@@ -179,6 +179,7 @@ export type SubRequestBanUnbanUserType = {
     type: 'ban' | 'unban';
     sessionId: string; // can be blinded id or not
     roomId: string;
+    isGlobal: boolean;
   };
 };
 
@@ -187,6 +188,13 @@ export type SubRequestDeleteAllUserPostsType = {
   deleteAllPosts: {
     sessionId: string; // can be blinded id or not
     roomId: string;
+  };
+};
+
+export type SubRequestDeleteAllUserServerPostsType = {
+  type: 'deleteAllUserPosts';
+  deleteAllUserPosts: {
+    sessionId: string; // can be blinded id or not
   };
 };
 
@@ -218,6 +226,7 @@ export type OpenGroupBatchRow =
   | SubRequestAddRemoveModeratorType
   | SubRequestBanUnbanUserType
   | SubRequestDeleteAllUserPostsType
+  | SubRequestDeleteAllUserServerPostsType
   | SubRequestUpdateRoomType
   | SubRequestDeleteReactionType;
 
@@ -225,6 +234,7 @@ export type OpenGroupBatchRow =
  *
  * @param options Array of subrequest options to be made.
  */
+// tslint:disable-next-line: cyclomatic-complexity
 const makeBatchRequestPayload = (
   options: OpenGroupBatchRow
 ): BatchSubRequest | Array<BatchSubRequest> | null => {
@@ -295,6 +305,20 @@ const makeBatchRequestPayload = (
       }));
     case 'banUnbanUser':
       const isBan = Boolean(options.banUnbanUser.type === 'ban');
+      const isGlobal = options.banUnbanUser.isGlobal;
+      window?.log?.info(`BAN: ${options.banUnbanUser.sessionId}, global: ${options.banUnbanUser.isGlobal}`);
+      if (isGlobal) {
+	// Issue server-wide (un)ban.
+	return {
+	  method: 'POST',
+	  path: `/user/${options.banUnbanUser.sessionId}/${isBan ? 'ban' : 'unban'}`,
+	  json: {
+	    global: true,
+	    // timeout: null, // for now we do not support the timeout argument
+	  },
+	}
+      }
+      // Issue room-wide (un)ban.
       return {
         method: 'POST',
         path: `/user/${options.banUnbanUser.sessionId}/${isBan ? 'ban' : 'unban'}`,
@@ -310,6 +334,11 @@ const makeBatchRequestPayload = (
       return {
         method: 'DELETE',
         path: `/room/${options.deleteAllPosts.roomId}/all/${options.deleteAllPosts.sessionId}`,
+      };
+    case 'deleteAllUserPosts':
+      return {
+        method: 'DELETE',
+        path: `/rooms/all/${options.deleteAllUserPosts.sessionId}`,
       };
     case 'updateRoom':
       return {
