@@ -56,7 +56,13 @@ async function banOrUnBanUserCall(
     if (!isChangeApplied) {
       window?.log?.warn(`failed to ${banType} user: ${isChangeApplied}`);
 
-      banType === 'ban' ? ToastUtils.pushUserBanFailure() : ToastUtils.pushUserUnbanFailure();
+      banType === 'ban'
+	? isGlobal
+	  ? ToastUtils.pushGlobalUserBanFailure()
+	  : ToastUtils.pushUserBanFailure()
+	: isGlobal
+	  ? ToastUtils.pushGlobalUserUnbanFailure()
+	  : ToastUtils.pushUserUnbanFailure();
       return false;
     }
     window?.log?.info(`${pubkey.key} user ${banType}ned successfully...`);
