@@ -56,7 +56,7 @@ async function banOrUnBanUserCall(
     if (!isChangeApplied) {
       window?.log?.warn(`failed to ${banType} user: ${isChangeApplied}`);
 
-      banType === 'ban' ? ToastUtils.pushUserBanFailure() : ToastUtils.pushUserUnbanSuccess();
+      banType === 'ban' ? ToastUtils.pushUserBanFailure() : ToastUtils.pushUserUnbanFailure();
       return false;
     }
     window?.log?.info(`${pubkey.key} user ${banType}ned successfully...`);
