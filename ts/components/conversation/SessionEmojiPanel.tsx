@@ -1,21 +1,22 @@
 import React, { forwardRef } from 'react';
 import classNames from 'classnames';
 import styled from 'styled-components';
-// @ts-ignore
-import Picker from '@emoji-mart/react';
 import { useSelector } from 'react-redux';
+import Picker from '@emoji-mart/react';
+
 import { getTheme, isDarkTheme } from '../../state/selectors/theme';
-import { FixedBaseEmoji, FixedPickerProps } from '../../types/Reaction';
 import {
   COLORS,
   ColorsType,
   PrimaryColorStateType,
   THEMES,
   ThemeStateType,
+  // eslint-disable-next-line import/extensions
 } from '../../themes/constants/colors.js';
 import { hexColorToRGB } from '../../util/hexColorToRGB';
 import { getPrimaryColor } from '../../state/selectors/primaryColor';
 import { i18nEmojiData } from '../../util/emoji';
+import { FixedBaseEmoji } from '../../types/Reaction';
 
 export const StyledEmojiPanel = styled.div<{
   isModal: boolean;
@@ -68,7 +69,7 @@ export const StyledEmojiPanel = styled.div<{
         content: '';
         position: absolute;
         top: calc(100% - 40px);
-        left: calc(100% - 79px);
+        left: calc(100% - 106px);
         width: 22px;
         height: 22px;
         transform: rotate(45deg);
@@ -77,6 +78,10 @@ export const StyledEmojiPanel = styled.div<{
         border: 0.7px solid var(--border-color);
         clip-path: polygon(100% 100%, 7.2px 100%, 100% 7.2px);
         ${props.panelBackgroundRGB && `background-color: rgb(${props.panelBackgroundRGB})`};
+
+        [dir='rtl'] & {
+          left: 75px;
+        }
       }
     `};
   }
@@ -90,13 +95,14 @@ type Props = {
   onKeyDown?: (event: any) => void;
 };
 
-const pickerProps: FixedPickerProps = {
+const pickerProps = {
   title: '',
   showPreview: true,
   autoFocus: true,
   skinTonePosition: 'preview',
 };
 
+// eslint-disable-next-line react/display-name
 export const SessionEmojiPanel = forwardRef<HTMLDivElement, Props>((props: Props, ref) => {
   const { onEmojiClicked, show, isModal = false, onKeyDown } = props;
   const primaryColor = useSelector(getPrimaryColor);
@@ -109,11 +115,10 @@ export const SessionEmojiPanel = forwardRef<HTMLDivElement, Props>((props: Props
   switch (theme) {
     case 'ocean-dark':
       panelBackgroundRGB = hexColorToRGB(THEMES.OCEAN_DARK.COLOR1);
-      // tslint:disable: no-non-null-assertion
+
       panelTextRGB = hexColorToRGB(THEMES.OCEAN_DARK.COLOR7!);
       break;
     case 'ocean-light':
-      // tslint:disable: no-non-null-assertion
       panelBackgroundRGB = hexColorToRGB(THEMES.OCEAN_LIGHT.COLOR7!);
       panelTextRGB = hexColorToRGB(THEMES.OCEAN_LIGHT.COLOR1);
       break;

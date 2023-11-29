@@ -1,22 +1,19 @@
-import React, { useState } from 'react';
 import classNames from 'classnames';
-
-import * as MIME from '../../../../../ts/types/MIME';
-import * as GoogleChrome from '../../../../../ts/util/GoogleChrome';
-
-import { useSelector } from 'react-redux';
-
+import React, { useState } from 'react';
 import { noop } from 'lodash';
+
+import * as MIME from '../../../../types/MIME';
+import * as GoogleChrome from '../../../../util/GoogleChrome';
+
 import { useDisableDrag } from '../../../../hooks/useDisableDrag';
 import { useEncryptedFileFetch } from '../../../../hooks/useEncryptedFileFetch';
 import { PubKey } from '../../../../session/types';
 import {
-  getSelectedConversationKey,
-  isPublicGroupConversation,
-} from '../../../../state/selectors/conversations';
+  useSelectedIsPrivate,
+  useSelectedIsPublic,
+} from '../../../../state/selectors/selectedConversation';
 import { ContactName } from '../../ContactName';
 import { MessageBody } from './MessageBody';
-import { useIsPrivate } from '../../../../hooks/useParamSelector';
 
 export type QuotePropsWithoutListener = {
   attachment?: QuotedAttachmentType;
@@ -64,7 +61,7 @@ function getObjectUrl(thumbnail: Attachment | undefined): string | undefined {
     return thumbnail.objectUrl;
   }
 
-  return;
+  return undefined;
 }
 
 function getTypeLabel({
@@ -87,7 +84,7 @@ function getTypeLabel({
     return window.i18n('audio');
   }
 
-  return;
+  return undefined;
 }
 export const QuoteIcon = (props: any) => {
   const { icon } = props;
@@ -229,8 +226,7 @@ export const QuoteText = (
 ) => {
   const { text, attachment, isIncoming } = props;
 
-  const convoId = useSelector(getSelectedConversationKey);
-  const isGroup = !useIsPrivate(convoId);
+  const isGroup = !useSelectedIsPrivate();
 
   if (text) {
     return (
@@ -345,7 +341,7 @@ export const Quote = (props: QuotePropsWithListener) => {
     setImageBroken(true);
   };
 
-  const isPublic = useSelector(isPublicGroupConversation);
+  const isPublic = useSelectedIsPublic();
 
   if (!validateQuote(props)) {
     return null;

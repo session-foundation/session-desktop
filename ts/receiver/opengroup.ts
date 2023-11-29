@@ -6,10 +6,10 @@ import {
 import { SignalService } from '../protobuf';
 import { OpenGroupRequestCommonType } from '../session/apis/open_group_api/opengroupV2/ApiUtil';
 import { OpenGroupMessageV4 } from '../session/apis/open_group_api/opengroupV2/OpenGroupServerPoller';
+import { isUsAnySogsFromCache } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import { getOpenGroupV2ConversationId } from '../session/apis/open_group_api/utils/OpenGroupUtils';
 import { getConversationController } from '../session/conversations';
 import { removeMessagePadding } from '../session/crypto/BufferPadding';
-import { UserUtils } from '../session/utils';
 import { perfEnd, perfStart } from '../session/utils/Performance';
 import { fromBase64ToArray } from '../session/utils/String';
 import { cleanIncomingDataMessage, messageHasVisibleContent } from './dataMessage';
@@ -50,14 +50,14 @@ const handleOpenGroupMessage = async (
 
   const dataUint = new Uint8Array(removeMessagePadding(arr));
 
-  const decoded = SignalService.Content.decode(dataUint);
+  const decodedContent = SignalService.Content.decode(dataUint);
 
   const conversationId = getOpenGroupV2ConversationId(serverUrl, roomId);
   if (!conversationId) {
     window?.log?.error('We cannot handle a message without a conversationId');
     return;
   }
-  const idataMessage = decoded?.dataMessage;
+  const idataMessage = decodedContent?.dataMessage;
   if (!idataMessage) {
     window?.log?.error('Invalid decoded opengroup message: no dataMessage');
     return;
@@ -85,7 +85,7 @@ const handleOpenGroupMessage = async (
   }
 
   void groupConvo.queueJob(async () => {
-    const isMe = UserUtils.isUsFromCache(sender);
+    const isMe = isUsAnySogsFromCache(sender);
 
     // this timestamp has already been forced to ms by the handleMessagesResponseV4() function
     const commonAttributes = { serverTimestamp: sentTimestamp, serverId, conversationId };
@@ -101,7 +101,9 @@ const handleOpenGroupMessage = async (
     await handleMessageJob(
       msgModel,
       groupConvo,
-      toRegularMessage(cleanIncomingDataMessage(decoded?.dataMessage as SignalService.DataMessage)),
+      toRegularMessage(
+        cleanIncomingDataMessage(decodedContent?.dataMessage as SignalService.DataMessage)
+      ),
       noop,
       sender,
       ''

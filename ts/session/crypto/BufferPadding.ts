@@ -1,3 +1,5 @@
+import { MAX_ATTACHMENT_FILESIZE_BYTES } from '../constants';
+
 /**
  * This file is used to pad message buffer and attachments
  */
@@ -18,7 +20,8 @@ export function removeMessagePadding(paddedData: ArrayBuffer): ArrayBuffer {
       const plaintext = new Uint8Array(i);
       plaintext.set(paddedPlaintext.subarray(0, i));
       return plaintext.buffer;
-    } else if (paddedPlaintext[i] !== PADDING_BYTE) {
+    }
+    if (paddedPlaintext[i] !== PADDING_BYTE) {
       // window?.log?.warn('got a message without padding... Letting it through for now');
       return paddedPlaintext;
     }
@@ -73,10 +76,18 @@ export function addAttachmentPadding(data: ArrayBuffer): ArrayBuffer {
   const originalUInt = new Uint8Array(data);
   window?.log?.info('Adding attachment padding...');
 
-  const paddedSize = Math.max(
+  let paddedSize = Math.max(
     541,
+    // eslint-disable-next-line prefer-exponentiation-operator, no-restricted-properties
     Math.floor(Math.pow(1.05, Math.ceil(Math.log(originalUInt.length) / Math.log(1.05))))
   );
+
+  if (
+    paddedSize > MAX_ATTACHMENT_FILESIZE_BYTES &&
+    originalUInt.length <= MAX_ATTACHMENT_FILESIZE_BYTES
+  ) {
+    paddedSize = MAX_ATTACHMENT_FILESIZE_BYTES;
+  }
   const paddedData = new ArrayBuffer(paddedSize);
   const paddedUInt = new Uint8Array(paddedData);
 

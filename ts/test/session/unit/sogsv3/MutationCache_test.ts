@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-expressions */
 import { expect } from 'chai';
 import Sinon from 'sinon';
 import {
@@ -14,7 +15,6 @@ import {
   OpenGroupMessageV4,
   OpenGroupReactionMessageV4,
 } from '../../../../session/apis/open_group_api/opengroupV2/OpenGroupServerPoller';
-// tslint:disable: chai-vague-errors
 
 describe('mutationCache', () => {
   TestUtils.stubWindowLog();
@@ -311,7 +311,7 @@ describe('mutationCache', () => {
         server: roomInfos.serverUrl,
         room: roomInfos.roomId,
         changeType: ChangeType.REACTIONS,
-        seqno: 300, // greater than response messageResponse seqno should be procesed
+        seqno: 300, // greater than response messageResponse seqno should be processed
         metadata: {
           messageId: originalMessage.serverId,
           emoji: '😄',
@@ -322,7 +322,7 @@ describe('mutationCache', () => {
         server: roomInfos.serverUrl,
         room: roomInfos.roomId,
         changeType: ChangeType.REACTIONS,
-        seqno: 301, //// greater than response messageResponse seqno should be procesed
+        seqno: 301, // greater than response messageResponse seqno should be processed
         metadata: {
           messageId: originalMessage.serverId,
           emoji: '😈',

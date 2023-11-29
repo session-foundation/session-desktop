@@ -3,7 +3,7 @@ import { SessionIcon, SessionIconType } from '../icon';
 
 import { SessionDropdownItem, SessionDropDownItemType } from './SessionDropdownItem';
 
-// THIS IS DROPDOWN ACCORDIAN STYLE OPTIONS SELECTOR ELEMENT, NOT A CONTEXTMENU
+// THIS IS DROPDOWN ACCORDION STYLE OPTIONS SELECTOR ELEMENT, NOT A CONTEXTMENU
 
 type Props = {
   label: string;
@@ -17,15 +17,16 @@ type Props = {
     active?: boolean;
     onClick?: any;
   }>;
+  dataTestId?: string;
 };
 
 export const SessionDropdown = (props: Props) => {
-  const { label, options } = props;
+  const { label, options, dataTestId } = props;
   const [expanded, setExpanded] = useState(!!props.expanded);
   const chevronOrientation = expanded ? 180 : 0;
 
   return (
-    <div className="session-dropdown">
+    <div className="session-dropdown" data-testid={dataTestId}>
       <div
         className="session-dropdown__label"
         onClick={() => {
@@ -43,6 +44,7 @@ export const SessionDropdown = (props: Props) => {
             return (
               <SessionDropdownItem
                 key={item.content}
+                dataTestId={`dropdownitem-${item.content.replace(' ', '-')}`}
                 content={item.content}
                 icon={item.icon}
                 type={item.type}

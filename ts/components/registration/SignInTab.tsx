@@ -20,8 +20,6 @@ export enum SignInMode {
   UsingRecoveryPhrase,
   LinkDevice,
 }
-// tslint:disable: use-simple-attributes
-// tslint:disable: react-unused-props-and-state
 
 const LinkDeviceButton = (props: { onLinkDeviceButtonClicked: () => any }) => {
   return (
@@ -208,6 +206,7 @@ export const SignInTab = () => {
             pointerEvents: 'all',
             backgroundColor: 'var(--background-primary-color)',
           }}
+          dataTestId="three-dot-loading-animation"
         >
           <SessionSpinner loading={true} />
         </Flex>

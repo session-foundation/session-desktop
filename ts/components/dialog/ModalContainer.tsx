@@ -8,6 +8,7 @@ import {
   getConfirmModal,
   getDeleteAccountModalState,
   getEditProfileDialog,
+  getEditProfilePictureModalState,
   getInviteContactModal,
   getOnionPathDialog,
   getReactClearAllDialog,
@@ -37,6 +38,7 @@ import { SessionNicknameDialog } from './SessionNicknameDialog';
 import { BanOrUnBanUserDialog, ServerBanOrUnBanUserDialog } from './BanOrUnbanUserDialog';
 import { ReactListModal } from './ReactListModal';
 import { ReactClearAllModal } from './ReactClearAllModal';
+import { EditProfilePictureModal } from './EditProfilePictureModal';
 
 export const ModalContainer = () => {
   const confirmModalState = useSelector(getConfirmModal);
@@ -57,6 +59,7 @@ export const ModalContainer = () => {
   const serverBanOrUnbanUserModalState = useSelector(getServerBanOrUnbanUserModalState);
   const reactListModalState = useSelector(getReactListDialog);
   const reactClearAllModalState = useSelector(getReactClearAllDialog);
+  const editProfilePictureModalState = useSelector(getEditProfilePictureModalState);
 
   return (
     <>
@@ -82,6 +85,9 @@ export const ModalContainer = () => {
       {confirmModalState && <SessionConfirm {...confirmModalState} />}
       {reactListModalState && <ReactListModal {...reactListModalState} />}
       {reactClearAllModalState && <ReactClearAllModal {...reactClearAllModalState} />}
+      {editProfilePictureModalState && (
+        <EditProfilePictureModal {...editProfilePictureModalState} />
+      )}
     </>
   );
 };

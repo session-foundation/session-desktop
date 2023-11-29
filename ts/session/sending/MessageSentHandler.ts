@@ -40,7 +40,6 @@ async function handlePublicMessageSentSuccess(
   }
 }
 
-// tslint:disable-next-line: cyclomatic-complexity
 async function handleMessageSentSuccess(
   sentMessage: RawMessage,
   effectiveTimestamp: number,
@@ -175,7 +174,7 @@ async function handleMessageSentFailure(
 /**
  * This function tries to find a message by messageId by first looking on the MessageController.
  * The MessageController holds all messages being in memory.
- * Those are the messages sent recently, recieved recently, or the one shown to the user.
+ * Those are the messages sent recently, received recently, or the one shown to the user.
  *
  * If the app restarted, it's very likely those messages won't be on the memory anymore.
  * In this case, this function will look for it in the database and return it.

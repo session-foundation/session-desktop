@@ -9,6 +9,7 @@ import {
   ConfirmModalState,
   DeleteAccountModalState,
   EditProfileModalState,
+  EditProfilePictureModalState,
   InviteContactModalState,
   ModalState,
   OnionPathModalState,
@@ -114,4 +115,9 @@ export const getReactListDialog = createSelector(
 export const getReactClearAllDialog = createSelector(
   getModal,
   (state: ModalState): ReactModalsState => state.reactClearAllModalState
+);
+
+export const getEditProfilePictureModalState = createSelector(
+  getModal,
+  (state: ModalState): EditProfilePictureModalState => state.editProfilePictureModalState
 );

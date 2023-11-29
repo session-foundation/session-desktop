@@ -1,11 +1,10 @@
-// tslint:disable: no-implicit-dependencies max-func-body-length no-unused-expression
-
 import chai from 'chai';
 import { v4 as uuid } from 'uuid';
+import chaiAsPromised from 'chai-as-promised';
+
 import { JobQueue } from '../../../../session/utils/JobQueue';
 import { TestUtils } from '../../../test-utils';
 
-import chaiAsPromised from 'chai-as-promised';
 chai.use(chaiAsPromised as any);
 
 const { assert } = chai;
@@ -42,7 +41,7 @@ describe('JobQueue', () => {
       const start = Date.now();
       await assert.eventually.deepEqual(Promise.all(input.map(mapper)), [10, 20, 30]);
       const timeTaken = Date.now() - start;
-      assert.isAtLeast(timeTaken, 20, 'Queue should take atleast 100ms to run.');
+      assert.isAtLeast(timeTaken, 20, 'Queue should take at least 100ms to run.');
     });
 
     it('should return the result of the job', async () => {

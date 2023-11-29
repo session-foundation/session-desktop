@@ -25,8 +25,8 @@
   position: relative;
   display: inline-flex;
   flex-direction: row;
-  align-items: center;
-  max-width: 95%;
+  align-items: flex-end;
+  max-width: 100%;
 
   @media (min-width: 1200px) {
     max-width: 65%;
@@ -99,7 +99,8 @@
 }
 
 @mixin session-h-title {
-  @include fontAccentBold();
+  font-weight: bold;
+  font-family: var(--font-accent), var(--font-default);
 }
 
 h1 {

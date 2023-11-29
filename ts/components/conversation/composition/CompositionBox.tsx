@@ -1,30 +1,18 @@
-import React from 'react';
 import _, { debounce, isEmpty } from 'lodash';
+import React from 'react';
+import { connect } from 'react-redux';
+import styled from 'styled-components';
 
+import { AbortController } from 'abort-controller';
+import { Mention, MentionsInput, SuggestionDataItem } from 'react-mentions';
+
+import autoBind from 'auto-bind';
 import * as MIME from '../../../types/MIME';
 
 import { SessionEmojiPanel, StyledEmojiPanel } from '../SessionEmojiPanel';
 import { SessionRecording } from '../SessionRecording';
 
-import {
-  getPreview,
-  LINK_PREVIEW_TIMEOUT,
-  SessionStagedLinkPreview,
-} from '../SessionStagedLinkPreview';
-import { AbortController } from 'abort-controller';
-import { SessionQuotedMessageComposition } from '../SessionQuotedMessageComposition';
-import { Mention, MentionsInput, SuggestionDataItem } from 'react-mentions';
-import autoBind from 'auto-bind';
-import { getMediaPermissionsSettings } from '../../settings/SessionSettings';
-import { getDraftForConversation, updateDraftForConversation } from '../SessionConversationDrafts';
-import {
-  AddStagedAttachmentButton,
-  SendMessageButton,
-  StartRecordingButton,
-  ToggleEmojiButton,
-} from './CompositionButtons';
-import { AttachmentType } from '../../../types/Attachment';
-import { connect } from 'react-redux';
+import { SettingsKey } from '../../../data/settings-key';
 import { showLinkSharingConfirmationModalDialog } from '../../../interactions/conversationInteractions';
 import { getConversationController } from '../../../session/conversations';
 import { ToastUtils } from '../../../session/utils';
@@ -32,35 +20,52 @@ import { ReduxConversationType } from '../../../state/ducks/conversations';
 import { removeAllStagedAttachmentsInConversation } from '../../../state/ducks/stagedAttachments';
 import { StateType } from '../../../state/reducer';
 import {
-  getIsTypingEnabled,
   getMentionsInput,
   getQuotedMessage,
   getSelectedConversation,
-  getSelectedConversationKey,
 } from '../../../state/selectors/conversations';
-import { AttachmentUtil } from '../../../util';
-import { Flex } from '../../basic/Flex';
-import { CaptionEditor } from '../../CaptionEditor';
-import { StagedAttachmentList } from '../StagedAttachmentList';
+import {
+  getSelectedCanWrite,
+  getSelectedConversationKey,
+} from '../../../state/selectors/selectedConversation';
+import { AttachmentType } from '../../../types/Attachment';
 import { processNewAttachment } from '../../../types/MessageAttachment';
+import { FixedBaseEmoji } from '../../../types/Reaction';
+import { AttachmentUtil } from '../../../util';
 import {
   StagedAttachmentImportedType,
   StagedPreviewImportedType,
 } from '../../../util/attachmentsUtil';
+import { HTMLDirection } from '../../../util/i18n';
+import { LinkPreviews } from '../../../util/linkPreviews';
+import { CaptionEditor } from '../../CaptionEditor';
+import { Flex } from '../../basic/Flex';
+import { getMediaPermissionsSettings } from '../../settings/SessionSettings';
+import { getDraftForConversation, updateDraftForConversation } from '../SessionConversationDrafts';
+import { SessionQuotedMessageComposition } from '../SessionQuotedMessageComposition';
+import {
+  LINK_PREVIEW_TIMEOUT,
+  SessionStagedLinkPreview,
+  getPreview,
+} from '../SessionStagedLinkPreview';
+import { StagedAttachmentList } from '../StagedAttachmentList';
+import {
+  AddStagedAttachmentButton,
+  SendMessageButton,
+  StartRecordingButton,
+  ToggleEmojiButton,
+} from './CompositionButtons';
+import { renderEmojiQuickResultRow, searchEmojiForQuery } from './EmojiQuickResult';
 import {
   cleanMentions,
   mentionsRegex,
   renderUserMentionRow,
   styleForCompositionBoxSuggestions,
 } from './UserMentions';
-import { renderEmojiQuickResultRow, searchEmojiForQuery } from './EmojiQuickResult';
-import { LinkPreviews } from '../../../util/linkPreviews';
-import styled from 'styled-components';
-import { FixedBaseEmoji } from '../../../types/Reaction';
 
 export interface ReplyingToMessageProps {
   convoId: string;
-  id: string;
+  id: string; // this is the quoted message timestamp
   author: string;
   timestamp: number;
   text?: string;
@@ -104,6 +109,7 @@ interface Props {
   quotedMessageProps?: ReplyingToMessageProps;
   stagedAttachments: Array<StagedAttachmentType>;
   onChoseAttachments: (newAttachments: Array<File>) => void;
+  htmlDirection: HTMLDirection;
 }
 
 interface State {
@@ -115,26 +121,28 @@ interface State {
   showCaptionEditor?: AttachmentType;
 }
 
-const sendMessageStyle = {
-  control: {
-    wordBreak: 'break-all',
-  },
-  input: {
-    overflow: 'auto',
-    maxHeight: '50vh',
-    wordBreak: 'break-word',
-    padding: '0px',
-    margin: '0px',
-  },
-  highlighter: {
-    boxSizing: 'border-box',
-    overflow: 'hidden',
-    maxHeight: '50vh',
-  },
-  flexGrow: 1,
-  minHeight: '24px',
-  width: '100%',
-  ...styleForCompositionBoxSuggestions,
+const sendMessageStyle = (dir?: HTMLDirection) => {
+  return {
+    control: {
+      wordBreak: 'break-all',
+    },
+    input: {
+      overflow: 'auto',
+      maxHeight: '50vh',
+      wordBreak: 'break-word',
+      padding: '0px',
+      margin: '0px',
+    },
+    highlighter: {
+      boxSizing: 'border-box',
+      overflow: 'hidden',
+      maxHeight: '50vh',
+    },
+    flexGrow: 1,
+    minHeight: '24px',
+    width: '100%',
+    ...styleForCompositionBoxSuggestions(dir),
+  };
 };
 
 const getDefaultState = (newConvoId?: string) => {
@@ -172,7 +180,7 @@ const getSelectionBasedOnMentions = (draft: string, index: number) => {
     lastMatchEndIndex = currentMatchStartIndex + match.length;
 
     const realLength = displayName.length + 1;
-    lastRealMatchEndIndex = lastRealMatchEndIndex + realLength;
+    lastRealMatchEndIndex += realLength;
 
     // the +1 is for the @
     return {
@@ -205,21 +213,23 @@ const getSelectionBasedOnMentions = (draft: string, index: number) => {
   return Number.MAX_SAFE_INTEGER;
 };
 
-const StyledEmojiPanelContainer = styled.div`
+const StyledEmojiPanelContainer = styled.div<{ dir?: HTMLDirection }>`
   ${StyledEmojiPanel} {
     position: absolute;
     bottom: 68px;
-    right: 0px;
+    ${props => (props.dir === 'rtl' ? 'left: 0px' : 'right: 0px;')}
   }
 `;
 
-const StyledSendMessageInput = styled.div`
+const StyledSendMessageInput = styled.div<{ dir?: HTMLDirection }>`
+  position: relative;
   cursor: text;
   display: flex;
   align-items: center;
   flex-grow: 1;
   min-height: var(--composition-container-height);
   padding: var(--margins-xs) 0;
+  ${props => props.dir === 'rtl' && 'margin-inline-start: var(--margins-sm);'}
   z-index: 1;
   background-color: inherit;
 
@@ -231,7 +241,7 @@ const StyledSendMessageInput = styled.div`
   textarea {
     font-family: var(--font-default);
     min-height: calc(var(--composition-container-height) / 3);
-    max-height: 3 * var(--composition-container-height);
+    max-height: calc(3 * var(--composition-container-height));
     margin-right: var(--margins-md);
     color: var(--text-color-primary);
 
@@ -345,6 +355,7 @@ class CompositionBoxInner extends React.Component<Props, State> {
     }
     const { items } = e.clipboardData;
     let imgBlob = null;
+    // eslint-disable-next-line no-restricted-syntax
     for (const item of items as any) {
       const pasteType = item.type.split('/')[0];
       if (pasteType === 'image') {
@@ -399,6 +410,7 @@ class CompositionBoxInner extends React.Component<Props, State> {
     return (
       <SessionRecording
         sendVoiceMessage={this.sendVoiceMessage}
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onLoadVoiceNoteView={this.onLoadVoiceNoteView}
         onExitVoiceNoteView={this.onExitVoiceNoteView}
       />
@@ -408,11 +420,17 @@ class CompositionBoxInner extends React.Component<Props, State> {
   private renderCompositionView() {
     const { showEmojiPanel } = this.state;
     const { typingEnabled } = this.props;
+    /* eslint-disable @typescript-eslint/no-misused-promises */
 
     return (
-      <>
+      <Flex
+        dir={this.props.htmlDirection}
+        container={true}
+        flexDirection={'row'}
+        alignItems={'center'}
+        width={'100%'}
+      >
         {typingEnabled && <AddStagedAttachmentButton onClick={this.onChooseAttachment} />}
-
         <input
           className="hidden"
           placeholder="Attachment"
@@ -421,11 +439,10 @@ class CompositionBoxInner extends React.Component<Props, State> {
           type="file"
           onChange={this.onChoseAttachment}
         />
-
         {typingEnabled && <StartRecordingButton onClick={this.onLoadVoiceNoteView} />}
-
         <StyledSendMessageInput
           role="main"
+          dir={this.props.htmlDirection}
           onClick={this.focusCompositionBox} // used to focus on the textarea when clicking in its container
           ref={el => {
             this.container = el;
@@ -434,14 +451,12 @@ class CompositionBoxInner extends React.Component<Props, State> {
         >
           {this.renderTextArea()}
         </StyledSendMessageInput>
-
         {typingEnabled && (
           <ToggleEmojiButton ref={this.emojiPanelButton} onClick={this.toggleEmojiPanel} />
         )}
-        <SendMessageButton onClick={this.onSendMessage} />
-
+        {typingEnabled && <SendMessageButton onClick={this.onSendMessage} />}
         {typingEnabled && showEmojiPanel && (
-          <StyledEmojiPanelContainer role="button">
+          <StyledEmojiPanelContainer role="button" dir={this.props.htmlDirection}>
             <SessionEmojiPanel
               ref={this.emojiPanel}
               show={showEmojiPanel}
@@ -450,13 +465,15 @@ class CompositionBoxInner extends React.Component<Props, State> {
             />
           </StyledEmojiPanelContainer>
         )}
-      </>
+      </Flex>
     );
   }
+  /* eslint-enable @typescript-eslint/no-misused-promises */
 
   private renderTextArea() {
     const { i18n } = window;
     const { draft } = this.state;
+    const { htmlDirection } = this.props;
 
     if (!this.props.selectedConversation) {
       return null;
@@ -469,33 +486,35 @@ class CompositionBoxInner extends React.Component<Props, State> {
       if (left) {
         return i18n('youLeftTheGroup');
       }
-      if (isBlocked && isPrivate) {
+      if (isBlocked) {
         return i18n('unblockToSend');
-      }
-      if (isBlocked && !isPrivate) {
-        return i18n('unblockGroupToSend');
       }
       return i18n('sendMessage');
     };
 
-    const { isKickedFromGroup, left, isPrivate, isBlocked } = this.props.selectedConversation;
+    const { isKickedFromGroup, left, isBlocked } = this.props.selectedConversation;
     const messagePlaceHolder = makeMessagePlaceHolderText();
     const { typingEnabled } = this.props;
     const neverMatchingRegex = /($a)/;
+
+    const style = sendMessageStyle(htmlDirection);
 
     return (
       <MentionsInput
         value={draft}
         onChange={this.onChange}
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onKeyDown={this.onKeyDown}
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onKeyUp={this.onKeyUp}
         placeholder={messagePlaceHolder}
         spellCheck={true}
+        dir={htmlDirection}
         inputRef={this.textarea}
         disabled={!typingEnabled}
         rows={1}
         data-testid="message-input-text-area"
-        style={sendMessageStyle}
+        style={style}
         suggestionsPortalHost={this.container as any}
         forceSuggestionsAboveCursor={true} // force mentions to be rendered on top of the cursor, this is working with a fork of react-mentions for now
       >
@@ -505,7 +524,9 @@ class CompositionBoxInner extends React.Component<Props, State> {
           markup="@ￒ__id__ￗ__display__ￒ" // ￒ = \uFFD2 is one of the forbidden char for a display name (check displayNameRegex)
           trigger="@"
           // this is only for the composition box visible content. The real stuff on the backend box is the @markup
-          displayTransform={(_id, display) => `@${display}`}
+          displayTransform={(_id, display) =>
+            htmlDirection === 'rtl' ? `${display}@` : `@${display}`
+          }
           data={this.fetchUsersForGroup}
           renderSuggestion={renderUserMentionRow}
         />
@@ -551,14 +572,16 @@ class CompositionBoxInner extends React.Component<Props, State> {
       return;
     }
 
+    if (this.props.selectedConversation.isPrivate) {
+      return;
+    }
+
     if (this.props.selectedConversation.isPublic) {
       this.fetchUsersForOpenGroup(overridenQuery, callback);
       return;
     }
-    if (!this.props.selectedConversation.isPrivate) {
-      this.fetchUsersForClosedGroup(overridenQuery, callback);
-      return;
-    }
+    // can only be a closed group here
+    this.fetchUsersForClosedGroup(overridenQuery, callback);
   }
 
   private fetchUsersForClosedGroup(
@@ -602,7 +625,7 @@ class CompositionBoxInner extends React.Component<Props, State> {
 
   private renderStagedLinkPreview(): JSX.Element | null {
     // Don't generate link previews if user has turned them off
-    if (!(window.getSettingValue('link-preview-setting') || false)) {
+    if (!(window.getSettingValue(SettingsKey.settingsLinkPreview) || false)) {
       return null;
     }
 
@@ -672,6 +695,7 @@ class CompositionBoxInner extends React.Component<Props, State> {
       abortController.abort();
     }, LINK_PREVIEW_TIMEOUT);
 
+    // eslint-disable-next-line more/no-then
     getPreview(firstLink, abortController.signal)
       .then(ret => {
         // we finished loading the preview, and checking the abortConrtoller, we are still not aborted.
@@ -707,7 +731,7 @@ class CompositionBoxInner extends React.Component<Props, State> {
         // than the message was sent without the link preview.
         // So be sure to reset the staged link preview so it is not sent with the next message.
 
-        // if we were not aborted, it's probably just an error on the fetch. Nothing to do excpet mark the fetch as done (with errors)
+        // if we were not aborted, it's probably just an error on the fetch. Nothing to do except mark the fetch as done (with errors)
 
         if (aborted) {
           this.setState({
@@ -840,7 +864,6 @@ class CompositionBoxInner extends React.Component<Props, State> {
     }
   }
 
-  // tslint:disable-next-line: cyclomatic-complexity
   private async onSendMessage() {
     if (!this.props.selectedConversationKey) {
       throw new Error('selectedConversationKey is needed');
@@ -855,12 +878,8 @@ class CompositionBoxInner extends React.Component<Props, State> {
       return;
     }
 
-    if (selectedConversation.isBlocked && selectedConversation.isPrivate) {
+    if (selectedConversation.isBlocked) {
       ToastUtils.pushUnblockToSend();
-      return;
-    }
-    if (selectedConversation.isBlocked && !selectedConversation.isPrivate) {
-      ToastUtils.pushUnblockToSendGroup();
       return;
     }
     // Verify message length
@@ -1084,7 +1103,7 @@ const mapStateToProps = (state: StateType) => {
     quotedMessageProps: getQuotedMessage(state),
     selectedConversation: getSelectedConversation(state),
     selectedConversationKey: getSelectedConversationKey(state),
-    typingEnabled: getIsTypingEnabled(state),
+    typingEnabled: getSelectedCanWrite(state),
   };
 };
 

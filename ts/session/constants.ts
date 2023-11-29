@@ -1,5 +1,3 @@
-// tslint:disable: binary-expression-operand-order
-
 const seconds = 1000;
 const minutes = seconds * 60;
 const hours = minutes * 60;
@@ -16,6 +14,7 @@ export const TTL_DEFAULT = {
   TYPING_MESSAGE: 20 * DURATION.SECONDS,
   CALL_MESSAGE: 5 * 60 * DURATION.SECONDS,
   TTL_MAX: 14 * DURATION.DAYS,
+  TTL_CONFIG: 30 * DURATION.DAYS,
 };
 
 export const SWARM_POLLING_TIMEOUT = {
@@ -25,7 +24,6 @@ export const SWARM_POLLING_TIMEOUT = {
 };
 
 export const PROTOCOLS = {
-  // tslint:disable-next-line: no-http-string
   HTTP: 'http:',
   HTTPS: 'https:',
 };
@@ -39,10 +37,14 @@ export const CONVERSATION = {
   // Maximum voice message duraton of 5 minutes
   // which equates to 1.97 MB
   MAX_VOICE_MESSAGE_DURATION: 300,
+  MAX_UNREAD_COUNT: 999,
 };
-// Max attachment size: 6 MB
 
-export const MAX_ATTACHMENT_FILESIZE_BYTES = 6 * 1000 * 1000; // 6MB
+/**
+ * The file server and onion request max upload size is 10MB precisely.
+ * 10MB is still ok, but one byte more is not.
+ */
+export const MAX_ATTACHMENT_FILESIZE_BYTES = 10 * 1000 * 1000;
 
 export const VALIDATION = {
   MAX_GROUP_NAME_LENGTH: 30,
@@ -55,9 +57,6 @@ export const UI = {
     GREEN: '#00F782',
   },
 };
-
-// we keep 150 chars, because quoting someone with 66 hex chars need to be kept in full so we can render it in the quote with its name
-export const QUOTED_TEXT_MAX_LENGTH = 150;
 
 export const DEFAULT_RECENT_REACTS = ['😂', '🥰', '😢', '😡', '😮', '😈'];
 

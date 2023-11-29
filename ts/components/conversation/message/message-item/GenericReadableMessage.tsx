@@ -2,9 +2,12 @@ import classNames from 'classnames';
 import React, { useCallback, useEffect, useState } from 'react';
 import { contextMenu } from 'react-contexify';
 import { useDispatch, useSelector } from 'react-redux';
-// tslint:disable-next-line: no-submodule-imports
+import styled, { keyframes } from 'styled-components';
+
 import useInterval from 'react-use/lib/useInterval';
-import _ from 'lodash';
+import useMount from 'react-use/lib/useMount';
+
+import { isNil, isString, toNumber } from 'lodash';
 import { Data } from '../../../../data/data';
 import { MessageRenderingProps } from '../../../../models/messageType';
 import { getConversationController } from '../../../../session/conversations';
@@ -16,10 +19,11 @@ import {
 } from '../../../../state/selectors/conversations';
 import { getIncrement } from '../../../../util/timer';
 import { ExpireTimer } from '../../ExpireTimer';
-import { MessageAvatar } from '../message-content/MessageAvatar';
+
+import { isOpenOrClosedGroup } from '../../../../models/conversationAttributes';
 import { MessageContentWithStatuses } from '../message-content/MessageContentWithStatus';
+import { StyledMessageReactionsContainer } from '../message-content/MessageReactions';
 import { ReadableMessage } from './ReadableMessage';
-import styled, { keyframes } from 'styled-components';
 
 export type GenericReadableMessageSelectorProps = Pick<
   MessageRenderingProps,
@@ -79,7 +83,7 @@ function useIsExpired(props: ExpiringProps) {
         convo?.updateLastMessage();
       }
     }
-  }, [expirationTimestamp, expirationLength, isExpired, messageId, convoId]);
+  }, [dispatch, expirationTimestamp, expirationLength, isExpired, messageId, convoId]);
 
   let checkFrequency: number | null = null;
   if (expirationLength) {
@@ -87,9 +91,9 @@ function useIsExpired(props: ExpiringProps) {
     checkFrequency = Math.max(EXPIRATION_CHECK_MINIMUM, increment);
   }
 
-  useEffect(() => {
+  useMount(() => {
     void checkExpired();
-  }, []); // check on mount
+  });
   useInterval(checkExpired, checkFrequency); // check every 2sec or sooner if needed
 
   return { isExpired };
@@ -100,7 +104,6 @@ type Props = {
   ctxMenuID: string;
   isDetailView?: boolean;
 };
-// tslint:disable: use-simple-attributes
 
 const highlightedMessageAnimation = keyframes`
   1% {
@@ -116,10 +119,14 @@ const StyledReadableMessage = styled(ReadableMessage)<{
   align-items: center;
   width: 100%;
   letter-spacing: 0.03rem;
-  padding: var(--margins-xs) var(--margins-lg) 0;
+  padding: 0 var(--margins-lg) 0;
 
   &.message-highlighted {
     animation: ${highlightedMessageAnimation} 1s ease-in-out;
+  }
+
+  ${StyledMessageReactionsContainer} {
+    margin-top: var(--margins-xs);
   }
 
   ${props =>
@@ -173,13 +180,27 @@ export const GenericReadableMessage = (props: Props) => {
 
   const handleContextMenu = useCallback(
     (e: React.MouseEvent<HTMLElement>) => {
+      // this is quite dirty but considering that we want the context menu of the message to show on click on the attachment
+      // and the context menu save attachment item to save the right attachment I did not find a better way for now.
+
+      // Note: If you change this, also make sure to update the `saveAttachment()` in MessageContextMenu.tsx
       const enableContextMenu = !multiSelectMode && !msgProps?.isKickedFromGroup;
+      const attachmentIndexStr = (e?.target as any)?.parentElement?.getAttribute?.(
+        'data-attachmentindex'
+      );
+      const attachmentIndex =
+        isString(attachmentIndexStr) && !isNil(toNumber(attachmentIndexStr))
+          ? toNumber(attachmentIndexStr)
+          : 0;
 
       if (enableContextMenu) {
         contextMenu.hideAll();
         contextMenu.show({
           id: ctxMenuID,
           event: e,
+          props: {
+            dataAttachmentIndex: attachmentIndex,
+          },
         });
       }
       setIsRightClicked(enableContextMenu);
@@ -221,7 +242,7 @@ export const GenericReadableMessage = (props: Props) => {
   }
 
   const selected = isMessageSelected || false;
-  const isGroup = conversationType === 'group';
+  const isGroup = isOpenOrClosedGroup(conversationType);
   const isIncoming = direction === 'incoming';
 
   return (
@@ -238,7 +259,6 @@ export const GenericReadableMessage = (props: Props) => {
       isUnread={!!isUnread}
       key={`readable-message-${messageId}`}
     >
-      <MessageAvatar messageId={messageId} />
       {expirationLength && expirationTimestamp && (
         <ExpireTimer
           isCorrectSide={!isIncoming}

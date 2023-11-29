@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import _ from 'lodash';
+import { useDispatch } from 'react-redux';
+
 import { getConversationController } from '../../session/conversations';
 
-import _ from 'lodash';
 import { SpacerLG } from '../basic/Text';
-import { useDispatch } from 'react-redux';
 import { changeNickNameModal } from '../../state/ducks/modalDialog';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionWrapperModal } from '../SessionWrapperModal';
@@ -43,7 +44,7 @@ export const SessionNicknameDialog = (props: Props) => {
       throw new Error('Cant save without conversation id');
     }
     const conversation = getConversationController().get(conversationId);
-    await conversation.setNickname(nickname);
+    await conversation.setNickname(nickname, true);
     onClickClose();
   };
 
@@ -67,6 +68,7 @@ export const SessionNicknameDialog = (props: Props) => {
         onKeyUp={e => {
           void onNicknameInput(_.cloneDeep(e));
         }}
+        data-testid="nickname-input"
       />
 
       <div className="session-modal__button-group">
@@ -74,6 +76,7 @@ export const SessionNicknameDialog = (props: Props) => {
           text={window.i18n('ok')}
           buttonType={SessionButtonType.Simple}
           onClick={saveNickname}
+          dataTestId="confirm-nickname"
         />
         <SessionButton
           text={window.i18n('cancel')}

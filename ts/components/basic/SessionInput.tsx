@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 
 import classNames from 'classnames';
 import { SessionIconButton } from '../icon';
+import { Noop } from '../../types/Util';
+import { useHTMLDirection } from '../../util/i18n';
 
 type Props = {
   label?: string;
@@ -44,8 +46,18 @@ const ErrorItem = (props: { error: string | undefined }) => {
   );
 };
 
-const ShowHideButton = (props: { toggleForceShow: () => void }) => {
-  return <SessionIconButton iconType="eye" iconSize="medium" onClick={props.toggleForceShow} />;
+const ShowHideButton = (props: { toggleForceShow: Noop }) => {
+  const htmlDirection = useHTMLDirection();
+  const position = htmlDirection === 'ltr' ? { right: '0px' } : { left: '0px' };
+
+  return (
+    <SessionIconButton
+      iconType="eye"
+      iconSize="medium"
+      onClick={props.toggleForceShow}
+      style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', ...position }}
+    />
+  );
 };
 
 export const SessionInput = (props: Props) => {
@@ -92,7 +104,7 @@ export const SessionInput = (props: Props) => {
         data-testid={inputDataTestId}
         onChange={updateInputValue}
         className={classNames(enableShowHide ? 'session-input-floating-label-show-hide' : '')}
-        // just incase onChange isn't triggered
+        // just in case onChange isn't triggered
         onBlur={updateInputValue}
         onKeyPress={event => {
           if (event.key === 'Enter' && props.onEnterPressed) {

@@ -1,12 +1,12 @@
 import { hexColorToRGB } from '../util/hexColorToRGB';
 import { COLORS } from './constants/colors';
 
-// These variables are independant of the current theme
+// These variables are independent of the current theme
 export type ThemeGlobals = {
   /* Fonts */
   '--font-default': string;
-  '--font-font-accent': string;
-  '--font-font-mono': string;
+  '--font-accent': string;
+  '--font-mono': string;
   '--font-size-xs': string;
   '--font-size-sm': string;
   '--font-size-md': string;
@@ -17,6 +17,7 @@ export type ThemeGlobals = {
   '--font-size-h4': string;
 
   /* Margins */
+  '--margins-xxs': string;
   '--margins-xs': string;
   '--margins-sm': string;
   '--margins-md': string;
@@ -86,8 +87,8 @@ export type ThemeGlobals = {
 // These are only set once in the global style (at root).
 export const THEME_GLOBALS: ThemeGlobals = {
   '--font-default': 'Roboto',
-  '--font-font-accent': 'Loor',
-  '--font-font-mono': 'SpaceMono',
+  '--font-accent': 'Loor',
+  '--font-mono': 'SpaceMono',
   '--font-size-xs': '11px',
   '--font-size-sm': '13px',
   '--font-size-md': '15px',
@@ -97,6 +98,7 @@ export const THEME_GLOBALS: ThemeGlobals = {
   '--font-size-h3': '20px',
   '--font-size-h4': '16px',
 
+  '--margins-xxs': '2.5px',
   '--margins-xs': '5px',
   '--margins-sm': '10px',
   '--margins-md': '15px',
@@ -150,8 +152,10 @@ export const THEME_GLOBALS: ThemeGlobals = {
 // These should only be needed for the global style (at root).
 export function declareCSSVariables(variables: Record<string, string>) {
   let output = '';
+  // eslint-disable-next-line no-restricted-syntax
   for (const [key, value] of Object.entries(variables)) {
     output += `${key}: ${value};\n`;
   }
+
   return output;
 }

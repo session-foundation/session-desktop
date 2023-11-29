@@ -43,13 +43,6 @@ textarea {
   background: var(--text-selection-color);
 }
 
-.shadowed {
-  opacity: $session-shadow-opacity;
-}
-.overlayed {
-  opacity: $session-overlay-opacity;
-  pointer-events: none;
-}
 .overlay {
   display: flex !important;
   z-index: 1;
@@ -129,13 +122,6 @@ textarea {
   font-style: normal;
 }
 
-.module-message__author-avatar {
-  position: relative;
-  margin-inline-end: 20px;
-  padding-top: 5px;
-  padding-inline-end: 4px;
-}
-
 .module-message--incoming {
   margin-inline-start: 0;
   margin-inline-end: auto;
@@ -204,7 +190,7 @@ label {
   box-sizing: border-box;
   max-height: 70vh;
   max-width: calc(min(70vw, 800px));
-  font-family: $session-font-default;
+  font-family: var(--font-default);
   background-color: var(--modal-background-content-color);
   color: var(--modal-text-color);
   border: 1px solid var(--border-color);
@@ -263,7 +249,7 @@ label {
 
   &__body {
     padding: 0px var(--margins-lg) var(--margins-lg) var(--margins-lg);
-    font-family: $session-font-default;
+    font-family: var(--font-default);
     line-height: $session-font-md;
     font-size: $session-font-md;
     overflow-y: auto;
@@ -532,7 +518,7 @@ label {
 
 .session-settings {
   width: 100%;
-  height: 100vh;
+  height: 100%;
   display: flex;
   flex-direction: column;
   background-color: var(--background-secondary-color);

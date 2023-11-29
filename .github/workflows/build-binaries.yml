@@ -5,9 +5,14 @@ on:
   push:
     branches:
       - clearnet
+      - unstable
   pull_request:
     branches:
       - clearnet
+      - unstable
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -15,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2019, macos-latest, ubuntu-18.04]
+        os: [windows-2022, macos-11, ubuntu-20.04]
     env:
       SIGNAL_ENV: production
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -25,52 +30,7 @@ jobs:
       - name: Checkout git repo
         uses: actions/checkout@v3
 
-      # we stay on v2 even if there is a v3 because the v3 logic is less flexible for our usecase
-      - name: Install node
-        uses: actions/setup-node@v2
-        with:
-          node-version: '16.13.0'
-
-      - name: Cache Desktop node_modules
-        id: cache-desktop-modules
-        uses: actions/cache@v2
-        if: runner.os != 'Windows'
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-${{ hashFiles('package.json', 'yarn.lock', 'patches/**') }}
-
-      - name: Chocolatey Install Action
-        if: runner.os == 'Windows'
-        uses: crazy-max/ghaction-chocolatey@v1.4.2
-        with:
-          args: install python2 visualcpp-build-tools -y
-
-      # Not having this will break the windows build because the PATH won't be set by msbuild.
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.1
-        if: runner.os == 'Windows'
-
-      - name: Setup node for windows
-        if: runner.os == 'Windows'
-        run: |
-          npm install --global node-gyp@latest
-          npm config set python python2.7
-          npm config set msvs_version 2017
-
-      - name: Install Desktop node_modules
-        if: steps.cache-desktop-modules.outputs.cache-hit != 'true'
-        run: yarn install --frozen-lockfile --network-timeout 600000 --force
-
-      - name: Generate and concat files
-        run: yarn build-everything
-
-      - name: Lint Files
-        # no need to lint files on all platforms. Just do it once on the quicker one
-        if: runner.os == 'Linux'
-        run: yarn lint-full
-
-      - name: Unit Test
-        run: yarn test
+      - uses: ./actions/setup_and_build
 
       - name: Build windows production binaries
         if: runner.os == 'Windows'

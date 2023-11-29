@@ -5,6 +5,7 @@ import { Data } from '../../../../data/data';
 import { PubKey } from '../../../../session/types/PubKey';
 import { isDarkTheme } from '../../../../state/selectors/theme';
 import { nativeEmojiData } from '../../../../util/emoji';
+import { findAndFormatContact } from '../../../../models/message';
 
 export type TipPosition = 'center' | 'left' | 'right';
 
@@ -78,7 +79,7 @@ const generateContactsString = async (
   if (message) {
     let meIndex = -1;
     results = senders.map((sender, index) => {
-      const contact = message.findAndFormatContact(sender);
+      const contact = findAndFormatContact(sender);
       if (contact.isMe) {
         meIndex = index;
       }
@@ -98,8 +99,8 @@ const generateContactsString = async (
 const Contacts = (contacts: Array<string>, count: number) => {
   const darkMode = useSelector(isDarkTheme);
 
-  if (!Boolean(contacts?.length > 0)) {
-    return;
+  if (!(contacts?.length > 0)) {
+    return null;
   }
 
   const reactors = contacts.length;
@@ -117,7 +118,8 @@ const Contacts = (contacts: Array<string>, count: number) => {
         <span>{window.i18n('reactionPopup')}</span>
       </StyledContacts>
     );
-  } else if (reactors > 3) {
+  }
+  if (reactors > 3) {
     return (
       <StyledContacts>
         {window.i18n('reactionPopupMany', [contacts[0], contacts[1], contacts[3]])}{' '}
@@ -127,9 +129,8 @@ const Contacts = (contacts: Array<string>, count: number) => {
         <span>{window.i18n('reactionPopup')}</span>
       </StyledContacts>
     );
-  } else {
-    return null;
   }
+  return null;
 };
 
 type Props = {
@@ -148,6 +149,7 @@ export const ReactionPopup = (props: Props): ReactElement => {
 
   useEffect(() => {
     let isCancelled = false;
+    // eslint-disable-next-line more/no-then
     generateContactsString(messageId, senders)
       .then(async results => {
         if (isCancelled) {
@@ -157,11 +159,7 @@ export const ReactionPopup = (props: Props): ReactElement => {
           setContacts(results);
         }
       })
-      .catch(() => {
-        if (isCancelled) {
-          return;
-        }
-      });
+      .catch(() => {});
 
     return () => {
       isCancelled = true;

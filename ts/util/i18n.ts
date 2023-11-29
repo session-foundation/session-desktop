@@ -13,7 +13,8 @@ export const setupi18n = (locale: string, messages: LocaleMessagesType) => {
   function getMessage(key: string, substitutions: Array<string>) {
     const message = messages[key];
     if (!message) {
-      // tslint:disable-next-line: no-console
+      // eslint:disable: no-console
+      // eslint-disable-next-line no-console
       (window.log.error || console.log)(
         `i18n: Attempted to get translation for nonexistent key '${key}'`
       );
@@ -29,7 +30,8 @@ export const setupi18n = (locale: string, messages: LocaleMessagesType) => {
       );
 
       return substituted.replaceAll('ￗ', '$');
-    } else if (substitutions) {
+    }
+    if (substitutions) {
       return message.replace(/\$.+?\$/, substitutions);
     }
 
@@ -41,6 +43,7 @@ export const setupi18n = (locale: string, messages: LocaleMessagesType) => {
   return getMessage;
 };
 
+// eslint-disable-next-line import/no-mutable-exports
 export let langNotSupportedMessageShown = false;
 
 export const loadEmojiPanelI18n = async () => {
@@ -62,4 +65,17 @@ export const loadEmojiPanelI18n = async () => {
       }
     }
   }
+  return undefined;
 };
+
+// RTL Support
+
+export type HTMLDirection = 'ltr' | 'rtl';
+
+export function isRtlBody(): boolean {
+  const body = document.getElementsByTagName('body').item(0);
+
+  return body?.classList.contains('rtl') || false;
+}
+
+export const useHTMLDirection = (): HTMLDirection => (isRtlBody() ? 'rtl' : 'ltr');

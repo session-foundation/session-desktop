@@ -1,11 +1,12 @@
+import { compact } from 'lodash';
+
 import { OpenGroupData, OpenGroupV2Room } from '../../../../data/opengroups';
-import _, { compact } from 'lodash';
 import { OpenGroupMessageV2 } from './OpenGroupMessageV2';
 import { UserUtils } from '../../../utils';
 import { fromHexToArray } from '../../../utils/String';
 import { getSodiumRenderer } from '../../../crypto';
 import { SogsBlinding } from '../sogsv3/sogsBlinding';
-import { getNowWithNetworkOffset } from '../../snode_api/SNodeAPI';
+import { GetNetworkTime } from '../../snode_api/getNetworkTime';
 
 export type OpenGroupRequestHeaders = {
   'X-SOGS-Pubkey': string;
@@ -22,7 +23,7 @@ export type OpenGroupRequestHeaders = {
  * @param endpoint endpoint of request we're making
  * @param method method of request we're making
  * @param blinded is the server being requested to blinded or not
- * @param body the body of the request we're mkaing
+ * @param body the body of the request we're making
  * @returns object of headers, including X-SOGS and other headers.
  */
 const getOurOpenGroupHeaders = async (
@@ -36,12 +37,12 @@ const getOurOpenGroupHeaders = async (
   const signingKeys = await UserUtils.getUserED25519KeyPairBytes();
   if (!signingKeys) {
     window?.log?.error('getOurOpenGroupHeaders - Unable to get our signing keys');
-    return;
+    return undefined;
   }
 
   const nonce = (await getSodiumRenderer()).randombytes_buf(16);
 
-  const timestamp = Math.floor(getNowWithNetworkOffset() / 1000);
+  const timestamp = Math.floor(GetNetworkTime.getNowWithNetworkOffset() / 1000);
   return SogsBlinding.getOpenGroupHeaders({
     signingKeys,
     serverPK: fromHexToArray(serverPublicKey),

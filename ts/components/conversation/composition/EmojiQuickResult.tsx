@@ -1,13 +1,14 @@
 import React from 'react';
 import { SuggestionDataItem } from 'react-mentions';
 import styled from 'styled-components';
-// @ts-ignore
 import { SearchIndex } from 'emoji-mart';
+// eslint-disable-next-line import/extensions
 import { searchSync } from '../../../util/emoji.js';
 
 const EmojiQuickResult = styled.span`
   display: flex;
   align-items: center;
+  min-width: 250px;
   width: 100%;
   padding-inline-end: 20px;
   padding-inline-start: 10px;

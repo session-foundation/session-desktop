@@ -1,7 +1,10 @@
+// eslint:disable: no-require-imports no-var-requires
 const { clipboard, ipcRenderer, webFrame } = require('electron/main');
 const { Storage } = require('./ts/util/storage');
 
 const url = require('url');
+
+const _ = require('lodash');
 
 const config = url.parse(window.location.toString(), true).query;
 const configAny = config;
@@ -13,7 +16,6 @@ if (config.environment !== 'production') {
 if (config.appInstance) {
   title += ` - ${config.appInstance}`;
 }
-// tslint:disable: no-require-imports no-var-requires
 
 window.platform = process.platform;
 window.getTitle = () => title;
@@ -29,8 +31,13 @@ window.sessionFeatureFlags = {
   useTestNet: Boolean(
     process.env.NODE_APP_INSTANCE && process.env.NODE_APP_INSTANCE.includes('testnet')
   ),
-  useSettingsThemeSwitcher: true,
+  integrationTestEnv: Boolean(
+    process.env.NODE_APP_INSTANCE && process.env.NODE_APP_INSTANCE.includes('test-integration')
+  ),
+  useClosedGroupV3: false || process.env.USE_CLOSED_GROUP_V3,
   debug: {
+    debugLogging: !_.isEmpty(process.env.SESSION_DEBUG),
+    debugLibsessionDumps: !_.isEmpty(process.env.SESSION_DEBUG_LIBSESSION_DUMPS),
     debugFileServerRequests: false,
     debugNonSnodeRequests: false,
     debugOnionRequests: false,
@@ -236,7 +243,6 @@ const { getConversationController } = require('./ts/session/conversations/Conver
 window.getConversationController = getConversationController;
 // Linux seems to periodically let the event loop stop, so this is a global workaround
 setInterval(() => {
-  // tslint:disable-next-line: no-empty
   window.nodeSetImmediate(() => {});
 }, 1000);
 
@@ -247,11 +253,12 @@ window.clipboard = clipboard;
 
 window.getSeedNodeList = () =>
   window.sessionFeatureFlags.useTestNet
-    ? ['http://public.loki.foundation:38157']
+    ? ['http://seed2.getsession.org:38157']
     : [
-        'https://storage.seed1.loki.network:4433/',
-        'https://storage.seed3.loki.network:4433/',
-        'https://public.loki.foundation:4433/',
+        // Note: for each of the seed nodes, the cert pinned is the one provided on the port 4443 and not the 4433, because the 4443 is a 10year one
+        'https://seed1.getsession.org:4443/',
+        'https://seed2.getsession.org:4443/',
+        'https://seed3.getsession.org:4443/',
       ];
 
 const { locale: localFromEnv } = config;

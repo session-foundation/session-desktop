@@ -1,11 +1,13 @@
 import styled from 'styled-components';
+import { HTMLDirection } from '../../util/i18n';
 
 export interface FlexProps {
   children?: any;
   className?: string;
   container?: boolean;
-  /****** Container Props ********/
-  flexDirection?: 'row' | 'column';
+  dataTestId?: string;
+  // Container Props
+  flexDirection?: 'row' | 'row-reverse' | 'column' | 'column-reverse';
   justifyContent?:
     | 'flex-start'
     | 'flex-end'
@@ -23,11 +25,11 @@ export interface FlexProps {
     | 'baseline'
     | 'initial'
     | 'inherit';
-  /****** Child Props ********/
+  // Child Props
   flexGrow?: number;
   flexShrink?: number;
   flexBasis?: number;
-  /****** Common Layout Props ********/
+  // Common Layout Props
   padding?: string;
   margin?: string;
   width?: string;
@@ -35,6 +37,8 @@ export interface FlexProps {
   maxWidth?: string;
   minWidth?: string;
   maxHeight?: string;
+  // RTL support
+  dir?: HTMLDirection;
 }
 
 export const Flex = styled.div<FlexProps>`
@@ -52,4 +56,5 @@ export const Flex = styled.div<FlexProps>`
   height: ${props => props.height || 'auto'};
   max-width: ${props => props.maxWidth || 'none'};
   min-width: ${props => props.minWidth || 'none'};
+  direction: ${props => props.dir || undefined};
 `;

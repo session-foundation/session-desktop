@@ -1,17 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { MouseEvent, useState } from 'react';
+import { QRCode } from 'react-qr-svg';
+import { useDispatch } from 'react-redux';
+import useMount from 'react-use/lib/useMount';
+import styled from 'styled-components';
 
+import { Data } from '../../data/data';
 import { ToastUtils } from '../../session/utils';
 import { matchesHash } from '../../util/passwordUtils';
-import { Data } from '../../data/data';
-import { QRCode } from 'react-qr-svg';
-import { mn_decode } from '../../session/crypto/mnemonic';
-import { SpacerSM } from '../basic/Text';
+
+import { mnDecode } from '../../session/crypto/mnemonic';
 import { recoveryPhraseModal } from '../../state/ducks/modalDialog';
-import { useDispatch } from 'react-redux';
-import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
-import { SessionWrapperModal } from '../SessionWrapperModal';
+import { SpacerSM } from '../basic/Text';
+
+import { saveQRCode } from '../../util/saveQRCode';
 import { getCurrentRecoveryPhrase } from '../../util/storage';
-import styled from 'styled-components';
+import { SessionWrapperModal } from '../SessionWrapperModal';
+import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 
 interface PasswordProps {
   setPasswordValid: (val: boolean) => any;
@@ -90,14 +94,24 @@ interface SeedProps {
   onClickCopy?: () => any;
 }
 
-const StyledRecoveryPhrase = styled.i`
-  margin-bottom: var(--margins-md);
-`;
+const StyledRecoveryPhrase = styled.i``;
 
 const StyledQRImage = styled.div`
   width: fit-content;
-  margin: 0 auto;
+  margin: 0 auto var(--margins-lg);
+  cursor: pointer;
 `;
+
+const handleSaveQRCode = (event: MouseEvent) => {
+  event.preventDefault();
+  saveQRCode(
+    'session-recovery-phrase',
+    '220px',
+    '220px',
+    'var(--white-color)',
+    'var(--black-color)'
+  );
+};
 
 const Seed = (props: SeedProps) => {
   const { recoveryPhrase, onClickCopy } = props;
@@ -106,7 +120,7 @@ const Seed = (props: SeedProps) => {
   const fgColor = 'var(--black-color)';
   const dispatch = useDispatch();
 
-  const hexEncodedSeed = mn_decode(recoveryPhrase, 'english');
+  const hexEncodedSeed = mnDecode(recoveryPhrase, 'english');
 
   const copyRecoveryPhrase = (recoveryPhraseToCopy: string) => {
     window.clipboard.writeText(recoveryPhraseToCopy);
@@ -132,6 +146,15 @@ const Seed = (props: SeedProps) => {
           {i18n('recoveryPhraseSavePromptMain')}
         </p>
 
+        <StyledQRImage
+          aria-label={window.i18n('clickToTrustContact')}
+          title={window.i18n('clickToTrustContact')}
+          className="qr-image"
+          onClick={handleSaveQRCode}
+        >
+          <QRCode value={hexEncodedSeed} bgColor={bgColor} fgColor={fgColor} level="L" />
+        </StyledQRImage>
+
         <StyledRecoveryPhrase
           data-testid="recovery-phrase-seed-modal"
           className="session-modal__text-highlight"
@@ -139,9 +162,6 @@ const Seed = (props: SeedProps) => {
           {recoveryPhrase}
         </StyledRecoveryPhrase>
       </div>
-      <StyledQRImage className="qr-image">
-        <QRCode value={hexEncodedSeed} bgColor={bgColor} fgColor={fgColor} level="L" />
-      </StyledQRImage>
       <div
         className="session-modal__button-group"
         style={{ justifyContent: 'center', width: '100%' }}
@@ -176,43 +196,40 @@ const SessionSeedModalInner = (props: ModalInnerProps) => {
   const [passwordHash, setPasswordHash] = useState('');
   const dispatch = useDispatch();
 
-  useEffect(() => {
+  useMount(() => {
+    async function checkHasPassword() {
+      if (!loadingPassword) {
+        return;
+      }
+
+      const hash = await Data.getPasswordHash();
+      setHasPassword(!!hash);
+      setPasswordHash(hash || '');
+      setLoadingPassword(false);
+    }
+    async function getRecoveryPhrase() {
+      if (recoveryPhrase) {
+        return false;
+      }
+      const newRecoveryPhrase = getCurrentRecoveryPhrase();
+      setRecoveryPhrase(newRecoveryPhrase);
+      setLoadingSeed(false);
+
+      return true;
+    }
+
     setTimeout(() => (document.getElementById('seed-input-password') as any)?.focus(), 100);
     void checkHasPassword();
     void getRecoveryPhrase();
-  }, []);
-
-  const i18n = window.i18n;
+  });
 
   const onClose = () => dispatch(recoveryPhraseModal(null));
-
-  const checkHasPassword = async () => {
-    if (!loadingPassword) {
-      return;
-    }
-
-    const hash = await Data.getPasswordHash();
-    setHasPassword(!!hash);
-    setPasswordHash(hash || '');
-    setLoadingPassword(false);
-  };
-
-  const getRecoveryPhrase = async () => {
-    if (recoveryPhrase) {
-      return false;
-    }
-    const newRecoveryPhrase = getCurrentRecoveryPhrase();
-    setRecoveryPhrase(newRecoveryPhrase);
-    setLoadingSeed(false);
-
-    return true;
-  };
 
   return (
     <>
       {!loadingSeed && (
         <SessionWrapperModal
-          title={i18n('showRecoveryPhrase')}
+          title={window.i18n('showRecoveryPhrase')}
           onClose={onClose}
           showExitIcon={true}
         >

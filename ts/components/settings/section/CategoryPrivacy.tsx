@@ -1,7 +1,7 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import React from 'react';
-// tslint:disable-next-line: no-submodule-imports
+
 import useUpdate from 'react-use/lib/useUpdate';
-import { Data, hasLinkPreviewPopupBeenDisplayed } from '../../../data/data';
 import { SettingsKey } from '../../../data/settings-key';
 import { ConversationTypeEnum } from '../../../models/conversationAttributes';
 import { updateConfirmModal } from '../../../state/ducks/modalDialog';
@@ -9,22 +9,35 @@ import { SessionButtonColor } from '../../basic/SessionButton';
 import { SpacerLG } from '../../basic/Text';
 import { TypingBubble } from '../../conversation/TypingBubble';
 
+import { UserUtils } from '../../../session/utils';
+import { ConfigurationSync } from '../../../session/utils/job_runners/jobs/ConfigurationSyncJob';
+import { SessionUtilUserProfile } from '../../../session/utils/libsession/libsession_utils_user_profile';
+import {
+  useHasBlindedMsgRequestsEnabled,
+  useHasLinkPreviewEnabled,
+} from '../../../state/selectors/settings';
+import { Storage } from '../../../util/storage';
 import { SessionSettingButtonItem, SessionToggleWithDescription } from '../SessionSettingListItem';
 import { displayPasswordModal } from '../SessionSettings';
 
-async function toggleLinkPreviews() {
-  const newValue = !window.getSettingValue(SettingsKey.settingsLinkPreview);
-  await window.setSettingValue(SettingsKey.settingsLinkPreview, newValue);
-  if (!newValue) {
-    await Data.createOrUpdateItem({ id: hasLinkPreviewPopupBeenDisplayed, value: false });
-  } else {
+async function toggleLinkPreviews(isToggleOn: boolean, forceUpdate: () => void) {
+  if (!isToggleOn) {
     window.inboxStore?.dispatch(
       updateConfirmModal({
         title: window.i18n('linkPreviewsTitle'),
         message: window.i18n('linkPreviewsConfirmMessage'),
         okTheme: SessionButtonColor.Danger,
+        onClickOk: async () => {
+          const newValue = !isToggleOn;
+          await window.setSettingValue(SettingsKey.settingsLinkPreview, newValue);
+          forceUpdate();
+        },
       })
     );
+  } else {
+    await window.setSettingValue(SettingsKey.settingsLinkPreview, false);
+    await Storage.put(SettingsKey.hasLinkPreviewPopupBeenDisplayed, false);
+    forceUpdate();
   }
 }
 
@@ -42,7 +55,8 @@ export const SettingsCategoryPrivacy = (props: {
   onPasswordUpdated: (action: string) => void;
 }) => {
   const forceUpdate = useUpdate();
-  const isLinkPreviewsOn = Boolean(window.getSettingValue(SettingsKey.settingsLinkPreview));
+  const isLinkPreviewsOn = useHasLinkPreviewEnabled();
+  const areBlindedRequestsEnabled = useHasBlindedMsgRequestsEnabled();
 
   if (props.hasPassword !== null) {
     return (
@@ -56,6 +70,7 @@ export const SettingsCategoryPrivacy = (props: {
           title={window.i18n('readReceiptSettingTitle')}
           description={window.i18n('readReceiptSettingDescription')}
           active={window.getSettingValue(SettingsKey.settingsReadReceipt)}
+          dataTestId="enable-read-receipts"
         />
         <SessionToggleWithDescription
           onClickToggle={async () => {
@@ -69,13 +84,26 @@ export const SettingsCategoryPrivacy = (props: {
           childrenDescription={<TypingBubbleItem />}
         />
         <SessionToggleWithDescription
-          onClickToggle={async () => {
-            await toggleLinkPreviews();
-            forceUpdate();
+          onClickToggle={() => {
+            void toggleLinkPreviews(isLinkPreviewsOn, forceUpdate);
           }}
           title={window.i18n('linkPreviewsTitle')}
           description={window.i18n('linkPreviewDescription')}
           active={isLinkPreviewsOn}
+        />
+        <SessionToggleWithDescription
+          onClickToggle={async () => {
+            const toggledValue = !areBlindedRequestsEnabled;
+            await window.setSettingValue(SettingsKey.hasBlindedMsgRequestsEnabled, toggledValue);
+            await SessionUtilUserProfile.insertUserProfileIntoWrapper(
+              UserUtils.getOurPubKeyStrFromCache()
+            );
+            await ConfigurationSync.queueNewJobIfNeeded();
+            forceUpdate();
+          }}
+          title={window.i18n('blindedMsgReqsSettingTitle')}
+          description={window.i18n('blindedMsgReqsSettingDesc')}
+          active={areBlindedRequestsEnabled}
         />
 
         {!props.hasPassword && (

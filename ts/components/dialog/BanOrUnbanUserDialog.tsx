@@ -1,31 +1,25 @@
 import React, { useRef, useState } from 'react';
-import { PubKey } from '../../session/types';
-import { ToastUtils } from '../../session/utils';
-import { Flex } from '../basic/Flex';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  BanType,
-  updateBanOrUnbanUserModal,
-  updateServerBanOrUnbanUserModal
-} from '../../state/ducks/modalDialog';
-import { SpacerSM } from '../basic/Text';
-import { getConversationController } from '../../session/conversations/ConversationController';
-import { SessionWrapperModal } from '../SessionWrapperModal';
-import { SessionSpinner } from '../basic/SessionSpinner';
-import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
-import { ConversationModel } from '../../models/conversation';
 import { useFocusMount } from '../../hooks/useFocusMount';
 import { useConversationPropsById } from '../../hooks/useParamSelector';
+import { ConversationModel } from '../../models/conversation';
 import {
   sogsV3BanUser,
   sogsV3ServerBanUser,
   sogsV3ServerUnbanUser,
   sogsV3UnbanUser
 } from '../../session/apis/open_group_api/sogsv3/sogsV3BanUnban';
-import { SessionHeaderSearchInput } from '../SessionHeaderSearchInput';
+import { getConversationController } from '../../session/conversations/ConversationController';
+import { PubKey } from '../../session/types';
+import { ToastUtils } from '../../session/utils';
+import { BanType, updateBanOrUnbanUserModal, updateServerBanOrUnbanUserModal } from '../../state/ducks/modalDialog';
 import { isDarkTheme } from '../../state/selectors/theme';
-
-// tslint:disable: use-simple-attributes
+import { SessionHeaderSearchInput } from '../SessionHeaderSearchInput';
+import { SessionWrapperModal } from '../SessionWrapperModal';
+import { Flex } from '../basic/Flex';
+import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
+import { SessionSpinner } from '../basic/SessionSpinner';
+import { SpacerSM } from '../basic/Text';
 
 async function banOrUnBanUserCall(
   convo: ConversationModel,
@@ -55,17 +49,16 @@ async function banOrUnBanUserCall(
 
     if (!isChangeApplied) {
       window?.log?.warn(`failed to ${banType} user: ${isChangeApplied}`);
-
-      banType === 'ban'
-	? isGlobal
-	  ? ToastUtils.pushGlobalUserBanFailure()
-	  : ToastUtils.pushUserBanFailure()
-	: isGlobal
-	  ? ToastUtils.pushGlobalUserUnbanFailure()
-	  : ToastUtils.pushUserUnbanFailure();
+      switch (`${banType}-${isGlobal ? 'global' : 'local'}` as `${BanType}-${'global'|'local'}`) {
+        case 'ban-local': ToastUtils.pushUserBanFailure(); break;
+        case 'ban-global': ToastUtils.pushGlobalUserBanFailure(); break;
+        case 'unban-local': ToastUtils.pushUserUnbanFailure(); break;
+        case 'unban-global': ToastUtils.pushGlobalUserUnbanFailure(); break;
+      }
       return false;
     }
     window?.log?.info(`${pubkey.key} user ${banType}ned successfully...`);
+    // eslint-disable-next-line no-unused-expressions
     banType === 'ban' ? ToastUtils.pushUserBanSuccess() : ToastUtils.pushUserUnbanSuccess();
     return true;
   } catch (e) {

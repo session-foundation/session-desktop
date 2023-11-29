@@ -1,13 +1,14 @@
-import { SessionIconButton } from '../icon';
-import { animation, contextMenu, Item, Menu } from 'react-contexify';
+import React, { useEffect, useState } from 'react';
+import { contextMenu, Item, Menu } from 'react-contexify';
+import { useDispatch, useSelector } from 'react-redux';
+import styled from 'styled-components';
+
+import { CallManager, ToastUtils } from '../../session/utils';
 import { InputItem } from '../../session/utils/calling/CallManager';
 import { setFullScreenCall } from '../../state/ducks/call';
-import { CallManager, ToastUtils } from '../../session/utils';
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { getHasOngoingCallWithPubkey } from '../../state/selectors/call';
+import { SessionIconButton } from '../icon';
 import { DropDownAndToggleButton } from '../icon/DropDownAndToggleButton';
-import styled from 'styled-components';
 import { SessionContextMenuContainer } from '../SessionContextMenuContainer';
 
 const VideoInputMenu = ({
@@ -19,7 +20,7 @@ const VideoInputMenu = ({
 }) => {
   return (
     <SessionContextMenuContainer>
-      <Menu id={triggerId} animation={animation.fade}>
+      <Menu id={triggerId} animation="fade">
         {camerasList.map(m => {
           return (
             <Item
@@ -92,7 +93,7 @@ const AudioInputMenu = ({
 }) => {
   return (
     <SessionContextMenuContainer>
-      <Menu id={triggerId} animation={animation.fade}>
+      <Menu id={triggerId} animation="fade">
         {audioInputsList.map(m => {
           return (
             <Item
@@ -161,7 +162,7 @@ const AudioOutputMenu = ({
 }) => {
   return (
     <SessionContextMenuContainer>
-      <Menu id={triggerId} animation={animation.fade}>
+      <Menu id={triggerId} animation="fade">
         {audioOutputsList.map(m => {
           return (
             <Item
@@ -281,8 +282,10 @@ export const HangUpButton = ({ isFullScreen }: { isFullScreen: boolean }) => {
         iconType="hangup"
         iconColor="var(--danger-color)"
         borderRadius="50%"
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onClick={handleEndCall}
         margin="10px"
+        dataTestId="end-call"
       />
     </StyledCallActionButton>
   );
@@ -327,7 +330,7 @@ const handleSpeakerToggle = async (
   isAudioOutputMuted: boolean
 ) => {
   if (!currentConnectedAudioOutputs.length) {
-    ToastUtils.pushNoAudioInputFound();
+    ToastUtils.pushNoAudioOutputFound();
 
     return;
   }
