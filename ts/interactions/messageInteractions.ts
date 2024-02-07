@@ -4,6 +4,9 @@ import {
   sogsV3RemoveAdmins,
 } from '../session/apis/open_group_api/sogsv3/sogsV3AddRemoveMods';
 import {
+  OpenGroupPermissionType, sogsV3AddPermissions, sogsV3ClearPermissions
+} from '../session/apis/open_group_api/sogsv3/sogsV3UserPermissions'
+import {
   isOpenGroupV2,
   openGroupV2CompleteURLRegex,
 } from '../session/apis/open_group_api/utils/OpenGroupUtils';
@@ -101,6 +104,48 @@ export async function addSenderAsModerator(sender: string, convoId: string) {
     }
   } catch (e) {
     window?.log?.error('Got error while adding moderator:', e);
+  }
+}
+
+export async function addUserPermissions(sender: string, convoId: string, permissions: Array<OpenGroupPermissionType>) {
+  try {
+    const user = PubKey.cast(sender);
+    const convo = getConversationController().getOrThrow(convoId);
+
+    const roomInfo = convo.toOpenGroupV2();
+    const res = await sogsV3AddPermissions([user], roomInfo, permissions);
+    if (!res) {
+      window?.log?.warn('failed to add user permissions:', res);
+
+      ToastUtils.pushFailedToChangeUserPermissions();
+    } else {
+      window?.log?.info(`${user.key} given permissions ${permissions.join(", ")}...`);
+      ToastUtils.pushUserPermissionsChanged();
+    }
+  } catch (e) {
+    window?.log?.error('Got error while adding user permissions:', e);
+    ToastUtils.pushFailedToChangeUserPermissions();
+  }
+}
+
+export async function clearUserPermissions(sender: string, convoId: string, permissions: Array<OpenGroupPermissionType>) {
+  try {
+    const user = PubKey.cast(sender);
+    const convo = getConversationController().getOrThrow(convoId);
+
+    const roomInfo = convo.toOpenGroupV2();
+    const res = await sogsV3ClearPermissions([user], roomInfo, permissions);
+    if (!res) {
+      window?.log?.warn('failed to add user permissions:', res);
+
+      ToastUtils.pushFailedToChangeUserPermissions();
+    } else {
+      window?.log?.info(`${user.key} given permissions ${permissions.join(", ")}...`);
+      ToastUtils.pushUserPermissionsChanged();
+    }
+  } catch (e) {
+    window?.log?.error('Got error while clearing user permissions:', e);
+    ToastUtils.pushFailedToChangeUserPermissions();
   }
 }
 

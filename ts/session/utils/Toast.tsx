@@ -250,6 +250,14 @@ export function pushUserRemovedFromModerators() {
   pushToastSuccess('userRemovedFromModerators', window.i18n('userRemovedFromModerators'));
 }
 
+export function pushFailedToChangeUserPermissions() {
+  pushToastWarning('failedToChangeUserPermissions', window.i18n('failedToChangeUserPermissions'));
+}
+
+export function pushUserPermissionsChanged() {
+  pushToastSuccess('userPermissionsChanged', window.i18n('userPermissionsChanged'));
+}
+
 export function pushInvalidPubKey() {
   pushToastSuccess('invalidPubKey', window.i18n('invalidPubkeyFormat'));
 }
