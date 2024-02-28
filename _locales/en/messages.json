@@ -260,7 +260,7 @@
   "serverBanUserAndDeleteAll": "Ban from Server and Delete All",
   "userBanned": "Banned successfully",
   "userBanFailed": "Ban failed!",
-  "GlobalUserBanFailed": "Ban failed! Are you a global admin/mod?",
+  "globalUserBanFailed": "Ban failed! Are you a global admin/mod?",
   "leaveGroup": "Leave Group",
   "leaveAndRemoveForEveryone": "Leave Group and Remove for Everyone",
   "leaveGroupConfirmation": "Are you sure you want to leave this group?",
