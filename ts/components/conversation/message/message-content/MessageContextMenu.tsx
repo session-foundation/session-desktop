@@ -148,6 +148,20 @@ const AdminActionItems = ({ messageId }: MessageId) => {
     MessageInteraction.serverUnbanUser(sender, convoId);
   }
 
+  const addUploadPermission = () => {
+    MessageInteraction.addUserPermissions(sender, convoId, ['upload']);
+  }
+
+  const clearUploadPermission = () => {
+    MessageInteraction.clearUserPermissions(sender, convoId, ['upload']);
+  }
+
+  // TODO: This codebase is a pain.
+  // Fixed to `true`.
+  const isRoomUploadRestricted = true;
+  const canSenderUpload = true;
+  const canSenderNotUpload = true;
+
   return showAdminActions ? (
     <>
       <Item onClick={onBan}>{window.i18n('banUser')}</Item>
@@ -159,6 +173,16 @@ const AdminActionItems = ({ messageId }: MessageId) => {
       )}
       <Item onClick={onServerBan}>{window.i18n('serverBanUser')}</Item>
       <Item onClick={onServerUnban}>{window.i18n('serverUnbanUser')}</Item>
+      {isPublic && !isSenderAdmin && isRoomUploadRestricted &&
+        <>
+        {canSenderUpload && (
+          <Item onClick={addUploadPermission}>{window.i18n('addUploadPermission')}</Item>
+        )}
+        {canSenderNotUpload && (
+          <Item onClick={clearUploadPermission}>{window.i18n('clearUploadPermission')}</Item>
+        )}
+        </>
+      }
     </>
   ) : null;
 };

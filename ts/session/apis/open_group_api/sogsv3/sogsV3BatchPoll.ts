@@ -10,6 +10,8 @@ import {
   OpenGroupRequestHeaders,
 } from '../opengroupV2/OpenGroupPollingUtils';
 import { addJsonContentTypeToHeaders } from './sogsV3SendMessage';
+import { OpenGroupPermissionType } from './sogsV3UserPermissions';
+import { hasDuplicates } from '../../../../shared/array_utils';
 
 type BatchFetchRequestOptions = {
   method: 'POST' | 'PUT' | 'GET' | 'DELETE';
@@ -225,6 +227,17 @@ export type SubRequestDeleteReactionType = {
   };
 };
 
+export type SubRequestUpdateUserRoomPermissionsType = {
+  type: 'updateRoomUserPerms',
+  updateUserRoomPerms: {
+    sessionId: string;
+    roomId: string;
+    permsToAdd?: OpenGroupPermissionType[],
+    permsToRemove?: OpenGroupPermissionType[]
+    permsToClear?: OpenGroupPermissionType[],
+  }
+}
+
 export type OpenGroupBatchRow =
   | SubRequestCapabilitiesType
   | SubRequestMessagesType
@@ -237,7 +250,36 @@ export type OpenGroupBatchRow =
   | SubRequestDeleteAllUserPostsType
   | SubRequestDeleteAllUserServerPostsType
   | SubRequestUpdateRoomType
-  | SubRequestDeleteReactionType;
+  | SubRequestDeleteReactionType
+  | SubRequestUpdateUserRoomPermissionsType;
+
+type OpenGroupPermissionSelection<Prefix extends string=""> = {
+  [permission in `${Prefix}${OpenGroupPermissionType}`]?: boolean;
+};
+
+function makePermissionSelection<const Prefix extends string> (
+  permissions: OpenGroupPermissionType[] | undefined,
+  choice: boolean,
+  prefix: Prefix
+): OpenGroupPermissionSelection<typeof prefix>;
+
+function makePermissionSelection (
+  permissions: OpenGroupPermissionType[] | undefined,
+  choice: boolean
+): OpenGroupPermissionSelection;
+
+function makePermissionSelection (
+  permissions: OpenGroupPermissionType[] | undefined,
+  choice: boolean,
+  prefix: string = ""
+): OpenGroupPermissionSelection {
+  return permissions?.reduce(
+    ( aggregatePermissions, newPermission ) => ({
+      ...aggregatePermissions,
+      [`${prefix}${newPermission}`]: choice
+    }), {}
+  ) ?? {};
+}
 
 /**
  *
@@ -367,6 +409,23 @@ const makeBatchRequestPayload = (
       return {
         method: 'DELETE',
         path: `/room/${options.deleteReaction.roomId}/reactions/${options.deleteReaction.messageId}/${options.deleteReaction.reaction}`,
+      };
+    case 'updateRoomUserPerms':
+      if (hasDuplicates([
+        ...options.updateUserRoomPerms.permsToAdd ?? [],
+        ...options.updateUserRoomPerms.permsToRemove ?? [],
+        ...options.updateUserRoomPerms.permsToClear ?? []
+      ])) {
+        throw new Error("Cannot change the same permission in more than one way");
+      }
+      return {
+        method: 'POST',
+        path: `/room/${options.updateUserRoomPerms.roomId}/permissions/${options.updateUserRoomPerms.sessionId}`,
+        json: ({
+          ...makePermissionSelection(options.updateUserRoomPerms.permsToAdd, true),
+          ...makePermissionSelection(options.updateUserRoomPerms.permsToRemove, false),
+          ...makePermissionSelection(options.updateUserRoomPerms.permsToClear, true, "default_"),
+        })
       };
     default:
       assertUnreachable(type, 'Invalid batch request row');
