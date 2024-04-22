@@ -140,6 +140,14 @@ const AdminActionItems = ({ messageId }: MessageId) => {
     MessageInteraction.unbanUser(sender, convoId);
   };
 
+  const onServerBan = () => {
+    MessageInteraction.serverBanUser(sender, convoId);
+  }
+
+  const onServerUnban = () => {
+    MessageInteraction.serverUnbanUser(sender, convoId);
+  }
+
   return showAdminActions ? (
     <>
       <Item onClick={onBan}>{window.i18n('banUser')}</Item>
@@ -149,6 +157,8 @@ const AdminActionItems = ({ messageId }: MessageId) => {
       ) : (
         <Item onClick={addModerator}>{window.i18n('addAsModerator')}</Item>
       )}
+      <Item onClick={onServerBan}>{window.i18n('serverBanUser')}</Item>
+      <Item onClick={onServerUnban}>{window.i18n('serverUnbanUser')}</Item>
     </>
   ) : null;
 };

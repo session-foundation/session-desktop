@@ -14,6 +14,7 @@ import {
   getReactListDialog,
   getRecoveryPhraseDialog,
   getRemoveModeratorsModal,
+  getServerBanOrUnbanUserModalState,
   getSessionPasswordDialog,
   getUpdateGroupMembersModal,
   getUpdateGroupNameModal,
@@ -32,7 +33,7 @@ import { RemoveModeratorsDialog } from './ModeratorsRemoveDialog';
 import { UpdateGroupMembersDialog } from './UpdateGroupMembersDialog';
 import { UpdateGroupNameDialog } from './UpdateGroupNameDialog';
 import { SessionNicknameDialog } from './SessionNicknameDialog';
-import { BanOrUnBanUserDialog } from './BanOrUnbanUserDialog';
+import { BanOrUnBanUserDialog, ServerBanOrUnBanUserDialog } from './BanOrUnbanUserDialog';
 import { ReactListModal } from './ReactListModal';
 import { ReactClearAllModal } from './ReactClearAllModal';
 import { EditProfilePictureModal } from './EditProfilePictureModal';
@@ -52,6 +53,7 @@ export const ModalContainer = () => {
   const sessionPasswordModalState = useSelector(getSessionPasswordDialog);
   const deleteAccountModalState = useSelector(getDeleteAccountModalState);
   const banOrUnbanUserModalState = useSelector(getBanOrUnbanUserModalState);
+  const serverBanOrUnbanUserModalState = useSelector(getServerBanOrUnbanUserModalState);
   const reactListModalState = useSelector(getReactListDialog);
   const reactClearAllModalState = useSelector(getReactClearAllDialog);
   const editProfilePictureModalState = useSelector(getEditProfilePictureModalState);
@@ -59,6 +61,7 @@ export const ModalContainer = () => {
   return (
     <>
       {banOrUnbanUserModalState && <BanOrUnBanUserDialog {...banOrUnbanUserModalState} />}
+      {serverBanOrUnbanUserModalState && <ServerBanOrUnBanUserDialog {...serverBanOrUnbanUserModalState} />}
       {inviteModalState && <InviteContactsDialog {...inviteModalState} />}
       {addModeratorsModalState && <AddModeratorsDialog {...addModeratorsModalState} />}
       {removeModeratorsModalState && <RemoveModeratorsDialog {...removeModeratorsModalState} />}

@@ -26,6 +26,8 @@ import {
   NotificationForConvoMenuItem,
   ShowUserDetailsMenuItem,
   UnbanMenuItem,
+  ServerBanMenuItem,
+  ServerUnbanMenuItem,
 } from './Menu';
 
 export type PropsContextConversationItem = {
@@ -62,6 +64,8 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
         {/* Communities actions */}
         <BanMenuItem />
         <UnbanMenuItem />
+        <ServerBanMenuItem />
+        <ServerUnbanMenuItem />
         <InviteContactMenuItem />
         <DeleteMessagesMenuItem />
         <DeletePrivateConversationMenuItem />

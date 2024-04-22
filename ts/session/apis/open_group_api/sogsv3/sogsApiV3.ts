@@ -557,6 +557,7 @@ export const handleBatchPollResults = async (
         case 'deleteMessage':
         case 'banUnbanUser':
         case 'deleteAllPosts':
+        case 'deleteAllUserPosts':
         case 'updateRoom':
         case 'deleteReaction':
           // we do nothing for all of those, but let's make sure if we ever add something batch polled for, we include it's handling here.
