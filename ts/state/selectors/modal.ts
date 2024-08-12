@@ -1,6 +1,5 @@
 import { createSelector } from '@reduxjs/toolkit';
 
-import { StateType } from '../reducer';
 import {
   AddModeratorsModalState,
   BanOrUnbanUserModalState,
@@ -9,11 +8,13 @@ import {
   DeleteAccountModalState,
   EditProfileModalState,
   EditProfilePictureModalState,
+  EnterPasswordModalState,
+  HideRecoveryPasswordModalState,
   InviteContactModalState,
+  LightBoxOptions,
   ModalState,
   OnionPathModalState,
   ReactModalsState,
-  RecoveryPhraseModalState,
   RemoveModeratorsModalState,
   ServerBanOrUnbanUserModalState,
   SessionPasswordModalState,
@@ -21,10 +22,22 @@ import {
   UpdateGroupNameModalState,
   UserDetailsModalState,
 } from '../ducks/modalDialog';
+import { StateType } from '../reducer';
 
 export const getModal = (state: StateType): ModalState => {
   return state.modals;
 };
+
+export const getIsModalVisble = createSelector(getModal, (state: ModalState): boolean => {
+  const modalValues = Object.values(state);
+  for (let i = 0; i < modalValues.length; i++) {
+    if (modalValues[i] !== null) {
+      return true;
+    }
+  }
+
+  return false;
+});
 
 export const getConfirmModal = createSelector(
   getModal,
@@ -86,9 +99,9 @@ export const getOnionPathDialog = createSelector(
   (state: ModalState): OnionPathModalState => state.onionPathModal
 );
 
-export const getRecoveryPhraseDialog = createSelector(
+export const getEnterPasswordModalState = createSelector(
   getModal,
-  (state: ModalState): RecoveryPhraseModalState => state.recoveryPhraseModal
+  (state: ModalState): EnterPasswordModalState => state.enterPasswordModal
 );
 
 export const getSessionPasswordDialog = createSelector(
@@ -114,4 +127,14 @@ export const getReactClearAllDialog = createSelector(
 export const getEditProfilePictureModalState = createSelector(
   getModal,
   (state: ModalState): EditProfilePictureModalState => state.editProfilePictureModalState
+);
+
+export const getHideRecoveryPasswordModalState = createSelector(
+  getModal,
+  (state: ModalState): HideRecoveryPasswordModalState => state.hideRecoveryPasswordModalState
+);
+
+export const getLightBoxOptions = createSelector(
+  getModal,
+  (state: ModalState): LightBoxOptions => state.lightBoxOptions
 );

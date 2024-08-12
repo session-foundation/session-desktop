@@ -1,4 +1,3 @@
-import React from 'react';
 import { toast } from 'react-toastify';
 import { SessionToast, SessionToastType } from '../../components/basic/SessionToast';
 import { SectionType, showLeftPaneSection, showSettingsSection } from '../../state/ducks/section';
@@ -250,7 +249,7 @@ export function pushUserPermissionsChanged() {
 }
 
 export function pushInvalidPubKey() {
-  pushToastSuccess('invalidPubKey', window.i18n('invalidPubkeyFormat'));
+  pushToastSuccess('invalidPubKey', window.i18n('accountIdErrorInvalid'));
 }
 
 export function pushNoCameraFound() {

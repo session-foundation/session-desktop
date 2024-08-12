@@ -5,7 +5,7 @@
 
 import AbortController from 'abort-controller';
 import { PubKey } from '../../../types';
-import { OpenGroupRequestCommonType } from '../opengroupV2/ApiUtil';
+import { OpenGroupRequestCommonType } from '../../../../data/types';
 import { sogsBatchSend } from './sogsV3BatchPoll';
 
 export type OpenGroupPermissionType = 'access' | 'read' | 'upload' | 'write';
