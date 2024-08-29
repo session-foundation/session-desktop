@@ -20,6 +20,7 @@ import {
 
 import crypto from 'crypto';
 import fs from 'fs';
+import { copyFile, appendFile } from 'node:fs/promises';
 import os from 'os';
 import path, { join } from 'path';
 import { platform as osPlatform } from 'process';
@@ -77,7 +78,7 @@ import { initAttachmentsChannel } from '../node/attachment_channel';
 import * as updater from '../updater/index'; // checked - only node
 
 import { ephemeralConfig } from '../node/config/ephemeral_config'; // checked - only node
-import { getLogger, initializeLogger } from '../node/logging'; // checked - only node
+import { getLoggerFilePath, getLogger, initializeLogger } from '../node/logging'; // checked - only node
 import { createTemplate } from '../node/menu'; // checked - only node
 import { installPermissionsHandler } from '../node/permissions'; // checked - only node
 import { installFileHandler, installWebHandler } from '../node/protocol_filter'; // checked - only node
@@ -648,79 +649,37 @@ async function showAbout() {
   aboutWindow?.show();
 }
 
-let debugLogWindow: BrowserWindow | null = null;
-async function showDebugLogWindow() {
-  if (debugLogWindow) {
-    debugLogWindow.show();
-    return;
-  }
-
-  if (!mainWindow) {
-    console.info('debug log needs mainwindow size to open');
-    return;
-  }
-
-  const theme = await getThemeFromMainWindow();
-  const size = mainWindow.getSize();
-  const options = {
-    width: Math.max(size[0] - 100, getDefaultWindowSize().minWidth),
-    height: Math.max(size[1] - 100, getDefaultWindowSize().minHeight),
-    resizable: true,
-    title: locale.messages.debugLog,
-    autoHideMenuBar: true,
-    backgroundColor: classicDark['--background-primary-color'],
-    shadow: true,
-    show: false,
-    modal: true,
-    webPreferences: {
-      nodeIntegration: true,
-      nodeIntegrationInWorker: false,
-      contextIsolation: false,
-      preload: path.join(getAppRootPath(), 'debug_log_preload.js'),
-      nativeWindowOpen: true,
-    },
-    parent: mainWindow,
-  };
-
-  debugLogWindow = new BrowserWindow(options);
-
-  captureClicks(debugLogWindow);
-
-  await debugLogWindow.loadURL(prepareURL([getAppRootPath(), 'debug_log.html'], { theme }));
-
-  debugLogWindow.on('closed', () => {
-    debugLogWindow = null;
-  });
-
-  debugLogWindow.once('ready-to-show', () => {
-    debugLogWindow?.setBackgroundColor(classicDark['--background-primary-color']);
-  });
-
-  // see above: looks like sometimes ready-to-show is not fired by electron
-  debugLogWindow?.show();
-}
-
-async function saveDebugLog(_event: any, logText: any) {
+async function saveDebugLog(_event: any, additionalInfo?: string) {
   const options: Electron.SaveDialogOptions = {
     title: 'Save debug log',
-    defaultPath: path.join(app.getPath('desktop'), `session_debug_${Date.now()}.txt`),
+    defaultPath: path.join(
+      app.getPath('desktop'),
+      `session_debug_${new Date().toISOString().replace(/:/g, '_')}.txt`
+    ),
     properties: ['createDirectory'],
   };
 
   try {
     const result = await dialog.showSaveDialog(options);
     const outputPath = result.filePath;
-    console.info(`Trying to save logs to ${outputPath}`);
+    console.info(`[log] Trying to save logs to ${outputPath}`);
     if (result === undefined || outputPath === undefined || outputPath === '') {
       throw Error("User clicked Save button but didn't create a file");
     }
 
-    fs.writeFile(outputPath, logText, err => {
-      if (err) {
-        throw Error(`${err}`);
-      }
-      console.info(`Saved log - ${outputPath}`);
-    });
+    const loggerFilePath = getLoggerFilePath();
+    if (!loggerFilePath) {
+      throw Error('No logger file path');
+    }
+
+    await copyFile(loggerFilePath, outputPath);
+    console.info(`[log] Copied logs to ${outputPath} from ${loggerFilePath}`);
+
+    // append any additional info
+    if (additionalInfo) {
+      await appendFile(outputPath, additionalInfo, { encoding: 'utf-8' });
+      console.info(`[log] Saved additional info to logs ${outputPath} from ${loggerFilePath}`);
+    }
   } catch (err) {
     console.error('Error saving debug log', err);
   }
@@ -840,7 +799,7 @@ function setupMenu() {
   const { platform } = process;
   const menuOptions = {
     development,
-    showDebugLog: showDebugLogWindow,
+    saveDebugLog,
     showWindow,
     showAbout,
     openReleaseNotes,
@@ -995,6 +954,28 @@ ipc.on('password-window-login', async (event, passPhrase) => {
   }
 });
 
+ipc.on('password-recovery-phrase', async (event, passPhrase) => {
+  const sendResponse = (e: string | undefined) => {
+    event.sender.send('password-recovery-phrase-response', e);
+  };
+
+  try {
+    // Check if the hash we have stored matches the given password.
+    const hash = sqlNode.getPasswordHash();
+
+    const hashMatches = passPhrase && PasswordUtil.matchesHash(passPhrase, hash);
+    if (hash && !hashMatches) {
+      throw new Error('Invalid password');
+    }
+    // no issues. send back undefined, meaning OK
+    sendResponse(undefined);
+  } catch (e) {
+    const localisedError = locale.messages.removePasswordInvalid;
+    // send back the error
+    sendResponse(localisedError);
+  }
+});
+
 ipc.on('start-in-tray-on-start', (event, newValue) => {
   try {
     userConfig.set('startInTray', newValue);
@@ -1080,13 +1061,6 @@ ipc.on('set-password', async (event, passPhrase, oldPhrase) => {
 });
 
 // Debug Log-related IPC calls
-
-ipc.on('show-debug-log', showDebugLogWindow);
-ipc.on('close-debug-log', () => {
-  if (debugLogWindow) {
-    debugLogWindow.close();
-  }
-});
 ipc.on('save-debug-log', saveDebugLog);
 ipc.on('load-maxmind-data', async (event: IpcMainEvent) => {
   try {

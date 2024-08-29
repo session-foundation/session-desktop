@@ -1,5 +1,4 @@
 import { format, formatDistanceStrict } from 'date-fns';
-import { ipcRenderer } from 'electron';
 import { isEmpty } from 'lodash';
 import moment from 'moment';
 
@@ -24,6 +23,7 @@ import { useSelectedConversationKey } from '../../../../../../state/selectors/se
 import { Flex } from '../../../../../basic/Flex';
 import { SpacerSM } from '../../../../../basic/Text';
 import { CopyToClipboardIcon } from '../../../../../buttons';
+import { saveLogToDesktop } from '../../../../../../util/logging';
 
 export const MessageInfoLabel = styled.label<{ color?: string }>`
   font-size: var(--font-size-lg);
@@ -74,10 +74,6 @@ export const LabelWithInfo = (props: LabelWithInfoProps) => {
 // Message timestamp format: "06:02 PM Tue, 15/11/2022"
 const formatTimestamps = 'hh:mm A ddd, D/M/Y';
 
-const showDebugLog = () => {
-  ipcRenderer.send('show-debug-log');
-};
-
 const DebugMessageInfo = ({ messageId }: { messageId: string }) => {
   const convoId = useSelectedConversationKey();
   const messageHash = useMessageHash(messageId);
@@ -85,6 +81,8 @@ const DebugMessageInfo = ({ messageId }: { messageId: string }) => {
   const expirationType = useMessageExpirationType(messageId);
   const expirationDurationMs = useMessageExpirationDurationMs(messageId);
   const expirationTimestamp = useMessageExpirationTimestamp(messageId);
+  const timestamp = useMessageTimestamp(messageId);
+  const serverTimestamp = useMessageServerTimestamp(messageId);
 
   if (!isDevProd()) {
     return null;
@@ -92,29 +90,25 @@ const DebugMessageInfo = ({ messageId }: { messageId: string }) => {
 
   return (
     <>
-      {convoId ? (
-        <LabelWithInfo label={`${window.i18n('conversationId')}:`} info={convoId} />
+      {convoId ? <LabelWithInfo label={`Conversation ID:`} info={convoId} /> : null}
+      {messageHash ? <LabelWithInfo label={`Message Hash:`} info={messageHash} /> : null}
+      {serverId ? <LabelWithInfo label={`Server ID:`} info={`${serverId}`} /> : null}
+      {timestamp ? <LabelWithInfo label={`Timestamp:`} info={String(timestamp)} /> : null}
+      {serverTimestamp ? (
+        <LabelWithInfo label={`Server Timestamp:`} info={String(serverTimestamp)} />
       ) : null}
-      {messageHash ? (
-        <LabelWithInfo label={`${window.i18n('messageHash')}:`} info={messageHash} />
-      ) : null}
-      {serverId ? (
-        <LabelWithInfo label={`${window.i18n('serverId')}:`} info={`${serverId}`} />
-      ) : null}
-      {expirationType ? (
-        <LabelWithInfo label={`${window.i18n('expirationType')}:`} info={expirationType} />
-      ) : null}
+      {expirationType ? <LabelWithInfo label={`Expiration Type:`} info={expirationType} /> : null}
       {expirationDurationMs ? (
         <LabelWithInfo
-          label={`${window.i18n('expirationDuration')}:`}
-          // formatDistanceStrict (date-fns) is not localized yet
+          label={`Expiration Duration:`}
+          // TODO formatDistanceStrict (date-fns) is not localized yet
           info={`${formatDistanceStrict(0, Math.floor(expirationDurationMs / 1000))}`}
         />
       ) : null}
       {expirationTimestamp ? (
         <LabelWithInfo
-          label={`${window.i18n('disappears')}:`}
-          // format (date-fns) is not localized yet
+          label={`Disappears:`}
+          // TODO format (date-fns) is not localized yet
           info={`${format(expirationTimestamp, 'PPpp')}`}
         />
       ) : null}
@@ -164,7 +158,9 @@ export const MessageInfo = ({ messageId, errors }: { messageId: string; errors: 
             label={`${window.i18n('error')}:`}
             info={errorString || window.i18n('unknownError')}
             dataColor={'var(--danger-color)'}
-            onClick={showDebugLog}
+            onClick={() => {
+              void saveLogToDesktop();
+            }}
           />
         </>
       )}

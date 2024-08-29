@@ -7,7 +7,7 @@ export const createTemplate = (
     openSupportPage: () => void;
     platform: string;
     showAbout: () => void;
-    showDebugLog: () => void;
+    saveDebugLog: (_event: any, additionalInfo?: string) => void;
     showWindow: () => void;
   },
   messages: LocaleMessagesType
@@ -16,7 +16,7 @@ export const createTemplate = (
     throw new TypeError('`options.platform` must be a string');
   }
 
-  const { openReleaseNotes, openSupportPage, platform, showAbout, showDebugLog, showWindow } =
+  const { openReleaseNotes, openSupportPage, platform, showAbout, saveDebugLog, showWindow } =
     options;
 
   const template = [
@@ -95,8 +95,10 @@ export const createTemplate = (
           type: 'separator',
         },
         {
-          label: messages.debugLog,
-          click: showDebugLog,
+          label: messages.showDebugLog,
+          click: () => {
+            saveDebugLog('save-debug-log');
+          },
         },
         {
           type: 'separator',
@@ -124,9 +126,6 @@ export const createTemplate = (
         {
           label: messages.goToReleaseNotes,
           click: openReleaseNotes,
-        },
-        {
-          type: 'separator',
         },
         {
           label: messages.goToSupportPage,

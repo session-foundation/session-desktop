@@ -4,6 +4,7 @@ const { Storage } = require('./ts/util/storage');
 
 const { isTestNet, isTestIntegration } = require('./ts/shared/env_vars');
 
+const os = require('os');
 const url = require('url');
 
 const _ = require('lodash');
@@ -26,11 +27,13 @@ window.getAppInstance = () => configAny.appInstance;
 window.getVersion = () => configAny.version;
 window.getCommitHash = () => configAny.commitHash;
 window.getNodeVersion = () => configAny.node_version;
+window.getOSRelease = () =>
+  `${os.type()} ${os.release()}, Node.js ${config.node_version} ${os.platform()} ${os.arch()}`;
+window.saveLog = additionalText => ipcRenderer.send('save-debug-log', additionalText);
 
 window.sessionFeatureFlags = {
   useOnionRequests: true,
   useTestNet: isTestNet() || isTestIntegration(),
-  integrationTestEnv: isTestIntegration(),
   useClosedGroupV3: false,
   debug: {
     debugLogging: !_.isEmpty(process.env.SESSION_DEBUG),
@@ -65,11 +68,27 @@ window.setPassword = async (passPhrase, oldPhrase) =>
   new Promise((resolve, reject) => {
     ipc.once('set-password-response', (_event, response) => {
       if (!response) {
-        return reject('window.setPassword: No response from main process');
+        // We don't reject here, but return undefined and handle the result in the caller.
+        // The reason is because we sometimes want to reject, but sometimes not depending on what the caller is doing (set/change/remove)
+        // For instance, removing a password makes `!response` true, and so we would reject here even if we
+        // technically didn't have an reason to.
+        return resolve(undefined);
       }
       return resolve(response);
     });
     ipc.send('set-password', passPhrase, oldPhrase);
+  });
+
+// called to verify that the password is correct when showing the recovery from seed modal
+window.onTryPassword = async passPhrase =>
+  new Promise((resolve, reject) => {
+    ipcRenderer.once('password-recovery-phrase-response', (_event, error) => {
+      if (error) {
+        return reject(error);
+      }
+      return resolve();
+    });
+    ipcRenderer.send('password-recovery-phrase', passPhrase);
   });
 
 window.setStartInTray = async startInTray =>

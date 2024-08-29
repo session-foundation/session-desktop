@@ -92,7 +92,6 @@ export const OverlayInvite = () => {
             alignItems="center"
           >
             <SessionInput
-              autoFocus={true}
               type="text"
               value={ourSessionID}
               editable={false}

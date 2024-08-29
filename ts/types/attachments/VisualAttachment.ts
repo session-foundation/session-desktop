@@ -13,6 +13,7 @@ import { ToastUtils } from '../../session/utils';
 import { GoogleChrome } from '../../util';
 import { autoScaleForAvatar, autoScaleForThumbnail } from '../../util/attachmentsUtil';
 import { isAudio } from '../MIME';
+import { isTestIntegration } from '../../shared/env_vars';
 
 export const THUMBNAIL_SIDE = 200;
 export const THUMBNAIL_CONTENT_TYPE = 'image/png';
@@ -206,8 +207,8 @@ export async function autoScaleAvatarBlob(file: File) {
  * Shows the system file picker for images, scale the image down for avatar/opengroup measurements and return the blob objectURL on success
  */
 export async function pickFileForAvatar(): Promise<string | null> {
-  if (window.sessionFeatureFlags.integrationTestEnv) {
-    window.log.info(
+  if (isTestIntegration()) {
+    window.log.warn(
       'shorting pickFileForAvatar as it does not work in playwright/notsending the filechooser event'
     );
 

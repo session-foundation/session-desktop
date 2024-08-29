@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022, macos-12, ubuntu-20.04]
+        os: [windows-2022, ubuntu-20.04, macos-12]
     env:
       SIGNAL_ENV: production
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -22,7 +22,8 @@ jobs:
       - name: Checkout git repo
         uses: actions/checkout@v3
 
-      - uses: ./actions/setup_and_build
+      - name: Setup & Build
+        uses: ./actions/setup_and_build
 
       - name: Build windows production binaries
         if: runner.os == 'Windows'

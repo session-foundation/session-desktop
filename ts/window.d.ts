@@ -34,7 +34,6 @@ declare global {
       useOnionRequests: boolean;
       useTestNet: boolean;
       useClosedGroupV3: boolean;
-      integrationTestEnv: boolean;
       debug: {
         debugLogging: boolean;
         debugLibsessionDumps: boolean;
@@ -43,11 +42,12 @@ declare global {
         debugOnionRequests: boolean;
       };
     };
-    onLogin: (pw: string) => Promise<void>;
+    onLogin: (pw: string) => Promise<void>; // only set on the password window
+    onTryPassword: (pw: string) => Promise<void>; // only set on the main window
     persistStore?: Persistor;
     restart: () => void;
     getSeedNodeList: () => Array<string> | undefined;
-    setPassword: (newPassword: string | null, oldPassword: string | null) => Promise<string>;
+    setPassword: (newPassword: string | null, oldPassword: string | null) => Promise<string | undefined>;
     isOnline: boolean;
     toggleMediaPermissions: () => Promise<void>;
     toggleCallMediaPermissionsTo: (enabled: boolean) => Promise<void>;
@@ -82,6 +82,7 @@ declare global {
     getCommitHash: () => string | undefined;
     getVersion: () => string;
     getOSRelease: () => string;
+    saveLog: (additionalText?: string) => void;
     setAutoHideMenuBar: (val: boolean) => void;
     setMenuBarVisibility: (val: boolean) => void;
     contextMenuShown: boolean;
@@ -98,7 +99,6 @@ declare global {
     getOpengroupPruning: () => Promise<boolean>;
     setOpengroupPruning: (val: boolean) => Promise<void>;
     closeAbout: () => void;
-    closeDebugLog: () => void;
     getAutoUpdateEnabled: () => boolean;
     setAutoUpdateEnabled: (enabled: boolean) => void;
     setZoomFactor: (newZoom: number) => void;

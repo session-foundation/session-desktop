@@ -195,6 +195,9 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
     }
     try {
       const updatedHash = await window.setPassword(enteredPassword, null);
+      if (!updatedHash) {
+        throw new Error('window.setPassword expected updatedHash to be set for actionSet');
+      }
       await Storage.put('passHash', updatedHash);
 
       ToastUtils.pushToastSuccess(
@@ -245,6 +248,9 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
 
     try {
       const updatedHash = await window.setPassword(newPassword, oldPassword);
+      if (!updatedHash) {
+        throw new Error('window.setPassword expected updatedHash to be set for actionChange');
+      }
       await Storage.put('passHash', updatedHash);
 
       ToastUtils.pushToastSuccess(
@@ -276,7 +282,10 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
     }
 
     try {
-      await window.setPassword(null, oldPassword);
+      const updatedHash = await window.setPassword(null, oldPassword);
+      if (updatedHash) {
+        throw new Error('window.setPassword expected updatedHash to be unset for actionRemove');
+      }
       await Storage.remove('passHash');
 
       ToastUtils.pushToastWarning(
