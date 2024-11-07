@@ -13,7 +13,6 @@ import {
   useSelectedConversationKey,
   useSelectedExpireTimer,
   useSelectedIsGroupOrCommunity,
-  useSelectedWeAreAdmin,
 } from '../../../../../state/selectors/selectedConversation';
 import { ReleasedFeatures } from '../../../../../util/releaseFeature';
 import { Flex } from '../../../../basic/Flex';
@@ -117,7 +116,6 @@ export const OverlayDisappearingMessages = () => {
   const isGroup = useSelectedIsGroupOrCommunity();
   const expirationMode = useSelectedConversationDisappearingMode();
   const expireTimer = useSelectedExpireTimer();
-  const weAreAdmin = useSelectedWeAreAdmin();
 
   const [modeSelected, setModeSelected] = useState<
     DisappearingMessageConversationModeType | undefined
@@ -174,10 +172,10 @@ export const OverlayDisappearingMessages = () => {
           <HeaderTitle>{window.i18n('disappearingMessages')}</HeaderTitle>
           <HeaderSubtitle>
             {singleMode === 'deleteAfterRead'
-              ? window.i18n('disappearingMessagesModeAfterReadSubtitle')
+              ? window.i18n('disappearingMessagesDisappearAfterReadDescription')
               : singleMode === 'deleteAfterSend'
-                ? window.i18n('disappearingMessagesModeAfterSendSubtitle')
-                : window.i18n('settingAppliesToYourMessages')}
+                ? window.i18n('disappearingMessagesDisappearAfterSendDescription')
+                : window.i18n('disappearingMessagesDescription1')}
           </HeaderSubtitle>
         </Header>
         <DisappearingModes
@@ -204,13 +202,15 @@ export const OverlayDisappearingMessages = () => {
             />
           </>
         )}
-        {isGroup && isV2Released && !weAreAdmin && (
+
+        {isGroup && (
           <>
             <SpacerLG />
+            {/* We want those to be shown no matter our admin rights in a group. */}
             <StyledNonAdminDescription>
-              {window.i18n('settingAppliesToEveryone')}
+              {window.i18n('disappearingMessagesDescription')}
               <br />
-              {window.i18n('onlyGroupAdminsCanChange')}
+              {window.i18n('disappearingMessagesOnlyAdmins')}
             </StyledNonAdminDescription>
           </>
         )}

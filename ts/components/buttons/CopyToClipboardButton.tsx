@@ -1,6 +1,6 @@
 import { isEmpty } from 'lodash';
 import { useState } from 'react';
-import useCopyToClipboard from 'react-use/lib/useCopyToClipboard';
+import { clipboard } from 'electron';
 import { useHotkey } from '../../hooks/useHotkey';
 import { ToastUtils } from '../../session/utils';
 import { SessionButton, SessionButtonProps } from '../basic/SessionButton';
@@ -19,24 +19,19 @@ export const CopyToClipboardButton = (props: CopyToClipboardButtonProps) => {
   const { copyContent, onCopyComplete, hotkey = false, text } = props;
   const [copied, setCopied] = useState(false);
 
-  const [{ value }, copyToClipboard] = useCopyToClipboard();
-
   const onClick = () => {
     try {
-      if (!copyContent && !text) {
+      const toCopy = copyContent || text;
+      if (!toCopy) {
         throw Error('Nothing to copy!');
       }
 
-      if (copyContent) {
-        copyToClipboard(copyContent);
-      } else if (text) {
-        copyToClipboard(text);
-      }
+      clipboard.writeText(toCopy);
 
       ToastUtils.pushCopiedToClipBoard();
       setCopied(true);
       if (onCopyComplete) {
-        onCopyComplete(value);
+        onCopyComplete(text);
       }
     } catch (err) {
       window.log.error('CopyToClipboard:', err);
@@ -49,13 +44,7 @@ export const CopyToClipboardButton = (props: CopyToClipboardButtonProps) => {
     <SessionButton
       aria-label={'copy to clipboard button'}
       {...props}
-      text={
-        !isEmpty(text)
-          ? text
-          : copied
-            ? window.i18n('copiedToClipboard')
-            : window.i18n('editMenuCopy')
-      }
+      text={!isEmpty(text) ? text : copied ? window.i18n('copied') : window.i18n('copy')}
       onClick={onClick}
     />
   );
@@ -66,13 +55,12 @@ type CopyToClipboardIconProps = Omit<SessionIconButtonProps, 'children' | 'onCli
 
 export const CopyToClipboardIcon = (props: CopyToClipboardIconProps & { copyContent: string }) => {
   const { copyContent, onCopyComplete, hotkey = false } = props;
-  const [{ value }, copyToClipboard] = useCopyToClipboard();
 
   const onClick = () => {
-    copyToClipboard(copyContent);
+    clipboard.writeText(copyContent);
     ToastUtils.pushCopiedToClipBoard();
     if (onCopyComplete) {
-      onCopyComplete(value);
+      onCopyComplete(copyContent);
     }
   };
 

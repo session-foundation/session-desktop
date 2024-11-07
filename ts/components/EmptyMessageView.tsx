@@ -5,6 +5,7 @@ import { useIsDarkTheme } from '../state/selectors/theme';
 import { isSignWithRecoveryPhrase } from '../util/storage';
 import { Flex } from './basic/Flex';
 import { Spacer2XL, SpacerXS } from './basic/Text';
+import { Localizer } from './basic/Localizer';
 
 const StyledPlaceholder = styled(Flex)`
   background-color: var(--background-secondary-color);
@@ -91,7 +92,7 @@ export const EmptyMessageView = () => {
           <StyledSessionWelcome
             color={isDarkTheme ? 'var(--primary-color)' : 'var(--text-primary-color)'}
           >
-            {window.i18n('onboardingBubbleWelcomeToSession')}
+            <Localizer token="onboardingBubbleWelcomeToSession" args={{ emoji: '👋' }} />
           </StyledSessionWelcome>
         </>
       ) : (

@@ -37,7 +37,6 @@ import {
   StagedAttachmentImportedType,
   StagedPreviewImportedType,
 } from '../../../util/attachmentsUtil';
-import { HTMLDirection } from '../../../util/i18n';
 import { LinkPreviews } from '../../../util/linkPreviews';
 import { CaptionEditor } from '../../CaptionEditor';
 import { Flex } from '../../basic/Flex';
@@ -58,6 +57,7 @@ import {
 } from './CompositionButtons';
 import { CompositionTextArea } from './CompositionTextArea';
 import { cleanMentions, mentionsRegex } from './UserMentions';
+import { HTMLDirection } from '../../../util/i18n/rtlSupport';
 
 export interface ReplyingToMessageProps {
   convoId: string;
@@ -390,6 +390,13 @@ class CompositionBoxInner extends Component<Props, State> {
   private renderCompositionView() {
     const { showEmojiPanel } = this.state;
     const { typingEnabled } = this.props;
+
+    // we can only send a message if the conversation allows writing in it AND
+    // - we've got a message body OR
+    // - we've got a staged attachments
+    const showSendButton =
+      typingEnabled && (!isEmpty(this.state.draft) || !isEmpty(this.props.stagedAttachments));
+
     /* eslint-disable @typescript-eslint/no-misused-promises */
 
     return (
@@ -432,7 +439,7 @@ class CompositionBoxInner extends Component<Props, State> {
         {typingEnabled && (
           <ToggleEmojiButton ref={this.emojiPanelButton} onClick={this.toggleEmojiPanel} />
         )}
-        {typingEnabled && <SendMessageButton onClick={this.onSendMessage} />}
+        {showSendButton && <SendMessageButton onClick={this.onSendMessage} />}
         {typingEnabled && showEmojiPanel && (
           <StyledEmojiPanelContainer role="button" dir={this.props.htmlDirection}>
             <SessionEmojiPanel
@@ -446,6 +453,7 @@ class CompositionBoxInner extends Component<Props, State> {
       </Flex>
     );
   }
+
   /* eslint-enable @typescript-eslint/no-misused-promises */
 
   private fetchUsersForOpenGroup(
@@ -666,7 +674,7 @@ class CompositionBoxInner extends Component<Props, State> {
       const onSave = (caption: string) => {
         // eslint-disable-next-line no-param-reassign
         attachment.caption = caption;
-        ToastUtils.pushToastInfo('saved', window.i18n('saved'));
+        ToastUtils.pushToastInfo('saved', window.i18n.stripped('saved'));
         // close the lightbox on save
         this.setState({
           showCaptionEditor: undefined,
@@ -811,15 +819,13 @@ class CompositionBoxInner extends Component<Props, State> {
     // Verify message length
     const msgLen = messagePlaintext?.length || 0;
     if (msgLen === 0 && this.props.stagedAttachments?.length === 0) {
-      ToastUtils.pushMessageBodyMissing();
       return;
     }
 
-    if (!selectedConversation.isPrivate && selectedConversation.left) {
-      ToastUtils.pushYouLeftTheGroup();
-      return;
-    }
-    if (!selectedConversation.isPrivate && selectedConversation.isKickedFromGroup) {
+    if (
+      !selectedConversation.isPrivate &&
+      (selectedConversation.left || selectedConversation.isKickedFromGroup)
+    ) {
       ToastUtils.pushYouLeftTheGroup();
       return;
     }

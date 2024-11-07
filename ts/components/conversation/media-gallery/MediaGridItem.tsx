@@ -6,6 +6,7 @@ import { useEncryptedFileFetch } from '../../../hooks/useEncryptedFileFetch';
 import { LightBoxOptions, updateLightBoxOptions } from '../../../state/ducks/modalDialog';
 import { isImageTypeSupported, isVideoTypeSupported } from '../../../util/GoogleChrome';
 import { MediaItemType } from '../../lightbox/LightboxGallery';
+import { AriaLabels } from '../../../util/hardcodedAriaLabels';
 
 type Props = {
   mediaItem: MediaItemType;
@@ -14,7 +15,6 @@ type Props = {
 
 const MediaGridItemContent = (props: Props) => {
   const { mediaItem } = props;
-  const i18n = window.i18n;
   const { attachment, contentType } = mediaItem;
 
   const urlToDecrypt = mediaItem.thumbnailObjectUrl || '';
@@ -49,9 +49,9 @@ const MediaGridItemContent = (props: Props) => {
 
     return (
       <img
-        alt={i18n('lightboxImageAlt')}
         className="module-media-grid-item__image"
         src={srcData}
+        alt={AriaLabels.imageSentInConversation}
         onError={onImageError}
         onDragStart={disableDrag}
       />
@@ -72,9 +72,9 @@ const MediaGridItemContent = (props: Props) => {
     return (
       <div className="module-media-grid-item__image-container">
         <img
-          alt={i18n('lightboxImageAlt')}
           className="module-media-grid-item__image"
           src={srcData}
+          alt={AriaLabels.imageSentInConversation}
           onError={onImageError}
           onDragStart={disableDrag}
         />

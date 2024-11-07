@@ -6,7 +6,7 @@ import { useIconToImageURL } from '../../../hooks/useIconToImageURL';
 import { usePasswordModal } from '../../../hooks/usePasswordModal';
 import { mnDecode } from '../../../session/crypto/mnemonic';
 import {
-  updateHideRecoveryPasswordModel,
+  updateHideRecoveryPasswordModal,
   updateLightBoxOptions,
 } from '../../../state/ducks/modalDialog';
 import { showSettingsSection } from '../../../state/ducks/section';
@@ -18,8 +18,8 @@ import { prepareQRCodeForLightBox } from '../../../util/qrCodes';
 import { getCurrentRecoveryPhrase } from '../../../util/storage';
 import { QRCodeLogoProps, SessionQRCode } from '../../SessionQRCode';
 import { AnimatedFlex } from '../../basic/Flex';
+import { Localizer } from '../../basic/Localizer';
 import { SessionButtonColor } from '../../basic/SessionButton';
-import { SessionHtmlRenderer } from '../../basic/SessionHTMLRenderer';
 import { SpacerMD, SpacerSM } from '../../basic/Text';
 import { CopyToClipboardIcon } from '../../buttons/CopyToClipboardButton';
 import { SessionIconButton } from '../../icon';
@@ -110,9 +110,7 @@ export const SettingsCategoryRecoveryPassword = () => {
           iconSize: 18,
           iconColor: 'var(--text-primary-color)',
         }}
-        description={
-          <SessionHtmlRenderer tag="p" html={window.i18n('recoveryPasswordDescription')} />
-        }
+        description={<Localizer token="recoveryPasswordDescription" />}
         inline={false}
       >
         <SpacerMD />
@@ -177,15 +175,15 @@ export const SettingsCategoryRecoveryPassword = () => {
             marginLeft: isQRVisible ? '-8px' : undefined,
           }}
         >
-          {isQRVisible ? window.i18n('passwordView') : window.i18n('qrView')}
+          {isQRVisible ? window.i18n('recoveryPasswordView') : window.i18n('qrView')}
         </SessionIconButton>
       </SessionSettingsItemWrapper>
       {!hideRecoveryPassword ? (
         <SessionSettingButtonItem
-          title={window.i18n('recoveryPasswordHidePermanently')}
+          title={window.i18n('recoveryPasswordHideRecoveryPassword')}
           description={window.i18n('recoveryPasswordHideRecoveryPasswordDescription')}
           onClick={() => {
-            dispatch(updateHideRecoveryPasswordModel({ state: 'firstWarning' }));
+            dispatch(updateHideRecoveryPasswordModal({ state: 'firstWarning' }));
           }}
           buttonText={window.i18n('hide')}
           buttonColor={SessionButtonColor.Danger}

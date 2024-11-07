@@ -1,9 +1,9 @@
 let latestRelease: string | undefined;
 
-export function setLastestRelease(release: string) {
+export function setLatestRelease(release: string) {
   latestRelease = release;
 }
 
-export function getLastestRelease() {
+export function getLatestRelease() {
   return latestRelease;
 }

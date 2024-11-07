@@ -10,8 +10,7 @@ import { YourSessionIDPill, YourSessionIDSelectable } from '../../basic/YourSess
 import { useHotkey } from '../../../hooks/useHotkey';
 import { useOurAvatarPath, useOurConversationUsername } from '../../../hooks/useParamSelector';
 import { ProfileManager } from '../../../session/profile_manager/ProfileManager';
-import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_constants';
-import { editProfileModal, updateEditProfilePictureModel } from '../../../state/ducks/modalDialog';
+import { editProfileModal, updateEditProfilePictureModal } from '../../../state/ducks/modalDialog';
 import { SessionWrapperModal } from '../../SessionWrapperModal';
 import { Flex } from '../../basic/Flex';
 import { SessionButton } from '../../basic/SessionButton';
@@ -214,13 +213,15 @@ export const EditProfileDialog = () => {
 
     try {
       setLoading(true);
+      // Note: this will not throw, but just truncate the display name if it is too long.
+      // I guess it is expected as there is no UI to show anything else than a generic error?
       const validName = await ProfileManager.updateOurProfileDisplayName(profileName);
       setUpdateProfileName(validName);
       setProfileName(validName);
       setMode('default');
     } catch (err) {
       window.log.error('Profile update error', err);
-      setProfileNameError(window.i18n('unknownError'));
+      setProfileNameError(window.i18n('errorUnknown'));
     } finally {
       setLoading(false);
     }
@@ -232,7 +233,7 @@ export const EditProfileDialog = () => {
     }
     closeDialog();
     dispatch(
-      updateEditProfilePictureModel({
+      updateEditProfilePictureModal({
         avatarPath,
         profileName,
         ourId,
@@ -274,7 +275,7 @@ export const EditProfileDialog = () => {
   return (
     <StyledEditProfileDialog className="edit-profile-dialog" data-testid="edit-profile-dialog">
       <SessionWrapperModal
-        title={window.i18n('editProfileModalTitle')}
+        title={window.i18n('profile')}
         headerIconButtons={backButton}
         headerReverse={true}
         showExitIcon={true}
@@ -320,7 +321,7 @@ export const EditProfileDialog = () => {
             autoFocus={true}
             disableOnBlurEvent={true}
             type="text"
-            placeholder={window.i18n('enterDisplayName')}
+            placeholder={window.i18n('displayNameEnter')}
             value={profileName}
             onValueChanged={(name: string) => {
               const sanitizedName = sanitizeDisplayNameOrToast(name, setProfileNameError);
@@ -330,7 +331,6 @@ export const EditProfileDialog = () => {
             tabIndex={0}
             required={true}
             error={profileNameError}
-            maxLength={LIBSESSION_CONSTANTS.CONTACT_MAX_NAME_LENGTH}
             textSize={'xl'}
             centerText={true}
             inputRef={inputRef}

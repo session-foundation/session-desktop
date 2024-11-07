@@ -10,6 +10,7 @@ import { useSelectedConversationKey } from '../../../state/selectors/selectedCon
 import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
 import { SpacerLG } from '../../basic/Text';
 import { ConversationListItem } from '../conversation-list-item/ConversationListItem';
+import { Localizer } from '../../basic/Localizer';
 
 const MessageRequestListPlaceholder = styled.div`
   color: var(--conversation-tab-text-color);
@@ -40,6 +41,7 @@ const MessageRequestList = () => {
 export const OverlayMessageRequest = () => {
   useKey('Escape', closeOverlay);
   const dispatch = useDispatch();
+
   function closeOverlay() {
     dispatch(resetLeftOverlayMode());
   }
@@ -55,15 +57,12 @@ export const OverlayMessageRequest = () => {
    * @returns void
    */
   function handleClearAllRequestsClick() {
-    const { i18n } = window;
-    const title = i18n('clearAllConfirmationTitle');
-    const message = i18n('clearAllConfirmationBody');
     const onClose = dispatch(updateConfirmModal(null));
 
     dispatch(
       updateConfirmModal({
-        title,
-        message,
+        title: window.i18n('clearAll'),
+        i18nMessage: { token: 'messageRequestsClearAllExplanation' },
         onClose,
         onClickOk: async () => {
           window?.log?.info('Blocking all message requests');
@@ -88,6 +87,9 @@ export const OverlayMessageRequest = () => {
         onClickClose: () => {
           window.inboxStore?.dispatch(updateConfirmModal(null));
         },
+        okTheme: SessionButtonColor.Danger,
+        closeTheme: SessionButtonColor.Primary,
+        okText: window.i18n('clear'),
       })
     );
   }
@@ -108,7 +110,7 @@ export const OverlayMessageRequest = () => {
         <>
           <SpacerLG />
           <MessageRequestListPlaceholder>
-            {window.i18n('noMessageRequestsPending')}
+            <Localizer token="messageRequestsNonePending" />
           </MessageRequestListPlaceholder>
         </>
       )}

@@ -26,7 +26,7 @@ export const SettingsCategoryAppearance = () => {
             window.toggleMenuBar();
             forceUpdate();
           }}
-          title={window.i18n('hideMenuBarTitle')}
+          title={window.i18n('appearanceHideMenuBar')}
           description={window.i18n('hideMenuBarDescription')}
           active={isHideMenuBarActive}
         />
@@ -40,8 +40,8 @@ export const SettingsCategoryAppearance = () => {
             await ensureThemeConsistency();
           }
         }}
-        title={window.i18n('matchThemeSystemSettingTitle')}
-        description={window.i18n('matchThemeSystemSettingDescription')}
+        title={window.i18n('appearanceAutoDarkMode')}
+        description={window.i18n('followSystemSettings')}
         active={isFollowSystemThemeEnabled}
         dataTestId="enable-follow-system-theme"
       />

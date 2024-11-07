@@ -164,9 +164,7 @@ function update(forceRefresh = false) {
   // distinguishing between zero (0) and other (non-zero),
   // e.g. Russian:
   // http://docs.translatehouse.org/projects/localization-guide/en/latest/l10n/pluralforms.html
-  const newMessageCountLabel = `${messagesNotificationCount} ${
-    messagesNotificationCount === 1 ? window.i18n('newMessage') : window.i18n('newMessages')
-  }`;
+  const newMessageCountLabel = window.i18n('messageNew', { count: messagesNotificationCount });
 
   if (!currentNotifications.length) {
     return;
@@ -194,9 +192,9 @@ function update(forceRefresh = false) {
       // eslint-disable-next-line prefer-destructuring
       iconUrl = lastNotification.iconUrl;
       if (messagesNotificationCount === 1) {
-        message = `${window.i18n('notificationFrom')} ${lastMessageTitle}`;
+        message = `${window.i18n('from')} ${lastMessageTitle}`;
       } else {
-        message = window.i18n('notificationMostRecentFrom', [lastMessageTitle]);
+        message = window.i18n('notificationsMostRecent', { name: lastMessageTitle });
       }
       break;
     }
@@ -208,7 +206,9 @@ function update(forceRefresh = false) {
         message = lastNotification.message;
       } else {
         title = newMessageCountLabel;
-        message = `${window.i18n('notificationMostRecent')} ${lastNotification.message}`;
+        message = `${window.i18n('notificationsMostRecent', { name: title })} ${
+          lastNotification.message
+        }`;
       }
       // eslint-disable-next-line prefer-destructuring
       iconUrl = lastNotification.iconUrl;
@@ -219,7 +219,7 @@ function update(forceRefresh = false) {
 
   const shouldHideExpiringMessageBody = lastNotification.isExpiringMessage && isMacOS();
   if (shouldHideExpiringMessageBody) {
-    message = window.i18n('newMessage');
+    message = window.i18n('messageNew', { count: messagesNotificationCount });
   }
 
   window.drawAttention();

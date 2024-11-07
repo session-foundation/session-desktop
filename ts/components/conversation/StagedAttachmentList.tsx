@@ -15,6 +15,7 @@ import { isImageTypeSupported, isVideoTypeSupported } from '../../util/GoogleChr
 import { Image } from './Image';
 import { StagedGenericAttachment } from './StagedGenericAttachment';
 import { StagedPlaceholderAttachment } from './StagedPlaceholderAttachment';
+import { AriaLabels } from '../../util/hardcodedAriaLabels';
 
 type Props = {
   attachments: Array<AttachmentType>;
@@ -83,7 +84,7 @@ export const StagedAttachmentList = (props: Props) => {
             return (
               <Image
                 key={imageKey}
-                alt={window.i18n('stagedImageAttachment', [attachment.fileName])}
+                alt={AriaLabels.stagedAttachment}
                 attachment={attachment}
                 softCorners={true}
                 playIconOverlay={isVideoAttachment(attachment)}

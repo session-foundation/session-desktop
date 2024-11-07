@@ -228,15 +228,15 @@ export type SubRequestDeleteReactionType = {
 };
 
 export type SubRequestUpdateUserRoomPermissionsType = {
-  type: 'updateRoomUserPerms',
+  type: 'updateRoomUserPerms';
   updateUserRoomPerms: {
     sessionId: string;
     roomId: string;
-    permsToAdd?: OpenGroupPermissionType[],
-    permsToRemove?: OpenGroupPermissionType[]
-    permsToClear?: OpenGroupPermissionType[],
-  }
-}
+    permsToAdd?: Array<OpenGroupPermissionType>;
+    permsToRemove?: Array<OpenGroupPermissionType>;
+    permsToClear?: Array<OpenGroupPermissionType>;
+  };
+};
 
 export type OpenGroupBatchRow =
   | SubRequestCapabilitiesType
@@ -253,32 +253,35 @@ export type OpenGroupBatchRow =
   | SubRequestDeleteReactionType
   | SubRequestUpdateUserRoomPermissionsType;
 
-type OpenGroupPermissionSelection<Prefix extends string=""> = {
+type OpenGroupPermissionSelection<Prefix extends string = ''> = {
   [permission in `${Prefix}${OpenGroupPermissionType}`]?: boolean;
 };
 
-function makePermissionSelection<const Prefix extends string> (
-  permissions: OpenGroupPermissionType[] | undefined,
+function makePermissionSelection<const Prefix extends string>(
+  permissions: Array<OpenGroupPermissionType> | undefined,
   choice: boolean,
   prefix: Prefix
 ): OpenGroupPermissionSelection<typeof prefix>;
 
-function makePermissionSelection (
-  permissions: OpenGroupPermissionType[] | undefined,
+function makePermissionSelection(
+  permissions: Array<OpenGroupPermissionType> | undefined,
   choice: boolean
 ): OpenGroupPermissionSelection;
 
-function makePermissionSelection (
-  permissions: OpenGroupPermissionType[] | undefined,
+function makePermissionSelection(
+  permissions: Array<OpenGroupPermissionType> | undefined,
   choice: boolean,
-  prefix: string = ""
+  prefix: string = ''
 ): OpenGroupPermissionSelection {
-  return permissions?.reduce(
-    ( aggregatePermissions, newPermission ) => ({
-      ...aggregatePermissions,
-      [`${prefix}${newPermission}`]: choice
-    }), {}
-  ) ?? {};
+  return (
+    permissions?.reduce(
+      (aggregatePermissions, newPermission) => ({
+        ...aggregatePermissions,
+        [`${prefix}${newPermission}`]: choice,
+      }),
+      {}
+    ) ?? {}
+  );
 }
 
 /**
@@ -365,17 +368,19 @@ const makeBatchRequestPayload = (
     case 'banUnbanUser':
       const isBan = Boolean(options.banUnbanUser.type === 'ban');
       const isGlobal = options.banUnbanUser.isGlobal;
-      window?.log?.info(`BAN: ${options.banUnbanUser.sessionId}, global: ${options.banUnbanUser.isGlobal}`);
+      window?.log?.info(
+        `BAN: ${options.banUnbanUser.sessionId}, global: ${options.banUnbanUser.isGlobal}`
+      );
       if (isGlobal) {
-	// Issue server-wide (un)ban.
-	return {
-	  method: 'POST',
-	  path: `/user/${options.banUnbanUser.sessionId}/${isBan ? 'ban' : 'unban'}`,
-	  json: {
-	    global: true,
-	    // timeout: null, // for now we do not support the timeout argument
-	  },
-	}
+        // Issue server-wide (un)ban.
+        return {
+          method: 'POST',
+          path: `/user/${options.banUnbanUser.sessionId}/${isBan ? 'ban' : 'unban'}`,
+          json: {
+            global: true,
+            // timeout: null, // for now we do not support the timeout argument
+          },
+        };
       }
       // Issue room-wide (un)ban.
       return {
@@ -411,21 +416,23 @@ const makeBatchRequestPayload = (
         path: `/room/${options.deleteReaction.roomId}/reactions/${options.deleteReaction.messageId}/${options.deleteReaction.reaction}`,
       };
     case 'updateRoomUserPerms':
-      if (hasDuplicates([
-        ...options.updateUserRoomPerms.permsToAdd ?? [],
-        ...options.updateUserRoomPerms.permsToRemove ?? [],
-        ...options.updateUserRoomPerms.permsToClear ?? []
-      ])) {
-        throw new Error("Cannot change the same permission in more than one way");
+      if (
+        hasDuplicates([
+          ...(options.updateUserRoomPerms.permsToAdd ?? []),
+          ...(options.updateUserRoomPerms.permsToRemove ?? []),
+          ...(options.updateUserRoomPerms.permsToClear ?? []),
+        ])
+      ) {
+        throw new Error('Cannot change the same permission in more than one way');
       }
       return {
         method: 'POST',
         path: `/room/${options.updateUserRoomPerms.roomId}/permissions/${options.updateUserRoomPerms.sessionId}`,
-        json: ({
+        json: {
           ...makePermissionSelection(options.updateUserRoomPerms.permsToAdd, true),
           ...makePermissionSelection(options.updateUserRoomPerms.permsToRemove, false),
-          ...makePermissionSelection(options.updateUserRoomPerms.permsToClear, true, "default_"),
-        })
+          ...makePermissionSelection(options.updateUserRoomPerms.permsToClear, true, 'default_'),
+        },
       };
     default:
       assertUnreachable(type, 'Invalid batch request row');

@@ -94,16 +94,17 @@ export type PrimaryColorStateType =
   | 'orange'
   | 'red';
 
+// TODO: localize the ariaLabels below
 type PrimaryColorType = { id: PrimaryColorStateType; ariaLabel: string; color: string };
 
 export const getPrimaryColors = (): Array<PrimaryColorType> => [
-  { id: 'green', ariaLabel: window.i18n('primaryColorGreen'), color: COLORS.PRIMARY.GREEN },
-  { id: 'blue', ariaLabel: window.i18n('primaryColorBlue'), color: COLORS.PRIMARY.BLUE },
-  { id: 'yellow', ariaLabel: window.i18n('primaryColorYellow'), color: COLORS.PRIMARY.YELLOW },
-  { id: 'pink', ariaLabel: window.i18n('primaryColorPink'), color: COLORS.PRIMARY.PINK },
-  { id: 'purple', ariaLabel: window.i18n('primaryColorPurple'), color: COLORS.PRIMARY.PURPLE },
-  { id: 'orange', ariaLabel: window.i18n('primaryColorOrange'), color: COLORS.PRIMARY.ORANGE },
-  { id: 'red', ariaLabel: window.i18n('primaryColorRed'), color: COLORS.PRIMARY.RED },
+  { id: 'green', ariaLabel: 'Primary color green', color: COLORS.PRIMARY.GREEN },
+  { id: 'blue', ariaLabel: 'Primary color blue', color: COLORS.PRIMARY.BLUE },
+  { id: 'yellow', ariaLabel: 'Primary color yellow', color: COLORS.PRIMARY.YELLOW },
+  { id: 'pink', ariaLabel: 'Primary color pink', color: COLORS.PRIMARY.PINK },
+  { id: 'purple', ariaLabel: 'Primary color purple', color: COLORS.PRIMARY.PURPLE },
+  { id: 'orange', ariaLabel: 'Primary color orange', color: COLORS.PRIMARY.ORANGE },
+  { id: 'red', ariaLabel: 'Primary color red', color: COLORS.PRIMARY.RED },
 ];
 
 // Themes
@@ -249,7 +250,7 @@ export type StyleSessionSwitcher = {
 export const getThemeColors = (): Array<ThemeType> => [
   {
     id: 'classic-dark',
-    title: window.i18n('classicDarkThemeTitle'),
+    title: window.i18n('appearanceThemesClassicDark'),
     style: {
       background: THEMES.CLASSIC_DARK.COLOR0,
       border: THEMES.CLASSIC_DARK.COLOR3,
@@ -259,7 +260,7 @@ export const getThemeColors = (): Array<ThemeType> => [
   },
   {
     id: 'classic-light',
-    title: window.i18n('classicLightThemeTitle'),
+    title: window.i18n('appearanceThemesClassicLight'),
     style: {
       background: THEMES.CLASSIC_LIGHT.COLOR6,
       border: THEMES.CLASSIC_LIGHT.COLOR3,
@@ -269,7 +270,7 @@ export const getThemeColors = (): Array<ThemeType> => [
   },
   {
     id: 'ocean-dark',
-    title: window.i18n('oceanDarkThemeTitle'),
+    title: window.i18n('appearanceThemesOceanDark'),
     style: {
       background: THEMES.OCEAN_DARK.COLOR2,
       border: THEMES.OCEAN_DARK.COLOR4,
@@ -279,7 +280,7 @@ export const getThemeColors = (): Array<ThemeType> => [
   },
   {
     id: 'ocean-light',
-    title: window.i18n('oceanLightThemeTitle'),
+    title: window.i18n('appearanceThemesOceanLight'),
     style: {
       background: THEMES.OCEAN_LIGHT.COLOR7!,
       border: THEMES.OCEAN_LIGHT.COLOR3,

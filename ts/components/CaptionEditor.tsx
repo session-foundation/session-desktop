@@ -1,6 +1,7 @@
 import * as GoogleChrome from '../util/GoogleChrome';
 
 import { AttachmentType } from '../types/Attachment';
+import { AriaLabels } from '../util/hardcodedAriaLabels';
 
 type Props = {
   attachment: AttachmentType;
@@ -19,9 +20,9 @@ const CaptionEditorObject = (props: Props) => {
     return (
       <img
         className="module-caption-editor__image"
-        alt={window.i18n('imageAttachmentAlt')}
         src={url}
         onClick={onClose}
+        alt={AriaLabels.imageAttachmentAlt}
       />
     );
   }

@@ -3,6 +3,7 @@ import { isEmpty } from 'lodash';
 import { TimerOptionsArray } from '../../../../../session/disappearing_messages/timerOptions';
 import { PanelButtonGroup, PanelLabel } from '../../../../buttons/PanelButton';
 import { PanelRadioButton } from '../../../../buttons/PanelRadioButton';
+import { Localizer } from '../../../../basic/Localizer';
 
 type TimerOptionsProps = {
   options: TimerOptionsArray | null;
@@ -21,7 +22,11 @@ export const TimeOptions = (props: TimerOptionsProps) => {
 
   return (
     <>
-      {!hasOnlyOneMode && <PanelLabel>{window.i18n('timer')}</PanelLabel>}
+      {!hasOnlyOneMode && (
+        <PanelLabel>
+          <Localizer token="disappearingMessagesTimer" />
+        </PanelLabel>
+      )}
       <PanelButtonGroup>
         {options.map(option => {
           return (

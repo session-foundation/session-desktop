@@ -14,6 +14,7 @@ import { MemberListItem } from '../MemberListItem';
 import { SessionWrapperModal } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionSpinner } from '../loading';
+import { Localizer } from '../basic/Localizer';
 
 type Props = {
   conversationId: string;
@@ -25,22 +26,27 @@ async function removeMods(convoId: string, modsToRemove: Array<string>) {
     return false;
   }
   window?.log?.info(`asked to remove moderators: ${modsToRemove}`);
-
+  const modsToRemovePubkey = compact(modsToRemove.map(m => PubKey.from(m)));
+  const modsToRemoveNames = modsToRemovePubkey.map(
+    m =>
+      getConversationController().get(m.key)?.getNicknameOrRealUsernameOrPlaceholder() ||
+      window.i18n('unknown')
+  );
   try {
     const convo = getConversationController().get(convoId);
 
     const roomInfos = convo.toOpenGroupV2();
-    const modsToRemovePubkey = compact(modsToRemove.map(m => PubKey.from(m)));
+
     const res = await sogsV3RemoveAdmins(modsToRemovePubkey, roomInfos);
 
     if (!res) {
       window?.log?.warn('failed to remove moderators:', res);
 
-      ToastUtils.pushFailedToRemoveFromModerator();
+      ToastUtils.pushFailedToRemoveFromModerator(modsToRemoveNames);
       return false;
     }
     window?.log?.info(`${modsToRemove} removed from moderators...`);
-    ToastUtils.pushUserRemovedFromModerators();
+    ToastUtils.pushUserRemovedFromModerators(modsToRemoveNames);
     return true;
   } catch (e) {
     window?.log?.error('Got error while removing moderator:', e);
@@ -77,9 +83,8 @@ export const RemoveModeratorsDialog = (props: Props) => {
   const existingMods = convoProps.groupAdmins || [];
   const hasMods = existingMods.length !== 0;
 
-  const title = `${i18n('removeModerators')}: ${convoProps.displayNameInProfile}`;
   return (
-    <SessionWrapperModal title={title} onClose={closeDialog}>
+    <SessionWrapperModal title={i18n('adminRemove')} onClose={closeDialog}>
       <Flex container={true} flexDirection="column" alignItems="center">
         {hasMods ? (
           <div className="contact-selection-list">
@@ -101,7 +106,9 @@ export const RemoveModeratorsDialog = (props: Props) => {
             ))}
           </div>
         ) : (
-          <p>{i18n('noModeratorsToRemove')}</p>
+          <p>
+            <Localizer token="adminRemoveCommunityNone" />
+          </p>
         )}
 
         <div className="session-modal__button-group">
@@ -109,7 +116,7 @@ export const RemoveModeratorsDialog = (props: Props) => {
             buttonType={SessionButtonType.Simple}
             onClick={removeModsCall}
             disabled={removingInProgress}
-            text={i18n('ok')}
+            text={i18n('okay')}
           />
           <SessionButton
             buttonType={SessionButtonType.Simple}

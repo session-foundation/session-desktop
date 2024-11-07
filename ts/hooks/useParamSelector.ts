@@ -76,6 +76,19 @@ export function useConversationsUsernameWithQuoteOrFullPubkey(pubkeys: Array<str
   });
 }
 
+export function useConversationsNicknameRealNameOrShortenPubkey(pubkeys: Array<string>) {
+  return useSelector((state: StateType) => {
+    return pubkeys.map(pk => {
+      if (pk === UserUtils.getOurPubKeyStrFromCache() || pk.toLowerCase() === 'you') {
+        return window.i18n('you');
+      }
+      const convo = state.conversations.conversationLookup[pk];
+
+      return convo?.nickname || convo?.displayNameInProfile || PubKey.shorten(pk);
+    });
+  });
+}
+
 export function useOurConversationUsername() {
   return useConversationUsername(UserUtils.getOurPubKeyStrFromCache());
 }
@@ -122,6 +135,7 @@ export function useNotificationSetting(convoId?: string) {
   const convoProps = useConversationPropsById(convoId);
   return convoProps?.currentNotificationSetting || 'all';
 }
+
 export function useIsPublic(convoId?: string) {
   const convoProps = useConversationPropsById(convoId);
   return Boolean(convoProps && convoProps.isPublic);
@@ -384,32 +398,16 @@ export function useSortedGroupMembers(convoId: string | undefined): Array<string
 export function useDisappearingMessageSettingText({
   convoId,
   abbreviate,
-  separator = ' - ',
 }: {
   convoId?: string;
   abbreviate?: boolean;
-  separator?: string;
 }): string {
   const convoProps = useConversationPropsById(convoId);
   if (!convoProps) {
     return '';
   }
 
-  const { expirationMode, expireTimer, isMe, isPublic } = convoProps;
-
-  const isGroup = !convoProps.isPrivate && !convoProps.isPublic;
-
-  // TODO legacy messages support will be removed in a future release
-  const expirationModeText =
-    expirationMode === 'deleteAfterRead'
-      ? window.i18n('disappearingMessagesModeAfterRead')
-      : expirationMode === 'deleteAfterSend'
-        ? window.i18n('disappearingMessagesModeAfterSend')
-        : expirationMode === 'legacy'
-          ? isMe || (isGroup && !isPublic)
-            ? window.i18n('disappearingMessagesModeAfterSend')
-            : window.i18n('disappearingMessagesModeAfterRead')
-          : null;
+  const { expirationMode, expireTimer } = convoProps;
 
   const expireTimerText = isNumber(expireTimer)
     ? abbreviate
@@ -417,9 +415,19 @@ export function useDisappearingMessageSettingText({
       : TimerOptions.getName(expireTimer)
     : null;
 
-  return expireTimer && expirationModeText
-    ? `${expirationModeText}${expireTimerText ? `${separator}${expireTimerText}` : ''}`
-    : '';
+  if (!expireTimerText) {
+    return '';
+  }
+
+  if (expirationMode === 'legacy') {
+    throw new Error('legacy support is removed');
+  }
+
+  return expirationMode === 'deleteAfterRead'
+    ? window.i18n('disappearingMessagesDisappearAfterReadState', { time: expireTimerText })
+    : expirationMode === 'deleteAfterSend'
+      ? window.i18n('disappearingMessagesDisappearAfterSendState', { time: expireTimerText })
+      : '';
 }
 
 export function useLastMessage(convoId?: string) {

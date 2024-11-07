@@ -50,8 +50,11 @@ export const AddModeratorsDialog = (props: Props) => {
 
         ToastUtils.pushFailedToAddAsModerator();
       } else {
+        const userDisplayName =
+          getConversationController().get(pubkey.key)?.getNicknameOrRealUsernameOrPlaceholder() ||
+          window.i18n('unknown');
         window?.log?.info(`${pubkey.key} added as moderator...`);
-        ToastUtils.pushUserAddedToModerators();
+        ToastUtils.pushUserAddedToModerators(userDisplayName);
 
         // clear input box
         setInputBoxValue('');
@@ -63,11 +66,6 @@ export const AddModeratorsDialog = (props: Props) => {
     }
   };
 
-  const { i18n } = window;
-  const chatName = convo.getNicknameOrRealUsernameOrPlaceholder();
-
-  const title = `${i18n('addModerators')}: ${chatName}`;
-
   const onPubkeyBoxChanges = (e: any) => {
     const val = e.target.value;
     setInputBoxValue(val);
@@ -76,17 +74,16 @@ export const AddModeratorsDialog = (props: Props) => {
   return (
     <SessionWrapperModal
       showExitIcon={true}
-      title={title}
+      title={window.i18n('adminPromote')}
       onClose={() => {
         dispatch(updateAddModeratorsModal(null));
       }}
     >
       <Flex container={true} flexDirection="column" alignItems="center">
-        <p>Add Moderator:</p>
         <SessionHeaderSearchInput
           type="text"
           isDarkTheme={isDarkTheme}
-          placeholder={i18n('accountIdEnter')}
+          placeholder={window.i18n('accountIdEnter')}
           dir="auto"
           onChange={onPubkeyBoxChanges}
           disabled={addingInProgress}
@@ -96,7 +93,7 @@ export const AddModeratorsDialog = (props: Props) => {
         <SessionButton
           buttonType={SessionButtonType.Simple}
           onClick={addAsModerator}
-          text={i18n('add')}
+          text={window.i18n('add')}
           disabled={addingInProgress}
         />
 

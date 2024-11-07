@@ -57,37 +57,37 @@ const getCategories = (): Array<Categories> => {
   return [
     {
       id: 'privacy' as const,
-      title: window.i18n('privacySettingsTitle'),
+      title: window.i18n('sessionPrivacy'),
       icon: { type: 'padlock', ...forcedSize },
     },
     {
       id: 'notifications' as const,
-      title: window.i18n('notificationsSettingsTitle'),
+      title: window.i18n('sessionNotifications'),
       icon: { type: 'speaker', ...forcedSize },
     },
     {
       id: 'conversations' as const,
-      title: window.i18n('conversationsSettingsTitle'),
+      title: window.i18n('sessionConversations'),
       icon: { type: 'chatBubble', ...forcedSize },
     },
     {
       id: 'messageRequests' as const,
-      title: window.i18n('openMessageRequestInbox'),
+      title: window.i18n('sessionMessageRequests'),
       icon: { type: 'messageRequest', ...forcedSize },
     },
     {
       id: 'appearance' as const,
-      title: window.i18n('appearanceSettingsTitle'),
+      title: window.i18n('sessionAppearance'),
       icon: { type: 'paintbrush', ...forcedSize },
     },
     {
       id: 'permissions',
-      title: window.i18n('permissionsSettingsTitle'),
+      title: window.i18n('sessionPermissions'),
       icon: { type: 'checkCircle', ...forcedSize },
     },
     {
       id: 'help' as const,
-      title: window.i18n('helpSettingsTitle'),
+      title: window.i18n('sessionHelp'),
       icon: { type: 'question', ...forcedSize },
     },
     {
@@ -97,7 +97,7 @@ const getCategories = (): Array<Categories> => {
     },
     {
       id: 'clearData' as const,
-      title: window.i18n('clearDataSettingsTitle'),
+      title: window.i18n('sessionClearData'),
       icon: { type: 'delete', ...forcedSize, color: 'var(--danger-color)' },
     },
   ];

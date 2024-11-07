@@ -17,6 +17,7 @@ import { MemberListItem } from '../MemberListItem';
 import { SessionWrapperModal } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { ConversationTypeEnum } from '../../models/types';
+import { Localizer } from '../basic/Localizer';
 
 type Props = {
   conversationId: string;
@@ -122,7 +123,6 @@ const InviteContactsDialogInner = (props: Props) => {
     );
   }
 
-  const chatName = convoProps.displayNameInProfile || window.i18n('unknown');
   const isPublicConvo = convoProps.isPublic;
 
   const closeDialog = () => {
@@ -149,11 +149,9 @@ const InviteContactsDialogInner = (props: Props) => {
     return event.key === 'Esc' || event.key === 'Escape';
   }, closeDialog);
 
-  const unknown = window.i18n('unknown');
-
-  const titleText = `${window.i18n('addingContacts', [chatName || unknown])}`;
+  const titleText = window.i18n('membersInvite');
   const cancelText = window.i18n('cancel');
-  const okText = window.i18n('ok');
+  const okText = window.i18n('okay');
 
   const hasContacts = validContactsForInvite.length > 0;
 
@@ -176,7 +174,9 @@ const InviteContactsDialogInner = (props: Props) => {
         ) : (
           <>
             <SpacerLG />
-            <p className="no-contacts">{window.i18n('noContactsToAdd')}</p>
+            <p className="no-contacts">
+              <Localizer token="contactNone" />
+            </p>
             <SpacerLG />
           </>
         )}

@@ -54,7 +54,7 @@ export const MenuButton = () => {
         iconColor="var(--menu-button-icon-color)"
         iconRotation={isToggled ? 45 : 0}
         iconPadding="2px"
-        aria-label={window.i18n('chooseAnAction')}
+        aria-label={window.i18n('contentDescriptionChooseConversationType')}
       />
     </StyledMenuButton>
   );

@@ -2,6 +2,7 @@ import { useSelector } from 'react-redux';
 import {
   getAddModeratorsModal,
   getBanOrUnbanUserModalState,
+  getBlockOrUnblockUserModalState,
   getChangeNickNameDialog,
   getConfirmModal,
   getDeleteAccountModalState,
@@ -12,6 +13,7 @@ import {
   getInviteContactModal,
   getLightBoxOptions,
   getOnionPathDialog,
+  getOpenUrlModalState,
   getReactClearAllDialog,
   getReactListDialog,
   getRemoveModeratorsModal,
@@ -40,6 +42,8 @@ import { UpdateGroupMembersDialog } from './UpdateGroupMembersDialog';
 import { UpdateGroupNameDialog } from './UpdateGroupNameDialog';
 import { UserDetailsDialog } from './UserDetailsDialog';
 import { EditProfileDialog } from './edit-profile/EditProfileDialog';
+import { OpenUrlModal } from './OpenUrlModal';
+import { BlockOrUnblockDialog } from './blockOrUnblock/BlockOrUnblockDialog';
 
 export const ModalContainer = () => {
   const confirmModalState = useSelector(getConfirmModal);
@@ -57,16 +61,21 @@ export const ModalContainer = () => {
   const deleteAccountModalState = useSelector(getDeleteAccountModalState);
   const banOrUnbanUserModalState = useSelector(getBanOrUnbanUserModalState);
   const serverBanOrUnbanUserModalState = useSelector(getServerBanOrUnbanUserModalState);
+  const blockOrUnblockModalState = useSelector(getBlockOrUnblockUserModalState);
   const reactListModalState = useSelector(getReactListDialog);
   const reactClearAllModalState = useSelector(getReactClearAllDialog);
   const editProfilePictureModalState = useSelector(getEditProfilePictureModalState);
   const hideRecoveryPasswordModalState = useSelector(getHideRecoveryPasswordModalState);
+  const openUrlModalState = useSelector(getOpenUrlModalState);
   const lightBoxOptions = useSelector(getLightBoxOptions);
 
   return (
     <>
       {banOrUnbanUserModalState && <BanOrUnBanUserDialog {...banOrUnbanUserModalState} />}
-      {serverBanOrUnbanUserModalState && <ServerBanOrUnBanUserDialog {...serverBanOrUnbanUserModalState} />}
+      {serverBanOrUnbanUserModalState && (
+        <ServerBanOrUnBanUserDialog {...serverBanOrUnbanUserModalState} />
+      )}
+      {blockOrUnblockModalState && <BlockOrUnblockDialog {...blockOrUnblockModalState} />}
       {inviteModalState && <InviteContactsDialog {...inviteModalState} />}
       {addModeratorsModalState && <AddModeratorsDialog {...addModeratorsModalState} />}
       {removeModeratorsModalState && <RemoveModeratorsDialog {...removeModeratorsModalState} />}
@@ -90,6 +99,7 @@ export const ModalContainer = () => {
       {hideRecoveryPasswordModalState && (
         <HideRecoveryPasswordDialog {...hideRecoveryPasswordModalState} />
       )}
+      {openUrlModalState && <OpenUrlModal {...openUrlModalState} />}
       {lightBoxOptions && <LightboxGallery {...lightBoxOptions} />}
     </>
   );

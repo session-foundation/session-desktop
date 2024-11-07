@@ -17,6 +17,7 @@ import { deleteDbLocally } from '../../../util/accountManager';
 import { Flex } from '../../basic/Flex';
 import { SessionButtonColor } from '../../basic/SessionButton';
 import { SessionIconButton } from '../../icon';
+import type { LocalizerComponentProps, LocalizerToken } from '../../../types/localizer';
 
 /** Min height should match the onboarding step with the largest height this prevents the loading spinner from jumping around while still keeping things centered  */
 const StyledBackButtonContainer = styled(Flex)`
@@ -30,14 +31,14 @@ export const BackButtonWithinContainer = ({
   callback,
   onQuitVisible,
   shouldQuitOnClick,
-  quitMessage,
+  quitI18nMessageArgs,
 }: {
   children: ReactNode;
   margin?: string;
   callback?: () => void;
   onQuitVisible?: () => void;
   shouldQuitOnClick?: boolean;
-  quitMessage?: string;
+  quitI18nMessageArgs: LocalizerComponentProps<LocalizerToken>;
 }) => {
   return (
     <StyledBackButtonContainer
@@ -52,7 +53,7 @@ export const BackButtonWithinContainer = ({
           callback={callback}
           onQuitVisible={onQuitVisible}
           shouldQuitOnClick={shouldQuitOnClick}
-          quitMessage={quitMessage}
+          quitI18nMessageArgs={quitI18nMessageArgs}
         />
       </div>
       {children}
@@ -64,12 +65,12 @@ export const BackButton = ({
   callback,
   onQuitVisible,
   shouldQuitOnClick,
-  quitMessage,
+  quitI18nMessageArgs,
 }: {
   callback?: () => void;
   onQuitVisible?: () => void;
   shouldQuitOnClick?: boolean;
-  quitMessage?: string;
+  quitI18nMessageArgs: LocalizerComponentProps<LocalizerToken>;
 }) => {
   const step = useOnboardStep();
   const restorationStep = useOnboardAccountRestorationStep();
@@ -85,14 +86,15 @@ export const BackButton = ({
       iconRotation={90}
       padding={'0'}
       onClick={() => {
-        if (shouldQuitOnClick && quitMessage) {
+        if (shouldQuitOnClick && quitI18nMessageArgs) {
           if (onQuitVisible) {
             onQuitVisible();
           }
+
           dispatch(
             updateQuitModal({
               title: window.i18n('warning'),
-              message: quitMessage,
+              i18nMessage: quitI18nMessageArgs,
               okTheme: SessionButtonColor.Danger,
               okText: window.i18n('quitButton'),
               onClickOk: async () => {

@@ -1,7 +1,6 @@
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { PropsForExpirationTimer } from '../../state/ducks/conversations';
-import { assertUnreachable } from '../../types/sqlSharedTypes';
 
 import { isLegacyDisappearingModeEnabled } from '../../session/disappearing_messages/legacy';
 import { UserUtils } from '../../session/utils';
@@ -11,9 +10,9 @@ import {
   useSelectedExpireTimer,
   useSelectedIsGroupOrCommunity,
   useSelectedIsGroupV2,
-  useSelectedIsNoteToSelf,
-  useSelectedIsPrivate,
+  useSelectedIsLegacyGroup,
   useSelectedIsPrivateFriend,
+  useSelectedIsPublic,
 } from '../../state/selectors/selectedConversation';
 import { ReleasedFeatures } from '../../util/releaseFeature';
 import { Flex } from '../basic/Flex';
@@ -23,8 +22,9 @@ import { ExpirableReadableMessage } from './message/message-item/ExpirableReadab
 import { ConversationInteraction } from '../../interactions';
 import { getConversationController } from '../../session/conversations';
 import { updateConfirmModal } from '../../state/ducks/modalDialog';
+import type { LocalizerComponentProps, LocalizerToken } from '../../types/localizer';
+import { Localizer } from '../basic/Localizer';
 import { SessionButtonColor } from '../basic/SessionButton';
-import { SessionHtmlRenderer } from '../basic/SessionHTMLRenderer';
 import { SessionIcon } from '../icon';
 
 const FollowSettingButton = styled.button`
@@ -42,18 +42,29 @@ function useFollowSettingsButtonClick(
   const onExit = () => dispatch(updateConfirmModal(null));
 
   const doIt = () => {
-    const mode =
+    const localizedMode =
       props.expirationMode === 'deleteAfterRead'
-        ? window.i18n('timerModeRead')
-        : window.i18n('timerModeSent');
-    const message = props.disabled
-      ? window.i18n('followSettingDisabled')
-      : window.i18n('followSettingTimeAndType', [props.timespanText, mode]);
-    const okText = props.disabled ? window.i18n('confirm') : window.i18n('set');
+        ? window.i18n('disappearingMessagesTypeRead')
+        : window.i18n('disappearingMessagesTypeSent');
+
+    const i18nMessage: LocalizerComponentProps<LocalizerToken> = props.disabled
+      ? {
+          token: 'disappearingMessagesFollowSettingOff',
+        }
+      : {
+          token: 'disappearingMessagesFollowSettingOn',
+          args: {
+            time: props.timespanText,
+            disappearing_messages_type: localizedMode,
+          },
+        };
+
+    const okText = window.i18n('confirm');
+
     dispatch(
       updateConfirmModal({
-        title: window.i18n('followSetting'),
-        message,
+        title: window.i18n('disappearingMessagesFollowSetting'),
+        i18nMessage,
         okText,
         okTheme: SessionButtonColor.Danger,
         onClickOk: async () => {
@@ -126,71 +137,97 @@ const FollowSettingsButton = (props: PropsForExpirationTimer) => {
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       onClick={() => click.doIt()}
     >
-      {window.i18n('followSetting')}
+      {window.i18n('disappearingMessagesFollowSetting')}
     </FollowSettingButton>
   );
 };
 
-function useTextToRender(props: PropsForExpirationTimer) {
-  const { pubkey, profileName, expirationMode, timespanText, type, disabled } = props;
+function useTextToRenderI18nProps(
+  props: PropsForExpirationTimer
+): LocalizerComponentProps<LocalizerToken> {
+  const { pubkey: authorPk, profileName, expirationMode, timespanText: time, disabled } = props;
 
-  const isV2Released = ReleasedFeatures.isDisappearMessageV2FeatureReleasedCached();
-  const isPrivate = useSelectedIsPrivate();
-  const isMe = useSelectedIsNoteToSelf();
-  const ownSideOnly = isV2Released && isPrivate && !isMe;
-  // when v2 is released, and this is a private chat, the settings are for the outgoing messages of whoever made the change only
+  const isLegacyGroup = useSelectedIsLegacyGroup();
 
-  const contact = profileName || pubkey;
-  // TODO legacy messages support will be removed in a future release
-  const mode = isLegacyDisappearingModeEnabled(expirationMode)
-    ? null
-    : expirationMode === 'deleteAfterRead'
-      ? window.i18n('timerModeRead')
-      : window.i18n('timerModeSent');
-  switch (type) {
-    case 'fromOther':
-      return disabled
-        ? window.i18n(
-            ownSideOnly ? 'theyDisabledTheirDisappearingMessages' : 'disabledDisappearingMessages',
-            [contact, timespanText]
-          )
-        : mode
-          ? window.i18n(ownSideOnly ? 'theySetTheirDisappearingMessages' : 'theyChangedTheTimer', [
-              contact,
-              timespanText,
-              mode,
-            ])
-          : window.i18n('theyChangedTheTimerLegacy', [contact, timespanText]);
-    case 'fromMe':
-    case 'fromSync':
-      return disabled
-        ? window.i18n(
-            ownSideOnly ? 'youDisabledYourDisappearingMessages' : 'youDisabledDisappearingMessages'
-          )
-        : mode
-          ? window.i18n(ownSideOnly ? 'youSetYourDisappearingMessages' : 'youChangedTheTimer', [
-              timespanText,
-              mode,
-            ])
-          : window.i18n('youChangedTheTimerLegacy', [timespanText]);
-    default:
-      assertUnreachable(type, `TimerNotification: Missing case error "${type}"`);
+  const authorIsUs = authorPk === UserUtils.getOurPubKeyStrFromCache();
+
+  const name = profileName ?? authorPk;
+
+  // TODO: legacy messages support will be removed in a future release
+  if (isLegacyDisappearingModeEnabled(expirationMode)) {
+    return {
+      token: 'deleteAfterLegacyDisappearingMessagesTheyChangedTimer',
+      args: {
+        name: authorIsUs ? window.i18n('you') : name,
+        time,
+      },
+    };
   }
-  throw new Error('unhandled case');
+
+  const disappearing_messages_type =
+    expirationMode === 'deleteAfterRead'
+      ? window.i18n('disappearingMessagesTypeRead')
+      : window.i18n('disappearingMessagesTypeSent');
+
+  if (isLegacyGroup) {
+    if (disabled) {
+      return authorIsUs
+        ? {
+            token: 'disappearingMessagesTurnedOffYouGroup',
+          }
+        : {
+            token: 'disappearingMessagesTurnedOffGroup',
+            args: {
+              name,
+            },
+          };
+    }
+  }
+
+  if (disabled) {
+    return authorIsUs
+      ? {
+          token: isLegacyGroup
+            ? 'disappearingMessagesTurnedOffYouGroup'
+            : 'disappearingMessagesTurnedOffYou',
+        }
+      : {
+          token: isLegacyGroup
+            ? 'disappearingMessagesTurnedOffGroup'
+            : 'disappearingMessagesTurnedOff',
+          args: {
+            name,
+          },
+        };
+  }
+
+  return authorIsUs
+    ? {
+        token: 'disappearingMessagesSetYou',
+        args: {
+          time,
+          disappearing_messages_type,
+        },
+      }
+    : {
+        token: 'disappearingMessagesSet',
+        args: {
+          time,
+          disappearing_messages_type,
+          name,
+        },
+      };
 }
 
 export const TimerNotification = (props: PropsForExpirationTimer) => {
   const { messageId } = props;
 
-  const textToRender = useTextToRender(props);
+  const i18nProps = useTextToRenderI18nProps(props);
   const isGroupOrCommunity = useSelectedIsGroupOrCommunity();
   const isGroupV2 = useSelectedIsGroupV2();
+  const isPublic = useSelectedIsPublic();
   // renderOff is true when the update is put to off, or when we have a legacy group control message (as they are not expiring at all)
-  const renderOffIcon = props.disabled || (isGroupOrCommunity && !isGroupV2);
-
-  if (!textToRender || textToRender.length === 0) {
-    throw new Error('textToRender invalid key used TimerNotification');
-  }
+  const renderOffIcon = props.disabled || (isGroupOrCommunity && isPublic && !isGroupV2);
 
   return (
     <ExpirableReadableMessage
@@ -221,7 +258,7 @@ export const TimerNotification = (props: PropsForExpirationTimer) => {
           </>
         )}
         <TextWithChildren subtle={true}>
-          <SessionHtmlRenderer html={textToRender} />
+          <Localizer {...i18nProps} />
         </TextWithChildren>
         <FollowSettingsButton {...props} />
       </Flex>

@@ -208,8 +208,10 @@ async function updateLibsessionLatestProcessedUserTimestamp(
  * Instead you will need to updateOurProfileLegacyOrViaLibSession() to support them
  */
 async function handleUserProfileUpdate(result: IncomingConfResult): Promise<IncomingConfResult> {
-  const updateUserInfo = await UserConfigWrapperActions.getUserInfo();
-  if (!updateUserInfo) {
+  const profilePic = await UserConfigWrapperActions.getProfilePic();
+  const displayName = await UserConfigWrapperActions.getName();
+  const priority = await UserConfigWrapperActions.getPriority();
+  if (!profilePic || isEmpty(profilePic)) {
     return result;
   }
 
@@ -219,15 +221,15 @@ async function handleUserProfileUpdate(result: IncomingConfResult): Promise<Inco
     await window.setSettingValue(SettingsKey.hasBlindedMsgRequestsEnabled, newBlindedMsgRequest); // this does the dispatch to redux
   }
 
-  const picUpdate = !isEmpty(updateUserInfo.key) && !isEmpty(updateUserInfo.url);
+  const picUpdate = !isEmpty(profilePic.key) && !isEmpty(profilePic.url);
 
   // NOTE: if you do any changes to the user's settings which are synced, it should be done above the `updateOurProfileLegacyOrViaLibSession` call
   await updateOurProfileLegacyOrViaLibSession({
     sentAt: result.latestEnvelopeTimestamp,
-    displayName: updateUserInfo.name,
-    profileUrl: picUpdate ? updateUserInfo.url : null,
-    profileKey: picUpdate ? updateUserInfo.key : null,
-    priority: updateUserInfo.priority,
+    displayName: displayName || '',
+    profileUrl: picUpdate ? profilePic.url : null,
+    profileKey: picUpdate ? profilePic.key : null,
+    priority,
   });
 
   // NOTE: If we want to update the conversation in memory with changes from the updated user profile we need to wait untl the profile has been updated to prevent multiple merge conflicts

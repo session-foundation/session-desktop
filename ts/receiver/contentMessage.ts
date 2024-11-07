@@ -20,7 +20,7 @@ import { removeMessagePadding } from '../session/crypto/BufferPadding';
 import { DisappearingMessages } from '../session/disappearing_messages';
 import { ReadyToDisappearMsgUpdate } from '../session/disappearing_messages/types';
 import { ProfileManager } from '../session/profile_manager/ProfileManager';
-import { GroupUtils, UserUtils } from '../session/utils';
+import { UserUtils } from '../session/utils';
 import { perfEnd, perfStart } from '../session/utils/Performance';
 import { fromHexToArray, toHex } from '../session/utils/String';
 import { isUsFromCache } from '../session/utils/User';
@@ -69,10 +69,7 @@ async function decryptForClosedGroup(envelope: EnvelopePlus) {
   window?.log?.info('received closed group message');
   try {
     const hexEncodedGroupPublicKey = envelope.source;
-    if (!GroupUtils.isClosedGroup(PubKey.cast(hexEncodedGroupPublicKey))) {
-      window?.log?.warn('received medium group message but not for an existing medium group');
-      throw new Error('Invalid group public key'); // invalidGroupPublicKey
-    }
+
     const encryptionKeyPairs = await getAllCachedECKeyPair(hexEncodedGroupPublicKey);
 
     const encryptionKeyPairsCount = encryptionKeyPairs?.length;

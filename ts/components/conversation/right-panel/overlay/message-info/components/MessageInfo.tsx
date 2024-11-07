@@ -1,6 +1,4 @@
-import { format, formatDistanceStrict } from 'date-fns';
 import { isEmpty } from 'lodash';
-import moment from 'moment';
 
 import styled from 'styled-components';
 import { MessageFrom } from '.';
@@ -20,9 +18,15 @@ import {
 
 import { isDevProd } from '../../../../../../shared/env_vars';
 import { useSelectedConversationKey } from '../../../../../../state/selectors/selectedConversation';
+
 import { Flex } from '../../../../../basic/Flex';
 import { SpacerSM } from '../../../../../basic/Text';
 import { CopyToClipboardIcon } from '../../../../../buttons';
+import {
+  formatTimeDistanceToNow,
+  formatTimeDurationMs,
+  formatDateWithLocale,
+} from '../../../../../../util/i18n/formatting/generics';
 import { saveLogToDesktop } from '../../../../../../util/logging';
 
 export const MessageInfoLabel = styled.label<{ color?: string }>`
@@ -71,8 +75,7 @@ export const LabelWithInfo = (props: LabelWithInfoProps) => {
   );
 };
 
-// Message timestamp format: "06:02 PM Tue, 15/11/2022"
-const formatTimestamps = 'hh:mm A ddd, D/M/Y';
+const formatTimestampStr = 'hh:mm d LLL, yyyy' as const;
 
 const DebugMessageInfo = ({ messageId }: { messageId: string }) => {
   const convoId = useSelectedConversationKey();
@@ -87,7 +90,7 @@ const DebugMessageInfo = ({ messageId }: { messageId: string }) => {
   if (!isDevProd()) {
     return null;
   }
-
+  // Note: the strings here are hardcoded because we do not share them with other platforms through crowdin
   return (
     <>
       {convoId ? <LabelWithInfo label={`Conversation ID:`} info={convoId} /> : null}
@@ -101,15 +104,13 @@ const DebugMessageInfo = ({ messageId }: { messageId: string }) => {
       {expirationDurationMs ? (
         <LabelWithInfo
           label={`Expiration Duration:`}
-          // TODO formatDistanceStrict (date-fns) is not localized yet
-          info={`${formatDistanceStrict(0, Math.floor(expirationDurationMs / 1000))}`}
+          info={formatTimeDurationMs(Math.floor(expirationDurationMs))}
         />
       ) : null}
       {expirationTimestamp ? (
         <LabelWithInfo
           label={`Disappears:`}
-          // TODO format (date-fns) is not localized yet
-          info={`${format(expirationTimestamp, 'PPpp')}`}
+          info={formatTimeDistanceToNow(Math.floor(expirationTimestamp / 1000))}
         />
       ) : null}
     </>
@@ -128,8 +129,14 @@ export const MessageInfo = ({ messageId, errors }: { messageId: string; errors: 
     return null;
   }
 
-  const sentAtStr = `${moment(serverTimestamp || sentAt).format(formatTimestamps)}`;
-  const receivedAtStr = `${moment(receivedAt).format(formatTimestamps)}`;
+  const sentAtStr = formatDateWithLocale({
+    date: new Date(serverTimestamp || sentAt || 0),
+    formatStr: formatTimestampStr,
+  });
+  const receivedAtStr = formatDateWithLocale({
+    date: new Date(receivedAt || 0),
+    formatStr: formatTimestampStr,
+  });
 
   const hasError = !isEmpty(errors);
   const errorString = hasError
@@ -142,11 +149,11 @@ export const MessageInfo = ({ messageId, errors }: { messageId: string; errors: 
 
   return (
     <Flex container={true} flexDirection="column">
-      <LabelWithInfo label={`${window.i18n('sent')}:`} info={sentAtStr} />
+      <LabelWithInfo label={window.i18n('sent')} info={sentAtStr} />
       <DebugMessageInfo messageId={messageId} />
 
       {direction === 'incoming' ? (
-        <LabelWithInfo label={`${window.i18n('received')}:`} info={receivedAtStr} />
+        <LabelWithInfo label={window.i18n('received')} info={receivedAtStr} />
       ) : null}
       <SpacerSM />
       <MessageFrom sender={sender} isSenderAdmin={isSenderAdmin} />
@@ -154,9 +161,9 @@ export const MessageInfo = ({ messageId, errors }: { messageId: string; errors: 
         <>
           <SpacerSM />
           <LabelWithInfo
-            title={window.i18n('shareBugDetails')}
-            label={`${window.i18n('error')}:`}
-            info={errorString || window.i18n('unknownError')}
+            title={window.i18n('helpReportABugExportLogsSaveToDesktopDescription')}
+            label={`${window.i18n('theError')}:`}
+            info={errorString || window.i18n('errorUnknown')}
             dataColor={'var(--danger-color)'}
             onClick={() => {
               void saveLogToDesktop();

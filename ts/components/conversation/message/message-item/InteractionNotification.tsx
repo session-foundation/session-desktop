@@ -1,6 +1,10 @@
 import { isEmpty } from 'lodash';
 import styled from 'styled-components';
-import { useIsPrivate, useIsPublic } from '../../../../hooks/useParamSelector';
+import {
+  useIsPrivate,
+  useIsPublic,
+  useNicknameOrProfileNameOrShortenedPubkey,
+} from '../../../../hooks/useParamSelector';
 import { assertUnreachable } from '../../../../types/sqlSharedTypes';
 import { Flex } from '../../../basic/Flex';
 import { ReadableMessage } from './ReadableMessage';
@@ -18,6 +22,8 @@ export const InteractionNotification = (props: PropsForInteractionNotification) 
   const { notificationType, convoId, messageId, receivedAt, isUnread } = props;
 
   const { interactionStatus, interactionType } = notificationType;
+
+  const displayName = useNicknameOrProfileNameOrShortenedPubkey(convoId);
 
   const isGroup = !useIsPrivate(convoId);
   const isCommunity = useIsPublic(convoId);
@@ -40,10 +46,14 @@ export const InteractionNotification = (props: PropsForInteractionNotification) 
       break;
     case ConversationInteractionType.Leave:
       text = isCommunity
-        ? window.i18n('leaveCommunityFailedPleaseTryAgain')
+        ? window.i18n('communityLeaveError', {
+            community_name: displayName || window.i18n('communityUnknown'),
+          })
         : isGroup
-          ? window.i18n('leaveGroupFailedPleaseTryAgain')
-          : window.i18n('deleteConversationFailedPleaseTryAgain');
+          ? window.i18n('groupLeaveErrorFailed', {
+              group_name: displayName || window.i18n('groupUnknown'),
+            })
+          : ''; // we cannot fail to do other actions, so not printing anything
       break;
     default:
       assertUnreachable(

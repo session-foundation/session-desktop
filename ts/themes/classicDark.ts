@@ -165,4 +165,6 @@ export const classicDark: ThemeColorVariables = {
   '--file-dropzone-border-color': 'var(--primary-color)',
 
   '--session-recording-pulse-color': hexColorToRGB(THEMES.CLASSIC_DARK.DANGER),
+
+  '--renderer-span-primary-color': 'var(--primary-color)',
 };

@@ -54,10 +54,12 @@ export const AboutView = () => {
   }
 
   const versionInfo = `v${window.getVersion()}`;
-  const systemInfo = window.i18n('systemInformationDesktop', [window.getOSRelease()]);
-  const commitInfo = window.i18n('commitHashDesktop', [
-    window.getCommitHash() || window.i18n('unknown'),
-  ]);
+  const systemInfo = window.i18n('systemInformationDesktop', {
+    information: window.getOSRelease(),
+  });
+  const commitInfo = window.i18n('commitHashDesktop', {
+    hash: window.getCommitHash() || window.i18n('unknown'),
+  });
 
   useEffect(() => {
     if (window.theme) {
@@ -114,10 +116,10 @@ export const AboutView = () => {
         <a href="https://getsession.org">https://getsession.org</a>
         <br />
         <a className="privacy" href="https://getsession.org/privacy-policy">
-          {window.i18n('privacyPolicy')}
+          {window.i18n('onboardingPrivacy')}
         </a>
         <a className="privacy" href="https://getsession.org/terms-of-service/">
-          {window.i18n('termsOfService')}
+          {window.i18n('onboardingTos')}
         </a>
         <br />
       </StyledContent>

@@ -1,82 +1,163 @@
-# This script will build session production binaries anytime a branch is updated
-name: Session Build Binaries
+# There is a fair bit of duplication here, but it is the best to save our github free minutes for now.
+# We could save and restore cache to different jobs but that takes roughly 3 minutes to save,
+# so better run them in parrallel instead.
+
+name: Session Desktop
 
 on:
   push:
     branches:
+      - master
       - clearnet
       - unstable
-      - release/
-      - ci/
+      - 'release/**'
+      - 'ci/**'
   pull_request:
     branches:
       - clearnet
       - unstable
-      - release/
-      - ci/
+      - 'release/**'
+      - 'ci/**'
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+env:
+  # we want to publish on "push to master" only. When we don't want to publish, we want to upload artefacts
+  SHOULD_PUBLISH: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
+  build_linux:
+    runs-on: ubuntu-20.04
     strategy:
-      fail-fast: false
       matrix:
-        # We want a mac arm64 build, and according to this https://github.com/actions/runner-images#available-images macos-14 is always arm64
-        os: [windows-2022, ubuntu-20.04, macos-12, macos-14]
+        # this needs to be a valid target of https://www.electron.build/linux#target
+        pkg_to_build: ['deb', 'rpm', 'freebsd', 'AppImage']
+
     env:
-      SIGNAL_ENV: production
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - run: git config --global core.autocrlf false
 
       - name: Checkout git repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup & Build
         uses: ./actions/setup_and_build
+        with:
+          cache_suffix: ${{ matrix.pkg_to_build }}
+
+      - name: Lint Files
+        # no need to lint files on all platforms
+        run: yarn lint-full
 
       - name: Enforce yarn.lock has no duplicates
+        # no need to dedup yarn.lock on all platforms
         uses: ./actions/deduplicate_fail
 
-      - name: Build windows production binaries
-        if: runner.os == 'Windows'
-        run: node_modules\.bin\electron-builder --config.extraMetadata.environment=%SIGNAL_ENV% --publish=never --config.directories.output=release
+        # we want to test on all platforms since some are testing the rendered menus (and are dependent on the platform)
+      - name: Unit Test
+        run: yarn test
 
-      - name: Build mac production binaries
-        if: runner.os == 'macOS'
+      - name: Build but do not publish ${{ matrix.pkg_to_build }}
+        # we want this to run always, except on "push" to "master"
+        if: ${{ env.SHOULD_PUBLISH == 'false' }}
+        run: |
+          sed -i 's/"target": \["deb"\]/"target": "${{ matrix.pkg_to_build }}"/g' package.json && yarn build-release
+
+      - name: Upload artefacts ${{ matrix.pkg_to_build }}
+        # we want this to run always, except on "push" to "master"
+        if: ${{ env.SHOULD_PUBLISH == 'false' }}
+        uses: ./actions/upload_prod_artefacts
+        with:
+          upload_prefix: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.pkg_to_build }}
+
+      - name: Build & publish ${{ matrix.pkg_to_build }}
+        # we want this to run only when on "push" to "master"
+        if: ${{ env.SHOULD_PUBLISH == 'true' }}
+        run: |
+          sed -i 's/"target": \["deb"\]/"target": "${{ matrix.pkg_to_build }}"/g' package.json && yarn build-release-publish
+
+  build_windows:
+    runs-on: windows-2022
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - run: git config --global core.autocrlf false
+
+      - name: Checkout git repo
+        uses: actions/checkout@v4
+
+      - name: Setup & Build
+        uses: ./actions/setup_and_build
+        with:
+          cache_suffix: 'windows_x64'
+
+        # we want to test on all platforms since some are testing the rendered menus (and are dependent on the platform)
+      - name: Unit Test
+        run: yarn test
+
+      - name: Build but do not publish
+        # we want this to run always, except on "push" to "master"
+        if: ${{ env.SHOULD_PUBLISH == 'false' }}
+        run: yarn build-release
+
+      - name: Upload artefacts
+        # we want this to run always, except on "push" to "master"
+        if: ${{ env.SHOULD_PUBLISH == 'false' }}
+        uses: ./actions/upload_prod_artefacts
+        with:
+          upload_prefix: ${{ runner.os }}-${{ runner.arch }}
+
+      - name: Build & publish
+        # we want this to run only when on "push" to "master"
+        if: ${{ env.SHOULD_PUBLISH == 'true' }}
+        run: yarn build-release-publish # No other args needed for windows publish
+
+  # We want a mac arm64 build, and according to this https://github.com/actions/runner-images#available-images macos-14 is always arm64
+  # macos-14 is disabled for now as we hit our free tier limit for macos builds
+  build_macos_x64:
+    runs-on: macos-12
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      MAC_CERTIFICATE: ${{ secrets.MAC_CERTIFICATE }}
+      MAC_CERTIFICATE_PASSWORD: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
+      SIGNING_APPLE_ID: ${{ secrets.SIGNING_APPLE_ID }}
+      SIGNING_APP_PASSWORD: ${{ secrets.SIGNING_APP_PASSWORD }}
+      SIGNING_TEAM_ID: ${{ secrets.SIGNING_TEAM_ID }}
+    steps:
+      - run: git config --global core.autocrlf false
+
+      - name: Checkout git repo
+        uses: actions/checkout@v4
+
+      - name: Setup & Build
+        uses: ./actions/setup_and_build
+        with:
+          cache_suffix: 'macos_x64'
+
+        # we want to test on all platforms since some are testing the rendered menus (and are dependent on the platform)
+      - name: Unit Test
+        run: yarn test
+
+      - name: Build but do not publish
+        # we want this to run always, except on "push" to "master"
+        if: ${{ env.SHOULD_PUBLISH == 'false' }}
         run: |
           source ./build/setup-mac-certificate.sh
-          $(yarn bin)/electron-builder --config.extraMetadata.environment=$SIGNAL_ENV --config.mac.bundleVersion=${{ github.ref }} --publish=never --config.directories.output=release
-        env:
-          MAC_CERTIFICATE: ${{ secrets.MAC_CERTIFICATE }}
-          MAC_CERTIFICATE_PASSWORD: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
-          SIGNING_APPLE_ID: ${{ secrets.SIGNING_APPLE_ID }}
-          SIGNING_APP_PASSWORD: ${{ secrets.SIGNING_APP_PASSWORD }}
-          SIGNING_TEAM_ID: ${{ secrets.SIGNING_TEAM_ID }}
+          yarn build-release --config.mac.bundleVersion=${{ github.ref }}
 
-      - name: Build linux production binaries
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get install -y rpm
-          yarn build-release
-
-      - name: Remove unpacked files
-        run: |
-          ls -d -- */ | xargs -I{} echo "Removing {}"
-          ls -d -- */ | xargs -I{} rm -rf {}
-        shell: bash
-        working-directory: ./release/
-
-      - name: Remaining files
-        run: ls .
-        shell: bash
-        working-directory: ./release/
-
-      - name: Upload Production Artifacts
-        uses: actions/upload-artifact@v1
+      - name: Upload artefacts
+        # we want this to run always, except on "push" to "master"
+        if: ${{ env.SHOULD_PUBLISH == 'false' }}
+        uses: ./actions/upload_prod_artefacts
         with:
-          name: ${{ runner.os }}-${{ runner.arch }}-production
-          path: release
+          upload_prefix: ${{ runner.os }}-${{ runner.arch }}
+
+      - name: Build & publish
+        # we want this to run only when on "push" to "master"
+        if: ${{ env.SHOULD_PUBLISH == 'true' }}
+        run: |
+          source ./build/setup-mac-certificate.sh
+          yarn build-release-publish --config.mac.bundleVersion=${{ github.ref }}

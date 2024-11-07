@@ -1,0 +1,27 @@
+name: 'Upload production artefact (not publish)'
+description: 'Upload production artefact (not publish)'
+inputs:
+  upload_prefix:
+    description: 'upload name prefix'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Remove unpacked files
+      run: |
+        ls -d -- */ | xargs -I{} echo "Removing {}"
+        ls -d -- */ | xargs -I{} rm -rf {}
+      shell: bash
+      working-directory: ./release/
+
+    - name: Remaining files
+      run: ls .
+      shell: bash
+      working-directory: ./release/
+
+    - name: Upload Production Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.upload_prefix }}-production
+        path: release

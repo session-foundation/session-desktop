@@ -66,13 +66,13 @@ export class UpdateGroupNameDialog extends Component<Props, State> {
     const { groupName, newAvatarObjecturl, oldAvatarPath } = this.state;
     const trimmedGroupName = groupName?.trim();
     if (!trimmedGroupName) {
-      this.onShowError(window.i18n('emptyGroupNameError'));
+      this.onShowError(window.i18n('groupNameEnterPlease'));
 
       return;
     }
 
     if (trimmedGroupName.length > LIBSESSION_CONSTANTS.BASE_GROUP_MAX_NAME_LENGTH) {
-      this.onShowError(window.i18n('invalidGroupNameTooLong'));
+      this.onShowError(window.i18n('groupNameEnterShorter'));
 
       return;
     }
@@ -96,18 +96,15 @@ export class UpdateGroupNameDialog extends Component<Props, State> {
   }
 
   public render() {
-    const okText = window.i18n('ok');
+    const okText = window.i18n('okay');
     const cancelText = window.i18n('cancel');
-    const titleText = window.i18n('updateGroupDialogTitle', [
-      this.convo.getRealSessionUsername() || window.i18n('unknown'),
-    ]);
 
     const errorMsg = this.state.errorMessage;
     const isAdmin = !this.convo.isPublic();
 
     return (
       <SessionWrapperModal
-        title={titleText}
+        title={window.i18n('groupName')}
         onClose={() => this.closeDialog()}
         additionalClassName="update-group-dialog"
       >
@@ -133,7 +130,7 @@ export class UpdateGroupNameDialog extends Component<Props, State> {
           <input
             type="text"
             value={this.state.groupName}
-            placeholder={window.i18n('groupNamePlaceholder')}
+            placeholder={window.i18n('groupNameEnter')}
             onChange={this.onGroupNameChanged}
             tabIndex={0}
             required={true}

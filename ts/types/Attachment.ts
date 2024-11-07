@@ -1,12 +1,13 @@
 import { isUndefined, padStart } from 'lodash';
-import moment from 'moment';
 
+import { format } from 'date-fns';
 import { SignalService } from '../protobuf';
 import { isImageTypeSupported, isVideoTypeSupported } from '../util/GoogleChrome';
 import { ATTACHMENT_DEFAULT_MAX_SIDE } from '../util/attachmentsUtil';
 import { saveURLAsFile } from '../util/saveURLAsFile';
 import * as MIME from './MIME';
 import { THUMBNAIL_SIDE } from './attachments/VisualAttachment';
+import { AriaLabels } from '../util/hardcodedAriaLabels';
 
 const MAX_WIDTH = THUMBNAIL_SIDE;
 const MAX_HEIGHT = THUMBNAIL_SIDE;
@@ -140,6 +141,7 @@ export function isImageAttachment(attachment: AttachmentType): boolean {
     attachment && attachment.contentType && isImageTypeSupported(attachment.contentType)
   );
 }
+
 export function hasImage(attachments?: Array<AttachmentType>): boolean {
   return Boolean(attachments && attachments[0] && (attachments[0].url || attachments[0].pending));
 }
@@ -212,9 +214,10 @@ export function areAllAttachmentsVisual(attachments?: Array<AttachmentType>): bo
 }
 
 export function getAlt(attachment: AttachmentType): string {
+  // TODO: make those localized through crowdin
   return isVideoAttachment(attachment)
-    ? window.i18n('videoAttachmentAlt')
-    : window.i18n('imageAttachmentAlt');
+    ? AriaLabels.screenshotVideoInMsg
+    : AriaLabels.imageAttachmentAlt;
 }
 
 // Migration-related attachment stuff
@@ -319,7 +322,7 @@ export const getSuggestedFilename = ({
     return attachment.fileName;
   }
   const prefix = 'session-attachment';
-  const suffix = timestamp ? moment(timestamp).format('-YYYY-MM-DD-HHmmss') : '';
+  const suffix = timestamp ? format(new Date(timestamp), '-yyyy-MM-dd-HHmmss') : '';
   const fileType = getFileExtension(attachment);
   const extension = fileType ? `.${fileType}` : '';
   const indexSuffix = index ? `_${padStart(index.toString(), 3, '0')}` : '';

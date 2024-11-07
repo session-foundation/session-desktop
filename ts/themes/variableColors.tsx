@@ -207,4 +207,11 @@ export type ThemeColorVariables = {
 
   /* Session Recording */
   '--session-recording-pulse-color': string;
+
+  /* HTML Renderer */
+  /**
+   * This isn't good, but we want the span color to be
+   * `--primary-color` on dark themes and `--text-primary-color` on light themes
+   */
+  '--renderer-span-primary-color': string;
 };

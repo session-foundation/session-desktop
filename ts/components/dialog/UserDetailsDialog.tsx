@@ -83,7 +83,7 @@ export const UserDetailsDialog = (props: UserDetailsModalState) => {
       <SpacerLG />
       <div className="session-modal__button-group__center">
         <SessionButton
-          text={window.i18n('startConversation')}
+          text={window.i18n('conversationsNew')}
           buttonType={SessionButtonType.Simple}
           onClick={onClickStartConversation}
         />

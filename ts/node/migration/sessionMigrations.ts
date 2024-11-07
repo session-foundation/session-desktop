@@ -1376,11 +1376,13 @@ function updateToSessionSchemaVersion31(currentVersion: number, db: BetterSqlite
       const ourDbProfileKey = fromHexToArray(ourConversation.profileKey || '');
       const ourConvoPriority = ourConversation.priority;
 
+      // we don't want to throw if somehow our display name in the DB is too long here, so we use the truncated version.
+      userProfileWrapper.setNameTruncated(ourDbName);
+      userProfileWrapper.setPriority(ourConvoPriority);
       if (ourDbProfileUrl && !isEmpty(ourDbProfileKey)) {
-        userProfileWrapper.setUserInfo(ourDbName, ourConvoPriority, {
-          url: ourDbProfileUrl,
-          key: ourDbProfileKey,
-        });
+        userProfileWrapper.setProfilePic({ key: ourDbProfileKey, url: ourDbProfileUrl });
+      } else {
+        userProfileWrapper.setProfilePic({ key: null, url: null });
       }
 
       MIGRATION_HELPERS.V31.insertContactIntoContactWrapper(

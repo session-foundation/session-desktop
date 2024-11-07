@@ -2,13 +2,13 @@ import { isEmpty } from 'lodash';
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { SettingsKey } from '../../data/settings-key';
-import { updateHideRecoveryPasswordModel } from '../../state/ducks/modalDialog';
+import { updateHideRecoveryPasswordModal } from '../../state/ducks/modalDialog';
 import { showSettingsSection } from '../../state/ducks/section';
 import { SessionWrapperModal } from '../SessionWrapperModal';
 import { Flex } from '../basic/Flex';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
-import { SessionHtmlRenderer } from '../basic/SessionHTMLRenderer';
 import { SpacerMD } from '../basic/Text';
+import { Localizer } from '../basic/Localizer';
 
 const StyledDescriptionContainer = styled.div`
   width: 280px;
@@ -25,7 +25,7 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
   const dispatch = useDispatch();
 
   const onClose = () => {
-    dispatch(updateHideRecoveryPasswordModel(null));
+    dispatch(updateHideRecoveryPasswordModal(null));
   };
 
   const onConfirmation = async () => {
@@ -41,10 +41,10 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
   const leftButtonProps =
     state === 'firstWarning'
       ? {
-          text: window.i18n('continue'),
+          text: window.i18n('theContinue'),
           buttonColor: SessionButtonColor.Danger,
           onClick: () => {
-            dispatch(updateHideRecoveryPasswordModel({ state: 'secondWarning' }));
+            dispatch(updateHideRecoveryPasswordModal({ state: 'secondWarning' }));
           },
           dataTestId: 'session-confirm-ok-button',
         }
@@ -79,11 +79,11 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
       additionalClassName="no-body-padding"
     >
       <StyledDescriptionContainer>
-        <SessionHtmlRenderer
-          html={
+        <Localizer
+          token={
             state === 'firstWarning'
-              ? window.i18n('recoveryPasswordHidePermanentlyDescription1')
-              : window.i18n('recoveryPasswordHidePermanentlyDescription2')
+              ? 'recoveryPasswordHidePermanentlyDescription1'
+              : 'recoveryPasswordHidePermanentlyDescription2'
           }
         />
       </StyledDescriptionContainer>

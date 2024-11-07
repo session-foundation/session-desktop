@@ -7,6 +7,7 @@ import {
   ContactsWrapperActionsCalls,
   ConvoInfoVolatileWrapperActionsCalls,
   LegacyGroupInfo,
+  ProfilePicture,
   UserConfigWrapperActionsCalls,
   UserGroupsWrapperActionsCalls,
 } from 'libsession_util_nodejs';
@@ -106,17 +107,33 @@ export const UserConfigWrapperActions: UserConfigWrapperActionsCalls = {
   currentHashes: async () => GenericWrapperActions.currentHashes('UserConfig'),
 
   /** UserConfig wrapper specific actions */
-  getUserInfo: async () =>
-    callLibSessionWorker(['UserConfig', 'getUserInfo']) as Promise<
-      ReturnType<UserConfigWrapperActionsCalls['getUserInfo']>
+  getPriority: async () =>
+    callLibSessionWorker(['UserConfig', 'getPriority']) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['getPriority']>
     >,
-  setUserInfo: async (
-    name: string,
-    priority: number,
-    profilePic: { url: string; key: Uint8Array } | null
-  ) =>
-    callLibSessionWorker(['UserConfig', 'setUserInfo', name, priority, profilePic]) as Promise<
-      ReturnType<UserConfigWrapperActionsCalls['setUserInfo']>
+  getName: async () =>
+    callLibSessionWorker(['UserConfig', 'getName']) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['getName']>
+    >,
+  getProfilePic: async () =>
+    callLibSessionWorker(['UserConfig', 'getProfilePic']) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['getProfilePic']>
+    >,
+  setPriority: async (priority: number) =>
+    callLibSessionWorker(['UserConfig', 'setPriority', priority]) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['setPriority']>
+    >,
+  setName: async (name: string) =>
+    callLibSessionWorker(['UserConfig', 'setName', name]) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['setName']>
+    >,
+  setNameTruncated: async (name: string) =>
+    callLibSessionWorker(['UserConfig', 'setNameTruncated', name]) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['setNameTruncated']>
+    >,
+  setProfilePic: async (profilePic: ProfilePicture) =>
+    callLibSessionWorker(['UserConfig', 'setProfilePic', profilePic]) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['setProfilePic']>
     >,
   getEnableBlindedMsgRequest: async () =>
     callLibSessionWorker(['UserConfig', 'getEnableBlindedMsgRequest']) as Promise<

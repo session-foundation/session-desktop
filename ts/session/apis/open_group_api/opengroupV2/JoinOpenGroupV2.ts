@@ -95,7 +95,7 @@ async function joinOpenGroupV2(
 
     if (!conversation) {
       window?.log?.warn('Failed to join open group v2');
-      throw new Error(window.i18n('connectToServerFail'));
+      throw new Error(window.i18n('communityJoinError'));
     }
 
     // here we managed to connect to the group.
@@ -140,10 +140,13 @@ export async function joinOpenGroupV2WithUIEvents(
     const parsedRoom = parseOpenGroupV2(completeUrl);
     if (!parsedRoom) {
       if (showToasts) {
-        ToastUtils.pushToastError('connectToServer', window.i18n('invalidOpenGroupUrl'));
+        ToastUtils.pushToastError(
+          'connectToServer',
+          window.i18n.stripped('communityEnterUrlErrorInvalid')
+        );
       }
       if (errorHandler) {
-        errorHandler(window.i18n('invalidOpenGroupUrl'));
+        errorHandler(window.i18n('communityEnterUrlErrorInvalid'));
       }
       return false;
     }
@@ -155,15 +158,18 @@ export async function joinOpenGroupV2WithUIEvents(
       await existingConvo.setIsApproved(true, false);
       await existingConvo.commit();
       if (showToasts) {
-        ToastUtils.pushToastError('publicChatExists', window.i18n('publicChatExists'));
+        ToastUtils.pushToastError(
+          'communityJoinedAlready',
+          window.i18n.stripped('communityJoinedAlready')
+        );
       }
       if (errorHandler) {
-        errorHandler(window.i18n('publicChatExists'));
+        errorHandler(window.i18n('communityJoinedAlready'));
       }
       return false;
     }
     if (showToasts) {
-      ToastUtils.pushToastInfo('connectingToServer', window.i18n('connectingToServer'));
+      ToastUtils.pushToastInfo('connectingToServer', window.i18n.stripped('callsConnecting'));
     }
 
     uiCallback?.({ loadingState: 'started', conversationKey: conversationID });
@@ -174,7 +180,7 @@ export async function joinOpenGroupV2WithUIEvents(
       if (showToasts) {
         ToastUtils.pushToastSuccess(
           'connectToServerSuccess',
-          window.i18n('connectToServerSuccess')
+          window.i18n.stripped('communityJoined')
         );
       }
       uiCallback?.({ loadingState: 'finished', conversationKey: convoCreated?.id });
@@ -182,20 +188,20 @@ export async function joinOpenGroupV2WithUIEvents(
       return true;
     }
     if (showToasts) {
-      ToastUtils.pushToastError('connectToServerFail', window.i18n('connectToServerFail'));
+      ToastUtils.pushToastError('communityJoinError', window.i18n.stripped('communityJoinError'));
     }
     if (errorHandler) {
-      errorHandler(window.i18n('connectToServerFail'));
+      errorHandler(window.i18n('communityJoinError'));
     }
 
     uiCallback?.({ loadingState: 'failed', conversationKey: conversationID });
   } catch (error) {
     window?.log?.warn('got error while joining open group:', error.message);
     if (showToasts) {
-      ToastUtils.pushToastError('connectToServerFail', window.i18n('connectToServerFail'));
+      ToastUtils.pushToastError('communityJoinError', window.i18n.stripped('communityJoinError'));
     }
     if (errorHandler) {
-      errorHandler(window.i18n('connectToServerFail'));
+      errorHandler(window.i18n('communityJoinError'));
     }
     uiCallback?.({ loadingState: 'failed', conversationKey: null });
   }

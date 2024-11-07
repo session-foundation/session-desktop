@@ -9,6 +9,7 @@ import { SessionButtonColor } from '../components/basic/SessionButton';
 import { getCallMediaPermissionsSettings } from '../components/settings/SessionSettings';
 import { Data } from '../data/data';
 import { SettingsKey } from '../data/settings-key';
+import { ConversationTypeEnum } from '../models/types';
 import { uploadFileToFsWithOnionV4 } from '../session/apis/file_server_api/FileServerApi';
 import { OpenGroupUtils } from '../session/apis/open_group_api/utils';
 import { GetNetworkTime } from '../session/apis/snode_api/getNetworkTime';
@@ -30,24 +31,24 @@ import {
   changeNickNameModal,
   updateAddModeratorsModal,
   updateBanOrUnbanUserModal,
+  updateBlockOrUnblockModal,
   updateConfirmModal,
   updateGroupMembersModal,
   updateGroupNameModal,
   updateInviteContactModal,
   updateRemoveModeratorsModal,
-  updateServerBanOrUnbanUserModal
+  updateServerBanOrUnbanUserModal,
 } from '../state/ducks/modalDialog';
 import { MIME } from '../types';
 import { IMAGE_JPEG } from '../types/MIME';
 import { processNewAttachment } from '../types/MessageAttachment';
 import { urlToBlob } from '../types/attachments/VisualAttachment';
-import { BlockedNumberController } from '../util/blockedNumberController';
 import { encryptProfile } from '../util/crypto/profileEncrypter';
 import { ReleasedFeatures } from '../util/releaseFeature';
 import { Storage, setLastProfileUpdateTimestamp } from '../util/storage';
 import { UserGroupsWrapperActions } from '../webworker/workers/browser/libsession_worker_interface';
-import { ConversationTypeEnum } from '../models/types';
 import { ConversationInteractionStatus, ConversationInteractionType } from './types';
+import { BlockedNumberController } from '../util';
 
 export async function copyPublicKeyByConvoId(convoId: string) {
   if (OpenGroupUtils.isOpenGroupV2(convoId)) {
@@ -68,38 +69,21 @@ export async function copyPublicKeyByConvoId(convoId: string) {
 }
 
 export async function blockConvoById(conversationId: string) {
-  const conversation = getConversationController().get(conversationId);
-
-  if (!conversation.id || conversation.isPublic()) {
-    return;
-  }
-
-  // I don't think we want to reset the approved fields when blocking a contact
-  // if (conversation.isPrivate()) {
-  //   await conversation.setIsApproved(false);
-  // }
-
-  await BlockedNumberController.block(conversation.id);
-  await conversation.commit();
-  ToastUtils.pushToastSuccess('blocked', window.i18n('blocked'));
+  window.inboxStore?.dispatch(
+    updateBlockOrUnblockModal({
+      action: 'block',
+      pubkeys: [conversationId],
+    })
+  );
 }
 
 export async function unblockConvoById(conversationId: string) {
-  const conversation = getConversationController().get(conversationId);
-
-  if (!conversation) {
-    // we assume it's a block contact and not group.
-    // this is to be able to unlock a contact we don't have a conversation with.
-    await BlockedNumberController.unblockAll([conversationId]);
-    ToastUtils.pushToastSuccess('unblocked', window.i18n('unblocked'));
-    return;
-  }
-  if (!conversation.id || conversation.isPublic()) {
-    return;
-  }
-  await BlockedNumberController.unblockAll([conversationId]);
-  ToastUtils.pushToastSuccess('unblocked', window.i18n('unblocked'));
-  await conversation.commit();
+  window.inboxStore?.dispatch(
+    updateBlockOrUnblockModal({
+      action: 'unblock',
+      pubkeys: [conversationId],
+    })
+  );
 }
 
 /**
@@ -143,7 +127,7 @@ export async function declineConversationWithoutConfirm({
   // this will update the value in the wrapper if needed but not remove the entry if we want it gone. The remove is done below with removeContactFromWrapper
   await conversationToDecline.commit();
   if (blockContact) {
-    await blockConvoById(conversationId);
+    await BlockedNumberController.block(conversationId);
   }
   // when removing a message request, without blocking it, we actually have no need to store the conversation in the wrapper. So just remove the entry
 
@@ -173,11 +157,17 @@ export const declineConversationWithConfirm = ({
   syncToDevices: boolean;
   blockContact: boolean; // if set to false, the contact will just be set to not approved
 }) => {
+  const convoName =
+    getConversationController().get(conversationId)?.getNicknameOrRealUsernameOrPlaceholder() ||
+    window.i18n('unknown');
   window?.inboxStore?.dispatch(
     updateConfirmModal({
-      okText: blockContact ? window.i18n('block') : window.i18n('decline'),
+      okText: blockContact ? window.i18n('block') : window.i18n('delete'),
       cancelText: window.i18n('cancel'),
-      message: window.i18n('declineRequestMessage'),
+      title: blockContact ? window.i18n('block') : window.i18n('delete'),
+      i18nMessage: blockContact
+        ? { token: 'blockDescription', args: { name: convoName } }
+        : { token: 'messageRequestsDelete' },
       onClickOk: async () => {
         await declineConversationWithoutConfirm({
           conversationId,
@@ -192,6 +182,8 @@ export const declineConversationWithConfirm = ({
       onClickClose: () => {
         window?.inboxStore?.dispatch(updateConfirmModal(null));
       },
+      okTheme: SessionButtonColor.Danger,
+      closeTheme: SessionButtonColor.Primary,
     })
   );
 };
@@ -222,10 +214,7 @@ export async function showUpdateGroupMembersByConvoId(conversationId: string) {
   window.inboxStore?.dispatch(updateGroupMembersModal({ conversationId }));
 }
 
-export function showLeavePrivateConversationbyConvoId(
-  conversationId: string,
-  name: string | undefined
-) {
+export function showLeavePrivateConversationbyConvoId(conversationId: string) {
   const conversation = getConversationController().get(conversationId);
   const isMe = conversation.isMe();
 
@@ -264,10 +253,15 @@ export function showLeavePrivateConversationbyConvoId(
 
   window?.inboxStore?.dispatch(
     updateConfirmModal({
-      title: isMe ? window.i18n('hideConversation') : window.i18n('deleteConversation'),
-      message: isMe
-        ? window.i18n('hideNoteToSelfConfirmation')
-        : window.i18n('deleteConversationConfirmation', name ? [name] : ['']),
+      title: isMe ? window.i18n('noteToSelfHide') : window.i18n('conversationsDelete'),
+      i18nMessage: isMe
+        ? { token: 'noteToSelfHideDescription' }
+        : {
+            token: 'conversationsDeleteDescription',
+            args: {
+              name: conversation.getNicknameOrRealUsernameOrPlaceholder(),
+            },
+          },
       onClickOk,
       okText: isMe ? window.i18n('hide') : window.i18n('delete'),
       okTheme: SessionButtonColor.Danger,
@@ -354,8 +348,11 @@ export async function showLeaveGroupByConvoId(conversationId: string, name: stri
     // NOTE For legacy closed groups
     window?.inboxStore?.dispatch(
       updateConfirmModal({
-        title: window.i18n('leaveGroup'),
-        message: window.i18n('leaveGroupConrirmationOnlyAdminLegacy', name ? [name] : ['']),
+        title: window.i18n('groupLeave'),
+        i18nMessage: {
+          token: 'groupDeleteDescription',
+          args: { group_name: name ?? '' },
+        },
         onClickOk,
         okText: window.i18n('leave'),
         okTheme: SessionButtonColor.Danger,
@@ -372,8 +369,8 @@ export async function showLeaveGroupByConvoId(conversationId: string, name: stri
     // };
     // window?.inboxStore?.dispatch(
     //   updateConfirmModal({
-    //     title: window.i18n('leaveGroup'),
-    //     message: window.i18n('leaveGroupConfirmationOnlyAdmin', name ? [name] : ['']),
+    //     title: window.i18n('groupLeave'),
+    //     message: window.i18n('leaveGroupConfirmationOnlyAdmin', {name: name ?? ''}),
     //     messageSub: window.i18n('leaveGroupConfirmationOnlyAdminWarning'),
     //     onClickOk: onClickOkLastAdmin,
     //     okText: window.i18n('addModerator'),
@@ -389,8 +386,8 @@ export async function showLeaveGroupByConvoId(conversationId: string, name: stri
   } else if (isPublic || (isClosedGroup && !isAdmin)) {
     window?.inboxStore?.dispatch(
       updateConfirmModal({
-        title: isPublic ? window.i18n('leaveCommunity') : window.i18n('leaveGroup'),
-        message: window.i18n('leaveGroupConfirmation', name ? [name] : ['']),
+        title: isPublic ? window.i18n('communityLeave') : window.i18n('groupLeave'),
+        i18nMessage: { token: 'groupLeaveDescription', args: { group_name: name ?? '' } },
         onClickOk,
         okText: window.i18n('leave'),
         okTheme: SessionButtonColor.Danger,
@@ -458,6 +455,7 @@ export async function setNotificationForConvoId(
     await conversation.commit();
   }
 }
+
 export async function clearNickNameByConvoId(conversationId: string) {
   const conversation = getConversationController().get(conversationId);
   await conversation.setNickname(null, true);
@@ -495,8 +493,8 @@ export function deleteAllMessagesByConvoIdWithConfirmation(conversationId: strin
 
   window?.inboxStore?.dispatch(
     updateConfirmModal({
-      title: window.i18n('deleteMessages'),
-      message: window.i18n('deleteMessagesConfirmation'),
+      title: window.i18n('deleteMessage', { count: 2 }), // count of 2 to get the plural "Messages Deleted"
+      i18nMessage: { token: 'deleteAfterGroupPR3DeleteMessagesConfirmation' },
       onClickOk,
       okTheme: SessionButtonColor.Danger,
       onClickClose,
@@ -514,7 +512,6 @@ export async function setDisappearingMessagesByConvoId(
   const canSetDisappearing = !conversation.isOutgoingRequest() && !conversation.isIncomingRequest();
 
   if (!canSetDisappearing) {
-    ToastUtils.pushMustBeApproved();
     return;
   }
 
@@ -717,10 +714,8 @@ export async function showLinkSharingConfirmationModalDialog(e: any) {
     if (!alreadyDisplayedPopup) {
       window.inboxStore?.dispatch(
         updateConfirmModal({
-          shouldShowConfirm:
-            !window.getSettingValue(SettingsKey.settingsLinkPreview) && !alreadyDisplayedPopup,
-          title: window.i18n('linkPreviewsTitle'),
-          message: window.i18n('linkPreviewsConfirmMessage'),
+          title: window.i18n('linkPreviewsEnable'),
+          i18nMessage: { token: 'linkPreviewsFirstDescription' },
           okTheme: SessionButtonColor.Danger,
           onClickOk: async () => {
             await window.setSettingValue(SettingsKey.settingsLinkPreview, true);
@@ -728,6 +723,7 @@ export async function showLinkSharingConfirmationModalDialog(e: any) {
           onClickClose: async () => {
             await Storage.put(SettingsKey.hasLinkPreviewPopupBeenDisplayed, true);
           },
+          okText: window.i18n('enable'),
         })
       );
     }

@@ -1,7 +1,6 @@
 import styled from 'styled-components';
 
 import { isEmpty } from 'lodash';
-import moment from 'moment';
 import useBoolean from 'react-use/lib/useBoolean';
 import useInterval from 'react-use/lib/useInterval';
 import { useMessageExpirationPropsById } from '../../../../hooks/useParamSelector';
@@ -10,6 +9,7 @@ import { nativeEmojiData } from '../../../../util/emoji';
 import { getRecentReactions } from '../../../../util/storage';
 import { SpacerSM } from '../../../basic/Text';
 import { SessionIcon, SessionIconButton } from '../../../icon';
+import { formatAbbreviatedExpireDoubleTimer } from '../../../../util/i18n/formatting/expirationTimer';
 
 type Props = {
   action: (...args: Array<any>) => void;
@@ -33,6 +33,7 @@ const StyledMessageReactBar = styled.div`
 
   .session-icon-button {
     margin: 0 4px;
+
     &:hover svg {
       background-color: var(--chat-buttons-background-hover-color);
     }
@@ -96,40 +97,26 @@ function useIsRenderedExpiresInItem(messageId: string) {
 }
 
 function formatTimeLeft({ timeLeftMs }: { timeLeftMs: number }) {
-  const timeLeft = moment(timeLeftMs).utc();
+  const timeLeftSeconds = Math.floor(timeLeftMs / 1000);
 
-  if (timeLeftMs <= 0) {
-    return `0s`;
+  if (timeLeftSeconds <= 0) {
+    return '0s';
   }
 
-  if (timeLeft.isBefore(moment.utc(0).add(1, 'minute'))) {
-    return window.i18n('messageWillDisappear', [`${timeLeft.seconds()}s`]);
+  const [time_large, time_small] = formatAbbreviatedExpireDoubleTimer(timeLeftSeconds);
+  if (time_large && time_small) {
+    return window.i18n('disappearingMessagesCountdownBigSmall', {
+      time_large,
+      time_small,
+    });
+  }
+  if (time_large) {
+    return window.i18n('disappearingMessagesCountdownBig', {
+      time_large,
+    });
   }
 
-  if (timeLeft.isBefore(moment.utc(0).add(1, 'hour'))) {
-    const extraUnit = timeLeft.seconds() ? ` ${timeLeft.seconds()}s` : '';
-    return window.i18n('messageWillDisappear', [`${timeLeft.minutes()}m${extraUnit}`]);
-  }
-
-  if (timeLeft.isBefore(moment.utc(0).add(1, 'day'))) {
-    const extraUnit = timeLeft.minutes() ? ` ${timeLeft.minutes()}m` : '';
-    return window.i18n('messageWillDisappear', [`${timeLeft.hours()}h${extraUnit}`]);
-  }
-
-  if (timeLeft.isBefore(moment.utc(0).add(7, 'day'))) {
-    const extraUnit = timeLeft.hours() ? ` ${timeLeft.hours()}h` : '';
-    return window.i18n('messageWillDisappear', [`${timeLeft.dayOfYear() - 1}d${extraUnit}`]);
-  }
-
-  if (timeLeft.isBefore(moment.utc(0).add(31, 'day'))) {
-    const days = timeLeft.dayOfYear() - 1;
-    const weeks = Math.floor(days / 7);
-    const daysLeft = days % 7;
-    const extraUnit = daysLeft ? ` ${daysLeft}d` : '';
-    return window.i18n('messageWillDisappear', [`${weeks}w${extraUnit}`]);
-  }
-
-  return '...';
+  throw new Error('formatTimeLeft unexpected duration given');
 }
 
 const ExpiresInItem = ({ expirationTimestamp }: { expirationTimestamp?: number | null }) => {

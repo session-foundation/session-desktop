@@ -1,5 +1,17 @@
 import { isString } from 'lodash';
-import { LocaleMessagesType } from './locale';
+import type { SetupI18nReturnType } from '../types/localizer';
+import { LOCALE_DEFAULTS } from '../localization/constants';
+
+/**
+ * Adds the accelerator prefix to the label for the menu item
+ * @link https://www.electronjs.org/docs/latest/api/menu#static-methods
+ *
+ * @param label - The label for the menu item
+ * @returns The label with the accelerator prefix
+ */
+const withAcceleratorPrefix = (label: string) => {
+  return `&${label}`;
+};
 
 export const createTemplate = (
   options: {
@@ -10,7 +22,7 @@ export const createTemplate = (
     saveDebugLog: (_event: any, additionalInfo?: string) => void;
     showWindow: () => void;
   },
-  messages: LocaleMessagesType
+  i18n: SetupI18nReturnType
 ) => {
   if (!isString(options.platform)) {
     throw new TypeError('`options.platform` must be a string');
@@ -21,81 +33,81 @@ export const createTemplate = (
 
   const template = [
     {
-      label: messages.mainMenuFile,
+      label: withAcceleratorPrefix(i18n('file')),
       submenu: [
         {
           type: 'separator',
         },
         {
           role: 'quit',
-          label: messages.appMenuQuit,
+          label: i18n('quit'),
         },
       ],
     },
     {
-      label: messages.mainMenuEdit,
+      label: withAcceleratorPrefix(i18n('edit')),
       submenu: [
         {
           role: 'undo',
-          label: messages.editMenuUndo,
+          label: i18n('undo'),
         },
         {
           role: 'redo',
-          label: messages.editMenuRedo,
+          label: i18n('redo'),
         },
         {
           type: 'separator',
         },
         {
           role: 'cut',
-          label: messages.editMenuCut,
+          label: i18n('cut'),
         },
         {
           role: 'copy',
-          label: messages.editMenuCopy,
+          label: i18n('copy'),
         },
         {
           role: 'paste',
-          label: messages.editMenuPaste,
+          label: i18n('paste'),
         },
         {
           role: 'delete',
-          label: messages.delete,
+          label: i18n('delete'),
         },
         {
           role: 'selectall',
-          label: messages.editMenuSelectAll,
+          label: i18n('selectAll'),
         },
       ],
     },
     {
-      label: messages.mainMenuView,
+      label: withAcceleratorPrefix(i18n('view')),
       submenu: [
         {
           role: 'resetzoom',
-          label: messages.viewMenuResetZoom,
+          label: i18n('actualSize'),
         },
         {
           accelerator: platform === 'darwin' ? 'Command+=' : 'Control+Plus',
           role: 'zoomin',
-          label: messages.viewMenuZoomIn,
+          label: i18n('appearanceZoomIn'),
         },
         {
           role: 'zoomout',
-          label: messages.viewMenuZoomOut,
+          label: i18n('appearanceZoomOut'),
         },
         {
           type: 'separator',
         },
         {
           role: 'togglefullscreen',
-          label: messages.viewMenuToggleFullScreen,
+          label: i18n('fullScreenToggle'),
         },
         {
           type: 'separator',
         },
         {
-          label: messages.showDebugLog,
+          label: i18n('debugLog'),
           click: () => {
             saveDebugLog('save-debug-log');
           },
@@ -105,37 +117,37 @@ export const createTemplate = (
         },
         {
           role: 'toggledevtools',
-          label: messages.viewMenuToggleDevTools,
+          label: i18n('developerToolsToggle'),
         },
       ],
     },
     {
-      label: messages.mainMenuWindow,
+      label: withAcceleratorPrefix(i18n('window')),
       role: 'window',
       submenu: [
         {
           role: 'minimize',
-          label: messages.windowMenuMinimize,
+          label: i18n('minimize'),
         },
       ],
     },
     {
-      label: messages.mainMenuHelp,
+      label: withAcceleratorPrefix(i18n('sessionHelp')),
       role: 'help',
       submenu: [
         {
-          label: messages.goToReleaseNotes,
+          label: i18n('updateReleaseNotes'),
           click: openReleaseNotes,
         },
         {
-          label: messages.goToSupportPage,
+          label: i18n('supportGoTo'),
           click: openSupportPage,
         },
         {
           type: 'separator',
         },
         {
-          label: messages.about,
+          label: i18n('about'),
           click: showAbout,
         },
       ],
@@ -143,7 +155,7 @@ export const createTemplate = (
   ];
 
   if (platform === 'darwin') {
-    return updateForMac(template, messages, {
+    return updateForMac(template, i18n, {
       showAbout,
       showWindow,
     });
@@ -154,7 +166,7 @@ export const createTemplate = (
 
 function updateForMac(
   template: any,
-  messages: LocaleMessagesType,
+  i18n: SetupI18nReturnType,
   options: { showAbout: () => void; showWindow: () => void }
 ) {
   const { showAbout, showWindow } = options;
@@ -168,10 +180,10 @@ function updateForMac(
 
   // Add the OSX-specific Signal Desktop menu at the far left
   template.unshift({
-    label: messages.sessionMessenger,
+    label: LOCALE_DEFAULTS.app_name,
     submenu: [
       {
-        label: messages.about,
+        label: i18n('about'),
         click: showAbout,
       },
       {
@@ -181,22 +193,22 @@ function updateForMac(
         type: 'separator',
       },
       {
-        label: messages.appMenuHide,
+        label: i18n('hide'),
         role: 'hide',
       },
       {
-        label: messages.appMenuHideOthers,
+        label: i18n('hideOthers'),
         role: 'hideothers',
       },
       {
-        label: messages.appMenuUnhide,
+        label: i18n('showAll'),
         role: 'unhide',
       },
       {
         type: 'separator',
       },
       {
-        label: messages.appMenuQuit,
+        label: i18n('quit'),
         role: 'quit',
       },
     ],
@@ -207,21 +219,21 @@ function updateForMac(
   // eslint-disable-next-line no-param-reassign
   template[windowMenuTemplateIndex].submenu = [
     {
-      label: messages.windowMenuClose,
+      label: i18n('closeWindow'),
       accelerator: 'CmdOrCtrl+W',
       role: 'close',
     },
     {
-      label: messages.windowMenuMinimize,
+      label: i18n('minimize'),
       accelerator: 'CmdOrCtrl+M',
       role: 'minimize',
     },
     {
-      label: messages.windowMenuZoom,
+      label: i18n('appearanceZoom'),
       role: 'zoom',
     },
     {
-      label: messages.show,
+      label: i18n('show'),
       click: showWindow,
     },
   ];

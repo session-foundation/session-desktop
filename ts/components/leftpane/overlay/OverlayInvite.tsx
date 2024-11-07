@@ -56,6 +56,7 @@ const StyledButtonerContainer = styled.div`
 const StyledInputContainer = styled(Flex)`
   ${StyledTextAreaContainer} {
     padding: 0;
+
     div:first-child {
       padding: 0 var(--margins-sm);
     }
@@ -102,7 +103,7 @@ export const OverlayInvite = () => {
             />
           </StyledInputContainer>
           <SpacerMD />
-          <StyledDescription>{window.i18n('shareAccountIdDescription')}</StyledDescription>
+          <StyledDescription>{window.i18n('accountIdCopyDescription')}</StyledDescription>
           <SpacerLG />
           <StyledButtonerContainer>
             <CopyToClipboardButton
@@ -122,14 +123,14 @@ export const OverlayInvite = () => {
           />
           <SpacerMD />
           <StyledHeadingContainer container={true} justifyContent="center" alignItems="center">
-            <StyledHeading>{window.i18n('accountIDCopied')}</StyledHeading>
+            <StyledHeading>{window.i18n('accountIdCopied')}</StyledHeading>
             <HelpDeskButton
               iconColor={'var(--text-primary-color)'}
               style={{ display: 'inline-flex' }}
             />
           </StyledHeadingContainer>
           <SpacerSM />
-          <StyledDescription>{window.i18n('sessionInviteAFriendIDCopied')}</StyledDescription>
+          <StyledDescription>{window.i18n('shareAccountIdDescriptionCopied')}</StyledDescription>
         </>
       )}
     </StyledLeftPaneOverlay>

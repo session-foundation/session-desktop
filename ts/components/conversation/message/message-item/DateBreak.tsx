@@ -1,6 +1,9 @@
-import moment from 'moment';
-
 import styled from 'styled-components';
+import { DURATION } from '../../../../session/constants';
+import {
+  formatFullDate,
+  formatRelativeTimestampWithLocale,
+} from '../../../../util/i18n/formatting/generics';
 
 const DateBreakContainer = styled.div``;
 
@@ -17,9 +20,12 @@ const DateBreakText = styled.div`
 
 export const MessageDateBreak = (props: { timestamp: number; messageId: string }) => {
   const { timestamp, messageId } = props;
-  const text = moment(timestamp).calendar(undefined, {
-    sameElse: 'llll',
-  });
+  // if less than 7 days, we display the "last Thursday at 4:10" syntax
+  // otherwise, we display the date + time separately
+  const text =
+    Date.now() - timestamp <= DURATION.DAYS * 7
+      ? formatRelativeTimestampWithLocale(timestamp)
+      : formatFullDate(new Date(timestamp));
 
   return (
     <DateBreakContainer id={`date-break-${messageId}`}>

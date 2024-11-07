@@ -40,7 +40,7 @@ async function joinOpenGroup(
     );
     return groupCreated;
   }
-  throw new Error(window.i18n('invalidOpenGroupUrl'));
+  throw new Error(window.i18n('communityEnterUrlErrorInvalid'));
 }
 
 export const OverlayCommunity = () => {
@@ -101,7 +101,7 @@ export const OverlayCommunity = () => {
       <SessionInput
         autoFocus={true}
         type="text"
-        placeholder={window.i18n('enterAnOpenGroupURL')}
+        placeholder={window.i18n('communityEnterUrl')}
         value={groupUrl}
         onValueChanged={setGroupUrl}
         onEnterPressed={onTryJoinRoom}

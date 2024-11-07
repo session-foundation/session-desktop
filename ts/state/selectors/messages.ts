@@ -131,7 +131,7 @@ export function useMessageTimestamp(messageId: string | undefined) {
   return useMessagePropsByMessageId(messageId)?.propsForMessage.timestamp;
 }
 
-export function useMessageBody(messageId: string) {
+export function useMessageBody(messageId: string | undefined) {
   return useMessagePropsByMessageId(messageId)?.propsForMessage.text;
 }
 

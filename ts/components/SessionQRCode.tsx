@@ -113,8 +113,8 @@ export function SessionQRCode(props: SessionQRCodeProps) {
       alignItems="center"
       size={size}
       id={id}
+      title={window.i18n('download')}
       aria-label={ariaLabel || 'QR code'}
-      title={window.i18n('clickToTrustContact')}
       onClick={(event: MouseEvent<HTMLDivElement>) => {
         event.preventDefault();
         void handleOnClick();

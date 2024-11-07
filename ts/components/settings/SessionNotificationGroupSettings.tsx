@@ -38,15 +38,15 @@ export const SessionNotificationGroupSettings = () => {
 
   const items = [
     {
-      label: window.i18n('nameAndMessage'),
+      label: window.i18n('notificationsContentShowNameAndContent'),
       value: NOTIFICATION.MESSAGE,
     },
     {
-      label: window.i18n('nameOnly'),
+      label: window.i18n('notificationsContentShowNameOnly'),
       value: NOTIFICATION.NAME,
     },
     {
-      label: window.i18n('noNameOrMessage'),
+      label: window.i18n('notificationsContentShowNoNameOrContent'),
       value: NOTIFICATION.COUNT,
     },
   ];
@@ -57,11 +57,8 @@ export const SessionNotificationGroupSettings = () => {
     }
     Notifications.addPreviewNotification({
       conversationId: `preview-notification-${Date.now()}`,
-      message:
-        items.find(m => m.value === initialNotificationEnabled)?.label ||
-        window?.i18n?.('messageBody') ||
-        'Message body',
-      title: window.i18n('notificationPreview'),
+      message: items.find(m => m.value === initialNotificationEnabled)?.label || 'Message body',
+      title: window.i18n('preview'),
       iconUrl: null,
       isExpiringMessage: false,
       messageSentAt: Date.now(),
@@ -78,7 +75,7 @@ export const SessionNotificationGroupSettings = () => {
           );
           forceUpdate();
         }}
-        title={window.i18n('notificationsSettingsTitle')}
+        title={window.i18n('sessionNotifications')}
         active={notificationsAreEnabled}
       />
       {notificationsAreEnabled && isAudioNotificationSupported() && (
@@ -90,14 +87,14 @@ export const SessionNotificationGroupSettings = () => {
             );
             forceUpdate();
           }}
-          title={window.i18n('audioNotificationsSettingsTitle')}
+          title={window.i18n('notificationsSoundDesktop')}
           active={initialAudioNotificationEnabled}
         />
       )}
       {notificationsAreEnabled ? (
         <SessionSettingsItemWrapper
-          title={window.i18n('notificationsSettingsContent')}
-          description={window.i18n('notificationSettingsDialog')}
+          title={window.i18n('notificationsContent')}
+          description={window.i18n('notificationsContentDescription')}
           inline={false}
         >
           <SessionRadioGroup
@@ -111,7 +108,7 @@ export const SessionNotificationGroupSettings = () => {
           />
           <StyledButtonContainer>
             <SpacerLG />
-            <SessionButton text={window.i18n('notificationPreview')} onClick={onClickPreview} />
+            <SessionButton text={window.i18n('preview')} onClick={onClickPreview} />
           </StyledButtonContainer>
         </SessionSettingsItemWrapper>
       ) : null}

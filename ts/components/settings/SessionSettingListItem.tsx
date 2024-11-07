@@ -63,6 +63,9 @@ const StyledSettingItemInline = styled(StyledSettingItem)`
   align-items: center;
   justify-content: space-between;
   transition: var(--default-duration);
+  button {
+    flex-shrink: 0;
+  }
 `;
 
 const StyledSettingItemClickable = styled(StyledSettingItemInline)`

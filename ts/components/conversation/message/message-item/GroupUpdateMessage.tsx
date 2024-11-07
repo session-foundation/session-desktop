@@ -1,58 +1,56 @@
-import { useConversationsUsernameWithQuoteOrFullPubkey } from '../../../../hooks/useParamSelector';
-import { arrayContainsUsOnly } from '../../../../models/message';
+import { isNull } from 'lodash';
+import {
+  getJoinedGroupUpdateChangeStr,
+  getKickedGroupUpdateStr,
+  getLeftGroupUpdateChangeStr,
+} from '../../../../models/groupUpdate';
 import {
   PropsForGroupUpdate,
   PropsForGroupUpdateType,
 } from '../../../../state/ducks/conversations';
-import { assertUnreachable } from '../../../../types/sqlSharedTypes';
+import { useSelectedNicknameOrProfileNameOrShortenedPubkey } from '../../../../state/selectors/selectedConversation';
 import { ExpirableReadableMessage } from './ExpirableReadableMessage';
 import { NotificationBubble } from './notification-bubble/NotificationBubble';
+import { Localizer } from '../../../basic/Localizer';
+import type { LocalizerComponentPropsObject } from '../../../../types/localizer';
 
 // This component is used to display group updates in the conversation view.
 
-const ChangeItemJoined = (added: Array<string>): string => {
+const ChangeItemJoined = (added: Array<string>): LocalizerComponentPropsObject => {
+  const groupName = useSelectedNicknameOrProfileNameOrShortenedPubkey();
+
   if (!added.length) {
-    throw new Error('Group update add is missing contacts');
+    throw new Error('Group update added is missing details');
   }
-  const names = useConversationsUsernameWithQuoteOrFullPubkey(added);
-  const joinKey = added.length > 1 ? 'multipleJoinedTheGroup' : 'joinedTheGroup';
-  return window.i18n(joinKey, [names.join(', ')]);
+
+  return getJoinedGroupUpdateChangeStr(added, groupName);
 };
 
-const ChangeItemKicked = (kicked: Array<string>): string => {
+const ChangeItemKicked = (kicked: Array<string>): LocalizerComponentPropsObject => {
   if (!kicked.length) {
-    throw new Error('Group update kicked is missing contacts');
+    throw new Error('Group update kicked is missing details');
   }
-  const names = useConversationsUsernameWithQuoteOrFullPubkey(kicked);
+  const groupName = useSelectedNicknameOrProfileNameOrShortenedPubkey();
 
-  if (arrayContainsUsOnly(kicked)) {
-    return window.i18n('youGotKickedFromGroup');
-  }
-
-  const kickedKey = kicked.length > 1 ? 'multipleKickedFromTheGroup' : 'kickedFromTheGroup';
-  return window.i18n(kickedKey, [names.join(', ')]);
+  return getKickedGroupUpdateStr(kicked, groupName);
 };
 
-const ChangeItemLeft = (left: Array<string>): string => {
+const ChangeItemLeft = (left: Array<string>): LocalizerComponentPropsObject => {
+  const groupName = useSelectedNicknameOrProfileNameOrShortenedPubkey();
+
   if (!left.length) {
-    throw new Error('Group update remove is missing contacts');
+    throw new Error('Group update left is missing details');
   }
 
-  const names = useConversationsUsernameWithQuoteOrFullPubkey(left);
-
-  if (arrayContainsUsOnly(left)) {
-    return window.i18n('youLeftTheGroup');
-  }
-
-  const leftKey = left.length > 1 ? 'multipleLeftTheGroup' : 'leftTheGroup';
-  return window.i18n(leftKey, [names.join(', ')]);
+  return getLeftGroupUpdateChangeStr(left, groupName);
 };
 
-const ChangeItem = (change: PropsForGroupUpdateType): string => {
+const ChangeItem = (change: PropsForGroupUpdateType): LocalizerComponentPropsObject => {
   const { type } = change;
   switch (type) {
     case 'name':
-      return window.i18n('titleIsNow', [change.newName || '']);
+      return { token: 'groupNameNew', args: { group_name: change.newName } };
+
     case 'add':
       return ChangeItemJoined(change.added);
 
@@ -63,15 +61,15 @@ const ChangeItem = (change: PropsForGroupUpdateType): string => {
       return ChangeItemKicked(change.kicked);
 
     case 'general':
-      return window.i18n('updatedTheGroup');
     default:
-      assertUnreachable(type, `ChangeItem: Missing case error "${type}"`);
-      return '';
+      return { token: 'groupUpdated' };
   }
 };
 
 export const GroupUpdateMessage = (props: PropsForGroupUpdate) => {
   const { change, messageId } = props;
+
+  const changeItem = ChangeItem(change);
 
   return (
     <ExpirableReadableMessage
@@ -80,7 +78,9 @@ export const GroupUpdateMessage = (props: PropsForGroupUpdate) => {
       dataTestId="group-update-message"
       isControlMessage={true}
     >
-      <NotificationBubble notificationText={ChangeItem(change)} iconType="users" />
+      <NotificationBubble iconType="users">
+        {!isNull(changeItem) ? <Localizer {...changeItem} /> : null}
+      </NotificationBubble>
     </ExpirableReadableMessage>
   );
 };

@@ -37,6 +37,7 @@ const StyledQuoteTextContent = styled.div`
   padding-inline-start: 10px;
   padding-inline-end: 10px;
   max-width: 100%;
+  overflow: hidden;
 
   display: flex;
   flex-direction: column;

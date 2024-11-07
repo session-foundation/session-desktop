@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import { ClosedGroup, getMessageQueue } from '..';
+import { ConversationTypeEnum } from '../../models/types';
 import { addKeyPairToCacheAndDBIfNeeded } from '../../receiver/closedGroups';
 import { ECKeyPair } from '../../receiver/keypairs';
 import { openConversationWithMessages } from '../../state/ducks/conversations';
@@ -15,7 +16,6 @@ import { PubKey } from '../types';
 import { UserUtils } from '../utils';
 import { forceSyncConfigurationNowIfNeeded } from '../utils/sync/syncUtils';
 import { getConversationController } from './ConversationController';
-import { ConversationTypeEnum } from '../../models/types';
 
 export async function createClosedGroup(groupName: string, members: Array<string>, isV3: boolean) {
   const setOfMembers = new Set(members);
@@ -92,6 +92,39 @@ export async function createClosedGroup(groupName: string, members: Array<string
   await openConversationWithMessages({ conversationKey: groupPublicKey, messageId: null });
 }
 
+function getMessageArgs(group_name: string, names: Array<string>) {
+  const name = names[0];
+
+  switch (names.length) {
+    case 1:
+      return {
+        token: 'groupInviteFailedUser',
+        args: {
+          group_name,
+          name,
+        },
+      } as const;
+    case 2:
+      return {
+        token: 'groupInviteFailedTwo',
+        args: {
+          group_name,
+          name,
+          other_name: names[1],
+        },
+      } as const;
+    default:
+      return {
+        token: 'groupInviteFailedMultiple',
+        args: {
+          group_name,
+          name,
+          count: names.length - 1,
+        },
+      } as const;
+  }
+}
+
 /**
  * Sends a group invite message to each member of the group.
  * @returns Array of promises for group invite messages sent to group members.
@@ -118,15 +151,10 @@ async function sendToGroupMembers(
 
   if (allInvitesSent) {
     if (isRetry) {
-      const invitesTitle =
-        inviteResults.length > 1
-          ? window.i18n('closedGroupInviteSuccessTitlePlural')
-          : window.i18n('closedGroupInviteSuccessTitle');
-
       window.inboxStore?.dispatch(
         updateConfirmModal({
-          title: invitesTitle,
-          message: window.i18n('closedGroupInviteSuccessMessage'),
+          title: window.i18n('groupInviteSuccessful'),
+          i18nMessage: { token: 'groupInviteSuccessful' },
           hideCancel: true,
           onClickClose: () => {
             window.inboxStore?.dispatch(updateConfirmModal(null));
@@ -137,27 +165,30 @@ async function sendToGroupMembers(
     return allInvitesSent;
   }
   // Confirmation dialog that recursively calls sendToGroupMembers on resolve
+  const membersToResend: Array<string> = new Array<string>();
+  inviteResults.forEach((result, index) => {
+    const member = listOfMembers[index];
+    // group invite must always contain the admin member.
+    if (result !== true || admins.includes(member)) {
+      membersToResend.push(member);
+    }
+  });
+  const namesOfMembersToResend = membersToResend.map(
+    m =>
+      getConversationController().get(m)?.getNicknameOrRealUsernameOrPlaceholder() ||
+      window.i18n('unknown')
+  );
+
+  if (membersToResend.length < 1) {
+    throw new Error('Some invites failed, we should have found members to resend');
+  }
 
   window.inboxStore?.dispatch(
     updateConfirmModal({
-      title:
-        inviteResults.length > 1
-          ? window.i18n('closedGroupInviteFailTitlePlural')
-          : window.i18n('closedGroupInviteFailTitle'),
-      message:
-        inviteResults.length > 1
-          ? window.i18n('closedGroupInviteFailMessagePlural')
-          : window.i18n('closedGroupInviteFailMessage'),
-      okText: window.i18n('closedGroupInviteOkText'),
+      title: window.i18n('groupError'),
+      i18nMessage: getMessageArgs(groupName, namesOfMembersToResend),
+      okText: window.i18n('resend'),
       onClickOk: async () => {
-        const membersToResend: Array<string> = new Array<string>();
-        inviteResults.forEach((result, index) => {
-          const member = listOfMembers[index];
-          // group invite must always contain the admin member.
-          if (result !== true || admins.includes(member)) {
-            membersToResend.push(member);
-          }
-        });
         if (membersToResend.length > 0) {
           const isRetrySend = true;
           await sendToGroupMembers(

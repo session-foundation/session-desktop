@@ -146,3 +146,5 @@ yarn build-release
 ```
 
 The binaries will be placed inside the `release/` folder.
+
+On linux, you can change in package.json `"target": ["deb"],` to any of the [electron-builder targets](https://www.electron.build/linux#target) to build for another target.

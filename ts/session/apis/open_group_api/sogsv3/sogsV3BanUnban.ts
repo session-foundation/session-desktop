@@ -15,7 +15,7 @@ export const sogsV3BanUser = async (
         sessionId: userToBan.key,
         roomId: roomInfos.roomId,
         type: 'ban',
-	isGlobal: false
+        isGlobal: false,
       },
     },
   ];
@@ -52,19 +52,19 @@ export const sogsV3UnbanUser = async (
           sessionId: userToBan.key,
           roomId: roomInfos.roomId,
           type: 'unban',
-          isGlobal: false
+          isGlobal: false,
         },
       },
     ],
     'batch'
   );
   return batchFirstSubIsSuccess(batchSendResponse);
-}
+};
 
 export const sogsV3ServerBanUser = async (
   userToBan: PubKey,
   roomInfos: OpenGroupRequestCommonType,
-  deleteAllMessages: boolean,
+  deleteAllMessages: boolean
 ): Promise<boolean> => {
   const sequence: Array<OpenGroupBatchRow> = [
     {
@@ -73,7 +73,7 @@ export const sogsV3ServerBanUser = async (
         sessionId: userToBan.key,
         roomId: roomInfos.roomId,
         type: 'ban',
-        isGlobal: true
+        isGlobal: true,
       },
     },
   ];
@@ -110,11 +110,11 @@ export const sogsV3ServerUnbanUser = async (
           sessionId: userToBan.key,
           roomId: roomInfos.roomId,
           type: 'unban',
-          isGlobal: true
+          isGlobal: true,
         },
       },
     ],
     'batch'
   );
   return batchFirstSubIsSuccess(batchSendResponse);
-}
+};

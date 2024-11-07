@@ -4,8 +4,10 @@ import {
   sogsV3RemoveAdmins,
 } from '../session/apis/open_group_api/sogsv3/sogsV3AddRemoveMods';
 import {
-  OpenGroupPermissionType, sogsV3AddPermissions, sogsV3ClearPermissions
-} from '../session/apis/open_group_api/sogsv3/sogsV3UserPermissions'
+  OpenGroupPermissionType,
+  sogsV3AddPermissions,
+  sogsV3ClearPermissions,
+} from '../session/apis/open_group_api/sogsv3/sogsV3UserPermissions';
 import {
   isOpenGroupV2,
   openGroupV2CompleteURLRegex,
@@ -17,7 +19,7 @@ import { ToastUtils } from '../session/utils';
 import {
   updateBanOrUnbanUserModal,
   updateConfirmModal,
-  updateServerBanOrUnbanUserModal
+  updateServerBanOrUnbanUserModal,
 } from '../state/ducks/modalDialog';
 
 export function banUser(userToBan: string, conversationId: string) {
@@ -117,15 +119,19 @@ export async function removeSenderFromModerator(sender: string, convoId: string)
     const pubKeyToRemove = PubKey.cast(sender);
     const convo = getConversationController().getOrThrow(convoId);
 
+    const userDisplayName =
+      getConversationController().get(sender)?.getNicknameOrRealUsernameOrPlaceholder() ||
+      window.i18n('unknown');
+
     const roomInfo = convo.toOpenGroupV2();
     const res = await sogsV3RemoveAdmins([pubKeyToRemove], roomInfo);
     if (!res) {
       window?.log?.warn('failed to remove moderator:', res);
 
-      ToastUtils.pushFailedToRemoveFromModerator();
+      ToastUtils.pushFailedToRemoveFromModerator([userDisplayName]);
     } else {
       window?.log?.info(`${pubKeyToRemove.key} removed from moderators...`);
-      ToastUtils.pushUserRemovedFromModerators();
+      ToastUtils.pushUserRemovedFromModerators([userDisplayName]);
     }
   } catch (e) {
     window?.log?.error('Got error while removing moderator:', e);
@@ -145,14 +151,21 @@ export async function addSenderAsModerator(sender: string, convoId: string) {
       ToastUtils.pushFailedToAddAsModerator();
     } else {
       window?.log?.info(`${pubKeyToAdd.key} added to moderators...`);
-      ToastUtils.pushUserAddedToModerators();
+      const userDisplayName =
+        getConversationController().get(sender)?.getNicknameOrRealUsernameOrPlaceholder() ||
+        window.i18n('unknown');
+      ToastUtils.pushUserAddedToModerators(userDisplayName);
     }
   } catch (e) {
     window?.log?.error('Got error while adding moderator:', e);
   }
 }
 
-export async function addUserPermissions(sender: string, convoId: string, permissions: Array<OpenGroupPermissionType>) {
+export async function addUserPermissions(
+  sender: string,
+  convoId: string,
+  permissions: Array<OpenGroupPermissionType>
+) {
   try {
     const user = PubKey.cast(sender);
     const convo = getConversationController().getOrThrow(convoId);
@@ -164,7 +177,7 @@ export async function addUserPermissions(sender: string, convoId: string, permis
 
       ToastUtils.pushFailedToChangeUserPermissions();
     } else {
-      window?.log?.info(`${user.key} given permissions ${permissions.join(", ")}...`);
+      window?.log?.info(`${user.key} given permissions ${permissions.join(', ')}...`);
       ToastUtils.pushUserPermissionsChanged();
     }
   } catch (e) {
@@ -173,7 +186,11 @@ export async function addUserPermissions(sender: string, convoId: string, permis
   }
 }
 
-export async function clearUserPermissions(sender: string, convoId: string, permissions: Array<OpenGroupPermissionType>) {
+export async function clearUserPermissions(
+  sender: string,
+  convoId: string,
+  permissions: Array<OpenGroupPermissionType>
+) {
   try {
     const user = PubKey.cast(sender);
     const convo = getConversationController().getOrThrow(convoId);
@@ -185,7 +202,7 @@ export async function clearUserPermissions(sender: string, convoId: string, perm
 
       ToastUtils.pushFailedToChangeUserPermissions();
     } else {
-      window?.log?.info(`${user.key} given permissions ${permissions.join(", ")}...`);
+      window?.log?.info(`${user.key} given permissions ${permissions.join(', ')}...`);
       ToastUtils.pushUserPermissionsChanged();
     }
   } catch (e) {
@@ -201,17 +218,19 @@ const acceptOpenGroupInvitationV2 = (completeUrl: string, roomName?: string) => 
 
   window.inboxStore?.dispatch(
     updateConfirmModal({
-      title: window.i18n('joinOpenGroupAfterInvitationConfirmationTitle', [
-        roomName || window.i18n('unknown'),
-      ]),
-      message: window.i18n('joinOpenGroupAfterInvitationConfirmationDesc', [
-        roomName || window.i18n('unknown'),
-      ]),
+      title: window.i18n('communityJoin'),
+      i18nMessage: {
+        token: 'communityJoinDescription',
+        args: {
+          community_name: roomName || window.i18n('unknown'),
+        },
+      },
       onClickOk: async () => {
         await joinOpenGroupV2WithUIEvents(completeUrl, true, false);
       },
 
       onClickClose,
+      okText: window.i18n('join'),
     })
   );
   // this function does not throw, and will showToasts if anything happens

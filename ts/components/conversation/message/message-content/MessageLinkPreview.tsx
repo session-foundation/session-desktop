@@ -9,9 +9,10 @@ import {
 } from '../../../../state/selectors';
 import { useIsMessageSelectionMode } from '../../../../state/selectors/selectedConversation';
 import { isImageAttachment } from '../../../../types/Attachment';
-import { showLinkVisitWarningDialog } from '../../../dialog/SessionConfirm';
 import { SessionIcon } from '../../../icon';
 import { Image } from '../../Image';
+import { showLinkVisitWarningDialog } from '../../../dialog/OpenUrlModal';
+import { AriaLabels } from '../../../../util/hardcodedAriaLabels';
 
 export type MessageLinkPreviewSelectorProps = Pick<
   MessageRenderingProps,
@@ -74,7 +75,7 @@ export const MessageLinkPreview = (props: Props) => {
           <div className="module-message__link-preview__image_container">
             <Image
               softCorners={true}
-              alt={window.i18n('previewThumbnail', [first.domain])}
+              alt={AriaLabels.imageLinkPreview}
               height={linkPreviewsImageSize}
               width={linkPreviewsImageSize}
               url={first.image.url}

@@ -68,7 +68,10 @@ export function search(query: string): SearchResultsKickoffActionType {
 
 async function doSearch(query: string): Promise<SearchResultsPayloadType> {
   const options: SearchOptions = {
-    noteToSelf: window.i18n('noteToSelf').toLowerCase(),
+    noteToSelf: [
+      window.i18n('noteToSelf').toLowerCase(),
+      window.i18n.inEnglish('noteToSelf').toLowerCase(),
+    ],
     savedMessages: window.i18n('savedMessages').toLowerCase(),
     ourNumber: UserUtils.getOurPubKeyStrFromCache(),
   };
@@ -89,12 +92,14 @@ async function doSearch(query: string): Promise<SearchResultsPayloadType> {
     messages: filteredMessages,
   };
 }
+
 export function clearSearch(): ClearSearchActionType {
   return {
     type: 'SEARCH_CLEAR',
     payload: null,
   };
 }
+
 export function updateSearchTerm(query: string): UpdateSearchTermActionType {
   return {
     type: 'SEARCH_UPDATE',
@@ -207,10 +212,8 @@ async function queryContactsAndGroups(providedQuery: string, options: SearchOpti
   let contactsAndGroups: Array<string> = searchResults.map(conversation => conversation.id);
 
   const queryLowered = query.toLowerCase();
-  // Inject synthetic Note to Self entry if query matches localized 'Note to Self'
   if (
-    noteToSelf.includes(query) ||
-    noteToSelf.includes(queryLowered) ||
+    noteToSelf.some(str => str.includes(query) || str.includes(queryLowered)) ||
     savedMessages.includes(query) ||
     savedMessages.includes(queryLowered)
   ) {

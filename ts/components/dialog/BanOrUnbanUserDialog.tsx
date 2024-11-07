@@ -8,12 +8,16 @@ import {
   sogsV3BanUser,
   sogsV3ServerBanUser,
   sogsV3ServerUnbanUser,
-  sogsV3UnbanUser
+  sogsV3UnbanUser,
 } from '../../session/apis/open_group_api/sogsv3/sogsV3BanUnban';
 import { getConversationController } from '../../session/conversations/ConversationController';
 import { PubKey } from '../../session/types';
 import { ToastUtils } from '../../session/utils';
-import { BanType, updateBanOrUnbanUserModal, updateServerBanOrUnbanUserModal } from '../../state/ducks/modalDialog';
+import {
+  BanType,
+  updateBanOrUnbanUserModal,
+  updateServerBanOrUnbanUserModal,
+} from '../../state/ducks/modalDialog';
 import { useIsDarkTheme } from '../../state/selectors/theme';
 import { SessionHeaderSearchInput } from '../SessionHeaderSearchInput';
 import { SessionWrapperModal } from '../SessionWrapperModal';
@@ -42,19 +46,28 @@ async function banOrUnBanUserCall(
     const isChangeApplied =
       banType === 'ban'
         ? isGlobal
-	  ? await sogsV3ServerBanUser(pubkey, roomInfos, deleteAll)
-	  : await sogsV3BanUser(pubkey, roomInfos, deleteAll)
+          ? await sogsV3ServerBanUser(pubkey, roomInfos, deleteAll)
+          : await sogsV3BanUser(pubkey, roomInfos, deleteAll)
         : isGlobal
-	  ? await sogsV3ServerUnbanUser(pubkey, roomInfos)
-	  : await sogsV3UnbanUser(pubkey, roomInfos);
+          ? await sogsV3ServerUnbanUser(pubkey, roomInfos)
+          : await sogsV3UnbanUser(pubkey, roomInfos);
 
     if (!isChangeApplied) {
       window?.log?.warn(`failed to ${banType} user: ${isChangeApplied}`);
-      switch (`${banType}-${isGlobal ? 'global' : 'local'}` as `${BanType}-${'global'|'local'}`) {
-        case 'ban-local': ToastUtils.pushUserBanFailure(); break;
-        case 'ban-global': ToastUtils.pushGlobalUserBanFailure(); break;
-        case 'unban-local': ToastUtils.pushUserUnbanFailure(); break;
-        case 'unban-global': ToastUtils.pushGlobalUserUnbanFailure(); break;
+      // eslint-disable-next-line default-case
+      switch (`${banType}-${isGlobal ? 'global' : 'local'}` as `${BanType}-${'global' | 'local'}`) {
+        case 'ban-local':
+          ToastUtils.pushUserBanFailure();
+          break;
+        case 'ban-global':
+          ToastUtils.pushGlobalUserBanFailure();
+          break;
+        case 'unban-local':
+          ToastUtils.pushUserUnbanFailure();
+          break;
+        case 'unban-global':
+          ToastUtils.pushGlobalUserUnbanFailure();
+          break;
       }
       return false;
     }
@@ -115,8 +128,7 @@ export const BanOrUnBanUserDialog = (props: {
     setInProgress(false);
   };
 
-  const chatName = convo.getNicknameOrRealUsernameOrPlaceholder();
-  const title = `${isBan ? window.i18n('banUser') : window.i18n('unbanUser')}: ${chatName}`;
+  const title = isBan ? window.i18n('banUser') : window.i18n('banUnbanUser');
 
   const onPubkeyBoxChanges = (e: ChangeEvent<HTMLInputElement>) => {
     setInputBoxValue(e.target.value?.trim() || '');
@@ -129,7 +141,7 @@ export const BanOrUnBanUserDialog = (props: {
     await banOrUnBanUser(true);
   };
 
-  const buttonText = isBan ? i18n('banUser') : i18n('unbanUser');
+  const buttonText = isBan ? i18n('banUser') : i18n('banUnbanUser');
 
   return (
     <SessionWrapperModal
@@ -164,7 +176,7 @@ export const BanOrUnBanUserDialog = (props: {
                 buttonType={SessionButtonType.Simple}
                 buttonColor={SessionButtonColor.Danger}
                 onClick={startBanAndDeleteAllSequence}
-                text={i18n('banUserAndDeleteAll')}
+                text={i18n('banDeleteAll')}
                 disabled={inProgress}
               />
             </>
@@ -174,7 +186,7 @@ export const BanOrUnBanUserDialog = (props: {
       </Flex>
     </SessionWrapperModal>
   );
-}
+};
 
 // FIXME: Refactor with BanOrUnBanUserDialog().
 export const ServerBanOrUnBanUserDialog = (props: {
@@ -209,7 +221,9 @@ export const ServerBanOrUnBanUserDialog = (props: {
   const banOrUnBanUser = async (deleteAll: boolean = false) => {
     const castedPubkey = pubkey?.length ? pubkey : inputBoxValue;
 
-    window?.log?.info(`asked to ${banType} user server-wide: ${castedPubkey}, banAndDeleteAll:${deleteAll}`);
+    window?.log?.info(
+      `asked to ${banType} user server-wide: ${castedPubkey}, banAndDeleteAll:${deleteAll}`
+    );
     setInProgress(true);
     const isBanned = await banOrUnBanUserCall(convo, castedPubkey, banType, deleteAll, true);
     if (isBanned) {
@@ -224,7 +238,7 @@ export const ServerBanOrUnBanUserDialog = (props: {
   };
 
   const serverHost = new window.URL(convo.toOpenGroupV2().serverUrl).host;
-  const title = `${isBan ? window.i18n('banUser') : window.i18n('unbanUser')} @ ${serverHost}`;
+  const title = `${isBan ? window.i18n('banUser') : window.i18n('banUnbanUser')} @ ${serverHost}`;
 
   const onPubkeyBoxChanges = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputBoxValue(e.target.value?.trim() || '');
@@ -237,7 +251,7 @@ export const ServerBanOrUnBanUserDialog = (props: {
     await banOrUnBanUser(true);
   };
 
-  const buttonText = isBan ? i18n('banUser') : i18n('unbanUser');
+  const buttonText = isBan ? i18n('banUser') : i18n('banUnbanUser');
 
   return (
     <SessionWrapperModal
@@ -282,4 +296,4 @@ export const ServerBanOrUnBanUserDialog = (props: {
       </Flex>
     </SessionWrapperModal>
   );
-}
+};

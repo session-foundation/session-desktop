@@ -27,23 +27,18 @@ const StyledButtonContainer = styled.div`
 const StyledReactClearAllContainer = styled(Flex)`
   margin: var(--margins-lg);
 
-  p {
-    font-size: 18px;
-    font-weight: 500;
-    padding-bottom: var(--margins-lg);
-    margin: var(--margins-md) auto;
-    border-bottom: 1.5px solid var(--border-color);
-
-    span {
-      margin-left: 4px;
-    }
-  }
-
   .session-button {
     font-size: 16px;
     height: 36px;
     padding-top: 3px;
   }
+`;
+
+const StyledDescription = styled.div`
+  font-size: var(--font-size-md);
+  font-weight: 400;
+  padding-bottom: var(--margins-lg);
+  margin: var(--margins-md) auto;
 `;
 
 export const ReactClearAllModal = (props: Props) => {
@@ -83,7 +78,9 @@ export const ReactClearAllModal = (props: Props) => {
       onClose={handleClose}
     >
       <StyledReactClearAllContainer container={true} flexDirection={'column'} alignItems="center">
-        <p>{window.i18n('clearAllReactions', [reaction])}</p>
+        <StyledDescription>
+          {window.i18n('emojiReactsClearAll', { emoji: reaction })}
+        </StyledDescription>
         <StyledButtonContainer className="session-modal__button-group">
           <SessionButton
             text={window.i18n('clear')}

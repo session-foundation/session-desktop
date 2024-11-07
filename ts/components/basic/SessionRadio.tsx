@@ -135,6 +135,7 @@ export const SessionRadio = (props: SessionRadioProps) => {
 
 const StyledInputOutlineSelected = styled(StyledInput)`
   color: ${props => (props.disabled ? 'var(--disabled-color)' : 'var(--text-primary-color)')};
+
   label:before,
   label:before {
     outline: none;
@@ -164,7 +165,7 @@ export const SessionRadioPrimaryColors = (props: {
   active: boolean;
   inputName?: string;
   onClick: (value: string) => void;
-  ariaLabel: string;
+  ariaLabel?: string;
   color: string; // by default, we use the theme accent color but for the settings screen we need to be able to force it
   disabled?: boolean;
 }) => {

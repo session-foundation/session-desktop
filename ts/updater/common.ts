@@ -1,4 +1,5 @@
 import { BrowserWindow, dialog } from 'electron';
+import type { SetupI18nReturnType } from '../types/localizer';
 
 export type MessagesType = {
   [key: string]: string;
@@ -17,16 +18,15 @@ export type LoggerType = {
 
 export async function showDownloadUpdateDialog(
   mainWindow: BrowserWindow,
-  messages: MessagesType
+  i18n: SetupI18nReturnType
 ): Promise<boolean> {
   const DOWNLOAD_BUTTON = 0;
   const LATER_BUTTON = 1;
   const options = {
     type: 'info' as const,
-    buttons: [messages.autoUpdateDownloadButtonLabel, messages.autoUpdateLaterButtonLabel],
-    title: messages.autoUpdateNewVersionTitle,
-    message: messages.autoUpdateNewVersionMessage,
-    detail: messages.autoUpdateDownloadInstructions,
+    buttons: [i18n('download'), i18n('later')],
+    title: i18n('updateSession'),
+    message: i18n('updateNewVersionDescription'),
     defaultId: LATER_BUTTON,
     cancelId: DOWNLOAD_BUTTON,
   };
@@ -38,16 +38,15 @@ export async function showDownloadUpdateDialog(
 
 export async function showUpdateDialog(
   mainWindow: BrowserWindow,
-  messages: MessagesType
+  i18n: SetupI18nReturnType
 ): Promise<boolean> {
   const RESTART_BUTTON = 0;
   const LATER_BUTTON = 1;
-  const options = {
+  const options: Electron.MessageBoxOptions = {
     type: 'info' as const,
-    buttons: [messages.autoUpdateRestartButtonLabel, messages.autoUpdateLaterButtonLabel],
-    title: messages.autoUpdateNewVersionTitle,
-    message: messages.autoUpdateDownloadedMessage,
-    detail: messages.autoUpdateNewVersionInstructions,
+    buttons: [i18n('restart'), i18n('later')],
+    title: i18n('updateSession'),
+    message: i18n('updateDownloaded'),
     defaultId: LATER_BUTTON,
     cancelId: RESTART_BUTTON,
   };
@@ -56,12 +55,12 @@ export async function showUpdateDialog(
   return ret.response === RESTART_BUTTON;
 }
 
-export async function showCannotUpdateDialog(mainWindow: BrowserWindow, messages: MessagesType) {
+export async function showCannotUpdateDialog(mainWindow: BrowserWindow, i18n: SetupI18nReturnType) {
   const options = {
     type: 'error' as const,
-    buttons: [messages.ok],
-    title: messages.cannotUpdate,
-    message: messages.cannotUpdateDetail,
+    buttons: [i18n('okay')],
+    title: i18n('updateError'),
+    message: i18n('updateErrorDescription'),
   };
   await dialog.showMessageBox(mainWindow, options);
 }

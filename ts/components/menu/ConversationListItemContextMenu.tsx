@@ -1,10 +1,10 @@
-import { Item, Menu } from 'react-contexify';
+import { Menu } from 'react-contexify';
 
 import { useSelector } from 'react-redux';
 import { useConvoIdFromContext } from '../../contexts/ConvoIdContext';
 import { useIsPinned, useIsPrivate, useIsPrivateAndFriend } from '../../hooks/useParamSelector';
 import { getConversationController } from '../../session/conversations';
-import { isSearching } from '../../state/selectors/search';
+import { useIsSearching } from '../../state/selectors/search';
 import { getIsMessageSection } from '../../state/selectors/section';
 import { SessionContextMenuContainer } from '../SessionContextMenuContainer';
 import {
@@ -13,7 +13,6 @@ import {
   BlockMenuItem,
   ChangeNicknameMenuItem,
   ClearNicknameMenuItem,
-  CopyMenuItem,
   DeclineAndBlockMsgRequestMenuItem,
   DeclineMsgRequestMenuItem,
   DeleteMessagesMenuItem,
@@ -28,6 +27,10 @@ import {
   ServerBanMenuItem,
   ServerUnbanMenuItem,
 } from './Menu';
+import { CopyCommunityUrlMenuItem } from './items/CopyCommunityUrl/CopyCommunityUrlMenuItem';
+import { CopyAccountIdMenuItem } from './items/CopyAccountId/CopyAccountIdMenuItem';
+import { ItemWithDataTestId } from './items/MenuItemWithDataTestId';
+import { getMenuAnimation } from './MenuAnimation';
 
 export type PropsContextConversationItem = {
   triggerId: string;
@@ -35,15 +38,17 @@ export type PropsContextConversationItem = {
 
 const ConversationListItemContextMenu = (props: PropsContextConversationItem) => {
   const { triggerId } = props;
-  const isSearchingMode = useSelector(isSearching);
+  const isSearching = useIsSearching();
 
-  if (isSearchingMode) {
+  const convoIdFromContext = useConvoIdFromContext();
+
+  if (isSearching) {
     return null;
   }
 
   return (
     <SessionContextMenuContainer>
-      <Menu id={triggerId} animation="fade">
+      <Menu id={triggerId} animation={getMenuAnimation()}>
         {/* Message request related actions */}
         <AcceptMsgRequestMenuItem />
         <DeclineMsgRequestMenuItem />
@@ -53,7 +58,8 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
         <NotificationForConvoMenuItem />
 
         <BlockMenuItem />
-        <CopyMenuItem />
+        <CopyCommunityUrlMenuItem convoId={convoIdFromContext} />
+        <CopyAccountIdMenuItem pubkey={convoIdFromContext} />
         {/* Read state actions */}
         <MarkAllReadMenuItem />
         <MarkConversationUnreadMenuItem />
@@ -91,8 +97,8 @@ export const PinConversationMenuItem = (): JSX.Element | null => {
       void conversation?.togglePinned();
     };
 
-    const menuText = isPinned ? window.i18n('unpinConversation') : window.i18n('pinConversation');
-    return <Item onClick={togglePinConversation}>{menuText}</Item>;
+    const menuText = isPinned ? window.i18n('pinUnpin') : window.i18n('pin');
+    return <ItemWithDataTestId onClick={togglePinConversation}>{menuText}</ItemWithDataTestId>;
   }
   return null;
 };

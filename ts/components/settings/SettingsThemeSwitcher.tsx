@@ -12,6 +12,7 @@ import { switchThemeTo } from '../../themes/switchTheme';
 import { SessionRadio, SessionRadioPrimaryColors } from '../basic/SessionRadio';
 import { SpacerLG, SpacerMD } from '../basic/Text';
 import { StyledDescriptionSettingsItem, StyledTitleSettingsItem } from './SessionSettingListItem';
+import { Localizer } from '../basic/Localizer';
 
 const StyledSwitcherContainer = styled.div`
   font-size: var(--font-size-md);
@@ -112,12 +113,16 @@ export const SettingsThemeSwitcher = () => {
 
   return (
     <StyledSwitcherContainer>
-      <StyledTitleSettingsItem>{window.i18n('themesSettingTitle')}</StyledTitleSettingsItem>
+      <StyledTitleSettingsItem>
+        <Localizer token="appearanceThemes" />
+      </StyledTitleSettingsItem>
       <ThemesContainer>
         <Themes />
       </ThemesContainer>
       <SpacerMD />
-      <StyledDescriptionSettingsItem>{window.i18n('primaryColor')}</StyledDescriptionSettingsItem>
+      <StyledDescriptionSettingsItem>
+        <Localizer token="appearancePrimaryColor" />
+      </StyledDescriptionSettingsItem>
       <SpacerMD />
       <ThemesContainer style={{ marginInlineStart: 'var(--margins-xs)' }}>
         {getPrimaryColors().map(item => {

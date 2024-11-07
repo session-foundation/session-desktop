@@ -62,7 +62,11 @@ export const MessageStatus = ({ messageId, dataTestId }: Props) => {
   }
 };
 
-const MessageStatusContainer = styled.div<{ isIncoming: boolean; isGroup: boolean }>`
+const MessageStatusContainer = styled.div<{
+  isIncoming: boolean;
+  isGroup: boolean;
+  clickable: boolean;
+}>`
   display: inline-block;
   align-self: ${props => (props.isIncoming ? 'flex-start' : 'flex-end')};
   flex-direction: ${props =>
@@ -72,7 +76,7 @@ const MessageStatusContainer = styled.div<{ isIncoming: boolean; isGroup: boolea
 
   margin-bottom: 2px;
   margin-inline-start: 5px;
-  cursor: pointer;
+  cursor: ${props => (props.clickable ? 'pointer' : 'inherit')};
   display: flex;
   align-items: center;
   margin-inline-start: ${props =>
@@ -152,6 +156,7 @@ const MessageStatusSending = ({ dataTestId }: Omit<Props, 'isDetailView'>) => {
       data-testtype="sending"
       isIncoming={false}
       isGroup={false}
+      clickable={false}
     >
       <TextDetails text={window.i18n('sending')} textColor="var(--text-secondary-color)" />
       <IconNormal rotateDuration={2} iconType="sending" />
@@ -191,8 +196,12 @@ const MessageStatusSent = ({ dataTestId, messageId }: Omit<Props, 'isDetailView'
       data-testtype="sent"
       isIncoming={false}
       isGroup={isGroup}
+      clickable={false}
     >
-      <TextDetails text={window.i18n('sent')} textColor="var(--text-secondary-color)" />
+      <TextDetails
+        text={window.i18n('disappearingMessagesSent')}
+        textColor="var(--text-secondary-color)"
+      />
       <IconForExpiringMessageId messageId={messageId} iconType="circleCheck" />
     </MessageStatusContainer>
   );
@@ -219,6 +228,7 @@ const MessageStatusRead = ({
       data-testtype="read"
       isIncoming={isIncoming}
       isGroup={isGroup}
+      clickable={false}
     >
       <TextDetails text={window.i18n('read')} textColor="var(--text-secondary-color)" />
       <IconForExpiringMessageId messageId={messageId} iconType="doubleCheckCircleFilled" />
@@ -234,14 +244,18 @@ const MessageStatusError = ({ dataTestId }: Omit<Props, 'isDetailView'>) => {
     <MessageStatusContainer
       data-testid={dataTestId}
       data-testtype="failed"
+      title={window.i18n('messageStatusFailedToSend')}
       onClick={() => {
         void saveLogToDesktop();
       }}
-      title={window.i18n('sendFailed')}
       isIncoming={false}
+      clickable={true}
       isGroup={isGroup}
     >
-      <TextDetails text={window.i18n('failedToSendMessage')} textColor="var(--danger-color)" />
+      <TextDetails
+        text={window.i18n('messageStatusFailedToSend')}
+        textColor="var(--danger-color)"
+      />
       <IconDanger iconType="error" />
     </MessageStatusContainer>
   );

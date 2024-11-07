@@ -1,10 +1,12 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { compact, isEmpty, remove, sortBy } from 'lodash';
 
+import { useSelector } from 'react-redux';
 import { StateType } from '../reducer';
 
 import { UserUtils } from '../../session/utils';
 import { MessageResultProps } from '../../types/message';
+
 import { ConversationLookupType } from '../ducks/conversations';
 import { SearchStateType } from '../ducks/search';
 import { getConversationLookup } from './conversations';
@@ -14,7 +16,7 @@ export const getSearch = (state: StateType): SearchStateType => state.search;
 
 export const getQuery = (state: StateType): string => getSearch(state).query;
 
-export const isSearching = (state: StateType) => {
+const isSearching = (state: StateType) => {
   return !!getSearch(state)?.query?.trim();
 };
 
@@ -121,3 +123,7 @@ export const getSearchResultsList = createSelector([getSearchResults], searchSta
 
   return builtList;
 });
+
+export function useIsSearching() {
+  return useSelector(isSearching);
+}

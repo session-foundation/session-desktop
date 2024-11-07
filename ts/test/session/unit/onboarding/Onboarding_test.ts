@@ -10,6 +10,7 @@ import {
 } from '../../../../util/accountManager';
 import { TestUtils } from '../../../test-utils';
 import { stubWindow } from '../../../test-utils/utils';
+import { resetLocaleAndTranslationDict } from '../../../../util/i18n/shared';
 
 describe('Onboarding', () => {
   const polledDisplayName = 'Hello World';
@@ -25,6 +26,7 @@ describe('Onboarding', () => {
   });
 
   afterEach(() => {
+    resetLocaleAndTranslationDict();
     Sinon.restore();
   });
 
@@ -34,7 +36,7 @@ describe('Onboarding', () => {
         displayNameIsValid(undefined);
       } catch (error) {
         error.should.be.an.instanceOf(Error);
-        error.message.should.equal(window.i18n('displayNameEmpty'));
+        error.message.should.equal(window.i18n('displayNameErrorDescription'));
       }
     });
     it('should throw an error if the display name is empty after trimming', async () => {
@@ -42,7 +44,7 @@ describe('Onboarding', () => {
         displayNameIsValid('    ');
       } catch (error) {
         error.should.be.an.instanceOf(Error);
-        error.message.should.equal(window.i18n('displayNameEmpty'));
+        error.message.should.equal(window.i18n('displayNameErrorDescription'));
       }
     });
     it('if the display name is valid it should be returned', async () => {
@@ -52,7 +54,7 @@ describe('Onboarding', () => {
         expect(validDisplayName, `should equal ${displayName}`).to.equal(displayName);
       } catch (error) {
         error.should.not.be.an.instanceOf(Error);
-        error.message.should.not.equal(window.i18n('displayNameEmpty'));
+        error.message.should.not.equal(window.i18n('displayNameErrorDescription'));
       }
     });
   });

@@ -12,6 +12,7 @@ import { Flex } from '../../../basic/Flex';
 import { SessionIcon } from '../../../icon';
 import { Reaction, ReactionProps } from '../reactions/Reaction';
 import { StyledPopupContainer } from '../reactions/ReactionPopup';
+import { Localizer } from '../../../basic/Localizer';
 
 export const popupXDefault = -81;
 export const popupYDefault = -90;
@@ -127,7 +128,7 @@ const ExpandedReactions = (props: ExpandReactionsProps) => {
       <Reactions {...props} />
       <StyledReadLess onClick={handleExpand}>
         <SessionIcon iconType="chevron" iconSize="medium" iconRotation={180} />
-        {window.i18n('expandedReactionsText')}
+        <Localizer token="showLess" />
       </StyledReadLess>
     </Flex>
   );

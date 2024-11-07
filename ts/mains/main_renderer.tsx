@@ -29,6 +29,8 @@ import { Notifications } from '../util/notifications';
 import { Registration } from '../util/registration';
 import { Storage, isSignInByLinking } from '../util/storage';
 import { getOppositeTheme, isThemeMismatched } from '../util/theme';
+import { getCrowdinLocale } from '../util/i18n/shared';
+import { rtlLocales } from '../localization/constants';
 
 // Globally disable drag and drop
 document.body.addEventListener(
@@ -50,6 +52,7 @@ document.body.addEventListener(
 
 // Load these images now to ensure that they don't flicker on first use
 const images = [];
+
 function preload(list: Array<string>) {
   for (let index = 0, max = list.length; index < max; index += 1) {
     const image = new Image();
@@ -57,6 +60,7 @@ function preload(list: Array<string>) {
     images.push(image);
   }
 }
+
 preload([
   'alert-outline.svg',
   'check.svg',
@@ -111,6 +115,7 @@ function mapOldThemeToNew(theme: string) {
       return theme;
   }
 }
+
 // using __unused as lodash is imported using _
 ipcRenderer.on('native-theme-update', (__unused, shouldUseDarkColors) => {
   const shouldFollowSystemTheme = window.getSettingValue(SettingsKey.hasFollowSystemThemeEnabled);
@@ -287,9 +292,7 @@ async function start() {
   });
 
   function switchBodyToRtlIfNeeded() {
-    const rtlLocales = ['fa', 'ar', 'he'];
-
-    const loc = (window.i18n as any).getLocale();
+    const loc = getCrowdinLocale();
     if (rtlLocales.includes(loc) && !document.getElementById('body')?.classList.contains('rtl')) {
       document.getElementById('body')?.classList.add('rtl');
     }
@@ -426,6 +429,7 @@ async function start() {
 }
 
 let disconnectTimer: NodeJS.Timeout | null = null;
+
 function onOffline() {
   window.log.info('offline');
   window.globalOnlineStatus = false;
@@ -469,6 +473,7 @@ function disconnect() {
 }
 
 let connectCount = 0;
+
 async function connect() {
   window.log.info('connect');
 

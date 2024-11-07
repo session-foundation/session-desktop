@@ -165,4 +165,6 @@ export const classicLight: ThemeColorVariables = {
   '--file-dropzone-border-color': 'var(--text-primary-color)',
 
   '--session-recording-pulse-color': hexColorToRGB(THEMES.CLASSIC_LIGHT.DANGER),
+
+  '--renderer-span-primary-color': 'var(--text-primary-color)',
 };

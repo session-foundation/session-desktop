@@ -1,25 +1,17 @@
-import { useConversationUsername } from '../../../../hooks/useParamSelector';
+import { useNicknameOrProfileNameOrShortenedPubkey } from '../../../../hooks/useParamSelector';
 import { PropsForMessageRequestResponse } from '../../../../models/messageType';
 import { UserUtils } from '../../../../session/utils';
 import { Flex } from '../../../basic/Flex';
-import { SpacerSM, Text } from '../../../basic/Text';
+import { Localizer } from '../../../basic/Localizer';
+import { SpacerSM, TextWithChildren } from '../../../basic/Text';
 import { ReadableMessage } from './ReadableMessage';
 
 // Note this should not respond to the disappearing message conversation setting so we use the ReadableMessage
 export const MessageRequestResponse = (props: PropsForMessageRequestResponse) => {
   const { messageId, isUnread, receivedAt, conversationId } = props;
 
-  const profileName = useConversationUsername(conversationId);
+  const name = useNicknameOrProfileNameOrShortenedPubkey(conversationId);
   const isFromSync = props.source === UserUtils.getOurPubKeyStrFromCache();
-
-  let msgText = '';
-  if (isFromSync) {
-    msgText = profileName
-      ? window.i18n('messageRequestAcceptedOurs', [profileName])
-      : window.i18n('messageRequestAcceptedOursNoName');
-  } else {
-    msgText = window.i18n('messageRequestAccepted');
-  }
 
   return (
     <ReadableMessage
@@ -38,7 +30,18 @@ export const MessageRequestResponse = (props: PropsForMessageRequestResponse) =>
         id={`msg-${messageId}`}
       >
         <SpacerSM />
-        <Text text={msgText} subtle={true} ellipsisOverflow={false} textAlign="center" />
+        <TextWithChildren subtle={true} ellipsisOverflow={false} textAlign="center">
+          {isFromSync ? (
+            <Localizer
+              token="messageRequestYouHaveAccepted"
+              args={{
+                name,
+              }}
+            />
+          ) : (
+            <Localizer token="messageRequestsAccepted" />
+          )}
+        </TextWithChildren>
       </Flex>
     </ReadableMessage>
   );

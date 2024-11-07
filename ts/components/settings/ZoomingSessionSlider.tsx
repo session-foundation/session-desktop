@@ -26,7 +26,7 @@ export const ZoomingSessionSlider = (props: { onSliderChange?: (value: number) =
   };
 
   return (
-    <SessionSettingsItemWrapper title={window.i18n('zoomFactorSettingTitle')} inline={false}>
+    <SessionSettingsItemWrapper title={window.i18n('appearanceZoom')} inline={false}>
       <Flex
         container={true}
         justifyContent={'flex-start'}

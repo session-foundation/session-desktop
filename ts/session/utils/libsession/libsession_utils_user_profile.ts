@@ -38,14 +38,15 @@ async function insertUserProfileIntoWrapper(convoId: string) {
     })}`
   );
 
+  // we don't want to throw if somehow our display name in the DB is too long here, so we use the truncated version.
+  await UserConfigWrapperActions.setNameTruncated(dbName);
+  await UserConfigWrapperActions.setPriority(priority);
   if (dbProfileUrl && !isEmpty(dbProfileKey)) {
-    await UserConfigWrapperActions.setUserInfo(dbName, priority, {
-      url: dbProfileUrl,
-      key: dbProfileKey,
-    });
+    await UserConfigWrapperActions.setProfilePic({ key: dbProfileKey, url: dbProfileUrl });
   } else {
-    await UserConfigWrapperActions.setUserInfo(dbName, priority, null);
+    await UserConfigWrapperActions.setProfilePic({ key: null, url: null });
   }
+
   await UserConfigWrapperActions.setEnableBlindedMsgRequest(areBlindedMsgRequestEnabled);
   await UserConfigWrapperActions.setNoteToSelfExpiry(expirySeconds);
 

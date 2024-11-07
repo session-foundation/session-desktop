@@ -49,6 +49,7 @@ const StyledSearchResults = styled.div`
   align-items: flex-start;
 
   cursor: pointer;
+
   &:hover {
     background-color: var(--conversation-tab-background-hover-color);
   }
@@ -236,7 +237,7 @@ export const MessageSearchResult = (props: MessageSearchResultProps) => {
           <StyledTimestampContaimer>
             <Timestamp
               timestamp={serverTimestamp || timestamp || sent_at || received_at}
-              momentFromNow={false}
+              isConversationSearchResult={true}
             />
           </StyledTimestampContaimer>
         </ResultsHeader>

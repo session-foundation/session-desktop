@@ -76,7 +76,11 @@ export const IncomingCallDialog = () => {
 
   if (hasIncomingCall) {
     return (
-      <SessionWrapperModal title={window.i18n('incomingCallFrom', [from || 'unknown'])}>
+      <SessionWrapperModal
+        title={window.i18n('callsIncoming', {
+          name: from ?? window.i18n('unknown'),
+        })}
+      >
         <IncomingCallAvatarContainer>
           <Avatar size={AvatarSize.XL} pubkey={incomingCallFromPubkey} />
         </IncomingCallAvatarContainer>

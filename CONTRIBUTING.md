@@ -116,23 +116,23 @@ Setup instructions for Windows using Chocolatey:
   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
   ```
 
-
 ### Linux
 
 1.  Install build tools `apt install build-essential cmake` (this installs make, g++, gcc)
 2.  Depending on your distro, you might need to install `hunspell` and `hunspell-<lan>` (e.g. `hunspell-en-au`)
 
 In Ubuntu, you may also need to install
+
 ```
 sudo apt install cmake
 npm install cmake-js
 ```
 
 In Fedora, you may also need to install
+
 ```
 sudo dnf install make automake gcc gcc-c++ kernel-devel
 ```
-
 
 ### All platforms
 
@@ -237,7 +237,7 @@ So you wanna make a pull request? Please observe the following guidelines.
   this script generates updated TypeScript type definitions to ensure you aren't
   using a localisation key which doesn't exist.
 - Please do not submit pull requests for pure translation fixes. Anyone can update
-  the translations at [Crowdin](https://crowdin.com/project/session-desktop).
+  the translations at [Crowdin](https://getsession.org/translate).
 - [Rebase](https://nathanleclaire.com/blog/2014/09/14/dont-be-scared-of-git-rebase/) your
   changes on the latest `clearnet` branch, resolving any conflicts.
   This ensures that your changes will merge cleanly when you open your PR.
@@ -274,3 +274,5 @@ You can build a production binary by running the following:
 yarn build-everything
 yarn build-release
 ```
+
+On linux, you can change in package.json `"target": ["deb"],` to any of the [electron-builder targets](https://www.electron.build/linux#target) to build for another target.

@@ -8,6 +8,7 @@ import { Flex } from '../basic/Flex';
 import { SessionIconButton } from '../icon';
 import { SessionSpinner } from '../loading';
 import { StagedLinkPreviewImage } from './composition/CompositionBox';
+import { AriaLabels } from '../../util/hardcodedAriaLabels';
 
 type Props = {
   isLoaded: boolean;
@@ -77,7 +78,7 @@ export const StagedLinkPreview = (props: Props) => {
         {isLoaded && image && isContentTypeImage ? (
           <StyledImage>
             <Image
-              alt={window.i18n('stagedPreviewThumbnail', [domain || ''])}
+              alt={AriaLabels.imageStagedLinkPreview}
               attachment={image as any}
               height={100}
               width={100}

@@ -1,58 +1,41 @@
-import { PubKey } from '../../../../../session/types';
 import { CallNotificationType, PropsForCallNotification } from '../../../../../state/ducks/types';
 
-import {
-  useSelectedConversationKey,
-  useSelectedDisplayNameInProfile,
-  useSelectedNickname,
-} from '../../../../../state/selectors/selectedConversation';
-import { LocalizerKeys } from '../../../../../types/LocalizerKeys';
+import { useSelectedNicknameOrProfileNameOrShortenedPubkey } from '../../../../../state/selectors/selectedConversation';
+import type { LocalizerToken } from '../../../../../types/localizer';
 import { SessionIconType } from '../../../../icon';
 import { ExpirableReadableMessage } from '../ExpirableReadableMessage';
 import { NotificationBubble } from './NotificationBubble';
+import { Localizer } from '../../../../basic/Localizer';
 
 type StyleType = Record<
   CallNotificationType,
-  { notificationTextKey: LocalizerKeys; iconType: SessionIconType; iconColor: string }
+  { notificationTextKey: LocalizerToken; iconType: SessionIconType; iconColor: string }
 >;
 
-const style: StyleType = {
+const style = {
   'missed-call': {
-    notificationTextKey: 'callMissed',
+    notificationTextKey: 'callsMissedCallFrom',
     iconType: 'callMissed',
     iconColor: 'var(--danger-color)',
   },
   'started-call': {
-    notificationTextKey: 'startedACall',
+    notificationTextKey: 'callsYouCalled',
     iconType: 'callOutgoing',
     iconColor: 'inherit',
   },
   'answered-a-call': {
-    notificationTextKey: 'answeredACall',
+    notificationTextKey: 'callsInProgress',
     iconType: 'callIncoming',
     iconColor: 'inherit',
   },
-};
+} satisfies StyleType;
 
 export const CallNotification = (props: PropsForCallNotification) => {
   const { messageId, notificationType } = props;
-  const selectedConvoId = useSelectedConversationKey();
 
-  const displayNameInProfile = useSelectedDisplayNameInProfile();
-  const nickname = useSelectedNickname();
+  const name = useSelectedNicknameOrProfileNameOrShortenedPubkey() ?? window.i18n('unknown');
 
-  const displayName =
-    nickname || displayNameInProfile || (selectedConvoId && PubKey.shorten(selectedConvoId));
-
-  const styleItem = style[notificationType];
-  const notificationText = window.i18n(styleItem.notificationTextKey, [
-    displayName || window.i18n('unknown'),
-  ]);
-  if (!window.i18n(styleItem.notificationTextKey)) {
-    throw new Error(`invalid i18n key ${styleItem.notificationTextKey}`);
-  }
-  const iconType = styleItem.iconType;
-  const iconColor = styleItem.iconColor;
+  const { iconColor, iconType, notificationTextKey } = style[notificationType];
 
   return (
     <ExpirableReadableMessage
@@ -61,11 +44,9 @@ export const CallNotification = (props: PropsForCallNotification) => {
       dataTestId={`call-notification-${notificationType}`}
       isControlMessage={true}
     >
-      <NotificationBubble
-        notificationText={notificationText}
-        iconType={iconType}
-        iconColor={iconColor}
-      />
+      <NotificationBubble iconType={iconType} iconColor={iconColor}>
+        <Localizer token={notificationTextKey} args={{ name }} />
+      </NotificationBubble>
     </ExpirableReadableMessage>
   );
 };

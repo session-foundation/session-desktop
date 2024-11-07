@@ -7,7 +7,6 @@ import { ProfileManager } from '../../../session/profile_manager/ProfileManager'
 import { PromiseUtils } from '../../../session/utils';
 import { TaskTimedOutError } from '../../../session/utils/Promise';
 import { NotFoundError } from '../../../session/utils/errors';
-import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_constants';
 import { trigger } from '../../../shims/events';
 import {
   AccountRestoration,
@@ -181,7 +180,8 @@ export const RestoreAccount = () => {
     }
 
     try {
-      const validName = await ProfileManager.updateOurProfileDisplayName(displayName, true);
+      // this will throw if the display name is too long
+      const validName = await ProfileManager.updateOurProfileDisplayNameOnboarding(displayName);
 
       const trimmedPassword = recoveryPassword.trim();
       setRecoveryPassword(trimmedPassword);
@@ -192,12 +192,14 @@ export const RestoreAccount = () => {
         dispatch,
       });
     } catch (err) {
-      const errorString = err.message || String(err);
       window.log.error(
-        `[onboarding] restore account: Failed with new display name! Error: ${errorString}`
+        `[onboarding] restore account: Failed with new display name! Error: ${err.message || String(err)}`
       );
       dispatch(setAccountRestorationStep(AccountRestoration.DisplayName));
-      dispatch(setDisplayNameError(errorString));
+
+      // Note: we have to assume here that libsession threw an error because the name was too long.
+      // The error reported by libsession is not localized
+      dispatch(setDisplayNameError(window.i18n('displayNameErrorDescriptionShorter')));
     }
   };
 
@@ -205,7 +207,7 @@ export const RestoreAccount = () => {
     <BackButtonWithinContainer
       margin={'2px 0 0 -36px'}
       shouldQuitOnClick={step !== AccountRestoration.RecoveryPassword}
-      quitMessage={window.i18n('onboardingBackLoadAccount')}
+      quitI18nMessageArgs={{ token: 'onboardingBackLoadAccount' }}
       onQuitVisible={() => {
         if (!abortController.signal.aborted) {
           abortController.abort();
@@ -255,7 +257,9 @@ export const RestoreAccount = () => {
               />
             </Flex>
             <SpacerSM />
-            <OnboardDescription>{window.i18n('onboardingRecoveryPassword')}</OnboardDescription>
+            <OnboardDescription>
+              {window.i18n('recoveryPasswordRestoreDescription')}
+            </OnboardDescription>
             <SpacerLG />
             <SessionInput
               ariaLabel="Recovery password input"
@@ -296,11 +300,11 @@ export const RestoreAccount = () => {
             <OnboardDescription>{window.i18n('displayNameErrorNew')}</OnboardDescription>
             <SpacerLG />
             <SessionInput
-              ariaLabel={window.i18n('enterDisplayName')}
+              ariaLabel={window.i18n('displayNameEnter')}
               autoFocus={true}
               disableOnBlurEvent={true}
               type="text"
-              placeholder={window.i18n('enterDisplayName')}
+              placeholder={window.i18n('displayNameEnter')}
               value={displayName}
               onValueChanged={(name: string) => {
                 const sanitizedName = sanitizeDisplayNameOrToast(
@@ -312,7 +316,6 @@ export const RestoreAccount = () => {
               }}
               onEnterPressed={recoverAndEnterDisplayName}
               error={displayNameError}
-              maxLength={LIBSESSION_CONSTANTS.CONTACT_MAX_NAME_LENGTH}
               inputDataTestId="display-name-input"
             />
             <SpacerLG />

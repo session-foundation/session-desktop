@@ -1,5 +1,4 @@
 import { fromPairs, map } from 'lodash';
-import moment from 'moment';
 
 import { Provider } from 'react-redux';
 import useMount from 'react-use/lib/useMount';
@@ -46,12 +45,6 @@ function makeLookup<T>(items: Array<T>, key: string): { [key: string]: T } {
 
   return fromPairs(pairs);
 }
-
-// Default to the locale from env. It will be overridden if moment
-// does not recognize it with what moment knows which is the closest.
-// i.e. es-419 will return 'es'.
-// We just need to use what we got from moment in getLocale on the updateLocale below
-moment.locale((window.i18n as any).getLocale());
 
 const StyledGutter = styled.div`
   width: var(--left-panel-width) !important;
@@ -121,7 +114,7 @@ const SomeDeviceOutdatedSyncingNotice = () => {
   }
   return (
     <NoticeBanner
-      text={window.i18n('someOfYourDeviceUseOutdatedVersion')}
+      text={window.i18n('deleteAfterGroupFirstReleaseConfigOutdated')}
       dismissCallback={dismiss}
     />
   );

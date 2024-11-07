@@ -6,6 +6,7 @@ import { useEncryptedFileFetch } from '../../../../../hooks/useEncryptedFileFetc
 
 import { icons } from '../../../../icon';
 import { QuoteIcon } from './QuoteIconContainer';
+import { AriaLabels } from '../../../../../util/hardcodedAriaLabels';
 
 const StyledQuoteImage = styled.div`
   flex: initial;
@@ -15,6 +16,7 @@ const StyledQuoteImage = styled.div`
   position: relative;
   border-radius: 4px;
   overflow: hidden;
+
   img {
     width: 100%;
     height: 100%;
@@ -76,9 +78,9 @@ export const QuoteImage = (props: {
     <StyledQuoteImage>
       <img
         src={srcData}
-        alt={window.i18n('quoteThumbnailAlt')}
         onDragStart={disableDrag}
         onError={handleImageErrorBound}
+        alt={AriaLabels.quoteImageThumbnail}
       />
       {showPlayButton && (
         <StyledPlayButton>

@@ -3,8 +3,12 @@ import { Data } from '../../../../data/data';
 import { getConversationController } from '../../../../session/conversations';
 import { AttachmentDownloads } from '../../../../session/utils';
 import { updateConfirmModal } from '../../../../state/ducks/modalDialog';
+import { useMessageAttachments } from '../../../../state/selectors';
+import { isAudio } from '../../../../types/MIME';
+import { isImageTypeSupported, isVideoTypeSupported } from '../../../../util/GoogleChrome';
 import { SessionButtonColor } from '../../../basic/SessionButton';
 import { SessionIcon } from '../../../icon';
+import { Localizer } from '../../../basic/Localizer';
 
 const StyledTrustSenderUI = styled.div`
   padding-inline: var(--margins-lg);
@@ -25,6 +29,7 @@ const ClickToDownload = styled.div`
 `;
 
 export const ClickToTrustSender = (props: { messageId: string }) => {
+  const attachments = useMessageAttachments(props.messageId);
   const openConfirmationModal = async (e: any) => {
     e.stopPropagation();
     e.preventDefault();
@@ -37,12 +42,13 @@ export const ClickToTrustSender = (props: { messageId: string }) => {
     const convo = getConversationController().get(sender);
     window.inboxStore?.dispatch(
       updateConfirmModal({
-        title: window.i18n('trustThisContactDialogTitle', [
-          convo.getContactProfileNameOrShortenedPubKey(),
-        ]),
-        message: window.i18n('trustThisContactDialogDescription', [
-          convo.getContactProfileNameOrShortenedPubKey(),
-        ]),
+        title: window.i18n('attachmentsAutoDownloadModalTitle'),
+        i18nMessage: {
+          token: 'attachmentsAutoDownloadModalDescription',
+          args: {
+            conversation_name: convo.getContactProfileNameOrShortenedPubKey(),
+          },
+        },
         closeTheme: SessionButtonColor.Danger,
         onClickOk: async () => {
           convo.set({ isTrustedForAttachmentDownload: true });
@@ -108,15 +114,33 @@ export const ClickToTrustSender = (props: { messageId: string }) => {
         onClickClose: () => {
           window.inboxStore?.dispatch(updateConfirmModal(null));
         },
+        okText: window.i18n('download'),
       })
     );
   };
+
+  const firstMimeType = attachments?.[0].contentType || 'unknown';
+
+  const fileType = isAudio(firstMimeType)
+    ? window.i18n('audio')
+    : isVideoTypeSupported(firstMimeType) || isImageTypeSupported(firstMimeType)
+      ? window.i18n('media')
+      : window.i18n('file');
 
   return (
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     <StyledTrustSenderUI onClick={openConfirmationModal}>
       <SessionIcon iconSize="small" iconType="gallery" />
-      <ClickToDownload>{window.i18n('clickToTrustContact')}</ClickToDownload>
+      <ClickToDownload>
+        <Localizer
+          token="attachmentsClickToDownload"
+          args={{
+            // Note: we don't want to change the case of a localized string, but as an exception this one is approved.
+            // The reason is that the attachments logic is scheduled to be changed soon :tm:
+            file_type: fileType.toLocaleLowerCase(),
+          }}
+        />
+      </ClickToDownload>
     </StyledTrustSenderUI>
   );
 };

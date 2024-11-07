@@ -1,11 +1,12 @@
 import { useState } from 'react';
-
+import { useDispatch } from 'react-redux';
 import useUpdate from 'react-use/lib/useUpdate';
 import styled from 'styled-components';
 import { useSet } from '../../hooks/useSet';
-import { ToastUtils } from '../../session/utils';
+import { updateBlockOrUnblockModal } from '../../state/ducks/modalDialog';
 import { BlockedNumberController } from '../../util';
 import { MemberListItem } from '../MemberListItem';
+import { Localizer } from '../basic/Localizer';
 import { SessionButton, SessionButtonColor } from '../basic/SessionButton';
 import { SpacerLG, SpacerSM } from '../basic/Text';
 import { SessionIconButton } from '../icon';
@@ -72,10 +73,15 @@ const BlockedEntries = (props: {
 };
 
 const NoBlockedContacts = () => {
-  return <div>{window.i18n('noBlockedContacts')}</div>;
+  return (
+    <div>
+      <Localizer token="blockBlockedNone" />
+    </div>
+  );
 };
 
 export const BlockedContactsList = () => {
+  const dispatch = useDispatch();
   const [expanded, setExpanded] = useState(false);
   const {
     uniqueValues: selectedIds,
@@ -98,10 +104,17 @@ export const BlockedContactsList = () => {
 
   async function unBlockThoseUsers() {
     if (selectedIds.length) {
-      await BlockedNumberController.unblockAll(selectedIds);
-      emptySelected();
-      ToastUtils.pushToastSuccess('unblocked', window.i18n('unblocked'));
-      forceUpdate();
+      dispatch(
+        updateBlockOrUnblockModal({
+          action: 'unblock',
+          pubkeys: selectedIds,
+          onConfirmed: () => {
+            // annoying, but until that BlockedList is in redux, we need to force a refresh of this component when a change is made.
+            emptySelected();
+            forceUpdate();
+          },
+        })
+      );
     }
   }
 
@@ -112,7 +125,7 @@ export const BlockedContactsList = () => {
         expanded={!noBlockedNumbers && expanded}
       >
         <BlockedContactListTitle onClick={toggleUnblockList}>
-          <SettingsTitleAndDescription title={window.i18n('blockedSettingsTitle')} />
+          <SettingsTitleAndDescription title={window.i18n('conversationsBlockedContacts')} />
           {noBlockedNumbers ? (
             <NoBlockedContacts />
           ) : (
@@ -120,7 +133,7 @@ export const BlockedContactsList = () => {
               {hasAtLeastOneSelected && expanded ? (
                 <SessionButton
                   buttonColor={SessionButtonColor.Danger}
-                  text={window.i18n('unblock')}
+                  text={window.i18n('blockUnblock')}
                   onClick={unBlockThoseUsers}
                   dataTestId="unblock-button-settings-screen"
                 />

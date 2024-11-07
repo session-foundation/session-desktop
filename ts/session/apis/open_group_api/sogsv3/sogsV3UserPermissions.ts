@@ -19,16 +19,14 @@ export const sogsV3AddPermissions = async (
     roomInfos.serverUrl,
     new Set([roomInfos.roomId]),
     new AbortController().signal,
-    usersToAddPermissionsTo.map((user) => (
-      {
-        type: 'updateRoomUserPerms',
-        updateUserRoomPerms: {
-          roomId: roomInfos.roomId,
-          sessionId: user.key,
-          permsToAdd: permissions,
-        }
-      }
-    )),
+    usersToAddPermissionsTo.map(user => ({
+      type: 'updateRoomUserPerms',
+      updateUserRoomPerms: {
+        roomId: roomInfos.roomId,
+        sessionId: user.key,
+        permsToAdd: permissions,
+      },
+    })),
     'batch'
   );
   const isSuccess = batchSendResponse?.body?.every(m => m?.code === 200) || false;
@@ -36,7 +34,7 @@ export const sogsV3AddPermissions = async (
     window.log.warn('add permissions failed with body', batchSendResponse?.body);
   }
   return isSuccess;
-}
+};
 
 export const sogsV3ClearPermissions = async (
   usersToClearPermissionsFor: Array<PubKey>,
@@ -47,16 +45,14 @@ export const sogsV3ClearPermissions = async (
     roomInfos.serverUrl,
     new Set([roomInfos.roomId]),
     new AbortController().signal,
-    usersToClearPermissionsFor.map((user) => (
-      {
-        type: 'updateRoomUserPerms',
-        updateUserRoomPerms: {
-          roomId: roomInfos.roomId,
-          sessionId: user.key,
-          permsToClear: permissions
-        }
-      }
-    )),
+    usersToClearPermissionsFor.map(user => ({
+      type: 'updateRoomUserPerms',
+      updateUserRoomPerms: {
+        roomId: roomInfos.roomId,
+        sessionId: user.key,
+        permsToClear: permissions,
+      },
+    })),
     'batch'
   );
   const isSuccess = batchSendResponse?.body?.every(m => m?.code === 200) || false;
@@ -64,4 +60,4 @@ export const sogsV3ClearPermissions = async (
     window.log.warn('add permissions failed with body', batchSendResponse?.body);
   }
   return isSuccess;
-}
+};

@@ -1,5 +1,5 @@
 // eslint:disable: no-require-imports no-var-requires
-const { clipboard, ipcRenderer, webFrame } = require('electron/main');
+const { clipboard, ipcRenderer: ipc, webFrame } = require('electron/main');
 const { Storage } = require('./ts/util/storage');
 
 const { isTestNet, isTestIntegration } = require('./ts/shared/env_vars');
@@ -9,8 +9,14 @@ const url = require('url');
 
 const _ = require('lodash');
 
+const { setupI18n } = require('./ts/util/i18n/i18n');
+
+const { dictionary, crowdinLocale } = ipc.sendSync('locale-data');
+
 const config = url.parse(window.location.toString(), true).query;
 const configAny = config;
+
+window.i18n = setupI18n({ crowdinLocale, translationDictionary: dictionary });
 
 let title = config.name;
 if (config.environment !== 'production') {
@@ -29,12 +35,13 @@ window.getCommitHash = () => configAny.commitHash;
 window.getNodeVersion = () => configAny.node_version;
 window.getOSRelease = () =>
   `${os.type()} ${os.release()}, Node.js ${config.node_version} ${os.platform()} ${os.arch()}`;
-window.saveLog = additionalText => ipcRenderer.send('save-debug-log', additionalText);
+window.saveLog = additionalText => ipc.send('save-debug-log', additionalText);
 
 window.sessionFeatureFlags = {
   useOnionRequests: true,
   useTestNet: isTestNet() || isTestIntegration(),
   useClosedGroupV3: false,
+  replaceLocalizedStringsWithKeys: false,
   debug: {
     debugLogging: !_.isEmpty(process.env.SESSION_DEBUG),
     debugLibsessionDumps: !_.isEmpty(process.env.SESSION_DEBUG_LIBSESSION_DUMPS),
@@ -50,9 +57,6 @@ window.versionInfo = {
   commitHash: window.getCommitHash(),
   appInstance: window.getAppInstance(),
 };
-
-const ipc = ipcRenderer;
-const localeMessages = ipc.sendSync('locale-data');
 
 window.updateZoomFactor = () => {
   const zoomFactor = window.getSettingValue('zoom-factor-setting') || 100;
@@ -82,13 +86,13 @@ window.setPassword = async (passPhrase, oldPhrase) =>
 // called to verify that the password is correct when showing the recovery from seed modal
 window.onTryPassword = async passPhrase =>
   new Promise((resolve, reject) => {
-    ipcRenderer.once('password-recovery-phrase-response', (_event, error) => {
+    ipc.once('password-recovery-phrase-response', (_event, error) => {
       if (error) {
         return reject(error);
       }
       return resolve();
     });
-    ipcRenderer.send('password-recovery-phrase', passPhrase);
+    ipc.send('password-recovery-phrase', passPhrase);
   });
 
 window.setStartInTray = async startInTray =>
@@ -250,7 +254,6 @@ if (config.proxyUrl) {
 window.nodeSetImmediate = setImmediate;
 
 const data = require('./ts/data/dataInit');
-const { setupi18n } = require('./ts/util/i18n');
 window.Signal = data.initData();
 
 const { getConversationController } = require('./ts/session/conversations/ConversationController');
@@ -271,9 +274,6 @@ window.getSeedNodeList = () =>
         'https://seed2.getsession.org:4443/',
         'https://seed3.getsession.org:4443/',
       ];
-
-const { locale: localFromEnv } = config;
-window.i18n = setupi18n(localFromEnv || 'en', localeMessages);
 
 window.addEventListener('contextmenu', e => {
   const editable = e && e.target.closest('textarea, input, [contenteditable="true"]');

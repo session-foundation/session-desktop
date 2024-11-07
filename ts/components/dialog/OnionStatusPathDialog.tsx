@@ -22,6 +22,7 @@ import { THEME_GLOBALS } from '../../themes/globals';
 import { SessionWrapperModal } from '../SessionWrapperModal';
 import { SessionIcon, SessionIconButton } from '../icon';
 import { SessionSpinner } from '../loading';
+import { getCrowdinLocale } from '../../util/i18n/shared';
 
 export type StatusLightType = {
   glowStartDelay: number;
@@ -105,19 +106,17 @@ const OnionPathModalInner = () => {
 
   const nodes = [
     {
-      label: window.i18n('device'),
+      label: window.i18n('you'),
     },
     ...onionPath,
     {
-      label: window.i18n('destination'),
+      label: window.i18n('onionRoutingPathDestination'),
     },
   ];
 
   return (
     <>
-      <StyledOnionDescription>
-        {window.i18n('onionPathIndicatorDescription')}
-      </StyledOnionDescription>
+      <StyledOnionDescription>{window.i18n('onionRoutingPathDescription')}</StyledOnionDescription>
       <StyledOnionNodeList>
         <Flex container={true}>
           <StyledLightsContainer>
@@ -137,16 +136,16 @@ const OnionPathModalInner = () => {
           <Flex container={true} flexDirection="column" alignItems="flex-start">
             {nodes.map((snode: Snode | any) => {
               const country = reader?.get(snode.ip || '0.0.0.0')?.country;
-              const locale = (window.i18n as any).getLocale() as string;
+              const locale = getCrowdinLocale();
 
-              // typescript complains that the [] operator cannot be used with the 'string' coming from getLocale()
+              // typescript complains that the [] operator cannot be used with the 'string' coming from getCrowdinLocale()
               const countryNamesAsAny = country?.names as any;
               const countryName =
                 snode.label || // to take care of the "Device" case
                 countryNamesAsAny?.[locale] || // try to find the country name based on the user local first
                 // eslint-disable-next-line dot-notation
                 countryNamesAsAny?.['en'] || // if not found, fallback to the country in english
-                window.i18n('unknownCountry');
+                window.i18n('onionRoutingPathUnknownCountry');
 
               return (
                 <OnionCountryDisplay
@@ -258,7 +257,7 @@ export const OnionPathModal = () => {
   const dispatch = useDispatch();
   return (
     <SessionWrapperModal
-      title={window.i18n('onionPathIndicatorTitle')}
+      title={window.i18n('onionRoutingPath')}
       confirmText={window.i18n('learnMore')}
       cancelText={window.i18n('cancel')}
       onConfirm={onConfirm}

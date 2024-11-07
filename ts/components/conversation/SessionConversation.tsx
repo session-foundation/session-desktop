@@ -51,10 +51,10 @@ import { NoMessageInConversation } from './SubtleNotification';
 import { ConversationHeaderWithDetails } from './header/ConversationHeader';
 
 import { isAudio } from '../../types/MIME';
-import { HTMLDirection } from '../../util/i18n';
 import { NoticeBanner } from '../NoticeBanner';
 import { SessionSpinner } from '../loading';
 import { RightPanel, StyledRightPanelContainer } from './right-panel/RightPanel';
+import { HTMLDirection } from '../../util/i18n/rtlSupport';
 
 const DEFAULT_JPEG_QUALITY = 0.85;
 
@@ -200,7 +200,7 @@ export class SessionConversation extends Component<Props, State> {
       window.inboxStore?.dispatch(
         updateConfirmModal({
           title: window.i18n('warning'),
-          message: window.i18n('recoveryPasswordWarningSendDescription'),
+          i18nMessage: { token: 'recoveryPasswordWarningSendDescription' },
           okTheme: SessionButtonColor.Danger,
           onClickOk: () => {
             void sendAndScroll();
@@ -237,12 +237,14 @@ export class SessionConversation extends Component<Props, State> {
     }
     // TODOLATER break selectionMode into it's own container component so we can use hooks to fetch relevant state from the store
     const selectionMode = selectedMessages.length > 0;
-
+    // TODO legacy messages support will be removed in a future release
     const bannerText =
       selectedConversation.hasOutdatedClient &&
       selectedConversation.hasOutdatedClient !== ourDisplayNameInProfile
-        ? window.i18n('disappearingMessagesModeOutdated', [selectedConversation.hasOutdatedClient])
-        : window.i18n('someOfYourDeviceUseOutdatedVersion');
+        ? window.i18n('disappearingMessagesLegacy', {
+            name: selectedConversation.hasOutdatedClient, // we store this guy's display name in here.
+          })
+        : window.i18n('deleteAfterGroupFirstReleaseConfigOutdated');
 
     return (
       <>
@@ -356,7 +358,7 @@ export class SessionConversation extends Component<Props, State> {
     }
   }
 
-  private async maybeAddAttachment(file: any) {
+  private async maybeAddAttachment(file: File) {
     if (!file) {
       return;
     }
@@ -396,7 +398,7 @@ export class SessionConversation extends Component<Props, State> {
       });
 
       if (blob.blob.size > MAX_ATTACHMENT_FILESIZE_BYTES) {
-        ToastUtils.pushFileSizeErrorAsByte(MAX_ATTACHMENT_FILESIZE_BYTES);
+        ToastUtils.pushFileSizeErrorAsByte();
         return;
       }
     } catch (error) {

@@ -69,6 +69,11 @@ export const getServerBanOrUnbanUserModalState = createSelector(
   (state: ModalState): ServerBanOrUnbanUserModalState => state.serverBanOrUnbanUserModal
 );
 
+export const getBlockOrUnblockUserModalState = createSelector(
+  getModal,
+  (state: ModalState) => state.blockOrUnblockModal
+);
+
 export const getUpdateGroupNameModal = createSelector(
   getModal,
   (state: ModalState): UpdateGroupNameModalState => state.groupNameModal
@@ -132,6 +137,11 @@ export const getEditProfilePictureModalState = createSelector(
 export const getHideRecoveryPasswordModalState = createSelector(
   getModal,
   (state: ModalState): HideRecoveryPasswordModalState => state.hideRecoveryPasswordModalState
+);
+
+export const getOpenUrlModalState = createSelector(
+  getModal,
+  (state: ModalState) => state.openUrlModal
 );
 
 export const getLightBoxOptions = createSelector(

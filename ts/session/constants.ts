@@ -17,6 +17,19 @@ export const DURATION = {
   WEEKS: days * 7,
 };
 
+export const DURATION_SECONDS = {
+  /** 1s */
+  SECONDS: Math.floor(DURATION.SECONDS / 1000),
+  /** 60s */
+  MINUTES: Math.floor(DURATION.MINUTES / 1000),
+  /** 60 * 60 = 3,600s */
+  HOURS: Math.floor(DURATION.HOURS / 1000),
+  /** 24 * 60 * 60 = 86,400s */
+  DAYS: Math.floor(DURATION.DAYS / 1000),
+  /** 7 * 24 * 60 * 60  = 604,800s */
+  WEEKS: Math.floor(DURATION.WEEKS / 1000),
+};
+
 export const FILESIZE = {
   /** 1KB */
   KB: 1024,

@@ -1,13 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import styled from 'styled-components';
-import { Data } from '../../../../data/data';
 import { findAndFormatContact } from '../../../../models/message';
 import { PubKey } from '../../../../session/types/PubKey';
-import { useIsDarkTheme } from '../../../../state/selectors/theme';
+
+import { Localizer } from '../../../basic/Localizer';
 import { nativeEmojiData } from '../../../../util/emoji';
+import type { LocalizerComponentPropsObject } from '../../../../types/localizer';
 
 export type TipPosition = 'center' | 'left' | 'right';
 
+// TODO: Look into adjusting the width to match the new strings better
 export const POPUP_WIDTH = 216; // px
 
 export const StyledPopupContainer = styled.div<{ tooltipPosition: TipPosition }>`
@@ -55,81 +57,52 @@ export const StyledPopupContainer = styled.div<{ tooltipPosition: TipPosition }>
 
 const StyledEmoji = styled.span`
   font-size: 36px;
-  margin-left: 8px;
+  margin-block-start: 8px;
 `;
 
-const StyledContacts = styled.span`
-  word-break: break-all;
-  span {
-    word-break: keep-all;
-  }
-`;
-
-const StyledOthers = styled.span<{ isDarkTheme: boolean }>`
-  color: ${props => (props.isDarkTheme ? 'var(--primary-color)' : 'var(--text-primary-color)')};
-`;
-
-const generateContactsString = async (
-  messageId: string,
+const generateContactsString = (
   senders: Array<string>
-): Promise<Array<string> | null> => {
-  let results = [];
-  const message = await Data.getMessageById(messageId);
-  if (message) {
-    let meIndex = -1;
-    results = senders.map((sender, index) => {
-      const contact = findAndFormatContact(sender);
-      if (contact.isMe) {
-        meIndex = index;
-      }
-      return contact?.profileName || contact?.name || PubKey.shorten(sender);
-    });
-    if (meIndex >= 0) {
-      results.splice(meIndex, 1);
-      results = [window.i18n('you'), ...results];
+): { contacts: Array<string>; hasMe: boolean } => {
+  const contacts: Array<string> = [];
+  let hasMe = false;
+  senders.forEach(sender => {
+    // TODO truncate with ellipsis if too long?
+    const contact = findAndFormatContact(sender);
+    if (contact.isMe) {
+      hasMe = true;
+    } else {
+      contacts.push(contact?.profileName ?? contact?.name ?? PubKey.shorten(sender));
     }
-    if (results && results.length > 0) {
-      return results;
-    }
-  }
-  return null;
+  });
+  return { contacts, hasMe };
 };
 
-const Contacts = (contacts: Array<string>, count: number) => {
-  const isDarkTheme = useIsDarkTheme();
+const getI18nComponentProps = (
+  isYou: boolean,
+  contacts: Array<string>,
+  numberOfReactors: number,
+  emoji: string,
+  emojiName?: string
+): LocalizerComponentPropsObject => {
+  const name = contacts[0];
+  const other_name = contacts[1];
+  const emoji_name = emojiName ? `:${emojiName}:` : emoji;
+  const count = numberOfReactors - 1;
 
-  if (!(contacts?.length > 0)) {
-    return null;
+  switch (numberOfReactors) {
+    case 1:
+      return isYou
+        ? { token: 'emojiReactsHoverYouNameDesktop', args: { emoji_name } }
+        : { token: 'emojiReactsHoverNameDesktop', args: { name, emoji_name } };
+    case 2:
+      return isYou
+        ? { token: 'emojiReactsHoverYouNameTwoDesktop', args: { name, emoji_name } }
+        : { token: 'emojiReactsHoverNameTwoDesktop', args: { name, other_name, emoji_name } };
+    default:
+      return isYou
+        ? { token: 'emojiReactsHoverYouNameMultipleDesktop', args: { count, emoji_name } }
+        : { token: 'emojiReactsHoverTwoNameMultipleDesktop', args: { name, count, emoji_name } };
   }
-
-  const reactors = contacts.length;
-  if (reactors === 1 || reactors === 2 || reactors === 3) {
-    return (
-      <StyledContacts>
-        {window.i18n(
-          reactors === 1
-            ? 'reactionPopupOne'
-            : reactors === 2
-              ? 'reactionPopupTwo'
-              : 'reactionPopupThree',
-          contacts
-        )}{' '}
-        <span>{window.i18n('reactionPopup')}</span>
-      </StyledContacts>
-    );
-  }
-  if (reactors > 3) {
-    return (
-      <StyledContacts>
-        {window.i18n('reactionPopupMany', [contacts[0], contacts[1], contacts[3]])}{' '}
-        <StyledOthers isDarkTheme={isDarkTheme}>
-          {window.i18n(reactors === 4 ? 'otherSingular' : 'otherPlural', [`${count - 3}`])}
-        </StyledOthers>{' '}
-        <span>{window.i18n('reactionPopup')}</span>
-      </StyledContacts>
-    );
-  }
-  return null;
 };
 
 type Props = {
@@ -142,33 +115,22 @@ type Props = {
 };
 
 export const ReactionPopup = (props: Props) => {
-  const { messageId, emoji, count, senders, tooltipPosition = 'center', onClick } = props;
+  const { emoji, senders, tooltipPosition = 'center', count, onClick } = props;
 
-  const [contacts, setContacts] = useState<Array<string>>([]);
+  const emojiName = nativeEmojiData?.ids?.[emoji];
+  const emojiAriaLabel = nativeEmojiData?.ariaLabels?.[emoji];
 
-  useEffect(() => {
-    let isCancelled = false;
-    // eslint-disable-next-line more/no-then
-    generateContactsString(messageId, senders)
-      .then(async results => {
-        if (isCancelled) {
-          return;
-        }
-        if (results) {
-          setContacts(results);
-        }
-      })
-      .catch(() => {});
+  const { contacts, hasMe } = useMemo(() => generateContactsString(senders), [senders]);
 
-    return () => {
-      isCancelled = true;
-    };
-  }, [count, messageId, senders]);
+  const i18nProps = useMemo(
+    () => getI18nComponentProps(hasMe, contacts, count, emoji, emojiName),
+    [hasMe, contacts, count, emoji, emojiName]
+  );
 
   return (
     <StyledPopupContainer tooltipPosition={tooltipPosition} onClick={onClick}>
-      {Contacts(contacts, count)}
-      <StyledEmoji role={'img'} aria-label={nativeEmojiData?.ariaLabels?.[emoji]}>
+      <Localizer {...i18nProps} />
+      <StyledEmoji role={'img'} aria-label={emojiAriaLabel}>
         {emoji}
       </StyledEmoji>
     </StyledPopupContainer>

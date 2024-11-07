@@ -47,6 +47,7 @@ $session-compose-margin: 20px;
     &__header__date--has-unread {
       flex-grow: 1 !important;
       text-align: end !important;
+      padding-inline-start: var(--margins-xs);
     }
 
     &__message__text {

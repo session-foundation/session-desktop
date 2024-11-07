@@ -23,8 +23,8 @@ async function toggleLinkPreviews(isToggleOn: boolean, forceUpdate: () => void) 
   if (!isToggleOn) {
     window.inboxStore?.dispatch(
       updateConfirmModal({
-        title: window.i18n('linkPreviewsTitle'),
-        message: window.i18n('linkPreviewsConfirmMessage'),
+        title: window.i18n('linkPreviewsSend'),
+        i18nMessage: { token: 'linkPreviewsSendModalDescription' },
         okTheme: SessionButtonColor.Danger,
         onClickOk: async () => {
           const newValue = !isToggleOn;
@@ -68,8 +68,8 @@ export const SettingsCategoryPrivacy = (props: {
           await window.setSettingValue(SettingsKey.settingsReadReceipt, !old);
           forceUpdate();
         }}
-        title={window.i18n('readReceiptSettingTitle')}
-        description={window.i18n('readReceiptSettingDescription')}
+        title={window.i18n('readReceipts')}
+        description={window.i18n('readReceiptsDescription')}
         active={window.getSettingValue(SettingsKey.settingsReadReceipt)}
         dataTestId="enable-read-receipts"
       />
@@ -79,8 +79,8 @@ export const SettingsCategoryPrivacy = (props: {
           await window.setSettingValue(SettingsKey.settingsTypingIndicator, !old);
           forceUpdate();
         }}
-        title={window.i18n('typingIndicatorsSettingTitle')}
-        description={window.i18n('typingIndicatorsSettingDescription')}
+        title={window.i18n('typingIndicators')}
+        description={window.i18n('typingIndicatorsDescription')}
         active={Boolean(window.getSettingValue(SettingsKey.settingsTypingIndicator))}
         childrenDescription={<TypingBubbleItem />}
       />
@@ -88,8 +88,8 @@ export const SettingsCategoryPrivacy = (props: {
         onClickToggle={() => {
           void toggleLinkPreviews(isLinkPreviewsOn, forceUpdate);
         }}
-        title={window.i18n('linkPreviewsTitle')}
-        description={window.i18n('linkPreviewDescription')}
+        title={window.i18n('linkPreviewsSend')}
+        description={window.i18n('linkPreviewsDescription')}
         active={isLinkPreviewsOn}
       />
       <SessionToggleWithDescription
@@ -102,44 +102,43 @@ export const SettingsCategoryPrivacy = (props: {
           await ConfigurationSync.queueNewJobIfNeeded();
           forceUpdate();
         }}
-        title={window.i18n('blindedMsgReqsSettingTitle')}
-        description={window.i18n('blindedMsgReqsSettingDesc')}
+        title={window.i18n('messageRequestsCommunities')}
+        description={window.i18n('messageRequestsCommunitiesDescription')}
         active={areBlindedRequestsEnabled}
       />
 
       {!props.hasPassword ? (
         <SessionSettingButtonItem
           title={window.i18n('lockApp')}
-          description={window.i18n('setAccountPasswordDescription')}
+          description={window.i18n('passwordDescription')}
           onClick={() => {
             displayPasswordModal('set', props.onPasswordUpdated);
             forceUpdate();
           }}
-          buttonText={window.i18n('setPassword')}
+          buttonText={window.i18n('passwordSet')}
           dataTestId={'set-password-button'}
         />
       ) : (
         <>
           {/* We have a password, let's show the 'change' and 'remove' password buttons */}
           <SessionSettingButtonItem
-            title={window.i18n('changeAccountPasswordTitle')}
-            description={window.i18n('changeAccountPasswordDescription')}
+            title={window.i18n('passwordChange')}
+            description={window.i18n('passwordChangeDescription')}
             onClick={() => {
               displayPasswordModal('change', props.onPasswordUpdated);
               forceUpdate();
             }}
-            buttonText={window.i18n('changePassword')}
+            buttonText={window.i18n('passwordChange')}
             dataTestId="change-password-settings-button"
           />
           <SessionSettingButtonItem
-            title={window.i18n('removeAccountPasswordTitle')}
-            description={window.i18n('removeAccountPasswordDescription')}
+            description={window.i18n('passwordRemoveDescription')}
             onClick={() => {
               displayPasswordModal('remove', props.onPasswordUpdated);
               forceUpdate();
             }}
             buttonColor={SessionButtonColor.Danger}
-            buttonText={window.i18n('removePassword')}
+            buttonText={window.i18n('passwordRemove')}
             dataTestId="remove-password-settings-button"
           />
         </>

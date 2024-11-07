@@ -3,16 +3,19 @@
 
 const { ipcRenderer } = require('electron');
 const url = require('url');
-const i18n = require('./ts/util/i18n');
+const { setupI18n } = require('./ts/util/i18n/i18n');
 
 const config = url.parse(window.location.toString(), true).query;
-const { locale } = config;
-const localeMessages = ipcRenderer.sendSync('locale-data');
+const { dictionary, crowdinLocale } = ipcRenderer.sendSync('locale-data');
 
 // If the app is locked we can't access the database to check the theme.
 window.theme = 'classic-dark';
 window.primaryColor = 'green';
-window.i18n = i18n.setupi18n(locale, localeMessages);
+
+window.i18n = setupI18n({
+  crowdinLocale,
+  translationDictionary: dictionary,
+});
 
 window.getEnvironment = () => config.environment;
 window.getVersion = () => config.version;

@@ -1,6 +1,5 @@
 import classNames from 'classnames';
 import { isEmpty } from 'lodash';
-import moment from 'moment';
 import { MouseEvent, useCallback, useLayoutEffect, useState } from 'react';
 import { InView } from 'react-intersection-observer';
 import { useSelector } from 'react-redux';
@@ -27,6 +26,7 @@ import { MessageHighlighter } from './MessageHighlighter';
 import { MessageLinkPreview } from './MessageLinkPreview';
 import { MessageQuote } from './MessageQuote';
 import { MessageText } from './MessageText';
+import { formatFullDate } from '../../../../util/i18n/formatting/generics';
 
 export type MessageContentSelectorProps = Pick<
   MessageRenderingProps,
@@ -150,7 +150,7 @@ export const MessageContent = (props: Props) => {
 
   const hasContentBeforeAttachment = !isEmpty(previews) || !isEmpty(quote) || !isEmpty(text);
 
-  const toolTipTitle = moment(serverTimestamp || timestamp).format('llll');
+  const toolTipTitle = formatFullDate(new Date(serverTimestamp || timestamp));
 
   return (
     <StyledMessageContent

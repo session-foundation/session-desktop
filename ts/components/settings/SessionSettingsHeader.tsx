@@ -26,22 +26,22 @@ export const SettingsHeader = (props: Props) => {
   let categoryTitle: string | null = null;
   switch (category) {
     case 'appearance':
-      categoryTitle = window.i18n('appearanceSettingsTitle');
+      categoryTitle = window.i18n('sessionAppearance');
       break;
     case 'conversations':
-      categoryTitle = window.i18n('conversationsSettingsTitle');
+      categoryTitle = window.i18n('sessionConversations');
       break;
     case 'notifications':
-      categoryTitle = window.i18n('notificationsSettingsTitle');
+      categoryTitle = window.i18n('sessionNotifications');
       break;
     case 'help':
-      categoryTitle = window.i18n('helpSettingsTitle');
+      categoryTitle = window.i18n('sessionHelp');
       break;
     case 'permissions':
-      categoryTitle = window.i18n('permissionsSettingsTitle');
+      categoryTitle = window.i18n('sessionPermissions');
       break;
     case 'privacy':
-      categoryTitle = window.i18n('privacySettingsTitle');
+      categoryTitle = window.i18n('sessionPrivacy');
       break;
     case 'recoveryPassword':
       categoryTitle = window.i18n('sessionRecoveryPassword');

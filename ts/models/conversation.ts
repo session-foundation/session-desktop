@@ -212,6 +212,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
   public isOpenGroupV2(): boolean {
     return OpenGroupUtils.isOpenGroupV2(this.id);
   }
+
   public isClosedGroup(): boolean {
     return Boolean(
       (this.get('type') === ConversationTypeEnum.GROUP && this.id.startsWith('05')) ||
@@ -890,11 +891,12 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
      * - ignores a off setting for a legacy group (as we can get a setting from restored from configMessage, and a newgroup can still be in the swarm when linking a device
      */
     const shouldAddExpireUpdateMsgGroup =
-      isLegacyGroup &&
-      !fromConfigMessage &&
-      (expirationMode !== this.get('expirationMode') || expireTimer !== this.get('expireTimer')) &&
-      expirationMode !== 'off';
-
+      fromCurrentDevice ||
+      (isLegacyGroup &&
+        !fromConfigMessage &&
+        (expirationMode !== this.get('expirationMode') ||
+          expireTimer !== this.get('expireTimer')) &&
+        expirationMode !== 'off');
     const shouldAddExpireUpdateMessage =
       shouldAddExpireUpdateMsgPrivate || shouldAddExpireUpdateMsgGroup;
 
@@ -1336,6 +1338,9 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
     if (this.isPrivate()) {
       return window.i18n('anonymous');
     }
+    if (this.isPublic()) {
+      return window.i18n('communityUnknown');
+    }
     return window.i18n('unknown');
   }
 
@@ -1757,7 +1762,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
       const isFirstMessageOfConvo =
         (await Data.getMessagesByConversation(this.id, { messageId: null })).messages.length === 1;
       if (hadNoRequestsPrior && isFirstMessageOfConvo) {
-        friendRequestText = window.i18n('youHaveANewFriendRequest');
+        friendRequestText = window.i18n('messageRequestsNew');
       } else {
         window?.log?.info(
           'notification cancelled for as pending requests already exist',
@@ -1841,9 +1846,9 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
       conversationId,
       iconUrl,
       isExpiringMessage: false,
-      message: window.i18n('incomingCallFrom', [
-        this.getNicknameOrRealUsername() || window.i18n('anonymous'),
-      ]),
+      message: window.i18n('callsIncoming', {
+        name: this.getNicknameOrRealUsername() || window.i18n('anonymous'),
+      }),
       messageSentAt: now,
       title: this.getNicknameOrRealUsernameOrPlaceholder(),
     });
@@ -2048,7 +2053,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
     const roomInfo = OpenGroupData.getV2OpenGroupRoom(groupUrl);
 
     if (!roomInfo || !roomInfo.serverPublicKey) {
-      ToastUtils.pushToastError('no-sogs-matching', window.i18n('couldntFindServerMatching'));
+      ToastUtils.pushToastError('no-sogs-matching', window.i18n.stripped('communityJoinError'));
       window?.log?.error('Could not find room with matching server url', groupUrl);
       throw new Error(`Could not find room with matching server url: ${groupUrl}`);
     }
@@ -2579,6 +2584,7 @@ export class ConversationCollection extends Backbone.Collection<ConversationMode
     };
   }
 }
+
 ConversationCollection.prototype.model = ConversationModel;
 
 export function hasValidOutgoingRequestValues({

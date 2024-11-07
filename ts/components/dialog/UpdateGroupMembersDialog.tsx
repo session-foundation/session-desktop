@@ -9,7 +9,7 @@ import { updateGroupMembersModal } from '../../state/ducks/modalDialog';
 import { MemberListItem } from '../MemberListItem';
 import { SessionWrapperModal } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
-import { SpacerLG, Text } from '../basic/Text';
+import { SpacerLG } from '../basic/Text';
 
 import { useConversationPropsById, useWeAreAdmin } from '../../hooks/useParamSelector';
 
@@ -63,49 +63,6 @@ const ClassicMemberList = (props: {
           />
         );
       })}
-    </>
-  );
-};
-
-const ZombiesList = ({ convoId }: { convoId: string }) => {
-  const convoProps = useConversationPropsById(convoId);
-
-  function onZombieClicked() {
-    if (!convoProps?.weAreAdmin) {
-      ToastUtils.pushOnlyAdminCanRemove();
-    }
-  }
-  if (!convoProps || !convoProps.zombies?.length) {
-    return null;
-  }
-  const { zombies, weAreAdmin } = convoProps;
-
-  const zombieElements = zombies.map((zombie: string) => {
-    const isSelected = weAreAdmin || false; // && !member.checkmarked;
-    return (
-      <MemberListItem
-        key={`zombie-list-${zombie}`}
-        isSelected={isSelected}
-        onSelect={onZombieClicked}
-        onUnselect={onZombieClicked}
-        isZombie={true}
-        pubkey={zombie}
-      />
-    );
-  });
-  return (
-    <>
-      <SpacerLG />
-      {weAreAdmin && (
-        <Text
-          padding="20px"
-          text={window.i18n('removeResidueMembers')}
-          subtle={true}
-          maxWidth="400px"
-          textAlign="center"
-        />
-      )}
-      {zombieElements}
     </>
   );
 };
@@ -201,7 +158,7 @@ export const UpdateGroupMembersDialog = (props: Props) => {
 
   const onAdd = (member: string) => {
     if (!weAreAdmin) {
-      ToastUtils.pushOnlyAdminCanRemove();
+      window?.log?.warn('Only group admin can add members!');
       return;
     }
 
@@ -211,8 +168,6 @@ export const UpdateGroupMembersDialog = (props: Props) => {
   const onRemove = (member: string) => {
     if (!weAreAdmin) {
       window?.log?.warn('Only group admin can remove members!');
-
-      ToastUtils.pushOnlyAdminCanRemove();
       return;
     }
     if (convoProps.groupAdmins?.includes(member)) {
@@ -227,9 +182,9 @@ export const UpdateGroupMembersDialog = (props: Props) => {
   };
 
   const showNoMembersMessage = existingMembers.length === 0;
-  const okText = window.i18n('ok');
+  const okText = window.i18n('okay');
   const cancelText = window.i18n('cancel');
-  const titleText = window.i18n('updateGroupDialogTitle', [convoProps.displayNameInProfile || '']);
+  const titleText = window.i18n('groupMembers');
 
   return (
     <SessionWrapperModal title={titleText} onClose={closeDialog}>
@@ -241,8 +196,7 @@ export const UpdateGroupMembersDialog = (props: Props) => {
           selectedMembers={membersToKeepWithUpdate}
         />
       </StyledClassicMemberList>
-      <ZombiesList convoId={conversationId} />
-      {showNoMembersMessage && <p>{window.i18n('noMembersInThisGroup')}</p>}
+      {showNoMembersMessage && <p>{window.i18n('groupMembersNone')}</p>}
 
       <SpacerLG />
 

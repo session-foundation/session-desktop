@@ -404,11 +404,11 @@ export class SwarmPolling {
           await UserConfigWrapperActions.init(privateKeyEd25519, null);
           await UserConfigWrapperActions.merge(incomingConfigMessages);
 
-          const userInfo = await UserConfigWrapperActions.getUserInfo();
-          if (!userInfo) {
-            throw new Error('UserInfo not found');
+          const name = await UserConfigWrapperActions.getName();
+          if (!name) {
+            throw new Error('UserInfo not found or name is empty');
           }
-          return userInfo.name;
+          return name;
         } catch (e) {
           window.log.warn('LibSessionUtil.initializeLibSessionUtilWrappers failed with', e.message);
         } finally {

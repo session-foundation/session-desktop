@@ -29,6 +29,11 @@ const forceNetworkDeletion = async (): Promise<Array<string> | null> => {
   try {
     const maliciousSnodes = await pRetry(
       async () => {
+        if (!window.isOnline) {
+          window?.log?.warn('forceNetworkDeletion: we are offline.');
+          return null;
+        }
+
         const userSwarm = await getSwarmFor(userX25519PublicKey);
         const snodeToMakeRequestTo: Snode | undefined = sample(userSwarm);
 
@@ -150,7 +155,7 @@ const forceNetworkDeletion = async (): Promise<Array<string> | null> => {
             }
           },
           {
-            retries: 3,
+            retries: 1,
             minTimeout: SnodeAPI.TEST_getMinTimeout(),
             onFailedAttempt: e => {
               window?.log?.warn(

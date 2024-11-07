@@ -1,17 +1,17 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 
 import autoBind from 'auto-bind';
+import { isEmpty } from 'lodash';
 import { Component } from 'react';
 import { ToastUtils } from '../../session/utils';
 import { sessionPassword } from '../../state/ducks/modalDialog';
-import { LocalizerKeys } from '../../types/LocalizerKeys';
 import type { PasswordAction } from '../../types/ReduxTypes';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { matchesHash, validatePassword } from '../../util/passwordUtils';
 import { getPasswordHash, Storage } from '../../util/storage';
-import { SessionWrapperModal } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SpacerSM } from '../basic/Text';
+import { SessionWrapperModal } from '../SessionWrapperModal';
 
 interface Props {
   passwordAction: PasswordAction;
@@ -55,39 +55,44 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
 
   public render() {
     const { passwordAction } = this.props;
+    const { currentPasswordEntered } = this.state;
     let placeholders: Array<string> = [];
     switch (passwordAction) {
       case 'change':
         placeholders = [
-          window.i18n('typeInOldPassword'),
-          window.i18n('enterNewPassword'),
-          window.i18n('confirmNewPassword'),
+          window.i18n('passwordEnterCurrent'),
+          window.i18n('passwordEnterNew'),
+          window.i18n('passwordConfirm'),
         ];
         break;
       case 'remove':
-        placeholders = [window.i18n('enterPassword')];
+        placeholders = [window.i18n('passwordRemove')];
         break;
       case 'enter':
-        placeholders = [window.i18n('enterPassword')];
+        placeholders = [window.i18n('passwordCreate')];
         break;
       default:
-        placeholders = [window.i18n('createPassword'), window.i18n('confirmPassword')];
+        placeholders = [window.i18n('passwordCreate'), window.i18n('passwordConfirm')];
     }
 
     const confirmButtonText =
       passwordAction === 'remove' ? window.i18n('remove') : window.i18n('done');
-    // do this separately so typescript's compiler likes it
-    const localizedKeyAction: LocalizerKeys =
-      passwordAction === 'change'
-        ? 'changePassword'
-        : passwordAction === 'remove'
-          ? 'removePassword'
-          : passwordAction === 'enter'
-            ? 'passwordViewTitle'
-            : 'setPassword';
+
+    const titleString = () => {
+      switch (passwordAction) {
+        case 'change':
+          return window.i18n('passwordChange');
+        case 'remove':
+          return window.i18n('passwordRemove');
+        case 'enter':
+          return window.i18n('passwordEnter');
+        default:
+          return window.i18n('passwordSet');
+      }
+    };
 
     return (
-      <SessionWrapperModal title={window.i18n(localizedKeyAction)} onClose={this.closeDialog}>
+      <SessionWrapperModal title={titleString()} onClose={this.closeDialog}>
         <SpacerSM />
 
         <div className="session-modal__input-group">
@@ -132,6 +137,12 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
             buttonColor={passwordAction === 'remove' ? SessionButtonColor.Danger : undefined}
             buttonType={SessionButtonType.Simple}
             onClick={this.setPassword}
+            disabled={
+              (passwordAction === 'change' ||
+                passwordAction === 'set' ||
+                passwordAction === 'remove') &&
+              isEmpty(currentPasswordEntered)
+            }
           />
           {passwordAction !== 'enter' && (
             <SessionButton
@@ -166,9 +177,14 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
    * Returns false and set the state error field in the input is not a valid password
    * or returns true
    */
-  private validatePassword(firstPassword: string) {
+  private validatePassword(enteredPassword: string) {
+    if (isEmpty(enteredPassword)) {
+      // Note, we don't want to display an error when the password is empty, but just drop the action
+      window.log.info('validatePassword needs a password to be given');
+      return false;
+    }
     // if user did not fill the first password field, we can't do anything
-    const errorFirstInput = validatePassword(firstPassword);
+    const errorFirstInput = validatePassword(enteredPassword);
     if (errorFirstInput !== null) {
       this.setState({
         error: errorFirstInput,
@@ -188,7 +204,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
 
     if (enteredPassword !== enteredPasswordConfirm) {
       this.setState({
-        error: window.i18n('setPasswordInvalid'),
+        error: window.i18n('passwordErrorMatch'),
       });
       this.showError();
       return;
@@ -202,8 +218,8 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
 
       ToastUtils.pushToastSuccess(
         'setPasswordSuccessToast',
-        window.i18n('setPasswordTitle'),
-        window.i18n('setPasswordToastDescription')
+        window.i18n.stripped('passwordSet'),
+        window.i18n.stripped('passwordSetDescription')
       );
 
       this.props.onOk();
@@ -211,7 +227,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
     } catch (err) {
       window.log.error(err);
       this.setState({
-        error: window.i18n('setPasswordFail'),
+        error: window.i18n('passwordFailed'),
       });
       this.showError();
     }
@@ -231,7 +247,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
     // Check the retyped password matches the new password
     if (newPassword !== newConfirmedPassword) {
       this.setState({
-        error: window.i18n('passwordsDoNotMatch'),
+        error: window.i18n('passwordErrorMatch'),
       });
       this.showError();
       return;
@@ -240,7 +256,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
     const isValidWithStoredInDB = this.validatePasswordHash(oldPassword);
     if (!isValidWithStoredInDB) {
       this.setState({
-        error: window.i18n('changePasswordInvalid'),
+        error: window.i18n('passwordCurrentIncorrect'),
       });
       this.showError();
       return;
@@ -255,8 +271,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
 
       ToastUtils.pushToastSuccess(
         'setPasswordSuccessToast',
-        window.i18n('changePasswordTitle'),
-        window.i18n('changePasswordToastDescription')
+        window.i18n.stripped('passwordChangedDescription')
       );
 
       this.props.onOk();
@@ -271,11 +286,16 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
   }
 
   private async handleActionRemove(oldPassword: string) {
+    if (isEmpty(oldPassword)) {
+      // Note, we want to drop "Enter" when no passwords are entered.
+      window.log.info('handleActionRemove: no password given. dropping');
+      return;
+    }
     // We don't validate oldPassword on change: this is validate on the validatePasswordHash below
     const isValidWithStoredInDB = this.validatePasswordHash(oldPassword);
     if (!isValidWithStoredInDB) {
       this.setState({
-        error: window.i18n('removePasswordInvalid'),
+        error: window.i18n('passwordIncorrect'),
       });
       this.showError();
       return;
@@ -290,8 +310,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
 
       ToastUtils.pushToastWarning(
         'setPasswordSuccessToast',
-        window.i18n('removePasswordTitle'),
-        window.i18n('removePasswordToastDescription')
+        window.i18n.stripped('passwordRemovedDescription')
       );
 
       this.props.onOk();
@@ -321,7 +340,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
     const isValidWithStoredInDB = this.validatePasswordHash(enteredPassword);
     if (!isValidWithStoredInDB) {
       this.setState({
-        error: window.i18n('invalidPassword'),
+        error: window.i18n('passwordIncorrect'),
       });
       this.showError();
       return;
@@ -336,10 +355,11 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
     const { currentPasswordEntered, currentPasswordConfirmEntered, currentPasswordRetypeEntered } =
       this.state;
 
-    // Trim leading / trailing whitespace for UX
-    const firstPasswordEntered = (currentPasswordEntered || '').trim();
-    const secondPasswordEntered = (currentPasswordConfirmEntered || '').trim();
-    const thirdPasswordEntered = (currentPasswordRetypeEntered || '').trim();
+    // Note: don't trim anything. If the user entered a space as a first/last
+    // char and saved it as is in his password manager, so be it.
+    const firstPasswordEntered = currentPasswordEntered || '';
+    const secondPasswordEntered = currentPasswordConfirmEntered || '';
+    const thirdPasswordEntered = currentPasswordRetypeEntered || '';
 
     switch (passwordAction) {
       case 'set': {

@@ -12,6 +12,7 @@ import {
   sendConfigMessageAndDeleteEverything,
 } from '../../util/accountManager';
 import { SessionRadioGroup } from '../basic/SessionRadioGroup';
+import { Localizer } from '../basic/Localizer';
 
 const DEVICE_ONLY = 'device_only';
 const DEVICE_AND_NETWORK = 'device_and_network';
@@ -24,9 +25,8 @@ const DescriptionBeforeAskingConfirmation = (props: {
   const { deleteMode, setDeleteMode } = props;
   return (
     <>
-      <span className="session-confirm-main-message">{window.i18n('deleteAccountWarning')}</span>
       <span className="session-confirm-main-message">
-        {window.i18n('dialogClearAllDataDeletionQuestion')}
+        <Localizer token="clearDataAllDescription" />
       </span>
 
       <SpacerLG />
@@ -39,8 +39,8 @@ const DescriptionBeforeAskingConfirmation = (props: {
           }
         }}
         items={[
-          { label: window.i18n('deviceOnly'), value: DEVICE_ONLY },
-          { label: window.i18n('entireAccount'), value: 'device_and_network' },
+          { label: window.i18n('clearDeviceOnly'), value: DEVICE_ONLY },
+          { label: window.i18n('clearDeviceAndNetwork'), value: 'device_and_network' },
         ]}
       />
     </>
@@ -51,8 +51,8 @@ const DescriptionWhenAskingConfirmation = (props: { deleteMode: DeleteModes }) =
   return (
     <span className="session-confirm-main-message">
       {props.deleteMode === 'device_and_network'
-        ? window.i18n('areYouSureDeleteEntireAccount')
-        : window.i18n('areYouSureDeleteDeviceOnly')}
+        ? window.i18n('clearDeviceAndNetworkConfirm')
+        : window.i18n('clearDeviceDescription')}
     </span>
   );
 };
@@ -102,7 +102,7 @@ export const DeleteAccountModal = () => {
 
   return (
     <SessionWrapperModal
-      title={window.i18n('clearAllData')}
+      title={window.i18n('clearDataAll')}
       onClose={onClickCancelHandler}
       showExitIcon={true}
     >

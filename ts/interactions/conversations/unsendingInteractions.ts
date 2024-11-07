@@ -235,7 +235,7 @@ async function unsendMessageJustForThisUser(
 
   // Update view and trigger update
   window.inboxStore?.dispatch(resetSelectedMessageIds());
-  ToastUtils.pushDeleted(msgsToDelete.length);
+  ToastUtils.pushDeleted(unsendMsgObjects.length);
 }
 
 const doDeleteSelectedMessagesInSOGS = async (
@@ -309,7 +309,6 @@ const doDeleteSelectedMessages = async ({
   }
 
   // #region deletion for 1-1 and closed groups
-
   if (deleteForEveryone) {
     if (!isAllOurs) {
       ToastUtils.pushMessageDeleteForbidden();
@@ -362,18 +361,13 @@ export async function deleteMessagesByIdForEveryone(
     await Promise.all(messageIds.map(m => Data.getMessageById(m, false)))
   );
 
-  const messageCount = selectedMessages.length;
-  const moreThanOne = messageCount > 1;
-
   const closeDialog = () => window.inboxStore?.dispatch(updateConfirmModal(null));
 
   window.inboxStore?.dispatch(
     updateConfirmModal({
-      title: window.i18n('deleteForEveryone'),
-      message: moreThanOne
-        ? window.i18n('deleteMessagesQuestion', [messageCount.toString()])
-        : window.i18n('deleteMessageQuestion'),
-      okText: window.i18n('deleteForEveryone'),
+      title: window.i18n('clearMessagesForEveryone'),
+      i18nMessage: { token: 'deleteMessage', args: { count: selectedMessages.length } },
+      okText: window.i18n('clearMessagesForEveryone'),
       okTheme: SessionButtonColor.Danger,
       onClickOk: async () => {
         await doDeleteSelectedMessages({ selectedMessages, conversation, deleteForEveryone: true });
@@ -396,20 +390,20 @@ export async function deleteMessagesById(messageIds: Array<string>, conversation
 
   const isMe = conversation.isMe();
 
-  const messageCount = selectedMessages.length;
-  const moreThanOne = selectedMessages.length > 1;
   const closeDialog = () => window.inboxStore?.dispatch(updateConfirmModal(null));
+  const clearMessagesForEveryone = 'clearMessagesForEveryone';
 
   window.inboxStore?.dispatch(
     updateConfirmModal({
-      title: window.i18n('deleteJustForMe'),
-      message: moreThanOne
-        ? window.i18n('deleteMessagesQuestion', [messageCount.toString()])
-        : window.i18n('deleteMessageQuestion'),
+      title: window.i18n('clearMessagesForMe'),
+      i18nMessage: { token: 'deleteMessage', args: { count: selectedMessages.length } },
       radioOptions: !isMe
         ? [
-            { label: window.i18n('deleteJustForMe'), value: 'deleteJustForMe' },
-            { label: window.i18n('deleteForEveryone'), value: 'deleteForEveryone' },
+            { label: window.i18n('clearMessagesForMe'), value: 'clearMessagesForMe' as const },
+            {
+              label: window.i18n('clearMessagesForEveryone'),
+              value: clearMessagesForEveryone,
+            },
           ]
         : undefined,
       okText: window.i18n('delete'),
@@ -418,7 +412,7 @@ export async function deleteMessagesById(messageIds: Array<string>, conversation
         await doDeleteSelectedMessages({
           selectedMessages,
           conversation,
-          deleteForEveryone: args === 'deleteForEveryone', // chosenOption from radioOptions
+          deleteForEveryone: args === clearMessagesForEveryone,
         });
         window.inboxStore?.dispatch(updateConfirmModal(null));
         window.inboxStore?.dispatch(closeRightPanel());

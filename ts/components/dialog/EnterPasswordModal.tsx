@@ -39,7 +39,10 @@ export const EnterPasswordModal = (props: EnterPasswordModalProps) => {
     try {
       const passwordValue = passwordInputRef.current?.value;
       if (!passwordValue) {
-        ToastUtils.pushToastError('enterPasswordErrorToast', window.i18n('noGivenPassword'));
+        ToastUtils.pushToastError(
+          'enterPasswordErrorToast',
+          window.i18n.stripped('passwordIncorrect')
+        );
 
         return;
       }
@@ -51,7 +54,10 @@ export const EnterPasswordModal = (props: EnterPasswordModalProps) => {
       onPasswordVerified();
     } catch (e) {
       window.log.error('window.onTryPassword failed with', e);
-      ToastUtils.pushToastError('enterPasswordErrorToast', window.i18n('invalidPassword'));
+      ToastUtils.pushToastError(
+        'enterPasswordErrorToast',
+        window.i18n.stripped('passwordIncorrect')
+      );
     }
   });
 
@@ -76,7 +82,7 @@ export const EnterPasswordModal = (props: EnterPasswordModalProps) => {
 
   return (
     <SessionWrapperModal
-      title={title || window.i18n('enterPassword')}
+      title={title || window.i18n('passwordEnter')}
       onClose={onClose}
       showExitIcon={true}
     >
@@ -88,7 +94,7 @@ export const EnterPasswordModal = (props: EnterPasswordModalProps) => {
             type="password"
             ref={passwordInputRef}
             data-testid="password-input"
-            placeholder={window.i18n('enterPassword')}
+            placeholder={window.i18n('passwordEnter')}
           />
         </div>
 

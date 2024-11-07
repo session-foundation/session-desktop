@@ -14,6 +14,7 @@ import { SessionToastContainer } from './SessionToastContainer';
 import { SessionWrapperModal } from './SessionWrapperModal';
 import { SessionToast } from './basic/SessionToast';
 import { SessionSpinner } from './loading';
+import { Localizer } from './basic/Localizer';
 
 interface State {
   errorCount: number;
@@ -27,7 +28,11 @@ const TextPleaseWait = (props: { isLoading: boolean }) => {
   if (!props.isLoading) {
     return null;
   }
-  return <div>{window.i18n('pleaseWaitOpenAndOptimizeDb')}</div>;
+  return (
+    <div>
+      <Localizer token="waitOneMoment" />
+    </div>
+  );
 };
 
 const StyledContent = styled.div`
@@ -70,14 +75,16 @@ class SessionPasswordPromptInner extends PureComponent<unknown, State> {
     const isLoading = this.state.loading;
     const spinner = isLoading ? <SessionSpinner loading={true} /> : null;
     const featureElement = this.state.clearDataView ? (
-      <p>{window.i18n('deleteAccountFromLogin')}</p>
+      <p>
+        <Localizer token="clearDeviceDescription" />
+      </p>
     ) : (
       <div className="session-modal__input-group">
         <input
           type="password"
           id="password-prompt-input"
           defaultValue=""
-          placeholder={window.i18n('enterPassword')}
+          placeholder={window.i18n('passwordEnter')}
           onKeyUp={this.onKeyUp}
           ref={input => {
             this.inputRef = input;
@@ -88,9 +95,7 @@ class SessionPasswordPromptInner extends PureComponent<unknown, State> {
 
     return (
       <SessionWrapperModal
-        title={
-          this.state.clearDataView ? window.i18n('clearDevice') : window.i18n('passwordViewTitle')
-        }
+        title={this.state.clearDataView ? window.i18n('clearDevice') : window.i18n('passwordEnter')}
       >
         {spinner || featureElement}
         <TextPleaseWait isLoading={isLoading} />
