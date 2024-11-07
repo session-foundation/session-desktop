@@ -261,7 +261,7 @@
         "StartupWMClass": "Session"
       },
       "asarUnpack": "node_modules/spellchecker/vendor/hunspell_dictionaries",
-      "target": ["deb"],
+      "target": ["appImage"],
       "icon": "build/icon-linux.icns"
     },
     "asarUnpack": [
