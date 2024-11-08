@@ -20,6 +20,7 @@ import {
   SessionPasswordModalState,
   UpdateGroupMembersModalState,
   UpdateGroupNameModalState,
+  UpdateGroupPermissionsModalState,
   UserDetailsModalState,
 } from '../ducks/modalDialog';
 import { StateType } from '../reducer';
@@ -82,6 +83,11 @@ export const getUpdateGroupNameModal = createSelector(
 export const getUpdateGroupMembersModal = createSelector(
   getModal,
   (state: ModalState): UpdateGroupMembersModalState => state.groupMembersModal
+);
+
+export const getUpdateGroupPermissionsModal = createSelector(
+  getModal,
+  (state: ModalState): UpdateGroupPermissionsModalState => state.groupPermissionsModal
 );
 
 export const getUserDetailsModal = createSelector(

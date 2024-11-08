@@ -21,6 +21,7 @@ import {
   getSessionPasswordDialog,
   getUpdateGroupMembersModal,
   getUpdateGroupNameModal,
+  getUpdateGroupPermissionsModal,
   getUserDetailsModal,
 } from '../../state/selectors/modal';
 import { LightboxGallery } from '../lightbox/LightboxGallery';
@@ -44,6 +45,7 @@ import { UserDetailsDialog } from './UserDetailsDialog';
 import { EditProfileDialog } from './edit-profile/EditProfileDialog';
 import { OpenUrlModal } from './OpenUrlModal';
 import { BlockOrUnblockDialog } from './blockOrUnblock/BlockOrUnblockDialog';
+import { UpdateGroupPermissionsDialog } from './UpdateGroupPermissionsDialog';
 
 export const ModalContainer = () => {
   const confirmModalState = useSelector(getConfirmModal);
@@ -51,6 +53,7 @@ export const ModalContainer = () => {
   const addModeratorsModalState = useSelector(getAddModeratorsModal);
   const removeModeratorsModalState = useSelector(getRemoveModeratorsModal);
   const updateGroupMembersModalState = useSelector(getUpdateGroupMembersModal);
+  const updateGroupPermissionsModalState = useSelector(getUpdateGroupPermissionsModal);
   const updateGroupNameModalState = useSelector(getUpdateGroupNameModal);
   const userDetailsModalState = useSelector(getUserDetailsModal);
   const changeNicknameModal = useSelector(getChangeNickNameDialog);
@@ -81,6 +84,9 @@ export const ModalContainer = () => {
       {removeModeratorsModalState && <RemoveModeratorsDialog {...removeModeratorsModalState} />}
       {updateGroupMembersModalState && (
         <UpdateGroupMembersDialog {...updateGroupMembersModalState} />
+      )}
+      {updateGroupPermissionsModalState && (
+        <UpdateGroupPermissionsDialog {...updateGroupPermissionsModalState} />
       )}
       {updateGroupNameModalState && <UpdateGroupNameDialog {...updateGroupNameModalState} />}
       {userDetailsModalState && <UserDetailsDialog {...userDetailsModalState} />}

@@ -25,6 +25,7 @@ export type AddModeratorsModalState = InviteContactModalState;
 export type RemoveModeratorsModalState = InviteContactModalState;
 export type UpdateGroupMembersModalState = InviteContactModalState;
 export type UpdateGroupNameModalState = InviteContactModalState;
+export type UpdateGroupPermissionsModalState = InviteContactModalState;
 export type ChangeNickNameModalState = InviteContactModalState;
 export type EditProfileModalState = object | null;
 export type OnionPathModalState = EditProfileModalState;
@@ -66,6 +67,7 @@ export type ModalState = {
   addModeratorsModal: AddModeratorsModalState;
   groupNameModal: UpdateGroupNameModalState;
   groupMembersModal: UpdateGroupMembersModalState;
+  groupPermissionsModal: UpdateGroupPermissionsModalState;
   userDetailsModal: UserDetailsModalState;
   nickNameModal: ChangeNickNameModalState;
   editProfileModal: EditProfileModalState;
@@ -91,6 +93,7 @@ export const initialModalState: ModalState = {
   blockOrUnblockModal: null,
   groupNameModal: null,
   groupMembersModal: null,
+  groupPermissionsModal: null,
   userDetailsModal: null,
   nickNameModal: null,
   editProfileModal: null,
@@ -139,6 +142,12 @@ const ModalSlice = createSlice({
     },
     updateGroupMembersModal(state, action: PayloadAction<UpdateGroupMembersModalState | null>) {
       return { ...state, groupMembersModal: action.payload };
+    },
+    updateGroupPermissionsModal(
+      state,
+      action: PayloadAction<UpdateGroupPermissionsModalState | null>
+    ) {
+      return { ...state, groupPermissionsModal: action.payload };
     },
     updateUserDetailsModal(state, action: PayloadAction<UserDetailsModalState | null>) {
       return { ...state, userDetailsModal: action.payload };
@@ -204,6 +213,7 @@ export const {
   updateRemoveModeratorsModal,
   updateGroupNameModal,
   updateGroupMembersModal,
+  updateGroupPermissionsModal,
   updateUserDetailsModal,
   changeNickNameModal,
   editProfileModal,

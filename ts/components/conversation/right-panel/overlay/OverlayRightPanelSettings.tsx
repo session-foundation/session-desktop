@@ -19,6 +19,7 @@ import {
   showRemoveModeratorsByConvoId,
   showUpdateGroupMembersByConvoId,
   showUpdateGroupNameByConvoId,
+  showUpdateGroupPermissionsByConvoId,
 } from '../../../../interactions/conversationInteractions';
 import { Constants } from '../../../../session';
 import { closeRightPanel } from '../../../../state/ducks/conversations';
@@ -272,6 +273,7 @@ export const OverlayRightPanelSettings = () => {
           : window.i18n('groupLeave');
 
   const showUpdateGroupNameButton = isGroup && weAreAdmin && !commonNoShow; // legacy groups non-admin cannot change groupname anymore
+  const showUpdateGroupPermissions = weAreAdmin && isPublic;
   const showAddRemoveModeratorsButton = weAreAdmin && !commonNoShow && isPublic;
   const showUpdateGroupMembersButton = !isPublic && isGroup && !commonNoShow;
 
@@ -290,6 +292,17 @@ export const OverlayRightPanelSettings = () => {
               text={window.i18n('groupEdit')}
               onClick={() => {
                 void showUpdateGroupNameByConvoId(selectedConvoKey);
+              }}
+              dataTestId="edit-group-name"
+            />
+          )}
+
+          {showUpdateGroupPermissions && (
+            <PanelIconButton
+              iconType={'padlock'}
+              text={window.i18n('groupChangePermissions')}
+              onClick={() => {
+                void showUpdateGroupPermissionsByConvoId(selectedConvoKey);
               }}
               dataTestId="edit-group-name"
             />

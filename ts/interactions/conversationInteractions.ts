@@ -35,6 +35,7 @@ import {
   updateConfirmModal,
   updateGroupMembersModal,
   updateGroupNameModal,
+  updateGroupPermissionsModal,
   updateInviteContactModal,
   updateRemoveModeratorsModal,
   updateServerBanOrUnbanUserModal,
@@ -199,6 +200,13 @@ export async function showUpdateGroupNameByConvoId(conversationId: string) {
     );
   }
   window.inboxStore?.dispatch(updateGroupNameModal({ conversationId }));
+}
+
+export async function showUpdateGroupPermissionsByConvoId(conversationId: string) {
+  const conversation = getConversationController().get(conversationId);
+  if (conversation.isOpenGroupV2()) {
+    window.inboxStore?.dispatch(updateGroupPermissionsModal({ conversationId }));
+  }
 }
 
 export async function showUpdateGroupMembersByConvoId(conversationId: string) {
