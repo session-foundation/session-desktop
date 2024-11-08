@@ -208,6 +208,19 @@ export type SubRequestUpdateRoomType = {
   };
 };
 
+export type SubRequestUpdateRoomPermsType = {
+  type: 'updateRoomPerms';
+  updateRoomPerms: {
+    roomId: string;
+    permsToSet: {
+      default_read?: boolean;
+      default_write?: boolean;
+      default_upload?: boolean;
+      default_accessible?: boolean;
+    };
+  };
+};
+
 export type SubRequestDeleteReactionType = {
   type: 'deleteReaction';
   deleteReaction: {
@@ -228,6 +241,7 @@ export type OpenGroupBatchRow =
   | SubRequestBanUnbanUserType
   | SubRequestDeleteAllUserPostsType
   | SubRequestUpdateRoomType
+  | SubRequestUpdateRoomPermsType
   | SubRequestDeleteReactionType;
 
 /**
@@ -333,6 +347,12 @@ const makeBatchRequestPayload = (
         method: 'PUT',
         path: `/room/${options.updateRoom.roomId}`,
         json: { image: options.updateRoom.imageId },
+      };
+    case 'updateRoomPerms':
+      return {
+        method: 'PUT',
+        path: `/room/${options.updateRoomPerms.roomId}`,
+        json: { ...options.updateRoomPerms.permsToSet },
       };
     case 'deleteReaction':
       return {

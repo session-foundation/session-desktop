@@ -374,6 +374,7 @@
   "giphyWarning": "Giphy",
   "giphyWarningDescription": "{app_name} will connect to Giphy to provide search results. You will not have full metadata protection when sending GIFs.",
   "groupAddMemberMaximum": "Groups have a maximum of 100 members",
+  "groupChangePermissions": "Edit Permissions",
   "groupCreate": "Create Group",
   "groupCreateErrorNoMembers": "Please pick at least one other group member.",
   "groupDelete": "Delete Group",
