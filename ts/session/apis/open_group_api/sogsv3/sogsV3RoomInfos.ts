@@ -9,7 +9,7 @@ import { OpenGroupV2Room } from '../../../../data/types';
 
 export const getAllRoomInfos = async (roomInfos: OpenGroupV2Room) => {
   const result = await OnionSending.sendJsonViaOnionV4ToSogs({
-    blinded: true,
+    blinded: false,
     endpoint: '/rooms',
     method: 'GET',
     serverPubkey: roomInfos.serverPublicKey,
@@ -18,6 +18,7 @@ export const getAllRoomInfos = async (roomInfos: OpenGroupV2Room) => {
     serverUrl: roomInfos.serverUrl,
     headers: null,
     throwErrors: false,
+    includeAuthHeaders: false, // Don't include headers in default room requests (excessive metadata)
   });
 
   // not a batch call yet as we need to exclude headers for this call for now
