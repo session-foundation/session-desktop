@@ -4,7 +4,6 @@ import { useSelector } from 'react-redux';
 import { useConvoIdFromContext } from '../../contexts/ConvoIdContext';
 import { useIsPinned, useIsPrivate, useIsPrivateAndFriend } from '../../hooks/useParamSelector';
 import { getConversationController } from '../../session/conversations';
-import { useIsSearching } from '../../state/selectors/search';
 import { getIsMessageSection } from '../../state/selectors/section';
 import { SessionContextMenuContainer } from '../SessionContextMenuContainer';
 import {
@@ -36,13 +35,7 @@ export type PropsContextConversationItem = {
 
 const ConversationListItemContextMenu = (props: PropsContextConversationItem) => {
   const { triggerId } = props;
-  const isSearching = useIsSearching();
-
   const convoIdFromContext = useConvoIdFromContext();
-
-  if (isSearching) {
-    return null;
-  }
 
   return (
     <SessionContextMenuContainer>
