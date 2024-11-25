@@ -157,9 +157,9 @@ async function pushChangesToGroupSwarmIfNeeded({
   ]);
 
   const result = await MessageSender.sendEncryptedDataToSnode({
-    // Note: this is on purpose that supplementalKeysSubRequest is before pendingConfigRequests
-    // as this is to avoid a race condition where a device is polling right
-    // while we are posting the configs (already encrypted with the new keys)
+    // Note: this is on purpose that supplementalKeysSubRequest is before pendingConfigRequests.
+    // This is to avoid a race condition where a device is polling while we
+    // are posting the configs (already encrypted with the new keys)
     sortedSubRequests,
     destination: groupPk,
     method: 'sequence',
@@ -198,7 +198,7 @@ async function pushChangesToGroupSwarmIfNeeded({
 
 class GroupSyncJob extends PersistedJob<GroupSyncPersistedData> {
   constructor({
-    identifier, // this has to be the pubkey to which we
+    identifier, // this has to be the group's pubkey
     nextAttemptTimestamp,
     maxAttempts,
     currentRetry,
@@ -241,8 +241,6 @@ class GroupSyncJob extends PersistedJob<GroupSyncPersistedData> {
         groupPk: thisJobDestination,
         extraStoreRequests: [],
       });
-
-      // eslint-disable-next-line no-useless-catch
     } catch (e) {
       window.log.warn('GroupSyncJob failed with', e.message);
       return RunJobResult.RetryJobIfPossible;
@@ -251,7 +249,7 @@ class GroupSyncJob extends PersistedJob<GroupSyncPersistedData> {
         `GroupSyncJob ${ed25519Str(thisJobDestination)} run() took ${Date.now() - start}ms`
       );
 
-      // this is a simple way to make sure whatever happens here, we update the lastest timestamp.
+      // this is a simple way to make sure whatever happens here, we update the latest timestamp.
       // (a finally statement is always executed (no matter if exception or returns in other try/catch block)
       this.updateLastTickTimestamp();
     }

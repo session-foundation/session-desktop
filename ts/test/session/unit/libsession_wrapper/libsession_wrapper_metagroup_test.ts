@@ -25,7 +25,6 @@ function emptyMember(pubkeyHex: PubkeyType): GroupMemberGet {
       url: null,
     },
     nominatedAdmin: false,
-    removedStatus: 'NOT_REMOVED',
     pubkeyHex,
   };
 }
@@ -299,8 +298,7 @@ describe('libsession_metagroup', () => {
       expect(metaGroupWrapper.memberGetAll().length).to.be.deep.eq(1);
       const expected: GroupMemberGet = {
         ...emptyMember(member),
-        removedStatus: 'REMOVED_MEMBER_AND_MESSAGES',
-        memberStatus: 'INVITE_ACCEPTED', // marking a member as pending removal auto-marks him as accepted (so we don't retry sending an invite)
+        memberStatus: 'REMOVED_MEMBER_AND_MESSAGES',
       };
       expect(metaGroupWrapper.memberGetAll().length).to.be.deep.eq(1);
       expect(metaGroupWrapper.memberGetAll()[0]).to.be.deep.eq(expected);
@@ -312,8 +310,7 @@ describe('libsession_metagroup', () => {
       expect(metaGroupWrapper.memberGetAll().length).to.be.deep.eq(1);
       const expected: GroupMemberGet = {
         ...emptyMember(member),
-        removedStatus: 'REMOVED_MEMBER',
-        memberStatus: 'INVITE_ACCEPTED', // marking a member as pending removal auto-marks him as accepted (so we don't retry sending an invite)
+        memberStatus: 'REMOVED_MEMBER',
       };
       expect(metaGroupWrapper.memberGetAll()).to.be.deep.eq([expected]);
     });

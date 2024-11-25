@@ -18,6 +18,7 @@ import {
   RunJobResult,
 } from '../PersistedJob';
 import { MessageQueue } from '../../../sending';
+import { DURATION } from '../../../constants';
 
 const defaultMsBetweenRetries = 10000;
 const defaultMaxAttempts = 1;
@@ -62,11 +63,7 @@ class GroupPromoteJob extends PersistedJob<GroupPromotePersistedData> {
     Partial<
       Pick<
         GroupPromotePersistedData,
-        | 'nextAttemptTimestamp'
-        | 'identifier'
-        | 'maxAttempts'
-        | 'delayBetweenRetries'
-        | 'currentRetry'
+        'nextAttemptTimestamp' | 'identifier' | 'maxAttempts' | 'currentRetry'
       >
     >) {
     super({
@@ -153,7 +150,7 @@ class GroupPromoteJob extends PersistedJob<GroupPromotePersistedData> {
   }
 
   public getJobTimeoutMs(): number {
-    return 15000;
+    return 15 * DURATION.SECONDS;
   }
 }
 

@@ -17,7 +17,7 @@ import {
 } from '../PersistedJob';
 
 const defaultMsBetweenRetries = 10000;
-const defaultMaxAttemps = 3;
+const defaultMaxAttempts = 3;
 
 /**
  * Returns true if the provided conversationId is a private chat and that we should add an Avatar Download Job to the list of jobs to run.
@@ -74,11 +74,7 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
     Partial<
       Pick<
         AvatarDownloadPersistedData,
-        | 'nextAttemptTimestamp'
-        | 'identifier'
-        | 'maxAttempts'
-        | 'delayBetweenRetries'
-        | 'currentRetry'
+        'nextAttemptTimestamp' | 'identifier' | 'maxAttempts' | 'currentRetry'
       >
     >) {
     super({
@@ -86,7 +82,7 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
       identifier: identifier || v4(),
       conversationId,
       delayBetweenRetries: defaultMsBetweenRetries,
-      maxAttempts: isNumber(maxAttempts) ? maxAttempts : defaultMaxAttemps,
+      maxAttempts: isNumber(maxAttempts) ? maxAttempts : defaultMaxAttempts,
       nextAttemptTimestamp: nextAttemptTimestamp || Date.now() + defaultMsBetweenRetries,
       currentRetry: isNumber(currentRetry) ? currentRetry : 0,
     });

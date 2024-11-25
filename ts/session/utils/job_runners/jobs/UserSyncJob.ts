@@ -188,7 +188,7 @@ class UserSyncJob extends PersistedJob<UserSyncPersistedData> {
     } finally {
       window.log.debug(`UserSyncJob run() took ${Date.now() - start}ms`);
 
-      // this is a simple way to make sure whatever happens here, we update the lastest timestamp.
+      // this is a simple way to make sure whatever happens here, we update the latest timestamp.
       // (a finally statement is always executed (no matter if exception or returns in other try/catch block)
       this.updateLastTickTimestamp();
     }

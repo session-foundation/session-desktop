@@ -36,6 +36,7 @@ import {
   WithSecretKey,
 } from '../../../types/with';
 import { groupInfoActions } from '../../../../state/ducks/metaGroups';
+import { DURATION } from '../../../constants';
 
 const defaultMsBetweenRetries = 10000;
 const defaultMaxAttempts = 1;
@@ -98,11 +99,7 @@ class GroupPendingRemovalsJob extends PersistedJob<GroupPendingRemovalsPersisted
     Partial<
       Pick<
         GroupPendingRemovalsPersistedData,
-        | 'nextAttemptTimestamp'
-        | 'identifier'
-        | 'maxAttempts'
-        | 'delayBetweenRetries'
-        | 'currentRetry'
+        'nextAttemptTimestamp' | 'identifier' | 'maxAttempts' | 'currentRetry'
       >
     >) {
     super({
@@ -135,7 +132,7 @@ class GroupPendingRemovalsJob extends PersistedJob<GroupPendingRemovalsPersisted
         return RunJobResult.Success;
       }
       const deleteMessagesOfMembers = pendingRemovals
-        .filter(m => m.removedStatus === 'REMOVED_MEMBER_AND_MESSAGES')
+        .filter(m => m.memberStatus === 'REMOVED_MEMBER_AND_MESSAGES')
         .map(m => m.pubkeyHex);
 
       const sessionIdsHex = pendingRemovals.map(m => m.pubkeyHex);
@@ -274,7 +271,7 @@ class GroupPendingRemovalsJob extends PersistedJob<GroupPendingRemovalsPersisted
   }
 
   public getJobTimeoutMs(): number {
-    return 15000;
+    return 15 * DURATION.SECONDS;
   }
 }
 

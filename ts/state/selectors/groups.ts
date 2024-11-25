@@ -108,8 +108,12 @@ function getMemberPromotionNotSent(state: StateType, pubkey: PubkeyType, convo?:
 
 function getMemberPendingRemoval(state: StateType, pubkey: PubkeyType, convo?: GroupPubkeyType) {
   const members = getMembersOfGroup(state, convo);
-  const removedStatus = findMemberInMembers(members, pubkey)?.removedStatus;
-  return removedStatus !== 'NOT_REMOVED';
+  const removedStatus = findMemberInMembers(members, pubkey)?.memberStatus;
+  return (
+    removedStatus === 'REMOVED_UNKNOWN' ||
+    removedStatus === 'REMOVED_MEMBER' ||
+    removedStatus === 'REMOVED_MEMBER_AND_MESSAGES'
+  );
 }
 
 export function getLibMembersCount(state: StateType, convo?: GroupPubkeyType): Array<string> {
@@ -317,32 +321,38 @@ export function useStateOf03GroupMembers(convoId?: string) {
     switch (item.memberStatus) {
       case 'INVITE_FAILED':
       case 'INVITE_NOT_SENT':
-        stateSortingOrder = -5;
+        stateSortingOrder = -50;
         break;
       case 'INVITE_SENDING':
-        stateSortingOrder = -4;
+        stateSortingOrder = -40;
         break;
       case 'INVITE_SENT':
-        stateSortingOrder = -3;
+        stateSortingOrder = -30;
+        break;
+      case 'REMOVED_UNKNOWN': // fallback, hopefully won't happen in production
+      case 'REMOVED_MEMBER': // we want pending removal members at the end
+      case 'REMOVED_MEMBER_AND_MESSAGES':
+        stateSortingOrder = -20;
         break;
       case 'PROMOTION_FAILED':
       case 'PROMOTION_NOT_SENT':
-        stateSortingOrder = -2;
+        stateSortingOrder = -15;
         break;
       case 'PROMOTION_SENDING':
-        stateSortingOrder = -1;
+        stateSortingOrder = -10;
         break;
       case 'PROMOTION_SENT':
         stateSortingOrder = 0;
         break;
       case 'PROMOTION_ACCEPTED':
-        stateSortingOrder = 1;
+        stateSortingOrder = 10;
         break;
       case 'INVITE_ACCEPTED':
-        stateSortingOrder = 2;
+        stateSortingOrder = 20;
         break;
-      case 'UNKNOWN':
-        stateSortingOrder = 5; // just a fallback, hopefully won't happen in production
+      case 'INVITE_UNKNOWN': // fallback, hopefully won't happen in production
+      case 'PROMOTION_UNKNOWN': // fallback, hopefully won't happen in production
+        stateSortingOrder = 50;
         break;
 
       default:

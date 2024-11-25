@@ -24,6 +24,7 @@ import { MessageQueue } from '../../../sending';
 import { NetworkTime } from '../../../../util/NetworkTime';
 import { SubaccountUnrevokeSubRequest } from '../../../apis/snode_api/SnodeRequestTypes';
 import { GroupSync } from './GroupSyncJob';
+import { DURATION } from '../../../constants';
 
 const defaultMsBetweenRetries = 10000;
 const defaultMaxAttempts = 1;
@@ -34,7 +35,7 @@ type JobExtraArgs = {
   inviteAsAdmin: boolean;
   /**
    * When inviting a member, we usually only want to sent a message to his swarm.
-   * In the case of a invitation resend process though, we also want to make sure his token is unrevoked from the group's swarm.
+   * In the case of an invitation resend process though, we also want to make sure his token is unrevoked from the group's swarm.
    *
    */
   forceUnrevoke: boolean;
@@ -151,11 +152,7 @@ class GroupInviteJob extends PersistedJob<GroupInvitePersistedData> {
     Partial<
       Pick<
         GroupInvitePersistedData,
-        | 'nextAttemptTimestamp'
-        | 'identifier'
-        | 'maxAttempts'
-        | 'delayBetweenRetries'
-        | 'currentRetry'
+        'nextAttemptTimestamp' | 'identifier' | 'maxAttempts' | 'currentRetry'
       >
     >) {
     super({
@@ -298,7 +295,7 @@ class GroupInviteJob extends PersistedJob<GroupInvitePersistedData> {
   }
 
   public getJobTimeoutMs(): number {
-    return 15000;
+    return 15 * DURATION.SECONDS;
   }
 }
 
@@ -321,7 +318,7 @@ function updateFailedStateForMember(groupPk: GroupPubkeyType, member: PubkeyType
   if (!thisGroupFailure) {
     thisGroupFailure = {
       failedMembers: [],
-      debouncedCall: debounce(displayFailedInvitesForGroup, 1000), // TODO change to 5000
+      debouncedCall: debounce(displayFailedInvitesForGroup, 5 * DURATION.SECONDS),
     };
   }
 
