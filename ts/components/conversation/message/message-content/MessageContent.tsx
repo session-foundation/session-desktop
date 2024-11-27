@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { isEmpty } from 'lodash';
-import { MouseEvent, useCallback, useLayoutEffect, useState } from 'react';
+import { useCallback, useLayoutEffect, useState } from 'react';
 import { InView } from 'react-intersection-observer';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
@@ -36,23 +36,6 @@ export type MessageContentSelectorProps = Pick<
 type Props = {
   messageId: string;
 };
-
-// TODO not too sure what is this doing? It is not preventDefault()
-// or stopPropagation() so I think this is never cancelling a click event?
-function onClickOnMessageInnerContainer(event: MouseEvent<HTMLDivElement>) {
-  const selection = window.getSelection();
-  // Text is being selected
-  if (selection && selection.type === 'Range') {
-    return;
-  }
-
-  // User clicked on message body
-  const target = event.target as HTMLDivElement;
-  if (target.className === 'text-selectable' || window.contextMenuShown) {
-    // eslint-disable-next-line no-useless-return
-    return;
-  }
-}
 
 const StyledMessageContent = styled.div<{ msgDirection: MessageModelType }>`
   display: flex;
@@ -156,7 +139,6 @@ export const MessageContent = (props: Props) => {
     <StyledMessageContent
       className={classNames('module-message__container', `module-message__container--${direction}`)}
       role="button"
-      onClick={onClickOnMessageInnerContainer}
       title={toolTipTitle}
       msgDirection={direction}
     >

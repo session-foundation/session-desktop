@@ -12,7 +12,7 @@ import {
   useSelectedIsKickedFromGroup,
   useSelectedIsNoteToSelf,
   useSelectedIsPublic,
-  useSelectedMembers,
+  useSelectedMembersCount,
   useSelectedNicknameOrProfileNameOrShortenedPubkey,
   useSelectedNotificationSetting,
   useSelectedSubscriberCount,
@@ -61,7 +61,7 @@ export const ConversationHeaderTitle = (props: ConversationHeaderTitleProps) => 
   const isKickedFromGroup = useSelectedIsKickedFromGroup();
   const isMe = useSelectedIsNoteToSelf();
   const isGroup = useSelectedIsGroupOrCommunity();
-  const members = useSelectedMembers();
+  const selectedMembersCount = useSelectedMembersCount();
 
   const expirationMode = useSelectedConversationDisappearingMode();
   const disappearingMessageSubtitle = useDisappearingMessageSettingText({
@@ -85,7 +85,7 @@ export const ConversationHeaderTitle = (props: ConversationHeaderTitleProps) => 
       if (isPublic) {
         count = subscriberCount || 0;
       } else {
-        count = members.length;
+        count = selectedMembersCount;
       }
     }
 
@@ -94,7 +94,7 @@ export const ConversationHeaderTitle = (props: ConversationHeaderTitleProps) => 
     }
 
     return null;
-  }, [i18n, isGroup, isKickedFromGroup, isPublic, members.length, subscriberCount]);
+  }, [i18n, isGroup, isKickedFromGroup, isPublic, selectedMembersCount, subscriberCount]);
 
   const handleRightPanelToggle = () => {
     if (isRightPanelOn) {

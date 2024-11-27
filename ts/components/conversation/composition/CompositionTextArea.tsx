@@ -1,17 +1,17 @@
 import { RefObject, useState } from 'react';
 import { Mention, MentionsInput } from 'react-mentions';
-import { getConversationController } from '../../../session/conversations';
 import {
   useSelectedConversationKey,
   useSelectedIsBlocked,
+  useSelectedIsGroupDestroyed,
   useSelectedIsKickedFromGroup,
-  useSelectedIsLeft,
   useSelectedNicknameOrProfileNameOrShortenedPubkey,
 } from '../../../state/selectors/selectedConversation';
 import { updateDraftForConversation } from '../SessionConversationDrafts';
 import { renderEmojiQuickResultRow, searchEmojiForQuery } from './EmojiQuickResult';
 import { renderUserMentionRow, styleForCompositionBoxSuggestions } from './UserMentions';
 import { HTMLDirection, useHTMLDirection } from '../../../util/i18n/rtlSupport';
+import { ConvoHub } from '../../../session/conversations';
 
 const sendMessageStyle = (dir?: HTMLDirection) => {
   return {
@@ -56,7 +56,7 @@ export const CompositionTextArea = (props: Props) => {
   const selectedConversationKey = useSelectedConversationKey();
   const htmlDirection = useHTMLDirection();
   const isKickedFromGroup = useSelectedIsKickedFromGroup();
-  const left = useSelectedIsLeft();
+  const isGroupDestroyed = useSelectedIsGroupDestroyed();
   const isBlocked = useSelectedIsBlocked();
   const groupName = useSelectedNicknameOrProfileNameOrShortenedPubkey();
 
@@ -65,11 +65,11 @@ export const CompositionTextArea = (props: Props) => {
   }
 
   const makeMessagePlaceHolderText = () => {
+    if (isGroupDestroyed) {
+      return window.i18n('groupDeletedMemberDescription', { group_name: groupName });
+    }
     if (isKickedFromGroup) {
       return window.i18n('groupRemovedYou', { group_name: groupName });
-    }
-    if (left) {
-      return window.i18n('groupMemberYouLeft');
     }
     if (isBlocked) {
       return window.i18n('blockBlockedDescription');
@@ -100,7 +100,7 @@ export const CompositionTextArea = (props: Props) => {
     Also, check for a message length change before firing it up, to avoid catching ESC, tab, or whatever which is not typing
      */
     if (draft && draft.length && draft.length !== lastBumpTypingMessageLength) {
-      const conversationModel = getConversationController().get(selectedConversationKey);
+      const conversationModel = ConvoHub.use().get(selectedConversationKey);
       if (!conversationModel) {
         return;
       }

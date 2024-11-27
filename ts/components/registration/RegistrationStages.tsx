@@ -2,7 +2,7 @@ import { shell } from 'electron';
 import { AnimatePresence } from 'framer-motion';
 import styled from 'styled-components';
 import { Data } from '../../data/data';
-import { getConversationController } from '../../session/conversations';
+import { ConvoHub } from '../../session/conversations';
 import {
   AccountCreation,
   AccountRestoration,
@@ -24,8 +24,8 @@ export async function resetRegistration() {
   await Data.removeAll();
   Storage.reset();
   await Storage.fetch();
-  getConversationController().reset();
-  await getConversationController().load();
+  ConvoHub.use().reset();
+  await ConvoHub.use().load();
 }
 
 const StyledRegistrationContainer = styled(Flex)`

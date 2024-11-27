@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react';
 
 import styled from 'styled-components';
 import { useIsPrivate, useIsPublic } from '../../../hooks/useParamSelector';
-import { getConversationController } from '../../../session/conversations';
+
+import { ConvoHub } from '../../../session/conversations';
 import { assertUnreachable } from '../../../types/sqlSharedTypes';
 import { MessageBody } from '../../conversation/message/message-content/MessageBody';
 import {
@@ -34,7 +35,7 @@ export const InteractionItem = (props: InteractionItemProps) => {
   // NOTE we want to reset the interaction state when the last message changes
   useEffect(() => {
     if (conversationId) {
-      const convo = getConversationController().get(conversationId);
+      const convo = ConvoHub.use().get(conversationId);
 
       if (
         convo &&
@@ -59,9 +60,7 @@ export const InteractionItem = (props: InteractionItemProps) => {
   let text = storedLastMessageText || '';
   let errorText = '';
 
-  const name = getConversationController()
-    .get(conversationId)
-    ?.getNicknameOrRealUsernameOrPlaceholder();
+  const name = ConvoHub.use().get(conversationId)?.getNicknameOrRealUsernameOrPlaceholder();
 
   switch (interactionType) {
     case ConversationInteractionType.Hide:

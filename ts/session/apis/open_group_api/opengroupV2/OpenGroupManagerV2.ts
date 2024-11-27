@@ -1,12 +1,12 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-restricted-syntax */
 
-import { clone, groupBy, isEqual, uniqBy } from 'lodash';
 import autoBind from 'auto-bind';
+import { clone, groupBy, isEqual, uniqBy } from 'lodash';
 
 import { OpenGroupData } from '../../../../data/opengroups';
 import { ConversationModel } from '../../../../models/conversation';
-import { getConversationController } from '../../../conversations';
+import { ConvoHub } from '../../../conversations';
 import { allowOnlyOneAtATime } from '../../../utils/Promise';
 import {
   getAllValidOpenGroupV2ConversationRoomInfos,
@@ -57,15 +57,15 @@ export class OpenGroupManagerV2 {
     publicKey: string
   ): Promise<ConversationModel | undefined> {
     // make sure to use the https version of our official sogs
-    const overridenUrl =
+    const overriddenUrl =
       (serverUrl.includes(`://${ourSogsDomainName}`) && !serverUrl.startsWith('https')) ||
       serverUrl.includes(`://${ourSogsLegacyIp}`)
         ? ourSogsUrl
         : serverUrl;
 
-    const oneAtaTimeStr = `oneAtaTimeOpenGroupV2Join:${overridenUrl}${roomId}`;
+    const oneAtaTimeStr = `oneAtaTimeOpenGroupV2Join:${overriddenUrl}${roomId}`;
     return allowOnlyOneAtATime(oneAtaTimeStr, async () => {
-      return this.attemptConnectionV2(overridenUrl, roomId, publicKey);
+      return this.attemptConnectionV2(overriddenUrl, roomId, publicKey);
     });
   }
 
@@ -129,6 +129,7 @@ export class OpenGroupManagerV2 {
     if (this.isPolling) {
       return;
     }
+
     const allRoomInfos = await getAllValidOpenGroupV2ConversationRoomInfos();
     if (allRoomInfos?.size) {
       this.addRoomToPolledRooms([...allRoomInfos.values()]);
@@ -148,7 +149,7 @@ export class OpenGroupManagerV2 {
   ): Promise<ConversationModel | undefined> {
     let conversationId = getOpenGroupV2ConversationId(serverUrl, roomId);
 
-    if (getConversationController().get(conversationId)) {
+    if (ConvoHub.use().get(conversationId)) {
       // Url incorrect or server not compatible
       throw new Error(window.i18n('communityJoinedAlready'));
     }
@@ -196,7 +197,7 @@ export class OpenGroupManagerV2 {
         await OpenGroupData.saveV2OpenGroupRoom(updatedRoom);
       }
 
-      const conversation = await getConversationController().getOrCreateAndWait(
+      const conversation = await ConvoHub.use().getOrCreateAndWait(
         conversationId,
         ConversationTypeEnum.GROUP
       );

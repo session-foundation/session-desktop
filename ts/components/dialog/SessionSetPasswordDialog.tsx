@@ -218,7 +218,6 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
 
       ToastUtils.pushToastSuccess(
         'setPasswordSuccessToast',
-        window.i18n.stripped('passwordSet'),
         window.i18n.stripped('passwordSetDescription')
       );
 

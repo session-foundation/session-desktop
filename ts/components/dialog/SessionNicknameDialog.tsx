@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 
 import styled from 'styled-components';
-import { getConversationController } from '../../session/conversations';
+import { ConvoHub } from '../../session/conversations';
 
 import { changeNickNameModal } from '../../state/ducks/modalDialog';
 import { SessionWrapperModal } from '../SessionWrapperModal';
@@ -53,7 +53,7 @@ export const SessionNicknameDialog = (props: Props) => {
     if (!conversationId) {
       throw new Error('Cant save without conversation id');
     }
-    const conversation = getConversationController().get(conversationId);
+    const conversation = ConvoHub.use().get(conversationId);
     await conversation.setNickname(nickname, true);
     onClickClose();
   };

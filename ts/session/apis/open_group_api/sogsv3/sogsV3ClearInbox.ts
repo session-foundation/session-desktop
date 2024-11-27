@@ -1,5 +1,5 @@
 import AbortController from 'abort-controller';
-import { getConversationController } from '../../../conversations';
+import { ConvoHub } from '../../../conversations';
 import { getOpenGroupV2ConversationId } from '../utils/OpenGroupUtils';
 import {
   batchFirstSubIsSuccess,
@@ -7,8 +7,8 @@ import {
   OpenGroupBatchRow,
   sogsBatchSend,
 } from './sogsV3BatchPoll';
-import { OpenGroupRequestCommonType } from '../../../../data/types';
 import { PromiseUtils } from '../../../utils';
+import { OpenGroupRequestCommonType } from '../../../../data/types';
 
 type OpenGroupClearInboxResponse = {
   deleted: number;
@@ -18,7 +18,7 @@ export const clearInbox = async (roomInfos: OpenGroupRequestCommonType): Promise
   let success = false;
 
   const conversationId = getOpenGroupV2ConversationId(roomInfos.serverUrl, roomInfos.roomId);
-  const conversation = getConversationController().get(conversationId);
+  const conversation = ConvoHub.use().get(conversationId);
 
   if (!conversation) {
     throw new Error(`clearInbox Matching conversation not found in db ${conversationId}`);

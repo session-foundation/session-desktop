@@ -130,7 +130,7 @@ export const LeftPaneBanner = () => {
   const showRecoveryPhraseModal = () => {
     dispatch(disableRecoveryPhrasePrompt());
     dispatch(showLeftPaneSection(SectionType.Settings));
-    dispatch(showSettingsSection('recoveryPassword'));
+    dispatch(showSettingsSection('recovery-password'));
   };
 
   if (section !== SectionType.Message || isSignInWithRecoveryPhrase || hideRecoveryPassword) {

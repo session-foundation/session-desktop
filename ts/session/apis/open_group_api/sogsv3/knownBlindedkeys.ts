@@ -2,13 +2,13 @@ import { crypto_sign_curve25519_pk_to_ed25519 } from 'curve25519-js';
 import { from_hex, to_hex } from 'libsodium-wrappers-sumo';
 import { cloneDeep, flatten, isEmpty, isEqual, isString, uniqBy } from 'lodash';
 
+import { ConvoHub } from '../../../conversations';
 import { Data } from '../../../../data/data';
 import { OpenGroupData } from '../../../../data/opengroups';
 import { KNOWN_BLINDED_KEYS_ITEM } from '../../../../data/settings-key';
 import { ConversationModel } from '../../../../models/conversation';
 import { roomHasBlindEnabled } from '../../../../types/sqlSharedTypes';
 import { Storage } from '../../../../util/storage';
-import { getConversationController } from '../../../conversations';
 import { LibSodiumWrappers } from '../../../crypto';
 import { KeyPrefixType, PubKey } from '../../../types';
 import { UserUtils } from '../../../utils';
@@ -160,10 +160,10 @@ export function tryMatchBlindWithStandardKey(
     // From the account id (ignoring 05 prefix) we have two possible ed25519 pubkeys; the first is
     // the positive(which is what Signal's XEd25519 conversion always uses)
 
-    const inbin = from_hex(sessionIdNoPrefix);
+    const inBin = from_hex(sessionIdNoPrefix);
     // Note: The below method is code we have exposed from the method within the Curve25519-js library
     // rather than custom code we have written
-    const xEd25519Key = crypto_sign_curve25519_pk_to_ed25519(inbin);
+    const xEd25519Key = crypto_sign_curve25519_pk_to_ed25519(inBin);
 
     // Blind it:
     const pk1 = combineKeys(kBytes, xEd25519Key, sodium);
@@ -202,7 +202,7 @@ function findNotCachedBlindingMatch(
   }
 
   // we iterate only over the convos private, approved, and which have an unblinded id.
-  const foundConvoMatchingBlindedPubkey = getConversationController()
+  const foundConvoMatchingBlindedPubkey = ConvoHub.use()
     .getConversations()
     .filter(m => m.isPrivate() && m.isApproved() && !PubKey.isBlinded(m.id))
     .find(m => {
@@ -238,7 +238,7 @@ export function getUsBlindedInThatServer(convo: ConversationModel | string): str
   }
   const convoId = isString(convo) ? convo : convo.id;
 
-  if (!getConversationController().get(convoId)?.isOpenGroupV2()) {
+  if (!ConvoHub.use().get(convoId)?.isOpenGroupV2()) {
     return undefined;
   }
   const room = OpenGroupData.getV2OpenGroupRoom(isString(convo) ? convo : convo.id);
@@ -273,14 +273,14 @@ function findNotCachedBlindedConvoFromUnblindedKey(
   // we iterate only over the convos private, with a blindedId, and active,
   // so the one to which we sent a message already or received one from outside sogs.
   const foundConvosForThisServerPk =
-    getConversationController()
+    ConvoHub.use()
       .getConversations()
       .filter(m => m.isPrivate() && PubKey.isBlinded(m.id) && m.isActive())
       .filter(m => {
         return tryMatchBlindWithStandardKey(unblindedID, m.id, serverPublicKey, sodium);
       }) || [];
 
-  // we should have only one per server, as we gave the serverpubkey and a blindedId is uniq for a serverPk
+  // we should have only one per server, as we gave the serverPubkey and a blindedId is uniq for a serverPk
 
   return foundConvosForThisServerPk;
 }

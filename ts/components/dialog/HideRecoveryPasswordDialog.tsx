@@ -46,12 +46,12 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
           onClick: () => {
             dispatch(updateHideRecoveryPasswordModal({ state: 'secondWarning' }));
           },
-          dataTestId: 'session-confirm-ok-button',
+          dataTestId: 'session-confirm-ok-button' as const,
         }
       : {
           text: window.i18n('cancel'),
           onClick: onClose,
-          dataTestId: 'session-confirm-cancel-button',
+          dataTestId: 'session-confirm-cancel-button' as const,
         };
 
   const rightButtonProps =
@@ -59,7 +59,7 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
       ? {
           text: window.i18n('cancel'),
           onClick: onClose,
-          dataTestId: 'session-confirm-cancel-button',
+          dataTestId: 'session-confirm-cancel-button' as const,
         }
       : {
           text: window.i18n('yes'),
@@ -67,7 +67,7 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
           onClick: () => {
             void onConfirmation();
           },
-          dataTestId: 'session-confirm-ok-button',
+          dataTestId: 'session-confirm-ok-button' as const,
         };
 
   return (

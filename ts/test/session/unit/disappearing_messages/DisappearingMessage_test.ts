@@ -3,7 +3,6 @@ import chaiAsPromised from 'chai-as-promised';
 import Sinon from 'sinon';
 import { Conversation, ConversationModel } from '../../../../models/conversation';
 import { ConversationAttributes } from '../../../../models/conversationAttributes';
-import { GetNetworkTime } from '../../../../session/apis/snode_api/getNetworkTime';
 import { DisappearingMessages } from '../../../../session/disappearing_messages';
 import {
   DisappearingMessageConversationModeType,
@@ -21,6 +20,7 @@ import {
   generateVisibleMessage,
 } from '../../../test-utils/utils';
 import { ConversationTypeEnum } from '../../../../models/types';
+import { NetworkTime } from '../../../../util/NetworkTime';
 
 chai.use(chaiAsPromised as any);
 
@@ -38,7 +38,7 @@ describe('DisappearingMessage', () => {
   } as ConversationAttributes;
 
   beforeEach(() => {
-    Sinon.stub(GetNetworkTime, 'getLatestTimestampOffset').returns(getLatestTimestampOffset);
+    Sinon.stub(NetworkTime, 'getLatestTimestampOffset').returns(getLatestTimestampOffset);
     Sinon.stub(UserUtils, 'getOurPubKeyStrFromCache').returns(ourNumber);
   });
 
@@ -174,9 +174,8 @@ describe('DisappearingMessage', () => {
     it("if it's a Group Conversation and expireTimer > 0 then the message's expirationType is always deleteAfterSend", async () => {
       const ourConversation = new ConversationModel({
         ...conversationArgs,
-        type: ConversationTypeEnum.GROUP,
-        // TODO update to 03 prefix when we release new groups
-        id: '05123456564',
+        type: ConversationTypeEnum.GROUPV2,
+        id: TestUtils.generateFakeClosedGroupV2PkStr(),
       });
       const expireTimer = 60; // seconds
       const expirationMode = 'deleteAfterRead'; // not correct
@@ -236,9 +235,8 @@ describe('DisappearingMessage', () => {
     it("if it's a Group Conversation and expireTimer > 0 then the conversation mode is always deleteAfterSend", async () => {
       const ourConversation = new ConversationModel({
         ...conversationArgs,
-        type: ConversationTypeEnum.GROUP,
-        // TODO update to 03 prefix when we release new groups
-        id: '05123456564',
+        type: ConversationTypeEnum.GROUPV2,
+        id: TestUtils.generateFakeClosedGroupV2PkStr(),
       });
       const expirationType = 'deleteAfterRead'; // not correct
       const expireTimer = 60; // seconds
@@ -467,7 +465,7 @@ describe('DisappearingMessage', () => {
       message.set({
         expirationType: 'deleteAfterRead',
         expireTimer: 300,
-        sent_at: GetNetworkTime.getNowWithNetworkOffset(),
+        sent_at: NetworkTime.now(),
       });
       Sinon.stub(message, 'getConversation').returns(conversation);
 
@@ -490,7 +488,7 @@ describe('DisappearingMessage', () => {
       const message = generateFakeOutgoingPrivateMessage(conversation.get('id'));
       message.set({
         expirationType: 'deleteAfterRead',
-        sent_at: GetNetworkTime.getNowWithNetworkOffset(),
+        sent_at: NetworkTime.now(),
       });
       Sinon.stub(message, 'getConversation').returns(conversation);
 
@@ -506,7 +504,7 @@ describe('DisappearingMessage', () => {
       const message = generateFakeOutgoingPrivateMessage(conversation.get('id'));
       message.set({
         expireTimer: 300,
-        sent_at: GetNetworkTime.getNowWithNetworkOffset(),
+        sent_at: NetworkTime.now(),
       });
       Sinon.stub(message, 'getConversation').returns(conversation);
 
@@ -515,7 +513,7 @@ describe('DisappearingMessage', () => {
       expect(message.getExpirationStartTimestamp(), 'it should be undefined').to.be.undefined;
     });
     it('if expirationStartTimestamp is already defined then it should not have changed', async () => {
-      const now = GetNetworkTime.getNowWithNetworkOffset();
+      const now = NetworkTime.now();
       const conversation = new ConversationModel({
         ...conversationArgs,
         id: ourNumber,
@@ -547,9 +545,9 @@ describe('DisappearingMessage', () => {
       it('if the conversation is public it should throw', async () => {
         const conversation = new ConversationModel({
           ...conversationArgs,
+          id: 'https://example.org',
+          type: ConversationTypeEnum.GROUP,
         });
-
-        Sinon.stub(conversation, 'isPublic').returns(true);
 
         const promise = conversation.updateExpireTimer({
           providedDisappearingMode: 'deleteAfterSend',
@@ -561,7 +559,7 @@ describe('DisappearingMessage', () => {
           fromConfigMessage: false,
         });
         await expect(promise).is.rejectedWith(
-          "updateExpireTimer() Disappearing messages aren't supported in communities"
+          'updateExpireTimer() Disappearing messages are only supported int groups and private chats'
         );
       });
 
@@ -607,7 +605,7 @@ describe('DisappearingMessage', () => {
           providedDisappearingMode: 'deleteAfterSend',
           providedExpireTimer: 600,
           providedSource: testPubkey,
-          receivedAt: GetNetworkTime.getNowWithNetworkOffset(),
+          sentAt: NetworkTime.now(),
           fromSync: true,
           shouldCommitConvo: false,
           existingMessage: undefined,

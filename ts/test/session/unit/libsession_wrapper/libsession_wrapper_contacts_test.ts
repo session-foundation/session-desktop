@@ -3,13 +3,13 @@ import { expect } from 'chai';
 import Sinon from 'sinon';
 import { ConversationModel } from '../../../../models/conversation';
 import { ConversationAttributes } from '../../../../models/conversationAttributes';
-import { GetNetworkTime } from '../../../../session/apis/snode_api/getNetworkTime';
-import { getConversationController } from '../../../../session/conversations';
+import { ConvoHub } from '../../../../session/conversations';
 import { UserUtils } from '../../../../session/utils';
 import { SessionUtilContact } from '../../../../session/utils/libsession/libsession_utils_contacts';
 import { TestUtils } from '../../../test-utils';
 import { stubWindowLog } from '../../../test-utils/utils/stubbing';
 import { ConversationTypeEnum, CONVERSATION_PRIORITIES } from '../../../../models/types';
+import { NetworkTime } from '../../../../util/NetworkTime';
 
 describe('libsession_contacts', () => {
   stubWindowLog();
@@ -26,7 +26,7 @@ describe('libsession_contacts', () => {
   } as ConversationAttributes;
 
   beforeEach(() => {
-    Sinon.stub(GetNetworkTime, 'getLatestTimestampOffset').returns(getLatestTimestampOffset);
+    Sinon.stub(NetworkTime, 'getLatestTimestampOffset').returns(getLatestTimestampOffset);
     Sinon.stub(UserUtils, 'getOurPubKeyStrFromCache').returns(ourNumber);
     TestUtils.stubLibSessionWorker(undefined);
   });
@@ -228,7 +228,7 @@ describe('libsession_contacts', () => {
         ...validArgs,
         ...contactArgs,
       } as ConversationAttributes);
-      Sinon.stub(getConversationController(), 'get').returns(contact);
+      Sinon.stub(ConvoHub.use(), 'get').returns(contact);
       Sinon.stub(SessionUtilContact, 'isContactToStoreInWrapper').returns(true);
 
       const wrapperContact = await SessionUtilContact.insertContactFromDBIntoWrapperAndRefresh(
@@ -282,7 +282,7 @@ describe('libsession_contacts', () => {
         expirationMode: 'deleteAfterSend',
         expireTimer: 300,
       });
-      Sinon.stub(getConversationController(), 'get').returns(contact);
+      Sinon.stub(ConvoHub.use(), 'get').returns(contact);
       Sinon.stub(SessionUtilContact, 'isContactToStoreInWrapper').returns(true);
 
       const wrapperContact = await SessionUtilContact.insertContactFromDBIntoWrapperAndRefresh(

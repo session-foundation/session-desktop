@@ -1,6 +1,7 @@
 // eslint:disable: no-require-imports no-var-requires one-variable-per-declaration no-void-expression function-name
 
-import _, { isEmpty } from 'lodash';
+import { GroupPubkeyType } from 'libsession_util_nodejs';
+import _, { isArray, isEmpty } from 'lodash';
 import { ConversationModel } from '../models/conversation';
 import { ConversationAttributes } from '../models/conversationAttributes';
 import { MessageCollection, MessageModel } from '../models/message';
@@ -25,6 +26,11 @@ import { channels } from './channels';
 import * as dataInit from './dataInit';
 import { cleanData } from './dataUtils';
 import { SNODE_POOL_ITEM_ID } from './settings-key';
+import {
+  FindAllMessageFromSendersInConversationTypeArgs,
+  FindAllMessageHashesInConversationMatchingAuthorTypeArgs,
+  FindAllMessageHashesInConversationTypeArgs,
+} from './sharedDataTypes';
 import { GuardNode, Snode } from './types';
 
 const ERASE_SQL_KEY = 'erase-sql-key';
@@ -209,12 +215,12 @@ async function cleanLastHashes(): Promise<void> {
   await channels.cleanLastHashes();
 }
 
-async function saveSeenMessageHashes(
-  data: Array<{
-    expiresAt: number;
-    hash: string;
-  }>
-): Promise<void> {
+export type SeenMessageHashes = {
+  expiresAt: number;
+  hash: string;
+};
+
+async function saveSeenMessageHashes(data: Array<SeenMessageHashes>): Promise<void> {
   await channels.saveSeenMessageHashes(cleanData(data));
 }
 
@@ -264,6 +270,25 @@ async function removeMessage(id: string): Promise<void> {
  */
 async function removeMessagesByIds(ids: Array<string>): Promise<void> {
   await channels.removeMessagesByIds(ids);
+}
+
+async function removeAllMessagesInConversationSentBefore(args: {
+  deleteBeforeSeconds: number;
+  conversationId: GroupPubkeyType;
+}): Promise<Array<string>> {
+  return channels.removeAllMessagesInConversationSentBefore(args);
+}
+
+async function getAllMessagesWithAttachmentsInConversationSentBefore(args: {
+  deleteAttachBeforeSeconds: number;
+  conversationId: GroupPubkeyType;
+}): Promise<Array<MessageModel>> {
+  const msgAttrs = await channels.getAllMessagesWithAttachmentsInConversationSentBefore(args);
+
+  if (!msgAttrs || isEmpty(msgAttrs) || !isArray(msgAttrs)) {
+    return [];
+  }
+  return msgAttrs.map((msg: any) => new MessageModel(msg));
 }
 
 async function getMessageIdsFromServerIds(
@@ -551,6 +576,42 @@ async function removeAllMessagesInConversation(conversationId: string): Promise<
   );
 }
 
+async function findAllMessageFromSendersInConversation(
+  args: FindAllMessageFromSendersInConversationTypeArgs
+): Promise<Array<MessageModel>> {
+  const msgAttrs = await channels.findAllMessageFromSendersInConversation(args);
+
+  if (!msgAttrs || isEmpty(msgAttrs) || !isArray(msgAttrs)) {
+    return [];
+  }
+
+  return msgAttrs.map((msg: any) => new MessageModel(msg));
+}
+
+async function findAllMessageHashesInConversation(
+  args: FindAllMessageHashesInConversationTypeArgs
+): Promise<Array<MessageModel>> {
+  const msgAttrs = await channels.findAllMessageHashesInConversation(args);
+
+  if (!msgAttrs || isEmpty(msgAttrs) || !isArray(msgAttrs)) {
+    return [];
+  }
+
+  return msgAttrs.map((msg: any) => new MessageModel(msg));
+}
+
+async function findAllMessageHashesInConversationMatchingAuthor(
+  args: FindAllMessageHashesInConversationMatchingAuthorTypeArgs
+): Promise<Array<MessageModel>> {
+  const msgAttrs = await channels.findAllMessageHashesInConversationMatchingAuthor(args);
+
+  if (!msgAttrs || isEmpty(msgAttrs) || !isArray(msgAttrs)) {
+    return [];
+  }
+
+  return msgAttrs.map((msg: any) => new MessageModel(msg));
+}
+
 async function getMessagesBySentAt(sentAt: number): Promise<MessageCollection> {
   const messages = await channels.getMessagesBySentAt(sentAt);
   return new MessageCollection(messages);
@@ -806,6 +867,8 @@ export const Data = {
   saveMessages,
   removeMessage,
   removeMessagesByIds,
+  removeAllMessagesInConversationSentBefore,
+  getAllMessagesWithAttachmentsInConversationSentBefore,
   cleanUpExpirationTimerUpdateHistory,
   getMessageIdsFromServerIds,
   getMessageById,
@@ -830,6 +893,9 @@ export const Data = {
   getLastHashBySnode,
   getSeenMessagesByHashList,
   removeAllMessagesInConversation,
+  findAllMessageFromSendersInConversation,
+  findAllMessageHashesInConversation,
+  findAllMessageHashesInConversationMatchingAuthor,
   getMessagesBySentAt,
   getExpiredMessages,
   getOutgoingWithoutExpiresAt,

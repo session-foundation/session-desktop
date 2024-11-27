@@ -17,7 +17,6 @@ import {
   FinalRelayOptions,
   Onions,
   STATUS_NO_STATUS,
-  SnodeResponse,
   buildErrorMessageWithFailedCode,
 } from '../apis/snode_api/onions';
 import { PROTOCOLS } from '../constants';
@@ -73,12 +72,6 @@ const getOnionPathForSending = async () => {
     return null;
   }
   return pathNodes;
-};
-
-export type OnionSnodeResponse = {
-  result: SnodeResponse;
-  txtResponse: string;
-  response: string;
 };
 
 export type OnionV4SnodeResponse = {
@@ -159,7 +152,7 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
          * call above will call us again with the same params but a different path.
          * If the error is not recoverable, it throws a pRetry.AbortError.
          */
-        const onionV4Response = await Onions.sendOnionRequestHandlingSnodeEject({
+        const onionV4Response = await Onions.sendOnionRequestHandlingSnodeEjectNoRetries({
           nodePath: pathNodes,
           destSnodeX25519: destinationX25519Key,
           finalDestOptions: payloadObj,
@@ -167,11 +160,12 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
           abortSignal,
           useV4: true,
           throwErrors,
+          allow401s: false,
         });
 
         if (window.sessionFeatureFlags?.debug.debugNonSnodeRequests) {
           window.log.info(
-            'sendViaOnionV4ToNonSnodeWithRetries: sendOnionRequestHandlingSnodeEject returned: ',
+            'sendViaOnionV4ToNonSnodeWithRetries: sendOnionRequestHandlingSnodeEjectNoRetries returned: ',
             JSON.stringify(onionV4Response)
           );
         }
@@ -236,7 +230,7 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
       },
       {
         retries: 2, // retry 3 (2+1) times at most
-        minTimeout: 100,
+        minTimeout: OnionSending.getMinTimeoutForSogs(),
         onFailedAttempt: e => {
           window?.log?.warn(
             `sendViaOnionV4ToNonSnodeWithRetries attempt #${e.attemptNumber} failed. ${e.retriesLeft} retries left...: ${e.message}`
@@ -526,6 +520,13 @@ async function sendJsonViaOnionV4ToFileServer(sendOptions: {
   return res as OnionV4JSONSnodeResponse;
 }
 
+/**
+ * This is used during stubbing so we can override the time between retries (so the unit tests are faster)
+ */
+function getMinTimeoutForSogs() {
+  return 100;
+}
+
 // we export these methods for stubbing during testing
 export const OnionSending = {
   endpointRequiresDecoding,
@@ -537,4 +538,5 @@ export const OnionSending = {
   sendBinaryViaOnionV4ToSogs,
   getBinaryViaOnionV4FromFileServer,
   sendJsonViaOnionV4ToFileServer,
+  getMinTimeoutForSogs,
 };

@@ -10,7 +10,7 @@ import {
   updateLightBoxOptions,
 } from '../../../state/ducks/modalDialog';
 import { showSettingsSection } from '../../../state/ducks/section';
-import { getIsModalVisble } from '../../../state/selectors/modal';
+import { getIsModalVisible } from '../../../state/selectors/modal';
 import { useHideRecoveryPasswordEnabled } from '../../../state/selectors/settings';
 import { useIsDarkTheme } from '../../../state/selectors/theme';
 import { THEME_GLOBALS } from '../../../themes/globals';
@@ -74,7 +74,7 @@ export const SettingsCategoryRecoveryPassword = () => {
   const [isQRVisible, setIsQRVisible] = useState(false);
 
   const hideRecoveryPassword = useHideRecoveryPasswordEnabled();
-  const isModalVisible = useSelector(getIsModalVisble);
+  const isModalVisible = useSelector(getIsModalVisible);
 
   const isDarkTheme = useIsDarkTheme();
   const { dataURL, iconSize, iconColor, backgroundColor, loading } = useIconToImageURL(qrLogoProps);

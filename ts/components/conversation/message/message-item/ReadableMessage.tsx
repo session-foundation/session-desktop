@@ -1,5 +1,6 @@
 import { debounce, noop } from 'lodash';
 import {
+  SessionDataTestId,
   AriaRole,
   MouseEvent,
   MouseEventHandler,
@@ -13,7 +14,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useScrollToLoadedMessage } from '../../../../contexts/ScrollToLoadedMessage';
 import { Data } from '../../../../data/data';
 import { useHasUnread } from '../../../../hooks/useParamSelector';
-import { getConversationController } from '../../../../session/conversations';
+import { ConvoHub } from '../../../../session/conversations';
 import {
   fetchBottomMessagesForConversation,
   fetchTopMessagesForConversation,
@@ -39,8 +40,8 @@ export type ReadableMessageProps = {
   isUnread: boolean;
   onClick?: MouseEventHandler<HTMLElement>;
   onDoubleClickCapture?: MouseEventHandler<HTMLElement>;
+  dataTestId: SessionDataTestId;
   role?: AriaRole;
-  dataTestId: string;
   onContextMenu?: (e: MouseEvent<HTMLElement>) => void;
   isControlMessage?: boolean;
 };
@@ -126,7 +127,7 @@ export const ReadableMessage = (props: ReadableMessageProps) => {
         // make sure the app is focused, because we mark message as read here
         if (inView === true && isAppFocused) {
           dispatch(showScrollToBottomButton(false));
-          getConversationController()
+          ConvoHub.use()
             .get(selectedConversationKey)
             ?.markConversationRead({ newestUnreadDate: receivedAt || 0, fromConfigMessage: false }); // TODOLATER this should be `sentAt || serverTimestamp` I think
 
@@ -157,7 +158,7 @@ export const ReadableMessage = (props: ReadableMessageProps) => {
             // mark the whole conversation as read until this point.
             // this will trigger the expire timer.
             if (foundSentAt) {
-              getConversationController()
+              ConvoHub.use()
                 .get(selectedConversationKey)
                 ?.markConversationRead({ newestUnreadDate: foundSentAt, fromConfigMessage: false });
             }

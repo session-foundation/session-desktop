@@ -1,30 +1,10 @@
-import _, { intersectionWith, sampleSize } from 'lodash';
-import { SnodePool } from '.';
+import { compact, intersectionWith, sampleSize } from 'lodash';
+import { BatchRequests } from './batchRequest';
+import { GetNetworkTime } from './getNetworkTime';
+import { SnodePool } from './snodePool';
 import { Snode } from '../../../data/types';
 import { GetServiceNodesSubRequest } from './SnodeRequestTypes';
-import { doSnodeBatchRequest } from './batchRequest';
-import { GetNetworkTime } from './getNetworkTime';
-import { minSnodePoolCount, requiredSnodesForAgreement } from './snodePool';
-
-function buildSnodeListRequests(): Array<GetServiceNodesSubRequest> {
-  const request: GetServiceNodesSubRequest = {
-    method: 'oxend_request',
-    params: {
-      endpoint: 'get_service_nodes',
-      params: {
-        active_only: true,
-        fields: {
-          public_ip: true,
-          storage_port: true,
-          pubkey_x25519: true,
-          pubkey_ed25519: true,
-          storage_server_version: true,
-        },
-      },
-    },
-  };
-  return [request];
-}
+import { SnodePoolConstants } from './snodePoolConstants';
 
 /**
  * Returns a list of unique snodes got from the specified targetNode.
@@ -32,8 +12,15 @@ function buildSnodeListRequests(): Array<GetServiceNodesSubRequest> {
  * This is exported for testing purpose only.
  */
 async function getSnodePoolFromSnode(targetNode: Snode): Promise<Array<Snode>> {
-  const requests = buildSnodeListRequests();
-  const results = await doSnodeBatchRequest(requests, targetNode, 4000, null);
+  const subRequest = new GetServiceNodesSubRequest();
+
+  const results = await BatchRequests.doUnsignedSnodeBatchRequestNoRetries(
+    [subRequest],
+    targetNode,
+    10000,
+    null,
+    false
+  );
 
   const firstResult = results[0];
 
@@ -62,7 +49,7 @@ async function getSnodePoolFromSnode(targetNode: Snode): Promise<Array<Snode>> {
     GetNetworkTime.handleTimestampOffsetFromNetwork('get_service_nodes', json.t);
 
     // we the return list by the snode is already made of uniq snodes
-    return _.compact(snodes);
+    return compact(snodes);
   } catch (e) {
     window?.log?.error('Invalid json response');
     return [];
@@ -78,7 +65,7 @@ async function getSnodePoolFromSnode(targetNode: Snode): Promise<Array<Snode>> {
  */
 async function getSnodePoolFromSnodes() {
   const existingSnodePool = await SnodePool.getSnodePoolFromDBOrFetchFromSeed();
-  if (existingSnodePool.length <= minSnodePoolCount) {
+  if (existingSnodePool.length <= SnodePoolConstants.minSnodePoolCount) {
     window?.log?.warn(
       'getSnodePoolFromSnodes: Cannot get snodes list from snodes; not enough snodes',
       existingSnodePool.length
@@ -115,9 +102,9 @@ async function getSnodePoolFromSnodes() {
     }
   );
   // We want the snodes to agree on at least this many snodes
-  if (commonSnodes.length < requiredSnodesForAgreement) {
+  if (commonSnodes.length < SnodePoolConstants.requiredSnodesForAgreement) {
     throw new Error(
-      `Inconsistent snode pools. We did not get at least ${requiredSnodesForAgreement} in common`
+      `Inconsistent snode pools. We did not get at least ${SnodePoolConstants.requiredSnodesForAgreement} in common`
     );
   }
   return commonSnodes;

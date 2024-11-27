@@ -1,5 +1,5 @@
 import Backbone from 'backbone';
-import _ from 'lodash';
+import _, { toPairs } from 'lodash';
 import { createRoot } from 'react-dom/client';
 
 import nativeEmojiData from '@emoji-mart/data';
@@ -15,7 +15,7 @@ import { SettingsKey } from '../data/settings-key';
 import { MessageModel } from '../models/message';
 import { queueAllCached } from '../receiver/receiver';
 import { loadKnownBlindedKeys } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
-import { getConversationController } from '../session/conversations';
+import { ConvoHub } from '../session/conversations';
 import { DisappearingMessages } from '../session/disappearing_messages';
 import { AttachmentDownloads, ToastUtils } from '../session/utils';
 import { getOurPubKeyStrFromCache } from '../session/utils/User';
@@ -136,14 +136,13 @@ ipcRenderer.on('native-theme-update', (__unused, shouldUseDarkColors) => {
 
 async function startJobRunners() {
   // start the job runners
-  await runners.avatarDownloadRunner.loadJobsFromDb();
-  runners.avatarDownloadRunner.startProcessing();
-  await runners.configurationSyncRunner.loadJobsFromDb();
-  runners.configurationSyncRunner.startProcessing();
-  await runners.updateMsgExpiryRunner.loadJobsFromDb();
-  runners.updateMsgExpiryRunner.startProcessing();
-  await runners.fetchSwarmMsgExpiryRunner.loadJobsFromDb();
-  runners.fetchSwarmMsgExpiryRunner.startProcessing();
+  const pairs = toPairs(runners);
+  for (let index = 0; index < pairs.length; index++) {
+    const runner = pairs[index][1];
+    // eslint-disable-next-line no-await-in-loop
+    await runner.loadJobsFromDb();
+    runner.startProcessing();
+  }
 }
 
 // We need this 'first' check because we don't want to start the app up any other time
@@ -191,7 +190,7 @@ Storage.onready(async () => {
       // Stop background processing
       AttachmentDownloads.stop();
       // Stop processing incoming messages
-      // TODOLATER stop polling opengroupv2 and swarm nodes
+      // TODOLATER stop polling opengroup v2 and swarm nodes
 
       // Shut down the data interface cleanly
       await Data.shutdown();
@@ -205,7 +204,6 @@ Storage.onready(async () => {
 
   if (newVersion) {
     window.log.info(`New version detected: ${currentVersion}; previous: ${lastVersion}`);
-
     await Data.cleanupOrphanedAttachments();
   }
 
@@ -226,9 +224,9 @@ Storage.onready(async () => {
     await initialiseEmojiData(nativeEmojiData);
     await AttachmentDownloads.initAttachmentPaths();
 
+    await BlockedNumberController.load();
     await Promise.all([
-      getConversationController().load(),
-      BlockedNumberController.load(),
+      ConvoHub.use().load(),
       OpenGroupData.opengroupRoomsLoad(),
       loadKnownBlindedKeys(),
     ]);
@@ -304,7 +302,7 @@ async function start() {
     window.setAutoHideMenuBar(hideMenuBar);
     window.setMenuBarVisibility(!hideMenuBar);
     // eslint-disable-next-line more/no-then
-    void getConversationController()
+    void ConvoHub.use()
       .loadPromise()
       ?.then(() => {
         const container = document.getElementById('root');

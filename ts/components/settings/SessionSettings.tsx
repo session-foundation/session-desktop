@@ -73,7 +73,7 @@ const SessionInfo = () => {
       <StyledSpanSessionInfo
         onClick={() => {
           void shell.openExternal(
-            `https://github.com/oxen-io/session-desktop/releases/tag/v${window.versionInfo.version}`
+            `https://github.com/session-foundation/session-desktop/releases/tag/v${window.versionInfo.version}`
           );
         }}
       >
@@ -116,12 +116,12 @@ const SettingInCategory = (props: {
       return <SettingsCategoryHelp />;
     case 'permissions':
       return <SettingsCategoryPermissions />;
-    case 'recoveryPassword':
+    case 'recovery-password':
       return <SettingsCategoryRecoveryPassword />;
 
     // these are just buttons and don't have screens
-    case 'clearData':
-    case 'messageRequests':
+    case 'clear-data':
+    case 'message-requests':
     default:
       return null;
   }

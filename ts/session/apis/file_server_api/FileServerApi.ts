@@ -5,8 +5,8 @@ import {
   batchGlobalIsSuccess,
   parseBatchGlobalStatusCode,
 } from '../open_group_api/sogsv3/sogsV3BatchPoll';
-import { GetNetworkTime } from '../snode_api/getNetworkTime';
 import { fromUInt8ArrayToBase64 } from '../../utils/String';
+import { NetworkTime } from '../../../util/NetworkTime';
 
 export const fileServerHost = 'filev2.getsession.org';
 export const fileServerURL = `http://${fileServerHost}`;
@@ -129,7 +129,7 @@ const parseStatusCodeFromOnionRequestV4 = (
 export const getLatestReleaseFromFileServer = async (
   userEd25519SecretKey: Uint8Array
 ): Promise<string | null> => {
-  const sigTimestampSeconds = GetNetworkTime.getNowWithNetworkOffsetSeconds();
+  const sigTimestampSeconds = NetworkTime.getNowWithNetworkOffsetSeconds();
   const blindedPkHex = await BlindingActions.blindVersionPubkey({
     ed25519SecretKey: userEd25519SecretKey,
   });

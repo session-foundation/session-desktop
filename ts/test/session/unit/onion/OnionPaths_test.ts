@@ -16,7 +16,7 @@ import {
 } from '../../../test-utils/utils';
 import { SeedNodeAPI } from '../../../../session/apis/seed_node_api';
 import { ServiceNodesList } from '../../../../session/apis/snode_api/getServiceNodesList';
-import { TEST_resetState } from '../../../../session/apis/snode_api/snodePool';
+import { SnodePool } from '../../../../session/apis/snode_api/snodePool';
 
 chai.use(chaiAsPromised as any);
 chai.should();
@@ -134,7 +134,7 @@ describe('OnionPaths', () => {
       TestUtils.stubWindow('getSeedNodeList', () => ['seednode1']);
 
       TestUtils.stubWindowLog();
-      TEST_resetState();
+      SnodePool.TEST_resetState();
 
       fetchSnodePoolFromSeedNodeWithRetries = Sinon.stub(
         SeedNodeAPI,

@@ -22,7 +22,7 @@ type ButtonSettingsProps = {
   buttonType?: SessionButtonType;
   buttonShape?: SessionButtonShape;
   buttonText: string;
-  dataTestId?: string;
+  dataTestId?: React.SessionDataTestId;
   onClick: () => void;
 };
 
@@ -160,7 +160,7 @@ export const SessionToggleWithDescription = (props: {
   onClickToggle: () => void;
   confirmationDialogParams?: SessionConfirmDialogProps;
   childrenDescription?: ReactNode; // if set, those elements will be appended next to description field (only used for typing message settings as of now)
-  dataTestId?: string;
+  dataTestId?: React.SessionDataTestId;
 }) => {
   const {
     title,

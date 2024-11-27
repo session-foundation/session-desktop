@@ -29,7 +29,7 @@ export const MessageText = (props: Props) => {
   }
   const { text, isDeleted, conversationType } = selected;
 
-  const contents = isDeleted ? window.i18n('deleteMessageDeleted', { count: 1 }) : text?.trim();
+  const contents = isDeleted ? window.i18n('deleteMessageDeletedGlobally') : text?.trim();
 
   if (!contents) {
     return null;

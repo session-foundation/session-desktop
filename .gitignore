@@ -54,5 +54,4 @@ stylesheets/dist/
 ts/webworker/workers/node/**/*.node
 ts/localization/locales.ts
 
-.yarn/**/*.mjs
-.yarn/**/*.cjs
+.yarn/

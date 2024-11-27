@@ -19,20 +19,23 @@ export interface LokiFetchOptions {
 
 /**
  * A small wrapper around node-fetch which deserializes response
- * returns insecureNodeFetch response or false
+ * returned by insecureNodeFetch or false.
+ * Does not do any retries, nor eject snodes if needed
  */
-async function doRequest({
+async function doRequestNoRetries({
   options,
   url,
   associatedWith,
   targetNode,
   timeout,
+  allow401s,
 }: {
   url: string;
   options: LokiFetchOptions;
   targetNode?: Snode;
   associatedWith: string | null;
   timeout: number;
+  allow401s: boolean;
 }): Promise<undefined | SnodeResponse> {
   const method = options.method || 'GET';
 
@@ -50,11 +53,12 @@ async function doRequest({
         ? true
         : window.sessionFeatureFlags?.useOnionRequests;
     if (useOnionRequests && targetNode) {
-      const fetchResult = await Onions.lokiOnionFetch({
+      const fetchResult = await Onions.lokiOnionFetchNoRetries({
         targetNode,
         body: fetchOptions.body,
         headers: fetchOptions.headers,
         associatedWith: associatedWith || undefined,
+        allow401s,
       });
       if (!fetchResult) {
         return undefined;
@@ -108,12 +112,13 @@ async function doRequest({
  *  -> if the targetNode gets too many errors => we will need to try to do this request again with another target node
  * The
  */
-export async function snodeRpc(
+async function snodeRpcNoRetries(
   {
     method,
     params,
     targetNode,
     associatedWith,
+    allow401s,
     timeout = 10000,
   }: {
     method: string;
@@ -121,6 +126,7 @@ export async function snodeRpc(
     targetNode: Snode;
     associatedWith: string | null;
     timeout?: number;
+    allow401s: boolean;
   } // the user pubkey this call is for. if the onion request fails, this is used to handle the error for this user swarm for instance
 ): Promise<undefined | SnodeResponse> {
   const url = `https://${targetNode.ip}:${targetNode.port}/storage_rpc/v1`;
@@ -138,11 +144,14 @@ export async function snodeRpc(
     agent: null,
   };
 
-  return doRequest({
+  return doRequestNoRetries({
     url,
     options: fetchOptions,
     targetNode,
     associatedWith,
     timeout,
+    allow401s,
   });
 }
+
+export const SessionRpc = { snodeRpcNoRetries };

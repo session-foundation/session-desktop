@@ -2,12 +2,12 @@ import { compact } from 'lodash';
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 
-import { getConversationController } from '../../session/conversations';
+import { ConvoHub } from '../../session/conversations';
 import { PubKey } from '../../session/types';
 import { ToastUtils } from '../../session/utils';
 import { Flex } from '../basic/Flex';
 
-import { useConversationPropsById } from '../../hooks/useParamSelector';
+import { useGroupAdmins, useIsPublic, useWeAreAdmin } from '../../hooks/useParamSelector';
 import { sogsV3RemoveAdmins } from '../../session/apis/open_group_api/sogsv3/sogsV3AddRemoveMods';
 import { updateRemoveModeratorsModal } from '../../state/ducks/modalDialog';
 import { MemberListItem } from '../MemberListItem';
@@ -29,11 +29,10 @@ async function removeMods(convoId: string, modsToRemove: Array<string>) {
   const modsToRemovePubkey = compact(modsToRemove.map(m => PubKey.from(m)));
   const modsToRemoveNames = modsToRemovePubkey.map(
     m =>
-      getConversationController().get(m.key)?.getNicknameOrRealUsernameOrPlaceholder() ||
-      window.i18n('unknown')
+      ConvoHub.use().get(m.key)?.getNicknameOrRealUsernameOrPlaceholder() || window.i18n('unknown')
   );
   try {
-    const convo = getConversationController().get(convoId);
+    const convo = ConvoHub.use().get(convoId);
 
     const roomInfos = convo.toOpenGroupV2();
 
@@ -64,6 +63,10 @@ export const RemoveModeratorsDialog = (props: Props) => {
     dispatch(updateRemoveModeratorsModal(null));
   };
 
+  const weAreAdmin = useWeAreAdmin(conversationId);
+  const isPublic = useIsPublic(conversationId);
+  const groupAdmins = useGroupAdmins(conversationId);
+
   const removeModsCall = async () => {
     if (modsToRemove.length) {
       setRemovingInProgress(true);
@@ -75,12 +78,11 @@ export const RemoveModeratorsDialog = (props: Props) => {
     }
   };
 
-  const convoProps = useConversationPropsById(conversationId);
-  if (!convoProps || !convoProps.isPublic || !convoProps.weAreAdmin) {
+  if (!isPublic || !weAreAdmin) {
     throw new Error('RemoveModeratorsDialog: convoProps invalid');
   }
 
-  const existingMods = convoProps.groupAdmins || [];
+  const existingMods = groupAdmins || [];
   const hasMods = existingMods.length !== 0;
 
   return (
@@ -102,6 +104,7 @@ export const RemoveModeratorsDialog = (props: Props) => {
                   setModsToRemove(updatedList);
                 }}
                 disableBg={true}
+                maxNameWidth="100%"
               />
             ))}
           </div>

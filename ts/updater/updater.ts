@@ -8,7 +8,7 @@ import { gt as isVersionGreaterThan, parse as parseVersion } from 'semver';
 
 import { windowMarkShouldQuit } from '../node/window_state';
 
-import { getLatestRelease } from '../node/latest_desktop_release';
+import { UPDATER_INTERVAL_MS } from '../session/constants';
 import type { SetupI18nReturnType } from '../types/localizer';
 import {
   getPrintableError,
@@ -17,6 +17,7 @@ import {
   showDownloadUpdateDialog,
   showUpdateDialog,
 } from './common';
+import { getLatestRelease } from '../node/latest_desktop_release';
 
 let isUpdating = false;
 let downloadIgnored = false;
@@ -41,16 +42,13 @@ export async function start(
   autoUpdater.logger = logger;
   autoUpdater.autoDownload = false;
 
-  interval = global.setInterval(
-    async () => {
-      try {
-        await checkForUpdates(getMainWindow, i18n, logger);
-      } catch (error) {
-        logger.error('auto-update: error:', getPrintableError(error));
-      }
-    },
-    1000 * 60 * 10
-  ); // trigger and try to update every 10 minutes to let the file gets downloaded if we are updating
+  interval = global.setInterval(async () => {
+    try {
+      await checkForUpdates(getMainWindow, i18n, logger);
+    } catch (error) {
+      logger.error('auto-update: error:', getPrintableError(error));
+    }
+  }, UPDATER_INTERVAL_MS); // trigger and try to update every 10 minutes to let the file gets downloaded if we are updating
   stopped = false;
 
   global.setTimeout(
@@ -62,7 +60,7 @@ export async function start(
       }
     },
     2 * 60 * 1000
-  ); // we do checks from the fileserver every 1 minute.
+  ); // we do checks from the file server every 1 minute.
 }
 
 export function stop() {
@@ -110,7 +108,7 @@ async function checkForUpdates(
     logger.info('[updater] checkForUpdates isMoreRecent', isMoreRecent);
     if (!isMoreRecent) {
       logger.info(
-        `Fileserver has no update so we are not looking for an update from github current:${currentVersion} fromFileServer:${latestVersionFromFsFromRenderer}`
+        `File server has no update so we are not looking for an update from github current:${currentVersion} fromFileServer:${latestVersionFromFsFromRenderer}`
       );
       return;
     }

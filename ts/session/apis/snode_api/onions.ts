@@ -1,6 +1,6 @@
+import https from 'https';
 import { AbortSignal } from 'abort-controller';
 import ByteBuffer from 'bytebuffer';
-import https from 'https';
 import { to_string } from 'libsodium-wrappers-sumo';
 import { cloneDeep, isEmpty, isString, omit } from 'lodash';
 import insecureNodeFetch, { RequestInit, Response } from 'node-fetch';
@@ -8,7 +8,7 @@ import pRetry from 'p-retry';
 // eslint-disable-next-line import/no-unresolved
 import { AbortSignal as AbortSignalNode } from 'node-fetch/externals';
 
-import { dropSnodeFromSnodePool, dropSnodeFromSwarmIfNeeded, updateSwarmFor } from './snodePool';
+import { SnodePool } from './snodePool';
 
 import { OnionPaths } from '../../onions';
 import { incrementBadPathCountOrDrop } from '../../onions/onionPath';
@@ -262,6 +262,17 @@ function process406Or425Error(statusCode: number) {
   }
 }
 
+/**
+ * 401 is a signature or forbidden error.
+ */
+function process401Error(statusCode: number) {
+  if (statusCode === 401) {
+    throw new pRetry.AbortError(
+      `Got 401 status code. Most likely a client bug. Retries would not help. `
+    );
+  }
+}
+
 function processOxenServerError(_statusCode: number, body?: string) {
   if (body === OXEN_SERVER_ERROR) {
     window?.log?.warn('[path] Got Oxen server Error. Not much to do if the server has troubles.');
@@ -298,19 +309,24 @@ export async function processOnionRequestErrorAtDestination({
   body,
   destinationSnodeEd25519,
   associatedWith,
+  allow401s,
 }: {
   statusCode: number;
   body: string;
   destinationSnodeEd25519?: string;
   associatedWith?: string;
+  allow401s: boolean;
 }) {
   if (statusCode === 200) {
     return;
   }
   window?.log?.info(
-    `processOnionRequestErrorAtDestination. statusCode nok: ${statusCode}: "${body}"`
+    `processOnionRequestErrorAtDestination. statusCode nok: ${statusCode}: associatedWith:${associatedWith}  destinationSnodeEd25519:${destinationSnodeEd25519}`
   );
   process406Or425Error(statusCode);
+  if (!allow401s) {
+    process401Error(statusCode);
+  }
   processOxenServerError(statusCode, body);
   await process421Error(statusCode, body, associatedWith, destinationSnodeEd25519);
   if (destinationSnodeEd25519) {
@@ -334,10 +350,10 @@ async function handleNodeNotFound({
   window?.log?.warn('Handling NODE NOT FOUND with: ', shortNodeNotFound);
 
   if (associatedWith) {
-    await dropSnodeFromSwarmIfNeeded(associatedWith, ed25519NotFound);
+    await SnodePool.dropSnodeFromSwarmIfNeeded(associatedWith, ed25519NotFound);
   }
 
-  await dropSnodeFromSnodePool(ed25519NotFound);
+  await SnodePool.dropSnodeFromSnodePool(ed25519NotFound);
   snodeFailureCount[ed25519NotFound] = 0;
   // try to remove the not found snode from any of the paths if it's there.
   // it may not be here, as the snode note found might be the target snode of the request.
@@ -388,7 +404,8 @@ async function processAnyOtherErrorAtDestination(
   // this test checks for error at the destination.
   if (
     status !== 400 &&
-    status !== 406 && // handled in process406Error
+    status !== 401 && // handled in process401Error
+    status !== 406 && // handled in process406Or425Error
     status !== 421 // handled in process421Error
   ) {
     window?.log?.warn(`[path] Got status at destination: ${status}`);
@@ -508,6 +525,7 @@ async function processOnionResponse({
   abortSignal,
   associatedWith,
   destinationSnodeEd25519,
+  allow401s,
 }: {
   response?: { text: () => Promise<string>; status: number };
   symmetricKey?: ArrayBuffer;
@@ -515,6 +533,7 @@ async function processOnionResponse({
   destinationSnodeEd25519?: string;
   abortSignal?: AbortSignal;
   associatedWith?: string;
+  allow401s: boolean;
 }): Promise<SnodeResponse> {
   let ciphertext = '';
 
@@ -588,6 +607,7 @@ async function processOnionResponse({
       body: jsonRes?.body, // this is really important. the `.body`. the .body should be a string. for instance for nodeNotFound but is most likely a dict (Record<string,any>))
       destinationSnodeEd25519,
       associatedWith,
+      allow401s,
     });
 
     return jsonRes as SnodeResponse;
@@ -726,11 +746,11 @@ async function handle421InvalidSwarm({
         parsedBody.snodes.map((s: any) => ed25519Str(s.pubkey_ed25519))
       );
 
-      await updateSwarmFor(associatedWith, parsedBody.snodes);
+      await SnodePool.updateSwarmFor(associatedWith, parsedBody.snodes);
       throw new pRetry.AbortError(ERROR_421_HANDLED_RETRY_REQUEST);
     }
     // remove this node from the swarm of this pubkey
-    await dropSnodeFromSwarmIfNeeded(associatedWith, destinationSnodeEd25519);
+    await SnodePool.dropSnodeFromSwarmIfNeeded(associatedWith, destinationSnodeEd25519);
   } catch (e) {
     if (e.message !== ERROR_421_HANDLED_RETRY_REQUEST) {
       window?.log?.warn(
@@ -738,7 +758,7 @@ async function handle421InvalidSwarm({
         e
       );
       // could not parse result. Consider that this snode as invalid
-      await dropSnodeFromSwarmIfNeeded(associatedWith, destinationSnodeEd25519);
+      await SnodePool.dropSnodeFromSwarmIfNeeded(associatedWith, destinationSnodeEd25519);
     }
   }
   await Onions.incrementBadSnodeCountOrDrop({
@@ -779,9 +799,9 @@ async function incrementBadSnodeCountOrDrop({
     );
 
     if (associatedWith) {
-      await dropSnodeFromSwarmIfNeeded(associatedWith, snodeEd25519);
+      await SnodePool.dropSnodeFromSwarmIfNeeded(associatedWith, snodeEd25519);
     }
-    await dropSnodeFromSnodePool(snodeEd25519);
+    await SnodePool.dropSnodeFromSnodePool(snodeEd25519);
     snodeFailureCount[snodeEd25519] = 0;
 
     await OnionPaths.dropSnodeFromPath(snodeEd25519);
@@ -798,7 +818,7 @@ async function incrementBadSnodeCountOrDrop({
  * This call tries to send the request via onion. If we get a bad path, it handles the snode removing of the swarm and snode pool.
  * But the caller needs to handle the retry (and rebuild the path on his side if needed)
  */
-async function sendOnionRequestHandlingSnodeEject({
+async function sendOnionRequestHandlingSnodeEjectNoRetries({
   destSnodeX25519,
   finalDestOptions,
   nodePath,
@@ -807,6 +827,7 @@ async function sendOnionRequestHandlingSnodeEject({
   finalRelayOptions,
   useV4,
   throwErrors,
+  allow401s,
 }: {
   nodePath: Array<Snode>;
   destSnodeX25519: string;
@@ -816,9 +837,10 @@ async function sendOnionRequestHandlingSnodeEject({
   associatedWith?: string;
   useV4: boolean;
   throwErrors: boolean;
+  allow401s: boolean;
 }): Promise<SnodeResponse | SnodeResponseV4 | undefined> {
   // this sendOnionRequestNoRetries() call has to be the only one like this.
-  // If you need to call it, call it through sendOnionRequestHandlingSnodeEject because this is the one handling path rebuilding and known errors
+  // If you need to call it, call it through sendOnionRequestHandlingSnodeEjectNoRetries because this is the one handling path rebuilding and known errors
   let response;
   let decodingSymmetricKey;
   try {
@@ -834,7 +856,7 @@ async function sendOnionRequestHandlingSnodeEject({
 
     if (window.sessionFeatureFlags?.debug.debugOnionRequests) {
       window.log.info(
-        `sendOnionRequestHandlingSnodeEject: sendOnionRequestNoRetries: useV4:${useV4} destSnodeX25519:${destSnodeX25519}; \nfinalDestOptions:${JSON.stringify(
+        `sendOnionRequestHandlingSnodeEjectNoRetries: sendOnionRequestNoRetries: useV4:${useV4} destSnodeX25519:${destSnodeX25519}; \nfinalDestOptions:${JSON.stringify(
           finalDestOptions
         )}; \nfinalRelayOptions:${JSON.stringify(finalRelayOptions)}\n\n result: ${JSON.stringify(
           result
@@ -884,6 +906,7 @@ async function sendOnionRequestHandlingSnodeEject({
     destinationSnodeEd25519,
     abortSignal,
     associatedWith,
+    allow401s,
   });
 }
 
@@ -1088,15 +1111,15 @@ const sendOnionRequestNoRetries = async ({
   return { response, decodingSymmetricKey: destCtx.symmetricKey };
 };
 
-async function sendOnionRequestSnodeDest(
+async function sendOnionRequestSnodeDestNoRetries(
   onionPath: Array<Snode>,
   targetNode: Snode,
   headers: Record<string, any>,
-
   plaintext: string | null,
+  allow401s: boolean,
   associatedWith?: string
 ) {
-  return Onions.sendOnionRequestHandlingSnodeEject({
+  return Onions.sendOnionRequestHandlingSnodeEjectNoRetries({
     nodePath: onionPath,
     destSnodeX25519: targetNode.pubkey_x25519,
     finalDestOptions: {
@@ -1107,50 +1130,38 @@ async function sendOnionRequestSnodeDest(
     associatedWith,
     useV4: false, // sadly, request to snode do not support v4 yet
     throwErrors: false,
+    allow401s,
   });
 }
 
 /**
  * If the fetch throws a retryable error we retry this call with a new path at most 3 times. If another error happens, we return it. If we have a result we just return it.
  */
-async function lokiOnionFetch({
+async function lokiOnionFetchNoRetries({
   targetNode,
   associatedWith,
   body,
   headers,
+  allow401s,
 }: {
   targetNode: Snode;
   headers: Record<string, any>;
   body: string | null;
   associatedWith?: string;
+  allow401s: boolean;
 }): Promise<SnodeResponse | undefined> {
   try {
-    const retriedResult = await pRetry(
-      async () => {
-        // Get a path excluding `targetNode`:
-        const path = await OnionPaths.getOnionPath({ toExclude: targetNode });
-        const result = await sendOnionRequestSnodeDest(
-          path,
-          targetNode,
-          headers,
-          body,
-          associatedWith
-        );
-        return result;
-      },
-      {
-        retries: 3,
-        factor: 1,
-        minTimeout: 100,
-        onFailedAttempt: e => {
-          window?.log?.warn(
-            `onionFetchRetryable attempt #${e.attemptNumber} failed. ${e.retriesLeft} retries left...`
-          );
-        },
-      }
+    // Get a path excluding `targetNode`:
+    const path = await OnionPaths.getOnionPath({ toExclude: targetNode });
+    const result = await sendOnionRequestSnodeDestNoRetries(
+      path,
+      targetNode,
+      headers,
+      body,
+      allow401s,
+      associatedWith
     );
-
-    return retriedResult as SnodeResponse | undefined;
+    return result as SnodeResponse | undefined;
   } catch (e) {
     window?.log?.warn('onionFetchRetryable failed ', e.message);
     if (e?.errno === 'ENETUNREACH') {
@@ -1166,11 +1177,11 @@ async function lokiOnionFetch({
 }
 
 export const Onions = {
-  sendOnionRequestHandlingSnodeEject,
+  sendOnionRequestHandlingSnodeEjectNoRetries,
   incrementBadSnodeCountOrDrop,
   decodeOnionResult,
-  lokiOnionFetch,
-  sendOnionRequestSnodeDest,
+  lokiOnionFetchNoRetries,
+  sendOnionRequestSnodeDestNoRetries,
   processOnionResponse,
   processOnionResponseV4,
   isFinalDestinationSnode,

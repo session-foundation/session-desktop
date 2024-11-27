@@ -1,9 +1,10 @@
+import { SessionDataTestId } from 'react';
 import styled from 'styled-components';
 
 type Props = {
   size: 'small' | 'normal';
   direction?: string;
-  dataTestId?: string;
+  dataTestId?: SessionDataTestId;
 };
 
 // Module: Spinner

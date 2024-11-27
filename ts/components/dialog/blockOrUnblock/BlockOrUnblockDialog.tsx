@@ -14,6 +14,7 @@ import { SessionButton, SessionButtonColor, SessionButtonType } from '../../basi
 import { StyledModalDescriptionContainer } from '../shared/ModalDescriptionContainer';
 import { BlockOrUnblockModalState } from './BlockOrUnblockModalState';
 import type { LocalizerComponentPropsObject } from '../../../types/localizer';
+import { UserSync } from '../../../session/utils/job_runners/jobs/UserSyncJob';
 
 type ModalState = NonNullable<BlockOrUnblockModalState>;
 
@@ -77,6 +78,7 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
     }
     closeModal();
     onConfirmed?.();
+    await UserSync.queueNewJobIfNeeded();
   }, [action, onConfirmed, pubkeys]);
 
   if (isEmpty(pubkeys)) {
@@ -104,7 +106,7 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
               buttonColor={SessionButtonColor.White}
               onClick={closeModal}
               text={window.i18n('cancel')}
-              dataTestId="session-cancel-ok-button"
+              dataTestId="session-confirm-cancel-button"
             />
           </div>
         </Flex>
