@@ -8,13 +8,11 @@ on:
   push:
     branches:
       - master
-      - clearnet
       - unstable
       - 'release/**'
       - 'ci/**'
   pull_request:
     branches:
-      - clearnet
       - unstable
       - 'release/**'
       - 'ci/**'

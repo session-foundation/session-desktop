@@ -239,10 +239,10 @@ So you wanna make a pull request? Please observe the following guidelines.
 - Please do not submit pull requests for pure translation fixes. Anyone can update
   the translations at [Crowdin](https://getsession.org/translate).
 - [Rebase](https://nathanleclaire.com/blog/2014/09/14/dont-be-scared-of-git-rebase/) your
-  changes on the latest `clearnet` branch, resolving any conflicts.
+  changes on the latest `unstable` branch, resolving any conflicts.
   This ensures that your changes will merge cleanly when you open your PR.
 - Be sure to add and run tests!
-- Make sure the diff between `clearnet` and your branch contains only the
+- Make sure the diff between `unstable` and your branch contains only the
   minimal set of changes needed to implement your feature or bugfix. This will
   make it easier for the person reviewing your code to approve the changes.
   Please do not submit a PR with commented out code or unfinished features.
