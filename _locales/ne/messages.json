@@ -404,7 +404,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> र <b>{count} अन्य</b>लाई समूहमा सामेल हुन आमन्त्रित गरियो।",
   "groupMemberNewTwo": "<b>{name}</b> र <b>{other_name}</b>लाई समूहमा सामेल हुन आमन्त्रित गरियो।",
   "groupMemberNewYouHistoryMultiple": "<b>तपाईं</b> र <b>{count} अन्य</b>लाई समूहमा सामेल हुन आमन्त्रित गरियो। च्याट इतिहास सेयर गरियो।",
-  "groupMemberNewYouHistoryTwo": "<b>तपाईं</b> र <b>{name}</b>लाई समूहमा सामेल हुन आमन्त्रित गरियो। च्याट इतिहास सेयर गरियो।",
   "groupMemberYouLeft": "<b>तपाईं</b>ले समूह छोड्नुभयो।",
   "groupMembers": "समूह सदस्यहरू",
   "groupMembersNone": "यस समूहमा अरु कुनै सदस्यहरू छैनन्।",

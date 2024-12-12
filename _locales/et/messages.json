@@ -405,7 +405,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> ja <b>{count} teist </b> kutsuti grupiga liituma.",
   "groupMemberNewTwo": "<b>{name}</b> ja <b>{other_name}</b> kutsuti grupiga liituma.",
   "groupMemberNewYouHistoryMultiple": "<b>Sind</b> ja <b>{count} teist</b> kutsuti grupiga liituma. Vestluse ajalugu jagati nendega.",
-  "groupMemberNewYouHistoryTwo": "<b>Sind</b> ja <b>{name}</b> kutsuti grupiga liituma. Vestluse ajalugu jagati nendega.",
   "groupMemberYouLeft": "<b>Sina</b> lahkusid grupist.",
   "groupMembers": "Grupi liikmed",
   "groupMembersNone": "Selles grupis pole teisi liikmeid.",

@@ -406,7 +406,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> మరియు <b>{count} ఇతరులు</b> సమూహంలో చేరడానికి ఆహ్వానించబడ్డారు.",
   "groupMemberNewTwo": "<b>{name}</b> మరియు <b>{other_name}</b> సమూహంలో చేరడానికి ఆహ్వానించబడ్డారు.",
   "groupMemberNewYouHistoryMultiple": "<b>మీరు</b> మరియు <b>{count} ఇతరులు</b> సమూహంలో చేరడానికి ఆహ్వానించబడ్డారు. చాట్ చరిత్ర పంచబడింది.",
-  "groupMemberNewYouHistoryTwo": "<b>మీరు</b> మరియు <b>{name}</b> సమూహంలో చేరడానికి ఆహ్వానించబడ్డారు. చాట్ చరిత్ర పంచబడింది.",
   "groupMemberYouLeft": "<b>మీరు</b> సమూహాన్ని వదిలారు.",
   "groupMembers": "సమూహ సభ్యులు",
   "groupMembersNone": "ఈ గ్రూపులో ఇతరులు సభ్యులు లేరు.",

@@ -59,6 +59,7 @@ import {
 import { CompositionTextArea } from './CompositionTextArea';
 import { cleanMentions, mentionsRegex } from './UserMentions';
 import { HTMLDirection } from '../../../util/i18n/rtlSupport';
+import { PubKey } from '../../../session/types';
 
 export interface ReplyingToMessageProps {
   convoId: string;
@@ -521,8 +522,7 @@ class CompositionBoxInner extends Component<Props, State> {
 
     const allMembers = allPubKeys.map(pubKey => {
       const convo = ConvoHub.use().get(pubKey);
-      const profileName =
-        convo?.getNicknameOrRealUsernameOrPlaceholder() || window.i18n('anonymous');
+      const profileName = convo?.getNicknameOrRealUsernameOrPlaceholder() || PubKey.shorten(pubKey);
 
       return {
         id: pubKey,
@@ -539,7 +539,7 @@ class CompositionBoxInner extends Component<Props, State> {
 
     // Transform the users to what react-mentions expects
     const mentionsData = members.map(user => ({
-      display: user.authorProfileName || window.i18n('anonymous'),
+      display: user.authorProfileName || PubKey.shorten(user.id),
       id: user.id,
     }));
     callback(mentionsData);

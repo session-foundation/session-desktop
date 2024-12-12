@@ -20,3 +20,5 @@ export type WithBatchMethod<T extends string> = { method: T };
 
 export type WithConvoId = { conversationId: string };
 export type WithMessageId = { messageId: string };
+
+export type WithLocalMessageDeletionType = { deletionType: 'complete' | 'markDeleted' };

@@ -405,7 +405,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> ndi <b>{count} ena</b> anaitanidwa kuti alowe mu gulu.",
   "groupMemberNewTwo": "<b>{name}</b> ndi <b>{other_name}</b> anaitanidwa kuti alowe mu gulu.",
   "groupMemberNewYouHistoryMultiple": "<b>Inu</b> ndi <b>{count} ena</b> anaitanidwa kuti alowe mu gulu. Mbiri ya macheza idagawidwa.",
-  "groupMemberNewYouHistoryTwo": "<b>Inu</b> ndi <b>{name}</b> anaitanidwa kuti alowe mu gulu. Mbiri ya macheza idagawidwa.",
   "groupMemberYouLeft": "<b>Inu</b> achoka gulu.",
   "groupMembers": "Mamembala am gulu",
   "groupMembersNone": "Palibe mamembala ena mu gulu ili.",

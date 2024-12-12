@@ -406,7 +406,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> e <b>altri {count}</b> hanno ricevuto un invito a unirsi al gruppo.",
   "groupMemberNewTwo": "<b>{name}</b> e <b>{other_name}</b> hanno ricevuto un invito a unirsi al gruppo.",
   "groupMemberNewYouHistoryMultiple": "<b>Tu</b> e <b>altri {count}</b> avete ricevuto un invito a unirvi al gruppo. La cronologia della chat è condivisa.",
-  "groupMemberNewYouHistoryTwo": "<b>Tu</b> e <b>{name}</b> avete ricevuto un invito a unirvi al gruppo. La cronologia della chat è condivisa.",
   "groupMemberYouLeft": "<b>Hai</b> lasciato il gruppo.",
   "groupMembers": "Membri del gruppo",
   "groupMembersNone": "Non ci sono altri membri in questo gruppo.",

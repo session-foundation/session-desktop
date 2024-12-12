@@ -405,7 +405,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> და <b>{count} სხვა</b> მოიწვიეს ჯგუფში.",
   "groupMemberNewTwo": "<b>{name}</b> და <b>{other_name}</b> მოიწვიეს ჯგუფში.",
   "groupMemberNewYouHistoryMultiple": "<b>თქვენ</b> და <b>{count} სხვა</b> მიწვეული იყავით ჯგუფში. ჩეთის ისტორია გაზიარდა.",
-  "groupMemberNewYouHistoryTwo": "<b>თქვენ</b> და <b>{name}</b> მიწვეული იყავით ჯგუფში. ჩეთის ისტორია გაზიარდა.",
   "groupMemberYouLeft": "<b>თქვენ</b> დატოვეთ ჯგუფი.",
   "groupMembers": "ჯგუფის წევრები",
   "groupMembersNone": "ამ ჯგუფში სხვა წევრები არ არიან.",

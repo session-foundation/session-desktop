@@ -342,4 +342,8 @@ input {
 
 .module-message__text {
   white-space: pre-wrap;
+
+  svg {
+    margin-inline-end: var(--margins-xs);
+  }
 }

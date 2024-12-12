@@ -58,7 +58,7 @@ import { ConversationMessageRequestButtons } from './MessageRequestButtons';
 import { RightPanel, StyledRightPanelContainer } from './right-panel/RightPanel';
 import { HTMLDirection } from '../../util/i18n/rtlSupport';
 import { showLinkVisitWarningDialog } from '../dialog/OpenUrlModal';
-import { NoMessageInConversation } from './SubtleNotification';
+import { InvitedToGroup, NoMessageInConversation } from './SubtleNotification';
 
 const DEFAULT_JPEG_QUALITY = 0.85;
 
@@ -265,7 +265,8 @@ export class SessionConversation extends Component<Props, State> {
             >
               <div className="conversation-messages">
                 <NoMessageInConversation />
-                <ConversationMessageRequestButtons />
+                <InvitedToGroup />
+
                 <SplitViewContainer
                   top={<InConversationCallContainer />}
                   bottom={
@@ -276,8 +277,10 @@ export class SessionConversation extends Component<Props, State> {
                   }
                   disableTop={!this.props.hasOngoingCallWithFocusedConvo}
                 />
+
                 {isDraggingFile && <SessionFileDropzone />}
               </div>
+              <ConversationMessageRequestButtons />
 
               <CompositionBox
                 sendMessage={this.sendMessageFn}

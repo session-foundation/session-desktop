@@ -113,9 +113,12 @@ export const handleAcceptConversationRequest = async ({
   approvalMessageTimestamp: number;
 }) => {
   const convo = ConvoHub.use().get(convoId);
-  if (!convo || (!convo.isPrivate() && !convo.isClosedGroupV2())) {
+  if (!convo || convo.isApproved() || (!convo.isPrivate() && !convo.isClosedGroupV2())) {
+    window?.log?.info('Conversation is already approved or not private/03group');
+
     return null;
   }
+
   const previousIsApproved = convo.isApproved();
   const previousDidApprovedMe = convo.didApproveMe();
   // Note: we don't mark as approvedMe = true, as we do not know if they did send us a message yet.
@@ -507,30 +510,9 @@ export async function showLeaveGroupByConvoId(conversationId: string, name: stri
         conversationId,
       })
     );
-    // TODO this is post release chunk3 stuff: Only to be used after the closed group rebuild chunk3
-    // const onClickOkLastAdmin = () => {
-    //   /* TODO */
-    // };
-    // const onClickCloseLastAdmin = () => {
-    //   /* TODO */
-    // };
-    // window?.inboxStore?.dispatch(
-    //   updateConfirmModal({
-    //     title: window.i18n('groupLeave'),
-    //     message: window.i18n('leaveGroupConfirmationOnlyAdmin', {name: name ?? ''}),
-    //     messageSub: window.i18n('leaveGroupConfirmationOnlyAdminWarning'),
-    //     onClickOk: onClickOkLastAdmin,
-    //     okText: window.i18n('addModerator'),
-    //     cancelText: window.i18n('leave'),
-    //     onClickCancel: onClickCloseLastAdmin,
-    //     closeTheme: SessionButtonColor.Danger,
-    //     onClickClose,
-    //     showExitIcon: true,
-    //     headerReverse: true,
-    //     conversationId,
-    //   })
-    // );
-  } else if (isPublic || (isClosedGroup && !isAdmin)) {
+    return;
+  }
+  if (isPublic || (isClosedGroup && !isAdmin)) {
     window?.inboxStore?.dispatch(
       updateConfirmModal({
         title: isPublic ? window.i18n('communityLeave') : window.i18n('groupLeave'),

@@ -405,7 +405,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> dan <b>{count} lainnya</b> telah diundang untuk bergabung dengan grup.",
   "groupMemberNewTwo": "<b>{name}</b> dan <b>{other_name}</b> telah diundang untuk bergabung dengan grup.",
   "groupMemberNewYouHistoryMultiple": "<b>Anda</b> dan <b>{count} lainnya</b> telah diundang untuk bergabung dengan grup. Riwayat obrolan dibagikan.",
-  "groupMemberNewYouHistoryTwo": "<b>Anda</b> dan <b>{name}</b> telah diundang untuk bergabung dengan grup. Riwayat obrolan dibagikan.",
   "groupMemberYouLeft": "<b>Anda</b> keluar dari grup.",
   "groupMembers": "Anggota grup",
   "groupMembersNone": "Tidak ada anggota lain di dalam grup ini.",

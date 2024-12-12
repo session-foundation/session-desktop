@@ -51,7 +51,7 @@ export const oceanDark: ThemeColorVariables = {
   '--button-outline-border-hover-color': 'var(--text-primary-color)',
   '--button-outline-disabled-color': 'var(--disabled-color)',
 
-  '--button-solid-background-color': THEMES.OCEAN_DARK.COLOR1,
+  '--button-solid-background-color': 'var(--background-secondary-color)',
   '--button-solid-background-hover-color': THEMES.OCEAN_DARK.COLOR4,
   '--button-solid-text-color': 'var(--text-primary-color)',
   '--button-solid-text-hover-color': 'var(--text-primary-color)',

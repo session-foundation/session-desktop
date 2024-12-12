@@ -95,26 +95,22 @@ export const AboutView = () => {
           className="version"
           text={versionInfo}
           buttonType={SessionButtonType.Simple}
-          showToast={false}
         />
         <CopyToClipboardButton
           className="os"
           text={systemInfo}
           buttonType={SessionButtonType.Simple}
-          showToast={false}
         />
         <CopyToClipboardButton
           className="commitHash"
           text={commitInfo}
           buttonType={SessionButtonType.Simple}
-          showToast={false}
         />
         {environmentStates.length ? (
           <CopyToClipboardButton
             className="environment"
             text={environmentStates.join(' - ')}
             buttonType={SessionButtonType.Simple}
-            showToast={false}
           />
         ) : null}
         <a href="https://getsession.org">https://getsession.org</a>

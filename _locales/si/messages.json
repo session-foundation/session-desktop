@@ -405,7 +405,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> සහ <b>{count} වෙනත් අය</b> කණ්ඩායමට සම්බන්ධ වන්නට ආරාධනා කරන ලදී.",
   "groupMemberNewTwo": "<b>{name}</b> සහ <b>{other_name}</b> කණ්ඩායමට සම්බන්ධ වන්නට ආරාධනා කරන ලදී.",
   "groupMemberNewYouHistoryMultiple": "<b>ඔබ</b> සහ <b>{count} වෙනත් අය</b> කණ්ඩායමට සම්බන්ධ වන්නට ආරාධනා කරන ලදී. සංවාද ඉතිහාසය බෙදා ගන්නා ලදී.",
-  "groupMemberNewYouHistoryTwo": "<b>ඔබ</b> සහ <b>{name}</b> කණ්ඩායමට සම්බන්ධ වන්නට ආරාධනා කරන ලදී. සංවාද ඉතිහාසය බෙදා ගන්නා ලදී.",
   "groupMemberYouLeft": "<b>ඔබ</b> කණ්ඩායම හැර ගියේය.",
   "groupMembers": "සමූහ සාමාජිකයින්",
   "groupMembersNone": "මෙම සමූහයේ වෙනත් සාමාජිකයින් නැත.",

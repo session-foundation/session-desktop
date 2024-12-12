@@ -2,14 +2,15 @@ import { ConvoHub } from '../session/conversations';
 import { UserUtils } from '../session/utils';
 import type { LocalizerComponentPropsObject } from '../types/localizer';
 
-// to remove after merge with groups
 function usAndXOthers(arr: Array<string>) {
   const us = UserUtils.getOurPubKeyStrFromCache();
 
-  if (arr.includes(us)) {
-    return { us: true, others: arr.filter(m => m !== us) };
+  const others = arr.filter(m => m !== us).sort();
+
+  if (others.length !== arr.length) {
+    return { us: true, others };
   }
-  return { us: false, others: arr };
+  return { us: false, others };
 }
 
 export function getKickedGroupUpdateStr(
@@ -87,7 +88,7 @@ export function getJoinedGroupUpdateChangeStr(
           return { token: addedWithHistory ? 'groupInviteYouHistory' : 'groupInviteYou' };
         case 1:
           return addedWithHistory
-            ? { token: 'groupMemberNewYouHistoryTwo', args: { name: othersNames[0] } }
+            ? { token: 'groupMemberNewYouHistoryTwo', args: { other_name: othersNames[0] } }
             : { token: 'groupInviteYouAndOtherNew', args: { other_name: othersNames[0] } };
         default:
           return addedWithHistory

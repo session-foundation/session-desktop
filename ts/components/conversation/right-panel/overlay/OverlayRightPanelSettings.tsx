@@ -275,9 +275,7 @@ export const OverlayRightPanelSettings = () => {
         lastMessage?.interactionStatus === ConversationInteractionStatus.Error
       ? window.i18n('conversationsDelete')
       : isKickedFromGroup
-        ? window.i18n('groupRemovedYou', {
-            group_name: selectedUsername || window.i18n('groupUnknown'),
-          })
+        ? window.i18n('groupDelete')
         : window.i18n('groupLeave');
 
   const showUpdateGroupNameButton = isGroup && weAreAdmin && !commonNoShow; // legacy groups non-admin cannot change groupname anymore

@@ -462,6 +462,7 @@ export class SwarmPolling {
     );
     // We always handle the config messages first (for groups 03 or our own messages)
     await this.handleUserOrGroupConfMessages({ confMessages, pubkey, type });
+
     await this.handleRevokedMessages({ revokedMessages, groupPk: pubkey, type });
 
     // Merge results into one list of unique messages
@@ -716,15 +717,17 @@ export class SwarmPolling {
   }
 
   private async handleSeenMessages(
-    messages: Array<RetrieveMessageItem>
-  ): Promise<Array<RetrieveMessageItem>> {
+    messages: Array<RetrieveMessageItemWithNamespace>
+  ): Promise<Array<RetrieveMessageItemWithNamespace>> {
     if (!messages.length) {
       return [];
     }
 
-    const incomingHashes = messages.map((m: RetrieveMessageItem) => m.hash);
+    const incomingHashes = messages.map((m: RetrieveMessageItemWithNamespace) => m.hash);
     const dupHashes = await Data.getSeenMessagesByHashList(incomingHashes);
-    const newMessages = messages.filter((m: RetrieveMessageItem) => !dupHashes.includes(m.hash));
+    const newMessages = messages.filter(
+      (m: RetrieveMessageItemWithNamespace) => !dupHashes.includes(m.hash)
+    );
 
     return newMessages;
   }

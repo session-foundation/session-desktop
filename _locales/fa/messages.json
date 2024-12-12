@@ -404,7 +404,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> و <b>{count} سایرین</b> برای عضویت در گروه دعوت شدند.",
   "groupMemberNewTwo": "<b>{name}</b> و <b>{other_name}</b> برای عضویت در گروه دعوت شدند.",
   "groupMemberNewYouHistoryMultiple": "<b>شما</b> و<b>{count} سایرین</b> دعوت شدید تا به گروه بپیوندید. تاریخچه ی چت به اشتراک گذاشته شد.",
-  "groupMemberNewYouHistoryTwo": "<b>شما</b> و <b>{name}</b> دعوت شدید تا به گروه بپیوندید. تاریخچه ی چت به اشتراک گذاشته شد.",
   "groupMemberYouLeft": "<b>شما</b> گروه را ترک کردید.",
   "groupMembers": "اعضای گروه",
   "groupMembersNone": "هیچ عضو دیگری در این گروه نیست.",

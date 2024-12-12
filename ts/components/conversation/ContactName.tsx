@@ -6,6 +6,7 @@ import {
   useNicknameOrProfileNameOrShortenedPubkey,
 } from '../../hooks/useParamSelector';
 import { Emojify } from './Emojify';
+import { PubKey } from '../../session/types';
 
 type Props = {
   pubkey: string;
@@ -41,7 +42,7 @@ export const ContactName = (props: Props) => {
         }
       : commonStyles
   ) as CSSProperties;
-  const textProfile = profileName || name || convoName || window.i18n('anonymous');
+  const textProfile = profileName || name || convoName || PubKey.shorten(pubkey);
 
   return (
     <span

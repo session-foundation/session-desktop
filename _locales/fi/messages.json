@@ -406,7 +406,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> ja <b>{count} muuta</b> kutsuttiin ryhmään.",
   "groupMemberNewTwo": "<b>{name}</b> ja <b>{other_name}</b> kutsuttiin ryhmään.",
   "groupMemberNewYouHistoryMultiple": "<b>Sinä</b> ja <b>{count} muuta</b> kutsuttiin ryhmään. Keskusteluhistoria jaetaan.",
-  "groupMemberNewYouHistoryTwo": "<b>Sinä</b> ja <b>{name}</b> kutsuttiin ryhmään. Keskusteluhistoria jaetaan.",
   "groupMemberYouLeft": "<b>Sinä</b> poistuit ryhmästä.",
   "groupMembers": "Ryhmän jäsenet",
   "groupMembersNone": "Ryhmässä ei ole muita jäseniä.",

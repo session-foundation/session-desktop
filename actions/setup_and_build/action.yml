@@ -22,12 +22,6 @@ runs:
       uses: microsoft/setup-msbuild@v2
       if: runner.os == 'Windows'
 
-    - name: Setup node for windows
-      if: runner.os == 'Windows'
-      shell: bash
-      run: |
-        yarn global add node-gyp@latest
-
     - uses: actions/cache/restore@v4
       id: cache-desktop-modules
       with:

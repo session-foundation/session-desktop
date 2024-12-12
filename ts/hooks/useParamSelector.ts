@@ -115,19 +115,6 @@ export function useConversationsUsernameWithQuoteOrFullPubkey(pubkeys: Array<str
   });
 }
 
-/**
- * Returns either the nickname, the profileName, a shortened pubkey, or "you" for our own pubkey
- */
-export function useConversationsUsernameWithQuoteOrShortPk(pubkeys: Array<string>) {
-  return useSelector((state: StateType) => {
-    return pubkeys.map(pubkey => {
-      const nameGot = usernameForQuoteOrFullPk(pubkey, state);
-
-      return nameGot?.length ? nameGot : PubKey.shorten(pubkey);
-    });
-  });
-}
-
 export function useConversationsNicknameRealNameOrShortenPubkey(pubkeys: Array<string>) {
   return useSelector((state: StateType) => {
     return pubkeys.map(pk => {

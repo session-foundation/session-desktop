@@ -405,7 +405,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> a <b>{count} drīg</b> šumār zant group ke.",
   "groupMemberNewTwo": "<b>{name}</b> a <b>{other_name}</b> šumār zant group ke.",
   "groupMemberNewYouHistoryMultiple": "<b>Šumār</b> a <b>{count} drīg</b> šumār zant group ke. Chat history was shared.",
-  "groupMemberNewYouHistoryTwo": "<b>Šumār</b> a <b>{name}</b> šumār zant group ke. Chat history was shared.",
   "groupMemberYouLeft": "<b>Šumār</b> jāmš.",
   "groupMembers": "گروپءِ اراکنان",
   "groupMembersNone": "اس گروپ میں دوسرے کوئی رکن نہیں.",

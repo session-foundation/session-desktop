@@ -406,7 +406,6 @@
   "groupMemberNewMultiple": "<b>{name}</b>和<b>{count}名其他成员</b>被邀请加入群组。",
   "groupMemberNewTwo": "<b>{name}</b>和<b>{other_name}</b>被邀请加入了群组。",
   "groupMemberNewYouHistoryMultiple": "<b>您</b>和其他<b>{count}人</b>被邀请加入群组。聊天记录已共享。",
-  "groupMemberNewYouHistoryTwo": "<b>您</b>和<b>{name}</b>被邀请加入了群组。 聊天记录已共享。",
   "groupMemberYouLeft": "<b>您</b>离开了群组。",
   "groupMembers": "群成员",
   "groupMembersNone": "此群组没有其他成员。",

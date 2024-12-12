@@ -406,7 +406,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> và <b>{count} người khác</b> đã được mời tham gia nhóm.",
   "groupMemberNewTwo": "<b>{name}</b> và <b>{other_name}</b> đã được mời tham gia nhóm.",
   "groupMemberNewYouHistoryMultiple": "<b>Bạn</b> và <b>{count} người khác</b> đã được mời tham gia nhóm. Lịch sử trò chuyện đã được chia sẻ.",
-  "groupMemberNewYouHistoryTwo": "<b>Bạn</b> và <b>{name}</b> đã được mời tham gia nhóm. Lịch sử trò chuyện đã được chia sẻ.",
   "groupMemberYouLeft": "<b>Bạn</b> đã rời nhóm.",
   "groupMembers": "Thành viên nhóm",
   "groupMembersNone": "Không có thành viên nào khác trong nhóm này.",

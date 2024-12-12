@@ -405,7 +405,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> i <b>{count} innych użytkowników </b> zostali zaproszeni do grupy.",
   "groupMemberNewTwo": "Użytkownicy <b>{name}</b> oraz <b>{other_name}</b> zostali zaproszeni do grupy.",
   "groupMemberNewYouHistoryMultiple": "<b>Ty</b> i <b>{count} innych użytkowników</b> zostaliście zaproszeni do grupy. Udostępniono historię czatu.",
-  "groupMemberNewYouHistoryTwo": "<b>Ty</b> oraz użytkownik <b>{name}</b> zostaliście zaproszeni do grupy. Udostępniono historię czatu.",
   "groupMemberYouLeft": "<b>Opuszczasz</b> grupę.",
   "groupMembers": "Członkowie grupy",
   "groupMembersNone": "W grupie nie ma innych członków.",

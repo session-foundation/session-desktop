@@ -789,7 +789,6 @@ async function handleGroupUpdate(latestEnvelopeTimestamp: number) {
   for (let index = 0; index < allGroupsInWrapper.length; index++) {
     const groupInWrapper = allGroupsInWrapper[index];
     window.inboxStore?.dispatch(groupInfoActions.handleUserGroupUpdate(groupInWrapper) as any);
-
     await handleSingleGroupUpdate({ groupInWrapper, latestEnvelopeTimestamp, userEdKeypair });
   }
 

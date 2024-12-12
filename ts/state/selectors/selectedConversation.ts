@@ -374,9 +374,6 @@ export function useSelectedShortenedPubkeyOrFallback() {
   if (isPrivate && selected) {
     return PubKey.shorten(selected);
   }
-  if (isPrivate) {
-    return window.i18n('anonymous');
-  }
   return window.i18n('unknown');
 }
 

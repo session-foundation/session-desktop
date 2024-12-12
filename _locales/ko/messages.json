@@ -406,7 +406,6 @@
   "groupMemberNewMultiple": "<b>{name}님</b>과 <b>{count}명</b>이 그룹에 초대되었습니다.",
   "groupMemberNewTwo": "<b>{name}님</b>과 <b>{other_name}</b>님이 그룹 초대를 받았습니다.",
   "groupMemberNewYouHistoryMultiple": "<b>당신</b>과 <b>{count} 명의 사람들이</b> 그룹으로 초대받았습니다. 대화 내역이 공개됩니다.",
-  "groupMemberNewYouHistoryTwo": "<b>당신</b>과 <b>{name}</b>이 그룹에 초대받았습니다. 대화 내역이 공개됩니다.",
   "groupMemberYouLeft": "<b>당신</b>이 그룹을 나갔습니다.",
   "groupMembers": "그룹 멤버",
   "groupMembersNone": "이 그룹에 다른 멤버가 없습니다.",

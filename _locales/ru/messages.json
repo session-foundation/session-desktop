@@ -409,7 +409,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> и <b>{count} других человек</b> были приглашены в группу.",
   "groupMemberNewTwo": "<b>{name}</b> и <b>{other_name}</b> были приглашены в группу.",
   "groupMemberNewYouHistoryMultiple": "<b>Вы</b> и <b>{count} других пользователей</b> приглашены вступить в группу. История чата была передана.",
-  "groupMemberNewYouHistoryTwo": "<b>Вы</b> и пользователь <b>{name}</b> приглашены вступить в группу. История чата была передана.",
   "groupMemberYouLeft": "<b>Вы</b> покинули группу.",
   "groupMembers": "Участники группы",
   "groupMembersNone": "В этой группе нет других участников.",

@@ -317,7 +317,7 @@ class ConvoController {
         } catch (e) {
           // nothing to do
         }
-        if (groupInUserGroup && nameInMetaGroup && groupInUserGroup.name !== nameInMetaGroup) {
+        if (groupInUserGroup && nameInMetaGroup) {
           groupInUserGroup.name = nameInMetaGroup;
         }
         await UserGroupsWrapperActions.setGroup(groupInUserGroup);

@@ -1423,11 +1423,6 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
     return this.getNickname() || this.getRealSessionUsername();
   }
 
-  /**
-   * @returns `getNickname` if a private convo and a nickname is set, or `getRealSessionUsername`
-   *
-   * Can also a localized 'Anonymous' for an unknown private chat and localized 'Unknown' for an unknown group (open/closed)
-   */
   public getNicknameOrRealUsernameOrPlaceholder(): string {
     const nickOrReal = this.getNickname() || this.getRealSessionUsername();
 
@@ -1435,7 +1430,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
       return nickOrReal;
     }
     if (this.isPrivate()) {
-      return window.i18n('anonymous');
+      return PubKey.shorten(this.id);
     }
     if (this.isPublic()) {
       return window.i18n('communityUnknown');
@@ -1981,7 +1976,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
       iconUrl,
       isExpiringMessage: false,
       message: window.i18n('callsIncoming', {
-        name: this.getNicknameOrRealUsername() || window.i18n('anonymous'),
+        name: this.getNicknameOrRealUsername() || PubKey.shorten(conversationId),
       }),
       messageSentAt: now,
       title: this.getNicknameOrRealUsernameOrPlaceholder(),

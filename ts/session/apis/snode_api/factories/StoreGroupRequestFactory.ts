@@ -103,11 +103,11 @@ function makeStoreGroupKeysSubRequest({
 
   if (!group.secretKey || isEmpty(group.secretKey)) {
     window.log.debug(
-      `pushChangesToGroupSwarmIfNeeded: ${ed25519Str(groupPk)}: keysEncryptedmessage not empty but we do not have the secretKey`
+      `makeStoreGroupKeysSubRequest: ${ed25519Str(groupPk)}: keysEncryptedmessage not empty but we do not have the secretKey`
     );
 
     throw new Error(
-      'pushChangesToGroupSwarmIfNeeded: keysEncryptedmessage not empty but we do not have the secretKey'
+      'makeStoreGroupKeysSubRequest: keysEncryptedmessage not empty but we do not have the secretKey'
     );
   }
   return new StoreGroupKeysSubRequest({
@@ -136,11 +136,11 @@ function makeStoreGroupConfigSubRequest({
 
   if (!group.secretKey || isEmpty(group.secretKey)) {
     window.log.debug(
-      `pushChangesToGroupSwarmIfNeeded: ${ed25519Str(groupPk)}: pendingConfigMsgs not empty but we do not have the secretKey`
+      `makeStoreGroupConfigSubRequest: ${ed25519Str(groupPk)}: pendingConfigMsgs not empty but we do not have the secretKey`
     );
 
     throw new Error(
-      'pushChangesToGroupSwarmIfNeeded: pendingConfigMsgs not empty but we do not have the secretKey'
+      'makeStoreGroupConfigSubRequest: pendingConfigMsgs not empty but we do not have the secretKey'
     );
   }
 

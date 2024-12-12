@@ -406,7 +406,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> และ <b>{count} อื่นๆ</b> ถูกเชิญเข้าร่วมกลุ่ม",
   "groupMemberNewTwo": "<b>{name}</b> และ <b>{other_name}</b> ถูกเชิญเข้าร่วมกลุ่ม",
   "groupMemberNewYouHistoryMultiple": "<b>คุณ</b> และ <b>{count} อื่นๆ</b> ถูกเชิญเข้าร่วมกลุ่ม ประวัติการแชทถูกแชร์",
-  "groupMemberNewYouHistoryTwo": "<b>คุณ</b> และ <b>{name}</b> ถูกเชิญเข้าร่วมกลุ่ม ประวัติการแชทถูกแชร์",
   "groupMemberYouLeft": "<b>คุณ</b> ได้ออกจากกลุ่ม",
   "groupMembers": "สมาชิกกลุ่ม",
   "groupMembersNone": "ไม่มีสมาชิกคนอื่นในกลุ่มนี้",

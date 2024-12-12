@@ -405,7 +405,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> kaj <b>{count} aliaj</b> estis invititaj aniĝi al la grupo.",
   "groupMemberNewTwo": "<b>{name}</b> kaj <b>{other_name}</b> estis invititaj aniĝi al la grupo.",
   "groupMemberNewYouHistoryMultiple": "<b>Vi</b> kaj <b>{count} aliaj</b> estis invititaj aniĝi al la grupo. Babilhistorio estis dividita.",
-  "groupMemberNewYouHistoryTwo": "<b>Vi</b> kaj <b>{name}</b> estis invititaj aniĝi al la grupo. Babilhistorio estis dividita.",
   "groupMemberYouLeft": "<b>Vi</b> forlasis la grupon.",
   "groupMembers": "Grupanoj",
   "groupMembersNone": "Ne estas aliaj membroj en ĉi tiu grupo.",

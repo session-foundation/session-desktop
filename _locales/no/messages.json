@@ -405,7 +405,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> og <b>{count} andre</b> ble invitert til å bli med i gruppen.",
   "groupMemberNewTwo": "<b>{name}</b> og <b>{other_name}</b> ble invitert til å bli med i gruppen.",
   "groupMemberNewYouHistoryMultiple": "<b>Du</b> og <b>{count} andre</b> ble invitert til å bli med i gruppen. Chat-historikk ble delt.",
-  "groupMemberNewYouHistoryTwo": "<b>Du</b> og <b>{name}</b> ble invitert til å bli med i gruppen. Chat-historikk ble delt.",
   "groupMemberYouLeft": "<b>Du</b> forlot gruppen.",
   "groupMembers": "Gruppemedlemmer",
   "groupMembersNone": "Det er ingen andre medlemmer i denne gruppen.",

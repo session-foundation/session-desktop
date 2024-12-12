@@ -405,7 +405,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> နှင့် <b>{count} ဦး</b> အဖွဲ့သို့ ဖိတ်ကြားခံရသည်။",
   "groupMemberNewTwo": "<b>{name}</b> နှင့် <b>{other_name}</b> အဖွဲ့သို့ ဖိတ်ကြားခံရသည်။",
   "groupMemberNewYouHistoryMultiple": "<b>သင်</b> နှင့် <b>{count} ဦး</b> အဖွဲ့သို့ ဖိတ်ကြားခံရသည်။ စကားဝိုင်းမှတ်တမ်းကိုမျှဝေခဲ့သည်။",
-  "groupMemberNewYouHistoryTwo": "<b>သင်</b>နှင့် <b>{name}</b> အဖွဲ့သို့ ဖိတ်ကြားခံရပြီ။ စကားဝိုင်းမှတ်တမ်းကိုမျှဝေခဲ့သည်။",
   "groupMemberYouLeft": "<b>သင်</b> အဖွဲ့မှ ထွက်သွားပါပြီ။",
   "groupMembers": "အုပ်စုဝင်များ",
   "groupMembersNone": "ဤအုပ်စုတွင် အခြား အဖွဲ့ဝင်မရှိပါ။",

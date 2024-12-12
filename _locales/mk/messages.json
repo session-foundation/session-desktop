@@ -405,7 +405,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> и <b>{count} други</b> беа поканети да се придружат на групата.",
   "groupMemberNewTwo": "<b>{name}</b> и <b>{other_name}</b> беа поканети да се придружат на групата.",
   "groupMemberNewYouHistoryMultiple": "<b>Вие</b> и <b>{count} други</b> беа поканети да се придружат на групата. Историјата на разговорот е споделена.",
-  "groupMemberNewYouHistoryTwo": "<b>Вие</b> и <b>{name}</b> беа поканети да се придружат на групата. Историјата на разговорот е споделена.",
   "groupMemberYouLeft": "<b>Вие</b> ја напуштивте групата.",
   "groupMembers": "Членови на групата",
   "groupMembersNone": "Нема други членови во оваа група.",

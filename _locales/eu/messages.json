@@ -405,7 +405,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> eta <b>{count} beste</b> taldera batzeko gonbidatu dira.",
   "groupMemberNewTwo": "<b>{name}</b> eta <b>{other_name}</b> taldera batzeko gonbidatu dira.",
   "groupMemberNewYouHistoryMultiple": "<b>Zuk</b> eta <b>{count} beste</b> taldera batzeko gonbidatu zaituzte. Txat historia partekatu da.",
-  "groupMemberNewYouHistoryTwo": "<b>Zuk</b> eta <b>{name}</b> taldera batzeko gonbidatu zaituzte. Txat historia partekatu da.",
   "groupMemberYouLeft": "<b>Zuk</b> taldea utzi duzu.",
   "groupMembers": "Taldeko Kideak",
   "groupMembersNone": "Ez dago beste kiderik talde honetan.",

@@ -406,7 +406,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> dan <b>{count} lainnya</b> dijemput untuk menyertai kumpulan.",
   "groupMemberNewTwo": "<b>{name}</b> dan <b>{other_name}</b> dijemput untuk menyertai kumpulan.",
   "groupMemberNewYouHistoryMultiple": "<b>Anda</b> dan <b>{count} yang lain</b> dijemput untuk menyertai kumpulan. Sejarah sembang telah dikongsi.",
-  "groupMemberNewYouHistoryTwo": "<b>Anda</b> dan <b>{name}</b> dijemput untuk menyertai kumpulan. Sejarah sembang telah dikongsi.",
   "groupMemberYouLeft": "<b>Anda</b> meninggalkan kumpulan.",
   "groupMembers": "Ahli Kumpulan",
   "groupMembersNone": "Tiada ahli lain di dalam kumpulan ini.",

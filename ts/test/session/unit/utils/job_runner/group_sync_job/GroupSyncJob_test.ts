@@ -57,7 +57,7 @@ function validUserGroup03WithSecKey(pubkey?: GroupPubkeyType) {
     secretKey: new Uint8Array(30),
     destroyed: false,
     invitePending: false,
-    joinedAtSeconds: Date.now(),
+    joinedAtSeconds: Math.floor(Date.now() / 1000),
     kicked: false,
     priority: 0,
     pubkeyHex: pubkey || TestUtils.generateFakeClosedGroupV2PkStr(),

@@ -406,7 +406,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> és <b>{count} másik személy</b> meghívást kaptak a csoportba.",
   "groupMemberNewTwo": "<b>{name}</b> és <b>{other_name}</b> meghívást kaptak a csoportba.",
   "groupMemberNewYouHistoryMultiple": "<b>Te</b> és <b>{count} másik személy</b> meg lettetek hívva a csoportba. A beszélgetési előzményeket megosztottuk.",
-  "groupMemberNewYouHistoryTwo": "<b>Te</b> és <b>{name}</b> meg lettetek hívva a csoportba. A beszélgetési előzményeket megosztottuk.",
   "groupMemberYouLeft": "<b>Te</b> kiléptél a csoportból.",
   "groupMembers": "Csoporttagok",
   "groupMembersNone": "Nincsenek más tagok ebben a csoportban.",

@@ -68,7 +68,7 @@ async function getInitializedGroupObject({
   if (!found) {
     found = {
       authData: null,
-      joinedAtSeconds: Date.now(),
+      joinedAtSeconds: Math.floor(Date.now() / 1000),
       name: groupName,
       priority: 0,
       pubkeyHex: groupPk,
@@ -410,7 +410,7 @@ async function handleGroupUpdateMemberLeftNotificationMessage({
   });
 }
 
-async function handleGroupDeleteMemberContentMessage({
+async function handleGroupUpdateDeleteMemberContentMessage({
   groupPk,
   signatureTimestamp,
   change,
@@ -420,7 +420,7 @@ async function handleGroupDeleteMemberContentMessage({
   if (!convo) {
     return;
   }
-  window.log.info(`handleGroupDeleteMemberContentMessage for ${ed25519Str(groupPk)}`);
+  window.log.info(`handleGroupUpdateDeleteMemberContentMessage for ${ed25519Str(groupPk)}`);
 
   /**
    * When handling a GroupUpdateDeleteMemberContentMessage we need to do a few things.
@@ -428,10 +428,8 @@ async function handleGroupDeleteMemberContentMessage({
    *   1. we only delete the messageHashes which are in the change.messageHashes AND sent by that same author.
    * When `adminSignature` is not empty and valid,
    *   2. we delete all the messages in the group sent by any of change.memberSessionIds AND
-   *   3. we delete all the messageHashes in the conversation matching the change.messageHashes (even if not from the right sender)
+   *   3. we mark as deleted all the messageHashes in the conversation matching the change.messageHashes (even if not from the right sender)
    *
-   * Note: we never fully delete those messages locally, but only empty them and mark them as deleted with the
-   * "This message was deleted" placeholder.
    * Eventually, we will be able to delete those "deleted by kept locally" messages with placeholders.
    */
 
@@ -445,8 +443,8 @@ async function handleGroupDeleteMemberContentMessage({
       signatureTimestamp,
     });
 
-    // we don't want to hang while for too long here
-    // processing the handleGroupDeleteMemberContentMessage itself
+    // we don't want to hang for too long here
+    // processing the handleGroupUpdateDeleteMemberContentMessage itself
     // (we are running on the receiving pipeline here)
     // so network calls are not allowed.
     for (let index = 0; index < messageModels.length; index++) {
@@ -456,7 +454,7 @@ async function handleGroupDeleteMemberContentMessage({
         await messageModel.markAsDeleted();
       } catch (e) {
         window.log.warn(
-          `handleGroupDeleteMemberContentMessage markAsDeleted non-admin of ${messageModel.getMessageHash()} failed with`,
+          `handleGroupUpdateDeleteMemberContentMessage markAsDeleted non-admin of ${messageModel.getMessageHash()} failed with`,
           e.message
         );
       }
@@ -488,6 +486,7 @@ async function handleGroupDeleteMemberContentMessage({
     toRemove,
     signatureTimestamp,
   }); // this is step 2.
+
   const modelsByHashes = await Data.findAllMessageHashesInConversation({
     groupPk,
     messageHashes: change.messageHashes,
@@ -731,7 +730,7 @@ async function handleGroupUpdateMessage(
     return;
   }
   if (details.updateMessage.deleteMemberContent) {
-    await handleGroupDeleteMemberContentMessage({
+    await handleGroupUpdateDeleteMemberContentMessage({
       change: details.updateMessage
         .deleteMemberContent as SignalService.GroupUpdateDeleteMemberContentMessage,
       ...detailsWithContext,
