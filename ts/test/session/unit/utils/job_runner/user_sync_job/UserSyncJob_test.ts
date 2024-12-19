@@ -3,7 +3,7 @@ import { omit } from 'lodash';
 import Long from 'long';
 import Sinon from 'sinon';
 import { getSodiumNode } from '../../../../../../node/sodiumNode';
-import { NotEmptyArrayOfBatchResults } from '../../../../../../session/apis/snode_api/SnodeRequestTypes';
+import { NotEmptyArrayOfBatchResults } from '../../../../../../session/apis/snode_api/BatchResultEntry';
 import {
   SnodeNamespaces,
   SnodeNamespacesUserConfig,

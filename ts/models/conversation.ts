@@ -74,7 +74,6 @@ import {
   MessageRequestResponse,
   MessageRequestResponseParams,
 } from '../session/messages/outgoing/controlMessage/MessageRequestResponse';
-import { UserSync } from '../session/utils/job_runners/jobs/UserSyncJob';
 import { SessionUtilContact } from '../session/utils/libsession/libsession_utils_contacts';
 import { SessionUtilConvoInfoVolatile } from '../session/utils/libsession/libsession_utils_convo_info_volatile';
 import { SessionUtilUserGroups } from '../session/utils/libsession/libsession_utils_user_groups';
@@ -94,7 +93,6 @@ import {
 } from '../types/sqlSharedTypes';
 import { Notifications } from '../util/notifications';
 import { Reactions } from '../util/reactions';
-import { Registration } from '../util/registration';
 import { Storage } from '../util/storage';
 import {
   ConversationAttributes,
@@ -797,6 +795,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
 
     const messageRequestResponse = new MessageRequestResponse(messageRequestResponseParams);
     const pubkeyForSending = new PubKey(this.id);
+    window.log.info(`Sending message request accepted message to ${PubKey.shorten(this.id)}`);
     await MessageQueue.use()
       .sendToPubKey(pubkeyForSending, messageRequestResponse, SnodeNamespaces.Default)
       .catch(window?.log?.error);
@@ -1423,11 +1422,6 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
     return this.getNickname() || this.getRealSessionUsername();
   }
 
-  /**
-   * @returns `getNickname` if a private convo and a nickname is set, or `getRealSessionUsername`
-   *
-   * Can also a localized 'Anonymous' for an unknown private chat and localized 'Unknown' for an unknown group (open/closed)
-   */
   public getNicknameOrRealUsernameOrPlaceholder(): string {
     const nickOrReal = this.getNickname() || this.getRealSessionUsername();
 
@@ -1435,7 +1429,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
       return nickOrReal;
     }
     if (this.isPrivate()) {
-      return window.i18n('anonymous');
+      return PubKey.shorten(this.id);
     }
     if (this.isPublic()) {
       return window.i18n('communityUnknown');
@@ -1981,7 +1975,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
       iconUrl,
       isExpiringMessage: false,
       message: window.i18n('callsIncoming', {
-        name: this.getNicknameOrRealUsername() || window.i18n('anonymous'),
+        name: this.getNicknameOrRealUsername() || PubKey.shorten(conversationId),
       }),
       messageSentAt: now,
       title: this.getNicknameOrRealUsernameOrPlaceholder(),
@@ -2447,17 +2441,11 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
       flags,
     });
 
-    // no need to trigger a UI update now, we trigger a messagesAdded just below
-    const messageId = await model.commit(false);
+    const messageId = await model.commit(true);
     model.set({ id: messageId });
 
     await model.setToExpire();
-
-    const messageModelProps = model.getMessageModelProps();
-    window.inboxStore?.dispatch(conversationActions.messagesChanged([messageModelProps]));
     this.updateLastMessage();
-
-    await this.commit();
     return model;
   }
 
@@ -2759,11 +2747,6 @@ async function commitConversationAndRefreshWrapper(id: string) {
     }
   }
 
-  if (Registration.isDone()) {
-    // save the new dump if needed to the DB asap
-    // this call throttled so we do not run this too often (and not for every .commit())
-    await UserSync.queueNewJobIfNeeded();
-  }
   convo.triggerUIRefresh();
 }
 

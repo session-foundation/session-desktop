@@ -8,8 +8,10 @@ import { SeedNodeAPI } from '../seed_node_api';
 import { GetExpiriesFromNodeSubRequest } from './SnodeRequestTypes';
 import { BatchRequests } from './batchRequest';
 import { SnodePool } from './snodePool';
-import { GetExpiriesResultsContent, WithMessagesHashes } from './types';
+import { GetExpiriesResultsContent } from './types';
+import { WithMessagesHashes } from '../../types/with';
 import { DURATION } from '../../constants';
+import { NetworkTime } from '../../../util/NetworkTime';
 
 export type GetExpiriesRequestResponseResults = Record<string, number>;
 
@@ -46,7 +48,10 @@ async function getExpiriesFromNodesNoRetries(
   associatedWith: PubkeyType
 ) {
   try {
-    const expireRequest = new GetExpiriesFromNodeSubRequest({ messagesHashes: messageHashes });
+    const expireRequest = new GetExpiriesFromNodeSubRequest({
+      messagesHashes: messageHashes,
+      getNow: NetworkTime.now,
+    });
     const result = await BatchRequests.doUnsignedSnodeBatchRequestNoRetries({
       unsignedSubRequests: [expireRequest],
       targetNode,

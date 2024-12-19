@@ -406,7 +406,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> kunye <b>{count} abanye abantu</b> babememelwe ukuba bajoyine iqela.",
   "groupMemberNewTwo": "<b>{name}</b> kunye <b>{other_name}</b> babememelwe ukuba bajoyine iqela.",
   "groupMemberNewYouHistoryMultiple": "<b>Mna</b> kunye <b>{count} abanye abantu</b> babememelwe ukuba bajoyine iqela. Imbali yencoko yenziwe yabelwana ngayo.",
-  "groupMemberNewYouHistoryTwo": "<b>Mna</b> kunye <b>{name}</b> babememelwe ukuba bajoyine iqela. Imbali yencoko yenziwe yabelwana ngayo.",
   "groupMemberYouLeft": "<b>Mna</b> bashiye iqela.",
   "groupMembers": "Amalungu eQela",
   "groupMembersNone": "Akukho namanye amalungu kweli qela.",

@@ -405,7 +405,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> i <b>{count} altres</b> han estat convidats a unir-se al grup.",
   "groupMemberNewTwo": "<b>{name}</b> i <b>{other_name}</b> han estat convidats a unir-se al grup.",
   "groupMemberNewYouHistoryMultiple": "<b>Tu</b> i <b>{count} altres</b> heu estat convidats a unir-vos al grup. S'ha compartit l'historial de la conversa.",
-  "groupMemberNewYouHistoryTwo": "<b>Tu</b> i <b>{name}</b> heu estat convidats a unir-vos al grup. S'ha compartit l'historial de la conversa.",
   "groupMemberYouLeft": "<b>Tu</b> has abandonat el grup.",
   "groupMembers": "Membres del Grup",
   "groupMembersNone": "No hi ha altres membres en aquest grup.",

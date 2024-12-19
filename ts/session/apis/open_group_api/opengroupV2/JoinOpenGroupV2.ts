@@ -3,7 +3,6 @@ import { ConversationModel } from '../../../../models/conversation';
 import { ConvoHub } from '../../../conversations';
 import { PromiseUtils, ToastUtils } from '../../../utils';
 
-import { forceSyncConfigurationNowIfNeeded } from '../../../utils/sync/syncUtils';
 import {
   getOpenGroupV2ConversationId,
   openGroupV2CompleteURLRegex,
@@ -56,10 +55,7 @@ export function parseOpenGroupV2(urlWithPubkey: string): OpenGroupV2Room | undef
  * @param room The room id to join
  * @param publicKey The server publicKey. It comes from the joining link. (or is already here for the default open group server)
  */
-async function joinOpenGroupV2(
-  room: OpenGroupV2Room,
-  fromConfigMessage: boolean
-): Promise<ConversationModel | undefined> {
+async function joinOpenGroupV2(room: OpenGroupV2Room): Promise<ConversationModel | undefined> {
   if (!room.serverUrl || !room.roomId || room.roomId.length < 1 || !room.serverPublicKey) {
     return undefined;
   }
@@ -81,9 +77,7 @@ async function joinOpenGroupV2(
     // we already have a convo associated with it. Remove everything related to it so we start fresh
     window?.log?.warn('leaving before rejoining open group v2 room', conversationId);
 
-    await ConvoHub.use().deleteCommunity(conversationId, {
-      fromSyncMessage: true,
-    });
+    await ConvoHub.use().deleteCommunity(conversationId);
   }
 
   // Try to connect to server
@@ -98,11 +92,6 @@ async function joinOpenGroupV2(
       throw new Error(window.i18n('communityJoinError'));
     }
 
-    // here we managed to connect to the group.
-    // if this is not a Sync Message, we should trigger one
-    if (!fromConfigMessage) {
-      await forceSyncConfigurationNowIfNeeded();
-    }
     return conversation;
   } catch (e) {
     window?.log?.error('Could not join open group v2', e.message);
@@ -132,7 +121,6 @@ export type JoinSogsRoomUICallbackArgs = {
 export async function joinOpenGroupV2WithUIEvents(
   completeUrl: string,
   showToasts: boolean,
-  fromConfigMessage: boolean,
   uiCallback?: (args: JoinSogsRoomUICallbackArgs) => void,
   errorHandler?: (error: string) => void
 ): Promise<boolean> {
@@ -174,7 +162,7 @@ export async function joinOpenGroupV2WithUIEvents(
 
     uiCallback?.({ loadingState: 'started', conversationKey: conversationID });
 
-    const convoCreated = await joinOpenGroupV2(parsedRoom, fromConfigMessage);
+    const convoCreated = await joinOpenGroupV2(parsedRoom);
 
     if (convoCreated) {
       if (showToasts) {

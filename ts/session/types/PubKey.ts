@@ -86,9 +86,12 @@ export class PubKey {
   public static shorten(value: string | PubKey): string {
     const valAny = value as PubKey;
     const pk = value instanceof PubKey ? valAny.key : value;
-
-    if (!pk || pk.length < 8) {
+    if (!pk) {
       throw new Error('PubKey.shorten was given an invalid PubKey to shorten.');
+    }
+
+    if (pk.length < 8) {
+      return pk;
     }
 
     return `(${pk.substring(0, 4)}...${pk.substring(pk.length - 4)})`;

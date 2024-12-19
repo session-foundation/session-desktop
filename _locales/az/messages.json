@@ -406,7 +406,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> və <b>digər {count} nəfər</b> qrupa qoşulmaq üçün dəvət edildi.",
   "groupMemberNewTwo": "<b>{name}</b> və <b>{other_name}</b> qrupa qoşulmaq üçün dəvət edildi.",
   "groupMemberNewYouHistoryMultiple": "<b>Siz</b> və <b>digər {count} nəfər</b> qrupa qoşulmaq üçün dəvət edildiniz. Söhbət tarixçəsi paylaşıldı.",
-  "groupMemberNewYouHistoryTwo": "<b>Siz</b> və <b>{name}</b> qrupa qoşulmaq üçün dəvət edildiniz. Söhbət tarixçəsi paylaşıldı.",
   "groupMemberYouLeft": "<b>Siz</b> qrupu tərk etdiniz.",
   "groupMembers": "Qrup üzvləri",
   "groupMembersNone": "Bu qrupda başqa üzv yoxdur.",

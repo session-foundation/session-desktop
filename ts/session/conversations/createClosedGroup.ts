@@ -13,7 +13,6 @@ import {
 } from '../messages/outgoing/controlMessage/group/ClosedGroupNewMessage';
 import { PubKey } from '../types';
 import { UserUtils } from '../utils';
-import { forceSyncConfigurationNowIfNeeded } from '../utils/sync/syncUtils';
 import { ConvoHub } from './ConversationController';
 import { ConversationTypeEnum } from '../../models/types';
 import { NetworkTime } from '../../util/NetworkTime';
@@ -89,8 +88,6 @@ export async function createClosedGroup(groupName: string, members: Array<string
   }
   // commit again as now the keypair is saved and can be added to the libsession wrapper UserGroup
   await convo.commit();
-
-  await forceSyncConfigurationNowIfNeeded();
 
   await openConversationWithMessages({ conversationKey: groupPublicKey, messageId: null });
 }

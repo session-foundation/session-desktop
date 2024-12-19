@@ -405,7 +405,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> ir <b>{count} kiti</b> buvote pakviesti prisijungti prie grupės.",
   "groupMemberNewTwo": "<b>{name}</b> ir <b>{other_name}</b> buvote pakviesti prisijungti prie grupės.",
   "groupMemberNewYouHistoryMultiple": "<b>Jūs</b> ir <b>dar {count}</b> buvo pakviesti prisijungti prie grupės. Pokalbio istorija buvo pasidalinta.",
-  "groupMemberNewYouHistoryTwo": "<b>Jūs</b> ir <b>{name}</b> buvo pakviesti prisijungti prie grupės. Pokalbio istorija buvo pasidalinta.",
   "groupMemberYouLeft": "<b>Jūs</b> išėjote iš grupės.",
   "groupMembers": "Grupės dalyviai",
   "groupMembersNone": "Šioje grupėje nėra kitų narių.",

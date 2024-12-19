@@ -214,6 +214,7 @@ const doAppStartUp = async () => {
 
   global.setTimeout(() => {
     // Schedule a confSyncJob in some time to let anything incoming from the network be applied and see if there is a push needed
+    // Note: this also starts periodic jobs, so we don't need to keep doing it
     void UserSync.queueNewJobIfNeeded();
   }, 20000);
 };

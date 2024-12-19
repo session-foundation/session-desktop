@@ -406,7 +406,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> și <b> alți {count}</b> au fost invitați să se alăture grupului.",
   "groupMemberNewTwo": "<b>{name}</b> și <b>{other_name}</b> au fost invitați să se alăture grupului.",
   "groupMemberNewYouHistoryMultiple": "<b>Tu</b> și <b>alți {count}</b> ați fost invitați să vă alăturați grupului. Istoricul conversațiilor a fost partajat.",
-  "groupMemberNewYouHistoryTwo": "<b>Tu</b> și <b>{name}</b> ați fost invitați să vă alăturați grupului. Istoricul conversațiilor a fost partajat.",
   "groupMemberYouLeft": "<b>Tu</b> ai părăsit grupul.",
   "groupMembers": "Membrii grupului",
   "groupMembersNone": "Nu există alți membri în acest grup.",

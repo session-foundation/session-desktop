@@ -9,11 +9,8 @@ import { SeedNodeAPI } from '../seed_node_api';
 import { MAX_SUBREQUESTS_COUNT, UpdateExpiryOnNodeUserSubRequest } from './SnodeRequestTypes';
 import { BatchRequests } from './batchRequest';
 import { SnodePool } from './snodePool';
-import {
-  ExpireMessageResultItem,
-  ExpireMessagesResultsContent,
-  WithShortenOrExtend,
-} from './types';
+import { ExpireMessageResultItem, ExpireMessagesResultsContent } from './types';
+import { WithShortenOrExtend } from '../../types/with';
 import { DURATION } from '../../constants';
 
 export type verifyExpireMsgsResponseSignatureProps = ExpireMessageResultItem & {

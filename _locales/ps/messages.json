@@ -405,7 +405,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> او <b>{count} نور</b> ډله کې ګډون کولو ته بلل شوي.",
   "groupMemberNewTwo": "<b>{name}</b> او <b>{other_name}</b> ډله کې ګډون کولو ته بلل شوي.",
   "groupMemberNewYouHistoryMultiple": "<b>تاسو</b> او <b>{count} نور</b> ډله کې ګډون کولو ته بلل شوی. د خبرو تاریخ شریک شوی.",
-  "groupMemberNewYouHistoryTwo": "<b>تاسو</b> او <b>{name}</b> ډله کې ګډون کولو ته بلل شوی. د خبرو تاریخ شریک شوی.",
   "groupMemberYouLeft": "<b>تاسو</b> ګروپ پریښود.",
   "groupMembers": "د ډلې غړي",
   "groupMembersNone": "په دی ګروپ کې نور غړي نشته.",

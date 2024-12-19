@@ -406,7 +406,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> και <b>{count} άλλοι</b> προσκλήθηκαν να εγγραφούν στην ομάδα.",
   "groupMemberNewTwo": "<b>{name}</b> και <b>{other_name}</b> προσκλήθηκαν να συμμετάσχουν στην ομάδα.",
   "groupMemberNewYouHistoryMultiple": "<b>Εσείς</b> και <b>{count} άλλοι</b> προσκληθήκατε να συμμετάσχετε στην ομάδα. Το ιστορικό συνομιλίας κοινοποιήθηκε.",
-  "groupMemberNewYouHistoryTwo": "<b>Εσείς</b> και <b>{name}</b> προσκληθήκατε να συμμετάσχετε στην ομάδα. Το ιστορικό συνομιλίας κοινοποιήθηκε.",
   "groupMemberYouLeft": "<b>Εσείς</b> αποχωρήσατε από την ομάδα.",
   "groupMembers": "Μέλη Ομάδας",
   "groupMembersNone": "Δεν υπάρχουν άλλα μέλη σε αυτήν την ομάδα.",

@@ -8,7 +8,7 @@ import {
   processGetExpiriesRequestResponse,
 } from '../../../../session/apis/snode_api/getExpiriesRequest';
 import { SnodeSignature } from '../../../../session/apis/snode_api/signature/snodeSignatures';
-import { WithMessagesHashes } from '../../../../session/apis/snode_api/types';
+import { WithMessagesHashes } from '../../../../session/types/with';
 import { UserUtils } from '../../../../session/utils';
 import { isValidUnixTimestamp } from '../../../../session/utils/Timestamps';
 import { TypedStub, generateFakeSnode, stubWindowLog } from '../../../test-utils/utils';
@@ -48,7 +48,7 @@ describe('GetExpiriesRequest', () => {
     };
 
     it('builds a valid request given the messageHashes and valid timestamp for now', async () => {
-      const unsigned = new GetExpiriesFromNodeSubRequest(props);
+      const unsigned = new GetExpiriesFromNodeSubRequest({ ...props, getNow: NetworkTime.now });
       const request = await unsigned.build();
 
       expect(request, 'should not return null').to.not.be.null;
@@ -73,7 +73,7 @@ describe('GetExpiriesRequest', () => {
       (getOurPubKeyStrFromCacheStub as any).returns(undefined);
       let errorStr = 'fakeerror';
       try {
-        const unsigned = new GetExpiriesFromNodeSubRequest(props);
+        const unsigned = new GetExpiriesFromNodeSubRequest({ ...props, getNow: NetworkTime.now });
         const request = await unsigned.build();
         if (request) {
           throw new Error('we should not have been able to build a request');
@@ -88,7 +88,7 @@ describe('GetExpiriesRequest', () => {
       // Modify the stub behavior for this test only we need to return an unsupported type to simulate a missing pubkey
       Sinon.stub(SnodeSignature, 'generateGetExpiriesOurSignature').resolves(null);
 
-      const unsigned = new GetExpiriesFromNodeSubRequest(props);
+      const unsigned = new GetExpiriesFromNodeSubRequest({ ...props, getNow: NetworkTime.now });
       try {
         const request = await unsigned.build();
         if (request) {

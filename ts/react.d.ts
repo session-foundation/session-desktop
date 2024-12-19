@@ -179,6 +179,8 @@ declare module 'react' {
     // to sort
     | 'restore-using-recovery'
     | 'link-device'
+    | 'join-community-conversation'
+    | 'join-community-button'
     | 'select-contact'
     | 'contact' // this is way too generic
     | 'contact-status'
@@ -233,7 +235,8 @@ declare module 'react' {
     | 'conversation-options-avatar'
     | 'copy-sender-from-details'
     | 'copy-msg-from-details'
-    | 'block-unblock-modal-description'
+    | 'modal-heading'
+    | 'modal-description'
     // modules profile name
     | 'module-conversation__user__profile-name'
     | 'module-message-search-result__header__name__profile-name'

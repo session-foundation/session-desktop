@@ -39,12 +39,7 @@ export type RetrieveRequestResult = {
   messages: RetrieveMessagesResultsContent;
   namespace: SnodeNamespaces;
 };
-export type WithMessagesHashes = { messagesHashes: Array<string> };
-
 export type RetrieveMessagesResultsBatched = Array<RetrieveRequestResult>;
-
-export type ShortenOrExtend = 'extend' | 'shorten' | '';
-export type WithShortenOrExtend = { shortenOrExtend: ShortenOrExtend };
 
 export type WithRevokeSubRequest = {
   revokeSubRequest?: SubaccountRevokeSubRequest;

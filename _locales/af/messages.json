@@ -405,7 +405,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> en <b>{count} ander</b> is genooi om by die groep aan te sluit.",
   "groupMemberNewTwo": "<b>{name}</b> en <b>{other_name}</b> is genooi om by die groep aan te sluit.",
   "groupMemberNewYouHistoryMultiple": "<b>Jy</b> en <b>{count} ander</b> is genooi om by die groep aan te sluit. Kletsgeskiedenis is gedeel.",
-  "groupMemberNewYouHistoryTwo": "<b>Jy</b> en <b>{name}</b> is genooi om by die groep aan te sluit. Kletsgeskiedenis is gedeel.",
   "groupMemberYouLeft": "<b>You</b> het die groep verlaat",
   "groupMembers": "Groep Lede",
   "groupMembersNone": "Daar is geen ander lede in hierdie groep nie.",

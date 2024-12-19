@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-import { GroupPubkeyType, PubkeyType } from 'libsession_util_nodejs';
+import { GroupPubkeyType, MemberStateGroupV2, PubkeyType } from 'libsession_util_nodejs';
 import { isEmpty } from 'lodash';
 import {
   useNicknameOrProfileNameOrShortenedPubkey,
@@ -13,14 +13,9 @@ import { GroupInvite } from '../session/utils/job_runners/jobs/GroupInviteJob';
 import { hasClosedGroupV2QAButtons } from '../shared/env_vars';
 import {
   useMemberHasAcceptedInvite,
-  useMemberInviteFailed,
-  useMemberInviteSending,
-  useMemberInviteSent,
-  useMemberPromoteSending,
-  useMemberPromotionFailed,
-  useMemberPromotionSent,
   useMemberIsNominatedAdmin,
   useMemberPendingRemoval,
+  useMemberStatus,
 } from '../state/selectors/groups';
 import { Avatar, AvatarSize, CrownIcon } from './avatar/Avatar';
 import { Flex } from './basic/Flex';
@@ -35,6 +30,7 @@ import {
   MetaGroupWrapperActions,
   UserGroupsWrapperActions,
 } from '../webworker/workers/browser/libsession_worker_interface';
+import { assertUnreachable } from '../types/sqlSharedTypes';
 
 const AvatarContainer = styled.div`
   position: relative;
@@ -161,43 +157,57 @@ const StyledGroupStatusText = styled.span<{ isFailure: boolean }>`
   text-align: start;
 `;
 
+function localisedStatusFromMemberStatus(memberStatus: MemberStateGroupV2) {
+  switch (memberStatus) {
+    case 'INVITE_FAILED':
+      return window.i18n('groupInviteFailed');
+    case 'INVITE_NOT_SENT':
+      return window.i18n('groupInviteNotSent');
+    case 'INVITE_SENDING':
+      return window.i18n('groupInviteSending', { count: 1 });
+    case 'INVITE_SENT':
+      return window.i18n('groupInviteSent');
+    case 'INVITE_UNKNOWN': // fallback, hopefully won't happen in production
+      return window.i18n('groupInviteStatusUnknown');
+    case 'PROMOTION_UNKNOWN': // fallback, hopefully won't happen in production
+      return window.i18n('adminPromotionStatusUnknown');
+    case 'REMOVED_UNKNOWN': // fallback, hopefully won't happen in production
+    case 'REMOVED_MEMBER': // we want pending removal members at the end of the "invite" states
+    case 'REMOVED_MEMBER_AND_MESSAGES':
+      return null; // no text for those 3 pending removal states
+    case 'PROMOTION_FAILED':
+      return window.i18n('adminPromotionFailed');
+    case 'PROMOTION_NOT_SENT':
+      return window.i18n('adminPromotionNotSent');
+    case 'PROMOTION_SENDING':
+      return window.i18n('adminSendingPromotion', { count: 1 });
+    case 'PROMOTION_SENT':
+      return window.i18n('adminPromotionSent');
+    case 'PROMOTION_ACCEPTED':
+      return null; // no statuses for accepted state;
+    case 'INVITE_ACCEPTED':
+      return null; // no statuses for accepted state
+    default:
+      assertUnreachable(memberStatus, 'Unhandled switch case');
+      return Number.MAX_SAFE_INTEGER;
+  }
+}
+
 const GroupStatusText = ({ groupPk, pubkey }: { pubkey: PubkeyType; groupPk: GroupPubkeyType }) => {
-  const groupInviteFailed = useMemberInviteFailed(pubkey, groupPk);
-  const groupPromotionFailed = useMemberPromotionFailed(pubkey, groupPk);
-  const groupPromotionSending = useMemberPromoteSending(groupPk, pubkey);
+  const memberStatus = useMemberStatus(pubkey, groupPk);
 
-  const groupInviteSent = useMemberInviteSent(pubkey, groupPk);
-  const groupPromotionSent = useMemberPromotionSent(pubkey, groupPk);
-  const groupInviteSending = useMemberInviteSending(groupPk, pubkey);
+  if (!memberStatus) {
+    return null;
+  }
 
-  /**
-   * Note: Keep the "sending" checks here first, as we might be "sending" when we've previously failed.
-   * If we were to have the "failed" checks first, we'd hide the "sending" state when we are retrying.
-   */
-  const statusText = groupInviteSending
-    ? window.i18n('groupInviteSending', { count: 1 })
-    : groupPromotionSending
-      ? window.i18n('adminSendingPromotion', { count: 1 })
-      : groupPromotionFailed
-        ? window.i18n('adminPromotionFailed')
-        : groupInviteFailed
-          ? window.i18n('groupInviteFailed')
-          : groupInviteSent
-            ? window.i18n('groupInviteSent')
-            : groupPromotionSent
-              ? window.i18n('adminPromotionSent')
-              : null;
-
+  const statusText = localisedStatusFromMemberStatus(memberStatus);
   if (!statusText) {
     return null;
   }
   return (
     <StyledGroupStatusText
       data-testid={'contact-status'}
-      isFailure={
-        (groupPromotionFailed && !groupPromotionSending) ||
-        (groupInviteFailed && !groupInviteSending)
-      }
+      isFailure={memberStatus === 'INVITE_FAILED' || memberStatus === 'PROMOTION_FAILED'}
     >
       {statusText}
     </StyledGroupStatusText>
@@ -249,6 +259,8 @@ const ResendButton = ({ groupPk, pubkey }: { pubkey: PubkeyType; groupPk: GroupP
           window.log.warn('tried to resend invite but we do not have correct details');
           return;
         }
+        await MetaGroupWrapperActions.memberSetInviteNotSent(groupPk, pubkey);
+
         // if we tried to invite that member as admin right away, let's retry it as such.
         const inviteAsAdmin = member.nominatedAdmin;
         await GroupInvite.addJob({

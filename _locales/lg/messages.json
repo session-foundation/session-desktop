@@ -405,7 +405,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> ne <b>{count} abalala</b> mwakuyitibwa okwegatta mu kibiina.",
   "groupMemberNewTwo": "<b>{name}</b> ne <b>{other_name}</b> mwakuyitibwa okwegatta mu kibiina.",
   "groupMemberNewYouHistoryMultiple": "<b>Ggwe</b> ne <b>{count} abalala</b> mwakuyitibwa okwegatta mu kibiina. Ebika by'obubaka by'akugabana.",
-  "groupMemberNewYouHistoryTwo": "<b>Ggwe</b> ne <b>{name}</b> mwakuyitibwa okwegatta mu kibiina. Ebika by'obubaka by'akugabana.",
   "groupMemberYouLeft": "<b>Ggwe</b> wafuma mu kibiina.",
   "groupMembers": "Bonna",
   "groupMembersNone": "Tewali mirala mu kibiina kino.",

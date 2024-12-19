@@ -405,7 +405,6 @@
   "groupMemberNewMultiple": "<b>{name} </b> in <b>{count} drugi </b> so bili povabljeni, da se pridružijo skupini.",
   "groupMemberNewTwo": "<b>{name}</b> in <b>{other_name}</b> sta bila povabljena, da se pridružita skupini.",
   "groupMemberNewYouHistoryMultiple": "<b>Vi</b> in <b>{count} drugi</b> ste bili povabljeni, da se pridružite skupini. Zgodovina klepeta je bila deljena.",
-  "groupMemberNewYouHistoryTwo": "<b>Vi</b> in <b>{name}</b> sta bila povabljena, da se pridružita skupini. Zgodovina klepeta je bila deljena.",
   "groupMemberYouLeft": "<b>Vi </b> ste zapustili skupino.",
   "groupMembers": "Člani skupine",
   "groupMembersNone": "V tej skupini ni drugih članov.",

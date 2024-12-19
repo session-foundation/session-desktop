@@ -411,7 +411,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> та ще <b>{count} інших</b> були запрошені приєднатися до групи.",
   "groupMemberNewTwo": "<b>{name}</b> та <b>{other_name}</b> були запрошені приєднатися до групи.",
   "groupMemberNewYouHistoryMultiple": "<b>Ви</b> та <b>{count}</b> інших були запрошені приєднатися до групи. Було надано спільний доступ до історії чату.",
-  "groupMemberNewYouHistoryTwo": "<b>Ви</b> та <b>{name}</b> були запрошені приєднатися до групи. Було надано спільний доступ до історії чату.",
   "groupMemberYouLeft": "<b>Ви</b> покинули групу.",
   "groupMembers": "Учасники групи",
   "groupMembersNone": "Відсутні учасники у цій групі.",

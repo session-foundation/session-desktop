@@ -12,7 +12,7 @@ import {
 } from '../../../../session/apis/snode_api/SnodeRequestTypes';
 import { SnodeNamespaces } from '../../../../session/apis/snode_api/namespaces';
 import { SnodeAPIRetrieve } from '../../../../session/apis/snode_api/retrieveRequest';
-import { WithShortenOrExtend } from '../../../../session/apis/snode_api/types';
+import { WithShortenOrExtend } from '../../../../session/types/with';
 import { TestUtils } from '../../../test-utils';
 import { expectAsyncToThrow, stubLibSessionWorker } from '../../../test-utils/utils';
 import { NetworkTime } from '../../../../util/NetworkTime';

@@ -15,7 +15,6 @@ import {
   useIsPrivate,
   useIsPrivateAndFriend,
   useIsPublic,
-  useLastMessage,
   useNicknameOrProfileNameOrShortenedPubkey,
   useNotificationSetting,
   useWeAreAdmin,
@@ -31,8 +30,7 @@ import {
   showAddModeratorsByConvoId,
   showBanUserByConvoId,
   showInviteContactByConvoId,
-  showLeaveGroupByConvoId,
-  showLeavePrivateConversationByConvoId,
+  showDeletePrivateConversationByConvoId,
   showRemoveModeratorsByConvoId,
   showUnbanUserByConvoId,
   showUpdateGroupNameByConvoId,
@@ -58,10 +56,6 @@ import { useSelectedConversationKey } from '../../state/selectors/selectedConver
 import type { LocalizerToken } from '../../types/localizer';
 import { SessionButtonColor } from '../basic/SessionButton';
 import { ItemWithDataTestId } from './items/MenuItemWithDataTestId';
-import {
-  ConversationInteractionStatus,
-  ConversationInteractionType,
-} from '../../interactions/types';
 import { useLibGroupDestroyed } from '../../state/selectors/userGroups';
 import { NetworkTime } from '../../util/NetworkTime';
 
@@ -152,34 +146,6 @@ export const DeletePrivateContactMenuItem = () => {
 
     return <ItemWithDataTestId onClick={showConfirmationModal}>{menuItemText}</ItemWithDataTestId>;
   }
-  return null;
-};
-
-export const LeaveGroupOrCommunityMenuItem = () => {
-  const convoId = useConvoIdFromContext();
-  const username = useConversationUsername(convoId) || convoId;
-  const isPrivate = useIsPrivate(convoId);
-  const isPublic = useIsPublic(convoId);
-  const lastMessage = useLastMessage(convoId);
-  const isMessageRequestShown = useSelector(getIsMessageRequestOverlayShown);
-
-  if (!isPrivate && !isMessageRequestShown) {
-    return (
-      <ItemWithDataTestId
-        onClick={() => {
-          void showLeaveGroupByConvoId(convoId, username);
-        }}
-      >
-        {isPublic
-          ? window.i18n('communityLeave')
-          : lastMessage?.interactionType === ConversationInteractionType.Leave &&
-              lastMessage?.interactionStatus === ConversationInteractionStatus.Error
-            ? window.i18n('conversationsDelete')
-            : window.i18n('groupLeave')}
-      </ItemWithDataTestId>
-    );
-  }
-
   return null;
 };
 
@@ -427,7 +393,7 @@ export const DeletePrivateConversationMenuItem = () => {
   return (
     <ItemWithDataTestId
       onClick={() => {
-        showLeavePrivateConversationByConvoId(convoId);
+        showDeletePrivateConversationByConvoId(convoId);
       }}
     >
       {isMe ? window.i18n('noteToSelfHide') : window.i18n('conversationsDelete')}

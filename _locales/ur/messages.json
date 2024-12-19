@@ -402,7 +402,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> اور <b>{count} دیگر</b> گروپ میں مدعو کیا گیا۔",
   "groupMemberNewTwo": "<b>{name}</b> اور <b>{other_name}</b> کو گروپ میں شامل ہونے کی دعوت دی گئی۔",
   "groupMemberNewYouHistoryMultiple": "<b>آپ</b> اور <b>{count} دیگر</b> گروپ میں شامل ہونے کی دعوت دی گئی۔ چیٹ تاریخ شیئر کی گئی۔",
-  "groupMemberNewYouHistoryTwo": "<b>آپ</b> اور <b>{name}</b> گروپ میں شامل ہونے کی دعوت دی گئی۔ چیٹ تاریخ شیئر کی گئی۔",
   "groupMemberYouLeft": "<b>آپ</b> نے گروپ چھوڑ دیا۔",
   "groupMembers": "گروپ کے اراکین",
   "groupMembersNone": "اس گروپ میں کوئی دیگر رکن نہیں ہیں۔",

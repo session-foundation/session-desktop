@@ -15,17 +15,17 @@ import { SessionButton, SessionButtonColor } from '../basic/SessionButton';
 import {
   ConversationIncomingRequestExplanation,
   ConversationOutgoingRequestExplanation,
-  InvitedToGroupControlMessage,
 } from './SubtleNotification';
 import { NetworkTime } from '../../util/NetworkTime';
 
 const MessageRequestContainer = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   justify-content: center;
   padding: var(--margins-lg);
   gap: var(--margins-lg);
   text-align: center;
+  background: var(--background-secondary-color);
 `;
 
 const ConversationBannerRow = styled.div`
@@ -98,7 +98,6 @@ export const ConversationMessageRequestButtons = () => {
 
   return (
     <MessageRequestContainer>
-      <InvitedToGroupControlMessage />
       <ConversationBannerRow>
         <SessionButton
           onClick={() => {

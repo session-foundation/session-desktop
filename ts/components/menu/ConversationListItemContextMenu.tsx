@@ -21,7 +21,6 @@ import {
   DeleteMessagesMenuItem,
   DeletePrivateConversationMenuItem,
   InviteContactMenuItem,
-  LeaveGroupOrCommunityMenuItem,
   MarkAllReadMenuItem,
   MarkConversationUnreadMenuItem,
   NotificationForConvoMenuItem,
@@ -32,6 +31,9 @@ import { CopyCommunityUrlMenuItem } from './items/CopyCommunityUrl/CopyCommunity
 import { CopyAccountIdMenuItem } from './items/CopyAccountId/CopyAccountIdMenuItem';
 import { ItemWithDataTestId } from './items/MenuItemWithDataTestId';
 import { getMenuAnimation } from './MenuAnimation';
+import { LeaveCommunityMenuItem } from './items/LeaveCommunity/LeaveCommunityMenuItem';
+import { LeaveGroupMenuItem } from './items/LeaveAndDeleteGroup/LeaveGroupMenuItem';
+import { DeleteGroupMenuItem } from './items/LeaveAndDeleteGroup/DeleteGroupMenuItem';
 
 export type PropsContextConversationItem = {
   triggerId: string;
@@ -57,7 +59,6 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
         {/* Generic actions */}
         <PinConversationMenuItem />
         <NotificationForConvoMenuItem />
-
         <BlockMenuItem />
         <CopyCommunityUrlMenuItem convoId={convoIdFromContext} />
         <CopyAccountIdMenuItem pubkey={convoIdFromContext} />
@@ -73,7 +74,9 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
         <InviteContactMenuItem />
         <DeleteMessagesMenuItem />
         <DeletePrivateConversationMenuItem />
-        <LeaveGroupOrCommunityMenuItem />
+        <LeaveCommunityMenuItem />
+        <LeaveGroupMenuItem />
+        <DeleteGroupMenuItem />
         <ShowUserDetailsMenuItem />
       </Menu>
     </SessionContextMenuContainer>

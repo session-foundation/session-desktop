@@ -202,6 +202,8 @@ class GroupInviteJob extends PersistedJob<GroupInvitePersistedData> {
           extraStoreRequests: [],
         });
         if (sequenceResult !== RunJobResult.Success) {
+          await LibSessionUtil.saveDumpsToDb(groupPk);
+
           throw new Error(
             'GroupInviteJob: SubaccountUnrevokeSubRequest push() did not return success'
           );

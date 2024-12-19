@@ -23,9 +23,7 @@ import { PubKey } from '../session/types';
 import { perfEnd, perfStart } from '../session/utils/Performance';
 import { sleepFor, timeoutWithAbort } from '../session/utils/Promise';
 import { ed25519Str, fromHexToArray, toHex } from '../session/utils/String';
-import { UserSync } from '../session/utils/job_runners/jobs/UserSyncJob';
 import { SessionUtilContact } from '../session/utils/libsession/libsession_utils_contacts';
-import { forceSyncConfigurationNowIfNeeded } from '../session/utils/sync/syncUtils';
 import {
   conversationReset,
   quoteMessage,
@@ -113,15 +111,17 @@ export const handleAcceptConversationRequest = async ({
   approvalMessageTimestamp: number;
 }) => {
   const convo = ConvoHub.use().get(convoId);
-  if (!convo || (!convo.isPrivate() && !convo.isClosedGroupV2())) {
+  if (!convo || convo.isApproved() || (!convo.isPrivate() && !convo.isClosedGroupV2())) {
+    window?.log?.info('Conversation is already approved or not private/03group');
+
     return null;
   }
+
   const previousIsApproved = convo.isApproved();
   const previousDidApprovedMe = convo.didApproveMe();
   // Note: we don't mark as approvedMe = true, as we do not know if they did send us a message yet.
   await convo.setIsApproved(true, false);
   await convo.commit();
-  void forceSyncConfigurationNowIfNeeded();
 
   if (convo.isPrivate()) {
     // we only need the approval message (and sending a reply) when we are accepting a message request. i.e. someone sent us a message already and we didn't accept it yet.
@@ -179,12 +179,10 @@ export async function declineConversationWithoutConfirm({
   alsoBlock,
   conversationId,
   currentlySelectedConvo,
-  syncToDevices,
   conversationIdOrigin,
 }: {
   conversationId: string;
   currentlySelectedConvo: string | undefined;
-  syncToDevices: boolean;
   alsoBlock: boolean;
   conversationIdOrigin: string | null;
 }) {
@@ -246,9 +244,6 @@ export async function declineConversationWithoutConfirm({
     });
   }
 
-  if (syncToDevices) {
-    await forceSyncConfigurationNowIfNeeded();
-  }
   if (currentlySelectedConvo && currentlySelectedConvo === conversationId) {
     window?.inboxStore?.dispatch(resetConversationExternal());
   }
@@ -256,7 +251,6 @@ export async function declineConversationWithoutConfirm({
 
 export const declineConversationWithConfirm = ({
   conversationId,
-  syncToDevices,
   alsoBlock,
   currentlySelectedConvo,
   conversationIdOrigin,
@@ -297,7 +291,6 @@ export const declineConversationWithConfirm = ({
           conversationId,
           currentlySelectedConvo,
           alsoBlock,
-          syncToDevices,
           conversationIdOrigin,
         });
       },
@@ -337,7 +330,7 @@ export async function showUpdateGroupMembersByConvoId(conversationId: string) {
   window.inboxStore?.dispatch(updateGroupMembersModal({ conversationId }));
 }
 
-export function showLeavePrivateConversationByConvoId(conversationId: string) {
+export function showDeletePrivateConversationByConvoId(conversationId: string) {
   const conversation = ConvoHub.use().get(conversationId);
   const isMe = conversation.isMe();
 
@@ -351,11 +344,8 @@ export function showLeavePrivateConversationByConvoId(conversationId: string) {
 
   const onClickOk = async () => {
     try {
-      await updateConversationInteractionState({
-        conversationId,
-        type: isMe ? ConversationInteractionType.Hide : ConversationInteractionType.Leave,
-        status: ConversationInteractionStatus.Start,
-      });
+      // no network calls are made when we hide/delete a private chat, so no need to have a
+      // ConversationInteractionType state
       onClickClose();
       await ConvoHub.use().delete1o1(conversationId, {
         fromSyncMessage: false,
@@ -364,13 +354,7 @@ export function showLeavePrivateConversationByConvoId(conversationId: string) {
       });
       await clearConversationInteractionState({ conversationId });
     } catch (err) {
-      window.log.warn(`showLeavePrivateConversationByConvoId error: ${err}`);
-      await saveConversationInteractionErrorAsMessage({
-        conversationId,
-        interactionType: isMe
-          ? ConversationInteractionType.Hide
-          : ConversationInteractionType.Leave,
-      });
+      window.log.warn(`showDeletePrivateConversationByConvoId error: ${err}`);
     }
   };
 
@@ -411,9 +395,7 @@ async function leaveGroupOrCommunityByConvoId({
     }
 
     if (isPublic) {
-      await ConvoHub.use().deleteCommunity(conversationId, {
-        fromSyncMessage: false,
-      });
+      await ConvoHub.use().deleteCommunity(conversationId);
       return;
     }
     // for groups, we have a "leaving..." state that we don't need for communities.
@@ -449,6 +431,21 @@ async function leaveGroupOrCommunityByConvoId({
   }
 }
 
+/**
+ * Returns true if we the convo is a 03 group and if we can try to send a leave message.
+ */
+async function hasLeavingDetails(convoId: string) {
+  if (!PubKey.is03Pubkey(convoId)) {
+    return true;
+  }
+
+  const group = await UserGroupsWrapperActions.getGroup(convoId);
+
+  // we need the authData or the secretKey to be able to attempt to leave,
+  // otherwise we won't be able to even try
+  return group && (!isEmpty(group.authData) || !isEmpty(group.secretKey));
+}
+
 export async function showLeaveGroupByConvoId(conversationId: string, name: string | undefined) {
   const conversation = ConvoHub.use().get(conversationId);
 
@@ -462,15 +459,19 @@ export async function showLeaveGroupByConvoId(conversationId: string, name: stri
   const isAdmin = admins.includes(UserUtils.getOurPubKeyStrFromCache());
   const showOnlyGroupAdminWarning = isClosedGroup && isAdmin;
   const weAreLastAdmin =
-    (PubKey.is05Pubkey(conversationId) && isAdmin && admins.length === 1) ||
-    (PubKey.is03Pubkey(conversationId) && isAdmin && admins.length === 1);
+    (PubKey.is05Pubkey(conversationId) || PubKey.is03Pubkey(conversationId)) &&
+    isAdmin &&
+    admins.length === 1;
   const lastMessageInteractionType = conversation.get('lastMessageInteractionType');
   const lastMessageInteractionStatus = conversation.get('lastMessageInteractionStatus');
 
+  const canTryToLeave = await hasLeavingDetails(conversationId);
+
   if (
     !isPublic &&
-    lastMessageInteractionType === ConversationInteractionType.Leave &&
-    lastMessageInteractionStatus === ConversationInteractionStatus.Error
+    ((lastMessageInteractionType === ConversationInteractionType.Leave &&
+      lastMessageInteractionStatus === ConversationInteractionStatus.Error) ||
+      !canTryToLeave) // if we don't have any key to send our leave message, no need to try
   ) {
     await leaveGroupOrCommunityByConvoId({ conversationId, isPublic, sendLeaveMessage: false });
     return;
@@ -507,30 +508,9 @@ export async function showLeaveGroupByConvoId(conversationId: string, name: stri
         conversationId,
       })
     );
-    // TODO this is post release chunk3 stuff: Only to be used after the closed group rebuild chunk3
-    // const onClickOkLastAdmin = () => {
-    //   /* TODO */
-    // };
-    // const onClickCloseLastAdmin = () => {
-    //   /* TODO */
-    // };
-    // window?.inboxStore?.dispatch(
-    //   updateConfirmModal({
-    //     title: window.i18n('groupLeave'),
-    //     message: window.i18n('leaveGroupConfirmationOnlyAdmin', {name: name ?? ''}),
-    //     messageSub: window.i18n('leaveGroupConfirmationOnlyAdminWarning'),
-    //     onClickOk: onClickOkLastAdmin,
-    //     okText: window.i18n('addModerator'),
-    //     cancelText: window.i18n('leave'),
-    //     onClickCancel: onClickCloseLastAdmin,
-    //     closeTheme: SessionButtonColor.Danger,
-    //     onClickClose,
-    //     showExitIcon: true,
-    //     headerReverse: true,
-    //     conversationId,
-    //   })
-    // );
-  } else if (isPublic || (isClosedGroup && !isAdmin)) {
+    return;
+  }
+  if (isPublic || (isClosedGroup && !isAdmin)) {
     window?.inboxStore?.dispatch(
       updateConfirmModal({
         title: isPublic ? window.i18n('communityLeave') : window.i18n('groupLeave'),
@@ -759,7 +739,6 @@ export async function uploadOurAvatar(newAvatarDecrypted?: ArrayBuffer) {
 
   if (newAvatarDecrypted) {
     await setLastProfileUpdateTimestamp(Date.now());
-    await UserSync.queueNewJobIfNeeded();
     const userConfigLibsession = await ReleasedFeatures.checkIsUserConfigFeatureReleased();
 
     if (!userConfigLibsession) {

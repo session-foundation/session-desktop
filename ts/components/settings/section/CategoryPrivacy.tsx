@@ -8,7 +8,6 @@ import { SpacerLG } from '../../basic/Text';
 import { TypingBubble } from '../../conversation/TypingBubble';
 
 import { UserUtils } from '../../../session/utils';
-import { UserSync } from '../../../session/utils/job_runners/jobs/UserSyncJob';
 import { SessionUtilUserProfile } from '../../../session/utils/libsession/libsession_utils_user_profile';
 import {
   useHasBlindedMsgRequestsEnabled,
@@ -99,7 +98,6 @@ export const SettingsCategoryPrivacy = (props: {
           await SessionUtilUserProfile.insertUserProfileIntoWrapper(
             UserUtils.getOurPubKeyStrFromCache()
           );
-          await UserSync.queueNewJobIfNeeded();
           forceUpdate();
         }}
         title={window.i18n('messageRequestsCommunities')}

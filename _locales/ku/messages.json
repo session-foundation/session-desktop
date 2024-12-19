@@ -405,7 +405,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> و <b>{count} کەس دیکە</b> بانگکران بۆ بەشداریکردن لە گروپەکە.",
   "groupMemberNewTwo": "<b>{name}</b> و <b>{other_name}</b> بانگکران بۆ بەشداریکردن لە گروپەکە.",
   "groupMemberNewYouHistoryMultiple": "<b>تۆ</b> و <b>{count} کەس دیکە</b> بانگکران بۆ بەشداریکردن لە گروپەکە. مێژوو بگردەوەیی پەیامەکان سییبرەیە.",
-  "groupMemberNewYouHistoryTwo": "<b>تۆ</b> و <b>{name}</b> بانگکران بۆ بەشداریکردن لە گروپەکە. مێژوو بگردەوەیی پەیامەکان سییبرەیە.",
   "groupMemberYouLeft": "<b>تۆ</b> گروپەکەت بەجێهێشتووە.",
   "groupMembers": "ئەندامانی گروپ",
   "groupMembersNone": "هیچ ئەندامی تر لەم گروپەدا نیە.",

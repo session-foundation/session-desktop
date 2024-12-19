@@ -148,9 +148,7 @@ export async function getAllValidOpenGroupV2ConversationRoomInfos() {
           /* eslint-disable no-await-in-loop */
           await OpenGroupData.removeV2OpenGroupRoom(roomConvoId);
           getOpenGroupManager().removeRoomFromPolledRooms(infos);
-          await ConvoHub.use().deleteCommunity(roomConvoId, {
-            fromSyncMessage: false,
-          });
+          await ConvoHub.use().deleteCommunity(roomConvoId);
           /* eslint-enable no-await-in-loop */
         }
       } catch (e) {

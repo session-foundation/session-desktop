@@ -2,7 +2,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
 import styled from 'styled-components';
 import { declineConversationWithoutConfirm } from '../../../interactions/conversationInteractions';
-import { forceSyncConfigurationNowIfNeeded } from '../../../session/utils/sync/syncUtils';
 import { updateConfirmModal } from '../../../state/ducks/modalDialog';
 import { resetLeftOverlayMode } from '../../../state/ducks/section';
 import { getConversationRequestsIds } from '../../../state/selectors/conversations';
@@ -83,7 +82,6 @@ export const OverlayMessageRequest = () => {
                 alsoBlock: false,
                 conversationId: convoId,
                 currentlySelectedConvo,
-                syncToDevices: false,
                 conversationIdOrigin: null, // block is false, no need for conversationIdOrigin
               });
             } catch (e) {
@@ -92,8 +90,6 @@ export const OverlayMessageRequest = () => {
               );
             }
           }
-
-          await forceSyncConfigurationNowIfNeeded();
         },
         onClickClose: () => {
           window.inboxStore?.dispatch(updateConfirmModal(null));

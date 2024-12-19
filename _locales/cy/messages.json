@@ -406,7 +406,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> a <b>{count} eraill</b> wedi cael gwahoddiad i ymuno â'r grŵp.",
   "groupMemberNewTwo": "<b>{name}</b> a <b>{other_name}</b> wedi cael eu gwahodd i ymuno â'r grŵp.",
   "groupMemberNewYouHistoryMultiple": "<b>Chi</b> a <b>{count} eraill</b> ymunodd â'r grŵp. Hanes sgwrs wedi cael ei rhannu.",
-  "groupMemberNewYouHistoryTwo": "<b>Chi</b> a <b>{name}</b> ymunodd â'r grŵp. Hanes sgwrs wedi cael ei rhannu.",
   "groupMemberYouLeft": "<b>Rydych chi</b> wedi gadael y grŵp.",
   "groupMembers": "Aelodau'r grŵp",
   "groupMembersNone": "Nid oes aelodau eraill yn y grŵp hwn.",

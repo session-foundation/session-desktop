@@ -21,6 +21,7 @@ import { ed25519Str } from '../../session/utils/String';
 import { UserGroupsWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { NetworkTime } from '../../util/NetworkTime';
 import { MessageQueue } from '../../session/sending';
+import { WithLocalMessageDeletionType } from '../../session/types/with';
 
 async function unsendMessagesForEveryone1o1AndLegacy(
   conversation: ConversationModel,
@@ -103,7 +104,8 @@ export async function unsendMessagesForEveryoneGroupV2({
  */
 async function unsendMessagesForEveryone(
   conversation: ConversationModel,
-  msgsToDelete: Array<MessageModel>
+  msgsToDelete: Array<MessageModel>,
+  { deletionType }: WithLocalMessageDeletionType
 ) {
   window?.log?.info('Deleting messages for all users in this conversation');
   const destinationId = conversation.id as string;
@@ -134,7 +136,11 @@ async function unsendMessagesForEveryone(
       allMessagesFrom: [], // currently we cannot remove all the messages from a specific pubkey but we do already handle them on the receiving side
     });
   }
-  await deleteMessagesFromSwarmAndCompletelyLocally(conversation, msgsToDelete);
+  if (deletionType === 'complete') {
+    await deleteMessagesFromSwarmAndCompletelyLocally(conversation, msgsToDelete);
+  } else {
+    await deleteMessagesFromSwarmAndMarkAsDeletedLocally(conversation, msgsToDelete);
+  }
 
   window.inboxStore?.dispatch(resetSelectedMessageIds());
   ToastUtils.pushDeleted(msgsToDelete.length);
@@ -311,10 +317,9 @@ export async function deleteMessageLocallyOnly({
   conversation,
   message,
   deletionType,
-}: {
+}: WithLocalMessageDeletionType & {
   conversation: ConversationModel;
   message: MessageModel;
-  deletionType: 'complete' | 'markDeleted';
 }) {
   if (deletionType === 'complete') {
     // remove the message from the database
@@ -446,7 +451,9 @@ const doDeleteSelectedMessages = async ({
         }
       }
       // if they are all ours, of not but we are an admin, we can move forward
-      await unsendMessagesForEveryone(conversation, selectedMessages);
+      await unsendMessagesForEveryone(conversation, selectedMessages, {
+        deletionType: 'markDeleted', // 03 groups: mark as deleted
+      });
       return;
     }
 
@@ -455,13 +462,13 @@ const doDeleteSelectedMessages = async ({
       window.inboxStore?.dispatch(resetSelectedMessageIds());
       return;
     }
-    await unsendMessagesForEveryone(conversation, selectedMessages);
+    await unsendMessagesForEveryone(conversation, selectedMessages, { deletionType: 'complete' }); // not 03 group: delete completely
     return;
   }
 
   // delete just for me in a legacy closed group only means delete locally
   if (conversation.isClosedGroup()) {
-    await deleteMessagesFromSwarmAndCompletelyLocally(conversation, selectedMessages);
+    await deleteMessagesFromSwarmAndMarkAsDeletedLocally(conversation, selectedMessages);
 
     // Update view and trigger update
     window.inboxStore?.dispatch(resetSelectedMessageIds());

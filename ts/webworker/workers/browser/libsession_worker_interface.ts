@@ -638,6 +638,12 @@ export const MetaGroupWrapperActions: MetaGroupWrapperActionsCalls = {
       'memberSetInviteSent',
       pubkeyHex,
     ]) as Promise<ReturnType<MetaGroupWrapperActionsCalls['memberSetInviteSent']>>,
+  memberSetInviteNotSent: async (groupPk: GroupPubkeyType, pubkeyHex: PubkeyType) =>
+    callLibSessionWorker([
+      `MetaGroupConfig-${groupPk}`,
+      'memberSetInviteNotSent',
+      pubkeyHex,
+    ]) as Promise<ReturnType<MetaGroupWrapperActionsCalls['memberSetInviteNotSent']>>,
   memberSetInviteFailed: async (groupPk: GroupPubkeyType, pubkeyHex: PubkeyType) =>
     callLibSessionWorker([
       `MetaGroupConfig-${groupPk}`,

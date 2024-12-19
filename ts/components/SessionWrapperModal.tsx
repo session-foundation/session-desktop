@@ -124,7 +124,9 @@ export const SessionWrapperModal = (props: SessionWrapperModalType) => {
                       })
                     : null}
                 </Flex>
-                <StyledTitle className="session-modal__header__title">{title}</StyledTitle>
+                <StyledTitle className="session-modal__header__title" data-testid="modal-heading">
+                  {title}
+                </StyledTitle>
                 <Flex
                   container={true}
                   flexDirection={headerReverse ? 'row-reverse' : 'row'}

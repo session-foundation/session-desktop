@@ -155,7 +155,7 @@ const GroupRequestExplanation = () => {
   );
 };
 
-export const InvitedToGroupControlMessage = () => {
+const InvitedToGroupControlMessage = () => {
   const selectedConversation = useSelectedConversationKey();
   const isGroupV2 = useSelectedIsGroupV2();
   const hasMessages = useSelectedHasMessages();
@@ -199,6 +199,14 @@ export const InvitedToGroupControlMessage = () => {
       html={html}
       noExtraPadding={true} // in this case, `TextNotification` is part of a bigger component spacing each already
     />
+  );
+};
+
+export const InvitedToGroup = () => {
+  return (
+    <Container noExtraPadding={false}>
+      <InvitedToGroupControlMessage />
+    </Container>
   );
 };
 

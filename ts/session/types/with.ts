@@ -13,10 +13,15 @@ export type WithRemoveMembers = { removed: Array<PubkeyType> };
 export type WithPromotedMembers = { promoted: Array<PubkeyType> };
 
 export type WithMaxSize = { max_size?: number };
-export type WithShortenOrExtend = { shortenOrExtend: 'shorten' | 'extend' | '' };
 export type WithCreatedAtNetworkTimestamp = { createdAtNetworkTimestamp: number };
 export type WithMethod<T extends string> = { method: T };
 export type WithBatchMethod<T extends string> = { method: T };
+export type WithGetNow = { getNow: () => number };
 
 export type WithConvoId = { conversationId: string };
 export type WithMessageId = { messageId: string };
+
+export type WithLocalMessageDeletionType = { deletionType: 'complete' | 'markDeleted' };
+export type ShortenOrExtend = 'extend' | 'shorten' | '';
+export type WithShortenOrExtend = { shortenOrExtend: ShortenOrExtend };
+export type WithMessagesHashes = { messagesHashes: Array<string> };

@@ -405,7 +405,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> ಮತ್ತು <b>{count} ಇತರರನ್ನು</b> ಗುಂಪಿಗೆ ಸೇರಲು ಆಹ್ವಾನಿಸಲಾಗಿದೆ.",
   "groupMemberNewTwo": "<b>{name}</b> ಮತ್ತು <b>{other_name}</b> ಅವರನ್ನು ಗುಂಪಿಗೆ ಸೇರಲು ಆಹ್ವಾನಿಸಲಾಗಿದೆ.",
   "groupMemberNewYouHistoryMultiple": "<b>ನೀವು</b> ಮತ್ತು <b>{count} ಇತರರನ್ನು</b> ಗುಂಪಿಗೆ ಸೇರಲು ಆಹ್ವಾನಿಸಲಾಗಿದೆ. ಚಾಟ್ ಇತಿಹಾಸವನ್ನು ಹಂಚಲಾಗಿದೆ.",
-  "groupMemberNewYouHistoryTwo": "<b>ನೀವು</b> ಮತ್ತು <b>{name}</b> ಅವರಿಗೆ ಗುಂಪಿಗೆ ಸೇರಲು ಆಹ್ವಾನಿಸಲಾಗಿದೆ. ಚಾಟ್ ಇತಿಹಾಸವನ್ನು ಹಂಚಲಾಗಿದೆ.",
   "groupMemberYouLeft": "<b>ನೀವು</b> ಗುಂಪನ್ನು ತೊರೆದು ಹೋದಿದ್ದೀರಿ.",
   "groupMembers": "ಗುಂಪಿನೊಂದಿಗೆ ಸಂಪರ್ಕ",
   "groupMembersNone": "ಈ ಗುಂಪಿನಲ್ಲಿ ಇತರ ಸದಸ್ಯರಿಲ್ಲ.",

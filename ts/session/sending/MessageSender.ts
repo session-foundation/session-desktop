@@ -17,7 +17,6 @@ import {
   DeleteHashesFromGroupNodeSubRequest,
   DeleteHashesFromUserNodeSubRequest,
   MethodBatchType,
-  NotEmptyArrayOfBatchResults,
   RawSnodeSubRequests,
   StoreGroupInfoSubRequest,
   StoreGroupKeysSubRequest,
@@ -30,6 +29,7 @@ import {
   SubaccountRevokeSubRequest,
   SubaccountUnrevokeSubRequest,
 } from '../apis/snode_api/SnodeRequestTypes';
+import { NotEmptyArrayOfBatchResults } from '../apis/snode_api/BatchResultEntry';
 import { BatchRequests } from '../apis/snode_api/batchRequest';
 import { GetNetworkTime } from '../apis/snode_api/getNetworkTime';
 import { SnodeNamespace, SnodeNamespaces } from '../apis/snode_api/namespaces';
@@ -122,6 +122,7 @@ async function messageToRequest05({
     namespace,
     createdAtNetworkTimestamp: networkTimestamp,
     plainTextBuffer,
+    getNow: NetworkTime.now,
   };
   if (namespace === SnodeNamespaces.Default) {
     return new StoreUserMessageSubRequest(shared05Arguments);
@@ -165,6 +166,7 @@ async function messageToRequest03({
     groupPk: destination,
     dbMessageIdentifier: identifier || null,
     createdAtNetworkTimestamp: networkTimestamp,
+    getNow: NetworkTime.now,
     ...group,
   };
   if (

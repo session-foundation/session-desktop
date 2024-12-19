@@ -15,7 +15,6 @@ import { PubKey } from '../session/types';
 import { StringUtils, UserUtils } from '../session/utils';
 import { toHex } from '../session/utils/String';
 import { FetchMsgExpirySwarm } from '../session/utils/job_runners/jobs/FetchMsgExpirySwarmJob';
-import { UserSync } from '../session/utils/job_runners/jobs/UserSyncJob';
 import { LibSessionUtil } from '../session/utils/libsession/libsession_utils';
 import { SessionUtilContact } from '../session/utils/libsession/libsession_utils_contacts';
 import { SessionUtilConvoInfoVolatile } from '../session/utils/libsession/libsession_utils_convo_info_volatile';
@@ -506,9 +505,7 @@ async function handleCommunitiesUpdate() {
   for (let index = 0; index < communitiesToLeaveInDB.length; index++) {
     const toLeave = communitiesToLeaveInDB[index];
     window.log.info('leaving community with convoId ', toLeave.id);
-    await ConvoHub.use().deleteCommunity(toLeave.id, {
-      fromSyncMessage: true,
-    });
+    await ConvoHub.use().deleteCommunity(toLeave.id);
   }
 
   // this call can take quite a long time but must be awaited (as it is async and create the entry in the DB, used as a diff)
@@ -706,7 +703,6 @@ async function handleSingleGroupUpdate({
   userEdKeypair,
 }: {
   groupInWrapper: UserGroupsGet;
-  latestEnvelopeTimestamp: number;
   userEdKeypair: UserUtils.ByteKeyPair;
 }) {
   const groupPk = groupInWrapper.pubkeyHex;
@@ -728,7 +724,8 @@ async function handleSingleGroupUpdate({
 
   if (!ConvoHub.use().get(groupPk)) {
     const created = await ConvoHub.use().getOrCreateAndWait(groupPk, ConversationTypeEnum.GROUPV2);
-    const joinedAt = groupInWrapper.joinedAtSeconds * 1000 || Date.now();
+    const joinedAt =
+      groupInWrapper.joinedAtSeconds * 1000 || CONVERSATION.LAST_JOINED_FALLBACK_TIMESTAMP;
     const expireTimer =
       groupInWrapper.disappearingTimerSeconds && groupInWrapper.disappearingTimerSeconds > 0
         ? groupInWrapper.disappearingTimerSeconds
@@ -769,7 +766,7 @@ async function handleSingleGroupUpdateToLeave(toLeave: GroupPubkeyType) {
 /**
  * Called when we just got a userGroups merge from the network. We need to apply the changes to our local state. (i.e. DB and redux slice of 03 groups)
  */
-async function handleGroupUpdate(latestEnvelopeTimestamp: number) {
+async function handleGroupUpdate(_latestEnvelopeTimestamp: number) {
   // first let's check which groups needs to be joined or left by doing a diff of what is in the wrapper and what is in the DB
   const allGroupsInWrapper = await UserGroupsWrapperActions.getAllGroups();
   const allGroupsIdsInDb = ConvoHub.use()
@@ -789,8 +786,7 @@ async function handleGroupUpdate(latestEnvelopeTimestamp: number) {
   for (let index = 0; index < allGroupsInWrapper.length; index++) {
     const groupInWrapper = allGroupsInWrapper[index];
     window.inboxStore?.dispatch(groupInfoActions.handleUserGroupUpdate(groupInWrapper) as any);
-
-    await handleSingleGroupUpdate({ groupInWrapper, latestEnvelopeTimestamp, userEdKeypair });
+    await handleSingleGroupUpdate({ groupInWrapper, userEdKeypair });
   }
 
   const groupsInDbButNotInWrapper = difference(allGroupsIdsInDb, allGroupsIdsInWrapper);
@@ -979,7 +975,6 @@ async function processUserMergingResults(results: Map<ConfigWrapperUser, Incomin
   }
 
   const keys = [...results.keys()];
-  let anyNeedsPush = false;
   for (let index = 0; index < keys.length; index++) {
     const wrapperType = keys[index];
     const incomingResult = results.get(wrapperType);
@@ -1032,19 +1027,10 @@ async function processUserMergingResults(results: Map<ConfigWrapperUser, Incomin
           variant,
         });
       }
-
-      if (incomingResult.needsPush) {
-        anyNeedsPush = true;
-      }
     } catch (e) {
       window.log.error(`processMergingResults failed with ${e.message}`);
       return;
     }
-  }
-  // Now that the local state has been updated, trigger a config sync (this will push any
-  // pending updates and properly update the state)
-  if (anyNeedsPush) {
-    await UserSync.queueNewJobIfNeeded();
   }
 }
 

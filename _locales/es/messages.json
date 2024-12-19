@@ -406,7 +406,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> y <b>{count} más</b> fueron invitados a unirse al grupo.",
   "groupMemberNewTwo": "<b>{name}</b> y <b>{other_name}</b> fueron invitados a unirse al grupo.",
   "groupMemberNewYouHistoryMultiple": "<b>Tú</b> y <b>{count} más</b> habéis sido invitados a uniros al grupo. El historial de mensajes ha sido compartido.",
-  "groupMemberNewYouHistoryTwo": "<b>Tú</b> y <b>{name}</b> fueron invitados a unirse al grupo. El historial de chat fue compartido.",
   "groupMemberYouLeft": "<b>Tú</b> has abandonado el grupo.",
   "groupMembers": "Miembros del grupo",
   "groupMembersNone": "No hay otros miembros en este grupo.",

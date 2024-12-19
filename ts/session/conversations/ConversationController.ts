@@ -38,7 +38,6 @@ import { ed25519Str } from '../utils/String';
 import { PreConditionFailed } from '../utils/errors';
 import { RunJobResult } from '../utils/job_runners/PersistedJob';
 import { GroupSync } from '../utils/job_runners/jobs/GroupSyncJob';
-import { UserSync } from '../utils/job_runners/jobs/UserSyncJob';
 import { LibSessionUtil } from '../utils/libsession/libsession_utils';
 import { SessionUtilContact } from '../utils/libsession/libsession_utils_contacts';
 import { SessionUtilConvoInfoVolatile } from '../utils/libsession/libsession_utils_convo_info_volatile';
@@ -166,7 +165,7 @@ class ConvoController {
   public getNicknameOrRealUsernameOrPlaceholder(pubKey: string): string {
     const conversation = ConvoHub.use().get(pubKey);
     if (!conversation) {
-      return pubKey;
+      return PubKey.shorten(pubKey);
     }
     return conversation.getNicknameOrRealUsernameOrPlaceholder();
   }
@@ -248,7 +247,6 @@ class ConvoController {
 
     // we never keep a left legacy group. Only fully remove it.
     await this.removeGroupOrCommunityFromDBAndRedux(groupPk);
-    await UserSync.queueNewJobIfNeeded();
   }
 
   public async deleteGroup(
@@ -276,8 +274,9 @@ class ConvoController {
       `deleteGroup: ${ed25519Str(groupPk)}, sendLeaveMessage:${sendLeaveMessage}, fromSyncMessage:${fromSyncMessage}, deletionType:${deletionType}, deleteAllMessagesOnSwarm:${deleteAllMessagesOnSwarm}, forceDestroyForAllMembers:${forceDestroyForAllMembers}, clearFetchedHashes:${clearFetchedHashes}`
     );
 
-    // this deletes all messages in the conversation
-    const conversation = await this.deleteConvoInitialChecks(groupPk, 'Group', false);
+    // Keep the messages until we have effectively left the group (and managed to send our leave message)
+    // because we have the "Leaving..." state (left pane) linked to the last message in conversation.
+    const conversation = await this.deleteConvoInitialChecks(groupPk, 'Group', true);
     if (!conversation || !conversation.isClosedGroup()) {
       return;
     }
@@ -295,6 +294,10 @@ class ConvoController {
         throw new Error('Failed to send our leaving message to 03 group');
       }
     }
+
+    // now that we know we've sent the leave message, delete any remaining messages
+    await this.deleteConvoInitialChecks(groupPk, 'Group', false);
+
     // a group 03 can be removed fully or kept empty as kicked.
     // when it was pendingInvite, we delete it fully,
     // when it was not, we empty the group but keep it with the "you have been kicked" message
@@ -317,7 +320,7 @@ class ConvoController {
         } catch (e) {
           // nothing to do
         }
-        if (groupInUserGroup && nameInMetaGroup && groupInUserGroup.name !== nameInMetaGroup) {
+        if (groupInUserGroup && nameInMetaGroup) {
           groupInUserGroup.name = nameInMetaGroup;
         }
         await UserGroupsWrapperActions.setGroup(groupInUserGroup);
@@ -328,44 +331,59 @@ class ConvoController {
         }
       }
     } else {
+      // Let's check if we still have a MetaGroupWrapper for this group. If we don't we won't be able to do anything..
+      let metaGroupWrapperExists = false;
       try {
-        const us = UserUtils.getOurPubKeyStrFromCache();
-        const allMembers = await MetaGroupWrapperActions.memberGetAll(groupPk);
-        const otherAdminsCount = allMembers
-          .filter(m => m.nominatedAdmin)
-          .filter(m => m.pubkeyHex !== us).length;
-        const weAreLastAdmin = otherAdminsCount === 0;
-        const infos = await MetaGroupWrapperActions.infoGet(groupPk);
-        const fromUserGroup = await UserGroupsWrapperActions.getGroup(groupPk);
-        if (!infos || !fromUserGroup || isEmpty(infos) || isEmpty(fromUserGroup)) {
-          throw new Error('deleteGroup: some required data not present');
-        }
-        const { secretKey } = fromUserGroup;
-
-        // check if we are the last admin
-        if (secretKey && !isEmpty(secretKey) && (weAreLastAdmin || forceDestroyForAllMembers)) {
-          const deleteAllMessagesSubRequest = deleteAllMessagesOnSwarm
-            ? new DeleteAllFromGroupMsgNodeSubRequest({
-                groupPk,
-                secretKey,
-              })
-            : undefined;
-
-          // this marks the group info as deleted. We need to push those details
-          await MetaGroupWrapperActions.infoDestroy(groupPk);
-          const lastPushResult = await GroupSync.pushChangesToGroupSwarmIfNeeded({
-            groupPk,
-            deleteAllMessagesSubRequest,
-            extraStoreRequests: [],
-          });
-          if (lastPushResult !== RunJobResult.Success) {
-            throw new Error(`Failed to destroyGroupDetails for pk ${ed25519Str(groupPk)}`);
+        await MetaGroupWrapperActions.infoGet(groupPk);
+        metaGroupWrapperExists = true;
+      } catch {
+        window.log.warn(`deleteGroup: MetaGroupWrapperActions for ${groupPk} does not exist.`);
+      }
+      if (metaGroupWrapperExists) {
+        try {
+          const us = UserUtils.getOurPubKeyStrFromCache();
+          const allMembers = await MetaGroupWrapperActions.memberGetAll(groupPk);
+          const otherAdminsCount = allMembers
+            .filter(m => m.nominatedAdmin)
+            .filter(m => m.pubkeyHex !== us).length;
+          const weAreLastAdmin = otherAdminsCount === 0;
+          const infos = await MetaGroupWrapperActions.infoGet(groupPk);
+          const fromUserGroup = await UserGroupsWrapperActions.getGroup(groupPk);
+          if (!infos || !fromUserGroup || isEmpty(infos) || isEmpty(fromUserGroup)) {
+            throw new Error('deleteGroup: some required data not present');
           }
+          const { secretKey } = fromUserGroup;
+
+          // check if we are the last admin
+          if (secretKey && !isEmpty(secretKey) && (weAreLastAdmin || forceDestroyForAllMembers)) {
+            const deleteAllMessagesSubRequest = deleteAllMessagesOnSwarm
+              ? new DeleteAllFromGroupMsgNodeSubRequest({
+                  groupPk,
+                  secretKey,
+                })
+              : undefined;
+
+            // this marks the group info as deleted. We need to push those details
+            await MetaGroupWrapperActions.infoDestroy(groupPk);
+            const lastPushResult = await GroupSync.pushChangesToGroupSwarmIfNeeded({
+              groupPk,
+              deleteAllMessagesSubRequest,
+              extraStoreRequests: [],
+            });
+            await LibSessionUtil.saveDumpsToDb(groupPk);
+
+            if (lastPushResult !== RunJobResult.Success) {
+              throw new Error(`Failed to destroyGroupDetails for pk ${ed25519Str(groupPk)}`);
+            }
+          }
+        } catch (e) {
+          // if that group was already freed this will happen.
+          // we still want to delete it entirely though
+          window.log.warn(
+            `deleteGroup: MetaGroupWrapperActions failed with: ${e.message}... Keeping it as this should be a retryable error`
+          );
+          throw e;
         }
-      } catch (e) {
-        // if that group was already freed this will happen.
-        // we still want to delete it entirely though
-        window.log.warn(`deleteGroup: MetaGroupWrapperActions failed with: ${e.message}`);
       }
 
       // this deletes the secretKey if we had it. If we need it for something, it has to be done before this call.
@@ -383,6 +401,8 @@ class ConvoController {
       await Data.emptySeenMessageHashesForConversation(groupPk);
     }
 
+    await LibSessionUtil.saveDumpsToDb(UserUtils.getOurPubKeyStrFromCache());
+
     await SessionUtilConvoInfoVolatile.removeGroupFromWrapper(groupPk);
     // release the memory (and the current meta-dumps in memory for that group)
     window.log.info(`freeing meta group wrapper: ${ed25519Str(groupPk)}`);
@@ -392,10 +412,9 @@ class ConvoController {
     getSwarmPollingInstance().removePubkey(groupPk, 'deleteGroup');
 
     window.inboxStore?.dispatch(groupInfoActions.removeGroupDetailsFromSlice({ groupPk }));
-    await UserSync.queueNewJobIfNeeded();
   }
 
-  public async deleteCommunity(convoId: string, options: DeleteOptions) {
+  public async deleteCommunity(convoId: string) {
     const conversation = await this.deleteConvoInitialChecks(convoId, 'Community', false);
     if (!conversation || !conversation.isPublic()) {
       return;
@@ -408,10 +427,6 @@ class ConvoController {
     }
     await removeCommunityFromWrappers(conversation.id); // this call needs to fetch the pubkey
     await this.removeGroupOrCommunityFromDBAndRedux(conversation.id);
-
-    if (!options.fromSyncMessage) {
-      await UserSync.queueNewJobIfNeeded();
-    }
   }
 
   public async delete1o1(
@@ -453,10 +468,6 @@ class ConvoController {
       if (getCurrentlySelectedConversationOutsideRedux() === conversation.id) {
         window.inboxStore?.dispatch(resetConversationExternal());
       }
-    }
-
-    if (!options.fromSyncMessage) {
-      await UserSync.queueNewJobIfNeeded();
     }
   }
 

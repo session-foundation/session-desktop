@@ -406,7 +406,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> va <b>{count} boshqalar</b> guruhga qo'shildi.",
   "groupMemberNewTwo": "<b>{name}</b> va <b>{other_name}</b> guruhga qo'shildi.",
   "groupMemberNewYouHistoryMultiple": "<b>Siz</b> va <b>{count} boshqalar</b> guruhga qo'shildilar. Suhbat tarixini ko'rish imkoniyati berilgan.",
-  "groupMemberNewYouHistoryTwo": "<b>Siz</b> va <b>{name}</b> guruhga qo'shildi. Suhbat tarixini ko'rish imkoniyati berilgan.",
   "groupMemberYouLeft": "<b>Siz</b> guruhni tark etdik.",
   "groupMembers": "Guruh aʼzolari",
   "groupMembersNone": "Ushbu guruhda boshqa a'zolar yo'q.",

@@ -1108,7 +1108,7 @@ async function getAllMessagesWithAttachmentsInConversationSentBefore(
     .all({ conversationId, beforeMs: deleteAttachBeforeSeconds * 1000 });
   const messages = map(rows, row => jsonToObject(row.json));
   const messagesWithAttachments = messages.filter(m => {
-    return getExternalFilesForMessage(m).some(a => !isEmpty(a) && isString(a)); // when we remove an attachment, we set the path to '' so it should be excluded here
+    return getExternalFilesForMessage(m, false).some(a => !isEmpty(a) && isString(a)); // when we remove an attachment, we set the path to '' so it should be excluded here
   });
   return messagesWithAttachments;
 }
@@ -2079,7 +2079,7 @@ function getMessagesWithFileAttachments(conversationId: string, limit: number) {
   return map(rows, row => jsonToObject(row.json));
 }
 
-function getExternalFilesForMessage(message: any) {
+function getExternalFilesForMessage(message: any, includePreview = true) {
   const { attachments, quote, preview } = message;
   const files: Array<string> = [];
 
@@ -2108,7 +2108,7 @@ function getExternalFilesForMessage(message: any) {
     });
   }
 
-  if (preview && preview.length) {
+  if (includePreview && preview && preview.length) {
     forEach(preview, item => {
       const { image } = item;
 

@@ -37,7 +37,7 @@ import {
   WithSecretKey,
 } from '../../../types/with';
 import { groupInfoActions } from '../../../../state/ducks/metaGroups';
-import { DURATION } from '../../../constants';
+import { DURATION, TTL_DEFAULT } from '../../../constants';
 import { timeoutWithAbort } from '../../Promise';
 
 const defaultMsBetweenRetries = 10000;
@@ -163,6 +163,8 @@ class GroupPendingRemovalsJob extends PersistedJob<GroupPendingRemovalsPersisted
         encryptedData: multiEncryptedMessage,
         groupPk,
         secretKey: group.secretKey,
+        ttlMs: TTL_DEFAULT.CONFIG_MESSAGE,
+        getNow: NetworkTime.now,
       });
 
       const revokeRequests = compact([

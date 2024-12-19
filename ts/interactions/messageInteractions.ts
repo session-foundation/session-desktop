@@ -126,7 +126,7 @@ const acceptOpenGroupInvitationV2 = (completeUrl: string, roomName?: string) => 
         },
       },
       onClickOk: async () => {
-        await joinOpenGroupV2WithUIEvents(completeUrl, true, false);
+        await joinOpenGroupV2WithUIEvents(completeUrl, true);
       },
 
       onClickClose,

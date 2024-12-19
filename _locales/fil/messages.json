@@ -405,7 +405,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> at <b>{count} iba pa</b> ay naimbitahan na sumali sa grupo.",
   "groupMemberNewTwo": "<b>{name}</b> at <b>{other_name}</b> ay naimbitahan na sumali sa grupo.",
   "groupMemberNewYouHistoryMultiple": "<b>Ikaw</b> at <b>{count} iba pa</b> ay naimbitahan na sumali sa grupo. Ibinahagi ang kasaysayan ng chat.",
-  "groupMemberNewYouHistoryTwo": "<b>Ikaw</b> at <b>{name}</b> ay naimbitahan na sumali sa grupo. Ibinahagi ang kasaysayan ng chat.",
   "groupMemberYouLeft": "<b>Ikaw</b> ay umalis sa grupo.",
   "groupMembers": "Mga Miyembro ng Grupo",
   "groupMembersNone": "Walang ibang miyembro sa grupong ito.",

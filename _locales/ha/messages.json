@@ -405,7 +405,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> da <b>{count} wasu</b> an gayyace su shiga ƙungiyar.",
   "groupMemberNewTwo": "<b>{name}</b> da <b>{other_name}</b> an gayyace su shiga ƙungiyar.",
   "groupMemberNewYouHistoryMultiple": "<b>Ku</b> da <b>{count} wasu</b> an gayyace ku shiga ƙungiyar. An raba tarihin hira.",
-  "groupMemberNewYouHistoryTwo": "<b>Ku</b> da <b>{name}</b> an gayyace ku shiga ƙungiyar. An raba tarihin hira.",
   "groupMemberYouLeft": "<b>Ku</b> sun bar ƙungiyar.",
   "groupMembers": "Mambobin rukunin",
   "groupMembersNone": "Babu sauran mambobi a cikin wannan rukunin.",

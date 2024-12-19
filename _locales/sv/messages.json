@@ -407,7 +407,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> och <b>{count} andra</b> bjöds in till gruppen.",
   "groupMemberNewTwo": "<b>{name}</b> och <b>{other_name}</b> bjöds in att gå med i gruppen.",
   "groupMemberNewYouHistoryMultiple": "<b>Du</b> och <b>{count} andra</b> bjöds in att gå med i gruppen. Chatt historik delades.",
-  "groupMemberNewYouHistoryTwo": "<b>Du</b> och <b>{name}</b> bjöds in att gå med i gruppen. Chatt historik delades.",
   "groupMemberYouLeft": "<b>Du</b> lämnade gruppen.",
   "groupMembers": "Gruppmedlemmar",
   "groupMembersNone": "Det finns inga andra medlemmar i denna grupp.",

@@ -405,7 +405,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> এবং <b>{count} জন অন্য সদস্য</b> গ্রুপে যোগ দেওয়ার জন্য আমন্ত্রিত হয়েছে।",
   "groupMemberNewTwo": "<b>{name}</b> এবং <b>{other_name}</b> গ্রুপে যোগ দেওয়ার জন্য আমন্ত্রিত হয়েছে।",
   "groupMemberNewYouHistoryMultiple": "<b>আপনি</b> এবং <b>{count} জন অন্য সদস্য</b> গ্রুপে যোগ দেওয়ার জন্য আমন্ত্রিত হয়েছে। চ্যাট ইতিহাস শেয়ার করা হয়েছে।",
-  "groupMemberNewYouHistoryTwo": "<b>আপনি</b> এবং <b>{name}</b> গ্রুপে যোগ দেওয়ার জন্য আমন্ত্রিত হয়েছে। চ্যাট ইতিহাস শেয়ার করা হয়েছে।",
   "groupMemberYouLeft": "<b>আপনি</b> গ্রুপ থেকে বের হয়ে গিয়েছেন।",
   "groupMembers": "গ্রুপ সদস্যবৃন্দ",
   "groupMembersNone": "এই গ্রুপে অন্য কোনো সদস্য নেই।",

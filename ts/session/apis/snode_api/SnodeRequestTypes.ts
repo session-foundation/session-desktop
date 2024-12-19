@@ -17,18 +17,18 @@ import {
 } from './namespaces';
 import { GroupDetailsNeededForSignature, SnodeGroupSignature } from './signature/groupSignature';
 import { SnodeSignature } from './signature/snodeSignatures';
-import { ShortenOrExtend, WithMessagesHashes, WithShortenOrExtend } from './types';
-import { TTL_DEFAULT } from '../../constants';
-import { NetworkTime } from '../../../util/NetworkTime';
 import {
+  WithMessagesHashes,
+  ShortenOrExtend,
+  WithShortenOrExtend,
   WithCreatedAtNetworkTimestamp,
   WithMaxSize,
   WithMethod,
   WithSecretKey,
   WithSignature,
   WithTimestamp,
+  WithGetNow,
 } from '../../types/with';
-import { NonEmptyArray } from '../../types/utility';
 
 /**
  * This is the base sub request class that every other type of request has to extend.
@@ -38,6 +38,11 @@ abstract class SnodeAPISubRequest<T extends string> {
 
   public abstract loggingId(): string;
   public abstract getDestination(): PubkeyType | GroupPubkeyType | '<none>';
+  public abstract build(): Promise<Record<string, unknown>>;
+
+  public async toBody() {
+    return JSON.stringify(await this.build());
+  }
 
   constructor({ method }: WithMethod<T>) {
     this.method = method;
@@ -89,8 +94,11 @@ abstract class ExpireSubRequest extends SnodeAPISubRequest<'expire'> {
 }
 
 abstract class StoreSubRequest extends SnodeAPISubRequest<'store'> {
-  constructor() {
+  public readonly getNow: () => number;
+
+  constructor(args: WithGetNow) {
     super({ method: 'store' });
+    this.getNow = args.getNow;
   }
 }
 
@@ -110,7 +118,7 @@ export class RetrieveLegacyClosedGroupSubRequest extends RetrieveSubRequest {
     this.legacyGroupPk = legacyGroupPk;
   }
 
-  public build() {
+  public async build() {
     return {
       method: this.method,
       params: {
@@ -172,7 +180,6 @@ export class RetrieveUserSubRequest extends RetrieveSubRequest {
     namespace: SnodeNamespacesUser | SnodeNamespacesUserConfig;
   }) {
     super({ last_hash, max_size });
-
     this.namespace = namespace;
   }
 
@@ -280,7 +287,7 @@ export class OnsResolveSubRequest extends OxendSubRequest {
     this.base64EncodedNameHash = base64EncodedNameHash;
   }
 
-  public build() {
+  public async build() {
     return {
       method: this.method,
       params: {
@@ -303,7 +310,7 @@ export class OnsResolveSubRequest extends OxendSubRequest {
 }
 
 export class GetServiceNodesSubRequest extends OxendSubRequest {
-  public build() {
+  public async build() {
     return {
       method: this.method,
       params: {
@@ -343,7 +350,7 @@ export class SwarmForSubRequest extends SnodeAPISubRequest<'get_swarm'> {
     this.destination = pubkey;
   }
 
-  public build() {
+  public async build() {
     return {
       method: this.method,
       params: {
@@ -375,7 +382,7 @@ export class NetworkTimeSubRequest extends SnodeAPISubRequest<'info'> {
     super({ method: 'info' });
   }
 
-  public build() {
+  public async build() {
     return {
       method: this.method,
       params: {},
@@ -493,9 +500,12 @@ export class SubaccountUnrevokeSubRequest extends AbstractRevokeSubRequest<'unre
  */
 export class GetExpiriesFromNodeSubRequest extends SnodeAPISubRequest<'get_expiries'> {
   public readonly messageHashes: Array<string>;
+  public readonly getNow: () => number;
 
-  constructor(args: WithMessagesHashes) {
+  constructor(args: WithMessagesHashes & WithGetNow) {
     super({ method: 'get_expiries' });
+    this.getNow = args.getNow;
+
     this.messageHashes = args.messagesHashes;
     if (this.messageHashes.length === 0) {
       window.log.warn(`GetExpiriesFromNodeSubRequest given empty list of messageHashes`);
@@ -506,7 +516,7 @@ export class GetExpiriesFromNodeSubRequest extends SnodeAPISubRequest<'get_expir
    * For Revoke/unrevoke, this needs an admin signature
    */
   public async build() {
-    const timestamp = NetworkTime.now();
+    const timestamp = this.getNow();
 
     const ourPubKey = UserUtils.getOurPubKeyStrFromCache();
     if (!ourPubKey) {
@@ -871,6 +881,7 @@ export class StoreGroupMessageSubRequest extends StoreSubRequest {
 
   constructor(
     args: WithGroupPubkey &
+      WithGetNow &
       WithCreatedAtNetworkTimestamp & {
         ttlMs: number;
         encryptedData: Uint8Array;
@@ -879,7 +890,7 @@ export class StoreGroupMessageSubRequest extends StoreSubRequest {
         secretKey: Uint8Array | null;
       }
   ) {
-    super();
+    super(args);
     this.destination = args.groupPk;
     this.ttlMs = args.ttlMs;
     this.encryptedData = args.encryptedData;
@@ -954,16 +965,18 @@ abstract class StoreGroupConfigSubRequest<
   public readonly secretKey: Uint8Array | null;
 
   constructor(
-    args: WithGroupPubkey & {
-      namespace: T;
-      encryptedData: Uint8Array;
-      secretKey: Uint8Array | null;
-    }
+    args: WithGroupPubkey &
+      WithGetNow & {
+        namespace: T;
+        encryptedData: Uint8Array;
+        secretKey: Uint8Array | null;
+        ttlMs: number;
+      }
   ) {
-    super();
+    super(args);
     this.namespace = args.namespace;
     this.destination = args.groupPk;
-    this.ttlMs = TTL_DEFAULT.CONFIG_MESSAGE;
+    this.ttlMs = args.ttlMs;
     this.encryptedData = args.encryptedData;
     this.secretKey = args.secretKey;
 
@@ -1061,12 +1074,14 @@ export class StoreUserConfigSubRequest extends StoreSubRequest {
   public readonly encryptedData: Uint8Array;
   public readonly destination: PubkeyType;
 
-  constructor(args: {
-    namespace: SnodeNamespacesUserConfig;
-    ttlMs: number;
-    encryptedData: Uint8Array;
-  }) {
-    super();
+  constructor(
+    args: WithGetNow & {
+      namespace: SnodeNamespacesUserConfig;
+      ttlMs: number;
+      encryptedData: Uint8Array;
+    }
+  ) {
+    super(args);
     this.namespace = args.namespace;
     this.ttlMs = args.ttlMs;
     this.encryptedData = args.encryptedData;
@@ -1136,19 +1151,20 @@ export class StoreUserMessageSubRequest extends StoreSubRequest {
   public readonly plainTextBuffer: Uint8Array | null;
 
   constructor(
-    args: WithCreatedAtNetworkTimestamp & {
-      ttlMs: number;
-      encryptedData: Uint8Array;
-      destination: PubkeyType;
-      dbMessageIdentifier: string | null;
-      /**
-       * When we send a message to a 1o1 recipient, we then need to send the same message to our own swarm as a synced message.
-       * To forward that message, we need the original message data, which is the plainTextBuffer field here.
-       */
-      plainTextBuffer: Uint8Array | null;
-    }
+    args: WithCreatedAtNetworkTimestamp &
+      WithGetNow & {
+        ttlMs: number;
+        encryptedData: Uint8Array;
+        destination: PubkeyType;
+        dbMessageIdentifier: string | null;
+        /**
+         * When we send a message to a 1o1 recipient, we then need to send the same message to our own swarm as a synced message.
+         * To forward that message, we need the original message data, which is the plainTextBuffer field here.
+         */
+        plainTextBuffer: Uint8Array | null;
+      }
   ) {
-    super();
+    super(args);
     this.ttlMs = args.ttlMs;
     this.destination = args.destination;
     this.encryptedData = args.encryptedData;
@@ -1174,7 +1190,7 @@ export class StoreUserMessageSubRequest extends StoreSubRequest {
       method: this.method,
       params: {
         pubkey: this.destination,
-        timestamp: NetworkTime.now(),
+        timestamp: this.getNow(),
         namespace: this.namespace,
         ttl: this.ttlMs,
         data: encryptedDataBase64,
@@ -1207,14 +1223,15 @@ export class StoreLegacyGroupMessageSubRequest extends StoreSubRequest {
   public readonly createdAtNetworkTimestamp: number;
 
   constructor(
-    args: WithCreatedAtNetworkTimestamp & {
-      ttlMs: number;
-      encryptedData: Uint8Array;
-      destination: PubkeyType;
-      dbMessageIdentifier: string | null;
-    }
+    args: WithCreatedAtNetworkTimestamp &
+      WithGetNow & {
+        ttlMs: number;
+        encryptedData: Uint8Array;
+        destination: PubkeyType;
+        dbMessageIdentifier: string | null;
+      }
   ) {
-    super();
+    super(args);
     this.ttlMs = args.ttlMs;
     this.destination = args.destination;
     this.encryptedData = args.encryptedData;
@@ -1237,7 +1254,7 @@ export class StoreLegacyGroupMessageSubRequest extends StoreSubRequest {
       params: {
         // no signature required for a legacy group retrieve/store of message to namespace -10
         pubkey: this.destination,
-        timestamp: NetworkTime.now(),
+        timestamp: this.getNow(),
         namespace: this.namespace,
         ttl: this.ttlMs,
         data: encryptedDataBase64,
@@ -1358,13 +1375,6 @@ export function builtRequestToLoggingId(request: BuiltSnodeSubRequests): string 
       throw new Error('should be unreachable case');
   }
 }
-
-export type BatchResultEntry = {
-  code: number;
-  body: Record<string, any>;
-};
-
-export type NotEmptyArrayOfBatchResults = NonEmptyArray<BatchResultEntry>;
 
 export const MAX_SUBREQUESTS_COUNT = 20;
 

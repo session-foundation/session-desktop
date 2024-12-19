@@ -260,6 +260,7 @@ describe('libsession_metagroup', () => {
       expect(metaGroupWrapper.memberGetAll()[0]).to.be.deep.eq({
         ...emptyMember(member),
         name: 'member name',
+        memberStatus: 'INVITE_SENDING',
       });
     });
 
@@ -268,7 +269,11 @@ describe('libsession_metagroup', () => {
       metaGroupWrapper.memberConstructAndSet(member);
       metaGroupWrapper.memberSetProfilePicture(member, pic);
       expect(metaGroupWrapper.memberGetAll().length).to.be.deep.eq(1);
-      const expected = { ...emptyMember(member), profilePicture: pic };
+      const expected = {
+        ...emptyMember(member),
+        profilePicture: pic,
+        memberStatus: 'INVITE_SENDING',
+      };
 
       expect(metaGroupWrapper.memberGetAll()[0]).to.be.deep.eq(expected);
     });
@@ -289,7 +294,10 @@ describe('libsession_metagroup', () => {
     it('can simply add, and has the correct default', () => {
       expect(metaGroupWrapper.memberGetAll().length).to.be.deep.eq(0);
       metaGroupWrapper.memberConstructAndSet(member);
-      expect(metaGroupWrapper.memberGetAll()).to.be.deep.eq([emptyMember(member)]);
+      // locally, when adding a member it is shown as INVITE_SENDING
+      expect(metaGroupWrapper.memberGetAll()).to.be.deep.eq([
+        { ...emptyMember(member), memberStatus: 'INVITE_SENDING' },
+      ]);
     });
 
     it('can mark as removed with messages', () => {

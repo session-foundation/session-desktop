@@ -25,6 +25,7 @@ import {
   RunJobResult,
   UserSyncPersistedData,
 } from '../PersistedJob';
+import { NetworkTime } from '../../../../util/NetworkTime';
 
 const defaultMsBetweenRetries = 5 * DURATION.SECONDS; // a long time between retries, to avoid running multiple jobs at the same time, when one was postponed at the same time as one already planned (5s)
 const defaultMaxAttempts = 2;
@@ -96,6 +97,7 @@ async function pushChangesToUserSwarmIfNeeded() {
       encryptedData: m.ciphertext,
       namespace: m.namespace,
       ttlMs: TTL_DEFAULT.CONFIG_MESSAGE,
+      getNow: NetworkTime.now,
     });
   });
 
@@ -229,6 +231,8 @@ class UserSyncJob extends PersistedJob<UserSyncPersistedData> {
   }
 }
 
+let interval: NodeJS.Timeout | undefined;
+
 /**
  * Queue a new Sync Configuration if needed job.
  * A UserSyncJob can only be added if there is none of the same type queued already.
@@ -238,6 +242,10 @@ async function queueNewJobIfNeeded() {
     window.log.info('NOT Scheduling ConfSyncJob: as we are linking a device');
 
     return;
+  }
+  // let's schedule periodic UserConfig jobs so we don't need to always remember to call UserSync.queueNewJobIfNeeded
+  if (!interval) {
+    interval = global.setInterval(() => void queueNewJobIfNeeded(), defaultMsBetweenRetries);
   }
   if (
     !lastRunConfigSyncJobTimestamp ||

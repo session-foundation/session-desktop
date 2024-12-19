@@ -406,7 +406,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> û <b>{count} yên din</b> hatin dawetin ku tevlî komê bibin.",
   "groupMemberNewTwo": "<b>{name}</b> û <b>{other_name}</b> hatin dawetin ku tevlî komê bibin.",
   "groupMemberNewYouHistoryMultiple": "<b>Te</b> û <b>{count} yên din</b> hatin dawetin ku tevlî komê bibin. Dîroka sohbetê hate parve kirin.",
-  "groupMemberNewYouHistoryTwo": "<b>Te</b> û <b>{name}</b> hatin dawetin ku tevlî komê bibin. Dîroka sohbetê hate parve kirin.",
   "groupMemberYouLeft": "<b>Tu</b> ji komê derketî.",
   "groupMembers": "Endamên Kom",
   "groupMembersNone": "Li vê komê ti endamên din nîne.",

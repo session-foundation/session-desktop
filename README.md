@@ -67,3 +67,5 @@ Licensed under the GPLv3: https://www.gnu.org/licenses/gpl-3.0.html<br/>
 ## Attributions
 
 The IP-to-country mapping data used in this project is provided by [MaxMind GeoLite2](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data).
+
+This project uses the [Lucide Icon Font](https://lucide.dev/), which is licensed under the [ISC License](./third_party_licenses/LucideLicense.txt).

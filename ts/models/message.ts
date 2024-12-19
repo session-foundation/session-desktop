@@ -752,7 +752,7 @@ export class MessageModel extends Backbone.Model<MessageAttributes> {
       props.text = body;
     }
     if (this.get('isDeleted')) {
-      props.isDeleted = this.get('isDeleted');
+      props.isDeleted = !!this.get('isDeleted');
     }
 
     if (this.getMessageHash()) {

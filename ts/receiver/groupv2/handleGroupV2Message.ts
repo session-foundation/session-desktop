@@ -17,7 +17,6 @@ import { UserUtils } from '../../session/utils';
 import { sleepFor } from '../../session/utils/Promise';
 import { ed25519Str, stringToUint8Array } from '../../session/utils/String';
 import { PreConditionFailed } from '../../session/utils/errors';
-import { UserSync } from '../../session/utils/job_runners/jobs/UserSyncJob';
 import { LibSessionUtil } from '../../session/utils/libsession/libsession_utils';
 import { SessionUtilConvoInfoVolatile } from '../../session/utils/libsession/libsession_utils_convo_info_volatile';
 import { groupInfoActions } from '../../state/ducks/metaGroups';
@@ -68,7 +67,7 @@ async function getInitializedGroupObject({
   if (!found) {
     found = {
       authData: null,
-      joinedAtSeconds: Date.now(),
+      joinedAtSeconds: Math.floor(Date.now() / 1000),
       name: groupName,
       priority: 0,
       pubkeyHex: groupPk,
@@ -197,7 +196,6 @@ async function handleGroupUpdateInviteMessage({
   }
 
   await LibSessionUtil.saveDumpsToDb(UserUtils.getOurPubKeyStrFromCache());
-  await UserSync.queueNewJobIfNeeded();
   if (!found.invitePending) {
     // if this group should already be polling based on if that author is pre-approved or we've already approved that group from another device.
     getSwarmPollingInstance().addGroupId(groupPk, async () => {
@@ -410,7 +408,7 @@ async function handleGroupUpdateMemberLeftNotificationMessage({
   });
 }
 
-async function handleGroupDeleteMemberContentMessage({
+async function handleGroupUpdateDeleteMemberContentMessage({
   groupPk,
   signatureTimestamp,
   change,
@@ -420,7 +418,7 @@ async function handleGroupDeleteMemberContentMessage({
   if (!convo) {
     return;
   }
-  window.log.info(`handleGroupDeleteMemberContentMessage for ${ed25519Str(groupPk)}`);
+  window.log.info(`handleGroupUpdateDeleteMemberContentMessage for ${ed25519Str(groupPk)}`);
 
   /**
    * When handling a GroupUpdateDeleteMemberContentMessage we need to do a few things.
@@ -428,10 +426,8 @@ async function handleGroupDeleteMemberContentMessage({
    *   1. we only delete the messageHashes which are in the change.messageHashes AND sent by that same author.
    * When `adminSignature` is not empty and valid,
    *   2. we delete all the messages in the group sent by any of change.memberSessionIds AND
-   *   3. we delete all the messageHashes in the conversation matching the change.messageHashes (even if not from the right sender)
+   *   3. we mark as deleted all the messageHashes in the conversation matching the change.messageHashes (even if not from the right sender)
    *
-   * Note: we never fully delete those messages locally, but only empty them and mark them as deleted with the
-   * "This message was deleted" placeholder.
    * Eventually, we will be able to delete those "deleted by kept locally" messages with placeholders.
    */
 
@@ -445,8 +441,8 @@ async function handleGroupDeleteMemberContentMessage({
       signatureTimestamp,
     });
 
-    // we don't want to hang while for too long here
-    // processing the handleGroupDeleteMemberContentMessage itself
+    // we don't want to hang for too long here
+    // processing the handleGroupUpdateDeleteMemberContentMessage itself
     // (we are running on the receiving pipeline here)
     // so network calls are not allowed.
     for (let index = 0; index < messageModels.length; index++) {
@@ -456,7 +452,7 @@ async function handleGroupDeleteMemberContentMessage({
         await messageModel.markAsDeleted();
       } catch (e) {
         window.log.warn(
-          `handleGroupDeleteMemberContentMessage markAsDeleted non-admin of ${messageModel.getMessageHash()} failed with`,
+          `handleGroupUpdateDeleteMemberContentMessage markAsDeleted non-admin of ${messageModel.getMessageHash()} failed with`,
           e.message
         );
       }
@@ -488,6 +484,7 @@ async function handleGroupDeleteMemberContentMessage({
     toRemove,
     signatureTimestamp,
   }); // this is step 2.
+
   const modelsByHashes = await Data.findAllMessageHashesInConversation({
     groupPk,
     messageHashes: change.messageHashes,
@@ -621,7 +618,6 @@ async function handleGroupUpdatePromoteMessage({
   }
 
   await LibSessionUtil.saveDumpsToDb(UserUtils.getOurPubKeyStrFromCache());
-  await UserSync.queueNewJobIfNeeded();
   if (!found.invitePending) {
     // This group should already be polling based on if that author is pre-approved or we've already approved that group from another device.
     // Start polling from it, we will mark ourselves as admin once we get the first merge result, if needed.
@@ -731,7 +727,7 @@ async function handleGroupUpdateMessage(
     return;
   }
   if (details.updateMessage.deleteMemberContent) {
-    await handleGroupDeleteMemberContentMessage({
+    await handleGroupUpdateDeleteMemberContentMessage({
       change: details.updateMessage
         .deleteMemberContent as SignalService.GroupUpdateDeleteMemberContentMessage,
       ...detailsWithContext,

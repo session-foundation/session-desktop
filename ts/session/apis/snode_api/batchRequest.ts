@@ -10,10 +10,10 @@ import {
   builtRequestToLoggingId,
   BuiltSnodeSubRequests,
   MAX_SUBREQUESTS_COUNT,
-  NotEmptyArrayOfBatchResults,
   RawSnodeSubRequests,
   WithMethodBatchType,
 } from './SnodeRequestTypes';
+import { NotEmptyArrayOfBatchResults } from './BatchResultEntry';
 import { MergedAbortSignal, WithTimeoutMs } from './requestWith';
 
 function logSubRequests(requests: Array<BuiltSnodeSubRequests>) {

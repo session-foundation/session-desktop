@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import { LegacyGroupInfo } from 'libsession_util_nodejs';
+import { LegacyGroupInfo, UserGroupsWrapperNode } from 'libsession_util_nodejs';
 import { describe } from 'mocha';
 import Sinon from 'sinon';
 import { ConversationModel } from '../../../../models/conversation';
@@ -223,6 +223,21 @@ describe('libsession_user_groups', () => {
           'joinedAtSeconds in the wrapper should match the inputted group'
         ).to.equal(group.get('lastJoinedTimestamp'));
       });
+
+      it('throws when joined_at is too far in the future', async () => {
+        const us = await TestUtils.generateUserKeyPairs();
+
+        const groupWrapper = new UserGroupsWrapperNode(us.ed25519KeyPair.privKeyBytes, null);
+
+        const group = groupWrapper.createGroup();
+        group.joinedAtSeconds = 9000000000 - 1; // 9000000000 is the cut off by libsession-util-nodejs
+        groupWrapper.setGroup(group); // shouldn't throw
+        group.joinedAtSeconds = 9000000000 + 1; // 9000000000 is the cut off by libsession-util-nodejs
+        expect(() => {
+          groupWrapper.setGroup(group);
+        }).to.throw();
+      });
+
       it('if disappearing messages is on then the wrapper returned values should match the inputted group', async () => {
         const group = new ConversationModel({
           ...validArgs,

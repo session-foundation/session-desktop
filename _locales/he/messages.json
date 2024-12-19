@@ -405,7 +405,6 @@
   "groupMemberNewMultiple": "<b>{name}‏</b> ו<b>{count} אחרים‏</b> הוזמנו להצטרף לקבוצה.",
   "groupMemberNewTwo": "<b>{name}‏</b> ו<b>{other_name}‏</b> הוזמנו להצטרף לקבוצה.",
   "groupMemberNewYouHistoryMultiple": "<b>את/ה</b> ו<b>{count} אחרים‏</b> הוזמנתם להצטרף לקבוצה. היסטוריית הצ'אט שותפה.",
-  "groupMemberNewYouHistoryTwo": "<b>את/ה</b> ו<b>{name}‏</b> הוזמנתם להצטרף לקבוצה. היסטוריית הצ'אט שותפה.",
   "groupMemberYouLeft": "<b>את/ה</b> עזבת את הקבוצה.",
   "groupMembers": "חברי קבוצה",
   "groupMembersNone": "אין חברים אחרים בקבוצה זו.",

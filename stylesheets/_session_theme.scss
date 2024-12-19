@@ -65,10 +65,6 @@
       flex-direction: row;
       align-items: center;
 
-      svg {
-        margin-right: var(--margins-xs);
-      }
-
       a {
         text-decoration: underline;
         color: var(--message-bubbles-received-text-color);

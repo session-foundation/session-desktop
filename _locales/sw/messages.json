@@ -406,7 +406,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> na <b>{count} wengine</b> wamealikwa kujiunga na kundi.",
   "groupMemberNewTwo": "<b>{name}</b> na <b>{other_name}</b> wamealikwa kujiunga na kundi.",
   "groupMemberNewYouHistoryMultiple": "<b>Wewe</b> na <b>{count} wengine</b> mmealikwa kujiunga na kundi. Historia ya gumzo ilishirikiwa.",
-  "groupMemberNewYouHistoryTwo": "<b>Wewe</b> na <b>{name}</b> mmealikwa kujiunga na kundi. Historia ya gumzo ilishirikiwa.",
   "groupMemberYouLeft": "<b>Wewe</b> umetoka kwenye kundi.",
   "groupMembers": "Wajumbe wa kikundi",
   "groupMembersNone": "Hakuna wanachama wengine katika kikundi hiki.",

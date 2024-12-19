@@ -405,7 +405,6 @@
   "groupMemberNewMultiple": "<b>{name}</b> dhe <b>{count} të tjerë</b> u ftuat të bashkoheni me grupin.",
   "groupMemberNewTwo": "<b>{name}</b> dhe <b>{other_name}</b> u ftuat të bashkoheni me grupin.",
   "groupMemberNewYouHistoryMultiple": "<b>Ju</b> dhe <b>{count} të tjerë</b> u ftuat të bashkoheni me grupin. Historia e bisedës u ndanë.",
-  "groupMemberNewYouHistoryTwo": "<b>Ju</b> dhe <b>{name}</b> u ftuat të bashkoheni me grupin. Historia e bisedës u ndanë.",
   "groupMemberYouLeft": "<b>Ju</b> braktisët grupin.",
   "groupMembers": "Anëtarë grupi",
   "groupMembersNone": "Nuk ka anëtarë të tjerë në këtë grup.",
