@@ -11,7 +11,7 @@ export function normalizeLocaleName(locale: string) {
   const dashedLocale = locale.replaceAll('_', '-');
 
   // Note: this is a pain, but we somehow needs to keep in sync this logic and the LOCALE_PATH_MAPPING from
-  // https://github.com/oxen-io/session-shared-scripts/blob/main/crowdin/generate_desktop_strings.py
+  // https://github.com/session-foundation/session-shared-scripts/blob/main/crowdin/generate_desktop_strings.py
   // What we do, is keep as is, anything given in LOCALE_PATH_MAPPING, but otherwise, keep only the first part of the locale.
   // So `es-419` is allowed, but `es-es` is hardcoded to es, fr_FR is hardcoded to fr, and so on.
   if (

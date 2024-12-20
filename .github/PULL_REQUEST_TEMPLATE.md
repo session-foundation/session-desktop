@@ -9,13 +9,13 @@ Remember, you can preview this before saving it.
 
 ### First time contributor checklist:
 
-- [ ] I have read the [README](https://github.com/oxen-io/session-desktop/blob/master/README.md) and [Contributor Guidelines](https://github.com/oxen-io/session-desktop/blob/master/CONTRIBUTING.md)
+- [ ] I have read the [README](https://github.com/session-foundation/session-desktop/blob/master/README.md) and [Contributor Guidelines](https://github.com/session-foundation/session-desktop/blob/master/CONTRIBUTING.md)
 
 ### Contributor checklist:
 
 - [ ] My commits are in nice logical chunks with [good commit messages](http://chris.beams.io/posts/git-commit/)
-- [ ] My changes are [rebased](https://blog.axosoft.com/golden-rule-of-rebasing-in-git/) on the latest [`clearnet`](https://github.com/oxen-io/session-desktop/tree/clearnet) branch
-- [ ] A `yarn ready` run passes successfully ([more about tests here](https://github.com/oxen-io/session-desktop/blob/master/CONTRIBUTING.md#tests))
+- [ ] My changes are [rebased](https://blog.axosoft.com/golden-rule-of-rebasing-in-git/) on the latest [`unstable`](https://github.com/session-foundation/session-desktop/tree/unstable) branch
+- [ ] A `yarn ready` run passes successfully ([more about tests here](https://github.com/session-foundation/session-desktop/blob/master/CONTRIBUTING.md#tests))
 - [ ] My changes are ready to be shipped to users
 
 ### Description

@@ -79,7 +79,7 @@
     "bytebuffer": "^5.0.1",
     "classnames": "2.2.5",
     "config": "1.28.1",
-    "curve25519-js": "https://github.com/oxen-io/curve25519-js",
+    "curve25519-js": "https://github.com/session-foundation/curve25519-js",
     "date-fns": "^3.6.0",
     "dompurify": "^2.0.7",
     "electron-localshortcut": "^3.2.1",

@@ -10,11 +10,11 @@ Session integrates directly with [Oxen Service Nodes](https://docs.oxen.io/about
 
 ## Want to Contribute? Found a Bug or Have a feature request?
 
-Please search for any [existing issues](https://github.com/oxen-io/session-desktop/issues) that describe your bug in order to avoid duplicate submissions. <br><br>Submissions can be made by making a pull request to our development branch.If you don't know where to start contributing please read [Contributing.md](CONTRIBUTING.md) and refer to issues tagged with the [Good-first-issue](https://github.com/oxen-io/session-desktop/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) tag.
+Please search for any [existing issues](https://github.com/session-foundation/session-desktop/issues) that describe your bug in order to avoid duplicate submissions. <br><br>Submissions can be made by making a pull request to our development branch.If you don't know where to start contributing please read [Contributing.md](CONTRIBUTING.md) and refer to issues tagged with the [Good-first-issue](https://github.com/session-foundation/session-desktop/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) tag.
 
 ## Supported platforms
 
-Session requires Windows 10 or later, macOS Monterey (12) or later, or a Linux distribution with glibc 2.28 or later like Debian 10 or Ubuntu 20.04.
+Session requires Windows 10 or later, macOS Ventura (13) or later, or a Linux distribution with glibc 2.28 or later like Debian 10 or Ubuntu 20.04.
 
 ## Build instruction
 
@@ -32,8 +32,8 @@ gpg --import KeeJef.asc
 Get the signed hash for this release, the SESSION_VERSION needs to be updated for the release you want to verify
 
 ```
-export SESSION_VERSION=1.6.1
-wget https://github.com/oxen-io/session-desktop/releases/download/v$SESSION_VERSION/signatures.asc
+export SESSION_VERSION=1.14.5
+wget https://github.com/session-foundation/session-desktop/releases/download/v$SESSION_VERSION/signatures.asc
 ```
 
 Verify the signature of the hashes of the files

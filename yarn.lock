@@ -2584,9 +2584,9 @@ csstype@3.1.3, csstype@^3.0.2, csstype@^3.1.2:
   resolved "https://registry.yarnpkg.com/csstype/-/csstype-3.1.3.tgz#d80ff294d114fb0e6ac500fbf85b60137d7eff81"
   integrity sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw==
 
-"curve25519-js@https://github.com/oxen-io/curve25519-js":
+"curve25519-js@https://github.com/session-foundation/curve25519-js":
   version "0.0.4"
-  resolved "https://github.com/oxen-io/curve25519-js#102f8c0a31b5c58bad8606979036cf763be9f4f6"
+  resolved "https://github.com/session-foundation/curve25519-js#102f8c0a31b5c58bad8606979036cf763be9f4f6"
 
 dargs@^7.0.0:
   version "7.0.0"

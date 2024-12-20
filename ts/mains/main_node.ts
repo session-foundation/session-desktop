@@ -529,7 +529,7 @@ setTimeout(readyForUpdates, TEN_MINUTES);
 
 function openReleaseNotes() {
   void shell.openExternal(
-    `https://github.com/oxen-io/session-desktop/releases/tag/v${app.getVersion()}`
+    `https://github.com/session-foundation/session-desktop/releases/tag/v${app.getVersion()}`
   );
 }
 

@@ -10,7 +10,7 @@ It's a good idea to gauge interest in your intended work by finding the current 
 for it or creating a new one yourself. Use Github issues as a place to signal
 your intentions and get feedback from the users most likely to appreciate your changes.
 
-You're most likely to have your pull request accepted if it addresses an existing Github issue marked with the [good-first-issue](https://github.com/oxen-io/session-desktop/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) tag, these issues are specifically tagged, because they are generally features/bug fixes which can be cleanly merged on a single platform without requiring cross platform work, are generally of lower complexity than larger features and are non contentious, meaning that the core team doesn't need to try and assess the community desire for such a feature before merging.
+You're most likely to have your pull request accepted if it addresses an existing Github issue marked with the [good-first-issue](https://github.com/session-foundation/session-desktop/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) tag, these issues are specifically tagged, because they are generally features/bug fixes which can be cleanly merged on a single platform without requiring cross platform work, are generally of lower complexity than larger features and are non contentious, meaning that the core team doesn't need to try and assess the community desire for such a feature before merging.
 
 Of course we encourage community developers to work on ANY issue filed on our Github regardless of how it’s tagged, however if you pick up or create an issue without the “Good first issue” tag it would be best if you leave a comment on the issue so that the core team can give you any guidance required, especially around UI heavy features or issues which require cross platform integration.
 
@@ -18,7 +18,7 @@ Of course we encourage community developers to work on ANY issue filed on our Gi
 
 ## Node.js
 
-You'll need a [Node.js](https://nodejs.org/) version which matches our current version. You can check [`.nvmrc` in the `unstable` branch](https://github.com/oxen-io/session-desktop/blob/unstable/.nvmrc) to see what the current version is.
+You'll need a [Node.js](https://nodejs.org/) version which matches our current version. You can check [`.nvmrc` in the `unstable` branch](https://github.com/session-foundation/session-desktop/blob/unstable/.nvmrc) to see what the current version is.
 
 If you use other node versions you might have or need a node version manager.
 
@@ -139,7 +139,7 @@ sudo dnf install make automake gcc gcc-c++ kernel-devel
 Now, run these commands in your preferred terminal in a good directory for development:
 
 ```
-git clone https://github.com/oxen-io/session-desktop.git
+git clone https://github.com/session-foundation/session-desktop.git
 cd session-desktop
 npm install --global yarn      # (only if you don’t already have `yarn`)
 yarn install --frozen-lockfile # Install and build dependencies (this will take a while)
@@ -239,10 +239,10 @@ So you wanna make a pull request? Please observe the following guidelines.
 - Please do not submit pull requests for pure translation fixes. Anyone can update
   the translations at [Crowdin](https://getsession.org/translate).
 - [Rebase](https://nathanleclaire.com/blog/2014/09/14/dont-be-scared-of-git-rebase/) your
-  changes on the latest `clearnet` branch, resolving any conflicts.
+  changes on the latest `unstable` branch, resolving any conflicts.
   This ensures that your changes will merge cleanly when you open your PR.
 - Be sure to add and run tests!
-- Make sure the diff between `clearnet` and your branch contains only the
+- Make sure the diff between `unstable` and your branch contains only the
   minimal set of changes needed to implement your feature or bugfix. This will
   make it easier for the person reviewing your code to approve the changes.
   Please do not submit a PR with commented out code or unfinished features.
@@ -262,6 +262,7 @@ So you wanna make a pull request? Please observe the following guidelines.
       choices that may be helpful to someone reviewing or auditing the commit
       history in the future. When in doubt, err on the side of a longer
       commit message.
+
 Above all, spend some time with the repository. Follow the pull request template added to
 your pull request description automatically. Take a look at recent approved pull requests,
 see how they did things.
