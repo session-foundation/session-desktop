@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import _ from 'lodash';
 import { StagedAttachmentType } from '../../components/conversation/composition/CompositionBox';
+import { WithConvoId } from '../../session/types/with';
 
 export type StagedAttachmentsStateType = {
   stagedAttachments: { [conversationKey: string]: Array<StagedAttachmentType> };
@@ -44,11 +45,11 @@ const stagedAttachmentsSlice = createSlice({
     },
     removeAllStagedAttachmentsInConversation(
       state: StagedAttachmentsStateType,
-      action: PayloadAction<{ conversationKey: string }>
+      action: PayloadAction<WithConvoId>
     ) {
-      const { conversationKey } = action.payload;
+      const { conversationId } = action.payload;
 
-      const currentStagedAttachments = state.stagedAttachments[conversationKey];
+      const currentStagedAttachments = state.stagedAttachments[conversationId];
       if (!currentStagedAttachments || _.isEmpty(currentStagedAttachments)) {
         return state;
       }
@@ -61,7 +62,7 @@ const stagedAttachmentsSlice = createSlice({
         }
       });
 
-      delete state.stagedAttachments[conversationKey];
+      delete state.stagedAttachments[conversationId];
       return state;
     },
     removeStagedAttachmentInConversation(

@@ -3,6 +3,7 @@ import { isNumber } from 'lodash';
 import { batchFirstSubIsSuccess, batchGlobalIsSuccess, sogsBatchSend } from './sogsV3BatchPoll';
 import { uploadFileToRoomSogs3 } from './sogsV3SendFile';
 import { OpenGroupRequestCommonType } from '../../../../data/types';
+import { DURATION } from '../../../constants';
 
 /**
  * This function does a double request to the sogs.
@@ -35,7 +36,8 @@ export const uploadImageForRoomSogsV3 = async (
     new Set([roomInfos.roomId]),
     new AbortController().signal,
     [{ type: 'updateRoom', updateRoom: { roomId: roomInfos.roomId, imageId: fileId } }],
-    'batch'
+    'batch',
+    30 * DURATION.SECONDS // longer time for image upload
   );
 
   if (!batchGlobalIsSuccess(batchResult) || !batchFirstSubIsSuccess(batchResult)) {

@@ -1,6 +1,4 @@
-import _ from 'lodash';
-import { ClosedGroup, getMessageQueue } from '..';
-import { ConversationTypeEnum } from '../../models/types';
+import _, { isFinite, isNumber } from 'lodash';
 import { addKeyPairToCacheAndDBIfNeeded } from '../../receiver/closedGroups';
 import { ECKeyPair } from '../../receiver/keypairs';
 import { openConversationWithMessages } from '../../state/ducks/conversations';
@@ -8,24 +6,29 @@ import { updateConfirmModal } from '../../state/ducks/modalDialog';
 import { getSwarmPollingInstance } from '../apis/snode_api';
 import { SnodeNamespaces } from '../apis/snode_api/namespaces';
 import { generateClosedGroupPublicKey, generateCurve25519KeyPairWithoutPrefix } from '../crypto';
+import { ClosedGroup, GroupInfo } from '../group/closed-group';
 import {
   ClosedGroupNewMessage,
   ClosedGroupNewMessageParams,
 } from '../messages/outgoing/controlMessage/group/ClosedGroupNewMessage';
 import { PubKey } from '../types';
 import { UserUtils } from '../utils';
-import { forceSyncConfigurationNowIfNeeded } from '../utils/sync/syncUtils';
-import { getConversationController } from './ConversationController';
+import { ConvoHub } from './ConversationController';
+import { ConversationTypeEnum } from '../../models/types';
+import { NetworkTime } from '../../util/NetworkTime';
+import { MessageQueue } from '../sending';
 
-export async function createClosedGroup(groupName: string, members: Array<string>, isV3: boolean) {
+/**
+ * Creates a brand new closed group from user supplied details. This function generates a new identityKeyPair so cannot be used to restore a closed group.
+ * @param groupName the name of this closed group
+ * @param members the initial members of this closed group
+ */
+export async function createClosedGroup(groupName: string, members: Array<string>) {
+  // this is all legacy group logic.
+  // TODO: To be removed
+
   const setOfMembers = new Set(members);
-
-  if (isV3) {
-    throw new Error('groupv3 is not supported yet');
-  }
-
   const us = UserUtils.getOurPubKeyStrFromCache();
-
   const groupPublicKey = await generateClosedGroupPublicKey();
 
   const encryptionKeyPair = await generateCurve25519KeyPairWithoutPrefix();
@@ -34,11 +37,10 @@ export async function createClosedGroup(groupName: string, members: Array<string
   }
 
   // Create the group
-  const convo = await getConversationController().getOrCreateAndWait(
-    groupPublicKey,
-    ConversationTypeEnum.GROUP
-  );
+  const convo = await ConvoHub.use().getOrCreateAndWait(groupPublicKey, ConversationTypeEnum.GROUP);
+
   convo.set('lastJoinedTimestamp', Date.now());
+
   await convo.setIsApproved(true, false);
 
   // Ensure the current user is a member
@@ -49,7 +51,7 @@ export async function createClosedGroup(groupName: string, members: Array<string
   const existingExpirationType = 'unknown';
   const existingExpireTimer = 0;
 
-  const groupDetails: ClosedGroup.GroupInfo = {
+  const groupDetails: GroupInfo = {
     id: groupPublicKey,
     name: groupName,
     members: listOfMembers,
@@ -86,8 +88,6 @@ export async function createClosedGroup(groupName: string, members: Array<string
   }
   // commit again as now the keypair is saved and can be added to the libsession wrapper UserGroup
   await convo.commit();
-
-  await forceSyncConfigurationNowIfNeeded();
 
   await openConversationWithMessages({ conversationKey: groupPublicKey, messageId: null });
 }
@@ -147,7 +147,9 @@ async function sendToGroupMembers(
   window?.log?.info(`Sending invites for group ${groupPublicKey} to ${listOfMembers}`);
   // evaluating if all invites sent, if failed give the option to retry failed invites via modal dialog
   const inviteResults = await Promise.all(promises);
-  const allInvitesSent = _.every(inviteResults, inviteResult => inviteResult !== false);
+  const allInvitesSent = _.every(inviteResults, inviteResult => {
+    return isNumber(inviteResult) && isFinite(inviteResult);
+  });
 
   if (allInvitesSent) {
     if (isRetry) {
@@ -169,14 +171,12 @@ async function sendToGroupMembers(
   inviteResults.forEach((result, index) => {
     const member = listOfMembers[index];
     // group invite must always contain the admin member.
-    if (result !== true || admins.includes(member)) {
+    if (!result || admins.includes(member)) {
       membersToResend.push(member);
     }
   });
   const namesOfMembersToResend = membersToResend.map(
-    m =>
-      getConversationController().get(m)?.getNicknameOrRealUsernameOrPlaceholder() ||
-      window.i18n('unknown')
+    m => ConvoHub.use().get(m)?.getNicknameOrRealUsernameOrPlaceholder() || window.i18n('unknown')
   );
 
   if (membersToResend.length < 1) {
@@ -217,6 +217,8 @@ function createInvitePromises(
   admins: Array<string>,
   encryptionKeyPair: ECKeyPair
 ) {
+  const createAtNetworkTimestamp = NetworkTime.now();
+
   return listOfMembers.map(async m => {
     const messageParams: ClosedGroupNewMessageParams = {
       groupId: groupPublicKey,
@@ -224,15 +226,15 @@ function createInvitePromises(
       members: listOfMembers,
       admins,
       keypair: encryptionKeyPair,
-      timestamp: Date.now(),
+      createAtNetworkTimestamp,
       expirationType: null, // we keep that one **not** expiring
       expireTimer: 0,
     };
     const message = new ClosedGroupNewMessage(messageParams);
-    return getMessageQueue().sendToPubKeyNonDurably({
+    return MessageQueue.use().sendTo1o1NonDurably({
       pubkey: PubKey.cast(m),
       message,
-      namespace: SnodeNamespaces.UserMessages,
+      namespace: SnodeNamespaces.Default,
     });
   });
 }

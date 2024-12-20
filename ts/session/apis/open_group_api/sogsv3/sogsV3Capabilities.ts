@@ -4,6 +4,7 @@ import { OpenGroupData } from '../../../../data/opengroups';
 import { OnionSending } from '../../../onions/onionSend';
 import { OpenGroupPollingUtils } from '../opengroupV2/OpenGroupPollingUtils';
 import { batchGlobalIsSuccess } from './sogsV3BatchPoll';
+import { DURATION } from '../../../constants';
 
 const capabilitiesFetchForServer = async (
   serverUrl: string,
@@ -36,6 +37,7 @@ const capabilitiesFetchForServer = async (
     stringifiedBody: null,
     headers: null,
     throwErrors: false,
+    timeoutMs: 10 * DURATION.SECONDS,
   });
   // not a batch call yet as we need to exclude headers for this call for now
   if (!batchGlobalIsSuccess(result)) {

@@ -51,7 +51,7 @@ import { Message } from '../../../message/message-item/Message';
 import { AttachmentInfo, MessageInfo } from './components';
 import { AttachmentCarousel } from './components/AttachmentCarousel';
 import { ToastUtils } from '../../../../../session/utils';
-import { showCopyAccountIdAction } from '../../../../menu/items/CopyAccountId';
+import { showCopyAccountIdAction } from '../../../../menu/items/CopyAccountId/guard';
 
 // NOTE we override the default max-widths when in the detail isDetailView
 const StyledMessageBody = styled.div`

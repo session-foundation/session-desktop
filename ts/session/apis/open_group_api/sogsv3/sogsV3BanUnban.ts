@@ -2,6 +2,7 @@ import AbortController from 'abort-controller';
 import { PubKey } from '../../../types';
 import { batchFirstSubIsSuccess, OpenGroupBatchRow, sogsBatchSend } from './sogsV3BatchPoll';
 import { OpenGroupRequestCommonType } from '../../../../data/types';
+import { DURATION } from '../../../constants';
 
 export const sogsV3BanUser = async (
   userToBan: PubKey,
@@ -31,7 +32,8 @@ export const sogsV3BanUser = async (
     new Set([roomInfos.roomId]),
     new AbortController().signal,
     sequence,
-    'sequence'
+    'sequence',
+    10 * DURATION.SECONDS
   );
   return batchFirstSubIsSuccess(batchSendResponse);
 };
@@ -54,7 +56,8 @@ export const sogsV3UnbanUser = async (
         },
       },
     ],
-    'batch'
+    'batch',
+    10 * DURATION.SECONDS
   );
   return batchFirstSubIsSuccess(batchSendResponse);
 };

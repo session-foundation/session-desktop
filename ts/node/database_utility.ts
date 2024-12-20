@@ -17,6 +17,7 @@ export const ITEMS_TABLE = 'items';
 export const ATTACHMENT_DOWNLOADS_TABLE = 'attachment_downloads';
 export const CLOSED_GROUP_V2_KEY_PAIRS_TABLE = 'encryptionKeyPairsForClosedGroupV2';
 export const LAST_HASHES_TABLE = 'lastHashes';
+export const SEEN_MESSAGE_TABLE = 'seenMessages';
 
 export const HEX_KEY = /[^0-9A-Fa-f]/;
 

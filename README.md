@@ -10,7 +10,7 @@ Session integrates directly with [Oxen Service Nodes](https://docs.oxen.io/about
 
 ## Want to Contribute? Found a Bug or Have a feature request?
 
-Please search for any [existing issues](https://github.com/oxen-io/session-desktop/issues) that describe your bug in order to avoid duplicate submissions. <br><br>Submissions can be made by making a pull request to our development branch.If you don't know where to start contributing please read [Contributing.md](CONTRIBUTING.md) and refer to issues tagged with the [Good-first-issue](https://github.com/oxen-io/session-desktop/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) tag.
+Please search for any [existing issues](https://github.com/session-foundation/session-desktop/issues) that describe your bug in order to avoid duplicate submissions. <br><br>Submissions can be made by making a pull request to our development branch.If you don't know where to start contributing please read [Contributing.md](CONTRIBUTING.md) and refer to issues tagged with the [Good-first-issue](https://github.com/session-foundation/session-desktop/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) tag.
 
 ## Supported platforms
 
@@ -33,7 +33,7 @@ Get the signed hash for this release, the SESSION_VERSION needs to be updated fo
 
 ```
 export SESSION_VERSION=1.6.1
-wget https://github.com/oxen-io/session-desktop/releases/download/v$SESSION_VERSION/signatures.asc
+wget https://github.com/session-foundation/session-desktop/releases/download/v$SESSION_VERSION/signatures.asc
 ```
 
 Verify the signature of the hashes of the files
@@ -67,3 +67,5 @@ Licensed under the GPLv3: https://www.gnu.org/licenses/gpl-3.0.html<br/>
 ## Attributions
 
 The IP-to-country mapping data used in this project is provided by [MaxMind GeoLite2](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data).
+
+This project uses the [Lucide Icon Font](https://lucide.dev/), which is licensed under the [ISC License](./third_party_licenses/LucideLicense.txt).

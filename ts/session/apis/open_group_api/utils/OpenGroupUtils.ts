@@ -1,8 +1,8 @@
 import { isEmpty } from 'lodash';
 import { OpenGroupData } from '../../../../data/opengroups';
+import { ConvoHub } from '../../../conversations';
 import { getOpenGroupManager } from '../opengroupV2/OpenGroupManagerV2';
 import { SessionUtilUserGroups } from '../../../utils/libsession/libsession_utils_user_groups';
-import { getConversationController } from '../../../conversations';
 import { OpenGroupV2Room, OpenGroupRequestCommonType } from '../../../../data/types';
 
 // eslint-disable-next-line prefer-regex-literals
@@ -51,7 +51,7 @@ export function getCompleteUrlFromRoom(roomInfos: OpenGroupV2Room) {
     isEmpty(roomInfos.roomId) ||
     isEmpty(roomInfos.serverPublicKey)
   ) {
-    throw new Error('getCompleteUrlFromRoom needs serverPublicKey, roomid and serverUrl to be set');
+    throw new Error('getCompleteUrlFromRoom needs serverPublicKey, roomId and serverUrl to be set');
   }
   // serverUrl has the port and protocol already
   return `${roomInfos.serverUrl}/${roomInfos.roomId}?${publicKeyParam}${roomInfos.serverPublicKey}`;
@@ -148,9 +148,7 @@ export async function getAllValidOpenGroupV2ConversationRoomInfos() {
           /* eslint-disable no-await-in-loop */
           await OpenGroupData.removeV2OpenGroupRoom(roomConvoId);
           getOpenGroupManager().removeRoomFromPolledRooms(infos);
-          await getConversationController().deleteCommunity(roomConvoId, {
-            fromSyncMessage: false,
-          });
+          await ConvoHub.use().deleteCommunity(roomConvoId);
           /* eslint-enable no-await-in-loop */
         }
       } catch (e) {

@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 
 import { sogsV3AddAdmin } from '../../session/apis/open_group_api/sogsv3/sogsV3AddRemoveMods';
-import { getConversationController } from '../../session/conversations';
 import { PubKey } from '../../session/types';
 import { ToastUtils } from '../../session/utils';
+import { ConvoHub } from '../../session/conversations';
 import { updateAddModeratorsModal } from '../../state/ducks/modalDialog';
 import { useIsDarkTheme } from '../../state/selectors/theme';
 import { SessionHeaderSearchInput } from '../SessionHeaderSearchInput';
@@ -22,7 +22,7 @@ export const AddModeratorsDialog = (props: Props) => {
 
   const dispatch = useDispatch();
   const isDarkTheme = useIsDarkTheme();
-  const convo = getConversationController().get(conversationId);
+  const convo = ConvoHub.use().get(conversationId);
 
   const [inputBoxValue, setInputBoxValue] = useState('');
   const [addingInProgress, setAddingInProgress] = useState(false);
@@ -51,7 +51,7 @@ export const AddModeratorsDialog = (props: Props) => {
         ToastUtils.pushFailedToAddAsModerator();
       } else {
         const userDisplayName =
-          getConversationController().get(pubkey.key)?.getNicknameOrRealUsernameOrPlaceholder() ||
+          ConvoHub.use().get(pubkey.key)?.getNicknameOrRealUsernameOrPlaceholder() ||
           window.i18n('unknown');
         window?.log?.info(`${pubkey.key} added as moderator...`);
         ToastUtils.pushUserAddedToModerators(userDisplayName);

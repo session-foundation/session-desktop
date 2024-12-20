@@ -3,8 +3,10 @@ import chaiAsPromised from 'chai-as-promised';
 import { describe } from 'mocha';
 import Sinon from 'sinon';
 
-import { Onions, SnodePool } from '../../../../session/apis/snode_api';
+import { Onions } from '../../../../session/apis/snode_api';
 import { TestUtils } from '../../../test-utils';
+
+import { SnodePool } from '../../../../session/apis/snode_api/snodePool';
 
 import { Snode } from '../../../../data/types';
 import { SeedNodeAPI } from '../../../../session/apis/seed_node_api';

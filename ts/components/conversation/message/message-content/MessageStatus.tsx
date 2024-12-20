@@ -1,3 +1,4 @@
+import { SessionDataTestId } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { useMessageExpirationPropsById } from '../../../../hooks/useParamSelector';
@@ -13,7 +14,7 @@ import { saveLogToDesktop } from '../../../../util/logging';
 
 type Props = {
   messageId: string;
-  dataTestId?: string | undefined;
+  dataTestId: SessionDataTestId;
 };
 
 /**

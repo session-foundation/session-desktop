@@ -10,7 +10,7 @@ It's a good idea to gauge interest in your intended work by finding the current 
 for it or creating a new one yourself. Use Github issues as a place to signal
 your intentions and get feedback from the users most likely to appreciate your changes.
 
-You're most likely to have your pull request accepted if it addresses an existing Github issue marked with the [good-first-issue](https://github.com/oxen-io/session-desktop/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) tag, these issues are specifically tagged, because they are generally features/bug fixes which can be cleanly merged on a single platform without requiring cross platform work, are generally of lower complexity than larger features and are non contentious, meaning that the core team doesn't need to try and assess the community desire for such a feature before merging.
+You're most likely to have your pull request accepted if it addresses an existing Github issue marked with the [good-first-issue](https://github.com/session-foundation/session-desktop/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) tag, these issues are specifically tagged, because they are generally features/bug fixes which can be cleanly merged on a single platform without requiring cross platform work, are generally of lower complexity than larger features and are non contentious, meaning that the core team doesn't need to try and assess the community desire for such a feature before merging.
 
 Of course we encourage community developers to work on ANY issue filed on our Github regardless of how it’s tagged, however if you pick up or create an issue without the “Good first issue” tag it would be best if you leave a comment on the issue so that the core team can give you any guidance required, especially around UI heavy features or issues which require cross platform integration.
 
@@ -18,7 +18,7 @@ Of course we encourage community developers to work on ANY issue filed on our Gi
 
 ## Node.js
 
-You'll need a [Node.js](https://nodejs.org/) version which matches our current version. You can check [`.nvmrc` in the `unstable` branch](https://github.com/oxen-io/session-desktop/blob/unstable/.nvmrc) to see what the current version is.
+You'll need a [Node.js](https://nodejs.org/) version which matches our current version. You can check [`.nvmrc` in the `unstable` branch](https://github.com/session-foundation/session-desktop/blob/unstable/.nvmrc) to see what the current version is.
 
 If you use other node versions you might have or need a node version manager.
 
@@ -139,7 +139,7 @@ sudo dnf install make automake gcc gcc-c++ kernel-devel
 Now, run these commands in your preferred terminal in a good directory for development:
 
 ```
-git clone https://github.com/oxen-io/session-desktop.git
+git clone https://github.com/session-foundation/session-desktop.git
 cd session-desktop
 npm install --global yarn      # (only if you don’t already have `yarn`)
 yarn install --frozen-lockfile # Install and build dependencies (this will take a while)

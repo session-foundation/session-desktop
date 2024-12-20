@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import { Data } from '../../../../data/data';
-import { getConversationController } from '../../../../session/conversations';
+import { ConvoHub } from '../../../../session/conversations';
 import { AttachmentDownloads } from '../../../../session/utils';
 import { updateConfirmModal } from '../../../../state/ducks/modalDialog';
 import { useMessageAttachments } from '../../../../state/selectors';
@@ -39,14 +39,14 @@ export const ClickToTrustSender = (props: { messageId: string }) => {
       return;
     }
     const sender = found.getSource();
-    const convo = getConversationController().get(sender);
+    const convo = ConvoHub.use().get(sender);
     window.inboxStore?.dispatch(
       updateConfirmModal({
         title: window.i18n('attachmentsAutoDownloadModalTitle'),
         i18nMessage: {
           token: 'attachmentsAutoDownloadModalDescription',
           args: {
-            conversation_name: convo.getContactProfileNameOrShortenedPubKey(),
+            conversation_name: convo.getNicknameOrRealUsernameOrPlaceholder(),
           },
         },
         closeTheme: SessionButtonColor.Danger,

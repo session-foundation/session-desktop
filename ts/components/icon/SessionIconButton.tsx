@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import _ from 'lodash';
-import { KeyboardEvent, MouseEvent, ReactNode, forwardRef, memo } from 'react';
+import { KeyboardEvent, MouseEvent, SessionDataTestId, ReactNode, forwardRef, memo } from 'react';
 import styled from 'styled-components';
 import { SessionIcon, SessionIconProps } from './SessionIcon';
 
@@ -9,8 +9,9 @@ export type SessionIconButtonProps = SessionIconProps & {
   isSelected?: boolean;
   isHidden?: boolean;
   margin?: string;
+  dataTestId?: SessionDataTestId;
+  dataTestIdIcon?: SessionDataTestId;
   padding?: string;
-  dataTestIdIcon?: string;
   id?: string;
   title?: string;
   ariaLabel?: string;

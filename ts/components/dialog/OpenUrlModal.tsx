@@ -57,13 +57,13 @@ export function OpenUrlModal(props: OpenUrlModalState) {
           buttonColor={SessionButtonColor.Danger}
           buttonType={SessionButtonType.Simple}
           onClick={onClickOpen}
-          dataTestId="session-confirm-ok-button"
+          dataTestId="open-url-confirm-button"
         />
         <SessionButton
           text={window.i18n('urlCopy')}
           buttonType={SessionButtonType.Simple}
           onClick={onClickCopy}
-          dataTestId="session-confirm-cancel-button"
+          dataTestId="copy-url-button"
         />
       </div>
     </SessionWrapperModal>

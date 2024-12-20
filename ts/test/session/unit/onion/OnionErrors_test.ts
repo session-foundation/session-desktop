@@ -1,4 +1,5 @@
 import AbortController from 'abort-controller';
+
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import { describe } from 'mocha';
@@ -16,6 +17,7 @@ import {
   Onions,
   OXEN_SERVER_ERROR,
 } from '../../../../session/apis/snode_api/onions';
+import { SnodePool } from '../../../../session/apis/snode_api/snodePool';
 import { OnionPaths } from '../../../../session/onions';
 import { pathFailureCount } from '../../../../session/onions/onionPath';
 import { generateFakeSnodeWithEdKey, stubData } from '../../../test-utils/utils';
@@ -34,7 +36,7 @@ const getFakeResponseOnPath = (statusCode?: number, body?: string) => {
 
 const getFakeResponseOnDestination = (statusCode?: number, body?: string) => {
   return {
-    status: 200 || 0,
+    status: 200,
     text: async () => {
       return JSON.stringify({ status: statusCode, body: body || '' });
     },
@@ -88,7 +90,7 @@ describe('OnionPathsErrors', () => {
       guardPubkeys[1],
       guardPubkeys[2],
     ]);
-    TestUtils.stubWindow('getSeedNodeList', () => ['seednode1']);
+    TestUtils.stubWindow('getSeedNodeList', () => ['whatever']);
     Sinon.stub(SeedNodeAPI, 'fetchSnodePoolFromSeedNodeWithRetries').resolves(fakeSnodePool);
     stubData('getSwarmNodesForPubkey').resolves(fakeSwarmForAssociatedWith);
     updateGuardNodesStub = stubData('updateGuardNodes').resolves();
@@ -97,8 +99,8 @@ describe('OnionPathsErrors', () => {
     updateSwarmSpy = stubData('updateSwarmNodesForPubkey').resolves();
     stubData('getItemById').resolves({ id: SNODE_POOL_ITEM_ID, value: '' });
     stubData('createOrUpdateItem').resolves();
-    dropSnodeFromSnodePool = Sinon.spy(SnodeAPI.SnodePool, 'dropSnodeFromSnodePool');
-    dropSnodeFromSwarmIfNeededSpy = Sinon.spy(SnodeAPI.SnodePool, 'dropSnodeFromSwarmIfNeeded');
+    dropSnodeFromSnodePool = Sinon.spy(SnodePool, 'dropSnodeFromSnodePool');
+    dropSnodeFromSwarmIfNeededSpy = Sinon.spy(SnodePool, 'dropSnodeFromSwarmIfNeeded');
     dropSnodeFromPathSpy = Sinon.spy(OnionPaths, 'dropSnodeFromPath');
     incrementBadPathCountOrDropSpy = Sinon.spy(OnionPaths, 'incrementBadPathCountOrDrop');
     incrementBadSnodeCountOrDropSpy = Sinon.spy(Onions, 'incrementBadSnodeCountOrDrop');
@@ -110,12 +112,13 @@ describe('OnionPathsErrors', () => {
     await OnionPaths.getOnionPath({});
 
     oldOnionPaths = OnionPaths.TEST_getTestOnionPath();
-    Sinon.stub(Onions, 'decodeOnionResult').callsFake((_symkey: ArrayBuffer, plaintext: string) =>
-      Promise.resolve({
-        plaintext,
-        ciphertextBuffer: new Uint8Array(),
-        plaintextBuffer: Buffer.alloc(0),
-      })
+    Sinon.stub(Onions, 'decodeOnionResult').callsFake(
+      (_symmetricKey: ArrayBuffer, plaintext: string) =>
+        Promise.resolve({
+          plaintext,
+          ciphertextBuffer: new Uint8Array(),
+          plaintextBuffer: Buffer.alloc(0),
+        })
     );
   });
 
@@ -133,6 +136,7 @@ describe('OnionPathsErrors', () => {
           symmetricKey: new Uint8Array(),
           guardNode: guardSnode1,
           abortSignal: abortController.signal,
+          allow401s: false,
         });
         throw new Error('Error expected');
       } catch (e) {
@@ -148,6 +152,7 @@ describe('OnionPathsErrors', () => {
           response: getFakeResponseOnDestination(200),
           symmetricKey: new Uint8Array(),
           guardNode: guardSnode1,
+          allow401s: false,
         });
         throw new Error('Did not throw');
       } catch (e) {
@@ -166,6 +171,7 @@ describe('OnionPathsErrors', () => {
           response: getFakeResponseOnDestination(),
           symmetricKey: new Uint8Array(),
           guardNode: guardSnode1,
+          allow401s: false,
         });
         throw new Error('Did not throw');
       } catch (e) {
@@ -185,6 +191,7 @@ describe('OnionPathsErrors', () => {
             response: getFakeResponseOnPath(406),
             symmetricKey: new Uint8Array(),
             guardNode: guardSnode1,
+            allow401s: false,
           });
           throw new Error('Error expected');
         } catch (e) {
@@ -206,6 +213,7 @@ describe('OnionPathsErrors', () => {
             response: getFakeResponseOnDestination(406),
             symmetricKey: new Uint8Array(),
             guardNode: guardSnode1,
+            allow401s: false,
           });
           throw new Error('Error expected');
         } catch (e) {
@@ -230,6 +238,7 @@ describe('OnionPathsErrors', () => {
             response: getFakeResponseOnPath(425),
             symmetricKey: new Uint8Array(),
             guardNode: guardSnode1,
+            allow401s: false,
           });
           throw new Error('Error expected');
         } catch (e) {
@@ -251,6 +260,7 @@ describe('OnionPathsErrors', () => {
             response: getFakeResponseOnDestination(425),
             symmetricKey: new Uint8Array(),
             guardNode: guardSnode1,
+            allow401s: false,
           });
           throw new Error('Error expected');
         } catch (e) {
@@ -281,6 +291,7 @@ describe('OnionPathsErrors', () => {
               destinationSnodeEd25519: targetNode,
 
               associatedWith,
+              allow401s: false,
             });
             throw new Error('Error expected');
           } catch (e) {
@@ -298,7 +309,7 @@ describe('OnionPathsErrors', () => {
           expect(dropSnodeFromSwarmIfNeededSpy.firstCall.args[0]).to.eq(associatedWith);
           expect(dropSnodeFromSwarmIfNeededSpy.firstCall.args[1]).to.eq(targetNode);
 
-          // this node failed only once. it should not be dropped yet from the snodepool
+          // this node failed only once. it should not be dropped yet from the snode pool
           expect(dropSnodeFromSnodePool.callCount).to.eq(0);
           expect(dropSnodeFromPathSpy.callCount).to.eq(0);
           expect(incrementBadPathCountOrDropSpy.callCount).to.eq(0);
@@ -329,6 +340,7 @@ describe('OnionPathsErrors', () => {
               guardNode: guardSnode1,
               destinationSnodeEd25519: targetNode,
               associatedWith,
+              allow401s: false,
             });
             throw new Error('Error expected');
           } catch (e) {
@@ -341,8 +353,8 @@ describe('OnionPathsErrors', () => {
 
           // we got a new swarm for this pubkey. so it's OK that dropSnodeFromSwarm was not called for this pubkey
 
-          // this node failed only once. it should not be dropped yet from the snodepool
-          // this node failed only once. it should not be dropped yet from the snodepool
+          // this node failed only once. it should not be dropped yet from the snode pool
+          // this node failed only once. it should not be dropped yet from the snode pool
           expect(dropSnodeFromSnodePool.callCount).to.eq(0);
           expect(dropSnodeFromPathSpy.callCount).to.eq(0);
           expect(incrementBadPathCountOrDropSpy.callCount).to.eq(0);
@@ -364,6 +376,7 @@ describe('OnionPathsErrors', () => {
               destinationSnodeEd25519: targetNode,
 
               associatedWith,
+              allow401s: false,
             });
             throw new Error('Error expected');
           } catch (e) {
@@ -379,7 +392,7 @@ describe('OnionPathsErrors', () => {
           expect(dropSnodeFromSwarmIfNeededSpy.callCount).to.eq(1);
           expect(dropSnodeFromSwarmIfNeededSpy.firstCall.args[0]).to.eq(associatedWith);
           expect(dropSnodeFromSwarmIfNeededSpy.firstCall.args[1]).to.eq(targetNode);
-          // this node failed only once. it should not be dropped yet from the snodepool
+          // this node failed only once. it should not be dropped yet from the snode pool
           expect(dropSnodeFromSnodePool.callCount).to.eq(0);
           expect(dropSnodeFromPathSpy.callCount).to.eq(0);
           expect(incrementBadPathCountOrDropSpy.callCount).to.eq(0);
@@ -401,6 +414,7 @@ describe('OnionPathsErrors', () => {
               guardNode: guardSnode1,
               destinationSnodeEd25519: targetNode,
               associatedWith,
+              allow401s: false,
             });
             throw new Error('Error expected');
           } catch (e) {
@@ -418,7 +432,7 @@ describe('OnionPathsErrors', () => {
           expect(dropSnodeFromSwarmIfNeededSpy.firstCall.args[0]).to.eq(associatedWith);
           expect(dropSnodeFromSwarmIfNeededSpy.firstCall.args[1]).to.eq(targetNode);
 
-          // this node failed only once. it should not be dropped yet from the snodepool
+          // this node failed only once. it should not be dropped yet from the snode pool
           expect(dropSnodeFromSnodePool.callCount).to.eq(0);
           expect(dropSnodeFromPathSpy.callCount).to.eq(0);
           expect(incrementBadPathCountOrDropSpy.callCount).to.eq(0);
@@ -436,7 +450,7 @@ describe('OnionPathsErrors', () => {
    * processOnionResponse OXEN SERVER ERROR
    */
   describe('processOnionResponse - OXEN_SERVER_ERROR', () => {
-    // open group server v2 only talkes onion routing request. So errors can only happen at destination
+    // open group server v2 only talks onion routing request. So errors can only happen at destination
     it('throws a non-retryable error on oxen server errors on destination', async () => {
       const targetNode = otherNodesPubkeys[0];
 
@@ -448,6 +462,7 @@ describe('OnionPathsErrors', () => {
           destinationSnodeEd25519: targetNode,
 
           associatedWith,
+          allow401s: false,
         });
         throw new Error('Error expected');
       } catch (e) {
@@ -470,7 +485,7 @@ describe('OnionPathsErrors', () => {
    * processOnionResponse OXEN SERVER ERROR
    */
   describe('processOnionResponse - 502 - node not found', () => {
-    // open group server v2 only talkes onion routing request. So errors can only happen at destination
+    // open group server v2 only talks onion routing request. So errors can only happen at destination
     it('throws a retryable error on 502 on intermediate snode', async () => {
       const targetNode = otherNodesPubkeys[0];
       const failingSnode = oldOnionPaths[0][1];
@@ -484,6 +499,7 @@ describe('OnionPathsErrors', () => {
           guardNode: guardSnode1,
           destinationSnodeEd25519: targetNode,
           associatedWith,
+          allow401s: false,
         });
         throw new Error('Error expected');
       } catch (e) {
@@ -525,6 +541,7 @@ describe('OnionPathsErrors', () => {
           guardNode: guardSnode1,
           destinationSnodeEd25519: targetNode,
           associatedWith,
+          allow401s: false,
         });
         throw new Error('Error expected');
       } catch (e) {
@@ -565,6 +582,7 @@ describe('OnionPathsErrors', () => {
             guardNode: guardSnode1,
             destinationSnodeEd25519: targetNode,
             associatedWith,
+            allow401s: false,
           });
           throw new Error('Error expected');
         } catch (e) {
@@ -607,6 +625,7 @@ describe('OnionPathsErrors', () => {
           guardNode,
           destinationSnodeEd25519: targetNode,
           associatedWith,
+          allow401s: false,
         });
         throw new Error('Error expected');
       } catch (e) {
@@ -615,7 +634,7 @@ describe('OnionPathsErrors', () => {
         if (index < 2) {
           expect(pathFailureCount[guardNode.pubkey_ed25519]).to.eq(index + 1);
         } else {
-          // pathFailureCount is reset once we hit 3 for this guardnode
+          // pathFailureCount is reset once we hit 3 for this guard node
           expect(pathFailureCount[guardNode.pubkey_ed25519]).to.eq(0);
         }
       }
@@ -635,7 +654,7 @@ describe('OnionPathsErrors', () => {
     }
 
     expect(updateGuardNodesStub.callCount).to.eq(1);
-    // we dont know which snode failed so don't exclude any of those from swarms
+    // we don't know which snode failed so don't exclude any of those from swarms
     expect(dropSnodeFromSwarmIfNeededSpy.callCount).to.eq(0);
 
     expect(guardNode.pubkey_ed25519).to.eq(incrementBadPathCountOrDropSpy.args[0][0]);

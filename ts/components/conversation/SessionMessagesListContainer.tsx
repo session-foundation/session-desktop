@@ -25,7 +25,6 @@ import {
   getSortedMessagesOfSelectedConversation,
 } from '../../state/selectors/conversations';
 import { getSelectedConversationKey } from '../../state/selectors/selectedConversation';
-import { ConversationMessageRequestButtons } from './MessageRequestButtons';
 import { SessionMessagesList } from './SessionMessagesList';
 import { TypingBubble } from './TypingBubble';
 
@@ -126,7 +125,6 @@ class SessionMessagesListContainerInner extends Component<Props> {
             key="typing-bubble"
           />
         </StyledTypingBubbleContainer>
-        <ConversationMessageRequestButtons />
 
         <ScrollToLoadedMessageContext.Provider value={this.scrollToLoadedMessage}>
           <SessionMessagesList

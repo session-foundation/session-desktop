@@ -44,6 +44,7 @@ export const renderUserMentionRow = (suggestion: SuggestionDataItem) => {
       pubkey={`${suggestion.id}`}
       inMentions={true}
       dataTestId="mentions-popup-row"
+      maxNameWidth="100%"
     />
   );
 };

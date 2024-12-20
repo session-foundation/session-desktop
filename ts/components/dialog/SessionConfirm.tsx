@@ -16,7 +16,6 @@ import { StyledI18nSubText } from '../basic/StyledI18nSubText';
 
 export interface SessionConfirmDialogProps {
   i18nMessage?: LocalizerComponentPropsObject;
-  i18nMessageSub?: LocalizerComponentPropsObject;
   title?: string;
   radioOptions?: SessionRadioItems;
   onOk?: any;
@@ -51,7 +50,6 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
   const {
     title = '',
     i18nMessage,
-    i18nMessageSub,
     radioOptions,
     okTheme,
     closeTheme = SessionButtonColor.Danger,
@@ -133,9 +131,8 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
       {!showHeader && <SpacerLG />}
 
       <div className="session-modal__centered">
-        {i18nMessage ? <StyledI18nSubText {...i18nMessage} /> : null}
-        {i18nMessageSub ? (
-          <StyledI18nSubText {...i18nMessageSub} className="session-confirm-sub-message" />
+        {i18nMessage ? (
+          <StyledI18nSubText {...i18nMessage} data-testid="modal-description" />
         ) : null}
         {radioOptions && chosenOption !== '' ? (
           <SessionRadioGroup

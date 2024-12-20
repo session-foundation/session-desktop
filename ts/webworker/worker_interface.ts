@@ -106,7 +106,7 @@ export class WorkerInterface {
       reject: (error: any) => {
         this._removeJob(id);
         const end = Date.now();
-        window.log.info(
+        window.log.debug(
           `Worker job ${id} (${fnName}) failed in ${end - start}ms with ${error.message}`
         );
         return reject(error);
@@ -117,9 +117,11 @@ export class WorkerInterface {
   private _removeJob(id: number) {
     if (this._DEBUG) {
       this._jobs[id].complete = true;
-    } else {
-      delete this._jobs[id];
+      return this._jobs[id];
     }
+    const job = this._jobs[id];
+    delete this._jobs[id];
+    return job;
   }
 
   private _getJob(id: number) {

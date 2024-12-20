@@ -9,6 +9,7 @@ import {
   OpenGroupRequestHeaders,
 } from '../opengroupV2/OpenGroupPollingUtils';
 import { batchGlobalIsSuccess, parseBatchGlobalStatusCode } from './sogsV3BatchPoll';
+import { DURATION } from '../../../constants';
 
 export function addJsonContentTypeToHeaders(
   headers: OpenGroupRequestHeaders
@@ -61,6 +62,7 @@ export const sendSogsMessageOnionV4 = async (
     stringifiedBody,
     headers: null,
     throwErrors: true,
+    timeoutMs: 10 * DURATION.SECONDS,
   });
 
   if (!batchGlobalIsSuccess(result)) {
@@ -123,6 +125,7 @@ export const sendMessageOnionV4BlindedRequest = async (
     stringifiedBody,
     headers: null,
     throwErrors: true,
+    timeoutMs: 10 * DURATION.SECONDS,
   });
 
   if (!batchGlobalIsSuccess(result)) {

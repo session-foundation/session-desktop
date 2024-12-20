@@ -15,7 +15,7 @@ import { SessionRecording } from '../SessionRecording';
 
 import { SettingsKey } from '../../../data/settings-key';
 import { showLinkSharingConfirmationModalDialog } from '../../../interactions/conversationInteractions';
-import { getConversationController } from '../../../session/conversations';
+import { ConvoHub } from '../../../session/conversations';
 import { ToastUtils } from '../../../session/utils';
 import { ReduxConversationType } from '../../../state/ducks/conversations';
 import { removeAllStagedAttachmentsInConversation } from '../../../state/ducks/stagedAttachments';
@@ -26,6 +26,7 @@ import {
   getSelectedConversation,
 } from '../../../state/selectors/conversations';
 import {
+  getIsSelectedBlocked,
   getSelectedCanWrite,
   getSelectedConversationKey,
 } from '../../../state/selectors/selectedConversation';
@@ -58,6 +59,7 @@ import {
 import { CompositionTextArea } from './CompositionTextArea';
 import { cleanMentions, mentionsRegex } from './UserMentions';
 import { HTMLDirection } from '../../../util/i18n/rtlSupport';
+import { PubKey } from '../../../session/types';
 
 export interface ReplyingToMessageProps {
   convoId: string;
@@ -102,6 +104,7 @@ interface Props {
   selectedConversationKey?: string;
   selectedConversation: ReduxConversationType | undefined;
   typingEnabled: boolean;
+  isBlocked: boolean;
   quotedMessageProps?: ReplyingToMessageProps;
   stagedAttachments: Array<StagedAttachmentType>;
   onChoseAttachments: (newAttachments: Array<File>) => void;
@@ -389,7 +392,7 @@ class CompositionBoxInner extends Component<Props, State> {
 
   private renderCompositionView() {
     const { showEmojiPanel } = this.state;
-    const { typingEnabled } = this.props;
+    const { typingEnabled, isBlocked } = this.props;
 
     // we can only send a message if the conversation allows writing in it AND
     // - we've got a message body OR
@@ -398,6 +401,13 @@ class CompositionBoxInner extends Component<Props, State> {
       typingEnabled && (!isEmpty(this.state.draft) || !isEmpty(this.props.stagedAttachments));
 
     /* eslint-disable @typescript-eslint/no-misused-promises */
+
+    // we completely hide the composition box when typing is not enabled now.
+    // Actually not anymore. We want the above, except when we can't write because that user is blocked.
+    // When that user is blocked, **and only then**, we want to show the composition box, disabled with the placeholder "unblock to send".
+    if (!typingEnabled && !isBlocked) {
+      return null;
+    }
 
     return (
       <Flex
@@ -440,7 +450,7 @@ class CompositionBoxInner extends Component<Props, State> {
           <ToggleEmojiButton ref={this.emojiPanelButton} onClick={this.toggleEmojiPanel} />
         )}
         {showSendButton && <SendMessageButton onClick={this.onSendMessage} />}
-        {typingEnabled && showEmojiPanel && (
+        {showEmojiPanel && (
           <StyledEmojiPanelContainer role="button" dir={this.props.htmlDirection}>
             <SessionEmojiPanel
               ref={this.emojiPanel}
@@ -455,7 +465,6 @@ class CompositionBoxInner extends Component<Props, State> {
   }
 
   /* eslint-enable @typescript-eslint/no-misused-promises */
-
   private fetchUsersForOpenGroup(
     query: string,
     callback: (data: Array<SuggestionDataItem>) => void
@@ -478,9 +487,9 @@ class CompositionBoxInner extends Component<Props, State> {
   }
 
   private fetchUsersForGroup(query: string, callback: (data: Array<SuggestionDataItem>) => void) {
-    let overridenQuery = query;
+    let overriddenQuery = query;
     if (!query) {
-      overridenQuery = '';
+      overriddenQuery = '';
     }
     if (!this.props.selectedConversation) {
       return;
@@ -491,11 +500,11 @@ class CompositionBoxInner extends Component<Props, State> {
     }
 
     if (this.props.selectedConversation.isPublic) {
-      this.fetchUsersForOpenGroup(overridenQuery, callback);
+      this.fetchUsersForOpenGroup(overriddenQuery, callback);
       return;
     }
     // can only be a closed group here
-    this.fetchUsersForClosedGroup(overridenQuery, callback);
+    this.fetchUsersForClosedGroup(overriddenQuery, callback);
   }
 
   private fetchUsersForClosedGroup(
@@ -512,9 +521,8 @@ class CompositionBoxInner extends Component<Props, State> {
     }
 
     const allMembers = allPubKeys.map(pubKey => {
-      const conv = getConversationController().get(pubKey);
-      const profileName =
-        conv?.getNicknameOrRealUsernameOrPlaceholder() || window.i18n('anonymous');
+      const convo = ConvoHub.use().get(pubKey);
+      const profileName = convo?.getNicknameOrRealUsernameOrPlaceholder() || PubKey.shorten(pubKey);
 
       return {
         id: pubKey,
@@ -531,7 +539,7 @@ class CompositionBoxInner extends Component<Props, State> {
 
     // Transform the users to what react-mentions expects
     const mentionsData = members.map(user => ({
-      display: user.authorProfileName || window.i18n('anonymous'),
+      display: user.authorProfileName || PubKey.shorten(user.id),
       id: user.id,
     }));
     callback(mentionsData);
@@ -612,7 +620,7 @@ class CompositionBoxInner extends Component<Props, State> {
     // eslint-disable-next-line more/no-then
     getPreview(firstLink, abortController.signal)
       .then(ret => {
-        // we finished loading the preview, and checking the abortConrtoller, we are still not aborted.
+        // we finished loading the preview, and checking the abortController, we are still not aborted.
         // => update the staged preview
         if (this.linkPreviewAbortController && !this.linkPreviewAbortController.signal.aborted) {
           this.setState({
@@ -675,7 +683,7 @@ class CompositionBoxInner extends Component<Props, State> {
         // eslint-disable-next-line no-param-reassign
         attachment.caption = caption;
         ToastUtils.pushToastInfo('saved', window.i18n.stripped('saved'));
-        // close the lightbox on save
+        // close the light box on save
         this.setState({
           showCaptionEditor: undefined,
         });
@@ -822,10 +830,7 @@ class CompositionBoxInner extends Component<Props, State> {
       return;
     }
 
-    if (
-      !selectedConversation.isPrivate &&
-      (selectedConversation.left || selectedConversation.isKickedFromGroup)
-    ) {
+    if (!selectedConversation.isPrivate && selectedConversation.isKickedFromGroup) {
       ToastUtils.pushYouLeftTheGroup();
       return;
     }
@@ -850,7 +855,6 @@ class CompositionBoxInner extends Component<Props, State> {
         : undefined;
 
     try {
-      // this does not call call removeAllStagedAttachmentsInConvers
       const { attachments, previews } = await this.getFiles(linkPreview);
       this.props.sendMessage({
         body: messagePlaintext.trim(),
@@ -862,7 +866,7 @@ class CompositionBoxInner extends Component<Props, State> {
 
       window.inboxStore?.dispatch(
         removeAllStagedAttachmentsInConversation({
-          conversationKey: this.props.selectedConversationKey,
+          conversationId: this.props.selectedConversationKey,
         })
       );
       // Empty composition box and stagedAttachments
@@ -1027,6 +1031,7 @@ const mapStateToProps = (state: StateType) => {
     selectedConversation: getSelectedConversation(state),
     selectedConversationKey: getSelectedConversationKey(state),
     typingEnabled: getSelectedCanWrite(state),
+    isBlocked: getIsSelectedBlocked(state),
   };
 };
 

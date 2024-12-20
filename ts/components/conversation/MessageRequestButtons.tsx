@@ -1,26 +1,31 @@
-import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { useIsIncomingRequest, useIsOutgoingRequest } from '../../hooks/useParamSelector';
 import {
-  approveConvoAndSendResponse,
   declineConversationWithConfirm,
+  handleAcceptConversationRequest,
 } from '../../interactions/conversationInteractions';
-import { getConversationController } from '../../session/conversations';
-import { hasSelectedConversationIncomingMessages } from '../../state/selectors/conversations';
-import { useSelectedConversationKey } from '../../state/selectors/selectedConversation';
+import {
+  useSelectedConversationIdOrigin,
+  useSelectedConversationKey,
+  useSelectedIsGroupV2,
+  useSelectedIsPrivateFriend,
+} from '../../state/selectors/selectedConversation';
+import { useLibGroupInvitePending } from '../../state/selectors/userGroups';
 import { SessionButton, SessionButtonColor } from '../basic/SessionButton';
 import {
   ConversationIncomingRequestExplanation,
   ConversationOutgoingRequestExplanation,
 } from './SubtleNotification';
+import { NetworkTime } from '../../util/NetworkTime';
 
-const ConversationRequestBanner = styled.div`
+const MessageRequestContainer = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   justify-content: center;
   padding: var(--margins-lg);
   gap: var(--margins-lg);
   text-align: center;
+  background: var(--background-secondary-color);
 `;
 
 const ConversationBannerRow = styled.div`
@@ -42,84 +47,99 @@ const StyledBlockUserText = styled.span`
   font-weight: 700;
 `;
 
-const handleDeclineConversationRequest = (convoId: string, currentSelected: string | undefined) => {
+const handleDeclineConversationRequest = (
+  convoId: string,
+  currentSelected: string | undefined,
+  conversationIdOrigin: string | null
+) => {
   declineConversationWithConfirm({
     conversationId: convoId,
     syncToDevices: true,
-    blockContact: false,
+    alsoBlock: false,
     currentlySelectedConvo: currentSelected,
+    conversationIdOrigin,
   });
 };
 
 const handleDeclineAndBlockConversationRequest = (
   convoId: string,
-  currentSelected: string | undefined
+  currentSelected: string | undefined,
+  conversationIdOrigin: string | null
 ) => {
   declineConversationWithConfirm({
     conversationId: convoId,
     syncToDevices: true,
-    blockContact: true,
+    alsoBlock: true,
     currentlySelectedConvo: currentSelected,
+    conversationIdOrigin,
   });
-};
-
-const handleAcceptConversationRequest = async (convoId: string) => {
-  const convo = getConversationController().get(convoId);
-  if (!convo) {
-    return;
-  }
-  await convo.setDidApproveMe(true, false);
-  await convo.setIsApproved(true, false);
-  await convo.commit();
-  await convo.addOutgoingApprovalMessage(Date.now());
-  await approveConvoAndSendResponse(convoId);
 };
 
 export const ConversationMessageRequestButtons = () => {
   const selectedConvoId = useSelectedConversationKey();
-
-  const hasIncomingMessages = useSelector(hasSelectedConversationIncomingMessages);
   const isIncomingRequest = useIsIncomingRequest(selectedConvoId);
+  const isGroupV2 = useSelectedIsGroupV2();
+  const isPrivateAndFriend = useSelectedIsPrivateFriend();
+  const isGroupPendingInvite = useLibGroupInvitePending(selectedConvoId);
+  const convoOrigin = useSelectedConversationIdOrigin() ?? null;
   const isOutgoingRequest = useIsOutgoingRequest(selectedConvoId);
 
-  if (!selectedConvoId || (!isIncomingRequest && !isOutgoingRequest)) {
+  if (
+    !selectedConvoId ||
+    isPrivateAndFriend || // if we are already friends, there is no need for the msg request buttons
+    (isGroupV2 && !isGroupPendingInvite)
+  ) {
+    return null;
+  }
+
+  if (!isIncomingRequest) {
     return null;
   }
 
   return (
-    <ConversationRequestBanner>
-      {isOutgoingRequest && !hasIncomingMessages ? (
+    <MessageRequestContainer>
+      <ConversationBannerRow>
+        <SessionButton
+          onClick={() => {
+            void handleAcceptConversationRequest({
+              convoId: selectedConvoId,
+              approvalMessageTimestamp: NetworkTime.now(),
+            });
+          }}
+          text={window.i18n('accept')}
+          dataTestId="accept-message-request"
+        />
+        <SessionButton
+          buttonColor={SessionButtonColor.Danger}
+          text={window.i18n('delete')}
+          onClick={() => {
+            handleDeclineConversationRequest(selectedConvoId, selectedConvoId, convoOrigin);
+          }}
+          dataTestId="delete-message-request"
+        />
+      </ConversationBannerRow>
+      <ConversationIncomingRequestExplanation />
+
+      {isOutgoingRequest ? (
         <ConversationOutgoingRequestExplanation />
       ) : (
         <>
-          <StyledBlockUserText
-            onClick={() => {
-              handleDeclineAndBlockConversationRequest(selectedConvoId, selectedConvoId);
-            }}
-            data-testid="decline-and-block-message-request"
-          >
-            {window.i18n('block')}
-          </StyledBlockUserText>
-          <ConversationIncomingRequestExplanation />
-          <ConversationBannerRow>
-            <SessionButton
-              onClick={async () => {
-                await handleAcceptConversationRequest(selectedConvoId);
-              }}
-              text={window.i18n('accept')}
-              dataTestId="accept-message-request"
-            />
-            <SessionButton
-              buttonColor={SessionButtonColor.Danger}
-              text={window.i18n('decline')}
+          {(isGroupV2 && !!convoOrigin) || !isGroupV2 ? (
+            <StyledBlockUserText
               onClick={() => {
-                handleDeclineConversationRequest(selectedConvoId, selectedConvoId);
+                handleDeclineAndBlockConversationRequest(
+                  selectedConvoId,
+                  selectedConvoId,
+                  convoOrigin
+                );
               }}
-              dataTestId="decline-message-request"
-            />
-          </ConversationBannerRow>
+              data-testid="decline-and-block-message-request"
+            >
+              {window.i18n('block')}
+            </StyledBlockUserText>
+          ) : null}
         </>
       )}
-    </ConversationRequestBanner>
+    </MessageRequestContainer>
   );
 };

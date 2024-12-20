@@ -1,5 +1,5 @@
 import AbortController from 'abort-controller';
-import { getConversationController } from '../../../conversations';
+import { ConvoHub } from '../../../conversations';
 import { getOpenGroupV2ConversationId } from '../utils/OpenGroupUtils';
 import {
   batchFirstSubIsSuccess,
@@ -8,7 +8,7 @@ import {
   sogsBatchSend,
 } from './sogsV3BatchPoll';
 import { OpenGroupRequestCommonType } from '../../../../data/types';
-import { PromiseUtils } from '../../../utils';
+import { DURATION } from '../../../constants';
 
 type OpenGroupClearInboxResponse = {
   deleted: number;
@@ -18,7 +18,7 @@ export const clearInbox = async (roomInfos: OpenGroupRequestCommonType): Promise
   let success = false;
 
   const conversationId = getOpenGroupV2ConversationId(roomInfos.serverUrl, roomInfos.roomId);
-  const conversation = getConversationController().get(conversationId);
+  const conversation = ConvoHub.use().get(conversationId);
 
   if (!conversation) {
     throw new Error(`clearInbox Matching conversation not found in db ${conversationId}`);
@@ -34,15 +34,13 @@ export const clearInbox = async (roomInfos: OpenGroupRequestCommonType): Promise
 
   const abortSignal = new AbortController();
 
-  const result = await PromiseUtils.timeout(
-    sogsBatchSend(
-      roomInfos.serverUrl,
-      new Set([roomInfos.roomId]),
-      abortSignal.signal,
-      options,
-      'batch'
-    ),
-    10000
+  const result = await sogsBatchSend(
+    roomInfos.serverUrl,
+    new Set([roomInfos.roomId]),
+    abortSignal.signal,
+    options,
+    'batch',
+    10 * DURATION.SECONDS
   );
 
   if (!result) {

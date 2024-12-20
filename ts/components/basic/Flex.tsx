@@ -1,3 +1,4 @@
+import { SessionDataTestId } from 'react';
 import { HTMLMotionProps, motion } from 'framer-motion';
 import styled from 'styled-components';
 import { HTMLDirection } from '../../util/i18n/rtlSupport';
@@ -6,7 +7,7 @@ export interface FlexProps {
   children?: any;
   className?: string;
   container?: boolean;
-  dataTestId?: string;
+  dataTestId?: SessionDataTestId;
   // Container Props
   flexDirection?: 'row' | 'row-reverse' | 'column' | 'column-reverse';
   justifyContent?:
@@ -29,6 +30,7 @@ export interface FlexProps {
     | 'inherit';
   // Child Props
   flexGrow?: number;
+  gap?: string;
   flexShrink?: number;
   flexBasis?: number;
   // Common Layout Props
@@ -74,6 +76,7 @@ export const AnimatedFlex = styled(motion.div)<HTMLMotionProps<'div'> & FlexProp
   align-items: ${props => props.alignItems || 'stretch'};
   margin: ${props => props.margin || '0'};
   padding: ${props => props.padding || '0'};
+  gap: ${props => props.gap || undefined};
   width: ${props => props.width || 'auto'};
   height: ${props => props.height || 'auto'};
   max-width: ${props => props.maxWidth || 'none'};

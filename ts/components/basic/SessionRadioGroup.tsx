@@ -1,10 +1,16 @@
-import { useState } from 'react';
+import { SessionDataTestId, useState } from 'react';
+
 import useMount from 'react-use/lib/useMount';
 import styled, { CSSProperties } from 'styled-components';
 
 import { SessionRadio } from './SessionRadio';
 
-export type SessionRadioItems = Array<{ value: string; label: string }>;
+export type SessionRadioItems = Array<{
+  value: string;
+  label: string;
+  inputDataTestId: SessionDataTestId;
+  labelDataTestId: SessionDataTestId;
+}>;
 
 interface Props {
   initialItem: string;
@@ -50,6 +56,8 @@ export const SessionRadioGroup = (props: Props) => {
             label={item.label}
             active={itemIsActive}
             value={item.value}
+            inputDataTestId={item.inputDataTestId}
+            labelDataTestId={item.labelDataTestId}
             inputName={group}
             onClick={(value: string) => {
               setActiveItem(value);

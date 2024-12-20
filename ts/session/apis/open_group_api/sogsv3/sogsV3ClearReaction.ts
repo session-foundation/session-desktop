@@ -16,6 +16,7 @@ import {
 } from './sogsV3MutationCache';
 import { hasReactionSupport } from './sogsV3SendReaction';
 import { OpenGroupRequestCommonType } from '../../../../data/types';
+import { DURATION } from '../../../constants';
 
 /**
  * Clears a reaction on open group server using onion v4 logic and batch send
@@ -70,7 +71,8 @@ export const clearSogsReactionByServerId = async (
     new Set([roomInfos.roomId]),
     new AbortController().signal,
     options,
-    'batch'
+    'batch',
+    10 * DURATION.SECONDS
   );
 
   if (!result) {

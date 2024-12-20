@@ -1,7 +1,7 @@
 import { isEmpty, isNil } from 'lodash';
+import { ConvoHub } from '../conversations';
 import { setLastProfileUpdateTimestamp } from '../../util/storage';
 import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
-import { getConversationController } from '../conversations';
 import { SyncUtils, UserUtils } from '../utils';
 import { fromHexToArray, sanitizeSessionUsername, toHex } from '../utils/String';
 import { AvatarDownload } from '../utils/job_runners/jobs/AvatarDownloadJob';
@@ -19,16 +19,15 @@ export type Profile = {
  */
 async function updateOurProfileSync({ displayName, profileUrl, profileKey, priority }: Profile) {
   const us = UserUtils.getOurPubKeyStrFromCache();
-  const ourConvo = getConversationController().get(us);
+  const ourConvo = ConvoHub.use().get(us);
   if (!ourConvo?.id) {
     window?.log?.warn('[profileupdate] Cannot update our profile without convo associated');
     return;
   }
 
   await updateProfileOfContact(us, displayName, profileUrl, profileKey);
-  if (priority !== null && ourConvo.get('priority') !== priority) {
-    ourConvo.set('priority', priority);
-    await ourConvo.commit();
+  if (priority !== null) {
+    await ourConvo.setPriorityFromWrapper(priority, true);
   }
 }
 
@@ -41,14 +40,14 @@ async function updateProfileOfContact(
   profileUrl: string | null | undefined,
   profileKey: Uint8Array | null | undefined
 ) {
-  const conversation = getConversationController().get(pubkey);
-  // TODO we should make sure that this function does not get call directly when `updateOurProfileSync` should be called instead. I.e. for avatars received in messages from ourself
+  const conversation = ConvoHub.use().get(pubkey);
+
   if (!conversation || !conversation.isPrivate()) {
     window.log.warn('updateProfileOfContact can only be used for existing and private convos');
     return;
   }
   let changes = false;
-  const existingDisplayName = conversation.get('displayNameInProfile');
+  const existingDisplayName = conversation.getRealSessionUsername();
 
   // avoid setting the display name to an invalid value
   if (existingDisplayName !== displayName && !isEmpty(displayName)) {
@@ -60,8 +59,8 @@ async function updateProfileOfContact(
 
   let avatarChanged = false;
   // trust whatever we get as an update. It either comes from a shared config wrapper or one of that user's message. But in any case we should trust it, even if it gets resetted.
-  const prevPointer = conversation.get('avatarPointer');
-  const prevProfileKey = conversation.get('profileKey');
+  const prevPointer = conversation.getAvatarPointer();
+  const prevProfileKey = conversation.getProfileKey();
 
   // we have to set it right away and not in the async download job, as the next .commit will save it to the
   // database and wrapper (and we do not want to override anything in the wrapper's content
@@ -128,7 +127,7 @@ async function updateOurProfileDisplayNameOnboarding(newName: string) {
 
 async function updateOurProfileDisplayName(newName: string) {
   const ourNumber = UserUtils.getOurPubKeyStrFromCache();
-  const conversation = await getConversationController().getOrCreateAndWait(
+  const conversation = await ConvoHub.use().getOrCreateAndWait(
     ourNumber,
     ConversationTypeEnum.PRIVATE
   );

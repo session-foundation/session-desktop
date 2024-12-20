@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { SessionDataTestId } from 'react';
 import { SessionRadio } from '../basic/SessionRadio';
 import { PanelButton, PanelButtonProps, PanelButtonText, StyledContent } from './PanelButton';
 
@@ -20,6 +21,7 @@ interface PanelRadioButtonProps extends Omit<PanelButtonProps, 'children' | 'onC
   isSelected: boolean;
   onSelect?: (...args: Array<any>) => void;
   onUnselect?: (...args: Array<any>) => void;
+  radioInputDataTestId: SessionDataTestId;
 }
 
 export const PanelRadioButton = (props: PanelRadioButtonProps) => {
@@ -32,6 +34,7 @@ export const PanelRadioButton = (props: PanelRadioButtonProps) => {
     onUnselect,
     disabled = false,
     dataTestId,
+    radioInputDataTestId,
   } = props;
 
   return (
@@ -51,6 +54,7 @@ export const PanelRadioButton = (props: PanelRadioButtonProps) => {
             inputName={value}
             label=""
             disabled={disabled}
+            inputDataTestId={radioInputDataTestId}
           />
         </StyledCheckContainer>
       </StyledContent>

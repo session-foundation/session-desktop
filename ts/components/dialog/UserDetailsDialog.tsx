@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 import useKey from 'react-use/lib/useKey';
-import { getConversationController } from '../../session/conversations';
+import { ConvoHub } from '../../session/conversations';
 import { openConversationWithMessages } from '../../state/ducks/conversations';
 import { updateUserDetailsModal, UserDetailsModalState } from '../../state/ducks/modalDialog';
 import { Avatar, AvatarSize } from '../avatar/Avatar';
@@ -26,9 +26,9 @@ export const UserDetailsDialog = (props: UserDetailsModalState) => {
     if (!props) {
       return;
     }
-    const convo = getConversationController().get(props.conversationId);
+    const convo = ConvoHub.use().get(props.conversationId);
 
-    const conversation = await getConversationController().getOrCreateAndWait(
+    const conversation = await ConvoHub.use().getOrCreateAndWait(
       convo.id,
       ConversationTypeEnum.PRIVATE
     );

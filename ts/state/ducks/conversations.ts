@@ -1,16 +1,22 @@
 /* eslint-disable no-restricted-syntax */
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { PubkeyType } from 'libsession_util_nodejs';
 import { omit, toNumber } from 'lodash';
 import { ReplyingToMessageProps } from '../../components/conversation/composition/CompositionBox';
 import { QuotedAttachmentType } from '../../components/conversation/message/message-content/quote/Quote';
 import { Data } from '../../data/data';
-import { ConversationNotificationSettingType } from '../../models/conversationAttributes';
+
+import {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  ConversationAttributes,
+  ConversationNotificationSettingType,
+} from '../../models/conversationAttributes';
 import {
   MessageModelType,
   PropsForDataExtractionNotification,
   PropsForMessageRequestResponse,
 } from '../../models/messageType';
-import { getConversationController } from '../../session/conversations';
+import { ConvoHub } from '../../session/conversations';
 import { DisappearingMessages } from '../../session/disappearing_messages';
 import {
   DisappearingMessageConversationModeType,
@@ -18,7 +24,6 @@ import {
 } from '../../session/disappearing_messages/types';
 import { ReactionList } from '../../types/Reaction';
 import { resetRightOverlayMode } from './section';
-import { CONVERSATION_PRIORITIES, ConversationTypeEnum } from '../../models/types';
 import {
   LastMessageStatusType,
   LastMessageType,
@@ -26,6 +31,8 @@ import {
   PropsForInteractionNotification,
 } from './types';
 import { AttachmentType } from '../../types/Attachment';
+import { CONVERSATION_PRIORITIES, ConversationTypeEnum } from '../../models/types';
+import { WithConvoId, WithMessageHash, WithMessageId } from '../../session/types/with';
 
 export type MessageModelPropsWithoutConvoProps = {
   propsForMessage: PropsForMessageWithoutConvoProps;
@@ -85,23 +92,29 @@ export type PropsForExpirationTimer = {
   messageId: string;
 };
 
-export type PropsForGroupUpdateGeneral = {
-  type: 'general';
-};
-
 export type PropsForGroupUpdateAdd = {
   type: 'add';
-  added: Array<string>;
+  withHistory: boolean;
+  added: Array<PubkeyType>;
 };
 
 export type PropsForGroupUpdateKicked = {
   type: 'kicked';
-  kicked: Array<string>;
+  kicked: Array<PubkeyType>;
+};
+
+export type PropsForGroupUpdatePromoted = {
+  type: 'promoted';
+  promoted: Array<PubkeyType>;
+};
+
+export type PropsForGroupUpdateAvatarChange = {
+  type: 'avatarChange';
 };
 
 export type PropsForGroupUpdateLeft = {
   type: 'left';
-  left: Array<string>;
+  left: Array<PubkeyType>;
 };
 
 export type PropsForGroupUpdateName = {
@@ -110,9 +123,10 @@ export type PropsForGroupUpdateName = {
 };
 
 export type PropsForGroupUpdateType =
-  | PropsForGroupUpdateGeneral
   | PropsForGroupUpdateAdd
   | PropsForGroupUpdateKicked
+  | PropsForGroupUpdatePromoted
+  | PropsForGroupUpdateAvatarChange
   | PropsForGroupUpdateName
   | PropsForGroupUpdateLeft;
 
@@ -215,7 +229,6 @@ export interface ReduxConversationType {
   isTyping?: boolean;
   isBlocked?: boolean;
   isKickedFromGroup?: boolean;
-  left?: boolean;
   avatarPath?: string | null; // absolute filepath to the avatar
   groupAdmins?: Array<string>; // admins for closed groups and admins for open groups
   members?: Array<string>; // members for closed groups only
@@ -225,6 +238,10 @@ export interface ReduxConversationType {
    * If this is undefined, it means all notification are enabled
    */
   currentNotificationSetting?: ConversationNotificationSettingType;
+  /**
+   * @see {@link ConversationAttributes#conversationIdOrigin}.
+   */
+  conversationIdOrigin?: string;
 
   priority?: number; // undefined means 0
   isInitialFetchingInProgress?: boolean;
@@ -323,7 +340,7 @@ async function getMessages({
 }> {
   const beforeTimestamp = Date.now();
 
-  const conversation = getConversationController().get(conversationKey);
+  const conversation = ConvoHub.use().get(conversationKey);
   if (!conversation) {
     // no valid conversation, early return
     window?.log?.error('Failed to get convo on reducer.');
@@ -536,18 +553,25 @@ function handleMessagesChangedOrAdded(
 
 function handleMessageExpiredOrDeleted(
   state: ConversationsStateType,
-  payload: {
-    messageId: string;
-    conversationKey: string;
-  }
+  payload: WithConvoId & (WithMessageId | WithMessageHash)
 ) {
-  const { conversationKey, messageId } = payload;
-  if (conversationKey === state.selectedConversation) {
+  const { conversationId } = payload;
+  const messageId = (payload as any).messageId as string | undefined;
+  const messageHash = (payload as any).messageHash as string | undefined;
+
+  if (conversationId === state.selectedConversation) {
     // search if we find this message id.
     // we might have not loaded yet, so this case might not happen
-    const messageInStoreIndex = state?.messages.findIndex(m => m.propsForMessage.id === messageId);
+    const messageInStoreIndex = state?.messages.findIndex(
+      m =>
+        (messageId && m.propsForMessage.id === messageId) ||
+        (messageHash && m.propsForMessage.messageHash === messageHash)
+    );
     const editedQuotes = { ...state.quotes };
     if (messageInStoreIndex >= 0) {
+      const msgToRemove = state.messages[messageInStoreIndex];
+      const extractedMessageId = msgToRemove.propsForMessage.id;
+
       // we cannot edit the array directly, so slice the first part, and slice the second part,
       // keeping the index removed out
       const editedMessages = [
@@ -572,7 +596,9 @@ function handleMessageExpiredOrDeleted(
         messages: editedMessages,
         quotes: editedQuotes,
         firstUnreadMessageId:
-          state.firstUnreadMessageId === messageId ? undefined : state.firstUnreadMessageId,
+          state.firstUnreadMessageId === extractedMessageId
+            ? undefined
+            : state.firstUnreadMessageId,
       };
     }
 
@@ -583,12 +609,7 @@ function handleMessageExpiredOrDeleted(
 
 function handleMessagesExpiredOrDeleted(
   state: ConversationsStateType,
-  action: PayloadAction<
-    Array<{
-      messageId: string;
-      conversationKey: string;
-    }>
-  >
+  action: PayloadAction<Array<WithConvoId & (WithMessageId | WithMessageHash)>>
 ): ConversationsStateType {
   let stateCopy = state;
   action.payload.forEach(element => {
@@ -723,24 +744,20 @@ const conversationsSlice = createSlice({
 
     messagesExpired(
       state: ConversationsStateType,
-      action: PayloadAction<
-        Array<{
-          messageId: string;
-          conversationKey: string;
-        }>
-      >
+      action: PayloadAction<Array<WithConvoId & WithMessageId>>
+    ) {
+      return handleMessagesExpiredOrDeleted(state, action);
+    },
+    messageHashesExpired(
+      state: ConversationsStateType,
+      action: PayloadAction<Array<WithConvoId & WithMessageHash>>
     ) {
       return handleMessagesExpiredOrDeleted(state, action);
     },
 
     messagesDeleted(
       state: ConversationsStateType,
-      action: PayloadAction<
-        Array<{
-          messageId: string;
-          conversationKey: string;
-        }>
-      >
+      action: PayloadAction<Array<WithMessageId & WithConvoId>>
     ) {
       return handleMessagesExpiredOrDeleted(state, action);
     },
@@ -1066,6 +1083,7 @@ export const {
   conversationRemoved,
   removeAllConversations,
   messagesExpired,
+  messageHashesExpired,
   messagesDeleted,
   conversationReset,
   messagesChanged,
@@ -1090,7 +1108,7 @@ export const {
 } = actions;
 
 async function unmarkAsForcedUnread(convoId: string) {
-  const convo = getConversationController().get(convoId);
+  const convo = ConvoHub.use().get(convoId);
   if (convo && convo.isMarkedUnread()) {
     // we just opened it and it was forced "Unread", so we reset the unread state here
     await convo.markAsUnread(false, true);
@@ -1142,7 +1160,7 @@ export async function openConversationToSpecificMessage(args: {
 
   const mostRecentMessageIdOnOpen = await Data.getLastMessageIdInConversation(conversationKey);
 
-  // we do not care about the firstunread message id when opening to a specific message
+  // we do not care about the first unread message id when opening to a specific message
   window.inboxStore?.dispatch(
     actions.openConversationToSpecificMessage({
       conversationKey,

@@ -22,12 +22,4 @@ window.getVersion = () => config.version;
 window.getCommitHash = () => config.commitHash;
 window.getAppInstance = () => config.appInstance;
 
-const { AboutView } = require('./ts/components/AboutView');
-
-window.Signal = {
-  Components: {
-    AboutView,
-  },
-};
-
 require('./ts/util/logging');

@@ -11,7 +11,6 @@ import { Data } from '../../../../data/data';
 
 import { MessageInteraction } from '../../../../interactions';
 import { replyToMessage } from '../../../../interactions/conversationInteractions';
-import { deleteMessagesForX } from '../../../../interactions/conversations/unsendingInteractions';
 import {
   addSenderAsModerator,
   removeSenderFromModerator,
@@ -29,7 +28,6 @@ import {
   useMessageBody,
   useMessageDirection,
   useMessageIsDeletable,
-  useMessageIsDeletableForEveryone,
   useMessageSender,
   useMessageSenderIsAdmin,
   useMessageServerTimestamp,
@@ -48,11 +46,14 @@ import { Reactions } from '../../../../util/reactions';
 import { SessionContextMenuContainer } from '../../../SessionContextMenuContainer';
 import { SessionEmojiPanel, StyledEmojiPanel } from '../../SessionEmojiPanel';
 import { MessageReactBar } from './MessageReactBar';
-import { showCopyAccountIdAction } from '../../../menu/items/CopyAccountId';
 import { CopyAccountIdMenuItem } from '../../../menu/items/CopyAccountId/CopyAccountIdMenuItem';
 import { Localizer } from '../../../basic/Localizer';
 import { ItemWithDataTestId } from '../../../menu/items/MenuItemWithDataTestId';
 import { getMenuAnimation } from '../../../menu/MenuAnimation';
+import { WithMessageId } from '../../../../session/types/with';
+import { DeleteItem } from '../../../menu/items/DeleteMessage/DeleteMessageMenuItem';
+import { RetryItem } from '../../../menu/items/RetrySend/RetrySendMenuItem';
+import { showCopyAccountIdAction } from '../../../menu/items/CopyAccountId/guard';
 
 export type MessageContextMenuSelectorProps = Pick<
   MessageRenderingProps,
@@ -91,32 +92,7 @@ const StyledEmojiPanelContainer = styled.div<{ x: number; y: number }>`
   }
 `;
 
-const DeleteItem = ({ messageId }: { messageId: string }) => {
-  const convoId = useSelectedConversationKey();
-  const isPublic = useSelectedIsPublic();
-
-  const isDeletable = useMessageIsDeletable(messageId);
-  const isDeletableForEveryone = useMessageIsDeletableForEveryone(messageId);
-  const messageStatus = useMessageStatus(messageId);
-
-  const enforceDeleteServerSide = isPublic && messageStatus !== 'error';
-
-  const onDelete = useCallback(() => {
-    if (convoId) {
-      void deleteMessagesForX([messageId], convoId, enforceDeleteServerSide);
-    }
-  }, [convoId, enforceDeleteServerSide, messageId]);
-
-  if (!convoId || (isPublic && !isDeletableForEveryone) || (!isPublic && !isDeletable)) {
-    return null;
-  }
-
-  return <ItemWithDataTestId onClick={onDelete}>{window.i18n('delete')}</ItemWithDataTestId>;
-};
-
-type MessageId = { messageId: string };
-
-const AdminActionItems = ({ messageId }: MessageId) => {
+const AdminActionItems = ({ messageId }: WithMessageId) => {
   const convoId = useSelectedConversationKey();
   const isPublic = useSelectedIsPublic();
   const weAreModerator = useSelectedWeAreModerator();
@@ -160,24 +136,6 @@ const AdminActionItems = ({ messageId }: MessageId) => {
         </ItemWithDataTestId>
       )}
     </>
-  ) : null;
-};
-
-const RetryItem = ({ messageId }: MessageId) => {
-  const direction = useMessageDirection(messageId);
-
-  const status = useMessageStatus(messageId);
-  const isOutgoing = direction === 'outgoing';
-
-  const showRetry = status === 'error' && isOutgoing;
-  const onRetry = useCallback(async () => {
-    const found = await Data.getMessageById(messageId);
-    if (found) {
-      await found.retrySend();
-    }
-  }, [messageId]);
-  return showRetry ? (
-    <ItemWithDataTestId onClick={onRetry}>{window.i18n('resend')}</ItemWithDataTestId>
   ) : null;
 };
 
@@ -355,6 +313,7 @@ export const MessageContextMenu = (props: Props) => {
   if (!convoId) {
     return null;
   }
+
   return (
     <StyledMessageContextMenu ref={contextMenuRef}>
       {enableReactions && showEmojiPanel && (

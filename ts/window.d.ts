@@ -4,7 +4,6 @@ import {} from 'styled-components/cssprop';
 import { Store } from '@reduxjs/toolkit';
 import { Persistor } from 'redux-persist/es/types';
 
-import { ConversationCollection } from './models/conversation';
 import { PrimaryColorStateType, ThemeStateType } from './themes/constants/colors';
 import type {
   GetMessageArgs,
@@ -141,11 +140,14 @@ declare global {
     sessionFeatureFlags: {
       useOnionRequests: boolean;
       useTestNet: boolean;
-      useClosedGroupV3: boolean;
+      useClosedGroupV2: boolean;
+      useClosedGroupV2QAButtons: boolean;
+      useGroupV2InviteAsAdmin: boolean;
       replaceLocalizedStringsWithKeys: boolean;
       debug: {
         debugLogging: boolean;
         debugLibsessionDumps: boolean;
+        debugBuiltSnodeRequests: boolean;
         debugFileServerRequests: boolean;
         debugNonSnodeRequests: boolean;
         debugOnionRequests: boolean;
@@ -171,10 +173,8 @@ declare global {
     setTheme: (newTheme: string) => Promise<void>;
     userConfig: any;
     versionInfo: any;
-    getConversations: () => ConversationCollection;
     readyForUpdates: () => void;
     drawAttention: () => void;
-    MediaRecorder: any;
 
     platform: string;
     openFromNotification: (convoId: string) => void;
@@ -199,13 +199,12 @@ declare global {
     setMenuBarVisibility: (val: boolean) => void;
     contextMenuShown: boolean;
     inboxStore?: Store;
+    getState: () => unknown;
     openConversationWithMessages: (args: {
       conversationKey: string;
       messageId: string | null;
     }) => Promise<void>;
-    LokiPushNotificationServer: any;
     getGlobalOnlineStatus: () => boolean;
-    confirmationDialog: any;
     setStartInTray: (val: boolean) => Promise<void>;
     getStartInTray: () => Promise<boolean>;
     getOpengroupPruning: () => Promise<boolean>;
@@ -215,7 +214,5 @@ declare global {
     setAutoUpdateEnabled: (enabled: boolean) => void;
     setZoomFactor: (newZoom: number) => void;
     updateZoomFactor: () => void;
-
-    Signal: any;
   }
 }

@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { SessionDataTestId } from 'react';
 import { Flex } from '../../../basic/Flex';
 import { SessionIcon, SessionIconSize, SessionIconType } from '../../../icon';
 
@@ -52,7 +53,7 @@ type ActionRowProps = {
   iconType: SessionIconType;
   iconSize?: number | SessionIconSize;
   onClick: () => void;
-  dataTestId: string;
+  dataTestId: SessionDataTestId;
 };
 
 export function ActionRow(props: ActionRowProps) {

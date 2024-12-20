@@ -6,7 +6,7 @@ import { MIME } from '../../../../types';
 import { processNewAttachment } from '../../../../types/MessageAttachment';
 import { autoScaleForIncomingAvatar } from '../../../../util/attachmentsUtil';
 import { decryptProfile } from '../../../../util/crypto/profileEncrypter';
-import { getConversationController } from '../../../conversations';
+import { ConvoHub } from '../../../conversations';
 import { fromHexToArray } from '../../String';
 import { runners } from '../JobRunner';
 import {
@@ -17,14 +17,14 @@ import {
 } from '../PersistedJob';
 
 const defaultMsBetweenRetries = 10000;
-const defaultMaxAttemps = 3;
+const defaultMaxAttempts = 3;
 
 /**
  * Returns true if the provided conversationId is a private chat and that we should add an Avatar Download Job to the list of jobs to run.
  * Before calling this function, you have to update the related conversation profileKey and avatarPointer fields with the urls which should be downloaded, or reset them if you wanted them reset.
  */
 export function shouldAddAvatarDownloadJob({ conversationId }: { conversationId: string }) {
-  const conversation = getConversationController().get(conversationId);
+  const conversation = ConvoHub.use().get(conversationId);
   if (!conversation) {
     // return true so we do not retry this task.
     window.log.warn('shouldAddAvatarDownloadJob did not corresponding conversation');
@@ -35,8 +35,8 @@ export function shouldAddAvatarDownloadJob({ conversationId }: { conversationId:
     window.log.warn('shouldAddAvatarDownloadJob can only be used for private convos currently');
     return false;
   }
-  const prevPointer = conversation.get('avatarPointer');
-  const profileKey = conversation.get('profileKey');
+  const prevPointer = conversation.getAvatarPointer();
+  const profileKey = conversation.getProfileKey();
   const hasNoAvatar = isEmpty(prevPointer) || isEmpty(profileKey);
 
   if (hasNoAvatar) {
@@ -74,11 +74,7 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
     Partial<
       Pick<
         AvatarDownloadPersistedData,
-        | 'nextAttemptTimestamp'
-        | 'identifier'
-        | 'maxAttempts'
-        | 'delayBetweenRetries'
-        | 'currentRetry'
+        'nextAttemptTimestamp' | 'identifier' | 'maxAttempts' | 'currentRetry'
       >
     >) {
     super({
@@ -86,7 +82,7 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
       identifier: identifier || v4(),
       conversationId,
       delayBetweenRetries: defaultMsBetweenRetries,
-      maxAttempts: isNumber(maxAttempts) ? maxAttempts : defaultMaxAttemps,
+      maxAttempts: isNumber(maxAttempts) ? maxAttempts : defaultMaxAttempts,
       nextAttemptTimestamp: nextAttemptTimestamp || Date.now() + defaultMsBetweenRetries,
       currentRetry: isNumber(currentRetry) ? currentRetry : 0,
     });
@@ -104,7 +100,7 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
       return RunJobResult.PermanentFailure;
     }
 
-    let conversation = getConversationController().get(convoId);
+    let conversation = ConvoHub.use().get(convoId);
     if (!conversation) {
       // return true so we do not retry this task.
       window.log.warn('AvatarDownloadJob did not corresponding conversation');
@@ -116,8 +112,8 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
       return RunJobResult.PermanentFailure;
     }
     let changes = false;
-    const toDownloadPointer = conversation.get('avatarPointer');
-    const toDownloadProfileKey = conversation.get('profileKey');
+    const toDownloadPointer = conversation.getAvatarPointer();
+    const toDownloadProfileKey = conversation.getProfileKey();
 
     // if there is an avatar and profileKey for that user ('', null and undefined excluded), download, decrypt and save the avatar locally.
     if (toDownloadPointer && toDownloadProfileKey) {
@@ -127,7 +123,7 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
           url: toDownloadPointer,
           isRaw: true,
         });
-        conversation = getConversationController().getOrThrow(convoId);
+        conversation = ConvoHub.use().getOrThrow(convoId);
 
         if (!downloaded.data.byteLength) {
           window.log.debug(`[profileupdate] downloaded data is empty for  ${conversation.id}`);
@@ -161,7 +157,7 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
             data: await scaledData.blob.arrayBuffer(),
             contentType: MIME.IMAGE_UNKNOWN, // contentType is mostly used to generate previews and screenshot. We do not care for those in this case.
           });
-          conversation = getConversationController().getOrThrow(convoId);
+          conversation = ConvoHub.use().getOrThrow(convoId);
           ({ path } = upgraded);
         } catch (e) {
           window?.log?.error(`[profileupdate] Could not decrypt profile image: ${e}`);

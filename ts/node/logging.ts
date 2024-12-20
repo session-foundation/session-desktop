@@ -1,11 +1,12 @@
 // NOTE: Temporarily allow `then` until we convert the entire file to `async` / `await`:
 /* eslint-disable more/no-then */
 
-import path from 'path';
 import fs from 'fs';
+import path from 'path';
 
-import { app, ipcMain as ipc } from 'electron';
 import Logger from 'bunyan';
+// eslint-disable-next-line import/order
+import { app, ipcMain as ipc } from 'electron';
 import _ from 'lodash';
 import rimraf from 'rimraf';
 
@@ -184,7 +185,7 @@ async function fetchLogFile(logFile: string) {
   const fileListEntry = {
     level: 30, // INFO
     time: now.toJSON(),
-    msg: `Loaded this from logfile: "${logFile}"`,
+    msg: `Loaded this from log file: "${logFile}"`,
   };
 
   const read = await fetchLog(logFile);

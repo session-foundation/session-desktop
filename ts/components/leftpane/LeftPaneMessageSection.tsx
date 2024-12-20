@@ -14,7 +14,7 @@ import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { SessionSearchInput } from '../SessionSearchInput';
 import { StyledLeftPaneList } from './LeftPaneList';
 import { ConversationListItem } from './conversation-list-item/ConversationListItem';
-import { OverlayClosedGroup } from './overlay/OverlayClosedGroup';
+import { OverlayLegacyClosedGroup, OverlayClosedGroupV2 } from './overlay/OverlayClosedGroup';
 import { OverlayCommunity } from './overlay/OverlayCommunity';
 import { OverlayInvite } from './overlay/OverlayInvite';
 import { OverlayMessage } from './overlay/OverlayMessage';
@@ -46,7 +46,11 @@ const ClosableOverlay = () => {
     case 'open-group':
       return <OverlayCommunity />;
     case 'closed-group':
-      return <OverlayClosedGroup />;
+      return window.sessionFeatureFlags.useClosedGroupV2 ? (
+        <OverlayClosedGroupV2 />
+      ) : (
+        <OverlayLegacyClosedGroup />
+      );
     case 'message':
       return <OverlayMessage />;
     case 'message-requests':

@@ -1,6 +1,6 @@
 import styled from 'styled-components';
+import { ConvoHub } from '../../session/conversations';
 import { isUsAnySogsFromCache } from '../../session/apis/open_group_api/sogsv3/knownBlindedkeys';
-import { getConversationController } from '../../session/conversations';
 import { PubKey } from '../../session/types';
 import { RenderTextCallbackType } from '../../types/Util';
 
@@ -25,7 +25,7 @@ const StyledMentionedUs = styled(StyledMentionAnother)`
 
 const Mention = (props: MentionProps) => {
   const blindedOrNotPubkey = props.text.slice(1);
-  const foundConvo = getConversationController().get(blindedOrNotPubkey);
+  const foundConvo = ConvoHub.use().get(blindedOrNotPubkey);
 
   // this call takes care of finding if we have a blindedId of ourself on any sogs we have joined.
   if (isUsAnySogsFromCache(blindedOrNotPubkey)) {
@@ -34,7 +34,7 @@ const Mention = (props: MentionProps) => {
 
   return (
     <StyledMentionAnother>
-      @{foundConvo?.getContactProfileNameOrShortenedPubKey() || PubKey.shorten(props.text)}
+      @{foundConvo?.getNicknameOrRealUsernameOrPlaceholder() || PubKey.shorten(props.text)}
     </StyledMentionAnother>
   );
 };

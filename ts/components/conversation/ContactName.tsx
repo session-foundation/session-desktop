@@ -6,12 +6,16 @@ import {
   useNicknameOrProfileNameOrShortenedPubkey,
 } from '../../hooks/useParamSelector';
 import { Emojify } from './Emojify';
+import { PubKey } from '../../session/types';
 
 type Props = {
   pubkey: string;
   name?: string | null;
   profileName?: string | null;
-  module?: string;
+  module?:
+    | 'module-conversation__user'
+    | 'module-message-search-result__header__name'
+    | 'module-message__author';
   boldProfileName?: boolean;
   shouldShowPubkey: boolean;
 };
@@ -38,13 +42,13 @@ export const ContactName = (props: Props) => {
         }
       : commonStyles
   ) as CSSProperties;
-  const textProfile = profileName || name || convoName || window.i18n('anonymous');
+  const textProfile = profileName || name || convoName || PubKey.shorten(pubkey);
 
   return (
     <span
       className={classNames(prefix)}
       dir="auto"
-      data-testid={`${prefix}__profile-name`}
+      data-testid={`${prefix}__profile-name` as const}
       style={{
         textOverflow: 'inherit',
         display: 'flex',

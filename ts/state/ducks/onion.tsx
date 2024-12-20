@@ -11,7 +11,7 @@ export const initialOnionPathState = {
 };
 
 /**
- * This slice is the one holding the default joinable rooms fetched once in a while from the default opengroup v2 server.
+ * This slice is the one holding our current onion path state, and if we are detect as online.
  */
 const onionSlice = createSlice({
   name: 'onionPaths',
@@ -28,7 +28,6 @@ const onionSlice = createSlice({
   },
 });
 
-// destructures
 const { actions, reducer } = onionSlice;
 export const { updateOnionPaths, updateIsOnline } = actions;
 export const defaultOnionReducer = reducer;
