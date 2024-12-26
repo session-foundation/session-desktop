@@ -31,6 +31,7 @@ jobs:
   build_linux:
     runs-on: ubuntu-20.04
     strategy:
+      fail-fast: false
       matrix:
         # this needs to be a valid target of https://www.electron.build/linux#target
         pkg_to_build: ['deb', 'rpm', 'freebsd', 'AppImage']
@@ -118,7 +119,7 @@ jobs:
   # We want a mac arm64 build, and according to this https://github.com/actions/runner-images#available-images macos-14 is always arm64
   # macos-14 is disabled for now as we hit our free tier limit for macos builds
   build_macos_x64:
-    runs-on: macos-12
+    runs-on: macos-13
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       MAC_CERTIFICATE: ${{ secrets.MAC_CERTIFICATE }}

@@ -2,7 +2,7 @@
   "name": "session-desktop",
   "productName": "Session",
   "description": "Private messaging from your desktop",
-  "version": "1.14.2",
+  "version": "1.14.5",
   "license": "GPL-3.0",
   "author": {
     "name": "Oxen Labs",
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/oxen-io/session-desktop.git"
+    "url": "https://github.com/session-foundation/session-desktop.git"
   },
   "main": "ts/mains/main_node.js",
   "resolutions": {

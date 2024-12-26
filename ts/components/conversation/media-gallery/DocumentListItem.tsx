@@ -63,7 +63,7 @@ export const DocumentListItem = (props: Props) => {
           </span>
         </div>
         <div className="module-document-list-item__date">
-          {formatDateWithLocale({ date: new Date(timestamp), formatStr: 'ddd, MMM D, Y' })}
+          {formatDateWithLocale({ date: new Date(timestamp), formatStr: 'd LLL, yyyy' })}
         </div>
       </div>
     </div>

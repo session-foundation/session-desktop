@@ -1,9 +1,11 @@
+import { ipcRenderer } from 'electron';
 import { debounce } from 'lodash';
 import { useEffect, useRef, useState } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 import useInterval from 'react-use/lib/useInterval';
 import useTimeoutFn from 'react-use/lib/useTimeoutFn';
+import useThrottleFn from 'react-use/lib/useThrottleFn';
 
 import { Data } from '../../data/data';
 import { getConversationController } from '../../session/conversations';
@@ -37,18 +39,18 @@ import { LeftPaneSectionContainer } from './LeftPaneSectionContainer';
 
 import { SettingsKey } from '../../data/settings-key';
 import { useFetchLatestReleaseFromFileServer } from '../../hooks/useFetchLatestReleaseFromFileServer';
+import { useHotkey } from '../../hooks/useHotkey';
 import {
   forceRefreshRandomSnodePool,
   getFreshSwarmFor,
 } from '../../session/apis/snode_api/snodePool';
 import { ConfigurationSync } from '../../session/utils/job_runners/jobs/ConfigurationSyncJob';
+import { getIsModalVisble } from '../../state/selectors/modal';
 import { useIsDarkTheme } from '../../state/selectors/theme';
 import { switchThemeTo } from '../../themes/switchTheme';
 import { ReleasedFeatures } from '../../util/releaseFeature';
 import { getOppositeTheme } from '../../util/theme';
 import { SessionNotificationCount } from '../icon/SessionNotificationCount';
-import { useHotkey } from '../../hooks/useHotkey';
-import { getIsModalVisble } from '../../state/selectors/modal';
 
 const Section = (props: { type: SectionType }) => {
   const ourNumber = useSelector(getOurNumber);
@@ -237,6 +239,19 @@ export const ActionsPanel = () => {
 
     return () => clearTimeout(timeout);
   }, []);
+
+  const globalUnreadMessageCount = useSelector(getGlobalUnreadMessageCount);
+
+  // Reuse the unreadToShow from the global state to update the badge count
+  useThrottleFn(
+    (unreadCount: number) => {
+      if (globalUnreadMessageCount !== undefined) {
+        ipcRenderer.send('update-badge-count', unreadCount);
+      }
+    },
+    2000,
+    [globalUnreadMessageCount]
+  );
 
   useInterval(cleanUpOldDecryptedMedias, startCleanUpMedia ? cleanUpMediasInterval : null);
 

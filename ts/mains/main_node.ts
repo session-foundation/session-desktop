@@ -10,6 +10,7 @@ import {
   dialog,
   protocol as electronProtocol,
   ipcMain as ipc,
+  ipcMain,
   IpcMainEvent,
   Menu,
   nativeTheme,
@@ -27,7 +28,7 @@ import { platform as osPlatform } from 'process';
 import url from 'url';
 
 import Logger from 'bunyan';
-import _, { isEmpty } from 'lodash';
+import _, { isEmpty, isNumber, isFinite } from 'lodash';
 import pify from 'pify';
 
 import { setupGlobalErrorHandler } from '../node/global_errors'; // checked - only node
@@ -1016,6 +1017,12 @@ ipc.on('get-start-in-tray', event => {
     event.sender.send('get-start-in-tray-response', val);
   } catch (e) {
     event.sender.send('get-start-in-tray-response', false);
+  }
+});
+
+ipcMain.on('update-badge-count', (_event, count) => {
+  if (app.isReady()) {
+    app.setBadgeCount(isNumber(count) && isFinite(count) && count >= 0 ? count : 0);
   }
 });
 

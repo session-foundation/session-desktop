@@ -80,7 +80,6 @@ Building on windows should work straight out of the box, but if it fails then yo
 
 ```
 npm install --global --production windows-build-tools@4.0.0
-npm install --global node-gyp@latest
 npm config set python python2.7
 npm config set msvs_version 2015
 ```

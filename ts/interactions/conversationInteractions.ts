@@ -93,7 +93,7 @@ export async function unblockConvoById(conversationId: string) {
 export const approveConvoAndSendResponse = async (conversationId: string) => {
   const convoToApprove = getConversationController().get(conversationId);
 
-  if (!convoToApprove) {
+  if (!convoToApprove || convoToApprove.isApproved()) {
     window?.log?.info('Conversation is already approved.');
     return;
   }

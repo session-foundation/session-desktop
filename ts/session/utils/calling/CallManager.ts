@@ -35,6 +35,7 @@ import { MessageSender } from '../../sending';
 import { getIsRinging } from '../RingingManager';
 import { getBlackSilenceMediaStream } from './Silence';
 import { ed25519Str } from '../String';
+import { sleepFor } from '../Promise';
 
 export type InputItem = { deviceId: string; label: string };
 
@@ -534,6 +535,10 @@ export async function USER_callRecipient(recipient: string) {
   calledConvo.set('active_at', Date.now()); // addSingleOutgoingMessage does the commit for us on the convo
   await calledConvo.unhideIfNeeded(false);
   weAreCallerOnCurrentCall = true;
+  // Not ideal, but also temporary (see you in 2 years).
+  // We need to make sure the preoffer AND the messageRequestResponse sent in
+  // approveConvoAndSendResponse have different timestamps, as iOS will throw an error otherwise
+  await sleepFor(2);
 
   // initiating a call is analogous to sending a message request
   await approveConvoAndSendResponse(recipient);
