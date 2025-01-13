@@ -78,7 +78,7 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
       showHeader={true}
       additionalClassName="no-body-padding"
     >
-      <StyledDescriptionContainer>
+      <StyledDescriptionContainer data-testid='modal-description'>
         <Localizer
           token={
             state === 'firstWarning'
