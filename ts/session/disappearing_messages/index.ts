@@ -46,7 +46,7 @@ export async function destroyMessagesAndUpdateRedux(
       // TODO make this use getMessagesById and not getMessageById
 
       const message = await Data.getMessageById(messageIds[i]);
-      await message?.cleanup(false); // not triggering UI updates, as we remove them from the store just below
+      await message?.cleanup({ commit: false, triggerUIUpdate: false }); // not triggering UI updates, as we remove them from the store just below
       /* eslint-enable no-await-in-loop */
     }
 

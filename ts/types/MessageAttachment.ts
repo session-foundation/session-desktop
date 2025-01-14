@@ -23,7 +23,7 @@ export const deleteExternalMessageFiles = async (messageAttributes: {
   preview: Array<any> | undefined;
 }) => {
   let anyChanges = false;
-  const { attachments, quote, preview } = messageAttributes;
+  const { attachments, preview } = messageAttributes;
 
   if (attachments && attachments.length) {
     await Promise.all(attachments.map(deleteData));
@@ -44,27 +44,6 @@ export const deleteExternalMessageFiles = async (messageAttributes: {
         messageAttributes
       );
     }
-  }
-
-  if (quote && quote.attachments && quote.attachments.length) {
-    await Promise.all(
-      quote.attachments.map(async (_attachment: { thumbnail: any }) => {
-        const attachment = _attachment;
-        const { thumbnail } = attachment;
-
-        // To prevent spoofing, we copy the original image from the quoted message.
-        //   If so, it will have a 'copied' field. We don't want to delete it if it has
-        //   that field set to true.
-        if (thumbnail && thumbnail.path && !thumbnail.copied) {
-          await deleteOnDisk(thumbnail.path);
-        }
-
-        attachment.thumbnail = undefined;
-        anyChanges = true;
-
-        return attachment;
-      })
-    );
   }
 
   if (preview && preview.length) {

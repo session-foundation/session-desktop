@@ -442,9 +442,15 @@ export class MessageModel extends Backbone.Model<MessageAttributes> {
     return '';
   }
 
-  public async cleanup(triggerUIUpdate: boolean) {
+  public async cleanup({
+    triggerUIUpdate,
+    commit,
+  }: {
+    triggerUIUpdate: boolean;
+    commit: boolean;
+  }): Promise<void> {
     const changed = await deleteExternalMessageFiles(this.attributes);
-    if (changed) {
+    if (changed && commit) {
       await this.commit(triggerUIUpdate);
     }
   }

@@ -263,7 +263,7 @@ async function removeMessage(id: string): Promise<void> {
   //   it needs to delete all associated on-disk files along with the database delete.
   if (message) {
     await channels.removeMessage(id);
-    await message.cleanup(true);
+    await message.cleanup({ commit: false, triggerUIUpdate: false });
   }
 }
 
@@ -554,7 +554,7 @@ async function removeAllMessagesInConversation(conversationId: string): Promise<
     for (let index = 0; index < messages.length; index++) {
       const message = messages.at(index);
       // eslint-disable-next-line no-await-in-loop
-      await message.cleanup(false); // not triggering UI updates, as we remove them from the store just below
+      await message.cleanup({ commit: false, triggerUIUpdate: false }); // not triggering UI updates, as we remove them from the store just below
     }
     window.log.info(
       `removeAllMessagesInConversation messages.cleanup() ${conversationId} took ${

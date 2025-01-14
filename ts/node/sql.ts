@@ -2091,7 +2091,7 @@ function getMessagesWithFileAttachments(conversationId: string, limit: number) {
 }
 
 function getExternalFilesForMessage(message: any, includePreview = true) {
-  const { attachments, quote, preview } = message;
+  const { attachments, preview } = message;
   const files: Array<string> = [];
 
   forEach(attachments, attachment => {
@@ -2108,16 +2108,6 @@ function getExternalFilesForMessage(message: any, includePreview = true) {
       files.push(screenshot.path);
     }
   });
-
-  if (quote && quote.attachments && quote.attachments.length) {
-    forEach(quote.attachments, attachment => {
-      const { thumbnail } = attachment;
-
-      if (thumbnail && thumbnail.path) {
-        files.push(thumbnail.path);
-      }
-    });
-  }
 
   if (includePreview && preview && preview.length) {
     forEach(preview, item => {

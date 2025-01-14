@@ -157,14 +157,10 @@ export const deleteData = async (attachment: {
     throw new TypeError('deleteData: attachment is not valid');
   }
 
-  const { path, thumbnail, screenshot } = attachment;
+  const { path, screenshot } = attachment;
   if (isString(path)) {
     await deleteOnDisk(path);
     attachment.path = '';
-  }
-  if (thumbnail && isString(thumbnail.path)) {
-    await deleteOnDisk(thumbnail.path);
-    attachment.thumbnail = undefined;
   }
   if (screenshot && isString(screenshot.path)) {
     await deleteOnDisk(screenshot.path);
