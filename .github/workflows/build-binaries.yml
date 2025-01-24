@@ -118,8 +118,8 @@ jobs:
   build_macos:
     strategy:
       matrix:
-        os: [macos-14]
-        arch: ['arm64', 'x64']
+        os: [macos-14, macos-13]
+        arch: [arm64, x64]
     runs-on: ${{ matrix.os }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -137,7 +137,7 @@ jobs:
       - name: Setup & Build
         uses: ./actions/setup_and_build
         with:
-          cache_suffix: 'macos'
+          cache_suffix: ${{ matrix.os }}-${{ matrix.arch }}
 
         # we want to test on all platforms since some are testing the rendered menus (and are dependent on the platform)
       - name: Unit Test

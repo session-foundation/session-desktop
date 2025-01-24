@@ -227,30 +227,8 @@
       "category": "public.app-category.social-networking",
       "icon": "build/icon-mac.icns",
       "target": [
-        {
-          "target": "dmg",
-          "arch": [
-            "arm64"
-          ]
-        },
-        {
-          "target": "zip",
-          "arch": [
-            "arm64"
-          ]
-        },
-        {
-          "target": "dmg",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "zip",
-          "arch": [
-            "x64"
-          ]
-        }
+        "dmg",
+        "zip"
       ],
       "bundleVersion": "1",
       "hardenedRuntime": true,
