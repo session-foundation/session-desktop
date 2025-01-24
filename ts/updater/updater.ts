@@ -91,6 +91,7 @@ async function checkForUpdates(
   const canUpdate = await canAutoUpdate();
   logger.info('[updater] checkForUpdates canAutoUpdate', canUpdate);
   if (!canUpdate) {
+    logger.info('[updater] checkForUpdates canAutoUpdate false');
     return;
   }
 
@@ -155,7 +156,7 @@ async function checkForUpdates(
 
       const mainWindow = getMainWindow();
       if (!mainWindow) {
-        logger.error('[updater] cannot showDownloadUpdateDialog, mainWindow is unset');
+        console.error('[updater] cannot showDownloadUpdateDialog, mainWindow is unset');
         return;
       }
       logger.info('[updater] showing download dialog...');
@@ -176,7 +177,7 @@ async function checkForUpdates(
     } catch (error) {
       const mainWindow = getMainWindow();
       if (!mainWindow) {
-        logger.error('[updater] cannot showDownloadUpdateDialog, mainWindow is unset');
+        console.error('[updater] cannot showDownloadUpdateDialog, mainWindow is unset');
         return;
       }
       await showCannotUpdateDialog(mainWindow, i18n);
@@ -185,7 +186,7 @@ async function checkForUpdates(
 
     const window = getMainWindow();
     if (!window) {
-      logger.error('[updater] cannot showDownloadUpdateDialog, mainWindow is unset');
+      console.error('[updater] cannot showDownloadUpdateDialog, mainWindow is unset');
       return;
     }
     // Update downloaded successfully, we should ask the user to update
