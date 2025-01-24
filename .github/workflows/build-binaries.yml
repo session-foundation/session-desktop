@@ -114,10 +114,9 @@ jobs:
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         run: yarn build-release-publish # No other args needed for windows publish
 
-  # We want a mac arm64 build, and according to this https://github.com/actions/runner-images#available-images macos-14 is always arm64
-  # macos-14 is disabled for now as we hit our free tier limit for macos builds
-  build_macos_x64:
-    runs-on: macos-13
+  # We want both arm64 and intel mac builds, and according to this https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources macos-14 and above is always arm64 and macos-13 is the last intel runner
+  build_macos:
+    runs-on: macos-14
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       MAC_CERTIFICATE: ${{ secrets.MAC_CERTIFICATE }}
@@ -134,7 +133,7 @@ jobs:
       - name: Setup & Build
         uses: ./actions/setup_and_build
         with:
-          cache_suffix: 'macos_x64'
+          cache_suffix: 'macos'
 
         # we want to test on all platforms since some are testing the rendered menus (and are dependent on the platform)
       - name: Unit Test
