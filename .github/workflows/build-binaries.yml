@@ -116,11 +116,10 @@ jobs:
 
   # We want both arm64 and intel mac builds, and according to this https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources macos-14 and above is always arm64 and macos-13 is the last intel runner
   build_macos:
+    runs-on: macos-14
     strategy:
       matrix:
-        os: [macos-14, macos-13]
         arch: [arm64, x64]
-    runs-on: ${{ matrix.os }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       MAC_CERTIFICATE: ${{ secrets.MAC_CERTIFICATE }}
@@ -137,7 +136,7 @@ jobs:
       - name: Setup & Build
         uses: ./actions/setup_and_build
         with:
-          cache_suffix: ${{ matrix.os }}-${{ matrix.arch }}
+          cache_suffix: ${{ matrix.os }}
 
         # we want to test on all platforms since some are testing the rendered menus (and are dependent on the platform)
       - name: Unit Test
