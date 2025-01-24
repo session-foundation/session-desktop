@@ -116,7 +116,11 @@ jobs:
 
   # We want both arm64 and intel mac builds, and according to this https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources macos-14 and above is always arm64 and macos-13 is the last intel runner
   build_macos:
-    runs-on: macos-14
+    strategy:
+      matrix:
+        os: [macos-14]
+        arch: ['arm64', 'x64']
+    runs-on: ${{ matrix.os }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       MAC_CERTIFICATE: ${{ secrets.MAC_CERTIFICATE }}
@@ -151,7 +155,7 @@ jobs:
         if: ${{ env.SHOULD_PUBLISH == 'false' && env.SHOULD_PUBLISH_ALPHA == 'false'  }}
         uses: ./actions/upload_prod_artefacts
         with:
-          upload_prefix: ${{ runner.os }}-${{ runner.arch }}
+          upload_prefix: ${{ matrix.os }}-${{ matrix.arch }}
 
       - name: Build & publish
         # we want this to run only when on "push" to "master"
