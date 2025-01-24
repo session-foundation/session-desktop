@@ -1,5 +1,5 @@
 import { UserGroupsGet } from 'libsession_util_nodejs';
-import { compact, isEmpty, uniqBy } from 'lodash';
+import { compact, isEmpty } from 'lodash';
 import { SignalService } from '../../../../protobuf';
 import { MetaGroupWrapperActions } from '../../../../webworker/workers/browser/libsession_worker_interface';
 import { GroupUpdateInfoChangeMessage } from '../../../messages/outgoing/controlMessage/group_v2/to_group/GroupUpdateInfoChangeMessage';
@@ -38,13 +38,6 @@ async function makeGroupMessageSubRequest(
   const allForSameDestination = compactedMessages.every(m => m.destination === groupPk);
   if (!allForSameDestination) {
     throw new Error('makeGroupMessageSubRequest: not all messages are for the same destination');
-  }
-
-  const allTimestamps = uniqBy(compactedMessages, m => m.createAtNetworkTimestamp);
-  if (allTimestamps.length !== compactedMessages.length) {
-    throw new Error(
-      'tried to send batch request with messages having the same timestamp, this is not supported on all platforms.'
-    );
   }
 
   const messagesToEncrypt: Array<StoreGroupExtraData> = compactedMessages.map(updateMessage => {

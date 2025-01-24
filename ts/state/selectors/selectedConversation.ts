@@ -17,7 +17,7 @@ import {
 } from './conversations';
 import { getLibMembersPubkeys, useLibGroupName } from './groups';
 import { getCanWrite, getModerators, getSubscriberCount } from './sogsRoomInfo';
-import { getLibGroupDestroyed, getLibGroupKicked, useLibGroupDestroyed } from './userGroups';
+import { getLibGroupDestroyed, useLibGroupDestroyed } from './userGroups';
 
 const getIsSelectedPrivate = (state: StateType): boolean => {
   return Boolean(getSelectedConversation(state)?.isPrivate) || false;
@@ -59,7 +59,6 @@ export const getSelectedConversationIsPublic = (state: StateType): boolean => {
 export function getSelectedCanWrite(state: StateType) {
   const selectedConvoPubkey = getSelectedConversationKey(state);
   const isSelectedGroupDestroyed = getLibGroupDestroyed(state, selectedConvoPubkey);
-  const isSelectedGroupKicked = getLibGroupKicked(state, selectedConvoPubkey);
   if (!selectedConvoPubkey) {
     return false;
   }
@@ -77,7 +76,6 @@ export function getSelectedCanWrite(state: StateType) {
   return !(
     isBlocked ||
     isKickedFromGroup ||
-    isSelectedGroupKicked ||
     isSelectedGroupDestroyed ||
     readOnlySogs ||
     isBlindedAndDisabledMsgRequests

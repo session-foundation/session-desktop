@@ -725,8 +725,7 @@ async function handleSingleGroupUpdate({
     );
   }
 
-  const convoExisting = ConvoHub.use().get(groupPk);
-  if (!convoExisting) {
+  if (!ConvoHub.use().get(groupPk)) {
     const created = await ConvoHub.use().getOrCreateAndWait(groupPk, ConversationTypeEnum.GROUPV2);
     const joinedAt =
       groupInWrapper.joinedAtSeconds * 1000 || CONVERSATION.LAST_JOINED_FALLBACK_TIMESTAMP;
@@ -744,12 +743,6 @@ async function handleSingleGroupUpdate({
     });
     await created.commit();
     getSwarmPollingInstance().addGroupId(PubKey.cast(groupPk));
-  } else {
-    // Note: the priority is the only **field** we want to sync from our user group wrapper for 03-groups
-    const changes = await convoExisting.setPriorityFromWrapper(groupInWrapper.priority, false);
-    if (changes) {
-      await convoExisting.commit();
-    }
   }
 }
 

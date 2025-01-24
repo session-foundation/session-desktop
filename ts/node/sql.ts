@@ -22,7 +22,6 @@ import {
   last,
   map,
   omit,
-  some,
   uniq,
 } from 'lodash';
 
@@ -1108,7 +1107,7 @@ async function getAllMessagesWithAttachmentsInConversationSentBefore(
     .all({ conversationId, beforeMs: deleteAttachBeforeSeconds * 1000 });
   const messages = map(rows, row => jsonToObject(row.json));
   const messagesWithAttachments = messages.filter(m => {
-    return hasUserVisibleAttachments(m);
+    return getExternalFilesForMessage(m, false).some(a => !isEmpty(a) && isString(a)); // when we remove an attachment, we set the path to '' so it should be excluded here
   });
   return messagesWithAttachments;
 }
@@ -2093,7 +2092,7 @@ function getMessagesWithFileAttachments(conversationId: string, limit: number) {
   return map(rows, row => jsonToObject(row.json));
 }
 
-function getExternalFilesForMessage(message: any) {
+function getExternalFilesForMessage(message: any, includePreview = true) {
   const { attachments, quote, preview } = message;
   const files: Array<string> = [];
 
@@ -2111,6 +2110,7 @@ function getExternalFilesForMessage(message: any) {
       files.push(screenshot.path);
     }
   });
+
   if (quote && quote.attachments && quote.attachments.length) {
     forEach(quote.attachments, attachment => {
       const { thumbnail } = attachment;
@@ -2121,7 +2121,7 @@ function getExternalFilesForMessage(message: any) {
     });
   }
 
-  if (preview && preview.length) {
+  if (includePreview && preview && preview.length) {
     forEach(preview, item => {
       const { image } = item;
 
@@ -2132,30 +2132,6 @@ function getExternalFilesForMessage(message: any) {
   }
 
   return files;
-}
-
-/**
- * This looks like `getExternalFilesForMessage`, but it does not include some type of attachments not visible from the right panel.
- * It should only be used when we look for messages to mark as deleted when an admin
- * triggers a "delete messages with attachments since".
- * Note: quoted attachments are referencing the original message, so we don't need to include them here.
- * Note: previews are not considered user visible (because not visible from the right panel),
- * so we don't need to include them here
- * Note: voice messages are not considered user visible (because not visible from the right panel),
- */
-function hasUserVisibleAttachments(message: any) {
-  const { attachments } = message;
-
-  return some(attachments, attachment => {
-    const { path: file, flags, thumbnail, screenshot } = attachment;
-
-    return (
-      // eslint-disable-next-line no-bitwise
-      (file && !(flags & SignalService.AttachmentPointer.Flags.VOICE_MESSAGE)) ||
-      thumbnail?.path ||
-      screenshot?.path
-    );
-  });
 }
 
 function getExternalFilesForConversation(

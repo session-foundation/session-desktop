@@ -13,7 +13,6 @@ import {
   last,
   omit,
   sample,
-  sampleSize,
   toNumber,
   uniqBy,
 } from 'lodash';
@@ -54,19 +53,12 @@ import {
   RetrieveMessageItem,
   RetrieveMessageItemWithNamespace,
   RetrieveMessagesResultsBatched,
-  type RetrieveMessagesResultsMergedBatched,
+  RetrieveRequestResult,
 } from './types';
 import { ConversationTypeEnum } from '../../../models/types';
 import { Snode } from '../../../data/types';
 
 const minMsgCountShouldRetry = 95;
-/**
- * We retrieve from multiple snodes at the same time, and merge their reported messages because it's easy
- * for a snode to be out of sync.
- * Sometimes, being out of sync means that we won't be able to retrieve a message at all (revoked_subaccount).
- * We need a proper fix server side, but in the meantime, that's all we can do.
- */
-const RETRIEVE_SNODES_COUNT = 2;
 
 function extractWebSocketContent(
   message: string,
@@ -111,33 +103,6 @@ type GroupPollingEntry = {
 
 function entryToKey(entry: GroupPollingEntry) {
   return entry.pubkey.key;
-}
-
-function mergeMultipleRetrieveResults(
-  results: RetrieveMessagesResultsBatched
-): RetrieveMessagesResultsMergedBatched {
-  const mapped: Map<SnodeNamespaces, Map<string, RetrieveMessageItem>> = new Map();
-  for (let resultIndex = 0; resultIndex < results.length; resultIndex++) {
-    const result = results[resultIndex];
-    if (!mapped.has(result.namespace)) {
-      mapped.set(result.namespace, new Map());
-    }
-    if (result.messages.messages) {
-      for (let msgIndex = 0; msgIndex < result.messages.messages.length; msgIndex++) {
-        const msg = result.messages.messages[msgIndex];
-        if (!mapped.get(result.namespace)!.has(msg.hash)) {
-          mapped.get(result.namespace)!.set(msg.hash, msg);
-        }
-      }
-    }
-  }
-
-  // Convert the merged map back to an array
-  return Array.from(mapped.entries()).map(([namespace, messagesMap]) => ({
-    code: results.find(m => m.namespace === namespace)?.code || 200,
-    namespace,
-    messages: { messages: Array.from(messagesMap.values()) },
-  }));
 }
 
 export class SwarmPolling {
@@ -449,40 +414,27 @@ export class SwarmPolling {
   public async pollOnceForKey([pubkey, type]: PollForUs | PollForLegacy | PollForGroup) {
     const namespaces = this.getNamespacesToPollFrom(type);
     const swarmSnodes = await SnodePool.getSwarmFor(pubkey);
-    let resultsFromAllNamespaces: RetrieveMessagesResultsMergedBatched | null;
+    let resultsFromAllNamespaces: RetrieveMessagesResultsBatched | null;
 
-    let toPollFrom: Array<Snode> = [];
+    let toPollFrom: Snode | undefined;
 
     try {
-      toPollFrom = sampleSize(swarmSnodes, RETRIEVE_SNODES_COUNT);
+      toPollFrom = sample(swarmSnodes);
 
-      if (toPollFrom.length !== RETRIEVE_SNODES_COUNT) {
+      if (!toPollFrom) {
         throw new Error(
-          `SwarmPolling: pollOnceForKey: not snodes in swarm for ${ed25519Str(pubkey)}. Expected to have at least ${RETRIEVE_SNODES_COUNT}.`
+          `SwarmPolling: pollOnceForKey: no snode in swarm for ${ed25519Str(pubkey)}`
         );
       }
-
-      const resultsFromAllSnodesSettled = await Promise.allSettled(
-        toPollFrom.map(async snode => {
-          // Note: always print something so we know if the polling is hanging
-          window.log.info(
-            `SwarmPolling: about to pollNodeForKey of ${ed25519Str(pubkey)} from snode: ${ed25519Str(snode.pubkey_ed25519)} namespaces: ${namespaces} `
-          );
-          const thisSnodeResults = await this.pollNodeForKey(snode, pubkey, namespaces, type);
-          // Note: always print something so we know if the polling is hanging
-          window.log.info(
-            `SwarmPolling: pollNodeForKey of ${ed25519Str(pubkey)} from snode: ${ed25519Str(snode.pubkey_ed25519)} namespaces: ${namespaces} returned: ${thisSnodeResults?.length}`
-          );
-          return thisSnodeResults;
-        })
-      );
+      // Note: always print something so we know if the polling is hanging
       window.log.info(
-        `SwarmPolling: pollNodeForKey of ${ed25519Str(pubkey)} namespaces: ${namespaces} returned ${resultsFromAllSnodesSettled.filter(m => m.status === 'fulfilled').length}/${RETRIEVE_SNODES_COUNT} fulfilled promises`
+        `SwarmPolling: about to pollNodeForKey of ${ed25519Str(pubkey)} from snode: ${ed25519Str(toPollFrom.pubkey_ed25519)} namespaces: ${namespaces} `
       );
-      resultsFromAllNamespaces = mergeMultipleRetrieveResults(
-        compact(
-          resultsFromAllSnodesSettled.filter(m => m.status === 'fulfilled').flatMap(m => m.value)
-        )
+      resultsFromAllNamespaces = await this.pollNodeForKey(toPollFrom, pubkey, namespaces, type);
+
+      // Note: always print something so we know if the polling is hanging
+      window.log.info(
+        `SwarmPolling: pollNodeForKey of ${ed25519Str(pubkey)} from snode: ${ed25519Str(toPollFrom.pubkey_ed25519)} namespaces: ${namespaces} returned: ${resultsFromAllNamespaces?.length}`
       );
     } catch (e) {
       window.log.warn(
@@ -538,7 +490,7 @@ export class SwarmPolling {
 
     const newMessages = await this.handleSeenMessages(uniqOtherMsgs);
     window.log.info(
-      `SwarmPolling: handleSeenMessages: ${newMessages.length} out of ${uniqOtherMsgs.length} are not seen yet about pk:${ed25519Str(pubkey)} snode: ${JSON.stringify(toPollFrom.map(m => ed25519Str(m.pubkey_ed25519)))}`
+      `SwarmPolling: handleSeenMessages: ${newMessages.length} out of ${uniqOtherMsgs.length} are not seen yet about pk:${ed25519Str(pubkey)} snode: ${toPollFrom ? ed25519Str(toPollFrom.pubkey_ed25519) : 'undefined'}`
     );
     if (type === ConversationTypeEnum.GROUPV2) {
       if (!PubKey.is03Pubkey(pubkey)) {
@@ -1023,7 +975,7 @@ const retrieveItemSchema = z.object({
 });
 
 function retrieveItemWithNamespace(
-  results: RetrieveMessagesResultsMergedBatched
+  results: Array<RetrieveRequestResult>
 ): Array<RetrieveMessageItemWithNamespace> {
   return flatten(
     compact(
@@ -1044,7 +996,7 @@ function retrieveItemWithNamespace(
 
 function filterMessagesPerTypeOfConvo<T extends ConversationTypeEnum>(
   type: T,
-  retrieveResults: RetrieveMessagesResultsMergedBatched
+  retrieveResults: RetrieveMessagesResultsBatched
 ): {
   confMessages: Array<RetrieveMessageItemWithNamespace> | null;
   revokedMessages: Array<RetrieveMessageItemWithNamespace> | null;

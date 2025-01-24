@@ -12,7 +12,6 @@ import { renderEmojiQuickResultRow, searchEmojiForQuery } from './EmojiQuickResu
 import { renderUserMentionRow, styleForCompositionBoxSuggestions } from './UserMentions';
 import { HTMLDirection, useHTMLDirection } from '../../../util/i18n/rtlSupport';
 import { ConvoHub } from '../../../session/conversations';
-import { Constants } from '../../../session';
 
 const sendMessageStyle = (dir?: HTMLDirection) => {
   return {
@@ -88,10 +87,7 @@ export const CompositionTextArea = (props: Props) => {
       throw new Error('selectedConversationKey is needed');
     }
 
-    const newDraft = (event.target.value ?? '').slice(
-      0,
-      Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT
-    );
+    const newDraft = event.target.value ?? '';
     setDraft(newDraft);
     updateDraftForConversation({ conversationKey: selectedConversationKey, draft: newDraft });
   };
@@ -125,7 +121,6 @@ export const CompositionTextArea = (props: Props) => {
       spellCheck={true}
       dir={htmlDirection}
       inputRef={textAreaRef}
-      maxLength={Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT}
       disabled={!typingEnabled}
       rows={1}
       data-testid="message-input-text-area"

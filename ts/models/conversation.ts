@@ -811,20 +811,11 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
       networkTimestamp
     );
 
-    const attachmentsWithVoiceMessage = attachments
-      ? attachments.map(attachment => {
-          if (attachment.isVoiceMessage) {
-            return { ...attachment, flags: SignalService.AttachmentPointer.Flags.VOICE_MESSAGE };
-          }
-          return attachment;
-        })
-      : undefined;
-
     const messageModel = await this.addSingleOutgoingMessage({
       body,
       quote: isEmpty(quote) ? undefined : quote,
       preview,
-      attachments: attachmentsWithVoiceMessage,
+      attachments,
       sent_at: networkTimestamp, // overridden later, but we need one to have the sorting done in the UI even when the sending is pending
       expirationType: DisappearingMessages.changeToDisappearingMessageType(
         this,

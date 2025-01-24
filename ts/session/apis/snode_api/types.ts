@@ -34,21 +34,12 @@ export type RetrieveMessagesResultsContent = {
   t: number;
 };
 
-type RetrieveMessagesResultsContentMerged = Pick<RetrieveMessagesResultsContent, 'messages'>;
-
-type RetrieveRequestResult<
-  T extends RetrieveMessagesResultsContent | RetrieveMessagesResultsContentMerged,
-> = {
+export type RetrieveRequestResult = {
   code: number;
-  messages: T;
+  messages: RetrieveMessagesResultsContent;
   namespace: SnodeNamespaces;
 };
-export type RetrieveMessagesResultsBatched = Array<
-  RetrieveRequestResult<RetrieveMessagesResultsContent>
->;
-export type RetrieveMessagesResultsMergedBatched = Array<
-  RetrieveRequestResult<RetrieveMessagesResultsContentMerged>
->;
+export type RetrieveMessagesResultsBatched = Array<RetrieveRequestResult>;
 
 export type WithRevokeSubRequest = {
   revokeSubRequest?: SubaccountRevokeSubRequest;

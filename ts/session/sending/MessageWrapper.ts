@@ -4,7 +4,7 @@ import { MessageEncrypter } from '../crypto/MessageEncrypter';
 import { PubKey } from '../types';
 
 function encryptionBasedOnConversation(destination: PubKey) {
-  if (PubKey.is03Pubkey(destination.key) || ConvoHub.use().get(destination.key)?.isClosedGroup()) {
+  if (ConvoHub.use().get(destination.key)?.isClosedGroup()) {
     return SignalService.Envelope.Type.CLOSED_GROUP_MESSAGE;
   }
   return SignalService.Envelope.Type.SESSION_MESSAGE;

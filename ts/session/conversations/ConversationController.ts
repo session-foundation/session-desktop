@@ -695,7 +695,7 @@ async function leaveClosedGroup(groupPk: PubkeyType | GroupPubkeyType, fromSyncM
     const createAtNetworkTimestamp = NetworkTime.now();
     // Send the update to the 03 group
     const ourLeavingMessage = new GroupUpdateMemberLeftMessage({
-      createAtNetworkTimestamp: createAtNetworkTimestamp + 1, // we just need it to be different than the one of ourLeavingNotificationMessage
+      createAtNetworkTimestamp,
       groupPk,
       expirationType: null, // we keep that one **not** expiring
       expireTimer: null,

@@ -77,11 +77,6 @@ export const CONVERSATION = {
   MAX_GLOBAL_UNREAD_COUNT: 99, // the global one does not look good with 4 digits (999+) so we have a smaller one for it
   /** NOTE some existing groups might not have joinedAtSeconds and we need a fallback value that is not falsy in order to poll and show up in the conversations list */
   LAST_JOINED_FALLBACK_TIMESTAMP: 1,
-  /**
-   * the maximum chars that can be typed/pasted in the composition box.
-   * Same as android.
-   */
-  MAX_MESSAGE_CHAR_COUNT: 2000,
 } as const;
 
 /**

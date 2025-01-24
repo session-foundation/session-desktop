@@ -727,14 +727,11 @@ export class MessageModel extends Backbone.Model<MessageAttributes> {
       thumbnail,
       fileName,
       caption,
-      isVoiceMessage: isVoiceMessageFromDb,
     } = attachment;
 
     const isVoiceMessageBool =
-      !!isVoiceMessageFromDb ||
       // eslint-disable-next-line no-bitwise
-      !!(flags && flags & SignalService.AttachmentPointer.Flags.VOICE_MESSAGE) ||
-      false;
+      Boolean(flags && flags & SignalService.AttachmentPointer.Flags.VOICE_MESSAGE) || false;
 
     return {
       id,
