@@ -22,35 +22,41 @@ Build instructions can be found in [Contributing.md](CONTRIBUTING.md).
 
 ## Verifying signatures
 
-Get Kee's key and import it:
+**Step 1:**
+
+Add Jason's GPG key. Jason Rhinelander, a member of the [Session Technology Foundation](https://session.foundation/) and is the current signer for all Session Desktop releases. His GPG key can be found on his GitHub and other sources.
 
 ```
-wget https://raw.githubusercontent.com/oxen-io/oxen-core/dev/utils/gpg_keys/KeeJef.asc
-gpg --import KeeJef.asc
+wget https://github.com/jagerman.gpg
+gpg --import jagerman.gpg
 ```
 
-Get the signed hash for this release, the SESSION_VERSION needs to be updated for the release you want to verify
+**Step 2:**
+
+Get the signed hashes for this release. `SESSION_VERSION` needs to be updated for the release you want to verify.
 
 ```
-export SESSION_VERSION=1.15.0
-wget https://github.com/session-foundation/session-desktop/releases/download/v$SESSION_VERSION/signatures.asc
+export SESSION_VERSION=1.14.5
+wget "https://github.com/session-foundation/session-desktop/releases/download/v$SESSION_VERSION/signature.asc"
 ```
 
-Verify the signature of the hashes of the files
+**Step 3:**
+
+Verify the signature of the hashes of the files.
 
 ```
-gpg --verify signatures.asc 2>&1 |grep "Good signature from"
+gpg --verify signature.asc 2>&1 |grep "Good signature from"
 ```
 
-The command above should print "`Good signature from "Kee Jefferys...`"
-If it does, the hashes are valid but we still have to make the sure the signed hashes matches the downloaded files.
+The command above should print "`Good signature from "Jason Rhinelander...`". If it does, the hashes are valid but we still have to make the sure the signed hashes match the downloaded files.
 
-Make sure the two commands below returns the same hash.
-If they do, files are valid
+**Step 4:**
+
+Make sure the two commands below return the same hash for the file you are checking. If they do, file is valid.
 
 ```
-sha256sum session-desktop-linux-amd64-$SESSION_VERSION.deb
-grep .deb signatures.asc
+sha256sum session-desktop-linux-x86_64-$SESSION_VERSION.AppImage
+grep $SESSION_VERSION.AppImage signature.asc
 ```
 
 ## Debian repository
@@ -61,7 +67,8 @@ Please visit https://deb.oxen.io/<br/>
 
 Copyright 2011 Whisper Systems<br/>
 Copyright 2013-2017 Open Whisper Systems<br/>
-Copyright 2019-2023 The Oxen Project<br/>
+Copyright 2019-2024 The Oxen Project<br/>
+Copyright 2014-2025 Session Technology Foundation<br/>
 Licensed under the GPLv3: https://www.gnu.org/licenses/gpl-3.0.html<br/>
 
 ## Attributions
