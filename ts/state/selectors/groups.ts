@@ -296,3 +296,20 @@ export function useStateOf03GroupMembers(convoId?: string) {
   }, [unsortedMembers, us, names]);
   return sorted;
 }
+
+function getErrorPushKeysForAddedMembers(state: StateType, convo?: string) {
+  if (!convo) {
+    return undefined;
+  }
+  if (!PubKey.is03Pubkey(convo)) {
+    return undefined;
+  }
+
+  return getLibGroupsState(state).addedMembersError[convo] || '';
+}
+
+export function useErrorPushKeysForAddedMembers(convo?: string) {
+  return useSelector((state: StateType) => {
+    return getErrorPushKeysForAddedMembers(state, convo);
+  });
+}

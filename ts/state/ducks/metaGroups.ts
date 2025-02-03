@@ -53,10 +53,12 @@ import {
   WithRemoveMembers,
 } from '../../session/types/with';
 import { updateGroupNameModal } from './modalDialog';
+import { localize } from '../../localization/localeTools';
 
 export type GroupState = {
   infos: Record<GroupPubkeyType, GroupInfoGet>;
   members: Record<GroupPubkeyType, Array<GroupMemberGet>>;
+  addedMembersError: Record<GroupPubkeyType, string>;
   creationFromUIPending: boolean;
   memberChangesFromUIPending: boolean;
   nameChangesFromUIPending: boolean;
@@ -67,6 +69,7 @@ export type GroupState = {
 export const initialGroupState: GroupState = {
   infos: {},
   members: {},
+  addedMembersError: {},
   creationFromUIPending: false,
   memberChangesFromUIPending: false,
   nameChangesFromUIPending: false,
@@ -689,9 +692,11 @@ async function handleMemberAddedFromUI({
     });
     if (sequenceResult !== RunJobResult.Success) {
       await LibSessionUtil.saveDumpsToDb(groupPk);
-
+      window.log.warn(
+        `handleMemberAddedFromUI: pushChangesToGroupSwarmIfNeeded for ${ed25519Str(groupPk)} did not return success`
+      ); // throwing so we handle the reset state in the catch below
       throw new Error(
-        'handleMemberAddedFromUI: pushChangesToGroupSwarmIfNeeded did not return success'
+        `handleMemberAddedFromUI: pushChangesToGroupSwarmIfNeeded for ${ed25519Str(groupPk)} did not return success`
       );
     }
   } catch (e) {
@@ -699,6 +704,20 @@ async function handleMemberAddedFromUI({
       'handleMemberAddedFromUI: pushChangesToGroupSwarmIfNeeded failed with:',
       e.message
     );
+    try {
+      for (let index = 0; index < withHistory.length; index++) {
+        await MetaGroupWrapperActions.memberSetInviteFailed(groupPk, withHistory[index]);
+      }
+      for (let index = 0; index < withoutHistory.length; index++) {
+        await MetaGroupWrapperActions.memberSetInviteFailed(groupPk, withoutHistory[index]);
+      }
+    } catch (e2) {
+      window.log.warn(
+        'handleMemberAddedFromUI: marking members invite failed, failed with:',
+        e2.message
+      );
+    }
+    return false;
   }
 
   // schedule send invite details, auth signature, etc. to the new users
@@ -710,6 +729,7 @@ async function handleMemberAddedFromUI({
   });
 
   await convo.commit();
+  return true;
 }
 
 /**
@@ -937,7 +957,7 @@ const currentDeviceGroupMembersChange = createAsyncThunk(
       alsoRemoveMessages: boolean;
     },
     payloadCreator
-  ): Promise<GroupDetailsUpdate> => {
+  ): Promise<GroupDetailsUpdate & { pushedKeysForNewMembers: boolean }> => {
     const state = payloadCreator.getState() as StateType;
     if (!state.groups.infos[groupPk] || !state.groups.members[groupPk]) {
       throw new PreConditionFailed(
@@ -952,7 +972,7 @@ const currentDeviceGroupMembersChange = createAsyncThunk(
       alsoRemoveMessages: args.alsoRemoveMessages,
     });
 
-    await handleMemberAddedFromUI({
+    const pushedKeysForNewMembers = await handleMemberAddedFromUI({
       groupPk,
       addMembersWithHistory: args.addMembersWithHistory,
       addMembersWithoutHistory: args.addMembersWithoutHistory,
@@ -962,6 +982,7 @@ const currentDeviceGroupMembersChange = createAsyncThunk(
       groupPk,
       infos: await MetaGroupWrapperActions.infoGet(groupPk),
       members: await MetaGroupWrapperActions.memberGetAll(groupPk),
+      pushedKeysForNewMembers,
     };
   }
 );
@@ -1255,6 +1276,13 @@ const metaGroupSlice = createSlice({
       delete state.members[payload.groupPk];
       delete state.membersInviteSending[payload.groupPk];
       delete state.membersPromoteSending[payload.groupPk];
+      delete state.addedMembersError[payload.groupPk];
+    },
+    resetInvitesForGroupFailed(
+      state: GroupState,
+      { payload }: PayloadAction<{ groupPk: GroupPubkeyType }>
+    ) {
+      delete state.addedMembersError[payload.groupPk];
     },
   },
   extraReducers: builder => {
@@ -1338,9 +1366,20 @@ const metaGroupSlice = createSlice({
     builder.addCase(currentDeviceGroupMembersChange.fulfilled, (state, action) => {
       state.memberChangesFromUIPending = false;
 
-      const { infos, members, groupPk } = action.payload;
+      const { infos, members, groupPk, pushedKeysForNewMembers } = action.payload;
+      const triedToAddCount =
+        action.meta.arg.addMembersWithHistory.length +
+          action.meta.arg.addMembersWithoutHistory.length || 1;
       state.infos[groupPk] = infos;
       state.members[groupPk] = members;
+
+      if (!pushedKeysForNewMembers) {
+        state.addedMembersError[groupPk] = localize('inviteFailedDescription')
+          .withArgs({
+            count: triedToAddCount,
+          })
+          .toString();
+      }
       refreshConvosModelProps([groupPk]);
       if (window.sessionFeatureFlags.debug.debugLibsessionDumps) {
         window.log.info(`groupInfo after currentDeviceGroupMembersChange: ${stringify(infos)}`);
@@ -1353,8 +1392,9 @@ const metaGroupSlice = createSlice({
       window.log.error('a currentDeviceGroupMembersChange was rejected', action.error);
       state.memberChangesFromUIPending = false;
     });
-    builder.addCase(currentDeviceGroupMembersChange.pending, state => {
+    builder.addCase(currentDeviceGroupMembersChange.pending, (state, action) => {
       state.memberChangesFromUIPending = true;
+      delete state.addedMembersError[action.meta.arg.groupPk];
     });
 
     /** currentDeviceGroupNameChange */

@@ -22,7 +22,10 @@ import { PubKey } from '../../session/types';
 import { SessionUtilUserGroups } from '../../session/utils/libsession/libsession_utils_user_groups';
 import { groupInfoActions } from '../../state/ducks/metaGroups';
 import { useContactsToInviteToGroup } from '../../state/selectors/conversations';
-import { useMemberGroupChangePending } from '../../state/selectors/groups';
+import {
+  useErrorPushKeysForAddedMembers,
+  useMemberGroupChangePending,
+} from '../../state/selectors/groups';
 import { useSelectedIsGroupV2 } from '../../state/selectors/selectedConversation';
 import { MemberListItem } from '../MemberListItem';
 import { SessionWrapperModal } from '../SessionWrapperModal';
@@ -116,6 +119,9 @@ const InviteContactsDialogInner = (props: Props) => {
   const { conversationId } = props;
   const dispatch = useDispatch();
 
+  const errorPushKeysForAddedMembers = useErrorPushKeysForAddedMembers(conversationId);
+  console.warn('errorPushKeysForAddedMembers', errorPushKeysForAddedMembers);
+
   const privateContactPubkeys = useContactsToInviteToGroup() as Array<PubkeyType>;
 
   const isProcessingUIChange = useMemberGroupChangePending();
@@ -141,6 +147,9 @@ const InviteContactsDialogInner = (props: Props) => {
 
   const closeDialog = () => {
     dispatch(updateInviteContactModal(null));
+    if (PubKey.is03Pubkey(conversationId)) {
+      dispatch(groupInfoActions.resetInvitesForGroupFailed({ groupPk: conversationId }));
+    }
   };
 
   const onClickOK = () => {
@@ -197,6 +206,7 @@ const InviteContactsDialogInner = (props: Props) => {
           </span>
         </>
       )}
+      {isGroupV2 && errorPushKeysForAddedMembers ? <div>{errorPushKeysForAddedMembers}</div> : null}
       <div className="contact-selection-list">
         {hasContacts ? (
           validContactsForInvite.map((member: string) => (
