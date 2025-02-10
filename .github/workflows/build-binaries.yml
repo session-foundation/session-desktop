@@ -115,7 +115,7 @@ jobs:
         run: yarn build-release-publish # No other args needed for windows publish
 
   # We want both arm64 and intel mac builds, and according to this https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources macos-14 and above is always arm64 and macos-13 is the last intel runner
-  build_macos_arm64:
+  build_macos_silicon:
     runs-on: macos-14
     strategy:
       matrix:
@@ -162,7 +162,7 @@ jobs:
         run: |
           source ./build/setup-mac-certificate.sh
           yarn build-release-publish --config.mac.bundleVersion=${{ github.ref }}
-  build_macos_x64:
+  build_macos_intel:
     runs-on: macos-13
     strategy:
       matrix:
