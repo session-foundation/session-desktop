@@ -16,7 +16,7 @@ runs:
       working-directory: ./release/
 
     - name: Remaining files
-      run: ls . | grep ${{ matrix.arch }}
+      run: ls .
       shell: bash
       working-directory: ./release/
 
@@ -24,7 +24,4 @@ runs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.upload_prefix }}-production
-        path: |
-          release/builder-debug.yml
-          release/latest-mac.yml
-          release/**/session-desktop-mac-${{ matrix.arch }}
+        path: release

@@ -136,7 +136,7 @@ jobs:
       - name: Setup & Build
         uses: ./actions/setup_and_build
         with:
-          cache_suffix: ${{ matrix.os }}-${{ matrix.arch }}
+          cache_suffix: ${{ runner.os }}-${{ matrix.arch }}
 
         # we want to test on all platforms since some are testing the rendered menus (and are dependent on the platform)
       - name: Unit Test
@@ -154,7 +154,7 @@ jobs:
         if: ${{ env.SHOULD_PUBLISH == 'false' }}
         uses: ./actions/upload_prod_artefacts
         with:
-          upload_prefix: ${{ matrix.os }}-${{ matrix.arch }}
+          upload_prefix: ${{ runner.os }}-${{ matrix.arch }}
 
       - name: Build & publish
         # we want this to run only when on "push" to "master"
@@ -183,7 +183,7 @@ jobs:
       - name: Setup & Build
         uses: ./actions/setup_and_build
         with:
-          cache_suffix: ${{ matrix.os }}-${{ matrix.arch }}
+          cache_suffix: ${{ runner.os }}-${{ matrix.arch }}
 
         # we want to test on all platforms since some are testing the rendered menus (and are dependent on the platform)
       - name: Unit Test
@@ -201,7 +201,7 @@ jobs:
         if: ${{ env.SHOULD_PUBLISH == 'false' && env.SHOULD_PUBLISH_ALPHA == 'false'  }}
         uses: ./actions/upload_prod_artefacts
         with:
-          upload_prefix: ${{ matrix.os }}-${{ matrix.arch }}
+          upload_prefix: ${{ runner.os }}-${{ matrix.arch }}
 
       - name: Build & publish
         # we want this to run only when on "push" to "master"
