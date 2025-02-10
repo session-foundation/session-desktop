@@ -252,7 +252,7 @@
   "create": "Lumikha",
   "cut": "Putulin",
   "databaseErrorGeneric": "Nagkaroon ng error sa database.<br/><br/>I-export ang mga log ng iyong application upang ibahagi para sa troubleshooting. Kung hindi ito magtagumpay, i-reinstall ang {app_name} at i-restore ang iyong account.<br/><br/>Babala: Magreresulta ito sa pagkawala ng lahat ng mensahe, attachment, at data ng account na mas luma sa dalawang linggo.",
-  "databaseErrorTimeout": "Napansin namin na matagal magbukas ang {app_name}.<br/><br/>Maaari kang maghintay, i-export ang logs ng iyong device para sa troubleshooting, o subukang i-restart ang Session.",
+  "databaseErrorTimeout": "Napansin namin na matagal magbukas ang {app_name}.<br/><br/>Maaari kang maghintay, i-export ang logs ng iyong device para sa troubleshooting, o subukang i-restart ang {app_name}.",
   "databaseErrorUpdate": "Ang database ng iyong app ay hindi tugma sa bersyong ito ng {app_name}. I-reinstall ang app at ibalik ang iyong account upang makabuo ng bagong database at ipagpatuloy ang paggamit ng {app_name}.<br/><br/>Babala: Magdudulot ito ng pagkawala ng lahat ng mensahe at attachment na mas matanda sa dalawang linggo.",
   "databaseOptimizing": "Ina-optimize ang Database",
   "debugLog": "I-debug ang Log",

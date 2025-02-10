@@ -35,6 +35,7 @@
   "adminRemovedUser": "<b>{name}</b> було вилучено із групи.",
   "adminRemovedUserMultiple": "<b>{name}</b> та ще <b>{count} інших</b> було вилучено з переліку адміністраторів.",
   "adminRemovedUserOther": "<b>{name}</b> та <b>{other_name}</b> було вилучено з переліку адміністраторів.",
+  "adminSendingPromotion": "{count, plural, one [Надсилання прав адміністратора] few [Надсилання прав адміністратора] many [Надсилання прав адміністраторів] other [Надсилання прав адміністраторів]}",
   "adminSettings": "Адміністраторські налаштування",
   "adminTwoPromotedToAdmin": "<b>{name}</b> та <b>{other_name}</b> було підвищено до адміністраторів.",
   "andMore": "+{count}",

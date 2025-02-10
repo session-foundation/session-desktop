@@ -251,7 +251,7 @@
   "create": "Krijo",
   "cut": "Prije",
   "databaseErrorGeneric": "Ndodhi një gabim në bazën e të dhënave.<br/><br/>Eksportoni regjistrat e aplikacionit tuaj për ndarjen e problemeve. Nëse kjo nuk ka sukses, ripaketoni {app_name} dhe riktheni llogarinë tuaj.<br/><br/>Paralajmërim: Kjo do të rezultojë në humbjen e të gjitha mesazheve, bashkangjitjeve dhe të dhënave të tjera të llogarisë më të vjetra se dy javë.",
-  "databaseErrorTimeout": "Ne kemi vërejtur që {app_name} po merr shumë kohë për tu nisur.<br/><br/>Ju mund të prisni, eksportoni regjistrat e pajisjes suaj për ndihmë në zgjidhjen e problemeve, ose provoni të rinisni Session.",
+  "databaseErrorTimeout": "Ne kemi vërejtur që {app_name} po merr shumë kohë për tu nisur.<br/><br/>Ju mund të prisni, eksportoni regjistrat e pajisjes suaj për ndihmë në zgjidhjen e problemeve, ose provoni të rinisni {app_name}.",
   "databaseErrorUpdate": "Baza e të dhënave të aplikacionit tuaj është e papajtueshme me këtë version të {app_name}. Rinstaloni aplikacionin dhe riktheni llogarinë tuaj për të gjeneruar një bazë të re të të dhënave dhe për të vazhduar përdorimin e {app_name}.<br/><br/>Paralajmërim: Kjo do të rezultojë në humbjen e të gjitha mesazheve dhe bashkëngjitjeve më të vjetra se dy javë.",
   "databaseOptimizing": "Optimizimi i Bazës së të Dhënave",
   "debugLog": "Regjistër Diagnostikimesh",

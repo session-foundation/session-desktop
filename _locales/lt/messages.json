@@ -251,7 +251,7 @@
   "create": "Sukurti",
   "cut": "Iškirpti",
   "databaseErrorGeneric": "Įvyko duomenų bazės klaida.<br/><br/>Eksportuokite savo programos žurnalus, kad galėtumėte juos pasidalinti sprendžiant problemas. Jei tai bus nesėkminga, perinstaliuokite {app_name} ir atkurkite savo paskyrą.<br/><br/>Įspėjimas: Tai sukels visų pranešimų, priedų ir paskyros duomenų senesnių nei dviejų savaičių praradimą.",
-  "databaseErrorTimeout": "Pastebėjome, kad {app_name} užtrunka ilgai paleisti.<br/><br/>Galite toliau laukti, eksportuoti savo įrenginio žurnalus, kad galėtumėte juos pasidalinti dėl trikčių šalinimo, arba bandykite iš naujo paleisti Session.",
+  "databaseErrorTimeout": "Pastebėjome, kad {app_name} užtrunka ilgai paleisti.<br/><br/>Galite toliau laukti, eksportuoti savo įrenginio žurnalus, kad galėtumėte juos pasidalinti dėl trikčių šalinimo, arba bandykite iš naujo paleisti {app_name}.",
   "databaseErrorUpdate": "Jūsų programos duomenų bazė nesuderinama su šia {app_name} versija. Iš naujo įdiekite programą ir atkurkite savo paskyrą, kad sugeneruotumėte naują duomenų bazę ir toliau naudotumėte {app_name}.<br/><br/>Įspėjimas: Dėl to visos pranešimų ir priedų, senesnių nei dvi savaitės, bus prarastos.",
   "databaseOptimizing": "Optimizuojama duomenų bazė",
   "debugLog": "Derinimo žurnalas",

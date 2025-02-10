@@ -251,7 +251,7 @@
   "create": "Ustvari",
   "cut": "Odreži",
   "databaseErrorGeneric": "Prišlo je do napake v podatkovni bazi.<br/><br/>Izvozite dnevnike aplikacije, da jih delite za odpravljanje težav. Če to ni uspešno, znova namestite {app_name} in obnovite svoj račun.<br/><br/>Opozorilo: To bo povzročilo izgubo vseh sporočil, prilog in podatkov računa, starejših od dveh tednov.",
-  "databaseErrorTimeout": "Opažamo, da {app_name} potrebuje dolgo časa za zagon.<br/><br/>Lahko nadaljujete s čakanjem, izvozite dnevniške datoteke naprave za odpravljanje težav ali poskusite znova zagnati Session.",
+  "databaseErrorTimeout": "Opažamo, da {app_name} potrebuje dolgo časa za zagon.<br/><br/>Lahko nadaljujete s čakanjem, izvozite dnevniške datoteke naprave za odpravljanje težav ali poskusite znova zagnati {app_name}.",
   "databaseErrorUpdate": "Vaša baza podatkov aplikacije ni združljiva s to različico {app_name}. Ponovno namestite aplikacijo in obnovite svoj račun, da ustvarite novo bazo podatkov in nadaljujete z uporabo {app_name}.<br/><br/>Opozorilo: To bo povzročilo izgubo vseh sporočil in prilog, starejših od dveh tednov.",
   "databaseOptimizing": "Optimizacija podatkovne baze",
   "debugLog": "Sistemska zabeležba",

@@ -251,7 +251,7 @@
   "create": "Opprett",
   "cut": "Klipp ut",
   "databaseErrorGeneric": "Det oppsto ein databasefeil.<br/><br/>Eksporter loggane dine for å dela for feilsøking. Om dette ikkje lukkast, installér {app_name} på nytt og gjenopprett kontoen din.<br/><br/>Advarsel: Dette vil resultere i tap av makulerte meldingar, vedlegg og kontodata eldre enn to uker.",
-  "databaseErrorTimeout": "Vi har merka at {app_name} tar lang tid på å starte.<br/><br/>Du kan vente, eksportere loggar frå eininga di for deling til feilsøking, eller prøve å starte Session på nytt.",
+  "databaseErrorTimeout": "Vi har merka at {app_name} tar lang tid på å starte.<br/><br/>Du kan vente, eksportere loggar frå eininga di for deling til feilsøking, eller prøve å starte {app_name} på nytt.",
   "databaseErrorUpdate": "Databasen til appen din er ikkje kompatibel med denne versjonen av {app_name}. Installer appen på nytt og gjenopprett kontoen din for å generera ein ny database og fortset å bruka {app_name}.<br/><br/>Advarsel: Dette vil resultera i at alle meldingar og vedlegg eldre enn to veker går tapt.",
   "databaseOptimizing": "Optimaliserer databasen",
   "debugLog": "Feilsøkingslogg",

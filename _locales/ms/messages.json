@@ -252,7 +252,7 @@
   "create": "Buat",
   "cut": "Potong",
   "databaseErrorGeneric": "Ralat pangkalan data berlaku.<br/><br/>Eksport log aplikasi anda untuk bahagian penyelesaian masalah. Jika ini tidak berjaya, pasang semula {app_name} dan kembalikan akaun anda.<br/><br/>Amaran: Ini akan menyebabkan kehilangan semua mesej, lampiran, dan data akaun lebih lama daripada dua minggu.",
-  "databaseErrorTimeout": "Kami perasan {app_name} mengambil masa yang lama untuk bermula.<br/><br/>Anda boleh terus menunggu, eksport log peranti anda untuk perkongsian penyelesaian masalah atau cuba mulakan semula Session.",
+  "databaseErrorTimeout": "Kami perasan {app_name} mengambil masa yang lama untuk bermula.<br/><br/>Anda boleh terus menunggu, eksport log peranti anda untuk perkongsian penyelesaian masalah atau cuba mulakan semula {app_name}.",
   "databaseErrorUpdate": "Pangkalan data aplikasi anda tidak serasi dengan versi {app_name} ini. Pasang semula aplikasi ini dan pulihkan akaun anda untuk menjana pangkalan data baru dan terus menggunakan {app_name}.<br/><br/>Amaran: Ini akan menyebabkan kehilangan semua mesej dan lampiran yang lebih lama daripada dua minggu.",
   "databaseOptimizing": "Mengoptimumkan Pangkalan Data",
   "debugLog": "Log Nyahpepijat",

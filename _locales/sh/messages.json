@@ -251,7 +251,7 @@
   "create": "Kreiraj",
   "cut": "Izreži",
   "databaseErrorGeneric": "Došlo je do greške baze podataka.<br/><br/>Izvezi dnevnike aplikacije da biste ih podijelili za rješavanje problema. Ako to nije uspješno, ponovo instaliraj {app_name} i vrati svoj račun.<br/><br/>Upozorenje: Ovo će rezultirati gubitkom svih poruka, privitaka i podataka o računu starijih od dvije sedmice.",
-  "databaseErrorTimeout": "Primetili smo da pokretanje {app_name} traje dugo.<br/><br/>Možete nastaviti da čekate, izvesti logove uređaja za deljenje radi otklanjanja grešaka, ili pokušati ponovo pokrenuti Session.",
+  "databaseErrorTimeout": "Primetili smo da pokretanje {app_name} traje dugo.<br/><br/>Možete nastaviti da čekate, izvesti logove uređaja za deljenje radi otklanjanja grešaka, ili pokušati ponovo pokrenuti {app_name}.",
   "databaseErrorUpdate": "Tvoja baza podataka aplikacije nije kompatibilna s ovom verzijom {app_name}. Ponovo instaliraj aplikaciju i obnovi svoj račun da stvoriš novu bazu podataka i nastaviš koristiti {app_name}.<br/><br/>Upozorenje: Ovo će dovesti do gubitka svih poruka i privitaka starijih od dvije sedmice.",
   "databaseOptimizing": "Optimizacija baze podataka",
   "debugLog": "Debug log",

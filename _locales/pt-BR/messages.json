@@ -252,7 +252,7 @@
   "create": "Criar",
   "cut": "Cortar",
   "databaseErrorGeneric": "Ocorreu um erro no banco de dados.<br/><br/>Exporte seus logs de aplicativos para compartilhar para solução de problemas. Se isso não funcionar, reinstale {app_name} e restaure sua conta.<br/><br/>Aviso: Isso resultará na perda de todas as mensagens, anexos e dados da conta com mais de duas semanas.",
-  "databaseErrorTimeout": "Observamos que {app_name} está demorando muito para iniciar.<br/><br/>Você pode continuar esperando, exportar os logs do seu dispositivo para compartilhar para solução de problemas, ou tentar reiniciar o Session.",
+  "databaseErrorTimeout": "Observamos que {app_name} está demorando muito para iniciar.<br/><br/>Você pode continuar esperando, exportar os logs do seu dispositivo para compartilhar para solução de problemas, ou tentar reiniciar o {app_name}.",
   "databaseErrorUpdate": "O banco de dados do seu aplicativo é incompatível com esta versão do {app_name}. Reinstale o aplicativo e restaure sua conta para gerar um novo banco de dados e continuar usando {app_name}.<br/><br/>Aviso: Isso resultará na perda de todas as mensagens e anexos com mais de duas semanas.",
   "databaseOptimizing": "Otimizando base de dados",
   "debugLog": "Log de Depuração",

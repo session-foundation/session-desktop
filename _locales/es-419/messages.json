@@ -252,7 +252,7 @@
   "create": "Crear",
   "cut": "Cortar",
   "databaseErrorGeneric": "Se produjo un error en la base de datos.<br/><br/>Exporta tus registros de aplicación para compartirlos y solucionar problemas. Si no tiene éxito, reinstala {app_name} y restaura tu cuenta.<br/><br/>Advertencia: Esto resultará en la pérdida de todos los mensajes, adjuntos y datos de la cuenta mayores de dos semanas.",
-  "databaseErrorTimeout": "Hemos notado que {app_name} está tardando mucho en arrancar.<br/><br/>Puedes esperar, exportar los registros de tu dispositivo para compartirlos para la resolución de problemas, o intentar reiniciar Session.",
+  "databaseErrorTimeout": "Hemos notado que {app_name} está tardando mucho en arrancar.<br/><br/>Puedes esperar, exportar los registros de tu dispositivo para compartirlos para la resolución de problemas, o intentar reiniciar {app_name}.",
   "databaseErrorUpdate": "Tu base de datos de la app es incompatible con esta versión de {app_name}. Reinstala la app y restaura tu cuenta para generar una nueva base de datos y continuar usando {app_name}.<br/><br/>Advertencia: Esto resultará en la pérdida de todos los mensajes y archivos adjuntos mayores a dos semanas.",
   "databaseOptimizing": "Optimizando base de datos",
   "debugLog": "Registro de depuración",

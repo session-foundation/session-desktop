@@ -252,7 +252,7 @@
   "create": "Çêke",
   "cut": "Biqusîne",
   "databaseErrorGeneric": "Çewtiya danegehê derket.<br/><br/>Logên sepana xwe eksport bike ji bo parvekirina xebîtina girtinê. Heke ev bi ser neket, {app_name} naxwe heta tu hesabê xwe nûkirinê.<br/><br/>Hişyarî: Ev sêbabiê lêçûnê hemû peyam û adewlîyên zêdeyan êdî yên dua hefteyan.",
-  "databaseErrorTimeout": "Em teswîr kirin {app_name} bimînte ye.<br/><br/>Hûn dikarin perê nîşan bibinine rewşa sernîşana hûn perê logoya ten do dike bibirûje, an berbijîhengê sessionê dîsa baş.herşe cereyan bike.",
+  "databaseErrorTimeout": "Em teswîr kirin {app_name} bimînte ye.<br/><br/>Hûn dikarin perê nîşan bibinine rewşa sernîşana hûn perê logoya ten do dike bibirûje, an berbijîhengê {app_name} dîsa baş.herşe cereyan bike.",
   "databaseErrorUpdate": "بنکەی زانیاری بەرنامەکەت ناگەلێرد بەم وه‌ شەپکنیکی {app_name}. بەخێربەستەوە بەرنامەکە و ئەژمێرت پاشەکەوتی بکەیت بۆ بەکاربردنی {app_name}.<br/><br/>ئاگاداری: ئەمە دوای دیترین مەکموو بەرەوکردنەکان و هاوبەشەکان بەکارە لأختە دەکاتە دوو هەفتە ئەگەری پەیامەکان.",
   "databaseOptimizing": "باشکردنی بنکەدراوە",
   "debugLog": "Loga pînekirina çewtiyan",

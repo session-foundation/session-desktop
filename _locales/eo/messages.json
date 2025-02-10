@@ -251,7 +251,7 @@
   "create": "Krei",
   "cut": "Eltondi",
   "databaseErrorGeneric": "Okazis datumbaza eraro.<br/><br/>Eksportu viajn uzaddosierojn por kunhavigi por sensiligi. Se ĉi tio malsukcesas, re-instalu {app_name} kaj restaŭru vian konton.<br/><br/>Averto: Ĉi tio rezultos en perdo de ĉiuj mesaĝoj, enmetaĵoj, kaj kontaj datumoj pli malnovaj ol du semajnoj.",
-  "databaseErrorTimeout": "Ni rimarkis ke {app_name} bezonas longe por komenci.<br/><br/>Vi povas daŭrigi atendadon, eksporti viajn aparato-protokolojn por dividi por cimo-serĉado, aŭ reprovi relanĉi Session.",
+  "databaseErrorTimeout": "Ni rimarkis ke {app_name} bezonas longe por komenci.<br/><br/>Vi povas daŭrigi atendadon, eksporti viajn aparato-protokolojn por dividi por cimo-serĉado, aŭ reprovi relanĉi {app_name}.",
   "databaseErrorUpdate": "Via aplikaĵa datumbazo ne kongruas kun ĉi tiu versio de {app_name}. Reinstalu la aplikaĵon kaj restarigu vian konton por generi novan datumbazon kaj daŭrigi la uzadon de {app_name}.<br/><br/>Averto: Ĉi tio rezultos en la perdo de ĉiuj mesaĝoj kaj aldonaĵoj pli aĝaj ol du semajnoj.",
   "databaseOptimizing": "Optimumigante Datumbazon",
   "debugLog": "Sencimiga protokolo",

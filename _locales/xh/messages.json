@@ -252,7 +252,7 @@
   "create": "Yenza",
   "cut": "Sika",
   "databaseErrorGeneric": "Kufunyenwe impazamo kwisiseko sedatha.<br/><br/>Nceda thumela ii-log zenkqubo yakho ukuze uwabelane ngazo ngeengxaki. Ukuba oku kuphumelele, reinstall {app_name} kwaye ubuyisele iakhawunti yakho.<br/><br/>Isilumkiso: oku kuya kubangela ukulahleka kwemiyalezo yonke, ii-attachements, kunye nedatha yeakhawunti endala ngokuphakama kweveki ezimbini.",
-  "databaseErrorTimeout": "Siqaphele ukuba i-{app_name} ithatha ixesha elide ukuqala.<br/><br/>Ungaqhubeka ulinde, uthumele iingxelo zesixhobo sakho ukwabelana ngazo ukulungisa iingxaki, okanye uzame ukuqala ngokutsha i-Session.",
+  "databaseErrorTimeout": "Siqaphele ukuba i-{app_name} ithatha ixesha elide ukuqala.<br/><br/>Ungaqhubeka ulinde, uthumele iingxelo zesixhobo sakho ukwabelana ngazo ukulungisa iingxaki, okanye uzame ukuqala ngokutsha {app_name}.",
   "databaseErrorUpdate": "I-database yakho yohlelo lwe-app ayinakuvisisana nohlobo lwangoku lwe {app_name}. Faka app kwakhona kwaye ubuyisele i-akhawunti yakho ukuphuhlisa database entsha kwaye uqhubeke usebenzisa {app_name}.<br/><br/>Isilumkiso: Oku kuya kubangela ukulahleka kwemiyalezo yonke kunye nezinto ezihambelanayo ezindala kunokuba yiveki ezimbini.",
   "databaseOptimizing": "Ukuphucula iDatha",
   "debugLog": "Ilogi yeSipseko",

@@ -252,7 +252,7 @@
   "create": "Yaratish",
   "cut": "Kesish",
   "databaseErrorGeneric": "Ma'lumotlar bazasida xato yuz berdi.<br/><br/>Dastur loglaringizni eksport qiling va muammolarni hal qilish uchun ulashing. Agar bu muvaffaqiyatsiz bo'lsa, {app_name} ni qayta o'rnating va akkauntingizni tiklang.<br/><br/>Ogohlik: Bu barcha xabarlar, ilova va ikki haftadan eski akkaunt ma'lumotlarini yo'qotishga olib keladi.",
-  "databaseErrorTimeout": "Biz {app_name}ning ishga tushishi uzoq vaqt talab qilayotganini sezib qoldik.<br/><br/>Siz kutishni davom ettirishingiz, apparat yozuvlarini eksport qilib ulashishingiz yoki Sessionni qayta ishga tushirishingiz mumkin.",
+  "databaseErrorTimeout": "{app_name} ishga tushishiga koʻp vaqt ketayotganini aniqladik.<br/><br/>Kutishda davom etishingiz, muammolarni bartaraf etish uchun qurilma jurnallarini baham koʻrish uchun eksport qilishingiz yoki {app_name} ilovasini qayta ishga tushirishga urinib koʻrishingiz mumkin.",
   "databaseErrorUpdate": "Sizning ilova ma'lumotlar bazasi ushbu {app_name} versiyasi bilan mos kelmaydi. Ilovani qayta o'rnating va hisobingizni tiklang, yangi ma'lumotlar bazasini yaratish va {app_name} dan foydalanishni davom ettirish uchun.<br/><br/>Ogohlantirish: bu ikki haftalikdan katta barcha xabarlar va ilovalarni yo'qotishga olib keladi.",
   "databaseOptimizing": "Ma'lumotlar bazasi optimallashtirilmoqda",
   "debugLog": "Tahlil yozuvi",
