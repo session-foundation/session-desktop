@@ -4,8 +4,9 @@ import { useDispatch } from 'react-redux';
 import { Flex } from '../../basic/Flex';
 import { SpacerMD, SpacerSM } from '../../basic/Text';
 import { updateDebugMenuModal } from '../../../state/ducks/modalDialog';
-import { AboutInfo, DebugActions, FeatureFlags, OtherInfo } from './components';
+import { AboutInfo, DebugActions, OtherInfo } from './components';
 import { SessionWrapperModal } from '../../SessionWrapperModal';
+import { FeatureFlags } from './FeatureFlags';
 
 const StyledContent = styled(Flex)`
   padding-inline: var(--margins-sm);
