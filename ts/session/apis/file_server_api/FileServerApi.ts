@@ -8,6 +8,7 @@ import {
 import { fromUInt8ArrayToBase64 } from '../../utils/String';
 import { NetworkTime } from '../../../util/NetworkTime';
 import { DURATION } from '../../constants';
+import { getOSArchitecture } from '../../../OS';
 
 export const fileServerHost = 'filev2.getsession.org';
 export const fileServerURL = `http://${fileServerHost}`;
@@ -146,9 +147,11 @@ export const getLatestReleaseFromFileServer = async (
     'X-FS-Timestamp': `${sigTimestampSeconds}`,
     'X-FS-Signature': fromUInt8ArrayToBase64(signature),
   };
+
+  const endpoint = `${RELEASE_VERSION_ENDPOINT}&arch=${getOSArchitecture()}`;
   const result = await OnionSending.sendJsonViaOnionV4ToFileServer({
     abortSignal: new AbortController().signal,
-    endpoint: RELEASE_VERSION_ENDPOINT,
+    endpoint,
     method: 'GET',
     stringifiedBody: null,
     headers,
