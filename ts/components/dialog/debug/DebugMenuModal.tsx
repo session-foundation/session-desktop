@@ -7,6 +7,7 @@ import { updateDebugMenuModal } from '../../../state/ducks/modalDialog';
 import { AboutInfo, DebugActions, OtherInfo } from './components';
 import { SessionWrapperModal } from '../../SessionWrapperModal';
 import { FeatureFlags } from './FeatureFlags';
+import { ReleaseChannel } from './ReleaseChannel';
 
 const StyledContent = styled(Flex)`
   padding-inline: var(--margins-sm);
@@ -50,7 +51,9 @@ export function DebugMenuModal() {
           <DebugActions />
           <SpacerSM />
           <FeatureFlags flags={window.sessionFeatureFlags} />
-          <SpacerMD />
+          <SpacerSM />
+          <ReleaseChannel />
+          <SpacerSM />
           <AboutInfo />
           <OtherInfo />
           <SpacerMD />

@@ -252,7 +252,11 @@ declare module 'react' {
     | 'module-message-search-result__header__name__profile-name'
     | 'module-message__author__profile-name'
     | 'module-contact-name__profile-name'
-    | 'delete-from-details';
+    | 'delete-from-details'
+    | 'input-releases-latest'
+    | 'input-releases-alpha'
+    | 'label-releases-latest'
+    | 'label-releases-alpha';
 
   interface HTMLAttributes {
     'data-testid'?: SessionDataTestId;
