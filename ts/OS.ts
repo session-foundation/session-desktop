@@ -13,3 +13,5 @@ export const isWindows = (minVersion?: string) => {
 
   return _.isUndefined(minVersion) ? true : semver.gte(osRelease, minVersion);
 };
+
+export const getOSArchitecture = () => os.arch();
