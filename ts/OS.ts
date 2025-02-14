@@ -15,3 +15,4 @@ export const isWindows = (minVersion?: string) => {
 };
 
 export const getOSArchitecture = () => os.arch();
+export const getOSPlatform = () => os.platform();
