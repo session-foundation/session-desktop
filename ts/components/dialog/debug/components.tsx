@@ -18,6 +18,7 @@ import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_c
 
 export const DebugActions = () => {
   const [loadingLatestRelease, setLoadingLatestRelease] = useBoolean(false);
+  const [loadingAlphaRelease, setLoadingAlphaRelease] = useBoolean(false);
 
   const dispatch = useDispatch();
 
@@ -78,7 +79,7 @@ export const DebugActions = () => {
             const userEd25519SecretKey = (await UserUtils.getUserED25519KeyPairBytes())
               ?.privKeyBytes;
             if (!userEd25519SecretKey) {
-              window.log.error('[debugMenu] no userEd25519SecretKey');
+              window.log.error('[debugMenu] debugLatestRelease no userEd25519SecretKey');
               return;
             }
             setLoadingLatestRelease(true);
@@ -94,6 +95,31 @@ export const DebugActions = () => {
         >
           <SessionSpinner loading={loadingLatestRelease} color={'var(--text-primary-color)'} />
           {!loadingLatestRelease ? 'Check latest release' : null}
+        </SessionButton>
+        <SessionButton
+          onClick={async () => {
+            const userEd25519SecretKey = (await UserUtils.getUserED25519KeyPairBytes())
+              ?.privKeyBytes;
+            if (!userEd25519SecretKey) {
+              window.log.error('[debugMenu] debugAlphaRelease no userEd25519SecretKey');
+              return;
+            }
+            setLoadingAlphaRelease(true);
+            const versionNumber = await getLatestReleaseFromFileServer(
+              userEd25519SecretKey,
+              'alpha'
+            );
+            setLoadingAlphaRelease(false);
+
+            if (versionNumber) {
+              ToastUtils.pushToastInfo('debugAlphaRelease', `v${versionNumber}`);
+            } else {
+              ToastUtils.pushToastError('debugAlphaRelease', 'Failed to fetch latest release');
+            }
+          }}
+        >
+          <SessionSpinner loading={loadingAlphaRelease} color={'var(--text-primary-color)'} />
+          {!loadingAlphaRelease ? 'Check alpha release' : null}
         </SessionButton>
       </Flex>
     </>
