@@ -513,7 +513,10 @@ async function readyForUpdates() {
     await updater.start(getMainWindow, userConfig, i18n, logger);
   } catch (error) {
     const log = logger || console;
-    log.error('Error starting update checks:', error && error.stack ? error.stack : error);
+    log.error(
+      '[updater] Error starting update checks:',
+      error && error.stack ? error.stack : error
+    );
   }
 }
 
