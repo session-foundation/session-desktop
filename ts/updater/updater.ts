@@ -193,7 +193,9 @@ function isUpdateAvailable(updateInfo: UpdateInfo): boolean {
   const currentVersion = autoUpdater.currentVersion.toString();
 
   const latestIsNewer = isVersionGreaterThan(latestVersion, currentVersion);
-  console.log(`[updater] isUpdateAvailable latestIsNewer: ${latestIsNewer}`);
+  console.log(
+    `[updater] isUpdateAvailable latestIsNewer: ${latestIsNewer} currentVersion: ${currentVersion} latestVersion: ${latestVersion}`
+  );
   return latestIsNewer;
 }
 

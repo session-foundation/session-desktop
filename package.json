@@ -125,7 +125,7 @@
     "redux-promise-middleware": "^6.2.0",
     "rimraf": "2.6.2",
     "sanitize.css": "^12.0.1",
-    "semver": "^7.5.4",
+    "semver": "^7.7.1",
     "styled-components": "^6.1.11",
     "uuid": "8.3.2",
     "webrtc-adapter": "^4.1.1",
