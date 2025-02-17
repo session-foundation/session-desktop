@@ -91,9 +91,10 @@ export const DebugActions = () => {
 
             if (versionNumber) {
               ToastUtils.pushToastInfo(
-                'debugLatestRelease',
-                `Available: v${versionNumber} Current: v${window.versionInfo.version}`
+                'debugCurrentRelease1',
+                `Current: v${window.versionInfo.version}`
               );
+              ToastUtils.pushToastInfo('debugLatestRelease', `Available: v${versionNumber}`);
             } else {
               ToastUtils.pushToastError('debugLatestRelease', 'Failed to fetch latest release');
             }
@@ -119,9 +120,10 @@ export const DebugActions = () => {
 
             if (versionNumber) {
               ToastUtils.pushToastInfo(
-                'debugAlphaRelease',
-                `Available: v${versionNumber} Current: v${window.versionInfo.version}`
+                'debugCurrentRelease2',
+                `Current: v${window.versionInfo.version}`
               );
+              ToastUtils.pushToastInfo('debugAlphaRelease', `Available: v${versionNumber}`);
             } else {
               ToastUtils.pushToastError('debugAlphaRelease', 'Failed to fetch latest release');
             }
