@@ -2,6 +2,7 @@ import useAsync from 'react-use/lib/useAsync';
 import { shell } from 'electron';
 import useBoolean from 'react-use/lib/useBoolean';
 import { useDispatch } from 'react-redux';
+import { gt as isVersionGreaterThan } from 'semver';
 import { Flex } from '../../basic/Flex';
 import { SpacerXS } from '../../basic/Text';
 import { localize } from '../../../localization/localeTools';
@@ -95,6 +96,10 @@ export const DebugActions = () => {
                 `Current: v${window.versionInfo.version}`
               );
               ToastUtils.pushToastInfo('debugLatestRelease', `Available: v${versionNumber}`);
+              window.log.debug(
+                `WIP: [debugMenu] [updater] isVersionGreaterThan(latestVersion, currentVersion)`,
+                isVersionGreaterThan(`v${versionNumber}`, `v${window.versionInfo.version}`)
+              );
             } else {
               ToastUtils.pushToastError('debugLatestRelease', 'Failed to fetch latest release');
             }
@@ -124,6 +129,10 @@ export const DebugActions = () => {
                 `Current: v${window.versionInfo.version}`
               );
               ToastUtils.pushToastInfo('debugAlphaRelease', `Available: v${versionNumber}`);
+              window.log.debug(
+                `WIP: [debugMenu] [updater] isVersionGreaterThan(latestVersion, currentVersion)`,
+                isVersionGreaterThan(`v${versionNumber}`, `v${window.versionInfo.version}`)
+              );
             } else {
               ToastUtils.pushToastError('debugAlphaRelease', 'Failed to fetch latest release');
             }
