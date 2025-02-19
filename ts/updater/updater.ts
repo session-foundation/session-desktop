@@ -131,11 +131,10 @@ async function checkForUpdates(
     // Get the update using electron-updater, this fetches from github
     const result = await autoUpdater.checkForUpdates();
 
-    logger.info('[updater] checkForUpdates got github response back ');
+    logger.info('[updater] checkForUpdates got github response back', result);
 
     if (!result?.updateInfo) {
       logger.info('[updater] no update info received');
-
       return;
     }
 
@@ -214,7 +213,7 @@ function isUpdateAvailable(updateInfo: UpdateInfo): boolean {
 
   const updateIsNewer = isVersionGreaterThan(updateVersion, currentVersion);
   console.log(
-    `[updater] isUpdateAvailable updateIsNewer: ${updateIsNewer} currentVersion: ${currentVersion} updateVersion: ${updateVersion}`
+    `[updater] isUpdateAvailable currentVersion: ${currentVersion} updateVersion: ${updateVersion} updateIsNewer: ${updateIsNewer}`
   );
   return updateIsNewer;
 }
