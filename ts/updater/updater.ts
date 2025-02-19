@@ -233,7 +233,7 @@ function isUpdateAvailable(updateInfo: UpdateInfo): boolean {
 
   const updateIsNewer = isVersionGreaterThan(updateVersion, currentVersion);
   console.log(
-    `[updater] isUpdateAvailable currentVersion: ${currentVersion} updateVersion: ${updateVersion} updateIsNewer: ${updateIsNewer}`
+    `[updater] isUpdateAvailable updateIsNewer: ${updateIsNewer} updateVersion: ${updateVersion} currentVersion: ${currentVersion}`
   );
   return updateIsNewer;
 }
