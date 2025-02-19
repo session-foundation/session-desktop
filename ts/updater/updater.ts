@@ -1,7 +1,12 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 /* eslint-disable no-console */
 import { app, type BrowserWindow } from 'electron';
-import { autoUpdater, type UpdateInfo } from 'electron-updater';
+import {
+  autoUpdater,
+  DOWNLOAD_PROGRESS,
+  UPDATE_DOWNLOADED,
+  type UpdateInfo,
+} from 'electron-updater';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { gt as isVersionGreaterThan, parse as parseVersion } from 'semver';
@@ -24,7 +29,16 @@ let downloadIgnored = false;
 let interval: NodeJS.Timeout | undefined;
 let stopped = false;
 
-// eslint:disable: no-console
+autoUpdater.on(DOWNLOAD_PROGRESS, eventDownloadProgress => {
+  const progress = eventDownloadProgress.transferred / eventDownloadProgress.total;
+  console.log(
+    `[updater] download progress: ${progress} eventDownloadProgress.transferred ${eventDownloadProgress.transferred} eventDownloadProgress.total ${eventDownloadProgress.total}`
+  );
+});
+
+autoUpdater.on(UPDATE_DOWNLOADED, () => {
+  console.log('[updater] update downloaded');
+});
 
 export async function start(
   getMainWindow: () => BrowserWindow | null,
@@ -137,7 +151,7 @@ async function checkForUpdates(
 
       const mainWindow = getMainWindow();
       if (!mainWindow) {
-        console.error('[updater] cannot showDownloadUpdateDialog, mainWindow is unset');
+        logger.error('[updater] cannot showDownloadUpdateDialog, mainWindow is unset');
         return;
       }
       logger.info('[updater] showing download dialog...');
@@ -154,7 +168,7 @@ async function checkForUpdates(
     } catch (error) {
       const mainWindow = getMainWindow();
       if (!mainWindow) {
-        console.error('[updater] cannot showDownloadUpdateDialog, mainWindow is unset');
+        logger.error('[updater] cannot showDownloadUpdateDialog, mainWindow is unset');
         return;
       }
       await showCannotUpdateDialog(mainWindow, i18n);
@@ -162,7 +176,7 @@ async function checkForUpdates(
     }
     const window = getMainWindow();
     if (!window) {
-      console.error('[updater] cannot showDownloadUpdateDialog, mainWindow is unset');
+      logger.error('[updater] cannot showDownloadUpdateDialog, mainWindow is unset');
       return;
     }
     // Update downloaded successfully, we should ask the user to update
