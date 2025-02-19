@@ -228,25 +228,13 @@
       "icon": "build/icon-mac.icns",
       "target": [
         {
-          "target": "dmg",
+          "target": "default",
           "arch": [
             "arm64"
           ]
         },
         {
-          "target": "zip",
-          "arch": [
-            "arm64"
-          ]
-        },
-        {
-          "target": "dmg",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "zip",
+          "target": "default",
           "arch": [
             "x64"
           ]
