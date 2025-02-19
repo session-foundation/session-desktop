@@ -33,7 +33,7 @@ runs:
     - name: Move ${{ inputs.upload_prefix }} files
       if: ${{ inputs.multiarch_build == 'true' }}
       run: |
-        mv *${{inputs.upload_prefix}}* production-${{ inputs.upload_prefix }}/
+        ls -f -- | grep ${{inputs.upload_prefix}} | xargs -I{} mv {} production-${{ inputs.upload_prefix }}/
         mv *latest*.yml production-${{ inputs.upload_prefix }}/
         mv builder-debug.yml production-${{ inputs.upload_prefix }}/
       shell: bash
