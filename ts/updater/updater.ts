@@ -31,9 +31,8 @@ let interval: NodeJS.Timeout | undefined;
 let stopped = false;
 
 autoUpdater.on(DOWNLOAD_PROGRESS, eventDownloadProgress => {
-  const progress = (eventDownloadProgress.transferred / eventDownloadProgress.total) * 100;
   console.log(
-    `[updater] download progress: ${progress} download size ${filesize(eventDownloadProgress.total, { base: 10 })}`
+    `[updater] download progress: ${filesize(eventDownloadProgress.transferred, { base: 10 })}/${filesize(eventDownloadProgress.total, { base: 10 })}`
   );
 });
 
@@ -42,7 +41,7 @@ autoUpdater.on(UPDATE_DOWNLOADED, () => {
   console.log('[updater] update downloaded');
   console.info('[updater] calling quitAndInstall...');
   autoUpdater.quitAndInstall();
-  isUpdating = true;
+  isUpdating = false;
 });
 
 export async function start(
