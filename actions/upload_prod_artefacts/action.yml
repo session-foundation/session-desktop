@@ -19,28 +19,28 @@ runs:
       working-directory: ./release/
 
     - name: Make artefacts folder
-      run: mkdir -p ${{ inputs.upload_prefix }}-production
+      run: mkdir -p production-${{ inputs.upload_prefix }}
       shell: bash
       working-directory: ./release/
 
     - name: Move all files
       if: ${{ inputs.multiarch_build == 'false' }}
       run: |
-        ls -f -- | xargs -I{} mv {} ${{ inputs.upload_prefix }}-production/"
+        ls -f -- | xargs -I{} mv {} production-${{ inputs.upload_prefix }}/
       shell: bash
       working-directory: ./release/
 
     - name: Move ${{ inputs.upload_prefix }} files
       if: ${{ inputs.multiarch_build == 'true' }}
       run: |
-        mv *${{ inputs.upload_prefix }}* ${{ inputs.upload_prefix }}-production/
-        mv builder-debug.yml ${{ inputs.upload_prefix }}-production/
-        mv *latest*.yml ${{ inputs.upload_prefix }}-production/
+        mv *${{inputs.upload_prefix}}* production-${{ inputs.upload_prefix }}/
+        mv *latest*.yml production-${{ inputs.upload_prefix }}/
+        mv builder-debug.yml production-${{ inputs.upload_prefix }}/
       shell: bash
       working-directory: ./release/
 
     - name: Artefact files
-      run: ls ${{ inputs.upload_prefix }}-production/
+      run: ls production-${{ inputs.upload_prefix }}/
       shell: bash
       working-directory: ./release/
 
@@ -48,4 +48,4 @@ runs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.upload_prefix }}-production
-        path: release/${{ inputs.upload_prefix }}-production/
+        path: release/production-${{ inputs.upload_prefix }}/
