@@ -30,9 +30,17 @@ async function fetchReleaseFromFSAndUpdateMain(userEd25519SecretKey: Uint8Array)
     }
 
     const justFetched = await getLatestReleaseFromFileServer(userEd25519SecretKey);
-    window.log.info('[updater] fetched latest release from fileserver: ', justFetched);
+    if (!justFetched) {
+      window.log.info('[updater] no new release found on fileserver');
+      return;
+    }
 
-    if (isString(justFetched) && !isEmpty(justFetched)) {
+    const [releaseVersion, releaseChannel] = justFetched;
+    window.log.info(
+      `[updater] fetched ${releaseChannel} release from fileserver: ${releaseVersion}`
+    );
+
+    if (isString(releaseVersion) && !isEmpty(releaseVersion)) {
       lastFetchedTimestamp = Date.now();
       ipcRenderer.send('set-release-from-file-server', justFetched);
       window.readyForUpdates();

@@ -135,7 +135,7 @@ const parseStatusCodeFromOnionRequestV4 = (
 export const getLatestReleaseFromFileServer = async (
   userEd25519SecretKey: Uint8Array,
   releaseType?: ReleaseChannels
-): Promise<string | null> => {
+): Promise<[string, ReleaseChannels] | null> => {
   const sigTimestampSeconds = NetworkTime.getNowWithNetworkOffsetSeconds();
   const blindedPkHex = await BlindingActions.blindVersionPubkey({
     ed25519SecretKey: userEd25519SecretKey,
@@ -177,5 +177,5 @@ export const getLatestReleaseFromFileServer = async (
   if (!latestVersionWithV) {
     return null;
   }
-  return latestVersionWithV;
+  return [latestVersionWithV, releaseType || releaseChannel];
 };

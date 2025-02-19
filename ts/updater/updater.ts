@@ -76,29 +76,30 @@ async function checkForUpdates(
   i18n: SetupI18nReturnType,
   logger: LoggerType
 ) {
-  logger.info('[updater] checkForUpdates');
   if (stopped || isUpdating || downloadIgnored) {
+    logger.info('[updater] checkForUpdates stopped or isUpdating or downloadIgnored');
     return;
   }
 
   const canUpdate = await canAutoUpdate();
-  logger.info('[updater] canUpdate', canUpdate);
+  logger.info('[updater] checkForUpdates canAutoUpdate', canUpdate);
   if (!canUpdate) {
-    logger.info('[updater] checkForUpdates canAutoUpdate false');
     return;
   }
 
-  logger.info('[updater] checkForUpdates...');
+  logger.info('[updater] checkForUpdates isUpdating', isUpdating);
 
   isUpdating = true;
 
   try {
-    const latestVersionFromFsFromRenderer = getLatestRelease();
+    const [latestVersionFromFsFromRenderer, releaseChannelFromFsFromRenderer] = getLatestRelease();
 
-    logger.info('[updater] latestVersionFromFsFromRenderer', latestVersionFromFsFromRenderer);
+    logger.info(
+      `[updater] checkForUpdates latestVersionFromFsFromRenderer ${latestVersionFromFsFromRenderer} releaseChannelFromFsFromRenderer ${releaseChannelFromFsFromRenderer}`
+    );
     if (!latestVersionFromFsFromRenderer || !latestVersionFromFsFromRenderer?.length) {
       logger.info(
-        '[updater] testVersionFromFsFromRenderer was not updated yet by renderer. Skipping update check'
+        '[updater] checkForUpdates testVersionFromFsFromRenderer was not updated yet by renderer. Skipping update check'
       );
       return;
     }
@@ -180,10 +181,10 @@ async function checkForUpdates(
 }
 
 function isUpdateAvailable(updateInfo: UpdateInfo): boolean {
-  const latestVersion = parseVersion(updateInfo.version);
-  if (!latestVersion) {
+  const updateVersion = parseVersion(updateInfo.version);
+  if (!updateVersion) {
     console.error(
-      '[updater] isUpdateAvailable could not parse latest version:',
+      '[updater] isUpdateAvailable could not parse update version:',
       updateInfo.version
     );
     return false;
@@ -192,11 +193,11 @@ function isUpdateAvailable(updateInfo: UpdateInfo): boolean {
   // We need to convert this to string because typescript won't let us use types across submodules ....
   const currentVersion = autoUpdater.currentVersion.toString();
 
-  const latestIsNewer = isVersionGreaterThan(latestVersion, currentVersion);
+  const updateIsNewer = isVersionGreaterThan(updateVersion, currentVersion);
   console.log(
-    `[updater] isUpdateAvailable latestIsNewer: ${latestIsNewer} currentVersion: ${currentVersion} latestVersion: ${latestVersion}`
+    `[updater] isUpdateAvailable updateIsNewer: ${updateIsNewer} currentVersion: ${currentVersion} updateVersion: ${updateVersion}`
   );
-  return latestIsNewer;
+  return updateIsNewer;
 }
 
 /*
