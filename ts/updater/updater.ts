@@ -11,6 +11,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { gt as isVersionGreaterThan, parse as parseVersion } from 'semver';
 
+import filesize from 'filesize';
 import { windowMarkShouldQuit } from '../node/window_state';
 
 import { UPDATER_INTERVAL_MS } from '../session/constants';
@@ -30,14 +31,16 @@ let interval: NodeJS.Timeout | undefined;
 let stopped = false;
 
 autoUpdater.on(DOWNLOAD_PROGRESS, eventDownloadProgress => {
-  const progress = eventDownloadProgress.transferred / eventDownloadProgress.total;
+  const progress = (eventDownloadProgress.transferred / eventDownloadProgress.total) * 100;
   console.log(
-    `[updater] download progress: ${progress} eventDownloadProgress.transferred ${eventDownloadProgress.transferred} eventDownloadProgress.total ${eventDownloadProgress.total}`
+    `[updater] download progress: ${progress} download size ${filesize(eventDownloadProgress.total, { base: 10 })}`
   );
 });
 
 autoUpdater.on(UPDATE_DOWNLOADED, () => {
   console.log('[updater] update downloaded');
+  console.info('[updater] calling quitAndInstall...');
+  autoUpdater.quitAndInstall();
 });
 
 export async function start(
@@ -91,7 +94,9 @@ async function checkForUpdates(
   logger: LoggerType
 ) {
   if (stopped || isUpdating || downloadIgnored) {
-    logger.info('[updater] checkForUpdates stopped or isUpdating or downloadIgnored');
+    logger.info(
+      `[updater] checkForUpdates is returning early stopped ${stopped} isUpdating ${isUpdating} downloadIgnored ${downloadIgnored}`
+    );
     return;
   }
 
@@ -106,14 +111,14 @@ async function checkForUpdates(
   isUpdating = true;
 
   try {
-    const [latestVersionFromFsFromRenderer, releaseChannelFromFsFromRenderer] = getLatestRelease();
+    const [updateVersionFromFsFromRenderer, releaseChannelFromFsFromRenderer] = getLatestRelease();
 
     logger.info(
-      `[updater] checkForUpdates latestVersionFromFsFromRenderer ${latestVersionFromFsFromRenderer} releaseChannelFromFsFromRenderer ${releaseChannelFromFsFromRenderer}`
+      `[updater] checkForUpdates updateVersionFromFsFromRenderer ${updateVersionFromFsFromRenderer} releaseChannelFromFsFromRenderer ${releaseChannelFromFsFromRenderer}`
     );
-    if (!latestVersionFromFsFromRenderer || !latestVersionFromFsFromRenderer?.length) {
+    if (!updateVersionFromFsFromRenderer || !updateVersionFromFsFromRenderer?.length) {
       logger.info(
-        '[updater] checkForUpdates testVersionFromFsFromRenderer was not updated yet by renderer. Skipping update check'
+        '[updater] checkForUpdates updateVersionFromFsFromRenderer has not updated yet by the renderer process yet. Skipping update check'
       );
       return;
     }
@@ -128,11 +133,11 @@ async function checkForUpdates(
     }
 
     const currentVersion = autoUpdater.currentVersion.toString();
-    const isMoreRecent = isVersionGreaterThan(latestVersionFromFsFromRenderer, currentVersion);
+    const isMoreRecent = isVersionGreaterThan(updateVersionFromFsFromRenderer, currentVersion);
     logger.info('[updater] checkForUpdates isMoreRecent', isMoreRecent);
     if (!isMoreRecent) {
       logger.info(
-        `[updater] File server has no update so we are not looking for an update from github current:${currentVersion} fromFileServer:${latestVersionFromFsFromRenderer}`
+        `[updater] File server has no update so we are not looking for an update from github current:${currentVersion} fromFileServer:${updateVersionFromFsFromRenderer}`
       );
       return;
     }
@@ -199,9 +204,8 @@ async function checkForUpdates(
       return;
     }
 
-    logger.info('[updater] calling quitAndInstall...');
+    logger.info('[updater] calling windowMarkShouldQuit...');
     windowMarkShouldQuit();
-    autoUpdater.quitAndInstall();
   } finally {
     isUpdating = false;
   }
