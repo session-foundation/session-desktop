@@ -84,25 +84,27 @@ export const DebugActions = () => {
               return;
             }
             setLoadingLatestRelease(true);
-            const versionNumber = await getLatestReleaseFromFileServer(
-              userEd25519SecretKey,
-              'latest'
-            );
+            const result = await getLatestReleaseFromFileServer(userEd25519SecretKey, 'latest');
+            if (!result) {
+              ToastUtils.pushToastError('debugLatestRelease', 'Failed to fetch latest release');
+              return;
+            }
+            const [versionNumber, releaseChannel] = result;
+            if (!versionNumber) {
+              ToastUtils.pushToastError('debugLatestRelease', 'Failed to fetch latest release');
+              return;
+            }
             setLoadingLatestRelease(false);
 
-            if (versionNumber) {
-              ToastUtils.pushToastInfo(
-                'debugCurrentRelease1',
-                `Current: v${window.versionInfo.version}`
-              );
-              ToastUtils.pushToastInfo('debugLatestRelease', `Available: v${versionNumber}`);
-              window.log.debug(
-                `WIP: [debugMenu] [updater] isVersionGreaterThan(latestVersion, currentVersion)`,
-                isVersionGreaterThan(`v${versionNumber}`, `v${window.versionInfo.version}`)
-              );
-            } else {
-              ToastUtils.pushToastError('debugLatestRelease', 'Failed to fetch latest release');
-            }
+            ToastUtils.pushToastInfo(
+              'debugCurrentRelease',
+              `Current: v${window.versionInfo.version}`
+            );
+            ToastUtils.pushToastInfo(`debugLatestRelease`, `Available: v${versionNumber}`);
+            window.log.debug(
+              `WIP: [debugMenu] [updater] ${releaseChannel} channel isVersionGreaterThan(latestVersion, currentVersion)`,
+              isVersionGreaterThan(`v${versionNumber}`, `v${window.versionInfo.version}`)
+            );
           }}
         >
           <SessionSpinner loading={loadingLatestRelease} color={'var(--text-primary-color)'} />
@@ -117,25 +119,27 @@ export const DebugActions = () => {
               return;
             }
             setLoadingAlphaRelease(true);
-            const versionNumber = await getLatestReleaseFromFileServer(
-              userEd25519SecretKey,
-              'alpha'
-            );
+            const result = await getLatestReleaseFromFileServer(userEd25519SecretKey, 'alpha');
+            if (!result) {
+              ToastUtils.pushToastError('debugAlphaRelease', 'Failed to fetch alpha release');
+              return;
+            }
+            const [versionNumber, releaseChannel] = result;
+            if (!versionNumber) {
+              ToastUtils.pushToastError('debugAlphaRelease', 'Failed to fetch alpha release');
+              return;
+            }
             setLoadingAlphaRelease(false);
 
-            if (versionNumber) {
-              ToastUtils.pushToastInfo(
-                'debugCurrentRelease2',
-                `Current: v${window.versionInfo.version}`
-              );
-              ToastUtils.pushToastInfo('debugAlphaRelease', `Available: v${versionNumber}`);
-              window.log.debug(
-                `WIP: [debugMenu] [updater] isVersionGreaterThan(latestVersion, currentVersion)`,
-                isVersionGreaterThan(`v${versionNumber}`, `v${window.versionInfo.version}`)
-              );
-            } else {
-              ToastUtils.pushToastError('debugAlphaRelease', 'Failed to fetch latest release');
-            }
+            ToastUtils.pushToastInfo(
+              `debugCurrentRelease1`,
+              `Current: v${window.versionInfo.version}`
+            );
+            ToastUtils.pushToastInfo('debugAlphaRelease', `Available: v${versionNumber}`);
+            window.log.debug(
+              `WIP: [debugMenu] [updater] ${releaseChannel} channel isVersionGreaterThan(latestVersion, currentVersion)`,
+              isVersionGreaterThan(`v${versionNumber}`, `v${window.versionInfo.version}`)
+            );
           }}
         >
           <SessionSpinner loading={loadingAlphaRelease} color={'var(--text-primary-color)'} />
