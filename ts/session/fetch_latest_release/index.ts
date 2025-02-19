@@ -24,7 +24,7 @@ async function fetchReleaseFromFSAndUpdateMain(userEd25519SecretKey: Uint8Array)
     const diff = Date.now() - lastFetchedTimestamp;
     if (diff < skipIfLessThan) {
       window.log.info(
-        `[updater] fetched release from fs ${Math.floor(diff / DURATION.MINUTES)}minutes ago, skipping until that's at least ${Math.floor(skipIfLessThan / DURATION.MINUTES)}`
+        `[updater] fetched release from fs ${Math.floor(diff / DURATION.MINUTES)} minutes ago, skipping until that's at least ${Math.floor(skipIfLessThan / DURATION.MINUTES)}`
       );
       return;
     }
