@@ -32,16 +32,20 @@ let stopped = false;
 
 autoUpdater.on(DOWNLOAD_PROGRESS, eventDownloadProgress => {
   console.log(
-    `[updater] download progress: ${filesize(eventDownloadProgress.transferred, { base: 10 })}/${filesize(eventDownloadProgress.total, { base: 10 })}`
+    `[updater] downloading ${filesize(eventDownloadProgress.transferred, { base: 10 })}/${filesize(eventDownloadProgress.total, { base: 10 })}`
   );
 });
 
 autoUpdater.on(UPDATE_DOWNLOADED, () => {
   isUpdating = true;
   console.log('[updater] update downloaded');
-  console.info('[updater] calling quitAndInstall...');
-  autoUpdater.quitAndInstall();
-  isUpdating = false;
+  // https://github.com/electron-userland/electron-builder/issues/6058#issuecomment-1130344017
+  setTimeout(() => {
+    console.info('[updater] calling quitAndInstall...');
+    autoUpdater.quitAndInstall();
+    app.exit();
+    isUpdating = false;
+  }, 1000);
 });
 
 export async function start(
@@ -211,7 +215,6 @@ async function checkForUpdates(
 
     logger.info('[updater] calling windowMarkShouldQuit...');
     windowMarkShouldQuit();
-    logger.info('[updater] UPDATE_DOWNLOADED event should be emitted soon...', UPDATE_DOWNLOADED);
   } finally {
     isUpdating = false;
   }
