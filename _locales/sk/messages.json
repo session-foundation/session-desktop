@@ -419,7 +419,6 @@
   "groupOnlyAdmin": "Ste jediným správcom v <b>{group_name}</b>.<br/><br/>Členovia skupiny a nastavenia sa bez správcu nedajú meniť.",
   "groupPromotedYou": "<b>Vy</b> ste boli povýšený/á na správcu.",
   "groupPromotedYouMultiple": "<b>Vy</b> a <b>{count} ďalší</b> ste boli povýšení na správcov.",
-  "groupPromotedYouTwo": "<b>Vy</b> a <b>{name}</b> ste boli povýšení na správcov.",
   "groupRemoveDescription": "Chcete odstrániť <b>{name}</b> z <b>{group_name}</b>?",
   "groupRemoveDescriptionMultiple": "Chcete odstrániť <b>{name}</b> a <b>{count} ďalších</b> z <b>{group_name}</b>?",
   "groupRemoveDescriptionTwo": "Chcete odstrániť <b>{name}</b> a <b>{other_name}</b> z <b>{group_name}</b>?",

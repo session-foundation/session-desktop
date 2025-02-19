@@ -419,7 +419,6 @@
   "groupOnlyAdmin": "Você é o único admin em <b>{group_name}</b>.<br/><br/>Os membros e as definições do grupo não podem ser alterados sem um admin.",
   "groupPromotedYou": "<b>Foi</b> promovido a administrador.",
   "groupPromotedYouMultiple": "<b>Você</b> e <b>{count} outros</b> foram promovidos a Admin.",
-  "groupPromotedYouTwo": "<b>Você</b> e <b>{name}</b> foram promovidos a Admin.",
   "groupRemoveDescription": "Gostaria de remover <b>{name}</b> de <b>{group_name}</b>?",
   "groupRemoveDescriptionMultiple": "Gostaria de remover <b>{name}</b> e <b>{count} outros</b> de <b>{group_name}</b>?",
   "groupRemoveDescriptionTwo": "Gostaria de remover <b>{name}</b> e <b>{other_name}</b> de <b>{group_name}</b>?",

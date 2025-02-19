@@ -418,7 +418,6 @@
   "groupOnlyAdmin": "You are the only admin in <b>{group_name}</b>.<br/><br/>Group members and settings cannot be changed without an admin.",
   "groupPromotedYou": "<b>আপনি</b> অ্যাডমিন হিসেবে উন্নীত হয়েছেন।",
   "groupPromotedYouMultiple": "<b>আপনি</b> এবং <b>{count} জন অন্যরা</b> অ্যাডমিন হিসেবে উন্নীত হয়েছে।",
-  "groupPromotedYouTwo": "<b>আপনি</b> এবং <b>{name}</b> অ্যাডমিন হিসেবে উন্নীত হয়েছেন।",
   "groupRemoveDescription": "Would you like to remove <b>{name}</b> from <b>{group_name}</b>?",
   "groupRemoveDescriptionMultiple": "Would you like to remove <b>{name}</b> and <b>{count} others</b> from <b>{group_name}</b>?",
   "groupRemoveDescriptionTwo": "Would you like to remove <b>{name}</b> and <b>{other_name}</b> from <b>{group_name}</b>?",

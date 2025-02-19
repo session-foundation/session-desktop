@@ -422,7 +422,6 @@
   "groupOnlyAdmin": "Вы единственный администратор в <b>{group_name}</b>.<br/><br/>Участники группы и настройки не могут быть изменены без администратора.",
   "groupPromotedYou": "<b>Вы</b> назначены администратором.",
   "groupPromotedYouMultiple": "<b>Вы</b> и <b>{count} других человек</b> назначены администраторами.",
-  "groupPromotedYouTwo": "<b>Вы</b> и <b>{name}</b> назначены администраторами.",
   "groupRemoveDescription": "Хотите удалить <b>{name}</b> из <b>{group_name}</b>?",
   "groupRemoveDescriptionMultiple": "Хотите удалить <b>{name}</b> и <b>{count} других</b> из <b>{group_name}</b>?",
   "groupRemoveDescriptionTwo": "Хотите удалить <b>{name}</b> и <b>{other_name}</b> из <b>{group_name}</b>?",

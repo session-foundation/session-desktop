@@ -418,7 +418,6 @@
   "groupOnlyAdmin": "את/ה המנהל/ת היחיד/ה ב-<b>{group_name}</b>.<br/><br/>חברי הקבוצה וההגדרות לא יכולים להשתנות ללא מנהל/ת.",
   "groupPromotedYou": "<b>את/ה</b> קודמת למנהל.",
   "groupPromotedYouMultiple": "<b>את/ה</b> ו<b>{count} אחרים</b> קודמתם למנהל.",
-  "groupPromotedYouTwo": "<b>את/ה</b> ו<b>{name}</b> קודמתם למנהל.",
   "groupRemoveDescription": "האם ברצונך להסיר את <b>{name}</b> מ-<b>{group_name}</b>?",
   "groupRemoveDescriptionMultiple": "האם ברצונך להסיר את <b>{name}</b> ואת <b>{count} אחרים</b> מ-<b>{group_name}</b>?",
   "groupRemoveDescriptionTwo": "האם ברצונך להסיר את <b>{name}</b> ואת <b>{other_name}</b> מ-<b>{group_name}</b>?",

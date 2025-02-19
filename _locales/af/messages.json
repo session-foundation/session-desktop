@@ -418,7 +418,6 @@
   "groupOnlyAdmin": "Jy is die enigste administrateur in <b>{group_name}</b>.<br/><br/>Groepslede en instellings kan nie verander word sonder 'n administrateur nie.",
   "groupPromotedYou": "<b>Jy</b> is bevorder tot Admin.",
   "groupPromotedYouMultiple": "<b>Jy</b> en <b>{count} ander</b> is bevorder tot Admin.",
-  "groupPromotedYouTwo": "<b>Jy</b> en <b>{name}</b> is bevorder tot Admin.",
   "groupRemoveDescription": "Wil jy <b>{name}</b> verwyder uit <b>{group_name}?</b>",
   "groupRemoveDescriptionMultiple": "Wil jy <b>{name}</b> en <b>{count} ander</b> verwyder uit <b>{group_name}?</b>",
   "groupRemoveDescriptionTwo": "Wil jy <b>{name}</b> en <b>{other_name}</b> verwyder uit <b>{group_name}?</b>",

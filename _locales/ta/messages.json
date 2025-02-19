@@ -419,7 +419,6 @@
   "groupOnlyAdmin": "நீங்கள் <b>{group_name}</b> இல் ஒரே நிர்வாகியாக உள்ளீர்கள்.<br/><br/> குழு உறுப்பினர்களும் அமைப்புகளும் நிர்வாகியில்லாமல் மாற்ற முடியாது.",
   "groupPromotedYou": "<b>நீங்கள்</b> நிர்வாகியாக உயர்த்தப்பட்டீர்கள்.",
   "groupPromotedYouMultiple": "<b>நீங்கள்</b> மற்றும் <b>{count} பிறர்</b> நிர்வாகியாக உயர்த்தப்பட்டீர்கள்.",
-  "groupPromotedYouTwo": "<b>நீங்கள்</b> மற்றும் <b>{name}</b> நிர்வாகியாக உயர்த்தப்பட்டீர்கள்.",
   "groupRemoveDescription": "நீங்கள் <b>{name}</b> ஐ <b>{group_name}</b> இல் இருந்து அகற்ற விரும்புகிறீர்களா?",
   "groupRemoveDescriptionMultiple": "நீங்கள் <b>{name}</b> மற்றும் <b>{count} மற்றவர்களை</b> <b>{group_name}</b> இல் இருந்து அகற்ற விரும்புகிறீர்களா?",
   "groupRemoveDescriptionTwo": "நீங்கள் <b>{name}</b> மற்றும் <b>{other_name}</b> ஐ <b>{group_name}</b> இல் இருந்து அகற்ற விரும்புகிறீர்களா?",

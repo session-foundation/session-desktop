@@ -419,7 +419,6 @@
   "groupOnlyAdmin": "Te vagy az egyetlen adminisztrátor a <b>{group_name}</b> csoportban.<br/><br/>A csoporttagok és beállítások nem változtathatók adminisztrátor nélkül.",
   "groupPromotedYou": "<b>Te</b> adminisztrátorrá lettél előléptetve.",
   "groupPromotedYouMultiple": "<b>Te</b> és <b>{count} másik személy</b> adminisztrátorrá lettetek előléptetve.",
-  "groupPromotedYouTwo": "<b>Te</b> és <b>{name}</b> adminisztrátorrá lettetek előléptetve.",
   "groupRemoveDescription": "El szeretnéd távolítani <b>{name}</b>-t a <b>{group_name}</b> csoportból?",
   "groupRemoveDescriptionMultiple": "El szeretnéd távolítani <b>{name}</b>-t és <b>{count} másik személyt</b> a <b>{group_name}</b> csoportból?",
   "groupRemoveDescriptionTwo": "El szeretnéd távolítani <b>{name}</b>-t és <b>{other_name}</b>-t a <b>{group_name}</b> csoportból?",

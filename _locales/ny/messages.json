@@ -418,7 +418,6 @@
   "groupOnlyAdmin": "Inu ndinu oyang'anira payekha mu <b>{group_name}</b>.<br/><br/>Mabwenzi ndi zoikamo sizingasinthidwe popanda woyang'anira.",
   "groupPromotedYou": "<b>Inu</b> mwakwezedwa kukhala Admin.",
   "groupPromotedYouMultiple": "<b>Inu</b> ndi <b>{count} ena</b> mwakwezedwa kukhala Admin.",
-  "groupPromotedYouTwo": "<b>Inu</b> ndi <b>{name}</b> mwakwezedwa kukhala Admin.",
   "groupRemoveDescription": "Kodi mukufuna kuchotsa <b>{name}</b> ku <b>{group_name}</b>?",
   "groupRemoveDescriptionMultiple": "Kodi mukufuna kuchotsa <b>{name}</b> ndi <b>{count} ena</b> ku <b>{group_name}</b>?",
   "groupRemoveDescriptionTwo": "Kodi mukufuna kuchotsa <b>{name}</b> ndi <b>{other_name}</b> ku <b>{group_name}</b>?",

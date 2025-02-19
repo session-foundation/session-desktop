@@ -418,7 +418,6 @@
   "groupOnlyAdmin": "Olete ainus administraator grupis <b>{group_name}</b>.<br/><br/>Grupi liikmeid ja sätteid ei saa muuta ilma administraatorita.",
   "groupPromotedYou": "<b>Sina</b> määrati adminiks.",
   "groupPromotedYouMultiple": "<b>Sind</b> ja <b>{count} teist</b> määrati administraatoriks.",
-  "groupPromotedYouTwo": "<b>Sind</b> ja <b>{name}</b> määrati administraatoriks.",
   "groupRemoveDescription": "Kas soovite eemaldada <b>{name}</b> grupist <b>{group_name}</b>?",
   "groupRemoveDescriptionMultiple": "Kas soovite eemaldada <b>{name}</b> ja <b>{count} teised</b> grupist <b>{group_name}</b>?",
   "groupRemoveDescriptionTwo": "Kas soovite eemaldada <b>{name}</b> ja <b>{other_name}</b> grupist <b>{group_name}</b>?",

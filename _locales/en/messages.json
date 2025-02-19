@@ -440,7 +440,7 @@
   "groupPendingRemoval": "Pending removal",
   "groupPromotedYou": "<b>You</b> were promoted to Admin.",
   "groupPromotedYouMultiple": "<b>You</b> and <b>{count} others</b> were promoted to Admin.",
-  "groupPromotedYouTwo": "<b>You</b> and <b>{name}</b> were promoted to Admin.",
+  "groupPromotedYouTwo": "<b>You</b> and <b>{other_name}</b> were promoted to Admin.",
   "groupRemoveDescription": "Would you like to remove <b>{name}</b> from <b>{group_name}</b>?",
   "groupRemoveDescriptionMultiple": "Would you like to remove <b>{name}</b> and <b>{count} others</b> from <b>{group_name}</b>?",
   "groupRemoveDescriptionTwo": "Would you like to remove <b>{name}</b> and <b>{other_name}</b> from <b>{group_name}</b>?",
@@ -483,8 +483,8 @@
   "leaving": "Leaving...",
   "legacyGroupAfterDeprecationAdmin": "This group is now read-only. Recreate this group to keep chatting.",
   "legacyGroupAfterDeprecationMember": "This group is now read-only. Ask the group admin to recreate this group to keep chatting.",
-  "legacyGroupBeforeDeprecationAdmin": "Groups have been upgraded! Recreate this group for improved reliability. This group will become read-only on {date}.",
-  "legacyGroupBeforeDeprecationMember": "Groups have been upgraded! Ask the group admin to recreate this group for improved reliability. This group will become read-only on {date}.",
+  "legacyGroupBeforeDeprecationAdmin": "Groups have been upgraded! Recreate this group for improved reliability. This group will become read-only at {date}.",
+  "legacyGroupBeforeDeprecationMember": "Groups have been upgraded! Ask the group admin to recreate this group for improved reliability. This group will become read-only at {date}.",
   "legacyGroupChatHistory": "Chat history will not be transferred to the new group. You can still view all chat history in your old group.",
   "legacyGroupMemberNew": "<b>{name}</b> joined the group.",
   "legacyGroupMemberNewMultiple": "<b>{name}</b> and <b>{count} others</b> joined the group.",
@@ -821,3 +821,4 @@
   "yes": "Yes",
   "you": "You"
 }
+

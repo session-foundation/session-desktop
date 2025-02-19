@@ -419,7 +419,6 @@
   "groupOnlyAdmin": "Siz <b>{group_name}</b> qrupunda yeganə adminsiniz.<br/><br/>Qrup üzvləri və ayarları admin olmadan dəyişdirilə bilməz.",
   "groupPromotedYou": "<b>Siz</b> Admin oldunuz.",
   "groupPromotedYouMultiple": "<b>Siz</b> və <b> digər {count} nəfər</b> Admin oldunuz.",
-  "groupPromotedYouTwo": "<b>Siz</b> və<b>{name}</b> Admin oldunuz.",
   "groupRemoveDescription": "<b>{name}</b> istifadəçisini <b>{group_name}</b> qrupundan çıxarmaq istəyirsiniz?",
   "groupRemoveDescriptionMultiple": "<b>{name}</b> və digər <b>{count} nəfəri</b> <b>{group_name}</b> qrupundan çıxartmaq istəyirsiniz?",
   "groupRemoveDescriptionTwo": "<b>{name}</b> və <b>{other_name}</b> istifadəçilərini <b>{group_name}</b> qrupundan çıxarmaq istəyirsiniz?",

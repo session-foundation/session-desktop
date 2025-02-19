@@ -418,7 +418,6 @@
   "groupOnlyAdmin": "You are the only admin in <b>{group_name}.</b><br/><br/>Group members and settings cannot be changed without an admin.",
   "groupPromotedYou": "<b>သင်</b> ကို အုပ်ချုပ်ရေးမှူးအဖြစ် တိုးတက်လာသည်။",
   "groupPromotedYouMultiple": "<b>သင်</b> နှင့် <b>{count} ဦး</b> အဖွဲ့ဝင်များကို အုပ်ချုပ်ရေးမှူးအဖြစ် တက်လာသည်။",
-  "groupPromotedYouTwo": "<b>သင်</b> နှင့် <b>{name}</b> ကို အုပ်ချုပ်ရေးမှူးအဖြစ် တိုးတက်လာသည်။",
   "groupRemoveDescription": "Would you like to remove <b>{name}</b> from <b>{group_name}?</b>",
   "groupRemoveDescriptionMultiple": "Would you like to remove <b>{name}</b> and <b>{count} others</b> from <b>{group_name}?</b>",
   "groupRemoveDescriptionTwo": "Would you like to remove <b>{name}</b> and <b>{other_name}</b> from <b>{group_name}?</b>",

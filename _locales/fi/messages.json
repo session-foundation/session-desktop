@@ -419,7 +419,6 @@
   "groupOnlyAdmin": "Olet ainoa ylläpitäjä ryhmässä <b>{group_name}</b>.<br/><br/>Ryhmän jäseniä ja asetuksia ei voi muuttaa ilman ylläpitäjää.",
   "groupPromotedYou": "<b>Sinut</b> ylennettiin ylläpitäjäksi.",
   "groupPromotedYouMultiple": "<b>Sinä</b> ja <b>{count} muuta</b> ylennettiin ylläpitäjiksi.",
-  "groupPromotedYouTwo": "<b>Sinä</b> ja <b>{name}</b> ylennettiin ylläpitäjiksi.",
   "groupRemoveDescription": "Haluatko poistaa <b>{name}</b> ryhmästä <b>{group_name}</b>?",
   "groupRemoveDescriptionMultiple": "Haluatko poistaa <b>{name}</b> ja <b>{count} muuta</b> ryhmästä <b>{group_name}</b>?",
   "groupRemoveDescriptionTwo": "Haluatko poistaa <b>{name}</b> ja <b>{other_name}</b> ryhmästä <b>{group_name}</b>?",

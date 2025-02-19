@@ -418,7 +418,6 @@
   "groupOnlyAdmin": "Zu zara <b>{group_name}</b>-ko administratzaile bakarra.<br/><br/>Taldekideak eta ezarpenak ezin daitezke aldatu admin bat gabe.",
   "groupPromotedYou": "<b>Zuk</b> administratzaile izendatu zaituzte.",
   "groupPromotedYouMultiple": "<b>Zu</b> eta <b>{count} beste</b> administratzaile izendatu zaituztete.",
-  "groupPromotedYouTwo": "<b>Zu</b> eta <b>{name}</b> administratzaile izendatu zaituztete.",
   "groupRemoveDescription": "<b>{name}</b> <b>{group_name}</b>-tik kendu nahi duzu?",
   "groupRemoveDescriptionMultiple": "<b>{name}</b> eta <b>{count} beste batzuk</b> <b>{group_name}</b>-tik kendu nahi dituzu?",
   "groupRemoveDescriptionTwo": "<b>{name}</b> eta <b>{other_name}</b> <b>{group_name}</b>-tik kendu nahi dituzu?",

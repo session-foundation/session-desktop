@@ -419,7 +419,6 @@
   "groupOnlyAdmin": "Та <b>{group_name}</b>-ийн цорын ганц админ байна.<br/><br/>Бүлгийн гишүүд болон тохиргоог админгүй өөрчлөх боломжгүй.",
   "groupPromotedYou": "<b>Та </b> Админ боллоо.",
   "groupPromotedYouMultiple": "<b>Та</b> болон <b>{count} бусад</b> Админ боллоо.",
-  "groupPromotedYouTwo": "<b>Та</b> болон <b>{name}</b> Админ боллоо.",
   "groupRemoveDescription": "<b>{name}</b>-г <b>{group_name}</b> -аас устгахыг хүсэж байна уу?",
   "groupRemoveDescriptionMultiple": "<b>{name}</b>-г болон <b>{count} бусдыг</b> <b>{group_name}</b>-аас устгахыг хүсэж байна уу?",
   "groupRemoveDescriptionTwo": "<b>{name}</b>-г болон <b>{other_name}</b>-г <b>{group_name}</b>-аас устгахыг хүсэж байна уу?",

@@ -420,7 +420,6 @@
   "groupOnlyAdmin": "Du bist der einzige Admin in <b>{group_name}</b>.<br/><br/>Gruppenmitglieder und -einstellungen können ohne einen Admin nicht geändert werden.",
   "groupPromotedYou": "<b>Du</b> wurdest zum Admin befördert.",
   "groupPromotedYouMultiple": "<b>Du</b> und <b>{count} andere</b> wurden zu Admin befördert.",
-  "groupPromotedYouTwo": "<b>Du</b> und <b>{name}</b> wurden zu Admin befördert.",
   "groupRemoveDescription": "Möchtest du <b>{name}</b> aus <b>{group_name}</b> entfernen?",
   "groupRemoveDescriptionMultiple": "Möchtest du <b>{name}</b> und <b>{count} andere</b> aus <b>{group_name}</b> entfernen?",
   "groupRemoveDescriptionTwo": "Möchtest du <b>{name}</b> und <b>{other_name}</b> aus <b>{group_name}</b> entfernen?",

@@ -419,7 +419,6 @@
   "groupOnlyAdmin": "Είστε ο μόνος διαχειριστής στην <b>{group_name}</b>.<br/><br/>Τα μέλη και οι ρυθμίσεις της ομάδας δεν μπορούν να αλλάξουν χωρίς διαχειριστή.",
   "groupPromotedYou": "<b>Εσείς</b> γίνατε Διαχειριστές.",
   "groupPromotedYouMultiple": "<b>Εσείς</b> και <b>{count} άλλοι</b> γίνατε Διαχειριστές.",
-  "groupPromotedYouTwo": "<b>Εσείς</b> και <b>{name}</b> γίνατε Διαχειριστές.",
   "groupRemoveDescription": "Θα θέλατε να αφαιρέσετε τον/την <b>{name}</b> από την <b>{group_name}</b>;",
   "groupRemoveDescriptionMultiple": "Θα θέλατε να αφαιρέσετε τον/την <b>{name}</b> και άλλους <b>{count}</b> από την <b>{group_name}</b>;",
   "groupRemoveDescriptionTwo": "Θα θέλατε να αφαιρέσετε τον/την <b>{name}</b> και τον/την <b>{other_name}</b> από την <b>{group_name}</b>;",

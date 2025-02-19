@@ -418,7 +418,6 @@
   "groupOnlyAdmin": "Вие сте единственият администратор в <b>{group_name}</b>.<br/><br/>Членовете и настройките на групата не могат да бъдат променяни без администратор.",
   "groupPromotedYou": "<b>Вие</b> бяхте повишен в Администратор.",
   "groupPromotedYouMultiple": "<b>Вие</b> и <b>{count} други</b> бяхте повишени в Администратор.",
-  "groupPromotedYouTwo": "<b>Вие</b> и <b>{name}</b> бяхте повишени в Администратор.",
   "groupRemoveDescription": "Искате ли да отстраните <b>{name}</b> от <b>{group_name}</b>?",
   "groupRemoveDescriptionMultiple": "Искате ли да отстраните <b>{name}</b> и <b>{count} други</b> от <b>{group_name}</b>?",
   "groupRemoveDescriptionTwo": "Искате ли да отстраните <b>{name}</b> и <b>{other_name}</b> от <b>{group_name}</b>?",

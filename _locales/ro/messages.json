@@ -419,7 +419,6 @@
   "groupOnlyAdmin": "Ești singurul administrator din <b>{group_name}</b>.<br/><br/>Membrii și setările grupului nu pot fi modificate fără un administrator.",
   "groupPromotedYou": "<b>Tu</b> ai fost promovat/ă la nivel de administrator.",
   "groupPromotedYouMultiple": "<b>Tu</b> și <b>alți {count}</b> ați fost promovați la nivel de administrator.",
-  "groupPromotedYouTwo": "<b>Tu</b> și <b>{name}</b> ați fost promovați la nivel de administrator.",
   "groupRemoveDescription": "Doriți să eliminați pe <b>{name}</b> din <b>{group_name}</b>?",
   "groupRemoveDescriptionMultiple": "Doriți să eliminați pe <b>{name}</b> și <b>alți {count}</b> din <b>{group_name}</b>?",
   "groupRemoveDescriptionTwo": "Doriți să eliminați pe <b>{name}</b> și <b>{other_name}</b> din <b>{group_name}</b>?",

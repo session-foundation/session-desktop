@@ -418,7 +418,6 @@
   "groupOnlyAdmin": "شما <b>{group_name}</b> کے واحد منتظم ہیں۔<br/><br/>گروپ کے اراکین اور سیٹنگز ایک منتظم کے بغیر تبدیل نہیں کیے جا سکتے۔",
   "groupPromotedYou": "<b>Šumār</b> rīhīyā Admin šumār.",
   "groupPromotedYouMultiple": "<b>شما</b> اور <b>{count} دٖگر</b> رِہویاً ادمن شومار.",
-  "groupPromotedYouTwo": "<b>شما</b> اور <b>{name}</b> رِہویاً ادمن شومار.",
   "groupRemoveDescription": "تراچ بیت پاسکن <b>{name}</b> <b>{group_name}</b>؟",
   "groupRemoveDescriptionMultiple": "ترا چہ بیتھہ <b>{name}</b> و <b>{count} اسمیں</b> <b>{group_name}</b>؟",
   "groupRemoveDescriptionTwo": "تراچ بیتھہ <b>{name}</b> و <b>{other_name}</b> <b>{group_name}</b>؟",

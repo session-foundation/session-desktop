@@ -418,7 +418,6 @@
   "groupOnlyAdmin": "Vós sou l'únic administradór de <b>{group_name}</b>.<br/><br/>Els membres del grup i les configuracions no poden ser canviats sense un administradór.",
   "groupPromotedYou": "<b>Tu</b> has estat ascendit a administrador.",
   "groupPromotedYouMultiple": "<b>Tu</b> i <b>{count} altres</b> heu estat ascendits a administrador.",
-  "groupPromotedYouTwo": "<b>Tu</b> i <b>{name}</b> heu estat ascendits a administrador.",
   "groupRemoveDescription": "Voleu eliminar <b>{name}</b> de <b>{group_name}</b>?",
   "groupRemoveDescriptionMultiple": "Voleu eliminar <b>{name}</b> i <b>{count} altres</b> de <b>{group_name}</b>?",
   "groupRemoveDescriptionTwo": "Voleu eliminar <b>{name}</b> i <b>{other_name}</b> de <b>{group_name}</b>?",
