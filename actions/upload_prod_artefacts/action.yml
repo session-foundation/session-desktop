@@ -34,8 +34,8 @@ runs:
       if: ${{ inputs.multiarch_build == 'true' }}
       run: |
         ls -f -- | grep ${{inputs.upload_prefix}} | xargs -I{} mv {} production-${{ inputs.upload_prefix }}/
-        mv *latest*.yml production-${{ inputs.upload_prefix }}/
-        mv builder-debug.yml production-${{ inputs.upload_prefix }}/
+        cp *latest*.yml production-${{ inputs.upload_prefix }}/
+        cp builder-debug.yml production-${{ inputs.upload_prefix }}/
       shell: bash
       working-directory: ./release/
 
@@ -48,4 +48,4 @@ runs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.upload_prefix }}-production
-        path: release/production-${{ inputs.upload_prefix }}/
+        path: release/production-${{ inputs.upload_prefix }}
