@@ -37,12 +37,12 @@ export async function start(
   logger: LoggerType
 ) {
   if (interval) {
-    logger.info('auto-update: Already running');
+    logger.info('[updater] auto-update: Already running');
 
     return;
   }
 
-  logger.info('auto-update: starting checks...');
+  logger.info('[updater] auto-update: starting checks...');
 
   autoUpdater.logger = logger;
   autoUpdater.autoDownload = false;
@@ -51,7 +51,7 @@ export async function start(
     try {
       await checkForUpdates(getMainWindow, i18n, logger);
     } catch (error) {
-      logger.error('auto-update: error:', getPrintableError(error));
+      logger.error('[updater] auto-update: error:', getPrintableError(error));
     }
   }, UPDATER_INTERVAL_MS); // trigger and try to update every 10 minutes to let the file gets downloaded if we are updating
   stopped = false;
@@ -61,7 +61,7 @@ export async function start(
       try {
         await checkForUpdates(getMainWindow, i18n, logger);
       } catch (error) {
-        logger.error('auto-update: error:', getPrintableError(error));
+        logger.error('[updater] auto-update: error:', getPrintableError(error));
       }
     },
     2 * 60 * 1000
@@ -91,7 +91,6 @@ async function checkForUpdates(
   const canUpdate = await canAutoUpdate();
   logger.info('[updater] checkForUpdates canAutoUpdate', canUpdate);
   if (!canUpdate) {
-    logger.info('checkForUpdates canAutoUpdate false');
     return;
   }
 
@@ -156,7 +155,7 @@ async function checkForUpdates(
 
       const mainWindow = getMainWindow();
       if (!mainWindow) {
-        console.error('cannot showDownloadUpdateDialog, mainWindow is unset');
+        logger.error('[updater] cannot showDownloadUpdateDialog, mainWindow is unset');
         return;
       }
       logger.info('[updater] showing download dialog...');
@@ -177,7 +176,7 @@ async function checkForUpdates(
     } catch (error) {
       const mainWindow = getMainWindow();
       if (!mainWindow) {
-        console.error('cannot showDownloadUpdateDialog, mainWindow is unset');
+        logger.error('[updater] cannot showDownloadUpdateDialog, mainWindow is unset');
         return;
       }
       await showCannotUpdateDialog(mainWindow, i18n);
@@ -186,7 +185,7 @@ async function checkForUpdates(
 
     const window = getMainWindow();
     if (!window) {
-      console.error('cannot showDownloadUpdateDialog, mainWindow is unset');
+      logger.error('[updater] cannot showDownloadUpdateDialog, mainWindow is unset');
       return;
     }
     // Update downloaded successfully, we should ask the user to update
