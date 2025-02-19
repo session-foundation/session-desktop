@@ -38,9 +38,11 @@ autoUpdater.on(DOWNLOAD_PROGRESS, eventDownloadProgress => {
 });
 
 autoUpdater.on(UPDATE_DOWNLOADED, () => {
+  isUpdating = true;
   console.log('[updater] update downloaded');
   console.info('[updater] calling quitAndInstall...');
   autoUpdater.quitAndInstall();
+  isUpdating = true;
 });
 
 export async function start(
@@ -113,15 +115,16 @@ async function checkForUpdates(
   try {
     const [updateVersionFromFsFromRenderer, releaseChannelFromFsFromRenderer] = getLatestRelease();
 
-    logger.info(
-      `[updater] checkForUpdates updateVersionFromFsFromRenderer ${updateVersionFromFsFromRenderer} releaseChannelFromFsFromRenderer ${releaseChannelFromFsFromRenderer}`
-    );
     if (!updateVersionFromFsFromRenderer || !updateVersionFromFsFromRenderer?.length) {
       logger.info(
-        '[updater] checkForUpdates updateVersionFromFsFromRenderer has not updated yet by the renderer process yet. Skipping update check'
+        '[updater] checkForUpdates getLatestRelease() has not been called by the renderer process yet. Skipping update check'
       );
       return;
     }
+
+    logger.info(
+      `[updater] checkForUpdates updateVersionFromFsFromRenderer ${updateVersionFromFsFromRenderer} releaseChannelFromFsFromRenderer ${releaseChannelFromFsFromRenderer}`
+    );
 
     if (releaseChannelFromFsFromRenderer !== 'latest') {
       // we only allow pre-release updates if the release channel is alpha
@@ -145,12 +148,14 @@ async function checkForUpdates(
     // Get the update using electron-updater, this fetches from github
     const result = await autoUpdater.checkForUpdates();
 
-    logger.info('[updater] checkForUpdates got github response back', result);
-
     if (!result?.updateInfo) {
-      logger.info('[updater] no update info received');
+      logger.info('[updater] received no updateInfo in response from GitHub');
       return;
     }
+
+    logger.info(
+      `[updater] checkForUpdates received response from GitHub at ${new Date().toISOString()} version: ${result?.updateInfo?.version}`
+    );
 
     try {
       const hasUpdate = isUpdateAvailable(result.updateInfo);
@@ -192,6 +197,7 @@ async function checkForUpdates(
       await showCannotUpdateDialog(mainWindow, i18n);
       throw error;
     }
+
     const window = getMainWindow();
     if (!window) {
       logger.error('[updater] cannot showDownloadUpdateDialog, mainWindow is unset');
@@ -206,6 +212,7 @@ async function checkForUpdates(
 
     logger.info('[updater] calling windowMarkShouldQuit...');
     windowMarkShouldQuit();
+    logger.info('[updater] UPDATE_DOWNLOADED event should be emitted soon...', UPDATE_DOWNLOADED);
   } finally {
     isUpdating = false;
   }
