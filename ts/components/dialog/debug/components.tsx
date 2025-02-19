@@ -2,7 +2,6 @@ import useAsync from 'react-use/lib/useAsync';
 import { shell } from 'electron';
 import useBoolean from 'react-use/lib/useBoolean';
 import { useDispatch } from 'react-redux';
-import { gt as isVersionGreaterThan } from 'semver';
 import { Flex } from '../../basic/Flex';
 import { SpacerXS } from '../../basic/Text';
 import { localize } from '../../../localization/localeTools';
@@ -91,7 +90,11 @@ export const DebugActions = () => {
             }
             const [versionNumber, releaseChannel] = result;
             if (!versionNumber) {
-              ToastUtils.pushToastError('debugLatestRelease', 'Failed to fetch latest release');
+              ToastUtils.pushToastError(
+                'debugLatestRelease',
+                `Failed to fetch ${releaseChannel} release`
+              );
+              setLoadingLatestRelease(false);
               return;
             }
             setLoadingLatestRelease(false);
@@ -101,10 +104,6 @@ export const DebugActions = () => {
               `Current: v${window.versionInfo.version}`
             );
             ToastUtils.pushToastInfo(`debugLatestRelease`, `Available: v${versionNumber}`);
-            window.log.debug(
-              `WIP: [debugMenu] [updater] ${releaseChannel} channel isVersionGreaterThan(latestVersion, currentVersion)`,
-              isVersionGreaterThan(`v${versionNumber}`, `v${window.versionInfo.version}`)
-            );
           }}
         >
           <SessionSpinner loading={loadingLatestRelease} color={'var(--text-primary-color)'} />
@@ -126,7 +125,11 @@ export const DebugActions = () => {
             }
             const [versionNumber, releaseChannel] = result;
             if (!versionNumber) {
-              ToastUtils.pushToastError('debugAlphaRelease', 'Failed to fetch alpha release');
+              ToastUtils.pushToastError(
+                'debugAlphaRelease',
+                `Failed to fetch ${releaseChannel} release`
+              );
+              setLoadingAlphaRelease(false);
               return;
             }
             setLoadingAlphaRelease(false);
@@ -136,10 +139,6 @@ export const DebugActions = () => {
               `Current: v${window.versionInfo.version}`
             );
             ToastUtils.pushToastInfo('debugAlphaRelease', `Available: v${versionNumber}`);
-            window.log.debug(
-              `WIP: [debugMenu] [updater] ${releaseChannel} channel isVersionGreaterThan(latestVersion, currentVersion)`,
-              isVersionGreaterThan(`v${versionNumber}`, `v${window.versionInfo.version}`)
-            );
           }}
         >
           <SessionSpinner loading={loadingAlphaRelease} color={'var(--text-primary-color)'} />
