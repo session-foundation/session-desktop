@@ -4,6 +4,9 @@ inputs:
   upload_prefix:
     description: 'upload name prefix'
     required: true
+  multiarch_build:
+    description: 'build folder contains multiple architectures'
+    required: true
 
 runs:
   using: 'composite'
@@ -15,8 +18,29 @@ runs:
       shell: bash
       working-directory: ./release/
 
-    - name: Remaining files
-      run: ls .
+    - name: Make artefacts folder
+      run: mkdir -p ${{ inputs.upload_prefix }}-production
+      shell: bash
+      working-directory: ./release/
+
+    - name: Move all files
+      if: ${{ inputs.multiarch_build == 'false' }}
+      run: |
+        ls -f -- | xargs -I{} mv {} ${{ inputs.upload_prefix }}-production/"
+      shell: bash
+      working-directory: ./release/
+
+    - name: Move ${{ inputs.upload_prefix }} files
+      if: ${{ inputs.multiarch_build == 'true' }}
+      run: |
+        mv *${{ inputs.upload_prefix }}* ${{ inputs.upload_prefix }}-production/
+        mv builder-debug.yml ${{ inputs.upload_prefix }}-production/
+        mv *latest*.yml ${{ inputs.upload_prefix }}-production/
+      shell: bash
+      working-directory: ./release/
+
+    - name: Artefact files
+      run: ls ${{ inputs.upload_prefix }}-production/
       shell: bash
       working-directory: ./release/
 
@@ -24,4 +48,4 @@ runs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.upload_prefix }}-production
-        path: release
+        path: release/${{ inputs.upload_prefix }}-production/
