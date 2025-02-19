@@ -37,7 +37,7 @@ async function fetchReleaseFromFSAndUpdateMain(userEd25519SecretKey: Uint8Array)
 
     const [releaseVersion, releaseChannel] = justFetched;
     window.log.info(
-      `[updater] fetched ${releaseChannel} release from fileserver: ${releaseVersion}`
+      `[updater] renderer process fetched from the ${releaseChannel} release channel on the fileserver: ${releaseVersion}`
     );
 
     if (isString(releaseVersion) && !isEmpty(releaseVersion)) {
