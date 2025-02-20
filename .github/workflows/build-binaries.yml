@@ -117,55 +117,8 @@ jobs:
         run: yarn build-release-publish # No other args needed for windows publish
 
   # We want both arm64 and intel mac builds, and according to this https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources macos-14 and above is always arm64 and macos-13 is the last intel runner
-  build_macos_x64:
-    runs-on: macos-13
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      MAC_CERTIFICATE: ${{ secrets.MAC_CERTIFICATE }}
-      MAC_CERTIFICATE_PASSWORD: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
-      SIGNING_APPLE_ID: ${{ secrets.SIGNING_APPLE_ID }}
-      SIGNING_APP_PASSWORD: ${{ secrets.SIGNING_APP_PASSWORD }}
-      SIGNING_TEAM_ID: ${{ secrets.SIGNING_TEAM_ID }}
-    steps:
-      - run: git config --global core.autocrlf false
-
-      - name: Checkout git repo
-        uses: actions/checkout@v4
-
-      - name: Setup & Build
-        uses: ./actions/setup_and_build
-        with:
-          cache_suffix: ${{ runner.os }}
-
-        # we want to test on all platforms since some are testing the rendered menus (and are dependent on the platform)
-      - name: Unit Test
-        run: yarn test
-
-      - name: Build but do not publish
-        # we want this to run always, except on "push" to "master"
-        if: ${{ env.SHOULD_PUBLISH == 'false' && env.SHOULD_PUBLISH_ALPHA == 'false'  }}
-        run: |
-          source ./build/setup-mac-certificate.sh
-          yarn build-release --config.mac.bundleVersion=${{ github.ref }}
-
-      - name: Upload artefacts (x64)
-        # we want this to run always, except on "push" to "master"
-        if: ${{ env.SHOULD_PUBLISH == 'false' && env.SHOULD_PUBLISH_ALPHA == 'false'  }}
-        uses: ./actions/upload_prod_artefacts
-        with:
-          upload_prefix: mac-x64
-          multiarch_build: 'true'
-
-      - name: Build & publish
-        # we want this to run only when on "push" to "master"
-        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
-        run: |
-          source ./build/setup-mac-certificate.sh
-          yarn build-release-publish --config.mac.bundleVersion=${{ github.ref }}
-
-  # We want both arm64 and intel mac builds, but the x64 binaries built on an arm64 runner will not build native modules correctly https://github.com/electron-userland/electron-builder/issues/8646
-  # However building both will give us a valid latest-mac.yml for auto updating https://github.com/electron-userland/electron-builder/issues/6643
-  build_macos_arm64:
+  # Note x64 builds made on an arm64 host will not bundle the native modules correctly https://github.com/electron-userland/electron-builder/issues/8646
+  build_mac_arm64:
     runs-on: macos-14
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -183,20 +136,20 @@ jobs:
       - name: Setup & Build
         uses: ./actions/setup_and_build
         with:
-          cache_suffix: ${{ runner.os }}
+          cache_suffix: mac-arm64
 
         # we want to test on all platforms since some are testing the rendered menus (and are dependent on the platform)
       - name: Unit Test
         run: yarn test
 
-      - name: Build but do not publish
+      - name: Build but do not publish ${{ runner.arch }}
         # we want this to run always, except on "push" to "master"
         if: ${{ env.SHOULD_PUBLISH == 'false' && env.SHOULD_PUBLISH_ALPHA == 'false'  }}
         run: |
           source ./build/setup-mac-certificate.sh
           yarn build-release --config.mac.bundleVersion=${{ github.ref }}
 
-      - name: Upload artefacts (arm64)
+      - name: Upload artefacts ${{ runner.arch }}
         # we want this to run always, except on "push" to "master"
         if: ${{ env.SHOULD_PUBLISH == 'false' && env.SHOULD_PUBLISH_ALPHA == 'false'  }}
         uses: ./actions/upload_prod_artefacts
@@ -204,7 +157,53 @@ jobs:
           upload_prefix: mac-arm64
           multiarch_build: 'true'
 
-      - name: Build & publish
+      - name: Build & publish ${{ runner.arch }}
+        # we want this to run only when on "push" to "master"
+        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
+        run: |
+          source ./build/setup-mac-certificate.sh
+          yarn build-release-publish --config.mac.bundleVersion=${{ github.ref }}
+
+  build_mac_x64:
+    runs-on: macos-13
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      MAC_CERTIFICATE: ${{ secrets.MAC_CERTIFICATE }}
+      MAC_CERTIFICATE_PASSWORD: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
+      SIGNING_APPLE_ID: ${{ secrets.SIGNING_APPLE_ID }}
+      SIGNING_APP_PASSWORD: ${{ secrets.SIGNING_APP_PASSWORD }}
+      SIGNING_TEAM_ID: ${{ secrets.SIGNING_TEAM_ID }}
+    steps:
+      - run: git config --global core.autocrlf false
+
+      - name: Checkout git repo
+        uses: actions/checkout@v4
+
+      - name: Setup & Build
+        uses: ./actions/setup_and_build
+        with:
+          cache_suffix: mac-x64
+
+        # we want to test on all platforms since some are testing the rendered menus (and are dependent on the platform)
+      - name: Unit Test
+        run: yarn test
+
+      - name: Build but do not publish ${{ runner.arch }}
+        # we want this to run always, except on "push" to "master"
+        if: ${{ env.SHOULD_PUBLISH == 'false' && env.SHOULD_PUBLISH_ALPHA == 'false'  }}
+        run: |
+          source ./build/setup-mac-certificate.sh
+          yarn build-release --config.mac.bundleVersion=${{ github.ref }}
+
+      - name: Upload artefacts ${{ runner.arch }}
+        # we want this to run always, except on "push" to "master"
+        if: ${{ env.SHOULD_PUBLISH == 'false' && env.SHOULD_PUBLISH_ALPHA == 'false'  }}
+        uses: ./actions/upload_prod_artefacts
+        with:
+          upload_prefix: mac-x64
+          multiarch_build: 'true'
+
+      - name: Build & publish ${{ runner.arch }}
         # we want this to run only when on "push" to "master"
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         run: |

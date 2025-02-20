@@ -213,6 +213,7 @@
     "appId": "com.loki-project.messenger-desktop",
     "afterSign": "build/notarize.js",
     "afterPack": "build/afterPackHook.js",
+    "afterAllArtifactBuild": "build/afterAllArtifactBuild.js",
     "artifactName": "${name}-${os}-${arch}-${version}.${ext}",
     "generateUpdatesFilesForAllChannels": true,
     "extraResources": [
