@@ -175,8 +175,9 @@
     "chai-bytes": "^0.1.2",
     "cross-env": "^6.0.3",
     "css-loader": "^6.7.2",
+    "dmg-builder": "23.6.0",
     "electron": "25.8.4",
-    "electron-builder": "^25.1.8",
+    "electron-builder": "23.0.8",
     "eslint": "8.57.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "9.1.0",
@@ -227,7 +228,8 @@
       "category": "public.app-category.social-networking",
       "icon": "build/icon-mac.icns",
       "target": [
-        "default"
+        "dmg",
+        "zip"
       ],
       "bundleVersion": "1",
       "hardenedRuntime": true,
@@ -262,7 +264,9 @@
         "StartupWMClass": "Session"
       },
       "asarUnpack": "node_modules/spellchecker/vendor/hunspell_dictionaries",
-      "target": "deb",
+      "target": [
+        "deb"
+      ],
       "icon": "build/icon-linux.icns"
     },
     "asarUnpack": [
