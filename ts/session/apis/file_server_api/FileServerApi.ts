@@ -141,7 +141,13 @@ export const getLatestReleaseFromFileServer = async (
     ed25519SecretKey: userEd25519SecretKey,
   });
   const method = 'GET';
-  const releaseChannel = Storage.get('releaseChannel') as ReleaseChannels;
+  let releaseChannel = Storage.get('releaseChannel') as ReleaseChannels;
+
+  if (!releaseChannel) {
+    releaseChannel = 'latest';
+    await Storage.put('releaseChannel', releaseChannel);
+  }
+
   const endpoint = `${RELEASE_VERSION_ENDPOINT}?platform=desktop&os=${getOSPlatform()}&arch=${getOSArchitecture()}${releaseChannel ? `&release_channel=${releaseType || releaseChannel}` : ''}`;
 
   const signature = await BlindingActions.blindVersionSignRequest({
