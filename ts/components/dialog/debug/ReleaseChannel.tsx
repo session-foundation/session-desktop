@@ -33,11 +33,8 @@ export const ReleaseChannel = () => {
 
   const changeReleaseChannel = (channel: ReleaseChannels) => {
     window.log.debug(
-      `WIP: [debugMenu] release channel to ${channel} was ${Storage.get('releaseChannel') || 'not set'}`
+      `WIP: [debugMenu] Setting release channel to ${channel}. It was ${Storage.get('releaseChannel') || 'not set'}`
     );
-    if (Storage.get('releaseChannel') === channel) {
-      return;
-    }
     dispatch(
       updateConfirmModal({
         title: localize('warning').toString(),
@@ -49,7 +46,7 @@ export const ReleaseChannel = () => {
             await Storage.put('releaseChannel', channel);
           } catch (error) {
             window.log.warn(
-              `[debugMenu] Something went wrong when changing the release channel to ${channel}  was ${Storage.get('releaseChannel') || 'not set'}:`,
+              `[debugMenu] Something went wrong when setting the release channel to ${channel}. It was ${Storage.get('releaseChannel') || 'not set'}:`,
               error && error.stack ? error.stack : error
             );
           } finally {
