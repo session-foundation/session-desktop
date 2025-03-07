@@ -221,7 +221,7 @@ export const EditProfileDialog = () => {
 
       // Note: this will not throw, but just truncate the display name if it is too long.
       // I guess it is expected as there is no UI to show anything else than a generic error?
-      const validName = await ProfileManager.updateOurProfileDisplayName(profileName);
+      const validName = await ProfileManager.updateOurProfileDisplayName(sanitizedName);
       setUpdateProfileName(validName);
       setProfileName(validName);
       setMode('default');
