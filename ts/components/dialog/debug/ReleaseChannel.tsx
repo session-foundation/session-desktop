@@ -12,7 +12,7 @@ import { Storage } from '../../../util/storage';
 
 const items = [
   {
-    label: capitalize(LATEST_CHANNEL),
+    label: 'Stable',
     value: LATEST_CHANNEL,
     inputDataTestId: `input-releases-${LATEST_CHANNEL}` as const,
     labelDataTestId: `label-releases-${LATEST_CHANNEL}` as const,
@@ -33,7 +33,7 @@ export const ReleaseChannel = () => {
 
   const changeReleaseChannel = (channel: ReleaseChannels) => {
     window.log.debug(
-      `WIP: [debugMenu] Setting release channel to ${channel}. It was ${Storage.get('releaseChannel') || 'not set'}`
+      `[debugMenu] Setting release channel to ${channel}. It was ${Storage.get('releaseChannel') || 'not set'}`
     );
     dispatch(
       updateConfirmModal({
