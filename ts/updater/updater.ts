@@ -1,12 +1,7 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 /* eslint-disable no-console */
 import { app, type BrowserWindow } from 'electron';
-import {
-  autoUpdater,
-  DOWNLOAD_PROGRESS,
-  UPDATE_DOWNLOADED,
-  type UpdateInfo,
-} from 'electron-updater';
+import { autoUpdater, DOWNLOAD_PROGRESS, type UpdateInfo } from 'electron-updater';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { gt as isVersionGreaterThan, parse as parseVersion } from 'semver';
@@ -34,18 +29,6 @@ autoUpdater.on(DOWNLOAD_PROGRESS, eventDownloadProgress => {
   console.log(
     `[updater] downloading ${filesize(eventDownloadProgress.transferred, { base: 10 })}/${filesize(eventDownloadProgress.total, { base: 10 })}`
   );
-});
-
-autoUpdater.on(UPDATE_DOWNLOADED, () => {
-  isUpdating = true;
-  console.log('[updater] update downloaded');
-  // https://github.com/electron-userland/electron-builder/issues/6058#issuecomment-1130344017
-  setTimeout(() => {
-    console.info('[updater] calling quitAndInstall...');
-    autoUpdater.quitAndInstall();
-    app.exit();
-    isUpdating = false;
-  }, 1000);
 });
 
 export async function start(
@@ -208,8 +191,9 @@ async function checkForUpdates(
       return;
     }
 
-    logger.info('[updater] calling windowMarkShouldQuit...');
+    logger.info('[updater] calling windowMarkShouldQuit then quitAndInstall...');
     windowMarkShouldQuit();
+    autoUpdater.quitAndInstall();
   } finally {
     isUpdating = false;
   }
