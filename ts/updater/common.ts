@@ -18,7 +18,8 @@ export type LoggerType = {
 
 export async function showDownloadUpdateDialog(
   mainWindow: BrowserWindow,
-  i18n: SetupI18nReturnType
+  i18n: SetupI18nReturnType,
+  version: string
 ): Promise<boolean> {
   const DOWNLOAD_BUTTON = 0;
   const LATER_BUTTON = 1;
@@ -26,7 +27,7 @@ export async function showDownloadUpdateDialog(
     type: 'info' as const,
     buttons: [i18n('download'), i18n('later')],
     title: i18n('updateSession'),
-    message: i18n('updateNewVersionDescription'),
+    message: i18n('updateNewVersionDescription', { version }),
     defaultId: LATER_BUTTON,
     cancelId: DOWNLOAD_BUTTON,
   };

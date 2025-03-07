@@ -159,7 +159,11 @@ async function checkForUpdates(
         return;
       }
       logger.info('[updater] showing download dialog...');
-      const shouldDownload = await showDownloadUpdateDialog(mainWindow, i18n);
+      const shouldDownload = await showDownloadUpdateDialog(
+        mainWindow,
+        i18n,
+        result.updateInfo.version
+      );
       logger.info('[updater] shouldDownload:', shouldDownload);
 
       if (!shouldDownload) {

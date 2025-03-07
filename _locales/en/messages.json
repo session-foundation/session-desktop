@@ -806,9 +806,9 @@
   "updateDownloaded": "Update installed, click to restart",
   "updateDownloading": "Downloading update: {percent_loader}%",
   "updateError": "Cannot Update",
-  "updateErrorDescription": "Session failed to update. Please go to https://getsession.org/download and install the new version manually, then contact our Help Center to let us know about this problem.",
-  "updateNewVersion": "A new version of Session is available, tap to update",
-  "updateNewVersionDescription": "A new version of Session is available.",
+  "updateErrorDescription": "{app_name} failed to update. Please go to {session_download_url} and install the new version manually, then contact our Help Center to let us know about this problem.",
+  "updateNewVersion": "A new version of {app_name} is available, tap to update",
+  "updateNewVersionDescription": "A new version ({version}) of {app_name} is available.",
   "updateReleaseNotes": "Go to Release Notes",
   "updateSession": "Session Update",
   "updateVersion": "Version {version}",
@@ -828,4 +828,3 @@
   "yes": "Yes",
   "you": "You"
 }
-
