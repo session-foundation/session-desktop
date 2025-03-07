@@ -24,6 +24,7 @@ concurrency:
 env:
   # we want to publish on "push to master" only. When we don't want to publish, we want to upload artefacts
   SHOULD_PUBLISH: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+  # TODO Are we happy with this condition?
   SHOULD_PUBLISH_ALPHA: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/heads/release') && contains(github.ref, '-alpha.') }}
 
 jobs:
