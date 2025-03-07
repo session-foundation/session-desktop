@@ -166,6 +166,7 @@ import type { SetupI18nReturnType } from '../types/localizer';
 import { isSessionLocaleSet, getCrowdinLocale } from '../util/i18n/shared';
 import { loadLocalizedDictionary } from '../node/locale';
 import { simpleDictionary } from '../localization/locales';
+import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
 
 // Both of these will be set after app fires the 'ready' event
 let logger: Logger | null = null;
@@ -716,7 +717,14 @@ app.on('ready', async () => {
   await initializeLogger();
   logger = getLogger();
   assertLogger().info('app ready');
-  assertLogger().info(`starting version ${packageJson.version}`);
+  assertLogger().info(`starting session-desktop version ${packageJson.version}`);
+  assertLogger().info(
+    `Libsession Commit Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_UTIL_VERSION || 'Unknown'}`
+  );
+  assertLogger().info(
+    `Libsession NodeJS Version/Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_VERSION || 'Unknown'}/${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_COMMIT || 'Unknown'}`
+  );
+
   if (!isSessionLocaleSet()) {
     const appLocale = process.env.LANGUAGE || app.getLocale() || 'en';
     const loadedLocale = loadLocalizedDictionary({ appLocale, logger });
@@ -864,7 +872,6 @@ app.on('before-quit', () => {
     readyForShutdown: mainWindow ? readyForShutdown : null,
     shouldQuit: windowShouldQuit(),
   });
-
   if (tray) {
     tray.destroy();
   }

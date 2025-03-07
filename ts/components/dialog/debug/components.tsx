@@ -18,6 +18,7 @@ import { getLatestReleaseFromFileServer } from '../../../session/apis/file_serve
 import { SessionSpinner } from '../../loading';
 import { setDebugMode } from '../../../state/ducks/debug';
 import { updateDebugMenuModal } from '../../../state/ducks/modalDialog';
+import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_constants';
 
 export const DebugActions = () => {
   const [loadingLatestRelease, setLoadingLatestRelease] = useBoolean(false);
@@ -223,6 +224,9 @@ export const AboutInfo = () => {
     `${localize('updateVersion').withArgs({ version: window.getVersion() })}`,
     `${localize('systemInformationDesktop').withArgs({ information: window.getOSRelease() })}`,
     `${localize('commitHashDesktop').withArgs({ hash: window.getCommitHash() || window.i18n('unknown') })}`,
+    `Libsession Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_UTIL_VERSION || 'Unknown'}`,
+    `Libsession NodeJS Version: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_VERSION || 'Unknown'}`,
+    `Libsession NodeJS Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_COMMIT || 'Unknown'}`,
     `${environmentStates.join(' - ')}`,
   ];
 
