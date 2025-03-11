@@ -4,9 +4,6 @@ inputs:
   upload_prefix:
     description: 'upload name prefix'
     required: true
-  multiarch_build:
-    description: 'build folder contains multiple architectures'
-    required: true
 
 runs:
   using: 'composite'
@@ -18,29 +15,8 @@ runs:
       shell: bash
       working-directory: ./release/
 
-    - name: Make artefacts folder
-      run: mkdir -p production-${{ inputs.upload_prefix }}
-      shell: bash
-      working-directory: ./release/
-
-    - name: Move all files
-      if: ${{ inputs.multiarch_build == 'false' }}
-      run: |
-        ls -p | grep -v / | xargs -I{} mv {} production-${{ inputs.upload_prefix }}/
-      shell: bash
-      working-directory: ./release/
-
-    - name: Move ${{ inputs.upload_prefix }} files
-      if: ${{ inputs.multiarch_build == 'true' }}
-      run: |
-        ls -p | grep -v / | grep ${{inputs.upload_prefix}} | xargs -I{} mv {} production-${{ inputs.upload_prefix }}/
-        cp *latest*.yml production-${{ inputs.upload_prefix }}/
-        cp builder-debug.yml production-${{ inputs.upload_prefix }}/
-      shell: bash
-      working-directory: ./release/
-
-    - name: Artefact files
-      run: ls production-${{ inputs.upload_prefix }}/
+    - name: Remaining files
+      run: ls .
       shell: bash
       working-directory: ./release/
 

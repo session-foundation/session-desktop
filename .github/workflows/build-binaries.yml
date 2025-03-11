@@ -71,7 +71,6 @@ jobs:
         uses: ./actions/upload_prod_artefacts
         with:
           upload_prefix: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.pkg_to_build }}
-          multiarch_build: 'false'
 
       - name: Build & publish ${{ matrix.pkg_to_build }}
         # we want this to run only when on "push" to "master"
@@ -109,7 +108,6 @@ jobs:
         uses: ./actions/upload_prod_artefacts
         with:
           upload_prefix: ${{ runner.os }}-${{ runner.arch }}
-          multiarch_build: 'false'
 
       - name: Build & publish
         # we want this to run only when on "push" to "master"
@@ -155,7 +153,6 @@ jobs:
         uses: ./actions/upload_prod_artefacts
         with:
           upload_prefix: mac-arm64
-          multiarch_build: 'true'
 
       - name: Build & publish
         # we want this to run only when on "push" to "master"
@@ -215,7 +212,6 @@ jobs:
         uses: ./actions/upload_prod_artefacts
         with:
           upload_prefix: mac-x64
-          multiarch_build: 'true'
 
       - name: Build & publish
         # we want this to run only when on "push" to "master"
