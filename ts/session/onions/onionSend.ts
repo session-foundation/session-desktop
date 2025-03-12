@@ -275,6 +275,10 @@ async function sendJsonViaOnionV4ToSogs(
     abortSignal: AbortSignal;
     headers: Record<string, any> | null;
     throwErrors: boolean;
+    /**
+     * Auth headers are usually required, but can be skipped for some endpoints.
+     * Set this to false to not include them.
+     */
     includeAuthHeaders?: boolean;
   }
 ): Promise<OnionV4JSONSnodeResponse | null> {
@@ -288,7 +292,7 @@ async function sendJsonViaOnionV4ToSogs(
     abortSignal,
     headers: includedHeaders,
     throwErrors,
-    includeAuthHeaders = true, // Default to true
+    includeAuthHeaders = true,
     timeoutMs,
   } = sendOptions;
 
@@ -332,7 +336,7 @@ async function sendJsonViaOnionV4ToSogs(
     timeoutMs
   );
 
-  return res as OnionV4JSONSnodeResponse;
+  return res as OnionV4JSONSnodeResponse | null;
 }
 
 /**
