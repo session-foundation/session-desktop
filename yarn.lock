@@ -282,9 +282,9 @@
   optionalDependencies:
     global-agent "^3.0.0"
 
-"@electron/node-gyp@git+https://github.com/electron/node-gyp.git#06b29aafb7708acef8b3669835c8a7857ebc92d2":
+"@electron/node-gyp@https://github.com/electron/node-gyp#06b29aafb7708acef8b3669835c8a7857ebc92d2":
   version "10.2.0-electron.1"
-  resolved "git+https://github.com/electron/node-gyp.git#06b29aafb7708acef8b3669835c8a7857ebc92d2"
+  resolved "https://github.com/electron/node-gyp#06b29aafb7708acef8b3669835c8a7857ebc92d2"
   dependencies:
     env-paths "^2.2.0"
     exponential-backoff "^3.1.1"
@@ -655,10 +655,10 @@
     redux-thunk "^2.4.2"
     reselect "^4.1.8"
 
-"@signalapp/better-sqlite3@^8.4.3":
-  version "8.7.1"
-  resolved "https://registry.yarnpkg.com/@signalapp/better-sqlite3/-/better-sqlite3-8.7.1.tgz#0a09293aa833b836ec6b17f6ab0e790097f3fdeb"
-  integrity sha512-T/7OXR0RfSJ8jXK837wXmad0c4XESBHoGDCLDZFTrd4l0nzfbTxEbXo6VCvUyxDTGrKUfIHCo5JtffIl8jQL5Q==
+"@signalapp/better-sqlite3@9.0.13":
+  version "9.0.13"
+  resolved "https://registry.yarnpkg.com/@signalapp/better-sqlite3/-/better-sqlite3-9.0.13.tgz#9617b4f45a6662fef6c9975e3e08dbef555bedc1"
+  integrity sha512-sl5JJvHz/mGy3JXXcWFq7PxeO/d9SaCjPq/FPc4RCujaTC9JofHLdxQjn2xSSZQBLm28o2as3p6hD9eDk+BVNw==
   dependencies:
     bindings "^1.5.0"
     tar "^6.1.0"

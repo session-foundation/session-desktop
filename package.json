@@ -67,7 +67,7 @@
     "@emoji-mart/data": "^1.1.2",
     "@emoji-mart/react": "^1.1.1",
     "@reduxjs/toolkit": "1.9.7",
-    "@signalapp/better-sqlite3": "^8.4.3",
+    "@signalapp/better-sqlite3": "9.0.13",
     "@types/react-mentions": "^4.1.8",
     "@types/react-test-renderer": "^18.3.0",
     "abort-controller": "3.0.0",
