@@ -1,5 +1,5 @@
 import { compact, flatten, isEqual } from 'lodash';
-import { useEffect, useState } from 'react';
+import { SessionDataTestId, useEffect, useState } from 'react';
 
 import { useDispatch } from 'react-redux';
 import useInterval from 'react-use/lib/useInterval';
@@ -10,10 +10,15 @@ import { SessionIconButton } from '../../../icon';
 import {
   useConversationUsername,
   useDisappearingMessageSettingText,
+  useIsClosedGroup,
+  useIsGroupDestroyed,
+  useIsKickedFromGroup,
+  useIsPublic,
 } from '../../../../hooks/useParamSelector';
 import { useIsRightPanelShowing } from '../../../../hooks/useUI';
 import {
   showAddModeratorsByConvoId,
+  showDeleteGroupByConvoId,
   showInviteContactByConvoId,
   showLeaveGroupByConvoId,
   showRemoveModeratorsByConvoId,
@@ -21,18 +26,22 @@ import {
   showUpdateGroupNameByConvoId,
 } from '../../../../interactions/conversationInteractions';
 import { Constants } from '../../../../session';
+import { PubKey } from '../../../../session/types';
+import { hasClosedGroupV2QAButtons } from '../../../../shared/env_vars';
 import { closeRightPanel } from '../../../../state/ducks/conversations';
+import { groupInfoActions } from '../../../../state/ducks/metaGroups';
 import { resetRightOverlayMode, setRightOverlayMode } from '../../../../state/ducks/section';
 import {
+  useConversationIsExpired03Group,
   useSelectedConversationKey,
   useSelectedDisplayNameInProfile,
   useSelectedIsActive,
   useSelectedIsBlocked,
+  useSelectedIsGroupDestroyed,
   useSelectedIsGroupOrCommunity,
+  useSelectedIsGroupV2,
   useSelectedIsKickedFromGroup,
-  useSelectedIsLeft,
   useSelectedIsPublic,
-  useSelectedLastMessage,
   useSelectedSubscriberCount,
   useSelectedWeAreAdmin,
 } from '../../../../state/selectors/selectedConversation';
@@ -45,11 +54,13 @@ import { PanelButtonGroup, PanelIconButton } from '../../../buttons';
 import { MediaItemType } from '../../../lightbox/LightboxGallery';
 import { MediaGallery } from '../../media-gallery/MediaGallery';
 import { Header, StyledScrollContainer } from './components';
-import {
-  ConversationInteractionStatus,
-  ConversationInteractionType,
-} from '../../../../interactions/types';
 import { Localizer } from '../../../basic/Localizer';
+import {
+  showDeleteGroupItem,
+  showLeaveGroupItem,
+} from '../../../menu/items/LeaveAndDeleteGroup/guard';
+import { useIsMessageRequestOverlayShown } from '../../../../state/selectors/section';
+import { showLeaveCommunityItem } from '../../../menu/items/LeaveCommunity/guard';
 
 async function getMediaGalleryProps(conversationId: string): Promise<{
   documents: Array<MediaItemType>;
@@ -128,15 +139,22 @@ const HeaderItem = () => {
   const dispatch = useDispatch();
   const isBlocked = useSelectedIsBlocked();
   const isKickedFromGroup = useSelectedIsKickedFromGroup();
-  const left = useSelectedIsLeft();
+  const isGroupDestroyed = useSelectedIsGroupDestroyed();
   const isGroup = useSelectedIsGroupOrCommunity();
+  const isGroupV2 = useSelectedIsGroupV2();
+  const isPublic = useSelectedIsPublic();
   const subscriberCount = useSelectedSubscriberCount();
+  const weAreAdmin = useSelectedWeAreAdmin();
 
   if (!selectedConvoKey) {
     return null;
   }
 
-  const showInviteContacts = isGroup && !isKickedFromGroup && !isBlocked && !left;
+  const showInviteLegacyGroup =
+    !isPublic && !isGroupV2 && isGroup && !isKickedFromGroup && !isBlocked;
+  const showInviteGroupV2 =
+    isGroupV2 && !isKickedFromGroup && !isBlocked && weAreAdmin && !isGroupDestroyed;
+  const showInviteContacts = isPublic || showInviteLegacyGroup || showInviteGroupV2;
   const showMemberCount = !!(subscriberCount && subscriberCount > 0);
 
   return (
@@ -188,12 +206,101 @@ const StyledName = styled.h4`
   font-size: var(--font-size-md);
 `;
 
+const LeaveCommunityPanelButton = () => {
+  const selectedConvoKey = useSelectedConversationKey();
+  const selectedUsername = useConversationUsername(selectedConvoKey) || selectedConvoKey;
+  const isPublic = useIsPublic(selectedConvoKey);
+
+  const showItem = showLeaveCommunityItem({ isPublic });
+
+  if (!selectedConvoKey || !showItem) {
+    return null;
+  }
+
+  return (
+    <PanelIconButton
+      text={window.i18n('communityLeave')}
+      dataTestId="leave-group-button"
+      onClick={() => void showLeaveGroupByConvoId(selectedConvoKey, selectedUsername)}
+      color={'var(--danger-color)'}
+      iconType={'delete'}
+    />
+  );
+};
+
+const DeleteGroupPanelButton = () => {
+  const convoId = useSelectedConversationKey();
+  const isGroup = useIsClosedGroup(convoId);
+  const isMessageRequestShown = useIsMessageRequestOverlayShown();
+  const isKickedFromGroup = useIsKickedFromGroup(convoId) || false;
+  const selectedUsername = useConversationUsername(convoId) || convoId;
+  const isPublic = useIsPublic(convoId);
+  const isGroupDestroyed = useIsGroupDestroyed(convoId);
+  const is03GroupExpired = useConversationIsExpired03Group(convoId);
+
+  const showItem = showDeleteGroupItem({
+    isGroup,
+    isKickedFromGroup,
+    isMessageRequestShown,
+    isPublic,
+    isGroupDestroyed,
+    is03GroupExpired,
+  });
+
+  if (!showItem || !convoId) {
+    return null;
+  }
+
+  const token = PubKey.is03Pubkey(convoId) ? 'groupDelete' : 'conversationsDelete';
+
+  return (
+    <PanelIconButton
+      text={window.i18n(token)}
+      dataTestId="leave-group-button"
+      onClick={() => void showDeleteGroupByConvoId(convoId, selectedUsername)}
+      color={'var(--danger-color)'}
+      iconType={'delete'}
+    />
+  );
+};
+
+const LeaveGroupPanelButton = () => {
+  const selectedConvoKey = useSelectedConversationKey();
+  const isGroup = useIsClosedGroup(selectedConvoKey);
+  const username = useConversationUsername(selectedConvoKey) || selectedConvoKey;
+  const isMessageRequestShown = useIsMessageRequestOverlayShown();
+  const isKickedFromGroup = useIsKickedFromGroup(selectedConvoKey) || false;
+  const isPublic = useIsPublic(selectedConvoKey);
+  const isGroupDestroyed = useIsGroupDestroyed(selectedConvoKey);
+
+  const showItem = showLeaveGroupItem({
+    isGroup,
+    isKickedFromGroup,
+    isMessageRequestShown,
+    isPublic,
+    isGroupDestroyed,
+  });
+
+  if (!selectedConvoKey || !showItem) {
+    return null;
+  }
+
+  return (
+    <PanelIconButton
+      text={window.i18n('groupLeave')}
+      dataTestId="leave-group-button"
+      onClick={() => void showLeaveGroupByConvoId(selectedConvoKey, username)}
+      color={'var(--danger-color)'}
+      iconType={'delete'}
+    />
+  );
+};
+
 export const OverlayRightPanelSettings = () => {
   const [documents, setDocuments] = useState<Array<MediaItemType>>([]);
   const [media, setMedia] = useState<Array<MediaItemType>>([]);
 
   const selectedConvoKey = useSelectedConversationKey();
-  const selectedUsername = useConversationUsername(selectedConvoKey) || selectedConvoKey;
   const isShowing = useIsRightPanelShowing();
 
   const dispatch = useDispatch();
@@ -201,14 +308,13 @@ export const OverlayRightPanelSettings = () => {
   const isActive = useSelectedIsActive();
   const isBlocked = useSelectedIsBlocked();
   const isKickedFromGroup = useSelectedIsKickedFromGroup();
-  const left = useSelectedIsLeft();
   const isGroup = useSelectedIsGroupOrCommunity();
+  const isGroupV2 = useSelectedIsGroupV2();
   const isPublic = useSelectedIsPublic();
   const weAreAdmin = useSelectedWeAreAdmin();
   const disappearingMessagesSubtitle = useDisappearingMessageSettingText({
     convoId: selectedConvoKey,
   });
-  const lastMessage = useSelectedLastMessage();
 
   useEffect(() => {
     let isCancelled = false;
@@ -256,28 +362,12 @@ export const OverlayRightPanelSettings = () => {
     return null;
   }
 
-  const commonNoShow = isKickedFromGroup || left || isBlocked || !isActive;
+  const commonNoShow = isKickedFromGroup || isBlocked || !isActive;
   const hasDisappearingMessages = !isPublic && !commonNoShow;
-  const leaveGroupString = isPublic
-    ? window.i18n('communityLeave')
-    : lastMessage?.interactionType === ConversationInteractionType.Leave &&
-        lastMessage?.interactionStatus === ConversationInteractionStatus.Error
-      ? window.i18n('conversationsDelete')
-      : isKickedFromGroup
-        ? window.i18n('groupRemovedYou', {
-            group_name: selectedUsername || window.i18n('groupUnknown'),
-          })
-        : left
-          ? window.i18n('groupMemberYouLeft')
-          : window.i18n('groupLeave');
 
   const showUpdateGroupNameButton = isGroup && weAreAdmin && !commonNoShow; // legacy groups non-admin cannot change groupname anymore
   const showAddRemoveModeratorsButton = weAreAdmin && !commonNoShow && isPublic;
   const showUpdateGroupMembersButton = !isPublic && isGroup && !commonNoShow;
-
-  const deleteConvoAction = async () => {
-    await showLeaveGroupByConvoId(selectedConvoKey, selectedUsername);
-  };
 
   return (
     <StyledScrollContainer>
@@ -294,6 +384,56 @@ export const OverlayRightPanelSettings = () => {
               dataTestId="edit-group-name"
             />
           )}
+
+          {hasClosedGroupV2QAButtons() && isGroupV2 ? (
+            <>
+              <PanelIconButton
+                iconType={'group'}
+                text={'trigger avatar message'}
+                onClick={() => {
+                  if (!PubKey.is03Pubkey(selectedConvoKey)) {
+                    throw new Error('triggerFakeAvatarUpdate needs a 03 pubkey');
+                  }
+                  window.inboxStore?.dispatch(
+                    groupInfoActions.triggerFakeAvatarUpdate({ groupPk: selectedConvoKey }) as any
+                  );
+                }}
+                dataTestId={'' as SessionDataTestId}
+              />
+              <PanelIconButton
+                iconType={'group'}
+                text={'trigger delete message before now'}
+                onClick={() => {
+                  if (!PubKey.is03Pubkey(selectedConvoKey)) {
+                    throw new Error('We need a 03 pubkey');
+                  }
+                  window.inboxStore?.dispatch(
+                    groupInfoActions.triggerFakeDeleteMsgBeforeNow({
+                      groupPk: selectedConvoKey,
+                      messagesWithAttachmentsOnly: false,
+                    }) as any
+                  );
+                }}
+                dataTestId={'' as SessionDataTestId}
+              />
+              <PanelIconButton
+                iconType={'group'}
+                text={'delete message with attachments before now'}
+                onClick={() => {
+                  if (!PubKey.is03Pubkey(selectedConvoKey)) {
+                    throw new Error('We need a 03 pubkey');
+                  }
+                  window.inboxStore?.dispatch(
+                    groupInfoActions.triggerFakeDeleteMsgBeforeNow({
+                      groupPk: selectedConvoKey,
+                      messagesWithAttachmentsOnly: true,
+                    }) as any
+                  );
+                }}
+                dataTestId={'' as SessionDataTestId}
+              />
+            </>
+          ) : null}
 
           {showAddRemoveModeratorsButton && (
             <>
@@ -342,14 +482,11 @@ export const OverlayRightPanelSettings = () => {
 
           <MediaGallery documents={documents} media={media} />
           {isGroup && (
-            <PanelIconButton
-              text={leaveGroupString}
-              dataTestId="leave-group-button"
-              disabled={isKickedFromGroup || left}
-              onClick={() => void deleteConvoAction()}
-              color={'var(--danger-color)'}
-              iconType={'delete'}
-            />
+            <>
+              <LeaveGroupPanelButton />
+              <DeleteGroupPanelButton />
+              <LeaveCommunityPanelButton />
+            </>
           )}
         </PanelButtonGroup>
         <SpacerLG />

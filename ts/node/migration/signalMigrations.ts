@@ -1,6 +1,6 @@
-import path from 'path';
 import * as BetterSqlite3 from '@signalapp/better-sqlite3';
 import { isNumber } from 'lodash';
+import path from 'path';
 
 import {
   ATTACHMENT_DOWNLOADS_TABLE,
@@ -11,6 +11,7 @@ import {
   LAST_HASHES_TABLE,
   MESSAGES_FTS_TABLE,
   MESSAGES_TABLE,
+  SEEN_MESSAGE_TABLE,
 } from '../database_utility';
 import { getAppRootPath } from '../getRootPath';
 import { updateSessionSchema } from './sessionMigrations';
@@ -245,7 +246,7 @@ function updateToSchemaVersion6(currentVersion: number, db: BetterSqlite3.Databa
         expiresAt INTEGER
       );
 
-      CREATE TABLE seenMessages(
+      CREATE TABLE ${SEEN_MESSAGE_TABLE}(
         hash TEXT PRIMARY KEY,
         expiresAt INTEGER
       );

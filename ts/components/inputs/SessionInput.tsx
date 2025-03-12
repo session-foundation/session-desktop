@@ -1,4 +1,12 @@
-import { ChangeEvent, ReactNode, RefObject, useEffect, useRef, useState } from 'react';
+import {
+  ChangeEvent,
+  ReactNode,
+  RefObject,
+  SessionDataTestId,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import { motion } from 'framer-motion';
 import { isEmpty, isEqual } from 'lodash';
@@ -185,13 +193,13 @@ const ErrorItem = (props: { id: string; error: string }) => {
   );
 };
 
-type ShowHideButtonStrings = { hide: string; show: string };
+type ShowHideButtonStrings<T extends string> = { hide: T; show: T };
 type ShowHideButtonProps = {
   forceShow: boolean;
   toggleForceShow: () => void;
   error: boolean;
-  ariaLabels?: ShowHideButtonStrings;
-  dataTestIds?: ShowHideButtonStrings;
+  ariaLabels?: ShowHideButtonStrings<string>;
+  dataTestIds?: ShowHideButtonStrings<SessionDataTestId>;
 };
 
 const ShowHideButton = (props: ShowHideButtonProps) => {
@@ -255,11 +263,11 @@ type Props = {
   autoFocus?: boolean;
   disableOnBlurEvent?: boolean;
   inputRef?: RefObject<HTMLInputElement | HTMLTextAreaElement>;
-  inputDataTestId?: string;
+  inputDataTestId?: SessionDataTestId;
   id?: string;
   enableShowHideButton?: boolean;
-  showHideButtonAriaLabels?: ShowHideButtonStrings;
-  showHideButtonDataTestIds?: ShowHideButtonStrings;
+  showHideButtonAriaLabels?: ShowHideButtonStrings<string>;
+  showHideButtonDataTestIds?: ShowHideButtonStrings<SessionDataTestId>;
   ctaButton?: ReactNode;
   monospaced?: boolean;
   textSize?: TextSizes;

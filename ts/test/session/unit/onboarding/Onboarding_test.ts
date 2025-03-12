@@ -1,6 +1,5 @@
 import { expect } from 'chai';
 import Sinon from 'sinon';
-import { displayNameIsValid } from '../../../../components/registration/utils';
 import { getSwarmPollingInstance } from '../../../../session/apis/snode_api';
 import { PubKey } from '../../../../session/types';
 import {
@@ -10,7 +9,8 @@ import {
 } from '../../../../util/accountManager';
 import { TestUtils } from '../../../test-utils';
 import { stubWindow } from '../../../test-utils/utils';
-import { resetLocaleAndTranslationDict } from '../../../../util/i18n/shared';
+import { sanitizeDisplayNameOrToast } from '../../../../components/registration/utils';
+import { EmptyDisplayNameError } from '../../../../session/utils/errors';
 
 describe('Onboarding', () => {
   const polledDisplayName = 'Hello World';
@@ -26,35 +26,31 @@ describe('Onboarding', () => {
   });
 
   afterEach(() => {
-    resetLocaleAndTranslationDict();
     Sinon.restore();
   });
 
-  describe('displayNameIsValid', () => {
+  describe('sanitizeDisplayNameOrToast', () => {
     it('should throw an error if the display name is undefined', async () => {
       try {
-        displayNameIsValid(undefined);
+        sanitizeDisplayNameOrToast('');
       } catch (error) {
-        error.should.be.an.instanceOf(Error);
-        error.message.should.equal(window.i18n('displayNameErrorDescription'));
+        error.should.be.an.instanceOf(EmptyDisplayNameError);
       }
     });
     it('should throw an error if the display name is empty after trimming', async () => {
       try {
-        displayNameIsValid('    ');
+        sanitizeDisplayNameOrToast('    ');
       } catch (error) {
-        error.should.be.an.instanceOf(Error);
-        error.message.should.equal(window.i18n('displayNameErrorDescription'));
+        error.should.be.an.instanceOf(EmptyDisplayNameError);
       }
     });
     it('if the display name is valid it should be returned', async () => {
       try {
         const displayName = 'Hello World';
-        const validDisplayName = displayNameIsValid(displayName);
+        const validDisplayName = sanitizeDisplayNameOrToast(displayName);
         expect(validDisplayName, `should equal ${displayName}`).to.equal(displayName);
       } catch (error) {
-        error.should.not.be.an.instanceOf(Error);
-        error.message.should.not.equal(window.i18n('displayNameErrorDescription'));
+        error.should.not.be.an.instanceOf(EmptyDisplayNameError);
       }
     });
   });

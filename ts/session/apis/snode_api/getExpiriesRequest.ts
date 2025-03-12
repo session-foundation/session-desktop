@@ -1,16 +1,17 @@
 /* eslint-disable no-restricted-syntax */
-import { isFinite, isNil, isNumber, sample } from 'lodash';
+import { PubkeyType } from 'libsession_util_nodejs';
+import { isFinite, isNil, isNumber } from 'lodash';
 import pRetry from 'p-retry';
 import { Snode } from '../../../data/types';
 import { UserUtils } from '../../utils';
-import { EmptySwarmError } from '../../utils/errors';
 import { SeedNodeAPI } from '../seed_node_api';
-import { GetExpiriesFromNodeSubRequest, fakeHash } from './SnodeRequestTypes';
-import { doSnodeBatchRequest } from './batchRequest';
-import { GetNetworkTime } from './getNetworkTime';
-import { getSwarmFor } from './snodePool';
-import { SnodeSignature } from './snodeSignatures';
+import { GetExpiriesFromNodeSubRequest } from './SnodeRequestTypes';
+import { BatchRequests } from './batchRequest';
+import { SnodePool } from './snodePool';
 import { GetExpiriesResultsContent } from './types';
+import { WithMessagesHashes } from '../../types/with';
+import { DURATION } from '../../constants';
+import { NetworkTime } from '../../../util/NetworkTime';
 
 export type GetExpiriesRequestResponseResults = Record<string, number>;
 
@@ -41,18 +42,25 @@ export async function processGetExpiriesRequestResponse(
   return results;
 }
 
-async function getExpiriesFromNodes(
+async function getExpiriesFromNodesNoRetries(
   targetNode: Snode,
-  expireRequest: GetExpiriesFromNodeSubRequest
+  messageHashes: Array<string>,
+  associatedWith: PubkeyType
 ) {
   try {
-    const result = await doSnodeBatchRequest(
-      [expireRequest],
+    const expireRequest = new GetExpiriesFromNodeSubRequest({
+      messagesHashes: messageHashes,
+      getNow: NetworkTime.now,
+    });
+    const result = await BatchRequests.doUnsignedSnodeBatchRequestNoRetries({
+      unsignedSubRequests: [expireRequest],
       targetNode,
-      4000,
-      expireRequest.params.pubkey,
-      'batch'
-    );
+      timeoutMs: 10 * DURATION.SECONDS,
+      associatedWith,
+      allow401s: false,
+      method: 'batch',
+      abortSignal: null,
+    });
 
     if (!result || result.length !== 1) {
       throw Error(
@@ -67,21 +75,21 @@ async function getExpiriesFromNodes(
     const firstResult = result[0];
 
     if (firstResult.code !== 200) {
-      throw Error(`getExpiriesFromNodes result is not 200 but ${firstResult.code}`);
+      throw Error(`getExpiriesFromNodesNoRetries result is not 200 but ${firstResult.code}`);
     }
 
     // expirationResults is a record of {messageHash: currentExpiry}
     const expirationResults = await processGetExpiriesRequestResponse(
       targetNode,
       firstResult.body.expiries as GetExpiriesResultsContent,
-      expireRequest.params.messages
+      expireRequest.messageHashes
     );
 
     // Note: even if expirationResults is empty we need to process the results.
     // The status code is 200, so if the results is empty, it means all those messages already expired.
 
     // Note: a hash which already expired on the server is not going to be returned. So we force it's fetchedExpiry to be now() to make it expire asap
-    const expiriesWithForcedExpiried = expireRequest.params.messages.map(messageHash => ({
+    const expiriesWithForcedExpiried = expireRequest.messageHashes.map(messageHash => ({
       messageHash,
       fetchedExpiry: expirationResults?.[messageHash] || Date.now(),
     }));
@@ -97,83 +105,27 @@ async function getExpiriesFromNodes(
   }
 }
 
-export type GetExpiriesFromSnodeProps = {
-  messageHashes: Array<string>;
-};
-
-export async function buildGetExpiriesRequest({
-  messageHashes,
-}: GetExpiriesFromSnodeProps): Promise<GetExpiriesFromNodeSubRequest | null> {
-  const timestamp = GetNetworkTime.getNowWithNetworkOffset();
-
-  const ourPubKey = UserUtils.getOurPubKeyStrFromCache();
-  if (!ourPubKey) {
-    window.log.error('[buildGetExpiriesRequest] No pubkey found', messageHashes);
-    return null;
-  }
-
-  const signResult = await SnodeSignature.generateGetExpiriesSignature({
-    timestamp,
-    messageHashes,
-  });
-
-  if (!signResult) {
-    window.log.error(
-      `[buildGetExpiriesRequest] SnodeSignature.generateUpdateExpirySignature returned an empty result ${messageHashes}`
-    );
-    return null;
-  }
-
-  const getExpiriesParams: GetExpiriesFromNodeSubRequest = {
-    method: 'get_expiries',
-    params: {
-      pubkey: ourPubKey,
-      pubkey_ed25519: signResult.pubkey_ed25519.toUpperCase(),
-      messages: messageHashes,
-      timestamp,
-      signature: signResult?.signature,
-    },
-  };
-
-  return getExpiriesParams;
-}
-
 /**
  * Sends an 'get_expiries' request which retrieves the current expiry timestamps of the given messages.
  *
  * The returned TTLs should be assigned to the given disappearing messages.
  * @param messageHashes the hashes of the messages we want the current expiries for
  * @param timestamp the time (ms) the request was initiated, must be within ±60s of the current time so using the server time is recommended.
- * @returns an arrray of the expiry timestamps (TTL) for the given messages
+ * @returns an array of the expiry timestamps (TTL) for the given messages
  */
-export async function getExpiriesFromSnode({ messageHashes }: GetExpiriesFromSnodeProps) {
-  // FIXME There is a bug in the snode code that requires at least 2 messages to be requested. Will be fixed in next storage server release
-  if (messageHashes.length === 1) {
-    messageHashes.push(fakeHash);
-  }
-
+export async function getExpiriesFromSnode({ messagesHashes }: WithMessagesHashes) {
   const ourPubKey = UserUtils.getOurPubKeyStrFromCache();
   if (!ourPubKey) {
-    window.log.error('[getExpiriesFromSnode] No pubkey found', messageHashes);
+    window.log.error('[getExpiriesFromSnode] No pubkey found', messagesHashes);
     return [];
   }
 
-  let snode: Snode | undefined;
-
   try {
-    const expireRequestParams = await buildGetExpiriesRequest({ messageHashes });
-    if (!expireRequestParams) {
-      throw new Error(`Failed to build get_expiries request ${JSON.stringify({ messageHashes })}`);
-    }
-
     const fetchedExpiries = await pRetry(
       async () => {
-        const swarm = await getSwarmFor(ourPubKey);
-        snode = sample(swarm);
-        if (!snode) {
-          throw new EmptySwarmError(ourPubKey, 'Ran out of swarm nodes to query');
-        }
-        return getExpiriesFromNodes(snode, expireRequestParams);
+        const targetNode = await SnodePool.getNodeFromSwarmOrThrow(ourPubKey);
+
+        return getExpiriesFromNodesNoRetries(targetNode, messagesHashes, ourPubKey);
       },
       {
         retries: 3,
@@ -189,11 +141,10 @@ export async function getExpiriesFromSnode({ messageHashes }: GetExpiriesFromSno
 
     return fetchedExpiries;
   } catch (e) {
-    const snodeStr = snode ? `${snode.ip}:${snode.port}` : 'null';
     window?.log?.warn(
       `[getExpiriesFromSnode] ${e.code ? `${e.code} ` : ''}${
         e.message || e
-      } by ${ourPubKey} for ${messageHashes} via snode:${snodeStr}`
+      } by ${ourPubKey} for ${messagesHashes}`
     );
     throw e;
   }

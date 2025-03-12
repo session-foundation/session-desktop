@@ -17,7 +17,7 @@ export class MessageRequestResponse extends ContentMessage {
 
   constructor(params: MessageRequestResponseParams) {
     super({
-      timestamp: params.timestamp,
+      createAtNetworkTimestamp: params.createAtNetworkTimestamp,
     } as MessageRequestResponseParams);
 
     const profile = buildProfileForOutgoingMessage(params);
@@ -26,9 +26,7 @@ export class MessageRequestResponse extends ContentMessage {
   }
 
   public contentProto(): SignalService.Content {
-    return new SignalService.Content({
-      messageRequestResponse: this.messageRequestResponseProto(),
-    });
+    return super.makeContentProto({ messageRequestResponse: this.messageRequestResponseProto() });
   }
 
   public messageRequestResponseProto(): SignalService.MessageRequestResponse {

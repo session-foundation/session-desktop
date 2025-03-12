@@ -6,6 +6,7 @@ import { isSignWithRecoveryPhrase } from '../util/storage';
 import { Flex } from './basic/Flex';
 import { Spacer2XL, SpacerXS } from './basic/Text';
 import { Localizer } from './basic/Localizer';
+import { useShowOnboardingAccountJustCreated } from '../state/selectors/settings';
 
 const StyledPlaceholder = styled(Flex)`
   background-color: var(--background-secondary-color);
@@ -72,8 +73,8 @@ export const EmptyMessageView = () => {
   const conversationCount = useSelector(getLeftPaneConversationIdsCount);
   const isSignInWithRecoveryPhrase = isSignWithRecoveryPhrase();
 
-  const launchCount = window.getSettingValue('launch-count');
-  const newAccountCreated = !isSignInWithRecoveryPhrase && (!launchCount || launchCount < 1);
+  const showOnboardingAccountJustCreated = useShowOnboardingAccountJustCreated();
+  const newAccountCreated = !isSignInWithRecoveryPhrase && showOnboardingAccountJustCreated;
 
   return (
     <StyledPlaceholder

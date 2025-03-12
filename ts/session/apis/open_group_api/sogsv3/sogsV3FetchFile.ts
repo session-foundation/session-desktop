@@ -5,12 +5,13 @@ import { MIME } from '../../../../types';
 import { processNewAttachment } from '../../../../types/MessageAttachment';
 import { roomHasBlindEnabled } from '../../../../types/sqlSharedTypes';
 import { callUtilsWorker } from '../../../../webworker/workers/browser/util_worker_interface';
-import { getConversationController } from '../../../conversations';
+import { ConvoHub } from '../../../conversations';
 import { OnionSending } from '../../../onions/onionSend';
 import { allowOnlyOneAtATime } from '../../../utils/Promise';
 import { OpenGroupPollingUtils } from '../opengroupV2/OpenGroupPollingUtils';
 import { getOpenGroupV2ConversationId } from '../utils/OpenGroupUtils';
 import { OpenGroupV2Room } from '../../../../data/types';
+import { DURATION } from '../../../constants';
 
 export async function fetchBinaryFromSogsWithOnionV4(sendOptions: {
   serverUrl: string;
@@ -62,7 +63,8 @@ export async function fetchBinaryFromSogsWithOnionV4(sendOptions: {
       useV4: true,
     },
     throwError,
-    abortSignal
+    abortSignal,
+    30 * DURATION.SECONDS // longer time for binary fetch
   );
 
   if (!res?.bodyBinary) {
@@ -85,11 +87,11 @@ export async function sogsV3FetchPreviewAndSaveIt(roomInfos: OpenGroupV2RoomWith
   const imageIdNumber = toNumber(imageID);
 
   const convoId = getOpenGroupV2ConversationId(roomInfos.serverUrl, roomInfos.roomId);
-  let convo = getConversationController().get(convoId);
+  let convo = ConvoHub.use().get(convoId);
   if (!convo) {
     return;
   }
-  let existingImageId = convo.get('avatarImageId');
+  let existingImageId = convo.getAvatarImageId();
   if (existingImageId === imageIdNumber) {
     // return early as the imageID about to be downloaded the one already set as avatar is the same.
     return;
@@ -110,11 +112,11 @@ export async function sogsV3FetchPreviewAndSaveIt(roomInfos: OpenGroupV2RoomWith
     return;
   }
   // refresh to make sure the convo was not deleted during the fetch above
-  convo = getConversationController().get(convoId);
+  convo = ConvoHub.use().get(convoId);
   if (!convo) {
     return;
   }
-  existingImageId = convo.get('avatarImageId');
+  existingImageId = convo.getAvatarImageId();
   if (existingImageId !== imageIdNumber && isFinite(imageIdNumber)) {
     // we have to trigger an update
     // write the file to the disk (automatically encrypted),

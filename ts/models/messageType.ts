@@ -1,3 +1,4 @@
+import { PubkeyType } from 'libsession_util_nodejs';
 import { defaultsDeep } from 'lodash';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -13,6 +14,7 @@ import {
   CallNotificationType,
   InteractionNotificationType,
 } from '../state/ducks/types';
+import type { SignalService } from '../protobuf';
 
 export type MessageModelType = 'incoming' | 'outgoing';
 
@@ -39,10 +41,10 @@ export interface MessageAttributes {
   read_by: Array<string>; // we actually only care about the length of this. values are not used for anything
   type: MessageModelType;
   group_update?: MessageGroupUpdate;
-  groupInvitation?: any;
+  groupInvitation?: { url: string | undefined; name: string } | undefined;
   attachments?: any;
   conversationId: string;
-  errors?: any;
+  errors?: string;
   flags?: number;
   hasAttachments: 1 | 0;
   hasFileAttachments: 1 | 0;
@@ -126,12 +128,6 @@ export interface MessageAttributes {
   interactionNotification?: InteractionNotificationType;
 }
 
-export interface DataExtractionNotificationMsg {
-  type: number; // screenshot or saving event, based on SignalService.DataExtractionNotification.Type
-  source: string; // the guy who made a screenshot
-  referencedAttachmentTimestamp: number; // the attachment timestamp he screenshot
-}
-
 export interface MessageRequestResponseMsg {
   source: string;
   isApproved: boolean;
@@ -143,26 +139,20 @@ export enum MessageDirection {
   any = '%',
 }
 
-export type PropsForDataExtractionNotification = DataExtractionNotificationMsg & {
-  name: string;
-  messageId: string;
+export type DataExtractionNotificationMsg = {
+  type: SignalService.DataExtractionNotification.Type;
 };
 
-export type PropsForMessageRequestResponse = MessageRequestResponseMsg & {
-  conversationId?: string;
-  name?: string;
-  messageId: string;
-  receivedAt?: number;
-  isUnread: boolean;
-  isApproved?: boolean;
-  source?: string;
-};
+export type PropsForDataExtractionNotification = DataExtractionNotificationMsg;
 
 export type MessageGroupUpdate = {
-  left?: Array<string>;
-  joined?: Array<string>;
-  kicked?: Array<string>;
+  left?: Array<PubkeyType>;
+  joined?: Array<PubkeyType>;
+  joinedWithHistory?: Array<PubkeyType>;
+  kicked?: Array<PubkeyType>;
+  promoted?: Array<PubkeyType>;
   name?: string;
+  avatarChange?: boolean;
 };
 
 export interface MessageAttributesOptionals {
@@ -184,23 +174,18 @@ export interface MessageAttributesOptionals {
   read_by?: Array<string>; // we actually only care about the length of this. values are not used for anything
   type: MessageModelType;
   group_update?: MessageGroupUpdate;
-  groupInvitation?: any;
+  groupInvitation?: { url: string | undefined; name: string } | undefined;
   attachments?: any;
-  contact?: any;
   conversationId: string;
   errors?: any;
   flags?: number;
   hasAttachments?: boolean;
   hasFileAttachments?: boolean;
   hasVisualMediaAttachments?: boolean;
-  dataExtractionNotification?: {
-    type: number;
-    source: string;
-    referencedAttachmentTimestamp: number;
-  };
+  dataExtractionNotification?: DataExtractionNotificationMsg;
   messageRequestResponse?: {
-    /** 1 means approved, 0 means unapproved. */
-    isApproved?: number;
+    // keeping it as a object in case we ever add a field here.
+    // Note: we had isApproved field, but it was unused so I got rid of it
   };
   unread?: number;
   group?: any;

@@ -11,6 +11,7 @@ import { reducer as theme } from './ducks/theme';
 import { reducer as user, UserStateType } from './ducks/user';
 
 import { PrimaryColorStateType, ThemeStateType } from '../themes/constants/colors';
+import { groupReducer, GroupState } from './ducks/metaGroups';
 import { modalReducer as modals, ModalState } from './ducks/modalDialog';
 import { defaultOnionReducer as onionPaths, OnionState } from './ducks/onion';
 import { settingsReducer, SettingsState } from './ducks/settings';
@@ -19,6 +20,9 @@ import {
   StagedAttachmentsStateType,
 } from './ducks/stagedAttachments';
 import { userConfigReducer as userConfig, UserConfigState } from './ducks/userConfig';
+import { userGroupReducer, UserGroupState } from './ducks/userGroups';
+import { releasedFeaturesReducer, ReleasedFeaturesState } from './ducks/releasedFeatures';
+import { debugReducer, type DebugState } from './ducks/debug';
 
 export type StateType = {
   search: SearchStateType;
@@ -35,6 +39,10 @@ export type StateType = {
   call: CallStateType;
   sogsRoomInfo: SogsRoomInfoState;
   settings: SettingsState;
+  groups: GroupState;
+  userGroups: UserGroupState;
+  releasedFeatures: ReleasedFeaturesState;
+  debug: DebugState;
 };
 
 const reducers = {
@@ -52,6 +60,10 @@ const reducers = {
   call,
   sogsRoomInfo: ReduxSogsRoomInfos.sogsRoomInfoReducer,
   settings: settingsReducer,
+  groups: groupReducer,
+  userGroups: userGroupReducer,
+  releasedFeatures: releasedFeaturesReducer,
+  debug: debugReducer,
 };
 
 // Making this work would require that our reducer signature supported AnyAction, not

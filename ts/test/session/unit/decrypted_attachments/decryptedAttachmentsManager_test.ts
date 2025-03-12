@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 import { beforeEach } from 'mocha';
 import Sinon from 'sinon';
-import * as DecryptedAttachmentsManager from '../../../../session/crypto/DecryptedAttachmentsManager';
 import { TestUtils } from '../../../test-utils';
+import { DecryptedAttachmentsManager } from '../../../../session/crypto/DecryptedAttachmentsManager';
 
 describe('DecryptedAttachmentsManager', () => {
   beforeEach(() => {
@@ -62,12 +62,6 @@ describe('DecryptedAttachmentsManager', () => {
           new Uint8Array(5)
         );
         TestUtils.stubCreateObjectUrl();
-      });
-
-      it('url starts with attachment path but is not already decrypted', () => {
-        expect(
-          DecryptedAttachmentsManager.getAlreadyDecryptedMediaUrl('/local/attachment/attachment1')
-        ).to.be.eq(null);
       });
 
       it('url starts with attachment path but is not already decrypted', async () => {
@@ -134,7 +128,4 @@ describe('DecryptedAttachmentsManager', () => {
       });
     });
   });
-
-  it.skip('cleanUpOldDecryptedMedias', () => {});
-  it.skip('getDecryptedBlob', () => {});
 });

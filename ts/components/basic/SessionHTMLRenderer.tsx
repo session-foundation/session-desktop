@@ -1,10 +1,11 @@
 import DOMPurify from 'dompurify';
-import { createElement, type ElementType } from 'react';
+import { createElement } from 'react';
 import { supportedFormattingTags } from './Localizer';
+import { LocalizerHtmlTag } from '../../localization/localeTools';
 
 type ReceivedProps = {
   html: string;
-  tag?: ElementType;
+  tag?: LocalizerHtmlTag;
   key?: any;
   className?: string;
 };

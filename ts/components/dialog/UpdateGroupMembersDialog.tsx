@@ -1,8 +1,10 @@
-import _ from 'lodash';
+import _, { difference } from 'lodash';
+import { useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
 import styled from 'styled-components';
 
+import { PubkeyType } from 'libsession_util_nodejs';
 import { ToastUtils, UserUtils } from '../../session/utils';
 
 import { updateGroupMembersModal } from '../../state/ducks/modalDialog';
@@ -11,17 +13,33 @@ import { SessionWrapperModal } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SpacerLG } from '../basic/Text';
 
-import { useConversationPropsById, useWeAreAdmin } from '../../hooks/useParamSelector';
+import {
+  useGroupAdmins,
+  useIsPrivate,
+  useIsPublic,
+  useSortedGroupMembers,
+  useWeAreAdmin,
+} from '../../hooks/useParamSelector';
 
 import { useSet } from '../../hooks/useSet';
-import { getConversationController } from '../../session/conversations';
-import { initiateClosedGroupUpdate } from '../../session/group/closed-group';
+import { ConvoHub } from '../../session/conversations';
+import { ClosedGroup } from '../../session/group/closed-group';
+import { PubKey } from '../../session/types';
+import { hasClosedGroupV2QAButtons } from '../../shared/env_vars';
+import { groupInfoActions } from '../../state/ducks/metaGroups';
+import {
+  useMemberGroupChangePending,
+  useStateOf03GroupMembers,
+} from '../../state/selectors/groups';
+import { useSelectedIsGroupV2 } from '../../state/selectors/selectedConversation';
+import { SessionSpinner } from '../loading';
+import { SessionToggle } from '../basic/SessionToggle';
 
 type Props = {
   conversationId: string;
 };
 
-const StyledClassicMemberList = styled.div`
+const StyledMemberList = styled.div`
   max-height: 240px;
 `;
 
@@ -29,7 +47,7 @@ const StyledClassicMemberList = styled.div`
  * Admins are always put first in the list of group members.
  * Also, admins have a little crown on their avatar.
  */
-const ClassicMemberList = (props: {
+const MemberList = (props: {
   convoId: string;
   selectedMembers: Array<string>;
   onSelect: (m: string) => void;
@@ -37,19 +55,26 @@ const ClassicMemberList = (props: {
 }) => {
   const { onSelect, convoId, onUnselect, selectedMembers } = props;
   const weAreAdmin = useWeAreAdmin(convoId);
-  const convoProps = useConversationPropsById(convoId);
-  if (!convoProps) {
-    throw new Error('MemberList needs convoProps');
-  }
-  let currentMembers = convoProps.members || [];
-  const { groupAdmins } = convoProps;
-  currentMembers = [...currentMembers].sort(m => (groupAdmins?.includes(m) ? -1 : 0));
+  const isV2Group = useSelectedIsGroupV2();
+
+  const groupAdmins = useGroupAdmins(convoId);
+  const groupMembers = useSortedGroupMembers(convoId);
+  const groupMembers03Group = useStateOf03GroupMembers(convoId);
+
+  const sortedMembersNon03 = useMemo(
+    () => [...groupMembers].sort(m => (groupAdmins?.includes(m) ? -1 : 0)),
+    [groupMembers, groupAdmins]
+  );
+
+  const sortedMembers = isV2Group ? groupMembers03Group.map(m => m.pubkeyHex) : sortedMembersNon03;
 
   return (
     <>
-      {currentMembers.map(member => {
+      {sortedMembers.map(member => {
         const isSelected = (weAreAdmin && selectedMembers.includes(member)) || false;
-        const isAdmin = groupAdmins?.includes(member);
+        const memberIsAdmin = groupAdmins?.includes(member);
+        // we want to hide the toggle for admins are they are not selectable
+        const showRadioButton = !memberIsAdmin && weAreAdmin;
 
         return (
           <MemberListItem
@@ -58,8 +83,12 @@ const ClassicMemberList = (props: {
             isSelected={isSelected}
             onSelect={onSelect}
             onUnselect={onUnselect}
-            isAdmin={isAdmin}
+            isAdmin={memberIsAdmin}
+            hideRadioButton={!showRadioButton}
             disableBg={true}
+            displayGroupStatus={isV2Group}
+            groupPk={convoId}
+            maxNameWidth="100%"
           />
         );
       })}
@@ -68,11 +97,11 @@ const ClassicMemberList = (props: {
 };
 
 async function onSubmit(convoId: string, membersAfterUpdate: Array<string>) {
-  const convoFound = getConversationController().get(convoId);
+  const convoFound = ConvoHub.use().get(convoId);
   if (!convoFound || !convoFound.isGroup()) {
     throw new Error('Invalid convo for updateGroupMembersDialog');
   }
-  if (!convoFound.isAdmin(UserUtils.getOurPubKeyStrFromCache())) {
+  if (!convoFound.weAreAdminUnblinded()) {
     window.log.warn('Skipping update of members, we are not the admin');
     return;
   }
@@ -87,8 +116,8 @@ async function onSubmit(convoId: string, membersAfterUpdate: Array<string>) {
   // We consider that the admin ALWAYS wants to remove zombies (actually they should be removed
   // automatically by him when the LEFT message is received)
 
-  const existingMembers = convoFound.get('members') || [];
-  const existingZombies = convoFound.get('zombies') || [];
+  const existingMembers = convoFound.getGroupMembers() || [];
+  const existingZombies = convoFound.getGroupZombies() || [];
 
   const allExistingMembersWithZombies = _.uniq(existingMembers.concat(existingZombies));
 
@@ -115,40 +144,58 @@ async function onSubmit(convoId: string, membersAfterUpdate: Array<string>) {
     memberAfterUpdate => !_.includes(membersToRemove, memberAfterUpdate)
   );
 
-  void initiateClosedGroupUpdate(
+  void ClosedGroup.initiateClosedGroupUpdate(
     convoId,
-    convoFound.get('displayNameInProfile') || 'Unknown',
+    convoFound.getRealSessionUsername() || 'Unknown',
     filteredMembers
   );
 }
 
 export const UpdateGroupMembersDialog = (props: Props) => {
   const { conversationId } = props;
-  const convoProps = useConversationPropsById(conversationId);
-  const existingMembers = convoProps?.members || [];
+  const isPrivate = useIsPrivate(conversationId);
+  const isPublic = useIsPublic(conversationId);
+  const weAreAdmin = useWeAreAdmin(conversationId);
+  const existingMembers = useSortedGroupMembers(conversationId) || [];
+  const groupAdmins = useGroupAdmins(conversationId);
+  const isProcessingUIChange = useMemberGroupChangePending();
+  const [alsoRemoveMessages, setAlsoRemoveMessages] = useState(false);
 
-  const {
-    addTo,
-    removeFrom,
-    uniqueValues: membersToKeepWithUpdate,
-  } = useSet<string>(existingMembers);
+  const { addTo, removeFrom, uniqueValues: membersToRemove } = useSet<string>([]);
 
   const dispatch = useDispatch();
 
-  if (!convoProps || convoProps.isPrivate || convoProps.isPublic) {
+  if (isPrivate || isPublic) {
     throw new Error('UpdateGroupMembersDialog invalid convoProps');
   }
-
-  const weAreAdmin = convoProps.weAreAdmin || false;
 
   const closeDialog = () => {
     dispatch(updateGroupMembersModal(null));
   };
 
   const onClickOK = async () => {
-    // const members = getWouldBeMembers(this.state.contactList).map(d => d.id);
-    // do not include zombies here, they are removed by force
-    await onSubmit(conversationId, membersToKeepWithUpdate);
+    if (PubKey.is03Pubkey(conversationId)) {
+      const toRemoveAndCurrentMembers = membersToRemove.filter(m =>
+        existingMembers.includes(m as PubkeyType)
+      );
+
+      const groupv2Action = groupInfoActions.currentDeviceGroupMembersChange({
+        groupPk: conversationId,
+        addMembersWithHistory: [],
+        addMembersWithoutHistory: [],
+        removeMembers: toRemoveAndCurrentMembers as Array<PubkeyType>,
+        alsoRemoveMessages,
+      });
+      dispatch(groupv2Action as any);
+
+      return; // keeping the dialog open until the async thunk is done
+    }
+
+    await onSubmit(
+      conversationId,
+      difference(existingMembers, membersToRemove) as Array<PubkeyType>
+    );
+
     closeDialog();
   };
 
@@ -156,25 +203,25 @@ export const UpdateGroupMembersDialog = (props: Props) => {
     return event.key === 'Esc' || event.key === 'Escape';
   }, closeDialog);
 
-  const onAdd = (member: string) => {
+  const onSelect = (member: string) => {
     if (!weAreAdmin) {
-      window?.log?.warn('Only group admin can add members!');
+      window?.log?.warn('Only group admin can select!');
+      return;
+    }
+
+    if (groupAdmins?.includes(member)) {
+      ToastUtils.pushCannotRemoveGroupAdmin();
+      window?.log?.warn(`User ${member} cannot be selected as they are an admin.`);
+
       return;
     }
 
     addTo(member);
   };
 
-  const onRemove = (member: string) => {
+  const onUnselect = (member: string) => {
     if (!weAreAdmin) {
-      window?.log?.warn('Only group admin can remove members!');
-      return;
-    }
-    if (convoProps.groupAdmins?.includes(member)) {
-      ToastUtils.pushCannotRemoveCreatorFromGroup();
-      window?.log?.warn(
-        `User ${member} cannot be removed as they are the creator of the closed group.`
-      );
+      window?.log?.warn('Only group admin can unselect members!');
       return;
     }
 
@@ -182,33 +229,51 @@ export const UpdateGroupMembersDialog = (props: Props) => {
   };
 
   const showNoMembersMessage = existingMembers.length === 0;
-  const okText = window.i18n('okay');
-  const cancelText = window.i18n('cancel');
-  const titleText = window.i18n('groupMembers');
 
   return (
-    <SessionWrapperModal title={titleText} onClose={closeDialog}>
-      <StyledClassicMemberList className="contact-selection-list">
-        <ClassicMemberList
+    <SessionWrapperModal title={window.i18n('groupMembers')} onClose={closeDialog}>
+      {hasClosedGroupV2QAButtons() && weAreAdmin && PubKey.is03Pubkey(conversationId) ? (
+        <>
+          Also remove messages:
+          <SessionToggle
+            active={alsoRemoveMessages}
+            onClick={() => {
+              setAlsoRemoveMessages(!alsoRemoveMessages);
+            }}
+          />
+        </>
+      ) : null}
+      <StyledMemberList className="contact-selection-list">
+        <MemberList
           convoId={conversationId}
-          onSelect={onAdd}
-          onUnselect={onRemove}
-          selectedMembers={membersToKeepWithUpdate}
+          onSelect={onSelect}
+          onUnselect={onUnselect}
+          selectedMembers={membersToRemove}
         />
-      </StyledClassicMemberList>
+      </StyledMemberList>
       {showNoMembersMessage && <p>{window.i18n('groupMembersNone')}</p>}
 
+      <SpacerLG />
+      <SessionSpinner loading={isProcessingUIChange} />
       <SpacerLG />
 
       <div className="session-modal__button-group">
         {weAreAdmin && (
-          <SessionButton text={okText} onClick={onClickOK} buttonType={SessionButtonType.Simple} />
+          <SessionButton
+            text={window.i18n('remove')}
+            onClick={onClickOK}
+            buttonType={SessionButtonType.Simple}
+            buttonColor={SessionButtonColor.Danger}
+            disabled={isProcessingUIChange || !membersToRemove.length}
+            dataTestId="session-confirm-ok-button"
+          />
         )}
         <SessionButton
-          text={cancelText}
-          buttonColor={weAreAdmin ? SessionButtonColor.Danger : undefined}
+          text={window.i18n('cancel')}
           buttonType={SessionButtonType.Simple}
           onClick={closeDialog}
+          disabled={isProcessingUIChange}
+          dataTestId="session-confirm-cancel-button"
         />
       </div>
     </SessionWrapperModal>

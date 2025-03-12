@@ -9,11 +9,7 @@ import { Spinner } from '../loading';
 import { MessageGenericAttachment } from './message/message-content/MessageGenericAttachment';
 import { useEncryptedFileFetch } from '../../hooks/useEncryptedFileFetch';
 import { useMessageIdFromContext } from '../../contexts/MessageIdContext';
-import {
-  useMessageDirection,
-  useMessageSelected,
-  useMessageTimestamp,
-} from '../../state/selectors';
+import { useMessageDirection, useMessageSelected } from '../../state/selectors';
 import { AriaLabels } from '../../util/hardcodedAriaLabels';
 
 type Props = {
@@ -76,16 +72,9 @@ export const Image = (props: Props) => {
   const messageId = useMessageIdFromContext();
   const dropShadow = useMessageSelected(messageId);
   const direction = useMessageDirection(messageId);
-  /** used for debugging */
-  const timestamp = useMessageTimestamp(messageId);
 
   const disableDrag = useDisableDrag();
-  const { loading, urlToLoad } = useEncryptedFileFetch(
-    url,
-    attachment.contentType,
-    false,
-    timestamp
-  );
+  const { loading, urlToLoad } = useEncryptedFileFetch(url, attachment.contentType, false);
 
   const { caption } = attachment || { caption: null };
   const [pending, setPending] = useState<boolean>(attachment.pending || true);

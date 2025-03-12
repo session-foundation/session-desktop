@@ -76,7 +76,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
     }
 
     const confirmButtonText =
-      passwordAction === 'remove' ? window.i18n('remove') : window.i18n('done');
+      passwordAction === 'remove' ? window.i18n('remove') : window.i18n('save');
 
     const titleString = () => {
       switch (passwordAction) {
@@ -186,10 +186,12 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
     // if user did not fill the first password field, we can't do anything
     const errorFirstInput = validatePassword(enteredPassword);
     if (errorFirstInput !== null) {
-      this.setState({
-        error: errorFirstInput,
-      });
-      this.showError();
+      this.setState(
+        {
+          error: errorFirstInput,
+        },
+        () => this.showError()
+      );
       return false;
     }
     return true;
@@ -218,7 +220,6 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
 
       ToastUtils.pushToastSuccess(
         'setPasswordSuccessToast',
-        window.i18n.stripped('passwordSet'),
         window.i18n.stripped('passwordSetDescription')
       );
 

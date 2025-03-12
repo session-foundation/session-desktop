@@ -1,6 +1,6 @@
+import { memo, SessionDataTestId } from 'react';
 import styled, { css, CSSProperties, keyframes } from 'styled-components';
 
-import { memo } from 'react';
 import { icons, SessionIconSize, SessionIconType } from '.';
 import { ClipRule, FillRule } from './Icons';
 
@@ -19,10 +19,10 @@ export type SessionIconProps = {
   glowStartDelay?: number;
   noScale?: boolean;
   backgroundColor?: string;
+  dataTestId?: SessionDataTestId;
   style?: CSSProperties;
-  dataTestId?: string;
   unreadCount?: number;
-  /** for some usecases, we want to fix the width of the icon and have the height be calculated from the ratio of the icon */
+  /** for some use cases, we want to fix the width of the icon and have the height be calculated from the ratio of the icon */
   sizeIsWidth?: boolean;
 };
 
@@ -145,7 +145,7 @@ const SessionSvg = (
     viewBox: string;
     path: string | Array<string>;
     style?: CSSProperties;
-    dataTestId?: string;
+    dataTestId?: SessionDataTestId;
   }
 ) => {
   const colorSvg = props.iconColor ? props.iconColor : 'var(--button-icon-stroke-color)';

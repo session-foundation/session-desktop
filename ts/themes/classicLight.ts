@@ -4,6 +4,7 @@ import { ThemeColorVariables } from './variableColors';
 
 export const classicLight: ThemeColorVariables = {
   '--danger-color': THEMES.CLASSIC_LIGHT.DANGER,
+  '--warning-color': THEMES.CLASSIC_LIGHT.WARNING,
   '--disabled-color': THEMES.CLASSIC_LIGHT.DISABLED,
 
   '--background-primary-color': THEMES.CLASSIC_LIGHT.COLOR6,
@@ -64,6 +65,7 @@ export const classicLight: ThemeColorVariables = {
 
   '--button-simple-text-color': 'var(--text-primary-color)',
   '--button-simple-disabled-color': 'var(--disabled-color)',
+  '--button-simple-text-hover-color': 'var(--disabled-color)',
 
   '--button-icon-background-color': 'var(--transparent-color)',
   '--button-icon-stroke-color': 'var(--text-secondary-color)',

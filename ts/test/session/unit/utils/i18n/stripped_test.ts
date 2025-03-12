@@ -2,45 +2,31 @@
 // @ts-nocheck - TODO: add generic type to setupI18n to fix this
 
 import { expect } from 'chai';
-import { initI18n, testDictionary } from './util';
-import { resetLocaleAndTranslationDict } from '../../../../../util/i18n/shared';
+import { initI18n } from './util';
 
 describe('stripped', () => {
-  let i18n;
-  beforeEach(() => {
-    i18n = initI18n(testDictionary);
-  });
-  afterEach(() => {
-    resetLocaleAndTranslationDict();
-  });
-
   it('returns the stripped message for a token', () => {
-    const message = i18n.stripped('greeting', { name: 'Alice' });
-    expect(message).to.equal('Hello, Alice!');
+    const message = initI18n().stripped('search');
+    expect(message).to.equal('Search');
   });
 
   it('returns the stripped message for a plural token', () => {
-    const message = i18n.stripped('search', { count: 1, found_count: 2 });
+    const message = initI18n().stripped('searchMatches', { count: 1, found_count: 2 });
     expect(message).to.equal('2 of 1 match');
   });
 
-  it('returns the stripped message for a token with no args', () => {
-    const message = i18n.stripped('noArgs');
-    expect(message).to.equal('No args');
-  });
-
-  it('returns the stripped message for a token with args', () => {
-    const message = i18n.stripped('args', { name: 'Alice' });
-    expect(message).to.equal('Hello, Alice!');
+  it('returns the stripped message for a token with the tags stripped', () => {
+    const message = initI18n().stripped('messageRequestYouHaveAccepted', { name: 'Alice' });
+    expect(message).to.equal('You have accepted the message request from Alice.');
   });
 
   it('returns the stripped message for a token with the tags stripped', () => {
-    const message = i18n.stripped('tag', { name: 'Alice' });
-    expect(message).to.equal('Hello, Alice! Welcome!');
-  });
-
-  it('returns the stripped message for a token with the tags stripped', () => {
-    const message = i18n.stripped('argInTag', { name: 'Alice', arg: 'Bob' });
-    expect(message).to.equal('Hello, Alice! Welcome, Bob!');
+    const message = initI18n().stripped('adminPromoteTwoDescription', {
+      name: 'Alice',
+      other_name: 'Bob',
+    });
+    expect(message).to.equal(
+      'Are you sure you want to promote Alice and Bob to admin? Admins cannot be removed.'
+    );
   });
 });

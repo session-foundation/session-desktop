@@ -1,6 +1,7 @@
 // Default Theme should be Classic Dark
 export type ThemeColorVariables = {
   '--danger-color': string;
+  '--warning-color': string;
   '--disabled-color': string;
 
   /* Backgrounds */
@@ -78,6 +79,7 @@ export type ThemeColorVariables = {
   /* Simple */
   '--button-simple-text-color': string;
   '--button-simple-disabled-color': string;
+  '--button-simple-text-hover-color': string;
 
   /* Icons */
   '--button-icon-background-color': string;

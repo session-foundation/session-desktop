@@ -38,7 +38,7 @@ const Items = (props: Props): JSX.Element => {
               />
             );
           default:
-            return missingCaseError(type);
+            throw missingCaseError(type);
         }
       })}
     </>

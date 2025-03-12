@@ -27,8 +27,8 @@ export const CopyToClipboardButton = (props: CopyToClipboardButtonProps) => {
       }
 
       clipboard.writeText(toCopy);
-
       ToastUtils.pushCopiedToClipBoard();
+
       setCopied(true);
       if (onCopyComplete) {
         onCopyComplete(text);
@@ -59,6 +59,7 @@ export const CopyToClipboardIcon = (props: CopyToClipboardIconProps & { copyCont
   const onClick = () => {
     clipboard.writeText(copyContent);
     ToastUtils.pushCopiedToClipBoard();
+
     if (onCopyComplete) {
       onCopyComplete(copyContent);
     }

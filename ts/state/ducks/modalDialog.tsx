@@ -6,20 +6,23 @@ import { SessionConfirmDialogProps } from '../../components/dialog/SessionConfir
 import { MediaItemType } from '../../components/lightbox/LightboxGallery';
 import { AttachmentTypeWithPath } from '../../types/Attachment';
 import type { EditProfilePictureModalProps, PasswordAction } from '../../types/ReduxTypes';
+import { WithConvoId } from '../../session/types/with';
 
 export type BanType = 'ban' | 'unban';
 
 export type ConfirmModalState = SessionConfirmDialogProps | null;
-export type InviteContactModalState = { conversationId: string } | null;
-export type BanOrUnbanUserModalState = {
-  conversationId: string;
-  banType: BanType;
-  pubkey?: string;
-} | null;
+
+export type InviteContactModalState = WithConvoId | null;
+export type BanOrUnbanUserModalState =
+  | (WithConvoId & {
+      banType: BanType;
+      pubkey?: string;
+    })
+  | null;
 export type AddModeratorsModalState = InviteContactModalState;
 export type RemoveModeratorsModalState = InviteContactModalState;
 export type UpdateGroupMembersModalState = InviteContactModalState;
-export type UpdateGroupNameModalState = InviteContactModalState;
+export type UpdateGroupNameModalState = WithConvoId | null;
 export type ChangeNickNameModalState = InviteContactModalState;
 export type EditProfileModalState = object | null;
 export type OnionPathModalState = EditProfileModalState;
@@ -51,6 +54,8 @@ export type LightBoxOptions = {
   onClose?: () => void;
 } | null;
 
+export type DebugMenuModalState = object | null;
+
 export type ModalState = {
   confirmModal: ConfirmModalState;
   inviteContactModal: InviteContactModalState;
@@ -73,6 +78,7 @@ export type ModalState = {
   hideRecoveryPasswordModalState: HideRecoveryPasswordModalState;
   openUrlModal: OpenUrlModalState;
   lightBoxOptions: LightBoxOptions;
+  debugMenuModal: DebugMenuModalState;
 };
 
 export const initialModalState: ModalState = {
@@ -97,6 +103,7 @@ export const initialModalState: ModalState = {
   hideRecoveryPasswordModalState: null,
   openUrlModal: null,
   lightBoxOptions: null,
+  debugMenuModal: null,
 };
 
 const ModalSlice = createSlice({
@@ -180,6 +187,9 @@ const ModalSlice = createSlice({
 
       return { ...state, lightBoxOptions };
     },
+    updateDebugMenuModal(state, action: PayloadAction<DebugMenuModalState>) {
+      return { ...state, debugMenuModal: action.payload };
+    },
   },
 });
 
@@ -206,5 +216,6 @@ export const {
   updateHideRecoveryPasswordModal,
   updateOpenUrlModal,
   updateLightBoxOptions,
+  updateDebugMenuModal,
 } = actions;
 export const modalReducer = reducer;

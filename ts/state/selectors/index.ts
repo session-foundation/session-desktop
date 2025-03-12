@@ -9,6 +9,7 @@ import * as StagedAttachmentSelectors from './stagedAttachments';
 import * as ThemeSelectors from './theme';
 import * as UserSelectors from './user';
 import * as UserConfigSelectors from './userConfig';
+import * as ReleasedFeaturesSelectors from './releasedFeatures';
 
 export {
   CallSelectors,
@@ -22,6 +23,7 @@ export {
   ThemeSelectors,
   UserConfigSelectors,
   UserSelectors,
+  ReleasedFeaturesSelectors,
 };
 
 export * from './messages';

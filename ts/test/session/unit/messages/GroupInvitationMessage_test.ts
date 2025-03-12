@@ -3,17 +3,17 @@ import { beforeEach } from 'mocha';
 
 import { SignalService } from '../../../../protobuf';
 import { Constants } from '../../../../session';
-import { GroupInvitationMessage } from '../../../../session/messages/outgoing/visibleMessage/GroupInvitationMessage';
+import { CommunityInvitationMessage } from '../../../../session/messages/outgoing/visibleMessage/CommunityInvitationMessage';
 
-describe('GroupInvitationMessage', () => {
-  let message: GroupInvitationMessage;
-  const timestamp = Date.now();
+describe('CommunityInvitationMessage', () => {
+  let message: CommunityInvitationMessage;
+  const createAtNetworkTimestamp = Date.now();
   const url = 'http://localhost';
   const name = 'test';
 
   beforeEach(() => {
-    message = new GroupInvitationMessage({
-      timestamp,
+    message = new CommunityInvitationMessage({
+      createAtNetworkTimestamp,
       url,
       name,
       expirationType: null,

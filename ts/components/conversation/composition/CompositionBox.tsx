@@ -4,7 +4,6 @@ import { connect } from 'react-redux';
 import styled from 'styled-components';
 
 import { AbortController } from 'abort-controller';
-import { SuggestionDataItem } from 'react-mentions';
 
 import autoBind from 'auto-bind';
 import { Component, RefObject, createRef } from 'react';
@@ -15,23 +14,18 @@ import { SessionRecording } from '../SessionRecording';
 
 import { SettingsKey } from '../../../data/settings-key';
 import { showLinkSharingConfirmationModalDialog } from '../../../interactions/conversationInteractions';
-import { getConversationController } from '../../../session/conversations';
 import { ToastUtils } from '../../../session/utils';
 import { ReduxConversationType } from '../../../state/ducks/conversations';
 import { removeAllStagedAttachmentsInConversation } from '../../../state/ducks/stagedAttachments';
 import { StateType } from '../../../state/reducer';
+import { getQuotedMessage, getSelectedConversation } from '../../../state/selectors/conversations';
 import {
-  getMentionsInput,
-  getQuotedMessage,
-  getSelectedConversation,
-} from '../../../state/selectors/conversations';
-import {
+  getIsSelectedBlocked,
   getSelectedCanWrite,
   getSelectedConversationKey,
 } from '../../../state/selectors/selectedConversation';
 import { AttachmentType } from '../../../types/Attachment';
 import { processNewAttachment } from '../../../types/MessageAttachment';
-import { FixedBaseEmoji } from '../../../types/Reaction';
 import { AttachmentUtil } from '../../../util';
 import {
   StagedAttachmentImportedType,
@@ -58,6 +52,7 @@ import {
 import { CompositionTextArea } from './CompositionTextArea';
 import { cleanMentions, mentionsRegex } from './UserMentions';
 import { HTMLDirection } from '../../../util/i18n/rtlSupport';
+import type { FixedBaseEmoji } from '../../../types/Reaction';
 
 export interface ReplyingToMessageProps {
   convoId: string;
@@ -102,6 +97,7 @@ interface Props {
   selectedConversationKey?: string;
   selectedConversation: ReduxConversationType | undefined;
   typingEnabled: boolean;
+  isBlocked: boolean;
   quotedMessageProps?: ReplyingToMessageProps;
   stagedAttachments: Array<StagedAttachmentType>;
   onChoseAttachments: (newAttachments: Array<File>) => void;
@@ -389,7 +385,7 @@ class CompositionBoxInner extends Component<Props, State> {
 
   private renderCompositionView() {
     const { showEmojiPanel } = this.state;
-    const { typingEnabled } = this.props;
+    const { typingEnabled, isBlocked } = this.props;
 
     // we can only send a message if the conversation allows writing in it AND
     // - we've got a message body OR
@@ -398,6 +394,13 @@ class CompositionBoxInner extends Component<Props, State> {
       typingEnabled && (!isEmpty(this.state.draft) || !isEmpty(this.props.stagedAttachments));
 
     /* eslint-disable @typescript-eslint/no-misused-promises */
+
+    // we completely hide the composition box when typing is not enabled now.
+    // Actually not anymore. We want the above, except when we can't write because that user is blocked.
+    // When that user is blocked, **and only then**, we want to show the composition box, disabled with the placeholder "unblock to send".
+    if (!typingEnabled && !isBlocked) {
+      return null;
+    }
 
     return (
       <Flex
@@ -431,7 +434,6 @@ class CompositionBoxInner extends Component<Props, State> {
             }}
             container={this.container}
             textAreaRef={this.textarea}
-            fetchUsersForGroup={this.fetchUsersForGroup}
             typingEnabled={this.props.typingEnabled}
             onKeyDown={this.onKeyDown}
           />
@@ -440,7 +442,7 @@ class CompositionBoxInner extends Component<Props, State> {
           <ToggleEmojiButton ref={this.emojiPanelButton} onClick={this.toggleEmojiPanel} />
         )}
         {showSendButton && <SendMessageButton onClick={this.onSendMessage} />}
-        {typingEnabled && showEmojiPanel && (
+        {showEmojiPanel && (
           <StyledEmojiPanelContainer role="button" dir={this.props.htmlDirection}>
             <SessionEmojiPanel
               ref={this.emojiPanel}
@@ -453,90 +455,6 @@ class CompositionBoxInner extends Component<Props, State> {
       </Flex>
     );
   }
-
-  /* eslint-enable @typescript-eslint/no-misused-promises */
-
-  private fetchUsersForOpenGroup(
-    query: string,
-    callback: (data: Array<SuggestionDataItem>) => void
-  ) {
-    const mentionsInput = getMentionsInput(window?.inboxStore?.getState() || []);
-    const filtered =
-      mentionsInput
-        .filter(d => !!d)
-        .filter(d => d.authorProfileName !== 'Anonymous')
-        .filter(d => d.authorProfileName?.toLowerCase()?.includes(query.toLowerCase()))
-        // Transform the users to what react-mentions expects
-        .map(user => {
-          return {
-            display: user.authorProfileName,
-            id: user.id,
-          };
-        }) || [];
-
-    callback(filtered);
-  }
-
-  private fetchUsersForGroup(query: string, callback: (data: Array<SuggestionDataItem>) => void) {
-    let overridenQuery = query;
-    if (!query) {
-      overridenQuery = '';
-    }
-    if (!this.props.selectedConversation) {
-      return;
-    }
-
-    if (this.props.selectedConversation.isPrivate) {
-      return;
-    }
-
-    if (this.props.selectedConversation.isPublic) {
-      this.fetchUsersForOpenGroup(overridenQuery, callback);
-      return;
-    }
-    // can only be a closed group here
-    this.fetchUsersForClosedGroup(overridenQuery, callback);
-  }
-
-  private fetchUsersForClosedGroup(
-    query: string,
-    callback: (data: Array<SuggestionDataItem>) => void
-  ) {
-    const { selectedConversation } = this.props;
-    if (!selectedConversation) {
-      return;
-    }
-    const allPubKeys = selectedConversation.members;
-    if (!allPubKeys || allPubKeys.length === 0) {
-      return;
-    }
-
-    const allMembers = allPubKeys.map(pubKey => {
-      const conv = getConversationController().get(pubKey);
-      const profileName =
-        conv?.getNicknameOrRealUsernameOrPlaceholder() || window.i18n('anonymous');
-
-      return {
-        id: pubKey,
-        authorProfileName: profileName,
-      };
-    });
-    // keep anonymous members so we can still quote them with their id
-    const members = allMembers
-      .filter(d => !!d)
-      .filter(
-        d =>
-          d.authorProfileName?.toLowerCase()?.includes(query.toLowerCase()) || !d.authorProfileName
-      );
-
-    // Transform the users to what react-mentions expects
-    const mentionsData = members.map(user => ({
-      display: user.authorProfileName || window.i18n('anonymous'),
-      id: user.id,
-    }));
-    callback(mentionsData);
-  }
-
   private renderStagedLinkPreview(): JSX.Element | null {
     // Don't generate link previews if user has turned them off
     if (!(window.getSettingValue(SettingsKey.settingsLinkPreview) || false)) {
@@ -612,7 +530,7 @@ class CompositionBoxInner extends Component<Props, State> {
     // eslint-disable-next-line more/no-then
     getPreview(firstLink, abortController.signal)
       .then(ret => {
-        // we finished loading the preview, and checking the abortConrtoller, we are still not aborted.
+        // we finished loading the preview, and checking the abortController, we are still not aborted.
         // => update the staged preview
         if (this.linkPreviewAbortController && !this.linkPreviewAbortController.signal.aborted) {
           this.setState({
@@ -675,7 +593,7 @@ class CompositionBoxInner extends Component<Props, State> {
         // eslint-disable-next-line no-param-reassign
         attachment.caption = caption;
         ToastUtils.pushToastInfo('saved', window.i18n.stripped('saved'));
-        // close the lightbox on save
+        // close the light box on save
         this.setState({
           showCaptionEditor: undefined,
         });
@@ -822,10 +740,7 @@ class CompositionBoxInner extends Component<Props, State> {
       return;
     }
 
-    if (
-      !selectedConversation.isPrivate &&
-      (selectedConversation.left || selectedConversation.isKickedFromGroup)
-    ) {
+    if (!selectedConversation.isPrivate && selectedConversation.isKickedFromGroup) {
       ToastUtils.pushYouLeftTheGroup();
       return;
     }
@@ -850,7 +765,6 @@ class CompositionBoxInner extends Component<Props, State> {
         : undefined;
 
     try {
-      // this does not call call removeAllStagedAttachmentsInConvers
       const { attachments, previews } = await this.getFiles(linkPreview);
       this.props.sendMessage({
         body: messagePlaintext.trim(),
@@ -862,7 +776,7 @@ class CompositionBoxInner extends Component<Props, State> {
 
       window.inboxStore?.dispatch(
         removeAllStagedAttachmentsInConversation({
-          conversationKey: this.props.selectedConversationKey,
+          conversationId: this.props.selectedConversationKey,
         })
       );
       // Empty composition box and stagedAttachments
@@ -1027,6 +941,7 @@ const mapStateToProps = (state: StateType) => {
     selectedConversation: getSelectedConversation(state),
     selectedConversationKey: getSelectedConversationKey(state),
     typingEnabled: getSelectedCanWrite(state),
+    isBlocked: getIsSelectedBlocked(state),
   };
 };
 

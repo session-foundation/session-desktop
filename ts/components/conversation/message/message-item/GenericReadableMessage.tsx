@@ -6,15 +6,13 @@ import { useSelector } from 'react-redux';
 import styled, { keyframes } from 'styled-components';
 import { useIsDetailMessageView } from '../../../../contexts/isDetailViewContext';
 import { MessageRenderingProps } from '../../../../models/messageType';
-import { getConversationController } from '../../../../session/conversations';
+import { ConvoHub } from '../../../../session/conversations';
 import { StateType } from '../../../../state/reducer';
 import { useMessageSelected } from '../../../../state/selectors';
-import {
-  getGenericReadableMessageSelectorProps,
-  isMessageSelectionMode,
-} from '../../../../state/selectors/conversations';
+import { getGenericReadableMessageSelectorProps } from '../../../../state/selectors/conversations';
 import { MessageContentWithStatuses } from '../message-content/MessageContentWithStatus';
 import { StyledMessageReactionsContainer } from '../message-content/MessageReactions';
+import { useIsMessageSelectionMode } from '../../../../state/selectors/selectedConversation';
 
 export type GenericReadableMessageSelectorProps = Pick<
   MessageRenderingProps,
@@ -74,7 +72,7 @@ export const GenericReadableMessage = (props: Props) => {
 
   const isMessageSelected = useMessageSelected(props.messageId);
 
-  const multiSelectMode = useSelector(isMessageSelectionMode);
+  const multiSelectMode = useIsMessageSelectionMode();
 
   const [isRightClicked, setIsRightClicked] = useState(false);
   const onMessageLoseFocus = useCallback(() => {
@@ -97,7 +95,6 @@ export const GenericReadableMessage = (props: Props) => {
         isString(attachmentIndexStr) && !isNil(toNumber(attachmentIndexStr))
           ? toNumber(attachmentIndexStr)
           : 0;
-
       if (enableContextMenu) {
         contextMenu.hideAll();
         contextMenu.show({
@@ -115,7 +112,7 @@ export const GenericReadableMessage = (props: Props) => {
 
   useEffect(() => {
     if (msgProps?.convoId) {
-      const conversationModel = getConversationController().get(msgProps?.convoId);
+      const conversationModel = ConvoHub.use().get(msgProps?.convoId);
       if (conversationModel) {
         setEnableReactions(conversationModel.hasReactions());
       }

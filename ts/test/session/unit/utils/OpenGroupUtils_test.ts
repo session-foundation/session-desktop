@@ -96,7 +96,7 @@ describe('OpenGroupUtils', () => {
           serverPublicKey: '',
           serverUrl: 'https://example.org',
         })
-      ).to.throw('getCompleteUrlFromRoom needs serverPublicKey, roomid and serverUrl to be set');
+      ).to.throw('getCompleteUrlFromRoom needs serverPublicKey, roomId and serverUrl to be set');
     });
 
     it('throws if serverUrl is empty', () => {
@@ -106,7 +106,7 @@ describe('OpenGroupUtils', () => {
           serverPublicKey: '05123456789',
           serverUrl: '',
         })
-      ).to.throw('getCompleteUrlFromRoom needs serverPublicKey, roomid and serverUrl to be set');
+      ).to.throw('getCompleteUrlFromRoom needs serverPublicKey, roomId and serverUrl to be set');
     });
 
     it('throws if roomId is empty', () => {
@@ -116,7 +116,7 @@ describe('OpenGroupUtils', () => {
           serverPublicKey: '05123456789',
           serverUrl: 'https://example.org',
         })
-      ).to.throw('getCompleteUrlFromRoom needs serverPublicKey, roomid and serverUrl to be set');
+      ).to.throw('getCompleteUrlFromRoom needs serverPublicKey, roomId and serverUrl to be set');
     });
     it('throws if pubkey is null', () => {
       expect(() =>
@@ -125,7 +125,7 @@ describe('OpenGroupUtils', () => {
           serverPublicKey: null as any,
           serverUrl: 'https://example.org',
         })
-      ).to.throw('getCompleteUrlFromRoom needs serverPublicKey, roomid and serverUrl to be set');
+      ).to.throw('getCompleteUrlFromRoom needs serverPublicKey, roomId and serverUrl to be set');
     });
 
     it('throws if serverUrl is null', () => {
@@ -135,7 +135,7 @@ describe('OpenGroupUtils', () => {
           serverPublicKey: '05123456789',
           serverUrl: null as any,
         })
-      ).to.throw('getCompleteUrlFromRoom needs serverPublicKey, roomid and serverUrl to be set');
+      ).to.throw('getCompleteUrlFromRoom needs serverPublicKey, roomId and serverUrl to be set');
     });
 
     it('throws if roomId is null', () => {
@@ -145,7 +145,7 @@ describe('OpenGroupUtils', () => {
           serverPublicKey: '05123456789',
           serverUrl: 'https://example.org',
         })
-      ).to.throw('getCompleteUrlFromRoom needs serverPublicKey, roomid and serverUrl to be set');
+      ).to.throw('getCompleteUrlFromRoom needs serverPublicKey, roomId and serverUrl to be set');
     });
   });
 });

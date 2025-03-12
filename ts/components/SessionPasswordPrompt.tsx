@@ -6,7 +6,6 @@ import { toast } from 'react-toastify';
 import styled from 'styled-components';
 
 import { SessionButton, SessionButtonColor, SessionButtonType } from './basic/SessionButton';
-// import { SessionSpinner } from './basic/SessionSpinner';
 import { SessionTheme } from '../themes/SessionTheme';
 import { switchPrimaryColorTo } from '../themes/switchPrimaryColor';
 import { switchThemeTo } from '../themes/switchTheme';
@@ -43,8 +42,8 @@ const StyledContent = styled.div`
 
 // We cannot import toastutils from the password window as it is pulling the whole sending
 // pipeline(and causing crashes on Session instances with password)
-function pushToastError(id: string, title: string, description?: string) {
-  toast.error(<SessionToast title={title} description={description} />, {
+function pushToastError(id: string, description: string) {
+  toast.error(<SessionToast description={description} />, {
     toastId: id,
     updateId: id,
   });

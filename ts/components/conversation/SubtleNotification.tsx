@@ -1,28 +1,51 @@
-import { useMemo } from 'react';
+import { SessionDataTestId } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
-import { useIsIncomingRequest, useIsOutgoingRequest } from '../../hooks/useParamSelector';
+import {
+  useIsIncomingRequest,
+  useIsOutgoingRequest,
+  useNicknameOrProfileNameOrShortenedPubkey,
+} from '../../hooks/useParamSelector';
+import { PubKey } from '../../session/types';
 import { SessionUtilContact } from '../../session/utils/libsession/libsession_utils_contacts';
 import {
-  getSelectedHasMessages,
   hasSelectedConversationIncomingMessages,
+  hasSelectedConversationOutgoingMessages,
+  useSelectedHasMessages,
 } from '../../state/selectors/conversations';
 import {
   getSelectedCanWrite,
+  useSelectedConversationIdOrigin,
   useSelectedConversationKey,
   useSelectedHasDisabledBlindedMsgRequests,
+  useSelectedIsApproved,
+  useSelectedIsGroupOrCommunity,
+  useSelectedIsGroupV2,
   useSelectedIsNoteToSelf,
   useSelectedIsPrivate,
+  useSelectedIsPublic,
   useSelectedNicknameOrProfileNameOrShortenedPubkey,
 } from '../../state/selectors/selectedConversation';
-import { Localizer } from '../basic/Localizer';
+import {
+  useLibGroupDestroyed,
+  useLibGroupInviteGroupName,
+  useLibGroupInvitePending,
+  useLibGroupKicked,
+  useLibGroupWeHaveSecretKey,
+} from '../../state/selectors/userGroups';
+import { localize } from '../../localization/localeTools';
+import { SessionHtmlRenderer } from '../basic/SessionHTMLRenderer';
 
-const Container = styled.div`
+const Container = styled.div<{ noExtraPadding: boolean }>`
   display: flex;
   flex-direction: row;
   justify-content: center;
-  padding: var(--margins-lg);
   background-color: var(--background-secondary-color);
+
+  // add padding only if we have a child.
+  &:has(*:not(:empty)) {
+    padding: ${props => (props.noExtraPadding ? '' : 'var(--margins-lg)')};
+  }
 `;
 
 const TextInner = styled.div`
@@ -31,6 +54,24 @@ const TextInner = styled.div`
   max-width: 390px;
 `;
 
+function TextNotification({
+  html,
+  dataTestId,
+  noExtraPadding,
+}: {
+  html: string;
+  dataTestId: SessionDataTestId;
+  noExtraPadding: boolean;
+}) {
+  return (
+    <Container data-testid={dataTestId} noExtraPadding={noExtraPadding}>
+      <TextInner>
+        <SessionHtmlRenderer html={html} />
+      </TextInner>
+    </Container>
+  );
+}
+
 /**
  * This component is used to display a warning when the user is sending a message request.
  *
@@ -38,6 +79,7 @@ const TextInner = styled.div`
 export const ConversationOutgoingRequestExplanation = () => {
   const selectedConversation = useSelectedConversationKey();
   const isOutgoingMessageRequest = useIsOutgoingRequest(selectedConversation);
+  // FIXME: we shouldn't need to rely on incoming messages being present (they can be deleted, expire, etc)
   const hasIncomingMessages = useSelector(hasSelectedConversationIncomingMessages);
 
   const showMsgRequestUI = selectedConversation && isOutgoingMessageRequest;
@@ -54,7 +96,11 @@ export const ConversationOutgoingRequestExplanation = () => {
   // This works because a blinded conversation is not saved in libsession currently, and will only be once approved_me is true
   if (!contactFromLibsession || !contactFromLibsession.approvedMe) {
     return (
-      <Container data-testid={'empty-conversation-control-message'} style={{ padding: 0 }}>
+      <Container
+        data-testid={'empty-conversation-control-message'}
+        style={{ padding: 0 }}
+        noExtraPadding={true}
+      >
         <TextInner>{window.i18n('messageRequestPendingDescription')}</TextInner>
       </Container>
     );
@@ -71,55 +117,173 @@ export const ConversationIncomingRequestExplanation = () => {
   const isIncomingMessageRequest = useIsIncomingRequest(selectedConversation);
 
   const showMsgRequestUI = selectedConversation && isIncomingMessageRequest;
-  const hasIncomingMessages = useSelector(hasSelectedConversationIncomingMessages);
+  const hasOutgoingMessages = useSelector(hasSelectedConversationOutgoingMessages);
 
-  if (!showMsgRequestUI || !hasIncomingMessages) {
+  const isGroupV2 = useSelectedIsGroupV2();
+
+  if (isGroupV2) {
+    return <GroupRequestExplanation />;
+  }
+
+  if (!showMsgRequestUI || hasOutgoingMessages) {
     return null;
   }
 
   return (
-    <Container>
-      <TextInner>{window.i18n('messageRequestsAcceptDescription')}</TextInner>
+    <TextNotification
+      dataTestId="conversation-request-explanation"
+      html={window.i18n('messageRequestsAcceptDescription')}
+      noExtraPadding={true} // in this case, `TextNotification` is part of a bigger component spacing each already
+    />
+  );
+};
+
+const GroupRequestExplanation = () => {
+  const selectedConversation = useSelectedConversationKey();
+  const isIncomingMessageRequest = useIsIncomingRequest(selectedConversation);
+  const isGroupV2 = useSelectedIsGroupV2();
+  const showMsgRequestUI = selectedConversation && isIncomingMessageRequest;
+  // isApproved in DB is tracking the pending state for a group
+  const isApproved = useSelectedIsApproved();
+  const isGroupPendingInvite = useLibGroupInvitePending(selectedConversation);
+
+  if (!showMsgRequestUI || isApproved || !isGroupV2 || !isGroupPendingInvite) {
+    return null;
+  }
+  return (
+    <TextNotification
+      dataTestId="group-request-explanation"
+      html={window.i18n('messageRequestGroupInviteDescription')}
+      noExtraPadding={true} // in this case, `TextNotification` is part of a bigger component spacing each already
+    />
+  );
+};
+
+const InvitedToGroupControlMessage = () => {
+  const selectedConversation = useSelectedConversationKey();
+  const isGroupV2 = useSelectedIsGroupV2();
+  const hasMessages = useSelectedHasMessages();
+  const isApproved = useSelectedIsApproved();
+
+  const groupName = useLibGroupInviteGroupName(selectedConversation) || window.i18n('unknown');
+  const conversationOrigin = useSelectedConversationIdOrigin();
+  const adminNameInvitedUs =
+    useNicknameOrProfileNameOrShortenedPubkey(conversationOrigin) || window.i18n('unknown');
+  const isGroupPendingInvite = useLibGroupInvitePending(selectedConversation);
+  const weHaveSecretKey = useLibGroupWeHaveSecretKey(selectedConversation);
+
+  if (
+    !selectedConversation ||
+    isApproved ||
+    hasMessages || // we don't want to display that "xx invited you" message if there are already other messages (incoming or outgoing)
+    !isGroupV2 ||
+    (conversationOrigin && !PubKey.is05Pubkey(conversationOrigin)) ||
+    !isGroupPendingInvite
+  ) {
+    return null;
+  }
+  // when restoring from seed we might not have the pubkey of who invited us, in that case, we just use a fallback
+  const html = conversationOrigin
+    ? weHaveSecretKey
+      ? window.i18n('groupInviteReinvite', {
+          group_name: groupName,
+          name: adminNameInvitedUs,
+        })
+      : window.i18n('messageRequestGroupInvite', {
+          group_name: groupName,
+          name: adminNameInvitedUs,
+        })
+    : weHaveSecretKey
+      ? window.i18n('groupInviteReinviteYou', { group_name: groupName })
+      : window.i18n('groupInviteYou');
+
+  return (
+    <TextNotification
+      dataTestId="group-invite-control-message"
+      html={html}
+      noExtraPadding={true} // in this case, `TextNotification` is part of a bigger component spacing each already
+    />
+  );
+};
+
+export const InvitedToGroup = () => {
+  return (
+    <Container noExtraPadding={false}>
+      <InvitedToGroupControlMessage />
     </Container>
   );
 };
 
-/**
- * This component is used to display a warning when the user is looking at an empty conversation.
- */
 export const NoMessageInConversation = () => {
   const selectedConversation = useSelectedConversationKey();
-
-  const hasMessages = useSelector(getSelectedHasMessages);
+  const hasMessages = useSelectedHasMessages();
+  const isGroupV2 = useSelectedIsGroupV2();
+  const isGroupOrCommunity = useSelectedIsGroupOrCommunity();
+  const isInvitePending = useLibGroupInvitePending(selectedConversation);
 
   const isMe = useSelectedIsNoteToSelf();
   const canWrite = useSelector(getSelectedCanWrite);
   const privateBlindedAndBlockingMsgReqs = useSelectedHasDisabledBlindedMsgRequests();
+
+  const isPrivate = useSelectedIsPrivate();
+  const isIncomingRequest = useIsIncomingRequest(selectedConversation);
+  const isKickedFromGroup = useLibGroupKicked(selectedConversation);
+  const isGroupDestroyed = useLibGroupDestroyed(selectedConversation);
   const name = useSelectedNicknameOrProfileNameOrShortenedPubkey();
+  const isPublic = useSelectedIsPublic();
 
-  const content = useMemo(() => {
+  const getHtmlToRender = () => {
+    // First, handle the "noteToSelf and various "private" cases
     if (isMe) {
-      return <Localizer token="noteToSelfEmpty" />;
+      return localize('noteToSelfEmpty').toString();
     }
-
-    if (canWrite) {
-      return <Localizer token="groupNoMessages" args={{ group_name: name }} />;
-    }
-
     if (privateBlindedAndBlockingMsgReqs) {
-      return <Localizer token="messageRequestsTurnedOff" args={{ name }} />;
+      return localize('messageRequestsTurnedOff').withArgs({ name }).toString();
+    }
+    if (isPrivate) {
+      // "You have no messages from X. Send a message to start the conversation!"
+      return localize('groupNoMessages').withArgs({ group_name: name }).toString();
     }
 
-    return <Localizer token="conversationsEmpty" args={{ conversation_name: name }} />;
-  }, [isMe, canWrite, privateBlindedAndBlockingMsgReqs, name]);
+    if (isPublic) {
+      return localize('conversationsEmpty').withArgs({ conversation_name: name }).toString();
+    }
 
-  if (!selectedConversation || hasMessages) {
+    // a "group but not public" is a legacy or a groupv2 (isPublic is handled just above)
+    if (isGroupOrCommunity) {
+      if (isGroupDestroyed) {
+        return localize('groupDeletedMemberDescription').withArgs({ group_name: name }).toString();
+      }
+
+      if (isKickedFromGroup) {
+        return localize('groupRemovedYou').withArgs({ group_name: name }).toString();
+      }
+      if (canWrite) {
+        // "You have no messages from X. Send a message to start the conversation!"
+        return localize('groupNoMessages').withArgs({ group_name: name }).toString();
+      }
+      // if we cannot write for some reason, don't show the "send a message" part
+      return localize('conversationsEmpty').withArgs({ conversation_name: name }).toString();
+    }
+
+    return localize('conversationsEmpty').withArgs({ conversation_name: name }).toString();
+  };
+
+  // groupV2 use its own invite logic as part of <GroupRequestExplanation />
+  if (
+    !selectedConversation ||
+    hasMessages ||
+    (isGroupV2 && isInvitePending) ||
+    (isPrivate && isIncomingRequest)
+  ) {
     return null;
   }
 
   return (
-    <Container data-testid="empty-conversation-notification">
-      <TextInner>{content}</TextInner>
-    </Container>
+    <TextNotification
+      dataTestId={'empty-conversation-control-message'}
+      html={getHtmlToRender()}
+      noExtraPadding={false} // in this case, `TextNotification` is **not** part of a bigger component so we need to add some spacing
+    />
   );
 };

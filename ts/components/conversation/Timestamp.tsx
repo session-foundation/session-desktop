@@ -3,7 +3,7 @@ import useUpdate from 'react-use/lib/useUpdate';
 import styled from 'styled-components';
 import { CONVERSATION } from '../../session/constants';
 import { getConversationItemString } from '../../util/i18n/formatting/conversationItemTimestamp';
-import { formatFullDate } from '../../util/i18n/formatting/generics';
+import { useFormatFullDate } from '../../hooks/useFormatFullDate';
 
 type Props = {
   timestamp?: number;
@@ -37,6 +37,7 @@ export const Timestamp = (props: Props) => {
   useInterval(update, UPDATE_FREQUENCY);
 
   const { timestamp, isConversationSearchResult } = props;
+  const formattedFullDate = useFormatFullDate(timestamp);
 
   if (timestamp === null || timestamp === undefined) {
     return null;
@@ -48,7 +49,7 @@ export const Timestamp = (props: Props) => {
   if (timestamp !== CONVERSATION.LAST_JOINED_FALLBACK_TIMESTAMP) {
     dateString = getConversationItemString(new Date(timestamp));
 
-    title = formatFullDate(new Date(timestamp));
+    title = formattedFullDate;
   }
 
   if (isConversationSearchResult) {

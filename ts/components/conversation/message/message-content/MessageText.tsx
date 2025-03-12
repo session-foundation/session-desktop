@@ -1,49 +1,66 @@
 import classNames from 'classnames';
 
-import { useSelector } from 'react-redux';
-import { isOpenOrClosedGroup } from '../../../../models/conversationAttributes';
-import { MessageRenderingProps } from '../../../../models/messageType';
-import { StateType } from '../../../../state/reducer';
-import {
-  getMessageTextProps,
-  isMessageSelectionMode,
-} from '../../../../state/selectors/conversations';
+import styled from 'styled-components';
 import { SessionIcon } from '../../../icon';
 import { MessageBody } from './MessageBody';
+import {
+  useMessageDirection,
+  useMessageIsDeleted,
+  useMessageText,
+} from '../../../../state/selectors';
+import {
+  useIsMessageSelectionMode,
+  useSelectedIsGroupOrCommunity,
+} from '../../../../state/selectors/selectedConversation';
+import type { WithMessageId } from '../../../../session/types/with';
 
-type Props = {
-  messageId: string;
-};
+type Props = WithMessageId;
 
-export type MessageTextSelectorProps = Pick<
-  MessageRenderingProps,
-  'text' | 'direction' | 'status' | 'isDeleted' | 'conversationType'
->;
+const StyledMessageText = styled.div<{ isDeleted?: boolean }>`
+  white-space: pre-wrap;
 
-export const MessageText = (props: Props) => {
-  const selected = useSelector((state: StateType) => getMessageTextProps(state, props.messageId));
-  const multiSelectMode = useSelector(isMessageSelectionMode);
-
-  if (!selected) {
-    return null;
+  svg {
+    margin-inline-end: var(--margins-xs);
   }
-  const { text, isDeleted, conversationType } = selected;
 
-  const contents = isDeleted ? window.i18n('deleteMessageDeleted', { count: 1 }) : text?.trim();
+  ${({ isDeleted }) =>
+    isDeleted &&
+    `
+    display: flex;
+    align-items: center;
+    `}
+`;
+
+export const MessageText = ({ messageId }: Props) => {
+  const multiSelectMode = useIsMessageSelectionMode();
+  const direction = useMessageDirection(messageId);
+  const isDeleted = useMessageIsDeleted(messageId);
+  const text = useMessageText(messageId);
+  const isOpenOrClosedGroup = useSelectedIsGroupOrCommunity();
+  const contents = isDeleted ? window.i18n('deleteMessageDeletedGlobally') : text?.trim();
 
   if (!contents) {
     return null;
   }
 
+  const iconColor =
+    direction === 'incoming'
+      ? 'var(--message-bubbles-received-text-color)'
+      : 'var(--message-bubbles-sent-text-color)';
+
   return (
-    <div dir="auto" className={classNames('module-message__text')}>
-      {isDeleted && <SessionIcon iconType="delete" iconSize="small" />}
+    <StyledMessageText
+      dir="auto"
+      className={classNames('module-message__text')}
+      isDeleted={isDeleted}
+    >
+      {isDeleted && <SessionIcon iconType="delete" iconSize="small" iconColor={iconColor} />}
       <MessageBody
         text={contents || ''}
         disableLinks={multiSelectMode}
         disableJumbomoji={false}
-        isGroup={isOpenOrClosedGroup(conversationType)}
+        isGroup={isOpenOrClosedGroup}
       />
-    </div>
+    </StyledMessageText>
   );
 };

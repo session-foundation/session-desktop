@@ -1,7 +1,6 @@
 import classNames from 'classnames';
 import { isEqual } from 'lodash';
-import { memo, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { memo, SessionDataTestId, useState } from 'react';
 import styled from 'styled-components';
 
 import { useDisableDrag } from '../../hooks/useDisableDrag';
@@ -11,10 +10,10 @@ import {
   useConversationUsername,
   useIsClosedGroup,
 } from '../../hooks/useParamSelector';
-import { isMessageSelectionMode } from '../../state/selectors/conversations';
 import { SessionIcon } from '../icon';
 import { AvatarPlaceHolder } from './AvatarPlaceHolder/AvatarPlaceHolder';
 import { ClosedGroupAvatar } from './AvatarPlaceHolder/ClosedGroupAvatar';
+import { useIsMessageSelectionMode } from '../../state/selectors/selectedConversation';
 
 export enum AvatarSize {
   XS = 28,
@@ -32,7 +31,8 @@ type Props = {
   size: AvatarSize;
   base64Data?: string; // if this is not empty, it will be used to render the avatar with base64 encoded data
   onAvatarClick?: () => void;
-  dataTestId?: string;
+  dataTestId?: SessionDataTestId;
+  imageDataTestId?: SessionDataTestId;
 };
 
 const Identicon = (props: Pick<Props, 'forcedName' | 'pubkey' | 'size'>) => {
@@ -114,11 +114,19 @@ const AvatarImage = (
 };
 
 const AvatarInner = (props: Props) => {
-  const { base64Data, size, pubkey, forcedAvatarPath, forcedName, dataTestId, onAvatarClick } =
-    props;
+  const {
+    base64Data,
+    size,
+    pubkey,
+    forcedAvatarPath,
+    forcedName,
+    dataTestId,
+    imageDataTestId,
+    onAvatarClick,
+  } = props;
   const [imageBroken, setImageBroken] = useState(false);
 
-  const isSelectingMessages = useSelector(isMessageSelectionMode);
+  const isSelectingMessages = useIsMessageSelectionMode();
 
   const isClosedGroup = useIsClosedGroup(pubkey);
   const avatarPath = useAvatarPath(pubkey);
@@ -137,6 +145,7 @@ const AvatarInner = (props: Props) => {
   const hasImage = (base64Data || urlToLoad) && !imageBroken && !isClosedGroup;
 
   const isClickable = !!onAvatarClick;
+
   return (
     <div
       className={classNames(
@@ -167,7 +176,7 @@ const AvatarInner = (props: Props) => {
           imageBroken={imageBroken}
           name={forcedName || name}
           handleImageError={handleImageError}
-          dataTestId={dataTestId ? `img-${dataTestId}` : undefined}
+          dataTestId={imageDataTestId}
         />
       ) : (
         <NoImage

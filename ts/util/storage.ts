@@ -93,12 +93,12 @@ function reset() {
   items = Object.create(null);
 }
 
-function getBoolOrFalse(settingsKey: string): boolean {
-  const got = Storage.get(settingsKey, false);
+function getBoolOr(settingsKey: string, fallback: boolean): boolean {
+  const got = Storage.get(settingsKey, fallback);
   if (isBoolean(got)) {
     return got;
   }
-  return false;
+  return fallback;
 }
 
 export async function setLocalPubKey(pubkey: string) {
@@ -171,4 +171,4 @@ export function getPasswordHash() {
   return Storage.get('passHash') as string;
 }
 
-export const Storage = { fetch, put, get, getBoolOrFalse, remove, onready, reset };
+export const Storage = { fetch, put, get, getBoolOr, remove, onready, reset };

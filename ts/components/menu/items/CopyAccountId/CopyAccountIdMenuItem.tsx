@@ -1,8 +1,8 @@
 import { useIsPrivate } from '../../../../hooks/useParamSelector';
 import { copyPublicKeyByConvoId } from '../../../../interactions/conversationInteractions';
 import { Localizer } from '../../../basic/Localizer';
-import { showCopyAccountIdAction } from '.';
 import { ItemWithDataTestId } from '../MenuItemWithDataTestId';
+import { showCopyAccountIdAction } from './guard';
 
 /**
  * Can be used to copy the conversation AccountID or the message's author sender'id.
@@ -10,8 +10,6 @@ import { ItemWithDataTestId } from '../MenuItemWithDataTestId';
  */
 export const CopyAccountIdMenuItem = ({ pubkey }: { pubkey: string }): JSX.Element | null => {
   const isPrivate = useIsPrivate(pubkey);
-
-  // we want to show the copyId for communities only
 
   if (showCopyAccountIdAction({ isPrivate, pubkey })) {
     return (

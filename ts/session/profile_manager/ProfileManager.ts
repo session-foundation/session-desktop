@@ -1,11 +1,12 @@
 import { isEmpty, isNil } from 'lodash';
+import { ConvoHub } from '../conversations';
 import { setLastProfileUpdateTimestamp } from '../../util/storage';
 import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
-import { getConversationController } from '../conversations';
 import { SyncUtils, UserUtils } from '../utils';
 import { fromHexToArray, sanitizeSessionUsername, toHex } from '../utils/String';
 import { AvatarDownload } from '../utils/job_runners/jobs/AvatarDownloadJob';
 import { CONVERSATION_PRIORITIES, ConversationTypeEnum } from '../../models/types';
+import { RetrieveDisplayNameError } from '../utils/errors';
 
 export type Profile = {
   displayName: string | undefined;
@@ -19,16 +20,15 @@ export type Profile = {
  */
 async function updateOurProfileSync({ displayName, profileUrl, profileKey, priority }: Profile) {
   const us = UserUtils.getOurPubKeyStrFromCache();
-  const ourConvo = getConversationController().get(us);
+  const ourConvo = ConvoHub.use().get(us);
   if (!ourConvo?.id) {
     window?.log?.warn('[profileupdate] Cannot update our profile without convo associated');
     return;
   }
 
   await updateProfileOfContact(us, displayName, profileUrl, profileKey);
-  if (priority !== null && ourConvo.get('priority') !== priority) {
-    ourConvo.set('priority', priority);
-    await ourConvo.commit();
+  if (priority !== null) {
+    await ourConvo.setPriorityFromWrapper(priority, true);
   }
 }
 
@@ -41,14 +41,14 @@ async function updateProfileOfContact(
   profileUrl: string | null | undefined,
   profileKey: Uint8Array | null | undefined
 ) {
-  const conversation = getConversationController().get(pubkey);
-  // TODO we should make sure that this function does not get call directly when `updateOurProfileSync` should be called instead. I.e. for avatars received in messages from ourself
+  const conversation = ConvoHub.use().get(pubkey);
+
   if (!conversation || !conversation.isPrivate()) {
     window.log.warn('updateProfileOfContact can only be used for existing and private convos');
     return;
   }
   let changes = false;
-  const existingDisplayName = conversation.get('displayNameInProfile');
+  const existingDisplayName = conversation.getRealSessionUsername();
 
   // avoid setting the display name to an invalid value
   if (existingDisplayName !== displayName && !isEmpty(displayName)) {
@@ -60,8 +60,8 @@ async function updateProfileOfContact(
 
   let avatarChanged = false;
   // trust whatever we get as an update. It either comes from a shared config wrapper or one of that user's message. But in any case we should trust it, even if it gets resetted.
-  const prevPointer = conversation.get('avatarPointer');
-  const prevProfileKey = conversation.get('profileKey');
+  const prevPointer = conversation.getAvatarPointer();
+  const prevProfileKey = conversation.getProfileKey();
 
   // we have to set it right away and not in the async download job, as the next .commit will save it to the
   // database and wrapper (and we do not want to override anything in the wrapper's content
@@ -100,24 +100,21 @@ async function updateProfileOfContact(
  * When registering a user/linking a device, we want to enforce a limit on the displayName length.
  * That limit is enforced by libsession when calling `setName` on the `UserConfigWrapper`.
  * `updateOurProfileDisplayNameOnboarding` is used to create a temporary `UserConfigWrapper`, call `setName` on it and release the memory used by the wrapper.
- * @returns the set displayName set if no error where thrown.
+ * @returns the set displayName set if no error where thrown
+ * @note Make sure the displayName has been trimmed and validated first.
  */
 async function updateOurProfileDisplayNameOnboarding(newName: string) {
-  const cleanName = sanitizeSessionUsername(newName).trim();
-
   try {
     // create a temp user config wrapper to test the display name with libsession
     const privKey = new Uint8Array(64);
     crypto.getRandomValues(privKey);
     await UserConfigWrapperActions.init(privKey, null);
     // this throws if the name is too long
-    await UserConfigWrapperActions.setName(cleanName);
+    await UserConfigWrapperActions.setName(newName);
     const appliedName = await UserConfigWrapperActions.getName();
 
     if (isNil(appliedName)) {
-      throw new Error(
-        'updateOurProfileDisplayNameOnboarding failed to retrieve name after setting it'
-      );
+      throw new RetrieveDisplayNameError();
     }
 
     return appliedName;
@@ -128,7 +125,7 @@ async function updateOurProfileDisplayNameOnboarding(newName: string) {
 
 async function updateOurProfileDisplayName(newName: string) {
   const ourNumber = UserUtils.getOurPubKeyStrFromCache();
-  const conversation = await getConversationController().getOrCreateAndWait(
+  const conversation = await ConvoHub.use().getOrCreateAndWait(
     ourNumber,
     ConversationTypeEnum.PRIVATE
   );
@@ -143,7 +140,7 @@ async function updateOurProfileDisplayName(newName: string) {
   await UserConfigWrapperActions.setNameTruncated(sanitizeSessionUsername(newName).trim());
   const truncatedName = await UserConfigWrapperActions.getName();
   if (isNil(truncatedName)) {
-    throw new Error('updateOurProfileDisplayName: failed to get truncated displayName back');
+    throw new RetrieveDisplayNameError();
   }
   await UserConfigWrapperActions.setPriority(dbPriority);
   if (dbProfileUrl && !isEmpty(dbProfileKey)) {

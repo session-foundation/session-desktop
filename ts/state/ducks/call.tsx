@@ -16,7 +16,7 @@ export const initialCallState: CallStateType = {
 };
 
 /**
- * This slice is the one holding the default joinable rooms fetched once in a while from the default opengroup v2 server.
+ * This slice is the one holding the redux slice representing our current call state.
  */
 const callSlice = createSlice({
   name: 'call',

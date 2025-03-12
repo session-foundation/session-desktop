@@ -5,6 +5,7 @@ import {
   getBlockOrUnblockUserModalState,
   getChangeNickNameDialog,
   getConfirmModal,
+  getDebugMenuModalState,
   getDeleteAccountModalState,
   getEditProfileDialog,
   getEditProfilePictureModalState,
@@ -43,6 +44,7 @@ import { UserDetailsDialog } from './UserDetailsDialog';
 import { EditProfileDialog } from './edit-profile/EditProfileDialog';
 import { OpenUrlModal } from './OpenUrlModal';
 import { BlockOrUnblockDialog } from './blockOrUnblock/BlockOrUnblockDialog';
+import { DebugMenuModal } from './debug/DebugMenuModal';
 
 export const ModalContainer = () => {
   const confirmModalState = useSelector(getConfirmModal);
@@ -66,9 +68,18 @@ export const ModalContainer = () => {
   const hideRecoveryPasswordModalState = useSelector(getHideRecoveryPasswordModalState);
   const openUrlModalState = useSelector(getOpenUrlModalState);
   const lightBoxOptions = useSelector(getLightBoxOptions);
+  const debugMenuModalState = useSelector(getDebugMenuModalState);
 
+  // NOTE the order of the modals is important for the z-index
   return (
     <>
+      {/* Screens */}
+      {sessionPasswordModalState && <SessionSetPasswordDialog {...sessionPasswordModalState} />}
+      {editProfileModalState && <EditProfileDialog {...editProfileModalState} />}
+      {onionPathModalState && <OnionPathModal {...onionPathModalState} />}
+      {reactListModalState && <ReactListModal {...reactListModalState} />}
+      {debugMenuModalState && <DebugMenuModal {...debugMenuModalState} />}
+      {/* Actions */}
       {banOrUnbanUserModalState && <BanOrUnBanUserDialog {...banOrUnbanUserModalState} />}
       {blockOrUnblockModalState && <BlockOrUnblockDialog {...blockOrUnblockModalState} />}
       {inviteModalState && <InviteContactsDialog {...inviteModalState} />}
@@ -80,13 +91,8 @@ export const ModalContainer = () => {
       {updateGroupNameModalState && <UpdateGroupNameDialog {...updateGroupNameModalState} />}
       {userDetailsModalState && <UserDetailsDialog {...userDetailsModalState} />}
       {changeNicknameModal && <SessionNicknameDialog {...changeNicknameModal} />}
-      {editProfileModalState && <EditProfileDialog {...editProfileModalState} />}
-      {onionPathModalState && <OnionPathModal {...onionPathModalState} />}
       {enterPasswordModalState && <EnterPasswordModal {...enterPasswordModalState} />}
-      {sessionPasswordModalState && <SessionSetPasswordDialog {...sessionPasswordModalState} />}
       {deleteAccountModalState && <DeleteAccountModal {...deleteAccountModalState} />}
-      {confirmModalState && <SessionConfirm {...confirmModalState} />}
-      {reactListModalState && <ReactListModal {...reactListModalState} />}
       {reactClearAllModalState && <ReactClearAllModal {...reactClearAllModalState} />}
       {editProfilePictureModalState && (
         <EditProfilePictureModal {...editProfilePictureModalState} />
@@ -94,8 +100,10 @@ export const ModalContainer = () => {
       {hideRecoveryPasswordModalState && (
         <HideRecoveryPasswordDialog {...hideRecoveryPasswordModalState} />
       )}
-      {openUrlModalState && <OpenUrlModal {...openUrlModalState} />}
       {lightBoxOptions && <LightboxGallery {...lightBoxOptions} />}
+      {openUrlModalState && <OpenUrlModal {...openUrlModalState} />}
+      {/* Should be on top of all other modals */}
+      {confirmModalState && <SessionConfirm {...confirmModalState} />}
     </>
   );
 };

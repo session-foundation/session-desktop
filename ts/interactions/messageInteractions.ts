@@ -7,7 +7,7 @@ import {
   isOpenGroupV2,
   openGroupV2CompleteURLRegex,
 } from '../session/apis/open_group_api/utils/OpenGroupUtils';
-import { getConversationController } from '../session/conversations';
+import { ConvoHub } from '../session/conversations';
 import { PubKey } from '../session/types';
 import { ToastUtils } from '../session/utils';
 
@@ -59,18 +59,20 @@ export function unbanUser(userToUnBan: string, conversationId: string) {
 }
 
 export function copyBodyToClipboard(body?: string | null) {
-  window.clipboard.writeText(body);
+  if (body) {
+    window.clipboard.writeText(body);
 
-  ToastUtils.pushCopiedToClipBoard();
+    ToastUtils.pushCopiedToClipBoard();
+  }
 }
 
 export async function removeSenderFromModerator(sender: string, convoId: string) {
   try {
     const pubKeyToRemove = PubKey.cast(sender);
-    const convo = getConversationController().getOrThrow(convoId);
+    const convo = ConvoHub.use().getOrThrow(convoId);
 
     const userDisplayName =
-      getConversationController().get(sender)?.getNicknameOrRealUsernameOrPlaceholder() ||
+      ConvoHub.use().get(sender)?.getNicknameOrRealUsernameOrPlaceholder() ||
       window.i18n('unknown');
 
     const roomInfo = convo.toOpenGroupV2();
@@ -91,7 +93,7 @@ export async function removeSenderFromModerator(sender: string, convoId: string)
 export async function addSenderAsModerator(sender: string, convoId: string) {
   try {
     const pubKeyToAdd = PubKey.cast(sender);
-    const convo = getConversationController().getOrThrow(convoId);
+    const convo = ConvoHub.use().getOrThrow(convoId);
 
     const roomInfo = convo.toOpenGroupV2();
     const res = await sogsV3AddAdmin([pubKeyToAdd], roomInfo);
@@ -102,7 +104,7 @@ export async function addSenderAsModerator(sender: string, convoId: string) {
     } else {
       window?.log?.info(`${pubKeyToAdd.key} added to moderators...`);
       const userDisplayName =
-        getConversationController().get(sender)?.getNicknameOrRealUsernameOrPlaceholder() ||
+        ConvoHub.use().get(sender)?.getNicknameOrRealUsernameOrPlaceholder() ||
         window.i18n('unknown');
       ToastUtils.pushUserAddedToModerators(userDisplayName);
     }
@@ -126,7 +128,7 @@ const acceptOpenGroupInvitationV2 = (completeUrl: string, roomName?: string) => 
         },
       },
       onClickOk: async () => {
-        await joinOpenGroupV2WithUIEvents(completeUrl, true, false);
+        await joinOpenGroupV2WithUIEvents(completeUrl, true);
       },
 
       onClickClose,

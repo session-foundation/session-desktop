@@ -122,9 +122,9 @@ export type SessionButtonProps = {
   onClick?: any;
   children?: ReactNode;
   margin?: string;
+  dataTestId?: React.SessionDataTestId;
   reference?: RefObject<HTMLButtonElement>;
   className?: string;
-  dataTestId?: string;
 };
 
 export const SessionButton = (props: SessionButtonProps) => {

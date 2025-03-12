@@ -1,36 +1,9 @@
 import { Locale } from 'date-fns';
 import { CrowdinLocale } from '../../localization/constants';
-import { en } from '../../localization/locales';
-import type { LocalizerDictionary } from '../../types/localizer';
 import { timeLocaleMap } from './timeLocaleMap';
 
 let mappedBrowserLocaleDisplayed = false;
 let crowdinLocale: CrowdinLocale | undefined;
-let translationDictionary: LocalizerDictionary | undefined;
-
-/**
- * Only exported for testing, reset the dictionary to use for translations and the locale set
- */
-export function resetLocaleAndTranslationDict() {
-  translationDictionary = undefined;
-  crowdinLocale = undefined;
-}
-
-/**
- * Returns the current dictionary to use for translations.
- */
-export function getTranslationDictionary(): LocalizerDictionary {
-  if (translationDictionary) {
-    return translationDictionary;
-  }
-
-  i18nLog('getTranslationDictionary: dictionary not init yet. Using en.');
-  return en;
-}
-
-export function getFallbackDictionary(): LocalizerDictionary {
-  return en;
-}
 
 /**
  * Logs an i18n message to the console.
@@ -106,34 +79,13 @@ export function getBrowserLocale() {
   }
 }
 
-export function setInitialLocale(crowdinLocaleArg: CrowdinLocale, dictionary: LocalizerDictionary) {
-  if (translationDictionary || crowdinLocale) {
-    throw new Error('setInitialLocale: translationDictionary or crowdinLocale is already init');
+export function setInitialLocale(crowdinLocaleArg: CrowdinLocale) {
+  if (crowdinLocale) {
+    i18nLog('setInitialLocale: crowdinLocale is already init');
   }
-  translationDictionary = dictionary;
   crowdinLocale = crowdinLocaleArg;
 }
 
 export function isSessionLocaleSet() {
   return !!crowdinLocale;
-}
-
-export function getStringForCardinalRule(
-  localizedString: string,
-  cardinalRule: Intl.LDMLPluralRule
-): string | undefined {
-  // TODO: investigate if this is the best way to handle regex like this
-  // We need block scoped regex to avoid running into this issue:
-  // https://stackoverflow.com/questions/18462784/why-is-javascript-regex-matching-every-second-time
-  const cardinalPluralRegex: Record<Intl.LDMLPluralRule, RegExp> = {
-    zero: /zero \[(.*?)\]/g,
-    one: /one \[(.*?)\]/g,
-    two: /two \[(.*?)\]/g,
-    few: /few \[(.*?)\]/g,
-    many: /many \[(.*?)\]/g,
-    other: /other \[(.*?)\]/g,
-  };
-  const regex = cardinalPluralRegex[cardinalRule];
-  const match = regex.exec(localizedString);
-  return match?.[1] ?? undefined;
 }

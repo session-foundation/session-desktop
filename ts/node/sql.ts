@@ -22,9 +22,11 @@ import {
   last,
   map,
   omit,
+  some,
   uniq,
 } from 'lodash';
 
+import { GroupPubkeyType } from 'libsession_util_nodejs';
 import { ConversationAttributes } from '../models/conversationAttributes';
 import { PubKey } from '../session/types/PubKey'; // checked - only node
 import { redactAll } from '../util/privacy'; // checked - only node
@@ -46,6 +48,7 @@ import {
   NODES_FOR_PUBKEY_TABLE,
   objectToJSON,
   OPEN_GROUP_ROOMS_V2_TABLE,
+  SEEN_MESSAGE_TABLE,
   toSqliteBoolean,
 } from './database_utility';
 import type { SetupI18nReturnType } from '../types/localizer'; // checked - only node
@@ -56,16 +59,23 @@ import {
   MsgDuplicateSearchOpenGroup,
   roomHasBlindEnabled,
   SaveConversationReturn,
+  SaveSeenMessageHash,
   UnprocessedDataNode,
   UnprocessedParameter,
   UpdateLastHashType,
 } from '../types/sqlSharedTypes';
 
 import { KNOWN_BLINDED_KEYS_ITEM, SettingsKey } from '../data/settings-key';
+import {
+  FindAllMessageFromSendersInConversationTypeArgs,
+  FindAllMessageHashesInConversationMatchingAuthorTypeArgs,
+  FindAllMessageHashesInConversationTypeArgs,
+} from '../data/sharedDataTypes';
 import { MessageAttributes } from '../models/messageType';
 import { SignalService } from '../protobuf';
 import { Quote } from '../receiver/types';
 import { DURATION } from '../session/constants';
+import { createDeleter, getAttachmentsPath } from '../shared/attachments/shared_attachments';
 import { ed25519Str } from '../session/utils/String';
 import {
   getSQLCipherIntegrityCheck,
@@ -148,7 +158,7 @@ async function initializeSql({
   i18n: SetupI18nReturnType;
   passwordAttempt: boolean;
 }) {
-  console.info('initializeSql sqlnode');
+  console.info('initializeSql sql node');
   if (isInstanceInitialized()) {
     throw new Error('Cannot initialize more than once!');
   }
@@ -232,7 +242,7 @@ async function initializeSql({
   return true;
 }
 
-function removeDB(configDir = null) {
+function removeDB(configDir: string | null = null) {
   if (isInstanceInitialized()) {
     throw new Error('removeDB: Cannot erase database when it is open!');
   }
@@ -289,7 +299,7 @@ function getGuardNodes() {
 function updateGuardNodes(nodes: Array<string>) {
   assertGlobalInstance().transaction(() => {
     assertGlobalInstance().exec(`DELETE FROM ${GUARD_NODE_TABLE}`);
-    nodes.map(edkey =>
+    nodes.map(edKey =>
       assertGlobalInstance()
         .prepare(
           `INSERT INTO ${GUARD_NODE_TABLE} (
@@ -297,7 +307,7 @@ function updateGuardNodes(nodes: Array<string>) {
       ) values ($ed25519PubKey)`
         )
         .run({
-          ed25519PubKey: edkey,
+          ed25519PubKey: edKey,
         })
     );
   })();
@@ -464,6 +474,7 @@ function saveConversation(data: ConversationAttributes): SaveConversationReturn 
     expirationMode,
     expireTimer,
     hasOutdatedClient,
+    isExpired03Group,
     lastMessage,
     lastMessageStatus,
     lastMessageInteractionType,
@@ -485,8 +496,8 @@ function saveConversation(data: ConversationAttributes): SaveConversationReturn 
     blocksSogsMsgReqsTimestamp,
   } = formatted;
 
-  const omited = omit(formatted);
-  const keys = Object.keys(omited);
+  const omitted = omit(formatted);
+  const keys = Object.keys(omitted);
   const columnsCommaSeparated = keys.join(', ');
   const valuesArgs = keys.map(k => `$${k}`).join(', ');
 
@@ -517,6 +528,7 @@ function saveConversation(data: ConversationAttributes): SaveConversationReturn 
       expirationMode,
       expireTimer,
       hasOutdatedClient,
+      isExpired03Group,
       lastMessageStatus,
       lastMessage: shortenedLastMessage,
       lastMessageInteractionType,
@@ -840,6 +852,8 @@ function saveMessage(data: MessageAttributes) {
     expireTimer,
     expirationStartTimestamp,
     flags,
+    messageHash,
+    errors,
   } = data;
 
   if (!id) {
@@ -872,6 +886,8 @@ function saveMessage(data: MessageAttributes) {
     type: type || '',
     unread,
     flags: flags ?? 0,
+    messageHash,
+    errors,
   };
 
   assertGlobalInstance()
@@ -896,7 +912,9 @@ function saveMessage(data: MessageAttributes) {
     source,
     type,
     unread,
-    flags
+    flags,
+    messageHash,
+    errors
   ) values (
     $id,
     $json,
@@ -917,7 +935,9 @@ function saveMessage(data: MessageAttributes) {
     $source,
     $type,
     $unread,
-    $flags
+    $flags,
+    $messageHash,
+    $errors
   );`
     )
     .run(payload);
@@ -925,10 +945,19 @@ function saveMessage(data: MessageAttributes) {
   return id;
 }
 
-function saveSeenMessageHashes(arrayOfHashes: Array<string>) {
+function saveSeenMessageHashes(arrayOfHashes: Array<SaveSeenMessageHash>) {
   assertGlobalInstance().transaction(() => {
     map(arrayOfHashes, saveSeenMessageHash);
   })();
+}
+
+function emptySeenMessageHashesForConversation(conversationId: string) {
+  if (!isString(conversationId) || isEmpty(conversationId)) {
+    throw new Error('emptySeenMessageHashesForConversation: conversationId is not a string');
+  }
+  assertGlobalInstance()
+    .prepare(`DELETE FROM ${SEEN_MESSAGE_TABLE} WHERE conversationId=$conversationId`)
+    .run({ conversationId });
 }
 
 function updateLastHash(data: UpdateLastHashType) {
@@ -961,22 +990,43 @@ function updateLastHash(data: UpdateLastHashType) {
     });
 }
 
-function saveSeenMessageHash(data: any) {
-  const { expiresAt, hash } = data;
+function clearLastHashesForConvoId(conversationId: string) {
+  if (!isString(conversationId) || isEmpty(conversationId)) {
+    throw new Error('clearLastHashesForConvoId: conversationId is not a string');
+  }
+  assertGlobalInstance()
+    .prepare(`DELETE FROM ${LAST_HASHES_TABLE} WHERE id=$conversationId`)
+    .run({ conversationId });
+}
+
+function saveSeenMessageHash(data: SaveSeenMessageHash) {
+  const { expiresAt, hash, conversationId } = data;
+  if (!isString(conversationId)) {
+    throw new Error('saveSeenMessageHash conversationId must be a string');
+  }
+  if (!isString(hash)) {
+    throw new Error('saveSeenMessageHash hash must be a string');
+  }
+  if (!isNumber(expiresAt)) {
+    throw new Error('saveSeenMessageHash expiresAt must be a number');
+  }
   try {
     assertGlobalInstance()
       .prepare(
-        `INSERT INTO seenMessages (
+        `INSERT OR REPLACE INTO ${SEEN_MESSAGE_TABLE} (
       expiresAt,
-      hash
+      hash,
+      conversationId
       ) values (
         $expiresAt,
-        $hash
+        $hash,
+        $conversationId
         );`
       )
       .run({
         expiresAt,
         hash,
+        conversationId,
       });
   } catch (e) {
     console.error('saveSeenMessageHash failed:', e.message);
@@ -990,7 +1040,7 @@ function cleanLastHashes() {
 }
 
 function cleanSeenMessages() {
-  assertGlobalInstance().prepare('DELETE FROM seenMessages WHERE expiresAt <= $now;').run({
+  assertGlobalInstance().prepare(`DELETE FROM ${SEEN_MESSAGE_TABLE} WHERE expiresAt <= $now;`).run({
     now: Date.now(),
   });
 }
@@ -1028,6 +1078,47 @@ function removeMessagesByIds(ids: Array<string>, instance?: BetterSqlite3.Databa
   console.log(`removeMessagesByIds of length ${ids.length} took ${Date.now() - start}ms`);
 }
 
+function removeAllMessagesInConversationSentBefore(
+  {
+    deleteBeforeSeconds,
+    conversationId,
+  }: { deleteBeforeSeconds: number; conversationId: GroupPubkeyType },
+  instance?: BetterSqlite3.Database
+) {
+  const msgIds = assertGlobalInstanceOrInstance(instance)
+    .prepare(
+      `SELECT id FROM ${MESSAGES_TABLE} WHERE conversationId = $conversationId AND sent_at <= $beforeMs;`
+    )
+    .all({ conversationId, beforeMs: deleteBeforeSeconds * 1000 });
+
+  assertGlobalInstanceOrInstance(instance)
+    .prepare(
+      `DELETE FROM ${MESSAGES_TABLE} WHERE conversationId = $conversationId AND sent_at <= $beforeMs;`
+    )
+    .run({ conversationId, beforeMs: deleteBeforeSeconds * 1000 });
+  console.info('removeAllMessagesInConversationSentBefore deleted msgIds:', JSON.stringify(msgIds));
+  return msgIds.map(m => m.id);
+}
+
+async function getAllMessagesWithAttachmentsInConversationSentBefore(
+  {
+    deleteAttachBeforeSeconds,
+    conversationId,
+  }: { deleteAttachBeforeSeconds: number; conversationId: GroupPubkeyType },
+  instance?: BetterSqlite3.Database
+) {
+  const rows = assertGlobalInstanceOrInstance(instance)
+    .prepare(
+      `SELECT json FROM ${MESSAGES_TABLE} WHERE conversationId = $conversationId AND sent_at <= $beforeMs;`
+    )
+    .all({ conversationId, beforeMs: deleteAttachBeforeSeconds * 1000 });
+  const messages = map(rows, row => jsonToObject(row.json));
+  const messagesWithAttachments = messages.filter(m => {
+    return hasUserVisibleAttachments(m);
+  });
+  return messagesWithAttachments;
+}
+
 function removeAllMessagesInConversation(
   conversationId: string,
   instance?: BetterSqlite3.Database
@@ -1040,6 +1131,93 @@ function removeAllMessagesInConversation(
   inst
     .prepare(`DELETE FROM ${MESSAGES_TABLE} WHERE conversationId = $conversationId`)
     .run({ conversationId });
+}
+
+function findAllMessageFromSendersInConversation(
+  { groupPk, toRemove, signatureTimestamp }: FindAllMessageFromSendersInConversationTypeArgs,
+  instance?: BetterSqlite3.Database
+) {
+  if (!groupPk || !toRemove.length) {
+    return { messageHashes: [] };
+  }
+  const rows = assertGlobalInstanceOrInstance(instance)
+    .prepare(
+      `SELECT json FROM ${MESSAGES_TABLE} WHERE conversationId = ? AND sent_at <= ? AND source IN ( ${toRemove.map(() => '?').join(', ')} )`
+    )
+    .all(groupPk, signatureTimestamp, ...toRemove);
+
+  if (!rows || isEmpty(rows)) {
+    return [];
+  }
+  return map(rows, row => jsonToObject(row.json));
+}
+
+function findAllMessageHashesInConversation(
+  { groupPk, messageHashes, signatureTimestamp }: FindAllMessageHashesInConversationTypeArgs,
+  instance?: BetterSqlite3.Database
+) {
+  if (!groupPk || !messageHashes.length) {
+    return [];
+  }
+  const rows = compact(
+    assertGlobalInstanceOrInstance(instance)
+      .prepare(
+        `SELECT json FROM ${MESSAGES_TABLE} WHERE conversationId = ? AND sent_at <= ? AND messageHash IN ( ${messageHashes.map(() => '?').join(', ')} )`
+      )
+      .all(groupPk, signatureTimestamp, ...messageHashes)
+  );
+
+  if (!rows || isEmpty(rows)) {
+    return [];
+  }
+  return map(rows, row => jsonToObject(row.json));
+}
+
+function findAllMessageHashesInConversationMatchingAuthor(
+  {
+    author,
+    groupPk,
+    messageHashes,
+    signatureTimestamp,
+  }: FindAllMessageHashesInConversationMatchingAuthorTypeArgs,
+  instance?: BetterSqlite3.Database
+) {
+  if (!groupPk || !author || !messageHashes.length) {
+    return { msgHashesDeleted: [], msgIdsDeleted: [] };
+  }
+  const rows = assertGlobalInstanceOrInstance(instance)
+    .prepare(
+      `SELECT json FROM ${MESSAGES_TABLE} WHERE conversationId = ? AND source = ? AND sent_at <= ? AND messageHash IN ( ${messageHashes.map(() => '?').join(', ')} );`
+    )
+    .all(groupPk, author, signatureTimestamp, ...messageHashes);
+
+  if (!rows || isEmpty(rows)) {
+    return null;
+  }
+  return map(rows, row => jsonToObject(row.json));
+}
+
+function fetchAllGroupUpdateFailedMessage(
+  groupPk: GroupPubkeyType,
+  instance?: BetterSqlite3.Database
+) {
+  if (!groupPk) {
+    return [];
+  }
+  const rows = assertGlobalInstanceOrInstance(instance)
+    .prepare(
+      `SELECT json FROM ${MESSAGES_TABLE} WHERE conversationId = ? AND (JSON_EXTRACT(json, '$.group_update') IS NOT NULL OR JSON_EXTRACT(json, '$.expirationTimerUpdate') IS NOT NULL) AND errors IS NOT NULL;`
+    )
+    .all(groupPk);
+
+  if (!rows || isEmpty(rows)) {
+    return [];
+  }
+  const objs = map(rows, row => jsonToObject(row.json)).filter(m => {
+    return !isEmpty(m);
+  });
+
+  return objs;
 }
 
 function cleanUpExpirationTimerUpdateHistory(
@@ -1056,6 +1234,7 @@ function cleanUpExpirationTimerUpdateHistory(
     )
     .all({ conversationId });
 
+  // we keep at most one, so if we have <= 1, we can just return that nothing was removed.
   if (rows.length <= 1) {
     return [];
   }
@@ -1096,7 +1275,7 @@ function getMessageIdsFromServerIds(serverIds: Array<string | number>, conversat
     Sqlite3 doesn't have a good way to have `IN` query with another query.
     See: https://github.com/mapbox/node-sqlite3/issues/762.
 
-    So we have to use templating to insert the values.
+    So we have to use string templates to insert the values.
   */
   const rows = assertGlobalInstance()
     .prepare(
@@ -1364,57 +1543,59 @@ function getMessagesByConversation(
   const floorLoadAllMessagesInConvo = 70;
 
   let messages: Array<Record<string, any>> = [];
-  let quotes = [];
+  let quotes: Array<any> = [];
 
   if (messageId || firstUnread) {
     const messageFound = getMessageById(messageId || firstUnread);
 
-    if (messageFound && messageFound.conversationId === conversationId) {
-      const start = Date.now();
-      const msgTimestamp =
-        messageFound.serverTimestamp || messageFound.sent_at || messageFound.received_at;
+    if (!messageFound || messageFound.conversationId !== conversationId) {
+      console.info(
+        `getMessagesByConversation: Could not find messageId ${messageId} in db with conversationId: ${conversationId}. Just fetching the convo as usual. messageFound:`,
+        messageFound
+      );
+      return { messages, quotes };
+    }
+    const start = Date.now();
+    const msgTimestamp =
+      messageFound.serverTimestamp || messageFound.sent_at || messageFound.received_at;
 
-      const commonArgs = {
-        conversationId,
-        msgTimestamp,
-        limit:
-          numberOfMessagesInConvo < floorLoadAllMessagesInConvo
-            ? floorLoadAllMessagesInConvo
-            : absLimit,
-      };
+    const commonArgs = {
+      conversationId,
+      msgTimestamp,
+      limit:
+        numberOfMessagesInConvo < floorLoadAllMessagesInConvo
+          ? floorLoadAllMessagesInConvo
+          : absLimit,
+    };
 
-      const messagesBefore = assertGlobalInstance()
-        .prepare(
-          `SELECT id, conversationId, json
+    const messagesBefore = assertGlobalInstance()
+      .prepare(
+        `SELECT id, conversationId, json
             FROM ${MESSAGES_TABLE} WHERE conversationId = $conversationId AND COALESCE(serverTimestamp, sent_at, received_at) <= $msgTimestamp
             ${orderByClause}
             LIMIT $limit`
-        )
-        .all(commonArgs);
+      )
+      .all(commonArgs);
 
-      const messagesAfter = assertGlobalInstance()
-        .prepare(
-          `SELECT id, conversationId, json
+    const messagesAfter = assertGlobalInstance()
+      .prepare(
+        `SELECT id, conversationId, json
             FROM ${MESSAGES_TABLE} WHERE conversationId = $conversationId AND COALESCE(serverTimestamp, sent_at, received_at) > $msgTimestamp
             ${orderByClauseASC}
             LIMIT $limit`
-        )
-        .all(commonArgs);
+      )
+      .all(commonArgs);
 
-      console.info(`getMessagesByConversation around took ${Date.now() - start}ms `);
+    console.info(`getMessagesByConversation around took ${Date.now() - start}ms `);
 
-      // sorting is made in redux already when rendered, but some things are made outside of redux, so let's make sure the order is right
-      messages = map([...messagesBefore, ...messagesAfter], row => jsonToObject(row.json)).sort(
-        (a, b) => {
-          return (
-            (b.serverTimestamp || b.sent_at || b.received_at) -
-            (a.serverTimestamp || a.sent_at || a.received_at)
-          );
-        }
-      );
-    }
-    console.info(
-      `getMessagesByConversation: Could not find messageId ${messageId} in db with conversationId: ${conversationId}. Just fetching the convo as usual.`
+    // sorting is made in redux already when rendered, but some things are made outside of redux, so let's make sure the order is right
+    messages = map([...messagesBefore, ...messagesAfter], row => jsonToObject(row.json)).sort(
+      (a, b) => {
+        return (
+          (b.serverTimestamp || b.sent_at || b.received_at) -
+          (a.serverTimestamp || a.sent_at || a.received_at)
+        );
+      }
     );
   } else {
     const limit =
@@ -1500,7 +1681,7 @@ function hasConversationOutgoingMessage(conversationId: string) {
       conversationId,
     });
   if (!row) {
-    throw new Error('hasConversationOutgoingMessage: Unable to get coun');
+    throw new Error('hasConversationOutgoingMessage: Unable to get count');
   }
 
   return Boolean(row['count(*)']);
@@ -1620,11 +1801,24 @@ function getLastHashBySnode(convoId: string, snode: string, namespace: number) {
 }
 
 function getSeenMessagesByHashList(hashes: Array<string>) {
-  const rows = assertGlobalInstance()
-    .prepare(`SELECT * FROM seenMessages WHERE hash IN ( ${hashes.map(() => '?').join(', ')} );`)
+  const fromSeenTableRows = assertGlobalInstance()
+    .prepare(
+      `SELECT * FROM ${SEEN_MESSAGE_TABLE} WHERE hash IN ( ${hashes.map(() => '?').join(', ')} );`
+    )
     .all(hashes);
 
-  return map(rows, row => row.hash);
+  const fromMessagesTableRows = compact(
+    assertGlobalInstance()
+      .prepare(
+        `SELECT messageHash FROM ${MESSAGES_TABLE} WHERE messageHash IN ( ${hashes.map(() => '?').join(', ')} )`
+      )
+      .all(hashes)
+  );
+
+  const hashesFromSeen: Array<string> = map(fromSeenTableRows, row => row.hash);
+  const hashesFromMessages: Array<string> = map(fromMessagesTableRows, row => row.messageHash);
+
+  return uniq(hashesFromSeen.concat(hashesFromMessages));
 }
 
 function getExpiredMessages() {
@@ -1697,12 +1891,12 @@ function getNextExpiringMessage() {
   return map(rows, row => jsonToObject(row.json));
 }
 
-/* Unproccessed a received messages not yet processed */
+/* Unprocessed a received messages not yet processed */
 const unprocessed: UnprocessedDataNode = {
   saveUnprocessed: (data: UnprocessedParameter) => {
     const { id, timestamp, version, attempts, envelope, senderIdentity, messageHash } = data;
     if (!id) {
-      throw new Error(`saveUnprocessed: id was falsey: ${id}`);
+      throw new Error(`saveUnprocessed: id was falsy: ${id}`);
     }
 
     assertGlobalInstance()
@@ -1881,7 +2075,7 @@ function removeAll() {
     DELETE FROM ${LAST_HASHES_TABLE};
     DELETE FROM ${NODES_FOR_PUBKEY_TABLE};
     DELETE FROM ${CLOSED_GROUP_V2_KEY_PAIRS_TABLE};
-    DELETE FROM seenMessages;
+    DELETE FROM ${SEEN_MESSAGE_TABLE};
     DELETE FROM ${CONVERSATIONS_TABLE};
     DELETE FROM ${MESSAGES_TABLE};
     DELETE FROM ${ATTACHMENT_DOWNLOADS_TABLE};
@@ -1930,7 +2124,7 @@ function getMessagesWithFileAttachments(conversationId: string, limit: number) {
 
 function getExternalFilesForMessage(message: any) {
   const { attachments, quote, preview } = message;
-  const files: Array<any> = [];
+  const files: Array<string> = [];
 
   forEach(attachments, attachment => {
     const { path: file, thumbnail, screenshot } = attachment;
@@ -1946,7 +2140,6 @@ function getExternalFilesForMessage(message: any) {
       files.push(screenshot.path);
     }
   });
-
   if (quote && quote.attachments && quote.attachments.length) {
     forEach(quote.attachments, attachment => {
       const { thumbnail } = attachment;
@@ -1968,6 +2161,30 @@ function getExternalFilesForMessage(message: any) {
   }
 
   return files;
+}
+
+/**
+ * This looks like `getExternalFilesForMessage`, but it does not include some type of attachments not visible from the right panel.
+ * It should only be used when we look for messages to mark as deleted when an admin
+ * triggers a "delete messages with attachments since".
+ * Note: quoted attachments are referencing the original message, so we don't need to include them here.
+ * Note: previews are not considered user visible (because not visible from the right panel),
+ * so we don't need to include them here
+ * Note: voice messages are not considered user visible (because not visible from the right panel),
+ */
+function hasUserVisibleAttachments(message: any) {
+  const { attachments } = message;
+
+  return some(attachments, attachment => {
+    const { path: file, flags, thumbnail, screenshot } = attachment;
+
+    return (
+      // eslint-disable-next-line no-bitwise
+      (file && !(flags & SignalService.AttachmentPointer.Flags.VOICE_MESSAGE)) ||
+      thumbnail?.path ||
+      screenshot?.path
+    );
+  });
 }
 
 function getExternalFilesForConversation(
@@ -1992,6 +2209,24 @@ function getExternalFilesForConversation(
   }
 
   return files;
+}
+
+async function deleteAll({
+  userDataPath,
+  attachments,
+}: {
+  userDataPath: string;
+  attachments: Array<string>;
+}) {
+  const deleteFromDisk = createDeleter(getAttachmentsPath(userDataPath));
+
+  for (let index = 0, max = attachments.length; index < max; index += 1) {
+    const file = attachments[index];
+    // eslint-disable-next-line no-await-in-loop
+    await deleteFromDisk(file);
+  }
+
+  console.log(`deleteAll: deleted ${attachments.length} files`);
 }
 
 function removeKnownAttachments(allAttachments: Array<string>) {
@@ -2136,7 +2371,7 @@ function getLatestClosedGroupEncryptionKeyPair(
 
 function addClosedGroupEncryptionKeyPair(
   groupPublicKey: string,
-  keypair: object,
+  keyPair: object,
   instance?: BetterSqlite3.Database
 ) {
   const timestamp = Date.now();
@@ -2156,7 +2391,7 @@ function addClosedGroupEncryptionKeyPair(
     .run({
       groupPublicKey,
       timestamp,
-      json: objectToJSON(keypair),
+      json: objectToJSON(keyPair),
     });
 }
 
@@ -2201,8 +2436,7 @@ function getV2OpenGroupRoom(conversationId: string, db?: BetterSqlite3.Database)
   return jsonToObject(row.json);
 }
 
-function saveV2OpenGroupRoom(opengroupsv2Room: OpenGroupV2Room, instance?: BetterSqlite3.Database) {
-  const { serverUrl, roomId, conversationId } = opengroupsv2Room;
+function saveV2OpenGroupRoom(opengroupsV2Room: OpenGroupV2Room, instance?: BetterSqlite3.Database) {
   assertGlobalInstanceOrInstance(instance)
     .prepare(
       `INSERT OR REPLACE INTO ${OPEN_GROUP_ROOMS_V2_TABLE} (
@@ -2218,10 +2452,10 @@ function saveV2OpenGroupRoom(opengroupsv2Room: OpenGroupV2Room, instance?: Bette
     )`
     )
     .run({
-      serverUrl,
-      roomId,
-      conversationId,
-      json: objectToJSON(opengroupsv2Room),
+      serverUrl: opengroupsV2Room.serverUrl,
+      roomId: opengroupsV2Room.roomId,
+      conversationId: opengroupsV2Room.conversationId,
+      json: objectToJSON(opengroupsV2Room),
     });
 }
 
@@ -2511,14 +2745,21 @@ export const sqlNode = {
   saveMessage,
   cleanSeenMessages,
   cleanLastHashes,
+  clearLastHashesForConvoId,
   saveSeenMessageHashes,
-  saveSeenMessageHash,
+  emptySeenMessageHashesForConversation,
   updateLastHash,
   saveMessages,
   removeMessage,
   removeMessagesByIds,
+  removeAllMessagesInConversationSentBefore,
+  getAllMessagesWithAttachmentsInConversationSentBefore,
   cleanUpExpirationTimerUpdateHistory,
   removeAllMessagesInConversation,
+  findAllMessageFromSendersInConversation,
+  findAllMessageHashesInConversation,
+  findAllMessageHashesInConversationMatchingAuthor,
+  fetchAllGroupUpdateFailedMessage,
   getUnreadByConversation,
   getUnreadDisappearingByConversation,
   markAllAsReadByConversationNoExpiration,
@@ -2554,7 +2795,7 @@ export const sqlNode = {
   removeAttachmentDownloadJob,
   removeAllAttachmentDownloadJobs,
   removeKnownAttachments,
-
+  deleteAll,
   removeAll,
 
   getMessagesWithVisualMediaAttachments,

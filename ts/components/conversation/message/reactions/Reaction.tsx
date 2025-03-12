@@ -11,6 +11,7 @@ import { abbreviateNumber } from '../../../../util/abbreviateNumber';
 import { nativeEmojiData } from '../../../../util/emoji';
 import { popupXDefault, popupYDefault } from '../message-content/MessageReactions';
 import { POPUP_WIDTH, ReactionPopup, TipPosition } from './ReactionPopup';
+import { useSelectedDisableLegacyGroupDeprecatedActions } from '../../../../hooks/useRefreshReleasedFeaturesTimestamp';
 
 const StyledReaction = styled.button<{
   selected: boolean;
@@ -79,6 +80,7 @@ export const Reaction = (props: ReactionProps) => {
   } = props;
 
   const rightOverlayMode = useRightOverlayMode();
+  const areDeprecatedLegacyGroupDisabled = useSelectedDisableLegacyGroupDeprecatedActions();
   const isMessageSelection = useIsMessageSelectionMode();
   const reactionsMap = (reactions && Object.fromEntries(reactions)) || {};
   const senders = reactionsMap[emoji]?.senders || [];
@@ -106,7 +108,8 @@ export const Reaction = (props: ReactionProps) => {
 
   const handleReactionClick = () => {
     if (!isMessageSelection) {
-      if (onClick) {
+      // Note: disable emoji clicks if the legacy group is deprecated (group is readonly)
+      if (onClick && !areDeprecatedLegacyGroupDisabled) {
         onClick(emoji);
       }
     }
@@ -174,6 +177,9 @@ export const Reaction = (props: ReactionProps) => {
           senders={reactionsMap[popupReaction]?.senders}
           tooltipPosition={tooltipPosition}
           onClick={() => {
+            if (areDeprecatedLegacyGroupDisabled) {
+              return;
+            }
             if (handlePopupReaction) {
               handlePopupReaction('');
             }

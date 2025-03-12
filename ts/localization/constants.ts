@@ -92,3 +92,7 @@ export const crowdinLocales = [
 ] as const;
 
 export type CrowdinLocale = (typeof crowdinLocales)[number];
+
+export function isCrowdinLocale(locale: string): locale is CrowdinLocale {
+  return crowdinLocales.includes(locale as CrowdinLocale);
+}

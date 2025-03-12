@@ -1,8 +1,8 @@
-import { showCopyCommunityUrlMenuItem } from '.';
 import { useIsPublic } from '../../../../hooks/useParamSelector';
 import { copyPublicKeyByConvoId } from '../../../../interactions/conversationInteractions';
 import { Localizer } from '../../../basic/Localizer';
 import { ItemWithDataTestId } from '../MenuItemWithDataTestId';
+import { showCopyCommunityUrlMenuItem } from './guard';
 
 export const CopyCommunityUrlMenuItem = ({ convoId }: { convoId: string }): JSX.Element | null => {
   const isPublic = useIsPublic(convoId);

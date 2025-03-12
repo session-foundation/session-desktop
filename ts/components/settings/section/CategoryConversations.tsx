@@ -6,7 +6,7 @@ import { ToastUtils } from '../../../session/utils';
 import { toggleAudioAutoplay } from '../../../state/ducks/userConfig';
 import { useHasEnterSendEnabled } from '../../../state/selectors/settings';
 import { getAudioAutoplay } from '../../../state/selectors/userConfig';
-import { SessionRadioGroup } from '../../basic/SessionRadioGroup';
+import { SessionRadioGroup, SessionRadioItems } from '../../basic/SessionRadioGroup';
 import { BlockedContactsList } from '../BlockedList';
 import {
   SessionSettingsItemWrapper,
@@ -87,14 +87,18 @@ const EnterKeyFunctionSetting = () => {
   const initialSetting = useHasEnterSendEnabled();
   const selectedWithSettingTrue = 'enterForNewLine';
 
-  const items = [
+  const items: SessionRadioItems = [
     {
       label: window.i18n('conversationsEnterSends'),
       value: 'enterForSend',
+      inputDataTestId: 'input-enterForSend',
+      labelDataTestId: 'label-enterForSend',
     },
     {
       label: window.i18n('conversationsEnterNewLine'),
       value: selectedWithSettingTrue,
+      inputDataTestId: `input-${selectedWithSettingTrue}`,
+      labelDataTestId: `label-${selectedWithSettingTrue}`,
     },
   ];
 

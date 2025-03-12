@@ -1,18 +1,20 @@
 /* eslint-disable no-restricted-syntax */
+
 import { createSelector } from '@reduxjs/toolkit';
 import { filter, isEmpty, isFinite, isNumber, pick, sortBy, toNumber } from 'lodash';
 
+import { useSelector } from 'react-redux';
 import {
   ConversationLookupType,
   ConversationsStateType,
   lookupQuote,
-  MentionsMembersType,
   MessageModelPropsWithConvoProps,
   MessageModelPropsWithoutConvoProps,
   PropsForQuote,
   QuoteLookupType,
   ReduxConversationType,
   SortedMessageModelProps,
+  type PropsForMessageWithoutConvoProps,
 } from '../ducks/conversations';
 import { StateType } from '../reducer';
 
@@ -20,11 +22,11 @@ import { ReplyingToMessageProps } from '../../components/conversation/compositio
 import { MessageAttachmentSelectorProps } from '../../components/conversation/message/message-content/MessageAttachment';
 import { MessageContentSelectorProps } from '../../components/conversation/message/message-content/MessageContent';
 import { MessageContentWithStatusSelectorProps } from '../../components/conversation/message/message-content/MessageContentWithStatus';
-import { MessageTextSelectorProps } from '../../components/conversation/message/message-content/MessageText';
 import { GenericReadableMessageSelectorProps } from '../../components/conversation/message/message-item/GenericReadableMessage';
 import { hasValidIncomingRequestValues } from '../../models/conversation';
 import { isOpenOrClosedGroup } from '../../models/conversationAttributes';
-import { getConversationController } from '../../session/conversations';
+import { ConvoHub } from '../../session/conversations';
+
 import { UserUtils } from '../../session/utils';
 import { BlockedNumberController } from '../../util';
 import { Storage } from '../../util/storage';
@@ -32,11 +34,13 @@ import { getIntl } from './user';
 
 import { MessageReactsSelectorProps } from '../../components/conversation/message/message-content/MessageReactions';
 import { processQuoteAttachment } from '../../models/message';
+import { CONVERSATION_PRIORITIES } from '../../models/types';
 import { isUsAnySogsFromCache } from '../../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import { PubKey } from '../../session/types';
+import { UserGroupsWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { getSelectedConversationKey } from './selectedConversation';
 import { getModeratorsOutsideRedux } from './sogsRoomInfo';
-import { CONVERSATION_PRIORITIES } from '../../models/types';
+import type { SessionSuggestionDataItem } from '../../components/conversation/composition/types';
 
 export const getConversations = (state: StateType): ConversationsStateType => state.conversations;
 
@@ -71,7 +75,7 @@ export const getSortedMessagesOfSelectedConversation = createSelector(
     }
 
     const convoId = messages[0].propsForMessage.convoId;
-    const convo = getConversationController().get(convoId);
+    const convo = ConvoHub.use().get(convoId);
 
     if (!convo) {
       return [];
@@ -91,6 +95,13 @@ export const hasSelectedConversationIncomingMessages = createSelector(
   }
 );
 
+export const hasSelectedConversationOutgoingMessages = createSelector(
+  getSortedMessagesOfSelectedConversation,
+  (messages: Array<MessageModelPropsWithoutConvoProps>): boolean => {
+    return messages.some(m => m.propsForMessage.direction === 'outgoing');
+  }
+);
+
 export const getFirstUnreadMessageId = (state: StateType): string | undefined => {
   return state.conversations.firstUnreadMessageId;
 };
@@ -102,7 +113,6 @@ export type MessagePropsType =
   | 'message-request-response'
   | 'timer-notification'
   | 'regular-message'
-  | 'unread-indicator'
   | 'call-notification'
   | 'interaction-notification';
 
@@ -129,90 +139,32 @@ export const getSortedMessagesTypesOfSelectedConversation = createSelector(
           ? messageTimestamp
           : undefined;
 
-      const common = { showUnreadIndicator: isFirstUnread, showDateBreak };
-
-      if (msg.propsForDataExtractionNotification) {
-        return {
-          ...common,
-          message: {
-            messageType: 'data-extraction',
-            props: { ...msg.propsForDataExtractionNotification, messageId: msg.propsForMessage.id },
-          },
-        };
-      }
-
-      if (msg.propsForMessageRequestResponse) {
-        return {
-          ...common,
-          message: {
-            messageType: 'message-request-response',
-            props: { ...msg.propsForMessageRequestResponse, messageId: msg.propsForMessage.id },
-          },
-        };
-      }
-
-      if (msg.propsForGroupInvitation) {
-        return {
-          ...common,
-          message: {
-            messageType: 'group-invitation',
-            props: { ...msg.propsForGroupInvitation, messageId: msg.propsForMessage.id },
-          },
-        };
-      }
-
-      if (msg.propsForGroupUpdateMessage) {
-        return {
-          ...common,
-          message: {
-            messageType: 'group-notification',
-            props: { ...msg.propsForGroupUpdateMessage, messageId: msg.propsForMessage.id },
-          },
-        };
-      }
-
-      if (msg.propsForTimerNotification) {
-        return {
-          ...common,
-          message: {
-            messageType: 'timer-notification',
-            props: { ...msg.propsForTimerNotification, messageId: msg.propsForMessage.id },
-          },
-        };
-      }
-
-      if (msg.propsForCallNotification) {
-        return {
-          ...common,
-          message: {
-            messageType: 'call-notification',
-            props: {
-              ...msg.propsForCallNotification,
-              messageId: msg.propsForMessage.id,
-            },
-          },
-        };
-      }
-
-      if (msg.propsForInteractionNotification) {
-        return {
-          ...common,
-          message: {
-            messageType: 'interaction-notification',
-            props: {
-              ...msg.propsForInteractionNotification,
-              messageId: msg.propsForMessage.id,
-            },
-          },
-        };
-      }
-
-      return {
+      const common = {
         showUnreadIndicator: isFirstUnread,
         showDateBreak,
+        messageId: msg.propsForMessage.id,
+      };
+
+      const messageType: MessagePropsType = msg.propsForDataExtractionNotification
+        ? ('data-extraction' as const)
+        : msg.propsForMessageRequestResponse
+          ? ('message-request-response' as const)
+          : msg.propsForCommunityInvitation
+            ? ('group-invitation' as const)
+            : msg.propsForGroupUpdateMessage
+              ? ('group-notification' as const)
+              : msg.propsForTimerNotification
+                ? ('timer-notification' as const)
+                : msg.propsForCallNotification
+                  ? ('call-notification' as const)
+                  : msg.propsForInteractionNotification
+                    ? ('interaction-notification' as const)
+                    : ('regular-message' as const);
+
+      return {
+        ...common,
         message: {
-          messageType: 'regular-message',
-          props: { messageId: msg.propsForMessage.id },
+          messageType,
         },
       };
     });
@@ -273,6 +225,13 @@ const _getLeftPaneConversationIds = (
         return false;
       }
 
+      if (
+        PubKey.is03Pubkey(conversation.id) &&
+        UserGroupsWrapperActions.getCachedGroup(conversation.id)?.invitePending
+      ) {
+        return false;
+      }
+
       // a non private conversation is always returned here
       if (!conversation.isPrivate) {
         return true;
@@ -298,7 +257,8 @@ const _getContacts = (
 ): Array<ReduxConversationType> => {
   return sortedConversations.filter(convo => {
     // a private conversation not approved is a message request. Include them in the list of contacts
-    return !convo.isBlocked && convo.isPrivate && !convo.isMe;
+    // Note: we filter out non 05-pubkeys as we don't want blinded message request to be part of this list
+    return !convo.isBlocked && convo.isPrivate && !convo.isMe && PubKey.is05Pubkey(convo.id);
   });
 };
 
@@ -321,7 +281,7 @@ const _getGlobalUnreadCount = (sortedConversations: Array<ReduxConversationType>
       conversation.priority &&
       conversation.priority <= CONVERSATION_PRIORITIES.default
     ) {
-      // dont increase unread counter, don't push to convo list.
+      // don't increase unread counter, don't push to convo list.
       continue;
     }
 
@@ -347,7 +307,7 @@ export const _getSortedConversations = (
   const sortedConversations: Array<ReduxConversationType> = [];
 
   for (const conversation of sorted) {
-    // Remove all invalid conversations and conversatons of devices associated
+    // Remove all invalid conversations and conversations of devices associated
     //  with cancelled attempted links
     if (!conversation.isPublic && !conversation.activeAt) {
       continue;
@@ -380,37 +340,40 @@ const _getConversationRequests = (
   sortedConversations: Array<ReduxConversationType>
 ): Array<ReduxConversationType> => {
   return filter(sortedConversations, conversation => {
-    const { isApproved, isBlocked, isPrivate, isMe, activeAt, didApproveMe } = conversation;
+    const { isApproved, isBlocked, isPrivate, isMe, activeAt, didApproveMe, id, priority } =
+      conversation;
+    const invitePending = PubKey.is03Pubkey(id)
+      ? UserGroupsWrapperActions.getCachedGroup(id)?.invitePending || false
+      : false;
     const isIncomingRequest = hasValidIncomingRequestValues({
+      id,
       isApproved: isApproved || false,
       isBlocked: isBlocked || false,
       isPrivate: isPrivate || false,
       isMe: isMe || false,
       activeAt: activeAt || 0,
       didApproveMe: didApproveMe || false,
+      invitePending,
+      priority,
     });
     return isIncomingRequest;
   });
 };
 
-export const getConversationRequests = createSelector(
-  getSortedConversations,
-  _getConversationRequests
-);
+const getConversationRequests = createSelector(getSortedConversations, _getConversationRequests);
 
 export const getConversationRequestsIds = createSelector(getConversationRequests, requests =>
   requests.map(m => m.id)
 );
 
-export const hasConversationRequests = (state: StateType) => {
-  return !!getConversationRequests(state).length;
-};
-
 const _getUnreadConversationRequests = (
   sortedConversationRequests: Array<ReduxConversationType>
 ): Array<ReduxConversationType> => {
   return filter(sortedConversationRequests, conversation => {
-    return Boolean(conversation && conversation.unreadCount && conversation.unreadCount > 0);
+    return Boolean(
+      conversation &&
+        ((conversation.unreadCount && conversation.unreadCount > 0) || conversation.isMarkedUnread)
+    );
   });
 };
 
@@ -432,6 +395,10 @@ export const getLeftPaneConversationIds = createSelector(
   _getLeftPaneConversationIds
 );
 
+export const useContactsToInviteToGroup = () => {
+  const contacts = useSelector(getPrivateContactsPubkeys);
+  return contacts;
+};
 export const getLeftPaneConversationIdsCount = createSelector(
   getLeftPaneConversationIds,
   (convoIds: Array<string>) => {
@@ -458,7 +425,7 @@ export type DirectContactsByNameType = {
 };
 
 // make sure that createSelector is called here so this function is memoized
-export const getSortedContacts = createSelector(
+const getSortedContacts = createSelector(
   getContacts,
   (contacts: Array<ReduxConversationType>): Array<DirectContactsByNameType> => {
     const us = UserUtils.getOurPubKeyStrFromCache();
@@ -528,10 +495,11 @@ export const getPrivateContactsPubkeys = createSelector(getSortedContacts, state
   state.map(m => m.id)
 );
 
-export const getGlobalUnreadMessageCount = createSelector(
-  getSortedConversations,
-  _getGlobalUnreadCount
-);
+const getGlobalUnreadMessageCount = createSelector(getSortedConversations, _getGlobalUnreadCount);
+
+export function useGlobalUnreadMessageCount() {
+  return useSelector(getGlobalUnreadMessageCount);
+}
 
 export const getMessageInfoId = (state: StateType) => state.conversations.messageInfoId;
 
@@ -565,8 +533,18 @@ export const getShouldHighlightMessage = (state: StateType): boolean =>
 export const getNextMessageToPlayId = (state: StateType): string | undefined =>
   state.conversations.nextMessageToPlayId || undefined;
 
-export const getMentionsInput = (state: StateType): MentionsMembersType =>
+export const getMentionsInput = (state: StateType): Array<SessionSuggestionDataItem> =>
   state.conversations.mentionMembers;
+
+/**
+ * Returns true if the props are not corresponding to a visible message.
+ * We want to show the author avatar/display name when the next/previous message is not a visible one.
+ * This is to make a sure a sequence of messages from the same author, with one of them being a control message,
+ * shows the avatar/name of the author before and after the control message.
+ */
+function messagePropsHaveVisibleMessage(msgProps?: PropsForMessageWithoutConvoProps) {
+  return !!msgProps?.text || !isEmpty(msgProps?.attachments);
+}
 
 /// Those calls are just related to ordering messages in the redux store.
 
@@ -581,17 +559,24 @@ function updateFirstMessageOfSeries(
   for (let i = 0; i < messageModelsProps.length; i++) {
     const currentSender = messageModelsProps[i].propsForMessage?.sender;
     // most recent message is at index 0, so the previous message sender is 1+index
-    const previousSender =
-      i < messageModelsProps.length - 1
-        ? messageModelsProps[i + 1].propsForMessage?.sender
-        : undefined;
-    const nextSender = i > 0 ? messageModelsProps[i - 1].propsForMessage?.sender : undefined;
+    const previousPropsMessage =
+      i < messageModelsProps.length - 1 ? messageModelsProps[i + 1].propsForMessage : undefined;
+    const nextPropsMessage = i > 0 ? messageModelsProps[i - 1].propsForMessage : undefined;
+
+    const previousSender = previousPropsMessage?.sender;
+    const previousMessageIsVisibleMessage = messagePropsHaveVisibleMessage(previousPropsMessage);
+    const nextSender = nextPropsMessage?.sender;
+    const nextMessageIsVisibleMessage = messagePropsHaveVisibleMessage(nextPropsMessage);
     // Handle firstMessageOfSeries for conditional avatar rendering
+
+    const firstMessageOfSeries =
+      !(i >= 0 && currentSender === previousSender) || !previousMessageIsVisibleMessage;
+    const lastMessageOfSeries = currentSender !== nextSender || !nextMessageIsVisibleMessage;
 
     sortedMessageProps.push({
       ...messageModelsProps[i],
-      firstMessageOfSeries: !(i >= 0 && currentSender === previousSender),
-      lastMessageOfSeries: currentSender !== nextSender,
+      firstMessageOfSeries,
+      lastMessageOfSeries,
     });
   }
   return sortedMessageProps;
@@ -667,8 +652,8 @@ export function getLoadedMessagesLength(state: StateType) {
   return getMessagesFromState(state).length;
 }
 
-export function getSelectedHasMessages(state: StateType): boolean {
-  return !isEmpty(getMessagesFromState(state));
+export function useSelectedHasMessages(): boolean {
+  return useSelector((state: StateType) => !isEmpty(getMessagesFromState(state)));
 }
 
 export const isFirstUnreadMessageIdAbove = createSelector(
@@ -886,25 +871,6 @@ export const getMessageQuoteProps = createSelector(
   }
 );
 
-export const getMessageTextProps = createSelector(
-  getMessagePropsByMessageId,
-  (props): MessageTextSelectorProps | undefined => {
-    if (!props || isEmpty(props)) {
-      return undefined;
-    }
-
-    const msgProps: MessageTextSelectorProps = pick(props.propsForMessage, [
-      'direction',
-      'status',
-      'text',
-      'isDeleted',
-      'conversationType',
-    ]);
-
-    return msgProps;
-  }
-);
-
 export const getMessageAttachmentProps = createSelector(
   getMessagePropsByMessageId,
   (props): MessageAttachmentSelectorProps | undefined => {
@@ -1019,4 +985,10 @@ export const getIsSelectedConvoInitialLoadingInProgress = (state: StateType): bo
 
 export function getCurrentlySelectedConversationOutsideRedux() {
   return window?.inboxStore?.getState().conversations.selectedConversation as string | undefined;
+}
+
+export function useConversationIdOrigin(convoId: string | undefined) {
+  return useSelector((state: StateType) =>
+    convoId ? state.conversations.conversationLookup?.[convoId]?.conversationIdOrigin : undefined
+  );
 }

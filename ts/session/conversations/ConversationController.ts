@@ -1,8 +1,9 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable more/no-then */
-import { ConvoVolatileType } from 'libsession_util_nodejs';
+import { GroupPubkeyType, PubkeyType, type ConvoVolatileType } from 'libsession_util_nodejs';
 import { isEmpty, isNil } from 'lodash';
 
+import AbortController from 'abort-controller';
 import { Data } from '../../data/data';
 import { OpenGroupData } from '../../data/opengroups';
 import { ConversationCollection, ConversationModel } from '../../models/conversation';
@@ -12,48 +13,62 @@ import {
 } from '../../state/ducks/conversations';
 import { BlockedNumberController } from '../../util';
 import { getOpenGroupManager } from '../apis/open_group_api/opengroupV2/OpenGroupManagerV2';
-import { getSwarmFor } from '../apis/snode_api/snodePool';
 import { PubKey } from '../types';
 
-import { getMessageQueue } from '..';
+import { ConfigDumpData } from '../../data/configDump/configDump';
 import { deleteAllMessagesByConvoIdNoConfirmation } from '../../interactions/conversationInteractions';
 import { removeAllClosedGroupEncryptionKeyPairs } from '../../receiver/closedGroups';
+import { groupInfoActions } from '../../state/ducks/metaGroups';
 import { getCurrentlySelectedConversationOutsideRedux } from '../../state/selectors/conversations';
-import { assertUnreachable } from '../../types/sqlSharedTypes';
-import { UserGroupsWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
+import { assertUnreachable, stringify } from '../../types/sqlSharedTypes';
+import {
+  MetaGroupWrapperActions,
+  UserGroupsWrapperActions,
+} from '../../webworker/workers/browser/libsession_worker_interface';
 import { OpenGroupUtils } from '../apis/open_group_api/utils';
 import { getSwarmPollingInstance } from '../apis/snode_api';
-import { GetNetworkTime } from '../apis/snode_api/getNetworkTime';
+import { DeleteAllFromGroupMsgNodeSubRequest } from '../apis/snode_api/SnodeRequestTypes';
 import { SnodeNamespaces } from '../apis/snode_api/namespaces';
 import { ClosedGroupMemberLeftMessage } from '../messages/outgoing/controlMessage/group/ClosedGroupMemberLeftMessage';
+import { GroupUpdateMemberLeftMessage } from '../messages/outgoing/controlMessage/group_v2/to_group/GroupUpdateMemberLeftMessage';
+import { GroupUpdateMemberLeftNotificationMessage } from '../messages/outgoing/controlMessage/group_v2/to_group/GroupUpdateMemberLeftNotificationMessage';
+import { MessageQueue, MessageSender } from '../sending';
 import { UserUtils } from '../utils';
-import { ConfigurationSync } from '../utils/job_runners/jobs/ConfigurationSyncJob';
+import { ed25519Str } from '../utils/String';
+import { PreConditionFailed } from '../utils/errors';
+import { RunJobResult } from '../utils/job_runners/PersistedJob';
+import { GroupSync } from '../utils/job_runners/jobs/GroupSyncJob';
 import { LibSessionUtil } from '../utils/libsession/libsession_utils';
 import { SessionUtilContact } from '../utils/libsession/libsession_utils_contacts';
 import { SessionUtilConvoInfoVolatile } from '../utils/libsession/libsession_utils_convo_info_volatile';
 import { SessionUtilUserGroups } from '../utils/libsession/libsession_utils_user_groups';
+import { DisappearingMessages } from '../disappearing_messages';
+import { StoreGroupRequestFactory } from '../apis/snode_api/factories/StoreGroupRequestFactory';
 import { CONVERSATION_PRIORITIES, ConversationTypeEnum } from '../../models/types';
+import { NetworkTime } from '../../util/NetworkTime';
+import { timeoutWithAbort } from '../utils/Promise';
+import { DURATION } from '../constants';
 
-let instance: ConversationController | null;
+let instance: ConvoController | null;
 
-export const getConversationController = () => {
+const getConvoHub = () => {
   if (instance) {
     return instance;
   }
-  instance = new ConversationController();
+  instance = new ConvoController();
 
   return instance;
 };
 
 type DeleteOptions = { fromSyncMessage: boolean };
 
-export class ConversationController {
+class ConvoController {
   private readonly conversations: ConversationCollection;
   private _initialFetchComplete: boolean = false;
-  private _initialPromise?: Promise<any>;
+  private _convoHubInitialPromise?: Promise<any>;
 
   /**
-   * Do not call this constructor. You get the ConversationController through getConversationController() only
+   * Do not call this constructor. You get the ConvoHub through ConvoHub.use() only
    */
   constructor() {
     this.conversations = new ConversationCollection();
@@ -62,7 +77,7 @@ export class ConversationController {
   // FIXME this could return | undefined
   public get(id: string): ConversationModel {
     if (!this._initialFetchComplete) {
-      throw new Error('getConversationController().get() needs complete initial fetch');
+      throw new Error('ConvoHub.use().get() needs complete initial fetch');
     }
 
     return this.conversations.get(id);
@@ -70,7 +85,7 @@ export class ConversationController {
 
   public getOrThrow(id: string): ConversationModel {
     if (!this._initialFetchComplete) {
-      throw new Error('getConversationController().get() needs complete initial fetch');
+      throw new Error('ConvoHub.use().get() needs complete initial fetch');
     }
 
     const convo = this.conversations.get(id);
@@ -78,7 +93,7 @@ export class ConversationController {
     if (convo) {
       return convo;
     }
-    throw new Error(`Conversation ${id} does not exist on getConversationController().get()`);
+    throw new Error(`Conversation ${id} does not exist on ConvoHub.use().get()`);
   }
   // Needed for some model setup which happens during the initial fetch() call below
   public getUnsafe(id: string): ConversationModel | undefined {
@@ -93,19 +108,19 @@ export class ConversationController {
     if (
       type !== ConversationTypeEnum.PRIVATE &&
       type !== ConversationTypeEnum.GROUP &&
-      type !== ConversationTypeEnum.GROUPV3
+      type !== ConversationTypeEnum.GROUPV2
     ) {
-      throw new TypeError(`'type' must be 'private' or 'group' or 'groupv3' but got: '${type}'`);
+      throw new TypeError(`'type' must be 'private' or 'group' or 'groupv2' but got: '${type}'`);
     }
 
-    if (type === ConversationTypeEnum.GROUPV3 && !PubKey.isClosedGroupV3(id)) {
+    if (type === ConversationTypeEnum.GROUPV2 && !PubKey.is03Pubkey(id)) {
       throw new Error(
-        'required v3 closed group` ` but the pubkey does not match the 03 prefix for them'
+        'required v3 closed group but the pubkey does not match the 03 prefix for them'
       );
     }
 
     if (!this._initialFetchComplete) {
-      throw new Error('getConversationController().get() needs complete initial fetch');
+      throw new Error('ConvoHub.use().get() needs complete initial fetch');
     }
 
     if (this.conversations.get(id)) {
@@ -139,11 +154,6 @@ export class ConversationController {
         })
       );
 
-      if (!conversation.isPublic() && conversation.isActive()) {
-        // NOTE: we request snodes updating the cache, but ignore the result
-
-        void getSwarmFor(id);
-      }
       return conversation;
     };
 
@@ -152,33 +162,33 @@ export class ConversationController {
     return conversation;
   }
 
-  public getContactProfileNameOrShortenedPubKey(pubKey: string): string {
-    const conversation = getConversationController().get(pubKey);
+  public getNicknameOrRealUsernameOrPlaceholder(pubKey: string): string {
+    const conversation = ConvoHub.use().get(pubKey);
     if (!conversation) {
-      return pubKey;
+      return PubKey.shorten(pubKey);
     }
-    return conversation.getContactProfileNameOrShortenedPubKey();
+    return conversation.getNicknameOrRealUsernameOrPlaceholder();
   }
 
   public async getOrCreateAndWait(
     id: string | PubKey,
     type: ConversationTypeEnum
   ): Promise<ConversationModel> {
-    const initialPromise =
-      this._initialPromise !== undefined ? this._initialPromise : Promise.resolve();
-    return initialPromise.then(() => {
-      if (!id) {
-        return Promise.reject(new Error('getOrCreateAndWait: invalid id passed.'));
-      }
-      const pubkey = id && (id as any).key ? (id as any).key : id;
-      const conversation = this.getOrCreate(pubkey, type);
+    const convoHubInitialPromise =
+      this._convoHubInitialPromise !== undefined ? this._convoHubInitialPromise : Promise.resolve();
+    await convoHubInitialPromise;
 
-      if (conversation) {
-        return conversation.initialPromise.then(() => conversation);
-      }
+    if (!id) {
+      throw new Error('getOrCreateAndWait: invalid id passed.');
+    }
+    const pubkey = id && (id as any).key ? (id as any).key : id;
+    const conversation = this.getOrCreate(pubkey, type);
 
-      return Promise.reject(new Error('getOrCreateAndWait: did not get conversation'));
-    });
+    if (conversation) {
+      return conversation.initialPromise.then(() => conversation);
+    }
+
+    return Promise.reject(new Error('getOrCreateAndWait: did not get conversation'));
   }
 
   /**
@@ -188,9 +198,7 @@ export class ConversationController {
    */
   public async deleteBlindedContact(blindedId: string) {
     if (!this._initialFetchComplete) {
-      throw new Error(
-        'getConversationController().deleteBlindedContact() needs complete initial fetch'
-      );
+      throw new Error('ConvoHub.use().deleteBlindedContact() needs complete initial fetch');
     }
     if (!PubKey.isBlinded(blindedId)) {
       throw new Error('deleteBlindedContact allow accepts blinded id');
@@ -205,45 +213,229 @@ export class ConversationController {
     // we remove the messages left in this convo. The caller has to merge them if needed
     await deleteAllMessagesByConvoIdNoConfirmation(conversation.id);
 
-    await conversation.setIsApproved(false, false);
-    await conversation.setDidApproveMe(false, false);
+    await conversation.setHidden(false);
     await conversation.commit();
   }
 
-  public async deleteClosedGroup(
-    groupId: string,
-    options: DeleteOptions & { sendLeaveMessage: boolean; forceDeleteLocal?: boolean }
+  public async deleteLegacyGroup(
+    groupPk: PubkeyType,
+    { sendLeaveMessage, fromSyncMessage }: DeleteOptions & { sendLeaveMessage: boolean }
   ) {
-    const conversation = await this.deleteConvoInitialChecks(groupId, 'LegacyGroup');
+    if (!PubKey.is05Pubkey(groupPk)) {
+      throw new PreConditionFailed('deleteLegacyGroup excepts a 05 group');
+    }
+
+    window.log.info(
+      `deleteLegacyGroup: ${ed25519Str(groupPk)}, sendLeaveMessage:${sendLeaveMessage}, fromSyncMessage:${fromSyncMessage}`
+    );
+
+    // this deletes all messages in the conversation
+    const conversation = await this.deleteConvoInitialChecks(groupPk, 'LegacyGroup', false);
     if (!conversation || !conversation.isClosedGroup()) {
       return;
     }
-    window.log.info(`deleteClosedGroup: ${groupId}, sendLeaveMessage?:${options.sendLeaveMessage}`);
-    getSwarmPollingInstance().removePubkey(groupId); // we don't need to keep polling anymore.
+    // we don't need to keep polling anymore.
+    getSwarmPollingInstance().removePubkey(groupPk, 'deleteLegacyGroup');
 
-    if (!options.forceDeleteLocal) {
-      await leaveClosedGroup(groupId, options.fromSyncMessage);
-      window.log.info(
-        `deleteClosedGroup: ${groupId}, sendLeaveMessage?:${options.sendLeaveMessage}`
-      );
+    // send the leave message before we delete everything for this group (including the key!)
+    if (sendLeaveMessage) {
+      await leaveClosedGroup(groupPk, fromSyncMessage);
+    }
 
-      if (options.sendLeaveMessage) {
-        await leaveClosedGroup(groupId, options.fromSyncMessage);
+    await removeLegacyGroupFromWrappers(groupPk);
+
+    // we never keep a left legacy group. Only fully remove it.
+    await this.removeGroupOrCommunityFromDBAndRedux(groupPk);
+  }
+
+  public async deleteGroup(
+    groupPk: GroupPubkeyType,
+    {
+      sendLeaveMessage,
+      fromSyncMessage,
+      deletionType,
+      deleteAllMessagesOnSwarm,
+      forceDestroyForAllMembers,
+      clearFetchedHashes,
+    }: DeleteOptions & {
+      sendLeaveMessage: boolean;
+      deletionType: 'doNotKeep' | 'keepAsKicked' | 'keepAsDestroyed';
+      deleteAllMessagesOnSwarm: boolean;
+      forceDestroyForAllMembers: boolean;
+      clearFetchedHashes: boolean;
+    }
+  ) {
+    if (!PubKey.is03Pubkey(groupPk)) {
+      throw new PreConditionFailed('deleteGroup excepts a 03-group');
+    }
+
+    window.log.info(
+      `deleteGroup: ${ed25519Str(groupPk)}, sendLeaveMessage:${sendLeaveMessage}, fromSyncMessage:${fromSyncMessage}, deletionType:${deletionType}, deleteAllMessagesOnSwarm:${deleteAllMessagesOnSwarm}, forceDestroyForAllMembers:${forceDestroyForAllMembers}, clearFetchedHashes:${clearFetchedHashes}`
+    );
+
+    // Keep the messages until we have effectively left the group (and managed to send our leave message)
+    // because we have the "Leaving..." state (left pane) linked to the last message in conversation.
+    const conversation = await this.deleteConvoInitialChecks(groupPk, 'Group', true);
+    if (!conversation || !conversation.isClosedGroup()) {
+      return;
+    }
+    // we don't need to keep polling anymore.
+    getSwarmPollingInstance().removePubkey(groupPk, 'deleteGroup');
+
+    const groupInUserGroup = await UserGroupsWrapperActions.getGroup(groupPk);
+
+    // Let's check if we still have a MetaGroupWrapper for this group. If we don't we won't be able to do anything..
+    let metaGroupWrapperExists = false;
+    try {
+      await MetaGroupWrapperActions.infoGet(groupPk);
+      metaGroupWrapperExists = true;
+    } catch {
+      window.log.warn(`deleteGroup: MetaGroupWrapperActions for ${groupPk} does not exist.`);
+    }
+
+    // send the leave message before we delete everything for this group (including the key!)
+    if (sendLeaveMessage && metaGroupWrapperExists) {
+      const failedToSendLeaveMessage = await leaveClosedGroup(groupPk, fromSyncMessage);
+      if (PubKey.is03Pubkey(groupPk) && failedToSendLeaveMessage) {
+        // this is caught and is adding an interaction notification message
+        throw new Error('Failed to send our leaving message to 03 group');
       }
     }
 
-    // if we were kicked or sent our left message, we have nothing to do more with that group.
-    // Just delete everything related to it, not trying to add update message or send a left message.
-    await this.removeGroupOrCommunityFromDBAndRedux(groupId);
-    await removeLegacyGroupFromWrappers(groupId);
+    // a group 03 can be removed fully or kept empty as kicked.
+    // when it was pendingInvite, we delete it fully,
+    // when it was not, we empty the group but keep it with the "you have been kicked" message
+    // Note: the pendingInvite=true case cannot really happen as we wouldn't be polling from that group (and so, not get the message kicking us)
+    if (deletionType === 'keepAsKicked' || deletionType === 'keepAsDestroyed') {
+      // now that we know we've sent the leave message, delete any remaining messages
+      await this.deleteConvoInitialChecks(groupPk, 'Group', false);
 
-    if (!options.fromSyncMessage) {
-      await ConfigurationSync.queueNewJobIfNeeded();
+      // delete the secretKey/authData if we had it. If we need it for something, it has to be done before this call.
+      if (groupInUserGroup) {
+        groupInUserGroup.authData = null;
+        groupInUserGroup.secretKey = null;
+        groupInUserGroup.disappearingTimerSeconds = undefined;
+
+        // we want to update the groupName in user group with whatever is in the groupInfo,
+        // so even if the group is not polled anymore, we have an up to date name on restore.
+        let nameInMetaGroup: string | undefined;
+        try {
+          const metaGroup = await MetaGroupWrapperActions.infoGet(groupPk);
+          if (metaGroup && metaGroup.name && !isEmpty(metaGroup.name)) {
+            nameInMetaGroup = metaGroup.name;
+          }
+        } catch (e) {
+          // nothing to do
+        }
+        if (groupInUserGroup && nameInMetaGroup) {
+          groupInUserGroup.name = nameInMetaGroup;
+        }
+        await UserGroupsWrapperActions.setGroup(groupInUserGroup);
+        if (deletionType === 'keepAsKicked') {
+          await UserGroupsWrapperActions.markGroupKicked(groupPk);
+        } else {
+          await UserGroupsWrapperActions.markGroupDestroyed(groupPk);
+        }
+      }
+    } else {
+      if (metaGroupWrapperExists) {
+        let secretKey: Uint8Array | null = null;
+        let weAreLastAdmin = false;
+        // this is pretty ugly. We need to **try to check** if we are the last admin before we destroy.
+        // That **try** is because we might not have the data we need to check that.
+        // If we do manage to check it AND we are the last admin,
+        // we mark the group as destroyed before destroying it locally.
+        try {
+          const us = UserUtils.getOurPubKeyStrFromCache();
+          const allMembers = await MetaGroupWrapperActions.memberGetAll(groupPk);
+          const otherAdminsCount = allMembers
+            .filter(m => m.nominatedAdmin)
+            .filter(m => m.pubkeyHex !== us).length;
+          // check if we are the last admin
+          weAreLastAdmin = otherAdminsCount === 0;
+          const infos = await MetaGroupWrapperActions.infoGet(groupPk);
+          const fromUserGroup = await UserGroupsWrapperActions.getGroup(groupPk);
+          if (!infos || !fromUserGroup || isEmpty(infos) || isEmpty(fromUserGroup)) {
+            window.log.debug(
+              `deleteGroup: some required data not present for ${ed25519Str(groupPk)}: infos:${stringify(infos)} fromUserGroup:${stringify(fromUserGroup)}`
+            );
+            throw new Error('deleteGroup: some required data not present');
+          }
+          secretKey = fromUserGroup.secretKey;
+        } catch (e) {
+          window.log.info(
+            `deleteGroup: initialchecks failed with: ${e.message}. Considering this error as not important and deleting the group anyway.`
+          );
+        }
+        try {
+          if (secretKey && !isEmpty(secretKey) && (weAreLastAdmin || forceDestroyForAllMembers)) {
+            const deleteAllMessagesSubRequest = deleteAllMessagesOnSwarm
+              ? new DeleteAllFromGroupMsgNodeSubRequest({
+                  groupPk,
+                  secretKey,
+                })
+              : undefined;
+
+            // this marks the group info as deleted. We need to push those details
+            await MetaGroupWrapperActions.infoDestroy(groupPk);
+            const lastPushResult = await GroupSync.pushChangesToGroupSwarmIfNeeded({
+              groupPk,
+              deleteAllMessagesSubRequest,
+              extraStoreRequests: [],
+              allow401s: false,
+            });
+            await LibSessionUtil.saveDumpsToDb(groupPk);
+
+            if (lastPushResult !== RunJobResult.Success) {
+              throw new Error(`Failed to destroyGroupDetails for pk ${ed25519Str(groupPk)}`);
+            }
+          }
+        } catch (e) {
+          // if that group was already freed this will happen.
+          window.log.warn(
+            `deleteGroup: MetaGroupWrapperActions failed with: ${e.message}... Keeping it as this should be a retryable error (we are admin case)`
+          );
+          throw e;
+        }
+      }
+      // now that we know we've pushed the group as destroyed, destroy the group's messages locally
+      await this.deleteConvoInitialChecks(groupPk, 'Group', false);
+
+      // this deletes the secretKey if we had it. If we need it for something, it has to be done before this call.
+      await UserGroupsWrapperActions.eraseGroup(groupPk);
+
+      // we are on the emptyGroupButKeepAsKicked=false case, so we remove it all
+      await this.removeGroupOrCommunityFromDBAndRedux(groupPk);
     }
+
+    // We want to clear the lastHash and the seenHashes of the corresponding group.
+    // We do this so that if we get reinvited to the group, we will
+    //  fetch and display all the messages from the group's swarm again.
+    if (clearFetchedHashes) {
+      await this.resetLastHashesForConversation(groupPk);
+    }
+
+    await LibSessionUtil.saveDumpsToDb(UserUtils.getOurPubKeyStrFromCache());
+
+    await SessionUtilConvoInfoVolatile.removeGroupFromWrapper(groupPk);
+    // release the memory (and the current meta-dumps in memory for that group)
+    window.log.info(`freeing meta group wrapper: ${ed25519Str(groupPk)}`);
+    await MetaGroupWrapperActions.free(groupPk);
+    // delete the dumps from the meta group state only, not the details in the UserGroups wrapper itself.
+    await ConfigDumpData.deleteDumpFor(groupPk);
+    getSwarmPollingInstance().removePubkey(groupPk, 'deleteGroup');
+
+    window.inboxStore?.dispatch(groupInfoActions.removeGroupDetailsFromSlice({ groupPk }));
   }
 
-  public async deleteCommunity(convoId: string, options: DeleteOptions) {
-    const conversation = await this.deleteConvoInitialChecks(convoId, 'Community');
+  async resetLastHashesForConversation(groupPk: GroupPubkeyType) {
+    window.log.info(`resetLastHashesForConversation for ${ed25519Str(groupPk)}`);
+    await getSwarmPollingInstance().resetLastHashesForConversation(groupPk);
+    await Data.emptySeenMessageHashesForConversation(groupPk);
+  }
+
+  public async deleteCommunity(convoId: string) {
+    const conversation = await this.deleteConvoInitialChecks(convoId, 'Community', false);
     if (!conversation || !conversation.isPublic()) {
       return;
     }
@@ -255,17 +447,13 @@ export class ConversationController {
     }
     await removeCommunityFromWrappers(conversation.id); // this call needs to fetch the pubkey
     await this.removeGroupOrCommunityFromDBAndRedux(conversation.id);
-
-    if (!options.fromSyncMessage) {
-      await ConfigurationSync.queueNewJobIfNeeded();
-    }
   }
 
   public async delete1o1(
     id: string,
-    options: DeleteOptions & { justHidePrivate?: boolean; keepMessages?: boolean }
+    options: DeleteOptions & { justHidePrivate?: boolean; keepMessages: boolean }
   ) {
-    const conversation = await this.deleteConvoInitialChecks(id, '1o1', options?.keepMessages);
+    const conversation = await this.deleteConvoInitialChecks(id, '1o1', options.keepMessages);
 
     if (!conversation || !conversation.isPrivate()) {
       return;
@@ -284,8 +472,7 @@ export class ConversationController {
     } else {
       window.log.info(`deleteContact isPrivate, reset fields and removing from wrapper: ${id}`);
 
-      await conversation.setIsApproved(false, false);
-      await conversation.setDidApproveMe(false, false);
+      await conversation.setHidden();
       conversation.set('active_at', 0);
       await BlockedNumberController.unblockAll([conversation.id]);
       await conversation.commit(); // first commit to DB so the DB knows about the changes
@@ -294,16 +481,12 @@ export class ConversationController {
       }
       if (conversation.id.startsWith('05')) {
         // make sure to filter blinded contacts as it will throw otherwise
-        await SessionUtilContact.removeContactFromWrapper(conversation.id); // then remove the entry alltogether from the wrapper
+        await SessionUtilContact.removeContactFromWrapper(conversation.id); // then remove the entry altogether from the wrapper
         await SessionUtilConvoInfoVolatile.removeContactFromWrapper(conversation.id);
       }
       if (getCurrentlySelectedConversationOutsideRedux() === conversation.id) {
         window.inboxStore?.dispatch(resetConversationExternal());
       }
-    }
-
-    if (!options.fromSyncMessage) {
-      await ConfigurationSync.queueNewJobIfNeeded();
     }
   }
 
@@ -311,7 +494,7 @@ export class ConversationController {
    *
    * @returns the reference of the list of conversations stored.
    * Warning: You should not edit things directly from that list. This must only be used for reading things.
-   * If you need to make a change, do the usual getConversationControler().get('the id you want to edit')
+   * If you need to make a change, do the usual ConvoHub.use().get('the id you want to edit')
    */
   public getConversations(): Array<ConversationModel> {
     return this.conversations.models;
@@ -379,19 +562,18 @@ export class ConversationController {
         throw error;
       }
     };
-    await BlockedNumberController.load();
 
-    this._initialPromise = load();
+    this._convoHubInitialPromise = load();
 
-    return this._initialPromise;
+    return this._convoHubInitialPromise;
   }
 
   public loadPromise() {
-    return this._initialPromise;
+    return this._convoHubInitialPromise;
   }
 
   public reset() {
-    this._initialPromise = Promise.resolve();
+    this._convoHubInitialPromise = Promise.resolve();
     this._initialFetchComplete = false;
     if (window?.inboxStore) {
       window.inboxStore?.dispatch(conversationActions.removeAllConversations());
@@ -402,37 +584,37 @@ export class ConversationController {
   private async deleteConvoInitialChecks(
     convoId: string,
     deleteType: ConvoVolatileType,
-    keepMessages?: boolean
+    keepMessages: boolean
   ) {
     if (!this._initialFetchComplete) {
-      throw new Error(`getConversationController.${deleteType} needs to complete initial fetch`);
+      throw new Error(`ConvoHub.${deleteType}  needs complete initial fetch`);
     }
 
-    window.log.info(`${deleteType} with ${convoId}`);
+    window.log.info(`deleteConvoInitialChecks: type ${deleteType} with ${ed25519Str(convoId)}`);
 
     const conversation = this.conversations.get(convoId);
     if (!conversation) {
-      window.log.warn(`${deleteType} no such convo ${convoId}`);
+      window.log.warn(`${deleteType} no such convo ${ed25519Str(convoId)}`);
       return null;
     }
 
     // Note in some cases (hiding a conversation) we don't want to delete the messages
     if (!keepMessages) {
       // those are the stuff to do for all conversation types
-      window.log.info(`${deleteType} destroyingMessages: ${convoId}`);
+      window.log.info(`${deleteType} destroyingMessages: ${ed25519Str(convoId)}`);
       await deleteAllMessagesByConvoIdNoConfirmation(convoId);
-      window.log.info(`${deleteType} messages destroyed: ${convoId}`);
+      window.log.info(`${deleteType} messages destroyed: ${ed25519Str(convoId)}`);
     }
 
     return conversation;
   }
 
   private async removeGroupOrCommunityFromDBAndRedux(convoId: string) {
-    window.log.info(`cleanUpGroupConversation, removing convo from DB: ${convoId}`);
+    window.log.info(`cleanUpGroupConversation, removing convo from DB: ${ed25519Str(convoId)}`);
     // not a private conversation, so not a contact for the ContactWrapper
     await Data.removeConversation(convoId);
 
-    // remove the data from the opengrouprooms table too if needed
+    // remove the data from the opengroup rooms table too if needed
     if (convoId && OpenGroupUtils.isOpenGroupV2(convoId)) {
       // remove the roomInfos locally for this open group room including the pubkey
       try {
@@ -442,7 +624,7 @@ export class ConversationController {
       }
     }
 
-    window.log.info(`cleanUpGroupConversation, convo removed from DB: ${convoId}`);
+    window.log.info(`cleanUpGroupConversation, convo removed from DB: ${ed25519Str(convoId)}`);
     const conversation = this.conversations.get(convoId);
 
     if (conversation) {
@@ -454,26 +636,30 @@ export class ConversationController {
     }
     window.inboxStore?.dispatch(conversationActions.conversationRemoved(convoId));
 
-    window.log.info(`cleanUpGroupConversation, convo removed from store: ${convoId}`);
+    window.log.info(`cleanUpGroupConversation, convo removed from store: ${ed25519Str(convoId)}`);
   }
 }
 
 /**
- * You most likely don't want to call this function directly, but instead use the deleteLegacyGroup() from the ConversationController as it will take care of more cleaningup.
+ * You most likely don't want to call this function directly, but instead use the deleteLegacyGroup()
+ * from the ConversationController as it will take care of more cleaning up.
+ * This throws if a leaveMessage needs to be sent, but fails to be sent.
  *
  * Note: `fromSyncMessage` is used to know if we need to send a leave group message to the group first.
  * So if the user made the action on this device, fromSyncMessage should be false, but if it happened from a linked device polled update, set this to true.
+ *
+ * @returns true if the message failed to be sent.
  */
-async function leaveClosedGroup(groupId: string, fromSyncMessage: boolean) {
-  const convo = getConversationController().get(groupId);
+async function leaveClosedGroup(groupPk: PubkeyType | GroupPubkeyType, fromSyncMessage: boolean) {
+  const convo = ConvoHub.use().get(groupPk);
 
   if (!convo || !convo.isClosedGroup()) {
     window?.log?.error('Cannot leave non-existing group');
-    return;
+    return false;
   }
 
   const ourNumber = UserUtils.getOurPubKeyStrFromCache();
-  const isCurrentUserAdmin = convo.get('groupAdmins')?.includes(ourNumber);
+  const isCurrentUserAdmin = convo.weAreAdminUnblinded();
 
   let members: Array<string> = [];
   let admins: Array<string> = [];
@@ -487,60 +673,132 @@ async function leaveClosedGroup(groupId: string, fromSyncMessage: boolean) {
   } else {
     // otherwise, just the exclude ourself from the members and trigger an update with this
     convo.set({ left: true });
-    members = (convo.get('members') || []).filter((m: string) => m !== ourNumber);
-    admins = convo.get('groupAdmins') || [];
+    members = (convo.getGroupMembers() || []).filter((m: string) => m !== ourNumber);
+    admins = convo.getGroupAdmins();
   }
   convo.set({ members });
   await convo.updateGroupAdmins(admins, false);
   await convo.commit();
 
-  const networkTimestamp = GetNetworkTime.getNowWithNetworkOffset();
-
-  getSwarmPollingInstance().removePubkey(groupId);
+  getSwarmPollingInstance().removePubkey(groupPk, 'leaveClosedGroup');
 
   if (fromSyncMessage) {
     // no need to send our leave message as our other device should already have sent it.
-    return;
+    return false;
   }
 
-  const keypair = await Data.getLatestClosedGroupEncryptionKeyPair(groupId);
-  if (!keypair || isEmpty(keypair) || isEmpty(keypair.publicHex) || isEmpty(keypair.privateHex)) {
-    // if we do not have a keypair, we won't be able to send our leaving message neither, so just skip sending it.
-    // this can happen when getting a group from a broken libsession usergroup wrapper, but not only.
-    return;
+  if (PubKey.is03Pubkey(groupPk)) {
+    const group = await UserGroupsWrapperActions.getGroup(groupPk);
+    if (!group || (!group.secretKey && !group.authData)) {
+      throw new Error('leaveClosedGroup: group from UserGroupsWrapperActions is null ');
+    }
+    const createAtNetworkTimestamp = NetworkTime.now();
+    // Send the update to the 03 group
+    const ourLeavingMessage = new GroupUpdateMemberLeftMessage({
+      createAtNetworkTimestamp: createAtNetworkTimestamp + 1, // we just need it to be different than the one of ourLeavingNotificationMessage
+      groupPk,
+      expirationType: null, // we keep that one **not** expiring
+      expireTimer: null,
+    });
+
+    const ourLeavingNotificationMessage = new GroupUpdateMemberLeftNotificationMessage({
+      createAtNetworkTimestamp,
+      groupPk,
+      ...DisappearingMessages.getExpireDetailsForOutgoingMessage(convo, createAtNetworkTimestamp), // this one should be expiring with the convo expiring details
+    });
+
+    window?.log?.info(
+      `We are leaving the group ${ed25519Str(groupPk)}. Sending our leaving messages.`
+    );
+    let failedToSent03LeaveMessage = true;
+    // We might not be able to send our leaving messages (no encryption key pair, we were already removed, no network, etc).
+    // If that happens, we should just remove everything from our current user.
+    try {
+      const storeRequests = await StoreGroupRequestFactory.makeGroupMessageSubRequest(
+        [ourLeavingNotificationMessage, ourLeavingMessage],
+        {
+          authData: group.authData,
+          secretKey: group.secretKey,
+        }
+      );
+      const controller = new AbortController();
+      const results = await timeoutWithAbort(
+        MessageSender.sendEncryptedDataToSnode({
+          destination: groupPk,
+          sortedSubRequests: storeRequests,
+          method: 'sequence',
+          abortSignal: controller.signal,
+          allow401s: true, // we want "allow" 401s so we don't throw
+        }),
+        30 * DURATION.SECONDS,
+        controller
+      );
+
+      if (results?.[0].code === 401) {
+        window.log.info(
+          `leaveClosedGroup for ${ed25519Str(groupPk)} failed with 401. Assuming we've been revoked.`
+        );
+      } else if (results?.[0].code !== 200) {
+        throw new Error(
+          `Even with the retries, leaving message for group ${ed25519Str(
+            groupPk
+          )} failed to be sent...`
+        );
+      }
+      failedToSent03LeaveMessage = false;
+    } catch (e) {
+      window?.log?.warn(
+        `failed to send our leaving messages for ${ed25519Str(groupPk)}:${e.message}`
+      );
+    }
+
+    // the rest of the cleaning of that conversation is done in the `deleteClosedGroup()`
+
+    return failedToSent03LeaveMessage;
+  }
+
+  // TODO remove legacy group support
+  const keyPair = await Data.getLatestClosedGroupEncryptionKeyPair(groupPk);
+  if (!keyPair || isEmpty(keyPair) || isEmpty(keyPair.publicHex) || isEmpty(keyPair.privateHex)) {
+    // if we do not have a keyPair, we won't be able to send our leaving message neither, so just skip sending it.
+    // this can happen when getting a group from a broken libsession user group wrapper, but not only.
+    return false;
   }
 
   // Send the update to the group
   const ourLeavingMessage = new ClosedGroupMemberLeftMessage({
-    timestamp: networkTimestamp,
-    groupId,
+    createAtNetworkTimestamp: NetworkTime.now(),
+    groupId: groupPk,
     expirationType: null, // we keep that one **not** expiring
     expireTimer: null,
   });
 
-  window?.log?.info(`We are leaving the group ${groupId}. Sending our leaving message.`);
-  // if we do not have a keypair for that group, we can't send our leave message, so just skip the message sending part
-  const wasSent = await getMessageQueue().sendToPubKeyNonDurably({
+  window?.log?.info(`We are leaving the legacy group ${groupPk}. Sending our leaving message.`);
+
+  // if we do not have a keyPair for that group, we can't send our leave message, so just skip the message sending part
+  const wasSent = await MessageQueue.use().sendToLegacyGroupNonDurably({
     message: ourLeavingMessage,
-    namespace: SnodeNamespaces.ClosedGroupMessage,
-    pubkey: PubKey.cast(groupId),
+    namespace: SnodeNamespaces.LegacyClosedGroup,
+    destination: groupPk,
   });
-  // TODO our leaving message might fail to be sent for some specific reason we want to still delete the group.
-  // for instance, if we do not have the encryption keypair anymore, we cannot send our left message, but we should still delete it's content
+  // The leaving message might fail to be sent for some specific reason we want to still delete the group.
+  // For instance, if we do not have the encryption keyPair anymore, we cannot send our left message, but we should still delete its content
   if (wasSent) {
     window?.log?.info(
-      `Leaving message sent ${groupId}. Removing everything related to this group.`
+      `Leaving message sent ${ed25519Str(groupPk)}. Removing everything related to this group.`
     );
   } else {
     window?.log?.info(
-      `Leaving message failed to be sent for ${groupId}. But still removing everything related to this group....`
+      `Leaving message failed to be sent for ${ed25519Str(
+        groupPk
+      )}. But still removing everything related to this group....`
     );
   }
-  // the rest of the cleaning of that conversation is done in the `deleteClosedGroup()`
+  return wasSent;
 }
 
 async function removeLegacyGroupFromWrappers(groupId: string) {
-  getSwarmPollingInstance().removePubkey(groupId);
+  getSwarmPollingInstance().removePubkey(groupId, 'removeLegacyGroupFromWrappers');
 
   await UserGroupsWrapperActions.eraseLegacyGroup(groupId);
   await SessionUtilConvoInfoVolatile.removeLegacyGroupFromWrapper(groupId);
@@ -570,3 +828,5 @@ async function removeCommunityFromWrappers(conversationId: string) {
     window?.log?.info('SessionUtilUserGroups.removeCommunityFromWrapper failed:', e.message);
   }
 }
+
+export const ConvoHub = { use: getConvoHub };

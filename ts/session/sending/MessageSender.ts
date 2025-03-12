@@ -1,75 +1,68 @@
 // REMOVE COMMENT AFTER: This can just export pure functions as it doesn't need state
 
 import { AbortController } from 'abort-controller';
-import ByteBuffer from 'bytebuffer';
-import _, { isEmpty, isNil, isNumber, isString, sample, toNumber } from 'lodash';
+import { GroupPubkeyType, PubkeyType } from 'libsession_util_nodejs';
+import { isArray, isEmpty, isNumber, isString } from 'lodash';
 import pRetry from 'p-retry';
 import { Data } from '../../data/data';
-import { SignalService } from '../../protobuf';
+import { UserGroupsWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { OpenGroupMessageV2 } from '../apis/open_group_api/opengroupV2/OpenGroupMessageV2';
 import {
   sendMessageOnionV4BlindedRequest,
   sendSogsMessageOnionV4,
 } from '../apis/open_group_api/sogsv3/sogsV3SendMessage';
 import {
-  NotEmptyArrayOfBatchResults,
-  StoreOnNodeMessage,
-  StoreOnNodeParams,
-  StoreOnNodeParamsNoSig,
+  BuiltSnodeSubRequests,
+  DeleteAllFromGroupMsgNodeSubRequest,
+  DeleteHashesFromGroupNodeSubRequest,
+  DeleteHashesFromUserNodeSubRequest,
+  isStoreUserInitiatedSubRequest,
+  MethodBatchType,
+  RawSnodeSubRequests,
+  StoreGroupInfoSubRequest,
+  StoreGroupKeysSubRequest,
+  StoreGroupMembersSubRequest,
+  StoreGroupMessageSubRequest,
+  StoreGroupRevokedRetrievableSubRequest,
+  StoreLegacyGroupMessageSubRequest,
+  StoreUserConfigSubRequest,
+  StoreUserMessageSubRequest,
+  SubaccountRevokeSubRequest,
+  SubaccountUnrevokeSubRequest,
+  type DeleteAllFromGroupNodeSubRequest,
 } from '../apis/snode_api/SnodeRequestTypes';
+import { NotEmptyArrayOfBatchResults } from '../apis/snode_api/BatchResultEntry';
+import { BatchRequests } from '../apis/snode_api/batchRequest';
 import { GetNetworkTime } from '../apis/snode_api/getNetworkTime';
 import { SnodeNamespace, SnodeNamespaces } from '../apis/snode_api/namespaces';
-import { getSwarmFor } from '../apis/snode_api/snodePool';
-import { SnodeSignature, SnodeSignatureResult } from '../apis/snode_api/snodeSignatures';
-import { SnodeAPIStore } from '../apis/snode_api/storeMessage';
-import { getConversationController } from '../conversations';
-import { MessageEncrypter } from '../crypto';
+import {
+  SigResultAdmin,
+  SigResultSubAccount,
+  SnodeGroupSignature,
+} from '../apis/snode_api/signature/groupSignature';
+import { SnodeSignature, SnodeSignatureResult } from '../apis/snode_api/signature/snodeSignatures';
+import { SnodePool } from '../apis/snode_api/snodePool';
+import { DURATION, TTL_DEFAULT } from '../constants';
+import { ConvoHub } from '../conversations';
 import { addMessagePadding } from '../crypto/BufferPadding';
 import { ContentMessage } from '../messages/outgoing';
-import { ConfigurationMessage } from '../messages/outgoing/controlMessage/ConfigurationMessage';
-import { SharedConfigMessage } from '../messages/outgoing/controlMessage/SharedConfigMessage';
 import { UnsendMessage } from '../messages/outgoing/controlMessage/UnsendMessage';
 import { ClosedGroupNewMessage } from '../messages/outgoing/controlMessage/group/ClosedGroupNewMessage';
 import { OpenGroupVisibleMessage } from '../messages/outgoing/visibleMessage/OpenGroupVisibleMessage';
 import { PubKey } from '../types';
-import { RawMessage } from '../types/RawMessage';
+import { OutgoingRawMessage } from '../types/RawMessage';
 import { UserUtils } from '../utils';
 import { ed25519Str, fromUInt8ArrayToBase64 } from '../utils/String';
-import { EmptySwarmError } from '../utils/errors';
+import { MessageSentHandler } from './MessageSentHandler';
+import { EncryptAndWrapMessageResults, MessageWrapper } from './MessageWrapper';
+import { SaveSeenMessageHash, stringify } from '../../types/sqlSharedTypes';
 import { OpenGroupRequestCommonType } from '../../data/types';
+import { NetworkTime } from '../../util/NetworkTime';
+import { MergedAbortSignal } from '../apis/snode_api/requestWith';
+import { WithAllow401s } from '../types/with';
+import { ERROR_421_HANDLED_RETRY_REQUEST } from '../apis/snode_api/onions';
 
 // ================ SNODE STORE ================
-
-function overwriteOutgoingTimestampWithNetworkTimestamp(message: { plainTextBuffer: Uint8Array }) {
-  const networkTimestamp = GetNetworkTime.getNowWithNetworkOffset();
-
-  const { plainTextBuffer } = message;
-  const contentDecoded = SignalService.Content.decode(plainTextBuffer);
-
-  const { dataMessage, dataExtractionNotification, typingMessage } = contentDecoded;
-  if (dataMessage && dataMessage.timestamp && toNumber(dataMessage.timestamp) > 0) {
-    // this is a sync message, do not overwrite the message timestamp
-    if (dataMessage.syncTarget) {
-      return {
-        overRiddenTimestampBuffer: plainTextBuffer,
-        networkTimestamp: _.toNumber(dataMessage.timestamp),
-      };
-    }
-    dataMessage.timestamp = networkTimestamp;
-  }
-  if (
-    dataExtractionNotification &&
-    dataExtractionNotification.timestamp &&
-    toNumber(dataExtractionNotification.timestamp) > 0
-  ) {
-    dataExtractionNotification.timestamp = networkTimestamp;
-  }
-  if (typingMessage && typingMessage.timestamp && toNumber(typingMessage.timestamp) > 0) {
-    typingMessage.timestamp = networkTimestamp;
-  }
-  const overRiddenTimestampBuffer = SignalService.Content.encode(contentDecoded).finish();
-  return { overRiddenTimestampBuffer, networkTimestamp };
-}
 
 function getMinRetryTimeout() {
   return 1000;
@@ -77,15 +70,160 @@ function getMinRetryTimeout() {
 
 function isContentSyncMessage(message: ContentMessage) {
   if (
-    message instanceof ConfigurationMessage ||
     message instanceof ClosedGroupNewMessage ||
     message instanceof UnsendMessage ||
-    message instanceof SharedConfigMessage ||
     (message as any).syncTarget?.length > 0
   ) {
     return true;
   }
   return false;
+}
+
+type StoreRequest05 =
+  | StoreUserConfigSubRequest
+  | StoreUserMessageSubRequest
+  | StoreLegacyGroupMessageSubRequest;
+type StoreRequest03 =
+  | StoreGroupInfoSubRequest
+  | StoreGroupMembersSubRequest
+  | StoreGroupKeysSubRequest
+  | StoreGroupRevokedRetrievableSubRequest
+  | StoreGroupMessageSubRequest;
+
+type StoreRequestPerPubkey<T extends GroupPubkeyType | PubkeyType> = T extends PubkeyType
+  ? StoreRequest05
+  : StoreRequest03;
+
+type EncryptedMessageDetails = Pick<
+  EncryptAndWrapMessageResults,
+  | 'namespace'
+  | 'encryptedAndWrappedData'
+  | 'identifier'
+  | 'ttl'
+  | 'networkTimestamp'
+  | 'plainTextBuffer'
+>;
+
+async function messageToRequest05({
+  destination,
+  encryptedAndWrapped: {
+    namespace,
+    encryptedAndWrappedData,
+    identifier,
+    ttl,
+    networkTimestamp,
+    plainTextBuffer,
+  },
+}: {
+  destination: PubkeyType;
+  encryptedAndWrapped: EncryptedMessageDetails;
+}): Promise<StoreRequest05> {
+  const shared05Arguments = {
+    encryptedData: encryptedAndWrappedData,
+    dbMessageIdentifier: identifier || null,
+    ttlMs: ttl,
+    destination,
+    namespace,
+    createdAtNetworkTimestamp: networkTimestamp,
+    plainTextBuffer,
+    getNow: NetworkTime.now,
+  };
+  if (namespace === SnodeNamespaces.Default) {
+    return new StoreUserMessageSubRequest(shared05Arguments);
+  }
+  if (namespace === SnodeNamespaces.LegacyClosedGroup) {
+    return new StoreLegacyGroupMessageSubRequest(shared05Arguments);
+  }
+  if (SnodeNamespace.isUserConfigNamespace(namespace)) {
+    return new StoreUserConfigSubRequest(shared05Arguments);
+  }
+
+  window.log.error(
+    `unhandled messageToRequest05 case with details: ${ed25519Str(destination)},namespace: ${namespace}`
+  );
+  throw new Error(
+    `unhandled messageToRequest05 case for 05 ${ed25519Str(destination)} and namespace ${namespace}`
+  );
+}
+
+async function messageToRequest03({
+  destination,
+  encryptedAndWrapped: { namespace, encryptedAndWrappedData, identifier, ttl, networkTimestamp },
+}: {
+  destination: GroupPubkeyType;
+  encryptedAndWrapped: Pick<
+    EncryptAndWrapMessageResults,
+    'namespace' | 'encryptedAndWrappedData' | 'identifier' | 'ttl' | 'networkTimestamp'
+  >;
+}): Promise<StoreRequest03> {
+  const group = await UserGroupsWrapperActions.getGroup(destination);
+  if (!group) {
+    window.log.warn(
+      `messageToRequest03: no such group found in wrapper: ${ed25519Str(destination)}`
+    );
+    throw new Error('messageToRequest03: no such group found in wrapper');
+  }
+  const shared03Arguments = {
+    encryptedData: encryptedAndWrappedData,
+    namespace,
+    ttlMs: ttl,
+    groupPk: destination,
+    dbMessageIdentifier: identifier || null,
+    createdAtNetworkTimestamp: networkTimestamp,
+    getNow: NetworkTime.now,
+    ...group,
+  };
+  if (
+    SnodeNamespace.isGroupConfigNamespace(namespace) ||
+    namespace === SnodeNamespaces.ClosedGroupMessages
+  ) {
+    return new StoreGroupMessageSubRequest(shared03Arguments);
+  }
+  window.log.error(
+    `unhandled messageToRequest03 case with details: ${ed25519Str(destination)},namespace: ${namespace}`
+  );
+  throw new Error(
+    `unhandled messageToRequest03 case for 03 ${ed25519Str(destination)} and namespace ${namespace}`
+  );
+}
+
+async function messageToRequest<T extends GroupPubkeyType | PubkeyType>({
+  destination,
+  encryptedAndWrapped,
+}: {
+  destination: T;
+  encryptedAndWrapped: EncryptedMessageDetails;
+}): Promise<StoreRequestPerPubkey<T>> {
+  if (PubKey.is03Pubkey(destination)) {
+    const req = await messageToRequest03({ destination, encryptedAndWrapped });
+    return req as StoreRequestPerPubkey<T>; // this is mandatory, sadly
+  }
+  if (PubKey.is05Pubkey(destination)) {
+    const req = await messageToRequest05({
+      destination,
+      encryptedAndWrapped,
+    });
+    return req as StoreRequestPerPubkey<T>; // this is mandatory, sadly
+  }
+
+  throw new Error('messageToRequest: unhandled case');
+}
+
+async function messagesToRequests<T extends GroupPubkeyType | PubkeyType>({
+  destination,
+  encryptedAndWrappedArr,
+}: {
+  destination: T;
+  encryptedAndWrappedArr: Array<EncryptedMessageDetails>;
+}): Promise<Array<StoreRequestPerPubkey<T>>> {
+  const subRequests: Array<StoreRequestPerPubkey<T>> = [];
+  for (let index = 0; index < encryptedAndWrappedArr.length; index++) {
+    const encryptedAndWrapped = encryptedAndWrappedArr[index];
+    // eslint-disable-next-line no-await-in-loop
+    const req = await messageToRequest({ destination, encryptedAndWrapped });
+    subRequests.push(req);
+  }
+  return subRequests;
 }
 
 /**
@@ -94,319 +232,320 @@ function isContentSyncMessage(message: ContentMessage) {
  * @param message The message to send.
  * @param attempts The amount of times to attempt sending. Minimum value is 1.
  */
-async function send({
+
+async function sendSingleMessage({
   message,
   retryMinTimeout = 100,
   attempts = 3,
   isSyncMessage,
+  abortSignal,
 }: {
-  message: RawMessage;
+  message: OutgoingRawMessage;
+  abortSignal: MergedAbortSignal | null;
   attempts?: number;
   retryMinTimeout?: number; // in ms
   isSyncMessage: boolean;
 }): Promise<{ wrappedEnvelope: Uint8Array; effectiveTimestamp: number }> {
+  const destination = message.device;
+  if (!PubKey.is03Pubkey(destination) && !PubKey.is05Pubkey(destination)) {
+    throw new Error('MessageSender rawMessage was given invalid pubkey');
+  }
   return pRetry(
     async () => {
-      const recipient = PubKey.cast(message.device);
-
-      // we can only have a single message in this send function for now
-      const [encryptedAndWrapped] = await encryptMessagesAndWrap([
-        {
-          destination: message.device,
-          plainTextBuffer: message.plainTextBuffer,
-          namespace: message.namespace,
-          ttl: message.ttl,
-          identifier: message.identifier,
-          isSyncMessage: Boolean(isSyncMessage),
-        },
-      ]);
-
-      // make sure to update the local sent_at timestamp, because sometimes, we will get the just pushed message in the receiver side
-      // before we return from the await below.
-      // and the isDuplicate messages relies on sent_at timestamp to be valid.
-      const found = await Data.getMessageById(encryptedAndWrapped.identifier);
-      // make sure to not update the sent timestamp if this a currently syncing message
-      if (found && !found.get('sentSync')) {
-        found.set({ sent_at: encryptedAndWrapped.networkTimestamp });
-        await found.commit();
-      }
-      let foundMessage = encryptedAndWrapped.identifier
-        ? await Data.getMessageById(encryptedAndWrapped.identifier)
-        : null;
-
-      const isSyncedDeleteAfterReadMessage =
-        found &&
-        UserUtils.isUsFromCache(recipient.key) &&
-        found.getExpirationType() === 'deleteAfterRead' &&
-        found.getExpireTimerSeconds() > 0 &&
-        encryptedAndWrapped.isSyncMessage;
-
-      let overridenTtl = encryptedAndWrapped.ttl;
-      if (isSyncedDeleteAfterReadMessage && found.getExpireTimerSeconds() > 0) {
-        const asMs = found.getExpireTimerSeconds() * 1000;
-        window.log.debug(`overriding ttl for synced DaR message to ${asMs}`);
-        overridenTtl = asMs;
-      }
-
-      const batchResult = await MessageSender.sendMessagesDataToSnode(
-        [
+      try {
+        const recipient = PubKey.cast(message.device);
+        // we can only have a single message in this send function for now
+        const [encryptedAndWrapped] = await MessageWrapper.encryptMessagesAndWrap([
           {
-            pubkey: recipient.key,
-            data64: encryptedAndWrapped.data64,
-            ttl: overridenTtl,
-            timestamp: encryptedAndWrapped.networkTimestamp,
-            namespace: encryptedAndWrapped.namespace,
+            destination: message.device,
+            plainTextBuffer: message.plainTextBuffer,
+            namespace: message.namespace,
+            ttl: message.ttl,
+            identifier: message.identifier,
+            networkTimestamp: message.networkTimestampCreated,
+            isSyncMessage: Boolean(isSyncMessage),
           },
-        ],
-        recipient.key,
-        null
-      );
-
-      const isDestinationClosedGroup = getConversationController()
-        .get(recipient.key)
-        ?.isClosedGroup();
-      const storedAt = batchResult?.[0]?.body?.t;
-      const storedHash = batchResult?.[0]?.body?.hash;
-
-      if (
-        batchResult &&
-        !isEmpty(batchResult) &&
-        batchResult[0].code === 200 &&
-        !isEmpty(storedHash) &&
-        isString(storedHash) &&
-        isNumber(storedAt)
-      ) {
-        // TODO: the expiration is due to be returned by the storage server on "store" soon, we will then be able to use it instead of doing the storedAt + ttl logic below
-        // if we have a hash and a storedAt, mark it as seen so we don't reprocess it on the next retrieve
-        await Data.saveSeenMessageHashes([
-          { expiresAt: storedAt + encryptedAndWrapped.ttl, hash: storedHash },
         ]);
-        // If message also has a sync message, save that hash. Otherwise save the hash from the regular message send i.e. only closed groups in this case.
 
-        if (
-          encryptedAndWrapped.identifier &&
-          (encryptedAndWrapped.isSyncMessage || isDestinationClosedGroup)
-        ) {
-          // get a fresh copy of the message from the DB
-          foundMessage = await Data.getMessageById(encryptedAndWrapped.identifier);
-          if (foundMessage) {
-            await foundMessage.updateMessageHash(storedHash);
-            await foundMessage.commit();
-          }
+        // make sure to update the local sent_at timestamp, because sometimes, we will get the just pushed message in the receiver side
+        // before we return from the await below.
+        // and the isDuplicate messages relies on sent_at timestamp to be valid.
+        const found = await Data.getMessageById(encryptedAndWrapped.identifier);
+
+        // make sure to not update the sent timestamp if this a currently syncing message
+        if (found && !found.get('sentSync')) {
+          found.set({ sent_at: encryptedAndWrapped.networkTimestamp });
+          await found.commit();
         }
-      }
+        const isSyncedDeleteAfterReadMessage =
+          found &&
+          UserUtils.isUsFromCache(recipient.key) &&
+          found.getExpirationType() === 'deleteAfterRead' &&
+          found.getExpireTimerSeconds() > 0 &&
+          encryptedAndWrapped.isSyncMessage;
 
-      return {
-        wrappedEnvelope: encryptedAndWrapped.data,
-        effectiveTimestamp: encryptedAndWrapped.networkTimestamp,
-      };
+        let overriddenTtl = encryptedAndWrapped.ttl;
+        if (isSyncedDeleteAfterReadMessage && found.getExpireTimerSeconds() > 0) {
+          const asMs = found.getExpireTimerSeconds() * 1000;
+          window.log.debug(`overriding ttl for synced DaR message to ${asMs}`);
+          overriddenTtl = asMs;
+        }
+
+        const subRequests = await messagesToRequests({
+          encryptedAndWrappedArr: [{ ...encryptedAndWrapped, ttl: overriddenTtl }],
+          destination,
+        });
+
+        const targetNode = await SnodePool.getNodeFromSwarmOrThrow(destination);
+
+        const batchResult = await BatchRequests.doUnsignedSnodeBatchRequestNoRetries({
+          unsignedSubRequests: subRequests,
+          targetNode,
+          timeoutMs: 10 * DURATION.SECONDS,
+          associatedWith: destination,
+          allow401s: false,
+          method: 'sequence',
+          abortSignal,
+        });
+
+        await handleBatchResultWithSubRequests({ batchResult, subRequests, destination });
+        return {
+          wrappedEnvelope: encryptedAndWrapped.encryptedAndWrappedData,
+          effectiveTimestamp: encryptedAndWrapped.networkTimestamp,
+        };
+      } catch (e) {
+        if (e instanceof pRetry.AbortError && e.message === ERROR_421_HANDLED_RETRY_REQUEST) {
+          // sendSingleMessage handles fetching a new snode itself once 421 was handled, but a pRetry.AbortError thrown
+          // will stop the retry process. We need to catch this specific error and throw it again (as a normal error)
+          // to let pRetry retry the request.
+          throw new Error(e.message);
+        }
+        throw e;
+      }
     },
     {
       retries: Math.max(attempts - 1, 0),
       factor: 1,
       minTimeout: retryMinTimeout || MessageSender.getMinRetryTimeout(),
+      onFailedAttempt: e => {
+        window?.log?.warn(
+          `[sendSingleMessage] attempt #${e.attemptNumber} failed. ${e.retriesLeft} retries left... Error: ${e.message}`
+        );
+      },
     }
   );
 }
 
-async function sendMessagesDataToSnode(
-  params: Array<StoreOnNodeParamsNoSig>,
-  destination: string,
-  messagesHashesToDelete: Set<string> | null
-): Promise<NotEmptyArrayOfBatchResults> {
-  const rightDestination = params.filter(m => m.pubkey === destination);
-  const swarm = await getSwarmFor(destination);
+async function getSignatureParamsFromNamespace(
+  { namespace }: { namespace: SnodeNamespaces },
+  destination: string
+): Promise<SigResultSubAccount | SigResultAdmin | SnodeSignatureResult | object> {
+  const store = 'store' as const;
+  if (SnodeNamespace.isUserConfigNamespace(namespace)) {
+    const ourPrivKey = (await UserUtils.getUserED25519KeyPairBytes())?.privKeyBytes;
+    if (!ourPrivKey) {
+      throw new Error(
+        'getSignatureParamsFromNamespace UserUtils.getUserED25519KeyPairBytes is empty'
+      );
+    }
+    return SnodeSignature.getSnodeSignatureParamsUs({
+      method: store,
+      namespace,
+    });
+  }
 
-  const withSigWhenRequired: Array<StoreOnNodeParams> = await Promise.all(
-    rightDestination.map(async item => {
-      // some namespaces require a signature to be added
-      let signOpts: SnodeSignatureResult | undefined;
-      if (SnodeNamespace.isUserConfigNamespace(item.namespace)) {
-        signOpts = await SnodeSignature.getSnodeSignatureParams({
-          method: 'store' as const,
-          namespace: item.namespace,
-          pubkey: destination,
-        });
-      }
-      const store: StoreOnNodeParams = {
-        data: item.data64,
-        namespace: item.namespace,
-        pubkey: item.pubkey,
-        timestamp: item.timestamp,
-        // sig_timestamp: item.timestamp,
-        // sig_timestamp is currently not forwarded from the receiving snode to the other swarm members, and so their sig verify fail.
-        // This timestamp is not really needed so we just don't send it in the meantime (the timestamp value is used if the sig_timestamp is not present)
-        ttl: item.ttl,
-        ...signOpts,
-      };
-      return store;
+  if (
+    SnodeNamespace.isGroupConfigNamespace(namespace) ||
+    namespace === SnodeNamespaces.ClosedGroupMessages ||
+    namespace === SnodeNamespaces.ClosedGroupRevokedRetrievableMessages
+  ) {
+    if (!PubKey.is03Pubkey(destination)) {
+      throw new Error(
+        'getSignatureParamsFromNamespace: group config namespace required a 03 pubkey'
+      );
+    }
+    const found = await UserGroupsWrapperActions.getGroup(destination);
+    return SnodeGroupSignature.getSnodeGroupSignature({
+      method: store,
+      namespace,
+      group: found,
+    });
+  }
+  // no signature required for this namespace/pubkey combo
+  return {};
+}
+
+function logBuildSubRequests(subRequests: Array<BuiltSnodeSubRequests>) {
+  if (!window.sessionFeatureFlags.debug.debugBuiltSnodeRequests) {
+    return;
+  }
+  window.log.debug(
+    `\n========================================\nsubRequests: [\n\t${subRequests
+      .map(m => {
+        return stringify(m);
+      })
+      .join(',\n\t')}]\n========================================`
+  );
+}
+
+async function signSubRequests(
+  params: Array<RawSnodeSubRequests>
+): Promise<Array<BuiltSnodeSubRequests>> {
+  const signedRequests: Array<BuiltSnodeSubRequests> = await Promise.all(
+    params.map(p => {
+      return p.build();
     })
   );
 
-  const signedDeleteOldHashesRequest =
-    messagesHashesToDelete && messagesHashesToDelete.size
-      ? await SnodeSignature.getSnodeSignatureByHashesParams({
-          method: 'delete' as const,
-          messages: [...messagesHashesToDelete],
-          pubkey: destination,
-        })
-      : null;
+  logBuildSubRequests(signedRequests);
 
-  const snode = sample(swarm);
-  if (!snode) {
-    throw new EmptySwarmError(destination, 'Ran out of swarm nodes to query');
+  return signedRequests;
+}
+
+type DeleteHashesRequestPerPubkey<T extends PubkeyType | GroupPubkeyType> = T extends PubkeyType
+  ? DeleteHashesFromUserNodeSubRequest
+  : DeleteHashesFromGroupNodeSubRequest;
+
+/**
+ * Make sure that all the sub requests have been given in their sendingOrder, or throw an error.
+ */
+function assertRequestsAreSorted({ subRequests }: { subRequests: Array<RawSnodeSubRequests> }) {
+  const allSorted = subRequests.every((current, index) => {
+    const currentOrder = current.requestOrder();
+    const previousOrder =
+      index > 0 ? subRequests[index - 1].requestOrder() : Number.MIN_SAFE_INTEGER;
+    return currentOrder >= previousOrder;
+  });
+  if (!allSorted) {
+    throw new Error(
+      'assertRequestsAreSorted: Some sub requests are not correctly sorted by requestOrder().'
+    );
+  }
+}
+
+type SortedSubRequestsType<T extends PubkeyType | GroupPubkeyType> = Array<
+  | StoreRequestPerPubkey<T>
+  | DeleteHashesRequestPerPubkey<T>
+  | DeleteAllFromGroupMsgNodeSubRequest
+  | DeleteAllFromGroupNodeSubRequest
+  | SubaccountRevokeSubRequest
+  | SubaccountUnrevokeSubRequest
+>;
+
+async function sendMessagesDataToSnode<T extends PubkeyType | GroupPubkeyType>({
+  associatedWith,
+  sortedSubRequests,
+  method,
+  abortSignal,
+  allow401s,
+}: WithAllow401s & {
+  sortedSubRequests: SortedSubRequestsType<T>;
+  associatedWith: T;
+  method: MethodBatchType;
+  abortSignal: MergedAbortSignal | null;
+}): Promise<NotEmptyArrayOfBatchResults> {
+  if (!associatedWith) {
+    throw new Error('sendMessagesDataToSnode first sub request pubkey needs to be set');
   }
 
-  try {
-    // No pRetry here as if this is a bad path it will be handled and retried in lokiOnionFetch.
-    const storeResults = await SnodeAPIStore.storeOnNode(
-      snode,
-      withSigWhenRequired,
-      signedDeleteOldHashesRequest
+  if (sortedSubRequests.some(m => m.destination !== associatedWith)) {
+    throw new Error(
+      'sendMessagesDataToSnode tried to send batch request containing sub request not for the right destination'
     );
+  }
 
-    if (!isEmpty(storeResults)) {
+  // Note: we want to make sure the caller sorted those sub requests, as it might try to handle the batch result based on the index.
+  // If we sorted the requests here, we'd need to make sure the caller knows that the results are not in order he sent them.
+  assertRequestsAreSorted({ subRequests: sortedSubRequests });
+
+  const targetNode = await SnodePool.getNodeFromSwarmOrThrow(associatedWith);
+
+  try {
+    const responses = await BatchRequests.doUnsignedSnodeBatchRequestNoRetries({
+      unsignedSubRequests: sortedSubRequests,
+      targetNode,
+      timeoutMs: 6 * DURATION.SECONDS,
+      associatedWith,
+      allow401s,
+      method,
+      abortSignal,
+    });
+
+    if (!responses || !responses.length) {
+      window?.log?.warn(
+        `SessionSnodeAPI::doUnsignedSnodeBatchRequestNoRetries on ${targetNode.ip}:${targetNode.port} returned falsy value`,
+        responses
+      );
+      throw new Error('doUnsignedSnodeBatchRequestNoRetries: Invalid result');
+    }
+    await handleBatchResultWithSubRequests({
+      batchResult: responses,
+      subRequests: sortedSubRequests,
+      destination: associatedWith,
+    });
+
+    const firstResult = responses[0];
+
+    if (firstResult.code !== 200) {
+      window?.log?.warn(
+        'first result status is not 200 for sendMessagesDataToSnode but: ',
+        firstResult.code
+      );
+      if (!allow401s || firstResult.code !== 401) {
+        throw new Error('sendMessagesDataToSnode: Invalid status code');
+      }
+    }
+
+    GetNetworkTime.handleTimestampOffsetFromNetwork('store', firstResult.body.t);
+
+    if (!isEmpty(responses)) {
       window?.log?.info(
-        `sendMessagesToSnode - Successfully stored messages to ${ed25519Str(destination)} via ${
-          snode.ip
-        }:${snode.port} on namespaces: ${rightDestination.map(m => m.namespace).join(',')}`
+        `sendMessagesDataToSnode - Successfully sent requests to ${ed25519Str(
+          associatedWith
+        )} via ${ed25519Str(targetNode.pubkey_ed25519)} (requests: ${sortedSubRequests.map(m => m.loggingId()).join(', ')})`
       );
     }
 
-    return storeResults;
+    return responses;
   } catch (e) {
-    const snodeStr = snode ? `${snode.ip}:${snode.port}` : 'null';
+    const snodeStr = targetNode ? `${ed25519Str(targetNode.pubkey_ed25519)}` : 'null';
     window?.log?.warn(
-      `sendMessagesToSnode - "${e.code}:${e.message}" to ${destination} via snode:${snodeStr}`
+      `sendMessagesDataToSnode - "${e.code}:${e.message}" to ${associatedWith} via snode:${snodeStr}`
     );
     throw e;
   }
 }
 
-function encryptionBasedOnConversation(destination: PubKey) {
-  if (getConversationController().get(destination.key)?.isClosedGroup()) {
-    return SignalService.Envelope.Type.CLOSED_GROUP_MESSAGE;
-  }
-  return SignalService.Envelope.Type.SESSION_MESSAGE;
-}
-
-type SharedEncryptAndWrap = {
-  ttl: number;
-  identifier: string;
-  isSyncMessage: boolean;
-};
-
-type EncryptAndWrapMessage = {
-  plainTextBuffer: Uint8Array;
-  destination: string;
-  namespace: number | null;
-} & SharedEncryptAndWrap;
-
-type EncryptAndWrapMessageResults = {
-  data64: string;
-  networkTimestamp: number;
-  data: Uint8Array;
-  namespace: number;
-} & SharedEncryptAndWrap;
-
-async function encryptMessageAndWrap(
-  params: EncryptAndWrapMessage
-): Promise<EncryptAndWrapMessageResults> {
-  const {
-    destination,
-    identifier,
-    isSyncMessage: syncMessage,
-    namespace,
-    plainTextBuffer,
-    ttl,
-  } = params;
-
-  const { overRiddenTimestampBuffer, networkTimestamp } =
-    overwriteOutgoingTimestampWithNetworkTimestamp({ plainTextBuffer });
-  const recipient = PubKey.cast(destination);
-
-  const { envelopeType, cipherText } = await MessageEncrypter.encrypt(
-    recipient,
-    overRiddenTimestampBuffer,
-    encryptionBasedOnConversation(recipient)
-  );
-
-  const envelope = await buildEnvelope(envelopeType, recipient.key, networkTimestamp, cipherText);
-
-  const data = wrapEnvelope(envelope);
-  const data64 = ByteBuffer.wrap(data).toString('base64');
-
-  // override the namespaces if those are unset in the incoming messages
-  // right when we upgrade from not having namespaces stored in the outgoing cached messages our messages won't have a namespace associated.
-  // So we need to keep doing the lookup of where they should go if the namespace is not set.
-
-  const overridenNamespace = !isNil(namespace)
-    ? namespace
-    : getConversationController().get(recipient.key)?.isClosedGroup()
-      ? SnodeNamespaces.ClosedGroupMessage
-      : SnodeNamespaces.UserMessages;
-
-  return {
-    data64,
-    networkTimestamp,
-    data,
-    namespace: overridenNamespace,
-    ttl,
-    identifier,
-    isSyncMessage: syncMessage,
-  };
-}
-
-async function encryptMessagesAndWrap(
-  messages: Array<EncryptAndWrapMessage>
-): Promise<Array<EncryptAndWrapMessageResults>> {
-  return Promise.all(messages.map(encryptMessageAndWrap));
-}
-
 /**
- * Send a list of messages to a single service node.
- * Used currently only for sending SharedConfigMessage for multiple messages at a time.
+ * Send an array of pre-encrypted data to the corresponding swarm.
+ * Note: also handles the result of each sub requests with `handleBatchResultWithSubRequests`
  *
- * @param params the messages to deposit
- * @param destination the pubkey we should deposit those message for
- * @returns the hashes of successful deposit
+ * @param params the data to deposit
+ * @param destination the pubkey we should deposit those message to
+ * @returns the batch/sequence results if further processing is needed
  */
-async function sendMessagesToSnode(
-  params: Array<StoreOnNodeMessage>,
-  destination: string,
-  messagesHashesToDelete: Set<string> | null
-): Promise<NotEmptyArrayOfBatchResults | null> {
+async function sendEncryptedDataToSnode<T extends GroupPubkeyType | PubkeyType>({
+  destination,
+  sortedSubRequests,
+  method,
+  abortSignal,
+  allow401s,
+}: WithAllow401s & {
+  sortedSubRequests: SortedSubRequestsType<T>; // keeping those as an array because the order needs to be enforced for some (group keys for instance)
+  destination: T;
+  method: MethodBatchType;
+  abortSignal: MergedAbortSignal | null;
+}): Promise<NotEmptyArrayOfBatchResults | null> {
   try {
-    const recipient = PubKey.cast(destination);
-
-    const encryptedAndWrapped: Array<Omit<EncryptAndWrapMessageResults, 'data' | 'isSyncMessage'>> =
-      [];
-
-    params.forEach(m => {
-      const wrapped = {
-        identifier: m.message.identifier,
-        isSyncMessage: MessageSender.isContentSyncMessage(m.message),
-        namespace: m.namespace,
-        ttl: m.message.ttl(),
-        networkTimestamp: GetNetworkTime.getNowWithNetworkOffset(),
-        data64: ByteBuffer.wrap(m.message.readyToSendData).toString('base64'),
-      };
-      encryptedAndWrapped.push(wrapped);
-    });
-
     const batchResults = await pRetry(
       async () => {
-        return MessageSender.sendMessagesDataToSnode(
-          encryptedAndWrapped.map(wrapped => ({
-            pubkey: recipient.key,
-            data64: wrapped.data64,
-            ttl: wrapped.ttl,
-            timestamp: wrapped.networkTimestamp,
-            namespace: wrapped.namespace,
-          })),
-          recipient.key,
-          messagesHashesToDelete
-        );
+        return MessageSender.sendMessagesDataToSnode({
+          sortedSubRequests,
+          associatedWith: destination,
+          method,
+          abortSignal,
+          allow401s,
+        });
       },
       {
         retries: 2,
@@ -417,53 +556,28 @@ async function sendMessagesToSnode(
     );
 
     if (!batchResults || isEmpty(batchResults)) {
-      throw new Error('result is empty for sendMessagesToSnode');
+      throw new Error('result is empty for sendEncryptedDataToSnode');
     }
 
     return batchResults;
   } catch (e) {
-    window.log.warn(`sendMessagesToSnode failed with ${e.message}`);
+    window.log.warn(`sendEncryptedDataToSnode failed with ${e.message}`);
+    const sortedSubRequestsWithMsg = sortedSubRequests.filter(r =>
+      isStoreUserInitiatedSubRequest(r)
+    );
+    for (let index = 0; index < sortedSubRequestsWithMsg.length; index++) {
+      const request = sortedSubRequestsWithMsg[index];
+      if (request.dbMessageIdentifier) {
+        // eslint-disable-next-line no-await-in-loop
+        await MessageSentHandler.handleSwarmMessageSentFailure(
+          { device: destination, identifier: request.dbMessageIdentifier },
+          e
+        );
+      }
+    }
+
     return null;
   }
-}
-
-async function buildEnvelope(
-  type: SignalService.Envelope.Type,
-  sskSource: string | undefined,
-  timestamp: number,
-  content: Uint8Array
-): Promise<SignalService.Envelope> {
-  let source: string | undefined;
-
-  if (type === SignalService.Envelope.Type.CLOSED_GROUP_MESSAGE) {
-    source = sskSource;
-  }
-
-  return SignalService.Envelope.create({
-    type,
-    source,
-    timestamp,
-    content,
-  });
-}
-
-/**
- * This is an outdated practice and we should probably just send the envelope data directly.
- * Something to think about in the future.
- */
-function wrapEnvelope(envelope: SignalService.Envelope): Uint8Array {
-  const request = SignalService.WebSocketRequestMessage.create({
-    id: 0,
-    body: SignalService.Envelope.encode(envelope).finish(),
-    verb: 'PUT',
-    path: '/api/v1/message',
-  });
-
-  const websocket = SignalService.WebSocketMessage.create({
-    type: SignalService.WebSocketMessage.Type.REQUEST,
-    request,
-  });
-  return SignalService.WebSocketMessage.encode(websocket).finish();
 }
 
 // ================ Open Group ================
@@ -477,10 +591,10 @@ async function sendToOpenGroupV2(
   blinded: boolean,
   filesToLink: Array<number>
 ): Promise<OpenGroupMessageV2 | boolean> {
-  // we agreed to pad message for opengroupv2
+  // we agreed to pad messages for opengroup v2
   const paddedBody = addMessagePadding(rawMessage.plainTextBuffer());
   const v2Message = new OpenGroupMessageV2({
-    sentTimestamp: GetNetworkTime.getNowWithNetworkOffset(),
+    sentTimestamp: NetworkTime.now(),
     base64EncodedData: fromUInt8ArrayToBase64(paddedBody),
     filesToLink,
   });
@@ -505,7 +619,7 @@ async function sendToOpenGroupV2BlindedRequest(
   recipientBlindedId: string
 ): Promise<{ serverId: number; serverTimestamp: number }> {
   const v2Message = new OpenGroupMessageV2({
-    sentTimestamp: GetNetworkTime.getNowWithNetworkOffset(),
+    sentTimestamp: NetworkTime.now(),
     base64EncodedData: fromUInt8ArrayToBase64(encryptedContent),
   });
 
@@ -523,9 +637,84 @@ async function sendToOpenGroupV2BlindedRequest(
 export const MessageSender = {
   sendToOpenGroupV2BlindedRequest,
   sendMessagesDataToSnode,
-  sendMessagesToSnode,
+  sendEncryptedDataToSnode,
   getMinRetryTimeout,
   sendToOpenGroupV2,
-  send,
+  sendSingleMessage,
   isContentSyncMessage,
+  getSignatureParamsFromNamespace,
+  signSubRequests,
+  messagesToRequests,
+  destinationIsClosedGroup,
 };
+
+function destinationIsClosedGroup(destination: string) {
+  return ConvoHub.use().get(destination)?.isClosedGroup();
+}
+
+/**
+ * Note: this function does not handle the syncing logic of messages yet.
+ * Use it to push message to group, to note to self, or with user messages which do not require a syncing logic
+ */
+async function handleBatchResultWithSubRequests({
+  batchResult,
+  destination,
+  subRequests,
+}: {
+  batchResult: NotEmptyArrayOfBatchResults;
+  subRequests: Array<RawSnodeSubRequests>;
+  destination: string;
+}) {
+  if (!batchResult || !isArray(batchResult) || isEmpty(batchResult)) {
+    window.log.error('handleBatchResultWithSubRequests: invalid batch result ');
+    return;
+  }
+
+  const seenHashes: Array<SaveSeenMessageHash> = [];
+
+  for (let index = 0; index < subRequests.length; index++) {
+    const subRequest = subRequests[index];
+
+    // there are some things we need to do when storing messages
+    // for groups/legacy groups or user (but not for config messages)
+    if (isStoreUserInitiatedSubRequest(subRequest)) {
+      const storedAt = batchResult?.[index]?.body?.t;
+      const storedHash = batchResult?.[index]?.body?.hash;
+      const subRequestStatusCode = batchResult?.[index]?.code;
+      // TODO: the expiration is due to be returned by the storage server on "store" soon, we will then be able to use it instead of doing the storedAt + ttl logic below
+      // if we have a hash and a storedAt, mark it as seen so we don't reprocess it on the next retrieve
+      if (
+        subRequestStatusCode === 200 &&
+        !isEmpty(storedHash) &&
+        isString(storedHash) &&
+        isNumber(storedAt)
+      ) {
+        seenHashes.push({
+          expiresAt: NetworkTime.now() + TTL_DEFAULT.CONTENT_MESSAGE, // non config msg expire at CONTENT_MESSAGE at most
+          hash: storedHash,
+          conversationId: destination,
+        });
+
+        // We need to store the hash of our synced message for a 1o1. (as this is the one stored on our swarm)
+        // For groups, we can just store that hash directly as the group's swarm is hosting all of the group messages
+        if (subRequest.dbMessageIdentifier) {
+          // eslint-disable-next-line no-await-in-loop
+          await MessageSentHandler.handleSwarmMessageSentSuccess(
+            {
+              device: subRequest.destination,
+              isDestinationClosedGroup: MessageSender.destinationIsClosedGroup(destination),
+              identifier: subRequest.dbMessageIdentifier,
+              plainTextBuffer:
+                subRequest instanceof StoreUserMessageSubRequest
+                  ? subRequest.plainTextBuffer
+                  : null,
+            },
+            subRequest.createdAtNetworkTimestamp,
+            storedHash
+          );
+        }
+      }
+    }
+  }
+  await Data.saveSeenMessageHashes(seenHashes);
+}

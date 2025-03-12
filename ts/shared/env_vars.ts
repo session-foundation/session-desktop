@@ -16,3 +16,7 @@ export function isTestNet() {
 export function isTestIntegration() {
   return envAppInstanceIncludes('test-integration');
 }
+
+export function hasClosedGroupV2QAButtons() {
+  return !!window.sessionFeatureFlags.useClosedGroupV2QAButtons;
+}

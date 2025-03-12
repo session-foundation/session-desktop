@@ -1,17 +1,29 @@
 import { RefObject, useState } from 'react';
 import { Mention, MentionsInput } from 'react-mentions';
-import { getConversationController } from '../../../session/conversations';
+import { uniq } from 'lodash';
+import { useSelector } from 'react-redux';
 import {
   useSelectedConversationKey,
   useSelectedIsBlocked,
+  useSelectedIsGroupDestroyed,
   useSelectedIsKickedFromGroup,
-  useSelectedIsLeft,
+  useSelectedIsPrivate,
+  useSelectedIsPublic,
   useSelectedNicknameOrProfileNameOrShortenedPubkey,
 } from '../../../state/selectors/selectedConversation';
 import { updateDraftForConversation } from '../SessionConversationDrafts';
 import { renderEmojiQuickResultRow, searchEmojiForQuery } from './EmojiQuickResult';
 import { renderUserMentionRow, styleForCompositionBoxSuggestions } from './UserMentions';
 import { HTMLDirection, useHTMLDirection } from '../../../util/i18n/rtlSupport';
+import { ConvoHub } from '../../../session/conversations';
+import { Constants } from '../../../session';
+import type { SessionSuggestionDataItem } from './types';
+import { getMentionsInput } from '../../../state/selectors/conversations';
+import { UserUtils } from '../../../session/utils';
+import { localize } from '../../../localization/localeTools';
+import { PubKey } from '../../../session/types';
+import { useLibGroupMembers } from '../../../state/selectors/groups';
+import { use05GroupMembers } from '../../../hooks/useParamSelector';
 
 const sendMessageStyle = (dir?: HTMLDirection) => {
   return {
@@ -42,34 +54,88 @@ type Props = {
   setDraft: (draft: string) => void;
   container: RefObject<HTMLDivElement>;
   textAreaRef: RefObject<HTMLTextAreaElement>;
-  fetchUsersForGroup: (query: string, callback: (data: any) => void) => void;
   typingEnabled: boolean;
   onKeyDown: (event: any) => void;
 };
 
+function filterMentionDataByQuery(query: string, mentionData: Array<SessionSuggestionDataItem>) {
+  return (
+    mentionData
+      .filter(d => !!d)
+      .filter(
+        d =>
+          d.display?.toLowerCase()?.includes(query.toLowerCase()) ||
+          d.id?.toLowerCase()?.includes(query.toLowerCase())
+      ) || []
+  );
+}
+
+function useMembersInThisChat(): Array<SessionSuggestionDataItem> {
+  const selectedConvoKey = useSelectedConversationKey();
+  const isPrivate = useSelectedIsPrivate();
+  const isPublic = useSelectedIsPublic();
+  const membersForCommunity = useSelector(getMentionsInput);
+  const membersFor03Group = useLibGroupMembers(selectedConvoKey);
+
+  const membersFor05LegacyGroup = use05GroupMembers(selectedConvoKey);
+
+  if (!selectedConvoKey) {
+    return [];
+  }
+  if (isPublic) {
+    return membersForCommunity || [];
+  }
+  const members = isPrivate
+    ? uniq([UserUtils.getOurPubKeyStrFromCache(), selectedConvoKey])
+    : PubKey.is03Pubkey(selectedConvoKey)
+      ? membersFor03Group
+      : membersFor05LegacyGroup;
+
+  return members.map(m => {
+    return {
+      id: m,
+      display: UserUtils.isUsFromCache(m)
+        ? localize('you').toString()
+        : ConvoHub.use().get(m)?.getNicknameOrRealUsernameOrPlaceholder() || PubKey.shorten(m),
+    };
+  });
+}
+
+function fetchMentionData(
+  query: string,
+  fetchedMembersInThisChat: Array<SessionSuggestionDataItem>
+): Array<SessionSuggestionDataItem> {
+  let overriddenQuery = query;
+  if (!query) {
+    overriddenQuery = '';
+  }
+
+  return filterMentionDataByQuery(overriddenQuery, fetchedMembersInThisChat);
+}
+
 export const CompositionTextArea = (props: Props) => {
-  const { draft, setDraft, container, textAreaRef, fetchUsersForGroup, typingEnabled, onKeyDown } =
-    props;
+  const { draft, setDraft, container, textAreaRef, typingEnabled, onKeyDown } = props;
 
   const [lastBumpTypingMessageLength, setLastBumpTypingMessageLength] = useState(0);
 
   const selectedConversationKey = useSelectedConversationKey();
   const htmlDirection = useHTMLDirection();
   const isKickedFromGroup = useSelectedIsKickedFromGroup();
-  const left = useSelectedIsLeft();
+  const isGroupDestroyed = useSelectedIsGroupDestroyed();
   const isBlocked = useSelectedIsBlocked();
   const groupName = useSelectedNicknameOrProfileNameOrShortenedPubkey();
+  const membersInThisChat = useMembersInThisChat();
 
   if (!selectedConversationKey) {
     return null;
   }
 
   const makeMessagePlaceHolderText = () => {
+    if (isGroupDestroyed) {
+      return window.i18n('groupDeletedMemberDescription', { group_name: groupName });
+    }
     if (isKickedFromGroup) {
       return window.i18n('groupRemovedYou', { group_name: groupName });
-    }
-    if (left) {
-      return window.i18n('groupMemberYouLeft');
     }
     if (isBlocked) {
       return window.i18n('blockBlockedDescription');
@@ -87,7 +153,10 @@ export const CompositionTextArea = (props: Props) => {
       throw new Error('selectedConversationKey is needed');
     }
 
-    const newDraft = event.target.value ?? '';
+    const newDraft = (event.target.value ?? '').slice(
+      0,
+      Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT
+    );
     setDraft(newDraft);
     updateDraftForConversation({ conversationKey: selectedConversationKey, draft: newDraft });
   };
@@ -100,7 +169,7 @@ export const CompositionTextArea = (props: Props) => {
     Also, check for a message length change before firing it up, to avoid catching ESC, tab, or whatever which is not typing
      */
     if (draft && draft.length && draft.length !== lastBumpTypingMessageLength) {
-      const conversationModel = getConversationController().get(selectedConversationKey);
+      const conversationModel = ConvoHub.use().get(selectedConversationKey);
       if (!conversationModel) {
         return;
       }
@@ -121,6 +190,7 @@ export const CompositionTextArea = (props: Props) => {
       spellCheck={true}
       dir={htmlDirection}
       inputRef={textAreaRef}
+      maxLength={Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT}
       disabled={!typingEnabled}
       rows={1}
       data-testid="message-input-text-area"
@@ -134,10 +204,10 @@ export const CompositionTextArea = (props: Props) => {
         markup="@ￒ__id__ￗ__display__ￒ" // ￒ = \uFFD2 is one of the forbidden char for a display name (check displayNameRegex)
         trigger="@"
         // this is only for the composition box visible content. The real stuff on the backend box is the @markup
-        displayTransform={(_id, display) =>
-          htmlDirection === 'rtl' ? `${display}@` : `@${display}`
-        }
-        data={fetchUsersForGroup}
+        displayTransform={(_id, display) => {
+          return htmlDirection === 'rtl' ? `${display}@` : `@${display}`;
+        }}
+        data={(query: string) => fetchMentionData(query, membersInThisChat)}
         renderSuggestion={renderUserMentionRow}
       />
       <Mention

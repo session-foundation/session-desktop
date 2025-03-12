@@ -88,7 +88,7 @@ export const SessionSearchInput = () => {
   const placeholder = isGroupCreationSearch ? window.i18n('searchContacts') : window.i18n('search');
 
   return (
-    <StyledSearchInput>
+    <StyledSearchInput data-testid={isGroupCreationSearch ? 'search-contacts-field' : undefined}>
       <SessionIconButton
         iconColor="var(--search-bar-icon-color)"
         iconSize="medium"

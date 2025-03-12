@@ -17,11 +17,11 @@ import {
   FinalRelayOptions,
   Onions,
   STATUS_NO_STATUS,
-  SnodeResponse,
   buildErrorMessageWithFailedCode,
 } from '../apis/snode_api/onions';
 import { PROTOCOLS } from '../constants';
 import { OnionV4 } from './onionv4';
+import { MergedAbortSignal, WithAbortSignal, WithTimeoutMs } from '../apis/snode_api/requestWith';
 
 export type OnionFetchOptions = {
   method: string;
@@ -75,12 +75,6 @@ const getOnionPathForSending = async () => {
   return pathNodes;
 };
 
-export type OnionSnodeResponse = {
-  result: SnodeResponse;
-  txtResponse: string;
-  response: string;
-};
-
 export type OnionV4SnodeResponse = {
   body: string | object | null; // if the content can be decoded as string
   bodyBinary: Uint8Array | null; // otherwise we return the raw content (could be an image data or file from sogs/fileserver)
@@ -107,7 +101,8 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
   url: URL,
   fetchOptions: OnionFetchOptions,
   throwErrors: boolean,
-  abortSignal?: AbortSignal
+  abortSignal: MergedAbortSignal,
+  timeoutMs: number
 ): Promise<OnionV4SnodeResponse | null> => {
   if (!fetchOptions.useV4) {
     throw new Error('sendViaOnionV4ToNonSnodeWithRetries is only to be used for onion v4 calls');
@@ -151,7 +146,7 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
           );
         }
         if (!pathNodes) {
-          throw new Error('getOnionPathForSending is emtpy');
+          throw new Error('getOnionPathForSending is empty');
         }
 
         /**
@@ -159,7 +154,7 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
          * call above will call us again with the same params but a different path.
          * If the error is not recoverable, it throws a pRetry.AbortError.
          */
-        const onionV4Response = await Onions.sendOnionRequestHandlingSnodeEject({
+        const onionV4Response = await Onions.sendOnionRequestHandlingSnodeEjectNoRetries({
           nodePath: pathNodes,
           destSnodeX25519: destinationX25519Key,
           finalDestOptions: payloadObj,
@@ -167,11 +162,13 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
           abortSignal,
           useV4: true,
           throwErrors,
+          allow401s: false,
+          timeoutMs,
         });
 
         if (window.sessionFeatureFlags?.debug.debugNonSnodeRequests) {
           window.log.info(
-            'sendViaOnionV4ToNonSnodeWithRetries: sendOnionRequestHandlingSnodeEject returned: ',
+            'sendViaOnionV4ToNonSnodeWithRetries: sendOnionRequestHandlingSnodeEjectNoRetries returned: ',
             JSON.stringify(onionV4Response)
           );
         }
@@ -236,7 +233,7 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
       },
       {
         retries: 2, // retry 3 (2+1) times at most
-        minTimeout: 100,
+        minTimeout: OnionSending.getMinTimeoutForSogs(),
         onFailedAttempt: e => {
           window?.log?.warn(
             `sendViaOnionV4ToNonSnodeWithRetries attempt #${e.attemptNumber} failed. ${e.retriesLeft} retries left...: ${e.message}`
@@ -267,18 +264,20 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
   return result;
 };
 
-async function sendJsonViaOnionV4ToSogs(sendOptions: {
-  serverUrl: string;
-  endpoint: string;
-  serverPubkey: string;
-  blinded: boolean;
-  method: string;
-  stringifiedBody: string | null;
-  abortSignal: AbortSignal;
-  headers: Record<string, any> | null;
-  throwErrors: boolean;
-  includeAuthHeaders?: boolean;
-}): Promise<OnionV4JSONSnodeResponse | null> {
+async function sendJsonViaOnionV4ToSogs(
+  sendOptions: WithTimeoutMs & {
+    serverUrl: string;
+    endpoint: string;
+    serverPubkey: string;
+    blinded: boolean;
+    method: string;
+    stringifiedBody: string | null;
+    abortSignal: AbortSignal;
+    headers: Record<string, any> | null;
+    throwErrors: boolean;
+    includeAuthHeaders?: boolean;
+  }
+): Promise<OnionV4JSONSnodeResponse | null> {
   const {
     serverUrl,
     endpoint,
@@ -290,6 +289,7 @@ async function sendJsonViaOnionV4ToSogs(sendOptions: {
     headers: includedHeaders,
     throwErrors,
     includeAuthHeaders = true, // Default to true
+    timeoutMs,
   } = sendOptions;
 
   if (!endpoint.startsWith('/')) {
@@ -328,7 +328,8 @@ async function sendJsonViaOnionV4ToSogs(sendOptions: {
       useV4: true,
     },
     throwErrors,
-    abortSignal
+    abortSignal,
+    timeoutMs
   );
 
   return res as OnionV4JSONSnodeResponse;
@@ -340,13 +341,15 @@ async function sendJsonViaOnionV4ToSogs(sendOptions: {
  *
  * You should probably not use this function directly but instead rely on the PnServer.notifyPnServer() function
  */
-async function sendJsonViaOnionV4ToPnServer(sendOptions: {
-  endpoint: string;
-  method: string;
-  stringifiedBody: string | null;
-  abortSignal: AbortSignal;
-}): Promise<OnionV4JSONSnodeResponse | null> {
-  const { endpoint, method, stringifiedBody, abortSignal } = sendOptions;
+async function sendJsonViaOnionV4ToPnServer(
+  sendOptions: WithTimeoutMs & {
+    endpoint: string;
+    method: string;
+    stringifiedBody: string | null;
+    abortSignal: AbortSignal;
+  }
+): Promise<OnionV4JSONSnodeResponse | null> {
+  const { endpoint, method, stringifiedBody, abortSignal, timeoutMs } = sendOptions;
   if (!endpoint.startsWith('/')) {
     throw new Error('endpoint needs a leading /');
   }
@@ -362,21 +365,24 @@ async function sendJsonViaOnionV4ToPnServer(sendOptions: {
       useV4: true,
     },
     false,
-    abortSignal
+    abortSignal,
+    timeoutMs
   );
   return res as OnionV4JSONSnodeResponse;
 }
 
-async function sendBinaryViaOnionV4ToSogs(sendOptions: {
-  serverUrl: string;
-  endpoint: string;
-  serverPubkey: string;
-  blinded: boolean;
-  method: string;
-  bodyBinary: Uint8Array;
-  abortSignal: AbortSignal;
-  headers: Record<string, any> | null;
-}): Promise<OnionV4JSONSnodeResponse | null> {
+async function sendBinaryViaOnionV4ToSogs(
+  sendOptions: WithTimeoutMs & {
+    serverUrl: string;
+    endpoint: string;
+    serverPubkey: string;
+    blinded: boolean;
+    method: string;
+    bodyBinary: Uint8Array;
+    abortSignal: AbortSignal;
+    headers: Record<string, any> | null;
+  }
+): Promise<OnionV4JSONSnodeResponse | null> {
   const {
     serverUrl,
     endpoint,
@@ -386,6 +392,7 @@ async function sendBinaryViaOnionV4ToSogs(sendOptions: {
     bodyBinary,
     abortSignal,
     headers: includedHeaders,
+    timeoutMs,
   } = sendOptions;
 
   if (!bodyBinary) {
@@ -417,7 +424,8 @@ async function sendBinaryViaOnionV4ToSogs(sendOptions: {
       useV4: true,
     },
     false,
-    abortSignal
+    abortSignal,
+    timeoutMs
   );
 
   return res as OnionV4JSONSnodeResponse;
@@ -433,13 +441,18 @@ async function sendBinaryViaOnionV4ToSogs(sendOptions: {
  * Upload binary to the file server.
  * You should probably not use this function directly, but instead rely on the FileServerAPI.uploadFileToFsWithOnionV4()
  */
-async function sendBinaryViaOnionV4ToFileServer(sendOptions: {
-  endpoint: string;
-  method: string;
-  bodyBinary: Uint8Array;
-  abortSignal: AbortSignal;
-}): Promise<OnionV4JSONSnodeResponse | null> {
-  const { endpoint, method, bodyBinary, abortSignal } = sendOptions;
+async function sendBinaryViaOnionV4ToFileServer({
+  endpoint,
+  method,
+  bodyBinary,
+  abortSignal,
+  timeoutMs,
+}: WithTimeoutMs &
+  WithAbortSignal & {
+    endpoint: string;
+    method: string;
+    bodyBinary: Uint8Array;
+  }): Promise<OnionV4JSONSnodeResponse | null> {
   if (!endpoint.startsWith('/')) {
     throw new Error('endpoint needs a leading /');
   }
@@ -455,7 +468,8 @@ async function sendBinaryViaOnionV4ToFileServer(sendOptions: {
       useV4: true,
     },
     false,
-    abortSignal
+    abortSignal,
+    timeoutMs
   );
 
   return res as OnionV4JSONSnodeResponse;
@@ -465,13 +479,18 @@ async function sendBinaryViaOnionV4ToFileServer(sendOptions: {
  * Download binary from the file server.
  * You should probably not use this function directly, but instead rely on the FileServerAPI.downloadFileFromFileServer()
  */
-async function getBinaryViaOnionV4FromFileServer(sendOptions: {
-  endpoint: string;
-  method: string;
-  abortSignal: AbortSignal;
-  throwError: boolean;
-}): Promise<OnionV4BinarySnodeResponse | null> {
-  const { endpoint, method, abortSignal, throwError } = sendOptions;
+async function getBinaryViaOnionV4FromFileServer({
+  endpoint,
+  method,
+  abortSignal,
+  throwError,
+  timeoutMs,
+}: WithTimeoutMs &
+  WithAbortSignal & {
+    endpoint: string;
+    method: string;
+    throwError: boolean;
+  }): Promise<OnionV4BinarySnodeResponse | null> {
   if (!endpoint.startsWith('/')) {
     throw new Error('endpoint needs a leading /');
   }
@@ -493,7 +512,8 @@ async function getBinaryViaOnionV4FromFileServer(sendOptions: {
       useV4: true,
     },
     throwError,
-    abortSignal
+    abortSignal,
+    timeoutMs
   );
 
   if (window.sessionFeatureFlags?.debug.debugFileServerRequests) {
@@ -509,14 +529,20 @@ async function getBinaryViaOnionV4FromFileServer(sendOptions: {
  * Send some generic json to the fileserver.
  * This function should probably not used directly as we only need it for the FileServerApi.getLatestReleaseFromFileServer() function
  */
-async function sendJsonViaOnionV4ToFileServer(sendOptions: {
-  endpoint: string;
-  method: string;
-  stringifiedBody: string | null;
-  abortSignal: AbortSignal;
-  headers: Record<string, string | number>;
-}): Promise<OnionV4JSONSnodeResponse | null> {
-  const { endpoint, method, stringifiedBody, abortSignal, headers } = sendOptions;
+async function sendJsonViaOnionV4ToFileServer({
+  endpoint,
+  method,
+  stringifiedBody,
+  abortSignal,
+  headers,
+  timeoutMs,
+}: WithAbortSignal &
+  WithTimeoutMs & {
+    endpoint: string;
+    method: string;
+    stringifiedBody: string | null;
+    headers: Record<string, string | number>;
+  }): Promise<OnionV4JSONSnodeResponse | null> {
   if (!endpoint.startsWith('/')) {
     throw new Error('endpoint needs a leading /');
   }
@@ -532,10 +558,18 @@ async function sendJsonViaOnionV4ToFileServer(sendOptions: {
       useV4: true,
     },
     false,
-    abortSignal
+    abortSignal,
+    timeoutMs
   );
 
   return res as OnionV4JSONSnodeResponse;
+}
+
+/**
+ * This is used during stubbing so we can override the time between retries (so the unit tests are faster)
+ */
+function getMinTimeoutForSogs() {
+  return 100;
 }
 
 // we export these methods for stubbing during testing
@@ -549,4 +583,5 @@ export const OnionSending = {
   sendBinaryViaOnionV4ToSogs,
   getBinaryViaOnionV4FromFileServer,
   sendJsonViaOnionV4ToFileServer,
+  getMinTimeoutForSogs,
 };

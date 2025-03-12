@@ -8,7 +8,7 @@ import { OpenGroupData } from '../../../../data/opengroups';
 import { ConversationModel } from '../../../../models/conversation';
 import { handleOpenGroupV4Message } from '../../../../receiver/opengroup';
 import { callUtilsWorker } from '../../../../webworker/workers/browser/util_worker_interface';
-import { getConversationController } from '../../../conversations';
+import { ConvoHub } from '../../../conversations';
 import { PubKey } from '../../../types';
 import {
   OpenGroupMessageV4,
@@ -25,7 +25,7 @@ import {
 } from './knownBlindedkeys';
 import { SogsBlinding } from './sogsBlinding';
 import { handleCapabilities } from './sogsCapabilities';
-import { BatchSogsReponse, OpenGroupBatchRow, SubRequestMessagesType } from './sogsV3BatchPoll';
+import { BatchSogsResponse, OpenGroupBatchRow, SubRequestMessagesType } from './sogsV3BatchPoll';
 
 import { Data } from '../../../../data/data';
 import { createSwarmMessageSentFromUs } from '../../../../models/messageFactory';
@@ -42,6 +42,7 @@ import { sogsRollingDeletions } from './sogsRollingDeletions';
 import { processMessagesUsingCache } from './sogsV3MutationCache';
 import { OpenGroupRequestCommonType } from '../../../../data/types';
 import { ConversationTypeEnum } from '../../../../models/types';
+import { shouldProcessContentMessage } from '../../../../receiver/common';
 
 /**
  * Get the convo matching those criteria and make sure it is an opengroup convo, or return null.
@@ -54,7 +55,7 @@ function getSogsConvoOrReturnEarly(serverUrl: string, roomId: string): Conversat
     return null;
   }
 
-  const foundConvo = getConversationController().get(convoId);
+  const foundConvo = ConvoHub.use().get(convoId);
   if (!foundConvo) {
     window.log.info('getSogsConvoOrReturnEarly: convo not found: ', convoId);
     return null;
@@ -70,8 +71,8 @@ function getSogsConvoOrReturnEarly(serverUrl: string, roomId: string): Conversat
 
 /**
  *
- * Handle the pollinfo from the response of a pysogs.
- * Pollinfos contains the subscriberCount (active users), the read, upload and write things we as a user can do.
+ * Handle the poll info from the response of a pysogs.
+ * Poll infos contains the subscriberCount (active users), the read, upload and write things we as a user can do.
  */
 async function handlePollInfoResponse(
   statusCode: number,
@@ -174,7 +175,7 @@ const handleSogsV3DeletedMessages = async (
 
   try {
     const convoId = getOpenGroupV2ConversationId(serverUrl, roomId);
-    const convo = getConversationController().get(convoId);
+    const convo = ConvoHub.use().get(convoId);
     const messageIds = await Data.getMessageIdsFromServerIds(allIdsRemoved, convo.id);
 
     allIdsRemoved.forEach(removedId => {
@@ -198,15 +199,15 @@ const handleSogsV3DeletedMessages = async (
 const handleMessagesResponseV4 = async (
   messages: Array<OpenGroupMessageV4>,
   serverUrl: string,
-  subrequestOption: SubRequestMessagesType
+  subRequestOption: SubRequestMessagesType
 ) => {
-  if (!subrequestOption || !subrequestOption.messages) {
-    window?.log?.error('handleBatchPollResults - missing fields required for message subresponse');
+  if (!subRequestOption || !subRequestOption.messages) {
+    window?.log?.error('handleBatchPollResults - missing fields required for message subResponse');
     return;
   }
 
   try {
-    const { roomId } = subrequestOption.messages;
+    const { roomId } = subRequestOption.messages;
 
     const stillPolledRooms = OpenGroupData.getV2OpenGroupRoomsByServerUrl(serverUrl);
 
@@ -219,7 +220,7 @@ const handleMessagesResponseV4 = async (
     const roomInfos = await getRoomAndUpdateLastFetchTimestamp(
       convoId,
       messages,
-      subrequestOption.messages
+      subRequestOption.messages
     );
     if (!roomInfos || !roomInfos.conversationId) {
       return;
@@ -243,7 +244,7 @@ const handleMessagesResponseV4 = async (
       return true;
     });
 
-    // Incoming messages from sogvs v3 are returned in descending order from the latest seqno, we need to sort it chronologically
+    // Incoming messages from sogs v3 are returned in descending order from the latest seqno, we need to sort it chronologically
     // Incoming messages for sogs v3 have a timestamp in seconds and not ms.
     // Session works with timestamp in ms, for a lot of things, so first, lets fix this.
     const messagesWithMsTimestamp = messagesWithoutReactionOnlyUpdates
@@ -256,7 +257,7 @@ const handleMessagesResponseV4 = async (
     const messagesWithoutDeleted = await handleSogsV3DeletedMessages(
       messagesWithMsTimestamp,
       serverUrl,
-      subrequestOption.messages.roomId
+      subRequestOption.messages.roomId
     );
 
     const messagesWithValidSignature =
@@ -319,7 +320,7 @@ const handleMessagesResponseV4 = async (
 
     if (messagesWithReactions.length > 0) {
       const conversationId = getOpenGroupV2ConversationId(serverUrl, roomId);
-      const groupConvo = getConversationController().get(conversationId);
+      const groupConvo = ConvoHub.use().get(conversationId);
       if (groupConvo && groupConvo.isOpenGroupV2()) {
         for (const messageWithReaction of messagesWithReactions) {
           if (isEmpty(messageWithReaction.reactions)) {
@@ -347,7 +348,7 @@ type InboxOutboxResponseObject = {
   id: number; // that specific inbox message id
   sender: string; // blindedPubkey of the sender, the unblinded one is inside message content, encrypted only for our blinded pubkey
   recipient: string; // blindedPubkey of the recipient, used for outbox messages only
-  posted_at: number; // timestamp as seconds.microsec
+  posted_at: number; // timestamp as seconds.microseconds
   message: string; // base64 data
 };
 
@@ -374,7 +375,7 @@ async function handleInboxOutboxMessages(
   const serverPubkey = roomInfos[0].serverPublicKey;
 
   const sodium = await getSodiumRenderer();
-  // make sure to add our blindedpubkey to this server in the cache, if it's not already there
+  // make sure to add our blinded pubkey to this server in the cache, if it's not already there
   await findCachedOurBlindedPubkeyOrLookItUp(serverPubkey, sodium);
 
   for (let index = 0; index < inboxOutboxResponse.length; index++) {
@@ -405,7 +406,13 @@ async function handleInboxOutboxMessages(
         id: v4(),
         type: SignalService.Envelope.Type.SESSION_MESSAGE, // this is not right, but we forward an already decrypted envelope so we don't care
       };
-
+      const contentDecrypted = SignalService.Content.decode(content);
+      if (!shouldProcessContentMessage(builtEnvelope, contentDecrypted, true)) {
+        window.log.warn(
+          `received inbox/outbox message that did not pass the shouldProcessContentMessage test envelopeTs: ${builtEnvelope.timestamp}`
+        );
+        continue;
+      }
       if (isOutbox) {
         /**
          * Handling outbox messages needs to skip some of the pipeline.
@@ -414,15 +421,14 @@ async function handleInboxOutboxMessages(
          * We will need this to send new message to that user from our second device.
          */
         const recipient = inboxOutboxItem.recipient;
-        const contentDecoded = SignalService.Content.decode(content);
 
         // if we already know this user's unblinded pubkey, store the blinded message we sent to that blinded recipient under
         // the unblinded conversation instead (as we would have merge the blinded one with the other )
         const unblindedIDOrBlinded =
           (await findCachedBlindedMatchOrLookItUp(recipient, serverPubkey, sodium)) || recipient;
 
-        if (contentDecoded.dataMessage) {
-          const outboxConversationModel = await getConversationController().getOrCreateAndWait(
+        if (contentDecrypted.dataMessage) {
+          const outboxConversationModel = await ConvoHub.use().getOrCreateAndWait(
             unblindedIDOrBlinded,
             ConversationTypeEnum.PRIVATE
           );
@@ -436,13 +442,13 @@ async function handleInboxOutboxMessages(
             messageHash: '',
             sentAt: postedAtInMs,
           });
-          await outboxConversationModel.setOriginConversationID(serverConversationId);
+          await outboxConversationModel.setOriginConversationID(serverConversationId, true);
 
           await handleOutboxMessageModel(
             msgModel,
             '',
             postedAtInMs,
-            contentDecoded.dataMessage as SignalService.DataMessage,
+            contentDecrypted.dataMessage as SignalService.DataMessage,
             outboxConversationModel
           );
         }
@@ -470,15 +476,15 @@ async function handleInboxOutboxMessages(
           });
           await findCachedBlindedMatchOrLookItUp(sender, serverPubkey, sodium);
         } catch (e) {
-          window.log.warn('tryMatchBlindWithStandardKey could not veriyfy');
+          window.log.warn('tryMatchBlindWithStandardKey could not verify');
         }
 
         await innerHandleSwarmContentMessage({
           envelope: builtEnvelope,
           sentAtTimestamp: postedAtInMs,
-          plaintext: builtEnvelope.content,
+          contentDecrypted: builtEnvelope.content,
           messageHash: '',
-          messageExpirationFromRetrieve: null, // sogs message do not expire
+          messageExpirationFromRetrieve: null, // sogs message cannot expire
         });
       }
     } catch (e) {
@@ -495,7 +501,7 @@ async function handleInboxOutboxMessages(
 
   const maxInboxOutboxId = inboxOutboxResponse.length
     ? Math.max(...inboxOutboxResponse.map(inboxOutboxItem => inboxOutboxItem.id))
-    : undefined || undefined;
+    : undefined;
 
   // we should probably extract the inboxId & outboxId fetched to another table, as it is server wide and not room specific
   if (isNumber(maxInboxOutboxId)) {
@@ -509,9 +515,9 @@ async function handleInboxOutboxMessages(
 
 export const handleBatchPollResults = async (
   serverUrl: string,
-  batchPollResults: BatchSogsReponse,
+  batchPollResults: BatchSogsResponse,
   /** using this as explicit way to ensure order  */
-  subrequestOptionsLookup: Array<OpenGroupBatchRow>
+  subRequestOptionsLookup: Array<OpenGroupBatchRow>
 ) => {
   // @@: Might not need the explicit type field.
   // pro: prevents cases where accidentally two fields for the opt. e.g. capability and message fields truthy.
@@ -519,7 +525,7 @@ export const handleBatchPollResults = async (
 
   // note: handling capabilities first before handling anything else as it affects how things are handled.
 
-  await handleCapabilities(subrequestOptionsLookup, batchPollResults, serverUrl);
+  await handleCapabilities(subRequestOptionsLookup, batchPollResults, serverUrl);
 
   if (batchPollResults && isArray(batchPollResults.body)) {
     /**
@@ -529,10 +535,10 @@ export const handleBatchPollResults = async (
      */
     for (let index = 0; index < batchPollResults.body.length; index++) {
       const subResponse = batchPollResults.body[index] as any;
-      // using subreqOptions as request type lookup,
-      // assumes batch subresponse order matches the subrequest order
-      const subrequestOption = subrequestOptionsLookup[index];
-      const responseType = subrequestOption.type;
+      // using subReqOptions as request type lookup,
+      // assumes batch subResponse order matches the subRequest order
+      const subRequestOption = subRequestOptionsLookup[index];
+      const responseType = subRequestOption.type;
 
       switch (responseType) {
         case 'capabilities':
@@ -540,7 +546,7 @@ export const handleBatchPollResults = async (
           break;
         case 'messages':
           // this will also include deleted messages explicitly with `data: null` & edited messages with a new data field & react changes with data not existing
-          await handleMessagesResponseV4(subResponse.body, serverUrl, subrequestOption);
+          await handleMessagesResponseV4(subResponse.body, serverUrl, subRequestOption);
           break;
         case 'pollInfo':
           await handlePollInfoResponse(subResponse.code, subResponse.body, serverUrl);
@@ -565,7 +571,7 @@ export const handleBatchPollResults = async (
         default:
           assertUnreachable(
             responseType,
-            `No matching subrequest response body for type: "${responseType}"`
+            `No matching subRequest response body for type: "${responseType}"`
           );
       }
     }

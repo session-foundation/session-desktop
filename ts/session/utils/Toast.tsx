@@ -3,30 +3,35 @@ import { SessionToast, SessionToastType } from '../../components/basic/SessionTo
 import { SectionType, showLeftPaneSection, showSettingsSection } from '../../state/ducks/section';
 
 // if you push a toast manually with toast...() be sure to set the type attribute of the SessionToast component
-export function pushToastError(id: string, title: string, description?: string) {
-  toast.error(
-    <SessionToast title={title} description={description} type={SessionToastType.Error} />,
-    { toastId: id, updateId: id }
-  );
+export function pushToastError(id: string, description: string) {
+  toast.error(<SessionToast description={description} type={SessionToastType.Error} />, {
+    toastId: id,
+    updateId: id,
+  });
 }
 
-export function pushToastWarning(id: string, title: string, description?: string) {
+export function pushToastWarning(id: string, description: string, onToastClick?: () => void) {
   toast.warning(
-    <SessionToast title={title} description={description} type={SessionToastType.Warning} />,
-    { toastId: id, updateId: id }
+    <SessionToast
+      description={description}
+      type={SessionToastType.Warning}
+      onToastClick={onToastClick}
+    />,
+    {
+      toastId: id,
+      updateId: id,
+    }
   );
 }
 
 export function pushToastInfo(
   id: string,
-  title: string,
-  description?: string,
+  description: string,
   onToastClick?: () => void,
   delay?: number
 ) {
   toast.info(
     <SessionToast
-      title={title}
       description={description}
       type={SessionToastType.Info}
       onToastClick={onToastClick}
@@ -35,11 +40,11 @@ export function pushToastInfo(
   );
 }
 
-export function pushToastSuccess(id: string, title: string, description?: string) {
-  toast.success(
-    <SessionToast title={title} description={description} type={SessionToastType.Success} />,
-    { toastId: id, updateId: id }
-  );
+export function pushToastSuccess(id: string, description: string) {
+  toast.success(<SessionToast description={description} type={SessionToastType.Success} />, {
+    toastId: id,
+    updateId: id,
+  });
 }
 
 export function pushLoadAttachmentFailure(message?: string) {
@@ -123,7 +128,6 @@ export function pushedMissedCallCauseOfPermission(conversationName: string) {
   const id = 'missedCallPermission';
   toast.info(
     <SessionToast
-      title={window.i18n.stripped('callsMissedCallFrom', { name: conversationName })}
       description={window.i18n.stripped('callsYouMissedCallPermissions', {
         name: conversationName,
       })}
@@ -137,7 +141,6 @@ export function pushedMissedCallCauseOfPermission(conversationName: string) {
 export function pushVideoCallPermissionNeeded() {
   pushToastInfo(
     'videoCallPermissionNeeded',
-    window.i18n.stripped('callsPermissionsRequired'),
     window.i18n.stripped('callsPermissionsRequiredDescription'),
     openPermissionsSettings
   );
@@ -147,7 +150,6 @@ export function pushAudioPermissionNeeded() {
   pushToastInfo(
     'audioPermissionNeeded',
     window.i18n.stripped('permissionsMicrophoneAccessRequiredDesktop'),
-    undefined,
     openPermissionsSettings
   );
 }
@@ -177,10 +179,10 @@ export function someDeletionsFailed(count: number) {
 }
 
 export function pushDeleted(count: number) {
-  pushToastSuccess('deleted', window.i18n.stripped('deleteMessageDeleted', { count }), undefined);
+  pushToastSuccess('deleted', window.i18n.stripped('deleteMessageDeleted', { count }));
 }
 
-export function pushCannotRemoveCreatorFromGroup() {
+export function pushCannotRemoveGroupAdmin() {
   pushToastWarning('adminCannotBeRemoved', window.i18n.stripped('adminCannotBeRemoved'));
 }
 
@@ -266,5 +268,5 @@ export function pushNoMediaUntilApproved() {
 }
 
 export function pushRateLimitHitReactions() {
-  pushToastInfo('reactRateLimit', '', window?.i18n?.('emojiReactsCoolDown')); // because otherwise test fails
+  pushToastInfo('reactRateLimit', window?.i18n?.('emojiReactsCoolDown')); // because otherwise test fails
 }

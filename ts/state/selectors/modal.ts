@@ -27,7 +27,7 @@ export const getModal = (state: StateType): ModalState => {
   return state.modals;
 };
 
-export const getIsModalVisble = createSelector(getModal, (state: ModalState): boolean => {
+export const getIsModalVisible = createSelector(getModal, (state: ModalState): boolean => {
   const modalValues = Object.values(state);
   for (let i = 0; i < modalValues.length; i++) {
     if (modalValues[i] !== null) {
@@ -142,3 +142,5 @@ export const getLightBoxOptions = createSelector(
   getModal,
   (state: ModalState): LightBoxOptions => state.lightBoxOptions
 );
+
+export const getDebugMenuModalState = (state: StateType) => getModal(state).debugMenuModal;

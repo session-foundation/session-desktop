@@ -18,8 +18,10 @@ import { Spacer2XL, Spacer3XL, SpacerLG, SpacerSM, SpacerXL } from '../../basic/
 import { CopyToClipboardButton } from '../../buttons/CopyToClipboardButton';
 import { SessionInput } from '../../inputs';
 import { SessionSpinner } from '../../loading';
-import { sanitizeDisplayNameOrToast } from '../../registration/utils';
 import { ProfileHeader, ProfileName, QRView } from './components';
+import { EmptyDisplayNameError, RetrieveDisplayNameError } from '../../../session/utils/errors';
+import { localize } from '../../../localization/localeTools';
+import { sanitizeDisplayNameOrToast } from '../../registration/utils';
 
 // #region Shortcuts
 const handleKeyQRMode = (
@@ -173,6 +175,7 @@ export const EditProfileDialog = () => {
   const [profileName, setProfileName] = useState(_profileName);
   const [updatedProfileName, setUpdateProfileName] = useState(profileName);
   const [profileNameError, setProfileNameError] = useState<string | undefined>(undefined);
+  const [cannotContinue, setCannotContinue] = useState(true);
 
   const copyButtonRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -207,12 +210,15 @@ export const EditProfileDialog = () => {
       : undefined;
 
   const onClickOK = async () => {
-    if (isEmpty(profileName) || !isEmpty(profileNameError)) {
-      return;
-    }
-
     try {
       setLoading(true);
+      const sanitizedName = sanitizeDisplayNameOrToast(profileName);
+
+      // this should never happen, but just in case
+      if (isEmpty(sanitizedName)) {
+        return;
+      }
+
       // Note: this will not throw, but just truncate the display name if it is too long.
       // I guess it is expected as there is no UI to show anything else than a generic error?
       const validName = await ProfileManager.updateOurProfileDisplayName(profileName);
@@ -221,7 +227,13 @@ export const EditProfileDialog = () => {
       setMode('default');
     } catch (err) {
       window.log.error('Profile update error', err);
-      setProfileNameError(window.i18n('errorUnknown'));
+      setCannotContinue(true);
+
+      if (err instanceof EmptyDisplayNameError || err instanceof RetrieveDisplayNameError) {
+        setProfileNameError(localize('displayNameErrorDescription').toString());
+      } else {
+        setProfileNameError(localize('errorUnknown').toString());
+      }
     } finally {
       setLoading(false);
     }
@@ -324,8 +336,8 @@ export const EditProfileDialog = () => {
             placeholder={window.i18n('displayNameEnter')}
             value={profileName}
             onValueChanged={(name: string) => {
-              const sanitizedName = sanitizeDisplayNameOrToast(name, setProfileNameError);
-              setProfileName(sanitizedName);
+              setProfileName(name);
+              setCannotContinue(false);
             }}
             editable={!loading}
             tabIndex={0}
@@ -381,7 +393,7 @@ export const EditProfileDialog = () => {
               <SessionButton
                 text={window.i18n('save')}
                 onClick={onClickOK}
-                disabled={loading}
+                disabled={cannotContinue}
                 dataTestId="save-button-profile-update"
               />
             )

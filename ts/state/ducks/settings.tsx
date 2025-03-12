@@ -10,6 +10,7 @@ const SettingsBoolsKeyTrackedInRedux = [
   SettingsKey.hasFollowSystemThemeEnabled,
   SettingsKey.hasShiftSendEnabled,
   SettingsKey.hideRecoveryPassword,
+  SettingsKey.showOnboardingAccountJustCreated,
 ] as const;
 
 export type SettingsState = {
@@ -25,6 +26,7 @@ export function getSettingsInitialState() {
       hasFollowSystemThemeEnabled: false,
       hasShiftSendEnabled: false,
       hideRecoveryPassword: false,
+      showOnboardingAccountJustCreated: true,
     },
   };
 }
@@ -56,6 +58,7 @@ const settingsSlice = createSlice({
         hasFollowSystemThemeEnabled: boolean;
         hasShiftSendEnabled: boolean;
         hideRecoveryPassword: boolean;
+        showOnboardingAccountJustCreated: boolean;
       }>
     ) {
       const {
@@ -65,6 +68,7 @@ const settingsSlice = createSlice({
         someDeviceOutdatedSyncing,
         hasShiftSendEnabled,
         hideRecoveryPassword,
+        showOnboardingAccountJustCreated,
       } = payload;
 
       state.settingsBools.someDeviceOutdatedSyncing = someDeviceOutdatedSyncing;
@@ -73,6 +77,7 @@ const settingsSlice = createSlice({
       state.settingsBools.hasFollowSystemThemeEnabled = hasFollowSystemThemeEnabled;
       state.settingsBools.hasShiftSendEnabled = hasShiftSendEnabled;
       state.settingsBools.hideRecoveryPassword = hideRecoveryPassword;
+      state.settingsBools.showOnboardingAccountJustCreated = showOnboardingAccountJustCreated;
 
       return state;
     },

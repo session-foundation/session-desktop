@@ -9,6 +9,8 @@ import { HTTPError, NotFoundError } from '../../utils/errors';
 
 import { APPLICATION_JSON } from '../../../types/MIME';
 import { ERROR_421_HANDLED_RETRY_REQUEST, Onions, snodeHttpsAgent, SnodeResponse } from './onions';
+import { WithAbortSignal, WithTimeoutMs } from './requestWith';
+import { WithAllow401s } from '../../types/with';
 
 export interface LokiFetchOptions {
   method: 'GET' | 'POST';
@@ -19,26 +21,30 @@ export interface LokiFetchOptions {
 
 /**
  * A small wrapper around node-fetch which deserializes response
- * returns insecureNodeFetch response or false
+ * returned by insecureNodeFetch or false.
+ * Does not do any retries, nor eject snodes if needed
  */
-async function doRequest({
+async function doRequestNoRetries({
   options,
   url,
   associatedWith,
   targetNode,
-  timeout,
-}: {
-  url: string;
-  options: LokiFetchOptions;
-  targetNode?: Snode;
-  associatedWith: string | null;
-  timeout: number;
-}): Promise<undefined | SnodeResponse> {
+  timeoutMs,
+  allow401s,
+  abortSignal,
+}: WithTimeoutMs &
+  WithAbortSignal &
+  WithAllow401s & {
+    url: string;
+    options: LokiFetchOptions;
+    targetNode?: Snode;
+    associatedWith: string | null;
+  }): Promise<undefined | SnodeResponse> {
   const method = options.method || 'GET';
 
   const fetchOptions = {
     ...options,
-    timeout,
+    timeoutMs,
     method,
   };
 
@@ -50,11 +56,14 @@ async function doRequest({
         ? true
         : window.sessionFeatureFlags?.useOnionRequests;
     if (useOnionRequests && targetNode) {
-      const fetchResult = await Onions.lokiOnionFetch({
+      const fetchResult = await Onions.lokiOnionFetchNoRetries({
         targetNode,
         body: fetchOptions.body,
         headers: fetchOptions.headers,
         associatedWith: associatedWith || undefined,
+        allow401s,
+        abortSignal,
+        timeoutMs,
       });
       if (!fetchResult) {
         return undefined;
@@ -108,20 +117,23 @@ async function doRequest({
  *  -> if the targetNode gets too many errors => we will need to try to do this request again with another target node
  * The
  */
-export async function snodeRpc(
+async function snodeRpcNoRetries(
   {
     method,
     params,
     targetNode,
     associatedWith,
-    timeout = 10000,
-  }: {
-    method: string;
-    params: Record<string, any> | Array<Record<string, any>>;
-    targetNode: Snode;
-    associatedWith: string | null;
-    timeout?: number;
-  } // the user pubkey this call is for. if the onion request fails, this is used to handle the error for this user swarm for instance
+    allow401s,
+    timeoutMs,
+    abortSignal,
+  }: WithTimeoutMs &
+    WithAllow401s &
+    WithAbortSignal & {
+      method: string;
+      params: Record<string, any> | Array<Record<string, any>>;
+      targetNode: Snode;
+      associatedWith: string | null;
+    } // the user pubkey this call is for. if the onion request fails, this is used to handle the error for this user swarm for instance
 ): Promise<undefined | SnodeResponse> {
   const url = `https://${targetNode.ip}:${targetNode.port}/storage_rpc/v1`;
 
@@ -138,11 +150,15 @@ export async function snodeRpc(
     agent: null,
   };
 
-  return doRequest({
+  return doRequestNoRetries({
     url,
     options: fetchOptions,
     targetNode,
     associatedWith,
-    timeout,
+    timeoutMs,
+    allow401s,
+    abortSignal,
   });
 }
+
+export const SessionRpc = { snodeRpcNoRetries };

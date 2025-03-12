@@ -7,6 +7,7 @@ import { ipcRenderer } from 'electron';
 import _ from 'lodash';
 
 import { redactAll } from './privacy';
+import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
 
 const ipc = ipcRenderer;
 
@@ -110,6 +111,12 @@ const development = window && window?.getEnvironment && window?.getEnvironment()
 
 // The Bunyan API: https://github.com/trentm/node-bunyan#log-method-api
 function logAtLevel(level: string, prefix: string, ...args: any) {
+  // when unit testing with mocha, we just log whatever we get to the console.log
+  if (typeof (global as any).it === 'function') {
+    (console as any)._log(prefix, now(), ...args);
+    return;
+  }
+
   if (prefix === 'DEBUG' && !window.sessionFeatureFlags.debug.debugLogging) {
     return;
   }
@@ -153,12 +160,19 @@ export function saveLogToDesktop() {
   const versionInfo = `v${window.getVersion()}`;
   const systemInfo = `System Information: ${window.getOSRelease()}`;
   const commitInfo = `Commit Hash: ${window.getCommitHash()}` || 'Unknown';
+  const libsessionCommitInfo =
+    `Libsession Commit Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_UTIL_VERSION}` || 'Unknown';
+  const libsessionNodeJSCommitInfo =
+    `Libsession NodeJS Version/Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_VERSION}/${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_COMMIT}` ||
+    'Unknown';
   const debugLogWithSystemInfo = `
 ******************************************************************************
 # Application Info
 ${versionInfo}
 ${systemInfo}
 ${commitInfo}
+${libsessionCommitInfo}
+${libsessionNodeJSCommitInfo}
 ******************************************************************************`;
   window.saveLog(debugLogWithSystemInfo);
 }

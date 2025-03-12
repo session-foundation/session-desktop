@@ -1,5 +1,6 @@
 import { createSelector } from '@reduxjs/toolkit';
 
+import { useSelector } from 'react-redux';
 import { LeftOverlayMode, SectionStateType, SectionType } from '../ducks/section';
 import { StateType } from '../reducer';
 import type { SessionSettingCategory } from '../../types/ReduxTypes';
@@ -34,9 +35,13 @@ export const getRightOverlayMode = (state: StateType) => {
   return state.section.rightOverlayMode;
 };
 
-export const getIsMessageRequestOverlayShown = (state: StateType) => {
+const getIsMessageRequestOverlayShown = (state: StateType) => {
   const focusedSection = getFocusedSection(state);
   const leftOverlayMode = getLeftOverlayMode(state);
 
   return focusedSection === SectionType.Message && leftOverlayMode === 'message-requests';
 };
+
+export function useIsMessageRequestOverlayShown() {
+  return useSelector(getIsMessageRequestOverlayShown);
+}

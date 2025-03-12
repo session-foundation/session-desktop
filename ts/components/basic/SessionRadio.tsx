@@ -1,4 +1,5 @@
-import { ChangeEvent, SyntheticEvent } from 'react';
+import { ChangeEvent, SessionDataTestId, SyntheticEvent } from 'react';
+
 import styled, { CSSProperties } from 'styled-components';
 import { Flex } from './Flex';
 
@@ -61,6 +62,8 @@ type SessionRadioProps = {
   disabled?: boolean;
   radioPosition?: 'left' | 'right';
   style?: CSSProperties;
+  labelDataTestId?: SessionDataTestId;
+  inputDataTestId?: SessionDataTestId;
 };
 
 export const SessionRadio = (props: SessionRadioProps) => {
@@ -74,6 +77,8 @@ export const SessionRadio = (props: SessionRadioProps) => {
     disabled = false,
     radioPosition = 'left',
     style,
+    labelDataTestId,
+    inputDataTestId,
   } = props;
 
   const clickHandler = (e: SyntheticEvent<any>) => {
@@ -114,7 +119,7 @@ export const SessionRadio = (props: SessionRadioProps) => {
           filledSize={filledSize * 2}
           outlineOffset={outlineOffset}
           disabled={disabled}
-          data-testid={`input-${value.replaceAll(' ', '-')}`} // data-testid cannot have spaces
+          data-testid={inputDataTestId}
         />
         <StyledLabel
           role="button"
@@ -124,7 +129,7 @@ export const SessionRadio = (props: SessionRadioProps) => {
           beforeMargins={beforeMargins}
           aria-label={label}
           disabled={disabled}
-          data-testid={`label-${value}`}
+          data-testid={labelDataTestId}
         >
           {label}
         </StyledLabel>

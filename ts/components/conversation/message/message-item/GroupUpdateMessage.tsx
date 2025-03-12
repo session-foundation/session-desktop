@@ -1,75 +1,75 @@
-import { isNull } from 'lodash';
 import {
+  getGroupNameChangeStr,
   getJoinedGroupUpdateChangeStr,
   getKickedGroupUpdateStr,
   getLeftGroupUpdateChangeStr,
+  getPromotedGroupUpdateChangeStr,
 } from '../../../../models/groupUpdate';
+import { PropsForGroupUpdateType } from '../../../../state/ducks/conversations';
 import {
-  PropsForGroupUpdate,
-  PropsForGroupUpdateType,
-} from '../../../../state/ducks/conversations';
-import { useSelectedNicknameOrProfileNameOrShortenedPubkey } from '../../../../state/selectors/selectedConversation';
+  useSelectedIsGroupV2,
+  useSelectedNicknameOrProfileNameOrShortenedPubkey,
+} from '../../../../state/selectors/selectedConversation';
+import { Localizer } from '../../../basic/Localizer';
 import { ExpirableReadableMessage } from './ExpirableReadableMessage';
 import { NotificationBubble } from './notification-bubble/NotificationBubble';
-import { Localizer } from '../../../basic/Localizer';
-import type { LocalizerComponentPropsObject } from '../../../../types/localizer';
+import type { LocalizerComponentPropsObject } from '../../../../localization/localeTools';
+import type { WithMessageId } from '../../../../session/types/with';
+import { useMessageGroupUpdateChange } from '../../../../state/selectors';
+import { assertUnreachable } from '../../../../types/sqlSharedTypes';
 
 // This component is used to display group updates in the conversation view.
 
-const ChangeItemJoined = (added: Array<string>): LocalizerComponentPropsObject => {
+function useChangeItem(change?: PropsForGroupUpdateType): LocalizerComponentPropsObject | null {
   const groupName = useSelectedNicknameOrProfileNameOrShortenedPubkey();
+  const isGroupV2 = useSelectedIsGroupV2();
 
-  if (!added.length) {
-    throw new Error('Group update added is missing details');
+  if (!change) {
+    return null;
   }
+  const changeType = change.type;
 
-  return getJoinedGroupUpdateChangeStr(added, groupName);
-};
-
-const ChangeItemKicked = (kicked: Array<string>): LocalizerComponentPropsObject => {
-  if (!kicked.length) {
-    throw new Error('Group update kicked is missing details');
-  }
-  const groupName = useSelectedNicknameOrProfileNameOrShortenedPubkey();
-
-  return getKickedGroupUpdateStr(kicked, groupName);
-};
-
-const ChangeItemLeft = (left: Array<string>): LocalizerComponentPropsObject => {
-  const groupName = useSelectedNicknameOrProfileNameOrShortenedPubkey();
-
-  if (!left.length) {
-    throw new Error('Group update left is missing details');
-  }
-
-  return getLeftGroupUpdateChangeStr(left, groupName);
-};
-
-const ChangeItem = (change: PropsForGroupUpdateType): LocalizerComponentPropsObject => {
-  const { type } = change;
-  switch (type) {
-    case 'name':
-      return { token: 'groupNameNew', args: { group_name: change.newName } };
-
-    case 'add':
-      return ChangeItemJoined(change.added);
-
+  switch (changeType) {
     case 'left':
-      return ChangeItemLeft(change.left);
-
+      if (!change.left.length) {
+        throw new Error('Group update left is missing details');
+      }
+      return getLeftGroupUpdateChangeStr(change.left);
     case 'kicked':
-      return ChangeItemKicked(change.kicked);
-
-    case 'general':
+      if (!change.kicked.length) {
+        throw new Error('Group update kicked is missing details');
+      }
+      return getKickedGroupUpdateStr(change.kicked, groupName);
+    case 'add':
+      if (!change.added.length) {
+        throw new Error('Group update added is missing details');
+      }
+      return getJoinedGroupUpdateChangeStr(change.added, isGroupV2, change.withHistory, groupName);
+    case 'promoted':
+      if (!change.promoted.length) {
+        throw new Error('Group update promoted is missing details');
+      }
+      return getPromotedGroupUpdateChangeStr(change.promoted);
+    case 'name':
+      return getGroupNameChangeStr(change.newName);
+    case 'avatarChange':
+      return {
+        token: 'groupDisplayPictureUpdated',
+      };
     default:
-      return { token: 'groupUpdated' };
+      assertUnreachable(changeType, `invalid case: ${changeType}`);
+      throw new Error('unhandled case, but this is to make typescript happy');
   }
-};
+}
 
-export const GroupUpdateMessage = (props: PropsForGroupUpdate) => {
-  const { change, messageId } = props;
+export const GroupUpdateMessage = ({ messageId }: WithMessageId) => {
+  const groupChange = useMessageGroupUpdateChange(messageId);
 
-  const changeItem = ChangeItem(change);
+  const changeProps = useChangeItem(groupChange);
+
+  if (!changeProps || !groupChange) {
+    return null;
+  }
 
   return (
     <ExpirableReadableMessage
@@ -79,7 +79,7 @@ export const GroupUpdateMessage = (props: PropsForGroupUpdate) => {
       isControlMessage={true}
     >
       <NotificationBubble iconType="users">
-        {!isNull(changeItem) ? <Localizer {...changeItem} /> : null}
+        <Localizer {...changeProps} />
       </NotificationBubble>
     </ExpirableReadableMessage>
   );

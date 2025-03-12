@@ -5,7 +5,10 @@ import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { isEmpty } from 'lodash';
 import { useDispatch } from 'react-redux';
-import { getConversationController } from '../../../session/conversations';
+import { toASCII } from 'punycode';
+
+import { ConvoHub } from '../../../session/conversations';
+
 import { PubKey } from '../../../session/types';
 import { openConversationWithMessages } from '../../../state/ducks/conversations';
 import { resetLeftOverlayMode } from '../../../state/ducks/section';
@@ -73,12 +76,12 @@ export const OverlayMessage = () => {
   const disableNextButton = !pubkeyOrOns || loading;
 
   async function openConvoOnceResolved(resolvedSessionID: string) {
-    const convo = await getConversationController().getOrCreateAndWait(
+    const convo = await ConvoHub.use().getOrCreateAndWait(
       resolvedSessionID,
       ConversationTypeEnum.PRIVATE
     );
 
-    // we now want to show a conversation we just started on the leftpane, even if we did not send a message to it yet
+    // we now want to show a conversation we just started on the left pane, even if we did not send a message to it yet
     if (!convo.isActive() || convo.isHidden()) {
       // bump the timestamp only if we were not active before
       if (!convo.isActive()) {
@@ -102,23 +105,23 @@ export const OverlayMessage = () => {
       return;
     }
 
-    const pubkeyorOnsTrimmed = pubkeyOrOns.trim();
-    const validationError = PubKey.validateWithErrorNoBlinding(pubkeyorOnsTrimmed);
+    const pubkeyOrOnsTrimmed = toASCII(pubkeyOrOns.trim());
+    const validationError = PubKey.validateWithErrorNoBlinding(pubkeyOrOnsTrimmed);
 
     if (!validationError) {
-      await openConvoOnceResolved(pubkeyorOnsTrimmed);
+      await openConvoOnceResolved(pubkeyOrOnsTrimmed);
       return;
     }
 
-    const isPubkey = PubKey.validate(pubkeyorOnsTrimmed);
-    const isGroupPubkey = PubKey.isClosedGroupV3(pubkeyorOnsTrimmed);
+    const isPubkey = PubKey.validate(pubkeyOrOnsTrimmed);
+    const isGroupPubkey = PubKey.is03Pubkey(pubkeyOrOnsTrimmed);
     if ((isPubkey && validationError) || isGroupPubkey) {
       setPubkeyOrOnsError(validationError);
       return;
     }
 
     // this might be an ONS, validate the regex first
-    const mightBeOnsName = new RegExp(ONSResolve.onsNameRegex, 'g').test(pubkeyorOnsTrimmed);
+    const mightBeOnsName = new RegExp(ONSResolve.onsNameRegex, 'g').test(pubkeyOrOnsTrimmed);
     if (!mightBeOnsName) {
       setPubkeyOrOnsError(window.i18n('onsErrorNotRecognized'));
       return;
@@ -126,7 +129,7 @@ export const OverlayMessage = () => {
 
     setLoading(true);
     try {
-      const resolvedSessionID = await ONSResolve.getSessionIDForOnsName(pubkeyorOnsTrimmed);
+      const resolvedSessionID = await ONSResolve.getSessionIDForOnsName(pubkeyOrOnsTrimmed);
       const idValidationError = PubKey.validateWithErrorNoBlinding(resolvedSessionID);
 
       if (idValidationError) {
@@ -191,8 +194,8 @@ export const OverlayMessage = () => {
 
       {!isEmpty(pubkeyOrOns) ? (
         <SessionButton
-          ariaLabel={window.i18n('theContinue')}
-          text={window.i18n('theContinue')}
+          ariaLabel={window.i18n('next')}
+          text={window.i18n('next')}
           disabled={disableNextButton}
           onClick={handleMessageButtonClick}
           dataTestId="next-new-conversation-button"

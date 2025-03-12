@@ -5,12 +5,12 @@
  * To identity between an open or closed group before v3, we need to rely on the prefix (05 is closed groups, 'http%' is opengroup)
  *
  *
- * We will need to support existing closed groups foir now, but we will be able to get rid of existing closed groups at some point.
+ * We will need to support existing closed groups for now, but we will be able to get rid of existing closed groups at some point.
  * When we do get rid of them, we will be able to remove any GROUP conversation with prefix 05 (as they are old closed groups) and update the remaining GROUP to be opengroups instead
  */
 export enum ConversationTypeEnum {
   GROUP = 'group',
-  GROUPV3 = 'groupv3',
+  GROUPV2 = 'groupv2',
   PRIVATE = 'private',
 }
 

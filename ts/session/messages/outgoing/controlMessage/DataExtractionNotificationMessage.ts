@@ -1,11 +1,14 @@
-import { getMessageQueue } from '../../..';
+import { v4 as uuid } from 'uuid';
+
 import { SignalService } from '../../../../protobuf';
 import { SnodeNamespaces } from '../../../apis/snode_api/namespaces';
-import { getConversationController } from '../../../conversations';
+import { ConvoHub } from '../../../conversations';
 import { DisappearingMessages } from '../../../disappearing_messages';
 import { PubKey } from '../../../types';
 import { UserUtils } from '../../../utils';
 import { ExpirableMessage, ExpirableMessageParams } from '../ExpirableMessage';
+import { NetworkTime } from '../../../../util/NetworkTime';
+import { MessageQueue } from '../../../sending';
 
 interface DataExtractionNotificationMessageParams extends ExpirableMessageParams {
   referencedAttachmentTimestamp: number;
@@ -17,7 +20,7 @@ export class DataExtractionNotificationMessage extends ExpirableMessage {
   constructor(params: DataExtractionNotificationMessageParams) {
     super(params);
     this.referencedAttachmentTimestamp = params.referencedAttachmentTimestamp;
-    // this does not make any sense
+    // this is unused. Probably on all platforms, but well.
     if (!this.referencedAttachmentTimestamp) {
       throw new Error('referencedAttachmentTimestamp must be set');
     }
@@ -25,11 +28,11 @@ export class DataExtractionNotificationMessage extends ExpirableMessage {
 
   public contentProto(): SignalService.Content {
     const content = super.contentProto();
-    content.dataExtractionNotification = this.dataExtractionProto();
+    content.dataExtractionNotification = this.extractionProto();
     return content;
   }
 
-  protected dataExtractionProto(): SignalService.DataExtractionNotification {
+  protected extractionProto(): SignalService.DataExtractionNotification {
     const ACTION_ENUM = SignalService.DataExtractionNotification.Type;
 
     const action = ACTION_ENUM.MEDIA_SAVED; // we cannot know when user screenshots, so it can only be a media saved on desktop
@@ -49,7 +52,7 @@ export const sendDataExtractionNotification = async (
   attachmentSender: string,
   referencedAttachmentTimestamp: number
 ) => {
-  const convo = getConversationController().get(conversationId);
+  const convo = ConvoHub.use().get(conversationId);
   if (!convo || !convo.isPrivate() || convo.isMe() || UserUtils.isUsFromCache(attachmentSender)) {
     window.log.warn('Not sending saving attachment notification for', attachmentSender);
     return;
@@ -61,7 +64,8 @@ export const sendDataExtractionNotification = async (
   // but also expire on the recipient's side (and synced) once read.
   const dataExtractionNotificationMessage = new DataExtractionNotificationMessage({
     referencedAttachmentTimestamp,
-    timestamp: Date.now(),
+    identifier: uuid(),
+    createAtNetworkTimestamp: NetworkTime.now(),
     expirationType,
     expireTimer,
   });
@@ -72,11 +76,11 @@ export const sendDataExtractionNotification = async (
   );
 
   try {
-    await getMessageQueue().sendToPubKey(
+    await MessageQueue.use().sendTo1o1NonDurably({
       pubkey,
-      dataExtractionNotificationMessage,
-      SnodeNamespaces.UserMessages
-    );
+      message: dataExtractionNotificationMessage,
+      namespace: SnodeNamespaces.Default,
+    });
   } catch (e) {
     window.log.warn('failed to send data extraction notification', e);
   }

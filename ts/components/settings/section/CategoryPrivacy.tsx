@@ -8,7 +8,6 @@ import { SpacerLG } from '../../basic/Text';
 import { TypingBubble } from '../../conversation/TypingBubble';
 
 import { UserUtils } from '../../../session/utils';
-import { ConfigurationSync } from '../../../session/utils/job_runners/jobs/ConfigurationSyncJob';
 import { SessionUtilUserProfile } from '../../../session/utils/libsession/libsession_utils_user_profile';
 import {
   useHasBlindedMsgRequestsEnabled,
@@ -99,7 +98,6 @@ export const SettingsCategoryPrivacy = (props: {
           await SessionUtilUserProfile.insertUserProfileIntoWrapper(
             UserUtils.getOurPubKeyStrFromCache()
           );
-          await ConfigurationSync.queueNewJobIfNeeded();
           forceUpdate();
         }}
         title={window.i18n('messageRequestsCommunities')}
@@ -132,6 +130,7 @@ export const SettingsCategoryPrivacy = (props: {
             dataTestId="change-password-settings-button"
           />
           <SessionSettingButtonItem
+            title={window.i18n('passwordRemove')}
             description={window.i18n('passwordRemoveDescription')}
             onClick={() => {
               displayPasswordModal('remove', props.onPasswordUpdated);

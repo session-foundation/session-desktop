@@ -5,6 +5,7 @@ import { OpenGroupData } from '../../../../data/opengroups';
 import { assertUnreachable, roomHasBlindEnabled } from '../../../../types/sqlSharedTypes';
 import { Reactions } from '../../../../util/reactions';
 import { OnionSending, OnionV4JSONSnodeResponse } from '../../../onions/onionSend';
+import { MethodBatchType } from '../../snode_api/SnodeRequestTypes';
 import {
   OpenGroupPollingUtils,
   OpenGroupRequestHeaders,
@@ -26,11 +27,11 @@ type BatchBodyRequestSharedOptions = {
   headers?: any;
 };
 
-interface BatchJsonSubrequestOptions extends BatchBodyRequestSharedOptions {
+interface BatchJsonSubRequestOptions extends BatchBodyRequestSharedOptions {
   json: object;
 }
 
-type BatchBodyRequest = BatchJsonSubrequestOptions;
+type BatchBodyRequest = BatchJsonSubRequestOptions;
 
 type BatchSubRequest = BatchBodyRequest | BatchFetchRequestOptions;
 
@@ -45,7 +46,7 @@ type BatchRequest = {
   headers: OpenGroupRequestHeaders;
 };
 
-export type BatchSogsReponse = {
+export type BatchSogsResponse = {
   status_code: number;
   body?: Array<{ body: object; code: number; headers?: Record<string, string> }>;
 };
@@ -55,8 +56,9 @@ export const sogsBatchSend = async (
   roomInfos: Set<string>,
   abortSignal: AbortSignal,
   batchRequestOptions: Array<OpenGroupBatchRow>,
-  batchType: 'batch' | 'sequence'
-): Promise<BatchSogsReponse | null> => {
+  batchType: MethodBatchType,
+  timeoutMs: number
+): Promise<BatchSogsResponse | null> => {
   // getting server pk for room
   const [roomId] = roomInfos;
   const fetchedRoomInfo = OpenGroupData.getV2OpenGroupRoomByRoomId({
@@ -64,7 +66,7 @@ export const sogsBatchSend = async (
     roomId,
   });
   if (!fetchedRoomInfo || !fetchedRoomInfo?.serverPublicKey) {
-    window?.log?.warn('Couldnt get fetched info or server public key -- aborting batch request');
+    window?.log?.warn("Couldn't get fetched info or server public key -- aborting batch request");
     return null;
   }
   const { serverPublicKey } = fetchedRoomInfo;
@@ -87,7 +89,8 @@ export const sogsBatchSend = async (
     serverUrl,
     serverPublicKey,
     batchRequest,
-    abortSignal
+    abortSignal,
+    timeoutMs
   );
   if (abortSignal.aborted) {
     window.log.info('sendSogsBatchRequestOnionV4 aborted.');
@@ -98,28 +101,26 @@ export const sogsBatchSend = async (
 };
 
 export function parseBatchGlobalStatusCode(
-  response?: BatchSogsReponse | OnionV4JSONSnodeResponse | null
+  response?: BatchSogsResponse | OnionV4JSONSnodeResponse | null
 ): number | undefined {
   return response?.status_code;
 }
 
 export function batchGlobalIsSuccess(
-  response?: BatchSogsReponse | OnionV4JSONSnodeResponse | null
+  response?: BatchSogsResponse | OnionV4JSONSnodeResponse | null
 ): boolean {
   const status = parseBatchGlobalStatusCode(response);
   return Boolean(status && isNumber(status) && status >= 200 && status <= 300);
 }
 
-function parseBatchFirstSubStatusCode(response?: BatchSogsReponse | null): number | undefined {
+function parseBatchFirstSubStatusCode(response?: BatchSogsResponse | null): number | undefined {
   return response?.body?.[0].code;
 }
 
-export function batchFirstSubIsSuccess(response?: BatchSogsReponse | null): boolean {
+export function batchFirstSubIsSuccess(response?: BatchSogsResponse | null): boolean {
   const status = parseBatchFirstSubStatusCode(response);
   return Boolean(status && isNumber(status) && status >= 200 && status <= 300);
 }
-
-export type SubrequestOptionType = 'capabilities' | 'messages' | 'pollInfo' | 'inbox';
 
 export type SubRequestCapabilitiesType = { type: 'capabilities' };
 
@@ -232,7 +233,7 @@ export type OpenGroupBatchRow =
 
 /**
  *
- * @param options Array of subrequest options to be made.
+ * @param options Array of subRequest options to be made.
  */
 const makeBatchRequestPayload = (
   options: OpenGroupBatchRow
@@ -356,9 +357,9 @@ const getBatchRequest = async (
   serverPublicKey: string,
   batchOptions: Array<OpenGroupBatchRow>,
   requireBlinding: boolean,
-  batchType: 'batch' | 'sequence'
+  batchType: MethodBatchType
 ): Promise<BatchRequest | undefined> => {
-  const batchEndpoint = batchType === 'sequence' ? '/sequence' : '/batch';
+  const batchEndpoint = `/${batchType}` as const;
   const batchMethod = 'POST';
   if (!batchOptions || isEmpty(batchOptions)) {
     return undefined;
@@ -397,8 +398,9 @@ const sendSogsBatchRequestOnionV4 = async (
   serverUrl: string,
   serverPubkey: string,
   request: BatchRequest,
-  abortSignal: AbortSignal
-): Promise<null | BatchSogsReponse> => {
+  abortSignal: AbortSignal,
+  timeoutMs: number
+): Promise<null | BatchSogsResponse> => {
   const { endpoint, headers, method, body } = request;
   if (!endpoint.startsWith('/')) {
     throw new Error('endpoint needs a leading /');
@@ -416,7 +418,8 @@ const sendSogsBatchRequestOnionV4 = async (
       useV4: true,
     },
     false,
-    abortSignal
+    abortSignal,
+    timeoutMs
   );
 
   if (abortSignal.aborted) {
@@ -428,7 +431,7 @@ const sendSogsBatchRequestOnionV4 = async (
     return null;
   }
   if (isObject(batchResponse.body)) {
-    return batchResponse as BatchSogsReponse;
+    return batchResponse as BatchSogsResponse;
   }
 
   window?.log?.warn('sogsbatch: batch response decoded body is not object. Returning null');

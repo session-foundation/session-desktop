@@ -6,6 +6,7 @@ import {
   sogsBatchSend,
 } from './sogsV3BatchPoll';
 import { OpenGroupRequestCommonType } from '../../../../data/types';
+import { DURATION } from '../../../constants';
 
 /**
  * Deletes messages on open group server using onion v4 logic and batch send
@@ -23,7 +24,8 @@ export const deleteSogsMessageByServerIds = async (
     new Set([roomInfos.roomId]),
     new AbortController().signal,
     options,
-    'batch'
+    'batch',
+    10 * DURATION.SECONDS
   );
 
   try {

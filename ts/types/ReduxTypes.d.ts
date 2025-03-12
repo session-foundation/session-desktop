@@ -9,12 +9,12 @@ export type SessionSettingCategory =
   | 'privacy'
   | 'notifications'
   | 'conversations'
-  | 'messageRequests'
+  | 'message-requests'
   | 'appearance'
   | 'permissions'
   | 'help'
-  | 'recoveryPassword'
-  | 'clearData';
+  | 'recovery-password'
+  | 'clear-data';
 
 export type PasswordAction = 'set' | 'change' | 'remove' | 'enter';
 

@@ -2,7 +2,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
 import styled from 'styled-components';
 import { declineConversationWithoutConfirm } from '../../../interactions/conversationInteractions';
-import { forceSyncConfigurationNowIfNeeded } from '../../../session/utils/sync/syncUtils';
 import { updateConfirmModal } from '../../../state/ducks/modalDialog';
 import { resetLeftOverlayMode } from '../../../state/ducks/section';
 import { getConversationRequestsIds } from '../../../state/selectors/conversations';
@@ -10,6 +9,7 @@ import { useSelectedConversationKey } from '../../../state/selectors/selectedCon
 import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
 import { SpacerLG } from '../../basic/Text';
 import { ConversationListItem } from '../conversation-list-item/ConversationListItem';
+import { ed25519Str } from '../../../session/utils/String';
 import { Localizer } from '../../basic/Localizer';
 
 const MessageRequestListPlaceholder = styled.div`
@@ -64,6 +64,9 @@ export const OverlayMessageRequest = () => {
         title: window.i18n('clearAll'),
         i18nMessage: { token: 'messageRequestsClearAllExplanation' },
         onClose,
+        okTheme: SessionButtonColor.Danger,
+        closeTheme: SessionButtonColor.Primary,
+        okText: window.i18n('clear'),
         onClickOk: async () => {
           window?.log?.info('Blocking all message requests');
           if (!hasRequests) {
@@ -73,23 +76,24 @@ export const OverlayMessageRequest = () => {
 
           for (let index = 0; index < messageRequests.length; index++) {
             const convoId = messageRequests[index];
-            // eslint-disable-next-line no-await-in-loop
-            await declineConversationWithoutConfirm({
-              blockContact: false,
-              conversationId: convoId,
-              currentlySelectedConvo,
-              syncToDevices: false,
-            });
+            try {
+              // eslint-disable-next-line no-await-in-loop
+              await declineConversationWithoutConfirm({
+                alsoBlock: false,
+                conversationId: convoId,
+                currentlySelectedConvo,
+                conversationIdOrigin: null, // block is false, no need for conversationIdOrigin
+              });
+            } catch (e) {
+              window.log.warn(
+                `failed to decline msg request ${ed25519Str(convoId)} with error: ${e.message}`
+              );
+            }
           }
-
-          await forceSyncConfigurationNowIfNeeded();
         },
         onClickClose: () => {
           window.inboxStore?.dispatch(updateConfirmModal(null));
         },
-        okTheme: SessionButtonColor.Danger,
-        closeTheme: SessionButtonColor.Primary,
-        okText: window.i18n('clear'),
       })
     );
   }
