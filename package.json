@@ -176,7 +176,7 @@
     "cross-env": "^6.0.3",
     "css-loader": "^6.7.2",
     "dmg-builder": "23.6.0",
-    "electron": "25.8.4",
+    "electron": "34.2.0",
     "electron-builder": "23.0.8",
     "eslint": "8.57.0",
     "eslint-config-airbnb-base": "^15.0.0",
@@ -208,7 +208,7 @@
     "webpack-cli": "^5.1.4"
   },
   "engines": {
-    "node": "18.15.0"
+    "node": "20.18.2"
   },
   "build": {
     "appId": "com.loki-project.messenger-desktop",
