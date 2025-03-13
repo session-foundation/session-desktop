@@ -173,7 +173,7 @@
     "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
     "chai-bytes": "^0.1.2",
-    "cross-env": "^6.0.3",
+    "cross-env": "^7.0.3",
     "css-loader": "^6.7.2",
     "dmg-builder": "23.6.0",
     "electron": "34.2.0",
