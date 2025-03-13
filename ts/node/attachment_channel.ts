@@ -6,7 +6,7 @@ import path from 'path';
 import rimraf from 'rimraf';
 
 import { getAttachmentsPath } from '../shared/attachments/shared_attachments';
-import { sqlNode } from './sql'; // checked - only node
+import { sqlNode } from './sql';
 
 let initialized = false;
 

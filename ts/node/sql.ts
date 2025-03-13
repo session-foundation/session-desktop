@@ -28,8 +28,8 @@ import {
 
 import { GroupPubkeyType } from 'libsession_util_nodejs';
 import { ConversationAttributes } from '../models/conversationAttributes';
-import { PubKey } from '../session/types/PubKey'; // checked - only node
-import { redactAll } from '../util/privacy'; // checked - only node
+import { PubKey } from '../session/types/PubKey';
+import { redactAll } from '../util/privacy';
 import {
   arrayStrToJson,
   assertValidConversationAttributes,
@@ -51,8 +51,8 @@ import {
   SEEN_MESSAGE_TABLE,
   toSqliteBoolean,
 } from './database_utility';
-import type { SetupI18nReturnType } from '../types/localizer'; // checked - only node
-import { StorageItem } from './storage_item'; // checked - only node
+import type { SetupI18nReturnType } from '../types/localizer';
+import { StorageItem } from './storage_item';
 
 import {
   CONFIG_DUMP_TABLE,
