@@ -187,7 +187,6 @@
     "husky": "^9.1.7",
     "jsdom": "^22.1.0",
     "jsdom-global": "^3.0.2",
-    "lint-staged": "^15.5.0",
     "mini-css-extract-plugin": "^2.7.5",
     "mocha": "10.0.0",
     "node-loader": "^2.0.0",
