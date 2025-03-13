@@ -127,7 +127,7 @@
     "sanitize.css": "^12.0.1",
     "semver": "^7.5.4",
     "styled-components": "^6.1.11",
-    "uuid": "8.3.2",
+    "uuid": "11.1.0",
     "webrtc-adapter": "^4.1.1",
     "zod": "^3.22.4"
   },
@@ -167,14 +167,13 @@
     "@types/semver": "5.5.0",
     "@types/sinon": "9.0.4",
     "@types/styled-components": "^5.1.34",
-    "@types/uuid": "8.3.4",
     "@typescript-eslint/eslint-plugin": "7.1.0",
     "@typescript-eslint/parser": "7.1.0",
     "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
     "chai-bytes": "^0.1.2",
     "cross-env": "^7.0.3",
-    "css-loader": "^6.7.2",
+    "css-loader": "^7.1.2",
     "dmg-builder": "23.6.0",
     "electron": "34.2.0",
     "electron-builder": "26.0.11",
@@ -262,7 +261,9 @@
         "StartupWMClass": "Session"
       },
       "asarUnpack": "node_modules/spellchecker/vendor/hunspell_dictionaries",
-      "target": ["deb"],
+      "target": [
+        "deb"
+      ],
       "icon": "build/icon-linux.icns"
     },
     "asarUnpack": [
