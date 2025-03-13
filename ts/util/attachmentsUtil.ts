@@ -3,7 +3,7 @@ import imageType from 'image-type';
 
 import { arrayBufferToBlob } from 'blob-util';
 import loadImage from 'blueimp-load-image';
-import fileSize from 'filesize';
+import { filesize } from 'filesize';
 import { StagedAttachmentType } from '../components/conversation/composition/CompositionBox';
 import { SignalService } from '../protobuf';
 import { DecryptedAttachmentsManager } from '../session/crypto/DecryptedAttachmentsManager';
@@ -187,7 +187,7 @@ export async function autoScale<T extends { contentType: string; blob: Blob }>(
   }
 
   if (blob.type === IMAGE_GIF && blob.size > maxSize) {
-    throw new Error(`GIF is too large. Max size: ${fileSize(maxSize, { base: 10, round: 0 })}`);
+    throw new Error(`GIF is too large. Max size: ${filesize(maxSize, { base: 10, round: 0 })}`);
   }
 
   perfStart(`loadimage-*${blob.size}`);

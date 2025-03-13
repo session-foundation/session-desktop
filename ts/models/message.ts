@@ -1,7 +1,7 @@
 import Backbone from 'backbone';
 
 import autoBind from 'auto-bind';
-import filesize from 'filesize';
+import { filesize } from 'filesize';
 import { GroupPubkeyType, PubkeyType } from 'libsession_util_nodejs';
 import { cloneDeep, debounce, isEmpty, size as lodashSize, uniq } from 'lodash';
 import { SignalService } from '../protobuf';
