@@ -16,25 +16,25 @@ import {
   startingCallWith,
 } from '../../../state/ducks/call';
 import { openConversationWithMessages } from '../../../state/ducks/conversations';
-import { getConversationController } from '../../conversations';
+import { ConvoHub } from '../../conversations';
 import { CallMessage } from '../../messages/outgoing/controlMessage/CallMessage';
 import { PubKey } from '../../types';
 
-import { getMessageQueue } from '../..';
 import { getCallMediaPermissionsSettings } from '../../../components/settings/SessionSettings';
 import { Data } from '../../../data/data';
-import { approveConvoAndSendResponse } from '../../../interactions/conversationInteractions';
+import { handleAcceptConversationRequest } from '../../../interactions/conversationInteractions';
 import { READ_MESSAGE_STATE } from '../../../models/conversationAttributes';
 import { PnServer } from '../../apis/push_notification_api';
-import { GetNetworkTime } from '../../apis/snode_api/getNetworkTime';
 import { SnodeNamespaces } from '../../apis/snode_api/namespaces';
 import { DURATION } from '../../constants';
 import { DisappearingMessages } from '../../disappearing_messages';
 import { ReadyToDisappearMsgUpdate } from '../../disappearing_messages/types';
-import { MessageSender } from '../../sending';
+import { MessageQueue, MessageSender } from '../../sending';
 import { getIsRinging } from '../RingingManager';
 import { getBlackSilenceMediaStream } from './Silence';
 import { ed25519Str } from '../String';
+import { WithMessageHash } from '../../types/with';
+import { NetworkTime } from '../../../util/NetworkTime';
 import { sleepFor } from '../Promise';
 
 export type InputItem = { deviceId: string; label: string };
@@ -42,7 +42,6 @@ export type InputItem = { deviceId: string; label: string };
 export const callTimeoutMs = 60000;
 
 export type WithOptExpireUpdate = { expireDetails: ReadyToDisappearMsgUpdate | undefined };
-export type WithMessageHash = { messageHash: string };
 
 /**
  * This uuid is set only once we accepted a call or started one.
@@ -396,7 +395,7 @@ export async function selectAudioOutputByDeviceId(audioOutputDeviceId: string) {
 
 async function createOfferAndSendIt(recipient: string, msgIdentifier: string | null) {
   try {
-    const convo = getConversationController().get(recipient);
+    const convo = ConvoHub.use().get(recipient);
     if (!convo) {
       throw new Error('createOfferAndSendIt needs a convo');
     }
@@ -433,8 +432,8 @@ async function createOfferAndSendIt(recipient: string, msgIdentifier: string | n
         DisappearingMessages.forcedDeleteAfterReadMsgSetting(convo);
 
       const offerMessage = new CallMessage({
+        createAtNetworkTimestamp: NetworkTime.now(),
         identifier: msgIdentifier || undefined,
-        timestamp: Date.now(),
         type: SignalService.CallMessage.Type.OFFER,
         sdps: [overridenSdps],
         uuid: currentCallUUID,
@@ -443,10 +442,10 @@ async function createOfferAndSendIt(recipient: string, msgIdentifier: string | n
       });
 
       window.log.info(`sending '${offer.type}'' with callUUID: ${currentCallUUID}`);
-      const negotiationOfferSendResult = await getMessageQueue().sendToPubKeyNonDurably({
+      const negotiationOfferSendResult = await MessageQueue.use().sendTo1o1NonDurably({
         pubkey: PubKey.cast(recipient),
         message: offerMessage,
-        namespace: SnodeNamespaces.UserMessages,
+        namespace: SnodeNamespaces.Default,
       });
       if (typeof negotiationOfferSendResult === 'number') {
         // window.log?.warn('setting last sent timestamp');
@@ -523,7 +522,7 @@ export async function USER_callRecipient(recipient: string) {
   peerConnection = createOrGetPeerConnection(recipient);
   // send a pre offer just to wake up the device on the remote side
   const preOfferMsg = new CallMessage({
-    timestamp: now,
+    createAtNetworkTimestamp: NetworkTime.now(),
     type: SignalService.CallMessage.Type.PRE_OFFER,
     uuid: currentCallUUID,
     expirationType: null, // Note: Preoffer messages are not added to the DB, so no need to make them expire
@@ -531,7 +530,7 @@ export async function USER_callRecipient(recipient: string) {
   });
 
   window.log.info('Sending preOffer message to ', ed25519Str(recipient));
-  const calledConvo = getConversationController().get(recipient);
+  const calledConvo = ConvoHub.use().get(recipient);
   calledConvo.set('active_at', Date.now()); // addSingleOutgoingMessage does the commit for us on the convo
   await calledConvo.unhideIfNeeded(false);
   weAreCallerOnCurrentCall = true;
@@ -541,18 +540,22 @@ export async function USER_callRecipient(recipient: string) {
   await sleepFor(2);
 
   // initiating a call is analogous to sending a message request
-  await approveConvoAndSendResponse(recipient);
+  await handleAcceptConversationRequest({
+    convoId: recipient,
+    approvalMessageTimestamp: NetworkTime.now() - 100,
+  });
 
-  // Note: we do the sending of the preoffer manually as the sendToPubkeyNonDurably rely on having a message saved to the db for MessageSentSuccess
+  // Note: we do the sending of the preoffer manually as the sendTo1o1NonDurably rely on having a message saved to the db for MessageSentSuccess
   // which is not the case for a pre offer message (the message only exists in memory)
-  const rawMessage = await MessageUtils.toRawMessage(
+  const rawPreOffer = await MessageUtils.toRawMessage(
     PubKey.cast(recipient),
     preOfferMsg,
-    SnodeNamespaces.UserMessages
+    SnodeNamespaces.Default
   );
-  const { wrappedEnvelope } = await MessageSender.send({
-    message: rawMessage,
+  const { wrappedEnvelope } = await MessageSender.sendSingleMessage({
+    message: rawPreOffer,
     isSyncMessage: false,
+    abortSignal: null,
   });
   void PnServer.notifyPnServer(wrappedEnvelope, recipient);
 
@@ -617,7 +620,7 @@ const iceSenderDebouncer = _.debounce(async (recipient: string) => {
     return;
   }
   const callIceCandicates = new CallMessage({
-    timestamp: Date.now(),
+    createAtNetworkTimestamp: NetworkTime.now(),
     type: SignalService.CallMessage.Type.ICE_CANDIDATES,
     sdpMLineIndexes: validCandidates.map(c => c.sdpMLineIndex),
     sdpMids: validCandidates.map(c => c.sdpMid),
@@ -631,10 +634,10 @@ const iceSenderDebouncer = _.debounce(async (recipient: string) => {
     `sending ICE CANDIDATES MESSAGE to ${ed25519Str(recipient)} about call ${currentCallUUID}`
   );
 
-  await getMessageQueue().sendToPubKeyNonDurably({
+  await MessageQueue.use().sendTo1o1NonDurably({
     pubkey: PubKey.cast(recipient),
     message: callIceCandicates,
-    namespace: SnodeNamespaces.UserMessages,
+    namespace: SnodeNamespaces.Default,
   });
 }, 2000);
 
@@ -917,8 +920,8 @@ export async function USER_acceptIncomingCallRequest(fromSender: string) {
       await peerConnection.addIceCandidate(candicate);
     }
   }
-  const networkTimestamp = GetNetworkTime.getNowWithNetworkOffset();
-  const callerConvo = getConversationController().get(fromSender);
+  const networkTimestamp = NetworkTime.now();
+  const callerConvo = ConvoHub.use().get(fromSender);
   callerConvo.set('active_at', networkTimestamp);
   await callerConvo.unhideIfNeeded(false);
 
@@ -940,12 +943,14 @@ export async function USER_acceptIncomingCallRequest(fromSender: string) {
   await buildAnswerAndSendIt(fromSender, msgIdentifier);
 
   // consider the conversation completely approved
-  await callerConvo.setDidApproveMe(true);
-  await approveConvoAndSendResponse(fromSender);
+  await handleAcceptConversationRequest({
+    convoId: fromSender,
+    approvalMessageTimestamp: NetworkTime.now() - 100,
+  });
 }
 
 export async function rejectCallAlreadyAnotherCall(fromSender: string, forcedUUID: string) {
-  const convo = getConversationController().get(fromSender);
+  const convo = ConvoHub.use().get(fromSender);
   if (!convo) {
     throw new Error('rejectCallAlreadyAnotherCall non existing convo');
   }
@@ -958,7 +963,7 @@ export async function rejectCallAlreadyAnotherCall(fromSender: string, forcedUUI
 
   const rejectCallMessage = new CallMessage({
     type: SignalService.CallMessage.Type.END_CALL,
-    timestamp: Date.now(),
+    createAtNetworkTimestamp: NetworkTime.now(),
     uuid: forcedUUID,
     expirationType,
     expireTimer,
@@ -981,7 +986,7 @@ export async function USER_rejectIncomingCallRequest(fromSender: string) {
   window.log.info(`USER_rejectIncomingCallRequest ${ed25519Str(fromSender)}: ${aboutCallUUID}`);
   if (aboutCallUUID) {
     rejectedCallUUIDS.add(aboutCallUUID);
-    const convo = getConversationController().get(fromSender);
+    const convo = ConvoHub.use().get(fromSender);
     if (!convo) {
       throw new Error('USER_rejectIncomingCallRequest not existing convo');
     }
@@ -991,7 +996,7 @@ export async function USER_rejectIncomingCallRequest(fromSender: string) {
 
     const endCallMessage = new CallMessage({
       type: SignalService.CallMessage.Type.END_CALL,
-      timestamp: Date.now(),
+      createAtNetworkTimestamp: NetworkTime.now(),
       uuid: aboutCallUUID,
       expirationType,
       expireTimer,
@@ -1012,15 +1017,15 @@ export async function USER_rejectIncomingCallRequest(fromSender: string) {
 
 async function sendCallMessageAndSync(callmessage: CallMessage, user: string) {
   await Promise.all([
-    getMessageQueue().sendToPubKeyNonDurably({
+    MessageQueue.use().sendTo1o1NonDurably({
       pubkey: PubKey.cast(user),
       message: callmessage,
-      namespace: SnodeNamespaces.UserMessages,
+      namespace: SnodeNamespaces.Default,
     }),
-    getMessageQueue().sendToPubKeyNonDurably({
+    MessageQueue.use().sendTo1o1NonDurably({
       pubkey: UserUtils.getOurPubKeyFromCache(),
       message: callmessage,
-      namespace: SnodeNamespaces.UserMessages,
+      namespace: SnodeNamespaces.Default,
     }),
   ]);
 }
@@ -1032,7 +1037,7 @@ export async function USER_hangup(fromSender: string) {
     window.log.warn('should not be able to hangup without a currentCallUUID');
     return;
   }
-  const convo = getConversationController().get(fromSender);
+  const convo = ConvoHub.use().get(fromSender);
   if (!convo) {
     throw new Error('USER_hangup not existing convo');
   }
@@ -1042,15 +1047,15 @@ export async function USER_hangup(fromSender: string) {
   rejectedCallUUIDS.add(currentCallUUID);
   const endCallMessage = new CallMessage({
     type: SignalService.CallMessage.Type.END_CALL,
-    timestamp: Date.now(),
+    createAtNetworkTimestamp: NetworkTime.now(),
     uuid: currentCallUUID,
     expirationType,
     expireTimer,
   });
-  void getMessageQueue().sendToPubKeyNonDurably({
+  void MessageQueue.use().sendTo1o1NonDurably({
     pubkey: PubKey.cast(fromSender),
     message: endCallMessage,
-    namespace: SnodeNamespaces.UserMessages,
+    namespace: SnodeNamespaces.Default,
   });
 
   window.inboxStore?.dispatch(endCall());
@@ -1116,7 +1121,7 @@ async function buildAnswerAndSendIt(sender: string, msgIdentifier: string | null
       window.log.warn('failed to create answer');
       return;
     }
-    const convo = getConversationController().get(sender);
+    const convo = ConvoHub.use().get(sender);
     if (!convo) {
       throw new Error('buildAnswerAndSendIt not existing convo');
     }
@@ -1125,8 +1130,8 @@ async function buildAnswerAndSendIt(sender: string, msgIdentifier: string | null
       DisappearingMessages.forcedDeleteAfterReadMsgSetting(convo);
     const answerSdp = answer.sdp;
     const callAnswerMessage = new CallMessage({
+      createAtNetworkTimestamp: NetworkTime.now(),
       identifier: msgIdentifier || undefined,
-      timestamp: Date.now(),
       type: SignalService.CallMessage.Type.ANSWER,
       sdps: [answerSdp],
       uuid: currentCallUUID,
@@ -1160,7 +1165,7 @@ function getCachedMessageFromCallMessage(
 }
 
 async function isUserApprovedOrWeSentAMessage(user: string) {
-  const isApproved = getConversationController().get(user)?.isApproved();
+  const isApproved = ConvoHub.use().get(user)?.isApproved();
 
   if (isApproved) {
     return true;
@@ -1260,8 +1265,8 @@ export async function handleCallTypeOffer(
       window.inboxStore?.dispatch(incomingCall({ pubkey: sender }));
 
       // show a notification
-      const callerConvo = getConversationController().get(sender);
-      const convNotif = callerConvo?.get('triggerNotificationsFor') || 'disabled';
+      const callerConvo = ConvoHub.use().get(sender);
+      const convNotif = callerConvo?.getNotificationsFor() || 'disabled';
       if (convNotif === 'disabled') {
         window?.log?.info('notifications disabled for convo', ed25519Str(sender));
       } else if (callerConvo) {
@@ -1286,7 +1291,7 @@ export async function handleMissedCall(
   reason: 'not-approved' | 'permissions' | 'another-call-ongoing' | 'too-old-timestamp',
   details: WithMessageHash & WithOptExpireUpdate
 ) {
-  const incomingCallConversation = getConversationController().get(sender);
+  const incomingCallConversation = ConvoHub.use().get(sender);
 
   const displayname =
     incomingCallConversation?.getNickname() ||
@@ -1319,10 +1324,10 @@ async function addMissedCallMessage(
   sentAt: number,
   details: (WithMessageHash & WithOptExpireUpdate) | null
 ) {
-  const incomingCallConversation = getConversationController().get(callerPubkey);
+  const incomingCallConversation = ConvoHub.use().get(callerPubkey);
 
   if (incomingCallConversation.isActive() || incomingCallConversation.isHidden()) {
-    incomingCallConversation.set('active_at', GetNetworkTime.getNowWithNetworkOffset());
+    incomingCallConversation.set('active_at', NetworkTime.now());
     await incomingCallConversation.unhideIfNeeded(false);
   }
 
@@ -1333,7 +1338,8 @@ async function addMissedCallMessage(
     callNotificationType: 'missed-call',
     source: callerPubkey,
     sent_at: sentAt,
-    received_at: GetNetworkTime.getNowWithNetworkOffset(),
+    received_at: NetworkTime.now(),
+    expireTimer: 0,
     unread: READ_MESSAGE_STATE.unread,
     messageHash: details?.messageHash,
   });

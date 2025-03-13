@@ -3,9 +3,12 @@ import { Menu } from 'react-contexify';
 import { useSelector } from 'react-redux';
 import { useConvoIdFromContext } from '../../contexts/ConvoIdContext';
 import { useIsPinned, useIsPrivate, useIsPrivateAndFriend } from '../../hooks/useParamSelector';
-import { getConversationController } from '../../session/conversations';
+import { ConvoHub } from '../../session/conversations';
+import {
+  getIsMessageSection,
+  useIsMessageRequestOverlayShown,
+} from '../../state/selectors/section';
 import { useIsSearching } from '../../state/selectors/search';
-import { getIsMessageSection } from '../../state/selectors/section';
 import { SessionContextMenuContainer } from '../SessionContextMenuContainer';
 import {
   AcceptMsgRequestMenuItem,
@@ -18,7 +21,6 @@ import {
   DeleteMessagesMenuItem,
   DeletePrivateConversationMenuItem,
   InviteContactMenuItem,
-  LeaveGroupOrCommunityMenuItem,
   MarkAllReadMenuItem,
   MarkConversationUnreadMenuItem,
   NotificationForConvoMenuItem,
@@ -31,6 +33,13 @@ import { CopyCommunityUrlMenuItem } from './items/CopyCommunityUrl/CopyCommunity
 import { CopyAccountIdMenuItem } from './items/CopyAccountId/CopyAccountIdMenuItem';
 import { ItemWithDataTestId } from './items/MenuItemWithDataTestId';
 import { getMenuAnimation } from './MenuAnimation';
+import { LeaveCommunityMenuItem } from './items/LeaveCommunity/LeaveCommunityMenuItem';
+import { LeaveGroupMenuItem } from './items/LeaveAndDeleteGroup/LeaveGroupMenuItem';
+import {
+  DeleteDeprecatedLegacyGroupMenuItem,
+  DeleteGroupMenuItem,
+} from './items/LeaveAndDeleteGroup/DeleteGroupMenuItem';
+import { useDisableLegacyGroupDeprecatedActions } from '../../hooks/useRefreshReleasedFeaturesTimestamp';
 
 export type PropsContextConversationItem = {
   triggerId: string;
@@ -42,8 +51,22 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
 
   const convoIdFromContext = useConvoIdFromContext();
 
+  const disabledLegacyGroup = useDisableLegacyGroupDeprecatedActions(convoIdFromContext);
+  const isPinned = useIsPinned(convoIdFromContext);
+
   if (isSearching) {
     return null;
+  }
+
+  if (disabledLegacyGroup) {
+    return (
+      <SessionContextMenuContainer>
+        <Menu id={triggerId} animation={getMenuAnimation()}>
+          <DeleteDeprecatedLegacyGroupMenuItem />
+          {isPinned ? <PinConversationMenuItem /> : null}
+        </Menu>
+      </SessionContextMenuContainer>
+    );
   }
 
   return (
@@ -56,7 +79,6 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
         {/* Generic actions */}
         <PinConversationMenuItem />
         <NotificationForConvoMenuItem />
-
         <BlockMenuItem />
         <CopyCommunityUrlMenuItem convoId={convoIdFromContext} />
         <CopyAccountIdMenuItem pubkey={convoIdFromContext} />
@@ -74,7 +96,9 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
         <InviteContactMenuItem />
         <DeleteMessagesMenuItem />
         <DeletePrivateConversationMenuItem />
-        <LeaveGroupOrCommunityMenuItem />
+        <LeaveCommunityMenuItem />
+        <LeaveGroupMenuItem />
+        <DeleteGroupMenuItem />
         <ShowUserDetailsMenuItem />
       </Menu>
     </SessionContextMenuContainer>
@@ -89,9 +113,10 @@ export const PinConversationMenuItem = (): JSX.Element | null => {
   const isPrivateAndFriend = useIsPrivateAndFriend(conversationId);
   const isPrivate = useIsPrivate(conversationId);
   const isPinned = useIsPinned(conversationId);
+  const isMessageRequest = useIsMessageRequestOverlayShown();
 
-  if (isMessagesSection && (!isPrivate || (isPrivate && isPrivateAndFriend))) {
-    const conversation = getConversationController().get(conversationId);
+  if (isMessagesSection && !isMessageRequest && (!isPrivate || (isPrivate && isPrivateAndFriend))) {
+    const conversation = ConvoHub.use().get(conversationId);
 
     const togglePinConversation = () => {
       void conversation?.togglePinned();

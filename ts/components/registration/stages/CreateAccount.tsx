@@ -1,6 +1,7 @@
 import { isEmpty } from 'lodash';
 import { useDispatch } from 'react-redux';
 import useMount from 'react-use/lib/useMount';
+import { useState } from 'react';
 import { SettingsKey } from '../../../data/settings-key';
 import { mnDecode } from '../../../session/crypto/mnemonic';
 import { ProfileManager } from '../../../session/profile_manager/ProfileManager';
@@ -32,20 +33,21 @@ import { SessionInput } from '../../inputs';
 import { resetRegistration } from '../RegistrationStages';
 import { ContinueButton, OnboardDescription, OnboardHeading } from '../components';
 import { BackButtonWithinContainer } from '../components/BackButton';
-import { displayNameIsValid, sanitizeDisplayNameOrToast } from '../utils';
+import { sanitizeDisplayNameOrToast } from '../utils';
+import { EmptyDisplayNameError, RetrieveDisplayNameError } from '../../../session/utils/errors';
+import { localize } from '../../../localization/localeTools';
 
-export type AccountDetails = {
+type AccountCreateDetails = {
   recoveryPassword: string;
-  displayName?: string;
+  displayName: string;
 };
 
-async function signUp(signUpDetails: AccountDetails) {
+async function signUp(signUpDetails: AccountCreateDetails) {
   const { displayName, recoveryPassword } = signUpDetails;
 
   try {
-    const validDisplayName = displayNameIsValid(displayName);
     await resetRegistration();
-    await registerSingleDevice(recoveryPassword, 'english', validDisplayName);
+    await registerSingleDevice(recoveryPassword, 'english', displayName);
     await Storage.put(SettingsKey.hasSyncedInitialConfigurationItem, Date.now());
     await setSignWithRecoveryPhrase(false);
     trigger('openInbox');
@@ -61,6 +63,8 @@ export const CreateAccount = () => {
   const displayNameError = useDisplayNameError();
 
   const dispatch = useDispatch();
+
+  const [cannotContinue, setCannotContinue] = useState(true);
 
   const generateMnemonicAndKeyPair = async () => {
     if (recoveryPassword === '') {
@@ -87,13 +91,16 @@ export const CreateAccount = () => {
   });
 
   const signUpWithDetails = async () => {
-    if (isEmpty(displayName) || !isEmpty(displayNameError)) {
-      return;
-    }
-
     try {
+      const sanitizedName = sanitizeDisplayNameOrToast(displayName);
+
+      // this should never happen, but just in case
+      if (isEmpty(sanitizedName)) {
+        return;
+      }
+
       // this throws if the display name is too long
-      const validName = await ProfileManager.updateOurProfileDisplayNameOnboarding(displayName);
+      const validName = await ProfileManager.updateOurProfileDisplayNameOnboarding(sanitizedName);
 
       await signUp({
         displayName: validName,
@@ -105,10 +112,17 @@ export const CreateAccount = () => {
       window.log.error(
         `[onboarding] create account: signUpWithDetails failed! Error: ${err.message || String(err)}`
       );
+
+      setCannotContinue(true);
       dispatch(setAccountCreationStep(AccountCreation.DisplayName));
-      // Note: we have to assume here that libsession threw an error because the name was too long.
-      // The error reported by libsession is not localized
-      dispatch(setDisplayNameError(window.i18n('displayNameErrorDescriptionShorter')));
+
+      if (err instanceof EmptyDisplayNameError || err instanceof RetrieveDisplayNameError) {
+        dispatch(setDisplayNameError(localize('displayNameErrorDescription').toString()));
+      } else {
+        // Note: we have to assume here that libsession threw an error because the name was too long since we covered the other cases.
+        // The error reported by libsession is not localized
+        dispatch(setDisplayNameError(localize('displayNameErrorDescriptionShorter').toString()));
+      }
     }
   };
 
@@ -142,18 +156,15 @@ export const CreateAccount = () => {
           placeholder={window.i18n('displayNameEnter')}
           value={displayName}
           onValueChanged={(name: string) => {
-            const sanitizedName = sanitizeDisplayNameOrToast(name, setDisplayNameError, dispatch);
-            dispatch(setDisplayName(sanitizedName));
+            dispatch(setDisplayName(name));
+            setCannotContinue(false);
           }}
           onEnterPressed={signUpWithDetails}
           error={displayNameError}
           inputDataTestId="display-name-input"
         />
         <SpacerLG />
-        <ContinueButton
-          onClick={signUpWithDetails}
-          disabled={isEmpty(displayName) || !isEmpty(displayNameError)}
-        />
+        <ContinueButton onClick={signUpWithDetails} disabled={cannotContinue} />
       </Flex>
     </BackButtonWithinContainer>
   );

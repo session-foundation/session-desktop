@@ -1,5 +1,3 @@
-import { isEmpty } from 'lodash';
-
 import styled from 'styled-components';
 import { MessageFrom } from '.';
 import {
@@ -117,7 +115,7 @@ const DebugMessageInfo = ({ messageId }: { messageId: string }) => {
   );
 };
 
-export const MessageInfo = ({ messageId, errors }: { messageId: string; errors: Array<Error> }) => {
+export const MessageInfo = ({ messageId, errors }: { messageId: string; errors?: string }) => {
   const sender = useMessageSender(messageId);
   const direction = useMessageDirection(messageId);
   const sentAt = useMessageTimestamp(messageId);
@@ -138,15 +136,6 @@ export const MessageInfo = ({ messageId, errors }: { messageId: string; errors: 
     formatStr: formatTimestampStr,
   });
 
-  const hasError = !isEmpty(errors);
-  const errorString = hasError
-    ? errors?.reduce((previous, current, currentIndex) => {
-        return `${previous}${current.message}${
-          errors.length > 1 && currentIndex < errors.length - 1 ? ', ' : ''
-        }`;
-      }, '')
-    : null;
-
   return (
     <Flex container={true} flexDirection="column">
       <LabelWithInfo label={window.i18n('sent')} info={sentAtStr} />
@@ -157,13 +146,13 @@ export const MessageInfo = ({ messageId, errors }: { messageId: string; errors: 
       ) : null}
       <SpacerSM />
       <MessageFrom sender={sender} isSenderAdmin={isSenderAdmin} />
-      {hasError && (
+      {!!errors && (
         <>
           <SpacerSM />
           <LabelWithInfo
             title={window.i18n('helpReportABugExportLogsSaveToDesktopDescription')}
             label={`${window.i18n('theError')}:`}
-            info={errorString || window.i18n('errorUnknown')}
+            info={errors || window.i18n('errorUnknown')}
             dataColor={'var(--danger-color)'}
             onClick={() => {
               void saveLogToDesktop();

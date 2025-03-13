@@ -23,7 +23,7 @@ Session doesn't support custom theming yet but it's pretty easy to add a new the
 
 [Here](https://github.com/yougotwill/session-desktop/pull/19) is an example PR for the `Windows Crash` theme which was inspired by the classic [blue screen of death](https://user-images.githubusercontent.com/14887287/203880658-e4a768d7-1b25-45d2-9e6d-00b233eb84a8.png).
 
-Keep in mind that if you swap back to the latest `clearnet` with the `Windows Crash` theme set it may cause a database issue. So when you change your branch back make sure to set your theme to one of the [available themes](#available-themes) above.
+Keep in mind that if you swap back to the latest `unstable` with the `Windows Crash` theme set it may cause a database issue. So when you change your branch back make sure to set your theme to one of the [available themes](#available-themes) above.
 
 ### Screenshot
 

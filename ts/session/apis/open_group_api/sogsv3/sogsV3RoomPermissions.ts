@@ -6,6 +6,7 @@
 import AbortController from 'abort-controller';
 import { OpenGroupRequestCommonType } from '../../../../data/types';
 import { sogsBatchSend } from './sogsV3BatchPoll';
+import { DURATION } from '../../../constants';
 
 export type OpenGroupRoomPermissionType =
   | 'default_read'
@@ -38,7 +39,8 @@ export const sogsV3SetRoomPermissions = async (
         },
       },
     ],
-    'batch'
+    'batch',
+    10 * DURATION.SECONDS
   );
   const isSuccess = batchSendResponse?.body?.every(m => m?.code === 200) || false;
   if (!isSuccess) {

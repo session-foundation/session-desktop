@@ -70,13 +70,18 @@ export const CONVERSATION = {
   DEFAULT_DOCUMENTS_FETCH_COUNT: 100,
   DEFAULT_MESSAGE_FETCH_COUNT: 30,
   MAX_MESSAGE_FETCH_COUNT: 1000,
-  // Maximum voice message duraton of 5 minutes
+  // Maximum voice message duration of 5 minutes
   // which equates to 1.97 MB
   MAX_VOICE_MESSAGE_DURATION: 300,
   MAX_CONVO_UNREAD_COUNT: 999,
   MAX_GLOBAL_UNREAD_COUNT: 99, // the global one does not look good with 4 digits (999+) so we have a smaller one for it
   /** NOTE some existing groups might not have joinedAtSeconds and we need a fallback value that is not falsy in order to poll and show up in the conversations list */
   LAST_JOINED_FALLBACK_TIMESTAMP: 1,
+  /**
+   * the maximum chars that can be typed/pasted in the composition box.
+   * Same as android.
+   */
+  MAX_MESSAGE_CHAR_COUNT: 2000,
 } as const;
 
 /**
@@ -92,9 +97,23 @@ export const VALIDATION = {
 export const DEFAULT_RECENT_REACTS = ['😂', '🥰', '😢', '😡', '😮', '😈'];
 export const REACT_LIMIT = 6;
 
+export const UPDATER_INTERVAL_MS = 10 * DURATION.MINUTES;
+
+/**
+ * Start create groups as new at this time (currently Thursday March 20th 09:00 AEDT)
+ */
+const START_CREATE_NEW_GROUP = 1742421600000;
+
+/**
+ * Mark legacy groups readonly at this time (currently Thursday April 3rd 09:00 AEDT)
+ */
+const LEGACY_GROUP_READONLY = 1743631200000;
+
 export const FEATURE_RELEASE_TIMESTAMPS = {
   DISAPPEARING_MESSAGES_V2: 1710284400000, // 13/03/2024 10:00 Melbourne time
   USER_CONFIG: 1690761600000, // Monday July 31st at 10am Melbourne time
+  START_CREATE_NEW_GROUP,
+  LEGACY_GROUP_READONLY,
 };
 
 export const ONBOARDING_TIMES = {

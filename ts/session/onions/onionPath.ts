@@ -10,17 +10,16 @@ import { Data } from '../../data/data';
 import { Snode } from '../../data/types';
 import { updateOnionPaths } from '../../state/ducks/onion';
 import { APPLICATION_JSON } from '../../types/MIME';
-import { Onions, snodeHttpsAgent } from '../apis/snode_api/onions';
 import { ERROR_CODE_NO_CONNECT } from '../apis/snode_api/SNodeAPI';
-import * as SnodePool from '../apis/snode_api/snodePool';
+import { Onions, snodeHttpsAgent } from '../apis/snode_api/onions';
+
 import { DURATION } from '../constants';
 import { UserUtils } from '../utils';
 import { allowOnlyOneAtATime } from '../utils/Promise';
 import { ed25519Str } from '../utils/String';
-
-export const desiredGuardCount = 2;
-export const minimumGuardCount = 1;
-export const ONION_REQUEST_HOPS = 3;
+import { SnodePool } from '../apis/snode_api/snodePool';
+import { SnodePoolConstants } from '../apis/snode_api/snodePoolConstants';
+import { desiredGuardCount, minimumGuardCount, ONION_REQUEST_HOPS } from './onionPathConstants';
 
 export function getOnionPathMinTimeout() {
   return DURATION.SECONDS;
@@ -109,23 +108,23 @@ export async function dropSnodeFromPath(snodeEd25519: string) {
   // make a copy now so we don't alter the real one while doing stuff here
   const oldPaths = _.cloneDeep(onionPaths);
 
-  let pathtoPatchUp = oldPaths[pathWithSnodeIndex];
+  let pathToPatchUp = oldPaths[pathWithSnodeIndex];
   // remove the snode causing issue from this path
-  const nodeToRemoveIndex = pathtoPatchUp.findIndex(snode => snode.pubkey_ed25519 === snodeEd25519);
+  const nodeToRemoveIndex = pathToPatchUp.findIndex(snode => snode.pubkey_ed25519 === snodeEd25519);
 
   // this should not happen, but well...
   if (nodeToRemoveIndex === -1) {
     return;
   }
 
-  pathtoPatchUp = pathtoPatchUp.filter(snode => snode.pubkey_ed25519 !== snodeEd25519);
+  pathToPatchUp = pathToPatchUp.filter(snode => snode.pubkey_ed25519 !== snodeEd25519);
 
   const ed25519KeysToExclude = _.flattenDeep(oldPaths).map(m => m.pubkey_ed25519);
   // this call throws if it cannot return a valid snode.
   const snodeToAppendToPath = await SnodePool.getRandomSnode(ed25519KeysToExclude);
   // Don't test the new snode as this would reveal the user's IP
-  pathtoPatchUp.push(snodeToAppendToPath);
-  onionPaths[pathWithSnodeIndex] = pathtoPatchUp;
+  pathToPatchUp.push(snodeToAppendToPath);
+  onionPaths[pathWithSnodeIndex] = pathToPatchUp;
 }
 
 export async function getOnionPath({ toExclude }: { toExclude?: Snode }): Promise<Array<Snode>> {
@@ -316,7 +315,7 @@ export async function testGuardNode(snode: Snode) {
     response = await insecureNodeFetch(url, fetchOptions);
   } catch (e) {
     if (e.type === 'request-timeout') {
-      window?.log?.warn('test :,', ed25519Str(snode.pubkey_ed25519));
+      window?.log?.warn('testGuardNode request timed out for:', ed25519Str(snode.pubkey_ed25519));
     }
     if (e.code === 'ENETUNREACH') {
       window?.log?.warn('no network on node,', snode);
@@ -343,7 +342,7 @@ export async function selectGuardNodes(): Promise<Array<Snode>> {
   const nodePool = await SnodePool.getSnodePoolFromDBOrFetchFromSeed();
 
   window.log.info(`selectGuardNodes snodePool length: ${nodePool.length}`);
-  if (nodePool.length < SnodePool.minSnodePoolCount) {
+  if (nodePool.length < SnodePoolConstants.minSnodePoolCount) {
     window?.log?.error(
       `Could not select guard nodes. Not enough nodes in the pool: ${nodePool.length}`
     );
@@ -392,8 +391,8 @@ export async function selectGuardNodes(): Promise<Array<Snode>> {
 
   guardNodes = selectedGuardNodes.slice(0, desiredGuardCount);
   if (guardNodes.length < desiredGuardCount) {
-    window?.log?.error(`Cound't get enough guard nodes, only have: ${guardNodes.length}`);
-    throw new Error(`Cound't get enough guard nodes, only have: ${guardNodes.length}`);
+    window?.log?.error(`Couldn't get enough guard nodes, only have: ${guardNodes.length}`);
+    throw new Error(`Couldn't get enough guard nodes, only have: ${guardNodes.length}`);
   }
 
   await internalUpdateGuardNodes(guardNodes);
@@ -449,7 +448,7 @@ async function buildNewOnionPathsWorker() {
       // get an up to date list of snodes from cache, from db, or from the a seed node.
       let allNodes = await SnodePool.getSnodePoolFromDBOrFetchFromSeed();
 
-      if (allNodes.length <= SnodePool.minSnodePoolCount) {
+      if (allNodes.length <= SnodePoolConstants.minSnodePoolCount) {
         throw new Error(`Cannot rebuild path as we do not have enough snodes: ${allNodes.length}`);
       }
 
@@ -463,7 +462,7 @@ async function buildNewOnionPathsWorker() {
         `SessionSnodeAPI::buildNewOnionPaths, snodePool length: ${allNodes.length}`
       );
       // get all snodes minus the selected guardNodes
-      if (allNodes.length <= SnodePool.minSnodePoolCount) {
+      if (allNodes.length <= SnodePoolConstants.minSnodePoolCount) {
         throw new Error('Too few nodes to build an onion path. Even after fetching from seed.');
       }
 
@@ -477,7 +476,7 @@ async function buildNewOnionPathsWorker() {
           return _.fill(Array(group.length), _.sample(group) as Snode);
         })
       );
-      if (oneNodeForEachSubnet24KeepingRatio.length <= SnodePool.minSnodePoolCount) {
+      if (oneNodeForEachSubnet24KeepingRatio.length <= SnodePoolConstants.minSnodePoolCount) {
         throw new Error(
           'Too few nodes "unique by ip" to build an onion path. Even after fetching from seed.'
         );
@@ -527,6 +526,7 @@ async function buildNewOnionPathsWorker() {
       }
 
       window?.log?.info(`Built ${onionPaths.length} onion paths`);
+      window?.log?.debug(`onionPaths:`, JSON.stringify(onionPaths));
     },
     {
       retries: 3, // 4 total

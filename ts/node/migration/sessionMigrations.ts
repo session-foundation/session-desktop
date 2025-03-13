@@ -19,6 +19,7 @@ import {
   MESSAGES_TABLE,
   NODES_FOR_PUBKEY_TABLE,
   OPEN_GROUP_ROOMS_V2_TABLE,
+  SEEN_MESSAGE_TABLE,
   dropFtsAndTriggers,
   objectToJSON,
   rebuildFtsTable,
@@ -105,6 +106,10 @@ const LOKI_SCHEMA_VERSIONS = [
   updateToSessionSchemaVersion35,
   updateToSessionSchemaVersion36,
   updateToSessionSchemaVersion37,
+  updateToSessionSchemaVersion38,
+  updateToSessionSchemaVersion39,
+  updateToSessionSchemaVersion40,
+  updateToSessionSchemaVersion41,
 ];
 
 function updateToSessionSchemaVersion1(currentVersion: number, db: BetterSqlite3.Database) {
@@ -627,7 +632,7 @@ function updateToSessionSchemaVersion20(currentVersion: number, db: BetterSqlite
 
     //   // obj.profile.displayName is the display as this user set it.
     //   if (obj?.nickname?.length && obj?.profile?.displayName?.length) {
-    //     // this one has a nickname set, but name is unset, set it to the displayName in the lokiProfile if it's exisitng
+    //     // this one has a nickname set, but name is unset, set it to the displayName in the lokiProfile if it's existing
     //     obj.name = obj.profile.displayName;
     //     sqlNode.saveConversation(obj as ConversationAttributes, db);
     //   }
@@ -931,8 +936,8 @@ function updateToSessionSchemaVersion27(currentVersion: number, db: BetterSqlite
   }
 
   function getAllOpenGroupV2Conversations(instance: BetterSqlite3.Database) {
-    // first _ matches all opengroupv1 (they are completely removed in a migration now),
-    // second _ force a second char to be there, so it can only be opengroupv2 convos
+    // first _ matches all opengroup v1 (they are completely removed in a migration now),
+    // second _ force a second char to be there, so it can only be opengroup v2 convos
 
     const rows = instance
       .prepare(
@@ -1463,7 +1468,7 @@ function updateToSessionSchemaVersion31(currentVersion: number, db: BetterSqlite
       });
 
       /**
-       * Setup up the UserGroups Wrapper with all the comunities details which needs to be stored in it.
+       * Setup up the UserGroups Wrapper with all the communities details which needs to be stored in it.
        */
 
       // this filter is based on the `isCommunityToStoreInWrapper` function.
@@ -1493,7 +1498,7 @@ function updateToSessionSchemaVersion31(currentVersion: number, db: BetterSqlite
         });
 
         console.info(
-          '===================== Done with communinities inserting ======================='
+          '===================== Done with communities inserting ======================='
         );
       }
 
@@ -1616,11 +1621,11 @@ function updateToSessionSchemaVersion33(currentVersion: number, db: BetterSqlite
     const loggedInUser = getLoggedInUserConvoDuringMigration(db);
 
     if (!loggedInUser?.ourKeys) {
-      // no user loggedin was empty. Considering no users are logged in
+      // Considering no users are logged in
       writeSessionSchemaVersion(targetVersion, db);
       return;
     }
-    // a user is logged in, we want to enable the 'inbox' polling for sogs, only if the current userwrapper for that field is undefined
+    // a user is logged in, we want to enable the 'inbox' polling for sogs, only if the current user wrapper for that field is undefined
     const { privateEd25519, publicKeyHex } = loggedInUser.ourKeys;
 
     // Get existing config wrapper dump and update it
@@ -1964,6 +1969,97 @@ function updateToSessionSchemaVersion37(currentVersion: number, db: BetterSqlite
     db.prepare(`DELETE FROM ${ITEMS_TABLE} WHERE id = $snodePoolId;`).run({
       snodePoolId: SNODE_POOL_ITEM_ID,
     });
+    writeSessionSchemaVersion(targetVersion, db);
+  })();
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
+}
+
+function updateToSessionSchemaVersion38(currentVersion: number, db: BetterSqlite3.Database) {
+  const targetVersion = 38;
+  if (currentVersion >= targetVersion) {
+    return;
+  }
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
+
+  db.transaction(() => {
+    db.exec(`ALTER TABLE ${MESSAGES_TABLE} ADD COLUMN messageHash TEXT;
+      UPDATE ${MESSAGES_TABLE} SET
+      messageHash = json_extract(json, '$.messageHash');
+        `);
+
+    db.exec(`CREATE INDEX messages_t_messageHash ON ${MESSAGES_TABLE} (
+      messageHash
+    );`);
+    db.exec(`CREATE INDEX messages_t_messageHash_author ON ${MESSAGES_TABLE} (
+      messageHash,
+      source
+    );`);
+    db.exec(`CREATE INDEX messages_t_messageHash_author_convoId ON ${MESSAGES_TABLE} (
+      messageHash,
+      source,
+      conversationId
+    );`);
+    writeSessionSchemaVersion(targetVersion, db);
+  })();
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
+}
+
+function updateToSessionSchemaVersion39(currentVersion: number, db: BetterSqlite3.Database) {
+  const targetVersion = 39;
+  if (currentVersion >= targetVersion) {
+    return;
+  }
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
+
+  db.transaction(() => {
+    db.exec(`ALTER TABLE ${SEEN_MESSAGE_TABLE} ADD COLUMN conversationId TEXT;`);
+
+    db.exec(`CREATE INDEX seen_hashes_per_pubkey ON ${SEEN_MESSAGE_TABLE} (
+      conversationId
+    );`);
+    writeSessionSchemaVersion(targetVersion, db);
+  })();
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
+}
+
+function updateToSessionSchemaVersion40(currentVersion: number, db: BetterSqlite3.Database) {
+  const targetVersion = 40;
+  if (currentVersion >= targetVersion) {
+    return;
+  }
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
+
+  db.transaction(() => {
+    // the 'errors' field used to do different things. We need to extract it to be a single string.
+    db.exec(`ALTER TABLE ${MESSAGES_TABLE} ADD COLUMN errors TEXT;`);
+    db.exec(`UPDATE ${MESSAGES_TABLE}
+      SET json = json_remove(json, '$.errors');
+    `);
+
+    writeSessionSchemaVersion(targetVersion, db);
+  })();
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
+}
+
+function updateToSessionSchemaVersion41(currentVersion: number, db: BetterSqlite3.Database) {
+  const targetVersion = 41;
+  if (currentVersion >= targetVersion) {
+    return;
+  }
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
+
+  db.transaction(() => {
+    // the 'isExpired03Group' field is used to keep track of an 03 group is expired
+    db.prepare(`ALTER TABLE ${CONVERSATIONS_TABLE} ADD COLUMN isExpired03Group BOOLEAN;`).run();
+
     writeSessionSchemaVersion(targetVersion, db);
   })();
 

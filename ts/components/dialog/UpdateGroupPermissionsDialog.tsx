@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import { Component } from 'react';
 import styled from 'styled-components';
 import { ConversationModel } from '../../models/conversation';
-import { getConversationController } from '../../session/conversations';
 import { updateGroupPermissionsModal } from '../../state/ducks/modalDialog';
 import { THEME_GLOBALS } from '../../themes/globals';
 import { SessionWrapperModal } from '../SessionWrapperModal';
@@ -17,6 +16,7 @@ import {
   OpenGroupRoomPermissionType,
   sogsV3SetRoomPermissions,
 } from '../../session/apis/open_group_api/sogsv3/sogsV3RoomPermissions';
+import { ConvoHub } from '../../session/conversations';
 
 const StyledErrorMessage = styled(motion.p)`
   text-align: center;
@@ -45,7 +45,7 @@ export class UpdateGroupPermissionsDialog extends Component<Props, State> {
     super(props);
 
     autoBind(this);
-    this.convo = getConversationController().get(props.conversationId);
+    this.convo = ConvoHub.use().get(props.conversationId);
 
     this.state = {
       default_read: this.convo.attributes.default_read ?? true,

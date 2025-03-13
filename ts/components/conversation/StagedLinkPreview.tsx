@@ -74,9 +74,11 @@ export const StagedLinkPreview = (props: Props) => {
         justifyContent={isLoading ? 'center' : 'flex-start'}
         alignItems={'center'}
       >
-        {isLoading ? <SessionSpinner loading={isLoading} /> : null}
+        {isLoading ? (
+          <SessionSpinner loading={isLoading} data-testid="link-preview-loading" />
+        ) : null}
         {isLoaded && image && isContentTypeImage ? (
-          <StyledImage>
+          <StyledImage data-testid="link-preview-image">
             <Image
               alt={AriaLabels.imageStagedLinkPreview}
               attachment={image as any}
@@ -87,7 +89,7 @@ export const StagedLinkPreview = (props: Props) => {
             />
           </StyledImage>
         ) : null}
-        {isLoaded ? <StyledText>{title}</StyledText> : null}
+        {isLoaded ? <StyledText data-testid="link-preview-title">{title}</StyledText> : null}
       </Flex>
       <SessionIconButton
         iconType="exit"
@@ -98,6 +100,7 @@ export const StagedLinkPreview = (props: Props) => {
         }}
         margin={'0 var(--margins-sm) 0 0'}
         aria-label={window.i18n('close')}
+        dataTestId="link-preview-close"
         style={{
           position: isLoading ? 'absolute' : undefined,
           right: isLoading ? 'var(--margins-sm)' : undefined,

@@ -8,10 +8,7 @@ import { PropsForAttachment, toggleSelectedMessageId } from '../../../../state/d
 import { LightBoxOptions, updateLightBoxOptions } from '../../../../state/ducks/modalDialog';
 import { StateType } from '../../../../state/reducer';
 import { useMessageSelected } from '../../../../state/selectors';
-import {
-  getMessageAttachmentProps,
-  isMessageSelectionMode,
-} from '../../../../state/selectors/conversations';
+import { getMessageAttachmentProps } from '../../../../state/selectors/conversations';
 import {
   AttachmentType,
   AttachmentTypeWithPath,
@@ -28,6 +25,7 @@ import { MessageHighlighter } from './MessageHighlighter';
 import { useIsDetailMessageView } from '../../../../contexts/isDetailViewContext';
 import { MessageGenericAttachment } from './MessageGenericAttachment';
 import { ContextMessageProvider } from '../../../../contexts/MessageIdContext';
+import { useIsMessageSelectionMode } from '../../../../state/selectors/selectedConversation';
 
 export type MessageAttachmentSelectorProps = Pick<
   MessageRenderingProps,
@@ -67,7 +65,7 @@ export const MessageAttachment = (props: Props) => {
     getMessageAttachmentProps(state, messageId)
   );
 
-  const multiSelectMode = useSelector(isMessageSelectionMode);
+  const multiSelectMode = useIsMessageSelectionMode();
   const selected = useMessageSelected(messageId);
   const onClickOnImageGrid = useCallback(
     (attachment: AttachmentTypeWithPath | AttachmentType) => {

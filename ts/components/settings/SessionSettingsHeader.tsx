@@ -43,11 +43,11 @@ export const SettingsHeader = (props: Props) => {
     case 'privacy':
       categoryTitle = window.i18n('sessionPrivacy');
       break;
-    case 'recoveryPassword':
+    case 'recovery-password':
       categoryTitle = window.i18n('sessionRecoveryPassword');
       break;
-    case 'clearData':
-    case 'messageRequests':
+    case 'clear-data':
+    case 'message-requests':
       throw new Error(`no header for should be tried to be rendered for "${category}"`);
 
     default:

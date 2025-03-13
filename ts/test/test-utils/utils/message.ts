@@ -17,8 +17,10 @@ import { OpenGroupVisibleMessage } from '../../../session/messages/outgoing/visi
 import { VisibleMessage } from '../../../session/messages/outgoing/visibleMessage/VisibleMessage';
 import { PubKey } from '../../../session/types';
 import { OpenGroupReaction } from '../../../types/Reaction';
-import { generateFakePubKey } from './pubkey';
+import { generateFakePubKeyStr } from './pubkey';
 import { OpenGroupRequestCommonType } from '../../../data/types';
+
+const loremIpsum = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit';
 
 export function generateVisibleMessage({
   identifier,
@@ -28,9 +30,9 @@ export function generateVisibleMessage({
   timestamp?: number;
 } = {}): VisibleMessage {
   return new VisibleMessage({
-    body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit',
+    body: loremIpsum,
     identifier: identifier ?? uuid(),
-    timestamp: timestamp || Date.now(),
+    createAtNetworkTimestamp: timestamp || Date.now(),
     attachments: undefined,
     quote: undefined,
     expirationType: null,
@@ -78,7 +80,7 @@ export function generateOpenGroupMessageV2WithServerId(
 
 export function generateOpenGroupVisibleMessage(): OpenGroupVisibleMessage {
   return new OpenGroupVisibleMessage({
-    timestamp: Date.now(),
+    createAtNetworkTimestamp: Date.now(),
   });
 }
 
@@ -86,14 +88,9 @@ export function generateOpenGroupV2RoomInfos(): OpenGroupRequestCommonType {
   return { roomId: 'main', serverUrl: 'http://open.getsession.org' };
 }
 
-export function generateClosedGroupMessage(
-  groupId?: string,
-  timestamp?: number
-): ClosedGroupVisibleMessage {
+export function generateClosedGroupMessage(groupId?: string): ClosedGroupVisibleMessage {
   return new ClosedGroupVisibleMessage({
-    identifier: uuid(),
-    groupId: groupId ? PubKey.cast(groupId) : generateFakePubKey(),
-    timestamp: timestamp || Date.now(),
+    groupId: groupId ? PubKey.cast(groupId).key : generateFakePubKeyStr(),
     chatMessage: generateVisibleMessage(),
   });
 }
@@ -152,16 +149,16 @@ export function generateDisappearingVisibleMessage({
   if (!isEmpty(expirationTimerUpdate)) {
     return new ExpirationTimerUpdateMessage({
       identifier: identifier ?? uuid(),
-      timestamp: timestamp || Date.now(),
+      createAtNetworkTimestamp: timestamp || Date.now(),
       expirationType: expirationTimerUpdate.expirationType || null,
       expireTimer: expirationTimerUpdate.expireTimer,
     });
   }
 
   return new VisibleMessage({
-    body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit',
+    body: loremIpsum,
     identifier: identifier ?? uuid(),
-    timestamp: timestamp || Date.now(),
+    createAtNetworkTimestamp: timestamp || Date.now(),
     attachments: undefined,
     quote: undefined,
     expirationType: expirationType ?? null,
@@ -174,11 +171,9 @@ export function generateDisappearingVisibleMessage({
 export function generateFakeExpirationTimerUpdate({
   expirationType,
   expireTimer,
-  source = '',
 }: {
   expirationType: DisappearingMessageType;
   expireTimer: number;
-  source?: string;
 }): MessageModel {
   const convoId = TestUtils.generateFakePubKeyStr();
   return new MessageModel({
@@ -190,7 +185,6 @@ export function generateFakeExpirationTimerUpdate({
     expirationTimerUpdate: {
       expirationType,
       expireTimer,
-      source,
     },
     flags: 2,
   });

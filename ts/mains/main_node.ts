@@ -29,7 +29,6 @@ import url from 'url';
 
 import Logger from 'bunyan';
 import _, { isEmpty, isNumber, isFinite } from 'lodash';
-import pify from 'pify';
 
 import { setupGlobalErrorHandler } from '../node/global_errors'; // checked - only node
 import { setup as setupSpellChecker } from '../node/spell_check'; // checked - only node
@@ -39,7 +38,7 @@ import packageJson from '../../package.json'; // checked - only node
 
 setupGlobalErrorHandler();
 
-const getRealPath = pify(fs.realpath);
+const getRealPath = (p: string) => fs.realpathSync(p);
 
 // Hardcoding appId to prevent build failures on release.
 // const appUserModelId = packageJson.build.appId;
@@ -164,12 +163,9 @@ import { isDevProd, isTestIntegration } from '../shared/env_vars';
 import { classicDark } from '../themes';
 import type { SetupI18nReturnType } from '../types/localizer';
 
-import {
-  isSessionLocaleSet,
-  getTranslationDictionary,
-  getCrowdinLocale,
-} from '../util/i18n/shared';
+import { isSessionLocaleSet, getCrowdinLocale } from '../util/i18n/shared';
 import { loadLocalizedDictionary } from '../node/locale';
+import { simpleDictionary } from '../localization/locales';
 
 // Both of these will be set after app fires the 'ready' event
 let logger: Logger | null = null;
@@ -529,7 +525,7 @@ setTimeout(readyForUpdates, TEN_MINUTES);
 
 function openReleaseNotes() {
   void shell.openExternal(
-    `https://github.com/oxen-io/session-desktop/releases/tag/v${app.getVersion()}`
+    `https://github.com/session-foundation/session-desktop/releases/tag/v${app.getVersion()}`
   );
 }
 
@@ -696,14 +692,13 @@ async function saveDebugLog(_event: any, additionalInfo?: string) {
     console.error('Error saving debug log', err);
   }
 }
-
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 let ready = false;
 app.on('ready', async () => {
-  const userDataPath = await getRealPath(app.getPath('userData'));
-  const installPath = await getRealPath(join(app.getAppPath(), '..', '..'));
+  const userDataPath = getRealPath(app.getPath('userData'));
+  const installPath = getRealPath(join(app.getAppPath(), '..', '..'));
 
   installFileHandler({
     protocol: electronProtocol,
@@ -757,7 +752,7 @@ function getDefaultSQLKey() {
 
 async function removeDB() {
   // this don't remove attachments and stuff like that...
-  const userDir = await getRealPath(app.getPath('userData'));
+  const userDir = getRealPath(app.getPath('userData'));
   sqlNode.removeDB(userDir);
 
   try {
@@ -783,7 +778,7 @@ async function removeDB() {
 }
 
 async function showMainWindow(sqlKey: string, passwordAttempt = false) {
-  const userDataPath = await getRealPath(app.getPath('userData'));
+  const userDataPath = getRealPath(app.getPath('userData'));
 
   await sqlNode.initializeSql({
     configDir: userDataPath,
@@ -912,7 +907,6 @@ app.on('web-contents-created', (_createEvent, contents) => {
 ipc.on('locale-data', event => {
   // eslint-disable-next-line no-param-reassign
   event.returnValue = {
-    dictionary: getTranslationDictionary(),
     crowdinLocale: getCrowdinLocale(),
   };
 });
@@ -986,7 +980,7 @@ ipc.on('password-recovery-phrase', async (event, passPhrase) => {
     // no issues. send back undefined, meaning OK
     sendResponse(undefined);
   } catch (e) {
-    const localisedError = getTranslationDictionary().passwordIncorrect;
+    const localisedError = simpleDictionary.passwordIncorrect[getCrowdinLocale()];
     // send back the error
     sendResponse(localisedError);
   }

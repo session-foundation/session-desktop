@@ -47,7 +47,7 @@ export const StagedAttachmentList = (props: Props) => {
     if (!conversationKey) {
       return;
     }
-    dispatch(removeAllStagedAttachmentsInConversation({ conversationKey }));
+    dispatch(removeAllStagedAttachmentsInConversation({ conversationId: conversationKey }));
   };
 
   const onRemoveByFilename = (filename: string) => {

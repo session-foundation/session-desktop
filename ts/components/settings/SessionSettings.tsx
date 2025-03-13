@@ -20,6 +20,7 @@ import { SettingsCategoryHelp } from './section/CategoryHelp';
 import { SettingsCategoryPermissions } from './section/CategoryPermissions';
 import { SettingsCategoryPrivacy } from './section/CategoryPrivacy';
 import { SettingsCategoryRecoveryPassword } from './section/CategoryRecoveryPassword';
+import { setDebugMode } from '../../state/ducks/debug';
 
 export function displayPasswordModal(
   passwordAction: PasswordAction,
@@ -68,12 +69,16 @@ const StyledSpanSessionInfo = styled.span`
 `;
 
 const SessionInfo = () => {
+  const [clickCount, setClickCount] = useState(0);
+
+  const dispatch = useDispatch();
+
   return (
     <StyledVersionInfo>
       <StyledSpanSessionInfo
         onClick={() => {
           void shell.openExternal(
-            `https://github.com/oxen-io/session-desktop/releases/tag/v${window.versionInfo.version}`
+            `https://github.com/session-foundation/session-desktop/releases/tag/v${window.versionInfo.version}`
           );
         }}
       >
@@ -88,7 +93,17 @@ const SessionInfo = () => {
           }}
         />
       </StyledSpanSessionInfo>
-      <StyledSpanSessionInfo>{window.versionInfo.commitHash}</StyledSpanSessionInfo>
+      <StyledSpanSessionInfo
+        onClick={() => {
+          setClickCount(clickCount + 1);
+          if (clickCount === 10) {
+            dispatch(setDebugMode(true));
+            setClickCount(0);
+          }
+        }}
+      >
+        {window.versionInfo.commitHash}
+      </StyledSpanSessionInfo>
     </StyledVersionInfo>
   );
 };
@@ -116,12 +131,12 @@ const SettingInCategory = (props: {
       return <SettingsCategoryHelp />;
     case 'permissions':
       return <SettingsCategoryPermissions />;
-    case 'recoveryPassword':
+    case 'recovery-password':
       return <SettingsCategoryRecoveryPassword />;
 
     // these are just buttons and don't have screens
-    case 'clearData':
-    case 'messageRequests':
+    case 'clear-data':
+    case 'message-requests':
     default:
       return null;
   }

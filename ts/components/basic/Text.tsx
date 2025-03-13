@@ -78,3 +78,18 @@ export const Spacer2XL = (props: { style?: CSSProperties }) => {
 export const Spacer3XL = (props: { style?: CSSProperties }) => {
   return <Spacer size="3xl" style={props.style} />;
 };
+
+export const HintText = ({ children }: { children: string }) => {
+  return (
+    <span
+      style={{
+        color: 'var(--renderer-span-primary-color)',
+        fontSize: 'var(--font-size-sm)',
+        fontWeight: 400,
+        marginInlineStart: 'var(--margins-xs)',
+      }}
+    >
+      <strong>•</strong> {children}
+    </span>
+  );
+};

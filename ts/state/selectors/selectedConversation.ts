@@ -15,18 +15,17 @@ import {
   getSelectedConversation,
   getSelectedMessageIds,
 } from './conversations';
+import { getLibMembersPubkeys, useLibGroupName } from './groups';
 import { getCanWrite, getModerators, getSubscriberCount } from './sogsRoomInfo';
+import { getLibGroupDestroyed, getLibGroupKicked, useLibGroupDestroyed } from './userGroups';
+import { getDisableLegacyGroupDeprecatedActions } from '../../hooks/useRefreshReleasedFeaturesTimestamp';
 
 const getIsSelectedPrivate = (state: StateType): boolean => {
   return Boolean(getSelectedConversation(state)?.isPrivate) || false;
 };
 
-const getIsSelectedBlocked = (state: StateType): boolean => {
+export const getIsSelectedBlocked = (state: StateType): boolean => {
   return Boolean(getSelectedConversation(state)?.isBlocked) || false;
-};
-
-const getSelectedIsApproved = (state: StateType): boolean => {
-  return Boolean(getSelectedConversation(state)?.isApproved) || false;
 };
 
 const getSelectedApprovedMe = (state: StateType): boolean => {
@@ -60,6 +59,8 @@ export const getSelectedConversationIsPublic = (state: StateType): boolean => {
  */
 export function getSelectedCanWrite(state: StateType) {
   const selectedConvoPubkey = getSelectedConversationKey(state);
+  const isSelectedGroupDestroyed = getLibGroupDestroyed(state, selectedConvoPubkey);
+  const isSelectedGroupKicked = getLibGroupKicked(state, selectedConvoPubkey);
   if (!selectedConvoPubkey) {
     return false;
   }
@@ -68,18 +69,26 @@ export function getSelectedCanWrite(state: StateType) {
     return false;
   }
   const canWriteSogs = getCanWrite(state, selectedConvoPubkey);
-  const { isBlocked, isKickedFromGroup, left, isPublic } = selectedConvo;
+  const { isBlocked, isKickedFromGroup, isPublic } = selectedConvo;
 
   const readOnlySogs = isPublic && !canWriteSogs;
 
-  const isBlindedAndDisabledMsgRequests = getSelectedBlindedDisabledMsgRequests(state); // true if isPrivate, blinded and explicitely disabled msgreq
+  const isBlindedAndDisabledMsgRequests = getSelectedBlindedDisabledMsgRequests(state); // true if isPrivate, blinded and explicitly disabled msgreq
 
-  return !(
-    isBlocked ||
-    isKickedFromGroup ||
-    left ||
-    readOnlySogs ||
-    isBlindedAndDisabledMsgRequests
+  const disabledLegacyGroupWrite = getDisableLegacyGroupDeprecatedActions(
+    state,
+    selectedConvoPubkey
+  );
+
+  return (
+    !(
+      isBlocked ||
+      isKickedFromGroup ||
+      isSelectedGroupKicked ||
+      isSelectedGroupDestroyed ||
+      readOnlySogs ||
+      isBlindedAndDisabledMsgRequests
+    ) && !disabledLegacyGroupWrite
   );
 }
 
@@ -121,12 +130,18 @@ const getSelectedConversationIsGroupOrCommunity = (state: StateType): boolean =>
   return type ? isOpenOrClosedGroup(type) : false;
 };
 
+/**
+ * Returns true if the current conversation selected is a group conversation.
+ * Returns false if the current conversation selected is not a group conversation, or none are selected
+ */
 const getSelectedConversationIsGroupV2 = (state: StateType): boolean => {
   const selected = getSelectedConversation(state);
   if (!selected || !selected.type) {
     return false;
   }
-  return selected.type === ConversationTypeEnum.GROUPV3;
+  return selected.type
+    ? selected.type === ConversationTypeEnum.GROUPV2 && PubKey.is03Pubkey(selected.id)
+    : false;
 };
 
 /**
@@ -139,17 +154,32 @@ export const isClosedGroupConversation = (state: StateType): boolean => {
   }
   return (
     (selected.type === ConversationTypeEnum.GROUP && !selected.isPublic) ||
-    selected.type === ConversationTypeEnum.GROUPV3 ||
+    selected.type === ConversationTypeEnum.GROUPV2 ||
     false
   );
 };
 
-const getSelectedGroupMembers = (state: StateType): Array<string> => {
+const getSelectedMembersCount = (state: StateType): number => {
+  const selected = getSelectedConversation(state);
+  if (!selected) {
+    return 0;
+  }
+  if (PubKey.is03Pubkey(selected.id)) {
+    return getLibMembersPubkeys(state, selected.id).length || 0;
+  }
+  if (selected.isPrivate || selected.isPublic) {
+    return 0;
+  }
+  return selected.members?.length || 0;
+};
+
+const getSelectedGroupAdmins = (state: StateType): Array<string> => {
   const selected = getSelectedConversation(state);
   if (!selected) {
     return [];
   }
-  return selected.members || [];
+
+  return selected.groupAdmins || [];
 };
 
 const getSelectedSubscriberCount = (state: StateType): number | undefined => {
@@ -228,10 +258,9 @@ export function useSelectedIsPublic() {
  */
 export function useSelectedIsLegacyGroup() {
   const isGroupOrCommunity = useSelectedIsGroupOrCommunity();
-  const isGroupV2 = useSelectedIsGroupV2();
-  const isPublic = useSelectedIsPublic();
+  const selectedConvoKey = useSelectedConversationKey();
 
-  return isGroupOrCommunity && !isGroupV2 && !isPublic;
+  return isGroupOrCommunity && selectedConvoKey && PubKey.is05Pubkey(selectedConvoKey);
 }
 
 export function useSelectedIsPrivate() {
@@ -243,7 +272,9 @@ export function useSelectedIsBlocked() {
 }
 
 export function useSelectedIsApproved() {
-  return useSelector(getSelectedIsApproved);
+  return useSelector((state: StateType): boolean => {
+    return !!(getSelectedConversation(state)?.isApproved || false);
+  });
 }
 
 export function useSelectedApprovedMe() {
@@ -296,8 +327,12 @@ export function useSelectedIsNoteToSelf() {
   return useSelector(getIsSelectedNoteToSelf);
 }
 
-export function useSelectedMembers() {
-  return useSelector(getSelectedGroupMembers);
+export function useSelectedMembersCount() {
+  return useSelector(getSelectedMembersCount);
+}
+
+export function useSelectedGroupAdmins() {
+  return useSelector(getSelectedGroupAdmins);
 }
 
 export function useSelectedSubscriberCount() {
@@ -310,6 +345,11 @@ export function useSelectedIsKickedFromGroup() {
   );
 }
 
+export function useSelectedIsGroupDestroyed() {
+  const convoKey = useSelectedConversationKey();
+  return useLibGroupDestroyed(convoKey);
+}
+
 export function useSelectedExpireTimer(): number | undefined {
   return useSelector((state: StateType) => getSelectedConversation(state)?.expireTimer);
 }
@@ -320,8 +360,8 @@ export function useSelectedConversationDisappearingMode():
   return useSelector((state: StateType) => getSelectedConversation(state)?.expirationMode);
 }
 
-export function useSelectedIsLeft() {
-  return useSelector((state: StateType) => Boolean(getSelectedConversation(state)?.left) || false);
+export function useSelectedConversationIdOrigin() {
+  return useSelector((state: StateType) => getSelectedConversation(state)?.conversationIdOrigin);
 }
 
 export function useSelectedNickname() {
@@ -343,9 +383,6 @@ export function useSelectedShortenedPubkeyOrFallback() {
   if (isPrivate && selected) {
     return PubKey.shorten(selected);
   }
-  if (isPrivate) {
-    return window.i18n('anonymous');
-  }
   return window.i18n('unknown');
 }
 
@@ -354,12 +391,17 @@ export function useSelectedShortenedPubkeyOrFallback() {
  * This also returns the localized "Note to Self" if the conversation is the note to self.
  */
 export function useSelectedNicknameOrProfileNameOrShortenedPubkey() {
+  const selectedId = useSelectedConversationKey();
   const nickname = useSelectedNickname();
   const profileName = useSelectedDisplayNameInProfile();
   const shortenedPubkey = useSelectedShortenedPubkeyOrFallback();
   const isMe = useSelectedIsNoteToSelf();
+  const libGroupName = useLibGroupName(selectedId);
   if (isMe) {
     return window.i18n('noteToSelf');
+  }
+  if (selectedId && PubKey.is03Pubkey(selectedId)) {
+    return libGroupName || profileName || shortenedPubkey;
   }
   return nickname || profileName || shortenedPubkey;
 }
@@ -393,4 +435,11 @@ export function useSelectedLastMessage() {
 
 export function useSelectedMessageIds() {
   return useSelector(getSelectedMessageIds);
+}
+
+export function useConversationIsExpired03Group(convoId?: string) {
+  return useSelector(
+    (state: StateType) =>
+      !!convoId && PubKey.is03Pubkey(convoId) && !!getSelectedConversation(state)?.isExpired03Group
+  );
 }

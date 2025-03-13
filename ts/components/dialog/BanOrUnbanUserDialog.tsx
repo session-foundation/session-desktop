@@ -2,7 +2,7 @@ import { ChangeEvent, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 
 import { useFocusMount } from '../../hooks/useFocusMount';
-import { useConversationPropsById } from '../../hooks/useParamSelector';
+import { useConversationUsername } from '../../hooks/useParamSelector';
 import { ConversationModel } from '../../models/conversation';
 import {
   sogsV3BanUser,
@@ -10,7 +10,7 @@ import {
   sogsV3ServerUnbanUser,
   sogsV3UnbanUser,
 } from '../../session/apis/open_group_api/sogsv3/sogsV3BanUnban';
-import { getConversationController } from '../../session/conversations/ConversationController';
+import { ConvoHub } from '../../session/conversations/ConversationController';
 import { PubKey } from '../../session/types';
 import { ToastUtils } from '../../session/utils';
 import {
@@ -92,20 +92,17 @@ export const BanOrUnBanUserDialog = (props: {
   const isBan = banType === 'ban';
   const dispatch = useDispatch();
   const isDarkTheme = useIsDarkTheme();
-  const convo = getConversationController().get(conversationId);
+  const convo = ConvoHub.use().get(conversationId);
   const inputRef = useRef(null);
 
   useFocusMount(inputRef, true);
-  const wasGivenAPubkey = Boolean(pubkey?.length);
   const [inputBoxValue, setInputBoxValue] = useState('');
   const [inProgress, setInProgress] = useState(false);
 
-  const sourceConvoProps = useConversationPropsById(pubkey);
+  const displayName = useConversationUsername(pubkey);
 
   const inputTextToDisplay =
-    wasGivenAPubkey && sourceConvoProps
-      ? `${sourceConvoProps.displayNameInProfile} ${PubKey.shorten(sourceConvoProps.id)}`
-      : undefined;
+    !!pubkey && displayName ? `${displayName} ${PubKey.shorten(pubkey)}` : undefined;
 
   /**
    * Ban or Unban a user from an open group
@@ -120,7 +117,7 @@ export const BanOrUnBanUserDialog = (props: {
     if (isBanned) {
       // clear input box
       setInputBoxValue('');
-      if (wasGivenAPubkey) {
+      if (pubkey) {
         dispatch(updateBanOrUnbanUserModal(null));
       }
     }
@@ -159,8 +156,8 @@ export const BanOrUnBanUserDialog = (props: {
           placeholder={i18n('accountIdEnter')}
           dir="auto"
           onChange={onPubkeyBoxChanges}
-          disabled={inProgress || wasGivenAPubkey}
-          value={wasGivenAPubkey ? inputTextToDisplay : inputBoxValue}
+          disabled={inProgress || !!pubkey}
+          value={pubkey ? inputTextToDisplay : inputBoxValue}
         />
         <Flex container={true}>
           <SessionButton
@@ -199,20 +196,17 @@ export const ServerBanOrUnBanUserDialog = (props: {
   const isBan = banType === 'ban';
   const dispatch = useDispatch();
   const darkMode = useIsDarkTheme();
-  const convo = getConversationController().get(conversationId);
+  const convo = ConvoHub.use().get(conversationId);
   const inputRef = useRef(null);
 
   useFocusMount(inputRef, true);
-  const wasGivenAPubkey = Boolean(pubkey?.length);
   const [inputBoxValue, setInputBoxValue] = useState('');
   const [inProgress, setInProgress] = useState(false);
 
-  const sourceConvoProps = useConversationPropsById(pubkey);
+  const displayName = useConversationUsername(pubkey);
 
   const inputTextToDisplay =
-    wasGivenAPubkey && sourceConvoProps
-      ? `${sourceConvoProps.displayNameInProfile} ${PubKey.shorten(sourceConvoProps.id)}`
-      : undefined;
+    !!pubkey && displayName ? `${displayName} ${PubKey.shorten(pubkey)}` : undefined;
 
   /**
    * Ban or Unban a user from an open group
@@ -229,7 +223,7 @@ export const ServerBanOrUnBanUserDialog = (props: {
     if (isBanned) {
       // clear input box
       setInputBoxValue('');
-      if (wasGivenAPubkey) {
+      if (pubkey) {
         dispatch(updateServerBanOrUnbanUserModal(null));
       }
     }
@@ -269,8 +263,8 @@ export const ServerBanOrUnBanUserDialog = (props: {
           placeholder={i18n('accountIdEnter')}
           dir="auto"
           onChange={onPubkeyBoxChanges}
-          disabled={inProgress || wasGivenAPubkey}
-          value={wasGivenAPubkey ? inputTextToDisplay : inputBoxValue}
+          disabled={inProgress || !!pubkey}
+          value={pubkey ? inputTextToDisplay : inputBoxValue}
         />
         <Flex container={true}>
           <SessionButton

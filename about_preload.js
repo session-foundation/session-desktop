@@ -7,12 +7,11 @@ const os = require('os');
 const { setupI18n } = require('./ts/util/i18n/i18n');
 
 const config = url.parse(window.location.toString(), true).query;
-const { dictionary, crowdinLocale } = ipcRenderer.sendSync('locale-data');
+const { crowdinLocale } = ipcRenderer.sendSync('locale-data');
 
 window.theme = config.theme;
 window.i18n = setupI18n({
   crowdinLocale,
-  translationDictionary: dictionary,
 });
 
 window.getOSRelease = () =>
@@ -21,13 +20,5 @@ window.getEnvironment = () => config.environment;
 window.getVersion = () => config.version;
 window.getCommitHash = () => config.commitHash;
 window.getAppInstance = () => config.appInstance;
-
-const { AboutView } = require('./ts/components/AboutView');
-
-window.Signal = {
-  Components: {
-    AboutView,
-  },
-};
 
 require('./ts/util/logging');

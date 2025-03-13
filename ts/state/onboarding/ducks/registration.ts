@@ -27,7 +27,7 @@ export enum AccountRestoration {
   Finished,
   /** we failed to fetch account details in time, so we enter it manually */
   DisplayName,
-  /** we have restored successfuly, show the conversation screen */
+  /** we have restored successfully, show the conversation screen */
   Complete,
 }
 

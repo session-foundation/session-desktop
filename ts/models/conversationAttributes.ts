@@ -1,5 +1,6 @@
 import { defaults } from 'lodash';
 import { DisappearingMessageConversationModeType } from '../session/disappearing_messages/types';
+
 import { ConversationTypeEnum, CONVERSATION_PRIORITIES } from './types';
 import { ConversationInteractionType, ConversationInteractionStatus } from '../interactions/types';
 import { LastMessageStatusType } from '../state/ducks/types';
@@ -7,7 +8,7 @@ import { LastMessageStatusType } from '../state/ducks/types';
 export function isOpenOrClosedGroup(conversationType: ConversationTypeEnum) {
   return (
     conversationType === ConversationTypeEnum.GROUP ||
-    conversationType === ConversationTypeEnum.GROUPV3
+    conversationType === ConversationTypeEnum.GROUPV2
   );
 }
 
@@ -37,7 +38,7 @@ export type ConversationAttributesWithNotSavedOnes = ConversationAttributes &
 
 export interface ConversationAttributes {
   id: string;
-  type: ConversationTypeEnum.PRIVATE | ConversationTypeEnum.GROUPV3 | ConversationTypeEnum.GROUP;
+  type: ConversationTypeEnum.PRIVATE | ConversationTypeEnum.GROUPV2 | ConversationTypeEnum.GROUP;
 
   // 0 means inactive (undefined and null too but we try to get rid of them and only have 0 = inactive)
   active_at: number; // this field is the one used to sort conversations in the left pane from most recent
@@ -45,7 +46,7 @@ export interface ConversationAttributes {
   /**
    * lastMessage is actually just a preview of the last message text, shortened to 60 chars.
    * This is to avoid filling the redux store with a huge last message when it's only used in the
-   * preview of a conversation (leftpane).
+   * preview of a conversation (left pane).
    * The shortening is made in sql.ts directly.
    */
   lastMessage: string | null;
@@ -60,9 +61,9 @@ export interface ConversationAttributes {
 
   avatarInProfile?: string; // this is the avatar path locally once downloaded and stored in the application attachments folder
 
-  isTrustedForAttachmentDownload: boolean; // not synced accross devices, this field is used if we should auto download attachments from this conversation or not
+  isTrustedForAttachmentDownload: boolean; // not synced across devices, this field is used if we should auto download attachments from this conversation or not
 
-  conversationIdOrigin?: string; // Blinded message requests ONLY: The community from which this conversation originated from
+  conversationIdOrigin?: string; // The conversation from which this conversation originated from: blinded message request or 03-group admin who invited us
 
   // TODOLATER those two items are only used for legacy closed groups and will be removed when we get rid of the legacy closed groups support
   lastJoinedTimestamp: number; // ClosedGroup: last time we were added to this group // TODOLATER to remove after legacy closed group are dropped
@@ -78,7 +79,7 @@ export interface ConversationAttributes {
   nickname?: string; // this is the name WE gave to that user (only applicable to private chats, not closed group neither opengroups)
   profileKey?: string; // Consider this being a hex string if it is set
   triggerNotificationsFor: ConversationNotificationSettingType;
-  avatarPointer?: string; // this is the url of the avatar on the file server v2. we use this to detect if we need to redownload the avatar from someone (not used for opengroups)
+  avatarPointer?: string; // this is the url of the avatar on the file server v2. we use this to detect if we need to re-download the avatar from someone (not used for opengroups)
   /** in seconds, 0 means no expiration */
   expireTimer: number;
 
@@ -100,6 +101,13 @@ export interface ConversationAttributes {
   // TODO we need to make a migration to remove this value from the db since the implementation is hacky
   /** to warn the user that the person he is talking to is using an old client which might cause issues */
   hasOutdatedClient?: string;
+
+  /**
+   * An 03-group is expired if an admin didn't come online for the last 30 days.
+   * In that case, we might not have any keys on the swarm, and so restoring from seed would mean we can't actually
+   * send any messages/nor decrypt any.
+   */
+  isExpired03Group?: boolean;
 }
 
 /**

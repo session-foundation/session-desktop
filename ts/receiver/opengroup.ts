@@ -7,13 +7,14 @@ import { SignalService } from '../protobuf';
 import { OpenGroupMessageV4 } from '../session/apis/open_group_api/opengroupV2/OpenGroupServerPoller';
 import { isUsAnySogsFromCache } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import { getOpenGroupV2ConversationId } from '../session/apis/open_group_api/utils/OpenGroupUtils';
-import { getConversationController } from '../session/conversations';
+import { ConvoHub } from '../session/conversations';
 import { removeMessagePadding } from '../session/crypto/BufferPadding';
 import { perfEnd, perfStart } from '../session/utils/Performance';
 import { fromBase64ToArray } from '../session/utils/String';
 import { cleanIncomingDataMessage, messageHasVisibleContent } from './dataMessage';
 import { handleMessageJob, toRegularMessage } from './queuedJob';
 import { OpenGroupRequestCommonType } from '../data/types';
+import { shouldProcessContentMessage } from './common';
 
 export const handleOpenGroupV4Message = async (
   message: OpenGroupMessageV4,
@@ -52,6 +53,14 @@ const handleOpenGroupMessage = async (
 
   const decodedContent = SignalService.Content.decode(dataUint);
 
+  if (!shouldProcessContentMessage({ timestamp: sentTimestamp }, decodedContent, true)) {
+    window?.log?.info(
+      'sogs message: shouldProcessContentMessage is false for message sentAt:',
+      sentTimestamp
+    );
+    return;
+  }
+
   const conversationId = getOpenGroupV2ConversationId(serverUrl, roomId);
   if (!conversationId) {
     window?.log?.error('We cannot handle a message without a conversationId');
@@ -68,12 +77,12 @@ const handleOpenGroupMessage = async (
     return;
   }
 
-  if (!getConversationController().get(conversationId)?.isOpenGroupV2()) {
+  if (!ConvoHub.use().get(conversationId)?.isOpenGroupV2()) {
     window?.log?.error('Received a message for an unknown convo or not an v2. Skipping');
     return;
   }
 
-  const groupConvo = getConversationController().get(conversationId);
+  const groupConvo = ConvoHub.use().get(conversationId);
 
   if (!groupConvo) {
     window?.log?.warn('Skipping handleJob for unknown convo: ', conversationId);

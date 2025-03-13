@@ -2,16 +2,12 @@
 // @ts-nocheck - TODO: add generic type to setupI18n to fix this
 
 import { expect } from 'chai';
-import { initI18n, testDictionary } from './util';
-import { resetLocaleAndTranslationDict } from '../../../../../util/i18n/shared';
+import { initI18n } from './util';
 
 describe('formatMessageWithArgs', () => {
   let i18n;
   beforeEach(() => {
-    i18n = initI18n(testDictionary);
-  });
-  afterEach(() => {
-    resetLocaleAndTranslationDict();
+    i18n = initI18n();
   });
 
   it('returns the message with args for a message', () => {

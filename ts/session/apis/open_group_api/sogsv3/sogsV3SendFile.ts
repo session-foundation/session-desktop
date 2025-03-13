@@ -4,6 +4,7 @@ import { roomHasBlindEnabled } from '../../../../types/sqlSharedTypes';
 import { OnionSending } from '../../../onions/onionSend';
 import { batchGlobalIsSuccess } from './sogsV3BatchPoll';
 import { OpenGroupRequestCommonType } from '../../../../data/types';
+import { DURATION } from '../../../constants';
 
 /**
  * Returns the id on which the file is saved, or null
@@ -18,7 +19,7 @@ export const uploadFileToRoomSogs3 = async (
 
   const roomDetails = OpenGroupData.getV2OpenGroupRoomByRoomId(roomInfos);
   if (!roomDetails || !roomDetails.serverPublicKey) {
-    window.log.warn('uploadFileOpenGroupV3: roomDetails is invalid');
+    window.log.warn('uploadFileOpenGroup: roomDetails is invalid');
     return null;
   }
 
@@ -31,6 +32,7 @@ export const uploadFileToRoomSogs3 = async (
     endpoint: `/room/${roomDetails.roomId}/file`,
     method: 'POST',
     serverUrl: roomDetails.serverUrl,
+    timeoutMs: 30 * DURATION.SECONDS, // longer time allowed for file upload
   });
 
   if (!batchGlobalIsSuccess(result)) {

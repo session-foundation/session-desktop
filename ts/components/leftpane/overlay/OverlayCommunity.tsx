@@ -34,7 +34,6 @@ async function joinOpenGroup(
     const groupCreated = await joinOpenGroupV2WithUIEvents(
       serverUrl,
       false,
-      false,
       uiCallback,
       errorHandler
     );
@@ -113,9 +112,15 @@ export const OverlayCommunity = () => {
         centerText={true}
         monospaced={true}
         isTextArea={true}
+        inputDataTestId="join-community-conversation"
       />
       <Spacer2XL />
-      <SessionButton text={window.i18n('join')} disabled={!groupUrl} onClick={onTryJoinRoom} />
+      <SessionButton
+        text={window.i18n('join')}
+        disabled={!groupUrl}
+        onClick={onTryJoinRoom}
+        dataTestId="join-community-button"
+      />
       {!loading ? <Spacer2XL /> : null}
       <SessionSpinner loading={loading} />
       <SessionJoinableRooms onJoinClick={onTryJoinRoom} alreadyJoining={loading} />

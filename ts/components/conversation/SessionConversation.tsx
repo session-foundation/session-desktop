@@ -6,6 +6,8 @@ import loadImage from 'blueimp-load-image';
 import classNames from 'classnames';
 import { Component, RefObject, createRef } from 'react';
 import styled from 'styled-components';
+import { useDispatch } from 'react-redux';
+import { format } from 'date-fns';
 import {
   CompositionBox,
   SendMessageType,
@@ -21,7 +23,7 @@ import { SessionFileDropzone } from './SessionFileDropzone';
 import { Data } from '../../data/data';
 import { markAllReadByConvoId } from '../../interactions/conversationInteractions';
 import { MAX_ATTACHMENT_FILESIZE_BYTES } from '../../session/constants';
-import { getConversationController } from '../../session/conversations';
+import { ConvoHub } from '../../session/conversations';
 import { ToastUtils } from '../../session/utils';
 import {
   ReduxConversationType,
@@ -47,14 +49,30 @@ import { EmptyMessageView } from '../EmptyMessageView';
 import { SplitViewContainer } from '../SplitViewContainer';
 import { SessionButtonColor } from '../basic/SessionButton';
 import { InConversationCallContainer } from '../calling/InConversationCallContainer';
-import { NoMessageInConversation } from './SubtleNotification';
+
 import { ConversationHeaderWithDetails } from './header/ConversationHeader';
 
 import { isAudio } from '../../types/MIME';
 import { NoticeBanner } from '../NoticeBanner';
 import { SessionSpinner } from '../loading';
+import { ConversationMessageRequestButtons } from './MessageRequestButtons';
 import { RightPanel, StyledRightPanelContainer } from './right-panel/RightPanel';
 import { HTMLDirection } from '../../util/i18n/rtlSupport';
+import { showLinkVisitWarningDialog } from '../dialog/OpenUrlModal';
+import { InvitedToGroup, NoMessageInConversation } from './SubtleNotification';
+import { PubKey } from '../../session/types';
+import { isUsAnySogsFromCache } from '../../session/apis/open_group_api/sogsv3/knownBlindedkeys';
+import { localize } from '../../localization/localeTools';
+import {
+  useConversationIsExpired03Group,
+  useSelectedConversationKey,
+  useSelectedIsPrivate,
+  useSelectedIsPublic,
+  useSelectedWeAreAdmin,
+} from '../../state/selectors/selectedConversation';
+import { useSelectedDisableLegacyGroupDeprecatedActions } from '../../hooks/useRefreshReleasedFeaturesTimestamp';
+import { useAreGroupsCreatedAsNewGroupsYet } from '../../state/selectors/releasedFeatures';
+import { Constants } from '../../session';
 
 const DEFAULT_JPEG_QUALITY = 0.85;
 
@@ -93,6 +111,20 @@ const ConvoLoadingSpinner = () => {
   );
 };
 
+const GroupMarkedAsExpired = () => {
+  const selectedConvo = useSelectedConversationKey();
+  const isExpired03Group = useConversationIsExpired03Group(selectedConvo);
+  if (!selectedConvo || !PubKey.is03Pubkey(selectedConvo) || !isExpired03Group) {
+    return null;
+  }
+  return (
+    <NoticeBanner
+      text={window.i18n('groupNotUpdatedWarning')}
+      dataTestId="group-not-updated-30-days-banner"
+    />
+  );
+};
+
 export class SessionConversation extends Component<Props, State> {
   private readonly messageContainerRef: RefObject<HTMLDivElement>;
   private dragCounter: number;
@@ -113,7 +145,7 @@ export class SessionConversation extends Component<Props, State> {
   }
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  // ~~~~~~~~~~~~~~~~ LIFECYCLES ~~~~~~~~~~~~~~~~
+  // ~~~~~~~~~~~~~~~~ LIFE CYCLES ~~~~~~~~~~~~~~~~
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   public componentDidUpdate(prevProps: Props, _prevState: State) {
@@ -180,7 +212,7 @@ export class SessionConversation extends Component<Props, State> {
 
   public sendMessageFn(msg: SendMessageType) {
     const { selectedConversationKey } = this.props;
-    const conversationModel = getConversationController().get(selectedConversationKey);
+    const conversationModel = ConvoHub.use().get(selectedConversationKey);
 
     if (!conversationModel) {
       return;
@@ -195,7 +227,7 @@ export class SessionConversation extends Component<Props, State> {
 
     const recoveryPhrase = getCurrentRecoveryPhrase();
 
-    // string replace to fix case where pasted text contains invis characters causing false negatives
+    // string replace to fix case where pasted text contains invisible characters causing false negatives
     if (msg.body.replace(/\s/g, '').includes(recoveryPhrase.replace(/\s/g, ''))) {
       window.inboxStore?.dispatch(
         updateConfirmModal({
@@ -237,36 +269,24 @@ export class SessionConversation extends Component<Props, State> {
     }
     // TODOLATER break selectionMode into it's own container component so we can use hooks to fetch relevant state from the store
     const selectionMode = selectedMessages.length > 0;
-    // TODO legacy messages support will be removed in a future release
-    const bannerText =
-      selectedConversation.hasOutdatedClient &&
-      selectedConversation.hasOutdatedClient !== ourDisplayNameInProfile
-        ? window.i18n('disappearingMessagesLegacy', {
-            name: selectedConversation.hasOutdatedClient, // we store this guy's display name in here.
-          })
-        : window.i18n('deleteAfterGroupFirstReleaseConfigOutdated');
 
     return (
       <>
         <div className="conversation-header">
           <ConversationHeaderWithDetails />
-          {selectedConversation?.hasOutdatedClient?.length ? (
-            <NoticeBanner
-              text={bannerText}
-              dismissCallback={() => {
-                const conversation = getConversationController().get(selectedConversation.id);
-                conversation.set({ hasOutdatedClient: undefined });
-                void conversation.commit();
-              }}
-            />
-          ) : null}
+          <GroupMarkedAsExpired />
+          <OutdatedClientBanner
+            ourDisplayNameInProfile={ourDisplayNameInProfile}
+            selectedConversation={selectedConversation}
+          />
+          <OutdatedLegacyGroupBanner />
         </div>
         {isSelectedConvoInitialLoadingInProgress ? (
           <ConvoLoadingSpinner />
         ) : (
           <>
             <div
-              // if you change the classname, also update it on onKeyDown
+              // if you change the class name, also update it on onKeyDown
               className={classNames('conversation-content', selectionMode && 'selection-mode')}
               tabIndex={0}
               onKeyDown={this.onKeyDown}
@@ -274,6 +294,7 @@ export class SessionConversation extends Component<Props, State> {
             >
               <div className="conversation-messages">
                 <NoMessageInConversation />
+                <InvitedToGroup />
 
                 <SplitViewContainer
                   top={<InConversationCallContainer />}
@@ -285,8 +306,11 @@ export class SessionConversation extends Component<Props, State> {
                   }
                   disableTop={!this.props.hasOngoingCallWithFocusedConvo}
                 />
+
                 {isDraggingFile && <SessionFileDropzone />}
               </div>
+
+              <ConversationMessageRequestButtons />
 
               <CompositionBox
                 sendMessage={this.sendMessageFn}
@@ -527,12 +551,12 @@ export class SessionConversation extends Component<Props, State> {
     );
 
     const allMembers = allPubKeys.map((pubKey: string) => {
-      const conv = getConversationController().get(pubKey);
-      const profileName = conv?.getNicknameOrRealUsernameOrPlaceholder();
-
       return {
         id: pubKey,
-        authorProfileName: profileName,
+        display: isUsAnySogsFromCache(pubKey)
+          ? localize('you').toString()
+          : ConvoHub.use().get(pubKey)?.getNicknameOrRealUsernameOrPlaceholder() ||
+            PubKey.shorten(pubKey),
       };
     });
 
@@ -632,3 +656,70 @@ const renderImagePreview = async (contentType: string, file: File, fileName: str
     thumbnail: null,
   };
 };
+
+function OutdatedClientBanner(props: {
+  selectedConversation: Pick<ReduxConversationType, 'id' | 'hasOutdatedClient'>;
+  ourDisplayNameInProfile: string;
+}) {
+  const { selectedConversation, ourDisplayNameInProfile } = props;
+  const bannerText =
+    selectedConversation.hasOutdatedClient &&
+    selectedConversation.hasOutdatedClient !== ourDisplayNameInProfile
+      ? window.i18n('disappearingMessagesLegacy', { name: selectedConversation.hasOutdatedClient })
+      : window.i18n('deleteAfterGroupFirstReleaseConfigOutdated');
+
+  return selectedConversation.hasOutdatedClient?.length ? (
+    <NoticeBanner
+      text={bannerText}
+      onBannerClick={() => {
+        const conversation = ConvoHub.use().get(selectedConversation.id);
+        conversation.set({ hasOutdatedClient: undefined });
+        void conversation.commit();
+      }}
+      icon="exit"
+      dataTestId="some-of-your-devices-outdated-conversation"
+    />
+  ) : null;
+}
+
+function OutdatedLegacyGroupBanner() {
+  const dispatch = useDispatch();
+
+  const weAreAdmin = useSelectedWeAreAdmin();
+  const selectedConversationKey = useSelectedConversationKey();
+  const isPrivate = useSelectedIsPrivate();
+  const isPublic = useSelectedIsPublic();
+  const deprecatedLegacyGroups = useSelectedDisableLegacyGroupDeprecatedActions();
+
+  const isLegacyGroup =
+    !isPrivate && !isPublic && selectedConversationKey && selectedConversationKey.startsWith('05');
+
+  const newGroupsCanBeCreated = useAreGroupsCreatedAsNewGroupsYet();
+  const date = format(
+    new Date(Constants.FEATURE_RELEASE_TIMESTAMPS.LEGACY_GROUP_READONLY),
+    'h:mm a, d MMM yyyy'
+  );
+
+  const text = deprecatedLegacyGroups
+    ? localize(
+        weAreAdmin ? 'legacyGroupAfterDeprecationAdmin' : 'legacyGroupAfterDeprecationMember'
+      ).toString()
+    : localize(
+        weAreAdmin ? 'legacyGroupBeforeDeprecationAdmin' : 'legacyGroupBeforeDeprecationMember'
+      )
+        .withArgs({
+          date,
+        })
+        .toString();
+
+  return isLegacyGroup && newGroupsCanBeCreated ? (
+    <NoticeBanner
+      text={text}
+      onBannerClick={() => {
+        showLinkVisitWarningDialog('https://getsession.org/groups', dispatch);
+      }}
+      icon="externalLink"
+      dataTestId="legacy-group-banner"
+    />
+  ) : null;
+}

@@ -5,6 +5,7 @@ import styled from 'styled-components';
 import { Flex } from './Flex';
 
 import { SessionIcon, SessionIconType } from '../icon';
+import { SessionHtmlRenderer } from './SessionHTMLRenderer';
 
 // NOTE We don't change the color strip on the left based on the type. 16/09/2022
 export enum SessionToastType {
@@ -15,26 +16,17 @@ export enum SessionToastType {
 }
 
 type Props = {
-  title: string;
+  description: string;
   id?: string;
   type?: SessionToastType;
   icon?: SessionIconType;
-  description?: string;
   closeToast?: any;
   onToastClick?: () => void;
 };
 
-const TitleDiv = styled.div`
-  font-size: var(--font-size-md);
-  line-height: 1.5;
-  font-family: var(--font-default);
-  color: var(--text-primary-color);
-  text-overflow: ellipsis;
-`;
-
 const DescriptionDiv = styled.div`
   font-size: var(--font-size-sm);
-  color: var(--text-secondary-color);
+  color: var(--text-primary-color);
   text-overflow: ellipsis;
   font-family: var(--font-default);
   padding-top: var(--margins-xs);
@@ -46,8 +38,16 @@ const IconDiv = styled.div`
   margin: 0 var(--margins-sm) 0 var(--margins-xs);
 `;
 
+function DescriptionPubkeysReplaced({ description }: { description: string }) {
+  return (
+    <DescriptionDiv>
+      <SessionHtmlRenderer html={description} />
+    </DescriptionDiv>
+  );
+}
+
 export const SessionToast = (props: Props) => {
-  const { title, description, type, icon } = props;
+  const { description, type, icon } = props;
 
   const toastDesc = description || '';
   const toastIconSize = toastDesc ? 'huge' : 'medium';
@@ -92,8 +92,7 @@ export const SessionToast = (props: Props) => {
         flexDirection="column"
         className="session-toast"
       >
-        <TitleDiv>{title}</TitleDiv>
-        {toastDesc && <DescriptionDiv>{toastDesc}</DescriptionDiv>}
+        <DescriptionPubkeysReplaced description={toastDesc} />
       </Flex>
     </Flex>
   );

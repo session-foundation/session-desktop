@@ -1,5 +1,4 @@
 import { ipcRenderer } from 'electron';
-import { debounce } from 'lodash';
 import { useEffect, useRef, useState } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
@@ -8,25 +7,27 @@ import useTimeoutFn from 'react-use/lib/useTimeoutFn';
 import useThrottleFn from 'react-use/lib/useThrottleFn';
 
 import { Data } from '../../data/data';
-import { getConversationController } from '../../session/conversations';
-import { getMessageQueue } from '../../session/sending';
-import { syncConfigurationIfNeeded } from '../../session/utils/sync/syncUtils';
+import { ConvoHub } from '../../session/conversations';
 
 import { clearSearch } from '../../state/ducks/search';
 import { resetLeftOverlayMode, SectionType, showLeftPaneSection } from '../../state/ducks/section';
 import {
-  getGlobalUnreadMessageCount,
   getOurPrimaryConversation,
+  useGlobalUnreadMessageCount,
 } from '../../state/selectors/conversations';
 import { getFocusedSection } from '../../state/selectors/section';
 import { getOurNumber } from '../../state/selectors/user';
 
-import { cleanUpOldDecryptedMedias } from '../../session/crypto/DecryptedAttachmentsManager';
+import { DecryptedAttachmentsManager } from '../../session/crypto/DecryptedAttachmentsManager';
 
 import { DURATION } from '../../session/constants';
 
 import { uploadOurAvatar } from '../../interactions/conversationInteractions';
-import { editProfileModal, onionPathModal } from '../../state/ducks/modalDialog';
+import {
+  editProfileModal,
+  onionPathModal,
+  updateDebugMenuModal,
+} from '../../state/ducks/modalDialog';
 
 import { loadDefaultRooms } from '../../session/apis/open_group_api/opengroupV2/ApiUtil';
 import { getOpenGroupManager } from '../../session/apis/open_group_api/opengroupV2/OpenGroupManagerV2';
@@ -38,27 +39,29 @@ import { SessionIconButton } from '../icon/SessionIconButton';
 import { LeftPaneSectionContainer } from './LeftPaneSectionContainer';
 
 import { SettingsKey } from '../../data/settings-key';
+import { SnodePool } from '../../session/apis/snode_api/snodePool';
+import { UserSync } from '../../session/utils/job_runners/jobs/UserSyncJob';
+import { forceSyncConfigurationNowIfNeeded } from '../../session/utils/sync/syncUtils';
 import { useFetchLatestReleaseFromFileServer } from '../../hooks/useFetchLatestReleaseFromFileServer';
 import { useHotkey } from '../../hooks/useHotkey';
-import {
-  forceRefreshRandomSnodePool,
-  getFreshSwarmFor,
-} from '../../session/apis/snode_api/snodePool';
-import { ConfigurationSync } from '../../session/utils/job_runners/jobs/ConfigurationSyncJob';
-import { getIsModalVisble } from '../../state/selectors/modal';
 import { useIsDarkTheme } from '../../state/selectors/theme';
 import { switchThemeTo } from '../../themes/switchTheme';
-import { ReleasedFeatures } from '../../util/releaseFeature';
 import { getOppositeTheme } from '../../util/theme';
 import { SessionNotificationCount } from '../icon/SessionNotificationCount';
+import { getIsModalVisible } from '../../state/selectors/modal';
+
+import { ReleasedFeatures } from '../../util/releaseFeature';
+import { MessageQueue } from '../../session/sending';
+import { useRefreshReleasedFeaturesTimestamp } from '../../hooks/useRefreshReleasedFeaturesTimestamp';
+import { useDebugMode } from '../../state/selectors/debug';
 
 const Section = (props: { type: SectionType }) => {
   const ourNumber = useSelector(getOurNumber);
-  const globalUnreadMessageCount = useSelector(getGlobalUnreadMessageCount);
+  const globalUnreadMessageCount = useGlobalUnreadMessageCount();
   const dispatch = useDispatch();
   const { type } = props;
 
-  const isModalVisible = useSelector(getIsModalVisble);
+  const isModalVisible = useSelector(getIsModalVisible);
   const isDarkTheme = useIsDarkTheme();
   const focusedSection = useSelector(getFocusedSection);
   const isSelected = focusedSection === props.type;
@@ -79,6 +82,9 @@ const Section = (props: { type: SectionType }) => {
     } else if (type === SectionType.PathIndicator) {
       // Show Path Indicator Modal
       dispatch(onionPathModal({}));
+    } else if (type === SectionType.DebugMenu) {
+      // Show Debug Menu
+      dispatch(updateDebugMenuModal({}));
     } else {
       // message section
       dispatch(clearSearch());
@@ -105,6 +111,7 @@ const Section = (props: { type: SectionType }) => {
         onAvatarClick={handleClick}
         pubkey={ourNumber}
         dataTestId="leftpane-primary-avatar"
+        imageDataTestId={`img-leftpane-primary-avatar`}
       />
     );
   }
@@ -135,6 +142,16 @@ const Section = (props: { type: SectionType }) => {
           ref={settingsIconRef}
         />
       );
+    case SectionType.DebugMenu:
+      return (
+        <SessionIconButton
+          iconSize="medium"
+          dataTestId="debug-menu-section"
+          iconType={'debug'}
+          onClick={handleClick}
+          isSelected={isSelected}
+        />
+      );
     case SectionType.PathIndicator:
       return (
         <ActionPanelOnionStatusLight
@@ -162,12 +179,12 @@ const cleanUpMediasInterval = DURATION.MINUTES * 60;
 // Do this only if we created a new account id, or if we already received the initial configuration message
 const triggerSyncIfNeeded = async () => {
   const us = UserUtils.getOurPubKeyStrFromCache();
-  await getConversationController().get(us).setDidApproveMe(true, true);
-  await getConversationController().get(us).setIsApproved(true, true);
+  await ConvoHub.use().get(us).setDidApproveMe(true, true);
+  await ConvoHub.use().get(us).setIsApproved(true, true);
   const didWeHandleAConfigurationMessageAlready =
     (await Data.getItemById(SettingsKey.hasSyncedInitialConfigurationItem))?.value || false;
   if (didWeHandleAConfigurationMessageAlready) {
-    await syncConfigurationIfNeeded();
+    await forceSyncConfigurationNowIfNeeded();
   }
 };
 
@@ -196,10 +213,12 @@ const doAppStartUp = async () => {
   void triggerSyncIfNeeded();
   void getSwarmPollingInstance().start();
   void loadDefaultRooms();
-  void getFreshSwarmFor(UserUtils.getOurPubKeyStrFromCache()); // refresh our swarm on start to speed up the first message fetching event
+  void SnodePool.getFreshSwarmFor(UserUtils.getOurPubKeyStrFromCache()); // refresh our swarm on start to speed up the first message fetching event
+  void Data.cleanupOrphanedAttachments();
 
   // TODOLATER make this a job of the JobRunner
-  debounce(triggerAvatarReUploadIfNeeded, 200);
+  // Note: do not make this a debounce call (as for some reason it doesn't work with promises)
+  void triggerAvatarReUploadIfNeeded();
 
   /* Postpone a little bit of the polling of sogs messages to let the swarm messages come in first. */
   global.setTimeout(() => {
@@ -209,14 +228,30 @@ const doAppStartUp = async () => {
   global.setTimeout(() => {
     // init the messageQueue. In the constructor, we add all not send messages
     // this call does nothing except calling the constructor, which will continue sending message in the pipeline
-    void getMessageQueue().processAllPending();
+    void MessageQueue.use().processAllPending();
   }, 3000);
 
   global.setTimeout(() => {
     // Schedule a confSyncJob in some time to let anything incoming from the network be applied and see if there is a push needed
-    void ConfigurationSync.queueNewJobIfNeeded();
+    // Note: this also starts periodic jobs, so we don't need to keep doing it
+    void UserSync.queueNewJobIfNeeded();
   }, 20000);
 };
+
+function useUpdateBadgeCount() {
+  const globalUnreadMessageCount = useGlobalUnreadMessageCount();
+
+  // Reuse the unreadToShow from the global state to update the badge count
+  useThrottleFn(
+    (unreadCount: number) => {
+      if (globalUnreadMessageCount !== undefined) {
+        ipcRenderer.send('update-badge-count', unreadCount);
+      }
+    },
+    2000,
+    [globalUnreadMessageCount]
+  );
+}
 
 /**
  * ActionsPanel is the far left banner (not the left pane).
@@ -225,9 +260,10 @@ const doAppStartUp = async () => {
 export const ActionsPanel = () => {
   const [startCleanUpMedia, setStartCleanUpMedia] = useState(false);
   const ourPrimaryConversation = useSelector(getOurPrimaryConversation);
+  const showDebugMenu = useDebugMode();
 
   // this maxi useEffect is called only once: when the component is mounted.
-  // For the action panel, it means this is called only one per app start/with a user loggedin
+  // For the action panel, it means this is called only one per app start/with a user logged in
   useEffect(() => {
     void doAppStartUp();
   }, []);
@@ -240,20 +276,12 @@ export const ActionsPanel = () => {
     return () => clearTimeout(timeout);
   }, []);
 
-  const globalUnreadMessageCount = useSelector(getGlobalUnreadMessageCount);
+  useUpdateBadgeCount();
 
-  // Reuse the unreadToShow from the global state to update the badge count
-  useThrottleFn(
-    (unreadCount: number) => {
-      if (globalUnreadMessageCount !== undefined) {
-        ipcRenderer.send('update-badge-count', unreadCount);
-      }
-    },
-    2000,
-    [globalUnreadMessageCount]
+  useInterval(
+    DecryptedAttachmentsManager.cleanUpOldDecryptedMedias,
+    startCleanUpMedia ? cleanUpMediasInterval : null
   );
-
-  useInterval(cleanUpOldDecryptedMedias, startCleanUpMedia ? cleanUpMediasInterval : null);
 
   useFetchLatestReleaseFromFileServer();
 
@@ -261,7 +289,7 @@ export const ActionsPanel = () => {
     if (!ourPrimaryConversation) {
       return;
     }
-    void syncConfigurationIfNeeded();
+    void forceSyncConfigurationNowIfNeeded();
   }, DURATION.DAYS * 2);
 
   useInterval(() => {
@@ -270,7 +298,7 @@ export const ActionsPanel = () => {
     }
     // trigger an updates from the snodes every hour
 
-    void forceRefreshRandomSnodePool();
+    void SnodePool.forceRefreshRandomSnodePool();
   }, DURATION.HOURS * 1);
 
   useTimeoutFn(() => {
@@ -278,7 +306,7 @@ export const ActionsPanel = () => {
       return;
     }
     // trigger an updates from the snodes after 5 minutes, once
-    void forceRefreshRandomSnodePool();
+    void SnodePool.forceRefreshRandomSnodePool();
   }, DURATION.MINUTES * 5);
 
   useInterval(() => {
@@ -289,16 +317,20 @@ export const ActionsPanel = () => {
     void triggerAvatarReUploadIfNeeded();
   }, DURATION.DAYS * 1);
 
+  useRefreshReleasedFeaturesTimestamp();
+
   if (!ourPrimaryConversation) {
     window?.log?.warn('ActionsPanel: ourPrimaryConversation is not set');
     return null;
   }
+
   return (
     <>
       <LeftPaneSectionContainer data-testid="leftpane-section-container">
         <Section type={SectionType.Profile} />
         <Section type={SectionType.Message} />
         <Section type={SectionType.Settings} />
+        {showDebugMenu && <Section type={SectionType.DebugMenu} />}
         <Section type={SectionType.PathIndicator} />
         <Section type={SectionType.ColorMode} />
       </LeftPaneSectionContainer>

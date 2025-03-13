@@ -11,7 +11,6 @@ import { Data } from '../../../../data/data';
 
 import { MessageInteraction } from '../../../../interactions';
 import { replyToMessage } from '../../../../interactions/conversationInteractions';
-import { deleteMessagesForX } from '../../../../interactions/conversations/unsendingInteractions';
 import {
   addSenderAsModerator,
   removeSenderFromModerator,
@@ -29,7 +28,6 @@ import {
   useMessageBody,
   useMessageDirection,
   useMessageIsDeletable,
-  useMessageIsDeletableForEveryone,
   useMessageSender,
   useMessageSenderIsAdmin,
   useMessageServerTimestamp,
@@ -48,11 +46,15 @@ import { Reactions } from '../../../../util/reactions';
 import { SessionContextMenuContainer } from '../../../SessionContextMenuContainer';
 import { SessionEmojiPanel, StyledEmojiPanel } from '../../SessionEmojiPanel';
 import { MessageReactBar } from './MessageReactBar';
-import { showCopyAccountIdAction } from '../../../menu/items/CopyAccountId';
 import { CopyAccountIdMenuItem } from '../../../menu/items/CopyAccountId/CopyAccountIdMenuItem';
 import { Localizer } from '../../../basic/Localizer';
 import { ItemWithDataTestId } from '../../../menu/items/MenuItemWithDataTestId';
 import { getMenuAnimation } from '../../../menu/MenuAnimation';
+import { WithMessageId } from '../../../../session/types/with';
+import { DeleteItem } from '../../../menu/items/DeleteMessage/DeleteMessageMenuItem';
+import { RetryItem } from '../../../menu/items/RetrySend/RetrySendMenuItem';
+import { showCopyAccountIdAction } from '../../../menu/items/CopyAccountId/guard';
+import { useSelectedDisableLegacyGroupDeprecatedActions } from '../../../../hooks/useRefreshReleasedFeaturesTimestamp';
 
 export type MessageContextMenuSelectorProps = Pick<
   MessageRenderingProps,
@@ -91,32 +93,7 @@ const StyledEmojiPanelContainer = styled.div<{ x: number; y: number }>`
   }
 `;
 
-const DeleteItem = ({ messageId }: { messageId: string }) => {
-  const convoId = useSelectedConversationKey();
-  const isPublic = useSelectedIsPublic();
-
-  const isDeletable = useMessageIsDeletable(messageId);
-  const isDeletableForEveryone = useMessageIsDeletableForEveryone(messageId);
-  const messageStatus = useMessageStatus(messageId);
-
-  const enforceDeleteServerSide = isPublic && messageStatus !== 'error';
-
-  const onDelete = useCallback(() => {
-    if (convoId) {
-      void deleteMessagesForX([messageId], convoId, enforceDeleteServerSide);
-    }
-  }, [convoId, enforceDeleteServerSide, messageId]);
-
-  if (!convoId || (isPublic && !isDeletableForEveryone) || (!isPublic && !isDeletable)) {
-    return null;
-  }
-
-  return <ItemWithDataTestId onClick={onDelete}>{window.i18n('delete')}</ItemWithDataTestId>;
-};
-
-type MessageId = { messageId: string };
-
-const AdminActionItems = ({ messageId }: MessageId) => {
+const AdminActionItems = ({ messageId }: WithMessageId) => {
   const convoId = useSelectedConversationKey();
   const isPublic = useSelectedIsPublic();
   const weAreModerator = useSelectedWeAreModerator();
@@ -203,24 +180,6 @@ const AdminActionItems = ({ messageId }: MessageId) => {
   ) : null;
 };
 
-const RetryItem = ({ messageId }: MessageId) => {
-  const direction = useMessageDirection(messageId);
-
-  const status = useMessageStatus(messageId);
-  const isOutgoing = direction === 'outgoing';
-
-  const showRetry = status === 'error' && isOutgoing;
-  const onRetry = useCallback(async () => {
-    const found = await Data.getMessageById(messageId);
-    if (found) {
-      await found.retrySend();
-    }
-  }, [messageId]);
-  return showRetry ? (
-    <ItemWithDataTestId onClick={onRetry}>{window.i18n('resend')}</ItemWithDataTestId>
-  ) : null;
-};
-
 export const showMessageInfoOverlay = async ({
   messageId,
   dispatch,
@@ -247,6 +206,7 @@ export const MessageContextMenu = (props: Props) => {
   const { messageId, contextMenuId, enableReactions } = props;
   const dispatch = useDispatch();
   const { hideAll } = useContextMenu();
+  const legacyGroupIsDeprecated = useSelectedDisableLegacyGroupDeprecatedActions();
 
   const isSelectedBlocked = useSelectedIsBlocked();
   const convoId = useSelectedConversationKey();
@@ -395,6 +355,39 @@ export const MessageContextMenu = (props: Props) => {
   if (!convoId) {
     return null;
   }
+
+  if (legacyGroupIsDeprecated) {
+    return (
+      <StyledMessageContextMenu ref={contextMenuRef}>
+        <SessionContextMenuContainer>
+          <Menu
+            id={contextMenuId}
+            onVisibilityChange={onVisibilityChange}
+            animation={getMenuAnimation()}
+          >
+            {attachments?.length && attachments.every(m => !m.pending && m.path) ? (
+              <ItemWithDataTestId onClick={saveAttachment}>
+                {window.i18n('save')}
+              </ItemWithDataTestId>
+            ) : null}
+            <ItemWithDataTestId onClick={copyText}>{window.i18n('copy')}</ItemWithDataTestId>
+            <ItemWithDataTestId
+              onClick={() => {
+                void showMessageInfoOverlay({ messageId, dispatch });
+              }}
+            >
+              <Localizer token="info" />
+            </ItemWithDataTestId>
+            {/* this is a message in the view, so always private */}
+            {sender && showCopyAccountIdAction({ isPrivate: true, pubkey: sender }) ? (
+              <CopyAccountIdMenuItem pubkey={sender} />
+            ) : null}
+          </Menu>
+        </SessionContextMenuContainer>
+      </StyledMessageContextMenu>
+    );
+  }
+
   return (
     <StyledMessageContextMenu ref={contextMenuRef}>
       {enableReactions && showEmojiPanel && (
@@ -444,7 +437,7 @@ export const MessageContextMenu = (props: Props) => {
           <RetryItem messageId={messageId} />
           {isDeletable ? (
             <ItemWithDataTestId onClick={onSelect}>
-              <Localizer token="messageSelect" />
+              <Localizer token="select" />
             </ItemWithDataTestId>
           ) : null}
           <DeleteItem messageId={messageId} />

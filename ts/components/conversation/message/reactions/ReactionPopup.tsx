@@ -5,7 +5,7 @@ import { PubKey } from '../../../../session/types/PubKey';
 
 import { Localizer } from '../../../basic/Localizer';
 import { nativeEmojiData } from '../../../../util/emoji';
-import type { LocalizerComponentPropsObject } from '../../../../types/localizer';
+import type { LocalizerComponentPropsObject } from '../../../../localization/localeTools';
 
 export type TipPosition = 'center' | 'left' | 'right';
 

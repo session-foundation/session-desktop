@@ -1,7 +1,6 @@
 import classNames from 'classnames';
 import { isEmpty } from 'lodash';
 
-import { useSelector } from 'react-redux';
 import { useConvoIdFromContext } from '../../../contexts/ConvoIdContext';
 import {
   useHasUnread,
@@ -12,7 +11,7 @@ import {
 } from '../../../hooks/useParamSelector';
 import { LastMessageStatusType } from '../../../state/ducks/types';
 import { useIsSearching } from '../../../state/selectors/search';
-import { getIsMessageRequestOverlayShown } from '../../../state/selectors/section';
+import { useIsMessageRequestOverlayShown } from '../../../state/selectors/section';
 import { assertUnreachable } from '../../../types/sqlSharedTypes';
 import { TypingAnimation } from '../../conversation/TypingAnimation';
 import { MessageBody } from '../../conversation/message/message-content/MessageBody';
@@ -26,7 +25,7 @@ export const MessageItem = () => {
 
   const hasUnread = useHasUnread(conversationId);
   const isConvoTyping = useIsTyping(conversationId);
-  const isMessageRequest = useSelector(getIsMessageRequestOverlayShown);
+  const isMessageRequest = useIsMessageRequestOverlayShown();
   const isOutgoingRequest = useIsOutgoingRequest(conversationId);
 
   const isSearching = useIsSearching();
@@ -48,6 +47,7 @@ export const MessageItem = () => {
   if (isEmpty(text)) {
     return null;
   }
+  const withoutHtmlTags = text.replaceAll(/(<([^>]+)>)/gi, '');
 
   return (
     <div className="module-conversation-list-item__message">
@@ -60,7 +60,12 @@ export const MessageItem = () => {
         {isConvoTyping ? (
           <TypingAnimation />
         ) : (
-          <MessageBody text={text} disableJumbomoji={true} disableLinks={true} isGroup={isGroup} />
+          <MessageBody
+            text={withoutHtmlTags}
+            disableJumbomoji={true}
+            disableLinks={true}
+            isGroup={isGroup}
+          />
         )}
       </div>
       {!isSearching && lastMessage && lastMessage.status && !isMessageRequest ? (

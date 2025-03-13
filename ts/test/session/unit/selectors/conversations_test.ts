@@ -8,7 +8,6 @@ import {
   _getSortedConversations,
 } from '../../../../state/selectors/conversations';
 import { TestUtils } from '../../../test-utils';
-import { resetLocaleAndTranslationDict } from '../../../../util/i18n/shared';
 
 describe('state/selectors/conversations', () => {
   beforeEach(() => {
@@ -16,7 +15,6 @@ describe('state/selectors/conversations', () => {
     TestUtils.stubI18n();
   });
   afterEach(() => {
-    resetLocaleAndTranslationDict();
     Sinon.restore();
   });
   describe('#getSortedConversationsList', () => {
@@ -33,7 +31,6 @@ describe('state/selectors/conversations', () => {
           isTyping: false,
           isBlocked: false,
           isKickedFromGroup: false,
-          left: false,
           isPublic: false,
           currentNotificationSetting: 'all',
           weAreAdmin: false,
@@ -57,7 +54,6 @@ describe('state/selectors/conversations', () => {
           isTyping: false,
           isBlocked: false,
           isKickedFromGroup: false,
-          left: false,
           isPublic: false,
           currentNotificationSetting: 'all',
           weAreAdmin: false,
@@ -80,7 +76,6 @@ describe('state/selectors/conversations', () => {
           isTyping: false,
           isBlocked: false,
           isKickedFromGroup: false,
-          left: false,
           isPublic: false,
           currentNotificationSetting: 'all',
           weAreAdmin: false,
@@ -103,7 +98,6 @@ describe('state/selectors/conversations', () => {
           isTyping: false,
           isBlocked: false,
           isKickedFromGroup: false,
-          left: false,
           isPublic: false,
           currentNotificationSetting: 'all',
           weAreAdmin: false,
@@ -126,13 +120,11 @@ describe('state/selectors/conversations', () => {
           isTyping: false,
           isBlocked: false,
           isKickedFromGroup: false,
-          left: false,
           isPublic: false,
           expireTimer: 0,
           currentNotificationSetting: 'all',
           weAreAdmin: false,
           isPrivate: false,
-
           avatarPath: '',
           groupAdmins: [],
           lastMessage: undefined,
@@ -165,7 +157,6 @@ describe('state/selectors/conversations', () => {
           isTyping: false,
           isBlocked: false,
           isKickedFromGroup: false,
-          left: false,
           expireTimer: 0,
           currentNotificationSetting: 'all',
           weAreAdmin: false,
@@ -190,7 +181,6 @@ describe('state/selectors/conversations', () => {
           isTyping: false,
           isBlocked: false,
           isKickedFromGroup: false,
-          left: false,
           expireTimer: 0,
           currentNotificationSetting: 'all',
           weAreAdmin: false,
@@ -215,7 +205,6 @@ describe('state/selectors/conversations', () => {
           isTyping: false,
           isBlocked: false,
           isKickedFromGroup: false,
-          left: false,
           expireTimer: 0,
           currentNotificationSetting: 'all',
           weAreAdmin: false,
@@ -240,7 +229,6 @@ describe('state/selectors/conversations', () => {
           isTyping: false,
           isBlocked: false,
           isKickedFromGroup: false,
-          left: false,
           expireTimer: 0,
           currentNotificationSetting: 'all',
           weAreAdmin: false,
@@ -264,7 +252,6 @@ describe('state/selectors/conversations', () => {
           isTyping: false,
           isBlocked: false,
           isKickedFromGroup: false,
-          left: false,
 
           expireTimer: 0,
           currentNotificationSetting: 'all',

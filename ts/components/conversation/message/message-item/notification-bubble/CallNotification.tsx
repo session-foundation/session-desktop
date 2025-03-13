@@ -1,15 +1,17 @@
-import { CallNotificationType, PropsForCallNotification } from '../../../../../state/ducks/types';
+import { CallNotificationType } from '../../../../../state/ducks/types';
 
 import { useSelectedNicknameOrProfileNameOrShortenedPubkey } from '../../../../../state/selectors/selectedConversation';
-import type { LocalizerToken } from '../../../../../types/localizer';
 import { SessionIconType } from '../../../../icon';
 import { ExpirableReadableMessage } from '../ExpirableReadableMessage';
 import { NotificationBubble } from './NotificationBubble';
 import { Localizer } from '../../../../basic/Localizer';
+import { MergedLocalizerTokens } from '../../../../../localization/localeTools';
+import type { WithMessageId } from '../../../../../session/types/with';
+import { useMessageCallNotificationType } from '../../../../../state/selectors';
 
 type StyleType = Record<
   CallNotificationType,
-  { notificationTextKey: LocalizerToken; iconType: SessionIconType; iconColor: string }
+  { notificationTextKey: MergedLocalizerTokens; iconType: SessionIconType; iconColor: string }
 >;
 
 const style = {
@@ -30,10 +32,16 @@ const style = {
   },
 } satisfies StyleType;
 
-export const CallNotification = (props: PropsForCallNotification) => {
-  const { messageId, notificationType } = props;
+export const CallNotification = (props: WithMessageId) => {
+  const { messageId } = props;
+
+  const notificationType = useMessageCallNotificationType(messageId);
 
   const name = useSelectedNicknameOrProfileNameOrShortenedPubkey() ?? window.i18n('unknown');
+
+  if (!notificationType) {
+    return null;
+  }
 
   const { iconColor, iconType, notificationTextKey } = style[notificationType];
 
@@ -45,7 +53,11 @@ export const CallNotification = (props: PropsForCallNotification) => {
       isControlMessage={true}
     >
       <NotificationBubble iconType={iconType} iconColor={iconColor}>
-        <Localizer token={notificationTextKey} args={{ name }} />
+        {notificationTextKey === 'callsInProgress' ? (
+          <Localizer token={notificationTextKey} />
+        ) : (
+          <Localizer token={notificationTextKey} args={{ name }} />
+        )}
       </NotificationBubble>
     </ExpirableReadableMessage>
   );

@@ -20,6 +20,9 @@ const getHasShiftSendEnabled = (state: StateType) =>
 const getHideRecoveryPassword = (state: StateType) =>
   state.settings.settingsBools[SettingsKey.hideRecoveryPassword];
 
+const getShowOnboardingAccountJustCreated = (state: StateType) =>
+  state.settings.settingsBools[SettingsKey.showOnboardingAccountJustCreated];
+
 export const useHasLinkPreviewEnabled = () => {
   const value = useSelector(getLinkPreviewEnabled);
   return Boolean(value);
@@ -48,6 +51,12 @@ export const useHasEnterSendEnabled = () => {
 
 export const useHideRecoveryPasswordEnabled = () => {
   const value = useSelector(getHideRecoveryPassword);
+
+  return Boolean(value);
+};
+
+export const useShowOnboardingAccountJustCreated = () => {
+  const value = useSelector(getShowOnboardingAccountJustCreated);
 
   return Boolean(value);
 };

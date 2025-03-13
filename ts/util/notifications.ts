@@ -6,12 +6,7 @@ import { isMacOS } from '../OS';
 import { isAudioNotificationSupported } from '../types/Settings';
 import { isWindowFocused } from './focusListener';
 import { Storage } from './storage';
-
-const SettingNames = {
-  COUNT: 'count',
-  NAME: 'name',
-  MESSAGE: 'message',
-};
+import { LOCALE_DEFAULTS } from '../localization/constants';
 
 function filter(text?: string) {
   return (text || '')
@@ -116,6 +111,70 @@ function clearByMessageId(messageId: string) {
   }
 }
 
+function getNotificationDetails(
+  notifications: Array<SessionNotification>,
+  userSetting: UserSetting
+) {
+  if (!notifications.length) {
+    return null;
+  }
+  if (userSetting === 'off') {
+    return null;
+  }
+
+  const messagesNotificationCount = currentNotifications.length;
+
+  // NOTE: i18n has more complex rules for pluralization than just
+  // distinguishing between zero (0) and other (non-zero),
+  // e.g. Russian:
+  // http://docs.translatehouse.org/projects/localization-guide/en/latest/l10n/pluralforms.html
+  const newMessageCountLabel = window.i18n('messageNew', { count: messagesNotificationCount });
+
+  const lastNotification = last(currentNotifications);
+
+  if (!lastNotification || messagesNotificationCount <= 0) {
+    return null;
+  }
+  const lastNotificationTitle = lastNotification.title;
+  const lastNotificationMessage = lastNotification.message;
+  const mostRecentFrom = window.i18n('notificationsMostRecent', { name: lastNotificationTitle });
+
+  // if the last message is an expiring one, fallback to the COUNT only option so we don't leak the message in the notification status
+  // on macos.
+  const overriddenUserSetting: UserSetting =
+    lastNotification.isExpiringMessage && isMacOS() ? 'count' : userSetting;
+
+  switch (overriddenUserSetting) {
+    case 'name': {
+      return {
+        title: newMessageCountLabel,
+        iconUrl: lastNotification.iconUrl,
+        message:
+          messagesNotificationCount === 1
+            ? `${window.i18n('from')} ${lastNotificationTitle}`
+            : mostRecentFrom,
+      };
+    }
+    case 'message':
+      return {
+        title: messagesNotificationCount === 1 ? lastNotificationTitle : newMessageCountLabel,
+        iconUrl: lastNotification.iconUrl,
+        message:
+          messagesNotificationCount === 1
+            ? lastNotificationMessage
+            : `${mostRecentFrom}: ${lastNotificationMessage}`,
+      };
+    case 'count':
+    default:
+      // default case: assume we want the most privacy so COUNT of messages only
+      return {
+        title: LOCALE_DEFAULTS.app_name,
+        message: newMessageCountLabel,
+        iconUrl: null,
+      };
+  }
+}
+
 function update(forceRefresh = false) {
   if (lastNotificationDisplayed) {
     lastNotificationDisplayed.close();
@@ -126,7 +185,6 @@ function update(forceRefresh = false) {
   const isAudioNotificationEnabled =
     (Storage.get(SettingsKey.settingsAudioNotification) as boolean) || false;
   const audioNotificationSupported = isAudioNotificationSupported();
-  // const isNotificationGroupingSupported = Settings.isNotificationGroupingSupported();
   const numNotifications = currentNotifications.length;
   const userSetting = getUserSetting();
 
@@ -154,18 +212,6 @@ function update(forceRefresh = false) {
     return;
   }
 
-  let title;
-  let message;
-  let iconUrl;
-
-  const messagesNotificationCount = currentNotifications.length;
-
-  // NOTE: i18n has more complex rules for pluralization than just
-  // distinguishing between zero (0) and other (non-zero),
-  // e.g. Russian:
-  // http://docs.translatehouse.org/projects/localization-guide/en/latest/l10n/pluralforms.html
-  const newMessageCountLabel = window.i18n('messageNew', { count: messagesNotificationCount });
-
   if (!currentNotifications.length) {
     return;
   }
@@ -176,50 +222,14 @@ function update(forceRefresh = false) {
     return;
   }
 
-  switch (userSetting) {
-    case SettingNames.COUNT:
-      title = 'Session';
-
-      if (messagesNotificationCount > 0) {
-        message = newMessageCountLabel;
-      } else {
-        return;
-      }
-      break;
-    case SettingNames.NAME: {
-      const lastMessageTitle = lastNotification.title;
-      title = newMessageCountLabel;
-      // eslint-disable-next-line prefer-destructuring
-      iconUrl = lastNotification.iconUrl;
-      if (messagesNotificationCount === 1) {
-        message = `${window.i18n('from')} ${lastMessageTitle}`;
-      } else {
-        message = window.i18n('notificationsMostRecent', { name: lastMessageTitle });
-      }
-      break;
-    }
-    case SettingNames.MESSAGE:
-      if (messagesNotificationCount === 1) {
-        // eslint-disable-next-line prefer-destructuring
-        title = lastNotification.title;
-        // eslint-disable-next-line prefer-destructuring
-        message = lastNotification.message;
-      } else {
-        title = newMessageCountLabel;
-        message = `${window.i18n('notificationsMostRecent', { name: title })} ${
-          lastNotification.message
-        }`;
-      }
-      // eslint-disable-next-line prefer-destructuring
-      iconUrl = lastNotification.iconUrl;
-      break;
-    default:
-      window.log.error(`Error: Unknown user notification setting: '${userSetting}'`);
-  }
-
-  const shouldHideExpiringMessageBody = lastNotification.isExpiringMessage && isMacOS();
-  if (shouldHideExpiringMessageBody) {
-    message = window.i18n('messageNew', { count: messagesNotificationCount });
+  // We continue to build up more and more messages for our notifications
+  // until the user comes back to our app or closes the app. Then we’ll
+  // clear everything out. The good news is that we'll have a maximum of
+  // 1 notification in the Notification area (something like
+  // ‘10 new messages’) assuming that `Notification::close` does its job.
+  const details = getNotificationDetails(currentNotifications, getUserSetting());
+  if (!details) {
+    return;
   }
 
   window.drawAttention();
@@ -229,23 +239,17 @@ function update(forceRefresh = false) {
     }
     void sound.play();
   }
-  lastNotificationDisplayed = new Notification(title || '', {
-    body: window.platform === 'linux' ? filter(message) : message,
-    icon: iconUrl || undefined,
+  lastNotificationDisplayed = new Notification(details.title || '', {
+    body: window.platform === 'linux' ? filter(details.message) : details.message,
+    icon: details.iconUrl || undefined,
     silent: true,
   });
   lastNotificationDisplayed.onclick = () => {
     window.openFromNotification(lastNotification.conversationId);
   };
-
-  // We continue to build up more and more messages for our notifications
-  // until the user comes back to our app or closes the app. Then we’ll
-  // clear everything out. The good news is that we'll have a maximum of
-  // 1 notification in the Notification area (something like
-  // ‘10 new messages’) assuming that `Notification::close` does its job.
 }
 function getUserSetting() {
-  return (Storage.get('notification-setting') as UserSetting) || SettingNames.MESSAGE;
+  return (Storage.get('notification-setting') as UserSetting) || 'message';
 }
 function onRemove() {
   // window.log.info('Remove notification');

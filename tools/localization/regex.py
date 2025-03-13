@@ -18,7 +18,7 @@ def get_localization_regex_list(string):
     fr"i18n\('{key}'(, {{[\S\s.]*}})?\)",
     fr"i18n\.(stripped|inEnglish|getRawMessage)\('{key}'(, {{[\S\s.]*}})?\)",
     fr"window\?\.i18n\?\.\('{key}'(, {{[\S\s.]*}})?\)",
-    fr"<StyledI18nSubText[\S\s.]*token=[\S\s.]*{key}[\S\s.]*"
+    fr"<I18nSubText[\S\s.]*token=[\S\s.]*{key}[\S\s.]*"
   ]
 
 

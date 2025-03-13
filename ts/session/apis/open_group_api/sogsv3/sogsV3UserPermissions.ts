@@ -7,6 +7,7 @@ import AbortController from 'abort-controller';
 import { PubKey } from '../../../types';
 import { OpenGroupRequestCommonType } from '../../../../data/types';
 import { sogsBatchSend } from './sogsV3BatchPoll';
+import { DURATION } from '../../../constants';
 
 export type OpenGroupPermissionType = 'access' | 'read' | 'upload' | 'write';
 
@@ -27,7 +28,8 @@ export const sogsV3AddPermissions = async (
         permsToAdd: permissions,
       },
     })),
-    'batch'
+    'batch',
+    10 * DURATION.SECONDS
   );
   const isSuccess = batchSendResponse?.body?.every(m => m?.code === 200) || false;
   if (!isSuccess) {
@@ -53,7 +55,8 @@ export const sogsV3ClearPermissions = async (
         permsToClear: permissions,
       },
     })),
-    'batch'
+    'batch',
+    10 * DURATION.SECONDS
   );
   const isSuccess = batchSendResponse?.body?.every(m => m?.code === 200) || false;
   if (!isSuccess) {

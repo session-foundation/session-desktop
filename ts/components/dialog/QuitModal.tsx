@@ -8,7 +8,7 @@ import { Flex } from '../basic/Flex';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SpacerLG, SpacerSM } from '../basic/Text';
 import { SessionConfirmDialogProps } from './SessionConfirm';
-import { StyledI18nSubText } from '../basic/StyledI18nSubText';
+import { I18nSubText } from '../basic/I18nSubText';
 
 const modalStyle: CSSProperties = {
   maxWidth: '300px',
@@ -85,7 +85,7 @@ export const QuitModal = (props: SessionConfirmDialogProps) => {
           style={modalStyle}
         >
           <SpacerLG />
-          <StyledI18nSubText {...i18nMessage}></StyledI18nSubText>
+          <I18nSubText localizerProps={i18nMessage} dataTestId="modal-description" />
           <SpacerLG />
         </Flex>
       ) : null}

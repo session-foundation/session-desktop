@@ -11,39 +11,39 @@ import {
   autoOrientJPEGAttachment,
   captureDimensionsAndScreenshot,
   deleteData,
+  deleteDataSuccessful,
   loadData,
   replaceUnicodeV2,
 } from './attachments/migrations';
 
 // NOTE I think this is only used on the renderer side, but how?!
-export const deleteExternalMessageFiles = async (message: {
-  attachments: any;
-  quote: any;
-  preview: any;
+export const deleteExternalMessageFiles = async (messageAttributes: {
+  attachments: Array<any> | undefined;
+  quote: { attachments: Array<any> | undefined };
+  preview: Array<any> | undefined;
 }) => {
-  const { attachments, quote, preview } = message;
+  let anyChanges = false;
+  const { attachments, preview } = messageAttributes;
 
   if (attachments && attachments.length) {
     await Promise.all(attachments.map(deleteData));
-  }
+    anyChanges = true;
 
-  if (quote && quote.attachments && quote.attachments.length) {
-    await Promise.all(
-      quote.attachments.map(async (_attachment: { thumbnail: any }) => {
-        const attachment = _attachment;
-        const { thumbnail } = attachment;
+    // test that the files were deleted successfully
+    try {
+      let results = await Promise.allSettled(attachments.map(deleteDataSuccessful));
+      results = results.filter(result => result.status === 'rejected');
 
-        // To prevent spoofing, we copy the original image from the quoted message.
-        //   If so, it will have a 'copied' field. We don't want to delete it if it has
-        //   that field set to true.
-        if (thumbnail && thumbnail.path && !thumbnail.copied) {
-          await deleteOnDisk(thumbnail.path);
-        }
-
-        attachment.thumbnail = undefined;
-        return attachment;
-      })
-    );
+      if (results.length) {
+        throw Error;
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        '[deleteExternalMessageFiles]: Failed to delete attachments for',
+        messageAttributes
+      );
+    }
   }
 
   if (preview && preview.length) {
@@ -57,10 +57,13 @@ export const deleteExternalMessageFiles = async (message: {
         }
 
         item.image = undefined;
+        anyChanges = true;
+
         return image;
       })
     );
   }
+  return anyChanges;
 };
 
 let attachmentsPath: string | undefined;

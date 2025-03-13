@@ -4,6 +4,7 @@ import { ThemeColorVariables } from './variableColors';
 
 export const oceanDark: ThemeColorVariables = {
   '--danger-color': THEMES.OCEAN_DARK.DANGER,
+  '--warning-color': THEMES.OCEAN_DARK.WARNING,
   '--disabled-color': THEMES.OCEAN_DARK.DISABLED,
 
   '--background-primary-color': THEMES.OCEAN_DARK.COLOR1,
@@ -64,6 +65,7 @@ export const oceanDark: ThemeColorVariables = {
 
   '--button-simple-text-color': 'var(--text-primary-color)',
   '--button-simple-disabled-color': 'var(--disabled-color)',
+  '--button-simple-text-hover-color': 'var(--disabled-color)',
 
   '--button-icon-background-color': 'var(--transparent-color)',
   '--button-icon-stroke-color': 'var(--text-secondary-color)',

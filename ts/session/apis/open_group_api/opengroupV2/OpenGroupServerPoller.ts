@@ -295,7 +295,8 @@ export class OpenGroupServerPoller {
         this.roomIdsToPoll,
         this.abortController.signal,
         subrequestOptions,
-        'batch'
+        'batch',
+        10 * DURATION.SECONDS
       );
 
       if (!batchPollResults) {

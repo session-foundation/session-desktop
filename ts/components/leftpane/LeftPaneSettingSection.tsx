@@ -1,3 +1,4 @@
+import { SessionDataTestId } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 
@@ -45,6 +46,7 @@ const StyledIconContainer = styled.div`
 type Categories = {
   id: SessionSettingCategory;
   title: string;
+  dataTestId: SessionDataTestId;
   icon: {
     type: SessionIconType;
     size: number;
@@ -58,60 +60,57 @@ const getCategories = (): Array<Categories> => {
     {
       id: 'privacy' as const,
       title: window.i18n('sessionPrivacy'),
-      icon: { type: 'padlock', ...forcedSize },
+      icon: { type: 'padlock' as const, ...forcedSize },
     },
     {
       id: 'notifications' as const,
       title: window.i18n('sessionNotifications'),
-      icon: { type: 'speaker', ...forcedSize },
+      icon: { type: 'speaker' as const, ...forcedSize },
     },
     {
       id: 'conversations' as const,
       title: window.i18n('sessionConversations'),
-      icon: { type: 'chatBubble', ...forcedSize },
+      icon: { type: 'chatBubble' as const, ...forcedSize },
     },
     {
-      id: 'messageRequests' as const,
+      id: 'message-requests' as const,
       title: window.i18n('sessionMessageRequests'),
-      icon: { type: 'messageRequest', ...forcedSize },
+      icon: { type: 'messageRequest' as const, ...forcedSize },
     },
     {
       id: 'appearance' as const,
       title: window.i18n('sessionAppearance'),
-      icon: { type: 'paintbrush', ...forcedSize },
+      icon: { type: 'paintbrush' as const, ...forcedSize },
     },
     {
-      id: 'permissions',
+      id: 'permissions' as const,
       title: window.i18n('sessionPermissions'),
-      icon: { type: 'checkCircle', ...forcedSize },
+      icon: { type: 'checkCircle' as const, ...forcedSize },
     },
     {
       id: 'help' as const,
       title: window.i18n('sessionHelp'),
-      icon: { type: 'question', ...forcedSize },
+      icon: { type: 'question' as const, ...forcedSize },
     },
     {
-      id: 'recoveryPassword' as const,
+      id: 'recovery-password' as const,
       title: window.i18n('sessionRecoveryPassword'),
-      icon: { type: 'recoveryPasswordFill', ...forcedSize },
+      icon: { type: 'recoveryPasswordFill' as const, ...forcedSize },
     },
     {
-      id: 'clearData' as const,
+      id: 'clear-data' as const,
       title: window.i18n('sessionClearData'),
-      icon: { type: 'delete', ...forcedSize, color: 'var(--danger-color)' },
+      icon: { type: 'delete' as const, ...forcedSize, color: 'var(--danger-color)' },
     },
-  ];
+  ].map(m => ({ ...m, dataTestId: `${m.id}-settings-menu-item` as const }));
 };
 
-const LeftPaneSettingsCategoryRow = (props: { item: Categories }) => {
-  const { item } = props;
-  const { id, title, icon } = item;
+const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
+  const { id, title, icon, dataTestId } = item;
   const dispatch = useDispatch();
   const focusedSettingsSection = useSelector(getFocusedSettingsSection);
 
-  const dataTestId = `${title.toLowerCase().replace(' ', '-')}-settings-menu-item`;
-
-  const isClearData = id === 'clearData';
+  const isClearData = id === 'clear-data';
 
   return (
     <StyledSettingsListItem
@@ -126,12 +125,12 @@ const LeftPaneSettingsCategoryRow = (props: { item: Categories }) => {
       padding={'0px var(--margins-md) 0 var(--margins-sm)'}
       onClick={() => {
         switch (id) {
-          case 'messageRequests':
+          case 'message-requests':
             dispatch(showLeftPaneSection(SectionType.Message));
             dispatch(setLeftOverlayMode('message-requests'));
             dispatch(resetConversationExternal());
             break;
-          case 'clearData':
+          case 'clear-data':
             dispatch(updateDeleteAccountModal({}));
             break;
           default:
@@ -169,7 +168,7 @@ const LeftPaneSettingsCategories = () => {
   const hideRecoveryPassword = useHideRecoveryPasswordEnabled();
 
   if (hideRecoveryPassword) {
-    categories = categories.filter(category => category.id !== 'recoveryPassword');
+    categories = categories.filter(category => category.id !== 'recovery-password');
   }
 
   return (

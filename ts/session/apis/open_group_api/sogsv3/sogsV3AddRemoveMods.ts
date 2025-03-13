@@ -4,6 +4,7 @@ import AbortController from 'abort-controller';
 import { PubKey } from '../../../types';
 import { batchFirstSubIsSuccess, sogsBatchSend } from './sogsV3BatchPoll';
 import { OpenGroupRequestCommonType } from '../../../../data/types';
+import { DURATION } from '../../../constants';
 
 /**
  * Add those pubkeys as admins.
@@ -27,7 +28,8 @@ export const sogsV3AddAdmin = async (
         },
       },
     ],
-    'batch'
+    'batch',
+    10 * DURATION.SECONDS
   );
   const isSuccess = batchFirstSubIsSuccess(batchSendResponse);
   if (!isSuccess) {
@@ -58,7 +60,8 @@ export const sogsV3RemoveAdmins = async (
         },
       },
     ],
-    'batch'
+    'batch',
+    10 * DURATION.SECONDS
   );
   const isSuccess = batchSendResponse?.body?.every(m => m?.code === 200) || false;
   if (!isSuccess) {

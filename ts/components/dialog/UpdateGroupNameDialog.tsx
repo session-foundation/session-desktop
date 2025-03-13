@@ -1,21 +1,26 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import autoBind from 'auto-bind';
+import { useState } from 'react';
 
 import { motion } from 'framer-motion';
-import { Component } from 'react';
+import { useDispatch } from 'react-redux';
+import useKey from 'react-use/lib/useKey';
 import styled from 'styled-components';
-import { ConversationModel } from '../../models/conversation';
-import { getConversationController } from '../../session/conversations';
-import { initiateClosedGroupUpdate } from '../../session/group/closed-group';
+import { useIsClosedGroup, useIsPublic } from '../../hooks/useParamSelector';
+import { ConvoHub } from '../../session/conversations';
+import { ClosedGroup } from '../../session/group/closed-group';
 import { initiateOpenGroupUpdate } from '../../session/group/open-group';
+import { PubKey } from '../../session/types';
+import LIBSESSION_CONSTANTS from '../../session/utils/libsession/libsession_constants';
+import { groupInfoActions } from '../../state/ducks/metaGroups';
 import { updateGroupNameModal } from '../../state/ducks/modalDialog';
+import { useGroupNameChangeFromUIPending } from '../../state/selectors/groups';
 import { THEME_GLOBALS } from '../../themes/globals';
 import { pickFileForAvatar } from '../../types/attachments/VisualAttachment';
 import { SessionWrapperModal } from '../SessionWrapperModal';
 import { Avatar, AvatarSize } from '../avatar/Avatar';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SpacerMD } from '../basic/Text';
-import LIBSESSION_CONSTANTS from '../../session/utils/libsession/libsession_constants';
+import { SessionSpinner } from '../loading';
 
 const StyledErrorMessage = styled(motion.p)`
   text-align: center;
@@ -24,214 +29,199 @@ const StyledErrorMessage = styled(motion.p)`
   user-select: none;
 `;
 
-type Props = {
+function GroupAvatar({
+  isPublic,
+  conversationId,
+  fireInputEvent,
+  newAvatarObjecturl,
+  oldAvatarPath,
+}: {
+  isPublic: boolean;
   conversationId: string;
-};
-
-interface State {
-  groupName: string | undefined;
-  errorDisplayed: boolean;
-  errorMessage: string;
-  oldAvatarPath: string | null;
   newAvatarObjecturl: string | null;
+  oldAvatarPath: string | null;
+  fireInputEvent: () => Promise<void>;
+}) {
+  if (!isPublic) {
+    return null;
+  }
+
+  return (
+    <div className="avatar-center">
+      <div className="avatar-center-inner">
+        <Avatar
+          forcedAvatarPath={newAvatarObjecturl || oldAvatarPath}
+          size={AvatarSize.XL}
+          pubkey={conversationId}
+        />
+        <div className="image-upload-section" role="button" onClick={fireInputEvent} />
+      </div>
+    </div>
+  );
 }
 
-export class UpdateGroupNameDialog extends Component<Props, State> {
-  private readonly convo: ConversationModel;
+export function UpdateGroupNameDialog(props: { conversationId: string }) {
+  const dispatch = useDispatch();
+  const { conversationId } = props;
+  const [errorMsg, setErrorMsg] = useState('');
+  const [errorDisplayed, setErrorDisplayed] = useState(false);
+  const [newAvatarObjecturl, setNewAvatarObjecturl] = useState<string | null>(null);
+  const isCommunity = useIsPublic(conversationId);
+  const isClosedGroup = useIsClosedGroup(conversationId);
+  const convo = ConvoHub.use().get(conversationId);
+  const isNameChangePending = useGroupNameChangeFromUIPending();
 
-  constructor(props: Props) {
-    super(props);
-
-    autoBind(this);
-    this.convo = getConversationController().get(props.conversationId);
-
-    this.state = {
-      groupName: this.convo.getRealSessionUsername(),
-      errorDisplayed: false,
-      errorMessage: 'placeholder',
-      oldAvatarPath: this.convo.getAvatarPath(),
-      newAvatarObjecturl: null,
-    };
+  if (!convo) {
+    throw new Error('UpdateGroupNameDialog corresponding convo not found');
   }
 
-  public componentDidMount() {
-    window.addEventListener('keyup', this.onKeyUp);
+  const oldAvatarPath = convo?.getAvatarPath() || null;
+  const originalGroupName = convo?.getRealSessionUsername();
+  const [newGroupName, setNewGroupName] = useState(originalGroupName);
+
+  function closeDialog() {
+    dispatch(updateGroupNameModal(null));
   }
 
-  public componentWillUnmount() {
-    window.removeEventListener('keyup', this.onKeyUp);
+  function onShowError(msg: string) {
+    if (errorMsg === msg) {
+      return;
+    }
+    setErrorMsg(msg);
+    setErrorDisplayed(true);
+
+    setTimeout(() => {
+      setErrorDisplayed(false);
+    }, 3000);
   }
 
-  public onClickOK() {
-    const { groupName, newAvatarObjecturl, oldAvatarPath } = this.state;
-    const trimmedGroupName = groupName?.trim();
+  async function fireInputEvent() {
+    const scaledObjectUrl = await pickFileForAvatar();
+    if (scaledObjectUrl) {
+      setNewAvatarObjecturl(scaledObjectUrl);
+    }
+  }
+
+  function onClickOK() {
+    if (isNameChangePending) {
+      return;
+    }
+    const trimmedGroupName = newGroupName?.trim();
     if (!trimmedGroupName) {
-      this.onShowError(window.i18n('groupNameEnterPlease'));
+      onShowError(window.i18n('groupNameEnterPlease'));
 
       return;
     }
 
     if (trimmedGroupName.length > LIBSESSION_CONSTANTS.BASE_GROUP_MAX_NAME_LENGTH) {
-      this.onShowError(window.i18n('groupNameEnterShorter'));
+      onShowError(window.i18n('groupNameEnterShorter'));
 
       return;
     }
+    onShowError('');
 
-    if (
-      trimmedGroupName !== this.convo.getRealSessionUsername() ||
-      newAvatarObjecturl !== oldAvatarPath
-    ) {
-      if (this.convo.isPublic()) {
-        void initiateOpenGroupUpdate(this.convo.id, trimmedGroupName, {
+    if (trimmedGroupName !== originalGroupName || newAvatarObjecturl !== oldAvatarPath) {
+      if (isCommunity) {
+        void initiateOpenGroupUpdate(conversationId, trimmedGroupName, {
           objectUrl: newAvatarObjecturl,
         });
+        closeDialog();
       } else {
-        const members = this.convo.get('members') || [];
-
-        void initiateClosedGroupUpdate(this.convo.id, trimmedGroupName, members);
+        if (PubKey.is03Pubkey(conversationId)) {
+          const updateNameAction = groupInfoActions.currentDeviceGroupNameChange({
+            groupPk: conversationId,
+            newName: trimmedGroupName,
+          });
+          dispatch(updateNameAction as any);
+          return; // keeping the dialog open until the async thunk is done (via isNameChangePending)
+        }
+        void ClosedGroup.initiateClosedGroupUpdate(conversationId, trimmedGroupName, null);
+        closeDialog();
       }
     }
-
-    this.closeDialog();
   }
 
-  public render() {
-    const okText = window.i18n('okay');
-    const cancelText = window.i18n('cancel');
+  useKey('Escape', closeDialog);
+  useKey('Esc', closeDialog);
+  useKey('Enter', onClickOK);
 
-    const errorMsg = this.state.errorMessage;
-    const isAdmin = !this.convo.isPublic();
-
-    return (
-      <SessionWrapperModal
-        title={window.i18n('groupName')}
-        onClose={() => this.closeDialog()}
-        additionalClassName="update-group-dialog"
-      >
-        {this.state.errorDisplayed ? (
-          <>
-            <SpacerMD />
-            <StyledErrorMessage
-              initial={{ opacity: 0 }}
-              animate={{ opacity: this.state.errorDisplayed ? 1 : 0 }}
-              transition={{ duration: THEME_GLOBALS['--duration-modal-error-shown'] }}
-              style={{ marginTop: this.state.errorDisplayed ? '0' : '-5px' }}
-            >
-              {errorMsg}
-            </StyledErrorMessage>
-            <SpacerMD />
-          </>
-        ) : null}
-
-        {this.renderAvatar()}
-        <SpacerMD />
-
-        {isAdmin ? (
-          <input
-            type="text"
-            value={this.state.groupName}
-            placeholder={window.i18n('groupNameEnter')}
-            onChange={this.onGroupNameChanged}
-            tabIndex={0}
-            required={true}
-            aria-required={true}
-            autoFocus={true}
-            maxLength={LIBSESSION_CONSTANTS.BASE_GROUP_MAX_NAME_LENGTH}
-            data-testid="group-name-input"
-          />
-        ) : null}
-
-        <div className="session-modal__button-group">
-          <SessionButton
-            text={okText}
-            onClick={this.onClickOK}
-            buttonType={SessionButtonType.Simple}
-          />
-          <SessionButton
-            text={cancelText}
-            buttonColor={SessionButtonColor.Danger}
-            buttonType={SessionButtonType.Simple}
-            onClick={this.closeDialog}
-          />
-        </div>
-      </SessionWrapperModal>
-    );
+  if (!isClosedGroup && !isCommunity) {
+    throw new Error('groupNameUpdate dialog only works for communities and closed groups');
   }
 
-  private onShowError(msg: string) {
-    if (this.state.errorDisplayed) {
-      return;
-    }
+  const okText = window.i18n('okay');
+  const cancelText = window.i18n('cancel');
 
-    this.setState({
-      errorDisplayed: true,
-      errorMessage: msg,
-    });
+  const isAdmin = !isCommunity;
 
-    setTimeout(() => {
-      this.setState({
-        errorDisplayed: false,
-      });
-    }, 3000);
-  }
+  return (
+    <SessionWrapperModal
+      title={window.i18n('groupName')}
+      onClose={() => closeDialog()}
+      additionalClassName="update-group-dialog"
+    >
+      {errorMsg ? (
+        <>
+          <SpacerMD />
+          <StyledErrorMessage
+            initial={{ opacity: 0 }}
+            animate={{ opacity: errorDisplayed ? 1 : 0 }}
+            transition={{ duration: THEME_GLOBALS['--duration-modal-error-shown'] }}
+            style={{ marginTop: errorDisplayed ? '0' : '-5px' }}
+            data-testid="error-message"
+          >
+            {errorMsg}
+          </StyledErrorMessage>
+          <SpacerMD />
+        </>
+      ) : null}
 
-  private onKeyUp(event: any) {
-    switch (event.key) {
-      case 'Enter':
-        this.onClickOK();
-        break;
-      case 'Esc':
-      case 'Escape':
-        this.closeDialog();
-        break;
-      default:
-    }
-  }
+      <GroupAvatar
+        conversationId={conversationId}
+        fireInputEvent={fireInputEvent}
+        isPublic={isCommunity}
+        newAvatarObjecturl={newAvatarObjecturl}
+        oldAvatarPath={oldAvatarPath}
+      />
+      <SpacerMD />
 
-  private closeDialog() {
-    window.removeEventListener('keyup', this.onKeyUp);
+      {isAdmin ? (
+        <input
+          type="text"
+          value={newGroupName}
+          placeholder={window.i18n('groupNameEnter')}
+          onKeyDown={e => {
+            if (e.key === 'Enter') {
+              onClickOK();
+              e.preventDefault();
+            }
+          }}
+          onChange={e => setNewGroupName(e.target.value)}
+          tabIndex={0}
+          required={true}
+          aria-required={true}
+          autoFocus={true}
+          maxLength={LIBSESSION_CONSTANTS.BASE_GROUP_MAX_NAME_LENGTH}
+          data-testid="group-name-input"
+        />
+      ) : null}
 
-    window.inboxStore?.dispatch(updateGroupNameModal(null));
-  }
+      <SessionSpinner loading={isNameChangePending} />
 
-  private onGroupNameChanged(event: any) {
-    const groupName = event.target.value;
-    this.setState(state => {
-      return {
-        ...state,
-        groupName,
-      };
-    });
-  }
-
-  private renderAvatar() {
-    const isPublic = this.convo.isPublic();
-    const pubkey = this.convo.id;
-
-    const { newAvatarObjecturl, oldAvatarPath } = this.state;
-
-    if (!isPublic) {
-      return undefined;
-    }
-
-    return (
-      <div className="avatar-center">
-        <div className="avatar-center-inner">
-          <Avatar
-            forcedAvatarPath={newAvatarObjecturl || oldAvatarPath}
-            size={AvatarSize.XL}
-            pubkey={pubkey}
-          />
-          <div className="image-upload-section" role="button" onClick={this.fireInputEvent} />
-        </div>
+      <div className="session-modal__button-group">
+        <SessionButton
+          text={okText}
+          onClick={onClickOK}
+          buttonType={SessionButtonType.Simple}
+          disabled={isNameChangePending}
+        />
+        <SessionButton
+          text={cancelText}
+          buttonColor={SessionButtonColor.Danger}
+          buttonType={SessionButtonType.Simple}
+          onClick={closeDialog}
+        />
       </div>
-    );
-  }
-
-  private async fireInputEvent() {
-    const scaledObjectUrl = await pickFileForAvatar();
-    if (scaledObjectUrl) {
-      this.setState({ newAvatarObjecturl: scaledObjectUrl });
-    }
-  }
+    </SessionWrapperModal>
+  );
 }

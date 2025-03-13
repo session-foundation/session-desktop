@@ -1,7 +1,8 @@
 import { SearchIndex } from 'emoji-mart';
-import { SuggestionDataItem } from 'react-mentions';
 import styled from 'styled-components';
+import type { SuggestionDataItem } from 'react-mentions';
 import { searchSync } from '../../../util/emoji';
+import type { SessionSuggestionDataItem } from './types';
 
 const EmojiQuickResult = styled.span`
   display: flex;
@@ -27,7 +28,7 @@ export const renderEmojiQuickResultRow = (suggestion: SuggestionDataItem) => {
   );
 };
 
-export const searchEmojiForQuery = (query: string): Array<SuggestionDataItem> => {
+export const searchEmojiForQuery = (query: string): Array<SessionSuggestionDataItem> => {
   if (query.length === 0 || !SearchIndex) {
     return [];
   }

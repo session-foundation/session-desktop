@@ -21,6 +21,7 @@ const hideRecoveryPassword = 'hideRecoveryPassword';
 const latestUserProfileEnvelopeTimestamp = 'latestUserProfileEnvelopeTimestamp';
 const latestUserGroupEnvelopeTimestamp = 'latestUserGroupEnvelopeTimestamp';
 const latestUserContactsEnvelopeTimestamp = 'latestUserContactsEnvelopeTimestamp';
+const showOnboardingAccountJustCreated = 'showOnboardingAccountJustCreated';
 
 export const SettingsKey = {
   settingsReadReceipt,
@@ -44,6 +45,7 @@ export const SettingsKey = {
   latestUserContactsEnvelopeTimestamp,
   hasFollowSystemThemeEnabled,
   hideRecoveryPassword,
+  showOnboardingAccountJustCreated,
 } as const;
 
 export const KNOWN_BLINDED_KEYS_ITEM = 'KNOWN_BLINDED_KEYS_ITEM';

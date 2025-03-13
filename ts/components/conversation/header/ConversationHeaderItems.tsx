@@ -12,22 +12,19 @@ import {
 } from '../../../state/selectors/selectedConversation';
 import { Avatar, AvatarSize } from '../../avatar/Avatar';
 import { SessionIconButton } from '../../icon';
+import { useDisableLegacyGroupDeprecatedActions } from '../../../hooks/useRefreshReleasedFeaturesTimestamp';
 
-export const AvatarHeader = (props: {
-  pubkey: string;
-  onAvatarClick?: (pubkey: string) => void;
-}) => {
+export const AvatarHeader = (props: { pubkey: string; onAvatarClick?: () => void }) => {
   const { pubkey, onAvatarClick } = props;
+  const isDisabledLegacyGroupDeprecated = useDisableLegacyGroupDeprecatedActions(pubkey);
+
+  const optOnAvatarClick = !isDisabledLegacyGroupDeprecated ? onAvatarClick : undefined;
 
   return (
     <span className="module-conversation-header__avatar">
       <Avatar
         size={AvatarSize.S}
-        onAvatarClick={() => {
-          if (onAvatarClick) {
-            onAvatarClick(pubkey);
-          }
-        }}
+        onAvatarClick={optOnAvatarClick}
         pubkey={pubkey}
         dataTestId="conversation-options-avatar"
       />
@@ -55,7 +52,7 @@ export const BackButton = (props: { onGoBack: () => void; showBackButton: boolea
 export const CallButton = () => {
   const isPrivate = useSelectedIsPrivate();
   const isBlocked = useSelectedIsBlocked();
-  const activeAt = useSelectedIsActive();
+  const isActive = useSelectedIsActive();
   const isMe = useSelectedIsNoteToSelf();
   const selectedConvoKey = useSelectedConversationKey();
 
@@ -70,7 +67,7 @@ export const CallButton = () => {
     isMe ||
     !selectedConvoKey ||
     isBlocked ||
-    !activeAt ||
+    !isActive ||
     !isPrivateAndFriend // call requires us to be friends
   ) {
     return null;

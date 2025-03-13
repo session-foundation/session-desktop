@@ -6,6 +6,7 @@ import { OpenGroupV2Info } from '../opengroupV2/ApiUtil';
 import { batchGlobalIsSuccess, parseBatchGlobalStatusCode } from './sogsV3BatchPoll';
 import { fetchCapabilitiesAndUpdateRelatedRoomsOfServerUrl } from './sogsV3Capabilities';
 import { OpenGroupV2Room } from '../../../../data/types';
+import { DURATION } from '../../../constants';
 
 export const getAllRoomInfos = async (roomInfos: OpenGroupV2Room) => {
   const result = await OnionSending.sendJsonViaOnionV4ToSogs({
@@ -18,6 +19,7 @@ export const getAllRoomInfos = async (roomInfos: OpenGroupV2Room) => {
     serverUrl: roomInfos.serverUrl,
     headers: null,
     throwErrors: false,
+    timeoutMs: 10 * DURATION.SECONDS,
   });
 
   // not a batch call yet as we need to exclude headers for this call for now
@@ -89,6 +91,7 @@ export async function openGroupV2GetRoomInfoViaOnionV4({
     serverPubkey,
     headers: null,
     throwErrors: false,
+    timeoutMs: 10 * DURATION.SECONDS,
   });
   const room = result?.body as Record<string, any> | undefined;
   if (room) {

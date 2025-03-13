@@ -10,7 +10,7 @@ import styled from 'styled-components';
 import { AnimatePresence } from 'framer-motion';
 import { LeftPane } from './leftpane/LeftPane';
 // moment does not support es-419 correctly (and cause white screen on app start)
-import { getConversationController } from '../session/conversations';
+import { ConvoHub } from '../session/conversations';
 import { UserUtils } from '../session/utils';
 import { createStore } from '../state/createStore';
 import { initialCallState } from '../state/ducks/call';
@@ -31,13 +31,17 @@ import { StateType } from '../state/reducer';
 import { SessionMainPanel } from './SessionMainPanel';
 
 import { SettingsKey } from '../data/settings-key';
+import { groupInfoActions, initialGroupState } from '../state/ducks/metaGroups';
 import { getSettingsInitialState, updateAllOnStorageReady } from '../state/ducks/settings';
 import { initialSogsRoomInfoState } from '../state/ducks/sogsRoomInfo';
 import { useHasDeviceOutdatedSyncing } from '../state/selectors/settings';
 import { SessionTheme } from '../themes/SessionTheme';
 import { Storage } from '../util/storage';
+import { UserGroupsWrapperActions } from '../webworker/workers/browser/libsession_worker_interface';
 import { NoticeBanner } from './NoticeBanner';
 import { Flex } from './basic/Flex';
+import { initialReleasedFeaturesState } from '../state/ducks/releasedFeatures';
+import { initialDebugState } from '../state/ducks/debug';
 
 function makeLookup<T>(items: Array<T>, key: string): { [key: string]: T } {
   // Yep, we can't index into item without knowing what it is. True. But we want to.
@@ -51,11 +55,17 @@ const StyledGutter = styled.div`
   transition: none;
 `;
 
-function createSessionInboxStore() {
+async function createSessionInboxStore() {
   // Here we set up a full redux store with initial state for our LeftPane Root
-  const conversations = getConversationController()
+  const conversations = ConvoHub.use()
     .getConversations()
     .map(conversation => conversation.getConversationModelProps());
+
+  const userGroups: Record<string, any> = {};
+
+  (await UserGroupsWrapperActions.getAllGroups()).forEach(m => {
+    userGroups[m.pubkeyHex] = m;
+  });
 
   const initialState: StateType = {
     conversations: {
@@ -78,28 +88,43 @@ function createSessionInboxStore() {
     call: initialCallState,
     sogsRoomInfo: initialSogsRoomInfoState,
     settings: getSettingsInitialState(),
+    groups: initialGroupState,
+    userGroups: { userGroups },
+    releasedFeatures: initialReleasedFeaturesState,
+    debug: initialDebugState,
   };
 
   return createStore(initialState);
 }
 
-function setupLeftPane(forceUpdateInboxComponent: () => void) {
+async function setupLeftPane(forceUpdateInboxComponent: () => void) {
   window.openConversationWithMessages = openConversationWithMessages;
-  window.inboxStore = createSessionInboxStore();
 
-  window.inboxStore.dispatch(
+  window.inboxStore = await createSessionInboxStore();
+
+  window.inboxStore?.dispatch(
     updateAllOnStorageReady({
-      hasBlindedMsgRequestsEnabled: Storage.getBoolOrFalse(
-        SettingsKey.hasBlindedMsgRequestsEnabled
+      hasBlindedMsgRequestsEnabled: Storage.getBoolOr(
+        SettingsKey.hasBlindedMsgRequestsEnabled,
+        false
       ),
-      someDeviceOutdatedSyncing: Storage.getBoolOrFalse(SettingsKey.someDeviceOutdatedSyncing),
-      settingsLinkPreview: Storage.getBoolOrFalse(SettingsKey.settingsLinkPreview),
-      hasFollowSystemThemeEnabled: Storage.getBoolOrFalse(SettingsKey.hasFollowSystemThemeEnabled),
-      hasShiftSendEnabled: Storage.getBoolOrFalse(SettingsKey.hasShiftSendEnabled),
-      hideRecoveryPassword: Storage.getBoolOrFalse(SettingsKey.hideRecoveryPassword),
+      someDeviceOutdatedSyncing: Storage.getBoolOr(SettingsKey.someDeviceOutdatedSyncing, false),
+      settingsLinkPreview: Storage.getBoolOr(SettingsKey.settingsLinkPreview, false),
+      hasFollowSystemThemeEnabled: Storage.getBoolOr(
+        SettingsKey.hasFollowSystemThemeEnabled,
+        false
+      ),
+      hasShiftSendEnabled: Storage.getBoolOr(SettingsKey.hasShiftSendEnabled, false),
+      hideRecoveryPassword: Storage.getBoolOr(SettingsKey.hideRecoveryPassword, false),
+      showOnboardingAccountJustCreated: Storage.getBoolOr(
+        SettingsKey.showOnboardingAccountJustCreated,
+        true
+      ),
     })
   );
+  window.inboxStore?.dispatch(groupInfoActions.loadMetaDumpsFromDB() as any); // this loads the dumps from DB and fills the 03-groups slice with the corresponding details
   forceUpdateInboxComponent();
+  window.getState = window.inboxStore.getState;
 }
 
 const SomeDeviceOutdatedSyncingNotice = () => {
@@ -115,7 +140,9 @@ const SomeDeviceOutdatedSyncingNotice = () => {
   return (
     <NoticeBanner
       text={window.i18n('deleteAfterGroupFirstReleaseConfigOutdated')}
-      dismissCallback={dismiss}
+      onBannerClick={dismiss}
+      icon="exit"
+      dataTestId="some-of-your-devices-outdated-inbox"
     />
   );
 };
@@ -124,7 +151,7 @@ export const SessionInboxView = () => {
   const update = useUpdate();
   // run only on mount
   useMount(() => {
-    setupLeftPane(update);
+    void setupLeftPane(update);
   });
 
   if (!window.inboxStore) {

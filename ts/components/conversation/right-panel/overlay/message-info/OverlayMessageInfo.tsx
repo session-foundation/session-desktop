@@ -51,7 +51,8 @@ import { Message } from '../../../message/message-item/Message';
 import { AttachmentInfo, MessageInfo } from './components';
 import { AttachmentCarousel } from './components/AttachmentCarousel';
 import { ToastUtils } from '../../../../../session/utils';
-import { showCopyAccountIdAction } from '../../../../menu/items/CopyAccountId';
+import { showCopyAccountIdAction } from '../../../../menu/items/CopyAccountId/guard';
+import { useSelectedDisableLegacyGroupDeprecatedActions } from '../../../../../hooks/useRefreshReleasedFeaturesTimestamp';
 
 // NOTE we override the default max-widths when in the detail isDetailView
 const StyledMessageBody = styled.div`
@@ -103,7 +104,7 @@ const StyledMessageInfoContainer = styled.div`
 `;
 
 type MessageInfoProps = {
-  errors: Array<Error>;
+  errors?: string;
   attachments: Array<PropsForAttachment>;
 };
 
@@ -151,10 +152,7 @@ async function getPropsForMessageInfo(
       }
     }
 
-    // This will make the error message for outgoing key errors a bit nicer
-    const errors = (found.get('errors') || []).map((error: any) => {
-      return error;
-    });
+    const errors = found.get('errors');
 
     const toRet: MessageInfoProps = {
       errors,
@@ -199,6 +197,9 @@ type WithMessageIdOpt = { messageId: string };
  */
 function CopyMessageBodyButton({ messageId }: WithMessageIdOpt) {
   const messageBody = useMessageBody(messageId);
+  if (!messageBody) {
+    return null;
+  }
   return (
     <PanelIconButton
       text={window.i18n('copy')}
@@ -272,6 +273,7 @@ export const OverlayMessageInfo = () => {
   const timestamp = useMessageTimestamp(messageId);
   const serverTimestamp = useMessageServerTimestamp(messageId);
   const sender = useMessageSender(messageId);
+  const legacyGroupIsDeprecated = useSelectedDisableLegacyGroupDeprecatedActions();
 
   // we close the right panel when switching conversation so the convoId of that message is always the selectedConversationKey
   // is always the currently selected conversation
@@ -366,9 +368,9 @@ export const OverlayMessageInfo = () => {
           <PanelButtonGroup style={{ margin: '0' }}>
             {/* CopyMessageBodyButton is always shown so the PanelButtonGroup always has at least one item */}
             <CopyMessageBodyButton messageId={messageId} />
-            <ReplyToMessageButton messageId={messageId} />
+            {!legacyGroupIsDeprecated && <ReplyToMessageButton messageId={messageId} />}
             <CopySenderSessionId messageId={messageId} />
-            {hasErrors && direction === 'outgoing' && (
+            {hasErrors && !legacyGroupIsDeprecated && direction === 'outgoing' && (
               <PanelIconButton
                 text={window.i18n('resend')}
                 iconType="resend"
@@ -398,7 +400,7 @@ export const OverlayMessageInfo = () => {
                 }}
               />
             )}
-            {isDeletable && (
+            {isDeletable && !legacyGroupIsDeprecated && (
               <PanelIconButton
                 text={window.i18n('delete')}
                 iconType="delete"

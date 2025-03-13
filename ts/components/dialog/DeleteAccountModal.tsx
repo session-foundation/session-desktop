@@ -14,8 +14,8 @@ import {
 import { SessionRadioGroup } from '../basic/SessionRadioGroup';
 import { Localizer } from '../basic/Localizer';
 
-const DEVICE_ONLY = 'device_only';
-const DEVICE_AND_NETWORK = 'device_and_network';
+const DEVICE_ONLY = 'device_only' as const;
+const DEVICE_AND_NETWORK = 'device_and_network' as const;
 type DeleteModes = typeof DEVICE_ONLY | typeof DEVICE_AND_NETWORK;
 
 const DescriptionBeforeAskingConfirmation = (props: {
@@ -23,6 +23,22 @@ const DescriptionBeforeAskingConfirmation = (props: {
   setDeleteMode: (deleteMode: DeleteModes) => void;
 }) => {
   const { deleteMode, setDeleteMode } = props;
+
+  const items = [
+    {
+      label: window.i18n('clearDeviceOnly'),
+      value: DEVICE_ONLY,
+    },
+    {
+      label: window.i18n('clearDeviceAndNetwork'),
+      value: DEVICE_AND_NETWORK,
+    },
+  ].map(m => ({
+    ...m,
+    inputDataTestId: `input-${m.value}` as const,
+    labelDataTestId: `label-${m.value}` as const,
+  }));
+
   return (
     <>
       <span className="session-confirm-main-message">
@@ -38,10 +54,7 @@ const DescriptionBeforeAskingConfirmation = (props: {
             setDeleteMode(value);
           }
         }}
-        items={[
-          { label: window.i18n('clearDeviceOnly'), value: DEVICE_ONLY },
-          { label: window.i18n('clearDeviceAndNetwork'), value: 'device_and_network' },
-        ]}
+        items={items}
       />
     </>
   );

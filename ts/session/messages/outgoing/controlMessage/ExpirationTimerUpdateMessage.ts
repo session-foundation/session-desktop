@@ -19,7 +19,7 @@ export class ExpirationTimerUpdateMessage extends DataMessage {
 
   constructor(params: ExpirationTimerUpdateMessageParams) {
     super({
-      timestamp: params.timestamp,
+      createAtNetworkTimestamp: params.createAtNetworkTimestamp,
       identifier: params.identifier,
       expirationType: params.expirationType,
       expireTimer: params.expireTimer,
@@ -31,6 +31,7 @@ export class ExpirationTimerUpdateMessage extends DataMessage {
   }
 
   public contentProto(): SignalService.Content {
+    // TODO: I am pretty sure we don't need this anymore (super.contentProto does the same in DataMessage)
     return new SignalService.Content({
       ...super.contentProto(),
       dataMessage: this.dataProto(),
@@ -38,7 +39,7 @@ export class ExpirationTimerUpdateMessage extends DataMessage {
   }
 
   public dataProto(): SignalService.DataMessage {
-    const data = super.dataProto();
+    const data = new SignalService.DataMessage({});
 
     data.flags = SignalService.DataMessage.Flags.EXPIRATION_TIMER_UPDATE;
 

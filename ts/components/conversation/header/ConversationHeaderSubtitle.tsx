@@ -17,7 +17,8 @@ export const StyledSubtitleContainer = styled.div`
   align-items: center;
   justify-content: center;
   margin: 0 auto;
-  min-width: 230px;
+  // with the "Recreate group" button (temporary) visible, at min-width we have less room available
+  min-width: 180px;
 
   div:first-child {
     span:last-child {

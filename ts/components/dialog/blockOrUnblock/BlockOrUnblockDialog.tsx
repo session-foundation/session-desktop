@@ -13,7 +13,7 @@ import { Localizer } from '../../basic/Localizer';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../../basic/SessionButton';
 import { StyledModalDescriptionContainer } from '../shared/ModalDescriptionContainer';
 import { BlockOrUnblockModalState } from './BlockOrUnblockModalState';
-import type { LocalizerComponentPropsObject } from '../../../types/localizer';
+import type { LocalizerComponentPropsObject } from '../../../localization/localeTools';
 
 type ModalState = NonNullable<BlockOrUnblockModalState>;
 
@@ -86,7 +86,7 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
 
   return (
     <SessionWrapperModal showExitIcon={true} title={localizedAction} onClose={closeModal}>
-      <StyledModalDescriptionContainer data-testid="block-unblock-modal-description">
+      <StyledModalDescriptionContainer data-testid="modal-description">
         <Localizer {...args} />
       </StyledModalDescriptionContainer>
       <Flex container={true} flexDirection="column" alignItems="center">
@@ -101,10 +101,9 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
             />
             <SessionButton
               buttonType={SessionButtonType.Simple}
-              buttonColor={SessionButtonColor.White}
               onClick={closeModal}
               text={window.i18n('cancel')}
-              dataTestId="session-cancel-ok-button"
+              dataTestId="session-confirm-cancel-button"
             />
           </div>
         </Flex>

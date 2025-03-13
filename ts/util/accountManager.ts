@@ -1,5 +1,5 @@
 import { isEmpty } from 'lodash';
-import { getConversationController } from '../session/conversations';
+import { ConvoHub } from '../session/conversations';
 import { getSodiumRenderer } from '../session/crypto';
 import { ed25519Str, fromArrayBufferToBase64, fromHex, toHex } from '../session/utils/String';
 import { configurationMessageReceived, trigger } from '../shims/events';
@@ -222,7 +222,7 @@ export async function registrationDone(ourPubkey: string, displayName: string) {
   }
 
   // Ensure that we always have a conversation for ourself
-  const conversation = await getConversationController().getOrCreateAndWait(
+  const conversation = await ConvoHub.use().getOrCreateAndWait(
     ourPubkey,
     ConversationTypeEnum.PRIVATE
   );

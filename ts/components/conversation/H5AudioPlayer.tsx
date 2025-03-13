@@ -1,5 +1,5 @@
 // Audio Player
-import { useEffect, useRef, useState } from 'react';
+import { SessionDataTestId, useEffect, useRef, useState } from 'react';
 import H5AudioPlayer, { RHAP_UI } from 'react-h5-audio-player';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
@@ -9,11 +9,11 @@ import { useMessageDirection, useMessageSelected } from '../../state/selectors';
 import {
   getNextMessageToPlayId,
   getSortedMessagesOfSelectedConversation,
-  isMessageSelectionMode,
 } from '../../state/selectors/conversations';
 import { getAudioAutoplay } from '../../state/selectors/userConfig';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
 import { SessionIcon } from '../icon';
+import { useIsMessageSelectionMode } from '../../state/selectors/selectedConversation';
 
 const StyledSpeedButton = styled.div`
   padding: var(--margins-xs);
@@ -164,14 +164,14 @@ export const AudioPlayerWithEncryptedFile = (props: {
   const autoPlaySetting = useSelector(getAudioAutoplay);
   const messageProps = useSelector(getSortedMessagesOfSelectedConversation);
   const nextMessageToPlayId = useSelector(getNextMessageToPlayId);
-  const multiSelectMode = useSelector(isMessageSelectionMode);
+  const multiSelectMode = useIsMessageSelectionMode();
   const selected = useMessageSelected(messageId);
   const direction = useMessageDirection(messageId);
   const iconColor =
     direction === 'incoming'
       ? 'var(--message-bubbles-received-text-color)'
       : 'var(--message-bubbles-sent-text-color)';
-  const dataTestId = `audio-${messageId}`;
+  const dataTestId: SessionDataTestId = 'audio-player';
 
   const triggerPlayNextMessageIfNeeded = (endedMessageId: string) => {
     const justEndedMessageIndex = messageProps.findIndex(
