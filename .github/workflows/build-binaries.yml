@@ -32,7 +32,7 @@ jobs:
       fail-fast: false
       matrix:
         # this needs to be a valid target of https://www.electron.build/linux#target
-        pkg_to_build: ['deb', 'rpm', 'freebsd', 'AppImage']
+        pkg_to_build: ['deb', 'rpm', 'freebsd', 'AppImage'] # , 'qa' to add back once the sed below works (currently applied, but not in built appImage)
 
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -41,6 +41,12 @@ jobs:
 
       - name: Checkout git repo
         uses: actions/checkout@v4
+
+      - name: Patch for QA build
+        if: ${{ env.SHOULD_PUBLISH == 'false' && matrix.pkg_to_build == 'qa' }}
+        run: |
+          sed -i "s/if (isPackaged)/if (isPackaged \&\& false)/g" ts/node/config.ts
+          cat ts/node/config.ts
 
       - name: Setup & Build
         uses: ./actions/setup_and_build
@@ -52,7 +58,6 @@ jobs:
         run: yarn lint-full
 
       - name: Enforce yarn.lock has no duplicates
-        # no need to dedup yarn.lock on all platforms
         uses: ./actions/deduplicate_fail
 
         # we want to test on all platforms since some are testing the rendered menus (and are dependent on the platform)
@@ -63,7 +68,8 @@ jobs:
         # we want this to run always, except on "push" to "master"
         if: ${{ env.SHOULD_PUBLISH == 'false' }}
         run: |
-          sed -i 's/"target": \["deb"\]/"target": "${{ matrix.pkg_to_build }}"/g' package.json && yarn build-release
+          cat ts/node/config.ts
+          sed -i 's/"target": "deb"/"target": "${{ matrix.pkg_to_build == 'qa' && 'AppImage' || matrix.pkg_to_build }}"/g' package.json && yarn build-release
 
       - name: Upload artefacts ${{ matrix.pkg_to_build }}
         # we want this to run always, except on "push" to "master"
@@ -74,9 +80,9 @@ jobs:
 
       - name: Build & publish ${{ matrix.pkg_to_build }}
         # we want this to run only when on "push" to "master"
-        if: ${{ env.SHOULD_PUBLISH == 'true' }}
+        if: ${{ env.SHOULD_PUBLISH == 'true' && matrix.pkg_to_build != 'qa' }}
         run: |
-          sed -i 's/"target": \["deb"\]/"target": "${{ matrix.pkg_to_build }}"/g' package.json && yarn build-release-publish
+          sed -i 's/"target": "deb"/"target": "${{ matrix.pkg_to_build }}"/g' package.json && yarn build-release-publish
 
   build_windows:
     runs-on: windows-2022
