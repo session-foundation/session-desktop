@@ -1,8 +1,8 @@
 import os from 'os';
 import Sinon from 'sinon';
+import { expect } from 'chai';
 
 import * as Settings from '../../types/Settings';
-import { expect } from 'chai';
 
 describe('Settings', () => {
   describe('isAudioNotificationSupported', () => {
