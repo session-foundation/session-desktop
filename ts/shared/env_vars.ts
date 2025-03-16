@@ -1,8 +1,8 @@
-function envAppInstanceIncludes(prefix: string) {
+function envAppInstanceIncludes(toInclude: string) {
   if (!process.env.NODE_APP_INSTANCE) {
     return false;
   }
-  return !!process.env.NODE_APP_INSTANCE.includes(prefix);
+  return !!process.env.NODE_APP_INSTANCE.includes(toInclude);
 }
 
 export function isDevProd() {
