@@ -680,7 +680,6 @@
   "recoveryPasswordBannerTitle": "Gem din recovery password",
   "recoveryPasswordDescription": "Brug din recovery password til at indlæse din konto på nye enheder.<br/><br/>Din konto kan ikke gendannes uden din recovery password. Sørg for, at den er opbevaret et sikkert sted, og del den ikke med nogen.",
   "recoveryPasswordEnter": "Indtast din gendannelsesadgangskode",
-  "recoveryPasswordErrorLoad": "Der opstod en fejl ved indlæsning af din recovery password.<br/><br/>Eksporter dine logs, og upload derefter filen via Sessions Help Desk for at hjælpe med at løse dette problem.",
   "recoveryPasswordErrorMessageGeneric": "Please check your recovery password and try again.",
   "recoveryPasswordErrorMessageIncorrect": "Nogle af ordene i din Recovery Password er forkerte. Venligst tjek igen.",
   "recoveryPasswordErrorMessageShort": "Den indtastede Gendannelseskode er ikke lang nok. Kontroller den og prøv igen.",

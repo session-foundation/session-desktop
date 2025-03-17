@@ -680,7 +680,6 @@
   "recoveryPasswordBannerTitle": "Salvesta oma taastamisparool",
   "recoveryPasswordDescription": "Konto laadimiseks kasutage oma taastamissalasõna uutes seadmetes.<br/><br/>Teie kontot ei saa taastada ilma taastamissalasõnata. Veenduge, et see oleks turvaliselt salvestatud ja ärge jagage seda kellelegi.",
   "recoveryPasswordEnter": "Sisesta oma taastamise parool",
-  "recoveryPasswordErrorLoad": "Taastamise parooli avamisel ilmnes viga.<br/><br/>Palun ekspordi oma logifail ja laadi fail üles Session'i läbi Kasutajatoe, et sellele probleemile lahendus leida.",
   "recoveryPasswordErrorMessageGeneric": "Palun kontrollige oma taastamisparooli ja proovige uuesti.",
   "recoveryPasswordErrorMessageIncorrect": "Mõned teie taastamislause sõnad on valed. Palun kontrollige ja proovige uuesti.",
   "recoveryPasswordErrorMessageShort": "Sisestatud taastamislause ei ole piisavalt pikk. Palun kontrollige ja proovige uuesti.",

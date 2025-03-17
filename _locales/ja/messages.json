@@ -681,7 +681,6 @@
   "recoveryPasswordBannerTitle": "リカバリーパスワードを保存してください",
   "recoveryPasswordDescription": "リカバリパスワードを使用して、新しいデバイスでアカウントを読み込みます。<br/><br/> リカバリパスワードがないとアカウントを復元できません。 安全な場所に保管し、他の人と共有しないでください。",
   "recoveryPasswordEnter": "リカバリーフレーズを入力してください",
-  "recoveryPasswordErrorLoad": "回復パスワードの読み込み中にエラーが発生しました。<br/><br/>ログをエクスポートしてから、Sessionのヘルプデスクにファイルをアップロードし、この問題の解決に役立ててください。",
   "recoveryPasswordErrorMessageGeneric": "リカバリーパスワードを確認してもう一度やり直してください",
   "recoveryPasswordErrorMessageIncorrect": "いくつかのリカバリパスワードの単語が間違っています。確認して再試行してください。",
   "recoveryPasswordErrorMessageShort": "入力したリカバリーパスワードが十分な長さではありません。確認して再試行してください。",

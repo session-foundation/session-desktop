@@ -680,7 +680,6 @@
   "recoveryPasswordBannerTitle": "Stoor jou herstel wagwoord",
   "recoveryPasswordDescription": "Gebruik jou herstelwagwoord om jou rekening op nuwe toestelle te laai.<br/><br/>Jou rekening kan nie herstel word sonder jou herstelwagwoord nie. Maak seker jy stoor dit iewers veilig en moenie dit met enigiemand deel nie.",
   "recoveryPasswordEnter": "Voer jou herstel wagwoord in",
-  "recoveryPasswordErrorLoad": "‘n Fout het voorgekom tydens die laai van jou herstel wagwoord.<br/><br/>Exporteer asseblief jou logboeke, en laai dan die lêer op deur Session se Hulptoonbank om te help om hierdie probleem op te los.",
   "recoveryPasswordErrorMessageGeneric": "Gaan jou herstel wagwoord na en probeer weer.",
   "recoveryPasswordErrorMessageIncorrect": "Sommige van die woorde in jou herstel wagwoord is verkeerd. Kontroleer en probeer weer.",
   "recoveryPasswordErrorMessageShort": "Die Herwinningswagwoord wat jy ingevoer het, is nie lank genoeg nie. Gaan dit asseblief na en probeer weer.",

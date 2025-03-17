@@ -681,7 +681,6 @@
   "recoveryPasswordBannerTitle": "Uložte si svoju frázu pre obnovenie",
   "recoveryPasswordDescription": "Použite svoje recovery password na načítanie účtu na nových zariadeniach.<br/><br/>Bez recovery password váš účet nebude možné obnoviť. Uistite sa, že je uložené na bezpečnom mieste a nezdieľajte ho s nikým.",
   "recoveryPasswordEnter": "Zadajte frázu pre obnovenie",
-  "recoveryPasswordErrorLoad": "Pri pokuse o načítanie hesla na obnovenie došlo k chybe.<br/><br/>Prosím, exportujte svoje protokoly a potom súbor odošlite prostredníctvom asistenčnej služby Session, aby vám pomohli vyriešiť tento problém.",
   "recoveryPasswordErrorMessageGeneric": "Skontrolujte prosím frázu na obnovenie a skúste to znova.",
   "recoveryPasswordErrorMessageIncorrect": "Niektoré slová vo vašom Recovery Password sú nesprávne. Skontrolujte ich prosím a skúste to znova.",
   "recoveryPasswordErrorMessageShort": "Zadané heslo na obnovenie nie je dostatočne dlhé. Skontrolujte ho a skúste to znova.",

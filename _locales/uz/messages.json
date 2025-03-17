@@ -681,7 +681,6 @@
   "recoveryPasswordBannerTitle": "Qayta tiklash parolingizni saqlang",
   "recoveryPasswordDescription": "Hisobingizni yangi qurilmalarda yuklash uchun qayta parolingizdan foydalaning.<br/><br/>Hisobingiz qayta parolsiz tiklanmaydi. Unga xavfsiz va ishonchli joyda saqlanganidan ishonch hosil qiling va hech kimga oshkor qilmang.",
   "recoveryPasswordEnter": "Qayta tiklash parolingizni kiriting",
-  "recoveryPasswordErrorLoad": "Qayta tiklash parolingizni yuklashda xatolik yuz berdi.<br/><br/>Muammoni hal qilishda yordam berish uchun ilovangiz jurnallarini eksport qiling, so'ngra Session Yordam Markaziga faylni yuklang.",
   "recoveryPasswordErrorMessageGeneric": "Qayta tiklash parolingizni tekshiring va qaytadan urinib ko‘ring.",
   "recoveryPasswordErrorMessageIncorrect": "Qayta tiklash parolingizdagi ayrim so'zlar noto'g'ri. Iltimos, tekshirib ko'ring va qaytadan urinib ko'ring.",
   "recoveryPasswordErrorMessageShort": "Kiritilgan Recovery Password yetarlicha uzun emas. Iltimos, tekshiring va qayta urinib ko'ring.",

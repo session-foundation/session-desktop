@@ -681,7 +681,6 @@
   "recoveryPasswordBannerTitle": "Guarde su clave de recuperación",
   "recoveryPasswordDescription": "Usa tu contraseña de recuperación para cargar tu cuenta en nuevos dispositivos.<br/><br/>Tu cuenta no se puede recuperar sin tu contraseña de recuperación. Asegúrate de que esté guardada en un lugar seguro y no la compartas con nadie.",
   "recoveryPasswordEnter": "Ingrese su clave de recuperación",
-  "recoveryPasswordErrorLoad": "Ocurrió un error mientras intentábamos cargar tu contraseña de recuperación. <br/><br/> Por favor exporta los logs, luego sube el archivo mediante Session's Help Desk para ayudarte a resolver este problema.",
   "recoveryPasswordErrorMessageGeneric": "Por favor, comprueba tu clave de recuperación y vuelve a intentarlo.",
   "recoveryPasswordErrorMessageIncorrect": "Algunas de las palabras en tu clave de recuperación son incorrectas. Por favor verifica e inténtalo de nuevo.",
   "recoveryPasswordErrorMessageShort": "La contraseña de recuperación que ingresaste no es lo suficientemente larga. Por favor verifica e intenta nuevamente.",

@@ -681,7 +681,6 @@
   "recoveryPasswordBannerTitle": "Salva la tua password di recupero",
   "recoveryPasswordDescription": "Utilizza la tua password di recupero per caricare il tuo account su nuovi dispositivi.<br/><br/>Il tuo account non può essere ripristinato senza la tua password di recupero. Assicurati di conservarla in un luogo sicuro, riservato e di non condividerla con nessuno.",
   "recoveryPasswordEnter": "Inserisci la tua password di recupero",
-  "recoveryPasswordErrorLoad": "Si è verificato un errore durante il caricamento della tua password di recupero.<br/><br/>Esporta i log e invia il file tramite il Centro Assistenza di Session per aiutarti a risolvere il problema.",
   "recoveryPasswordErrorMessageGeneric": "Controlla la tua password di recupero e riprova.",
   "recoveryPasswordErrorMessageIncorrect": "Alcune delle parole nella tua password di recupero sono errate. Si prega di controllare e riprovare.",
   "recoveryPasswordErrorMessageShort": "La password di recupero inserita non è abbastanza lunga. Controlla e riprova.",

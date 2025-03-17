@@ -680,7 +680,6 @@
   "recoveryPasswordBannerTitle": "Захавайце свой Recovery password",
   "recoveryPasswordDescription": "Выкарыстоўвайце свой пароль для аднаўлення, каб загрузіць свой уліковы запіс на новых прыладах.<br/><br/>Ваш уліковы запіс не можа быць адноўлены без вашага пароля для аднаўлення. Захоўвайце яго ў бяспечным і надзейным месцы — і не дзяліце з нікога.",
   "recoveryPasswordEnter": "Увядзіце recovery password",
-  "recoveryPasswordErrorLoad": "Пры спробе загрузіць пароль аднаўлення адбылася памылка.<br/><br/>Калі ласка, экспартуйце свае часопісы, а затым загрузіце файл у службу падтрымкі Session, каб вырашыць гэтую праблему.",
   "recoveryPasswordErrorMessageGeneric": "Калі ласка, праверце ваш пароль для аднаўлення і паспрабуйце зноў.",
   "recoveryPasswordErrorMessageIncorrect": "Некаторыя з слоў у вашым Recovery password няправільныя. Калі ласка, праверце і паспрабуйце яшчэ раз.",
   "recoveryPasswordErrorMessageShort": "The Recovery Password you entered is not long enough. Please check and try again.",

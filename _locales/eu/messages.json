@@ -680,7 +680,6 @@
   "recoveryPasswordBannerTitle": "Gorde zure Recovery Password",
   "recoveryPasswordDescription": "Erabili zure berreskurapen pasahitza zure kontua kargatzeko gailu berrietan.<br/><br/>Zure kontua ezin da berreskuratu berreskurapen pasahitzik gabe. Ziurtatu leku seguru batean gordeta dagoela eta ez partekatu inorekin.",
   "recoveryPasswordEnter": "Sartu zure berreskuratze pasahitza",
-  "recoveryPasswordErrorLoad": "Errore bat gertatu da zure berreskuratze pasahitza kargatzean.<br/><br/>Mesedez esportatu zure erregistroak, eta igo fitxategia Session-en Laguntza Mahaiaren bidez arazo hau konpontzeko.",
   "recoveryPasswordErrorMessageGeneric": "Mesedez, egiaztatu zure berreskurapen pasahitza eta saiatu berriro.",
   "recoveryPasswordErrorMessageIncorrect": "Zure berreskurapen pasahitzean hitz batzuk okerrak dira. Mesedez, egiaztatu eta saiatu berriro.",
   "recoveryPasswordErrorMessageShort": "Sartu duzun Berreskuratze Pasahitza ez da nahikoa luzea. Mesedez, egiaztatu eta saiatu berriro.",

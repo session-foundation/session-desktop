@@ -680,7 +680,6 @@
   "recoveryPasswordBannerTitle": "Ajiye kalmar sirrin dawo da asusunka",
   "recoveryPasswordDescription": "Yi amfani da kalmar wucewa ta dawo da asusun naka a kan sabbin na'urori.<br/><br/>Ba za a iya dawo da asusunku ba tare da kalmar wucewarku ta dawo ba. Tabbatar an adana ta wani wuri mai tsaro kuma kada ku raba ta da kowa ba.",
   "recoveryPasswordEnter": "Shigar da kalmar sirrin dawo da ku",
-  "recoveryPasswordErrorLoad": "An error occurred when trying to load your recovery password.<br/><br/>Please export your logs, then upload the file though Session's Help Desk to help resolve this issue.",
   "recoveryPasswordErrorMessageGeneric": "Duba kalmar maidowarka kuma sake gwadawa.",
   "recoveryPasswordErrorMessageIncorrect": "Wasu kalmomin cikin Kalmar Tseratarku ba daidai bane. Da fatan za ku duba kuma ku sake gwadawa.",
   "recoveryPasswordErrorMessageShort": "Kalmar wucewar Warkar da ka shigar ba ta daɗe sosai ba. Da fatan a duba kuma a sake gwadawa.",

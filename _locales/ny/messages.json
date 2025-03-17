@@ -680,7 +680,6 @@
   "recoveryPasswordBannerTitle": "Save your recovery password",
   "recoveryPasswordDescription": "Gwiritsani ntchito chinsinsi chobwezeretsanso akaunti yanu pazida zatsopano.<br/><br/> Akaunti yanu siyingathe kubwezeretsedwa popanda chinsinsicho. Onetsetsani kuti yatero pamtendere ndi chitetezo - ndipo musagawane aliyense.",
   "recoveryPasswordEnter": "Lemberani mawu achinsinsi a kubwereranso",
-  "recoveryPasswordErrorLoad": "Panachitika vuto loyesa kutsegula achinsinsi anu obwezeretsa.<br/><br/>Chonde tumizani ma logs anu, ndiye kukweza fayilo kupyolera mu Session's Help Desk kuti athandize kuthetsa vutoli.",
   "recoveryPasswordErrorMessageGeneric": "Chonde onani chinsinsi chanu chobwezera ndikuyesanso.",
   "recoveryPasswordErrorMessageIncorrect": "Some of the words in your Recovery Password are incorrect. Please check and try again.",
   "recoveryPasswordErrorMessageShort": "Password Yobwezeretsa yomwe mwalowetsa siyonse bwino. Chonde fufuzani ndikuyesanso.",

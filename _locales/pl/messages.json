@@ -696,7 +696,6 @@
   "recoveryPasswordBannerTitle": "Zapisz swoje hasło odzyskiwania",
   "recoveryPasswordDescription": "Aby wczytać konto na nowych urządzeniach, użyj hasła odzyskiwania.<br/><br/>Nie można odzyskać konta bez hasła odzyskiwania. Upewnij się, że jest ono przechowywane w bezpiecznym miejscu i nie udostępniaj go nikomu.",
   "recoveryPasswordEnter": "Wprowadź hasło odzyskiwania",
-  "recoveryPasswordErrorLoad": "Wystąpił błąd podczas próby załadowania hasła odzyskiwania.<br/><br/> Wyślij swoje dzienniki, a następnie prześlij plik przez deskę ratunkową Sesji, aby pomóc rozwiązać ten problem.",
   "recoveryPasswordErrorMessageGeneric": "Sprawdź hasło odzyskiwania i spróbuj ponownie.",
   "recoveryPasswordErrorMessageIncorrect": "Niektóre ze słów w haśle odzyskiwania są nieprawidłowe. Sprawdź i spróbuj ponownie.",
   "recoveryPasswordErrorMessageShort": "Wprowadzone hasło odzyskiwania nie jest wystarczająco długie. Sprawdź i spróbuj ponownie.",

@@ -680,7 +680,6 @@
   "recoveryPasswordBannerTitle": "Save your recovery password",
   "recoveryPasswordDescription": "Use your recovery password to load your account on new devices.<br/><br/>Your account cannot be recovered without your recovery password. Make sure it's stored somewhere safe and secure — and don't share it with anyone.",
   "recoveryPasswordEnter": "Ilagay ang iyong recovery password",
-  "recoveryPasswordErrorLoad": "Nagkaroon ng isang error sa pag-load ng iyong recovery password.<br/><br/>Paki-export ang iyong mga log, pagkatapos ay i-upload ang file sa pamamagitan ng Session's Help Desk upang matulungan na malutas ang isyung ito.",
   "recoveryPasswordErrorMessageGeneric": "Pakibanggitin ang iyong recovery password at subukang muli.",
   "recoveryPasswordErrorMessageIncorrect": "Ang ilan sa mga salita sa iyong Recovery Password ay mali. Pakisuyong tingnang mabuti at subukan muli.",
   "recoveryPasswordErrorMessageShort": "Ang Recovery Password na iyong ipinasok ay hindi sapat ang haba. Paki-check at subukan muli.",

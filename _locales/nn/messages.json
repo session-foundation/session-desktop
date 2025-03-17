@@ -680,7 +680,6 @@
   "recoveryPasswordBannerTitle": "Lagre ditt Recovery password",
   "recoveryPasswordDescription": "Bruk gjenopprettingsløsenordet ditt for å laste kontoen din på nye enheter.<br/><br/>Kontoen din kan ikke gjenopprettes uten gjenopprettingsløsenordet. Sørg for at det er lagret et trygt sted — og del det ikke med noen.",
   "recoveryPasswordEnter": "Skriv inn gjenopprettingspassordet ditt",
-  "recoveryPasswordErrorLoad": "Ein feil oppstod når vi prøvde å laste inn gjenopprettingspassordet ditt.<br/><br/>Eksporter loggane dine, og last deretter opp fila via Session si hjelpeside for å få hjelp med dette problemet.",
   "recoveryPasswordErrorMessageGeneric": "Vennligst sjekk gjenoppretting passordet ditt og prøv igjen.",
   "recoveryPasswordErrorMessageIncorrect": "Nokre av orda i gjenopprettingspassordet ditt er feil. Ver venleg å sjekke og prøve igjen.",
   "recoveryPasswordErrorMessageShort": "Gjenopprettingspassordet du skrev inn er ikke langt nok. Vennligst sjekk og prøv igjen.",

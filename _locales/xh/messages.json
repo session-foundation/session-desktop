@@ -681,7 +681,6 @@
   "recoveryPasswordBannerTitle": "Gcina iphasiwedi yakho yokubuyisela kwi imeyile",
   "recoveryPasswordDescription": "Faka iphasiwedi yakho yokufumana kwakhona ukuze ufake iakhawunti yakho kwizixhobo ezintsha.<br/><br/>Iakhawunti yakho ayinakufumaneka ngaphandle kwephasiwedi yakho yokufumana kwakhona. Qinisekisa ukuba iyonke indawo ekhuselekileyo kwaye ungayabelani nabani na.",
   "recoveryPasswordEnter": "Ngenisa i-password yakho yokubuyisela",
-  "recoveryPasswordErrorLoad": "Impazamo yenzekile xa uzama ukulayisha iphasiwedi yakho yokubuyisela.<br/><br/>Nceda upapashe iilog zenkqubo yakho, uze ulayishe ifayile e-Desk ka-Session yokuNceda ukusombulula lo mba.",
   "recoveryPasswordErrorMessageGeneric": "Nceda ujonge ipassword yakho yokubuyisela kwaye uzame kwakhona.",
   "recoveryPasswordErrorMessageIncorrect": "Some of the words in your Recovery Password are incorrect. Please check and try again.",
   "recoveryPasswordErrorMessageShort": "I-Password yokubuyisela oyifakileyo ayide. Nceda ujonge uze uzame kwakhona.",

@@ -681,7 +681,6 @@
   "recoveryPasswordBannerTitle": "Salvează parola de recuperare",
   "recoveryPasswordDescription": "Folosește parola de recuperare pentru a încărca contul pe dispozitive noi.<br/><br/>Contul nu poate fi recuperat fără parola de recuperare. Asigurați-vă că este stocată într-un loc sigur și securizat – și nu o împărtășiți nimănui.",
   "recoveryPasswordEnter": "Introduceți parola de recuperare",
-  "recoveryPasswordErrorLoad": "A apărut o eroare la încărcarea parolei de recuperare.<br/><br/>Te rugăm să exporți jurnalele, apoi să încarci fișierul prin intermediul Biroului de asistență Session pentru a ajuta la soluționarea acestei probleme.",
   "recoveryPasswordErrorMessageGeneric": "Vă rugăm să verificați parola de recuperare și să încercați din nou.",
   "recoveryPasswordErrorMessageIncorrect": "Unele din cuvintele din Parola de Recuperare sunt incorecte. Te rugăm să verifici și să încerci din nou.",
   "recoveryPasswordErrorMessageShort": "Parola de Recuperare introdusă nu este suficient de lungă. Te rugăm să verifici și să încerci din nou.",

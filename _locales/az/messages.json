@@ -681,7 +681,6 @@
   "recoveryPasswordBannerTitle": "Geri qaytarma parolunuzu saxlayın",
   "recoveryPasswordDescription": "Hesabınızı yeni cihazlara yükləmək üçün geri qaytarma parolunuzu istifadə edin.<br/><br/>Geri qaytarma parolunuz olmadan hesabınız geri qaytarıla bilməz. Təhlükəsiz və etibarlı yerdə saxladığınıza əmin olun və heç kəslə paylaşmayın.",
   "recoveryPasswordEnter": "Geri qaytarma parolunuzu daxil edin",
-  "recoveryPasswordErrorLoad": "Geri qaytarma parolunuzu yükləməyə çalışarkən bir xəta baş verdi.<br/><br/>Bu problemi həll etməyə kömək etmək üçün lütfən jurnalı xaricə köçürün, daha sonra Session-un Kömək Masası üzərindən həmin faylı yükləyin.",
   "recoveryPasswordErrorMessageGeneric": "Lütfən geri qaytarma parolunuzu yoxlayıb yenidən sınayın.",
   "recoveryPasswordErrorMessageIncorrect": "Geri qaytarma parolunuzdakı bəzi sözlər yanlışdır. Lütfən yoxlayıb yenidən sınayın.",
   "recoveryPasswordErrorMessageShort": "Daxil etdiyiniz Geri qaytarma parolu yetərincə uzun deyil. Lütfən, yoxlayıb yenidən sınayın.",

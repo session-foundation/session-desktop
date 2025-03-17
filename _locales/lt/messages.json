@@ -683,7 +683,6 @@
   "recoveryPasswordBannerTitle": "Įrašyti jūsų atkūrimo slaptažodį",
   "recoveryPasswordDescription": "Naudokite savo atkūrimo slaptažodį, kad įkeltumėte savo paskyrą į naujus įrenginius.<br/><br/>Jūsų paskyra negali būti atkurta be jūsų atkūrimo slaptažodžio. Įsitikinkite, kad jis yra saugomas saugioje vietoje — ir nesidalinkite juo su niekuo.",
   "recoveryPasswordEnter": "Įveskite savo atkūrimo slaptažodį",
-  "recoveryPasswordErrorLoad": "Įkeliant jūsų atkūrimo slaptažodį įvyko klaida.<br/><br/>Prašome eksportuoti savo žurnalus ir įkelkite failą per \"Session\" pagalbos tarnybą, kad galėtume išspręsti šią problemą.",
   "recoveryPasswordErrorMessageGeneric": "Patikrinkite atkūrimo slaptažodį ir bandykite dar kartą.",
   "recoveryPasswordErrorMessageIncorrect": "Kai kurie jūsų atkūrimo slaptažodžio žodžiai neteisingi. Prašome patikrinti ir bandykite dar kartą.",
   "recoveryPasswordErrorMessageShort": "Įvestas atkūrimo slaptažodis yra per trumpas. Prašome patikrinti ir bandyti dar kartą.",
