@@ -1,9 +1,7 @@
-import Backbone from 'backbone';
-
 import autoBind from 'auto-bind';
 import { filesize } from 'filesize';
 import { GroupPubkeyType, PubkeyType } from 'libsession_util_nodejs';
-import { cloneDeep, debounce, isEmpty, size as lodashSize, uniq } from 'lodash';
+import { debounce, isEmpty, size as lodashSize, uniq } from 'lodash';
 import { SignalService } from '../protobuf';
 import { ConvoHub } from '../session/conversations';
 import { ContentMessage } from '../session/messages/outgoing';
@@ -96,15 +94,16 @@ import { NetworkTime } from '../util/NetworkTime';
 import { MessageQueue } from '../session/sending';
 import { getTimerNotificationStr } from './timerNotifications';
 import { ExpirationTimerUpdate } from '../session/disappearing_messages/types';
+import { FakeBackboneCollection, FakeBackboneModel } from './models';
 
 // tslint:disable: cyclomatic-complexity
 
-export class MessageModel extends Backbone.Model<MessageAttributes> {
+export class MessageModel extends FakeBackboneModel<MessageAttributes> {
   constructor(attributes: MessageAttributesOptionals & { skipTimerInit?: boolean }) {
     const filledAttrs = fillMessageAttributesWithDefaults(attributes);
     super(filledAttrs);
 
-    if (!this.id) {
+    if (!this.get('id')) {
       throw new Error('A message always needs to have an id.');
     }
     if (!this.get('conversationId')) {
@@ -153,7 +152,7 @@ export class MessageModel extends Backbone.Model<MessageAttributes> {
 
     if (callNotificationType) {
       const propsForCallNotification: PropsForCallNotification = {
-        messageId: this.id,
+        messageId: this.get('id'),
         notificationType: callNotificationType,
       };
       messageProps.propsForCallNotification = propsForCallNotification;
@@ -425,7 +424,7 @@ export class MessageModel extends Backbone.Model<MessageAttributes> {
    *
    */
   public async cleanup() {
-    await deleteExternalMessageFiles(this.attributes);
+    await deleteExternalMessageFiles(this.cloneAttributes());
     // Note: we don't commit here, because when we do cleanup, we always
     // want to cleanup right before deleting the message itself.
   }
@@ -606,7 +605,7 @@ export class MessageModel extends Backbone.Model<MessageAttributes> {
     const isTrustedForAttachmentDownload = this.isTrustedForAttachmentDownload();
     const body = this.get('body');
     const props: PropsForMessageWithoutConvoProps = {
-      id: this.id,
+      id: this.get('id'),
       direction: this.isIncoming() ? 'incoming' : 'outgoing',
       timestamp: this.get('sent_at') || 0,
       sender,
@@ -900,7 +899,7 @@ export class MessageModel extends Backbone.Model<MessageAttributes> {
 
       if (conversation.isPublic()) {
         const openGroupParams: OpenGroupVisibleMessageParams = {
-          identifier: this.id,
+          identifier: this.get('id'),
           createAtNetworkTimestamp: NetworkTime.now(),
           lokiProfile: UserUtils.getOurProfile(),
           body,
@@ -927,7 +926,7 @@ export class MessageModel extends Backbone.Model<MessageAttributes> {
       const createAtNetworkTimestamp = NetworkTime.now();
 
       const chatParams: VisibleMessageParams = {
-        identifier: this.id,
+        identifier: this.get('id'),
         body,
         createAtNetworkTimestamp,
         attachments,
@@ -1041,7 +1040,7 @@ export class MessageModel extends Backbone.Model<MessageAttributes> {
       window?.log?.error('Message hash not provided to update message hash');
     }
     if (this.get('messageHash') !== messageHash) {
-      window?.log?.info(`updated message ${this.id} with hash: ${messageHash}`);
+      window?.log?.info(`updated message ${this.get('id')} with hash: ${messageHash}`);
 
       this.set({
         messageHash,
@@ -1088,7 +1087,7 @@ export class MessageModel extends Backbone.Model<MessageAttributes> {
       );
 
       const syncMessage = buildSyncMessage(
-        this.id,
+        this.get('id'),
         dataMessage as SignalService.DataMessage,
         conversation.id,
         sentTimestamp,
@@ -1119,11 +1118,11 @@ export class MessageModel extends Backbone.Model<MessageAttributes> {
   }
 
   public async commit(triggerUIUpdate = true) {
-    if (!this.id) {
+    if (!this.get('id')) {
       throw new Error('A message always needs an id');
     }
     // because the saving to db calls _cleanData which mutates the field for cleaning, we need to save a copy
-    const id = await Data.saveMessage(cloneDeep(this.attributes));
+    const id = await Data.saveMessage(this.cloneAttributes());
     if (triggerUIUpdate) {
       this.dispatchMessageUpdate();
     }
@@ -1177,7 +1176,7 @@ export class MessageModel extends Backbone.Model<MessageAttributes> {
       }
     }
 
-    Notifications.clearByMessageId(this.id);
+    Notifications.clearByMessageId(this.get('id'));
     return false;
   }
 
@@ -1225,6 +1224,22 @@ export class MessageModel extends Backbone.Model<MessageAttributes> {
     }
   }
 
+  public deleteAttributes(attrsToDelete: 'quote_attachments' | 'preview_image') {
+    switch (attrsToDelete) {
+      case 'quote_attachments':
+        delete this.attributes.quote.attachments;
+        break;
+
+      case 'preview_image':
+        delete this.attributes.preview[0].image;
+
+        break;
+
+      default:
+        break;
+    }
+  }
+
   public isTrustedForAttachmentDownload() {
     try {
       const senderConvoId = this.getSource();
@@ -1247,7 +1262,7 @@ export class MessageModel extends Backbone.Model<MessageAttributes> {
   }
 
   private dispatchMessageUpdate() {
-    updatesToDispatch.set(this.id, this.getMessageModelProps());
+    updatesToDispatch.set(this.get('id'), this.getMessageModelProps());
     throttledAllMessagesDispatch();
   }
 
@@ -1367,9 +1382,9 @@ export function cancelUpdatesToDispatch(messageIds: Array<string>) {
 
 const updatesToDispatch: Map<string, MessageModelPropsWithoutConvoProps> = new Map();
 
-export class MessageCollection extends Backbone.Collection<MessageModel> {}
+export class MessageCollection extends FakeBackboneCollection<MessageAttributes, MessageModel> {
 
-MessageCollection.prototype.model = MessageModel;
+}
 
 export function findAndFormatContact(pubkey: string): FindAndFormatContactType {
   const contactModel = ConvoHub.use().get(pubkey);

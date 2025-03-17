@@ -256,28 +256,23 @@ async function start() {
 
   const results = await Promise.all([Data.getOutgoingWithoutExpiresAt()]);
 
-  // Combine the models
-  const messagesForCleanup = results.reduce(
-    (array, current) => array.concat((current as any).toArray()),
-    []
-  );
-
-  window.log.info(`Cleanup: Found ${messagesForCleanup.length} messages for cleanup`);
-
   const idsToCleanUp: Array<string> = [];
-  await Promise.all(
-    messagesForCleanup.map((message: MessageModel) => {
+
+  results.forEach(collection =>
+    collection.forEach((message: MessageModel) => {
       const sentAt = message.get('sent_at');
 
       if (message.hasErrors()) {
-        return null;
+        return;
       }
 
       window.log.info(`Cleanup: Deleting unsent message ${sentAt}`);
-      idsToCleanUp.push(message.id);
-      return null;
+      idsToCleanUp.push(message.get('id'));
     })
   );
+
+  window.log.info(`Cleanup: Found ${idsToCleanUp.length} messages for cleanup`);
+
   if (idsToCleanUp.length) {
     await Data.removeMessagesByIds(idsToCleanUp);
   }

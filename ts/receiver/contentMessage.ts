@@ -876,7 +876,7 @@ async function handleMessageRequestResponse(
       }
     });
     // this is based on the messageId as  primary key. So this should overwrite existing messages with new merged data
-    await Data.saveMessages(allMessageModels.map(m => m.attributes));
+    await Data.saveMessages(allMessageModels.map(m => m.cloneAttributes()));
 
     for (let index = 0; index < convosToMerge.length; index++) {
       const element = convosToMerge[index];

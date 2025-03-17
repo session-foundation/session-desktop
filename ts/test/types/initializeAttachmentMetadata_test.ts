@@ -212,7 +212,7 @@ describe('initializeAttachmentMetadata', () => {
 
     it('empty attachments [] should return false x3', () => {
       const msgModel = generateFakeIncomingPrivateMessage();
-      msgModel.set('attachments', []);
+      msgModel.setSingle('attachments', []);
       const mt = getAttachmentMetadata(msgModel);
       expect(mt.hasAttachments).to.be.eq(0);
       expect(mt.hasFileAttachments).to.be.eq(0);
@@ -221,7 +221,7 @@ describe('initializeAttachmentMetadata', () => {
 
     it('has one image attachment only', () => {
       const msgModel = generateFakeIncomingPrivateMessage();
-      msgModel.set('attachments', [{ contentType: 'image/jpeg' }]);
+      msgModel.setSingle('attachments', [{ contentType: 'image/jpeg' }]);
       const mt = getAttachmentMetadata(msgModel);
       expect(mt.hasAttachments).to.be.eq(1);
       expect(mt.hasFileAttachments).to.be.eq(0);
@@ -230,7 +230,10 @@ describe('initializeAttachmentMetadata', () => {
 
     it('has two image attachment only', () => {
       const msgModel = generateFakeIncomingPrivateMessage();
-      msgModel.set('attachments', [{ contentType: 'image/jpeg' }, { contentType: 'image/jpeg' }]);
+      msgModel.setSingle('attachments', [
+        { contentType: 'image/jpeg' },
+        { contentType: 'image/jpeg' },
+      ]);
       const mt = getAttachmentMetadata(msgModel);
       expect(mt.hasAttachments).to.be.eq(1);
       expect(mt.hasFileAttachments).to.be.eq(0);
@@ -239,7 +242,7 @@ describe('initializeAttachmentMetadata', () => {
 
     it('has one audio attachment only', () => {
       const msgModel = generateFakeIncomingPrivateMessage();
-      msgModel.set('attachments', [{ contentType: 'audio/mp3' }]);
+      msgModel.setSingle('attachments', [{ contentType: 'audio/mp3' }]);
       const mt = getAttachmentMetadata(msgModel);
       expect(mt.hasAttachments).to.be.eq(1);
       expect(mt.hasFileAttachments).to.be.eq(0);
@@ -248,7 +251,7 @@ describe('initializeAttachmentMetadata', () => {
 
     it('has one file attachment only', () => {
       const msgModel = generateFakeIncomingPrivateMessage();
-      msgModel.set('attachments', [{ contentType: 'whatever' }]);
+      msgModel.setSingle('attachments', [{ contentType: 'whatever' }]);
       const mt = getAttachmentMetadata(msgModel);
       expect(mt.hasAttachments).to.be.eq(1);
       expect(mt.hasFileAttachments).to.be.eq(1);
@@ -257,7 +260,7 @@ describe('initializeAttachmentMetadata', () => {
 
     it('has two file attachment only', () => {
       const msgModel = generateFakeIncomingPrivateMessage();
-      msgModel.set('attachments', [{ contentType: 'whatever' }, { contentType: 'whatever' }]);
+      msgModel.setSingle('attachments', [{ contentType: 'whatever' }, { contentType: 'whatever' }]);
       const mt = getAttachmentMetadata(msgModel);
       expect(mt.hasAttachments).to.be.eq(1);
       expect(mt.hasFileAttachments).to.be.eq(1);
@@ -266,7 +269,7 @@ describe('initializeAttachmentMetadata', () => {
 
     it('has two attachments with undefined contenttype', () => {
       const msgModel = generateFakeIncomingPrivateMessage();
-      msgModel.set('attachments', [{ contentType: undefined }, { contentType: undefined }]);
+      msgModel.setSingle('attachments', [{ contentType: undefined }, { contentType: undefined }]);
       const mt = getAttachmentMetadata(msgModel);
       expect(mt.hasAttachments).to.be.eq(1);
       expect(mt.hasFileAttachments).to.be.eq(0);
@@ -275,7 +278,7 @@ describe('initializeAttachmentMetadata', () => {
 
     it('has two attachments with null contenttype', () => {
       const msgModel = generateFakeIncomingPrivateMessage();
-      msgModel.set('attachments', [{ contentType: null }, { contentType: null }]);
+      msgModel.setSingle('attachments', [{ contentType: null }, { contentType: null }]);
       const mt = getAttachmentMetadata(msgModel);
       expect(mt.hasAttachments).to.be.eq(1);
       expect(mt.hasFileAttachments).to.be.eq(1);

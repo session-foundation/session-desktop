@@ -365,7 +365,7 @@ async function getMessagesBySenderAndSentAt(
     return null;
   }
 
-  return new MessageCollection(messages);
+  return new MessageCollection(messages, MessageModel);
 }
 
 async function getUnreadByConversation(
@@ -373,7 +373,7 @@ async function getUnreadByConversation(
   sentBeforeTimestamp: number
 ): Promise<MessageCollection> {
   const messages = await channels.getUnreadByConversation(conversationId, sentBeforeTimestamp);
-  return new MessageCollection(messages);
+  return new MessageCollection(messages, MessageModel);
 }
 
 async function getUnreadDisappearingByConversation(
@@ -384,7 +384,7 @@ async function getUnreadDisappearingByConversation(
     conversationId,
     sentBeforeTimestamp
   );
-  return new MessageCollection(messages).models;
+  return new MessageCollection(messages, MessageModel).models;
 }
 
 async function markAllAsReadByConversationNoExpiration(
@@ -436,7 +436,7 @@ async function getMessagesByConversation(
   }
 
   return {
-    messages: new MessageCollection(messages),
+    messages: new MessageCollection(messages, MessageModel),
     quotes,
   };
 }
@@ -446,7 +446,7 @@ async function getMessagesByConversation(
  * It just grabs the last messages of a conversation.
  *
  * To be used when you want for instance to remove messages from a conversations, in order.
- * Or to trigger downloads of a attachments from a just approved contact (clicktotrustSender)
+ * Or to trigger downloads of a attachments from a just approved contact (clickToTrustSender)
  * @param conversationId the conversationId to fetch messages from
  * @param limit the maximum number of messages to return
  * @param skipTimerInit  see MessageModel.skipTimerInit
@@ -464,7 +464,7 @@ async function getLastMessagesByConversation(
       message.skipTimerInit = skipTimerInit;
     }
   }
-  return new MessageCollection(messages);
+  return new MessageCollection(messages, MessageModel);
 }
 
 async function getLastMessageIdInConversation(conversationId: string) {
@@ -479,7 +479,7 @@ async function getLastMessageInConversation(conversationId: string) {
     message.skipTimerInit = true;
   }
 
-  const collection = new MessageCollection(messages);
+  const collection = new MessageCollection(messages, MessageModel);
   return collection.length ? collection.models[0] : null;
 }
 
@@ -490,7 +490,7 @@ async function getOldestMessageInConversation(conversationId: string) {
     message.skipTimerInit = true;
   }
 
-  const collection = new MessageCollection(messages);
+  const collection = new MessageCollection(messages, MessageModel);
   return collection.length ? collection.models[0] : null;
 }
 
@@ -554,7 +554,7 @@ async function removeAllMessagesInConversation(conversationId: string): Promise<
     for (let index = 0; index < messages.length; index++) {
       const message = messages.at(index);
       // eslint-disable-next-line no-await-in-loop
-      await message.cleanup();
+      await message?.cleanup();
     }
     window.log.info(
       `removeAllMessagesInConversation messages.cleanup() ${conversationId} took ${
@@ -628,22 +628,22 @@ async function fetchAllGroupUpdateFailedMessage(groupPk: GroupPubkeyType) {
 
 async function getMessagesBySentAt(sentAt: number): Promise<MessageCollection> {
   const messages = await channels.getMessagesBySentAt(sentAt);
-  return new MessageCollection(messages);
+  return new MessageCollection(messages, MessageModel);
 }
 
 async function getExpiredMessages(): Promise<MessageCollection> {
   const messages = await channels.getExpiredMessages();
-  return new MessageCollection(messages);
+  return new MessageCollection(messages, MessageModel);
 }
 
 async function getOutgoingWithoutExpiresAt(): Promise<MessageCollection> {
   const messages = await channels.getOutgoingWithoutExpiresAt();
-  return new MessageCollection(messages);
+  return new MessageCollection(messages, MessageModel);
 }
 
 async function getNextExpiringMessage(): Promise<MessageCollection> {
   const messages = await channels.getNextExpiringMessage();
-  return new MessageCollection(messages);
+  return new MessageCollection(messages, MessageModel);
 }
 
 // Unprocessed
@@ -811,7 +811,7 @@ export async function createOrUpdateItem(data: StorageItem): Promise<void> {
 
 /**
  * Note: In the app, you should always call getItemById through Data.getItemById (from the data.ts file).
- * This is to ensure testing and stubbbing works as expected
+ * This is to ensure testing and stubbing works as expected
  */
 export async function getItemById(id: string): Promise<StorageItem | undefined> {
   const keys = (ITEM_KEYS as any)[id];
@@ -821,7 +821,7 @@ export async function getItemById(id: string): Promise<StorageItem | undefined> 
 }
 /**
  * Note: In the app, you should always call getAllItems through Data.getAllItems (from the data.ts file).
- * This is to ensure testing and stubbbing works as expected
+ * This is to ensure testing and stubbing works as expected
  */
 export async function getAllItems(): Promise<Array<StorageItem>> {
   const items = await channels.getAllItems();
@@ -834,7 +834,7 @@ export async function getAllItems(): Promise<Array<StorageItem>> {
 
 /**
  * Note: In the app, you should always call removeItemById through Data.removeItemById (from the data.ts file).
- * This is to ensure testing and stubbbing works as expected
+ * This is to ensure testing and stubbing works as expected
  */
 export async function removeItemById(id: string): Promise<void> {
   await channels.removeItemById(id);

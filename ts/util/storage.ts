@@ -163,7 +163,7 @@ export function getRecentReactions(): Array<string> {
   return DEFAULT_RECENT_REACTS;
 }
 
-export async function saveRecentReations(reactions: Array<string>) {
+export async function saveRecentReactions(reactions: Array<string>) {
   return Storage.put('recent_reactions', reactions.join(' '));
 }
 

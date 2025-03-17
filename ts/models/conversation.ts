@@ -29,7 +29,7 @@ import { PubKey } from '../session/types';
 import { ToastUtils, UserUtils } from '../session/utils';
 import { BlockedNumberController } from '../util';
 import { MessageModel } from './message';
-import { MessageAttributesOptionals } from './messageType';
+import { MessageAttributesOptionals, type MessageAttributes } from './messageType';
 
 import { Data } from '../data/data';
 import { OpenGroupUtils } from '../session/apis/open_group_api/utils';
@@ -483,7 +483,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
   public async updateGroupAdmins(groupAdmins: Array<string>, shouldCommit: boolean) {
     const sortedNewAdmins = uniq(sortBy(groupAdmins));
 
-    // check if there is any difference betwewen the two, if yes, override it with what we got.
+    // check if there is any difference between the two, if yes, override it with what we got.
     if (!xor(this.getGroupAdmins(), groupAdmins).length) {
       return false;
     }
@@ -495,7 +495,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
   }
 
   /**
-   * Fetches from the Database an update of what are the memory only informations like mentionedUs and the unreadCount, etc
+   * Fetches from the Database an update of what are the memory only information like mentionedUs and the unreadCount, etc
    */
   public async refreshInMemoryDetails(providedMemoryDetails?: SaveConversationReturn) {
     if (!SessionUtilConvoInfoVolatile.isConvoToStoreInWrapper(this)) {
@@ -1915,12 +1915,12 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
     }
 
     // make sure the notifications are not muted for this convo (and not the source convo)
-    const convNotif = this.getNotificationsFor();
-    if (convNotif === 'disabled') {
+    const notificationsFor = this.getNotificationsFor();
+    if (notificationsFor === 'disabled') {
       window?.log?.info('notifications disabled for convo', this.idForLogging());
       return;
     }
-    if (convNotif === 'mentions_only') {
+    if (notificationsFor === 'mentions_only') {
       // check if the message has ourselves as mentions
       const regex = new RegExp(`@${PubKey.regexForPubkeys}`, 'g');
       const text = message.get('body');
@@ -1948,10 +1948,10 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
 
     const iconUrl = await this.getNotificationIcon();
 
-    const messageJSON = message.toJSON();
-    const messageSentAt = messageJSON.sent_at;
+    const messageAttrs = message.cloneAttributes();
+    const messageSentAt = messageAttrs.sent_at;
     const messageId = message.id;
-    const isExpiringMessage = this.isExpiringMessage(messageJSON);
+    const isExpiringMessage = this.isExpiringMessage(messageAttrs);
 
     Notifications.addNotification({
       conversationId,
@@ -1959,7 +1959,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
       isExpiringMessage,
       message: friendRequestText || message.getNotificationText(),
       messageId,
-      messageSentAt,
+      messageSentAt: messageSentAt || Date.now(),
       title: friendRequestText ? '' : convo.getNicknameOrRealUsernameOrPlaceholder(),
     });
   }
@@ -1972,8 +1972,8 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
     const conversationId = this.id;
 
     // make sure the notifications are not muted for this convo (and not the source convo)
-    const convNotif = this.getNotificationsFor();
-    if (convNotif === 'disabled') {
+    const notificationsFor = this.getNotificationsFor();
+    if (notificationsFor === 'disabled') {
       window?.log?.info(
         'notifyIncomingCall: notifications disabled for convo',
         this.idForLogging()
@@ -2142,7 +2142,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
       if (this.isPrivate()) {
         if (this.isMe()) {
           if (this.matchesDisappearingMode('deleteAfterRead')) {
-            throw new Error('Note to Self disappearing messages must be deleteAterSend');
+            throw new Error('Note to Self disappearing messages must be deleteAfterSend');
           }
           chatMessageParams.syncTarget = this.id;
           const chatMessageMe = new VisibleMessage(chatMessageParams);
@@ -2312,6 +2312,23 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
       return;
     }
     const lastMessageModel = messages.at(0);
+    if (!lastMessageModel) {
+      if (
+        this.get('lastMessage') ||
+        this.get('lastMessageStatus') ||
+        this.get('lastMessageInteractionType') ||
+        this.get('lastMessageInteractionStatus')
+      ) {
+        this.set({
+          lastMessage: '',
+          lastMessageStatus: undefined,
+          lastMessageInteractionType: undefined,
+          lastMessageInteractionStatus: undefined,
+        });
+        await this.commit();
+      }
+      return;
+    }
     const interactionNotification = lastMessageModel.getInteractionNotification();
 
     const lastMessageInteractionType = interactionNotification?.interactionType;
@@ -2411,7 +2428,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
       }
     }
     // save all the attributes in a single call
-    await Data.saveMessages(oldUnreadNowRead.map(m => m.attributes));
+    await Data.saveMessages(oldUnreadNowRead.map(m => m.cloneAttributes()));
     // trigger all the ui updates in a single call
     window.inboxStore?.dispatch(
       conversationActions.messagesChanged(oldUnreadNowRead.map(m => m.getMessageModelProps()))
@@ -2475,7 +2492,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
     }
   }
 
-  private isExpiringMessage(json: any) {
+  private isExpiringMessage(json: MessageAttributes) {
     if (json.type === 'incoming') {
       return false;
     }
@@ -2640,7 +2657,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
 
             return {
               contentType,
-              // Our protos library complains about this field being undefined, so we
+              // Our proto library complains about this field being undefined, so we
               //   force it to null
               fileName: fileName || null,
               thumbnail: attachment?.thumbnail?.path // loadAttachmentData throws if the thumbnail.path is not set
@@ -2665,7 +2682,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
 
             return {
               contentType,
-              // Our protos library complains about this field being undefined, so we
+              // Our proto library complains about this field being undefined, so we
               //   force it to null
               fileName: null,
               thumbnail: image

@@ -17,13 +17,14 @@ import {
 } from './attachments/migrations';
 
 // NOTE I think this is only used on the renderer side, but how?!
-export const deleteExternalMessageFiles = async (messageAttributes: {
-  attachments: Array<any> | undefined;
-  quote: { attachments: Array<any> | undefined };
-  preview: Array<any> | undefined;
+export const deleteExternalMessageFiles = async ({
+  attachments,
+  preview,
+}: {
+  attachments?: Array<any> | undefined;
+  preview?: Array<any> | undefined;
 }) => {
   let anyChanges = false;
-  const { attachments, preview } = messageAttributes;
 
   if (attachments && attachments.length) {
     await Promise.all(attachments.map(deleteData));
@@ -39,10 +40,10 @@ export const deleteExternalMessageFiles = async (messageAttributes: {
       }
     } catch (err) {
       // eslint-disable-next-line no-console
-      console.warn(
-        '[deleteExternalMessageFiles]: Failed to delete attachments for',
-        messageAttributes
-      );
+      console.warn('[deleteExternalMessageFiles]: Failed to delete attachments for', {
+        attachments,
+        preview,
+      });
     }
   }
 

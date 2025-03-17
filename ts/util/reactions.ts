@@ -6,7 +6,7 @@ import { isUsAnySogsFromCache } from '../session/apis/open_group_api/sogsv3/know
 import { ToastUtils, UserUtils } from '../session/utils';
 
 import { Action, OpenGroupReactionList, ReactionList, RecentReactions } from '../types/Reaction';
-import { getRecentReactions, saveRecentReations } from './storage';
+import { getRecentReactions, saveRecentReactions } from './storage';
 
 const SOGSReactorsFetchCount = 5;
 const rateCountLimit = 20;
@@ -203,7 +203,7 @@ const handleMessageReaction = async ({
 
     if (details && details.index === undefined) {
       reacts[reaction.emoji].index = originalMessage.get('reactsIndex') ?? 0;
-      originalMessage.set('reactsIndex', (originalMessage.get('reactsIndex') ?? 0) + 1);
+      originalMessage.setSingle('reactsIndex', (originalMessage.get('reactsIndex') ?? 0) + 1);
     }
   } else {
     delete reacts[reaction.emoji];
@@ -346,7 +346,7 @@ const updateRecentReactions = async (reactions: Array<string>, newReaction: stri
   } else {
     recentReactions.push(newReaction);
   }
-  await saveRecentReations(recentReactions.items);
+  await saveRecentReactions(recentReactions.items);
 };
 
 // exported for testing purposes

@@ -338,7 +338,10 @@ async function getMessages({
     });
 
   const messagesProps: Array<MessageModelPropsWithoutConvoProps> = messagesCollection.models.map(
-    m => m.getMessageModelProps()
+    m => {
+
+      return m.getMessageModelProps();
+    }
   );
   const time = Date.now() - beforeTimestamp;
   window?.log?.info(`Loading ${messagesProps.length} messages took ${time}ms to load.`);

@@ -11,7 +11,7 @@ import { Reactions } from '../../../../util/reactions';
 import * as Storage from '../../../../util/storage';
 import { generateFakeIncomingPrivateMessage, stubWindowLog } from '../../../test-utils/utils';
 
-import { MessageCollection } from '../../../../models/message';
+import { MessageCollection, MessageModel } from '../../../../models/message';
 import { SignalService } from '../../../../protobuf';
 import { UserUtils } from '../../../../session/utils';
 import { TestUtils } from '../../../test-utils';
@@ -24,7 +24,7 @@ describe('ReactionMessage', () => {
   let clock: Sinon.SinonFakeTimers;
   const ourNumber = TestUtils.generateFakePubKeyStr();
   const originalMessage = generateFakeIncomingPrivateMessage();
-  originalMessage.set('sent_at', Date.now());
+  originalMessage.setSingle('sent_at', Date.now());
 
   beforeEach(() => {
     Sinon.stub(originalMessage, 'getConversation').returns({
@@ -35,11 +35,13 @@ describe('ReactionMessage', () => {
     // sendMessageReaction stubs
     Sinon.stub(Data, 'getMessageById').resolves(originalMessage);
     Sinon.stub(Storage, 'getRecentReactions').returns(DEFAULT_RECENT_REACTS);
-    Sinon.stub(Storage, 'saveRecentReations').resolves();
+    Sinon.stub(Storage, 'saveRecentReactions').resolves();
     Sinon.stub(UserUtils, 'getOurPubKeyStrFromCache').returns(ourNumber);
 
     // handleMessageReaction stubs
-    Sinon.stub(Data, 'getMessagesBySentAt').resolves(new MessageCollection([originalMessage]));
+    Sinon.stub(Data, 'getMessagesBySentAt').resolves(
+      new MessageCollection([originalMessage], MessageModel)
+    );
     Sinon.stub(originalMessage, 'commit').resolves();
   });
 
@@ -113,7 +115,7 @@ describe('ReactionMessage', () => {
 
     clock = useFakeTimers({ now: Date.now(), shouldAdvanceTime: true });
 
-    // Wait a miniute for the rate limit to clear
+    // Wait a minute for the rate limit to clear
     clock.tick(1 * 60 * 1000);
 
     reaction = await Reactions.sendMessageReaction(originalMessage.get('id'), '👋');
