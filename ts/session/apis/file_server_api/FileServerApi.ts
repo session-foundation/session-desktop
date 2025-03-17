@@ -8,7 +8,6 @@ import {
 import { fromUInt8ArrayToBase64 } from '../../utils/String';
 import { NetworkTime } from '../../../util/NetworkTime';
 import { DURATION } from '../../constants';
-import { getOSArchitecture, getOSPlatform } from '../../../OS';
 import type { ReleaseChannels } from '../../../updater/types';
 import { Storage } from '../../../util/storage';
 
@@ -148,7 +147,10 @@ export const getLatestReleaseFromFileServer = async (
     await Storage.put('releaseChannel', releaseChannel);
   }
 
-  const endpoint = `${RELEASE_VERSION_ENDPOINT}?platform=desktop&os=${getOSPlatform()}&arch=${getOSArchitecture()}${releaseChannel ? `&release_channel=${releaseType || releaseChannel}` : ''}`;
+  const queryParams = new URLSearchParams();
+  queryParams.append('platform', 'desktop');
+  queryParams.append('release_channel', releaseType || releaseChannel);
+  const endpoint = `${RELEASE_VERSION_ENDPOINT}?${queryParams}`;
 
   const signature = await BlindingActions.blindVersionSignRequest({
     ed25519SecretKey: userEd25519SecretKey,
