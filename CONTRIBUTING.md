@@ -424,6 +424,6 @@ The binaries will be placed inside the `release/` folder.
 <details>
 <summary>Linux</summary>
 
-You can change in [package.json](./package.json) `"target": ["deb"],` to any of the [electron-builder targets](https://www.electron.build/linux#target) to build for another target.
+You can change in [package.json](./package.json) `"target": "deb",` to any of the [electron-builder targets](https://www.electron.build/linux#target) to build for another target.
 
 </details>

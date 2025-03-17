@@ -253,7 +253,7 @@
     "linux": {
       "category": "Network;InstantMessaging;Chat",
       "asarUnpack": "node_modules/spellchecker/vendor/hunspell_dictionaries",
-      "target": ["deb"],
+      "target": "deb",
       "icon": "build/icon-linux.icns"
     },
     "asarUnpack": [
