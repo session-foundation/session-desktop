@@ -871,14 +871,6 @@
   resolved "https://registry.yarnpkg.com/@types/aria-query/-/aria-query-5.0.4.tgz#1a31c3d378850d2778dabb6374d036dcba4ba708"
   integrity sha512-rfT93uj5s0PRL7EzccGMs3brplhcrghnDoV26NqKhCAS1hVo+WdNsPvE/yb6ilfr5hi2MEk6d5EWJTKdxg8jVw==
 
-"@types/backbone@1.4.2":
-  version "1.4.2"
-  resolved "https://registry.yarnpkg.com/@types/backbone/-/backbone-1.4.2.tgz#2af5ca6536d4cd510842eea6eeea11a42fa704b9"
-  integrity sha512-+yfi5cLeIPU3JuCrFP4Bodpv8oLrE5sbiqQIMPvHIKaVCz0JCBt9GEQKZsz2haibrTV4Axks6ovoHc2yUbpWzg==
-  dependencies:
-    "@types/jquery" "*"
-    "@types/underscore" "*"
-
 "@types/blueimp-load-image@^5.16.6":
   version "5.16.6"
   resolved "https://registry.yarnpkg.com/@types/blueimp-load-image/-/blueimp-load-image-5.16.6.tgz#2532889b528ca347703272fd271230cf3e1db64a"
@@ -1031,13 +1023,6 @@
   version "4.0.4"
   resolved "https://registry.yarnpkg.com/@types/http-cache-semantics/-/http-cache-semantics-4.0.4.tgz#b979ebad3919799c979b17c72621c0bc0a31c6c4"
   integrity sha512-1m0bIFVc7eJWyve9S0RnuRgcQqF/Xd5QsUZAZeQFr1Q3/p9JWoQQEqmVy+DPTNpGXwhgIetAoYF8JSc33q29QA==
-
-"@types/jquery@*":
-  version "3.5.30"
-  resolved "https://registry.yarnpkg.com/@types/jquery/-/jquery-3.5.30.tgz#888d584cbf844d3df56834b69925085038fd80f7"
-  integrity sha512-nbWKkkyb919DOUxjmRVk8vwtDb0/k8FKncmUKFi+NY+QXqWltooxTrswvz4LspQwxvLdvzBN1TImr6cw3aQx2A==
-  dependencies:
-    "@types/sizzle" "*"
 
 "@types/js-cookie@^2.2.6":
   version "2.2.7"
@@ -1249,11 +1234,6 @@
   resolved "https://registry.yarnpkg.com/@types/sinonjs__fake-timers/-/sinonjs__fake-timers-8.1.5.tgz#5fd3592ff10c1e9695d377020c033116cc2889f2"
   integrity sha512-mQkU2jY8jJEF7YHjHvsQO8+3ughTL1mcnn96igfhONmR+fUPSKIkefQYpSe8bsly2Ep7oQbn/6VG5/9/0qcArQ==
 
-"@types/sizzle@*":
-  version "2.3.8"
-  resolved "https://registry.yarnpkg.com/@types/sizzle/-/sizzle-2.3.8.tgz#518609aefb797da19bf222feb199e8f653ff7627"
-  integrity sha512-0vWLNK2D5MT9dg0iOo8GlKguPAU02QjmZitPEsXRuJXU/OGIOt9vT9Fc26wtYuavLxtO45v9PGleoL9Z0k1LHg==
-
 "@types/styled-components@^5.1.34":
   version "5.1.34"
   resolved "https://registry.yarnpkg.com/@types/styled-components/-/styled-components-5.1.34.tgz#4107df8ef8a7eaba4fa6b05f78f93fba4daf0300"
@@ -1277,11 +1257,6 @@
   version "2.0.7"
   resolved "https://registry.yarnpkg.com/@types/trusted-types/-/trusted-types-2.0.7.tgz#baccb07a970b91707df3a3e8ba6896c57ead2d11"
   integrity sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==
-
-"@types/underscore@*":
-  version "1.11.15"
-  resolved "https://registry.yarnpkg.com/@types/underscore/-/underscore-1.11.15.tgz#29c776daecf6f1935da9adda17509686bf979947"
-  integrity sha512-HP38xE+GuWGlbSRq9WrZkousaQ7dragtZCruBVMi0oX1migFZavZ3OROKHSkNp/9ouq82zrWtZpg18jFnVN96g==
 
 "@types/use-sync-external-store@^0.0.3":
   version "0.0.3"
@@ -2054,13 +2029,6 @@ axios@^1.3.2:
     follow-redirects "^1.15.6"
     form-data "^4.0.0"
     proxy-from-env "^1.1.0"
-
-backbone@1.3.3:
-  version "1.3.3"
-  resolved "https://registry.yarnpkg.com/backbone/-/backbone-1.3.3.tgz#4cc80ea7cb1631ac474889ce40f2f8bc683b2999"
-  integrity sha512-aK+k3TiU4tQDUrRCymDDE7XDFnMVuyE6zbZ4JX7mb4pJbQTVOH997/kyBzb8wB2s5Y/Oh7EUfj+sZhwRPxWwow==
-  dependencies:
-    underscore ">=1.8.3"
 
 balanced-match@^1.0.0:
   version "1.0.2"
@@ -7880,7 +7848,7 @@ unbox-primitive@^1.1.0:
     has-symbols "^1.1.0"
     which-boxed-primitive "^1.1.1"
 
-underscore@>=1.8.3, underscore@~1.13.2:
+underscore@~1.13.2:
   version "1.13.6"
   resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.13.6.tgz#04786a1f589dc6c09f761fc5f45b89e935136441"
   integrity sha512-+A5Sja4HP1M08MaXya7p5LvjuM7K6q/2EaC0+iovj/wOcMsTzMvDFbasi/oSapiwOlt252IqsKqPjCl7huKS0A==
