@@ -2,7 +2,7 @@ import * as BetterSqlite3 from '@signalapp/better-sqlite3';
 import { app, clipboard, dialog, Notification } from 'electron';
 import fs from 'fs';
 import path from 'path';
-import rimraf from 'rimraf';
+import { rimrafSync } from 'rimraf';
 
 import { base64_variants, from_base64, to_hex } from 'libsodium-wrappers-sumo';
 import {
@@ -252,9 +252,9 @@ function removeDB(configDir: string | null = null) {
   }
 
   if (databaseFilePath) {
-    rimraf.sync(databaseFilePath);
-    rimraf.sync(`${databaseFilePath}-shm`);
-    rimraf.sync(`${databaseFilePath}-wal`);
+    rimrafSync(databaseFilePath);
+    rimrafSync(`${databaseFilePath}-shm`);
+    rimrafSync(`${databaseFilePath}-wal`);
   }
 }
 
