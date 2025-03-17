@@ -2,9 +2,9 @@ import { assign, cloneDeep } from 'lodash';
 import { MessageModel } from './message';
 import type { MessageAttributes } from './messageType';
 
-export type FakeBackboneAttributes = Record<string, any> & { id: string };
+export type ModelAttributes = Record<string, any> & { id: string };
 
-export abstract class FakeBackboneModel<T extends FakeBackboneAttributes> {
+export abstract class Model<T extends ModelAttributes> {
   protected attributes: T;
 
   constructor(attributes: T) {

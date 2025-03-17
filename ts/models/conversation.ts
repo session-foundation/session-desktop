@@ -137,7 +137,7 @@ import { ConversationTypeEnum, CONVERSATION_PRIORITIES } from './types';
 import { NetworkTime } from '../util/NetworkTime';
 import { MessageQueue } from '../session/sending';
 import type { WithMessageHashOrNull } from '../session/types/with';
-import { FakeBackboneModel } from './models';
+import { Model } from './models';
 
 type InMemoryConvoInfos = {
   mentionedUs: boolean;
@@ -150,7 +150,7 @@ type InMemoryConvoInfos = {
  */
 const inMemoryConvoInfos: Map<string, InMemoryConvoInfos> = new Map();
 
-export class ConversationModel extends FakeBackboneModel<ConversationAttributes> {
+export class ConversationModel extends Model<ConversationAttributes> {
   public updateLastMessage: () => unknown; // unknown because it is a Promise that we do not want to await
   public throttledBumpTyping: () => void;
   public throttledNotify: (message: MessageModel) => void;

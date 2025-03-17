@@ -94,11 +94,11 @@ import { NetworkTime } from '../util/NetworkTime';
 import { MessageQueue } from '../session/sending';
 import { getTimerNotificationStr } from './timerNotifications';
 import { ExpirationTimerUpdate } from '../session/disappearing_messages/types';
-import { FakeBackboneModel } from './models';
+import { Model } from './models';
 
 // tslint:disable: cyclomatic-complexity
 
-export class MessageModel extends FakeBackboneModel<MessageAttributes> {
+export class MessageModel extends Model<MessageAttributes> {
   constructor(attributes: MessageAttributesOptionals & { skipTimerInit?: boolean }) {
     const filledAttrs = fillMessageAttributesWithDefaults(attributes);
     super(filledAttrs);
