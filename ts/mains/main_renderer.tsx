@@ -1,5 +1,4 @@
-import Backbone from 'backbone';
-import _, { toPairs } from 'lodash';
+import { toPairs } from 'lodash';
 import { createRoot } from 'react-dom/client';
 
 import nativeEmojiData from '@emoji-mart/data';
@@ -31,6 +30,7 @@ import { Storage, isSignInByLinking } from '../util/storage';
 import { getOppositeTheme, isThemeMismatched } from '../util/theme';
 import { getCrowdinLocale } from '../util/i18n/shared';
 import { rtlLocales } from '../localization/constants';
+import { SessionEventEmitter } from '../shared/event_emitter';
 
 // Globally disable drag and drop
 document.body.addEventListener(
@@ -93,7 +93,7 @@ let newVersion = false;
 
 window.document.title = window.getTitle();
 
-const WhisperEvents = _.clone(Backbone.Events);
+const WhisperEvents = new SessionEventEmitter();
 window.Whisper = window.Whisper || {};
 window.Whisper.events = WhisperEvents;
 window.log.info('Storage fetch');

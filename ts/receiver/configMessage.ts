@@ -19,7 +19,7 @@ import { LibSessionUtil } from '../session/utils/libsession/libsession_utils';
 import { SessionUtilContact } from '../session/utils/libsession/libsession_utils_contacts';
 import { SessionUtilConvoInfoVolatile } from '../session/utils/libsession/libsession_utils_convo_info_volatile';
 import { SessionUtilUserGroups } from '../session/utils/libsession/libsession_utils_user_groups';
-import { configurationMessageReceived, trigger } from '../shims/events';
+import { configurationMessageReceived } from '../shims/events';
 import { getCurrentlySelectedConversationOutsideRedux } from '../state/selectors/conversations';
 import { assertUnreachable, stringify, toFixedUint8ArrayOfLength } from '../types/sqlSharedTypes';
 import { BlockedNumberController } from '../util';
@@ -1086,7 +1086,7 @@ async function updateOurProfileViaLibSession(
   await setLastProfileUpdateTimestamp(toNumber(sentAt));
   // do not trigger a sign in by linking if the display name is empty
   if (!isEmpty(displayName)) {
-    trigger(configurationMessageReceived, displayName);
+    window.Whisper.events.trigger(configurationMessageReceived, displayName);
   } else {
     window?.log?.warn('Got a configuration message but the display name is empty');
   }

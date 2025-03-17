@@ -7,7 +7,6 @@ import { mnDecode } from '../../../session/crypto/mnemonic';
 import { ProfileManager } from '../../../session/profile_manager/ProfileManager';
 import { StringUtils } from '../../../session/utils';
 import { fromHex } from '../../../session/utils/String';
-import { trigger } from '../../../shims/events';
 import {
   AccountCreation,
   setAccountCreationStep,
@@ -50,7 +49,7 @@ async function signUp(signUpDetails: AccountCreateDetails) {
     await registerSingleDevice(recoveryPassword, 'english', displayName);
     await Storage.put(SettingsKey.hasSyncedInitialConfigurationItem, Date.now());
     await setSignWithRecoveryPhrase(false);
-    trigger('openInbox');
+    window.Whisper.events.trigger('openInbox');
   } catch (e) {
     await resetRegistration();
     throw e;
