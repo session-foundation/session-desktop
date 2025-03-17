@@ -19,8 +19,10 @@ export abstract class FakeBackboneModel<T extends FakeBackboneAttributes> {
     return this.attributes[key];
   }
 
-  public setSingle<K extends keyof T>(key: K, value: T[K]) {
-    this.attributes[key] = value;
+  public setSingle<K extends keyof T>(key: K, value: T[K] | undefined) {
+    const toSet: Partial<T> = {};
+    toSet[key] = value;
+    this.set(toSet);
     return this;
   }
 

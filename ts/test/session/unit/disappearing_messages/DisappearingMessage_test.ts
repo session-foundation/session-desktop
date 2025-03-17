@@ -18,9 +18,11 @@ import {
   generateFakeIncomingPrivateMessage,
   generateFakeOutgoingPrivateMessage,
   generateVisibleMessage,
+  stubData,
 } from '../../../test-utils/utils';
 import { ConversationTypeEnum } from '../../../../models/types';
 import { NetworkTime } from '../../../../util/NetworkTime';
+import { ConvoHub } from '../../../../session/conversations';
 
 chai.use(chaiAsPromised as any);
 
@@ -37,9 +39,14 @@ describe('DisappearingMessage', () => {
     didApproveMe: true,
   } as ConversationAttributes;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     Sinon.stub(NetworkTime, 'getLatestTimestampOffset').returns(getLatestTimestampOffset);
     Sinon.stub(UserUtils, 'getOurPubKeyStrFromCache').returns(ourNumber);
+    ConvoHub.use().reset();
+
+    stubData('getAllConversations').resolves([]);
+    stubData('saveConversation').resolves();
+    await ConvoHub.use().load();
   });
 
   afterEach(() => {

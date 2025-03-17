@@ -1,5 +1,4 @@
 import autoBind from 'auto-bind';
-import Backbone from 'backbone';
 import { from_hex } from 'libsodium-wrappers-sumo';
 import {
   debounce,
@@ -138,6 +137,7 @@ import { ConversationTypeEnum, CONVERSATION_PRIORITIES } from './types';
 import { NetworkTime } from '../util/NetworkTime';
 import { MessageQueue } from '../session/sending';
 import type { WithMessageHashOrNull } from '../session/types/with';
+import { FakeBackboneModel } from './models';
 
 type InMemoryConvoInfos = {
   mentionedUs: boolean;
@@ -150,7 +150,7 @@ type InMemoryConvoInfos = {
  */
 const inMemoryConvoInfos: Map<string, InMemoryConvoInfos> = new Map();
 
-export class ConversationModel extends Backbone.Model<ConversationAttributes> {
+export class ConversationModel extends FakeBackboneModel<ConversationAttributes> {
   public updateLastMessage: () => unknown; // unknown because it is a Promise that we do not want to await
   public throttledBumpTyping: () => void;
   public throttledNotify: (message: MessageModel) => void;
@@ -1050,7 +1050,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
     }
 
     if (this.isActive()) {
-      this.set('active_at', createAtNetworkTimestamp);
+      this.setSingle('active_at', createAtNetworkTimestamp);
     }
 
     if (shouldCommitConvo) {
@@ -2744,7 +2744,7 @@ async function commitConversationAndRefreshWrapper(id: string) {
   }
 
   // write to db
-  const savedDetails = await Data.saveConversation(convo.attributes);
+  const savedDetails = await Data.saveConversation(convo.cloneAttributes());
   await convo.refreshInMemoryDetails(savedDetails);
 
   // Performance impact on this is probably to be pretty bad. We might want to push for that DB refactor to be done sooner so we do not need to fetch info from the DB anymore
@@ -2801,17 +2801,6 @@ const throttledAllConversationsDispatch = debounce(
 );
 
 const updatesToDispatch: Map<string, ReduxConversationType> = new Map();
-
-export class ConversationCollection extends Backbone.Collection<ConversationModel> {
-  constructor(models?: Array<ConversationModel>) {
-    super(models);
-    this.comparator = (m: ConversationModel) => {
-      return -(m.getActiveAt() || 0);
-    };
-  }
-}
-
-ConversationCollection.prototype.model = ConversationModel;
 
 export function hasValidOutgoingRequestValues({
   isMe,
