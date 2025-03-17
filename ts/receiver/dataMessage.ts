@@ -311,7 +311,7 @@ export async function isSwarmMessageDuplicate({
           timestamp: sentAt,
         },
       ])
-    )?.models?.length;
+    )?.length;
 
     return Boolean(result);
   } catch (error) {

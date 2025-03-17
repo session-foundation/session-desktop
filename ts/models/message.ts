@@ -94,7 +94,7 @@ import { NetworkTime } from '../util/NetworkTime';
 import { MessageQueue } from '../session/sending';
 import { getTimerNotificationStr } from './timerNotifications';
 import { ExpirationTimerUpdate } from '../session/disappearing_messages/types';
-import { FakeBackboneCollection, FakeBackboneModel } from './models';
+import { FakeBackboneModel } from './models';
 
 // tslint:disable: cyclomatic-complexity
 
@@ -1381,10 +1381,6 @@ export function cancelUpdatesToDispatch(messageIds: Array<string>) {
 }
 
 const updatesToDispatch: Map<string, MessageModelPropsWithoutConvoProps> = new Map();
-
-export class MessageCollection extends FakeBackboneCollection<MessageAttributes, MessageModel> {
-
-}
 
 export function findAndFormatContact(pubkey: string): FindAndFormatContactType {
   const contactModel = ConvoHub.use().get(pubkey);

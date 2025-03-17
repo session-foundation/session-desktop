@@ -2391,7 +2391,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
     const conversationId = this.id;
     Notifications.clearByConversationID(conversationId);
 
-    const oldUnreadNowRead = (await this.getUnreadByConversation(newestUnreadDate)).models;
+    const oldUnreadNowRead = await this.getUnreadByConversation(newestUnreadDate);
 
     if (!oldUnreadNowRead.length) {
       // no new messages where read, no need to do anything

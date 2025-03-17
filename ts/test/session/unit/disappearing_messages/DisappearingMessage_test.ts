@@ -465,8 +465,8 @@ describe('DisappearingMessage', () => {
         expireTimer: 300,
         sent_at: NetworkTime.now(),
       });
-      Sinon.stub(message, 'getConversation').returns(conversation);
 
+      Sinon.stub(message, 'getConversation').returns(conversation);
       DisappearingMessages.checkForExpiringOutgoingMessage(message, 'unit tests');
 
       expect(message.getExpirationStartTimestamp(), 'it should be defined').to.not.be.undefined;
@@ -528,6 +528,7 @@ describe('DisappearingMessage', () => {
       DisappearingMessages.checkForExpiringOutgoingMessage(message, 'unit tests');
 
       expect(message.getExpirationStartTimestamp(), 'it should be defined').to.not.be.undefined;
+
       expect(
         isValidUnixTimestamp(message.getExpirationStartTimestamp()),
         'it should be a valid unix timestamp'

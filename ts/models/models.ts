@@ -1,4 +1,6 @@
-import { cloneDeep, merge } from 'lodash';
+import { assign, cloneDeep } from 'lodash';
+import { MessageModel } from './message';
+import type { MessageAttributes } from './messageType';
 
 export type FakeBackboneAttributes = Record<string, any> & { id: string };
 
@@ -23,7 +25,7 @@ export abstract class FakeBackboneModel<T extends FakeBackboneAttributes> {
   }
 
   public set(attrs: Partial<T>) {
-    this.attributes = merge(this.attributes, attrs);
+    this.attributes = assign(this.attributes, attrs);
     return this;
   }
 
@@ -32,42 +34,6 @@ export abstract class FakeBackboneModel<T extends FakeBackboneAttributes> {
   }
 }
 
-export class FakeBackboneCollection<
-  A extends FakeBackboneAttributes,
-  T extends FakeBackboneModel<A>,
-> {
-  public models: Array<T>;
-
-  constructor(modelsOrAttrs: Array<T | A>, ModelClass: new (attrs: A) => T) {
-    this.models = modelsOrAttrs.map(m => {
-      if (m instanceof FakeBackboneModel) {
-        return m;
-      }
-      return new ModelClass(m);
-    });
-  }
-
-  get length() {
-    return this.models.length;
-  }
-
-  public map(action: (msg: T) => any) {
-    return this.models.map(action);
-  }
-
-  public at(index: number) {
-    return this.models.at(index);
-  }
-
-  public find(...args: Parameters<typeof this.models.find>) {
-    return this.models.find(...args);
-  }
-
-  public forEach(...args: Parameters<typeof this.models.forEach>) {
-    return this.models.forEach(...args);
-  }
-
-  public filter(...args: Parameters<typeof this.models.filter>) {
-    return this.models.filter(...args);
-  }
+export function makeMessageModels(modelsOrAttrs: Array<MessageModel | MessageAttributes>) {
+  return modelsOrAttrs.map(a => (a instanceof MessageModel ? a : new MessageModel(a)));
 }

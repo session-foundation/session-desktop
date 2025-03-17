@@ -764,7 +764,7 @@ async function handleUnsendMessage(envelope: EnvelopePlus, unsendMessage: Signal
         timestamp: toNumber(timestamp),
       },
     ])
-  )?.models?.[0];
+  )?.[0];
   const messageHash = messageToDelete?.get('messageHash');
   // #endregion
 
@@ -867,7 +867,7 @@ async function handleMessageRequestResponse(
       )
     );
 
-    const allMessageModels = flatten(allMessagesCollections.map(m => m.messages.models));
+    const allMessageModels = flatten(allMessagesCollections.map(m => m.messages));
     allMessageModels.forEach(messageModel => {
       messageModel.set({ conversationId: unblindedConvoId });
 

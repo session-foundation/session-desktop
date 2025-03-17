@@ -11,10 +11,10 @@ import { Reactions } from '../../../../util/reactions';
 import * as Storage from '../../../../util/storage';
 import { generateFakeIncomingPrivateMessage, stubWindowLog } from '../../../test-utils/utils';
 
-import { MessageCollection, MessageModel } from '../../../../models/message';
 import { SignalService } from '../../../../protobuf';
 import { UserUtils } from '../../../../session/utils';
 import { TestUtils } from '../../../test-utils';
+import { makeMessageModels } from '../../../../models/models';
 
 chai.use(chaiAsPromised as any);
 
@@ -39,9 +39,7 @@ describe('ReactionMessage', () => {
     Sinon.stub(UserUtils, 'getOurPubKeyStrFromCache').returns(ourNumber);
 
     // handleMessageReaction stubs
-    Sinon.stub(Data, 'getMessagesBySentAt').resolves(
-      new MessageCollection([originalMessage], MessageModel)
-    );
+    Sinon.stub(Data, 'getMessagesBySentAt').resolves(makeMessageModels([originalMessage]));
     Sinon.stub(originalMessage, 'commit').resolves();
   });
 

@@ -4,8 +4,12 @@ import { GroupPubkeyType } from 'libsession_util_nodejs';
 import _, { isArray, isEmpty } from 'lodash';
 import { ConversationModel } from '../models/conversation';
 import { ConversationAttributes } from '../models/conversationAttributes';
-import { MessageCollection, MessageModel } from '../models/message';
-import { MessageAttributes, MessageDirection } from '../models/messageType';
+import { MessageModel } from '../models/message';
+import {
+  MessageAttributes,
+  MessageDirection,
+  type MessageAttributesOptionals,
+} from '../models/messageType';
 import { StorageItem } from '../node/storage_item';
 import { HexKeyPair } from '../receiver/keypairs';
 import { Quote } from '../receiver/types';
@@ -33,6 +37,7 @@ import {
   FindAllMessageHashesInConversationTypeArgs,
 } from './sharedDataTypes';
 import { GuardNode, Snode } from './types';
+import { makeMessageModels } from '../models/models';
 
 const ERASE_SQL_KEY = 'erase-sql-key';
 const ERASE_ATTACHMENTS_KEY = 'erase-attachments';
@@ -358,22 +363,22 @@ async function getMessagesBySenderAndSentAt(
     source: string;
     timestamp: number;
   }>
-): Promise<MessageCollection | null> {
-  const messages = await channels.getMessagesBySenderAndSentAt(propsList);
+): Promise<Array<MessageModel> | null> {
+  const messages: unknown = await channels.getMessagesBySenderAndSentAt(propsList);
 
-  if (!messages || !messages.length) {
+  if (!messages || !Array.isArray(messages) || !messages.length) {
     return null;
   }
 
-  return new MessageCollection(messages, MessageModel);
+  return makeMessageModels(messages);
 }
 
 async function getUnreadByConversation(
   conversationId: string,
   sentBeforeTimestamp: number
-): Promise<MessageCollection> {
+): Promise<Array<MessageModel>> {
   const messages = await channels.getUnreadByConversation(conversationId, sentBeforeTimestamp);
-  return new MessageCollection(messages, MessageModel);
+  return makeMessageModels(messages);
 }
 
 async function getUnreadDisappearingByConversation(
@@ -384,7 +389,7 @@ async function getUnreadDisappearingByConversation(
     conversationId,
     sentBeforeTimestamp
   );
-  return new MessageCollection(messages, MessageModel).models;
+  return makeMessageModels(messages);
 }
 
 async function markAllAsReadByConversationNoExpiration(
@@ -422,7 +427,7 @@ async function getMessagesByConversation(
     returnQuotes = false,
     messageId = null,
   }: { skipTimerInit?: false; returnQuotes?: boolean; messageId: string | null }
-): Promise<{ messages: MessageCollection; quotes: Array<Quote> }> {
+): Promise<{ messages: Array<MessageModel>; quotes: Array<Quote> }> {
   const { messages, quotes } = await channels.getMessagesByConversation(conversationId, {
     messageId,
     returnQuotes,
@@ -436,7 +441,7 @@ async function getMessagesByConversation(
   }
 
   return {
-    messages: new MessageCollection(messages, MessageModel),
+    messages: makeMessageModels(messages),
     quotes,
   };
 }
@@ -456,7 +461,7 @@ async function getLastMessagesByConversation(
   conversationId: string,
   limit: number,
   skipTimerInit: boolean
-): Promise<MessageCollection> {
+): Promise<Array<MessageModel>> {
   const messages = await channels.getLastMessagesByConversation(conversationId, limit);
   if (skipTimerInit) {
     // eslint-disable-next-line no-restricted-syntax
@@ -464,12 +469,12 @@ async function getLastMessagesByConversation(
       message.skipTimerInit = skipTimerInit;
     }
   }
-  return new MessageCollection(messages, MessageModel);
+  return makeMessageModels(messages);
 }
 
 async function getLastMessageIdInConversation(conversationId: string) {
   const collection = await getLastMessagesByConversation(conversationId, 1, true);
-  return collection.models.length ? collection.models[0].id : null;
+  return collection.length ? collection[0].id : null;
 }
 
 async function getLastMessageInConversation(conversationId: string) {
@@ -478,9 +483,8 @@ async function getLastMessageInConversation(conversationId: string) {
   for (const message of messages) {
     message.skipTimerInit = true;
   }
-
-  const collection = new MessageCollection(messages, MessageModel);
-  return collection.length ? collection.models[0] : null;
+  const collection = makeMessageModels(messages);
+  return collection.length ? collection[0] : null;
 }
 
 async function getOldestMessageInConversation(conversationId: string) {
@@ -490,8 +494,8 @@ async function getOldestMessageInConversation(conversationId: string) {
     message.skipTimerInit = true;
   }
 
-  const collection = new MessageCollection(messages, MessageModel);
-  return collection.length ? collection.models[0] : null;
+  const collection = makeMessageModels(messages);
+  return collection.length ? collection[0] : null;
 }
 
 /**
@@ -607,13 +611,13 @@ async function findAllMessageHashesInConversation(
 async function findAllMessageHashesInConversationMatchingAuthor(
   args: FindAllMessageHashesInConversationMatchingAuthorTypeArgs
 ): Promise<Array<MessageModel>> {
-  const msgAttrs = await channels.findAllMessageHashesInConversationMatchingAuthor(args);
+  const msgAttrs: unknown = await channels.findAllMessageHashesInConversationMatchingAuthor(args);
 
   if (!msgAttrs || isEmpty(msgAttrs) || !isArray(msgAttrs)) {
     return [];
   }
 
-  return msgAttrs.map((msg: any) => new MessageModel(msg));
+  return msgAttrs.map(attrs => new MessageModel(attrs));
 }
 
 async function fetchAllGroupUpdateFailedMessage(groupPk: GroupPubkeyType) {
@@ -626,24 +630,24 @@ async function fetchAllGroupUpdateFailedMessage(groupPk: GroupPubkeyType) {
   return msgAttrs.map((msg: any) => new MessageModel(msg));
 }
 
-async function getMessagesBySentAt(sentAt: number): Promise<MessageCollection> {
+async function getMessagesBySentAt(sentAt: number): Promise<Array<MessageModel>> {
   const messages = await channels.getMessagesBySentAt(sentAt);
-  return new MessageCollection(messages, MessageModel);
+  return makeMessageModels(messages);
 }
 
-async function getExpiredMessages(): Promise<MessageCollection> {
-  const messages = await channels.getExpiredMessages();
-  return new MessageCollection(messages, MessageModel);
+async function getExpiredMessages(): Promise<Array<MessageModel>> {
+  const attrs = await channels.getExpiredMessages();
+  return makeMessageModels(attrs);
 }
 
-async function getOutgoingWithoutExpiresAt(): Promise<MessageCollection> {
-  const messages = await channels.getOutgoingWithoutExpiresAt();
-  return new MessageCollection(messages, MessageModel);
+async function getOutgoingWithoutExpiresAt(): Promise<Array<MessageModel>> {
+  const attrs = await channels.getOutgoingWithoutExpiresAt();
+  return (attrs || []).map((a: MessageAttributesOptionals) => new MessageModel(a));
 }
 
-async function getNextExpiringMessage(): Promise<MessageCollection> {
+async function getNextExpiringMessage(): Promise<Array<MessageModel>> {
   const messages = await channels.getNextExpiringMessage();
-  return new MessageCollection(messages, MessageModel);
+  return makeMessageModels(messages);
 }
 
 // Unprocessed
