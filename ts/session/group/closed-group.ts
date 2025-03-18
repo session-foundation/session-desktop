@@ -305,7 +305,7 @@ async function sendNewName(convo: ConversationModel, name: string, messageId: st
     return;
   }
 
-  const groupId = convo.get('id');
+  const groupId = convo.id;
 
   // Send the update to the group
   const nameChangeMessage = new ClosedGroupNameChangeMessage({
@@ -394,7 +394,7 @@ async function sendRemovedMembers(
   }
   const ourNumber = UserUtils.getOurPubKeyFromCache();
   const admins = convo.getGroupAdmins() || [];
-  const groupId = convo.get('id');
+  const groupId = convo.id;
 
   const isCurrentUserAdmin = admins.includes(ourNumber.key);
   const isUserLeaving = removedMembers.includes(ourNumber.key);

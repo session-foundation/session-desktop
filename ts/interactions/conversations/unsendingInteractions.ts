@@ -311,7 +311,7 @@ async function deleteMessagesLocallyOnly({
     if (deletionType === 'complete') {
       // remove the message from the database
       // eslint-disable-next-line no-await-in-loop
-      await conversation.removeMessage(message.get('id'));
+      await conversation.removeMessage(message.id);
     } else {
       // just mark the message as deleted but still show in conversation
       // eslint-disable-next-line no-await-in-loop

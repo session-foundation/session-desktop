@@ -71,7 +71,7 @@ export const MessageQuote = (props: Props) => {
         // If found, we navigate to the quoted message which also refreshes the message quote component
         if (quotedMessage) {
           conversationKey = String(quotedMessage.get('conversationId'));
-          messageIdToNavigateTo = String(quotedMessage.get('id'));
+          messageIdToNavigateTo = String(quotedMessage.id);
         } else {
           quoteNotFoundInDB = true;
         }

@@ -11,10 +11,10 @@ import { updateGroupMembersModal, updateInviteContactModal } from '../../state/d
 import { SpacerLG } from '../basic/Text';
 
 import {
-  useIsPrivate,
-  useIsPublic,
-  useSortedGroupMembers,
-  useZombies,
+    useIsPrivate,
+    useIsPublic,
+    useSortedGroupMembers,
+    useZombies,
 } from '../../hooks/useParamSelector';
 import { useSet } from '../../hooks/useSet';
 import { ClosedGroup } from '../../session/group/closed-group';
@@ -103,7 +103,7 @@ const submitForClosedGroup = async (convoId: string, pubkeys: Array<string>) => 
     const allMembers = _.concat(existingMembers, newMembers, [ourPK]);
     const uniqMembers = _.uniq(allMembers);
 
-    const groupId = convo.get('id');
+    const groupId = convo.id;
     const groupName = convo.getNicknameOrRealUsernameOrPlaceholder();
 
     await ClosedGroup.initiateClosedGroupUpdate(groupId, groupName, uniqMembers);

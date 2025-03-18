@@ -103,7 +103,7 @@ export class MessageModel extends Model<MessageAttributes> {
     const filledAttrs = fillMessageAttributesWithDefaults(attributes);
     super(filledAttrs);
 
-    if (!this.get('id')) {
+    if (!this.id) {
       throw new Error('A message always needs to have an id.');
     }
     if (!this.get('conversationId')) {
@@ -152,7 +152,7 @@ export class MessageModel extends Model<MessageAttributes> {
 
     if (callNotificationType) {
       const propsForCallNotification: PropsForCallNotification = {
-        messageId: this.get('id'),
+        messageId: this.id,
         notificationType: callNotificationType,
       };
       messageProps.propsForCallNotification = propsForCallNotification;
@@ -605,7 +605,7 @@ export class MessageModel extends Model<MessageAttributes> {
     const isTrustedForAttachmentDownload = this.isTrustedForAttachmentDownload();
     const body = this.get('body');
     const props: PropsForMessageWithoutConvoProps = {
-      id: this.get('id'),
+      id: this.id,
       direction: this.isIncoming() ? 'incoming' : 'outgoing',
       timestamp: this.get('sent_at') || 0,
       sender,
@@ -899,7 +899,7 @@ export class MessageModel extends Model<MessageAttributes> {
 
       if (conversation.isPublic()) {
         const openGroupParams: OpenGroupVisibleMessageParams = {
-          identifier: this.get('id'),
+          identifier: this.id,
           createAtNetworkTimestamp: NetworkTime.now(),
           lokiProfile: UserUtils.getOurProfile(),
           body,
@@ -926,7 +926,7 @@ export class MessageModel extends Model<MessageAttributes> {
       const createAtNetworkTimestamp = NetworkTime.now();
 
       const chatParams: VisibleMessageParams = {
-        identifier: this.get('id'),
+        identifier: this.id,
         body,
         createAtNetworkTimestamp,
         attachments,
@@ -1040,7 +1040,7 @@ export class MessageModel extends Model<MessageAttributes> {
       window?.log?.error('Message hash not provided to update message hash');
     }
     if (this.get('messageHash') !== messageHash) {
-      window?.log?.info(`updated message ${this.get('id')} with hash: ${messageHash}`);
+      window?.log?.info(`updated message ${this.id} with hash: ${messageHash}`);
 
       this.set({
         messageHash,
@@ -1087,7 +1087,7 @@ export class MessageModel extends Model<MessageAttributes> {
       );
 
       const syncMessage = buildSyncMessage(
-        this.get('id'),
+        this.id,
         dataMessage as SignalService.DataMessage,
         conversation.id,
         sentTimestamp,
@@ -1118,7 +1118,7 @@ export class MessageModel extends Model<MessageAttributes> {
   }
 
   public async commit(triggerUIUpdate = true) {
-    if (!this.get('id')) {
+    if (!this.id) {
       throw new Error('A message always needs an id');
     }
     // because the saving to db calls _cleanData which mutates the field for cleaning, we need to save a copy
@@ -1164,7 +1164,7 @@ export class MessageModel extends Model<MessageAttributes> {
                 expirationMode,
                 readAt,
                 'markMessageReadNoCommit',
-                this.get('id')
+                this.id
               ),
             });
             // return true, we want to update/refresh the real expiry of this message from the swarm
@@ -1176,7 +1176,7 @@ export class MessageModel extends Model<MessageAttributes> {
       }
     }
 
-    Notifications.clearByMessageId(this.get('id'));
+    Notifications.clearByMessageId(this.id);
     return false;
   }
 
@@ -1213,7 +1213,7 @@ export class MessageModel extends Model<MessageAttributes> {
         expires_at: expiresAt,
       });
 
-      if (this.get('id')) {
+      if (this.id) {
         await this.commit();
       }
 
@@ -1262,7 +1262,7 @@ export class MessageModel extends Model<MessageAttributes> {
   }
 
   private dispatchMessageUpdate() {
-    updatesToDispatch.set(this.get('id'), this.getMessageModelProps());
+    updatesToDispatch.set(this.id, this.getMessageModelProps());
     throttledAllMessagesDispatch();
   }
 

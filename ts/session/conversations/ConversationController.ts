@@ -151,7 +151,7 @@ class ConvoController {
 
       window?.inboxStore?.dispatch(
         conversationActions.conversationAdded({
-          id: conversation.get('id'),
+          id: conversation.id,
           data: conversation.getConversationModelProps(),
         })
       );

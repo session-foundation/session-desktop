@@ -45,7 +45,7 @@ describe('ReactionMessage', () => {
 
   it('can react to a message', async () => {
     // Send reaction
-    const reaction = await Reactions.sendMessageReaction(originalMessage.get('id'), '😄');
+    const reaction = await Reactions.sendMessageReaction(originalMessage.id, '😄');
 
     expect(reaction?.id, 'id should match the original message timestamp').to.be.equal(
       Number(originalMessage.get('sent_at'))
@@ -77,7 +77,7 @@ describe('ReactionMessage', () => {
 
   it('can remove a reaction from a message', async () => {
     // Send reaction
-    const reaction = await Reactions.sendMessageReaction(originalMessage.get('id'), '😄');
+    const reaction = await Reactions.sendMessageReaction(originalMessage.id, '😄');
 
     expect(reaction?.id, 'id should match the original message timestamp').to.be.equal(
       Number(originalMessage.get('sent_at'))
@@ -103,10 +103,10 @@ describe('ReactionMessage', () => {
     // we have already sent 2 messages when this test runs
     for (let i = 0; i < 18; i++) {
       // Send reaction
-      await Reactions.sendMessageReaction(originalMessage.get('id'), '👍');
+      await Reactions.sendMessageReaction(originalMessage.id, '👍');
     }
 
-    let reaction = await Reactions.sendMessageReaction(originalMessage.get('id'), '👎');
+    let reaction = await Reactions.sendMessageReaction(originalMessage.id, '👎');
 
     expect(reaction, 'no reaction should be returned since we are over the rate limit').to.be
       .undefined;
@@ -116,7 +116,7 @@ describe('ReactionMessage', () => {
     // Wait a minute for the rate limit to clear
     clock.tick(1 * 60 * 1000);
 
-    reaction = await Reactions.sendMessageReaction(originalMessage.get('id'), '👋');
+    reaction = await Reactions.sendMessageReaction(originalMessage.id, '👋');
 
     expect(reaction?.id, 'id should match the original message timestamp').to.be.equal(
       Number(originalMessage.get('sent_at'))

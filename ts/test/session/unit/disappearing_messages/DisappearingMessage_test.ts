@@ -466,7 +466,7 @@ describe('DisappearingMessage', () => {
         ...conversationArgs,
         id: ourNumber,
       });
-      const message = generateFakeOutgoingPrivateMessage(conversation.get('id'));
+      const message = generateFakeOutgoingPrivateMessage(conversation.id);
       message.set({
         expirationType: 'deleteAfterRead',
         expireTimer: 300,
@@ -490,7 +490,7 @@ describe('DisappearingMessage', () => {
         ...conversationArgs,
         id: ourNumber,
       });
-      const message = generateFakeOutgoingPrivateMessage(conversation.get('id'));
+      const message = generateFakeOutgoingPrivateMessage(conversation.id);
       message.set({
         expirationType: 'deleteAfterRead',
         sent_at: NetworkTime.now(),
@@ -506,7 +506,7 @@ describe('DisappearingMessage', () => {
         ...conversationArgs,
         id: ourNumber,
       });
-      const message = generateFakeOutgoingPrivateMessage(conversation.get('id'));
+      const message = generateFakeOutgoingPrivateMessage(conversation.id);
       message.set({
         expireTimer: 300,
         sent_at: NetworkTime.now(),
@@ -523,7 +523,7 @@ describe('DisappearingMessage', () => {
         ...conversationArgs,
         id: ourNumber,
       });
-      const message = generateFakeOutgoingPrivateMessage(conversation.get('id'));
+      const message = generateFakeOutgoingPrivateMessage(conversation.id);
       message.set({
         expirationType: 'deleteAfterRead',
         expireTimer: 300,

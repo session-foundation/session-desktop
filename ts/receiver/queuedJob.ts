@@ -391,7 +391,7 @@ async function markConvoAsReadIfOutgoingMessage(
               expirationMode,
               message.get('sent_at'),
               'markConvoAsReadIfOutgoingMessage',
-              message.get('id')
+              message.id
             ),
           });
           await message.commit();
@@ -450,7 +450,7 @@ export async function handleMessageJob(
             expirationMode,
             messageModel.get('sent_at'),
             'handleMessageJob',
-            messageModel.get('id')
+            messageModel.id
           ),
         });
       }

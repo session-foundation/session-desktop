@@ -1045,7 +1045,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       expireTimer: this.isClosedGroup() && !this.isClosedGroupV2() ? 0 : expireTimer,
     });
 
-    if (!message.get('id')) {
+    if (!message.id) {
       message.set({ id: v4() });
     }
 
@@ -1080,7 +1080,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
               expirationMode,
               message.get('sent_at'),
               'updateExpireTimer() remote change',
-              message.get('id')
+              message.id
             ),
           });
         }
@@ -1119,7 +1119,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (this.isPrivate()) {
       const expirationTimerMessage = new ExpirationTimerUpdateMessage(expireUpdate);
 
-      const pubkey = new PubKey(this.get('id'));
+      const pubkey = new PubKey(this.id);
       await MessageQueue.use().sendToPubKey(
         pubkey,
         expirationTimerMessage,
@@ -1147,7 +1147,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
             typeOfChange: SignalService.GroupUpdateInfoChangeMessage.Type.DISAPPEARING_MESSAGES,
             ...expireUpdate,
             groupPk: this.id,
-            identifier: message.get('id'),
+            identifier: message.id,
             sodium: await getSodiumRenderer(),
             secretKey: group.secretKey,
             updatedExpirationSeconds: expireUpdate.expireTimer,
@@ -1173,7 +1173,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
         const expireUpdateForGroup = {
           ...expireUpdate,
-          groupId: this.get('id'),
+          groupId: this.id,
         };
 
         const expirationTimerMessage = new ExpirationTimerUpdateMessage(expireUpdateForGroup);
@@ -2405,7 +2405,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     for (const nowRead of oldUnreadNowRead) {
       const shouldUpdateSwarmExpiry = nowRead.markMessageReadNoCommit(readAt);
       if (shouldUpdateSwarmExpiry) {
-        msgsIdsToUpdateExpireOnSwarm.push(nowRead.get('id') as string);
+        msgsIdsToUpdateExpireOnSwarm.push(nowRead.id as string);
       }
 
       const sentAt = nowRead.get('sent_at') || nowRead.get('serverTimestamp');

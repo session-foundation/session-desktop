@@ -267,7 +267,7 @@ async function start() {
       }
 
       window.log.info(`Cleanup: Deleting unsent message ${sentAt}`);
-      idsToCleanUp.push(message.get('id'));
+      idsToCleanUp.push(message.id);
     })
   );
 
