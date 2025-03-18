@@ -54,7 +54,7 @@
   "dependencies": {
     "@emoji-mart/data": "^1.2.1",
     "@emoji-mart/react": "^1.1.1",
-    "@reduxjs/toolkit": "2.6.1",
+    "@reduxjs/toolkit": "^1.9.7",
     "@signalapp/better-sqlite3": "9.0.13",
     "@types/react-mentions": "^4.4.1",
     "@types/react-test-renderer": "^18.3.1",
@@ -305,6 +305,9 @@
       "!**/node_modules/*/build/**",
       "!**/*.{o,hprof,orig,pyc,pyo,rbc}",
       "!**/._*",
+      "node_modules/linkify-it/package.json",
+      "node_modules/linkify-it/build/index.cjs.js",
+      "node_modules/uc.micro/build/index.cjs.js",
       "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,__pycache__,thumbs.db,.gitignore,.gitattributes,.editorconfig,.flowconfig,.yarn-metadata.json,.idea,appveyor.yml,.travis.yml,circle.yml,npm-debug.log,,yarn.lock,.yarn-integrity,.map}",
       "!**/*.js.map",
       "!**/*.ts",
