@@ -475,7 +475,7 @@ class ConvoController {
       window.log.info(`deleteContact isPrivate, reset fields and removing from wrapper: ${id}`);
 
       await conversation.setHidden();
-      conversation.setSingle('active_at', 0);
+      conversation.setKey('active_at', 0);
       await BlockedNumberController.unblockAll([conversation.id]);
       await conversation.commit(); // first commit to DB so the DB knows about the changes
       if (SessionUtilContact.isContactToStoreInWrapper(conversation)) {

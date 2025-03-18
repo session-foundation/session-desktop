@@ -103,7 +103,7 @@ describe('SwarmPolling:pollForAllKeys', () => {
     stubWithGroups([]);
     stubWithLegacyGroups([]);
     const convo = ConvoHub.use().getOrCreate(ourNumber, ConversationTypeEnum.PRIVATE);
-    convo.setSingle('active_at', Date.now() - 1000 * 3600 * 25);
+    convo.setKey('active_at', Date.now() - 1000 * 3600 * 25);
     await swarmPolling.start(true);
 
     expect(pollOnceForKeySpy.callCount).to.eq(1);
@@ -114,7 +114,7 @@ describe('SwarmPolling:pollForAllKeys', () => {
     stubWithGroups([]);
     stubWithLegacyGroups([]);
     const convo = ConvoHub.use().getOrCreate(ourNumber, ConversationTypeEnum.PRIVATE);
-    convo.setSingle('active_at', Date.now());
+    convo.setKey('active_at', Date.now());
     await swarmPolling.start(true);
 
     expect(pollOnceForKeySpy.callCount).to.eq(1);
@@ -127,7 +127,7 @@ describe('SwarmPolling:pollForAllKeys', () => {
       const convo = ConvoHub.use().getOrCreate(groupPk, ConversationTypeEnum.GROUP);
       stubWithLegacyGroups([groupPk]);
       stubWithGroups([]);
-      convo.setSingle('active_at', Date.now());
+      convo.setKey('active_at', Date.now());
       const groupConvoPubkey = PubKey.cast(groupPk);
       swarmPolling.addGroupId(groupConvoPubkey);
       await swarmPolling.start(true);
@@ -145,7 +145,7 @@ describe('SwarmPolling:pollForAllKeys', () => {
 
       stubWithLegacyGroups([groupPk]);
       stubWithGroups([]);
-      convo.setSingle('active_at', 1);
+      convo.setKey('active_at', 1);
       swarmPolling.addGroupId(PubKey.cast(groupPk));
 
       await swarmPolling.start(true);
@@ -167,7 +167,7 @@ describe('SwarmPolling:pollForAllKeys', () => {
       stubWithLegacyGroups([groupPk]);
       stubWithGroups([]);
 
-      groupConvo.setSingle('active_at', 1); // really old, but active
+      groupConvo.setKey('active_at', 1); // really old, but active
       swarmPolling.addGroupId(groupPk);
       // this calls the stub 2 times, one for our direct pubkey and one for the group
       await swarmPolling.start(true);
@@ -188,7 +188,7 @@ describe('SwarmPolling:pollForAllKeys', () => {
       stubWithLegacyGroups([groupPk]);
       stubWithGroups([]);
 
-      convo.setSingle('active_at', Date.now());
+      convo.setKey('active_at', Date.now());
       swarmPolling.addGroupId(groupPk);
       await swarmPolling.start(true);
       expect(pollOnceForKeySpy.callCount).to.eq(2);
@@ -220,14 +220,14 @@ describe('SwarmPolling:pollForAllKeys', () => {
       stubWithLegacyGroups([groupPk]);
       stubWithGroups([]);
       pollOnceForKeySpy.resetHistory();
-      convo.setSingle('active_at', Date.now());
+      convo.setKey('active_at', Date.now());
       swarmPolling.addGroupId(groupPk);
       // this call the stub two times already, one for our direct pubkey and one for the group
       await swarmPolling.start(true);
       const timeToTick = 3 * 60 * 1000;
       swarmPolling.forcePolledTimestamp(groupPk, Date.now() - timeToTick);
       // more than week old, so inactive group but we have to tick after more than 2 min
-      convo.setSingle('active_at', Date.now() - 7 * 25 * 3600 * 1000);
+      convo.setKey('active_at', Date.now() - 7 * 25 * 3600 * 1000);
       clock.tick(timeToTick);
       /** this is not easy to explain, but
        * - during the swarmPolling.start, we get two calls to pollOnceForKeySpy (one for our id and one for group od)
@@ -252,12 +252,12 @@ describe('SwarmPolling:pollForAllKeys', () => {
       stubWithLegacyGroups([groupPk]);
       stubWithGroups([]);
 
-      convo.setSingle('active_at', Date.now());
+      convo.setKey('active_at', Date.now());
       swarmPolling.addGroupId(groupPk);
       await swarmPolling.start(true);
 
       // more than a week old, we should not tick after just 5 seconds
-      convo.setSingle('active_at', Date.now() - 7 * 24 * 3600 * 1000 - 3600 * 1000);
+      convo.setKey('active_at', Date.now() - 7 * 24 * 3600 * 1000 - 3600 * 1000);
 
       clock.tick(1 * 60 * 1000);
       await sleepFor(10);
@@ -281,7 +281,7 @@ describe('SwarmPolling:pollForAllKeys', () => {
         stubWithLegacyGroups([convo.id]);
         stubWithGroups([]);
 
-        convo.setSingle('active_at', Date.now());
+        convo.setKey('active_at', Date.now());
         groupConvoPubkey = PubKey.cast(convo.id);
         swarmPolling.addGroupId(groupConvoPubkey);
         await swarmPolling.start(true);
@@ -297,7 +297,7 @@ describe('SwarmPolling:pollForAllKeys', () => {
       it('does run twice if activeAt is less than 2 days', async () => {
         pollOnceForKeySpy.resetHistory();
         // less than 2 days old, this is an active group
-        convo.setSingle('active_at', Date.now() - 2 * 24 * 3600 * 1000 - 3600 * 1000);
+        convo.setKey('active_at', Date.now() - 2 * 24 * 3600 * 1000 - 3600 * 1000);
 
         const timeToTick = 6 * 1000;
 
@@ -323,7 +323,7 @@ describe('SwarmPolling:pollForAllKeys', () => {
       it('does run twice if activeAt is more than 2 days old and we tick more than one minute', async () => {
         pollOnceForKeySpy.resetHistory();
         TestUtils.stubWindowLog();
-        convo.setSingle('active_at', Date.now() - 2 * 25 * 3600 * 1000); // medium active
+        convo.setKey('active_at', Date.now() - 2 * 25 * 3600 * 1000); // medium active
         // fake that the group is part of the wrapper otherwise we stop tracking it after the first polling event
 
         const timeToTick = 65 * 1000; // more than one minute
@@ -355,7 +355,7 @@ describe('SwarmPolling:pollForAllKeys', () => {
       const convo = ConvoHub.use().getOrCreate(groupPk, ConversationTypeEnum.GROUPV2);
       stubWithLegacyGroups([]);
       stubWithGroups([groupPk]);
-      convo.setSingle('active_at', Date.now());
+      convo.setKey('active_at', Date.now());
       const groupConvoPubkey = PubKey.cast(groupPk);
       swarmPolling.addGroupId(groupConvoPubkey);
       await swarmPolling.start(true);
@@ -372,7 +372,7 @@ describe('SwarmPolling:pollForAllKeys', () => {
       const convo = ConvoHub.use().getOrCreate(groupPk, ConversationTypeEnum.GROUPV2);
       stubWithLegacyGroups([]);
       stubWithGroups([groupPk]);
-      convo.setSingle('active_at', 1);
+      convo.setKey('active_at', 1);
       swarmPolling.addGroupId(PubKey.cast(groupPk));
 
       await swarmPolling.start(true);
@@ -393,7 +393,7 @@ describe('SwarmPolling:pollForAllKeys', () => {
       stubWithLegacyGroups([]);
       stubWithGroups([groupPk]);
 
-      convo.setSingle('active_at', 1); // really old, but active
+      convo.setKey('active_at', 1); // really old, but active
       swarmPolling.addGroupId(groupPk);
       // this calls the stub 2 times, one for our direct pubkey and one for the group
       await swarmPolling.start(true);
@@ -412,7 +412,7 @@ describe('SwarmPolling:pollForAllKeys', () => {
       stubWithLegacyGroups([]);
       stubWithGroups([groupPk]);
 
-      convo.setSingle('active_at', Date.now());
+      convo.setKey('active_at', Date.now());
       swarmPolling.addGroupId(groupPk);
       await swarmPolling.start(true);
       expect(pollOnceForKeySpy.callCount).to.eq(2);
@@ -442,14 +442,14 @@ describe('SwarmPolling:pollForAllKeys', () => {
       stubWithGroups([groupPk]);
 
       pollOnceForKeySpy.resetHistory();
-      convo.setSingle('active_at', Date.now());
+      convo.setKey('active_at', Date.now());
       swarmPolling.addGroupId(groupPk);
       // this call the stub two times already, one for our direct pubkey and one for the group
       await swarmPolling.start(true);
       const timeToTick = 3 * 60 * 1000;
       swarmPolling.forcePolledTimestamp(groupPk, Date.now() - timeToTick);
       // more than week old, so inactive group but we have to tick after more than 2 min
-      convo.setSingle('active_at', Date.now() - 7 * 25 * 3600 * 1000);
+      convo.setKey('active_at', Date.now() - 7 * 25 * 3600 * 1000);
       clock.tick(timeToTick);
       /** this is not easy to explain, but
        * - during the swarmPolling.start, we get two calls to pollOnceForKeySpy (one for our id and one for group od)
@@ -471,12 +471,12 @@ describe('SwarmPolling:pollForAllKeys', () => {
       stubWithLegacyGroups([]);
       stubWithGroups([groupPk]);
 
-      convo.setSingle('active_at', Date.now());
+      convo.setKey('active_at', Date.now());
       swarmPolling.addGroupId(groupPk);
       await swarmPolling.start(true);
 
       // more than a week old, we should not tick after just 5 seconds
-      convo.setSingle('active_at', Date.now() - 7 * 24 * 3600 * 1000 - 3600 * 1000);
+      convo.setKey('active_at', Date.now() - 7 * 24 * 3600 * 1000 - 3600 * 1000);
 
       clock.tick(1 * 60 * 1000);
       await sleepFor(10);
@@ -500,7 +500,7 @@ describe('SwarmPolling:pollForAllKeys', () => {
         stubWithLegacyGroups([]);
         stubWithGroups([convo.id as GroupPubkeyType]);
 
-        convo.setSingle('active_at', Date.now());
+        convo.setKey('active_at', Date.now());
         groupConvoPubkey = PubKey.cast(convo.id);
         swarmPolling.addGroupId(groupConvoPubkey);
         await swarmPolling.start(true);
@@ -516,7 +516,7 @@ describe('SwarmPolling:pollForAllKeys', () => {
       it('does run twice if activeAt is less than 2 days', async () => {
         pollOnceForKeySpy.resetHistory();
         // less than 2 days old, this is an active group
-        convo.setSingle('active_at', Date.now() - 2 * 24 * 3600 * 1000 - 3600 * 1000);
+        convo.setKey('active_at', Date.now() - 2 * 24 * 3600 * 1000 - 3600 * 1000);
 
         const timeToTick = 6 * 1000;
 
@@ -542,7 +542,7 @@ describe('SwarmPolling:pollForAllKeys', () => {
       it('does run twice if activeAt is more than 2 days old and we tick more than one minute', async () => {
         pollOnceForKeySpy.resetHistory();
         TestUtils.stubWindowLog();
-        convo.setSingle('active_at', Date.now() - 2 * 25 * 3600 * 1000); // medium active
+        convo.setKey('active_at', Date.now() - 2 * 25 * 3600 * 1000); // medium active
         // fake that the group is part of the wrapper otherwise we stop tracking it after the first polling event
 
         const timeToTick = 65 * 1000; // more than one minute

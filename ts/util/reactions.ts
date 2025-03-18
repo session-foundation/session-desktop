@@ -203,7 +203,7 @@ const handleMessageReaction = async ({
 
     if (details && details.index === undefined) {
       reacts[reaction.emoji].index = originalMessage.get('reactsIndex') ?? 0;
-      originalMessage.setSingle('reactsIndex', (originalMessage.get('reactsIndex') ?? 0) + 1);
+      originalMessage.setKey('reactsIndex', (originalMessage.get('reactsIndex') ?? 0) + 1);
     }
   } else {
     delete reacts[reaction.emoji];

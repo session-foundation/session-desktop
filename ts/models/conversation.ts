@@ -1050,7 +1050,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
 
     if (this.isActive()) {
-      this.setSingle('active_at', createAtNetworkTimestamp);
+      this.setKey('active_at', createAtNetworkTimestamp);
     }
 
     if (shouldCommitConvo) {

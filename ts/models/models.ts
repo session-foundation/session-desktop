@@ -19,7 +19,7 @@ export abstract class Model<T extends ModelAttributes> {
     return this._attributes[key];
   }
 
-  public setSingle<K extends keyof T>(key: K, value: T[K] | undefined) {
+  public setKey<K extends keyof T>(key: K, value: T[K] | undefined) {
     const toSet: Partial<T> = {};
     toSet[key] = value;
     this.set(toSet);

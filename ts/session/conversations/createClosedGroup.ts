@@ -39,7 +39,7 @@ export async function createClosedGroup(groupName: string, members: Array<string
   // Create the group
   const convo = await ConvoHub.use().getOrCreateAndWait(groupPublicKey, ConversationTypeEnum.GROUP);
 
-  convo.setSingle('lastJoinedTimestamp', Date.now());
+  convo.setKey('lastJoinedTimestamp', Date.now());
 
   await convo.setIsApproved(true, false);
 

@@ -366,7 +366,7 @@ async function handleSwarmMessage(
         msgModel.get('unread') &&
         rawDataMessage.reaction.action === Action.REACT
       ) {
-        msgModel.setSingle('reaction', rawDataMessage.reaction as Reaction);
+        msgModel.setKey('reaction', rawDataMessage.reaction as Reaction);
         convoToAddMessageTo.throttledNotify(msgModel);
       }
 

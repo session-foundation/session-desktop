@@ -24,7 +24,7 @@ describe('ReactionMessage', () => {
   let clock: Sinon.SinonFakeTimers;
   const ourNumber = TestUtils.generateFakePubKeyStr();
   const originalMessage = generateFakeIncomingPrivateMessage();
-  originalMessage.setSingle('sent_at', Date.now());
+  originalMessage.setKey('sent_at', Date.now());
 
   beforeEach(() => {
     Sinon.stub(originalMessage, 'getConversation').returns({
