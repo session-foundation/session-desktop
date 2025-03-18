@@ -327,7 +327,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     // To reduce the redux store size, only set fields which cannot be undefined.
     // For instance, a boolean can usually be not set if false, etc
     const toRet: ReduxConversationType = {
-      id: this.id as string,
+      id: this.id,
       activeAt: this.getActiveAt(),
       type: this.get('type'),
     };
@@ -1098,7 +1098,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     // We would have returned if that message sending part was not needed
     //
     const expireUpdate = {
-      identifier: message.id as string,
+      identifier: message.id,
       createAtNetworkTimestamp,
       expirationType,
       expireTimer,
@@ -1482,7 +1482,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       return false;
     }
 
-    const groupModerators = getModeratorsOutsideRedux(this.id as string);
+    const groupModerators = getModeratorsOutsideRedux(this.id);
     return Array.isArray(groupModerators) && groupModerators.includes(pubKey);
   }
 
@@ -1948,7 +1948,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
     const iconUrl = await this.getNotificationIcon();
 
-    const messageAttrs = message.cloneAttributes();
+    const messageAttrs = message.attributes;
     const messageSentAt = messageAttrs.sent_at;
     const messageId = message.id;
     const isExpiringMessage = this.isExpiringMessage(messageAttrs);
@@ -2083,7 +2083,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     try {
       const { body, attachments, preview, quote, fileIdsToLink } = await message.uploadData();
       const { id } = message;
-      const destination = this.id as string;
+      const destination = this.id;
 
       const sentAt = message.get('sent_at'); // this is used to store the timestamp when we tried sending that message, it should be set by the caller
       if (!sentAt) {
@@ -2405,7 +2405,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     for (const nowRead of oldUnreadNowRead) {
       const shouldUpdateSwarmExpiry = nowRead.markMessageReadNoCommit(readAt);
       if (shouldUpdateSwarmExpiry) {
-        msgsIdsToUpdateExpireOnSwarm.push(nowRead.id as string);
+        msgsIdsToUpdateExpireOnSwarm.push(nowRead.id);
       }
 
       const sentAt = nowRead.get('sent_at') || nowRead.get('serverTimestamp');
@@ -2492,7 +2492,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
   }
 
-  private isExpiringMessage(json: MessageAttributes) {
+  private isExpiringMessage(json: Readonly<MessageAttributes>) {
     if (json.type === 'incoming') {
       return false;
     }
@@ -2575,7 +2575,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       return;
     }
 
-    const recipientId = this.id as string;
+    const recipientId = this.id;
 
     if (isEmpty(recipientId)) {
       throw new Error('Need to provide either recipientId');

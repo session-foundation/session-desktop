@@ -282,7 +282,7 @@ describe('SwarmPolling:pollForAllKeys', () => {
         stubWithGroups([]);
 
         convo.setSingle('active_at', Date.now());
-        groupConvoPubkey = PubKey.cast(convo.id as string);
+        groupConvoPubkey = PubKey.cast(convo.id);
         swarmPolling.addGroupId(groupConvoPubkey);
         await swarmPolling.start(true);
       });
@@ -501,7 +501,7 @@ describe('SwarmPolling:pollForAllKeys', () => {
         stubWithGroups([convo.id as GroupPubkeyType]);
 
         convo.setSingle('active_at', Date.now());
-        groupConvoPubkey = PubKey.cast(convo.id as string);
+        groupConvoPubkey = PubKey.cast(convo.id);
         swarmPolling.addGroupId(groupConvoPubkey);
         await swarmPolling.start(true);
       });

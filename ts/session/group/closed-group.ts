@@ -131,7 +131,7 @@ async function initiateClosedGroupUpdate(
       ...sharedDetails,
       messageHash: null, // this is legacy groups
     });
-    await sendNewName(convo, diff.newName, dbMessageName.id as string);
+    await sendNewName(convo, diff.newName, dbMessageName.id);
   }
 
   if (diff.type === 'add' && diff.added?.length) {
@@ -142,7 +142,7 @@ async function initiateClosedGroupUpdate(
       ...sharedDetails,
       messageHash: null, // this is legacy groups
     });
-    await sendAddedMembers(convo, diff.added, dbMessageAdded.id as string, updateObj);
+    await sendAddedMembers(convo, diff.added, dbMessageAdded.id, updateObj);
   }
 
   if (diff.type === 'kicked' && diff.kicked?.length) {
@@ -153,7 +153,7 @@ async function initiateClosedGroupUpdate(
       ...sharedDetails,
       messageHash: null, // this is legacy groups
     });
-    await sendRemovedMembers(convo, diff.kicked, updatedMembers, dbMessageLeaving.id as string);
+    await sendRemovedMembers(convo, diff.kicked, updatedMembers, dbMessageLeaving.id);
   }
   await convo.commit();
 }

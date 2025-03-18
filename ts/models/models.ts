@@ -5,18 +5,18 @@ import type { MessageAttributes } from './messageType';
 export type ModelAttributes = Record<string, any> & { id: string };
 
 export abstract class Model<T extends ModelAttributes> {
-  protected attributes: T;
+  protected _attributes: T;
 
   constructor(attributes: T) {
-    this.attributes = attributes;
+    this._attributes = attributes;
   }
 
   get id(): string {
-    return this.attributes.id;
+    return this._attributes.id;
   }
 
   public get<K extends keyof T>(key: K): T[K] {
-    return this.attributes[key];
+    return this._attributes[key];
   }
 
   public setSingle<K extends keyof T>(key: K, value: T[K] | undefined) {
@@ -27,12 +27,16 @@ export abstract class Model<T extends ModelAttributes> {
   }
 
   public set(attrs: Partial<T>) {
-    this.attributes = assign(this.attributes, attrs);
+    this._attributes = assign(this._attributes, attrs);
     return this;
   }
 
+  get attributes(): Readonly<T> {
+    return this._attributes;
+  }
+
   public cloneAttributes() {
-    return cloneDeep(this.attributes);
+    return cloneDeep(this._attributes);
   }
 }
 

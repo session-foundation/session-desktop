@@ -305,7 +305,7 @@ function getContactsToRemoveFromDB(contactsInWrapper: Array<ContactInfo>) {
   const allContactsInDBWhichShouldBeInWrapperIds = ConvoHub.use()
     .getConversations()
     .filter(SessionUtilContact.isContactToStoreInWrapper)
-    .map(m => m.id as string);
+    .map(m => m.id);
 
   const currentlySelectedConversationId = getCurrentlySelectedConversationOutsideRedux();
   const currentlySelectedConvo = currentlySelectedConversationId
@@ -467,7 +467,7 @@ async function handleCommunitiesUpdate() {
     .getConversations()
     .filter(SessionUtilUserGroups.isCommunityToStoreInWrapper);
 
-  const allCommunitiesIdsInDB = allCommunitiesConversation.map(m => m.id as string);
+  const allCommunitiesIdsInDB = allCommunitiesConversation.map(m => m.id);
   window.log.debug('allCommunitiesIdsInDB', allCommunitiesIdsInDB);
 
   const communitiesIdsInWrapper = compact(
@@ -559,7 +559,7 @@ async function handleLegacyGroupUpdate(latestEnvelopeTimestamp: number) {
     .getConversations()
     .filter(SessionUtilUserGroups.isLegacyGroupToRemoveFromDBIfNotInWrapper);
 
-  const allLegacyGroupsIdsInDB = allLegacyGroupsInDb.map(m => m.id as string);
+  const allLegacyGroupsIdsInDB = allLegacyGroupsInDb.map(m => m.id);
   const allLegacyGroupsIdsInWrapper = allLegacyGroupsInWrapper.map(m => m.pubkeyHex);
 
   const legacyGroupsToJoinInDB = allLegacyGroupsInWrapper.filter(m => {

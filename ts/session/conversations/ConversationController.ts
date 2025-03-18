@@ -479,10 +479,7 @@ class ConvoController {
       await BlockedNumberController.unblockAll([conversation.id]);
       await conversation.commit(); // first commit to DB so the DB knows about the changes
       if (SessionUtilContact.isContactToStoreInWrapper(conversation)) {
-        window.log.warn(
-          'isContactToStoreInWrapper still true for ',
-          conversation.cloneAttributes()
-        );
+        window.log.warn('isContactToStoreInWrapper still true for ', conversation.attributes);
       }
       if (conversation.id.startsWith('05')) {
         // make sure to filter blinded contacts as it will throw otherwise

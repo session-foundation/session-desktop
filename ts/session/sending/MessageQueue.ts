@@ -350,7 +350,7 @@ export class MessageQueueCl {
         isSyncMessage,
         abortSignal: null,
       });
-      window.log.debug('sendSingleMessage took ', Date.now() - start);
+      window.log.debug(`sendSingleMessage took ${Date.now() - start}ms`);
 
       const cb = this.pendingMessageCache.callbacks.get(rawMessage.identifier);
 

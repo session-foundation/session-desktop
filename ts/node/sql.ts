@@ -2646,12 +2646,6 @@ function cleanUpOldOpengroupsOnStart() {
         // no need to update the `unreadCount` during the migration anymore.
         // `saveConversation` is broken when called with a argument without all the required fields.
         // and this makes little sense as the unreadCount will be updated on opening
-        // const unreadCount = get UnreadCountByConversation(convoId);
-        // const convoProps = get ConversationById(convoId);
-        // if (convoProps) {
-        //   convoProps.unread Count = unread Count;
-        //   saveConversation(convoProps);
-        // }
       } else {
         console.info(
           `Not cleaning messages older than 6 months in public convo: ${convoId}. message count: ${messagesInConvoBefore}`
@@ -2671,7 +2665,7 @@ function cleanUpOldOpengroupsOnStart() {
     const ourPubkey = ourNumber.value.split('.')[0];
 
     const allInactiveAndWithoutMessagesConvo = allInactiveConvos
-      .map(c => c.id as string)
+      .map(c => c.id)
       .filter(convoId => {
         return !!(convoId !== ourPubkey && getMessagesCountBySender({ source: convoId }) === 0);
       });

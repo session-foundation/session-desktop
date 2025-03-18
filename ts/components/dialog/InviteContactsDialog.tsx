@@ -11,10 +11,10 @@ import { updateGroupMembersModal, updateInviteContactModal } from '../../state/d
 import { SpacerLG } from '../basic/Text';
 
 import {
-    useIsPrivate,
-    useIsPublic,
-    useSortedGroupMembers,
-    useZombies,
+  useIsPrivate,
+  useIsPublic,
+  useSortedGroupMembers,
+  useZombies,
 } from '../../hooks/useParamSelector';
 import { useSet } from '../../hooks/useSet';
 import { ClosedGroup } from '../../session/group/closed-group';

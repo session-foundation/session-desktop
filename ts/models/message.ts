@@ -424,7 +424,7 @@ export class MessageModel extends Model<MessageAttributes> {
    *
    */
   public async cleanup() {
-    await deleteExternalMessageFiles(this.cloneAttributes());
+    await deleteExternalMessageFiles(this.attributes);
     // Note: we don't commit here, because when we do cleanup, we always
     // want to cleanup right before deleting the message itself.
   }

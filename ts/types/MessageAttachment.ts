@@ -20,10 +20,10 @@ import {
 export const deleteExternalMessageFiles = async ({
   attachments,
   preview,
-}: {
+}: Readonly<{
   attachments?: Array<any> | undefined;
   preview?: Array<any> | undefined;
-}) => {
+}>) => {
   let anyChanges = false;
 
   if (attachments && attachments.length) {
@@ -36,7 +36,7 @@ export const deleteExternalMessageFiles = async ({
       results = results.filter(result => result.status === 'rejected');
 
       if (results.length) {
-        throw Error;
+        throw new Error('deleteDataSuccessful: failed to delete anything');
       }
     } catch (err) {
       // eslint-disable-next-line no-console
@@ -225,7 +225,7 @@ export const migrateDataToFileSystem = async (data?: ArrayBuffer) => {
 };
 
 export async function deleteExternalFilesOfConversation(
-  conversationAttributes: ConversationAttributes
+  conversationAttributes: Readonly<Pick<ConversationAttributes, 'avatarInProfile'>>
 ) {
   if (!conversationAttributes) {
     return;
