@@ -58,7 +58,7 @@
     "worker:utils": "webpack  --config=./utils.worker.config.js",
     "worker:libsession": "rimraf --glob 'ts/webworker/workers/node/libsession/*.node' && webpack  --config=./libsession.worker.config.js",
     "dedup-yarn-lock": "npx --yes yarn-deduplicate yarn.lock",
-    "prepare": "husky init",
+    "prepare": "husky",
     "print-deps": "node -v  && python3 --version"
   },
   "dependencies": {
