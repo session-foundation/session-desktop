@@ -110,6 +110,7 @@ const LOKI_SCHEMA_VERSIONS = [
   updateToSessionSchemaVersion39,
   updateToSessionSchemaVersion40,
   updateToSessionSchemaVersion41,
+  updateToSessionSchemaVersion42,
 ];
 
 function updateToSessionSchemaVersion1(currentVersion: number, db: BetterSqlite3.Database) {
@@ -2059,6 +2060,44 @@ function updateToSessionSchemaVersion41(currentVersion: number, db: BetterSqlite
   db.transaction(() => {
     // the 'isExpired03Group' field is used to keep track of an 03 group is expired
     db.prepare(`ALTER TABLE ${CONVERSATIONS_TABLE} ADD COLUMN isExpired03Group BOOLEAN;`).run();
+
+    writeSessionSchemaVersion(targetVersion, db);
+  })();
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
+}
+
+function updateToSessionSchemaVersion42(currentVersion: number, db: BetterSqlite3.Database) {
+  const targetVersion = 42;
+  if (currentVersion >= targetVersion) {
+    return;
+  }
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
+
+  db.transaction(() => {
+    const row = db.prepare(`SELECT count(*) from ${CONVERSATIONS_TABLE};`).get();
+
+    const convoCount = row ? row['count(*)'] || 0 : 0;
+    console.log(`convoCount: ${convoCount}`);
+
+    const itemValue = sqlNode.getItemById(SettingsKey.showOnboardingAccountJustCreated, db)?.value;
+    console.log(`showOnboardingAccountJustCreated before: ${itemValue}`);
+
+    if (convoCount > 1 && itemValue === undefined) {
+      console.log(
+        'setting showOnboardingAccountJustCreated to false (user has conversations already, but itemValue was undefined)'
+      );
+
+      sqlNode.createOrUpdateItem(
+        { id: SettingsKey.showOnboardingAccountJustCreated, value: false },
+        db
+      );
+    }
+    console.log(
+      'showOnboardingAccountJustCreated after ',
+      sqlNode.getItemById(SettingsKey.showOnboardingAccountJustCreated, db)?.value
+    );
 
     writeSessionSchemaVersion(targetVersion, db);
   })();
