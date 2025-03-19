@@ -473,8 +473,8 @@ async function getLastMessagesByConversation(
 }
 
 async function getLastMessageIdInConversation(conversationId: string) {
-  const collection = await getLastMessagesByConversation(conversationId, 1, true);
-  return collection.length ? collection[0].id : null;
+  const models = await getLastMessagesByConversation(conversationId, 1, true);
+  return models?.[0]?.id || null;
 }
 
 async function getLastMessageInConversation(conversationId: string) {
@@ -483,8 +483,7 @@ async function getLastMessageInConversation(conversationId: string) {
   for (const message of messages) {
     message.skipTimerInit = true;
   }
-  const collection = makeMessageModels(messages);
-  return collection.length ? collection[0] : null;
+  return makeMessageModels(messages)?.[0] || null;
 }
 
 async function getOldestMessageInConversation(conversationId: string) {
@@ -494,8 +493,7 @@ async function getOldestMessageInConversation(conversationId: string) {
     message.skipTimerInit = true;
   }
 
-  const collection = makeMessageModels(messages);
-  return collection.length ? collection[0] : null;
+  return makeMessageModels(messages)?.[0] || null;
 }
 
 /**

@@ -40,6 +40,6 @@ export abstract class Model<T extends ModelAttributes> {
   }
 }
 
-export function makeMessageModels(modelsOrAttrs: Array<MessageModel | MessageAttributes>) {
-  return modelsOrAttrs.map(a => (a instanceof MessageModel ? a : new MessageModel(a)));
+export function makeMessageModels(modelsOrAttrs: Array<MessageAttributes>) {
+  return modelsOrAttrs.map(a => new MessageModel(a));
 }

@@ -14,7 +14,6 @@ import { generateFakeIncomingPrivateMessage, stubWindowLog } from '../../../test
 import { SignalService } from '../../../../protobuf';
 import { UserUtils } from '../../../../session/utils';
 import { TestUtils } from '../../../test-utils';
-import { makeMessageModels } from '../../../../models/models';
 
 chai.use(chaiAsPromised as any);
 
@@ -39,7 +38,7 @@ describe('ReactionMessage', () => {
     Sinon.stub(UserUtils, 'getOurPubKeyStrFromCache').returns(ourNumber);
 
     // handleMessageReaction stubs
-    Sinon.stub(Data, 'getMessagesBySentAt').resolves(makeMessageModels([originalMessage]));
+    Sinon.stub(Data, 'getMessagesBySentAt').resolves([originalMessage]);
     Sinon.stub(originalMessage, 'commit').resolves();
   });
 
