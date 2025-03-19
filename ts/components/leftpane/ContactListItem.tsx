@@ -1,4 +1,4 @@
-import classNames from 'classnames';
+import clsx from 'clsx';
 import { useConversationUsername, useIsMe, useIsPrivate } from '../../hooks/useParamSelector';
 import { Avatar, AvatarSize } from '../avatar/Avatar';
 import { Emojify } from '../conversation/Emojify';
@@ -28,7 +28,7 @@ export const ContactListItem = (props: Props) => {
     <div
       role="button"
       onClick={onClick}
-      className={classNames(
+      className={clsx(
         'module-contact-list-item',
         onClick ? 'module-contact-list-item--with-click-handler' : null
       )}

@@ -1,6 +1,6 @@
-import classNames from 'classnames';
 import { ReactNode, RefObject } from 'react';
 import styled from 'styled-components';
+import clsx from 'clsx';
 
 export enum SessionButtonType {
   Outline = 'outline',
@@ -158,7 +158,7 @@ export const SessionButton = (props: SessionButtonProps) => {
       color={buttonColor}
       buttonShape={buttonShape}
       buttonType={buttonType}
-      className={classNames(
+      className={clsx(
         'session-button',
         buttonShape,
         buttonType,

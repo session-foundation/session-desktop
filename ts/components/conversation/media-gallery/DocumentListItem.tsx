@@ -1,5 +1,5 @@
-import classNames from 'classnames';
 import { useCallback } from 'react';
+import clsx from 'clsx';
 
 import { filesize } from 'filesize';
 import { useSelectedConversationKey } from '../../../state/selectors/selectedConversation';
@@ -45,7 +45,7 @@ export const DocumentListItem = (props: Props) => {
 
   return (
     <div
-      className={classNames(
+      className={clsx(
         'module-document-list-item',
         defaultShowSeparator ? 'module-document-list-item--with-separator' : null
       )}

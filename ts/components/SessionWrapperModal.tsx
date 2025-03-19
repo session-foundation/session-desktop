@@ -1,7 +1,6 @@
-import classNames from 'classnames';
 import { ReactNode, useRef } from 'react';
 import useKey from 'react-use/lib/useKey';
-
+import { clsx } from 'clsx';
 import styled from 'styled-components';
 import { SessionIconButton } from './icon';
 
@@ -77,7 +76,7 @@ export const SessionWrapperModal = (props: SessionWrapperModalType) => {
   return (
     <SessionFocusTrap>
       <StyledRootDialog
-        className={classNames('loki-dialog modal', additionalClassName || null)}
+        className={clsx('loki-dialog modal', additionalClassName || null)}
         onClick={handleClick}
         role="dialog"
       >

@@ -1,6 +1,7 @@
-import classNames from 'classnames';
 import _ from 'lodash';
 import { KeyboardEvent, MouseEvent, SessionDataTestId, ReactNode, forwardRef, memo } from 'react';
+import clsx from 'clsx';
+
 import styled from 'styled-components';
 import { SessionIcon, SessionIconProps } from './SessionIcon';
 
@@ -89,7 +90,7 @@ const SessionIconButtonInner = forwardRef<HTMLButtonElement, SessionIconButtonPr
       <StyledSessionIconButton
         color={iconColor}
         isSelected={isSelected}
-        className={classNames('session-icon-button', iconSize, className)}
+        className={clsx('session-icon-button', iconSize, className)}
         ref={ref}
         id={id}
         title={title}

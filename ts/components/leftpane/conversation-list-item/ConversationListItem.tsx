@@ -1,6 +1,7 @@
-import classNames from 'classnames';
 import { isNil } from 'lodash';
 import { MouseEvent, ReactNode, useCallback } from 'react';
+import clsx from 'clsx';
+
 import { contextMenu } from 'react-contexify';
 import { createPortal } from 'react-dom';
 import { useDispatch } from 'react-redux';
@@ -111,7 +112,7 @@ export const ConversationListItem = (props: Props) => {
             });
           }}
           style={style}
-          className={classNames(
+          className={clsx(
             'module-conversation-list-item',
             hasUnread ? 'module-conversation-list-item--has-unread' : null,
             hasUnreadMentionedUs ? 'module-conversation-list-item--mentioned-us' : null,

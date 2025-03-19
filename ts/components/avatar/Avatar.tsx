@@ -1,7 +1,7 @@
-import classNames from 'classnames';
 import { isEqual } from 'lodash';
 import { memo, SessionDataTestId, useState } from 'react';
 import styled from 'styled-components';
+import clsx from 'clsx';
 
 import { useDisableDrag } from '../../hooks/useDisableDrag';
 import { useEncryptedFileFetch } from '../../hooks/useEncryptedFileFetch';
@@ -148,7 +148,7 @@ const AvatarInner = (props: Props) => {
 
   return (
     <div
-      className={classNames(
+      className={clsx(
         'module-avatar',
         `module-avatar--${size}`,
         hasImage ? 'module-avatar--with-image' : 'module-avatar--no-image',
