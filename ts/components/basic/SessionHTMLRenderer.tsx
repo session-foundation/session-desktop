@@ -21,6 +21,8 @@ type ReceivedProps = {
  *
  * For a list of supported tags, see {@link supportedFormattingTags}.
  *
+ * @deprecated use Localizer instead of this to avoid html characters non-escape issues
+ *
  * @returns The rendered HTML as a string.
  */
 export const SessionHtmlRenderer = ({ tag = 'div', key, html, className }: ReceivedProps) => {
