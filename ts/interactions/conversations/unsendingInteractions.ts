@@ -149,22 +149,22 @@ async function unsendMessagesForEveryone(
 function getUnsendMessagesObjects1o1OrLegacyGroups(messages: Array<MessageModel>) {
   // #region building request
   return compact(
-    messages.map(message => {
+    messages.map((message, index) => {
       const author = message.get('source');
 
       // call getPropsForMessage here so we get the received_at or sent_at timestamp in timestamp
-      const timestamp = message.getPropsForMessage().timestamp;
-      if (!timestamp) {
+      const referencedMessageTimestamp = message.getPropsForMessage().timestamp;
+      if (!referencedMessageTimestamp) {
         window?.log?.error('cannot find timestamp - aborting unsend request');
         return undefined;
       }
 
-      const unsendParams = {
-        createAtNetworkTimestamp: timestamp,
+      return new UnsendMessage({
+        // this isn't pretty, but we need a unique timestamp for Android to not drop the message as a duplicate
+        createAtNetworkTimestamp: NetworkTime.now() + index,
+        referencedMessageTimestamp,
         author,
-      };
-
-      return new UnsendMessage(unsendParams);
+      });
     })
   );
   // #endregion
