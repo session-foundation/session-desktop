@@ -1,6 +1,6 @@
 when:
   - path:
-      exclude: '*.md'
+      exclude: ['*.md']
     event: "push"
 
 steps:
