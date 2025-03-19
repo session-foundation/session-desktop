@@ -5,7 +5,7 @@ when:
 
 steps:
   python:
-    image: ubuntu-22.04
+    image: docker.io/ubuntu:22.04
     commands:
       - sudo apt install python3/3.12
       - python -m pip install --upgrade pip setuptools
