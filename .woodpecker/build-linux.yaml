@@ -1,0 +1,24 @@
+when:
+  - path:
+      exclude: '*.md'
+  - event: "push"
+
+steps:
+  python:
+    image: ubuntu-22.04
+    commands:
+      - sudo apt install python3/3.12
+      - python -m pip install --upgrade pip setuptools
+  yarn:
+    image: codeberg.org/woodpecker-plugins/node-pm
+    settings:
+      run: ["install", "build-everything"]
+      with: yarn
+      frozen_lockfile: true
+  publish:
+    image: woodpeckerci/plugin-release
+    settings:
+      files:
+        - "release/*.AppImage"
+      api_key:
+        from_secret: ACCESS_TOKEN
