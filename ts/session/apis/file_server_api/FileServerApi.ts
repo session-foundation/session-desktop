@@ -8,7 +8,7 @@ import {
 import { fromUInt8ArrayToBase64 } from '../../utils/String';
 import { NetworkTime } from '../../../util/NetworkTime';
 import { DURATION } from '../../constants';
-import type { ReleaseChannels } from '../../../updater/types';
+import { isReleaseChannel, type ReleaseChannels } from '../../../updater/types';
 import { Storage } from '../../../util/storage';
 
 export const fileServerHost = 'filev2.getsession.org';
@@ -142,7 +142,7 @@ export const getLatestReleaseFromFileServer = async (
   const method = 'GET';
   let releaseChannel = Storage.get('releaseChannel') as ReleaseChannels;
 
-  if (!releaseChannel) {
+  if (!releaseChannel || !isReleaseChannel(releaseChannel)) {
     releaseChannel = 'latest';
     await Storage.put('releaseChannel', releaseChannel);
   }
