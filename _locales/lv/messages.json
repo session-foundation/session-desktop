@@ -715,7 +715,6 @@
   "updateError": "Nevar atjaunināt",
   "updateErrorDescription": "Session neizdevās atjaunot. Lūdzu, dodieties uz https://getsession.org/download un instalējiet jauno versiju manuāli, tad sazinieties ar mūsu Palīdzības centru, lai informētu par šo problēmu.",
   "updateNewVersion": "Ir pieejama jauna Session versija, pieskarieties, lai atjauninātu",
-  "updateNewVersionDescription": "Ir pieejama jauna Session versija.",
   "updateReleaseNotes": "Iet uz izlaiduma piezīmēm",
   "updateSession": "Session atjaunināšana",
   "updateVersion": "Versija {version}",
