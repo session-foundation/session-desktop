@@ -12,7 +12,7 @@ steps:
     image: docker.io/node:18.15.0-alpine3.17
     commands:
       - apk update
-      - apk add build-base cmake
+      - apk add git build-base cmake
       - yarn install --frozen-lockfile --network-timeout 600000
       - yarn build-everything
   publish:
