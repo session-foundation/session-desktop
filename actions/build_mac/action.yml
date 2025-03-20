@@ -1,0 +1,50 @@
+name: 'Build macOS'
+description: 'Build macOS and update release metadata if needed'
+inputs:
+  architecture:
+    description: 'cpu architecture'
+    required: true
+  should_publish:
+    description: 'should publish'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Build but do not publish
+      # always run this, except on "push" to "master" or alpha releases
+      if: ${{ inputs.should_publish == 'false' }}
+      run: |
+        ./../build/setup-mac-certificate.sh
+        yarn build-release --config.mac.bundleVersion=${{ github.ref }}
+      shell: bash
+
+    - name: Upload artefacts
+      # always run this, except on "push" to "master" or alpha releases
+      if: ${{ inputs.should_publish == 'false' }}
+      uses: ./upload_prod_artefacts
+      with:
+        upload_prefix: mac-${{ inputs.architecture }}
+
+    - name: Build & publish
+      # only run this on "push" to "master" or alpha releases
+      if: ${{ inputs.should_publish == 'true' }}
+      run: |
+        ./../build/setup-mac-release-arch.sh
+        yarn build-release-publish --config.mac.bundleVersion=${{ github.ref }}
+      shell: bash
+
+    - name: Setup release metadata
+      # only run this on "push" to "master" or alpha releases
+      if: ${{ inputs.should_publish == 'true' }}
+      run: |
+        ./../build/setup-mac-release-arch.sh
+      shell: bash
+
+    - name: Upload release metadata
+      # only run this on "push" to "master" or alpha releases
+      if: ${{ inputs.should_publish == 'true' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: latest-mac-${{ inputs.architecture }}.yml
+        path: dist/latest-mac-${{ inputs.architecture }}.yml

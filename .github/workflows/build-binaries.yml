@@ -140,40 +140,11 @@ jobs:
       - name: Unit Test
         run: yarn test
 
-      - name: Build but do not publish
-        # always run this, except on "push" to "master" or alpha releases
-        if: ${{ env.SHOULD_PUBLISH == 'false' && env.SHOULD_PUBLISH_ALPHA == 'false'  }}
-        run: |
-          . ./build/setup-mac-certificate.sh
-          yarn build-release --config.mac.bundleVersion=${{ github.ref }}
-
-      - name: Upload artefacts
-        # always run this, except on "push" to "master" or alpha releases
-        if: ${{ env.SHOULD_PUBLISH == 'false' && env.SHOULD_PUBLISH_ALPHA == 'false'  }}
-        uses: ./actions/upload_prod_artefacts
+      - name: Build macOS
+        uses: ./actions/build_mac
         with:
-          upload_prefix: mac-arm64
-
-      - name: Build & publish
-        # only run this on "push" to "master" or alpha releases
-        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
-        run: |
-          . ./build/setup-mac-certificate.sh
-          yarn build-release-publish --config.mac.bundleVersion=${{ github.ref }}
-
-      - name: Setup release metadata
-        # only run this on "push" to "master" or alpha releases
-        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
-        run: |
-          . ./build/setup-mac-release-arch.sh
-
-      - name: Upload release metadata
-        # only run this on "push" to "master" or alpha releases
-        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: latest-mac-arm64.yml
-          path: dist/latest-mac-arm64.yml
+          architecture: arm64
+          should_publish: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
 
   build_mac_x64:
     runs-on: macos-13
@@ -199,40 +170,11 @@ jobs:
       - name: Unit Test
         run: yarn test
 
-      - name: Build but do not publish
-        # always run this, except on "push" to "master" or alpha releases
-        if: ${{ env.SHOULD_PUBLISH == 'false' && env.SHOULD_PUBLISH_ALPHA == 'false'  }}
-        run: |
-          . ./build/setup-mac-certificate.sh
-          yarn build-release --config.mac.bundleVersion=${{ github.ref }}
-
-      - name: Upload artefacts
-        # always run this, except on "push" to "master" or alpha releases
-        if: ${{ env.SHOULD_PUBLISH == 'false' && env.SHOULD_PUBLISH_ALPHA == 'false'  }}
-        uses: ./actions/upload_prod_artefacts
+      - name: Build macOS
+        uses: ./actions/build_mac
         with:
-          upload_prefix: mac-x64
-
-      - name: Build & publish
-        # only run this on "push" to "master" or alpha releases
-        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
-        run: |
-          . ./build/setup-mac-certificate.sh
-          yarn build-release-publish --config.mac.bundleVersion=${{ github.ref }}
-
-      - name: Setup release metadata
-        # only run this on "push" to "master" or alpha releases
-        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
-        run: |
-          . ./build/setup-mac-release-arch.sh
-
-      - name: Upload release metadata
-        # only run this on "push" to "master" or alpha releases
-        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: latest-mac-x64.yml
-          path: dist/latest-mac-x64.yml
+          architecture: x64
+          should_publish: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
 
   post_build_mac:
     needs: [build_mac_arm64, build_mac_x64]
