@@ -9,7 +9,7 @@ steps:
     commands:
       - python3 -m pip install --upgrade pip setuptools
   yarn:
-    image: docker.io/node:18.15.0
+    image: docker.io/node:18.15.0-bullseye
     commands:
       - echo 'Acquire::http::Timeout "20";' > /etc/apt/apt.conf.d/80-retries
       - apt-get update
