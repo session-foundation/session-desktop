@@ -7,7 +7,7 @@ steps:
   build:
     image: docker.io/python:3.12-bookworm
     commands:
-      - apt update
+      - apt-get update
       - python3 -m pip install --upgrade pip setuptools
       - apt-get install git build-essentials cmake nodejs=18.15.0 -y
       - if ! which yarn; do npm install --global yarn; done
