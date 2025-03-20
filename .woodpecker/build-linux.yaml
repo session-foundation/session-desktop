@@ -13,7 +13,7 @@ steps:
       - apt-get install software-properties-common -y
       - add-apt-repository ppa:deadsnakes/ppa -y
       - apt-get update
-      - apt-get install python3.12 -y
+      - apt-get install python3.12 python3-pip -y
       - python3 -m pip install --upgrade pip setuptools
   yarn:
     image: codeberg.org/woodpecker-plugins/node-pm
