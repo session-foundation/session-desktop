@@ -1,7 +1,7 @@
 import useAsync from 'react-use/lib/useAsync';
 import { shell } from 'electron';
-import useBoolean from 'react-use/lib/useBoolean';
 import { useDispatch } from 'react-redux';
+import { useState } from 'react';
 import { Flex } from '../../basic/Flex';
 import { SpacerXS } from '../../basic/Text';
 import { localize } from '../../../localization/localeTools';
@@ -15,11 +15,77 @@ import { SessionSpinner } from '../../loading';
 import { setDebugMode } from '../../../state/ducks/debug';
 import { updateDebugMenuModal } from '../../../state/ducks/modalDialog';
 import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_constants';
+import { type ReleaseChannels } from '../../../updater/types';
+
+const CheckVersionButton = ({ channelToCheck }: { channelToCheck: ReleaseChannels }) => {
+  const channelName = channelToCheck === 'latest' ? 'stable' : channelToCheck;
+  const [loading, setLoading] = useState(false);
+  const state = useAsync(async () => {
+    const userEd25519KeyPairBytes = await UserUtils.getUserED25519KeyPairBytes();
+    const userEd25519SecretKey = userEd25519KeyPairBytes?.privKeyBytes;
+    return userEd25519SecretKey;
+  });
+
+  return (
+    <SessionButton
+      onClick={async () => {
+        if (state.loading || state.error) {
+          window.log.error(
+            `[debugMenu] CheckVersionButton checking ${channelToCheck} channel state loading ${state.loading} error ${state.error}`
+          );
+          setLoading(false);
+          return;
+        }
+        if (!state.value) {
+          window.log.error(
+            `[debugMenu] CheckVersionButton checking ${channelToCheck} channel no userEd25519SecretKey`
+          );
+          setLoading(false);
+          return;
+        }
+        setLoading(true);
+        const result = await getLatestReleaseFromFileServer(state.value, channelToCheck);
+        if (!result) {
+          ToastUtils.pushToastError(
+            'CheckVersionButton',
+            `Failed to fetch ${channelToCheck} release`
+          );
+          setLoading(false);
+          return;
+        }
+        const [versionNumber, releaseChannel] = result;
+        if (!releaseChannel) {
+          ToastUtils.pushToastError(
+            'CheckVersionButton',
+            `Failed to return release channel when fetching`
+          );
+          setLoading(false);
+          return;
+        }
+        if (!versionNumber) {
+          ToastUtils.pushToastError(
+            'CheckVersionButton',
+            `Failed to fetch ${channelToCheck} release version`
+          );
+          setLoading(false);
+          return;
+        }
+        setLoading(false);
+
+        ToastUtils.pushToastInfo(`CheckVersionButtonAvailable`, `Available: v${versionNumber}`);
+        ToastUtils.pushToastInfo(
+          'CheckVersionButtonCurrent',
+          `Current: v${window.versionInfo.version}`
+        );
+      }}
+    >
+      <SessionSpinner loading={loading || state.loading} color={'var(--text-primary-color)'} />
+      {!loading && !state.loading ? `Check ${channelName} version` : null}
+    </SessionButton>
+  );
+};
 
 export const DebugActions = () => {
-  const [loadingLatestRelease, setLoadingLatestRelease] = useBoolean(false);
-  const [loadingAlphaRelease, setLoadingAlphaRelease] = useBoolean(false);
-
   const dispatch = useDispatch();
 
   return (
@@ -73,81 +139,8 @@ export const DebugActions = () => {
         >
           <Localizer token="updateReleaseNotes" />
         </SessionButton>
-
-        <SessionButton
-          onClick={async () => {
-            const userEd25519SecretKey = (await UserUtils.getUserED25519KeyPairBytes())
-              ?.privKeyBytes;
-            if (!userEd25519SecretKey) {
-              window.log.error('[debugMenu] debugLatestRelease no userEd25519SecretKey');
-              setLoadingLatestRelease(false);
-              return;
-            }
-            setLoadingLatestRelease(true);
-            const result = await getLatestReleaseFromFileServer(userEd25519SecretKey, 'latest');
-            if (!result) {
-              ToastUtils.pushToastError('debugLatestRelease', 'Failed to fetch latest release');
-              setLoadingLatestRelease(false);
-              return;
-            }
-            const [versionNumber, releaseChannel] = result;
-            if (!versionNumber) {
-              ToastUtils.pushToastError(
-                'debugLatestRelease',
-                `Failed to fetch ${releaseChannel} release`
-              );
-              setLoadingLatestRelease(false);
-              return;
-            }
-            setLoadingLatestRelease(false);
-
-            ToastUtils.pushToastInfo(
-              'debugCurrentRelease',
-              `Current: v${window.versionInfo.version}`
-            );
-            ToastUtils.pushToastInfo(`debugLatestRelease`, `Available: v${versionNumber}`);
-          }}
-        >
-          <SessionSpinner loading={loadingLatestRelease} color={'var(--text-primary-color)'} />
-          {!loadingLatestRelease ? 'Check stable version' : null}
-        </SessionButton>
-        <SessionButton
-          onClick={async () => {
-            const userEd25519SecretKey = (await UserUtils.getUserED25519KeyPairBytes())
-              ?.privKeyBytes;
-            if (!userEd25519SecretKey) {
-              window.log.error('[debugMenu] debugAlphaRelease no userEd25519SecretKey');
-              setLoadingAlphaRelease(false);
-              return;
-            }
-            setLoadingAlphaRelease(true);
-            const result = await getLatestReleaseFromFileServer(userEd25519SecretKey, 'alpha');
-            if (!result) {
-              ToastUtils.pushToastError('debugAlphaRelease', 'Failed to fetch alpha release');
-              setLoadingAlphaRelease(false);
-              return;
-            }
-            const [versionNumber, releaseChannel] = result;
-            if (!versionNumber) {
-              ToastUtils.pushToastError(
-                'debugAlphaRelease',
-                `Failed to fetch ${releaseChannel} release`
-              );
-              setLoadingAlphaRelease(false);
-              return;
-            }
-            setLoadingAlphaRelease(false);
-
-            ToastUtils.pushToastInfo(
-              `debugCurrentRelease1`,
-              `Current: v${window.versionInfo.version}`
-            );
-            ToastUtils.pushToastInfo('debugAlphaRelease', `Available: v${versionNumber}`);
-          }}
-        >
-          <SessionSpinner loading={loadingAlphaRelease} color={'var(--text-primary-color)'} />
-          {!loadingAlphaRelease ? 'Check alpha version' : null}
-        </SessionButton>
+        <CheckVersionButton channelToCheck="latest" />
+        <CheckVersionButton channelToCheck="alpha" />
       </Flex>
     </>
   );
