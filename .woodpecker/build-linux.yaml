@@ -7,7 +7,7 @@ steps:
   python:
     image: docker.io/ubuntu:22.04
     commands:
-      - debconf debconf/frontend select Noninteractive' | debconf-set-selections
+      - echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
       - apt-get update
       - apt-get upgrade -y
       - apt-get install software-properties-common -y
