@@ -33,8 +33,8 @@ import {
   useLibGroupKicked,
   useLibGroupWeHaveSecretKey,
 } from '../../state/selectors/userGroups';
-import { localize } from '../../localization/localeTools';
-import { SessionHtmlRenderer } from '../basic/SessionHTMLRenderer';
+import { type LocalizerComponentPropsObject } from '../../localization/localeTools';
+import { Localizer } from '../basic/Localizer';
 
 const Container = styled.div<{ noExtraPadding: boolean }>`
   display: flex;
@@ -55,18 +55,18 @@ const TextInner = styled.div`
 `;
 
 function TextNotification({
-  html,
+  details,
   dataTestId,
   noExtraPadding,
 }: {
-  html: string;
+  details: LocalizerComponentPropsObject;
   dataTestId: SessionDataTestId;
   noExtraPadding: boolean;
 }) {
   return (
     <Container data-testid={dataTestId} noExtraPadding={noExtraPadding}>
       <TextInner>
-        <SessionHtmlRenderer html={html} />
+        <Localizer {...details} />
       </TextInner>
     </Container>
   );
@@ -132,7 +132,7 @@ export const ConversationIncomingRequestExplanation = () => {
   return (
     <TextNotification
       dataTestId="conversation-request-explanation"
-      html={window.i18n('messageRequestsAcceptDescription')}
+      details={{ token: 'messageRequestsAcceptDescription' }}
       noExtraPadding={true} // in this case, `TextNotification` is part of a bigger component spacing each already
     />
   );
@@ -153,7 +153,7 @@ const GroupRequestExplanation = () => {
   return (
     <TextNotification
       dataTestId="group-request-explanation"
-      html={window.i18n('messageRequestGroupInviteDescription')}
+      details={{ token: 'messageRequestGroupInviteDescription' }}
       noExtraPadding={true} // in this case, `TextNotification` is part of a bigger component spacing each already
     />
   );
@@ -183,24 +183,37 @@ const InvitedToGroupControlMessage = () => {
     return null;
   }
   // when restoring from seed we might not have the pubkey of who invited us, in that case, we just use a fallback
-  const html = conversationOrigin
+  const details: LocalizerComponentPropsObject = conversationOrigin
     ? weHaveSecretKey
-      ? window.i18n('groupInviteReinvite', {
-          group_name: groupName,
-          name: adminNameInvitedUs,
-        })
-      : window.i18n('messageRequestGroupInvite', {
-          group_name: groupName,
-          name: adminNameInvitedUs,
-        })
+      ? {
+          token: 'groupInviteReinvite',
+          args: {
+            group_name: groupName,
+            name: adminNameInvitedUs,
+          },
+        }
+      : {
+          token: 'messageRequestGroupInvite',
+          args: {
+            group_name: groupName,
+            name: adminNameInvitedUs,
+          },
+        }
     : weHaveSecretKey
-      ? window.i18n('groupInviteReinviteYou', { group_name: groupName })
-      : window.i18n('groupInviteYou');
+      ? {
+          token: 'groupInviteReinviteYou',
+          args: {
+            group_name: groupName,
+          },
+        }
+      : {
+          token: 'groupInviteYou',
+        };
 
   return (
     <TextNotification
       dataTestId="group-invite-control-message"
-      html={html}
+      details={details}
       noExtraPadding={true} // in this case, `TextNotification` is part of a bigger component spacing each already
     />
   );
@@ -214,60 +227,70 @@ export const InvitedToGroup = () => {
   );
 };
 
-export const NoMessageInConversation = () => {
+function useGetMessageDetailsForNoMessages(): LocalizerComponentPropsObject {
   const selectedConversation = useSelectedConversationKey();
-  const hasMessages = useSelectedHasMessages();
-  const isGroupV2 = useSelectedIsGroupV2();
   const isGroupOrCommunity = useSelectedIsGroupOrCommunity();
-  const isInvitePending = useLibGroupInvitePending(selectedConversation);
 
   const isMe = useSelectedIsNoteToSelf();
   const canWrite = useSelector(getSelectedCanWrite);
   const privateBlindedAndBlockingMsgReqs = useSelectedHasDisabledBlindedMsgRequests();
 
   const isPrivate = useSelectedIsPrivate();
-  const isIncomingRequest = useIsIncomingRequest(selectedConversation);
   const isKickedFromGroup = useLibGroupKicked(selectedConversation);
   const isGroupDestroyed = useLibGroupDestroyed(selectedConversation);
   const name = useSelectedNicknameOrProfileNameOrShortenedPubkey();
   const isPublic = useSelectedIsPublic();
 
-  const getHtmlToRender = () => {
-    // First, handle the "noteToSelf and various "private" cases
-    if (isMe) {
-      return localize('noteToSelfEmpty').toString();
+  const argsName = { name };
+  const argsGroupName = { group_name: name };
+  const argsConversationName = { conversation_name: name };
+
+  // First, handle the "noteToSelf and various "private" cases
+  if (isMe) {
+    return { token: 'noteToSelfEmpty' };
+  }
+  if (privateBlindedAndBlockingMsgReqs) {
+    return { token: 'messageRequestsTurnedOff', args: argsName };
+  }
+  if (isPrivate) {
+    // "You have no messages from X. Send a message to start the conversation!"
+    return { token: 'groupNoMessages', args: argsGroupName };
+  }
+
+  if (isPublic) {
+    return { token: 'conversationsEmpty', args: argsConversationName };
+  }
+
+  // a "group but not public" is a legacy or a groupv2 (isPublic is handled just above)
+  if (isGroupOrCommunity) {
+    if (isGroupDestroyed) {
+      return { token: 'groupDeletedMemberDescription', args: argsGroupName };
     }
-    if (privateBlindedAndBlockingMsgReqs) {
-      return localize('messageRequestsTurnedOff').withArgs({ name }).toString();
+
+    if (isKickedFromGroup) {
+      return { token: 'groupRemovedYou', args: argsGroupName };
     }
-    if (isPrivate) {
+    if (canWrite) {
       // "You have no messages from X. Send a message to start the conversation!"
-      return localize('groupNoMessages').withArgs({ group_name: name }).toString();
+      return { token: 'groupNoMessages', args: argsGroupName };
     }
+    // if we cannot write for some reason, don't show the "send a message" part
+    return { token: 'conversationsEmpty', args: argsConversationName };
+  }
 
-    if (isPublic) {
-      return localize('conversationsEmpty').withArgs({ conversation_name: name }).toString();
-    }
+  return { token: 'conversationsEmpty', args: argsConversationName };
+}
 
-    // a "group but not public" is a legacy or a groupv2 (isPublic is handled just above)
-    if (isGroupOrCommunity) {
-      if (isGroupDestroyed) {
-        return localize('groupDeletedMemberDescription').withArgs({ group_name: name }).toString();
-      }
+export const NoMessageInConversation = () => {
+  const selectedConversation = useSelectedConversationKey();
+  const hasMessages = useSelectedHasMessages();
+  const isGroupV2 = useSelectedIsGroupV2();
+  const isInvitePending = useLibGroupInvitePending(selectedConversation);
 
-      if (isKickedFromGroup) {
-        return localize('groupRemovedYou').withArgs({ group_name: name }).toString();
-      }
-      if (canWrite) {
-        // "You have no messages from X. Send a message to start the conversation!"
-        return localize('groupNoMessages').withArgs({ group_name: name }).toString();
-      }
-      // if we cannot write for some reason, don't show the "send a message" part
-      return localize('conversationsEmpty').withArgs({ conversation_name: name }).toString();
-    }
+  const isPrivate = useSelectedIsPrivate();
+  const isIncomingRequest = useIsIncomingRequest(selectedConversation);
 
-    return localize('conversationsEmpty').withArgs({ conversation_name: name }).toString();
-  };
+  const msgDetails = useGetMessageDetailsForNoMessages();
 
   // groupV2 use its own invite logic as part of <GroupRequestExplanation />
   if (
@@ -282,7 +305,7 @@ export const NoMessageInConversation = () => {
   return (
     <TextNotification
       dataTestId={'empty-conversation-control-message'}
-      html={getHtmlToRender()}
+      details={msgDetails}
       noExtraPadding={false} // in this case, `TextNotification` is **not** part of a bigger component so we need to add some spacing
     />
   );
