@@ -5,14 +5,8 @@ when:
 
 steps:
   python:
-    image: docker.io/ubuntu:22.04
+    image: docker.io/python:3.12-bookworm
     commands:
-      - echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
-      - apt-get update
-      - apt-get install software-properties-common -y
-      - add-apt-repository ppa:deadsnakes/ppa -y
-      - apt-get update
-      - apt-get install python3.12 python3-pip -y
       - python3 -m pip install --upgrade pip setuptools
   yarn:
     image: codeberg.org/woodpecker-plugins/node-pm
