@@ -86,7 +86,7 @@ type GroupDetailsUpdate = {
 async function checkWeAreAdmin(groupPk: GroupPubkeyType) {
   const us = UserUtils.getOurPubKeyStrFromCache();
   const usInGroup = await MetaGroupWrapperActions.memberGet(groupPk, us);
-  const inUserGroup = await UserGroupsWrapperActions.getGroup(groupPk);
+  const inUserGroup = UserGroupsWrapperActions.getCachedGroup(groupPk);
   // if the secretKey is not empty AND we are a member of the group, we are a current admin
   return Boolean(!isEmpty(inUserGroup?.secretKey) && usInGroup?.nominatedAdmin);
 }

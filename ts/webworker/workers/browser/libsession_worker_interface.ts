@@ -26,7 +26,6 @@ import {
 // eslint-disable-next-line import/order
 import { join } from 'path';
 
-import { cloneDeep } from 'lodash';
 import { getAppRootPath } from '../../../node/getRootPath';
 import { userGroupsActions } from '../../../state/ducks/userGroups';
 import { WorkerInterface } from '../../worker_interface';
@@ -232,6 +231,18 @@ function dispatchCachedGroupsToRedux() {
   );
 }
 
+function dispatchCachedGroupToRedux(groupId: GroupPubkeyType) {
+  const groupFound = groups.get(groupId);
+  window?.inboxStore?.dispatch?.(
+    userGroupsActions.refreshUserGroupDetails({
+      group: {
+        pubkey: groupId,
+        details: groupFound ? makeUserGroupGetRedux(groupFound) : null,
+      },
+    })
+  );
+}
+
 export const UserGroupsWrapperActions: UserGroupsWrapperActionsCalls & {
   getCachedGroup: (pubkeyHex: GroupPubkeyType) => UserGroupsGet | undefined;
 } = {
@@ -306,8 +317,9 @@ export const UserGroupsWrapperActions: UserGroupsWrapperActionsCalls & {
       ReturnType<UserGroupsWrapperActionsCalls['createGroup']>
     >;
     groups.set(group.pubkeyHex, group);
-    dispatchCachedGroupsToRedux();
-    return cloneDeep(group);
+    dispatchCachedGroupToRedux(group.pubkeyHex);
+
+    return group;
   },
 
   getGroup: async (pubkeyHex: GroupPubkeyType) => {
@@ -321,8 +333,11 @@ export const UserGroupsWrapperActions: UserGroupsWrapperActionsCalls & {
     } else {
       groups.delete(pubkeyHex);
     }
-    dispatchCachedGroupsToRedux();
-    return cloneDeep(group);
+    // Note: for performance reasons, we don't want to trigger a UI refresh here.
+    // a getGroup can be done in many places, but we only ever need to refresh the UI on sets/merge
+    // Dispatching a UI changes causes the performance on large DB to be poor.
+
+    return group;
   },
 
   getCachedGroup: (pubkeyHex: GroupPubkeyType) => {
@@ -337,7 +352,7 @@ export const UserGroupsWrapperActions: UserGroupsWrapperActionsCalls & {
     groups.clear();
     groupsFetched.forEach(f => groups.set(f.pubkeyHex, f));
     dispatchCachedGroupsToRedux();
-    return cloneDeep(groupsFetched);
+    return groupsFetched;
   },
 
   setGroup: async (info: UserGroupsSet) => {
@@ -346,8 +361,9 @@ export const UserGroupsWrapperActions: UserGroupsWrapperActionsCalls & {
     >;
     groups.set(group.pubkeyHex, group);
 
-    dispatchCachedGroupsToRedux();
-    return cloneDeep(group);
+    dispatchCachedGroupToRedux(group.pubkeyHex);
+
+    return group;
   },
 
   markGroupKicked: async (pubkeyHex: GroupPubkeyType) => {
@@ -357,8 +373,9 @@ export const UserGroupsWrapperActions: UserGroupsWrapperActionsCalls & {
       pubkeyHex,
     ])) as Awaited<ReturnType<UserGroupsWrapperActionsCalls['markGroupKicked']>>;
     groups.set(group.pubkeyHex, group);
-    dispatchCachedGroupsToRedux();
-    return cloneDeep(group);
+    dispatchCachedGroupToRedux(group.pubkeyHex);
+
+    return group;
   },
 
   markGroupInvited: async (pubkeyHex: GroupPubkeyType) => {
@@ -369,8 +386,9 @@ export const UserGroupsWrapperActions: UserGroupsWrapperActionsCalls & {
     ])) as Awaited<ReturnType<UserGroupsWrapperActionsCalls['markGroupInvited']>>;
     groups.set(group.pubkeyHex, group);
 
-    dispatchCachedGroupsToRedux();
-    return cloneDeep(group);
+    dispatchCachedGroupToRedux(group.pubkeyHex);
+
+    return group;
   },
 
   markGroupDestroyed: async (pubkeyHex: GroupPubkeyType) => {
@@ -381,8 +399,9 @@ export const UserGroupsWrapperActions: UserGroupsWrapperActionsCalls & {
     ])) as Awaited<ReturnType<UserGroupsWrapperActionsCalls['markGroupDestroyed']>>;
     groups.set(group.pubkeyHex, group);
 
-    dispatchCachedGroupsToRedux();
-    return cloneDeep(group);
+    dispatchCachedGroupToRedux(group.pubkeyHex);
+
+    return group;
   },
 
   eraseGroup: async (pubkeyHex: GroupPubkeyType) => {
@@ -393,7 +412,8 @@ export const UserGroupsWrapperActions: UserGroupsWrapperActionsCalls & {
     ])) as Awaited<ReturnType<UserGroupsWrapperActionsCalls['eraseGroup']>>;
 
     groups.delete(pubkeyHex);
-    dispatchCachedGroupsToRedux();
+    dispatchCachedGroupToRedux(pubkeyHex);
+
     return ret;
   },
 };
