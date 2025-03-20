@@ -8,6 +8,7 @@ import { PrimaryColorStateType, ThemeStateType } from './themes/constants/colors
 import type { GetMessageArgs } from './types/localizer';
 import type { I18nMethods } from './types/I18nMethods';
 import type { MergedLocalizerTokens } from './localization/localeTools';
+import type { EventEmitter } from './shared/event_emitter';
 
 export interface LibTextsecure {
   messaging: boolean;
@@ -41,7 +42,7 @@ declare global {
   interface Window {
     Events: any;
     Session: any;
-    Whisper: any;
+    Whisper: { events: EventEmitter };
     clearLocalData: () => Promise<void>;
     clipboard: any;
     getSettingValue: (id: string, comparisonValue?: any) => any;

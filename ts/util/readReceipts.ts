@@ -1,9 +1,9 @@
-import { MessageCollection } from '../models/message';
+import { type MessageModel } from '../models/message';
 
 import { Data } from '../data/data';
 import { ConvoHub } from '../session/conversations';
 
-async function getTargetMessage(reader: string, messages: MessageCollection) {
+async function getTargetMessage(reader: string, messages: Array<MessageModel>) {
   if (messages.length === 0) {
     return null;
   }

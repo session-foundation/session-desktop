@@ -12,7 +12,6 @@ import {
   NotFoundError,
   RetrieveDisplayNameError,
 } from '../../../session/utils/errors';
-import { trigger } from '../../../shims/events';
 import {
   AccountRestoration,
   setAccountRestorationStep,
@@ -59,7 +58,7 @@ export async function finishRestore(pubkey: string, displayName: string) {
   await setSignWithRecoveryPhrase(true);
   await registrationDone(pubkey, displayName);
 
-  trigger('openInbox');
+  window.Whisper.events.trigger('openInbox');
 }
 
 /**

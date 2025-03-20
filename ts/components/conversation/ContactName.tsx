@@ -1,5 +1,5 @@
-import classNames from 'classnames';
 import { CSSProperties } from 'react';
+import clsx from 'clsx';
 
 import {
   useIsPrivate,
@@ -46,7 +46,7 @@ export const ContactName = (props: Props) => {
 
   return (
     <span
-      className={classNames(prefix)}
+      className={clsx(prefix)}
       dir="auto"
       data-testid={`${prefix}__profile-name` as const}
       style={{

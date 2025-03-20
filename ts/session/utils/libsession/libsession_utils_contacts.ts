@@ -31,7 +31,7 @@ const mappedContactWrapperValues = new Map<string, ContactInfo>();
  */
 function isContactToStoreInWrapper(convo: ConversationModel): boolean {
   try {
-    PubKey.cast(convo.id as string);
+    PubKey.cast(convo.id);
   } catch (e) {
     return false;
   }

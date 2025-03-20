@@ -608,8 +608,7 @@ async function checkHasOutdatedDisappearingMessageClient(
   const isOutdated =
     expireUpdate.isLegacyDataMessage || expireUpdate.isLegacyConversationSettingMessage;
 
-  const outdatedSender =
-    sender.get('nickname') || sender.get('displayNameInProfile') || sender.get('id');
+  const outdatedSender = sender.get('nickname') || sender.get('displayNameInProfile') || sender.id;
 
   if (convoToUpdate.getHasOutdatedClient()) {
     // trigger notice banner

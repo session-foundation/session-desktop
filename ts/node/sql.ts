@@ -2,7 +2,7 @@ import * as BetterSqlite3 from '@signalapp/better-sqlite3';
 import { app, clipboard, dialog, Notification } from 'electron';
 import fs from 'fs';
 import path from 'path';
-import rimraf from 'rimraf';
+import { rimrafSync } from 'rimraf';
 
 import { base64_variants, from_base64, to_hex } from 'libsodium-wrappers-sumo';
 import {
@@ -28,8 +28,8 @@ import {
 
 import { GroupPubkeyType } from 'libsession_util_nodejs';
 import { ConversationAttributes } from '../models/conversationAttributes';
-import { PubKey } from '../session/types/PubKey'; // checked - only node
-import { redactAll } from '../util/privacy'; // checked - only node
+import { PubKey } from '../session/types/PubKey';
+import { redactAll } from '../util/privacy';
 import {
   arrayStrToJson,
   assertValidConversationAttributes,
@@ -51,8 +51,8 @@ import {
   SEEN_MESSAGE_TABLE,
   toSqliteBoolean,
 } from './database_utility';
-import type { SetupI18nReturnType } from '../types/localizer'; // checked - only node
-import { StorageItem } from './storage_item'; // checked - only node
+import type { SetupI18nReturnType } from '../types/localizer';
+import { StorageItem } from './storage_item';
 
 import {
   CONFIG_DUMP_TABLE,
@@ -252,9 +252,9 @@ function removeDB(configDir: string | null = null) {
   }
 
   if (databaseFilePath) {
-    rimraf.sync(databaseFilePath);
-    rimraf.sync(`${databaseFilePath}-shm`);
-    rimraf.sync(`${databaseFilePath}-wal`);
+    rimrafSync(databaseFilePath);
+    rimrafSync(`${databaseFilePath}-shm`);
+    rimrafSync(`${databaseFilePath}-wal`);
   }
 }
 
@@ -2648,12 +2648,6 @@ function cleanUpOldOpengroupsOnStart() {
         // no need to update the `unreadCount` during the migration anymore.
         // `saveConversation` is broken when called with a argument without all the required fields.
         // and this makes little sense as the unreadCount will be updated on opening
-        // const unreadCount = get UnreadCountByConversation(convoId);
-        // const convoProps = get ConversationById(convoId);
-        // if (convoProps) {
-        //   convoProps.unread Count = unread Count;
-        //   saveConversation(convoProps);
-        // }
       } else {
         console.info(
           `Not cleaning messages older than 6 months in public convo: ${convoId}. message count: ${messagesInConvoBefore}`
@@ -2673,7 +2667,7 @@ function cleanUpOldOpengroupsOnStart() {
     const ourPubkey = ourNumber.value.split('.')[0];
 
     const allInactiveAndWithoutMessagesConvo = allInactiveConvos
-      .map(c => c.id as string)
+      .map(c => c.id)
       .filter(convoId => {
         return !!(convoId !== ourPubkey && getMessagesCountBySender({ source: convoId }) === 0);
       });

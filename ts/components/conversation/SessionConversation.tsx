@@ -1,9 +1,9 @@
 import _ from 'lodash';
+import clsx from 'clsx';
 
 import autoBind from 'auto-bind';
 import { blobToArrayBuffer } from 'blob-util';
 import loadImage from 'blueimp-load-image';
-import classNames from 'classnames';
 import { Component, RefObject, createRef } from 'react';
 import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
@@ -287,7 +287,7 @@ export class SessionConversation extends Component<Props, State> {
           <>
             <div
               // if you change the class name, also update it on onKeyDown
-              className={classNames('conversation-content', selectionMode && 'selection-mode')}
+              className={clsx('conversation-content', selectionMode && 'selection-mode')}
               tabIndex={0}
               onKeyDown={this.onKeyDown}
               role="navigation"
@@ -320,7 +320,7 @@ export class SessionConversation extends Component<Props, State> {
                 htmlDirection={this.props.htmlDirection}
               />
             </div>
-            <StyledRightPanelContainer className={classNames(isRightPanelShowing && 'show')}>
+            <StyledRightPanelContainer className={clsx(isRightPanelShowing && 'show')}>
               <RightPanel />
             </StyledRightPanelContainer>
           </>

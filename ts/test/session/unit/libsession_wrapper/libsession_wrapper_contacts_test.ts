@@ -232,7 +232,7 @@ describe('libsession_contacts', () => {
       Sinon.stub(SessionUtilContact, 'isContactToStoreInWrapper').returns(true);
 
       const wrapperContact = await SessionUtilContact.insertContactFromDBIntoWrapperAndRefresh(
-        contact.get('id')
+        contact.id
       );
 
       expect(wrapperContact, 'something should be returned from the wrapper').to.not.be.null;
@@ -286,7 +286,7 @@ describe('libsession_contacts', () => {
       Sinon.stub(SessionUtilContact, 'isContactToStoreInWrapper').returns(true);
 
       const wrapperContact = await SessionUtilContact.insertContactFromDBIntoWrapperAndRefresh(
-        contact.get('id')
+        contact.id
       );
 
       expect(wrapperContact, 'something should be returned from the wrapper').to.not.be.null;

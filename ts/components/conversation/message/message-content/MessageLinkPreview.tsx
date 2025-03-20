@@ -1,6 +1,6 @@
-import classNames from 'classnames';
-
 import { useDispatch } from 'react-redux';
+import clsx from 'clsx';
+
 import { MessageRenderingProps } from '../../../../models/messageType';
 import {
   useMessageAttachments,
@@ -65,12 +65,10 @@ export const MessageLinkPreview = (props: Props) => {
   return (
     <div
       role="button"
-      className={classNames(
-        `module-message__link-preview module-message__link-preview--${direction}`
-      )}
+      className={clsx(`module-message__link-preview module-message__link-preview--${direction}`)}
       onClick={openLinkFromPreview}
     >
-      <div className={classNames('module-message__link-preview__content')}>
+      <div className={clsx('module-message__link-preview__content')}>
         {previewHasImage ? (
           <div className="module-message__link-preview__image_container">
             <Image
@@ -92,7 +90,7 @@ export const MessageLinkPreview = (props: Props) => {
             </div>
           </div>
         )}
-        <div className={classNames('module-message__link-preview__text')}>
+        <div className={clsx('module-message__link-preview__text')}>
           <div className="module-message__link-preview__title">{first.title}</div>
           <div className="module-message__link-preview__location">{first.domain}</div>
         </div>

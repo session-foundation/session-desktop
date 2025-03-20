@@ -1,8 +1,8 @@
-import classNames from 'classnames';
-
 import styled from 'styled-components';
 
 import { useMemo } from 'react';
+import clsx from 'clsx';
+
 import { acceptOpenGroupInvitation } from '../../../../interactions/messageInteractions';
 import { SessionIconButton } from '../../../icon';
 import { ExpirableReadableMessage } from './ExpirableReadableMessage';
@@ -104,7 +104,7 @@ export const CommunityInvitation = ({ messageId }: WithMessageId) => {
       key={`readable-message-${messageId}`}
       dataTestId="control-message"
     >
-      <StyledCommunityInvitation className={classNames(classes)}>
+      <StyledCommunityInvitation className={clsx(classes)}>
         <div className="contents">
           <StyledIconContainer>
             <SessionIconButton

@@ -724,7 +724,7 @@ export async function uploadOurAvatar(newAvatarDecrypted?: ArrayBuffer) {
   }
   const { fileUrl, fileId } = avatarPointer;
 
-  ourConvo.set('avatarPointer', fileUrl);
+  ourConvo.setKey('avatarPointer', fileUrl);
 
   // this encrypts and save the new avatar and returns a new attachment path
   const upgraded = await processNewAttachment({
@@ -733,7 +733,7 @@ export async function uploadOurAvatar(newAvatarDecrypted?: ArrayBuffer) {
     contentType: MIME.IMAGE_UNKNOWN, // contentType is mostly used to generate previews and screenshot. We do not care for those in this case.
   });
   // Replace our temporary image with the attachment pointer from the server:
-  ourConvo.set('avatarInProfile', undefined);
+  ourConvo.setKey('avatarInProfile', undefined);
   const displayName = ourConvo.getRealSessionUsername();
 
   // write the profileKey even if it did not change
@@ -785,9 +785,9 @@ export async function clearOurAvatar(commit: boolean = true) {
     return;
   }
 
-  ourConvo.set('avatarPointer', undefined);
-  ourConvo.set('avatarInProfile', undefined);
-  ourConvo.set('profileKey', undefined);
+  ourConvo.setKey('avatarPointer', undefined);
+  ourConvo.setKey('avatarInProfile', undefined);
+  ourConvo.setKey('profileKey', undefined);
 
   await setLastProfileUpdateTimestamp(Date.now());
 
@@ -907,8 +907,8 @@ export async function updateConversationInteractionState({
     (type !== convo.get('lastMessageInteractionType') ||
       status !== convo.get('lastMessageInteractionStatus'))
   ) {
-    convo.set('lastMessageInteractionType', type);
-    convo.set('lastMessageInteractionStatus', status);
+    convo.setKey('lastMessageInteractionType', type);
+    convo.setKey('lastMessageInteractionStatus', status);
 
     await convo.commit();
     window.log.debug(
@@ -931,8 +931,8 @@ export async function clearConversationInteractionState({
     convo &&
     (convo.get('lastMessageInteractionType') || convo.get('lastMessageInteractionStatus'))
   ) {
-    convo.set('lastMessageInteractionType', undefined);
-    convo.set('lastMessageInteractionStatus', undefined);
+    convo.setKey('lastMessageInteractionType', null);
+    convo.setKey('lastMessageInteractionStatus', null);
 
     await convo.commit();
     window.log.debug(`clearConversationInteractionState for ${conversationId}`);
