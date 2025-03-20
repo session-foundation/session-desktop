@@ -167,6 +167,7 @@ import { isSessionLocaleSet, getCrowdinLocale } from '../util/i18n/shared';
 import { loadLocalizedDictionary } from '../node/locale';
 import { simpleDictionary } from '../localization/locales';
 import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
+import { isReleaseChannel } from '../updater/types';
 
 // Both of these will be set after app fires the 'ready' event
 let logger: Logger | null = null;
@@ -496,9 +497,9 @@ ipc.on('show-window', () => {
 ipc.on('set-release-from-file-server', (_event, releaseInfoFromFileServer) => {
   const [releaseVersion, releaseChannel] = releaseInfoFromFileServer;
 
-  if (!releaseVersion || !releaseChannel) {
+  if (!releaseVersion || !releaseChannel || !isReleaseChannel(releaseChannel)) {
     console.error(
-      '[updater] set-release-from-file-server: invalid release information, missing version or channel'
+      `[updater] set-release-from-file-server: invalid release information, version=${releaseVersion} or channel=${releaseChannel}`
     );
     return;
   }
