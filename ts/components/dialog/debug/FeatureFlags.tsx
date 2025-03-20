@@ -8,7 +8,7 @@ import { HintText, SpacerXS } from '../../basic/Text';
 const unsupportedFlags = ['useTestNet'];
 const untestedFlags = ['useOnionRequests', 'useClosedGroupV3', 'replaceLocalizedStringsWithKeys'];
 
-const handleFeatureFlagToggle = async (
+const handleFeatureFlagToggle = (
   forceUpdate: () => void,
   flag: SessionFeatureFlagsKeys,
   parentFlag?: SessionFeatureFlagsKeys
