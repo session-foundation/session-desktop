@@ -11,7 +11,7 @@ steps:
       - python3 -m pip install --upgrade pip setuptools
       - apt-get install git build-essential cmake -y
       - curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash
-      - source "$HOME/.nvm/nvm.sh"
+      - \. "$HOME/.nvm/nvm.sh"
       - nvm use
       - if ! which yarn; do npm install --global yarn; done
       - yarn install --frozen-lockfile --network-timeout 600000
