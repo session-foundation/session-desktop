@@ -84,17 +84,17 @@ export const SessionWrapperModal = (props: SessionWrapperModalType) => {
           <div ref={modalRef} className="session-modal">
             {showHeader ? (
               <Flex
-                container={true}
-                flexDirection={headerReverse ? 'row-reverse' : 'row'}
-                justifyContent={'space-between'}
-                alignItems={'center'}
+                $container={true}
+                $flexDirection={headerReverse ? 'row-reverse' : 'row'}
+                $justifyContent={'space-between'}
+                $alignItems={'center'}
                 padding={'var(--margins-lg)'}
                 className={'session-modal__header'}
               >
                 <Flex
-                  container={true}
-                  flexDirection={headerReverse ? 'row-reverse' : 'row'}
-                  alignItems={'center'}
+                  $container={true}
+                  $flexDirection={headerReverse ? 'row-reverse' : 'row'}
+                  $alignItems={'center'}
                   padding={'0'}
                   margin={'0'}
                   className={'session-modal__header__close'}
@@ -127,9 +127,9 @@ export const SessionWrapperModal = (props: SessionWrapperModalType) => {
                   {title}
                 </StyledTitle>
                 <Flex
-                  container={true}
-                  flexDirection={headerReverse ? 'row-reverse' : 'row'}
-                  alignItems={'center'}
+                  $container={true}
+                  $flexDirection={headerReverse ? 'row-reverse' : 'row'}
+                  $alignItems={'center'}
                   padding={'0'}
                   margin={'0'}
                 >

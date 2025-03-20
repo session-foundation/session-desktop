@@ -44,21 +44,21 @@ export const ConversationHeaderWithDetails = () => {
   return (
     <div className="module-conversation-header">
       <Flex
-        container={true}
-        justifyContent={'flex-end'}
-        alignItems="center"
+        $container={true}
+        $justifyContent={'flex-end'}
+        $alignItems="center"
         width="100%"
-        flexGrow={1}
+        $flexGrow={1}
       >
         <ConversationHeaderTitle showSubtitle={!isOutgoingRequest} />
 
         {!isOutgoingRequest && !isSelectionMode && (
           <Flex
-            container={true}
-            flexDirection="row"
-            alignItems="center"
-            flexGrow={0}
-            flexShrink={0}
+            $container={true}
+            $flexDirection="row"
+            $alignItems="center"
+            $flexGrow={0}
+            $flexShrink={0}
           >
             <RecreateGroupButton />
             <CallButton />

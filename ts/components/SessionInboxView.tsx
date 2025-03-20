@@ -170,7 +170,7 @@ export const SessionInboxView = () => {
           <SessionTheme>
             <SomeDeviceOutdatedSyncingNotice />
             <AnimatePresence>
-              <Flex container={true} height="0" flexShrink={100} flexGrow={1}>
+              <Flex $container={true} height="0" $flexShrink={100} $flexGrow={1}>
                 <StyledGutter>
                   <LeftPane />
                 </StyledGutter>

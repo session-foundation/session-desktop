@@ -43,14 +43,14 @@ export const RegistrationStages = () => {
 
   return (
     <AnimatePresence>
-      <StyledRegistrationContainer container={true} flexDirection="column">
-        <Flex container={true} alignItems="center" height={'30px'}>
+      <StyledRegistrationContainer $container={true} $flexDirection="column">
+        <Flex $container={true} $alignItems="center" height={'30px'}>
           <SessionIcon iconColor="var(--primary-color)" iconSize={'huge'} iconType="brand" />
           <SpacerXS />
           <div style={{ flexGrow: 1, zIndex: -1 }}>
             <SessionIcon iconSize={140} iconType="session" iconColor="var(--text-primary-color)" />
           </div>
-          <Flex container={true} alignItems="center">
+          <Flex $container={true} $alignItems="center">
             <SessionIconButton
               ariaLabel="FAQ Link"
               iconType="question"
@@ -81,7 +81,7 @@ export const RegistrationStages = () => {
           </Flex>
         </Flex>
 
-        <Flex container={true} flexDirection="column" alignItems="center">
+        <Flex $container={true} $flexDirection="column" $alignItems="center">
           <SpacerXL />
           <OnboardContainer
             key={`${Onboarding[step]}-${step === Onboarding.CreateAccount ? AccountCreation[creationStep] : AccountRestoration[restorationStep]}`}

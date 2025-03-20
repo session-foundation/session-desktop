@@ -167,7 +167,7 @@ export const OverlayDisappearingMessages = () => {
 
   return (
     <StyledScrollContainer>
-      <Flex container={true} flexDirection={'column'} alignItems={'center'}>
+      <Flex $container={true} $flexDirection={'column'} $alignItems={'center'}>
         <Header>
           <HeaderTitle>{window.i18n('disappearingMessages')}</HeaderTitle>
           <HeaderSubtitle>

@@ -332,7 +332,7 @@ export const OverlayMessageInfo = () => {
 
   return (
     <StyledScrollContainer>
-      <Flex container={true} flexDirection={'column'} alignItems={'center'}>
+      <Flex $container={true} $flexDirection={'column'} $alignItems={'center'}>
         <Header hideBackButton={true} closeButtonOnClick={closePanel}>
           <HeaderTitle>{window.i18n('messageInfo')}</HeaderTitle>
         </Header>

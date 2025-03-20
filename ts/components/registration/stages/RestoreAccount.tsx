@@ -245,11 +245,11 @@ export const RestoreAccount = () => {
       }}
     >
       <Flex
-        container={true}
+        $container={true}
         width="100%"
-        flexDirection="column"
-        justifyContent="flex-start"
-        alignItems="flex-start"
+        $flexDirection="column"
+        $justifyContent="flex-start"
+        $alignItems="flex-start"
         margin={
           step === AccountRestoration.RecoveryPassword || step === AccountRestoration.DisplayName
             ? '0 0 0 8px'
@@ -258,7 +258,7 @@ export const RestoreAccount = () => {
       >
         {step === AccountRestoration.RecoveryPassword ? (
           <>
-            <Flex container={true} width={'100%'} alignItems="center">
+            <Flex $container={true} width={'100%'} $alignItems="center">
               <OnboardHeading>{window.i18n('sessionRecoveryPassword')}</OnboardHeading>
               <SessionIcon
                 iconType="recoveryPasswordOutline"
@@ -305,7 +305,7 @@ export const RestoreAccount = () => {
             />
           </>
         ) : step === AccountRestoration.DisplayName ? (
-          <Flex container={true} width="100%" flexDirection="column" alignItems="flex-start">
+          <Flex $container={true} width="100%" $flexDirection="column" $alignItems="flex-start">
             <OnboardHeading>{window.i18n('displayNameNew')}</OnboardHeading>
             <SpacerSM />
             <OnboardDescription>{window.i18n('displayNameErrorNew')}</OnboardDescription>

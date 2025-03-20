@@ -30,12 +30,12 @@ export const DebugActions = () => {
       <h2>Actions</h2>
       <SpacerXS />
       <Flex
-        container={true}
+        $container={true}
         width="100%"
-        justifyContent="flex-start"
-        alignItems="flex-start"
-        flexWrap="wrap"
-        flexGap="var(--margins-md) var(--margins-lg)"
+        $justifyContent="flex-start"
+        $alignItems="flex-start"
+        $flexWrap="wrap"
+        $flexGap="var(--margins-md) var(--margins-lg)"
       >
         <SessionButton
           buttonColor={SessionButtonColor.Danger}
@@ -143,10 +143,10 @@ const FlagToggle = ({
     <Flex
       key={key}
       id={key}
-      container={true}
+      $container={true}
       width="100%"
-      alignItems="center"
-      justifyContent="space-between"
+      $alignItems="center"
+      $justifyContent="space-between"
     >
       <span>
         {flag}
@@ -164,14 +164,14 @@ export const FeatureFlags = ({ flags }: { flags: Record<string, any> }) => {
   const forceUpdate = useUpdate();
   return (
     <Flex
-      container={true}
+      $container={true}
       width={'100%'}
-      flexDirection="column"
-      justifyContent="flex-start"
-      alignItems="flex-start"
-      flexGap="var(--margins-xs)"
+      $flexDirection="column"
+      $justifyContent="flex-start"
+      $alignItems="flex-start"
+      $flexGap="var(--margins-xs)"
     >
-      <Flex container={true} alignItems="center">
+      <Flex $container={true} $alignItems="center">
         <h2>Feature Flags</h2>
         <HintText>Experimental</HintText>
       </Flex>
@@ -232,25 +232,25 @@ export const AboutInfo = () => {
 
   return (
     <Flex
-      container={true}
+      $container={true}
       width={'100%'}
-      flexDirection="column"
-      justifyContent="flex-start"
-      alignItems="flex-start"
-      flexWrap="wrap"
+      $flexDirection="column"
+      $justifyContent="flex-start"
+      $alignItems="flex-start"
+      $flexWrap="wrap"
     >
       <SpacerXS />
-      <Flex container={true} width="100%" alignItems="center" flexGap="var(--margins-xs)">
+      <Flex $container={true} width="100%" $alignItems="center" $flexGap="var(--margins-xs)">
         <h2>About</h2>
         <CopyToClipboardIcon iconSize={'medium'} copyContent={aboutInfo.join('\n')} />
       </Flex>
       <Flex
-        container={true}
+        $container={true}
         width="100%"
-        flexDirection="column"
-        justifyContent="space-between"
-        alignItems="center"
-        flexGap="var(--margins-xs)"
+        $flexDirection="column"
+        $justifyContent="space-between"
+        $alignItems="center"
+        $flexGap="var(--margins-xs)"
       >
         {aboutInfo.map((info, index) => {
           if (!info) {
@@ -259,10 +259,10 @@ export const AboutInfo = () => {
           return (
             <Flex
               key={`debug-about-info-${index}`}
-              container={true}
+              $container={true}
               width="100%"
-              alignItems="flex-start"
-              flexGap="var(--margins-xs)"
+              $alignItems="flex-start"
+              $flexGap="var(--margins-xs)"
             >
               <p style={{ userSelect: 'text', lineHeight: 1.5 }}>{info}</p>
               <CopyToClipboardIcon iconSize={'medium'} copyContent={info} />
@@ -283,27 +283,27 @@ export const OtherInfo = () => {
 
   return (
     <Flex
-      container={true}
+      $container={true}
       width={'100%'}
-      flexDirection="column"
-      justifyContent="flex-start"
-      alignItems="flex-start"
-      flexWrap="wrap"
+      $flexDirection="column"
+      $justifyContent="flex-start"
+      $alignItems="flex-start"
+      $flexWrap="wrap"
     >
       <SpacerXS />
-      <Flex container={true} width="100%" alignItems="center" flexGap="var(--margins-xs)">
+      <Flex $container={true} width="100%" $alignItems="center" $flexGap="var(--margins-xs)">
         <h2>Other Info</h2>
         {otherInfo.value ? (
           <CopyToClipboardIcon iconSize={'medium'} copyContent={otherInfo.value.join('\n')} />
         ) : null}
       </Flex>
       <Flex
-        container={true}
+        $container={true}
         width="100%"
-        flexDirection="column"
-        justifyContent="space-between"
-        alignItems="center"
-        flexGap="var(--margins-xs)"
+        $flexDirection="column"
+        $justifyContent="space-between"
+        $alignItems="center"
+        $flexGap="var(--margins-xs)"
       >
         {otherInfo.loading ? (
           <p>{localize('loading')}</p>
@@ -316,10 +316,10 @@ export const OtherInfo = () => {
           ? otherInfo.value.map((info, index) => (
               <Flex
                 key={`debug-other-info-${index}`}
-                container={true}
+                $container={true}
                 width="100%"
-                alignItems="flex-start"
-                flexGap="var(--margins-xs)"
+                $alignItems="flex-start"
+                $flexGap="var(--margins-xs)"
               >
                 <p style={{ userSelect: 'text', lineHeight: 1.5 }}>{info}</p>
                 <CopyToClipboardIcon iconSize={'medium'} copyContent={info} />

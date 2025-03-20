@@ -51,14 +51,14 @@ const getIconDimensionFromIconSize = (iconSize: SessionIconSize | number) => {
 type StyledSvgProps = {
   width: string | number;
   height: string | number;
-  iconRotation: number;
-  rotateDuration?: number;
+  $iconRotation: number;
+  $rotateDuration?: number;
   borderRadius?: string;
-  iconPadding?: string;
-  glowDuration?: number;
-  glowStartDelay?: number;
-  noScale?: boolean;
-  iconColor?: string;
+  $iconPadding?: string;
+  $glowDuration?: number;
+  $glowStartDelay?: number;
+  $noScale?: boolean;
+  $iconColor?: string;
   backgroundColor?: string;
   fill?: string;
   clipRule?: ClipRule;
@@ -103,25 +103,29 @@ const glow = (color: string, glowDuration: number, glowStartDelay: number) => {
 };
 
 const animation = (props: {
-  rotateDuration?: number;
-  glowDuration?: number;
-  glowStartDelay?: number;
-  iconColor?: string;
-  noScale?: boolean;
+  $rotateDuration?: number;
+  $glowDuration?: number;
+  $glowStartDelay?: number;
+  $iconColor?: string;
+  $noScale?: boolean;
 }) => {
-  if (props.rotateDuration) {
+  if (props.$rotateDuration) {
     return css`
-      animation: ${rotate} ${props.rotateDuration}s linear infinite;
+      animation: ${rotate} ${props.$rotateDuration}s linear infinite;
     `;
   }
-  if (props.noScale) {
+  if (props.$noScale) {
     return css``;
   }
 
-  if (props.glowDuration !== undefined && props.glowStartDelay !== undefined && props.iconColor) {
+  if (
+    props.$glowDuration !== undefined &&
+    props.$glowStartDelay !== undefined &&
+    props.$iconColor
+  ) {
     return css`
-      animation: ${glow(props.iconColor, props.glowDuration, props.glowStartDelay)}
-        ${props.glowDuration}s ease infinite;
+      animation: ${glow(props.$iconColor, props.$glowDuration, props.$glowStartDelay)}
+        ${props.$glowDuration}s ease infinite;
     `;
   }
   return undefined;
@@ -129,14 +133,14 @@ const animation = (props: {
 
 const Svg = memo(styled.svg<StyledSvgProps>`
   width: ${props => props.width};
-  transform: ${props => `rotate(${props.iconRotation}deg)`};
+  transform: ${props => `rotate(${props.$iconRotation}deg)`};
   ${props => animation(props)};
   border-radius: ${props => props.borderRadius};
   background-color: ${props =>
     props.backgroundColor ? props.backgroundColor : 'var(--button-icon-background-color)'};
-  filter: ${props => (props.noScale ? `drop-shadow(0px 0px 4px ${props.iconColor})` : '')};
-  fill: ${props => (props.iconColor ? props.iconColor : 'var(--button-icon-stroke-color)')};
-  padding: ${props => (props.iconPadding ? props.iconPadding : '')};
+  filter: ${props => (props.$noScale ? `drop-shadow(0px 0px 4px ${props.$iconColor})` : '')};
+  fill: ${props => (props.$iconColor ? props.$iconColor : 'var(--button-icon-stroke-color)')};
+  padding: ${props => (props.$iconPadding ? props.$iconPadding : '')};
   transition: inherit;
 `);
 
@@ -148,21 +152,21 @@ const SessionSvg = (
     dataTestId?: SessionDataTestId;
   }
 ) => {
-  const colorSvg = props.iconColor ? props.iconColor : 'var(--button-icon-stroke-color)';
+  const colorSvg = props.$iconColor ? props.$iconColor : 'var(--button-icon-stroke-color)';
   const pathArray = props.path instanceof Array ? props.path : [props.path];
   const propsToPick = {
     width: props.width,
     height: props.height,
-    rotateDuration: props.rotateDuration,
-    iconRotation: props.iconRotation,
+    $rotateDuration: props.$rotateDuration,
+    $iconRotation: props.$iconRotation,
     viewBox: props.viewBox,
-    glowDuration: props.glowDuration,
-    glowStartDelay: props.glowStartDelay,
-    iconColor: props.iconColor,
-    noScale: props.noScale,
+    $glowDuration: props.$glowDuration,
+    $glowStartDelay: props.$glowStartDelay,
+    $iconColor: props.$iconColor,
+    $noScale: props.$noScale,
     backgroundColor: props.backgroundColor,
     borderRadius: props.borderRadius,
-    iconPadding: props.iconPadding,
+    $iconPadding: props.$iconPadding,
     fill: props.fill,
     clipRule: props.clipRule,
     fillRule: props.fillRule,
@@ -213,15 +217,15 @@ export const SessionIcon = (props: SessionIconProps) => {
       path={iconDef.path}
       width={width}
       height={height}
-      rotateDuration={rotateDuration}
-      glowDuration={glowDuration}
-      glowStartDelay={glowStartDelay}
-      noScale={noScale}
+      $rotateDuration={rotateDuration}
+      $glowDuration={glowDuration}
+      $glowStartDelay={glowStartDelay}
+      $noScale={noScale}
       borderRadius={borderRadius}
-      iconRotation={iconRotation}
-      iconColor={iconColor}
+      $iconRotation={iconRotation}
+      $iconColor={iconColor}
       backgroundColor={backgroundColor}
-      iconPadding={iconPadding}
+      $iconPadding={iconPadding}
       fill={fill}
       clipRule={clipRule}
       fillRule={fillRule}

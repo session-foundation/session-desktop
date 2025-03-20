@@ -29,8 +29,8 @@ export const ContactName = (props: Props) => {
   const shouldShowProfile = Boolean(convoName || profileName || name);
 
   const commonStyles = {
-    'min-width': 0,
-    'text-overflow': 'ellipsis',
+    minWidth: 0,
+    textOverflow: 'ellipsis',
     overflow: 'hidden',
   } as CSSProperties;
 

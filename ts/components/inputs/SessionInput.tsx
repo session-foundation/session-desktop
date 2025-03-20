@@ -404,17 +404,17 @@ export const SessionInput = (props: Props) => {
   return (
     <StyledSessionInput
       className={className}
-      container={true}
-      flexDirection="column"
-      justifyContent="center"
-      alignItems="center"
+      $container={true}
+      $flexDirection="column"
+      $justifyContent="center"
+      $alignItems="center"
       error={Boolean(errorString)}
       textSize={textSize}
     >
       <StyledBorder
-        container={true}
+        $container={true}
         width="100%"
-        alignItems="center"
+        $alignItems="center"
         initial={{
           borderColor: errorString ? 'var(--input-border-color)' : undefined,
         }}

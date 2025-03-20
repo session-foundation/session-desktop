@@ -91,10 +91,10 @@ export const OverlayCommunity = () => {
 
   return (
     <StyledLeftPaneOverlay
-      container={true}
-      flexDirection={'column'}
-      flexGrow={1}
-      alignItems={'center'}
+      $container={true}
+      $flexDirection={'column'}
+      $flexGrow={1}
+      $alignItems={'center'}
       padding={'var(--margins-md)'}
     >
       <SessionInput

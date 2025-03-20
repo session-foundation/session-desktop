@@ -70,7 +70,7 @@ export const UserDetailsDialog = (props: UserDetailsModalState) => {
         </div>
       </div>
       <SpacerLG />
-      <Flex container={true} width={'100%'} justifyContent="center" alignItems="center">
+      <Flex $container={true} width={'100%'} $justifyContent="center" $alignItems="center">
         <SessionInput
           value={props.conversationId}
           textSize="md"

@@ -88,7 +88,7 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
         />
       </StyledDescriptionContainer>
       <SpacerMD />
-      <Flex container={true} justifyContent="center" alignItems="center" width="100%">
+      <Flex $container={true} $justifyContent="center" $alignItems="center" width="100%">
         <SessionButton {...leftButtonProps} buttonType={SessionButtonType.Ghost} />
         <SessionButton {...rightButtonProps} buttonType={SessionButtonType.Ghost} />
       </Flex>

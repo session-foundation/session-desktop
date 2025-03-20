@@ -138,7 +138,7 @@ const ResendContainer = ({
   ) {
     return (
       <Flex
-        container={true}
+        $container={true}
         margin="0 0 0 auto"
         padding="0 var(--margins-lg)"
         gap="var(--margins-sm)"
@@ -352,10 +352,10 @@ export const MemberListItem = <T extends string>({
       <StyledInfo>
         <AvatarItem memberPubkey={pubkey} isAdmin={isAdmin || false} />
         <Flex
-          container={true}
-          flexDirection="column"
+          $container={true}
+          $flexDirection="column"
           margin="0 var(--margins-md)"
-          alignItems="flex-start"
+          $alignItems="flex-start"
           minWidth="0"
         >
           <StyledName data-testid={'contact'} maxName={maxNameWidth}>
