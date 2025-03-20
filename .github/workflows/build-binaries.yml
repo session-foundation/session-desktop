@@ -144,7 +144,7 @@ jobs:
         # we want this to run always, except on "push" to "master"
         if: ${{ env.SHOULD_PUBLISH == 'false' && env.SHOULD_PUBLISH_ALPHA == 'false'  }}
         run: |
-          source ./build/setup-mac-certificate.sh
+          . ./build/setup-mac-certificate.sh
           yarn build-release --config.mac.bundleVersion=${{ github.ref }}
 
       - name: Upload artefacts
@@ -158,14 +158,14 @@ jobs:
         # we want this to run only when on "push" to "master"
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         run: |
-          source ./build/setup-mac-certificate.sh
+          . ./build/setup-mac-certificate.sh
           yarn build-release-publish --config.mac.bundleVersion=${{ github.ref }}
 
       - name: Setup release metadata
         # we want this to run only when on "push" to "master"
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         run: |
-          source ./build/setup-mac-release-arch.sh
+          . ./build/setup-mac-release-arch.sh
 
       - name: Upload release metadata
         # we want this to run only when on "push" to "master"
@@ -203,7 +203,7 @@ jobs:
         # we want this to run always, except on "push" to "master"
         if: ${{ env.SHOULD_PUBLISH == 'false' && env.SHOULD_PUBLISH_ALPHA == 'false'  }}
         run: |
-          source ./build/setup-mac-certificate.sh
+          . ./build/setup-mac-certificate.sh
           yarn build-release --config.mac.bundleVersion=${{ github.ref }}
 
       - name: Upload artefacts
@@ -217,14 +217,14 @@ jobs:
         # we want this to run only when on "push" to "master"
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         run: |
-          source ./build/setup-mac-certificate.sh
+          . ./build/setup-mac-certificate.sh
           yarn build-release-publish --config.mac.bundleVersion=${{ github.ref }}
 
       - name: Setup release metadata
         # we want this to run only when on "push" to "master"
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         run: |
-          source ./build/setup-mac-release-arch.sh
+          . ./build/setup-mac-release-arch.sh
 
       - name: Upload release metadata
         # we want this to run only when on "push" to "master"
@@ -264,7 +264,7 @@ jobs:
         # we want this to run only when on "push" to "master"
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         run: |
-          source ./build/setup-mac-release-combine.sh
+          . ./build/setup-mac-release-combine.sh
 
       - name: Upload release metadata
         # we want this to run only when on "push" to "master"
