@@ -2,7 +2,6 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
   GroupInfoGet,
-  GroupMemberGet,
   GroupPubkeyType,
   PubkeyType,
   UserGroupsGet,
@@ -54,10 +53,11 @@ import {
 } from '../../session/types/with';
 import { updateGroupNameModal } from './modalDialog';
 import { localize } from '../../localization/localeTools';
+import { type GroupMemberGetRedux, makeGroupMemberGetRedux } from './types/groupReduxTypes';
 
 export type GroupState = {
   infos: Record<GroupPubkeyType, GroupInfoGet>;
-  members: Record<GroupPubkeyType, Array<GroupMemberGet>>;
+  members: Record<GroupPubkeyType, Array<GroupMemberGetRedux>>;
   memberChangesFromUIPending: boolean;
   nameChangesFromUIPending: boolean;
 
@@ -80,7 +80,7 @@ export const initialGroupState: GroupState = {
 type GroupDetailsUpdate = {
   groupPk: GroupPubkeyType;
   infos: GroupInfoGet;
-  members: Array<GroupMemberGet>;
+  members: Array<GroupMemberGetRedux>;
 };
 
 async function checkWeAreAdmin(groupPk: GroupPubkeyType) {
@@ -409,7 +409,9 @@ const loadMetaDumpsFromDB = createAsyncThunk(
         await MetaGroupWrapperActions.memberResetAllSendingState(groupPk);
 
         const infos = await MetaGroupWrapperActions.infoGet(groupPk);
-        const members = await MetaGroupWrapperActions.memberGetAll(groupPk);
+        const members = (await MetaGroupWrapperActions.memberGetAll(groupPk)).map(
+          makeGroupMemberGetRedux
+        );
 
         toReturn.push({ groupPk, infos, members });
       } catch (e) {

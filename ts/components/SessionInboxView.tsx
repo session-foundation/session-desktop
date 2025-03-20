@@ -32,6 +32,7 @@ import { SessionMainPanel } from './SessionMainPanel';
 
 import { SettingsKey } from '../data/settings-key';
 import { groupInfoActions, initialGroupState } from '../state/ducks/metaGroups';
+import { makeUserGroupGetRedux } from '../state/ducks/types/groupReduxTypes';
 import { getSettingsInitialState, updateAllOnStorageReady } from '../state/ducks/settings';
 import { initialSogsRoomInfoState } from '../state/ducks/sogsRoomInfo';
 import { useHasDeviceOutdatedSyncing } from '../state/selectors/settings';
@@ -42,6 +43,7 @@ import { NoticeBanner } from './NoticeBanner';
 import { Flex } from './basic/Flex';
 import { initialReleasedFeaturesState } from '../state/ducks/releasedFeatures';
 import { initialDebugState } from '../state/ducks/debug';
+import type { UserGroupState } from '../state/ducks/userGroups';
 
 function makeLookup<T>(items: Array<T>, key: string): { [key: string]: T } {
   // Yep, we can't index into item without knowing what it is. True. But we want to.
@@ -61,10 +63,10 @@ async function createSessionInboxStore() {
     .getConversations()
     .map(conversation => conversation.getConversationModelProps());
 
-  const userGroups: Record<string, any> = {};
+  const userGroups: UserGroupState['userGroups'] = {};
 
   (await UserGroupsWrapperActions.getAllGroups()).forEach(m => {
-    userGroups[m.pubkeyHex] = m;
+    userGroups[m.pubkeyHex] = makeUserGroupGetRedux(m);
   });
 
   const initialState: StateType = {

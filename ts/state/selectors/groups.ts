@@ -1,14 +1,11 @@
-import {
-  GroupMemberGet,
-  GroupPubkeyType,
-  MemberStateGroupV2,
-  PubkeyType,
-} from 'libsession_util_nodejs';
+import { GroupPubkeyType, MemberStateGroupV2, PubkeyType } from 'libsession_util_nodejs';
 import { useSelector } from 'react-redux';
 import { sortBy } from 'lodash';
 import { useMemo } from 'react';
+import { createSelector } from '@reduxjs/toolkit';
 import { PubKey } from '../../session/types';
 import { GroupState } from '../ducks/metaGroups';
+import { type GroupMemberGetRedux } from '../ducks/types/groupReduxTypes';
 import { StateType } from '../reducer';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { UserUtils } from '../../session/utils';
@@ -16,19 +13,22 @@ import { useConversationsNicknameRealNameOrShortenPubkey } from '../../hooks/use
 
 const getLibGroupsState = (state: StateType): GroupState => state.groups;
 
-function getMembersOfGroup(state: StateType, convo?: string): Array<GroupMemberGet> {
-  if (!convo) {
-    return [];
-  }
-  if (!PubKey.is03Pubkey(convo)) {
-    return [];
-  }
+const getMembersOfGroup = createSelector(
+  [(state: StateType) => state, (_state: StateType, convo?: string) => convo],
+  (state: StateType, convo?: string) => {
+    if (!convo) {
+      return [];
+    }
+    if (!PubKey.is03Pubkey(convo)) {
+      return [];
+    }
 
-  const members = getLibGroupsState(state).members[convo];
-  return members || [];
-}
+    const members = getLibGroupsState(state).members[convo];
+    return members || [];
+  }
+);
 
-function findMemberInMembers(members: Array<GroupMemberGet>, memberPk: string) {
+function findMemberInMembers(members: Array<GroupMemberGetRedux>, memberPk: string) {
   return members.find(m => m.pubkeyHex === memberPk);
 }
 

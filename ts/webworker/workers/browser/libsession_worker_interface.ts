@@ -31,6 +31,7 @@ import { getAppRootPath } from '../../../node/getRootPath';
 import { userGroupsActions } from '../../../state/ducks/userGroups';
 import { WorkerInterface } from '../../worker_interface';
 import { ConfigWrapperUser, LibSessionWorkerFunctions } from './libsession_worker_functions';
+import { makeUserGroupGetRedux } from '../../../state/ducks/types/groupReduxTypes';
 
 let libsessionWorkerInterface: WorkerInterface | undefined;
 
@@ -225,7 +226,9 @@ const groups: Map<GroupPubkeyType, UserGroupsGet> = new Map();
 
 function dispatchCachedGroupsToRedux() {
   window?.inboxStore?.dispatch?.(
-    userGroupsActions.refreshUserGroupsSlice({ groups: [...groups.values()] })
+    userGroupsActions.refreshUserGroupsSlice({
+      groups: [...groups.values()].map(makeUserGroupGetRedux),
+    })
   );
 }
 

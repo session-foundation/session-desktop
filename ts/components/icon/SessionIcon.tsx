@@ -62,7 +62,7 @@ type StyledSvgProps = {
   backgroundColor?: string;
   fill?: string;
   clipRule?: ClipRule;
-  filleRule?: FillRule;
+  fillRule?: FillRule;
 };
 
 const rotate = keyframes`
@@ -165,9 +165,8 @@ const SessionSvg = (
     iconPadding: props.iconPadding,
     fill: props.fill,
     clipRule: props.clipRule,
-    fillRule: props.filleRule,
+    fillRule: props.fillRule,
     style: props.style,
-    dataTestId: props.dataTestId,
   };
 
   return (
@@ -225,7 +224,7 @@ export const SessionIcon = (props: SessionIconProps) => {
       iconPadding={iconPadding}
       fill={fill}
       clipRule={clipRule}
-      filleRule={fillRule}
+      fillRule={fillRule}
       style={style}
       dataTestId={dataTestId}
     />

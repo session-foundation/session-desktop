@@ -1,9 +1,10 @@
 /* eslint-disable no-await-in-loop */
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
-import { GroupPubkeyType, UserGroupsGet } from 'libsession_util_nodejs';
+import { GroupPubkeyType } from 'libsession_util_nodejs';
+import type { UserGroupsRedux } from './types/groupReduxTypes';
 
 export type UserGroupState = {
-  userGroups: Record<GroupPubkeyType, UserGroupsGet>;
+  userGroups: Record<GroupPubkeyType, UserGroupsRedux>;
 };
 
 export const initialUserGroupState: UserGroupState = {
@@ -17,7 +18,7 @@ const userGroupSlice = createSlice({
   reducers: {
     refreshUserGroupsSlice(
       state: UserGroupState,
-      action: PayloadAction<{ groups: Array<UserGroupsGet> }>
+      action: PayloadAction<{ groups: Array<UserGroupsRedux> }>
     ) {
       state.userGroups = {};
       action.payload.groups.forEach(m => {
