@@ -9,7 +9,10 @@ steps:
     commands:
       - apt-get update
       - python3 -m pip install --upgrade pip setuptools
-      - apt-get install git build-essentials cmake nodejs=18.15.0 -y
+      - apt-get install git build-essentials cmake -y
+      - curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash
+      - source "$HOME/.nvm/nvm.sh"
+      - nvm use
       - if ! which yarn; do npm install --global yarn; done
       - yarn install --frozen-lockfile --network-timeout 600000
       - yarn build-everything
