@@ -39,7 +39,7 @@ const FlagToggle = ({
   value: any;
   parentFlag?: SessionFeatureFlagsKeys;
 }) => {
-  const key = `feature-flag-toggle${parentFlag ? `-${parentFlag}` : ''}-${flag}`;
+  const key = `feature-flag-toggle-${flag}`;
   return (
     <Flex
       key={key}
