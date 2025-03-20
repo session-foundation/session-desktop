@@ -7,7 +7,7 @@ steps:
   python:
     image: docker.io/ubuntu:22.04
     commands:
-      - apt install python3/3.12
+      - apt-get install python3/3.12
       - python -m pip install --upgrade pip setuptools
   yarn:
     image: codeberg.org/woodpecker-plugins/node-pm
