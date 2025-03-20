@@ -493,8 +493,17 @@ ipc.on('show-window', () => {
   showWindow();
 });
 
-ipc.on('set-release-from-file-server', (_event, releaseGotFromFileServer) => {
-  setLatestRelease(releaseGotFromFileServer);
+ipc.on('set-release-from-file-server', (_event, releaseInfoFromFileServer) => {
+  const [releaseVersion, releaseChannel] = releaseInfoFromFileServer;
+
+  if (!releaseVersion || !releaseChannel) {
+    console.error(
+      '[updater] set-release-from-file-server: invalid release information, missing version or channel'
+    );
+    return;
+  }
+
+  setLatestRelease(releaseInfoFromFileServer);
 });
 
 let isReadyForUpdates = false;
