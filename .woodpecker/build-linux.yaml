@@ -11,6 +11,7 @@ steps:
   yarn:
     image: docker.io/node:18.15.0
     commands:
+      - echo 'Acquire::http::Timeout "20";' > /etc/apt/apt.conf.d/80-retries
       - apt-get update
       - apt-get install build-essential cmake -y
       - yarn install --frozen-lockfile --network-timeout 600000
