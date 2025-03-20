@@ -9,11 +9,11 @@ steps:
     commands:
       - python3 -m pip install --upgrade pip setuptools
   yarn:
-    image: codeberg.org/woodpecker-plugins/node-pm
-    settings:
-      run: ["install", "build-everything"]
-      with: yarn
-      frozen_lockfile: true
+    image: docker.io/node:18.5.0-slim
+    commands:
+      - npm install --global yarn
+      - yarn install --frozen-lockfile --network-timeout 600000
+      - yarn build-everything
   publish:
     image: woodpeckerci/plugin-release
     settings:
