@@ -61,7 +61,9 @@ const FlagToggle = ({
   );
 };
 
-export const FeatureFlags = ({ flags }: { flags: Record<string, any> }) => {
+type FlagValues = boolean | object;
+
+export const FeatureFlags = ({ flags }: { flags: Record<string, FlagValues> }) => {
   const forceUpdate = useUpdate();
   return (
     <Flex
@@ -90,7 +92,7 @@ export const FeatureFlags = ({ flags }: { flags: Record<string, any> }) => {
           return (
             <>
               <h3>{flag}</h3>
-              {Object.entries(value).map(([k, v]: [string, any]) => {
+              {Object.entries(value).map(([k, v]: [string, FlagValues]) => {
                 const nestedFlag = k as SessionFeatureFlagsKeys;
                 return (
                   <FlagToggle
