@@ -11,9 +11,9 @@ import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { UserUtils } from '../../session/utils';
 import { useConversationsNicknameRealNameOrShortenPubkey } from '../../hooks/useParamSelector';
 
-const getLibGroupsState = (state: StateType): GroupState => state.groups;
+const selectLibGroupsState = (state: StateType): GroupState => state.groups;
 
-const getMembersOfGroup = createSelector(
+const selectMembersOfGroup = createSelector(
   [(state: StateType) => state, (_state: StateType, convo?: string) => convo],
   (state: StateType, convo?: string) => {
     if (!convo) {
@@ -23,7 +23,7 @@ const getMembersOfGroup = createSelector(
       return [];
     }
 
-    const members = getLibGroupsState(state).members[convo];
+    const members = selectLibGroupsState(state).members[convo];
     return members || [];
   }
 );
@@ -32,81 +32,97 @@ function findMemberInMembers(members: Array<GroupMemberGetRedux>, memberPk: stri
   return members.find(m => m.pubkeyHex === memberPk);
 }
 
-export function getLibMembersPubkeys(state: StateType, convo?: string): Array<PubkeyType> {
-  const members = getMembersOfGroup(state, convo);
+export function selectLibMembersPubkeys(state: StateType, convo?: string): Array<PubkeyType> {
+  const members = selectMembersOfGroup(state, convo);
 
   return members.map(m => m.pubkeyHex);
 }
 
-function getIsCreatingGroupFromUI(state: StateType): boolean {
-  return getLibGroupsState(state).creationFromUIPending;
+function selectIsCreatingGroupFromUI(state: StateType): boolean {
+  return selectLibGroupsState(state).creationFromUIPending;
 }
 
-function getIsMemberGroupChangePendingFromUI(state: StateType): boolean {
-  return getLibGroupsState(state).memberChangesFromUIPending;
+function selectIsMemberGroupChangePendingFromUI(state: StateType): boolean {
+  return selectLibGroupsState(state).memberChangesFromUIPending;
 }
 
-function getGroupNameChangeFromUIPending(state: StateType): boolean {
-  return getLibGroupsState(state).nameChangesFromUIPending;
+function selectGroupNameChangeFromUIPending(state: StateType): boolean {
+  return selectLibGroupsState(state).nameChangesFromUIPending;
 }
 
-export function getLibAdminsPubkeys(state: StateType, convo?: string): Array<string> {
-  const members = getMembersOfGroup(state, convo);
+export function selectLibAdminsPubkeys(state: StateType, convo?: string): Array<string> {
+  const members = selectMembersOfGroup(state, convo);
   return members.filter(m => m.nominatedAdmin).map(m => m.pubkeyHex);
 }
 
-function getMemberInviteFailed(state: StateType, pubkey: PubkeyType, convo?: GroupPubkeyType) {
-  const members = getMembersOfGroup(state, convo);
+function selectMemberInviteFailed(state: StateType, pubkey: PubkeyType, convo?: GroupPubkeyType) {
+  const members = selectMembersOfGroup(state, convo);
   return findMemberInMembers(members, pubkey)?.memberStatus === 'INVITE_FAILED' || false;
 }
 
-function getMemberInviteNotSent(state: StateType, pubkey: PubkeyType, convo?: GroupPubkeyType) {
-  const members = getMembersOfGroup(state, convo);
+function selectMemberInviteNotSent(state: StateType, pubkey: PubkeyType, convo?: GroupPubkeyType) {
+  const members = selectMembersOfGroup(state, convo);
   return findMemberInMembers(members, pubkey)?.memberStatus === 'INVITE_NOT_SENT' || false;
 }
 
-function getMemberInviteSent(state: StateType, pubkey: PubkeyType, convo?: GroupPubkeyType) {
-  const members = getMembersOfGroup(state, convo);
+function selectMemberInviteSent(state: StateType, pubkey: PubkeyType, convo?: GroupPubkeyType) {
+  const members = selectMembersOfGroup(state, convo);
 
   return findMemberInMembers(members, pubkey)?.memberStatus === 'INVITE_SENT' || false;
 }
 
-function getMemberHasAcceptedPromotion(
+function selectMemberHasAcceptedPromotion(
   state: StateType,
   pubkey: PubkeyType,
   convo?: GroupPubkeyType
 ) {
-  const members = getMembersOfGroup(state, convo);
+  const members = selectMembersOfGroup(state, convo);
   return findMemberInMembers(members, pubkey)?.memberStatus === 'PROMOTION_ACCEPTED' || false;
 }
 
-function getMemberIsNominatedAdmin(state: StateType, pubkey: PubkeyType, convo?: GroupPubkeyType) {
-  const members = getMembersOfGroup(state, convo);
+function selectMemberIsNominatedAdmin(
+  state: StateType,
+  pubkey: PubkeyType,
+  convo?: GroupPubkeyType
+) {
+  const members = selectMembersOfGroup(state, convo);
   return findMemberInMembers(members, pubkey)?.nominatedAdmin || false;
 }
 
-function getMemberHasAcceptedInvite(state: StateType, pubkey: PubkeyType, convo?: GroupPubkeyType) {
-  const members = getMembersOfGroup(state, convo);
+function selectMemberHasAcceptedInvite(
+  state: StateType,
+  pubkey: PubkeyType,
+  convo?: GroupPubkeyType
+) {
+  const members = selectMembersOfGroup(state, convo);
   return findMemberInMembers(members, pubkey)?.memberStatus === 'INVITE_ACCEPTED' || false;
 }
 
-function getMemberPromotionFailed(state: StateType, pubkey: PubkeyType, convo?: GroupPubkeyType) {
-  const members = getMembersOfGroup(state, convo);
+function selectMemberPromotionFailed(
+  state: StateType,
+  pubkey: PubkeyType,
+  convo?: GroupPubkeyType
+) {
+  const members = selectMembersOfGroup(state, convo);
   return findMemberInMembers(members, pubkey)?.memberStatus === 'PROMOTION_FAILED' || false;
 }
 
-function getMemberPromotionSent(state: StateType, pubkey: PubkeyType, convo?: GroupPubkeyType) {
-  const members = getMembersOfGroup(state, convo);
+function selectMemberPromotionSent(state: StateType, pubkey: PubkeyType, convo?: GroupPubkeyType) {
+  const members = selectMembersOfGroup(state, convo);
   return findMemberInMembers(members, pubkey)?.memberStatus === 'PROMOTION_SENT' || false;
 }
 
-function getMemberPromotionNotSent(state: StateType, pubkey: PubkeyType, convo?: GroupPubkeyType) {
-  const members = getMembersOfGroup(state, convo);
+function selectMemberPromotionNotSent(
+  state: StateType,
+  pubkey: PubkeyType,
+  convo?: GroupPubkeyType
+) {
+  const members = selectMembersOfGroup(state, convo);
   return findMemberInMembers(members, pubkey)?.memberStatus === 'PROMOTION_NOT_SENT' || false;
 }
 
-function getMemberPendingRemoval(state: StateType, pubkey: PubkeyType, convo?: GroupPubkeyType) {
-  const members = getMembersOfGroup(state, convo);
+function selectMemberPendingRemoval(state: StateType, pubkey: PubkeyType, convo?: GroupPubkeyType) {
+  const members = selectMembersOfGroup(state, convo);
   const removedStatus = findMemberInMembers(members, pubkey)?.memberStatus;
   return (
     removedStatus === 'REMOVED_UNKNOWN' ||
@@ -115,16 +131,16 @@ function getMemberPendingRemoval(state: StateType, pubkey: PubkeyType, convo?: G
   );
 }
 
-function getMemberStatus(state: StateType, pubkey: PubkeyType, convo?: GroupPubkeyType) {
-  const members = getMembersOfGroup(state, convo);
+function selectMemberStatus(state: StateType, pubkey: PubkeyType, convo?: GroupPubkeyType) {
+  const members = selectMembersOfGroup(state, convo);
   return findMemberInMembers(members, pubkey)?.memberStatus;
 }
 
-export function getLibMembersCount(state: StateType, convo?: GroupPubkeyType): Array<string> {
-  return getLibMembersPubkeys(state, convo);
+export function selectLibMembersCount(state: StateType, convo?: GroupPubkeyType): Array<string> {
+  return selectLibMembersPubkeys(state, convo);
 }
 
-function getLibGroupName(state: StateType, convo?: string): string | undefined {
+function selectLibGroupName(state: StateType, convo?: string): string | undefined {
   if (!convo) {
     return undefined;
   }
@@ -132,99 +148,101 @@ function getLibGroupName(state: StateType, convo?: string): string | undefined {
     return undefined;
   }
 
-  const name = getLibGroupsState(state).infos[convo]?.name;
+  const name = selectLibGroupsState(state).infos[convo]?.name;
   return name || undefined;
 }
 
 export function useLibGroupName(convoId?: string): string | undefined {
-  return useSelector((state: StateType) => getLibGroupName(state, convoId));
+  return useSelector((state: StateType) => selectLibGroupName(state, convoId));
 }
 
 export function useLibGroupMembers(convoId?: string): Array<PubkeyType> {
-  return useSelector((state: StateType) => getLibMembersPubkeys(state, convoId));
+  return useSelector((state: StateType) => selectLibMembersPubkeys(state, convoId));
 }
 
 export function useLibGroupAdmins(convoId?: string): Array<string> {
-  return useSelector((state: StateType) => getLibAdminsPubkeys(state, convoId));
+  return useSelector((state: StateType) => selectLibAdminsPubkeys(state, convoId));
 }
 
-export function getLibGroupNameOutsideRedux(convoId: string): string | undefined {
+export function selectLibGroupNameOutsideRedux(convoId: string): string | undefined {
   const state = window.inboxStore?.getState();
-  return state ? getLibGroupName(state, convoId) : undefined;
+  return state ? selectLibGroupName(state, convoId) : undefined;
 }
 
-export function getLibGroupMembersOutsideRedux(convoId: string): Array<string> {
+export function selectLibGroupMembersOutsideRedux(convoId: string): Array<string> {
   const state = window.inboxStore?.getState();
-  return state ? getLibMembersPubkeys(state, convoId) : [];
+  return state ? selectLibMembersPubkeys(state, convoId) : [];
 }
 
-export function getLibGroupAdminsOutsideRedux(convoId: string): Array<string> {
+export function selectLibGroupAdminsOutsideRedux(convoId: string): Array<string> {
   const state = window.inboxStore?.getState();
-  return state ? getLibAdminsPubkeys(state, convoId) : [];
+  return state ? selectLibAdminsPubkeys(state, convoId) : [];
 }
 
-export function getMemberInviteSentOutsideRedux(
+export function selectMemberInviteSentOutsideRedux(
   member: PubkeyType,
   convoId: GroupPubkeyType
 ): boolean {
   const state = window.inboxStore?.getState();
-  return state ? getMemberInviteSent(state, member, convoId) : false;
+  return state ? selectMemberInviteSent(state, member, convoId) : false;
 }
 
 export function useIsCreatingGroupFromUIPending() {
-  return useSelector(getIsCreatingGroupFromUI);
+  return useSelector(selectIsCreatingGroupFromUI);
 }
 
 export function useMemberStatus(member: PubkeyType, groupPk: GroupPubkeyType) {
-  return useSelector((state: StateType) => getMemberStatus(state, member, groupPk));
+  return useSelector((state: StateType) => selectMemberStatus(state, member, groupPk));
 }
 
 export function useMemberInviteFailed(member: PubkeyType, groupPk: GroupPubkeyType) {
-  return useSelector((state: StateType) => getMemberInviteFailed(state, member, groupPk));
+  return useSelector((state: StateType) => selectMemberInviteFailed(state, member, groupPk));
 }
 
 export function useMemberInviteSent(member: PubkeyType, groupPk: GroupPubkeyType) {
-  return useSelector((state: StateType) => getMemberInviteSent(state, member, groupPk));
+  return useSelector((state: StateType) => selectMemberInviteSent(state, member, groupPk));
 }
 
 export function useMemberInviteNotSent(member: PubkeyType, groupPk: GroupPubkeyType) {
-  return useSelector((state: StateType) => getMemberInviteNotSent(state, member, groupPk));
+  return useSelector((state: StateType) => selectMemberInviteNotSent(state, member, groupPk));
 }
 
 export function useMemberHasAcceptedPromotion(member: PubkeyType, groupPk: GroupPubkeyType) {
-  return useSelector((state: StateType) => getMemberHasAcceptedPromotion(state, member, groupPk));
+  return useSelector((state: StateType) =>
+    selectMemberHasAcceptedPromotion(state, member, groupPk)
+  );
 }
 
 export function useMemberIsNominatedAdmin(member: PubkeyType, groupPk: GroupPubkeyType) {
-  return useSelector((state: StateType) => getMemberIsNominatedAdmin(state, member, groupPk));
+  return useSelector((state: StateType) => selectMemberIsNominatedAdmin(state, member, groupPk));
 }
 
 export function useMemberHasAcceptedInvite(member: PubkeyType, groupPk: GroupPubkeyType) {
-  return useSelector((state: StateType) => getMemberHasAcceptedInvite(state, member, groupPk));
+  return useSelector((state: StateType) => selectMemberHasAcceptedInvite(state, member, groupPk));
 }
 
 export function useMemberPromotionFailed(member: PubkeyType, groupPk: GroupPubkeyType) {
-  return useSelector((state: StateType) => getMemberPromotionFailed(state, member, groupPk));
+  return useSelector((state: StateType) => selectMemberPromotionFailed(state, member, groupPk));
 }
 
 export function useMemberPromotionSent(member: PubkeyType, groupPk: GroupPubkeyType) {
-  return useSelector((state: StateType) => getMemberPromotionSent(state, member, groupPk));
+  return useSelector((state: StateType) => selectMemberPromotionSent(state, member, groupPk));
 }
 
 export function useMemberPromotionNotSent(member: PubkeyType, groupPk: GroupPubkeyType) {
-  return useSelector((state: StateType) => getMemberPromotionNotSent(state, member, groupPk));
+  return useSelector((state: StateType) => selectMemberPromotionNotSent(state, member, groupPk));
 }
 
 export function useMemberPendingRemoval(member: PubkeyType, groupPk: GroupPubkeyType) {
-  return useSelector((state: StateType) => getMemberPendingRemoval(state, member, groupPk));
+  return useSelector((state: StateType) => selectMemberPendingRemoval(state, member, groupPk));
 }
 
 export function useMemberGroupChangePending() {
-  return useSelector(getIsMemberGroupChangePendingFromUI);
+  return useSelector(selectIsMemberGroupChangePendingFromUI);
 }
 
 export function useGroupNameChangeFromUIPending() {
-  return useSelector(getGroupNameChangeFromUIPending);
+  return useSelector(selectGroupNameChangeFromUIPending);
 }
 
 function getSortingOrderForStatus(memberStatus: MemberStateGroupV2) {
@@ -265,7 +283,7 @@ function getSortingOrderForStatus(memberStatus: MemberStateGroupV2) {
 
 export function useStateOf03GroupMembers(convoId?: string) {
   const us = UserUtils.getOurPubKeyStrFromCache();
-  const unsortedMembers = useSelector((state: StateType) => getMembersOfGroup(state, convoId));
+  const unsortedMembers = useSelector((state: StateType) => selectMembersOfGroup(state, convoId));
 
   const names = useConversationsNicknameRealNameOrShortenPubkey(
     unsortedMembers.map(m => m.pubkeyHex)
