@@ -9,7 +9,6 @@ steps:
     commands:
       - echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
       - apt-get update
-      - apt-get upgrade -y
       - apt-get install software-properties-common -y
       - add-apt-repository ppa:deadsnakes/ppa -y
       - apt-get update
