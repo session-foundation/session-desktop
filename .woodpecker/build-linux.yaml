@@ -11,9 +11,8 @@ steps:
   yarn:
     image: docker.io/node:18.15.0-alpine3.17
     commands:
-      - echo 'Acquire::http::Timeout "20";' > /etc/apt/apt.conf.d/80-retries
-      - apt-get update
-      - apt-get install build-essential cmake -y
+      - apk update
+      - apk add build-base cmake -y
       - yarn install --frozen-lockfile --network-timeout 600000
       - yarn build-everything
   publish:
