@@ -209,11 +209,8 @@ function assertArrayBufferView(val: any) {
   }
 }
 
-// encryptForPubkey: hexString, payloadBytes: Uint8Array
-async function encryptForPubkey(
-  pubkeyX25519str: string,
-  payloadBytes: Uint8Array<ArrayBufferLike>
-) {
+// encryptForPubkey: hexString, payloadBytes: Uint8Array<ArrayBuffer>
+async function encryptForPubkey(pubkeyX25519str: string, payloadBytes: Uint8Array<ArrayBuffer>) {
   try {
     if (typeof pubkeyX25519str !== 'string') {
       throw new Error('pubkeyX25519str type not correct');
@@ -226,7 +223,7 @@ async function encryptForPubkey(
       pubkeyX25519Buffer,
       new Uint8Array(ephemeral.private)
     );
-    const ciphertext = await EncryptAESGCM(symmetricKey, payloadBytes);
+    const ciphertext = await EncryptAESGCM(symmetricKey, payloadBytes.buffer);
 
     return { ciphertext, symmetricKey, ephemeralKey: ephemeral.public };
   } catch (e) {
@@ -235,7 +232,7 @@ async function encryptForPubkey(
   }
 }
 
-async function EncryptAESGCM(symmetricKey: ArrayBuffer, plaintext: Uint8Array<ArrayBufferLike>) {
+async function EncryptAESGCM(symmetricKey: ArrayBuffer, plaintext: ArrayBuffer) {
   const nonce = crypto.getRandomValues(new Uint8Array(NONCE_LENGTH));
 
   const key = await crypto.subtle.importKey('raw', symmetricKey, { name: 'AES-GCM' }, false, [
@@ -256,13 +253,17 @@ async function EncryptAESGCM(symmetricKey: ArrayBuffer, plaintext: Uint8Array<Ar
   return ivAndCiphertext;
 }
 
-// uint8array, uint8array
-async function DecryptAESGCM(symmetricKey: Uint8Array, ivAndCiphertext: Uint8Array) {
+// uint8array<ArrayBuffer>, uint8array<ArrayBuffer>
+async function DecryptAESGCM(
+  symmetricKey: Uint8Array<ArrayBuffer>,
+  ivAndCiphertext: Uint8Array<ArrayBuffer>
+) {
   assertArrayBufferView(symmetricKey);
   assertArrayBufferView(ivAndCiphertext);
 
-  const nonce = ivAndCiphertext.slice(0, NONCE_LENGTH);
-  const ciphertext = ivAndCiphertext.slice(NONCE_LENGTH);
+  const nonce = ivAndCiphertext.buffer.slice(0, NONCE_LENGTH);
+  const ciphertext = new Uint8Array(ivAndCiphertext.buffer.slice(NONCE_LENGTH));
+
   const key = await crypto.subtle.importKey('raw', symmetricKey, { name: 'AES-GCM' }, false, [
     'decrypt',
   ]);
