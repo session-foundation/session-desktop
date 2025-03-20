@@ -6,6 +6,7 @@ import { isEmpty, isString } from 'lodash';
 import { ipcRenderer } from 'electron';
 import { DURATION } from '../constants';
 import { getLatestReleaseFromFileServer } from '../apis/file_server_api/FileServerApi';
+import { isReleaseChannel } from '../../updater/types';
 
 /**
  * We don't want to hit the fileserver too often. Only often on start, and then every 30 minutes
@@ -40,7 +41,7 @@ async function fetchReleaseFromFSAndUpdateMain(userEd25519SecretKey: Uint8Array)
       `[updater] renderer process fetched from the ${releaseChannel} release channel on the fileserver: ${releaseVersion}`
     );
 
-    if (isString(releaseVersion) && !isEmpty(releaseVersion)) {
+    if (isString(releaseVersion) && !isEmpty(releaseVersion) && isReleaseChannel(releaseChannel)) {
       lastFetchedTimestamp = Date.now();
       ipcRenderer.send('set-release-from-file-server', justFetched);
       window.readyForUpdates();
