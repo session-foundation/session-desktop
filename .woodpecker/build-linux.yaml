@@ -11,7 +11,8 @@ steps:
   yarn:
     image: docker.io/node:18.15.0
     commands:
-      - apt install build-essential cmake
+      - apt-get update
+      - apt-get install build-essential cmake
       - yarn install --frozen-lockfile --network-timeout 600000
       - yarn build-everything
   publish:
