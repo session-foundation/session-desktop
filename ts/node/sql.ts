@@ -443,8 +443,10 @@ function clearOutAllSnodesNotInPool(edKeysOfSnodePool: Array<string>) {
   });
 }
 
-function getConversationCount() {
-  const row = assertGlobalInstance().prepare(`SELECT count(*) from ${CONVERSATIONS_TABLE};`).get();
+function getConversationCount(db?: BetterSqlite3.Database) {
+  const row = assertGlobalInstanceOrInstance(db)
+    .prepare(`SELECT count(*) from ${CONVERSATIONS_TABLE};`)
+    .get();
   if (!row) {
     throw new Error(`getConversationCount: Unable to get count of ${CONVERSATIONS_TABLE}`);
   }
