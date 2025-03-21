@@ -3,6 +3,7 @@ when:
       exclude: ['*.md']
     event: ["push", "tag"]
     branch: ["woodpecker-ci", "dev-gravel"]
+    evaluate: 'not (CI_COMMIT_MESSAGE contains "[nolinux]")'
 
 steps:
   build:
