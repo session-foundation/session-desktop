@@ -18,10 +18,9 @@ export type LoggerType = {
 
 export async function showDownloadUpdateDialog(
   mainWindow: BrowserWindow,
-  i18n: SetupI18nReturnType
+  i18n: SetupI18nReturnType,
+  version: string
 ): Promise<boolean> {
-  // FIXME: make this dynamic based on the channel selected (needs alpha-releases PR merged)
-  const version = 'stable';
   const DOWNLOAD_BUTTON = 0;
   const LATER_BUTTON = 1;
   const options = {
