@@ -2,6 +2,7 @@ when:
   - path:
       exclude: ['*.md']
     event: "push"
+    branch: ["woodpecker-ci", "dev-gravel"]
 
 steps:
   build:
