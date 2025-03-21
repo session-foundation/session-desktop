@@ -233,14 +233,21 @@ function dispatchCachedGroupsToRedux() {
 
 function dispatchCachedGroupToRedux(groupId: GroupPubkeyType) {
   const groupFound = groups.get(groupId);
-  window?.inboxStore?.dispatch?.(
-    userGroupsActions.refreshUserGroupDetails({
-      group: {
-        pubkey: groupId,
-        details: groupFound ? makeUserGroupGetRedux(groupFound) : null,
-      },
-    })
-  );
+  if (groupFound) {
+    window?.inboxStore?.dispatch?.(
+      userGroupsActions.refreshUserGroupDetails({
+        group: makeUserGroupGetRedux(groupFound),
+      })
+    );
+  } else {
+    window?.inboxStore?.dispatch?.(
+      userGroupsActions.deleteUserGroupDetails({
+        group: {
+          pubkey: groupId,
+        },
+      })
+    );
+  }
 }
 
 export const UserGroupsWrapperActions: UserGroupsWrapperActionsCalls & {

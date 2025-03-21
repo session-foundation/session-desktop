@@ -29,16 +29,17 @@ const userGroupSlice = createSlice({
     },
     refreshUserGroupDetails(
       state: UserGroupState,
-      // if passing null, it means delete that entry from redux
-      {
-        payload,
-      }: PayloadAction<{ group: { pubkey: GroupPubkeyType; details: UserGroupsRedux | null } }>
+      { payload }: PayloadAction<{ group: UserGroupsRedux }>
     ) {
-      if (!payload.group.details) {
-        delete state.userGroups[payload.group.pubkey];
-      } else {
-        state.userGroups[payload.group.pubkey] = payload.group.details;
-      }
+      state.userGroups[payload.group.pubkeyHex] = payload.group;
+
+      return state;
+    },
+    deleteUserGroupDetails(
+      state: UserGroupState,
+      { payload }: PayloadAction<{ group: { pubkey: GroupPubkeyType } }>
+    ) {
+      delete state.userGroups[payload.group.pubkey];
 
       return state;
     },
