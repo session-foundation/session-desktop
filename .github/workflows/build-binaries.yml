@@ -144,7 +144,7 @@ jobs:
         if: ${{ env.SHOULD_PUBLISH == 'false' }}
         run: |
           source ./build/setup-mac-certificate.sh
-          yarn build-release --config.mac.bundleVersion=${{ github.ref }}
+          yarn build-release-publish --config.mac.bundleVersion=${{ github.ref }}
 
       - name: Upload artefacts
         # we want this to run always, except on "push" to "master"
