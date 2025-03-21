@@ -13,7 +13,7 @@ steps:
       - apt-get install git build-essential cmake -y
       - curl -fsSL https://fnm.vercel.app/install | bash -s -- --skip-shell --install-dir "/.fnm"
       - export PATH="/.fnm:$PATH"
-      - eval "$(fnm env --use-on-cd --shell bash)"
+      - eval "$(fnm env --shell bash)"
       - fnm install
       - fnm use
       - if ! which yarn; do npm install --global yarn; done
