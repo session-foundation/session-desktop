@@ -687,7 +687,6 @@
   "updateDownloading": "Descargando actualización: {percent_loader}%",
   "updateError": "Non se pode actualizar",
   "updateNewVersion": "Hai dispoñible unha nova versión de Session, toca para actualizar",
-  "updateNewVersionDescription": "Hai dispoñible unha nova versión de Session.",
   "updateReleaseNotes": "Ir ás notas de lanzamento",
   "updateSession": "Actualización de Session",
   "updateVersion": "Versión {version}",

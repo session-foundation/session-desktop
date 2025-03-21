@@ -253,7 +253,6 @@
   "updateDownloading": "ກຳລັງດາວໂຫລດການປັບປຸງ: {percent_loader}%",
   "updateError": "ບໍ່ສາມາດອັບເດດໄດ້",
   "updateNewVersion": "ວິທີໃຫມ່ຂອງ Session ມີໃຫ້, ກົດເພື່ອອັບເດດ",
-  "updateNewVersionDescription": "ວິທີໃຫມ່ຂອງ Session ມີໃຫ້.",
   "updateSession": "ອັບເດດ Session",
   "urlCopy": "ເສັກກີ້າບເອີຢ໇ລໍ້າ"
 }
