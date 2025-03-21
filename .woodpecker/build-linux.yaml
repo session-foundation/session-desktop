@@ -19,6 +19,7 @@ steps:
       - if ! which yarn; then npm install --global yarn; fi
       - yarn install --frozen-lockfile --network-timeout 600000
       - yarn build-everything
+      - yarn build-release --linux appImage
     entrypoint: ["/bin/bash", "-c", "echo $CI_SCRIPT | base64 -d | /bin/bash -e"]
 
   publish:
