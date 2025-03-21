@@ -10,9 +10,10 @@ steps:
       - apt-get update
       - python3 -m pip install --upgrade pip setuptools
       - apt-get install git build-essential cmake -y
-      - curl -fsSL https://fnm.vercel.app/install | bash -s -- --skip-shell
-      - eval "$(fnm env --use-on-cd --shell bash)"
-      - fnm install 18.15.0
+      - curl -fsSL https://fnm.vercel.app/install | bash -s -- --skip-shell --install-dir "/.fnm"
+      - eval "$(/.fnm/fnm env --use-on-cd --shell bash)"
+      - /.fnm/fnm install
+      - /.fnm/fnm use
       - if ! which yarn; do npm install --global yarn; done
       - yarn install --frozen-lockfile --network-timeout 600000
       - yarn build-everything
