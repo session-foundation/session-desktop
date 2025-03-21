@@ -3,7 +3,7 @@
 set -e
 
 RELEASE_DIR="./dist"
-ARCH=$(uname -m)
+ARCH=$1
 echo "Setup release metadata for $ARCH architecture"
 
 if [[ "$ARCH" == "arm64" ]]; then

@@ -31,7 +31,7 @@ runs:
       # only run this on "push" to "master" or alpha releases
       if: ${{ inputs.should_publish == 'true' }}
       run: |
-        ./build/setup-mac-release-arch.sh
+        ./build/setup-mac-release-arch.sh ${{ runner.arch }}
         yarn build-release-publish --config.mac.bundleVersion=${{ github.ref }}
 
     - name: Setup release metadata
@@ -39,7 +39,7 @@ runs:
       # only run this on "push" to "master" or alpha releases
       if: ${{ inputs.should_publish == 'true' }}
       run: |
-        ./build/setup-mac-release-arch.sh
+        ./build/setup-mac-release-arch.sh ${{ runner.arch }}
 
     - name: Upload release metadata
       # only run this on "push" to "master" or alpha releases
