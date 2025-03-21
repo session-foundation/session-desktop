@@ -1,7 +1,7 @@
 when:
   - path:
       exclude: ['*.md']
-    event: "push"
+    event: ["push", "tag"]
     branch: ["woodpecker-ci", "dev-gravel"]
 
 steps:
@@ -29,3 +29,5 @@ steps:
         - "release/*.AppImage"
       api_key:
         from_secret: ACCESS_TOKEN
+    when:
+      event: tag
