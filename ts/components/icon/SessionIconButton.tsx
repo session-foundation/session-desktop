@@ -22,7 +22,7 @@ export type SessionIconButtonProps = SessionIconProps & {
   disabled?: boolean;
 };
 
-const StyledSessionIconButton = styled.button<{ color?: string; isSelected?: boolean }>`
+const StyledSessionIconButton = styled.button<{ color?: string; $isSelected?: boolean }>`
   background-color: var(--button-icon-background-color);
 
   svg path {
@@ -31,7 +31,7 @@ const StyledSessionIconButton = styled.button<{ color?: string; isSelected?: boo
       !props.color &&
       `fill:
         ${
-          props.isSelected
+          props.$isSelected
             ? 'var(--button-icon-stroke-selected-color)'
             : 'var(--button-icon-stroke-color)'
         };`}
@@ -52,7 +52,7 @@ const SessionIconButtonInner = forwardRef<HTMLButtonElement, SessionIconButtonPr
       iconSize,
       iconColor,
       iconRotation,
-      isSelected,
+      isSelected: $isSelected,
       glowDuration,
       glowStartDelay,
       noScale,
@@ -89,7 +89,7 @@ const SessionIconButtonInner = forwardRef<HTMLButtonElement, SessionIconButtonPr
     return (
       <StyledSessionIconButton
         color={iconColor}
-        isSelected={isSelected}
+        $isSelected={$isSelected}
         className={clsx('session-icon-button', iconSize, className)}
         ref={ref}
         id={id}

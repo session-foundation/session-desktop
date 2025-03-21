@@ -27,7 +27,7 @@ export const SessionFileDropzone = () => {
   return (
     <DropZoneContainer>
       <DropZoneWithBorder>
-        <Flex container={true} justifyContent="space-around" height="100%" alignItems="center">
+        <Flex $container={true} $justifyContent="space-around" height="100%" $alignItems="center">
           <SessionIcon
             iconColor="var(--file-dropzone-border-color)"
             iconSize={'max'}

@@ -140,10 +140,10 @@ export const MessageContentWithStatuses = (props: Props) => {
         dataTestId={dataTestId}
       >
         <Flex
-          container={true}
-          flexDirection="column"
-          flexShrink={0}
-          alignItems="flex-end"
+          $container={true}
+          $flexDirection="column"
+          $flexShrink={0}
+          $alignItems="flex-end"
           maxWidth="100%"
         >
           <StyledMessageWithAuthor>

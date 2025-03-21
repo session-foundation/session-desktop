@@ -137,10 +137,10 @@ export const CreateAccount = () => {
       }}
     >
       <Flex
-        container={true}
+        $container={true}
         width="100%"
-        flexDirection="column"
-        alignItems="flex-start"
+        $flexDirection="column"
+        $alignItems="flex-start"
         margin={'0 0 0 8px'}
       >
         <OnboardHeading>{window.i18n('displayNamePick')}</OnboardHeading>

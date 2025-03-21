@@ -42,11 +42,11 @@ export const BackButtonWithinContainer = ({
 }) => {
   return (
     <StyledBackButtonContainer
-      container={true}
+      $container={true}
       width={'100%'}
-      flexDirection="row"
-      justifyContent="flex-start"
-      alignItems="flex-start"
+      $flexDirection="row"
+      $justifyContent="flex-start"
+      $alignItems="flex-start"
     >
       <div style={{ margin }}>
         <BackButton

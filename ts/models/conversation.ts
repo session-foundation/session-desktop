@@ -108,9 +108,9 @@ import { LibSessionUtil } from '../session/utils/libsession/libsession_utils';
 import { SessionUtilUserProfile } from '../session/utils/libsession/libsession_utils_user_profile';
 import { ReduxSogsRoomInfos } from '../state/ducks/sogsRoomInfo';
 import {
-  getLibGroupAdminsOutsideRedux,
-  getLibGroupMembersOutsideRedux,
-  getLibGroupNameOutsideRedux,
+  selectLibGroupAdminsOutsideRedux,
+  selectLibGroupMembersOutsideRedux,
+  selectLibGroupNameOutsideRedux,
 } from '../state/selectors/groups';
 import {
   getCanWriteOutsideRedux,
@@ -1407,7 +1407,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
    * @returns `displayNameInProfile` so the real username as defined by that user/group
    */
   public getRealSessionUsername(): string | undefined {
-    return getLibGroupNameOutsideRedux(this.id) || this.get('displayNameInProfile');
+    return selectLibGroupNameOutsideRedux(this.id) || this.get('displayNameInProfile');
   }
 
   /**
@@ -2028,7 +2028,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
   public getGroupAdmins(): Array<string> {
     if (this.isClosedGroupV2()) {
-      return getLibGroupAdminsOutsideRedux(this.id);
+      return selectLibGroupAdminsOutsideRedux(this.id);
     }
     const groupAdmins = this.get('groupAdmins');
 
@@ -2059,7 +2059,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
   public getGroupMembers(): Array<string> {
     if (this.isClosedGroup()) {
       if (this.isClosedGroupV2()) {
-        return getLibGroupMembersOutsideRedux(this.id);
+        return selectLibGroupMembersOutsideRedux(this.id);
       }
       const members = this.get('members');
       return members && members.length > 0 ? members : [];

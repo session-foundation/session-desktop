@@ -78,12 +78,12 @@ export const EmptyMessageView = () => {
 
   return (
     <StyledPlaceholder
-      container={true}
+      $container={true}
       width={'100%'}
       className="content"
-      flexDirection="column"
-      justifyContent="center"
-      alignItems="center"
+      $flexDirection="column"
+      $justifyContent="center"
+      $alignItems="center"
     >
       {newAccountCreated ? (
         <>
@@ -98,11 +98,11 @@ export const EmptyMessageView = () => {
         </>
       ) : (
         <StyledSessionFullLogo
-          container={true}
+          $container={true}
           className="content"
-          flexDirection="column"
-          justifyContent="center"
-          alignItems="center"
+          $flexDirection="column"
+          $justifyContent="center"
+          $alignItems="center"
           margin="0 auto"
         >
           <img src="images/session/brand.svg" alt="full-brand-logo" />

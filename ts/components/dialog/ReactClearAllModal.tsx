@@ -77,7 +77,11 @@ export const ReactClearAllModal = (props: Props) => {
       showHeader={false}
       onClose={handleClose}
     >
-      <StyledReactClearAllContainer container={true} flexDirection={'column'} alignItems="center">
+      <StyledReactClearAllContainer
+        $container={true}
+        $flexDirection={'column'}
+        $alignItems="center"
+      >
         <StyledDescription>
           {window.i18n('emojiReactsClearAll', { emoji: reaction })}
         </StyledDescription>

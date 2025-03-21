@@ -143,13 +143,13 @@ export const LeftPaneBanner = () => {
         <StyledProgressBarInner />
       </StyledProgressBarContainer>
       <StyledBanner
-        container={true}
+        $container={true}
         width={'100%'}
-        flexDirection="column"
-        alignItems={'flex-start'}
+        $flexDirection="column"
+        $alignItems={'flex-start'}
         padding={'var(--margins-md)'}
       >
-        <Flex container={true} width={'100%'} alignItems="flex-start">
+        <Flex $container={true} width={'100%'} $alignItems="flex-start">
           <StyledBannerTitle>
             <Localizer token="recoveryPasswordBannerTitle" />
           </StyledBannerTitle>
@@ -189,12 +189,12 @@ export const LeftPaneSectionHeader = () => {
   const isMessageSection = focusedSection === SectionType.Message;
 
   return (
-    <Flex flexDirection="column">
+    <Flex $flexDirection="column">
       <StyledLeftPaneSectionHeader
-        container={true}
-        flexDirection="row"
-        justifyContent="space-between"
-        alignItems="center"
+        $container={true}
+        $flexDirection="row"
+        $justifyContent="space-between"
+        $alignItems="center"
       >
         {leftOverlayMode &&
         leftOverlayMode !== 'choose-action' &&

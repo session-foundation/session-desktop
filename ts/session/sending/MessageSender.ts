@@ -156,7 +156,7 @@ async function messageToRequest03({
     'namespace' | 'encryptedAndWrappedData' | 'identifier' | 'ttl' | 'networkTimestamp'
   >;
 }): Promise<StoreRequest03> {
-  const group = await UserGroupsWrapperActions.getGroup(destination);
+  const group = UserGroupsWrapperActions.getCachedGroup(destination);
   if (!group) {
     window.log.warn(
       `messageToRequest03: no such group found in wrapper: ${ed25519Str(destination)}`
@@ -364,7 +364,12 @@ async function getSignatureParamsFromNamespace(
         'getSignatureParamsFromNamespace: group config namespace required a 03 pubkey'
       );
     }
-    const found = await UserGroupsWrapperActions.getGroup(destination);
+    const found = UserGroupsWrapperActions.getCachedGroup(destination);
+    if (!found) {
+      throw new Error(
+        `getSignatureParamsFromNamespace: group ${ed25519Str(destination)} not found in cache`
+      );
+    }
     return SnodeGroupSignature.getSnodeGroupSignature({
       method: store,
       namespace,

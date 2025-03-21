@@ -50,7 +50,7 @@ export const SubtitleDotMenu = ({
   optionsCount: number;
   style: CSSProperties;
 }) => (
-  <StyledSubtitleDotMenu id={id} container={true} alignItems={'center'} style={style}>
+  <StyledSubtitleDotMenu id={id} $container={true} $alignItems={'center'} style={style}>
     {Array(optionsCount)
       .fill(0)
       .map((_, index) => {
@@ -101,10 +101,10 @@ export const ConversationHeaderSubtitle = (props: ConversationHeaderSubtitleProp
   return (
     <StyledSubtitleContainer>
       <Flex
-        container={true}
-        flexDirection={'row'}
-        justifyContent={subtitlesArray.length < 2 ? 'center' : 'space-between'}
-        alignItems={'center'}
+        $container={true}
+        $flexDirection={'row'}
+        $justifyContent={subtitlesArray.length < 2 ? 'center' : 'space-between'}
+        $alignItems={'center'}
         width={'100%'}
       >
         <SessionIconButton

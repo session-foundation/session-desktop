@@ -79,7 +79,7 @@ export const AddModeratorsDialog = (props: Props) => {
         dispatch(updateAddModeratorsModal(null));
       }}
     >
-      <Flex container={true} flexDirection="column" alignItems="center">
+      <Flex $container={true} $flexDirection="column" $alignItems="center">
         <SessionHeaderSearchInput
           type="text"
           isDarkTheme={isDarkTheme}

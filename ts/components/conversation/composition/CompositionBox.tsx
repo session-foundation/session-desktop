@@ -293,7 +293,7 @@ class CompositionBoxInner extends Component<Props, State> {
     const { showRecordingView } = this.state;
 
     return (
-      <Flex flexDirection="column">
+      <Flex $flexDirection="column">
         <SessionQuotedMessageComposition />
         {this.renderStagedLinkPreview()}
         {this.renderAttachmentsStaged()}
@@ -405,9 +405,9 @@ class CompositionBoxInner extends Component<Props, State> {
     return (
       <Flex
         dir={this.props.htmlDirection}
-        container={true}
-        flexDirection={'row'}
-        alignItems={'center'}
+        $container={true}
+        $flexDirection={'row'}
+        $alignItems={'center'}
         width={'100%'}
       >
         {typingEnabled && <AddStagedAttachmentButton onClick={this.onChooseAttachment} />}

@@ -20,7 +20,7 @@ import {
   pushQuotedMessageDetails,
 } from '../state/ducks/conversations';
 import { showMessageRequestBannerOutsideRedux } from '../state/ducks/userConfig';
-import { getMemberInviteSentOutsideRedux } from '../state/selectors/groups';
+import { selectMemberInviteSentOutsideRedux } from '../state/selectors/groups';
 import { getHideMessageRequestBannerOutsideRedux } from '../state/selectors/userConfig';
 import { GoogleChrome } from '../util';
 import { LinkPreviews } from '../util/linkPreviews';
@@ -276,7 +276,7 @@ async function handleMessageFromPendingMember(
     return;
   }
 
-  const isMemberInviteSent = getMemberInviteSentOutsideRedux(source, convoId);
+  const isMemberInviteSent = selectMemberInviteSentOutsideRedux(source, convoId);
   if (!isMemberInviteSent) {
     return; // nothing else to do
   }

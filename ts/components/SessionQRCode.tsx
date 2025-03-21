@@ -108,9 +108,9 @@ export function SessionQRCode(props: SessionQRCodeProps) {
 
   return (
     <StyledQRView
-      container={true}
-      justifyContent="center"
-      alignItems="center"
+      $container={true}
+      $justifyContent="center"
+      $alignItems="center"
       size={size}
       id={id}
       title={window.i18n('download')}
