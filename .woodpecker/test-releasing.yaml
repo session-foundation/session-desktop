@@ -1,5 +1,5 @@
 when:
-  - evaluate: 'CI_COMMIT_MESSAGE contains "[testreleasing]"'
+  - evaluate: 'CI_COMMIT_TAG contains "releasetest"'
     event: ["tag"]
 
 steps:
