@@ -1,5 +1,3 @@
-const { notarize } = require('@electron/notarize');
-
 /*
  Pre-requisites: https://github.com/electron/electron-notarize#prerequisites
     1. Generate an app specific password
@@ -13,6 +11,8 @@ const { notarize } = require('@electron/notarize');
 const log = msg => console.log(`\n${msg}`);
 const isEmpty = v => !v || v.length === 0;
 
+const { execSync } = require('node:child_process');
+
 exports.default = async function notarizing(context) {
   const { electronPlatformName, appOutDir } = context;
   if (electronPlatformName !== 'darwin') {
@@ -23,20 +23,33 @@ exports.default = async function notarizing(context) {
   const appName = context.packager.appInfo.productFilename;
   const { SIGNING_APPLE_ID, SIGNING_APP_PASSWORD, SIGNING_TEAM_ID } = process.env;
 
-  if (isEmpty(SIGNING_APPLE_ID) || isEmpty(SIGNING_APP_PASSWORD)) {
-    log('SIGNING_APPLE_ID or SIGNING_APP_PASSWORD not set.\nTerminating noratization.');
+  if (isEmpty(SIGNING_APPLE_ID) || isEmpty(SIGNING_APP_PASSWORD) || isEmpty(SIGNING_TEAM_ID)) {
+    log(
+      'SIGNING_APPLE_ID or SIGNING_APP_PASSWORD or SIGNING_TEAM_ID not set.\nTerminating noratization.'
+    );
     return;
   }
 
-  const options = {
-    appBundleId: 'com.loki-project.messenger-desktop',
-    appPath: `${appOutDir}/${appName}.app`,
-    appleId: SIGNING_APPLE_ID,
-    appleIdPassword: SIGNING_APP_PASSWORD,
-  };
-  if (!isEmpty(SIGNING_TEAM_ID)) {
-    options.ascProvider = SIGNING_TEAM_ID;
-    options.teamId = SIGNING_TEAM_ID;
-  }
-  return notarize(options);
+  const appPath = `${appOutDir}/${appName}.app`;
+  const zipPath = `${appOutDir}/${appName}.zip`;
+  const appleId = SIGNING_APPLE_ID;
+  const appleIdPassword = SIGNING_APP_PASSWORD;
+  const teamId = SIGNING_TEAM_ID;
+
+  console.log(
+    execSync(`ditto -c -k --keepParent "${appPath}" "${zipPath}"`, {
+      encoding: 'utf8',
+    })
+  );
+
+  console.log(
+    execSync(
+      `xcrun notarytool submit "${zipPath}" --team-id "${teamId}" --apple-id "${appleId}" --password "${appleIdPassword}" --wait`,
+      { encoding: 'utf8' }
+    )
+  );
+
+
+
+  console.log(execSync(`xcrun stapler staple "${appPath}"`, { encoding: 'utf8' }));
 };
