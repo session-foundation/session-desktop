@@ -1,0 +1,13 @@
+when:
+  - evaluate: 'CI_COMMIT_MESSAGE contains [testreleasing]'
+    event: ["tag"]
+
+steps:
+  publish:
+    image: woodpeckerci/plugin-release
+    settings:
+      draft: true
+      files:
+        - .woodpecker/test-releasing.yaml
+      api_key:
+        from_secret: ACCESS_TOKEN
