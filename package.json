@@ -207,6 +207,7 @@
         "dmg",
         "zip"
       ],
+      "notarize": false,
       "bundleVersion": "1",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
