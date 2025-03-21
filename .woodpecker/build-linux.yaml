@@ -11,7 +11,7 @@ steps:
       - python3 -m pip install --upgrade pip setuptools
       - apt-get install git build-essential cmake -y
       - curl -o- https://fnm.vercel.app/install | bash
-      - fnm install 18.15.0
+      - SHELL=/bin/bash fnm install 18.15.0
       - if ! which yarn; do npm install --global yarn; done
       - yarn install --frozen-lockfile --network-timeout 600000
       - yarn build-everything
