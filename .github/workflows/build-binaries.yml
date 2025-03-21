@@ -140,7 +140,7 @@ jobs:
       - name: Unit Test
         run: yarn test
 
-      - name: Make release build (arm64)
+      - name: Make release build arm64
         uses: ./actions/make_release_build
         with:
           architecture: arm64
@@ -170,7 +170,7 @@ jobs:
       - name: Unit Test
         run: yarn test
 
-      - name: Make release build (x64)
+      - name: Make release build x64
         uses: ./actions/make_release_build
         with:
           architecture: x64
