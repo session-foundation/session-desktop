@@ -14,32 +14,32 @@ runs:
     - name: Build but do not publish
       # always run this, except on "push" to "master" or alpha releases
       if: ${{ inputs.should_publish == 'false' }}
+      shell: bash
       run: |
         ./build/setup-mac-certificate.sh
         yarn build-release --config.mac.bundleVersion=${{ github.ref }}
-      shell: bash
 
     - name: Upload artefacts
       # always run this, except on "push" to "master" or alpha releases
       if: ${{ inputs.should_publish == 'false' }}
-      uses: ./upload_prod_artefacts
+      uses: ./actions/upload_prod_artefacts
       with:
         upload_prefix: mac-${{ inputs.architecture }}
 
     - name: Build & publish
+      shell: bash
       # only run this on "push" to "master" or alpha releases
       if: ${{ inputs.should_publish == 'true' }}
       run: |
         ./build/setup-mac-release-arch.sh
         yarn build-release-publish --config.mac.bundleVersion=${{ github.ref }}
-      shell: bash
 
     - name: Setup release metadata
+      shell: bash
       # only run this on "push" to "master" or alpha releases
       if: ${{ inputs.should_publish == 'true' }}
       run: |
         ./build/setup-mac-release-arch.sh
-      shell: bash
 
     - name: Upload release metadata
       # only run this on "push" to "master" or alpha releases
