@@ -1,5 +1,5 @@
-name: 'Build macOS'
-description: 'Build macOS and update release metadata if needed'
+name: 'Make release build'
+description: '[macOS only] Build a release for a specific cpu architecture and update the release metadata if needed.'
 inputs:
   architecture:
     description: 'cpu architecture'

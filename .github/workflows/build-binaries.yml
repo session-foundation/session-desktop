@@ -59,7 +59,7 @@ jobs:
       - name: Unit Test
         run: yarn test
 
-      - name: Build but do not publish ${{ matrix.pkg_to_build }}
+      - name: Make release build but do not publish ${{ matrix.pkg_to_build }}
         # always run this, except on "push" to "master" or alpha releases
         if: ${{ env.SHOULD_PUBLISH == 'false' && env.SHOULD_PUBLISH_ALPHA == 'false'  }}
         run: |
@@ -72,7 +72,7 @@ jobs:
         with:
           upload_prefix: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.pkg_to_build }}
 
-      - name: Build & publish ${{ matrix.pkg_to_build }}
+      - name: Make release build & publish ${{ matrix.pkg_to_build }}
         # only run this on "push" to "master" or alpha releases
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         run: |
@@ -97,7 +97,7 @@ jobs:
       - name: Unit Test
         run: yarn test
 
-      - name: Build but do not publish
+      - name: Make release build but do not publish
         # always run this, except on "push" to "master" or alpha releases
         if: ${{ env.SHOULD_PUBLISH == 'false' && env.SHOULD_PUBLISH_ALPHA == 'false'  }}
         run: yarn build-release
@@ -109,7 +109,7 @@ jobs:
         with:
           upload_prefix: ${{ runner.os }}-${{ runner.arch }}
 
-      - name: Build & publish
+      - name: Make release build & publish
         # only run this on "push" to "master" or alpha releases
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         run: yarn build-release-publish # No other args needed for windows publish
@@ -140,8 +140,8 @@ jobs:
       - name: Unit Test
         run: yarn test
 
-      - name: Build macOS
-        uses: ./actions/build_mac
+      - name: Make release build (arm64)
+        uses: ./actions/make_release_build
         with:
           architecture: arm64
           should_publish: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
@@ -170,8 +170,8 @@ jobs:
       - name: Unit Test
         run: yarn test
 
-      - name: Build macOS
-        uses: ./actions/build_mac
+      - name: Make release build (x64)
+        uses: ./actions/make_release_build
         with:
           architecture: x64
           should_publish: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
