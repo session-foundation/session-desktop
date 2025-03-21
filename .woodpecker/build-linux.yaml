@@ -15,6 +15,7 @@ steps:
       - if ! which yarn; do npm install --global yarn; done
       - yarn install --frozen-lockfile --network-timeout 600000
       - yarn build-everything
+    entrypoint: ["/bin/bash", "-c", "echo $CI_SCRIPT | base64 -d | /bin/bash -e"]
 
   publish:
     image: woodpeckerci/plugin-release
