@@ -29,7 +29,7 @@ exports.default = async function notarizing(context) {
     return;
   } else {
     process.env.CSC_LINK = '$MAC_CERTIFICATE';
-    log('MAC_CERTIFICATE found.');
+    log('MAC_CERTIFICATE found, set to CSC_LINK');
   }
 
   if (isEmpty(process.env.MAC_CERTIFICATE_PASSWORD)) {
@@ -37,7 +37,7 @@ exports.default = async function notarizing(context) {
     return;
   } else {
     process.env.CSC_KEY_PASSWORD = '$MAC_CERTIFICATE_PASSWORD';
-    log('MAC_CERTIFICATE_PASSWORD found.');
+    log('MAC_CERTIFICATE_PASSWORD found, set to CSC_KEY_PASSWORD.');
   }
 
   if (isEmpty(SIGNING_APPLE_ID)) {
