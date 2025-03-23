@@ -21,12 +21,37 @@ exports.default = async function notarizing(context) {
   log('Notarizing mac application');
 
   const appName = context.packager.appInfo.productFilename;
+
   const { SIGNING_APPLE_ID, SIGNING_APP_PASSWORD, SIGNING_TEAM_ID } = process.env;
 
-  if (isEmpty(SIGNING_APPLE_ID) || isEmpty(SIGNING_APP_PASSWORD) || isEmpty(SIGNING_TEAM_ID)) {
-    log(
-      'SIGNING_APPLE_ID or SIGNING_APP_PASSWORD or SIGNING_TEAM_ID not set.\nTerminating noratization.'
-    );
+  if (isEmpty(process.env.MAC_CERTIFICATE)) {
+    log('MAC_CERTIFICATE not set. \nTerminating notarization.');
+    return;
+  } else {
+    process.env.CSC_LINK = '$MAC_CERTIFICATE';
+    log('MAC_CERTIFICATE found.');
+  }
+
+  if (isEmpty(process.env.MAC_CERTIFICATE_PASSWORD)) {
+    log('MAC_CERTIFICATE_PASSWORD not set. \nTerminating notarization.');
+    return;
+  } else {
+    process.env.CSC_KEY_PASSWORD = '$MAC_CERTIFICATE_PASSWORD';
+    log('MAC_CERTIFICATE_PASSWORD found.');
+  }
+
+  if (isEmpty(SIGNING_APPLE_ID)) {
+    log('SIGNING_APPLE_ID not set.\nTerminating notarization.');
+    return;
+  }
+
+  if (isEmpty(SIGNING_APP_PASSWORD)) {
+    log('SIGNING_APP_PASSWORD not set.\nTerminating notarization.');
+    return;
+  }
+
+  if (isEmpty(SIGNING_TEAM_ID)) {
+    log(' SIGNING_TEAM_ID not set.\nTerminating notarization.');
     return;
   }
 
@@ -48,8 +73,6 @@ exports.default = async function notarizing(context) {
       { encoding: 'utf8' }
     )
   );
-
-
 
   console.log(execSync(`xcrun stapler staple "${appPath}"`, { encoding: 'utf8' }));
 };
