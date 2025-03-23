@@ -28,6 +28,7 @@ env:
 jobs:
   build_linux:
     runs-on: ubuntu-22.04
+    if: false
     strategy:
       fail-fast: false
       matrix:
@@ -79,6 +80,7 @@ jobs:
 
   build_windows:
     runs-on: windows-2022
+    if: false
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
