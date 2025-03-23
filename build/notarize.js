@@ -21,24 +21,7 @@ exports.default = async function notarizing(context) {
   log('Notarizing mac application');
 
   const appName = context.packager.appInfo.productFilename;
-
   const { SIGNING_APPLE_ID, SIGNING_APP_PASSWORD, SIGNING_TEAM_ID } = process.env;
-
-  if (isEmpty(process.env.MAC_CERTIFICATE)) {
-    log('MAC_CERTIFICATE not set. \nTerminating notarization.');
-    return;
-  } else {
-    process.env.CSC_LINK = '$MAC_CERTIFICATE';
-    log('MAC_CERTIFICATE found, set to CSC_LINK');
-  }
-
-  if (isEmpty(process.env.MAC_CERTIFICATE_PASSWORD)) {
-    log('MAC_CERTIFICATE_PASSWORD not set. \nTerminating notarization.');
-    return;
-  } else {
-    process.env.CSC_KEY_PASSWORD = '$MAC_CERTIFICATE_PASSWORD';
-    log('MAC_CERTIFICATE_PASSWORD found, set to CSC_KEY_PASSWORD.');
-  }
 
   if (isEmpty(SIGNING_APPLE_ID)) {
     log('SIGNING_APPLE_ID not set.\nTerminating notarization.');
