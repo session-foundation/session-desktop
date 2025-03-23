@@ -78,7 +78,7 @@ exports.default = async function notarizing(context) {
 
   console.log(
     execSync(
-      `xcrun notarytool submit "${zipPath}" --team-id "${teamId}" --apple-id "${appleId}" --password "${appleIdPassword}" --wait`,
+      `xcrun notarytool submit "${zipPath}" --team-id "${teamId}" --apple-id "${appleId}" --password "${appleIdPassword}" --verbose --wait`,
       { encoding: 'utf8' }
     )
   );
