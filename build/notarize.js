@@ -62,19 +62,16 @@ exports.default = async function notarizing(context) {
   const teamId = SIGNING_TEAM_ID;
 
   console.log(
-    execSync(`ditto -c -k --keepParent "${appPath}" "${zipPath}"`, {
+    execSync(`ditto -c -k  --sequesterRsrc --keepParent "${appPath}" "${zipPath}"`, {
       encoding: 'utf8',
     })
   );
 
-  console.log(
-    execSync(
-      `xcrundefaults write com.apple.gke.notary.tool nt-upload-connection-timeout 300`,
-      { encoding: 'utf8' }
-    )
-  );
-
-
+  // console.log(
+  //   execSync(`xcrundefaults write com.apple.gke.notary.tool nt-upload-connection-timeout 300`, {
+  //     encoding: 'utf8',
+  //   })
+  // );
 
   console.log(
     execSync(
