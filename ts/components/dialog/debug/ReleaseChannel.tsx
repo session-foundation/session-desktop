@@ -1,7 +1,6 @@
 import { capitalize } from 'lodash';
 import { useDispatch } from 'react-redux';
 import useUpdate from 'react-use/lib/useUpdate';
-import type { Dispatch } from 'redux';
 import { localize } from '../../../localization/localeTools';
 import { updateConfirmModal } from '../../../state/ducks/modalDialog';
 import { Flex } from '../../basic/Flex';
@@ -11,38 +10,42 @@ import { HintText } from '../../basic/Text';
 import { ALPHA_CHANNEL, LATEST_CHANNEL, type ReleaseChannels } from '../../../updater/types';
 import { Storage } from '../../../util/storage';
 
-const changeReleaseChannel = (
-  channel: ReleaseChannels,
-  dispatch: Dispatch,
-  forceUpdate: () => void
-) => {
-  window.log.debug(
-    `[debugMenu] Setting release channel to ${channel}. It was ${Storage.get('releaseChannel') || 'not set'}`
-  );
-  dispatch(
-    updateConfirmModal({
-      title: localize('warning').toString(),
-      i18nMessage: { token: 'settingsRestartDescription' },
-      okTheme: SessionButtonColor.Danger,
-      okText: localize('restart').toString(),
-      onClickOk: async () => {
-        try {
-          await Storage.put('releaseChannel', channel);
-        } catch (error) {
-          window.log.warn(
-            `[debugMenu] Something went wrong when setting the release channel to ${channel}. It was ${Storage.get('releaseChannel') || 'not set'}:`,
-            error && error.stack ? error.stack : error
-          );
-        } finally {
-          window.restart();
-        }
-      },
-      onClickCancel: () => {
-        dispatch(updateConfirmModal(null));
-        forceUpdate();
-      },
-    })
-  );
+/**
+ * Returns a function that can set the release channel to a provided value
+ */
+const useReleaseChannel = () => {
+  const dispatch = useDispatch();
+  const forceUpdate = useUpdate();
+
+  return (channel: ReleaseChannels) => {
+    window.log.debug(
+      `[debugMenu] useReleaseChannel Setting release channel to ${channel}. It was ${Storage.get('releaseChannel') || 'not set'}`
+    );
+    dispatch(
+      updateConfirmModal({
+        title: localize('warning').toString(),
+        i18nMessage: { token: 'settingsRestartDescription' },
+        okTheme: SessionButtonColor.Danger,
+        okText: localize('restart').toString(),
+        onClickOk: async () => {
+          try {
+            await Storage.put('releaseChannel', channel);
+          } catch (error) {
+            window.log.warn(
+              `[debugMenu] useReleaseChannel Something went wrong when setting the release channel to ${channel}. It was ${Storage.get('releaseChannel') || 'not set'}:`,
+              error && error.stack ? error.stack : error
+            );
+          } finally {
+            window.restart();
+          }
+        },
+        onClickCancel: () => {
+          dispatch(updateConfirmModal(null));
+          forceUpdate();
+        },
+      })
+    );
+  };
 };
 
 const items = [
@@ -61,21 +64,19 @@ const items = [
 ];
 
 export const ReleaseChannel = () => {
-  const forceUpdate = useUpdate();
   const releaseChannel = Storage.get('releaseChannel') as ReleaseChannels;
-
-  const dispatch = useDispatch();
+  const setReleaseChannel = useReleaseChannel();
 
   return (
     <Flex
-      container={true}
+      $container={true}
       width={'100%'}
-      flexDirection="column"
-      justifyContent="flex-start"
-      alignItems="flex-start"
-      flexGap="var(--margins-xs)"
+      $flexDirection="column"
+      $justifyContent="flex-start"
+      $alignItems="flex-start"
+      $flexGap="var(--margins-xs)"
     >
-      <Flex container={true} alignItems="center">
+      <Flex $container={true} $alignItems="center">
         <h2>Release Channel</h2>
         <HintText>Experimental</HintText>
       </Flex>
@@ -85,7 +86,7 @@ export const ReleaseChannel = () => {
         items={items}
         onClick={value => {
           if (value === LATEST_CHANNEL || value === ALPHA_CHANNEL) {
-            changeReleaseChannel(value, dispatch, forceUpdate);
+            setReleaseChannel(value);
           }
         }}
         style={{ margin: 0 }}

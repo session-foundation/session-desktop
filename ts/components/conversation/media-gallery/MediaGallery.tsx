@@ -1,5 +1,5 @@
-import classNames from 'classnames';
 import { useCallback, useState } from 'react';
+import clsx from 'clsx';
 
 import { MediaItemType } from '../../lightbox/LightboxGallery';
 import { AttachmentSection } from './AttachmentSection';
@@ -23,7 +23,7 @@ const Tab = ({
 }) => {
   return (
     <div
-      className={classNames(
+      className={clsx(
         'module-media-gallery__tab',
         isSelected ? 'module-media-gallery__tab--active' : null
       )}

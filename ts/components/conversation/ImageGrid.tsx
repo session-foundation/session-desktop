@@ -21,11 +21,11 @@ type Props = {
   onClickAttachment?: (attachment: AttachmentTypeWithPath | AttachmentType) => void;
 };
 
-const StyledImageGrid = styled.div<{ flexDirection: 'row' | 'column' }>`
+const StyledImageGrid = styled.div<{ $flexDirection: 'row' | 'column' }>`
   display: inline-flex;
   align-items: center;
   gap: var(--margins-sm);
-  flex-direction: ${props => props.flexDirection};
+  flex-direction: ${props => props.$flexDirection};
 `;
 
 const Row = (
@@ -86,7 +86,7 @@ export const ImageGrid = (props: Props) => {
 
   if (attachments.length === 1 || !areAllAttachmentsVisual(attachments)) {
     return (
-      <StyledImageGrid flexDirection={'row'}>
+      <StyledImageGrid $flexDirection={'row'}>
         <Row
           attachments={attachments.slice(0, 1)}
           imageBroken={imageBroken}
@@ -104,7 +104,7 @@ export const ImageGrid = (props: Props) => {
   if (attachments.length === 2) {
     // when we got 2 attachments we render them side by side with the full size of THUMBNAIL_SIDE
     return (
-      <StyledImageGrid flexDirection={'row'}>
+      <StyledImageGrid $flexDirection={'row'}>
         <Row
           attachments={attachments.slice(0, 2)}
           imageBroken={imageBroken}
@@ -123,7 +123,7 @@ export const ImageGrid = (props: Props) => {
 
   // we know only support having 3 attachments displayed at most, the rest are on the overlay
   return (
-    <StyledImageGrid flexDirection={'row'}>
+    <StyledImageGrid $flexDirection={'row'}>
       <Row
         attachments={attachments.slice(0, 1)}
         imageBroken={imageBroken}
@@ -135,7 +135,7 @@ export const ImageGrid = (props: Props) => {
         totalAttachmentsCount={attachments.length}
       />
 
-      <StyledImageGrid flexDirection={'column'}>
+      <StyledImageGrid $flexDirection={'column'}>
         <Row
           attachments={attachments.slice(1, 3)}
           imageBroken={imageBroken}

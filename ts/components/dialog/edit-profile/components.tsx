@@ -116,7 +116,7 @@ export const ProfileName = (props: { profileName: string; onClick: () => void })
   const { profileName, onClick } = props;
 
   return (
-    <StyledProfileName container={true} justifyContent="center" alignItems="center">
+    <StyledProfileName $container={true} $justifyContent="center" $alignItems="center">
       <SessionIconButton
         iconType="pencil"
         iconSize="large"

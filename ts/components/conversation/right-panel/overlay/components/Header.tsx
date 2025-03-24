@@ -44,7 +44,7 @@ export const Header = (props: HeaderProps) => {
   const dispatch = useDispatch();
 
   return (
-    <Flex container={true} width={'100%'} padding={'32px var(--margins-lg) var(--margins-md)'}>
+    <Flex $container={true} width={'100%'} padding={'32px var(--margins-lg) var(--margins-md)'}>
       {!hideBackButton && (
         <SessionIconButton
           iconSize={'medium'}
@@ -61,10 +61,10 @@ export const Header = (props: HeaderProps) => {
         />
       )}
       <Flex
-        container={true}
-        flexDirection={'column'}
-        justifyContent={'flex-start'}
-        alignItems={'center'}
+        $container={true}
+        $flexDirection={'column'}
+        $justifyContent={'flex-start'}
+        $alignItems={'center'}
         width={'100%'}
         margin={'-5px auto auto'}
       >

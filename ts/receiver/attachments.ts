@@ -259,6 +259,6 @@ export async function queueAttachmentDownloads(
   count += await processQuoteAttachments(message, conversation);
 
   if (count > 0) {
-    await Data.saveMessage(message.attributes);
+    await Data.saveMessage(message.cloneAttributes());
   }
 }

@@ -311,7 +311,7 @@ export async function isSwarmMessageDuplicate({
           timestamp: sentAt,
         },
       ])
-    )?.models?.length;
+    )?.length;
 
     return Boolean(result);
   } catch (error) {
@@ -366,7 +366,7 @@ async function handleSwarmMessage(
         msgModel.get('unread') &&
         rawDataMessage.reaction.action === Action.REACT
       ) {
-        msgModel.set('reaction', rawDataMessage.reaction as Reaction);
+        msgModel.setKey('reaction', rawDataMessage.reaction as Reaction);
         convoToAddMessageTo.throttledNotify(msgModel);
       }
 

@@ -764,7 +764,7 @@ async function handleUnsendMessage(envelope: EnvelopePlus, unsendMessage: Signal
         timestamp: toNumber(timestamp),
       },
     ])
-  )?.models?.[0];
+  )?.[0];
   const messageHash = messageToDelete?.get('messageHash');
   // #endregion
 
@@ -867,7 +867,7 @@ async function handleMessageRequestResponse(
       )
     );
 
-    const allMessageModels = flatten(allMessagesCollections.map(m => m.messages.models));
+    const allMessageModels = flatten(allMessagesCollections.map(m => m.messages));
     allMessageModels.forEach(messageModel => {
       messageModel.set({ conversationId: unblindedConvoId });
 
@@ -876,7 +876,7 @@ async function handleMessageRequestResponse(
       }
     });
     // this is based on the messageId as  primary key. So this should overwrite existing messages with new merged data
-    await Data.saveMessages(allMessageModels.map(m => m.attributes));
+    await Data.saveMessages(allMessageModels.map(m => m.cloneAttributes()));
 
     for (let index = 0; index < convosToMerge.length; index++) {
       const element = convosToMerge[index];

@@ -353,10 +353,10 @@ export const EditProfileDialog = () => {
         {mode !== 'qr' ? <Spacer3XL /> : <SpacerSM />}
 
         <StyledSessionIdSection
-          container={true}
-          flexDirection="column"
-          justifyContent="center"
-          alignItems="center"
+          $container={true}
+          $flexDirection="column"
+          $justifyContent="center"
+          $alignItems="center"
           width={'100%'}
         >
           <YourSessionIDPill />
@@ -366,10 +366,10 @@ export const EditProfileDialog = () => {
           {!loading ? <Spacer2XL /> : null}
           {mode === 'default' || mode === 'qr' || mode === 'lightbox' ? (
             <Flex
-              container={true}
-              justifyContent={mode === 'default' ? 'space-between' : 'center'}
-              alignItems="center"
-              flexGap="var(--margins-lg)"
+              $container={true}
+              $justifyContent={mode === 'default' ? 'space-between' : 'center'}
+              $alignItems="center"
+              $flexGap="var(--margins-lg)"
               width={'100%'}
             >
               <CopyToClipboardButton

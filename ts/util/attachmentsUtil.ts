@@ -3,7 +3,7 @@ import imageType from 'image-type';
 
 import { arrayBufferToBlob } from 'blob-util';
 import loadImage from 'blueimp-load-image';
-import fileSize from 'filesize';
+import { filesize } from 'filesize';
 import { StagedAttachmentType } from '../components/conversation/composition/CompositionBox';
 import { SignalService } from '../protobuf';
 import { DecryptedAttachmentsManager } from '../session/crypto/DecryptedAttachmentsManager';
@@ -86,7 +86,8 @@ export async function autoScaleForIncomingAvatar(incomingAvatar: ArrayBuffer) {
   // the avatar url send in a message does not contain anything related to the avatar MIME type, so
   // we use imageType to find the MIMEtype from the buffer itself
 
-  const contentType = imageType(new Uint8Array(incomingAvatar))?.mime || IMAGE_UNKNOWN;
+  const imageTypeParsed = imageType(new Uint8Array(incomingAvatar));
+  const contentType = imageTypeParsed?.mime || IMAGE_UNKNOWN;
   const blob = arrayBufferToBlob(incomingAvatar, contentType);
   // we do not know how to resize an incoming gif avatar, so just keep it full sized.
   if (contentType === IMAGE_GIF) {
@@ -187,7 +188,7 @@ export async function autoScale<T extends { contentType: string; blob: Blob }>(
   }
 
   if (blob.type === IMAGE_GIF && blob.size > maxSize) {
-    throw new Error(`GIF is too large. Max size: ${fileSize(maxSize, { base: 10, round: 0 })}`);
+    throw new Error(`GIF is too large. Max size: ${filesize(maxSize, { base: 10, round: 0 })}`);
   }
 
   perfStart(`loadimage-*${blob.size}`);
@@ -359,7 +360,9 @@ export async function getFileAndStoreLocallyImageBuffer(imageBuffer: ArrayBuffer
     return null;
   }
 
-  const contentType = imageType(new Uint8Array(imageBuffer))?.mime || IMAGE_UNKNOWN;
+  const imageTypeParsed = imageType(new Uint8Array(imageBuffer));
+
+  const contentType = imageTypeParsed?.mime || IMAGE_UNKNOWN;
 
   const blob = new Blob([imageBuffer], { type: contentType });
 

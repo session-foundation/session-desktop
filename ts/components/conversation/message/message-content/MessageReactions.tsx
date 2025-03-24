@@ -71,9 +71,9 @@ const Reactions = (props: ReactionsProps) => {
   const { messageId, reactions, inModal } = props;
   return (
     <StyledMessageReactions
-      container={true}
-      flexWrap={inModal ? 'nowrap' : 'wrap'}
-      alignItems={'center'}
+      $container={true}
+      $flexWrap={inModal ? 'nowrap' : 'wrap'}
+      $alignItems={'center'}
       fullWidth={inModal}
     >
       {reactions.map(([emoji, _]) => (
@@ -91,9 +91,9 @@ const CompressedReactions = (props: ExpandReactionsProps) => {
   const { messageId, reactions, inModal, handleExpand } = props;
   return (
     <StyledMessageReactions
-      container={true}
-      flexWrap={inModal ? 'nowrap' : 'wrap'}
-      alignItems={'center'}
+      $container={true}
+      $flexWrap={inModal ? 'nowrap' : 'wrap'}
+      $alignItems={'center'}
       fullWidth={true}
     >
       {reactions.slice(0, 4).map(([emoji, _]) => (
@@ -124,7 +124,7 @@ const CompressedReactions = (props: ExpandReactionsProps) => {
 const ExpandedReactions = (props: ExpandReactionsProps) => {
   const { handleExpand } = props;
   return (
-    <Flex container={true} flexDirection={'column'} alignItems={'center'} margin="4px 0 0">
+    <Flex $container={true} $flexDirection={'column'} $alignItems={'center'} margin="4px 0 0">
       <Reactions {...props} />
       <StyledReadLess onClick={handleExpand}>
         <SessionIcon iconType="chevron" iconSize="medium" iconRotation={180} />
@@ -217,10 +217,10 @@ export const MessageReactions = (props: Props) => {
 
   return (
     <StyledMessageReactionsContainer
-      container={true}
-      flexDirection={'column'}
-      justifyContent={'center'}
-      alignItems={inModal ? 'flex-start' : 'center'}
+      $container={true}
+      $flexDirection={'column'}
+      $justifyContent={'center'}
+      $alignItems={inModal ? 'flex-start' : 'center'}
       x={popupX}
       y={popupY}
       noAvatar={noAvatar}

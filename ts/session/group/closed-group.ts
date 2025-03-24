@@ -131,7 +131,7 @@ async function initiateClosedGroupUpdate(
       ...sharedDetails,
       messageHash: null, // this is legacy groups
     });
-    await sendNewName(convo, diff.newName, dbMessageName.id as string);
+    await sendNewName(convo, diff.newName, dbMessageName.id);
   }
 
   if (diff.type === 'add' && diff.added?.length) {
@@ -142,7 +142,7 @@ async function initiateClosedGroupUpdate(
       ...sharedDetails,
       messageHash: null, // this is legacy groups
     });
-    await sendAddedMembers(convo, diff.added, dbMessageAdded.id as string, updateObj);
+    await sendAddedMembers(convo, diff.added, dbMessageAdded.id, updateObj);
   }
 
   if (diff.type === 'kicked' && diff.kicked?.length) {
@@ -153,7 +153,7 @@ async function initiateClosedGroupUpdate(
       ...sharedDetails,
       messageHash: null, // this is legacy groups
     });
-    await sendRemovedMembers(convo, diff.kicked, updatedMembers, dbMessageLeaving.id as string);
+    await sendRemovedMembers(convo, diff.kicked, updatedMembers, dbMessageLeaving.id);
   }
   await convo.commit();
 }
@@ -305,7 +305,7 @@ async function sendNewName(convo: ConversationModel, name: string, messageId: st
     return;
   }
 
-  const groupId = convo.get('id');
+  const groupId = convo.id;
 
   // Send the update to the group
   const nameChangeMessage = new ClosedGroupNameChangeMessage({
@@ -394,7 +394,7 @@ async function sendRemovedMembers(
   }
   const ourNumber = UserUtils.getOurPubKeyFromCache();
   const admins = convo.getGroupAdmins() || [];
-  const groupId = convo.get('id');
+  const groupId = convo.id;
 
   const isCurrentUserAdmin = admins.includes(ourNumber.key);
   const isUserLeaving = removedMembers.includes(ourNumber.key);

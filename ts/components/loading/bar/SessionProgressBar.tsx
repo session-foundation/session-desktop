@@ -55,10 +55,10 @@ export function SessionProgressBar(props: Props) {
 
   return (
     <Flex
-      container={true}
+      $container={true}
       width={width}
-      flexDirection={'column'}
-      alignItems={'flex-start'}
+      $flexDirection={'column'}
+      $alignItems={'flex-start'}
       margin={margin}
     >
       {title ? (
@@ -67,7 +67,7 @@ export function SessionProgressBar(props: Props) {
           <SpacerMD />
         </>
       ) : null}
-      <Flex container={true} width={width} justifyContent="space-between" alignItems="center">
+      <Flex $container={true} width={width} $justifyContent="space-between" $alignItems="center">
         {subtitle ? <StyledText>{subtitle}</StyledText> : null}
         {showPercentage ? <StyledText>{Math.floor(progress)}%</StyledText> : null}
       </Flex>

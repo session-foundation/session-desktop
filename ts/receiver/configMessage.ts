@@ -19,7 +19,7 @@ import { LibSessionUtil } from '../session/utils/libsession/libsession_utils';
 import { SessionUtilContact } from '../session/utils/libsession/libsession_utils_contacts';
 import { SessionUtilConvoInfoVolatile } from '../session/utils/libsession/libsession_utils_convo_info_volatile';
 import { SessionUtilUserGroups } from '../session/utils/libsession/libsession_utils_user_groups';
-import { configurationMessageReceived, trigger } from '../shims/events';
+import { configurationMessageReceived } from '../shims/events';
 import { getCurrentlySelectedConversationOutsideRedux } from '../state/selectors/conversations';
 import { assertUnreachable, stringify, toFixedUint8ArrayOfLength } from '../types/sqlSharedTypes';
 import { BlockedNumberController } from '../util';
@@ -305,7 +305,7 @@ function getContactsToRemoveFromDB(contactsInWrapper: Array<ContactInfo>) {
   const allContactsInDBWhichShouldBeInWrapperIds = ConvoHub.use()
     .getConversations()
     .filter(SessionUtilContact.isContactToStoreInWrapper)
-    .map(m => m.id as string);
+    .map(m => m.id);
 
   const currentlySelectedConversationId = getCurrentlySelectedConversationOutsideRedux();
   const currentlySelectedConvo = currentlySelectedConversationId
@@ -467,7 +467,7 @@ async function handleCommunitiesUpdate() {
     .getConversations()
     .filter(SessionUtilUserGroups.isCommunityToStoreInWrapper);
 
-  const allCommunitiesIdsInDB = allCommunitiesConversation.map(m => m.id as string);
+  const allCommunitiesIdsInDB = allCommunitiesConversation.map(m => m.id);
   window.log.debug('allCommunitiesIdsInDB', allCommunitiesIdsInDB);
 
   const communitiesIdsInWrapper = compact(
@@ -559,7 +559,7 @@ async function handleLegacyGroupUpdate(latestEnvelopeTimestamp: number) {
     .getConversations()
     .filter(SessionUtilUserGroups.isLegacyGroupToRemoveFromDBIfNotInWrapper);
 
-  const allLegacyGroupsIdsInDB = allLegacyGroupsInDb.map(m => m.id as string);
+  const allLegacyGroupsIdsInDB = allLegacyGroupsInDb.map(m => m.id);
   const allLegacyGroupsIdsInWrapper = allLegacyGroupsInWrapper.map(m => m.pubkeyHex);
 
   const legacyGroupsToJoinInDB = allLegacyGroupsInWrapper.filter(m => {
@@ -1086,7 +1086,7 @@ async function updateOurProfileViaLibSession(
   await setLastProfileUpdateTimestamp(toNumber(sentAt));
   // do not trigger a sign in by linking if the display name is empty
   if (!isEmpty(displayName)) {
-    trigger(configurationMessageReceived, displayName);
+    window.Whisper.events.trigger(configurationMessageReceived, displayName);
   } else {
     window?.log?.warn('Got a configuration message but the display name is empty');
   }

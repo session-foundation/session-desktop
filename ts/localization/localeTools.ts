@@ -30,11 +30,15 @@ function isEmptyObject(obj: unknown) {
 }
 
 export function setLogger(cb: Logger) {
-  if (logger) {
+  if (logger && !isRunningInMocha()) {
     // eslint-disable-next-line no-console
-    console.log('logger already initialized. overwriding it');
+    console.debug('logger already initialized. overwriding it');
   }
   logger = cb;
+}
+
+function isRunningInMocha(): boolean {
+  return typeof global.it === 'function';
 }
 
 export function setLocaleInUse(crowdinLocale: CrowdinLocale) {

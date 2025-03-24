@@ -11,7 +11,6 @@ import { Reactions } from '../../../../util/reactions';
 import * as Storage from '../../../../util/storage';
 import { generateFakeIncomingPrivateMessage, stubWindowLog } from '../../../test-utils/utils';
 
-import { MessageCollection } from '../../../../models/message';
 import { SignalService } from '../../../../protobuf';
 import { UserUtils } from '../../../../session/utils';
 import { TestUtils } from '../../../test-utils';
@@ -24,7 +23,7 @@ describe('ReactionMessage', () => {
   let clock: Sinon.SinonFakeTimers;
   const ourNumber = TestUtils.generateFakePubKeyStr();
   const originalMessage = generateFakeIncomingPrivateMessage();
-  originalMessage.set('sent_at', Date.now());
+  originalMessage.setKey('sent_at', Date.now());
 
   beforeEach(() => {
     Sinon.stub(originalMessage, 'getConversation').returns({
@@ -35,17 +34,17 @@ describe('ReactionMessage', () => {
     // sendMessageReaction stubs
     Sinon.stub(Data, 'getMessageById').resolves(originalMessage);
     Sinon.stub(Storage, 'getRecentReactions').returns(DEFAULT_RECENT_REACTS);
-    Sinon.stub(Storage, 'saveRecentReations').resolves();
+    Sinon.stub(Storage, 'saveRecentReactions').resolves();
     Sinon.stub(UserUtils, 'getOurPubKeyStrFromCache').returns(ourNumber);
 
     // handleMessageReaction stubs
-    Sinon.stub(Data, 'getMessagesBySentAt').resolves(new MessageCollection([originalMessage]));
+    Sinon.stub(Data, 'getMessagesBySentAt').resolves([originalMessage]);
     Sinon.stub(originalMessage, 'commit').resolves();
   });
 
   it('can react to a message', async () => {
     // Send reaction
-    const reaction = await Reactions.sendMessageReaction(originalMessage.get('id'), '😄');
+    const reaction = await Reactions.sendMessageReaction(originalMessage.id, '😄');
 
     expect(reaction?.id, 'id should match the original message timestamp').to.be.equal(
       Number(originalMessage.get('sent_at'))
@@ -77,7 +76,7 @@ describe('ReactionMessage', () => {
 
   it('can remove a reaction from a message', async () => {
     // Send reaction
-    const reaction = await Reactions.sendMessageReaction(originalMessage.get('id'), '😄');
+    const reaction = await Reactions.sendMessageReaction(originalMessage.id, '😄');
 
     expect(reaction?.id, 'id should match the original message timestamp').to.be.equal(
       Number(originalMessage.get('sent_at'))
@@ -103,20 +102,20 @@ describe('ReactionMessage', () => {
     // we have already sent 2 messages when this test runs
     for (let i = 0; i < 18; i++) {
       // Send reaction
-      await Reactions.sendMessageReaction(originalMessage.get('id'), '👍');
+      await Reactions.sendMessageReaction(originalMessage.id, '👍');
     }
 
-    let reaction = await Reactions.sendMessageReaction(originalMessage.get('id'), '👎');
+    let reaction = await Reactions.sendMessageReaction(originalMessage.id, '👎');
 
     expect(reaction, 'no reaction should be returned since we are over the rate limit').to.be
       .undefined;
 
     clock = useFakeTimers({ now: Date.now(), shouldAdvanceTime: true });
 
-    // Wait a miniute for the rate limit to clear
+    // Wait a minute for the rate limit to clear
     clock.tick(1 * 60 * 1000);
 
-    reaction = await Reactions.sendMessageReaction(originalMessage.get('id'), '👋');
+    reaction = await Reactions.sendMessageReaction(originalMessage.id, '👋');
 
     expect(reaction?.id, 'id should match the original message timestamp').to.be.equal(
       Number(originalMessage.get('sent_at'))

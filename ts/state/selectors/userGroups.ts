@@ -14,7 +14,7 @@ const getGroupById = (state: StateType, convoId?: string) => {
 
 export function useLibGroupWeHaveSecretKey(convoId?: string) {
   return useSelector((state: StateType) => {
-    return !isEmpty(getGroupById(state, convoId)?.secretKey);
+    return !isEmpty(getGroupById(state, convoId)?.secretKeyHex);
   });
 }
 

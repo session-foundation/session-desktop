@@ -120,17 +120,17 @@ export const SessionQuotedMessageComposition = () => {
 
   return (
     <QuotedMessageComposition
-      container={true}
-      justifyContent="space-between"
-      alignItems="center"
+      $container={true}
+      $justifyContent="space-between"
+      $alignItems="center"
       width={'100%'}
-      flexGrow={1}
+      $flexGrow={1}
       padding={'var(--margins-md)'}
     >
       <QuotedMessageCompositionReply
-        container={true}
-        justifyContent="flex-start"
-        alignItems={'center'}
+        $container={true}
+        $justifyContent="flex-start"
+        $alignItems={'center'}
         hasAttachments={hasAttachments}
       >
         {hasAttachments && (
@@ -152,10 +152,10 @@ export const SessionQuotedMessageComposition = () => {
           </StyledImage>
         )}
         <StyledText
-          container={true}
-          flexDirection="column"
-          justifyContent={'center'}
-          alignItems={'flex-start'}
+          $container={true}
+          $flexDirection="column"
+          $justifyContent={'center'}
+          $alignItems={'flex-start'}
         >
           <p>{authorName}</p>
           {subtitleText && <Subtle>{subtitleText}</Subtle>}

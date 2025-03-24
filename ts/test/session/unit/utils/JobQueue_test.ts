@@ -1,4 +1,4 @@
-import chai from 'chai';
+import chai, { expect } from 'chai';
 import { v4 as uuid } from 'uuid';
 import chaiAsPromised from 'chai-as-promised';
 
@@ -15,11 +15,11 @@ describe('JobQueue', () => {
       const queue = new JobQueue();
       const id = 'jobId';
 
-      assert.isFalse(queue.has(id));
+      expect(queue.has(id)).to.be.eq(false);
       const promise = queue.addWithId(id, async () => TestUtils.timeout(30));
-      assert.isTrue(queue.has(id));
+      expect(queue.has(id)).to.be.eq(true);
       await promise;
-      assert.isFalse(queue.has(id));
+      expect(queue.has(id)).to.be.eq(false);
     });
   });
 
@@ -97,17 +97,17 @@ describe('JobQueue', () => {
       const id = uuid();
 
       const successfullJob = queue.addWithId(id, async () => TestUtils.timeout(10));
-      assert.isTrue(queue.has(id));
+      expect(queue.has(id)).to.be.eq(true);
       await successfullJob;
-      assert.isFalse(queue.has(id));
+      expect(queue.has(id)).to.be.eq(false);
 
       const failJob = queue.addWithId(id, async () => {
         await TestUtils.timeout(10);
         throw new Error('failed');
       });
-      assert.isTrue(queue.has(id));
+      expect(queue.has(id)).to.be.eq(true);
       await assert.isRejected(failJob, /failed/);
-      assert.isFalse(queue.has(id));
+      expect(queue.has(id)).to.be.eq(false);
     });
   });
 });

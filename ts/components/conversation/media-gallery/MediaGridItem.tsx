@@ -1,5 +1,5 @@
-import classNames from 'classnames';
 import { useState } from 'react';
+import clsx from 'clsx';
 
 import { useDisableDrag } from '../../../hooks/useDisableDrag';
 import { useEncryptedFileFetch } from '../../../hooks/useEncryptedFileFetch';
@@ -39,10 +39,7 @@ const MediaGridItemContent = (props: Props) => {
     if (imageBroken || !srcData) {
       return (
         <div
-          className={classNames(
-            'module-media-grid-item__icon',
-            'module-media-grid-item__icon-image'
-          )}
+          className={clsx('module-media-grid-item__icon', 'module-media-grid-item__icon-image')}
         />
       );
     }
@@ -61,10 +58,7 @@ const MediaGridItemContent = (props: Props) => {
     if (imageBroken || !srcData) {
       return (
         <div
-          className={classNames(
-            'module-media-grid-item__icon',
-            'module-media-grid-item__icon-video'
-          )}
+          className={clsx('module-media-grid-item__icon', 'module-media-grid-item__icon-video')}
         />
       );
     }
@@ -86,9 +80,7 @@ const MediaGridItemContent = (props: Props) => {
   }
 
   return (
-    <div
-      className={classNames('module-media-grid-item__icon', 'module-media-grid-item__icon-generic')}
-    />
+    <div className={clsx('module-media-grid-item__icon', 'module-media-grid-item__icon-generic')} />
   );
 };
 

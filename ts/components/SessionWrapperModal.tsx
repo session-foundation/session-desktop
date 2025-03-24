@@ -1,7 +1,6 @@
-import classNames from 'classnames';
 import { ReactNode, useRef } from 'react';
 import useKey from 'react-use/lib/useKey';
-
+import { clsx } from 'clsx';
 import styled from 'styled-components';
 import { SessionIconButton } from './icon';
 
@@ -77,7 +76,7 @@ export const SessionWrapperModal = (props: SessionWrapperModalType) => {
   return (
     <SessionFocusTrap>
       <StyledRootDialog
-        className={classNames('loki-dialog modal', additionalClassName || null)}
+        className={clsx('loki-dialog modal', additionalClassName || null)}
         onClick={handleClick}
         role="dialog"
       >
@@ -85,17 +84,17 @@ export const SessionWrapperModal = (props: SessionWrapperModalType) => {
           <div ref={modalRef} className="session-modal">
             {showHeader ? (
               <Flex
-                container={true}
-                flexDirection={headerReverse ? 'row-reverse' : 'row'}
-                justifyContent={'space-between'}
-                alignItems={'center'}
+                $container={true}
+                $flexDirection={headerReverse ? 'row-reverse' : 'row'}
+                $justifyContent={'space-between'}
+                $alignItems={'center'}
                 padding={'var(--margins-lg)'}
                 className={'session-modal__header'}
               >
                 <Flex
-                  container={true}
-                  flexDirection={headerReverse ? 'row-reverse' : 'row'}
-                  alignItems={'center'}
+                  $container={true}
+                  $flexDirection={headerReverse ? 'row-reverse' : 'row'}
+                  $alignItems={'center'}
                   padding={'0'}
                   margin={'0'}
                   className={'session-modal__header__close'}
@@ -128,9 +127,9 @@ export const SessionWrapperModal = (props: SessionWrapperModalType) => {
                   {title}
                 </StyledTitle>
                 <Flex
-                  container={true}
-                  flexDirection={headerReverse ? 'row-reverse' : 'row'}
-                  alignItems={'center'}
+                  $container={true}
+                  $flexDirection={headerReverse ? 'row-reverse' : 'row'}
+                  $alignItems={'center'}
                   padding={'0'}
                   margin={'0'}
                 >

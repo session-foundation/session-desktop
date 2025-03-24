@@ -108,7 +108,7 @@ async function unsendMessagesForEveryone(
   { deletionType }: WithLocalMessageDeletionType
 ) {
   window?.log?.info('Deleting messages for all users in this conversation');
-  const destinationId = conversation.id as string;
+  const destinationId = conversation.id;
   if (!destinationId) {
     return;
   }
@@ -311,7 +311,7 @@ async function deleteMessagesLocallyOnly({
     if (deletionType === 'complete') {
       // remove the message from the database
       // eslint-disable-next-line no-await-in-loop
-      await conversation.removeMessage(message.get('id'));
+      await conversation.removeMessage(message.id);
     } else {
       // just mark the message as deleted but still show in conversation
       // eslint-disable-next-line no-await-in-loop
@@ -618,7 +618,7 @@ async function deleteOpenGroupMessages(
   // remove only the messages we managed to remove on the server
   if (allMessagesAreDeleted) {
     window?.log?.info('Removed all those serverIds messages successfully');
-    return validMessageModelsToRemove.map(m => m.id as string);
+    return validMessageModelsToRemove.map(m => m.id);
   }
   window?.log?.info(
     'failed to remove all those serverIds message. not removing them locally neither'

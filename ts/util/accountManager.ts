@@ -2,7 +2,7 @@ import { isEmpty } from 'lodash';
 import { ConvoHub } from '../session/conversations';
 import { getSodiumRenderer } from '../session/crypto';
 import { ed25519Str, fromArrayBufferToBase64, fromHex, toHex } from '../session/utils/String';
-import { configurationMessageReceived, trigger } from '../shims/events';
+import { configurationMessageReceived } from '../shims/events';
 
 import { SessionButtonColor } from '../components/basic/SessionButton';
 import { Data } from '../data/data';
@@ -139,7 +139,7 @@ export async function signInByLinkingDevice(
   const displayName = await getSwarmPollingInstance().pollOnceForOurDisplayName(abortSignal);
 
   // NOTE the registration is not yet finished until the configurationMessageReceived event has been processed
-  trigger(configurationMessageReceived, pubKeyString, displayName);
+  window.Whisper.events.trigger(configurationMessageReceived, pubKeyString, displayName);
   // for testing purposes
   return { displayName, pubKeyString };
 }
@@ -198,7 +198,7 @@ async function createAccount(identityKeyPair: SessionKeyPair) {
 }
 
 /**
- * When a user sucessfully registers, we need to initialise the libession wrappers and create a conversation for the user
+ * When a user successfully registers, we need to initialise the libsession wrappers and create a conversation for the user
  * @param ourPubkey the pubkey recovered from the seed
  * @param displayName the display name entered by the user. Can be what is fetched from the last config message or what is entered manually by the user
  */
@@ -243,7 +243,7 @@ export async function registrationDone(ourPubkey: string, displayName: string) {
 
   window?.log?.info('[onboarding] dispatching registration event');
   // this will make the poller start fetching messages
-  trigger('registration_done');
+  window.Whisper.events.trigger('registration_done');
 }
 
 export const deleteDbLocally = async () => {

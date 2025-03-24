@@ -119,10 +119,10 @@ const StyledSubtitle = styled.p<{ color?: string }>`
 export const PanelButtonText = (props: { text: string; subtitle?: string; color?: string }) => {
   return (
     <Flex
-      container={true}
+      $container={true}
       width={'100%'}
-      flexDirection={'column'}
-      alignItems={'flex-start'}
+      $flexDirection={'column'}
+      $alignItems={'flex-start'}
       margin="0 var(--margins-lg) 0 0"
       minWidth="0"
     >

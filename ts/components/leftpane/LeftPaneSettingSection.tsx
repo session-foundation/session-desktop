@@ -117,11 +117,11 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
       key={id}
       active={id === focusedSettingsSection}
       role="link"
-      container={true}
-      flexDirection={'row'}
-      justifyContent={'flex-start'}
-      alignItems={'center'}
-      flexShrink={0}
+      $container={true}
+      $flexDirection={'row'}
+      $justifyContent={'flex-start'}
+      $alignItems={'center'}
+      $flexShrink={0}
       padding={'0px var(--margins-md) 0 var(--margins-sm)'}
       onClick={() => {
         switch (id) {

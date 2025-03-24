@@ -135,11 +135,11 @@ const ReactionSenders = (props: ReactionSendersProps) => {
       {senders.map((sender: string) => (
         <StyledReactionSender
           key={`${messageId}-${sender}`}
-          container={true}
-          justifyContent={'space-between'}
-          alignItems={'center'}
+          $container={true}
+          $justifyContent={'space-between'}
+          $alignItems={'center'}
         >
-          <Flex container={true} alignItems={'center'} style={{ overflow: 'hidden' }}>
+          <Flex $container={true} $alignItems={'center'} style={{ overflow: 'hidden' }}>
             <Avatar
               size={AvatarSize.XS}
               pubkey={sender}
@@ -333,7 +333,11 @@ export const ReactListModal = (props: Props) => {
       showHeader={false}
       onClose={handleClose}
     >
-      <StyledReactListContainer container={true} flexDirection={'column'} alignItems={'flex-start'}>
+      <StyledReactListContainer
+        $container={true}
+        $flexDirection={'column'}
+        $alignItems={'flex-start'}
+      >
         <StyledReactionsContainer>
           <MessageReactions
             messageId={messageId}
@@ -346,14 +350,14 @@ export const ReactListModal = (props: Props) => {
         </StyledReactionsContainer>
         {reactionsMap && currentReact && (
           <StyledSendersContainer
-            container={true}
-            flexDirection={'column'}
-            alignItems={'flex-start'}
+            $container={true}
+            $flexDirection={'column'}
+            $alignItems={'flex-start'}
           >
             <StyledReactionBar
-              container={true}
-              justifyContent={'space-between'}
-              alignItems={'center'}
+              $container={true}
+              $justifyContent={'space-between'}
+              $alignItems={'center'}
             >
               <p>
                 <span role={'img'} aria-label={reactAriaLabel}>

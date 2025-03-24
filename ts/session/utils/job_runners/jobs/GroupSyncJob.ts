@@ -256,7 +256,7 @@ async function allFailedToSentGroupControlMessagesToRetry(groupPk: GroupPubkeyTy
       firstChunk.map(m => {
         const groupUpdate = m.get('group_update');
         const createAtNetworkTimestamp = m.get('sent_at') || NetworkTime.now();
-        const identifier = m.get('id');
+        const identifier = m.id;
         if (!group.secretKey) {
           return null;
         }

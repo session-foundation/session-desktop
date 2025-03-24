@@ -44,10 +44,10 @@ const FlagToggle = ({
     <Flex
       key={key}
       id={key}
-      container={true}
+      $container={true}
       width="100%"
-      alignItems="center"
-      justifyContent="space-between"
+      $alignItems="center"
+      $justifyContent="space-between"
     >
       <span>
         {flag}
@@ -67,14 +67,14 @@ export const FeatureFlags = ({ flags }: { flags: Record<string, FlagValues> }) =
   const forceUpdate = useUpdate();
   return (
     <Flex
-      container={true}
+      $container={true}
       width={'100%'}
-      flexDirection="column"
-      justifyContent="flex-start"
-      alignItems="flex-start"
-      flexGap="var(--margins-xs)"
+      $flexDirection="column"
+      $justifyContent="flex-start"
+      $alignItems="flex-start"
+      $flexGap="var(--margins-xs)"
     >
-      <Flex container={true} alignItems="center">
+      <Flex $container={true} $alignItems="center">
         <h2>Feature Flags</h2>
         <HintText>Experimental</HintText>
       </Flex>
