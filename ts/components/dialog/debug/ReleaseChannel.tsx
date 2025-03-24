@@ -65,7 +65,6 @@ const items = [
 
 export const ReleaseChannel = () => {
   const releaseChannel = Storage.get('releaseChannel') as ReleaseChannels;
-
   const setReleaseChannel = useReleaseChannel();
 
   return (
