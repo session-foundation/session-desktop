@@ -702,8 +702,8 @@ async function leaveClosedGroup(groupPk: PubkeyType | GroupPubkeyType, fromSyncM
     const ourLeavingMessage = new GroupUpdateMemberLeftMessage({
       createAtNetworkTimestamp: createAtNetworkTimestamp + 1, // we just need it to be different than the one of ourLeavingNotificationMessage
       groupPk,
-      expirationType: null, // we keep that one **not** expiring
-      expireTimer: null,
+      expirationType: 'unknown', // we keep that one **not** expiring
+      expireTimer: 0,
     });
 
     const ourLeavingNotificationMessage = new GroupUpdateMemberLeftNotificationMessage({
@@ -774,8 +774,8 @@ async function leaveClosedGroup(groupPk: PubkeyType | GroupPubkeyType, fromSyncM
   const ourLeavingMessage = new ClosedGroupMemberLeftMessage({
     createAtNetworkTimestamp: NetworkTime.now(),
     groupId: groupPk,
-    expirationType: null, // we keep that one **not** expiring
-    expireTimer: null,
+    expirationType: 'unknown', // we keep that one **not** expiring
+    expireTimer: 0,
   });
 
   window?.log?.info(`We are leaving the legacy group ${groupPk}. Sending our leaving message.`);

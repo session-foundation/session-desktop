@@ -22,8 +22,8 @@ chai.use(chaiAsPromised as any);
 const { expect } = chai;
 
 const sharedNoExpire = {
-  expireTimer: null,
-  expirationType: null,
+  expireTimer: 0,
+  expirationType: 'unknown' as const,
 };
 
 describe('Message Utils', () => {

@@ -639,7 +639,6 @@ async function handleLegacyGroupUpdate(latestEnvelopeTimestamp: number) {
     let changes = await legacyGroupConvo.setPriorityFromWrapper(fromWrapper.priority, false);
 
     if (fromWrapper.disappearingTimerSeconds !== legacyGroupConvo.getExpireTimer()) {
-      // TODO legacy messages support will be removed in a future release
       const success = await legacyGroupConvo.updateExpireTimer({
         providedDisappearingMode:
           fromWrapper.disappearingTimerSeconds && fromWrapper.disappearingTimerSeconds > 0
@@ -837,7 +836,6 @@ async function applyConvoVolatileUpdateFromWrapper(
   }
 
   try {
-    // TODO legacy messages support will be removed in a future release
     if (foundConvo.isPrivate() && !foundConvo.isMe() && foundConvo.getExpireTimer() > 0) {
       const messagesExpiring = await Data.getUnreadDisappearingByConversation(
         convoId,
