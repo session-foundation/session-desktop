@@ -8,23 +8,6 @@ inputs:
   should_publish:
     description: 'should publish'
     required: true
-  # macOS signing
-  MAC_CERTIFICATE:
-    description: 'Mac certificate for signing.'
-    required: false
-  MAC_CERTIFICATE_PASSWORD:
-    description: 'Password for the Mac certificate.'
-    required: false
-  SIGNING_APPLE_ID:
-    description: 'Apple ID for signing.'
-    required: false
-  SIGNING_APP_PASSWORD:
-    description: 'App-specific password for Apple ID.'
-    required: false
-  SIGNING_TEAM_ID:
-    description: 'Apple Team ID for signing.'
-    required: false
-
 
 runs:
   using: 'composite'
@@ -33,12 +16,6 @@ runs:
       # always run this, except on "push" to "master" or alpha releases
       if: ${{ inputs.should_publish == 'false' }}
       shell: bash
-      env:
-        MAC_CERTIFICATE: ${{ inputs.MAC_CERTIFICATE }}
-        MAC_CERTIFICATE_PASSWORD: ${{ inputs.MAC_CERTIFICATE_PASSWORD }}
-        SIGNING_APPLE_ID: ${{ inputs.SIGNING_APPLE_ID }}
-        SIGNING_APP_PASSWORD: ${{ inputs.SIGNING_APP_PASSWORD }}
-        SIGNING_TEAM_ID: ${{ inputs.SIGNING_TEAM_ID }}
       run: |
         ./build/setup-mac-certificate.sh
         yarn build-release --config.mac.bundleVersion=${{ github.ref }}
@@ -54,12 +31,6 @@ runs:
       # only run this on "push" to "master" or alpha releases
       if: ${{ inputs.should_publish == 'true' }}
       shell: bash
-      env:
-        MAC_CERTIFICATE: ${{ inputs.MAC_CERTIFICATE }}
-        MAC_CERTIFICATE_PASSWORD: ${{ inputs.MAC_CERTIFICATE_PASSWORD }}
-        SIGNING_APPLE_ID: ${{ inputs.SIGNING_APPLE_ID }}
-        SIGNING_APP_PASSWORD: ${{ inputs.SIGNING_APP_PASSWORD }}
-        SIGNING_TEAM_ID: ${{ inputs.SIGNING_TEAM_ID }}
       run: |
         ./build/setup-mac-certificate.sh
         yarn build-release-publish --config.mac.bundleVersion=${{ github.ref }}
