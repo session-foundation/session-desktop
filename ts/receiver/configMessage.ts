@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import { ContactInfo, GroupPubkeyType, UserGroupsGet } from 'libsession_util_nodejs';
-import { compact, difference, isEmpty, isNil, isNumber, toNumber } from 'lodash';
+import { compact, difference, isEmpty, isNil, isNumber } from 'lodash';
 import { ConfigDumpData } from '../data/configDump/configDump';
 import { SettingsKey } from '../data/settings-key';
 import { deleteAllMessagesByConvoIdNoConfirmation } from '../interactions/conversationInteractions';
@@ -23,7 +23,7 @@ import { configurationMessageReceived } from '../shims/events';
 import { getCurrentlySelectedConversationOutsideRedux } from '../state/selectors/conversations';
 import { assertUnreachable, stringify, toFixedUint8ArrayOfLength } from '../types/sqlSharedTypes';
 import { BlockedNumberController } from '../util';
-import { Storage, setLastProfileUpdateTimestamp } from '../util/storage';
+import { Storage } from '../util/storage';
 // eslint-disable-next-line import/no-unresolved, import/extensions
 import { HexString } from '../node/hexStrings';
 import {
@@ -44,7 +44,6 @@ import {
 } from '../webworker/workers/browser/libsession_worker_functions';
 // eslint-disable-next-line import/no-unresolved, import/extensions
 import { Data } from '../data/data';
-import { ReleasedFeatures } from '../util/releaseFeature';
 
 // eslint-disable-next-line import/no-unresolved
 import {
@@ -245,7 +244,6 @@ async function handleUserProfileUpdate(result: IncomingUserResult): Promise<void
 
   // NOTE: if you do any changes to the user's settings which are synced, it should be done above the `updateOurProfileViaLibSession` call
   await updateOurProfileViaLibSession({
-    sentAt: result.latestEnvelopeTimestamp,
     displayName: displayName || '',
     profileUrl: picUpdate ? profilePic.url : null,
     profileKey: picUpdate ? profilePic.key : null,
@@ -263,13 +261,10 @@ async function handleUserProfileUpdate(result: IncomingUserResult): Promise<void
     const wrapperNoteToSelfExpirySeconds = await UserConfigWrapperActions.getNoteToSelfExpiry();
 
     if (wrapperNoteToSelfExpirySeconds !== expireTimer) {
-      // TODO legacy messages support will be removed in a future release
       const success = await ourConvo.updateExpireTimer({
         providedDisappearingMode:
           wrapperNoteToSelfExpirySeconds && wrapperNoteToSelfExpirySeconds > 0
-            ? ReleasedFeatures.isDisappearMessageV2FeatureReleasedCached()
-              ? 'deleteAfterSend'
-              : 'legacy'
+            ? 'deleteAfterSend'
             : 'off',
         providedExpireTimer: wrapperNoteToSelfExpirySeconds,
         providedSource: ourConvo.id,
@@ -648,9 +643,7 @@ async function handleLegacyGroupUpdate(latestEnvelopeTimestamp: number) {
       const success = await legacyGroupConvo.updateExpireTimer({
         providedDisappearingMode:
           fromWrapper.disappearingTimerSeconds && fromWrapper.disappearingTimerSeconds > 0
-            ? ReleasedFeatures.isDisappearMessageV2FeatureReleasedCached()
-              ? 'deleteAfterSend'
-              : 'legacy'
+            ? 'deleteAfterSend'
             : 'off',
         providedExpireTimer: fromWrapper.disappearingTimerSeconds,
         providedSource: legacyGroupConvo.id,
@@ -1072,9 +1065,7 @@ async function updateOurProfileViaLibSession(
     priority,
     profileKey,
     profileUrl,
-    sentAt,
   }: {
-    sentAt: number;
     displayName: string;
     profileUrl: string | null;
     profileKey: Uint8Array | null;
@@ -1083,7 +1074,6 @@ async function updateOurProfileViaLibSession(
 ) {
   await ProfileManager.updateOurProfileSync({ displayName, profileUrl, profileKey, priority });
 
-  await setLastProfileUpdateTimestamp(toNumber(sentAt));
   // do not trigger a sign in by linking if the display name is empty
   if (!isEmpty(displayName)) {
     window.Whisper.events.trigger(configurationMessageReceived, displayName);

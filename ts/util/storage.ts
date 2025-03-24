@@ -2,7 +2,6 @@ import { isBoolean } from 'lodash';
 import { SessionKeyPair } from '../receiver/keypairs';
 import { DEFAULT_RECENT_REACTS } from '../session/constants';
 import { deleteSettingsBoolValue, updateSettingsBoolValue } from '../state/ducks/settings';
-import { ReleasedFeatures } from './releaseFeature';
 import { Data } from '../data/data';
 
 let ready = false;
@@ -138,13 +137,6 @@ export function isSignWithRecoveryPhrase() {
 
 export async function setSignWithRecoveryPhrase(isRecoveryPhraseUsed: boolean) {
   await put('is_sign_in_recovery_phrase', isRecoveryPhraseUsed);
-}
-
-export async function setLastProfileUpdateTimestamp(lastUpdateTimestamp: number) {
-  if (await ReleasedFeatures.checkIsUserConfigFeatureReleased()) {
-    return;
-  }
-  await put('last_profile_update_timestamp', lastUpdateTimestamp);
 }
 
 export function getCurrentRecoveryPhrase() {

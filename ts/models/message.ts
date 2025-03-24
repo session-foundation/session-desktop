@@ -1154,7 +1154,7 @@ export class MessageModel extends Model<MessageAttributes> {
         expireTimer
       );
 
-      if (expirationMode === 'legacy' || expirationMode === 'deleteAfterRead') {
+      if (expirationMode === 'deleteAfterRead') {
         if (this.isIncoming() && !this.isExpiring()) {
           // only if that message has not started to expire already, set its "start expiry".
           // this is because a message can have a expire start timestamp set when receiving it, if the convo volatile said that the message was read by another device.

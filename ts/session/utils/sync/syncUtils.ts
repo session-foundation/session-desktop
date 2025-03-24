@@ -1,7 +1,6 @@
 import { isEmpty, isNumber, toNumber } from 'lodash';
 import { SignalService } from '../../../protobuf';
 import { UserSyncJobDone } from '../../../shims/events';
-import { ReleasedFeatures } from '../../../util/releaseFeature';
 
 import { DisappearingMessageUpdate } from '../../disappearing_messages/types';
 import { DataMessage } from '../../messages/outgoing';
@@ -17,7 +16,6 @@ import {
 import { UserSync } from '../job_runners/jobs/UserSyncJob';
 
 export const forceSyncConfigurationNowIfNeeded = async (waitForMessageSent = false) => {
-  await ReleasedFeatures.checkIsUserConfigFeatureReleased();
   return new Promise(resolve => {
     // if we hang for more than 20sec, force resolve this promise.
     setTimeout(() => {
