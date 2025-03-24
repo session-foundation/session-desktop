@@ -8,6 +8,23 @@ inputs:
   should_publish:
     description: 'should publish'
     required: true
+  # macOS signing
+  MAC_CERTIFICATE:
+    description: 'Mac certificate for signing.'
+    required: false
+  MAC_CERTIFICATE_PASSWORD:
+    description: 'Password for the Mac certificate.'
+    required: false
+  SIGNING_APPLE_ID:
+    description: 'Apple ID for signing.'
+    required: false
+  SIGNING_APP_PASSWORD:
+    description: 'App-specific password for Apple ID.'
+    required: false
+  SIGNING_TEAM_ID:
+    description: 'Apple Team ID for signing.'
+    required: false
+
 
 runs:
   using: 'composite'
