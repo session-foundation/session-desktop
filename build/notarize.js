@@ -15,14 +15,42 @@ const isEmpty = v => !v || v.length === 0;
 
 const { execSync } = require('node:child_process');
 
+function runCommandWithExitCode(command) {
+  try {
+    const output = execSync(command, { stdio: 'pipe' });
+    return { success: true, output: output.toString().trim() };
+  } catch (error) {
+    return { success: false, code: error.status, message: error.stderr.toString().trim() };
+  }
+}
+
 exports.default = async function notarizing(context) {
   const { electronPlatformName, appOutDir } = context;
   if (electronPlatformName !== 'darwin') {
     return;
   }
-  log('Notarizing mac application');
 
   const appName = context.packager.appInfo.productFilename;
+
+  const appPath = `${appOutDir}/${appName}.app`;
+  const zipPath = `${appOutDir}/${appName}.zip`;
+
+  const verifyCheck = runCommandWithExitCode(`codesign --verify --deep --strict "${appPath}"`);
+  if (!verifyCheck.success) {
+    if (verifyCheck.code === 1) {
+      console.error(`Signature is invalid for app "${appPath}".`);
+    } else if (verifyCheck.code === 2) {
+      console.error(`"${appPath}" is not signed.`);
+    } else {
+      console.error(`Error (${verifyCheck.code}): ${verifyCheck.message} for app: "${appPath}"`);
+    }
+    console.warn('skipping notarization step');
+    return;
+  }
+
+  log(`"${appPath}" signature is valid.`);
+  log('Notarizing mac application');
+
   const { SIGNING_APPLE_ID, SIGNING_APP_PASSWORD, SIGNING_TEAM_ID } = process.env;
 
   if (isEmpty(SIGNING_APPLE_ID)) {
@@ -39,9 +67,6 @@ exports.default = async function notarizing(context) {
     log(' SIGNING_TEAM_ID not set.\nTerminating notarization.');
     return;
   }
-
-  const appPath = `${appOutDir}/${appName}.app`;
-  const zipPath = `${appOutDir}/${appName}.zip`;
 
   console.log(
     execSync(`ditto -c -k  --sequesterRsrc --keepParent "${appPath}" "${zipPath}"`, {
