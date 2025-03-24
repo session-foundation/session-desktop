@@ -216,16 +216,15 @@ export async function addUpdateMessage({
   }
 
   if (convo && expireUpdate && expireUpdate.expirationType && expireUpdate.expirationTimer > 0) {
-    const { expirationTimer, expirationType, isLegacyDataMessage } = expireUpdate;
+    const { expirationTimer, expirationType } = expireUpdate;
 
     msgAttrs.expirationType = expirationType === 'deleteAfterSend' ? 'deleteAfterSend' : 'unknown';
     msgAttrs.expireTimer = msgAttrs.expirationType === 'deleteAfterSend' ? expirationTimer : 0;
 
     // NOTE Triggers disappearing for an incoming groupUpdate message
-    // TODO legacy messages support will be removed in a future release
-    if (isLegacyDataMessage || expirationType === 'deleteAfterSend') {
+    if (expirationType === 'deleteAfterSend') {
       msgAttrs.expirationStartTimestamp = DisappearingMessages.setExpirationStartTimestamp(
-        isLegacyDataMessage ? 'legacy' : expirationType === 'unknown' ? 'off' : expirationType,
+        expirationType,
         sentAt,
         'addUpdateMessage'
       );

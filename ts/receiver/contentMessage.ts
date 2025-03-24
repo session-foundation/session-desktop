@@ -571,18 +571,7 @@ export async function innerHandleSwarmContentMessage({
       if (isEmpty(content.dataMessage.profileKey)) {
         content.dataMessage.profileKey = null;
       }
-      // TODO legacy messages support will be removed in a future release
-      if (expireUpdate?.isDisappearingMessagesV2Released) {
-        await DisappearingMessages.checkHasOutdatedDisappearingMessageClient(
-          conversationModelForUIUpdate,
-          senderConversationModel,
-          expireUpdate
-        );
-        if (expireUpdate.isLegacyConversationSettingMessage) {
-          await IncomingMessageCache.removeFromCache(envelope);
-          return;
-        }
-      }
+
       await handleSwarmDataMessage({
         envelope,
         sentAtTimestamp,

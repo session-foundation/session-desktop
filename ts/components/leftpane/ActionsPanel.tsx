@@ -50,7 +50,6 @@ import { getOppositeTheme } from '../../util/theme';
 import { SessionNotificationCount } from '../icon/SessionNotificationCount';
 import { getIsModalVisible } from '../../state/selectors/modal';
 
-import { ReleasedFeatures } from '../../util/releaseFeature';
 import { MessageQueue } from '../../session/sending';
 import { useRefreshReleasedFeaturesTimestamp } from '../../hooks/useRefreshReleasedFeaturesTimestamp';
 import { useDebugMode } from '../../state/selectors/debug';
@@ -205,9 +204,6 @@ const triggerAvatarReUploadIfNeeded = async () => {
 const doAppStartUp = async () => {
   // this generates the key to encrypt attachments locally
   await Data.generateAttachmentKeyIfEmpty();
-
-  // Feature Checks
-  await ReleasedFeatures.checkIsDisappearMessageV2FeatureReleased();
 
   // trigger a sync message if needed for our other devices
   void triggerSyncIfNeeded();

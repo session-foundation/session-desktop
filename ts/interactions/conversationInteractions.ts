@@ -45,8 +45,7 @@ import { IMAGE_JPEG } from '../types/MIME';
 import { processNewAttachment } from '../types/MessageAttachment';
 import { urlToBlob } from '../types/attachments/VisualAttachment';
 import { encryptProfile } from '../util/crypto/profileEncrypter';
-import { ReleasedFeatures } from '../util/releaseFeature';
-import { Storage, setLastProfileUpdateTimestamp } from '../util/storage';
+import { Storage } from '../util/storage';
 import { UserGroupsWrapperActions } from '../webworker/workers/browser/libsession_worker_interface';
 import { ConversationInteractionStatus, ConversationInteractionType } from './types';
 import { BlockedNumberController } from '../util';
@@ -748,14 +747,7 @@ export async function uploadOurAvatar(newAvatarDecrypted?: ArrayBuffer) {
   const newTimestampReupload = Date.now();
   await Storage.put(SettingsKey.lastAvatarUploadTimestamp, newTimestampReupload);
 
-  if (newAvatarDecrypted) {
-    await setLastProfileUpdateTimestamp(Date.now());
-    const userConfigLibsession = await ReleasedFeatures.checkIsUserConfigFeatureReleased();
-
-    if (!userConfigLibsession) {
-      await SyncUtils.forceSyncConfigurationNowIfNeeded(true);
-    }
-  } else {
+  if (!newAvatarDecrypted) {
     window.log.info(
       `Reuploading avatar finished at ${newTimestampReupload}, newAttachmentPointer ${fileUrl}`
     );
@@ -788,8 +780,6 @@ export async function clearOurAvatar(commit: boolean = true) {
   ourConvo.setKey('avatarPointer', undefined);
   ourConvo.setKey('avatarInProfile', undefined);
   ourConvo.setKey('profileKey', undefined);
-
-  await setLastProfileUpdateTimestamp(Date.now());
 
   if (commit) {
     await ourConvo.commit();

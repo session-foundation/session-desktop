@@ -14,7 +14,6 @@ import {
   useSelectedExpireTimer,
   useSelectedIsGroupOrCommunity,
 } from '../../../../../state/selectors/selectedConversation';
-import { ReleasedFeatures } from '../../../../../util/releaseFeature';
 import { Flex } from '../../../../basic/Flex';
 import { SessionButton } from '../../../../basic/SessionButton';
 import { SpacerLG } from '../../../../basic/Text';
@@ -51,9 +50,8 @@ const StyledNonAdminDescription = styled.div`
   line-height: 15px;
 `;
 
-// TODO legacy messages support will be removed in a future release
 function loadDefaultTimeValue(
-  modeSelected: DisappearingMessageConversationModeType | undefined,
+  modeSelected: DisappearingMessageConversationModeType,
   hasOnlyOneMode: boolean
 ) {
   // NOTE if there is only 1 disappearing message mode available the default state is that it is turned off
@@ -62,42 +60,23 @@ function loadDefaultTimeValue(
   }
 
   return modeSelected !== 'off'
-    ? modeSelected !== 'legacy'
-      ? modeSelected === 'deleteAfterSend'
-        ? TimerOptions.DEFAULT_OPTIONS.DELETE_AFTER_SEND
-        : TimerOptions.DEFAULT_OPTIONS.DELETE_AFTER_READ
-      : TimerOptions.DEFAULT_OPTIONS.LEGACY
+    ? modeSelected === 'deleteAfterSend'
+      ? TimerOptions.DEFAULT_OPTIONS.DELETE_AFTER_SEND
+      : TimerOptions.DEFAULT_OPTIONS.DELETE_AFTER_READ
     : 0;
 }
 
 /** if there is only one disappearing message mode and 'off' enabled then we trigger single mode UI */
-function useSingleMode(disappearingModeOptions: any) {
-  const singleMode: DisappearingMessageConversationModeType | undefined =
+function useSingleMode(disappearingModeOptions: Record<string, boolean> | undefined) {
+  const singleMode: DisappearingMessageConversationModeType =
     disappearingModeOptions &&
     disappearingModeOptions.off !== undefined &&
     Object.keys(disappearingModeOptions).length === 2
       ? (Object.keys(disappearingModeOptions)[1] as DisappearingMessageConversationModeType)
-      : undefined;
+      : 'off';
   const hasOnlyOneMode = Boolean(singleMode && singleMode.length > 0);
 
   return { singleMode, hasOnlyOneMode };
-}
-
-// TODO legacy messages support will be removed in a future release
-function useLegacyModeBeforeV2Release(
-  isV2Released: boolean,
-  expirationMode: DisappearingMessageConversationModeType | undefined,
-  setModeSelected: (mode: DisappearingMessageConversationModeType | undefined) => void
-) {
-  useEffect(() => {
-    if (!isV2Released) {
-      setModeSelected(
-        expirationMode === 'deleteAfterRead' || expirationMode === 'deleteAfterSend'
-          ? 'legacy'
-          : expirationMode
-      );
-    }
-  }, [expirationMode, isV2Released, setModeSelected]);
 }
 
 export type PropsForExpirationSettings = {
@@ -114,17 +93,15 @@ export const OverlayDisappearingMessages = () => {
   const { singleMode, hasOnlyOneMode } = useSingleMode(disappearingModeOptions);
 
   const isGroup = useSelectedIsGroupOrCommunity();
-  const expirationMode = useSelectedConversationDisappearingMode();
+  const expirationMode = useSelectedConversationDisappearingMode() || 'off';
   const expireTimer = useSelectedExpireTimer();
 
-  const [modeSelected, setModeSelected] = useState<
-    DisappearingMessageConversationModeType | undefined
-  >(hasOnlyOneMode ? singleMode : expirationMode);
+  const [modeSelected, setModeSelected] = useState<DisappearingMessageConversationModeType>(
+    hasOnlyOneMode ? singleMode : expirationMode
+  );
 
   const [timeSelected, setTimeSelected] = useState(expireTimer || 0);
   const timerOptions = useTimerOptionsByMode(modeSelected, hasOnlyOneMode);
-
-  const isV2Released = ReleasedFeatures.isDisappearMessageV2FeatureReleasedCached();
 
   const handleSetMode = async () => {
     if (hasOnlyOneMode) {
@@ -145,8 +122,6 @@ export const OverlayDisappearingMessages = () => {
       dispatch(resetRightOverlayMode());
     }
   };
-
-  useLegacyModeBeforeV2Release(isV2Released, expirationMode, setModeSelected);
 
   useEffect(() => {
     // NOTE loads a time value from the conversation model or the default

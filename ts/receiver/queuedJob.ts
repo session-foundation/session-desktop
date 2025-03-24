@@ -439,12 +439,7 @@ export async function handleMessageJob(
         messageModel.getExpireTimerSeconds()
       );
 
-      // TODO legacy messages support will be removed in a future release
-      const canBeDeleteAfterSend = conversation && (conversation.isMe() || conversation.isGroup());
-      if (
-        (canBeDeleteAfterSend && expirationMode === 'legacy') ||
-        expirationMode === 'deleteAfterSend'
-      ) {
+      if (expirationMode === 'deleteAfterSend') {
         messageModel.set({
           expirationStartTimestamp: DisappearingMessages.setExpirationStartTimestamp(
             expirationMode,

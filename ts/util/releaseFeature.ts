@@ -1,29 +1,23 @@
-import { FEATURE_RELEASE_TIMESTAMPS } from '../session/constants';
 import { UserSync } from '../session/utils/job_runners/jobs/UserSyncJob';
 import { assertUnreachable } from '../types/sqlSharedTypes';
 import { NetworkTime } from './NetworkTime';
 import { Storage } from './storage';
 
-let isDisappearingMessageFeatureReleased: boolean | undefined;
-let isUserConfigLibsessionFeatureReleased: boolean | undefined;
-// TODO DO NOT MERGE Remove export after QA
-export type FeatureNameTracked = 'disappearing_messages' | 'user_config_libsession';
+type FeatureNameTracked = 'null';
+let isNullFeatureReleased: boolean | undefined;
 
 /**
  * This is only intended for testing. Do not call this in production.
  */
 export function resetFeatureReleasedCachedValue() {
-  isDisappearingMessageFeatureReleased = undefined;
-  isUserConfigLibsessionFeatureReleased = undefined;
+  isNullFeatureReleased = undefined;
 }
 
 // eslint-disable-next-line consistent-return
 function getIsFeatureReleasedCached(featureName: FeatureNameTracked) {
   switch (featureName) {
-    case 'disappearing_messages':
-      return isDisappearingMessageFeatureReleased;
-    case 'user_config_libsession':
-      return isUserConfigLibsessionFeatureReleased;
+    case 'null':
+      return isNullFeatureReleased;
     default:
       assertUnreachable(featureName, 'case not handled for getIsFeatureReleasedCached');
   }
@@ -31,11 +25,8 @@ function getIsFeatureReleasedCached(featureName: FeatureNameTracked) {
 
 function setIsFeatureReleasedCached(featureName: FeatureNameTracked, value: boolean) {
   switch (featureName) {
-    case 'disappearing_messages':
-      isDisappearingMessageFeatureReleased = value;
-      break;
-    case 'user_config_libsession':
-      isUserConfigLibsessionFeatureReleased = value;
+    case 'null':
+      isNullFeatureReleased = value;
       break;
     default:
       assertUnreachable(featureName, 'case not handled for setIsFeatureReleasedCached');
@@ -45,10 +36,8 @@ function setIsFeatureReleasedCached(featureName: FeatureNameTracked, value: bool
 // eslint-disable-next-line consistent-return
 function getFeatureReleaseTimestamp(featureName: FeatureNameTracked) {
   switch (featureName) {
-    case 'disappearing_messages':
-      return FEATURE_RELEASE_TIMESTAMPS.DISAPPEARING_MESSAGES_V2;
-    case 'user_config_libsession':
-      return FEATURE_RELEASE_TIMESTAMPS.USER_CONFIG;
+    case 'null':
+      return 0;
     default:
       assertUnreachable(featureName, 'case not handled for getFeatureReleaseTimestamp');
   }
@@ -92,26 +81,12 @@ async function checkIsFeatureReleased(featureName: FeatureNameTracked): Promise<
   return isReleased;
 }
 
-async function checkIsUserConfigFeatureReleased() {
-  return checkIsFeatureReleased('user_config_libsession');
+async function checkIsNullReleased() {
+  return checkIsFeatureReleased('null');
 }
 
-async function checkIsDisappearMessageV2FeatureReleased() {
-  return checkIsFeatureReleased('disappearing_messages');
+function isNullReleasedCached(): boolean {
+  return !!isNullFeatureReleased;
 }
 
-function isUserConfigFeatureReleasedCached(): boolean {
-  return !!isUserConfigLibsessionFeatureReleased;
-}
-
-// NOTE Make sure to call checkIsDisappearMessageV2FeatureReleased at least once and then use this. It's mostly used in components that are rendered where we don't want to do async calls
-function isDisappearMessageV2FeatureReleasedCached(): boolean {
-  return !!isDisappearingMessageFeatureReleased;
-}
-
-export const ReleasedFeatures = {
-  checkIsUserConfigFeatureReleased,
-  checkIsDisappearMessageV2FeatureReleased,
-  isUserConfigFeatureReleasedCached,
-  isDisappearMessageV2FeatureReleasedCached,
-};
+export const ReleasedFeatures = { checkIsNullReleased, isNullReleasedCached };
