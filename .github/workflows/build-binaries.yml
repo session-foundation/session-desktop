@@ -28,7 +28,6 @@ env:
 jobs:
   build_linux:
     runs-on: ubuntu-22.04
-    if: false
     strategy:
       fail-fast: false
       matrix:
@@ -80,7 +79,6 @@ jobs:
 
   build_windows:
     runs-on: windows-2022
-    if: false
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -146,7 +144,7 @@ jobs:
         if: ${{ env.SHOULD_PUBLISH == 'false' }}
         run: |
           source ./build/setup-mac-certificate.sh
-          yarn build-release-publish --config.mac.bundleVersion=${{ github.ref }}
+          yarn build-release --config.mac.bundleVersion=${{ github.ref }}
 
       - name: Upload artefacts
         # we want this to run always, except on "push" to "master"

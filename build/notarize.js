@@ -50,12 +50,6 @@ exports.default = async function notarizing(context) {
     })
   );
 
-  // console.log(
-  //   execSync(`xcrundefaults write com.apple.gke.notary.tool nt-upload-connection-timeout 300`, {
-  //     encoding: 'utf8',
-  //   })
-  // );
-
   console.log(
     execSync(
       `xcrun notarytool submit "${zipPath}" --team-id "${teamId}" --apple-id "${appleId}" --password "${appleIdPassword}" --verbose --wait`,
