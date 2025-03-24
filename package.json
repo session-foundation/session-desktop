@@ -120,7 +120,6 @@
   "devDependencies": {
     "@commitlint/cli": "^19.8.0",
     "@commitlint/config-conventional": "^19.8.0",
-    "@electron/notarize": "^2.5.0",
     "@testing-library/jest-dom": "^6.4.6",
     "@testing-library/react": "^15.0.7",
     "@testing-library/user-event": "^14.6.1",
