@@ -629,8 +629,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
       if (this.isOpenGroupV2()) {
         // communities have no expiration timer support, so enforce it here.
-        chatMessageParams.expirationType = null;
-        chatMessageParams.expireTimer = null;
+        chatMessageParams.expirationType = 'unknown';
+        chatMessageParams.expireTimer = 0;
 
         const chatMessageOpenGroupV2 = new OpenGroupVisibleMessage(chatMessageParams);
         const roomInfos = this.toOpenGroupV2();
@@ -2695,7 +2695,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
     return success;
   }
 
-  // NOTE We want to replace Backbone .get() calls with these getters as we migrate to Redux completely eventually
   // #region Start of getters
   public getExpirationMode() {
     return this.get('expirationMode');

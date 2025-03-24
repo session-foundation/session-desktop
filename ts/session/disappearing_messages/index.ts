@@ -181,7 +181,6 @@ function setExpirationStartTimestamp(
     // );
   }
 
-  // TODO legacy messages support will be removed in a future release
   if (timestamp) {
     if (!isValidUnixTimestamp(timestamp)) {
       window.log.debug(
@@ -216,7 +215,7 @@ function setExpirationStartTimestamp(
       expirationStartTimestamp = undefined;
       break;
     default:
-      window.log.debug(
+      window.log.warn(
         `[setExpirationStartTimestamp] Invalid disappearing message mode "${mode}" set. Ignoring.${
           messageId ? `messageId: ${messageId} ` : ''
         }`
@@ -309,7 +308,6 @@ function forcedDeleteAfterSendMsgSetting(convo: ConversationModel): {
   };
 }
 
-// TODO legacy messages support will be removed in a future release
 /**
  * Converts DisappearingMessageType to DisappearingMessageConversationModeType
  *
@@ -336,15 +334,15 @@ function changeToDisappearingConversationMode(
   return expirationType === 'deleteAfterSend' ? 'deleteAfterSend' : 'deleteAfterRead';
 }
 
-// TODO legacy messages support will be removed in a future release
 async function checkForExpireUpdateInContentMessage(
   content: SignalService.Content,
   convoToUpdate: ConversationModel,
   messageExpirationFromRetrieve: number | null
-): Promise<DisappearingMessageUpdate | undefined> {
+): Promise<DisappearingMessageUpdate> {
   const expirationTimer = content.expirationTimer;
 
-  // NOTE we don't use the expirationType directly from the Content Message because we need to resolve it to the correct convo type first in case it has errors
+  // NOTE we don't use the expirationType directly from the Content Message because
+  // we need to resolve it to the correct convo type first in case it has errors
   const expirationMode = changeToDisappearingConversationMode(
     convoToUpdate,
     DisappearingMessageMode[content.expirationType],
@@ -392,7 +390,6 @@ function checkForExpiringOutgoingMessage(message: MessageModel, location?: strin
   }
 }
 
-// TODO legacy messages support will be removed in a future release
 function getMessageReadyToDisappear(
   conversationModel: ConversationModel,
   messageModel: MessageModel,

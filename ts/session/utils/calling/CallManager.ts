@@ -525,8 +525,8 @@ export async function USER_callRecipient(recipient: string) {
     createAtNetworkTimestamp: NetworkTime.now(),
     type: SignalService.CallMessage.Type.PRE_OFFER,
     uuid: currentCallUUID,
-    expirationType: null, // Note: Preoffer messages are not added to the DB, so no need to make them expire
-    expireTimer: null,
+    expirationType: 'unknown', // Note: Preoffer messages are not added to the DB, so no need to make them expire
+    expireTimer: 0,
   });
 
   window.log.info('Sending preOffer message to ', ed25519Str(recipient));
@@ -626,8 +626,8 @@ const iceSenderDebouncer = _.debounce(async (recipient: string) => {
     sdpMids: validCandidates.map(c => c.sdpMid),
     sdps: validCandidates.map(c => c.candidate),
     uuid: currentCallUUID,
-    expirationType: null, // Note: An ICE_CANDIDATES is not saved to the DB on the recipient's side, so no need to make it expire
-    expireTimer: null,
+    expirationType: 'unknown', // Note: An ICE_CANDIDATES is not saved to the DB on the recipient's side, so no need to make it expire
+    expireTimer: 0,
   });
 
   window.log.info(

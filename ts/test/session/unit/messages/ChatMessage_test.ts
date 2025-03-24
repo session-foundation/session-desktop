@@ -13,8 +13,8 @@ import {
 } from '../../../../session/messages/outgoing/visibleMessage/VisibleMessage';
 
 const sharedNoExpire = {
-  expirationType: null,
-  expireTimer: null,
+  expirationType: 'unknown' as const,
+  expireTimer: 0,
 };
 
 describe('VisibleMessage', () => {

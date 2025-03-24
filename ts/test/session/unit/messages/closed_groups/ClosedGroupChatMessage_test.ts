@@ -8,6 +8,11 @@ import { PubKey } from '../../../../../session/types';
 import { StringUtils } from '../../../../../session/utils';
 import { TestUtils } from '../../../../test-utils';
 
+const sharedNoExpire = {
+  expireTimer: 0,
+  expirationType: 'unknown' as const,
+};
+
 describe('ClosedGroupVisibleMessage', () => {
   let groupId: string;
   beforeEach(() => {
@@ -18,8 +23,7 @@ describe('ClosedGroupVisibleMessage', () => {
     const chatMessage = new VisibleMessage({
       createAtNetworkTimestamp,
       body: 'body',
-      expirationType: null,
-      expireTimer: null,
+      ...sharedNoExpire,
     });
     const message = new ClosedGroupVisibleMessage({
       groupId,
@@ -48,8 +52,7 @@ describe('ClosedGroupVisibleMessage', () => {
   it('correct ttl', () => {
     const chatMessage = new VisibleMessage({
       createAtNetworkTimestamp: Date.now(),
-      expirationType: null,
-      expireTimer: null,
+      ...sharedNoExpire,
     });
     const message = new ClosedGroupVisibleMessage({
       groupId,
@@ -61,8 +64,7 @@ describe('ClosedGroupVisibleMessage', () => {
   it('has an identifier', () => {
     const chatMessage = new VisibleMessage({
       createAtNetworkTimestamp: Date.now(),
-      expirationType: null,
-      expireTimer: null,
+      ...sharedNoExpire,
     });
     const message = new ClosedGroupVisibleMessage({
       groupId,
@@ -78,8 +80,7 @@ describe('ClosedGroupVisibleMessage', () => {
       createAtNetworkTimestamp,
       body: 'body',
       identifier: 'closedGroupMessage',
-      expirationType: null,
-      expireTimer: null,
+      ...sharedNoExpire,
     });
     const message = new ClosedGroupVisibleMessage({
       groupId,
@@ -94,8 +95,7 @@ describe('ClosedGroupVisibleMessage', () => {
       createAtNetworkTimestamp,
       body: 'body',
       identifier: 'chatMessage',
-      expirationType: null,
-      expireTimer: null,
+      ...sharedNoExpire,
     });
     const message = new ClosedGroupVisibleMessage({
       groupId,

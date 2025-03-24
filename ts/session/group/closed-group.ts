@@ -312,7 +312,7 @@ async function sendNewName(convo: ConversationModel, name: string, messageId: st
     groupId,
     identifier: messageId,
     name,
-    expirationType: null, // we keep that one **not** expiring
+    expirationType: 'unknown', // we keep that one **not** expiring
     expireTimer: 0,
   });
   await MessageQueue.use().sendToGroup({
@@ -348,7 +348,7 @@ async function sendAddedMembers(
     groupId,
     addedMembers,
     identifier: messageId,
-    expirationType: null, // we keep that one **not** expiring
+    expirationType: 'unknown', // we keep that one **not** expiring
     expireTimer: 0,
   });
   await MessageQueue.use().sendToGroup({
@@ -365,7 +365,7 @@ async function sendAddedMembers(
     members,
     keypair: encryptionKeyPair,
     identifier: messageId || uuidv4(),
-    expirationType: null, // we keep that one **not** expiring
+    expirationType: 'unknown', // we keep that one **not** expiring
     expireTimer: 0,
   });
 
@@ -409,7 +409,7 @@ async function sendRemovedMembers(
     groupId,
     removedMembers,
     identifier: messageId,
-    expirationType: null, // we keep that one **not** expiring
+    expirationType: 'unknown', // we keep that one **not** expiring
     expireTimer: 0,
   });
   // Send the group update, and only once sent, generate and distribute a new encryption key pair if needed
@@ -471,7 +471,7 @@ async function generateAndSendNewEncryptionKeyPair(
     groupId: toHex(groupId),
     createAtNetworkTimestamp: NetworkTime.now(),
     encryptedKeyPairs: wrappers,
-    expirationType: null, // we keep that one **not** expiring
+    expirationType: 'unknown', // we keep that one **not** expiring
     expireTimer: 0,
   });
 

@@ -5,6 +5,11 @@ import { SignalService } from '../../../../protobuf';
 import { Constants } from '../../../../session';
 import { CommunityInvitationMessage } from '../../../../session/messages/outgoing/visibleMessage/CommunityInvitationMessage';
 
+const sharedNoExpire = {
+  expireTimer: 0,
+  expirationType: 'unknown' as const,
+};
+
 describe('CommunityInvitationMessage', () => {
   let message: CommunityInvitationMessage;
   const createAtNetworkTimestamp = Date.now();
@@ -16,8 +21,7 @@ describe('CommunityInvitationMessage', () => {
       createAtNetworkTimestamp,
       url,
       name,
-      expirationType: null,
-      expireTimer: null,
+      ...sharedNoExpire,
     });
   });
 

@@ -975,8 +975,8 @@ async function sendLatestKeyPairToUsers(
         groupId: groupPubKey,
         createAtNetworkTimestamp: NetworkTime.now(),
         encryptedKeyPairs: wrappers,
-        expirationType: null, // we keep that one **not** expiring (not rendered in the clients, and we need it to be as available as possible on the swarm)
-        expireTimer: null,
+        expirationType: 'unknown', // we keep that one **not** expiring (not rendered in the clients, and we need it to be as available as possible on the swarm)
+        expireTimer: 0,
       });
 
       // the encryption keypair is sent using established channels

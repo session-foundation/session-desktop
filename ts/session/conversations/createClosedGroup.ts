@@ -227,7 +227,7 @@ function createInvitePromises(
       admins,
       keypair: encryptionKeyPair,
       createAtNetworkTimestamp,
-      expirationType: null, // we keep that one **not** expiring
+      expirationType: 'unknown', // we keep that one **not** expiring
       expireTimer: 0,
     };
     const message = new ClosedGroupNewMessage(messageParams);
