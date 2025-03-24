@@ -6,6 +6,8 @@
 
 /*
   Notarizing: https://kilianvalkhof.com/2019/electron/notarizing-your-electron-application/
+  This script is heavily inspired by https://github.com/electron/notarize/issues/193#issuecomment-2466569367
+  For up to date official mac information, see https://developer.apple.com/documentation/security/customizing-the-notarization-workflow
 */
 
 const log = msg => console.log(`\n${msg}`);
@@ -40,9 +42,6 @@ exports.default = async function notarizing(context) {
 
   const appPath = `${appOutDir}/${appName}.app`;
   const zipPath = `${appOutDir}/${appName}.zip`;
-  const appleId = SIGNING_APPLE_ID;
-  const appleIdPassword = SIGNING_APP_PASSWORD;
-  const teamId = SIGNING_TEAM_ID;
 
   console.log(
     execSync(`ditto -c -k  --sequesterRsrc --keepParent "${appPath}" "${zipPath}"`, {
@@ -52,7 +51,7 @@ exports.default = async function notarizing(context) {
 
   console.log(
     execSync(
-      `xcrun notarytool submit "${zipPath}" --team-id "${teamId}" --apple-id "${appleId}" --password "${appleIdPassword}" --verbose --wait`,
+      `xcrun notarytool submit "${zipPath}" --team-id "${SIGNING_TEAM_ID}" --apple-id "${SIGNING_APPLE_ID}" --password "${SIGNING_APP_PASSWORD}" --verbose --wait`,
       { encoding: 'utf8' }
     )
   );
