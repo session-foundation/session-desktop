@@ -61,7 +61,7 @@ runs:
         SIGNING_APP_PASSWORD: ${{ inputs.SIGNING_APP_PASSWORD }}
         SIGNING_TEAM_ID: ${{ inputs.SIGNING_TEAM_ID }}
       run: |
-        ./build/setup-mac-release-arch.sh ${{ inputs.architecture }}
+        ./build/setup-mac-certificate.sh
         yarn build-release-publish --config.mac.bundleVersion=${{ github.ref }}
 
     - name: Setup release metadata

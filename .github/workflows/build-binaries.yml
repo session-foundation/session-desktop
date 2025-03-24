@@ -120,6 +120,11 @@ jobs:
     runs-on: macos-14
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      MAC_CERTIFICATE: ${{ secrets.MAC_CERTIFICATE }}
+      MAC_CERTIFICATE_PASSWORD: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
+      SIGNING_APPLE_ID: ${{ secrets.SIGNING_APPLE_ID }}
+      SIGNING_APP_PASSWORD: ${{ secrets.SIGNING_APP_PASSWORD }}
+      SIGNING_TEAM_ID: ${{ secrets.SIGNING_TEAM_ID }}
     steps:
       - run: git config --global core.autocrlf false
 
@@ -140,16 +145,21 @@ jobs:
         with:
           architecture: arm64
           should_publish: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
-          MAC_CERTIFICATE: ${{ secrets.MAC_CERTIFICATE }}
-          MAC_CERTIFICATE_PASSWORD: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
-          SIGNING_APPLE_ID: ${{ secrets.SIGNING_APPLE_ID }}
-          SIGNING_APP_PASSWORD: ${{ secrets.SIGNING_APP_PASSWORD }}
-          SIGNING_TEAM_ID: ${{ secrets.SIGNING_TEAM_ID }}
+          MAC_CERTIFICATE: ${{ env.MAC_CERTIFICATE }}
+          MAC_CERTIFICATE_PASSWORD: ${{ env.MAC_CERTIFICATE_PASSWORD }}
+          SIGNING_APPLE_ID: ${{ env.SIGNING_APPLE_ID }}
+          SIGNING_APP_PASSWORD: ${{ env.SIGNING_APP_PASSWORD }}
+          SIGNING_TEAM_ID: ${{ env.SIGNING_TEAM_ID }}
 
   build_mac_x64:
     runs-on: macos-13
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      MAC_CERTIFICATE: ${{ secrets.MAC_CERTIFICATE }}
+      MAC_CERTIFICATE_PASSWORD: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
+      SIGNING_APPLE_ID: ${{ secrets.SIGNING_APPLE_ID }}
+      SIGNING_APP_PASSWORD: ${{ secrets.SIGNING_APP_PASSWORD }}
+      SIGNING_TEAM_ID: ${{ secrets.SIGNING_TEAM_ID }}
     steps:
       - run: git config --global core.autocrlf false
 
@@ -170,11 +180,11 @@ jobs:
         with:
           architecture: x64
           should_publish: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
-          MAC_CERTIFICATE: ${{ secrets.MAC_CERTIFICATE }}
-          MAC_CERTIFICATE_PASSWORD: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
-          SIGNING_APPLE_ID: ${{ secrets.SIGNING_APPLE_ID }}
-          SIGNING_APP_PASSWORD: ${{ secrets.SIGNING_APP_PASSWORD }}
-          SIGNING_TEAM_ID: ${{ secrets.SIGNING_TEAM_ID }}
+          MAC_CERTIFICATE: ${{ env.MAC_CERTIFICATE }}
+          MAC_CERTIFICATE_PASSWORD: ${{ env.MAC_CERTIFICATE_PASSWORD }}
+          SIGNING_APPLE_ID: ${{ env.SIGNING_APPLE_ID }}
+          SIGNING_APP_PASSWORD: ${{ env.SIGNING_APP_PASSWORD }}
+          SIGNING_TEAM_ID: ${{ env.SIGNING_TEAM_ID }}
 
   post_build_mac:
     needs: [build_mac_arm64, build_mac_x64]
