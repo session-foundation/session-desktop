@@ -29,22 +29,17 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Setup environment
-      shell: bash
-      run: |
-        echo "STEP: Setup environment"
-        export MAC_CERTIFICATE=${{ inputs.architecture }}
-        export MAC_CERTIFICATE_PASSWORD=${{ inputs.MAC_CERTIFICATE_PASSWORD }}
-        export SIGNING_APPLE_ID=${{ inputs.SIGNING_APPLE_ID }}
-        export SIGNING_APP_PASSWORD=${{ inputs.SIGNING_APP_PASSWORD }}
-        export SIGNING_TEAM_ID=${{ inputs.SIGNING_TEAM_ID }}
-
     - name: Build but do not publish
       # always run this, except on "push" to "master" or alpha releases
       if: ${{ inputs.should_publish == 'false' }}
       shell: bash
+      env:
+        MAC_CERTIFICATE: ${{ inputs.MAC_CERTIFICATE }}
+        MAC_CERTIFICATE_PASSWORD: ${{ inputs.MAC_CERTIFICATE_PASSWORD }}
+        SIGNING_APPLE_ID: ${{ inputs.SIGNING_APPLE_ID }}
+        SIGNING_APP_PASSWORD: ${{ inputs.SIGNING_APP_PASSWORD }}
+        SIGNING_TEAM_ID: ${{ inputs.SIGNING_TEAM_ID }}
       run: |
-        echo "STEP: Build but do not publish"
         ./build/setup-mac-certificate.sh
         yarn build-release --config.mac.bundleVersion=${{ github.ref }}
 
@@ -56,20 +51,24 @@ runs:
         upload_prefix: mac-${{ inputs.architecture }}
 
     - name: Build & publish
-      shell: bash
       # only run this on "push" to "master" or alpha releases
       if: ${{ inputs.should_publish == 'true' }}
+      shell: bash
+      env:
+        MAC_CERTIFICATE: ${{ inputs.MAC_CERTIFICATE }}
+        MAC_CERTIFICATE_PASSWORD: ${{ inputs.MAC_CERTIFICATE_PASSWORD }}
+        SIGNING_APPLE_ID: ${{ inputs.SIGNING_APPLE_ID }}
+        SIGNING_APP_PASSWORD: ${{ inputs.SIGNING_APP_PASSWORD }}
+        SIGNING_TEAM_ID: ${{ inputs.SIGNING_TEAM_ID }}
       run: |
-        echo "STEP: Build & publish"
         ./build/setup-mac-release-arch.sh ${{ inputs.architecture }}
         yarn build-release-publish --config.mac.bundleVersion=${{ github.ref }}
 
     - name: Setup release metadata
-      shell: bash
       # only run this on "push" to "master" or alpha releases
       if: ${{ inputs.should_publish == 'true' }}
+      shell: bash
       run: |
-        echo "STEP: Setup release metadata"
         ./build/setup-mac-release-arch.sh ${{ inputs.architecture }}
 
     - name: Upload release metadata
