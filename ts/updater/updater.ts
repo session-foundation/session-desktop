@@ -6,7 +6,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { gt as isVersionGreaterThan, parse as parseVersion } from 'semver';
 
-import filesize from 'filesize';
+import { filesize } from 'filesize';
 import { windowMarkShouldQuit } from '../node/window_state';
 
 import { UPDATER_INTERVAL_MS } from '../session/constants';

@@ -42,13 +42,13 @@ const FlagToggle = ({
   const key = `feature-flag-toggle-${flag}`;
   return (
     <Flex
-    key={key}
-    id={key}
-    $container={true}
-    width="100%"
-    $alignItems="center"
-    $justifyContent="space-between"
-  >
+      key={key}
+      id={key}
+      $container={true}
+      width="100%"
+      $alignItems="center"
+      $justifyContent="space-between"
+    >
       <span>
         {flag}
         {untestedFlags.includes(flag) ? <HintText>Untested</HintText> : null}
@@ -67,13 +67,13 @@ export const FeatureFlags = ({ flags }: { flags: Record<string, FlagValues> }) =
   const forceUpdate = useUpdate();
   return (
     <Flex
-    $container={true}
-    width={'100%'}
-    $flexDirection="column"
-    $justifyContent="flex-start"
-    $alignItems="flex-start"
-    $flexGap="var(--margins-xs)"
-  >
+      $container={true}
+      width={'100%'}
+      $flexDirection="column"
+      $justifyContent="flex-start"
+      $alignItems="flex-start"
+      $flexGap="var(--margins-xs)"
+    >
       <Flex $container={true} $alignItems="center">
         <h2>Feature Flags</h2>
         <HintText>Experimental</HintText>
