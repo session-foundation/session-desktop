@@ -17,7 +17,7 @@ runs:
       if: ${{ inputs.should_publish == 'false' }}
       shell: bash
       run: |
-        ./build/setup-mac-certificate.sh
+        . ./build/setup-mac-certificate.sh
         yarn build-release --config.mac.bundleVersion=${{ github.ref }}
 
     - name: Upload artefacts
@@ -32,7 +32,7 @@ runs:
       if: ${{ inputs.should_publish == 'true' }}
       shell: bash
       run: |
-        ./build/setup-mac-certificate.sh
+        . ./build/setup-mac-certificate.sh
         yarn build-release-publish --config.mac.bundleVersion=${{ github.ref }}
 
     - name: Setup release metadata
