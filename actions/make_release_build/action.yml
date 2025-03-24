@@ -1,6 +1,7 @@
 name: 'Make release build'
 description: '[macOS only] Build a release for a specific cpu architecture and update the release metadata if needed.'
 inputs:
+  # See 'arch' in https://www.electron.build/cli.html#targetconfiguration
   architecture:
     description: 'cpu architecture'
     required: true
@@ -31,7 +32,7 @@ runs:
       # only run this on "push" to "master" or alpha releases
       if: ${{ inputs.should_publish == 'true' }}
       run: |
-        ./build/setup-mac-release-arch.sh ${{ runner.arch }}
+        ./build/setup-mac-release-arch.sh ${{ inputs.architecture }}
         yarn build-release-publish --config.mac.bundleVersion=${{ github.ref }}
 
     - name: Setup release metadata
@@ -39,7 +40,7 @@ runs:
       # only run this on "push" to "master" or alpha releases
       if: ${{ inputs.should_publish == 'true' }}
       run: |
-        ./build/setup-mac-release-arch.sh ${{ runner.arch }}
+        ./build/setup-mac-release-arch.sh ${{ inputs.architecture }}
 
     - name: Upload release metadata
       # only run this on "push" to "master" or alpha releases
