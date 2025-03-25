@@ -81,7 +81,6 @@ interface State {
 }
 
 interface Props {
-  ourDisplayNameInProfile: string;
   ourNumber: string;
   selectedConversationKey: string;
   selectedConversation?: ReduxConversationType;
@@ -256,7 +255,6 @@ export class SessionConversation extends Component<Props, State> {
     const { isDraggingFile } = this.state;
 
     const {
-      ourDisplayNameInProfile,
       selectedConversation,
       messagesProps,
       selectedMessages,
@@ -275,10 +273,6 @@ export class SessionConversation extends Component<Props, State> {
         <div className="conversation-header">
           <ConversationHeaderWithDetails />
           <GroupMarkedAsExpired />
-          <OutdatedClientBanner
-            ourDisplayNameInProfile={ourDisplayNameInProfile}
-            selectedConversation={selectedConversation}
-          />
           <OutdatedLegacyGroupBanner />
         </div>
         {isSelectedConvoInitialLoadingInProgress ? (
@@ -657,30 +651,6 @@ const renderImagePreview = async (contentType: string, file: File, fileName: str
   };
 };
 
-function OutdatedClientBanner(props: {
-  selectedConversation: Pick<ReduxConversationType, 'id' | 'hasOutdatedClient'>;
-  ourDisplayNameInProfile: string;
-}) {
-  const { selectedConversation, ourDisplayNameInProfile } = props;
-  const bannerText =
-    selectedConversation.hasOutdatedClient &&
-    selectedConversation.hasOutdatedClient !== ourDisplayNameInProfile
-      ? window.i18n('disappearingMessagesLegacy', { name: selectedConversation.hasOutdatedClient })
-      : window.i18n('deleteAfterGroupFirstReleaseConfigOutdated');
-
-  return selectedConversation.hasOutdatedClient?.length ? (
-    <NoticeBanner
-      text={bannerText}
-      onBannerClick={() => {
-        const conversation = ConvoHub.use().get(selectedConversation.id);
-        conversation.set({ hasOutdatedClient: undefined });
-        void conversation.commit();
-      }}
-      icon="exit"
-      dataTestId="some-of-your-devices-outdated-conversation"
-    />
-  ) : null;
-}
 
 function OutdatedLegacyGroupBanner() {
   const dispatch = useDispatch();

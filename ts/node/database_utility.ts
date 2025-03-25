@@ -32,7 +32,7 @@ function jsonToArray(json: string): Array<string> {
   try {
     return JSON.parse(json);
   } catch (e) {
-    console.error('jsontoarray failed:', e.message);
+    console.error('jsonToArray failed:', e.message);
     return [];
   }
 }
@@ -78,7 +78,6 @@ const allowedKeysFormatRowOfConversation = [
   'blocksSogsMsgReqsTimestamp',
   'priority',
   'expirationMode',
-  'hasOutdatedClient',
   'isExpired03Group',
 ];
 
@@ -213,7 +212,6 @@ const allowedKeysOfConversationAttributes = [
   'blocksSogsMsgReqsTimestamp',
   'priority',
   'expirationMode',
-  'hasOutdatedClient',
   'isExpired03Group',
 ];
 
