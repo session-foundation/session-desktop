@@ -651,7 +651,6 @@ const renderImagePreview = async (contentType: string, file: File, fileName: str
   };
 };
 
-
 function OutdatedLegacyGroupBanner() {
   const dispatch = useDispatch();
 
