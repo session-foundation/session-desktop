@@ -81,7 +81,6 @@ const InviteContactsDialogInner = (props: Props) => {
     throw new Error('InviteContactsDialogInner must be a group');
   }
   const members = uniq(membersFromRedux);
-  // filter our zombies and current members from the list of contact we can add
 
   const validContactsForInvite = isPublic
     ? privateContactPubkeys

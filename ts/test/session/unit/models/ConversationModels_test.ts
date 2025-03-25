@@ -22,20 +22,6 @@ describe('fillConvoAttributesWithDefaults', () => {
     });
   });
 
-  describe('zombies', () => {
-    it('initialize zombies if they are not given', () => {
-      expect(fillConvoAttributesWithDefaults({} as ConversationAttributes)).to.have.deep.property(
-        'zombies',
-        []
-      );
-    });
-
-    it('do not override zombies if they are  given', () => {
-      expect(
-        fillConvoAttributesWithDefaults({ zombies: ['123'] } as ConversationAttributes)
-      ).to.have.deep.property('zombies', ['123']);
-    });
-  });
 
   describe('groupAdmins', () => {
     it('initialize groupAdmins if they are not given', () => {

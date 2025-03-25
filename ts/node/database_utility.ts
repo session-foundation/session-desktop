@@ -49,7 +49,6 @@ export function toSqliteBoolean(val: boolean): number {
 const allowedKeysFormatRowOfConversation = [
   'groupAdmins',
   'members',
-  'zombies',
   'isTrustedForAttachmentDownload',
   'isApproved',
   'didApproveMe',
@@ -109,7 +108,7 @@ export function formatRowOfConversation(
 
   const convo: ConversationAttributes = omit(row, 'json') as ConversationAttributes;
 
-  // if the stringified array of admins/moderators/members/zombies length is less than 5,
+  // if the stringified array of admins/moderators/members length is less than 5,
   // we consider there is nothing to parse and just return []
   const minLengthNoParsing = 5;
 
@@ -120,8 +119,6 @@ export function formatRowOfConversation(
 
   convo.members =
     row.members?.length && row.members.length > minLengthNoParsing ? jsonToArray(row.members) : [];
-  convo.zombies =
-    row.zombies?.length && row.zombies.length > minLengthNoParsing ? jsonToArray(row.zombies) : [];
 
   // sqlite stores boolean as integer. to clean thing up we force the expected boolean fields to be boolean
   convo.isTrustedForAttachmentDownload = Boolean(convo.isTrustedForAttachmentDownload);
@@ -185,7 +182,6 @@ export function formatRowOfConversation(
 const allowedKeysOfConversationAttributes = [
   'groupAdmins',
   'members',
-  'zombies',
   'isTrustedForAttachmentDownload',
   'isApproved',
   'didApproveMe',

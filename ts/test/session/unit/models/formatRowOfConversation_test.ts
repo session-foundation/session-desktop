@@ -198,39 +198,6 @@ describe('formatRowOfConversation', () => {
     });
   });
 
-  describe('zombies', () => {
-    it('zombies undefined fills it with []', () => {
-      expect(
-        formatRowOfConversation({ zombies: undefined }, 'test', 0, false)
-      ).to.be.have.deep.property('zombies', []);
-    });
-
-    it('zombies null fills it with []', () => {
-      expect(formatRowOfConversation({ zombies: null }, 'test', 0, false)).to.be.have.deep.property(
-        'zombies',
-        []
-      );
-    });
-
-    it('zombies [] fills it with []', () => {
-      expect(formatRowOfConversation({ zombies: '[]' }, 'test', 0, false)).to.be.have.deep.property(
-        'zombies',
-        []
-      );
-    });
-
-    it('zombies ["12345"] from db as string', () => {
-      expect(
-        formatRowOfConversation({ zombies: '["12345"]' }, 'test', 0, false)
-      ).to.be.have.deep.property('zombies', ['12345']);
-    });
-
-    it('zombies ["12345", "52345"] fills it with ["12345", "52345"]', () => {
-      expect(
-        formatRowOfConversation({ zombies: '["12345", "52345"]' }, 'test', 0, false)
-      ).to.be.have.deep.property('zombies', ['12345', '52345']);
-    });
-  });
 
   it('throws an error if a key is not expected', () => {
     expect(() => formatRowOfConversation({ not_valid: undefined }, 'test', 0, false)).throws(

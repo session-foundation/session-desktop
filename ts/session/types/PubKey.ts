@@ -192,18 +192,6 @@ export class PubKey {
   }
 
 
-  /**
-   * This removes the `__textsecure_group__!` prefix from a pubkey if this pubkey have one
-   * @param keyWithOrWithoutPrefix the key to use as base
-   */
-  public static removeTextSecurePrefixIfNeeded(keyWithOrWithoutPrefix: string | PubKey): string {
-    const key =
-      keyWithOrWithoutPrefix instanceof PubKey
-        ? keyWithOrWithoutPrefix.key
-        : keyWithOrWithoutPrefix;
-    return key.replace(PubKey.PREFIX_GROUP_TEXTSECURE, '');
-  }
-
   public static isEqual(comparator1: PubKey | string, comparator2: PubKey | string) {
     return PubKey.cast(comparator1).isEqual(comparator2);
   }

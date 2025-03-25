@@ -685,7 +685,8 @@ async function leaveClosedGroup(groupPk: GroupPubkeyType, fromSyncMessage: boole
   }
 
   if (!PubKey.is03Pubkey(groupPk)) {
-    throw new Error('Legacy groups support has been dropped');
+    window.log.warn('Legacy groups support has been dropped');
+    return null;
   }
 
   const group = await UserGroupsWrapperActions.getGroup(groupPk);

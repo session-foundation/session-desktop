@@ -26,6 +26,10 @@ export async function addUpdateMessage({
 } & WithDisappearingMessageUpdate): Promise<MessageModel> {
   const groupUpdate: MessageGroupUpdate = {};
 
+  if (!convo.isClosedGroupV2()) {
+    throw new Error('addUpdateMessage only supports 03-groups now');
+  }
+
   if (diff.type === 'name' && diff.newName) {
     groupUpdate.name = diff.newName;
   } else if (diff.type === 'add' && diff.added) {

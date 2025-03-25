@@ -83,7 +83,7 @@ export interface ConversationAttributes {
   /** in seconds, 0 means no expiration */
   expireTimer: number;
 
-  members: Array<string>; // groups only members are all members for this group. zombies excluded (not used for communities)
+  members: Array<string>; // groups only members are all members for this group (not used for communities)
   groupAdmins: Array<string>; // for sogs and closed group: the unique admins of that group
 
   priority: number; // -1 = hidden (contact and NTS only), 0 = normal, 1 = pinned
@@ -117,7 +117,6 @@ export const fillConvoAttributesWithDefaults = (
 ): ConversationAttributes => {
   return defaults(optAttributes, {
     members: [],
-    zombies: [],
     groupAdmins: [],
 
     lastJoinedTimestamp: 0,

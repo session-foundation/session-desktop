@@ -2068,6 +2068,7 @@ function updateToSessionSchemaVersion43(currentVersion: number, db: BetterSqlite
 
   db.transaction(() => {
     db.prepare(`ALTER TABLE ${CONVERSATIONS_TABLE} DROP COLUMN hasOutdatedClient;`).run();
+    db.prepare(`ALTER TABLE ${CONVERSATIONS_TABLE} DROP COLUMN zombies;`).run();
 
     db.prepare(
       `UPDATE ${CONVERSATIONS_TABLE}
