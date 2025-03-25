@@ -10,8 +10,8 @@ if [[ "$ARCH" == "arm64" ]]; then
   ls -t $RELEASE_DIR/latest-mac.yml | head -n 1 | xargs -I {} mv {} $RELEASE_DIR/latest-mac-$ARCH.yml
   echo "Created latest-mac-$ARCH.yml"
 elif [[ "$ARCH" == "x64" ]]; then
-  ls -t $RELEASE_DIR/latest-mac.yml | head -n 1 | xargs -I {} mv {} $RELEASE_DIR/latest-mac-x64.yml
-  echo "Created latest-mac-x64.yml"
+  ls -t $RELEASE_DIR/latest-mac.yml | head -n 1 | xargs -I {} mv {} $RELEASE_DIR/latest-mac-$ARCH.yml
+  echo "Created latest-mac-$ARCH.yml"
 else
   echo "Unknown architecture: $ARCH"
   exit 1
