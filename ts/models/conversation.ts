@@ -894,11 +894,12 @@ export class ConversationModel extends Model<ConversationAttributes> {
     const isRemoteChange = Boolean((sentAt || fromSync || fromConfigMessage) && !fromCurrentDevice);
 
     // we don't add an update message when this comes from a config message, as we already have the SyncedMessage itself with the right timestamp to display
-    if (!this.isClosedGroup() && !this.isPrivate()) {
+    if (!this.isClosedGroupV2() && !this.isPrivate()) {
       throw new Error(
-        'updateExpireTimer() Disappearing messages are only supported int groups and private chats'
+        'updateExpireTimer() Disappearing messages are only supported in 03-groups and private chats'
       );
     }
+
     let expirationMode = providedDisappearingMode;
     let expireTimer = providedExpireTimer;
     const source = providedSource || UserUtils.getOurPubKeyStrFromCache();
@@ -908,28 +909,10 @@ export class ConversationModel extends Model<ConversationAttributes> {
       expireTimer = 0;
     }
     const shouldAddExpireUpdateMsgPrivate = this.isPrivate() && !fromConfigMessage;
-    const isLegacyGroup = this.isClosedGroup() && !PubKey.is03Pubkey(this.id);
-
-    /**
-     * it's ugly, but we want to add a message for legacy groups only when
-     * - not coming from a config message
-     * - effectively changes the setting
-     * - ignores a off setting for a legacy group (as we can get a setting from restored from configMessage, and a new group can still be in the swarm when linking a device
-     */
-    const shouldAddExpireUpdateMsgLegacyGroup =
-      fromCurrentDevice ||
-      (isLegacyGroup &&
-        !fromConfigMessage &&
-        (expirationMode !== this.get('expirationMode') ||
-          expireTimer !== this.get('expireTimer')) &&
-        expirationMode !== 'off');
-
     const shouldAddExpireUpdateMsgGroupV2 = this.isClosedGroupV2() && !fromConfigMessage;
 
     const shouldAddExpireUpdateMessage =
-      shouldAddExpireUpdateMsgPrivate ||
-      shouldAddExpireUpdateMsgLegacyGroup ||
-      shouldAddExpireUpdateMsgGroupV2;
+      shouldAddExpireUpdateMsgPrivate || shouldAddExpireUpdateMsgGroupV2;
 
     // When we add a disappearing messages notification to the conversation, we want it
     // to be above the message that initiated that change, hence the subtraction.
@@ -1826,7 +1809,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       return;
     }
     const conversationId = this.id;
-    const isLegacyGroup = this.isClosedGroup() && this.id.startsWith('05');
+    const isLegacyGroup = this.isClosedGroup() && PubKey.is05Pubkey(this.id);
 
     let friendRequestText;
     // NOTE: legacy groups are never approved, so we should not cancel notifications

@@ -192,9 +192,14 @@ export async function handleSwarmDataMessage({
     await IncomingMessageCache.removeFromCache(envelope);
     return;
   }
-  const convoIdToAddTheMessageTo = PubKey.removeTextSecurePrefixIfNeeded(
-    isSyncedMessage ? cleanDataMessage.syncTarget : envelope.source
-  );
+  const convoIdToAddTheMessageTo = isSyncedMessage ? cleanDataMessage.syncTarget : envelope.source;
+  if (convoIdToAddTheMessageTo.startsWith(PubKey.PREFIX_GROUP_TEXTSECURE)) {
+    window?.log?.warn(
+      'got a message starting with textsecure prefix. can only be legacy group message. dropping.'
+    );
+    await IncomingMessageCache.removeFromCache(envelope);
+    return;
+  }
 
   const isGroupMessage = !!envelope.senderIdentity;
   const isGroupV2Message = isGroupMessage && PubKey.is03Pubkey(envelope.source);
