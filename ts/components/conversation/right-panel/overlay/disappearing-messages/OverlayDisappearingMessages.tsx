@@ -68,15 +68,14 @@ function loadDefaultTimeValue(
 
 /** if there is only one disappearing message mode and 'off' enabled then we trigger single mode UI */
 function useSingleMode(disappearingModeOptions: Record<string, boolean> | undefined) {
-  const singleMode: DisappearingMessageConversationModeType =
+  const singleMode: DisappearingMessageConversationModeType | undefined =
     disappearingModeOptions &&
     disappearingModeOptions.off !== undefined &&
     Object.keys(disappearingModeOptions).length === 2
       ? (Object.keys(disappearingModeOptions)[1] as DisappearingMessageConversationModeType)
-      : 'off';
-  const hasOnlyOneMode = Boolean(singleMode && singleMode.length > 0);
+      : undefined;
 
-  return { singleMode, hasOnlyOneMode };
+  return { singleMode };
 }
 
 export type PropsForExpirationSettings = {
@@ -90,7 +89,8 @@ export const OverlayDisappearingMessages = () => {
   const dispatch = useDispatch();
   const selectedConversationKey = useSelectedConversationKey();
   const disappearingModeOptions = useSelector(getSelectedConversationExpirationModes);
-  const { singleMode, hasOnlyOneMode } = useSingleMode(disappearingModeOptions);
+  const { singleMode } = useSingleMode(disappearingModeOptions);
+  const hasOnlyOneMode = !!(singleMode && singleMode.length > 0);
 
   const isGroup = useSelectedIsGroupOrCommunity();
   const expirationMode = useSelectedConversationDisappearingMode() || 'off';
