@@ -1,8 +1,8 @@
 import Picker from '@emoji-mart/react';
-import classNames from 'classnames';
 import { forwardRef } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
+import clsx from 'clsx';
 
 import { getPrimaryColor } from '../../state/selectors/primaryColor';
 import { useIsDarkTheme, useTheme } from '../../state/selectors/theme';
@@ -138,7 +138,7 @@ export const SessionEmojiPanel = forwardRef<HTMLDivElement, Props>((props: Props
       theme={theme}
       panelBackgroundRGB={panelBackgroundRGB}
       panelTextRGB={panelTextRGB}
-      className={classNames(show && 'show')}
+      className={clsx(show && 'show')}
       ref={ref}
     >
       <Picker

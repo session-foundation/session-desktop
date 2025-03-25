@@ -11,7 +11,7 @@ import { AddNewLines } from '../../AddNewLines';
 import { Emojify } from '../../Emojify';
 import { showLinkVisitWarningDialog } from '../../../dialog/OpenUrlModal';
 
-const linkify = LinkifyIt();
+const linkify = new LinkifyIt();
 
 type Props = {
   text: string;

@@ -1,7 +1,6 @@
-import classNames from 'classnames';
-
 import { MouseEvent } from 'react';
 import { useSelector } from 'react-redux';
+import clsx from 'clsx';
 import styled from 'styled-components';
 import { useConvoIdFromContext } from '../../../contexts/ConvoIdContext';
 import { Data } from '../../../data/data';
@@ -181,7 +180,7 @@ export const ConversationListItemHeaderItem = () => {
   return (
     <div className="module-conversation-list-item__header">
       <div
-        className={classNames(
+        className={clsx(
           'module-conversation-list-item__header__name',
           hasUnread ? 'module-conversation-list-item__header__name--with-unread' : null
         )}
@@ -195,7 +194,7 @@ export const ConversationListItemHeaderItem = () => {
 
       {!isSearching && (
         <div
-          className={classNames(
+          className={clsx(
             'module-conversation-list-item__header__date',
             hasUnread ? 'module-conversation-list-item__header__date--has-unread' : null
           )}

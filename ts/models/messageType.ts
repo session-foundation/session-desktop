@@ -179,9 +179,9 @@ export interface MessageAttributesOptionals {
   conversationId: string;
   errors?: any;
   flags?: number;
-  hasAttachments?: boolean;
-  hasFileAttachments?: boolean;
-  hasVisualMediaAttachments?: boolean;
+  hasAttachments?: 1 | 0;
+  hasFileAttachments?: 1 | 0;
+  hasVisualMediaAttachments?: 1 | 0;
   dataExtractionNotification?: DataExtractionNotificationMsg;
   messageRequestResponse?: {
     // keeping it as a object in case we ever add a field here.

@@ -52,16 +52,34 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
   const disabledLegacyGroup = useDisableLegacyGroupDeprecatedActions(convoIdFromContext);
   const isPinned = useIsPinned(convoIdFromContext);
 
-  if (isSearching) {
-    return null;
-  }
-
   if (disabledLegacyGroup) {
     return (
       <SessionContextMenuContainer>
         <Menu id={triggerId} animation={getMenuAnimation()}>
           <DeleteDeprecatedLegacyGroupMenuItem />
           {isPinned ? <PinConversationMenuItem /> : null}
+        </Menu>
+      </SessionContextMenuContainer>
+    );
+  }
+
+  if (isSearching) {
+    // When we are searching, we can sometimes find conversations that should have a limited set of actions,
+    // so here we have a whitelist of what can be done.
+
+    return (
+      <SessionContextMenuContainer>
+        <Menu id={triggerId} animation={getMenuAnimation()}>
+          <DeleteDeprecatedLegacyGroupMenuItem />
+          <PinConversationMenuItem />
+          <BlockMenuItem />
+          <CopyCommunityUrlMenuItem convoId={convoIdFromContext} />
+          <CopyAccountIdMenuItem pubkey={convoIdFromContext} />
+          <DeleteMessagesMenuItem />
+          <DeletePrivateConversationMenuItem />
+          <LeaveCommunityMenuItem />
+          <LeaveGroupMenuItem />
+          <DeleteGroupMenuItem />
         </Menu>
       </SessionContextMenuContainer>
     );

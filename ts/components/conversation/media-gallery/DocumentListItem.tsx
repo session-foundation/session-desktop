@@ -1,7 +1,7 @@
-import classNames from 'classnames';
 import { useCallback } from 'react';
+import clsx from 'clsx';
 
-import formatFileSize from 'filesize';
+import { filesize } from 'filesize';
 import { useSelectedConversationKey } from '../../../state/selectors/selectedConversation';
 import { saveAttachmentToDisk } from '../../../util/attachmentsUtil';
 import { MediaItemType } from '../../lightbox/LightboxGallery';
@@ -45,7 +45,7 @@ export const DocumentListItem = (props: Props) => {
 
   return (
     <div
-      className={classNames(
+      className={clsx(
         'module-document-list-item',
         defaultShowSeparator ? 'module-document-list-item--with-separator' : null
       )}
@@ -59,7 +59,7 @@ export const DocumentListItem = (props: Props) => {
         <div className="module-document-list-item__metadata">
           <span className="module-document-list-item__file-name">{fileName}</span>
           <span className="module-document-list-item__file-size">
-            {typeof fileSize === 'number' ? formatFileSize(fileSize) : ''}
+            {typeof fileSize === 'number' ? filesize(fileSize) : ''}
           </span>
         </div>
         <div className="module-document-list-item__date">

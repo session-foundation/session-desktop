@@ -108,7 +108,7 @@ async function unsendMessagesForEveryone(
   { deletionType }: WithLocalMessageDeletionType
 ) {
   window?.log?.info('Deleting messages for all users in this conversation');
-  const destinationId = conversation.id as string;
+  const destinationId = conversation.id;
   if (!destinationId) {
     return;
   }
@@ -149,22 +149,22 @@ async function unsendMessagesForEveryone(
 function getUnsendMessagesObjects1o1OrLegacyGroups(messages: Array<MessageModel>) {
   // #region building request
   return compact(
-    messages.map(message => {
+    messages.map((message, index) => {
       const author = message.get('source');
 
       // call getPropsForMessage here so we get the received_at or sent_at timestamp in timestamp
-      const timestamp = message.getPropsForMessage().timestamp;
-      if (!timestamp) {
+      const referencedMessageTimestamp = message.getPropsForMessage().timestamp;
+      if (!referencedMessageTimestamp) {
         window?.log?.error('cannot find timestamp - aborting unsend request');
         return undefined;
       }
 
-      const unsendParams = {
-        createAtNetworkTimestamp: timestamp,
+      return new UnsendMessage({
+        // this isn't pretty, but we need a unique timestamp for Android to not drop the message as a duplicate
+        createAtNetworkTimestamp: NetworkTime.now() + index,
+        referencedMessageTimestamp,
         author,
-      };
-
-      return new UnsendMessage(unsendParams);
+      });
     })
   );
   // #endregion
@@ -311,7 +311,7 @@ async function deleteMessagesLocallyOnly({
     if (deletionType === 'complete') {
       // remove the message from the database
       // eslint-disable-next-line no-await-in-loop
-      await conversation.removeMessage(message.get('id'));
+      await conversation.removeMessage(message.id);
     } else {
       // just mark the message as deleted but still show in conversation
       // eslint-disable-next-line no-await-in-loop
@@ -462,6 +462,8 @@ const doDeleteSelectedMessages = async ({
       messages: selectedMessages,
       deletionType: 'markDeleted',
     });
+    ToastUtils.pushDeleted(selectedMessages.length);
+
     return;
   }
 
@@ -618,7 +620,7 @@ async function deleteOpenGroupMessages(
   // remove only the messages we managed to remove on the server
   if (allMessagesAreDeleted) {
     window?.log?.info('Removed all those serverIds messages successfully');
-    return validMessageModelsToRemove.map(m => m.id as string);
+    return validMessageModelsToRemove.map(m => m.id);
   }
   window?.log?.info(
     'failed to remove all those serverIds message. not removing them locally neither'

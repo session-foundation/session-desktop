@@ -198,16 +198,16 @@ export const OverlayClosedGroupV2 = () => {
 
   return (
     <StyledLeftPaneOverlay
-      container={true}
-      flexDirection={'column'}
-      flexGrow={1}
-      alignItems={'center'}
+      $container={true}
+      $flexDirection={'column'}
+      $flexGrow={1}
+      $alignItems={'center'}
     >
       <Flex
-        container={true}
+        $container={true}
         width={'100%'}
-        flexDirection="column"
-        alignItems="center"
+        $flexDirection="column"
+        $alignItems="center"
         padding={'var(--margins-md)'}
       >
         <SessionInput
@@ -290,7 +290,7 @@ export const OverlayClosedGroupV2 = () => {
       </StyledGroupMemberListContainer>
 
       <SpacerLG style={{ flexShrink: 0 }} />
-      <Flex container={true} width={'100%'} flexDirection="column" padding={'var(--margins-md)'}>
+      <Flex $container={true} width={'100%'} $flexDirection="column" padding={'var(--margins-md)'}>
         <SessionButton
           text={window.i18n('create')}
           disabled={disableCreateButton}
@@ -354,16 +354,16 @@ export const OverlayLegacyClosedGroup = () => {
 
   return (
     <StyledLeftPaneOverlay
-      container={true}
-      flexDirection={'column'}
-      flexGrow={1}
-      alignItems={'center'}
+      $container={true}
+      $flexDirection={'column'}
+      $flexGrow={1}
+      $alignItems={'center'}
     >
       <Flex
-        container={true}
+        $container={true}
         width={'100%'}
-        flexDirection="column"
-        alignItems="center"
+        $flexDirection="column"
+        $alignItems="center"
         padding={'var(--margins-md)'}
       >
         <SessionInput
@@ -412,7 +412,7 @@ export const OverlayLegacyClosedGroup = () => {
       </StyledGroupMemberListContainer>
 
       <SpacerLG style={{ flexShrink: 0 }} />
-      <Flex container={true} width={'100%'} flexDirection="column" padding={'var(--margins-md)'}>
+      <Flex $container={true} width={'100%'} $flexDirection="column" padding={'var(--margins-md)'}>
         <SessionButton
           text={window.i18n('create')}
           disabled={disableCreateButton}

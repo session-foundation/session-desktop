@@ -45,7 +45,7 @@ export const MessageFrom = (props: { sender: string; isSenderAdmin: boolean }) =
 
   return (
     <StyledMessageInfoAuthor>
-      <Flex container={true} justifyContent="flex-start" alignItems="flex-start">
+      <Flex $container={true} $justifyContent="flex-start" $alignItems="flex-start">
         <MessageInfoLabel>{from}</MessageInfoLabel>
         {isDev ? (
           <CopyToClipboardIcon

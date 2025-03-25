@@ -1,6 +1,6 @@
 import os from 'os';
 import Sinon from 'sinon';
-import { assert } from 'chai';
+import { expect } from 'chai';
 
 import * as Settings from '../../types/Settings';
 
@@ -16,7 +16,7 @@ describe('Settings', () => {
       });
 
       it('should return true', () => {
-        assert.isTrue(Settings.isAudioNotificationSupported());
+        expect(Settings.isAudioNotificationSupported()).to.be.eq(true);
       });
     });
 
@@ -32,7 +32,7 @@ describe('Settings', () => {
         });
 
         it('should return false', () => {
-          assert.isFalse(Settings.isAudioNotificationSupported());
+          expect(Settings.isAudioNotificationSupported()).to.be.eq(false);
         });
       });
 
@@ -47,7 +47,7 @@ describe('Settings', () => {
         });
 
         it('should return true', () => {
-          assert.isTrue(Settings.isAudioNotificationSupported());
+          expect(Settings.isAudioNotificationSupported()).to.be.eq(true);
         });
       });
     });
@@ -62,7 +62,7 @@ describe('Settings', () => {
       });
 
       it('should return true', () => {
-        assert.isTrue(Settings.isAudioNotificationSupported());
+        expect(Settings.isAudioNotificationSupported()).to.be.eq(true);
       });
     });
   });
@@ -78,7 +78,7 @@ describe('Settings', () => {
       });
 
       it('should return true', () => {
-        assert.isTrue(Settings.isNotificationGroupingSupported());
+        expect(Settings.isNotificationGroupingSupported()).to.be.eq(true);
       });
     });
 
@@ -94,7 +94,7 @@ describe('Settings', () => {
         });
 
         it('should return false', () => {
-          assert.isFalse(Settings.isNotificationGroupingSupported());
+          expect(Settings.isNotificationGroupingSupported()).to.be.eq(false);
         });
       });
 
@@ -109,7 +109,7 @@ describe('Settings', () => {
         });
 
         it('should return true', () => {
-          assert.isTrue(Settings.isNotificationGroupingSupported());
+          expect(Settings.isNotificationGroupingSupported()).to.be.eq(true);
         });
       });
     });
@@ -124,7 +124,7 @@ describe('Settings', () => {
       });
 
       it('should return true', () => {
-        assert.isTrue(Settings.isNotificationGroupingSupported());
+        expect(Settings.isNotificationGroupingSupported()).to.be.eq(true);
       });
     });
   });
@@ -139,7 +139,7 @@ describe('Settings', () => {
       });
 
       it('should return false', () => {
-        assert.isFalse(Settings.isHideMenuBarSupported());
+        expect(Settings.isHideMenuBarSupported()).to.be.eq(false);
       });
     });
 
@@ -155,7 +155,7 @@ describe('Settings', () => {
         });
 
         it('should return true', () => {
-          assert.isTrue(Settings.isHideMenuBarSupported());
+          expect(Settings.isHideMenuBarSupported()).to.be.eq(true);
         });
       });
 
@@ -170,7 +170,7 @@ describe('Settings', () => {
         });
 
         it('should return true', () => {
-          assert.isTrue(Settings.isHideMenuBarSupported());
+          expect(Settings.isHideMenuBarSupported()).to.be.eq(true);
         });
       });
     });
@@ -185,7 +185,7 @@ describe('Settings', () => {
       });
 
       it('should return true', () => {
-        assert.isTrue(Settings.isHideMenuBarSupported());
+        expect(Settings.isHideMenuBarSupported()).to.be.eq(true);
       });
     });
   });

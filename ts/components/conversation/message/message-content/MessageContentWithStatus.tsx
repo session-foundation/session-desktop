@@ -1,6 +1,6 @@
-import classNames from 'classnames';
 import { SessionDataTestId, MouseEvent, useCallback, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { clsx } from 'clsx';
 import styled from 'styled-components';
 import { useIsDetailMessageView } from '../../../../contexts/isDetailViewContext';
 import { replyToMessage } from '../../../../interactions/conversationInteractions';
@@ -133,17 +133,17 @@ export const MessageContentWithStatuses = (props: Props) => {
     >
       <ExpirableReadableMessage
         messageId={messageId}
-        className={classNames('module-message', `module-message--${direction}`)}
+        className={clsx('module-message', `module-message--${direction}`)}
         role={'button'}
         onClick={onClickOnMessageOuterContainer}
         onDoubleClickCapture={onDoubleClickReplyToMessage}
         dataTestId={dataTestId}
       >
         <Flex
-          container={true}
-          flexDirection="column"
-          flexShrink={0}
-          alignItems="flex-end"
+          $container={true}
+          $flexDirection="column"
+          $flexShrink={0}
+          $alignItems="flex-end"
           maxWidth="100%"
         >
           <StyledMessageWithAuthor>

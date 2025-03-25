@@ -87,7 +87,7 @@ export const RemoveModeratorsDialog = (props: Props) => {
 
   return (
     <SessionWrapperModal title={i18n('adminRemove')} onClose={closeDialog}>
-      <Flex container={true} flexDirection="column" alignItems="center">
+      <Flex $container={true} $flexDirection="column" $alignItems="center">
         {hasMods ? (
           <div className="contact-selection-list">
             {existingMods.map(modId => (

@@ -192,10 +192,10 @@ export const TimerNotification = (props: WithMessageId) => {
       dataTestId={'disappear-control-message'}
     >
       <Flex
-        container={true}
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
+        $container={true}
+        $flexDirection="column"
+        $alignItems="center"
+        $justifyContent="center"
         width="90%"
         maxWidth="700px"
         margin="5px auto 10px auto" // top margin is smaller that bottom one to make the stopwatch icon of expirable message closer to its content

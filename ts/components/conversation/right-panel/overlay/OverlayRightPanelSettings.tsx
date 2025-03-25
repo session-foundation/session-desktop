@@ -167,9 +167,9 @@ const HeaderItem = () => {
       hideCloseButton={true}
     >
       <Flex
-        container={true}
-        justifyContent={'center'}
-        alignItems={'center'}
+        $container={true}
+        $justifyContent={'center'}
+        $alignItems={'center'}
         width={'100%'}
         style={{ position: 'relative' }}
       >
@@ -190,7 +190,7 @@ const HeaderItem = () => {
       </Flex>
       <StyledName data-testid="right-panel-group-name">{displayNameInProfile}</StyledName>
       {showMemberCount && (
-        <Flex container={true} flexDirection={'column'}>
+        <Flex $container={true} $flexDirection={'column'}>
           <div role="button" className="subtle">
             <Localizer token="members" args={{ count: subscriberCount }} />
           </div>
@@ -371,7 +371,7 @@ export const OverlayRightPanelSettings = () => {
 
   return (
     <StyledScrollContainer>
-      <Flex container={true} flexDirection={'column'} alignItems={'center'}>
+      <Flex $container={true} $flexDirection={'column'} $alignItems={'center'}>
         <HeaderItem />
         <PanelButtonGroup style={{ margin: '0 var(--margins-lg)' }}>
           {showUpdateGroupNameButton && (

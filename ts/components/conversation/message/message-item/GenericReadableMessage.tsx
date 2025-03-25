@@ -1,6 +1,7 @@
-import classNames from 'classnames';
 import { isNil, isString, toNumber } from 'lodash';
 import { MouseEvent, useCallback, useEffect, useState } from 'react';
+import clsx from 'clsx';
+
 import { contextMenu } from 'react-contexify';
 import { useSelector } from 'react-redux';
 import styled, { keyframes } from 'styled-components';
@@ -138,7 +139,7 @@ export const GenericReadableMessage = (props: Props) => {
       selected={selected}
       isDetailView={isDetailView}
       isRightClicked={isRightClicked}
-      className={classNames(selected ? 'message-selected' : undefined)}
+      className={clsx(selected ? 'message-selected' : undefined)}
       onContextMenu={handleContextMenu}
       key={`readable-message-${messageId}`}
     >

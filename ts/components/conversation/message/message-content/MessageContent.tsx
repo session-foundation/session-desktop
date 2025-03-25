@@ -1,6 +1,7 @@
-import classNames from 'classnames';
 import { isEmpty } from 'lodash';
 import { useCallback, useLayoutEffect, useState } from 'react';
+import clsx from 'clsx';
+
 import { InView } from 'react-intersection-observer';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
@@ -137,7 +138,7 @@ export const MessageContent = (props: Props) => {
 
   return (
     <StyledMessageContent
-      className={classNames('module-message__container', `module-message__container--${direction}`)}
+      className={clsx('module-message__container', `module-message__container--${direction}`)}
       role="button"
       title={toolTipTitle}
       msgDirection={direction}

@@ -1,7 +1,7 @@
 import { app, ipcMain } from 'electron';
-import { ephemeralConfig } from './config/ephemeral_config'; // checked - only node
-import { userConfig } from './config/user_config'; // checked - only node
-import { sqlNode } from './sql'; // checked - only node
+import { ephemeralConfig } from './config/ephemeral_config';
+import { userConfig } from './config/user_config';
+import { sqlNode } from './sql';
 
 let initialized = false;
 

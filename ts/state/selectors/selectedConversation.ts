@@ -15,7 +15,7 @@ import {
   getSelectedConversation,
   getSelectedMessageIds,
 } from './conversations';
-import { getLibMembersPubkeys, useLibGroupName } from './groups';
+import { selectLibMembersPubkeys, useLibGroupName } from './groups';
 import { getCanWrite, getModerators, getSubscriberCount } from './sogsRoomInfo';
 import { getLibGroupDestroyed, getLibGroupKicked, useLibGroupDestroyed } from './userGroups';
 import { getDisableLegacyGroupDeprecatedActions } from '../../hooks/useRefreshReleasedFeaturesTimestamp';
@@ -165,7 +165,7 @@ const getSelectedMembersCount = (state: StateType): number => {
     return 0;
   }
   if (PubKey.is03Pubkey(selected.id)) {
-    return getLibMembersPubkeys(state, selected.id).length || 0;
+    return selectLibMembersPubkeys(state, selected.id).length || 0;
   }
   if (selected.isPrivate || selected.isPublic) {
     return 0;

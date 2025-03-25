@@ -314,7 +314,7 @@ export const Lightbox = (props: Props) => {
           </div>
         </div>
         <div style={styles.controls as any}>
-          <Flex container={true}>
+          <Flex $container={true}>
             <IconButton type="close" onClick={handleClose} />
           </Flex>
 

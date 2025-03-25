@@ -209,8 +209,8 @@ function assertArrayBufferView(val: any) {
   }
 }
 
-// encryptForPubkey: hexString, payloadBytes: Uint8Array
-async function encryptForPubkey(pubkeyX25519str: string, payloadBytes: Uint8Array) {
+// encryptForPubkey: hexString, payloadBytes: Uint8Array<ArrayBuffer>
+async function encryptForPubkey(pubkeyX25519str: string, payloadBytes: Uint8Array<ArrayBuffer>) {
   try {
     if (typeof pubkeyX25519str !== 'string') {
       throw new Error('pubkeyX25519str type not correct');
@@ -223,7 +223,7 @@ async function encryptForPubkey(pubkeyX25519str: string, payloadBytes: Uint8Arra
       pubkeyX25519Buffer,
       new Uint8Array(ephemeral.private)
     );
-    const ciphertext = await EncryptAESGCM(symmetricKey, payloadBytes);
+    const ciphertext = await EncryptAESGCM(symmetricKey, payloadBytes.buffer);
 
     return { ciphertext, symmetricKey, ephemeralKey: ephemeral.public };
   } catch (e) {
@@ -253,20 +253,20 @@ async function EncryptAESGCM(symmetricKey: ArrayBuffer, plaintext: ArrayBuffer) 
   return ivAndCiphertext;
 }
 
-// uint8array, uint8array
-async function DecryptAESGCM(symmetricKey: Uint8Array, ivAndCiphertext: Uint8Array) {
+// uint8array<ArrayBuffer>, uint8array<ArrayBuffer>
+async function DecryptAESGCM(
+  symmetricKey: Uint8Array<ArrayBuffer>,
+  ivAndCiphertext: Uint8Array<ArrayBuffer>
+) {
   assertArrayBufferView(symmetricKey);
   assertArrayBufferView(ivAndCiphertext);
 
   const nonce = ivAndCiphertext.buffer.slice(0, NONCE_LENGTH);
-  const ciphertext = ivAndCiphertext.buffer.slice(NONCE_LENGTH);
-  const key = await crypto.subtle.importKey(
-    'raw',
-    symmetricKey.buffer,
-    { name: 'AES-GCM' },
-    false,
-    ['decrypt']
-  );
+  const ciphertext = new Uint8Array(ivAndCiphertext.buffer.slice(NONCE_LENGTH));
+
+  const key = await crypto.subtle.importKey('raw', symmetricKey, { name: 'AES-GCM' }, false, [
+    'decrypt',
+  ]);
 
   return crypto.subtle.decrypt({ name: 'AES-GCM', iv: nonce }, key, ciphertext);
 }

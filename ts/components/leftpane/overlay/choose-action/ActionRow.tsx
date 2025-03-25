@@ -69,10 +69,10 @@ export function ActionRow(props: ActionRowProps) {
         />
       </StyledIcon>
       <Flex
-        container={true}
-        flexDirection={'column'}
-        justifyContent={'flex-start'}
-        alignItems={'flex-start'}
+        $container={true}
+        $flexDirection={'column'}
+        $justifyContent={'flex-start'}
+        $alignItems={'flex-start'}
         width={'100%'}
       >
         <StyledChooseActionTitle>{title}</StyledChooseActionTitle>

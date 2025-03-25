@@ -209,7 +209,7 @@ function findNotCachedBlindingMatch(
       return tryMatchBlindWithStandardKey(m.id, blindedId, serverPublicKey, sodium);
     });
 
-  return foundConvoMatchingBlindedPubkey?.get('id') || undefined;
+  return foundConvoMatchingBlindedPubkey?.id || undefined;
 }
 
 /**
