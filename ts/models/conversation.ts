@@ -2700,7 +2700,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
     return this.get('expireTimer');
   }
 
-
   public getIsExpired03Group() {
     return PubKey.is03Pubkey(this.id) && !!this.get('isExpired03Group');
   }
