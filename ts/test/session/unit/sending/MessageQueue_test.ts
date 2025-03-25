@@ -15,7 +15,6 @@ import Sinon, * as sinon from 'sinon';
 import { PubkeyType } from 'libsession_util_nodejs';
 import { randombytes_buf } from 'libsodium-wrappers-sumo';
 import { ContentMessage } from '../../../../session/messages/outgoing';
-import { ClosedGroupMessage } from '../../../../session/messages/outgoing/controlMessage/group/ClosedGroupMessage';
 import { MessageSender } from '../../../../session/sending';
 import { MessageQueueCl } from '../../../../session/sending/MessageQueue';
 import { PubKey } from '../../../../session/types';
@@ -238,97 +237,64 @@ describe('MessageQueue', () => {
     });
   });
 
-  describe('sendToGroup', () => {
-    it('should throw an error if invalid non-group message was passed', async () => {
-      const chatMessage = TestUtils.generateVisibleMessage();
-      return expect(
-        messageQueueStub.sendToGroup({
-          message: chatMessage as any,
-          namespace: SnodeNamespaces.LegacyClosedGroup,
-        })
-      ).to.be.rejectedWith('Invalid group message passed in sendToGroup.');
+  describe('sendToOpenGroupV2', () => {
+    let sendToOpenGroupV2Stub: sinon.SinonStub;
+    beforeEach(() => {
+      sendToOpenGroupV2Stub = Sinon.stub(MessageSender, 'sendToOpenGroupV2').resolves(
+        TestUtils.generateOpenGroupMessageV2()
+      );
     });
 
-    describe('closed groups', () => {
-      it('can send to closed group', async () => {
-        const send = Sinon.stub(messageQueueStub, 'sendToPubKey').resolves();
+    it('can send to open group', async () => {
+      const message = TestUtils.generateOpenGroupVisibleMessage();
+      const roomInfos = TestUtils.generateOpenGroupV2RoomInfos();
 
-        const message = TestUtils.generateClosedGroupMessage();
-        await messageQueueStub.sendToGroup({
-          message,
-          namespace: SnodeNamespaces.LegacyClosedGroup,
-        });
-        expect(send.callCount).to.equal(1);
+      await messageQueueStub.sendToOpenGroupV2({
+        message,
+        roomInfos,
+        blinded: false,
+        filesToLink: [],
+      });
+      expect(sendToOpenGroupV2Stub.callCount).to.equal(1);
+    });
 
-        const arg = send.getCall(0).args;
-        expect(arg[1] instanceof ClosedGroupMessage).to.equal(
-          true,
-          'message sent to group member was not a ClosedGroupMessage'
-        );
+    it('should emit a success event when send was successful', async () => {
+      sendToOpenGroupV2Stub.resolves({
+        serverId: 5125,
+        sentTimestamp: 5127,
       });
 
-      describe('open groupsv2', () => {
-        let sendToOpenGroupV2Stub: sinon.SinonStub;
-        beforeEach(() => {
-          sendToOpenGroupV2Stub = Sinon.stub(MessageSender, 'sendToOpenGroupV2').resolves(
-            TestUtils.generateOpenGroupMessageV2()
-          );
-        });
-
-        it('can send to open group', async () => {
-          const message = TestUtils.generateOpenGroupVisibleMessage();
-          const roomInfos = TestUtils.generateOpenGroupV2RoomInfos();
-
-          await messageQueueStub.sendToOpenGroupV2({
-            message,
-            roomInfos,
-            blinded: false,
-            filesToLink: [],
-          });
-          expect(sendToOpenGroupV2Stub.callCount).to.equal(1);
-        });
-
-        it('should emit a success event when send was successful', async () => {
-          sendToOpenGroupV2Stub.resolves({
-            serverId: 5125,
-            sentTimestamp: 5127,
-          });
-
-          const message = TestUtils.generateOpenGroupVisibleMessage();
-          const roomInfos = TestUtils.generateOpenGroupV2RoomInfos();
-          await messageQueueStub.sendToOpenGroupV2({
-            message,
-            roomInfos,
-            blinded: false,
-            filesToLink: [],
-          });
-
-          expect(messageSentPublicHandlerSuccessStub.callCount).to.equal(1);
-          expect(messageSentPublicHandlerSuccessStub.lastCall.args[0]).to.equal(message.identifier);
-          expect(messageSentPublicHandlerSuccessStub.lastCall.args[1].serverId).to.equal(5125);
-          expect(messageSentPublicHandlerSuccessStub.lastCall.args[1].serverTimestamp).to.equal(
-            5127
-          );
-        });
-
-        it('should emit a fail event if something went wrong', async () => {
-          sendToOpenGroupV2Stub.resolves({ serverId: -1, serverTimestamp: -1 });
-          stubData('getMessageById').resolves();
-          const message = TestUtils.generateOpenGroupVisibleMessage();
-          const roomInfos = TestUtils.generateOpenGroupV2RoomInfos();
-
-          await messageQueueStub.sendToOpenGroupV2({
-            message,
-            roomInfos,
-            blinded: false,
-            filesToLink: [],
-          });
-          expect(handlePublicMessageSentFailureStub.callCount).to.equal(1);
-          expect(handlePublicMessageSentFailureStub.lastCall.args[0].identifier).to.equal(
-            message.identifier
-          );
-        });
+      const message = TestUtils.generateOpenGroupVisibleMessage();
+      const roomInfos = TestUtils.generateOpenGroupV2RoomInfos();
+      await messageQueueStub.sendToOpenGroupV2({
+        message,
+        roomInfos,
+        blinded: false,
+        filesToLink: [],
       });
+
+      expect(messageSentPublicHandlerSuccessStub.callCount).to.equal(1);
+      expect(messageSentPublicHandlerSuccessStub.lastCall.args[0]).to.equal(message.identifier);
+      expect(messageSentPublicHandlerSuccessStub.lastCall.args[1].serverId).to.equal(5125);
+      expect(messageSentPublicHandlerSuccessStub.lastCall.args[1].serverTimestamp).to.equal(5127);
+    });
+
+    it('should emit a fail event if something went wrong', async () => {
+      sendToOpenGroupV2Stub.resolves({ serverId: -1, serverTimestamp: -1 });
+      stubData('getMessageById').resolves();
+      const message = TestUtils.generateOpenGroupVisibleMessage();
+      const roomInfos = TestUtils.generateOpenGroupV2RoomInfos();
+
+      await messageQueueStub.sendToOpenGroupV2({
+        message,
+        roomInfos,
+        blinded: false,
+        filesToLink: [],
+      });
+      expect(handlePublicMessageSentFailureStub.callCount).to.equal(1);
+      expect(handlePublicMessageSentFailureStub.lastCall.args[0].identifier).to.equal(
+        message.identifier
+      );
     });
   });
 });

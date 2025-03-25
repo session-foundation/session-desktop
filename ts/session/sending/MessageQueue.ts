@@ -1,38 +1,22 @@
 import { AbortController } from 'abort-controller';
 
-import { PubkeyType } from 'libsession_util_nodejs';
 import { MessageSender } from '.';
-import { ClosedGroupMessage } from '../messages/outgoing/controlMessage/group/ClosedGroupMessage';
-import { ClosedGroupNameChangeMessage } from '../messages/outgoing/controlMessage/group/ClosedGroupNameChangeMessage';
 import { OutgoingRawMessage, PubKey } from '../types';
 import { JobQueue, MessageUtils, UserUtils } from '../utils';
 import { PendingMessageCache } from './PendingMessageCache';
 
 import { ContentMessage } from '../messages/outgoing';
-import { ExpirationTimerUpdateMessage } from '../messages/outgoing/controlMessage/ExpirationTimerUpdateMessage';
-import { ClosedGroupAddedMembersMessage } from '../messages/outgoing/controlMessage/group/ClosedGroupAddedMembersMessage';
-import { ClosedGroupEncryptionPairMessage } from '../messages/outgoing/controlMessage/group/ClosedGroupEncryptionPairMessage';
-import { ClosedGroupMemberLeftMessage } from '../messages/outgoing/controlMessage/group/ClosedGroupMemberLeftMessage';
-import { ClosedGroupRemovedMembersMessage } from '../messages/outgoing/controlMessage/group/ClosedGroupRemovedMembersMessage';
-import {
-  ClosedGroupV2VisibleMessage,
-  ClosedGroupVisibleMessage,
-} from '../messages/outgoing/visibleMessage/ClosedGroupVisibleMessage';
+import { ClosedGroupV2VisibleMessage } from '../messages/outgoing/visibleMessage/ClosedGroupVisibleMessage';
 import { SyncMessageType } from '../utils/sync/syncUtils';
 import { MessageSentHandler } from './MessageSentHandler';
 
 import { OpenGroupMessageV2 } from '../apis/open_group_api/opengroupV2/OpenGroupMessageV2';
 import { sendSogsReactionOnionV4 } from '../apis/open_group_api/sogsv3/sogsV3SendReaction';
-import {
-  SnodeNamespaces,
-  SnodeNamespacesLegacyGroup,
-  SnodeNamespacesUser,
-} from '../apis/snode_api/namespaces';
+import { SnodeNamespaces, SnodeNamespacesUser } from '../apis/snode_api/namespaces';
 import { CallMessage } from '../messages/outgoing/controlMessage/CallMessage';
 import { DataExtractionNotificationMessage } from '../messages/outgoing/controlMessage/DataExtractionNotificationMessage';
 import { TypingMessage } from '../messages/outgoing/controlMessage/TypingMessage';
 import { UnsendMessage } from '../messages/outgoing/controlMessage/UnsendMessage';
-import { ClosedGroupNewMessage } from '../messages/outgoing/controlMessage/group/ClosedGroupNewMessage';
 import { GroupUpdateDeleteMemberContentMessage } from '../messages/outgoing/controlMessage/group_v2/to_group/GroupUpdateDeleteMemberContentMessage';
 import { GroupUpdateInfoChangeMessage } from '../messages/outgoing/controlMessage/group_v2/to_group/GroupUpdateInfoChangeMessage';
 import { GroupUpdateMemberChangeMessage } from '../messages/outgoing/controlMessage/group_v2/to_group/GroupUpdateMemberChangeMessage';
@@ -41,8 +25,6 @@ import { GroupUpdateInviteMessage } from '../messages/outgoing/controlMessage/gr
 import { GroupUpdatePromoteMessage } from '../messages/outgoing/controlMessage/group_v2/to_user/GroupUpdatePromoteMessage';
 import { OpenGroupVisibleMessage } from '../messages/outgoing/visibleMessage/OpenGroupVisibleMessage';
 import { OpenGroupRequestCommonType } from '../../data/types';
-
-// ClosedGroupEncryptionPairReplyMessage must be sent to a user pubkey. Not a group.
 
 export class MessageQueueCl {
   private readonly jobQueues: Map<string, JobQueue> = new Map();
@@ -168,42 +150,6 @@ export class MessageQueueCl {
     }
   }
 
-  /**
-   *
-   * @param sentCb currently only called for medium groups sent message
-   */
-  public async sendToGroup({
-    message,
-    namespace,
-    groupPubKey,
-    sentCb,
-  }: {
-    message:
-      | ClosedGroupVisibleMessage
-      | ClosedGroupAddedMembersMessage
-      | ClosedGroupRemovedMembersMessage
-      | ClosedGroupNameChangeMessage
-      | ClosedGroupMemberLeftMessage
-      | ExpirationTimerUpdateMessage
-      | ClosedGroupEncryptionPairMessage
-      | UnsendMessage;
-    namespace: SnodeNamespacesLegacyGroup;
-    sentCb?: (message: OutgoingRawMessage) => Promise<void>;
-    groupPubKey?: PubKey;
-  }): Promise<void> {
-    let destinationPubKey: PubKey | undefined = groupPubKey;
-    if (message instanceof ExpirationTimerUpdateMessage || message instanceof ClosedGroupMessage) {
-      destinationPubKey = groupPubKey || message.groupId;
-    }
-
-    if (!destinationPubKey) {
-      throw new Error('Invalid group message passed in sendToGroup.');
-    }
-
-    // if groupId is set here, it means it's for a medium group. So send it as it
-    return this.sendToPubKey(PubKey.cast(destinationPubKey), message, namespace, sentCb, true);
-  }
-
   public async sendToGroupV2({
     message,
     sentCb,
@@ -251,27 +197,6 @@ export class MessageQueueCl {
     });
   }
 
-  public async sendToLegacyGroupNonDurably({
-    message,
-    namespace,
-    destination,
-  }: {
-    message: ClosedGroupMemberLeftMessage;
-    namespace: SnodeNamespaces.LegacyClosedGroup;
-    destination: PubkeyType;
-  }) {
-    if (!destination || !PubKey.is05Pubkey(destination)) {
-      throw new Error('Invalid legacy group message passed in sendToLegacyGroupNonDurably.');
-    }
-
-    return this.sendToPubKeyNonDurably({
-      message,
-      namespace,
-      pubkey: PubKey.cast(destination),
-      isSyncMessage: false,
-    });
-  }
-
   public async sendSyncMessage({
     namespace,
     message,
@@ -307,7 +232,6 @@ export class MessageQueueCl {
       | TypingMessage // no point of caching the typing message, they are very short lived
       | DataExtractionNotificationMessage
       | CallMessage
-      | ClosedGroupNewMessage
       | GroupUpdateInviteMessage
       | GroupUpdatePromoteMessage;
     namespace: SnodeNamespaces.Default;
@@ -424,9 +348,7 @@ export class MessageQueueCl {
     // Don't send to ourselves
     let isSyncMessage = false;
     if (UserUtils.isUsFromCache(destinationPk)) {
-      // We allow a message for ourselves only if it's a ClosedGroupNewMessage,
-      // or a message with a syncTarget set.
-
+      // We allow a message for ourselves only if it's a message with a syncTarget set.
       if (MessageSender.isContentSyncMessage(message)) {
         window?.log?.info('OutgoingMessageQueue: Processing sync message');
         isSyncMessage = true;

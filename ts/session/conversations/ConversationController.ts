@@ -17,7 +17,6 @@ import { PubKey } from '../types';
 
 import { ConfigDumpData } from '../../data/configDump/configDump';
 import { deleteAllMessagesByConvoIdNoConfirmation } from '../../interactions/conversationInteractions';
-import { removeAllClosedGroupEncryptionKeyPairs } from '../../receiver/closedGroups';
 import { groupInfoActions } from '../../state/ducks/metaGroups';
 import { getCurrentlySelectedConversationOutsideRedux } from '../../state/selectors/conversations';
 import { assertUnreachable, stringify } from '../../types/sqlSharedTypes';
@@ -28,11 +27,9 @@ import {
 import { OpenGroupUtils } from '../apis/open_group_api/utils';
 import { getSwarmPollingInstance } from '../apis/snode_api';
 import { DeleteAllFromGroupMsgNodeSubRequest } from '../apis/snode_api/SnodeRequestTypes';
-import { SnodeNamespaces } from '../apis/snode_api/namespaces';
-import { ClosedGroupMemberLeftMessage } from '../messages/outgoing/controlMessage/group/ClosedGroupMemberLeftMessage';
 import { GroupUpdateMemberLeftMessage } from '../messages/outgoing/controlMessage/group_v2/to_group/GroupUpdateMemberLeftMessage';
 import { GroupUpdateMemberLeftNotificationMessage } from '../messages/outgoing/controlMessage/group_v2/to_group/GroupUpdateMemberLeftNotificationMessage';
-import { MessageQueue, MessageSender } from '../sending';
+import { MessageSender } from '../sending';
 import { UserUtils } from '../utils';
 import { ed25519Str } from '../utils/String';
 import { PreConditionFailed } from '../utils/errors';
@@ -238,11 +235,6 @@ class ConvoController {
     }
     // we don't need to keep polling anymore.
     getSwarmPollingInstance().removePubkey(groupPk, 'deleteLegacyGroup');
-
-    // send the leave message before we delete everything for this group (including the key!)
-    if (sendLeaveMessage) {
-      await leaveClosedGroup(groupPk, fromSyncMessage);
-    }
 
     await removeLegacyGroupFromWrappers(groupPk);
 
@@ -655,7 +647,7 @@ class ConvoController {
  *
  * @returns true if the message failed to be sent.
  */
-async function leaveClosedGroup(groupPk: PubkeyType | GroupPubkeyType, fromSyncMessage: boolean) {
+async function leaveClosedGroup(groupPk: GroupPubkeyType, fromSyncMessage: boolean) {
   const convo = ConvoHub.use().get(groupPk);
 
   if (!convo || !convo.isClosedGroup()) {
@@ -692,114 +684,77 @@ async function leaveClosedGroup(groupPk: PubkeyType | GroupPubkeyType, fromSyncM
     return false;
   }
 
-  if (PubKey.is03Pubkey(groupPk)) {
-    const group = await UserGroupsWrapperActions.getGroup(groupPk);
-    if (!group || (!group.secretKey && !group.authData)) {
-      throw new Error('leaveClosedGroup: group from UserGroupsWrapperActions is null ');
-    }
-    const createAtNetworkTimestamp = NetworkTime.now();
-    // Send the update to the 03 group
-    const ourLeavingMessage = new GroupUpdateMemberLeftMessage({
-      createAtNetworkTimestamp: createAtNetworkTimestamp + 1, // we just need it to be different than the one of ourLeavingNotificationMessage
-      groupPk,
-      expirationType: 'unknown', // we keep that one **not** expiring
-      expireTimer: 0,
-    });
-
-    const ourLeavingNotificationMessage = new GroupUpdateMemberLeftNotificationMessage({
-      createAtNetworkTimestamp,
-      groupPk,
-      ...DisappearingMessages.getExpireDetailsForOutgoingMessage(convo, createAtNetworkTimestamp), // this one should be expiring with the convo expiring details
-    });
-
-    window?.log?.info(
-      `We are leaving the group ${ed25519Str(groupPk)}. Sending our leaving messages.`
-    );
-    let failedToSent03LeaveMessage = true;
-    // We might not be able to send our leaving messages (no encryption key pair, we were already removed, no network, etc).
-    // If that happens, we should just remove everything from our current user.
-    try {
-      const storeRequests = await StoreGroupRequestFactory.makeGroupMessageSubRequest(
-        [ourLeavingNotificationMessage, ourLeavingMessage],
-        {
-          authData: group.authData,
-          secretKey: group.secretKey,
-        }
-      );
-      const controller = new AbortController();
-      const results = await timeoutWithAbort(
-        MessageSender.sendEncryptedDataToSnode({
-          destination: groupPk,
-          sortedSubRequests: storeRequests,
-          method: 'sequence',
-          abortSignal: controller.signal,
-          allow401s: true, // we want "allow" 401s so we don't throw
-        }),
-        30 * DURATION.SECONDS,
-        controller
-      );
-
-      if (results?.[0].code === 401) {
-        window.log.info(
-          `leaveClosedGroup for ${ed25519Str(groupPk)} failed with 401. Assuming we've been revoked.`
-        );
-      } else if (results?.[0].code !== 200) {
-        throw new Error(
-          `Even with the retries, leaving message for group ${ed25519Str(
-            groupPk
-          )} failed to be sent...`
-        );
-      }
-      failedToSent03LeaveMessage = false;
-    } catch (e) {
-      window?.log?.warn(
-        `failed to send our leaving messages for ${ed25519Str(groupPk)}:${e.message}`
-      );
-    }
-
-    // the rest of the cleaning of that conversation is done in the `deleteClosedGroup()`
-
-    return failedToSent03LeaveMessage;
+  if (!PubKey.is03Pubkey(groupPk)) {
+    throw new Error('Legacy groups support has been dropped');
   }
 
-  // TODO remove legacy group support
-  const keyPair = await Data.getLatestClosedGroupEncryptionKeyPair(groupPk);
-  if (!keyPair || isEmpty(keyPair) || isEmpty(keyPair.publicHex) || isEmpty(keyPair.privateHex)) {
-    // if we do not have a keyPair, we won't be able to send our leaving message neither, so just skip sending it.
-    // this can happen when getting a group from a broken libsession user group wrapper, but not only.
-    return false;
+  const group = await UserGroupsWrapperActions.getGroup(groupPk);
+  if (!group || (!group.secretKey && !group.authData)) {
+    throw new Error('leaveClosedGroup: group from UserGroupsWrapperActions is null ');
   }
-
-  // Send the update to the group
-  const ourLeavingMessage = new ClosedGroupMemberLeftMessage({
-    createAtNetworkTimestamp: NetworkTime.now(),
-    groupId: groupPk,
+  const createAtNetworkTimestamp = NetworkTime.now();
+  // Send the update to the 03 group
+  const ourLeavingMessage = new GroupUpdateMemberLeftMessage({
+    createAtNetworkTimestamp: createAtNetworkTimestamp + 1, // we just need it to be different than the one of ourLeavingNotificationMessage
+    groupPk,
     expirationType: 'unknown', // we keep that one **not** expiring
     expireTimer: 0,
   });
 
-  window?.log?.info(`We are leaving the legacy group ${groupPk}. Sending our leaving message.`);
-
-  // if we do not have a keyPair for that group, we can't send our leave message, so just skip the message sending part
-  const wasSent = await MessageQueue.use().sendToLegacyGroupNonDurably({
-    message: ourLeavingMessage,
-    namespace: SnodeNamespaces.LegacyClosedGroup,
-    destination: groupPk,
+  const ourLeavingNotificationMessage = new GroupUpdateMemberLeftNotificationMessage({
+    createAtNetworkTimestamp,
+    groupPk,
+    ...DisappearingMessages.getExpireDetailsForOutgoingMessage(convo, createAtNetworkTimestamp), // this one should be expiring with the convo expiring details
   });
-  // The leaving message might fail to be sent for some specific reason we want to still delete the group.
-  // For instance, if we do not have the encryption keyPair anymore, we cannot send our left message, but we should still delete its content
-  if (wasSent) {
-    window?.log?.info(
-      `Leaving message sent ${ed25519Str(groupPk)}. Removing everything related to this group.`
+
+  window?.log?.info(
+    `We are leaving the group ${ed25519Str(groupPk)}. Sending our leaving messages.`
+  );
+  let failedToSent03LeaveMessage = true;
+  // We might not be able to send our leaving messages (no encryption key pair, we were already removed, no network, etc).
+  // If that happens, we should just remove everything from our current user.
+  try {
+    const storeRequests = await StoreGroupRequestFactory.makeGroupMessageSubRequest(
+      [ourLeavingNotificationMessage, ourLeavingMessage],
+      {
+        authData: group.authData,
+        secretKey: group.secretKey,
+      }
     );
-  } else {
-    window?.log?.info(
-      `Leaving message failed to be sent for ${ed25519Str(
-        groupPk
-      )}. But still removing everything related to this group....`
+    const controller = new AbortController();
+    const results = await timeoutWithAbort(
+      MessageSender.sendEncryptedDataToSnode({
+        destination: groupPk,
+        sortedSubRequests: storeRequests,
+        method: 'sequence',
+        abortSignal: controller.signal,
+        allow401s: true, // we want "allow" 401s so we don't throw
+      }),
+      30 * DURATION.SECONDS,
+      controller
+    );
+
+    if (results?.[0].code === 401) {
+      window.log.info(
+        `leaveClosedGroup for ${ed25519Str(groupPk)} failed with 401. Assuming we've been revoked.`
+      );
+    } else if (results?.[0].code !== 200) {
+      throw new Error(
+        `Even with the retries, leaving message for group ${ed25519Str(
+          groupPk
+        )} failed to be sent...`
+      );
+    }
+    failedToSent03LeaveMessage = false;
+  } catch (e) {
+    window?.log?.warn(
+      `failed to send our leaving messages for ${ed25519Str(groupPk)}:${e.message}`
     );
   }
-  return wasSent;
+
+  // the rest of the cleaning of that conversation is done in the `deleteClosedGroup()`
+
+  return failedToSent03LeaveMessage;
 }
 
 async function removeLegacyGroupFromWrappers(groupId: string) {
@@ -807,7 +762,6 @@ async function removeLegacyGroupFromWrappers(groupId: string) {
 
   await UserGroupsWrapperActions.eraseLegacyGroup(groupId);
   await SessionUtilConvoInfoVolatile.removeLegacyGroupFromWrapper(groupId);
-  await removeAllClosedGroupEncryptionKeyPairs(groupId);
 }
 
 async function removeCommunityFromWrappers(conversationId: string) {

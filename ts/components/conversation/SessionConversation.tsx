@@ -71,7 +71,6 @@ import {
   useSelectedWeAreAdmin,
 } from '../../state/selectors/selectedConversation';
 import { useSelectedDisableLegacyGroupDeprecatedActions } from '../../hooks/useRefreshReleasedFeaturesTimestamp';
-import { useAreGroupsCreatedAsNewGroupsYet } from '../../state/selectors/releasedFeatures';
 import { Constants } from '../../session';
 
 const DEFAULT_JPEG_QUALITY = 0.85;
@@ -663,7 +662,6 @@ function OutdatedLegacyGroupBanner() {
   const isLegacyGroup =
     !isPrivate && !isPublic && selectedConversationKey && selectedConversationKey.startsWith('05');
 
-  const newGroupsCanBeCreated = useAreGroupsCreatedAsNewGroupsYet();
   const date = format(
     new Date(Constants.FEATURE_RELEASE_TIMESTAMPS.LEGACY_GROUP_READONLY),
     'h:mm a, d MMM yyyy'
@@ -681,7 +679,7 @@ function OutdatedLegacyGroupBanner() {
         })
         .toString();
 
-  return isLegacyGroup && newGroupsCanBeCreated ? (
+  return isLegacyGroup ? (
     <NoticeBanner
       text={text}
       onBannerClick={() => {

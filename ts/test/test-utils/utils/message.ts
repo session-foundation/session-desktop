@@ -12,12 +12,9 @@ import {
   ExpirationTimerUpdate,
 } from '../../../session/disappearing_messages/types';
 import { ExpirationTimerUpdateMessage } from '../../../session/messages/outgoing/controlMessage/ExpirationTimerUpdateMessage';
-import { ClosedGroupVisibleMessage } from '../../../session/messages/outgoing/visibleMessage/ClosedGroupVisibleMessage';
 import { OpenGroupVisibleMessage } from '../../../session/messages/outgoing/visibleMessage/OpenGroupVisibleMessage';
 import { VisibleMessage } from '../../../session/messages/outgoing/visibleMessage/VisibleMessage';
-import { PubKey } from '../../../session/types';
 import { OpenGroupReaction } from '../../../types/Reaction';
-import { generateFakePubKeyStr } from './pubkey';
 import { OpenGroupRequestCommonType } from '../../../data/types';
 
 const loremIpsum = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit';
@@ -86,13 +83,6 @@ export function generateOpenGroupVisibleMessage(): OpenGroupVisibleMessage {
 
 export function generateOpenGroupV2RoomInfos(): OpenGroupRequestCommonType {
   return { roomId: 'main', serverUrl: 'http://open.getsession.org' };
-}
-
-export function generateClosedGroupMessage(groupId?: string): ClosedGroupVisibleMessage {
-  return new ClosedGroupVisibleMessage({
-    groupId: groupId ? PubKey.cast(groupId).key : generateFakePubKeyStr(),
-    chatMessage: generateVisibleMessage(),
-  });
 }
 
 export function generateFakeIncomingPrivateMessage(): MessageModel {

@@ -28,13 +28,11 @@ import {
 
 import { GroupPubkeyType } from 'libsession_util_nodejs';
 import { ConversationAttributes } from '../models/conversationAttributes';
-import { PubKey } from '../session/types/PubKey';
 import { redactAll } from '../util/privacy';
 import {
   arrayStrToJson,
   assertValidConversationAttributes,
   ATTACHMENT_DOWNLOADS_TABLE,
-  CLOSED_GROUP_V2_KEY_PAIRS_TABLE,
   CONVERSATIONS_TABLE,
   formatRowOfConversation,
   GUARD_NODE_TABLE,
@@ -2074,7 +2072,6 @@ function removeAll() {
     DELETE FROM unprocessed;
     DELETE FROM ${LAST_HASHES_TABLE};
     DELETE FROM ${NODES_FOR_PUBKEY_TABLE};
-    DELETE FROM ${CLOSED_GROUP_V2_KEY_PAIRS_TABLE};
     DELETE FROM ${SEEN_MESSAGE_TABLE};
     DELETE FROM ${CONVERSATIONS_TABLE};
     DELETE FROM ${MESSAGES_TABLE};
@@ -2325,84 +2322,6 @@ function getMessagesCountByConversation(
     .get({ conversationId });
 
   return row ? row['count(*)'] : 0;
-}
-
-/**
- * The returned array is ordered based on the timestamp, the latest is at the end.
- * @param groupPublicKey string | PubKey
- */
-function getAllEncryptionKeyPairsForGroup(
-  groupPublicKey: string | PubKey,
-  db?: BetterSqlite3.Database
-) {
-  const rows = getAllEncryptionKeyPairsForGroupRaw(groupPublicKey, db);
-
-  return map(rows, row => jsonToObject(row.json));
-}
-
-function getAllEncryptionKeyPairsForGroupRaw(
-  groupPublicKey: string | PubKey,
-  db?: BetterSqlite3.Database
-) {
-  const pubkeyAsString = (groupPublicKey as PubKey).key
-    ? (groupPublicKey as PubKey).key
-    : groupPublicKey;
-  const rows = assertGlobalInstanceOrInstance(db)
-    .prepare(
-      `SELECT * FROM ${CLOSED_GROUP_V2_KEY_PAIRS_TABLE} WHERE groupPublicKey = $groupPublicKey ORDER BY timestamp ASC;`
-    )
-    .all({
-      groupPublicKey: pubkeyAsString,
-    });
-
-  return rows;
-}
-
-function getLatestClosedGroupEncryptionKeyPair(
-  groupPublicKey: string,
-  db?: BetterSqlite3.Database
-) {
-  const rows = getAllEncryptionKeyPairsForGroup(groupPublicKey, db);
-  if (!rows || rows.length === 0) {
-    return undefined;
-  }
-  return rows[rows.length - 1];
-}
-
-function addClosedGroupEncryptionKeyPair(
-  groupPublicKey: string,
-  keyPair: object,
-  instance?: BetterSqlite3.Database
-) {
-  const timestamp = Date.now();
-
-  assertGlobalInstanceOrInstance(instance)
-    .prepare(
-      `INSERT OR REPLACE INTO ${CLOSED_GROUP_V2_KEY_PAIRS_TABLE} (
-      groupPublicKey,
-      timestamp,
-        json
-        ) values (
-          $groupPublicKey,
-          $timestamp,
-          $json
-          );`
-    )
-    .run({
-      groupPublicKey,
-      timestamp,
-      json: objectToJSON(keyPair),
-    });
-}
-
-function removeAllClosedGroupEncryptionKeyPairs(groupPublicKey: string) {
-  assertGlobalInstance()
-    .prepare(
-      `DELETE FROM ${CLOSED_GROUP_V2_KEY_PAIRS_TABLE} WHERE groupPublicKey = $groupPublicKey`
-    )
-    .run({
-      groupPublicKey,
-    });
 }
 
 /**
@@ -2795,11 +2714,6 @@ export const sqlNode = {
   getMessagesWithVisualMediaAttachments,
   getMessagesWithFileAttachments,
   getMessagesCountByConversation,
-
-  getAllEncryptionKeyPairsForGroup,
-  getLatestClosedGroupEncryptionKeyPair,
-  addClosedGroupEncryptionKeyPair,
-  removeAllClosedGroupEncryptionKeyPairs,
 
   // open group v2
   getV2OpenGroupRoom,

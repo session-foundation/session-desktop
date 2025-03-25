@@ -10,7 +10,6 @@ import { DURATION, TTL_DEFAULT } from '../../constants';
 import { SnodeResponseError } from '../../utils/errors';
 import {
   RetrieveGroupSubRequest,
-  RetrieveLegacyClosedGroupSubRequest,
   RetrieveUserSubRequest,
   UpdateExpiryOnNodeGroupSubRequest,
   UpdateExpiryOnNodeUserSubRequest,
@@ -47,37 +46,6 @@ async function retrieveRequestForUs({
 type NamespaceAndLastHash = { lastHash: string | null; namespace: SnodeNamespaces };
 
 /**
- * Retrieve for legacy groups are not authenticated so no need to sign the request
- */
-function retrieveRequestForLegacyGroup({
-  namespace,
-  ourPubkey,
-  pubkey,
-  retrieveParam,
-}: {
-  pubkey: string;
-  namespace: SnodeNamespaces.LegacyClosedGroup;
-  ourPubkey: string;
-  retrieveParam: RetrieveParams;
-}) {
-  if (pubkey === ourPubkey || !PubKey.is05Pubkey(pubkey)) {
-    throw new Error(
-      'namespace -10 can only be used to retrieve messages from a legacy closed group (prefix 05)'
-    );
-  }
-  if (namespace !== SnodeNamespaces.LegacyClosedGroup) {
-    throw new Error(`retrieveRequestForLegacyGroup namespace can only be -10`);
-  }
-
-  // if we give a timestamp, a signature will be required by the service node, and we don't want to provide one as this is an unauthenticated namespace
-  return new RetrieveLegacyClosedGroupSubRequest({
-    last_hash: retrieveParam.last_hash,
-    max_size: retrieveParam.max_size,
-    legacyGroupPk: pubkey,
-  });
-}
-
-/**
  * Retrieve for groups (03-prefixed) are authenticated with the admin key if we have it, or with our sub key auth
  */
 async function retrieveRequestForGroup({
@@ -106,7 +74,6 @@ async function retrieveRequestForGroup({
 }
 
 type RetrieveSubRequestType =
-  | RetrieveLegacyClosedGroupSubRequest
   | RetrieveUserSubRequest
   | RetrieveGroupSubRequest
   | UpdateExpiryOnNodeUserSubRequest
@@ -140,10 +107,6 @@ async function buildRetrieveRequest(
         timestamp: now,
         max_size: foundMaxSize,
       };
-
-      if (namespace === SnodeNamespaces.LegacyClosedGroup) {
-        return retrieveRequestForLegacyGroup({ namespace, ourPubkey, pubkey, retrieveParam });
-      }
 
       if (PubKey.is03Pubkey(pubkey)) {
         if (!SnodeNamespace.isGroupNamespace(namespace)) {

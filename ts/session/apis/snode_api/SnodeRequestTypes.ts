@@ -104,45 +104,6 @@ abstract class StoreSubRequest extends SnodeAPISubRequest<'store'> {
 }
 
 /**
- * Retrieve for legacy was not authenticated
- */
-export class RetrieveLegacyClosedGroupSubRequest extends RetrieveSubRequest {
-  public readonly legacyGroupPk: PubkeyType;
-  public readonly namespace = SnodeNamespaces.LegacyClosedGroup;
-
-  constructor({
-    last_hash,
-    legacyGroupPk,
-    max_size,
-  }: WithMaxSize & { last_hash: string; legacyGroupPk: PubkeyType }) {
-    super({ last_hash, max_size });
-    this.legacyGroupPk = legacyGroupPk;
-  }
-
-  public async build() {
-    return {
-      method: this.method,
-      params: {
-        namespace: this.namespace,
-        pubkey: this.legacyGroupPk,
-        last_hash: this.last_hash,
-        max_size: this.max_size,
-        // legacy closed groups retrieve are not authenticated because the clients do not have a shared key
-        // if we give a timestamp, a signature will be requested by the snode so this request for legacy does not take a timestamp
-      },
-    };
-  }
-
-  public getDestination() {
-    return this.legacyGroupPk;
-  }
-
-  public loggingId(): string {
-    return `${this.method}-${SnodeNamespace.toRole(this.namespace)}`;
-  }
-}
-
-/**
  * If you are thinking of adding the `limit` field here: don't.
  * We fetch the full list because we will remove from every cached swarms the snodes not found in that fresh list.
  * If a `limit` was set, we would remove a lot of valid snodes from those cached swarms.
@@ -1260,70 +1221,6 @@ export class StoreUserMessageSubRequest extends StoreSubRequest {
 }
 
 /**
- * A request to send a message to the default namespace of another user (namespace 0 is not authenticated)
- *
- * TODO: this is almost an exact match of `StoreUserMessageSubRequest` due to be removed once we get rid of legacy groups.
- */
-export class StoreLegacyGroupMessageSubRequest extends StoreSubRequest {
-  public readonly ttlMs: number;
-  public readonly encryptedData: Uint8Array;
-  public readonly namespace = SnodeNamespaces.LegacyClosedGroup;
-  public readonly destination: PubkeyType;
-  public readonly dbMessageIdentifier: string | null;
-  public readonly createdAtNetworkTimestamp: number;
-
-  constructor(
-    args: WithCreatedAtNetworkTimestamp &
-      WithGetNow & {
-        ttlMs: number;
-        encryptedData: Uint8Array;
-        destination: PubkeyType;
-        dbMessageIdentifier: string | null;
-      }
-  ) {
-    super(args);
-    this.ttlMs = args.ttlMs;
-    this.destination = args.destination;
-    this.encryptedData = args.encryptedData;
-    this.dbMessageIdentifier = args.dbMessageIdentifier;
-    this.createdAtNetworkTimestamp = args.createdAtNetworkTimestamp;
-
-    if (isEmpty(this.encryptedData)) {
-      throw new Error('this.encryptedData cannot be empty');
-    }
-  }
-
-  public async build(): Promise<{
-    method: 'store';
-    params: StoreOnNodeNormalParams;
-  }> {
-    const encryptedDataBase64 = ByteBuffer.wrap(this.encryptedData).toString('base64');
-
-    return {
-      method: this.method,
-      params: {
-        // no signature required for a legacy group retrieve/store of message to namespace -10
-        pubkey: this.destination,
-        timestamp: this.getNow(),
-        namespace: this.namespace,
-        ttl: this.ttlMs,
-        data: encryptedDataBase64,
-      },
-    };
-  }
-
-  public loggingId(): string {
-    return `${this.method}-${ed25519Str(this.destination)}-${SnodeNamespace.toRole(
-      this.namespace
-    )}`;
-  }
-
-  public getDestination() {
-    return this.destination;
-  }
-}
-
-/**
  * When sending group libsession push(), we can also include extra messages to store (update messages, supplemental keys, etc)
  */
 export type StoreGroupExtraData = {
@@ -1365,7 +1262,6 @@ export type MethodBatchType = 'batch' | 'sequence';
 export type WithMethodBatchType = { method: MethodBatchType };
 
 export type RawSnodeSubRequests =
-  | RetrieveLegacyClosedGroupSubRequest
   | RetrieveUserSubRequest
   | RetrieveGroupSubRequest
   | StoreGroupInfoSubRequest
@@ -1378,7 +1274,6 @@ export type RawSnodeSubRequests =
   | OnsResolveSubRequest
   | GetServiceNodesSubRequest
   | StoreUserMessageSubRequest
-  | StoreLegacyGroupMessageSubRequest
   | NetworkTimeSubRequest
   | DeleteHashesFromGroupNodeSubRequest
   | DeleteHashesFromUserNodeSubRequest
@@ -1442,17 +1337,12 @@ export type BatchStoreWithExtraParams =
  * Those messages are the messages that display a failed/sent status, so we need to update them when the request is done, to reflect the
  * success/failure of the sending step.
  */
-export type StoreUserInitiatedSubRequest =
-  | StoreGroupMessageSubRequest
-  | StoreLegacyGroupMessageSubRequest
-  | StoreUserMessageSubRequest;
+export type StoreUserInitiatedSubRequest = StoreGroupMessageSubRequest | StoreUserMessageSubRequest;
 
 export function isStoreUserInitiatedSubRequest(
   request: SnodeAPISubRequest<string>
 ): request is StoreUserInitiatedSubRequest {
   return (
-    request instanceof StoreGroupMessageSubRequest ||
-    request instanceof StoreLegacyGroupMessageSubRequest ||
-    request instanceof StoreUserMessageSubRequest
+    request instanceof StoreGroupMessageSubRequest || request instanceof StoreUserMessageSubRequest
   );
 }

@@ -315,18 +315,6 @@ function useConversationPropsById(convoId?: string) {
   });
 }
 
-export function useZombies(convoId?: string) {
-  return useSelector((state: StateType) => {
-    if (!convoId) {
-      return null;
-    }
-    const convo = state.conversations.conversationLookup[convoId];
-    if (!convo) {
-      return null;
-    }
-    return convo.zombies;
-  });
-}
 
 export function useMessageReactsPropsById(messageId?: string) {
   return useSelector((state: StateType) => {

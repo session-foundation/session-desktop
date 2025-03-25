@@ -10,14 +10,12 @@ import {
 } from 'libsession_util_nodejs';
 import { from_hex } from 'libsodium-wrappers-sumo';
 import { isEmpty, isEqual } from 'lodash';
-import { HexKeyPair } from '../../../receiver/keypairs';
 import { fromHexToArray } from '../../../session/utils/String';
 import {
   CONFIG_DUMP_TABLE,
   ConfigDumpRow,
   maybeArrayJSONtoArray,
 } from '../../../types/sqlSharedTypes';
-import { sqlNode } from '../../sql';
 import { checkTargetMigration, hasDebugEnvVariable } from '../utils';
 import { CONVERSATION_PRIORITIES } from '../../../models/types';
 
@@ -246,18 +244,13 @@ function getLegacyGroupInfoFromDBValues({
 function updateLegacyGroupInWrapper(
   legacyGroup: any,
   userGroupConfigWrapper: UserGroupsWrapperNode,
-  db: BetterSqlite3.Database,
+  _db: BetterSqlite3.Database,
   version: number
 ) {
   checkTargetMigration(version, targetVersion);
 
   if (legacyGroup !== null) {
     const priority = legacyGroup.priority || CONVERSATION_PRIORITIES.default;
-
-    const latestEncryptionKeyPairHex = sqlNode.getLatestClosedGroupEncryptionKeyPair(
-      legacyGroup.id,
-      db
-    ) as HexKeyPair | undefined;
 
     const wrapperLegacyGroup = getLegacyGroupInfoFromDBValues({
       id: legacyGroup.id,
@@ -267,8 +260,8 @@ function updateLegacyGroupInWrapper(
       groupAdmins: legacyGroup.groupAdmins || [],
       members: legacyGroup.members || [],
       displayNameInProfile: legacyGroup.displayNameInProfile || '',
-      encPubkeyHex: latestEncryptionKeyPairHex?.publicHex || '',
-      encSeckeyHex: latestEncryptionKeyPairHex?.privateHex || '',
+      encPubkeyHex: '',
+      encSeckeyHex: '',
       lastJoinedTimestamp: legacyGroup.lastJoinedTimestamp || 0,
     });
 

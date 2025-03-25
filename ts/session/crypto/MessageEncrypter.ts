@@ -1,7 +1,6 @@
 import { GroupPubkeyType } from 'libsession_util_nodejs';
 import { isEmpty } from 'lodash';
 import { concatUInt8Array, getSodiumRenderer } from '.';
-import { Data } from '../../data/data';
 import { SignalService } from '../../protobuf';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { MetaGroupWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
@@ -23,26 +22,6 @@ async function encryptWithLibSession(destination: GroupPubkeyType, plainText: Ui
     window.log.warn('encrypt message for group failed with', e.message);
     throw new SigningFailed(e.message);
   }
-}
-
-async function encryptForLegacyGroup(destination: PubKey, plainText: Uint8Array) {
-  const hexEncryptionKeyPair = await Data.getLatestClosedGroupEncryptionKeyPair(destination.key);
-  if (!hexEncryptionKeyPair) {
-    window?.log?.warn("Couldn't get key pair for closed group during encryption");
-    throw new Error("Couldn't get key pair for closed group");
-  }
-
-  const destinationX25519Pk = PubKey.cast(hexEncryptionKeyPair.publicHex);
-
-  const cipherTextClosedGroup = await MessageEncrypter.encryptUsingSessionProtocol(
-    destinationX25519Pk,
-    plainText
-  );
-
-  return {
-    envelopeType: SignalService.Envelope.Type.CLOSED_GROUP_MESSAGE,
-    cipherText: cipherTextClosedGroup,
-  };
 }
 
 /**
@@ -80,7 +59,7 @@ async function encrypt(
         };
       }
 
-      return encryptForLegacyGroup(destination, plainTextPadded); // not padding it again, it is already done by libsession
+      throw new Error('legacy groups are readonly'); // legacy groups are readonly
     }
     default:
       assertUnreachable(encryptionType, 'MessageEncrypter encrypt unreachable case');

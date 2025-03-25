@@ -24,7 +24,6 @@ import {
   StoreGroupMembersSubRequest,
   StoreGroupMessageSubRequest,
   StoreGroupRevokedRetrievableSubRequest,
-  StoreLegacyGroupMessageSubRequest,
   StoreUserConfigSubRequest,
   StoreUserMessageSubRequest,
   SubaccountRevokeSubRequest,
@@ -47,7 +46,6 @@ import { ConvoHub } from '../conversations';
 import { addMessagePadding } from '../crypto/BufferPadding';
 import { ContentMessage } from '../messages/outgoing';
 import { UnsendMessage } from '../messages/outgoing/controlMessage/UnsendMessage';
-import { ClosedGroupNewMessage } from '../messages/outgoing/controlMessage/group/ClosedGroupNewMessage';
 import { OpenGroupVisibleMessage } from '../messages/outgoing/visibleMessage/OpenGroupVisibleMessage';
 import { PubKey } from '../types';
 import { OutgoingRawMessage } from '../types/RawMessage';
@@ -69,20 +67,14 @@ function getMinRetryTimeout() {
 }
 
 function isContentSyncMessage(message: ContentMessage) {
-  if (
-    message instanceof ClosedGroupNewMessage ||
-    message instanceof UnsendMessage ||
-    (message as any).syncTarget?.length > 0
-  ) {
+  if (message instanceof UnsendMessage || (message as any).syncTarget?.length > 0) {
     return true;
   }
   return false;
 }
 
-type StoreRequest05 =
-  | StoreUserConfigSubRequest
-  | StoreUserMessageSubRequest
-  | StoreLegacyGroupMessageSubRequest;
+type StoreRequest05 = StoreUserConfigSubRequest | StoreUserMessageSubRequest;
+
 type StoreRequest03 =
   | StoreGroupInfoSubRequest
   | StoreGroupMembersSubRequest
@@ -131,9 +123,7 @@ async function messageToRequest05({
   if (namespace === SnodeNamespaces.Default) {
     return new StoreUserMessageSubRequest(shared05Arguments);
   }
-  if (namespace === SnodeNamespaces.LegacyClosedGroup) {
-    return new StoreLegacyGroupMessageSubRequest(shared05Arguments);
-  }
+
   if (SnodeNamespace.isUserConfigNamespace(namespace)) {
     return new StoreUserConfigSubRequest(shared05Arguments);
   }

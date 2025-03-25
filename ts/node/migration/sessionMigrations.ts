@@ -381,56 +381,8 @@ function updateToSessionSchemaVersion11(currentVersion: number, db: BetterSqlite
   }
   console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
 
-  function remove05PrefixFromStringIfNeeded(str: string) {
-    if (str.length === 66 && str.startsWith('05')) {
-      return str.substr(2);
-    }
-    return str;
-  }
-
   db.transaction(() => {
-    // the migration is called only once, so all current groups not being open groups are v1 closed group.
-    const allClosedGroupV1Ids = db
-      .prepare(
-        `SELECT id FROM ${CONVERSATIONS_TABLE} WHERE
-        type = 'group' AND
-        id NOT LIKE 'publicChat:%';`
-      )
-      .all()
-      .map(m => m.id) as Array<string>;
-
-    allClosedGroupV1Ids.forEach(groupV1Id => {
-      try {
-        console.log('Migrating closed group v1 to v2: pubkey', groupV1Id);
-        const groupV1IdentityKey = sqlNode.getIdentityKeyById(groupV1Id, db);
-        if (!groupV1IdentityKey) {
-          return;
-        }
-        const encryptionPubKeyWithoutPrefix = remove05PrefixFromStringIfNeeded(
-          groupV1IdentityKey.id
-        );
-
-        // Note:
-        // this is what we get from getIdentityKeyById:
-        //   {
-        //     id: string;
-        //     secretKey?: string;
-        //   }
-
-        // and this is what we want saved in db:
-        //   {
-        //    publicHex: string; // without prefix
-        //    privateHex: string;
-        //   }
-        const keyPair = {
-          publicHex: encryptionPubKeyWithoutPrefix,
-          privateHex: groupV1IdentityKey.secretKey,
-        };
-        sqlNode.addClosedGroupEncryptionKeyPair(groupV1Id, keyPair, db);
-      } catch (e) {
-        console.error(e);
-      }
-    });
+    // legacy groups stuff. Not needed anymore
     writeSessionSchemaVersion(targetVersion, db);
   })();
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
@@ -2121,6 +2073,8 @@ function updateToSessionSchemaVersion43(currentVersion: number, db: BetterSqlite
       `UPDATE ${CONVERSATIONS_TABLE}
         SET expirationMode = 'deleteAfterSend' AND expirationMode = 'legacy';`
     ).run();
+
+    db.prepare(`DROP TABLE ${CLOSED_GROUP_V2_KEY_PAIRS_TABLE};`);
 
     writeSessionSchemaVersion(targetVersion, db);
   })();

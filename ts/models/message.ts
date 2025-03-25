@@ -5,10 +5,7 @@ import { debounce, isEmpty, size as lodashSize, uniq } from 'lodash';
 import { SignalService } from '../protobuf';
 import { ConvoHub } from '../session/conversations';
 import { ContentMessage } from '../session/messages/outgoing';
-import {
-  ClosedGroupV2VisibleMessage,
-  ClosedGroupVisibleMessage,
-} from '../session/messages/outgoing/visibleMessage/ClosedGroupVisibleMessage';
+import { ClosedGroupV2VisibleMessage } from '../session/messages/outgoing/visibleMessage/ClosedGroupVisibleMessage';
 import { PubKey } from '../session/types';
 import {
   UserUtils,
@@ -977,15 +974,8 @@ export class MessageModel extends Model<MessageAttributes> {
         });
       }
 
-      const closedGroupVisibleMessage = new ClosedGroupVisibleMessage({
-        groupId: PubKey.cast(this.get('conversationId')).key,
-        chatMessage,
-      });
-
-      return MessageQueue.use().sendToGroup({
-        message: closedGroupVisibleMessage,
-        namespace: SnodeNamespaces.LegacyClosedGroup,
-      });
+      // legacy groups are readonly
+      return null;
     } catch (e: unknown) {
       if (e instanceof Error) {
         await this.saveErrors(e);

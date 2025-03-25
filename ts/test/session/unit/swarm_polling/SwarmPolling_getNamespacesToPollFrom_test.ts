@@ -40,12 +40,6 @@ describe('SwarmPolling:getNamespacesToPollFrom', () => {
     ]);
   });
 
-  it('for legacy group ', () => {
-    expect(swarmPolling.getNamespacesToPollFrom(ConversationTypeEnum.GROUP)).to.deep.equal([
-      SnodeNamespaces.LegacyClosedGroup,
-    ]);
-  });
-
   it('for unknown type ', () => {
     expect(() => swarmPolling.getNamespacesToPollFrom('invalidtype' as any)).to.throw(''); // empty string just means that we want it to throw anything
   });

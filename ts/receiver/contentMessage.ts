@@ -33,7 +33,7 @@ import {
   MetaGroupWrapperActions,
 } from '../webworker/workers/browser/libsession_worker_interface';
 import { handleCallMessage } from './callMessage';
-import { getAllCachedECKeyPair, sentAtMoreRecentThanWrapper } from './closedGroups';
+import { sentAtMoreRecentThanWrapper } from './closedGroups';
 import { ECKeyPair } from './keypairs';
 import { CONVERSATION_PRIORITIES, ConversationTypeEnum } from '../models/types';
 import { shouldProcessContentMessage } from './common';
@@ -63,92 +63,6 @@ export async function handleSwarmContentMessage(
     });
   } catch (e) {
     window?.log?.warn(e.message);
-  }
-}
-
-async function decryptForClosedGroup(
-  envelope: EnvelopePlus
-): Promise<{ decryptedContent: ArrayBuffer }> {
-  window?.log?.info('received closed group message');
-  try {
-    const hexEncodedGroupPublicKey = envelope.source;
-
-    const encryptionKeyPairs = await getAllCachedECKeyPair(hexEncodedGroupPublicKey);
-
-    const encryptionKeyPairsCount = encryptionKeyPairs?.length;
-    if (!encryptionKeyPairs?.length) {
-      throw new Error(`No group keypairs for group ${hexEncodedGroupPublicKey}`); // noGroupKeyPair
-    }
-    // Loop through all known group key pairs in reverse order (i.e. try the latest key pair first (which'll more than
-    // likely be the one we want) but try older ones in case that didn't work)
-    let decryptedContent: ArrayBuffer | undefined;
-    let keyIndex = 0;
-
-    // If an error happens in here, we catch it in the inner try-catch
-    // When the loop is done, we check if the decryption is a success;
-    // If not, we trigger a new Error which will trigger in the outer try-catch
-    do {
-      try {
-        const hexEncryptionKeyPair = encryptionKeyPairs.pop();
-
-        if (!hexEncryptionKeyPair) {
-          throw new Error('No more encryption keypairs to try for message.');
-        }
-        const encryptionKeyPair = ECKeyPair.fromHexKeyPair(hexEncryptionKeyPair);
-
-        // eslint-disable-next-line no-await-in-loop
-        const res = await decryptWithSessionProtocol(
-          envelope,
-          envelope.content,
-          encryptionKeyPair,
-          true
-        );
-        if (res?.decryptedContent.byteLength) {
-          decryptedContent = res.decryptedContent;
-
-          break;
-        }
-        decryptedContent = res.decryptedContent;
-
-        keyIndex++;
-      } catch (e) {
-        window?.log?.info(
-          `Failed to decrypt closed group with key index ${keyIndex}. We have ${encryptionKeyPairs.length} keys to try left.`
-        );
-      }
-    } while (encryptionKeyPairs.length > 0);
-
-    if (!decryptedContent?.byteLength) {
-      throw new Error(
-        `Could not decrypt message for closed group with any of the ${encryptionKeyPairsCount} keypairs.`
-      );
-    }
-    if (keyIndex !== 0) {
-      window?.log?.warn(
-        'Decrypted a closed group message with not the latest encryptionkeypair we have'
-      );
-    }
-    window?.log?.info('ClosedGroup Message decrypted successfully with keyIndex:', keyIndex);
-
-    const withoutPadding = removeMessagePadding(decryptedContent);
-    return { decryptedContent: withoutPadding };
-  } catch (e) {
-    /**
-     * If an error happened during the decoding,
-     * we trigger a request to get the latest EncryptionKeyPair for this medium group.
-     * Indeed, we might not have the latest one used by someone else, or not have any keypairs for this group.
-     *
-     */
-
-    window?.log?.warn('decryptWithSessionProtocol for medium group message throw:', e.message);
-    const groupPubKey = PubKey.cast(envelope.source);
-
-    // IMPORTANT do not remove the message from the cache just yet.
-    // We will try to decrypt it once we get the encryption keypair.
-    // for that to work, we need to throw an error just like here.
-    throw new Error(
-      `Waiting for an encryption keypair to be received for group ${groupPubKey.key}`
-    );
   }
 }
 
@@ -277,15 +191,7 @@ async function decrypt(envelope: EnvelopePlus): Promise<{ decryptedContent: Arra
       decryptedContent = await decryptEnvelopeWithOurKey(envelope);
       break;
     case SignalService.Envelope.Type.CLOSED_GROUP_MESSAGE:
-      if (PubKey.is03Pubkey(envelope.source)) {
-        // groupv2 messages are decrypted way earlier than this via libsession, and what we get here is already decrypted
-        return { decryptedContent: envelope.content };
-      }
-      // eslint-disable-next-line no-case-declarations
-      const res = await decryptForClosedGroup(envelope);
-      decryptedContent = res.decryptedContent;
-
-      break;
+      return null
     default:
       assertUnreachable(envelope.type, `Unknown message type:${envelope.type}`);
   }
@@ -426,11 +332,10 @@ function shouldDropBlockedUserMessage(
     // it might be a message sent to a community from a user we've blocked
     return true;
   }
-  const isLegacyGroupUpdateMessage = !isEmpty(data.closedGroupControlMessage);
 
   const isGroupV2UpdateMessage = !isEmpty(data.groupUpdateMessage);
 
-  return !isLegacyGroupUpdateMessage && !isGroupV2UpdateMessage;
+  return !isGroupV2UpdateMessage;
 }
 
 async function dropIncomingGroupMessage(envelope: EnvelopePlus, sentAtTimestamp: number) {

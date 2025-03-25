@@ -20,10 +20,7 @@ import { DisappearingMessageConversationModeType } from 'libsession_util_nodejs'
 import { v4 } from 'uuid';
 import { SignalService } from '../protobuf';
 import { ConvoHub } from '../session/conversations';
-import {
-  ClosedGroupV2VisibleMessage,
-  ClosedGroupVisibleMessage,
-} from '../session/messages/outgoing/visibleMessage/ClosedGroupVisibleMessage';
+import { ClosedGroupV2VisibleMessage } from '../session/messages/outgoing/visibleMessage/ClosedGroupVisibleMessage';
 import { PubKey } from '../session/types';
 import { ToastUtils, UserUtils } from '../session/utils';
 import { BlockedNumberController } from '../util';
@@ -424,11 +421,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
       if (this.isKickedFromGroup()) {
         toRet.isKickedFromGroup = this.isKickedFromGroup();
       }
-      // to be dropped once we get rid of the legacy closed groups
-      const zombies = this.getGroupZombies() || [];
-      if (zombies?.length) {
-        toRet.zombies = uniq(zombies);
-      }
     }
 
     // -- Handle the field stored only in memory for all types of conversation--
@@ -685,22 +677,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       }
 
       if (this.isClosedGroup()) {
-        const chatMessageMediumGroup = new VisibleMessage(chatMessageParams);
-        const closedGroupVisibleMessage = new ClosedGroupVisibleMessage({
-          chatMessage: chatMessageMediumGroup,
-          groupId: destinationPubkey.key,
-        });
-        // we need the return await so that errors are caught in the catch {}
-        await MessageQueue.use().sendToGroup({
-          message: closedGroupVisibleMessage,
-          namespace: SnodeNamespaces.LegacyClosedGroup,
-        });
-
-        await Reactions.handleMessageReaction({
-          reaction,
-          sender: UserUtils.getOurPubKeyStrFromCache(),
-          you: true,
-        });
+        // legacy groups are readonly
         return;
       }
 
@@ -1145,20 +1122,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
           return true;
         }
 
-        // NOTE: we agreed that outgoing ExpirationTimerUpdate **for legacy groups** are not expiring,
-        // but they still need the content to be right(as this is what we use for the change itself)
+        // legacy groups are readonly. Nothing to do
 
-        const expireUpdateForGroup = {
-          ...expireUpdate,
-          groupId: this.id,
-        };
-
-        const expirationTimerMessage = new ExpirationTimerUpdateMessage(expireUpdateForGroup);
-
-        await MessageQueue.use().sendToGroup({
-          message: expirationTimerMessage,
-          namespace: SnodeNamespaces.LegacyClosedGroup,
-        });
         return true;
       }
       window.log.warn(
@@ -2044,18 +2009,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
     return [];
   }
 
-  public getGroupZombies(): Array<string> {
-    if (this.isClosedGroup()) {
-      // closed group with 03 prefix does not have the concepts of zombies
-      if (this.isClosedGroupV2()) {
-        return [];
-      }
-      const zombies = this.get('zombies');
-      return zombies && zombies.length > 0 ? zombies : [];
-    }
-    return [];
-  }
-
   private async sendMessageJob(message: MessageModel) {
     try {
       const { body, attachments, preview, quote, fileIdsToLink } = await message.uploadData();
@@ -2166,21 +2119,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       }
 
       if (this.isClosedGroup()) {
-        if (this.matchesDisappearingMode('deleteAfterRead')) {
-          throw new Error('Group disappearing messages must be deleteAfterSend');
-        }
-        const chatMessageMediumGroup = new VisibleMessage(chatMessageParams);
-        const closedGroupVisibleMessage = new ClosedGroupVisibleMessage({
-          chatMessage: chatMessageMediumGroup,
-          groupId: destinationPubkey.key,
-          // expirationType & expireTimer are part of the chatMessageMediumGroup object
-        });
-
-        // we need the return await so that errors are caught in the catch {}
-        await MessageQueue.use().sendToGroup({
-          message: closedGroupVisibleMessage,
-          namespace: SnodeNamespaces.LegacyClosedGroup,
-        });
+        // legacy groups are readonly
         return;
       }
 

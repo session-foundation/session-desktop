@@ -2,22 +2,14 @@ import { useState } from 'react';
 import useKey from 'react-use/lib/useKey';
 
 import { PubkeyType } from 'libsession_util_nodejs';
-import _, { difference, uniq } from 'lodash';
+import { difference, uniq } from 'lodash';
 import { useDispatch } from 'react-redux';
-import { VALIDATION } from '../../session/constants';
 import { ConvoHub } from '../../session/conversations';
-import { ToastUtils, UserUtils } from '../../session/utils';
 import { updateGroupMembersModal, updateInviteContactModal } from '../../state/ducks/modalDialog';
 import { SpacerLG } from '../basic/Text';
 
-import {
-  useIsPrivate,
-  useIsPublic,
-  useSortedGroupMembers,
-  useZombies,
-} from '../../hooks/useParamSelector';
+import { useIsPrivate, useIsPublic, useSortedGroupMembers } from '../../hooks/useParamSelector';
 import { useSet } from '../../hooks/useSet';
-import { ClosedGroup } from '../../session/group/closed-group';
 import { PubKey } from '../../session/types';
 import { SessionUtilUserGroups } from '../../session/utils/libsession/libsession_utils_user_groups';
 import { groupInfoActions } from '../../state/ducks/metaGroups';
@@ -72,44 +64,6 @@ async function submitForOpenGroup(convoId: string, pubkeys: Array<string>) {
   }
 }
 
-const submitForClosedGroup = async (convoId: string, pubkeys: Array<string>) => {
-  const convo = ConvoHub.use().get(convoId);
-  if (!convo || !convo.isGroup()) {
-    throw new Error('submitForClosedGroup group not found');
-  }
-  // closed group chats
-  const ourPK = UserUtils.getOurPubKeyStrFromCache();
-  // we only care about real members. If a member is currently a zombie we have to be able to add him back
-  let existingMembers = convo.getGroupMembers() || [];
-  // at least make sure it's an array
-  if (!Array.isArray(existingMembers)) {
-    existingMembers = [];
-  }
-  existingMembers = _.compact(existingMembers);
-  const existingZombies = convo.getGroupZombies() || [];
-  const newMembers = pubkeys.filter(d => !existingMembers.includes(d));
-
-  if (newMembers.length > 0) {
-    // Do not trigger an update if there is too many members
-    // be sure to include current zombies in this count
-    if (
-      newMembers.length + existingMembers.length + existingZombies.length >
-      VALIDATION.CLOSED_GROUP_SIZE_LIMIT
-    ) {
-      ToastUtils.pushTooManyMembers();
-      return;
-    }
-
-    const allMembers = _.concat(existingMembers, newMembers, [ourPK]);
-    const uniqMembers = _.uniq(allMembers);
-
-    const groupId = convo.id;
-    const groupName = convo.getNicknameOrRealUsernameOrPlaceholder();
-
-    await ClosedGroup.initiateClosedGroupUpdate(groupId, groupName, uniqMembers);
-  }
-};
-
 const InviteContactsDialogInner = (props: Props) => {
   const { conversationId } = props;
   const dispatch = useDispatch();
@@ -118,7 +72,6 @@ const InviteContactsDialogInner = (props: Props) => {
   const isPrivate = useIsPrivate(conversationId);
   const isPublic = useIsPublic(conversationId);
   const membersFromRedux = useSortedGroupMembers(conversationId) || [];
-  const zombiesFromRedux = useZombies(conversationId) || [];
   const isGroupV2 = useSelectedIsGroupV2();
   const [shareHistory, setShareHistory] = useState(false);
 
@@ -127,12 +80,12 @@ const InviteContactsDialogInner = (props: Props) => {
   if (isPrivate) {
     throw new Error('InviteContactsDialogInner must be a group');
   }
-  const zombiesAndMembers = uniq([...membersFromRedux, ...zombiesFromRedux]);
+  const members = uniq(membersFromRedux);
   // filter our zombies and current members from the list of contact we can add
 
   const validContactsForInvite = isPublic
     ? privateContactPubkeys
-    : difference(privateContactPubkeys, zombiesAndMembers);
+    : difference(privateContactPubkeys, members);
 
   const closeDialog = () => {
     dispatch(updateInviteContactModal(null));
@@ -147,25 +100,23 @@ const InviteContactsDialogInner = (props: Props) => {
       void submitForOpenGroup(conversationId, selectedContacts);
       return;
     }
-    if (PubKey.is03Pubkey(conversationId)) {
-      const forcedAsPubkeys = selectedContacts as Array<PubkeyType>;
-      const action = groupInfoActions.currentDeviceGroupMembersChange({
-        addMembersWithoutHistory: shareHistory ? [] : forcedAsPubkeys,
-        addMembersWithHistory: shareHistory ? forcedAsPubkeys : [],
-        removeMembers: [],
-        groupPk: conversationId,
-        alsoRemoveMessages: false,
-      });
-      dispatch(action as any);
-      empty();
-      // We want to show the dialog where "invite sending" is visible (i.e. the current group members) instead of this one
-      // once we hit "invite"
-      closeDialog();
-      dispatch(updateGroupMembersModal({ conversationId }));
-
-      return;
+    if (!PubKey.is03Pubkey(conversationId)) {
+      throw new Error('Only communities and 03-groups are allowed here');
     }
-    void submitForClosedGroup(conversationId, selectedContacts);
+    const forcedAsPubkeys = selectedContacts as Array<PubkeyType>;
+    const action = groupInfoActions.currentDeviceGroupMembersChange({
+      addMembersWithoutHistory: shareHistory ? [] : forcedAsPubkeys,
+      addMembersWithHistory: shareHistory ? forcedAsPubkeys : [],
+      removeMembers: [],
+      groupPk: conversationId,
+      alsoRemoveMessages: false,
+    });
+    dispatch(action as any);
+    empty();
+    // We want to show the dialog where "invite sending" is visible (i.e. the current group members) instead of this one
+    // once we hit "invite"
+    closeDialog();
+    dispatch(updateGroupMembersModal({ conversationId }));
   };
 
   useKey((event: KeyboardEvent) => {

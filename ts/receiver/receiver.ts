@@ -228,15 +228,6 @@ export async function queueAllCached() {
   }, Promise.resolve());
 }
 
-export async function queueAllCachedFromSource(source: string) {
-  const items = await IncomingMessageCache.getAllFromCacheForSource(source);
-
-  // queue all cached for this source, but keep the order
-  await items.reduce(async (promise, item) => {
-    await promise;
-    await queueCached(item);
-  }, Promise.resolve());
-}
 
 async function queueCached(item: UnprocessedParameter) {
   try {

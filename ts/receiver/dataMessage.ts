@@ -11,7 +11,6 @@ import { ConversationModel } from '../models/conversation';
 import { ConvoHub } from '../session/conversations';
 import { PubKey } from '../session/types';
 import { StringUtils, UserUtils } from '../session/utils';
-import { handleLegacyClosedGroupControlMessage } from './closedGroups';
 import { handleMessageJob, toRegularMessage } from './queuedJob';
 
 import { MessageModel } from '../models/message';
@@ -45,9 +44,6 @@ function cleanAttachments(decryptedDataMessage: SignalService.DataMessage) {
   const { quote } = decryptedDataMessage;
 
   // Here we go from binary to string/base64 in all AttachmentPointer digest/key fields
-
-  // we do not care about the group field on Session Desktop
-  decryptedDataMessage.group = null;
 
   // when receiving a message we get keys of attachment as buffer, but we override the data with the decrypted string instead.
   // TODO it would be nice to get rid of that as any here, but not in this PR
@@ -173,16 +169,6 @@ export async function handleSwarmDataMessage({
     // Groups update should always be able to be decrypted as we get the keys before trying to decrypt them.
     // If decryption failed once, it will keep failing, so no need to keep it in the cache.
     await IncomingMessageCache.removeFromCache({ id: envelope.id });
-    return;
-  }
-  // we handle legacy group updates from our other devices in handleLegacyClosedGroupControlMessage()
-  if (cleanDataMessage.closedGroupControlMessage) {
-    // TODO DEPRECATED
-    await handleLegacyClosedGroupControlMessage(
-      envelope,
-      cleanDataMessage.closedGroupControlMessage as SignalService.DataMessage.ClosedGroupControlMessage,
-      expireUpdate || null
-    );
     return;
   }
 

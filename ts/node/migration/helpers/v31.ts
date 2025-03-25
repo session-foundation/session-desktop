@@ -15,7 +15,6 @@ import { ConversationAttributes } from '../../../models/conversationAttributes';
 import { maybeArrayJSONtoArray } from '../../../types/sqlSharedTypes';
 import { checkTargetMigration, hasDebugEnvVariable } from '../utils';
 import { sqlNode } from '../../sql';
-import { HexKeyPair } from '../../../receiver/keypairs';
 import { fromHexToArray } from '../../../session/utils/String';
 import { CONVERSATION_PRIORITIES } from '../../../models/types';
 
@@ -310,10 +309,6 @@ function insertLegacyGroupIntoWrapper(
   const { priority, id, groupAdmins, members, displayNameInProfile, lastJoinedTimestamp } =
     legacyGroup;
 
-  const latestEncryptionKeyPairHex = sqlNode.getLatestClosedGroupEncryptionKeyPair(
-    legacyGroup.id,
-    db
-  ) as HexKeyPair | undefined;
 
   const wrapperLegacyGroup = getLegacyGroupInfoFromDBValues({
     id,
@@ -321,8 +316,8 @@ function insertLegacyGroupIntoWrapper(
     groupAdmins,
     members,
     displayNameInProfile,
-    encPubkeyHex: latestEncryptionKeyPairHex?.publicHex || '',
-    encSeckeyHex: latestEncryptionKeyPairHex?.privateHex || '',
+    encPubkeyHex: '',
+    encSeckeyHex: '',
     lastJoinedTimestamp,
   });
 

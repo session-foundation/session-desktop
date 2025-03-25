@@ -4,7 +4,6 @@ import { KeyPair, to_hex } from 'libsodium-wrappers-sumo';
 import _ from 'lodash';
 import { Snode } from '../../../data/types';
 import { getSodiumNode } from '../../../node/sodiumNode';
-import { ECKeyPair } from '../../../receiver/keypairs';
 import { SnodePool } from '../../../session/apis/snode_api/snodePool';
 import { PubKey } from '../../../session/types';
 import { ByteKeyPair } from '../../../session/utils/User';
@@ -79,12 +78,6 @@ export function generateFakeClosedGroupV2PkStr(): GroupPubkeyType {
   const pubkeyString: GroupPubkeyType = `03${hexBuffer}`;
 
   return pubkeyString;
-}
-
-export function generateFakeECKeyPair(): ECKeyPair {
-  const pubkey = generateFakePubKey().toArray();
-  const privKey = new Uint8Array(crypto.randomBytes(64));
-  return new ECKeyPair(pubkey, privKey);
 }
 
 export function generateFakePubKeys(amount: number): Array<PubKey> {

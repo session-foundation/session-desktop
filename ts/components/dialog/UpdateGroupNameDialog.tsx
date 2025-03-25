@@ -7,7 +7,6 @@ import useKey from 'react-use/lib/useKey';
 import styled from 'styled-components';
 import { useIsClosedGroup, useIsPublic } from '../../hooks/useParamSelector';
 import { ConvoHub } from '../../session/conversations';
-import { ClosedGroup } from '../../session/group/closed-group';
 import { initiateOpenGroupUpdate } from '../../session/group/open-group';
 import { PubKey } from '../../session/types';
 import LIBSESSION_CONSTANTS from '../../session/utils/libsession/libsession_constants';
@@ -127,16 +126,15 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
         });
         closeDialog();
       } else {
-        if (PubKey.is03Pubkey(conversationId)) {
-          const updateNameAction = groupInfoActions.currentDeviceGroupNameChange({
-            groupPk: conversationId,
-            newName: trimmedGroupName,
-          });
-          dispatch(updateNameAction as any);
-          return; // keeping the dialog open until the async thunk is done (via isNameChangePending)
+        if (!PubKey.is03Pubkey(conversationId)) {
+          throw new Error('Only 03-group are supported here');
         }
-        void ClosedGroup.initiateClosedGroupUpdate(conversationId, trimmedGroupName, null);
-        closeDialog();
+        const updateNameAction = groupInfoActions.currentDeviceGroupNameChange({
+          groupPk: conversationId,
+          newName: trimmedGroupName,
+        });
+        dispatch(updateNameAction as any);
+        // keeping the dialog open until the async thunk is done (via isNameChangePending)
       }
     }
   }
