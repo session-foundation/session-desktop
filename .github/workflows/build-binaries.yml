@@ -206,7 +206,7 @@ jobs:
         # only run this on "push" to "master" or alpha releases
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         run: |
-          . ./build/setup-mac-release-combine.sh
+          ./build/setup-mac-release-combine.sh
 
       - name: Upload release metadata
         # only run this on "push" to "master" or alpha releases
