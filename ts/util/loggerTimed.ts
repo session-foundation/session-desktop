@@ -58,6 +58,7 @@ export class TimedLog {
   public static formatDistanceToNow(time: number) {
     const ms = Date.now() - Math.floor(time);
     const s = Math.floor(ms / 1000);
+
     if (s === 0) {
       return `${ms}${TimedLog.millisecondSuffix}`;
     }
@@ -66,12 +67,9 @@ export class TimedLog {
       return `${s}${TimedLog.secondSuffix}`;
     }
 
-    function formatMillisecondsToSeconds(milliseconds: number): string {
-      const seconds = milliseconds / 1000;
-      return seconds.toFixed(3).replace(/\.?0+$/, '');
-    }
-
-    return `${formatMillisecondsToSeconds(ms)}${TimedLog.secondSuffix}`;
+    const seconds = ms / 1000;
+    const formattedSeconds = seconds.toFixed(3).replace(/\.?0+$/, '');
+    return `${formattedSeconds}${TimedLog.secondSuffix}`;
   }
 
   /**
