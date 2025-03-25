@@ -97,8 +97,6 @@ export interface ConversationAttributes {
 
   /** disappearing messages setting for this conversation */
   expirationMode: DisappearingMessageConversationModeType;
-  /** to warn the user that the person he is talking to is using an old client which might cause issues */
-  hasOutdatedClient?: string;
 
   /**
    * An 03-group is expired if an admin didn't come online for the last 30 days.

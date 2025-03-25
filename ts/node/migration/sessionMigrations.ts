@@ -111,6 +111,7 @@ const LOKI_SCHEMA_VERSIONS = [
   updateToSessionSchemaVersion40,
   updateToSessionSchemaVersion41,
   updateToSessionSchemaVersion42,
+  updateToSessionSchemaVersion43,
 ];
 
 function updateToSessionSchemaVersion1(currentVersion: number, db: BetterSqlite3.Database) {
@@ -2098,6 +2099,23 @@ function updateToSessionSchemaVersion42(currentVersion: number, db: BetterSqlite
       'showOnboardingAccountJustCreated after ',
       sqlNode.getItemById(SettingsKey.showOnboardingAccountJustCreated, db)?.value
     );
+
+    writeSessionSchemaVersion(targetVersion, db);
+  })();
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
+}
+
+function updateToSessionSchemaVersion43(currentVersion: number, db: BetterSqlite3.Database) {
+  const targetVersion = 43;
+  if (currentVersion >= targetVersion) {
+    return;
+  }
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
+
+  db.transaction(() => {
+    db.prepare(`ALTER TABLE ${CONVERSATIONS_TABLE} DROP COLUMN hasOutdatedClient;`).run();
 
     writeSessionSchemaVersion(targetVersion, db);
   })();

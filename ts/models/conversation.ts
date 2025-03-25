@@ -376,10 +376,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
       toRet.expirationMode = this.getExpirationMode();
     }
 
-    if (this.getHasOutdatedClient()) {
-      toRet.hasOutdatedClient = this.getHasOutdatedClient();
-    }
-
     if (this.getIsExpired03Group()) {
       toRet.isExpired03Group = true;
     }
@@ -2704,9 +2700,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
     return this.get('expireTimer');
   }
 
-  public getHasOutdatedClient() {
-    return this.get('hasOutdatedClient');
-  }
 
   public getIsExpired03Group() {
     return PubKey.is03Pubkey(this.id) && !!this.get('isExpired03Group');
