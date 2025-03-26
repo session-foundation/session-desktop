@@ -287,8 +287,8 @@ We use the `python3` command for many of our scripts. If you have installed Pyth
 <details>
 <summary><em>...(mach-o file, but is an incompatible architecture (have 'x86_64', need 'arm64'))...</em></summary>
 
-> [!NOTE]
-> TLDR: If you are using VS Code, check the architecture of your integrated terminal by running `uname -m` in it.
+> **TLDR**
+> If you are using VS Code, check the architecture of your integrated terminal by running `uname -m` in it.
 > This also applies to NodeJS installations. Check with `node -p process.arch`.
 > If the architecture doesn't match your host operating system Session will fail to run.
 
