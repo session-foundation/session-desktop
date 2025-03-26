@@ -284,6 +284,18 @@ We use the `python3` command for many of our scripts. If you have installed Pyth
 
 </details>
 
+<details>
+<summary><em>...(mach-o file, but is an incompatible architecture (have 'x86_64', need 'arm64'))...</em></summary>
+
+> [!NOTE]
+> TLDR: If you are using VS Code, check the architecture of your integrated terminal by running `uname -m` in it.This also applies to NodeJS installations. Check with `node -p process.arch`. If the architecture doesn't match your host operating system Session will fail to run.
+
+Are you using Visual Studio Code? Make sure that your installation matches your host operating system. For example if your device is `arm64` make sure the VS Code installation is not `x86_64`. If they do not match and you are using VS Code's integrated terminal, it will run on the architecture of the VS Code installation. Therefore if you installed NodeJS or adding packages via the integrated terminal, it will use the wrong architecture and not match your host system. You can check the architecture of your NodeJS installation by running `node -p process.arch` in the terminal.
+
+This error comes from when you build Session's native modules e.g. `better-sqlite3`, `libsession_util_nodejs`, they have been compiled for the wrong cpu architecture.
+
+</details>
+
 ## Hot reloading
 
 More often than not, you'll need to restart the application regularly to see your changes, as there
