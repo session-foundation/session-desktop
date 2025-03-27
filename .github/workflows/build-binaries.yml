@@ -119,28 +119,20 @@ jobs:
         run: |
           version=$(node -p "require('./package.json').version")
           echo "VERSION_TAG=$version" >> "$GITHUB_OUTPUT"
+
       - name: Download release metadata
         # only run this on "push" to "master" or alpha releases
         if: ${{ env.SHOULD_PUBLISH == 'true' }}
         uses: actions/download-artifact@v4
         with:
+          name: latest-linux-AppImage.yml
           path: dist
-          pattern: latest-linux-*
-          merge-multiple: true
 
-      - name: Combine release metadata
+      - name: Rename
         # only run this on "push" to "master" or alpha releases
         if: ${{ env.SHOULD_PUBLISH == 'true'  }}
         run: |
-          ./build/setup-linux-release-combine.sh
-          
-      - name: Upload release metadata
-        # only run this on "push" to "master" or alpha releases
-        if: ${{ env.SHOULD_PUBLISH == 'true'  }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: latest-linux.yml
-          path: dist/latest-linux.yml
+          mv dist/latest-linux-AppImage.yml dist/latest-linux.yml
 
       - name: Upload changes to draft release
         # only run this on "push" to "master" or alpha releases
