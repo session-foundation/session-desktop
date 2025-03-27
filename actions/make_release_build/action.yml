@@ -17,7 +17,7 @@ runs:
       if: ${{ inputs.should_publish == 'false' }}
       shell: bash
       run: |
-        . ./build/setup-mac-certificate.sh
+        source ./build/setup-mac-certificate.sh
         yarn build-release --config.mac.bundleVersion=${{ github.ref }}
 
     - name: Upload artefacts
@@ -32,15 +32,17 @@ runs:
       if: ${{ inputs.should_publish == 'true' }}
       shell: bash
       run: |
-        . ./build/setup-mac-certificate.sh
+        source ./build/setup-mac-certificate.sh
         yarn build-release-publish --config.mac.bundleVersion=${{ github.ref }}
 
-    - name: Setup release metadata
+      # Note: We need to backup the latest.yml file because other jobs can overwrite it when they are complete e.g. macOS arm64 and x64
+    - name: Backup release metadata
       # only run this on "push" to "master" or alpha releases
       if: ${{ inputs.should_publish == 'true' }}
       shell: bash
       run: |
-        ./build/setup-mac-release-arch.sh ${{ inputs.architecture }}
+        echo "Backup release metadata for ${{ inputs.architecture }}"
+        mv dist/latest-mac.yml dist/latest-mac-${{ inputs.architecture }}.yml
 
     - name: Upload release metadata
       # only run this on "push" to "master" or alpha releases
