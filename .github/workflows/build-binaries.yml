@@ -188,7 +188,7 @@ jobs:
         with:
           sparse-checkout: |
             package.json
-          sparse-checkout-cone-mode: false
+            build/setup-mac-release-combine.sh
 
       - name: Get version tag from package.json
         id: get_version
