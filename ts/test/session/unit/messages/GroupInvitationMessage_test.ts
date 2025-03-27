@@ -4,10 +4,11 @@ import { beforeEach } from 'mocha';
 import { SignalService } from '../../../../protobuf';
 import { Constants } from '../../../../session';
 import { CommunityInvitationMessage } from '../../../../session/messages/outgoing/visibleMessage/CommunityInvitationMessage';
+import { DisappearingMessageMode } from '../../../../session/disappearing_messages/types';
 
 const sharedNoExpire = {
   expireTimer: 0,
-  expirationType: 'unknown' as const,
+  expirationType: DisappearingMessageMode[0],
 };
 
 describe('CommunityInvitationMessage', () => {
