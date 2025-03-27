@@ -192,6 +192,7 @@
     "afterSign": "build/notarize.js",
     "afterPack": "build/afterPackHook.js",
     "artifactName": "${name}-${os}-${arch}-${version}.${ext}",
+    "generateUpdatesFilesForAllChannels": true,
     "extraResources": [
       {
         "from": "./build/launcher-script.sh",

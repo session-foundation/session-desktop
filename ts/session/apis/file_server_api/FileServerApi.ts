@@ -8,12 +8,14 @@ import {
 import { fromUInt8ArrayToBase64 } from '../../utils/String';
 import { NetworkTime } from '../../../util/NetworkTime';
 import { DURATION } from '../../constants';
+import { isReleaseChannel, type ReleaseChannels } from '../../../updater/types';
+import { Storage } from '../../../util/storage';
 
 export const fileServerHost = 'filev2.getsession.org';
 export const fileServerURL = `http://${fileServerHost}`;
 
 export const fileServerPubKey = 'da21e1d886c6fbaea313f75298bd64aab03a97ce985b46bb2dad9f2089c8ee59';
-const RELEASE_VERSION_ENDPOINT = '/session_version?platform=desktop';
+const RELEASE_VERSION_ENDPOINT = '/session_version';
 
 const POST_GET_FILE_ENDPOINT = '/file';
 
@@ -130,15 +132,32 @@ const parseStatusCodeFromOnionRequestV4 = (
  * This call is onion routed and so do not expose our ip to github nor the file server.
  */
 export const getLatestReleaseFromFileServer = async (
-  userEd25519SecretKey: Uint8Array
-): Promise<string | null> => {
+  userEd25519SecretKey: Uint8Array,
+  releaseType?: ReleaseChannels
+): Promise<[string, ReleaseChannels] | null> => {
   const sigTimestampSeconds = NetworkTime.getNowWithNetworkOffsetSeconds();
   const blindedPkHex = await BlindingActions.blindVersionPubkey({
     ed25519SecretKey: userEd25519SecretKey,
   });
-  const signature = await BlindingActions.blindVersionSign({
+  const method = 'GET';
+  let releaseChannel = Storage.get('releaseChannel') as ReleaseChannels;
+
+  if (!releaseChannel || !isReleaseChannel(releaseChannel)) {
+    releaseChannel = 'latest';
+    await Storage.put('releaseChannel', releaseChannel);
+  }
+
+  const queryParams = new URLSearchParams();
+  queryParams.append('platform', 'desktop');
+  queryParams.append('release_channel', releaseType || releaseChannel);
+  const endpoint = `${RELEASE_VERSION_ENDPOINT}?${queryParams}`;
+
+  const signature = await BlindingActions.blindVersionSignRequest({
     ed25519SecretKey: userEd25519SecretKey,
     sigTimestampSeconds,
+    sigMethod: method,
+    sigPath: endpoint,
+    sigBody: null,
   });
 
   const headers = {
@@ -146,14 +165,16 @@ export const getLatestReleaseFromFileServer = async (
     'X-FS-Timestamp': `${sigTimestampSeconds}`,
     'X-FS-Signature': fromUInt8ArrayToBase64(signature),
   };
-  const result = await OnionSending.sendJsonViaOnionV4ToFileServer({
+
+  const params = {
     abortSignal: new AbortController().signal,
-    endpoint: RELEASE_VERSION_ENDPOINT,
-    method: 'GET',
+    endpoint,
+    method,
     stringifiedBody: null,
     headers,
     timeoutMs: 10 * DURATION.SECONDS,
-  });
+  };
+  const result = await OnionSending.sendJsonViaOnionV4ToFileServer(params);
 
   if (!batchGlobalIsSuccess(result) || parseStatusCodeFromOnionRequestV4(result) !== 200) {
     return null;
@@ -164,5 +185,5 @@ export const getLatestReleaseFromFileServer = async (
   if (!latestVersionWithV) {
     return null;
   }
-  return latestVersionWithV;
+  return [latestVersionWithV, releaseType || releaseChannel];
 };

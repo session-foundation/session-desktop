@@ -167,6 +167,7 @@ import { isSessionLocaleSet, getCrowdinLocale } from '../util/i18n/shared';
 import { loadLocalizedDictionary } from '../node/locale';
 import { simpleDictionary } from '../localization/locales';
 import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
+import { isReleaseChannel } from '../updater/types';
 
 // Both of these will be set after app fires the 'ready' event
 let logger: Logger | null = null;
@@ -493,8 +494,17 @@ ipc.on('show-window', () => {
   showWindow();
 });
 
-ipc.on('set-release-from-file-server', (_event, releaseGotFromFileServer) => {
-  setLatestRelease(releaseGotFromFileServer);
+ipc.on('set-release-from-file-server', (_event, releaseInfoFromFileServer) => {
+  const [releaseVersion, releaseChannel] = releaseInfoFromFileServer;
+
+  if (!releaseVersion || !releaseChannel || !isReleaseChannel(releaseChannel)) {
+    console.error(
+      `[updater] set-release-from-file-server: invalid release information, version=${releaseVersion} or channel=${releaseChannel}`
+    );
+    return;
+  }
+
+  setLatestRelease(releaseInfoFromFileServer);
 });
 
 let isReadyForUpdates = false;
@@ -513,7 +523,10 @@ async function readyForUpdates() {
     await updater.start(getMainWindow, userConfig, i18n, logger);
   } catch (error) {
     const log = logger || console;
-    log.error('Error starting update checks:', error && error.stack ? error.stack : error);
+    log.error(
+      '[updater] Error starting update checks:',
+      error && error.stack ? error.stack : error
+    );
   }
 }
 

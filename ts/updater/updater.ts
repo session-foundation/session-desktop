@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 /* eslint-disable no-console */
 import { app, type BrowserWindow } from 'electron';
-import { autoUpdater, type UpdateInfo } from 'electron-updater';
+import { autoUpdater, DOWNLOAD_PROGRESS, type UpdateInfo } from 'electron-updater';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { gt as isVersionGreaterThan, parse as parseVersion } from 'semver';
 
+import { filesize } from 'filesize';
 import { windowMarkShouldQuit } from '../node/window_state';
 
 import { UPDATER_INTERVAL_MS } from '../session/constants';
@@ -24,7 +25,11 @@ let downloadIgnored = false;
 let interval: NodeJS.Timeout | undefined;
 let stopped = false;
 
-// eslint:disable: no-console
+autoUpdater.on(DOWNLOAD_PROGRESS, eventDownloadProgress => {
+  console.log(
+    `[updater] downloading ${filesize(eventDownloadProgress.transferred, { base: 10 })}/${filesize(eventDownloadProgress.total, { base: 10 })}`
+  );
+});
 
 export async function start(
   getMainWindow: () => BrowserWindow | null,
@@ -32,12 +37,12 @@ export async function start(
   logger: LoggerType
 ) {
   if (interval) {
-    logger.info('auto-update: Already running');
+    logger.info('[updater] auto-update: Already running');
 
     return;
   }
 
-  logger.info('auto-update: starting checks...');
+  logger.info('[updater] auto-update: starting checks...');
 
   autoUpdater.logger = logger;
   autoUpdater.autoDownload = false;
@@ -46,7 +51,7 @@ export async function start(
     try {
       await checkForUpdates(getMainWindow, i18n, logger);
     } catch (error) {
-      logger.error('auto-update: error:', getPrintableError(error));
+      logger.error('[updater] auto-update: error:', getPrintableError(error));
     }
   }, UPDATER_INTERVAL_MS); // trigger and try to update every 10 minutes to let the file gets downloaded if we are updating
   stopped = false;
@@ -56,11 +61,11 @@ export async function start(
       try {
         await checkForUpdates(getMainWindow, i18n, logger);
       } catch (error) {
-        logger.error('auto-update: error:', getPrintableError(error));
+        logger.error('[updater] auto-update: error:', getPrintableError(error));
       }
     },
     2 * 60 * 1000
-  ); // we do checks from the file server every 1 minute.
+  ); // we do checks from the file server every 2 minutes.
 }
 
 export function stop() {
@@ -76,39 +81,52 @@ async function checkForUpdates(
   i18n: SetupI18nReturnType,
   logger: LoggerType
 ) {
-  logger.info('[updater] checkForUpdates');
   if (stopped || isUpdating || downloadIgnored) {
+    logger.info(
+      `[updater] checkForUpdates is returning early stopped ${stopped} isUpdating ${isUpdating} downloadIgnored ${downloadIgnored}`
+    );
     return;
   }
 
   const canUpdate = await canAutoUpdate();
-  logger.info('[updater] canUpdate', canUpdate);
+  logger.info('[updater] checkForUpdates canAutoUpdate', canUpdate);
   if (!canUpdate) {
-    logger.info('checkForUpdates canAutoUpdate false');
     return;
   }
 
-  logger.info('[updater] checkForUpdates...');
+  logger.info('[updater] checkForUpdates isUpdating', isUpdating);
 
   isUpdating = true;
 
   try {
-    const latestVersionFromFsFromRenderer = getLatestRelease();
+    const [updateVersionFromFsFromRenderer, releaseChannelFromFsFromRenderer] = getLatestRelease();
 
-    logger.info('[updater] latestVersionFromFsFromRenderer', latestVersionFromFsFromRenderer);
-    if (!latestVersionFromFsFromRenderer || !latestVersionFromFsFromRenderer?.length) {
+    if (!updateVersionFromFsFromRenderer || !updateVersionFromFsFromRenderer?.length) {
       logger.info(
-        '[updater] testVersionFromFsFromRenderer was not updated yet by renderer. Skipping update check'
+        '[updater] checkForUpdates getLatestRelease() has not been called by the renderer process yet. Skipping update check'
       );
       return;
     }
 
+    logger.info(
+      `[updater] checkForUpdates updateVersionFromFsFromRenderer ${updateVersionFromFsFromRenderer} releaseChannelFromFsFromRenderer ${releaseChannelFromFsFromRenderer}`
+    );
+
+    if (releaseChannelFromFsFromRenderer !== 'latest') {
+      // we only allow pre-release updates if the release channel is alpha
+      autoUpdater.allowPrerelease = releaseChannelFromFsFromRenderer === 'alpha';
+      autoUpdater.allowDowngrade = releaseChannelFromFsFromRenderer === 'alpha';
+      logger.info(
+        `[updater] checkForUpdates we are on the ${releaseChannelFromFsFromRenderer} channel allowPrerelease ${autoUpdater.allowPrerelease} allowDowngrade ${autoUpdater.allowDowngrade}`
+      );
+    }
+
     const currentVersion = autoUpdater.currentVersion.toString();
-    const isMoreRecent = isVersionGreaterThan(latestVersionFromFsFromRenderer, currentVersion);
+    const isMoreRecent = isVersionGreaterThan(updateVersionFromFsFromRenderer, currentVersion);
     logger.info('[updater] checkForUpdates isMoreRecent', isMoreRecent);
     if (!isMoreRecent) {
       logger.info(
-        `File server has no update so we are not looking for an update from github current:${currentVersion} fromFileServer:${latestVersionFromFsFromRenderer}`
+        `[updater] File server has no update so we are not looking for an update from github current:${currentVersion} fromFileServer:${updateVersionFromFsFromRenderer}`
       );
       return;
     }
@@ -116,13 +134,14 @@ async function checkForUpdates(
     // Get the update using electron-updater, this fetches from github
     const result = await autoUpdater.checkForUpdates();
 
-    logger.info('[updater] checkForUpdates got github response back ');
-
     if (!result?.updateInfo) {
-      logger.info('[updater] no update info received');
-
+      logger.info('[updater] received no updateInfo in response from GitHub');
       return;
     }
+
+    logger.info(
+      `[updater] checkForUpdates received response from GitHub at ${new Date().toISOString()} version: ${result?.updateInfo?.version}`
+    );
 
     try {
       const hasUpdate = isUpdateAvailable(result.updateInfo);
@@ -136,7 +155,7 @@ async function checkForUpdates(
 
       const mainWindow = getMainWindow();
       if (!mainWindow) {
-        console.error('cannot showDownloadUpdateDialog, mainWindow is unset');
+        logger.error('[updater] cannot showDownloadUpdateDialog, mainWindow is unset');
         return;
       }
       logger.info('[updater] showing download dialog...');
@@ -158,15 +177,16 @@ async function checkForUpdates(
     } catch (error) {
       const mainWindow = getMainWindow();
       if (!mainWindow) {
-        console.error('cannot showDownloadUpdateDialog, mainWindow is unset');
+        logger.error('[updater] cannot showDownloadUpdateDialog, mainWindow is unset');
         return;
       }
       await showCannotUpdateDialog(mainWindow, i18n);
       throw error;
     }
+
     const window = getMainWindow();
     if (!window) {
-      console.error('cannot showDownloadUpdateDialog, mainWindow is unset');
+      logger.error('[updater] cannot showDownloadUpdateDialog, mainWindow is unset');
       return;
     }
     // Update downloaded successfully, we should ask the user to update
@@ -176,7 +196,7 @@ async function checkForUpdates(
       return;
     }
 
-    logger.info('[updater] calling quitAndInstall...');
+    logger.info('[updater] calling windowMarkShouldQuit then quitAndInstall...');
     windowMarkShouldQuit();
     autoUpdater.quitAndInstall();
   } finally {
@@ -185,15 +205,23 @@ async function checkForUpdates(
 }
 
 function isUpdateAvailable(updateInfo: UpdateInfo): boolean {
-  const latestVersion = parseVersion(updateInfo.version);
-  if (!latestVersion) {
+  const updateVersion = parseVersion(updateInfo.version);
+  if (!updateVersion) {
+    console.error(
+      '[updater] isUpdateAvailable could not parse update version:',
+      updateInfo.version
+    );
     return false;
   }
 
   // We need to convert this to string because typescript won't let us use types across submodules ....
   const currentVersion = autoUpdater.currentVersion.toString();
 
-  return isVersionGreaterThan(latestVersion, currentVersion);
+  const updateIsNewer = isVersionGreaterThan(updateVersion, currentVersion);
+  console.log(
+    `[updater] isUpdateAvailable updateIsNewer: ${updateIsNewer} updateVersion: ${updateVersion} currentVersion: ${currentVersion}`
+  );
+  return updateIsNewer;
 }
 
 /*
