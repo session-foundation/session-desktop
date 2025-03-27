@@ -462,6 +462,8 @@ const doDeleteSelectedMessages = async ({
       messages: selectedMessages,
       deletionType: 'markDeleted',
     });
+    ToastUtils.pushDeleted(selectedMessages.length);
+
     return;
   }
 

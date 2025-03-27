@@ -78,6 +78,77 @@ jobs:
         run: |
           sed -i 's/"target": "deb"/"target": "${{ matrix.pkg_to_build }}"/g' package.json && yarn build-release-publish
 
+      - name: Backup AppImage latest-linux.yml file
+        # only run this on "push" to "master"
+        # Note: only AppImage can auto update via electron-builder on linux.continue-on-error.
+        # Note: We need to backup the latest-linux appImage file as other builds are overwriting it when they finish
+        # after the AppImage build
+        if: ${{ env.SHOULD_PUBLISH == 'true' && matrix.pkg_to_build == 'AppImage' }}
+        shell: bash
+        run: |
+          mv dist/latest-linux.yml dist/latest-linux-${{ matrix.pkg_to_build }}.yml
+
+      - name: Upload release metadata
+        # only run this on "push" to "master"
+        # Check the details of why we need this above (and why only for AppImage)
+        if: ${{ env.SHOULD_PUBLISH == 'true' && matrix.pkg_to_build == 'AppImage' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: latest-linux-${{ matrix.pkg_to_build }}.yml
+          path: dist/latest-linux-${{ matrix.pkg_to_build }}.yml
+
+  post_build_linux:
+    needs: [build_linux]
+    runs-on: ubuntu-22.04
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout git repo
+        # only run this on "push" to "master"
+        if: ${{ env.SHOULD_PUBLISH == 'true' }}
+        uses: actions/checkout@v4
+        # We only need the package.json file in this run (to extract the version being built)
+        with:
+          sparse-checkout: |
+            package.json
+          sparse-checkout-cone-mode: false
+
+      - name: Get version tag from package.json
+        id: get_version
+        # only run this on "push" to "master"
+        if: ${{ env.SHOULD_PUBLISH == 'true' }}
+        run: |
+          version=$(node -p "require('./package.json').version")
+          echo "VERSION_TAG=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Download release metadata
+        # only run this on "push" to "master"
+        if: ${{ env.SHOULD_PUBLISH == 'true' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: latest-linux-AppImage.yml
+          path: dist
+
+      - name: Rename
+        # only run this on "push" to "master"
+        if: ${{ env.SHOULD_PUBLISH == 'true'  }}
+        run: |
+          mv dist/latest-linux-AppImage.yml dist/latest-linux.yml
+
+      - name: Upload changes to draft release
+        # only run this on "push" to "master"
+        if: ${{ env.SHOULD_PUBLISH == 'true' }}
+        uses: ncipollo/release-action@v1
+        with:
+          tag: v${{ steps.get_version.outputs.VERSION_TAG }}
+          draft: true
+          name: 'Draft'
+          artifacts: 'dist/latest-linux.yml'
+          allowUpdates: true
+          omitNameDuringUpdate: true
+          replacesArtifacts: true
+          updateOnlyUnreleased: true
+
   build_windows:
     runs-on: windows-2022
     env:
