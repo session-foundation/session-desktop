@@ -318,7 +318,7 @@ async function allFailedToSentGroupControlMessagesToRetry(groupPk: GroupPubkeyTy
             typeOfChange: SignalService.GroupUpdateInfoChangeMessage.Type.DISAPPEARING_MESSAGES,
             ...shared,
             updatedExpirationSeconds: expirationTimerUpdate.expireTimer,
-            expirationType: expirationTimerUpdate.expirationType || 'unknown',
+            expirationType: expirationTimerUpdate.expirationType,
           });
         }
         window.log.warn(

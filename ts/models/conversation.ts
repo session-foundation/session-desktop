@@ -125,7 +125,6 @@ import { FetchMsgExpirySwarm } from '../session/utils/job_runners/jobs/FetchMsgE
 import { GroupSync } from '../session/utils/job_runners/jobs/GroupSyncJob';
 import { UpdateMsgExpirySwarm } from '../session/utils/job_runners/jobs/UpdateMsgExpirySwarmJob';
 import { getLibGroupKickedOutsideRedux } from '../state/selectors/userGroups';
-import { ReleasedFeatures } from '../util/releaseFeature';
 import {
   MetaGroupWrapperActions,
   UserGroupsWrapperActions,
@@ -377,10 +376,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
       toRet.expirationMode = this.getExpirationMode();
     }
 
-    if (this.getHasOutdatedClient()) {
-      toRet.hasOutdatedClient = this.getHasOutdatedClient();
-    }
-
     if (this.getIsExpired03Group()) {
       toRet.isExpired03Group = true;
     }
@@ -630,8 +625,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
       if (this.isOpenGroupV2()) {
         // communities have no expiration timer support, so enforce it here.
-        chatMessageParams.expirationType = null;
-        chatMessageParams.expireTimer = null;
+        chatMessageParams.expirationType = 'unknown';
+        chatMessageParams.expireTimer = 0;
 
         const chatMessageOpenGroupV2 = new OpenGroupVisibleMessage(chatMessageParams);
         const roomInfos = this.toOpenGroupV2();
@@ -963,28 +958,13 @@ export class ConversationModel extends Model<ConversationAttributes> {
     // to be above the message that initiated that change, hence the subtraction.
     const createAtNetworkTimestamp = (sentAt || NetworkTime.now()) - 1;
 
-    // NOTE when we turn the disappearing setting to off, we don't want it to expire with the previous expiration anymore
-    const isV2DisappearReleased = ReleasedFeatures.isDisappearMessageV2FeatureReleasedCached();
-    // when the v2 disappear is released, the changes we make are only for our outgoing messages, not shared with a contact anymore
-    if (isV2DisappearReleased) {
-      if (!this.isPrivate()) {
-        this.set({
-          expirationMode,
-          expireTimer,
-        });
-      } else if (fromSync || fromCurrentDevice) {
-        if (expirationMode === 'legacy') {
-          // TODO legacy messages support will be removed in a future release
-          return false;
-        }
-        // v2 is live, this is a private chat and a change we made, set the setting to what was given, otherwise discard it
-        this.set({
-          expirationMode,
-          expireTimer,
-        });
-      }
-    } else {
-      // v2 is not live, we apply the setting we get blindly
+    if (!this.isPrivate()) {
+      this.set({
+        expirationMode,
+        expireTimer,
+      });
+    } else if (fromSync || fromCurrentDevice) {
+      // this is a private chat and a change we made, set the setting to what was given, otherwise discard it
       this.set({
         expirationMode,
         expireTimer,
@@ -1071,10 +1051,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
         const canBeDeleteAfterSend =
           this.isMe() || !(this.isGroup() && !this.isClosedGroupV2() && message.isControlMessage());
-        if (
-          (canBeDeleteAfterSend && expirationMode === 'legacy') ||
-          expirationMode === 'deleteAfterSend'
-        ) {
+        if (canBeDeleteAfterSend || expirationMode === 'deleteAfterSend') {
           message.set({
             expirationStartTimestamp: DisappearingMessages.setExpirationStartTimestamp(
               expirationMode,
@@ -2714,7 +2691,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
     return success;
   }
 
-  // NOTE We want to replace Backbone .get() calls with these getters as we migrate to Redux completely eventually
   // #region Start of getters
   public getExpirationMode() {
     return this.get('expirationMode');
@@ -2722,10 +2698,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
   public getExpireTimer() {
     return this.get('expireTimer');
-  }
-
-  public getHasOutdatedClient() {
-    return this.get('hasOutdatedClient');
   }
 
   public getIsExpired03Group() {

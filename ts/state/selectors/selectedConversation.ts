@@ -73,7 +73,7 @@ export function getSelectedCanWrite(state: StateType) {
 
   const readOnlySogs = isPublic && !canWriteSogs;
 
-  const isBlindedAndDisabledMsgRequests = getSelectedBlindedDisabledMsgRequests(state); // true if isPrivate, blinded and explicitly disabled msgreq
+  const isBlindedAndDisabledMsgRequests = getSelectedBlindedDisabledMsgRequests(state); // true if isPrivate, blinded and explicitly disabled msg requests
 
   const disabledLegacyGroupWrite = getDisableLegacyGroupDeprecatedActions(
     state,
@@ -196,11 +196,8 @@ export const getSelectedConversationExpirationModes = (state: StateType) => {
     return undefined;
   }
 
-  // NOTE this needs to be as any because the number of modes can change depending on if v2 is released or we are in single mode
+  // NOTE this needs to be as any because the number of modes can change depending on if we are in single mode
   let modes: any = DisappearingMessageConversationModes;
-  // TODO legacy messages support will be removed in a future release
-  // TODO remove legacy mode
-  modes = modes.slice(0, -1);
 
   // Note to Self and Closed Groups only support deleteAfterSend
   const isClosedGroup = !convo.isPrivate && !convo.isPublic;

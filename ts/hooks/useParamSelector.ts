@@ -422,15 +422,6 @@ export function useTimerOptionsByMode(disappearingMessageMode?: string, hasOnlyO
       });
     }
     switch (disappearingMessageMode) {
-      // TODO legacy messages support will be removed in a future release
-      case 'legacy':
-        options.push(
-          ...TimerOptions.DELETE_LEGACY.map(option => ({
-            name: TimerOptions.getName(option),
-            value: option,
-          }))
-        );
-        break;
       case 'deleteAfterRead':
         options.push(
           ...TimerOptions.DELETE_AFTER_READ.map(option => ({
@@ -520,10 +511,6 @@ export function useDisappearingMessageSettingText({
 
   if (!expireTimerText) {
     return '';
-  }
-
-  if (expirationMode === 'legacy') {
-    throw new Error('legacy support is removed');
   }
 
   return expirationMode === 'deleteAfterRead'

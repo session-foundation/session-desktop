@@ -17,7 +17,6 @@ import { DisappearingMessageUpdate } from '../session/disappearing_messages/type
 import { ClosedGroupEncryptionPairReplyMessage } from '../session/messages/outgoing/controlMessage/group/ClosedGroupEncryptionPairReplyMessage';
 import { UserUtils } from '../session/utils';
 import { perfEnd, perfStart } from '../session/utils/Performance';
-import { ReleasedFeatures } from '../util/releaseFeature';
 import { Storage } from '../util/storage';
 // eslint-disable-next-line import/no-unresolved, import/extensions
 import { ConfigWrapperUser } from '../webworker/workers/browser/libsession_worker_functions';
@@ -224,11 +223,6 @@ export async function sentAtMoreRecentThanWrapper(
   envelopeSentAtMs: number,
   variant: ConfigWrapperUser
 ): Promise<'unknown' | 'wrapper_more_recent' | 'envelope_more_recent'> {
-  const userConfigReleased = await ReleasedFeatures.checkIsUserConfigFeatureReleased();
-  if (!userConfigReleased) {
-    return 'unknown';
-  }
-
   const settingsKey = getSettingsKeyFromLibsessionWrapper(variant);
   if (!settingsKey) {
     return 'unknown';
@@ -270,7 +264,7 @@ export async function handleNewClosedGroup(
   const ourNumber = UserUtils.getOurPubKeyFromCache();
 
   if (envelope.senderIdentity === ourNumber.key) {
-    window?.log?.warn('Dropping new closed group updatemessage from our other device.');
+    window?.log?.warn('Dropping new closed group update message from our other device.');
     await IncomingMessageCache.removeFromCache(envelope);
     return;
   }
@@ -320,14 +314,8 @@ export async function handleNewClosedGroup(
       await addKeyPairToCacheAndDBIfNeeded(groupId, ecKeyPairAlreadyExistingConvo.toHexKeyPair());
 
       // TODO This is only applicable for old closed groups - will be removed in future
-      // TODO legacy messages support will be removed in a future release
       await groupConvo.updateExpireTimer({
-        providedDisappearingMode:
-          expireTimer === 0
-            ? 'off'
-            : ReleasedFeatures.isDisappearMessageV2FeatureReleasedCached()
-              ? 'deleteAfterSend'
-              : 'legacy',
+        providedDisappearingMode: expireTimer === 0 ? 'off' : 'deleteAfterSend',
         providedExpireTimer: expireTimer,
         providedSource: sender,
         sentAt: NetworkTime.now(),
@@ -987,8 +975,8 @@ async function sendLatestKeyPairToUsers(
         groupId: groupPubKey,
         createAtNetworkTimestamp: NetworkTime.now(),
         encryptedKeyPairs: wrappers,
-        expirationType: null, // we keep that one **not** expiring (not rendered in the clients, and we need it to be as available as possible on the swarm)
-        expireTimer: null,
+        expirationType: 'unknown', // we keep the one **not** expiring (not rendered in the clients, and we need it to be as available as possible on the swarm)
+        expireTimer: 0,
       });
 
       // the encryption keypair is sent using established channels

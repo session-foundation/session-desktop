@@ -201,8 +201,6 @@ export type RegularMessageType = Pick<
   | 'reaction'
   | 'profile'
   | 'profileKey'
-  // TODO legacy messages support will be removed in a future release
-  | 'expireTimer'
   | 'blocksCommunityMessageRequests'
 > & { isRegularMessage: true };
 
@@ -221,7 +219,6 @@ export function toRegularMessage(rawDataMessage: SignalService.DataMessage): Reg
       'openGroupInvitation',
       'quote',
       'profile',
-      'expireTimer',
       'blocksCommunityMessageRequests',
     ]),
     isRegularMessage: true,
@@ -439,12 +436,7 @@ export async function handleMessageJob(
         messageModel.getExpireTimerSeconds()
       );
 
-      // TODO legacy messages support will be removed in a future release
-      const canBeDeleteAfterSend = conversation && (conversation.isMe() || conversation.isGroup());
-      if (
-        (canBeDeleteAfterSend && expirationMode === 'legacy') ||
-        expirationMode === 'deleteAfterSend'
-      ) {
+      if (expirationMode === 'deleteAfterSend') {
         messageModel.set({
           expirationStartTimestamp: DisappearingMessages.setExpirationStartTimestamp(
             expirationMode,

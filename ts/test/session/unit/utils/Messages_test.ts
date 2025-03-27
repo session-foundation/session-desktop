@@ -16,14 +16,15 @@ import { ClosedGroupEncryptionPairReplyMessage } from '../../../../session/messa
 import { ClosedGroupNameChangeMessage } from '../../../../session/messages/outgoing/controlMessage/group/ClosedGroupNameChangeMessage';
 import { ClosedGroupNewMessage } from '../../../../session/messages/outgoing/controlMessage/group/ClosedGroupNewMessage';
 import { ClosedGroupRemovedMembersMessage } from '../../../../session/messages/outgoing/controlMessage/group/ClosedGroupRemovedMembersMessage';
+import { DisappearingMessageMode } from '../../../../session/disappearing_messages/types';
 
 chai.use(chaiAsPromised as any);
 
 const { expect } = chai;
 
 const sharedNoExpire = {
-  expireTimer: null,
-  expirationType: null,
+  expireTimer: 0,
+  expirationType: DisappearingMessageMode[0],
 };
 
 describe('Message Utils', () => {

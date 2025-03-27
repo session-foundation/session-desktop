@@ -1,6 +1,5 @@
 import { isEmpty, isNil } from 'lodash';
 import { ConvoHub } from '../conversations';
-import { setLastProfileUpdateTimestamp } from '../../util/storage';
 import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { SyncUtils, UserUtils } from '../utils';
 import { fromHexToArray, sanitizeSessionUsername, toHex } from '../utils/String';
@@ -153,7 +152,6 @@ async function updateOurProfileDisplayName(newName: string) {
 
   // might be good to not trigger a sync if the name did not change
   await conversation.commit();
-  await setLastProfileUpdateTimestamp(Date.now());
   await SyncUtils.forceSyncConfigurationNowIfNeeded(true);
 
   return truncatedName;

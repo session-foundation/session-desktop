@@ -155,6 +155,11 @@ message DataMessage {
   reserved 7;
   reserved "timestamp";
 
+  // 5 = expireTimer unused and should not be used (in contentMessage now)
+
+  reserved 5;
+  reserved "expireTimer";
+
   enum Flags {
     EXPIRATION_TIMER_UPDATE   = 2;
   }
@@ -233,8 +238,6 @@ message DataMessage {
   repeated AttachmentPointer         attachments               = 2;
   optional GroupContext              group                     = 3;
   optional uint32                    flags                     = 4;
-  // TODO legacy messages support will be removed in a future release
-  optional uint32                    expireTimer               = 5;
   optional bytes                     profileKey                = 6;
   optional Quote                     quote                     = 8;
   repeated Preview                   preview                   = 10;

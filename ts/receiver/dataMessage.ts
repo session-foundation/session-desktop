@@ -112,10 +112,6 @@ export function cleanIncomingDataMessage(rawDataMessage: SignalService.DataMessa
   if (rawDataMessage.flags == null) {
     rawDataMessage.flags = 0;
   }
-  // TODO legacy messages support will be removed in a future release
-  if (rawDataMessage.expireTimer == null) {
-    rawDataMessage.expireTimer = 0;
-  }
   // eslint-disable-next-line no-bitwise
   if (rawDataMessage.flags & FLAGS.EXPIRATION_TIMER_UPDATE) {
     rawDataMessage.body = '';

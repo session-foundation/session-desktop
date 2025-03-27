@@ -5,8 +5,6 @@ import { PanelRadioButton } from '../../../../buttons/PanelRadioButton';
 
 function toDataTestId(mode: DisappearingMessageConversationModeType) {
   switch (mode) {
-    case 'legacy':
-      return 'disappear-legacy-option' as const;
     case 'deleteAfterRead':
       return 'disappear-after-read-option' as const;
     case 'deleteAfterSend':
@@ -40,22 +38,18 @@ export const DisappearingModes = (props: DisappearingModesProps) => {
         {Object.keys(options).map(_mode => {
           const mode = _mode as DisappearingMessageConversationModeType;
           const optionI18n =
-            mode === 'legacy'
-              ? '' // TODO: to cleanup when we remove legacy entirely
-              : mode === 'deleteAfterRead'
-                ? window.i18n('disappearingMessagesDisappearAfterRead')
-                : mode === 'deleteAfterSend'
-                  ? window.i18n('disappearingMessagesDisappearAfterSend')
-                  : window.i18n('off');
+            mode === 'deleteAfterRead'
+              ? window.i18n('disappearingMessagesDisappearAfterRead')
+              : mode === 'deleteAfterSend'
+                ? window.i18n('disappearingMessagesDisappearAfterSend')
+                : window.i18n('off');
 
           const subtitleI18n =
-            mode === 'legacy'
-              ? '' // TODO: to cleanup when we remove legacy entirely
-              : mode === 'deleteAfterRead'
-                ? window.i18n('disappearingMessagesDisappearAfterReadDescription')
-                : mode === 'deleteAfterSend'
-                  ? window.i18n('disappearingMessagesDisappearAfterSendDescription')
-                  : undefined;
+            mode === 'deleteAfterRead'
+              ? window.i18n('disappearingMessagesDisappearAfterReadDescription')
+              : mode === 'deleteAfterSend'
+                ? window.i18n('disappearingMessagesDisappearAfterSendDescription')
+                : undefined;
           const parentDataTestId = toDataTestId(mode);
 
           return (

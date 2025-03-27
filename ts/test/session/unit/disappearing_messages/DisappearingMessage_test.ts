@@ -10,7 +10,6 @@ import {
 } from '../../../../session/disappearing_messages/types';
 import { UserUtils } from '../../../../session/utils';
 import { isValidUnixTimestamp } from '../../../../session/utils/Timestamps';
-import { ReleasedFeatures } from '../../../../util/releaseFeature';
 import { TestUtils } from '../../../test-utils';
 import {
   generateDisappearingVisibleMessage,
@@ -194,21 +193,7 @@ describe('DisappearingMessage', () => {
 
       expect(messageExpirationType, 'returns deleteAfterSend').to.be.eq('deleteAfterSend');
     });
-    // TODO legacy messages support will be removed in a future release
-    it("if it's a Private Conversation and the expirationMode is legacy and expireTimer = 0 then the message's expirationType is unknown", async () => {
-      const conversation = new ConversationModel({
-        ...conversationArgs,
-      });
-      const expireTimer = 0; // seconds
-      const expirationMode = 'legacy';
-      const messageExpirationType = DisappearingMessages.changeToDisappearingMessageType(
-        conversation,
-        expireTimer,
-        expirationMode
-      );
 
-      expect(messageExpirationType, 'returns unknown').to.be.eq('unknown');
-    });
     it("if it's a Private Conversation and the expirationMode is undefined and expireTimer > 0 then the message's expirationType is unknown", async () => {
       const conversation = new ConversationModel({
         ...conversationArgs,
@@ -313,30 +298,6 @@ describe('DisappearingMessage', () => {
 
       expect(conversationMode, 'returns off').to.be.eq('off');
     });
-    // TODO legacy messages support will be removed in a future release
-    it('if the type is unknown and expireTimer > 0 then the conversation mode is legacy', async () => {
-      const conversation = new ConversationModel({ ...conversationArgs });
-      const expirationType: DisappearingMessageType = 'unknown';
-      const expireTimer = 60; // seconds
-      const conversationMode = DisappearingMessages.changeToDisappearingConversationMode(
-        conversation,
-        expirationType,
-        expireTimer
-      );
-
-      expect(conversationMode, 'returns legacy').to.be.eq('legacy');
-    });
-    it('if the type is undefined and expireTimer > 0 then the conversation mode is legacy', async () => {
-      const conversation = new ConversationModel({ ...conversationArgs });
-      const expireTimer = 60; // seconds
-      const conversationMode = DisappearingMessages.changeToDisappearingConversationMode(
-        conversation,
-        undefined,
-        expireTimer
-      );
-
-      expect(conversationMode, 'returns legacy').to.be.eq('legacy');
-    });
   });
 
   describe('checkForExpireUpdateInContentMessage', () => {
@@ -345,8 +306,6 @@ describe('DisappearingMessage', () => {
       const convoToUpdate = new ConversationModel({
         ...conversationArgs,
       });
-      // TODO legacy messages support will be removed in a future release
-      Sinon.stub(ReleasedFeatures, 'checkIsDisappearMessageV2FeatureReleased').resolves(true);
 
       const expireUpdate = await DisappearingMessages.checkForExpireUpdateInContentMessage(
         visibleMessage.contentProto(),
@@ -356,12 +315,6 @@ describe('DisappearingMessage', () => {
 
       expect(expireUpdate?.expirationType, 'expirationType should be unknown').to.equal('unknown');
       expect(expireUpdate?.expirationTimer, 'expirationTimer should be 0').to.equal(0);
-
-      expect(
-        expireUpdate?.isLegacyConversationSettingMessage,
-        'isLegacyConversationSettingMessage should be false'
-      ).to.be.false;
-      expect(expireUpdate?.isLegacyDataMessage, 'isLegacyDataMessage should be false').to.be.false;
     });
     it('if we receive a deleteAfterRead message after 1 minute then it returns those values', async () => {
       const disappearingMessage = generateDisappearingVisibleMessage({
@@ -372,8 +325,6 @@ describe('DisappearingMessage', () => {
       const convoToUpdate = new ConversationModel({
         ...conversationArgs,
       });
-      // TODO legacy messages support will be removed in a future release
-      Sinon.stub(ReleasedFeatures, 'checkIsDisappearMessageV2FeatureReleased').resolves(true);
 
       const expireUpdate = await DisappearingMessages.checkForExpireUpdateInContentMessage(
         disappearingMessage.contentProto(),
@@ -385,12 +336,6 @@ describe('DisappearingMessage', () => {
         'deleteAfterRead'
       );
       expect(expireUpdate?.expirationTimer, 'expirationTimer should be 60').to.equal(60);
-
-      expect(
-        expireUpdate?.isLegacyConversationSettingMessage,
-        'isLegacyConversationSettingMessage should be false'
-      ).to.be.false;
-      expect(expireUpdate?.isLegacyDataMessage, 'isLegacyDataMessage should be false').to.be.false;
     });
     it('if we receive an ExpirationTimerUpdate message for deleteAfterSend after 5 minutes then it returns those values', async () => {
       const expirationTimerUpdateMessage = generateDisappearingVisibleMessage({
@@ -405,8 +350,6 @@ describe('DisappearingMessage', () => {
       const convoToUpdate = new ConversationModel({
         ...conversationArgs,
       });
-      // TODO legacy messages support will be removed in a future release
-      Sinon.stub(ReleasedFeatures, 'checkIsDisappearMessageV2FeatureReleased').resolves(true);
 
       const expireUpdate = await DisappearingMessages.checkForExpireUpdateInContentMessage(
         expirationTimerUpdateMessage.contentProto(),
@@ -418,12 +361,6 @@ describe('DisappearingMessage', () => {
         'deleteAfterSend'
       );
       expect(expireUpdate?.expirationTimer, 'expirationTimer should be 300').to.equal(300);
-
-      expect(
-        expireUpdate?.isLegacyConversationSettingMessage,
-        'isLegacyConversationSettingMessage should be false'
-      ).to.be.false;
-      expect(expireUpdate?.isLegacyDataMessage, 'isLegacyDataMessage should be false').to.be.false;
     });
     it('if we receive an outdated ExpirationTimerUpdate message then it should be ignored and is outdated', async () => {
       const expirationTimerUpdateMessage = generateDisappearingVisibleMessage({
@@ -438,8 +375,6 @@ describe('DisappearingMessage', () => {
       const convoToUpdate = new ConversationModel({
         ...conversationArgs,
       });
-      // TODO legacy messages support will be removed in a future release
-      Sinon.stub(ReleasedFeatures, 'checkIsDisappearMessageV2FeatureReleased').resolves(true);
 
       const expireUpdate = await DisappearingMessages.checkForExpireUpdateInContentMessage(
         expirationTimerUpdateMessage.contentProto(),
@@ -451,12 +386,6 @@ describe('DisappearingMessage', () => {
         'deleteAfterSend'
       );
       expect(expireUpdate?.expirationTimer, 'expirationTimer should be 300').to.equal(300);
-
-      expect(
-        expireUpdate?.isLegacyConversationSettingMessage,
-        'isLegacyConversationSettingMessage should be false'
-      ).to.be.false;
-      expect(expireUpdate?.isLegacyDataMessage, 'isLegacyDataMessage should be false').to.be.false;
     });
   });
 

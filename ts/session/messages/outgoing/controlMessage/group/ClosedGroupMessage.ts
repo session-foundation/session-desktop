@@ -31,8 +31,7 @@ export abstract class ClosedGroupMessage extends DataMessage {
   public contentProto(): SignalService.Content {
     const content = super.contentProto();
     content.dataMessage = this.dataProto();
-    // TODO legacy messages support will be removed in a future release
-    // Closed Groups only support 'deleteAfterSend' and 'legacy'
+    // Closed Groups only support 'deleteAfterSend'
     content.expirationType =
       this.expirationType === 'deleteAfterSend'
         ? SignalService.Content.ExpirationType.DELETE_AFTER_SEND

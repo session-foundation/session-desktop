@@ -1,7 +1,6 @@
 import { isEmpty, isNumber, toNumber } from 'lodash';
 import { SignalService } from '../../../protobuf';
 import { UserSyncJobDone } from '../../../shims/events';
-import { ReleasedFeatures } from '../../../util/releaseFeature';
 
 import { DisappearingMessageUpdate } from '../../disappearing_messages/types';
 import { DataMessage } from '../../messages/outgoing';
@@ -17,7 +16,6 @@ import {
 import { UserSync } from '../job_runners/jobs/UserSyncJob';
 
 export const forceSyncConfigurationNowIfNeeded = async (waitForMessageSent = false) => {
-  await ReleasedFeatures.checkIsUserConfigFeatureReleased();
   return new Promise(resolve => {
     // if we hang for more than 20sec, force resolve this promise.
     setTimeout(() => {
@@ -47,7 +45,7 @@ const buildSyncVisibleMessage = (
   dataMessage: SignalService.DataMessage,
   createAtNetworkTimestamp: number,
   syncTarget: string,
-  expireUpdate?: DisappearingMessageUpdate
+  expireUpdate: DisappearingMessageUpdate
 ) => {
   const body = dataMessage.body || undefined;
 
@@ -73,7 +71,6 @@ const buildSyncVisibleMessage = (
   }) as Array<AttachmentPointerWithUrl>;
   const quote = (dataMessage.quote as Quote) || undefined;
   const preview = (dataMessage.preview as Array<PreviewWithAttachmentUrl>) || [];
-  const dataMessageExpireTimer = dataMessage.expireTimer;
 
   return new VisibleMessage({
     identifier,
@@ -83,8 +80,8 @@ const buildSyncVisibleMessage = (
     quote,
     preview,
     syncTarget,
-    expireTimer: expireUpdate?.expirationTimer || dataMessageExpireTimer,
-    expirationType: expireUpdate?.expirationType || null,
+    expireTimer: expireUpdate.expirationTimer,
+    expirationType: expireUpdate.expirationType,
   });
 };
 
@@ -116,7 +113,7 @@ export const buildSyncMessage = (
   data: DataMessage | SignalService.DataMessage,
   syncTarget: string,
   sentTimestamp: number,
-  expireUpdate?: DisappearingMessageUpdate
+  expireUpdate: DisappearingMessageUpdate
 ): VisibleMessage | ExpirationTimerUpdateMessage | null => {
   if (
     (data as any).constructor.name !== 'DataMessage' &&
