@@ -7,10 +7,11 @@ import { VisibleMessage } from '../../../../../session/messages/outgoing/visible
 import { PubKey } from '../../../../../session/types';
 import { StringUtils } from '../../../../../session/utils';
 import { TestUtils } from '../../../../test-utils';
+import { DisappearingMessageMode } from '../../../../../session/disappearing_messages/types';
 
 const sharedNoExpire = {
   expireTimer: 0,
-  expirationType: 'unknown' as const,
+  expirationType: DisappearingMessageMode[0],
 };
 
 describe('ClosedGroupVisibleMessage', () => {

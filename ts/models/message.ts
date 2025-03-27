@@ -444,7 +444,7 @@ export class MessageModel extends Model<MessageAttributes> {
     const { expireTimer } = timerUpdate;
     const expirationMode = DisappearingMessages.changeToDisappearingConversationMode(
       convo,
-      timerUpdate?.expirationType || 'unknown',
+      timerUpdate.expirationType,
       expireTimer || 0
     );
 
