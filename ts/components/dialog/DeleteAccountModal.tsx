@@ -144,6 +144,7 @@ export const DeleteAccountModal = () => {
                 void onDeleteEverythingAndNetworkData();
               }
             }}
+            dataTestId="session-confirm-ok-button"
             disabled={isLoading}
           />
 
@@ -154,6 +155,7 @@ export const DeleteAccountModal = () => {
               dispatch(updateDeleteAccountModal(null));
             }}
             disabled={isLoading}
+            dataTestId="session-confirm-cancel-button"
           />
         </div>
         <SpacerLG />
