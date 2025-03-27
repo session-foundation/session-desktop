@@ -7,10 +7,10 @@ ARCH=$1
 echo "Setup release metadata for $ARCH architecture"
 
 if [[ "$ARCH" == "arm64" ]]; then
-  ls -t $RELEASE_DIR/latest-mac.yml | head -n 1 | xargs -I {} mv {} $RELEASE_DIR/latest-mac-$ARCH.yml
+  mv $RELEASE_DIR/latest-mac.yml $RELEASE_DIR/latest-mac-$ARCH.yml
   echo "Created latest-mac-$ARCH.yml"
 elif [[ "$ARCH" == "x64" ]]; then
-  ls -t $RELEASE_DIR/latest-mac.yml | head -n 1 | xargs -I {} mv {} $RELEASE_DIR/latest-mac-$ARCH.yml
+  mv $RELEASE_DIR/latest-mac.yml $RELEASE_DIR/latest-mac-$ARCH.yml
   echo "Created latest-mac-$ARCH.yml"
 else
   echo "Unknown architecture: $ARCH"

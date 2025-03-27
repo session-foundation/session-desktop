@@ -184,6 +184,11 @@ jobs:
         # only run this on "push" to "master" or alpha releases
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         uses: actions/checkout@v4
+        # We only need the package.json file in this run (to extract the version being built)
+        with:
+          sparse-checkout: |
+            package.json
+          sparse-checkout-cone-mode: false
 
       - name: Get version tag from package.json
         id: get_version
@@ -207,14 +212,6 @@ jobs:
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         run: |
           ./build/setup-mac-release-combine.sh
-
-      - name: Upload release metadata
-        # only run this on "push" to "master" or alpha releases
-        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: latest-mac.yml
-          path: dist/latest-mac.yml
 
       - name: Upload changes to draft release
         # only run this on "push" to "master" or alpha releases
