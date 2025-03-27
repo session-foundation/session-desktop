@@ -140,7 +140,9 @@ export const DebugActions = () => {
           <Localizer token="updateReleaseNotes" />
         </SessionButton>
         <CheckVersionButton channelToCheck="latest" />
-        <CheckVersionButton channelToCheck="alpha" />
+        {window.sessionFeatureFlags.useReleaseChannels ? (
+          <CheckVersionButton channelToCheck="alpha" />
+        ) : null}
       </Flex>
     </>
   );

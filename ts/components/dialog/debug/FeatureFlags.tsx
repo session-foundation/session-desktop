@@ -4,9 +4,7 @@ import type { SessionFeatureFlagsKeys } from '../../../window';
 import { Flex } from '../../basic/Flex';
 import { SessionToggle } from '../../basic/SessionToggle';
 import { HintText, SpacerXS } from '../../basic/Text';
-
-const unsupportedFlags = ['useTestNet'];
-const untestedFlags = ['useOnionRequests', 'useClosedGroupV3', 'replaceLocalizedStringsWithKeys'];
+import { DEBUG_FEATURE_FLAGS } from './constants';
 
 const handleFeatureFlagToggle = (
   forceUpdate: () => void,
@@ -51,7 +49,8 @@ const FlagToggle = ({
     >
       <span>
         {flag}
-        {untestedFlags.includes(flag) ? <HintText>Untested</HintText> : null}
+        {DEBUG_FEATURE_FLAGS.DEV.includes(flag) ? <HintText>Experimental</HintText> : null}
+        {DEBUG_FEATURE_FLAGS.UNTESTED.includes(flag) ? <HintText>Untested</HintText> : null}
       </span>
       <SessionToggle
         active={value}
@@ -84,7 +83,10 @@ export const FeatureFlags = ({ flags }: { flags: Record<string, FlagValues> }) =
       <SpacerXS />
       {Object.entries(flags).map(([key, value]) => {
         const flag = key as SessionFeatureFlagsKeys;
-        if (unsupportedFlags.includes(flag)) {
+        if (
+          (!process.env.SESSION_DEV && DEBUG_FEATURE_FLAGS.DEV.includes(flag)) ||
+          DEBUG_FEATURE_FLAGS.UNSUPPORTED.includes(flag)
+        ) {
           return null;
         }
 

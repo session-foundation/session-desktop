@@ -55,6 +55,7 @@ window.sessionFeatureFlags = {
   forceLegacyGroupsDeprecated: false, // TODO DO NOT MERGE Remove after QA
   useClosedGroupV2QAButtons: false, // TODO DO NOT MERGE Remove after QA
   replaceLocalizedStringsWithKeys: false,
+  useReleaseChannels: false,
   debug: {
     debugLogging: !_.isEmpty(process.env.SESSION_DEBUG),
     debugLibsessionDumps: !_.isEmpty(process.env.SESSION_DEBUG_LIBSESSION_DUMPS),

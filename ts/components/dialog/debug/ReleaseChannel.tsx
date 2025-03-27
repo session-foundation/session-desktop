@@ -67,6 +67,10 @@ export const ReleaseChannel = () => {
   const releaseChannel = Storage.get('releaseChannel') as ReleaseChannels;
   const setReleaseChannel = useReleaseChannel();
 
+  if (!window.sessionFeatureFlags.useReleaseChannels) {
+    return null;
+  }
+
   return (
     <Flex
       $container={true}
