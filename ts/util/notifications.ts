@@ -30,7 +30,7 @@ export type SessionNotification = {
 };
 
 let isEnabled: boolean = false;
-let lastNotificationDisplayed: null | Notification = null;
+let currentNotification: null | Notification = null;
 
 let currentNotifications: Array<SessionNotification> = [];
 
@@ -39,7 +39,7 @@ let currentNotifications: Array<SessionNotification> = [];
 //   to manually close them. This introduces a minimum amount of time between calls,
 //   and batches up the quick successive update() calls we get from an incoming
 //   read sync, which might have a number of messages referenced inside of it.
-const debouncedUpdate = debounce(update, 2000);
+const debouncedUpdate = debounce(update, 2000, { trailing: true, maxWait: 2000 });
 const fastUpdate = update;
 
 function clear() {
@@ -176,9 +176,9 @@ function getNotificationDetails(
 }
 
 function update(forceRefresh = false) {
-  if (lastNotificationDisplayed) {
-    lastNotificationDisplayed.close();
-    lastNotificationDisplayed = null;
+  if (currentNotification) {
+    currentNotification.close();
+    currentNotification = null;
   }
 
   const isAppFocused = isWindowFocused();
@@ -239,12 +239,12 @@ function update(forceRefresh = false) {
     }
     void sound.play();
   }
-  lastNotificationDisplayed = new Notification(details.title || '', {
+  currentNotification = new Notification(details.title || '', {
     body: window.platform === 'linux' ? filter(details.message) : details.message,
     icon: details.iconUrl || undefined,
     silent: true,
   });
-  lastNotificationDisplayed.onclick = () => {
+  currentNotification.onclick = () => {
     window.openFromNotification(lastNotification.conversationId);
   };
 }
