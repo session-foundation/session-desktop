@@ -82,7 +82,7 @@ jobs:
         # only run this on "push" to "master" or alpha releases
         # Note: only AppImage can auto update via electron-builder on linux.
         # Note: We need to backup the latest-linux.yml for appImage builds as other builds can overwrite it when they are built e.g. deb, rpm, freebsd
-        if: (${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true') && matrix.pkg_to_build == 'AppImage' }}
+        if: ${{ (env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true') && matrix.pkg_to_build == 'AppImage' }}
         shell: bash
         run: |
           mv dist/latest-linux.yml dist/latest-linux-${{ matrix.pkg_to_build }}.yml
@@ -90,7 +90,7 @@ jobs:
       - name: Upload release metadata
         # only run this on "push" to "master" or alpha releases
         # Check the details of why we need this above (and why only for AppImage)
-        if: (${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true') && matrix.pkg_to_build == 'AppImage' }}
+        if: ${{ (env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true') && matrix.pkg_to_build == 'AppImage' }}
         uses: actions/upload-artifact@v4
         with:
           name: latest-linux-${{ matrix.pkg_to_build }}.yml
