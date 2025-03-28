@@ -168,6 +168,7 @@ import { loadLocalizedDictionary } from '../node/locale';
 import { simpleDictionary } from '../localization/locales';
 import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
 import { isReleaseChannel } from '../updater/types';
+import { canAutoUpdate, checkForUpdates } from '../updater/updater';
 
 // Both of these will be set after app fires the 'ready' event
 let logger: Logger | null = null;
@@ -531,6 +532,35 @@ async function readyForUpdates() {
 }
 
 ipc.once('ready-for-updates', readyForUpdates);
+
+// NOTE fetchReleaseFromFSAndUpdateMain must be called at least once before checkForUpdates gets called
+ipc.handle('force-update', async () => {
+  try {
+    if (!logger) {
+      throw new Error('Must provide logger!');
+    }
+
+    if (!isReadyForUpdates) {
+      throw new Error('Not ready for updates');
+    }
+
+    const canUpdate = await canAutoUpdate();
+
+    if (!canUpdate) {
+      throw new Error('Cannot use auto update! See canAutoUpdate() for more info.');
+    }
+
+    const success = await checkForUpdates(getMainWindow, i18n, logger, true);
+    if (!success) {
+      throw new Error('Failed to check for updates');
+    }
+    return true;
+  } catch (error) {
+    const log = logger || console;
+    log.error('[updater] force update', error && error.stack ? error.stack : error);
+    return false;
+  }
+});
 
 // Forcefully call readyForUpdates after 10 minutes.
 // This ensures we start the updater.
@@ -1186,4 +1216,8 @@ async function askForMediaAccess() {
 
 ipc.on('media-access', async () => {
   await askForMediaAccess();
+});
+
+ipc.handle('get-storage-profile', async (): Promise<string> => {
+  return app.getPath('userData');
 });

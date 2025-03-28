@@ -1,18 +1,17 @@
 import { isBoolean } from 'lodash';
-import useUpdate from 'react-use/lib/useUpdate';
 import type { SessionFeatureFlagsKeys } from '../../../window';
 import { Flex } from '../../basic/Flex';
 import { SessionToggle } from '../../basic/SessionToggle';
 import { HintText, SpacerXS } from '../../basic/Text';
+import { DEBUG_FEATURE_FLAGS } from './constants';
 
-const unsupportedFlags = ['useTestNet'];
-const untestedFlags = ['useOnionRequests', 'useClosedGroupV3', 'replaceLocalizedStringsWithKeys'];
+type FeatureFlagToggleType = {
+  forceUpdate: () => void;
+  flag: SessionFeatureFlagsKeys;
+  parentFlag?: SessionFeatureFlagsKeys;
+};
 
-const handleFeatureFlagToggle = (
-  forceUpdate: () => void,
-  flag: SessionFeatureFlagsKeys,
-  parentFlag?: SessionFeatureFlagsKeys
-) => {
+const handleFeatureFlagToggle = ({ flag, parentFlag, forceUpdate }: FeatureFlagToggleType) => {
   const currentValue = parentFlag
     ? (window as any).sessionFeatureFlags[parentFlag][flag]
     : (window as any).sessionFeatureFlags[flag];
@@ -29,15 +28,12 @@ const handleFeatureFlagToggle = (
 };
 
 const FlagToggle = ({
-  forceUpdate,
   flag,
   value,
+  forceUpdate,
   parentFlag,
-}: {
-  forceUpdate: () => void;
-  flag: SessionFeatureFlagsKeys;
+}: FeatureFlagToggleType & {
   value: any;
-  parentFlag?: SessionFeatureFlagsKeys;
 }) => {
   const key = `feature-flag-toggle-${flag}`;
   return (
@@ -51,11 +47,12 @@ const FlagToggle = ({
     >
       <span>
         {flag}
-        {untestedFlags.includes(flag) ? <HintText>Untested</HintText> : null}
+        {DEBUG_FEATURE_FLAGS.DEV.includes(flag) ? <HintText>Experimental</HintText> : null}
+        {DEBUG_FEATURE_FLAGS.UNTESTED.includes(flag) ? <HintText>Untested</HintText> : null}
       </span>
       <SessionToggle
         active={value}
-        onClick={() => void handleFeatureFlagToggle(forceUpdate, flag, parentFlag)}
+        onClick={() => void handleFeatureFlagToggle({ flag, parentFlag, forceUpdate })}
       />
     </Flex>
   );
@@ -63,8 +60,13 @@ const FlagToggle = ({
 
 type FlagValues = boolean | object;
 
-export const FeatureFlags = ({ flags }: { flags: Record<string, FlagValues> }) => {
-  const forceUpdate = useUpdate();
+export const FeatureFlags = ({
+  flags,
+  forceUpdate,
+}: {
+  flags: Record<string, FlagValues>;
+  forceUpdate: () => void;
+}) => {
   return (
     <Flex
       $container={true}
@@ -84,7 +86,10 @@ export const FeatureFlags = ({ flags }: { flags: Record<string, FlagValues> }) =
       <SpacerXS />
       {Object.entries(flags).map(([key, value]) => {
         const flag = key as SessionFeatureFlagsKeys;
-        if (unsupportedFlags.includes(flag)) {
+        if (
+          (!process.env.SESSION_DEV && DEBUG_FEATURE_FLAGS.DEV.includes(flag)) ||
+          DEBUG_FEATURE_FLAGS.UNSUPPORTED.includes(flag)
+        ) {
           return null;
         }
 
@@ -96,10 +101,10 @@ export const FeatureFlags = ({ flags }: { flags: Record<string, FlagValues> }) =
                 const nestedFlag = k as SessionFeatureFlagsKeys;
                 return (
                   <FlagToggle
-                    forceUpdate={forceUpdate}
                     flag={nestedFlag}
                     value={v}
                     parentFlag={flag}
+                    forceUpdate={forceUpdate}
                   />
                 );
               })}
