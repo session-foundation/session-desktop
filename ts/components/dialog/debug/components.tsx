@@ -1,13 +1,10 @@
-import { isBoolean } from 'lodash';
-import useUpdate from 'react-use/lib/useUpdate';
 import useAsync from 'react-use/lib/useAsync';
-import { shell } from 'electron';
-import useBoolean from 'react-use/lib/useBoolean';
+import { ipcRenderer, shell } from 'electron';
 import { useDispatch } from 'react-redux';
-import type { SessionFeatureFlagsKeys } from '../../../window';
+import { useState } from 'react';
+import useAsyncFn from 'react-use/lib/useAsyncFn';
 import { Flex } from '../../basic/Flex';
-import { SessionToggle } from '../../basic/SessionToggle';
-import { HintText, SpacerXS } from '../../basic/Text';
+import { SpacerXS } from '../../basic/Text';
 import { localize } from '../../../localization/localeTools';
 import { CopyToClipboardIcon } from '../../buttons';
 import { saveLogToDesktop } from '../../../util/logging';
@@ -19,10 +16,121 @@ import { SessionSpinner } from '../../loading';
 import { setDebugMode } from '../../../state/ducks/debug';
 import { updateDebugMenuModal } from '../../../state/ducks/modalDialog';
 import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_constants';
+import { type ReleaseChannels } from '../../../updater/types';
+import { fetchLatestRelease } from '../../../session/fetch_latest_release';
+
+const CheckVersionButton = ({ channelToCheck }: { channelToCheck: ReleaseChannels }) => {
+  const channelName = channelToCheck === 'latest' ? 'stable' : channelToCheck;
+  const [loading, setLoading] = useState(false);
+  const state = useAsync(async () => {
+    const userEd25519KeyPairBytes = await UserUtils.getUserED25519KeyPairBytes();
+    const userEd25519SecretKey = userEd25519KeyPairBytes?.privKeyBytes;
+    return userEd25519SecretKey;
+  });
+
+  return (
+    <SessionButton
+      onClick={async () => {
+        if (state.loading || state.error) {
+          window.log.error(
+            `[debugMenu] CheckVersionButton checking ${channelToCheck} channel state loading ${state.loading} error ${state.error}`
+          );
+          setLoading(false);
+          return;
+        }
+        if (!state.value) {
+          window.log.error(
+            `[debugMenu] CheckVersionButton checking ${channelToCheck} channel no userEd25519SecretKey`
+          );
+          setLoading(false);
+          return;
+        }
+        setLoading(true);
+        const result = await getLatestReleaseFromFileServer(state.value, channelToCheck);
+        if (!result) {
+          ToastUtils.pushToastError(
+            'CheckVersionButton',
+            `Failed to fetch ${channelToCheck} release`
+          );
+          setLoading(false);
+          return;
+        }
+        const [versionNumber, releaseChannel] = result;
+        if (!releaseChannel) {
+          ToastUtils.pushToastError(
+            'CheckVersionButton',
+            `Failed to return release channel when fetching`
+          );
+          setLoading(false);
+          return;
+        }
+        if (!versionNumber) {
+          ToastUtils.pushToastError(
+            'CheckVersionButton',
+            `Failed to fetch ${channelToCheck} release version`
+          );
+          setLoading(false);
+          return;
+        }
+        setLoading(false);
+
+        ToastUtils.pushToastInfo(`CheckVersionButtonAvailable`, `Available: v${versionNumber}`);
+        ToastUtils.pushToastInfo(
+          'CheckVersionButtonCurrent',
+          `Current: v${window.versionInfo.version}`
+        );
+      }}
+    >
+      <SessionSpinner loading={loading || state.loading} color={'var(--text-primary-color)'} />
+      {!loading && !state.loading ? `Check ${channelName} version` : null}
+    </SessionButton>
+  );
+};
+
+const CheckForUpdatesButton = () => {
+  const [state, handleCheckForUpdates] = useAsyncFn(async () => {
+    window.log.warn(
+      '[updater] [debugMenu] CheckForUpdatesButton clicked! Current version',
+      window.getVersion()
+    );
+
+    try {
+      const userEd25519KeyPairBytes = await UserUtils.getUserED25519KeyPairBytes();
+      const userEd25519SecretKey = userEd25519KeyPairBytes?.privKeyBytes;
+      const newVersion = await fetchLatestRelease.fetchReleaseFromFSAndUpdateMain(
+        userEd25519SecretKey,
+        true
+      );
+
+      if (!newVersion) {
+        throw new Error('No version returned from fileserver');
+      }
+
+      const success = await ipcRenderer.invoke('force-update-check');
+      if (!success) {
+        ToastUtils.pushToastError('CheckForUpdatesButton', 'Check for updates failed! See logs');
+      }
+    } catch (error) {
+      window.log.error(
+        '[updater] [debugMenu] CheckForUpdatesButton',
+        error && error.stack ? error.stack : error
+      );
+    }
+  });
+
+  return (
+    <SessionButton
+      onClick={() => {
+        void handleCheckForUpdates();
+      }}
+    >
+      <SessionSpinner loading={state.loading} color={'var(--text-primary-color)'} />
+      {!state.loading ? 'Check for updates' : null}
+    </SessionButton>
+  );
+};
 
 export const DebugActions = () => {
-  const [loadingLatestRelease, setLoadingLatestRelease] = useBoolean(false);
-
   const dispatch = useDispatch();
 
   return (
@@ -76,136 +184,21 @@ export const DebugActions = () => {
         >
           <Localizer token="updateReleaseNotes" />
         </SessionButton>
-
+        <CheckForUpdatesButton />
+        <CheckVersionButton channelToCheck="latest" />
+        {window.sessionFeatureFlags.useReleaseChannels ? (
+          <CheckVersionButton channelToCheck="alpha" />
+        ) : null}
         <SessionButton
           onClick={async () => {
-            const userEd25519SecretKey = (await UserUtils.getUserED25519KeyPairBytes())
-              ?.privKeyBytes;
-            if (!userEd25519SecretKey) {
-              window.log.error('[debugMenu] no userEd25519SecretKey');
-              return;
-            }
-            setLoadingLatestRelease(true);
-            const versionNumber = await getLatestReleaseFromFileServer(userEd25519SecretKey);
-            setLoadingLatestRelease(false);
-
-            if (versionNumber) {
-              ToastUtils.pushToastInfo('debugLatestRelease', `v${versionNumber}`);
-            } else {
-              ToastUtils.pushToastError('debugLatestRelease', 'Failed to fetch latest release');
-            }
+            const storageProfile = await ipcRenderer.invoke('get-storage-profile');
+            void shell.openPath(storageProfile);
           }}
         >
-          <SessionSpinner loading={loadingLatestRelease} color={'var(--text-primary-color)'} />
-          {!loadingLatestRelease ? 'Check latest release' : null}
+          Open storage profile
         </SessionButton>
       </Flex>
     </>
-  );
-};
-
-const unsupportedFlags = ['useTestNet'];
-const untestedFlags = ['useOnionRequests', 'useClosedGroupV3', 'replaceLocalizedStringsWithKeys'];
-
-const handleFeatureFlagToggle = async (
-  forceUpdate: () => void,
-  flag: SessionFeatureFlagsKeys,
-  parentFlag?: SessionFeatureFlagsKeys
-) => {
-  const currentValue = parentFlag
-    ? (window as any).sessionFeatureFlags[parentFlag][flag]
-    : (window as any).sessionFeatureFlags[flag];
-
-  if (parentFlag) {
-    (window as any).sessionFeatureFlags[parentFlag][flag] = !currentValue;
-    window.log.debug(`[debugMenu] toggled ${parentFlag}.${flag} to ${!currentValue}`);
-  } else {
-    (window as any).sessionFeatureFlags[flag] = !currentValue;
-    window.log.debug(`[debugMenu] toggled ${flag} to ${!currentValue}`);
-  }
-
-  forceUpdate();
-};
-
-const FlagToggle = ({
-  forceUpdate,
-  flag,
-  value,
-  parentFlag,
-}: {
-  forceUpdate: () => void;
-  flag: SessionFeatureFlagsKeys;
-  value: any;
-  parentFlag?: SessionFeatureFlagsKeys;
-}) => {
-  const key = `feature-flag-toggle${parentFlag ? `-${parentFlag}` : ''}-${flag}`;
-  return (
-    <Flex
-      key={key}
-      id={key}
-      $container={true}
-      width="100%"
-      $alignItems="center"
-      $justifyContent="space-between"
-    >
-      <span>
-        {flag}
-        {untestedFlags.includes(flag) ? <HintText>Untested</HintText> : null}
-      </span>
-      <SessionToggle
-        active={value}
-        onClick={() => void handleFeatureFlagToggle(forceUpdate, flag, parentFlag)}
-      />
-    </Flex>
-  );
-};
-
-export const FeatureFlags = ({ flags }: { flags: Record<string, any> }) => {
-  const forceUpdate = useUpdate();
-  return (
-    <Flex
-      $container={true}
-      width={'100%'}
-      $flexDirection="column"
-      $justifyContent="flex-start"
-      $alignItems="flex-start"
-      $flexGap="var(--margins-xs)"
-    >
-      <Flex $container={true} $alignItems="center">
-        <h2>Feature Flags</h2>
-        <HintText>Experimental</HintText>
-      </Flex>
-      <i>
-        Changes are temporary. You can clear them by reloading the window or restarting the app.
-      </i>
-      <SpacerXS />
-      {Object.entries(flags).map(([key, value]) => {
-        const flag = key as SessionFeatureFlagsKeys;
-        if (unsupportedFlags.includes(flag)) {
-          return null;
-        }
-
-        if (!isBoolean(value)) {
-          return (
-            <>
-              <h3>{flag}</h3>
-              {Object.entries(value).map(([k, v]: [string, any]) => {
-                const nestedFlag = k as SessionFeatureFlagsKeys;
-                return (
-                  <FlagToggle
-                    forceUpdate={forceUpdate}
-                    flag={nestedFlag}
-                    value={v}
-                    parentFlag={flag}
-                  />
-                );
-              })}
-            </>
-          );
-        }
-        return <FlagToggle forceUpdate={forceUpdate} flag={flag} value={value} />;
-      })}
-    </Flex>
   );
 };
 

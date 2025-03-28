@@ -21,6 +21,7 @@ export type SessionFeatureFlags = {
   useClosedGroupV2QAButtons: boolean;
   forceLegacyGroupsDeprecated: boolean;
   replaceLocalizedStringsWithKeys: boolean;
+  useReleaseChannels: boolean;
   debug: {
     debugLogging: boolean;
     debugLibsessionDumps: boolean;
