@@ -86,7 +86,7 @@ const CheckVersionButton = ({ channelToCheck }: { channelToCheck: ReleaseChannel
   );
 };
 
-const ForceUpdateButton = () => {
+const CheckForUpdatesButton = () => {
   const [loading, setLoading] = useState(false);
   const state = useAsync(async () => {
     const userEd25519KeyPairBytes = await UserUtils.getUserED25519KeyPairBytes();
@@ -94,9 +94,9 @@ const ForceUpdateButton = () => {
     return userEd25519SecretKey;
   });
 
-  const handleForceUpdate = async () => {
+  const handleCheckForUpdates = async () => {
     window.log.warn(
-      '[updater] [debugMenu] Triggering force update. Current version',
+      '[updater] [debugMenu] Triggering check for updates. Current version',
       window.getVersion()
     );
     setLoading(true);
@@ -118,14 +118,14 @@ const ForceUpdateButton = () => {
     const newVersion = await fetchLatestRelease.fetchReleaseFromFSAndUpdateMain(state.value, true);
 
     if (!newVersion) {
-      window.log.info('[updater] [debugMenu] no result from fileserver');
+      window.log.info('[updater] [debugMenu] no version returned from fileserver');
       setLoading(false);
       return;
     }
 
-    const success = await ipcRenderer.invoke('force-update');
+    const success = await ipcRenderer.invoke('force-update-check');
     if (!success) {
-      ToastUtils.pushToastError('ForceUpdate', 'Force update failed! See logs');
+      ToastUtils.pushToastError('CheckForUpdatesButton', 'Check for updates failed! See logs');
     }
 
     setLoading(false);
@@ -134,11 +134,11 @@ const ForceUpdateButton = () => {
   return (
     <SessionButton
       onClick={() => {
-        void handleForceUpdate();
+        void handleCheckForUpdates();
       }}
     >
       <SessionSpinner loading={loading || state.loading} color={'var(--text-primary-color)'} />
-      {!loading && !state.loading ? 'Force update' : null}
+      {!loading && !state.loading ? 'Check for updates' : null}
     </SessionButton>
   );
 };
@@ -197,7 +197,7 @@ export const DebugActions = () => {
         >
           <Localizer token="updateReleaseNotes" />
         </SessionButton>
-        <ForceUpdateButton />
+        <CheckForUpdatesButton />
         <CheckVersionButton channelToCheck="latest" />
         {window.sessionFeatureFlags.useReleaseChannels ? (
           <CheckVersionButton channelToCheck="alpha" />
