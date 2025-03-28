@@ -90,31 +90,31 @@ const CheckVersionButton = ({ channelToCheck }: { channelToCheck: ReleaseChannel
 const CheckForUpdatesButton = () => {
   const [state, handleCheckForUpdates] = useAsyncFn(async () => {
     window.log.warn(
-      '[updater] [debugMenu] Triggering check for updates. Current version',
+      '[updater] [debugMenu] CheckForUpdatesButton clicked! Current version',
       window.getVersion()
     );
 
-    const userEd25519KeyPairBytes = await UserUtils.getUserED25519KeyPairBytes();
-    const userEd25519SecretKey = userEd25519KeyPairBytes?.privKeyBytes;
+    try {
+      const userEd25519KeyPairBytes = await UserUtils.getUserED25519KeyPairBytes();
+      const userEd25519SecretKey = userEd25519KeyPairBytes?.privKeyBytes;
+      const newVersion = await fetchLatestRelease.fetchReleaseFromFSAndUpdateMain(
+        userEd25519SecretKey,
+        true
+      );
 
-    if (!userEd25519SecretKey) {
-      window.log.error(`[updater] [debugMenu] userEd25519SecretKey not found`);
-      return;
-    }
+      if (!newVersion) {
+        throw new Error('No version returned from fileserver');
+      }
 
-    const newVersion = await fetchLatestRelease.fetchReleaseFromFSAndUpdateMain(
-      userEd25519SecretKey,
-      true
-    );
-
-    if (!newVersion) {
-      window.log.info('[updater] [debugMenu] no version returned from fileserver');
-      return;
-    }
-
-    const success = await ipcRenderer.invoke('force-update-check');
-    if (!success) {
-      ToastUtils.pushToastError('CheckForUpdatesButton', 'Check for updates failed! See logs');
+      const success = await ipcRenderer.invoke('force-update-check');
+      if (!success) {
+        ToastUtils.pushToastError('CheckForUpdatesButton', 'Check for updates failed! See logs');
+      }
+    } catch (error) {
+      window.log.error(
+        '[updater] [debugMenu] CheckForUpdatesButton',
+        error && error.stack ? error.stack : error
+      );
     }
   });
 
