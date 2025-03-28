@@ -1,16 +1,17 @@
 import { isBoolean } from 'lodash';
-import useUpdate from 'react-use/lib/useUpdate';
 import type { SessionFeatureFlagsKeys } from '../../../window';
 import { Flex } from '../../basic/Flex';
 import { SessionToggle } from '../../basic/SessionToggle';
 import { HintText, SpacerXS } from '../../basic/Text';
 import { DEBUG_FEATURE_FLAGS } from './constants';
 
-const handleFeatureFlagToggle = (
-  forceUpdate: () => void,
-  flag: SessionFeatureFlagsKeys,
-  parentFlag?: SessionFeatureFlagsKeys
-) => {
+type FeatureFlagToggleType = {
+  forceUpdate: () => void;
+  flag: SessionFeatureFlagsKeys;
+  parentFlag?: SessionFeatureFlagsKeys;
+};
+
+const handleFeatureFlagToggle = ({ flag, parentFlag, forceUpdate }: FeatureFlagToggleType) => {
   const currentValue = parentFlag
     ? (window as any).sessionFeatureFlags[parentFlag][flag]
     : (window as any).sessionFeatureFlags[flag];
@@ -27,15 +28,12 @@ const handleFeatureFlagToggle = (
 };
 
 const FlagToggle = ({
-  forceUpdate,
   flag,
   value,
+  forceUpdate,
   parentFlag,
-}: {
-  forceUpdate: () => void;
-  flag: SessionFeatureFlagsKeys;
+}: FeatureFlagToggleType & {
   value: any;
-  parentFlag?: SessionFeatureFlagsKeys;
 }) => {
   const key = `feature-flag-toggle-${flag}`;
   return (
@@ -54,7 +52,7 @@ const FlagToggle = ({
       </span>
       <SessionToggle
         active={value}
-        onClick={() => void handleFeatureFlagToggle(forceUpdate, flag, parentFlag)}
+        onClick={() => void handleFeatureFlagToggle({ flag, parentFlag, forceUpdate })}
       />
     </Flex>
   );
@@ -62,8 +60,13 @@ const FlagToggle = ({
 
 type FlagValues = boolean | object;
 
-export const FeatureFlags = ({ flags }: { flags: Record<string, FlagValues> }) => {
-  const forceUpdate = useUpdate();
+export const FeatureFlags = ({
+  flags,
+  forceUpdate,
+}: {
+  flags: Record<string, FlagValues>;
+  forceUpdate: () => void;
+}) => {
   return (
     <Flex
       $container={true}
@@ -98,10 +101,10 @@ export const FeatureFlags = ({ flags }: { flags: Record<string, FlagValues> }) =
                 const nestedFlag = k as SessionFeatureFlagsKeys;
                 return (
                   <FlagToggle
-                    forceUpdate={forceUpdate}
                     flag={nestedFlag}
                     value={v}
                     parentFlag={flag}
+                    forceUpdate={forceUpdate}
                   />
                 );
               })}
