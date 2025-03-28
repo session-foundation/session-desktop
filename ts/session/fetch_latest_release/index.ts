@@ -19,21 +19,24 @@ function resetForTesting() {
   lastFetchedTimestamp = Number.MIN_SAFE_INTEGER;
 }
 
-async function fetchReleaseFromFSAndUpdateMain(userEd25519SecretKey: Uint8Array) {
+async function fetchReleaseFromFSAndUpdateMain(
+  userEd25519SecretKey: Uint8Array,
+  force?: boolean
+): Promise<string | null> {
   try {
     window.log.info('[updater] about to fetchReleaseFromFSAndUpdateMain');
     const diff = Date.now() - lastFetchedTimestamp;
-    if (diff < skipIfLessThan) {
+    if (!force && diff < skipIfLessThan) {
       window.log.info(
         `[updater] fetched release from fs ${Math.floor(diff / DURATION.MINUTES)} minutes ago, skipping until that's at least ${Math.floor(skipIfLessThan / DURATION.MINUTES)}`
       );
-      return;
+      return null;
     }
 
     const justFetched = await getLatestReleaseFromFileServer(userEd25519SecretKey);
     if (!justFetched) {
       window.log.info('[updater] no new release found on fileserver');
-      return;
+      return null;
     }
 
     const [releaseVersion, releaseChannel] = justFetched;
@@ -45,9 +48,13 @@ async function fetchReleaseFromFSAndUpdateMain(userEd25519SecretKey: Uint8Array)
       lastFetchedTimestamp = Date.now();
       ipcRenderer.send('set-release-from-file-server', justFetched);
       window.readyForUpdates();
+      return releaseVersion;
     }
+
+    return null;
   } catch (e) {
     window.log.warn(e);
+    return null;
   }
 }
 

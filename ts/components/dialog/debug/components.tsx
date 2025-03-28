@@ -1,5 +1,5 @@
 import useAsync from 'react-use/lib/useAsync';
-import { shell } from 'electron';
+import { ipcRenderer, shell } from 'electron';
 import { useDispatch } from 'react-redux';
 import { useState } from 'react';
 import { Flex } from '../../basic/Flex';
@@ -16,6 +16,7 @@ import { setDebugMode } from '../../../state/ducks/debug';
 import { updateDebugMenuModal } from '../../../state/ducks/modalDialog';
 import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_constants';
 import { type ReleaseChannels } from '../../../updater/types';
+import { fetchLatestRelease } from '../../../session/fetch_latest_release';
 
 const CheckVersionButton = ({ channelToCheck }: { channelToCheck: ReleaseChannels }) => {
   const channelName = channelToCheck === 'latest' ? 'stable' : channelToCheck;
@@ -85,6 +86,63 @@ const CheckVersionButton = ({ channelToCheck }: { channelToCheck: ReleaseChannel
   );
 };
 
+const ForceUpdateButton = () => {
+  const [loading, setLoading] = useState(false);
+  const state = useAsync(async () => {
+    const userEd25519KeyPairBytes = await UserUtils.getUserED25519KeyPairBytes();
+    const userEd25519SecretKey = userEd25519KeyPairBytes?.privKeyBytes;
+    return userEd25519SecretKey;
+  });
+
+  const handleForceUpdate = async () => {
+    window.log.warn(
+      '[updater] [debugMenu] Triggering force update. Current version',
+      window.getVersion()
+    );
+    setLoading(true);
+
+    if (state.loading || state.error) {
+      window.log.error(
+        `[updater] [debugMenu] userEd25519SecretKey loading ${state.loading} error ${state.error}`
+      );
+      setLoading(false);
+      return;
+    }
+
+    if (!state.value) {
+      window.log.error(`[updater] [debugMenu] userEd25519SecretKey not found`);
+      setLoading(false);
+      return;
+    }
+
+    const newVersion = await fetchLatestRelease.fetchReleaseFromFSAndUpdateMain(state.value, true);
+
+    if (!newVersion) {
+      window.log.info('[updater] [debugMenu] no result from fileserver');
+      setLoading(false);
+      return;
+    }
+
+    const success = await ipcRenderer.invoke('force-update');
+    if (!success) {
+      ToastUtils.pushToastError('ForceUpdate', 'Force update failed! See logs');
+    }
+
+    setLoading(false);
+  };
+
+  return (
+    <SessionButton
+      onClick={() => {
+        void handleForceUpdate();
+      }}
+    >
+      <SessionSpinner loading={loading || state.loading} color={'var(--text-primary-color)'} />
+      {!loading && !state.loading ? 'Force update' : null}
+    </SessionButton>
+  );
+};
+
 export const DebugActions = () => {
   const dispatch = useDispatch();
 
@@ -139,10 +197,19 @@ export const DebugActions = () => {
         >
           <Localizer token="updateReleaseNotes" />
         </SessionButton>
+        <ForceUpdateButton />
         <CheckVersionButton channelToCheck="latest" />
         {window.sessionFeatureFlags.useReleaseChannels ? (
           <CheckVersionButton channelToCheck="alpha" />
         ) : null}
+        <SessionButton
+          onClick={async () => {
+            const storageProfile = await ipcRenderer.invoke('get-storage-profile');
+            void shell.openPath(storageProfile);
+          }}
+        >
+          Open storage profile
+        </SessionButton>
       </Flex>
     </>
   );

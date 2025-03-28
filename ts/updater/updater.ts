@@ -76,22 +76,27 @@ export function stop() {
   stopped = true;
 }
 
-async function checkForUpdates(
+/**
+ * We return false in some steps to show the process was interrupted
+ * @note exported for testing purposes only
+ * */
+export async function checkForUpdates(
   getMainWindow: () => BrowserWindow | null,
   i18n: SetupI18nReturnType,
-  logger: LoggerType
+  logger: LoggerType,
+  force?: boolean
 ) {
-  if (stopped || isUpdating || downloadIgnored) {
+  if (stopped || isUpdating || (downloadIgnored && !force)) {
     logger.info(
       `[updater] checkForUpdates is returning early stopped ${stopped} isUpdating ${isUpdating} downloadIgnored ${downloadIgnored}`
     );
-    return;
+    return false;
   }
 
   const canUpdate = await canAutoUpdate();
   logger.info('[updater] checkForUpdates canAutoUpdate', canUpdate);
   if (!canUpdate) {
-    return;
+    return false;
   }
 
   logger.info('[updater] checkForUpdates isUpdating', isUpdating);
@@ -105,7 +110,7 @@ async function checkForUpdates(
       logger.info(
         '[updater] checkForUpdates getLatestRelease() has not been called by the renderer process yet. Skipping update check'
       );
-      return;
+      return false;
     }
 
     logger.info(
@@ -128,7 +133,7 @@ async function checkForUpdates(
       logger.info(
         `[updater] File server has no update so we are not looking for an update from github current:${currentVersion} fromFileServer:${updateVersionFromFsFromRenderer}`
       );
-      return;
+      return false;
     }
 
     // Get the update using electron-updater, this fetches from github
@@ -136,7 +141,7 @@ async function checkForUpdates(
 
     if (!result?.updateInfo) {
       logger.info('[updater] received no updateInfo in response from GitHub');
-      return;
+      return false;
     }
 
     logger.info(
@@ -150,13 +155,13 @@ async function checkForUpdates(
       if (!hasUpdate) {
         logger.info('[updater] no update available');
 
-        return;
+        return false;
       }
 
       const mainWindow = getMainWindow();
       if (!mainWindow) {
         logger.error('[updater] cannot showDownloadUpdateDialog, mainWindow is unset');
-        return;
+        return false;
       }
       logger.info('[updater] showing download dialog...');
 
@@ -169,8 +174,8 @@ async function checkForUpdates(
 
       if (!shouldDownload) {
         downloadIgnored = true;
-
-        return;
+        logger.info('[updater] download cancelled by user');
+        return true;
       }
 
       await autoUpdater.downloadUpdate();
@@ -178,7 +183,7 @@ async function checkForUpdates(
       const mainWindow = getMainWindow();
       if (!mainWindow) {
         logger.error('[updater] cannot showDownloadUpdateDialog, mainWindow is unset');
-        return;
+        return false;
       }
       await showCannotUpdateDialog(mainWindow, i18n);
       throw error;
@@ -187,18 +192,19 @@ async function checkForUpdates(
     const window = getMainWindow();
     if (!window) {
       logger.error('[updater] cannot showDownloadUpdateDialog, mainWindow is unset');
-      return;
+      return false;
     }
     // Update downloaded successfully, we should ask the user to update
     logger.info('[updater] showing update dialog...');
     const shouldUpdate = await showUpdateDialog(window, i18n);
     if (!shouldUpdate) {
-      return;
+      return false;
     }
 
     logger.info('[updater] calling windowMarkShouldQuit then quitAndInstall...');
     windowMarkShouldQuit();
     autoUpdater.quitAndInstall();
+    return true;
   } finally {
     isUpdating = false;
   }
@@ -224,11 +230,12 @@ function isUpdateAvailable(updateInfo: UpdateInfo): boolean {
   return updateIsNewer;
 }
 
-/*
-  Check if we have the required files to auto update.
-  These files won't exist inside certain formats such as a linux deb file.
-*/
-async function canAutoUpdate(): Promise<boolean> {
+/**
+ * Check if we have the required files to auto update.
+ * These files won't exist inside certain formats such as a linux deb file or when unpackaged e.g. running the dev app
+ * @note exported for testing purposes only
+ */
+export async function canAutoUpdate(): Promise<boolean> {
   const isPackaged = app.isPackaged;
 
   // On a production app, we need to use resources path to check for the file
