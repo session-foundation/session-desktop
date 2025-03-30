@@ -11,10 +11,11 @@ import {
   Quote,
   VisibleMessage,
 } from '../../../../session/messages/outgoing/visibleMessage/VisibleMessage';
+import { DisappearingMessageMode } from '../../../../session/disappearing_messages/types';
 
 const sharedNoExpire = {
-  expirationType: null,
-  expireTimer: null,
+  expirationType: DisappearingMessageMode[0],
+  expireTimer: 0,
 };
 
 describe('VisibleMessage', () => {

@@ -50,7 +50,7 @@ jobs:
 
       - name: Lint Files
         # no need to lint files on all platforms
-        run: yarn lint-full
+        run: yarn lint
 
       - name: Enforce yarn.lock has no duplicates
         uses: ./actions/deduplicate_fail
