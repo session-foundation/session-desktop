@@ -85,7 +85,7 @@ jobs:
         if: ${{ (env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true') && matrix.pkg_to_build == 'AppImage' }}
         shell: bash
         run: |
-          mv dist/latest-linux.yml dist/latest-linux-${{ matrix.pkg_to_build }}.yml
+          mv dist/latest-linux.yml dist/latest-linux-${{ matrix.pkg_to_build }}-${{ github.sha }}.yml
 
       - name: Upload release metadata
         # only run this on "push" to "master" or alpha releases
@@ -93,8 +93,8 @@ jobs:
         if: ${{ (env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true') && matrix.pkg_to_build == 'AppImage' }}
         uses: actions/upload-artifact@v4
         with:
-          name: latest-linux-${{ matrix.pkg_to_build }}.yml
-          path: dist/latest-linux-${{ matrix.pkg_to_build }}.yml
+          name: latest-linux-${{ matrix.pkg_to_build }}-${{ github.sha }}.yml
+          path: dist/latest-linux-${{ matrix.pkg_to_build }}-${{ github.sha }}.yml
 
   post_build_linux:
     needs: [build_linux]
@@ -125,14 +125,14 @@ jobs:
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         uses: actions/download-artifact@v4
         with:
-          name: latest-linux-AppImage.yml
+          name: latest-linux-AppImage-${{ github.sha }}.yml
           path: dist
 
       - name: Rename
         # only run this on "push" to "master" or alpha releases
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         run: |
-          mv dist/latest-linux-AppImage.yml dist/latest-linux.yml
+          mv dist/latest-linux-AppImage-${{ github.sha }}.yml dist/latest-linux.yml
 
       - name: Upload changes to draft release
         # only run this on "push" to "master" or alpha releases
@@ -273,15 +273,15 @@ jobs:
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         uses: actions/download-artifact@v4
         with:
+          name: latest-mac-*-${{ github.sha }}.yml
           path: dist
-          pattern: latest-mac-*
           merge-multiple: true
 
       - name: Combine release metadata
         # only run this on "push" to "master" or alpha releases
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         run: |
-          ./build/setup-mac-release-combine.sh
+          ./build/setup-mac-release-combine.sh ${{ github.sha }}
 
       - name: Upload changes to draft release
         # only run this on "push" to "master" or alpha releases

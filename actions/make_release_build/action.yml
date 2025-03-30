@@ -42,12 +42,12 @@ runs:
       shell: bash
       run: |
         echo "Backup release metadata for ${{ inputs.architecture }}"
-        mv dist/latest-mac.yml dist/latest-mac-${{ inputs.architecture }}.yml
+        mv dist/latest-mac.yml dist/latest-mac-${{ inputs.architecture }}-${{ github.sha }}.yml
 
     - name: Upload release metadata
       # only run this on "push" to "master" or alpha releases
       if: ${{ inputs.should_publish == 'true' }}
       uses: actions/upload-artifact@v4
       with:
-        name: latest-mac-${{ inputs.architecture }}.yml
-        path: dist/latest-mac-${{ inputs.architecture }}.yml
+        name: latest-mac-${{ inputs.architecture }}-${{ github.sha }}.yml
+        path: dist/latest-mac-${{ inputs.architecture }}-${{ github.sha }}.yml

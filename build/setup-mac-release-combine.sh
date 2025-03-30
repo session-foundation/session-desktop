@@ -2,9 +2,10 @@
 
 set -e
 
+IDENTIFIER=$1
 RELEASE_DIR="./dist"
-ARM64_FILE="$RELEASE_DIR/latest-mac-arm64.yml"
-X64_FILE="$RELEASE_DIR/latest-mac-x64.yml"
+ARM64_FILE="$RELEASE_DIR/latest-mac-arm64-$IDENTIFIER.yml"
+X64_FILE="$RELEASE_DIR/latest-mac-x64-$IDENTIFIER.yml"
 OUTPUT_FILE="$RELEASE_DIR/latest-mac.yml"
 
 echo "Combined release metadata from both architectures"
