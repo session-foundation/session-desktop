@@ -273,7 +273,7 @@ jobs:
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         uses: actions/download-artifact@v4
         with:
-          name: latest-mac-*-${{ github.sha }}.yml
+          pattern: latest-mac-*-${{ github.sha }}.yml
           path: dist
           merge-multiple: true
 
