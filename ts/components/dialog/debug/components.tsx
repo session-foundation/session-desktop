@@ -2,6 +2,7 @@ import useAsync from 'react-use/lib/useAsync';
 import { ipcRenderer, shell } from 'electron';
 import { useDispatch } from 'react-redux';
 import { useState } from 'react';
+import useAsyncFn from 'react-use/lib/useAsyncFn';
 import { Flex } from '../../basic/Flex';
 import { SpacerXS } from '../../basic/Text';
 import { localize } from '../../../localization/localeTools';
@@ -86,59 +87,45 @@ const CheckVersionButton = ({ channelToCheck }: { channelToCheck: ReleaseChannel
   );
 };
 
-const ForceUpdateButton = () => {
-  const [loading, setLoading] = useState(false);
-  const state = useAsync(async () => {
-    const userEd25519KeyPairBytes = await UserUtils.getUserED25519KeyPairBytes();
-    const userEd25519SecretKey = userEd25519KeyPairBytes?.privKeyBytes;
-    return userEd25519SecretKey;
-  });
-
-  const handleForceUpdate = async () => {
+const CheckForUpdatesButton = () => {
+  const [state, handleCheckForUpdates] = useAsyncFn(async () => {
     window.log.warn(
-      '[updater] [debugMenu] Triggering force update. Current version',
+      '[updater] [debugMenu] CheckForUpdatesButton clicked! Current version',
       window.getVersion()
     );
-    setLoading(true);
 
-    if (state.loading || state.error) {
-      window.log.error(
-        `[updater] [debugMenu] userEd25519SecretKey loading ${state.loading} error ${state.error}`
+    try {
+      const userEd25519KeyPairBytes = await UserUtils.getUserED25519KeyPairBytes();
+      const userEd25519SecretKey = userEd25519KeyPairBytes?.privKeyBytes;
+      const newVersion = await fetchLatestRelease.fetchReleaseFromFSAndUpdateMain(
+        userEd25519SecretKey,
+        true
       );
-      setLoading(false);
-      return;
+
+      if (!newVersion) {
+        throw new Error('No version returned from fileserver');
+      }
+
+      const success = await ipcRenderer.invoke('force-update-check');
+      if (!success) {
+        ToastUtils.pushToastError('CheckForUpdatesButton', 'Check for updates failed! See logs');
+      }
+    } catch (error) {
+      window.log.error(
+        '[updater] [debugMenu] CheckForUpdatesButton',
+        error && error.stack ? error.stack : error
+      );
     }
-
-    if (!state.value) {
-      window.log.error(`[updater] [debugMenu] userEd25519SecretKey not found`);
-      setLoading(false);
-      return;
-    }
-
-    const newVersion = await fetchLatestRelease.fetchReleaseFromFSAndUpdateMain(state.value, true);
-
-    if (!newVersion) {
-      window.log.info('[updater] [debugMenu] no result from fileserver');
-      setLoading(false);
-      return;
-    }
-
-    const success = await ipcRenderer.invoke('force-update');
-    if (!success) {
-      ToastUtils.pushToastError('ForceUpdate', 'Force update failed! See logs');
-    }
-
-    setLoading(false);
-  };
+  });
 
   return (
     <SessionButton
       onClick={() => {
-        void handleForceUpdate();
+        void handleCheckForUpdates();
       }}
     >
-      <SessionSpinner loading={loading || state.loading} color={'var(--text-primary-color)'} />
-      {!loading && !state.loading ? 'Force update' : null}
+      <SessionSpinner loading={state.loading} color={'var(--text-primary-color)'} />
+      {!state.loading ? 'Check for updates' : null}
     </SessionButton>
   );
 };
@@ -197,7 +184,7 @@ export const DebugActions = () => {
         >
           <Localizer token="updateReleaseNotes" />
         </SessionButton>
-        <ForceUpdateButton />
+        <CheckForUpdatesButton />
         <CheckVersionButton channelToCheck="latest" />
         {window.sessionFeatureFlags.useReleaseChannels ? (
           <CheckVersionButton channelToCheck="alpha" />

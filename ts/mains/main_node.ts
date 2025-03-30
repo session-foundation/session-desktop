@@ -534,7 +534,7 @@ async function readyForUpdates() {
 ipc.once('ready-for-updates', readyForUpdates);
 
 // NOTE fetchReleaseFromFSAndUpdateMain must be called at least once before checkForUpdates gets called
-ipc.handle('force-update', async () => {
+ipc.handle('force-update-check', async () => {
   try {
     if (!logger) {
       throw new Error('Must provide logger!');
@@ -557,7 +557,7 @@ ipc.handle('force-update', async () => {
     return true;
   } catch (error) {
     const log = logger || console;
-    log.error('[updater] force update', error && error.stack ? error.stack : error);
+    log.error('[updater] force-update-check', error && error.stack ? error.stack : error);
     return false;
   }
 });
