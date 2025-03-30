@@ -80,8 +80,8 @@ const buildSyncVisibleMessage = (
     quote,
     preview,
     syncTarget,
-    expireTimer: expireUpdate.expirationTimer || 0,
-    expirationType: expireUpdate.expirationType || 'unknown',
+    expireTimer: expireUpdate.expirationTimer,
+    expirationType: expireUpdate.expirationType,
   });
 };
 

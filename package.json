@@ -2,7 +2,7 @@
   "name": "session-desktop",
   "productName": "Session",
   "description": "Private messaging from your desktop",
-  "version": "1.15.1",
+  "version": "1.15.2",
   "license": "GPL-3.0",
   "author": {
     "name": "Session Foundation",
@@ -192,6 +192,7 @@
     "afterSign": "build/notarize.js",
     "afterPack": "build/afterPackHook.js",
     "artifactName": "${name}-${os}-${arch}-${version}.${ext}",
+    "generateUpdatesFilesForAllChannels": true,
     "extraResources": [
       {
         "from": "./build/launcher-script.sh",
@@ -227,6 +228,12 @@
       "icon": "build/icon.ico",
       "target": [
         "nsis"
+      ]
+    },
+    "rpm": {
+      "fpm": [
+        "--rpm-rpmbuild-define",
+        "_build_id_links none"
       ]
     },
     "nsis": {

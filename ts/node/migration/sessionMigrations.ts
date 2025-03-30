@@ -112,6 +112,7 @@ const LOKI_SCHEMA_VERSIONS = [
   updateToSessionSchemaVersion41,
   updateToSessionSchemaVersion42,
   updateToSessionSchemaVersion43,
+  updateToSessionSchemaVersion44,
 ];
 
 function updateToSessionSchemaVersion1(currentVersion: number, db: BetterSqlite3.Database) {
@@ -2068,6 +2069,27 @@ function updateToSessionSchemaVersion43(currentVersion: number, db: BetterSqlite
 
   db.transaction(() => {
     db.prepare(`ALTER TABLE ${CONVERSATIONS_TABLE} DROP COLUMN hasOutdatedClient;`).run();
+
+    db.prepare(
+      `UPDATE ${CONVERSATIONS_TABLE}
+        SET expirationMode = 'deleteAfterSend' AND expirationMode = 'legacy';`
+    ).run();
+
+    writeSessionSchemaVersion(targetVersion, db);
+  })();
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
+}
+
+function updateToSessionSchemaVersion44(currentVersion: number, db: BetterSqlite3.Database) {
+  const targetVersion = 44;
+  if (currentVersion >= targetVersion) {
+    return;
+  }
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
+
+  db.transaction(() => {
     db.prepare(`ALTER TABLE ${CONVERSATIONS_TABLE} DROP COLUMN zombies;`).run();
 
     db.prepare(

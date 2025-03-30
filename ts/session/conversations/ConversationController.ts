@@ -358,7 +358,7 @@ class ConvoController {
           secretKey = fromUserGroup.secretKey;
         } catch (e) {
           window.log.info(
-            `deleteGroup: initialchecks failed with: ${e.message}. Considering this error as not important and deleting the group anyway.`
+            `deleteGroup: initial checks failed with: ${e.message}. Considering this error as not important and deleting the group anyway.`
           );
         }
         try {

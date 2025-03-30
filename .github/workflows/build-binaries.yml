@@ -22,8 +22,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # we want to publish on "push to master" only. When we don't want to publish, we want to upload artefacts
+  # we only want to publish on "push to master" or alpha releases. When we don't want to publish, we want to upload artefacts
   SHOULD_PUBLISH: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+  SHOULD_PUBLISH_ALPHA: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/heads/release') && contains(github.ref, '-alpha.') }}
 
 jobs:
   build_linux:
@@ -59,23 +60,93 @@ jobs:
         run: yarn test
 
       - name: Build but do not publish ${{ matrix.pkg_to_build }}
-        # we want this to run always, except on "push" to "master"
-        if: ${{ env.SHOULD_PUBLISH == 'false' }}
+        # always run this, except on "push" to "master" or alpha releases
+        if: ${{ env.SHOULD_PUBLISH == 'false' && env.SHOULD_PUBLISH_ALPHA == 'false'  }}
         run: |
           sed -i 's/"target": "deb"/"target": "${{ matrix.pkg_to_build }}"/g' package.json && yarn build-release
 
       - name: Upload artefacts ${{ matrix.pkg_to_build }}
-        # we want this to run always, except on "push" to "master"
-        if: ${{ env.SHOULD_PUBLISH == 'false' }}
+        # always run this, except on "push" to "master" or alpha releases
+        if: ${{ env.SHOULD_PUBLISH == 'false' && env.SHOULD_PUBLISH_ALPHA == 'false'  }}
         uses: ./actions/upload_prod_artefacts
         with:
           upload_prefix: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.pkg_to_build }}
 
       - name: Build & publish ${{ matrix.pkg_to_build }}
-        # we want this to run only when on "push" to "master"
-        if: ${{ env.SHOULD_PUBLISH == 'true' }}
+        # only run this on "push" to "master" or alpha releases
+        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         run: |
           sed -i 's/"target": "deb"/"target": "${{ matrix.pkg_to_build }}"/g' package.json && yarn build-release-publish
+
+      - name: Backup release metadata
+        # only run this on "push" to "master" or alpha releases
+        # Note: only AppImage can auto update via electron-builder on linux.
+        # Note: We need to backup the latest-linux.yml for appImage builds as other builds can overwrite it when they are built e.g. deb, rpm, freebsd
+        if: ${{ (env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true') && matrix.pkg_to_build == 'AppImage' }}
+        shell: bash
+        run: |
+          mv dist/latest-linux.yml dist/latest-linux-${{ matrix.pkg_to_build }}.yml
+
+      - name: Upload release metadata
+        # only run this on "push" to "master" or alpha releases
+        # Check the details of why we need this above (and why only for AppImage)
+        if: ${{ (env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true') && matrix.pkg_to_build == 'AppImage' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: latest-linux-${{ matrix.pkg_to_build }}.yml
+          path: dist/latest-linux-${{ matrix.pkg_to_build }}.yml
+
+  post_build_linux:
+    needs: [build_linux]
+    runs-on: ubuntu-22.04
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout git repo
+        # only run this on "push" to "master" or alpha releases
+        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
+        uses: actions/checkout@v4
+        # We only need the package.json file in this run (to extract the version being built)
+        with:
+          sparse-checkout: |
+            package.json
+          sparse-checkout-cone-mode: false
+
+      - name: Get version tag from package.json
+        id: get_version
+        # only run this on "push" to "master" or alpha releases
+        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
+        run: |
+          version=$(node -p "require('./package.json').version")
+          echo "VERSION_TAG=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Download release metadata
+        # only run this on "push" to "master" or alpha releases
+        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: latest-linux-AppImage.yml
+          path: dist
+
+      - name: Rename
+        # only run this on "push" to "master" or alpha releases
+        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
+        run: |
+          mv dist/latest-linux-AppImage.yml dist/latest-linux.yml
+
+      - name: Upload changes to draft release
+        # only run this on "push" to "master" or alpha releases
+        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
+        uses: ncipollo/release-action@v1
+        with:
+          tag: v${{ steps.get_version.outputs.VERSION_TAG }}
+          draft: true
+          name: 'Draft'
+          artifacts: 'dist/latest-linux.yml'
+          allowUpdates: true
+          omitNameDuringUpdate: true
+          replacesArtifacts: true
+          updateOnlyUnreleased: true
 
   build_windows:
     runs-on: windows-2022
@@ -97,20 +168,20 @@ jobs:
         run: yarn test
 
       - name: Build but do not publish
-        # we want this to run always, except on "push" to "master"
-        if: ${{ env.SHOULD_PUBLISH == 'false' }}
+        # always run this, except on "push" to "master" or alpha releases
+        if: ${{ env.SHOULD_PUBLISH == 'false' && env.SHOULD_PUBLISH_ALPHA == 'false'  }}
         run: yarn build-release
 
       - name: Upload artefacts
-        # we want this to run always, except on "push" to "master"
-        if: ${{ env.SHOULD_PUBLISH == 'false' }}
+        # always run this, except on "push" to "master" or alpha releases
+        if: ${{ env.SHOULD_PUBLISH == 'false' && env.SHOULD_PUBLISH_ALPHA == 'false'  }}
         uses: ./actions/upload_prod_artefacts
         with:
           upload_prefix: ${{ runner.os }}-${{ runner.arch }}
 
       - name: Build & publish
-        # we want this to run only when on "push" to "master"
-        if: ${{ env.SHOULD_PUBLISH == 'true' }}
+        # only run this on "push" to "master" or alpha releases
+        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         run: yarn build-release-publish # No other args needed for windows publish
 
   # We want a mac arm64 build, and according to this https://github.com/actions/runner-images#available-images macos-14 is always arm64
@@ -140,22 +211,22 @@ jobs:
         run: yarn test
 
       - name: Build but do not publish
-        # we want this to run always, except on "push" to "master"
-        if: ${{ env.SHOULD_PUBLISH == 'false' }}
+        # always run this, except on "push" to "master" or alpha releases
+        if: ${{ env.SHOULD_PUBLISH == 'false' && env.SHOULD_PUBLISH_ALPHA == 'false'  }}
         run: |
           source ./build/setup-mac-certificate.sh
           yarn build-release --config.mac.bundleVersion=${{ github.ref }}
 
       - name: Upload artefacts
-        # we want this to run always, except on "push" to "master"
-        if: ${{ env.SHOULD_PUBLISH == 'false' }}
+        # always run this, except on "push" to "master" or alpha releases
+        if: ${{ env.SHOULD_PUBLISH == 'false' && env.SHOULD_PUBLISH_ALPHA == 'false'  }}
         uses: ./actions/upload_prod_artefacts
         with:
           upload_prefix: ${{ runner.os }}-${{ runner.arch }}
 
       - name: Build & publish
-        # we want this to run only when on "push" to "master"
-        if: ${{ env.SHOULD_PUBLISH == 'true' }}
+        # only run this on "push" to "master" or alpha releases
+        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         run: |
           source ./build/setup-mac-certificate.sh
           yarn build-release-publish --config.mac.bundleVersion=${{ github.ref }}

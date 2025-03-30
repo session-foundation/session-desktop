@@ -1,4 +1,5 @@
 import 'react';
+import type { ReleaseChannels } from './updater/types';
 
 /**
  * WARNING: if you change something here, you will most likely break some integration tests.
@@ -252,7 +253,9 @@ declare module 'react' {
     | 'module-message-search-result__header__name__profile-name'
     | 'module-message__author__profile-name'
     | 'module-contact-name__profile-name'
-    | 'delete-from-details';
+    | 'delete-from-details'
+    | `input-releases-${ReleaseChannels}`
+    | `label-releases-${ReleaseChannels}`;
 
   interface HTMLAttributes {
     'data-testid'?: SessionDataTestId;
