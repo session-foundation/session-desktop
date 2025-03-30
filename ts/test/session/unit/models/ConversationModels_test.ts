@@ -22,7 +22,6 @@ describe('fillConvoAttributesWithDefaults', () => {
     });
   });
 
-
   describe('groupAdmins', () => {
     it('initialize groupAdmins if they are not given', () => {
       expect(fillConvoAttributesWithDefaults({} as ConversationAttributes)).to.have.deep.property(

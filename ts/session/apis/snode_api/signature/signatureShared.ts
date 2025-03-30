@@ -80,6 +80,5 @@ async function getSnodeSignatureShared(params: SnodeSigParamsAdminGroup | SnodeS
 
 export const SignatureShared = {
   getSnodeSignatureShared,
-  getVerificationDataForStoreRetrieve
-  ,
+  getVerificationDataForStoreRetrieve,
 };

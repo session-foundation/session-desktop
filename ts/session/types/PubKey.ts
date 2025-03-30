@@ -191,7 +191,6 @@ export class PubKey {
     return null;
   }
 
-
   public static isEqual(comparator1: PubKey | string, comparator2: PubKey | string) {
     return PubKey.cast(comparator1).isEqual(comparator2);
   }

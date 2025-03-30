@@ -495,7 +495,7 @@ describe('DisappearingMessage', () => {
           messageHash: null,
         });
         await expect(promise).is.rejectedWith(
-          'updateExpireTimer() Disappearing messages are only supported int groups and private chats'
+          'updateExpireTimer() Disappearing messages are only supported in 03-groups and private chats'
         );
       });
 

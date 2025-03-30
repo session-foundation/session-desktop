@@ -228,7 +228,6 @@ export async function queueAllCached() {
   }, Promise.resolve());
 }
 
-
 async function queueCached(item: UnprocessedParameter) {
   try {
     const envelopePlaintext = StringUtils.encode(item.envelope, 'base64');

@@ -191,7 +191,7 @@ async function decrypt(envelope: EnvelopePlus): Promise<{ decryptedContent: Arra
       decryptedContent = await decryptEnvelopeWithOurKey(envelope);
       break;
     case SignalService.Envelope.Type.CLOSED_GROUP_MESSAGE:
-      return null
+      return null;
     default:
       assertUnreachable(envelope.type, `Unknown message type:${envelope.type}`);
   }

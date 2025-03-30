@@ -198,7 +198,6 @@ describe('formatRowOfConversation', () => {
     });
   });
 
-
   it('throws an error if a key is not expected', () => {
     expect(() => formatRowOfConversation({ not_valid: undefined }, 'test', 0, false)).throws(
       'formatRowOfConversation: an invalid key was given in the record: not_valid'

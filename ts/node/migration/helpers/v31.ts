@@ -309,7 +309,6 @@ function insertLegacyGroupIntoWrapper(
   const { priority, id, groupAdmins, members, displayNameInProfile, lastJoinedTimestamp } =
     legacyGroup;
 
-
   const wrapperLegacyGroup = getLegacyGroupInfoFromDBValues({
     id,
     priority,
