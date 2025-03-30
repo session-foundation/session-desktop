@@ -167,6 +167,8 @@ import { isSessionLocaleSet, getCrowdinLocale } from '../util/i18n/shared';
 import { loadLocalizedDictionary } from '../node/locale';
 import { simpleDictionary } from '../localization/locales';
 import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
+import { isReleaseChannel } from '../updater/types';
+import { canAutoUpdate, checkForUpdates } from '../updater/updater';
 
 // Both of these will be set after app fires the 'ready' event
 let logger: Logger | null = null;
@@ -493,8 +495,17 @@ ipc.on('show-window', () => {
   showWindow();
 });
 
-ipc.on('set-release-from-file-server', (_event, releaseGotFromFileServer) => {
-  setLatestRelease(releaseGotFromFileServer);
+ipc.on('set-release-from-file-server', (_event, releaseInfoFromFileServer) => {
+  const [releaseVersion, releaseChannel] = releaseInfoFromFileServer;
+
+  if (!releaseVersion || !releaseChannel || !isReleaseChannel(releaseChannel)) {
+    console.error(
+      `[updater] set-release-from-file-server: invalid release information, version=${releaseVersion} or channel=${releaseChannel}`
+    );
+    return;
+  }
+
+  setLatestRelease(releaseInfoFromFileServer);
 });
 
 let isReadyForUpdates = false;
@@ -513,11 +524,43 @@ async function readyForUpdates() {
     await updater.start(getMainWindow, userConfig, i18n, logger);
   } catch (error) {
     const log = logger || console;
-    log.error('Error starting update checks:', error && error.stack ? error.stack : error);
+    log.error(
+      '[updater] Error starting update checks:',
+      error && error.stack ? error.stack : error
+    );
   }
 }
 
 ipc.once('ready-for-updates', readyForUpdates);
+
+// NOTE fetchReleaseFromFSAndUpdateMain must be called at least once before checkForUpdates gets called
+ipc.handle('force-update-check', async () => {
+  try {
+    if (!logger) {
+      throw new Error('Must provide logger!');
+    }
+
+    if (!isReadyForUpdates) {
+      throw new Error('Not ready for updates');
+    }
+
+    const canUpdate = await canAutoUpdate();
+
+    if (!canUpdate) {
+      throw new Error('Cannot use auto update! See canAutoUpdate() for more info.');
+    }
+
+    const success = await checkForUpdates(getMainWindow, i18n, logger, true);
+    if (!success) {
+      throw new Error('Failed to check for updates');
+    }
+    return true;
+  } catch (error) {
+    const log = logger || console;
+    log.error('[updater] force-update-check', error && error.stack ? error.stack : error);
+    return false;
+  }
+});
 
 // Forcefully call readyForUpdates after 10 minutes.
 // This ensures we start the updater.
@@ -1173,4 +1216,8 @@ async function askForMediaAccess() {
 
 ipc.on('media-access', async () => {
   await askForMediaAccess();
+});
+
+ipc.handle('get-storage-profile', async (): Promise<string> => {
+  return app.getPath('userData');
 });

@@ -203,7 +203,7 @@ Storage.onready(async () => {
   await Storage.put('version', currentVersion);
 
   if (newVersion) {
-    window.log.info(`New version detected: ${currentVersion}; previous: ${lastVersion}`);
+    window.log.info(`[updater] New version detected: ${currentVersion}; previous: ${lastVersion}`);
     await Data.cleanupOrphanedAttachments();
   }
 
