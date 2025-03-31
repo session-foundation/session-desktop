@@ -20,7 +20,7 @@ Session uses the Session encryption protocol and the Oxen blockchain’s decentr
 
 Session requires Windows 10 or later, macOS Ventura (13) or later, or a Linux distribution with glibc 2.35 or later like Debian 12 or Ubuntu 22.04.
 
-# Verify signatures
+# Verify Signatures
 
 Follow the instructions [here](https://github.com/session-foundation/session-desktop/tree/master#verifying-signatures) using the signature below.
 
