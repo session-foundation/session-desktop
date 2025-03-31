@@ -59,7 +59,7 @@ jobs:
       - name: Unit Test
         run: yarn test
 
-      - name: Build but do not publish ${{ matrix.pkg_to_build }}
+      - name: Make release build but do not publish ${{ matrix.pkg_to_build }}
         # always run this, except on "push" to "master" or alpha releases
         if: ${{ env.SHOULD_PUBLISH == 'false' && env.SHOULD_PUBLISH_ALPHA == 'false'  }}
         run: |
@@ -72,7 +72,7 @@ jobs:
         with:
           upload_prefix: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.pkg_to_build }}
 
-      - name: Build & publish ${{ matrix.pkg_to_build }}
+      - name: Make release build & publish ${{ matrix.pkg_to_build }}
         # only run this on "push" to "master" or alpha releases
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         run: |
@@ -85,7 +85,7 @@ jobs:
         if: ${{ (env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true') && matrix.pkg_to_build == 'AppImage' }}
         shell: bash
         run: |
-          mv dist/latest-linux.yml dist/latest-linux-${{ matrix.pkg_to_build }}.yml
+          mv dist/latest-linux.yml dist/latest-linux-${{ matrix.pkg_to_build }}-${{ github.sha }}.yml
 
       - name: Upload release metadata
         # only run this on "push" to "master" or alpha releases
@@ -93,8 +93,8 @@ jobs:
         if: ${{ (env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true') && matrix.pkg_to_build == 'AppImage' }}
         uses: actions/upload-artifact@v4
         with:
-          name: latest-linux-${{ matrix.pkg_to_build }}.yml
-          path: dist/latest-linux-${{ matrix.pkg_to_build }}.yml
+          name: latest-linux-${{ matrix.pkg_to_build }}-${{ github.sha }}.yml
+          path: dist/latest-linux-${{ matrix.pkg_to_build }}-${{ github.sha }}.yml
 
   post_build_linux:
     needs: [build_linux]
@@ -110,6 +110,8 @@ jobs:
         with:
           sparse-checkout: |
             package.json
+            build/release-notes.md
+            build/release-notes-alpha.md
           sparse-checkout-cone-mode: false
 
       - name: Get version tag from package.json
@@ -125,14 +127,14 @@ jobs:
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         uses: actions/download-artifact@v4
         with:
-          name: latest-linux-AppImage.yml
+          name: latest-linux-AppImage-${{ github.sha }}.yml
           path: dist
 
       - name: Rename
         # only run this on "push" to "master" or alpha releases
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         run: |
-          mv dist/latest-linux-AppImage.yml dist/latest-linux.yml
+          mv dist/latest-linux-AppImage-${{ github.sha }}.yml dist/latest-linux.yml
 
       - name: Upload changes to draft release
         # only run this on "push" to "master" or alpha releases
@@ -142,6 +144,7 @@ jobs:
           tag: v${{ steps.get_version.outputs.VERSION_TAG }}
           draft: true
           name: 'Draft'
+          bodyFile: ${{ env.SHOULD_PUBLISH_ALPHA == 'true' && 'build/release-notes-alpha.md' || 'build/release-notes.md' }}
           artifacts: 'dist/latest-linux.yml'
           allowUpdates: true
           omitNameDuringUpdate: true
@@ -167,7 +170,7 @@ jobs:
       - name: Unit Test
         run: yarn test
 
-      - name: Build but do not publish
+      - name: Make release build but do not publish
         # always run this, except on "push" to "master" or alpha releases
         if: ${{ env.SHOULD_PUBLISH == 'false' && env.SHOULD_PUBLISH_ALPHA == 'false'  }}
         run: yarn build-release
@@ -179,14 +182,44 @@ jobs:
         with:
           upload_prefix: ${{ runner.os }}-${{ runner.arch }}
 
-      - name: Build & publish
+      - name: Make release build & publish
         # only run this on "push" to "master" or alpha releases
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         run: yarn build-release-publish # No other args needed for windows publish
 
-  # We want a mac arm64 build, and according to this https://github.com/actions/runner-images#available-images macos-14 is always arm64
-  # macos-14 is disabled for now as we hit our free tier limit for macos builds
-  build_macos_x64:
+  # We want both arm64 and intel mac builds, and according to this https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources macos-14 and above is always arm64 and macos-13 is the last intel runner
+  # NOTE x64 builds made on an arm64 host will not bundle the native modules correctly https://github.com/electron-userland/electron-builder/issues/8646
+  build_mac_arm64:
+    runs-on: macos-14
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      MAC_CERTIFICATE: ${{ secrets.MAC_CERTIFICATE }}
+      MAC_CERTIFICATE_PASSWORD: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
+      SIGNING_APPLE_ID: ${{ secrets.SIGNING_APPLE_ID }}
+      SIGNING_APP_PASSWORD: ${{ secrets.SIGNING_APP_PASSWORD }}
+      SIGNING_TEAM_ID: ${{ secrets.SIGNING_TEAM_ID }}
+    steps:
+      - run: git config --global core.autocrlf false
+
+      - name: Checkout git repo
+        uses: actions/checkout@v4
+
+      - name: Setup & Build
+        uses: ./actions/setup_and_build
+        with:
+          cache_suffix: mac-arm64
+
+        # we want to test on all platforms since some are testing the rendered menus (and are dependent on the platform)
+      - name: Unit Test
+        run: yarn test
+
+      - name: Make release build arm64
+        uses: ./actions/make_release_build
+        with:
+          architecture: arm64
+          should_publish: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
+
+  build_mac_x64:
     runs-on: macos-13
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -204,29 +237,66 @@ jobs:
       - name: Setup & Build
         uses: ./actions/setup_and_build
         with:
-          cache_suffix: 'macos_x64'
+          cache_suffix: mac-x64
 
         # we want to test on all platforms since some are testing the rendered menus (and are dependent on the platform)
       - name: Unit Test
         run: yarn test
 
-      - name: Build but do not publish
-        # always run this, except on "push" to "master" or alpha releases
-        if: ${{ env.SHOULD_PUBLISH == 'false' && env.SHOULD_PUBLISH_ALPHA == 'false'  }}
-        run: |
-          source ./build/setup-mac-certificate.sh
-          yarn build-release --config.mac.bundleVersion=${{ github.ref }}
-
-      - name: Upload artefacts
-        # always run this, except on "push" to "master" or alpha releases
-        if: ${{ env.SHOULD_PUBLISH == 'false' && env.SHOULD_PUBLISH_ALPHA == 'false'  }}
-        uses: ./actions/upload_prod_artefacts
+      - name: Make release build x64
+        uses: ./actions/make_release_build
         with:
-          upload_prefix: ${{ runner.os }}-${{ runner.arch }}
+          architecture: x64
+          should_publish: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
 
-      - name: Build & publish
+  post_build_mac:
+    needs: [build_mac_arm64, build_mac_x64]
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout git repo
+        # only run this on "push" to "master" or alpha releases
+        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
+        uses: actions/checkout@v4
+        # We only need the package.json file in this run (to extract the version being built)
+        with:
+          sparse-checkout: |
+            package.json
+            build/setup-mac-release-combine.sh
+
+      - name: Get version tag from package.json
+        id: get_version
         # only run this on "push" to "master" or alpha releases
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         run: |
-          source ./build/setup-mac-certificate.sh
-          yarn build-release-publish --config.mac.bundleVersion=${{ github.ref }}
+          version=$(node -p "require('./package.json').version")
+          echo "VERSION_TAG=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Download release metadata
+        # only run this on "push" to "master" or alpha releases
+        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
+        uses: actions/download-artifact@v4
+        with:
+          pattern: latest-mac-*-${{ github.sha }}.yml
+          path: dist
+          merge-multiple: true
+
+      - name: Combine release metadata
+        # only run this on "push" to "master" or alpha releases
+        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
+        run: |
+          ./build/setup-mac-release-combine.sh ${{ github.sha }}
+
+      - name: Upload changes to draft release
+        # only run this on "push" to "master" or alpha releases
+        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
+        uses: ncipollo/release-action@v1
+        with:
+          tag: v${{ steps.get_version.outputs.VERSION_TAG }}
+          draft: true
+          name: "Draft"
+          artifacts: "dist/latest-mac.yml"
+          allowUpdates: true
+          omitBodyDuringUpdate: true
+          omitNameDuringUpdate: true
+          replacesArtifacts: true
+          updateOnlyUnreleased: true
