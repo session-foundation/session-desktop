@@ -147,7 +147,6 @@ jobs:
           bodyFile: ${{ env.SHOULD_PUBLISH_ALPHA == 'true' && 'build/release-notes-alpha.md' || 'build/release-notes.md' }}
           artifacts: 'dist/latest-linux.yml'
           allowUpdates: true
-          omitBodyDuringUpdate: true
           omitNameDuringUpdate: true
           replacesArtifacts: true
           updateOnlyUnreleased: true
