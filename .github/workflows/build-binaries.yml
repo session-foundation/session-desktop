@@ -110,6 +110,8 @@ jobs:
         with:
           sparse-checkout: |
             package.json
+            build/release-notes.md
+            build/release-notes-alpha.md
           sparse-checkout-cone-mode: false
 
       - name: Get version tag from package.json
@@ -142,8 +144,10 @@ jobs:
           tag: v${{ steps.get_version.outputs.VERSION_TAG }}
           draft: true
           name: 'Draft'
+          bodyFile: ${{ env.SHOULD_PUBLISH_ALPHA == 'true' && 'build/release-notes-alpha.md' || build/release-notes.md }}
           artifacts: 'dist/latest-linux.yml'
           allowUpdates: true
+          omitBodyDuringUpdate: true
           omitNameDuringUpdate: true
           replacesArtifacts: true
           updateOnlyUnreleased: true
@@ -293,6 +297,7 @@ jobs:
           name: "Draft"
           artifacts: "dist/latest-mac.yml"
           allowUpdates: true
+          omitBodyDuringUpdate: true
           omitNameDuringUpdate: true
           replacesArtifacts: true
           updateOnlyUnreleased: true
