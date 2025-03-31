@@ -100,17 +100,11 @@ export const REACT_LIMIT = 6;
 export const UPDATER_INTERVAL_MS = 10 * DURATION.MINUTES;
 
 /**
- * Start create groups as new at this time (currently Thursday March 20th 09:00 AEDT)
- */
-const START_CREATE_NEW_GROUP = 1742421600000;
-
-/**
  * Mark legacy groups readonly at this time (currently Thursday April 3rd 09:00 AEDT)
  */
 const LEGACY_GROUP_READONLY = 1743631200000;
 
 export const FEATURE_RELEASE_TIMESTAMPS = {
-  START_CREATE_NEW_GROUP,
   LEGACY_GROUP_READONLY,
 };
 
