@@ -216,16 +216,15 @@ export async function addUpdateMessage({
   }
 
   if (convo && expireUpdate && expireUpdate.expirationType && expireUpdate.expirationTimer > 0) {
-    const { expirationTimer, expirationType, isLegacyDataMessage } = expireUpdate;
+    const { expirationTimer, expirationType } = expireUpdate;
 
     msgAttrs.expirationType = expirationType === 'deleteAfterSend' ? 'deleteAfterSend' : 'unknown';
     msgAttrs.expireTimer = msgAttrs.expirationType === 'deleteAfterSend' ? expirationTimer : 0;
 
     // NOTE Triggers disappearing for an incoming groupUpdate message
-    // TODO legacy messages support will be removed in a future release
-    if (isLegacyDataMessage || expirationType === 'deleteAfterSend') {
+    if (expirationType === 'deleteAfterSend') {
       msgAttrs.expirationStartTimestamp = DisappearingMessages.setExpirationStartTimestamp(
-        isLegacyDataMessage ? 'legacy' : expirationType === 'unknown' ? 'off' : expirationType,
+        expirationType,
         sentAt,
         'addUpdateMessage'
       );
@@ -313,7 +312,7 @@ async function sendNewName(convo: ConversationModel, name: string, messageId: st
     groupId,
     identifier: messageId,
     name,
-    expirationType: null, // we keep that one **not** expiring
+    expirationType: 'unknown', // we keep that one **not** expiring
     expireTimer: 0,
   });
   await MessageQueue.use().sendToGroup({
@@ -349,7 +348,7 @@ async function sendAddedMembers(
     groupId,
     addedMembers,
     identifier: messageId,
-    expirationType: null, // we keep that one **not** expiring
+    expirationType: 'unknown', // we keep that one **not** expiring
     expireTimer: 0,
   });
   await MessageQueue.use().sendToGroup({
@@ -366,7 +365,7 @@ async function sendAddedMembers(
     members,
     keypair: encryptionKeyPair,
     identifier: messageId || uuidv4(),
-    expirationType: null, // we keep that one **not** expiring
+    expirationType: 'unknown', // we keep that one **not** expiring
     expireTimer: 0,
   });
 
@@ -410,7 +409,7 @@ async function sendRemovedMembers(
     groupId,
     removedMembers,
     identifier: messageId,
-    expirationType: null, // we keep that one **not** expiring
+    expirationType: 'unknown', // we keep that one **not** expiring
     expireTimer: 0,
   });
   // Send the group update, and only once sent, generate and distribute a new encryption key pair if needed
@@ -472,7 +471,7 @@ async function generateAndSendNewEncryptionKeyPair(
     groupId: toHex(groupId),
     createAtNetworkTimestamp: NetworkTime.now(),
     encryptedKeyPairs: wrappers,
-    expirationType: null, // we keep that one **not** expiring
+    expirationType: 'unknown', // we keep that one **not** expiring
     expireTimer: 0,
   });
 

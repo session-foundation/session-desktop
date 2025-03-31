@@ -35,8 +35,8 @@ export function generateVisibleMessage({
     createAtNetworkTimestamp: timestamp || Date.now(),
     attachments: undefined,
     quote: undefined,
-    expirationType: null,
-    expireTimer: null,
+    expirationType: 'unknown',
+    expireTimer: 0,
     lokiProfile: undefined,
     preview: undefined,
   });
@@ -161,8 +161,8 @@ export function generateDisappearingVisibleMessage({
     createAtNetworkTimestamp: timestamp || Date.now(),
     attachments: undefined,
     quote: undefined,
-    expirationType: expirationType ?? null,
-    expireTimer: expireTimer ?? null,
+    expirationType: expirationType ?? 'unknown',
+    expireTimer: expireTimer ?? 0,
     lokiProfile: undefined,
     preview: undefined,
   });

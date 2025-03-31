@@ -4,6 +4,12 @@ import { beforeEach } from 'mocha';
 import { SignalService } from '../../../../protobuf';
 import { Constants } from '../../../../session';
 import { CommunityInvitationMessage } from '../../../../session/messages/outgoing/visibleMessage/CommunityInvitationMessage';
+import { DisappearingMessageMode } from '../../../../session/disappearing_messages/types';
+
+const sharedNoExpire = {
+  expireTimer: 0,
+  expirationType: DisappearingMessageMode[0],
+};
 
 describe('CommunityInvitationMessage', () => {
   let message: CommunityInvitationMessage;
@@ -16,8 +22,7 @@ describe('CommunityInvitationMessage', () => {
       createAtNetworkTimestamp,
       url,
       name,
-      expirationType: null,
-      expireTimer: null,
+      ...sharedNoExpire,
     });
   });
 

@@ -1924,9 +1924,9 @@ available-typed-arrays@^1.0.7:
     possible-typed-array-names "^1.0.0"
 
 axios@^1.3.2:
-  version "1.8.3"
-  resolved "https://registry.yarnpkg.com/axios/-/axios-1.8.3.tgz#9ebccd71c98651d547162a018a1a95a4b4ed4de8"
-  integrity sha512-iP4DebzoNlP/YN2dpwCgb8zoCmhtkajzS48JvwmkSkXvPI3DHc7m+XYL5tGnSlJtR6nImXZmdCuN5aP8dh1d8A==
+  version "1.8.4"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-1.8.4.tgz#78990bb4bc63d2cae072952d374835950a82f447"
+  integrity sha512-eBSYY4Y68NNlHbHBMdeDmKNtDgXWhQsJcGqzO3iLUM0GraQFSS9cVgPX5I9b3lbdFKyYoAEGAZF1DwhTaljNAw==
   dependencies:
     follow-redirects "^1.15.6"
     form-data "^4.0.0"
@@ -4919,9 +4919,9 @@ levn@~0.3.0:
     prelude-ls "~1.1.2"
     type-check "~0.3.2"
 
-"libsession_util_nodejs@https://github.com/session-foundation/libsession-util-nodejs/releases/download/v0.4.27/libsession_util_nodejs-v0.4.27.tar.gz":
-  version "0.4.27"
-  resolved "https://github.com/session-foundation/libsession-util-nodejs/releases/download/v0.4.27/libsession_util_nodejs-v0.4.27.tar.gz#d4e389c34ccf2e8097be463eaa10e4323f3addd0"
+"libsession_util_nodejs@https://github.com/session-foundation/libsession-util-nodejs/releases/download/v0.4.28/libsession_util_nodejs-v0.4.28.tar.gz":
+  version "0.4.28"
+  resolved "https://github.com/session-foundation/libsession-util-nodejs/releases/download/v0.4.28/libsession_util_nodejs-v0.4.28.tar.gz#ebed51f562245df8503292585ed282495f50aa71"
   dependencies:
     cmake-js "7.2.1"
     node-addon-api "^6.1.0"
