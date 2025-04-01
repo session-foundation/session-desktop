@@ -165,6 +165,6 @@ export function stubValidSnodeSwarm() {
 
 /** You must call stubWindowLog() before using */
 export const stubI18n = () => {
-  const { i18n } = loadLocalizedDictionary({ appLocale: 'en', logger: window.log });
+  const { i18n } = loadLocalizedDictionary({ appLocale: 'en' });
   stubWindow('i18n', i18n);
 };

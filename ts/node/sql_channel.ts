@@ -54,8 +54,9 @@ export function initializeSqlChannel() {
     }
   });
 
-  ipcMain.handle('get-user-data-path', () => {
-    return app.getPath('userData');
+  ipcMain.on('get-user-data-path', event => {
+    // eslint-disable-next-line no-param-reassign
+    event.returnValue = app.getPath('userData');
   });
   ipcMain.handle('get-data-path', () => {
     return app.getAppPath();

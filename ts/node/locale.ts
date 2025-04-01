@@ -36,22 +36,12 @@ function resolveLocale(crowdinLocale: string): CrowdinLocale {
   return 'en' as CrowdinLocale;
 }
 
-export function loadLocalizedDictionary({
-  appLocale,
-  logger,
-}: {
-  appLocale: string;
-  logger?: any;
-}): {
+export function loadLocalizedDictionary({ appLocale }: { appLocale: string }): {
   crowdinLocale: CrowdinLocale;
   i18n: SetupI18nReturnType;
 } {
   if (!appLocale) {
     throw new TypeError('`appLocale` is required');
-  }
-
-  if (!logger || !logger.error) {
-    throw new TypeError('`logger.error` is required');
   }
 
   // Load locale - if we can't load messages for the current locale, we

@@ -12,6 +12,11 @@ const { crowdinLocale } = ipcRenderer.sendSync('locale-data');
 window.theme = 'classic-dark';
 window.primaryColor = 'green';
 
+// Note: we have to call initializeRendererProcessLogger before setupI18n
+const { initializeRendererProcessLogger } = require('./ts/util/logger/renderer_process_logging.js');
+
+initializeRendererProcessLogger();
+
 window.i18n = setupI18n({
   crowdinLocale,
 });

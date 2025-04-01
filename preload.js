@@ -18,6 +18,11 @@ const { crowdinLocale } = ipc.sendSync('locale-data');
 const config = url.parse(window.location.toString(), true).query;
 const configAny = config;
 
+// Note: we have to call initializeRendererProcessLogger before setupI18n
+const { initializeRendererProcessLogger } = require('./ts/util/logger/renderer_process_logging.js');
+
+initializeRendererProcessLogger();
+
 window.i18n = setupI18n({ crowdinLocale });
 
 let title = config.name;
@@ -37,7 +42,7 @@ window.getCommitHash = () => configAny.commitHash;
 window.getNodeVersion = () => configAny.node_version;
 window.getOSRelease = () =>
   `${os.type()} ${os.release()}, Node.js ${config.node_version} ${os.platform()} ${os.arch()}`;
-window.saveLog = additionalText => ipc.send('save-debug-log', additionalText);
+window.saveLog = () => ipc.send('export-logs' );
 window.getUserKeys = async () => {
   const pubkey = UserUtils.getOurPubKeyStrFromCache();
   const userEd25519SecretKey = (await UserUtils.getUserED25519KeyPairBytes())?.privKeyBytes;
@@ -260,8 +265,6 @@ ipc.on('get-ready-for-shutdown', async () => {
 });
 
 // We pull these dependencies in now, from here, because they have Node.js dependencies
-
-require('./ts/util/logging');
 
 if (config.proxyUrl) {
   window.log.info('Using provided proxy url');

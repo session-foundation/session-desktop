@@ -76,7 +76,7 @@ let internalWriteNewAttachmentData: ((arrayBuffer: ArrayBuffer) => Promise<strin
 
 // userDataPath must be app.getPath('userData');
 export async function initializeAttachmentLogic() {
-  const userDataPath = await ipcRenderer.invoke('get-user-data-path');
+  const userDataPath = ipcRenderer.sendSync('get-user-data-path');
 
   if (attachmentsPath) {
     throw new Error('attachmentsPath already initialized');

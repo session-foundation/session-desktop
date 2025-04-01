@@ -11,13 +11,8 @@ let crowdinLocale: CrowdinLocale | undefined;
  * @deprecated we want to use a normal logger instead of this function, eventually.
  */
 export function i18nLog(message: string) {
-  if (typeof window !== 'undefined') {
-    // eslint-disable-next-line no-console
-    (window?.log?.error ?? console.log)(`i18n: ${message}`);
-  } else {
-    // eslint-disable-next-line no-console
-    console.log(`i18n: ${message}`);
-  }
+  // eslint-disable-next-line no-console
+  console.log(`i18n: ${message}`);
 }
 
 export function getTimeLocaleDictionary() {

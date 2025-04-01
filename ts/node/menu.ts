@@ -109,7 +109,7 @@ export const createTemplate = (
         {
           label: i18n('debugLog'),
           click: () => {
-            saveDebugLog('save-debug-log');
+            saveDebugLog('export-logs');
           },
         },
         {

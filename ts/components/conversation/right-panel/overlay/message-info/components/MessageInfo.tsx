@@ -25,7 +25,7 @@ import {
   formatTimeDurationMs,
   formatDateWithLocale,
 } from '../../../../../../util/i18n/formatting/generics';
-import { saveLogToDesktop } from '../../../../../../util/logging';
+import { saveLogToDesktop } from '../../../../../../util/logger/renderer_process_logging';
 
 export const MessageInfoLabel = styled.label<{ color?: string }>`
   font-size: var(--font-size-lg);
