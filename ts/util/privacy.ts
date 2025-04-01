@@ -1,6 +1,6 @@
 /* eslint-env node */
 
-import { escapeRegExp, isEmpty, isRegExp, isString } from 'lodash';
+import { escapeRegExp, isRegExp, isString } from 'lodash';
 import { compose } from 'lodash/fp';
 import { getAppRootPath } from '../node/getRootPath';
 import { isDevProd } from '../shared/env_vars';
@@ -101,11 +101,7 @@ const removeNewlines = (text: string) => text.replace(/\r?\n|\r/g, '');
 const redactSensitivePaths = redactPath(APP_ROOT_PATH);
 
 function shouldNotRedactLogs() {
-  // if featureFlag is set to true, trust it
-  if (!isEmpty(process.env.SESSION_DEBUG_DISABLE_REDACTED)) {
-    return true;
-  }
-  // otherwise we don't want to redact logs when running on the devprod env
+  // we don't want to redact logs when running on the devprod
   return isDevProd();
 }
 

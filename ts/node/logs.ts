@@ -1,13 +1,11 @@
 import { ipcRenderer } from 'electron';
+import pTimeout from 'p-timeout';
 
-export async function deleteAllLogs() {
-  return new Promise((resolve, reject) => {
-    ipcRenderer.once('delete-all-logs-complete', resolve);
+import { beforeRestart } from '../util/logger/renderer_process_logging';
+import { DURATION } from '../session/constants';
 
-    setTimeout(() => {
-      reject(new Error('Request to delete all logs timed out'));
-    }, 5000);
-
-    ipcRenderer.send('delete-all-logs');
-  });
+export function deleteAllLogs(): Promise<void> {
+  // Restart logging again when the file stream close
+  beforeRestart();
+  return pTimeout(ipcRenderer.invoke('delete-all-logs'), 5 * DURATION.SECONDS);
 }
