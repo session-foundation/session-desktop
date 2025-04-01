@@ -18,7 +18,7 @@ import {
 } from './shared';
 import * as log from './log';
 import { createRotatingPinoDest } from './rotatingPinoDest';
-import { isDevProd } from '../../shared/env_vars';
+import { isDevProd, isUnitTest } from '../../shared/env_vars';
 import { Errors } from '../../types/Errors';
 import LIBSESSION_CONSTANTS from '../../session/utils/libsession/libsession_constants';
 
@@ -33,8 +33,10 @@ function consoleLog(...args: ReadonlyArray<unknown>) {
 }
 
 if (window.console) {
-  console._log = console.log;
-  console.log = consoleLog;
+  if (!isUnitTest()) {
+    console._log = console.log;
+    console.log = consoleLog;
+  }
 }
 
 let globalLogger: undefined | pino.Logger;

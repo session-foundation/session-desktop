@@ -1,3 +1,4 @@
+import { isUnitTest } from '../shared/env_vars';
 import { CrowdinLocale } from './constants';
 import type { I18nMethods } from './I18nMethods';
 import { pluralsDictionary, simpleDictionary } from './locales';
@@ -30,15 +31,11 @@ function isEmptyObject(obj: unknown) {
 }
 
 export function setLogger(cb: Logger) {
-  if (logger && !isRunningInMocha()) {
+  if (logger && !isUnitTest()) {
     // eslint-disable-next-line no-console
-    console.debug('logger already initialized. overwriding it');
+    console.debug('logger already initialized. overriding it');
   }
   logger = cb;
-}
-
-function isRunningInMocha(): boolean {
-  return typeof global.it === 'function';
 }
 
 export function setLocaleInUse(crowdinLocale: CrowdinLocale) {
@@ -415,7 +412,7 @@ class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends String {
       }
 
       if (!isPluralToken(this.token)) {
-        throw new Error('invalid token provided');
+        throw new Error(`invalid token provided: ${this.token}`);
       }
 
       return this.resolvePluralString();
