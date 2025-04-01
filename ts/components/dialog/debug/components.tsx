@@ -7,7 +7,6 @@ import { Flex } from '../../basic/Flex';
 import { SpacerXS } from '../../basic/Text';
 import { localize } from '../../../localization/localeTools';
 import { CopyToClipboardIcon } from '../../buttons';
-import { saveLogToDesktop } from '../../../util/logging';
 import { Localizer } from '../../basic/Localizer';
 import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
 import { ToastUtils, UserUtils } from '../../../session/utils';
@@ -18,6 +17,7 @@ import { updateDebugMenuModal } from '../../../state/ducks/modalDialog';
 import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_constants';
 import { type ReleaseChannels } from '../../../updater/types';
 import { fetchLatestRelease } from '../../../session/fetch_latest_release';
+import { saveLogToDesktop } from '../../../util/logger/renderer_process_logging';
 
 const CheckVersionButton = ({ channelToCheck }: { channelToCheck: ReleaseChannels }) => {
   const channelName = channelToCheck === 'latest' ? 'stable' : channelToCheck;

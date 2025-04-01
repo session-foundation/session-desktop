@@ -11,14 +11,10 @@ import { windowMarkShouldQuit } from '../node/window_state';
 
 import { UPDATER_INTERVAL_MS } from '../session/constants';
 import type { SetupI18nReturnType } from '../types/localizer';
-import {
-  getPrintableError,
-  type LoggerType,
-  showCannotUpdateDialog,
-  showDownloadUpdateDialog,
-  showUpdateDialog,
-} from './common';
+import { showCannotUpdateDialog, showDownloadUpdateDialog, showUpdateDialog } from './common';
 import { getLatestRelease } from '../node/latest_desktop_release';
+import { Errors } from '../types/Errors';
+import type { LoggerType } from '../util/logger/Logging';
 
 let isUpdating = false;
 let downloadIgnored = false;
@@ -51,7 +47,7 @@ export async function start(
     try {
       await checkForUpdates(getMainWindow, i18n, logger);
     } catch (error) {
-      logger.error('[updater] auto-update: error:', getPrintableError(error));
+      logger.error('[updater] auto-update: error:', Errors.toString(error));
     }
   }, UPDATER_INTERVAL_MS); // trigger and try to update every 10 minutes to let the file gets downloaded if we are updating
   stopped = false;
@@ -61,7 +57,7 @@ export async function start(
       try {
         await checkForUpdates(getMainWindow, i18n, logger);
       } catch (error) {
-        logger.error('[updater] auto-update: error:', getPrintableError(error));
+        logger.error('[updater] auto-update: error:', Errors.toString(error));
       }
     },
     2 * 60 * 1000
