@@ -42,7 +42,7 @@ window.getCommitHash = () => configAny.commitHash;
 window.getNodeVersion = () => configAny.node_version;
 window.getOSRelease = () =>
   `${os.type()} ${os.release()}, Node.js ${config.node_version} ${os.platform()} ${os.arch()}`;
-window.saveLog = () => ipc.send('export-logs' );
+window.saveLog = () => ipc.send('export-logs');
 window.getUserKeys = async () => {
   const pubkey = UserUtils.getOurPubKeyStrFromCache();
   const userEd25519SecretKey = (await UserUtils.getUserED25519KeyPairBytes())?.privKeyBytes;

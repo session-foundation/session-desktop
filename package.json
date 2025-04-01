@@ -38,7 +38,7 @@
     "lint": "yarn format-full --cache && eslint --cache .",
     "format-full": "prettier --list-different --write \"*.{css,js,json,scss,ts,tsx}\" \"./**/*.{css,js,json,scss,ts,tsx}\"",
     "start-prod-test": "cross-env NODE_ENV=production NODE_APP_INSTANCE=$MULTI electron .",
-    "test": "mocha",
+    "test": "cross-env IS_UNIT_TEST=1 mocha",
     "build-release-base": "cross-env NODE_ENV=production electron-builder --config.extraMetadata.environment=production",
     "build-release": "yarn build-release-base --publish=never --config.directories.output=release",
     "build-release-publish": "yarn build-release-base --publish=always",

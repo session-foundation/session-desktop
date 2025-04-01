@@ -1,6 +1,7 @@
 import { Locale } from 'date-fns';
 import { CrowdinLocale } from '../../localization/constants';
 import { timeLocaleMap } from './timeLocaleMap';
+import { isUnitTest } from '../../shared/env_vars';
 
 let mappedBrowserLocaleDisplayed = false;
 let crowdinLocale: CrowdinLocale | undefined;
@@ -75,7 +76,7 @@ export function getBrowserLocale() {
 }
 
 export function setInitialLocale(crowdinLocaleArg: CrowdinLocale) {
-  if (crowdinLocale) {
+  if (crowdinLocale && !isUnitTest()) {
     i18nLog('setInitialLocale: crowdinLocale is already init');
   }
   crowdinLocale = crowdinLocaleArg;

@@ -5,6 +5,7 @@ import { getMessage } from './functions/getMessage';
 import { i18nLog, setInitialLocale } from './shared';
 import { CrowdinLocale } from '../../localization/constants';
 import { setLocaleInUse, setLogger } from '../../localization/localeTools';
+import { isUnitTest } from '../../shared/env_vars';
 
 /**
  * Sets up the i18n function with the provided locale and messages.
@@ -25,9 +26,10 @@ export const setupI18n = ({
 
   setInitialLocale(crowdinLocale);
 
-  i18nLog(`Setup Complete with crowdinLocale: ${crowdinLocale}`);
-
-  // eslint-disable-next-line no-console
+  if (!isUnitTest()) {
+    // eslint-disable-next-line no-console
+    console.log(`Setup Complete with crowdinLocale: ${crowdinLocale}`);
+  }
   setLogger(i18nLog);
   setLocaleInUse(crowdinLocale);
   return getMessage;

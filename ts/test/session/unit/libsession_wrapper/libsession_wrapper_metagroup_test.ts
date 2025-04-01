@@ -154,7 +154,6 @@ describe('libsession_metagroup', () => {
   describe('members', () => {
     it('all fields are accounted for', () => {
       const memberCreated = metaGroupWrapper.memberGetOrConstruct(member);
-      console.info('Object.keys(memberCreated) ', JSON.stringify(Object.keys(memberCreated)));
       expect(Object.keys(memberCreated).sort()).to.be.deep.eq(
         [
           'pubkeyHex',
