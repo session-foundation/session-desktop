@@ -7,7 +7,7 @@
 
 import type { BrowserWindow } from 'electron';
 import { app, ipcMain as ipc, dialog } from 'electron';
-import { filter, flatten, isString, map, memoize, pick, sortBy } from 'lodash';
+import { filter, flatten, isBoolean, isString, map, memoize, pick, sortBy } from 'lodash';
 import {
   existsSync,
   mkdirSync,
@@ -16,7 +16,7 @@ import {
   unlinkSync,
   writeFileSync,
 } from 'node:fs';
-import { rm } from 'node:fs/promises';
+import { rm, readdir, stat } from 'node:fs/promises';
 import { join } from 'path';
 import pino from 'pino';
 import path from 'node:path';
@@ -82,7 +82,7 @@ export async function initializeMainProcessLogger(
   } catch (error) {
     const errorString = `Failed to clean logs; deleting all. Error: ${Errors.toString(error)}`;
     console.error(errorString);
-    await deleteAllLogs(logPath);
+    await deleteAllLogs(logPath, false);
     mkdirSync(logPath, { recursive: true });
 
     // If we want this log entry to persist on disk, we need to wait until we've
@@ -98,6 +98,7 @@ export async function initializeMainProcessLogger(
     globalLogger = undefined;
 
     if (shouldRestart) {
+      console._log('initializeMainProcessLogger after restart');
       void initializeMainProcessLogger(getMainWindow);
     }
   };
@@ -160,15 +161,27 @@ export async function initializeMainProcessLogger(
   });
 
   ipc.removeHandler('delete-all-logs');
-  ipc.handle('delete-all-logs', async () => {
-    // Restart logging when the streams will close
-    shouldRestart = true;
+  ipc.handle('delete-all-logs', async (_event, keepCurrent: unknown) => {
+    if (!isBoolean(keepCurrent)) {
+      throw new Error('delete-all-logs: excepted boolean for keepCurrent');
+    }
+
+    if (!keepCurrent) {
+      // Restart logging when the streams will close
+      shouldRestart = true;
+    }
 
     try {
-      await deleteAllLogs(logPath);
+      await deleteAllLogs(logPath, keepCurrent);
     } catch (error) {
       logger.error(`Problem deleting all logs: ${Errors.toString(error)}`);
     }
+    return fetchLogsStorageUsed(logPath);
+  });
+
+  ipc.removeHandler('get-logs-folder-size');
+  ipc.handle('get-logs-folder-size', async () => {
+    return fetchLogsStorageUsed(logPath);
   });
 
   globalLogger = logger;
@@ -176,8 +189,56 @@ export async function initializeMainProcessLogger(
   return log;
 }
 
-async function deleteAllLogs(logPath: string): Promise<void> {
-  await rm(logPath, { recursive: true, force: true });
+async function deleteAllLogs(logPath: string, keepCurrent: boolean): Promise<void> {
+  // The "current" log file written to is always `*.log`.
+  // The ones from a previous rotation always match `*.log.1`, `.log.2`, etc
+  // So, when we've been told to keep the current one, we remove only the files with `.log.` in the name
+  // (Note the last "." at the end of the `.log.` here)
+  const pattern = keepCurrent ? `.log.` : '.log';
+
+  try {
+    const files = await readdir(logPath);
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const filePath = path.join(logPath, file);
+
+      if (filePath.includes(pattern)) {
+        // eslint-disable-next-line no-await-in-loop
+        await rm(filePath, { force: true });
+        console.log(`removed log file: "${filePath}"`);
+      }
+    }
+  } catch (error) {
+    globalLogger?.error('deleteAllLogs: Error reading directory or files:', error);
+  }
+}
+
+async function fetchLogsStorageUsed(logPath: string): Promise<number> {
+  try {
+    const files = await readdir(logPath);
+    let totalSize = 0;
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const filePath = path.join(logPath, file);
+
+      if (file.includes('.log')) {
+        // eslint-disable-next-line no-await-in-loop
+        const fileStats = await stat(filePath);
+
+        if (fileStats.isFile()) {
+          totalSize += fileStats.size;
+        }
+      }
+    }
+
+    console.log(`fetchLogsStorageUsed: Total size of .log files: ${totalSize} bytes`);
+    return totalSize;
+  } catch (error) {
+    globalLogger?.error('fetchLogsStorageUsed: Error reading directory or files:', error);
+    return 0;
+  }
 }
 
 async function cleanupLogs(logPath: string) {
@@ -202,7 +263,7 @@ async function cleanupLogs(logPath: string) {
     );
 
     // delete and re-create the log directory
-    await deleteAllLogs(logPath);
+    await deleteAllLogs(logPath, false);
     mkdirSync(logPath, { recursive: true });
   }
 }

@@ -1,4 +1,3 @@
-import { isUnitTest } from '../shared/env_vars';
 import { CrowdinLocale } from './constants';
 import type { I18nMethods } from './I18nMethods';
 import { pluralsDictionary, simpleDictionary } from './locales';
@@ -30,8 +29,14 @@ function isEmptyObject(obj: unknown) {
   return Object.keys(obj).length === 0;
 }
 
+// Note: not using isUnitTest as we will eventually move the whole folder to its own
+// package
+function isRunningInMocha(): boolean {
+  return typeof global.it === 'function';
+}
+
 export function setLogger(cb: Logger) {
-  if (logger && !isUnitTest()) {
+  if (logger && !isRunningInMocha()) {
     // eslint-disable-next-line no-console
     console.debug('logger already initialized. overriding it');
   }
