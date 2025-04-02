@@ -12,10 +12,10 @@ import { DURATION } from '../../session/constants';
 const MAX_ROTATIONS = 3;
 
 /**
- * Do the file rotation every 2 hours, that should be enough for multiple restarts and
- * avoid the files getting too big
+ * Do the file rotation every 24 hours, that should be enough for multiple
+ * restarts and prevent the files getting too big
  */
-const ROTATION_INTERVAL = 2 * DURATION.HOURS;
+const ROTATION_INTERVAL = 24 * DURATION.HOURS;
 
 const RETRY_DELAY = 12 * DURATION.SECONDS;
 
@@ -88,6 +88,9 @@ export function createRotatingPinoDest({
 
     // Success, reopen
     boom.reopen();
+    warn('======================================================================');
+    warn('============================ new log file ============================');
+    warn('======================================================================');
 
     if (retryCount !== 0) {
       warn(`rotatingPinoDest: rotation succeeded after ${retryCount} retries`);
