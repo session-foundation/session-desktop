@@ -4,10 +4,13 @@ set -e
 
 IDENTIFIER=$1
 RELEASE_DIR="./dist"
-APPIMAGE_FILE="$RELEASE_DIR/latest-mac-x64-$IDENTIFIER.yml"
-DEB_FILE="$RELEASE_DIR/latest-mac-x64-$IDENTIFIER.yml"
-RPM_FILE="$RELEASE_DIR/latest-mac-x64-$IDENTIFIER.yml"
-FREEBSD_FILE="$RELEASE_DIR/latest-linux-arm64-$IDENTIFIER.yml"
+APPIMAGE_FILE="$RELEASE_DIR/latest-linux-AppImage-$IDENTIFIER.yml"
+DEB_FILE="$RELEASE_DIR/latest-linux-deb-$IDENTIFIER.yml"
+RPM_FILE="$RELEASE_DIR/latest-linux-rpm-$IDENTIFIER.yml"
+
+# Note: freebsd doesn't do auto update via electron-updater
+# and so doesn't generate a latest-linux
+# FREEBSD_FILE="$RELEASE_DIR/latest-linux-arm64-$IDENTIFIER.yml"
 OUTPUT_FILE="$RELEASE_DIR/latest-linux.yml"
 
 echo "Combined release metadata from all linux builds"
