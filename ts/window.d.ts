@@ -23,6 +23,7 @@ export type SessionFeatureFlags = {
   replaceLocalizedStringsWithKeys: boolean;
   useReleaseChannels: boolean;
   debug: {
+    debugMenu: boolean;
     debugLogging: boolean;
     debugLibsessionDumps: boolean;
     debugBuiltSnodeRequests: boolean;

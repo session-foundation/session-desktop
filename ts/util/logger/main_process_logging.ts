@@ -194,7 +194,7 @@ async function deleteAllLogs(logPath: string, keepCurrent: boolean): Promise<voi
   // The ones from a previous rotation always match `*.log.1`, `.log.2`, etc
   // So, when we've been told to keep the current one, we remove only the files with `.log.` in the name
   // (Note the last "." at the end of the `.log.` here)
-  const pattern = keepCurrent ? `.log.` : '.log';
+  const pattern = keepCurrent ? '.log.' : '.log';
 
   try {
     const files = await readdir(logPath);
@@ -300,10 +300,6 @@ function eliminateOutOfDateFiles(
       Promise.all([readFirstLine(target), readLastLines(target, 2)]).then(results => {
         const start = results[0];
         const end = results[1].split('\n');
-        console._log(
-          `eliminateOutOfDateFiles of file "${target}" has start:${start} & end:${end}. (results: ${reallyJsonStringify(results)})`
-        );
-        console._log(`eliminateOutOfDateFiles above^^^^^`);
 
         const file = {
           path: target,
@@ -314,8 +310,6 @@ function eliminateOutOfDateFiles(
         };
 
         if (!file.start && !file.end) {
-          console._log(`eliminateOutOfDateFiles: removing ${file.path}`);
-
           unlinkSync(file.path);
         }
 
