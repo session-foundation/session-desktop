@@ -7,7 +7,7 @@ const { isTestNet, isTestIntegration } = require('./ts/shared/env_vars');
 const os = require('os');
 const url = require('url');
 
-const _ = require('lodash');
+const { isEmpty } = require('lodash');
 
 const { setupI18n } = require('./ts/util/i18n/i18n');
 const { UserUtils } = require('./ts/session/utils');
@@ -62,10 +62,11 @@ window.sessionFeatureFlags = {
   replaceLocalizedStringsWithKeys: false,
   useReleaseChannels: false,
   debug: {
-    debugLogging: !_.isEmpty(process.env.SESSION_DEBUG),
-    debugLibsessionDumps: !_.isEmpty(process.env.SESSION_DEBUG_LIBSESSION_DUMPS),
-    debugBuiltSnodeRequests: !_.isEmpty(process.env.SESSION_DEBUG_BUILT_SNODE_REQUEST),
-    debugSwarmPolling: !_.isEmpty(process.env.SESSION_DEBUG_SWARM_POLLING),
+    debugMenu: !isEmpty(process.env.SESSION_DEV),
+    debugLogging: !isEmpty(process.env.SESSION_DEBUG),
+    debugLibsessionDumps: !isEmpty(process.env.SESSION_DEBUG_LIBSESSION_DUMPS),
+    debugBuiltSnodeRequests: !isEmpty(process.env.SESSION_DEBUG_BUILT_SNODE_REQUEST),
+    debugSwarmPolling: !isEmpty(process.env.SESSION_DEBUG_SWARM_POLLING),
     debugFileServerRequests: false,
     debugNonSnodeRequests: false,
     debugOnionRequests: false,
