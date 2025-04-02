@@ -3,6 +3,9 @@ import { ipcRenderer, shell } from 'electron';
 import { useDispatch } from 'react-redux';
 import { useState } from 'react';
 import useAsyncFn from 'react-use/lib/useAsyncFn';
+import useInterval from 'react-use/lib/useInterval';
+import { filesize } from 'filesize';
+
 import { Flex } from '../../basic/Flex';
 import { SpacerXS } from '../../basic/Text';
 import { localize } from '../../../localization/localeTools';
@@ -18,6 +21,8 @@ import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_c
 import { type ReleaseChannels } from '../../../updater/types';
 import { fetchLatestRelease } from '../../../session/fetch_latest_release';
 import { saveLogToDesktop } from '../../../util/logger/renderer_process_logging';
+import { DURATION } from '../../../session/constants';
+import { Errors } from '../../../types/Errors';
 
 const CheckVersionButton = ({ channelToCheck }: { channelToCheck: ReleaseChannels }) => {
   const channelName = channelToCheck === 'latest' ? 'stable' : channelToCheck;
@@ -130,6 +135,47 @@ const CheckForUpdatesButton = () => {
   );
 };
 
+/**
+ * Using a function here to avoid a useCallback below
+ */
+function fetchLogSizeFromIpc() {
+  return ipcRenderer.invoke('get-logs-folder-size');
+}
+
+const ClearOldLogsButton = () => {
+  const [logSize, setLogSize] = useState(0);
+  useInterval(async () => {
+    const fetched = await fetchLogSizeFromIpc();
+    if (fetched && Number.isFinite(fetched)) {
+      setLogSize(fetched);
+    } else {
+      setLogSize(0);
+    }
+  }, 1 * DURATION.SECONDS);
+
+  const [_state, handleDeleteAllLogs] = useAsyncFn(async () => {
+    try {
+      const afterCleanSize = await ipcRenderer.invoke('delete-all-logs', true);
+      window.log.warn(
+        `[debugMenu] ClearOldLogsButton clicked. After clean: ${filesize(afterCleanSize)}`
+      );
+      setLogSize(afterCleanSize);
+    } catch (error) {
+      window.log.error(`[debugMenu] ClearOldLogsButton ${Errors.toString(error)}`);
+    }
+  });
+
+  return (
+    <SessionButton
+      onClick={() => {
+        void handleDeleteAllLogs();
+      }}
+    >
+      Clear old logs {filesize(logSize)}
+    </SessionButton>
+  );
+};
+
 export const DebugActions = () => {
   const dispatch = useDispatch();
 
@@ -185,6 +231,7 @@ export const DebugActions = () => {
           <Localizer token="updateReleaseNotes" />
         </SessionButton>
         <CheckForUpdatesButton />
+        <ClearOldLogsButton />
         <CheckVersionButton channelToCheck="latest" />
         {window.sessionFeatureFlags.useReleaseChannels ? (
           <CheckVersionButton channelToCheck="alpha" />
