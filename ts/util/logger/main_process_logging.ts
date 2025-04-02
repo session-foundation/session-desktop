@@ -18,7 +18,6 @@ import {
 } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import { join } from 'path';
-import type { StreamEntry } from 'pino';
 import pino from 'pino';
 import path from 'node:path';
 import readFirstLine from 'firstline';
@@ -37,10 +36,10 @@ import {
 } from './shared';
 import { CircularBuffer } from './circularBuffer';
 import type { LoggerType } from './Logging';
-import { createRotatingPinoDest } from './rotatingPinoDest';
 import { Errors } from '../../types/Errors';
 
 import { reallyJsonStringify } from '../reallyJsonStringify';
+import { buildPinoLogger } from './buildPinoLogger';
 
 const MAX_LOG_LINES_MERGED_EXPORT = 1_000_000;
 
@@ -94,9 +93,6 @@ export async function initializeMainProcessLogger(
   }
 
   const logFile = join(logPath, 'main.log');
-  const rotatingStream = createRotatingPinoDest({
-    logFile,
-  });
 
   const onClose = () => {
     globalLogger = undefined;
@@ -106,27 +102,7 @@ export async function initializeMainProcessLogger(
     }
   };
 
-  rotatingStream.on('close', onClose);
-  rotatingStream.on('error', onClose);
-
-  const streams = new Array<StreamEntry>();
-  streams.push({ stream: rotatingStream });
-
-  streams.push({
-    level: 'debug' as const,
-    stream: process.stdout,
-  });
-
-  const logger = pino(
-    {
-      formatters: {
-        // No point in saving pid or hostname
-        bindings: () => ({}),
-      },
-      timestamp: pino.stdTimeFunctions.isoTime,
-    },
-    pino.multistream(streams)
-  );
+  const logger = buildPinoLogger(logFile, onClose);
 
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   ipc.on('export-logs', async () => {
@@ -350,12 +326,10 @@ function fetchLogs(logPath: string): Array<LogEntryType> {
 }
 
 function logAtLevel(level: LogLevel, ...args: ReadonlyArray<unknown>) {
+  // main side, we only need to log to the globalLogger, it prints to stdout and the rotating file
   if (globalLogger) {
     const levelString = getLogLevelString(level);
     globalLogger[levelString](cleanArgs(args));
-  }
-  if (!process.stdout.destroyed) {
-    console._log(...args);
   }
 }
 
@@ -415,7 +389,7 @@ export function getLogFromData(data: unknown, additionalData: unknown) {
   let countOfLines = 0;
   if (isFetchLogIpcData(data)) {
     const { logEntries } = data;
-    console.warn('logEntries length:', logEntries.length);
+    console.info('[logging] logEntries length:', logEntries.length);
     countOfLines += logEntries.length;
     body = logEntries.map(formatLine).join('\n');
   } else {
