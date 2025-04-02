@@ -82,7 +82,7 @@ jobs:
         # only run this on "push" to "master" or alpha releases
         # Note: The jobs are overwriting each other latest-linux.yml.
         # So here, we upload all of them as artefact, and then merge them (see `post_build_linux`)
-        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
+        if: ${{ (env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true') && matrix.pkg_to_build != 'freebsd' }}
         shell: bash
         run: |
           mv dist/latest-linux.yml dist/latest-linux-${{ matrix.pkg_to_build }}-${{ github.sha }}.yml
@@ -90,7 +90,7 @@ jobs:
       - name: Upload release metadata
         # only run this on "push" to "master" or alpha releases
         # Check the details of why we need this above (and why only for AppImage)
-        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
+        if: ${{ (env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true') && matrix.pkg_to_build != 'freebsd' }}
         uses: actions/upload-artifact@v4
         with:
           name: latest-linux-${{ matrix.pkg_to_build }}-${{ github.sha }}.yml
@@ -297,8 +297,8 @@ jobs:
         with:
           tag: v${{ steps.get_version.outputs.VERSION_TAG }}
           draft: true
-          name: "Draft"
-          artifacts: "dist/latest-mac.yml"
+          name: 'Draft'
+          artifacts: 'dist/latest-mac.yml'
           allowUpdates: true
           omitBodyDuringUpdate: true
           omitNameDuringUpdate: true
