@@ -26,6 +26,7 @@ export type SessionFeatureFlags = {
     debugLogging: boolean;
     debugLibsessionDumps: boolean;
     debugBuiltSnodeRequests: boolean;
+    debugSwarmPolling: boolean;
     debugFileServerRequests: boolean;
     debugNonSnodeRequests: boolean;
     debugOnionRequests: boolean;

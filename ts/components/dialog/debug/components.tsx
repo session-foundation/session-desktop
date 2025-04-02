@@ -153,6 +153,7 @@ const ClearOldLogsButton = () => {
     }
   }, 1 * DURATION.SECONDS);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_state, handleDeleteAllLogs] = useAsyncFn(async () => {
     try {
       const afterCleanSize = await ipcRenderer.invoke('delete-all-logs', true);
