@@ -17,16 +17,10 @@ import {
   type LogEntryType,
 } from './shared';
 import * as log from './log';
-import { createRotatingPinoDest } from './rotatingPinoDest';
 import { isDevProd, isUnitTest } from '../../shared/env_vars';
 import { Errors } from '../../types/Errors';
 import LIBSESSION_CONSTANTS from '../../session/utils/libsession/libsession_constants';
-
-// Backwards-compatible logging, simple strings and no level (defaulted to INFO)
-function now() {
-  const date = new Date();
-  return date.toJSON();
-}
+import { buildPinoLogger } from './buildPinoLogger';
 
 function consoleLog(...args: ReadonlyArray<unknown>) {
   logAtLevel(LogLevel.Info, ...args);
@@ -62,32 +56,20 @@ export function initializeRendererProcessLogger(): void {
       initializeRendererProcessLogger();
     }
   };
-
-  const stream = createRotatingPinoDest({
-    logFile,
-  });
-
-  stream.on('close', onClose);
-  stream.on('error', onClose);
-
-  globalLogger = pino(
-    {
-      formatters: {
-        // No point in saving pid or hostname
-        bindings: () => ({}),
-      },
-      timestamp: pino.stdTimeFunctions.isoTime,
-    },
-    stream
-  );
+  globalLogger = buildPinoLogger(logFile, onClose);
 
   log.setLogAtLevel(logAtLevel);
 }
 
-// A modern logging interface for the browser
+// Backwards-compatible logging, simple strings and no level (defaulted to INFO)
+function now() {
+  const date = new Date();
+  return date.toJSON();
+}
 
 function logAtLevel(level: LogLevel, ...args: ReadonlyArray<unknown>): void {
   if (isDevProd()) {
+    // we are in renderer, we log to the console tab, always
     const prefix = getLogLevelString(level).toUpperCase().padEnd(levelMaxLength, ' ');
     console._log(prefix, now(), ...args);
   }
@@ -98,7 +80,7 @@ function logAtLevel(level: LogLevel, ...args: ReadonlyArray<unknown>): void {
   if (!globalLogger) {
     throw new Error('Logger has not been initialized yet');
   }
-
+  // then we also log with the globalLogger, that logs to stdout and the rotating file
   globalLogger[levelString](msg);
 }
 

@@ -11,11 +11,6 @@ import { redactAll } from '../privacy';
 export { LogLevel };
 
 export type FetchLogIpcData = {
-  // capabilities: Record<string, unknown>;
-  // remoteConfig: Record<string, unknown>;
-  // statistics: Record<string, unknown>;
-  // user: Record<string, unknown>;
-
   // We expect `logEntries` to be `Array<LogEntryType>`, but we don't validate that
   //   upfront—we only validate it when we go to log each line. This improves the
   //   performance, because we don't have to iterate over every single log entry twice. It
@@ -26,12 +21,7 @@ export type FetchLogIpcData = {
 // We don't use Zod here because it'd be slow parsing all of the log entries.
 //   Unfortunately, Zod is a bit slow even with `z.array(z.unknown())`.
 export const isFetchLogIpcData = (data: unknown): data is FetchLogIpcData =>
-  isRecord(data) &&
-  // isRecord(data.capabilities) &&
-  // isRecord(data.remoteConfig) &&
-  // isRecord(data.statistics) &&
-  // isRecord(data.user) &&
-  Array.isArray(data.logEntries);
+  isRecord(data) && Array.isArray(data.logEntries);
 
 // These match [Pino's core fields][1].
 // [1]: https://getpino.io/#/?id=usage
