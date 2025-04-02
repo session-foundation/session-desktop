@@ -7,5 +7,5 @@ import { DURATION } from '../session/constants';
 export function deleteAllLogs(): Promise<void> {
   // Restart logging again when the file stream close
   beforeRestart();
-  return pTimeout(ipcRenderer.invoke('delete-all-logs'), 5 * DURATION.SECONDS);
+  return pTimeout(ipcRenderer.invoke('delete-all-logs', false), 5 * DURATION.SECONDS);
 }
