@@ -110,8 +110,7 @@ jobs:
         with:
           sparse-checkout: |
             package.json
-            build/setup-mac-release-combine.sh
-            build/setup-linux-release-combine.sh
+            build/setup-release-combine.sh
             build/release-notes.md
             build/release-notes-alpha.md
           sparse-checkout-cone-mode: false
@@ -137,7 +136,7 @@ jobs:
         # only run this on "push" to "master" or alpha releases
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         run: |
-          ./build/setup-linux-release-combine.sh ${{ github.sha }}
+          ./build/setup-release-combine.sh ${{ github.sha }} linux
 
       - name: Upload changes to draft release
         # only run this on "push" to "master" or alpha releases
@@ -265,7 +264,7 @@ jobs:
         with:
           sparse-checkout: |
             package.json
-            build/setup-mac-release-combine.sh
+            build/setup-release-combine.sh
 
       - name: Get version tag from package.json
         id: get_version
@@ -288,7 +287,7 @@ jobs:
         # only run this on "push" to "master" or alpha releases
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         run: |
-          ./build/setup-mac-release-combine.sh ${{ github.sha }}
+          ./build/setup-release-combine.sh ${{ github.sha }} mac
 
       - name: Upload changes to draft release
         # only run this on "push" to "master" or alpha releases
