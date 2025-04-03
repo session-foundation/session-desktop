@@ -18,7 +18,6 @@ export type SessionFeatureFlags = {
   useOnionRequests: boolean;
   useTestNet: boolean;
   useClosedGroupV2QAButtons: boolean;
-  forceLegacyGroupsDeprecated: boolean;
   replaceLocalizedStringsWithKeys: boolean;
   useReleaseChannels: boolean;
   debug: {

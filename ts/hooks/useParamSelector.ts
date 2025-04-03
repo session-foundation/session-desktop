@@ -142,6 +142,12 @@ export function useIsClosedGroup(convoId?: string) {
   return (convoProps && !convoProps.isPrivate && !convoProps.isPublic) || false;
 }
 
+export function useIsLegacyGroup(convoId?: string) {
+  const isGroup = useIsClosedGroup(convoId);
+
+  return isGroup && convoId && PubKey.is05Pubkey(convoId);
+}
+
 export function useIsPrivate(convoId?: string) {
   const convoProps = useConversationPropsById(convoId);
   return Boolean(convoProps && convoProps.isPrivate);

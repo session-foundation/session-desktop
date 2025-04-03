@@ -99,14 +99,7 @@ export const REACT_LIMIT = 6;
 
 export const UPDATER_INTERVAL_MS = 10 * DURATION.MINUTES;
 
-/**
- * Mark legacy groups readonly at this time (currently Thursday April 3rd 09:00 AEDT)
- */
-const LEGACY_GROUP_READONLY = 1743631200000;
-
-export const FEATURE_RELEASE_TIMESTAMPS = {
-  LEGACY_GROUP_READONLY,
-};
+export const FEATURE_RELEASE_TIMESTAMPS = {};
 
 export const ONBOARDING_TIMES = {
   /** 15 seconds */

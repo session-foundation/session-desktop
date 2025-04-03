@@ -51,7 +51,6 @@ window.getUserKeys = async () => {
 window.sessionFeatureFlags = {
   useOnionRequests: true,
   useTestNet: isTestNet() || isTestIntegration(),
-  forceLegacyGroupsDeprecated: false, // TODO DO NOT MERGE Remove after QA
   useClosedGroupV2QAButtons: false, // TODO DO NOT MERGE Remove after QA
   replaceLocalizedStringsWithKeys: false,
   useReleaseChannels: false,

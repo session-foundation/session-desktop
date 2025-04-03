@@ -7,7 +7,6 @@ import loadImage from 'blueimp-load-image';
 import { Component, RefObject, createRef } from 'react';
 import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
-import { format } from 'date-fns';
 import {
   CompositionBox,
   SendMessageType,
@@ -70,8 +69,6 @@ import {
   useSelectedIsPublic,
   useSelectedWeAreAdmin,
 } from '../../state/selectors/selectedConversation';
-import { useSelectedDisableLegacyGroupDeprecatedActions } from '../../hooks/useRefreshReleasedFeaturesTimestamp';
-import { Constants } from '../../session';
 
 const DEFAULT_JPEG_QUALITY = 0.85;
 
@@ -657,27 +654,16 @@ function OutdatedLegacyGroupBanner() {
   const selectedConversationKey = useSelectedConversationKey();
   const isPrivate = useSelectedIsPrivate();
   const isPublic = useSelectedIsPublic();
-  const deprecatedLegacyGroups = useSelectedDisableLegacyGroupDeprecatedActions();
 
   const isLegacyGroup =
-    !isPrivate && !isPublic && selectedConversationKey && selectedConversationKey.startsWith('05');
+    !isPrivate &&
+    !isPublic &&
+    selectedConversationKey &&
+    PubKey.is05Pubkey(selectedConversationKey);
 
-  const date = format(
-    new Date(Constants.FEATURE_RELEASE_TIMESTAMPS.LEGACY_GROUP_READONLY),
-    'h:mm a, d MMM yyyy'
-  );
-
-  const text = deprecatedLegacyGroups
-    ? localize(
-        weAreAdmin ? 'legacyGroupAfterDeprecationAdmin' : 'legacyGroupAfterDeprecationMember'
-      ).toString()
-    : localize(
-        weAreAdmin ? 'legacyGroupBeforeDeprecationAdmin' : 'legacyGroupBeforeDeprecationMember'
-      )
-        .withArgs({
-          date,
-        })
-        .toString();
+  const text = localize(
+    weAreAdmin ? 'legacyGroupAfterDeprecationAdmin' : 'legacyGroupAfterDeprecationMember'
+  ).toString();
 
   return isLegacyGroup ? (
     <NoticeBanner

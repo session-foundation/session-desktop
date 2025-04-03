@@ -58,7 +58,6 @@ import {
 } from './types';
 import { ConversationTypeEnum } from '../../../models/types';
 import { Snode } from '../../../data/types';
-import { areLegacyGroupsReadOnlyOutsideRedux } from '../../../state/selectors/releasedFeatures';
 
 const minMsgCountShouldRetry = 95;
 /**
@@ -300,17 +299,6 @@ export class SwarmPolling {
     const groupsToLeave = groups
       .filter(m => !allGroupsInWrapper.some(w => w.pubkeyHex === m.pubkey.key))
       .map(entryToKey);
-
-    const legacyGroupDeprecatedDisabled = areLegacyGroupsReadOnlyOutsideRedux();
-
-    const allLegacyGroupsTracked = legacyGroupDeprecatedDisabled
-      ? []
-      : legacyGroups
-          .filter(m => this.shouldPollByTimeout(m)) // should we poll from it depending on this group activity?
-          .filter(m => allGroupsLegacyInWrapper.some(w => w.pubkeyHex === m.pubkey.key)) // we don't poll from legacy groups which are not in the user group wrapper
-          .map(m => m.pubkey.key) // extract the pubkey
-          .map(m => [m, ConversationTypeEnum.GROUP] as PollForLegacy); //
-    toPollDetails = concat(toPollDetails, allLegacyGroupsTracked);
 
     const allGroupsTracked = groups
       .filter(m => this.shouldPollByTimeout(m)) // should we poll from it depending on this group activity?

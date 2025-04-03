@@ -6,7 +6,6 @@ import styled from 'styled-components';
 
 import { concat, isEmpty } from 'lodash';
 import useBoolean from 'react-use/lib/useBoolean';
-import useUpdate from 'react-use/lib/useUpdate';
 import type { PubkeyType } from 'libsession_util_nodejs';
 import { MemberListItem } from '../../MemberListItem';
 import { SessionButton } from '../../basic/SessionButton';
@@ -86,7 +85,6 @@ export const OverlayClosedGroupV2 = () => {
   const searchTerm = useSelector(getSearchTerm);
   const searchResultContactsOnly = useSelector(getSearchResultsContactOnly);
 
-  const forceRefresh = useUpdate();
   const selectedMemberIds = useSelector(
     (state: StateType) => state.groups.creationMembersSelected || []
   );
@@ -196,17 +194,6 @@ export const OverlayClosedGroupV2 = () => {
                 active={inviteAsAdmin}
                 onClick={() => {
                   setInviteAsAdmin(!inviteAsAdmin);
-                }}
-              />
-            </span>
-            <span style={{ display: 'flex', alignItems: 'center' }}>
-              Deprecated Legacy groups?{'  '}
-              <SessionToggle
-                active={window.sessionFeatureFlags.forceLegacyGroupsDeprecated}
-                onClick={() => {
-                  window.sessionFeatureFlags.forceLegacyGroupsDeprecated =
-                    !window.sessionFeatureFlags.forceLegacyGroupsDeprecated;
-                  forceRefresh();
                 }}
               />
             </span>

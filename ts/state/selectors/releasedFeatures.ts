@@ -1,15 +1,8 @@
-export const areLegacyGroupsReadOnly = (): boolean => {
-  const theyAre = !!window.inboxStore?.getState()?.releasedFeatures.legacyGroupsReadOnly;
+import { useSelector } from 'react-redux';
+import type { StateType } from '../reducer';
 
-  return window.sessionFeatureFlags.forceLegacyGroupsDeprecated || theyAre;
+export const useUpdatedAt = (): number => {
+  return useSelector((state: StateType) => {
+    return state?.releasedFeatures.refreshedAt || 0;
+  });
 };
-
-/**
- * @returns true if legacy groups should not be polled anymore
- */
-export function areLegacyGroupsReadOnlyOutsideRedux() {
-  if (!window.inboxStore) {
-    return false;
-  }
-  return areLegacyGroupsReadOnly();
-}
