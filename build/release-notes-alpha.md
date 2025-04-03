@@ -3,7 +3,8 @@
 > # ⚠️ This is an alpha release ⚠️
 >
 > It is experimental and for development purposes only.
-> Do not use in production environments.
+> Do not use in production environments!
+> **Any changes listed here may or may not make a final release of Session Desktop.**
 
 # Session
 
