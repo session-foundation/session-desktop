@@ -2119,7 +2119,7 @@ function updateToSessionSchemaVersion43(currentVersion: number, db: BetterSqlite
 
     db.prepare(
       `UPDATE ${CONVERSATIONS_TABLE}
-        SET expirationMode = 'deleteAfterSend' AND expirationMode = 'legacy';`
+        SET expirationMode = 'deleteAfterSend' WHERE expirationMode = 'legacy';`
     ).run();
 
     writeSessionSchemaVersion(targetVersion, db);
