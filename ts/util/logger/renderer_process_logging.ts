@@ -34,11 +34,6 @@ if (window.console) {
 }
 
 let globalLogger: undefined | pino.Logger;
-let shouldRestart = false;
-
-export function beforeRestart(): void {
-  shouldRestart = true;
-}
 
 export function initializeRendererProcessLogger(): void {
   if (globalLogger) {
@@ -50,11 +45,8 @@ export function initializeRendererProcessLogger(): void {
   const logFile = path.join(basePath, 'logs', 'app.log');
 
   const onClose = () => {
+    console._log('initializeRendererProcessLogger onClose was called');
     globalLogger = undefined;
-
-    if (shouldRestart) {
-      initializeRendererProcessLogger();
-    }
   };
   globalLogger = buildPinoLogger(logFile, onClose);
 

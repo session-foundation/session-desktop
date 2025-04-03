@@ -101,7 +101,7 @@ const removeNewlines = (text: string) => text.replace(/\r?\n|\r/g, '');
 const redactSensitivePaths = redactPath(APP_ROOT_PATH);
 
 function shouldNotRedactLogs() {
-  // we don't want to redact logs when running on the devprod
+  // we don't want to redact logs when running on devprod
   return isDevProd();
 }
 

@@ -86,7 +86,7 @@ import { windowMarkShouldQuit, windowShouldQuit } from '../node/window_state';
 let appStartInitialSpellcheckSetting = true;
 
 function openDevToolsTestIntegration() {
-  return true; // isTestIntegration() && !isEmpty(process.env.TEST_OPEN_DEV_TOOLS);
+  return isTestIntegration() && !isEmpty(process.env.TEST_OPEN_DEV_TOOLS);
 }
 
 async function getSpellCheckSetting() {
