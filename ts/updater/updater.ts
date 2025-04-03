@@ -117,7 +117,7 @@ export async function checkForUpdates(
       `[updater] checkForUpdates updateVersionFromFsFromRenderer ${updateVersionFromFsFromRenderer} releaseChannelFromFsFromRenderer ${releaseChannelFromFsFromRenderer}`
     );
 
-    if (releaseChannelFromFsFromRenderer !== 'latest') {
+    if (releaseChannelFromFsFromRenderer !== 'stable') {
       // we only allow pre-release updates if the release channel is alpha
       autoUpdater.allowPrerelease = releaseChannelFromFsFromRenderer === 'alpha';
       autoUpdater.allowDowngrade = releaseChannelFromFsFromRenderer === 'alpha';
