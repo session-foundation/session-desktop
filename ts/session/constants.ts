@@ -95,7 +95,7 @@ export const VALIDATION = {
 };
 
 export const DEFAULT_RECENT_REACTS = ['😂', '🥰', '😢', '😡', '😮', '😈'];
-export const REACT_LIMIT = 6;
+export const REACT_LIMIT = 60000;
 
 export const UPDATER_INTERVAL_MS = 10 * DURATION.MINUTES;
 
