@@ -165,7 +165,7 @@ import type { SetupI18nReturnType } from '../types/localizer';
 
 import { isSessionLocaleSet, getCrowdinLocale } from '../util/i18n/shared';
 import { loadLocalizedDictionary } from '../node/locale';
-import { simpleDictionary } from '../localization/locales';
+import { simpleDictionaryNoArgs } from '../localization/locales';
 import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
 import { isReleaseChannel } from '../updater/types';
 import { canAutoUpdate, checkForUpdates } from '../updater/updater';
@@ -770,7 +770,7 @@ app.on('ready', async () => {
 
   if (!isSessionLocaleSet()) {
     const appLocale = process.env.LANGUAGE || app.getLocale() || 'en';
-    const loadedLocale = loadLocalizedDictionary({ appLocale, logger });
+    const loadedLocale = loadLocalizedDictionary({ appLocale });
     i18n = loadedLocale.i18n;
     assertLogger().info(`appLocale is ${appLocale}`);
     assertLogger().info(`crowdin locale is ${loadedLocale.crowdinLocale}`);
@@ -1030,7 +1030,7 @@ ipc.on('password-recovery-phrase', async (event, passPhrase) => {
     // no issues. send back undefined, meaning OK
     sendResponse(undefined);
   } catch (e) {
-    const localisedError = simpleDictionary.passwordIncorrect[getCrowdinLocale()];
+    const localisedError = simpleDictionaryNoArgs.passwordIncorrect[getCrowdinLocale()];
     // send back the error
     sendResponse(localisedError);
   }
