@@ -36,7 +36,7 @@ for PARTIAL_FILE in "${PARTIAL_FILES[@]}"; do
   done
 done
 
-# Write the rest from ARM64 (assumes same for both)
+# Write the rest from BASE_FILE (assumes it is first in the list for all platforms)
 echo "path: $(grep 'path:' "$BASE_FILE" | awk '{print $2}')" >> "$OUTPUT_FILE"
 echo "sha512: $(grep 'sha512:' "$BASE_FILE" | tail -n 1 | awk '{print $2}')" >> "$OUTPUT_FILE"
 echo "releaseDate: $(grep 'releaseDate:' "$BASE_FILE" | awk '{print $2}')" >> "$OUTPUT_FILE"

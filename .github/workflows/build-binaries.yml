@@ -80,8 +80,9 @@ jobs:
 
       - name: Backup release metadata
         # only run this on "push" to "master" or alpha releases
-        # Note: The jobs are overwriting each other latest-linux.yml.
-        # So here, we upload all of them as artefact, and then merge them (see `post_build_linux`)
+        # Note: The jobs are overwriting each other's latest-linux.yml.
+        # So, we upload all of them as artifacts, and then merge them (see `post_build_linux`)
+        # note: freebsd does not generate a latest-linux.yml file so we exclude it
         if: ${{ (env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true') && matrix.pkg_to_build != 'freebsd' }}
         shell: bash
         run: |
@@ -89,7 +90,6 @@ jobs:
 
       - name: Upload release metadata
         # only run this on "push" to "master" or alpha releases
-        # Check the details of why we need this above (and why only for AppImage)
         if: ${{ (env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true') && matrix.pkg_to_build != 'freebsd' }}
         uses: actions/upload-artifact@v4
         with:
@@ -149,7 +149,6 @@ jobs:
           bodyFile: ${{ env.SHOULD_PUBLISH_ALPHA == 'true' && 'build/release-notes-alpha.md' || 'build/release-notes.md' }}
           artifacts: 'dist/latest-linux.yml'
           allowUpdates: true
-          omitBodyDuringUpdate: true
           omitNameDuringUpdate: true
           replacesArtifacts: true
           updateOnlyUnreleased: true
