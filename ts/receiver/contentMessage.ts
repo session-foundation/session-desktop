@@ -33,7 +33,7 @@ import {
   MetaGroupWrapperActions,
 } from '../webworker/workers/browser/libsession_worker_interface';
 import { handleCallMessage } from './callMessage';
-import { sentAtMoreRecentThanWrapper } from './closedGroups';
+import { sentAtMoreRecentThanWrapper } from './sentAtMoreRecent';
 import { ECKeyPair } from './keypairs';
 import { CONVERSATION_PRIORITIES, ConversationTypeEnum } from '../models/types';
 import { shouldProcessContentMessage } from './common';
