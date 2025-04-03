@@ -34,7 +34,6 @@ import {
   isLogEntry,
   levelMaxLength,
 } from './shared';
-import { CircularBuffer } from './circularBuffer';
 import type { LoggerType } from './Logging';
 import { Errors } from '../../types/Errors';
 
@@ -42,6 +41,8 @@ import { reallyJsonStringify } from '../reallyJsonStringify';
 import { buildPinoLogger } from './buildPinoLogger';
 
 const MAX_LOG_LINES_MERGED_EXPORT = 1_000_000;
+// a million lines of log (per file) should be more than enough.
+const MAX_LOG_LINES_PER_FILE = 1_000_000;
 
 declare global {
   // We want to extend `Console`, so we need an interface.
@@ -53,16 +54,7 @@ declare global {
   }
 }
 
-// a million lines of log (per file) should be more than enough.
-const MAX_LOG_LINES_PER_FILE = 1_000_000;
-
 let globalLogger: undefined | pino.Logger;
-let shouldRestart = false;
-
-export function getLoggerFilePath() {
-  throw new Error('TODO FIXME');
-  // return loggerFilePath;
-}
 
 export async function initializeMainProcessLogger(
   getMainWindow: () => null | BrowserWindow
@@ -97,10 +89,8 @@ export async function initializeMainProcessLogger(
   const onClose = () => {
     globalLogger = undefined;
 
-    if (shouldRestart) {
-      console._log('initializeMainProcessLogger after restart');
-      void initializeMainProcessLogger(getMainWindow);
-    }
+    console._log('initializeMainProcessLogger onClose was called');
+    void initializeMainProcessLogger(getMainWindow);
   };
 
   const logger = buildPinoLogger(logFile, onClose);
@@ -164,11 +154,6 @@ export async function initializeMainProcessLogger(
   ipc.handle('delete-all-logs', async (_event, keepCurrent: unknown) => {
     if (!isBoolean(keepCurrent)) {
       throw new Error('delete-all-logs: excepted boolean for keepCurrent');
-    }
-
-    if (!keepCurrent) {
-      // Restart logging when the streams will close
-      shouldRestart = true;
     }
 
     try {
@@ -331,10 +316,11 @@ function eliminateOldEntries(files: ReadonlyArray<{ path: string }>, date: Reado
 }
 
 function fetchLog(logFile: string): Array<LogEntryType> {
-  const results = new CircularBuffer<LogEntryType>(MAX_LOG_LINES_PER_FILE);
-
   const content = readFileSync(logFile, 'utf-8');
   const lines = content.split(/\r?\n/);
+  // filter out lines that are not valid
+  const validEntries: Array<LogEntryType> = new Array(MAX_LOG_LINES_PER_FILE);
+
   for (let index = 0; index < lines.length; index++) {
     const line = lines[index];
 
@@ -348,13 +334,13 @@ function fetchLog(logFile: string): Array<LogEntryType> {
         continue;
       }
 
-      results.push(result);
+      validEntries.push(result);
     } catch (e) {
       console.info(`fetchLog: json parse failed in file "${logFile}" with ${Errors.toString(e)}`);
     }
   }
 
-  return results.toArray();
+  return validEntries;
 }
 
 function fetchLogs(logPath: string): Array<LogEntryType> {

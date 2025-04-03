@@ -942,6 +942,13 @@
   dependencies:
     filesize "*"
 
+"@types/firstline@^2.0.4":
+  version "2.0.4"
+  resolved "https://registry.yarnpkg.com/@types/firstline/-/firstline-2.0.4.tgz#b8d3f8f7396d1589efea89db183c047a42efaf04"
+  integrity sha512-EYoMzk783ncj3soLGADXD/rklDMw1PAO5Hc3lRZa5G21vkfacwkdTlIdhTJ39omqDLezTSmxjDG1psd4A/mUHg==
+  dependencies:
+    "@types/node" "*"
+
 "@types/fs-extra@11.0.4":
   version "11.0.4"
   resolved "https://registry.yarnpkg.com/@types/fs-extra/-/fs-extra-11.0.4.tgz#e16a863bb8843fba8c5004362b5a73e17becca45"

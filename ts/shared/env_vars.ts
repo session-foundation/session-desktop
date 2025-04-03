@@ -10,7 +10,7 @@ export function isDevProd() {
 }
 
 export function isTestNet() {
-  return envAppInstanceIncludes('devprod');
+  return envAppInstanceIncludes('testnet');
 }
 
 export function isProd() {
