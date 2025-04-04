@@ -238,9 +238,10 @@ function useUpdateBadgeCount() {
   const globalUnreadMessageCount = useGlobalUnreadMessageCount();
 
   // Reuse the unreadToShow from the global state to update the badge count
+  // Note: useThrottleFn from react-use will run execute trailing edge too.
   useThrottleFn(
     (unreadCount: number) => {
-      if (globalUnreadMessageCount !== undefined) {
+      if (unreadCount !== undefined) {
         ipcRenderer.send('update-badge-count', unreadCount);
       }
     },

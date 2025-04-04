@@ -79,7 +79,7 @@
     "fs-extra": "11.3.0",
     "glob": "10.4.5",
     "image-type": "^4.1.0",
-    "libsession_util_nodejs": "https://github.com/session-foundation/libsession-util-nodejs/releases/download/v0.4.28/libsession_util_nodejs-v0.4.28.tar.gz",
+    "libsession_util_nodejs": "https://github.com/session-foundation/libsession-util-nodejs/releases/download/v0.4.31/libsession_util_nodejs-v0.4.31.tar.gz",
     "libsodium-wrappers-sumo": "^0.7.15",
     "linkify-it": "^5.0.0",
     "lodash": "^4.17.21",
