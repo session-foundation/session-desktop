@@ -167,7 +167,9 @@ async function pendingChangesForUs(): Promise<UserDestinationChanges> {
 
     hashes.forEach(h => results.allOldHashes.add(h)); // add all the hashes to the set
   }
-  window.log.info(`those user variants needs push: "${[...variantsNeedingPush]}"`);
+  if (variantsNeedingPush.size > 0) {
+    window.log.info(`those user variants needs push: "${[...variantsNeedingPush]}"`);
+  }
 
   return results;
 }

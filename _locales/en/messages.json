@@ -274,7 +274,6 @@
   "databaseErrorTimeout": "We've noticed Session is taking a long time to start.<br/><br/>You can continue to wait, export your device logs to share for troubleshooting, or try restarting Session.",
   "databaseErrorUpdate": "Your app database is incompatible with this version of Session. Reinstall the app and restore your account to generate a new database and continue using Session.<br/><br/>Warning: This will result in the loss of all messages and attachments older than two weeks.",
   "databaseOptimizing": "Optimizing Database",
-  "debugLog": "Debug Log",
   "decline": "Decline",
   "delete": "Delete",
   "deleteAfterGroupFirstReleaseConfigOutdated": "Some of your devices are using outdated versions. Syncing may be unreliable until they are updated.",

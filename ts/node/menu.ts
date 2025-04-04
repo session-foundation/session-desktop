@@ -107,13 +107,10 @@ export const createTemplate = (
           type: 'separator',
         },
         {
-          label: i18n('debugLog'),
+          label: i18n('helpReportABugExportLogs'),
           click: () => {
             saveDebugLog('export-logs');
           },
-        },
-        {
-          type: 'separator',
         },
         {
           role: 'toggledevtools',
