@@ -2,8 +2,9 @@ import { capitalize } from 'lodash';
 import { Flex } from '../../basic/Flex';
 import { SessionRadioGroup } from '../../basic/SessionRadioGroup';
 import { HintText } from '../../basic/Text';
-import { ALPHA_CHANNEL, STABLE_CHANNEL } from '../../../updater/types';
+import { ALPHA_CHANNEL, isReleaseChannel, STABLE_CHANNEL } from '../../../updater/types';
 import { useReleaseChannel } from './hooks/useReleaseChannel';
+import { ToastUtils } from '../../../session/utils';
 
 const items = [
   {
@@ -45,8 +46,10 @@ export const ReleaseChannel = () => {
         initialItem={releaseChannel}
         items={items}
         onClick={value => {
-          if (value === STABLE_CHANNEL || value === ALPHA_CHANNEL) {
+          if (isReleaseChannel(value)) {
             setReleaseChannel(value);
+          } else {
+            ToastUtils.pushToastError('ReleaseChannel', 'Invalid release channel!');
           }
         }}
         style={{ margin: 0 }}
