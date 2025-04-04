@@ -188,7 +188,7 @@ export class SwarmPolling {
   }
 
   public stop(e?: Error) {
-    window.log.info('SwarmPolling: stopped swarm polling', e?.message || e || '');
+    window.log.warn('SwarmPolling: stopped swarm polling', e?.message || e || '');
 
     for (let i = 0; i < timeouts.length; i++) {
       clearTimeout(timeouts[i]);
@@ -708,7 +708,7 @@ export class SwarmPolling {
         namespacesAndLastHashes.some(m => m) &&
         namespacesAndLastHashesAfterFetch.every(m => !m)
       ) {
-        window.log.info(
+        swarmLog(
           `SwarmPolling: hashes for ${ed25519Str(pubkey)} have been reset while we were fetching new messages. discarding them....`
         );
         return [];
@@ -789,7 +789,7 @@ export class SwarmPolling {
         return `${role}:${newHash}`;
       });
 
-      window.log.info(
+      swarmLog(
         `SwarmPolling: updating last hashes for ${ed25519Str(pubkey)}: ${ed25519Str(snodeEdkey)}  ${namespacesWithNewLastHashes.join(', ')}`
       );
       await Promise.all(
