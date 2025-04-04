@@ -1,19 +1,15 @@
-// Copyright 2020 Signal Messenger, LLC
-// SPDX-License-Identifier: AGPL-3.0-only
-
-export type LogFunction = (...args: Array<unknown>) => void;
+export type LogFn = (...args: Array<unknown>) => void;
 
 export type LoggerType = {
-  fatal: LogFunction;
-  error: LogFunction;
-  warn: LogFunction;
-  info: LogFunction;
-  debug: LogFunction;
-  trace: LogFunction;
+  fatal: LogFn;
+  error: LogFn;
+  warn: LogFn;
+  info: LogFn;
+  debug: LogFn;
+  trace: LogFn;
 };
 
-// These match [Pino's recommendations][0].
-// [0]: https://getpino.io/#/docs/api?id=loggerlevels-object
+// These match Pino's recommendations https://getpino.io/#/docs/api?id=loggerlevels-object
 export enum LogLevel {
   Fatal = 60,
   Error = 50,

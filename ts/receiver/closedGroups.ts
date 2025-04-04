@@ -30,6 +30,7 @@ import { ConversationTypeEnum } from '../models/types';
 import { NetworkTime } from '../util/NetworkTime';
 import { MessageQueue } from '../session/sending';
 import { areLegacyGroupsReadOnlyOutsideRedux } from '../state/selectors/releasedFeatures';
+import { DURATION } from '../session/constants';
 
 export const distributingClosedGroupEncryptionKeyPairs = new Map<string, ECKeyPair>();
 
@@ -236,7 +237,7 @@ export async function sentAtMoreRecentThanWrapper(
 
   // this must return true if the message we are considering should have already been handled based on our `latestProcessedEnvelope`.
   // so if that message was sent before `latestProcessedEnvelope - 2 mins`, we must return true;
-  const latestProcessedEnvelopeLess2Mins = latestProcessedEnvelope - 2 * 60 * 1000;
+  const latestProcessedEnvelopeLess2Mins = latestProcessedEnvelope - 2 * DURATION.MINUTES;
 
   return envelopeSentAtMs > latestProcessedEnvelopeLess2Mins
     ? 'envelope_more_recent'

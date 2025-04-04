@@ -2,13 +2,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import pino from 'pino';
-import { isRecord } from '../isRecord';
 import { reallyJsonStringify } from '../reallyJsonStringify';
 import { LogLevel } from './Logging';
 import { missingCaseError } from '../missingCaseError';
 import { redactAll } from '../privacy';
 
 export { LogLevel };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
 
 export type FetchLogIpcData = {
   // We expect `logEntries` to be `Array<LogEntryType>`, but we don't validate that

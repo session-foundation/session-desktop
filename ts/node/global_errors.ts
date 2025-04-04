@@ -1,6 +1,3 @@
-// Copyright 2018 Signal Messenger, LLC
-// SPDX-License-Identifier: AGPL-3.0-only
-
 import { app, dialog, clipboard } from 'electron';
 import os from 'node:os';
 import { reallyJsonStringify } from '../util/reallyJsonStringify';
@@ -53,16 +50,8 @@ function _getError(reason: unknown): Error {
 }
 
 export const addHandler = (): void => {
-  app.on('render-process-gone', (_event, _webContents, details) => {
-    const { reason, exitCode } = details;
-
-    if (reason === 'clean-exit') {
-      return;
-    }
-
-    handleError('Render process is gone', new Error(`Reason: ${reason}, Exit Code: ${exitCode}`));
-  });
-
+  // Note: we could maybe add a handler for when the renderer process died here?
+  // (but also ignore the valid death like on restart/quit)
   process.on('uncaughtException', (reason: unknown) => {
     handleError('Unhandled Error', _getError(reason));
   });

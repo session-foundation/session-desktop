@@ -168,6 +168,7 @@ import { canAutoUpdate, checkForUpdates } from '../updater/updater';
 import { initializeMainProcessLogger } from '../util/logger/main_process_logging';
 
 import * as log from '../util/logger/log';
+import { DURATION } from '../session/constants';
 
 // Both of these will be set after app fires the 'ready' event
 let i18n: SetupI18nReturnType;
@@ -395,7 +396,7 @@ async function createWindow() {
       (windowConfig as any).fullscreen = true;
     }
 
-    console.log('Updating BrowserWindow config: %s', JSON.stringify(windowConfig));
+    console.log(`Updating BrowserWindow config: ${JSON.stringify(windowConfig)}`);
     ephemeralConfig.set('window', windowConfig);
   }
 
@@ -851,13 +852,10 @@ async function requestShutdown() {
     //   exits the app before we've set everything up in preload() (so the browser isn't
     //   yet listening for these events), or if there are a whole lot of stacked-up tasks.
     // Note: two minutes is also our timeout for SQL tasks in data.ts in the browser.
-    setTimeout(
-      () => {
-        console.log('requestShutdown: Response never received; forcing shutdown.');
-        resolve(undefined);
-      },
-      2 * 60 * 1000
-    );
+    setTimeout(() => {
+      console.log('requestShutdown: Response never received; forcing shutdown.');
+      resolve(undefined);
+    }, 2 * DURATION.MINUTES);
   });
 
   try {

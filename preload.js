@@ -62,7 +62,6 @@ window.sessionFeatureFlags = {
   replaceLocalizedStringsWithKeys: false,
   useReleaseChannels: false,
   debug: {
-    debugMenu: !isEmpty(process.env.SESSION_DEV),
     debugLogging: !isEmpty(process.env.SESSION_DEBUG),
     debugLibsessionDumps: !isEmpty(process.env.SESSION_DEBUG_LIBSESSION_DUMPS),
     debugBuiltSnodeRequests: !isEmpty(process.env.SESSION_DEBUG_BUILT_SNODE_REQUEST),
