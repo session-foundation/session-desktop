@@ -160,8 +160,10 @@ const ClearOldLogsButton = () => {
         `[debugMenu] ClearOldLogsButton clicked. After clean: ${filesize(afterCleanSize)}`
       );
       setLogSize(afterCleanSize);
+      ToastUtils.pushToastInfo('ClearOldLogsButton', 'Cleared old logs!');
     } catch (error) {
       window.log.error(`[debugMenu] ClearOldLogsButton ${Errors.toString(error)}`);
+      ToastUtils.pushToastError('ClearOldLogsButtonError', 'Clearing logs failed! See logs');
     }
   });
 

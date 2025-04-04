@@ -110,6 +110,7 @@ export async function initializeMainProcessLogger(
 
     let data: FetchLogIpcData;
     try {
+      logger.info(`Trying to loading log data in ${logPath}`);
       const logEntries = fetchLogs(logPath);
       data = {
         logEntries,
@@ -331,12 +332,15 @@ function fetchLog(logFile: string): Array<LogEntryType> {
       const parsed = JSON.parse(line);
       const result = parsed && pick(parsed, ['level', 'time', 'msg']);
       if (!isLogEntry(result)) {
+        globalLogger?.warn(`fetchLog: entry is not a valid log entry: ${line}`);
         continue;
       }
 
       validEntries.push(result);
     } catch (e) {
-      console.info(`fetchLog: json parse failed in file "${logFile}" with ${Errors.toString(e)}`);
+      globalLogger?.warn(
+        `fetchLog: json parse failed in file "${logFile}" with ${Errors.toString(e)}`
+      );
     }
   }
 
