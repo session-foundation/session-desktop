@@ -5,6 +5,7 @@ import fs from 'fs';
 import pino from 'pino';
 
 import { DURATION } from '../../session/constants';
+import { LogLevel } from './Logging';
 
 /**
  * Keep at most rotated 3 files, so  4 files total including the "current" one
@@ -41,7 +42,7 @@ export function createRotatingPinoDest({
 
   const warn = (msg: string) => {
     const line = JSON.stringify({
-      level: 40,
+      level: LogLevel.Warn,
       time: new Date(),
       msg,
     });

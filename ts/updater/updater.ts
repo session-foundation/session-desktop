@@ -9,7 +9,7 @@ import { gt as isVersionGreaterThan, parse as parseVersion } from 'semver';
 import { filesize } from 'filesize';
 import { windowMarkShouldQuit } from '../node/window_state';
 
-import { UPDATER_INTERVAL_MS } from '../session/constants';
+import { DURATION, UPDATER_INTERVAL_MS } from '../session/constants';
 import type { SetupI18nReturnType } from '../types/localizer';
 import { showCannotUpdateDialog, showDownloadUpdateDialog, showUpdateDialog } from './common';
 import { getLatestRelease } from '../node/latest_desktop_release';
@@ -52,16 +52,13 @@ export async function start(
   }, UPDATER_INTERVAL_MS); // trigger and try to update every 10 minutes to let the file gets downloaded if we are updating
   stopped = false;
 
-  global.setTimeout(
-    async () => {
-      try {
-        await checkForUpdates(getMainWindow, i18n, logger);
-      } catch (error) {
-        logger.error('[updater] auto-update: error:', Errors.toString(error));
-      }
-    },
-    2 * 60 * 1000
-  ); // we do checks from the file server every 2 minutes.
+  global.setTimeout(async () => {
+    try {
+      await checkForUpdates(getMainWindow, i18n, logger);
+    } catch (error) {
+      logger.error('[updater] auto-update: error:', Errors.toString(error));
+    }
+  }, 2 * DURATION.MINUTES); // we do checks from the file server every 2 minutes.
 }
 
 export function stop() {
