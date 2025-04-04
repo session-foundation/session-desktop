@@ -218,7 +218,7 @@ async function fetchLogsStorageUsed(logPath: string): Promise<number> {
       }
     }
 
-    console.log(`fetchLogsStorageUsed: Total size of .log files: ${totalSize} bytes`);
+    globalLogger?.debug(`fetchLogsStorageUsed: Total size of .log files: ${totalSize} bytes`);
     return totalSize;
   } catch (error) {
     globalLogger?.error('fetchLogsStorageUsed: Error reading directory or files:', error);
