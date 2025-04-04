@@ -114,7 +114,7 @@ export async function checkForUpdates(
     }
 
     logger.info(
-      `[updater] checkForUpdates updateVersionFromFsFromRenderer ${updateVersionFromFsFromRenderer} releaseChannelFromFsFromRenderer ${releaseChannelFromFsFromRenderer}`
+      `[updater] checkForUpdates updateVersionFromFsFromRenderer ${updateVersionFromFsFromRenderer} releaseChannelFromFsFromRenderer ${releaseChannelFromFsFromRenderer} allowPrerelease ${autoUpdater.allowPrerelease} allowDownload ${autoUpdater.allowDowngrade}`
     );
 
     const currentVersion = autoUpdater.currentVersion.toString();
