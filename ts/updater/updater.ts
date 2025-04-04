@@ -117,15 +117,6 @@ export async function checkForUpdates(
       `[updater] checkForUpdates updateVersionFromFsFromRenderer ${updateVersionFromFsFromRenderer} releaseChannelFromFsFromRenderer ${releaseChannelFromFsFromRenderer}`
     );
 
-    if (releaseChannelFromFsFromRenderer !== 'stable') {
-      // we only allow pre-release updates if the release channel is alpha
-      autoUpdater.allowPrerelease = releaseChannelFromFsFromRenderer === 'alpha';
-      autoUpdater.allowDowngrade = releaseChannelFromFsFromRenderer === 'alpha';
-      logger.info(
-        `[updater] checkForUpdates we are on the ${releaseChannelFromFsFromRenderer} channel allowPrerelease ${autoUpdater.allowPrerelease} allowDowngrade ${autoUpdater.allowDowngrade}`
-      );
-    }
-
     const currentVersion = autoUpdater.currentVersion.toString();
     const isMoreRecent = isVersionGreaterThan(updateVersionFromFsFromRenderer, currentVersion);
     logger.info('[updater] checkForUpdates isMoreRecent', isMoreRecent);
