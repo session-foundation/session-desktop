@@ -80,17 +80,17 @@ jobs:
 
       - name: Backup release metadata
         # only run this on "push" to "master" or alpha releases
-        # Note: only AppImage can auto update via electron-builder on linux.
-        # Note: We need to backup the latest-linux.yml for appImage builds as other builds can overwrite it when they are built e.g. deb, rpm, freebsd
-        if: ${{ (env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true') && matrix.pkg_to_build == 'AppImage' }}
+        # Note: The jobs are overwriting each other's latest-linux.yml.
+        # So, we upload all of them as artifacts, and then merge them (see `post_build_linux`)
+        # note: freebsd does not generate a latest-linux.yml file so we exclude it
+        if: ${{ (env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true') && matrix.pkg_to_build != 'freebsd' }}
         shell: bash
         run: |
           mv dist/latest-linux.yml dist/latest-linux-${{ matrix.pkg_to_build }}-${{ github.sha }}.yml
 
       - name: Upload release metadata
         # only run this on "push" to "master" or alpha releases
-        # Check the details of why we need this above (and why only for AppImage)
-        if: ${{ (env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true') && matrix.pkg_to_build == 'AppImage' }}
+        if: ${{ (env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true') && matrix.pkg_to_build != 'freebsd' }}
         uses: actions/upload-artifact@v4
         with:
           name: latest-linux-${{ matrix.pkg_to_build }}-${{ github.sha }}.yml
@@ -106,10 +106,11 @@ jobs:
         # only run this on "push" to "master" or alpha releases
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         uses: actions/checkout@v4
-        # We only need the package.json file in this run (to extract the version being built)
+        # We only need a few files in this run, no point cloning everything
         with:
           sparse-checkout: |
             package.json
+            build/setup-release-combine.sh
             build/release-notes.md
             build/release-notes-alpha.md
           sparse-checkout-cone-mode: false
@@ -127,14 +128,15 @@ jobs:
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         uses: actions/download-artifact@v4
         with:
-          name: latest-linux-AppImage-${{ github.sha }}.yml
+          pattern: latest-linux-*-${{ github.sha }}.yml
           path: dist
+          merge-multiple: true
 
-      - name: Rename
+      - name: Combine release metadata
         # only run this on "push" to "master" or alpha releases
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         run: |
-          mv dist/latest-linux-AppImage-${{ github.sha }}.yml dist/latest-linux.yml
+          ./build/setup-release-combine.sh ${{ github.sha }} linux
 
       - name: Upload changes to draft release
         # only run this on "push" to "master" or alpha releases
@@ -261,7 +263,7 @@ jobs:
         with:
           sparse-checkout: |
             package.json
-            build/setup-mac-release-combine.sh
+            build/setup-release-combine.sh
 
       - name: Get version tag from package.json
         id: get_version
@@ -284,7 +286,7 @@ jobs:
         # only run this on "push" to "master" or alpha releases
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         run: |
-          ./build/setup-mac-release-combine.sh ${{ github.sha }}
+          ./build/setup-release-combine.sh ${{ github.sha }} mac
 
       - name: Upload changes to draft release
         # only run this on "push" to "master" or alpha releases
@@ -293,8 +295,8 @@ jobs:
         with:
           tag: v${{ steps.get_version.outputs.VERSION_TAG }}
           draft: true
-          name: "Draft"
-          artifacts: "dist/latest-mac.yml"
+          name: 'Draft'
+          artifacts: 'dist/latest-mac.yml'
           allowUpdates: true
           omitBodyDuringUpdate: true
           omitNameDuringUpdate: true
