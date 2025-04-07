@@ -6,12 +6,9 @@ import { reallyJsonStringify } from '../reallyJsonStringify';
 import { LogLevel } from './Logging';
 import { missingCaseError } from '../missingCaseError';
 import { redactAll } from '../privacy';
+import { isRecord } from '../../types/isRecord';
 
 export { LogLevel };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 export type FetchLogIpcData = {
   // We expect `logEntries` to be `Array<LogEntryType>`, but we don't validate that
