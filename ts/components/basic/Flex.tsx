@@ -7,7 +7,7 @@ export interface FlexProps {
   children?: any;
   className?: string;
   $container?: boolean;
-  $dataTestId?: SessionDataTestId;
+  dataTestId?: SessionDataTestId;
   // Container Props
   $flexDirection?: 'row' | 'row-reverse' | 'column' | 'column-reverse';
   $justifyContent?:
