@@ -39,6 +39,7 @@ import { Errors } from '../../types/Errors';
 
 import { reallyJsonStringify } from '../reallyJsonStringify';
 import { buildPinoLogger } from './buildPinoLogger';
+import { isRecord } from '../../types/isRecord';
 
 const MAX_LOG_LINES_MERGED_EXPORT = 1_000_000;
 // a million lines of log (per file) should be more than enough.
@@ -363,7 +364,10 @@ function fetchLogs(logPath: string): Array<LogEntryType> {
 
   data.push(fileListEntry);
 
-  const sorted = sortBy(data, logEntry => logEntry.time);
+  const sorted = sortBy(
+    data.filter(m => isRecord(m) && m?.time),
+    logEntry => logEntry.time
+  );
 
   // no point exporting more than MAX_LOG_LINES_MERGED_EXPORT lines
   return sorted.slice(-MAX_LOG_LINES_MERGED_EXPORT);
