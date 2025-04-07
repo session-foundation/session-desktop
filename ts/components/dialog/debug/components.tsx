@@ -25,7 +25,6 @@ import { DURATION } from '../../../session/constants';
 import { Errors } from '../../../types/Errors';
 
 const CheckVersionButton = ({ channelToCheck }: { channelToCheck: ReleaseChannels }) => {
-  const channelName = channelToCheck === 'latest' ? 'stable' : channelToCheck;
   const [loading, setLoading] = useState(false);
   const state = useAsync(async () => {
     const userEd25519KeyPairBytes = await UserUtils.getUserED25519KeyPairBytes();
@@ -87,7 +86,7 @@ const CheckVersionButton = ({ channelToCheck }: { channelToCheck: ReleaseChannel
       }}
     >
       <SessionSpinner loading={loading || state.loading} color={'var(--text-primary-color)'} />
-      {!loading && !state.loading ? `Check ${channelName} version` : null}
+      {!loading && !state.loading ? `Check ${channelToCheck} version` : null}
     </SessionButton>
   );
 };
@@ -235,7 +234,7 @@ export const DebugActions = () => {
         </SessionButton>
         <CheckForUpdatesButton />
         <ClearOldLogsButton />
-        <CheckVersionButton channelToCheck="latest" />
+        <CheckVersionButton channelToCheck="stable" />
         {window.sessionFeatureFlags.useReleaseChannels ? (
           <CheckVersionButton channelToCheck="alpha" />
         ) : null}

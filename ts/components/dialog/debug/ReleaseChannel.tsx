@@ -2,15 +2,16 @@ import { capitalize } from 'lodash';
 import { Flex } from '../../basic/Flex';
 import { SessionRadioGroup } from '../../basic/SessionRadioGroup';
 import { HintText } from '../../basic/Text';
-import { ALPHA_CHANNEL, LATEST_CHANNEL } from '../../../updater/types';
+import { ALPHA_CHANNEL, isReleaseChannel, STABLE_CHANNEL } from '../../../updater/types';
 import { useReleaseChannel } from './hooks/useReleaseChannel';
+import { ToastUtils } from '../../../session/utils';
 
 const items = [
   {
-    label: 'Stable',
-    value: LATEST_CHANNEL,
-    inputDataTestId: `input-releases-${LATEST_CHANNEL}` as const,
-    labelDataTestId: `label-releases-${LATEST_CHANNEL}` as const,
+    label: capitalize(STABLE_CHANNEL),
+    value: STABLE_CHANNEL,
+    inputDataTestId: `input-releases-${STABLE_CHANNEL}` as const,
+    labelDataTestId: `label-releases-${STABLE_CHANNEL}` as const,
   },
   {
     label: capitalize(ALPHA_CHANNEL),
@@ -45,8 +46,10 @@ export const ReleaseChannel = () => {
         initialItem={releaseChannel}
         items={items}
         onClick={value => {
-          if (value === LATEST_CHANNEL || value === ALPHA_CHANNEL) {
+          if (isReleaseChannel(value)) {
             setReleaseChannel(value);
+          } else {
+            ToastUtils.pushToastError('ReleaseChannel', 'Invalid release channel!');
           }
         }}
         style={{ margin: 0 }}
