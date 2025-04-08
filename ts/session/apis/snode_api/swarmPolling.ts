@@ -820,7 +820,7 @@ export class SwarmPolling {
       } else if (!window.inboxStore?.getState().onionPaths.isOnline) {
         window.inboxStore?.dispatch(updateIsOnline(true));
       }
-      window?.log?.info('SwarmPolling: pollNodeForKey failed with:', e.message);
+      window?.log?.warn('SwarmPolling: pollNodeForKey failed with:', e.message);
       return null;
     }
   }

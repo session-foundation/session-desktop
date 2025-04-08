@@ -130,8 +130,8 @@ export function saveLogToDesktop() {
 
 // eslint-disable-next-line @typescript-eslint/no-misused-promises
 ipc?.on('additional-log-data-request', async event => {
-  let otherDetails = 'Other details:';
-  otherDetails += ` userAgent: ${window.navigator.userAgent}`;
+  let otherDetails = 'Other details:\n';
+  otherDetails += ` userAgent: ${window.navigator.userAgent}\n`;
   otherDetails += ` node: ${window?.getNodeVersion()}\n`;
   otherDetails += ` env: ${window?.getEnvironment()}\n`;
 
