@@ -171,6 +171,10 @@ export async function initializeMainProcessLogger(
   ipc.handle('get-logs-folder-size', async () => {
     return fetchLogsStorageUsed(logPath);
   });
+  ipc.on('get-user-data-path', event => {
+    // eslint-disable-next-line no-param-reassign
+    event.returnValue = app.getPath('userData');
+  });
 
   globalLogger = logger;
 
@@ -415,7 +419,7 @@ function logAtLevel(level: LogLevel, ...args: ReadonlyArray<unknown>) {
     // made before `globalLogger = logger` above will not be printed anywhere, and debugging will be a pain.
     // This is the case for *all* the log lines added while doing the log rotation, and cleaning of
     // the existing logs.
-    console._log(levelString, ...cleanedArgs);
+    console._log(levelString, cleanedArgs);
   }
 }
 
