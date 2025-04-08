@@ -20,8 +20,8 @@ import { rm, readdir, stat } from 'node:fs/promises';
 import { join } from 'path';
 import pino from 'pino';
 import path from 'node:path';
+import readLastLines from 'read-last-lines';
 import readFirstLine from 'firstline';
-import { read as readLastLines } from 'read-last-lines';
 
 import * as log from './log';
 
@@ -40,6 +40,7 @@ import { Errors } from '../../types/Errors';
 import { reallyJsonStringify } from '../reallyJsonStringify';
 import { buildPinoLogger } from './buildPinoLogger';
 import { isRecord } from '../../types/isRecord';
+import { FILESIZE } from '../../session/constants';
 
 const MAX_LOG_LINES_MERGED_EXPORT = 1_000_000;
 // a million lines of log (per file) should be more than enough.
@@ -90,7 +91,7 @@ export async function initializeMainProcessLogger(
   const onClose = () => {
     globalLogger = undefined;
 
-    console._log('initializeMainProcessLogger onClose was called');
+    console.log('initializeMainProcessLogger onClose was called');
     void initializeMainProcessLogger(getMainWindow);
   };
 
@@ -191,9 +192,9 @@ async function deleteAllLogs(logPath: string, keepCurrent: boolean): Promise<voi
       const filePath = path.join(logPath, file);
 
       if (filePath.includes(pattern)) {
+        console.info(`removed log file: "${filePath}"`);
         // eslint-disable-next-line no-await-in-loop
         await rm(filePath, { force: true });
-        console.log(`removed log file: "${filePath}"`);
       }
     }
   } catch (error) {
@@ -231,16 +232,15 @@ async function cleanupLogs(logPath: string) {
   const earliestDate = new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 3)
   );
+  console.log(`cleanupLogs: ${now}, earliestDate:${earliestDate}`);
 
   try {
     const remaining = await eliminateOutOfDateFiles(logPath, earliestDate);
     const files = filter(remaining, file => !file.start && file.end);
-
     if (!files.length) {
       return;
     }
-
-    eliminateOldEntries(files, earliestDate);
+    await eliminateOldEntries(files, earliestDate);
   } catch (error) {
     console.error(
       'Error cleaning logs; deleting and starting over from scratch.',
@@ -267,6 +267,17 @@ function isLineAfterDate(line: string, date: Readonly<Date>): boolean {
   }
 }
 
+async function readFirstAndLastLines(targetFile: string) {
+  try {
+    const firstLine = await readFirstLine(targetFile);
+    const lastLines = await readLastLines.read(targetFile, 2);
+
+    return [firstLine, lastLines];
+  } catch (e) {
+    return ['', ''];
+  }
+}
+
 function eliminateOutOfDateFiles(
   logPath: string,
   date: Readonly<Date>
@@ -282,7 +293,7 @@ function eliminateOutOfDateFiles(
 
   return Promise.all(
     map(paths, target =>
-      Promise.all([readFirstLine(target), readLastLines(target, 2)]).then(results => {
+      readFirstAndLastLines(target).then(results => {
         const start = results[0];
         const end = results[1].split('\n');
 
@@ -295,6 +306,7 @@ function eliminateOutOfDateFiles(
         };
 
         if (!file.start && !file.end) {
+          console.log(`eliminateOutOfDateFiles: removing "${file.path}"`);
           unlinkSync(file.path);
         }
 
@@ -304,15 +316,35 @@ function eliminateOutOfDateFiles(
   );
 }
 
-function eliminateOldEntries(files: ReadonlyArray<{ path: string }>, date: Readonly<Date>): void {
-  map(files, file => {
+/**
+ * Return the size in bytes of that file.
+ */
+async function getFileSize(filePath: string): Promise<number> {
+  const stats = await stat(filePath);
+  return stats.size;
+}
+
+async function eliminateOldEntries(files: ReadonlyArray<{ path: string }>, date: Readonly<Date>) {
+  const maxFileSize = 100 * FILESIZE.MB;
+  for (let index = 0; index < files.length; index++) {
+    const file = files[index];
+
+    // eslint-disable-next-line no-await-in-loop
+    const fileSize = await getFileSize(file.path);
+    if (fileSize > maxFileSize) {
+      console.warn(`${file.path} is more than 100MB, discarding it`);
+      unlinkSync(file.path);
+      return;
+    }
+    console.log(`eliminateOldEntries of ${file.path}...`);
+
     const lines = fetchLog(file.path);
 
     const recent = filter(lines, line => new Date(line.time) >= date);
     const text = map(recent, line => JSON.stringify(line)).join('\n');
 
-    return writeFileSync(file.path, `${text}\n`);
-  });
+    writeFileSync(file.path, `${text}\n`);
+  }
 }
 
 function fetchLog(logFile: string): Array<LogEntryType> {
@@ -374,9 +406,16 @@ function fetchLogs(logPath: string): Array<LogEntryType> {
 
 function logAtLevel(level: LogLevel, ...args: ReadonlyArray<unknown>) {
   // main side, we only need to log to the globalLogger, it prints to stdout and the rotating file
+  const levelString = getLogLevelString(level);
+  const cleanedArgs = cleanArgs(args);
   if (globalLogger) {
-    const levelString = getLogLevelString(level);
-    globalLogger[levelString](cleanArgs(args));
+    globalLogger[levelString](cleanedArgs);
+  } else {
+    // Note: it is very important to have a fallback here, otherwise the logs made in this file that are
+    // made before `globalLogger = logger` above will not be printed anywhere, and debugging will be a pain.
+    // This is the case for *all* the log lines added while doing the log rotation, and cleaning of
+    // the existing logs.
+    console._log(levelString, ...cleanedArgs);
   }
 }
 
@@ -384,6 +423,10 @@ function logAtLevel(level: LogLevel, ...args: ReadonlyArray<unknown>) {
 if (!console._log) {
   log.setLogAtLevel(logAtLevel);
 
+  // Warning: this is done when the .ts file is loaded.
+  // Which means that anything written to the console before that event,
+  // and the globalLogger being initialised needs to be force redirected to stdout.
+  // See the comment in logAtLevel
   console._log = console.log;
   console.log = log.info;
   console._error = console.error;

@@ -64,6 +64,7 @@ export function createRotatingPinoDest({
         const nextPath = `${logFile}.${pendingFileIndex + 1}`;
 
         if (fs.existsSync(nextPath)) {
+          warn(`rotatingPinoDest: removed nextPath during rotation: "${nextPath}"`);
           fs.unlinkSync(nextPath);
         }
         if (!fs.existsSync(currentPath)) {
