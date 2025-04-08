@@ -11,6 +11,25 @@ import {
   type TokensSimpleAndArgs,
 } from './locales';
 
+// Note: those two functions are actually duplicates of Errors.toString.
+// We should maybe make that a module that we reuse?
+function withClause(error: unknown) {
+  if (error && typeof error === 'object' && 'cause' in error) {
+    return `\nCaused by: ${String(error.cause)}`;
+  }
+  return '';
+}
+
+function stringifyError(error: unknown): string {
+  if (error instanceof Error && error.stack) {
+    return error.stack + withClause(error);
+  }
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String(error.message) + withClause(error);
+  }
+  return String(error) + withClause(error);
+}
+
 // eslint-disable-next-line no-console
 const SubLogger = { info: console.log };
 
@@ -143,8 +162,8 @@ export function getMessageDefault<T extends MergedLocalizerTokens>(
   const token = props[0];
   try {
     return localizeFromOld(props[0], props[1] as ArgsFromToken<T>).toString();
-  } catch (error: any) {
-    log(error.message);
+  } catch (error) {
+    log(stringifyError(error));
     return token;
   }
 }
@@ -258,8 +277,8 @@ export const getRawMessage: I18nMethods['getRawMessage'] = (crowdinLocale, ...[t
     }
 
     return pluralString.replaceAll('#', `${num}`);
-  } catch (error: any) {
-    log(error.message);
+  } catch (error) {
+    log(stringifyError(error));
     return token;
   }
 };
@@ -343,8 +362,8 @@ class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends String {
       }
 
       return str;
-    } catch (error: any) {
-      log(error.message);
+    } catch (error) {
+      log(stringifyError(error));
       return this.token;
     }
   }
@@ -396,8 +415,8 @@ class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends String {
       }
 
       return this.resolvePluralString();
-    } catch (error: any) {
-      log(error.message);
+    } catch (error) {
+      log(stringifyError(error));
       return this.token;
     }
   }
