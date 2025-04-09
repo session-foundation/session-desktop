@@ -84,6 +84,7 @@
     "linkify-it": "^5.0.0",
     "lodash": "^4.17.21",
     "long": "^4.0.0",
+    "lucide-react": "0.473.0",
     "maxmind": "^4.3.24",
     "mic-recorder-to-mp3": "^2.2.2",
     "node-fetch": "^2.7.0",

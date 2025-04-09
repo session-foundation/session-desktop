@@ -97,3 +97,13 @@
   src: url('../fonts/Loor.ttf') format('truetype');
   line-height: 1.4rem;
 }
+
+/** Icon font
+ * Current: Lucide v0.473.0
+ * Download from https://github.com/lucide-icons/lucide/releases
+*  NOTE Make sure the lucide-react package is the same version
+*/
+@font-face {
+  font-family: 'Lucide';
+  src: url('../fonts/lucide.ttf') format('truetype');
+}
