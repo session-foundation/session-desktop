@@ -15,23 +15,47 @@ export function pxValueToNumber(value: string) {
   return numberValue;
 }
 
+// TODO Replace all instances of old h1-h3s with new h1-h3s which match the design system
 // These variables are independent of the current theme
 type ThemeGlobals = {
-  /* Fonts */
+  /* Typography */
+  /* Font Families */
   '--font-default': string;
   '--font-accent': string;
   '--font-mono': string;
 
+  /* Headings */
+  '--font-size-h1': string;
+  '--font-size-h1-new': string;
+  '--font-size-h2': string;
+  '--font-size-h2-new': string;
+  '--font-size-h3': string;
+  '--font-size-h3-new': string;
+  '--font-size-h4': string;
+  '--font-size-h5': string;
+  '--font-size-h6': string;
+  '--font-size-h7': string;
+  '--font-size-h8': string;
+  '--font-size-h9': string;
+
+  /* Body (default) */
   '--font-size-xl': string;
   '--font-size-lg': string;
-  '--font-size-md': string;
+  '--font-size-md': string; // base font size
   '--font-size-sm': string;
   '--font-size-xs': string;
+  '--font-size-xxs': string; // fine print
 
-  '--font-size-h1': string;
-  '--font-size-h2': string;
-  '--font-size-h3': string;
-  '--font-size-h4': string;
+  /* Display (monospace) */
+  '--font-display-size-xl': string;
+  '--font-display-size-lg': string;
+  '--font-display-size-md': string; // base font size
+  '--font-display-size-sm': string;
+  '--font-display-size-xs': string;
+  '--font-display-size-xxs': string; // fine print
+
+  /* Line Heights */
+  '--font-line-height': string;
 
   /* Margins */
   '--margins-3xl': string;
@@ -69,7 +93,7 @@ type ThemeGlobals = {
   '--duration-right-panel': string;
   '--duration-onion-status-glow': string;
   '--duration-progress-bar': string;
-  '--duration-onboarding-container': string;
+  '--duration-fadein': string;
   '--duration-modal-error-faded': string;
   '--duration-modal-error-shown': string;
   '--duration-modal-to-inbox': string;
@@ -98,10 +122,6 @@ type ThemeGlobals = {
   '--button-path-default-color': string;
   '--button-path-connecting-color': string;
   '--button-path-error-color': string;
-
-  /* Modals */
-  '--modal-background-color': string;
-  '--modal-drop-shadow': string;
 
   /* Lightbox */
   '--lightbox-background-color': string;
@@ -141,7 +161,7 @@ type ThemeGlobals = {
 
 type Theme = ThemeGlobals | ThemeColorVariables;
 
-export type ThemeKeys = keyof ThemeGlobals | keyof ThemeColorVariables;
+export type ThemeKeys = keyof ThemeGlobals | keyof ThemeColorVariables | '--primary-color';
 
 export function getThemeValue(key: ThemeKeys) {
   return getComputedStyle(document.documentElement).getPropertyValue(key);
@@ -160,17 +180,35 @@ export const THEME_GLOBALS: ThemeGlobals = {
   '--font-accent': 'Loor',
   '--font-mono': 'Roboto Mono',
 
+  '--font-size-h1': '30px',
+  '--font-size-h1-new': '36px',
+  '--font-size-h2': '24px',
+  '--font-size-h2-new': '32px',
+  '--font-size-h3': '20px',
+  '--font-size-h3-new': '29px',
+  '--font-size-h4': '26px',
+  '--font-size-h5': '23px',
+  '--font-size-h6': '20px',
+  '--font-size-h7': '18px',
+  '--font-size-h8': '16px',
+  '--font-size-h9': '14px',
 
+  // TODO update these values to match the body typograhy in the design system. Will need to review most of the app for this.
   '--font-size-xl': '19px',
   '--font-size-lg': '17px',
   '--font-size-md': '15px',
   '--font-size-sm': '13px',
   '--font-size-xs': '11px',
+  '--font-size-xxs': '9px',
 
-  '--font-size-h1': '30px',
-  '--font-size-h2': '24px',
-  '--font-size-h3': '20px',
-  '--font-size-h4': '16px',
+  '--font-display-size-xl': '18px',
+  '--font-display-size-lg': '16px',
+  '--font-display-size-md': '14px',
+  '--font-display-size-sm': '12px',
+  '--font-display-size-xs': '11px',
+  '--font-display-size-xxs': '9px',
+
+  '--font-line-height': '1.2', // 120% but we want a unitless value so that line heights are calculated correctly for nested elements
 
   '--margins-3xl': '35px',
   '--margins-2xl': '30px',
@@ -203,7 +241,7 @@ export const THEME_GLOBALS: ThemeGlobals = {
   '--duration-right-panel': setDuration('0.3s'),
   '--duration-onion-status-glow': setDuration(10),
   '--duration-progress-bar': setDuration(0.5),
-  '--duration-onboarding-container': setDuration(1),
+  '--duration-fadein': setDuration(1),
   '--duration-modal-error-faded': setDuration('100ms'),
   '--duration-modal-error-shown': setDuration(0.25),
   '--duration-modal-to-inbox': setDuration('0.1s'),
@@ -229,9 +267,6 @@ export const THEME_GLOBALS: ThemeGlobals = {
   '--button-path-default-color': COLORS.PATH.DEFAULT,
   '--button-path-connecting-color': COLORS.PATH.CONNECTING,
   '--button-path-error-color': COLORS.PATH.ERROR,
-
-  '--modal-background-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.6)`,
-  '--modal-drop-shadow': `0px 0px 10px rgba(${hexColorToRGB(COLORS.BLACK)}, 0.22)`,
 
   '--lightbox-background-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.8)`,
   '--lightbox-caption-background-color': 'rgba(192, 192, 192, .40)',
