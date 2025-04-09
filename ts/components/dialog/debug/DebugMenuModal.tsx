@@ -6,7 +6,7 @@ import { Flex } from '../../basic/Flex';
 import { SpacerMD, SpacerSM } from '../../basic/Text';
 import { updateDebugMenuModal } from '../../../state/ducks/modalDialog';
 import { AboutInfo, DebugActions, OtherInfo } from './components';
-import { SessionWrapperModal } from '../../SessionWrapperModal';
+import { SessionWrapperModal2 } from '../../SessionWrapperModal2';
 import { FeatureFlags } from './FeatureFlags';
 import { ReleaseChannel } from './ReleaseChannel';
 
@@ -45,7 +45,15 @@ export function DebugMenuModal() {
 
   return (
     <AnimatePresence>
-      <SessionWrapperModal title={'Debug Menu'} onClose={onClose} showExitIcon={true}>
+      <SessionWrapperModal2
+        title={'Debug Menu'}
+        onClose={onClose}
+        showExitIcon={true}
+        contentBorder={false}
+        contentWidth={'75%'}
+        shouldOverflow={true}
+        allowOutsideClick={false}
+      >
         <StyledContent
           $container={true}
           $flexDirection="column"
@@ -62,7 +70,7 @@ export function DebugMenuModal() {
           <OtherInfo />
           <SpacerMD />
         </StyledContent>
-      </SessionWrapperModal>
+      </SessionWrapperModal2>
     </AnimatePresence>
   );
 }
