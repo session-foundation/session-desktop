@@ -30,7 +30,7 @@ export const OnboardContainer = (props: OnboardContainerProps) => {
       animate={'animate'}
       exit={'exit'}
       transition={{
-        duration: THEME_GLOBALS['--duration-onboarding-container'],
+        duration: THEME_GLOBALS['--duration-fadein'],
       }}
     >
       {children}

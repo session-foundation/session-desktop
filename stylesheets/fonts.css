@@ -76,9 +76,19 @@
   font-style: italic;
 }
 
+/* Monospace font */
 @font-face {
-  font-family: SpaceMono;
-  src: url('../fonts/SpaceMono-Regular.ttf') format('truetype');
+  font-family: 'Roboto Mono';
+  src: url('../fonts/RobotoMono-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Roboto Mono';
+  src: url('../fonts/RobotoMono-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 700;
+  font-style: italic;
 }
 
 /* Accented font */

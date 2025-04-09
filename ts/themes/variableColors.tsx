@@ -66,7 +66,6 @@ export type ThemeColorVariables = {
   '--button-solid-background-hover-color': string;
   '--button-solid-text-color': string;
   '--button-solid-text-hover-color': string;
-  /* Solid buttons stay the same and rely on the disabled pointer */
   '--button-solid-disabled-color': string;
   '--button-solid-shadow-color': string;
 
@@ -112,6 +111,7 @@ export type ThemeColorVariables = {
 
   /* Scroll Bars */
   '--scroll-bar-track-color': string;
+  '--scroll-bar-track-hover-color': string;
   '--scroll-bar-thumb-color': string;
   '--scroll-bar-thumb-hover-color': string;
 
@@ -145,9 +145,12 @@ export type ThemeColorVariables = {
   '--emoji-reaction-bar-icon-color': string;
 
   /* Modals */
+  '--modal-background-color': string;
   '--modal-background-content-color': string;
   '--modal-text-color': string;
   '--modal-text-danger-color': string;
+  '--modal-shadow-color': string;
+  '--modal-drop-shadow': string;
 
   /* Toasts */
   '--toast-background-color': string;
