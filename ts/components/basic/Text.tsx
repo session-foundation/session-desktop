@@ -103,12 +103,12 @@ export const StringCollapser = ({
   str,
   leadingChars = 6,
   trailingChars = 4,
-  separtorStyle,
+  separatorStyle,
 }: {
   str: string;
   leadingChars?: number;
   trailingChars?: number;
-  separtorStyle?: CSSProperties;
+  separatorStyle?: CSSProperties;
 }) => {
   if (str.length <= leadingChars + trailingChars + 3) {
     return <>{str}</>;
@@ -117,7 +117,7 @@ export const StringCollapser = ({
   return (
     <span>
       {str.slice(0, leadingChars)}
-      <span style={separtorStyle}>…</span>
+      <span style={separatorStyle}>…</span>
       {str.slice(-trailingChars)}
     </span>
   );

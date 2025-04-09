@@ -190,25 +190,26 @@ const ErrorItem = (props: {
   loading?: boolean;
   dataTestId?: SessionDataTestId;
 }) => {
+  const { loading, error, hasError, setTextErrorStyle, setHasError } = props;
   const [errorValue, setErrorValue] = useState<LocalizerComponentPropsObject | string | undefined>(
     undefined
   );
 
   useEffect(() => {
     // if we have an error we want to continue to show that error unless it changes to a new error, we dont care if the input value changes
-    if (props.error && !isEmpty(props.error) && !isEqual(props.error, errorValue)) {
-      setErrorValue(props.error);
-      props.setTextErrorStyle(true);
-      props.setHasError(true);
+    if (error && !isEmpty(error) && !isEqual(error, errorValue)) {
+      setErrorValue(error);
+      setTextErrorStyle(true);
+      setHasError(true);
     }
 
     // if the input value has been submitted somewhere check if we have an error and if we do clear it
-    if (props.loading && props.hasError && errorValue && isEmpty(props.error)) {
+    if (loading && hasError && errorValue && isEmpty(error)) {
       setErrorValue(undefined);
-      props.setTextErrorStyle(false);
-      props.setHasError(false);
+      setTextErrorStyle(false);
+      setHasError(false);
     }
-  }, [errorValue, props]);
+  }, [errorValue, error, loading, hasError, setHasError, setTextErrorStyle]);
 
   if (!errorValue) {
     return null;
