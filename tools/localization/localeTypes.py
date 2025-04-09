@@ -1,8 +1,42 @@
 #!/bin/python3
 import re
-from typing import List, Tuple
 
 OUTPUT_FILE = "./ts/localization/locales.ts"
+
+
+# Define the mapping of special fields to their types and corresponding "WithX"
+with_map = {
+    ("name", "string"): "WithName",
+    ("group_name", "string"): "WithGroupName",
+    ("community_name", "string"): "WithCommunityName",
+    ("other_name", "string"): "WithOtherName",
+    ("author", "string"): "WithAuthor",
+    ("emoji", "string"): "WithEmoji",
+    ("emoji_name", "string"): "WithEmojiName",
+    ("admin_name", "string"): "WithAdminName",
+    ("time", "string"): "WithTime",
+    ("time_large", "string"): "WithTimeLarge",
+    ("time_small", "string"): "WithTimeSmall",
+    ("disappearing_messages_type", "string"): "WithDisappearingMessagesType",
+    ("conversation_name", "string"): "WithConversationName",
+    ("file_type", "string"): "WithFileType",
+    ("date", "string"): "WithDate",
+    ("date_time", "string"): "WithDateTime",
+    ("message_snippet", "string"): "WithMessageSnippet",
+    ("query", "string"): "WithQuery",
+    ("version", "string"): "WithVersion",
+    ("information", "string"): "WithInformation",
+    ("device", "string"): "WithDevice",
+    ("percent_loader", "string"): "WithPercentLoader",
+    ("message_count", "string"): "WithMessageCount",
+    ("conversation_count", "string"): "WithConversationCount",
+    ("found_count", "number"): "WithFoundCount",
+    ("hash", "string"): "WithHash",
+    ("url", "string"): "WithUrl",
+    ("account_id", "string"): "WithAccountId",
+    ("count", "number"): "WithCount",
+    ("service_node_id", "string"): "WithServiceNodeId",
+}
 
 
 def wrapValue(value):
@@ -62,6 +96,19 @@ def extract_vars(text):
     return vars
 
 
+
+def vars_to_record_ts(vars):
+    arr = []
+    for var in vars:
+        to_append = [var, 'number' if var == 'count' or var == 'found_count' else 'string']
+        if to_append not in arr:
+          arr.append(to_append)
+
+    return arr
+
+
+
+
 def vars_to_record(vars):
     arr = []
     for var in vars:
@@ -69,7 +116,6 @@ def vars_to_record(vars):
         if to_append not in arr:
           arr.append(to_append)
 
-    # print(arr)
     if not arr:
         return ''
     return "{" + ', '.join(arr) + "}"
@@ -90,9 +136,14 @@ def generate_type_object(locales):
     Returns:
       str: A string representation of the JavaScript object.
     """
-    js_object = "{\n"
-    js_plural_object_container = "{\n"
+    js_object_no_args = "{\n"
+    js_object_with_args = "{\n"
+    js_plural_object_container_with_args = "{\n"
     plural_pattern = r"(zero|one|two|few|many|other)\s*\[([^\]]+)\]"
+
+    tokens_simple_no_args = []
+    tokens_simple_with_args = {}
+    tokens_plurals_with_args = {}
 
     for key, value_en in locales['en'].items():
         if value_en.startswith("{count, plural, "):
@@ -119,7 +170,6 @@ def generate_type_object(locales):
 
 
               all_locales_strings = []
-              as_record_type_en = vars_to_record(extracted_vars)
 
               for token, localized_string in plurals_with_token:
                 if localized_string:
@@ -138,11 +188,11 @@ def generate_type_object(locales):
               js_plural_object += "\n    },"
 
               all_locales_plurals.append(js_plural_object)
-            js_plural_object_container += f'  {wrapValue(key)}: {{\n{"\n".join(all_locales_plurals)}\n    args: {args_to_type(as_record_type_en)}\n  }},\n'
+            js_plural_object_container_with_args += f'  {wrapValue(key)}: {{\n{"\n".join(all_locales_plurals)}\n  }},\n'
+            tokens_plurals_with_args[key] = vars_to_record_ts(extracted_vars)
 
         else:
           extracted_vars_en = extract_vars(value_en)
-          as_record_type_en = vars_to_record(extracted_vars_en)
           other_locales_replaced_values = [[locale, data.get(key, "")] for locale, data in locales.items()]
 
           all_locales_strings = []
@@ -152,12 +202,28 @@ def generate_type_object(locales):
             else:
               all_locales_strings.append(f'{wrapValue(locale.replace("_","-"))}: "{escape_str(value_en)}"')
 
-          # print('key',key, " other_locales_replaced_values:", other_locales_replaced_values)
-          js_object += f'  {wrapValue(key)}: {{\n      {",\n      ".join(all_locales_strings)},\n      args: {args_to_type(as_record_type_en)}\n  }},\n'
+          if extracted_vars_en:
+            js_object_with_args += f'  {wrapValue(key)}: {{\n      {",\n      ".join(all_locales_strings)},\n }},\n'
+            tokens_simple_with_args[key] = vars_to_record_ts(extracted_vars_en)
+          else:
+            js_object_no_args += f'  {wrapValue(key)}: {{\n      {",\n      ".join(all_locales_strings)},\n  }},\n'
+            tokens_simple_no_args.append(key)
 
-    js_object += "}"
-    js_plural_object_container += "}"
-    return js_object,js_plural_object_container
+    tokens_simple_no_args_str = "\n    '" + "' |\n    '".join(tokens_simple_no_args) + "'"
+
+    js_object_no_args += "}"
+    js_object_with_args += "}"
+    js_plural_object_container_with_args += "}"
+
+    dicts = {
+        "simple_no_args": js_object_no_args,
+        "simple_with_args": js_object_with_args,
+        "plurals_with_args": js_plural_object_container_with_args,
+        "tokens_simple_no_args_str": tokens_simple_no_args_str,
+        "tokens_simple_with_args": tokens_simple_with_args,
+        "tokens_plural_with_args": tokens_plurals_with_args,
+    }
+    return dicts
 
 
 DISCLAIMER = """
@@ -190,6 +256,40 @@ def generateLocalesType(locale, data):
     return f"Locales generated at: {OUTPUT_FILE}"
 
 
+def format_tokens_with_named_args(token_args_dict):
+    result = []
+
+    for token, args in token_args_dict.items():
+        extras = []
+        with_types = []
+
+        for arg_name, arg_type in args:
+            key = (arg_name, arg_type)
+            if key in with_map:
+                with_types.append(with_map[key])
+            else:
+                extras.append(f"{arg_name}: {arg_type}")
+
+        # Join parts
+        joined = " & ".join(with_types)
+        if extras:
+            extras_str = "{ " + ", ".join(extras) + " }"
+            joined = f"{joined} & {extras_str}" if joined else extras_str
+
+        result.append(f"   {token}: {joined}")
+
+    return "{\n" + ",\n".join(result) +"\n}"
+
+
+def generate_with_types(with_map):
+    lines = []
+    for (arg_name, arg_type), type_name in with_map.items():
+        lines.append(f"type {type_name} = {{{arg_name}: {arg_type}}};")
+    return "\n".join(lines)
+
+
+
+
 def generateLocalesMergedType(locales):
     """
     Generate the locales type and write it to a file.
@@ -204,17 +304,45 @@ def generateLocalesMergedType(locales):
             f"{DISCLAIMER}"
         )
 
+        ts_file.write("import type { CrowdinLocale } from './constants';\n")
+
         dicts = generate_type_object(locales)
 
-        dictVar = "simpleDictionary"
-        pluralDictVar = "pluralsDictionary"
+        tokens_simple_with_args = dicts['tokens_simple_with_args']
+        tokens_plural_with_args = dicts['tokens_plural_with_args']
+
+        tokens_union_simple_args = format_tokens_with_named_args(tokens_simple_with_args)
+        tokens_union_plural_args = format_tokens_with_named_args(tokens_plural_with_args)
 
 
         ts_file.write(f"""
-export const {dictVar} = {dicts[0]} as const;
+{generate_with_types(with_map)}
 
-export const {pluralDictVar} = {dicts[1]} as const;
+export type TokenSimpleNoArgs = {dicts['tokens_simple_no_args_str']};
+
+export type TokensSimpleAndArgs = {tokens_union_simple_args};
+
+export type TokensPluralAndArgs = {tokens_union_plural_args};
+
+export type TokenSimpleWithArgs = {"\n    '" + "' |\n    '".join(list(tokens_simple_with_args.keys())) + "'"}
+
+export type TokenPluralWithArgs = {"\n    '" + "' |\n    '".join(list(tokens_plural_with_args.keys())) + "'"}
+
+export const simpleDictionaryNoArgs: Record<
+  TokenSimpleNoArgs,
+  Record<CrowdinLocale, string>
+> = {dicts['simple_no_args']} as const;
+
+
+export const simpleDictionaryWithArgs: Record<
+  TokenSimpleWithArgs,
+  Record<CrowdinLocale, string>
+> = {dicts['simple_with_args']} as const;
+
+export const pluralsDictionaryWithArgs = {dicts['plurals_with_args']} as const;
+
 """)
+
 
     return f"Locales generated at: {OUTPUT_FILE}"
 
