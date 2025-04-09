@@ -1,10 +1,13 @@
-import { shell } from 'electron';
+import { useDispatch } from 'react-redux';
+import { showLinkVisitWarningDialog } from '../dialog/OpenUrlModal';
 import { SessionIconButton, SessionIconSize } from '../icon';
 import { SessionIconButtonProps } from '../icon/SessionIconButton';
 
 export const HelpDeskButton = (
   props: Omit<SessionIconButtonProps, 'iconType' | 'iconSize'> & { iconSize?: SessionIconSize }
 ) => {
+  const dispatch = useDispatch();
+
   return (
     <SessionIconButton
       aria-label="Help desk link"
@@ -15,9 +18,7 @@ export const HelpDeskButton = (
       padding={props.padding || '0'}
       dataTestId="session-link-helpdesk"
       onClick={() => {
-        void shell.openExternal(
-          'https://sessionapp.zendesk.com/hc/en-us/articles/4439132747033-How-do-Session-ID-usernames-work'
-        );
+        showLinkVisitWarningDialog('https://getsession.org/account-ids', dispatch);
       }}
     />
   );
