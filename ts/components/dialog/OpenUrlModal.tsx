@@ -5,15 +5,16 @@ import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { MessageInteraction } from '../../interactions';
 import { OpenUrlModalState, updateOpenUrlModal } from '../../state/ducks/modalDialog';
-import { SessionWrapperModal } from '../SessionWrapperModal';
+import { SessionWrapperModal2 } from '../SessionWrapperModal2';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
-import { SpacerMD } from '../basic/Text';
 import { I18nSubText } from '../basic/I18nSubText';
-import { StyledModalDescriptionContainer } from './shared/ModalDescriptionContainer';
+import { Flex } from '../basic/Flex';
+import { SpacerSM, SpacerXS } from '../basic/Text';
 
-const StyledScrollDescriptionContainer = styled(StyledModalDescriptionContainer)`
-  max-height: 110px;
+const StyledScrollDescriptionContainer = styled.div`
+  max-height: 150px;
   overflow-y: auto;
+  text-align: center;
 `;
 
 export function OpenUrlModal(props: OpenUrlModalState) {
@@ -39,22 +40,27 @@ export function OpenUrlModal(props: OpenUrlModalState) {
   }
 
   return (
-    <SessionWrapperModal
+    <SessionWrapperModal2
       title={window.i18n('urlOpen')}
       onClose={onClose}
       showExitIcon={true}
       showHeader={true}
     >
-      <div className="session-modal__centered">
-        <StyledScrollDescriptionContainer>
-          <I18nSubText
-            localizerProps={{ token: 'urlOpenDescription', asTag: 'span', args: { url } }}
-            dataTestId="modal-description"
-          />
-        </StyledScrollDescriptionContainer>
-      </div>
-      <SpacerMD />
-      <div className="session-modal__button-group">
+      <StyledScrollDescriptionContainer>
+        <I18nSubText
+          localizerProps={{ token: 'urlOpenDescription', asTag: 'span', args: { url } }}
+          dataTestId="modal-description"
+        />
+      </StyledScrollDescriptionContainer>
+      <SpacerSM />
+
+      <Flex
+        $container={true}
+        width={'100%'}
+        $justifyContent="center"
+        $alignItems="center"
+        $flexGap="var(--margins-md)"
+      >
         <SessionButton
           text={window.i18n('open')}
           buttonColor={SessionButtonColor.Danger}
@@ -68,8 +74,9 @@ export function OpenUrlModal(props: OpenUrlModalState) {
           onClick={onClickCopy}
           dataTestId="copy-url-button"
         />
-      </div>
-    </SessionWrapperModal>
+      </Flex>
+      <SpacerXS />
+    </SessionWrapperModal2>
   );
 }
 

@@ -138,11 +138,11 @@ export const DebugActions = () => {
       <SpacerXS />
       <Flex
         $container={true}
-        width="100%"
+        maxWidth="900px"
         $justifyContent="flex-start"
         $alignItems="flex-start"
         $flexWrap="wrap"
-        $flexGap="var(--margins-md) var(--margins-lg)"
+        $flexGap="var(--margins-lg)"
       >
         <SessionButton
           buttonColor={SessionButtonColor.Danger}
@@ -215,10 +215,10 @@ export const AboutInfo = () => {
   const aboutInfo = [
     `${localize('updateVersion').withArgs({ version: window.getVersion() })}`,
     `${localize('systemInformationDesktop').withArgs({ information: window.getOSRelease() })}`,
-    `${localize('commitHashDesktop').withArgs({ hash: window.getCommitHash() || window.i18n('unknown') })}`,
-    `Libsession Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_UTIL_VERSION || 'Unknown'}`,
-    `Libsession NodeJS Version: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_VERSION || 'Unknown'}`,
-    `Libsession NodeJS Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_COMMIT || 'Unknown'}`,
+    `${localize('commitHashDesktop').withArgs({ hash: window.getCommitHash() || localize('unknown').toString() })}`,
+    `Libsession Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_UTIL_VERSION || localize('unknown').toString()}`,
+    `Libsession NodeJS Version: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_VERSION || localize('unknown').toString()}`,
+    `Libsession NodeJS Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_COMMIT || localize('unknown').toString()}`,
     `${environmentStates.join(' - ')}`,
   ];
 

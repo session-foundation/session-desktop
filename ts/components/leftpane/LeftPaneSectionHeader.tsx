@@ -20,6 +20,7 @@ import { SpacerMD, SpacerSM } from '../basic/Text';
 import { MenuButton } from '../buttons';
 import { SessionIcon, SessionIconButton } from '../icon';
 import { Localizer } from '../basic/Localizer';
+import { H2 } from '../basic/Heading';
 
 const StyledLeftPaneSectionHeader = styled(Flex)`
   height: var(--main-view-header-height);
@@ -27,10 +28,8 @@ const StyledLeftPaneSectionHeader = styled(Flex)`
   transition: var(--default-duration);
 `;
 
-const SectionTitle = styled.h1`
-  padding-top: var(--margins-xs);
+const SectionTitle = styled(H2)`
   flex-grow: 1;
-  color: var(--text-primary-color);
 `;
 
 const StyledProgressBarContainer = styled.div`
@@ -210,7 +209,7 @@ export const LeftPaneSectionHeader = () => {
         ) : (
           <SpacerSM />
         )}
-        <SectionTitle>{label}</SectionTitle>
+        <SectionTitle color={'var(--text-primary-color)'}>{label}</SectionTitle>
         {isMessageSection && <MenuButton />}
       </StyledLeftPaneSectionHeader>
       {showRecoveryPhrasePrompt && <LeftPaneBanner />}

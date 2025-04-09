@@ -1,25 +1,89 @@
-import { useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
+import styled from 'styled-components';
 import { useLastMessage } from '../../hooks/useParamSelector';
 import { updateConversationInteractionState } from '../../interactions/conversationInteractions';
 import { ConversationInteractionStatus } from '../../interactions/types';
 import { updateConfirmModal } from '../../state/ducks/modalDialog';
-import { SessionWrapperModal } from '../SessionWrapperModal';
+import { SessionWrapperModal2 } from '../SessionWrapperModal2';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionRadioGroup, SessionRadioItems } from '../basic/SessionRadioGroup';
-import { SpacerLG } from '../basic/Text';
 import { SessionSpinner } from '../loading';
 import type { LocalizerComponentPropsObject } from '../../localization/localeTools';
 import { I18nSubText } from '../basic/I18nSubText';
+import { Flex } from '../basic/Flex';
+import { SpacerSM, SpacerXS } from '../basic/Text';
+
+const StyledMessageContainer = styled(Flex)`
+  text-align: center;
+`;
+
+const ConfirmationButtons = ({
+  isLoading,
+  okText,
+  cancelText,
+  hideCancel,
+  okTheme,
+  closeTheme,
+  onClickOkHandler,
+  onClickCancelHandler,
+}: {
+  isLoading: boolean;
+  okText: string;
+  cancelText: string;
+  hideCancel: boolean;
+  okTheme: SessionButtonColor | undefined;
+  closeTheme: SessionButtonColor;
+  onClickOkHandler: () => Promise<void> | void;
+  onClickCancelHandler: () => Promise<void> | void;
+}) => {
+  return (
+    <>
+      <SessionSpinner loading={isLoading} />
+      <SpacerSM />
+      <Flex
+        $container={true}
+        width={'100%'}
+        $justifyContent="center"
+        $alignItems="center"
+        $flexGap="var(--margins-md)"
+      >
+        <SessionButton
+          text={okText}
+          buttonColor={okTheme}
+          buttonType={SessionButtonType.Simple}
+          fontWeight={500}
+          onClick={onClickOkHandler}
+          margin={'var(--margins-xs)'}
+          dataTestId="session-confirm-ok-button"
+        />
+        {!hideCancel && (
+          <SessionButton
+            text={cancelText}
+            buttonColor={!okTheme ? closeTheme : undefined}
+            buttonType={SessionButtonType.Simple}
+            fontWeight={500}
+            onClick={onClickCancelHandler}
+            margin={'var(--margins-xs)'}
+            dataTestId="session-confirm-cancel-button"
+          />
+        )}
+      </Flex>
+      <SpacerXS />
+    </>
+  );
+};
 
 export interface SessionConfirmDialogProps {
+  children?: ReactNode;
   i18nMessage?: LocalizerComponentPropsObject;
   title?: string;
   radioOptions?: SessionRadioItems;
   onOk?: any;
   onClose?: any;
   closeAfterInput?: boolean;
+  contentWidth?: string;
 
   /**
    * function to run on ok click. Closes modal after execution by default
@@ -40,13 +104,13 @@ export interface SessionConfirmDialogProps {
   okTheme?: SessionButtonColor;
   closeTheme?: SessionButtonColor;
   showExitIcon?: boolean | undefined;
-  headerReverse?: boolean;
   conversationId?: string;
 }
 
 export const SessionConfirm = (props: SessionConfirmDialogProps) => {
   const dispatch = useDispatch();
   const {
+    children,
     title = '',
     i18nMessage,
     radioOptions,
@@ -57,9 +121,9 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
     hideCancel = false,
     onClickCancel,
     showExitIcon,
-    headerReverse,
     closeAfterInput = true,
     conversationId,
+    contentWidth,
   } = props;
 
   const lastMessage = useLastMessage(conversationId);
@@ -120,53 +184,50 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
   };
 
   return (
-    <SessionWrapperModal
+    <SessionWrapperModal2
       title={title}
       onClose={onClickClose}
       showExitIcon={showExitIcon}
       showHeader={showHeader}
-      headerReverse={headerReverse}
+      contentWidth={contentWidth}
+      buttonChildren={
+        <ConfirmationButtons
+          isLoading={isLoading}
+          okText={okText}
+          cancelText={cancelText}
+          hideCancel={hideCancel}
+          okTheme={okTheme}
+          closeTheme={closeTheme}
+          onClickOkHandler={onClickOkHandler}
+          onClickCancelHandler={onClickCancelHandler}
+        />
+      }
+      classes="session-confirm"
     >
-      {!showHeader && <SpacerLG />}
-
-      <div className="session-modal__centered">
+      <StyledMessageContainer
+        $container={true}
+        $flexDirection="column"
+        width={'100%'}
+        $alignItems="center"
+      >
         {i18nMessage ? (
           <I18nSubText localizerProps={i18nMessage} dataTestId="modal-description" />
         ) : null}
-        {radioOptions && chosenOption !== '' ? (
-          <SessionRadioGroup
-            group="session-confirm-radio-group"
-            initialItem={chosenOption}
-            items={radioOptions}
-            radioPosition="right"
-            onClick={value => {
-              if (value) {
-                setChosenOption(value);
-              }
-            }}
-          />
-        ) : null}
-        <SessionSpinner loading={isLoading} />
-      </div>
-
-      <div className="session-modal__button-group">
-        <SessionButton
-          text={okText}
-          buttonColor={okTheme}
-          buttonType={SessionButtonType.Simple}
-          onClick={onClickOkHandler}
-          dataTestId="session-confirm-ok-button"
+      </StyledMessageContainer>
+      {radioOptions && chosenOption !== '' ? (
+        <SessionRadioGroup
+          group="session-confirm-radio-group"
+          initialItem={chosenOption}
+          items={radioOptions}
+          radioPosition="right"
+          onClick={value => {
+            if (value) {
+              setChosenOption(value);
+            }
+          }}
         />
-        {!hideCancel && (
-          <SessionButton
-            text={cancelText}
-            buttonColor={!okTheme ? closeTheme : undefined}
-            buttonType={SessionButtonType.Simple}
-            onClick={onClickCancelHandler}
-            dataTestId="session-confirm-cancel-button"
-          />
-        )}
-      </div>
-    </SessionWrapperModal>
+      ) : null}
+      {children}
+    </SessionWrapperModal2>
   );
 };
