@@ -76,6 +76,7 @@ export const SessionWrapperModal = (props: SessionWrapperModalType) => {
   return (
     <SessionFocusTrap>
       <StyledRootDialog
+        shouldOverflow={true}
         className={clsx('loki-dialog modal', additionalClassName || null)}
         onClick={handleClick}
         role="dialog"
