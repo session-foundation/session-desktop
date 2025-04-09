@@ -12,7 +12,6 @@ import {
 import { showSettingsSection } from '../../../state/ducks/section';
 import { getIsModalVisible } from '../../../state/selectors/modal';
 import { useHideRecoveryPasswordEnabled } from '../../../state/selectors/settings';
-import { useIsDarkTheme } from '../../../state/selectors/theme';
 import { THEME_GLOBALS } from '../../../themes/globals';
 import { prepareQRCodeForLightBox } from '../../../util/qrCodes';
 import { getCurrentRecoveryPhrase } from '../../../util/storage';
@@ -76,7 +75,6 @@ export const SettingsCategoryRecoveryPassword = () => {
   const hideRecoveryPassword = useHideRecoveryPasswordEnabled();
   const isModalVisible = useSelector(getIsModalVisible);
 
-  const isDarkTheme = useIsDarkTheme();
   const { dataURL, iconSize, iconColor, backgroundColor, loading } = useIconToImageURL(qrLogoProps);
 
   const dispatch = useDispatch();
@@ -140,7 +138,7 @@ export const SettingsCategoryRecoveryPassword = () => {
             $justifyContent={'space-between'}
             $alignItems={'center'}
             width={'100%'}
-            color={isDarkTheme ? 'var(--primary-color)' : 'var(--text-primary-color)'}
+            color={'var(--renderer-span-primary-color)'}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: THEME_GLOBALS['--default-duration-seconds'] }}
@@ -152,7 +150,7 @@ export const SettingsCategoryRecoveryPassword = () => {
               copyContent={recoveryPhrase}
               iconSize={'huge'}
               iconColor={'var(--text-primary-color)'}
-              hotkey={true}
+              hotkey={!isModalVisible}
             />
           </StyledRecoveryPassword>
         )}

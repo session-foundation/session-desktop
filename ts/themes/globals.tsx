@@ -158,7 +158,8 @@ export function setThemeValues(variables: Theme) {
 export const THEME_GLOBALS: ThemeGlobals = {
   '--font-default': 'Roboto',
   '--font-accent': 'Loor',
-  '--font-mono': 'SpaceMono',
+  '--font-mono': 'Roboto Mono',
+
 
   '--font-size-xl': '19px',
   '--font-size-lg': '17px',

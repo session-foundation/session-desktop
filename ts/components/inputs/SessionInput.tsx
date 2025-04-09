@@ -9,13 +9,15 @@ import {
 } from 'react';
 
 import { motion } from 'framer-motion';
-import { isEmpty, isEqual } from 'lodash';
+import { isEmpty, isEqual, isString } from 'lodash';
 import styled, { CSSProperties } from 'styled-components';
 import { THEME_GLOBALS } from '../../themes/globals';
 import { AnimatedFlex, Flex } from '../basic/Flex';
 import { SpacerMD } from '../basic/Text';
 import { SessionIconButton } from '../icon';
 import { useHTMLDirection } from '../../util/i18n/rtlSupport';
+import { Localizer } from '../basic/Localizer';
+import type { LocalizerComponentPropsObject } from '../../localization/localeTools';
 
 type TextSizes = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
@@ -68,10 +70,11 @@ const StyledSessionInput = styled(Flex)<{
   `}
 `;
 
-const StyledBorder = styled(AnimatedFlex)`
+const StyledBorder = styled(AnimatedFlex)<{ shape: 'round' | 'square' | 'none' }>`
   position: relative;
   border: 1px solid var(--input-border-color);
-  border-radius: 13px;
+  border-radius: ${props =>
+    props.shape === 'none' ? '0px' : props.shape === 'square' ? '7px' : '13px'};
 `;
 
 const StyledInput = styled(motion.input)<{
@@ -79,16 +82,17 @@ const StyledInput = styled(motion.input)<{
   textSize: TextSizes;
   centerText?: boolean;
   monospaced?: boolean;
+  padding?: string;
 }>`
   outline: 0;
   border: none;
   width: 100%;
-  padding: var(--margins-lg);
   background: transparent;
   color: ${props => (props.error ? 'var(--danger-color)' : 'var(--input-text-color)')};
 
   font-family: ${props => (props.monospaced ? 'var(--font-mono)' : 'var(--font-default)')};
   line-height: 1.4;
+  padding: ${props => (props.padding ? props.padding : 'var(--margins-lg)')};
   ${props => props.centerText && 'text-align: center;'}
   ${props => `font-size: var(--font-size-${props.textSize});`}
 
@@ -103,15 +107,15 @@ export const StyledTextAreaContainer = styled(motion.div)<{
   textSize: TextSizes;
   centerText?: boolean;
   monospaced?: boolean;
+  padding?: string;
 }>`
   display: flex;
   align-items: center;
   position: relative;
   line-height: 1;
-  min-height: 80px;
   height: 100%;
   width: 100%;
-  padding: 0 var(--margins-md);
+  padding: ${props => (props.padding ? props.padding : 'var(--margins-md)')};
 
   background: transparent;
   color: ${props => (props.error ? 'var(--danger-color)' : 'var(--input-text-color)')};
@@ -124,7 +128,6 @@ export const StyledTextAreaContainer = styled(motion.div)<{
     display: flex;
     height: 100%;
     width: 100%;
-    padding: var(--margins-md) 0;
     outline: 0;
     border: none;
     background: transparent;
@@ -151,16 +154,17 @@ const StyledPlaceholder = styled(motion.div)<{
   editable: boolean;
   centerText?: boolean;
   monospaced?: boolean;
+  padding?: string;
 }>`
   position: relative;
   width: 100%;
-  min-height: 80px;
   height: 100%;
   transition: opacity var(--default-duration) color var(--default-duration);
   ${props => props.editable && 'cursor: pointer;'}
   line-height: 1;
 
-  padding: ${props => !props.centerText && 'var(--margins-md) 0'};
+  ${props => props.editable && 'cursor: pointer;'}
+  ${props => !props.centerText && props.padding && `padding: ${props.padding};`}
 
   background: transparent;
   color: ${props =>
@@ -177,7 +181,39 @@ const StyledPlaceholder = styled(motion.div)<{
     'text-align: center; display: flex; align-items: center; justify-content: center;'}
 `;
 
-const ErrorItem = (props: { id: string; error: string }) => {
+const ErrorItem = (props: {
+  id: string;
+  error: LocalizerComponentPropsObject | string | undefined;
+  hasError: boolean;
+  setHasError: (value: boolean) => void;
+  setTextErrorStyle: (value: boolean) => void;
+  loading?: boolean;
+  dataTestId?: SessionDataTestId;
+}) => {
+  const [errorValue, setErrorValue] = useState<LocalizerComponentPropsObject | string | undefined>(
+    undefined
+  );
+
+  useEffect(() => {
+    // if we have an error we want to continue to show that error unless it changes to a new error, we dont care if the input value changes
+    if (props.error && !isEmpty(props.error) && !isEqual(props.error, errorValue)) {
+      setErrorValue(props.error);
+      props.setTextErrorStyle(true);
+      props.setHasError(true);
+    }
+
+    // if the input value has been submitted somewhere check if we have an error and if we do clear it
+    if (props.loading && props.hasError && errorValue && isEmpty(props.error)) {
+      setErrorValue(undefined);
+      props.setTextErrorStyle(false);
+      props.setHasError(false);
+    }
+  }, [errorValue, props]);
+
+  if (!errorValue) {
+    return null;
+  }
+
   return (
     <motion.label
       aria-label="Error message"
@@ -186,9 +222,9 @@ const ErrorItem = (props: { id: string; error: string }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: THEME_GLOBALS['--default-duration-seconds'] }}
-      data-testid="session-error-message"
+      data-testid={props.dataTestId || 'session-error-message'}
     >
-      {props.error}
+      {isString(errorValue) ? errorValue : <Localizer {...errorValue} />}
     </motion.label>
   );
 };
@@ -252,7 +288,7 @@ const StyledCtaContainer = styled(motion.div)`
 `;
 
 type Props = {
-  error?: string;
+  error?: LocalizerComponentPropsObject | string;
   type?: string;
   value?: string;
   placeholder?: string;
@@ -264,6 +300,7 @@ type Props = {
   disableOnBlurEvent?: boolean;
   inputRef?: RefObject<HTMLInputElement | HTMLTextAreaElement>;
   inputDataTestId?: SessionDataTestId;
+  errorDataTestId?: SessionDataTestId;
   id?: string;
   enableShowHideButton?: boolean;
   showHideButtonAriaLabels?: ShowHideButtonStrings<string>;
@@ -274,8 +311,11 @@ type Props = {
   centerText?: boolean;
   editable?: boolean;
   isTextArea?: boolean;
+  inputShape?: 'round' | 'square' | 'none';
+  padding?: string;
   required?: boolean;
   tabIndex?: number;
+  loading?: boolean;
   className?: string;
 };
 
@@ -293,6 +333,7 @@ export const SessionInput = (props: Props) => {
     disableOnBlurEvent,
     inputRef,
     inputDataTestId,
+    errorDataTestId,
     id = 'session-input-floating-label',
     enableShowHideButton,
     showHideButtonAriaLabels,
@@ -303,12 +344,15 @@ export const SessionInput = (props: Props) => {
     centerText,
     editable = true,
     isTextArea,
+    inputShape = 'round',
+    padding,
     required,
     tabIndex,
+    loading,
     className,
   } = props;
   const [inputValue, setInputValue] = useState('');
-  const [errorString, setErrorString] = useState('');
+  const [hasError, setHasError] = useState(false);
   const [textErrorStyle, setTextErrorStyle] = useState(false);
   const [forceShow, setForceShow] = useState(false);
   const [isFocused, setIsFocused] = useState(props.autoFocus || false);
@@ -348,6 +392,7 @@ export const SessionInput = (props: Props) => {
     textSize,
     disabled: !editable,
     maxLength,
+    padding,
     autoFocus,
     'data-testid': inputDataTestId,
     required,
@@ -374,7 +419,6 @@ export const SessionInput = (props: Props) => {
         }
         event.preventDefault();
         onEnterPressed(inputValue);
-        setErrorString('');
       }
     },
   };
@@ -385,15 +429,8 @@ export const SessionInput = (props: Props) => {
     centerText,
     textSize,
     monospaced,
+    padding,
   };
-
-  // if we have an error, we want to show it even if the input changes to a valid value
-  useEffect(() => {
-    if (error && !isEmpty(error) && !isEqual(error, errorString)) {
-      setErrorString(error);
-      setTextErrorStyle(!!error);
-    }
-  }, [error, errorString]);
 
   useEffect(() => {
     if (isTextArea && editable && isFocused && textAreaRef && textAreaRef.current !== null) {
@@ -408,18 +445,19 @@ export const SessionInput = (props: Props) => {
       $flexDirection="column"
       $justifyContent="center"
       $alignItems="center"
-      error={Boolean(errorString)}
+      error={hasError}
       textSize={textSize}
     >
       <StyledBorder
-        $container={true}
+        shape={inputShape}
         width="100%"
+        $container={true}
         $alignItems="center"
         initial={{
-          borderColor: errorString ? 'var(--input-border-color)' : undefined,
+          borderColor: hasError ? 'var(--input-border-color)' : undefined,
         }}
         animate={{
-          borderColor: errorString ? 'var(--danger-color)' : undefined,
+          borderColor: hasError ? 'var(--danger-color)' : undefined,
         }}
         transition={{ duration: THEME_GLOBALS['--default-duration-seconds'] }}
       >
@@ -440,6 +478,7 @@ export const SessionInput = (props: Props) => {
                 editable={editable}
                 centerText={centerText}
                 monospaced={monospaced}
+                padding={padding}
                 onClick={() => {
                   if (editable) {
                     setIsFocused(true);
@@ -464,19 +503,27 @@ export const SessionInput = (props: Props) => {
             toggleForceShow={() => {
               setForceShow(!forceShow);
             }}
-            error={Boolean(errorString)}
+            error={hasError}
             ariaLabels={showHideButtonAriaLabels}
             dataTestIds={showHideButtonDataTestIds}
           />
         )}
       </StyledBorder>
 
-      {ctaButton || errorString ? <SpacerMD /> : null}
-      {errorString ? <ErrorItem id={id} error={errorString} /> : null}
+      {ctaButton || hasError ? <SpacerMD /> : null}
+      <ErrorItem
+        id={id}
+        error={error}
+        hasError={hasError}
+        setHasError={setHasError}
+        setTextErrorStyle={setTextErrorStyle}
+        loading={loading}
+        dataTestId={errorDataTestId}
+      />
 
       <StyledCtaContainer
-        initial={{ y: errorString && ctaButton ? 0 : undefined }}
-        animate={{ y: errorString && ctaButton ? 'var(--margins-md)' : undefined }}
+        initial={{ y: hasError && ctaButton ? 0 : undefined }}
+        animate={{ y: hasError && ctaButton ? 'var(--margins-md)' : undefined }}
       >
         {ctaButton}
       </StyledCtaContainer>
