@@ -76,7 +76,7 @@ const StyledModal = styled.div<{
   }
 `;
 
-const StyledModayBody = styled.div<{ shouldOverflow: boolean }>`
+const StyledModalBody = styled.div<{ shouldOverflow: boolean }>`
   padding: ${props =>
     props.shouldOverflow
       ? '0 var(--margins-sm) 0 0' // right padding balances the space around the scrollbar
@@ -278,7 +278,7 @@ export const SessionWrapperModal2 = (props: SessionWrapperModalType2) => {
             />
           ) : null}
 
-          <StyledModayBody
+          <StyledModalBody
             onScroll={event => {
               handleScroll(event);
             }}
@@ -288,7 +288,7 @@ export const SessionWrapperModal2 = (props: SessionWrapperModalType2) => {
               {props.children}
               {props.buttonChildren}
             </div>
-          </StyledModayBody>
+          </StyledModalBody>
         </StyledModal>
       </StyledRootDialog>
     </SessionFocusTrap>
