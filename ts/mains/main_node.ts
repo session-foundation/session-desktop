@@ -14,6 +14,7 @@ import {
   IpcMainEvent,
   Menu,
   nativeTheme,
+  powerSaveBlocker,
   screen,
   shell,
   systemPreferences,
@@ -39,6 +40,13 @@ import packageJson from '../../package.json';
 setupGlobalErrorHandler();
 
 const getRealPath = (p: string) => fs.realpathSync(p);
+
+// All of our polling is done from the renderer thread, so we need to set this flag
+// to keep polling even if the renderer hidden/minimized.
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
+app.commandLine.appendSwitch('disable-background-timer-throttling');
+app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
+powerSaveBlocker.start('prevent-app-suspension');
 
 // Hardcoding appId to prevent build failures on release.
 // const appUserModelId = packageJson.build.appId;
@@ -308,6 +316,7 @@ async function createWindow() {
       preload: path.join(getAppRootPath(), 'preload.js'),
       nativeWindowOpen: true,
       spellcheck: await getSpellCheckSetting(),
+      backgroundThrottling: false,
     },
     // only set icon for Linux, the executable one will be used by default for other platforms
     icon:
