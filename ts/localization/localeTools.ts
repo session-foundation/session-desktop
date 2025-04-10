@@ -106,6 +106,17 @@ type ArgsFromTokenStr<T extends SimpleLocalizerTokens | PluralLocalizerTokens> =
 
 export type ArgsFromToken<T extends MergedLocalizerTokens> = MappedToTsTypes<ArgsFromTokenStr<T>>;
 
+export type ArgsFromTokenWithIcon<
+  T extends MergedLocalizerTokens,
+  I extends string = string,
+> = MappedToTsTypes<ArgsFromTokenStr<T>> & { icon: I };
+
+export function isArgsFromTokenWithIcon<T extends MergedLocalizerTokens, I extends string>(
+  args: ArgsFromToken<T> | undefined
+): args is ArgsFromTokenWithIcon<T, I> {
+  return !!args && !isEmptyObject(args) && 'icon' in args && typeof args.icon === 'string';
+}
+
 /** The arguments for retrieving a localized message */
 export type GetMessageArgs<T extends MergedLocalizerTokens> = T extends MergedLocalizerTokens
   ? T extends MergedTokenWithArgs
@@ -515,22 +526,19 @@ type LocalizerComponentBaseProps<T extends MergedLocalizerTokens> = {
 };
 
 /** The props for the localization component */
-export type LocalizerComponentProps<T extends MergedLocalizerTokens> =
-  T extends MergedLocalizerTokens
-    ? ArgsFromToken<T> extends never
+export type LocalizerComponentProps<
+  T extends MergedLocalizerTokens,
+  I extends string = string,
+> = T extends MergedLocalizerTokens
+  ? ArgsFromToken<T> extends never
+    ? LocalizerComponentBaseProps<T> & { args?: undefined }
+    : ArgsFromToken<T> extends Record<string, never>
       ? LocalizerComponentBaseProps<T> & { args?: undefined }
-      : ArgsFromToken<T> extends Record<string, never>
-        ? LocalizerComponentBaseProps<T> & { args?: undefined }
-        : LocalizerComponentBaseProps<T> & { args: ArgsFromToken<T> }
-    : never;
-
-export type LocalizerComponentPropsWithIcon<
-  A extends MergedLocalizerTokens,
-  B,
-> = LocalizerComponentProps<A> & {
-  args?: ArgsFromToken<A> & {
-    icon?: B;
-  };
-};
+      : ArgsFromToken<T> extends { icon: string }
+        ? LocalizerComponentBaseProps<T> & { args: ArgsFromTokenWithIcon<T, I> }
+        : LocalizerComponentBaseProps<T> & {
+            args: ArgsFromToken<T>;
+          }
+  : never;
 
 export type LocalizerComponentPropsObject = LocalizerComponentProps<MergedLocalizerTokens>;
