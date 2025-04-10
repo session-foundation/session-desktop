@@ -9,5 +9,5 @@ type DebugFeatureFlagsType = {
 export const DEBUG_FEATURE_FLAGS: DebugFeatureFlagsType = {
   DEV: ['useReleaseChannels'],
   UNSUPPORTED: ['useTestNet'],
-  UNTESTED: ['useOnionRequests', 'useClosedGroupV3', 'replaceLocalizedStringsWithKeys'],
+  UNTESTED: ['useOnionRequests', 'replaceLocalizedStringsWithKeys'],
 };
