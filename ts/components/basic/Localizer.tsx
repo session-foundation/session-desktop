@@ -54,7 +54,7 @@ export const Localizer = <T extends MergedLocalizerTokens>(
     ...([props.token, args] as GetMessageArgs<T>)
   );
 
-  // NOTE If the string contains an icon we want to replace it with the relevant html from LUCIDE_ICONS before we santize the args
+  // NOTE If the string contains an icon we want to replace it with the relevant html from LUCIDE_ICONS before we sanitize the args
   if (isArgsFromTokenWithIcon<MergedLocalizerTokens, LucideInlineIconKeys>(props.args)) {
     rawString = rawString.replaceAll(/\{icon}/g, LUCIDE_INLINE_ICONS[props.args.icon]);
   }
