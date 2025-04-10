@@ -7,7 +7,7 @@ const { isTestNet, isTestIntegration } = require('./ts/shared/env_vars');
 const os = require('os');
 const url = require('url');
 
-const _ = require('lodash');
+const { isEmpty } = require('lodash');
 
 const { setupI18n } = require('./ts/util/i18n/i18n');
 const { UserUtils } = require('./ts/session/utils');
@@ -17,6 +17,11 @@ const { crowdinLocale } = ipc.sendSync('locale-data');
 
 const config = url.parse(window.location.toString(), true).query;
 const configAny = config;
+
+// Note: we have to call initializeRendererProcessLogger before setupI18n
+const { initializeRendererProcessLogger } = require('./ts/util/logger/renderer_process_logging.js');
+
+initializeRendererProcessLogger();
 
 window.i18n = setupI18n({ crowdinLocale });
 
@@ -37,7 +42,7 @@ window.getCommitHash = () => configAny.commitHash;
 window.getNodeVersion = () => configAny.node_version;
 window.getOSRelease = () =>
   `${os.type()} ${os.release()}, Node.js ${config.node_version} ${os.platform()} ${os.arch()}`;
-window.saveLog = additionalText => ipc.send('save-debug-log', additionalText);
+window.saveLog = () => ipc.send('export-logs');
 window.getUserKeys = async () => {
   const pubkey = UserUtils.getOurPubKeyStrFromCache();
   const userEd25519SecretKey = (await UserUtils.getUserED25519KeyPairBytes())?.privKeyBytes;
@@ -57,9 +62,10 @@ window.sessionFeatureFlags = {
   replaceLocalizedStringsWithKeys: false,
   useReleaseChannels: false,
   debug: {
-    debugLogging: !_.isEmpty(process.env.SESSION_DEBUG),
-    debugLibsessionDumps: !_.isEmpty(process.env.SESSION_DEBUG_LIBSESSION_DUMPS),
-    debugBuiltSnodeRequests: !_.isEmpty(process.env.SESSION_DEBUG_BUILT_SNODE_REQUEST),
+    debugLogging: !isEmpty(process.env.SESSION_DEBUG),
+    debugLibsessionDumps: !isEmpty(process.env.SESSION_DEBUG_LIBSESSION_DUMPS),
+    debugBuiltSnodeRequests: !isEmpty(process.env.SESSION_DEBUG_BUILT_SNODE_REQUEST),
+    debugSwarmPolling: !isEmpty(process.env.SESSION_DEBUG_SWARM_POLLING),
     debugFileServerRequests: false,
     debugNonSnodeRequests: false,
     debugOnionRequests: false,
@@ -260,8 +266,6 @@ ipc.on('get-ready-for-shutdown', async () => {
 });
 
 // We pull these dependencies in now, from here, because they have Node.js dependencies
-
-require('./ts/util/logging');
 
 if (config.proxyUrl) {
   window.log.info('Using provided proxy url');

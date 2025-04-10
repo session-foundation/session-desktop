@@ -83,7 +83,10 @@ async function encrypt(
       return encryptForLegacyGroup(destination, plainTextPadded); // not padding it again, it is already done by libsession
     }
     default:
-      assertUnreachable(encryptionType, 'MessageEncrypter encrypt unreachable case');
+      assertUnreachable(
+        encryptionType,
+        `MessageEncrypter encrypt unreachable case "${encryptionType}"`
+      );
   }
 }
 

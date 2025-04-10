@@ -29,16 +29,18 @@ function isEmptyObject(obj: unknown) {
   return Object.keys(obj).length === 0;
 }
 
+// Note: not using isUnitTest as we will eventually move the whole folder to its own
+// package
+function isRunningInMocha(): boolean {
+  return typeof global.it === 'function';
+}
+
 export function setLogger(cb: Logger) {
   if (logger && !isRunningInMocha()) {
     // eslint-disable-next-line no-console
-    console.debug('logger already initialized. overwriding it');
+    console.debug('logger already initialized. overriding it');
   }
   logger = cb;
-}
-
-function isRunningInMocha(): boolean {
-  return typeof global.it === 'function';
 }
 
 export function setLocaleInUse(crowdinLocale: CrowdinLocale) {
@@ -425,7 +427,7 @@ class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends String {
       }
 
       if (!isPluralToken(this.token)) {
-        throw new Error('invalid token provided');
+        throw new Error(`invalid token provided: ${this.token}`);
       }
 
       return this.resolvePluralString();
