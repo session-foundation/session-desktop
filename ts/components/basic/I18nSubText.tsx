@@ -1,7 +1,6 @@
 import styled from 'styled-components';
 import { SessionDataTestId } from 'react';
-import { Localizer } from './Localizer';
-import type { LocalizerComponentPropsObject } from '../../localization/localeTools';
+import { Localizer, type LocalizerProps } from './Localizer';
 
 const StyledI18nSubTextContainer = styled('div')`
   font-size: var(--font-size-md);
@@ -22,7 +21,7 @@ export const I18nSubText = ({
 }: {
   className?: string;
   dataTestId: SessionDataTestId;
-  localizerProps: LocalizerComponentPropsObject;
+  localizerProps: LocalizerProps;
 }) => {
   return (
     <StyledI18nSubTextContainer className={className} data-testid={dataTestId}>

@@ -33,8 +33,7 @@ import {
   useLibGroupKicked,
   useLibGroupWeHaveSecretKey,
 } from '../../state/selectors/userGroups';
-import { type LocalizerComponentPropsObject } from '../../localization/localeTools';
-import { Localizer } from '../basic/Localizer';
+import { Localizer, type LocalizerProps } from '../basic/Localizer';
 
 const Container = styled.div<{ noExtraPadding: boolean }>`
   display: flex;
@@ -59,7 +58,7 @@ function TextNotification({
   dataTestId,
   noExtraPadding,
 }: {
-  details: LocalizerComponentPropsObject;
+  details: LocalizerProps;
   dataTestId: SessionDataTestId;
   noExtraPadding: boolean;
 }) {
@@ -183,7 +182,7 @@ const InvitedToGroupControlMessage = () => {
     return null;
   }
   // when restoring from seed we might not have the pubkey of who invited us, in that case, we just use a fallback
-  const details: LocalizerComponentPropsObject = conversationOrigin
+  const details: LocalizerProps = conversationOrigin
     ? weHaveSecretKey
       ? {
           token: 'groupInviteReinvite',
@@ -227,7 +226,7 @@ export const InvitedToGroup = () => {
   );
 };
 
-function useGetMessageDetailsForNoMessages(): LocalizerComponentPropsObject {
+function useGetMessageDetailsForNoMessages(): LocalizerProps {
   const selectedConversation = useSelectedConversationKey();
   const isGroupOrCommunity = useSelectedIsGroupOrCommunity();
 

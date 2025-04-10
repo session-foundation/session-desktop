@@ -9,15 +9,14 @@ import { updateBlockOrUnblockModal } from '../../../state/ducks/modalDialog';
 import { BlockedNumberController } from '../../../util';
 import { SessionWrapperModal } from '../../SessionWrapperModal';
 import { Flex } from '../../basic/Flex';
-import { Localizer } from '../../basic/Localizer';
+import { Localizer, type LocalizerProps } from '../../basic/Localizer';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../../basic/SessionButton';
 import { StyledModalDescriptionContainer } from '../shared/ModalDescriptionContainer';
 import { BlockOrUnblockModalState } from './BlockOrUnblockModalState';
-import type { LocalizerComponentPropsObject } from '../../../localization/localeTools';
 
 type ModalState = NonNullable<BlockOrUnblockModalState>;
 
-function getUnblockTokenAndArgs(names: Array<string>): LocalizerComponentPropsObject {
+function getUnblockTokenAndArgs(names: Array<string>): LocalizerProps {
   // multiple unblock is supported
   switch (names.length) {
     case 1:
@@ -36,7 +35,7 @@ function getUnblockTokenAndArgs(names: Array<string>): LocalizerComponentPropsOb
 function useBlockUnblockI18nDescriptionArgs({
   action,
   pubkeys,
-}: Pick<ModalState, 'action' | 'pubkeys'>): LocalizerComponentPropsObject {
+}: Pick<ModalState, 'action' | 'pubkeys'>): LocalizerProps {
   const names = useConversationsNicknameRealNameOrShortenPubkey(pubkeys);
   if (!pubkeys.length) {
     throw new Error('useI18nDescriptionArgsForAction called with empty list of pubkeys');

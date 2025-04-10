@@ -3,9 +3,8 @@ import styled from 'styled-components';
 import { findAndFormatContact } from '../../../../models/message';
 import { PubKey } from '../../../../session/types/PubKey';
 
-import { Localizer } from '../../../basic/Localizer';
+import { Localizer, type LocalizerProps } from '../../../basic/Localizer';
 import { nativeEmojiData } from '../../../../util/emoji';
-import type { LocalizerComponentPropsObject } from '../../../../localization/localeTools';
 
 export type TipPosition = 'center' | 'left' | 'right';
 
@@ -83,7 +82,7 @@ const getI18nComponentProps = (
   numberOfReactors: number,
   emoji: string,
   emojiName?: string
-): LocalizerComponentPropsObject => {
+): LocalizerProps => {
   const name = contacts[0];
   const other_name = contacts[1];
   const emoji_name = emojiName ? `:${emojiName}:` : emoji;
