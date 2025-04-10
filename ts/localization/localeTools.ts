@@ -106,7 +106,7 @@ type ArgsFromTokenStr<T extends SimpleLocalizerTokens | PluralLocalizerTokens> =
 
 export type ArgsFromToken<T extends MergedLocalizerTokens> = MappedToTsTypes<ArgsFromTokenStr<T>>;
 
-export type ArgsFromTokenWithIcon<
+type ArgsFromTokenWithIcon<
   T extends MergedLocalizerTokens,
   I extends string = string,
 > = MappedToTsTypes<ArgsFromTokenStr<T>> & { icon: I };
