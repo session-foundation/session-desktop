@@ -539,5 +539,3 @@ export type LocalizerComponentProps<
             args: ArgsFromToken<T>;
           }
   : never;
-
-export type LocalizerComponentPropsObject = LocalizerComponentProps<MergedLocalizerTokens>;

@@ -13,8 +13,7 @@ import {
 import useDebounce from 'react-use/lib/useDebounce';
 import type { CSSProperties } from 'styled-components';
 import { isString } from 'lodash';
-import { Localizer } from './basic/Localizer';
-import type { LocalizerComponentPropsObject } from '../localization/localeTools';
+import { Localizer, type LocalizerProps } from './basic/Localizer';
 
 type TipPosition = 'center' | 'left' | 'right';
 
@@ -66,7 +65,7 @@ const StyledTooltip = styled.div<{
 
 type Props = {
   reference: RefObject<HTMLDivElement>;
-  content: LocalizerComponentPropsObject | string;
+  content: LocalizerProps | string;
   readyToShow: boolean;
   tooltipPosition?: TipPosition;
   x: number;
@@ -119,7 +118,7 @@ export const SessionTooltip = ({
   dataTestId,
 }: {
   children: ReactNode;
-  content: LocalizerComponentPropsObject | string;
+  content: LocalizerProps | string;
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
   maxContentWidth?: string;

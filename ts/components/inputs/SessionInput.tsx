@@ -16,8 +16,7 @@ import { AnimatedFlex, Flex } from '../basic/Flex';
 import { SpacerMD } from '../basic/Text';
 import { SessionIconButton } from '../icon';
 import { useHTMLDirection } from '../../util/i18n/rtlSupport';
-import { Localizer } from '../basic/Localizer';
-import type { LocalizerComponentPropsObject } from '../../localization/localeTools';
+import { Localizer, type LocalizerProps } from '../basic/Localizer';
 
 type TextSizes = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
@@ -183,7 +182,7 @@ const StyledPlaceholder = styled(motion.div)<{
 
 const ErrorItem = (props: {
   id: string;
-  error: LocalizerComponentPropsObject | string | undefined;
+  error: LocalizerProps | string | undefined;
   hasError: boolean;
   setHasError: (value: boolean) => void;
   setTextErrorStyle: (value: boolean) => void;
@@ -191,9 +190,7 @@ const ErrorItem = (props: {
   dataTestId?: SessionDataTestId;
 }) => {
   const { loading, error, hasError, setTextErrorStyle, setHasError } = props;
-  const [errorValue, setErrorValue] = useState<LocalizerComponentPropsObject | string | undefined>(
-    undefined
-  );
+  const [errorValue, setErrorValue] = useState<LocalizerProps | string | undefined>(undefined);
 
   useEffect(() => {
     // if we have an error we want to continue to show that error unless it changes to a new error, we dont care if the input value changes
@@ -289,7 +286,7 @@ const StyledCtaContainer = styled(motion.div)`
 `;
 
 type Props = {
-  error?: LocalizerComponentPropsObject | string;
+  error?: LocalizerProps | string;
   type?: string;
   value?: string;
   placeholder?: string;
