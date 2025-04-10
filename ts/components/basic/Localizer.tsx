@@ -24,6 +24,11 @@ const StyledHtmlRenderer = styled.span`
   * > span {
     color: var(--renderer-span-primary-color);
   }
+
+  * > span[role='img'] {
+    font-family: var(--font-icon);
+    vertical-align: top;
+  }
 `;
 
 /**
@@ -38,10 +43,15 @@ const StyledHtmlRenderer = styled.span`
 export const Localizer = <T extends MergedLocalizerTokens>(props: LocalizerComponentProps<T>) => {
   const args = 'args' in props ? props.args : undefined;
 
-  const rawString = window.i18n.getRawMessage<T>(
+  let rawString: string = window.i18n.getRawMessage<T>(
     getCrowdinLocale(),
     ...([props.token, args] as GetMessageArgs<T>)
   );
+
+  // NOTE If the string contains an icon we want to replace it with the relevant html from LUCIDE_ICONS before we santize the args
+  if (args && 'icon' in args && args.icon) {
+    rawString = rawString.replaceAll(/\{icon}/g, args.icon as string);
+  }
 
   const containsFormattingTags = createSupportedFormattingTagsRegex().test(rawString);
   const cleanArgs = args && containsFormattingTags ? sanitizeArgs(args) : args;

@@ -133,3 +133,13 @@ export const PASSWORD_LENGTH = {
    */
   MAX_PASSWORD_LEN: 64,
 };
+
+/**
+ * Used for rendering icons inside of the Localizer component
+ * @note Current: Lucide v0.473.0
+ * @note The Lucide Icon font must be installed locally to see these icons.
+ * @note Download from https://github.com/lucide-icons/lucide/releases
+ */
+export enum LUCIDE_ICONS {
+  EXTERNAL_LINK_ICON = "<span role='img' aria-label='external link icon'></span>",
+}
