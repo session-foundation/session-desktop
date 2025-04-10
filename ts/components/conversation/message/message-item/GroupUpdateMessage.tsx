@@ -10,17 +10,16 @@ import {
   useSelectedIsGroupV2,
   useSelectedNicknameOrProfileNameOrShortenedPubkey,
 } from '../../../../state/selectors/selectedConversation';
-import { Localizer } from '../../../basic/Localizer';
+import { Localizer, type LocalizerProps } from '../../../basic/Localizer';
 import { ExpirableReadableMessage } from './ExpirableReadableMessage';
 import { NotificationBubble } from './notification-bubble/NotificationBubble';
-import type { LocalizerComponentPropsObject } from '../../../../localization/localeTools';
 import type { WithMessageId } from '../../../../session/types/with';
 import { useMessageGroupUpdateChange } from '../../../../state/selectors';
 import { assertUnreachable } from '../../../../types/sqlSharedTypes';
 
 // This component is used to display group updates in the conversation view.
 
-function useChangeItem(change?: PropsForGroupUpdateType): LocalizerComponentPropsObject | null {
+function useChangeItem(change?: PropsForGroupUpdateType): LocalizerProps | null {
   const groupName = useSelectedNicknameOrProfileNameOrShortenedPubkey();
   const isGroupV2 = useSelectedIsGroupV2();
 

@@ -106,6 +106,16 @@ type ArgsFromTokenStr<T extends SimpleLocalizerTokens | PluralLocalizerTokens> =
 
 export type ArgsFromToken<T extends MergedLocalizerTokens> = MappedToTsTypes<ArgsFromTokenStr<T>>;
 
+type ArgsFromTokenWithIcon<T extends MergedLocalizerTokens, I> = MappedToTsTypes<
+  ArgsFromTokenStr<T>
+> & { icon: I };
+
+export function isArgsFromTokenWithIcon<T extends MergedLocalizerTokens, I extends string>(
+  args: ArgsFromToken<T> | undefined
+): args is ArgsFromTokenWithIcon<T, I> {
+  return !!args && !isEmptyObject(args) && 'icon' in args && typeof args.icon === 'string';
+}
+
 /** The arguments for retrieving a localized message */
 export type GetMessageArgs<T extends MergedLocalizerTokens> = T extends MergedLocalizerTokens
   ? T extends MergedTokenWithArgs
@@ -118,7 +128,7 @@ type MappedToTsTypes<T extends Record<string, DynamicArgStr>> = {
 };
 
 function propsToTuple<T extends MergedLocalizerTokens>(
-  opts: LocalizerComponentProps<T>
+  opts: LocalizerComponentProps<T, string>
 ): GetMessageArgs<T> {
   return (
     isTokenWithArgs(opts.token) ? [opts.token, opts.args] : [opts.token]
@@ -515,13 +525,17 @@ type LocalizerComponentBaseProps<T extends MergedLocalizerTokens> = {
 };
 
 /** The props for the localization component */
-export type LocalizerComponentProps<T extends MergedLocalizerTokens> =
-  T extends MergedLocalizerTokens
-    ? ArgsFromToken<T> extends never
+export type LocalizerComponentProps<
+  T extends MergedLocalizerTokens,
+  I,
+> = T extends MergedLocalizerTokens
+  ? ArgsFromToken<T> extends never
+    ? LocalizerComponentBaseProps<T> & { args?: undefined }
+    : ArgsFromToken<T> extends Record<string, never>
       ? LocalizerComponentBaseProps<T> & { args?: undefined }
-      : ArgsFromToken<T> extends Record<string, never>
-        ? LocalizerComponentBaseProps<T> & { args?: undefined }
-        : LocalizerComponentBaseProps<T> & { args: ArgsFromToken<T> }
-    : never;
-
-export type LocalizerComponentPropsObject = LocalizerComponentProps<MergedLocalizerTokens>;
+      : ArgsFromToken<T> extends { icon: string }
+        ? LocalizerComponentBaseProps<T> & { args: ArgsFromTokenWithIcon<T, I> }
+        : LocalizerComponentBaseProps<T> & {
+            args: ArgsFromToken<T>;
+          }
+  : never;

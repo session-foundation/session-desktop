@@ -56,8 +56,8 @@ import { GroupUpdateMessageFactory } from '../session/messages/message_factory/g
 import { MessageSender } from '../session/sending';
 import { StoreGroupRequestFactory } from '../session/apis/snode_api/factories/StoreGroupRequestFactory';
 import { DURATION } from '../session/constants';
-import type { LocalizerComponentPropsObject } from '../localization/localeTools';
 import { GroupInvite } from '../session/utils/job_runners/jobs/GroupInviteJob';
+import type { LocalizerProps } from '../components/basic/Localizer';
 
 export async function copyPublicKeyByConvoId(convoId: string) {
   if (OpenGroupUtils.isOpenGroupV2(convoId)) {
@@ -267,7 +267,7 @@ export const declineConversationWithConfirm = ({
 
   const convoName = ConvoHub.use().get(conversationId)?.getNicknameOrRealUsernameOrPlaceholder();
 
-  const i18nMessage: LocalizerComponentPropsObject = isGroupV2
+  const i18nMessage: LocalizerProps = isGroupV2
     ? alsoBlock && originNameToBlock
       ? { token: 'blockDescription', args: { name: originNameToBlock } } // groupv2, and blocking by sender name
       : { token: 'groupInviteDelete' } // groupv2, and no info about the sender, falling back to delete only

@@ -20,11 +20,10 @@ import { ExpirableReadableMessage } from './message/message-item/ExpirableReadab
 import { ConversationInteraction } from '../../interactions';
 import { ConvoHub } from '../../session/conversations';
 import { updateConfirmModal } from '../../state/ducks/modalDialog';
-import { Localizer } from '../basic/Localizer';
+import { Localizer, type LocalizerProps } from '../basic/Localizer';
 import { SessionButtonColor } from '../basic/SessionButton';
 import { SessionIcon } from '../icon';
 import { getTimerNotificationStr } from '../../models/timerNotifications';
-import type { LocalizerComponentPropsObject } from '../../localization/localeTools';
 import type { WithMessageId } from '../../session/types/with';
 import {
   useMessageAuthor,
@@ -55,7 +54,7 @@ function useFollowSettingsButtonClick({ messageId }: WithMessageId) {
         ? window.i18n('disappearingMessagesTypeRead')
         : window.i18n('disappearingMessagesTypeSent');
 
-    const i18nMessage: LocalizerComponentPropsObject = disabled
+    const i18nMessage: LocalizerProps = disabled
       ? {
           token: 'disappearingMessagesFollowSettingOff',
         }

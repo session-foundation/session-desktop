@@ -10,10 +10,10 @@ import { SessionWrapperModal2 } from '../SessionWrapperModal2';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionRadioGroup, SessionRadioItems } from '../basic/SessionRadioGroup';
 import { SessionSpinner } from '../loading';
-import type { LocalizerComponentPropsObject } from '../../localization/localeTools';
 import { I18nSubText } from '../basic/I18nSubText';
 import { Flex } from '../basic/Flex';
 import { SpacerSM, SpacerXS } from '../basic/Text';
+import type { LocalizerProps } from '../basic/Localizer';
 
 const StyledMessageContainer = styled(Flex)`
   text-align: center;
@@ -77,7 +77,7 @@ const ConfirmationButtons = ({
 
 export interface SessionConfirmDialogProps {
   children?: ReactNode;
-  i18nMessage?: LocalizerComponentPropsObject;
+  i18nMessage?: LocalizerProps;
   title?: string;
   radioOptions?: SessionRadioItems;
   onOk?: any;

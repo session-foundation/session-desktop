@@ -23,6 +23,7 @@ type ThemeGlobals = {
   '--font-default': string;
   '--font-accent': string;
   '--font-mono': string;
+  '--font-icon': string;
 
   /* Headings */
   '--font-size-h1': string;
@@ -179,6 +180,7 @@ export const THEME_GLOBALS: ThemeGlobals = {
   '--font-default': 'Roboto',
   '--font-accent': 'Loor',
   '--font-mono': 'Roboto Mono',
+  '--font-icon': 'Lucide',
 
   '--font-size-h1': '30px',
   '--font-size-h1-new': '36px',
