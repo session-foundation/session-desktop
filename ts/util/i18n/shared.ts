@@ -1,6 +1,7 @@
 import { Locale } from 'date-fns';
 import { CrowdinLocale } from '../../localization/constants';
 import { timeLocaleMap } from './timeLocaleMap';
+import { isUnitTest } from '../../shared/env_vars';
 
 let mappedBrowserLocaleDisplayed = false;
 let crowdinLocale: CrowdinLocale | undefined;
@@ -11,13 +12,8 @@ let crowdinLocale: CrowdinLocale | undefined;
  * @deprecated we want to use a normal logger instead of this function, eventually.
  */
 export function i18nLog(message: string) {
-  if (typeof window !== 'undefined') {
-    // eslint-disable-next-line no-console
-    (window?.log?.error ?? console.log)(`i18n: ${message}`);
-  } else {
-    // eslint-disable-next-line no-console
-    console.log(`i18n: ${message}`);
-  }
+  // eslint-disable-next-line no-console
+  console.log(`i18n: ${message}`);
 }
 
 export function getTimeLocaleDictionary() {
@@ -80,7 +76,7 @@ export function getBrowserLocale() {
 }
 
 export function setInitialLocale(crowdinLocaleArg: CrowdinLocale) {
-  if (crowdinLocale) {
+  if (crowdinLocale && !isUnitTest()) {
     i18nLog('setInitialLocale: crowdinLocale is already init');
   }
   crowdinLocale = crowdinLocaleArg;

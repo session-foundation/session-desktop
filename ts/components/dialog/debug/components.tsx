@@ -3,11 +3,13 @@ import { ipcRenderer, shell } from 'electron';
 import { useDispatch } from 'react-redux';
 import { useState } from 'react';
 import useAsyncFn from 'react-use/lib/useAsyncFn';
+import useInterval from 'react-use/lib/useInterval';
+import { filesize } from 'filesize';
+
 import { Flex } from '../../basic/Flex';
 import { SpacerXS } from '../../basic/Text';
 import { localize } from '../../../localization/localeTools';
 import { CopyToClipboardIcon } from '../../buttons';
-import { saveLogToDesktop } from '../../../util/logging';
 import { Localizer } from '../../basic/Localizer';
 import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
 import { ToastUtils, UserUtils } from '../../../session/utils';
@@ -18,9 +20,11 @@ import { updateDebugMenuModal } from '../../../state/ducks/modalDialog';
 import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_constants';
 import { type ReleaseChannels } from '../../../updater/types';
 import { fetchLatestRelease } from '../../../session/fetch_latest_release';
+import { saveLogToDesktop } from '../../../util/logger/renderer_process_logging';
+import { DURATION } from '../../../session/constants';
+import { Errors } from '../../../types/Errors';
 
 const CheckVersionButton = ({ channelToCheck }: { channelToCheck: ReleaseChannels }) => {
-  const channelName = channelToCheck === 'latest' ? 'stable' : channelToCheck;
   const [loading, setLoading] = useState(false);
   const state = useAsync(async () => {
     const userEd25519KeyPairBytes = await UserUtils.getUserED25519KeyPairBytes();
@@ -82,7 +86,7 @@ const CheckVersionButton = ({ channelToCheck }: { channelToCheck: ReleaseChannel
       }}
     >
       <SessionSpinner loading={loading || state.loading} color={'var(--text-primary-color)'} />
-      {!loading && !state.loading ? `Check ${channelName} version` : null}
+      {!loading && !state.loading ? `Check ${channelToCheck} version` : null}
     </SessionButton>
   );
 };
@@ -130,6 +134,50 @@ const CheckForUpdatesButton = () => {
   );
 };
 
+/**
+ * Using a function here to avoid a useCallback below
+ */
+function fetchLogSizeFromIpc() {
+  return ipcRenderer.invoke('get-logs-folder-size');
+}
+
+const ClearOldLogsButton = () => {
+  const [logSize, setLogSize] = useState(0);
+  useInterval(async () => {
+    const fetched = await fetchLogSizeFromIpc();
+    if (fetched && Number.isFinite(fetched)) {
+      setLogSize(fetched);
+    } else {
+      setLogSize(0);
+    }
+  }, 1 * DURATION.SECONDS);
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_state, handleDeleteAllLogs] = useAsyncFn(async () => {
+    try {
+      const afterCleanSize = await ipcRenderer.invoke('delete-all-logs', true);
+      window.log.warn(
+        `[debugMenu] ClearOldLogsButton clicked. After clean: ${filesize(afterCleanSize)}`
+      );
+      setLogSize(afterCleanSize);
+      ToastUtils.pushToastInfo('ClearOldLogsButton', 'Cleared old logs!');
+    } catch (error) {
+      window.log.error(`[debugMenu] ClearOldLogsButton ${Errors.toString(error)}`);
+      ToastUtils.pushToastError('ClearOldLogsButtonError', 'Clearing logs failed! See logs');
+    }
+  });
+
+  return (
+    <SessionButton
+      onClick={() => {
+        void handleDeleteAllLogs();
+      }}
+    >
+      Clear old logs {filesize(logSize)}
+    </SessionButton>
+  );
+};
+
 export const DebugActions = () => {
   const dispatch = useDispatch();
 
@@ -139,11 +187,11 @@ export const DebugActions = () => {
       <SpacerXS />
       <Flex
         $container={true}
-        width="100%"
+        maxWidth="900px"
         $justifyContent="flex-start"
         $alignItems="flex-start"
         $flexWrap="wrap"
-        $flexGap="var(--margins-md) var(--margins-lg)"
+        $flexGap="var(--margins-lg)"
       >
         <SessionButton
           buttonColor={SessionButtonColor.Danger}
@@ -185,7 +233,8 @@ export const DebugActions = () => {
           <Localizer token="updateReleaseNotes" />
         </SessionButton>
         <CheckForUpdatesButton />
-        <CheckVersionButton channelToCheck="latest" />
+        <ClearOldLogsButton />
+        <CheckVersionButton channelToCheck="stable" />
         {window.sessionFeatureFlags.useReleaseChannels ? (
           <CheckVersionButton channelToCheck="alpha" />
         ) : null}
@@ -216,10 +265,10 @@ export const AboutInfo = () => {
   const aboutInfo = [
     `${localize('updateVersion').withArgs({ version: window.getVersion() })}`,
     `${localize('systemInformationDesktop').withArgs({ information: window.getOSRelease() })}`,
-    `${localize('commitHashDesktop').withArgs({ hash: window.getCommitHash() || window.i18n('unknown') })}`,
-    `Libsession Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_UTIL_VERSION || 'Unknown'}`,
-    `Libsession NodeJS Version: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_VERSION || 'Unknown'}`,
-    `Libsession NodeJS Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_COMMIT || 'Unknown'}`,
+    `${localize('commitHashDesktop').withArgs({ hash: window.getCommitHash() || localize('unknown').toString() })}`,
+    `Libsession Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_UTIL_VERSION || localize('unknown').toString()}`,
+    `Libsession NodeJS Version: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_VERSION || localize('unknown').toString()}`,
+    `Libsession NodeJS Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_COMMIT || localize('unknown').toString()}`,
     `${environmentStates.join(' - ')}`,
   ];
 

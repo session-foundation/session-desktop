@@ -10,6 +10,12 @@ const config = url.parse(window.location.toString(), true).query;
 const { crowdinLocale } = ipcRenderer.sendSync('locale-data');
 
 window.theme = config.theme;
+
+// Note: we have to call initializeRendererProcessLogger before setupI18n
+const { initializeRendererProcessLogger } = require('./ts/util/logger/renderer_process_logging.js');
+
+initializeRendererProcessLogger();
+
 window.i18n = setupI18n({
   crowdinLocale,
 });

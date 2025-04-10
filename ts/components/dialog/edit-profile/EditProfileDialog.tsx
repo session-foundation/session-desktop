@@ -339,6 +339,7 @@ export const EditProfileDialog = () => {
               setProfileName(name);
               setCannotContinue(false);
             }}
+            loading={loading}
             editable={!loading}
             tabIndex={0}
             required={true}

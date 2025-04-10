@@ -1,7 +1,7 @@
+import { saveLogToDesktop } from '../../../util/logger/renderer_process_logging';
 import { SessionButtonShape, SessionButtonType } from '../../basic/SessionButton';
 
 import { SessionSettingButtonItem, SessionSettingsTitleWithLink } from '../SessionSettingListItem';
-import { saveLogToDesktop } from '../../../util/logging';
 
 export const SettingsCategoryHelp = () => {
   return (

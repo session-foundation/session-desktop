@@ -62,7 +62,10 @@ async function encrypt(
       throw new Error('legacy groups are readonly'); // legacy groups are readonly
     }
     default:
-      assertUnreachable(encryptionType, 'MessageEncrypter encrypt unreachable case');
+      assertUnreachable(
+        encryptionType,
+        `MessageEncrypter encrypt unreachable case "${encryptionType}"`
+      );
   }
 }
 

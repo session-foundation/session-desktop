@@ -25,9 +25,6 @@ export const StyledRightPanelContainer = styled.div`
 `;
 
 const StyledRightPanel = styled(Flex)`
-  h2 {
-    word-break: break-word;
-  }
   .description {
     margin: var(--margins-md) 0;
     min-height: 4rem;

@@ -58,10 +58,6 @@ const StyledGroupMemberListContainer = styled.div`
   width: 100%;
   overflow-x: hidden;
   overflow-y: auto;
-
-  &::-webkit-scrollbar-track {
-    background-color: var(--background-secondary-color);
-  }
 `;
 
 const NoContacts = () => {
@@ -176,6 +172,7 @@ export const OverlayClosedGroupV2 = () => {
           onValueChanged={onValueChanged}
           onEnterPressed={onEnterPressed}
           error={groupNameError}
+          loading={isCreatingGroup}
           maxLength={LIBSESSION_CONSTANTS.BASE_GROUP_MAX_NAME_LENGTH}
           textSize="md"
           centerText={true}
@@ -188,7 +185,14 @@ export const OverlayClosedGroupV2 = () => {
         {/* TODO: localize those strings once out releasing those buttons for real Remove after QA */}
         {hasClosedGroupV2QAButtons() && (
           <>
-            <span style={{ display: 'flex', alignItems: 'center' }}>
+            <span
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                width: '100%',
+              }}
+            >
               Invite as admin?{'  '}
               <SessionToggle
                 active={inviteAsAdmin}

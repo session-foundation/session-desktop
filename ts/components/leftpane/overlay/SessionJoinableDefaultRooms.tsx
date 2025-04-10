@@ -8,7 +8,7 @@ import { DefaultRoomsState, updateDefaultBase64RoomData } from '../../../state/d
 import { StateType } from '../../../state/reducer';
 import { Avatar, AvatarSize } from '../../avatar/Avatar';
 import { Flex } from '../../basic/Flex';
-import { H4 } from '../../basic/Heading';
+import { H8 } from '../../basic/Heading';
 import { PillContainerHoverable, StyledPillContainerHoverable } from '../../basic/PillContainer';
 import { SpacerXS } from '../../basic/Text';
 import { SessionSpinner } from '../../loading';
@@ -173,9 +173,9 @@ export const SessionJoinableRooms = (props: {
       dir={htmlDirection}
       width="100%"
     >
-      <H4>
+      <H8>
         <Localizer token="communityJoinOfficial" />
-      </H4>
+      </H8>
       <SpacerXS />
       <Flex
         $container={true}

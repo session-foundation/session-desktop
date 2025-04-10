@@ -43,17 +43,18 @@ const FlagToggle = ({
       $container={true}
       width="100%"
       $alignItems="center"
-      $justifyContent="space-between"
+      $justifyContent="flex-start"
+      $flexGap="var(--margins-sm)"
     >
+      <SessionToggle
+        active={value}
+        onClick={() => void handleFeatureFlagToggle({ flag, parentFlag, forceUpdate })}
+      />
       <span>
         {flag}
         {DEBUG_FEATURE_FLAGS.DEV.includes(flag) ? <HintText>Experimental</HintText> : null}
         {DEBUG_FEATURE_FLAGS.UNTESTED.includes(flag) ? <HintText>Untested</HintText> : null}
       </span>
-      <SessionToggle
-        active={value}
-        onClick={() => void handleFeatureFlagToggle({ flag, parentFlag, forceUpdate })}
-      />
     </Flex>
   );
 };

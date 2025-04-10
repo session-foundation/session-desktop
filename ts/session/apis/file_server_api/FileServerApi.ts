@@ -143,7 +143,7 @@ export const getLatestReleaseFromFileServer = async (
   let releaseChannel = Storage.get('releaseChannel') as ReleaseChannels;
 
   if (!releaseChannel || !isReleaseChannel(releaseChannel)) {
-    releaseChannel = 'latest';
+    releaseChannel = 'stable';
     await Storage.put('releaseChannel', releaseChannel);
   }
 

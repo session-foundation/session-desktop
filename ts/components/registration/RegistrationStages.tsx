@@ -1,6 +1,6 @@
-import { shell } from 'electron';
 import { AnimatePresence } from 'framer-motion';
 import styled from 'styled-components';
+import { useDispatch } from 'react-redux';
 import { Data } from '../../data/data';
 import { ConvoHub } from '../../session/conversations';
 import {
@@ -19,6 +19,7 @@ import { SpacerSM, SpacerXL, SpacerXS } from '../basic/Text';
 import { SessionIcon, SessionIconButton } from '../icon';
 import { OnboardContainer } from './components';
 import { CreateAccount, RestoreAccount, Start } from './stages';
+import { showLinkVisitWarningDialog } from '../dialog/OpenUrlModal';
 
 export async function resetRegistration() {
   await Data.removeAll();
@@ -41,6 +42,8 @@ export const RegistrationStages = () => {
   const creationStep = useOnboardAccountCreationStep();
   const restorationStep = useOnboardAccountRestorationStep();
 
+  const dispatch = useDispatch();
+
   return (
     <AnimatePresence>
       <StyledRegistrationContainer $container={true} $flexDirection="column">
@@ -61,7 +64,7 @@ export const RegistrationStages = () => {
               style={{ border: '2px solid var(--text-primary-color)', borderRadius: '9999px' }}
               dataTestId="session-faq-link"
               onClick={() => {
-                void shell.openExternal('https://getsession.org/faq');
+                showLinkVisitWarningDialog('https://getsession.org/faq', dispatch);
               }}
             />
             <SpacerSM />
@@ -75,7 +78,7 @@ export const RegistrationStages = () => {
               style={{ border: '2px solid var(--text-primary-color)', borderRadius: '9999px' }}
               dataTestId="session-website-link"
               onClick={() => {
-                void shell.openExternal('https://getsession.org');
+                showLinkVisitWarningDialog('https://getsession.org', dispatch);
               }}
             />
           </Flex>

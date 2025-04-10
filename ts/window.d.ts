@@ -24,6 +24,7 @@ export type SessionFeatureFlags = {
     debugLogging: boolean;
     debugLibsessionDumps: boolean;
     debugBuiltSnodeRequests: boolean;
+    debugSwarmPolling: boolean;
     debugFileServerRequests: boolean;
     debugNonSnodeRequests: boolean;
     debugOnionRequests: boolean;
@@ -40,7 +41,6 @@ If you import anything in global.d.ts, the type system won't work correctly.
 declare global {
   interface Window {
     Events: any;
-    Session: any;
     Whisper: { events: EventEmitter };
     clearLocalData: () => Promise<void>;
     clipboard: any;
@@ -159,7 +159,7 @@ declare global {
     getCommitHash: () => string | undefined;
     getVersion: () => string;
     getOSRelease: () => string;
-    saveLog: (additionalText?: string) => void;
+    saveLog: () => void;
     setAutoHideMenuBar: (val: boolean) => void;
     setMenuBarVisibility: (val: boolean) => void;
     contextMenuShown: boolean;

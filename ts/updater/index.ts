@@ -1,8 +1,8 @@
 import type { BrowserWindow } from 'electron';
 import { start as startUpdater, stop as stopUpdater } from './updater';
-import type { LoggerType } from './common';
 import type { UserConfig } from '../node/config/user_config';
 import type { SetupI18nReturnType } from '../types/localizer';
+import type { LoggerType } from '../util/logger/Logging';
 
 let initialized = false;
 let localUserConfig: UserConfig;

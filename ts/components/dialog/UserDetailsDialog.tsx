@@ -74,10 +74,11 @@ export const UserDetailsDialog = (props: UserDetailsModalState) => {
         <SessionInput
           value={props.conversationId}
           textSize="md"
-          centerText={true}
           editable={false}
           monospaced={true}
+          centerText={true}
           isTextArea={true}
+          padding={'var(--margins-xl) var(--margins-md)'}
         />
       </Flex>
       <SpacerLG />

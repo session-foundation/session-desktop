@@ -90,9 +90,10 @@ export const classicLight: ThemeColorVariables = {
   '--search-bar-icon-color': 'var(--text-secondary-color)',
   '--search-bar-icon-hover-color': 'var(--text-primary-color)',
 
-  '--scroll-bar-track-color': 'none',
-  '--scroll-bar-thumb-color': THEMES.CLASSIC_LIGHT.COLOR2,
-  '--scroll-bar-thumb-hover-color': THEMES.CLASSIC_LIGHT.COLOR1,
+  '--scroll-bar-track-color': `rgba(${hexColorToRGB(THEMES.CLASSIC_LIGHT.COLOR1)}, 0.10)`,
+  '--scroll-bar-track-hover-color': `rgba(${hexColorToRGB(THEMES.CLASSIC_LIGHT.COLOR1)}, 0.20)`,
+  '--scroll-bar-thumb-color': `rgba(${hexColorToRGB(THEMES.CLASSIC_LIGHT.COLOR1)}, 0.20)`,
+  '--scroll-bar-thumb-hover-color': `rgba(${hexColorToRGB(THEMES.CLASSIC_LIGHT.COLOR1)}, 1.0)`,
 
   '--zoom-bar-track-color': THEMES.CLASSIC_LIGHT.COLOR3,
   '--zoom-bar-thumb-color': 'var(--primary-color)',
@@ -116,9 +117,12 @@ export const classicLight: ThemeColorVariables = {
   '--emoji-reaction-bar-icon-background-color': 'var(--background-primary-color)',
   '--emoji-reaction-bar-icon-color': 'var(--text-primary-color)',
 
+  '--modal-background-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.2)`,
   '--modal-background-content-color': THEMES.CLASSIC_LIGHT.COLOR6,
   '--modal-text-color': 'var(--text-primary-color)',
   '--modal-text-danger-color': 'var(--danger-color)',
+  '--modal-shadow-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.25)`,
+  '--modal-drop-shadow': `0px 0px 40px 0px var(--modal-shadow-color)`,
 
   '--toast-background-color': 'var(--background-primary-color)',
   '--toast-text-color': 'var(--text-primary-color)',

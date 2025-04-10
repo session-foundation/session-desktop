@@ -170,6 +170,7 @@ export const OverlayMessage = () => {
         error={pubkeyOrOnsError}
         centerText={true}
         isTextArea={true}
+        loading={loading}
         inputDataTestId="new-session-conversation"
       />
       <SpacerMD />
