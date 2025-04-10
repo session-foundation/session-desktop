@@ -2,11 +2,12 @@ import styled from 'styled-components';
 import { SessionHtmlRenderer } from './SessionHTMLRenderer';
 import {
   GetMessageArgs,
-  LocalizerComponentProps,
   MergedLocalizerTokens,
   sanitizeArgs,
+  type LocalizerComponentPropsWithIcon,
 } from '../../localization/localeTools';
 import { getCrowdinLocale } from '../../util/i18n/shared';
+import { LUCIDE_INLINE_ICONS, type LucideInlineIconKeys } from '../icon/lucide';
 
 /** An array of supported html tags to render if found in a string */
 export const supportedFormattingTags = ['b', 'i', 'u', 's', 'br', 'span'];
@@ -31,6 +32,11 @@ const StyledHtmlRenderer = styled.span`
   }
 `;
 
+export type LocalizerProps = LocalizerComponentPropsWithIcon<
+  MergedLocalizerTokens,
+  LucideInlineIconKeys
+>;
+
 /**
  * Retrieve a localized message string, substituting dynamic parts where necessary and formatting it as HTML if necessary.
  *
@@ -40,7 +46,9 @@ const StyledHtmlRenderer = styled.span`
  *
  * @returns The localized message string with substitutions and formatting applied.
  */
-export const Localizer = <T extends MergedLocalizerTokens>(props: LocalizerComponentProps<T>) => {
+export const Localizer = <T extends MergedLocalizerTokens>(
+  props: LocalizerComponentPropsWithIcon<T, LucideInlineIconKeys>
+) => {
   const args = 'args' in props ? props.args : undefined;
 
   let rawString: string = window.i18n.getRawMessage<T>(
@@ -50,7 +58,7 @@ export const Localizer = <T extends MergedLocalizerTokens>(props: LocalizerCompo
 
   // NOTE If the string contains an icon we want to replace it with the relevant html from LUCIDE_ICONS before we santize the args
   if (args && 'icon' in args && args.icon) {
-    rawString = rawString.replaceAll(/\{icon}/g, args.icon as string);
+    rawString = rawString.replaceAll(/\{icon}/g, LUCIDE_INLINE_ICONS[args.icon]);
   }
 
   const containsFormattingTags = createSupportedFormattingTagsRegex().test(rawString);

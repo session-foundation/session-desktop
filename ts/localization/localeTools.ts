@@ -524,4 +524,13 @@ export type LocalizerComponentProps<T extends MergedLocalizerTokens> =
         : LocalizerComponentBaseProps<T> & { args: ArgsFromToken<T> }
     : never;
 
+export type LocalizerComponentPropsWithIcon<
+  A extends MergedLocalizerTokens,
+  B,
+> = LocalizerComponentProps<A> & {
+  args?: ArgsFromToken<A> & {
+    icon?: B;
+  };
+};
+
 export type LocalizerComponentPropsObject = LocalizerComponentProps<MergedLocalizerTokens>;
