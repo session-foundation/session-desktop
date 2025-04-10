@@ -106,10 +106,9 @@ type ArgsFromTokenStr<T extends SimpleLocalizerTokens | PluralLocalizerTokens> =
 
 export type ArgsFromToken<T extends MergedLocalizerTokens> = MappedToTsTypes<ArgsFromTokenStr<T>>;
 
-type ArgsFromTokenWithIcon<
-  T extends MergedLocalizerTokens,
-  I extends string = string,
-> = MappedToTsTypes<ArgsFromTokenStr<T>> & { icon: I };
+type ArgsFromTokenWithIcon<T extends MergedLocalizerTokens, I> = MappedToTsTypes<
+  ArgsFromTokenStr<T>
+> & { icon: I };
 
 export function isArgsFromTokenWithIcon<T extends MergedLocalizerTokens, I extends string>(
   args: ArgsFromToken<T> | undefined
@@ -129,7 +128,7 @@ type MappedToTsTypes<T extends Record<string, DynamicArgStr>> = {
 };
 
 function propsToTuple<T extends MergedLocalizerTokens>(
-  opts: LocalizerComponentProps<T>
+  opts: LocalizerComponentProps<T, string>
 ): GetMessageArgs<T> {
   return (
     isTokenWithArgs(opts.token) ? [opts.token, opts.args] : [opts.token]
@@ -528,7 +527,7 @@ type LocalizerComponentBaseProps<T extends MergedLocalizerTokens> = {
 /** The props for the localization component */
 export type LocalizerComponentProps<
   T extends MergedLocalizerTokens,
-  I extends string = string,
+  I,
 > = T extends MergedLocalizerTokens
   ? ArgsFromToken<T> extends never
     ? LocalizerComponentBaseProps<T> & { args?: undefined }
