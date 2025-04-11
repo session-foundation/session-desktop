@@ -53,6 +53,8 @@ import { AttachmentInfo, MessageInfo } from './components';
 import { AttachmentCarousel } from './components/AttachmentCarousel';
 import { ToastUtils } from '../../../../../session/utils';
 import { showCopyAccountIdAction } from '../../../../menu/items/CopyAccountId/guard';
+import { LUCIDE_ICONS_UNICODE } from '../../../../icon/lucide';
+import { PanelIconLucideIcon } from '../../../../buttons/PanelIconButton';
 
 // NOTE we override the default max-widths when in the detail isDetailView
 const StyledMessageBody = styled.div`
@@ -203,7 +205,7 @@ function CopyMessageBodyButton({ messageId }: WithMessageIdOpt) {
   return (
     <PanelIconButton
       text={window.i18n('copy')}
-      iconType="copy"
+      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.COPY} />}
       onClick={() => {
         clipboard.writeText(messageBody || '');
         ToastUtils.pushCopiedToClipBoard();
@@ -221,7 +223,7 @@ function ReplyToMessageButton({ messageId }: WithMessageIdOpt) {
   return (
     <PanelIconButton
       text={window.i18n('reply')}
-      iconType="reply"
+      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.REPLY} />}
       onClick={() => {
         // eslint-disable-next-line more/no-then
         void replyToMessage(messageId).then(foundIt => {
@@ -250,7 +252,7 @@ function CopySenderSessionId({ messageId }: WithMessageIdOpt) {
     return (
       <PanelIconButton
         text={window.i18n('accountIDCopy')}
-        iconType="copy"
+        iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.COPY} />}
         onClick={() => {
           clipboard.writeText(senderId);
           ToastUtils.pushCopiedToClipBoard();
@@ -374,7 +376,7 @@ export const OverlayMessageInfo = () => {
             {hasErrors && !isLegacyGroup && direction === 'outgoing' && (
               <PanelIconButton
                 text={window.i18n('resend')}
-                iconType="resend"
+                iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.REFRESH_CW} />}
                 onClick={() => {
                   void resendMessage(messageId);
                   dispatch(closeRightPanel());
@@ -386,7 +388,9 @@ export const OverlayMessageInfo = () => {
             {hasAttachments && (
               <PanelIconButton
                 text={window.i18n('save')}
-                iconType="saveToDisk"
+                iconElement={
+                  <PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.CIRCLE_ARROW_DOWN} />
+                }
                 dataTestId="save-attachment-from-details"
                 onClick={() => {
                   if (hasAttachments) {
@@ -404,7 +408,7 @@ export const OverlayMessageInfo = () => {
             {isDeletable && !isLegacyGroup && (
               <PanelIconButton
                 text={window.i18n('delete')}
-                iconType="delete"
+                iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.TRASH2} />}
                 color={'var(--danger-color)'}
                 dataTestId="delete-from-details"
                 onClick={() => {

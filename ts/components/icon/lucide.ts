@@ -1,3 +1,20 @@
+export const LUCIDE_ICONS_UNICODE = {
+  EXTERNAL_LINK_ICON: '',
+  COPY: '',
+  REPLY: '',
+  REFRESH_CW: '',
+  CIRCLE_ARROW_DOWN: '',
+  TRASH2: '',
+  LOG_OUT: '',
+  AT_SIGN: '',
+  VOLUME_OFF: '',
+  VOLUME_2: '',
+  BUG: '',
+  TIMER: '',
+  USER_ROUND: '',
+  USER_ROUND_PEN: '',
+} as const;
+
 /**
  * Used for rendering icons inside of the Localizer component
  * @note Current: Lucide v0.473.0
@@ -5,7 +22,7 @@
  * @note Download from https://github.com/lucide-icons/lucide/releases
  */
 export const LUCIDE_INLINE_ICONS = {
-  EXTERNAL_LINK_ICON: "<span role='img' aria-label='external link icon'></span>",
+  EXTERNAL_LINK_ICON: `<span role='img' aria-label='external link icon'>${LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}</span>`,
 };
 
 export type LucideInlineIconKeys = keyof typeof LUCIDE_INLINE_ICONS;

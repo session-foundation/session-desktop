@@ -5,7 +5,6 @@ import {
   useAvatarPath,
   useConversationUsername,
   useHasNickname,
-  useIsActive,
   useIsBlinded,
   useIsBlocked,
   useIsGroupV2,
@@ -58,6 +57,7 @@ import { ItemWithDataTestId } from './items/MenuItemWithDataTestId';
 import { useLibGroupDestroyed } from '../../state/selectors/userGroups';
 import { NetworkTime } from '../../util/NetworkTime';
 import { MergedLocalizerTokens } from '../../localization/localeTools';
+import { useShowNotificationFor } from '../menuAndSettingsHooks/useShowNotificationFor';
 
 /** Menu items standardized */
 
@@ -486,44 +486,26 @@ export const NotificationForConvoMenuItem = (): JSX.Element | null => {
   // Note: this item is used in the header and in the list item, so we need to grab the details
   // from the convoId from the context itself, not the redux selected state
   const convoId = useConvoIdFromContext();
-
   const currentNotificationSetting = useNotificationSetting(convoId);
-  const isBlocked = useIsBlocked(convoId);
-  const isActive = useIsActive(convoId);
-  const isKickedFromGroup = useIsKickedFromGroup(convoId);
-  const isGroupDestroyed = useLibGroupDestroyed(convoId);
+  const showNotificationFor = useShowNotificationFor(convoId);
 
-  const isFriend = useIsPrivateAndFriend(convoId);
-  const isPrivate = useIsPrivate(convoId);
-  const isMessageRequestShown = useIsMessageRequestOverlayShown();
-
-  if (
-    !convoId ||
-    isMessageRequestShown ||
-    isKickedFromGroup ||
-    isGroupDestroyed ||
-    isBlocked ||
-    !isActive ||
-    (isPrivate && !isFriend)
-  ) {
+  if (!showNotificationFor) {
     return null;
   }
+  // const isrtlMode = isRtlBody();
 
-  // const isRtlMode = isRtlBody();
-
-  // exclude mentions_only settings for private chats as this does not make much sense
-  const notificationForConvoOptions = ConversationNotificationSetting.filter(n =>
-    isPrivate ? n !== 'mentions_only' : true
-  ).map((n: ConversationNotificationSettingType) => {
-    // do this separately so typescript's compiler likes it
-    const keyToUse: MergedLocalizerTokens =
-      n === 'all' || !n
-        ? 'notificationsAllMessages'
-        : n === 'disabled'
-          ? 'notificationsMute'
-          : 'notificationsMentionsOnly';
-    return { value: n, name: window.i18n(keyToUse) };
-  });
+  const notificationForConvoOptions = ConversationNotificationSetting.map(
+    (n: ConversationNotificationSettingType) => {
+      // do this separately so typescript's compiler likes it
+      const keyToUse: MergedLocalizerTokens =
+        n === 'all' || !n
+          ? 'notificationsAllMessages'
+          : n === 'disabled'
+            ? 'notificationsMute'
+            : 'notificationsMentionsOnly';
+      return { value: n, name: window.i18n(keyToUse) };
+    }
+  );
 
   return (
     // Remove the && false to make context menu work with RTL support

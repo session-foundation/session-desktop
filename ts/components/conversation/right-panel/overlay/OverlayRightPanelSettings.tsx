@@ -4,8 +4,9 @@ import { SessionDataTestId, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import useInterval from 'react-use/lib/useInterval';
 import styled from 'styled-components';
+
 import { Data } from '../../../../data/data';
-import { SessionIconButton } from '../../../icon';
+import { SessionIcon, SessionIconButton } from '../../../icon';
 
 import {
   useConversationUsername,
@@ -14,6 +15,7 @@ import {
   useIsGroupDestroyed,
   useIsKickedFromGroup,
   useIsPublic,
+  useNotificationSetting,
 } from '../../../../hooks/useParamSelector';
 import { useIsRightPanelShowing } from '../../../../hooks/useUI';
 import {
@@ -61,6 +63,11 @@ import {
 } from '../../../menu/items/LeaveAndDeleteGroup/guard';
 import { useIsMessageRequestOverlayShown } from '../../../../state/selectors/section';
 import { showLeaveCommunityItem } from '../../../menu/items/LeaveCommunity/guard';
+import { useShowNotificationFor } from '../../../menuAndSettingsHooks/useShowNotificationFor';
+import type { ConversationNotificationSettingType } from '../../../../models/conversationAttributes';
+import { localize } from '../../../../localization/localeTools';
+import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
+import { PanelIconLucideIcon } from '../../../buttons/PanelIconButton';
 
 async function getMediaGalleryProps(conversationId: string): Promise<{
   documents: Array<MediaItemType>;
@@ -223,7 +230,7 @@ const LeaveCommunityPanelButton = () => {
       dataTestId="leave-group-button"
       onClick={() => void showLeaveGroupByConvoId(selectedConvoKey, selectedUsername)}
       color={'var(--danger-color)'}
-      iconType={'delete'}
+      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.TRASH2} />}
     />
   );
 };
@@ -259,7 +266,7 @@ const DeleteGroupPanelButton = () => {
       dataTestId="leave-group-button"
       onClick={() => void showDeleteGroupByConvoId(convoId, selectedUsername)}
       color={'var(--danger-color)'}
-      iconType={'delete'}
+      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.TRASH2} />}
     />
   );
 };
@@ -291,7 +298,49 @@ const LeaveGroupPanelButton = () => {
       dataTestId="leave-group-button"
       onClick={() => void showLeaveGroupByConvoId(selectedConvoKey, username)}
       color={'var(--danger-color)'}
-      iconType={'delete'}
+      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.LOG_OUT} />}
+    />
+  );
+};
+
+const NotificationPanelIconButton = (notificationSelected: ConversationNotificationSettingType) => {
+  switch (notificationSelected) {
+    case 'mentions_only':
+      return LUCIDE_ICONS_UNICODE.AT_SIGN;
+    case 'disabled':
+      return LUCIDE_ICONS_UNICODE.VOLUME_OFF;
+    case 'all':
+    default:
+      return LUCIDE_ICONS_UNICODE.VOLUME_2;
+  }
+};
+
+const NotificationPanelButton = ({ convoId }: { convoId: string }) => {
+  const showNotificationFor = useShowNotificationFor(convoId);
+
+  const notificationSelected = useNotificationSetting(convoId);
+  const subtitle =
+    notificationSelected === 'disabled'
+      ? localize('notificationsMute').toString()
+      : notificationSelected === 'mentions_only'
+        ? localize('notificationsMentionsOnly').toString()
+        : localize('notificationsAllMessages').toString();
+
+  if (!showNotificationFor) {
+    return null;
+  }
+
+  return (
+    <PanelIconButton
+      iconElement={
+        <PanelIconLucideIcon iconUnicode={NotificationPanelIconButton(notificationSelected)} />
+      }
+      text={localize('sessionNotifications').toString()}
+      onClick={() => {
+        throw new Error('FIXME: showUpdateGroupMembersByConvoId');
+      }}
+      subtitle={subtitle}
+      dataTestId="group-members"
     />
   );
 };
@@ -376,7 +425,9 @@ export const OverlayRightPanelSettings = () => {
         <PanelButtonGroup style={{ margin: '0 var(--margins-lg)' }}>
           {showUpdateGroupNameButton && (
             <PanelIconButton
-              iconType={'groupMembers'}
+              iconElement={
+                <PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.USER_ROUND_PEN} />
+              }
               text={window.i18n('groupEdit')}
               onClick={() => {
                 void showUpdateGroupNameByConvoId(selectedConvoKey);
@@ -388,7 +439,7 @@ export const OverlayRightPanelSettings = () => {
           {hasClosedGroupV2QAButtons() && isGroupV2 ? (
             <>
               <PanelIconButton
-                iconType={'group'}
+                iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.BUG} />}
                 text={'trigger avatar message'}
                 onClick={() => {
                   if (!PubKey.is03Pubkey(selectedConvoKey)) {
@@ -401,7 +452,7 @@ export const OverlayRightPanelSettings = () => {
                 dataTestId={'' as SessionDataTestId}
               />
               <PanelIconButton
-                iconType={'group'}
+                iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.BUG} />}
                 text={'trigger delete message before now'}
                 onClick={() => {
                   if (!PubKey.is03Pubkey(selectedConvoKey)) {
@@ -417,7 +468,7 @@ export const OverlayRightPanelSettings = () => {
                 dataTestId={'' as SessionDataTestId}
               />
               <PanelIconButton
-                iconType={'group'}
+                iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.BUG} />}
                 text={'delete message with attachments before now'}
                 onClick={() => {
                   if (!PubKey.is03Pubkey(selectedConvoKey)) {
@@ -438,7 +489,7 @@ export const OverlayRightPanelSettings = () => {
           {showAddRemoveModeratorsButton && (
             <>
               <PanelIconButton
-                iconType={'addModerator'}
+                iconElement={<SessionIcon iconSize={'large'} iconType={'addModerator'} />}
                 text={window.i18n('adminPromote')}
                 onClick={() => {
                   showAddModeratorsByConvoId(selectedConvoKey);
@@ -447,7 +498,7 @@ export const OverlayRightPanelSettings = () => {
               />
 
               <PanelIconButton
-                iconType={'deleteModerator'}
+                iconElement={<SessionIcon iconSize={'large'} iconType={'deleteModerator'} />}
                 text={window.i18n('adminRemove')}
                 onClick={() => {
                   showRemoveModeratorsByConvoId(selectedConvoKey);
@@ -459,7 +510,7 @@ export const OverlayRightPanelSettings = () => {
 
           {showUpdateGroupMembersButton && (
             <PanelIconButton
-              iconType={'groupMembers'}
+              iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.USER_ROUND} />}
               text={window.i18n('groupMembers')}
               onClick={() => {
                 void showUpdateGroupMembersByConvoId(selectedConvoKey);
@@ -470,7 +521,7 @@ export const OverlayRightPanelSettings = () => {
 
           {hasDisappearingMessages && (
             <PanelIconButton
-              iconType={'timer50'}
+              iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.TIMER} />}
               text={window.i18n('disappearingMessages')}
               subtitle={disappearingMessagesSubtitle}
               dataTestId="disappearing-messages"
@@ -479,6 +530,8 @@ export const OverlayRightPanelSettings = () => {
               }}
             />
           )}
+
+          <NotificationPanelButton convoId={selectedConvoKey} />
 
           <MediaGallery documents={documents} media={media} />
           {isGroup && (
