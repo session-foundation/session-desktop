@@ -52,26 +52,6 @@ describe('MessageEncrypter', () => {
 
   describe('EncryptionType', () => {
     describe('ClosedGroup', () => {
-      it('should return a CLOSED_GROUP_MESSAGE envelope type for ClosedGroup', async () => {
-        const hexKeyPair = {
-          publicHex: `05${ourUserEd25516Keypair.pubKey}`,
-          privateHex: '0123456789abcdef',
-        };
-
-        TestUtils.stubData('getLatestClosedGroupEncryptionKeyPair').resolves(hexKeyPair);
-
-        const data = crypto.randomBytes(10);
-
-        const result = await MessageEncrypter.encrypt(
-          TestUtils.generateFakePubKey(),
-          data,
-          SignalService.Envelope.Type.CLOSED_GROUP_MESSAGE
-        );
-        chai
-          .expect(result.envelopeType)
-          .to.deep.equal(SignalService.Envelope.Type.CLOSED_GROUP_MESSAGE);
-      });
-
       it('should return a SESSION_MESSAGE envelope type for Fallback', async () => {
         const data = crypto.randomBytes(10);
 

@@ -63,10 +63,6 @@ message Content {
   optional uint64                     sigTimestamp               = 15;
 }
 
-message KeyPair {
-  required bytes publicKey  = 1;
-  required bytes privateKey = 2;
-}
 
 message DataExtractionNotification {
 
@@ -156,9 +152,15 @@ message DataMessage {
   reserved "timestamp";
 
   // 5 = expireTimer unused and should not be used (in contentMessage now)
-
   reserved 5;
   reserved "expireTimer";
+
+  // 104 = legacy group control message
+  reserved 104;
+  reserved "closedGroupControlMessage";
+  // 3 = group (GroupContext) legacy group
+  reserved 3;
+  reserved "group";
 
   enum Flags {
     EXPIRATION_TIMER_UPDATE   = 2;
@@ -205,38 +207,10 @@ message DataMessage {
     required string name = 3;
   }
 
-  message ClosedGroupControlMessage {
-
-	  enum Type {
-	    NEW                           = 1;
-      ENCRYPTION_KEY_PAIR           = 3;
-      NAME_CHANGE                   = 4;
-      MEMBERS_ADDED                 = 5;
-      MEMBERS_REMOVED               = 6;
-      MEMBER_LEFT                   = 7;
-      ENCRYPTION_KEY_PAIR_REQUEST   = 8;
-    }
-
-	  message KeyPairWrapper {
-	    // @required
-	    required bytes publicKey        = 1; // The public key of the user the key pair is meant for
-	    // @required
-	    required bytes encryptedKeyPair = 2; // The encrypted key pair
-	  }
-	  required Type           type              = 1;
-	  optional bytes          publicKey         = 2;
-	  optional string         name              = 3;
-	  optional KeyPair        encryptionKeyPair = 4;
-	  repeated bytes          members           = 5;
-	  repeated bytes          admins            = 6;
-	  repeated KeyPairWrapper wrappers          = 7;
-	  optional uint32         expirationTimer   = 8;
-	}
 
 
   optional string                    body                      = 1;
   repeated AttachmentPointer         attachments               = 2;
-  optional GroupContext              group                     = 3;
   optional uint32                    flags                     = 4;
   optional bytes                     profileKey                = 6;
   optional Quote                     quote                     = 8;
@@ -244,7 +218,6 @@ message DataMessage {
   optional Reaction                  reaction                  = 11;
   optional LokiProfile               profile                   = 101;
   optional OpenGroupInvitation       openGroupInvitation       = 102;
-  optional ClosedGroupControlMessage closedGroupControlMessage = 104;
   optional string                    syncTarget                = 105;
   optional bool                      blocksCommunityMessageRequests  = 106;
   optional GroupUpdateMessage        groupUpdateMessage              = 120;
@@ -299,26 +272,6 @@ message AttachmentPointer {
   optional uint32  height      = 10;
   optional string  caption     = 11;
   optional string  url         = 101;
-}
-
-message GroupContext {
-
-  enum Type {
-    UNKNOWN      = 0;
-    UPDATE       = 1;
-    DELIVER      = 2;
-    QUIT         = 3;
-    REQUEST_INFO = 4;
-  }
-
-  // @required
-  optional bytes             id      = 1;
-  // @required
-  optional Type              type    = 2;
-  optional string            name    = 3;
-  repeated string            members = 4;
-  optional AttachmentPointer avatar  = 5;
-  repeated string            admins  = 6;
 }
 
 

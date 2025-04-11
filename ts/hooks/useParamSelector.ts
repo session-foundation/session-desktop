@@ -142,6 +142,12 @@ export function useIsClosedGroup(convoId?: string) {
   return (convoProps && !convoProps.isPrivate && !convoProps.isPublic) || false;
 }
 
+export function useIsLegacyGroup(convoId?: string) {
+  const isGroup = useIsClosedGroup(convoId);
+
+  return isGroup && convoId && PubKey.is05Pubkey(convoId);
+}
+
 export function useIsPrivate(convoId?: string) {
   const convoProps = useConversationPropsById(convoId);
   return Boolean(convoProps && convoProps.isPrivate);
@@ -312,19 +318,6 @@ function useConversationPropsById(convoId?: string) {
       return null;
     }
     return convo;
-  });
-}
-
-export function useZombies(convoId?: string) {
-  return useSelector((state: StateType) => {
-    if (!convoId) {
-      return null;
-    }
-    const convo = state.conversations.conversationLookup[convoId];
-    if (!convo) {
-      return null;
-    }
-    return convo.zombies;
   });
 }
 

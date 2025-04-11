@@ -37,6 +37,7 @@ import {
 import {
   useSelectedConversationKey,
   useSelectedIsBlocked,
+  useSelectedIsLegacyGroup,
   useSelectedIsPublic,
   useSelectedWeAreAdmin,
   useSelectedWeAreModerator,
@@ -54,7 +55,6 @@ import { WithMessageId } from '../../../../session/types/with';
 import { DeleteItem } from '../../../menu/items/DeleteMessage/DeleteMessageMenuItem';
 import { RetryItem } from '../../../menu/items/RetrySend/RetrySendMenuItem';
 import { showCopyAccountIdAction } from '../../../menu/items/CopyAccountId/guard';
-import { useSelectedDisableLegacyGroupDeprecatedActions } from '../../../../hooks/useRefreshReleasedFeaturesTimestamp';
 
 export type MessageContextMenuSelectorProps = Pick<
   MessageRenderingProps,
@@ -166,7 +166,7 @@ export const MessageContextMenu = (props: Props) => {
   const { messageId, contextMenuId, enableReactions } = props;
   const dispatch = useDispatch();
   const { hideAll } = useContextMenu();
-  const legacyGroupIsDeprecated = useSelectedDisableLegacyGroupDeprecatedActions();
+  const isLegacyGroup = useSelectedIsLegacyGroup();
 
   const isSelectedBlocked = useSelectedIsBlocked();
   const convoId = useSelectedConversationKey();
@@ -316,7 +316,7 @@ export const MessageContextMenu = (props: Props) => {
     return null;
   }
 
-  if (legacyGroupIsDeprecated) {
+  if (isLegacyGroup) {
     return (
       <StyledMessageContextMenu ref={contextMenuRef}>
         <SessionContextMenuContainer>

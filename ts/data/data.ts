@@ -11,11 +11,9 @@ import {
   type MessageAttributesOptionals,
 } from '../models/messageType';
 import { StorageItem } from '../node/storage_item';
-import { HexKeyPair } from '../receiver/keypairs';
 import { Quote } from '../receiver/types';
 import { getSodiumRenderer } from '../session/crypto';
 import { DisappearingMessages } from '../session/disappearing_messages';
-import { PubKey } from '../session/types';
 import { fromArrayBufferToBase64, fromBase64ToArrayBuffer } from '../session/utils/String';
 import { MessageResultProps } from '../types/message';
 import {
@@ -101,35 +99,6 @@ async function updateSwarmNodesForPubkey(
 
 async function clearOutAllSnodesNotInPool(edKeysOfSnodePool: Array<string>): Promise<void> {
   await channels.clearOutAllSnodesNotInPool(edKeysOfSnodePool);
-}
-
-// Closed group
-
-/**
- * The returned array is ordered based on the timestamp, the latest is at the end.
- */
-async function getAllEncryptionKeyPairsForGroup(
-  groupPublicKey: string | PubKey
-): Promise<Array<HexKeyPair> | undefined> {
-  const pubkey = (groupPublicKey as PubKey).key || (groupPublicKey as string);
-  return channels.getAllEncryptionKeyPairsForGroup(pubkey);
-}
-
-async function getLatestClosedGroupEncryptionKeyPair(
-  groupPublicKey: string
-): Promise<HexKeyPair | undefined> {
-  return channels.getLatestClosedGroupEncryptionKeyPair(groupPublicKey);
-}
-
-async function addClosedGroupEncryptionKeyPair(
-  groupPublicKey: string,
-  keypair: HexKeyPair
-): Promise<void> {
-  await channels.addClosedGroupEncryptionKeyPair(groupPublicKey, keypair);
-}
-
-async function removeAllClosedGroupEncryptionKeyPairs(groupPublicKey: string): Promise<void> {
-  return channels.removeAllClosedGroupEncryptionKeyPairs(groupPublicKey);
 }
 
 // Conversation
@@ -862,10 +831,6 @@ export const Data = {
   getSwarmNodesForPubkey,
   updateSwarmNodesForPubkey,
   clearOutAllSnodesNotInPool,
-  getAllEncryptionKeyPairsForGroup,
-  getLatestClosedGroupEncryptionKeyPair,
-  addClosedGroupEncryptionKeyPair,
-  removeAllClosedGroupEncryptionKeyPairs,
   saveConversation,
   fetchConvoMemoryDetails,
   getConversationById,

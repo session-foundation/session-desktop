@@ -4,7 +4,6 @@ import { compact, difference, isEmpty, isNil, isNumber } from 'lodash';
 import { ConfigDumpData } from '../data/configDump/configDump';
 import { SettingsKey } from '../data/settings-key';
 import { deleteAllMessagesByConvoIdNoConfirmation } from '../interactions/conversationInteractions';
-import { ClosedGroup } from '../session';
 import { getOpenGroupManager } from '../session/apis/open_group_api/opengroupV2/OpenGroupManagerV2';
 import { OpenGroupUtils } from '../session/apis/open_group_api/utils';
 import { getOpenGroupV2ConversationId } from '../session/apis/open_group_api/utils/OpenGroupUtils';
@@ -13,7 +12,6 @@ import { ConvoHub } from '../session/conversations';
 import { ProfileManager } from '../session/profile_manager/ProfileManager';
 import { PubKey } from '../session/types';
 import { StringUtils, UserUtils } from '../session/utils';
-import { toHex } from '../session/utils/String';
 import { FetchMsgExpirySwarm } from '../session/utils/job_runners/jobs/FetchMsgExpirySwarmJob';
 import { LibSessionUtil } from '../session/utils/libsession/libsession_utils';
 import { SessionUtilContact } from '../session/utils/libsession/libsession_utils_contacts';
@@ -32,7 +30,6 @@ import {
   SnodeNamespacesUserConfig,
 } from '../session/apis/snode_api/namespaces';
 import { RetrieveMessageItemWithNamespace } from '../session/apis/snode_api/types';
-import { GroupInfo } from '../session/group/closed-group';
 import { groupInfoActions } from '../state/ducks/metaGroups';
 import {
   ConfigWrapperObjectTypesMeta,
@@ -54,10 +51,6 @@ import {
   UserConfigWrapperActions,
   UserGroupsWrapperActions,
 } from '../webworker/workers/browser/libsession_worker_interface';
-import { addKeyPairToCacheAndDBIfNeeded } from './closedGroups';
-import { HexKeyPair } from './keypairs';
-import { queueAllCachedFromSource } from './receiver';
-
 import { CONVERSATION } from '../session/constants';
 import { CONVERSATION_PRIORITIES, ConversationTypeEnum } from '../models/types';
 
@@ -547,8 +540,8 @@ async function handleCommunitiesUpdate() {
   }
 }
 
-async function handleLegacyGroupUpdate(latestEnvelopeTimestamp: number) {
-  // first let's check which closed groups needs to be joined or left by doing a diff of what is in the wrapper and what is in the DB
+async function handleLegacyGroupUpdate() {
+  // first let's check which legacy groups needs left by doing a diff of what is in the wrapper and what is in the DB
   const allLegacyGroupsInWrapper = await UserGroupsWrapperActions.getAllLegacyGroups();
   const allLegacyGroupsInDb = ConvoHub.use()
     .getConversations()
@@ -557,19 +550,12 @@ async function handleLegacyGroupUpdate(latestEnvelopeTimestamp: number) {
   const allLegacyGroupsIdsInDB = allLegacyGroupsInDb.map(m => m.id);
   const allLegacyGroupsIdsInWrapper = allLegacyGroupsInWrapper.map(m => m.pubkeyHex);
 
-  const legacyGroupsToJoinInDB = allLegacyGroupsInWrapper.filter(m => {
-    return !allLegacyGroupsIdsInDB.includes(m.pubkeyHex);
-  });
-
   window.log.debug(`allLegacyGroupsInWrapper: ${allLegacyGroupsInWrapper.map(m => m.pubkeyHex)} `);
   window.log.debug(`allLegacyGroupsIdsInDB: ${allLegacyGroupsIdsInDB} `);
 
   const legacyGroupsToLeaveInDB = allLegacyGroupsInDb.filter(m => {
     return !allLegacyGroupsIdsInWrapper.includes(m.id);
   });
-  window.log.info(
-    `we have to join ${legacyGroupsToJoinInDB.length} legacy groups in DB compared to what is in the wrapper`
-  );
 
   window.log.info(
     `we have to leave ${legacyGroupsToLeaveInDB.length} legacy groups in DB compared to what is in the wrapper`
@@ -591,17 +577,6 @@ async function handleLegacyGroupUpdate(latestEnvelopeTimestamp: number) {
     }
   }
 
-  for (let index = 0; index < legacyGroupsToJoinInDB.length; index++) {
-    const toJoin = legacyGroupsToJoinInDB[index];
-    window.log.info(
-      'joining legacy group from configuration sync message with convoId ',
-      toJoin.pubkeyHex
-    );
-
-    // let's just create the required convo here, as we update the fields right below
-    await ConvoHub.use().getOrCreateAndWait(toJoin.pubkeyHex, ConversationTypeEnum.GROUP);
-  }
-
   for (let index = 0; index < allLegacyGroupsInWrapper.length; index++) {
     const fromWrapper = allLegacyGroupsInWrapper[index];
 
@@ -615,81 +590,13 @@ async function handleLegacyGroupUpdate(latestEnvelopeTimestamp: number) {
       continue;
     }
 
-    const members = fromWrapper.members.map(m => m.pubkeyHex);
-    const admins = fromWrapper.members.filter(m => m.isAdmin).map(m => m.pubkeyHex);
-    const creationTimestamp = fromWrapper.joinedAtSeconds
-      ? fromWrapper.joinedAtSeconds * 1000
-      : CONVERSATION.LAST_JOINED_FALLBACK_TIMESTAMP;
-
-    // then for all the existing legacy group in the wrapper, we need to override the field of what we have in the DB with what is in the wrapper
-    // We only set group admins on group creation
-    const groupDetails: GroupInfo = {
-      id: fromWrapper.pubkeyHex,
-      name: fromWrapper.name,
-      members,
-      admins,
-      activeAt:
-        !!legacyGroupConvo.get('active_at') && legacyGroupConvo.get('active_at') > creationTimestamp
-          ? legacyGroupConvo.get('active_at')
-          : creationTimestamp,
-    };
-
-    await ClosedGroup.updateOrCreateClosedGroup(groupDetails);
-
-    let changes = await legacyGroupConvo.setPriorityFromWrapper(fromWrapper.priority, false);
-
-    if (fromWrapper.disappearingTimerSeconds !== legacyGroupConvo.getExpireTimer()) {
-      const success = await legacyGroupConvo.updateExpireTimer({
-        providedDisappearingMode:
-          fromWrapper.disappearingTimerSeconds && fromWrapper.disappearingTimerSeconds > 0
-            ? 'deleteAfterSend'
-            : 'off',
-        providedExpireTimer: fromWrapper.disappearingTimerSeconds,
-        providedSource: legacyGroupConvo.id,
-        sentAt: latestEnvelopeTimestamp,
-        fromSync: true,
-        shouldCommitConvo: false,
-        fromCurrentDevice: false,
-        fromConfigMessage: true,
-        messageHash: null, // legacy groups
-      });
-      changes = success;
-    }
-
-    const existingTimestampMs = legacyGroupConvo.getLastJoinedTimestamp();
-    const existingJoinedAtSeconds = Math.floor(existingTimestampMs / 1000);
-    if (existingJoinedAtSeconds !== creationTimestamp) {
-      legacyGroupConvo.set({
-        lastJoinedTimestamp: creationTimestamp,
-      });
-      changes = true;
-    }
-    // start polling for this group if we are still part of it.
-    if (!legacyGroupConvo.isKickedFromGroup()) {
-      getSwarmPollingInstance().addGroupId(PubKey.cast(fromWrapper.pubkeyHex));
-
-      // save the encryption key pair if needed
-      if (!isEmpty(fromWrapper.encPubkey) && !isEmpty(fromWrapper.encSeckey)) {
-        try {
-          const inWrapperKeypair: HexKeyPair = {
-            publicHex: toHex(fromWrapper.encPubkey),
-            privateHex: toHex(fromWrapper.encSeckey),
-          };
-
-          await addKeyPairToCacheAndDBIfNeeded(fromWrapper.pubkeyHex, inWrapperKeypair);
-        } catch (e) {
-          window.log.warn('failed to save key pair for legacy group', fromWrapper.pubkeyHex);
-        }
-      }
-    }
+    // legacy groups can only be unpinned or deleted now that they are readonly.
+    const changes = await legacyGroupConvo.setPriorityFromWrapper(fromWrapper.priority, false);
 
     if (changes) {
       // this commit will grab the latest encryption key pair and add it to the user group wrapper if needed
       await legacyGroupConvo.commit();
     }
-
-    // trigger decrypting of all this group messages we did not decrypt successfully yet.
-    await queueAllCachedFromSource(fromWrapper.pubkeyHex);
   }
 }
 
@@ -813,7 +720,7 @@ async function handleUserGroupsUpdate(result: IncomingUserResult) {
         await handleCommunitiesUpdate();
         break;
       case 'LegacyGroup':
-        await handleLegacyGroupUpdate(result.latestEnvelopeTimestamp);
+        await handleLegacyGroupUpdate();
         break;
       case 'Group':
         await handleGroupUpdate(result.latestEnvelopeTimestamp);

@@ -5,7 +5,6 @@ import Sinon from 'sinon';
 import { GroupPubkeyType, PubkeyType, UserGroupsGet } from 'libsession_util_nodejs';
 import {
   RetrieveGroupSubRequest,
-  RetrieveLegacyClosedGroupSubRequest,
   RetrieveUserSubRequest,
   UpdateExpiryOnNodeGroupSubRequest,
   UpdateExpiryOnNodeUserSubRequest,
@@ -25,7 +24,7 @@ function expectRetrieveWith({
   lastHash,
   maxSize,
 }: {
-  request: RetrieveLegacyClosedGroupSubRequest | RetrieveUserSubRequest | RetrieveGroupSubRequest;
+  request: RetrieveUserSubRequest | RetrieveGroupSubRequest;
   namespace: SnodeNamespaces;
   lastHash: string | null;
   maxSize: number;
@@ -194,91 +193,6 @@ describe('SnodeAPI:buildRetrieveRequest', () => {
             { lastHash: 'lasthash2', namespace: SnodeNamespaces.UserContacts },
           ],
           us,
-          us,
-          ['hashbump1', 'hashbump2']
-        );
-
-      await expectAsyncToThrow(
-        pr,
-        `retrieveRequestForUs not a valid namespace to retrieve as us:${SnodeNamespaces.ClosedGroupKeys}`
-      );
-    });
-  });
-
-  describe('legacy group', () => {
-    let groupPk: PubkeyType;
-    beforeEach(() => {
-      groupPk = TestUtils.generateFakePubKeyStr();
-    });
-    it('with single namespace and lasthash, no hashesToBump ', async () => {
-      const requests = await SnodeAPIRetrieve.buildRetrieveRequest(
-        [{ lastHash: 'lasthash', namespace: SnodeNamespaces.LegacyClosedGroup }],
-        groupPk,
-        us,
-        null
-      );
-
-      expect(requests.length).to.be.eq(1);
-      const req = requests[0];
-      if (req.method !== 'retrieve') {
-        throw new Error('expected retrieve method');
-      }
-      expectRetrieveWith({
-        request: req,
-        lastHash: 'lasthash',
-        maxSize: -1,
-        namespace: SnodeNamespaces.LegacyClosedGroup,
-      });
-    });
-
-    it('with 1 namespace and lasthashes, 2 hashesToBump ', async () => {
-      const requests = await SnodeAPIRetrieve.buildRetrieveRequest(
-        [{ lastHash: 'lasthash1', namespace: SnodeNamespaces.LegacyClosedGroup }],
-        groupPk,
-        us,
-        ['hashbump1', 'hashbump2'] // legacy groups have not the possibility to bump the expire of messages
-      );
-
-      expect(requests.length).to.be.eq(1);
-      const req1 = requests[0];
-      if (req1.method !== 'retrieve') {
-        throw new Error('expected retrieve/expire method');
-      }
-
-      expectRetrieveWith({
-        request: req1,
-        lastHash: 'lasthash1',
-        maxSize: -1,
-        namespace: SnodeNamespaces.LegacyClosedGroup,
-      });
-    });
-
-    it('with 0 namespaces, 2 hashesToBump ', async () => {
-      const requests = await SnodeAPIRetrieve.buildRetrieveRequest([], groupPk, us, [
-        'hashbump1',
-        'hashbump2',
-      ]);
-
-      expect(requests.length).to.be.eq(0); // legacy groups have not possibility to bump expire of messages
-    });
-
-    it('with 0 namespaces, 0 hashesToBump ', async () => {
-      const requests = await SnodeAPIRetrieve.buildRetrieveRequest([], groupPk, us, []);
-      expect(requests.length).to.be.eq(0);
-    });
-    it('with 0 namespaces, null hashesToBump ', async () => {
-      const requests = await SnodeAPIRetrieve.buildRetrieveRequest([], groupPk, us, null);
-      expect(requests.length).to.be.eq(0);
-    });
-
-    it('throws if given an invalid legacy group namespace to retrieve from ', async () => {
-      const pr = async () =>
-        SnodeAPIRetrieve.buildRetrieveRequest(
-          [
-            { lastHash: 'lasthash1', namespace: SnodeNamespaces.ClosedGroupKeys },
-            { lastHash: 'lasthash2', namespace: SnodeNamespaces.UserContacts },
-          ],
-          groupPk,
           us,
           ['hashbump1', 'hashbump2']
         );

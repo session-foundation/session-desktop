@@ -14,13 +14,12 @@ import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { SessionSearchInput } from '../SessionSearchInput';
 import { StyledLeftPaneList } from './LeftPaneList';
 import { ConversationListItem } from './conversation-list-item/ConversationListItem';
-import { OverlayLegacyClosedGroup, OverlayClosedGroupV2 } from './overlay/OverlayClosedGroup';
+import { OverlayClosedGroupV2 } from './overlay/OverlayClosedGroup';
 import { OverlayCommunity } from './overlay/OverlayCommunity';
 import { OverlayInvite } from './overlay/OverlayInvite';
 import { OverlayMessage } from './overlay/OverlayMessage';
 import { OverlayMessageRequest } from './overlay/OverlayMessageRequest';
 import { OverlayChooseAction } from './overlay/choose-action/OverlayChooseAction';
-import { useAreGroupsCreatedAsNewGroupsYet } from '../../state/selectors/releasedFeatures';
 
 const StyledLeftPaneContent = styled.div`
   display: flex;
@@ -41,15 +40,13 @@ const StyledConversationListContent = styled.div`
 const ClosableOverlay = () => {
   const leftOverlayMode = useSelector(getLeftOverlayMode);
 
-  const shouldCreateNewGroups = useAreGroupsCreatedAsNewGroupsYet();
-
   switch (leftOverlayMode) {
     case 'choose-action':
       return <OverlayChooseAction />;
     case 'open-group':
       return <OverlayCommunity />;
     case 'closed-group':
-      return shouldCreateNewGroups ? <OverlayClosedGroupV2 /> : <OverlayLegacyClosedGroup />;
+      return <OverlayClosedGroupV2 />;
     case 'message':
       return <OverlayMessage />;
     case 'message-requests':

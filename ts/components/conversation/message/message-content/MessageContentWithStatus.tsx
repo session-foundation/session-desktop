@@ -18,8 +18,10 @@ import { MessageContent } from './MessageContent';
 import { MessageContextMenu } from './MessageContextMenu';
 import { MessageReactions } from './MessageReactions';
 import { MessageStatus } from './MessageStatus';
-import { useIsMessageSelectionMode } from '../../../../state/selectors/selectedConversation';
-import { useSelectedDisableLegacyGroupDeprecatedActions } from '../../../../hooks/useRefreshReleasedFeaturesTimestamp';
+import {
+  useIsMessageSelectionMode,
+  useSelectedIsLegacyGroup,
+} from '../../../../state/selectors/selectedConversation';
 
 export type MessageContentWithStatusSelectorProps = { isGroup: boolean } & Pick<
   MessageRenderingProps,
@@ -63,7 +65,7 @@ export const MessageContentWithStatuses = (props: Props) => {
   const hideAvatar = useHideAvatarInMsgList(props.messageId);
 
   const multiSelectMode = useIsMessageSelectionMode();
-  const legacyGroupActionsDisabled = useSelectedDisableLegacyGroupDeprecatedActions();
+  const isLegacyGroup = useSelectedIsLegacyGroup();
 
   const onClickOnMessageOuterContainer = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
@@ -77,7 +79,7 @@ export const MessageContentWithStatuses = (props: Props) => {
   );
 
   const onDoubleClickReplyToMessage = (e: MouseEvent<HTMLDivElement>) => {
-    if (legacyGroupActionsDisabled) {
+    if (isLegacyGroup) {
       return;
     }
     const currentSelection = window.getSelection();

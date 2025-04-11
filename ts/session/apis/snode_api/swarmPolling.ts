@@ -58,7 +58,6 @@ import {
 } from './types';
 import { ConversationTypeEnum } from '../../../models/types';
 import { Snode } from '../../../data/types';
-import { areLegacyGroupsReadOnlyOutsideRedux } from '../../../state/selectors/releasedFeatures';
 
 const minMsgCountShouldRetry = 95;
 /**
@@ -208,6 +207,10 @@ export class SwarmPolling {
 
   public addGroupId(pubkey: PubKey | string, callbackFirstPoll?: () => Promise<void>) {
     const pk = PubKey.cast(pubkey);
+    if (PubKey.is05Pubkey(pk.key)) {
+      window.log.info('not polling for legacy group');
+      return;
+    }
     if (this.groupPolling.findIndex(m => m.pubkey.key === pk.key) === -1) {
       window?.log?.info(
         `SwarmPolling: Swarm addGroupId: adding pubkey ${ed25519Str(pk.key)} to polling`
@@ -302,17 +305,6 @@ export class SwarmPolling {
     const groupsToLeave = groups
       .filter(m => !allGroupsInWrapper.some(w => w.pubkeyHex === m.pubkey.key))
       .map(entryToKey);
-
-    const legacyGroupDeprecatedDisabled = areLegacyGroupsReadOnlyOutsideRedux();
-
-    const allLegacyGroupsTracked = legacyGroupDeprecatedDisabled
-      ? []
-      : legacyGroups
-          .filter(m => this.shouldPollByTimeout(m)) // should we poll from it depending on this group activity?
-          .filter(m => allGroupsLegacyInWrapper.some(w => w.pubkeyHex === m.pubkey.key)) // we don't poll from legacy groups which are not in the user group wrapper
-          .map(m => m.pubkey.key) // extract the pubkey
-          .map(m => [m, ConversationTypeEnum.GROUP] as PollForLegacy); //
-    toPollDetails = concat(toPollDetails, allLegacyGroupsTracked);
 
     const allGroupsTracked = groups
       .filter(m => this.shouldPollByTimeout(m)) // should we poll from it depending on this group activity?
@@ -906,9 +898,6 @@ export class SwarmPolling {
       ];
       return toRet;
     }
-    if (type === ConversationTypeEnum.GROUP) {
-      return [SnodeNamespaces.LegacyClosedGroup];
-    }
     if (type === ConversationTypeEnum.GROUPV2) {
       return [
         SnodeNamespaces.ClosedGroupRevokedRetrievableMessages, // if we are kicked from the group, this will still return a 200, other namespaces will be 401/403
@@ -917,6 +906,9 @@ export class SwarmPolling {
         SnodeNamespaces.ClosedGroupMembers,
         SnodeNamespaces.ClosedGroupKeys, // keys are fetched last to avoid race conditions when someone deposits them
       ];
+    }
+    if (type === ConversationTypeEnum.GROUP) {
+      throw new Error('legacy groups are readonly'); // legacy groups are readonly
     }
     assertUnreachable(
       type,

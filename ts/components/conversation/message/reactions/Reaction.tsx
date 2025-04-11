@@ -4,14 +4,16 @@ import styled from 'styled-components';
 import { useRightOverlayMode } from '../../../../hooks/useUI';
 import { isUsAnySogsFromCache } from '../../../../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import { UserUtils } from '../../../../session/utils';
-import { useIsMessageSelectionMode } from '../../../../state/selectors/selectedConversation';
+import {
+  useIsMessageSelectionMode,
+  useSelectedIsLegacyGroup,
+} from '../../../../state/selectors/selectedConversation';
 import { THEME_GLOBALS } from '../../../../themes/globals';
 import { SortedReactionList } from '../../../../types/Reaction';
 import { abbreviateNumber } from '../../../../util/abbreviateNumber';
 import { nativeEmojiData } from '../../../../util/emoji';
 import { popupXDefault, popupYDefault } from '../message-content/MessageReactions';
 import { POPUP_WIDTH, ReactionPopup, TipPosition } from './ReactionPopup';
-import { useSelectedDisableLegacyGroupDeprecatedActions } from '../../../../hooks/useRefreshReleasedFeaturesTimestamp';
 
 const StyledReaction = styled.button<{
   selected: boolean;
@@ -80,7 +82,6 @@ export const Reaction = (props: ReactionProps) => {
   } = props;
 
   const rightOverlayMode = useRightOverlayMode();
-  const areDeprecatedLegacyGroupDisabled = useSelectedDisableLegacyGroupDeprecatedActions();
   const isMessageSelection = useIsMessageSelectionMode();
   const reactionsMap = (reactions && Object.fromEntries(reactions)) || {};
   const senders = reactionsMap[emoji]?.senders || [];
@@ -89,6 +90,8 @@ export const Reaction = (props: ReactionProps) => {
 
   const reactionRef = useRef<HTMLDivElement>(null);
   const { docX: _docX, elW } = useMouse(reactionRef);
+
+  const isLegacyGroup = useSelectedIsLegacyGroup();
 
   const gutterWidth = 380; // TODOLATER make this a variable which can be shared in CSS and JS
   const tooltipMidPoint = POPUP_WIDTH / 2; // px
@@ -109,7 +112,7 @@ export const Reaction = (props: ReactionProps) => {
   const handleReactionClick = () => {
     if (!isMessageSelection) {
       // Note: disable emoji clicks if the legacy group is deprecated (group is readonly)
-      if (onClick && !areDeprecatedLegacyGroupDisabled) {
+      if (onClick && !isLegacyGroup) {
         onClick(emoji);
       }
     }
@@ -177,7 +180,7 @@ export const Reaction = (props: ReactionProps) => {
           senders={reactionsMap[popupReaction]?.senders}
           tooltipPosition={tooltipPosition}
           onClick={() => {
-            if (areDeprecatedLegacyGroupDisabled) {
+            if (isLegacyGroup) {
               return;
             }
             if (handlePopupReaction) {

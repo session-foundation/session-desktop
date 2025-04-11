@@ -1,5 +1,5 @@
 import { KeyPair } from 'libsodium-wrappers-sumo';
-import { fromHexToArray, toHex } from '../session/utils/String';
+import { toHex } from '../session/utils/String';
 
 export type HexKeyPair = {
   publicHex: string;
@@ -31,14 +31,6 @@ export class ECKeyPair {
 
   public static fromArrayBuffer(pub: ArrayBuffer, priv: ArrayBuffer) {
     return new ECKeyPair(new Uint8Array(pub), new Uint8Array(priv));
-  }
-
-  public static fromKeyPair(pair: SessionKeyPair) {
-    return new ECKeyPair(new Uint8Array(pair.pubKey), new Uint8Array(pair.privKey));
-  }
-
-  public static fromHexKeyPair(pair: HexKeyPair) {
-    return new ECKeyPair(fromHexToArray(pair.publicHex), fromHexToArray(pair.privateHex));
   }
 
   public toString() {

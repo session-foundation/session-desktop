@@ -1,11 +1,10 @@
-import _, { difference } from 'lodash';
 import { useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
 import styled from 'styled-components';
 
 import { PubkeyType } from 'libsession_util_nodejs';
-import { ToastUtils, UserUtils } from '../../session/utils';
+import { ToastUtils } from '../../session/utils';
 
 import { updateGroupMembersModal } from '../../state/ducks/modalDialog';
 import { MemberListItem } from '../MemberListItem';
@@ -22,8 +21,6 @@ import {
 } from '../../hooks/useParamSelector';
 
 import { useSet } from '../../hooks/useSet';
-import { ConvoHub } from '../../session/conversations';
-import { ClosedGroup } from '../../session/group/closed-group';
 import { PubKey } from '../../session/types';
 import { hasClosedGroupV2QAButtons } from '../../shared/env_vars';
 import { groupInfoActions } from '../../state/ducks/metaGroups';
@@ -96,61 +93,6 @@ const MemberList = (props: {
   );
 };
 
-async function onSubmit(convoId: string, membersAfterUpdate: Array<string>) {
-  const convoFound = ConvoHub.use().get(convoId);
-  if (!convoFound || !convoFound.isGroup()) {
-    throw new Error('Invalid convo for updateGroupMembersDialog');
-  }
-  if (!convoFound.weAreAdminUnblinded()) {
-    window.log.warn('Skipping update of members, we are not the admin');
-    return;
-  }
-  const ourPK = UserUtils.getOurPubKeyStrFromCache();
-
-  const allMembersAfterUpdate = _.uniq(_.concat(membersAfterUpdate, [ourPK]));
-
-  // membersAfterUpdate won't include the zombies. We are the admin and we want to remove them not matter what
-
-  // We need to NOT trigger an group update if the list of member is the same.
-  // We need to merge all members, including zombies for this call.
-  // We consider that the admin ALWAYS wants to remove zombies (actually they should be removed
-  // automatically by him when the LEFT message is received)
-
-  const existingMembers = convoFound.getGroupMembers() || [];
-  const existingZombies = convoFound.getGroupZombies() || [];
-
-  const allExistingMembersWithZombies = _.uniq(existingMembers.concat(existingZombies));
-
-  const notPresentInOld = allMembersAfterUpdate.filter(
-    m => !allExistingMembersWithZombies.includes(m)
-  );
-
-  // be sure to include zombies in here
-  const membersToRemove = allExistingMembersWithZombies.filter(
-    m => !allMembersAfterUpdate.includes(m)
-  );
-
-  // do the xor between the two. if the length is 0, it means the before and the after is the same.
-  const xor = _.xor(membersToRemove, notPresentInOld);
-  if (xor.length === 0) {
-    window.log.info('skipping group update: no detected changes in group member list');
-
-    return;
-  }
-
-  // If any extra devices of removed exist in newMembers, ensure that you filter them
-  // Note: I think this is useless
-  const filteredMembers = allMembersAfterUpdate.filter(
-    memberAfterUpdate => !_.includes(membersToRemove, memberAfterUpdate)
-  );
-
-  void ClosedGroup.initiateClosedGroupUpdate(
-    convoId,
-    convoFound.getRealSessionUsername() || 'Unknown',
-    filteredMembers
-  );
-}
-
 export const UpdateGroupMembersDialog = (props: Props) => {
   const { conversationId } = props;
   const isPrivate = useIsPrivate(conversationId);
@@ -174,29 +116,23 @@ export const UpdateGroupMembersDialog = (props: Props) => {
   };
 
   const onClickOK = async () => {
-    if (PubKey.is03Pubkey(conversationId)) {
-      const toRemoveAndCurrentMembers = membersToRemove.filter(m =>
-        existingMembers.includes(m as PubkeyType)
-      );
-
-      const groupv2Action = groupInfoActions.currentDeviceGroupMembersChange({
-        groupPk: conversationId,
-        addMembersWithHistory: [],
-        addMembersWithoutHistory: [],
-        removeMembers: toRemoveAndCurrentMembers as Array<PubkeyType>,
-        alsoRemoveMessages,
-      });
-      dispatch(groupv2Action as any);
-
-      return; // keeping the dialog open until the async thunk is done
+    if (!PubKey.is03Pubkey(conversationId)) {
+      throw new Error('Only 03 groups are supported here');
     }
-
-    await onSubmit(
-      conversationId,
-      difference(existingMembers, membersToRemove) as Array<PubkeyType>
+    const toRemoveAndCurrentMembers = membersToRemove.filter(m =>
+      existingMembers.includes(m as PubkeyType)
     );
 
-    closeDialog();
+    const groupv2Action = groupInfoActions.currentDeviceGroupMembersChange({
+      groupPk: conversationId,
+      addMembersWithHistory: [],
+      addMembersWithoutHistory: [],
+      removeMembers: toRemoveAndCurrentMembers as Array<PubkeyType>,
+      alsoRemoveMessages,
+    });
+    dispatch(groupv2Action as any);
+
+    // keeping the dialog open until the async thunk is done
   };
 
   useKey((event: KeyboardEvent) => {

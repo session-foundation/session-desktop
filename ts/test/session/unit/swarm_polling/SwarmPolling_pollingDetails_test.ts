@@ -138,7 +138,7 @@ describe('getPollingDetails', () => {
   });
 
   describe("groups in wrapper should be included in 'to poll' only", () => {
-    it('legacy group in wrapper should be polled', async () => {
+    it('legacy group in wrapper should not be polled', async () => {
       const groupPk = TestUtils.generateFakePubKeyStr();
 
       TestUtils.stubUserGroupWrapper('getAllLegacyGroups', [
@@ -153,9 +153,8 @@ describe('getPollingDetails', () => {
         await swarmPolling.getPollingDetails([
           { pubkey: PubKey.cast(groupPk), lastPolledTimestamp: 0 },
         ]);
-      expect(toPollDetails.length).to.be.eq(2, 'both our and closed group should be polled');
+      expect(toPollDetails.length).to.be.eq(1, 'only our swarm should be polled');
       expect(toPollDetails[0]).to.be.deep.eq([ourNumber, ConversationTypeEnum.PRIVATE]);
-      expect(toPollDetails[1]).to.be.deep.eq([groupPk, ConversationTypeEnum.GROUP]);
       // no groups to leave nor legacy ones
       expect(legacyGroupsToLeave.length).to.be.eq(0);
       expect(groupsToLeave.length).to.be.eq(0);
@@ -202,9 +201,9 @@ describe('getPollingDetails', () => {
           { pubkey: PubKey.cast(groupV2Pk), lastPolledTimestamp: 0 },
           { pubkey: PubKey.cast(groupV2Pk2), lastPolledTimestamp: 0 },
         ]);
-      expect(toPollDetails.length).to.be.eq(2, 'both our and closed group should be polled');
+      expect(toPollDetails.length).to.be.eq(1, 'only our pubkey should be  polled');
+      // Note: legacy groups are not polled anymore
       expect(toPollDetails[0]).to.be.deep.eq([ourNumber, ConversationTypeEnum.PRIVATE]);
-      expect(toPollDetails[1]).to.be.deep.eq([groupPk, ConversationTypeEnum.GROUP]);
       expect(legacyGroupsToLeave.length).to.be.eq(0);
       expect(groupsToLeave.length).to.be.eq(2);
       expect(groupsToLeave[0]).to.be.deep.eq(groupV2Pk);
@@ -231,6 +230,7 @@ describe('getPollingDetails', () => {
       expect(toPollDetails.length).to.be.eq(2);
       expect(toPollDetails[0]).to.be.deep.eq([ourNumber, ConversationTypeEnum.PRIVATE]);
       expect(toPollDetails[1]).to.be.deep.eq([groupPk, ConversationTypeEnum.GROUPV2]);
+      // Note: legacy groups are not polled anymore
       expect(legacyGroupsToLeave.length).to.be.eq(2);
       expect(legacyGroupsToLeave[0]).to.be.eq(groupPkLeg1);
       expect(legacyGroupsToLeave[1]).to.be.eq(groupPkLeg2);
@@ -262,12 +262,11 @@ describe('getPollingDetails', () => {
           { pubkey: PubKey.cast(groupPkLeg2), lastPolledTimestamp: 0 },
         ]);
 
-      expect(toPollDetails.length).to.be.eq(5);
+      expect(toPollDetails.length).to.be.eq(3);
       expect(toPollDetails[0]).to.be.deep.eq([ourNumber, ConversationTypeEnum.PRIVATE]);
-      expect(toPollDetails[1]).to.be.deep.eq([groupPkLeg1, ConversationTypeEnum.GROUP]);
-      expect(toPollDetails[2]).to.be.deep.eq([groupPkLeg2, ConversationTypeEnum.GROUP]);
-      expect(toPollDetails[3]).to.be.deep.eq([groupPk1, ConversationTypeEnum.GROUPV2]);
-      expect(toPollDetails[4]).to.be.deep.eq([groupPk2, ConversationTypeEnum.GROUPV2]);
+      // Note: legacy groups are not polled anymore
+      expect(toPollDetails[1]).to.be.deep.eq([groupPk1, ConversationTypeEnum.GROUPV2]);
+      expect(toPollDetails[2]).to.be.deep.eq([groupPk2, ConversationTypeEnum.GROUPV2]);
 
       // no groups to leave nor legacy ones
       expect(legacyGroupsToLeave.length).to.be.eq(0);
