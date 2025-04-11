@@ -13,7 +13,7 @@ import { getSettingsKeyFromLibsessionWrapper } from './configMessage';
  * Some messages on our swarm might unhide a contact which was marked hidden after that message was already received on another device. Same for groups left/joined etc.
  *
  * @returns true if the user config release is live AND the latest processed corresponding wrapper is supposed to have already included the changes this message did.
- * So if that message should not make any changes to the ata tracked in the wrappers (just add messages if needed, but don't set members, unhide contact etc).
+ * So if that message should not make any changes to the data tracked in the wrappers (just add messages if needed, but don't set members, unhide contact etc).
  */
 export async function sentAtMoreRecentThanWrapper(
   envelopeSentAtMs: number,
