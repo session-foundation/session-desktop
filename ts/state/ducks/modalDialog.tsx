@@ -55,6 +55,7 @@ export type LightBoxOptions = {
 } | null;
 
 export type DebugMenuModalState = object | null;
+export type ConversationSettingsModalState = WithConvoId | null;
 
 export type ModalState = {
   confirmModal: ConfirmModalState;
@@ -79,6 +80,7 @@ export type ModalState = {
   openUrlModal: OpenUrlModalState;
   lightBoxOptions: LightBoxOptions;
   debugMenuModal: DebugMenuModalState;
+  conversationSettingsModal: ConversationSettingsModalState;
 };
 
 export const initialModalState: ModalState = {
@@ -104,6 +106,7 @@ export const initialModalState: ModalState = {
   openUrlModal: null,
   lightBoxOptions: null,
   debugMenuModal: null,
+  conversationSettingsModal: null,
 };
 
 const ModalSlice = createSlice({
@@ -190,6 +193,9 @@ const ModalSlice = createSlice({
     updateDebugMenuModal(state, action: PayloadAction<DebugMenuModalState>) {
       return { ...state, debugMenuModal: action.payload };
     },
+    updateConversationSettingsModal(state, action: PayloadAction<ConversationSettingsModalState>) {
+      return { ...state, conversationSettingsModal: action.payload };
+    },
   },
 });
 
@@ -217,5 +223,6 @@ export const {
   updateOpenUrlModal,
   updateLightBoxOptions,
   updateDebugMenuModal,
+  updateConversationSettingsModal,
 } = actions;
 export const modalReducer = reducer;

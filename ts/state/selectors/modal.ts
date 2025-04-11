@@ -144,3 +144,5 @@ export const getLightBoxOptions = createSelector(
 );
 
 export const getDebugMenuModalState = (state: StateType) => getModal(state).debugMenuModal;
+export const getConversationSettingsModalState = (state: StateType) =>
+  getModal(state).conversationSettingsModal;

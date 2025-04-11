@@ -5,6 +5,7 @@ import {
   getBlockOrUnblockUserModalState,
   getChangeNickNameDialog,
   getConfirmModal,
+  getConversationSettingsModalState,
   getDebugMenuModalState,
   getDeleteAccountModalState,
   getEditProfileDialog,
@@ -45,6 +46,7 @@ import { EditProfileDialog } from './edit-profile/EditProfileDialog';
 import { OpenUrlModal } from './OpenUrlModal';
 import { BlockOrUnblockDialog } from './blockOrUnblock/BlockOrUnblockDialog';
 import { DebugMenuModal } from './debug/DebugMenuModal';
+import { ConversationSettingsDialog } from './conversationSettings/conversationSettingsDialog';
 
 export const ModalContainer = () => {
   const confirmModalState = useSelector(getConfirmModal);
@@ -69,11 +71,15 @@ export const ModalContainer = () => {
   const openUrlModalState = useSelector(getOpenUrlModalState);
   const lightBoxOptions = useSelector(getLightBoxOptions);
   const debugMenuModalState = useSelector(getDebugMenuModalState);
+  const conversationSettingsModalState = useSelector(getConversationSettingsModalState);
 
   // NOTE the order of the modals is important for the z-index
   return (
     <>
       {/* Screens */}
+      {conversationSettingsModalState && (
+        <ConversationSettingsDialog {...conversationSettingsModalState} />
+      )}
       {sessionPasswordModalState && <SessionSetPasswordDialog {...sessionPasswordModalState} />}
       {editProfileModalState && <EditProfileDialog {...editProfileModalState} />}
       {onionPathModalState && <OnionPathModal {...onionPathModalState} />}

@@ -9,8 +9,10 @@ import { useDispatch } from 'react-redux';
 import { CSSProperties } from 'styled-components';
 import { Avatar, AvatarSize } from '../../avatar/Avatar';
 
-import { openConversationWithMessages } from '../../../state/ducks/conversations';
-import { updateUserDetailsModal } from '../../../state/ducks/modalDialog';
+import {
+  updateConversationSettingsModal,
+  updateUserDetailsModal,
+} from '../../../state/ducks/modalDialog';
 
 import {
   ContextConversationProvider,
@@ -30,6 +32,7 @@ import { SpacerXS } from '../../basic/Text';
 import { MemoConversationListItemContextMenu } from '../../menu/ConversationListItemContextMenu';
 import { ConversationListItemHeaderItem } from './HeaderItem';
 import { MessageItem } from './MessageItem';
+import { openConversationWithMessages } from '../../../state/ducks/conversations';
 
 const Portal = ({ children }: { children: ReactNode }) => {
   return createPortal(children, document.querySelector('.inbox.index') as Element);
@@ -66,6 +69,7 @@ type Props = { conversationId: string; style?: CSSProperties };
 
 export const ConversationListItem = (props: Props) => {
   const { conversationId, style } = props;
+  const dispatch = useDispatch();
   const key = `conversation-item-${conversationId}`;
 
   const hasUnread = useHasUnread(conversationId);
@@ -89,10 +93,14 @@ export const ConversationListItem = (props: Props) => {
     (e: MouseEvent<HTMLDivElement>) => {
       // mousedown is invoked sooner than onClick, but for both right and left click
       if (e.button === 0) {
-        void openConversationWithMessages({ conversationKey: conversationId, messageId: null });
+        if (isSelectedConvo) {
+          dispatch(updateConversationSettingsModal({ conversationId }));
+        } else {
+          void openConversationWithMessages({ conversationKey: conversationId, messageId: null });
+        }
       }
     },
-    [conversationId]
+    [conversationId, isSelectedConvo]
   );
 
   return (

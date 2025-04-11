@@ -3,10 +3,9 @@ import { SessionDataTestId, useEffect, useState } from 'react';
 
 import { useDispatch } from 'react-redux';
 import useInterval from 'react-use/lib/useInterval';
-import styled from 'styled-components';
 
 import { Data } from '../../../../data/data';
-import { SessionIcon, SessionIconButton } from '../../../icon';
+import { SessionIcon } from '../../../icon';
 
 import {
   useConversationUsername,
@@ -21,7 +20,6 @@ import { useIsRightPanelShowing } from '../../../../hooks/useUI';
 import {
   showAddModeratorsByConvoId,
   showDeleteGroupByConvoId,
-  showInviteContactByConvoId,
   showLeaveGroupByConvoId,
   showRemoveModeratorsByConvoId,
   showUpdateGroupMembersByConvoId,
@@ -30,33 +28,27 @@ import {
 import { Constants } from '../../../../session';
 import { PubKey } from '../../../../session/types';
 import { hasClosedGroupV2QAButtons } from '../../../../shared/env_vars';
-import { closeRightPanel } from '../../../../state/ducks/conversations';
 import { groupInfoActions } from '../../../../state/ducks/metaGroups';
-import { resetRightOverlayMode, setRightOverlayMode } from '../../../../state/ducks/section';
+import { setRightOverlayMode } from '../../../../state/ducks/section';
 import {
   useConversationIsExpired03Group,
   useSelectedConversationKey,
-  useSelectedDisplayNameInProfile,
   useSelectedIsActive,
   useSelectedIsBlocked,
-  useSelectedIsGroupDestroyed,
   useSelectedIsGroupOrCommunity,
   useSelectedIsGroupV2,
   useSelectedIsKickedFromGroup,
   useSelectedIsPublic,
-  useSelectedSubscriberCount,
   useSelectedWeAreAdmin,
 } from '../../../../state/selectors/selectedConversation';
 import { AttachmentTypeWithPath } from '../../../../types/Attachment';
 import { getAbsoluteAttachmentPath } from '../../../../types/MessageAttachment';
-import { Avatar, AvatarSize } from '../../../avatar/Avatar';
 import { Flex } from '../../../basic/Flex';
-import { SpacerLG, SpacerMD, SpacerXL } from '../../../basic/Text';
+import { SpacerLG, SpacerXL } from '../../../basic/Text';
 import { PanelButtonGroup, PanelIconButton } from '../../../buttons';
 import { MediaItemType } from '../../../lightbox/LightboxGallery';
 import { MediaGallery } from '../../media-gallery/MediaGallery';
-import { Header, StyledScrollContainer } from './components';
-import { Localizer } from '../../../basic/Localizer';
+import { StyledScrollContainer } from './components';
 import {
   showDeleteGroupItem,
   showLeaveGroupItem,
@@ -139,79 +131,6 @@ async function getMediaGalleryProps(conversationId: string): Promise<{
     documents: compact(documents), // remove null
   };
 }
-
-const HeaderItem = () => {
-  const selectedConvoKey = useSelectedConversationKey();
-  const displayNameInProfile = useSelectedDisplayNameInProfile();
-  const dispatch = useDispatch();
-  const isBlocked = useSelectedIsBlocked();
-  const isKickedFromGroup = useSelectedIsKickedFromGroup();
-  const isGroupDestroyed = useSelectedIsGroupDestroyed();
-  const isGroup = useSelectedIsGroupOrCommunity();
-  const isGroupV2 = useSelectedIsGroupV2();
-  const isPublic = useSelectedIsPublic();
-  const subscriberCount = useSelectedSubscriberCount();
-  const weAreAdmin = useSelectedWeAreAdmin();
-
-  if (!selectedConvoKey) {
-    return null;
-  }
-
-  const showInviteLegacyGroup =
-    !isPublic && !isGroupV2 && isGroup && !isKickedFromGroup && !isBlocked;
-  const showInviteGroupV2 =
-    isGroupV2 && !isKickedFromGroup && !isBlocked && weAreAdmin && !isGroupDestroyed;
-  const showInviteContacts = isPublic || showInviteLegacyGroup || showInviteGroupV2;
-  const showMemberCount = !!(subscriberCount && subscriberCount > 0);
-
-  return (
-    <Header
-      backButtonDirection="right"
-      backButtonOnClick={() => {
-        dispatch(closeRightPanel());
-        dispatch(resetRightOverlayMode());
-      }}
-      hideCloseButton={true}
-    >
-      <Flex
-        $container={true}
-        $justifyContent={'center'}
-        $alignItems={'center'}
-        width={'100%'}
-        style={{ position: 'relative' }}
-      >
-        <Avatar size={AvatarSize.XL} pubkey={selectedConvoKey} />
-        {showInviteContacts && (
-          <SessionIconButton
-            iconType="addUser"
-            iconSize="medium"
-            onClick={() => {
-              if (selectedConvoKey) {
-                showInviteContactByConvoId(selectedConvoKey);
-              }
-            }}
-            style={{ position: 'absolute', right: '0px', top: '4px' }}
-            dataTestId="add-user-button"
-          />
-        )}
-      </Flex>
-      <StyledName data-testid="right-panel-group-name">{displayNameInProfile}</StyledName>
-      {showMemberCount && (
-        <Flex $container={true} $flexDirection={'column'}>
-          <div role="button" className="subtle">
-            <Localizer token="members" args={{ count: subscriberCount }} />
-          </div>
-          <SpacerMD />
-        </Flex>
-      )}
-    </Header>
-  );
-};
-
-const StyledName = styled.h4`
-  padding-inline: var(--margins-md);
-  font-size: var(--font-size-md);
-`;
 
 const LeaveCommunityPanelButton = () => {
   const selectedConvoKey = useSelectedConversationKey();
@@ -421,7 +340,6 @@ export const OverlayRightPanelSettings = () => {
   return (
     <StyledScrollContainer>
       <Flex $container={true} $flexDirection={'column'} $alignItems={'center'}>
-        <HeaderItem />
         <PanelButtonGroup style={{ margin: '0 var(--margins-lg)' }}>
           {showUpdateGroupNameButton && (
             <PanelIconButton
