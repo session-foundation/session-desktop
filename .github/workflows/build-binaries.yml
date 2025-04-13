@@ -221,6 +221,13 @@ jobs:
           architecture: arm64
           should_publish: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
 
+      - name: Upload artefacts
+        # always run this, except on "push" to "master" or alpha releases
+        if: ${{ env.SHOULD_PUBLISH == 'false' && env.SHOULD_PUBLISH_ALPHA == 'false'  }}
+        uses: ./actions/upload_prod_artefacts
+        with:
+          upload_prefix: mac-arm64
+
   build_mac_x64:
     runs-on: macos-13
     env:

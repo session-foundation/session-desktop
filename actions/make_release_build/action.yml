@@ -5,6 +5,10 @@ inputs:
   architecture:
     description: 'cpu architecture'
     required: true
+    default: 'x64'
+    options:
+      - x64
+      - arm64
   should_publish:
     description: 'should publish'
     required: true
