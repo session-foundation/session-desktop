@@ -1,0 +1,5 @@
+{
+  "tasks": {
+    "build": "nvm install && nvm use && yarn install --frozen-lockfile && yarn build-everything"
+  }
+}
