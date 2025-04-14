@@ -145,7 +145,7 @@ export function useIsClosedGroup(convoId?: string) {
 export function useIsLegacyGroup(convoId?: string) {
   const isGroup = useIsClosedGroup(convoId);
 
-  return isGroup && convoId && PubKey.is05Pubkey(convoId);
+  return isGroup && !!convoId && PubKey.is05Pubkey(convoId);
 }
 
 export function useIsPrivate(convoId?: string) {

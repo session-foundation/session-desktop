@@ -94,13 +94,18 @@ export const ConversationListItem = (props: Props) => {
       // mousedown is invoked sooner than onClick, but for both right and left click
       if (e.button === 0) {
         if (isSelectedConvo) {
-          dispatch(updateConversationSettingsModal({ conversationId }));
+          dispatch(
+            updateConversationSettingsModal({
+              conversationId,
+              settingsModalPage: 'default',
+            })
+          );
         } else {
           void openConversationWithMessages({ conversationKey: conversationId, messageId: null });
         }
       }
     },
-    [conversationId, isSelectedConvo]
+    [conversationId, isSelectedConvo, dispatch]
   );
 
   return (

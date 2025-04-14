@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-const LucideIconWrapper = styled.span<{ iconColor?: string; iconSize: string }>`
+const LucideIconWrapper = styled.div<{ iconColor?: string; iconSize: string }>`
   font-family: var(--font-icon);
   font-size: ${({ iconSize }) => iconSize};
   color: ${({ iconColor }) => iconColor};

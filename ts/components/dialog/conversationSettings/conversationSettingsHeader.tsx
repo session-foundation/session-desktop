@@ -2,16 +2,7 @@ import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { closeRightPanel } from '../../../state/ducks/conversations';
 import { resetRightOverlayMode } from '../../../state/ducks/section';
-import {
-  useSelectedDisplayNameInProfile,
-  useSelectedIsBlocked,
-  useSelectedIsKickedFromGroup,
-  useSelectedIsGroupDestroyed,
-  useSelectedIsGroupOrCommunity,
-  useSelectedIsGroupV2,
-  useSelectedIsPublic,
-  useSelectedWeAreAdmin,
-} from '../../../state/selectors/selectedConversation';
+import { useSelectedDisplayNameInProfile } from '../../../state/selectors/selectedConversation';
 import { Avatar, AvatarSize } from '../../avatar/Avatar';
 import { Flex } from '../../basic/Flex';
 import { Localizer } from '../../basic/Localizer';
@@ -42,23 +33,10 @@ function SubscriberCount(props: WithConvoId) {
 export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
   const dispatch = useDispatch();
   const displayNameInProfile = useSelectedDisplayNameInProfile();
-  const isBlocked = useSelectedIsBlocked();
-  const isKickedFromGroup = useSelectedIsKickedFromGroup();
-  const isGroupDestroyed = useSelectedIsGroupDestroyed();
-  const isGroup = useSelectedIsGroupOrCommunity();
-  const isGroupV2 = useSelectedIsGroupV2();
-  const isPublic = useSelectedIsPublic();
-  const weAreAdmin = useSelectedWeAreAdmin();
 
   if (!conversationId) {
     return null;
   }
-
-  const showInviteLegacyGroup =
-    !isPublic && !isGroupV2 && isGroup && !isKickedFromGroup && !isBlocked;
-  const showInviteGroupV2 =
-    isGroupV2 && !isKickedFromGroup && !isBlocked && weAreAdmin && !isGroupDestroyed;
-  const showInviteContacts = isPublic || showInviteLegacyGroup || showInviteGroupV2;
 
   return (
     <Header

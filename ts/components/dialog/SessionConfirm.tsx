@@ -83,7 +83,8 @@ export interface SessionConfirmDialogProps {
   onOk?: any;
   onClose?: any;
   closeAfterInput?: boolean;
-  contentWidth?: string;
+  contentMaxWidth?: string;
+  contentMinWidth?: string;
 
   /**
    * function to run on ok click. Closes modal after execution by default
@@ -123,7 +124,8 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
     showExitIcon,
     closeAfterInput = true,
     conversationId,
-    contentWidth,
+    contentMaxWidth,
+    contentMinWidth,
   } = props;
 
   const lastMessage = useLastMessage(conversationId);
@@ -189,7 +191,8 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
       onClose={onClickClose}
       showExitIcon={showExitIcon}
       showHeader={showHeader}
-      contentWidth={contentWidth}
+      contentMaxWidth={contentMaxWidth}
+      contentMinWidth={contentMinWidth}
       buttonChildren={
         <ConfirmationButtons
           isLoading={isLoading}

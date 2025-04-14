@@ -55,7 +55,20 @@ export type LightBoxOptions = {
 } | null;
 
 export type DebugMenuModalState = object | null;
-export type ConversationSettingsModalState = WithConvoId | null;
+
+export type ConversationSettingsModalPage = 'default' | 'disappearing_message' | 'notifications';
+type SettingsPageThatCannotBeStandalone = Extract<ConversationSettingsModalPage, 'default'>;
+type SettingsPageThatCanBeStandalone = Exclude<ConversationSettingsModalPage, 'default'>;
+export type ConversationSettingsModalState =
+  | (WithConvoId &
+      (
+        | { settingsModalPage: SettingsPageThatCannotBeStandalone }
+        | {
+            settingsModalPage: SettingsPageThatCanBeStandalone;
+            standalonePage: boolean;
+          }
+      ))
+  | null;
 
 export type ModalState = {
   confirmModal: ConfirmModalState;

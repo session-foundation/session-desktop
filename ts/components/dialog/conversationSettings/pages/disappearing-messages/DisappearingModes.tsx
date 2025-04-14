@@ -1,6 +1,11 @@
 import { DisappearingMessageConversationModeType } from '../../../../../session/disappearing_messages/types';
 import { Localizer } from '../../../../basic/Localizer';
-import { PanelButtonGroup, PanelLabel } from '../../../../buttons/PanelButton';
+import {
+  PanelButtonGroup,
+  PanelButtonText,
+  PanelButtonTextWithSubText,
+  PanelLabel,
+} from '../../../../buttons/PanelButton';
 import { PanelRadioButton } from '../../../../buttons/PanelRadioButton';
 
 function toDataTestId(mode: DisappearingMessageConversationModeType) {
@@ -55,15 +60,28 @@ export const DisappearingModes = (props: DisappearingModesProps) => {
           return (
             <PanelRadioButton
               key={mode}
-              text={optionI18n}
-              subtitle={subtitleI18n}
+              textElement={
+                subtitleI18n ? (
+                  <PanelButtonTextWithSubText
+                    text={optionI18n}
+                    subText={subtitleI18n}
+                    textDataTestId="disappearing-messages-menu-option"
+                    subTextDataTestId="disappearing-messages-timer-menu-option"
+                  />
+                ) : (
+                  <PanelButtonText
+                    text={optionI18n}
+                    textDataTestId="disappearing-messages-menu-option"
+                  />
+                )
+              }
               value={mode}
               isSelected={selected === mode}
               onSelect={() => {
                 setSelected(mode);
               }}
               disabled={options[mode]}
-              dataTestId={parentDataTestId}
+              rowDataTestId={parentDataTestId}
               radioInputDataTestId={`input-${parentDataTestId}`}
             />
           );

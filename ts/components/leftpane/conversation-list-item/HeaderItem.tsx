@@ -1,5 +1,4 @@
 import { MouseEvent } from 'react';
-import { useSelector } from 'react-redux';
 import clsx from 'clsx';
 import styled from 'styled-components';
 import { useConvoIdFromContext } from '../../../contexts/ConvoIdContext';
@@ -19,13 +18,13 @@ import {
   openConversationWithMessages,
 } from '../../../state/ducks/conversations';
 import { useIsSearching } from '../../../state/selectors/search';
-import { getIsMessageSection } from '../../../state/selectors/section';
+import { useIsMessageSection } from '../../../state/selectors/section';
 import { Timestamp } from '../../conversation/Timestamp';
 import { SessionIcon } from '../../icon';
 import { UserItem } from './UserItem';
 
 const NotificationSettingIcon = () => {
-  const isMessagesSection = useSelector(getIsMessageSection);
+  const isMessagesSection = useIsMessageSection();
   const convoId = useConvoIdFromContext();
   const convoSetting = useNotificationSetting(convoId);
 
@@ -69,7 +68,7 @@ const StyledConversationListItemIconWrapper = styled.div`
 const PinIcon = () => {
   const conversationId = useConvoIdFromContext();
 
-  const isMessagesSection = useSelector(getIsMessageSection);
+  const isMessagesSection = useIsMessageSection();
   const isPinned = useIsPinned(conversationId);
 
   return isMessagesSection && isPinned ? (

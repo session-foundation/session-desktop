@@ -3,8 +3,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useDisappearingMessageSettingText } from '../../../hooks/useParamSelector';
 import { useIsRightPanelShowing } from '../../../hooks/useUI';
-import { closeRightPanel, openRightPanel } from '../../../state/ducks/conversations';
-import { resetRightOverlayMode, setRightOverlayMode } from '../../../state/ducks/section';
+import { closeRightPanel } from '../../../state/ducks/conversations';
+import { resetRightOverlayMode } from '../../../state/ducks/section';
 import {
   useSelectedConversationDisappearingMode,
   useSelectedConversationKey,
@@ -19,6 +19,8 @@ import {
   useSelectedSubscriberCount,
 } from '../../../state/selectors/selectedConversation';
 import { ConversationHeaderSubtitle } from './ConversationHeaderSubtitle';
+import { updateConversationSettingsModal } from '../../../state/ducks/modalDialog';
+import { useLocalisedNotificationOf } from '../../menuAndSettingsHooks/useLocalisedNotificationFor';
 
 export type SubtitleStrings = Record<string, string> & {
   notifications?: string;
@@ -34,19 +36,6 @@ export type SubtitleStringsType = keyof Pick<
 type ConversationHeaderTitleProps = {
   showSubtitle?: boolean;
 };
-
-function useLocalizedNotificationText() {
-  const currentNotificationSetting = useSelectedNotificationSetting();
-  switch (currentNotificationSetting) {
-    case 'mentions_only':
-      return window.i18n('notificationsHeaderMentionsOnly');
-    case 'disabled':
-      return window.i18n('notificationsHeaderMute');
-    case 'all':
-    default:
-      return window.i18n('notificationsHeaderAllMessages');
-  }
-}
 
 export const ConversationHeaderTitle = (props: ConversationHeaderTitleProps) => {
   const { showSubtitle = true } = props;
@@ -65,6 +54,7 @@ export const ConversationHeaderTitle = (props: ConversationHeaderTitleProps) => 
   const selectedMembersCount = useSelectedMembersCount();
 
   const isLegacyGroup = useSelectedIsLegacyGroup();
+  const notification = useSelectedNotificationSetting();
 
   const expirationMode = useSelectedConversationDisappearingMode();
   const disappearingMessageSubtitle = useDisappearingMessageSettingText({
@@ -80,7 +70,7 @@ export const ConversationHeaderTitle = (props: ConversationHeaderTitleProps) => 
 
   const { i18n } = window;
 
-  const notificationSubtitle = useLocalizedNotificationText();
+  const notificationSubtitle = useLocalisedNotificationOf(notification, 'title');
 
   const memberCountSubtitle = useMemo(() => {
     let count = 0;
@@ -99,8 +89,8 @@ export const ConversationHeaderTitle = (props: ConversationHeaderTitleProps) => 
     return null;
   }, [i18n, isGroup, isKickedFromGroup, isPublic, selectedMembersCount, subscriberCount]);
 
-  const handleRightPanelToggle = () => {
-    if (isLegacyGroup) {
+  const onHeaderClick = () => {
+    if (isLegacyGroup || !convoId) {
       return;
     }
     if (isRightPanelOn) {
@@ -111,15 +101,23 @@ export const ConversationHeaderTitle = (props: ConversationHeaderTitleProps) => 
     // NOTE If disappearing messages is defined we must show it first
     if (visibleSubtitle === 'disappearingMessages') {
       dispatch(
-        setRightOverlayMode({
-          type: 'disappearing_messages',
-          params: null,
+        updateConversationSettingsModal({
+          conversationId: convoId,
+          settingsModalPage: 'disappearing_message',
+          standalonePage: true,
+        })
+      );
+    } else if (visibleSubtitle === 'notifications') {
+      dispatch(
+        updateConversationSettingsModal({
+          conversationId: convoId,
+          settingsModalPage: 'notifications',
+          standalonePage: true,
         })
       );
     } else {
       dispatch(resetRightOverlayMode());
     }
-    dispatch(openRightPanel());
   };
 
   useEffect(() => {
@@ -161,35 +159,28 @@ export const ConversationHeaderTitle = (props: ConversationHeaderTitleProps) => 
     setSubtitleArray(newSubtitlesArray);
   }, [disappearingMessageSubtitle, memberCountSubtitle, notificationSubtitle, visibleSubtitle]);
 
+  const className = isMe ? '' : 'module-contact-name__profile-name';
+  const displayName = isMe ? i18n('noteToSelf') : convoName;
+
   return (
     <div className="module-conversation-header__title-container">
       <div className="module-conversation-header__title-flex">
         <div className="module-conversation-header__title">
-          {isMe ? (
-            <span
-              onClick={handleRightPanelToggle}
-              role="button"
-              data-testid="header-conversation-name"
-            >
-              {i18n('noteToSelf')}
-            </span>
-          ) : (
-            <span
-              className="module-contact-name__profile-name"
-              onClick={handleRightPanelToggle}
-              role="button"
-              data-testid="header-conversation-name"
-            >
-              {convoName}
-            </span>
-          )}
+          <span
+            className={className}
+            onClick={onHeaderClick}
+            role="button"
+            data-testid="header-conversation-name"
+          >
+            {displayName}
+          </span>
           {showSubtitle && subtitleArray.indexOf(visibleSubtitle) > -1 && (
             <ConversationHeaderSubtitle
               currentSubtitle={visibleSubtitle}
               setCurrentSubtitle={setVisibleSubtitle}
               subtitlesArray={subtitleArray}
               subtitleStrings={subtitleStrings}
-              onClickFunction={handleRightPanelToggle}
+              onClickFunction={onHeaderClick}
               showDisappearingMessageIcon={
                 visibleSubtitle === 'disappearingMessages' && expirationMode !== 'off'
               }

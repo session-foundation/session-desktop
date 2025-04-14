@@ -27,6 +27,23 @@ declare module 'react' {
     | 'time-option-1-days'
     | 'time-option-7-days'
     | 'time-option-14-days';
+
+  type MenuOption =
+    | 'attachments'
+    | 'group-members'
+    | 'notifications'
+    | 'invite-contacts'
+    | 'clear-all-messages'
+    | 'disappearing-messages' // one of those two might be incorrect. FIXME
+    | 'disappearing-messages-timer';
+
+  type MenuOptionDetails = `${MenuOption}-details`;
+  type NotificationsOptions = 'mute' | 'all-messages' | 'mentions-only';
+  type NotificationButtons = `notifications-${NotificationsOptions}-button`;
+  type NotificationRadioButtons = `notifications-${NotificationsOptions}-radio-button`;
+
+  type SetButton = 'notifications' | 'disappear';
+
   type SessionDataTestId =
     | 'group-member-status-text'
     | 'loading-spinner'
@@ -227,7 +244,6 @@ declare module 'react' {
     | 'save-button-profile-update'
     | 'save-button-profile-update'
     | 'copy-button-profile-update'
-    | 'disappear-set-button'
     | 'create-group-button'
     | 'delete-message-request'
     | 'accept-message-request'
@@ -255,7 +271,14 @@ declare module 'react' {
     | 'module-contact-name__profile-name'
     | 'delete-from-details'
     | `input-releases-${ReleaseChannels}`
-    | `label-releases-${ReleaseChannels}`;
+    | `label-releases-${ReleaseChannels}`
+    | `${MenuOption}-menu-option`
+    | `${MenuOptionDetails}-menu-option`
+    | `${SetButton}-set-button`
+    | `${NotificationButtons}`
+    | `${NotificationRadioButtons}`
+    // Once the whole app have datatestId when required, this `invalid-data-testid` will be removed
+    | 'invalid-data-testid';
 
   interface HTMLAttributes {
     'data-testid'?: SessionDataTestId;

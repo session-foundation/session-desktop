@@ -3,7 +3,6 @@ import { useDispatch } from 'react-redux';
 import type { PubkeyType } from 'libsession_util_nodejs';
 import { useCallback } from 'react';
 import styled from 'styled-components';
-import { openRightPanel } from '../../../state/ducks/conversations';
 
 import {
   use05GroupMembers,
@@ -22,7 +21,10 @@ import { SelectionOverlay } from './ConversationHeaderSelectionOverlay';
 import { ConversationHeaderTitle } from './ConversationHeaderTitle';
 import { localize } from '../../../localization/localeTools';
 import { groupInfoActions } from '../../../state/ducks/metaGroups';
-import { updateConfirmModal } from '../../../state/ducks/modalDialog';
+import {
+  updateConfirmModal,
+  updateConversationSettingsModal,
+} from '../../../state/ducks/modalDialog';
 import { setLeftOverlayMode } from '../../../state/ducks/section';
 import { SessionButtonColor, SessionButton, SessionButtonType } from '../../basic/SessionButton';
 import { ConvoHub } from '../../../session/conversations';
@@ -63,7 +65,12 @@ export const ConversationHeaderWithDetails = () => {
             <CallButton />
             <AvatarHeader
               onAvatarClick={() => {
-                dispatch(openRightPanel());
+                dispatch(
+                  updateConversationSettingsModal({
+                    conversationId: selectedConvoKey,
+                    settingsModalPage: 'default',
+                  })
+                );
               }}
               pubkey={selectedConvoKey}
             />

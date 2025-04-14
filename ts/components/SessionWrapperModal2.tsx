@@ -23,14 +23,16 @@ const StyledModalHeader = styled(Flex)`
 const StyledModal = styled.div<{
   shouldOverflow: boolean;
   scrolled: boolean;
-  contentWidth?: string;
+  contentMaxWidth?: string;
+  contentMinWidth?: string;
   padding?: string;
   border: boolean;
 }>`
   animation: fadein var(--default-duration);
   z-index: 150;
   max-height: 90vh;
-  max-width: ${props => (props.contentWidth ? props.contentWidth : DEFAULT_MODAL_WIDTH)};
+  max-width: ${props => (props.contentMaxWidth ? props.contentMaxWidth : DEFAULT_MODAL_WIDTH)};
+  min-width: ${props => (props.contentMinWidth ? props.contentMinWidth : DEFAULT_MODAL_WIDTH)};
   box-sizing: border-box;
   font-family: var(--font-default);
   background-color: var(--modal-background-content-color);
@@ -109,7 +111,8 @@ export type SessionWrapperModalType2 = {
   headerIconButtons?: Array<Omit<SessionIconButtonProps, 'iconSize'>>;
   children: ReactNode;
   buttonChildren?: ReactNode;
-  contentWidth?: string;
+  contentMaxWidth?: string;
+  contentMinWidth?: string;
   contentBorder?: boolean;
   shouldOverflow?: boolean;
   padding?: string;
@@ -141,7 +144,7 @@ const ModalHeader = (
         margin={'0'}
       >
         {headerIconButtons?.length ? (
-          headerIconButtons.map((iconItem: any) => {
+          headerIconButtons.map(iconItem => {
             return (
               <SessionIconButton
                 key={iconItem.iconType}
@@ -212,7 +215,8 @@ export const SessionWrapperModal2 = (props: SessionWrapperModalType2) => {
     showHeader = true,
     showExitIcon,
     headerIconButtons,
-    contentWidth,
+    contentMinWidth,
+    contentMaxWidth,
     contentBorder = true,
     shouldOverflow = false,
     padding,
@@ -263,7 +267,8 @@ export const SessionWrapperModal2 = (props: SessionWrapperModalType2) => {
       >
         <StyledModal
           ref={modalRef}
-          contentWidth={contentWidth}
+          contentMaxWidth={contentMaxWidth}
+          contentMinWidth={contentMinWidth}
           shouldOverflow={shouldOverflow}
           scrolled={scrolled}
           padding={padding}

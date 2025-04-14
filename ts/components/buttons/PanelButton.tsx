@@ -1,4 +1,4 @@
-import { ReactNode, SessionDataTestId } from 'react';
+import { ReactNode, SessionDataTestId, type PropsWithChildren } from 'react';
 import styled, { CSSProperties } from 'styled-components';
 import { Flex } from '../basic/Flex';
 
@@ -63,6 +63,7 @@ export const PanelButtonGroup = (props: PanelButtonGroupProps) => {
 
 const StyledPanelButton = styled.button<{
   disabled: boolean;
+  color?: string;
 }>`
   cursor: ${props => (props.disabled ? 'not-allowed' : 'pointer')};
   display: flex;
@@ -74,7 +75,7 @@ const StyledPanelButton = styled.button<{
   height: 65px;
   width: 100%;
   transition: var(--default-duration);
-  color: ${props => (props.disabled ? 'var(--disabled-color)' : 'inherit')};
+  color: ${props => (props.disabled ? 'var(--disabled-color)' : props.color)};
 
   &:not(:last-child) {
     border-bottom: 1px solid var(--border-color);
@@ -89,10 +90,11 @@ export type PanelButtonProps = {
   onClick: (...args: Array<any>) => void;
   dataTestId: SessionDataTestId;
   style?: CSSProperties;
+  color?: string;
 };
 
 export const PanelButton = (props: PanelButtonProps) => {
-  const { className, disabled = false, children, onClick, dataTestId, style } = props;
+  const { className, disabled = false, children, onClick, dataTestId, style, color } = props;
 
   return (
     <StyledPanelButton
@@ -101,6 +103,7 @@ export const PanelButton = (props: PanelButtonProps) => {
       onClick={onClick}
       style={style}
       data-testid={dataTestId}
+      color={color}
     >
       {children}
     </StyledPanelButton>
@@ -116,7 +119,24 @@ const StyledSubtitle = styled.p<{ color?: string }>`
   ${props => props.color && `color: ${props.color};`}
 `;
 
-export const PanelButtonText = (props: { text: string; subtitle?: string; color?: string }) => {
+/**
+ * PanelButtonText can be used in two ways:
+ * 1. As a simple text with no subtitle
+ * 2. As a text with a subtitle
+ * If a subtitle is provided, it's dataTestId is required too.
+ */
+type PanelButtonTextBaseProps = {
+  text: string;
+  textDataTestId: SessionDataTestId;
+  color?: string;
+};
+
+export type PanelButtonSubtextProps = {
+  subText: string;
+  subTextDataTestId: SessionDataTestId;
+};
+
+const PanelButtonTextInternal = (props: PropsWithChildren) => {
   return (
     <Flex
       $container={true}
@@ -126,8 +146,36 @@ export const PanelButtonText = (props: { text: string; subtitle?: string; color?
       margin="0 var(--margins-lg) 0 0"
       minWidth="0"
     >
-      <StyledText color={props.color}>{props.text}</StyledText>
-      {!!props.subtitle && <StyledSubtitle color={props.color}>{props.subtitle}</StyledSubtitle>}
+      {props.children}
     </Flex>
+  );
+};
+
+function TextOnly(props: PanelButtonTextBaseProps) {
+  return (
+    <StyledText color={props.color} data-testid={props.textDataTestId}>
+      {props.text}
+    </StyledText>
+  );
+}
+
+export const PanelButtonTextWithSubText = (
+  props: PanelButtonTextBaseProps & PanelButtonSubtextProps
+) => {
+  return (
+    <PanelButtonTextInternal>
+      <TextOnly color={props.color} textDataTestId={props.textDataTestId} text={props.text} />{' '}
+      <StyledSubtitle color={props.color} data-testid={props.subTextDataTestId}>
+        {props.subText}
+      </StyledSubtitle>
+    </PanelButtonTextInternal>
+  );
+};
+
+export const PanelButtonText = (props: PanelButtonTextBaseProps) => {
+  return (
+    <PanelButtonTextInternal>
+      <TextOnly color={props.color} textDataTestId={props.textDataTestId} text={props.text} />
+    </PanelButtonTextInternal>
   );
 };

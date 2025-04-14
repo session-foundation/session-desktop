@@ -4,6 +4,7 @@ import {
   useIsKickedFromGroup,
   useIsPrivateAndFriend,
   useIsPrivate,
+  useIsMe,
 } from '../../hooks/useParamSelector';
 import { useIsMessageRequestOverlayShown } from '../../state/selectors/section';
 import { useLibGroupDestroyed } from '../../state/selectors/userGroups';
@@ -20,8 +21,10 @@ export const useShowNotificationFor = (convoId: string) => {
   const isFriend = useIsPrivateAndFriend(convoId);
   const isPrivate = useIsPrivate(convoId);
   const isMessageRequestShown = useIsMessageRequestOverlayShown();
+  const isMe = useIsMe(convoId);
 
   if (
+    isMe ||
     !convoId ||
     isMessageRequestShown ||
     isKickedFromGroup ||

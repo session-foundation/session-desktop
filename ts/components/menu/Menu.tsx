@@ -1,5 +1,5 @@
 import { Submenu } from 'react-contexify';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { useConvoIdFromContext } from '../../contexts/ConvoIdContext';
 import {
   useAvatarPath,
@@ -35,10 +35,6 @@ import {
   showUpdateGroupNameByConvoId,
   unblockConvoById,
 } from '../../interactions/conversationInteractions';
-import {
-  ConversationNotificationSetting,
-  ConversationNotificationSettingType,
-} from '../../models/conversationAttributes';
 import { ConvoHub } from '../../session/conversations';
 import { PubKey } from '../../session/types';
 import {
@@ -48,16 +44,16 @@ import {
 } from '../../state/ducks/modalDialog';
 import { useConversationIdOrigin } from '../../state/selectors/conversations';
 import {
-  getIsMessageSection,
   useIsMessageRequestOverlayShown,
+  useIsMessageSection,
 } from '../../state/selectors/section';
 import { useSelectedConversationKey } from '../../state/selectors/selectedConversation';
 import { SessionButtonColor } from '../basic/SessionButton';
 import { ItemWithDataTestId } from './items/MenuItemWithDataTestId';
 import { useLibGroupDestroyed } from '../../state/selectors/userGroups';
 import { NetworkTime } from '../../util/NetworkTime';
-import { MergedLocalizerTokens } from '../../localization/localeTools';
 import { useShowNotificationFor } from '../menuAndSettingsHooks/useShowNotificationFor';
+import { useLocalisedNotificationOptions } from '../menuAndSettingsHooks/useLocalisedNotificationFor';
 
 /** Menu items standardized */
 
@@ -81,7 +77,7 @@ export const InviteContactMenuItem = (): JSX.Element | null => {
 
 export const MarkConversationUnreadMenuItem = (): JSX.Element | null => {
   const conversationId = useConvoIdFromContext();
-  const isMessagesSection = useSelector(getIsMessageSection);
+  const isMessagesSection = useIsMessageSection();
   const isPrivate = useIsPrivate(conversationId);
   const isPrivateAndFriend = useIsPrivateAndFriend(conversationId);
   const isMessageRequestShown = useIsMessageRequestOverlayShown();
@@ -488,24 +484,11 @@ export const NotificationForConvoMenuItem = (): JSX.Element | null => {
   const convoId = useConvoIdFromContext();
   const currentNotificationSetting = useNotificationSetting(convoId);
   const showNotificationFor = useShowNotificationFor(convoId);
-
+  const notificationForConvoOptions = useLocalisedNotificationOptions('action');
   if (!showNotificationFor) {
     return null;
   }
   // const isrtlMode = isRtlBody();
-
-  const notificationForConvoOptions = ConversationNotificationSetting.map(
-    (n: ConversationNotificationSettingType) => {
-      // do this separately so typescript's compiler likes it
-      const keyToUse: MergedLocalizerTokens =
-        n === 'all' || !n
-          ? 'notificationsAllMessages'
-          : n === 'disabled'
-            ? 'notificationsMute'
-            : 'notificationsMentionsOnly';
-      return { value: n, name: window.i18n(keyToUse) };
-    }
-  );
 
   return (
     // Remove the && false to make context menu work with RTL support

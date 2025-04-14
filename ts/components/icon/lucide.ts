@@ -1,10 +1,10 @@
 export const LUCIDE_ICONS_UNICODE = {
-  EXTERNAL_LINK_ICON: '',
+  EXTERNAL_LINK_ICON: '',
   COPY: '',
   REPLY: '',
   REFRESH_CW: '',
   CIRCLE_ARROW_DOWN: '',
-  TRASH2: '',
+  TRASH2: '',
   LOG_OUT: '',
   AT_SIGN: '',
   VOLUME_OFF: '',
@@ -13,6 +13,10 @@ export const LUCIDE_ICONS_UNICODE = {
   TIMER: '',
   USER_ROUND: '',
   USER_ROUND_PEN: '',
+  USER_ROUND_PLUS: '',
+  FILE: '',
+  PIN: '',
+  PIN_OFF: '',
 } as const;
 
 /**
