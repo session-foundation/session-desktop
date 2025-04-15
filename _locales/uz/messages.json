@@ -372,7 +372,6 @@
   "groupCreate": "Guruh yaratish",
   "groupCreateErrorNoMembers": "Kamida bir guruh a’zosini tanlang.",
   "groupDelete": "Guruhni o'chirish",
-  "groupDeleteDescription": "Haqiqatan ham <b>{group_name}</b> ni o'chirmoqchimisiz? Bu barcha a'zo va guruh kontentlarini o'chiradi.",
   "groupDescriptionEnter": "Guruh tavsifini kiritish",
   "groupDisplayPictureUpdated": "Gruppa ko‘rsatgan rasm yangilandi.",
   "groupEdit": "Guruhni tahrirlash",

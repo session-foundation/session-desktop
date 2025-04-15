@@ -372,7 +372,6 @@
   "groupCreate": "Vytvoriť skupinu",
   "groupCreateErrorNoMembers": "Prosím zvoľte aspoň 1 člena skupiny.",
   "groupDelete": "Vymazať skupinu",
-  "groupDeleteDescription": "Ste si istí, že chcete vymazať <b>{group_name}</b>? Tým sa odstránia všetci členovia a všetok obsah skupiny bude vymazaný.",
   "groupDescriptionEnter": "Zadajte popis skupiny",
   "groupDisplayPictureUpdated": "Obrázok skupiny bol aktualizovaný.",
   "groupEdit": "Upraviť skupinu",

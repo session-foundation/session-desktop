@@ -371,7 +371,6 @@
   "groupCreate": "Taldea sortu",
   "groupCreateErrorNoMembers": "Mesedez, hautatu beste talde kideren bat gutxienez.",
   "groupDelete": "Taldea Ezabatu",
-  "groupDeleteDescription": "Ziur zaude <b>{group_name}</b> taldea ezabatu nahi duzula? Honek kide guztiak kendu eta taldeko eduki guztiak ezabatuko ditu.",
   "groupDescriptionEnter": "Idatzi taldearen deskribapena",
   "groupDisplayPictureUpdated": "Taldearen erakus-irudia eguneratu da.",
   "groupEdit": "Taldea Editatu",

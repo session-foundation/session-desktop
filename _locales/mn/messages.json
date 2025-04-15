@@ -372,7 +372,6 @@
   "groupCreate": "Бүлэг үүсгэх",
   "groupCreateErrorNoMembers": "Дор хаяж нэг өөр бүлгийн гишүүн сонгоно уу.",
   "groupDelete": "Бүлгийг устгах",
-  "groupDeleteDescription": "Та <b>{group_name}</b>-г устгахыг хүсэж байгаадаа итгэлтэй байна уу? Энэ нь бүх гишүүдийг устгаж, бүлгийн бүх контентыг устгана.",
   "groupDescriptionEnter": "Бүлгийн тайлбар оруулна уу",
   "groupDisplayPictureUpdated": "Бүлгийн дэлгэцийн зураг шинэчлэгдсэн.",
   "groupEdit": "Бүлгийг засварлах",

@@ -371,7 +371,6 @@
   "groupCreate": "گروپ دروست بکە",
   "groupCreateErrorNoMembers": "تکایە بەلایەنی کەسێکی تر لە گروپەوە هەڵبژێرە.",
   "groupDelete": "سڕینەوەی گروپ",
-  "groupDeleteDescription": "دڵنیایت لەوەی ببە تەواوی <b>{group_name}</b>? ئەمە هەموو ئەندامەکان لادەبات و هەموو ناوەراسەکانی ئەو گروپە بسڕنەوە.",
   "groupDescriptionEnter": "بەشایی گروپەکە بنووسە",
   "groupDisplayPictureUpdated": "وێنەی گروپ نوێکرایەوە.",
   "groupEdit": "دەستکاری گروپ",

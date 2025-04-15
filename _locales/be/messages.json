@@ -371,7 +371,6 @@
   "groupCreate": "Стварыць групу",
   "groupCreateErrorNoMembers": "Калі ласка абярыце прынамсі аднаго ўдзельніка групы.",
   "groupDelete": "Выдаліць групу",
-  "groupDeleteDescription": "Вы ўпэўнены, што жадаеце выдаліць <b>{group_name}?</b> Гэта выдаліць усіх удзельнікаў і выдаліць увесь змесціва групы.",
   "groupDescriptionEnter": "Увядзіце апісанне групы",
   "groupDisplayPictureUpdated": "Фота групы абноўлена.",
   "groupEdit": "Рэдагаваць групу",

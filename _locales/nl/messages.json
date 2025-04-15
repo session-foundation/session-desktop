@@ -376,7 +376,6 @@
   "groupCreate": "Groep aanmaken",
   "groupCreateErrorNoMembers": "Kies ten minste één ander groepslid.",
   "groupDelete": "Verwijder groep",
-  "groupDeleteDescription": "Weet je zeker dat je <b>{group_name}</b> wilt verwijderen? Dit zal alle leden verwijderen en alle groepsinhoud wissen.",
   "groupDeletedMemberDescription": "{group_name} is verwijderd door een groepsbeheerder. U kunt geen berichten meer versturen.",
   "groupDescriptionEnter": "Voer een groepsbeschrijving in",
   "groupDisplayPictureUpdated": "Groepsafbeelding bijgewerkt.",

@@ -371,7 +371,6 @@
   "groupCreate": "បង្កើតក្រុម",
   "groupCreateErrorNoMembers": "សូមជ្រើសរើសសមាជិកដែលបានចូលរួមយ៉ាងតិចបំផុតមួយ.",
   "groupDelete": "លុប​ក្រុម",
-  "groupDeleteDescription": "តើអ្នកប្រាកដទេថាអ្នកចង់លុប <b>{group_name}?</b> នេះនឹងលុបសមាជិកទាំងអស់ហើយនឹងលុបមាតិកាក្រុមទាំងមូល។",
   "groupDescriptionEnter": "បញ្ចូលការពិពណ៌នាក្រុម",
   "groupDisplayPictureUpdated": "រូបតំណាងក្រុមត្រូវបានធ្វើបច្ចុប្បន្នភាព។",
   "groupEdit": "កែក្រុម",

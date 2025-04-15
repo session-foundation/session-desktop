@@ -381,7 +381,6 @@
   "groupCreate": "Создать группу",
   "groupCreateErrorNoMembers": "Пожалуйста, выберите как минимум одного участника группы.",
   "groupDelete": "Удалить группу",
-  "groupDeleteDescription": "Вы уверены, что хотите удалить группу <b>{group_name}?</b> Это удалит всех участников и всё содержимое группы.",
   "groupDeleteDescriptionMember": "Вы действительно хотите удалить группу <b>{group_name}</b>?",
   "groupDeletedMemberDescription": "{group_name} был удалён администратором группы. Вы больше не сможете отправлять сообщения в этой группе.",
   "groupDescriptionEnter": "Введите описание группы",

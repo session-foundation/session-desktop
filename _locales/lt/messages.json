@@ -371,7 +371,6 @@
   "groupCreate": "Sukurti grupę",
   "groupCreateErrorNoMembers": "Pasirinkite bent vieną kitą grupės narį.",
   "groupDelete": "Ištrinti grupę",
-  "groupDeleteDescription": "Ar tikrai norite ištrinti <b>{group_name}</b>? Tai pašalins visus narius ir ištrins visą grupės turinį.",
   "groupDescriptionEnter": "Įveskite grupės aprašymą",
   "groupDisplayPictureUpdated": "Grupės paveikslas atnaujintas.",
   "groupEdit": "Taisyti grupę",

@@ -371,7 +371,6 @@
   "groupCreate": "צור קבוצה",
   "groupCreateErrorNoMembers": "אנא בחר לפחות חבר קבוצה אחד",
   "groupDelete": "מחק קבוצה",
-  "groupDeleteDescription": "האם אתה בטוח שברצונך למחוק את <b>{group_name}</b>? פעולה זו תסיר את כל החברים ותמחק את כל תוכן הקבוצה.",
   "groupDescriptionEnter": "הזן תיאור קבוצה",
   "groupDisplayPictureUpdated": "תמונת הקבוצה עודכנה.",
   "groupEdit": "ערוך קבוצה",

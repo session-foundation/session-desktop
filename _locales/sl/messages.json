@@ -371,7 +371,6 @@
   "groupCreate": "Ustvari skupino",
   "groupCreateErrorNoMembers": "Prosimo, izberite vsaj enega dodatnega člana skupine.",
   "groupDelete": "Izbriši skupino",
-  "groupDeleteDescription": "Ali ste prepričani, da želite izbrisati <b>{group_name}</b>? To bo odstranilo vse člane in izbrisalo vsebine skupine.",
   "groupDescriptionEnter": "Vnesite opis skupine",
   "groupDisplayPictureUpdated": "Slika skupine je bila posodobljena.",
   "groupEdit": "Uredi skupino",

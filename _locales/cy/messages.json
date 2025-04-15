@@ -372,7 +372,6 @@
   "groupCreate": "Creu Grŵp",
   "groupCreateErrorNoMembers": "Dewiswch o leiaf un aelod grŵp arall.",
   "groupDelete": "Dileu Grŵp",
-  "groupDeleteDescription": "Ydych chi'n siŵr eich bod am ddileu <b>{group_name}</b>? Bydd hyn yn dileu'r holl aelodau ac yn dileu'r holl gynnwys grŵp.",
   "groupDescriptionEnter": "Rhowch ddisgrifiad y grŵp",
   "groupDisplayPictureUpdated": "Llun arddangos grŵp wedi'i ddiweddaru.",
   "groupEdit": "Golygu Grŵp",

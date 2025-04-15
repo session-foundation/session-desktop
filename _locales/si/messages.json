@@ -371,7 +371,6 @@
   "groupCreate": "සමූහයක් සාදන්න",
   "groupCreateErrorNoMembers": "කරුණාකර අවම වශයෙන් එක් එක් කණ්ඩායම් සාමාජිකයෙකු තෝරන්න.",
   "groupDelete": "සමූහය මකන්න",
-  "groupDeleteDescription": "ඔබට <b>{group_name}</b> මැකීමට අවශ්‍ය බව විශ්වාසද? මෙම කණ්ඩායමේ සියලු සාමාජිකයින් ඉවත් කර, සමූහ තොරතුරු සියල්ල මකනු ඇත.",
   "groupDescriptionEnter": "සමූහ විස්තරයක් ඇතුළු කරන්න",
   "groupDisplayPictureUpdated": "කණ්ඩායම් පෙන්වීමේ රූපය යාවත්කාලීන කළා.",
   "groupEdit": "සමූහය සංස්කරණය",

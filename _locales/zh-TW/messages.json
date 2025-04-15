@@ -372,7 +372,6 @@
   "groupCreate": "建立群組",
   "groupCreateErrorNoMembers": "請選擇至少一名群組成員。",
   "groupDelete": "刪除群組",
-  "groupDeleteDescription": "您確定要刪除 <b>{group_name}</b> 嗎？這將移除所有成員並刪除所有群組內容。",
   "groupDescriptionEnter": "輸入群組描述",
   "groupDisplayPictureUpdated": "群組顯示圖片已更新。",
   "groupEdit": "編輯群組",

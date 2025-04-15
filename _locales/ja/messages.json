@@ -372,7 +372,6 @@
   "groupCreate": "グループを作成",
   "groupCreateErrorNoMembers": "他のグループメンバーも選択してください",
   "groupDelete": "グループを削除",
-  "groupDeleteDescription": "<b>{group_name}</b>を削除してもよろしいですか？これにより、すべてのメンバーが削除され、すべてのグループコンテンツが削除されます。",
   "groupDescriptionEnter": "グループ説明を入力してください",
   "groupDisplayPictureUpdated": "グループ表示画像を更新しました",
   "groupEdit": "グループを編集",

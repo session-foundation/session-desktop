@@ -174,7 +174,6 @@
   "giphyWarningDescription": "Session ຊື່ທີ່ຊົງກັບ Giphy ເພື່ອໃຫ້ຜະລິດຕອບປະສົດຜ້ອນ. ເຈົ້າຈະບໍ່ມີການປ້ອງກັນ metadata ທີ່ສົມບູນເມື່ອສົ່ງ GIFs.",
   "groupCreate": "ເກີນໄວນຳເກາບພາຍ",
   "groupDelete": "ລຶບກຸ່ມ",
-  "groupDeleteDescription": "ເຈົ້າຢ່າງມັ້ນໃຈແທ້ຢານລລີ້າງ <b>{group_name}</b>ສົງຂໍ້ມູນຫາທັນສະຕິ່ນທນທັນທີ່?",
   "groupDescriptionEnter": "ປ້ອນລາຍລະອຽດກຸ່ມ",
   "groupEdit": "ແກ້ໄຂກຸ່ມ",
   "groupErrorCreate": "ບໍ່ສາມາດສ້າງກຸ່ມໄດ້. ກະລຸນາກວດກາເຊື່ອມຕໍ່ອິນເນັດຂອງທ່ານແລ້ວລອງໄໝ.",

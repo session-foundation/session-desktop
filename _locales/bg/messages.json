@@ -371,7 +371,6 @@
   "groupCreate": "Създай група",
   "groupCreateErrorNoMembers": "Моля, изберете поне още един член на групата.",
   "groupDelete": "Изтрий групата",
-  "groupDeleteDescription": "Сигурен ли/ли сте, че искате да изтриете <b>{group_name}</b>? Това ще премахне всички членове и изтрие цялото съдържание на групата.",
   "groupDescriptionEnter": "Въведи описание на групата",
   "groupDisplayPictureUpdated": "Снимката на групата е обновена.",
   "groupEdit": "Редактирай групата",

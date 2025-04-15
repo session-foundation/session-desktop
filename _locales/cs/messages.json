@@ -381,7 +381,6 @@
   "groupCreate": "Vytvořit skupinu",
   "groupCreateErrorNoMembers": "Prosím vyberte alespoň jednoho dalšího člena skupiny.",
   "groupDelete": "Smazat skupinu",
-  "groupDeleteDescription": "Jste si jisti, že chcete smazat <b>{group_name}</b>? Tímto odstraníte všechny členy a smažete veškerý obsah skupiny.",
   "groupDeleteDescriptionMember": "Opravdu chcete smazat <b>{group_name}</b>?",
   "groupDeletedMemberDescription": "Skupina {group_name} byla smazána správcem skupiny. Nebudete moci posílat další zprávy.",
   "groupDescriptionEnter": "Zadejte popis skupiny",

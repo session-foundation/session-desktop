@@ -371,7 +371,6 @@
   "groupCreate": "گروپ بناؤ",
   "groupCreateErrorNoMembers": "براہء مہربانی کم از کم ایک اور گروپ ممبر منتخب کنیں.",
   "groupDelete": "گروپ کو حذف کریں",
-  "groupDeleteDescription": "کیا آپ یقیناً <b>{group_name}</b> کو حذف کرنا چاہتے ہیں؟ اس سے تمام ممبران ہٹا دیے جائیں گے اور تمام گروپ مواد کو حذف کر دیا جائے گا۔",
   "groupDescriptionEnter": "گروپ کا وضاحتی بیان درج کریں",
   "groupDisplayPictureUpdated": "گروپ ءِ ظاهرەیر عکس آپڈیٹ بوت.",
   "groupEdit": "گروپ ایڈٹ کریں",

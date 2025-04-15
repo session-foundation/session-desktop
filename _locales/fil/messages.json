@@ -371,7 +371,6 @@
   "groupCreate": "Lumikha ng Grupo",
   "groupCreateErrorNoMembers": "Pakipili ng kahit isang miyembro ng grupo.",
   "groupDelete": "Alisin ang Grupo",
-  "groupDeleteDescription": "Sigurado ka bang gusto mong tanggalin ang <b>{group_name}?</b> Tatanggalin nito ang lahat ng miyembro at ang lahat ng nilalaman ng grupo.",
   "groupDescriptionEnter": "Ilagay ang deskripsyon ng grupo",
   "groupDisplayPictureUpdated": "Na-update na ang display picture ng grupo.",
   "groupEdit": "I-edit ang grupo",

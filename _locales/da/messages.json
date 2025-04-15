@@ -371,7 +371,6 @@
   "groupCreate": "Opret gruppe",
   "groupCreateErrorNoMembers": "Venligst vælg mindst én anden gruppemedlem.",
   "groupDelete": "Slet gruppe",
-  "groupDeleteDescription": "Er du sikker på, at du vil slette <b>{group_name}</b>? Dette vil fjerne alle medlemmer og slette alt gruppeoplekalt indhold.",
   "groupDescriptionEnter": "Indtast en gruppedescription",
   "groupDisplayPictureUpdated": "Gruppedisplaybillede opdateret.",
   "groupEdit": "Rediger gruppe",

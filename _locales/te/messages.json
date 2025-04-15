@@ -372,7 +372,6 @@
   "groupCreate": "సమూహం సృష్టించండి",
   "groupCreateErrorNoMembers": "దయచేసి కనీసం ఒక ఇతర సమూహ సభ్యుని ఎంచుకోండి.",
   "groupDelete": "సమూహాన్ని తొలగించు",
-  "groupDeleteDescription": "మీరు <b>{group_name}</b>ని తొలగించాలనుకుంటున్నారా? ఇది అన్ని సభ్యులను తొలగించి, అన్ని సమూహ విషయాన్ని తొలగిస్తుంది.",
   "groupDescriptionEnter": "సమూహ వివరణను ఎంటర్ చేయండి",
   "groupDisplayPictureUpdated": "సమూహ ప్రదర్శన చిత్రం నవీకరించబడింది.",
   "groupEdit": "సమూహాన్ని మార్చు",

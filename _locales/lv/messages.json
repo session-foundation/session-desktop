@@ -352,7 +352,6 @@
   "groupCreate": "Izveidot grupu",
   "groupCreateErrorNoMembers": "Lūdzu, izvēlies vismaz vienu citu grupas dalībnieku.",
   "groupDelete": "Dzēst grupu",
-  "groupDeleteDescription": "Vai esat pārliecināts, ka vēlaties dzēst <b>{group_name}?</b> Tas noņems visus dalībniekus un dzēsīs visu grupas saturu.",
   "groupDescriptionEnter": "Ievadiet grupas aprakstu",
   "groupDisplayPictureUpdated": "Grupas attēls atjaunots.",
   "groupEdit": "Rediģēt grupu",

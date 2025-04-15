@@ -372,7 +372,6 @@
   "groupCreate": "Unda Kikundi",
   "groupCreateErrorNoMembers": "Tafadhali chagua angalau mwanakikundi mmoja.",
   "groupDelete": "Futa Kundi",
-  "groupDeleteDescription": "Una uhakika unataka kufuta <b>{group_name}</b> kikundi hiki? Hii itapondoa wanakikundi na kushusha maudhui yote.",
   "groupDescriptionEnter": "Weka maelezo ya kikundi",
   "groupDisplayPictureUpdated": "Picha ya onyesho la kikundi imesasishwa.",
   "groupEdit": "Hariri Kundi",

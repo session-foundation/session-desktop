@@ -371,7 +371,6 @@
   "groupCreate": "Skep Groep",
   "groupCreateErrorNoMembers": "Kies ten minste een ander groep lid.",
   "groupDelete": "Skrap Groep",
-  "groupDeleteDescription": "Is jy seker jy wil <b>{group_name}</b> verwyder? Dit sal alle lede verwyder en alle groepinhoud skrap.",
   "groupDescriptionEnter": "Voer 'n groep beskrywing in",
   "groupDisplayPictureUpdated": "Groep vertoon prent opgedateer.",
   "groupEdit": "Wysig Groep",

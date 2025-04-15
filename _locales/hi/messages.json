@@ -372,7 +372,6 @@
   "groupCreate": "समूह बनाएँ",
   "groupCreateErrorNoMembers": "कृपया कम से कम एक ग्रुप सदस्य चुनें",
   "groupDelete": "ग्रुप डिलीट करें",
-  "groupDeleteDescription": "क्या आप वाकई <b>{group_name}</b> को हटाना चाहते हैं? इससे सभी सदस्य हटा दिए जाएंगे और समूह की सारी सामग्री हट जाएगी।",
   "groupDescriptionEnter": "ग्रुप विवरण दर्ज करें",
   "groupDisplayPictureUpdated": "समूह डिस्प्ले चित्र अपडेट किया गया।",
   "groupEdit": "समूह संपादित करें",

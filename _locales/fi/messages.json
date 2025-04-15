@@ -372,7 +372,6 @@
   "groupCreate": "Luo ryhmä",
   "groupCreateErrorNoMembers": "Valitse vähintään 1 ryhmän jäsen.",
   "groupDelete": "Poista ryhmä",
-  "groupDeleteDescription": "Haluatko varmasti poistaa <b>{group_name}</b>? Tämä poistaa kaikki jäsenet ja poistaa kaiken ryhmäsisällön.",
   "groupDescriptionEnter": "Syötä ryhmän kuvaus",
   "groupDisplayPictureUpdated": "Ryhmän näyttökuva on vaihdettu.",
   "groupEdit": "Muokkaa ryhmää",

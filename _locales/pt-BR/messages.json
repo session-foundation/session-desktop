@@ -372,7 +372,6 @@
   "groupCreate": "Criar Grupo",
   "groupCreateErrorNoMembers": "Escolha pelo menos 2 membros do grupo.",
   "groupDelete": "Excluir grupo",
-  "groupDeleteDescription": "Tem certeza de que deseja apagar <b>{group_name}</b>? Isso removerá todos os membros e excluirá todo o conteúdo do grupo.",
   "groupDescriptionEnter": "Digite a descrição do grupo",
   "groupDisplayPictureUpdated": "Imagem do grupo atualizada.",
   "groupEdit": "Editar grupo",

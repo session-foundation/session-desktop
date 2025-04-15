@@ -372,7 +372,6 @@
   "groupCreate": "Qrup yarat",
   "groupCreateErrorNoMembers": "Lütfən ən azı bir qrup üzvü seçin.",
   "groupDelete": "Qrupu sil",
-  "groupDeleteDescription": "<b>{group_name}</b> qrupunu silmək istədiyinizə əminsiniz? Bu, bütün üzvləri çıxardacaq və bütün qrup məzmununu siləcək.",
   "groupDescriptionEnter": "Qrup açıqlamasını daxil edin",
   "groupDisplayPictureUpdated": "Qrupun ekran şəkli güncəlləndi.",
   "groupEdit": "Qrupa düzəliş et",

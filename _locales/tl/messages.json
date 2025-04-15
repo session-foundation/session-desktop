@@ -372,7 +372,6 @@
   "groupCreate": "Lumikha ng Grupo",
   "groupCreateErrorNoMembers": "Pakipili ng hindi bababa sa 1 miyembro ng grupo.",
   "groupDelete": "Alisin ang Grupo",
-  "groupDeleteDescription": "Sigurado ka bang gusto mong burahin ang <b>{group_name}</b>? Mababura nito ang lahat ng miyembro at group content.",
   "groupDescriptionEnter": "Maglagay ng paglalarawan ng grupo",
   "groupDisplayPictureUpdated": "Na-update ang group display picture.",
   "groupEdit": "I-edit ang Grupo",

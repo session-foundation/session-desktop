@@ -373,7 +373,6 @@
   "groupCreate": "Skapa grupp",
   "groupCreateErrorNoMembers": "Välj minst en annan gruppmedlem.",
   "groupDelete": "Radera grupp",
-  "groupDeleteDescription": "Är du säker på att du vill radera <b>{group_name}</b>? Detta kommer att ta bort alla medlemmar och radera allt gruppinnehåll.",
   "groupDescriptionEnter": "Ange en gruppbeskrivning",
   "groupDisplayPictureUpdated": "Gruppvisningsbild uppdaterad.",
   "groupEdit": "Redigera grupp",

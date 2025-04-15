@@ -379,7 +379,6 @@
   "groupCreate": "Buat Grup",
   "groupCreateErrorNoMembers": "Pilih setidaknya satu anggota grup lainnya.",
   "groupDelete": "Hapus Grup",
-  "groupDeleteDescription": "Apakah Anda yakin ingin menghapus <b>{group_name}?</b> Ini akan menghapus semua anggota dan menghapus semua konten grup.",
   "groupDeletedMemberDescription": "{group_name} telah dihapus oleh admin grup. Anda tidak akan dapat mengirim pesan lagi.",
   "groupDescriptionEnter": "Masukkan deskripsi grup",
   "groupDisplayPictureUpdated": "Gambar tampilan grup diperbarui.",

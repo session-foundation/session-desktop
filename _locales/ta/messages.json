@@ -372,7 +372,6 @@
   "groupCreate": "குழுவை உருவாக்கு",
   "groupCreateErrorNoMembers": "முக்கியமாக ஒன்றைத் தேர்வுசெய்யவும்",
   "groupDelete": "குழுவை நீக்கு",
-  "groupDeleteDescription": "நீங்கள் நிச்சயமாக <b>{group_name}</b> ஐ நீக்க விரும்புகிறீர்களா? இது அனைத்து உறுப்பினர்களையும் அகற்றும் மற்றும் அனைத்து குழு உள்ளடக்கங்களை நீக்கும்.",
   "groupDescriptionEnter": "குழு விளக்கத்தை உள்ளிடவும்",
   "groupDisplayPictureUpdated": "குழுவின் காட்சி படம் புதுப்பிக்கப்பட்டது.",
   "groupEdit": "குழு திருத்தம்",

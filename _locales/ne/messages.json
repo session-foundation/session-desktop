@@ -370,7 +370,6 @@
   "groupCreate": "समूह बनाउनुहोस्",
   "groupCreateErrorNoMembers": "कृपया कम्तिमा एउटा अर्को समूह सदस्य चयन गर्नुहोस्।",
   "groupDelete": "समूह मेटाउनुहोस्",
-  "groupDeleteDescription": "के तपाई पक्का हुनुहुन्छ कि तपाई <b>{group_name}</b> मेटाउन चाहनुहुन्छ? यसले सबै सदस्यहरू हटाउँछ र सबै समूह सामग्री मेटाउँछ।",
   "groupDescriptionEnter": "समूहको वर्णन प्रविष्ट गर्नुहोस्",
   "groupDisplayPictureUpdated": "समूह प्रदर्शित तस्वीर अद्यावधिक गरियो।",
   "groupEdit": "समूह सम्पादन गर्नुहोस्",

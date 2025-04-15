@@ -371,7 +371,6 @@
   "groupCreate": "Ƙirƙiri Rukuni",
   "groupCreateErrorNoMembers": "Zaɓi aƙalla memba guda ɗaya na ƙungiya.",
   "groupDelete": "Goge Group",
-  "groupDeleteDescription": "Kana tabbata kana so ka share <b>{group_name}?</b>? Wannan zai cire dukan mambobi kuma ya goge duk abubuwan da aka ƙunsa.",
   "groupDescriptionEnter": "Shigar da bayanin ƙungiya",
   "groupDisplayPictureUpdated": "An sabunta hoton nuni na rukuni.",
   "groupEdit": "Gyara Group",

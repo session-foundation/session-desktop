@@ -371,7 +371,6 @@
   "groupCreate": "ჯგუფის შექმნა",
   "groupCreateErrorNoMembers": "გთხოვთ აირჩიოთ მინიმუმ ერთი სხვა ჯგუფის წევრი.",
   "groupDelete": "ჯგუფის წაშლა",
-  "groupDeleteDescription": "დარწმუნებული ხართ, რომ გსურთ <b>{group_name}</b>-ის წაშლა? ეს წაშლის ყველა წევრს და წაშლის ყველა ჯგუფის შინაარსს.",
   "groupDescriptionEnter": "შეიყვანეთ ჯგუფის აღწერა",
   "groupDisplayPictureUpdated": "ჯგუფის სურათი განახლდა.",
   "groupEdit": "ჯგუფის რედაქტირება",
