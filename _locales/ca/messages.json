@@ -371,7 +371,6 @@
   "groupCreate": "Creeu un grup",
   "groupCreateErrorNoMembers": "Com a mínim, trieu 1 membre per al grup, per favor.",
   "groupDelete": "Esborra el grup",
-  "groupDeleteDescription": "Esteu segur que voleu esborrar <b>{group_name}?</b> Això eliminarà tots els membres i suprimirà tot el contingut del grup.",
   "groupDescriptionEnter": "Introdueix una descripció del grup",
   "groupDisplayPictureUpdated": "La imatge de perfil del grup ha estat actualitzada.",
   "groupEdit": "Edita el grup",

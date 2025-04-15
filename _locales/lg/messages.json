@@ -371,7 +371,6 @@
   "groupCreate": "Kilira Ekibiina",
   "groupCreateErrorNoMembers": "Londa omu ku buli alala.",
   "groupDelete": "Kuggye Ku Group",
-  "groupDeleteDescription": "Oli mbanankubye okusula <b>{group_name}</b>? Eby'okulaba byonna bijja kusulibwa.",
   "groupDescriptionEnter": "Yingiza ebikwata ku kibinja",
   "groupDisplayPictureUpdated": "Ekifaananyi ekyeraga ekibinja ky'ajunanibwa.",
   "groupEdit": "Kakuzimbirwa",

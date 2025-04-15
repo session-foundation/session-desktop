@@ -371,7 +371,6 @@
   "groupCreate": "Pangani Gulu",
   "groupCreateErrorNoMembers": "Chonde sonkhanitsani limodzi la mamembala agulu ina.",
   "groupDelete": "Chotsani Gulu",
-  "groupDeleteDescription": "Mukutsimikiza kuti mukufuna kufufuta <b>{group_name}</b>? Izi zithandizira kuchotsa mamembala onse ndikuchotsa zonse zomwe zili m'gulu.",
   "groupDescriptionEnter": "Lemberani mafotokozedwe amugulu",
   "groupDisplayPictureUpdated": "Chithunzi cha chiwonetsero chagulu chapangidwanso.",
   "groupEdit": "Sintha Gulu",

@@ -372,7 +372,6 @@
   "groupCreate": "Komê Çêke",
   "groupCreateErrorNoMembers": "Ji kerema xwe bi kêmanî 1 yekê din bibijêre.",
   "groupDelete": "Komê jê bibe",
-  "groupDeleteDescription": "Tu piştrast î ku tu dixwazî jê bide <b>{group_name}</b>? Ev dê hemû endaman arekin û temamî naveroka komeyê paqij bike.",
   "groupDescriptionEnter": "Terîfekî komê binivîse",
   "groupDisplayPictureUpdated": "Wêneya grupa hate nûvekirin.",
   "groupEdit": "Komê Biguherîne",

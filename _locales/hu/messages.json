@@ -372,7 +372,6 @@
   "groupCreate": "Csoport létrehozása",
   "groupCreateErrorNoMembers": "Válassz legalább 1 csoporttagot.",
   "groupDelete": "Csoport törlése",
-  "groupDeleteDescription": "Biztos, hogy törölni szeretnéd a(z) <b>{group_name}</b> csoportot? Ezzel minden tag törölve lesz, és a csoport teljes tartalma törölve lesz.",
   "groupDescriptionEnter": "Adj meg egy csoportleírást",
   "groupDisplayPictureUpdated": "A csoport képe frissítve lett.",
   "groupEdit": "Csoport szerkesztése",

@@ -371,7 +371,6 @@
   "groupCreate": "Loo grupp",
   "groupCreateErrorNoMembers": "Palun vali vähemalt 1 grupiliige.",
   "groupDelete": "Kustuta grupp",
-  "groupDeleteDescription": "Kas olete kindel, et soovite kustutada <b>{group_name}</b>? See eemaldab kõik liikmed ja kustutab kogu grupi sisu.",
   "groupDescriptionEnter": "Sisestage grupi kirjeldus",
   "groupDisplayPictureUpdated": "Grupi kuvapilt uuendatud.",
   "groupEdit": "Redigeeri gruppi",

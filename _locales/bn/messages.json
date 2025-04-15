@@ -371,7 +371,6 @@
   "groupCreate": "গ্রুপ তৈরি করুন",
   "groupCreateErrorNoMembers": "দয়া করে অন্তত একজন অতিরিক্ত সদস্য নির্বাচন করুন।",
   "groupDelete": "গ্রুপ মুছে ফেলুন",
-  "groupDeleteDescription": "আপনি কি নিশ্চিত যে আপনি <b>{group_name}</b> মুছে ফেলতে চান? এটি সমস্ত সদস্যকে সরিয়ে দেবে এবং সমস্ত গ্রুপ কন্টেন্ট মুছে দেবে।",
   "groupDescriptionEnter": "গ্রুপ বিবরণ লিখুন",
   "groupDisplayPictureUpdated": "গ্রুপ ডিসপ্লে পিকচার আপডেট হয়েছে।",
   "groupEdit": "গ্রুপ সম্পাদনা করুন",

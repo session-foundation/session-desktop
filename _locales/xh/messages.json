@@ -372,7 +372,6 @@
   "groupCreate": "Yenza iqela",
   "groupCreateErrorNoMembers": "Nceda ukhethe ubuncinane ilungu elinye leqela elinge",
   "groupDelete": "Sangula Iqela",
-  "groupDeleteDescription": "Uqinisekile ukuba ufuna ukucima <b>{group_name}?</b> Oku kuyakuchithela onke amalungu kunye nokucima yonke into yeqela.",
   "groupDescriptionEnter": "Ngena inkcazo yeqela",
   "groupDisplayPictureUpdated": "Umfanekiso wokubonisa weqela uhlaziyiwe.",
   "groupEdit": "Hlela Iqela",

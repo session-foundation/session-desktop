@@ -371,7 +371,6 @@
   "groupCreate": "Ստեղծել խումբ",
   "groupCreateErrorNoMembers": "Խնդրում ենք ընտրել խմբի առնվազն 1 անդամ:",
   "groupDelete": "Ջնջել խումբը",
-  "groupDeleteDescription": "Իսկապե՞ս ուզում եք ջնջել <b>{group_name}</b>-ը: Սա կջնջի խմբի բոլոր անդամներին և խմբի ամբողջ բովանդակությունը:",
   "groupDescriptionEnter": "Մուտքագրեք խմբի նկարագրությունը",
   "groupDisplayPictureUpdated": "Խմբի ցուցադրվող նկարն թարմացվել է:",
   "groupEdit": "Խմբագրել խումբը",

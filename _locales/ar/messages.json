@@ -375,7 +375,6 @@
   "groupCreate": "إنشاء مجموعة",
   "groupCreateErrorNoMembers": "الرجاء إختيار عضو اخر على الأقل.",
   "groupDelete": "حذف مجموعة",
-  "groupDeleteDescription": "هل أنت متأكد من حذف <b>{group_name}؟</b> سيؤدي ذلك إلى إزالة جميع الأعضاء وحذف كافة محتويات المجموعة.",
   "groupDeletedMemberDescription": "{group_name} تم حذفه بواسطة مشرف المجموعة. لن تتمكن من إرسال أي رسائل أخرى.",
   "groupDescriptionEnter": "أدخل وصف للمجموعة",
   "groupDisplayPictureUpdated": "تم تحديث صورة العرض للمجموعة.",

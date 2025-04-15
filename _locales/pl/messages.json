@@ -379,7 +379,6 @@
   "groupCreate": "Utwórz grupę",
   "groupCreateErrorNoMembers": "Wybierz co najmniej jednego innego członka grupy.",
   "groupDelete": "Usuń grupę",
-  "groupDeleteDescription": "Czy na pewno chcesz usunąć grupę <b>{group_name}</b>? Spowoduje to usunięcie wszystkich członków i całej zawartości grupy.",
   "groupDeletedMemberDescription": "{group_name} została usunięta przez administratora grupy. Nie będzie można wysyłać więcej wiadomości.",
   "groupDescriptionEnter": "Wprowadź opis grupy",
   "groupDisplayPictureUpdated": "Zaktualizowano zdjęcie profilowe grupy.",

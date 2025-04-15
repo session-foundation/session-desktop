@@ -371,7 +371,6 @@
   "groupCreate": "ಗುಂಪನ್ನು ರಚಿಸಿ",
   "groupCreateErrorNoMembers": "ದಯವಿಟ್ಟು ಕನಿಷ್ಠ ಒಂದು ಇತರೆ ಗುಂಪಿನ ಸದಸ್ಯರನ್ನು ಆಯ್ಕೆಮಾಡಿ.",
   "groupDelete": "ಗುಂಪನ್ನು ಅಳಿಸಿ",
-  "groupDeleteDescription": "ನೀವು <b>{group_name}('</b> ಅನ್ನು ಅಳಿಸಲು ಖಚಿತವಾಗಿದ್ದೀರಾ? ಇದು ಎಲ್ಲಾ ಸದಸ್ಯರನ್ನು ತೆಗೆದುಹಾಕುತ್ತದೆ ಮತ್ತು ಎಲ್ಲಾ ಗುಂಪಿನ ವಿಷಯವನ್ನು ಅಳಿಸುತ್ತದೆ.",
   "groupDescriptionEnter": "ಗುಂಪಿನ ವಿವರಣೆ ನಮೂದಿಸಿ",
   "groupDisplayPictureUpdated": "ಗುಂಪು ಪ್ರದರ್ಶನ ಚಿತ್ರವನ್ನು ನವೀಕರಿಸಲಾಗಿದೆ.",
   "groupEdit": "ಸಮೂಹ ತಿದ್ದು",

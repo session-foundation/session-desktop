@@ -371,7 +371,6 @@
   "groupCreate": "Krei Grupon",
   "groupCreateErrorNoMembers": "Bonvolu elekti almenaŭ unu grupanon.",
   "groupDelete": "Forigi grupon",
-  "groupDeleteDescription": "Ĉu vi certas, ke vi volas forigi <b>{group_name}</b>? Ĉi tiu ago forigos ĉiujn membrojn kaj forigos ĉiujn enhavojn de la grupo.",
   "groupDescriptionEnter": "Enigu gruppriskribon",
   "groupDisplayPictureUpdated": "Grupa bildo ĝisdatigis.",
   "groupEdit": "Redakti Grupon",

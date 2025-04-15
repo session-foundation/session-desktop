@@ -371,7 +371,6 @@
   "groupCreate": "خپل پټنوم جوړ کړئ",
   "groupCreateErrorNoMembers": "مهرباني وکړئ لږ تر لږه یو بل د ډلې غړی غوره کړئ.",
   "groupDelete": "ډله ړنګول",
-  "groupDeleteDescription": "ته ډاډه يې چې <b>{group_name}</b> حذفول غواړې؟ دا به ټول غړي لرې کړي او ټول ډلې منځپانګه به حذف کړي.",
   "groupDescriptionEnter": "د ګروپ تشریح ولیکئ",
   "groupDisplayPictureUpdated": "د ډلې د ښودلو انځور تازه شو.",
   "groupEdit": "ډله سمول",

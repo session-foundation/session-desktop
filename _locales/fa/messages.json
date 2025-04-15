@@ -370,7 +370,6 @@
   "groupCreate": "ایجاد گروه",
   "groupCreateErrorNoMembers": "لطفاً حداقل یک عضو گروه دیگر انتخاب کنید.",
   "groupDelete": "حذف گروه",
-  "groupDeleteDescription": "آیا مطمئن هستید می‌خواهید <b>{group_name} </b> را حذف کنید؟ این کار تمام اعضا و محتوای گروه را حذف خواهد کرد.",
   "groupDescriptionEnter": "توضیحات گروه را وارد کنید",
   "groupDisplayPictureUpdated": "تصویر گروه به‌روزرسانی شد.",
   "groupEdit": "ویرایش گروه",

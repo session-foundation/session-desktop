@@ -376,7 +376,6 @@
   "groupCreate": "创建群组",
   "groupCreateErrorNoMembers": "请至少选择一名群组成员。",
   "groupDelete": "删除群组",
-  "groupDeleteDescription": "您确定要删除<b>{group_name}</b>吗？该操作将移除所有成员并删除所有群组内容。",
   "groupDeletedMemberDescription": "{group_name} 已被群组管理员删除。您将无法再发送任何信息。",
   "groupDescriptionEnter": "输入群组描述",
   "groupDisplayPictureUpdated": "群组头像已更新。",

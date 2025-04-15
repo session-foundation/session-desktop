@@ -371,7 +371,6 @@
   "groupCreate": "အဖွဲ့ဖန်တီးပါ",
   "groupCreateErrorNoMembers": "အဖွဲ့ဝင် ၁ ဉီး အနည်းဆုံး ရွေးထည့်ပေးပါ",
   "groupDelete": "အုပ်စု ဖျက်မည်",
-  "groupDeleteDescription": "သင် <b>{group_name}</b>ကို ဖျက်ချင်သေချာပါသလား? ၎င်းသည် အဖွဲ့ဝင်များအားလုံးကို ဖယ်ရှားပြီး အဖွဲ့၏အကြောင်းအရာအားလုံးကို ဖျက်သိမ်းပါမည်။",
   "groupDescriptionEnter": "အဖွဲ့အကြောင်းအရာ ထည့်ပါ",
   "groupDisplayPictureUpdated": "အုပ်စုပိုင်ဆိုင်မှု ပုံပြောင်းသွင်းမှု",
   "groupEdit": "အဖွဲ့ကို တည်းဖြတ်ပါ",

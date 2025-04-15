@@ -372,7 +372,6 @@
   "groupCreate": "Create Group",
   "groupCreateErrorNoMembers": "โปรดเลือกสมาชิกกลุ่มอย่างน้อยหนึ่งคน",
   "groupDelete": "ลบกลุ่ม",
-  "groupDeleteDescription": "คุณแน่ใจหรือไม่ว่าต้องการลบ <b>{group_name}?</b> การกระทำนี้จะลบสมาชิกทั้งหมดและลบเนื้อหากลุ่มทั้งหมด",
   "groupDescriptionEnter": "ป้อนคำอธิบายกลุ่ม",
   "groupDisplayPictureUpdated": "รูปกลุ่มถูกอัปเดตแล้ว",
   "groupEdit": "แก้ไขกลุ่ม",

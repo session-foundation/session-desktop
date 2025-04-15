@@ -371,7 +371,6 @@
   "groupCreate": "Krijo grup",
   "groupCreateErrorNoMembers": "Ju lutemi zgjedhni të paktën një anëtar tjetër grupi.",
   "groupDelete": "Fshi grupin.",
-  "groupDeleteDescription": "A jeni të sigurt që doni ta fshini <b>{group_name}</b>? Kjo do të heqë të gjithë anëtarët dhe do të fshijë të gjithë përmbajtjen e grupit.",
   "groupDescriptionEnter": "Shkruani një përshkrim grupi",
   "groupDisplayPictureUpdated": "Fotografia e grupit u përditësua.",
   "groupEdit": "Përpunoni grupin",

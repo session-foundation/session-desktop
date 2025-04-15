@@ -371,7 +371,6 @@
   "groupCreate": "ਗਰੁੱਪ ਬਣਾਓ",
   "groupCreateErrorNoMembers": "ਕਿਰਪਾ ਕਰਕੇ ਘੱਟੋ ਘੱਟ ਇੱਕ ਹੋਰ ਗਰੁੱਪ ਮੈਂਬਰ ਚੁਣੋ।",
   "groupDelete": "ਸਮੂਹ ਹਟਾਓ",
-  "groupDeleteDescription": "ਕੀ ਤੁਸੀਂ ਯਕੀਨਨ <b>{group_name}</b> ਮਿਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ? ਇਹ ਸਾਰੇ ਮੈਂਬਰਾਂ ਨੂੰ ਹਟਾ ਦੇਵੇਗਾ ਅਤੇ ਸਾਰੇ ਸਮੂਹ ਸਮਗਰੀ ਨੂੰ ਮਿਟਾ ਦੇਵੇਗਾ।",
   "groupDescriptionEnter": "ਇੱਕ ਗਰੁੱਪ ਦਾ ਵੇਰਵਾ ਦਰਜ ਕਰੋ",
   "groupDisplayPictureUpdated": "ਗਰੁੱਪ ਡਿਸਪਲੇ ਪਿਕਚਰ ਅਪਡੇਟ ਹੋਇਆ।",
   "groupEdit": "ਸਮੂਹ ਸੋਧੋ",

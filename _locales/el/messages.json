@@ -372,7 +372,6 @@
   "groupCreate": "Δημιουργία Ομάδας",
   "groupCreateErrorNoMembers": "Παρακαλώ επιλέξτε τουλάχιστον 1 μέλος ομάδας.",
   "groupDelete": "Διαγραφή Ομάδας",
-  "groupDeleteDescription": "Σίγουρα θέλετε να διαγράψετε την ομάδα <b>{group_name}</b>; Αυτό θα αφαιρέσει όλα τα μέλη και θα διαγράψει όλο το περιεχόμενο της ομάδας.",
   "groupDescriptionEnter": "Εισαγάγετε μια περιγραφή ομάδας",
   "groupDisplayPictureUpdated": "Η εικόνα προβολής της ομάδας ενημερώθηκε.",
   "groupEdit": "Επεξεργασία Ομάδας",

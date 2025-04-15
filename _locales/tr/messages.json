@@ -375,7 +375,6 @@
   "groupCreate": "Grup Oluştur",
   "groupCreateErrorNoMembers": "Lütfen en az 1 grup üyesi seçin.",
   "groupDelete": "Grubu Sil",
-  "groupDeleteDescription": "<b>{group_name}</b> adlı grubu silmek istediğinizden emin misiniz? Bu, tüm üyeleri kaldıracak ve tüm grup içeriğini silecektir.",
   "groupDescriptionEnter": "Grup açıklaması girin",
   "groupDisplayPictureUpdated": "Grup görüntü resmi güncellendi.",
   "groupEdit": "Grubu Düzenle",

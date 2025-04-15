@@ -372,7 +372,6 @@
   "groupCreate": "그룹 만들기",
   "groupCreateErrorNoMembers": "적어도 한 명의 추가 그룹 멤버를 선택해 주세요.",
   "groupDelete": "그룹 삭제하기",
-  "groupDeleteDescription": "Are you sure you want to delete <b>{group_name}</b>? This will remove all members and delete all group content.",
   "groupDescriptionEnter": "그룹 설명 입력",
   "groupDisplayPictureUpdated": "그룹 디스플레이 사진이 업데이트되었습니다.",
   "groupEdit": "그룹 편집",

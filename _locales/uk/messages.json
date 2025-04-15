@@ -376,7 +376,6 @@
   "groupCreate": "Створити групу",
   "groupCreateErrorNoMembers": "Будь ласка, виберіть принаймні 1 учасника групи.",
   "groupDelete": "Видалити групу",
-  "groupDeleteDescription": "Ви впевнені, що хочете видалити <b>{group_name}?</b> Це видалить усіх учасників і всю інформацію групи.",
   "groupDeletedMemberDescription": "{group_name} видалено адміністратором групи. Ви більше не зможете надсилати повідомлення.",
   "groupDescriptionEnter": "Введіть опис групи",
   "groupDisplayPictureUpdated": "Зображення групи для показу оновлено.",
