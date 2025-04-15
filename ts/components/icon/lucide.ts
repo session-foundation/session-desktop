@@ -21,7 +21,7 @@ export const LUCIDE_ICONS_UNICODE = {
 
 /**
  * Used for rendering icons inside of the Localizer component
- * @note Current: Lucide v0.473.0
+ * @note Current: Lucide v0.488.0
  * @note The Lucide Icon font must be installed locally to see these icons.
  * @note Download from https://github.com/lucide-icons/lucide/releases
  */
