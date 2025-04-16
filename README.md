@@ -12,13 +12,13 @@ Session integrates directly with [Oxen Service Nodes](https://docs.oxen.io/about
 
 ## Want to Contribute? Found a Bug or Have a feature request?
 
-Please search for any [existing issues](https://github.com/session-foundation/session-desktop/issues) that describe your bug in order to avoid duplicate submissions.
+Please search for any [existing issues](https://github.com/session-foundation/session-desktop/issues) that describe your bug or feature request to avoid duplicate submissions.
 
 Submissions can be made by making a pull request to our development branch.If you don't know where to start contributing please read [Contributing.md](CONTRIBUTING.md) and refer to issues tagged with the [good-first-issue](https://github.com/session-foundation/session-desktop/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) tag.
 
 ## Supported platforms
 
-Session requires Windows 10 or later, macOS Ventura (13) or later, or a Linux distribution with glibc 2.28 or later like Debian 10 or Ubuntu 22.04.
+Check Session's system requirements and what platforms are supported [here](https://github.com/session-foundation/session-desktop/releases/latest#user-content-supported-platforms).
 
 ## Build instructions
 
