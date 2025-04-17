@@ -22,6 +22,7 @@ import {
   UserGroupsSet,
   UserGroupsWrapperActionsCalls,
   EncryptionDomain,
+  type ConfirmPush,
 } from 'libsession_util_nodejs';
 // eslint-disable-next-line import/order
 import { join } from 'path';
@@ -71,7 +72,7 @@ type UserGenericWrapperActionsCalls = {
   needsDump: UserGenericWrapperActionsCall<ConfigWrapperUser, 'needsDump'>;
   needsPush: UserGenericWrapperActionsCall<ConfigWrapperUser, 'needsPush'>;
   push: UserGenericWrapperActionsCall<ConfigWrapperUser, 'push'>;
-  currentHashes: UserGenericWrapperActionsCall<ConfigWrapperUser, 'currentHashes'>;
+  activeHashes: UserGenericWrapperActionsCall<ConfigWrapperUser, 'activeHashes'>;
   storageNamespace: UserGenericWrapperActionsCall<ConfigWrapperUser, 'storageNamespace'>;
 };
 
@@ -88,8 +89,8 @@ export const UserGenericWrapperActions: UserGenericWrapperActionsCalls = {
    * See freeUserWrapper() in libsession.worker.ts */
   free: async (wrapperId: ConfigWrapperUser) =>
     callLibSessionWorker([wrapperId, 'free']) as Promise<void>,
-  confirmPushed: async (wrapperId: ConfigWrapperUser, seqno: number, hash: string) =>
-    callLibSessionWorker([wrapperId, 'confirmPushed', seqno, hash]) as ReturnType<
+  confirmPushed: async (wrapperId: ConfigWrapperUser, pushed: ConfirmPush) =>
+    callLibSessionWorker([wrapperId, 'confirmPushed', pushed]) as ReturnType<
       UserGenericWrapperActionsCalls['confirmPushed']
     >,
   dump: async (wrapperId: ConfigWrapperUser) =>
@@ -112,9 +113,9 @@ export const UserGenericWrapperActions: UserGenericWrapperActionsCalls = {
     >,
   push: async (wrapperId: ConfigWrapperUser) =>
     callLibSessionWorker([wrapperId, 'push']) as ReturnType<UserGenericWrapperActionsCalls['push']>,
-  currentHashes: async (wrapperId: ConfigWrapperUser) =>
-    callLibSessionWorker([wrapperId, 'currentHashes']) as ReturnType<
-      UserGenericWrapperActionsCalls['currentHashes']
+  activeHashes: async (wrapperId: ConfigWrapperUser) =>
+    callLibSessionWorker([wrapperId, 'activeHashes']) as ReturnType<
+      UserGenericWrapperActionsCalls['activeHashes']
     >,
   storageNamespace: async (wrapperId: ConfigWrapperUser) =>
     callLibSessionWorker([wrapperId, 'storageNamespace']) as ReturnType<
@@ -128,14 +129,14 @@ function createBaseActionsFor(wrapperType: ConfigWrapperUser) {
     init: async (ed25519Key: Uint8Array, dump: Uint8Array | null) =>
       UserGenericWrapperActions.init(wrapperType, ed25519Key, dump),
     free: async () => UserGenericWrapperActions.free(wrapperType),
-    confirmPushed: async (seqno: number, hash: string) =>
-      UserGenericWrapperActions.confirmPushed(wrapperType, seqno, hash),
+    confirmPushed: async (pushed: ConfirmPush) =>
+      UserGenericWrapperActions.confirmPushed(wrapperType, pushed),
     dump: async () => UserGenericWrapperActions.dump(wrapperType),
     makeDump: async () => UserGenericWrapperActions.makeDump(wrapperType),
     needsDump: async () => UserGenericWrapperActions.needsDump(wrapperType),
     needsPush: async () => UserGenericWrapperActions.needsPush(wrapperType),
     push: async () => UserGenericWrapperActions.push(wrapperType),
-    currentHashes: async () => UserGenericWrapperActions.currentHashes(wrapperType),
+    activeHashes: async () => UserGenericWrapperActions.activeHashes(wrapperType),
     merge: async (toMerge: Array<MergeSingle>) =>
       UserGenericWrapperActions.merge(wrapperType, toMerge),
     storageNamespace: async () => UserGenericWrapperActions.storageNamespace(wrapperType),
@@ -722,9 +723,9 @@ export const MetaGroupWrapperActions: MetaGroupWrapperActionsCalls = {
     callLibSessionWorker([`MetaGroupConfig-${groupPk}`, 'keyGetAll']) as Promise<
       ReturnType<MetaGroupWrapperActionsCalls['keyGetAll']>
     >,
-  currentHashes: async (groupPk: GroupPubkeyType) =>
-    callLibSessionWorker([`MetaGroupConfig-${groupPk}`, 'currentHashes']) as Promise<
-      ReturnType<MetaGroupWrapperActionsCalls['currentHashes']>
+  activeHashes: async (groupPk: GroupPubkeyType) =>
+    callLibSessionWorker([`MetaGroupConfig-${groupPk}`, 'activeHashes']) as Promise<
+      ReturnType<MetaGroupWrapperActionsCalls['activeHashes']>
     >,
   loadKeyMessage: async (
     groupPk: GroupPubkeyType,

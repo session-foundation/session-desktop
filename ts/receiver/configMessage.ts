@@ -128,7 +128,6 @@ async function mergeUserConfigsWithIncomingUpdates(
           variant
         );
       }
-
       const hashesMerged = await UserGenericWrapperActions.merge(variant, toMerge);
 
       const needsDump = await UserGenericWrapperActions.needsDump(variant);
