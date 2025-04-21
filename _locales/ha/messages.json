@@ -250,7 +250,6 @@
   "copy": "Kwafi",
   "create": "Ƙirƙiri",
   "cut": "Yanke",
-  "databaseErrorGeneric": "An sami kuskuren bayanai.<br/><br/>Fitar da bayanan aikace-aikacen ku don rabawa don warware matsala. Idan wannan bai yi nasara ba, sake sanya Session kuma dawo da asusunku.<br/><br/>Gargadi: Wannan zai haifar da asarar duk saƙonni, haɗe-haɗe, da bayanan asusu sama da sati biyu.",
   "databaseErrorTimeout": "Mun lura cewa Session yana ɗaukar dogon lokaci don farawa.<br/><br/>Za ku iya ci gaba da jira, fitar da log ɗin na'urarku don rabawa don magance matsaloli, ko sake farawa Session.",
   "databaseErrorUpdate": "Bayanan aikace-aikacen ku ba su dace da wannan sigar Session. Sake shigar da aikace-aikacen kuma dawo da asusunka don samar da sabon database kuma ci gaba da amfani da Session.<br/><br/>Gargadi: Wannan zai haifar da rasa duk sakonni da fayiloli fiye da makonni biyu.",
   "databaseOptimizing": "Ƙarƙare Bayanai",

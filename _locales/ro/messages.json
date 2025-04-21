@@ -251,7 +251,6 @@
   "copy": "Copiază",
   "create": "Creează",
   "cut": "Decupează",
-  "databaseErrorGeneric": "A apărut o eroare în baza de date.<br/><br/>Exportați jurnalele aplicației dvs. pentru a le partaja în scopuri de depanare. Dacă acest lucru nu reușește, reinstalați Session și restaurați contul.<br/><br/>Atenție: Acest lucru va duce la pierderea tuturor mesajelor, atașamentelor și datelor contului mai vechi de două săptămâni.",
   "databaseErrorTimeout": "Am observat că Session durează mult timp să pornească.<br/><br/>Puteți continua să așteptați, să exportați jurnalele dispozitivului pentru a le partaja pentru depanare sau să încercați să reporniți Session.",
   "databaseErrorUpdate": "Baza de date a aplicației dumneavoastră este incompatibilă cu această versiune de Session. Reinstalați aplicația și restaurați contul pentru a genera o nouă bază de date și a continua să folosiți Session.<br/><br/>Atenție: Aceasta va conduce la pierderea tuturor mesajelor și atașamentelor mai vechi de două săptămâni.",
   "databaseOptimizing": "Optimizare bază de date",

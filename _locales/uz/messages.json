@@ -251,7 +251,6 @@
   "copy": "Nusxalash",
   "create": "Yaratish",
   "cut": "Kesish",
-  "databaseErrorGeneric": "Ma'lumotlar bazasida xato yuz berdi.<br/><br/>Dastur loglaringizni eksport qiling va muammolarni hal qilish uchun ulashing. Agar bu muvaffaqiyatsiz bo'lsa, Session ni qayta o'rnating va akkauntingizni tiklang.<br/><br/>Ogohlik: Bu barcha xabarlar, ilova va ikki haftadan eski akkaunt ma'lumotlarini yo'qotishga olib keladi.",
   "databaseErrorTimeout": "Session ishga tushishiga koʻp vaqt ketayotganini aniqladik.<br/><br/>Kutishda davom etishingiz, muammolarni bartaraf etish uchun qurilma jurnallarini baham koʻrish uchun eksport qilishingiz yoki Session ilovasini qayta ishga tushirishga urinib koʻrishingiz mumkin.",
   "databaseErrorUpdate": "Sizning ilova ma'lumotlar bazasi ushbu Session versiyasi bilan mos kelmaydi. Ilovani qayta o'rnating va hisobingizni tiklang, yangi ma'lumotlar bazasini yaratish va Session dan foydalanishni davom ettirish uchun.<br/><br/>Ogohlantirish: bu ikki haftalikdan katta barcha xabarlar va ilovalarni yo'qotishga olib keladi.",
   "databaseOptimizing": "Ma'lumotlar bazasi optimallashtirilmoqda",

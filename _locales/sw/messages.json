@@ -251,7 +251,6 @@
   "copy": "Nakili",
   "create": "Unda",
   "cut": "Kata",
-  "databaseErrorGeneric": "Kosa la database limetokea.<br/><br/>Toa logi za programu zako kushirikisha kwa utatuzi. Ikiwa hili halitafanikiwa, sakinisha tena Session na urejeshe akaunti yako.<br/><br/> Onyo: Hii itasababisha kupotea kwa ujumbe wote, viambatisho, na data ya akaunti iliyo zaidi ya wiki mbili.",
   "databaseErrorTimeout": "Tumeona Session inachukua muda mrefu kuanza.<br/><br/>Unaweza kuendelea kusubiri, kuhamisha kumbukumbu za kifaa chako kushiriki kwa kutatua shida, au jaribu kuanzisha Session upya.",
   "databaseErrorUpdate": "Hifadhidata ya programu yako hailingani na toleo hili la Session. Sakinusha programu na urejeshe akaunti yako ili kuunda hifadhidata mpya na uendelee kutumia Session.<br/><br/>Onyo: Hii itasababisha kupoteza ujumbe na viambatanisho vyote vilivyo zaidi ya wiki mbili.",
   "databaseOptimizing": "Kuhamisha Hifadhidata",

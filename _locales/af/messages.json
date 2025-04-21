@@ -250,7 +250,6 @@
   "copy": "Kopieer",
   "create": "Skep",
   "cut": "Sny",
-  "databaseErrorGeneric": "’n Databasisfout het voorgekom.<br/><br/>Voer jou toepassingslogboeke uit om te deel vir foutsporing. Indien dit onsuksesvol is, herinstalleer Session en herstel jou rekening.<br/><br/>Waarskuwing: Dit sal lei tot die verlies van alle boodskappe, aanhegsels, en rekeningdata ouer as twee weke.",
   "databaseErrorTimeout": "Ons het opgemerk Session neem lank om te begin.<br/><br/>Jy kan aanhou wag, jou toestel logs uitvoer om te deel vir foutsporing, of probeer om Session te herbegin.",
   "databaseErrorUpdate": "Jou app databasis is onversoenbaar met hierdie weergawe van Session. Herinstalleer die app en herstel jou rekening om 'n nuwe databasis te genereer en voort te gaan met die gebruik van Session.<br/><br/>Waarskuwing: Dit sal lei tot die verlies van alle boodskappe en aanhegsels ouer as twee weke.",
   "databaseOptimizing": "Optimalisering databasis",

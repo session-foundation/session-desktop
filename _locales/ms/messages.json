@@ -251,7 +251,6 @@
   "copy": "Salin",
   "create": "Buat",
   "cut": "Potong",
-  "databaseErrorGeneric": "Ralat pangkalan data berlaku.<br/><br/>Eksport log aplikasi anda untuk bahagian penyelesaian masalah. Jika ini tidak berjaya, pasang semula Session dan kembalikan akaun anda.<br/><br/>Amaran: Ini akan menyebabkan kehilangan semua mesej, lampiran, dan data akaun lebih lama daripada dua minggu.",
   "databaseErrorTimeout": "Kami perasan Session mengambil masa yang lama untuk bermula.<br/><br/>Anda boleh terus menunggu, eksport log peranti anda untuk perkongsian penyelesaian masalah atau cuba mulakan semula Session.",
   "databaseErrorUpdate": "Pangkalan data aplikasi anda tidak serasi dengan versi Session ini. Pasang semula aplikasi ini dan pulihkan akaun anda untuk menjana pangkalan data baru dan terus menggunakan Session.<br/><br/>Amaran: Ini akan menyebabkan kehilangan semua mesej dan lampiran yang lebih lama daripada dua minggu.",
   "databaseOptimizing": "Mengoptimumkan Pangkalan Data",
