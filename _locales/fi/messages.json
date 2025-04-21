@@ -251,7 +251,6 @@
   "copy": "Kopioi",
   "create": "Luo",
   "cut": "Leikkaa",
-  "databaseErrorGeneric": "Tapahtui tietokantavirhe.<br/><br/>Vie sovelluslokisi vianselvitystä varten. Jollei tämä onnistu, asenna Session uudelleen ja palauta tilisi.<br/><br/>Varoitus: Tämän seurauksena kaikki kahta viikkoa vanhemmat viestit, liitteet ja tilitiedot menetetään.",
   "databaseErrorTimeout": "Huomasimme, että Session käynnistyy hitaasti.<br/><br/>Voit jatkaa odottamista, viedä laitteesi lokit jaettavaksi vianmäärityksessä tai yrittää käynnistää Session uudelleen.",
   "databaseErrorUpdate": "Sovellustietokanta ei ole yhteensopiva tämän Session version kanssa. Asenna sovellus uudelleen ja palauta tilisi, jotta voit luoda uuden tietokannan ja jatkaa Session käyttöä.<br/><br/>Varoitus: Tämä johtaa yli kaksi viikkoa vanhojen viestien ja liitteiden menetykseen.",
   "databaseOptimizing": "Optimoidaan tietokanta",

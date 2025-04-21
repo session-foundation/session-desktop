@@ -253,7 +253,6 @@
   "copy": "Kopiuj",
   "create": "Utwórz",
   "cut": "Wytnij",
-  "databaseErrorGeneric": "Wystąpił błąd bazy danych.<br/><br/>Wyeksportuj dzienniki aplikacji, aby udostępnić je w celu rozwiązania problemu. Jeśli to się nie powiedzie, zainstaluj ponownie aplikację Session i przywróć swoje konto.<br/><br/>Ostrzeżenie: spowoduje to utratę wszystkich wiadomości, załączników i danych konta starszych niż dwa tygodnie.",
   "databaseErrorTimeout": "Zauważyliśmy, że uruchomienie aplikacji Session zajmuje dużo czasu.<br/><br/> Możesz kontynuować oczekiwanie, wyeksportować dzienniki urządzenia do udostępnienia w celu rozwiązania problemów lub spróbować ponownie uruchomić aplikację Session.",
   "databaseErrorUpdate": "Twoja baza danych aplikacji jest niezgodna z tą wersją aplikacji Session. Aby wygenerować nową bazę danych i dalej korzystać z aplikacji Session, zainstaluj aplikację ponownie i przywróć swoje konto.<br/><br/>Uwaga: spowoduje to utratę wszystkich wiadomości i załączników starszych niż dwa tygodnie.",
   "databaseOptimizing": "Optymalizacja bazy danych",

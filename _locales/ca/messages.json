@@ -250,7 +250,6 @@
   "copy": "Copiar",
   "create": "Crear",
   "cut": "Retalla",
-  "databaseErrorGeneric": "S'ha produït un error de la base de dades.<br/><br/>Exporteu els registres de l'aplicació per compartir-los per a la resolució de problemes. Si no té èxit, reinstal·leu Session i restaureu el vostre compte.<br/><br/>Advertència: Això suposarà la pèrdua de tots els missatges, fitxers adjunts i dades del compte anteriors a dues setmanes.",
   "databaseErrorTimeout": "Hem notat que Session està trigant molt a començar.<br/><br/>Podeu continuar esperant, exportar els registres del dispositiu per compartir-los per solucionar problemes, o intentar reiniciar Session.",
   "databaseErrorUpdate": "La base de dades de la vostra aplicació no és compatible amb aquesta versió de Session. Reinstal·leu l'aplicació i restaureu el vostre compte per generar una nova base de dades i continuar utilitzant Session.<br/><br/>Avís: Això donarà lloc a la pèrdua de tots els missatges i adjunts anteriors a dues setmanes.",
   "databaseOptimizing": "Optimitzant la base de dades",

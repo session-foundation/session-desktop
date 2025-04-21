@@ -251,7 +251,6 @@
   "copy": "Copier",
   "create": "Créer",
   "cut": "Couper",
-  "databaseErrorGeneric": "Une erreur de base de données est survenue.<br/><br/>Exportez vos journaux d'application pour les partager pour le dépannage. Si cela échoue, réinstallez Session et restaurez votre compte.<br/><br/>Attention: Cela entraînera la perte de tout les messages, pièces jointes et données de compte de plus de deux semaines.",
   "databaseErrorTimeout": "Nous avons remarqué que Session met beaucoup de temps à démarrer.<br/><br/>Vous pouvez continuer à attendre, exporter les journaux de votre appareil pour les partager pour le dépannage ou essayer de redémarrer Session.",
   "databaseErrorUpdate": "La base de données de votre application est incompatible avec cette version de Session. Réinstallez l'application et restaurez votre compte pour générer une nouvelle base de données et continuer à utiliser Session.<br/><br/>Avertissement : Cela entraînera la perte de tous les messages et pièces jointes datant de plus de deux semaines.",
   "databaseOptimizing": "Optimisation de la base de données",

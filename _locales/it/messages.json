@@ -251,7 +251,6 @@
   "copy": "Copia",
   "create": "Crea",
   "cut": "Taglia",
-  "databaseErrorGeneric": "Si è verificato un errore del database.<br/><br/>Esporta i log dell'applicazione per condividerli e analizzare il problema. Se ciò non riesce, reinstalla Session e ripristina il tuo account.<br/><br/>Avviso: questo comporterà la perdita di tutti i messaggi, gli allegati e i dati dell'account più vecchi di due settimane.",
   "databaseErrorTimeout": "Abbiamo notato che Session ci impiega molto tempo ad avviarsi.<br/><br/>Puoi continuare ad attendere, esportare i log del dispositivo per la risoluzione dei problemi o provare a riavviare Session.",
   "databaseErrorUpdate": "Il database della tua app non è compatibile con questa versione di Session. Reinstalla l'app e ripristina il tuo account per generare un nuovo database e continuare a utilizzare Session.<br/><br/> Attenzione: Questo comporterà la perdita di tutti i messaggi e di tutti gli allegati più vecchi di due settimane.",
   "databaseOptimizing": "Ottimizzazione del database",

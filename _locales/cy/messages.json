@@ -251,7 +251,6 @@
   "copy": "Copïo",
   "create": "Creu",
   "cut": "Torri",
-  "databaseErrorGeneric": "Mae gwall cronfa ddata wedi digwydd.<br/><br/>Allforiwch gofnodion eich cais i'w rhannu ar gyfer datrys problemau. Os yw hyn yn aflwyddiannus, ailosodwch Session a adfer eich cyfrif.<br/><br/>Rhybudd: Bydd hyn yn arwain at golled o'r holl negeseuon, atodiadau, a data cyfrif sydd ymhellach i ffwrdd na phythefnos.",
   "databaseErrorTimeout": "Rydym wedi sylwi bod Session yn cymryd llawer o amser i ddechrau.<br/><br/>Gallwch barhau i aros, allforio logiau eich dyfais i'w rhannu ar gyfer datrys problemau, neu geisio ailgychwyn Session.",
   "databaseErrorUpdate": "Mae eich cronfa ddata ap yn anghydnaws â'r fersiwn hon o Session. Ailosodwch yr ap a darganfod eich cyfrif i greu cronfa ddata newydd a pharhau i ddefnyddio Session.<br/><br/>Rhybudd: Bydd hyn yn arwain at golli’r holl negeseuon a’r atodiadau sy’n hŷn na phythefnos.",
   "databaseOptimizing": "Optimeiddio Cronfa Ddata",
