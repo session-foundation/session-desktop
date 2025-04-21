@@ -210,7 +210,9 @@ export class PubKey {
   }
 
   public static isBlinded(key: string) {
-    return key.startsWith(KeyPrefixType.blinded15) || key.startsWith(KeyPrefixType.blinded25);
+    return (
+      key && (key.startsWith(KeyPrefixType.blinded15) || key.startsWith(KeyPrefixType.blinded25))
+    );
   }
 
   // TODO we should probably move those to a libsession exported ts file

@@ -85,7 +85,6 @@ async function insertContactFromDBIntoWrapperAndRefresh(
     expireTimer,
   });
   try {
-    window.log.debug('inserting into contact wrapper: ', JSON.stringify(wrapperContact));
     await ContactsWrapperActions.set(wrapperContact);
   } catch (e) {
     window.log.warn(`ContactsWrapperActions.set of ${id} failed with ${e.message}`);

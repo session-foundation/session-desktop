@@ -41,7 +41,7 @@ const StyledContent = styled.div`
   width: 100%;
 `;
 
-// We cannot import toastutils from the password window as it is pulling the whole sending
+// We cannot import ToastUtils from the password window as it is pulling the whole sending
 // pipeline(and causing crashes on Session instances with password)
 function pushToastError(id: string, description: string) {
   toast.error(<SessionToast description={description} />, {

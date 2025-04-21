@@ -38,6 +38,7 @@ import {
   isBlindingWrapperType,
   isMultiEncryptWrapperType,
   isUserConfigWrapperType,
+  isUtilitiesWrapperType,
 } from '../webworker/workers/browser/libsession_worker_functions';
 // eslint-disable-next-line import/no-unresolved, import/extensions
 import { Data } from '../data/data';
@@ -84,13 +85,19 @@ function byUserNamespace(incomingConfigs: Array<RetrieveMessageItemWithNamespace
 }
 
 async function printDumpForDebug(prefix: string, variant: ConfigWrapperObjectTypesMeta) {
+  if (
+    isMultiEncryptWrapperType(variant) ||
+    isBlindingWrapperType(variant) ||
+    isUtilitiesWrapperType(variant)
+  ) {
+    return; // nothing to print for those
+  }
+
   if (isUserConfigWrapperType(variant)) {
     window.log.info(prefix, StringUtils.toHex(await UserGenericWrapperActions.makeDump(variant)));
     return;
   }
-  if (isMultiEncryptWrapperType(variant) || isBlindingWrapperType(variant)) {
-    return; // nothing to print for this one
-  }
+
   const metaGroupDumps = await MetaGroupWrapperActions.metaMakeDump(
     getGroupPubkeyFromWrapperType(variant)
   );

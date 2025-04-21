@@ -156,9 +156,11 @@ async function pushChangesToUserSwarmIfNeeded() {
 
   const controller = new AbortController();
 
+  const sortedSubRequests = compact([...storeRequests, deleteHashesSubRequest]);
+
   const result = await timeoutWithAbort(
     MessageSender.sendEncryptedDataToSnode({
-      sortedSubRequests: compact([...storeRequests, deleteHashesSubRequest]),
+      sortedSubRequests,
       destination: us,
       method: 'sequence',
       abortSignal: controller.signal,
@@ -168,8 +170,7 @@ async function pushChangesToUserSwarmIfNeeded() {
     controller
   );
 
-  const expectedReplyLength =
-    changesToPush.messages.length + (changesToPush.allOldHashes.size ? 1 : 0);
+  const expectedReplyLength = sortedSubRequests.length;
   // we do a sequence call here. If we do not have the right expected number of results, consider it a failure
   if (!isArray(result) || result.length !== expectedReplyLength) {
     window.log.info(

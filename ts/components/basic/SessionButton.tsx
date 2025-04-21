@@ -127,6 +127,7 @@ export type SessionButtonProps = {
   dataTestId?: React.SessionDataTestId;
   reference?: RefObject<HTMLButtonElement>;
   className?: string;
+  style?: React.CSSProperties;
 };
 
 export const SessionButton = (props: SessionButtonProps) => {
@@ -145,6 +146,7 @@ export const SessionButton = (props: SessionButtonProps) => {
     onClick = null,
     fontWeight,
     margin,
+    style,
   } = props;
 
   const clickHandler = (e: any) => {
@@ -175,7 +177,7 @@ export const SessionButton = (props: SessionButtonProps) => {
       ref={reference}
       data-testid={dataTestId}
       $fontWeight={fontWeight}
-      style={{ margin }}
+      style={{ ...style, margin }}
     >
       {props.children || text}
     </StyledButton>

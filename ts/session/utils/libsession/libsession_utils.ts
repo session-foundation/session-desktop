@@ -2,7 +2,7 @@
 /* eslint-disable import/extensions */
 /* eslint-disable import/no-unresolved */
 import { GroupPubkeyType, PubkeyType } from 'libsession_util_nodejs';
-import { from_hex } from 'libsodium-wrappers-sumo';
+import { from_hex, to_hex } from 'libsodium-wrappers-sumo';
 import { compact, difference, flatten, isEmpty, isNil, isString, omit } from 'lodash';
 import Long from 'long';
 import { UserUtils } from '..';
@@ -15,6 +15,7 @@ import {
 import {
   UserGenericWrapperActions,
   MetaGroupWrapperActions,
+  UtilitiesActions,
 } from '../../../webworker/workers/browser/libsession_worker_interface';
 import {
   SnodeNamespace,
@@ -45,6 +46,7 @@ async function initializeLibSessionUtilWrappers() {
     throw new Error('edkeypair not found for current user');
   }
   const privateKeyEd25519 = keypair.privKeyBytes;
+  await UtilitiesActions.freeAllWrappers();
 
   // fetch the dumps we already have from the database
   const dumps = await ConfigDumpData.getAllDumpsWithData();
@@ -62,7 +64,9 @@ async function initializeLibSessionUtilWrappers() {
     if (!isUserConfigWrapperType(variant)) {
       continue;
     }
-    window.log.debug('initializeLibSessionUtilWrappers initing from dump', variant);
+    window.log.debug(
+      `initializeLibSessionUtilWrappers initing from dump "${variant}", length: ${dump.data.length}: ${to_hex(dump.data)}`
+    );
     try {
       await UserGenericWrapperActions.init(
         variant,
@@ -130,6 +134,7 @@ export type UserDestinationChanges = {
   messages: Array<PendingChangesForUs>;
   allOldHashes: Set<string>;
 };
+
 export type GroupDestinationChanges = {
   messages: Array<PendingChangesForGroup>;
   allOldHashes: Set<string>;

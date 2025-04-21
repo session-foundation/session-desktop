@@ -10,6 +10,7 @@ import {
   MultiEncryptWrapperNode,
   UserConfigWrapperNode,
   UserGroupsWrapperNode,
+  UtilitiesWrapperNode,
 } from 'libsession_util_nodejs';
 import { isEmpty, isNull, isObject } from 'lodash';
 
@@ -24,6 +25,8 @@ import {
   isMetaGroupWrapperType,
   isMultiEncryptWrapperType,
   isUserConfigWrapperType,
+  isUtilitiesWrapperType,
+  type UtilitiesConfig,
 } from '../../browser/libsession_worker_functions';
 
 /* eslint-disable no-console */
@@ -129,6 +132,16 @@ function getBlindingWrapper(wrapperType: BlindingConfig): BlindingWrapperNode {
     return BlindingWrapperNode;
   }
   assertUnreachable(wrapperType, `getBlindingWrapper missing global handling for "${wrapperType}"`);
+}
+
+function getUtilitiesWrapper(wrapperType: UtilitiesConfig): UtilitiesWrapperNode {
+  if (isUtilitiesWrapperType(wrapperType)) {
+    return UtilitiesWrapperNode;
+  }
+  assertUnreachable(
+    wrapperType,
+    `getUtilitiesWrapper missing global handling for "${wrapperType}"`
+  );
 }
 
 function isUInt8Array(value: unknown): value is Uint8Array {
@@ -275,6 +288,15 @@ function initGroupWrapper(options: Array<unknown>, wrapperType: ConfigWrapperGro
   assertUnreachable(groupType, `initGroupWrapper: Missing case error "${groupType}"`);
 }
 
+function freeAllWrappers() {
+  userProfileWrapper = undefined;
+  contactsConfigWrapper = undefined;
+  userGroupsConfigWrapper = undefined;
+  convoInfoVolatileConfigWrapper = undefined;
+
+  metaGroupWrappers.clear();
+}
+
 onmessage = async (e: {
   data: [number, ConfigWrapperObjectTypesMeta | 'Blinding', string, ...any];
 }) => {
@@ -282,8 +304,8 @@ onmessage = async (e: {
 
   try {
     if (action === 'init') {
-      if (config === 'Blinding' || config === 'MultiEncrypt') {
-        // nothing to do for the blinding/multiEncrypt wrapper, all functions are static
+      if (config === 'Blinding' || config === 'MultiEncrypt' || config === 'Utilities') {
+        // nothing to do for the blinding/multiEncrypt/utilities wrapper, all functions are static
         postMessage([jobId, null, null]);
         return;
       }
@@ -300,8 +322,8 @@ onmessage = async (e: {
       assertUnreachable(config, `Unhandled init wrapper type: ${config}`);
     }
     if (action === 'free') {
-      if (config === 'Blinding' || config === 'MultiEncrypt') {
-        // nothing to do for the blinding/multiEncrypt wrapper, all functions are static
+      if (config === 'Blinding' || config === 'MultiEncrypt' || config === 'Utilities') {
+        // nothing to do for the blinding/multiEncrypt/utilities wrapper, all functions are static
         postMessage([jobId, null, null]);
         return;
       }
@@ -318,6 +340,11 @@ onmessage = async (e: {
       }
       assertUnreachable(config, `Unhandled free wrapper type: ${config}`);
     }
+    if (action === 'freeAllWrappers') {
+      freeAllWrappers();
+      postMessage([jobId, null, null]);
+      return;
+    }
 
     const wrapper = isUserConfigWrapperType(config)
       ? getCorrespondingUserWrapper(config)
@@ -327,7 +354,9 @@ onmessage = async (e: {
           ? getMultiEncryptWrapper(config)
           : isBlindingWrapperType(config)
             ? getBlindingWrapper(config)
-            : undefined;
+            : isUtilitiesWrapperType(config)
+              ? getUtilitiesWrapper(config)
+              : undefined;
     if (!wrapper) {
       throw new Error(`did not find an already built (or static) wrapper for config: "${config}"`);
     }

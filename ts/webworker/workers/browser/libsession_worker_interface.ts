@@ -23,6 +23,7 @@ import {
   UserGroupsWrapperActionsCalls,
   EncryptionDomain,
   type ConfirmPush,
+  type UtilitiesWrapperActionsCalls,
 } from 'libsession_util_nodejs';
 // eslint-disable-next-line import/order
 import { join } from 'path';
@@ -830,6 +831,12 @@ export const BlindingActions: BlindingActionsCalls = {
     callLibSessionWorker(['Blinding', 'blindVersionSignRequest', opts]) as Promise<
       ReturnType<BlindingActionsCalls['blindVersionSignRequest']>
     >,
+};
+
+export const UtilitiesActions: UtilitiesWrapperActionsCalls = {
+  freeAllWrappers: async () => {
+    await callLibSessionWorker(['Utilities', 'freeAllWrappers']);
+  },
 };
 
 export const callLibSessionWorker = async (
