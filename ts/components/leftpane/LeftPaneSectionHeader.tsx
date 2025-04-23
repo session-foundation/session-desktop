@@ -20,7 +20,7 @@ import { SpacerMD, SpacerSM } from '../basic/Text';
 import { MenuButton } from '../buttons';
 import { SessionIcon, SessionIconButton } from '../icon';
 import { Localizer } from '../basic/Localizer';
-import { H2 } from '../basic/Heading';
+import { H4 } from '../basic/Heading';
 
 const StyledLeftPaneSectionHeader = styled(Flex)`
   height: var(--main-view-header-height);
@@ -28,7 +28,7 @@ const StyledLeftPaneSectionHeader = styled(Flex)`
   transition: var(--default-duration);
 `;
 
-const SectionTitle = styled(H2)`
+const SectionTitle = styled(H4)`
   flex-grow: 1;
 `;
 
@@ -68,7 +68,7 @@ const StyledBanner = styled(Flex)`
 `;
 
 const StyledBannerTitle = styled.p`
-  font-size: var(--font-size-h4);
+  font-size: var(--font-size-h8);
   font-weight: 500;
   line-height: 1;
 `;
