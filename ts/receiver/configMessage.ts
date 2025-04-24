@@ -35,8 +35,7 @@ import {
   ConfigWrapperObjectTypesMeta,
   ConfigWrapperUser,
   getGroupPubkeyFromWrapperType,
-  isBlindingWrapperType,
-  isMultiEncryptWrapperType,
+  isStaticSessionWrapper,
   isUserConfigWrapperType,
 } from '../webworker/workers/browser/libsession_worker_functions';
 // eslint-disable-next-line import/no-unresolved, import/extensions
@@ -84,13 +83,15 @@ function byUserNamespace(incomingConfigs: Array<RetrieveMessageItemWithNamespace
 }
 
 async function printDumpForDebug(prefix: string, variant: ConfigWrapperObjectTypesMeta) {
+  if (isStaticSessionWrapper(variant)) {
+    return; // nothing to print for those static wrappers
+  }
+
   if (isUserConfigWrapperType(variant)) {
     window.log.info(prefix, StringUtils.toHex(await UserGenericWrapperActions.makeDump(variant)));
     return;
   }
-  if (isMultiEncryptWrapperType(variant) || isBlindingWrapperType(variant)) {
-    return; // nothing to print for this one
-  }
+
   const metaGroupDumps = await MetaGroupWrapperActions.metaMakeDump(
     getGroupPubkeyFromWrapperType(variant)
   );
@@ -128,7 +129,6 @@ async function mergeUserConfigsWithIncomingUpdates(
           variant
         );
       }
-
       const hashesMerged = await UserGenericWrapperActions.merge(variant, toMerge);
 
       const needsDump = await UserGenericWrapperActions.needsDump(variant);

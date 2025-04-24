@@ -626,13 +626,13 @@ export class SwarmPolling {
       for (let index = 0; index < LibSessionUtil.requiredUserVariants.length; index++) {
         const variant = LibSessionUtil.requiredUserVariants[index];
         try {
-          const toBump = await UserGenericWrapperActions.currentHashes(variant);
+          const toBump = await UserGenericWrapperActions.activeHashes(variant);
 
           if (toBump?.length) {
             configHashesToBump.push(...toBump);
           }
         } catch (e) {
-          window.log.warn(`SwarmPolling: failed to get currentHashes for user variant ${variant}`);
+          window.log.warn(`SwarmPolling: failed to get activeHashes for user variant ${variant}`);
         }
       }
       window.log.debug(
@@ -641,7 +641,7 @@ export class SwarmPolling {
       return configHashesToBump;
     }
     if (type === ConversationTypeEnum.GROUPV2 && PubKey.is03Pubkey(pubkey)) {
-      const toBump = await MetaGroupWrapperActions.currentHashes(pubkey);
+      const toBump = await MetaGroupWrapperActions.activeHashes(pubkey);
       window.log.debug(
         `SwarmPolling: configHashesToBump group(${ed25519Str(pubkey)}) count: ${toBump.length}`
       );

@@ -6,6 +6,8 @@ import useAsyncFn from 'react-use/lib/useAsyncFn';
 import useInterval from 'react-use/lib/useInterval';
 import { filesize } from 'filesize';
 
+import type { PubkeyType } from 'libsession_util_nodejs';
+import { chunk } from 'lodash';
 import { Flex } from '../../basic/Flex';
 import { SpacerXS } from '../../basic/Text';
 import { localize } from '../../../localization/localeTools';
@@ -15,14 +17,48 @@ import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
 import { ToastUtils, UserUtils } from '../../../session/utils';
 import { getLatestReleaseFromFileServer } from '../../../session/apis/file_server_api/FileServerApi';
 import { SessionSpinner } from '../../loading';
-import { setDebugMode } from '../../../state/ducks/debug';
 import { updateDebugMenuModal } from '../../../state/ducks/modalDialog';
+import { setDebugMode } from '../../../state/ducks/debug';
 import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_constants';
 import { type ReleaseChannels } from '../../../updater/types';
 import { fetchLatestRelease } from '../../../session/fetch_latest_release';
 import { saveLogToDesktop } from '../../../util/logger/renderer_process_logging';
 import { DURATION } from '../../../session/constants';
 import { Errors } from '../../../types/Errors';
+import { PubKey } from '../../../session/types';
+import { ConvoHub } from '../../../session/conversations';
+import { ConversationTypeEnum } from '../../../models/types';
+import { ContactsWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
+import { usePolling } from '../../../hooks/usePolling';
+
+const hexRef = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
+
+function genRandomHexString(length: number) {
+  const result = [];
+
+  for (let n = 0; n < length; n++) {
+    result.push(hexRef[Math.floor(Math.random() * 16)]);
+  }
+  return result.join('');
+}
+
+async function generateOneRandomContact() {
+  const numBytes = PubKey.PUBKEY_LEN - 2;
+
+  const hexBuffer = genRandomHexString(numBytes);
+  const id: PubkeyType = `05${hexBuffer}`;
+  const created = await ConvoHub.use().getOrCreateAndWait(id, ConversationTypeEnum.PRIVATE);
+  // now() is not going to be synced on devices, instead createdAt will be used.
+  // createdAt is set to now in libsession-util itself,
+  // but we still need to mark that conversation as active
+  // for it to be inserted in the config
+  created.setKey('active_at', Date.now());
+  created.setKey('isApproved', true);
+  created.setSessionDisplayNameNoCommit(id.slice(2, 8));
+
+  await created.commit();
+  return created;
+}
 
 const CheckVersionButton = ({ channelToCheck }: { channelToCheck: ReleaseChannels }) => {
   const [loading, setLoading] = useState(false);
@@ -172,11 +208,67 @@ const ClearOldLogsButton = () => {
       onClick={() => {
         void handleDeleteAllLogs();
       }}
+      style={{ minWidth: '250px' }}
     >
       Clear old logs {filesize(logSize)}
     </SessionButton>
   );
 };
+
+const dummyContactPerClick = 500;
+
+async function fetchContactsCountAndUpdate() {
+  const count = (await ContactsWrapperActions.getAll()).length;
+  if (count && Number.isFinite(count)) {
+    return count;
+  }
+  return 0;
+}
+
+function AddDummyContactButton() {
+  const [loading, setLoading] = useState(false);
+  const [addedCount, setAddedCount] = useState(0);
+
+  const { data: contactsCount } = usePolling(
+    fetchContactsCountAndUpdate,
+    1000,
+    'AddDummyContactButton'
+  );
+
+  return (
+    <SessionButton
+      onClick={async () => {
+        if (loading) {
+          return;
+        }
+        try {
+          setLoading(true);
+          setAddedCount(0);
+          const chunkSize = 10;
+          const allIndexes = Array.from({ length: dummyContactPerClick }).map((_unused, i) => i);
+          const chunks = chunk(allIndexes, chunkSize);
+          for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
+            // eslint-disable-next-line no-await-in-loop
+            await Promise.all(chunks[chunkIndex].map(() => generateOneRandomContact()));
+            setAddedCount(Math.min(chunkIndex * chunkSize, dummyContactPerClick));
+          }
+        } finally {
+          setLoading(false);
+          setAddedCount(0);
+        }
+      }}
+      disabled={loading}
+    >
+      {loading ? (
+        <>
+          {addedCount}/{dummyContactPerClick}...
+        </>
+      ) : (
+        `Add ${dummyContactPerClick} contacts (${contactsCount})`
+      )}
+    </SessionButton>
+  );
+}
 
 export const DebugActions = () => {
   const dispatch = useDispatch();
@@ -246,6 +338,7 @@ export const DebugActions = () => {
         >
           Open storage profile
         </SessionButton>
+        <AddDummyContactButton />
       </Flex>
     </>
   );

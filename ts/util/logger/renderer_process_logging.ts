@@ -17,7 +17,7 @@ import {
   type LogEntryType,
 } from './shared';
 import * as log from './log';
-import { isDevProd, isUnitTest } from '../../shared/env_vars';
+import { isUnitTest } from '../../shared/env_vars';
 import { Errors } from '../../types/Errors';
 import LIBSESSION_CONSTANTS from '../../session/utils/libsession/libsession_constants';
 import { buildPinoLogger } from './buildPinoLogger';
@@ -60,11 +60,9 @@ function now() {
 }
 
 function logAtLevel(level: LogLevel, ...args: ReadonlyArray<unknown>): void {
-  if (isDevProd()) {
-    // we are in renderer, we log to the console tab, always
-    const prefix = getLogLevelString(level).toUpperCase().padEnd(levelMaxLength, ' ');
-    console._log(prefix, now(), ...args);
-  }
+  // we are in renderer, we log to the console tab, always
+  const prefix = getLogLevelString(level).toUpperCase().padEnd(levelMaxLength, ' ');
+  console._log(prefix, now(), ...args);
 
   const levelString = getLogLevelString(level);
   const msg = cleanArgs(args);

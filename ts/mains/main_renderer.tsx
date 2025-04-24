@@ -87,6 +87,7 @@ window.globalOnlineStatus = true; // default to true as we don't get an event on
 window.getGlobalOnlineStatus = () => window.globalOnlineStatus;
 
 window.log.info('background page reloaded');
+
 window.log.info('environment:', window.getEnvironment());
 
 let newVersion = false;
@@ -154,6 +155,7 @@ Storage.onready(async () => {
     return;
   }
   first = false;
+
   // Update zoom
   window.updateZoomFactor();
 

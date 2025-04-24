@@ -1533,7 +1533,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
 
     if (valueForced !== Boolean(this.isApproved())) {
-      window?.log?.info(`Setting ${ed25519Str(this.id)} isApproved to: ${value}`);
+      window?.log?.debug(`Setting ${ed25519Str(this.id)} isApproved to: ${value}`);
       this.set({
         isApproved: valueForced,
       });
@@ -1554,7 +1554,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
     const valueForced = Boolean(value);
     if (valueForced !== Boolean(this.didApproveMe())) {
-      window?.log?.info(`Setting ${ed25519Str(this.id)} didApproveMe to: ${value}`);
+      window?.log?.debug(`Setting ${ed25519Str(this.id)} didApproveMe to: ${value}`);
       this.set({
         didApproveMe: valueForced,
       });
