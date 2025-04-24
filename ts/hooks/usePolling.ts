@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-export function usePolling<T>(fn: () => Promise<T>, delay: number) {
+export function usePolling<T>(fn: () => Promise<T>, pollInterval: number, identifier: string) {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
@@ -19,7 +19,7 @@ export function usePolling<T>(fn: () => Promise<T>, delay: number) {
           setError(null);
         }
       } catch (err) {
-        window.log.warn('Polling error:', err);
+        window.log.warn(`${identifier} polling error:`, err);
         if (isMounted) {
           setError(err as Error);
         }
@@ -32,13 +32,13 @@ export function usePolling<T>(fn: () => Promise<T>, delay: number) {
 
     voidedExecute();
 
-    const interval = setInterval(voidedExecute, delay);
+    const interval = setInterval(voidedExecute, pollInterval);
 
     return () => {
       isMounted = false;
       clearInterval(interval);
     };
-  }, [fn, delay]);
+  }, [fn, pollInterval, identifier]);
 
   return { data, error };
 }

@@ -229,7 +229,11 @@ function AddDummyContactButton() {
   const [loading, setLoading] = useState(false);
   const [addedCount, setAddedCount] = useState(0);
 
-  const { data: contactsCount } = usePolling(fetchContactsCountAndUpdate, 1000);
+  const { data: contactsCount } = usePolling(
+    fetchContactsCountAndUpdate,
+    1000,
+    'AddDummyContactButton'
+  );
 
   return (
     <SessionButton
