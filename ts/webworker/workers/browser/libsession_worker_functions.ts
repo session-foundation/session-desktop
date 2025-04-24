@@ -118,3 +118,16 @@ export function getGroupPubkeyFromWrapperType(type: ConfigWrapperGroup): GroupPu
   }
   return type.substring(type.indexOf('-03') + 1) as GroupPubkeyType; // typescript is not yet smart enough
 }
+
+/**
+ * A static wrapper does not need to be init, all its functions are static.
+ */
+export function isStaticSessionWrapper(
+  config: ConfigWrapperObjectTypesMeta
+): config is 'Blinding' | 'MultiEncrypt' | 'Utilities' {
+  return (
+    isMultiEncryptWrapperType(config) ||
+    isBlindingWrapperType(config) ||
+    isUtilitiesWrapperType(config)
+  );
+}

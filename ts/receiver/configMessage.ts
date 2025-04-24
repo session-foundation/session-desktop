@@ -35,10 +35,8 @@ import {
   ConfigWrapperObjectTypesMeta,
   ConfigWrapperUser,
   getGroupPubkeyFromWrapperType,
-  isBlindingWrapperType,
-  isMultiEncryptWrapperType,
+  isStaticSessionWrapper,
   isUserConfigWrapperType,
-  isUtilitiesWrapperType,
 } from '../webworker/workers/browser/libsession_worker_functions';
 // eslint-disable-next-line import/no-unresolved, import/extensions
 import { Data } from '../data/data';
@@ -85,12 +83,8 @@ function byUserNamespace(incomingConfigs: Array<RetrieveMessageItemWithNamespace
 }
 
 async function printDumpForDebug(prefix: string, variant: ConfigWrapperObjectTypesMeta) {
-  if (
-    isMultiEncryptWrapperType(variant) ||
-    isBlindingWrapperType(variant) ||
-    isUtilitiesWrapperType(variant)
-  ) {
-    return; // nothing to print for those
+  if (isStaticSessionWrapper(variant)) {
+    return; // nothing to print for those static wrappers
   }
 
   if (isUserConfigWrapperType(variant)) {

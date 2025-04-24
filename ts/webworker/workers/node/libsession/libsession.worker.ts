@@ -24,6 +24,7 @@ import {
   isBlindingWrapperType,
   isMetaGroupWrapperType,
   isMultiEncryptWrapperType,
+  isStaticSessionWrapper,
   isUserConfigWrapperType,
   isUtilitiesWrapperType,
   type UtilitiesConfig,
@@ -304,7 +305,7 @@ onmessage = async (e: {
 
   try {
     if (action === 'init') {
-      if (config === 'Blinding' || config === 'MultiEncrypt' || config === 'Utilities') {
+      if (isStaticSessionWrapper(config)) {
         // nothing to do for the blinding/multiEncrypt/utilities wrapper, all functions are static
         postMessage([jobId, null, null]);
         return;
@@ -322,7 +323,7 @@ onmessage = async (e: {
       assertUnreachable(config, `Unhandled init wrapper type: ${config}`);
     }
     if (action === 'free') {
-      if (config === 'Blinding' || config === 'MultiEncrypt' || config === 'Utilities') {
+      if (isStaticSessionWrapper(config)) {
         // nothing to do for the blinding/multiEncrypt/utilities wrapper, all functions are static
         postMessage([jobId, null, null]);
         return;

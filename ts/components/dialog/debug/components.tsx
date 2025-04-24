@@ -5,7 +5,6 @@ import { useState } from 'react';
 import useAsyncFn from 'react-use/lib/useAsyncFn';
 import useInterval from 'react-use/lib/useInterval';
 import { filesize } from 'filesize';
-import useMount from 'react-use/lib/useMount';
 
 import type { PubkeyType } from 'libsession_util_nodejs';
 import { chunk } from 'lodash';
@@ -30,6 +29,7 @@ import { PubKey } from '../../../session/types';
 import { ConvoHub } from '../../../session/conversations';
 import { ConversationTypeEnum } from '../../../models/types';
 import { ContactsWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
+import { usePolling } from '../../../hooks/usePolling';
 
 const hexRef = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
 
@@ -217,27 +217,19 @@ const ClearOldLogsButton = () => {
 
 const dummyContactPerClick = 500;
 
-async function fetchContactsCountAndUpdate(setContactsCount: (count: number) => void) {
+async function fetchContactsCountAndUpdate() {
   const count = (await ContactsWrapperActions.getAll()).length;
   if (count && Number.isFinite(count)) {
-    setContactsCount(count);
-  } else {
-    setContactsCount(0);
+    return count;
   }
+  return 0;
 }
 
 function AddDummyContactButton() {
   const [loading, setLoading] = useState(false);
   const [addedCount, setAddedCount] = useState(0);
-  const [contactsCount, setContactsCount] = useState(0);
 
-  useMount(() => {
-    void fetchContactsCountAndUpdate(setContactsCount);
-  });
-
-  useInterval(async () => {
-    void fetchContactsCountAndUpdate(setContactsCount);
-  }, 1000);
+  const { data: contactsCount } = usePolling(fetchContactsCountAndUpdate, 1000);
 
   return (
     <SessionButton
