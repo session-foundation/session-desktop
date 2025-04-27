@@ -79,7 +79,7 @@ export const CONVERSATION = {
   LAST_JOINED_FALLBACK_TIMESTAMP: 1,
   /**
    * the maximum chars that can be typed/pasted in the composition box.
-   * Same as android.
+   * Increased to accommodate PGP payloads.
    */
   MAX_MESSAGE_CHAR_COUNT: 2000,
 } as const;
