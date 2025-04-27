@@ -105,7 +105,12 @@ const SessionJoinableRoomRow = (props: JoinableRoomProps) => {
     : undefined;
 
   return (
-    <StyledPillContainerHoverable container={true} alignItems="center" flexShrink={0} width={'70%'}>
+    <StyledPillContainerHoverable
+      $container={true}
+      $alignItems="center"
+      $flexShrink={0}
+      width={'70%'}
+    >
       <PillContainerHoverable
         onClick={onClickWithUrl}
         margin={'var(--margins-sm)'}
@@ -161,10 +166,10 @@ export const SessionJoinableRooms = (props: {
 
   return (
     <Flex
-      container={true}
-      flexGrow={1}
-      flexDirection="column"
-      alignItems="center"
+      $container={true}
+      $flexGrow={1}
+      $flexDirection="column"
+      $alignItems="center"
       dir={htmlDirection}
       width="100%"
     >
@@ -173,12 +178,12 @@ export const SessionJoinableRooms = (props: {
       </H4>
       <SpacerXS />
       <Flex
-        container={true}
-        flexDirection="column"
-        justifyContent="center"
-        alignItems="center"
-        flexGrow={0}
-        flexWrap="wrap"
+        $container={true}
+        $flexDirection="column"
+        $justifyContent="center"
+        $alignItems="center"
+        $flexGrow={0}
+        $flexWrap="wrap"
         dir={htmlDirection}
         width={'100%'}
         margin={'0 0 0 calc(var(--margins-md) * -1)'}

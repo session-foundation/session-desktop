@@ -1,6 +1,6 @@
-import classNames from 'classnames';
 import { useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
+import clsx from 'clsx';
 
 import { isNumber } from 'lodash';
 import { useDisableDrag } from '../../hooks/useDisableDrag';
@@ -133,7 +133,7 @@ export const Image = (props: Props) => {
           onClick(attachment);
         }
       }}
-      className={classNames(
+      className={clsx(
         'module-image',
         canClick ? 'module-image__with-click-handler' : null,
         softCorners ? 'module-image--soft-corners' : null
@@ -164,10 +164,7 @@ export const Image = (props: Props) => {
       ) : (
         <img
           onError={onErrorUrlFilterering}
-          className={classNames(
-            'module-image__image',
-            forceSquare ? 'module-image__image-cover' : ''
-          )}
+          className={clsx('module-image__image', forceSquare ? 'module-image__image-cover' : '')}
           alt={alt}
           style={{
             maxHeight: height,
@@ -190,7 +187,7 @@ export const Image = (props: Props) => {
         />
       ) : null}
       <StyledOverlay
-        className={classNames(softCorners ? 'module-image--soft-corners' : null)}
+        className={clsx(softCorners ? 'module-image--soft-corners' : null)}
         darkOverlay={darkOverlay}
         softCorners={softCorners}
       />

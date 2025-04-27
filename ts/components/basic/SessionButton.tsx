@@ -1,6 +1,6 @@
-import classNames from 'classnames';
 import { ReactNode, RefObject } from 'react';
 import styled from 'styled-components';
+import clsx from 'clsx';
 
 export enum SessionButtonType {
   Outline = 'outline',
@@ -32,10 +32,10 @@ export enum SessionButtonColor {
 
 const StyledButton = styled.button<{
   color: string | undefined;
-  buttonType: SessionButtonType;
-  buttonShape: SessionButtonShape;
+  $buttonType: SessionButtonType;
+  $buttonShape: SessionButtonShape;
 }>`
-  width: ${props => (props.buttonType === SessionButtonType.Ghost ? '100%' : 'auto')};
+  width: ${props => (props.$buttonType === SessionButtonType.Ghost ? '100%' : 'auto')};
   display: flex;
   justify-content: center;
   align-items: center;
@@ -47,32 +47,32 @@ const StyledButton = styled.button<{
   transition: var(--default-duration);
   background-repeat: no-repeat;
   overflow: hidden;
-  height: ${props => (props.buttonType === SessionButtonType.Ghost ? undefined : '34px')};
-  min-height: ${props => (props.buttonType === SessionButtonType.Ghost ? undefined : '34px')};
+  height: ${props => (props.$buttonType === SessionButtonType.Ghost ? undefined : '34px')};
+  min-height: ${props => (props.$buttonType === SessionButtonType.Ghost ? undefined : '34px')};
   padding: ${props =>
-    props.buttonType === SessionButtonType.Ghost ? '18px 24px 22px' : '0px 18px'};
+    props.$buttonType === SessionButtonType.Ghost ? '18px 24px 22px' : '0px 18px'};
   background-color: ${props =>
-    props.buttonType === SessionButtonType.Solid && props.color
+    props.$buttonType === SessionButtonType.Solid && props.color
       ? `var(--${props.color}-color)`
-      : `var(--button-${props.buttonType}-background-color)`};
+      : `var(--button-${props.$buttonType}-background-color)`};
   color: ${props =>
     props.color
-      ? props.buttonType !== SessionButtonType.Solid
+      ? props.$buttonType !== SessionButtonType.Solid
         ? `var(--${props.color}-color)`
         : 'var(--white-color)'
-      : `var(--button-${props.buttonType}-text-color)`};
+      : `var(--button-${props.$buttonType}-text-color)`};
   ${props =>
-    props.buttonType === SessionButtonType.Outline &&
+    props.$buttonType === SessionButtonType.Outline &&
     `outline: none; border: 1px solid ${
       props.color ? `var(--${props.color}-color)` : 'var(--button-outline-border-color)'
     }`};
   ${props =>
-    props.buttonType === SessionButtonType.Solid &&
+    props.$buttonType === SessionButtonType.Solid &&
     'box-shadow: 0px 0px 6px var(--button-solid-shadow-color);'}
   border-radius: ${props =>
-    props.buttonShape === SessionButtonShape.Round
+    props.$buttonShape === SessionButtonShape.Round
       ? '17px'
-      : props.buttonShape === SessionButtonShape.Square
+      : props.$buttonShape === SessionButtonShape.Square
         ? '6px'
         : '0px'};
 
@@ -88,25 +88,25 @@ const StyledButton = styled.button<{
     cursor: not-allowed;
     outline: none;
     ${props =>
-      props.buttonType === SessionButtonType.Solid
+      props.$buttonType === SessionButtonType.Solid
         ? 'background-color: var(--button-solid-disabled-color)'
-        : props.buttonType === SessionButtonType.Outline
+        : props.$buttonType === SessionButtonType.Outline
           ? 'border: 1px solid var(--button-outline-disabled-color)'
           : ''};
     color: ${props =>
-      props.buttonType === SessionButtonType.Solid
+      props.$buttonType === SessionButtonType.Solid
         ? 'var(--button-solid-text-color)'
-        : `var(--button-${props.buttonType}-disabled-color)`};
+        : `var(--button-${props.$buttonType}-disabled-color)`};
   }
 
   &:not(.disabled) {
     &:hover {
-      color: ${props => `var(--button-${props.buttonType}-text-hover-color)`};
+      color: ${props => `var(--button-${props.$buttonType}-text-hover-color)`};
       ${props =>
-        props.buttonType &&
-        `background-color: var(--button-${props.buttonType}-background-hover-color);`};
+        props.$buttonType &&
+        `background-color: var(--button-${props.$buttonType}-background-hover-color);`};
       ${props =>
-        props.buttonType === SessionButtonType.Outline &&
+        props.$buttonType === SessionButtonType.Outline &&
         'outline: none; border: 1px solid var(--button-outline-border-hover-color);'};
     }
   }
@@ -150,15 +150,16 @@ export const SessionButton = (props: SessionButtonProps) => {
       onClick();
     }
   };
+
   const onClickFn = disabled ? () => null : clickHandler;
 
   return (
     <StyledButton
       aria-label={ariaLabel}
       color={buttonColor}
-      buttonShape={buttonShape}
-      buttonType={buttonType}
-      className={classNames(
+      $buttonShape={buttonShape}
+      $buttonType={buttonType}
+      className={clsx(
         'session-button',
         buttonShape,
         buttonType,

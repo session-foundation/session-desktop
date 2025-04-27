@@ -118,10 +118,10 @@ const OnionPathModalInner = () => {
     <>
       <StyledOnionDescription>{window.i18n('onionRoutingPathDescription')}</StyledOnionDescription>
       <StyledOnionNodeList>
-        <Flex container={true}>
+        <Flex $container={true}>
           <StyledLightsContainer>
             <StyledVerticalLine />
-            <Flex container={true} flexDirection="column" alignItems="center" height="100%">
+            <Flex $container={true} $flexDirection="column" $alignItems="center" height="100%">
               {nodes.map((_snode: Snode | any, index: number) => {
                 return (
                   <OnionNodeStatusLight
@@ -133,7 +133,7 @@ const OnionPathModalInner = () => {
               })}
             </Flex>
           </StyledLightsContainer>
-          <Flex container={true} flexDirection="column" alignItems="flex-start">
+          <Flex $container={true} $flexDirection="column" $alignItems="flex-start">
             {nodes.map((snode: Snode | any) => {
               const country = reader?.get(snode.ip || '0.0.0.0')?.country;
               const locale = getCrowdinLocale();

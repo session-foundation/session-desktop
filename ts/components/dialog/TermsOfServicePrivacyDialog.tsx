@@ -34,7 +34,7 @@ export function TermsOfServicePrivacyDialog(props: TermsOfServicePrivacyDialogPr
     >
       <span>{window.i18n('urlOpenBrowser')}</span>
       <SpacerSM />
-      <Flex container={true} width={'100%'} justifyContent="center" alignItems="center">
+      <Flex $container={true} width={'100%'} $justifyContent="center" $alignItems="center">
         <SessionButton
           ariaLabel={'Terms of service button'}
           text={window.i18n('onboardingTos')}

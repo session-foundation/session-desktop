@@ -81,10 +81,10 @@ export const InteractionNotification = (props: WithMessageId) => {
     >
       <Flex
         id={`convo-interaction-${convoId}`}
-        container={true}
-        flexDirection="row"
-        alignItems="center"
-        justifyContent="center"
+        $container={true}
+        $flexDirection="row"
+        $alignItems="center"
+        $justifyContent="center"
         margin={'var(--margins-md) var(--margins-sm)'}
         data-testid="control-message"
       >

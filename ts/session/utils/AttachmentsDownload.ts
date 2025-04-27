@@ -1,6 +1,6 @@
 import { filter, isNumber, omit } from 'lodash';
 
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidV4 } from 'uuid';
 
 import { Data } from '../../data/data';
 import { MessageModel } from '../../models/message';
@@ -65,7 +65,7 @@ export async function addJob(attachment: any, job: AttachmentDownloadMessageDeta
     throw new Error('attachments_download/addJob: index must be a number');
   }
 
-  const id = uuidv4();
+  const id = uuidV4();
   const timestamp = Date.now();
 
   const toSave = {
@@ -118,7 +118,7 @@ async function _maybeStartJob() {
     return;
   }
 
-  // To prevent the race condition caused by two parallel database calls, eached kicked
+  // To prevent the race condition caused by two parallel database calls, each kicked
   //   off because the jobCount wasn't at the max.
   const secondJobCount = getActiveJobCount();
   const needed = MAX_ATTACHMENT_JOB_PARALLELISM - secondJobCount;
@@ -243,7 +243,7 @@ async function _runJob(job: any) {
       try {
         _addAttachmentToMessage(found, _markAttachmentAsError(attachment), { type, index });
       } catch (e) {
-        // just swallow this exception. We don't want to throw it from the catch block here as this will endup being a Uncaught global promise
+        // just swallow this exception. We don't want to throw it from the catch block here as this will end up being a Uncaught global promise
       }
       await _finishJob(found || null, id);
 
@@ -326,8 +326,7 @@ function _addAttachmentToMessage(
         throw new Error("_addAttachmentToMessage: quote didn't exist");
       }
 
-      // eslint-disable-next-line no-param-reassign
-      delete message.attributes.quote.attachments;
+      message.deleteAttributes('quote_attachments');
 
       return;
     }
@@ -336,8 +335,8 @@ function _addAttachmentToMessage(
       throw new Error(`_addAttachmentToMessage: preview didn't exist or ${index} was too large`);
     }
 
-    // eslint-disable-next-line no-param-reassign
-    delete message.attributes.preview[0].image;
+    message.deleteAttributes('preview_image');
+
     return;
   }
 

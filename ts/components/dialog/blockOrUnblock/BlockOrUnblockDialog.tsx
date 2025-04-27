@@ -89,8 +89,8 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
       <StyledModalDescriptionContainer data-testid="modal-description">
         <Localizer {...args} />
       </StyledModalDescriptionContainer>
-      <Flex container={true} flexDirection="column" alignItems="center">
-        <Flex container={true}>
+      <Flex $container={true} $flexDirection="column" $alignItems="center">
+        <Flex $container={true}>
           <div className="session-modal__button-group">
             <SessionButton
               buttonType={SessionButtonType.Simple}

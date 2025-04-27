@@ -275,6 +275,11 @@ async function sendJsonViaOnionV4ToSogs(
     abortSignal: AbortSignal;
     headers: Record<string, any> | null;
     throwErrors: boolean;
+    /**
+     * Auth headers are usually required, but can be skipped for some endpoints.
+     * Set this to false to not include them.
+     */
+    includeAuthHeaders?: boolean;
   }
 ): Promise<OnionV4JSONSnodeResponse | null> {
   const {
@@ -287,24 +292,35 @@ async function sendJsonViaOnionV4ToSogs(
     abortSignal,
     headers: includedHeaders,
     throwErrors,
+    includeAuthHeaders = true,
     timeoutMs,
   } = sendOptions;
+
   if (!endpoint.startsWith('/')) {
     throw new Error('endpoint needs a leading /');
   }
-  const builtUrl = new URL(`${serverUrl}${endpoint}`);
-  let headersWithSogsHeadersIfNeeded = await OpenGroupPollingUtils.getOurOpenGroupHeaders(
-    serverPubkey,
-    endpoint,
-    method,
-    blinded,
-    stringifiedBody
-  );
 
-  if (!headersWithSogsHeadersIfNeeded) {
-    return null;
+  const builtUrl = new URL(`${serverUrl}${endpoint}`);
+  let headersWithSogsHeadersIfNeeded: Record<string, any> = includedHeaders || {};
+
+  if (includeAuthHeaders) {
+    const ourHeaders = await OpenGroupPollingUtils.getOurOpenGroupHeaders(
+      serverPubkey,
+      endpoint,
+      method,
+      blinded,
+      stringifiedBody
+    );
+
+    if (!ourHeaders) {
+      return null;
+    }
+
+    headersWithSogsHeadersIfNeeded = {
+      ...headersWithSogsHeadersIfNeeded,
+      ...ourHeaders,
+    };
   }
-  headersWithSogsHeadersIfNeeded = { ...includedHeaders, ...headersWithSogsHeadersIfNeeded };
 
   const res = await OnionSending.sendViaOnionV4ToNonSnodeWithRetries(
     serverPubkey,
@@ -320,7 +336,7 @@ async function sendJsonViaOnionV4ToSogs(
     timeoutMs
   );
 
-  return res as OnionV4JSONSnodeResponse;
+  return res as OnionV4JSONSnodeResponse | null;
 }
 
 /**

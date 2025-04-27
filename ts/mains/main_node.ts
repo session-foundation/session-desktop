@@ -30,11 +30,11 @@ import url from 'url';
 import Logger from 'bunyan';
 import _, { isEmpty, isNumber, isFinite } from 'lodash';
 
-import { setupGlobalErrorHandler } from '../node/global_errors'; // checked - only node
-import { setup as setupSpellChecker } from '../node/spell_check'; // checked - only node
+import { setupGlobalErrorHandler } from '../node/global_errors';
+import { setup as setupSpellChecker } from '../node/spell_check';
 
 import electronLocalshortcut from 'electron-localshortcut';
-import packageJson from '../../package.json'; // checked - only node
+import packageJson from '../../package.json';
 
 setupGlobalErrorHandler();
 
@@ -61,12 +61,12 @@ let readyForShutdown: boolean = false;
 // Tray icon and related objects
 let tray: any = null;
 
-import { config } from '../node/config'; // checked - only node
+import { config } from '../node/config';
 
 // Very important to put before the single instance check, since it is based on the
 //   userData directory.
-import { userConfig } from '../node/config/user_config'; // checked - only node
-import * as PasswordUtil from '../util/passwordUtils'; // checked - only node
+import { userConfig } from '../node/config/user_config';
+import * as PasswordUtil from '../util/passwordUtils';
 
 const development = (config as any).environment === 'development';
 const appInstance = config.util.getEnv('NODE_APP_INSTANCE') || 0;
@@ -75,17 +75,17 @@ const appInstance = config.util.getEnv('NODE_APP_INSTANCE') || 0;
 //   data directory has been set.
 import { initAttachmentsChannel } from '../node/attachment_channel';
 
-import * as updater from '../updater/index'; // checked - only node
+import * as updater from '../updater/index';
 
-import { ephemeralConfig } from '../node/config/ephemeral_config'; // checked - only node
-import { getLoggerFilePath, getLogger, initializeLogger } from '../node/logging'; // checked - only node
-import { createTemplate } from '../node/menu'; // checked - only node
-import { installPermissionsHandler } from '../node/permissions'; // checked - only node
-import { installFileHandler, installWebHandler } from '../node/protocol_filter'; // checked - only node
-import { sqlNode } from '../node/sql'; // checked - only node
-import * as sqlChannels from '../node/sql_channel'; // checked - only node
-import { createTrayIcon } from '../node/tray_icon'; // checked - only node
-import { windowMarkShouldQuit, windowShouldQuit } from '../node/window_state'; // checked - only node
+import { ephemeralConfig } from '../node/config/ephemeral_config';
+import { getLoggerFilePath, getLogger, initializeLogger } from '../node/logging';
+import { createTemplate } from '../node/menu';
+import { installPermissionsHandler } from '../node/permissions';
+import { installFileHandler, installWebHandler } from '../node/protocol_filter';
+import { sqlNode } from '../node/sql';
+import * as sqlChannels from '../node/sql_channel';
+import { createTrayIcon } from '../node/tray_icon';
+import { windowMarkShouldQuit, windowShouldQuit } from '../node/window_state';
 
 let appStartInitialSpellcheckSetting = true;
 
@@ -166,6 +166,7 @@ import type { SetupI18nReturnType } from '../types/localizer';
 import { isSessionLocaleSet, getCrowdinLocale } from '../util/i18n/shared';
 import { loadLocalizedDictionary } from '../node/locale';
 import { simpleDictionary } from '../localization/locales';
+import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
 
 // Both of these will be set after app fires the 'ready' event
 let logger: Logger | null = null;
@@ -716,7 +717,14 @@ app.on('ready', async () => {
   await initializeLogger();
   logger = getLogger();
   assertLogger().info('app ready');
-  assertLogger().info(`starting version ${packageJson.version}`);
+  assertLogger().info(`starting session-desktop version ${packageJson.version}`);
+  assertLogger().info(
+    `Libsession Commit Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_UTIL_VERSION || 'Unknown'}`
+  );
+  assertLogger().info(
+    `Libsession NodeJS Version/Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_VERSION || 'Unknown'}/${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_COMMIT || 'Unknown'}`
+  );
+
   if (!isSessionLocaleSet()) {
     const appLocale = process.env.LANGUAGE || app.getLocale() || 'en';
     const loadedLocale = loadLocalizedDictionary({ appLocale, logger });
@@ -864,7 +872,6 @@ app.on('before-quit', () => {
     readyForShutdown: mainWindow ? readyForShutdown : null,
     shouldQuit: windowShouldQuit(),
   });
-
   if (tray) {
     tray.destroy();
   }

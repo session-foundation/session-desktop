@@ -135,10 +135,10 @@ export const SettingsCategoryRecoveryPassword = () => {
         ) : (
           <StyledRecoveryPassword
             aria-label="Recovery password"
-            container={true}
-            flexDirection={'row'}
-            justifyContent={'space-between'}
-            alignItems={'center'}
+            $container={true}
+            $flexDirection={'row'}
+            $justifyContent={'space-between'}
+            $alignItems={'center'}
             width={'100%'}
             color={isDarkTheme ? 'var(--primary-color)' : 'var(--text-primary-color)'}
             initial={{ opacity: 0 }}

@@ -35,10 +35,10 @@ export const NoticeBanner = (props: NoticeBannerProps) => {
 
   return (
     <StyledNoticeBanner
-      container={true}
-      flexDirection={'row'}
-      justifyContent={'center'}
-      alignItems={'center'}
+      $container={true}
+      $flexDirection={'row'}
+      $justifyContent={'center'}
+      $alignItems={'center'}
       data-testid={dataTestId}
       isClickable={!!onBannerClick}
       onClick={event => {

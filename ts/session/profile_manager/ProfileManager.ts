@@ -52,7 +52,7 @@ async function updateProfileOfContact(
 
   // avoid setting the display name to an invalid value
   if (existingDisplayName !== displayName && !isEmpty(displayName)) {
-    conversation.set('displayNameInProfile', displayName || undefined);
+    conversation.setKey('displayNameInProfile', displayName || undefined);
     changes = true;
   }
 

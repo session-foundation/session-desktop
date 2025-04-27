@@ -50,6 +50,7 @@ export const SessionToastContainer = () => {
       pauseOnHover={true}
       transition={Slide}
       limit={5}
+      icon={false}
     />
   );
 };

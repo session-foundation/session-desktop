@@ -3,10 +3,10 @@ import fse from 'fs-extra';
 import { glob } from 'glob';
 import { isString, map } from 'lodash';
 import path from 'path';
-import rimraf from 'rimraf';
+import { rimrafSync } from 'rimraf';
 
 import { getAttachmentsPath } from '../shared/attachments/shared_attachments';
-import { sqlNode } from './sql'; // checked - only node
+import { sqlNode } from './sql';
 
 let initialized = false;
 
@@ -51,7 +51,7 @@ export async function initAttachmentsChannel({ userDataPath }: { userDataPath: s
 
   ipcMain.on(ERASE_ATTACHMENTS_KEY, event => {
     try {
-      rimraf.sync(attachmentsDir);
+      rimrafSync(attachmentsDir);
       event.sender.send(`${ERASE_ATTACHMENTS_KEY}-done`);
     } catch (error) {
       const errorForDisplay = error && error.stack ? error.stack : error;

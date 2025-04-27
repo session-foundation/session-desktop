@@ -41,9 +41,9 @@ export function DebugMenuModal() {
     <AnimatePresence>
       <SessionWrapperModal title={'Debug Menu'} onClose={onClose} showExitIcon={true}>
         <StyledContent
-          container={true}
-          flexDirection="column"
-          alignItems="flex-start"
+          $container={true}
+          $flexDirection="column"
+          $alignItems="flex-start"
           padding="var(--margins-sm) 0"
         >
           <DebugActions />

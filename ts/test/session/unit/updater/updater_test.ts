@@ -14,7 +14,7 @@ describe('Updater', () => {
     );
 
     // the CI for building release relies on this being set to build the different targets.
-    if (!content || isEmpty(content) || !content.includes('"target": ["deb"],')) {
+    if (!content || isEmpty(content) || !content.includes('"target": "deb",')) {
       throw new Error(
         'Content empty or does not contain the target on a single line. They have to be for the linux CI builds to pass.'
       );

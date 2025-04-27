@@ -337,9 +337,9 @@ async function getMessages({
       returnQuotes: true,
     });
 
-  const messagesProps: Array<MessageModelPropsWithoutConvoProps> = messagesCollection.models.map(
-    m => m.getMessageModelProps()
-  );
+  const messagesProps: Array<MessageModelPropsWithoutConvoProps> = messagesCollection.map(m => {
+    return m.getMessageModelProps();
+  });
   const time = Date.now() - beforeTimestamp;
   window?.log?.info(`Loading ${messagesProps.length} messages took ${time}ms to load.`);
 
@@ -355,7 +355,7 @@ async function getMessages({
 
     if (quotedMessagesCollection?.length) {
       for (let i = 0; i < quotedMessagesCollection.length; i++) {
-        const quotedMessage = quotedMessagesCollection.models.at(i)?.getMessageModelProps();
+        const quotedMessage = quotedMessagesCollection.at(i)?.getMessageModelProps();
         if (quotedMessage) {
           const timestamp = quotedMessage.propsForMessage.timestamp;
           const sender = quotedMessage.propsForMessage.sender;

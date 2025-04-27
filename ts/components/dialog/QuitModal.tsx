@@ -78,10 +78,10 @@ export const QuitModal = (props: SessionConfirmDialogProps) => {
     >
       {i18nMessage ? (
         <Flex
-          container={true}
+          $container={true}
           width={'100%'}
-          justifyContent="center"
-          alignItems="center"
+          $justifyContent="center"
+          $alignItems="center"
           style={modalStyle}
         >
           <SpacerLG />
@@ -90,7 +90,7 @@ export const QuitModal = (props: SessionConfirmDialogProps) => {
         </Flex>
       ) : null}
       <SpacerSM />
-      <Flex container={true} width={'100%'} justifyContent="center" alignItems="center">
+      <Flex $container={true} width={'100%'} $justifyContent="center" $alignItems="center">
         <SessionButton
           text={okText}
           buttonColor={okTheme}

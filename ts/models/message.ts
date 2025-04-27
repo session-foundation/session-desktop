@@ -1,9 +1,7 @@
-import Backbone from 'backbone';
-
 import autoBind from 'auto-bind';
-import filesize from 'filesize';
+import { filesize } from 'filesize';
 import { GroupPubkeyType, PubkeyType } from 'libsession_util_nodejs';
-import { cloneDeep, debounce, isEmpty, size as lodashSize, uniq } from 'lodash';
+import { debounce, isEmpty, size as lodashSize, uniq } from 'lodash';
 import { SignalService } from '../protobuf';
 import { ConvoHub } from '../session/conversations';
 import { ContentMessage } from '../session/messages/outgoing';
@@ -96,10 +94,11 @@ import { NetworkTime } from '../util/NetworkTime';
 import { MessageQueue } from '../session/sending';
 import { getTimerNotificationStr } from './timerNotifications';
 import { ExpirationTimerUpdate } from '../session/disappearing_messages/types';
+import { Model } from './models';
 
 // tslint:disable: cyclomatic-complexity
 
-export class MessageModel extends Backbone.Model<MessageAttributes> {
+export class MessageModel extends Model<MessageAttributes> {
   constructor(attributes: MessageAttributesOptionals & { skipTimerInit?: boolean }) {
     const filledAttrs = fillMessageAttributesWithDefaults(attributes);
     super(filledAttrs);
@@ -1123,7 +1122,7 @@ export class MessageModel extends Backbone.Model<MessageAttributes> {
       throw new Error('A message always needs an id');
     }
     // because the saving to db calls _cleanData which mutates the field for cleaning, we need to save a copy
-    const id = await Data.saveMessage(cloneDeep(this.attributes));
+    const id = await Data.saveMessage(this.cloneAttributes());
     if (triggerUIUpdate) {
       this.dispatchMessageUpdate();
     }
@@ -1165,7 +1164,7 @@ export class MessageModel extends Backbone.Model<MessageAttributes> {
                 expirationMode,
                 readAt,
                 'markMessageReadNoCommit',
-                this.get('id')
+                this.id
               ),
             });
             // return true, we want to update/refresh the real expiry of this message from the swarm
@@ -1214,7 +1213,7 @@ export class MessageModel extends Backbone.Model<MessageAttributes> {
         expires_at: expiresAt,
       });
 
-      if (this.get('id')) {
+      if (this.id) {
         await this.commit();
       }
 
@@ -1222,6 +1221,22 @@ export class MessageModel extends Backbone.Model<MessageAttributes> {
         expiresAt,
         sentAt: this.get('sent_at'),
       });
+    }
+  }
+
+  public deleteAttributes(attrsToDelete: 'quote_attachments' | 'preview_image') {
+    switch (attrsToDelete) {
+      case 'quote_attachments':
+        delete this.attributes.quote.attachments;
+        break;
+
+      case 'preview_image':
+        delete this.attributes.preview[0].image;
+
+        break;
+
+      default:
+        break;
     }
   }
 
@@ -1366,10 +1381,6 @@ export function cancelUpdatesToDispatch(messageIds: Array<string>) {
 }
 
 const updatesToDispatch: Map<string, MessageModelPropsWithoutConvoProps> = new Map();
-
-export class MessageCollection extends Backbone.Collection<MessageModel> {}
-
-MessageCollection.prototype.model = MessageModel;
 
 export function findAndFormatContact(pubkey: string): FindAndFormatContactType {
   const contactModel = ConvoHub.use().get(pubkey);

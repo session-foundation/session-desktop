@@ -243,8 +243,7 @@ describe('UserSyncJob pushChangesToUserSwarmIfNeeded', () => {
     Sinon.stub(UserUtils, 'getOurPubKeyStrFromCache').returns(userkeys.x25519KeyPair.pubkeyHex);
     Sinon.stub(UserUtils, 'getUserED25519KeyPairBytes').resolves(userkeys.ed25519KeyPair);
 
-    window.Whisper = {};
-    window.Whisper.events = {};
+    window.Whisper = { events: {} };
     window.Whisper.events.trigger = Sinon.mock();
     stubConfigDumpData('saveConfigDump').resolves();
 

@@ -77,8 +77,8 @@ export const SessionToast = (props: Props) => {
 
   return (
     <Flex
-      container={true}
-      alignItems="center"
+      $container={true}
+      $alignItems="center"
       onClick={onToastClick}
       data-testid="session-toast"
       padding="var(--margins-sm) 0"
@@ -87,9 +87,9 @@ export const SessionToast = (props: Props) => {
         <SessionIcon iconType={toastIcon} iconSize={toastIconSize} />
       </IconDiv>
       <Flex
-        container={true}
-        justifyContent="flex-start"
-        flexDirection="column"
+        $container={true}
+        $justifyContent="flex-start"
+        $flexDirection="column"
         className="session-toast"
       >
         <DescriptionPubkeysReplaced description={toastDesc} />

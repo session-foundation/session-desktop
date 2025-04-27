@@ -148,7 +148,7 @@ export const BanOrUnBanUserDialog = (props: {
         dispatch(updateBanOrUnbanUserModal(null));
       }}
     >
-      <Flex container={true} flexDirection="column" alignItems="center">
+      <Flex $container={true} $flexDirection="column" $alignItems="center">
         <SessionHeaderSearchInput
           ref={inputRef}
           type="text"
@@ -159,7 +159,7 @@ export const BanOrUnBanUserDialog = (props: {
           disabled={inProgress || !!pubkey}
           value={pubkey ? inputTextToDisplay : inputBoxValue}
         />
-        <Flex container={true}>
+        <Flex $container={true}>
           <SessionButton
             buttonType={SessionButtonType.Simple}
             onClick={banOrUnBanUser}
@@ -255,7 +255,7 @@ export const ServerBanOrUnBanUserDialog = (props: {
         dispatch(updateServerBanOrUnbanUserModal(null));
       }}
     >
-      <Flex container={true} flexDirection="column" alignItems="center">
+      <Flex $container={true} $flexDirection="column" $alignItems="center">
         <SessionHeaderSearchInput
           ref={inputRef}
           type="text"
@@ -266,7 +266,7 @@ export const ServerBanOrUnBanUserDialog = (props: {
           disabled={inProgress || !!pubkey}
           value={pubkey ? inputTextToDisplay : inputBoxValue}
         />
-        <Flex container={true}>
+        <Flex $container={true}>
           <SessionButton
             buttonType={SessionButtonType.Simple}
             onClick={banOrUnBanUser}

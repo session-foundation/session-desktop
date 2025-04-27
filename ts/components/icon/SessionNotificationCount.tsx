@@ -6,16 +6,16 @@ type Props = {
   centeredOnTop: boolean;
   count?: number;
 };
-const StyledCountContainer = styled.div<{ centeredOnTop: boolean }>`
+const StyledCountContainer = styled.div<{ $centeredOnTop: boolean }>`
   background: var(--unread-messages-alert-background-color);
   color: var(--unread-messages-alert-text-color);
   text-align: center;
 
-  padding: ${props => (props.centeredOnTop ? '1px 3px 0' : '1px 4px')};
+  padding: ${props => (props.$centeredOnTop ? '1px 3px 0' : '1px 4px')};
 
   position: absolute;
-  top: ${props => (props.centeredOnTop ? '-10px' : '27px')};
-  left: ${props => (props.centeredOnTop ? '50%' : '28px')};
+  top: ${props => (props.$centeredOnTop ? '-10px' : '27px')};
+  left: ${props => (props.$centeredOnTop ? '50%' : '28px')};
 
   font-size: var(--font-size-xs);
   font-family: var(--font-default);
@@ -32,13 +32,13 @@ const StyledCountContainer = styled.div<{ centeredOnTop: boolean }>`
   flex-shrink: 0;
 
   transition: var(--default-duration);
-  transform: ${props => (props.centeredOnTop ? 'translateX(-50%)' : 'none')};
-  white-space: ${props => (props.centeredOnTop ? 'nowrap' : 'normal')};
+  transform: ${props => (props.$centeredOnTop ? 'translateX(-50%)' : 'none')};
+  white-space: ${props => (props.$centeredOnTop ? 'nowrap' : 'normal')};
 `;
 
-const StyledCount = styled.div<{ centeredOnTop: boolean }>`
+const StyledCount = styled.div<{ $centeredOnTop: boolean }>`
   position: relative;
-  font-size: ${props => (props.centeredOnTop ? 'var(--font-size-xs)' : '0.6rem')};
+  font-size: ${props => (props.$centeredOnTop ? 'var(--font-size-xs)' : '0.6rem')};
 `;
 
 const OverflowingAt = (props: { overflowingAt: number }) => {
@@ -57,8 +57,8 @@ const NotificationOrUnreadCount = ({ centeredOnTop, overflowingAt, count }: Prop
   const overflowing = count > overflowingAt;
 
   return (
-    <StyledCountContainer centeredOnTop={centeredOnTop}>
-      <StyledCount centeredOnTop={centeredOnTop}>
+    <StyledCountContainer $centeredOnTop={centeredOnTop}>
+      <StyledCount $centeredOnTop={centeredOnTop}>
         {overflowing ? <OverflowingAt overflowingAt={overflowingAt} /> : count}
       </StyledCount>
     </StyledCountContainer>

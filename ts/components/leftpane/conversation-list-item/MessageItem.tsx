@@ -1,5 +1,5 @@
-import classNames from 'classnames';
 import { isEmpty } from 'lodash';
+import clsx from 'clsx';
 
 import { useConvoIdFromContext } from '../../../contexts/ConvoIdContext';
 import {
@@ -52,7 +52,7 @@ export const MessageItem = () => {
   return (
     <div className="module-conversation-list-item__message">
       <div
-        className={classNames(
+        className={clsx(
           'module-conversation-list-item__message__text',
           hasUnread ? 'module-conversation-list-item__message__text--has-unread' : null
         )}

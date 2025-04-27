@@ -48,10 +48,10 @@ export class UpdateGroupPermissionsDialog extends Component<Props, State> {
     this.convo = ConvoHub.use().get(props.conversationId);
 
     this.state = {
-      default_read: this.convo.attributes.default_read ?? true,
-      default_write: this.convo.attributes.default_write ?? true,
-      default_accessible: this.convo.attributes.default_accessible ?? true,
-      default_upload: this.convo.attributes.default_upload ?? true,
+      default_read: true,
+      default_write: true,
+      default_accessible: true,
+      default_upload: true,
       errorDisplayed: false,
       errorMessage: 'placeholder',
     };

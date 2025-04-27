@@ -1,4 +1,4 @@
-import { assert } from 'chai';
+import { assert, expect } from 'chai';
 import * as PasswordUtil from '../../../../util/passwordUtils';
 
 describe('Password Util', () => {
@@ -19,11 +19,11 @@ describe('Password Util', () => {
     it('returns true for the same hash', () => {
       const phrase = 'phrase';
       const hash = PasswordUtil.generateHash(phrase);
-      assert.isTrue(PasswordUtil.matchesHash(phrase, hash));
+      expect(PasswordUtil.matchesHash(phrase, hash)).to.be.eq(true);
     });
     it('returns false for different hashes', () => {
       const hash = PasswordUtil.generateHash('phrase');
-      assert.isFalse(PasswordUtil.matchesHash('phrase2', hash));
+      expect(PasswordUtil.matchesHash('phrase2', hash)).to.be.eq(false);
     });
   });
 

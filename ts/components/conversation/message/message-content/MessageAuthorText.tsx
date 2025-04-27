@@ -48,7 +48,7 @@ export const MessageAuthorText = (props: Props) => {
   const displayedPubkey = authorProfileName ? PubKey.shorten(sender) : sender;
 
   return (
-    <StyledAuthorContainer container={true} hideAvatar={hideAvatar}>
+    <StyledAuthorContainer $container={true} hideAvatar={hideAvatar}>
       <ContactName
         pubkey={displayedPubkey}
         name={authorName}

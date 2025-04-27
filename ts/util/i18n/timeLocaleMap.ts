@@ -3,6 +3,7 @@ import * as supportedByDateFns from 'date-fns/locale';
 import { Locale } from 'date-fns';
 import { CrowdinLocale, crowdinLocales } from '../../localization/constants';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type MappedToEnType = { [K in CrowdinLocale]: Locale };
 
 /**

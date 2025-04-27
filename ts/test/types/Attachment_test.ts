@@ -1,4 +1,4 @@
-import { assert } from 'chai';
+import { assert, expect } from 'chai';
 
 import { parseISO } from 'date-fns';
 import * as Attachment from '../../types/Attachment';
@@ -204,7 +204,7 @@ describe('Attachment', () => {
         data: stringToArrayBuffer('gif'),
         contentType: MIME.IMAGE_GIF,
       };
-      assert.isTrue(Attachment.isVisualMedia(attachment));
+      expect(Attachment.isVisualMedia(attachment)).to.be.eq(true);
     });
 
     it('should return true for videos', () => {
@@ -213,7 +213,7 @@ describe('Attachment', () => {
         data: stringToArrayBuffer('mp4'),
         contentType: MIME.VIDEO_MP4,
       };
-      assert.isTrue(Attachment.isVisualMedia(attachment));
+      expect(Attachment.isVisualMedia(attachment)).to.be.eq(true);
     });
 
     it('should return false for voice message attachment', () => {
@@ -223,7 +223,7 @@ describe('Attachment', () => {
         data: stringToArrayBuffer('voice message'),
         contentType: MIME.AUDIO_AAC,
       };
-      assert.isFalse(Attachment.isVisualMedia(attachment));
+      expect(Attachment.isVisualMedia(attachment)).to.be.eq(false);
     });
 
     it('should return false for other attachments', () => {
@@ -232,7 +232,7 @@ describe('Attachment', () => {
         data: stringToArrayBuffer('{"foo": "bar"}'),
         contentType: MIME.APPLICATION_JSON,
       };
-      assert.isFalse(Attachment.isVisualMedia(attachment));
+      expect(Attachment.isVisualMedia(attachment)).to.be.eq(false);
     });
   });
 
@@ -243,7 +243,7 @@ describe('Attachment', () => {
         data: stringToArrayBuffer('{"foo": "bar"}'),
         contentType: MIME.APPLICATION_JSON,
       };
-      assert.isTrue(Attachment.isFile(attachment));
+      expect(Attachment.isFile(attachment)).to.be.eq(true);
     });
 
     it('should return false for images', () => {
@@ -252,7 +252,7 @@ describe('Attachment', () => {
         data: stringToArrayBuffer('gif'),
         contentType: MIME.IMAGE_GIF,
       };
-      assert.isFalse(Attachment.isFile(attachment));
+      expect(Attachment.isFile(attachment)).to.be.eq(false);
     });
 
     it('should return false for videos', () => {
@@ -261,7 +261,7 @@ describe('Attachment', () => {
         data: stringToArrayBuffer('mp4'),
         contentType: MIME.VIDEO_MP4,
       };
-      assert.isFalse(Attachment.isFile(attachment));
+      expect(Attachment.isFile(attachment)).to.be.eq(false);
     });
 
     it('should return false for voice message attachment', () => {
@@ -271,7 +271,7 @@ describe('Attachment', () => {
         data: stringToArrayBuffer('voice message'),
         contentType: MIME.AUDIO_AAC,
       };
-      assert.isFalse(Attachment.isFile(attachment));
+      expect(Attachment.isFile(attachment)).to.be.eq(false);
     });
   });
 
@@ -283,7 +283,7 @@ describe('Attachment', () => {
         data: stringToArrayBuffer('voice message'),
         contentType: MIME.AUDIO_AAC,
       };
-      assert.isTrue(Attachment.isVoiceMessage(attachment));
+      expect(Attachment.isVoiceMessage(attachment)).to.be.eq(true);
     });
 
     it('should return true for legacy Android voice message attachment', () => {
@@ -291,7 +291,7 @@ describe('Attachment', () => {
         data: stringToArrayBuffer('voice message'),
         contentType: MIME.AUDIO_MP3,
       };
-      assert.isTrue(Attachment.isVoiceMessage(attachment));
+      expect(Attachment.isVoiceMessage(attachment)).to.be.eq(true);
     });
 
     it('should return false for other attachments', () => {
@@ -300,7 +300,7 @@ describe('Attachment', () => {
         data: stringToArrayBuffer('foo'),
         contentType: MIME.IMAGE_GIF,
       };
-      assert.isFalse(Attachment.isVoiceMessage(attachment));
+      expect(Attachment.isVoiceMessage(attachment)).to.be.eq(false);
     });
   });
 });

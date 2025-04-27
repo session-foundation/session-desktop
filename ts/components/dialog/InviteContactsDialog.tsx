@@ -103,7 +103,7 @@ const submitForClosedGroup = async (convoId: string, pubkeys: Array<string>) => 
     const allMembers = _.concat(existingMembers, newMembers, [ourPK]);
     const uniqMembers = _.uniq(allMembers);
 
-    const groupId = convo.get('id');
+    const groupId = convo.id;
     const groupName = convo.getNicknameOrRealUsernameOrPlaceholder();
 
     await ClosedGroup.initiateClosedGroupUpdate(groupId, groupName, uniqMembers);

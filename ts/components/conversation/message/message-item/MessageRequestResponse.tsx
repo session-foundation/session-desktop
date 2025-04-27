@@ -27,10 +27,10 @@ export const MessageRequestResponse = ({ messageId }: WithMessageId) => {
       key={`readable-message-${messageId}`}
     >
       <Flex
-        container={true}
-        flexDirection="row"
-        alignItems="center"
-        justifyContent="center"
+        $container={true}
+        $flexDirection="row"
+        $alignItems="center"
+        $justifyContent="center"
         margin={'var(--margins-sm)'}
         id={`msg-${messageId}`}
       >

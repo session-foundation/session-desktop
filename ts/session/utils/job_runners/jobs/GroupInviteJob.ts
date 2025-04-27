@@ -170,7 +170,7 @@ class GroupInviteJob extends PersistedJob<GroupInvitePersistedData> {
     window.log.info(
       `running job ${jobType} with groupPk:"${groupPk}" member:${member} inviteAsAdmin:${inviteAsAdmin} id:"${identifier}" `
     );
-    const group = await UserGroupsWrapperActions.getGroup(groupPk);
+    const group = UserGroupsWrapperActions.getCachedGroup(groupPk);
     if (!group || !group.secretKey || !group.name) {
       window.log.warn(`GroupInviteJob: Did not find group in wrapper or no valid info in wrapper`);
       return RunJobResult.PermanentFailure;

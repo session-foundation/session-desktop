@@ -18,9 +18,11 @@ import {
   generateFakeIncomingPrivateMessage,
   generateFakeOutgoingPrivateMessage,
   generateVisibleMessage,
+  stubData,
 } from '../../../test-utils/utils';
 import { ConversationTypeEnum } from '../../../../models/types';
 import { NetworkTime } from '../../../../util/NetworkTime';
+import { ConvoHub } from '../../../../session/conversations';
 
 chai.use(chaiAsPromised as any);
 
@@ -37,9 +39,14 @@ describe('DisappearingMessage', () => {
     didApproveMe: true,
   } as ConversationAttributes;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     Sinon.stub(NetworkTime, 'getLatestTimestampOffset').returns(getLatestTimestampOffset);
     Sinon.stub(UserUtils, 'getOurPubKeyStrFromCache').returns(ourNumber);
+    ConvoHub.use().reset();
+
+    stubData('getAllConversations').resolves([]);
+    stubData('saveConversation').resolves();
+    await ConvoHub.use().load();
   });
 
   afterEach(() => {
@@ -459,14 +466,14 @@ describe('DisappearingMessage', () => {
         ...conversationArgs,
         id: ourNumber,
       });
-      const message = generateFakeOutgoingPrivateMessage(conversation.get('id'));
+      const message = generateFakeOutgoingPrivateMessage(conversation.id);
       message.set({
         expirationType: 'deleteAfterRead',
         expireTimer: 300,
         sent_at: NetworkTime.now(),
       });
-      Sinon.stub(message, 'getConversation').returns(conversation);
 
+      Sinon.stub(message, 'getConversation').returns(conversation);
       DisappearingMessages.checkForExpiringOutgoingMessage(message, 'unit tests');
 
       expect(message.getExpirationStartTimestamp(), 'it should be defined').to.not.be.undefined;
@@ -483,7 +490,7 @@ describe('DisappearingMessage', () => {
         ...conversationArgs,
         id: ourNumber,
       });
-      const message = generateFakeOutgoingPrivateMessage(conversation.get('id'));
+      const message = generateFakeOutgoingPrivateMessage(conversation.id);
       message.set({
         expirationType: 'deleteAfterRead',
         sent_at: NetworkTime.now(),
@@ -499,7 +506,7 @@ describe('DisappearingMessage', () => {
         ...conversationArgs,
         id: ourNumber,
       });
-      const message = generateFakeOutgoingPrivateMessage(conversation.get('id'));
+      const message = generateFakeOutgoingPrivateMessage(conversation.id);
       message.set({
         expireTimer: 300,
         sent_at: NetworkTime.now(),
@@ -516,7 +523,7 @@ describe('DisappearingMessage', () => {
         ...conversationArgs,
         id: ourNumber,
       });
-      const message = generateFakeOutgoingPrivateMessage(conversation.get('id'));
+      const message = generateFakeOutgoingPrivateMessage(conversation.id);
       message.set({
         expirationType: 'deleteAfterRead',
         expireTimer: 300,
@@ -528,6 +535,7 @@ describe('DisappearingMessage', () => {
       DisappearingMessages.checkForExpiringOutgoingMessage(message, 'unit tests');
 
       expect(message.getExpirationStartTimestamp(), 'it should be defined').to.not.be.undefined;
+
       expect(
         isValidUnixTimestamp(message.getExpirationStartTimestamp()),
         'it should be a valid unix timestamp'

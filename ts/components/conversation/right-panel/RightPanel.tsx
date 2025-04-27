@@ -113,9 +113,9 @@ export const RightPanel = () => {
 
   return (
     <StyledRightPanel
-      container={true}
-      flexDirection={'column'}
-      alignItems={'center'}
+      $container={true}
+      $flexDirection={'column'}
+      $alignItems={'center'}
       width={'var(--right-panel-width)'}
       height={'var(--right-panel-height)'}
       className="right-panel"

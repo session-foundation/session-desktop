@@ -103,9 +103,9 @@ export const SessionRadio = (props: SessionRadioProps) => {
       disabled={disabled}
     >
       <Flex
-        container={true}
-        flexDirection={radioPosition === 'left' ? 'row' : 'row-reverse'}
-        justifyContent={radioPosition === 'left' ? 'flex-start' : 'flex-end'}
+        $container={true}
+        $flexDirection={radioPosition === 'left' ? 'row' : 'row-reverse'}
+        $justifyContent={radioPosition === 'left' ? 'flex-start' : 'flex-end'}
         style={{ ...style, position: 'relative' }}
       >
         <StyledInput
@@ -185,7 +185,7 @@ export const SessionRadioPrimaryColors = (props: {
   const outlineOffset = 5;
 
   return (
-    <Flex container={true} padding="0 0 5px 0">
+    <Flex $container={true} padding="0 0 5px 0">
       <StyledInputOutlineSelected
         type="radio"
         name={inputName || ''}

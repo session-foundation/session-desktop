@@ -1,6 +1,6 @@
-import classNames from 'classnames';
 import { noop } from 'lodash';
 import { MouseEvent, useState } from 'react';
+import { clsx } from 'clsx';
 
 import * as MIME from '../../../../types/MIME';
 import * as GoogleChrome from '../../../../util/GoogleChrome';
@@ -97,7 +97,7 @@ export const QuoteIcon = (props: any) => {
       <div className="module-quote__icon-container__inner">
         <div className="module-quote__icon-container__circle-background">
           <div
-            className={classNames(
+            className={clsx(
               'module-quote__icon-container__icon',
               `module-quote__icon-container__icon--${icon}`
             )}
@@ -124,7 +124,7 @@ export const QuoteImage = (props: {
     <div className="module-quote__icon-container__inner">
       <div className="module-quote__icon-container__circle-background">
         <div
-          className={classNames(
+          className={clsx(
             'module-quote__icon-container__icon',
             `module-quote__icon-container__icon--${icon}`
           )}
@@ -169,7 +169,7 @@ export const QuoteGenericFile = (
     <div className="module-quote__generic-file">
       <div className="module-quote__generic-file__icon" />
       <div
-        className={classNames(
+        className={clsx(
           'module-quote__generic-file__text',
           isIncoming ? 'module-quote__generic-file__text--incoming' : null
         )}
@@ -236,7 +236,7 @@ export const QuoteText = (
     return (
       <div
         dir="auto"
-        className={classNames(
+        className={clsx(
           'module-quote__primary__text',
           isIncoming ? 'module-quote__primary__text--incoming' : null
         )}
@@ -256,7 +256,7 @@ export const QuoteText = (
   if (typeLabel) {
     return (
       <div
-        className={classNames(
+        className={clsx(
           'module-quote__primary__type-label',
           isIncoming ? 'module-quote__primary__type-label--incoming' : null
         )}
@@ -283,7 +283,7 @@ const QuoteAuthor = (props: QuoteAuthorProps) => {
 
   return (
     <div
-      className={classNames(
+      className={clsx(
         'module-quote__primary__author',
         isIncoming ? 'module-quote__primary__author--incoming' : null
       )}
@@ -313,7 +313,7 @@ export const QuoteReferenceWarning = (
 
   return (
     <div
-      className={classNames(
+      className={clsx(
         'module-quote__reference-warning',
         isIncoming
           ? 'module-quote__reference-warning--incoming'
@@ -321,13 +321,13 @@ export const QuoteReferenceWarning = (
       )}
     >
       <div
-        className={classNames(
+        className={clsx(
           'module-quote__reference-warning__icon',
           isIncoming ? 'module-quote__reference-warning__icon--incoming' : null
         )}
       />
       <div
-        className={classNames(
+        className={clsx(
           'module-quote__reference-warning__text',
           isIncoming ? 'module-quote__reference-warning__text--incoming' : null
         )}
@@ -353,11 +353,11 @@ export const Quote = (props: QuotePropsWithListener) => {
   const { isIncoming, referencedMessageNotFound, attachment, text, onClick } = props;
 
   return (
-    <div className={classNames('module-quote-container')}>
+    <div className={clsx('module-quote-container')}>
       <div
         onClick={onClick}
         role="button"
-        className={classNames(
+        className={clsx(
           'module-quote',
           isIncoming ? 'module-quote--incoming' : 'module-quote--outgoing',
           !onClick ? 'module-quote--no-click' : null,

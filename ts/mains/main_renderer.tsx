@@ -1,5 +1,4 @@
-import Backbone from 'backbone';
-import _, { toPairs } from 'lodash';
+import { toPairs } from 'lodash';
 import { createRoot } from 'react-dom/client';
 
 import nativeEmojiData from '@emoji-mart/data';
@@ -31,6 +30,7 @@ import { Storage, isSignInByLinking } from '../util/storage';
 import { getOppositeTheme, isThemeMismatched } from '../util/theme';
 import { getCrowdinLocale } from '../util/i18n/shared';
 import { rtlLocales } from '../localization/constants';
+import { SessionEventEmitter } from '../shared/event_emitter';
 
 // Globally disable drag and drop
 document.body.addEventListener(
@@ -93,7 +93,7 @@ let newVersion = false;
 
 window.document.title = window.getTitle();
 
-const WhisperEvents = _.clone(Backbone.Events);
+const WhisperEvents = new SessionEventEmitter();
 window.Whisper = window.Whisper || {};
 window.Whisper.events = WhisperEvents;
 window.log.info('Storage fetch');
@@ -256,28 +256,23 @@ async function start() {
 
   const results = await Promise.all([Data.getOutgoingWithoutExpiresAt()]);
 
-  // Combine the models
-  const messagesForCleanup = results.reduce(
-    (array, current) => array.concat((current as any).toArray()),
-    []
-  );
-
-  window.log.info(`Cleanup: Found ${messagesForCleanup.length} messages for cleanup`);
-
   const idsToCleanUp: Array<string> = [];
-  await Promise.all(
-    messagesForCleanup.map((message: MessageModel) => {
+
+  results.forEach(collection =>
+    collection.forEach((message: MessageModel) => {
       const sentAt = message.get('sent_at');
 
       if (message.hasErrors()) {
-        return null;
+        return;
       }
 
       window.log.info(`Cleanup: Deleting unsent message ${sentAt}`);
       idsToCleanUp.push(message.id);
-      return null;
     })
   );
+
+  window.log.info(`Cleanup: Found ${idsToCleanUp.length} messages for cleanup`);
+
   if (idsToCleanUp.length) {
     await Data.removeMessagesByIds(idsToCleanUp);
   }

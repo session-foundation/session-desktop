@@ -6,7 +6,7 @@ import { isEmpty, isNil } from 'lodash';
 import AbortController from 'abort-controller';
 import { Data } from '../../data/data';
 import { OpenGroupData } from '../../data/opengroups';
-import { ConversationCollection, ConversationModel } from '../../models/conversation';
+import { ConversationModel } from '../../models/conversation';
 import {
   actions as conversationActions,
   resetConversationExternal,
@@ -63,7 +63,7 @@ const getConvoHub = () => {
 type DeleteOptions = { fromSyncMessage: boolean };
 
 class ConvoController {
-  private readonly conversations: ConversationCollection;
+  private conversations: Array<ConversationModel>;
   private _initialFetchComplete: boolean = false;
   private _convoHubInitialPromise?: Promise<any>;
 
@@ -71,7 +71,7 @@ class ConvoController {
    * Do not call this constructor. You get the ConvoHub through ConvoHub.use() only
    */
   constructor() {
-    this.conversations = new ConversationCollection();
+    this.conversations = [];
   }
 
   // FIXME this could return | undefined
@@ -80,7 +80,7 @@ class ConvoController {
       throw new Error('ConvoHub.use().get() needs complete initial fetch');
     }
 
-    return this.conversations.get(id);
+    return this.conversations.find(m => m.id === id) as ConversationModel; // FIXME allow undefined here, and fix all the calls
   }
 
   public getOrThrow(id: string): ConversationModel {
@@ -88,16 +88,17 @@ class ConvoController {
       throw new Error('ConvoHub.use().get() needs complete initial fetch');
     }
 
-    const convo = this.conversations.get(id);
+    const convo = this.getUnsafe(id);
 
     if (convo) {
       return convo;
     }
     throw new Error(`Conversation ${id} does not exist on ConvoHub.use().get()`);
   }
+
   // Needed for some model setup which happens during the initial fetch() call below
   public getUnsafe(id: string): ConversationModel | undefined {
-    return this.conversations.get(id);
+    return this.get(id);
   }
 
   public getOrCreate(id: string, type: ConversationTypeEnum) {
@@ -122,15 +123,16 @@ class ConvoController {
     if (!this._initialFetchComplete) {
       throw new Error('ConvoHub.use().get() needs complete initial fetch');
     }
-
-    if (this.conversations.get(id)) {
-      return this.conversations.get(id) as ConversationModel;
+    const existing = this.getUnsafe(id);
+    if (existing) {
+      return existing;
     }
 
-    const conversation = this.conversations.add({
+    const conversation = new ConversationModel({
       id,
       type,
-    });
+    } as any);
+    this.conversations.push(conversation);
 
     const create = async () => {
       try {
@@ -204,7 +206,7 @@ class ConvoController {
       throw new Error('deleteBlindedContact allow accepts blinded id');
     }
     window.log.info(`deleteBlindedContact with ${blindedId}`);
-    const conversation = this.conversations.get(blindedId);
+    const conversation = this.getUnsafe(blindedId);
     if (!conversation) {
       window.log.warn(`deleteBlindedContact no such convo ${blindedId}`);
       return;
@@ -473,7 +475,7 @@ class ConvoController {
       window.log.info(`deleteContact isPrivate, reset fields and removing from wrapper: ${id}`);
 
       await conversation.setHidden();
-      conversation.set('active_at', 0);
+      conversation.setKey('active_at', 0);
       await BlockedNumberController.unblockAll([conversation.id]);
       await conversation.commit(); // first commit to DB so the DB knows about the changes
       if (SessionUtilContact.isContactToStoreInWrapper(conversation)) {
@@ -497,7 +499,7 @@ class ConvoController {
    * If you need to make a change, do the usual ConvoHub.use().get('the id you want to edit')
    */
   public getConversations(): Array<ConversationModel> {
-    return this.conversations.models;
+    return this.conversations;
   }
 
   public async load() {
@@ -510,7 +512,7 @@ class ConvoController {
         const startLoad = Date.now();
 
         const convoModels = await Data.getAllConversations();
-        this.conversations.add(convoModels);
+        this.conversations.push(...convoModels);
 
         const start = Date.now();
         const numberOfVariants = LibSessionUtil.requiredUserVariants.length;
@@ -578,7 +580,7 @@ class ConvoController {
     if (window?.inboxStore) {
       window.inboxStore?.dispatch(conversationActions.removeAllConversations());
     }
-    this.conversations.reset([]);
+    this.conversations = [];
   }
 
   private async deleteConvoInitialChecks(
@@ -592,7 +594,7 @@ class ConvoController {
 
     window.log.info(`deleteConvoInitialChecks: type ${deleteType} with ${ed25519Str(convoId)}`);
 
-    const conversation = this.conversations.get(convoId);
+    const conversation = this.getUnsafe(convoId);
     if (!conversation) {
       window.log.warn(`${deleteType} no such convo ${ed25519Str(convoId)}`);
       return null;
@@ -625,10 +627,13 @@ class ConvoController {
     }
 
     window.log.info(`cleanUpGroupConversation, convo removed from DB: ${ed25519Str(convoId)}`);
-    const conversation = this.conversations.get(convoId);
+    const conversation = this.getUnsafe(convoId);
 
     if (conversation) {
-      this.conversations.remove(conversation);
+      const foundAt = this.conversations.findIndex(m => m.id === conversation.id);
+      if (foundAt >= 0) {
+        this.conversations.splice(foundAt, 1);
+      }
 
       window?.inboxStore?.dispatch(
         conversationActions.conversationsChanged([conversation.getConversationModelProps()])

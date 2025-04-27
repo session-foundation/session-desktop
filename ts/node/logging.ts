@@ -8,7 +8,7 @@ import Logger from 'bunyan';
 // eslint-disable-next-line import/order
 import { app, ipcMain as ipc } from 'electron';
 import _ from 'lodash';
-import rimraf from 'rimraf';
+import { rimraf } from 'rimraf';
 
 import { readFile } from 'fs-extra';
 import { redactAll } from '../util/privacy';
@@ -97,21 +97,8 @@ export function getLoggerFilePath() {
 }
 
 async function deleteAllLogs(logFile: string) {
-  return new Promise((resolve, reject) => {
-    rimraf(
-      logFile,
-      {
-        disableGlob: true,
-      },
-      error => {
-        if (error) {
-          reject(error);
-          return;
-        }
-
-        resolve(undefined);
-      }
-    );
+  return rimraf(logFile, {
+    glob: false,
   });
 }
 

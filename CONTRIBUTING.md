@@ -21,7 +21,7 @@ Of course we encourage community developers to work on ANY issue filed on our Gi
 
 ### Node.js
 
-You'll need a [Node.js](https://nodejs.org/) version which matches our current version. You can check [`.nvmrc` in the `unstable` branch](https://github.com/session-foundation/session-desktop/blob/unstable/.nvmrc) to see what the current version is.
+You'll need a [Node.js](https://nodejs.org/) version which matches our current version. You can check [`.nvmrc` in the `dev` branch](https://github.com/session-foundation/session-desktop/blob/dev/.nvmrc) to see what the current version is.
 
 If you use other node versions you might have or need a node version manager.
 
@@ -31,7 +31,7 @@ If you use other node versions you might have or need a node version manager.
 
 ### Python
 
-You will need a [Python](https://www.python.org) version which matches our current version. You can check [`.tool-versions` in the `unstable` branch](https://github.com/session-foundation/session-desktop/blob/unstable/.tool-versions) to see what the current version is.
+You will need a [Python](https://www.python.org) version which matches our current version. You can check [`.tool-versions` in the `dev` branch](https://github.com/session-foundation/session-desktop/blob/dev/.tool-versions) to see what the current version is.
 
 If you use other python versions you might have or need a python version manager.
 
@@ -382,10 +382,10 @@ So you wanna make a pull request? Please observe the following guidelines.
 - Please do not submit pull requests for pure translation fixes. Anyone can update
   the translations at [Crowdin](https://getsession.org/translate).
 - [Rebase](https://nathanleclaire.com/blog/2014/09/14/dont-be-scared-of-git-rebase/) your
-  changes on the latest `unstable` branch, resolving any conflicts.
+  changes on the latest `dev` branch, resolving any conflicts.
   This ensures that your changes will merge cleanly when you open your PR.
 - Be sure to add and run tests!
-- Make sure the diff between `unstable` and your branch contains only the
+- Make sure the diff between `dev` and your branch contains only the
   minimal set of changes needed to implement your feature or bug fix. This will
   make it easier for the person reviewing your code to approve the changes.
   Please do not submit a PR with commented out code or unfinished features.
@@ -424,6 +424,6 @@ The binaries will be placed inside the `release/` folder.
 <details>
 <summary>Linux</summary>
 
-You can change in [package.json](./package.json) `"target": ["deb"],` to any of the [electron-builder targets](https://www.electron.build/linux#target) to build for another target.
+You can change in [package.json](./package.json) `"target": "deb",` to any of the [electron-builder targets](https://www.electron.build/linux#target) to build for another target.
 
 </details>

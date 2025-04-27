@@ -65,3 +65,36 @@ export const sanitizeSessionUsername = (inputName: string) => {
 
 export const ed25519Str = (ed25519Key: string) =>
   `(...${ed25519Key.length > 58 ? ed25519Key.substr(58) : ed25519Key})`;
+
+/**
+ * Trims a string including any special whitespace characters.
+ * @param value the string to trim
+ * @returns the trimmed string
+ * @note https://en.wikipedia.org/wiki/Whitespace_character
+ * @note The following characters are considered special whitespace characters:
+ * - U+200B ZERO WIDTH SPACE https://unicode-explorer.com/c/200B
+ * - U+200C ZERO WIDTH NON-JOINER https://unicode-explorer.com/c/200C
+ * - U+200D ZERO WIDTH JOINER https://unicode-explorer.com/c/200D
+ * - U+200E LEFT-TO-RIGHT MARK https://unicode-explorer.com/c/200E
+ * - U+200F RIGHT-TO-LEFT MARK https://unicode-explorer.com/c/200F
+ * - U+2060 WORD JOINER https://unicode-explorer.com/c/2060
+ * - U+FEFF ZERO WIDTH NO-BREAK SPACE https://unicode-explorer.com/c/FEFF
+ */
+export const trimWhitespace = (value: string): string => {
+  const blacklist = ['​', '‌', '‍', '‎', '‏', '⁠', ''];
+
+  let trimmedValue = value.trim();
+
+  while (trimmedValue[0] && blacklist.includes(trimmedValue[0])) {
+    trimmedValue = trimmedValue.slice(1);
+  }
+
+  while (
+    trimmedValue[trimmedValue.length - 1] &&
+    blacklist.includes(trimmedValue[trimmedValue.length - 1])
+  ) {
+    trimmedValue = trimmedValue.slice(0, -1);
+  }
+
+  return trimmedValue;
+};

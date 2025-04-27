@@ -10,7 +10,7 @@ import { DURATION } from '../../../constants';
 
 export const getAllRoomInfos = async (roomInfos: OpenGroupV2Room) => {
   const result = await OnionSending.sendJsonViaOnionV4ToSogs({
-    blinded: true,
+    blinded: false,
     endpoint: '/rooms',
     method: 'GET',
     serverPubkey: roomInfos.serverPublicKey,
@@ -19,6 +19,7 @@ export const getAllRoomInfos = async (roomInfos: OpenGroupV2Room) => {
     serverUrl: roomInfos.serverUrl,
     headers: null,
     throwErrors: false,
+    includeAuthHeaders: false, // Don't include headers in default room requests (excessive metadata)
     timeoutMs: 10 * DURATION.SECONDS,
   });
 

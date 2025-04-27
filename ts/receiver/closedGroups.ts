@@ -377,7 +377,7 @@ export async function handleNewClosedGroup(
   // But we need to override this value with the sent timestamp of the message creating this group for us.
   // Having that timestamp set will allow us to pickup incoming group update which were sent between
   // envelope.timestamp and Date.now(). And we need to listen to those (some might even remove us)
-  convo.set('lastJoinedTimestamp', envelopeTimestamp);
+  convo.setKey('lastJoinedTimestamp', envelopeTimestamp);
   convo.updateLastMessage();
 
   await convo.commit();
@@ -839,7 +839,7 @@ function addMemberToZombies(
   if (isAlreadyZombie) {
     return false;
   }
-  convo.set('zombies', [...zombies, userToAdd.key]);
+  convo.setKey('zombies', [...zombies, userToAdd.key]);
   return true;
 }
 
@@ -859,7 +859,7 @@ function removeMemberFromZombies(
   if (!isAlreadyAZombie) {
     return false;
   }
-  convo.set(
+  convo.setKey(
     'zombies',
     zombies.filter(z => z !== userToAdd.key)
   );
@@ -951,7 +951,7 @@ async function handleClosedGroupMemberLeft(
     addMemberToZombies(envelope, PubKey.cast(sender), convo);
   }
   if (!shouldOnlyAddUpdateMessage) {
-    convo.set('members', newMembers);
+    convo.setKey('members', newMembers);
   }
 
   await convo.commit();

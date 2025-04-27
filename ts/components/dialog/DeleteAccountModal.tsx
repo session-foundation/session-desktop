@@ -41,7 +41,7 @@ const DescriptionBeforeAskingConfirmation = (props: {
 
   return (
     <>
-      <span className="session-confirm-main-message">
+      <span className="session-confirm-main-message" data-testid="modal-description">
         <Localizer token="clearDataAllDescription" />
       </span>
 
@@ -62,7 +62,7 @@ const DescriptionBeforeAskingConfirmation = (props: {
 
 const DescriptionWhenAskingConfirmation = (props: { deleteMode: DeleteModes }) => {
   return (
-    <span className="session-confirm-main-message">
+    <span className="session-confirm-main-message" data-testid="modal-description">
       {props.deleteMode === 'device_and_network'
         ? window.i18n('clearDeviceAndNetworkConfirm')
         : window.i18n('clearDeviceDescription')}
@@ -144,6 +144,7 @@ export const DeleteAccountModal = () => {
                 void onDeleteEverythingAndNetworkData();
               }
             }}
+            dataTestId="session-confirm-ok-button"
             disabled={isLoading}
           />
 
@@ -154,6 +155,7 @@ export const DeleteAccountModal = () => {
               dispatch(updateDeleteAccountModal(null));
             }}
             disabled={isLoading}
+            dataTestId="session-confirm-cancel-button"
           />
         </div>
         <SpacerLG />

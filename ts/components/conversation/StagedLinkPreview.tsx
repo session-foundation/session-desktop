@@ -63,16 +63,16 @@ export const StagedLinkPreview = (props: Props) => {
 
   return (
     <StyledStagedLinkPreview
-      container={true}
-      justifyContent={isLoading ? 'center' : 'space-between'}
-      alignItems="center"
+      $container={true}
+      $justifyContent={isLoading ? 'center' : 'space-between'}
+      $alignItems="center"
       width={'100%'}
       padding={'var(--margins-md)'}
     >
       <Flex
-        container={true}
-        justifyContent={isLoading ? 'center' : 'flex-start'}
-        alignItems={'center'}
+        $container={true}
+        $justifyContent={isLoading ? 'center' : 'flex-start'}
+        $alignItems={'center'}
       >
         {isLoading ? (
           <SessionSpinner loading={isLoading} data-testid="link-preview-loading" />

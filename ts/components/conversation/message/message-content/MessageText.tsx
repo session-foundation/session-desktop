@@ -1,6 +1,6 @@
-import classNames from 'classnames';
-
 import styled from 'styled-components';
+import clsx from 'clsx';
+
 import { SessionIcon } from '../../../icon';
 import { MessageBody } from './MessageBody';
 import {
@@ -49,11 +49,7 @@ export const MessageText = ({ messageId }: Props) => {
       : 'var(--message-bubbles-sent-text-color)';
 
   return (
-    <StyledMessageText
-      dir="auto"
-      className={classNames('module-message__text')}
-      isDeleted={isDeleted}
-    >
+    <StyledMessageText dir="auto" className={clsx('module-message__text')} isDeleted={isDeleted}>
       {isDeleted && <SessionIcon iconType="delete" iconSize="small" iconColor={iconColor} />}
       <MessageBody
         text={contents || ''}

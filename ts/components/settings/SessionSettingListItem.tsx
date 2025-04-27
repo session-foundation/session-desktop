@@ -88,10 +88,10 @@ export const SettingsTitleAndDescription = (props: {
   return (
     <StyledInfo>
       <Flex
-        container={true}
-        flexDirection={'row'}
-        justifyContent={'flex-start'}
-        alignItems={'center'}
+        $container={true}
+        $flexDirection={'row'}
+        $justifyContent={'flex-start'}
+        $alignItems={'center'}
       >
         <StyledTitleSettingsItem>{title}</StyledTitleSettingsItem>
         {!isEmpty(icon) ? (

@@ -1,5 +1,6 @@
-import classNames from 'classnames';
 import styled from 'styled-components';
+import clsx from 'clsx';
+
 import { PropsForAttachment } from '../../../../state/ducks/conversations';
 import { AttachmentTypeWithPath, getExtensionForDisplay } from '../../../../types/Attachment';
 import { Spinner } from '../../../loading';
@@ -54,7 +55,7 @@ export function MessageGenericAttachment({
       )}
       <div className="module-message__generic-attachment__text">
         <div
-          className={classNames(
+          className={clsx(
             'module-message__generic-attachment__file-name',
             `module-message__generic-attachment__file-name--${direction}`
           )}
@@ -62,7 +63,7 @@ export function MessageGenericAttachment({
           {fileName}
         </div>
         <div
-          className={classNames(
+          className={clsx(
             'module-message__generic-attachment__file-size',
             `module-message__generic-attachment__file-size--${direction}`
           )}

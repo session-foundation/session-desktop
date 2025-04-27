@@ -221,7 +221,7 @@ export const EditProfileDialog = () => {
 
       // Note: this will not throw, but just truncate the display name if it is too long.
       // I guess it is expected as there is no UI to show anything else than a generic error?
-      const validName = await ProfileManager.updateOurProfileDisplayName(profileName);
+      const validName = await ProfileManager.updateOurProfileDisplayName(sanitizedName);
       setUpdateProfileName(validName);
       setProfileName(validName);
       setMode('default');
@@ -353,10 +353,10 @@ export const EditProfileDialog = () => {
         {mode !== 'qr' ? <Spacer3XL /> : <SpacerSM />}
 
         <StyledSessionIdSection
-          container={true}
-          flexDirection="column"
-          justifyContent="center"
-          alignItems="center"
+          $container={true}
+          $flexDirection="column"
+          $justifyContent="center"
+          $alignItems="center"
           width={'100%'}
         >
           <YourSessionIDPill />
@@ -366,10 +366,10 @@ export const EditProfileDialog = () => {
           {!loading ? <Spacer2XL /> : null}
           {mode === 'default' || mode === 'qr' || mode === 'lightbox' ? (
             <Flex
-              container={true}
-              justifyContent={mode === 'default' ? 'space-between' : 'center'}
-              alignItems="center"
-              flexGap="var(--margins-lg)"
+              $container={true}
+              $justifyContent={mode === 'default' ? 'space-between' : 'center'}
+              $alignItems="center"
+              $flexGap="var(--margins-lg)"
               width={'100%'}
             >
               <CopyToClipboardButton

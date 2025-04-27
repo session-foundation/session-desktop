@@ -63,16 +63,16 @@ export const SessionRegistrationView = () => {
   return (
     <Provider store={onboardingStore}>
       <SessionTheme>
-        <StyledFullscreenContainer container={true} alignItems="center">
+        <StyledFullscreenContainer $container={true} $alignItems="center">
           <Hero />
           <StyledSessionContent
-            flexDirection="column"
-            alignItems="center"
-            container={true}
+            $flexDirection="column"
+            $alignItems="center"
+            $container={true}
             height="100%"
-            flexGrow={1}
+            $flexGrow={1}
           >
-            <Flex container={true} margin="auto" alignItems="center" flexDirection="column">
+            <Flex $container={true} margin="auto" $alignItems="center" $flexDirection="column">
               <SessionToastContainer />
               <ModalContainer />
               <RegistrationStages />

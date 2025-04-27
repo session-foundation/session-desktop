@@ -1,5 +1,6 @@
 import autoBind from 'auto-bind';
-import classNames from 'classnames';
+import clsx from 'clsx';
+
 import { isString } from 'lodash';
 import { PureComponent, useEffect } from 'react';
 import { toast } from 'react-toastify';
@@ -164,7 +165,7 @@ class SessionPasswordPromptInner extends PureComponent<unknown, State> {
     const showResetElements = this.state.errorCount >= MAX_LOGIN_TRIES;
 
     return (
-      <div className={classNames(showResetElements && 'session-modal__button-group')}>
+      <div className={clsx(showResetElements && 'session-modal__button-group')}>
         {showResetElements && (
           <>
             <SessionButton

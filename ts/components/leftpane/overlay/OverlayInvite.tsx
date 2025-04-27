@@ -78,19 +78,19 @@ export const OverlayInvite = () => {
 
   return (
     <StyledLeftPaneOverlay
-      container={true}
-      flexDirection={'column'}
-      flexGrow={1}
-      alignItems={'center'}
+      $container={true}
+      $flexDirection={'column'}
+      $flexGrow={1}
+      $alignItems={'center'}
       padding={'var(--margins-md)'}
     >
       {!idCopied ? (
         <>
           <StyledInputContainer
-            container={true}
+            $container={true}
             width={'100%'}
-            justifyContent="center"
-            alignItems="center"
+            $justifyContent="center"
+            $alignItems="center"
           >
             <SessionInput
               type="text"
@@ -122,7 +122,7 @@ export const OverlayInvite = () => {
             iconColor={'var(--primary-color)'}
           />
           <SpacerMD />
-          <StyledHeadingContainer container={true} justifyContent="center" alignItems="center">
+          <StyledHeadingContainer $container={true} $justifyContent="center" $alignItems="center">
             <StyledHeading>{window.i18n('accountIdCopied')}</StyledHeading>
             <HelpDeskButton
               iconColor={'var(--text-primary-color)'}

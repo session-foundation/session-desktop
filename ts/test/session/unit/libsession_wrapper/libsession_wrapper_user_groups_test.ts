@@ -180,7 +180,7 @@ describe('libsession_user_groups', () => {
         );
 
         let wrapperGroup = await SessionUtilUserGroups.insertGroupsFromDBIntoWrapperAndRefresh(
-          group.get('id')
+          group.id
         );
 
         expect(wrapperGroup, 'something should be returned from the wrapper').to.not.be.null;
@@ -252,7 +252,7 @@ describe('libsession_user_groups', () => {
         );
 
         let wrapperGroup = await SessionUtilUserGroups.insertGroupsFromDBIntoWrapperAndRefresh(
-          group.get('id')
+          group.id
         );
 
         expect(wrapperGroup, 'something should be returned from the wrapper').to.not.be.null;

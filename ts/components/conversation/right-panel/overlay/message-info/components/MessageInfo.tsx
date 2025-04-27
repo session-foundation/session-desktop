@@ -59,7 +59,7 @@ export const LabelWithInfo = (props: LabelWithInfoProps) => {
   return (
     <LabelWithInfoContainer title={props.title || undefined} onClick={props.onClick}>
       <MessageInfoLabel color={props.labelColor}>{props.label}</MessageInfoLabel>
-      <Flex container={true} justifyContent="flex-start" alignItems="flex-start">
+      <Flex $container={true} $justifyContent="flex-start" $alignItems="flex-start">
         <MessageInfoData color={props.dataColor}>{props.info}</MessageInfoData>
         {isDev ? (
           <CopyToClipboardIcon
@@ -137,7 +137,7 @@ export const MessageInfo = ({ messageId, errors }: { messageId: string; errors?:
   });
 
   return (
-    <Flex container={true} flexDirection="column">
+    <Flex $container={true} $flexDirection="column">
       <LabelWithInfo label={window.i18n('sent')} info={sentAtStr} />
       <DebugMessageInfo messageId={messageId} />
 

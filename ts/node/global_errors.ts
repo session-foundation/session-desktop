@@ -1,6 +1,6 @@
 import { app, clipboard, dialog } from 'electron';
-import { redactAll } from '../util/privacy'; // checked - only node
-import { ConsoleCustom } from './logging'; // checked - only node
+import { redactAll } from '../util/privacy';
+import { ConsoleCustom } from './logging';
 
 // TODO use localize strings if we can.
 const quitText = 'Quit';

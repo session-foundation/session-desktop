@@ -74,10 +74,10 @@ export const AboutView = () => {
     <SessionTheme runSetup={false}>
       <SessionToastContainer />
       <StyledContent
-        container={true}
-        flexDirection={'column'}
-        justifyContent={'center'}
-        alignItems={'center'}
+        $container={true}
+        $flexDirection={'column'}
+        $justifyContent={'center'}
+        $alignItems={'center'}
       >
         <img
           src="images/session/session_icon.png"

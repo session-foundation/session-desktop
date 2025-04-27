@@ -63,16 +63,16 @@ export const OverlayChooseAction = () => {
 
   return (
     <StyledLeftPaneOverlay
-      container={true}
-      flexDirection={'column'}
-      flexGrow={1}
-      alignItems={'center'}
+      $container={true}
+      $flexDirection={'column'}
+      $flexGrow={1}
+      $alignItems={'center'}
     >
       <StyledActionRowContainer
-        container={true}
-        flexDirection={'column'}
-        justifyContent={'flex-start'}
-        alignItems={'flex-start'}
+        $container={true}
+        $flexDirection={'column'}
+        $justifyContent={'flex-start'}
+        $alignItems={'flex-start'}
       >
         <ActionRow
           title={window.i18n('messageNew', { count: 1 })}

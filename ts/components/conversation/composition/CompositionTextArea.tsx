@@ -46,7 +46,7 @@ const sendMessageStyle = (dir?: HTMLDirection) => {
     minHeight: '24px',
     width: '100%',
     ...styleForCompositionBoxSuggestions(dir),
-  };
+  } as const;
 };
 
 type Props = {

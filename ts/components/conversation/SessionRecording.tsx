@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 
-import classNames from 'classnames';
-
 import autoBind from 'auto-bind';
+import clsx from 'clsx';
+
 import MicRecorder from 'mic-recorder-to-mp3';
 import { Component } from 'react';
 import styled, { keyframes } from 'styled-components';
@@ -89,7 +89,7 @@ function RecordingDurations({
   const remainingTimeString = useFormattedDuration(remainingSeconds, { forceHours: false });
 
   return (
-    <div className={classNames('session-recording--timer', !isRecording && 'playback-timer')}>
+    <div className={clsx('session-recording--timer', !isRecording && 'playback-timer')}>
       {displayTimeString + (remainingTimeString ? ` / ${remainingTimeString}` : '')}
     </div>
   );
@@ -99,7 +99,7 @@ function RecordingTimer({ displaySeconds }: { displaySeconds: number }) {
   const displayTimeString = useFormattedDuration(displaySeconds, { forceHours: false });
 
   return (
-    <div className={classNames('session-recording--timer')}>
+    <div className={clsx('session-recording--timer')}>
       {displayTimeString}
       <StyledRecordTimerLight />
     </div>

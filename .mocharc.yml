@@ -9,3 +9,4 @@ spec:
   - './ts/test/**/*_test.js' # the positional arguments!
 timeout: 1000
 watch: false
+reporter: min

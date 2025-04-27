@@ -96,7 +96,12 @@ export const AttachmentCarousel = (props: Props) => {
   }
 
   return (
-    <Flex container={true} flexDirection={'row'} justifyContent={'center'} alignItems={'center'}>
+    <Flex
+      $container={true}
+      $flexDirection={'row'}
+      $justifyContent={'center'}
+      $alignItems={'center'}
+    >
       <CarouselButton visible={visibleIndex > 0} onClick={previousAction} rotation={90} />
       <ImageContainer>
         <Image

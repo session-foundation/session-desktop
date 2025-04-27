@@ -3,7 +3,7 @@ import nodeUrl from 'url';
 import { compact, isEmpty, isNumber, range } from 'lodash';
 import LinkifyIt from 'linkify-it';
 
-const linkify = LinkifyIt();
+const linkifyIt = new LinkifyIt();
 
 function maybeParseHref(href: string) {
   try {
@@ -22,7 +22,7 @@ function findLinks(text: string, caretLocation?: number) {
   const haveCaretLocation = isNumber(caretLocation);
   const textLength = text ? text.length : 0;
 
-  const matches = linkify.match(text || '') || [];
+  const matches = linkifyIt.match(text || '') || [];
   return compact(
     matches.map(match => {
       if (!haveCaretLocation) {

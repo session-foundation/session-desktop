@@ -1,5 +1,4 @@
 import autoBind from 'auto-bind';
-import Backbone from 'backbone';
 import { from_hex } from 'libsodium-wrappers-sumo';
 import {
   debounce,
@@ -29,7 +28,7 @@ import { PubKey } from '../session/types';
 import { ToastUtils, UserUtils } from '../session/utils';
 import { BlockedNumberController } from '../util';
 import { MessageModel } from './message';
-import { MessageAttributesOptionals } from './messageType';
+import { MessageAttributesOptionals, type MessageAttributes } from './messageType';
 
 import { Data } from '../data/data';
 import { OpenGroupUtils } from '../session/apis/open_group_api/utils';
@@ -109,9 +108,9 @@ import { LibSessionUtil } from '../session/utils/libsession/libsession_utils';
 import { SessionUtilUserProfile } from '../session/utils/libsession/libsession_utils_user_profile';
 import { ReduxSogsRoomInfos } from '../state/ducks/sogsRoomInfo';
 import {
-  getLibGroupAdminsOutsideRedux,
-  getLibGroupMembersOutsideRedux,
-  getLibGroupNameOutsideRedux,
+  selectLibGroupAdminsOutsideRedux,
+  selectLibGroupMembersOutsideRedux,
+  selectLibGroupNameOutsideRedux,
 } from '../state/selectors/groups';
 import {
   getCanWriteOutsideRedux,
@@ -138,6 +137,7 @@ import { ConversationTypeEnum, CONVERSATION_PRIORITIES } from './types';
 import { NetworkTime } from '../util/NetworkTime';
 import { MessageQueue } from '../session/sending';
 import type { WithMessageHashOrNull } from '../session/types/with';
+import { Model } from './models';
 
 type InMemoryConvoInfos = {
   mentionedUs: boolean;
@@ -150,7 +150,7 @@ type InMemoryConvoInfos = {
  */
 const inMemoryConvoInfos: Map<string, InMemoryConvoInfos> = new Map();
 
-export class ConversationModel extends Backbone.Model<ConversationAttributes> {
+export class ConversationModel extends Model<ConversationAttributes> {
   public updateLastMessage: () => unknown; // unknown because it is a Promise that we do not want to await
   public throttledBumpTyping: () => void;
   public throttledNotify: (message: MessageModel) => void;
@@ -327,7 +327,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
     // To reduce the redux store size, only set fields which cannot be undefined.
     // For instance, a boolean can usually be not set if false, etc
     const toRet: ReduxConversationType = {
-      id: this.id as string,
+      id: this.id,
       activeAt: this.getActiveAt(),
       type: this.get('type'),
     };
@@ -483,7 +483,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
   public async updateGroupAdmins(groupAdmins: Array<string>, shouldCommit: boolean) {
     const sortedNewAdmins = uniq(sortBy(groupAdmins));
 
-    // check if there is any difference betwewen the two, if yes, override it with what we got.
+    // check if there is any difference between the two, if yes, override it with what we got.
     if (!xor(this.getGroupAdmins(), groupAdmins).length) {
       return false;
     }
@@ -495,7 +495,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
   }
 
   /**
-   * Fetches from the Database an update of what are the memory only informations like mentionedUs and the unreadCount, etc
+   * Fetches from the Database an update of what are the memory only information like mentionedUs and the unreadCount, etc
    */
   public async refreshInMemoryDetails(providedMemoryDetails?: SaveConversationReturn) {
     if (!SessionUtilConvoInfoVolatile.isConvoToStoreInWrapper(this)) {
@@ -1045,12 +1045,12 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
       expireTimer: this.isClosedGroup() && !this.isClosedGroupV2() ? 0 : expireTimer,
     });
 
-    if (!message.get('id')) {
+    if (!message.id) {
       message.set({ id: v4() });
     }
 
     if (this.isActive()) {
-      this.set('active_at', createAtNetworkTimestamp);
+      this.setKey('active_at', createAtNetworkTimestamp);
     }
 
     if (shouldCommitConvo) {
@@ -1080,7 +1080,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
               expirationMode,
               message.get('sent_at'),
               'updateExpireTimer() remote change',
-              message.get('id')
+              message.id
             ),
           });
         }
@@ -1098,7 +1098,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
     // We would have returned if that message sending part was not needed
     //
     const expireUpdate = {
-      identifier: message.id as string,
+      identifier: message.id,
       createAtNetworkTimestamp,
       expirationType,
       expireTimer,
@@ -1119,7 +1119,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
     if (this.isPrivate()) {
       const expirationTimerMessage = new ExpirationTimerUpdateMessage(expireUpdate);
 
-      const pubkey = new PubKey(this.get('id'));
+      const pubkey = new PubKey(this.id);
       await MessageQueue.use().sendToPubKey(
         pubkey,
         expirationTimerMessage,
@@ -1147,7 +1147,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
             typeOfChange: SignalService.GroupUpdateInfoChangeMessage.Type.DISAPPEARING_MESSAGES,
             ...expireUpdate,
             groupPk: this.id,
-            identifier: message.get('id'),
+            identifier: message.id,
             sodium: await getSodiumRenderer(),
             secretKey: group.secretKey,
             updatedExpirationSeconds: expireUpdate.expireTimer,
@@ -1173,7 +1173,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
 
         const expireUpdateForGroup = {
           ...expireUpdate,
-          groupId: this.get('id'),
+          groupId: this.id,
         };
 
         const expirationTimerMessage = new ExpirationTimerUpdateMessage(expireUpdateForGroup);
@@ -1407,7 +1407,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
    * @returns `displayNameInProfile` so the real username as defined by that user/group
    */
   public getRealSessionUsername(): string | undefined {
-    return getLibGroupNameOutsideRedux(this.id) || this.get('displayNameInProfile');
+    return selectLibGroupNameOutsideRedux(this.id) || this.get('displayNameInProfile');
   }
 
   /**
@@ -1482,7 +1482,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
       return false;
     }
 
-    const groupModerators = getModeratorsOutsideRedux(this.id as string);
+    const groupModerators = getModeratorsOutsideRedux(this.id);
     return Array.isArray(groupModerators) && groupModerators.includes(pubKey);
   }
 
@@ -1915,12 +1915,12 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
     }
 
     // make sure the notifications are not muted for this convo (and not the source convo)
-    const convNotif = this.getNotificationsFor();
-    if (convNotif === 'disabled') {
+    const notificationsFor = this.getNotificationsFor();
+    if (notificationsFor === 'disabled') {
       window?.log?.info('notifications disabled for convo', this.idForLogging());
       return;
     }
-    if (convNotif === 'mentions_only') {
+    if (notificationsFor === 'mentions_only') {
       // check if the message has ourselves as mentions
       const regex = new RegExp(`@${PubKey.regexForPubkeys}`, 'g');
       const text = message.get('body');
@@ -1948,10 +1948,10 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
 
     const iconUrl = await this.getNotificationIcon();
 
-    const messageJSON = message.toJSON();
-    const messageSentAt = messageJSON.sent_at;
+    const messageAttrs = message.attributes;
+    const messageSentAt = messageAttrs.sent_at;
     const messageId = message.id;
-    const isExpiringMessage = this.isExpiringMessage(messageJSON);
+    const isExpiringMessage = this.isExpiringMessage(messageAttrs);
 
     Notifications.addNotification({
       conversationId,
@@ -1959,7 +1959,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
       isExpiringMessage,
       message: friendRequestText || message.getNotificationText(),
       messageId,
-      messageSentAt,
+      messageSentAt: messageSentAt || Date.now(),
       title: friendRequestText ? '' : convo.getNicknameOrRealUsernameOrPlaceholder(),
     });
   }
@@ -1972,8 +1972,8 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
     const conversationId = this.id;
 
     // make sure the notifications are not muted for this convo (and not the source convo)
-    const convNotif = this.getNotificationsFor();
-    if (convNotif === 'disabled') {
+    const notificationsFor = this.getNotificationsFor();
+    if (notificationsFor === 'disabled') {
       window?.log?.info(
         'notifyIncomingCall: notifications disabled for convo',
         this.idForLogging()
@@ -2028,7 +2028,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
 
   public getGroupAdmins(): Array<string> {
     if (this.isClosedGroupV2()) {
-      return getLibGroupAdminsOutsideRedux(this.id);
+      return selectLibGroupAdminsOutsideRedux(this.id);
     }
     const groupAdmins = this.get('groupAdmins');
 
@@ -2059,7 +2059,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
   public getGroupMembers(): Array<string> {
     if (this.isClosedGroup()) {
       if (this.isClosedGroupV2()) {
-        return getLibGroupMembersOutsideRedux(this.id);
+        return selectLibGroupMembersOutsideRedux(this.id);
       }
       const members = this.get('members');
       return members && members.length > 0 ? members : [];
@@ -2083,7 +2083,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
     try {
       const { body, attachments, preview, quote, fileIdsToLink } = await message.uploadData();
       const { id } = message;
-      const destination = this.id as string;
+      const destination = this.id;
 
       const sentAt = message.get('sent_at'); // this is used to store the timestamp when we tried sending that message, it should be set by the caller
       if (!sentAt) {
@@ -2142,7 +2142,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
       if (this.isPrivate()) {
         if (this.isMe()) {
           if (this.matchesDisappearingMode('deleteAfterRead')) {
-            throw new Error('Note to Self disappearing messages must be deleteAterSend');
+            throw new Error('Note to Self disappearing messages must be deleteAfterSend');
           }
           chatMessageParams.syncTarget = this.id;
           const chatMessageMe = new VisibleMessage(chatMessageParams);
@@ -2312,6 +2312,23 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
       return;
     }
     const lastMessageModel = messages.at(0);
+    if (!lastMessageModel) {
+      if (
+        this.get('lastMessage') ||
+        this.get('lastMessageStatus') ||
+        this.get('lastMessageInteractionType') ||
+        this.get('lastMessageInteractionStatus')
+      ) {
+        this.set({
+          lastMessage: '',
+          lastMessageStatus: undefined,
+          lastMessageInteractionType: undefined,
+          lastMessageInteractionStatus: undefined,
+        });
+        await this.commit();
+      }
+      return;
+    }
     const interactionNotification = lastMessageModel.getInteractionNotification();
 
     const lastMessageInteractionType = interactionNotification?.interactionType;
@@ -2374,7 +2391,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
     const conversationId = this.id;
     Notifications.clearByConversationID(conversationId);
 
-    const oldUnreadNowRead = (await this.getUnreadByConversation(newestUnreadDate)).models;
+    const oldUnreadNowRead = await this.getUnreadByConversation(newestUnreadDate);
 
     if (!oldUnreadNowRead.length) {
       // no new messages where read, no need to do anything
@@ -2388,7 +2405,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
     for (const nowRead of oldUnreadNowRead) {
       const shouldUpdateSwarmExpiry = nowRead.markMessageReadNoCommit(readAt);
       if (shouldUpdateSwarmExpiry) {
-        msgsIdsToUpdateExpireOnSwarm.push(nowRead.get('id') as string);
+        msgsIdsToUpdateExpireOnSwarm.push(nowRead.id);
       }
 
       const sentAt = nowRead.get('sent_at') || nowRead.get('serverTimestamp');
@@ -2411,7 +2428,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
       }
     }
     // save all the attributes in a single call
-    await Data.saveMessages(oldUnreadNowRead.map(m => m.attributes));
+    await Data.saveMessages(oldUnreadNowRead.map(m => m.cloneAttributes()));
     // trigger all the ui updates in a single call
     window.inboxStore?.dispatch(
       conversationActions.messagesChanged(oldUnreadNowRead.map(m => m.getMessageModelProps()))
@@ -2475,7 +2492,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
     }
   }
 
-  private isExpiringMessage(json: any) {
+  private isExpiringMessage(json: Readonly<MessageAttributes>) {
     if (json.type === 'incoming') {
       return false;
     }
@@ -2558,7 +2575,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
       return;
     }
 
-    const recipientId = this.id as string;
+    const recipientId = this.id;
 
     if (isEmpty(recipientId)) {
       throw new Error('Need to provide either recipientId');
@@ -2640,7 +2657,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
 
             return {
               contentType,
-              // Our protos library complains about this field being undefined, so we
+              // Our proto library complains about this field being undefined, so we
               //   force it to null
               fileName: fileName || null,
               thumbnail: attachment?.thumbnail?.path // loadAttachmentData throws if the thumbnail.path is not set
@@ -2665,7 +2682,7 @@ export class ConversationModel extends Backbone.Model<ConversationAttributes> {
 
             return {
               contentType,
-              // Our protos library complains about this field being undefined, so we
+              // Our proto library complains about this field being undefined, so we
               //   force it to null
               fileName: null,
               thumbnail: image
@@ -2727,7 +2744,7 @@ async function commitConversationAndRefreshWrapper(id: string) {
   }
 
   // write to db
-  const savedDetails = await Data.saveConversation(convo.attributes);
+  const savedDetails = await Data.saveConversation(convo.cloneAttributes());
   await convo.refreshInMemoryDetails(savedDetails);
 
   // Performance impact on this is probably to be pretty bad. We might want to push for that DB refactor to be done sooner so we do not need to fetch info from the DB anymore
@@ -2784,17 +2801,6 @@ const throttledAllConversationsDispatch = debounce(
 );
 
 const updatesToDispatch: Map<string, ReduxConversationType> = new Map();
-
-export class ConversationCollection extends Backbone.Collection<ConversationModel> {
-  constructor(models?: Array<ConversationModel>) {
-    super(models);
-    this.comparator = (m: ConversationModel) => {
-      return -(m.getActiveAt() || 0);
-    };
-  }
-}
-
-ConversationCollection.prototype.model = ConversationModel;
 
 export function hasValidOutgoingRequestValues({
   isMe,

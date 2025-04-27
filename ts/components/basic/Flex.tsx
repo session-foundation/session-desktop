@@ -6,11 +6,11 @@ import { HTMLDirection } from '../../util/i18n/rtlSupport';
 export interface FlexProps {
   children?: any;
   className?: string;
-  container?: boolean;
-  dataTestId?: SessionDataTestId;
+  $container?: boolean;
+  $dataTestId?: SessionDataTestId;
   // Container Props
-  flexDirection?: 'row' | 'row-reverse' | 'column' | 'column-reverse';
-  justifyContent?:
+  $flexDirection?: 'row' | 'row-reverse' | 'column' | 'column-reverse';
+  $justifyContent?:
     | 'flex-start'
     | 'flex-end'
     | 'center'
@@ -18,9 +18,9 @@ export interface FlexProps {
     | 'space-around'
     | 'initial'
     | 'inherit';
-  flexWrap?: 'wrap' | 'nowrap' | 'wrap-reverse';
-  flexGap?: string;
-  alignItems?:
+  $flexWrap?: 'wrap' | 'nowrap' | 'wrap-reverse';
+  $flexGap?: string;
+  $alignItems?:
     | 'stretch'
     | 'center'
     | 'flex-start'
@@ -29,10 +29,10 @@ export interface FlexProps {
     | 'initial'
     | 'inherit';
   // Child Props
-  flexGrow?: number;
+  $flexGrow?: number;
   gap?: string;
-  flexShrink?: number;
-  flexBasis?: number;
+  $flexShrink?: number;
+  $flexBasis?: number;
   // Common Layout Props
   padding?: string;
   margin?: string;
@@ -46,15 +46,15 @@ export interface FlexProps {
 }
 
 export const Flex = styled.div<FlexProps>`
-  display: ${props => (props.container ? 'flex' : 'block')};
-  justify-content: ${props => props.justifyContent || 'flex-start'};
-  flex-direction: ${props => props.flexDirection || 'row'};
-  flex-grow: ${props => (props.flexGrow !== undefined ? props.flexGrow : '0')};
-  flex-basis: ${props => (props.flexBasis !== undefined ? props.flexBasis : 'auto')};
-  flex-shrink: ${props => (props.flexShrink !== undefined ? props.flexShrink : '1')};
-  flex-wrap: ${props => (props.flexWrap !== undefined ? props.flexWrap : 'nowrap')};
-  gap: ${props => (props.flexGap !== undefined ? props.flexGap : undefined)};
-  align-items: ${props => props.alignItems || 'stretch'};
+  display: ${props => (props.$container ? 'flex' : 'block')};
+  justify-content: ${props => props.$justifyContent || 'flex-start'};
+  flex-direction: ${props => props.$flexDirection || 'row'};
+  flex-grow: ${props => (props.$flexGrow !== undefined ? props.$flexGrow : '0')};
+  flex-basis: ${props => (props.$flexBasis !== undefined ? props.$flexBasis : 'auto')};
+  flex-shrink: ${props => (props.$flexShrink !== undefined ? props.$flexShrink : '1')};
+  flex-wrap: ${props => (props.$flexWrap !== undefined ? props.$flexWrap : 'nowrap')};
+  gap: ${props => (props.$flexGap !== undefined ? props.$flexGap : undefined)};
+  align-items: ${props => props.$alignItems || 'stretch'};
   margin: ${props => props.margin || '0'};
   padding: ${props => props.padding || '0'};
   width: ${props => props.width || 'auto'};
@@ -65,15 +65,15 @@ export const Flex = styled.div<FlexProps>`
 `;
 
 export const AnimatedFlex = styled(motion.div)<HTMLMotionProps<'div'> & FlexProps>`
-  display: ${props => (props.container ? 'flex' : 'block')};
-  justify-content: ${props => props.justifyContent || 'flex-start'};
-  flex-direction: ${props => props.flexDirection || 'row'};
-  flex-grow: ${props => (props.flexGrow !== undefined ? props.flexGrow : '0')};
-  flex-basis: ${props => (props.flexBasis !== undefined ? props.flexBasis : 'auto')};
-  flex-shrink: ${props => (props.flexShrink !== undefined ? props.flexShrink : '1')};
-  flex-wrap: ${props => (props.flexWrap !== undefined ? props.flexWrap : 'nowrap')};
-  gap: ${props => (props.flexGap !== undefined ? props.flexGap : undefined)};
-  align-items: ${props => props.alignItems || 'stretch'};
+  display: ${props => (props.$container ? 'flex' : 'block')};
+  justify-content: ${props => props.$justifyContent || 'flex-start'};
+  flex-direction: ${props => props.$flexDirection || 'row'};
+  flex-grow: ${props => (props.$flexGrow !== undefined ? props.$flexGrow : '0')};
+  flex-basis: ${props => (props.$flexBasis !== undefined ? props.$flexBasis : 'auto')};
+  flex-shrink: ${props => (props.$flexShrink !== undefined ? props.$flexShrink : '1')};
+  flex-wrap: ${props => (props.$flexWrap !== undefined ? props.$flexWrap : 'nowrap')};
+  gap: ${props => (props.$flexGap !== undefined ? props.$flexGap : undefined)};
+  align-items: ${props => props.$alignItems || 'stretch'};
   margin: ${props => props.margin || '0'};
   padding: ${props => props.padding || '0'};
   gap: ${props => props.gap || undefined};
