@@ -81,7 +81,7 @@ export const CONVERSATION = {
    * the maximum chars that can be typed/pasted in the composition box.
    * Increased to accommodate PGP payloads.
    */
-  MAX_MESSAGE_CHAR_COUNT: 2000,
+  MAX_MESSAGE_CHAR_COUNT: 10000,
 } as const;
 
 /**
