@@ -17,15 +17,12 @@ import {
   useWeAreAdmin,
 } from '../../../hooks/useParamSelector';
 import {
-  blockConvoById,
   showAddModeratorsByConvoId,
   showDeleteGroupByConvoId,
-  showInviteContactByConvoId,
   showLeaveGroupByConvoId,
   showRemoveModeratorsByConvoId,
   showUpdateGroupMembersByConvoId,
   showUpdateGroupNameByConvoId,
-  unblockConvoById,
 } from '../../../interactions/conversationInteractions';
 import { localize } from '../../../localization/localeTools';
 import type { ConversationNotificationSettingType } from '../../../models/conversationAttributes';
@@ -57,6 +54,8 @@ import { useShowDeletePrivateContactCb } from '../../menuAndSettingsHooks/useSho
 import { useClearAllMessagesCb } from '../../menuAndSettingsHooks/useClearAllMessages';
 import { useHideNoteToSelfCb } from '../../menuAndSettingsHooks/useHideNoteToSelf';
 import { useShowDeletePrivateConversationCb } from '../../menuAndSettingsHooks/useShowDeletePrivateConversation';
+import { useShowInviteContactToCommunity } from '../../menuAndSettingsHooks/useShowInviteContactToCommunity';
+import { useShowInviteContactToGroupCb } from '../../menuAndSettingsHooks/useShowInviteContactToGroup';
 
 type WithAsAdmin = { asAdmin: boolean };
 
@@ -447,42 +446,32 @@ export function AddRemoveModeratorsButton({ conversationId }: WithConvoId) {
 }
 
 export function InviteContactsToCommunityButton({ conversationId }: WithConvoId) {
-  const isPublic = useIsPublic(conversationId);
+  const showInviteContactCb = useShowInviteContactToCommunity(conversationId);
 
-  if (!isPublic) {
+  if (!showInviteContactCb) {
     return null;
   }
   return (
     <PanelIconButton
       iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.USER_ROUND_PLUS} />}
       text={localize('membersInvite').toString()}
-      onClick={() => {
-        showInviteContactByConvoId(conversationId);
-      }}
+      onClick={showInviteContactCb}
       dataTestId="invite-contacts-menu-option"
     />
   );
 }
 
 export function InviteContactsToGroupV2Button({ conversationId }: WithConvoId) {
-  const isBlocked = useIsBlocked(conversationId);
-  const isKickedFromGroup = useIsKickedFromGroup(conversationId);
-  const isGroupDestroyed = useIsGroupDestroyed(conversationId);
-  const isGroupV2 = useIsGroupV2(conversationId);
-  const weAreAdmin = useWeAreAdmin(conversationId);
-  const showInviteGroupV2 =
-    isGroupV2 && !isKickedFromGroup && !isBlocked && weAreAdmin && !isGroupDestroyed;
+  const showInviteContactToGroupCb = useShowInviteContactToGroupCb(conversationId);
 
-  if (!showInviteGroupV2) {
+  if (!showInviteContactToGroupCb) {
     return null;
   }
   return (
     <PanelIconButton
       iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.USER_ROUND_PLUS} />}
       text={localize('membersInvite').toString()}
-      onClick={() => {
-        showInviteContactByConvoId(conversationId);
-      }}
+      onClick={showInviteContactToGroupCb}
       dataTestId="invite-contacts-menu-option"
     />
   );
@@ -565,21 +554,13 @@ export function BlockUnblockButton({ conversationId }: WithConvoId) {
   if (!showBlockUnblock) {
     return null;
   }
-  const blockTitle =
-    showBlockUnblock === 'can_be_unblocked'
-      ? localize('blockUnblock').toString()
-      : localize('block').toString();
-  const blockHandler =
-    showBlockUnblock === 'can_be_unblocked'
-      ? async () => unblockConvoById(conversationId)
-      : async () => blockConvoById(conversationId);
 
   return (
     <PanelIconButton
       iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.BAN} />}
-      text={blockTitle}
+      text={localize(showBlockUnblock.token).toString()}
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      onClick={blockHandler}
+      onClick={showBlockUnblock.cb}
       dataTestId="block-user-menu-option"
       color="var(--danger-color)"
     />

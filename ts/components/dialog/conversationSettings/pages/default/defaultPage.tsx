@@ -91,11 +91,9 @@ function DefaultPageForPrivate({ conversationId }: WithConvoId) {
 
       <PanelButtonGroup>
         <CopyAccountIdButton conversationId={convoId} />
+        <UpdateDisappearingMessagesButton conversationId={convoId} asAdmin={false} />
         <PinUnpinButton conversationId={convoId} />
         <NotificationPanelButton convoId={convoId} />
-        <UpdateGroupMembersButton conversationId={convoId} />
-        <UpdateGroupNameButton conversationId={convoId} />
-        <UpdateDisappearingMessagesButton conversationId={convoId} asAdmin={false} />
         <AttachmentsButton conversationId={convoId} />
         <InviteContactsToCommunityButton conversationId={convoId} />
       </PanelButtonGroup>
@@ -124,11 +122,11 @@ export function DefaultPage(props: WithConvoId) {
 
       <PanelButtonGroup>
         <CopyAccountIdButton conversationId={convoId} />
+        <UpdateDisappearingMessagesButton conversationId={convoId} asAdmin={false} />
         <PinUnpinButton conversationId={convoId} />
         <NotificationPanelButton convoId={convoId} />
         <UpdateGroupMembersButton conversationId={convoId} />
         <UpdateGroupNameButton conversationId={convoId} />
-        <UpdateDisappearingMessagesButton conversationId={convoId} asAdmin={false} />
         <AttachmentsButton conversationId={convoId} />
         <InviteContactsToCommunityButton conversationId={convoId} />
       </PanelButtonGroup>

@@ -33,11 +33,9 @@ import {
   changeNickNameModal,
   updateAddModeratorsModal,
   updateBanOrUnbanUserModal,
-  updateBlockOrUnblockModal,
   updateConfirmModal,
   updateGroupMembersModal,
   updateGroupNameModal,
-  updateInviteContactModal,
   updateRemoveModeratorsModal,
 } from '../state/ducks/modalDialog';
 import { MIME } from '../types';
@@ -75,24 +73,6 @@ export async function copyPublicKeyByConvoId(convoId: string) {
   } else {
     window.clipboard.writeText(convoId);
   }
-}
-
-export async function blockConvoById(conversationId: string) {
-  window.inboxStore?.dispatch(
-    updateBlockOrUnblockModal({
-      action: 'block',
-      pubkeys: [conversationId],
-    })
-  );
-}
-
-export async function unblockConvoById(conversationId: string) {
-  window.inboxStore?.dispatch(
-    updateBlockOrUnblockModal({
-      action: 'unblock',
-      pubkeys: [conversationId],
-    })
-  );
 }
 
 /**
@@ -483,10 +463,6 @@ export async function showDeleteGroupByConvoId(conversationId: string, name: str
       conversationId,
     })
   );
-}
-
-export function showInviteContactByConvoId(conversationId: string) {
-  window.inboxStore?.dispatch(updateInviteContactModal({ conversationId }));
 }
 
 export function showAddModeratorsByConvoId(conversationId: string) {

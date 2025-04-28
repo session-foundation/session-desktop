@@ -17,7 +17,6 @@ import {
   useWeAreAdmin,
 } from '../../hooks/useParamSelector';
 import {
-  blockConvoById,
   clearNickNameByConvoId,
   declineConversationWithConfirm,
   handleAcceptConversationRequest,
@@ -25,11 +24,9 @@ import {
   setNotificationForConvoId,
   showAddModeratorsByConvoId,
   showBanUserByConvoId,
-  showInviteContactByConvoId,
   showRemoveModeratorsByConvoId,
   showUnbanUserByConvoId,
   showUpdateGroupNameByConvoId,
-  unblockConvoById,
 } from '../../interactions/conversationInteractions';
 import { ConvoHub } from '../../session/conversations';
 import { PubKey } from '../../session/types';
@@ -51,21 +48,18 @@ import { useShowDeletePrivateContactCb } from '../menuAndSettingsHooks/useShowDe
 import { useClearAllMessagesCb } from '../menuAndSettingsHooks/useClearAllMessages';
 import { useHideNoteToSelfCb } from '../menuAndSettingsHooks/useHideNoteToSelf';
 import { useShowDeletePrivateConversationCb } from '../menuAndSettingsHooks/useShowDeletePrivateConversation';
+import { useShowInviteContactToCommunity } from '../menuAndSettingsHooks/useShowInviteContactToCommunity';
 
 /** Menu items standardized */
 
 export const InviteContactMenuItem = (): JSX.Element | null => {
   const convoId = useConvoIdFromContext();
-  const isPublic = useIsPublic(convoId);
+  const showInviteContactCb = useShowInviteContactToCommunity(convoId);
 
-  if (isPublic) {
+  if (showInviteContactCb) {
     return (
-      <ItemWithDataTestId
-        onClick={() => {
-          showInviteContactByConvoId(convoId);
-        }}
-      >
-        {window.i18n('membersInvite')}
+      <ItemWithDataTestId onClick={showInviteContactCb}>
+        {localize('membersInvite').toString()}
       </ItemWithDataTestId>
     );
   }
@@ -268,19 +262,15 @@ export const BlockMenuItem = (): JSX.Element | null => {
   const convoId = useConvoIdFromContext();
   const showBlockUnblock = useShowBlockUnblock(convoId);
 
-  if (showBlockUnblock) {
-    const blockTitle =
-      showBlockUnblock === 'can_be_unblocked'
-        ? localize('blockUnblock').toString()
-        : localize('block').toString();
-    const blockHandler =
-      showBlockUnblock === 'can_be_unblocked'
-        ? async () => unblockConvoById(convoId)
-        : async () => blockConvoById(convoId);
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    return <ItemWithDataTestId onClick={blockHandler}>{blockTitle}</ItemWithDataTestId>;
+  if (!showBlockUnblock) {
+    return null;
   }
-  return null;
+
+  return (
+    <ItemWithDataTestId onClick={showBlockUnblock.cb}>
+      {localize(showBlockUnblock.token).toString()}
+    </ItemWithDataTestId>
+  );
 };
 
 export const ClearNicknameMenuItem = (): JSX.Element | null => {
