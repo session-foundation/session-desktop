@@ -74,12 +74,13 @@ export const AddModeratorsDialog = (props: Props) => {
   return (
     <SessionWrapperModal
       showExitIcon={true}
-      title={window.i18n('adminPromote')}
+      title={window.i18n('addAdmins')}
       onClose={() => {
         dispatch(updateAddModeratorsModal(null));
       }}
     >
       <Flex $container={true} $flexDirection="column" $alignItems="center">
+        {/* <I18nSubText dataTestId='modal-description' localizerProps={{ token: 'addAdminsDescription' }} /> */}
         <SessionHeaderSearchInput
           type="text"
           isDarkTheme={isDarkTheme}

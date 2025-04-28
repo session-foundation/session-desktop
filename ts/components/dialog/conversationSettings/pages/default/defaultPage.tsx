@@ -36,7 +36,7 @@ import {
   RemoveAdminCommunityButton,
 } from '../../conversationSettingsItems';
 
-function GroupSettingsTitle() {
+function AdminSettingsTitle() {
   return (
     <PanelLabel>
       <Localizer token="adminSettings" />
@@ -56,17 +56,18 @@ function GroupV2AdminActions({ conversationId }: WithConvoId) {
   return (
     <>
       <SpacerSM />
-      <GroupSettingsTitle />
+      <AdminSettingsTitle />
       <PanelButtonGroup>
         <InviteContactsToGroupV2Button conversationId={conversationId} />
-        <UpdateGroupMembersButton conversationId={conversationId} />
+        <UpdateGroupMembersButton conversationId={conversationId} asAdmin={true} />
+        <UpdateGroupNameButton conversationId={conversationId} />
         <UpdateDisappearingMessagesButton conversationId={conversationId} asAdmin={true} />
-        TODO : add back admins add for group v2
         <ConversationSettingsQAButtons conversationId={conversationId} />
       </PanelButtonGroup>
     </>
   );
 }
+
 function CommunityAdminActions({ conversationId }: WithConvoId) {
   const isPublic = useIsPublic(conversationId);
   const isGroupV2 = useIsGroupV2(conversationId);
@@ -79,7 +80,7 @@ function CommunityAdminActions({ conversationId }: WithConvoId) {
   return (
     <>
       <SpacerSM />
-      <GroupSettingsTitle />
+      <AdminSettingsTitle />
       <PanelButtonGroup>
         <BanFromCommunityButton conversationId={conversationId} />
         <UnbanFromCommunityButton conversationId={conversationId} />
@@ -106,6 +107,8 @@ function DestructiveActions({ conversationId }: WithConvoId) {
           <LeaveGroupPanelButton conversationId={conversationId} />
           <DeleteGroupPanelButton conversationId={conversationId} />
           <LeaveCommunityPanelButton conversationId={conversationId} />
+          TODO: make leave and delete group (above) be only delete when we are the only admin TODO:
+          allow back to add members as admin for QA
         </>
       )}
     </PanelButtonGroup>
@@ -116,17 +119,17 @@ function DefaultPageForPrivate({ conversationId }: WithConvoId) {
   if (!conversationId) {
     return null;
   }
-  const convoId = conversationId;
+
   return (
     <>
-      <ConversationSettingsHeader conversationId={convoId} />
+      <ConversationSettingsHeader conversationId={conversationId} />
 
       <PanelButtonGroup>
-        <CopyAccountIdButton conversationId={convoId} />
-        <UpdateDisappearingMessagesButton conversationId={convoId} asAdmin={false} />
-        <PinUnpinButton conversationId={convoId} />
-        <NotificationPanelButton convoId={convoId} />
-        <AttachmentsButton conversationId={convoId} />
+        <CopyAccountIdButton conversationId={conversationId} />
+        <UpdateDisappearingMessagesButton conversationId={conversationId} asAdmin={false} />
+        <PinUnpinButton conversationId={conversationId} />
+        <NotificationPanelButton convoId={conversationId} />
+        <AttachmentsButton conversationId={conversationId} />
       </PanelButtonGroup>
 
       {/* Below are "destructive" actions */}
@@ -140,23 +143,48 @@ function DefaultPageForCommunities({ conversationId }: WithConvoId) {
   if (!conversationId) {
     return null;
   }
-  const convoId = conversationId;
   return (
     <>
-      <ConversationSettingsHeader conversationId={convoId} />
+      <ConversationSettingsHeader conversationId={conversationId} />
 
       <PanelButtonGroup>
-        <CopyCommunityUrlButton conversationId={convoId} />
-        <PinUnpinButton conversationId={convoId} />
-        <NotificationPanelButton convoId={convoId} />
-        <UpdateGroupMembersButton conversationId={convoId} />
-        <UpdateGroupNameButton conversationId={convoId} />
-        <InviteContactsToCommunityButton conversationId={convoId} />
-        <AttachmentsButton conversationId={convoId} />
+        <CopyCommunityUrlButton conversationId={conversationId} />
+        <PinUnpinButton conversationId={conversationId} />
+        <NotificationPanelButton convoId={conversationId} />
+        <UpdateGroupNameButton conversationId={conversationId} />
+        <InviteContactsToCommunityButton conversationId={conversationId} />
+        <AttachmentsButton conversationId={conversationId} />
       </PanelButtonGroup>
 
       {/* Below are "admins" actions */}
-      <CommunityAdminActions conversationId={convoId} />
+      <CommunityAdminActions conversationId={conversationId} />
+
+      {/* Below are "destructive" actions */}
+      <SpacerSM />
+      <DestructiveActions conversationId={conversationId} />
+    </>
+  );
+}
+
+function DefaultPageForGroupV2({ conversationId }: WithConvoId) {
+  if (!conversationId) {
+    return null;
+  }
+  return (
+    <>
+      <ConversationSettingsHeader conversationId={conversationId} />
+
+      <PanelButtonGroup>
+        <CopyCommunityUrlButton conversationId={conversationId} />
+        <UpdateDisappearingMessagesButton conversationId={conversationId} asAdmin={false} />
+        <PinUnpinButton conversationId={conversationId} />
+        <NotificationPanelButton convoId={conversationId} />
+        <UpdateGroupMembersButton conversationId={conversationId} asAdmin={false} />
+        <AttachmentsButton conversationId={conversationId} />
+      </PanelButtonGroup>
+
+      {/* Below are "admins" actions */}
+      <GroupV2AdminActions conversationId={conversationId} />
 
       {/* Below are "destructive" actions */}
       <SpacerSM />
@@ -173,41 +201,18 @@ export function DefaultPage(props: WithConvoId) {
   if (!props?.conversationId) {
     return null;
   }
-  const convoId = props.conversationId;
 
   if (isPrivate) {
-    return <DefaultPageForPrivate conversationId={convoId} />;
+    return <DefaultPageForPrivate conversationId={props.conversationId} />;
   }
 
   if (isPublic) {
-    return <DefaultPageForCommunities conversationId={convoId} />;
+    return <DefaultPageForCommunities conversationId={props.conversationId} />;
   }
 
   if (!isGroupV2) {
     return null;
   }
 
-  return (
-    <>
-      <ConversationSettingsHeader conversationId={convoId} />
-
-      <PanelButtonGroup>
-        <CopyCommunityUrlButton conversationId={convoId} />
-        <PinUnpinButton conversationId={convoId} />
-        <NotificationPanelButton convoId={convoId} />
-        <UpdateDisappearingMessagesButton conversationId={convoId} asAdmin={false} />
-        <UpdateGroupMembersButton conversationId={convoId} />
-        <UpdateGroupNameButton conversationId={convoId} />
-        <InviteContactsToCommunityButton conversationId={convoId} />
-        <AttachmentsButton conversationId={convoId} />
-      </PanelButtonGroup>
-
-      {/* Below are "admins" actions */}
-      <GroupV2AdminActions conversationId={props.conversationId} />
-
-      {/* Below are "destructive" actions */}
-      <SpacerSM />
-      <DestructiveActions conversationId={props.conversationId} />
-    </>
-  );
+  return <DefaultPageForGroupV2 conversationId={props.conversationId} />;
 }

@@ -31,6 +31,7 @@ declare module 'react' {
   type MenuOption =
     | 'attachments'
     | 'group-members'
+    | 'manage-members'
     | 'notifications'
     | 'invite-contacts'
     | 'clear-all-messages'

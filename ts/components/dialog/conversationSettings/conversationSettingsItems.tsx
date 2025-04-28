@@ -333,24 +333,35 @@ export const ConversationSettingsQAButtons = ({ conversationId }: WithConvoId) =
   );
 };
 
-export function UpdateGroupMembersButton({ conversationId }: WithConvoId) {
+export function UpdateGroupMembersButton({
+  conversationId,
+  asAdmin,
+}: WithConvoId & { asAdmin: boolean }) {
   const isGroup = useIsClosedGroup(conversationId);
-  const isPublic = useIsPublic(conversationId);
 
   const commonNoShow = useGroupCommonNoShow(conversationId);
-  const showUpdateGroupMembersButton = !isPublic && isGroup && !commonNoShow;
+  const showUpdateGroupMembersButton = isGroup && !commonNoShow;
+
+  const weAreAdmin = useWeAreAdmin(conversationId);
 
   if (!showUpdateGroupMembersButton) {
+    return null;
+  }
+
+  if (weAreAdmin && !asAdmin) {
+    return null;
+  }
+  if (!weAreAdmin && asAdmin) {
     return null;
   }
   return (
     <PanelIconButton
       iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.USER_ROUND} />}
-      text={localize('groupMembers').toString()}
+      text={asAdmin ? localize('manageMembers').toString() : localize('groupMembers').toString()}
       onClick={() => {
         void showUpdateGroupMembersByConvoId(conversationId);
       }}
-      dataTestId="group-members-menu-option"
+      dataTestId={asAdmin ? 'manage-members-menu-option' : 'group-members-menu-option'}
     />
   );
 }
