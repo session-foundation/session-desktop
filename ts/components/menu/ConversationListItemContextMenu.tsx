@@ -15,6 +15,7 @@ import {
   DeclineMsgRequestMenuItem,
   DeleteMessagesMenuItem,
   DeletePrivateConversationMenuItem,
+  HideNoteToSelfMenuItem,
   InviteContactMenuItem,
   MarkAllReadMenuItem,
   MarkConversationUnreadMenuItem,
@@ -105,6 +106,7 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
         <InviteContactMenuItem />
         <DeleteMessagesMenuItem />
         <DeletePrivateConversationMenuItem />
+        <HideNoteToSelfMenuItem />
         <LeaveCommunityMenuItem />
         <LeaveGroupMenuItem />
         <DeleteGroupMenuItem />

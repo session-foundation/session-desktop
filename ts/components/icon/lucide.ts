@@ -17,6 +17,8 @@ export const LUCIDE_ICONS_UNICODE = {
   FILE: '',
   PIN: '',
   PIN_OFF: '',
+  BAN: '',
+  EYE_OFF: '',
 } as const;
 
 /**

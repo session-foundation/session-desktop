@@ -115,7 +115,7 @@ export function ConversationSettingsDialog(props: ConversationSettingsModalState
         shouldOverflow={true}
         allowOutsideClick={false}
         headerIconButtons={backButton}
-        contentMinWidth="400px"
+        $contentMinWidth="400px"
       >
         <StyledContent
           $container={true}

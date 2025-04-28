@@ -1,5 +1,6 @@
 import type { SessionDataTestId } from 'react';
 import { useDispatch } from 'react-redux';
+import { clipboard } from 'electron';
 
 import {
   useConversationUsername,
@@ -16,7 +17,7 @@ import {
   useWeAreAdmin,
 } from '../../../hooks/useParamSelector';
 import {
-  deleteAllMessagesByConvoIdWithConfirmation,
+  blockConvoById,
   showAddModeratorsByConvoId,
   showDeleteGroupByConvoId,
   showInviteContactByConvoId,
@@ -24,6 +25,7 @@ import {
   showRemoveModeratorsByConvoId,
   showUpdateGroupMembersByConvoId,
   showUpdateGroupNameByConvoId,
+  unblockConvoById,
 } from '../../../interactions/conversationInteractions';
 import { localize } from '../../../localization/localeTools';
 import type { ConversationNotificationSettingType } from '../../../models/conversationAttributes';
@@ -48,6 +50,13 @@ import { useShowPinUnpin } from '../../menuAndSettingsHooks/usePinUnpin';
 import { openRightPanel } from '../../../state/ducks/conversations';
 import { updateConversationSettingsModal } from '../../../state/ducks/modalDialog';
 import { useLocalisedNotificationOf } from '../../menuAndSettingsHooks/useLocalisedNotificationFor';
+import { useShowCopyAccountId } from '../../menuAndSettingsHooks/useCopyAccountId';
+import { ToastUtils } from '../../../session/utils';
+import { useShowBlockUnblock } from '../../menuAndSettingsHooks/useShowBlockUnblock';
+import { useShowDeletePrivateContactCb } from '../../menuAndSettingsHooks/useShowDeletePrivateContact';
+import { useClearAllMessagesCb } from '../../menuAndSettingsHooks/useClearAllMessages';
+import { useHideNoteToSelfCb } from '../../menuAndSettingsHooks/useHideNoteToSelf';
+import { useShowDeletePrivateConversationCb } from '../../menuAndSettingsHooks/useShowDeletePrivateConversation';
 
 type WithAsAdmin = { asAdmin: boolean };
 
@@ -227,6 +236,26 @@ export const AttachmentsButton = (_props: WithConvoId) => {
   );
 };
 
+export const CopyAccountIdButton = ({ conversationId }: WithConvoId) => {
+  const showCopyAccountId = useShowCopyAccountId(conversationId);
+
+  if (!showCopyAccountId) {
+    return null;
+  }
+
+  return (
+    <PanelIconButton
+      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.COPY} />}
+      text={localize('accountIDCopy').toString()}
+      onClick={() => {
+        clipboard.writeText(conversationId);
+        ToastUtils.pushCopiedToClipBoard();
+      }}
+      dataTestId="copy-account-id-menu-option"
+    />
+  );
+};
+
 export const PinUnpinButton = ({ conversationId }: WithConvoId) => {
   const showPinUnpin = useShowPinUnpin(conversationId);
   const isPinned = useIsPinned(conversationId);
@@ -242,7 +271,7 @@ export const PinUnpinButton = ({ conversationId }: WithConvoId) => {
           iconUnicode={isPinned ? LUCIDE_ICONS_UNICODE.PIN_OFF : LUCIDE_ICONS_UNICODE.PIN}
         />
       }
-      text={localize(isPinned ? 'pinUnpin' : 'pin').toString()}
+      text={localize(isPinned ? 'pinUnpinConversation' : 'pinConversation').toString()}
       onClick={() => {
         void ConvoHub.use().get(conversationId)?.togglePinned();
       }}
@@ -460,16 +489,98 @@ export function InviteContactsToGroupV2Button({ conversationId }: WithConvoId) {
 }
 
 export function ClearAllMessagesButton({ conversationId }: WithConvoId) {
+  const clearAllMessagesCb = useClearAllMessagesCb({ conversationId });
   return (
     <PanelIconButton
       iconElement={
         <PanelIconSessionLegacyIcon iconType={'messageTrash'} iconColor="var(--danger-color)" />
       }
       text={localize('clearMessages').toString()}
-      onClick={() => {
-        deleteAllMessagesByConvoIdWithConfirmation(conversationId);
-      }}
+      onClick={clearAllMessagesCb}
       dataTestId="clear-all-messages-menu-option"
+      color="var(--danger-color)"
+    />
+  );
+}
+
+export function DeletePrivateConversationButton({ conversationId }: WithConvoId) {
+  const showDeleteConversationContactCb = useShowDeletePrivateConversationCb({ conversationId });
+
+  if (!showDeleteConversationContactCb) {
+    return null;
+  }
+
+  return (
+    <PanelIconButton
+      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.TRASH2} />}
+      text={localize('conversationsDelete').toString()}
+      onClick={showDeleteConversationContactCb}
+      dataTestId="delete-conversation-menu-option"
+      color="var(--danger-color)"
+    />
+  );
+}
+
+export function HideNoteToSelfButton({ conversationId }: WithConvoId) {
+  const showHideNoteToSelfCb = useHideNoteToSelfCb({ conversationId });
+
+  if (!showHideNoteToSelfCb) {
+    return null;
+  }
+
+  return (
+    <PanelIconButton
+      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.EYE_OFF} />}
+      text={localize('noteToSelfHide').toString()}
+      onClick={showHideNoteToSelfCb}
+      dataTestId="hide-nts-menu-option"
+      color="var(--danger-color)"
+    />
+  );
+}
+
+export function DeletePrivateContactButton({ conversationId }: WithConvoId) {
+  const showDeletePrivateContactCb = useShowDeletePrivateContactCb({ conversationId });
+
+  if (!showDeletePrivateContactCb) {
+    return null;
+  }
+
+  return (
+    <PanelIconButton
+      iconElement={
+        <PanelIconSessionLegacyIcon iconType={'removeUser'} iconColor="var(--danger-color)" />
+      }
+      text={localize('contactDelete').toString()}
+      onClick={showDeletePrivateContactCb}
+      dataTestId="delete-conversation-menu-option"
+      color="var(--danger-color)"
+    />
+  );
+}
+
+export function BlockUnblockButton({ conversationId }: WithConvoId) {
+  const showBlockUnblock = useShowBlockUnblock(conversationId);
+
+  if (!showBlockUnblock) {
+    return null;
+  }
+  const blockTitle =
+    showBlockUnblock === 'can_be_unblocked'
+      ? localize('blockUnblock').toString()
+      : localize('block').toString();
+  const blockHandler =
+    showBlockUnblock === 'can_be_unblocked'
+      ? async () => unblockConvoById(conversationId)
+      : async () => blockConvoById(conversationId);
+
+  return (
+    <PanelIconButton
+      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.BAN} />}
+      text={blockTitle}
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      onClick={blockHandler}
+      dataTestId="block-user-menu-option"
       color="var(--danger-color)"
     />
   );

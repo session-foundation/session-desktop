@@ -24,7 +24,7 @@ const StyledModal = styled.div<{
   shouldOverflow: boolean;
   scrolled: boolean;
   contentMaxWidth?: string;
-  contentMinWidth?: string;
+  $contentMinWidth?: string;
   padding?: string;
   border: boolean;
 }>`
@@ -32,7 +32,7 @@ const StyledModal = styled.div<{
   z-index: 150;
   max-height: 90vh;
   max-width: ${props => (props.contentMaxWidth ? props.contentMaxWidth : DEFAULT_MODAL_WIDTH)};
-  min-width: ${props => (props.contentMinWidth ? props.contentMinWidth : DEFAULT_MODAL_WIDTH)};
+  min-width: ${props => (props.$contentMinWidth ? props.$contentMinWidth : DEFAULT_MODAL_WIDTH)};
   box-sizing: border-box;
   font-family: var(--font-default);
   background-color: var(--modal-background-content-color);
@@ -72,9 +72,14 @@ const StyledModal = styled.div<{
   }
 
   ${StyledModalHeader} {
+    // marking those transparent so we don't have layout shift on scroll
+    margin-bottom: var(--margins-xs);
+    border-bottom: 1px solid var(--transparent-color);
+    box-shadow: 0px 0px 20px 8px var(--transparent-color);
+
     ${props =>
       props.scrolled &&
-      `margin-bottom: var(--margins-xs); border-bottom: 1px solid var(--border-color); box-shadow: 0px 0px 20px 8px var(--modal-shadow-color);`}
+      `border-bottom: 1px solid var(--border-color); box-shadow: 0px 0px 20px 8px var(--modal-shadow-color);`};
   }
 `;
 
@@ -112,7 +117,7 @@ export type SessionWrapperModalType2 = {
   children: ReactNode;
   buttonChildren?: ReactNode;
   contentMaxWidth?: string;
-  contentMinWidth?: string;
+  $contentMinWidth?: string;
   contentBorder?: boolean;
   shouldOverflow?: boolean;
   padding?: string;
@@ -215,7 +220,7 @@ export const SessionWrapperModal2 = (props: SessionWrapperModalType2) => {
     showHeader = true,
     showExitIcon,
     headerIconButtons,
-    contentMinWidth,
+    $contentMinWidth,
     contentMaxWidth,
     contentBorder = true,
     shouldOverflow = false,
@@ -268,7 +273,7 @@ export const SessionWrapperModal2 = (props: SessionWrapperModalType2) => {
         <StyledModal
           ref={modalRef}
           contentMaxWidth={contentMaxWidth}
-          contentMinWidth={contentMinWidth}
+          $contentMinWidth={$contentMinWidth}
           shouldOverflow={shouldOverflow}
           scrolled={scrolled}
           padding={padding}

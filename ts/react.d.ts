@@ -34,6 +34,10 @@ declare module 'react' {
     | 'notifications'
     | 'invite-contacts'
     | 'clear-all-messages'
+    | 'copy-account-id'
+    | 'delete-conversation'
+    | 'block-user'
+    | 'hide-nts'
     | 'disappearing-messages' // one of those two might be incorrect. FIXME
     | 'disappearing-messages-timer';
 

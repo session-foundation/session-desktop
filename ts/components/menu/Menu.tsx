@@ -6,7 +6,6 @@ import {
   useConversationUsername,
   useHasNickname,
   useIsBlinded,
-  useIsBlocked,
   useIsGroupV2,
   useIsIncomingRequest,
   useIsKickedFromGroup,
@@ -14,7 +13,6 @@ import {
   useIsPrivate,
   useIsPrivateAndFriend,
   useIsPublic,
-  useNicknameOrProfileNameOrShortenedPubkey,
   useNotificationSetting,
   useWeAreAdmin,
 } from '../../hooks/useParamSelector';
@@ -22,14 +20,12 @@ import {
   blockConvoById,
   clearNickNameByConvoId,
   declineConversationWithConfirm,
-  deleteAllMessagesByConvoIdWithConfirmation,
   handleAcceptConversationRequest,
   markAllReadByConvoId,
   setNotificationForConvoId,
   showAddModeratorsByConvoId,
   showBanUserByConvoId,
   showInviteContactByConvoId,
-  showDeletePrivateConversationByConvoId,
   showRemoveModeratorsByConvoId,
   showUnbanUserByConvoId,
   showUpdateGroupNameByConvoId,
@@ -37,23 +33,24 @@ import {
 } from '../../interactions/conversationInteractions';
 import { ConvoHub } from '../../session/conversations';
 import { PubKey } from '../../session/types';
-import {
-  changeNickNameModal,
-  updateConfirmModal,
-  updateUserDetailsModal,
-} from '../../state/ducks/modalDialog';
+import { changeNickNameModal, updateUserDetailsModal } from '../../state/ducks/modalDialog';
 import { useConversationIdOrigin } from '../../state/selectors/conversations';
 import {
   useIsMessageRequestOverlayShown,
   useIsMessageSection,
 } from '../../state/selectors/section';
 import { useSelectedConversationKey } from '../../state/selectors/selectedConversation';
-import { SessionButtonColor } from '../basic/SessionButton';
 import { ItemWithDataTestId } from './items/MenuItemWithDataTestId';
 import { useLibGroupDestroyed } from '../../state/selectors/userGroups';
 import { NetworkTime } from '../../util/NetworkTime';
 import { useShowNotificationFor } from '../menuAndSettingsHooks/useShowNotificationFor';
 import { useLocalisedNotificationOptions } from '../menuAndSettingsHooks/useLocalisedNotificationFor';
+import { localize } from '../../localization/localeTools';
+import { useShowBlockUnblock } from '../menuAndSettingsHooks/useShowBlockUnblock';
+import { useShowDeletePrivateContactCb } from '../menuAndSettingsHooks/useShowDeletePrivateContact';
+import { useClearAllMessagesCb } from '../menuAndSettingsHooks/useClearAllMessages';
+import { useHideNoteToSelfCb } from '../menuAndSettingsHooks/useHideNoteToSelf';
+import { useShowDeletePrivateConversationCb } from '../menuAndSettingsHooks/useShowDeletePrivateConversation';
 
 /** Menu items standardized */
 
@@ -108,41 +105,19 @@ export const MarkConversationUnreadMenuItem = (): JSX.Element | null => {
  * Note: We keep the entry in the database as the user profile might still be needed for communities/groups where this user.
  */
 export const DeletePrivateContactMenuItem = () => {
-  const dispatch = useDispatch();
   const convoId = useConvoIdFromContext();
-  const isPrivate = useIsPrivate(convoId);
-  const isRequest = useIsIncomingRequest(convoId);
 
-  const name = useNicknameOrProfileNameOrShortenedPubkey(convoId);
+  const showDeletePrivateContactCb = useShowDeletePrivateContactCb({ conversationId: convoId });
 
-  if (isPrivate && !isRequest) {
-    const menuItemText = window.i18n('contactDelete');
-
-    const onClickClose = () => {
-      dispatch(updateConfirmModal(null));
-    };
-
-    const showConfirmationModal = () => {
-      dispatch(
-        updateConfirmModal({
-          title: menuItemText,
-          i18nMessage: { token: 'contactDeleteDescription', args: { name } },
-          onClickClose,
-          okTheme: SessionButtonColor.Danger,
-          onClickOk: async () => {
-            await ConvoHub.use().delete1o1(convoId, {
-              fromSyncMessage: false,
-              justHidePrivate: false,
-              keepMessages: false,
-            });
-          },
-        })
-      );
-    };
-
-    return <ItemWithDataTestId onClick={showConfirmationModal}>{menuItemText}</ItemWithDataTestId>;
+  if (!showDeletePrivateContactCb) {
+    return null;
   }
-  return null;
+
+  return (
+    <ItemWithDataTestId onClick={showDeletePrivateContactCb}>
+      {localize('contactDelete').toString()}
+    </ItemWithDataTestId>
+  );
 };
 
 export const ShowUserDetailsMenuItem = () => {
@@ -291,16 +266,17 @@ export const MarkAllReadMenuItem = (): JSX.Element | null => {
 
 export const BlockMenuItem = (): JSX.Element | null => {
   const convoId = useConvoIdFromContext();
-  const isMe = useIsMe(convoId);
-  const isBlocked = useIsBlocked(convoId);
-  const isPrivate = useIsPrivate(convoId);
-  const isIncomingRequest = useIsIncomingRequest(convoId);
+  const showBlockUnblock = useShowBlockUnblock(convoId);
 
-  if (!isMe && isPrivate && !isIncomingRequest && !PubKey.isBlinded(convoId)) {
-    const blockTitle = isBlocked ? window.i18n('blockUnblock') : window.i18n('block');
-    const blockHandler = isBlocked
-      ? async () => unblockConvoById(convoId)
-      : async () => blockConvoById(convoId);
+  if (showBlockUnblock) {
+    const blockTitle =
+      showBlockUnblock === 'can_be_unblocked'
+        ? localize('blockUnblock').toString()
+        : localize('block').toString();
+    const blockHandler =
+      showBlockUnblock === 'can_be_unblocked'
+        ? async () => unblockConvoById(convoId)
+        : async () => blockConvoById(convoId);
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     return <ItemWithDataTestId onClick={blockHandler}>{blockTitle}</ItemWithDataTestId>;
   }
@@ -354,17 +330,13 @@ export const ChangeNicknameMenuItem = () => {
  */
 export const DeleteMessagesMenuItem = () => {
   const convoId = useConvoIdFromContext();
-  const isMessageRequestShown = useIsMessageRequestOverlayShown();
+  const clearAllMessagesCb = useClearAllMessagesCb({ conversationId: convoId });
 
-  if (!convoId || isMessageRequestShown) {
+  if (!convoId || !clearAllMessagesCb) {
     return null;
   }
   return (
-    <ItemWithDataTestId
-      onClick={() => {
-        deleteAllMessagesByConvoIdWithConfirmation(convoId);
-      }}
-    >
+    <ItemWithDataTestId onClick={clearAllMessagesCb}>
       {/* just more than 1 to have the string Delete Messages */}
       {window.i18n('deleteMessage', { count: 2 })}
     </ItemWithDataTestId>
@@ -377,22 +349,41 @@ export const DeleteMessagesMenuItem = () => {
  * Note: A dialog is opened to ask for confirmation before processing.
  */
 export const DeletePrivateConversationMenuItem = () => {
-  const convoId = useConvoIdFromContext();
-  const isRequest = useIsIncomingRequest(convoId);
-  const isPrivate = useIsPrivate(convoId);
-  const isMe = useIsMe(convoId);
+  const conversationId = useConvoIdFromContext();
 
-  if (!convoId || !isPrivate || isRequest) {
+  const showDeleteConversationContactCb = useShowDeletePrivateConversationCb({ conversationId });
+
+  if (!conversationId || !showDeleteConversationContactCb) {
     return null;
   }
 
   return (
     <ItemWithDataTestId
       onClick={() => {
-        showDeletePrivateConversationByConvoId(convoId);
+        showDeleteConversationContactCb();
       }}
     >
-      {isMe ? window.i18n('noteToSelfHide') : window.i18n('conversationsDelete')}
+      {window.i18n('conversationsDelete')}
+    </ItemWithDataTestId>
+  );
+};
+
+export const HideNoteToSelfMenuItem = () => {
+  const convoId = useConvoIdFromContext();
+
+  const showHideNoteToSelfCb = useHideNoteToSelfCb({ conversationId: convoId });
+
+  if (!convoId || !showHideNoteToSelfCb) {
+    return null;
+  }
+
+  return (
+    <ItemWithDataTestId
+      onClick={() => {
+        showHideNoteToSelfCb();
+      }}
+    >
+      {window.i18n('noteToSelfHide')}
     </ItemWithDataTestId>
   );
 };

@@ -192,7 +192,7 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
       showExitIcon={showExitIcon}
       showHeader={showHeader}
       contentMaxWidth={contentMaxWidth}
-      contentMinWidth={contentMinWidth}
+      $contentMinWidth={contentMinWidth}
       buttonChildren={
         <ConfirmationButtons
           isLoading={isLoading}

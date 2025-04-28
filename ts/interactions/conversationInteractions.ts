@@ -327,54 +327,6 @@ export async function showUpdateGroupMembersByConvoId(conversationId: string) {
   window.inboxStore?.dispatch(updateGroupMembersModal({ conversationId }));
 }
 
-export function showDeletePrivateConversationByConvoId(conversationId: string) {
-  const conversation = ConvoHub.use().get(conversationId);
-  const isMe = conversation.isMe();
-
-  if (!conversation.isPrivate()) {
-    throw new Error('showLeavePrivateConversationDialog() called with a non private convo.');
-  }
-
-  const onClickClose = () => {
-    window?.inboxStore?.dispatch(updateConfirmModal(null));
-  };
-
-  const onClickOk = async () => {
-    try {
-      // no network calls are made when we hide/delete a private chat, so no need to have a
-      // ConversationInteractionType state
-      onClickClose();
-      await ConvoHub.use().delete1o1(conversationId, {
-        fromSyncMessage: false,
-        justHidePrivate: true,
-        keepMessages: isMe,
-      });
-      await clearConversationInteractionState({ conversationId });
-    } catch (err) {
-      window.log.warn(`showDeletePrivateConversationByConvoId error: ${err}`);
-    }
-  };
-
-  window?.inboxStore?.dispatch(
-    updateConfirmModal({
-      title: isMe ? window.i18n('noteToSelfHide') : window.i18n('conversationsDelete'),
-      i18nMessage: isMe
-        ? { token: 'noteToSelfHideDescription' }
-        : {
-            token: 'conversationsDeleteDescription',
-            args: {
-              name: conversation.getNicknameOrRealUsernameOrPlaceholder(),
-            },
-          },
-      onClickOk,
-      okText: isMe ? window.i18n('hide') : window.i18n('delete'),
-      okTheme: SessionButtonColor.Danger,
-      onClickClose,
-      conversationId,
-    })
-  );
-}
-
 async function leaveGroupOrCommunityByConvoId({
   conversationId,
   sendLeaveMessage,
@@ -602,27 +554,6 @@ export async function deleteAllMessagesByConvoIdNoConfirmation(conversationId: s
 
   await conversation.commit();
   window.inboxStore?.dispatch(conversationReset(conversationId));
-}
-
-export function deleteAllMessagesByConvoIdWithConfirmation(conversationId: string) {
-  const onClickClose = () => {
-    window?.inboxStore?.dispatch(updateConfirmModal(null));
-  };
-
-  const onClickOk = async () => {
-    await deleteAllMessagesByConvoIdNoConfirmation(conversationId);
-    onClickClose();
-  };
-
-  window?.inboxStore?.dispatch(
-    updateConfirmModal({
-      title: window.i18n('deleteMessage', { count: 2 }), // count of 2 to get the plural "Messages Deleted"
-      i18nMessage: { token: 'deleteAfterGroupPR3DeleteMessagesConfirmation' },
-      onClickOk,
-      okTheme: SessionButtonColor.Danger,
-      onClickClose,
-    })
-  );
 }
 
 export async function setDisappearingMessagesByConvoId(
