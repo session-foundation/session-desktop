@@ -54,7 +54,6 @@ import { getMenuAnimation } from '../../../menu/MenuAnimation';
 import { WithMessageId } from '../../../../session/types/with';
 import { DeleteItem } from '../../../menu/items/DeleteMessage/DeleteMessageMenuItem';
 import { RetryItem } from '../../../menu/items/RetrySend/RetrySendMenuItem';
-import { showCopyAccountIdAction } from '../../../menu/items/CopyAccountId/guard';
 
 export type MessageContextMenuSelectorProps = Pick<
   MessageRenderingProps,
@@ -338,10 +337,7 @@ export const MessageContextMenu = (props: Props) => {
             >
               <Localizer token="info" />
             </ItemWithDataTestId>
-            {/* this is a message in the view, so always private */}
-            {sender && showCopyAccountIdAction({ isPrivate: true, pubkey: sender }) ? (
-              <CopyAccountIdMenuItem pubkey={sender} />
-            ) : null}
+            {sender ? <CopyAccountIdMenuItem pubkey={sender} /> : null}
           </Menu>
         </SessionContextMenuContainer>
       </StyledMessageContextMenu>
@@ -390,10 +386,7 @@ export const MessageContextMenu = (props: Props) => {
           >
             <Localizer token="info" />
           </ItemWithDataTestId>
-          {/* this is a message in the view, so always private */}
-          {sender && showCopyAccountIdAction({ isPrivate: true, pubkey: sender }) ? (
-            <CopyAccountIdMenuItem pubkey={sender} />
-          ) : null}
+          {sender ? <CopyAccountIdMenuItem pubkey={sender} /> : null}
           <RetryItem messageId={messageId} />
           {isDeletable ? (
             <ItemWithDataTestId onClick={onSelect}>

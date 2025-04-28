@@ -30,6 +30,7 @@ import {
   DeletePrivateContactButton,
   DeletePrivateConversationButton,
   HideNoteToSelfButton,
+  CopyCommunityUrlButton,
 } from '../../conversationSettingsItems';
 
 function AdminActions({ conversationId }: WithConvoId) {
@@ -95,8 +96,36 @@ function DefaultPageForPrivate({ conversationId }: WithConvoId) {
         <PinUnpinButton conversationId={convoId} />
         <NotificationPanelButton convoId={convoId} />
         <AttachmentsButton conversationId={convoId} />
-        <InviteContactsToCommunityButton conversationId={convoId} />
       </PanelButtonGroup>
+
+      {/* Below are "destructive" actions */}
+      <SpacerSM />
+      <DestructiveActions conversationId={conversationId} />
+    </>
+  );
+}
+
+function DefaultPageForCommunities({ conversationId }: WithConvoId) {
+  if (!conversationId) {
+    return null;
+  }
+  const convoId = conversationId;
+  return (
+    <>
+      <ConversationSettingsHeader conversationId={convoId} />
+
+      <PanelButtonGroup>
+        <CopyCommunityUrlButton conversationId={convoId} />
+        <PinUnpinButton conversationId={convoId} />
+        <NotificationPanelButton convoId={convoId} />
+        <UpdateGroupMembersButton conversationId={convoId} />
+        <UpdateGroupNameButton conversationId={convoId} />
+        <InviteContactsToCommunityButton conversationId={convoId} />
+        <AttachmentsButton conversationId={convoId} />
+      </PanelButtonGroup>
+
+      {/* Below are "admins" actions */}
+      <AdminActions conversationId={convoId} />
 
       {/* Below are "destructive" actions */}
       <SpacerSM />
@@ -107,6 +136,7 @@ function DefaultPageForPrivate({ conversationId }: WithConvoId) {
 
 export function DefaultPage(props: WithConvoId) {
   const isPrivate = useIsPrivate(props?.conversationId);
+  const isPublic = useIsPublic(props?.conversationId);
   if (!props?.conversationId) {
     return null;
   }
@@ -116,22 +146,26 @@ export function DefaultPage(props: WithConvoId) {
     return <DefaultPageForPrivate conversationId={convoId} />;
   }
 
+  if (isPublic) {
+    return <DefaultPageForCommunities conversationId={convoId} />;
+  }
+
   return (
     <>
       <ConversationSettingsHeader conversationId={convoId} />
 
       <PanelButtonGroup>
-        <CopyAccountIdButton conversationId={convoId} />
-        <UpdateDisappearingMessagesButton conversationId={convoId} asAdmin={false} />
+        <CopyCommunityUrlButton conversationId={convoId} />
         <PinUnpinButton conversationId={convoId} />
         <NotificationPanelButton convoId={convoId} />
+        <UpdateDisappearingMessagesButton conversationId={convoId} asAdmin={false} />
         <UpdateGroupMembersButton conversationId={convoId} />
         <UpdateGroupNameButton conversationId={convoId} />
-        <AttachmentsButton conversationId={convoId} />
         <InviteContactsToCommunityButton conversationId={convoId} />
+        <AttachmentsButton conversationId={convoId} />
       </PanelButtonGroup>
 
-      {/* Below are "are admins" actions */}
+      {/* Below are "admins" actions */}
       <AdminActions conversationId={props.conversationId} />
 
       {/* Below are "destructive" actions */}

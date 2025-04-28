@@ -155,7 +155,12 @@ export const OverlayRightPanelSettings = () => {
   return (
     <StyledScrollContainer>
       <Flex $container={true} $flexDirection={'column'} $alignItems={'center'}>
-        <Header hideBackButton={true} hideCloseButton={false} closeButtonOnClick={closePanel}>
+        <Header
+          hideBackButton={true}
+          hideCloseButton={false}
+          closeButtonOnClick={closePanel}
+          paddingTop="var(--margins-2xl)"
+        >
           <HeaderTitle>{displayName || PubKey.shorten(selectedConvoKey)}</HeaderTitle>
         </Header>
         <PanelButtonGroup style={{ margin: '0 var(--margins-lg)' }}>

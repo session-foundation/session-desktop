@@ -21,7 +21,6 @@ const StyledModalHeader = styled(Flex)`
 `;
 
 const StyledModal = styled.div<{
-  shouldOverflow: boolean;
   scrolled: boolean;
   contentMaxWidth?: string;
   $contentMinWidth?: string;
@@ -42,12 +41,7 @@ const StyledModal = styled.div<{
   box-shadow: var(--modal-drop-shadow);
 
   margin: auto auto;
-  padding: ${props =>
-    props.padding
-      ? props.padding
-      : props.shouldOverflow
-        ? '0 var(--margins-sm) var(--margins-sm) var(--margins-lg)' // offset scrollbar on the right with smaller right padding
-        : '0  var(--margins-lg) var(--margins-sm)'};
+  padding: ${props => (props.padding ? props.padding : '0  var(--margins-lg) var(--margins-sm)')};
 
   overflow: hidden;
   display: flex;
@@ -84,10 +78,7 @@ const StyledModal = styled.div<{
 `;
 
 const StyledModalBody = styled.div<{ shouldOverflow: boolean }>`
-  padding: ${props =>
-    props.shouldOverflow
-      ? '0 var(--margins-sm) 0 0' // right padding balances the space around the scrollbar
-      : '0'};
+  scrollbar-gutter: stable;
   margin: 0;
   font-family: var(--font-default);
   line-height: var(--font-size-md);
@@ -138,7 +129,7 @@ const ModalHeader = (
       $flexDirection={'row'}
       $justifyContent={'space-between'}
       $alignItems={'center'}
-      padding={'var(--margins-lg) var(--margins-sm) var(--margins-md) var(--margins-lg)'}
+      padding={'var(--margins-lg) var(--margins-sm)  var(--margins-sm) var(--margins-lg)'}
       margin={'0 calc(-1 * var(--margins-sm)) 0 calc(-1 * var(--margins-lg))'}
     >
       <Flex
@@ -274,7 +265,6 @@ export const SessionWrapperModal2 = (props: SessionWrapperModalType2) => {
           ref={modalRef}
           contentMaxWidth={contentMaxWidth}
           $contentMinWidth={$contentMinWidth}
-          shouldOverflow={shouldOverflow}
           scrolled={scrolled}
           padding={padding}
           border={contentBorder}

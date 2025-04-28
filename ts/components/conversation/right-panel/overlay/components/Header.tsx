@@ -31,6 +31,7 @@ type HeaderProps = {
   hideCloseButton?: boolean;
   closeButtonOnClick?: () => void;
   children?: ReactNode;
+  paddingTop: string;
 };
 
 export const Header = (props: HeaderProps) => {
@@ -41,11 +42,16 @@ export const Header = (props: HeaderProps) => {
     backButtonOnClick,
     hideCloseButton = false,
     closeButtonOnClick,
+    paddingTop,
   } = props;
   const dispatch = useDispatch();
 
   return (
-    <Flex $container={true} width={'100%'} padding={'32px var(--margins-lg) var(--margins-md)'}>
+    <Flex
+      $container={true}
+      width={'100%'}
+      padding={`${paddingTop} var(--margins-lg) var(--margins-md)`}
+    >
       {!hideBackButton && (
         <SessionIconButton
           iconSize={'medium'}

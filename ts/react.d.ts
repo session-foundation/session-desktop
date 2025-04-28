@@ -38,6 +38,8 @@ declare module 'react' {
     | 'delete-conversation'
     | 'block-user'
     | 'hide-nts'
+    | 'copy-community-url'
+    | 'leave-community'
     | 'disappearing-messages' // one of those two might be incorrect. FIXME
     | 'disappearing-messages-timer';
 
@@ -72,7 +74,8 @@ declare module 'react' {
     | 'your-profile-name'
     | 'edit-profile-dialog'
     | 'image-upload-section'
-    | 'right-panel-group-name'
+    | 'profile-picture'
+    | 'display-name'
     | 'control-message'
     | 'header-conversation-name'
     | 'disappear-messages-type-and-time'
@@ -98,6 +101,7 @@ declare module 'react' {
     | 'some-of-your-devices-outdated-conversation'
     | 'some-of-your-devices-outdated-inbox'
     | 'legacy-group-banner'
+    | 'account-id'
 
     // generic button types
     | 'emoji-button'

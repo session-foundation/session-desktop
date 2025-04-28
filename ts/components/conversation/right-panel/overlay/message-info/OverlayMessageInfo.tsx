@@ -33,10 +33,7 @@ import {
 } from '../../../../../state/selectors';
 import {
   useSelectedConversationKey,
-  useSelectedIsGroupOrCommunity,
   useSelectedIsLegacyGroup,
-  useSelectedIsPrivate,
-  useSelectedIsPublic,
 } from '../../../../../state/selectors/selectedConversation';
 import { canDisplayImagePreview } from '../../../../../types/Attachment';
 import { isAudio } from '../../../../../types/MIME';
@@ -52,9 +49,10 @@ import { Message } from '../../../message/message-item/Message';
 import { AttachmentInfo, MessageInfo } from './components';
 import { AttachmentCarousel } from './components/AttachmentCarousel';
 import { ToastUtils } from '../../../../../session/utils';
-import { showCopyAccountIdAction } from '../../../../menu/items/CopyAccountId/guard';
 import { LUCIDE_ICONS_UNICODE } from '../../../../icon/lucide';
 import { PanelIconLucideIcon } from '../../../../buttons/PanelIconButton';
+import { useShowCopyAccountIdCb } from '../../../../menuAndSettingsHooks/useCopyAccountId';
+import { localize } from '../../../../../localization/localeTools';
 
 // NOTE we override the default max-widths when in the detail isDetailView
 const StyledMessageBody = styled.div`
@@ -239,29 +237,21 @@ function ReplyToMessageButton({ messageId }: WithMessageIdOpt) {
 }
 
 function CopySenderSessionId({ messageId }: WithMessageIdOpt) {
-  const isGroupOrCommunity = useSelectedIsGroupOrCommunity();
-  const isPrivate = useSelectedIsPrivate();
-  const isPublic = useSelectedIsPublic();
   const senderId = useMessageAuthor(messageId);
+  const copySenderIdCb = useShowCopyAccountIdCb(senderId);
 
-  const isGroup = isGroupOrCommunity && !isPublic;
-  const isPrivateAndShouldShow =
-    senderId && showCopyAccountIdAction({ isPrivate, pubkey: senderId });
-
-  if (senderId && (isGroup || isPrivateAndShouldShow)) {
-    return (
-      <PanelIconButton
-        text={window.i18n('accountIDCopy')}
-        iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.COPY} />}
-        onClick={() => {
-          clipboard.writeText(senderId);
-          ToastUtils.pushCopiedToClipBoard();
-        }}
-        dataTestId="copy-sender-from-details"
-      />
-    );
+  if (!copySenderIdCb || !senderId) {
+    return null;
   }
-  return null;
+
+  return (
+    <PanelIconButton
+      text={localize('accountIDCopy').toString()}
+      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.COPY} />}
+      onClick={copySenderIdCb}
+      dataTestId="copy-sender-from-details"
+    />
+  );
 }
 
 export const OverlayMessageInfo = () => {
@@ -336,7 +326,11 @@ export const OverlayMessageInfo = () => {
   return (
     <StyledScrollContainer>
       <Flex $container={true} $flexDirection={'column'} $alignItems={'center'}>
-        <Header hideBackButton={true} closeButtonOnClick={closePanel}>
+        <Header
+          hideBackButton={true}
+          closeButtonOnClick={closePanel}
+          paddingTop="var(--margins-2xl)"
+        >
           <HeaderTitle>{window.i18n('messageInfo')}</HeaderTitle>
         </Header>
         <StyledMessageInfoContainer>

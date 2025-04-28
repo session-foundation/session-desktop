@@ -24,6 +24,7 @@ ${props.size ? `font-size: var(--font-size-${props.size});` : ''}
 ${props.color ? `color: ${props.color};` : ''}
 ${props.alignText ? `text-align: ${props.alignText};` : ''}
 `;
+
 const Heading = (headerProps: StyledHeadingProps) => {
   const StyledHeading =
     headerProps.size === 'h7' || headerProps.size === 'h8' || headerProps.size === 'h9'

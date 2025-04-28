@@ -1,6 +1,5 @@
 import type { SessionDataTestId } from 'react';
 import { useDispatch } from 'react-redux';
-import { clipboard } from 'electron';
 
 import {
   useConversationUsername,
@@ -47,8 +46,6 @@ import { useShowPinUnpin } from '../../menuAndSettingsHooks/usePinUnpin';
 import { openRightPanel } from '../../../state/ducks/conversations';
 import { updateConversationSettingsModal } from '../../../state/ducks/modalDialog';
 import { useLocalisedNotificationOf } from '../../menuAndSettingsHooks/useLocalisedNotificationFor';
-import { useShowCopyAccountId } from '../../menuAndSettingsHooks/useCopyAccountId';
-import { ToastUtils } from '../../../session/utils';
 import { useShowBlockUnblock } from '../../menuAndSettingsHooks/useShowBlockUnblock';
 import { useShowDeletePrivateContactCb } from '../../menuAndSettingsHooks/useShowDeletePrivateContact';
 import { useClearAllMessagesCb } from '../../menuAndSettingsHooks/useClearAllMessages';
@@ -56,6 +53,8 @@ import { useHideNoteToSelfCb } from '../../menuAndSettingsHooks/useHideNoteToSel
 import { useShowDeletePrivateConversationCb } from '../../menuAndSettingsHooks/useShowDeletePrivateConversation';
 import { useShowInviteContactToCommunity } from '../../menuAndSettingsHooks/useShowInviteContactToCommunity';
 import { useShowInviteContactToGroupCb } from '../../menuAndSettingsHooks/useShowInviteContactToGroup';
+import { useShowCopyAccountIdCb } from '../../menuAndSettingsHooks/useCopyAccountId';
+import { useShowCopyCommunityUrlCb } from '../../menuAndSettingsHooks/useCopyCommunityUrl';
 
 type WithAsAdmin = { asAdmin: boolean };
 
@@ -80,7 +79,7 @@ export const LeaveCommunityPanelButton = ({ conversationId }: WithConvoId) => {
   return (
     <PanelIconButton
       text={localize('communityLeave').toString()}
-      dataTestId="leave-group-button"
+      dataTestId="leave-community-menu-option"
       onClick={() => void showLeaveGroupByConvoId(conversationId, displayName)}
       color={'var(--danger-color)'}
       iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.LOG_OUT} />}
@@ -236,7 +235,7 @@ export const AttachmentsButton = (_props: WithConvoId) => {
 };
 
 export const CopyAccountIdButton = ({ conversationId }: WithConvoId) => {
-  const showCopyAccountId = useShowCopyAccountId(conversationId);
+  const showCopyAccountId = useShowCopyAccountIdCb(conversationId);
 
   if (!showCopyAccountId) {
     return null;
@@ -246,10 +245,7 @@ export const CopyAccountIdButton = ({ conversationId }: WithConvoId) => {
     <PanelIconButton
       iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.COPY} />}
       text={localize('accountIDCopy').toString()}
-      onClick={() => {
-        clipboard.writeText(conversationId);
-        ToastUtils.pushCopiedToClipBoard();
-      }}
+      onClick={showCopyAccountId}
       dataTestId="copy-account-id-menu-option"
     />
   );
@@ -457,6 +453,22 @@ export function InviteContactsToCommunityButton({ conversationId }: WithConvoId)
       text={localize('membersInvite').toString()}
       onClick={showInviteContactCb}
       dataTestId="invite-contacts-menu-option"
+    />
+  );
+}
+
+export function CopyCommunityUrlButton({ conversationId }: WithConvoId) {
+  const copyCommunityUrlCb = useShowCopyCommunityUrlCb(conversationId);
+
+  if (!copyCommunityUrlCb) {
+    return null;
+  }
+  return (
+    <PanelIconButton
+      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.COPY} />}
+      text={localize('communityUrlCopy').toString()}
+      onClick={copyCommunityUrlCb}
+      dataTestId="copy-community-url-menu-option"
     />
   );
 }
