@@ -16,10 +16,8 @@ import {
   useWeAreAdmin,
 } from '../../../hooks/useParamSelector';
 import {
-  showAddModeratorsByConvoId,
   showDeleteGroupByConvoId,
   showLeaveGroupByConvoId,
-  showRemoveModeratorsByConvoId,
   showUpdateGroupMembersByConvoId,
   showUpdateGroupNameByConvoId,
 } from '../../../interactions/conversationInteractions';
@@ -32,7 +30,6 @@ import { useIsMessageRequestOverlayShown } from '../../../state/selectors/sectio
 import { useConversationIsExpired03Group } from '../../../state/selectors/selectedConversation';
 import { PanelIconButton } from '../../buttons';
 import { PanelIconLucideIcon, PanelIconSessionLegacyIcon } from '../../buttons/PanelIconButton';
-import { SessionIcon } from '../../icon';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import {
   showDeleteGroupItem,
@@ -55,6 +52,10 @@ import { useShowInviteContactToCommunity } from '../../menuAndSettingsHooks/useS
 import { useShowInviteContactToGroupCb } from '../../menuAndSettingsHooks/useShowInviteContactToGroup';
 import { useShowCopyAccountIdCb } from '../../menuAndSettingsHooks/useCopyAccountId';
 import { useShowCopyCommunityUrlCb } from '../../menuAndSettingsHooks/useCopyCommunityUrl';
+import { useBanUserCb } from '../../menuAndSettingsHooks/useBanUser';
+import { useUnbanUserCb } from '../../menuAndSettingsHooks/useUnbanUnser';
+import { useAddModeratorsCb } from '../../menuAndSettingsHooks/useAddModerators';
+import { useRemoveModeratorsCb } from '../../menuAndSettingsHooks/useRemoveModerators';
 
 type WithAsAdmin = { asAdmin: boolean };
 
@@ -408,36 +409,76 @@ export function UpdateDisappearingMessagesButton({
   );
 }
 
-export function AddRemoveModeratorsButton({ conversationId }: WithConvoId) {
-  const commonNoShow = useGroupCommonNoShow(conversationId);
-  const isPublic = useIsPublic(conversationId);
-  const weAreAdmin = useWeAreAdmin(conversationId);
+export function AddAdminCommunityButton({ conversationId }: WithConvoId) {
+  const cb = useAddModeratorsCb(conversationId);
 
-  const showAddRemoveModeratorsButton = weAreAdmin && !commonNoShow && isPublic;
-
-  if (!showAddRemoveModeratorsButton) {
+  if (!cb) {
     return null;
   }
   return (
-    <>
-      <PanelIconButton
-        iconElement={<SessionIcon iconSize={'large'} iconType={'addModerator'} />}
-        text={localize('adminPromote').toString()}
-        onClick={() => {
-          showAddModeratorsByConvoId(conversationId);
-        }}
-        dataTestId="add-moderators"
-      />
+    <PanelIconButton
+      iconElement={
+        <PanelIconSessionLegacyIcon
+          iconType={'addModerator'}
+          iconColor="var(--text-primary-color"
+        />
+      }
+      text={localize('addAdmins').toString()}
+      onClick={cb}
+      dataTestId="add-admins-menu-option"
+    />
+  );
+}
+export function RemoveAdminCommunityButton({ conversationId }: WithConvoId) {
+  const cb = useRemoveModeratorsCb(conversationId);
 
-      <PanelIconButton
-        iconElement={<SessionIcon iconSize={'large'} iconType={'deleteModerator'} />}
-        text={localize('adminRemove').toString()}
-        onClick={() => {
-          showRemoveModeratorsByConvoId(conversationId);
-        }}
-        dataTestId="remove-moderators"
-      />
-    </>
+  if (!cb) {
+    return null;
+  }
+  return (
+    <PanelIconButton
+      iconElement={
+        <PanelIconSessionLegacyIcon
+          iconType={'deleteModerator'}
+          iconColor="var(--text-primary-color"
+        />
+      }
+      text={localize('adminRemove').toString()}
+      onClick={cb}
+      dataTestId="remove-admins-menu-option"
+    />
+  );
+}
+
+export function BanFromCommunityButton({ conversationId }: WithConvoId) {
+  const showBanUserCb = useBanUserCb(conversationId);
+
+  if (!showBanUserCb) {
+    return null;
+  }
+  return (
+    <PanelIconButton
+      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.USER_ROUND_X} />}
+      text={localize('banUser').toString()}
+      onClick={showBanUserCb}
+      dataTestId="ban-user-menu-option"
+    />
+  );
+}
+
+export function UnbanFromCommunityButton({ conversationId }: WithConvoId) {
+  const showUnbanUserCb = useUnbanUserCb(conversationId);
+
+  if (!showUnbanUserCb) {
+    return null;
+  }
+  return (
+    <PanelIconButton
+      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.USER_ROUND_CHECK} />}
+      text={localize('banUnbanUser').toString()}
+      onClick={showUnbanUserCb}
+      dataTestId="unban-user-menu-option"
+    />
   );
 }
 

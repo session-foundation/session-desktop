@@ -12,7 +12,6 @@ import {
   useIsMe,
   useIsPrivate,
   useIsPrivateAndFriend,
-  useIsPublic,
   useNotificationSetting,
   useWeAreAdmin,
 } from '../../hooks/useParamSelector';
@@ -22,10 +21,6 @@ import {
   handleAcceptConversationRequest,
   markAllReadByConvoId,
   setNotificationForConvoId,
-  showAddModeratorsByConvoId,
-  showBanUserByConvoId,
-  showRemoveModeratorsByConvoId,
-  showUnbanUserByConvoId,
   showUpdateGroupNameByConvoId,
 } from '../../interactions/conversationInteractions';
 import { ConvoHub } from '../../session/conversations';
@@ -49,6 +44,10 @@ import { useClearAllMessagesCb } from '../menuAndSettingsHooks/useClearAllMessag
 import { useHideNoteToSelfCb } from '../menuAndSettingsHooks/useHideNoteToSelf';
 import { useShowDeletePrivateConversationCb } from '../menuAndSettingsHooks/useShowDeletePrivateConversation';
 import { useShowInviteContactToCommunity } from '../menuAndSettingsHooks/useShowInviteContactToCommunity';
+import { useAddModeratorsCb } from '../menuAndSettingsHooks/useAddModerators';
+import { useRemoveModeratorsCb } from '../menuAndSettingsHooks/useRemoveModerators';
+import { useUnbanUserCb } from '../menuAndSettingsHooks/useUnbanUnser';
+import { useBanUserCb } from '../menuAndSettingsHooks/useBanUser';
 
 /** Menu items standardized */
 
@@ -156,7 +155,7 @@ export const UpdateGroupNameMenuItem = () => {
           void showUpdateGroupNameByConvoId(convoId);
         }}
       >
-        {window.i18n('groupEdit')}
+        {localize('groupEdit').toString()}
       </ItemWithDataTestId>
     );
   }
@@ -165,83 +164,59 @@ export const UpdateGroupNameMenuItem = () => {
 
 export const RemoveModeratorsMenuItem = (): JSX.Element | null => {
   const convoId = useConvoIdFromContext();
-  const isPublic = useIsPublic(convoId);
+  const showRemoveModeratorsCb = useRemoveModeratorsCb(convoId);
 
-  const isKickedFromGroup = useIsKickedFromGroup(convoId);
-  const weAreAdmin = useWeAreAdmin(convoId);
-
-  if (!isKickedFromGroup && weAreAdmin && isPublic) {
-    return (
-      <ItemWithDataTestId
-        onClick={() => {
-          showRemoveModeratorsByConvoId(convoId);
-        }}
-      >
-        {window.i18n('adminRemove')}
-      </ItemWithDataTestId>
-    );
+  if (!showRemoveModeratorsCb) {
+    return null;
   }
-  return null;
+  return (
+    <ItemWithDataTestId onClick={showRemoveModeratorsCb}>
+      {localize('adminRemove').toString()}
+    </ItemWithDataTestId>
+  );
 };
 
 export const AddModeratorsMenuItem = (): JSX.Element | null => {
   const convoId = useConvoIdFromContext();
-  const isPublic = useIsPublic(convoId);
-  const isKickedFromGroup = useIsKickedFromGroup(convoId);
-  const weAreAdmin = useWeAreAdmin(convoId);
+  const addRemoveModeratorsCb = useAddModeratorsCb(convoId);
 
-  if (!isKickedFromGroup && weAreAdmin && isPublic) {
-    return (
-      <ItemWithDataTestId
-        onClick={() => {
-          showAddModeratorsByConvoId(convoId);
-        }}
-      >
-        {window.i18n('adminPromote')}
-      </ItemWithDataTestId>
-    );
+  if (!addRemoveModeratorsCb) {
+    return null;
   }
-  return null;
+  return (
+    <ItemWithDataTestId onClick={addRemoveModeratorsCb}>
+      {localize('adminPromote').toString()}
+    </ItemWithDataTestId>
+  );
 };
 
 export const UnbanMenuItem = (): JSX.Element | null => {
   const convoId = useConvoIdFromContext();
-  const isPublic = useIsPublic(convoId);
-  const isKickedFromGroup = useIsKickedFromGroup(convoId);
-  const weAreAdmin = useWeAreAdmin(convoId);
+  const showUnbanUserCb = useUnbanUserCb(convoId);
 
-  if (isPublic && !isKickedFromGroup && weAreAdmin) {
-    return (
-      <ItemWithDataTestId
-        onClick={() => {
-          showUnbanUserByConvoId(convoId);
-        }}
-      >
-        {window.i18n('banUnbanUser')}
-      </ItemWithDataTestId>
-    );
+  if (!showUnbanUserCb) {
+    return null;
   }
-  return null;
+  return (
+    <ItemWithDataTestId onClick={showUnbanUserCb}>
+      {localize('banUnbanUser').toString()}
+    </ItemWithDataTestId>
+  );
 };
 
 export const BanMenuItem = (): JSX.Element | null => {
   const convoId = useConvoIdFromContext();
-  const isPublic = useIsPublic(convoId);
-  const isKickedFromGroup = useIsKickedFromGroup(convoId);
-  const weAreAdmin = useWeAreAdmin(convoId);
 
-  if (isPublic && !isKickedFromGroup && weAreAdmin) {
-    return (
-      <ItemWithDataTestId
-        onClick={() => {
-          showBanUserByConvoId(convoId);
-        }}
-      >
-        {window.i18n('banUser')}
-      </ItemWithDataTestId>
-    );
+  const showBanUserCb = useBanUserCb(convoId);
+
+  if (!showBanUserCb) {
+    return null;
   }
-  return null;
+  return (
+    <ItemWithDataTestId onClick={showBanUserCb}>
+      {localize('banUser').toString()}
+    </ItemWithDataTestId>
+  );
 };
 
 export const MarkAllReadMenuItem = (): JSX.Element | null => {

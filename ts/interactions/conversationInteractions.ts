@@ -30,12 +30,9 @@ import {
 } from '../state/ducks/conversations';
 import {
   changeNickNameModal,
-  updateAddModeratorsModal,
-  updateBanOrUnbanUserModal,
   updateConfirmModal,
   updateGroupMembersModal,
   updateGroupNameModal,
-  updateRemoveModeratorsModal,
 } from '../state/ducks/modalDialog';
 import { MIME } from '../types';
 import { IMAGE_JPEG } from '../types/MIME';
@@ -443,26 +440,6 @@ export async function showDeleteGroupByConvoId(conversationId: string, name: str
       onClickClose,
       conversationId,
     })
-  );
-}
-
-export function showAddModeratorsByConvoId(conversationId: string) {
-  window.inboxStore?.dispatch(updateAddModeratorsModal({ conversationId }));
-}
-
-export function showRemoveModeratorsByConvoId(conversationId: string) {
-  window.inboxStore?.dispatch(updateRemoveModeratorsModal({ conversationId }));
-}
-
-export function showBanUserByConvoId(conversationId: string, pubkey?: string) {
-  window.inboxStore?.dispatch(
-    updateBanOrUnbanUserModal({ banType: 'ban', conversationId, pubkey })
-  );
-}
-
-export function showUnbanUserByConvoId(conversationId: string, pubkey?: string) {
-  window.inboxStore?.dispatch(
-    updateBanOrUnbanUserModal({ banType: 'unban', conversationId, pubkey })
   );
 }
 

@@ -40,6 +40,10 @@ declare module 'react' {
     | 'hide-nts'
     | 'copy-community-url'
     | 'leave-community'
+    | 'add-admins'
+    | 'remove-admins'
+    | 'unban-user'
+    | 'ban-user'
     | 'disappearing-messages' // one of those two might be incorrect. FIXME
     | 'disappearing-messages-timer';
 
@@ -171,8 +175,6 @@ declare module 'react' {
     | 'leave-group-button'
     | 'disappearing-messages'
     | 'group-members'
-    | 'remove-moderators'
-    | 'add-moderators'
     | 'edit-group-name'
     | 'delete-group-button'
 

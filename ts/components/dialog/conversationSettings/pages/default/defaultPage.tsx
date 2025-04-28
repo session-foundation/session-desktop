@@ -17,7 +17,6 @@ import {
   UpdateGroupNameButton,
   AttachmentsButton,
   UpdateDisappearingMessagesButton,
-  AddRemoveModeratorsButton,
   ConversationSettingsQAButtons,
   ClearAllMessagesButton,
   LeaveGroupPanelButton,
@@ -31,9 +30,21 @@ import {
   DeletePrivateConversationButton,
   HideNoteToSelfButton,
   CopyCommunityUrlButton,
+  BanFromCommunityButton,
+  UnbanFromCommunityButton,
+  AddAdminCommunityButton,
+  RemoveAdminCommunityButton,
 } from '../../conversationSettingsItems';
 
-function AdminActions({ conversationId }: WithConvoId) {
+function GroupSettingsTitle() {
+  return (
+    <PanelLabel>
+      <Localizer token="adminSettings" />
+    </PanelLabel>
+  );
+}
+
+function GroupV2AdminActions({ conversationId }: WithConvoId) {
   const isPublic = useIsPublic(conversationId);
   const isGroupV2 = useIsGroupV2(conversationId);
   const weAreAdmin = useWeAreAdmin(conversationId);
@@ -45,15 +56,35 @@ function AdminActions({ conversationId }: WithConvoId) {
   return (
     <>
       <SpacerSM />
-      <PanelLabel>
-        <Localizer token="adminSettings" />
-      </PanelLabel>
+      <GroupSettingsTitle />
       <PanelButtonGroup>
         <InviteContactsToGroupV2Button conversationId={conversationId} />
         <UpdateGroupMembersButton conversationId={conversationId} />
         <UpdateDisappearingMessagesButton conversationId={conversationId} asAdmin={true} />
-        <AddRemoveModeratorsButton conversationId={conversationId} />
+        TODO : add back admins add for group v2
         <ConversationSettingsQAButtons conversationId={conversationId} />
+      </PanelButtonGroup>
+    </>
+  );
+}
+function CommunityAdminActions({ conversationId }: WithConvoId) {
+  const isPublic = useIsPublic(conversationId);
+  const isGroupV2 = useIsGroupV2(conversationId);
+  const weAreAdmin = useWeAreAdmin(conversationId);
+
+  if ((!isPublic && !isGroupV2) || !weAreAdmin) {
+    return null;
+  }
+
+  return (
+    <>
+      <SpacerSM />
+      <GroupSettingsTitle />
+      <PanelButtonGroup>
+        <BanFromCommunityButton conversationId={conversationId} />
+        <UnbanFromCommunityButton conversationId={conversationId} />
+        <AddAdminCommunityButton conversationId={conversationId} />
+        <RemoveAdminCommunityButton conversationId={conversationId} />
       </PanelButtonGroup>
     </>
   );
@@ -125,7 +156,7 @@ function DefaultPageForCommunities({ conversationId }: WithConvoId) {
       </PanelButtonGroup>
 
       {/* Below are "admins" actions */}
-      <AdminActions conversationId={convoId} />
+      <CommunityAdminActions conversationId={convoId} />
 
       {/* Below are "destructive" actions */}
       <SpacerSM />
@@ -137,6 +168,8 @@ function DefaultPageForCommunities({ conversationId }: WithConvoId) {
 export function DefaultPage(props: WithConvoId) {
   const isPrivate = useIsPrivate(props?.conversationId);
   const isPublic = useIsPublic(props?.conversationId);
+  const isGroupV2 = useIsGroupV2(props?.conversationId);
+
   if (!props?.conversationId) {
     return null;
   }
@@ -148,6 +181,10 @@ export function DefaultPage(props: WithConvoId) {
 
   if (isPublic) {
     return <DefaultPageForCommunities conversationId={convoId} />;
+  }
+
+  if (!isGroupV2) {
+    return null;
   }
 
   return (
@@ -166,7 +203,7 @@ export function DefaultPage(props: WithConvoId) {
       </PanelButtonGroup>
 
       {/* Below are "admins" actions */}
-      <AdminActions conversationId={props.conversationId} />
+      <GroupV2AdminActions conversationId={props.conversationId} />
 
       {/* Below are "destructive" actions */}
       <SpacerSM />

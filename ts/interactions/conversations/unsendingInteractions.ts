@@ -504,7 +504,7 @@ export async function deleteMessagesByIdForEveryone(
       title: isMe
         ? window.i18n('deleteMessageDevicesAll')
         : window.i18n('clearMessagesForEveryone'),
-      i18nMessage: { token: 'deleteMessage', args: { count: selectedMessages.length } },
+      i18nMessage: { token: 'deleteMessageConfirm', args: { count: selectedMessages.length } },
       okText: isMe
         ? window.i18n('deleteMessageDevicesAll')
         : window.i18n('clearMessagesForEveryone'),
