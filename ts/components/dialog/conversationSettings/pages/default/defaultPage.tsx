@@ -107,8 +107,6 @@ function DestructiveActions({ conversationId }: WithConvoId) {
           <LeaveGroupPanelButton conversationId={conversationId} />
           <DeleteGroupPanelButton conversationId={conversationId} />
           <LeaveCommunityPanelButton conversationId={conversationId} />
-          TODO: make leave and delete group (above) be only delete when we are the only admin TODO:
-          allow back to add members as admin for QA
         </>
       )}
     </PanelButtonGroup>

@@ -348,11 +348,11 @@ export async function showLeaveGroupByConvoId(conversationId: string, name: stri
   const isClosedGroup = conversation.isClosedGroup() || false;
   const isPublic = conversation.isPublic() || false;
   const admins = conversation.getGroupAdmins();
-  const isAdmin = admins.includes(UserUtils.getOurPubKeyStrFromCache());
-  const showOnlyGroupAdminWarning = isClosedGroup && isAdmin;
+  const weAreAdmin = admins.includes(UserUtils.getOurPubKeyStrFromCache());
+  const showOnlyGroupAdminWarning = isClosedGroup && weAreAdmin;
   const weAreLastAdmin =
     (PubKey.is05Pubkey(conversationId) || PubKey.is03Pubkey(conversationId)) &&
-    isAdmin &&
+    weAreAdmin &&
     admins.length === 1;
 
   // if this is a community, or we legacy group are not admin, we can just show a confirmation dialog
@@ -388,7 +388,7 @@ export async function showLeaveGroupByConvoId(conversationId: string, name: stri
     );
     return;
   }
-  if (isPublic || (isClosedGroup && !isAdmin)) {
+  if (isPublic || (isClosedGroup && !weAreAdmin)) {
     window?.inboxStore?.dispatch(
       updateConfirmModal({
         title: isPublic ? window.i18n('communityLeave') : window.i18n('groupLeave'),

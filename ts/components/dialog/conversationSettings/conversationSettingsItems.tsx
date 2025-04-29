@@ -2,12 +2,10 @@ import type { SessionDataTestId } from 'react';
 import { useDispatch } from 'react-redux';
 
 import {
-  useConversationUsername,
   useDisappearingMessageSettingText,
   useIsActive,
   useIsBlocked,
   useIsClosedGroup,
-  useIsGroupDestroyed,
   useIsGroupV2,
   useIsKickedFromGroup,
   useIsPinned,
@@ -16,8 +14,6 @@ import {
   useWeAreAdmin,
 } from '../../../hooks/useParamSelector';
 import {
-  showDeleteGroupByConvoId,
-  showLeaveGroupByConvoId,
   showUpdateGroupMembersByConvoId,
   showUpdateGroupNameByConvoId,
 } from '../../../interactions/conversationInteractions';
@@ -26,15 +22,9 @@ import type { ConversationNotificationSettingType } from '../../../models/conver
 import { PubKey } from '../../../session/types';
 import { hasClosedGroupV2QAButtons } from '../../../shared/env_vars';
 import { groupInfoActions } from '../../../state/ducks/metaGroups';
-import { useIsMessageRequestOverlayShown } from '../../../state/selectors/section';
-import { useConversationIsExpired03Group } from '../../../state/selectors/selectedConversation';
 import { PanelIconButton } from '../../buttons';
 import { PanelIconLucideIcon, PanelIconSessionLegacyIcon } from '../../buttons/PanelIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
-import {
-  showDeleteGroupItem,
-  showLeaveGroupItem,
-} from '../../menu/items/LeaveAndDeleteGroup/guard';
 import { useShowNotificationFor } from '../../menuAndSettingsHooks/useShowNotificationFor';
 import type { WithConvoId } from '../../../session/types/with';
 import { ConvoHub } from '../../../session/conversations';
@@ -56,6 +46,10 @@ import { useUnbanUserCb } from '../../menuAndSettingsHooks/useUnbanUnser';
 import { useAddModeratorsCb } from '../../menuAndSettingsHooks/useAddModerators';
 import { useRemoveModeratorsCb } from '../../menuAndSettingsHooks/useRemoveModerators';
 import { useShowLeaveCommunityCb } from '../../menuAndSettingsHooks/useShowLeaveCommunity';
+import {
+  useShowDeleteGroupCb,
+  useShowLeaveGroupCb,
+} from '../../menuAndSettingsHooks/useShowLeaveGroup';
 
 type WithAsAdmin = { asAdmin: boolean };
 
@@ -86,34 +80,17 @@ export const LeaveCommunityPanelButton = ({ conversationId }: WithConvoId) => {
 };
 
 export const DeleteGroupPanelButton = ({ conversationId }: WithConvoId) => {
-  const isGroup = useIsClosedGroup(conversationId);
-  const isMessageRequestShown = useIsMessageRequestOverlayShown();
-  const isKickedFromGroup = useIsKickedFromGroup(conversationId) || false;
-  const displayName = useConversationUsername(conversationId) || conversationId;
-  const isPublic = useIsPublic(conversationId);
-  const isGroupDestroyed = useIsGroupDestroyed(conversationId);
-  const is03GroupExpired = useConversationIsExpired03Group(conversationId);
+  const cb = useShowDeleteGroupCb(conversationId);
 
-  const showItem = showDeleteGroupItem({
-    isGroup,
-    isKickedFromGroup,
-    isMessageRequestShown,
-    isPublic,
-    isGroupDestroyed,
-    is03GroupExpired,
-  });
-
-  if (!showItem || !conversationId) {
+  if (!cb || !conversationId) {
     return null;
   }
 
-  const token = PubKey.is03Pubkey(conversationId) ? 'groupDelete' : 'conversationsDelete';
-
   return (
     <PanelIconButton
-      text={localize(token).toString()}
+      text={localize('groupDelete').toString()}
       dataTestId="leave-group-button"
-      onClick={() => void showDeleteGroupByConvoId(conversationId, displayName)}
+      onClick={cb}
       color={'var(--danger-color)'}
       iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.TRASH2} />}
     />
@@ -121,22 +98,9 @@ export const DeleteGroupPanelButton = ({ conversationId }: WithConvoId) => {
 };
 
 export const LeaveGroupPanelButton = ({ conversationId }: WithConvoId) => {
-  const isGroup = useIsClosedGroup(conversationId);
-  const username = useConversationUsername(conversationId) || conversationId;
-  const isMessageRequestShown = useIsMessageRequestOverlayShown();
-  const isKickedFromGroup = useIsKickedFromGroup(conversationId) || false;
-  const isPublic = useIsPublic(conversationId);
-  const isGroupDestroyed = useIsGroupDestroyed(conversationId);
+  const cb = useShowLeaveGroupCb(conversationId);
 
-  const showItem = showLeaveGroupItem({
-    isGroup,
-    isKickedFromGroup,
-    isMessageRequestShown,
-    isPublic,
-    isGroupDestroyed,
-  });
-
-  if (!conversationId || !showItem) {
+  if (!conversationId || !cb) {
     return null;
   }
 
@@ -144,7 +108,7 @@ export const LeaveGroupPanelButton = ({ conversationId }: WithConvoId) => {
     <PanelIconButton
       text={localize('groupLeave').toString()}
       dataTestId="leave-group-button"
-      onClick={() => void showLeaveGroupByConvoId(conversationId, username)}
+      onClick={cb}
       color={'var(--danger-color)'}
       iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.LOG_OUT} />}
     />
