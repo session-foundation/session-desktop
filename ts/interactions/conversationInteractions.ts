@@ -1,10 +1,7 @@
 import { isEmpty, isNil, uniq } from 'lodash';
 import { PubkeyType, WithGroupPubkey } from 'libsession_util_nodejs';
 import AbortController from 'abort-controller';
-import {
-  ConversationNotificationSettingType,
-  READ_MESSAGE_STATE,
-} from '../models/conversationAttributes';
+import { READ_MESSAGE_STATE } from '../models/conversationAttributes';
 import { CallManager, PromiseUtils, SyncUtils, ToastUtils, UserUtils } from '../session/utils';
 
 import { SessionButtonColor } from '../components/basic/SessionButton';
@@ -29,7 +26,6 @@ import {
   resetConversationExternal,
 } from '../state/ducks/conversations';
 import {
-  changeNickNameModal,
   updateConfirmModal,
   updateGroupMembersModal,
   updateGroupNameModal,
@@ -52,6 +48,7 @@ import { StoreGroupRequestFactory } from '../session/apis/snode_api/factories/St
 import { DURATION } from '../session/constants';
 import { GroupInvite } from '../session/utils/job_runners/jobs/GroupInviteJob';
 import type { LocalizerProps } from '../components/basic/Localizer';
+import { localize } from '../localization/localeTools';
 
 /**
  * Accept if needed the message request from this user.
@@ -338,18 +335,51 @@ async function leaveGroupOrCommunityByConvoId({
   }
 }
 
+export async function showLeaveCommunityByConvoId(
+  conversationId: string,
+  name: string | undefined
+) {
+  const conversation = ConvoHub.use().get(conversationId);
+
+  if (!conversation.isPublic()) {
+    throw new Error('showLeaveCommunityByConvoId() called with a non public convo.');
+  }
+
+  const onClickClose = () => {
+    window?.inboxStore?.dispatch(updateConfirmModal(null));
+  };
+
+  const onClickOk = async () => {
+    await leaveGroupOrCommunityByConvoId({
+      conversationId,
+      isPublic: true,
+      sendLeaveMessage: false,
+      onClickClose,
+    });
+  };
+
+  window?.inboxStore?.dispatch(
+    updateConfirmModal({
+      title: localize('communityLeave').toString(),
+      i18nMessage: { token: 'groupLeaveDescription', args: { group_name: name ?? '' } },
+      onClickOk,
+      okText: window.i18n('leave'),
+      okTheme: SessionButtonColor.Danger,
+      onClickClose,
+      conversationId,
+    })
+  );
+}
+
 export async function showLeaveGroupByConvoId(conversationId: string, name: string | undefined) {
   const conversation = ConvoHub.use().get(conversationId);
 
-  if (!conversation.isGroup()) {
+  if (!conversation.isClosedGroup()) {
     throw new Error('showLeaveGroupDialog() called with a non group convo.');
   }
 
-  const isClosedGroup = conversation.isClosedGroup() || false;
-  const isPublic = conversation.isPublic() || false;
   const admins = conversation.getGroupAdmins();
   const weAreAdmin = admins.includes(UserUtils.getOurPubKeyStrFromCache());
-  const showOnlyGroupAdminWarning = isClosedGroup && weAreAdmin;
   const weAreLastAdmin =
     (PubKey.is05Pubkey(conversationId) || PubKey.is03Pubkey(conversationId)) &&
     weAreAdmin &&
@@ -364,14 +394,13 @@ export async function showLeaveGroupByConvoId(conversationId: string, name: stri
   const onClickOk = async () => {
     await leaveGroupOrCommunityByConvoId({
       conversationId,
-      isPublic,
+      isPublic: false,
       sendLeaveMessage: !weAreLastAdmin, // we don't need to send a leave message when we are the last admin: the group is removed.
       onClickClose,
     });
   };
 
-  if (showOnlyGroupAdminWarning) {
-    // NOTE For legacy closed groups
+  if (weAreLastAdmin) {
     window?.inboxStore?.dispatch(
       updateConfirmModal({
         title: window.i18n('groupLeave'),
@@ -388,19 +417,17 @@ export async function showLeaveGroupByConvoId(conversationId: string, name: stri
     );
     return;
   }
-  if (isPublic || (isClosedGroup && !weAreAdmin)) {
-    window?.inboxStore?.dispatch(
-      updateConfirmModal({
-        title: isPublic ? window.i18n('communityLeave') : window.i18n('groupLeave'),
-        i18nMessage: { token: 'groupLeaveDescription', args: { group_name: name ?? '' } },
-        onClickOk,
-        okText: window.i18n('leave'),
-        okTheme: SessionButtonColor.Danger,
-        onClickClose,
-        conversationId,
-      })
-    );
-  }
+  window?.inboxStore?.dispatch(
+    updateConfirmModal({
+      title: localize('groupLeave').toString(),
+      i18nMessage: { token: 'groupLeaveDescription', args: { group_name: name ?? '' } },
+      onClickOk,
+      okText: window.i18n('leave'),
+      okTheme: SessionButtonColor.Danger,
+      onClickClose,
+      conversationId,
+    })
+  );
 }
 
 /**
@@ -450,28 +477,6 @@ export async function markAllReadByConvoId(conversationId: string) {
   await conversation?.markAllAsRead();
 
   perfEnd(`markAllReadByConvoId-${conversationId}`, 'markAllReadByConvoId');
-}
-
-export async function setNotificationForConvoId(
-  conversationId: string,
-  selected: ConversationNotificationSettingType
-) {
-  const conversation = ConvoHub.use().get(conversationId);
-
-  const existingSettings = conversation.getNotificationsFor();
-  if (existingSettings !== selected) {
-    conversation.set({ triggerNotificationsFor: selected });
-    await conversation.commit();
-  }
-}
-
-export async function clearNickNameByConvoId(conversationId: string) {
-  const conversation = ConvoHub.use().get(conversationId);
-  await conversation.setNickname(null, true);
-}
-
-export function showChangeNickNameByConvoId(conversationId: string) {
-  window.inboxStore?.dispatch(changeNickNameModal({ conversationId }));
 }
 
 export async function deleteAllMessagesByConvoIdNoConfirmation(conversationId: string) {

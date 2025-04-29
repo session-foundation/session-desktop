@@ -1,5 +1,5 @@
 import { useConversationUsername, useIsPublic } from '../../hooks/useParamSelector';
-import { showLeaveGroupByConvoId } from '../../interactions/conversationInteractions';
+import { showLeaveCommunityByConvoId } from '../../interactions/conversationInteractions';
 
 export function useShowLeaveCommunityCb(conversationId?: string) {
   const isPublic = useIsPublic(conversationId);
@@ -10,6 +10,6 @@ export function useShowLeaveCommunityCb(conversationId?: string) {
   }
 
   return () => {
-    void showLeaveGroupByConvoId(conversationId, username);
+    void showLeaveCommunityByConvoId(conversationId, username);
   };
 }

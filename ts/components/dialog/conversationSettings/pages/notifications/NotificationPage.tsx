@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { useIsLegacyGroup, useNotificationSetting } from '../../../../../hooks/useParamSelector';
-import { setNotificationForConvoId } from '../../../../../interactions/conversationInteractions';
 import { useSelectedConversationKey } from '../../../../../state/selectors/selectedConversation';
 import { Flex } from '../../../../basic/Flex';
 import { SessionButton } from '../../../../basic/SessionButton';
@@ -15,6 +14,7 @@ import { updateConversationSettingsModal } from '../../../../../state/ducks/moda
 import { useConversationSettingsModalIsStandalone } from '../../../../../state/selectors/modal';
 import { PanelButtonText } from '../../../../buttons/PanelButton';
 import { useLocalisedNotificationOptions } from '../../../../menuAndSettingsHooks/useLocalisedNotificationFor';
+import { useSetNotificationsFor } from '../../../../menuAndSettingsHooks/useSetNotificationsFor';
 
 const ButtonSpacer = styled.div`
   height: 80px;
@@ -74,10 +74,11 @@ export const NotificationsPage = () => {
   const shouldCloseOnSet = useConversationSettingsModalIsStandalone();
 
   const notificationOptions = useLocalisedNotificationOptions('action');
+  const setNotificationFor = useSetNotificationsFor(selectedConversationKey);
 
   const handleSetNotifications = async () => {
     if (selectedConversationKey && notificationSelected) {
-      await setNotificationForConvoId(selectedConversationKey, notificationSelected);
+      setNotificationFor(notificationSelected);
       if (shouldCloseOnSet) {
         dispatch(updateConversationSettingsModal(null));
       } else {

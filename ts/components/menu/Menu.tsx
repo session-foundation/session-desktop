@@ -4,28 +4,24 @@ import { useConvoIdFromContext } from '../../contexts/ConvoIdContext';
 import {
   useAvatarPath,
   useConversationUsername,
-  useHasNickname,
   useIsBlinded,
   useIsGroupV2,
   useIsIncomingRequest,
   useIsKickedFromGroup,
-  useIsMe,
   useIsPrivate,
   useIsPrivateAndFriend,
   useNotificationSetting,
   useWeAreAdmin,
 } from '../../hooks/useParamSelector';
 import {
-  clearNickNameByConvoId,
   declineConversationWithConfirm,
   handleAcceptConversationRequest,
   markAllReadByConvoId,
-  setNotificationForConvoId,
   showUpdateGroupNameByConvoId,
 } from '../../interactions/conversationInteractions';
 import { ConvoHub } from '../../session/conversations';
 import { PubKey } from '../../session/types';
-import { changeNickNameModal, updateUserDetailsModal } from '../../state/ducks/modalDialog';
+import { updateUserDetailsModal } from '../../state/ducks/modalDialog';
 import { useConversationIdOrigin } from '../../state/selectors/conversations';
 import {
   useIsMessageRequestOverlayShown,
@@ -48,6 +44,10 @@ import { useAddModeratorsCb } from '../menuAndSettingsHooks/useAddModerators';
 import { useRemoveModeratorsCb } from '../menuAndSettingsHooks/useRemoveModerators';
 import { useUnbanUserCb } from '../menuAndSettingsHooks/useUnbanUnser';
 import { useBanUserCb } from '../menuAndSettingsHooks/useBanUser';
+import { useSetNotificationsFor } from '../menuAndSettingsHooks/useSetNotificationsFor';
+import { useClearNickname } from '../menuAndSettingsHooks/useClearNickname';
+import { Localizer } from '../basic/Localizer';
+import { useChangeNickname } from '../menuAndSettingsHooks/useChangeNickname';
 
 /** Menu items standardized */
 
@@ -250,18 +250,16 @@ export const BlockMenuItem = (): JSX.Element | null => {
 
 export const ClearNicknameMenuItem = (): JSX.Element | null => {
   const convoId = useConvoIdFromContext();
-  const isMe = useIsMe(convoId);
-  const hasNickname = useHasNickname(convoId);
-  const isPrivate = useIsPrivate(convoId);
-  const isPrivateAndFriend = useIsPrivateAndFriend(convoId);
 
-  if (isMe || !hasNickname || !isPrivate || !isPrivateAndFriend) {
+  const clearNicknameCb = useClearNickname(convoId);
+
+  if (!clearNicknameCb) {
     return null;
   }
 
   return (
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    <ItemWithDataTestId onClick={async () => clearNickNameByConvoId(convoId)}>
+    <ItemWithDataTestId onClick={clearNicknameCb}>
       {window.i18n('nicknameRemove')}
     </ItemWithDataTestId>
   );
@@ -269,21 +267,15 @@ export const ClearNicknameMenuItem = (): JSX.Element | null => {
 
 export const ChangeNicknameMenuItem = () => {
   const convoId = useConvoIdFromContext();
-  const isMe = useIsMe(convoId);
-  const isPrivate = useIsPrivate(convoId);
-  const isPrivateAndFriend = useIsPrivateAndFriend(convoId);
-  const dispatch = useDispatch();
 
-  if (isMe || !isPrivate || !isPrivateAndFriend) {
+  const changeNicknameCb = useChangeNickname(convoId);
+
+  if (!changeNicknameCb) {
     return null;
   }
   return (
-    <ItemWithDataTestId
-      onClick={() => {
-        dispatch(changeNickNameModal({ conversationId: convoId }));
-      }}
-    >
-      {window.i18n('nicknameSet')}
+    <ItemWithDataTestId onClick={changeNicknameCb}>
+      <Localizer token="nicknameSet" />
     </ItemWithDataTestId>
   );
 };
@@ -441,6 +433,9 @@ export const NotificationForConvoMenuItem = (): JSX.Element | null => {
   const currentNotificationSetting = useNotificationSetting(convoId);
   const showNotificationFor = useShowNotificationFor(convoId);
   const notificationForConvoOptions = useLocalisedNotificationOptions('action');
+
+  const setNotificationFor = useSetNotificationsFor(convoId);
+
   if (!showNotificationFor) {
     return null;
   }
@@ -459,7 +454,7 @@ export const NotificationForConvoMenuItem = (): JSX.Element | null => {
           <ItemWithDataTestId
             key={item.value}
             onClick={() => {
-              void setNotificationForConvoId(convoId, item.value);
+              setNotificationFor(item.value);
             }}
             disabled={disabled}
           >
