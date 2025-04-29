@@ -35,7 +35,6 @@ import {
   showDeleteGroupItem,
   showLeaveGroupItem,
 } from '../../menu/items/LeaveAndDeleteGroup/guard';
-import { showLeaveCommunityItem } from '../../menu/items/LeaveCommunity/guard';
 import { useShowNotificationFor } from '../../menuAndSettingsHooks/useShowNotificationFor';
 import type { WithConvoId } from '../../../session/types/with';
 import { ConvoHub } from '../../../session/conversations';
@@ -56,6 +55,7 @@ import { useBanUserCb } from '../../menuAndSettingsHooks/useBanUser';
 import { useUnbanUserCb } from '../../menuAndSettingsHooks/useUnbanUnser';
 import { useAddModeratorsCb } from '../../menuAndSettingsHooks/useAddModerators';
 import { useRemoveModeratorsCb } from '../../menuAndSettingsHooks/useRemoveModerators';
+import { useShowLeaveCommunityCb } from '../../menuAndSettingsHooks/useShowLeaveCommunity';
 
 type WithAsAdmin = { asAdmin: boolean };
 
@@ -68,12 +68,9 @@ function useGroupCommonNoShow(convoId: string) {
 }
 
 export const LeaveCommunityPanelButton = ({ conversationId }: WithConvoId) => {
-  const displayName = useConversationUsername(conversationId) || conversationId;
-  const isPublic = useIsPublic(conversationId);
+  const cb = useShowLeaveCommunityCb(conversationId);
 
-  const showItem = showLeaveCommunityItem({ isPublic });
-
-  if (!conversationId || !showItem) {
+  if (!cb) {
     return null;
   }
 
@@ -81,7 +78,7 @@ export const LeaveCommunityPanelButton = ({ conversationId }: WithConvoId) => {
     <PanelIconButton
       text={localize('communityLeave').toString()}
       dataTestId="leave-community-menu-option"
-      onClick={() => void showLeaveGroupByConvoId(conversationId, displayName)}
+      onClick={cb}
       color={'var(--danger-color)'}
       iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.LOG_OUT} />}
     />
@@ -271,7 +268,7 @@ export const PinUnpinButton = ({ conversationId }: WithConvoId) => {
       onClick={() => {
         void ConvoHub.use().get(conversationId)?.togglePinned();
       }}
-      dataTestId="attachments-menu-option"
+      dataTestId="pin-conversation-menu-option"
     />
   );
 };
@@ -606,7 +603,7 @@ export function DeletePrivateContactButton({ conversationId }: WithConvoId) {
       }
       text={localize('contactDelete').toString()}
       onClick={showDeletePrivateContactCb}
-      dataTestId="delete-conversation-menu-option"
+      dataTestId="delete-contact-menu-option"
       color="var(--danger-color)"
     />
   );

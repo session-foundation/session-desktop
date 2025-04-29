@@ -98,8 +98,8 @@ function DestructiveActions({ conversationId }: WithConvoId) {
   return (
     <PanelButtonGroup>
       <BlockUnblockButton conversationId={conversationId} />
-      <ClearAllMessagesButton conversationId={conversationId} />
       <HideNoteToSelfButton conversationId={conversationId} />
+      <ClearAllMessagesButton conversationId={conversationId} />
       <DeletePrivateConversationButton conversationId={conversationId} />
       <DeletePrivateContactButton conversationId={conversationId} />
       {(isGroupV2 || isPublic) && (
