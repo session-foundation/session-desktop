@@ -7,7 +7,7 @@ import useInterval from 'react-use/lib/useInterval';
 import { filesize } from 'filesize';
 
 import type { PubkeyType } from 'libsession_util_nodejs';
-import { chunk } from 'lodash';
+import { chunk, toNumber } from 'lodash';
 import { Flex } from '../../basic/Flex';
 import { SpacerXS } from '../../basic/Text';
 import { localize } from '../../../localization/localeTools';
@@ -30,6 +30,7 @@ import { ConvoHub } from '../../../session/conversations';
 import { ConversationTypeEnum } from '../../../models/types';
 import { ContactsWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { usePolling } from '../../../hooks/usePolling';
+import { SessionInput } from '../../inputs';
 
 const hexRef = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
 
@@ -215,61 +216,6 @@ const ClearOldLogsButton = () => {
   );
 };
 
-const dummyContactPerClick = 500;
-
-async function fetchContactsCountAndUpdate() {
-  const count = (await ContactsWrapperActions.getAll()).length;
-  if (count && Number.isFinite(count)) {
-    return count;
-  }
-  return 0;
-}
-
-function AddDummyContactButton() {
-  const [loading, setLoading] = useState(false);
-  const [addedCount, setAddedCount] = useState(0);
-
-  const { data: contactsCount } = usePolling(
-    fetchContactsCountAndUpdate,
-    1000,
-    'AddDummyContactButton'
-  );
-
-  return (
-    <SessionButton
-      onClick={async () => {
-        if (loading) {
-          return;
-        }
-        try {
-          setLoading(true);
-          setAddedCount(0);
-          const chunkSize = 10;
-          const allIndexes = Array.from({ length: dummyContactPerClick }).map((_unused, i) => i);
-          const chunks = chunk(allIndexes, chunkSize);
-          for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
-            // eslint-disable-next-line no-await-in-loop
-            await Promise.all(chunks[chunkIndex].map(() => generateOneRandomContact()));
-            setAddedCount(Math.min(chunkIndex * chunkSize, dummyContactPerClick));
-          }
-        } finally {
-          setLoading(false);
-          setAddedCount(0);
-        }
-      }}
-      disabled={loading}
-    >
-      {loading ? (
-        <>
-          {addedCount}/{dummyContactPerClick}...
-        </>
-      ) : (
-        `Add ${dummyContactPerClick} contacts (${contactsCount})`
-      )}
-    </SessionButton>
-  );
-}
-
 export const DebugActions = () => {
   const dispatch = useDispatch();
 
@@ -338,9 +284,109 @@ export const DebugActions = () => {
         >
           Open storage profile
         </SessionButton>
-        <AddDummyContactButton />
       </Flex>
     </>
+  );
+};
+
+async function fetchContactsCountAndUpdate() {
+  const count = (await ContactsWrapperActions.getAll()).length;
+  if (count && Number.isFinite(count)) {
+    return count;
+  }
+  return 0;
+}
+
+function AddDummyContactButton() {
+  const [loading, setLoading] = useState(false);
+  const [addedCount, setAddedCount] = useState(0);
+  const [countToAdd, setCountToAdd] = useState(500);
+
+  const { data: contactsCount } = usePolling(
+    fetchContactsCountAndUpdate,
+    500,
+    'AddDummyContactButton'
+  );
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center' }}>
+      <SessionInput
+        autoFocus={false}
+        disableOnBlurEvent={true}
+        type="text"
+        value={`${countToAdd}`}
+        onValueChanged={(value: string) => {
+          const asNumber = toNumber(value);
+          if (Number.isFinite(asNumber)) {
+            setCountToAdd(asNumber);
+          }
+        }}
+        loading={loading}
+        maxLength={10}
+        ctaButton={
+          <SessionButton
+            onClick={async () => {
+              if (loading) {
+                return;
+              }
+              try {
+                setLoading(true);
+                setAddedCount(0);
+                const chunkSize = 10;
+                const allIndexes = Array.from({ length: countToAdd }).map((_unused, i) => i);
+                const chunks = chunk(allIndexes, chunkSize);
+                for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
+                  // eslint-disable-next-line no-await-in-loop
+                  await Promise.all(chunks[chunkIndex].map(() => generateOneRandomContact()));
+                  setAddedCount(Math.min(chunkIndex * chunkSize, countToAdd));
+                }
+              } finally {
+                setLoading(false);
+                setAddedCount(0);
+              }
+            }}
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                {addedCount}/{countToAdd}...
+              </>
+            ) : (
+              `Add ${countToAdd} contacts (current: ${contactsCount})`
+            )}
+          </SessionButton>
+        }
+      />
+    </div>
+  );
+}
+
+export const DataGenerationActions = () => {
+  return (
+    <Flex
+      $container={true}
+      width={'100%'}
+      $flexDirection="column"
+      $justifyContent="flex-start"
+      $alignItems="flex-start"
+      $flexWrap="wrap"
+    >
+      <SpacerXS />
+      <Flex $container={true} width="100%" $alignItems="center" $flexGap="var(--margins-xs)">
+        <h2>Data generation</h2>
+      </Flex>
+      <Flex
+        $container={true}
+        width="100%"
+        $flexDirection="column"
+        $justifyContent="space-between"
+        $alignItems="flex-start"
+        $flexGap="var(--margins-xs)"
+      >
+        <AddDummyContactButton />
+        <SpacerXS />
+      </Flex>
+    </Flex>
   );
 };
 
