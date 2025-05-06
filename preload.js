@@ -58,7 +58,7 @@ window.sessionFeatureFlags = {
   useTestNet: isTestNet() || isTestIntegration(),
   useClosedGroupV2QAButtons: false, // TODO DO NOT MERGE Remove after QA
   replaceLocalizedStringsWithKeys: false,
-  useReleaseChannels: false,
+  useReleaseChannels: true,
   debug: {
     debugLogging: !isEmpty(process.env.SESSION_DEBUG),
     debugLibsessionDumps: !isEmpty(process.env.SESSION_DEBUG_LIBSESSION_DUMPS),
