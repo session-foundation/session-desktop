@@ -7,7 +7,8 @@ type DebugFeatureFlagsType = {
 };
 
 export const DEBUG_FEATURE_FLAGS: DebugFeatureFlagsType = {
-  DEV: ['useReleaseChannels'],
+  // NOTE Put new feature flags in here during development so they are not available in production environments. Remove from here when they are ready for QA and production
+  DEV: [],
   UNSUPPORTED: ['useTestNet'],
   UNTESTED: ['useOnionRequests', 'replaceLocalizedStringsWithKeys'],
 };
