@@ -4,8 +4,7 @@ import { PropsForExpirationTimer } from '../state/ducks/conversations';
 import { PubKey } from '../session/types';
 import { UserUtils } from '../session/utils';
 import { TimerOptions } from '../session/disappearing_messages/timerOptions';
-import { isLegacyDisappearingModeEnabled } from '../session/disappearing_messages/legacy';
-import type { LocalizerComponentPropsObject } from '../localization/localeTools';
+import type { LocalizerProps } from '../components/basic/Localizer';
 
 export function getTimerNotificationStr({
   expirationMode,
@@ -17,7 +16,7 @@ export function getTimerNotificationStr({
   author: PubkeyType;
   convoId: string;
   isGroup: boolean;
-}): LocalizerComponentPropsObject {
+}): LocalizerProps {
   const is03group = PubKey.is03Pubkey(convoId);
   const authorIsUs = author === UserUtils.getOurPubKeyStrFromCache();
   const isLegacyGroup = isGroup && !is03group;
@@ -25,17 +24,6 @@ export function getTimerNotificationStr({
   const disabled = !timespanSeconds || timespanSeconds <= 0;
 
   const authorName = ConvoHub.use().getNicknameOrRealUsernameOrPlaceholder(author);
-
-  // TODO: legacy messages support will be removed in a future release
-  if (isLegacyDisappearingModeEnabled(expirationMode)) {
-    return {
-      token: 'deleteAfterLegacyDisappearingMessagesTheyChangedTimer',
-      args: {
-        name: authorIsUs ? window.i18n('you') : authorName,
-        time: timespanText,
-      },
-    } as const;
-  }
 
   const disappearing_messages_type =
     expirationMode === 'deleteAfterRead'

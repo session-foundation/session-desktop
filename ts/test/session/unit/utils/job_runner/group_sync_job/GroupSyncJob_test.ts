@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { GroupPubkeyType, UserGroupsGet } from 'libsession_util_nodejs';
-import { omit } from 'lodash';
+import { pick } from 'lodash';
 import Long from 'long';
 import Sinon from 'sinon';
 import { getSodiumNode } from '../../../../../../node/sodiumNode';
@@ -16,39 +16,42 @@ import {
   GroupDestinationChanges,
   GroupSuccessfulChange,
   LibSessionUtil,
-  PendingChangesForGroup,
 } from '../../../../../../session/utils/libsession/libsession_utils';
 import { MetaGroupWrapperActions } from '../../../../../../webworker/workers/browser/libsession_worker_interface';
 import { TestUtils } from '../../../../../test-utils';
 import { stubWindowFeatureFlags, stubWindowLog, TypedStub } from '../../../../../test-utils/utils';
 import { NetworkTime } from '../../../../../../util/NetworkTime';
 
-function validInfo(sodium: LibSodiumWrappers) {
+function validInfo(sodium: LibSodiumWrappers, count: number) {
   return {
-    type: 'GroupInfo',
-    ciphertext: sodium.randombytes_buf(12),
+    ciphertexts: Array.from({ length: count }, (_v, index) =>
+      sodium.randombytes_buf((index + 1) * 4)
+    ),
     seqno: Long.fromNumber(123),
-    namespace: SnodeNamespaces.ClosedGroupInfo,
+    namespace: SnodeNamespaces.ClosedGroupInfo as const,
     timestamp: 1234,
-  } as const;
+  };
 }
-function validMembers(sodium: LibSodiumWrappers) {
+function validMembers(sodium: LibSodiumWrappers, count: number) {
   return {
-    type: 'GroupMember',
-    ciphertext: sodium.randombytes_buf(12),
+    ciphertexts: Array.from({ length: count }, (_v, index) =>
+      sodium.randombytes_buf((index + 1) * 5)
+    ),
     seqno: Long.fromNumber(321),
-    namespace: SnodeNamespaces.ClosedGroupMembers,
+    namespace: SnodeNamespaces.ClosedGroupMembers as const,
     timestamp: 4321,
-  } as const;
+  };
 }
 
-function validKeys(sodium: LibSodiumWrappers) {
+function validKeys(sodium: LibSodiumWrappers, count: number) {
   return {
-    type: 'GroupKeys',
-    ciphertext: sodium.randombytes_buf(12),
-    namespace: SnodeNamespaces.ClosedGroupKeys,
+    ciphertexts: Array.from({ length: count }, (_v, index) =>
+      sodium.randombytes_buf((index + 1) * 6)
+    ),
+    namespace: SnodeNamespaces.ClosedGroupKeys as const,
     timestamp: 3333,
-  } as const;
+    seqno: null,
+  };
 }
 
 function validUserGroup03WithSecKey(pubkey?: GroupPubkeyType) {
@@ -152,8 +155,8 @@ describe('GroupSyncJob resultsToSuccessfulChange', () => {
   });
 
   it('extract one result with 200 and messagehash', () => {
-    const member = validMembers(sodium);
-    const info = validInfo(sodium);
+    const info = validInfo(sodium, 1);
+    const member = validMembers(sodium, 1);
     const batchResults: NotEmptyArrayOfBatchResults = [{ code: 200, body: { hash: 'hash1' } }];
     const request: GroupDestinationChanges = {
       allOldHashes: new Set(),
@@ -162,15 +165,29 @@ describe('GroupSyncJob resultsToSuccessfulChange', () => {
     const results = LibSessionUtil.batchResultsToGroupSuccessfulChange(batchResults, request);
     expect(results).to.be.deep.eq([
       {
-        updatedHash: 'hash1',
-        pushed: info,
+        messageHash: 'hash1',
+        pushed: pick(info, ['seqno', 'namespace']),
       },
     ]);
   });
 
+  it('does not extract one result with 200 and messagehash, if multi part was only sent partially', () => {
+    const member = validMembers(sodium, 2);
+    const info = validInfo(sodium, 2);
+    const batchResults: NotEmptyArrayOfBatchResults = [{ code: 200, body: { hash: 'hash1' } }];
+    const request: GroupDestinationChanges = {
+      allOldHashes: new Set(),
+      messages: [info, member],
+    };
+    const results = LibSessionUtil.batchResultsToGroupSuccessfulChange(batchResults, request);
+    expect(results).to.be.deep.eq([
+      // we need to confirm push a multi part message only if all the parts are sent
+    ]);
+  });
+
   it('extract two results with 200 and messagehash', () => {
-    const member = validMembers(sodium);
-    const info = validInfo(sodium);
+    const info = validInfo(sodium, 2);
+    const member = validMembers(sodium, 2);
     const batchResults: NotEmptyArrayOfBatchResults = [
       { code: 200, body: { hash: 'hash1' } },
       { code: 200, body: { hash: 'hash2' } },
@@ -182,19 +199,54 @@ describe('GroupSyncJob resultsToSuccessfulChange', () => {
     const results = LibSessionUtil.batchResultsToGroupSuccessfulChange(batchResults, request);
     expect(results).to.be.deep.eq([
       {
-        updatedHash: 'hash1',
-        pushed: info,
+        messageHash: 'hash1',
+        pushed: pick(info, ['seqno', 'namespace']),
       },
       {
-        updatedHash: 'hash2',
-        pushed: member,
+        messageHash: 'hash2',
+        pushed: pick(info, ['seqno', 'namespace']),
+      },
+      // member not here, as info was the only one sent fully
+    ]);
+  });
+
+  it('extract four results with 200 and messagehash', () => {
+    const member = validMembers(sodium, 2);
+    const info = validInfo(sodium, 2);
+    const batchResults: NotEmptyArrayOfBatchResults = [
+      { code: 200, body: { hash: 'hash1' } },
+      { code: 200, body: { hash: 'hash2' } },
+      { code: 200, body: { hash: 'hash3' } },
+      { code: 200, body: { hash: 'hash4' } },
+    ];
+    const request: GroupDestinationChanges = {
+      allOldHashes: new Set(),
+      messages: [info, member],
+    };
+    const results = LibSessionUtil.batchResultsToGroupSuccessfulChange(batchResults, request);
+    expect(results).to.be.deep.eq([
+      {
+        messageHash: 'hash1',
+        pushed: pick(info, ['seqno', 'namespace']),
+      },
+      {
+        messageHash: 'hash2',
+        pushed: pick(info, ['seqno', 'namespace']),
+      },
+      {
+        messageHash: 'hash3',
+        pushed: pick(member, ['seqno', 'namespace']),
+      },
+      {
+        messageHash: 'hash4',
+        pushed: pick(member, ['seqno', 'namespace']),
       },
     ]);
   });
 
   it('skip message hashes not a string', () => {
-    const member = validMembers(sodium);
-    const info = validInfo(sodium);
+    const member = validMembers(sodium, 2);
+    const info = validInfo(sodium, 2);
     const batchResults: NotEmptyArrayOfBatchResults = [
       { code: 200, body: { hash: 123 as any as string } },
       { code: 200, body: { hash: 'hash2' } },
@@ -205,37 +257,54 @@ describe('GroupSyncJob resultsToSuccessfulChange', () => {
     };
     const results = LibSessionUtil.batchResultsToGroupSuccessfulChange(batchResults, request);
     expect(results).to.be.deep.eq([
-      {
-        updatedHash: 'hash2',
-        pushed: member,
-      },
+      // info first result is not a string, so even if we have a result for both parts
+      // of info, it is not to be confirmedPushed
     ]);
   });
 
   it('skip request item without data', () => {
-    const member = validMembers(sodium);
-    const info = validInfo(sodium);
-    const infoNoData = omit(info, 'ciphertext');
+    const member = validMembers(sodium, 1);
+    const info = validInfo(sodium, 1);
+    info.ciphertexts = info.ciphertexts.map(_m => new Uint8Array());
     const batchResults: NotEmptyArrayOfBatchResults = [
       { code: 200, body: { hash: 'hash1' } },
       { code: 200, body: { hash: 'hash2' } },
     ];
     const request: GroupDestinationChanges = {
       allOldHashes: new Set(),
-      messages: [infoNoData as any as PendingChangesForGroup, member],
+      messages: [info, member],
     };
     const results = LibSessionUtil.batchResultsToGroupSuccessfulChange(batchResults, request);
     expect(results).to.be.deep.eq([
       {
-        updatedHash: 'hash2',
-        pushed: member,
+        messageHash: 'hash2',
+        pushed: pick(member, ['seqno', 'namespace']),
       },
     ]);
   });
 
+  it('skip request item without data (multi-part)', () => {
+    const member = validMembers(sodium, 2);
+    const info = validInfo(sodium, 2);
+    info.ciphertexts = info.ciphertexts.map(_m => new Uint8Array());
+    const batchResults: NotEmptyArrayOfBatchResults = [
+      { code: 200, body: { hash: 'hash1' } },
+      { code: 200, body: { hash: 'hash2' } },
+    ];
+    const request: GroupDestinationChanges = {
+      allOldHashes: new Set(),
+      messages: [info, member],
+    };
+    const results = LibSessionUtil.batchResultsToGroupSuccessfulChange(batchResults, request);
+
+    // info was 2 parts, and based on the results it was sent fully, but the ciphertexts were empty
+    // so we shouldn't have anything here
+    expect(results).to.be.deep.eq([]);
+  });
+
   it('skip request item without 200 code', () => {
-    const member = validMembers(sodium);
-    const info = validInfo(sodium);
+    const member = validMembers(sodium, 1);
+    const info = validInfo(sodium, 1);
     const batchResults: NotEmptyArrayOfBatchResults = [
       { code: 200, body: { hash: 'hash1' } },
       { code: 401, body: { hash: 'hash2' } },
@@ -247,8 +316,8 @@ describe('GroupSyncJob resultsToSuccessfulChange', () => {
     const results = LibSessionUtil.batchResultsToGroupSuccessfulChange(batchResults, request);
     expect(results).to.be.deep.eq([
       {
-        updatedHash: 'hash1',
-        pushed: info,
+        messageHash: 'hash1',
+        pushed: pick(info, ['seqno', 'namespace']),
       },
     ]);
 
@@ -258,8 +327,51 @@ describe('GroupSyncJob resultsToSuccessfulChange', () => {
     const results2 = LibSessionUtil.batchResultsToGroupSuccessfulChange(batchResults, request);
     expect(results2).to.be.deep.eq([
       {
-        updatedHash: 'hash2',
-        pushed: member,
+        messageHash: 'hash2',
+        pushed: pick(member, ['seqno', 'namespace']),
+      },
+    ]);
+  });
+
+  it('skip request item without 200 code, but one multipart message was fully sent', () => {
+    const info = validInfo(sodium, 2);
+    const member = validMembers(sodium, 2);
+    const batchResults: NotEmptyArrayOfBatchResults = [
+      { code: 200, body: { hash: 'hash1' } },
+      { code: 200, body: { hash: 'hash2' } },
+      { code: 401, body: { hash: 'hash3' } },
+      { code: 401, body: { hash: 'hash4' } },
+    ];
+    const request: GroupDestinationChanges = {
+      allOldHashes: new Set(),
+      messages: [info, member],
+    };
+    const results = LibSessionUtil.batchResultsToGroupSuccessfulChange(batchResults, request);
+    expect(results).to.be.deep.eq([
+      {
+        messageHash: 'hash1',
+        pushed: pick(info, ['seqno', 'namespace']),
+      },
+      {
+        messageHash: 'hash2',
+        pushed: pick(info, ['seqno', 'namespace']),
+      },
+    ]);
+
+    // another test swapping the results
+    batchResults[0].code = 401;
+    batchResults[1].code = 401;
+    batchResults[2].code = 200;
+    batchResults[3].code = 200;
+    const results2 = LibSessionUtil.batchResultsToGroupSuccessfulChange(batchResults, request);
+    expect(results2).to.be.deep.eq([
+      {
+        messageHash: 'hash3',
+        pushed: pick(member, ['seqno', 'namespace']),
+      },
+      {
+        messageHash: 'hash4',
+        pushed: pick(member, ['seqno', 'namespace']),
       },
     ]);
   });
@@ -311,8 +423,8 @@ describe('GroupSyncJob pushChangesToGroupSwarmIfNeeded', () => {
     stubWindowFeatureFlags();
     TestUtils.stubUserGroupWrapper('getGroup', validUserGroup03WithSecKey());
 
-    const info = validInfo(sodium);
-    const member = validMembers(sodium);
+    const info = validInfo(sodium, 2);
+    const member = validMembers(sodium, 2);
     const networkTimestamp = 4444;
     Sinon.stub(NetworkTime, 'now').returns(networkTimestamp);
     pendingChangesForGroupStub.resolves({
@@ -334,38 +446,53 @@ describe('GroupSyncJob pushChangesToGroupSwarmIfNeeded', () => {
     expect(saveDumpsToDbStub.firstCall.args).to.be.deep.eq([groupPk]);
   });
 
-  it('calls sendEncryptedDataToSnode and retry if network returned nothing', async () => {
+  it('calls sendEncryptedDataToSnode and retry if network returned nothing (multi-part)', async () => {
     stubWindowFeatureFlags();
     TestUtils.stubUserGroupWrapper('getGroup', validUserGroup03WithSecKey(groupPk));
 
-    const info = validInfo(sodium);
-    const member = validMembers(sodium);
-    const keys = validKeys(sodium);
+    const keys = validKeys(sodium, 2);
+    const info = validInfo(sodium, 2);
+    const member = validMembers(sodium, 2);
     pendingChangesForGroupStub.resolves({
       messages: [keys, info, member],
       allOldHashes: new Set('123'),
     });
     const changes: Array<GroupSuccessfulChange> = [
       {
-        pushed: keys,
-        updatedHash: 'hashkeys',
+        pushed: pick(keys, ['namespace']),
+        messageHash: 'hashkeys1',
       },
       {
-        pushed: info,
-        updatedHash: 'hashinfo',
+        pushed: pick(keys, ['namespace']),
+        messageHash: 'hashkeys2',
       },
       {
-        pushed: member,
-        updatedHash: 'hashmember',
+        pushed: pick(info, ['seqno', 'namespace']),
+        messageHash: 'hashinfo1',
+      },
+      {
+        pushed: pick(info, ['seqno', 'namespace']),
+        messageHash: 'hashinfo2',
+      },
+      {
+        pushed: pick(member, ['seqno', 'namespace']),
+        messageHash: 'hashmember1',
+      },
+      {
+        pushed: pick(member, ['seqno', 'namespace']),
+        messageHash: 'hashmember2',
       },
     ];
     Sinon.stub(LibSessionUtil, 'batchResultsToGroupSuccessfulChange').returns(changes);
     const metaConfirmPushed = Sinon.stub(MetaGroupWrapperActions, 'metaConfirmPushed').resolves();
 
     sendStub.resolves([
-      { code: 200, body: { hash: 'hashkeys' } },
-      { code: 200, body: { hash: 'hashinfo' } },
-      { code: 200, body: { hash: 'hashmember' } },
+      { code: 200, body: { hash: 'hashkeys1' } },
+      { code: 200, body: { hash: 'hashkeys2' } },
+      { code: 200, body: { hash: 'hashinfo1' } },
+      { code: 200, body: { hash: 'hashinfo2' } },
+      { code: 200, body: { hash: 'hashmember1' } },
+      { code: 200, body: { hash: 'hashmember2' } },
       { code: 200, body: {} }, // because we are giving a set of allOldHashes
     ]);
     const result = await GroupSync.pushChangesToGroupSwarmIfNeeded({
@@ -381,14 +508,14 @@ describe('GroupSyncJob pushChangesToGroupSwarmIfNeeded', () => {
     expect(saveDumpsToDbStub.secondCall.args).to.be.deep.eq([groupPk]);
     expect(saveDumpsToDbStub.callCount).to.be.eq(2);
 
+    expect(metaConfirmPushed.callCount).to.be.eq(1);
     expect(metaConfirmPushed.firstCall.args).to.be.deep.eq([
       groupPk,
       {
-        groupInfo: [123, 'hashinfo'],
-        groupMember: [321, 'hashmember'],
+        groupInfo: { seqno: 123, hashes: ['hashinfo1', 'hashinfo2'] },
+        groupMember: { seqno: 321, hashes: ['hashmember1', 'hashmember2'] },
       },
     ]);
-    expect(metaConfirmPushed.callCount).to.be.eq(1);
 
     expect(result).to.be.eq(RunJobResult.Success);
   });

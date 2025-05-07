@@ -4,11 +4,6 @@ import { assertUnreachable } from '../../../types/sqlSharedTypes';
 
 export enum SnodeNamespaces {
   /**
-   * The messages sent to a closed group are sent and polled from this namespace
-   */
-  LegacyClosedGroup = -10,
-
-  /**
    * This is the namespace anyone can deposit a message for us
    */
   Default = 0,
@@ -57,11 +52,6 @@ export enum SnodeNamespaces {
   ClosedGroupMembers = 14,
 }
 
-export type SnodeNamespacesLegacyGroup = PickEnum<
-  SnodeNamespaces,
-  SnodeNamespaces.LegacyClosedGroup
->;
-
 export type SnodeNamespacesGroupConfig = PickEnum<
   SnodeNamespaces,
   | SnodeNamespaces.ClosedGroupInfo
@@ -102,7 +92,6 @@ function isUserConfigNamespace(namespace: SnodeNamespaces): namespace is SnodeNa
     case SnodeNamespaces.ClosedGroupKeys:
     case SnodeNamespaces.ClosedGroupMembers:
     case SnodeNamespaces.ClosedGroupMessages:
-    case SnodeNamespaces.LegacyClosedGroup:
     case SnodeNamespaces.ClosedGroupRevokedRetrievableMessages:
     case SnodeNamespaces.Default:
       // user messages are not hosting config based messages
@@ -130,7 +119,6 @@ function isGroupConfigNamespace(
     case SnodeNamespaces.UserProfile:
     case SnodeNamespaces.UserGroups:
     case SnodeNamespaces.ConvoInfoVolatile:
-    case SnodeNamespaces.LegacyClosedGroup:
     case SnodeNamespaces.ClosedGroupMessages:
     case SnodeNamespaces.ClosedGroupRevokedRetrievableMessages:
       return false;
@@ -170,7 +158,6 @@ function isGroupNamespace(namespace: SnodeNamespaces): namespace is SnodeNamespa
     case SnodeNamespaces.UserProfile:
     case SnodeNamespaces.UserGroups:
     case SnodeNamespaces.ConvoInfoVolatile:
-    case SnodeNamespaces.LegacyClosedGroup:
       return false;
     default:
       try {
@@ -192,7 +179,6 @@ function namespacePriority(namespace: SnodeNamespaces): 10 | 1 {
     case SnodeNamespaces.ConvoInfoVolatile:
     case SnodeNamespaces.UserProfile:
     case SnodeNamespaces.UserContacts:
-    case SnodeNamespaces.LegacyClosedGroup:
     case SnodeNamespaces.ClosedGroupInfo:
     case SnodeNamespaces.ClosedGroupMembers:
     case SnodeNamespaces.ClosedGroupKeys:
@@ -237,8 +223,6 @@ function maxSizeMap(namespaces: Array<SnodeNamespaces>) {
 function toRole(namespace: number) {
   const asKnownNamespace: SnodeNamespaces = namespace;
   switch (asKnownNamespace) {
-    case SnodeNamespaces.LegacyClosedGroup:
-      return 'legacyGroup';
     case SnodeNamespaces.Default:
       return 'default';
     case SnodeNamespaces.UserProfile:

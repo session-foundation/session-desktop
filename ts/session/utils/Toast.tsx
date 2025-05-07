@@ -24,19 +24,14 @@ export function pushToastWarning(id: string, description: string, onToastClick?:
   );
 }
 
-export function pushToastInfo(
-  id: string,
-  description: string,
-  onToastClick?: () => void,
-  delay?: number
-) {
+export function pushToastInfo(id: string, description: string, onToastClick?: () => void) {
   toast.info(
     <SessionToast
       description={description}
       type={SessionToastType.Info}
       onToastClick={onToastClick}
     />,
-    { toastId: id, updateId: id, delay }
+    { toastId: id, updateId: id }
   );
 }
 

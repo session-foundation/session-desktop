@@ -53,18 +53,7 @@ async function unsendMessagesForEveryone1o1AndLegacy(
     return;
   }
   if (conversation.isClosedGroup()) {
-    // sending to recipient all the messages separately for now
-    await Promise.all(
-      unsendMsgObjects.map(unsendObject => {
-        return MessageQueue.use()
-          .sendToGroup({
-            message: unsendObject,
-            namespace: SnodeNamespaces.LegacyClosedGroup,
-            groupPubKey: new PubKey(destination),
-          })
-          .catch(window?.log?.error);
-      })
-    );
+    // legacy groups are readonly
   }
 }
 

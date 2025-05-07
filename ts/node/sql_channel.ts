@@ -1,4 +1,4 @@
-import { app, ipcMain } from 'electron';
+import { ipcMain } from 'electron';
 import { ephemeralConfig } from './config/ephemeral_config';
 import { userConfig } from './config/user_config';
 import { sqlNode } from './sql';
@@ -54,11 +54,5 @@ export function initializeSqlChannel() {
     }
   });
 
-  ipcMain.handle('get-user-data-path', () => {
-    return app.getPath('userData');
-  });
-  ipcMain.handle('get-data-path', () => {
-    return app.getAppPath();
-  });
   initialized = true;
 }

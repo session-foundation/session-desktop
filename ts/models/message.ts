@@ -5,10 +5,7 @@ import { debounce, isEmpty, size as lodashSize, uniq } from 'lodash';
 import { SignalService } from '../protobuf';
 import { ConvoHub } from '../session/conversations';
 import { ContentMessage } from '../session/messages/outgoing';
-import {
-  ClosedGroupV2VisibleMessage,
-  ClosedGroupVisibleMessage,
-} from '../session/messages/outgoing/visibleMessage/ClosedGroupVisibleMessage';
+import { ClosedGroupV2VisibleMessage } from '../session/messages/outgoing/visibleMessage/ClosedGroupVisibleMessage';
 import { PubKey } from '../session/types';
 import {
   UserUtils,
@@ -444,7 +441,7 @@ export class MessageModel extends Model<MessageAttributes> {
     const { expireTimer } = timerUpdate;
     const expirationMode = DisappearingMessages.changeToDisappearingConversationMode(
       convo,
-      timerUpdate?.expirationType || 'unknown',
+      timerUpdate.expirationType,
       expireTimer || 0
     );
 
@@ -935,7 +932,7 @@ export class MessageModel extends Model<MessageAttributes> {
         lokiProfile: UserUtils.getOurProfile(),
         // Note: we should have the fields set on that object when we've added it to the DB.
         // We don't want to reuse the conversation setting, as it might change since this message was sent.
-        expirationType: this.getExpirationType() || null,
+        expirationType: this.getExpirationType() || 'unknown',
         expireTimer: this.getExpireTimerSeconds(),
       };
       if (!chatParams.lokiProfile) {
@@ -977,15 +974,8 @@ export class MessageModel extends Model<MessageAttributes> {
         });
       }
 
-      const closedGroupVisibleMessage = new ClosedGroupVisibleMessage({
-        groupId: PubKey.cast(this.get('conversationId')).key,
-        chatMessage,
-      });
-
-      return MessageQueue.use().sendToGroup({
-        message: closedGroupVisibleMessage,
-        namespace: SnodeNamespaces.LegacyClosedGroup,
-      });
+      // legacy groups are readonly
+      return null;
     } catch (e: unknown) {
       if (e instanceof Error) {
         await this.saveErrors(e);
@@ -1154,7 +1144,7 @@ export class MessageModel extends Model<MessageAttributes> {
         expireTimer
       );
 
-      if (expirationMode === 'legacy' || expirationMode === 'deleteAfterRead') {
+      if (expirationMode === 'deleteAfterRead') {
         if (this.isIncoming() && !this.isExpiring()) {
           // only if that message has not started to expire already, set its "start expiry".
           // this is because a message can have a expire start timestamp set when receiving it, if the convo volatile said that the message was read by another device.
@@ -1318,7 +1308,6 @@ export class MessageModel extends Model<MessageAttributes> {
     return forcedArrayUpdate;
   }
 
-  // NOTE We want to replace Backbone .get() calls with these getters as we migrate to Redux completely eventually
   // #region Start of getters
   public getExpirationType() {
     return this.get('expirationType');

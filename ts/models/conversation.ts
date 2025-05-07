@@ -20,10 +20,7 @@ import { DisappearingMessageConversationModeType } from 'libsession_util_nodejs'
 import { v4 } from 'uuid';
 import { SignalService } from '../protobuf';
 import { ConvoHub } from '../session/conversations';
-import {
-  ClosedGroupV2VisibleMessage,
-  ClosedGroupVisibleMessage,
-} from '../session/messages/outgoing/visibleMessage/ClosedGroupVisibleMessage';
+import { ClosedGroupV2VisibleMessage } from '../session/messages/outgoing/visibleMessage/ClosedGroupVisibleMessage';
 import { PubKey } from '../session/types';
 import { ToastUtils, UserUtils } from '../session/utils';
 import { BlockedNumberController } from '../util';
@@ -125,7 +122,6 @@ import { FetchMsgExpirySwarm } from '../session/utils/job_runners/jobs/FetchMsgE
 import { GroupSync } from '../session/utils/job_runners/jobs/GroupSyncJob';
 import { UpdateMsgExpirySwarm } from '../session/utils/job_runners/jobs/UpdateMsgExpirySwarmJob';
 import { getLibGroupKickedOutsideRedux } from '../state/selectors/userGroups';
-import { ReleasedFeatures } from '../util/releaseFeature';
 import {
   MetaGroupWrapperActions,
   UserGroupsWrapperActions,
@@ -377,10 +373,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
       toRet.expirationMode = this.getExpirationMode();
     }
 
-    if (this.getHasOutdatedClient()) {
-      toRet.hasOutdatedClient = this.getHasOutdatedClient();
-    }
-
     if (this.getIsExpired03Group()) {
       toRet.isExpired03Group = true;
     }
@@ -428,11 +420,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
       // those are values coming only from the DB when this is a closed group
       if (this.isKickedFromGroup()) {
         toRet.isKickedFromGroup = this.isKickedFromGroup();
-      }
-      // to be dropped once we get rid of the legacy closed groups
-      const zombies = this.getGroupZombies() || [];
-      if (zombies?.length) {
-        toRet.zombies = uniq(zombies);
       }
     }
 
@@ -630,8 +617,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
       if (this.isOpenGroupV2()) {
         // communities have no expiration timer support, so enforce it here.
-        chatMessageParams.expirationType = null;
-        chatMessageParams.expireTimer = null;
+        chatMessageParams.expirationType = 'unknown';
+        chatMessageParams.expireTimer = 0;
 
         const chatMessageOpenGroupV2 = new OpenGroupVisibleMessage(chatMessageParams);
         const roomInfos = this.toOpenGroupV2();
@@ -690,22 +677,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       }
 
       if (this.isClosedGroup()) {
-        const chatMessageMediumGroup = new VisibleMessage(chatMessageParams);
-        const closedGroupVisibleMessage = new ClosedGroupVisibleMessage({
-          chatMessage: chatMessageMediumGroup,
-          groupId: destinationPubkey.key,
-        });
-        // we need the return await so that errors are caught in the catch {}
-        await MessageQueue.use().sendToGroup({
-          message: closedGroupVisibleMessage,
-          namespace: SnodeNamespaces.LegacyClosedGroup,
-        });
-
-        await Reactions.handleMessageReaction({
-          reaction,
-          sender: UserUtils.getOurPubKeyStrFromCache(),
-          you: true,
-        });
+        // legacy groups are readonly
         return;
       }
 
@@ -922,11 +894,12 @@ export class ConversationModel extends Model<ConversationAttributes> {
     const isRemoteChange = Boolean((sentAt || fromSync || fromConfigMessage) && !fromCurrentDevice);
 
     // we don't add an update message when this comes from a config message, as we already have the SyncedMessage itself with the right timestamp to display
-    if (!this.isClosedGroup() && !this.isPrivate()) {
+    if (!this.isClosedGroupV2() && !this.isPrivate()) {
       throw new Error(
-        'updateExpireTimer() Disappearing messages are only supported int groups and private chats'
+        'updateExpireTimer() Disappearing messages are only supported in 03-groups and private chats'
       );
     }
+
     let expirationMode = providedDisappearingMode;
     let expireTimer = providedExpireTimer;
     const source = providedSource || UserUtils.getOurPubKeyStrFromCache();
@@ -936,55 +909,22 @@ export class ConversationModel extends Model<ConversationAttributes> {
       expireTimer = 0;
     }
     const shouldAddExpireUpdateMsgPrivate = this.isPrivate() && !fromConfigMessage;
-    const isLegacyGroup = this.isClosedGroup() && !PubKey.is03Pubkey(this.id);
-
-    /**
-     * it's ugly, but we want to add a message for legacy groups only when
-     * - not coming from a config message
-     * - effectively changes the setting
-     * - ignores a off setting for a legacy group (as we can get a setting from restored from configMessage, and a new group can still be in the swarm when linking a device
-     */
-    const shouldAddExpireUpdateMsgLegacyGroup =
-      fromCurrentDevice ||
-      (isLegacyGroup &&
-        !fromConfigMessage &&
-        (expirationMode !== this.get('expirationMode') ||
-          expireTimer !== this.get('expireTimer')) &&
-        expirationMode !== 'off');
-
     const shouldAddExpireUpdateMsgGroupV2 = this.isClosedGroupV2() && !fromConfigMessage;
 
     const shouldAddExpireUpdateMessage =
-      shouldAddExpireUpdateMsgPrivate ||
-      shouldAddExpireUpdateMsgLegacyGroup ||
-      shouldAddExpireUpdateMsgGroupV2;
+      shouldAddExpireUpdateMsgPrivate || shouldAddExpireUpdateMsgGroupV2;
 
     // When we add a disappearing messages notification to the conversation, we want it
     // to be above the message that initiated that change, hence the subtraction.
     const createAtNetworkTimestamp = (sentAt || NetworkTime.now()) - 1;
 
-    // NOTE when we turn the disappearing setting to off, we don't want it to expire with the previous expiration anymore
-    const isV2DisappearReleased = ReleasedFeatures.isDisappearMessageV2FeatureReleasedCached();
-    // when the v2 disappear is released, the changes we make are only for our outgoing messages, not shared with a contact anymore
-    if (isV2DisappearReleased) {
-      if (!this.isPrivate()) {
-        this.set({
-          expirationMode,
-          expireTimer,
-        });
-      } else if (fromSync || fromCurrentDevice) {
-        if (expirationMode === 'legacy') {
-          // TODO legacy messages support will be removed in a future release
-          return false;
-        }
-        // v2 is live, this is a private chat and a change we made, set the setting to what was given, otherwise discard it
-        this.set({
-          expirationMode,
-          expireTimer,
-        });
-      }
-    } else {
-      // v2 is not live, we apply the setting we get blindly
+    if (!this.isPrivate()) {
+      this.set({
+        expirationMode,
+        expireTimer,
+      });
+    } else if (fromSync || fromCurrentDevice) {
+      // this is a private chat and a change we made, set the setting to what was given, otherwise discard it
       this.set({
         expirationMode,
         expireTimer,
@@ -1071,10 +1011,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
         const canBeDeleteAfterSend =
           this.isMe() || !(this.isGroup() && !this.isClosedGroupV2() && message.isControlMessage());
-        if (
-          (canBeDeleteAfterSend && expirationMode === 'legacy') ||
-          expirationMode === 'deleteAfterSend'
-        ) {
+        if (canBeDeleteAfterSend || expirationMode === 'deleteAfterSend') {
           message.set({
             expirationStartTimestamp: DisappearingMessages.setExpirationStartTimestamp(
               expirationMode,
@@ -1168,20 +1105,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
           return true;
         }
 
-        // NOTE: we agreed that outgoing ExpirationTimerUpdate **for legacy groups** are not expiring,
-        // but they still need the content to be right(as this is what we use for the change itself)
+        // legacy groups are readonly. Nothing to do
 
-        const expireUpdateForGroup = {
-          ...expireUpdate,
-          groupId: this.id,
-        };
-
-        const expirationTimerMessage = new ExpirationTimerUpdateMessage(expireUpdateForGroup);
-
-        await MessageQueue.use().sendToGroup({
-          message: expirationTimerMessage,
-          namespace: SnodeNamespaces.LegacyClosedGroup,
-        });
         return true;
       }
       window.log.warn(
@@ -1608,7 +1533,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
 
     if (valueForced !== Boolean(this.isApproved())) {
-      window?.log?.info(`Setting ${ed25519Str(this.id)} isApproved to: ${value}`);
+      window?.log?.debug(`Setting ${ed25519Str(this.id)} isApproved to: ${value}`);
       this.set({
         isApproved: valueForced,
       });
@@ -1629,7 +1554,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
     const valueForced = Boolean(value);
     if (valueForced !== Boolean(this.didApproveMe())) {
-      window?.log?.info(`Setting ${ed25519Str(this.id)} didApproveMe to: ${value}`);
+      window?.log?.debug(`Setting ${ed25519Str(this.id)} didApproveMe to: ${value}`);
       this.set({
         didApproveMe: valueForced,
       });
@@ -1884,7 +1809,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       return;
     }
     const conversationId = this.id;
-    const isLegacyGroup = this.isClosedGroup() && this.id.startsWith('05');
+    const isLegacyGroup = this.isClosedGroup() && PubKey.is05Pubkey(this.id);
 
     let friendRequestText;
     // NOTE: legacy groups are never approved, so we should not cancel notifications
@@ -2067,18 +1992,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
     return [];
   }
 
-  public getGroupZombies(): Array<string> {
-    if (this.isClosedGroup()) {
-      // closed group with 03 prefix does not have the concepts of zombies
-      if (this.isClosedGroupV2()) {
-        return [];
-      }
-      const zombies = this.get('zombies');
-      return zombies && zombies.length > 0 ? zombies : [];
-    }
-    return [];
-  }
-
   private async sendMessageJob(message: MessageModel) {
     try {
       const { body, attachments, preview, quote, fileIdsToLink } = await message.uploadData();
@@ -2189,21 +2102,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       }
 
       if (this.isClosedGroup()) {
-        if (this.matchesDisappearingMode('deleteAfterRead')) {
-          throw new Error('Group disappearing messages must be deleteAfterSend');
-        }
-        const chatMessageMediumGroup = new VisibleMessage(chatMessageParams);
-        const closedGroupVisibleMessage = new ClosedGroupVisibleMessage({
-          chatMessage: chatMessageMediumGroup,
-          groupId: destinationPubkey.key,
-          // expirationType & expireTimer are part of the chatMessageMediumGroup object
-        });
-
-        // we need the return await so that errors are caught in the catch {}
-        await MessageQueue.use().sendToGroup({
-          message: closedGroupVisibleMessage,
-          namespace: SnodeNamespaces.LegacyClosedGroup,
-        });
+        // legacy groups are readonly
         return;
       }
 
@@ -2714,7 +2613,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
     return success;
   }
 
-  // NOTE We want to replace Backbone .get() calls with these getters as we migrate to Redux completely eventually
   // #region Start of getters
   public getExpirationMode() {
     return this.get('expirationMode');
@@ -2722,10 +2620,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
   public getExpireTimer() {
     return this.get('expireTimer');
-  }
-
-  public getHasOutdatedClient() {
-    return this.get('hasOutdatedClient');
   }
 
   public getIsExpired03Group() {

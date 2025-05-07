@@ -1,6 +1,5 @@
 /* eslint-disable no-case-declarations */
 import { CommunityInfo, LegacyGroupInfo, UserGroupsType } from 'libsession_util_nodejs';
-import { Data } from '../../../data/data';
 import { OpenGroupData } from '../../../data/opengroups';
 import { ConversationModel } from '../../../models/conversation';
 import {
@@ -129,7 +128,6 @@ async function insertGroupsFromDBIntoWrapperAndRefresh(
       break;
 
     case 'LegacyGroup':
-      const encryptionKeyPair = await Data.getLatestClosedGroupEncryptionKeyPair(convoId);
       // Note: For any fields stored in both the DB and libsession,
       // we have to make direct calls to.get() and NOT the wrapped getPriority(), etc...
       const wrapperLegacyGroup = getLegacyGroupInfoFromDBValues({
@@ -140,8 +138,8 @@ async function insertGroupsFromDBIntoWrapperAndRefresh(
         expirationMode: foundConvo.get('expirationMode') || 'off',
         expireTimer: foundConvo.get('expireTimer') || 0,
         displayNameInProfile: foundConvo.getRealSessionUsername(),
-        encPubkeyHex: encryptionKeyPair?.publicHex || '',
-        encSeckeyHex: encryptionKeyPair?.privateHex || '',
+        encPubkeyHex: '',
+        encSeckeyHex: '',
         lastJoinedTimestamp: foundConvo.getLastJoinedTimestamp(),
       });
 

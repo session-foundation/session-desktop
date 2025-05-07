@@ -148,16 +148,16 @@ describe('LibSessionUtil pendingChangesForGroup', () => {
 
   it('valid results if needsPush is true', async () => {
     const pushResults = {
-      groupKeys: { data: new Uint8Array([3, 2, 1]), namespace: 13 },
+      groupKeys: { data: new Uint8Array([1, 1, 1]), namespace: 13 },
       groupInfo: {
         seqno: 1,
-        data: new Uint8Array([1, 2, 3]),
+        data: [new Uint8Array([3, 3, 3]), new Uint8Array([4, 4, 4])],
         hashes: ['123', '333'],
         namespace: 12,
       },
       groupMember: {
         seqno: 2,
-        data: new Uint8Array([1, 2]),
+        data: [new Uint8Array([1, 2, 3]), new Uint8Array([3, 2, 1])],
         hashes: ['321', '111'],
         namespace: 14,
       },
@@ -174,38 +174,35 @@ describe('LibSessionUtil pendingChangesForGroup', () => {
     ]);
 
     expect(result.messages.length).to.be.equal(3);
-    // check for the keys push content
-    expect(result.messages[0]).to.be.deep.eq({
-      type: 'GroupKeys',
-      ciphertext: new Uint8Array([3, 2, 1]),
-      namespace: 13,
-    });
-    // check for the info push content
-    expect(result.messages[1]).to.be.deep.eq({
-      type: 'GroupInfo',
-      ciphertext: new Uint8Array([1, 2, 3]),
-      namespace: 12,
-      seqno: Long.fromInt(pushResults.groupInfo.seqno),
-    });
-    // check for the members pusu content
-    expect(result.messages[2]).to.be.deep.eq({
-      type: 'GroupMember',
-      ciphertext: new Uint8Array([1, 2]),
-      namespace: 14,
-      seqno: Long.fromInt(pushResults.groupMember.seqno),
-    });
+    expect(result.messages).to.be.deep.eq([
+      {
+        ciphertexts: [pushResults.groupKeys.data],
+        namespace: pushResults.groupKeys.namespace,
+        seqno: null,
+      },
+      {
+        ciphertexts: pushResults.groupInfo.data,
+        namespace: pushResults.groupInfo.namespace,
+        seqno: Long.fromInt(pushResults.groupInfo.seqno),
+      },
+      {
+        ciphertexts: pushResults.groupMember.data,
+        namespace: pushResults.groupMember.namespace,
+        seqno: Long.fromInt(pushResults.groupMember.seqno),
+      },
+    ]);
   });
 
   it('skips entry results if needsPush one of the wrapper has no changes', async () => {
     const pushResults = {
       groupInfo: {
         seqno: 1,
-        data: new Uint8Array([1, 2, 3]),
+        data: [new Uint8Array([3, 3, 3]), new Uint8Array([4, 4, 4])],
         hashes: ['123', '333'],
         namespace: 12,
       },
       groupMember: null,
-      groupKeys: { data: new Uint8Array([3, 2, 1]), namespace: 13 },
+      groupKeys: { data: new Uint8Array([1, 1, 1]), namespace: 13 },
     };
     Sinon.stub(MetaGroupWrapperActions, 'needsPush').resolves(true);
     Sinon.stub(MetaGroupWrapperActions, 'push').resolves(pushResults);
@@ -232,7 +229,7 @@ describe('LibSessionUtil pendingChangesForUs', () => {
   it('valid results if ConvoVolatile needsPush only is true', async () => {
     // this is what would be supposedly returned by libsession
     const pushResultsConvo = {
-      data: randombytes_buf(300),
+      data: [randombytes_buf(300), randombytes_buf(400)],
       seqno: 123,
       hashes: ['123'],
       namespace: SnodeNamespaces.ConvoInfoVolatile,
@@ -265,7 +262,7 @@ describe('LibSessionUtil pendingChangesForUs', () => {
     // check for the messages to push are what we expect
     expect(result.messages).to.be.deep.eq([
       {
-        ciphertext: pushResultsConvo.data,
+        ciphertexts: pushResultsConvo.data,
         namespace: pushResultsConvo.namespace,
         seqno: Long.fromNumber(pushResultsConvo.seqno),
       },
@@ -275,25 +272,25 @@ describe('LibSessionUtil pendingChangesForUs', () => {
   it('valid results if all wrappers needsPush only are true', async () => {
     // this is what would be supposedly returned by libsession
     const pushConvo = {
-      data: randombytes_buf(300),
+      data: [randombytes_buf(300), randombytes_buf(400)],
       seqno: 123,
       hashes: ['123'],
       namespace: SnodeNamespaces.ConvoInfoVolatile,
     };
     const pushContacts = {
-      data: randombytes_buf(300),
+      data: [randombytes_buf(30), randombytes_buf(40), randombytes_buf(50)],
       seqno: 321,
       hashes: ['321', '4444'],
       namespace: SnodeNamespaces.UserContacts,
     };
     const pushGroups = {
-      data: randombytes_buf(300),
+      data: [randombytes_buf(200), randombytes_buf(400)],
       seqno: 222,
       hashes: ['222', '5555'],
       namespace: SnodeNamespaces.UserGroups,
     };
     const pushUser = {
-      data: randombytes_buf(300),
+      data: [randombytes_buf(100), randombytes_buf(200)],
       seqno: 111,
       hashes: ['111'],
       namespace: SnodeNamespaces.UserProfile,
@@ -343,7 +340,7 @@ describe('LibSessionUtil pendingChangesForUs', () => {
     // check for the messages to push are what we expect
     expect(result.messages).to.be.deep.eq(
       [pushUser, pushContacts, pushGroups, pushConvo].map(m => ({
-        ciphertext: m.data,
+        ciphertexts: m.data,
         namespace: m.namespace,
         seqno: Long.fromNumber(m.seqno),
       }))

@@ -5,7 +5,6 @@ import { SessionInput } from '../../components/inputs';
 import { TestUtils } from '../test-utils';
 import { findAllByElementType, renderComponent } from './renderComponent';
 
-// TODO[epic=SES-2418] migrate to Storybook
 describe('SessionInput', () => {
   beforeEach(() => {
     TestUtils.stubSVGElement();

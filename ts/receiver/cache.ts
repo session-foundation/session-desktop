@@ -87,19 +87,6 @@ async function getAllFromCache() {
   return increaseAttemptsOrRemove(items);
 }
 
-async function getAllFromCacheForSource(source: string) {
-  const items = await fetchAllFromCache();
-
-  // keep items without source too (for old message already added to the cache)
-  const itemsFromSource = items.filter(
-    item => !!item.senderIdentity || item.senderIdentity === source
-  );
-
-  window?.log?.info('getAllFromCacheForSource loaded', itemsFromSource.length, 'saved envelopes');
-
-  return increaseAttemptsOrRemove(itemsFromSource);
-}
-
 async function updateCacheWithDecryptedContent({
   envelope,
   decryptedContent,
@@ -138,7 +125,6 @@ export const IncomingMessageCache = {
   removeFromCache,
   addToCache,
   updateCacheWithDecryptedContent,
-  getAllFromCacheForSource,
   getAllFromCache,
   forceEmptyCache,
 };

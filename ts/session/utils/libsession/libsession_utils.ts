@@ -2,28 +2,33 @@
 /* eslint-disable import/extensions */
 /* eslint-disable import/no-unresolved */
 import { GroupPubkeyType, PubkeyType } from 'libsession_util_nodejs';
-import { from_hex } from 'libsodium-wrappers-sumo';
-import { compact, difference, isString, omit } from 'lodash';
+import { from_hex, to_hex } from 'libsodium-wrappers-sumo';
+import { compact, difference, flatten, isEmpty, isNil, isString, omit } from 'lodash';
 import Long from 'long';
 import { UserUtils } from '..';
 import { ConfigDumpData } from '../../../data/configDump/configDump';
 import { assertUnreachable } from '../../../types/sqlSharedTypes';
 import {
-  ConfigWrapperGroupDetailed,
   ConfigWrapperUser,
   isUserConfigWrapperType,
 } from '../../../webworker/workers/browser/libsession_worker_functions';
 import {
   UserGenericWrapperActions,
   MetaGroupWrapperActions,
+  UtilitiesActions,
 } from '../../../webworker/workers/browser/libsession_worker_interface';
-import { SnodeNamespaces, SnodeNamespacesUserConfig } from '../../apis/snode_api/namespaces';
+import {
+  SnodeNamespace,
+  SnodeNamespaces,
+  SnodeNamespacesUserConfig,
+} from '../../apis/snode_api/namespaces';
 import {
   BatchResultEntry,
   NotEmptyArrayOfBatchResults,
 } from '../../apis/snode_api/BatchResultEntry';
 import { PubKey } from '../../types';
 import { ed25519Str } from '../String';
+import type { WithMessageHash } from '../../types/with';
 
 const requiredUserVariants: Array<ConfigWrapperUser> = [
   'UserConfig',
@@ -41,6 +46,7 @@ async function initializeLibSessionUtilWrappers() {
     throw new Error('edkeypair not found for current user');
   }
   const privateKeyEd25519 = keypair.privKeyBytes;
+  await UtilitiesActions.freeAllWrappers();
 
   // fetch the dumps we already have from the database
   const dumps = await ConfigDumpData.getAllDumpsWithData();
@@ -58,7 +64,9 @@ async function initializeLibSessionUtilWrappers() {
     if (!isUserConfigWrapperType(variant)) {
       continue;
     }
-    window.log.debug('initializeLibSessionUtilWrappers initing from dump', variant);
+    window.log.debug(
+      `initializeLibSessionUtilWrappers initing from dump "${variant}", length: ${dump.data.length}: ${to_hex(dump.data)}`
+    );
     try {
       await UserGenericWrapperActions.init(
         variant,
@@ -101,45 +109,50 @@ async function initializeLibSessionUtilWrappers() {
 }
 
 type PendingChangesShared = {
-  ciphertext: Uint8Array;
+  ciphertexts: Array<Uint8Array>;
+  /**
+   * seqno is allowed to be null here because the group keys wrapper does not have a seqno.
+   */
+  seqno: Long | null;
 };
 
 export type PendingChangesForUs = PendingChangesShared & {
-  seqno: Long;
   namespace: SnodeNamespacesUserConfig;
 };
 
 type PendingChangesForGroupNonKey = PendingChangesShared & {
-  seqno: Long;
   namespace: SnodeNamespaces.ClosedGroupInfo | SnodeNamespaces.ClosedGroupMembers;
-  type: Extract<ConfigWrapperGroupDetailed, 'GroupInfo' | 'GroupMember'>;
 };
 
-type PendingChangesForGroupKey = {
-  ciphertext: Uint8Array;
+type PendingChangesForGroupKey = PendingChangesShared & {
   namespace: SnodeNamespaces.ClosedGroupKeys;
-  type: Extract<ConfigWrapperGroupDetailed, 'GroupKeys'>;
 };
 
 export type PendingChangesForGroup = PendingChangesForGroupNonKey | PendingChangesForGroupKey;
 
-type DestinationChanges<T extends PendingChangesForGroup | PendingChangesForUs> = {
-  messages: Array<T>;
+export type UserDestinationChanges = {
+  messages: Array<PendingChangesForUs>;
   allOldHashes: Set<string>;
 };
 
-export type UserDestinationChanges = DestinationChanges<PendingChangesForUs>;
-export type GroupDestinationChanges = DestinationChanges<PendingChangesForGroup>;
-
-export type UserSuccessfulChange = {
-  pushed: PendingChangesForUs;
-  updatedHash: string;
+export type GroupDestinationChanges = {
+  messages: Array<PendingChangesForGroup>;
+  allOldHashes: Set<string>;
 };
 
-export type GroupSuccessfulChange = {
-  pushed: PendingChangesForGroup;
-  updatedHash: string;
+export type UserSuccessfulChange = WithMessageHash & {
+  pushed: Pick<PendingChangesForUs, 'namespace' | 'seqno'>;
 };
+
+type KeysGroupSuccessfulChange = WithMessageHash & {
+  pushed: Pick<PendingChangesForGroupKey, 'namespace'>;
+};
+
+type NonKeysGroupSuccessfulChange = WithMessageHash & {
+  pushed: Pick<PendingChangesForGroupNonKey, 'namespace' | 'seqno'>;
+};
+
+export type GroupSuccessfulChange = KeysGroupSuccessfulChange | NonKeysGroupSuccessfulChange;
 
 /**
  * Fetch what needs to be pushed for all of the current user's wrappers.
@@ -160,14 +173,16 @@ async function pendingChangesForUs(): Promise<UserDestinationChanges> {
     const { data, seqno, hashes, namespace } = await UserGenericWrapperActions.push(variant);
     variantsNeedingPush.add(variant);
     results.messages.push({
-      ciphertext: data,
+      ciphertexts: data,
       seqno: Long.fromNumber(seqno),
       namespace,
     });
 
     hashes.forEach(h => results.allOldHashes.add(h)); // add all the hashes to the set
   }
-  window.log.info(`those user variants needs push: "${[...variantsNeedingPush]}"`);
+  if (variantsNeedingPush.size > 0) {
+    window.log.info(`those user variants needs push: "${[...variantsNeedingPush]}"`);
+  }
 
   return results;
 }
@@ -193,30 +208,28 @@ async function pendingChangesForGroup(groupPk: GroupPubkeyType): Promise<GroupDe
   // Note: We need the keys to be pushed first to avoid a race condition
   if (groupKeys) {
     results.push({
-      type: 'GroupKeys',
-      ciphertext: groupKeys.data,
+      ciphertexts: [groupKeys.data],
       namespace: groupKeys.namespace,
+      seqno: null,
     });
   }
 
   if (groupInfo) {
     results.push({
-      type: 'GroupInfo',
-      ciphertext: groupInfo.data,
+      ciphertexts: groupInfo.data,
       seqno: Long.fromNumber(groupInfo.seqno),
       namespace: groupInfo.namespace,
     });
   }
   if (groupMember) {
     results.push({
-      type: 'GroupMember',
-      ciphertext: groupMember.data,
+      ciphertexts: groupMember.data,
       seqno: Long.fromNumber(groupMember.seqno),
       namespace: groupMember.namespace,
     });
   }
   window.log.debug(
-    `${ed25519Str(groupPk)} those group variants needs push: "${results.map(m => m.type)}"`
+    `${ed25519Str(groupPk)} those group variants needs push: "${SnodeNamespace.toRoles(results.map(m => m.namespace))}"`
   );
 
   const memberHashes = compact(groupMember?.hashes) || [];
@@ -247,18 +260,180 @@ function userNamespaceToVariant(namespace: SnodeNamespacesUserConfig) {
   }
 }
 
-function resultShouldBeIncluded<T extends PendingChangesForGroup | PendingChangesForUs>(
-  msgPushed: T,
-  batchResult: BatchResultEntry
-) {
-  const hash = batchResult.body?.hash;
-  if (batchResult.code === 200 && isString(hash) && msgPushed && msgPushed.ciphertext) {
-    return {
-      hash,
-      pushed: msgPushed,
-    };
+function hashOfResultShouldBeIncluded({
+  batchResult,
+  ciphertext,
+}: {
+  ciphertext?: Uint8Array;
+  batchResult?: BatchResultEntry;
+}) {
+  const hash = batchResult?.body?.hash;
+  if (
+    batchResult &&
+    batchResult.code === 200 &&
+    isString(hash) &&
+    !isEmpty(hash) &&
+    ciphertext?.length
+  ) {
+    return hash;
   }
   return null;
+}
+
+function findMatchingIndexes<T>(
+  array: Array<T>,
+  predicate: (value: T, index: number, array: Array<T>) => boolean
+) {
+  const result: Array<number> = [];
+  array.forEach((value, index) => {
+    if (predicate(value, index, array)) {
+      result.push(index);
+    }
+  });
+  return result;
+}
+
+type FlattenedDataSentKeyItem = Omit<PendingChangesForGroupKey, 'ciphertexts'> & {
+  ciphertext: Uint8Array;
+};
+
+type FlattenedDataSentNonKeyItem = Omit<PendingChangesForGroupNonKey, 'ciphertexts'> & {
+  ciphertext: Uint8Array;
+};
+
+type FlattenedDataSentUserItem = Omit<PendingChangesForUs, 'ciphertexts'> & {
+  ciphertext: Uint8Array;
+};
+
+type FlattenedDataSentGroupItem = FlattenedDataSentKeyItem | FlattenedDataSentNonKeyItem;
+
+function isFlattenedItemGroupNonKeyChange(
+  change: FlattenedDataSentGroupItem
+): change is FlattenedDataSentNonKeyItem {
+  return change.namespace !== SnodeNamespaces.ClosedGroupKeys;
+}
+
+function nonGroupKeysMultiPartDetailsToConfirmPushed({
+  flatContentSent,
+  namespace,
+  result,
+}: {
+  result: NotEmptyArrayOfBatchResults;
+  flatContentSent: Array<FlattenedDataSentGroupItem>;
+  namespace: SnodeNamespaces.ClosedGroupInfo | SnodeNamespaces.ClosedGroupMembers;
+}) {
+  const indexes = findMatchingIndexes(flatContentSent, m => m.namespace === namespace);
+  if (!indexes.length) {
+    return [];
+  }
+  const firstItem = flatContentSent[indexes[0]];
+  if (!firstItem) {
+    return [];
+  }
+  if (!isFlattenedItemGroupNonKeyChange(firstItem)) {
+    return [];
+  }
+  if (isNil(firstItem.seqno)) {
+    return [];
+  }
+  const seqno = firstItem.seqno;
+
+  const allHashesToConfirm = compact(
+    indexes.map(i => {
+      const dataSent = flatContentSent[i];
+      const hashIfShouldBeIncluded = hashOfResultShouldBeIncluded({
+        batchResult: result?.[i],
+        ciphertext: dataSent.ciphertext,
+      });
+      return hashIfShouldBeIncluded;
+    })
+  );
+
+  const multiPartSuccessfulChanges: Array<NonKeysGroupSuccessfulChange> = [];
+
+  if (allHashesToConfirm.length === indexes.length) {
+    const toConfirmPushed = allHashesToConfirm.map(hash => ({
+      pushed: { namespace, seqno },
+      messageHash: hash,
+    }));
+    multiPartSuccessfulChanges.push(...toConfirmPushed);
+  }
+  return multiPartSuccessfulChanges;
+}
+
+function userMultiPartDetailsToConfirmPushed({
+  flatContentSent,
+  namespace,
+  result,
+}: {
+  result: NotEmptyArrayOfBatchResults;
+  flatContentSent: Array<FlattenedDataSentUserItem>;
+  namespace: SnodeNamespacesUserConfig;
+}) {
+  const indexes = findMatchingIndexes(flatContentSent, m => m.namespace === namespace);
+  if (!indexes.length) {
+    return [];
+  }
+  const firstItem = flatContentSent[indexes[0]];
+  if (!firstItem) {
+    return [];
+  }
+  const seqno = firstItem.seqno;
+  if (isNil(seqno)) {
+    return [];
+  }
+
+  const allHashesToConfirm = compact(
+    indexes.map(i => {
+      const dataSent = flatContentSent[i];
+      const hashIfShouldBeIncluded = hashOfResultShouldBeIncluded({
+        batchResult: result?.[i],
+        ciphertext: dataSent.ciphertext,
+      });
+      return hashIfShouldBeIncluded;
+    })
+  );
+
+  const multiPartSuccessfulChanges: Array<UserSuccessfulChange> = [];
+
+  if (allHashesToConfirm.length === indexes.length) {
+    const toConfirmPushed = allHashesToConfirm.map(hash => ({
+      pushed: { namespace, seqno },
+      messageHash: hash,
+    }));
+    multiPartSuccessfulChanges.push(...toConfirmPushed);
+  }
+  return multiPartSuccessfulChanges;
+}
+
+function keysMultiPartDetailsToConfirmPushed(
+  result: NotEmptyArrayOfBatchResults,
+  flatContentSent: Array<FlattenedDataSentGroupItem>
+) {
+  const indexes = findMatchingIndexes(
+    flatContentSent,
+    m => m.namespace === SnodeNamespaces.ClosedGroupKeys
+  );
+  const allHashesToConfirm = compact(
+    indexes.map(i => {
+      const dataSent = flatContentSent[i];
+      const hashIfShouldBeIncluded = hashOfResultShouldBeIncluded({
+        batchResult: result?.[i],
+        ciphertext: dataSent.ciphertext,
+      });
+      return hashIfShouldBeIncluded;
+    })
+  );
+
+  const multiPartSuccessfulChanges: Array<KeysGroupSuccessfulChange> = [];
+  if (allHashesToConfirm.length === indexes.length) {
+    const toConfirmPushed = allHashesToConfirm.map(hash => ({
+      pushed: { namespace: SnodeNamespaces.ClosedGroupKeys as const },
+      messageHash: hash,
+    }));
+    multiPartSuccessfulChanges.push(...toConfirmPushed);
+  }
+  return multiPartSuccessfulChanges;
 }
 
 /**
@@ -283,19 +458,29 @@ function batchResultsToGroupSuccessfulChange(
     return successfulChanges;
   }
 
-  for (let j = 0; j < result.length; j++) {
-    const msgPushed = request.messages?.[j];
+  const flatRequestsDetails: Array<FlattenedDataSentGroupItem> = flatten(
+    request.messages.map(m =>
+      m.ciphertexts.map(ciphertext => ({ ciphertext, ...omit(m, 'ciphertexts') }))
+    )
+  );
 
-    const shouldBe = resultShouldBeIncluded(msgPushed, result[j]);
+  const successfulKeysChanges = keysMultiPartDetailsToConfirmPushed(result, flatRequestsDetails);
 
-    if (shouldBe) {
-      // libsession keeps track of the hashes to push and the one pushed
-      successfulChanges.push({
-        updatedHash: shouldBe.hash,
-        pushed: shouldBe.pushed,
-      });
-    }
-  }
+  const successfulInfosChanges = nonGroupKeysMultiPartDetailsToConfirmPushed({
+    flatContentSent: flatRequestsDetails,
+    namespace: SnodeNamespaces.ClosedGroupInfo,
+    result,
+  });
+
+  const successfulMembersChanges = nonGroupKeysMultiPartDetailsToConfirmPushed({
+    flatContentSent: flatRequestsDetails,
+    namespace: SnodeNamespaces.ClosedGroupMembers,
+    result,
+  });
+
+  successfulChanges.push(...successfulKeysChanges);
+  successfulChanges.push(...successfulInfosChanges);
+  successfulChanges.push(...successfulMembersChanges);
 
   return successfulChanges;
 }
@@ -323,18 +508,40 @@ function batchResultsToUserSuccessfulChange(
     return successfulChanges;
   }
 
-  for (let j = 0; j < result.length; j++) {
-    const msgPushed = request.messages?.[j];
-    const shouldBe = resultShouldBeIncluded(msgPushed, result[j]);
+  const flatRequestsDetails: Array<FlattenedDataSentUserItem> = flatten(
+    request.messages.map(m =>
+      m.ciphertexts.map(ciphertext => ({ ciphertext, ...omit(m, 'ciphertexts') }))
+    )
+  );
 
-    if (shouldBe) {
-      // libsession keeps track of the hashes to push and the one pushed
-      successfulChanges.push({
-        updatedHash: shouldBe.hash,
-        pushed: shouldBe.pushed,
-      });
-    }
-  }
+  const successfulProfileChanges = userMultiPartDetailsToConfirmPushed({
+    flatContentSent: flatRequestsDetails,
+    namespace: SnodeNamespaces.UserProfile,
+    result,
+  });
+
+  const successfulContactsChanges = userMultiPartDetailsToConfirmPushed({
+    flatContentSent: flatRequestsDetails,
+    namespace: SnodeNamespaces.UserContacts,
+    result,
+  });
+
+  const successfulUserGroupsChanges = userMultiPartDetailsToConfirmPushed({
+    flatContentSent: flatRequestsDetails,
+    namespace: SnodeNamespaces.UserGroups,
+    result,
+  });
+
+  const successfulConvoVolatileChanges = userMultiPartDetailsToConfirmPushed({
+    flatContentSent: flatRequestsDetails,
+    namespace: SnodeNamespaces.ConvoInfoVolatile,
+    result,
+  });
+
+  successfulChanges.push(...successfulProfileChanges);
+  successfulChanges.push(...successfulContactsChanges);
+  successfulChanges.push(...successfulUserGroupsChanges);
+  successfulChanges.push(...successfulConvoVolatileChanges);
 
   return successfulChanges;
 }

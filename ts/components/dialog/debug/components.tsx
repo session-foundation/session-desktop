@@ -1,28 +1,222 @@
-import { isBoolean } from 'lodash';
-import useUpdate from 'react-use/lib/useUpdate';
 import useAsync from 'react-use/lib/useAsync';
-import { shell } from 'electron';
-import useBoolean from 'react-use/lib/useBoolean';
+import { ipcRenderer, shell } from 'electron';
 import { useDispatch } from 'react-redux';
-import type { SessionFeatureFlagsKeys } from '../../../window';
+import { useState } from 'react';
+import useAsyncFn from 'react-use/lib/useAsyncFn';
+import useInterval from 'react-use/lib/useInterval';
+import { filesize } from 'filesize';
+
+import type { PubkeyType } from 'libsession_util_nodejs';
+import { chunk, toNumber } from 'lodash';
 import { Flex } from '../../basic/Flex';
-import { SessionToggle } from '../../basic/SessionToggle';
-import { HintText, SpacerXS } from '../../basic/Text';
+import { SpacerXS } from '../../basic/Text';
 import { localize } from '../../../localization/localeTools';
 import { CopyToClipboardIcon } from '../../buttons';
-import { saveLogToDesktop } from '../../../util/logging';
 import { Localizer } from '../../basic/Localizer';
 import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
 import { ToastUtils, UserUtils } from '../../../session/utils';
 import { getLatestReleaseFromFileServer } from '../../../session/apis/file_server_api/FileServerApi';
 import { SessionSpinner } from '../../loading';
-import { setDebugMode } from '../../../state/ducks/debug';
 import { updateDebugMenuModal } from '../../../state/ducks/modalDialog';
+import { setDebugMode } from '../../../state/ducks/debug';
 import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_constants';
+import { type ReleaseChannels } from '../../../updater/types';
+import { fetchLatestRelease } from '../../../session/fetch_latest_release';
+import { saveLogToDesktop } from '../../../util/logger/renderer_process_logging';
+import { DURATION } from '../../../session/constants';
+import { Errors } from '../../../types/Errors';
+import { PubKey } from '../../../session/types';
+import { ConvoHub } from '../../../session/conversations';
+import { ConversationTypeEnum } from '../../../models/types';
+import { ContactsWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
+import { usePolling } from '../../../hooks/usePolling';
+import { SessionInput } from '../../inputs';
+
+const hexRef = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
+
+function genRandomHexString(length: number) {
+  const result = [];
+
+  for (let n = 0; n < length; n++) {
+    result.push(hexRef[Math.floor(Math.random() * 16)]);
+  }
+  return result.join('');
+}
+
+async function generateOneRandomContact() {
+  const numBytes = PubKey.PUBKEY_LEN - 2;
+
+  const hexBuffer = genRandomHexString(numBytes);
+  const id: PubkeyType = `05${hexBuffer}`;
+  const created = await ConvoHub.use().getOrCreateAndWait(id, ConversationTypeEnum.PRIVATE);
+  // now() is not going to be synced on devices, instead createdAt will be used.
+  // createdAt is set to now in libsession-util itself,
+  // but we still need to mark that conversation as active
+  // for it to be inserted in the config
+  created.setKey('active_at', Date.now());
+  created.setKey('isApproved', true);
+  created.setSessionDisplayNameNoCommit(id.slice(2, 8));
+
+  await created.commit();
+  return created;
+}
+
+const CheckVersionButton = ({ channelToCheck }: { channelToCheck: ReleaseChannels }) => {
+  const [loading, setLoading] = useState(false);
+  const state = useAsync(async () => {
+    const userEd25519KeyPairBytes = await UserUtils.getUserED25519KeyPairBytes();
+    const userEd25519SecretKey = userEd25519KeyPairBytes?.privKeyBytes;
+    return userEd25519SecretKey;
+  });
+
+  return (
+    <SessionButton
+      onClick={async () => {
+        if (state.loading || state.error) {
+          window.log.error(
+            `[debugMenu] CheckVersionButton checking ${channelToCheck} channel state loading ${state.loading} error ${state.error}`
+          );
+          setLoading(false);
+          return;
+        }
+        if (!state.value) {
+          window.log.error(
+            `[debugMenu] CheckVersionButton checking ${channelToCheck} channel no userEd25519SecretKey`
+          );
+          setLoading(false);
+          return;
+        }
+        setLoading(true);
+        const result = await getLatestReleaseFromFileServer(state.value, channelToCheck);
+        if (!result) {
+          ToastUtils.pushToastError(
+            'CheckVersionButton',
+            `Failed to fetch ${channelToCheck} release`
+          );
+          setLoading(false);
+          return;
+        }
+        const [versionNumber, releaseChannel] = result;
+        if (!releaseChannel) {
+          ToastUtils.pushToastError(
+            'CheckVersionButton',
+            `Failed to return release channel when fetching`
+          );
+          setLoading(false);
+          return;
+        }
+        if (!versionNumber) {
+          ToastUtils.pushToastError(
+            'CheckVersionButton',
+            `Failed to fetch ${channelToCheck} release version`
+          );
+          setLoading(false);
+          return;
+        }
+        setLoading(false);
+
+        ToastUtils.pushToastInfo(`CheckVersionButtonAvailable`, `Available: v${versionNumber}`);
+        ToastUtils.pushToastInfo(
+          'CheckVersionButtonCurrent',
+          `Current: v${window.versionInfo.version}`
+        );
+      }}
+    >
+      <SessionSpinner loading={loading || state.loading} color={'var(--text-primary-color)'} />
+      {!loading && !state.loading ? `Check ${channelToCheck} version` : null}
+    </SessionButton>
+  );
+};
+
+const CheckForUpdatesButton = () => {
+  const [state, handleCheckForUpdates] = useAsyncFn(async () => {
+    window.log.warn(
+      '[updater] [debugMenu] CheckForUpdatesButton clicked! Current version',
+      window.getVersion()
+    );
+
+    try {
+      const userEd25519KeyPairBytes = await UserUtils.getUserED25519KeyPairBytes();
+      const userEd25519SecretKey = userEd25519KeyPairBytes?.privKeyBytes;
+      const newVersion = await fetchLatestRelease.fetchReleaseFromFSAndUpdateMain(
+        userEd25519SecretKey,
+        true
+      );
+
+      if (!newVersion) {
+        throw new Error('No version returned from fileserver');
+      }
+
+      const success = await ipcRenderer.invoke('force-update-check');
+      if (!success) {
+        ToastUtils.pushToastError('CheckForUpdatesButton', 'Check for updates failed! See logs');
+      }
+    } catch (error) {
+      window.log.error(
+        '[updater] [debugMenu] CheckForUpdatesButton',
+        error && error.stack ? error.stack : error
+      );
+    }
+  });
+
+  return (
+    <SessionButton
+      onClick={() => {
+        void handleCheckForUpdates();
+      }}
+    >
+      <SessionSpinner loading={state.loading} color={'var(--text-primary-color)'} />
+      {!state.loading ? 'Check for updates' : null}
+    </SessionButton>
+  );
+};
+
+/**
+ * Using a function here to avoid a useCallback below
+ */
+function fetchLogSizeFromIpc() {
+  return ipcRenderer.invoke('get-logs-folder-size');
+}
+
+const ClearOldLogsButton = () => {
+  const [logSize, setLogSize] = useState(0);
+  useInterval(async () => {
+    const fetched = await fetchLogSizeFromIpc();
+    if (fetched && Number.isFinite(fetched)) {
+      setLogSize(fetched);
+    } else {
+      setLogSize(0);
+    }
+  }, 1 * DURATION.SECONDS);
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_state, handleDeleteAllLogs] = useAsyncFn(async () => {
+    try {
+      const afterCleanSize = await ipcRenderer.invoke('delete-all-logs', true);
+      window.log.warn(
+        `[debugMenu] ClearOldLogsButton clicked. After clean: ${filesize(afterCleanSize)}`
+      );
+      setLogSize(afterCleanSize);
+      ToastUtils.pushToastInfo('ClearOldLogsButton', 'Cleared old logs!');
+    } catch (error) {
+      window.log.error(`[debugMenu] ClearOldLogsButton ${Errors.toString(error)}`);
+      ToastUtils.pushToastError('ClearOldLogsButtonError', 'Clearing logs failed! See logs');
+    }
+  });
+
+  return (
+    <SessionButton
+      onClick={() => {
+        void handleDeleteAllLogs();
+      }}
+      style={{ minWidth: '250px' }}
+    >
+      Clear old logs {filesize(logSize)}
+    </SessionButton>
+  );
+};
 
 export const DebugActions = () => {
-  const [loadingLatestRelease, setLoadingLatestRelease] = useBoolean(false);
-
   const dispatch = useDispatch();
 
   return (
@@ -31,11 +225,11 @@ export const DebugActions = () => {
       <SpacerXS />
       <Flex
         $container={true}
-        width="100%"
+        maxWidth="900px"
         $justifyContent="flex-start"
         $alignItems="flex-start"
         $flexWrap="wrap"
-        $flexGap="var(--margins-md) var(--margins-lg)"
+        $flexGap="var(--margins-lg)"
       >
         <SessionButton
           buttonColor={SessionButtonColor.Danger}
@@ -76,92 +270,98 @@ export const DebugActions = () => {
         >
           <Localizer token="updateReleaseNotes" />
         </SessionButton>
-
+        <CheckForUpdatesButton />
+        <ClearOldLogsButton />
+        <CheckVersionButton channelToCheck="stable" />
+        {window.sessionFeatureFlags.useReleaseChannels ? (
+          <CheckVersionButton channelToCheck="alpha" />
+        ) : null}
         <SessionButton
           onClick={async () => {
-            const userEd25519SecretKey = (await UserUtils.getUserED25519KeyPairBytes())
-              ?.privKeyBytes;
-            if (!userEd25519SecretKey) {
-              window.log.error('[debugMenu] no userEd25519SecretKey');
-              return;
-            }
-            setLoadingLatestRelease(true);
-            const versionNumber = await getLatestReleaseFromFileServer(userEd25519SecretKey);
-            setLoadingLatestRelease(false);
-
-            if (versionNumber) {
-              ToastUtils.pushToastInfo('debugLatestRelease', `v${versionNumber}`);
-            } else {
-              ToastUtils.pushToastError('debugLatestRelease', 'Failed to fetch latest release');
-            }
+            const storageProfile = await ipcRenderer.invoke('get-storage-profile');
+            void shell.openPath(storageProfile);
           }}
         >
-          <SessionSpinner loading={loadingLatestRelease} color={'var(--text-primary-color)'} />
-          {!loadingLatestRelease ? 'Check latest release' : null}
+          Open storage profile
         </SessionButton>
       </Flex>
     </>
   );
 };
 
-const unsupportedFlags = ['useTestNet'];
-const untestedFlags = ['useOnionRequests', 'useClosedGroupV3', 'replaceLocalizedStringsWithKeys'];
-
-const handleFeatureFlagToggle = async (
-  forceUpdate: () => void,
-  flag: SessionFeatureFlagsKeys,
-  parentFlag?: SessionFeatureFlagsKeys
-) => {
-  const currentValue = parentFlag
-    ? (window as any).sessionFeatureFlags[parentFlag][flag]
-    : (window as any).sessionFeatureFlags[flag];
-
-  if (parentFlag) {
-    (window as any).sessionFeatureFlags[parentFlag][flag] = !currentValue;
-    window.log.debug(`[debugMenu] toggled ${parentFlag}.${flag} to ${!currentValue}`);
-  } else {
-    (window as any).sessionFeatureFlags[flag] = !currentValue;
-    window.log.debug(`[debugMenu] toggled ${flag} to ${!currentValue}`);
+async function fetchContactsCountAndUpdate() {
+  const count = (await ContactsWrapperActions.getAll()).length;
+  if (count && Number.isFinite(count)) {
+    return count;
   }
+  return 0;
+}
 
-  forceUpdate();
-};
+function AddDummyContactButton() {
+  const [loading, setLoading] = useState(false);
+  const [addedCount, setAddedCount] = useState(0);
+  const [countToAdd, setCountToAdd] = useState(500);
 
-const FlagToggle = ({
-  forceUpdate,
-  flag,
-  value,
-  parentFlag,
-}: {
-  forceUpdate: () => void;
-  flag: SessionFeatureFlagsKeys;
-  value: any;
-  parentFlag?: SessionFeatureFlagsKeys;
-}) => {
-  const key = `feature-flag-toggle${parentFlag ? `-${parentFlag}` : ''}-${flag}`;
-  return (
-    <Flex
-      key={key}
-      id={key}
-      $container={true}
-      width="100%"
-      $alignItems="center"
-      $justifyContent="space-between"
-    >
-      <span>
-        {flag}
-        {untestedFlags.includes(flag) ? <HintText>Untested</HintText> : null}
-      </span>
-      <SessionToggle
-        active={value}
-        onClick={() => void handleFeatureFlagToggle(forceUpdate, flag, parentFlag)}
-      />
-    </Flex>
+  const { data: contactsCount } = usePolling(
+    fetchContactsCountAndUpdate,
+    500,
+    'AddDummyContactButton'
   );
-};
 
-export const FeatureFlags = ({ flags }: { flags: Record<string, any> }) => {
-  const forceUpdate = useUpdate();
+  return (
+    <div style={{ display: 'flex', alignItems: 'center' }}>
+      <SessionInput
+        autoFocus={false}
+        disableOnBlurEvent={true}
+        type="text"
+        value={`${countToAdd}`}
+        onValueChanged={(value: string) => {
+          const asNumber = toNumber(value);
+          if (Number.isFinite(asNumber)) {
+            setCountToAdd(asNumber);
+          }
+        }}
+        loading={loading}
+        maxLength={10}
+        ctaButton={
+          <SessionButton
+            onClick={async () => {
+              if (loading) {
+                return;
+              }
+              try {
+                setLoading(true);
+                setAddedCount(0);
+                const chunkSize = 10;
+                const allIndexes = Array.from({ length: countToAdd }).map((_unused, i) => i);
+                const chunks = chunk(allIndexes, chunkSize);
+                for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
+                  // eslint-disable-next-line no-await-in-loop
+                  await Promise.all(chunks[chunkIndex].map(() => generateOneRandomContact()));
+                  setAddedCount(Math.min(chunkIndex * chunkSize, countToAdd));
+                }
+              } finally {
+                setLoading(false);
+                setAddedCount(0);
+              }
+            }}
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                {addedCount}/{countToAdd}...
+              </>
+            ) : (
+              `Add ${countToAdd} contacts (current: ${contactsCount})`
+            )}
+          </SessionButton>
+        }
+      />
+    </div>
+  );
+}
+
+export const DataGenerationActions = () => {
   return (
     <Flex
       $container={true}
@@ -169,42 +369,23 @@ export const FeatureFlags = ({ flags }: { flags: Record<string, any> }) => {
       $flexDirection="column"
       $justifyContent="flex-start"
       $alignItems="flex-start"
-      $flexGap="var(--margins-xs)"
+      $flexWrap="wrap"
     >
-      <Flex $container={true} $alignItems="center">
-        <h2>Feature Flags</h2>
-        <HintText>Experimental</HintText>
-      </Flex>
-      <i>
-        Changes are temporary. You can clear them by reloading the window or restarting the app.
-      </i>
       <SpacerXS />
-      {Object.entries(flags).map(([key, value]) => {
-        const flag = key as SessionFeatureFlagsKeys;
-        if (unsupportedFlags.includes(flag)) {
-          return null;
-        }
-
-        if (!isBoolean(value)) {
-          return (
-            <>
-              <h3>{flag}</h3>
-              {Object.entries(value).map(([k, v]: [string, any]) => {
-                const nestedFlag = k as SessionFeatureFlagsKeys;
-                return (
-                  <FlagToggle
-                    forceUpdate={forceUpdate}
-                    flag={nestedFlag}
-                    value={v}
-                    parentFlag={flag}
-                  />
-                );
-              })}
-            </>
-          );
-        }
-        return <FlagToggle forceUpdate={forceUpdate} flag={flag} value={value} />;
-      })}
+      <Flex $container={true} width="100%" $alignItems="center" $flexGap="var(--margins-xs)">
+        <h2>Data generation</h2>
+      </Flex>
+      <Flex
+        $container={true}
+        width="100%"
+        $flexDirection="column"
+        $justifyContent="space-between"
+        $alignItems="flex-start"
+        $flexGap="var(--margins-xs)"
+      >
+        <AddDummyContactButton />
+        <SpacerXS />
+      </Flex>
     </Flex>
   );
 };
@@ -223,10 +404,10 @@ export const AboutInfo = () => {
   const aboutInfo = [
     `${localize('updateVersion').withArgs({ version: window.getVersion() })}`,
     `${localize('systemInformationDesktop').withArgs({ information: window.getOSRelease() })}`,
-    `${localize('commitHashDesktop').withArgs({ hash: window.getCommitHash() || window.i18n('unknown') })}`,
-    `Libsession Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_UTIL_VERSION || 'Unknown'}`,
-    `Libsession NodeJS Version: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_VERSION || 'Unknown'}`,
-    `Libsession NodeJS Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_COMMIT || 'Unknown'}`,
+    `${localize('commitHashDesktop').withArgs({ hash: window.getCommitHash() || localize('unknown').toString() })}`,
+    `Libsession Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_UTIL_VERSION || localize('unknown').toString()}`,
+    `Libsession NodeJS Version: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_VERSION || localize('unknown').toString()}`,
+    `Libsession NodeJS Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_COMMIT || localize('unknown').toString()}`,
     `${environmentStates.join(' - ')}`,
   ];
 

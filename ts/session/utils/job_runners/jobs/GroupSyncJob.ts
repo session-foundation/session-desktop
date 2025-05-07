@@ -71,12 +71,28 @@ async function confirmPushedAndDump(
     switch (namespace) {
       case SnodeNamespaces.ClosedGroupInfo: {
         if (change.pushed.seqno) {
-          toConfirm[1].groupInfo = [change.pushed.seqno.toNumber(), change.updatedHash];
+          if (toConfirm[1].groupInfo === null) {
+            toConfirm[1].groupInfo = {
+              seqno: change.pushed.seqno.toNumber(),
+              hashes: [change.messageHash],
+            };
+          } else {
+            toConfirm[1].groupInfo.hashes.push(change.messageHash);
+          }
         }
         break;
       }
       case SnodeNamespaces.ClosedGroupMembers: {
-        toConfirm[1].groupMember = [change.pushed.seqno.toNumber(), change.updatedHash];
+        if (change.pushed.seqno) {
+          if (toConfirm[1].groupMember === null) {
+            toConfirm[1].groupMember = {
+              seqno: change.pushed.seqno.toNumber(),
+              hashes: [change.messageHash],
+            };
+          } else {
+            toConfirm[1].groupMember.hashes.push(change.messageHash);
+          }
+        }
         break;
       }
       case SnodeNamespaces.ClosedGroupKeys: {
@@ -228,7 +244,6 @@ async function pushChangesToGroupSwarmIfNeeded({
   if ((allOldHashes.size || pendingConfigData.length) && isEmpty(changes)) {
     return RunJobResult.RetryJobIfPossible;
   }
-
   // Now that we have the successful changes, we need to mark them as pushed and
   // generate any config dumps which need to be stored
   await confirmPushedAndDump(changes, groupPk);
@@ -318,7 +333,7 @@ async function allFailedToSentGroupControlMessagesToRetry(groupPk: GroupPubkeyTy
             typeOfChange: SignalService.GroupUpdateInfoChangeMessage.Type.DISAPPEARING_MESSAGES,
             ...shared,
             updatedExpirationSeconds: expirationTimerUpdate.expireTimer,
-            expirationType: expirationTimerUpdate.expirationType || 'unknown',
+            expirationType: expirationTimerUpdate.expirationType,
           });
         }
         window.log.warn(

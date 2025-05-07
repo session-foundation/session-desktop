@@ -213,7 +213,6 @@ export interface ReduxConversationType {
   mentionedUs?: boolean;
   expirationMode?: DisappearingMessageConversationModeType;
   expireTimer?: number;
-  hasOutdatedClient?: string;
   isExpired03Group?: boolean;
   isTyping?: boolean;
   isBlocked?: boolean;
@@ -221,7 +220,6 @@ export interface ReduxConversationType {
   avatarPath?: string | null; // absolute filepath to the avatar
   groupAdmins?: Array<string>; // admins for closed groups and admins for open groups
   members?: Array<string>; // members for closed groups only
-  zombies?: Array<string>; // members for closed groups only
 
   /**
    * If this is undefined, it means all notification are enabled

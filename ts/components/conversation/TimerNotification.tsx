@@ -12,7 +12,6 @@ import {
   useSelectedIsPrivateFriend,
   useSelectedIsPublic,
 } from '../../state/selectors/selectedConversation';
-import { ReleasedFeatures } from '../../util/releaseFeature';
 import { Flex } from '../basic/Flex';
 import { SpacerMD, TextWithChildren } from '../basic/Text';
 import { ExpirableReadableMessage } from './message/message-item/ExpirableReadableMessage';
@@ -21,11 +20,10 @@ import { ExpirableReadableMessage } from './message/message-item/ExpirableReadab
 import { ConversationInteraction } from '../../interactions';
 import { ConvoHub } from '../../session/conversations';
 import { updateConfirmModal } from '../../state/ducks/modalDialog';
-import { Localizer } from '../basic/Localizer';
+import { Localizer, type LocalizerProps } from '../basic/Localizer';
 import { SessionButtonColor } from '../basic/SessionButton';
 import { SessionIcon } from '../icon';
 import { getTimerNotificationStr } from '../../models/timerNotifications';
-import type { LocalizerComponentPropsObject } from '../../localization/localeTools';
 import type { WithMessageId } from '../../session/types/with';
 import {
   useMessageAuthor,
@@ -56,7 +54,7 @@ function useFollowSettingsButtonClick({ messageId }: WithMessageId) {
         ? window.i18n('disappearingMessagesTypeRead')
         : window.i18n('disappearingMessagesTypeSent');
 
-    const i18nMessage: LocalizerComponentPropsObject = disabled
+    const i18nMessage: LocalizerProps = disabled
       ? {
           token: 'disappearingMessagesFollowSettingOff',
         }
@@ -86,9 +84,6 @@ function useFollowSettingsButtonClick({ messageId }: WithMessageId) {
           }
           if (!convo.isPrivate()) {
             throw new Error('follow settings only work for private chats');
-          }
-          if (expirationMode === 'legacy') {
-            throw new Error('follow setting does not apply with legacy');
           }
           if (expirationMode !== 'off' && !timespanSeconds) {
             throw new Error('non-off mode requires seconds arg to be given');
@@ -126,10 +121,7 @@ function useOurExpirationMatches({ messageId }: WithMessageId) {
 }
 
 const FollowSettingsButton = ({ messageId }: WithMessageId) => {
-  const v2Released = ReleasedFeatures.isUserConfigFeatureReleasedCached();
   const isPrivateAndFriend = useSelectedIsPrivateFriend();
-
-  const expirationMode = useMessageExpirationUpdateMode(messageId);
   const authorIsUs = useMessageAuthorIsUs(messageId);
 
   const click = useFollowSettingsButtonClick({
@@ -137,14 +129,10 @@ const FollowSettingsButton = ({ messageId }: WithMessageId) => {
   });
   const areSameThanOurs = useOurExpirationMatches({ messageId });
 
-  if (!v2Released || !isPrivateAndFriend) {
+  if (!isPrivateAndFriend) {
     return null;
   }
-  if (
-    authorIsUs ||
-    areSameThanOurs ||
-    expirationMode === 'legacy' // we cannot follow settings with legacy mode
-  ) {
+  if (authorIsUs || areSameThanOurs) {
     return null;
   }
 

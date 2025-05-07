@@ -10,7 +10,7 @@ import { useSelectedIsGroupOrCommunity } from '../../../../state/selectors/selec
 import { SpacerXS } from '../../../basic/Text';
 import { SessionIcon, SessionIconType } from '../../../icon';
 import { ExpireTimer } from '../../ExpireTimer';
-import { saveLogToDesktop } from '../../../../util/logging';
+import { saveLogToDesktop } from '../../../../util/logger/renderer_process_logging';
 
 type Props = {
   messageId: string;

@@ -83,7 +83,7 @@ export interface ConversationAttributes {
   /** in seconds, 0 means no expiration */
   expireTimer: number;
 
-  members: Array<string>; // groups only members are all members for this group. zombies excluded (not used for communities)
+  members: Array<string>; // groups only members are all members for this group (not used for communities)
   groupAdmins: Array<string>; // for sogs and closed group: the unique admins of that group
 
   priority: number; // -1 = hidden (contact and NTS only), 0 = normal, 1 = pinned
@@ -97,10 +97,6 @@ export interface ConversationAttributes {
 
   /** disappearing messages setting for this conversation */
   expirationMode: DisappearingMessageConversationModeType;
-  // TODO legacy messages support will be removed in a future release
-  // TODO we need to make a migration to remove this value from the db since the implementation is hacky
-  /** to warn the user that the person he is talking to is using an old client which might cause issues */
-  hasOutdatedClient?: string;
 
   /**
    * An 03-group is expired if an admin didn't come online for the last 30 days.
@@ -121,7 +117,6 @@ export const fillConvoAttributesWithDefaults = (
 ): ConversationAttributes => {
   return defaults(optAttributes, {
     members: [],
-    zombies: [],
     groupAdmins: [],
 
     lastJoinedTimestamp: 0,

@@ -5,6 +5,7 @@ import {
   useIsClosedGroup,
   useIsPublic,
   useIsGroupDestroyed,
+  useIsLegacyGroup,
 } from '../../../../hooks/useParamSelector';
 import { showDeleteGroupByConvoId } from '../../../../interactions/conversationInteractions';
 import { PubKey } from '../../../../session/types';
@@ -12,7 +13,6 @@ import { useIsMessageRequestOverlayShown } from '../../../../state/selectors/sec
 import { ItemWithDataTestId } from '../MenuItemWithDataTestId';
 import { showDeleteGroupItem } from './guard';
 import { Localizer } from '../../../basic/Localizer';
-import { useDisableLegacyGroupDeprecatedActions } from '../../../../hooks/useRefreshReleasedFeaturesTimestamp';
 import { useConversationIsExpired03Group } from '../../../../state/selectors/selectedConversation';
 
 export const DeleteGroupMenuItem = () => {
@@ -56,9 +56,9 @@ export const DeleteDeprecatedLegacyGroupMenuItem = () => {
   const convoId = useConvoIdFromContext();
   const username = useConversationUsername(convoId) || convoId;
 
-  const shortCircuitDeleteDeprecatedGroup = useDisableLegacyGroupDeprecatedActions(convoId);
+  const isLegacyGroup = useIsLegacyGroup(convoId);
 
-  if (!shortCircuitDeleteDeprecatedGroup) {
+  if (!isLegacyGroup) {
     return null;
   }
 

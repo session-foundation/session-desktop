@@ -12,11 +12,12 @@ export const HeaderTitle = styled.h2`
   text-align: center;
   margin-top: 0px;
   margin-bottom: 0px;
+  word-break: break-word;
 `;
 
 export const HeaderSubtitle = styled.h3`
   font-family: var(--font-default);
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-weight: 400;
   text-align: center;
   padding-top: 0px;

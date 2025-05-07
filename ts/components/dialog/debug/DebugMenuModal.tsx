@@ -1,11 +1,14 @@
 import { AnimatePresence } from 'framer-motion';
 import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
+import useUpdate from 'react-use/lib/useUpdate';
 import { Flex } from '../../basic/Flex';
 import { SpacerMD, SpacerSM } from '../../basic/Text';
 import { updateDebugMenuModal } from '../../../state/ducks/modalDialog';
-import { AboutInfo, DebugActions, FeatureFlags, OtherInfo } from './components';
-import { SessionWrapperModal } from '../../SessionWrapperModal';
+import { AboutInfo, DataGenerationActions, DebugActions, OtherInfo } from './components';
+import { SessionWrapperModal2 } from '../../SessionWrapperModal2';
+import { FeatureFlags } from './FeatureFlags';
+import { ReleaseChannel } from './ReleaseChannel';
 
 const StyledContent = styled(Flex)`
   padding-inline: var(--margins-sm);
@@ -33,13 +36,24 @@ const StyledContent = styled(Flex)`
 export function DebugMenuModal() {
   const dispatch = useDispatch();
 
+  // NOTE we use forceUpdate here and pass it through so the entire modal refreshes when a flag is toggled
+  const forceUpdate = useUpdate();
+
   const onClose = () => {
     dispatch(updateDebugMenuModal(null));
   };
 
   return (
     <AnimatePresence>
-      <SessionWrapperModal title={'Debug Menu'} onClose={onClose} showExitIcon={true}>
+      <SessionWrapperModal2
+        title={'Debug Menu'}
+        onClose={onClose}
+        showExitIcon={true}
+        contentBorder={false}
+        contentWidth={'75%'}
+        shouldOverflow={true}
+        allowOutsideClick={false}
+      >
         <StyledContent
           $container={true}
           $flexDirection="column"
@@ -48,13 +62,17 @@ export function DebugMenuModal() {
         >
           <DebugActions />
           <SpacerSM />
-          <FeatureFlags flags={window.sessionFeatureFlags} />
-          <SpacerMD />
+          <DataGenerationActions />
+          <SpacerSM />
+          <FeatureFlags flags={window.sessionFeatureFlags} forceUpdate={forceUpdate} />
+          <SpacerSM />
+          <ReleaseChannel />
+          <SpacerSM />
           <AboutInfo />
           <OtherInfo />
           <SpacerMD />
         </StyledContent>
-      </SessionWrapperModal>
+      </SessionWrapperModal2>
     </AnimatePresence>
   );
 }

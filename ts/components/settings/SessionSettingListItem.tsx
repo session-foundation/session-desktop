@@ -113,9 +113,9 @@ export const SettingsTitleAndDescription = (props: {
 
 export const SessionSettingsItemWrapper = (props: {
   inline: boolean;
-  title?: string | ReactNode;
+  title?: ReactNode;
   icon?: SessionIconProps;
-  description?: string | ReactNode;
+  description?: ReactNode;
   children?: ReactNode;
   childrenDescription?: ReactNode;
 }) => {

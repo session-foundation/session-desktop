@@ -1,11 +1,12 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { isEmpty } from 'lodash';
 
 export interface DebugState {
   debugMode: boolean;
 }
 
 export const initialDebugState = {
-  debugMode: false,
+  debugMode: !isEmpty(process.env.SESSION_DEV),
 };
 
 const debugSlice = createSlice({
@@ -13,7 +14,6 @@ const debugSlice = createSlice({
   initialState: initialDebugState,
   reducers: {
     setDebugMode: (state, action: PayloadAction<boolean>) => {
-      (window as Window).sessionFeatureFlags.debug.debugLogging = action.payload;
       state.debugMode = action.payload;
       return state;
     },

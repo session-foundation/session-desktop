@@ -96,10 +96,6 @@ const channelsToMake = new Set([
   'cleanupOrphanedAttachments',
   'getMessagesWithVisualMediaAttachments',
   'getMessagesWithFileAttachments',
-  'getAllEncryptionKeyPairsForGroup',
-  'getLatestClosedGroupEncryptionKeyPair',
-  'addClosedGroupEncryptionKeyPair',
-  'removeAllClosedGroupEncryptionKeyPairs',
   ...channelsToMakeForOpengroupV2,
   ...channelsToMakeForConfigDumps,
 ]);

@@ -15,8 +15,8 @@ export class OpenGroupVisibleMessage extends VisibleMessage {
   constructor(params: OpenGroupVisibleMessageParams) {
     super({
       ...params,
-      expirationType: null,
-      expireTimer: null,
+      expirationType: 'unknown',
+      expireTimer: 0,
     });
     // they are the opposite of each others
     this.blocksCommunityMessageRequests = !Storage.get(SettingsKey.hasBlindedMsgRequestsEnabled);

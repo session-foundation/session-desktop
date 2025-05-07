@@ -58,7 +58,6 @@ import {
 } from './types';
 import { ConversationTypeEnum } from '../../../models/types';
 import { Snode } from '../../../data/types';
-import { areLegacyGroupsReadOnlyOutsideRedux } from '../../../state/selectors/releasedFeatures';
 
 const minMsgCountShouldRetry = 95;
 /**
@@ -141,6 +140,12 @@ function mergeMultipleRetrieveResults(
   }));
 }
 
+function swarmLog(msg: string) {
+  if (window.sessionFeatureFlags.debug.debugSwarmPolling) {
+    window.log.info(msg);
+  }
+}
+
 export class SwarmPolling {
   private groupPolling: Array<GroupPollingEntry>;
 
@@ -182,7 +187,7 @@ export class SwarmPolling {
   }
 
   public stop(e?: Error) {
-    window.log.info('SwarmPolling: stopped swarm polling', e?.message || e || '');
+    window.log.warn('SwarmPolling: stopped swarm polling', e?.message || e || '');
 
     for (let i = 0; i < timeouts.length; i++) {
       clearTimeout(timeouts[i]);
@@ -202,6 +207,10 @@ export class SwarmPolling {
 
   public addGroupId(pubkey: PubKey | string, callbackFirstPoll?: () => Promise<void>) {
     const pk = PubKey.cast(pubkey);
+    if (PubKey.is05Pubkey(pk.key)) {
+      window.log.info('not polling for legacy group');
+      return;
+    }
     if (this.groupPolling.findIndex(m => m.pubkey.key === pk.key) === -1) {
       window?.log?.info(
         `SwarmPolling: Swarm addGroupId: adding pubkey ${ed25519Str(pk.key)} to polling`
@@ -296,17 +305,6 @@ export class SwarmPolling {
     const groupsToLeave = groups
       .filter(m => !allGroupsInWrapper.some(w => w.pubkeyHex === m.pubkey.key))
       .map(entryToKey);
-
-    const legacyGroupDeprecatedDisabled = areLegacyGroupsReadOnlyOutsideRedux();
-
-    const allLegacyGroupsTracked = legacyGroupDeprecatedDisabled
-      ? []
-      : legacyGroups
-          .filter(m => this.shouldPollByTimeout(m)) // should we poll from it depending on this group activity?
-          .filter(m => allGroupsLegacyInWrapper.some(w => w.pubkeyHex === m.pubkey.key)) // we don't poll from legacy groups which are not in the user group wrapper
-          .map(m => m.pubkey.key) // extract the pubkey
-          .map(m => [m, ConversationTypeEnum.GROUP] as PollForLegacy); //
-    toPollDetails = concat(toPollDetails, allLegacyGroupsTracked);
 
     const allGroupsTracked = groups
       .filter(m => this.shouldPollByTimeout(m)) // should we poll from it depending on this group activity?
@@ -469,21 +467,24 @@ export class SwarmPolling {
 
       const resultsFromAllSnodesSettled = await Promise.allSettled(
         toPollFrom.map(async snode => {
-          // Note: always print something so we know if the polling is hanging
-          window.log.info(
+          swarmLog(
             `SwarmPolling: about to pollNodeForKey of ${ed25519Str(pubkey)} from snode: ${ed25519Str(snode.pubkey_ed25519)} namespaces: ${namespaces} `
           );
+
           const thisSnodeResults = await this.pollNodeForKey(snode, pubkey, namespaces, type);
-          // Note: always print something so we know if the polling is hanging
-          window.log.info(
+
+          swarmLog(
             `SwarmPolling: pollNodeForKey of ${ed25519Str(pubkey)} from snode: ${ed25519Str(snode.pubkey_ed25519)} namespaces: ${namespaces} returned: ${thisSnodeResults?.length}`
           );
+
           return thisSnodeResults;
         })
       );
-      window.log.info(
+
+      swarmLog(
         `SwarmPolling: pollNodeForKey of ${ed25519Str(pubkey)} namespaces: ${namespaces} returned ${resultsFromAllSnodesSettled.filter(m => m.status === 'fulfilled').length}/${RETRIEVE_SNODES_COUNT} fulfilled promises`
       );
+
       resultsFromAllNamespaces = mergeMultipleRetrieveResults(
         compact(
           resultsFromAllSnodesSettled.filter(m => m.status === 'fulfilled').flatMap(m => m.value)
@@ -533,7 +534,7 @@ export class SwarmPolling {
 
     const shouldDiscardMessages = await this.shouldLeaveNotPolledGroup({ type, pubkey });
     if (shouldDiscardMessages) {
-      window.log.info(
+      swarmLog(
         `SwarmPolling: polled a pk which should not be polled anymore: ${ed25519Str(
           pubkey
         )}. Discarding polling result`
@@ -542,9 +543,10 @@ export class SwarmPolling {
     }
 
     const newMessages = await this.handleSeenMessages(uniqOtherMsgs);
-    window.log.info(
+    swarmLog(
       `SwarmPolling: handleSeenMessages: ${newMessages.length} out of ${uniqOtherMsgs.length} are not seen yet about pk:${ed25519Str(pubkey)} snode: ${JSON.stringify(toPollFrom.map(m => ed25519Str(m.pubkey_ed25519)))}`
     );
+
     if (type === ConversationTypeEnum.GROUPV2) {
       if (!PubKey.is03Pubkey(pubkey)) {
         throw new Error('groupv2 expects a 03 key');
@@ -624,13 +626,13 @@ export class SwarmPolling {
       for (let index = 0; index < LibSessionUtil.requiredUserVariants.length; index++) {
         const variant = LibSessionUtil.requiredUserVariants[index];
         try {
-          const toBump = await UserGenericWrapperActions.currentHashes(variant);
+          const toBump = await UserGenericWrapperActions.activeHashes(variant);
 
           if (toBump?.length) {
             configHashesToBump.push(...toBump);
           }
         } catch (e) {
-          window.log.warn(`SwarmPolling: failed to get currentHashes for user variant ${variant}`);
+          window.log.warn(`SwarmPolling: failed to get activeHashes for user variant ${variant}`);
         }
       }
       window.log.debug(
@@ -639,7 +641,7 @@ export class SwarmPolling {
       return configHashesToBump;
     }
     if (type === ConversationTypeEnum.GROUPV2 && PubKey.is03Pubkey(pubkey)) {
-      const toBump = await MetaGroupWrapperActions.currentHashes(pubkey);
+      const toBump = await MetaGroupWrapperActions.activeHashes(pubkey);
       window.log.debug(
         `SwarmPolling: configHashesToBump group(${ed25519Str(pubkey)}) count: ${toBump.length}`
       );
@@ -698,7 +700,7 @@ export class SwarmPolling {
         namespacesAndLastHashes.some(m => m) &&
         namespacesAndLastHashesAfterFetch.every(m => !m)
       ) {
-        window.log.info(
+        swarmLog(
           `SwarmPolling: hashes for ${ed25519Str(pubkey)} have been reset while we were fetching new messages. discarding them....`
         );
         return [];
@@ -779,7 +781,7 @@ export class SwarmPolling {
         return `${role}:${newHash}`;
       });
 
-      window.log.info(
+      swarmLog(
         `SwarmPolling: updating last hashes for ${ed25519Str(pubkey)}: ${ed25519Str(snodeEdkey)}  ${namespacesWithNewLastHashes.join(', ')}`
       );
       await Promise.all(
@@ -810,7 +812,7 @@ export class SwarmPolling {
       } else if (!window.inboxStore?.getState().onionPaths.isOnline) {
         window.inboxStore?.dispatch(updateIsOnline(true));
       }
-      window?.log?.info('SwarmPolling: pollNodeForKey failed with:', e.message);
+      window?.log?.warn('SwarmPolling: pollNodeForKey failed with:', e.message);
       return null;
     }
   }
@@ -896,9 +898,6 @@ export class SwarmPolling {
       ];
       return toRet;
     }
-    if (type === ConversationTypeEnum.GROUP) {
-      return [SnodeNamespaces.LegacyClosedGroup];
-    }
     if (type === ConversationTypeEnum.GROUPV2) {
       return [
         SnodeNamespaces.ClosedGroupRevokedRetrievableMessages, // if we are kicked from the group, this will still return a 200, other namespaces will be 401/403
@@ -907,6 +906,9 @@ export class SwarmPolling {
         SnodeNamespaces.ClosedGroupMembers,
         SnodeNamespaces.ClosedGroupKeys, // keys are fetched last to avoid race conditions when someone deposits them
       ];
+    }
+    if (type === ConversationTypeEnum.GROUP) {
+      throw new Error('legacy groups are readonly'); // legacy groups are readonly
     }
     assertUnreachable(
       type,

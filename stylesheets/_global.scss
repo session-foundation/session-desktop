@@ -26,14 +26,23 @@ body {
 
 ::-webkit-scrollbar-track {
   background-color: var(--scroll-bar-track-color);
+  border-radius: 20px;
+  transition: var(--default-duration);
+
+  &:hover {
+    background-color: var(--scroll-bar-track-hover-color);
+    transition: var(--default-duration);
+  }
 }
 
 ::-webkit-scrollbar-thumb {
   background: var(--scroll-bar-thumb-color);
   border-radius: 20px;
+  transition: var(--default-duration);
 
   &:hover {
     background: var(--scroll-bar-thumb-hover-color);
+    transition: var(--default-duration);
   }
 }
 
