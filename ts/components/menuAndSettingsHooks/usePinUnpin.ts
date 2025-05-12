@@ -17,7 +17,7 @@ export function useShowPinUnpin(conversationId: string) {
   const isMessageRequest = useIsMessageRequestOverlayShown();
   const isLegacyGroup = useIsLegacyGroup(conversationId);
   const isPinned = useIsPinned(conversationId);
-  const isKicked = useIsKickedFromGroup(conversationId)
+  const isKicked = useIsKickedFromGroup(conversationId);
 
   // legacy groups are read only. Pinning is not allowed
   if (isLegacyGroup && !isPinned) {

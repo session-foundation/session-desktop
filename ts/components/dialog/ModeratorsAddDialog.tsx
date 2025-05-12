@@ -31,8 +31,9 @@ export const AddModeratorsDialog = (props: Props) => {
   const [inputBoxValue, setInputBoxValue] = useState('');
   const [addingInProgress, setAddingInProgress] = useState(false);
 
+  const pubkeys = compact(inputBoxValue.split(',').map(p => PubKey.from(p.trim())));
+
   const addAsModerator = async () => {
-    const pubkeys = compact(inputBoxValue.split(',').map(p => PubKey.from(p.trim())));
     if (!pubkeys || pubkeys.length === 0) {
       ToastUtils.pushInvalidPubKey();
       return;
@@ -95,7 +96,11 @@ export const AddModeratorsDialog = (props: Props) => {
             buttonType={SessionButtonType.Simple}
             onClick={addAsModerator}
             text={localize('add').toString()}
-            disabled={addingInProgress || inputBoxValue.length === 0}
+            disabled={
+              addingInProgress ||
+              inputBoxValue.length === 0 ||
+              pubkeys.length > MAX_SUBREQUESTS_COUNT
+            }
           />
           <SessionButton
             buttonType={SessionButtonType.Simple}
