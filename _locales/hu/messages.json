@@ -508,6 +508,8 @@
   "messageNewDescriptionMobile": "Új beszélgetés indítása úgy, hogy beírja ismerősöd Felhasználó ID-ját, ONS-t vagy beolvassa a QR kódját.",
   "messageNewYouveGot": "{count, plural, one [Új üzeneted érkezett.] other [{count} új üzeneted érkezett.]}",
   "messageReplyingTo": "Válasz erre",
+  "messageRequestDisabledToastAttachments": "Addig nem küldhet mellékleteket, amíg az üzenetkérelmét el nem fogadják",
+  "messageRequestDisabledToastVoiceMessages": "Addig nem küldhet hangüzeneteket, amíg az üzenetkérelmét el nem fogadják",
   "messageRequestGroupInvite": "<b>{name}</b> meghívott a <b>{group_name}</b> csoportba.",
   "messageRequestGroupInviteDescription": "Üzenet küldése ebbe a csoportba automatikusan elfogadja a csoportmeghívást.",
   "messageRequestPending": "Az üzenetkérésed jelenleg függőben van.",
