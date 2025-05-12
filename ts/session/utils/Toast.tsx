@@ -1,6 +1,7 @@
 import { toast } from 'react-toastify';
 import { SessionToast, SessionToastType } from '../../components/basic/SessionToast';
 import { SectionType, showLeftPaneSection, showSettingsSection } from '../../state/ducks/section';
+import { getPromotedGroupUpdateChangeStr } from '../../models/groupUpdate';
 
 // if you push a toast manually with toast...() be sure to set the type attribute of the SessionToast component
 export function pushToastError(id: string, description: string) {
@@ -211,8 +212,9 @@ export function pushFailedToRemoveFromModerator(names: Array<string>) {
   pushToastWarning('adminRemoveFailed', localizedString);
 }
 
-export function pushUserAddedToModerators(name: string) {
-  pushToastSuccess('adminPromotedToAdmin', window.i18n.stripped('adminPromotedToAdmin', { name }));
+export function pushUserAddedToModerators(userNames: Array<string>) {
+  const args = getPromotedGroupUpdateChangeStr(userNames);
+  pushToastSuccess('adminPromotedToAdmin', window.i18n.stripped(args.token, args.args));
 }
 
 export function pushUserRemovedFromModerators(names: Array<string>) {

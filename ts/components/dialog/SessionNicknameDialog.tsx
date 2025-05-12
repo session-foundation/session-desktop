@@ -1,7 +1,5 @@
-import _ from 'lodash';
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
-
 import styled from 'styled-components';
 import { ConvoHub } from '../../session/conversations';
 
@@ -9,9 +7,11 @@ import { changeNickNameModal } from '../../state/ducks/modalDialog';
 import { SessionWrapperModal } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SpacerLG } from '../basic/Text';
-import { useConversationRealName } from '../../hooks/useParamSelector';
+import { useConversationRealName, useNickname } from '../../hooks/useParamSelector';
 import { PubKey } from '../../session/types';
 import { Localizer } from '../basic/Localizer';
+import { SessionInput } from '../inputs';
+import { localize } from '../../localization/localeTools';
 
 type Props = {
   conversationId: string;
@@ -23,46 +23,30 @@ const StyledMaxWidth = styled.span`
 
 export const SessionNicknameDialog = (props: Props) => {
   const { conversationId } = props;
-  const [nickname, setNickname] = useState('');
+  const currentNickname = useNickname(conversationId);
+  const [nickname, setStateNickname] = useState(currentNickname || '');
   // this resolves to the real user name, and not the nickname (if set) like we do usually
   const displayName = useConversationRealName(conversationId);
-
   const dispatch = useDispatch();
-
-  /**
-   * Changes the state of nickname variable. If enter is pressed, saves the current
-   * entered nickname value as the nickname.
-   */
-  const onNicknameInput = async (event: any) => {
-    if (event.key === 'Enter') {
-      await saveNickname();
-    } else {
-      const currentNicknameEntered = event.target.value;
-      setNickname(currentNicknameEntered);
-    }
-  };
 
   const onClickClose = () => {
     dispatch(changeNickNameModal(null));
   };
 
-  /**
-   * Saves the currently entered nickname.
-   */
-  const saveNickname = async () => {
-    if (!conversationId) {
-      throw new Error('Cant save without conversation id');
-    }
-    const conversation = ConvoHub.use().get(conversationId);
-    await conversation.setNickname(nickname, true);
+  const saveNickname = async (providedNickname: string | null) => {
+    await ConvoHub.use().get(conversationId)?.setNickname(providedNickname, true);
     onClickClose();
+  };
+
+  const onClickRemove = async () => {
+    await saveNickname(null);
   };
 
   return (
     <SessionWrapperModal
       title={window.i18n('nicknameSet')}
       onClose={onClickClose}
-      showExitIcon={false}
+      showExitIcon={true}
       showHeader={true}
     >
       <StyledMaxWidth className="session-modal__centered">
@@ -75,29 +59,36 @@ export const SessionNicknameDialog = (props: Props) => {
         <SpacerLG />
       </StyledMaxWidth>
 
-      <input
+      <SessionInput
         autoFocus={true}
-        type="nickname"
-        id="nickname-modal-input"
-        placeholder={window.i18n('nicknameEnter')}
-        onKeyUp={e => {
-          void onNicknameInput(_.cloneDeep(e));
-        }}
-        data-testid="nickname-input"
+        ariaLabel="nickname input"
+        value={nickname}
+        textSize="md"
+        editable={true}
+        monospaced={false}
+        centerText={false}
+        isTextArea={false}
+        padding={'var(--margins-xl) var(--margins-md)'}
+        inputDataTestId="nickname-input"
+        onValueChanged={setStateNickname}
+        placeholder={localize('nicknameEnter').toString()}
+        onEnterPressed={saveNickname}
+        error={'nickname-input error handling is still to do'}
       />
 
       <div className="session-modal__button-group">
         <SessionButton
           text={window.i18n('save')}
           buttonType={SessionButtonType.Simple}
-          onClick={saveNickname}
-          dataTestId="confirm-nickname"
+          onClick={() => saveNickname(nickname)}
+          dataTestId="set-nickname-confirm-button"
         />
         <SessionButton
-          text={window.i18n('cancel')}
+          text={window.i18n('remove')}
           buttonColor={SessionButtonColor.Danger}
           buttonType={SessionButtonType.Simple}
-          onClick={onClickClose}
+          onClick={onClickRemove}
+          dataTestId="set-nickname-remove-button"
         />
       </div>
     </SessionWrapperModal>

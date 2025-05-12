@@ -1,9 +1,9 @@
-import { isEmpty } from 'lodash';
-
 import { useIsClosedGroup, useSortedGroupMembers } from '../../../hooks/useParamSelector';
 import { UserUtils } from '../../../session/utils';
 import { assertUnreachable } from '../../../types/sqlSharedTypes';
+import { MemberAvatarPlaceHolder } from '../../icon/MemberAvatarPlaceHolder';
 import { Avatar, AvatarSize } from '../Avatar';
+import { useAvatarBgColor } from './AvatarPlaceHolder';
 
 function getClosedGroupAvatarsSize(size: AvatarSize): AvatarSize {
   // Always use the size directly under the one requested
@@ -55,8 +55,13 @@ function useGroupMembersAvatars(convoId: string | undefined) {
   const isClosedGroup = useIsClosedGroup(convoId);
   const sortedMembers = useSortedGroupMembers(convoId);
 
-  if (!convoId || !isClosedGroup || isEmpty(sortedMembers)) {
+  if (!convoId || !isClosedGroup) {
     return undefined;
+  }
+
+  // for avatar purposes, we are always part of the group, even when there are no members at all
+  if (!sortedMembers || sortedMembers.length < 2) {
+    return { firstMember: us, secondMember: undefined };
   }
 
   return sortAndSlice(sortedMembers, us);
@@ -72,14 +77,38 @@ export const ClosedGroupAvatar = ({
   onAvatarClick?: () => void;
 }) => {
   const memberAvatars = useGroupMembersAvatars(convoId);
-  const avatarsDiameter = getClosedGroupAvatarsSize(size);
   const firstMemberId = memberAvatars?.firstMember || '';
   const secondMemberID = memberAvatars?.secondMember || '';
+  const avatarsDiameter = getClosedGroupAvatarsSize(size);
+
+  const firstChild = (
+    <Avatar size={avatarsDiameter} pubkey={firstMemberId} onAvatarClick={onAvatarClick} />
+  );
+  const secondChild = (
+    <Avatar size={avatarsDiameter} pubkey={secondMemberID} onAvatarClick={onAvatarClick} />
+  );
+
+  const { bgColor } = useAvatarBgColor(secondMemberID || convoId);
+
+  if (firstMemberId && secondMemberID) {
+    return (
+      <div className="module-avatar__icon-closed">
+        {firstChild}
+        {secondChild}
+      </div>
+    );
+  }
 
   return (
     <div className="module-avatar__icon-closed">
-      <Avatar size={avatarsDiameter} pubkey={firstMemberId} onAvatarClick={onAvatarClick} />
-      <Avatar size={avatarsDiameter} pubkey={secondMemberID} onAvatarClick={onAvatarClick} />
+      <Avatar
+        size={avatarsDiameter}
+        pubkey={UserUtils.getOurPubKeyStrFromCache()}
+        onAvatarClick={onAvatarClick}
+      />
+      <div className={`module-avatar module-avatar--${avatarsDiameter} module-avatar--no-image`}>
+        <MemberAvatarPlaceHolder bgColor={bgColor} />
+      </div>
     </div>
   );
 };

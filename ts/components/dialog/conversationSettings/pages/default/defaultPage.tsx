@@ -9,6 +9,7 @@ import { Localizer } from '../../../../basic/Localizer';
 import { SpacerSM } from '../../../../basic/Text';
 import { PanelButtonGroup } from '../../../../buttons';
 import { PanelLabel } from '../../../../buttons/PanelButton';
+import { useShowAttachments } from '../../../../menuAndSettingsHooks/useShowAttachments';
 import { ConversationSettingsHeader } from '../../conversationSettingsHeader';
 import {
   PinUnpinButton,
@@ -165,6 +166,13 @@ function DefaultPageForCommunities({ conversationId }: WithConvoId) {
 }
 
 function DefaultPageForGroupV2({ conversationId }: WithConvoId) {
+  /**
+   * Sometimes this menu is empty.
+   * When it is, there is still the padding of the PanelButtonGroup that is visible, and we want to avoid this.
+   * AttachmentsButton is *almost* always shown, but when it isn't the conditions mean that the whole menu is empty.
+   * So we can just filter based on if AttachmentsButton is shown of not.
+   */
+  const showAttachmentsCb = useShowAttachments({ conversationId });
   if (!conversationId) {
     return null;
   }
@@ -172,14 +180,15 @@ function DefaultPageForGroupV2({ conversationId }: WithConvoId) {
     <>
       <ConversationSettingsHeader conversationId={conversationId} />
 
-      <PanelButtonGroup>
-        <CopyCommunityUrlButton conversationId={conversationId} />
-        <UpdateDisappearingMessagesButton conversationId={conversationId} asAdmin={false} />
-        <PinUnpinButton conversationId={conversationId} />
-        <NotificationPanelButton convoId={conversationId} />
-        <UpdateGroupMembersButton conversationId={conversationId} asAdmin={false} />
-        <AttachmentsButton conversationId={conversationId} />
-      </PanelButtonGroup>
+      {showAttachmentsCb ? (
+        <PanelButtonGroup>
+          <UpdateDisappearingMessagesButton conversationId={conversationId} asAdmin={false} />
+          <PinUnpinButton conversationId={conversationId} />
+          <NotificationPanelButton convoId={conversationId} />
+          <UpdateGroupMembersButton conversationId={conversationId} asAdmin={false} />
+          <AttachmentsButton conversationId={conversationId} />
+        </PanelButtonGroup>
+      ) : null}
 
       {/* Below are "admins" actions */}
       <GroupV2AdminActions conversationId={conversationId} />
@@ -191,7 +200,7 @@ function DefaultPageForGroupV2({ conversationId }: WithConvoId) {
   );
 }
 
-export function DefaultPage(props: WithConvoId) {
+export function DefaultConversationSettingsPage(props: WithConvoId) {
   const isPrivate = useIsPrivate(props?.conversationId);
   const isPublic = useIsPublic(props?.conversationId);
   const isGroupV2 = useIsGroupV2(props?.conversationId);

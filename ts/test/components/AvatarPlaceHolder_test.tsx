@@ -42,13 +42,16 @@ describe('AvatarPlaceHolder', () => {
       <AvatarPlaceHolder
         diameter={AvatarSize.XL}
         name={displayName}
-        pubkey={''} // makes the hash will be undefined
+        pubkey={''} // will make the hash be undefined
         dataTestId="avatar-placeholder"
       />
     );
 
     const result2 = renderComponent(
-      <MemberAvatarPlaceHolder dataTestId="member-avatar-placeholder" />
+      <MemberAvatarPlaceHolder
+        dataTestId="member-avatar-placeholder"
+        bgColor="var(--primary-color)"
+      />
     );
 
     expect(areResultsEqual(result, result2, true)).to.equal(true);

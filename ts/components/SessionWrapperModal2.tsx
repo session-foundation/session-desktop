@@ -41,7 +41,8 @@ const StyledModal = styled.div<{
   box-shadow: var(--modal-drop-shadow);
 
   margin: auto auto;
-  padding: ${props => (props.padding ? props.padding : '0  var(--margins-lg) var(--margins-sm)')};
+  padding: ${props =>
+    props.padding ? props.padding : '0  var(--margins-md) var(--margins-sm) var(--margins-lg)'};
 
   overflow: hidden;
   display: flex;
@@ -99,6 +100,20 @@ const StyledTitle = styled.div`
   padding: var(--margins-xs) var(--margins-sm);
 `;
 
+export const ButtonChildrenContainer = (props: { children: ReactNode }) => {
+  return (
+    <Flex
+      $container={true}
+      width={'100%'}
+      $justifyContent="center"
+      $alignItems="center"
+      $flexGap="var(--margins-md)"
+    >
+      {props.children}
+    </Flex>
+  );
+};
+
 export type SessionWrapperModalType2 = {
   title?: string;
   showHeader?: boolean;
@@ -130,7 +145,7 @@ const ModalHeader = (
       $justifyContent={'space-between'}
       $alignItems={'center'}
       padding={'var(--margins-lg) var(--margins-sm)  var(--margins-sm) var(--margins-lg)'}
-      margin={'0 calc(-1 * var(--margins-sm)) 0 calc(-1 * var(--margins-lg))'}
+      margin={'0 calc(-1 * var(--margins-md)) 0 calc(-1 * var(--margins-lg))'}
     >
       <Flex
         $container={true}

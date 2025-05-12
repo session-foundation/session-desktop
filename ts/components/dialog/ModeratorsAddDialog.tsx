@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
+import { compact } from 'lodash';
 
 import { sogsV3AddAdmin } from '../../session/apis/open_group_api/sogsv3/sogsV3AddRemoveMods';
 import { PubKey } from '../../session/types';
@@ -8,10 +9,13 @@ import { ConvoHub } from '../../session/conversations';
 import { updateAddModeratorsModal } from '../../state/ducks/modalDialog';
 import { useIsDarkTheme } from '../../state/selectors/theme';
 import { SessionHeaderSearchInput } from '../SessionHeaderSearchInput';
-import { SessionWrapperModal } from '../SessionWrapperModal';
 import { Flex } from '../basic/Flex';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
 import { SessionSpinner } from '../loading';
+import { localize } from '../../localization/localeTools';
+import { I18nSubText } from '../basic/I18nSubText';
+import { MAX_SUBREQUESTS_COUNT } from '../../session/apis/snode_api/SnodeRequestTypes';
+import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
 
 type Props = {
   conversationId: string;
@@ -28,33 +32,39 @@ export const AddModeratorsDialog = (props: Props) => {
   const [addingInProgress, setAddingInProgress] = useState(false);
 
   const addAsModerator = async () => {
-    // if we don't have valid data entered by the user
-    const pubkey = PubKey.from(inputBoxValue);
-    if (!pubkey) {
-      window.log.info('invalid pubkey for adding as moderator:', inputBoxValue);
+    const pubkeys = compact(inputBoxValue.split(',').map(p => PubKey.from(p.trim())));
+    if (!pubkeys || pubkeys.length === 0) {
       ToastUtils.pushInvalidPubKey();
       return;
     }
 
-    window?.log?.info(`asked to add moderator: ${pubkey.key}`);
+    if (pubkeys.length > MAX_SUBREQUESTS_COUNT) {
+      window?.log?.info(`too many moderators to be added: ${pubkeys.length}`);
+
+      return;
+    }
+
+    window?.log?.info(`asked to add moderators: ${pubkeys.map(p => p.key)}`);
 
     try {
       setAddingInProgress(true);
 
       // this is a v2 opengroup
       const roomInfos = convo.toOpenGroupV2();
-      const isAdded = await sogsV3AddAdmin([pubkey], roomInfos);
+      const isAdded = await sogsV3AddAdmin(pubkeys, roomInfos);
 
       if (!isAdded) {
         window?.log?.warn('failed to add moderators:', isAdded);
 
         ToastUtils.pushFailedToAddAsModerator();
       } else {
-        const userDisplayName =
-          ConvoHub.use().get(pubkey.key)?.getNicknameOrRealUsernameOrPlaceholder() ||
-          window.i18n('unknown');
-        window?.log?.info(`${pubkey.key} added as moderator...`);
-        ToastUtils.pushUserAddedToModerators(userDisplayName);
+        const userNames = pubkeys.map(
+          p =>
+            ConvoHub.use().get(p.key)?.getNicknameOrRealUsernameOrPlaceholder() ||
+            window.i18n('unknown')
+        );
+        window?.log?.info(`${userNames.join(', ')} added as moderator(s)...`);
+        ToastUtils.pushUserAddedToModerators(userNames);
 
         // clear input box
         setInputBoxValue('');
@@ -71,35 +81,48 @@ export const AddModeratorsDialog = (props: Props) => {
     setInputBoxValue(val);
   };
 
+  const onClose = () => {
+    dispatch(updateAddModeratorsModal(null));
+  };
+
   return (
-    <SessionWrapperModal
-      showExitIcon={true}
-      title={window.i18n('addAdmins')}
-      onClose={() => {
-        dispatch(updateAddModeratorsModal(null));
-      }}
+    <SessionWrapperModal2
+      title={localize('addAdmins').toString()}
+      onClose={onClose}
+      buttonChildren={
+        <ButtonChildrenContainer>
+          <SessionButton
+            buttonType={SessionButtonType.Simple}
+            onClick={addAsModerator}
+            text={localize('add').toString()}
+            disabled={addingInProgress || inputBoxValue.length === 0}
+          />
+          <SessionButton
+            buttonType={SessionButtonType.Simple}
+            onClick={onClose}
+            text={localize('cancel').toString()}
+          />
+        </ButtonChildrenContainer>
+      }
     >
       <Flex $container={true} $flexDirection="column" $alignItems="center">
-        {/* <I18nSubText dataTestId='modal-description' localizerProps={{ token: 'addAdminsDescription' }} /> */}
+        <I18nSubText
+          dataTestId="modal-description"
+          localizerProps={{ token: 'addAdminsDescription' }}
+        />
         <SessionHeaderSearchInput
           type="text"
           isDarkTheme={isDarkTheme}
-          placeholder={window.i18n('accountIdEnter')}
+          placeholder={localize('accountId').toString()}
           dir="auto"
           onChange={onPubkeyBoxChanges}
           disabled={addingInProgress}
           value={inputBoxValue}
           autoFocus={true}
         />
-        <SessionButton
-          buttonType={SessionButtonType.Simple}
-          onClick={addAsModerator}
-          text={window.i18n('add')}
-          disabled={addingInProgress}
-        />
 
         <SessionSpinner loading={addingInProgress} />
       </Flex>
-    </SessionWrapperModal>
+    </SessionWrapperModal2>
   );
 };

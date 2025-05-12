@@ -77,7 +77,7 @@ const NoImage = memo(
     }
   ) => {
     const { forcedName, size, pubkey, isClosedGroup, onAvatarClick } = props;
-    // if no image but we have conversations set for the group, renders group members avatars
+
     if (pubkey && isClosedGroup) {
       return <ClosedGroupAvatar size={size} convoId={pubkey} onAvatarClick={onAvatarClick} />;
     }

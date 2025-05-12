@@ -3,15 +3,25 @@ import styled from 'styled-components';
 
 import { closeRightPanel } from '../../../state/ducks/conversations';
 import { resetRightOverlayMode } from '../../../state/ducks/section';
-import { useSelectedDisplayNameInProfile } from '../../../state/selectors/selectedConversation';
 import { Avatar, AvatarSize } from '../../avatar/Avatar';
 import { Flex } from '../../basic/Flex';
 import { Header } from '../../conversation/right-panel/overlay/components';
 import type { WithConvoId } from '../../../session/types/with';
-import { useIsMe, useIsPrivate } from '../../../hooks/useParamSelector';
+import {
+  useConversationRealName,
+  useHasNickname,
+  useIsClosedGroup,
+  useIsMe,
+  useIsPrivate,
+  useIsPublic,
+  useNicknameOrProfileNameOrShortenedPubkey,
+} from '../../../hooks/useParamSelector';
 import { PubKey } from '../../../session/types';
 import { H4 } from '../../basic/Heading';
 import { localize } from '../../../localization/localeTools';
+import { useChangeNickname } from '../../menuAndSettingsHooks/useChangeNickname';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
+import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 
 function AccountId({ conversationId }: WithConvoId) {
   const isPrivate = useIsPrivate(conversationId);
@@ -22,14 +32,54 @@ function AccountId({ conversationId }: WithConvoId) {
   return <StyledAccountId data-testid="account-id">{conversationId}</StyledAccountId>;
 }
 
+function ChangeNicknameButton({ conversationId }: WithConvoId) {
+  const changeNicknameCb = useChangeNickname(conversationId);
+
+  if (!changeNicknameCb) {
+    return null;
+  }
+
+  return (
+    <SessionLucideIconButton
+      unicode={LUCIDE_ICONS_UNICODE.PENCIL}
+      iconSize="large"
+      onClick={changeNicknameCb}
+      dataTestId="set-nickname-confirm-button"
+    />
+  );
+}
+
+const FallbackDisplayName = styled.div`
+  color: var(--text-secondary-color);
+  text-align: center;
+  font-size: var(--font-display-size-sm);
+  font-weight: 400;
+  line-height: 1.2;
+`;
+
 export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
   const dispatch = useDispatch();
-  const displayNameInProfile = useSelectedDisplayNameInProfile();
+
+  const nicknameOrDisplayName = useNicknameOrProfileNameOrShortenedPubkey(conversationId);
+  // if a nickname is set, we still want to display the real name of the user, as he defined it
+  const conversationRealName = useConversationRealName(conversationId);
+  const hasNickname = useHasNickname(conversationId);
   const isMe = useIsMe(conversationId);
+
+  const isCommunity = useIsPublic(conversationId);
+  const isClosedGroup = useIsClosedGroup(conversationId);
 
   if (!conversationId) {
     return null;
   }
+
+  // the data-test-id depends on the type of conversation
+  const dataTestId = isCommunity
+    ? 'community-name'
+    : isClosedGroup
+      ? 'group-name'
+      : // for 1o1, this will hold the nickname if set, or the display name
+        'preferred-display-name';
 
   return (
     <Header
@@ -48,12 +98,25 @@ export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
         $alignItems={'center'}
         width={'100%'}
         $flexDirection="column"
-        $flexGap="var(--margins-lg)"
+        $flexGap="var(--margins-sm)"
       >
         <Avatar size={AvatarSize.XL} pubkey={conversationId} dataTestId="profile-picture" />
-        <H4 data-testid="display-name">
-          {isMe ? localize('noteToSelf').toString() : displayNameInProfile}
-        </H4>
+        <Flex
+          $container={true}
+          $alignItems={'center'}
+          $flexDirection={'row'}
+          $flexGap="var(--margins-xs)"
+        >
+          <H4 dataTestId={dataTestId}>
+            {isMe ? localize('noteToSelf').toString() : nicknameOrDisplayName}
+          </H4>
+          <ChangeNicknameButton conversationId={conversationId} />
+        </Flex>
+        {hasNickname && conversationRealName ? (
+          <FallbackDisplayName data-testid="fallback-display-name">
+            ({conversationRealName})
+          </FallbackDisplayName>
+        ) : null}
         <AccountId conversationId={conversationId} />
       </Flex>
     </Header>

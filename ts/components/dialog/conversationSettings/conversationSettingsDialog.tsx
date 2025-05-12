@@ -12,7 +12,7 @@ import {
 } from '../../../state/ducks/modalDialog';
 import { localize } from '../../../localization/localeTools';
 import { DisappearingMessagesPage } from './pages/disappearing-messages/DisappearingMessagesPage';
-import { DefaultPage } from './pages/default/defaultPage';
+import { DefaultConversationSettingsPage } from './pages/default/defaultPage';
 import { assertUnreachable } from '../../../types/sqlSharedTypes';
 import { NotificationsPage } from './pages/notifications/NotificationPage';
 
@@ -100,7 +100,7 @@ export function ConversationSettingsDialog(props: ConversationSettingsModalState
 
   const PageToRender =
     !props || modalPage === 'default'
-      ? DefaultPage
+      ? DefaultConversationSettingsPage
       : modalPage === 'notifications'
         ? NotificationsPage
         : DisappearingMessagesPage;

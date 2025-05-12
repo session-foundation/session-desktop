@@ -27,6 +27,7 @@ import {
 } from '../state/ducks/conversations';
 import {
   updateConfirmModal,
+  updateConversationSettingsModal,
   updateGroupMembersModal,
   updateGroupNameModal,
 } from '../state/ducks/modalDialog';
@@ -398,6 +399,7 @@ export async function showLeaveGroupByConvoId(conversationId: string, name: stri
       sendLeaveMessage: !weAreLastAdmin, // we don't need to send a leave message when we are the last admin: the group is removed.
       onClickClose,
     });
+    window?.inboxStore?.dispatch(updateConversationSettingsModal(null));
   };
 
   if (weAreLastAdmin) {
@@ -455,6 +457,7 @@ export async function showDeleteGroupByConvoId(conversationId: string, name: str
       sendLeaveMessage: false,
       onClickClose,
     });
+    window?.inboxStore?.dispatch(updateConversationSettingsModal(null));
   };
 
   window?.inboxStore?.dispatch(

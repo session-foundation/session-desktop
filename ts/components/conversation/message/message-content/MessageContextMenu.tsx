@@ -48,7 +48,7 @@ import { WithMessageId } from '../../../../session/types/with';
 import { DeleteItem } from '../../../menu/items/DeleteMessage/DeleteMessageMenuItem';
 import { RetryItem } from '../../../menu/items/RetrySend/RetrySendMenuItem';
 import { useBanUserCb } from '../../../menuAndSettingsHooks/useBanUser';
-import { useUnbanUserCb } from '../../../menuAndSettingsHooks/useUnbanUnser';
+import { useUnbanUserCb } from '../../../menuAndSettingsHooks/useUnbanUser';
 import {
   sogsV3RemoveAdmins,
   sogsV3AddAdmin,
@@ -135,7 +135,7 @@ async function addSenderAsCommunityAdmin(sender: string, convoId: string) {
       const userDisplayName =
         ConvoHub.use().get(sender)?.getNicknameOrRealUsernameOrPlaceholder() ||
         window.i18n('unknown');
-      ToastUtils.pushUserAddedToModerators(userDisplayName);
+      ToastUtils.pushUserAddedToModerators([userDisplayName]);
     }
   } catch (e) {
     window?.log?.error('Got error while adding moderator:', e);

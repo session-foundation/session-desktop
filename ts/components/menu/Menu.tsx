@@ -42,7 +42,7 @@ import { useShowDeletePrivateConversationCb } from '../menuAndSettingsHooks/useS
 import { useShowInviteContactToCommunity } from '../menuAndSettingsHooks/useShowInviteContactToCommunity';
 import { useAddModeratorsCb } from '../menuAndSettingsHooks/useAddModerators';
 import { useRemoveModeratorsCb } from '../menuAndSettingsHooks/useRemoveModerators';
-import { useUnbanUserCb } from '../menuAndSettingsHooks/useUnbanUnser';
+import { useUnbanUserCb } from '../menuAndSettingsHooks/useUnbanUser';
 import { useBanUserCb } from '../menuAndSettingsHooks/useBanUser';
 import { useSetNotificationsFor } from '../menuAndSettingsHooks/useSetNotificationsFor';
 import { useClearNickname } from '../menuAndSettingsHooks/useClearNickname';

@@ -21,6 +21,7 @@ export const LUCIDE_ICONS_UNICODE = {
   EYE_OFF: '',
   USER_ROUND_X: '',
   USER_ROUND_CHECK: '',
+  PENCIL: '',
 } as const;
 
 /**

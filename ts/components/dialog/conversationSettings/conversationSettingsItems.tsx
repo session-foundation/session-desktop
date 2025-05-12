@@ -29,7 +29,6 @@ import { useShowNotificationFor } from '../../menuAndSettingsHooks/useShowNotifi
 import type { WithConvoId } from '../../../session/types/with';
 import { ConvoHub } from '../../../session/conversations';
 import { useShowPinUnpin } from '../../menuAndSettingsHooks/usePinUnpin';
-import { openRightPanel } from '../../../state/ducks/conversations';
 import { updateConversationSettingsModal } from '../../../state/ducks/modalDialog';
 import { useLocalisedNotificationOf } from '../../menuAndSettingsHooks/useLocalisedNotificationFor';
 import { useShowBlockUnblock } from '../../menuAndSettingsHooks/useShowBlockUnblock';
@@ -42,7 +41,7 @@ import { useShowInviteContactToGroupCb } from '../../menuAndSettingsHooks/useSho
 import { useShowCopyAccountIdCb } from '../../menuAndSettingsHooks/useCopyAccountId';
 import { useShowCopyCommunityUrlCb } from '../../menuAndSettingsHooks/useCopyCommunityUrl';
 import { useBanUserCb } from '../../menuAndSettingsHooks/useBanUser';
-import { useUnbanUserCb } from '../../menuAndSettingsHooks/useUnbanUnser';
+import { useUnbanUserCb } from '../../menuAndSettingsHooks/useUnbanUser';
 import { useAddModeratorsCb } from '../../menuAndSettingsHooks/useAddModerators';
 import { useRemoveModeratorsCb } from '../../menuAndSettingsHooks/useRemoveModerators';
 import { useShowLeaveCommunityCb } from '../../menuAndSettingsHooks/useShowLeaveCommunity';
@@ -50,6 +49,7 @@ import {
   useShowDeleteGroupCb,
   useShowLeaveGroupCb,
 } from '../../menuAndSettingsHooks/useShowLeaveGroup';
+import { useShowAttachments } from '../../menuAndSettingsHooks/useShowAttachments';
 
 type WithAsAdmin = { asAdmin: boolean };
 
@@ -182,15 +182,16 @@ export const UpdateGroupNameButton = ({ conversationId }: WithConvoId) => {
 };
 
 export const AttachmentsButton = (_props: WithConvoId) => {
-  const dispatch = useDispatch();
+  const showAttachmentsCb = useShowAttachments({ conversationId: _props.conversationId });
+
+  if (!showAttachmentsCb) {
+    return null;
+  }
   return (
     <PanelIconButton
       iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.FILE} />}
       text={localize('attachments').toString()}
-      onClick={() => {
-        dispatch(openRightPanel());
-        dispatch(updateConversationSettingsModal(null));
-      }}
+      onClick={showAttachmentsCb}
       dataTestId="attachments-menu-option"
     />
   );
@@ -504,6 +505,10 @@ export function InviteContactsToGroupV2Button({ conversationId }: WithConvoId) {
 
 export function ClearAllMessagesButton({ conversationId }: WithConvoId) {
   const clearAllMessagesCb = useClearAllMessagesCb({ conversationId });
+
+  if (!clearAllMessagesCb) {
+    return null;
+  }
   return (
     <PanelIconButton
       iconElement={

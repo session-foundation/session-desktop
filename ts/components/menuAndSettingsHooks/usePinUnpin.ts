@@ -1,4 +1,5 @@
 import {
+  useIsKickedFromGroup,
   useIsLegacyGroup,
   useIsPinned,
   useIsPrivate,
@@ -16,9 +17,15 @@ export function useShowPinUnpin(conversationId: string) {
   const isMessageRequest = useIsMessageRequestOverlayShown();
   const isLegacyGroup = useIsLegacyGroup(conversationId);
   const isPinned = useIsPinned(conversationId);
+  const isKicked = useIsKickedFromGroup(conversationId)
 
   // legacy groups are read only. Pinning is not allowed
   if (isLegacyGroup && !isPinned) {
+    return false;
+  }
+
+  if (isKicked) {
+    // When we got kicked, we can only unpin
     return false;
   }
 

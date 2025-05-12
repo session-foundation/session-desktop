@@ -3,9 +3,17 @@ import { deleteAllMessagesByConvoIdNoConfirmation } from '../../interactions/con
 import { updateConfirmModal } from '../../state/ducks/modalDialog';
 import { SessionButtonColor } from '../basic/SessionButton';
 import { localize } from '../../localization/localeTools';
+import { useIsKickedFromGroup } from '../../hooks/useParamSelector';
 
 export function useClearAllMessagesCb({ conversationId }: { conversationId: string }) {
   const dispatch = useDispatch();
+
+  const isKickedFromGroup = useIsKickedFromGroup(conversationId);
+
+  if (isKickedFromGroup) {
+    // we can't clear all if we are kicked from the group
+    return null;
+  }
 
   const onClickClose = () => {
     dispatch(updateConfirmModal(null));

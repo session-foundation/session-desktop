@@ -2,7 +2,7 @@ import { useDispatch } from 'react-redux';
 import { useIsMe } from '../../hooks/useParamSelector';
 import { localize } from '../../localization/localeTools';
 import { ConvoHub } from '../../session/conversations';
-import { updateConfirmModal } from '../../state/ducks/modalDialog';
+import { updateConfirmModal, updateConversationSettingsModal } from '../../state/ducks/modalDialog';
 import { SessionButtonColor } from '../basic/SessionButton';
 
 function useShowHideNoteToSelf({ conversationId }: { conversationId: string }) {
@@ -38,6 +38,7 @@ export function useHideNoteToSelfCb({ conversationId }: { conversationId: string
             justHidePrivate: true,
             keepMessages: false,
           });
+          dispatch(updateConversationSettingsModal(null));
         },
         okText: localize('hide').toString(),
       })

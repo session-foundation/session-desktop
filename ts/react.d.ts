@@ -57,6 +57,8 @@ declare module 'react' {
 
   type SetButton = 'notifications' | 'disappear';
 
+  type ConfirmButtons = `${'set-nickname' | 'open-url' | 'set-nickname'}-confirm-button`;
+
   type SessionDataTestId =
     | 'group-member-status-text'
     | 'loading-spinner'
@@ -79,6 +81,10 @@ declare module 'react' {
     | 'image-upload-click'
     | 'profile-name-input'
     | 'your-profile-name'
+    | 'community-name'
+    | 'group-name'
+    | 'preferred-display-name'
+    | 'fallback-display-name'
     | 'edit-profile-dialog'
     | 'image-upload-section'
     | 'profile-picture'
@@ -109,6 +115,7 @@ declare module 'react' {
     | 'some-of-your-devices-outdated-inbox'
     | 'legacy-group-banner'
     | 'account-id'
+    | 'set-nickname-remove-button'
 
     // generic button types
     | 'emoji-button'
@@ -134,6 +141,7 @@ declare module 'react' {
     | 'block-menu-item'
     | 'delete-menu-item'
     | 'accept-menu-item'
+    | ConfirmButtons
 
     // timer options
     | DisappearTimeOptionDataTestId
@@ -224,7 +232,6 @@ declare module 'react' {
     | 'contact' // this is way too generic
     | 'contact-status'
     | 'version-warning'
-    | 'open-url-confirm-button'
     | 'copy-url-button'
     | 'continue-session-button'
     | 'next-new-conversation-button'
