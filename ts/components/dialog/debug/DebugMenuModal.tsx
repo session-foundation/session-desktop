@@ -5,7 +5,7 @@ import useUpdate from 'react-use/lib/useUpdate';
 import { Flex } from '../../basic/Flex';
 import { SpacerMD, SpacerSM } from '../../basic/Text';
 import { updateDebugMenuModal } from '../../../state/ducks/modalDialog';
-import { AboutInfo, DebugActions, OtherInfo } from './components';
+import { AboutInfo, DataGenerationActions, DebugActions, OtherInfo } from './components';
 import { SessionWrapperModal2 } from '../../SessionWrapperModal2';
 import { FeatureFlags } from './FeatureFlags';
 import { ReleaseChannel } from './ReleaseChannel';
@@ -61,6 +61,8 @@ export function DebugMenuModal() {
           padding="var(--margins-sm) 0"
         >
           <DebugActions />
+          <SpacerSM />
+          <DataGenerationActions />
           <SpacerSM />
           <FeatureFlags flags={window.sessionFeatureFlags} forceUpdate={forceUpdate} />
           <SpacerSM />

@@ -113,6 +113,7 @@ const LOKI_SCHEMA_VERSIONS = [
   updateToSessionSchemaVersion42,
   updateToSessionSchemaVersion43,
   updateToSessionSchemaVersion44,
+  updateToSessionSchemaVersion45,
 ];
 
 function updateToSessionSchemaVersion1(currentVersion: number, db: BetterSqlite3.Database) {
@@ -2093,6 +2094,39 @@ function updateToSessionSchemaVersion44(currentVersion: number, db: BetterSqlite
     db.prepare(`ALTER TABLE ${CONVERSATIONS_TABLE} DROP COLUMN zombies;`).run();
 
     db.prepare(`DROP TABLE ${CLOSED_GROUP_V2_KEY_PAIRS_TABLE};`);
+
+    writeSessionSchemaVersion(targetVersion, db);
+  })();
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
+}
+
+function updateToSessionSchemaVersion45(currentVersion: number, db: BetterSqlite3.Database) {
+  const targetVersion = 45;
+  if (currentVersion >= targetVersion) {
+    return;
+  }
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
+
+  db.transaction(() => {
+    try {
+      const loggedInUser = getLoggedInUserConvoDuringMigration(db);
+
+      if (!loggedInUser || !loggedInUser?.ourKeys.publicKeyHex) {
+        throw new Error('publicKeyHex was empty. Considering no users are logged in');
+      }
+
+      const { publicKeyHex } = loggedInUser.ourKeys;
+      // if another of our device has pushed a multipart message and we have dropped it locally
+      // as we didn't support multi part yet, we need to refetch the message from the swarm.
+      // Note: this is only needed for our own contacts config.
+      db.prepare(
+        `DELETE FROM ${LAST_HASHES_TABLE} WHERE id = '${publicKeyHex}' AND namespace = 3;` // UserContacts
+      ).run();
+    } catch (e) {
+      // if no users are logged in, we can just continue here. Nothing is due to clean
+    }
 
     writeSessionSchemaVersion(targetVersion, db);
   })();
