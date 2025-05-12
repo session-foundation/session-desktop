@@ -13,6 +13,7 @@
   "accountIdYoursDescription": "Це ваш Account ID. Інші користувачі можуть просканувати його, щоб почати розмову з вами.",
   "actualSize": "Актуальний розмір",
   "add": "Додати",
+  "addAdmins": "Додати адміністраторів",
   "adminCannotBeRemoved": "Адміністратори не можуть бути видалені.",
   "adminMorePromotedToAdmin": "<b>{name}</b> та ще <b>{count} інших</b> було підвищено до адміністраторів.",
   "adminPromote": "Підвищити адміністратора",
