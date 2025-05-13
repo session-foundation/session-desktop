@@ -5,7 +5,7 @@ import { AvatarSize } from '../../components/avatar/Avatar';
 import { AvatarPlaceHolder } from '../../components/avatar/AvatarPlaceHolder/AvatarPlaceHolder';
 import { MemberAvatarPlaceHolder } from '../../components/icon/MemberAvatarPlaceHolder';
 import { TestUtils } from '../test-utils';
-import { areResultsEqual, findByDataTestId, renderComponent } from './renderComponent';
+import { expectResultToBeEqual, findByDataTestId, renderComponent } from './renderComponent';
 
 // TODO[epic=SES-2418] migrate to Storybook
 describe('AvatarPlaceHolder', () => {
@@ -37,12 +37,12 @@ describe('AvatarPlaceHolder', () => {
     expect(el.type, 'should be an svg').to.equal('svg');
     result.unmount();
   });
-  it('should render the MemberAvatarPlaceholder if we are loading or there is no hash', async () => {
+  it('should render the MemberAvatarPlaceholder if we are loading or there is no name', async () => {
     const result = renderComponent(
       <AvatarPlaceHolder
         diameter={AvatarSize.XL}
-        name={displayName}
-        pubkey={''} // will make the hash be undefined
+        name="" // will make initials empty, and so force the placeholder
+        pubkey={''}
         dataTestId="avatar-placeholder"
       />
     );
@@ -54,7 +54,7 @@ describe('AvatarPlaceHolder', () => {
       />
     );
 
-    expect(areResultsEqual(result, result2, true)).to.equal(true);
+    expectResultToBeEqual(result, result2);
     result.unmount();
     result2.unmount();
   });
