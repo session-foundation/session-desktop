@@ -6,7 +6,6 @@ import * as PrimaryColorSelectors from './primaryColor';
 import * as SearchSelectors from './search';
 import * as SectionSelectors from './section';
 import * as StagedAttachmentSelectors from './stagedAttachments';
-import * as ThemeSelectors from './theme';
 import * as UserSelectors from './user';
 import * as UserConfigSelectors from './userConfig';
 import * as ReleasedFeaturesSelectors from './releasedFeatures';
@@ -20,7 +19,6 @@ export {
   SearchSelectors,
   SectionSelectors,
   StagedAttachmentSelectors,
-  ThemeSelectors,
   UserConfigSelectors,
   UserSelectors,
   ReleasedFeaturesSelectors,

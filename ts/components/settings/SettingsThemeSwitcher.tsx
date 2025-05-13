@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { getPrimaryColor } from '../../state/selectors/primaryColor';
-import { useTheme } from '../../state/selectors/theme';
+import { useTheme } from '../../state/theme/selectors/theme';
 import {
   StyleSessionSwitcher,
   getPrimaryColors,

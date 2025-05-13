@@ -880,7 +880,7 @@
   "urlCopy": "Copy URL",
   "urlOpen": "Open URL",
   "urlOpenBrowser": "This will open in your browser.",
-  "urlOpenDescription": "Are you sure you want to open this URL in your browser?<br/><br/><b>{url}</b>",
+  "urlOpenDescription": "Are you sure you want to open this URL in your browser?<br/><br/>{url}",
   "useFastMode": "Use Fast Mode",
   "video": "Video",
   "videoErrorPlay": "Unable to play video.",
@@ -892,6 +892,20 @@
   "warning": "Warning",
   "window": "Window",
   "yes": "Yes",
-  "you": "You"
+  "you": "You",
+  "sessionNew": "<span><b>•</b> New</span>",
+  "sessionNetworkDescription": "Messages are sent using the Session Network. The network is comprised of nodes incentivized with Session Token, which keeps Session decentralized and secure. <span>Learn More {icon}</span>",
+  "sessionNetworkCurrentPrice": "Current SESH price",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {datetime}",
+  "sessionNetworkSecuredBy": "Network secured by",
+  "sessionNetworkNodesSwarm": "Session Nodes in <span>your swarm</span>",
+  "sessionNetworkNodesSecuring": "Session Nodes securing <span>your messages</span>",
+  "sessionNetworkTokenDescription": "When you stake Session Token to secure the network, you earn rewards in SESH from the Staking Reward Pool.",
+  "sessionNetworkMarketCap": "Market Cap",
+  "sessionNetworkLearnAboutStaking": "Learn About Staking",
+  "updated": "Last updated {relative_time} ago",
+  "sessionNetworkNotificationLive": "Session Token is live! Explore the new Session Network section in Settings to learn how Session Token powers Session.",
+  "errorGeneric": "Something went wrong. Please try again later",
+  "unavailable": "Unavailable"
 }
 

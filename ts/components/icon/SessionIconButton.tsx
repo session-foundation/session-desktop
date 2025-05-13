@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import { KeyboardEvent, MouseEvent, SessionDataTestId, ReactNode, forwardRef, memo } from 'react';
 import clsx from 'clsx';
-
 import styled from 'styled-components';
 import { SessionIcon, SessionIconProps } from './SessionIcon';
 
@@ -52,6 +51,7 @@ const SessionIconButtonInner = forwardRef<HTMLButtonElement, SessionIconButtonPr
       iconSize,
       iconColor,
       iconRotation,
+      rotateDuration,
       isSelected: $isSelected,
       glowDuration,
       glowStartDelay,
@@ -112,6 +112,7 @@ const SessionIconButtonInner = forwardRef<HTMLButtonElement, SessionIconButtonPr
           iconSize={iconSize}
           iconColor={iconColor}
           iconRotation={iconRotation}
+          rotateDuration={rotateDuration}
           glowDuration={glowDuration}
           glowStartDelay={glowStartDelay}
           noScale={noScale}

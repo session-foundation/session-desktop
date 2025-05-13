@@ -1,8 +1,11 @@
 export enum LOCALE_DEFAULTS {
   app_name = 'Session',
-  session_download_url = 'https://getsession.org/download',
-  gif = 'GIF',
-  oxen_foundation = 'Oxen Foundation',
+  token_name_short = 'SESH',
+  token_name_long = 'Session Token',
+  token_name_long_plural = 'Session Tokens',
+  network_name = 'Session Network',
+  staking_reward_pool = 'Staking Reward Pool',
+  usd_name_short = 'USD',
 }
 
 export const rtlLocales = ['ar', 'fa', 'he', 'ps', 'ur'];
@@ -96,4 +99,3 @@ export type CrowdinLocale = (typeof crowdinLocales)[number];
 export function isCrowdinLocale(locale: string): locale is CrowdinLocale {
   return crowdinLocales.includes(locale as CrowdinLocale);
 }
-

@@ -5,7 +5,7 @@ import { Localizer, type LocalizerProps } from './Localizer';
 const StyledI18nSubTextContainer = styled('div')`
   font-size: var(--font-size-md);
   line-height: 1.5;
-  margin-bottom: var(--margins-lg);
+  margin-bottom: var(--margins-sm);
 
   // TODO: we'd like the description to be on two lines instead of one when it is short.
   // setting the max-width depending on the text length is **not** the way to go.

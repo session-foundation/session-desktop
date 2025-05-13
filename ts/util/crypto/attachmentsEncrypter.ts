@@ -84,7 +84,7 @@ export async function decryptAttachment(
   return verifyMAC(ivAndCiphertext, macKey, mac, 32)
     .then(async () => {
       if (!theirDigest) {
-        throw new Error('Failure: Ask sender to update Signal and resend.');
+        throw new Error('Failure: Ask sender to update Session and resend.');
       }
       return verifyDigest(encryptedBin, theirDigest);
     })

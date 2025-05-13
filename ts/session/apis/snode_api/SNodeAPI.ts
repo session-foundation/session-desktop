@@ -16,6 +16,7 @@ import { DeleteUserHashesFactory } from './factories/DeleteUserHashesRequestFact
 import { SnodePool } from './snodePool';
 import { DURATION } from '../../constants';
 import { timeoutWithAbort } from '../../utils/Promise';
+import { ReduxOnionSelectors } from '../../../state/selectors/onions';
 
 export const ERROR_CODE_NO_CONNECT = 'ENETUNREACH: No network connection.';
 
@@ -29,7 +30,7 @@ const forceNetworkDeletion = async (): Promise<Array<string> | null> => {
   try {
     const maliciousSnodes = await pRetry(
       async () => {
-        if (!window.isOnline) {
+        if (!ReduxOnionSelectors.isOnlineOutsideRedux()) {
           window?.log?.warn('forceNetworkDeletion: we are offline.');
           return null;
         }

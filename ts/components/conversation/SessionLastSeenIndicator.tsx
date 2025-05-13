@@ -3,7 +3,6 @@ import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { useScrollToLoadedMessage } from '../../contexts/ScrollToLoadedMessage';
 import { getQuotedMessageToAnimate } from '../../state/selectors/conversations';
-import { useIsDarkTheme } from '../../state/selectors/theme';
 
 const LastSeenBar = styled.div`
   height: 2px;
@@ -24,7 +23,7 @@ const LastSeenText = styled.div`
   margin-inline: 1rem;
 `;
 
-const LastSeenBarContainer = styled.div<{ isDarkTheme?: boolean }>`
+const LastSeenBarContainer = styled.div`
   padding-bottom: 35px;
   max-width: 300px;
   align-self: center;
@@ -35,12 +34,11 @@ const LastSeenBarContainer = styled.div<{ isDarkTheme?: boolean }>`
   align-items: center;
 
   ${LastSeenBar} {
-    background-color: ${props =>
-      props.isDarkTheme ? 'var(--primary-color)' : 'var(--text-primary-color)'};
+    background-color: var(--renderer-span-primary-color);
   }
 
   ${LastSeenText} {
-    color: ${props => (props.isDarkTheme ? 'var(--primary-color)' : 'var(--text-primary-color)')};
+    color: var(--renderer-span-primary-color);
   }
 `;
 
@@ -49,7 +47,6 @@ export const SessionLastSeenIndicator = (props: {
   didScroll: boolean;
   setDidScroll: (scroll: boolean) => void;
 }) => {
-  const isDarkTheme = useIsDarkTheme();
   // if this unread-indicator is not unique it's going to cause issues
   const quotedMessageToAnimate = useSelector(getQuotedMessageToAnimate);
   const scrollToLoadedMessage = useScrollToLoadedMessage();
@@ -74,7 +71,7 @@ export const SessionLastSeenIndicator = (props: {
   });
 
   return (
-    <LastSeenBarContainer id="unread-indicator" isDarkTheme={isDarkTheme}>
+    <LastSeenBarContainer id="unread-indicator">
       <LastSeenBar />
       <LastSeenText>{window.i18n('messageUnread')}</LastSeenText>
 

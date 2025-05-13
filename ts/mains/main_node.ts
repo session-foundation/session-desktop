@@ -662,8 +662,8 @@ async function showAbout() {
 
   const theme = await getThemeFromMainWindow();
   const options = {
-    width: 500,
-    height: 500,
+    width: 550,
+    height: 550,
     resizeable: true,
     title: i18n('about'),
     autoHideMenuBar: true,

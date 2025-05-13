@@ -8,7 +8,7 @@ import { default as insecureNodeFetch } from 'node-fetch';
 import { OnionPaths } from '.';
 import { Data } from '../../data/data';
 import { Snode } from '../../data/types';
-import { updateOnionPaths } from '../../state/ducks/onion';
+import { updateOnionPaths } from '../../state/ducks/onions';
 import { APPLICATION_JSON } from '../../types/MIME';
 import { ERROR_CODE_NO_CONNECT } from '../apis/snode_api/SNodeAPI';
 import { Onions, snodeHttpsAgent } from '../apis/snode_api/onions';
@@ -361,7 +361,8 @@ export async function selectGuardNodes(): Promise<Array<Snode>> {
   // we only want to repeat if the await fails
   // eslint-disable-next-line-no-await-in-loop
   while (selectedGuardNodes.length < desiredGuardCount) {
-    if (!window.getGlobalOnlineStatus()) {
+    // NOTE we need a valid connection before we can test the guard nodes
+    if (!window.isOnline) {
       window?.log?.error('selectedGuardNodes: offline');
       throw new Error('selectedGuardNodes: offline');
     }

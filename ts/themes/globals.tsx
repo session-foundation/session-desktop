@@ -195,7 +195,7 @@ export const THEME_GLOBALS: ThemeGlobals = {
   '--font-size-h8': '16px',
   '--font-size-h9': '14px',
 
-  // TODO update these values to match the body typograhy in the design system. Will need to review most of the app for this.
+  // TODO update these values to match the body typography in the design system. Will need to review most of the app for this.
   '--font-size-xl': '19px',
   '--font-size-lg': '17px',
   '--font-size-md': '15px',
