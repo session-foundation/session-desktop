@@ -1,10 +1,11 @@
 import { AnimatePresence, MotionGlobalConfig } from 'framer-motion';
 import { isArray, unset } from 'lodash';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { expect } from 'chai';
 import { ElementType, ReactElement, ReactNode } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import TestRenderer from 'react-test-renderer';
 import { SessionTheme } from '../../themes/SessionTheme';
-import { expect } from 'chai';
 
 const Providers = ({ children }: { children: ReactNode }) => {
   MotionGlobalConfig.skipAnimations = false;

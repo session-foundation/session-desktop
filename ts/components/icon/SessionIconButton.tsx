@@ -50,6 +50,7 @@ const SessionIconButtonInner = forwardRef<HTMLButtonElement, SessionIconButtonPr
       className,
       children,
       disabled,
+      backgroundColor,
     } = props;
     const clickHandler = (e: MouseEvent<HTMLButtonElement>) => {
       if (!disabled && props.onClick) {
@@ -96,6 +97,7 @@ const SessionIconButtonInner = forwardRef<HTMLButtonElement, SessionIconButtonPr
           borderRadius={borderRadius}
           iconPadding={iconPadding}
           dataTestId={dataTestIdIcon}
+          backgroundColor={backgroundColor}
         />
         {children}
       </StyledSessionIconButton>

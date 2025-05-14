@@ -14,6 +14,7 @@ import { SessionIcon } from '../icon';
 import { AvatarPlaceHolder } from './AvatarPlaceHolder/AvatarPlaceHolder';
 import { ClosedGroupAvatar } from './AvatarPlaceHolder/ClosedGroupAvatar';
 import { useIsMessageSelectionMode } from '../../state/selectors/selectedConversation';
+import { PlusAvatarButton } from '../buttons/PlusAvatarButton';
 
 export enum AvatarSize {
   XS = 28,
@@ -33,6 +34,11 @@ type Props = {
   onAvatarClick?: () => void;
   dataTestId?: SessionDataTestId;
   imageDataTestId?: SessionDataTestId;
+  /**
+   * If this is set, show the `+` button to change the avatar.
+   * This will be the callback to call on click on that `+` button.
+   */
+  onPlusAvatarClick?: () => void;
 };
 
 const Identicon = (props: Pick<Props, 'forcedName' | 'pubkey' | 'size'>) => {
@@ -123,6 +129,7 @@ const AvatarInner = (props: Props) => {
     dataTestId,
     imageDataTestId,
     onAvatarClick,
+    onPlusAvatarClick,
   } = props;
   const [imageBroken, setImageBroken] = useState(false);
 
@@ -187,6 +194,9 @@ const AvatarInner = (props: Props) => {
           onAvatarClick={onAvatarClick}
         />
       )}
+      {onPlusAvatarClick ? (
+        <PlusAvatarButton onClick={onPlusAvatarClick} dataTestId="image-upload-section" />
+      ) : null}
     </div>
   );
 };

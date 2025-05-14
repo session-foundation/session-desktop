@@ -22,6 +22,7 @@ import { localize } from '../../../localization/localeTools';
 import { useChangeNickname } from '../../menuAndSettingsHooks/useChangeNickname';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { SessionLucideIconButton } from '../../icon/SessionIconButton';
+import { useEditProfilePictureCallback } from '../../menuAndSettingsHooks/useEditProfilePictureCallback';
 
 function AccountId({ conversationId }: WithConvoId) {
   const isPrivate = useIsPrivate(conversationId);
@@ -69,6 +70,8 @@ export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
   const isCommunity = useIsPublic(conversationId);
   const isClosedGroup = useIsClosedGroup(conversationId);
 
+  const editProfilePictureCb = useEditProfilePictureCallback({ conversationId });
+
   if (!conversationId) {
     return null;
   }
@@ -100,7 +103,12 @@ export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
         $flexDirection="column"
         $flexGap="var(--margins-sm)"
       >
-        <Avatar size={AvatarSize.XL} pubkey={conversationId} dataTestId="profile-picture" />
+        <Avatar
+          size={AvatarSize.XL}
+          pubkey={conversationId}
+          dataTestId="profile-picture"
+          onPlusAvatarClick={editProfilePictureCb}
+        />
         <Flex
           $container={true}
           $alignItems={'center'}

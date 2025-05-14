@@ -9,16 +9,10 @@ import { ConvoHub } from '../conversations';
 export type OpenGroupUpdateAvatar = { objectUrl: string | null };
 
 /**
- * This function is only called when the local user makes a change to an open group.
+ * This function is only called when the local user makes a change to a community.
  * So this function is not called on group updates from the network, even from another of our devices.
  */
-export async function initiateOpenGroupUpdate(
-  groupId: string,
-  groupName: string,
-  avatar: OpenGroupUpdateAvatar
-) {
-  // we actually do not change the groupName just yet here, serverSide. This is just done client side. Maybe something to allow in a later release.
-  // For now, the UI is actually not allowing changing the room name so we do not care.
+export async function initiateOpenGroupUpdate(groupId: string, avatar: OpenGroupUpdateAvatar) {
   const convo = ConvoHub.use().get(groupId);
 
   if (!convo?.isPublic()) {
@@ -68,7 +62,7 @@ export async function initiateOpenGroupUpdate(
         contentType: MIME.IMAGE_UNKNOWN, // contentType is mostly used to generate previews and screenshot. We do not care for those in this case.
       });
       await convo.setSessionProfile({
-        displayName: groupName || convo.getRealSessionUsername() || window.i18n('unknown'),
+        displayName: null, // null so we don't overwrite it
         avatarPath: upgraded.path,
         avatarImageId,
       });

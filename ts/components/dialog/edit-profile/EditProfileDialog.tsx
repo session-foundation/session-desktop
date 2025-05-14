@@ -10,7 +10,7 @@ import { YourSessionIDPill, YourSessionIDSelectable } from '../../basic/YourSess
 import { useHotkey } from '../../../hooks/useHotkey';
 import { useOurAvatarPath, useOurConversationUsername } from '../../../hooks/useParamSelector';
 import { ProfileManager } from '../../../session/profile_manager/ProfileManager';
-import { editProfileModal, updateEditProfilePictureModal } from '../../../state/ducks/modalDialog';
+import { editProfileModal } from '../../../state/ducks/modalDialog';
 import { SessionWrapperModal } from '../../SessionWrapperModal';
 import { Flex } from '../../basic/Flex';
 import { SessionButton } from '../../basic/SessionButton';
@@ -22,6 +22,7 @@ import { ProfileHeader, ProfileName, QRView } from './components';
 import { EmptyDisplayNameError, RetrieveDisplayNameError } from '../../../session/utils/errors';
 import { localize } from '../../../localization/localeTools';
 import { sanitizeDisplayNameOrToast } from '../../registration/utils';
+import { useEditProfilePictureCallback } from '../../menuAndSettingsHooks/useEditProfilePictureCallback';
 
 // #region Shortcuts
 const handleKeyQRMode = (
@@ -183,6 +184,7 @@ export const EditProfileDialog = () => {
   const avatarPath = useOurAvatarPath() || '';
   const ourId = UserUtils.getOurPubKeyStrFromCache();
 
+  const editProfilePictureCb = useEditProfilePictureCallback({ conversationId: ourId });
   const [mode, setMode] = useState<ProfileDialogModes>('default');
   const [loading, setLoading] = useState(false);
 
@@ -190,7 +192,7 @@ export const EditProfileDialog = () => {
     if (event?.key || loading) {
       return;
     }
-    window.inboxStore?.dispatch(editProfileModal(null));
+    dispatch(editProfileModal(null));
   };
 
   const backButton =
@@ -244,13 +246,7 @@ export const EditProfileDialog = () => {
       return;
     }
     closeDialog();
-    dispatch(
-      updateEditProfilePictureModal({
-        avatarPath,
-        profileName,
-        ourId,
-      })
-    );
+    editProfilePictureCb?.();
   };
 
   useHotkey('v', () => handleKeyQRMode(mode, setMode, loading), loading);

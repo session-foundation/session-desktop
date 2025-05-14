@@ -53,16 +53,18 @@ type ProfileAvatarProps = {
   newAvatarObjectUrl?: string | null;
   profileName: string | undefined;
   ourId: string;
+  onPlusAvatarClick?: () => void;
 };
 
 export const ProfileAvatar = (props: ProfileAvatarProps) => {
-  const { newAvatarObjectUrl, avatarPath, profileName, ourId } = props;
+  const { newAvatarObjectUrl, avatarPath, profileName, ourId, onPlusAvatarClick } = props;
   return (
     <Avatar
       forcedAvatarPath={newAvatarObjectUrl || avatarPath}
       forcedName={profileName || ourId}
       size={AvatarSize.XL}
       pubkey={ourId}
+      onPlusAvatarClick={onPlusAvatarClick}
     />
   );
 };
@@ -78,12 +80,11 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
   return (
     <div className="avatar-center">
       <div className="avatar-center-inner">
-        <ProfileAvatar avatarPath={avatarPath} profileName={profileName} ourId={ourId} />
-        <div
-          className="image-upload-section"
-          role="button"
-          onClick={onClick}
-          data-testid="image-upload-section"
+        <ProfileAvatar
+          avatarPath={avatarPath}
+          profileName={profileName}
+          ourId={ourId}
+          onPlusAvatarClick={onClick}
         />
         <div className="qr-view-button" onClick={onQRClick} role="button">
           <SessionIconButton iconType="qr" iconSize={26} iconColor="var(--black-color)" />

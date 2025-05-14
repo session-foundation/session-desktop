@@ -12,6 +12,7 @@ import { SpacerLG } from '../basic/Text';
 import { SessionIconButton } from '../icon';
 import { SessionSpinner } from '../loading';
 import { ProfileAvatar } from './edit-profile/components';
+import { PlusAvatarButton } from '../buttons/PlusAvatarButton';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
@@ -29,15 +30,7 @@ const UploadImageButton = () => {
       <StyledUploadButton>
         <SessionIconButton iconType="thumbnail" iconSize={80} iconPadding="16px" />
       </StyledUploadButton>
-      <SessionIconButton
-        iconType="plusFat"
-        iconSize={23}
-        iconColor="var(--modal-background-content-color)"
-        iconPadding="5px"
-        borderRadius="50%"
-        backgroundColor="var(--primary-color)"
-        style={{ position: 'absolute', bottom: 0, right: 0 }}
-      />
+      <PlusAvatarButton dataTestId="image-upload-section" />
     </div>
   );
 };
@@ -127,6 +120,7 @@ export const EditProfilePictureModal = (props: EditProfilePictureModalProps) => 
               avatarPath={avatarPath}
               profileName={profileName}
               ourId={ourId}
+              onPlusAvatarClick={() => void handleAvatarClick()}
             />
           ) : (
             <UploadImageButton />
