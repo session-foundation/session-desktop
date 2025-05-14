@@ -2,7 +2,6 @@ export enum LOCALE_DEFAULTS {
   app_name = 'Session',
   token_name_short = 'SESH',
   token_name_long = 'Session Token',
-  token_name_long_plural = 'Session Tokens',
   network_name = 'Session Network',
   staking_reward_pool = 'Staking Reward Pool',
   usd_name_short = 'USD',
