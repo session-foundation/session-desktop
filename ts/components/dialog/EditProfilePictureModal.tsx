@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { clearOurAvatar, uploadOurAvatar } from '../../interactions/conversationInteractions';
-import { ToastUtils } from '../../session/utils';
+import { ToastUtils, UserUtils } from '../../session/utils';
 import { editProfileModal, updateEditProfilePictureModal } from '../../state/ducks/modalDialog';
 import type { EditProfilePictureModalProps } from '../../types/ReduxTypes';
 import { pickFileForAvatar } from '../../types/attachments/VisualAttachment';
@@ -13,6 +13,10 @@ import { SessionIconButton } from '../icon';
 import { SessionSpinner } from '../loading';
 import { ProfileAvatar } from './edit-profile/components';
 import { PlusAvatarButton } from '../buttons/PlusAvatarButton';
+import { useAvatarPath, useConversationUsername, useIsMe } from '../../hooks/useParamSelector';
+import { localize } from '../../localization/localeTools';
+import { OpenGroupUtils } from '../../session/apis/open_group_api/utils';
+import { initiateOpenGroupUpdate } from '../../session/group/open-group';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
@@ -35,14 +39,21 @@ const UploadImageButton = () => {
   );
 };
 
-const uploadProfileAvatar = async (scaledAvatarUrl: string | null) => {
+const uploadProfileAvatar = async (scaledAvatarUrl: string | null, conversationId: string) => {
   if (scaledAvatarUrl?.length) {
     try {
       const blobContent = await (await fetch(scaledAvatarUrl)).blob();
       if (!blobContent || !blobContent.size) {
         throw new Error('Failed to fetch blob content from scaled avatar');
       }
-      await uploadOurAvatar(await blobContent.arrayBuffer());
+
+      if (conversationId === UserUtils.getOurPubKeyStrFromCache()) {
+        await uploadOurAvatar(await blobContent.arrayBuffer());
+      } else if (OpenGroupUtils.isOpenGroupV2(conversationId)) {
+        await initiateOpenGroupUpdate(conversationId, { objectUrl: scaledAvatarUrl });
+      } else {
+        throw new Error('dome');
+      }
     } catch (error) {
       if (error.message && error.message.length) {
         ToastUtils.pushToastError('edit-profile', error.message);
@@ -55,21 +66,22 @@ const uploadProfileAvatar = async (scaledAvatarUrl: string | null) => {
   }
 };
 
-export const EditProfilePictureModal = (props: EditProfilePictureModalProps) => {
+export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureModalProps) => {
   const dispatch = useDispatch();
 
-  const [newAvatarObjectUrl, setNewAvatarObjectUrl] = useState<string | null>(props.avatarPath);
+  const isMe = useIsMe(conversationId);
+
+  const avatarPath = useAvatarPath(conversationId) || '';
+  const profileName = useConversationUsername(conversationId) || '';
+
+  const [newAvatarObjectUrl, setNewAvatarObjectUrl] = useState<string | null>(avatarPath);
   const [loading, setLoading] = useState(false);
-
-  if (!props) {
-    return null;
-  }
-
-  const { avatarPath, profileName, ourId } = props;
 
   const closeDialog = () => {
     dispatch(updateEditProfilePictureModal(null));
-    dispatch(editProfileModal({}));
+    if (isMe) {
+      dispatch(editProfileModal({}));
+    }
   };
 
   const handleAvatarClick = async () => {
@@ -86,7 +98,7 @@ export const EditProfilePictureModal = (props: EditProfilePictureModalProps) => 
       return;
     }
 
-    await uploadProfileAvatar(newAvatarObjectUrl);
+    await uploadProfileAvatar(newAvatarObjectUrl, conversationId);
     setLoading(false);
     dispatch(updateEditProfilePictureModal(null));
   };
@@ -99,9 +111,13 @@ export const EditProfilePictureModal = (props: EditProfilePictureModalProps) => 
     dispatch(updateEditProfilePictureModal(null));
   };
 
+  const handleClick = () => {
+    void handleAvatarClick();
+  };
+
   return (
     <SessionWrapperModal
-      title={window.i18n('profileDisplayPictureSet')}
+      title={localize('profileDisplayPictureSet').toString()}
       onClose={closeDialog}
       showHeader={true}
       headerReverse={true}
@@ -110,7 +126,7 @@ export const EditProfilePictureModal = (props: EditProfilePictureModalProps) => 
       <div
         className="avatar-center"
         role="button"
-        onClick={() => void handleAvatarClick()}
+        onClick={handleClick}
         data-testid={'image-upload-click'}
       >
         <StyledAvatarContainer className="avatar-center-inner">
@@ -119,8 +135,8 @@ export const EditProfilePictureModal = (props: EditProfilePictureModalProps) => 
               newAvatarObjectUrl={newAvatarObjectUrl}
               avatarPath={avatarPath}
               profileName={profileName}
-              ourId={ourId}
-              onPlusAvatarClick={() => void handleAvatarClick()}
+              conversationId={conversationId}
+              onPlusAvatarClick={handleClick}
             />
           ) : (
             <UploadImageButton />
@@ -135,14 +151,14 @@ export const EditProfilePictureModal = (props: EditProfilePictureModalProps) => 
           <SpacerLG />
           <div className="session-modal__button-group">
             <SessionButton
-              text={window.i18n('save')}
+              text={localize('save').toString()}
               buttonType={SessionButtonType.Simple}
               onClick={handleUpload}
               disabled={newAvatarObjectUrl === avatarPath}
               dataTestId="save-button-profile-update"
             />
             <SessionButton
-              text={window.i18n('remove')}
+              text={localize('remove').toString()}
               buttonColor={SessionButtonColor.Danger}
               buttonType={SessionButtonType.Simple}
               onClick={handleRemove}

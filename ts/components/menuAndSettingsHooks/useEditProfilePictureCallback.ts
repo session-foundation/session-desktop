@@ -1,13 +1,7 @@
 import { useDispatch } from 'react-redux';
-import {
-  useIsGroupV2,
-  useIsMe,
-  useIsPublic,
-  useOurAvatarPath,
-  useOurConversationUsername,
-  useWeAreAdmin,
-} from '../../hooks/useParamSelector';
-import { updateEditProfilePictureModal, updateGroupNameModal } from '../../state/ducks/modalDialog';
+import { useIsGroupV2, useIsMe, useIsPublic, useWeAreAdmin } from '../../hooks/useParamSelector';
+import { updateEditProfilePictureModal } from '../../state/ducks/modalDialog';
+import { hasClosedGroupV2QAButtons } from '../../shared/env_vars';
 
 /**
  * We can edit
@@ -22,27 +16,20 @@ function useEditProfilePicture({ conversationId }: { conversationId: string }) {
 
   const weAreAdmin = useWeAreAdmin(conversationId);
 
-  return isMe || ((isPublic || isGroup) && weAreAdmin);
+  const hasQAButtonsOn = hasClosedGroupV2QAButtons();
+
+  return isMe || ((isPublic || isGroup) && weAreAdmin && hasQAButtonsOn);
 }
 
 export function useEditProfilePictureCallback({ conversationId }: { conversationId: string }) {
   const canEdit = useEditProfilePicture({ conversationId });
   const dispatch = useDispatch();
 
-  const isMe = useIsMe(conversationId);
-  const avatarPath = useOurAvatarPath() || '';
-  const profileName = useOurConversationUsername() || '';
-
   if (!canEdit) {
     return undefined;
   }
 
-  if (isMe) {
-    return () => {
-      dispatch(updateEditProfilePictureModal({ ourId: conversationId, avatarPath, profileName }));
-    };
-  }
   return () => {
-    dispatch(updateGroupNameModal({ conversationId }));
+    dispatch(updateEditProfilePictureModal({ conversationId }));
   };
 }

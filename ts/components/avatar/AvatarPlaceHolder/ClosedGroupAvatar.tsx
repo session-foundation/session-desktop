@@ -81,20 +81,13 @@ export const ClosedGroupAvatar = ({
   const secondMemberID = memberAvatars?.secondMember || '';
   const avatarsDiameter = getClosedGroupAvatarsSize(size);
 
-  const firstChild = (
-    <Avatar size={avatarsDiameter} pubkey={firstMemberId} onAvatarClick={onAvatarClick} />
-  );
-  const secondChild = (
-    <Avatar size={avatarsDiameter} pubkey={secondMemberID} onAvatarClick={onAvatarClick} />
-  );
-
   const { bgColor } = useAvatarBgColor(secondMemberID || convoId);
 
   if (firstMemberId && secondMemberID) {
     return (
       <div className="module-avatar__icon-closed">
-        {firstChild}
-        {secondChild}
+        <Avatar size={avatarsDiameter} pubkey={firstMemberId} onAvatarClick={onAvatarClick} />
+        <Avatar size={avatarsDiameter} pubkey={secondMemberID} onAvatarClick={onAvatarClick} />
       </div>
     );
   }

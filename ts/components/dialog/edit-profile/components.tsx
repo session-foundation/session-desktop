@@ -52,18 +52,18 @@ type ProfileAvatarProps = {
   avatarPath: string | null;
   newAvatarObjectUrl?: string | null;
   profileName: string | undefined;
-  ourId: string;
+  conversationId: string;
   onPlusAvatarClick?: () => void;
 };
 
 export const ProfileAvatar = (props: ProfileAvatarProps) => {
-  const { newAvatarObjectUrl, avatarPath, profileName, ourId, onPlusAvatarClick } = props;
+  const { newAvatarObjectUrl, avatarPath, profileName, conversationId, onPlusAvatarClick } = props;
   return (
     <Avatar
       forcedAvatarPath={newAvatarObjectUrl || avatarPath}
-      forcedName={profileName || ourId}
+      forcedName={profileName || conversationId}
       size={AvatarSize.XL}
-      pubkey={ourId}
+      pubkey={conversationId}
       onPlusAvatarClick={onPlusAvatarClick}
     />
   );
@@ -74,8 +74,31 @@ type ProfileHeaderProps = ProfileAvatarProps & {
   onQRClick: () => void;
 };
 
+const QrViewButton = styled.div`
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  height: 34px;
+  width: 34px;
+  border-radius: 50%;
+  background-color: var(--white-color);
+  transition: var(--default-duration);
+
+  &:hover {
+    filter: brightness(90%);
+  }
+
+  .session-icon-button {
+    opacity: 1;
+  }
+`;
+
 export const ProfileHeader = (props: ProfileHeaderProps) => {
-  const { avatarPath, profileName, ourId, onClick, onQRClick } = props;
+  const { avatarPath, profileName, conversationId, onClick, onQRClick } = props;
 
   return (
     <div className="avatar-center">
@@ -83,12 +106,12 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
         <ProfileAvatar
           avatarPath={avatarPath}
           profileName={profileName}
-          ourId={ourId}
+          conversationId={conversationId}
           onPlusAvatarClick={onClick}
         />
-        <div className="qr-view-button" onClick={onQRClick} role="button">
+        <QrViewButton onClick={onQRClick} role="button">
           <SessionIconButton iconType="qr" iconSize={26} iconColor="var(--black-color)" />
-        </div>
+        </QrViewButton>
       </div>
     </div>
   );

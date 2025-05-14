@@ -12,8 +12,11 @@ export type OpenGroupUpdateAvatar = { objectUrl: string | null };
  * This function is only called when the local user makes a change to a community.
  * So this function is not called on group updates from the network, even from another of our devices.
  */
-export async function initiateOpenGroupUpdate(groupId: string, avatar: OpenGroupUpdateAvatar) {
-  const convo = ConvoHub.use().get(groupId);
+export async function initiateOpenGroupUpdate(
+  conversationId: string,
+  avatar: OpenGroupUpdateAvatar
+) {
+  const convo = ConvoHub.use().get(conversationId);
 
   if (!convo?.isPublic()) {
     throw new Error('initiateOpenGroupUpdate can only be used for communities');
