@@ -393,6 +393,7 @@
   "groupLeaveDescriptionAdmin": "តើអ្នកប្រាកដទេថាអ្នកចង់ចាកចេញពី <b>{group_name}</b>?<br/><br/>នេះនឹងដកសមាជិកទាំងអស់និងលុបមាតិកាក្រុមទាំងមូល។",
   "groupLeaveErrorFailed": "បរាជ័យក្នុងការចាកចេញពី {group_name}",
   "groupMemberLeft": "<b>{name}‍</b> បានចាកចេញពីក្រុមនេះ។",
+  "groupMemberLeftMultiple": "<b>{name}‍</b> និង <b>{count}</b> គេផ្សង ទៀត‍ បន ចាចកេញីក្រុមនេះ។",
   "groupMemberLeftTwo": "<b>{name}‍</b> និង <b>{other_name}‍</b> បានចាកចេញពីក្រុមនេះ។",
   "groupMemberNew": "<b>{name}‍</b>បន ចូលក្រុម។",
   "groupMemberNewHistory": "<b>{name}</b> ត្រូវបានអញ្ជើញឱ្យចូលក្រុមនេះ។បានចែករំលែកប្រវត្តិការជជែក។",
