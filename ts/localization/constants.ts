@@ -3,6 +3,12 @@ export enum LOCALE_DEFAULTS {
   session_download_url = 'https://getsession.org/download',
   gif = 'GIF',
   oxen_foundation = 'Oxen Foundation',
+  network_name = 'Session Network',
+  token_name_long = 'Session Token',
+  staking_reward_pool = 'Staking Reward Pool',
+  token_name_short = 'SESH',
+  usd_name_short = 'USD',
+  session_network_data_price = 'Price data powered by CoinGecko<br/>Accurate at {datetime}',
 }
 
 export const rtlLocales = ['ar', 'fa', 'he', 'ps', 'ur'];
