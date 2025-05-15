@@ -1,24 +1,21 @@
-import { isEmpty, isNil, uniq } from 'lodash';
+import { isEmpty, uniq } from 'lodash';
 import { PubkeyType, WithGroupPubkey } from 'libsession_util_nodejs';
 import AbortController from 'abort-controller';
 import { READ_MESSAGE_STATE } from '../models/conversationAttributes';
-import { CallManager, PromiseUtils, SyncUtils, ToastUtils, UserUtils } from '../session/utils';
+import { CallManager, PromiseUtils, ToastUtils, UserUtils } from '../session/utils';
 
 import { SessionButtonColor } from '../components/basic/SessionButton';
 import { getCallMediaPermissionsSettings } from '../components/settings/SessionSettings';
 import { Data } from '../data/data';
 import { SettingsKey } from '../data/settings-key';
 import { ConversationTypeEnum } from '../models/types';
-import { uploadFileToFsWithOnionV4 } from '../session/apis/file_server_api/FileServerApi';
 import { getSwarmPollingInstance } from '../session/apis/snode_api';
 import { ConvoHub } from '../session/conversations';
-import { getSodiumRenderer } from '../session/crypto';
-import { DecryptedAttachmentsManager } from '../session/crypto/DecryptedAttachmentsManager';
 import { DisappearingMessageConversationModeType } from '../session/disappearing_messages/types';
 import { PubKey } from '../session/types';
 import { perfEnd, perfStart } from '../session/utils/Performance';
 import { sleepFor, timeoutWithAbort } from '../session/utils/Promise';
-import { ed25519Str, fromHexToArray, toHex } from '../session/utils/String';
+import { ed25519Str } from '../session/utils/String';
 import { SessionUtilContact } from '../session/utils/libsession/libsession_utils_contacts';
 import {
   conversationReset,
@@ -31,18 +28,13 @@ import {
   updateGroupMembersModal,
   updateGroupNameModal,
 } from '../state/ducks/modalDialog';
-import { MIME } from '../types';
-import { IMAGE_JPEG } from '../types/MIME';
-import { processNewAttachment } from '../types/MessageAttachment';
-import { urlToBlob } from '../types/attachments/VisualAttachment';
-import { encryptProfile } from '../util/crypto/profileEncrypter';
 import { Storage } from '../util/storage';
 import { UserGroupsWrapperActions } from '../webworker/workers/browser/libsession_worker_interface';
 import { ConversationInteractionStatus, ConversationInteractionType } from './types';
 import { BlockedNumberController } from '../util';
 import { sendInviteResponseToGroup } from '../session/sending/group/GroupInviteResponse';
 import { NetworkTime } from '../util/NetworkTime';
-import { ClosedGroup } from '../session';
+import { ClosedGroup } from '../session/group/closed-group';
 import { GroupUpdateMessageFactory } from '../session/messages/message_factory/group/groupUpdateMessageFactory';
 import { MessageSender } from '../session/sending';
 import { StoreGroupRequestFactory } from '../session/apis/snode_api/factories/StoreGroupRequestFactory';
@@ -531,135 +523,6 @@ export async function setDisappearingMessagesByConvoId(
     });
   }
 }
-
-/**
- * This function can be used for reupload our avatar to the file server or upload a new avatar.
- *
- * If this is a reupload, the old profileKey is used, otherwise a new one is generated
- */
-export async function uploadOurAvatar(newAvatarDecrypted?: ArrayBuffer) {
-  const ourConvo = ConvoHub.use().get(UserUtils.getOurPubKeyStrFromCache());
-  if (!ourConvo) {
-    window.log.warn('ourConvo not found... This is not a valid case');
-    return null;
-  }
-
-  let profileKey: Uint8Array | null;
-  let decryptedAvatarData;
-  if (newAvatarDecrypted) {
-    // Encrypt with a new key every time
-    profileKey = (await getSodiumRenderer()).randombytes_buf(32);
-    decryptedAvatarData = newAvatarDecrypted;
-  } else {
-    // this is a reupload. no need to generate a new profileKey
-    const ourConvoProfileKey =
-      ConvoHub.use().get(UserUtils.getOurPubKeyStrFromCache())?.getProfileKey() || null;
-
-    profileKey = ourConvoProfileKey ? fromHexToArray(ourConvoProfileKey) : null;
-    if (!profileKey) {
-      window.log.info('our profileKey not found. Not reuploading our avatar');
-      return null;
-    }
-    const currentAttachmentPath = ourConvo.getAvatarPath();
-
-    if (!currentAttachmentPath) {
-      window.log.warn('No attachment currently set for our convo.. Nothing to do.');
-      return null;
-    }
-
-    const decryptedAvatarUrl = await DecryptedAttachmentsManager.getDecryptedMediaUrl(
-      currentAttachmentPath,
-      IMAGE_JPEG,
-      true
-    );
-
-    if (!decryptedAvatarUrl) {
-      window.log.warn('Could not decrypt avatar stored locally..');
-      return null;
-    }
-    const blob = await urlToBlob(decryptedAvatarUrl);
-
-    decryptedAvatarData = await blob.arrayBuffer();
-  }
-
-  if (!decryptedAvatarData?.byteLength) {
-    window.log.warn('Could not read content of avatar ...');
-    return null;
-  }
-
-  const encryptedData = await encryptProfile(decryptedAvatarData, profileKey);
-
-  const avatarPointer = await uploadFileToFsWithOnionV4(encryptedData);
-  if (!avatarPointer) {
-    window.log.warn('failed to upload avatar to file server');
-    return null;
-  }
-  const { fileUrl, fileId } = avatarPointer;
-
-  ourConvo.setKey('avatarPointer', fileUrl);
-
-  // this encrypts and save the new avatar and returns a new attachment path
-  const upgraded = await processNewAttachment({
-    isRaw: true,
-    data: decryptedAvatarData,
-    contentType: MIME.IMAGE_UNKNOWN, // contentType is mostly used to generate previews and screenshot. We do not care for those in this case.
-  });
-  // Replace our temporary image with the attachment pointer from the server:
-  ourConvo.setKey('avatarInProfile', undefined);
-  const displayName = ourConvo.getRealSessionUsername();
-
-  // write the profileKey even if it did not change
-  ourConvo.set({ profileKey: toHex(profileKey) });
-  // Replace our temporary image with the attachment pointer from the server:
-  // this commits already
-  await ourConvo.setSessionProfile({
-    avatarPath: upgraded.path,
-    displayName,
-    avatarImageId: fileId,
-  });
-  const newTimestampReupload = Date.now();
-  await Storage.put(SettingsKey.lastAvatarUploadTimestamp, newTimestampReupload);
-
-  if (!newAvatarDecrypted) {
-    window.log.info(
-      `Reuploading avatar finished at ${newTimestampReupload}, newAttachmentPointer ${fileUrl}`
-    );
-  }
-  return {
-    avatarPointer: ourConvo.getAvatarPointer(),
-    profileKey: ourConvo.getProfileKey(),
-  };
-}
-
-/**
- * This function can be used for clearing our avatar.
- */
-export async function clearOurAvatar(commit: boolean = true) {
-  const ourConvo = ConvoHub.use().get(UserUtils.getOurPubKeyStrFromCache());
-  if (!ourConvo) {
-    window.log.warn('ourConvo not found... This is not a valid case');
-    return;
-  }
-
-  // return early if no change are needed at all
-  if (
-    isNil(ourConvo.get('avatarPointer')) &&
-    isNil(ourConvo.get('avatarInProfile')) &&
-    isNil(ourConvo.get('profileKey'))
-  ) {
-    return;
-  }
-
-  ourConvo.setKey('avatarPointer', undefined);
-  ourConvo.setKey('avatarInProfile', undefined);
-  ourConvo.setKey('profileKey', undefined);
-
-  if (commit) {
-    await ourConvo.commit();
-    await SyncUtils.forceSyncConfigurationNowIfNeeded(true);
-  }
-}
-
 export async function replyToMessage(messageId: string) {
   const quotedMessageModel = await Data.getMessageById(messageId);
   if (!quotedMessageModel) {

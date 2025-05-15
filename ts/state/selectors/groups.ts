@@ -50,6 +50,10 @@ function selectGroupNameChangeFromUIPending(state: StateType): boolean {
   return selectLibGroupsState(state).nameChangesFromUIPending;
 }
 
+function selectGroupAvatarChangeFromUIPending(state: StateType): boolean {
+  return selectLibGroupsState(state).avatarChangeFromUIPending;
+}
+
 export function selectLibAdminsPubkeys(state: StateType, convo?: string): Array<string> {
   const members = selectMembersOfGroup(state, convo);
   return members.filter(m => m.nominatedAdmin).map(m => m.pubkeyHex);
@@ -243,6 +247,10 @@ export function useMemberGroupChangePending() {
 
 export function useGroupNameChangeFromUIPending() {
   return useSelector(selectGroupNameChangeFromUIPending);
+}
+
+export function useGroupAvatarChangeFromUIPending() {
+  return useSelector(selectGroupAvatarChangeFromUIPending);
 }
 
 function getSortingOrderForStatus(memberStatus: MemberStateGroupV2) {

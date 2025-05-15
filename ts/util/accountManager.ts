@@ -18,7 +18,7 @@ import { getOurPubKeyStrFromCache } from '../session/utils/User';
 import { LibSessionUtil } from '../session/utils/libsession/libsession_utils';
 import { forceSyncConfigurationNowIfNeeded } from '../session/utils/sync/syncUtils';
 import { updateConfirmModal, updateDeleteAccountModal } from '../state/ducks/modalDialog';
-import { actions as userActions } from '../state/ducks/user';
+import { userActions } from '../state/ducks/user';
 import { Registration } from './registration';
 import { Storage, saveRecoveryPhrase, setLocalPubKey, setSignInByLinking } from './storage';
 import { PromiseUtils } from '../session/utils';
@@ -237,7 +237,6 @@ export async function registrationDone(ourPubkey: string, displayName: string) {
   const user = {
     ourDisplayNameInProfile: displayName,
     ourNumber: getOurPubKeyStrFromCache(),
-    ourPrimary: ourPubkey,
   };
   window.inboxStore?.dispatch(userActions.userChanged(user));
 

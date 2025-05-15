@@ -54,3 +54,9 @@ export function getModeratorsOutsideRedux(convoId: string): Array<string> {
 export const useSubscriberCount = (convoId?: string): number | undefined => {
   return useSelector((state: StateType) => getSubscriberCount(state, convoId));
 };
+
+export function useAvatarOfRoomIsUploading(convoId?: string) {
+  return useSelector((state: StateType) =>
+    convoId ? getSogsRoomInfoState(state).rooms[convoId]?.uploadingNewAvatar : false
+  );
+}

@@ -51,15 +51,21 @@ import {
   WithFromMemberLeftMessage,
   WithRemoveMembers,
 } from '../../session/types/with';
-import { updateGroupNameModal } from './modalDialog';
+import { updateEditProfilePictureModal, updateGroupNameModal } from './modalDialog';
 import { localize } from '../../localization/localeTools';
 import { type GroupMemberGetRedux, makeGroupMemberGetRedux } from './types/groupReduxTypes';
+import { uploadFileToFsWithOnionV4 } from '../../session/apis/file_server_api/FileServerApi';
+import { urlToBlob } from '../../types/attachments/VisualAttachment';
+import { encryptProfile } from '../../util/crypto/profileEncrypter';
+import { processNewAttachment } from '../../types/MessageAttachment';
+import { MIME } from '../../types';
 
 export type GroupState = {
   infos: Record<GroupPubkeyType, GroupInfoGet>;
   members: Record<GroupPubkeyType, Array<GroupMemberGetRedux>>;
   memberChangesFromUIPending: boolean;
   nameChangesFromUIPending: boolean;
+  avatarChangeFromUIPending: boolean;
 
   // those are group creation-related fields
   creationFromUIPending: boolean;
@@ -73,6 +79,7 @@ export const initialGroupState: GroupState = {
   creationFromUIPending: false,
   memberChangesFromUIPending: false,
   nameChangesFromUIPending: false,
+  avatarChangeFromUIPending: false,
   creationMembersSelected: [],
   creationGroupName: '',
 };
@@ -961,6 +968,114 @@ async function handleNameChangeFromUI({
   await convo.commit();
 }
 
+async function handleAvatarChangeFromUI({
+  groupPk,
+  objectUrl,
+}: WithGroupPubkey & {
+  objectUrl: string;
+}) {
+  const convo = ConvoHub.use().get(groupPk);
+  const us = UserUtils.getOurPubKeyStrFromCache();
+  if (!convo) {
+    throw new PreConditionFailed('handleAvatarChangeFromUI: convo not present');
+  }
+  const group = await UserGroupsWrapperActions.getGroup(groupPk);
+  if (!group || !group.secretKey || isEmpty(group.secretKey)) {
+    throw new Error('tried to make change to group but we do not have the admin secret key');
+  }
+  const infos = await MetaGroupWrapperActions.infoGet(groupPk);
+  if (!infos) {
+    throw new PreConditionFailed('avatarChange infoGet is empty');
+  }
+
+  await checkWeAreAdminOrThrow(groupPk, 'handleAvatarChangeFromUI');
+
+  const blobAvatarAlreadyScaled = await urlToBlob(objectUrl);
+
+  const dataResizedUnencrypted = await blobAvatarAlreadyScaled.arrayBuffer();
+  // generate a new profile key for this group
+  const profileKey = (await getSodiumRenderer()).randombytes_buf(32);
+  // encrypt the avatar data with the profile key
+  const encryptedData = await encryptProfile(dataResizedUnencrypted, profileKey);
+
+  const uploadedFileDetails = await uploadFileToFsWithOnionV4(encryptedData);
+  if (!uploadedFileDetails || !uploadedFileDetails.fileUrl) {
+    window?.log?.warn('File upload for groupv2 to file server failed');
+    throw new Error('File upload for groupv2 to file server failed');
+  }
+  const { fileUrl, fileId } = uploadedFileDetails;
+
+  const upgraded = await processNewAttachment({
+    data: dataResizedUnencrypted,
+    isRaw: true,
+    contentType: MIME.IMAGE_UNKNOWN, // contentType is mostly used to generate previews and screenshot. We do not care for those in this case.
+  });
+  await convo.setSessionProfile({
+    displayName: null, // null so we don't overwrite it
+    avatarPath: upgraded.path,
+    avatarImageId: fileId,
+  });
+  infos.profilePicture = { url: fileUrl, key: profileKey };
+  await MetaGroupWrapperActions.infoSet(groupPk, infos);
+  const createAtNetworkTimestamp = NetworkTime.now();
+
+  // we want to add an update message even if the change was done remotely
+  const msg = await ClosedGroup.addUpdateMessage({
+    convo,
+    diff: { type: 'avatarChange' },
+    sender: us,
+    sentAt: createAtNetworkTimestamp,
+    expireUpdate: DisappearingMessages.getExpireDetailsForOutgoingMessage(
+      convo,
+      createAtNetworkTimestamp
+    ),
+    markAlreadySent: false, // the store below will mark the message as sent with dbMsgIdentifier
+    messageHash: null,
+  });
+
+  // we want to send an update only if the change was made locally.
+  const avatarChangeMsg = new GroupUpdateInfoChangeMessage({
+    groupPk,
+    typeOfChange: SignalService.GroupUpdateInfoChangeMessage.Type.AVATAR,
+    identifier: msg.id,
+    createAtNetworkTimestamp,
+    secretKey: group.secretKey,
+    sodium: await getSodiumRenderer(),
+    ...DisappearingMessages.getExpireDetailsForOutgoingMessage(convo, createAtNetworkTimestamp),
+  });
+
+  const extraStoreRequests = await StoreGroupRequestFactory.makeGroupMessageSubRequest(
+    [avatarChangeMsg],
+    group
+  );
+
+  try {
+    const batchResult = await GroupSync.pushChangesToGroupSwarmIfNeeded({
+      groupPk,
+      extraStoreRequests,
+      allow401s: false,
+    });
+
+    if (batchResult !== RunJobResult.Success) {
+      await LibSessionUtil.saveDumpsToDb(groupPk);
+
+      throw new Error(
+        'handleAvatarChangeFromUI: pushChangesToGroupSwarmIfNeeded did not return success'
+      );
+    }
+  } catch (e) {
+    window.log.warn(
+      'handleAvatarChangeFromUI: pushChangesToGroupSwarmIfNeeded failed with:',
+      e.message
+    );
+  }
+
+  convo.set({
+    active_at: createAtNetworkTimestamp,
+  });
+  await convo.commit();
+}
+
 /**
  * This action is used to trigger a change when the local user does a change to a group v2 members list.
  * GroupV2 added members can be added two ways: with and without the history of messages.
@@ -1006,77 +1121,6 @@ const currentDeviceGroupMembersChange = createAsyncThunk(
       infos: await MetaGroupWrapperActions.infoGet(groupPk),
       members: await MetaGroupWrapperActions.memberGetAll(groupPk),
     };
-  }
-);
-
-const triggerFakeAvatarUpdate = createAsyncThunk(
-  'group/triggerFakeAvatarUpdate',
-  async (
-    {
-      groupPk,
-    }: {
-      groupPk: GroupPubkeyType;
-    },
-    payloadCreator
-  ): Promise<void> => {
-    const state = payloadCreator.getState() as StateType;
-    if (!state.groups.infos[groupPk]) {
-      throw new PreConditionFailed('triggerFakeAvatarUpdate group not present in redux slice');
-    }
-    const convo = ConvoHub.use().get(groupPk);
-    const group = await UserGroupsWrapperActions.getGroup(groupPk);
-    if (!convo || !group || !group.secretKey || isEmpty(group.secretKey)) {
-      throw new Error(
-        'triggerFakeAvatarUpdate: tried to make change to group but we do not have the admin secret key'
-      );
-    }
-
-    const createAtNetworkTimestamp = NetworkTime.now();
-    const expireUpdate = DisappearingMessages.getExpireDetailsForOutgoingMessage(
-      convo,
-      createAtNetworkTimestamp
-    );
-    const msgModel = await ClosedGroup.addUpdateMessage({
-      diff: { type: 'avatarChange' },
-      expireUpdate,
-      sender: UserUtils.getOurPubKeyStrFromCache(),
-      sentAt: createAtNetworkTimestamp,
-      convo,
-      markAlreadySent: false, // the store below will mark the message as sent with dbMsgIdentifier
-      messageHash: null,
-    });
-
-    await msgModel.commit();
-    const updateMsg = new GroupUpdateInfoChangeMessage({
-      createAtNetworkTimestamp,
-      typeOfChange: SignalService.GroupUpdateInfoChangeMessage.Type.AVATAR,
-      ...expireUpdate,
-      groupPk,
-      identifier: msgModel.id,
-      secretKey: group.secretKey,
-      sodium: await getSodiumRenderer(),
-    });
-
-    const extraStoreRequests = await StoreGroupRequestFactory.makeGroupMessageSubRequest(
-      [updateMsg],
-      group
-    );
-    try {
-      const batchResult = await GroupSync.pushChangesToGroupSwarmIfNeeded({
-        groupPk,
-        extraStoreRequests,
-        allow401s: false,
-      });
-      if (!batchResult) {
-        window.log.warn(`failed to send avatarChange message for group ${ed25519Str(groupPk)}`);
-        throw new Error('failed to send avatarChange message');
-      }
-    } catch (e) {
-      window.log.warn(
-        'currentDeviceGroupMembersChange: pushChangesToGroupSwarmIfNeeded failed with:',
-        e.message
-      );
-    }
   }
 );
 
@@ -1255,6 +1299,37 @@ const currentDeviceGroupNameChange = createAsyncThunk(
 
     await handleNameChangeFromUI({ groupPk, ...args });
     window.inboxStore?.dispatch(updateGroupNameModal(null));
+
+    return {
+      groupPk,
+      infos: await MetaGroupWrapperActions.infoGet(groupPk),
+      members: await MetaGroupWrapperActions.memberGetAll(groupPk),
+    };
+  }
+);
+
+const currentDeviceGroupAvatarChange = createAsyncThunk(
+  'group/currentDeviceGroupAvatarChange',
+  async (
+    {
+      groupPk,
+      ...args
+    }: {
+      groupPk: GroupPubkeyType;
+      objectUrl: string;
+    },
+    payloadCreator
+  ): Promise<GroupDetailsUpdate> => {
+    const state = payloadCreator.getState() as StateType;
+    if (!state.groups.infos[groupPk] || !state.groups.members[groupPk]) {
+      throw new PreConditionFailed(
+        'currentDeviceGroupAvatarChange group not present in redux slice'
+      );
+    }
+    await checkWeAreAdminOrThrow(groupPk, 'currentDeviceGroupAvatarChange');
+
+    await handleAvatarChangeFromUI({ groupPk, ...args });
+    window.inboxStore?.dispatch(updateEditProfilePictureModal(null));
 
     return {
       groupPk,
@@ -1468,6 +1543,31 @@ const metaGroupSlice = createSlice({
       state.nameChangesFromUIPending = true;
     });
 
+    /** currentDeviceGroupAvatarChange */
+    builder.addCase(currentDeviceGroupAvatarChange.fulfilled, (state, action) => {
+      state.avatarChangeFromUIPending = false;
+
+      const { infos, members, groupPk } = action.payload;
+      state.infos[groupPk] = infos;
+      state.members[groupPk] = members;
+      refreshConvosModelProps([groupPk]);
+      if (window.sessionFeatureFlags.debug.debugLibsessionDumps) {
+        window.log.info(
+          `groupInfo of ${ed25519Str(groupPk)} after currentDeviceGroupAvatarChange: ${stringify(infos)}`
+        );
+        window.log.info(
+          `groupMembers of ${ed25519Str(groupPk)} after currentDeviceGroupAvatarChange: ${stringify(members)}`
+        );
+      }
+    });
+    builder.addCase(currentDeviceGroupAvatarChange.rejected, (state, action) => {
+      window.log.error(`a ${currentDeviceGroupAvatarChange.name} was rejected`, action.error);
+      state.avatarChangeFromUIPending = false;
+    });
+    builder.addCase(currentDeviceGroupAvatarChange.pending, state => {
+      state.avatarChangeFromUIPending = true;
+    });
+
     /** handleMemberLeftMessage */
     builder.addCase(handleMemberLeftMessage.fulfilled, (state, action) => {
       const { infos, members, groupPk } = action.payload;
@@ -1504,14 +1604,6 @@ const metaGroupSlice = createSlice({
     builder.addCase(inviteResponseReceived.rejected, (_state, action) => {
       window.log.error('a inviteResponseReceived was rejected', action.error);
     });
-
-    // triggerFakeAvatarUpdate
-    builder.addCase(triggerFakeAvatarUpdate.fulfilled, () => {
-      window.log.error('a triggerFakeAvatarUpdate was fulfilled');
-    });
-    builder.addCase(triggerFakeAvatarUpdate.rejected, (_state, action) => {
-      window.log.error('a triggerFakeAvatarUpdate was rejected', action.error);
-    });
   },
 });
 
@@ -1524,7 +1616,7 @@ export const groupInfoActions = {
   inviteResponseReceived,
   handleMemberLeftMessage,
   currentDeviceGroupNameChange,
-  triggerFakeAvatarUpdate,
+  currentDeviceGroupAvatarChange,
   triggerFakeDeleteMsgBeforeNow,
   ...metaGroupSlice.actions,
 };

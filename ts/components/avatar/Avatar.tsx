@@ -140,7 +140,11 @@ const AvatarInner = (props: Props) => {
   const name = useConversationUsername(pubkey);
   // contentType is not important
   const { urlToLoad } = useEncryptedFileFetch(forcedAvatarPath || avatarPath || '', '', true);
+
   const handleImageError = () => {
+    if (pubkey === '036c60a48da97925d6eaaea4cf498fac92b05b999c9e957ecfd69fd352d6a9658c') {
+      debugger;
+    }
     window.log.warn(
       'Avatar: Image failed to load; failing over to placeholder',
       urlToLoad,
@@ -149,7 +153,7 @@ const AvatarInner = (props: Props) => {
     setImageBroken(true);
   };
 
-  const hasImage = (base64Data || urlToLoad) && !imageBroken && !isClosedGroup;
+  const hasImage = (base64Data || urlToLoad) && !imageBroken;
 
   const isClickable = !!onAvatarClick;
 

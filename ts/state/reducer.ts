@@ -8,7 +8,7 @@ import { reducer as search, SearchStateType } from './ducks/search';
 import { reducer as section, SectionStateType } from './ducks/section';
 import { ReduxSogsRoomInfos, SogsRoomInfoState } from './ducks/sogsRoomInfo';
 import { reducer as theme } from './ducks/theme';
-import { reducer as user, UserStateType } from './ducks/user';
+import { userReducer as user, UserStateType } from './ducks/user';
 
 import { PrimaryColorStateType, ThemeStateType } from '../themes/constants/colors';
 import { groupReducer, GroupState } from './ducks/metaGroups';

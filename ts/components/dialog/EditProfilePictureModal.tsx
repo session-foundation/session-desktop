@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
-import { clearOurAvatar, uploadOurAvatar } from '../../interactions/conversationInteractions';
+import { clearOurAvatar } from '../../interactions/avatar-interactions/nts-avatar-interactions';
 import { ToastUtils, UserUtils } from '../../session/utils';
 import { editProfileModal, updateEditProfilePictureModal } from '../../state/ducks/modalDialog';
 import type { EditProfilePictureModalProps } from '../../types/ReduxTypes';
@@ -13,10 +13,21 @@ import { SessionIconButton } from '../icon';
 import { SessionSpinner } from '../loading';
 import { ProfileAvatar } from './edit-profile/components';
 import { PlusAvatarButton } from '../buttons/PlusAvatarButton';
-import { useAvatarPath, useConversationUsername, useIsMe } from '../../hooks/useParamSelector';
+import {
+  useAvatarPath,
+  useConversationUsername,
+  useIsMe,
+  useIsPublic,
+} from '../../hooks/useParamSelector';
 import { localize } from '../../localization/localeTools';
 import { OpenGroupUtils } from '../../session/apis/open_group_api/utils';
-import { initiateOpenGroupUpdate } from '../../session/group/open-group';
+import { PubKey } from '../../session/types';
+import { groupInfoActions } from '../../state/ducks/metaGroups';
+import { useGroupAvatarChangeFromUIPending } from '../../state/selectors/groups';
+import { userActions } from '../../state/ducks/user';
+import { ReduxSogsRoomInfos } from '../../state/ducks/sogsRoomInfo';
+import { useOurAvatarIsUploading } from '../../state/selectors/user';
+import { useAvatarOfRoomIsUploading } from '../../state/selectors/sogsRoomInfo';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
@@ -39,20 +50,37 @@ const UploadImageButton = () => {
   );
 };
 
-const uploadProfileAvatar = async (scaledAvatarUrl: string | null, conversationId: string) => {
+const triggerUploadProfileAvatar = async (
+  scaledAvatarUrl: string | null,
+  conversationId: string
+) => {
   if (scaledAvatarUrl?.length) {
     try {
-      const blobContent = await (await fetch(scaledAvatarUrl)).blob();
+      const fetched = await fetch(scaledAvatarUrl);
+      const blobContent = await fetched.blob();
       if (!blobContent || !blobContent.size) {
         throw new Error('Failed to fetch blob content from scaled avatar');
       }
 
       if (conversationId === UserUtils.getOurPubKeyStrFromCache()) {
-        await uploadOurAvatar(await blobContent.arrayBuffer());
+        const newAvatarDecrypted = await blobContent.arrayBuffer();
+        window.inboxStore?.dispatch(userActions.updateOurAvatar({ newAvatarDecrypted }) as any);
       } else if (OpenGroupUtils.isOpenGroupV2(conversationId)) {
-        await initiateOpenGroupUpdate(conversationId, { objectUrl: scaledAvatarUrl });
+        window.inboxStore?.dispatch(
+          ReduxSogsRoomInfos.changeCommunityAvatar({
+            conversationId,
+            avatarObjectUrl: scaledAvatarUrl,
+          }) as any
+        );
+      } else if (PubKey.is03Pubkey(conversationId)) {
+        window.inboxStore?.dispatch(
+          groupInfoActions.currentDeviceGroupAvatarChange({
+            objectUrl: scaledAvatarUrl,
+            groupPk: conversationId,
+          }) as any
+        );
       } else {
-        throw new Error('dome');
+        throw new Error('uploadProfileAvatar: unsupported case');
       }
     } catch (error) {
       if (error.message && error.message.length) {
@@ -70,12 +98,16 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
   const dispatch = useDispatch();
 
   const isMe = useIsMe(conversationId);
+  const isCommunity = useIsPublic(conversationId);
 
   const avatarPath = useAvatarPath(conversationId) || '';
   const profileName = useConversationUsername(conversationId) || '';
 
+  const groupAvatarChangePending = useGroupAvatarChangeFromUIPending();
+  const ourAvatarIsUploading = useOurAvatarIsUploading();
+  const sogsAvatarIsUploading = useAvatarOfRoomIsUploading(conversationId);
+
   const [newAvatarObjectUrl, setNewAvatarObjectUrl] = useState<string | null>(avatarPath);
-  const [loading, setLoading] = useState(false);
 
   const closeDialog = () => {
     dispatch(updateEditProfilePictureModal(null));
@@ -92,23 +124,20 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
   };
 
   const handleUpload = async () => {
-    setLoading(true);
     if (newAvatarObjectUrl === avatarPath) {
       window.log.debug('Avatar Object URL has not changed!');
       return;
     }
 
-    await uploadProfileAvatar(newAvatarObjectUrl, conversationId);
-    setLoading(false);
-    dispatch(updateEditProfilePictureModal(null));
+    await triggerUploadProfileAvatar(newAvatarObjectUrl, conversationId);
   };
 
   const handleRemove = async () => {
-    setLoading(true);
+    if (isCommunity) {
+      throw new Error('community do not support removing avatars, only changing them');
+    }
     await clearOurAvatar();
     setNewAvatarObjectUrl(null);
-    setLoading(false);
-    dispatch(updateEditProfilePictureModal(null));
   };
 
   const handleClick = () => {
@@ -144,8 +173,8 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
         </StyledAvatarContainer>
       </div>
 
-      {loading ? (
-        <SessionSpinner loading={loading} />
+      {ourAvatarIsUploading || groupAvatarChangePending || sogsAvatarIsUploading ? (
+        <SessionSpinner loading={true} />
       ) : (
         <>
           <SpacerLG />
@@ -157,13 +186,16 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
               disabled={newAvatarObjectUrl === avatarPath}
               dataTestId="save-button-profile-update"
             />
-            <SessionButton
-              text={localize('remove').toString()}
-              buttonColor={SessionButtonColor.Danger}
-              buttonType={SessionButtonType.Simple}
-              onClick={handleRemove}
-              disabled={!avatarPath}
-            />
+            {/* we cannot remove avatars from communities, only change them */}
+            {!isCommunity ? (
+              <SessionButton
+                text={localize('remove').toString()}
+                buttonColor={SessionButtonColor.Danger}
+                buttonType={SessionButtonType.Simple}
+                onClick={handleRemove}
+                disabled={!avatarPath}
+              />
+            ) : null}
           </div>
         </>
       )}

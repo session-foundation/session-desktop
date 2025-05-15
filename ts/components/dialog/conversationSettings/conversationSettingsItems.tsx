@@ -240,7 +240,6 @@ export const PinUnpinButton = ({ conversationId }: WithConvoId) => {
 
 export const ConversationSettingsQAButtons = ({ conversationId }: WithConvoId) => {
   const isGroupV2 = useIsGroupV2(conversationId);
-  const dispatch = useDispatch();
 
   if (!hasClosedGroupV2QAButtons() || !isGroupV2) {
     return null;
@@ -248,17 +247,6 @@ export const ConversationSettingsQAButtons = ({ conversationId }: WithConvoId) =
 
   return (
     <>
-      <PanelIconButton
-        iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.BUG} />}
-        text={'trigger avatar message'}
-        onClick={() => {
-          if (!PubKey.is03Pubkey(conversationId)) {
-            throw new Error('triggerFakeAvatarUpdate needs a 03 pubkey');
-          }
-          dispatch(groupInfoActions.triggerFakeAvatarUpdate({ groupPk: conversationId }) as any);
-        }}
-        dataTestId={'' as SessionDataTestId}
-      />
       <PanelIconButton
         iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.BUG} />}
         text={'trigger delete message before now'}
