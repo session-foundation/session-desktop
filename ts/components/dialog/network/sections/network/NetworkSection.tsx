@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 import type { CSSProperties } from 'styled-components';
-import { localize } from '../../../../../localization/localeTools';
+import { formatMessageWithArgs, localize } from '../../../../../localization/localeTools';
 import { Flex } from '../../../../basic/Flex';
 import { SpacerMD, SpacerXS } from '../../../../basic/Text';
 import {
@@ -148,19 +148,17 @@ const CurrentPriceBlock = ({
         <BlockSecondaryText>{LOCALE_DEFAULTS.token_name_long}</BlockSecondaryText>
       </Flex>
       <SessionTooltip
-        content={{
-          token: 'sessionNetworkDataPrice',
-          args: {
-            datetime: !lastRefreshedTimestamp
-              ? '-'
-              : formatDateWithLocale({
-                  date: new Date(lastRefreshedTimestamp),
-                  formatStr: 'd MMM yyyy hh:mm a',
-                }),
-          },
-        }}
+        content={formatMessageWithArgs(LOCALE_DEFAULTS.session_network_data_price, {
+          date_time: !lastRefreshedTimestamp
+            ? '-'
+            : formatDateWithLocale({
+                date: new Date(lastRefreshedTimestamp),
+                formatStr: 'd MMM yyyy hh:mm a',
+              }),
+        })}
         loading={loading}
         dataTestId="tooltip-info"
+        htmlString={true}
         style={{
           position: 'absolute',
           top: 'var(--margins-xs)',
