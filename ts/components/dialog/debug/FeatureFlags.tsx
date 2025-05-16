@@ -1,14 +1,14 @@
 import { isBoolean } from 'lodash';
-import type { SessionFeatureFlagsKeys } from '../../../window';
+import type { SessionFlagsKeys } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { Flex } from '../../basic/Flex';
 import { SessionToggle } from '../../basic/SessionToggle';
-import { HintText, SpacerXS } from '../../basic/Text';
+import { HintText, SpacerSM, SpacerXS } from '../../basic/Text';
 import { DEBUG_FEATURE_FLAGS } from './constants';
 
 type FeatureFlagToggleType = {
   forceUpdate: () => void;
-  flag: SessionFeatureFlagsKeys;
-  parentFlag?: SessionFeatureFlagsKeys;
+  flag: SessionFlagsKeys;
+  parentFlag?: SessionFlagsKeys;
 };
 
 const handleFeatureFlagToggle = ({ flag, parentFlag, forceUpdate }: FeatureFlagToggleType) => {
@@ -86,7 +86,7 @@ export const FeatureFlags = ({
       </i>
       <SpacerXS />
       {Object.entries(flags).map(([key, value]) => {
-        const flag = key as SessionFeatureFlagsKeys;
+        const flag = key as SessionFlagsKeys;
         if (
           (!process.env.SESSION_DEV && DEBUG_FEATURE_FLAGS.DEV.includes(flag)) ||
           DEBUG_FEATURE_FLAGS.UNSUPPORTED.includes(flag)
@@ -99,7 +99,7 @@ export const FeatureFlags = ({
             <>
               <h3>{flag}</h3>
               {Object.entries(value).map(([k, v]: [string, FlagValues]) => {
-                const nestedFlag = k as SessionFeatureFlagsKeys;
+                const nestedFlag = k as SessionFlagsKeys;
                 return (
                   <FlagToggle
                     flag={nestedFlag}
@@ -114,6 +114,7 @@ export const FeatureFlags = ({
         }
         return <FlagToggle forceUpdate={forceUpdate} flag={flag} value={value} />;
       })}
+      <SpacerSM />
     </Flex>
   );
 };

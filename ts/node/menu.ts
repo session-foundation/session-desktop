@@ -175,7 +175,7 @@ function updateForMac(
   // Remove File menu
   template.shift();
 
-  // Add the OSX-specific Signal Desktop menu at the far left
+  // Add the OSX-specific Session Desktop menu to the far left
   template.unshift({
     label: LOCALE_DEFAULTS.app_name,
     submenu: [

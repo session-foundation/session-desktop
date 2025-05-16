@@ -43,21 +43,18 @@ export const classicLight: ThemeColorVariables = {
   '--settings-tab-text-color': 'var(--text-primary-color)',
 
   '--button-outline-background-color': 'var(--transparent-color)',
-  '--button-outline-background-hover-color': `rgba(${hexColorToRGB(
-    THEMES.CLASSIC_LIGHT.COLOR0
-  )}, 0.1)`,
+  '--button-outline-background-hover-color': 'var(--text-primary-color)',
   '--button-outline-text-color': 'var(--text-primary-color)',
-  '--button-outline-text-hover-color': 'var(--text-primary-color)',
+  '--button-outline-text-hover-color': THEMES.CLASSIC_LIGHT.COLOR6,
   '--button-outline-border-color': 'var(--text-primary-color)',
   '--button-outline-border-hover-color': 'var(--text-primary-color)',
   '--button-outline-disabled-color': 'var(--disabled-color)',
 
-  '--button-solid-background-color': 'var(--background-primary-color)',
-  '--button-solid-background-hover-color': THEMES.CLASSIC_LIGHT.COLOR4,
-  '--button-solid-text-color': 'var(--text-primary-color)',
+  '--button-solid-background-color': 'var(--text-primary-color)',
+  '--button-solid-background-hover-color': 'var(--transparent-color)',
+  '--button-solid-text-color': THEMES.CLASSIC_LIGHT.COLOR6,
   '--button-solid-text-hover-color': 'var(--text-primary-color)',
-  '--button-solid-disabled-color': THEMES.CLASSIC_LIGHT.COLOR4,
-  '--button-solid-shadow-color': `rgba(${hexColorToRGB(THEMES.CLASSIC_LIGHT.COLOR0)}, 0.25)`,
+  '--button-solid-disabled-color': 'var(--disabled-color)',
 
   '--button-ghost-background-color': 'none',
   '--button-ghost-background-hover-color': THEMES.CLASSIC_LIGHT.COLOR4,

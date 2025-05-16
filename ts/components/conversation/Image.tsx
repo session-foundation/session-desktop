@@ -77,10 +77,8 @@ export const Image = (props: Props) => {
   const { loading, urlToLoad } = useEncryptedFileFetch(url, attachment.contentType, false);
 
   const { caption } = attachment || { caption: null };
-  const [pending, setPending] = useState<boolean>(attachment.pending || true);
-  const [mounted, setMounted] = useState<boolean>(
-    (!loading || !pending) && urlToLoad === undefined
-  );
+  const [pending, setPending] = useState(attachment.pending ?? true);
+  const [mounted, setMounted] = useState((!loading || !pending) && urlToLoad === undefined);
 
   const canClick = onClick && !pending;
   const role = canClick ? 'button' : undefined;

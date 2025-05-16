@@ -11,11 +11,11 @@ import {
 import { disableRecoveryPhrasePrompt } from '../../state/ducks/userConfig';
 import { getFocusedSection, getLeftOverlayMode } from '../../state/selectors/section';
 import { useHideRecoveryPasswordEnabled } from '../../state/selectors/settings';
-import { useIsDarkTheme } from '../../state/selectors/theme';
+import { useIsDarkTheme } from '../../state/theme/selectors/theme';
 import { getShowRecoveryPhrasePrompt } from '../../state/selectors/userConfig';
 import { isSignWithRecoveryPhrase } from '../../util/storage';
 import { Flex } from '../basic/Flex';
-import { SessionButton } from '../basic/SessionButton';
+import { SessionButton, SessionButtonColor } from '../basic/SessionButton';
 import { SpacerMD, SpacerSM } from '../basic/Text';
 import { MenuButton } from '../buttons';
 import { SessionIcon, SessionIconButton } from '../icon';
@@ -164,6 +164,7 @@ export const LeftPaneBanner = () => {
           ariaLabel="Reveal recovery phrase button"
           text={window.i18n('theContinue')}
           onClick={showRecoveryPhraseModal}
+          buttonColor={SessionButtonColor.PrimaryDark}
           dataTestId="reveal-recovery-phrase"
         />
       </StyledBanner>

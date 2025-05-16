@@ -7,7 +7,6 @@ import { MemberAvatarPlaceHolder } from '../../components/icon/MemberAvatarPlace
 import { TestUtils } from '../test-utils';
 import { areResultsEqual, findByDataTestId, renderComponent } from './renderComponent';
 
-// TODO[epic=SES-2418] migrate to Storybook
 describe('AvatarPlaceHolder', () => {
   const pubkey = TestUtils.generateFakePubKeyStr();
   const displayName = 'Hello World';
@@ -47,9 +46,7 @@ describe('AvatarPlaceHolder', () => {
       />
     );
 
-    const result2 = renderComponent(
-      <MemberAvatarPlaceHolder dataTestId="member-avatar-placeholder" />
-    );
+    const result2 = renderComponent(<MemberAvatarPlaceHolder />);
 
     expect(areResultsEqual(result, result2, true)).to.equal(true);
     result.unmount();

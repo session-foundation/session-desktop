@@ -2,6 +2,7 @@ import styled from 'styled-components';
 
 import { GroupPubkeyType, MemberStateGroupV2, PubkeyType } from 'libsession_util_nodejs';
 import { isEmpty } from 'lodash';
+import type { SessionDataTestId } from 'react';
 import {
   useNicknameOrProfileNameOrShortenedPubkey,
   useWeAreAdmin,
@@ -114,7 +115,7 @@ type MemberListItemProps<T extends string> = {
   isAdmin?: boolean; // if true,  we add a small crown on top of their avatar
   onSelect?: (pubkey: T) => void;
   onUnselect?: (pubkey: T) => void;
-  dataTestId?: React.SessionDataTestId;
+  dataTestId?: SessionDataTestId;
   displayGroupStatus?: boolean;
   groupPk?: string;
   disabled?: boolean;
@@ -139,9 +140,9 @@ const ResendContainer = ({
     return (
       <Flex
         $container={true}
+        $flexGap="var(--margins-sm)"
         margin="0 0 0 auto"
         padding="0 var(--margins-lg)"
-        gap="var(--margins-sm)"
       >
         <ResendButton groupPk={groupPk} pubkey={pubkey} />
         <PromoteButton groupPk={groupPk} pubkey={pubkey} />

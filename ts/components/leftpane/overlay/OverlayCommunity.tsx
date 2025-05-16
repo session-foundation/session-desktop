@@ -11,7 +11,7 @@ import {
 } from '../../../session/apis/open_group_api/opengroupV2/JoinOpenGroupV2';
 import { openGroupV2CompleteURLRegex } from '../../../session/apis/open_group_api/utils/OpenGroupUtils';
 import { resetLeftOverlayMode } from '../../../state/ducks/section';
-import { SessionButton } from '../../basic/SessionButton';
+import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
 import { SessionSpinner } from '../../loading';
 
 import {
@@ -121,6 +121,7 @@ export const OverlayCommunity = () => {
         disabled={!groupUrl || loading}
         onClick={onTryJoinRoom}
         dataTestId="join-community-button"
+        buttonColor={SessionButtonColor.PrimaryDark}
       />
       {!loading ? <Spacer2XL /> : null}
       <SessionSpinner loading={loading} />

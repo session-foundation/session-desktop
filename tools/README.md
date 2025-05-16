@@ -66,8 +66,7 @@ files by running the following script:
   definitions [locales.ts](../ts/localization/locales.ts). This script also validates the dynamic variables in each
   locale file and flags any errors.
 
-The generated type file is not committed to the repository and is generated at build time. It is generated here to ensure
-that changes to any type definitions are not problematic.
+The generated type file is not committed to the repository and is generated at build time. It is generated here to ensure that changes to any type definitions are not problematic.
 
 ## [Generate Localized Strings Analysis](./localization/generateLocalizedStringsAnalysis.sh)
 

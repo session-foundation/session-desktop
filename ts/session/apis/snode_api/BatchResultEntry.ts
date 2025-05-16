@@ -1,4 +1,4 @@
-import { NonEmptyArray } from '../../types/utility';
+import type { NonEmptyArray } from '../../../types/Util';
 
 export type BatchResultEntry = {
   code: number;

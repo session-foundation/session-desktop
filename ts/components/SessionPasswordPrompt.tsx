@@ -6,6 +6,7 @@ import { PureComponent, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import styled from 'styled-components';
 
+import { Provider } from 'react-redux';
 import { SessionButton, SessionButtonColor, SessionButtonType } from './basic/SessionButton';
 import { SessionTheme } from '../themes/SessionTheme';
 import { switchPrimaryColorTo } from '../themes/switchPrimaryColor';
@@ -15,6 +16,7 @@ import { SessionWrapperModal } from './SessionWrapperModal';
 import { SessionToast } from './basic/SessionToast';
 import { SessionSpinner } from './loading';
 import { Localizer } from './basic/Localizer';
+import { themeStore } from '../state/theme/store';
 
 interface State {
   errorCount: number;
@@ -222,11 +224,13 @@ export const SessionPasswordPrompt = () => {
   }, []);
 
   return (
-    <SessionTheme>
-      <SessionToastContainer />
-      <StyledContent>
-        <SessionPasswordPromptInner />
-      </StyledContent>
-    </SessionTheme>
+    <Provider store={themeStore}>
+      <SessionTheme>
+        <SessionToastContainer />
+        <StyledContent>
+          <SessionPasswordPromptInner />
+        </StyledContent>
+      </SessionTheme>
+    </Provider>
   );
 };

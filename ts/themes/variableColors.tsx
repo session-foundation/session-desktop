@@ -67,7 +67,6 @@ export type ThemeColorVariables = {
   '--button-solid-text-color': string;
   '--button-solid-text-hover-color': string;
   '--button-solid-disabled-color': string;
-  '--button-solid-shadow-color': string;
 
   /* Ghost */
   '--button-ghost-background-color': string;

@@ -13,7 +13,7 @@ import {
   setDirection,
   setOnboardingStep,
 } from '../../../state/onboarding/ducks/registration';
-import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
+import { SessionButton } from '../../basic/SessionButton';
 import { SpacerLG } from '../../basic/Text';
 import { resetRegistration } from '../RegistrationStages';
 import { TermsAndConditions } from '../TermsAndConditions';
@@ -44,7 +44,6 @@ export const Start = () => {
     <StyledStart ready={ready}>
       <SessionButton
         ariaLabel={'Create account button'}
-        buttonColor={SessionButtonColor.White}
         onClick={() => {
           dispatch(setDirection('forward'));
           dispatch(setAccountCreationStep(AccountCreation.DisplayName));
@@ -56,7 +55,6 @@ export const Start = () => {
       <SpacerLG />
       <SessionButton
         ariaLabel={'Restore account button'}
-        buttonColor={SessionButtonColor.White}
         onClick={() => {
           dispatch(setDirection('forward'));
           dispatch(setOnboardingStep(Onboarding.RestoreAccount));

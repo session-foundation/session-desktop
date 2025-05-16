@@ -99,8 +99,6 @@ export const REACT_LIMIT = 6;
 
 export const UPDATER_INTERVAL_MS = 10 * DURATION.MINUTES;
 
-export const FEATURE_RELEASE_TIMESTAMPS = {};
-
 export const ONBOARDING_TIMES = {
   /** 15 seconds */
   RECOVERY_TIMEOUT: 15 * DURATION.SECONDS,

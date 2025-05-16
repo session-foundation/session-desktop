@@ -13,6 +13,7 @@ import { CopyToClipboardButton } from '../../buttons/CopyToClipboardButton';
 import { SessionIcon } from '../../icon';
 import { SessionInput } from '../../inputs';
 import { StyledLeftPaneOverlay } from './OverlayMessage';
+import { SessionButtonColor } from '../../basic/SessionButton';
 
 const StyledHeadingContainer = styled(Flex)`
   .session-icon-button {
@@ -92,6 +93,7 @@ export const OverlayInvite = () => {
           <SpacerLG />
           <StyledButtonerContainer>
             <CopyToClipboardButton
+              buttonColor={SessionButtonColor.PrimaryDark}
               copyContent={ourSessionID}
               onCopyComplete={() => setIdCopied(true)}
               hotkey={true}

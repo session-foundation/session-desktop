@@ -27,7 +27,7 @@ import { ERROR_CODE_NO_CONNECT } from './SNodeAPI';
 import { ConversationModel } from '../../../models/conversation';
 import { LibsessionMessageHandler } from '../../../receiver/libsession/handleLibSessionMessage';
 import { EnvelopePlus } from '../../../receiver/types';
-import { updateIsOnline } from '../../../state/ducks/onion';
+import { updateIsOnline } from '../../../state/ducks/onions';
 import { assertUnreachable } from '../../../types/sqlSharedTypes';
 import {
   UserGenericWrapperActions,
@@ -58,6 +58,7 @@ import {
 } from './types';
 import { ConversationTypeEnum } from '../../../models/types';
 import { Snode } from '../../../data/types';
+import { ReduxOnionSelectors } from '../../../state/selectors/onions';
 
 const minMsgCountShouldRetry = 95;
 /**
@@ -326,9 +327,12 @@ export class SwarmPolling {
    * Only public for testing
    */
   public async pollForAllKeys() {
-    if (!window.getGlobalOnlineStatus()) {
+    if (!window.isOnline) {
       window?.log?.error('SwarmPolling: pollForAllKeys: offline');
       // Very important to set up a new polling call so we do retry at some point
+      if (ReduxOnionSelectors.isOnlineOutsideRedux()) {
+        window.inboxStore?.dispatch(updateIsOnline(false));
+      }
       timeouts.push(setTimeout(this.pollForAllKeys.bind(this), SWARM_POLLING_TIMEOUT.ACTIVE));
       return;
     }
@@ -799,17 +803,17 @@ export class SwarmPolling {
         })
       );
 
-      if (!window.inboxStore?.getState().onionPaths.isOnline) {
+      if (!ReduxOnionSelectors.isOnlineOutsideRedux()) {
         window.inboxStore?.dispatch(updateIsOnline(true));
       }
 
       return results;
     } catch (e) {
-      if (e.message === ERROR_CODE_NO_CONNECT) {
-        if (window.inboxStore?.getState().onionPaths.isOnline) {
+      if (e.message === ERROR_CODE_NO_CONNECT || !navigator.onLine) {
+        if (ReduxOnionSelectors.isOnlineOutsideRedux()) {
           window.inboxStore?.dispatch(updateIsOnline(false));
         }
-      } else if (!window.inboxStore?.getState().onionPaths.isOnline) {
+      } else if (!ReduxOnionSelectors.isOnlineOutsideRedux()) {
         window.inboxStore?.dispatch(updateIsOnline(true));
       }
       window?.log?.warn('SwarmPolling: pollNodeForKey failed with:', e.message);

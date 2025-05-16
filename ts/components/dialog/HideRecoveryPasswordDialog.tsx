@@ -12,7 +12,7 @@ import { Localizer } from '../basic/Localizer';
 
 const StyledDescriptionContainer = styled.div`
   width: 280px;
-  line-height: 120%;
+  line-height: var(--font-line-height);
 `;
 
 export type HideRecoveryPasswordDialogProps = {

@@ -65,7 +65,6 @@ export const OverlayMessageRequest = () => {
         i18nMessage: { token: 'messageRequestsClearAllExplanation' },
         onClose,
         okTheme: SessionButtonColor.Danger,
-        closeTheme: SessionButtonColor.Primary,
         okText: window.i18n('clear'),
         onClickOk: async () => {
           window?.log?.info('Blocking all message requests');

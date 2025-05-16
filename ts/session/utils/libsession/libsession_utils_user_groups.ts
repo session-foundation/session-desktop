@@ -104,7 +104,7 @@ async function insertGroupsFromDBIntoWrapperAndRefresh(
       );
 
       const wrapperComm = getCommunityInfoFromDBValues({
-        priority: foundConvo.get('priority') || CONVERSATION_PRIORITIES.default, // this has to be a direct call to .get
+        priority: foundConvo.get('priority') || CONVERSATION_PRIORITIES.default, // this has to be a direct call to model.get()
         fullUrl,
       });
 
@@ -129,7 +129,7 @@ async function insertGroupsFromDBIntoWrapperAndRefresh(
 
     case 'LegacyGroup':
       // Note: For any fields stored in both the DB and libsession,
-      // we have to make direct calls to.get() and NOT the wrapped getPriority(), etc...
+      // we have to make direct calls to model.get() and NOT the wrapped getPriority(), etc...
       const wrapperLegacyGroup = getLegacyGroupInfoFromDBValues({
         id: foundConvo.id,
         priority: foundConvo.get('priority') || CONVERSATION_PRIORITIES.default,

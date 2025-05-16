@@ -1,9 +1,9 @@
-import type { SessionFeatureFlagsKeys } from '../../../window';
+import type { SessionFlagsKeys } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 type DebugFeatureFlagsType = {
-  DEV: Array<SessionFeatureFlagsKeys>;
-  UNSUPPORTED: Array<SessionFeatureFlagsKeys>;
-  UNTESTED: Array<SessionFeatureFlagsKeys>;
+  DEV: Array<SessionFlagsKeys>;
+  UNSUPPORTED: Array<SessionFlagsKeys>;
+  UNTESTED: Array<SessionFlagsKeys>;
 };
 
 export const DEBUG_FEATURE_FLAGS: DebugFeatureFlagsType = {

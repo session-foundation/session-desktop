@@ -2,7 +2,7 @@ import styled from 'styled-components';
 
 import { shell } from 'electron';
 import { isEmpty, pick } from 'lodash';
-import { ReactNode } from 'react';
+import { ReactNode, type SessionDataTestId } from 'react';
 import { Flex } from '../basic/Flex';
 import {
   SessionButton,
@@ -22,7 +22,7 @@ type ButtonSettingsProps = {
   buttonType?: SessionButtonType;
   buttonShape?: SessionButtonShape;
   buttonText: string;
-  dataTestId?: React.SessionDataTestId;
+  dataTestId?: SessionDataTestId;
   onClick: () => void;
 };
 
@@ -160,7 +160,7 @@ export const SessionToggleWithDescription = (props: {
   onClickToggle: () => void;
   confirmationDialogParams?: SessionConfirmDialogProps;
   childrenDescription?: ReactNode; // if set, those elements will be appended next to description field (only used for typing message settings as of now)
-  dataTestId?: React.SessionDataTestId;
+  dataTestId?: SessionDataTestId;
 }) => {
   const {
     title,

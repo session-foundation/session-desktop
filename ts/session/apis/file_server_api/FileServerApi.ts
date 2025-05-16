@@ -1,6 +1,6 @@
 import AbortController from 'abort-controller';
 import { BlindingActions } from '../../../webworker/workers/browser/libsession_worker_interface';
-import { OnionSending, OnionV4JSONSnodeResponse } from '../../onions/onionSend';
+import { OnionSending } from '../../onions/onionSend';
 import {
   batchGlobalIsSuccess,
   parseBatchGlobalStatusCode,
@@ -10,9 +10,10 @@ import { NetworkTime } from '../../../util/NetworkTime';
 import { DURATION } from '../../constants';
 import { isReleaseChannel, type ReleaseChannels } from '../../../updater/types';
 import { Storage } from '../../../util/storage';
+import { OnionV4 } from '../../onions/onionv4';
+import { SERVER_HOSTS } from '..';
 
-export const fileServerHost = 'filev2.getsession.org';
-export const fileServerURL = `http://${fileServerHost}`;
+export const fileServerURL = `http://${SERVER_HOSTS.FILE_SERVER}`;
 
 export const fileServerPubKey = 'da21e1d886c6fbaea313f75298bd64aab03a97ce985b46bb2dad9f2089c8ee59';
 const RELEASE_VERSION_ENDPOINT = '/session_version';
@@ -82,7 +83,7 @@ export const downloadFileFromFileServer = async (
   }
 
   const urlToGet = `${POST_GET_FILE_ENDPOINT}/${fileId}`;
-  if (window.sessionFeatureFlags?.debug.debugFileServerRequests) {
+  if (window.sessionFeatureFlags?.debug.debugServerRequests) {
     window.log.info(`about to try to download fsv2: "${urlToGet}"`);
   }
 
@@ -94,7 +95,7 @@ export const downloadFileFromFileServer = async (
     throwError: true,
     timeoutMs: 30 * DURATION.SECONDS, // longer time for file download
   });
-  if (window.sessionFeatureFlags?.debug.debugFileServerRequests) {
+  if (window.sessionFeatureFlags?.debug.debugServerRequests) {
     window.log.info(`download fsv2: "${urlToGet} got result:`, JSON.stringify(result));
   }
   if (!result) {
@@ -116,15 +117,6 @@ export const downloadFileFromFileServer = async (
   }
 
   return bodyBinary.buffer;
-};
-
-const parseStatusCodeFromOnionRequestV4 = (
-  onionV4Result: OnionV4JSONSnodeResponse | null
-): number | undefined => {
-  if (!onionV4Result) {
-    return undefined;
-  }
-  return onionV4Result?.body?.status_code || undefined;
 };
 
 /**
@@ -176,7 +168,7 @@ export const getLatestReleaseFromFileServer = async (
   };
   const result = await OnionSending.sendJsonViaOnionV4ToFileServer(params);
 
-  if (!batchGlobalIsSuccess(result) || parseStatusCodeFromOnionRequestV4(result) !== 200) {
+  if (!batchGlobalIsSuccess(result) || OnionV4.parseStatusCodeFromV4Request(result) !== 200) {
     return null;
   }
 

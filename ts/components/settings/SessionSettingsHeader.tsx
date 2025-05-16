@@ -46,6 +46,9 @@ export const SettingsHeader = (props: Props) => {
     case 'recovery-password':
       categoryTitle = window.i18n('sessionRecoveryPassword');
       break;
+    // this is a modal
+    case 'session-network':
+      break;
     case 'clear-data':
     case 'message-requests':
       throw new Error(`no header for should be tried to be rendered for "${category}"`);

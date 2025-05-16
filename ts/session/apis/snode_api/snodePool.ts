@@ -11,6 +11,7 @@ import { requestSnodesForPubkeyFromNetwork } from './getSwarmFor';
 import { Onions } from '.';
 import { ed25519Str } from '../../utils/String';
 import { SnodePoolConstants } from './snodePoolConstants';
+import { UserUtils } from '../../utils';
 
 let randomSnodePool: Array<Snode> = [];
 
@@ -355,6 +356,14 @@ async function getSwarmFromNetworkAndSave(pubkey: string) {
   return shuffledSwarm;
 }
 
+async function getSwarmNodeCount() {
+  return (await getSwarmFromCacheOrDb(UserUtils.getOurPubKeyStrFromCache())).length;
+}
+
+async function getSnodePoolCount() {
+  return (await getSnodePoolFromDBOrFetchFromSeed()).length;
+}
+
 export const SnodePool = {
   // snode pool
   dropSnodeFromSnodePool,
@@ -362,6 +371,7 @@ export const SnodePool = {
   getRandomSnode,
   getRandomSnodePool,
   getSnodePoolFromDBOrFetchFromSeed,
+  getSnodePoolCount,
 
   // swarm
   dropSnodeFromSwarmIfNeeded,
@@ -370,6 +380,7 @@ export const SnodePool = {
   getSwarmFor,
   getNodeFromSwarmOrThrow,
   getFreshSwarmFor,
+  getSwarmNodeCount,
 
   // tests
   TEST_resetState,

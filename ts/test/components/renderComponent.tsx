@@ -1,23 +1,27 @@
 import { AnimatePresence, MotionGlobalConfig } from 'framer-motion';
 import { isArray, isEqual, unset } from 'lodash';
-import { ElementType, ReactElement, ReactNode } from 'react';
+import { ElementType, ReactElement, ReactNode, type SessionDataTestId } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import TestRenderer from 'react-test-renderer';
+import { Provider } from 'react-redux';
 import { SessionTheme } from '../../themes/SessionTheme';
+import { themeStore } from '../../state/theme/store';
 
 const Providers = ({ children }: { children: ReactNode }) => {
   MotionGlobalConfig.skipAnimations = false;
 
   return (
-    <SessionTheme>
-      <AnimatePresence>
-        <ErrorBoundary
-          fallback={<>{`Failed to render a component!\n\t${JSON.stringify(children)}`}</>}
-        >
-          {children}
-        </ErrorBoundary>
-      </AnimatePresence>
-    </SessionTheme>
+    <Provider store={themeStore}>
+      <SessionTheme>
+        <AnimatePresence>
+          <ErrorBoundary
+            fallback={<>{`Failed to render a component!\n\t${JSON.stringify(children)}`}</>}
+          >
+            {children}
+          </ErrorBoundary>
+        </AnimatePresence>
+      </SessionTheme>
+    </Provider>
   );
 };
 
@@ -34,7 +38,7 @@ function getComponentTree(
 
 function findByDataTestId(
   renderResult: TestRenderer.ReactTestRenderer,
-  dataTestId: string
+  dataTestId: SessionDataTestId
 ): TestRenderer.ReactTestInstance {
   return renderResult.root.findByProps({ 'data-testid': dataTestId });
 }

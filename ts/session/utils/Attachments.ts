@@ -4,7 +4,6 @@ import _ from 'lodash';
 import { Attachment } from '../../types/Attachment';
 
 import { encryptAttachment } from '../../util/crypto/attachmentsEncrypter';
-import { uploadFileToFsWithOnionV4 } from '../apis/file_server_api/FileServerApi';
 import { addAttachmentPadding } from '../crypto/BufferPadding';
 import {
   AttachmentPointer,
@@ -13,6 +12,7 @@ import {
   Quote,
   QuotedAttachmentWithUrl,
 } from '../messages/outgoing/visibleMessage/VisibleMessage';
+import { uploadFileToFsWithOnionV4 } from '../apis/file_server_api/FileServerApi';
 
 interface UploadParams {
   attachment: Attachment;

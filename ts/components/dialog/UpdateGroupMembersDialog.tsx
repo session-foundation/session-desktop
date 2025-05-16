@@ -170,13 +170,22 @@ export const UpdateGroupMembersDialog = (props: Props) => {
     <SessionWrapperModal title={window.i18n('groupMembers')} onClose={closeDialog}>
       {hasClosedGroupV2QAButtons() && weAreAdmin && PubKey.is03Pubkey(conversationId) ? (
         <>
-          Also remove messages:
-          <SessionToggle
-            active={alsoRemoveMessages}
-            onClick={() => {
-              setAlsoRemoveMessages(!alsoRemoveMessages);
+          <span
+            style={{
+              display: 'flex',
+              justifyContent: 'space-evenly',
+              alignItems: 'center',
+              width: '400px',
             }}
-          />
+          >
+            Also remove messages:
+            <SessionToggle
+              active={alsoRemoveMessages}
+              onClick={() => {
+                setAlsoRemoveMessages(!alsoRemoveMessages);
+              }}
+            />
+          </span>
         </>
       ) : null}
       <StyledMemberList className="contact-selection-list">

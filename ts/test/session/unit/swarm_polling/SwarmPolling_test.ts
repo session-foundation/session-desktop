@@ -16,6 +16,7 @@ import { generateFakeSnodes, stubData } from '../../../test-utils/utils';
 import { ConversationTypeEnum } from '../../../../models/types';
 import { ConvoHub } from '../../../../session/conversations';
 import { SnodePool } from '../../../../session/apis/snode_api/snodePool';
+import { ReduxOnionSelectors } from '../../../../state/selectors/onions';
 
 chai.use(chaiAsPromised as any);
 chai.should();
@@ -44,8 +45,10 @@ describe('SwarmPolling', () => {
 
     Sinon.stub(SnodePool, 'getSwarmFor').resolves(generateFakeSnodes(5));
     Sinon.stub(SnodeAPIRetrieve, 'retrieveNextMessagesNoRetries').resolves([]);
+    Sinon.stub(ReduxOnionSelectors, 'isOnlineOutsideRedux').returns(true);
+
     TestUtils.stubWindow('inboxStore', undefined);
-    TestUtils.stubWindow('getGlobalOnlineStatus', () => true);
+    TestUtils.stubWindow('isOnline', true);
     TestUtils.stubWindowLog();
 
     const convoController = ConvoHub.use();

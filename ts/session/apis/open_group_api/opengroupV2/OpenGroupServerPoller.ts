@@ -27,6 +27,7 @@ import { roomHasBlindEnabled } from '../../../../types/sqlSharedTypes';
 import { Storage } from '../../../../util/storage';
 import { SettingsKey } from '../../../../data/settings-key';
 import { OpenGroupRequestCommonType } from '../../../../data/types';
+import { ReduxOnionSelectors } from '../../../../state/selectors/onions';
 
 export type OpenGroupMessageV4 = {
   /** AFAIK: indicates the number of the message in the group. e.g. 2nd message will be 1 or 2 */
@@ -196,7 +197,7 @@ export class OpenGroupServerPoller {
       return false;
     }
 
-    if (!window.getGlobalOnlineStatus()) {
+    if (!ReduxOnionSelectors.isOnlineOutsideRedux()) {
       window?.log?.info('OpenGroupServerPoller: offline');
       return false;
     }

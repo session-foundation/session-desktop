@@ -1,16 +1,22 @@
 import { ipcRenderer } from 'electron';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 import useInterval from 'react-use/lib/useInterval';
 import useTimeoutFn from 'react-use/lib/useTimeoutFn';
-import useThrottleFn from 'react-use/lib/useThrottleFn';
 
+import useMount from 'react-use/lib/useMount';
+import useThrottleFn from 'react-use/lib/useThrottleFn';
 import { Data } from '../../data/data';
 import { ConvoHub } from '../../session/conversations';
 
 import { clearSearch } from '../../state/ducks/search';
-import { resetLeftOverlayMode, SectionType, showLeftPaneSection } from '../../state/ducks/section';
+import {
+  resetLeftOverlayMode,
+  resetRightOverlayMode,
+  SectionType,
+  showLeftPaneSection,
+} from '../../state/ducks/section';
 import {
   getOurPrimaryConversation,
   useGlobalUnreadMessageCount,
@@ -44,15 +50,17 @@ import { UserSync } from '../../session/utils/job_runners/jobs/UserSyncJob';
 import { forceSyncConfigurationNowIfNeeded } from '../../session/utils/sync/syncUtils';
 import { useFetchLatestReleaseFromFileServer } from '../../hooks/useFetchLatestReleaseFromFileServer';
 import { useHotkey } from '../../hooks/useHotkey';
-import { useIsDarkTheme } from '../../state/selectors/theme';
+import { useIsDarkTheme } from '../../state/theme/selectors/theme';
 import { switchThemeTo } from '../../themes/switchTheme';
 import { getOppositeTheme } from '../../util/theme';
 import { SessionNotificationCount } from '../icon/SessionNotificationCount';
 import { getIsModalVisible } from '../../state/selectors/modal';
 
 import { MessageQueue } from '../../session/sending';
-import { useRefreshReleasedFeaturesTimestamp } from '../../hooks/useRefreshReleasedFeaturesTimestamp';
+import { useCheckReleasedFeatures } from '../../hooks/useCheckReleasedFeatures';
 import { useDebugMode } from '../../state/selectors/debug';
+import { networkDataActions } from '../../state/ducks/networkData';
+import { isSesh101ReadyOutsideRedux } from '../../state/selectors/releasedFeatures';
 
 const Section = (props: { type: SectionType }) => {
   const ourNumber = useSelector(getOurNumber);
@@ -209,7 +217,13 @@ const doAppStartUp = async () => {
   void triggerSyncIfNeeded();
   void getSwarmPollingInstance().start();
   void loadDefaultRooms();
-  void SnodePool.getFreshSwarmFor(UserUtils.getOurPubKeyStrFromCache()); // refresh our swarm on start to speed up the first message fetching event
+  // eslint-disable-next-line more/no-then
+  void SnodePool.getFreshSwarmFor(UserUtils.getOurPubKeyStrFromCache()).then(() => {
+    // trigger any other actions that need to be done after the swarm is ready
+    if (isSesh101ReadyOutsideRedux()) {
+      window.inboxStore?.dispatch(networkDataActions.fetchInfoFromSeshServer() as any);
+    }
+  }); // refresh our swarm on start to speed up the first message fetching event
   void Data.cleanupOrphanedAttachments();
 
   // TODOLATER make this a job of the JobRunner
@@ -232,6 +246,12 @@ const doAppStartUp = async () => {
     // Note: this also starts periodic jobs, so we don't need to keep doing it
     void UserSync.queueNewJobIfNeeded();
   }, 20000);
+
+  if (window.sessionFeatureFlags.showSettingsOnStart) {
+    window.inboxStore?.dispatch(showLeftPaneSection(SectionType.Settings));
+    window.inboxStore?.dispatch(resetLeftOverlayMode());
+    window.inboxStore?.dispatch(resetRightOverlayMode());
+  }
 };
 
 function useUpdateBadgeCount() {
@@ -259,19 +279,19 @@ export const ActionsPanel = () => {
   const ourPrimaryConversation = useSelector(getOurPrimaryConversation);
   const showDebugMenu = useDebugMode();
 
-  // this maxi useEffect is called only once: when the component is mounted.
+  // this useMount is called only once: when the component is mounted.
   // For the action panel, it means this is called only one per app start/with a user logged in
-  useEffect(() => {
+  useMount(() => {
     void doAppStartUp();
-  }, []);
+  });
 
   // wait for cleanUpMediasInterval and then start cleaning up medias
   // this would be way easier to just be able to not trigger a call with the setInterval
-  useEffect(() => {
+  useMount(() => {
     const timeout = setTimeout(() => setStartCleanUpMedia(true), cleanUpMediasInterval);
 
     return () => clearTimeout(timeout);
-  }, []);
+  });
 
   useUpdateBadgeCount();
 
@@ -293,9 +313,10 @@ export const ActionsPanel = () => {
     if (!ourPrimaryConversation) {
       return;
     }
-    // trigger an updates from the snodes every hour
 
+    // trigger an updates from the snodes and swarm every hour
     void SnodePool.forceRefreshRandomSnodePool();
+    void SnodePool.getFreshSwarmFor(UserUtils.getOurPubKeyStrFromCache());
   }, DURATION.HOURS * 1);
 
   useTimeoutFn(() => {
@@ -314,7 +335,7 @@ export const ActionsPanel = () => {
     void triggerAvatarReUploadIfNeeded();
   }, DURATION.DAYS * 1);
 
-  useRefreshReleasedFeaturesTimestamp();
+  useCheckReleasedFeatures();
 
   if (!ourPrimaryConversation) {
     window?.log?.warn('ActionsPanel: ourPrimaryConversation is not set');

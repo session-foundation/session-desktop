@@ -12,7 +12,6 @@ import { getCallMediaPermissionsSettings } from '../components/settings/SessionS
 import { Data } from '../data/data';
 import { SettingsKey } from '../data/settings-key';
 import { ConversationTypeEnum } from '../models/types';
-import { uploadFileToFsWithOnionV4 } from '../session/apis/file_server_api/FileServerApi';
 import { OpenGroupUtils } from '../session/apis/open_group_api/utils';
 import { getSwarmPollingInstance } from '../session/apis/snode_api';
 import { ConvoHub } from '../session/conversations';
@@ -58,6 +57,7 @@ import { StoreGroupRequestFactory } from '../session/apis/snode_api/factories/St
 import { DURATION } from '../session/constants';
 import { GroupInvite } from '../session/utils/job_runners/jobs/GroupInviteJob';
 import type { LocalizerProps } from '../components/basic/Localizer';
+import { uploadFileToFsWithOnionV4 } from '../session/apis/file_server_api/FileServerApi';
 
 export async function copyPublicKeyByConvoId(convoId: string) {
   if (OpenGroupUtils.isOpenGroupV2(convoId)) {
@@ -282,7 +282,6 @@ export const declineConversationWithConfirm = ({
       title: alsoBlock ? window.i18n('block') : window.i18n('delete'),
       i18nMessage,
       okTheme: SessionButtonColor.Danger,
-      closeTheme: SessionButtonColor.Primary,
       onClickOk: async () => {
         await declineConversationWithoutConfirm({
           conversationId,

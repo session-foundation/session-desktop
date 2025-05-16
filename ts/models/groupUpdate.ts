@@ -20,7 +20,7 @@ export function getKickedGroupUpdateStr(kicked: Array<string>, _groupName: strin
   if (us) {
     switch (others.length) {
       case 0:
-        return { token: 'groupRemovedYouGeneral', args: undefined };
+        return { token: 'groupRemovedYouGeneral' };
       case 1:
         return { token: 'groupRemovedYouTwo', args: { other_name: othersNames[0] } };
       default:
@@ -30,7 +30,7 @@ export function getKickedGroupUpdateStr(kicked: Array<string>, _groupName: strin
 
   switch (othersNames.length) {
     case 0:
-      return { token: 'groupUpdated', args: undefined };
+      return { token: 'groupUpdated' };
     case 1:
       return { token: 'groupRemoved', args: { name: othersNames[0] } };
     case 2:
@@ -60,7 +60,7 @@ export function getLeftGroupUpdateChangeStr(left: Array<string>): LocalizerProps
   }
 
   return us
-    ? { token: 'groupMemberYouLeft', args: undefined }
+    ? { token: 'groupMemberYouLeft' }
     : {
         token: 'groupMemberLeft',
         args: {
@@ -84,7 +84,6 @@ export function getJoinedGroupUpdateChangeStr(
         case 0:
           return {
             token: addedWithHistory ? 'groupInviteYouHistory' : 'groupInviteYou',
-            args: undefined,
           };
         case 1:
           return addedWithHistory
@@ -98,7 +97,7 @@ export function getJoinedGroupUpdateChangeStr(
     }
     switch (othersNames.length) {
       case 0:
-        return { token: 'groupUpdated', args: undefined }; // this is an invalid case, but well.
+        return { token: 'groupUpdated' }; // this is an invalid case, but well.
       case 1:
         return addedWithHistory
           ? { token: 'groupMemberNewHistory', args: { name: othersNames[0] } }
@@ -130,7 +129,7 @@ export function getJoinedGroupUpdateChangeStr(
   if (us) {
     switch (othersNames.length) {
       case 0:
-        return { token: 'legacyGroupMemberYouNew', args: undefined };
+        return { token: 'legacyGroupMemberYouNew' };
       case 1:
         return { token: 'legacyGroupMemberNewYouOther', args: { other_name: othersNames[0] } };
       default:
@@ -139,7 +138,7 @@ export function getJoinedGroupUpdateChangeStr(
   }
   switch (othersNames.length) {
     case 0:
-      return { token: 'groupUpdated', args: undefined };
+      return { token: 'groupUpdated' };
     case 1:
       return { token: 'legacyGroupMemberNew', args: { name: othersNames[0] } };
     case 2:
@@ -168,7 +167,7 @@ export function getPromotedGroupUpdateChangeStr(joined: Array<string>): Localize
   if (us) {
     switch (othersNames.length) {
       case 0:
-        return { token: 'groupPromotedYou', args: undefined };
+        return { token: 'groupPromotedYou' };
       case 1:
         return { token: 'groupPromotedYouTwo', args: { other_name: othersNames[0] } };
       default:
@@ -177,7 +176,7 @@ export function getPromotedGroupUpdateChangeStr(joined: Array<string>): Localize
   }
   switch (othersNames.length) {
     case 0:
-      return { token: 'groupUpdated', args: undefined };
+      return { token: 'groupUpdated' };
     case 1:
       return { token: 'adminPromotedToAdmin', args: { name: othersNames[0] } };
     case 2:
@@ -202,7 +201,7 @@ export function getPromotedGroupUpdateChangeStr(joined: Array<string>): Localize
 export function getGroupNameChangeStr(newName: string | undefined): LocalizerProps {
   return newName
     ? { token: 'groupNameNew', args: { group_name: newName } }
-    : { token: 'groupNameUpdated', args: undefined };
+    : { token: 'groupNameUpdated' };
 }
 
 export function getGroupDisplayPictureChangeStr(): LocalizerProps {

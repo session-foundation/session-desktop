@@ -134,6 +134,7 @@ import { NetworkTime } from '../util/NetworkTime';
 import { MessageQueue } from '../session/sending';
 import type { WithMessageHashOrNull } from '../session/types/with';
 import { Model } from './models';
+import { ReduxOnionSelectors } from '../state/selectors/onions';
 
 type InMemoryConvoInfos = {
   mentionedUs: boolean;
@@ -813,7 +814,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     });
 
     // We're offline!
-    if (!window.isOnline) {
+    if (!ReduxOnionSelectors.isOnlineOutsideRedux()) {
       const error = new Error('Network is not available');
       error.name = 'SendMessageNetworkError';
       (error as any).number = this.id;
@@ -1784,13 +1785,16 @@ export class ConversationModel extends Model<ConversationAttributes> {
     return null;
   }
 
-  public async getNotificationIcon() {
+  /**
+   * @note we will use a default image when making the notification if the avatar cannot be found depending on the platform
+   */
+  public async getNotificationIcon(): Promise<string | undefined> {
     const avatarUrl = this.getAvatarPath();
-    const noIconUrl = 'images/session/session_icon_32.png';
 
     if (!avatarUrl) {
-      return noIconUrl;
+      return undefined;
     }
+
     const decryptedAvatarUrl = await DecryptedAttachmentsManager.getDecryptedMediaUrl(
       avatarUrl,
       IMAGE_JPEG,
@@ -1799,7 +1803,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
     if (!decryptedAvatarUrl) {
       window.log.warn('Could not decrypt avatar stored locally for getNotificationIcon..');
-      return noIconUrl;
+      return undefined;
     }
     return decryptedAvatarUrl;
   }
@@ -1874,7 +1878,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
     const iconUrl = await this.getNotificationIcon();
 
     const messageAttrs = message.attributes;
-    const messageSentAt = messageAttrs.sent_at;
     const messageId = message.id;
     const isExpiringMessage = this.isExpiringMessage(messageAttrs);
 
@@ -1884,7 +1887,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
       isExpiringMessage,
       message: friendRequestText || message.getNotificationText(),
       messageId,
-      messageSentAt: messageSentAt || Date.now(),
       title: friendRequestText ? '' : convo.getNicknameOrRealUsernameOrPlaceholder(),
     });
   }
@@ -1906,7 +1908,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
       return;
     }
 
-    const now = Date.now();
     const iconUrl = await this.getNotificationIcon();
 
     Notifications.addNotification({
@@ -1916,7 +1917,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
       message: window.i18n('callsIncoming', {
         name: this.getNicknameOrRealUsername() || PubKey.shorten(conversationId),
       }),
-      messageSentAt: now,
       title: this.getNicknameOrRealUsernameOrPlaceholder(),
     });
   }

@@ -2,6 +2,7 @@ import { from_string, to_string } from 'libsodium-wrappers-sumo';
 import { isString, omit, toNumber } from 'lodash';
 import { EncodeV4OnionRequestInfos, SnodeResponseV4 } from '../apis/snode_api/onions';
 import { concatUInt8Array } from '../crypto';
+import type { OnionV4JSONSnodeResponse } from './onionSend';
 
 export const encodeV4Request = (requestInfo: EncodeV4OnionRequestInfos): Uint8Array => {
   const { body } = requestInfo;
@@ -123,4 +124,13 @@ const decodeV4Response = (snodeResponse: SnodeResponseV4): DecodedResponseV4 | u
   }
 };
 
-export const OnionV4 = { decodeV4Response };
+const parseStatusCodeFromV4Request = (
+  onionV4Result: OnionV4JSONSnodeResponse | null
+): number | undefined => {
+  if (!onionV4Result) {
+    return undefined;
+  }
+  return onionV4Result?.body?.status_code || undefined;
+};
+
+export const OnionV4 = { decodeV4Response, parseStatusCodeFromV4Request };

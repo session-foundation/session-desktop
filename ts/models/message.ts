@@ -92,6 +92,7 @@ import { MessageQueue } from '../session/sending';
 import { getTimerNotificationStr } from './timerNotifications';
 import { ExpirationTimerUpdate } from '../session/disappearing_messages/types';
 import { Model } from './models';
+import { ReduxOnionSelectors } from '../state/selectors/onions';
 
 // tslint:disable: cyclomatic-complexity
 
@@ -877,7 +878,7 @@ export class MessageModel extends Model<MessageAttributes> {
 
   // One caller today: event handler for the 'Retry Send' entry on right click of a failed send message
   public async retrySend() {
-    if (!window.isOnline) {
+    if (!ReduxOnionSelectors.isOnlineOutsideRedux()) {
       window?.log?.error('retrySend: Cannot retry since we are offline!');
       return null;
     }

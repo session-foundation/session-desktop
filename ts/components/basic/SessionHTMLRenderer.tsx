@@ -29,6 +29,7 @@ export const SessionHtmlRenderer = ({ tag = 'div', key, html, className }: Recei
   const clean = DOMPurify.sanitize(html, {
     USE_PROFILES: { html: true },
     ALLOWED_TAGS: supportedFormattingTags,
+    ALLOWED_ATTR: ['aria-label', 'role'],
   });
 
   return createElement(tag, {

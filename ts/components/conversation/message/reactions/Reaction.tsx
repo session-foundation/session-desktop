@@ -10,7 +10,7 @@ import {
 } from '../../../../state/selectors/selectedConversation';
 import { THEME_GLOBALS } from '../../../../themes/globals';
 import { SortedReactionList } from '../../../../types/Reaction';
-import { abbreviateNumber } from '../../../../util/abbreviateNumber';
+import { abbreviateNumber } from '../../../../util/numbers';
 import { nativeEmojiData } from '../../../../util/emoji';
 import { popupXDefault, popupYDefault } from '../message-content/MessageReactions';
 import { POPUP_WIDTH, ReactionPopup, TipPosition } from './ReactionPopup';

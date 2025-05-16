@@ -1,7 +1,7 @@
 import { capitalize } from 'lodash';
 import { Flex } from '../../basic/Flex';
 import { SessionRadioGroup } from '../../basic/SessionRadioGroup';
-import { HintText } from '../../basic/Text';
+import { HintText, SpacerSM } from '../../basic/Text';
 import { ALPHA_CHANNEL, isReleaseChannel, STABLE_CHANNEL } from '../../../updater/types';
 import { useReleaseChannel } from './hooks/useReleaseChannel';
 import { ToastUtils } from '../../../session/utils';
@@ -54,6 +54,7 @@ export const ReleaseChannel = () => {
         }}
         style={{ margin: 0 }}
       />
+      <SpacerSM />
     </Flex>
   );
 };

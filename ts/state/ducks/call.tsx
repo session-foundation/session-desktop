@@ -16,7 +16,7 @@ export const initialCallState: CallStateType = {
 };
 
 /**
- * This slice is the one holding the redux slice representing our current call state.
+ * This slice is the one holding our current call state.
  */
 const callSlice = createSlice({
   name: 'call',

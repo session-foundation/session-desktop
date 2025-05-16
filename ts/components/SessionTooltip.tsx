@@ -14,6 +14,7 @@ import useDebounce from 'react-use/lib/useDebounce';
 import type { CSSProperties } from 'styled-components';
 import { isString } from 'lodash';
 import { Localizer, type LocalizerProps } from './basic/Localizer';
+import { SessionHtmlRenderer } from './basic/SessionHTMLRenderer';
 
 type TipPosition = 'center' | 'left' | 'right';
 
@@ -67,6 +68,7 @@ type Props = {
   reference: RefObject<HTMLDivElement>;
   content: LocalizerProps | string;
   readyToShow: boolean;
+  htmlString?: boolean;
   tooltipPosition?: TipPosition;
   x: number;
   y: number;
@@ -79,6 +81,7 @@ const SessionTooltipContent = (props: Props) => {
     reference,
     content,
     readyToShow,
+    htmlString,
     tooltipPosition = 'center',
     x,
     y,
@@ -96,7 +99,15 @@ const SessionTooltipContent = (props: Props) => {
       y={y}
       maxWidth={maxWidth}
     >
-      {isString(content) ? content : <Localizer {...content} />}
+      {isString(content) ? (
+        !htmlString ? (
+          content
+        ) : (
+          <SessionHtmlRenderer html={content} />
+        )
+      ) : (
+        <Localizer {...content} />
+      )}
     </StyledTooltip>
   );
 };
@@ -116,6 +127,7 @@ export const SessionTooltip = ({
   loading = false,
   style,
   dataTestId,
+  htmlString,
 }: {
   children: ReactNode;
   content: LocalizerProps | string;
@@ -125,6 +137,7 @@ export const SessionTooltip = ({
   loading?: boolean;
   style?: CSSProperties;
   dataTestId?: SessionDataTestId;
+  htmlString?: boolean;
 }) => {
   const [readyToShow, setReadyToShow] = useState(false);
   const [hovered, setHovered] = useState(false);
@@ -174,6 +187,7 @@ export const SessionTooltip = ({
           onMouseEnter();
         }
         setHovered(true);
+        setDebouncedHover(true);
       }}
       onMouseLeave={() => {
         if (onMouseLeave) {
@@ -190,6 +204,7 @@ export const SessionTooltip = ({
           reference={contentRef}
           content={content}
           readyToShow={readyToShow}
+          htmlString={htmlString}
           x={x}
           y={y}
           maxWidth={maxContentWidth}

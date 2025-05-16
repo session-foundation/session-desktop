@@ -141,7 +141,14 @@ const InviteContactsDialogInner = (props: Props) => {
       {/* TODO: localize those strings once out releasing those buttons for real Remove after QA */}
       {isGroupV2 && hasClosedGroupV2QAButtons() && (
         <>
-          <span style={{ display: 'flex', alignItems: 'center' }}>
+          <span
+            style={{
+              display: 'flex',
+              justifyContent: 'space-evenly',
+              alignItems: 'center',
+              width: '400px',
+            }}
+          >
             Share History?{'  '}
             <SessionToggle active={shareHistory} onClick={() => setShareHistory(!shareHistory)} />
           </span>

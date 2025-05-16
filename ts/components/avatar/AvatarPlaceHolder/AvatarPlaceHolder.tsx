@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type SessionDataTestId } from 'react';
 import { getSodiumRenderer } from '../../../session/crypto';
 import { allowOnlyOneAtATime } from '../../../session/utils/Promise';
 import { toHex } from '../../../session/utils/String';
@@ -10,7 +10,7 @@ type Props = {
   diameter: number;
   name: string;
   pubkey: string;
-  dataTestId?: string;
+  dataTestId?: SessionDataTestId;
 };
 
 /** NOTE we use libsodium instead of crypto.subtle.digest because node:crypto.subtle.digest does not work the same way and we need to unit test this component */
@@ -30,7 +30,7 @@ const avatarPlaceholderColors: Array<string> = Object.values(COLORS.PRIMARY);
 
 function useHashBasedOnPubkey(pubkey: string) {
   const [hash, setHash] = useState<number | undefined>(undefined);
-  const [loading, setIsLoading] = useState<boolean>(true);
+  const [loading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const cachedHash = cachedHashes.get(pubkey);
