@@ -142,9 +142,6 @@ const AvatarInner = (props: Props) => {
   const { urlToLoad } = useEncryptedFileFetch(forcedAvatarPath || avatarPath || '', '', true);
 
   const handleImageError = () => {
-    if (pubkey === '036c60a48da97925d6eaaea4cf498fac92b05b999c9e957ecfd69fd352d6a9658c') {
-      debugger;
-    }
     window.log.warn(
       'Avatar: Image failed to load; failing over to placeholder',
       urlToLoad,

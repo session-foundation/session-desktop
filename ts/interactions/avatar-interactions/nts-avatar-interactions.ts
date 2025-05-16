@@ -1,9 +1,9 @@
-import { isEmpty, isNil } from 'lodash';
+import { isEmpty } from 'lodash';
 import { SettingsKey } from '../../data/settings-key';
 import { uploadFileToFsWithOnionV4 } from '../../session/apis/file_server_api/FileServerApi';
 import { ConvoHub } from '../../session/conversations';
 import { DecryptedAttachmentsManager } from '../../session/crypto/DecryptedAttachmentsManager';
-import { UserUtils, SyncUtils } from '../../session/utils';
+import { UserUtils } from '../../session/utils';
 import { fromHexToArray, toHex } from '../../session/utils/String';
 import { MIME } from '../../types';
 import { urlToBlob } from '../../types/attachments/VisualAttachment';
@@ -12,7 +12,6 @@ import { IMAGE_JPEG } from '../../types/MIME';
 import { encryptProfile } from '../../util/crypto/profileEncrypter';
 import { Storage } from '../../util/storage';
 import type { ConversationModel } from '../../models/conversation';
-
 
 /**
  * This function can be used for reupload our avatar to the file server.
@@ -103,40 +102,10 @@ export async function uploadAndSetOurAvatarShared({
     displayName,
     avatarImageId: fileId,
   });
-  const newTimestampReupload = Date.now();
-  await Storage.put(SettingsKey.lastAvatarUploadTimestamp, newTimestampReupload);
+  await Storage.put(SettingsKey.lastAvatarUploadTimestamp, Date.now());
 
   return {
     avatarPointer: ourConvo.getAvatarPointer(),
     profileKey: ourConvo.getProfileKey(),
   };
-}
-
-/**
- * This function can be used for clearing our avatar.
- */
-export async function clearOurAvatar(commit: boolean = true) {
-  const ourConvo = ConvoHub.use().get(UserUtils.getOurPubKeyStrFromCache());
-  if (!ourConvo) {
-    window.log.warn('ourConvo not found... This is not a valid case');
-    return;
-  }
-
-  // return early if no change are needed at all
-  if (
-    isNil(ourConvo.get('avatarPointer')) &&
-    isNil(ourConvo.get('avatarInProfile')) &&
-    isNil(ourConvo.get('profileKey'))
-  ) {
-    return;
-  }
-
-  ourConvo.setKey('avatarPointer', undefined);
-  ourConvo.setKey('avatarInProfile', undefined);
-  ourConvo.setKey('profileKey', undefined);
-
-  if (commit) {
-    await ourConvo.commit();
-    await SyncUtils.forceSyncConfigurationNowIfNeeded(true);
-  }
 }

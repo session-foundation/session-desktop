@@ -26,13 +26,12 @@ const defaultMaxAttempts = 3;
 export function shouldAddAvatarDownloadJob({ conversationId }: { conversationId: string }) {
   const conversation = ConvoHub.use().get(conversationId);
   if (!conversation) {
-    // return true so we do not retry this task.
-    window.log.warn('shouldAddAvatarDownloadJob did not corresponding conversation');
+    window.log.warn('shouldAddAvatarDownloadJob: no corresponding conversation');
 
     return false;
   }
-  if (!conversation.isPrivate()) {
-    window.log.warn('shouldAddAvatarDownloadJob can only be used for private convos currently');
+  if (!conversation.isPrivate() && !conversation.isClosedGroupV2()) {
+    window.log.warn('shouldAddAvatarDownloadJob can only be used for private or groupv2 convos');
     return false;
   }
   const prevPointer = conversation.getAvatarPointer();
@@ -91,31 +90,29 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
   public async run(): Promise<RunJobResult> {
     const convoId = this.persistedData.conversationId;
 
-    window.log.warn(
+    window.log.debug(
       `running job ${this.persistedData.jobType} with conversationId:"${convoId}" id:"${this.persistedData.identifier}" `
     );
 
     if (!this.persistedData.identifier || !convoId) {
-      // return true so we do not retry this task.
       return RunJobResult.PermanentFailure;
     }
 
     let conversation = ConvoHub.use().get(convoId);
     if (!conversation) {
-      // return true so we do not retry this task.
       window.log.warn('AvatarDownloadJob did not corresponding conversation');
 
       return RunJobResult.PermanentFailure;
     }
-    if (!conversation.isPrivate()) {
-      window.log.warn('AvatarDownloadJob can only be used for private convos currently');
+    if (!conversation.isPrivate() && !conversation.isClosedGroupV2()) {
+      window.log.warn('AvatarDownloadJob can only be used for private or groupv2 convos');
       return RunJobResult.PermanentFailure;
     }
     let changes = false;
     const toDownloadPointer = conversation.getAvatarPointer();
     const toDownloadProfileKey = conversation.getProfileKey();
 
-    // if there is an avatar and profileKey for that user ('', null and undefined excluded), download, decrypt and save the avatar locally.
+    // if there is an avatar and profileKey for that user/group ('', null and undefined excluded), download, decrypt and save the avatar locally.
     if (toDownloadPointer && toDownloadProfileKey) {
       try {
         window.log.debug(`[profileupdate] starting downloading task for  ${conversation.id}`);

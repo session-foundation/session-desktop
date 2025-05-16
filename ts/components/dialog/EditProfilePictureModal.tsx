@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
-import { clearOurAvatar } from '../../interactions/avatar-interactions/nts-avatar-interactions';
 import { ToastUtils, UserUtils } from '../../session/utils';
 import { editProfileModal, updateEditProfilePictureModal } from '../../state/ducks/modalDialog';
 import type { EditProfilePictureModalProps } from '../../types/ReduxTypes';
@@ -94,6 +93,30 @@ const triggerUploadProfileAvatar = async (
   }
 };
 
+const triggerRemovalProfileAvatar = async (conversationId: string) => {
+  try {
+    if (OpenGroupUtils.isOpenGroupV2(conversationId)) {
+      throw new Error('triggerRemovalProfileAvatar: not supported for communities');
+    }
+
+    if (conversationId === UserUtils.getOurPubKeyStrFromCache()) {
+      window.inboxStore?.dispatch(userActions.clearOurAvatar() as any);
+    } else if (PubKey.is03Pubkey(conversationId)) {
+      window.inboxStore?.dispatch(
+        groupInfoActions.currentDeviceGroupAvatarRemoval({
+          groupPk: conversationId,
+        }) as any
+      );
+    } else {
+      throw new Error('triggerRemovalProfileAvatar: unsupported case');
+    }
+  } catch (error) {
+    if (error.message && error.message.length) {
+      ToastUtils.pushToastError('edit-profile', error.message);
+    }
+  }
+};
+
 export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureModalProps) => {
   const dispatch = useDispatch();
 
@@ -136,7 +159,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
     if (isCommunity) {
       throw new Error('community do not support removing avatars, only changing them');
     }
-    await clearOurAvatar();
+    await triggerRemovalProfileAvatar(conversationId);
     setNewAvatarObjectUrl(null);
   };
 

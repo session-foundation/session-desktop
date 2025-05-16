@@ -1,8 +1,10 @@
+import { isNil } from 'lodash';
 import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { ConvoHub } from '../../session/conversations';
-import { UserUtils } from '../../session/utils';
+import { SyncUtils, UserUtils } from '../../session/utils';
 import { getSodiumRenderer } from '../../session/crypto';
 import { uploadAndSetOurAvatarShared } from '../../interactions/avatar-interactions/nts-avatar-interactions';
+import { ed25519Str } from '../../session/utils/String';
 
 export type UserStateType = {
   ourDisplayNameInProfile: string;
@@ -41,6 +43,37 @@ const updateOurAvatar = createAsyncThunk(
     });
   }
 );
+
+const clearOurAvatar = createAsyncThunk('user/clearOurAvatar', async () => {
+  const us = UserUtils.getOurPubKeyStrFromCache();
+  if (!us) {
+    window.log.warn('user/clearOurAvatar: invalid conversationId provided: ');
+    throw new Error('user/clearOurAvatar: invalid conversationId provided');
+  }
+  const convo = ConvoHub.use().get(us);
+  if (!convo) {
+    window.log.warn(
+      `clearOurAvatar: convo ${ed25519Str(us)} not found... This is not a valid case`
+    );
+    return;
+  }
+
+  // return early if no change are needed at all
+  if (
+    isNil(convo.get('avatarPointer')) &&
+    isNil(convo.get('avatarInProfile')) &&
+    isNil(convo.get('profileKey'))
+  ) {
+    return;
+  }
+
+  convo.setKey('avatarPointer', undefined);
+  convo.setKey('avatarInProfile', undefined);
+  convo.setKey('profileKey', undefined);
+
+  await convo.commit();
+  await SyncUtils.forceSyncConfigurationNowIfNeeded(true);
+});
 
 /**
  * This slice is representing the state of our user account.
@@ -81,12 +114,30 @@ const userSlice = createSlice({
       window.log.debug('a updateOurAvatar is pending');
       return state;
     });
+    builder.addCase(clearOurAvatar.fulfilled, (state, action) => {
+      window.log.error('a clearOurAvatar was fulfilled with:', action.payload);
+
+      state.uploadingNewAvatarCurrentUser = false;
+      return state;
+    });
+    builder.addCase(clearOurAvatar.rejected, (state, action) => {
+      window.log.error('a clearOurAvatar was rejected', action.error);
+      state.uploadingNewAvatarCurrentUser = false;
+      return state;
+    });
+    builder.addCase(clearOurAvatar.pending, (state, _action) => {
+      state.uploadingNewAvatarCurrentUser = true;
+
+      window.log.debug('a clearOurAvatar is pending');
+      return state;
+    });
   },
 });
 
 export const userActions = {
   ...userSlice.actions,
   updateOurAvatar,
+  clearOurAvatar,
 };
 
 export const userReducer = userSlice.reducer;

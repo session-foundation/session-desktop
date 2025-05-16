@@ -1076,6 +1076,109 @@ async function handleAvatarChangeFromUI({
   await convo.commit();
 }
 
+async function handleClearAvatarFromUI({ groupPk }: WithGroupPubkey) {
+  const convo = ConvoHub.use().get(groupPk);
+  if (!convo) {
+    window.log.warn(
+      `handleClearAvatarFromUI: convo ${ed25519Str(groupPk)} not found... This is not a valid case`
+    );
+    return;
+  }
+
+  console.warn(
+    'we should merge the shared logic of those functions together, before it gets more out of hands'
+  );
+
+  // return early if no change are needed at all
+  if (
+    isNil(convo.get('avatarPointer')) &&
+    isNil(convo.get('avatarInProfile')) &&
+    isNil(convo.get('profileKey'))
+  ) {
+    return;
+  }
+
+  // if we are a 03-group, we need to remove the avatar from the group config, and push a sync
+  const infos = await MetaGroupWrapperActions.infoGet(groupPk);
+  if (!infos) {
+    throw new PreConditionFailed('handleClearAvatarFromUI infoGet is empty');
+  }
+  if (infos.profilePicture?.url || infos.profilePicture?.key) {
+    await MetaGroupWrapperActions.infoSet(groupPk, {
+      ...infos,
+      profilePicture: null,
+    });
+    await GroupSync.queueNewJobIfNeeded(groupPk);
+  }
+
+  const group = await UserGroupsWrapperActions.getGroup(groupPk);
+  if (!group || !group.secretKey || isEmpty(group.secretKey)) {
+    throw new Error('tried to make change to group but we do not have the admin secret key');
+  }
+
+  await checkWeAreAdminOrThrow(groupPk, 'handleAvatarChangeFromUI');
+  convo.setKey('avatarPointer', undefined);
+  convo.setKey('avatarInProfile', undefined);
+  convo.setKey('profileKey', undefined);
+
+  const createAtNetworkTimestamp = NetworkTime.now();
+  // we want to add an update message even if the change was done remotely
+  const msg = await ClosedGroup.addUpdateMessage({
+    convo,
+    diff: { type: 'avatarChange' },
+    sender: UserUtils.getOurPubKeyStrFromCache(),
+    sentAt: createAtNetworkTimestamp,
+    expireUpdate: DisappearingMessages.getExpireDetailsForOutgoingMessage(
+      convo,
+      createAtNetworkTimestamp
+    ),
+    markAlreadySent: false, // the store below will mark the message as sent with dbMsgIdentifier
+    messageHash: null,
+  });
+
+  // we want to send an update only if the change was made locally.
+  const avatarChangeMsg = new GroupUpdateInfoChangeMessage({
+    groupPk,
+    typeOfChange: SignalService.GroupUpdateInfoChangeMessage.Type.AVATAR,
+    identifier: msg.id,
+    createAtNetworkTimestamp,
+    secretKey: group.secretKey,
+    sodium: await getSodiumRenderer(),
+    ...DisappearingMessages.getExpireDetailsForOutgoingMessage(convo, createAtNetworkTimestamp),
+  });
+
+  const extraStoreRequests = await StoreGroupRequestFactory.makeGroupMessageSubRequest(
+    [avatarChangeMsg],
+    group
+  );
+
+  try {
+    const batchResult = await GroupSync.pushChangesToGroupSwarmIfNeeded({
+      groupPk,
+      extraStoreRequests,
+      allow401s: false,
+    });
+
+    if (batchResult !== RunJobResult.Success) {
+      await LibSessionUtil.saveDumpsToDb(groupPk);
+
+      throw new Error(
+        'handleClearAvatarFromUI: pushChangesToGroupSwarmIfNeeded did not return success'
+      );
+    }
+  } catch (e) {
+    window.log.warn(
+      'handleClearAvatarFromUI: pushChangesToGroupSwarmIfNeeded failed with:',
+      e.message
+    );
+  }
+
+  convo.set({
+    active_at: createAtNetworkTimestamp,
+  });
+  await convo.commit();
+}
+
 /**
  * This action is used to trigger a change when the local user does a change to a group v2 members list.
  * GroupV2 added members can be added two ways: with and without the history of messages.
@@ -1339,6 +1442,28 @@ const currentDeviceGroupAvatarChange = createAsyncThunk(
   }
 );
 
+const currentDeviceGroupAvatarRemoval = createAsyncThunk(
+  'group/currentDeviceGroupAvatarRemoval',
+  async ({ groupPk }: WithGroupPubkey, payloadCreator): Promise<GroupDetailsUpdate> => {
+    const state = payloadCreator.getState() as StateType;
+    if (!state.groups.infos[groupPk] || !state.groups.members[groupPk]) {
+      throw new PreConditionFailed(
+        'currentDeviceGroupAvatarRemoval group not present in redux slice'
+      );
+    }
+    await checkWeAreAdminOrThrow(groupPk, 'currentDeviceGroupAvatarRemoval');
+
+    await handleClearAvatarFromUI({ groupPk });
+    window.inboxStore?.dispatch(updateEditProfilePictureModal(null));
+
+    return {
+      groupPk,
+      infos: await MetaGroupWrapperActions.infoGet(groupPk),
+      members: await MetaGroupWrapperActions.memberGetAll(groupPk),
+    };
+  }
+);
+
 function deleteGroupPkEntriesFromState(state: GroupState, groupPk: GroupPubkeyType) {
   delete state.infos[groupPk];
   delete state.members[groupPk];
@@ -1568,6 +1693,31 @@ const metaGroupSlice = createSlice({
       state.avatarChangeFromUIPending = true;
     });
 
+    /** currentDeviceGroupAvatarRemoval */
+    builder.addCase(currentDeviceGroupAvatarRemoval.fulfilled, (state, action) => {
+      state.avatarChangeFromUIPending = false;
+
+      const { infos, members, groupPk } = action.payload;
+      state.infos[groupPk] = infos;
+      state.members[groupPk] = members;
+      refreshConvosModelProps([groupPk]);
+      if (window.sessionFeatureFlags.debug.debugLibsessionDumps) {
+        window.log.info(
+          `groupInfo of ${ed25519Str(groupPk)} after currentDeviceGroupAvatarRemoval: ${stringify(infos)}`
+        );
+        window.log.info(
+          `groupMembers of ${ed25519Str(groupPk)} after currentDeviceGroupAvatarRemoval: ${stringify(members)}`
+        );
+      }
+    });
+    builder.addCase(currentDeviceGroupAvatarRemoval.rejected, (state, action) => {
+      window.log.error(`a ${currentDeviceGroupAvatarRemoval.name} was rejected`, action.error);
+      state.avatarChangeFromUIPending = false;
+    });
+    builder.addCase(currentDeviceGroupAvatarRemoval.pending, state => {
+      state.avatarChangeFromUIPending = true;
+    });
+
     /** handleMemberLeftMessage */
     builder.addCase(handleMemberLeftMessage.fulfilled, (state, action) => {
       const { infos, members, groupPk } = action.payload;
@@ -1617,6 +1767,7 @@ export const groupInfoActions = {
   handleMemberLeftMessage,
   currentDeviceGroupNameChange,
   currentDeviceGroupAvatarChange,
+  currentDeviceGroupAvatarRemoval,
   triggerFakeDeleteMsgBeforeNow,
   ...metaGroupSlice.actions,
 };
