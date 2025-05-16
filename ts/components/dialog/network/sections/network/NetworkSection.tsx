@@ -254,7 +254,7 @@ export function NetworkSection({ loading: _loading }: { loading: boolean }) {
       <SessionNetworkParagraph
         interactive={true}
         onClick={() => {
-          showLinkVisitWarningDialog('https://getsession.org/network', dispatch);
+          showLinkVisitWarningDialog('https://docs.getsession.org/session-network', dispatch);
         }}
         data-testid="learn-more-network-link"
       >

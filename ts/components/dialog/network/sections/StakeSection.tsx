@@ -123,7 +123,10 @@ export function StakeSection({ loading }: { loading: boolean }) {
         buttonColor={isDarkTheme ? SessionButtonColor.Primary : undefined}
         buttonShape={SessionButtonShape.Square}
         onClick={() => {
-          showLinkVisitWarningDialog('https://token.getsession.org/staking', dispatch);
+          showLinkVisitWarningDialog(
+            'https://docs.getsession.org/session-network/staking',
+            dispatch
+          );
         }}
         dataTestId="learn-about-staking-link"
       >
