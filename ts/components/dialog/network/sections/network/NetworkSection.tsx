@@ -18,7 +18,6 @@ import { Localizer } from '../../../../basic/Localizer';
 import { LOCALE_DEFAULTS } from '../../../../../localization/constants';
 import { NodeImage } from '../../NodeImage';
 import { showLinkVisitWarningDialog } from '../../../OpenUrlModal';
-import { useLastRefreshedTimestamp } from '../../../../../state/selectors/networkModal';
 import { useSecuringNodesCount } from './hooks/useSecuringNodesCount';
 import { formatNumber, formatDateWithLocale } from '../../../../../util/i18n/formatting/generics';
 import { abbreviateNumber } from '../../../../../util/numbers';
@@ -30,6 +29,7 @@ import {
   useUSDPrice,
   useNetworkStakedTokens,
   useNetworkStakedUSD,
+  usePriceTimestamp,
 } from '../../../../../state/selectors/networkData';
 import { Grid } from '../../../../basic/Grid';
 import { useIsOnline } from '../../../../../state/selectors/onions';
@@ -108,16 +108,15 @@ const NodesStats = ({
 };
 
 const CurrentPriceBlock = ({
-  lastRefreshedTimestamp,
   loading,
   usdPrice,
 }: {
-  lastRefreshedTimestamp: number;
   loading: boolean;
   usdPrice: number | null;
 }) => {
   const isOnline = useIsOnline();
   const isDarkTheme = useIsDarkTheme();
+  const priceTimestamp = usePriceTimestamp();
   const currentPrice = loading
     ? localize('loading')
     : isOnline && usdPrice
@@ -149,10 +148,10 @@ const CurrentPriceBlock = ({
       </Flex>
       <SessionTooltip
         content={formatMessageWithArgs(LOCALE_DEFAULTS.session_network_data_price, {
-          date_time: !lastRefreshedTimestamp
+          date_time: !priceTimestamp
             ? '-'
             : formatDateWithLocale({
-                date: new Date(lastRefreshedTimestamp),
+                date: new Date(priceTimestamp * 1000),
                 formatStr: 'd MMM yyyy hh:mm a',
               }),
         })}
@@ -230,7 +229,6 @@ export function NetworkSection({ loading: _loading }: { loading: boolean }) {
   const usdPrice = useUSDPrice();
   const securedBySESH = useNetworkStakedTokens();
   const securedByUSD = useNetworkStakedUSD();
-  const lastRefreshedTimestamp = useLastRefreshedTimestamp();
   const {
     securingNodesCount,
     swarmNodeCount,
@@ -286,11 +284,7 @@ export function NetworkSection({ loading: _loading }: { loading: boolean }) {
           loading={loading}
           error={error}
         />
-        <CurrentPriceBlock
-          lastRefreshedTimestamp={lastRefreshedTimestamp}
-          loading={loading}
-          usdPrice={usdPrice}
-        />
+        <CurrentPriceBlock loading={loading} usdPrice={usdPrice} />
         <SecuredByBlock
           securedBySESH={securedBySESH}
           securedByUSD={securedByUSD}
