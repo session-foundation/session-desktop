@@ -120,7 +120,7 @@ const CurrentPriceBlock = ({
   const currentPrice = loading
     ? localize('loading')
     : isOnline && usdPrice
-      ? `$${formatNumber(usdPrice, { currency: LOCALE_DEFAULTS.usd_name_short, minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true })}`
+      ? `$${formatNumber(usdPrice, { currency: LOCALE_DEFAULTS.usd_name_short, minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true })} ${LOCALE_DEFAULTS.usd_name_short}`
       : localize('unavailable').toString();
 
   return (
@@ -198,7 +198,7 @@ const SecuredByBlock = ({
     : isOnline && securedBySESH
       ? `${abbreviateNumber(securedBySESH, 0).toUpperCase()} ${LOCALE_DEFAULTS.token_name_short}`
       : localize('unavailable').toString();
-  const securedAmountUSD = `$${isOnline && !loading && securedByUSD ? formatNumber(securedByUSD, { currency: LOCALE_DEFAULTS.usd_name_short, minimumFractionDigits: 0, maximumFractionDigits: 0, useGrouping: true }) : '-'}`;
+  const securedAmountUSD = `$${isOnline && !loading && securedByUSD ? formatNumber(securedByUSD, { currency: LOCALE_DEFAULTS.usd_name_short, minimumFractionDigits: 0, maximumFractionDigits: 0, useGrouping: true }) : '-'} ${LOCALE_DEFAULTS.usd_name_short}`;
 
   return (
     <Block

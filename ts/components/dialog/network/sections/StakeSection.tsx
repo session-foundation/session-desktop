@@ -86,7 +86,7 @@ export function StakeSection({ loading }: { loading: boolean }) {
           minimumFractionDigits: 0,
           maximumFractionDigits: 0,
           useGrouping: true,
-        })}`
+        })} ${LOCALE_DEFAULTS.usd_name_short}`
       : localize('unavailable').toString();
 
   return (
