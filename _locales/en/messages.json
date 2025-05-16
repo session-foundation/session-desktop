@@ -895,7 +895,7 @@
   "urlCopy": "Copy URL",
   "urlOpen": "Open URL",
   "urlOpenBrowser": "This will open in your browser.",
-  "urlOpenDescription": "Are you sure you want to open this URL in your browser?<br/><br/>{url}",
+  "urlOpenDescription": "Are you sure you want to open this URL in your browser?<br/><br/><b>{url}</b>",
   "useFastMode": "Use Fast Mode",
   "video": "Video",
   "videoErrorPlay": "Unable to play video.",
