@@ -19,7 +19,5 @@ export type SessionSettingCategory =
 export type PasswordAction = 'set' | 'change' | 'remove' | 'enter';
 
 export type EditProfilePictureModalProps = {
-  avatarPath: string | null;
-  profileName: string | undefined;
-  ourId: string;
+  conversationId: string;
 };

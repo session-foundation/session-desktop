@@ -1,6 +1,6 @@
-export function getInitials(name?: string): string {
+export function getInitials(name?: string) {
   if (!name || !name.length) {
-    return '0';
+    return undefined;
   }
 
   if (name.length > 2 && name.startsWith('05')) {

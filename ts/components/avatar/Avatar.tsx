@@ -14,6 +14,7 @@ import { SessionIcon } from '../icon';
 import { AvatarPlaceHolder } from './AvatarPlaceHolder/AvatarPlaceHolder';
 import { ClosedGroupAvatar } from './AvatarPlaceHolder/ClosedGroupAvatar';
 import { useIsMessageSelectionMode } from '../../state/selectors/selectedConversation';
+import { PlusAvatarButton } from '../buttons/PlusAvatarButton';
 
 export enum AvatarSize {
   XS = 28,
@@ -33,6 +34,11 @@ type Props = {
   onAvatarClick?: () => void;
   dataTestId?: SessionDataTestId;
   imageDataTestId?: SessionDataTestId;
+  /**
+   * If this is set, show the `+` button to change the avatar.
+   * This will be the callback to call on click on that `+` button.
+   */
+  onPlusAvatarClick?: () => void;
 };
 
 const Identicon = (props: Pick<Props, 'forcedName' | 'pubkey' | 'size'>) => {
@@ -77,7 +83,7 @@ const NoImage = memo(
     }
   ) => {
     const { forcedName, size, pubkey, isClosedGroup, onAvatarClick } = props;
-    // if no image but we have conversations set for the group, renders group members avatars
+
     if (pubkey && isClosedGroup) {
       return <ClosedGroupAvatar size={size} convoId={pubkey} onAvatarClick={onAvatarClick} />;
     }
@@ -123,6 +129,7 @@ const AvatarInner = (props: Props) => {
     dataTestId,
     imageDataTestId,
     onAvatarClick,
+    onPlusAvatarClick,
   } = props;
   const [imageBroken, setImageBroken] = useState(false);
 
@@ -133,6 +140,7 @@ const AvatarInner = (props: Props) => {
   const name = useConversationUsername(pubkey);
   // contentType is not important
   const { urlToLoad } = useEncryptedFileFetch(forcedAvatarPath || avatarPath || '', '', true);
+
   const handleImageError = () => {
     window.log.warn(
       'Avatar: Image failed to load; failing over to placeholder',
@@ -142,7 +150,7 @@ const AvatarInner = (props: Props) => {
     setImageBroken(true);
   };
 
-  const hasImage = (base64Data || urlToLoad) && !imageBroken && !isClosedGroup;
+  const hasImage = (base64Data || urlToLoad) && !imageBroken;
 
   const isClickable = !!onAvatarClick;
 
@@ -187,6 +195,9 @@ const AvatarInner = (props: Props) => {
           onAvatarClick={onAvatarClick}
         />
       )}
+      {onPlusAvatarClick ? (
+        <PlusAvatarButton onClick={onPlusAvatarClick} dataTestId="image-upload-section" />
+      ) : null}
     </div>
   );
 };

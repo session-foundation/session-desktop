@@ -56,6 +56,20 @@ export type LightBoxOptions = {
 
 export type DebugMenuModalState = object | null;
 
+export type ConversationSettingsModalPage = 'default' | 'disappearing_message' | 'notifications';
+type SettingsPageThatCannotBeStandalone = Extract<ConversationSettingsModalPage, 'default'>;
+type SettingsPageThatCanBeStandalone = Exclude<ConversationSettingsModalPage, 'default'>;
+export type ConversationSettingsModalState =
+  | (WithConvoId &
+      (
+        | { settingsModalPage: SettingsPageThatCannotBeStandalone }
+        | {
+            settingsModalPage: SettingsPageThatCanBeStandalone;
+            standalonePage: boolean;
+          }
+      ))
+  | null;
+
 export type ModalState = {
   confirmModal: ConfirmModalState;
   inviteContactModal: InviteContactModalState;
@@ -79,6 +93,7 @@ export type ModalState = {
   openUrlModal: OpenUrlModalState;
   lightBoxOptions: LightBoxOptions;
   debugMenuModal: DebugMenuModalState;
+  conversationSettingsModal: ConversationSettingsModalState;
 };
 
 export const initialModalState: ModalState = {
@@ -104,6 +119,7 @@ export const initialModalState: ModalState = {
   openUrlModal: null,
   lightBoxOptions: null,
   debugMenuModal: null,
+  conversationSettingsModal: null,
 };
 
 const ModalSlice = createSlice({
@@ -190,6 +206,9 @@ const ModalSlice = createSlice({
     updateDebugMenuModal(state, action: PayloadAction<DebugMenuModalState>) {
       return { ...state, debugMenuModal: action.payload };
     },
+    updateConversationSettingsModal(state, action: PayloadAction<ConversationSettingsModalState>) {
+      return { ...state, conversationSettingsModal: action.payload };
+    },
   },
 });
 
@@ -217,5 +236,6 @@ export const {
   updateOpenUrlModal,
   updateLightBoxOptions,
   updateDebugMenuModal,
+  updateConversationSettingsModal,
 } = actions;
 export const modalReducer = reducer;

@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, type SessionDataTestId } from 'react';
 import styled, { CSSProperties } from 'styled-components';
 
 export type HeadingProps = {
@@ -10,6 +10,7 @@ export type HeadingProps = {
   fontWeight?: 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
   padding?: string;
   margin?: string;
+  dataTestId?: SessionDataTestId;
 };
 
 type StyledHeadingProps = HeadingProps & {
@@ -23,7 +24,9 @@ font-weight: ${props.fontWeight ? props.fontWeight : '700'};
 ${props.size ? `font-size: var(--font-size-${props.size});` : ''}
 ${props.color ? `color: ${props.color};` : ''}
 ${props.alignText ? `text-align: ${props.alignText};` : ''}
+line-height: 1.0;
 `;
+
 const Heading = (headerProps: StyledHeadingProps) => {
   const StyledHeading =
     headerProps.size === 'h7' || headerProps.size === 'h8' || headerProps.size === 'h9'
@@ -34,7 +37,11 @@ const Heading = (headerProps: StyledHeadingProps) => {
           ${props => headingStyles(props)}
         `;
 
-  return <StyledHeading {...headerProps}>{headerProps.children}</StyledHeading>;
+  return (
+    <StyledHeading {...headerProps} data-testid={headerProps.dataTestId}>
+      {headerProps.children}
+    </StyledHeading>
+  );
 };
 
 /** --font-size-h1 30px */

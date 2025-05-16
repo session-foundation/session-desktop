@@ -26,25 +26,48 @@ export type SessionIconProps = {
   sizeIsWidth?: boolean;
 };
 
+export const IconSizeToPx = {
+  tiny: 12,
+  small: 15,
+  /**
+   * medium is default
+   */
+  medium: 20,
+  large: 25,
+  huge: 30,
+  huge2: 40,
+  max: 50,
+};
+
+export const IconSizeToPxStr = {
+  tiny: `${IconSizeToPx.tiny}px`,
+  small: `${IconSizeToPx.small}px`,
+  medium: `${IconSizeToPx.medium}px`,
+  large: `${IconSizeToPx.large}px`,
+  huge: `${IconSizeToPx.huge}px`,
+  huge2: `${IconSizeToPx.huge2}px`,
+  max: `${IconSizeToPx.max}px`,
+};
+
 const getIconDimensionFromIconSize = (iconSize: SessionIconSize | number) => {
   if (typeof iconSize === 'number') {
     return iconSize;
   }
   switch (iconSize) {
     case 'tiny':
-      return 12;
+      return IconSizeToPx.tiny;
     case 'small':
-      return 15;
+      return IconSizeToPx.small;
     case 'medium':
-      return 20;
+      return IconSizeToPx.medium;
     case 'large':
-      return 25;
+      return IconSizeToPx.large;
     case 'huge':
-      return 30;
+      return IconSizeToPx.huge;
     case 'huge2':
-      return 40;
+      return IconSizeToPx.huge2;
     default:
-      return 20;
+      return IconSizeToPx.medium;
   }
 };
 

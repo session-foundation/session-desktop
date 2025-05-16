@@ -94,12 +94,8 @@ type RightPanelMessageInfoState = {
   type: 'message_info';
   params: { messageId: string; visibleAttachmentIndex: number | undefined };
 };
-type RightPanelDisappearingMessagesState = { type: 'disappearing_messages'; params: null };
 
-export type RightOverlayMode =
-  | RightPanelDefaultState
-  | RightPanelMessageInfoState
-  | RightPanelDisappearingMessagesState;
+export type RightOverlayMode = RightPanelDefaultState | RightPanelMessageInfoState;
 
 export function setRightOverlayMode(overlayMode: RightOverlayMode): RightOverlayModeActionType {
   return {

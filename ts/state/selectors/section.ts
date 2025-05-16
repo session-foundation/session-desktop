@@ -16,6 +16,10 @@ export const getIsMessageSection = (state: StateType) => {
   return state.section.focusedSection === SectionType.Message;
 };
 
+export function useIsMessageSection() {
+  return useSelector(getIsMessageSection);
+}
+
 export const getFocusedSettingsSection = createSelector(
   getSection,
   (state: SectionStateType): SessionSettingCategory | undefined => state.focusedSettingsSection
