@@ -187,6 +187,7 @@ export const SessionTooltip = ({
           onMouseEnter();
         }
         setHovered(true);
+        setDebouncedHover(true);
       }}
       onMouseLeave={() => {
         if (onMouseLeave) {
