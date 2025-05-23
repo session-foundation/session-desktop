@@ -1,10 +1,10 @@
-import autoBind from 'auto-bind';
 import clsx from 'clsx';
 
 import { isString } from 'lodash';
-import { PureComponent, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import styled from 'styled-components';
+import useTimeoutFn from 'react-use/lib/useTimeoutFn';
 
 import { SessionButton, SessionButtonColor, SessionButtonType } from './basic/SessionButton';
 import { SessionTheme } from '../themes/SessionTheme';
@@ -16,13 +16,7 @@ import { SessionToast } from './basic/SessionToast';
 import { SessionSpinner } from './loading';
 import { Localizer } from './basic/Localizer';
 
-interface State {
-  errorCount: number;
-  clearDataView: boolean;
-  loading: boolean;
-}
-
-export const MAX_LOGIN_TRIES = 3;
+const MAX_LOGIN_TRIES = 3;
 
 const TextPleaseWait = (props: { isLoading: boolean }) => {
   if (!props.isLoading) {
@@ -50,164 +44,174 @@ function pushToastError(id: string, description: string) {
   });
 }
 
-class SessionPasswordPromptInner extends PureComponent<unknown, State> {
-  private inputRef?: any;
+function ClearDataViewButtons({ onCancel }: { onCancel: () => void }) {
+  return (
+    <div className="session-modal__button-group">
+      <SessionButton
+        text={window.i18n('clearDevice')}
+        buttonColor={SessionButtonColor.Danger}
+        buttonType={SessionButtonType.Simple}
+        onClick={window.clearLocalData}
+      />
+      <SessionButton
+        text={window.i18n('cancel')}
+        buttonType={SessionButtonType.Simple}
+        onClick={onCancel}
+      />
+    </div>
+  );
+}
 
-  constructor(props: any) {
-    super(props);
+function PasswordViewButtons({
+  errorCount,
+  initLogin,
+  loading,
+  onShowClearDataView,
+}: {
+  errorCount: number;
+  loading: boolean;
+  initLogin: () => void;
+  onShowClearDataView: () => void;
+}) {
+  const showResetElements = errorCount >= MAX_LOGIN_TRIES;
 
-    this.state = {
-      errorCount: 0,
-      clearDataView: false,
-      loading: false,
-    };
-
-    autoBind(this);
-  }
-
-  public componentDidMount() {
-    setTimeout(() => {
-      this.inputRef?.focus();
-    }, 100);
-  }
-
-  public render() {
-    const isLoading = this.state.loading;
-    const spinner = isLoading ? <SessionSpinner loading={true} /> : null;
-    const featureElement = this.state.clearDataView ? (
-      <p>
-        <Localizer token="clearDeviceDescription" />
-      </p>
-    ) : (
-      <div className="session-modal__input-group">
-        <input
-          type="password"
-          id="password-prompt-input"
-          defaultValue=""
-          placeholder={window.i18n('passwordEnter')}
-          onKeyUp={this.onKeyUp}
-          ref={input => {
-            this.inputRef = input;
-          }}
+  return (
+    <div className={clsx(showResetElements && 'session-modal__button-group')}>
+      {showResetElements && (
+        <>
+          <SessionButton
+            text={window.i18n('clearDevice')}
+            buttonColor={SessionButtonColor.Danger}
+            buttonType={SessionButtonType.Simple}
+            onClick={onShowClearDataView}
+          />
+        </>
+      )}
+      {!loading && (
+        <SessionButton
+          text={showResetElements ? window.i18n('tryAgain') : window.i18n('done')}
+          buttonType={SessionButtonType.Simple}
+          onClick={initLogin}
+          disabled={loading}
         />
-      </div>
-    );
+      )}
+    </div>
+  );
+}
 
-    return (
-      <SessionWrapperModal
-        title={this.state.clearDataView ? window.i18n('clearDevice') : window.i18n('passwordEnter')}
-      >
-        {spinner || featureElement}
-        <TextPleaseWait isLoading={isLoading} />
-        {this.state.clearDataView
-          ? this.renderClearDataViewButtons()
-          : this.renderPasswordViewButtons()}
-      </SessionWrapperModal>
-    );
-  }
+async function onLogin(passPhrase: string, increaseErrorCount: () => void, onFinished: () => void) {
+  // Note: we don't trim the password anymore. If the user entered a space at the end, so be it.
+  try {
+    await window.onLogin(passPhrase);
+  } catch (error) {
+    // Increment the error counter and show the button if necessary
+    increaseErrorCount();
 
-  public onKeyUp(event: any) {
-    switch (event.key) {
-      case 'Enter':
-        this.initLogin();
-        break;
-      default:
+    if (error && isString(error)) {
+      pushToastError('onLogin', error);
+    } else if (error?.message && isString(error.message)) {
+      pushToastError('onLogin', error.message);
     }
-    event.preventDefault();
   }
+  onFinished();
+}
 
-  public async onLogin(passPhrase: string) {
-    // Note: we don't trim the password anymore. If the user entered a space at the end, so be it.
-    try {
-      await window.onLogin(passPhrase);
-    } catch (error) {
-      // Increment the error counter and show the button if necessary
-      this.setState({
-        errorCount: this.state.errorCount + 1,
-      });
+function ClearDataDescription() {
+  return (
+    <p>
+      <Localizer token="clearDeviceDescription" />
+    </p>
+  );
+}
 
-      if (error && isString(error)) {
-        pushToastError('onLogin', error);
-      } else if (error?.message && isString(error.message)) {
-        pushToastError('onLogin', error.message);
-      }
+const PasswordPrompt = ({
+  onEnterPressed,
+  onPasswordChange,
+}: {
+  onPasswordChange: (password: string) => void;
+  onEnterPressed: () => void;
+}) => {
+  const inputRef = useRef<HTMLInputElement>(null);
 
-      global.setTimeout(() => {
-        document.getElementById('password-prompt-input')?.focus();
-      }, 50);
-    }
-    this.setState({
-      loading: false,
-    });
-  }
+  useTimeoutFn(() => {
+    inputRef.current?.focus();
+  }, 50);
 
-  private initLogin() {
-    this.setState({
-      loading: true,
-    });
-    const passPhrase = String((this.inputRef as HTMLInputElement).value);
+  return (
+    <div className="session-modal__input-group">
+      <input
+        type="password"
+        autoFocus={true}
+        defaultValue=""
+        placeholder={window.i18n('passwordEnter')}
+        onChange={e => {
+          onPasswordChange(e.target.value);
+        }}
+        onKeyUp={e => {
+          if (e.key === 'Enter') {
+            onEnterPressed();
+          }
+        }}
+        ref={inputRef}
+      />
+    </div>
+  );
+};
+
+const SessionPasswordPromptInner = () => {
+  const [password, setPassword] = useState('');
+  const [errorCount, setErrorCount] = useState(0);
+  const [clearDataView, setClearDataView] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const showClearDataView = () => {
+    setErrorCount(0);
+    setClearDataView(true);
+  };
+
+  const increaseErrorCount = () => {
+    setErrorCount(errorCount + 1);
+  };
+
+  const initLogin = () => {
+    setLoading(true);
 
     // this is to make sure a render has the time to happen before we lock the thread with all of the db work
     // this might be removed once we get the db operations to a worker thread
     global.setTimeout(() => {
-      void this.onLogin(passPhrase);
+      void onLogin(password, increaseErrorCount, () => setLoading(false));
     }, 100);
-  }
+  };
 
-  private initClearDataView() {
-    this.setState({
-      errorCount: 0,
-      clearDataView: true,
-    });
-  }
-
-  private renderPasswordViewButtons(): JSX.Element {
-    const showResetElements = this.state.errorCount >= MAX_LOGIN_TRIES;
-
-    return (
-      <div className={clsx(showResetElements && 'session-modal__button-group')}>
-        {showResetElements && (
-          <>
-            <SessionButton
-              text={window.i18n('clearDevice')}
-              buttonColor={SessionButtonColor.Danger}
-              buttonType={SessionButtonType.Simple}
-              onClick={this.initClearDataView}
-            />
-          </>
-        )}
-        {!this.state.loading && (
-          <SessionButton
-            text={showResetElements ? window.i18n('tryAgain') : window.i18n('done')}
-            buttonType={SessionButtonType.Simple}
-            onClick={this.initLogin}
-            disabled={this.state.loading}
-          />
-        )}
-      </div>
-    );
-  }
-
-  private renderClearDataViewButtons(): JSX.Element {
-    return (
-      <div className="session-modal__button-group">
-        <SessionButton
-          text={window.i18n('clearDevice')}
-          buttonColor={SessionButtonColor.Danger}
-          buttonType={SessionButtonType.Simple}
-          onClick={window.clearLocalData}
-        />
-        <SessionButton
-          text={window.i18n('cancel')}
-          buttonType={SessionButtonType.Simple}
-          onClick={() => {
-            this.setState({ clearDataView: false });
+  return (
+    <SessionWrapperModal
+      title={clearDataView ? window.i18n('clearDevice') : window.i18n('passwordEnter')}
+    >
+      {loading ? (
+        <SessionSpinner loading={true} />
+      ) : clearDataView ? (
+        <ClearDataDescription />
+      ) : (
+        <PasswordPrompt onEnterPressed={initLogin} onPasswordChange={setPassword} />
+      )}
+      <TextPleaseWait isLoading={loading} />
+      {clearDataView ? (
+        <ClearDataViewButtons
+          onCancel={() => {
+            setClearDataView(false);
           }}
         />
-      </div>
-    );
-  }
-}
+      ) : (
+        <PasswordViewButtons
+          errorCount={errorCount}
+          loading={loading}
+          initLogin={initLogin}
+          onShowClearDataView={showClearDataView}
+        />
+      )}
+    </SessionWrapperModal>
+  );
+};
 
 export const SessionPasswordPrompt = () => {
   useEffect(() => {
