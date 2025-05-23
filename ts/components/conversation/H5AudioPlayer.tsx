@@ -48,11 +48,8 @@ export const StyledH5AudioPlayer = styled(H5AudioPlayer)<{ dropShadow?: boolean 
     outline: none;
   }
 
+  .rhap_current-time,
   .rhap_total-time {
-    display: none;
-  }
-
-  .rhap_current-time {
     margin: 0 5px 0 4px;
     flex-shrink: 0;
   }
@@ -267,6 +264,7 @@ export const AudioPlayerWithEncryptedFile = (props: {
           />
         </StyledSpeedButton>,
       ]}
+      customProgressBarSection={[RHAP_UI.DURATION, RHAP_UI.PROGRESS_BAR]}
       customIcons={{
         play: <SessionIcon iconType="play" iconSize="small" iconColor={iconColor} />,
         pause: <SessionIcon iconType="pause" iconSize="small" iconColor={iconColor} />,
