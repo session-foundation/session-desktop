@@ -27,6 +27,38 @@ declare module 'react' {
     | 'time-option-1-days'
     | 'time-option-7-days'
     | 'time-option-14-days';
+
+  type MenuOption =
+    | 'attachments'
+    | 'group-members'
+    | 'manage-members'
+    | 'notifications'
+    | 'invite-contacts'
+    | 'clear-all-messages'
+    | 'copy-account-id'
+    | 'delete-conversation'
+    | 'delete-contact'
+    | 'block-user'
+    | 'hide-nts'
+    | 'copy-community-url'
+    | 'leave-community'
+    | 'add-admins'
+    | 'remove-admins'
+    | 'pin-conversation'
+    | 'unban-user'
+    | 'ban-user'
+    | 'disappearing-messages' // one of those two might be incorrect. FIXME
+    | 'disappearing-messages-timer';
+
+  type MenuOptionDetails = `${MenuOption}-details`;
+  type NotificationsOptions = 'mute' | 'all-messages' | 'mentions-only';
+  type NotificationButtons = `notifications-${NotificationsOptions}-button`;
+  type NotificationRadioButtons = `notifications-${NotificationsOptions}-radio-button`;
+
+  type SetButton = 'notifications' | 'disappear';
+
+  type ConfirmButtons = `${'set-nickname' | 'open-url' | 'set-nickname'}-confirm-button`;
+
   type SessionDataTestId =
     | 'group-member-status-text'
     | 'loading-spinner'
@@ -49,9 +81,14 @@ declare module 'react' {
     | 'image-upload-click'
     | 'profile-name-input'
     | 'your-profile-name'
+    | 'community-name'
+    | 'group-name'
+    | 'preferred-display-name'
+    | 'fallback-display-name'
     | 'edit-profile-dialog'
     | 'image-upload-section'
-    | 'right-panel-group-name'
+    | 'profile-picture'
+    | 'display-name'
     | 'control-message'
     | 'header-conversation-name'
     | 'disappear-messages-type-and-time'
@@ -77,6 +114,8 @@ declare module 'react' {
     | 'some-of-your-devices-outdated-conversation'
     | 'some-of-your-devices-outdated-inbox'
     | 'legacy-group-banner'
+    | 'account-id'
+    | 'set-nickname-remove-button'
 
     // generic button types
     | 'emoji-button'
@@ -102,6 +141,7 @@ declare module 'react' {
     | 'block-menu-item'
     | 'delete-menu-item'
     | 'accept-menu-item'
+    | ConfirmButtons
 
     // timer options
     | DisappearTimeOptionDataTestId
@@ -146,8 +186,6 @@ declare module 'react' {
     | 'leave-group-button'
     | 'disappearing-messages'
     | 'group-members'
-    | 'remove-moderators'
-    | 'add-moderators'
     | 'edit-group-name'
     | 'delete-group-button'
 
@@ -194,7 +232,6 @@ declare module 'react' {
     | 'contact' // this is way too generic
     | 'contact-status'
     | 'version-warning'
-    | 'open-url-confirm-button'
     | 'copy-url-button'
     | 'continue-session-button'
     | 'next-new-conversation-button'
@@ -227,7 +264,6 @@ declare module 'react' {
     | 'save-button-profile-update'
     | 'save-button-profile-update'
     | 'copy-button-profile-update'
-    | 'disappear-set-button'
     | 'create-group-button'
     | 'delete-message-request'
     | 'accept-message-request'
@@ -255,7 +291,14 @@ declare module 'react' {
     | 'module-contact-name__profile-name'
     | 'delete-from-details'
     | `input-releases-${ReleaseChannels}`
-    | `label-releases-${ReleaseChannels}`;
+    | `label-releases-${ReleaseChannels}`
+    | `${MenuOption}-menu-option`
+    | `${MenuOptionDetails}-menu-option`
+    | `${SetButton}-set-button`
+    | `${NotificationButtons}`
+    | `${NotificationRadioButtons}`
+    // Once the whole app have datatestId when required, this `invalid-data-testid` will be removed
+    | 'invalid-data-testid';
 
   interface HTMLAttributes {
     'data-testid'?: SessionDataTestId;

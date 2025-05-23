@@ -7,7 +7,6 @@ import useKey from 'react-use/lib/useKey';
 import styled from 'styled-components';
 import { useIsClosedGroup, useIsPublic } from '../../hooks/useParamSelector';
 import { ConvoHub } from '../../session/conversations';
-import { initiateOpenGroupUpdate } from '../../session/group/open-group';
 import { PubKey } from '../../session/types';
 import LIBSESSION_CONSTANTS from '../../session/utils/libsession/libsession_constants';
 import { groupInfoActions } from '../../state/ducks/metaGroups';
@@ -32,12 +31,12 @@ function GroupAvatar({
   isPublic,
   conversationId,
   fireInputEvent,
-  newAvatarObjecturl,
+  newAvatarObjectUrl,
   oldAvatarPath,
 }: {
   isPublic: boolean;
   conversationId: string;
-  newAvatarObjecturl: string | null;
+  newAvatarObjectUrl: string | null;
   oldAvatarPath: string | null;
   fireInputEvent: () => Promise<void>;
 }) {
@@ -49,7 +48,7 @@ function GroupAvatar({
     <div className="avatar-center">
       <div className="avatar-center-inner">
         <Avatar
-          forcedAvatarPath={newAvatarObjecturl || oldAvatarPath}
+          forcedAvatarPath={newAvatarObjectUrl || oldAvatarPath}
           size={AvatarSize.XL}
           pubkey={conversationId}
         />
@@ -64,7 +63,7 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
   const { conversationId } = props;
   const [errorMsg, setErrorMsg] = useState('');
   const [errorDisplayed, setErrorDisplayed] = useState(false);
-  const [newAvatarObjecturl, setNewAvatarObjecturl] = useState<string | null>(null);
+  const [newAvatarObjectUrl, setNewAvatarObjectUrl] = useState<string | null>(null);
   const isCommunity = useIsPublic(conversationId);
   const isClosedGroup = useIsClosedGroup(conversationId);
   const convo = ConvoHub.use().get(conversationId);
@@ -72,6 +71,10 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
 
   if (!convo) {
     throw new Error('UpdateGroupNameDialog corresponding convo not found');
+  }
+
+  if (!isClosedGroup) {
+    throw new Error('groupNameUpdate dialog only works closed groups');
   }
 
   const oldAvatarPath = convo?.getAvatarPath() || null;
@@ -97,7 +100,7 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
   async function fireInputEvent() {
     const scaledObjectUrl = await pickFileForAvatar();
     if (scaledObjectUrl) {
-      setNewAvatarObjecturl(scaledObjectUrl);
+      setNewAvatarObjectUrl(scaledObjectUrl);
     }
   }
 
@@ -119,23 +122,16 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
     }
     onShowError('');
 
-    if (trimmedGroupName !== originalGroupName || newAvatarObjecturl !== oldAvatarPath) {
-      if (isCommunity) {
-        void initiateOpenGroupUpdate(conversationId, trimmedGroupName, {
-          objectUrl: newAvatarObjecturl,
-        });
-        closeDialog();
-      } else {
-        if (!PubKey.is03Pubkey(conversationId)) {
-          throw new Error('Only 03-group are supported here');
-        }
-        const updateNameAction = groupInfoActions.currentDeviceGroupNameChange({
-          groupPk: conversationId,
-          newName: trimmedGroupName,
-        });
-        dispatch(updateNameAction as any);
-        // keeping the dialog open until the async thunk is done (via isNameChangePending)
+    if (trimmedGroupName !== originalGroupName || newAvatarObjectUrl !== oldAvatarPath) {
+      if (!PubKey.is03Pubkey(conversationId)) {
+        throw new Error('Only 03-group are supported here');
       }
+      const updateNameAction = groupInfoActions.currentDeviceGroupNameChange({
+        groupPk: conversationId,
+        newName: trimmedGroupName,
+      });
+      dispatch(updateNameAction as any);
+      // keeping the dialog open until the async thunk is done (via isNameChangePending)
     }
   }
 
@@ -143,21 +139,11 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
   useKey('Esc', closeDialog);
   useKey('Enter', onClickOK);
 
-  if (!isClosedGroup && !isCommunity) {
-    throw new Error('groupNameUpdate dialog only works for communities and closed groups');
-  }
-
   const okText = window.i18n('okay');
   const cancelText = window.i18n('cancel');
 
-  const isAdmin = !isCommunity;
-
   return (
-    <SessionWrapperModal
-      title={window.i18n('groupName')}
-      onClose={() => closeDialog()}
-      additionalClassName="update-group-dialog"
-    >
+    <SessionWrapperModal title={window.i18n('groupName')} onClose={() => closeDialog()}>
       {errorMsg ? (
         <>
           <SpacerMD />
@@ -178,31 +164,29 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
         conversationId={conversationId}
         fireInputEvent={fireInputEvent}
         isPublic={isCommunity}
-        newAvatarObjecturl={newAvatarObjecturl}
+        newAvatarObjectUrl={newAvatarObjectUrl}
         oldAvatarPath={oldAvatarPath}
       />
       <SpacerMD />
 
-      {isAdmin ? (
-        <input
-          type="text"
-          value={newGroupName}
-          placeholder={window.i18n('groupNameEnter')}
-          onKeyDown={e => {
-            if (e.key === 'Enter') {
-              onClickOK();
-              e.preventDefault();
-            }
-          }}
-          onChange={e => setNewGroupName(e.target.value)}
-          tabIndex={0}
-          required={true}
-          aria-required={true}
-          autoFocus={true}
-          maxLength={LIBSESSION_CONSTANTS.BASE_GROUP_MAX_NAME_LENGTH}
-          data-testid="group-name-input"
-        />
-      ) : null}
+      <input
+        type="text"
+        value={newGroupName}
+        placeholder={window.i18n('groupNameEnter')}
+        onKeyDown={e => {
+          if (e.key === 'Enter') {
+            onClickOK();
+            e.preventDefault();
+          }
+        }}
+        onChange={e => setNewGroupName(e.target.value)}
+        tabIndex={0}
+        required={true}
+        aria-required={true}
+        autoFocus={true}
+        maxLength={LIBSESSION_CONSTANTS.BASE_GROUP_MAX_NAME_LENGTH}
+        data-testid="group-name-input"
+      />
 
       <SessionSpinner loading={isNameChangePending} />
 

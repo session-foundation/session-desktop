@@ -1,5 +1,7 @@
 import { AnimatePresence, MotionGlobalConfig } from 'framer-motion';
-import { isArray, isEqual, unset } from 'lodash';
+import { isArray, unset } from 'lodash';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { expect } from 'chai';
 import { ElementType, ReactElement, ReactNode } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import TestRenderer from 'react-test-renderer';
@@ -46,24 +48,20 @@ function findAllByElementType(
   return renderResult.root.findAllByType(elementType);
 }
 
-function areResultsEqual(
+function expectResultToBeEqual(
   renderResult: TestRenderer.ReactTestRenderer,
-  renderResult2: TestRenderer.ReactTestRenderer,
-  ignoreDataTestIds?: boolean
-): boolean {
-  if (ignoreDataTestIds) {
-    const obj = renderResult.toJSON();
-    const obj2 = renderResult2.toJSON();
-    unset(obj, "props['data-testid']");
-    unset(obj2, "props['data-testid']");
-    return isEqual(obj, obj2);
-  }
-
-  return isEqual(renderResult.toJSON(), renderResult2.toJSON());
+  renderResult2: TestRenderer.ReactTestRenderer
+) {
+  const obj = renderResult.toJSON();
+  const obj2 = renderResult2.toJSON();
+  // Note : we ignore data test ids for equality checks
+  unset(obj, "props['data-testid']");
+  unset(obj2, "props['data-testid']");
+  expect(obj).to.be.deep.eq(obj2);
 }
 
 export {
-  areResultsEqual,
+  expectResultToBeEqual,
   findAllByElementType,
   findByDataTestId,
   getComponentTree,

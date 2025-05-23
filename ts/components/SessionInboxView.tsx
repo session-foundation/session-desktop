@@ -77,6 +77,7 @@ async function createSessionInboxStore() {
     user: {
       ourDisplayNameInProfile: UserUtils.getOurProfile()?.displayName || '',
       ourNumber: UserUtils.getOurPubKeyStrFromCache(),
+      uploadingNewAvatarCurrentUser: false,
     },
     section: initialSectionState,
     defaultRooms: initialDefaultRoomState,

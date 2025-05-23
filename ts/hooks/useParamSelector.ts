@@ -72,6 +72,15 @@ export function useNicknameOrProfileNameOrShortenedPubkey(convoId?: string) {
 }
 
 /**
+ * Returns the nickname set for this conversation if it has one, or undefined
+ */
+export function useNickname(convoId?: string) {
+  const convoProps = useConversationPropsById(convoId);
+
+  return convoProps?.nickname;
+}
+
+/**
  * Returns the name of that conversation.
  * This is the group name, or the realName of a user for a private conversation with a recent nickname set
  */
@@ -145,7 +154,7 @@ export function useIsClosedGroup(convoId?: string) {
 export function useIsLegacyGroup(convoId?: string) {
   const isGroup = useIsClosedGroup(convoId);
 
-  return isGroup && convoId && PubKey.is05Pubkey(convoId);
+  return isGroup && !!convoId && PubKey.is05Pubkey(convoId);
 }
 
 export function useIsPrivate(convoId?: string) {
