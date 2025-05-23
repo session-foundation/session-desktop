@@ -39,9 +39,9 @@ async function getSnodePoolFromSnode(targetNode: Snode): Promise<Array<Snode>> {
       return [];
     }
 
-    // Filter 0.0.0.0 nodes which haven't submitted uptime proofs
+    // NOTE Filter out nodes that have missing ip addresses since they are not valid or 0.0.0.0 nodes which haven't submitted uptime proofs
     const snodes: Array<Snode> = json.result.service_node_states
-      .filter((snode: any) => snode.public_ip !== '0.0.0.0')
+      .filter((snode: any) => snode.public_ip && snode.public_ip !== '0.0.0.0')
       .map((snode: any) => ({
         ip: snode.public_ip,
         port: snode.storage_port,
@@ -95,7 +95,7 @@ async function getSnodePoolFromSnodes() {
     })
   );
 
-  // we want those at least `requiredSnodesForAgreement` snodes common between all the result
+  // we want those at least `requiredSnodesForAgreement` snodes common between all the results
   const commonSnodes = intersectionWith(
     results[0],
     results[1],
