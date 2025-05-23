@@ -22,6 +22,8 @@ import {
 import { PROTOCOLS } from '../constants';
 import { OnionV4 } from './onionv4';
 import { MergedAbortSignal, WithAbortSignal, WithTimeoutMs } from '../apis/snode_api/requestWith';
+import { OnionPathEmptyError } from '../utils/errors';
+import { SnodePool } from '../apis/snode_api/snodePool';
 
 export type OnionFetchOptions = {
   method: string;
@@ -146,7 +148,7 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
           );
         }
         if (!pathNodes) {
-          throw new Error('getOnionPathForSending is empty');
+          throw new OnionPathEmptyError();
         }
 
         /**
@@ -243,6 +245,11 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
     );
   } catch (e) {
     window?.log?.warn('sendViaOnionV4ToNonSnodeWithRetries failed ', e.message, throwErrors);
+    // NOTE if there are no snodes available, we want to refresh the snode pool from the seed
+    if (e instanceof OnionPathEmptyError) {
+      window?.log?.warn('endViaOnionV4ToNonSnodeWithRetries failed, no path available, refreshing snode pool');
+      void SnodePool.forceRefreshRandomSnodePool();
+    }
     if (throwErrors) {
       throw e;
     }

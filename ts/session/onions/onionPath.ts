@@ -20,6 +20,7 @@ import { ed25519Str } from '../utils/String';
 import { SnodePool } from '../apis/snode_api/snodePool';
 import { SnodePoolConstants } from '../apis/snode_api/snodePoolConstants';
 import { desiredGuardCount, minimumGuardCount, ONION_REQUEST_HOPS } from './onionPathConstants';
+import { OnionPathEmptyError } from '../utils/errors';
 
 export function getOnionPathMinTimeout() {
   return DURATION.SECONDS;
@@ -158,11 +159,14 @@ export async function getOnionPath({ toExclude }: { toExclude?: Snode }): Promis
       window.inboxStore?.dispatch(updateOnionPaths([]));
     }
   } else {
-    const ipsOnly = onionPaths.map(m =>
-      m.map(c => {
-        return { ip: c.ip };
-      })
-    );
+    const ipsOnly = onionPaths
+        // NOTE Filter out nodes that have missing ip addresses since they are not valid
+      .filter(m => m.filter(c => c.ip))
+      .map(m =>
+        m.map(c => {
+          return { ip: c.ip };
+        })
+      );
     if (!_.isEqual(window.inboxStore?.getState().onionPaths.snodePaths, ipsOnly)) {
       window.inboxStore?.dispatch(updateOnionPaths(ipsOnly));
     }
@@ -171,11 +175,11 @@ export async function getOnionPath({ toExclude }: { toExclude?: Snode }): Promis
   if (!toExclude) {
     // no need to exclude a node, then just return a random path from the list of path
     if (!onionPaths || onionPaths.length === 0) {
-      throw new Error('No onion paths available');
+      throw new OnionPathEmptyError();
     }
     const randomPathNoExclude = _.sample(onionPaths);
     if (!randomPathNoExclude) {
-      throw new Error('No onion paths available');
+      throw new OnionPathEmptyError();
     }
     return randomPathNoExclude;
   }
@@ -186,11 +190,11 @@ export async function getOnionPath({ toExclude }: { toExclude?: Snode }): Promis
   );
 
   if (!onionPathsWithoutExcluded || onionPathsWithoutExcluded.length === 0) {
-    throw new Error('No onion paths available after filtering');
+    throw new OnionPathEmptyError();
   }
   const randomPath = _.sample(onionPathsWithoutExcluded);
   if (!randomPath) {
-    throw new Error('No onion paths available after filtering');
+    throw new OnionPathEmptyError();
   }
   return randomPath;
 }
