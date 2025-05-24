@@ -2,7 +2,12 @@ import { Menu } from 'react-contexify';
 
 import { useSelector } from 'react-redux';
 import { useConvoIdFromContext } from '../../contexts/ConvoIdContext';
-import { useIsPinned, useIsPrivate, useIsPrivateAndFriend } from '../../hooks/useParamSelector';
+import {
+  useIsLegacyGroup,
+  useIsPinned,
+  useIsPrivate,
+  useIsPrivateAndFriend,
+} from '../../hooks/useParamSelector';
 import { ConvoHub } from '../../session/conversations';
 import {
   getIsMessageSection,
@@ -39,7 +44,6 @@ import {
   DeleteDeprecatedLegacyGroupMenuItem,
   DeleteGroupMenuItem,
 } from './items/LeaveAndDeleteGroup/DeleteGroupMenuItem';
-import { useDisableLegacyGroupDeprecatedActions } from '../../hooks/useRefreshReleasedFeaturesTimestamp';
 
 export type PropsContextConversationItem = {
   triggerId: string;
@@ -51,10 +55,10 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
 
   const convoIdFromContext = useConvoIdFromContext();
 
-  const disabledLegacyGroup = useDisableLegacyGroupDeprecatedActions(convoIdFromContext);
+  const legacyGroup = useIsLegacyGroup(convoIdFromContext);
   const isPinned = useIsPinned(convoIdFromContext);
 
-  if (disabledLegacyGroup) {
+  if (legacyGroup) {
     return (
       <SessionContextMenuContainer>
         <Menu id={triggerId} animation={getMenuAnimation()}>

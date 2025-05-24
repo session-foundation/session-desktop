@@ -5,14 +5,14 @@ import { ContentMessage } from './ContentMessage';
 import { MessageParams } from './Message';
 
 export interface ExpirableMessageParams extends MessageParams {
-  expirationType: DisappearingMessageType | null;
-  expireTimer: number | null;
+  expirationType: DisappearingMessageType;
+  expireTimer: number;
 }
 
 export class ExpirableMessage extends ContentMessage {
-  public readonly expirationType: DisappearingMessageType | null;
+  public readonly expirationType: DisappearingMessageType;
   /** in seconds, 0 means no expiration */
-  public readonly expireTimer: number | null;
+  public readonly expireTimer: number;
 
   constructor(params: ExpirableMessageParams) {
     super({
@@ -25,16 +25,13 @@ export class ExpirableMessage extends ContentMessage {
 
   public contentProto(): SignalService.Content {
     return super.makeContentProto({
-      // TODO legacy messages support will be removed in a future release
       expirationType:
         this.expirationType === 'deleteAfterSend'
           ? SignalService.Content.ExpirationType.DELETE_AFTER_SEND
           : this.expirationType === 'deleteAfterRead'
             ? SignalService.Content.ExpirationType.DELETE_AFTER_READ
-            : this.expirationType === 'unknown'
-              ? SignalService.Content.ExpirationType.UNKNOWN
-              : undefined,
-      expirationTimer: this.expireTimer && this.expireTimer > -1 ? this.expireTimer : undefined,
+            : SignalService.Content.ExpirationType.UNKNOWN,
+      expirationTimer: this.expireTimer >= 0 ? this.expireTimer : undefined,
     });
   }
 

@@ -50,7 +50,6 @@ import { getOppositeTheme } from '../../util/theme';
 import { SessionNotificationCount } from '../icon/SessionNotificationCount';
 import { getIsModalVisible } from '../../state/selectors/modal';
 
-import { ReleasedFeatures } from '../../util/releaseFeature';
 import { MessageQueue } from '../../session/sending';
 import { useRefreshReleasedFeaturesTimestamp } from '../../hooks/useRefreshReleasedFeaturesTimestamp';
 import { useDebugMode } from '../../state/selectors/debug';
@@ -206,9 +205,6 @@ const doAppStartUp = async () => {
   // this generates the key to encrypt attachments locally
   await Data.generateAttachmentKeyIfEmpty();
 
-  // Feature Checks
-  await ReleasedFeatures.checkIsDisappearMessageV2FeatureReleased();
-
   // trigger a sync message if needed for our other devices
   void triggerSyncIfNeeded();
   void getSwarmPollingInstance().start();
@@ -242,9 +238,10 @@ function useUpdateBadgeCount() {
   const globalUnreadMessageCount = useGlobalUnreadMessageCount();
 
   // Reuse the unreadToShow from the global state to update the badge count
+  // Note: useThrottleFn from react-use will run execute trailing edge too.
   useThrottleFn(
     (unreadCount: number) => {
-      if (globalUnreadMessageCount !== undefined) {
+      if (unreadCount !== undefined) {
         ipcRenderer.send('update-badge-count', unreadCount);
       }
     },

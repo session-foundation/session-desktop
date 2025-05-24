@@ -8,28 +8,19 @@ export const DisappearingMessageConversationModes = [
   'off',
   DisappearingMessageMode[1], // deleteAfterRead
   DisappearingMessageMode[2], // deleteAfterSend
-  // TODO legacy messages support will be removed in a future release
-  'legacy',
 ] as const;
 export type DisappearingMessageConversationModeType =
   (typeof DisappearingMessageConversationModes)[number];
 
-// TODO legacy messages support will be removed in a future release
-// expirationType will no longer have an undefined option
 /** Used for setting disappearing messages in conversations */
 export type ExpirationTimerUpdate = {
-  expirationType: DisappearingMessageType | undefined;
+  expirationType: DisappearingMessageType;
   expireTimer: number;
 };
 
 export type DisappearingMessageUpdate = {
   expirationType: DisappearingMessageType;
   expirationTimer: number;
-  // This is used for the expirationTimerUpdate
-  // TODO legacy messages support will be removed in a future release
-  isLegacyConversationSettingMessage?: boolean;
-  isLegacyDataMessage?: boolean;
-  isDisappearingMessagesV2Released?: boolean;
   messageExpirationFromRetrieve: number | null;
 };
 

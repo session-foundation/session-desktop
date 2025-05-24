@@ -34,6 +34,7 @@ import {
 import {
   useSelectedConversationKey,
   useSelectedIsGroupOrCommunity,
+  useSelectedIsLegacyGroup,
   useSelectedIsPrivate,
   useSelectedIsPublic,
 } from '../../../../../state/selectors/selectedConversation';
@@ -52,7 +53,6 @@ import { AttachmentInfo, MessageInfo } from './components';
 import { AttachmentCarousel } from './components/AttachmentCarousel';
 import { ToastUtils } from '../../../../../session/utils';
 import { showCopyAccountIdAction } from '../../../../menu/items/CopyAccountId/guard';
-import { useSelectedDisableLegacyGroupDeprecatedActions } from '../../../../../hooks/useRefreshReleasedFeaturesTimestamp';
 
 // NOTE we override the default max-widths when in the detail isDetailView
 const StyledMessageBody = styled.div`
@@ -273,7 +273,8 @@ export const OverlayMessageInfo = () => {
   const timestamp = useMessageTimestamp(messageId);
   const serverTimestamp = useMessageServerTimestamp(messageId);
   const sender = useMessageSender(messageId);
-  const legacyGroupIsDeprecated = useSelectedDisableLegacyGroupDeprecatedActions();
+
+  const isLegacyGroup = useSelectedIsLegacyGroup();
 
   // we close the right panel when switching conversation so the convoId of that message is always the selectedConversationKey
   // is always the currently selected conversation
@@ -368,9 +369,9 @@ export const OverlayMessageInfo = () => {
           <PanelButtonGroup style={{ margin: '0' }}>
             {/* CopyMessageBodyButton is always shown so the PanelButtonGroup always has at least one item */}
             <CopyMessageBodyButton messageId={messageId} />
-            {!legacyGroupIsDeprecated && <ReplyToMessageButton messageId={messageId} />}
+            {!isLegacyGroup && <ReplyToMessageButton messageId={messageId} />}
             <CopySenderSessionId messageId={messageId} />
-            {hasErrors && !legacyGroupIsDeprecated && direction === 'outgoing' && (
+            {hasErrors && !isLegacyGroup && direction === 'outgoing' && (
               <PanelIconButton
                 text={window.i18n('resend')}
                 iconType="resend"
@@ -400,7 +401,7 @@ export const OverlayMessageInfo = () => {
                 }}
               />
             )}
-            {isDeletable && !legacyGroupIsDeprecated && (
+            {isDeletable && !isLegacyGroup && (
               <PanelIconButton
                 text={window.i18n('delete')}
                 iconType="delete"

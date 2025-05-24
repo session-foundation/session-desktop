@@ -7,13 +7,13 @@
 import {
   app,
   BrowserWindow,
-  dialog,
   protocol as electronProtocol,
   ipcMain as ipc,
   ipcMain,
   IpcMainEvent,
   Menu,
   nativeTheme,
+  powerSaveBlocker,
   screen,
   shell,
   systemPreferences,
@@ -21,24 +21,29 @@ import {
 
 import crypto from 'crypto';
 import fs from 'fs';
-import { copyFile, appendFile } from 'node:fs/promises';
 import os from 'os';
 import path, { join } from 'path';
 import { platform as osPlatform } from 'process';
 import url from 'url';
 
-import Logger from 'bunyan';
 import _, { isEmpty, isNumber, isFinite } from 'lodash';
 
-import { setupGlobalErrorHandler } from '../node/global_errors';
+import { addHandler } from '../node/global_errors';
 import { setup as setupSpellChecker } from '../node/spell_check';
 
 import electronLocalshortcut from 'electron-localshortcut';
 import packageJson from '../../package.json';
 
-setupGlobalErrorHandler();
+addHandler();
 
 const getRealPath = (p: string) => fs.realpathSync(p);
+
+// All of our polling is done from the renderer thread, so we need to set this flag
+// to keep polling even if the renderer hidden/minimized.
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
+app.commandLine.appendSwitch('disable-background-timer-throttling');
+app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
+powerSaveBlocker.start('prevent-app-suspension');
 
 // Hardcoding appId to prevent build failures on release.
 // const appUserModelId = packageJson.build.appId;
@@ -78,7 +83,6 @@ import { initAttachmentsChannel } from '../node/attachment_channel';
 import * as updater from '../updater/index';
 
 import { ephemeralConfig } from '../node/config/ephemeral_config';
-import { getLoggerFilePath, getLogger, initializeLogger } from '../node/logging';
 import { createTemplate } from '../node/menu';
 import { installPermissionsHandler } from '../node/permissions';
 import { installFileHandler, installWebHandler } from '../node/protocol_filter';
@@ -167,17 +171,15 @@ import { isSessionLocaleSet, getCrowdinLocale } from '../util/i18n/shared';
 import { loadLocalizedDictionary } from '../node/locale';
 import { simpleDictionary } from '../localization/locales';
 import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
+import { isReleaseChannel } from '../updater/types';
+import { canAutoUpdate, checkForUpdates } from '../updater/updater';
+import { initializeMainProcessLogger } from '../util/logger/main_process_logging';
+
+import * as log from '../util/logger/log';
+import { DURATION } from '../session/constants';
 
 // Both of these will be set after app fires the 'ready' event
-let logger: Logger | null = null;
 let i18n: SetupI18nReturnType;
-
-function assertLogger(): Logger {
-  if (!logger) {
-    throw new Error('assertLogger: logger is not set');
-  }
-  return logger;
-}
 
 function prepareURL(pathSegments: Array<string>, moreKeys?: { theme: any }) {
   const urlObject: url.UrlObject = {
@@ -306,6 +308,7 @@ async function createWindow() {
       preload: path.join(getAppRootPath(), 'preload.js'),
       nativeWindowOpen: true,
       spellcheck: await getSpellCheckSetting(),
+      backgroundThrottling: false,
     },
     // only set icon for Linux, the executable one will be used by default for other platforms
     icon:
@@ -344,7 +347,7 @@ async function createWindow() {
     delete windowOptions.fullscreen;
   }
 
-  assertLogger().info('Initializing BrowserWindow config: %s', JSON.stringify(windowOptions));
+  console.log(`Initializing BrowserWindow config: ${JSON.stringify(windowOptions)}`);
 
   // Create the browser window.
   mainWindow = new BrowserWindow(windowOptions);
@@ -402,7 +405,7 @@ async function createWindow() {
       (windowConfig as any).fullscreen = true;
     }
 
-    assertLogger().info('Updating BrowserWindow config: %s', JSON.stringify(windowConfig));
+    console.log(`Updating BrowserWindow config: ${JSON.stringify(windowConfig)}`);
     ephemeralConfig.set('window', windowConfig);
   }
 
@@ -493,8 +496,17 @@ ipc.on('show-window', () => {
   showWindow();
 });
 
-ipc.on('set-release-from-file-server', (_event, releaseGotFromFileServer) => {
-  setLatestRelease(releaseGotFromFileServer);
+ipc.on('set-release-from-file-server', (_event, releaseInfoFromFileServer) => {
+  const [releaseVersion, releaseChannel] = releaseInfoFromFileServer;
+
+  if (!releaseVersion || !releaseChannel || !isReleaseChannel(releaseChannel)) {
+    console.error(
+      `[updater] set-release-from-file-server: invalid release information, version=${releaseVersion} or channel=${releaseChannel}`
+    );
+    return;
+  }
+
+  setLatestRelease(releaseInfoFromFileServer);
 });
 
 let isReadyForUpdates = false;
@@ -510,14 +522,44 @@ async function readyForUpdates() {
   // Second, start checking for app updates
   try {
     // if the user disabled auto updates, this will actually not start the updater
-    await updater.start(getMainWindow, userConfig, i18n, logger);
+    await updater.start(getMainWindow, userConfig, i18n, log);
   } catch (error) {
-    const log = logger || console;
-    log.error('Error starting update checks:', error && error.stack ? error.stack : error);
+    (log || console).error(
+      '[updater] Error starting update checks:',
+      error && error.stack ? error.stack : error
+    );
   }
 }
 
 ipc.once('ready-for-updates', readyForUpdates);
+
+// NOTE fetchReleaseFromFSAndUpdateMain must be called at least once before checkForUpdates gets called
+ipc.handle('force-update-check', async () => {
+  try {
+    if (!log) {
+      throw new Error('Must provide logger!');
+    }
+
+    if (!isReadyForUpdates) {
+      throw new Error('Not ready for updates');
+    }
+
+    const canUpdate = await canAutoUpdate();
+
+    if (!canUpdate) {
+      throw new Error('Cannot use auto update! See canAutoUpdate() for more info.');
+    }
+
+    const success = await checkForUpdates(getMainWindow, i18n, log, true);
+    if (!success) {
+      throw new Error('Failed to check for updates');
+    }
+    return true;
+  } catch (error) {
+    console.error('[updater] force-update-check', error && error.stack ? error.stack : error);
+    return false;
+  }
+});
 
 // Forcefully call readyForUpdates after 10 minutes.
 // This ensures we start the updater.
@@ -658,41 +700,10 @@ async function showAbout() {
   aboutWindow?.show();
 }
 
-async function saveDebugLog(_event: any, additionalInfo?: string) {
-  const options: Electron.SaveDialogOptions = {
-    title: 'Save debug log',
-    defaultPath: path.join(
-      app.getPath('desktop'),
-      `session_debug_${new Date().toISOString().replace(/:/g, '_')}.txt`
-    ),
-    properties: ['createDirectory'],
-  };
-
-  try {
-    const result = await dialog.showSaveDialog(options);
-    const outputPath = result.filePath;
-    console.info(`[log] Trying to save logs to ${outputPath}`);
-    if (result === undefined || outputPath === undefined || outputPath === '') {
-      throw Error("User clicked Save button but didn't create a file");
-    }
-
-    const loggerFilePath = getLoggerFilePath();
-    if (!loggerFilePath) {
-      throw Error('No logger file path');
-    }
-
-    await copyFile(loggerFilePath, outputPath);
-    console.info(`[log] Copied logs to ${outputPath} from ${loggerFilePath}`);
-
-    // append any additional info
-    if (additionalInfo) {
-      await appendFile(outputPath, additionalInfo, { encoding: 'utf-8' });
-      console.info(`[log] Saved additional info to logs ${outputPath} from ${loggerFilePath}`);
-    }
-  } catch (err) {
-    console.error('Error saving debug log', err);
-  }
+async function saveDebugLog(_event: any) {
+  ipc.emit('export-logs');
 }
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -714,23 +725,22 @@ app.on('ready', async () => {
 
   installPermissionsHandler({ userConfig });
 
-  await initializeLogger();
-  logger = getLogger();
-  assertLogger().info('app ready');
-  assertLogger().info(`starting session-desktop version ${packageJson.version}`);
-  assertLogger().info(
+  await initializeMainProcessLogger(getMainWindow);
+  console.log('app ready');
+  console.log(`starting session-desktop version ${packageJson.version}`);
+  console.log(
     `Libsession Commit Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_UTIL_VERSION || 'Unknown'}`
   );
-  assertLogger().info(
+  console.log(
     `Libsession NodeJS Version/Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_VERSION || 'Unknown'}/${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_COMMIT || 'Unknown'}`
   );
 
   if (!isSessionLocaleSet()) {
     const appLocale = process.env.LANGUAGE || app.getLocale() || 'en';
-    const loadedLocale = loadLocalizedDictionary({ appLocale, logger });
+    const loadedLocale = loadLocalizedDictionary({ appLocale });
     i18n = loadedLocale.i18n;
-    assertLogger().info(`appLocale is ${appLocale}`);
-    assertLogger().info(`crowdin locale is ${loadedLocale.crowdinLocale}`);
+    console.log(`appLocale is ${appLocale}`);
+    console.log(`crowdin locale is ${loadedLocale.crowdinLocale}`);
   }
 
   const key = getDefaultSQLKey();
@@ -738,10 +748,10 @@ app.on('ready', async () => {
   // If that fails then show the password window
   const dbHasPassword = userConfig.get('dbHasPassword');
   if (dbHasPassword) {
-    assertLogger().info('showing password window');
+    console.log('showing password window');
     await showPasswordWindow();
   } else {
-    assertLogger().info('showing main window');
+    console.log('showing main window');
     await showMainWindow(key);
   }
 });
@@ -851,13 +861,10 @@ async function requestShutdown() {
     //   exits the app before we've set everything up in preload() (so the browser isn't
     //   yet listening for these events), or if there are a whole lot of stacked-up tasks.
     // Note: two minutes is also our timeout for SQL tasks in data.ts in the browser.
-    setTimeout(
-      () => {
-        console.log('requestShutdown: Response never received; forcing shutdown.');
-        resolve(undefined);
-      },
-      2 * 60 * 1000
-    );
+    setTimeout(() => {
+      console.log('requestShutdown: Response never received; forcing shutdown.');
+      resolve(undefined);
+    }, 2 * DURATION.MINUTES);
   });
 
   try {
@@ -1080,7 +1087,6 @@ ipc.on('set-password', async (event, passPhrase, oldPhrase) => {
 });
 
 // Debug Log-related IPC calls
-ipc.on('save-debug-log', saveDebugLog);
 ipc.on('load-maxmind-data', async (event: IpcMainEvent) => {
   try {
     const appRoot =
@@ -1173,4 +1179,8 @@ async function askForMediaAccess() {
 
 ipc.on('media-access', async () => {
   await askForMediaAccess();
+});
+
+ipc.handle('get-storage-profile', async (): Promise<string> => {
+  return app.getPath('userData');
 });

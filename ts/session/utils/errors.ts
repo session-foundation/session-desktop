@@ -81,6 +81,8 @@ class BaseError extends Error {
   }
 }
 
+// NOTE If you make a custom error with a custom message, make sure to restore the prototype chain again using the new class prototype.
+// OTHERWISE instanceof CHECKS WILL BE FALSE
 export class SigningFailed extends BaseError {}
 export class InvalidSigningType extends BaseError {}
 export class GroupV2SigningFailed extends SigningFailed {}
@@ -99,10 +101,15 @@ export class RetrieveDisplayNameError extends BaseError {
     Object.setPrototypeOf(this, RetrieveDisplayNameError.prototype);
   }
 }
-
 export class EmptyDisplayNameError extends BaseError {
   constructor(message = 'display name is empty') {
     super(message);
     Object.setPrototypeOf(this, EmptyDisplayNameError.prototype);
+  }
+}
+export class OnionPathEmptyError extends BaseError {
+  constructor(message = 'onion path is empty') {
+    super(message);
+    Object.setPrototypeOf(this, OnionPathEmptyError.prototype);
   }
 }

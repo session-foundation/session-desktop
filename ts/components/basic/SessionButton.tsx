@@ -34,13 +34,14 @@ const StyledButton = styled.button<{
   color: string | undefined;
   $buttonType: SessionButtonType;
   $buttonShape: SessionButtonShape;
+  $fontWeight?: number;
 }>`
   width: ${props => (props.$buttonType === SessionButtonType.Ghost ? '100%' : 'auto')};
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: var(--font-size-md);
-  font-weight: 700;
+  font-weight: ${props => props.$fontWeight ?? 700};
   user-select: none;
   white-space: nowrap;
   cursor: pointer;
@@ -121,10 +122,12 @@ export type SessionButtonProps = {
   buttonColor?: SessionButtonColor; // will override theme
   onClick?: any;
   children?: ReactNode;
+  fontWeight?: number;
   margin?: string;
   dataTestId?: React.SessionDataTestId;
   reference?: RefObject<HTMLButtonElement>;
   className?: string;
+  style?: React.CSSProperties;
 };
 
 export const SessionButton = (props: SessionButtonProps) => {
@@ -141,7 +144,9 @@ export const SessionButton = (props: SessionButtonProps) => {
     ariaLabel,
     disabled = false,
     onClick = null,
+    fontWeight,
     margin,
+    style,
   } = props;
 
   const clickHandler = (e: any) => {
@@ -171,7 +176,8 @@ export const SessionButton = (props: SessionButtonProps) => {
       onClick={onClickFn}
       ref={reference}
       data-testid={dataTestId}
-      style={{ margin }}
+      $fontWeight={fontWeight}
+      style={{ ...style, margin }}
     >
       {props.children || text}
     </StyledButton>

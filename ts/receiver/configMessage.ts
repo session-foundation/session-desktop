@@ -1,10 +1,9 @@
 /* eslint-disable no-await-in-loop */
 import { ContactInfo, GroupPubkeyType, UserGroupsGet } from 'libsession_util_nodejs';
-import { compact, difference, isEmpty, isNil, isNumber, toNumber } from 'lodash';
+import { compact, difference, isEmpty, isNil, isNumber } from 'lodash';
 import { ConfigDumpData } from '../data/configDump/configDump';
 import { SettingsKey } from '../data/settings-key';
 import { deleteAllMessagesByConvoIdNoConfirmation } from '../interactions/conversationInteractions';
-import { ClosedGroup } from '../session';
 import { getOpenGroupManager } from '../session/apis/open_group_api/opengroupV2/OpenGroupManagerV2';
 import { OpenGroupUtils } from '../session/apis/open_group_api/utils';
 import { getOpenGroupV2ConversationId } from '../session/apis/open_group_api/utils/OpenGroupUtils';
@@ -13,7 +12,6 @@ import { ConvoHub } from '../session/conversations';
 import { ProfileManager } from '../session/profile_manager/ProfileManager';
 import { PubKey } from '../session/types';
 import { StringUtils, UserUtils } from '../session/utils';
-import { toHex } from '../session/utils/String';
 import { FetchMsgExpirySwarm } from '../session/utils/job_runners/jobs/FetchMsgExpirySwarmJob';
 import { LibSessionUtil } from '../session/utils/libsession/libsession_utils';
 import { SessionUtilContact } from '../session/utils/libsession/libsession_utils_contacts';
@@ -23,7 +21,7 @@ import { configurationMessageReceived } from '../shims/events';
 import { getCurrentlySelectedConversationOutsideRedux } from '../state/selectors/conversations';
 import { assertUnreachable, stringify, toFixedUint8ArrayOfLength } from '../types/sqlSharedTypes';
 import { BlockedNumberController } from '../util';
-import { Storage, setLastProfileUpdateTimestamp } from '../util/storage';
+import { Storage } from '../util/storage';
 // eslint-disable-next-line import/no-unresolved, import/extensions
 import { HexString } from '../node/hexStrings';
 import {
@@ -32,19 +30,16 @@ import {
   SnodeNamespacesUserConfig,
 } from '../session/apis/snode_api/namespaces';
 import { RetrieveMessageItemWithNamespace } from '../session/apis/snode_api/types';
-import { GroupInfo } from '../session/group/closed-group';
 import { groupInfoActions } from '../state/ducks/metaGroups';
 import {
   ConfigWrapperObjectTypesMeta,
   ConfigWrapperUser,
   getGroupPubkeyFromWrapperType,
-  isBlindingWrapperType,
-  isMultiEncryptWrapperType,
+  isStaticSessionWrapper,
   isUserConfigWrapperType,
 } from '../webworker/workers/browser/libsession_worker_functions';
 // eslint-disable-next-line import/no-unresolved, import/extensions
 import { Data } from '../data/data';
-import { ReleasedFeatures } from '../util/releaseFeature';
 
 // eslint-disable-next-line import/no-unresolved
 import {
@@ -55,10 +50,6 @@ import {
   UserConfigWrapperActions,
   UserGroupsWrapperActions,
 } from '../webworker/workers/browser/libsession_worker_interface';
-import { addKeyPairToCacheAndDBIfNeeded } from './closedGroups';
-import { HexKeyPair } from './keypairs';
-import { queueAllCachedFromSource } from './receiver';
-
 import { CONVERSATION } from '../session/constants';
 import { CONVERSATION_PRIORITIES, ConversationTypeEnum } from '../models/types';
 
@@ -92,13 +83,15 @@ function byUserNamespace(incomingConfigs: Array<RetrieveMessageItemWithNamespace
 }
 
 async function printDumpForDebug(prefix: string, variant: ConfigWrapperObjectTypesMeta) {
+  if (isStaticSessionWrapper(variant)) {
+    return; // nothing to print for those static wrappers
+  }
+
   if (isUserConfigWrapperType(variant)) {
     window.log.info(prefix, StringUtils.toHex(await UserGenericWrapperActions.makeDump(variant)));
     return;
   }
-  if (isMultiEncryptWrapperType(variant) || isBlindingWrapperType(variant)) {
-    return; // nothing to print for this one
-  }
+
   const metaGroupDumps = await MetaGroupWrapperActions.metaMakeDump(
     getGroupPubkeyFromWrapperType(variant)
   );
@@ -136,7 +129,6 @@ async function mergeUserConfigsWithIncomingUpdates(
           variant
         );
       }
-
       const hashesMerged = await UserGenericWrapperActions.merge(variant, toMerge);
 
       const needsDump = await UserGenericWrapperActions.needsDump(variant);
@@ -245,7 +237,6 @@ async function handleUserProfileUpdate(result: IncomingUserResult): Promise<void
 
   // NOTE: if you do any changes to the user's settings which are synced, it should be done above the `updateOurProfileViaLibSession` call
   await updateOurProfileViaLibSession({
-    sentAt: result.latestEnvelopeTimestamp,
     displayName: displayName || '',
     profileUrl: picUpdate ? profilePic.url : null,
     profileKey: picUpdate ? profilePic.key : null,
@@ -263,13 +254,10 @@ async function handleUserProfileUpdate(result: IncomingUserResult): Promise<void
     const wrapperNoteToSelfExpirySeconds = await UserConfigWrapperActions.getNoteToSelfExpiry();
 
     if (wrapperNoteToSelfExpirySeconds !== expireTimer) {
-      // TODO legacy messages support will be removed in a future release
       const success = await ourConvo.updateExpireTimer({
         providedDisappearingMode:
           wrapperNoteToSelfExpirySeconds && wrapperNoteToSelfExpirySeconds > 0
-            ? ReleasedFeatures.isDisappearMessageV2FeatureReleasedCached()
-              ? 'deleteAfterSend'
-              : 'legacy'
+            ? 'deleteAfterSend'
             : 'off',
         providedExpireTimer: wrapperNoteToSelfExpirySeconds,
         providedSource: ourConvo.id,
@@ -552,8 +540,8 @@ async function handleCommunitiesUpdate() {
   }
 }
 
-async function handleLegacyGroupUpdate(latestEnvelopeTimestamp: number) {
-  // first let's check which closed groups needs to be joined or left by doing a diff of what is in the wrapper and what is in the DB
+async function handleLegacyGroupUpdate() {
+  // first let's check which legacy groups needs left by doing a diff of what is in the wrapper and what is in the DB
   const allLegacyGroupsInWrapper = await UserGroupsWrapperActions.getAllLegacyGroups();
   const allLegacyGroupsInDb = ConvoHub.use()
     .getConversations()
@@ -562,19 +550,12 @@ async function handleLegacyGroupUpdate(latestEnvelopeTimestamp: number) {
   const allLegacyGroupsIdsInDB = allLegacyGroupsInDb.map(m => m.id);
   const allLegacyGroupsIdsInWrapper = allLegacyGroupsInWrapper.map(m => m.pubkeyHex);
 
-  const legacyGroupsToJoinInDB = allLegacyGroupsInWrapper.filter(m => {
-    return !allLegacyGroupsIdsInDB.includes(m.pubkeyHex);
-  });
-
   window.log.debug(`allLegacyGroupsInWrapper: ${allLegacyGroupsInWrapper.map(m => m.pubkeyHex)} `);
   window.log.debug(`allLegacyGroupsIdsInDB: ${allLegacyGroupsIdsInDB} `);
 
   const legacyGroupsToLeaveInDB = allLegacyGroupsInDb.filter(m => {
     return !allLegacyGroupsIdsInWrapper.includes(m.id);
   });
-  window.log.info(
-    `we have to join ${legacyGroupsToJoinInDB.length} legacy groups in DB compared to what is in the wrapper`
-  );
 
   window.log.info(
     `we have to leave ${legacyGroupsToLeaveInDB.length} legacy groups in DB compared to what is in the wrapper`
@@ -596,17 +577,6 @@ async function handleLegacyGroupUpdate(latestEnvelopeTimestamp: number) {
     }
   }
 
-  for (let index = 0; index < legacyGroupsToJoinInDB.length; index++) {
-    const toJoin = legacyGroupsToJoinInDB[index];
-    window.log.info(
-      'joining legacy group from configuration sync message with convoId ',
-      toJoin.pubkeyHex
-    );
-
-    // let's just create the required convo here, as we update the fields right below
-    await ConvoHub.use().getOrCreateAndWait(toJoin.pubkeyHex, ConversationTypeEnum.GROUP);
-  }
-
   for (let index = 0; index < allLegacyGroupsInWrapper.length; index++) {
     const fromWrapper = allLegacyGroupsInWrapper[index];
 
@@ -620,84 +590,13 @@ async function handleLegacyGroupUpdate(latestEnvelopeTimestamp: number) {
       continue;
     }
 
-    const members = fromWrapper.members.map(m => m.pubkeyHex);
-    const admins = fromWrapper.members.filter(m => m.isAdmin).map(m => m.pubkeyHex);
-    const creationTimestamp = fromWrapper.joinedAtSeconds
-      ? fromWrapper.joinedAtSeconds * 1000
-      : CONVERSATION.LAST_JOINED_FALLBACK_TIMESTAMP;
-
-    // then for all the existing legacy group in the wrapper, we need to override the field of what we have in the DB with what is in the wrapper
-    // We only set group admins on group creation
-    const groupDetails: GroupInfo = {
-      id: fromWrapper.pubkeyHex,
-      name: fromWrapper.name,
-      members,
-      admins,
-      activeAt:
-        !!legacyGroupConvo.get('active_at') && legacyGroupConvo.get('active_at') > creationTimestamp
-          ? legacyGroupConvo.get('active_at')
-          : creationTimestamp,
-    };
-
-    await ClosedGroup.updateOrCreateClosedGroup(groupDetails);
-
-    let changes = await legacyGroupConvo.setPriorityFromWrapper(fromWrapper.priority, false);
-
-    if (fromWrapper.disappearingTimerSeconds !== legacyGroupConvo.getExpireTimer()) {
-      // TODO legacy messages support will be removed in a future release
-      const success = await legacyGroupConvo.updateExpireTimer({
-        providedDisappearingMode:
-          fromWrapper.disappearingTimerSeconds && fromWrapper.disappearingTimerSeconds > 0
-            ? ReleasedFeatures.isDisappearMessageV2FeatureReleasedCached()
-              ? 'deleteAfterSend'
-              : 'legacy'
-            : 'off',
-        providedExpireTimer: fromWrapper.disappearingTimerSeconds,
-        providedSource: legacyGroupConvo.id,
-        sentAt: latestEnvelopeTimestamp,
-        fromSync: true,
-        shouldCommitConvo: false,
-        fromCurrentDevice: false,
-        fromConfigMessage: true,
-        messageHash: null, // legacy groups
-      });
-      changes = success;
-    }
-
-    const existingTimestampMs = legacyGroupConvo.getLastJoinedTimestamp();
-    const existingJoinedAtSeconds = Math.floor(existingTimestampMs / 1000);
-    if (existingJoinedAtSeconds !== creationTimestamp) {
-      legacyGroupConvo.set({
-        lastJoinedTimestamp: creationTimestamp,
-      });
-      changes = true;
-    }
-    // start polling for this group if we are still part of it.
-    if (!legacyGroupConvo.isKickedFromGroup()) {
-      getSwarmPollingInstance().addGroupId(PubKey.cast(fromWrapper.pubkeyHex));
-
-      // save the encryption key pair if needed
-      if (!isEmpty(fromWrapper.encPubkey) && !isEmpty(fromWrapper.encSeckey)) {
-        try {
-          const inWrapperKeypair: HexKeyPair = {
-            publicHex: toHex(fromWrapper.encPubkey),
-            privateHex: toHex(fromWrapper.encSeckey),
-          };
-
-          await addKeyPairToCacheAndDBIfNeeded(fromWrapper.pubkeyHex, inWrapperKeypair);
-        } catch (e) {
-          window.log.warn('failed to save key pair for legacy group', fromWrapper.pubkeyHex);
-        }
-      }
-    }
+    // legacy groups can only be unpinned or deleted now that they are readonly.
+    const changes = await legacyGroupConvo.setPriorityFromWrapper(fromWrapper.priority, false);
 
     if (changes) {
       // this commit will grab the latest encryption key pair and add it to the user group wrapper if needed
       await legacyGroupConvo.commit();
     }
-
-    // trigger decrypting of all this group messages we did not decrypt successfully yet.
-    await queueAllCachedFromSource(fromWrapper.pubkeyHex);
   }
 }
 
@@ -821,7 +720,7 @@ async function handleUserGroupsUpdate(result: IncomingUserResult) {
         await handleCommunitiesUpdate();
         break;
       case 'LegacyGroup':
-        await handleLegacyGroupUpdate(result.latestEnvelopeTimestamp);
+        await handleLegacyGroupUpdate();
         break;
       case 'Group':
         await handleGroupUpdate(result.latestEnvelopeTimestamp);
@@ -844,7 +743,6 @@ async function applyConvoVolatileUpdateFromWrapper(
   }
 
   try {
-    // TODO legacy messages support will be removed in a future release
     if (foundConvo.isPrivate() && !foundConvo.isMe() && foundConvo.getExpireTimer() > 0) {
       const messagesExpiring = await Data.getUnreadDisappearingByConversation(
         convoId,
@@ -1072,9 +970,7 @@ async function updateOurProfileViaLibSession(
     priority,
     profileKey,
     profileUrl,
-    sentAt,
   }: {
-    sentAt: number;
     displayName: string;
     profileUrl: string | null;
     profileKey: Uint8Array | null;
@@ -1083,7 +979,6 @@ async function updateOurProfileViaLibSession(
 ) {
   await ProfileManager.updateOurProfileSync({ displayName, profileUrl, profileKey, priority });
 
-  await setLastProfileUpdateTimestamp(toNumber(sentAt));
   // do not trigger a sign in by linking if the display name is empty
   if (!isEmpty(displayName)) {
     window.Whisper.events.trigger(configurationMessageReceived, displayName);

@@ -1,8 +1,8 @@
 import type { BrowserWindow } from 'electron';
 import { start as startUpdater, stop as stopUpdater } from './updater';
-import type { LoggerType } from './common';
 import type { UserConfig } from '../node/config/user_config';
 import type { SetupI18nReturnType } from '../types/localizer';
+import type { LoggerType } from '../util/logger/Logging';
 
 let initialized = false;
 let localUserConfig: UserConfig;
@@ -14,24 +14,24 @@ export async function start(
   logger?: LoggerType | null
 ) {
   if (initialized) {
-    throw new Error('updater/start: Updates have already been initialized!');
+    throw new Error('[updater] start: Updates have already been initialized!');
   }
 
   if (!userConfig) {
-    throw new Error('updater/start: userConfig is needed!');
+    throw new Error('[updater] start: userConfig is needed!');
   }
 
   if (!i18n) {
-    throw new Error('updater/start: Must provide i18n!');
+    throw new Error('[updater] start: Must provide i18n!');
   }
   if (!logger) {
-    throw new Error('updater/start: Must provide logger!');
+    throw new Error('[updater] start: Must provide logger!');
   }
   initialized = true;
   localUserConfig = userConfig; // reused below
 
   if (autoUpdateDisabled()) {
-    logger.info('updater/start: Updates disabled - not starting new version checks');
+    logger.info('[updater] start: Updates disabled - not starting new version checks');
 
     return;
   }

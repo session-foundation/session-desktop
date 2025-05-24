@@ -13,7 +13,6 @@ import { CopyToClipboardButton } from '../../buttons/CopyToClipboardButton';
 import { SessionIcon } from '../../icon';
 import { SessionInput } from '../../inputs';
 import { StyledLeftPaneOverlay } from './OverlayMessage';
-import { StyledTextAreaContainer } from '../../inputs/SessionInput';
 
 const StyledHeadingContainer = styled(Flex)`
   .session-icon-button {
@@ -53,16 +52,6 @@ const StyledButtonerContainer = styled.div`
   }
 `;
 
-const StyledInputContainer = styled(Flex)`
-  ${StyledTextAreaContainer} {
-    padding: 0;
-
-    div:first-child {
-      padding: 0 var(--margins-sm);
-    }
-  }
-`;
-
 export const OverlayInvite = () => {
   const ourSessionID = UserUtils.getOurPubKeyStrFromCache();
 
@@ -86,22 +75,18 @@ export const OverlayInvite = () => {
     >
       {!idCopied ? (
         <>
-          <StyledInputContainer
-            $container={true}
-            width={'100%'}
-            $justifyContent="center"
-            $alignItems="center"
-          >
+          <Flex $container={true} width={'100%'} $justifyContent="center" $alignItems="center">
             <SessionInput
               type="text"
               value={ourSessionID}
               editable={false}
               centerText={true}
               isTextArea={true}
+              padding={'var(--margins-xl) var(--margins-sm)'}
               ariaLabel="Account ID"
               inputDataTestId="your-account-id"
             />
-          </StyledInputContainer>
+          </Flex>
           <SpacerMD />
           <StyledDescription>{window.i18n('accountIdCopyDescription')}</StyledDescription>
           <SpacerLG />

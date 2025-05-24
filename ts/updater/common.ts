@@ -1,21 +1,6 @@
 import { BrowserWindow, dialog } from 'electron';
 import type { SetupI18nReturnType } from '../types/localizer';
 
-export type MessagesType = {
-  [key: string]: string;
-};
-
-type LogFunction = (...args: Array<any>) => void;
-
-export type LoggerType = {
-  fatal: LogFunction;
-  error: LogFunction;
-  warn: LogFunction;
-  info: LogFunction;
-  debug: LogFunction;
-  trace: LogFunction;
-};
-
 export async function showDownloadUpdateDialog(
   mainWindow: BrowserWindow,
   i18n: SetupI18nReturnType,
@@ -64,8 +49,4 @@ export async function showCannotUpdateDialog(mainWindow: BrowserWindow, i18n: Se
     message: i18n('updateErrorDescription'),
   };
   await dialog.showMessageBox(mainWindow, options);
-}
-
-export function getPrintableError(error: Error) {
-  return error && error.stack ? error.stack : error;
 }

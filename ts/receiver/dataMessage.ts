@@ -11,7 +11,6 @@ import { ConversationModel } from '../models/conversation';
 import { ConvoHub } from '../session/conversations';
 import { PubKey } from '../session/types';
 import { StringUtils, UserUtils } from '../session/utils';
-import { handleLegacyClosedGroupControlMessage } from './closedGroups';
 import { handleMessageJob, toRegularMessage } from './queuedJob';
 
 import { MessageModel } from '../models/message';
@@ -45,9 +44,6 @@ function cleanAttachments(decryptedDataMessage: SignalService.DataMessage) {
   const { quote } = decryptedDataMessage;
 
   // Here we go from binary to string/base64 in all AttachmentPointer digest/key fields
-
-  // we do not care about the group field on Session Desktop
-  decryptedDataMessage.group = null;
 
   // when receiving a message we get keys of attachment as buffer, but we override the data with the decrypted string instead.
   // TODO it would be nice to get rid of that as any here, but not in this PR
@@ -112,10 +108,6 @@ export function cleanIncomingDataMessage(rawDataMessage: SignalService.DataMessa
   if (rawDataMessage.flags == null) {
     rawDataMessage.flags = 0;
   }
-  // TODO legacy messages support will be removed in a future release
-  if (rawDataMessage.expireTimer == null) {
-    rawDataMessage.expireTimer = 0;
-  }
   // eslint-disable-next-line no-bitwise
   if (rawDataMessage.flags & FLAGS.EXPIRATION_TIMER_UPDATE) {
     rawDataMessage.body = '';
@@ -179,16 +171,6 @@ export async function handleSwarmDataMessage({
     await IncomingMessageCache.removeFromCache({ id: envelope.id });
     return;
   }
-  // we handle legacy group updates from our other devices in handleLegacyClosedGroupControlMessage()
-  if (cleanDataMessage.closedGroupControlMessage) {
-    // TODO DEPRECATED
-    await handleLegacyClosedGroupControlMessage(
-      envelope,
-      cleanDataMessage.closedGroupControlMessage as SignalService.DataMessage.ClosedGroupControlMessage,
-      expireUpdate || null
-    );
-    return;
-  }
 
   /**
    * This is a mess, but
@@ -210,9 +192,14 @@ export async function handleSwarmDataMessage({
     await IncomingMessageCache.removeFromCache(envelope);
     return;
   }
-  const convoIdToAddTheMessageTo = PubKey.removeTextSecurePrefixIfNeeded(
-    isSyncedMessage ? cleanDataMessage.syncTarget : envelope.source
-  );
+  const convoIdToAddTheMessageTo = isSyncedMessage ? cleanDataMessage.syncTarget : envelope.source;
+  if (convoIdToAddTheMessageTo.startsWith(PubKey.PREFIX_GROUP_TEXTSECURE)) {
+    window?.log?.warn(
+      'got a message starting with textsecure prefix. can only be legacy group message. dropping.'
+    );
+    await IncomingMessageCache.removeFromCache(envelope);
+    return;
+  }
 
   const isGroupMessage = !!envelope.senderIdentity;
   const isGroupV2Message = isGroupMessage && PubKey.is03Pubkey(envelope.source);

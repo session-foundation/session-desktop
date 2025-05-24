@@ -216,7 +216,7 @@ export const RestoreAccount = () => {
 
   return (
     <BackButtonWithinContainer
-      margin={'2px 0 0 -36px'}
+      margin={'3px 0 0 -36px'}
       shouldQuitOnClick={step !== AccountRestoration.RecoveryPassword}
       quitI18nMessageArgs={{ token: 'onboardingBackLoadAccount' }}
       onQuitVisible={() => {
@@ -262,9 +262,9 @@ export const RestoreAccount = () => {
               <OnboardHeading>{window.i18n('sessionRecoveryPassword')}</OnboardHeading>
               <SessionIcon
                 iconType="recoveryPasswordOutline"
-                iconSize="huge"
+                iconSize="medium"
                 iconColor="var(--text-primary-color)"
-                style={{ margin: '-4px 0 0 8px' }}
+                style={{ margin: '-4px 0 0 12px' }}
               />
             </Flex>
             <SpacerSM />

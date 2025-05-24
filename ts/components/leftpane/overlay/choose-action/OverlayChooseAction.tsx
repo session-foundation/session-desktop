@@ -3,18 +3,15 @@ import { useCallback, useEffect } from 'react';
 import { isEmpty, isString } from 'lodash';
 import { useDispatch } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
-import useUpdate from 'react-use/lib/useUpdate';
 import { resetLeftOverlayMode, setLeftOverlayMode } from '../../../../state/ducks/section';
 import { SpacerSM } from '../../../basic/Text';
 import { StyledLeftPaneOverlay } from '../OverlayMessage';
 import { ActionRow, StyledActionRowContainer } from './ActionRow';
 import { ContactsListWithBreaks } from './ContactsListWithBreaks';
 import { groupInfoActions } from '../../../../state/ducks/metaGroups';
-import { SessionToggle } from '../../../basic/SessionToggle';
 
 export const OverlayChooseAction = () => {
   const dispatch = useDispatch();
-  const forceRefresh = useUpdate();
 
   function closeOverlay() {
     dispatch(resetLeftOverlayMode());
@@ -82,19 +79,6 @@ export const OverlayChooseAction = () => {
           onClick={openNewMessage}
           dataTestId="chooser-new-conversation-button"
         />
-        {window.sessionFeatureFlags.useClosedGroupV2QAButtons ? (
-          <span style={{ display: 'flex', alignItems: 'center', alignSelf: 'center' }}>
-            Create group v2?{'  '}
-            <SessionToggle
-              active={window.sessionFeatureFlags.useClosedGroupV2}
-              onClick={() => {
-                window.sessionFeatureFlags.useClosedGroupV2 =
-                  !window.sessionFeatureFlags.useClosedGroupV2;
-                forceRefresh();
-              }}
-            />
-          </span>
-        ) : null}
         <ActionRow
           title={window.i18n('groupCreate')}
           ariaLabel={'Create a group button'}

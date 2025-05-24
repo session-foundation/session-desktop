@@ -99,22 +99,7 @@ export const REACT_LIMIT = 6;
 
 export const UPDATER_INTERVAL_MS = 10 * DURATION.MINUTES;
 
-/**
- * Start create groups as new at this time (currently Thursday March 20th 09:00 AEDT)
- */
-const START_CREATE_NEW_GROUP = 1742421600000;
-
-/**
- * Mark legacy groups readonly at this time (currently Thursday April 3rd 09:00 AEDT)
- */
-const LEGACY_GROUP_READONLY = 1743631200000;
-
-export const FEATURE_RELEASE_TIMESTAMPS = {
-  DISAPPEARING_MESSAGES_V2: 1710284400000, // 13/03/2024 10:00 Melbourne time
-  USER_CONFIG: 1690761600000, // Monday July 31st at 10am Melbourne time
-  START_CREATE_NEW_GROUP,
-  LEGACY_GROUP_READONLY,
-};
+export const FEATURE_RELEASE_TIMESTAMPS = {};
 
 export const ONBOARDING_TIMES = {
   /** 15 seconds */

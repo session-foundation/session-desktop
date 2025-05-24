@@ -101,24 +101,9 @@ const DELETE_AFTER_SEND = VALUES.filter(option => {
   );
 }).filter(filterOutDebugValues);
 
-// TODO legacy messages support will be removed in a future release
-const DELETE_LEGACY = VALUES.filter(option => {
-  return (
-    option === 10 || // 10 seconds: filtered out when app is packaged with filterOutDebugValues
-    option === 30 || // 30 seconds: filtered out when app is packaged with filterOutDebugValues
-    option === 60 || // 1 minute  : filtered out when app is packaged with filterOutDebugValues
-    option === 43200 || // 12 hours
-    option === 86400 || // 1 day
-    option === 604800 || // 1 week
-    option === 1209600 // 2 weeks
-  );
-}).filter(filterOutDebugValues);
-
 const DEFAULT_OPTIONS = {
   DELETE_AFTER_READ: 43200, // 12 hours
   DELETE_AFTER_SEND: 86400, // 1 day
-  // TODO legacy messages support will be removed in a future release
-  LEGACY: 86400, // 1 day
 };
 
 export const TimerOptions = {
@@ -126,7 +111,6 @@ export const TimerOptions = {
   VALUES,
   DELETE_AFTER_READ,
   DELETE_AFTER_SEND,
-  DELETE_LEGACY,
   getName,
   getAbbreviated,
 };

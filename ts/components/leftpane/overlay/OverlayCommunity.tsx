@@ -109,15 +109,16 @@ export const OverlayCommunity = () => {
         // - 1 for null terminator
         maxLength={LIBSESSION_CONSTANTS.COMMUNITY_FULL_URL_MAX_LENGTH - 1}
         textSize="md"
-        centerText={true}
         monospaced={true}
+        centerText={true}
         isTextArea={true}
+        loading={loading}
         inputDataTestId="join-community-conversation"
       />
       <Spacer2XL />
       <SessionButton
         text={window.i18n('join')}
-        disabled={!groupUrl}
+        disabled={!groupUrl || loading}
         onClick={onTryJoinRoom}
         dataTestId="join-community-button"
       />

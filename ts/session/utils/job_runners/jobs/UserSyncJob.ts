@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import { PubkeyType } from 'libsession_util_nodejs';
-import { compact, isArray, isEmpty, isNumber, isString } from 'lodash';
+import { compact, flatten, isArray, isEmpty, isNumber, isString } from 'lodash';
 import { v4 } from 'uuid';
 import { to_hex } from 'libsodium-wrappers-sumo';
 import AbortController from 'abort-controller';
@@ -26,6 +26,8 @@ import {
   UserSyncPersistedData,
 } from '../PersistedJob';
 import { NetworkTime } from '../../../../util/NetworkTime';
+import type { ConfigWrapperUser } from '../../../../webworker/workers/browser/libsession_worker_functions';
+import { objectEntries } from '../../../../shared/object_utils';
 
 const defaultMsBetweenRetries = 5 * DURATION.SECONDS; // a long time between retries, to avoid running multiple jobs at the same time, when one was postponed at the same time as one already planned (5s)
 const defaultMaxAttempts = 2;
@@ -40,14 +42,44 @@ async function confirmPushedAndDump(
   changes: Array<UserSuccessfulChange>,
   us: string
 ): Promise<void> {
+  const toConfirmPushed: Record<
+    ConfigWrapperUser,
+    Parameters<typeof UserGenericWrapperActions.confirmPushed>[1] | undefined
+  > = {
+    UserConfig: undefined,
+    ContactsConfig: undefined,
+    UserGroupsConfig: undefined,
+    ConvoInfoVolatileConfig: undefined,
+  };
   for (let i = 0; i < changes.length; i++) {
     const change = changes[i];
-    const variant = LibSessionUtil.userNamespaceToVariant(change.pushed.namespace);
-    await UserGenericWrapperActions.confirmPushed(
-      variant,
-      change.pushed.seqno.toNumber(),
-      change.updatedHash
-    );
+    const namespace = change.pushed.namespace;
+    const variant = LibSessionUtil.userNamespaceToVariant(namespace);
+    if (change.pushed.seqno) {
+      if (!toConfirmPushed[variant]) {
+        toConfirmPushed[variant] = {
+          seqno: change.pushed.seqno.toNumber(),
+          hashes: [change.messageHash],
+        };
+      } else {
+        toConfirmPushed[variant].hashes.push(change.messageHash);
+      }
+    }
+  }
+
+  const toConfirmPushedEntries = objectEntries(toConfirmPushed);
+  for (let index = 0; index < toConfirmPushedEntries.length; index++) {
+    const toConfirmPushedEntry = toConfirmPushedEntries[index];
+    if (!toConfirmPushedEntry[1]) {
+      continue;
+    }
+
+    if (toConfirmPushed) {
+      await UserGenericWrapperActions.confirmPushed(toConfirmPushedEntry[0], {
+        seqno: toConfirmPushedEntry[1].seqno,
+        hashes: toConfirmPushedEntry[1].hashes,
+      });
+    }
   }
 
   const { requiredUserVariants } = LibSessionUtil;
@@ -92,14 +124,18 @@ async function pushChangesToUserSwarmIfNeeded() {
     return RunJobResult.Success;
   }
 
-  const storeRequests = changesToPush.messages.map(m => {
-    return new StoreUserConfigSubRequest({
-      encryptedData: m.ciphertext,
-      namespace: m.namespace,
-      ttlMs: TTL_DEFAULT.CONFIG_MESSAGE,
-      getNow: NetworkTime.now,
-    });
-  });
+  const storeRequests = flatten(
+    changesToPush.messages.map(m => {
+      return m.ciphertexts.map(ciphertext => {
+        return new StoreUserConfigSubRequest({
+          encryptedData: ciphertext,
+          namespace: m.namespace,
+          ttlMs: TTL_DEFAULT.CONFIG_MESSAGE,
+          getNow: NetworkTime.now,
+        });
+      });
+    })
+  );
 
   if (window.sessionFeatureFlags.debug.debugLibsessionDumps) {
     for (let index = 0; index < LibSessionUtil.requiredUserVariants.length; index++) {
@@ -120,9 +156,11 @@ async function pushChangesToUserSwarmIfNeeded() {
 
   const controller = new AbortController();
 
+  const sortedSubRequests = compact([...storeRequests, deleteHashesSubRequest]);
+
   const result = await timeoutWithAbort(
     MessageSender.sendEncryptedDataToSnode({
-      sortedSubRequests: compact([...storeRequests, deleteHashesSubRequest]),
+      sortedSubRequests,
       destination: us,
       method: 'sequence',
       abortSignal: controller.signal,
@@ -132,8 +170,7 @@ async function pushChangesToUserSwarmIfNeeded() {
     controller
   );
 
-  const expectedReplyLength =
-    changesToPush.messages.length + (changesToPush.allOldHashes.size ? 1 : 0);
+  const expectedReplyLength = sortedSubRequests.length;
   // we do a sequence call here. If we do not have the right expected number of results, consider it a failure
   if (!isArray(result) || result.length !== expectedReplyLength) {
     window.log.info(

@@ -90,9 +90,10 @@ export const oceanDark: ThemeColorVariables = {
   '--search-bar-icon-color': 'var(--text-secondary-color)',
   '--search-bar-icon-hover-color': 'var(--text-primary-color)',
 
-  '--scroll-bar-track-color': 'none',
-  '--scroll-bar-thumb-color': THEMES.OCEAN_DARK.COLOR4,
-  '--scroll-bar-thumb-hover-color': THEMES.OCEAN_DARK.COLOR5,
+  '--scroll-bar-track-color': `rgba(${hexColorToRGB(THEMES.OCEAN_DARK.COLOR5)}, 0.10)`,
+  '--scroll-bar-track-hover-color': `rgba(${hexColorToRGB(THEMES.OCEAN_DARK.COLOR5)}, 0.20)`,
+  '--scroll-bar-thumb-color': `rgba(${hexColorToRGB(THEMES.OCEAN_DARK.COLOR5)}, 0.20)`,
+  '--scroll-bar-thumb-hover-color': `rgba(${hexColorToRGB(THEMES.OCEAN_DARK.COLOR5)}, 1.0)`,
 
   '--zoom-bar-track-color': THEMES.OCEAN_DARK.COLOR4,
   '--zoom-bar-thumb-color': 'var(--primary-color)',
@@ -116,9 +117,12 @@ export const oceanDark: ThemeColorVariables = {
   '--emoji-reaction-bar-icon-background-color': 'var(--background-primary-color)',
   '--emoji-reaction-bar-icon-color': 'var(--text-primary-color)',
 
+  '--modal-background-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.5)`,
   '--modal-background-content-color': 'var(--background-secondary-color)',
   '--modal-text-color': 'var(--text-primary-color)',
   '--modal-text-danger-color': 'var(--danger-color)',
+  '--modal-shadow-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 1.0)`,
+  '--modal-drop-shadow': `0px 0px 34px 0px var(--modal-shadow-color)`,
 
   '--toast-background-color': 'var(--background-secondary-color)',
   '--toast-text-color': 'var(--text-primary-color)',

@@ -31,7 +31,7 @@ export const TextWithChildren = (props: Omit<TextProps, 'text'> & { children: Re
 };
 
 type SpacerProps = {
-  size: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
+  size: 'xxs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
   style?: CSSProperties;
 };
 
@@ -42,6 +42,11 @@ const SpacerStyled = styled.div<SpacerProps>`
 
 const Spacer = (props: SpacerProps) => {
   return <SpacerStyled {...props} />;
+};
+
+/** --margins-xxs 2.5px */
+export const SpacerXXS = (props: { style?: CSSProperties }) => {
+  return <Spacer size="xxs" style={props.style} />;
 };
 
 /** --margins-xs 5px */
@@ -90,6 +95,30 @@ export const HintText = ({ children }: { children: string }) => {
       }}
     >
       <strong>•</strong> {children}
+    </span>
+  );
+};
+
+export const StringCollapser = ({
+  str,
+  leadingChars = 6,
+  trailingChars = 4,
+  separatorStyle,
+}: {
+  str: string;
+  leadingChars?: number;
+  trailingChars?: number;
+  separatorStyle?: CSSProperties;
+}) => {
+  if (str.length <= leadingChars + trailingChars + 3) {
+    return <>{str}</>;
+  }
+
+  return (
+    <span>
+      {str.slice(0, leadingChars)}
+      <span style={separatorStyle}>…</span>
+      {str.slice(-trailingChars)}
     </span>
   );
 };

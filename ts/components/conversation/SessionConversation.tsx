@@ -7,7 +7,6 @@ import loadImage from 'blueimp-load-image';
 import { Component, RefObject, createRef } from 'react';
 import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
-import { format } from 'date-fns';
 import {
   CompositionBox,
   SendMessageType,
@@ -70,9 +69,6 @@ import {
   useSelectedIsPublic,
   useSelectedWeAreAdmin,
 } from '../../state/selectors/selectedConversation';
-import { useSelectedDisableLegacyGroupDeprecatedActions } from '../../hooks/useRefreshReleasedFeaturesTimestamp';
-import { useAreGroupsCreatedAsNewGroupsYet } from '../../state/selectors/releasedFeatures';
-import { Constants } from '../../session';
 
 const DEFAULT_JPEG_QUALITY = 0.85;
 
@@ -81,7 +77,6 @@ interface State {
 }
 
 interface Props {
-  ourDisplayNameInProfile: string;
   ourNumber: string;
   selectedConversationKey: string;
   selectedConversation?: ReduxConversationType;
@@ -256,7 +251,6 @@ export class SessionConversation extends Component<Props, State> {
     const { isDraggingFile } = this.state;
 
     const {
-      ourDisplayNameInProfile,
       selectedConversation,
       messagesProps,
       selectedMessages,
@@ -275,10 +269,6 @@ export class SessionConversation extends Component<Props, State> {
         <div className="conversation-header">
           <ConversationHeaderWithDetails />
           <GroupMarkedAsExpired />
-          <OutdatedClientBanner
-            ourDisplayNameInProfile={ourDisplayNameInProfile}
-            selectedConversation={selectedConversation}
-          />
           <OutdatedLegacyGroupBanner />
         </div>
         {isSelectedConvoInitialLoadingInProgress ? (
@@ -657,31 +647,6 @@ const renderImagePreview = async (contentType: string, file: File, fileName: str
   };
 };
 
-function OutdatedClientBanner(props: {
-  selectedConversation: Pick<ReduxConversationType, 'id' | 'hasOutdatedClient'>;
-  ourDisplayNameInProfile: string;
-}) {
-  const { selectedConversation, ourDisplayNameInProfile } = props;
-  const bannerText =
-    selectedConversation.hasOutdatedClient &&
-    selectedConversation.hasOutdatedClient !== ourDisplayNameInProfile
-      ? window.i18n('disappearingMessagesLegacy', { name: selectedConversation.hasOutdatedClient })
-      : window.i18n('deleteAfterGroupFirstReleaseConfigOutdated');
-
-  return selectedConversation.hasOutdatedClient?.length ? (
-    <NoticeBanner
-      text={bannerText}
-      onBannerClick={() => {
-        const conversation = ConvoHub.use().get(selectedConversation.id);
-        conversation.set({ hasOutdatedClient: undefined });
-        void conversation.commit();
-      }}
-      icon="exit"
-      dataTestId="some-of-your-devices-outdated-conversation"
-    />
-  ) : null;
-}
-
 function OutdatedLegacyGroupBanner() {
   const dispatch = useDispatch();
 
@@ -689,30 +654,18 @@ function OutdatedLegacyGroupBanner() {
   const selectedConversationKey = useSelectedConversationKey();
   const isPrivate = useSelectedIsPrivate();
   const isPublic = useSelectedIsPublic();
-  const deprecatedLegacyGroups = useSelectedDisableLegacyGroupDeprecatedActions();
 
   const isLegacyGroup =
-    !isPrivate && !isPublic && selectedConversationKey && selectedConversationKey.startsWith('05');
+    !isPrivate &&
+    !isPublic &&
+    selectedConversationKey &&
+    PubKey.is05Pubkey(selectedConversationKey);
 
-  const newGroupsCanBeCreated = useAreGroupsCreatedAsNewGroupsYet();
-  const date = format(
-    new Date(Constants.FEATURE_RELEASE_TIMESTAMPS.LEGACY_GROUP_READONLY),
-    'h:mm a, d MMM yyyy'
-  );
+  const text = localize(
+    weAreAdmin ? 'legacyGroupAfterDeprecationAdmin' : 'legacyGroupAfterDeprecationMember'
+  ).toString();
 
-  const text = deprecatedLegacyGroups
-    ? localize(
-        weAreAdmin ? 'legacyGroupAfterDeprecationAdmin' : 'legacyGroupAfterDeprecationMember'
-      ).toString()
-    : localize(
-        weAreAdmin ? 'legacyGroupBeforeDeprecationAdmin' : 'legacyGroupBeforeDeprecationMember'
-      )
-        .withArgs({
-          date,
-        })
-        .toString();
-
-  return isLegacyGroup && newGroupsCanBeCreated ? (
+  return isLegacyGroup ? (
     <NoticeBanner
       text={text}
       onBannerClick={() => {

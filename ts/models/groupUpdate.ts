@@ -1,4 +1,4 @@
-import type { LocalizerComponentPropsObject } from '../localization/localeTools';
+import type { LocalizerProps } from '../components/basic/Localizer';
 import { ConvoHub } from '../session/conversations';
 import { UserUtils } from '../session/utils';
 
@@ -13,10 +13,7 @@ function usAndXOthers(arr: Array<string>) {
   return { us: false, others };
 }
 
-export function getKickedGroupUpdateStr(
-  kicked: Array<string>,
-  _groupName: string
-): LocalizerComponentPropsObject {
+export function getKickedGroupUpdateStr(kicked: Array<string>, _groupName: string): LocalizerProps {
   const { others, us } = usAndXOthers(kicked);
   const othersNames = others.map(ConvoHub.use().getNicknameOrRealUsernameOrPlaceholder);
 
@@ -55,7 +52,7 @@ export function getKickedGroupUpdateStr(
   }
 }
 
-export function getLeftGroupUpdateChangeStr(left: Array<string>): LocalizerComponentPropsObject {
+export function getLeftGroupUpdateChangeStr(left: Array<string>): LocalizerProps {
   const { others, us } = usAndXOthers(left);
 
   if (left.length !== 1) {
@@ -77,7 +74,7 @@ export function getJoinedGroupUpdateChangeStr(
   groupv2: boolean,
   addedWithHistory: boolean,
   _groupName: string
-): LocalizerComponentPropsObject {
+): LocalizerProps {
   const { others, us } = usAndXOthers(joined);
   const othersNames = others.map(ConvoHub.use().getNicknameOrRealUsernameOrPlaceholder);
 
@@ -164,9 +161,7 @@ export function getJoinedGroupUpdateChangeStr(
   }
 }
 
-export function getPromotedGroupUpdateChangeStr(
-  joined: Array<string>
-): LocalizerComponentPropsObject {
+export function getPromotedGroupUpdateChangeStr(joined: Array<string>): LocalizerProps {
   const { others, us } = usAndXOthers(joined);
   const othersNames = others.map(ConvoHub.use().getNicknameOrRealUsernameOrPlaceholder);
 
@@ -204,12 +199,12 @@ export function getPromotedGroupUpdateChangeStr(
   }
 }
 
-export function getGroupNameChangeStr(newName: string | undefined): LocalizerComponentPropsObject {
+export function getGroupNameChangeStr(newName: string | undefined): LocalizerProps {
   return newName
     ? { token: 'groupNameNew', args: { group_name: newName } }
     : { token: 'groupNameUpdated', args: undefined };
 }
 
-export function getGroupDisplayPictureChangeStr(): LocalizerComponentPropsObject {
+export function getGroupDisplayPictureChangeStr(): LocalizerProps {
   return { token: 'groupDisplayPictureUpdated', args: undefined };
 }

@@ -1,5 +1,5 @@
 import { UserGroupsGet } from 'libsession_util_nodejs';
-import { compact, isEmpty, uniqBy } from 'lodash';
+import { compact, flatten, isEmpty, uniqBy } from 'lodash';
 import { SignalService } from '../../../../protobuf';
 import { MetaGroupWrapperActions } from '../../../../webworker/workers/browser/libsession_worker_interface';
 import { GroupUpdateInfoChangeMessage } from '../../../messages/outgoing/controlMessage/group_v2/to_group/GroupUpdateInfoChangeMessage';
@@ -157,44 +157,59 @@ function makeStoreGroupConfigSubRequest({
   }
 
   const groupInfoSubRequests = compact(
-    pendingConfigData.map(m =>
-      m.namespace === SnodeNamespaces.ClosedGroupInfo
-        ? new StoreGroupInfoSubRequest({
-            encryptedData: m.ciphertext,
-            groupPk,
-            secretKey: group.secretKey,
-            ttlMs: TTL_DEFAULT.CONFIG_MESSAGE,
-            getNow: NetworkTime.now,
-          })
-        : null
+    flatten(
+      pendingConfigData.map(m =>
+        m.namespace === SnodeNamespaces.ClosedGroupInfo
+          ? m.ciphertexts.map(
+              ciphertext =>
+                new StoreGroupInfoSubRequest({
+                  encryptedData: ciphertext,
+                  groupPk,
+                  secretKey: group.secretKey,
+                  ttlMs: TTL_DEFAULT.CONFIG_MESSAGE,
+                  getNow: NetworkTime.now,
+                })
+            )
+          : null
+      )
     )
   );
 
-  const groupMembersSubRequests = compact(
-    pendingConfigData.map(m =>
-      m.namespace === SnodeNamespaces.ClosedGroupMembers
-        ? new StoreGroupMembersSubRequest({
-            encryptedData: m.ciphertext,
-            groupPk,
-            secretKey: group.secretKey,
-            ttlMs: TTL_DEFAULT.CONFIG_MESSAGE,
-            getNow: NetworkTime.now,
-          })
-        : null
+  const groupMembersSubRequests = flatten(
+    compact(
+      pendingConfigData.map(m =>
+        m.namespace === SnodeNamespaces.ClosedGroupMembers
+          ? m.ciphertexts.map(
+              ciphertext =>
+                new StoreGroupMembersSubRequest({
+                  encryptedData: ciphertext,
+                  groupPk,
+                  secretKey: group.secretKey,
+                  ttlMs: TTL_DEFAULT.CONFIG_MESSAGE,
+                  getNow: NetworkTime.now,
+                })
+            )
+          : null
+      )
     )
   );
 
-  const groupKeysSubRequests = compact(
-    pendingConfigData.map(m =>
-      m.namespace === SnodeNamespaces.ClosedGroupKeys
-        ? new StoreGroupKeysSubRequest({
-            encryptedData: m.ciphertext,
-            groupPk,
-            secretKey: group.secretKey,
-            ttlMs: TTL_DEFAULT.CONFIG_MESSAGE,
-            getNow: NetworkTime.now,
-          })
-        : null
+  const groupKeysSubRequests = flatten(
+    compact(
+      pendingConfigData.map(m =>
+        m.namespace === SnodeNamespaces.ClosedGroupKeys
+          ? m.ciphertexts.map(
+              ciphertext =>
+                new StoreGroupKeysSubRequest({
+                  encryptedData: ciphertext,
+                  groupPk,
+                  secretKey: group.secretKey,
+                  ttlMs: TTL_DEFAULT.CONFIG_MESSAGE,
+                  getNow: NetworkTime.now,
+                })
+            )
+          : null
+      )
     )
   );
 
