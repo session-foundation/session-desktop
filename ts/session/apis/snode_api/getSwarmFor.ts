@@ -55,6 +55,7 @@ async function requestSnodesForPubkeyWithTargetNodeRetryable(
       throw new Error('requestSnodesForPubkey: Invalid json (empty)');
     }
 
+    // NOTE Filter out 0.0.0.0 nodes which haven't submitted uptime proofs
     const snodes = body.snodes.filter((tSnode: any) => tSnode.ip !== '0.0.0.0');
     GetNetworkTime.handleTimestampOffsetFromNetwork('get_swarm', body.t);
     return snodes;
