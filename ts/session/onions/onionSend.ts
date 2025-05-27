@@ -223,14 +223,6 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
                 bodyBinary: decodedV4?.bodyBinary || null,
               };
             }
-
-            if (url.host === SERVER_HOSTS.NETWORK_SERVER) {
-              return {
-                status_code: foundStatusCode,
-                body: decodedV4?.body || null,
-                bodyBinary: decodedV4?.bodyBinary || null,
-              };
-            }
           }
 
           if (foundStatusCode === 404) {
@@ -245,6 +237,15 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
                 `with url:${url}. Stopping retries`
               )
             );
+          }
+
+          // NOTE we want to return the error status code to the caller, so they can handle it
+          if (url.host === SERVER_HOSTS.NETWORK_SERVER) {
+            return {
+              status_code: foundStatusCode,
+              body: decodedV4?.body || null,
+              bodyBinary: decodedV4?.bodyBinary || null,
+            };
           }
           // we consider those cases as an error, and trigger a retry (if possible), by throwing a non-abortable error
           throw new Error(

@@ -160,7 +160,7 @@ export async function getOnionPath({ toExclude }: { toExclude?: Snode }): Promis
     }
   } else {
     const ipsOnly = onionPaths
-        // NOTE Filter out nodes that have missing ip addresses since they are not valid
+      // NOTE Filter out nodes that have missing ip addresses since they are not valid
       .filter(m => m.filter(c => c.ip))
       .map(m =>
         m.map(c => {
