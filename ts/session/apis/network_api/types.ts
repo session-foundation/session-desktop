@@ -4,15 +4,17 @@
 import { isAddress } from 'viem/utils';
 import { z } from 'zod';
 
+const ResponseSchema = z.object({
+  status_code: z.number(),
+  t: z.number(),
+});
+
 /**
  * Response object for all endpoints
  * @property status_code - HTTP status code
  * @property t - Request unix timestamp (seconds)
  */
-const ResponseSchema = z.object({
-  status_code: z.number(),
-  t: z.number(),
-});
+export type NetworkAPIResponse = z.infer<typeof ResponseSchema>;
 
 /**
  * Token price info object

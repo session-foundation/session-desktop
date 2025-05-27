@@ -8,7 +8,7 @@ import {
   batchGlobalIsSuccess,
   parseBatchGlobalStatusCode,
 } from '../open_group_api/sogsv3/sogsV3BatchPoll';
-import { type InfoResponse, type ValidateHeaderResponse } from './types';
+import { type InfoResponse, type NetworkAPIResponse, type ValidateHeaderResponse } from './types';
 import { UserUtils } from '../../utils';
 import { SERVER_HOSTS } from '..';
 import { DURATION } from '../../constants';
@@ -119,8 +119,16 @@ export default class NetworkApi {
 
   // #region Response handling
 
-  private handleOnionResponse(result: OnionV4JSONSnodeResponse | null, endpoint: string) {
-    if (!batchGlobalIsSuccess(result)) {
+  private handleOnionResponse(
+    result: OnionV4JSONSnodeResponse | null,
+    endpoint: string
+  ): NetworkAPIResponse | ValidateHeaderResponse | InfoResponse {
+    const response: NetworkAPIResponse = {
+      status_code: result?.status_code || 500,
+      t: result?.body?.t || Date.now() / 1000,
+    };
+
+    if (!batchGlobalIsSuccess(result) || !result?.body) {
       if (window.sessionFeatureFlags?.debug.debugServerRequests) {
         window.log.error(
           `[network api] ${endpoint}: failed with status ${parseBatchGlobalStatusCode(result)} ${JSON.stringify(result)} `
@@ -128,20 +136,13 @@ export default class NetworkApi {
       }
 
       if (endpoint.startsWith('/validate/headers')) {
-        return {
-          success: false,
-        } as ValidateHeaderResponse;
+        return { ...response, success: false } as ValidateHeaderResponse;
       }
 
-      return null;
+      return response;
     }
 
-    const response = result?.body;
-    if (!response) {
-      return null;
-    }
-
-    return response;
+    return { ...response, ...result.body };
   }
   // #endregion
 

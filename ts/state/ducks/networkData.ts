@@ -6,6 +6,7 @@ import NetworkApi from '../../session/apis/network_api/NetworkApi';
 import type { StateType } from '../reducer';
 import { sleepFor } from '../../session/utils/Promise';
 import { DURATION } from '../../session/constants';
+import { batchGlobalIsSuccess } from '../../session/apis/open_group_api/sogsv3/sogsV3BatchPoll';
 
 export type NetworkDataState = DeepNullable<InfoResponse>;
 
@@ -41,7 +42,10 @@ const fetchInfoFromSeshServer = createAsyncThunk(
         );
       }
 
-      const infoLoading = (payloadCreator.getState() as StateType).networkModal.infoLoading;
+      const state = payloadCreator.getState() as StateType;
+      const infoLoading = state.networkModal.infoLoading;
+      const stalePriceTimestamp = state.networkData.price.t_stale;
+
       if (infoLoading) {
         throw new Error('already loading');
       }
@@ -50,7 +54,19 @@ const fetchInfoFromSeshServer = createAsyncThunk(
       const networkApi = new NetworkApi();
       const result = await networkApi.getInfo();
       if (!result) {
-        throw new Error('data fetch failed!');
+        throw new Error('Data fetch failed');
+      }
+
+      if (
+        !batchGlobalIsSuccess(result) &&
+        stalePriceTimestamp &&
+        Date.now() / 1000 > stalePriceTimestamp
+      ) {
+        payloadCreator.dispatch(networkDataActions.clearCachedData());
+        payloadCreator.dispatch(setLastRefreshedTimestamp(0));
+        throw new Error(
+          `Data fetch failed with ${result.status_code} error. Clearing stale cache data.`
+        );
       }
 
       payloadCreator.dispatch(setLastRefreshedTimestamp(Date.now()));
@@ -126,7 +142,11 @@ const refreshInfoFromSeshServer = createAsyncThunk(
 export const networkDataSlice = createSlice({
   name: 'networkData',
   initialState: initialNetworkDataState,
-  reducers: {},
+  reducers: {
+    clearCachedData(state) {
+      return { ...initialNetworkDataState, status_code: state.status_code, t: state.t };
+    },
+  },
   extraReducers: builder => {
     builder.addCase(fetchInfoFromSeshServer.fulfilled, (state, action) => {
       if (window.sessionFeatureFlags?.debug.debugServerRequests) {
@@ -135,8 +155,9 @@ export const networkDataSlice = createSlice({
           JSON.stringify(action.payload)
         );
       }
-      const { t, price, token, network } = action.payload;
+      const { t, status_code, price, token, network } = action.payload;
       state.t = t;
+      state.status_code = status_code;
       state.price = price;
       state.token = token;
       state.network = network;

@@ -10,6 +10,8 @@ export const getNetworkData = (state: StateType): NetworkDataState => {
 // #region - Getters
 const getInfoTimestamp = (state: StateType) => getNetworkData(state).t || 0;
 
+const getNetworkStatusCode = (state: StateType) => getNetworkData(state).status_code;
+
 const getUSDPrice = (state: StateType) => getNetworkData(state).price.usd;
 
 const getUSDMarketCap = (state: StateType) => getNetworkData(state).price.usd_market_cap;
@@ -36,6 +38,10 @@ const getNetworkStakedUSD = (state: StateType) => getNetworkData(state).network.
 // #region - Hooks
 export const useInfoTimestamp = (): number => {
   return useSelector(getInfoTimestamp);
+};
+
+export const useNetworkStatusCode = (): number | null => {
+  return useSelector(getNetworkStatusCode);
 };
 
 export const useUSDPrice = (): number | null => {
