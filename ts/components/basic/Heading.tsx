@@ -17,29 +17,24 @@ type StyledHeadingProps = HeadingProps & {
   size: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'h7' | 'h8' | 'h9';
 };
 
-const headingStyles = (props: StyledHeadingProps) => `
-margin: ${props.margin ? props.margin : '0'};
-padding: ${props.padding ? props.padding : '0'};
-font-weight: ${props.fontWeight ? props.fontWeight : '700'};
-${props.size ? `font-size: var(--font-size-${props.size});` : ''}
-${props.color ? `color: ${props.color};` : ''}
-${props.alignText ? `text-align: ${props.alignText};` : ''}
-line-height: 1.0;
+const StyledHeading = styled.h1<StyledHeadingProps>`
+  margin: ${props => props.margin || '0'};
+  padding: ${props => props.padding || '0'};
+  font-weight: ${props => props.fontWeight || '700'};
+  ${props => props.size && `font-size: var(--font-size-${props.size});`}
+  ${props => props.color && `color: ${props.color};`}
+  ${props => props.alignText && `text-align: ${props.alignText};`}
+  line-height: 1.0;
 `;
 
-const Heading = (headerProps: StyledHeadingProps) => {
-  const StyledHeading =
-    headerProps.size === 'h7' || headerProps.size === 'h8' || headerProps.size === 'h9'
-      ? styled.h6<StyledHeadingProps>`
-          ${props => headingStyles(props)}
-        `
-      : styled(headerProps.size)<StyledHeadingProps>`
-          ${props => headingStyles(props)}
-        `;
+const squashAsH6 = ['h6', 'h7', 'h8', 'h9'];
+
+const Heading = (props: StyledHeadingProps) => {
+  const tag = squashAsH6.includes(props.size) ? 'h6' : props.size;
 
   return (
-    <StyledHeading {...headerProps} data-testid={headerProps.dataTestId}>
-      {headerProps.children}
+    <StyledHeading as={tag} {...props} data-testid={props.dataTestId}>
+      {props.children}
     </StyledHeading>
   );
 };
