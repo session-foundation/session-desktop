@@ -836,6 +836,7 @@
   "sessionInviteAFriend": "Invite a Friend",
   "sessionMessageRequests": "Message Requests",
   "sessionNetworkCurrentPrice": "Current SESH price",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {datetime}",
   "sessionNetworkDescription": "Messages are sent using the Session Network. The network is comprised of nodes incentivized with Session Token, which keeps Session decentralized and secure. <span><b>Learn More</b> {icon}</span>",
   "sessionNetworkLearnAboutStaking": "Learn About Staking",
   "sessionNetworkMarketCap": "Market Cap",
