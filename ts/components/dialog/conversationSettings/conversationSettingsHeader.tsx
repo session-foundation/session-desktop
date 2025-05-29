@@ -89,7 +89,7 @@ const StyledDescription = styled.p<{ expanded: boolean }>`
   width: 100%;
   white-space: pre-wrap;
   overflow: hidden;
-  -webkit-line-clamp: ${({ expanded }) => (expanded ? 'unset' : '3')};
+  -webkit-line-clamp: ${({ expanded }) => (expanded ? 'unset' : '2')};
   display: -webkit-box;
   -webkit-box-orient: vertical;
   // some padding so we always have room to show the ellipsis, if needed
