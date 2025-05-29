@@ -15,7 +15,6 @@ import {
   PinUnpinButton,
   NotificationPanelButton,
   UpdateGroupMembersButton,
-  UpdateGroupNameButton,
   AttachmentsButton,
   UpdateDisappearingMessagesButton,
   ConversationSettingsQAButtons,
@@ -61,7 +60,6 @@ function GroupV2AdminActions({ conversationId }: WithConvoId) {
       <PanelButtonGroup>
         <InviteContactsToGroupV2Button conversationId={conversationId} />
         <UpdateGroupMembersButton conversationId={conversationId} asAdmin={true} />
-        <UpdateGroupNameButton conversationId={conversationId} />
         <UpdateDisappearingMessagesButton conversationId={conversationId} asAdmin={true} />
         <ConversationSettingsQAButtons conversationId={conversationId} />
       </PanelButtonGroup>
@@ -150,7 +148,6 @@ function DefaultPageForCommunities({ conversationId }: WithConvoId) {
         <CopyCommunityUrlButton conversationId={conversationId} />
         <PinUnpinButton conversationId={conversationId} />
         <NotificationPanelButton convoId={conversationId} />
-        <UpdateGroupNameButton conversationId={conversationId} />
         <InviteContactsToCommunityButton conversationId={conversationId} />
         <AttachmentsButton conversationId={conversationId} />
       </PanelButtonGroup>

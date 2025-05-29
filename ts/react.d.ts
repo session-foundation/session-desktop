@@ -57,7 +57,9 @@ declare module 'react' {
 
   type SetButton = 'notifications' | 'disappear';
 
-  type ConfirmButtons = `${'set-nickname' | 'open-url' | 'set-nickname'}-confirm-button`;
+  type ConfirmButtons =
+    `${'set-nickname' | 'open-url' | 'set-nickname' | 'update-group-info'}-confirm-button`;
+  type CancelButtons = `${'update-group-info'}-cancel-button`;
 
   type SessionDataTestId =
     | 'group-member-status-text'
@@ -71,7 +73,6 @@ declare module 'react' {
     | 'new-conversation-button'
     | 'message-request-banner'
     | 'leftpane-section-container'
-    | 'group-name-input'
     | 'open-url'
     | 'recovery-password-seed-modal'
     | 'password-input-reconfirm'
@@ -143,6 +144,7 @@ declare module 'react' {
     | 'delete-menu-item'
     | 'accept-menu-item'
     | ConfirmButtons
+    | CancelButtons
 
     // timer options
     | DisappearTimeOptionDataTestId
@@ -224,6 +226,8 @@ declare module 'react' {
     | 'link-preview-close'
 
     // to sort
+    | 'update-group-info-name-input'
+    | 'update-group-info-description-input'
     | 'restore-using-recovery'
     | 'link-device'
     | 'join-community-conversation'

@@ -3,20 +3,14 @@ import { useDispatch } from 'react-redux';
 
 import {
   useDisappearingMessageSettingText,
-  useIsActive,
-  useIsBlocked,
   useIsClosedGroup,
   useIsGroupV2,
-  useIsKickedFromGroup,
   useIsPinned,
   useIsPublic,
   useNotificationSetting,
   useWeAreAdmin,
 } from '../../../hooks/useParamSelector';
-import {
-  showUpdateGroupMembersByConvoId,
-  showUpdateGroupNameByConvoId,
-} from '../../../interactions/conversationInteractions';
+import { showUpdateGroupMembersByConvoId } from '../../../interactions/conversationInteractions';
 import { localize } from '../../../localization/localeTools';
 import type { ConversationNotificationSettingType } from '../../../models/conversationAttributes';
 import { PubKey } from '../../../session/types';
@@ -50,16 +44,9 @@ import {
   useShowLeaveGroupCb,
 } from '../../menuAndSettingsHooks/useShowLeaveGroup';
 import { useShowAttachments } from '../../menuAndSettingsHooks/useShowAttachments';
+import { useGroupCommonNoShow } from '../../menuAndSettingsHooks/useGroupCommonNoShow';
 
 type WithAsAdmin = { asAdmin: boolean };
-
-function useGroupCommonNoShow(convoId: string) {
-  const isKickedFromGroup = useIsKickedFromGroup(convoId) || false;
-  const isBlocked = useIsBlocked(convoId);
-  const isActive = useIsActive(convoId);
-
-  return isKickedFromGroup || isBlocked || !isActive;
-}
 
 export const LeaveCommunityPanelButton = ({ conversationId }: WithConvoId) => {
   const cb = useShowLeaveCommunityCb(conversationId);
@@ -155,28 +142,6 @@ export const NotificationPanelButton = ({ convoId }: { convoId: string }) => {
       subText={subText}
       subTextDataTestId="notifications-details-menu-option"
       dataTestId="notifications-menu-option"
-    />
-  );
-};
-
-export const UpdateGroupNameButton = ({ conversationId }: WithConvoId) => {
-  const isGroupV2 = useIsGroupV2(conversationId);
-  const weAreAdmin = useWeAreAdmin(conversationId);
-
-  const commonNoShow = useGroupCommonNoShow(conversationId);
-  const showUpdateGroupNameButton = isGroupV2 && weAreAdmin && !commonNoShow;
-
-  if (!showUpdateGroupNameButton) {
-    return null;
-  }
-  return (
-    <PanelIconButton
-      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.USER_ROUND_PEN} />}
-      text={localize('groupEdit').toString()}
-      onClick={() => {
-        void showUpdateGroupNameByConvoId(conversationId);
-      }}
-      dataTestId="edit-group-name"
     />
   );
 };

@@ -11,7 +11,10 @@ import { PubKey } from '../../session/types';
 import LIBSESSION_CONSTANTS from '../../session/utils/libsession/libsession_constants';
 import { groupInfoActions } from '../../state/ducks/metaGroups';
 import { updateGroupNameModal } from '../../state/ducks/modalDialog';
-import { useGroupNameChangeFromUIPending } from '../../state/selectors/groups';
+import {
+  useGroupNameChangeFromUIPending,
+  useLibGroupDescription,
+} from '../../state/selectors/groups';
 import { THEME_GLOBALS } from '../../themes/globals';
 import { pickFileForAvatar } from '../../types/attachments/VisualAttachment';
 import { SessionWrapperModal } from '../SessionWrapperModal';
@@ -19,6 +22,7 @@ import { Avatar, AvatarSize } from '../avatar/Avatar';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SpacerMD } from '../basic/Text';
 import { SessionSpinner } from '../loading';
+import { localize } from '../../localization/localeTools';
 
 const StyledErrorMessage = styled(motion.p)`
   text-align: center;
@@ -79,7 +83,9 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
 
   const oldAvatarPath = convo?.getAvatarPath() || null;
   const originalGroupName = convo?.getRealSessionUsername();
+  const originalGroupDescription = useLibGroupDescription(conversationId);
   const [newGroupName, setNewGroupName] = useState(originalGroupName);
+  const [newGroupDescription, setNewGroupDescription] = useState(originalGroupDescription);
 
   function closeDialog() {
     dispatch(updateGroupNameModal(null));
@@ -109,26 +115,38 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
       return;
     }
     const trimmedGroupName = newGroupName?.trim();
+    const trimmedGroupDescription = newGroupDescription?.trim();
     if (!trimmedGroupName) {
-      onShowError(window.i18n('groupNameEnterPlease'));
+      onShowError(localize('groupNameEnterPlease').toString());
 
       return;
     }
 
     if (trimmedGroupName.length > LIBSESSION_CONSTANTS.BASE_GROUP_MAX_NAME_LENGTH) {
-      onShowError(window.i18n('groupNameEnterShorter'));
+      onShowError(localize('groupNameEnterShorter').toString());
+
+      return;
+    }
+
+    if (trimmedGroupDescription.length > LIBSESSION_CONSTANTS.GROUP_INFO_DESCRIPTION_MAX_LENGTH) {
+      onShowError(localize('updateGroupInformationEnterShorterDescription').toString());
 
       return;
     }
     onShowError('');
 
-    if (trimmedGroupName !== originalGroupName || newAvatarObjectUrl !== oldAvatarPath) {
+    if (
+      trimmedGroupName !== originalGroupName ||
+      trimmedGroupDescription !== originalGroupDescription ||
+      newAvatarObjectUrl !== oldAvatarPath
+    ) {
       if (!PubKey.is03Pubkey(conversationId)) {
         throw new Error('Only 03-group are supported here');
       }
       const updateNameAction = groupInfoActions.currentDeviceGroupNameChange({
         groupPk: conversationId,
         newName: trimmedGroupName,
+        newDescription: trimmedGroupDescription,
       });
       dispatch(updateNameAction as any);
       // keeping the dialog open until the async thunk is done (via isNameChangePending)
@@ -139,11 +157,11 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
   useKey('Esc', closeDialog);
   useKey('Enter', onClickOK);
 
-  const okText = window.i18n('okay');
-  const cancelText = window.i18n('cancel');
-
   return (
-    <SessionWrapperModal title={window.i18n('groupName')} onClose={() => closeDialog()}>
+    <SessionWrapperModal
+      title={localize('updateGroupInformation').toString()}
+      onClose={() => closeDialog()}
+    >
       {errorMsg ? (
         <>
           <SpacerMD />
@@ -185,20 +203,38 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
         aria-required={true}
         autoFocus={true}
         maxLength={LIBSESSION_CONSTANTS.BASE_GROUP_MAX_NAME_LENGTH}
-        data-testid="group-name-input"
+        data-testid="update-group-info-name-input"
+      />
+      <input
+        type="text"
+        value={newGroupDescription}
+        placeholder={window.i18n('groupDescriptionEnter')}
+        onKeyDown={e => {
+          if (e.key === 'Enter') {
+            onClickOK();
+            e.preventDefault();
+          }
+        }}
+        onChange={e => setNewGroupDescription(e.target.value)}
+        tabIndex={1}
+        required={false}
+        aria-required={false}
+        autoFocus={false}
+        maxLength={LIBSESSION_CONSTANTS.GROUP_INFO_DESCRIPTION_MAX_LENGTH}
+        data-testid="update-group-info-description-input"
       />
 
       <SessionSpinner loading={isNameChangePending} />
 
       <div className="session-modal__button-group">
         <SessionButton
-          text={okText}
+          text={localize('save').toString()}
           onClick={onClickOK}
           buttonType={SessionButtonType.Simple}
           disabled={isNameChangePending}
         />
         <SessionButton
-          text={cancelText}
+          text={localize('cancel').toString()}
           buttonColor={SessionButtonColor.Danger}
           buttonType={SessionButtonType.Simple}
           onClick={closeDialog}

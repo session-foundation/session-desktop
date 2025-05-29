@@ -1,6 +1,6 @@
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type SessionDataTestId } from 'react';
 
 import { closeRightPanel } from '../../../state/ducks/conversations';
 import { resetRightOverlayMode } from '../../../state/ducks/section';
@@ -26,6 +26,7 @@ import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import { useEditProfilePictureCallback } from '../../menuAndSettingsHooks/useEditProfilePictureCallback';
 import { useRoomDescription } from '../../../state/selectors/sogsRoomInfo';
 import { useLibGroupDescription } from '../../../state/selectors/groups';
+import { useShowUpdateGroupNameDescriptionCb } from '../../menuAndSettingsHooks/useShowUpdateGroupNameDescription';
 
 function AccountId({ conversationId }: WithConvoId) {
   const isPrivate = useIsPrivate(conversationId);
@@ -36,10 +37,14 @@ function AccountId({ conversationId }: WithConvoId) {
   return <StyledAccountId data-testid="account-id">{conversationId}</StyledAccountId>;
 }
 
-function ChangeNicknameButton({ conversationId }: WithConvoId) {
-  const changeNicknameCb = useChangeNickname(conversationId);
-
-  if (!changeNicknameCb) {
+function EditGenericButton({
+  cb,
+  dataTestId,
+}: {
+  cb: (() => void) | null;
+  dataTestId: SessionDataTestId;
+}) {
+  if (!cb) {
     return null;
   }
 
@@ -47,10 +52,22 @@ function ChangeNicknameButton({ conversationId }: WithConvoId) {
     <SessionLucideIconButton
       unicode={LUCIDE_ICONS_UNICODE.PENCIL}
       iconSize="large"
-      onClick={changeNicknameCb}
-      dataTestId="set-nickname-confirm-button"
+      onClick={cb}
+      dataTestId={dataTestId}
     />
   );
+}
+
+function ChangeNicknameButton({ conversationId }: WithConvoId) {
+  const changeNicknameCb = useChangeNickname(conversationId);
+
+  return <EditGenericButton cb={changeNicknameCb} dataTestId="set-nickname-confirm-button" />;
+}
+
+function UpdateNameDescriptionButton({ conversationId }: WithConvoId) {
+  const updateNameDescCb = useShowUpdateGroupNameDescriptionCb({ conversationId });
+
+  return <EditGenericButton cb={updateNameDescCb} dataTestId="edit-group-name" />;
 }
 
 const StyledAccountId = styled.div`
@@ -191,6 +208,7 @@ export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
             {isMe ? localize('noteToSelf').toString() : nicknameOrDisplayName}
           </H4>
           <ChangeNicknameButton conversationId={conversationId} />
+          <UpdateNameDescriptionButton conversationId={conversationId} />
         </Flex>
         {hasNickname && conversationRealName ? (
           <StyledAccountId data-testid="fallback-display-name">

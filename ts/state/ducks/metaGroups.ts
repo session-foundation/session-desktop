@@ -59,6 +59,7 @@ import { urlToBlob } from '../../types/attachments/VisualAttachment';
 import { encryptProfile } from '../../util/crypto/profileEncrypter';
 import { processNewAttachment } from '../../types/MessageAttachment';
 import { MIME } from '../../types';
+import type { StoreGroupMessageSubRequest } from '../../session/apis/snode_api/SnodeRequestTypes';
 
 export type GroupState = {
   infos: Record<GroupPubkeyType, GroupInfoGet>;
@@ -517,7 +518,14 @@ function validateNameChange({
   groupPk,
   newName,
   currentName,
-}: WithGroupPubkey & { newName: string; currentName: string }) {
+  currentDescription,
+  newDescription,
+}: WithGroupPubkey & {
+  newName: string;
+  currentName: string;
+  currentDescription: string;
+  newDescription: string;
+}) {
   const us = UserUtils.getOurPubKeyStrFromCache();
   if (!newName || isEmpty(newName)) {
     throw new PreConditionFailed('validateNameChange needs a non empty name');
@@ -527,11 +535,11 @@ function validateNameChange({
   if (!convo) {
     throw new PreConditionFailed('validateNameChange convo not present in convo hub');
   }
-  if (newName === currentName) {
-    throw new PreConditionFailed('validateNameChange no name change detected');
+  if (newName === currentName && newDescription === currentDescription) {
+    throw new PreConditionFailed('validateNameChange no name/description change detected');
   }
 
-  return { newName, us, convo };
+  return { newName, newDescription, us, convo };
 }
 
 /**
@@ -883,8 +891,10 @@ async function handleMemberRemovedFromUI({
 async function handleNameChangeFromUI({
   groupPk,
   newName: uncheckedName,
+  newDescription: uncheckedDescription,
 }: WithGroupPubkey & {
   newName: string;
+  newDescription: string;
 }) {
   const group = await UserGroupsWrapperActions.getGroup(groupPk);
   if (!group || !group.secretKey || isEmpty(group.secretKey)) {
@@ -898,48 +908,56 @@ async function handleNameChangeFromUI({
   await checkWeAreAdminOrThrow(groupPk, 'handleNameChangeFromUIOrNot');
 
   // this throws if the name is the same, or empty
-  const { newName, convo, us } = validateNameChange({
+  const { newName, newDescription, convo, us } = validateNameChange({
     newName: uncheckedName,
     currentName: group.name || '',
     groupPk,
+    currentDescription: infos.description || '',
+    newDescription: uncheckedDescription,
   });
+
+  const nameChanged = newName !== group.name;
 
   group.name = newName;
   infos.name = newName;
+  infos.description = newDescription;
   await UserGroupsWrapperActions.setGroup(group);
   await MetaGroupWrapperActions.infoSet(groupPk, infos);
+  let extraStoreRequests: Array<StoreGroupMessageSubRequest> = [];
   const createAtNetworkTimestamp = NetworkTime.now();
 
-  // we want to add an update message even if the change was done remotely
-  const msg = await ClosedGroup.addUpdateMessage({
-    convo,
-    diff: { type: 'name', newName },
-    sender: us,
-    sentAt: createAtNetworkTimestamp,
-    expireUpdate: DisappearingMessages.getExpireDetailsForOutgoingMessage(
+  // we only send a name changed message if the name actually changed. We don't care about
+  if (nameChanged) {
+    // we want to add an update message even if the change was done remotely
+    const msg = await ClosedGroup.addUpdateMessage({
       convo,
-      createAtNetworkTimestamp
-    ),
-    markAlreadySent: false, // the store below will mark the message as sent with dbMsgIdentifier
-    messageHash: null,
-  });
+      diff: { type: 'name', newName },
+      sender: us,
+      sentAt: createAtNetworkTimestamp,
+      expireUpdate: DisappearingMessages.getExpireDetailsForOutgoingMessage(
+        convo,
+        createAtNetworkTimestamp
+      ),
+      markAlreadySent: false, // the store below will mark the message as sent with dbMsgIdentifier
+      messageHash: null,
+    });
 
-  // we want to send an update only if the change was made locally.
-  const nameChangeMsg = new GroupUpdateInfoChangeMessage({
-    groupPk,
-    typeOfChange: SignalService.GroupUpdateInfoChangeMessage.Type.NAME,
-    updatedName: newName,
-    identifier: msg.id,
-    createAtNetworkTimestamp,
-    secretKey: group.secretKey,
-    sodium: await getSodiumRenderer(),
-    ...DisappearingMessages.getExpireDetailsForOutgoingMessage(convo, createAtNetworkTimestamp),
-  });
-
-  const extraStoreRequests = await StoreGroupRequestFactory.makeGroupMessageSubRequest(
-    [nameChangeMsg],
-    group
-  );
+    // we want to send an update only if the change was made locally.
+    const nameChangeMsg = new GroupUpdateInfoChangeMessage({
+      groupPk,
+      typeOfChange: SignalService.GroupUpdateInfoChangeMessage.Type.NAME,
+      updatedName: newName,
+      identifier: msg.id,
+      createAtNetworkTimestamp,
+      secretKey: group.secretKey,
+      sodium: await getSodiumRenderer(),
+      ...DisappearingMessages.getExpireDetailsForOutgoingMessage(convo, createAtNetworkTimestamp),
+    });
+    extraStoreRequests = await StoreGroupRequestFactory.makeGroupMessageSubRequest(
+      [nameChangeMsg],
+      group
+    );
+  }
 
   try {
     const batchResult = await GroupSync.pushChangesToGroupSwarmIfNeeded({
@@ -1391,6 +1409,7 @@ const currentDeviceGroupNameChange = createAsyncThunk(
     }: {
       groupPk: GroupPubkeyType;
       newName: string;
+      newDescription: string;
     },
     payloadCreator
   ): Promise<GroupDetailsUpdate> => {
