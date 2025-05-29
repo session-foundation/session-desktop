@@ -13,6 +13,7 @@ type RoomInfo = {
   subscriberCount: number;
   moderators: Array<string>;
   uploadingNewAvatar: boolean;
+  roomDescription: string;
 };
 
 export type SogsRoomInfoState = {
@@ -30,6 +31,7 @@ function addEmptyEntryIfNeeded(state: any, convoId: string) {
       subscriberCount: 0,
       moderators: [],
       uploadingNewAvatar: false,
+      roomDescription: '',
     };
   }
 }
@@ -142,6 +144,12 @@ const sogsRoomInfosSlice = createSlice({
 
       return state;
     },
+    setRoomDescription(state, action: PayloadAction<{ convoId: string; roomDescription: string }>) {
+      addEmptyEntryIfNeeded(state, action.payload.convoId);
+      state.rooms[action.payload.convoId].roomDescription = action.payload.roomDescription;
+
+      return state;
+    },
   },
   extraReducers: builder => {
     builder.addCase(changeCommunityAvatar.fulfilled, (state, action) => {
@@ -173,12 +181,13 @@ const sogsRoomInfosSlice = createSlice({
 });
 
 const { actions, reducer } = sogsRoomInfosSlice;
-const { setSubscriberCount, setCanWrite, setModerators } = actions;
+const { setSubscriberCount, setCanWrite, setModerators, setRoomDescription } = actions;
 
 export const ReduxSogsRoomInfos = {
   setSubscriberCountOutsideRedux,
   setCanWriteOutsideRedux,
   setModeratorsOutsideRedux,
+  setRoomDescriptionOutsideRedux,
   sogsRoomInfoReducer: reducer,
   changeCommunityAvatar,
 };
@@ -203,6 +212,23 @@ function setModeratorsOutsideRedux(convoId: string, moderators: Array<string>) {
     setModerators({
       convoId,
       moderators,
+    })
+  );
+  return undefined;
+}
+
+/**
+ * Update the redux slice for that community's moderators list
+ * if we are a moderator that room and the room is blinded, this update needs to contain our unblinded pubkey, NOT the blinded one.
+ *
+ * @param convoId the convoId of the room to set the moderators
+ * @param moderators the updated list of moderators
+ */
+function setRoomDescriptionOutsideRedux(convoId: string, roomDescription: string) {
+  window.inboxStore?.dispatch(
+    setRoomDescription({
+      convoId,
+      roomDescription,
     })
   );
   return undefined;

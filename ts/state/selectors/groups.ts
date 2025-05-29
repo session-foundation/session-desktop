@@ -160,6 +160,19 @@ export function useLibGroupName(convoId?: string): string | undefined {
   return useSelector((state: StateType) => selectLibGroupName(state, convoId));
 }
 
+function selectLibGroupDescription(state: StateType, convo?: string): string {
+  if (!convo || !PubKey.is03Pubkey(convo)) {
+    return '';
+  }
+
+  const description = selectLibGroupsState(state).infos[convo]?.description;
+  return description ?? '';
+}
+
+export function useLibGroupDescription(convoId?: string): string {
+  return useSelector((state: StateType) => selectLibGroupDescription(state, convoId));
+}
+
 export function useLibGroupMembers(convoId?: string): Array<PubkeyType> {
   return useSelector((state: StateType) => selectLibMembersPubkeys(state, convoId));
 }

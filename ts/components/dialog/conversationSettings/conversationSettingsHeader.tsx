@@ -1,5 +1,6 @@
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
+import { useEffect, useRef, useState } from 'react';
 
 import { closeRightPanel } from '../../../state/ducks/conversations';
 import { resetRightOverlayMode } from '../../../state/ducks/section';
@@ -23,6 +24,8 @@ import { useChangeNickname } from '../../menuAndSettingsHooks/useChangeNickname'
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import { useEditProfilePictureCallback } from '../../menuAndSettingsHooks/useEditProfilePictureCallback';
+import { useRoomDescription } from '../../../state/selectors/sogsRoomInfo';
+import { useLibGroupDescription } from '../../../state/selectors/groups';
 
 function AccountId({ conversationId }: WithConvoId) {
   const isPrivate = useIsPrivate(conversationId);
@@ -50,13 +53,82 @@ function ChangeNicknameButton({ conversationId }: WithConvoId) {
   );
 }
 
-const FallbackDisplayName = styled.div`
+const StyledAccountId = styled.div`
   color: var(--text-secondary-color);
   text-align: center;
-  font-size: var(--font-display-size-sm);
   font-weight: 400;
   line-height: 1.2;
+  font-size: var(--font-display-size-sm);
+  font-family: var(--font-mono);
 `;
+
+const StyledDescription = styled.p<{ expanded: boolean }>`
+  color: var(--text-secondary-color);
+  font-size: var(--font-display-size-md);
+  text-align: center;
+  font-weight: 400;
+  line-height: 1.2;
+  background: transparent;
+  width: 100%;
+  white-space: pre-wrap;
+  overflow: hidden;
+  -webkit-line-clamp: ${({ expanded }) => (expanded ? 'unset' : '3')};
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  // some padding so we always have room to show the ellipsis, if needed
+  padding-inline: var(--margins-sm);
+`;
+
+const StyledViewMoreButton = styled.button`
+  color: var(--text-secondary-color);
+  text-align: center;
+  font-weight: 700;
+  transition-duration: var(--default-duration);
+
+  &:hover {
+    color: var(--text-primary-color);
+  }
+`;
+
+function Description({ conversationId }: WithConvoId) {
+  const roomDescription = useRoomDescription(conversationId);
+  const groupDescription = useLibGroupDescription(conversationId);
+  const [expanded, setExpanded] = useState(false);
+  const [isClamped, setIsClamped] = useState(false);
+  const ref = useRef<HTMLParagraphElement>(null);
+
+  const description = roomDescription || groupDescription;
+
+  // small hook to detect if View More/Less button should be shown, depending on
+  // if the description is overflowing the container
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) {
+      return;
+    }
+
+    const isOverflowing = el.scrollHeight > el.clientHeight;
+
+    setIsClamped(isOverflowing);
+  }, [description]);
+
+  if (!description) {
+    return null;
+  }
+
+  return (
+    <>
+      <StyledDescription data-testid="group-description" expanded={expanded} ref={ref}>
+        {description}
+      </StyledDescription>
+      {isClamped && (
+        <StyledViewMoreButton onClick={() => setExpanded(!expanded)}>
+          {expanded ? localize('viewLess').toString() : localize('viewMore').toString()}
+        </StyledViewMoreButton>
+      )}
+    </>
+  );
+}
 
 export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
   const dispatch = useDispatch();
@@ -121,20 +193,13 @@ export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
           <ChangeNicknameButton conversationId={conversationId} />
         </Flex>
         {hasNickname && conversationRealName ? (
-          <FallbackDisplayName data-testid="fallback-display-name">
+          <StyledAccountId data-testid="fallback-display-name">
             ({conversationRealName})
-          </FallbackDisplayName>
+          </StyledAccountId>
         ) : null}
+        <Description conversationId={conversationId} />
         <AccountId conversationId={conversationId} />
       </Flex>
     </Header>
   );
 };
-
-const StyledAccountId = styled.div`
-  font-family: var(--font-mono);
-  font-weight: 400;
-  font-size: var(--font-display-size-md);
-  text-align: center;
-  line-height: 1.2;
-`;

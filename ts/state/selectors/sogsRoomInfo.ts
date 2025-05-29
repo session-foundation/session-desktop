@@ -15,6 +15,14 @@ export function getCanWrite(state: StateType, selectedConvo?: string): boolean {
   return isNil(canWrite) ? true : canWrite;
 }
 
+function getRoomDescription(state: StateType, selectedConvo?: string) {
+  if (!selectedConvo) {
+    return '';
+  }
+  const roomDescription = getSogsRoomInfoState(state).rooms[selectedConvo]?.roomDescription;
+  return roomDescription ?? '';
+}
+
 export function getSubscriberCount(state: StateType, selectedConvo?: string): number {
   if (!selectedConvo) {
     return 0;
@@ -46,6 +54,11 @@ export function getCanWriteOutsideRedux(convoId: string): boolean {
   return state ? getCanWrite(state, convoId) : false;
 }
 
+export function getRoomDescriptionOutsideRedux(convoId: string): string {
+  const state = window.inboxStore?.getState();
+  return state ? getRoomDescription(state, convoId) : '';
+}
+
 export function getModeratorsOutsideRedux(convoId: string): Array<string> {
   const state = window.inboxStore?.getState();
   return state ? getModerators(state, convoId) : [];
@@ -59,4 +72,8 @@ export function useAvatarOfRoomIsUploading(convoId?: string) {
   return useSelector((state: StateType) =>
     convoId ? getSogsRoomInfoState(state).rooms[convoId]?.uploadingNewAvatar : false
   );
+}
+
+export function useRoomDescription(convoId?: string) {
+  return useSelector((state: StateType) => getRoomDescription(state, convoId));
 }

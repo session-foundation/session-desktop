@@ -112,6 +112,7 @@ import {
 import {
   getCanWriteOutsideRedux,
   getModeratorsOutsideRedux,
+  getRoomDescriptionOutsideRedux,
   getSubscriberCountOutsideRedux,
 } from '../state/selectors/sogsRoomInfo'; // decide it it makes sense to move this to a redux slice?
 
@@ -1618,6 +1619,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       moderators?: Array<string>;
       hidden_admins?: Array<string>;
       hidden_moderators?: Array<string>;
+      description?: string;
     };
   }) {
     if (!this.isPublic()) {
@@ -1651,13 +1653,16 @@ export class ConversationModel extends Model<ConversationAttributes> {
       hiddenModsOrAdmins: details.hidden_moderators,
       type: 'mods',
     });
+    hasChange = hasChange || modsChanged;
 
     if (details.name && details.name !== this.getRealSessionUsername()) {
       hasChange = hasChange || true;
       this.setSessionDisplayNameNoCommit(details.name);
     }
 
-    hasChange = hasChange || modsChanged;
+    if (this.handleRoomDescriptionChange({ description: details.description || '' })) {
+      hasChange = hasChange || true;
+    }
 
     if (this.isPublic() && details.image_id && isNumber(details.image_id)) {
       const roomInfos = OpenGroupData.getV2OpenGroupRoom(this.id);
@@ -2539,6 +2544,15 @@ export class ConversationModel extends Model<ConversationAttributes> {
           assertUnreachable(type, `handleSogsModsOrAdminsChanges: unhandled switch case: ${type}`);
       }
     }
+    return false;
+  }
+
+  private handleRoomDescriptionChange({ description }: { description: string }) {
+    if (getRoomDescriptionOutsideRedux(this.id) !== description) {
+      ReduxSogsRoomInfos.setRoomDescriptionOutsideRedux(this.id, description);
+      return true;
+    }
+
     return false;
   }
 

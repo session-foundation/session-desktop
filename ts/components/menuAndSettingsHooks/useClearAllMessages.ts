@@ -4,6 +4,7 @@ import { updateConfirmModal } from '../../state/ducks/modalDialog';
 import { SessionButtonColor } from '../basic/SessionButton';
 import { localize } from '../../localization/localeTools';
 import { useIsKickedFromGroup } from '../../hooks/useParamSelector';
+import { ToastUtils } from '../../session/utils';
 
 export function useClearAllMessagesCb({ conversationId }: { conversationId: string }) {
   const dispatch = useDispatch();
@@ -21,6 +22,7 @@ export function useClearAllMessagesCb({ conversationId }: { conversationId: stri
 
   const onClickOk = async () => {
     await deleteAllMessagesByConvoIdNoConfirmation(conversationId);
+    ToastUtils.pushDeleted(2);
     onClickClose();
   };
 

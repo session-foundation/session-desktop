@@ -83,6 +83,7 @@ declare module 'react' {
     | 'your-profile-name'
     | 'community-name'
     | 'group-name'
+    | 'group-description'
     | 'preferred-display-name'
     | 'fallback-display-name'
     | 'edit-profile-dialog'
