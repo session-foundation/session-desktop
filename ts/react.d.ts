@@ -61,6 +61,8 @@ declare module 'react' {
     `${'set-nickname' | 'open-url' | 'set-nickname' | 'update-group-info'}-confirm-button`;
   type CancelButtons = `${'update-group-info'}-cancel-button`;
 
+  type ClearButtons = `clear-${'group-info-description' | 'group-info-name' | 'nickname'}-button`;
+
   type SessionDataTestId =
     | 'group-member-status-text'
     | 'loading-spinner'
@@ -145,7 +147,7 @@ declare module 'react' {
     | 'accept-menu-item'
     | ConfirmButtons
     | CancelButtons
-    | 'clear-nickname-button'
+    | ClearButtons
 
     // timer options
     | DisappearTimeOptionDataTestId

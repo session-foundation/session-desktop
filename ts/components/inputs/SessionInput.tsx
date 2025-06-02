@@ -3,12 +3,12 @@ import {
   ReactNode,
   RefObject,
   SessionDataTestId,
+  useCallback,
   useEffect,
   useRef,
   useState,
   type PropsWithChildren,
 } from 'react';
-
 import { motion } from 'framer-motion';
 import { isEmpty, isEqual, isString } from 'lodash';
 import styled, { CSSProperties } from 'styled-components';
@@ -162,8 +162,6 @@ const StyledPlaceholder = styled(motion.div)<{
   transition: opacity var(--default-duration) color var(--default-duration);
   ${props => props.editable && 'cursor: pointer;'}
   line-height: 1;
-
-  ${props => props.editable && 'cursor: pointer;'}
   ${props => !props.centerText && props.padding && `padding: ${props.padding};`}
 
   background: transparent;
@@ -397,7 +395,6 @@ type Props = {
   required?: boolean;
   tabIndex?: number;
   loading?: boolean;
-  className?: string;
 };
 
 export const SessionInput = (props: Props) => {
@@ -427,7 +424,6 @@ export const SessionInput = (props: Props) => {
     required,
     tabIndex,
     loading,
-    className,
   } = props;
   const [inputValue, setInputValue] = useState('');
   const [hasError, setHasError] = useState(false);
@@ -523,7 +519,6 @@ export const SessionInput = (props: Props) => {
 
   return (
     <StyledSessionInput
-      className={className}
       $container={true}
       $flexDirection="column"
       $justifyContent="center"
@@ -602,12 +597,27 @@ export const SessionInput = (props: Props) => {
   );
 };
 
+function useUpdateInputValue(onValueChanged: (val: string) => void, disabled?: boolean) {
+  return useCallback(
+    (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      if (disabled) {
+        return;
+      }
+      e.preventDefault();
+      const val = e.target.value;
+
+      onValueChanged(val);
+    },
+    [disabled, onValueChanged]
+  );
+}
+
 /**
  * A simpler version of the SessionInput component.
  * Does not handle CTA, textarea, nor monospaced fonts.
  *
  * Also, error handling and value management is to be done by the parent component.
- * Providing `error` will make the input red and the error string displayed in it.
+ * Providing `error` will make the input red and the error string displayed below it.
  * This component should only be used for input that does not need remote validations, as the error
  * state is live. For remote validations, use the SessionInput component.
  */
@@ -625,7 +635,6 @@ export const SimpleSessionInput = (
     | 'padding'
     | 'required'
     | 'tabIndex'
-    | 'className'
   > &
     Required<Pick<Props, 'errorDataTestId'>> & {
       onValueChanged: (str: string) => void;
@@ -656,29 +665,20 @@ export const SimpleSessionInput = (
     padding,
     required,
     tabIndex,
-    className,
   } = props;
   const hasError = !isEmpty(providedError);
-  const correctType = 'text';
-
-  const updateInputValue = (e: ChangeEvent<HTMLInputElement>) => {
-    if (disabled) {
-      return;
-    }
-    e.preventDefault();
-    const val = e.target.value;
-
-    onValueChanged(val);
-  };
-
   const hasValue = !isEmpty(value);
+
+  const ref = useRef(inputRef?.current || null);
+
+  const updateInputValue = useUpdateInputValue(onValueChanged, disabled);
 
   const paddingInlineEnd = usePaddingForButtonInlineEnd({
     hasButtonInlineEnd: !!clearInputButtonDataTestId && hasValue,
   });
 
   const inputProps: any = {
-    type: correctType,
+    type: 'text',
     placeholder,
     value,
     textSize,
@@ -712,7 +712,6 @@ export const SimpleSessionInput = (
 
   return (
     <StyledSessionInput
-      className={className}
       $container={true}
       $flexDirection="column"
       $justifyContent="center"
@@ -721,7 +720,144 @@ export const SimpleSessionInput = (
       textSize={textSize}
     >
       <BorderWithErrorState hasError={hasError}>
-        <StyledInput {...inputProps} {...containerProps} ref={inputRef} aria-label={ariaLabel} />
+        <StyledInput {...inputProps} {...containerProps} ref={ref} aria-label={ariaLabel} />
+
+        {!disabled && hasValue && clearInputButtonDataTestId && (
+          <ClearInputButton
+            dataTestId={clearInputButtonDataTestId}
+            onClearInputClicked={() => {
+              onValueChanged('');
+            }}
+          />
+        )}
+      </BorderWithErrorState>
+
+      {hasError ? (
+        <>
+          <SpacerMD />
+          <SimpleErrorItem providedError={providedError} dataTestId={errorDataTestId} />
+        </>
+      ) : null}
+    </StyledSessionInput>
+  );
+};
+
+/**
+ * A simpler version of the SessionInput component as a TextArea.
+ * Does not handle CTA, centered placeholder, nor monospaced fonts.
+ *
+ * Also, and just like SimpleSessionInput, error handling and value management is to be done by the parent component.
+ * Providing `error` will make the textarea red and the error string displayed below it.
+ * This component should only be used for TextArea that does not need remote validations, as the error
+ * state is live. For remote validations, use the SessionInput component.
+ */
+export const SimpleSessionTextarea = (
+  props: Pick<
+    Props,
+    | 'placeholder'
+    | 'value'
+    | 'ariaLabel'
+    | 'maxLength'
+    | 'autoFocus'
+    | 'inputRef'
+    | 'inputDataTestId'
+    | 'textSize'
+    | 'padding'
+    | 'required'
+    | 'tabIndex'
+  > &
+    Required<Pick<Props, 'errorDataTestId'>> & {
+      onValueChanged: (str: string) => void;
+      providedError: string | LocalizerProps | undefined;
+      /**
+       * Provide this to show the clear input button
+       * */
+      clearInputButtonDataTestId?: SessionDataTestId;
+      disabled?: boolean;
+    }
+) => {
+  const {
+    placeholder,
+    value,
+    ariaLabel,
+    maxLength,
+    providedError,
+    onValueChanged,
+    autoFocus,
+    inputRef,
+    inputDataTestId,
+    errorDataTestId,
+    clearInputButtonDataTestId,
+    textSize = 'sm',
+    disabled,
+    padding,
+    required,
+    tabIndex,
+  } = props;
+  const hasError = !isEmpty(providedError);
+  const hasValue = !isEmpty(value);
+
+  const ref = useRef(inputRef?.current || null);
+
+  const updateInputValue = useUpdateInputValue(onValueChanged, disabled);
+
+  const paddingInlineEnd = usePaddingForButtonInlineEnd({
+    hasButtonInlineEnd: !!clearInputButtonDataTestId && hasValue,
+  });
+
+  const inputProps: any = {
+    type: 'text',
+    placeholder,
+    value,
+    textSize,
+    disabled,
+    maxLength,
+    padding,
+    autoFocus,
+    'data-testid': inputDataTestId,
+    required,
+    'aria-required': required,
+    tabIndex,
+    onChange: updateInputValue,
+    style: { paddingInlineEnd },
+    // no onEnterPressed/onKeyDown here, as this is a textarea (and multi lines are allowed)
+  };
+
+  const containerProps = {
+    noValue: !hasValue,
+    error: hasError,
+    textSize,
+    padding,
+  };
+
+  useEffect(() => {
+    const textarea = ref.current;
+    if (textarea) {
+      // don't ask me why, but we need to reset the height to auto before calculating it here
+      textarea.style.height = 'auto';
+      // we want 12 lines of text at most
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 12 * parseFloat(getComputedStyle(textarea).lineHeight))}px`;
+    }
+  }, [ref, value]);
+
+  return (
+    <StyledSessionInput
+      $container={true}
+      $flexDirection="column"
+      $justifyContent="center"
+      $alignItems="center"
+      error={hasError}
+      textSize={textSize}
+    >
+      <BorderWithErrorState hasError={hasError}>
+        <StyledTextAreaContainer {...containerProps}>
+          <textarea
+            {...inputProps}
+            placeholder={disabled ? value : placeholder}
+            ref={ref}
+            aria-label={ariaLabel}
+          />
+        </StyledTextAreaContainer>
 
         {!disabled && hasValue && clearInputButtonDataTestId && (
           <ClearInputButton

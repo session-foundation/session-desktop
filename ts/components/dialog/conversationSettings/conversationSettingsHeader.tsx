@@ -94,6 +94,7 @@ const StyledDescription = styled.p<{ expanded: boolean }>`
   -webkit-box-orient: vertical;
   // some padding so we always have room to show the ellipsis, if needed
   padding-inline: var(--margins-sm);
+  word-break: break-all;
 `;
 
 const StyledViewMoreButton = styled.button`
@@ -204,7 +205,7 @@ export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
           $flexDirection={'row'}
           $flexGap="var(--margins-xs)"
         >
-          <H4 dataTestId={dataTestId}>
+          <H4 dataTestId={dataTestId} style={{ wordBreak: 'break-all' }}>
             {isMe ? localize('noteToSelf').toString() : nicknameOrDisplayName}
           </H4>
           <ChangeNicknameButton conversationId={conversationId} />
