@@ -145,6 +145,7 @@ declare module 'react' {
     | 'accept-menu-item'
     | ConfirmButtons
     | CancelButtons
+    | 'clear-nickname-button'
 
     // timer options
     | DisappearTimeOptionDataTestId

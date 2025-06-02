@@ -135,6 +135,7 @@ import { NetworkTime } from '../util/NetworkTime';
 import { MessageQueue } from '../session/sending';
 import type { WithMessageHashOrNull } from '../session/types/with';
 import { Model } from './models';
+import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
 
 type InMemoryConvoInfos = {
   mentionedUs: boolean;
@@ -1268,18 +1269,16 @@ export class ConversationModel extends Model<ConversationAttributes> {
       return;
     }
     const trimmed = nickname && nickname.trim();
-    if (this.get('nickname') === trimmed) {
+    const truncatedNickname = trimmed?.slice(0, LIBSESSION_CONSTANTS.CONTACT_MAX_NAME_LENGTH);
+
+    if (this.get('nickname') === truncatedNickname) {
       return;
     }
-    // make sure to save the lokiDisplayName as name in the db. so a search of conversation returns it.
-    // (we look for matches in name too)
-    const realUserName = this.getRealSessionUsername();
 
-    if (!trimmed || !trimmed.length) {
-      this.set({ nickname: undefined, displayNameInProfile: realUserName });
-    } else {
-      this.set({ nickname: trimmed, displayNameInProfile: realUserName });
-    }
+    this.set({
+      nickname: truncatedNickname || undefined,
+      displayNameInProfile: this.getRealSessionUsername(),
+    });
 
     if (shouldCommit) {
       await this.commit();
