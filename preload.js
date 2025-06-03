@@ -202,6 +202,9 @@ ipc.on('get-theme-setting', () => {
   ipc.send('get-success-theme-setting', theme);
 });
 
+// Assume we are online until we are told otherwise (needed for restore from seed to work)
+window.isOnline = true;
+
 window.getSettingValue = (settingID, comparisonValue = null) => {
   // Comparison value allows you to pull boolean values from any type.
   // Eg. window.getSettingValue('theme', 'classic-dark')
