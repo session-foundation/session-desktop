@@ -1,3 +1,4 @@
+/* eslint-disable no-unneeded-ternary */
 import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 import type { CSSProperties } from 'styled-components';
@@ -26,13 +27,14 @@ import { SessionSpinner } from '../../../../loading';
 import { SessionTooltip } from '../../../../SessionTooltip';
 import { useHTMLDirection } from '../../../../../util/i18n/rtlSupport';
 import {
-  useUSDPrice,
-  useNetworkStakedTokens,
-  useNetworkStakedUSD,
   usePriceTimestamp,
+  useDataIsStale,
+  useNetworkStakedUSD,
+  useNetworkStakedTokens,
+  useUSDPrice,
 } from '../../../../../state/selectors/networkData';
 import { Grid } from '../../../../basic/Grid';
-import { useIsOnline } from '../../../../../state/selectors/onions';
+import { useInfoFakeRefreshing, useInfoLoading } from '../../../../../state/selectors/networkModal';
 
 const StyledStatsNumber = styled.strong`
   font-size: var(--font-size-h3-new);
@@ -40,22 +42,11 @@ const StyledStatsNumber = styled.strong`
   line-height: var(--font-line-height);
 `;
 
-const NodesStats = ({
-  securingNodesCount,
-  swarmNodeCount,
-  loading,
-  error,
-  style,
-}: {
-  securingNodesCount: number | undefined;
-  swarmNodeCount: number | undefined;
-  loading: boolean;
-  error?: Error;
-  style?: CSSProperties;
-}) => {
-  const isOnline = useIsOnline();
-  // NOTE We don't want to show the stats or the NodeImage unless we have both count values
-  const ready = isOnline && !loading && !error && swarmNodeCount && securingNodesCount;
+const NodesStats = ({ style }: { style?: CSSProperties }) => {
+  const { securingNodesCount, swarmNodeCount, dataIsStale } = useSecuringNodesCount();
+  const isFakeRefreshing = useInfoFakeRefreshing();
+
+  const infoLoading = useInfoLoading();
 
   return (
     <Flex
@@ -79,7 +70,15 @@ const NodesStats = ({
           <Localizer token={'sessionNetworkNodesSwarm'} />
         </SessionNetworkHeading>
         <StyledStatsNumber data-testid="your-swarm-amount">
-          {ready ? swarmNodeCount : <SessionSpinner loading={true} width="64px" height={'64px'} />}
+          {!infoLoading &&
+          !dataIsStale &&
+          !isFakeRefreshing &&
+          securingNodesCount &&
+          swarmNodeCount ? (
+            swarmNodeCount
+          ) : (
+            <SessionSpinner loading={true} width="64px" height={'64px'} />
+          )}
         </StyledStatsNumber>
       </Flex>
       <Flex
@@ -96,7 +95,7 @@ const NodesStats = ({
           <Localizer token={'sessionNetworkNodesSecuring'} />
         </SessionNetworkHeading>
         <StyledStatsNumber data-testid="nodes-securing-amount">
-          {ready ? (
+          {!dataIsStale && securingNodesCount && !isFakeRefreshing ? (
             `${abbreviateNumber(securingNodesCount, 0).toUpperCase()}`
           ) : (
             <SessionSpinner loading={true} width="64px" height={'64px'} />
@@ -107,21 +106,21 @@ const NodesStats = ({
   );
 };
 
-const CurrentPriceBlock = ({
-  loading,
-  usdPrice,
-}: {
-  loading: boolean;
-  usdPrice: number | null;
-}) => {
-  const isOnline = useIsOnline();
+const CurrentPriceBlock = () => {
   const isDarkTheme = useIsDarkTheme();
   const priceTimestamp = usePriceTimestamp();
-  const currentPrice = loading
-    ? localize('loading')
-    : isOnline && usdPrice
+  const usdPrice = useUSDPrice();
+  const infoLoading = useInfoLoading();
+  const isFakeRefreshing = useInfoFakeRefreshing();
+  const dataIsStale = useDataIsStale();
+
+  // if we have usdPrice (and not stale), we can show it
+  const currentPrice =
+    usdPrice && !isFakeRefreshing && !dataIsStale
       ? `$${formatNumber(usdPrice, { currency: LOCALE_DEFAULTS.usd_name_short, minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true })} ${LOCALE_DEFAULTS.usd_name_short}`
-      : localize('unavailable').toString();
+      : infoLoading || isFakeRefreshing
+        ? localize('loading')
+        : localize('unavailable').toString();
 
   return (
     <Block
@@ -158,7 +157,7 @@ const CurrentPriceBlock = ({
                 }),
           },
         }}
-        loading={loading}
+        loading={infoLoading || isFakeRefreshing || dataIsStale}
         dataTestId="tooltip-info"
         htmlString={true}
         style={{
@@ -185,23 +184,31 @@ const CurrentPriceBlock = ({
   );
 };
 
-const SecuredByBlock = ({
-  securedBySESH,
-  securedByUSD,
-  loading,
-}: {
-  securedBySESH: number | null;
-  securedByUSD: number | null;
-  loading: boolean;
-}) => {
-  const isOnline = useIsOnline();
+const SecuredByBlock = () => {
+  const securedBySESH = useNetworkStakedTokens();
+  const securedByUSD = useNetworkStakedUSD();
+  const dataIsStale = useDataIsStale();
   const isDarkTheme = useIsDarkTheme();
-  const securedAmountSESH = loading
-    ? localize('loading')
-    : isOnline && securedBySESH
+  const infoLoading = useInfoLoading();
+  const isFakeRefreshing = useInfoFakeRefreshing();
+
+  const securedAmountSESH =
+    securedBySESH && !isFakeRefreshing && !dataIsStale
       ? `${abbreviateNumber(securedBySESH, 0).toUpperCase()} ${LOCALE_DEFAULTS.token_name_short}`
-      : localize('unavailable').toString();
-  const securedAmountUSD = `$${isOnline && !loading && securedByUSD ? formatNumber(securedByUSD, { currency: LOCALE_DEFAULTS.usd_name_short, minimumFractionDigits: 0, maximumFractionDigits: 0, useGrouping: true }) : '-'} ${LOCALE_DEFAULTS.usd_name_short}`;
+      : infoLoading || isFakeRefreshing
+        ? localize('loading')
+        : localize('unavailable').toString();
+
+  const formattedNumberOrFallback =
+    securedByUSD && !isFakeRefreshing && !dataIsStale
+      ? formatNumber(securedByUSD, {
+          currency: LOCALE_DEFAULTS.usd_name_short,
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+          useGrouping: true,
+        })
+      : '-';
+  const securedAmountUSD = `$${formattedNumberOrFallback} ${LOCALE_DEFAULTS.usd_name_short}`;
 
   return (
     <Block
@@ -226,19 +233,13 @@ const SecuredByBlock = ({
   );
 };
 
-export function NetworkSection({ loading: _loading }: { loading: boolean }) {
+export function NetworkSection() {
   const htmlDirection = useHTMLDirection();
   const dispatch = useDispatch();
-  const usdPrice = useUSDPrice();
-  const securedBySESH = useNetworkStakedTokens();
-  const securedByUSD = useNetworkStakedUSD();
-  const {
-    securingNodesCount,
-    swarmNodeCount,
-    error,
-    loading: countsLoading,
-  } = useSecuringNodesCount();
-  const loading = countsLoading || _loading;
+
+  const { swarmNodeCount, dataIsStale } = useSecuringNodesCount();
+
+  const isFakeRefreshing = useInfoFakeRefreshing();
 
   return (
     <Flex
@@ -278,21 +279,11 @@ export function NetworkSection({ loading: _loading }: { loading: boolean }) {
           count={swarmNodeCount ?? 0}
           width={'153px'}
           height={'133px'}
-          loading={loading || !swarmNodeCount || !securingNodesCount}
-          error={error}
+          loading={!swarmNodeCount || dataIsStale || isFakeRefreshing}
         />
-        <NodesStats
-          securingNodesCount={securingNodesCount}
-          swarmNodeCount={swarmNodeCount}
-          loading={loading}
-          error={error}
-        />
-        <CurrentPriceBlock loading={loading} usdPrice={usdPrice} />
-        <SecuredByBlock
-          securedBySESH={securedBySESH}
-          securedByUSD={securedByUSD}
-          loading={loading}
-        />
+        <NodesStats />
+        <CurrentPriceBlock />
+        <SecuredByBlock />
       </Grid>
       <SpacerMD />
     </Flex>

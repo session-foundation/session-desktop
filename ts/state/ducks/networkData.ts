@@ -1,12 +1,14 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { isEmpty } from 'lodash';
+
 import type { InfoResponse } from '../../session/apis/network_api/types';
 import type { DeepNullable } from '../../types/Util';
-import { setInfoLoading, setLastRefreshedTimestamp } from './networkModal';
+import { setInfoFakeRefreshing, setInfoLoading, setLastRefreshedTimestamp } from './networkModal';
 import NetworkApi from '../../session/apis/network_api/NetworkApi';
 import type { StateType } from '../reducer';
-import { sleepFor } from '../../session/utils/Promise';
 import { DURATION } from '../../session/constants';
 import { batchGlobalIsSuccess } from '../../session/apis/open_group_api/sogsv3/sogsV3BatchPoll';
+import { sleepFor } from '../../session/utils/Promise';
 
 export type NetworkDataState = DeepNullable<InfoResponse>;
 
@@ -79,7 +81,7 @@ const fetchInfoFromSeshServer = createAsyncThunk(
 
 const refreshInfoFromSeshServer = createAsyncThunk(
   'networkData/refreshInfoFromSeshServer',
-  async ({ forceRefresh }: { forceRefresh?: boolean }, payloadCreator) => {
+  async (_opts, payloadCreator) => {
     if (window.sessionFeatureFlags?.debug.debugServerRequests) {
       window.log.info(
         `[networkData/refreshInfoFromSeshServer] starting ${new Date().toISOString()}`
@@ -87,25 +89,26 @@ const refreshInfoFromSeshServer = createAsyncThunk(
     }
 
     const state = payloadCreator.getState() as StateType;
-    const infoLoading = state.networkModal.infoLoading;
+    const { infoFakeRefreshing, infoLoading } = state.networkModal;
     const infoTimestamp = state.networkData.t;
     const stalePriceTimestamp = state.networkData.price.t_stale;
 
-    if (
-      !forceRefresh &&
-      infoTimestamp &&
-      stalePriceTimestamp &&
-      Date.now() / 1000 <= stalePriceTimestamp
-    ) {
+    // if we are already fake refreshing, cancel this call
+    if (infoFakeRefreshing) {
+      return;
+    }
+
+    if (infoTimestamp && stalePriceTimestamp && Date.now() / 1000 <= stalePriceTimestamp) {
       if (window.sessionFeatureFlags?.debug.debugServerRequests) {
         window.log.info(
-          `[networkData/refreshInfoFromSeshServer] using cache. Data will be stale in ${new Date(stalePriceTimestamp * 1000).toISOString()}`
+          `[networkData/refreshInfoFromSeshServer] using cache. Data will be stale at ${new Date(stalePriceTimestamp * 1000).toISOString()}`
         );
       }
-      payloadCreator.dispatch(setInfoLoading(true));
+      payloadCreator.dispatch(setInfoFakeRefreshing(true));
       await sleepFor(0.5 * DURATION.SECONDS);
+      payloadCreator.dispatch(setInfoFakeRefreshing(false));
       payloadCreator.dispatch(setLastRefreshedTimestamp(Date.now()));
-      payloadCreator.dispatch(setInfoLoading(false));
+
       return;
     }
 
@@ -158,9 +161,15 @@ export const networkDataSlice = createSlice({
       const { t, status_code, price, token, network } = action.payload;
       state.t = t;
       state.status_code = status_code;
-      state.price = price;
-      state.token = token;
-      state.network = network;
+      if (!isEmpty(price)) {
+        state.price = price;
+      }
+      if (!isEmpty(token)) {
+        state.token = token;
+      }
+      if (!isEmpty(network)) {
+        state.network = network;
+      }
     });
     builder.addCase(fetchInfoFromSeshServer.rejected, (_state, action) => {
       window.log.error(

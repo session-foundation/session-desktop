@@ -12,8 +12,12 @@ import { showLinkVisitWarningDialog } from '../../OpenUrlModal';
 import { formatNumber } from '../../../../util/i18n/formatting/generics';
 import { useIsDarkTheme } from '../../../../state/theme/selectors/theme';
 import { useHTMLDirection } from '../../../../util/i18n/rtlSupport';
-import { useStakingRewardPool, useUSDMarketCap } from '../../../../state/selectors/networkData';
-import { useIsOnline } from '../../../../state/selectors/onions';
+import {
+  useDataIsStale,
+  useStakingRewardPool,
+  useUSDMarketCap,
+} from '../../../../state/selectors/networkData';
+import { useInfoFakeRefreshing, useInfoLoading } from '../../../../state/selectors/networkModal';
 
 const StyledTokenSection = styled(Flex)<{ loading: boolean }>`
   font-size: var(--font-display-size-lg);
@@ -58,36 +62,40 @@ const TokenSection = ({
   );
 };
 
-export function StakeSection({ loading }: { loading: boolean }) {
-  const isOnline = useIsOnline();
+export function StakeSection() {
   const htmlDirection = useHTMLDirection();
   const isDarkTheme = useIsDarkTheme();
+  const infoLoading = useInfoLoading();
 
   const stakingRewardPool = useStakingRewardPool();
   const usdMarketCap = useUSDMarketCap();
+  const dataIsStale = useDataIsStale();
 
   const dispatch = useDispatch();
+  const isFakeRefreshing = useInfoFakeRefreshing();
 
-  const stakingRewardPoolValue = loading
-    ? localize('loading').toString()
-    : isOnline && stakingRewardPool
+  const stakingRewardPoolValue =
+    stakingRewardPool && !isFakeRefreshing && !dataIsStale
       ? `${formatNumber(stakingRewardPool, {
           minimumFractionDigits: 0,
           maximumFractionDigits: 0,
           useGrouping: true,
         })} ${LOCALE_DEFAULTS.token_name_short}`
-      : localize('unavailable').toString();
+      : infoLoading || isFakeRefreshing
+        ? localize('loading').toString()
+        : localize('unavailable').toString();
 
-  const networkMarketCapValue = loading
-    ? localize('loading').toString()
-    : isOnline && usdMarketCap
+  const networkMarketCapValue =
+    usdMarketCap && !isFakeRefreshing && !dataIsStale
       ? `$${formatNumber(usdMarketCap, {
           currency: LOCALE_DEFAULTS.usd_name_short,
           minimumFractionDigits: 0,
           maximumFractionDigits: 0,
           useGrouping: true,
         })} ${LOCALE_DEFAULTS.usd_name_short}`
-      : localize('unavailable').toString();
+      : infoLoading || isFakeRefreshing
+        ? localize('loading').toString()
+        : localize('unavailable').toString();
 
   return (
     <Flex
@@ -108,13 +116,13 @@ export function StakeSection({ loading }: { loading: boolean }) {
         <TokenSection
           text={LOCALE_DEFAULTS.staking_reward_pool}
           value={stakingRewardPoolValue}
-          loading={loading || !stakingRewardPool}
+          loading={infoLoading || !stakingRewardPool || isFakeRefreshing || dataIsStale}
           dataTestId={'staking-reward-pool-amount'}
         />
         <TokenSection
           text={localize('sessionNetworkMarketCap').toString()}
           value={networkMarketCapValue}
-          loading={loading || !usdMarketCap}
+          loading={infoLoading || !usdMarketCap || isFakeRefreshing || dataIsStale}
           dataTestId={'market-cap-amount'}
         />
       </Flex>

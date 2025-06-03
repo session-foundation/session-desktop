@@ -2,6 +2,7 @@ import { useSelector } from 'react-redux';
 import type { Address } from 'viem';
 import type { StateType } from '../reducer';
 import type { NetworkDataState } from '../ducks/networkData';
+import { NetworkTime } from '../../util/NetworkTime';
 
 export const getNetworkData = (state: StateType): NetworkDataState => {
   return state.networkData;
@@ -12,30 +13,44 @@ const getInfoTimestamp = (state: StateType) => getNetworkData(state).t || 0;
 
 const getNetworkStatusCode = (state: StateType) => getNetworkData(state).status_code;
 
-const getUSDPrice = (state: StateType) => getNetworkData(state).price.usd;
+const getUSDPrice = (state: StateType) => getNetworkData(state).price?.usd;
 
-const getUSDMarketCap = (state: StateType) => getNetworkData(state).price.usd_market_cap;
+const getUSDMarketCap = (state: StateType) => getNetworkData(state).price?.usd_market_cap;
 
-const getPriceTimestamp = (state: StateType) => getNetworkData(state).price.t_price;
+const getPriceTimestamp = (state: StateType) => getNetworkData(state).price?.t_price;
 
-const getStalePriceTimestamp = (state: StateType) => getNetworkData(state).price.t_stale;
+const getStalePriceTimestamp = (state: StateType) => {
+  const t_stale = getNetworkData(state).price?.t_stale;
+  return t_stale;
+};
 
-const getStakingRequirement = (state: StateType) => getNetworkData(state).token.staking_requirement;
+const getStakingRequirement = (state: StateType) =>
+  getNetworkData(state).token?.staking_requirement;
 
-const getStakingRewardPool = (state: StateType) => getNetworkData(state).token.staking_reward_pool;
+const getStakingRewardPool = (state: StateType) => getNetworkData(state).token?.staking_reward_pool;
 
-const getTokenContractAddress = (state: StateType) => getNetworkData(state).token.contract_address;
+const getTokenContractAddress = (state: StateType) => getNetworkData(state).token?.contract_address;
 
-const getNetworkSize = (state: StateType) => getNetworkData(state).network.network_size;
+const getNetworkSize = (state: StateType) => getNetworkData(state).network?.network_size;
 
 const getNetworkStakedTokens = (state: StateType) =>
-  getNetworkData(state).network.network_staked_tokens;
+  getNetworkData(state).network?.network_staked_tokens;
 
-const getNetworkStakedUSD = (state: StateType) => getNetworkData(state).network.network_staked_usd;
+const getNetworkStakedUSD = (state: StateType) => getNetworkData(state).network?.network_staked_usd;
 
 // #endregion
 
 // #region - Hooks
+
+/**
+ * @returns true if we have stale data (or not data)
+ */
+export const useDataIsStale = (): boolean => {
+  const staleTimestamp = useStalePriceTimestamp() || 0;
+
+  return NetworkTime.getNowWithNetworkOffsetSeconds() > staleTimestamp;
+};
+
 export const useInfoTimestamp = (): number => {
   return useSelector(getInfoTimestamp);
 };
@@ -45,11 +60,13 @@ export const useNetworkStatusCode = (): number | null => {
 };
 
 export const useUSDPrice = (): number | null => {
-  return useSelector(getUSDPrice);
+  const usdPrice = useSelector(getUSDPrice);
+  return usdPrice;
 };
 
 export const useUSDMarketCap = (): number | null => {
-  return useSelector(getUSDMarketCap);
+  const usdMarketCap = useSelector(getUSDMarketCap);
+  return usdMarketCap;
 };
 
 export const usePriceTimestamp = (): number | null => {
@@ -65,7 +82,8 @@ export const useStakingRequirement = (): number | null => {
 };
 
 export const useStakingRewardPool = (): number | null => {
-  return useSelector(getStakingRewardPool);
+  const stakingRewardPool = useSelector(getStakingRewardPool);
+  return stakingRewardPool;
 };
 
 export const useTokenContractAddress = (): Address | null => {
@@ -77,11 +95,13 @@ export const useNetworkSize = (): number | null => {
 };
 
 export const useNetworkStakedTokens = (): number | null => {
-  return useSelector(getNetworkStakedTokens);
+  const networkStakedTokens = useSelector(getNetworkStakedTokens);
+  return networkStakedTokens;
 };
 
 export const useNetworkStakedUSD = (): number | null => {
-  return useSelector(getNetworkStakedUSD);
+  const networkStakedUSD = useSelector(getNetworkStakedUSD);
+  return networkStakedUSD;
 };
 
 // #endregion

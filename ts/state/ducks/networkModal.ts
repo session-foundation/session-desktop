@@ -3,14 +3,17 @@ import type { LocalizerProps } from '../../components/basic/Localizer';
 
 export type NetworkModalState = {
   infoLoading: boolean;
-  nodesLoading: boolean;
+  /**
+   * Use to simulate a refresh of the data, when we have some data in the cache still valid (not stale)
+   */
+  infoFakeRefreshing: boolean;
   lastRefreshedTimestamp: number;
   errorMessage: LocalizerProps | null;
 };
 
 export const initialNetworkModalState: NetworkModalState = {
   infoLoading: false,
-  nodesLoading: false,
+  infoFakeRefreshing: false,
   lastRefreshedTimestamp: 0,
   errorMessage: null,
 };
@@ -23,8 +26,8 @@ export const networkModalSlice = createSlice({
       state.infoLoading = action.payload;
       return state;
     },
-    setNodesLoading(state, action: PayloadAction<boolean>) {
-      state.nodesLoading = action.payload;
+    setInfoFakeRefreshing(state, action: PayloadAction<boolean>) {
+      state.infoFakeRefreshing = action.payload;
       return state;
     },
     setLastRefreshedTimestamp(state, action: PayloadAction<number>) {
@@ -38,6 +41,6 @@ export const networkModalSlice = createSlice({
   },
 });
 
-export const { setInfoLoading, setNodesLoading, setLastRefreshedTimestamp, setErrorMessage } =
+export const { setInfoLoading, setInfoFakeRefreshing, setLastRefreshedTimestamp, setErrorMessage } =
   networkModalSlice.actions;
 export default networkModalSlice.reducer;

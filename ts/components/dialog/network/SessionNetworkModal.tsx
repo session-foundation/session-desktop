@@ -8,19 +8,18 @@ import { StakeSection } from './sections/StakeSection';
 import { ExtraSmallText, LastRefreshedText } from './components';
 import { SpacerMD, SpacerXL, SpacerXS } from '../../basic/Text';
 import {
+  useInfoFakeRefreshing,
   useInfoLoading,
   useLastRefreshedTimestamp,
-  useNodesLoading,
 } from '../../../state/selectors/networkModal';
 import { NetworkSection } from './sections/network/NetworkSection';
 import { networkDataActions } from '../../../state/ducks/networkData';
-import { useIsOnline } from '../../../state/selectors/onions';
+import { useDataIsStale } from '../../../state/selectors/networkData';
 
 export function SessionNetworkModal() {
-  const isOnline = useIsOnline();
-
   const infoLoading = useInfoLoading();
-  const nodesLoading = useNodesLoading();
+  const isFakeRefreshing = useInfoFakeRefreshing();
+  const dataIsStale = useDataIsStale();
 
   const lastRefreshedTimestamp = useLastRefreshedTimestamp();
 
@@ -30,35 +29,35 @@ export function SessionNetworkModal() {
     dispatch(updateSessionNetworkModal(null));
   };
 
+  const loading = infoLoading || isFakeRefreshing;
+
   return (
     <AnimatePresence>
       <SessionWrapperModal2
         title={LOCALE_DEFAULTS.network_name}
+        bigHeader={true}
         onClose={onClose}
         contentBorder={false}
         shouldOverflow={true}
         showExitIcon={true}
         headerIconButtons={[
           {
-            rotateDuration: infoLoading ? 1.5 : undefined,
+            rotateDuration: loading ? 1.5 : undefined,
             iconType: 'resend',
             onClick: () => {
-              if (infoLoading) {
+              if (loading) {
                 return;
               }
-              dispatch(
-                networkDataActions.refreshInfoFromSeshServer({ forceRefresh: !isOnline }) as any
-              );
+              dispatch(networkDataActions.refreshInfoFromSeshServer() as any);
             },
             dataTestIdIcon: 'refresh-button',
-            disabled: infoLoading,
+            disabled: loading,
           },
         ]}
-        bigHeader={true}
       >
-        <NetworkSection loading={infoLoading} />
-        <StakeSection loading={infoLoading} />
-        {lastRefreshedTimestamp && !infoLoading && !nodesLoading ? (
+        <NetworkSection />
+        <StakeSection />
+        {!dataIsStale && lastRefreshedTimestamp && !loading ? (
           <>
             <SpacerXL />
             <ExtraSmallText color={'var(--text-secondary-color)'} textAlignment="center">

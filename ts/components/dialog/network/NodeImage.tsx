@@ -13,7 +13,7 @@ import { NodeGraph6 } from './nodes/NodeGraph6';
 import { NodeGraph7 } from './nodes/NodeGraph7';
 import { NodeGraph8 } from './nodes/NodeGraph8';
 import { NodeGraph9 } from './nodes/NodeGraph9';
-import { useIsOnline } from '../../../state/selectors/onions';
+import { useSecuringNodesCount } from './sections/network/hooks/useSecuringNodesCount';
 
 const StyledNodeImage = styled(Block)`
   display: flex;
@@ -42,31 +42,25 @@ type Props = {
   width: string;
   height: string;
   loading?: boolean;
-  error?: Error;
 };
 
-export const NodeImage = (props: Props) => {
-  const { count, width, height, loading, error } = props;
-  const isOnline = useIsOnline();
+const nodeComps: Record<number, (props: NodeGraphProps) => JSX.Element> = {
+  1: NodeGraph1,
+  2: NodeGraph2,
+  3: NodeGraph3,
+  4: NodeGraph4,
+  5: NodeGraph5,
+  6: NodeGraph6,
+  7: NodeGraph7,
+  8: NodeGraph8,
+  9: NodeGraph9,
+  10: NodeGraph10,
+};
 
-  if (error) {
-    window.log.error(`[NodeImage] node count error: ${error}`);
-  }
+export const NodeImage = ({ width, height, loading }: Props) => {
+  const { swarmNodeCount } = useSecuringNodesCount();
 
-  const nodeComps: Record<number, (props: NodeGraphProps) => JSX.Element> = {
-    1: NodeGraph1,
-    2: NodeGraph2,
-    3: NodeGraph3,
-    4: NodeGraph4,
-    5: NodeGraph5,
-    6: NodeGraph6,
-    7: NodeGraph7,
-    8: NodeGraph8,
-    9: NodeGraph9,
-    10: NodeGraph10,
-  };
-
-  const NodeComp = nodeComps[count];
+  const NodeComp = nodeComps[swarmNodeCount ?? 0];
   const sharedNodeProps = {
     nodeColor: 'var(--primary-color)',
     pathColor: 'var(--text-primary-color)',
@@ -74,7 +68,7 @@ export const NodeImage = (props: Props) => {
     height,
   };
 
-  const ready = isOnline && !loading && !error && NodeComp;
+  const ready = !loading && NodeComp;
 
   return (
     <StyledNodeImage

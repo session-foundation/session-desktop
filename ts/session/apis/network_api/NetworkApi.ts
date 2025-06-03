@@ -1,5 +1,5 @@
-import { AbortController } from 'abort-controller';
 import { isEmpty } from 'lodash';
+import AbortController from 'abort-controller';
 import { BlindingActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { OnionSending, type OnionV4JSONSnodeResponse } from '../../onions/onionSend';
 import { fromUInt8ArrayToBase64 } from '../../utils/String';
@@ -12,6 +12,7 @@ import { type InfoResponse, type NetworkAPIResponse, type ValidateHeaderResponse
 import { UserUtils } from '../../utils';
 import { SERVER_HOSTS } from '..';
 import { DURATION } from '../../constants';
+import { timeoutWithAbort } from '../../utils/Promise';
 
 const networkApiPubkey = 'cbf461a4431dc9174dceef4421680d743a2a0e1a3131fc794240bcb0bc3dd449';
 
@@ -95,7 +96,6 @@ export default class NetworkApi {
       headers,
       stringifiedBody: body || null,
       pubkey: this.pubkey,
-      abortSignal: new AbortController().signal,
       timeoutMs,
     };
 
@@ -106,8 +106,13 @@ export default class NetworkApi {
     if (window.sessionFeatureFlags?.debug.debugServerRequests) {
       window.log.info(`[network api] ${request.endpoint}\nrequest:`, JSON.stringify(request));
     }
+    const controller = new AbortController();
+    const result = await timeoutWithAbort(
+      OnionSending.sendJsonViaOnionV4ToSeshServer({ ...request, abortSignal: controller.signal }),
+      request.timeoutMs,
+      controller
+    );
 
-    const result = await OnionSending.sendJsonViaOnionV4ToSeshServer(request);
     const response = this.handleOnionResponse(result, request.endpoint);
 
     if (window.sessionFeatureFlags?.debug.debugServerRequests) {

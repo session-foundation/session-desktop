@@ -160,7 +160,7 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
           case 'session-network':
             // if the network modal is not open yet do an info request
             if (focusedSettingsSection !== 'session-network') {
-              dispatch(networkDataActions.refreshInfoFromSeshServer({}) as any);
+              dispatch(networkDataActions.refreshInfoFromSeshServer() as any);
             }
             dispatch(updateSessionNetworkModal({}));
             break;
