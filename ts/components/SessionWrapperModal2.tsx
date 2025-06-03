@@ -71,9 +71,10 @@ const StyledModal = styled.div<{
   }
 
   ${StyledModalHeader} {
-    ${props =>
-      props.scrolled &&
-      `margin-bottom: ${props.bigHeader ? 'var(--margins-sm)' : 'var(--margins-xs)'}; border-bottom: 1px solid var(--border-color); box-shadow: 0px 0px 20px 8px var(--modal-shadow-color);`}
+    box-shadow: ${props => (props.scrolled ? '0px 0px 20px 8px var(--modal-shadow-color)' : '')};
+    border-bottom: ${props =>
+      props.scrolled ? '1px solid var(--border-color)' : '1px solid var(--transparent-color)'};
+    margin-bottom: ${props => (props.bigHeader ? 'var(--margins-sm)' : 'var(--margins-xs)')};
   }
 `;
 

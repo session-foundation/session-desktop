@@ -11,7 +11,6 @@ import { requestSnodesForPubkeyFromNetwork } from './getSwarmFor';
 import { Onions } from '.';
 import { ed25519Str } from '../../utils/String';
 import { SnodePoolConstants } from './snodePoolConstants';
-import { UserUtils } from '../../utils';
 
 let randomSnodePool: Array<Snode> = [];
 
@@ -304,6 +303,20 @@ async function getSwarmFromCacheOrDb(pubkey: string): Promise<Array<string>> {
 }
 
 /**
+ * Returns the swarm size for the specified pubkey.
+ * Note: this function does not fetch from the network or the database
+ *
+ */
+function getCachedSwarmSizeForPubkey(pubkey: string) {
+  // NOTE: important that maybeNodes is not [] here
+  const existingCache = swarmCache.get(pubkey);
+  if (existingCache === undefined) {
+    return null;
+  }
+  return existingCache.length;
+}
+
+/**
  * This call fetch from cache or db the swarm and extract only the one currently reachable.
  * If not enough snodes valid are in the swarm, if fetches new snodes for this pubkey from the network.
  */
@@ -356,14 +369,6 @@ async function getSwarmFromNetworkAndSave(pubkey: string) {
   return shuffledSwarm;
 }
 
-async function getSwarmNodeCount() {
-  return (await getSwarmFromCacheOrDb(UserUtils.getOurPubKeyStrFromCache())).length;
-}
-
-async function getSnodePoolCount() {
-  return (await getSnodePoolFromDBOrFetchFromSeed()).length;
-}
-
 export const SnodePool = {
   // snode pool
   dropSnodeFromSnodePool,
@@ -371,16 +376,16 @@ export const SnodePool = {
   getRandomSnode,
   getRandomSnodePool,
   getSnodePoolFromDBOrFetchFromSeed,
-  getSnodePoolCount,
 
   // swarm
   dropSnodeFromSwarmIfNeeded,
   updateSwarmFor,
   getSwarmFromCacheOrDb,
+
   getSwarmFor,
   getNodeFromSwarmOrThrow,
   getFreshSwarmFor,
-  getSwarmNodeCount,
+  getCachedSwarmSizeForPubkey,
 
   // tests
   TEST_resetState,
