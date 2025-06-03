@@ -121,7 +121,6 @@
   "banUser": "Drausti naudotoją",
   "banUserBanned": "Vartotojas užblokuotas",
   "block": "Užblokuoti",
-  "blockBlockedDescription": "Atblokuokite šį kontaktą, kad išsiųstumėte žinutę.",
   "blockBlockedNone": "Nėra užblokuotų adresatų",
   "blockBlockedUser": "Užblokuotas {name}",
   "blockDescription": "Ar tikrai norite užblokuoti <b>{name}</b>? Užblokuoti naudotojai negali siųsti žinučių užklausų, grupių kvietimų ar skambinti jums.",

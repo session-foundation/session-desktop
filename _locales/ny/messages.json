@@ -121,7 +121,6 @@
   "banUser": "Ban User",
   "banUserBanned": "Munthu wotsalira atachotsedwa",
   "block": "Block",
-  "blockBlockedDescription": "Pokankha Lamulo Llitsa lemba uthenga.",
   "blockBlockedNone": "Palibe Zilumikizana Zotsekedwa",
   "blockBlockedUser": "Blocked {name}",
   "blockDescription": "Mukutsimikiza kuti mukufuna kuletsa <b>{name}?</b>? Ogwiritsa omwe aletsedwa sangathe kukutumizirani mauthenga ofunira, kukupemphani mu mgulu kapena kukuyimbirani.",

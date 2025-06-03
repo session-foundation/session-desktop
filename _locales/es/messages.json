@@ -124,7 +124,6 @@
   "banUser": "Banear usuario",
   "banUserBanned": "Usuario expulsado",
   "block": "Bloquear",
-  "blockBlockedDescription": "Desbloquea este contacto para enviar mensajes.",
   "blockBlockedNone": "No hay contactos bloqueados",
   "blockBlockedUser": "Bloqueado {name}",
   "blockDescription": "¿Estás seguro de que quieres bloquear a <b>{name}?</b> Los usuarios bloqueados no pueden enviarte solicitudes de mensajes, invitaciones a grupos ni llamarte.",

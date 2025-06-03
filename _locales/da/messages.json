@@ -142,7 +142,6 @@
   "banUserBanned": "Bruger bandlyst",
   "banUserDescription": "Indtast konto-ID'et for den bruger, du vil blokere",
   "block": "Bloker",
-  "blockBlockedDescription": "Fjern blokering af denne kontakt for at sende en besked.",
   "blockBlockedNone": "Ingen blokerede kontakter",
   "blockBlockedUser": "Blokeret {name}",
   "blockDescription": "Er du sikker på, at du vil blokere <b>{name}?</b> Blokerede brugere kan ikke sende dig beskedanmodninger, gruppeinvitationer eller ringe til dig.",

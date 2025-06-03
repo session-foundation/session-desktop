@@ -142,7 +142,6 @@
   "banUserBanned": "Zablokowano użytkownikowi dostęp",
   "banUserDescription": "Wprowadź identyfikator konta użytkownika, którego chcesz zablokować",
   "block": "Zablokuj",
-  "blockBlockedDescription": "Odblokuj ten kontakt, aby wysłać wiadomość.",
   "blockBlockedNone": "Brak zablokowanych kontaktów",
   "blockBlockedUser": "Zablokowano {name}",
   "blockDescription": "Czy na pewno chcesz zablokować <b>{name}</b>? Zablokowani użytkownicy nie mogą wysyłać próśb o wiadomości, zaproszeń do grupy ani dzwonić.",

@@ -121,7 +121,6 @@
   "banUser": "Ban User",
   "banUserBanned": "Omukozesa asazibwaamu",
   "block": "Block",
-  "blockBlockedDescription": "Sazaamu omukozesa kuno okusindika obubaka.",
   "blockBlockedNone": "Tolina mikutu",
   "blockBlockedUser": "Blocked {name}",
   "blockDescription": "Oli mbanankubye <b>{name} </b>? Abanankubize tebayinza kusindikidde obubaka, obubaka bw'ekibinja oba okubakubira simu.",
