@@ -3,6 +3,7 @@ import { KeyboardEvent, MouseEvent, SessionDataTestId, ReactNode, forwardRef, me
 import clsx from 'clsx';
 import styled from 'styled-components';
 import { SessionIcon, SessionIconProps } from './SessionIcon';
+import { LucideIcon, type LucideIconProps } from './LucideIcon';
 
 export type SessionIconButtonProps = SessionIconProps & {
   onClick?: (e?: MouseEvent<HTMLButtonElement>) => void;
@@ -128,3 +129,78 @@ const SessionIconButtonInner = forwardRef<HTMLButtonElement, SessionIconButtonPr
 );
 
 export const SessionIconButton = memo(SessionIconButtonInner, _.isEqual);
+
+export const SessionLucideIconButton = (
+  props: Pick<
+    SessionIconButtonProps,
+    | 'onClick'
+    | 'disabled'
+    | 'isSelected'
+    | 'margin'
+    | 'padding'
+    | 'ariaLabel'
+    | 'title'
+    | 'dataTestId'
+    | 'dataTestIdIcon'
+    | 'style'
+    | 'tabIndex'
+  > &
+    Pick<LucideIconProps, 'unicode' | 'iconSize' | 'iconColor'>
+) => {
+  const {
+    unicode,
+    iconSize,
+    isSelected: $isSelected,
+    margin,
+    padding,
+    ariaLabel,
+    title,
+    dataTestId,
+    dataTestIdIcon,
+    style,
+    iconColor,
+    tabIndex,
+    disabled,
+    onClick,
+  } = props;
+
+  const clickHandler = (e: MouseEvent<HTMLButtonElement>) => {
+    if (!disabled && onClick) {
+      e.stopPropagation();
+      onClick(e);
+    }
+  };
+  const keyPressHandler = (e: KeyboardEvent<HTMLButtonElement>) => {
+    if (e.currentTarget.tabIndex > -1 && e.key === 'Enter' && !disabled && onClick) {
+      e.stopPropagation();
+      onClick();
+    }
+  };
+
+  return (
+    <StyledSessionIconButton
+      color={iconColor}
+      $isSelected={$isSelected}
+      title={title}
+      aria-label={ariaLabel}
+      onClick={clickHandler}
+      style={{
+        ...style,
+        display: style?.display ? style.display : 'flex',
+        margin: margin || '',
+        padding: padding || '',
+      }}
+      tabIndex={tabIndex}
+      onKeyDown={keyPressHandler}
+      disabled={disabled}
+      data-testid={dataTestId}
+    >
+      <LucideIcon
+        unicode={unicode}
+        iconSize={iconSize}
+        iconColor={iconColor}
+        dataTestId={dataTestIdIcon}
+      />
+    </StyledSessionIconButton>
+  );
+};
