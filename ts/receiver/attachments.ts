@@ -9,11 +9,11 @@ import { decryptAttachment } from '../util/crypto/attachmentsEncrypter';
 import { callUtilsWorker } from '../webworker/workers/browser/util_worker_interface';
 import { sogsV3FetchFileByFileID } from '../session/apis/open_group_api/sogsv3/sogsV3FetchFile';
 import { OpenGroupData } from '../data/opengroups';
+import { OpenGroupRequestCommonType } from '../data/types';
 import {
   downloadFileFromFileServer,
   fileServerURL,
 } from '../session/apis/file_server_api/FileServerApi';
-import { OpenGroupRequestCommonType } from '../data/types';
 
 export async function downloadAttachment(attachment: {
   url: string;

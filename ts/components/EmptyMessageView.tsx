@@ -1,7 +1,6 @@
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { getLeftPaneConversationIdsCount } from '../state/selectors/conversations';
-import { useIsDarkTheme } from '../state/selectors/theme';
 import { isSignWithRecoveryPhrase } from '../util/storage';
 import { Flex } from './basic/Flex';
 import { Spacer2XL, SpacerXS } from './basic/Text';
@@ -69,7 +68,6 @@ const StyledNoConversations = styled(StyledP)`
 `;
 
 export const EmptyMessageView = () => {
-  const isDarkTheme = useIsDarkTheme();
   const conversationCount = useSelector(getLeftPaneConversationIdsCount);
   const isSignInWithRecoveryPhrase = isSignWithRecoveryPhrase();
 
@@ -90,9 +88,7 @@ export const EmptyMessageView = () => {
           <StyledPartyPopper src="images/party-popper.svg" alt="party popper emoji" />
           <Spacer2XL />
           <StyledHeading>{window.i18n('onboardingAccountCreated')}</StyledHeading>
-          <StyledSessionWelcome
-            color={isDarkTheme ? 'var(--primary-color)' : 'var(--text-primary-color)'}
-          >
+          <StyledSessionWelcome color={'var(--renderer-span-primary-color)'}>
             <Localizer token="onboardingBubbleWelcomeToSession" args={{ emoji: '👋' }} />
           </StyledSessionWelcome>
         </>

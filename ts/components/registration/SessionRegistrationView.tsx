@@ -10,6 +10,7 @@ import { Flex } from '../basic/Flex';
 import { ModalContainer } from './ModalContainer';
 import { RegistrationStages } from './RegistrationStages';
 import { Hero } from './components';
+import { themeStore } from '../../state/theme/store';
 
 const StyledFullscreenContainer = styled(Flex)`
   position: relative;
@@ -61,25 +62,27 @@ export const SessionRegistrationView = () => {
   });
 
   return (
-    <Provider store={onboardingStore}>
-      <SessionTheme>
-        <StyledFullscreenContainer $container={true} $alignItems="center">
-          <Hero />
-          <StyledSessionContent
-            $flexDirection="column"
-            $alignItems="center"
-            $container={true}
-            height="100%"
-            $flexGrow={1}
-          >
-            <Flex $container={true} margin="auto" $alignItems="center" $flexDirection="column">
-              <SessionToastContainer />
-              <ModalContainer />
-              <RegistrationStages />
-            </Flex>
-          </StyledSessionContent>
-        </StyledFullscreenContainer>
-      </SessionTheme>
+    <Provider store={themeStore}>
+      <Provider store={onboardingStore}>
+        <SessionTheme>
+          <StyledFullscreenContainer $container={true} $alignItems="center">
+            <Hero />
+            <StyledSessionContent
+              $flexDirection="column"
+              $alignItems="center"
+              $container={true}
+              height="100%"
+              $flexGrow={1}
+            >
+              <Flex $container={true} margin="auto" $alignItems="center" $flexDirection="column">
+                <SessionToastContainer />
+                <ModalContainer />
+                <RegistrationStages />
+              </Flex>
+            </StyledSessionContent>
+          </StyledFullscreenContainer>
+        </SessionTheme>
+      </Provider>
     </Provider>
   );
 };

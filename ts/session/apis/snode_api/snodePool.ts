@@ -303,6 +303,20 @@ async function getSwarmFromCacheOrDb(pubkey: string): Promise<Array<string>> {
 }
 
 /**
+ * Returns the swarm size for the specified pubkey.
+ * Note: this function does not fetch from the network or the database
+ *
+ */
+function getCachedSwarmSizeForPubkey(pubkey: string) {
+  // NOTE: important that maybeNodes is not [] here
+  const existingCache = swarmCache.get(pubkey);
+  if (existingCache === undefined) {
+    return null;
+  }
+  return existingCache.length;
+}
+
+/**
  * This call fetch from cache or db the swarm and extract only the one currently reachable.
  * If not enough snodes valid are in the swarm, if fetches new snodes for this pubkey from the network.
  */
@@ -367,9 +381,11 @@ export const SnodePool = {
   dropSnodeFromSwarmIfNeeded,
   updateSwarmFor,
   getSwarmFromCacheOrDb,
+
   getSwarmFor,
   getNodeFromSwarmOrThrow,
   getFreshSwarmFor,
+  getCachedSwarmSizeForPubkey,
 
   // tests
   TEST_resetState,

@@ -1,8 +1,8 @@
 import styled from 'styled-components';
 
 import { isEmpty } from 'lodash';
-import useBoolean from 'react-use/lib/useBoolean';
 import useInterval from 'react-use/lib/useInterval';
+import useUpdate from 'react-use/lib/useUpdate';
 import { useMessageExpirationPropsById } from '../../../../hooks/useParamSelector';
 import { DURATION } from '../../../../session/constants';
 import { nativeEmojiData } from '../../../../util/emoji';
@@ -121,12 +121,12 @@ function formatTimeLeft({ timeLeftMs }: { timeLeftMs: number }) {
 
 const ExpiresInItem = ({ expirationTimestamp }: { expirationTimestamp?: number | null }) => {
   // this boolean is just used to forceRefresh the state when we get to display seconds in the contextmenu
-  const [refresh, setRefresh] = useBoolean(false);
+  const update = useUpdate();
   const timeLeftMs = (expirationTimestamp || 0) - Date.now();
 
   useInterval(
     () => {
-      setRefresh(!refresh);
+      update();
     },
     // We want to force refresh this component a lot more if the message has less than 1h before disappearing,
     // because when that's the case we also display the seconds left (i.e. 59min 23s) and we want that 23s to be dynamic.

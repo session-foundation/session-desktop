@@ -16,6 +16,7 @@ import {
 } from '../../../test-utils/utils';
 import { Snode } from '../../../../data/types';
 import { SnodePoolConstants } from '../../../../session/apis/snode_api/snodePoolConstants';
+import { ReduxOnionSelectors } from '../../../../state/selectors/onions';
 
 chai.use(chaiAsPromised as any);
 chai.should();
@@ -41,8 +42,10 @@ describe('GuardNodes', () => {
     beforeEach(() => {
       OnionPaths.clearTestOnionPath();
 
+      Sinon.stub(ReduxOnionSelectors, 'isOnlineOutsideRedux').returns(true);
+
       TestUtils.stubWindowLog();
-      TestUtils.stubWindow('getGlobalOnlineStatus', () => true);
+      TestUtils.stubWindow('isOnline', true);
 
       Onions.resetSnodeFailureCount();
       OnionPaths.resetPathFailureCount();

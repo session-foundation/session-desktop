@@ -1,4 +1,4 @@
-import { MouseEvent } from 'react';
+import { MouseEvent, type SessionDataTestId } from 'react';
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { updateConfirmModal } from '../../state/ducks/modalDialog';
@@ -48,7 +48,7 @@ type Props = {
   active: boolean;
   onClick: () => void;
   confirmationDialogParams?: any | undefined;
-  dataTestId?: React.SessionDataTestId;
+  dataTestId?: SessionDataTestId;
 };
 
 export const SessionToggle = (props: Props) => {
@@ -92,6 +92,7 @@ export const SessionToggle = (props: Props) => {
       onClick={clickHandler}
       active={props.active}
       data-testid={props.dataTestId}
+      data-active={props.active}
     >
       <StyledKnob active={props.active} />
     </StyledSessionToggle>

@@ -4,7 +4,6 @@ import pRetry from 'p-retry';
 
 import { OnionPaths } from '.';
 import { Snode } from '../../data/types';
-import { fileServerPubKey, fileServerURL } from '../apis/file_server_api/FileServerApi';
 import { OpenGroupPollingUtils } from '../apis/open_group_api/opengroupV2/OpenGroupPollingUtils';
 import { invalidAuthRequiresBlinding } from '../apis/open_group_api/opengroupV2/OpenGroupServerPoller';
 import {
@@ -24,6 +23,8 @@ import { OnionV4 } from './onionv4';
 import { MergedAbortSignal, WithAbortSignal, WithTimeoutMs } from '../apis/snode_api/requestWith';
 import { OnionPathEmptyError } from '../utils/errors';
 import { SnodePool } from '../apis/snode_api/snodePool';
+import { fileServerURL, fileServerPubKey } from '../apis/file_server_api/FileServerApi';
+import { SERVER_HOSTS } from '../apis';
 
 export type OnionFetchOptions = {
   method: string;
@@ -118,7 +119,7 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
 
   if (window.sessionFeatureFlags?.debug.debugNonSnodeRequests) {
     window.log.info(
-      'sendViaOnionV4ToNonSnodeWithRetries: buildSendViaOnionPayload returned ',
+      '[debugNonSnodeRequests] sendViaOnionV4ToNonSnodeWithRetries: buildSendViaOnionPayload returned ',
       JSON.stringify(payloadObj)
     );
   }
@@ -143,7 +144,7 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
         const pathNodes = await OnionSending.getOnionPathForSending();
         if (window.sessionFeatureFlags?.debug.debugNonSnodeRequests) {
           window.log.info(
-            'sendViaOnionV4ToNonSnodeWithRetries: getOnionPathForSending returned',
+            '[debugNonSnodeRequests] sendViaOnionV4ToNonSnodeWithRetries: getOnionPathForSending returned',
             JSON.stringify(pathNodes)
           );
         }
@@ -170,23 +171,23 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
 
         if (window.sessionFeatureFlags?.debug.debugNonSnodeRequests) {
           window.log.info(
-            'sendViaOnionV4ToNonSnodeWithRetries: sendOnionRequestHandlingSnodeEjectNoRetries returned: ',
+            '[debugNonSnodeRequests] sendViaOnionV4ToNonSnodeWithRetries: sendOnionRequestHandlingSnodeEjectNoRetries returned: ',
             JSON.stringify(onionV4Response)
           );
         }
 
         if (abortSignal?.aborted) {
           // if the request was aborted, we just want to stop retries.
-          window?.log?.warn('sendViaOnionV4ToNonSnodeRetryable request aborted.');
+          window?.log?.warn('sendViaOnionV4ToNonSnodeWithRetries request aborted.');
 
           throw new pRetry.AbortError('Request Aborted');
         }
 
         if (!onionV4Response) {
           // v4 failed responses result is undefined
-          window?.log?.warn('sendViaOnionV4ToNonSnodeRetryable failed during V4 request (in)');
+          window?.log?.warn('sendViaOnionV4ToNonSnodeWithRetries failed during V4 request (in)');
           throw new Error(
-            'sendViaOnionV4ToNonSnodeRetryable failed during V4 request. Retrying...'
+            'sendViaOnionV4ToNonSnodeWithRetries failed during V4 request. Retrying...'
           );
         }
 
@@ -194,24 +195,39 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
         // We decode it here, because if the result status code is not valid, we want to trigger a retry (by throwing an error)
         const decodedV4 = OnionV4.decodeV4Response(onionV4Response);
 
+        if (window.sessionFeatureFlags?.debug.debugNonSnodeRequests) {
+          window.log.info(
+            `[debugNonSnodeRequests] sendViaOnionV4ToNonSnodeWithRetries: payload: ${JSON.stringify(payloadObj)}\ndecoded response:`,
+            JSON.stringify(decodedV4)
+          );
+        }
+
         // the pn server replies with the decodedV4?.metadata as any)?.code syntax too since onion v4
         const foundStatusCode = decodedV4?.metadata?.code || STATUS_NO_STATUS;
         if (foundStatusCode < 200 || foundStatusCode > 299) {
           // this is temporary (as of 27/06/2022) as we want to not support unblinded sogs after some time
 
-          if (
-            foundStatusCode === 400 &&
-            (decodedV4?.body as any).plainText === invalidAuthRequiresBlinding
-          ) {
-            return {
-              status_code: foundStatusCode,
-              body: decodedV4?.body || null,
-              bodyBinary: decodedV4?.bodyBinary || null,
-            };
+          if (foundStatusCode === 400) {
+            const plainText = (decodedV4?.body as any).plainText;
+
+            if (plainText === invalidAuthRequiresBlinding) {
+              if (window.sessionFeatureFlags?.debug.debugNonSnodeRequests) {
+                window.log.info(
+                  `[debugNonSnodeRequests] sendViaOnionV4ToNonSnodeWithRetries: payload: ${JSON.stringify(payloadObj)}\n${foundStatusCode} error with message:\nplainText: ${plainText}`
+                );
+              }
+
+              return {
+                status_code: foundStatusCode,
+                body: decodedV4?.body || null,
+                bodyBinary: decodedV4?.bodyBinary || null,
+              };
+            }
           }
+
           if (foundStatusCode === 404) {
             window.log.warn(
-              `Got 404 while sendViaOnionV4ToNonSnodeWithRetries with url:${url}. Stopping retries`
+              `Got ${foundStatusCode} while sendViaOnionV4ToNonSnodeWithRetries with url:${url}. Stopping retries`
             );
             // most likely, a 404 won't fix itself. So just stop right here retries by throwing a non retryable error
             throw new pRetry.AbortError(
@@ -222,11 +238,21 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
               )
             );
           }
+
+          // NOTE we want to return the error status code to the caller, so they can handle it
+          if (url.host === SERVER_HOSTS.NETWORK_SERVER) {
+            return {
+              status_code: foundStatusCode,
+              body: decodedV4?.body || null,
+              bodyBinary: decodedV4?.bodyBinary || null,
+            };
+          }
           // we consider those cases as an error, and trigger a retry (if possible), by throwing a non-abortable error
           throw new Error(
             `sendViaOnionV4ToNonSnodeWithRetries failed with status code: ${foundStatusCode}. Retrying...`
           );
         }
+
         return {
           status_code: foundStatusCode,
           body: decodedV4?.body || null,
@@ -247,7 +273,9 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
     window?.log?.warn('sendViaOnionV4ToNonSnodeWithRetries failed ', e.message, throwErrors);
     // NOTE if there are no snodes available, we want to refresh the snode pool from the seed
     if (e instanceof OnionPathEmptyError) {
-      window?.log?.warn('endViaOnionV4ToNonSnodeWithRetries failed, no path available, refreshing snode pool');
+      window?.log?.warn(
+        'endViaOnionV4ToNonSnodeWithRetries failed, no path available, refreshing snode pool'
+      );
       void SnodePool.forceRefreshRandomSnodePool();
     }
     if (throwErrors) {
@@ -257,14 +285,14 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
   }
 
   if (abortSignal?.aborted) {
-    window?.log?.warn('sendViaOnionV4ToNonSnodeRetryable request aborted.');
+    window?.log?.warn('sendViaOnionV4ToNonSnodeWithRetries request aborted.');
 
     return null;
   }
 
   if (!result) {
     // v4 failed responses result is undefined
-    window?.log?.warn('sendViaOnionV4ToNonSnodeRetryable failed during V4 request (out)');
+    window?.log?.warn('sendViaOnionV4ToNonSnodeWithRetries failed during V4 request (out)');
     return null;
   }
 
@@ -507,7 +535,7 @@ async function getBinaryViaOnionV4FromFileServer({
   }
   const builtUrl = new URL(`${fileServerURL}${endpoint}`);
 
-  if (window.sessionFeatureFlags?.debug.debugFileServerRequests) {
+  if (window.sessionFeatureFlags?.debug.debugServerRequests) {
     window.log.info(`getBinaryViaOnionV4FromFileServer fsv2: "${builtUrl} `);
   }
 
@@ -527,7 +555,7 @@ async function getBinaryViaOnionV4FromFileServer({
     timeoutMs
   );
 
-  if (window.sessionFeatureFlags?.debug.debugFileServerRequests) {
+  if (window.sessionFeatureFlags?.debug.debugServerRequests) {
     window.log.info(
       `getBinaryViaOnionV4FromFileServer fsv2: "${builtUrl}; got:`,
       JSON.stringify(res)
@@ -577,6 +605,55 @@ async function sendJsonViaOnionV4ToFileServer({
 }
 
 /**
+ * Send some generic json to the sent server.
+ * This function should probably not used directly as we only need it for the NetworkApi.makeRequest() function
+ */
+async function sendJsonViaOnionV4ToSeshServer({
+  serverUrl,
+  endpoint,
+  method,
+  headers,
+  stringifiedBody,
+  pubkey,
+  abortSignal,
+  timeoutMs,
+}: WithAbortSignal &
+  WithTimeoutMs & {
+    serverUrl: string;
+    endpoint: string;
+    method: string;
+    headers: Record<string, string | number>;
+    stringifiedBody: string | null;
+    pubkey: string;
+  }): Promise<OnionV4JSONSnodeResponse | null> {
+  if (!endpoint.startsWith('/')) {
+    throw new Error('endpoint needs a leading /');
+  }
+
+  if (serverUrl.endsWith('/')) {
+    throw new Error('url should not end with /');
+  }
+
+  const builtUrl = new URL(`${serverUrl}${endpoint}`);
+
+  const res = await OnionSending.sendViaOnionV4ToNonSnodeWithRetries(
+    pubkey,
+    builtUrl,
+    {
+      method,
+      headers,
+      body: stringifiedBody,
+      useV4: true,
+    },
+    false,
+    abortSignal,
+    timeoutMs
+  );
+
+  return res as OnionV4JSONSnodeResponse;
+}
+
+/**
  * This is used during stubbing so we can override the time between retries (so the unit tests are faster)
  */
 function getMinTimeoutForSogs() {
@@ -593,6 +670,7 @@ export const OnionSending = {
   sendBinaryViaOnionV4ToFileServer,
   sendBinaryViaOnionV4ToSogs,
   getBinaryViaOnionV4FromFileServer,
+  sendJsonViaOnionV4ToSeshServer,
   sendJsonViaOnionV4ToFileServer,
   getMinTimeoutForSogs,
 };

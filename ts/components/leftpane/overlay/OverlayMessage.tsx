@@ -12,7 +12,7 @@ import { ConvoHub } from '../../../session/conversations';
 import { PubKey } from '../../../session/types';
 import { openConversationWithMessages } from '../../../state/ducks/conversations';
 import { resetLeftOverlayMode } from '../../../state/ducks/section';
-import { SessionButton } from '../../basic/SessionButton';
+import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
 import { SessionSpinner } from '../../loading';
 
 import { ONSResolve } from '../../../session/apis/snode_api/onsResolve';
@@ -199,6 +199,7 @@ export const OverlayMessage = () => {
           text={window.i18n('next')}
           disabled={disableNextButton}
           onClick={handleMessageButtonClick}
+          buttonColor={SessionButtonColor.PrimaryDark}
           dataTestId="next-new-conversation-button"
         />
       ) : null}

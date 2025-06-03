@@ -5,21 +5,15 @@ import styled from 'styled-components';
 import clsx from 'clsx';
 
 import { getPrimaryColor } from '../../state/selectors/primaryColor';
-import { useIsDarkTheme, useTheme } from '../../state/selectors/theme';
-import {
-  COLORS,
-  ColorsType,
-  PrimaryColorStateType,
-  THEMES,
-  ThemeStateType,
-} from '../../themes/constants/colors';
+import { useIsDarkTheme, useTheme } from '../../state/theme/selectors/theme';
+import { COLORS, THEMES, ThemeStateType, type ColorsType } from '../../themes/constants/colors';
 import { FixedBaseEmoji } from '../../types/Reaction';
 import { i18nEmojiData } from '../../util/emoji';
 import { hexColorToRGB } from '../../util/hexColorToRGB';
 
 export const StyledEmojiPanel = styled.div<{
   isModal: boolean;
-  primaryColor: PrimaryColorStateType;
+  primaryColor: string;
   theme: ThemeStateType;
   panelBackgroundRGB: string;
   panelTextRGB: string;
@@ -54,12 +48,7 @@ export const StyledEmojiPanel = styled.div<{
     --rgb-background: ${props => props.panelBackgroundRGB};
     --rgb-color: ${props => props.panelTextRGB};
     --rgb-input: ${props => props.panelBackgroundRGB};
-    --rgb-accent: ${props =>
-      hexColorToRGB(
-        props.primaryColor
-          ? COLORS.PRIMARY[`${props.primaryColor.toUpperCase() as keyof ColorsType['PRIMARY']}`]
-          : COLORS.PRIMARY.GREEN
-      )};
+    --rgb-accent: ${props => props.primaryColor};
 
     ${props =>
       !props.isModal &&
@@ -104,7 +93,7 @@ const pickerProps = {
 // eslint-disable-next-line react/display-name
 export const SessionEmojiPanel = forwardRef<HTMLDivElement, Props>((props: Props, ref) => {
   const { onEmojiClicked, show, isModal = false, onKeyDown } = props;
-  const primaryColor = useSelector(getPrimaryColor);
+  const _primaryColor = useSelector(getPrimaryColor);
   const theme = useTheme();
   const isDarkTheme = useIsDarkTheme();
 
@@ -114,7 +103,6 @@ export const SessionEmojiPanel = forwardRef<HTMLDivElement, Props>((props: Props
   switch (theme) {
     case 'ocean-dark':
       panelBackgroundRGB = hexColorToRGB(THEMES.OCEAN_DARK.COLOR1);
-
       panelTextRGB = hexColorToRGB(THEMES.OCEAN_DARK.COLOR7!);
       break;
     case 'ocean-light':
@@ -130,6 +118,14 @@ export const SessionEmojiPanel = forwardRef<HTMLDivElement, Props>((props: Props
       panelBackgroundRGB = hexColorToRGB(THEMES.CLASSIC_DARK.COLOR1);
       panelTextRGB = hexColorToRGB(THEMES.CLASSIC_DARK.COLOR6);
   }
+
+  const primaryColor = !isDarkTheme
+    ? panelTextRGB
+    : hexColorToRGB(
+        _primaryColor
+          ? COLORS.PRIMARY[`${_primaryColor.toUpperCase() as keyof ColorsType['PRIMARY']}`]
+          : COLORS.PRIMARY.GREEN
+      );
 
   return (
     <StyledEmojiPanel

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from 'react';
+import { useLayoutEffect, useState, type FC } from 'react';
 import { useSelector } from 'react-redux';
 
 import useKey from 'react-use/lib/useKey';
@@ -29,7 +29,7 @@ function isNotTextboxEvent(e: KeyboardEvent) {
 
 let previousRenderedConvo: string | undefined;
 
-const componentForMessageType: Record<MessagePropsType, React.FC<WithMessageId>> = {
+const componentForMessageType: Record<MessagePropsType, FC<WithMessageId>> = {
   'group-notification': GroupUpdateMessage,
   'group-invitation': CommunityInvitation,
   'message-request-response': MessageRequestResponse,

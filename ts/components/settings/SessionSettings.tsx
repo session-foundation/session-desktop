@@ -134,9 +134,10 @@ const SettingInCategory = (props: {
     case 'recovery-password':
       return <SettingsCategoryRecoveryPassword />;
 
-    // these are just buttons and don't have screens
-    case 'clear-data':
+    // these are just buttons or modals and don't have screens
     case 'message-requests':
+    case 'session-network':
+    case 'clear-data':
     default:
       return null;
   }

@@ -43,21 +43,18 @@ export const oceanLight: ThemeColorVariables = {
   '--settings-tab-text-color': 'var(--text-primary-color)',
 
   '--button-outline-background-color': 'var(--transparent-color)',
-  '--button-outline-background-hover-color': `rgba(${hexColorToRGB(
-    THEMES.OCEAN_LIGHT.COLOR0
-  )}, 0.1)`,
+  '--button-outline-background-hover-color': 'var(--text-primary-color)',
   '--button-outline-text-color': 'var(--text-primary-color)',
-  '--button-outline-text-hover-color': 'var(--text-primary-color)',
+  '--button-outline-text-hover-color': THEMES.OCEAN_LIGHT.COLOR7!,
   '--button-outline-border-color': 'var(--text-primary-color)',
   '--button-outline-border-hover-color': 'var(--text-primary-color)',
   '--button-outline-disabled-color': 'var(--disabled-color)',
 
-  '--button-solid-background-color': 'var(--background-primary-color)',
-  '--button-solid-background-hover-color': THEMES.OCEAN_LIGHT.COLOR6,
-  '--button-solid-text-color': 'var(--text-primary-color)',
+  '--button-solid-background-color': 'var(--text-primary-color)',
+  '--button-solid-background-hover-color': 'var(--transparent-color)',
+  '--button-solid-text-color': THEMES.OCEAN_LIGHT.COLOR7!,
   '--button-solid-text-hover-color': 'var(--text-primary-color)',
-  '--button-solid-disabled-color': THEMES.OCEAN_LIGHT.COLOR4,
-  '--button-solid-shadow-color': `rgba(${hexColorToRGB(THEMES.OCEAN_LIGHT.COLOR0)}, 0.25)`,
+  '--button-solid-disabled-color': 'var(--disabled-color)',
 
   '--button-ghost-background-color': 'none',
   '--button-ghost-background-hover-color': THEMES.OCEAN_LIGHT.COLOR6,
