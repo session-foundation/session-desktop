@@ -131,7 +131,7 @@ const Section = (props: { type: SectionType }) => {
 
   const buttonProps = {
     iconSize: '22px',
-    padding: '20px 20px',
+    padding: 'var(--margins-lg)',
     onClick: handleClick,
     isSelected,
   } satisfies Omit<SessionLucideIconButtonProps, 'unicode' | 'dataTestId'>;
