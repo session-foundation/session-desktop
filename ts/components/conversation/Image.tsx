@@ -83,7 +83,7 @@ export const Image = (props: Props) => {
   const canClick = onClick && !pending;
   const role = canClick ? 'button' : undefined;
 
-  const onErrorUrlFilterering = useCallback(() => {
+  const onErrorUrlFiltering = useCallback(() => {
     if (mounted && url && urlToLoad === '' && onError) {
       onError();
       setPending(false);
@@ -96,19 +96,19 @@ export const Image = (props: Props) => {
   useEffect(() => {
     if (mounted && url === '') {
       setPending(false);
-      onErrorUrlFilterering();
+      onErrorUrlFiltering();
     }
 
     if (mounted && imageBroken && urlToLoad === '') {
       setPending(false);
-      onErrorUrlFilterering();
+      onErrorUrlFiltering();
     }
 
     if (url) {
       setPending(false);
       setMounted(!loading && !pending);
     }
-  }, [imageBroken, loading, mounted, onErrorUrlFilterering, pending, url, urlToLoad]);
+  }, [imageBroken, loading, mounted, onErrorUrlFiltering, pending, url, urlToLoad]);
 
   if (mounted && imageBroken) {
     return (
@@ -145,7 +145,7 @@ export const Image = (props: Props) => {
       }}
       data-attachmentindex={attachmentIndex}
     >
-      {!mounted ? (
+      {!mounted || !urlToLoad ? (
         <div
           className="module-image__loading-placeholder"
           style={{
@@ -161,7 +161,7 @@ export const Image = (props: Props) => {
         </div>
       ) : (
         <img
-          onError={onErrorUrlFilterering}
+          onError={onErrorUrlFiltering}
           className={clsx('module-image__image', forceSquare ? 'module-image__image-cover' : '')}
           alt={alt}
           style={{
