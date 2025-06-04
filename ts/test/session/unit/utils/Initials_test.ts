@@ -4,15 +4,15 @@ import { getInitials } from '../../../../util/getInitials';
 describe('getInitials', () => {
   describe('empty or null string', () => {
     it('initials: return undefined if string is undefined', () => {
-      expect(getInitials(undefined)).to.be.equal('0', 'should have return 0');
+      expect(getInitials(undefined)).to.be.equal(undefined, 'should have return undefined');
     });
 
     it('initials: return undefined if string is empty', () => {
-      expect(getInitials('')).to.be.equal('0', 'should have return 0');
+      expect(getInitials('')).to.be.equal(undefined, 'should have return undefined');
     });
 
     it('initials: return undefined if string is null', () => {
-      expect(getInitials(null as any)).to.be.equal('0', 'should have return 0');
+      expect(getInitials(null as any)).to.be.equal(undefined, 'should have return undefined');
     });
   });
 

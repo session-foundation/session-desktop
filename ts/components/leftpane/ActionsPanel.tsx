@@ -28,7 +28,7 @@ import { DecryptedAttachmentsManager } from '../../session/crypto/DecryptedAttac
 
 import { DURATION } from '../../session/constants';
 
-import { uploadOurAvatar } from '../../interactions/conversationInteractions';
+import { reuploadCurrentAvatarUs } from '../../interactions/avatar-interactions/nts-avatar-interactions';
 import {
   editProfileModal,
   onionPathModal,
@@ -202,7 +202,7 @@ const triggerAvatarReUploadIfNeeded = async () => {
   if (Date.now() - lastTimeStampAvatarUpload > DURATION.DAYS * 14) {
     window.log.info('Reuploading avatar...');
     // reupload the avatar
-    await uploadOurAvatar();
+    await reuploadCurrentAvatarUs();
   }
 };
 

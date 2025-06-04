@@ -5,10 +5,9 @@ import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { MessageInteraction } from '../../interactions';
 import { OpenUrlModalState, updateOpenUrlModal } from '../../state/ducks/modalDialog';
-import { SessionWrapperModal2 } from '../SessionWrapperModal2';
+import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { I18nSubText } from '../basic/I18nSubText';
-import { Flex } from '../basic/Flex';
 import { SpacerSM, SpacerXS } from '../basic/Text';
 
 const StyledScrollDescriptionContainer = styled.div`
@@ -45,6 +44,23 @@ export function OpenUrlModal(props: OpenUrlModalState) {
       onClose={onClose}
       showExitIcon={true}
       showHeader={true}
+      buttonChildren={
+        <ButtonChildrenContainer>
+          <SessionButton
+            text={window.i18n('open')}
+            buttonColor={SessionButtonColor.Danger}
+            buttonType={SessionButtonType.Simple}
+            onClick={onClickOpen}
+            dataTestId="open-url-confirm-button"
+          />
+          <SessionButton
+            text={window.i18n('urlCopy')}
+            buttonType={SessionButtonType.Simple}
+            onClick={onClickCopy}
+            dataTestId="copy-url-button"
+          />
+        </ButtonChildrenContainer>
+      }
     >
       <StyledScrollDescriptionContainer>
         <I18nSubText
@@ -54,27 +70,6 @@ export function OpenUrlModal(props: OpenUrlModalState) {
       </StyledScrollDescriptionContainer>
       <SpacerSM />
 
-      <Flex
-        $container={true}
-        width={'100%'}
-        $justifyContent="center"
-        $alignItems="center"
-        $flexGap="var(--margins-md)"
-      >
-        <SessionButton
-          text={window.i18n('open')}
-          buttonColor={SessionButtonColor.Danger}
-          buttonType={SessionButtonType.Simple}
-          onClick={onClickOpen}
-          dataTestId="open-url-confirm-button"
-        />
-        <SessionButton
-          text={window.i18n('urlCopy')}
-          buttonType={SessionButtonType.Simple}
-          onClick={onClickCopy}
-          dataTestId="copy-url-button"
-        />
-      </Flex>
       <SpacerXS />
     </SessionWrapperModal2>
   );

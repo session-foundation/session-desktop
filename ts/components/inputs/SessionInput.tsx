@@ -3,11 +3,12 @@ import {
   ReactNode,
   RefObject,
   SessionDataTestId,
+  useCallback,
   useEffect,
   useRef,
   useState,
+  type PropsWithChildren,
 } from 'react';
-
 import { motion } from 'framer-motion';
 import { isEmpty, isEqual, isString } from 'lodash';
 import styled, { CSSProperties } from 'styled-components';
@@ -15,7 +16,7 @@ import { THEME_GLOBALS } from '../../themes/globals';
 import { AnimatedFlex, Flex } from '../basic/Flex';
 import { SpacerMD } from '../basic/Text';
 import { SessionIconButton } from '../icon';
-import { useHTMLDirection } from '../../util/i18n/rtlSupport';
+import { useHTMLDirection, type HTMLDirection } from '../../util/i18n/rtlSupport';
 import { Localizer, type LocalizerProps } from '../basic/Localizer';
 
 type TextSizes = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
@@ -161,8 +162,6 @@ const StyledPlaceholder = styled(motion.div)<{
   transition: opacity var(--default-duration) color var(--default-duration);
   ${props => props.editable && 'cursor: pointer;'}
   line-height: 1;
-
-  ${props => props.editable && 'cursor: pointer;'}
   ${props => !props.centerText && props.padding && `padding: ${props.padding};`}
 
   background: transparent;
@@ -230,6 +229,61 @@ const ErrorItem = (props: {
   );
 };
 
+function BorderWithErrorState({ hasError, children }: { hasError: boolean } & PropsWithChildren) {
+  const inputShape = 'round';
+  return (
+    <StyledBorder
+      shape={inputShape}
+      width="100%"
+      $container={true}
+      $alignItems="center"
+      initial={{
+        borderColor: hasError ? 'var(--input-border-color)' : undefined,
+      }}
+      animate={{
+        borderColor: hasError ? 'var(--danger-color)' : undefined,
+      }}
+      transition={{ duration: THEME_GLOBALS['--default-duration-seconds'] }}
+    >
+      {children}
+    </StyledBorder>
+  );
+}
+
+function usePaddingForButtonInlineEnd({ hasButtonInlineEnd }: { hasButtonInlineEnd?: boolean }) {
+  return hasButtonInlineEnd ? '48px' : undefined;
+}
+
+/**
+ * A simpler version of the ErrorItem component.
+ * Only reacts to error, no caching.
+ * So if you need a component that shows the error when provided, and hides it when not provided, use this.
+ */
+const SimpleErrorItem = ({
+  providedError,
+  dataTestId,
+}: {
+  providedError: LocalizerProps | string | undefined;
+  dataTestId: SessionDataTestId;
+}) => {
+  if (!providedError) {
+    return null;
+  }
+
+  return (
+    <motion.label
+      aria-label="Error message"
+      className={'filled error'}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: THEME_GLOBALS['--default-duration-seconds'] }}
+      data-testid={dataTestId}
+    >
+      {isString(providedError) ? providedError : <Localizer {...providedError} />}
+    </motion.label>
+  );
+};
+
 type ShowHideButtonStrings<T extends string> = { hide: T; show: T };
 type ShowHideButtonProps = {
   forceShow: boolean;
@@ -238,6 +292,16 @@ type ShowHideButtonProps = {
   ariaLabels?: ShowHideButtonStrings<string>;
   dataTestIds?: ShowHideButtonStrings<SessionDataTestId>;
 };
+
+function alignEndAbsoluteButtonStyle(htmlDirection: HTMLDirection): CSSProperties {
+  return {
+    position: 'absolute',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    left: htmlDirection === 'ltr' ? undefined : 'var(--margins-sm)',
+    right: htmlDirection === 'ltr' ? 'var(--margins-sm)' : undefined,
+  };
+}
 
 const ShowHideButton = (props: ShowHideButtonProps) => {
   const {
@@ -249,13 +313,7 @@ const ShowHideButton = (props: ShowHideButtonProps) => {
   } = props;
 
   const htmlDirection = useHTMLDirection();
-  const style: CSSProperties = {
-    position: 'absolute',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    left: htmlDirection === 'ltr' ? undefined : 'var(--margins-sm)',
-    right: htmlDirection === 'ltr' ? 'var(--margins-sm)' : undefined,
-  };
+  const style = alignEndAbsoluteButtonStyle(htmlDirection);
 
   if (forceShow) {
     return (
@@ -284,6 +342,29 @@ const ShowHideButton = (props: ShowHideButtonProps) => {
   );
 };
 
+const ClearInputButton = ({
+  onClearInputClicked,
+  dataTestId,
+}: {
+  onClearInputClicked: () => void;
+  dataTestId: SessionDataTestId;
+}) => {
+  const htmlDirection = useHTMLDirection();
+  const style = alignEndAbsoluteButtonStyle(htmlDirection);
+
+  return (
+    <SessionIconButton
+      ariaLabel="clear input"
+      iconType={'cross'}
+      iconColor={'var(--text-primary-color)'}
+      iconSize="medium"
+      onClick={onClearInputClicked}
+      style={style}
+      dataTestId={dataTestId}
+    />
+  );
+};
+
 const StyledCtaContainer = styled(motion.div)`
   width: 100%;
 `;
@@ -302,9 +383,10 @@ type Props = {
   inputRef?: RefObject<HTMLInputElement | HTMLTextAreaElement>;
   inputDataTestId?: SessionDataTestId;
   errorDataTestId?: SessionDataTestId;
-  id?: string;
-  enableShowHideButton?: boolean;
   showHideButtonAriaLabels?: ShowHideButtonStrings<string>;
+  /**
+   * Provide those to show the show/hide button (used for password input)
+   */
   showHideButtonDataTestIds?: ShowHideButtonStrings<SessionDataTestId>;
   ctaButton?: ReactNode;
   monospaced?: boolean;
@@ -312,12 +394,10 @@ type Props = {
   centerText?: boolean;
   editable?: boolean;
   isTextArea?: boolean;
-  inputShape?: 'round' | 'square' | 'none';
   padding?: string;
   required?: boolean;
   tabIndex?: number;
   loading?: boolean;
-  className?: string;
 };
 
 export const SessionInput = (props: Props) => {
@@ -335,8 +415,6 @@ export const SessionInput = (props: Props) => {
     inputRef,
     inputDataTestId,
     errorDataTestId,
-    id = 'session-input-floating-label',
-    enableShowHideButton,
     showHideButtonAriaLabels,
     showHideButtonDataTestIds,
     ctaButton,
@@ -345,12 +423,10 @@ export const SessionInput = (props: Props) => {
     centerText,
     editable = true,
     isTextArea,
-    inputShape = 'round',
     padding,
     required,
     tabIndex,
     loading,
-    className,
   } = props;
   const [inputValue, setInputValue] = useState('');
   const [hasError, setHasError] = useState(false);
@@ -384,6 +460,11 @@ export const SessionInput = (props: Props) => {
       onValueChanged(val);
     }
   };
+  const id = 'session-input-floating-label';
+
+  const paddingInlineEnd = usePaddingForButtonInlineEnd({
+    hasButtonInlineEnd: !!showHideButtonDataTestIds,
+  });
 
   const inputProps: any = {
     id,
@@ -400,7 +481,7 @@ export const SessionInput = (props: Props) => {
     'aria-required': required,
     tabIndex,
     onChange: updateInputValue,
-    style: { paddingInlineEnd: enableShowHideButton ? '48px' : undefined },
+    style: { paddingInlineEnd },
     // just in case onChange isn't triggered
     onBlur: (event: ChangeEvent<HTMLInputElement>) => {
       if (editable && !disableOnBlurEvent) {
@@ -441,7 +522,6 @@ export const SessionInput = (props: Props) => {
 
   return (
     <StyledSessionInput
-      className={className}
       $container={true}
       $flexDirection="column"
       $justifyContent="center"
@@ -449,19 +529,7 @@ export const SessionInput = (props: Props) => {
       error={hasError}
       textSize={textSize}
     >
-      <StyledBorder
-        shape={inputShape}
-        width="100%"
-        $container={true}
-        $alignItems="center"
-        initial={{
-          borderColor: hasError ? 'var(--input-border-color)' : undefined,
-        }}
-        animate={{
-          borderColor: hasError ? 'var(--danger-color)' : undefined,
-        }}
-        transition={{ duration: THEME_GLOBALS['--default-duration-seconds'] }}
-      >
+      <BorderWithErrorState hasError={hasError}>
         {isTextArea ? (
           <StyledTextAreaContainer {...containerProps}>
             {isFocused ? (
@@ -498,7 +566,7 @@ export const SessionInput = (props: Props) => {
             aria-label={ariaLabel || 'session input'}
           />
         )}
-        {editable && enableShowHideButton && (
+        {editable && showHideButtonDataTestIds && (
           <ShowHideButton
             forceShow={forceShow}
             toggleForceShow={() => {
@@ -509,7 +577,7 @@ export const SessionInput = (props: Props) => {
             dataTestIds={showHideButtonDataTestIds}
           />
         )}
-      </StyledBorder>
+      </BorderWithErrorState>
 
       {ctaButton || hasError ? <SpacerMD /> : null}
       <ErrorItem
@@ -528,6 +596,288 @@ export const SessionInput = (props: Props) => {
       >
         {ctaButton}
       </StyledCtaContainer>
+    </StyledSessionInput>
+  );
+};
+
+function useUpdateInputValue(onValueChanged: (val: string) => void, disabled?: boolean) {
+  return useCallback(
+    (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      if (disabled) {
+        return;
+      }
+      e.preventDefault();
+      const val = e.target.value;
+
+      onValueChanged(val);
+    },
+    [disabled, onValueChanged]
+  );
+}
+
+/**
+ * A simpler version of the SessionInput component.
+ * Does not handle CTA, textarea, nor monospaced fonts.
+ *
+ * Also, error handling and value management is to be done by the parent component.
+ * Providing `error` will make the input red and the error string displayed below it.
+ * This component should only be used for input that does not need remote validations, as the error
+ * state is live. For remote validations, use the SessionInput component.
+ */
+export const SimpleSessionInput = (
+  props: Pick<
+    Props,
+    | 'placeholder'
+    | 'value'
+    | 'ariaLabel'
+    | 'maxLength'
+    | 'autoFocus'
+    | 'inputRef'
+    | 'inputDataTestId'
+    | 'textSize'
+    | 'padding'
+    | 'required'
+    | 'tabIndex'
+  > &
+    Required<Pick<Props, 'errorDataTestId'>> & {
+      onValueChanged: (str: string) => void;
+      onEnterPressed: () => void;
+      providedError: string | LocalizerProps | undefined;
+      /**
+       * Provide this to show the clear input button
+       * */
+      clearInputButtonDataTestId?: SessionDataTestId;
+      disabled?: boolean;
+    }
+) => {
+  const {
+    placeholder,
+    value,
+    ariaLabel,
+    maxLength,
+    providedError,
+    onValueChanged,
+    onEnterPressed,
+    autoFocus,
+    inputRef,
+    inputDataTestId,
+    errorDataTestId,
+    clearInputButtonDataTestId,
+    textSize = 'sm',
+    disabled,
+    padding,
+    required,
+    tabIndex,
+  } = props;
+  const hasError = !isEmpty(providedError);
+  const hasValue = !isEmpty(value);
+
+  const ref = useRef(inputRef?.current || null);
+
+  const updateInputValue = useUpdateInputValue(onValueChanged, disabled);
+
+  const paddingInlineEnd = usePaddingForButtonInlineEnd({
+    hasButtonInlineEnd: !!clearInputButtonDataTestId && hasValue,
+  });
+
+  const inputProps: any = {
+    type: 'text',
+    placeholder,
+    value,
+    textSize,
+    disabled,
+    maxLength,
+    padding,
+    autoFocus,
+    'data-testid': inputDataTestId,
+    required,
+    'aria-required': required,
+    tabIndex,
+    onChange: updateInputValue,
+    style: { paddingInlineEnd },
+    onKeyDown: (event: KeyboardEvent) => {
+      if (disabled) {
+        return;
+      }
+      if (event.key === 'Enter' && onEnterPressed) {
+        event.preventDefault();
+        onEnterPressed();
+      }
+    },
+  };
+
+  const containerProps = {
+    noValue: !hasValue,
+    error: hasError,
+    textSize,
+    padding,
+  };
+
+  return (
+    <StyledSessionInput
+      $container={true}
+      $flexDirection="column"
+      $justifyContent="center"
+      $alignItems="center"
+      error={hasError}
+      textSize={textSize}
+    >
+      <BorderWithErrorState hasError={hasError}>
+        <StyledInput {...inputProps} {...containerProps} ref={ref} aria-label={ariaLabel} />
+
+        {!disabled && hasValue && clearInputButtonDataTestId && (
+          <ClearInputButton
+            dataTestId={clearInputButtonDataTestId}
+            onClearInputClicked={() => {
+              onValueChanged('');
+            }}
+          />
+        )}
+      </BorderWithErrorState>
+
+      {hasError ? (
+        <>
+          <SpacerMD />
+          <SimpleErrorItem providedError={providedError} dataTestId={errorDataTestId} />
+        </>
+      ) : null}
+    </StyledSessionInput>
+  );
+};
+
+/**
+ * A simpler version of the SessionInput component as a TextArea.
+ * Does not handle CTA, centered placeholder, nor monospaced fonts.
+ *
+ * Also, and just like SimpleSessionInput, error handling and value management is to be done by the parent component.
+ * Providing `error` will make the textarea red and the error string displayed below it.
+ * This component should only be used for TextArea that does not need remote validations, as the error
+ * state is live. For remote validations, use the SessionInput component.
+ */
+export const SimpleSessionTextarea = (
+  props: Pick<
+    Props,
+    | 'placeholder'
+    | 'value'
+    | 'ariaLabel'
+    | 'maxLength'
+    | 'autoFocus'
+    | 'inputRef'
+    | 'inputDataTestId'
+    | 'textSize'
+    | 'padding'
+    | 'required'
+    | 'tabIndex'
+  > &
+    Required<Pick<Props, 'errorDataTestId'>> & {
+      onValueChanged: (str: string) => void;
+      providedError: string | LocalizerProps | undefined;
+      /**
+       * Provide this to show the clear input button
+       * */
+      clearInputButtonDataTestId?: SessionDataTestId;
+      disabled?: boolean;
+    }
+) => {
+  const {
+    placeholder,
+    value,
+    ariaLabel,
+    maxLength,
+    providedError,
+    onValueChanged,
+    autoFocus,
+    inputRef,
+    inputDataTestId,
+    errorDataTestId,
+    clearInputButtonDataTestId,
+    textSize = 'sm',
+    disabled,
+    padding,
+    required,
+    tabIndex,
+  } = props;
+  const hasError = !isEmpty(providedError);
+  const hasValue = !isEmpty(value);
+
+  const ref = useRef(inputRef?.current || null);
+
+  const updateInputValue = useUpdateInputValue(onValueChanged, disabled);
+
+  const paddingInlineEnd = usePaddingForButtonInlineEnd({
+    hasButtonInlineEnd: !!clearInputButtonDataTestId && hasValue,
+  });
+
+  const inputProps: any = {
+    type: 'text',
+    placeholder,
+    value,
+    textSize,
+    disabled,
+    maxLength,
+    padding,
+    autoFocus,
+    'data-testid': inputDataTestId,
+    required,
+    'aria-required': required,
+    tabIndex,
+    onChange: updateInputValue,
+    style: { paddingInlineEnd },
+    // no onEnterPressed/onKeyDown here, as this is a textarea (and multi lines are allowed)
+  };
+
+  const containerProps = {
+    noValue: !hasValue,
+    error: hasError,
+    textSize,
+    padding,
+  };
+
+  useEffect(() => {
+    const textarea = ref.current;
+    if (textarea) {
+      // don't ask me why, but we need to reset the height to auto before calculating it here
+      textarea.style.height = 'auto';
+      // we want 12 lines of text at most
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 12 * parseFloat(getComputedStyle(textarea).lineHeight))}px`;
+    }
+  }, [ref, value]);
+
+  return (
+    <StyledSessionInput
+      $container={true}
+      $flexDirection="column"
+      $justifyContent="center"
+      $alignItems="center"
+      error={hasError}
+      textSize={textSize}
+    >
+      <BorderWithErrorState hasError={hasError}>
+        <StyledTextAreaContainer {...containerProps}>
+          <textarea
+            {...inputProps}
+            placeholder={disabled ? value : placeholder}
+            ref={ref}
+            aria-label={ariaLabel}
+          />
+        </StyledTextAreaContainer>
+
+        {!disabled && hasValue && clearInputButtonDataTestId && (
+          <ClearInputButton
+            dataTestId={clearInputButtonDataTestId}
+            onClearInputClicked={() => {
+              onValueChanged('');
+            }}
+          />
+        )}
+      </BorderWithErrorState>
+
+      {hasError ? (
+        <>
+          <SpacerMD />
+          <SimpleErrorItem providedError={providedError} dataTestId={errorDataTestId} />
+        </>
+      ) : null}
     </StyledSessionInput>
   );
 };
