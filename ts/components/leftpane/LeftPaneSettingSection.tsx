@@ -1,4 +1,4 @@
-import { SessionDataTestId, useMemo } from 'react';
+import { type ReactNode, SessionDataTestId, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 
@@ -20,13 +20,18 @@ import { getSessionNetworkModalState } from '../../state/selectors/modal';
 import { LOCALE_DEFAULTS } from '../../localization/constants';
 import { Localizer } from '../basic/Localizer';
 import { localize } from '../../localization/localeTools';
-import { useIsSesh101Ready } from '../../state/selectors/releasedFeatures';
 import { networkDataActions } from '../../state/ducks/networkData';
+import { showLinkVisitWarningDialog } from '../dialog/OpenUrlModal';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { LucideIcon } from '../icon/LucideIcon';
 
-const StyledSettingsSectionTitle = styled.span<{ isClearData: boolean; isNew?: boolean }>`
+const StyledSettingsSectionTitle = styled.span<{
+  color?: string;
+  isNew?: boolean;
+}>`
   font-size: var(--font-size-md);
   font-weight: 500;
-  color: ${props => props.isClearData && 'var(--danger-color)'};
+  color: ${props => props.color};
   flex-grow: ${props => !props.isNew && 1};
 `;
 
@@ -57,77 +62,93 @@ const StyledNewItem = styled.span`
   margin-inline-start: var(--margins-xs);
 `;
 
+type CategoryIcon = { color?: string } & (
+  | {
+      type: SessionIconType;
+    }
+  | {
+      type: 'lucide';
+      unicode: LUCIDE_ICONS_UNICODE;
+    }
+);
+
 type Categories = {
   id: SessionSettingCategory;
-  title: string;
+  title: ReactNode;
+  titleColor?: string;
   dataTestId: SessionDataTestId;
-  icon: {
-    type: SessionIconType;
-    size: number;
-    color?: string;
-  };
+  icon: CategoryIcon;
   isNew?: boolean;
 };
 
-const getCategories = (): Array<Categories> => {
-  const forcedSize = { size: 19 };
-  return [
+const categories: Array<Categories> = (
+  [
     {
-      id: 'privacy' as const,
-      title: localize('sessionPrivacy').toString(),
-      icon: { type: 'padlock' as const, ...forcedSize },
+      id: 'privacy',
+      title: localize('sessionPrivacy'),
+      icon: { type: 'padlock' },
     },
     {
-      id: 'notifications' as const,
-      title: localize('sessionNotifications').toString(),
-      icon: { type: 'speaker' as const, ...forcedSize },
+      id: 'donate',
+      title: localize('donate'),
+      titleColor: 'var(--primary-color)',
+      icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.HEART, color: 'var(--primary-color)' },
     },
     {
-      id: 'conversations' as const,
-      title: localize('sessionConversations').toString(),
-      icon: { type: 'chatBubble' as const, ...forcedSize },
+      id: 'notifications',
+      title: localize('sessionNotifications'),
+      icon: { type: 'speaker' },
     },
     {
-      id: 'message-requests' as const,
-      title: localize('sessionMessageRequests').toString(),
-      icon: { type: 'messageRequest' as const, ...forcedSize },
+      id: 'conversations',
+      title: localize('sessionConversations'),
+      icon: { type: 'chatBubble' },
     },
     {
-      id: 'appearance' as const,
-      title: localize('sessionAppearance').toString(),
-      icon: { type: 'paintbrush' as const, ...forcedSize },
+      id: 'message-requests',
+      title: localize('sessionMessageRequests'),
+      icon: { type: 'messageRequest' },
     },
     {
-      id: 'permissions' as const,
-      title: localize('sessionPermissions').toString(),
-      icon: { type: 'checkCircle' as const, ...forcedSize },
+      id: 'appearance',
+      title: localize('sessionAppearance'),
+      icon: { type: 'paintbrush' },
     },
     {
-      id: 'session-network' as const,
+      id: 'permissions',
+      title: localize('sessionPermissions'),
+      icon: { type: 'checkCircle' },
+    },
+    {
+      id: 'session-network',
       title: LOCALE_DEFAULTS.network_name,
-      icon: { type: 'sentToken' as const, ...forcedSize },
+      icon: { type: 'sentToken' },
       isNew: true,
     },
     {
-      id: 'recovery-password' as const,
-      title: localize('sessionRecoveryPassword').toString(),
-      icon: { type: 'recoveryPasswordFill' as const, ...forcedSize },
+      id: 'recovery-password',
+      title: localize('sessionRecoveryPassword'),
+      icon: { type: 'recoveryPasswordFill' },
     },
     {
-      id: 'help' as const,
-      title: localize('sessionHelp').toString(),
-      icon: { type: 'question' as const, ...forcedSize },
+      id: 'help',
+      title: localize('sessionHelp'),
+      icon: { type: 'question' },
     },
     {
-      id: 'clear-data' as const,
-      title: localize('sessionClearData').toString(),
-      icon: { type: 'delete' as const, ...forcedSize, color: 'var(--danger-color)' },
+      id: 'clear-data',
+      title: localize('sessionClearData'),
+      titleColor: 'var(--danger-color)',
+      icon: { type: 'delete', color: 'var(--danger-color)' },
     },
-  ].map(m => ({ ...m, dataTestId: `${m.id}-settings-menu-item` as const }));
-};
+  ] as const satisfies Array<Omit<Categories, 'dataTestId'>>
+).map(m => ({
+  ...m,
+  dataTestId: `${m.id}-settings-menu-item` as const,
+})) satisfies Array<Categories>;
 
 const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
-  const { id, title, icon, dataTestId, isNew } = item;
+  const { id, title, titleColor, icon, dataTestId, isNew } = item;
   const dispatch = useDispatch();
   const focusedSettingsSection = useSelector(getFocusedSettingsSection);
   const sessionNetworkModalState = useSelector(getSessionNetworkModalState);
@@ -137,7 +158,7 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
     [focusedSettingsSection, id, sessionNetworkModalState]
   );
 
-  const isClearData = id === 'clear-data';
+  const iconSize = 19;
 
   return (
     <StyledSettingsListItem
@@ -157,6 +178,9 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
             dispatch(setLeftOverlayMode('message-requests'));
             dispatch(resetConversationExternal());
             break;
+          case 'donate':
+            showLinkVisitWarningDialog('https://session.foundation/donate#app', dispatch);
+            break;
           case 'session-network':
             // if the network modal is not open yet do an info request
             if (focusedSettingsSection !== 'session-network') {
@@ -174,14 +198,18 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
       data-testid={dataTestId}
     >
       <StyledIconContainer>
-        <SessionIcon
-          iconType={icon.type}
-          iconSize={icon.size}
-          sizeIsWidth={true}
-          iconColor={icon.color || 'var(--text-primary-color)'}
-        />
+        {icon.type === 'lucide' ? (
+          <LucideIcon unicode={icon.unicode} iconSize={`${iconSize}px`} iconColor={icon.color} />
+        ) : (
+          <SessionIcon
+            iconType={icon.type}
+            iconSize={iconSize}
+            sizeIsWidth={true}
+            iconColor={icon.color || 'var(--text-primary-color)'}
+          />
+        )}
       </StyledIconContainer>
-      <StyledSettingsSectionTitle isClearData={isClearData} isNew={isNew}>
+      <StyledSettingsSectionTitle color={titleColor} isNew={isNew}>
         {title}
       </StyledSettingsSectionTitle>
 
@@ -191,7 +219,7 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
         </StyledNewItem>
       ) : null}
 
-      {isSelected && (
+      {isSelected ? (
         <SessionIcon
           iconSize={'medium'}
           iconType="chevron"
@@ -199,19 +227,17 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
           iconRotation={270}
           style={{ marginInlineStart: 'auto' }}
         />
-      )}
+      ) : null}
     </StyledSettingsListItem>
   );
 };
 
 const LeftPaneSettingsCategories = () => {
   const hideRecoveryPassword = useHideRecoveryPasswordEnabled();
-  const isSesh101Released = useIsSesh101Ready();
 
-  const settingsCategories = getCategories()
-    .filter(category => !hideRecoveryPassword || category.id !== 'recovery-password')
-    // TODO[epic=SES-2606] remove after feature release
-    .filter(category => isSesh101Released || category.id !== 'session-network');
+  const settingsCategories = categories.filter(
+    category => !hideRecoveryPassword || category.id !== 'recovery-password'
+  );
 
   return (
     <>

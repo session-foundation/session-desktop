@@ -22,6 +22,7 @@ export enum LUCIDE_ICONS_UNICODE {
   USER_ROUND_X = '',
   USER_ROUND_CHECK = '',
   PENCIL = '',
+  HEART = '',
 }
 
 /**
