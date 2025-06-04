@@ -76,6 +76,7 @@ type Categories = {
   id: SessionSettingCategory;
   title: ReactNode;
   titleColor?: string;
+  titleColorLightTheme?: string;
   dataTestId: SessionDataTestId;
   icon: CategoryIcon;
   isNew?: boolean;
@@ -86,44 +87,48 @@ const categories: Array<Categories> = (
     {
       id: 'privacy',
       title: localize('sessionPrivacy'),
-      icon: { type: 'padlock' },
+      icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.LOCK_KEYHOLE },
     },
     {
       id: 'donate',
       title: localize('donate'),
-      titleColor: 'var(--primary-color)',
-      icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.HEART, color: 'var(--primary-color)' },
-    },
-    {
-      id: 'notifications',
-      title: localize('sessionNotifications'),
-      icon: { type: 'speaker' },
-    },
-    {
-      id: 'conversations',
-      title: localize('sessionConversations'),
-      icon: { type: 'chatBubble' },
-    },
-    {
-      id: 'message-requests',
-      title: localize('sessionMessageRequests'),
-      icon: { type: 'messageRequest' },
-    },
-    {
-      id: 'appearance',
-      title: localize('sessionAppearance'),
-      icon: { type: 'paintbrush' },
-    },
-    {
-      id: 'permissions',
-      title: localize('sessionPermissions'),
-      icon: { type: 'checkCircle' },
+      titleColor: 'var(--renderer-span-primary-color)',
+      icon: {
+        type: 'lucide',
+        unicode: LUCIDE_ICONS_UNICODE.HEART,
+        color: 'var(--renderer-span-primary-color)',
+      },
     },
     {
       id: 'session-network',
       title: LOCALE_DEFAULTS.network_name,
-      icon: { type: 'sentToken' },
+      icon: { type: 'sessionToken' },
       isNew: true,
+    },
+    {
+      id: 'notifications',
+      title: localize('sessionNotifications'),
+      icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.VOLUME_2 },
+    },
+    {
+      id: 'conversations',
+      title: localize('sessionConversations'),
+      icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE },
+    },
+    {
+      id: 'message-requests',
+      title: localize('sessionMessageRequests'),
+      icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE_WARNING },
+    },
+    {
+      id: 'appearance',
+      title: localize('sessionAppearance'),
+      icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.PAINTBRUSH_VERTICAL },
+    },
+    {
+      id: 'permissions',
+      title: localize('sessionPermissions'),
+      icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.CIRCLE_CHECK },
     },
     {
       id: 'recovery-password',
@@ -139,7 +144,7 @@ const categories: Array<Categories> = (
       id: 'clear-data',
       title: localize('sessionClearData'),
       titleColor: 'var(--danger-color)',
-      icon: { type: 'delete', color: 'var(--danger-color)' },
+      icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.TRASH2, color: 'var(--danger-color)' },
     },
   ] as const satisfies Array<Omit<Categories, 'dataTestId'>>
 ).map(m => ({
@@ -158,7 +163,7 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
     [focusedSettingsSection, id, sessionNetworkModalState]
   );
 
-  const iconSize = 19;
+  const iconSize = 22;
 
   return (
     <StyledSettingsListItem
@@ -170,7 +175,7 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
       $justifyContent={'flex-start'}
       $alignItems={'center'}
       $flexShrink={0}
-      padding={'0px var(--margins-md) 0 var(--margins-sm)'}
+      padding={'0 var(--margins-md)'}
       onClick={() => {
         switch (id) {
           case 'message-requests':
@@ -220,11 +225,9 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
       ) : null}
 
       {isSelected ? (
-        <SessionIcon
-          iconSize={'medium'}
-          iconType="chevron"
-          iconColor={'var(--text-primary-color)'}
-          iconRotation={270}
+        <LucideIcon
+          iconSize={`${iconSize}px`}
+          unicode={LUCIDE_ICONS_UNICODE.CHEVRON_RIGHT}
           style={{ marginInlineStart: 'auto' }}
         />
       ) : null}
