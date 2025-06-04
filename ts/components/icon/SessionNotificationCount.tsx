@@ -14,7 +14,7 @@ const StyledCountContainer = styled.div<{ $centeredOnTop: boolean }>`
   padding: ${props => (props.$centeredOnTop ? '1px 3px 0' : '1px 4px')};
 
   position: absolute;
-  top: ${props => (props.$centeredOnTop ? '-10px' : '27px')};
+  top: ${props => (props.$centeredOnTop ? '-10px' : '22px')};
   left: ${props => (props.$centeredOnTop ? '50%' : '28px')};
 
   font-size: var(--font-size-xs);

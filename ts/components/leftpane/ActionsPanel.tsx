@@ -143,6 +143,9 @@ const Section = (props: { type: SectionType }) => {
           {...buttonProps}
           dataTestId="message-section"
           unicode={LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE}
+          style={{
+            position: 'relative',
+          }}
         >
           {Boolean(unreadToShow) && <SessionNotificationCount count={unreadToShow} />}
         </SessionLucideIconButton>
