@@ -7,6 +7,7 @@
 
 export type SessionSettingCategory =
   | 'privacy'
+  | 'donate'
   | 'notifications'
   | 'conversations'
   | 'message-requests'
