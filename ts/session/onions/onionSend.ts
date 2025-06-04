@@ -274,7 +274,7 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
     // NOTE if there are no snodes available, we want to refresh the snode pool from the seed
     if (e instanceof OnionPathEmptyError) {
       window?.log?.warn(
-        'endViaOnionV4ToNonSnodeWithRetries failed, no path available, refreshing snode pool'
+        'sendViaOnionV4ToNonSnodeWithRetries failed, no path available, refreshing snode pool'
       );
       void SnodePool.forceRefreshRandomSnodePool();
     }
