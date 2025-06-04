@@ -7,7 +7,7 @@ import { PubKey } from '../../session/types';
 import { ToastUtils } from '../../session/utils';
 import { ConvoHub } from '../../session/conversations';
 import { updateAddModeratorsModal } from '../../state/ducks/modalDialog';
-import { useIsDarkTheme } from '../../state/selectors/theme';
+import { useIsDarkTheme } from '../../state/theme/selectors/theme';
 import { SessionHeaderSearchInput } from '../SessionHeaderSearchInput';
 import { Flex } from '../basic/Flex';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';

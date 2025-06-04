@@ -121,7 +121,6 @@
   "banUser": "Blokkeer Gebruiker",
   "banUserBanned": "Gebruiker verban",
   "block": "Blokkeer",
-  "blockBlockedDescription": "Deblokkeer hierdie kontak om 'n boodskap te stuur.",
   "blockBlockedNone": "Geen geblokkeerde kontakte",
   "blockBlockedUser": "{name} Geblokkeer",
   "blockDescription": "Is jy seker jy wil <b>{name} blokkeer?</b> Geblokkeerde gebruikers kan nie vir jou boodskapversoeke stuur, groepuitnodigings stuur of jou bel nie.",

@@ -15,7 +15,7 @@ import {
   useSelectedIsGroupOrCommunity,
 } from '../../../../../state/selectors/selectedConversation';
 import { Flex } from '../../../../basic/Flex';
-import { SessionButton } from '../../../../basic/SessionButton';
+import { SessionButton, SessionButtonColor } from '../../../../basic/SessionButton';
 import { SpacerLG } from '../../../../basic/Text';
 import {
   HeaderSubtitle,
@@ -197,6 +197,7 @@ export const DisappearingMessagesPage = () => {
 
         <StyledButtonContainer>
           <SessionButton
+            buttonColor={SessionButtonColor.PrimaryDark}
             onClick={handleSetMode}
             disabled={
               singleMode

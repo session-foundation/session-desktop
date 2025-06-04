@@ -150,7 +150,7 @@ export const MessageInfo = ({ messageId, errors }: { messageId: string; errors?:
         <>
           <SpacerSM />
           <LabelWithInfo
-            title={window.i18n('helpReportABugExportLogsSaveToDesktopDescription')}
+            title={window.i18n('helpReportABugExportLogsDescription')}
             label={`${window.i18n('theError')}:`}
             info={errors || window.i18n('errorUnknown')}
             dataColor={'var(--danger-color)'}

@@ -294,9 +294,9 @@ async function getSnodesFromSeedUrl(urlObj: URL): Promise<Array<any>> {
       );
       throw new Error(`getSnodesFromSeedUrl: json.result is empty from ${urlObj.href}`);
     }
-    // Filter 0.0.0.0 nodes which haven't submitted uptime proofs
+    // NOTE Filter out nodes that have missing ip addresses since they are not valid or 0.0.0.0 nodes which haven't submitted uptime proofs
     const validNodes = result.service_node_states.filter(
-      (snode: any) => snode.public_ip !== '0.0.0.0'
+      (snode: any) => snode.public_ip && snode.public_ip !== '0.0.0.0'
     );
 
     if (validNodes.length === 0) {

@@ -63,6 +63,14 @@ declare module 'react' {
 
   type ClearButtons = `clear-${'group-info-description' | 'group-info-name' | 'nickname'}-button`;
 
+  // left pane section types
+  type Sections = `${'theme' | 'settings' | 'message' | 'privacy' | 'debug'}-section`;
+
+  type SettingsMenuItems =
+    `${'message-requests' | 'recovery-password' | 'privacy' | 'notifications' | 'conversations' | 'appearance' | 'help' | 'permissions' | 'clear-data' | 'session-network'}-settings-menu-item`;
+
+  type MenuItems = `${'block' | 'delete' | 'accept'}-menu-item`;
+
   type SessionDataTestId =
     | 'group-member-status-text'
     | 'loading-spinner'
@@ -126,28 +134,14 @@ declare module 'react' {
     | 'reveal-blocked-user-settings'
 
     // left pane section types
-    | 'theme-section'
-    | 'settings-section'
-    | 'message-section'
-    | 'privacy-section'
-    | 'debug-menu-section'
+    | Sections
 
     // settings menu item types
-    | 'message-requests-settings-menu-item'
-    | 'recovery-password-settings-menu-item'
-    | 'privacy-settings-menu-item'
-    | 'notifications-settings-menu-item'
-    | 'conversations-settings-menu-item'
-    | 'appearance-settings-menu-item'
-    | 'help-settings-menu-item'
-    | 'permissions-settings-menu-item'
-    | 'clear-data-settings-menu-item'
-    | 'block-menu-item'
-    | 'delete-menu-item'
-    | 'accept-menu-item'
+    | MenuItems
     | ConfirmButtons
     | CancelButtons
     | ClearButtons
+    | SettingsMenuItems
 
     // timer options
     | DisappearTimeOptionDataTestId
@@ -228,6 +222,26 @@ declare module 'react' {
     | 'link-preview-title'
     | 'link-preview-close'
 
+    // modules profile name
+    | 'module-conversation__user__profile-name'
+    | 'module-message-search-result__header__name__profile-name'
+    | 'module-message__author__profile-name'
+    | 'module-contact-name__profile-name'
+
+    // network page
+    | 'staking-reward-pool-amount'
+    | 'market-cap-amount'
+    | 'learn-about-staking-link'
+    | 'swarm-image'
+    | 'sent-price'
+    | 'tooltip-info'
+    | 'tooltip'
+    | 'network-secured-amount'
+    | 'learn-more-network-link'
+    | 'your-swarm-amount'
+    | 'nodes-securing-amount'
+    | 'refresh-button'
+
     // to sort
     | 'update-group-info-name-input'
     | 'update-group-info-description-input'
@@ -252,6 +266,8 @@ declare module 'react' {
     | 'confirm-nickname'
     | 'context-menu-item'
     | 'view-qr-code-button'
+    | 'your-qr-code'
+    | 'session-recovery-password'
     | 'hide-recovery-password-button'
     | 'copy-button-account-id'
     | 'path-light-svg'
@@ -292,12 +308,8 @@ declare module 'react' {
     | 'modal-description'
     | 'error-message'
     | 'group-not-updated-30-days-banner'
-    // modules profile name
-    | 'module-conversation__user__profile-name'
-    | 'module-message-search-result__header__name__profile-name'
-    | 'module-message__author__profile-name'
-    | 'module-contact-name__profile-name'
     | 'delete-from-details'
+    | 'avatar-placeholder'
     | `input-releases-${ReleaseChannels}`
     | `label-releases-${ReleaseChannels}`
     | `${MenuOption}-menu-option`
@@ -305,6 +317,7 @@ declare module 'react' {
     | `${SetButton}-set-button`
     | `${NotificationButtons}`
     | `${NotificationRadioButtons}`
+    | 'last-updated-timestamp'
     // Once the whole app have datatestId when required, this `invalid-data-testid` will be removed
     | 'invalid-data-testid';
 

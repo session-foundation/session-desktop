@@ -9,6 +9,7 @@ import { getCallMediaPermissionsSettings } from '../components/settings/SessionS
 import { Data } from '../data/data';
 import { SettingsKey } from '../data/settings-key';
 import { ConversationTypeEnum } from '../models/types';
+import { OpenGroupUtils } from '../session/apis/open_group_api/utils';
 import { getSwarmPollingInstance } from '../session/apis/snode_api';
 import { ConvoHub } from '../session/conversations';
 import { DisappearingMessageConversationModeType } from '../session/disappearing_messages/types';
@@ -23,6 +24,7 @@ import {
   resetConversationExternal,
 } from '../state/ducks/conversations';
 import {
+  updateBlockOrUnblockModal,
   updateConfirmModal,
   updateConversationSettingsModal,
   updateGroupMembersModal,
@@ -42,6 +44,42 @@ import { DURATION } from '../session/constants';
 import { GroupInvite } from '../session/utils/job_runners/jobs/GroupInviteJob';
 import type { LocalizerProps } from '../components/basic/Localizer';
 import { localize } from '../localization/localeTools';
+
+export async function copyPublicKeyByConvoId(convoId: string) {
+  if (OpenGroupUtils.isOpenGroupV2(convoId)) {
+    const fromWrapper = await UserGroupsWrapperActions.getCommunityByFullUrl(convoId);
+
+    if (!fromWrapper) {
+      window.log.warn('opengroup to copy was not found in the UserGroupsWrapper');
+      return;
+    }
+
+    if (fromWrapper.fullUrlWithPubkey) {
+      window.clipboard.writeText(fromWrapper.fullUrlWithPubkey);
+      ToastUtils.pushCopiedToClipBoard();
+    }
+  } else {
+    window.clipboard.writeText(convoId);
+  }
+}
+
+export async function blockConvoById(conversationId: string) {
+  window.inboxStore?.dispatch(
+    updateBlockOrUnblockModal({
+      action: 'block',
+      pubkeys: [conversationId],
+    })
+  );
+}
+
+export async function unblockConvoById(conversationId: string) {
+  window.inboxStore?.dispatch(
+    updateBlockOrUnblockModal({
+      action: 'unblock',
+      pubkeys: [conversationId],
+    })
+  );
+}
 
 /**
  * Accept if needed the message request from this user.
@@ -230,7 +268,6 @@ export const declineConversationWithConfirm = ({
       title: alsoBlock ? window.i18n('block') : window.i18n('delete'),
       i18nMessage,
       okTheme: SessionButtonColor.Danger,
-      closeTheme: SessionButtonColor.Primary,
       onClickOk: async () => {
         await declineConversationWithoutConfirm({
           conversationId,

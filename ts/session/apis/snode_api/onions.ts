@@ -17,7 +17,6 @@ import { Snode } from '../../../data/types';
 import { callUtilsWorker } from '../../../webworker/workers/browser/util_worker_interface';
 import { encodeV4Request } from '../../onions/onionv4';
 import { SnodeResponseError } from '../../utils/errors';
-import { fileServerHost } from '../file_server_api/FileServerApi';
 import { hrefPnServerProd } from '../push_notification_api/PnServer';
 import { ERROR_CODE_NO_CONNECT } from './SNodeAPI';
 import { MergedAbortSignal, WithAbortSignal, WithTimeoutMs } from './requestWith';
@@ -28,6 +27,9 @@ import {
   WithGuardNode,
   WithSymmetricKey,
 } from '../../types/with';
+import { updateIsOnline } from '../../../state/ducks/onions';
+import { SERVER_HOSTS } from '..';
+import { ReduxOnionSelectors } from '../../../state/selectors/onions';
 
 // hold the ed25519 key of a snode against the time it fails. Used to remove a snode only after a few failures (snodeFailureThreshold failures)
 let snodeFailureCount: Record<string, number> = {};
@@ -374,13 +376,6 @@ async function processAnyOtherErrorOnPath(
   if (status !== 200) {
     window?.log?.warn(`[path] Got status: ${status}`);
 
-    if (status === 404 || status === 400) {
-      window?.log?.warn(
-        'processAnyOtherErrorOnPathgot 404 or 400, probably a dead sogs. Skipping bad path update'
-      );
-      return;
-    }
-
     // If we have a specific node in fault we can exclude just this node.
     if (ciphertext?.startsWith(NEXT_NODE_NOT_FOUND_PREFIX)) {
       const nodeNotFound = ciphertext.substr(NEXT_NODE_NOT_FOUND_PREFIX.length);
@@ -457,9 +452,13 @@ async function processOnionRequestErrorOnPath(
       cipherAsString = '';
     }
   }
+
   if (httpStatusCode !== 200) {
-    window?.log?.warn('processOnionRequestErrorOnPath:', ciphertext);
+    window?.log?.warn(
+      `processOnionRequestErrorOnPath httpStatusCode: ${httpStatusCode} ciphertext: ${cipherAsString || ciphertext}`
+    );
   }
+
   process406Or425Error(httpStatusCode);
   await process421Error(httpStatusCode, cipherAsString, associatedWith, destinationEd25519Key);
   await processAnyOtherErrorOnPath(
@@ -860,7 +859,7 @@ async function sendOnionRequestHandlingSnodeEjectNoRetries({
     response = result.response;
     if (
       !isEmpty(finalRelayOptions) &&
-      finalRelayOptions.host !== fileServerHost &&
+      !Object.values(SERVER_HOSTS).includes(finalRelayOptions.host) &&
       response.status === 502 &&
       response.statusText === 'Bad Gateway'
     ) {
@@ -1063,6 +1062,14 @@ const sendOnionRequestNoRetries = async ({
       '...',
       destX25519hex.substring(32)
     );
+    if (e.message === ERROR_CODE_NO_CONNECT || !navigator.onLine) {
+      if (ReduxOnionSelectors.isOnlineOutsideRedux()) {
+        window.inboxStore?.dispatch(updateIsOnline(false));
+      }
+    } else if (!ReduxOnionSelectors.isOnlineOutsideRedux()) {
+      window.inboxStore?.dispatch(updateIsOnline(true));
+    }
+
     throw e;
   }
 

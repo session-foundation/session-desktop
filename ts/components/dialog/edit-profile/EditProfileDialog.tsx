@@ -13,7 +13,7 @@ import { ProfileManager } from '../../../session/profile_manager/ProfileManager'
 import { editProfileModal } from '../../../state/ducks/modalDialog';
 import { SessionWrapperModal } from '../../SessionWrapperModal';
 import { Flex } from '../../basic/Flex';
-import { SessionButton } from '../../basic/SessionButton';
+import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
 import { Spacer2XL, Spacer3XL, SpacerLG, SpacerSM, SpacerXL } from '../../basic/Text';
 import { CopyToClipboardButton } from '../../buttons/CopyToClipboardButton';
 import { SessionInput } from '../../inputs';
@@ -347,6 +347,7 @@ export const EditProfileDialog = () => {
               width={'100%'}
             >
               <CopyToClipboardButton
+                buttonColor={SessionButtonColor.PrimaryDark}
                 copyContent={us}
                 hotkey={true}
                 reference={copyButtonRef}
@@ -358,6 +359,7 @@ export const EditProfileDialog = () => {
                   onClick={() => {
                     setMode('qr');
                   }}
+                  buttonColor={SessionButtonColor.PrimaryDark}
                   dataTestId="view-qr-code-button"
                 />
               ) : null}
@@ -368,6 +370,7 @@ export const EditProfileDialog = () => {
                 text={window.i18n('save')}
                 onClick={onClickOK}
                 disabled={cannotContinue}
+                buttonColor={SessionButtonColor.PrimaryDark}
                 dataTestId="save-button-profile-update"
               />
             )

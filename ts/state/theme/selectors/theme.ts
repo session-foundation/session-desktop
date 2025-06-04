@@ -1,10 +1,12 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { useSelector } from 'react-redux';
-import { ThemeStateType } from '../../themes/constants/colors';
-import { checkDarkTheme, checkLightTheme } from '../../util/theme';
-import { StateType } from '../reducer';
+import { ThemeStateType } from '../../../themes/constants/colors';
+import { checkDarkTheme, checkLightTheme } from '../../../util/theme';
+import { ThemeStoreState } from '../store';
 
-export const getTheme = (state: StateType): ThemeStateType => state.theme;
+export const getTheme = (state: ThemeStoreState): ThemeStateType => {
+  return state.theme;
+};
 
 const getIsDarkTheme = createSelector(getTheme, (state): boolean => checkDarkTheme(state));
 

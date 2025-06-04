@@ -2,9 +2,9 @@ import _ from 'lodash';
 import { KeyboardEvent, MouseEvent, SessionDataTestId, ReactNode, forwardRef, memo } from 'react';
 import clsx from 'clsx';
 
+import { StyledSessionIconButton } from './StyledSessionIconButton';
 import { SessionIcon, SessionIconProps } from './SessionIcon';
 import { LucideIcon, type LucideIconProps } from './LucideIcon';
-import { StyledSessionIconButton } from './StyledSessionIconButton';
 
 export type SessionIconButtonProps = SessionIconProps & {
   onClick?: (e?: MouseEvent<HTMLButtonElement>) => void;
@@ -31,6 +31,7 @@ const SessionIconButtonInner = forwardRef<HTMLButtonElement, SessionIconButtonPr
       iconSize,
       iconColor,
       iconRotation,
+      rotateDuration,
       isSelected: $isSelected,
       glowDuration,
       glowStartDelay,
@@ -91,6 +92,7 @@ const SessionIconButtonInner = forwardRef<HTMLButtonElement, SessionIconButtonPr
           iconSize={iconSize}
           iconColor={iconColor}
           iconRotation={iconRotation}
+          rotateDuration={rotateDuration}
           glowDuration={glowDuration}
           glowStartDelay={glowStartDelay}
           noScale={noScale}

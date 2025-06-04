@@ -8,7 +8,7 @@ import { concat, isEmpty } from 'lodash';
 import useBoolean from 'react-use/lib/useBoolean';
 import type { PubkeyType } from 'libsession_util_nodejs';
 import { MemberListItem } from '../../MemberListItem';
-import { SessionButton } from '../../basic/SessionButton';
+import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
 
 import { VALIDATION } from '../../../session/constants';
 import { ToastUtils } from '../../../session/utils';
@@ -247,6 +247,7 @@ export const OverlayClosedGroupV2 = () => {
           disabled={disableCreateButton}
           onClick={onEnterPressed}
           dataTestId="create-group-button"
+          buttonColor={SessionButtonColor.PrimaryDark}
           margin="auto 0 0" // just to keep that button at the bottom of the overlay (even with an empty list)
         />
       </Flex>

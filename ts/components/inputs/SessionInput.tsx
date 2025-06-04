@@ -193,10 +193,13 @@ const ErrorItem = (props: {
 
   useEffect(() => {
     // if we have an error we want to continue to show that error unless it changes to a new error, we dont care if the input value changes
-    if (error && !isEmpty(error) && !isEqual(error, errorValue)) {
-      setErrorValue(error);
+    if (error && !isEmpty(error)) {
       setTextErrorStyle(true);
-      setHasError(true);
+
+      if (!isEqual(error, errorValue)) {
+        setErrorValue(error);
+        setHasError(true);
+      }
     }
 
     // if the input value has been submitted somewhere check if we have an error and if we do clear it
@@ -205,7 +208,7 @@ const ErrorItem = (props: {
       setTextErrorStyle(false);
       setHasError(false);
     }
-  }, [errorValue, error, loading, hasError, setHasError, setTextErrorStyle]);
+  }, [error, errorValue, hasError, loading, setHasError, setTextErrorStyle]);
 
   if (!errorValue) {
     return null;

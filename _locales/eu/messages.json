@@ -121,7 +121,6 @@
   "banUser": "Ban User",
   "banUserBanned": "Erabiltzailea debekatu da",
   "block": "Block",
-  "blockBlockedDescription": "Kontaktu hau desblokeatu mezu bat bidaltzeko.",
   "blockBlockedNone": "Ez dago blokeatutako kontakturik",
   "blockBlockedUser": "Blocked {name}",
   "blockDescription": "Ziur zaude <b>{name}</b> blokeatu nahi duzula? Erabiltzaile blokeatuek ezin dizkizute mezu-eskaerak, talde-gonbidapenak bidali edo deiak egin.",

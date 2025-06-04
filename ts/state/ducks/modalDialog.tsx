@@ -55,6 +55,7 @@ export type LightBoxOptions = {
 } | null;
 
 export type DebugMenuModalState = object | null;
+export type SessionNetworkModalState = object | null;
 
 export type ConversationSettingsModalPage = 'default' | 'disappearing_message' | 'notifications';
 type SettingsPageThatCannotBeStandalone = Extract<ConversationSettingsModalPage, 'default'>;
@@ -94,6 +95,7 @@ export type ModalState = {
   lightBoxOptions: LightBoxOptions;
   debugMenuModal: DebugMenuModalState;
   conversationSettingsModal: ConversationSettingsModalState;
+  sessionNetworkModal: SessionNetworkModalState;
 };
 
 export const initialModalState: ModalState = {
@@ -120,6 +122,7 @@ export const initialModalState: ModalState = {
   lightBoxOptions: null,
   debugMenuModal: null,
   conversationSettingsModal: null,
+  sessionNetworkModal: null,
 };
 
 const ModalSlice = createSlice({
@@ -209,6 +212,9 @@ const ModalSlice = createSlice({
     updateConversationSettingsModal(state, action: PayloadAction<ConversationSettingsModalState>) {
       return { ...state, conversationSettingsModal: action.payload };
     },
+    updateSessionNetworkModal(state, action: PayloadAction<SessionNetworkModalState>) {
+      return { ...state, sessionNetworkModal: action.payload };
+    },
   },
 });
 
@@ -237,5 +243,6 @@ export const {
   updateLightBoxOptions,
   updateDebugMenuModal,
   updateConversationSettingsModal,
+  updateSessionNetworkModal,
 } = actions;
 export const modalReducer = reducer;

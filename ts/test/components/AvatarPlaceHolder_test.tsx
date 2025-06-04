@@ -1,4 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies */
+import type { SessionDataTestId } from 'react';
 import { expect } from 'chai';
 import Sinon from 'sinon';
 import { AvatarSize } from '../../components/avatar/Avatar';
@@ -7,7 +8,6 @@ import { MemberAvatarPlaceHolder } from '../../components/icon/MemberAvatarPlace
 import { TestUtils } from '../test-utils';
 import { expectResultToBeEqual, findByDataTestId, renderComponent } from './renderComponent';
 
-// TODO[epic=SES-2418] migrate to Storybook
 describe('AvatarPlaceHolder', () => {
   const pubkey = TestUtils.generateFakePubKeyStr();
   const displayName = 'Hello World';
@@ -49,7 +49,7 @@ describe('AvatarPlaceHolder', () => {
 
     const result2 = renderComponent(
       <MemberAvatarPlaceHolder
-        dataTestId="member-avatar-placeholder"
+        dataTestId={'member-avatar-placeholder' as SessionDataTestId}
         bgColor="var(--primary-color)"
       />
     );

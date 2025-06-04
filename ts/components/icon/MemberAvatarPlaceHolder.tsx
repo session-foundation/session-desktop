@@ -1,8 +1,10 @@
+import type { SessionDataTestId } from 'react';
+
 export const MemberAvatarPlaceHolder = ({
   dataTestId,
   bgColor,
 }: {
-  dataTestId?: string;
+  dataTestId?: SessionDataTestId;
   bgColor: string;
 }) => {
   return (

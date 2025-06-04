@@ -194,6 +194,7 @@ const SessionSvg = (
     clipRule: props.clipRule,
     fillRule: props.fillRule,
     style: props.style,
+    dataTestId: props.dataTestId,
   };
 
   return (

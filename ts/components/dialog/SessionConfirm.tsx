@@ -97,6 +97,9 @@ export interface SessionConfirmDialogProps {
   cancelText?: string;
   hideCancel?: boolean;
   okTheme?: SessionButtonColor;
+  /**
+   * Theme for the close button. If an okayTheme is provided, this theme will be ignored
+   */
   closeTheme?: SessionButtonColor;
   showExitIcon?: boolean | undefined;
   conversationId?: string;
