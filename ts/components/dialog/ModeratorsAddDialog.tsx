@@ -16,6 +16,7 @@ import { MAX_SUBREQUESTS_COUNT } from '../../session/apis/snode_api/SnodeRequest
 import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
 import { SimpleSessionInput } from '../inputs/SessionInput';
 import { SpacerMD } from '../basic/Text';
+import { ClearInputButton } from '../inputs/ClearInputButton';
 
 type Props = {
   conversationId: string;
@@ -122,7 +123,15 @@ export const AddModeratorsDialog = (props: Props) => {
           errorDataTestId="error-message"
           providedError={''}
           autoFocus={true}
-          clearInputButtonDataTestId="clear-add-admins-button"
+          buttonEnd={
+            <ClearInputButton
+              dataTestId={'clear-add-admins-button'}
+              onClearInputClicked={() => {
+                setInputBoxValue('');
+              }}
+              show={!!inputBoxValue}
+            />
+          }
         />
 
         <SessionSpinner loading={addingInProgress} />

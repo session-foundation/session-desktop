@@ -1,6 +1,5 @@
 import {
   ChangeEvent,
-  ReactNode,
   RefObject,
   SessionDataTestId,
   useCallback,
@@ -8,15 +7,14 @@ import {
   useRef,
   useState,
   type PropsWithChildren,
+  type ReactNode,
 } from 'react';
 import { motion } from 'framer-motion';
 import { isEmpty, isEqual, isString } from 'lodash';
-import styled, { CSSProperties } from 'styled-components';
+import styled from 'styled-components';
 import { THEME_GLOBALS } from '../../themes/globals';
 import { AnimatedFlex, Flex } from '../basic/Flex';
 import { SpacerMD } from '../basic/Text';
-import { SessionIconButton } from '../icon';
-import { useHTMLDirection, type HTMLDirection } from '../../util/i18n/rtlSupport';
 import { Localizer, type LocalizerProps } from '../basic/Localizer';
 
 type TextSizes = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
@@ -188,7 +186,7 @@ const ErrorItem = (props: {
   loading?: boolean;
   dataTestId?: SessionDataTestId;
 }) => {
-  const { loading, error, hasError, setTextErrorStyle, setHasError } = props;
+  const { loading, error, hasError, setTextErrorStyle, setHasError, id } = props;
   const [errorValue, setErrorValue] = useState<LocalizerProps | string | undefined>(undefined);
 
   useEffect(() => {
@@ -217,7 +215,7 @@ const ErrorItem = (props: {
   return (
     <motion.label
       aria-label="Error message"
-      htmlFor={props.id}
+      htmlFor={id}
       className={'filled error'}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -284,91 +282,6 @@ const SimpleErrorItem = ({
   );
 };
 
-type ShowHideButtonStrings<T extends string> = { hide: T; show: T };
-type ShowHideButtonProps = {
-  forceShow: boolean;
-  toggleForceShow: () => void;
-  error: boolean;
-  ariaLabels?: ShowHideButtonStrings<string>;
-  dataTestIds?: ShowHideButtonStrings<SessionDataTestId>;
-};
-
-function alignEndAbsoluteButtonStyle(htmlDirection: HTMLDirection): CSSProperties {
-  return {
-    position: 'absolute',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    left: htmlDirection === 'ltr' ? undefined : 'var(--margins-sm)',
-    right: htmlDirection === 'ltr' ? 'var(--margins-sm)' : undefined,
-  };
-}
-
-const ShowHideButton = (props: ShowHideButtonProps) => {
-  const {
-    forceShow,
-    toggleForceShow,
-    error,
-    ariaLabels = { hide: 'Hide input text button', show: 'Show input text button' },
-    dataTestIds = { hide: 'hide-input-text-toggle', show: 'show-input-text-toggle' },
-  } = props;
-
-  const htmlDirection = useHTMLDirection();
-  const style = alignEndAbsoluteButtonStyle(htmlDirection);
-
-  if (forceShow) {
-    return (
-      <SessionIconButton
-        ariaLabel={ariaLabels.hide}
-        iconType={'eyeDisabled'}
-        iconColor={error ? 'var(--danger-color)' : 'var(--text-primary-color)'}
-        iconSize="huge"
-        onClick={toggleForceShow}
-        style={style}
-        dataTestId={dataTestIds.hide}
-      />
-    );
-  }
-
-  return (
-    <SessionIconButton
-      ariaLabel={ariaLabels.show}
-      iconType={'eye'}
-      iconColor={props.error ? 'var(--danger-color)' : 'var(--text-primary-color)'}
-      iconSize="huge"
-      onClick={toggleForceShow}
-      style={style}
-      dataTestId={dataTestIds.show}
-    />
-  );
-};
-
-const ClearInputButton = ({
-  onClearInputClicked,
-  dataTestId,
-}: {
-  onClearInputClicked: () => void;
-  dataTestId: SessionDataTestId;
-}) => {
-  const htmlDirection = useHTMLDirection();
-  const style = alignEndAbsoluteButtonStyle(htmlDirection);
-
-  return (
-    <SessionIconButton
-      ariaLabel="clear input"
-      iconType={'cross'}
-      iconColor={'var(--text-primary-color)'}
-      iconSize="medium"
-      onClick={onClearInputClicked}
-      style={style}
-      dataTestId={dataTestId}
-    />
-  );
-};
-
-const StyledCtaContainer = styled(motion.div)`
-  width: 100%;
-`;
-
 type Props = {
   error?: LocalizerProps | string;
   type?: string;
@@ -383,12 +296,6 @@ type Props = {
   inputRef?: RefObject<HTMLInputElement | HTMLTextAreaElement>;
   inputDataTestId?: SessionDataTestId;
   errorDataTestId?: SessionDataTestId;
-  showHideButtonAriaLabels?: ShowHideButtonStrings<string>;
-  /**
-   * Provide those to show the show/hide button (used for password input)
-   */
-  showHideButtonDataTestIds?: ShowHideButtonStrings<SessionDataTestId>;
-  ctaButton?: ReactNode;
   monospaced?: boolean;
   textSize?: TextSizes;
   centerText?: boolean;
@@ -403,7 +310,6 @@ type Props = {
 export const SessionInput = (props: Props) => {
   const {
     placeholder,
-    type = 'text',
     value,
     ariaLabel,
     maxLength,
@@ -415,9 +321,6 @@ export const SessionInput = (props: Props) => {
     inputRef,
     inputDataTestId,
     errorDataTestId,
-    showHideButtonAriaLabels,
-    showHideButtonDataTestIds,
-    ctaButton,
     monospaced,
     textSize = 'sm',
     centerText,
@@ -431,12 +334,9 @@ export const SessionInput = (props: Props) => {
   const [inputValue, setInputValue] = useState('');
   const [hasError, setHasError] = useState(false);
   const [textErrorStyle, setTextErrorStyle] = useState(false);
-  const [forceShow, setForceShow] = useState(false);
   const [isFocused, setIsFocused] = useState(props.autoFocus || false);
 
   const textAreaRef = useRef(inputRef?.current || null);
-
-  const correctType = forceShow ? 'text' : type;
 
   const updateInputValue = (e: ChangeEvent<HTMLInputElement>) => {
     if (!editable) {
@@ -460,15 +360,11 @@ export const SessionInput = (props: Props) => {
       onValueChanged(val);
     }
   };
+
   const id = 'session-input-floating-label';
 
-  const paddingInlineEnd = usePaddingForButtonInlineEnd({
-    hasButtonInlineEnd: !!showHideButtonDataTestIds,
-  });
-
   const inputProps: any = {
-    id,
-    type: correctType,
+    type: 'text',
     placeholder,
     value,
     textSize,
@@ -481,7 +377,6 @@ export const SessionInput = (props: Props) => {
     'aria-required': required,
     tabIndex,
     onChange: updateInputValue,
-    style: { paddingInlineEnd },
     // just in case onChange isn't triggered
     onBlur: (event: ChangeEvent<HTMLInputElement>) => {
       if (editable && !disableOnBlurEvent) {
@@ -506,7 +401,6 @@ export const SessionInput = (props: Props) => {
   };
 
   const containerProps = {
-    noValue: isEmpty(value),
     error: textErrorStyle,
     centerText,
     textSize,
@@ -566,20 +460,9 @@ export const SessionInput = (props: Props) => {
             aria-label={ariaLabel || 'session input'}
           />
         )}
-        {editable && showHideButtonDataTestIds && (
-          <ShowHideButton
-            forceShow={forceShow}
-            toggleForceShow={() => {
-              setForceShow(!forceShow);
-            }}
-            error={hasError}
-            ariaLabels={showHideButtonAriaLabels}
-            dataTestIds={showHideButtonDataTestIds}
-          />
-        )}
       </BorderWithErrorState>
 
-      {ctaButton || hasError ? <SpacerMD /> : null}
+      {hasError ? <SpacerMD /> : null}
       <ErrorItem
         id={id}
         error={error}
@@ -589,13 +472,6 @@ export const SessionInput = (props: Props) => {
         loading={loading}
         dataTestId={errorDataTestId}
       />
-
-      <StyledCtaContainer
-        initial={{ y: hasError && ctaButton ? 0 : undefined }}
-        animate={{ y: hasError && ctaButton ? 'var(--margins-md)' : undefined }}
-      >
-        {ctaButton}
-      </StyledCtaContainer>
     </StyledSessionInput>
   );
 };
@@ -627,6 +503,7 @@ function useUpdateInputValue(onValueChanged: (val: string) => void, disabled?: b
 export const SimpleSessionInput = (
   props: Pick<
     Props,
+    | 'type'
     | 'placeholder'
     | 'value'
     | 'ariaLabel'
@@ -644,14 +521,12 @@ export const SimpleSessionInput = (
       onValueChanged: (str: string) => void;
       onEnterPressed: () => void;
       providedError: string | LocalizerProps | undefined;
-      /**
-       * Provide this to show the clear input button
-       * */
-      clearInputButtonDataTestId?: SessionDataTestId;
       disabled?: boolean;
+      buttonEnd?: ReactNode;
     }
 ) => {
   const {
+    type = 'text',
     placeholder,
     value,
     ariaLabel,
@@ -663,13 +538,13 @@ export const SimpleSessionInput = (
     inputRef,
     inputDataTestId,
     errorDataTestId,
-    clearInputButtonDataTestId,
     textSize = 'sm',
     disabled,
     padding,
     required,
     tabIndex,
     centerText,
+    buttonEnd,
   } = props;
   const hasError = !isEmpty(providedError);
   const hasValue = !isEmpty(value);
@@ -677,11 +552,11 @@ export const SimpleSessionInput = (
   const updateInputValue = useUpdateInputValue(onValueChanged, disabled);
 
   const paddingInlineEnd = usePaddingForButtonInlineEnd({
-    hasButtonInlineEnd: !!clearInputButtonDataTestId && hasValue,
+    hasButtonInlineEnd: !!buttonEnd && hasValue,
   });
 
   const inputProps: any = {
-    type: 'text',
+    type,
     placeholder,
     value,
     textSize,
@@ -707,7 +582,6 @@ export const SimpleSessionInput = (
   };
 
   const containerProps = {
-    noValue: !hasValue,
     error: hasError,
     textSize,
     padding,
@@ -724,15 +598,7 @@ export const SimpleSessionInput = (
     >
       <BorderWithErrorState hasError={hasError}>
         <StyledInput {...inputProps} {...containerProps} ref={inputRef} aria-label={ariaLabel} />
-
-        {!disabled && hasValue && clearInputButtonDataTestId && (
-          <ClearInputButton
-            dataTestId={clearInputButtonDataTestId}
-            onClearInputClicked={() => {
-              onValueChanged('');
-            }}
-          />
-        )}
+        {buttonEnd}
       </BorderWithErrorState>
 
       {hasError ? (
@@ -772,11 +638,8 @@ export const SimpleSessionTextarea = (
     Required<Pick<Props, 'errorDataTestId'>> & {
       onValueChanged: (str: string) => void;
       providedError: string | LocalizerProps | undefined;
-      /**
-       * Provide this to show the clear input button
-       * */
-      clearInputButtonDataTestId?: SessionDataTestId;
       disabled?: boolean;
+      buttonEnd?: ReactNode;
     }
 ) => {
   const {
@@ -790,12 +653,12 @@ export const SimpleSessionTextarea = (
     inputRef,
     inputDataTestId,
     errorDataTestId,
-    clearInputButtonDataTestId,
     textSize = 'sm',
     disabled,
     padding,
     required,
     tabIndex,
+    buttonEnd,
   } = props;
   const hasError = !isEmpty(providedError);
   const hasValue = !isEmpty(value);
@@ -805,7 +668,7 @@ export const SimpleSessionTextarea = (
   const updateInputValue = useUpdateInputValue(onValueChanged, disabled);
 
   const paddingInlineEnd = usePaddingForButtonInlineEnd({
-    hasButtonInlineEnd: !!clearInputButtonDataTestId && hasValue,
+    hasButtonInlineEnd: !!buttonEnd && hasValue,
   });
 
   const inputProps: any = {
@@ -827,7 +690,6 @@ export const SimpleSessionTextarea = (
   };
 
   const containerProps = {
-    noValue: !hasValue,
     error: hasError,
     textSize,
     padding,
@@ -862,14 +724,7 @@ export const SimpleSessionTextarea = (
           />
         </StyledTextAreaContainer>
 
-        {!disabled && hasValue && clearInputButtonDataTestId && (
-          <ClearInputButton
-            dataTestId={clearInputButtonDataTestId}
-            onClearInputClicked={() => {
-              onValueChanged('');
-            }}
-          />
-        )}
+        {buttonEnd}
       </BorderWithErrorState>
 
       {hasError ? (

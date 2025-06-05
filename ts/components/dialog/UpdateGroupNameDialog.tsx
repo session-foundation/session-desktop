@@ -21,6 +21,7 @@ import { SessionSpinner } from '../loading';
 import { localize } from '../../localization/localeTools';
 import { SimpleSessionInput, SimpleSessionTextarea } from '../inputs/SessionInput';
 import { SessionWrapperModal2 } from '../SessionWrapperModal2';
+import { ClearInputButton } from '../inputs/ClearInputButton';
 
 function GroupAvatar({
   isPublic,
@@ -163,8 +164,16 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
         providedError={errorStringName}
         autoFocus={true}
         required={true}
-        clearInputButtonDataTestId="clear-group-info-name-button"
         tabIndex={0}
+        buttonEnd={
+          <ClearInputButton
+            dataTestId={'clear-group-info-name-button'}
+            onClearInputClicked={() => {
+              setNewGroupName('');
+            }}
+            show={!!newGroupName}
+          />
+        }
       />
       <SpacerSM />
 
@@ -179,9 +188,17 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
         errorDataTestId="error-message"
         providedError={errorStringDescription}
         autoFocus={false}
-        clearInputButtonDataTestId="clear-group-info-description-button"
         tabIndex={1}
         required={false}
+        buttonEnd={
+          <ClearInputButton
+            dataTestId={'clear-group-info-description-button'}
+            onClearInputClicked={() => {
+              setNewGroupDescription('');
+            }}
+            show={!!newGroupDescription}
+          />
+        }
       />
 
       <SessionSpinner loading={isNameChangePending} />

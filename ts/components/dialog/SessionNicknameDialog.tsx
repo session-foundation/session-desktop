@@ -13,6 +13,7 @@ import { Localizer } from '../basic/Localizer';
 import { localize } from '../../localization/localeTools';
 import LIBSESSION_CONSTANTS from '../../session/utils/libsession/libsession_constants';
 import { SimpleSessionInput } from '../inputs/SessionInput';
+import { ClearInputButton } from '../inputs/ClearInputButton';
 
 type Props = {
   conversationId: string;
@@ -48,7 +49,15 @@ function NicknameInput({
       errorDataTestId="error-message"
       providedError={errorString}
       autoFocus={true}
-      clearInputButtonDataTestId="clear-nickname-button"
+      buttonEnd={
+        <ClearInputButton
+          dataTestId={'clear-nickname-button'}
+          onClearInputClicked={() => {
+            setStateNickname('');
+          }}
+          show={!!nickname}
+        />
+      }
     />
   );
 }
