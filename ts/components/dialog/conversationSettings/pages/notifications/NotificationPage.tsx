@@ -15,6 +15,7 @@ import { useConversationSettingsModalIsStandalone } from '../../../../../state/s
 import { PanelButtonText } from '../../../../buttons/PanelButton';
 import { useLocalisedNotificationOptions } from '../../../../menuAndSettingsHooks/useLocalisedNotificationFor';
 import { useSetNotificationsFor } from '../../../../menuAndSettingsHooks/useSetNotificationsFor';
+import { useShowConversationSettingsFor } from '../../../../menuAndSettingsHooks/useShowConversationSettingsFor';
 
 const ButtonSpacer = styled.div`
   height: 80px;
@@ -76,18 +77,17 @@ export const NotificationsPage = () => {
   const notificationOptions = useLocalisedNotificationOptions('action');
   const setNotificationFor = useSetNotificationsFor(selectedConversationKey);
 
+  const showConvoSettingsCb = useShowConversationSettingsFor(selectedConversationKey);
+
   const handleSetNotifications = async () => {
     if (selectedConversationKey && notificationSelected) {
       setNotificationFor(notificationSelected);
       if (shouldCloseOnSet) {
         dispatch(updateConversationSettingsModal(null));
       } else {
-        dispatch(
-          updateConversationSettingsModal({
-            conversationId: selectedConversationKey,
-            settingsModalPage: 'default',
-          })
-        );
+        showConvoSettingsCb?.({
+          settingsModalPage: 'default',
+        });
       }
     }
   };

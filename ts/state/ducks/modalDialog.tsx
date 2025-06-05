@@ -60,16 +60,14 @@ export type SessionNetworkModalState = object | null;
 export type ConversationSettingsModalPage = 'default' | 'disappearing_message' | 'notifications';
 type SettingsPageThatCannotBeStandalone = Extract<ConversationSettingsModalPage, 'default'>;
 type SettingsPageThatCanBeStandalone = Exclude<ConversationSettingsModalPage, 'default'>;
-export type ConversationSettingsModalState =
-  | (WithConvoId &
-      (
-        | { settingsModalPage: SettingsPageThatCannotBeStandalone }
-        | {
-            settingsModalPage: SettingsPageThatCanBeStandalone;
-            standalonePage: boolean;
-          }
-      ))
-  | null;
+
+export type ConversationSettingsPage =
+  | { settingsModalPage: SettingsPageThatCannotBeStandalone }
+  | {
+      settingsModalPage: SettingsPageThatCanBeStandalone;
+      standalonePage: boolean;
+    };
+export type ConversationSettingsModalState = (WithConvoId & ConversationSettingsPage) | null;
 
 export type ModalState = {
   confirmModal: ConfirmModalState;

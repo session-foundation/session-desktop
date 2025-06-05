@@ -11,12 +11,7 @@ import { Data } from '../../data/data';
 import { ConvoHub } from '../../session/conversations';
 
 import { clearSearch } from '../../state/ducks/search';
-import {
-  resetLeftOverlayMode,
-  resetRightOverlayMode,
-  SectionType,
-  showLeftPaneSection,
-} from '../../state/ducks/section';
+import { resetLeftOverlayMode, SectionType, showLeftPaneSection } from '../../state/ducks/section';
 import {
   getOurPrimaryConversation,
   useGlobalUnreadMessageCount,
@@ -246,12 +241,6 @@ const doAppStartUp = async () => {
     // Note: this also starts periodic jobs, so we don't need to keep doing it
     void UserSync.queueNewJobIfNeeded();
   }, 20000);
-
-  if (window.sessionFeatureFlags.showSettingsOnStart) {
-    window.inboxStore?.dispatch(showLeftPaneSection(SectionType.Settings));
-    window.inboxStore?.dispatch(resetLeftOverlayMode());
-    window.inboxStore?.dispatch(resetRightOverlayMode());
-  }
 };
 
 function useUpdateBadgeCount() {

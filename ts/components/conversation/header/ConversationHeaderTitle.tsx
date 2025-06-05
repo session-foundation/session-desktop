@@ -19,8 +19,8 @@ import {
   useSelectedSubscriberCount,
 } from '../../../state/selectors/selectedConversation';
 import { ConversationHeaderSubtitle } from './ConversationHeaderSubtitle';
-import { updateConversationSettingsModal } from '../../../state/ducks/modalDialog';
 import { useLocalisedNotificationOf } from '../../menuAndSettingsHooks/useLocalisedNotificationFor';
+import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useShowConversationSettingsFor';
 
 export type SubtitleStrings = Record<string, string> & {
   notifications?: string;
@@ -89,6 +89,8 @@ export const ConversationHeaderTitle = (props: ConversationHeaderTitleProps) => 
     return null;
   }, [i18n, isGroup, isKickedFromGroup, isPublic, selectedMembersCount, subscriberCount]);
 
+  const showConvoSettingsCb = useShowConversationSettingsFor(convoId);
+
   const onHeaderClick = () => {
     if (isLegacyGroup || !convoId) {
       return;
@@ -97,24 +99,21 @@ export const ConversationHeaderTitle = (props: ConversationHeaderTitleProps) => 
       dispatch(closeRightPanel());
       return;
     }
+    if (!showConvoSettingsCb) {
+      return;
+    }
 
     // NOTE If disappearing messages is defined we must show it first
     if (visibleSubtitle === 'disappearingMessages') {
-      dispatch(
-        updateConversationSettingsModal({
-          conversationId: convoId,
-          settingsModalPage: 'disappearing_message',
-          standalonePage: true,
-        })
-      );
+      showConvoSettingsCb({
+        settingsModalPage: 'disappearing_message',
+        standalonePage: true,
+      });
     } else if (visibleSubtitle === 'notifications') {
-      dispatch(
-        updateConversationSettingsModal({
-          conversationId: convoId,
-          settingsModalPage: 'notifications',
-          standalonePage: true,
-        })
-      );
+      showConvoSettingsCb({
+        settingsModalPage: 'notifications',
+        standalonePage: true,
+      });
     } else {
       dispatch(resetRightOverlayMode());
     }

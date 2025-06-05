@@ -25,6 +25,7 @@ import { DisappearingModes } from './DisappearingModes';
 import { TimeOptions } from './TimeOptions';
 import { useConversationSettingsModalIsStandalone } from '../../../../../state/selectors/modal';
 import { updateConversationSettingsModal } from '../../../../../state/ducks/modalDialog';
+import { useShowConversationSettingsFor } from '../../../../menuAndSettingsHooks/useShowConversationSettingsFor';
 
 const ButtonSpacer = styled.div`
   height: 80px;
@@ -102,6 +103,8 @@ export const DisappearingMessagesPage = () => {
   const timerOptions = useTimerOptionsByMode(modeSelected, hasOnlyOneMode);
   const isStandalone = useConversationSettingsModalIsStandalone();
 
+  const showConvoSettingsCb = useShowConversationSettingsFor(selectedConversationKey);
+
   const handleSetMode = async () => {
     if (hasOnlyOneMode) {
       if (selectedConversationKey && singleMode) {
@@ -120,12 +123,9 @@ export const DisappearingMessagesPage = () => {
       if (isStandalone) {
         dispatch(updateConversationSettingsModal(null));
       } else {
-        dispatch(
-          updateConversationSettingsModal({
-            conversationId: selectedConversationKey,
-            settingsModalPage: 'default',
-          })
-        );
+        showConvoSettingsCb?.({
+          settingsModalPage: 'default',
+        });
       }
     }
   };

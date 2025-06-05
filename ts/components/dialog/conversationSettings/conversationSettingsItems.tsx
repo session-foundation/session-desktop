@@ -1,5 +1,4 @@
 import type { SessionDataTestId } from 'react';
-import { useDispatch } from 'react-redux';
 
 import {
   useDisappearingMessageSettingText,
@@ -23,7 +22,6 @@ import { useShowNotificationFor } from '../../menuAndSettingsHooks/useShowNotifi
 import type { WithConvoId } from '../../../session/types/with';
 import { ConvoHub } from '../../../session/conversations';
 import { useShowPinUnpin } from '../../menuAndSettingsHooks/usePinUnpin';
-import { updateConversationSettingsModal } from '../../../state/ducks/modalDialog';
 import { useLocalisedNotificationOf } from '../../menuAndSettingsHooks/useLocalisedNotificationFor';
 import { useShowBlockUnblock } from '../../menuAndSettingsHooks/useShowBlockUnblock';
 import { useShowDeletePrivateContactCb } from '../../menuAndSettingsHooks/useShowDeletePrivateContact';
@@ -45,6 +43,7 @@ import {
 } from '../../menuAndSettingsHooks/useShowLeaveGroup';
 import { useShowAttachments } from '../../menuAndSettingsHooks/useShowAttachments';
 import { useGroupCommonNoShow } from '../../menuAndSettingsHooks/useGroupCommonNoShow';
+import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useShowConversationSettingsFor';
 
 type WithAsAdmin = { asAdmin: boolean };
 
@@ -115,14 +114,14 @@ export const NotificationPanelIconButton = (notification: ConversationNotificati
 };
 
 export const NotificationPanelButton = ({ convoId }: { convoId: string }) => {
-  const dispatch = useDispatch();
   const showNotificationFor = useShowNotificationFor(convoId);
 
   const notification = useNotificationSetting(convoId);
 
   const subText = useLocalisedNotificationOf(notification, 'state');
+  const showConvoSettingsCb = useShowConversationSettingsFor(convoId);
 
-  if (!showNotificationFor) {
+  if (!showNotificationFor || !showConvoSettingsCb) {
     return null;
   }
 
@@ -131,13 +130,10 @@ export const NotificationPanelButton = ({ convoId }: { convoId: string }) => {
       iconElement={<PanelIconLucideIcon iconUnicode={NotificationPanelIconButton(notification)} />}
       text={localize('sessionNotifications').toString()}
       onClick={() => {
-        dispatch(
-          updateConversationSettingsModal({
-            conversationId: convoId,
-            settingsModalPage: 'notifications',
-            standalonePage: false,
-          })
-        );
+        showConvoSettingsCb({
+          settingsModalPage: 'notifications',
+          standalonePage: false,
+        });
       }}
       subText={subText}
       subTextDataTestId="notifications-details-menu-option"
@@ -291,10 +287,10 @@ export function UpdateDisappearingMessagesButton({
   const disappearingMessagesSubtitle = useDisappearingMessageSettingText({
     convoId: conversationId,
   });
-  const dispatch = useDispatch();
 
   const isGroupV2 = useIsGroupV2(conversationId);
   const weAreAdmin = useWeAreAdmin(conversationId);
+  const showConvoSettingsCb = useShowConversationSettingsFor(conversationId);
 
   if (!hasDisappearingMessages) {
     return null;
@@ -323,13 +319,7 @@ export function UpdateDisappearingMessagesButton({
       subText={disappearingMessagesSubtitle}
       dataTestId="disappearing-messages-menu-option"
       onClick={() => {
-        dispatch(
-          updateConversationSettingsModal({
-            conversationId,
-            settingsModalPage: 'disappearing_message',
-            standalonePage: false,
-          })
-        );
+        showConvoSettingsCb?.({ settingsModalPage: 'disappearing_message', standalonePage: false });
       }}
     />
   );

@@ -21,22 +21,20 @@ import { SelectionOverlay } from './ConversationHeaderSelectionOverlay';
 import { ConversationHeaderTitle } from './ConversationHeaderTitle';
 import { localize } from '../../../localization/localeTools';
 import { groupInfoActions } from '../../../state/ducks/metaGroups';
-import {
-  updateConfirmModal,
-  updateConversationSettingsModal,
-} from '../../../state/ducks/modalDialog';
+import { updateConfirmModal } from '../../../state/ducks/modalDialog';
 import { setLeftOverlayMode } from '../../../state/ducks/section';
 import { SessionButtonColor, SessionButton, SessionButtonType } from '../../basic/SessionButton';
 import { ConvoHub } from '../../../session/conversations';
 import { ConversationTypeEnum } from '../../../models/types';
 import { Constants } from '../../../session';
+import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useShowConversationSettingsFor';
 
 export const ConversationHeaderWithDetails = () => {
   const isSelectionMode = useIsMessageSelectionMode();
   const selectedConvoKey = useSelectedConversationKey();
   const isOutgoingRequest = useIsOutgoingRequest(selectedConvoKey);
 
-  const dispatch = useDispatch();
+  const showConvoSettingsCb = useShowConversationSettingsFor(selectedConvoKey);
 
   if (!selectedConvoKey) {
     return null;
@@ -64,14 +62,13 @@ export const ConversationHeaderWithDetails = () => {
             <RecreateGroupButton />
             <CallButton />
             <AvatarHeader
-              onAvatarClick={() => {
-                dispatch(
-                  updateConversationSettingsModal({
-                    conversationId: selectedConvoKey,
-                    settingsModalPage: 'default',
-                  })
-                );
-              }}
+              onAvatarClick={
+                showConvoSettingsCb
+                  ? () => {
+                      showConvoSettingsCb({ settingsModalPage: 'default' });
+                    }
+                  : undefined
+              }
               pubkey={selectedConvoKey}
             />
           </Flex>

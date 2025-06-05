@@ -192,7 +192,7 @@ const ErrorItem = (props: {
   const [errorValue, setErrorValue] = useState<LocalizerProps | string | undefined>(undefined);
 
   useEffect(() => {
-    // if we have an error we want to continue to show that error unless it changes to a new error, we dont care if the input value changes
+    // if we have an error we want to continue to show that error unless it changes to a new error, we don't care if the input value changes
     if (error && !isEmpty(error)) {
       setTextErrorStyle(true);
 

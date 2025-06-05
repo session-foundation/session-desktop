@@ -9,10 +9,7 @@ import { useDispatch } from 'react-redux';
 import { CSSProperties } from 'styled-components';
 import { Avatar, AvatarSize } from '../../avatar/Avatar';
 
-import {
-  updateConversationSettingsModal,
-  updateUserDetailsModal,
-} from '../../../state/ducks/modalDialog';
+import { updateUserDetailsModal } from '../../../state/ducks/modalDialog';
 
 import {
   ContextConversationProvider,
@@ -33,6 +30,7 @@ import { MemoConversationListItemContextMenu } from '../../menu/ConversationList
 import { ConversationListItemHeaderItem } from './HeaderItem';
 import { MessageItem } from './MessageItem';
 import { openConversationWithMessages } from '../../../state/ducks/conversations';
+import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useShowConversationSettingsFor';
 
 const Portal = ({ children }: { children: ReactNode }) => {
   return createPortal(children, document.querySelector('.inbox.index') as Element);
@@ -79,6 +77,8 @@ export const ConversationListItem = (props: Props) => {
   const isSearch = useIsSearching();
   const selectedConvo = useSelectedConversationKey();
 
+  const showConvoSettingsCb = useShowConversationSettingsFor(conversationId);
+
   const isSelectedConvo = conversationId === selectedConvo && !isNil(selectedConvo);
 
   if (isSearch) {
@@ -94,12 +94,9 @@ export const ConversationListItem = (props: Props) => {
       // mousedown is invoked sooner than onClick, but for both right and left click
       if (e.button === 0) {
         if (isSelectedConvo) {
-          dispatch(
-            updateConversationSettingsModal({
-              conversationId,
-              settingsModalPage: 'default',
-            })
-          );
+          showConvoSettingsCb?.({
+            settingsModalPage: 'default',
+          });
         } else {
           void openConversationWithMessages({ conversationKey: conversationId, messageId: null });
         }

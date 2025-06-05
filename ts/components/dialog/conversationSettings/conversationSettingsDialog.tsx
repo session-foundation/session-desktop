@@ -15,6 +15,7 @@ import { DisappearingMessagesPage } from './pages/disappearing-messages/Disappea
 import { DefaultConversationSettingsPage } from './pages/default/defaultPage';
 import { assertUnreachable } from '../../../types/sqlSharedTypes';
 import { NotificationsPage } from './pages/notifications/NotificationPage';
+import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useShowConversationSettingsFor';
 
 const StyledContent = styled(Flex)`
   /* position: absolute; */
@@ -39,7 +40,8 @@ function useTitleFromPage(page: ConversationSettingsModalPage | undefined) {
 
 function useCloseActionFromPage(props: ConversationSettingsModalState) {
   const dispatch = useDispatch();
-  if (!props?.conversationId) {
+  const showConvoSettingsCb = useShowConversationSettingsFor(props?.conversationId);
+  if (!props?.conversationId || !showConvoSettingsCb) {
     return noop;
   }
   switch (props.settingsModalPage) {
@@ -48,24 +50,23 @@ function useCloseActionFromPage(props: ConversationSettingsModalState) {
       return props.standalonePage
         ? () => dispatch(updateConversationSettingsModal(null))
         : () =>
-            dispatch(
-              updateConversationSettingsModal({
-                conversationId: props.conversationId,
-                settingsModalPage: 'default',
-              })
-            );
+            showConvoSettingsCb?.({
+              settingsModalPage: 'default',
+            });
+
     default:
       return () => dispatch(updateConversationSettingsModal(null));
   }
 }
 
 function useBackButtonForPage(modalState: ConversationSettingsModalState) {
-  const dispatch = useDispatch();
+  const showConvoSettingsCb = useShowConversationSettingsFor(modalState?.conversationId);
 
   if (
     !modalState?.settingsModalPage ||
     modalState?.settingsModalPage === 'default' ||
-    modalState?.standalonePage
+    modalState?.standalonePage ||
+    !showConvoSettingsCb
   ) {
     // no back button if we are on the default page or if the page is standalone
     return undefined;
@@ -76,12 +77,9 @@ function useBackButtonForPage(modalState: ConversationSettingsModalState) {
       iconType: 'chevron' as const,
       iconRotation: 90,
       onClick: () => {
-        dispatch(
-          updateConversationSettingsModal({
-            conversationId: modalState.conversationId,
-            settingsModalPage: 'default',
-          })
-        );
+        showConvoSettingsCb({
+          settingsModalPage: 'default',
+        });
       },
     },
   ];

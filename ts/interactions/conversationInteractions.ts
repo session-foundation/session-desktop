@@ -312,7 +312,7 @@ export async function showUpdateGroupMembersByConvoId(conversationId: string) {
   window.inboxStore?.dispatch(updateGroupMembersModal({ conversationId }));
 }
 
-async function leaveGroupOrCommunityByConvoId({
+export async function leaveGroupOrCommunityByConvoId({
   conversationId,
   sendLeaveMessage,
   isPublic,
@@ -365,41 +365,6 @@ async function leaveGroupOrCommunityByConvoId({
   }
 }
 
-export async function showLeaveCommunityByConvoId(
-  conversationId: string,
-  name: string | undefined
-) {
-  const conversation = ConvoHub.use().get(conversationId);
-
-  if (!conversation.isPublic()) {
-    throw new Error('showLeaveCommunityByConvoId() called with a non public convo.');
-  }
-
-  const onClickClose = () => {
-    window?.inboxStore?.dispatch(updateConfirmModal(null));
-  };
-
-  const onClickOk = async () => {
-    await leaveGroupOrCommunityByConvoId({
-      conversationId,
-      isPublic: true,
-      sendLeaveMessage: false,
-      onClickClose,
-    });
-  };
-
-  window?.inboxStore?.dispatch(
-    updateConfirmModal({
-      title: localize('communityLeave').toString(),
-      i18nMessage: { token: 'groupLeaveDescription', args: { group_name: name ?? '' } },
-      onClickOk,
-      okText: window.i18n('leave'),
-      okTheme: SessionButtonColor.Danger,
-      onClickClose,
-      conversationId,
-    })
-  );
-}
 
 export async function showLeaveGroupByConvoId(conversationId: string, name: string | undefined) {
   const conversation = ConvoHub.use().get(conversationId);
