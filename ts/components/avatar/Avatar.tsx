@@ -1,4 +1,3 @@
-import { isEqual } from 'lodash';
 import { memo, SessionDataTestId, useState } from 'react';
 import styled from 'styled-components';
 import clsx from 'clsx';
@@ -150,7 +149,13 @@ const AvatarInner = (props: Props) => {
     setImageBroken(true);
   };
 
-  const hasImage = (base64Data || urlToLoad) && !imageBroken;
+  /**
+   * base64Data is used for in memory avatars (like before joining a community from the Join a Community left pane section)
+   * Somehow, sometimes (only in the left pane) urlToLoad is set (to a wrong avatar) but `forcedAvatarPath || avatarPath` are both unset.
+   * I suspect that it comes from the virtualisation of the list, but I am not 100% sure.
+   * I didn't find the root cause but to avoid it we enforce that urlToLoad is used only when one of the avatar path is set.
+   */
+  const hasImage = (base64Data || ((forcedAvatarPath || avatarPath) && urlToLoad)) && !imageBroken;
 
   const isClickable = !!onAvatarClick;
 
@@ -202,4 +207,4 @@ const AvatarInner = (props: Props) => {
   );
 };
 
-export const Avatar = memo(AvatarInner, isEqual);
+export const Avatar = AvatarInner;
