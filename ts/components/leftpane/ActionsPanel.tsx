@@ -41,7 +41,10 @@ import { getSwarmPollingInstance } from '../../session/apis/snode_api';
 import { UserUtils } from '../../session/utils';
 import { Avatar, AvatarSize } from '../avatar/Avatar';
 import { ActionPanelOnionStatusLight } from '../dialog/OnionStatusPathDialog';
-import { SessionIconButton } from '../icon/SessionIconButton';
+import {
+  SessionLucideIconButton,
+  type SessionLucideIconButtonProps,
+} from '../icon/SessionIconButton';
 import { LeftPaneSectionContainer } from './LeftPaneSectionContainer';
 
 import { SettingsKey } from '../../data/settings-key';
@@ -61,6 +64,7 @@ import { useCheckReleasedFeatures } from '../../hooks/useCheckReleasedFeatures';
 import { useDebugMode } from '../../state/selectors/debug';
 import { networkDataActions } from '../../state/ducks/networkData';
 import { isSesh101ReadyOutsideRedux } from '../../state/selectors/releasedFeatures';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 const Section = (props: { type: SectionType }) => {
   const ourNumber = useSelector(getOurNumber);
@@ -71,7 +75,7 @@ const Section = (props: { type: SectionType }) => {
   const isModalVisible = useSelector(getIsModalVisible);
   const isDarkTheme = useIsDarkTheme();
   const focusedSection = useSelector(getFocusedSection);
-  const isSelected = focusedSection === props.type;
+  const isSelected = focusedSection === type;
 
   const handleClick = () => {
     if (type === SectionType.Profile) {
@@ -125,38 +129,42 @@ const Section = (props: { type: SectionType }) => {
 
   const unreadToShow = type === SectionType.Message ? globalUnreadMessageCount : undefined;
 
+  const buttonProps = {
+    iconSize: '22px',
+    padding: 'var(--margins-lg)',
+    onClick: handleClick,
+    isSelected,
+  } satisfies Omit<SessionLucideIconButtonProps, 'unicode' | 'dataTestId'>;
+
   switch (type) {
     case SectionType.Message:
       return (
-        <SessionIconButton
-          iconSize="medium"
+        <SessionLucideIconButton
+          {...buttonProps}
           dataTestId="message-section"
-          iconType={'chatBubble'}
-          onClick={handleClick}
-          isSelected={isSelected}
+          unicode={LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE}
+          style={{
+            position: 'relative',
+          }}
         >
           {Boolean(unreadToShow) && <SessionNotificationCount count={unreadToShow} />}
-        </SessionIconButton>
+        </SessionLucideIconButton>
       );
     case SectionType.Settings:
       return (
-        <SessionIconButton
-          iconSize="medium"
+        <SessionLucideIconButton
+          {...buttonProps}
           dataTestId="settings-section"
-          iconType={'gear'}
-          onClick={handleClick}
-          isSelected={isSelected}
+          unicode={LUCIDE_ICONS_UNICODE.SETTINGS}
           ref={settingsIconRef}
         />
       );
     case SectionType.DebugMenu:
       return (
-        <SessionIconButton
-          iconSize="medium"
+        <SessionLucideIconButton
+          {...buttonProps}
+          unicode={LUCIDE_ICONS_UNICODE.SQUARE_CODE}
           dataTestId="debug-menu-section"
-          iconType={'debug'}
-          onClick={handleClick}
-          isSelected={isSelected}
         />
       );
     case SectionType.PathIndicator:
@@ -170,12 +178,10 @@ const Section = (props: { type: SectionType }) => {
     case SectionType.ColorMode:
     default:
       return (
-        <SessionIconButton
-          iconSize="medium"
-          iconType={isDarkTheme ? 'moon' : 'sun'}
+        <SessionLucideIconButton
+          {...buttonProps}
+          unicode={isDarkTheme ? LUCIDE_ICONS_UNICODE.MOON : LUCIDE_ICONS_UNICODE.SUN_MEDIUM}
           dataTestId="theme-section"
-          onClick={handleClick}
-          isSelected={isSelected}
         />
       );
   }

@@ -103,6 +103,7 @@ declare module 'react' {
     | 'permissions-settings-menu-item'
     | 'clear-data-settings-menu-item'
     | 'session-network-settings-menu-item'
+    | 'donate-settings-menu-item'
 
     // timer options
     | DisappearTimeOptionDataTestId
