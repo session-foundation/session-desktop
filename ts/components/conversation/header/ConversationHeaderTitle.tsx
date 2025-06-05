@@ -4,7 +4,6 @@ import { useDispatch } from 'react-redux';
 import { useDisappearingMessageSettingText } from '../../../hooks/useParamSelector';
 import { useIsRightPanelShowing } from '../../../hooks/useUI';
 import { closeRightPanel } from '../../../state/ducks/conversations';
-import { resetRightOverlayMode } from '../../../state/ducks/section';
 import {
   useSelectedConversationDisappearingMode,
   useSelectedConversationKey,
@@ -115,7 +114,7 @@ export const ConversationHeaderTitle = (props: ConversationHeaderTitleProps) => 
         standalonePage: true,
       });
     } else {
-      dispatch(resetRightOverlayMode());
+      showConvoSettingsCb({ settingsModalPage: 'default' });
     }
   };
 
