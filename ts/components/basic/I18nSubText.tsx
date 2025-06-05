@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'styled-components';
 import styled from 'styled-components';
 import { SessionDataTestId } from 'react';
 import { Localizer, type LocalizerProps } from './Localizer';
@@ -15,16 +16,16 @@ const StyledI18nSubTextContainer = styled('div')`
 `;
 
 export const I18nSubText = ({
-  className,
   dataTestId,
   localizerProps,
+  style,
 }: {
-  className?: string;
   dataTestId: SessionDataTestId;
   localizerProps: LocalizerProps;
+  style?: CSSProperties;
 }) => {
   return (
-    <StyledI18nSubTextContainer className={className} data-testid={dataTestId}>
+    <StyledI18nSubTextContainer data-testid={dataTestId} style={style}>
       <Localizer {...localizerProps} />
     </StyledI18nSubTextContainer>
   );

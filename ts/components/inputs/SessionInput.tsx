@@ -638,6 +638,7 @@ export const SimpleSessionInput = (
     | 'padding'
     | 'required'
     | 'tabIndex'
+    | 'centerText'
   > &
     Required<Pick<Props, 'errorDataTestId'>> & {
       onValueChanged: (str: string) => void;
@@ -668,11 +669,10 @@ export const SimpleSessionInput = (
     padding,
     required,
     tabIndex,
+    centerText,
   } = props;
   const hasError = !isEmpty(providedError);
   const hasValue = !isEmpty(value);
-
-  const ref = useRef(inputRef?.current || null);
 
   const updateInputValue = useUpdateInputValue(onValueChanged, disabled);
 
@@ -694,7 +694,7 @@ export const SimpleSessionInput = (
     'aria-required': required,
     tabIndex,
     onChange: updateInputValue,
-    style: { paddingInlineEnd },
+    style: { paddingInlineEnd, textAlign: centerText ? 'center' : undefined },
     onKeyDown: (event: KeyboardEvent) => {
       if (disabled) {
         return;
@@ -723,7 +723,7 @@ export const SimpleSessionInput = (
       textSize={textSize}
     >
       <BorderWithErrorState hasError={hasError}>
-        <StyledInput {...inputProps} {...containerProps} ref={ref} aria-label={ariaLabel} />
+        <StyledInput {...inputProps} {...containerProps} ref={inputRef} aria-label={ariaLabel} />
 
         {!disabled && hasValue && clearInputButtonDataTestId && (
           <ClearInputButton
@@ -822,7 +822,7 @@ export const SimpleSessionTextarea = (
     'aria-required': required,
     tabIndex,
     onChange: updateInputValue,
-    style: { paddingInlineEnd },
+    style: { paddingInlineEnd, lineHeight: 1.5 },
     // no onEnterPressed/onKeyDown here, as this is a textarea (and multi lines are allowed)
   };
 

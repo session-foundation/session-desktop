@@ -14,6 +14,7 @@ import { SessionIcon } from '../../icon';
 import { SessionInput } from '../../inputs';
 import { StyledLeftPaneOverlay } from './OverlayMessage';
 import { SessionButtonColor } from '../../basic/SessionButton';
+import { localize } from '../../../localization/localeTools';
 
 const StyledHeadingContainer = styled(Flex)`
   .session-icon-button {
@@ -84,7 +85,7 @@ export const OverlayInvite = () => {
               centerText={true}
               isTextArea={false}
               padding={'var(--margins-xl) var(--margins-sm)'}
-              ariaLabel="Account ID"
+              ariaLabel={localize('accountId').toString()}
               inputDataTestId="your-account-id"
             />
           </Flex>

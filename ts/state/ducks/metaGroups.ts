@@ -1103,10 +1103,6 @@ async function handleClearAvatarFromUI({ groupPk }: WithGroupPubkey) {
     return;
   }
 
-  console.warn(
-    'we should merge the shared logic of those functions together, before it gets more out of hands'
-  );
-
   // return early if no change are needed at all
   if (
     isNil(convo.get('avatarPointer')) &&

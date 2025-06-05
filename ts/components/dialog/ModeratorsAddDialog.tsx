@@ -7,8 +7,6 @@ import { PubKey } from '../../session/types';
 import { ToastUtils } from '../../session/utils';
 import { ConvoHub } from '../../session/conversations';
 import { updateAddModeratorsModal } from '../../state/ducks/modalDialog';
-import { useIsDarkTheme } from '../../state/theme/selectors/theme';
-import { SessionHeaderSearchInput } from '../SessionHeaderSearchInput';
 import { Flex } from '../basic/Flex';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
 import { SessionSpinner } from '../loading';
@@ -16,6 +14,8 @@ import { localize } from '../../localization/localeTools';
 import { I18nSubText } from '../basic/I18nSubText';
 import { MAX_SUBREQUESTS_COUNT } from '../../session/apis/snode_api/SnodeRequestTypes';
 import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import { SimpleSessionInput } from '../inputs/SessionInput';
+import { SpacerMD } from '../basic/Text';
 
 type Props = {
   conversationId: string;
@@ -25,7 +25,6 @@ export const AddModeratorsDialog = (props: Props) => {
   const { conversationId } = props;
 
   const dispatch = useDispatch();
-  const isDarkTheme = useIsDarkTheme();
   const convo = ConvoHub.use().get(conversationId);
 
   const [inputBoxValue, setInputBoxValue] = useState('');
@@ -77,14 +76,11 @@ export const AddModeratorsDialog = (props: Props) => {
     }
   };
 
-  const onPubkeyBoxChanges = (e: any) => {
-    const val = e.target.value;
-    setInputBoxValue(val);
-  };
-
   const onClose = () => {
     dispatch(updateAddModeratorsModal(null));
   };
+
+  const tooManyModerators = pubkeys.length > MAX_SUBREQUESTS_COUNT;
 
   return (
     <SessionWrapperModal2
@@ -96,16 +92,14 @@ export const AddModeratorsDialog = (props: Props) => {
             buttonType={SessionButtonType.Simple}
             onClick={addAsModerator}
             text={localize('add').toString()}
-            disabled={
-              addingInProgress ||
-              inputBoxValue.length === 0 ||
-              pubkeys.length > MAX_SUBREQUESTS_COUNT
-            }
+            disabled={addingInProgress || inputBoxValue.length === 0 || tooManyModerators}
+            dataTestId="add-admins-confirm-button"
           />
           <SessionButton
             buttonType={SessionButtonType.Simple}
             onClick={onClose}
             text={localize('cancel').toString()}
+            dataTestId="add-admins-cancel-button"
           />
         </ButtonChildrenContainer>
       }
@@ -115,18 +109,24 @@ export const AddModeratorsDialog = (props: Props) => {
           dataTestId="modal-description"
           localizerProps={{ token: 'addAdminsDescription' }}
         />
-        <SessionHeaderSearchInput
-          type="text"
-          isDarkTheme={isDarkTheme}
+        <SimpleSessionInput
           placeholder={localize('accountId').toString()}
-          dir="auto"
-          onChange={onPubkeyBoxChanges}
+          onValueChanged={setInputBoxValue}
           disabled={addingInProgress}
           value={inputBoxValue}
+          ariaLabel="account Id input"
+          textSize="md"
+          padding={'var(--margins-md) var(--margins-md)'}
+          inputDataTestId="add-admins-input"
+          onEnterPressed={() => void addAsModerator()}
+          errorDataTestId="error-message"
+          providedError={''}
           autoFocus={true}
+          clearInputButtonDataTestId="clear-add-admins-button"
         />
 
         <SessionSpinner loading={addingInProgress} />
+        <SpacerMD />
       </Flex>
     </SessionWrapperModal2>
   );

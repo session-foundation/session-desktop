@@ -58,18 +58,47 @@ declare module 'react' {
   type SetButton = 'notifications' | 'disappear';
 
   type ConfirmButtons =
-    `${'set-nickname' | 'open-url' | 'set-nickname' | 'update-group-info'}-confirm-button`;
-  type CancelButtons = `${'update-group-info'}-cancel-button`;
+    | 'set-nickname'
+    | 'open-url'
+    | 'add-admins'
+    | 'update-group-info'
+    | 'ban-user'
+    | 'unban-user'
+    | 'ban-user-delete-all';
 
-  type ClearButtons = `clear-${'group-info-description' | 'group-info-name' | 'nickname'}-button`;
+  type CancelButtons = 'update-group-info' | 'add-admins' | 'unban-user';
+
+  type ClearButtons = 'group-info-description' | 'group-info-name' | 'nickname' | 'add-admins';
 
   // left pane section types
-  type Sections = `${'theme' | 'settings' | 'message' | 'privacy' | 'debug'}-section`;
+  type Sections = 'theme' | 'settings' | 'message' | 'privacy' | 'debug-menu';
 
   type SettingsMenuItems =
-    `${'message-requests' | 'recovery-password' | 'privacy' | 'notifications' | 'conversations' | 'appearance' | 'help' | 'permissions' | 'clear-data' | 'session-network'}-settings-menu-item`;
+    | 'message-requests'
+    | 'recovery-password'
+    | 'privacy'
+    | 'notifications'
+    | 'conversations'
+    | 'appearance'
+    | 'help'
+    | 'permissions'
+    | 'clear-data'
+    | 'session-network';
 
-  type MenuItems = `${'block' | 'delete' | 'accept'}-menu-item`;
+  type MenuItems = 'block' | 'delete' | 'accept';
+
+  type Inputs =
+    | 'password'
+    | 'nickname'
+    | 'profile-name'
+    | 'message'
+    | 'update-group-info-name'
+    | 'update-group-info-description'
+    | 'recovery-phrase'
+    | 'display-name'
+    | 'add-admins'
+    | 'ban-user'
+    | 'unban-user';
 
   type SessionDataTestId =
     | 'group-member-status-text'
@@ -87,10 +116,7 @@ declare module 'react' {
     | 'recovery-password-seed-modal'
     | 'password-input-reconfirm'
     | 'conversation-header-subtitle'
-    | 'password-input'
-    | 'nickname-input'
     | 'image-upload-click'
-    | 'profile-name-input'
     | 'your-profile-name'
     | 'community-name'
     | 'group-name'
@@ -104,7 +130,6 @@ declare module 'react' {
     | 'control-message'
     | 'header-conversation-name'
     | 'disappear-messages-type-and-time'
-    | 'message-input'
     | 'message-input-text-area'
     | 'messages-container'
     | 'decline-and-block-message-request'
@@ -132,16 +157,15 @@ declare module 'react' {
     // generic button types
     | 'emoji-button'
     | 'reveal-blocked-user-settings'
-
-    // left pane section types
-    | Sections
+    | `${Sections}-section`
 
     // settings menu item types
-    | MenuItems
-    | ConfirmButtons
-    | CancelButtons
-    | ClearButtons
-    | SettingsMenuItems
+    | `${MenuItems}-menu-item`
+    | `${ConfirmButtons}-confirm-button`
+    | `${CancelButtons}-cancel-button`
+    | `clear-${ClearButtons}-button`
+    | `${SettingsMenuItems}-settings-menu-item`
+    | `${Inputs}-input`
 
     // timer options
     | DisappearTimeOptionDataTestId
@@ -243,8 +267,6 @@ declare module 'react' {
     | 'refresh-button'
 
     // to sort
-    | 'update-group-info-name-input'
-    | 'update-group-info-description-input'
     | 'restore-using-recovery'
     | 'link-device'
     | 'join-community-conversation'
@@ -295,8 +317,6 @@ declare module 'react' {
     | 'session-id-signup'
     | 'search-contacts-field'
     | 'three-dot-loading-animation'
-    | 'recovery-phrase-input'
-    | 'display-name-input'
     | 'new-session-conversation'
     | 'new-closed-group-name'
     | 'leftpane-primary-avatar'

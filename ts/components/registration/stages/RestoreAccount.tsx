@@ -47,6 +47,7 @@ import { BackButtonWithinContainer } from '../components/BackButton';
 import { useRecoveryProgressEffect } from '../hooks';
 import { localize } from '../../../localization/localeTools';
 import { sanitizeDisplayNameOrToast } from '../utils';
+import { SimpleSessionInput } from '../../inputs/SessionInput';
 
 type AccountRestoreDetails = {
   recoveryPassword: string;
@@ -309,20 +310,19 @@ export const RestoreAccount = () => {
             <SpacerSM />
             <OnboardDescription>{window.i18n('displayNameErrorNew')}</OnboardDescription>
             <SpacerLG />
-            <SessionInput
-              ariaLabel={window.i18n('displayNameEnter')}
+            <SimpleSessionInput
+              ariaLabel={localize('displayNameEnter').toString()}
               autoFocus={true}
-              disableOnBlurEvent={true}
-              type="text"
-              placeholder={window.i18n('displayNameEnter')}
+              placeholder={localize('displayNameEnter').toString()}
               value={displayName}
               onValueChanged={(name: string) => {
                 dispatch(setDisplayName(name));
                 setCannotContinue(false);
               }}
-              onEnterPressed={recoverAndEnterDisplayName}
-              error={displayNameError}
+              onEnterPressed={() => void recoverAndEnterDisplayName()}
+              providedError={displayNameError}
               inputDataTestId="display-name-input"
+              errorDataTestId="error-message"
             />
             <SpacerLG />
             <ContinueButton

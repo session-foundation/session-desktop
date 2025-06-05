@@ -16,13 +16,13 @@ import { Flex } from '../../basic/Flex';
 import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
 import { Spacer2XL, Spacer3XL, SpacerLG, SpacerSM, SpacerXL } from '../../basic/Text';
 import { CopyToClipboardButton } from '../../buttons/CopyToClipboardButton';
-import { SessionInput } from '../../inputs';
 import { SessionSpinner } from '../../loading';
 import { ProfileHeader, ProfileName, QRView } from './components';
 import { EmptyDisplayNameError, RetrieveDisplayNameError } from '../../../session/utils/errors';
 import { localize } from '../../../localization/localeTools';
 import { sanitizeDisplayNameOrToast } from '../../registration/utils';
 import { useEditProfilePictureCallback } from '../../menuAndSettingsHooks/useEditProfilePictureCallback';
+import { SimpleSessionInput } from '../../inputs/SessionInput';
 
 // #region Shortcuts
 const handleKeyQRMode = (
@@ -302,25 +302,24 @@ export const EditProfileDialog = () => {
         )}
 
         {mode === 'edit' && (
-          <SessionInput
+          <SimpleSessionInput
             autoFocus={true}
-            disableOnBlurEvent={true}
-            type="text"
-            placeholder={window.i18n('displayNameEnter')}
+            placeholder={localize('displayNameEnter').toString()}
             value={profileName}
             onValueChanged={(name: string) => {
               setProfileName(name);
               setCannotContinue(false);
             }}
-            loading={loading}
-            editable={!loading}
+            onEnterPressed={() => void onClickOK()}
+            disabled={loading}
             tabIndex={0}
             required={true}
-            error={profileNameError}
-            textSize={'xl'}
             centerText={true}
+            providedError={profileNameError}
+            textSize={'xl'}
             inputRef={inputRef}
             inputDataTestId="profile-name-input"
+            errorDataTestId="error-message"
           />
         )}
 
