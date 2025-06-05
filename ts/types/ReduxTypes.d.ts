@@ -7,13 +7,15 @@
 
 export type SessionSettingCategory =
   | 'privacy'
+  | 'donate'
   | 'notifications'
   | 'conversations'
   | 'message-requests'
   | 'appearance'
   | 'permissions'
-  | 'help'
+  | 'session-network'
   | 'recovery-password'
+  | 'help'
   | 'clear-data';
 
 export type PasswordAction = 'set' | 'change' | 'remove' | 'enter';

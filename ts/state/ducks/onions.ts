@@ -11,7 +11,7 @@ export const initialOnionPathState = {
 };
 
 /**
- * This slice is the one holding our current onion path state, and if we are detect as online.
+ * This slice is the one holding our current onion path state, and if we are detected as online.
  */
 const onionSlice = createSlice({
   name: 'onionPaths',

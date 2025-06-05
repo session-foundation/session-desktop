@@ -1,9 +1,9 @@
 import _ from 'lodash';
 import { KeyboardEvent, MouseEvent, SessionDataTestId, ReactNode, forwardRef, memo } from 'react';
 import clsx from 'clsx';
-
 import styled from 'styled-components';
 import { SessionIcon, SessionIconProps } from './SessionIcon';
+import { LucideIcon, type LucideIconProps } from './LucideIcon';
 
 export type SessionIconButtonProps = SessionIconProps & {
   onClick?: (e?: MouseEvent<HTMLButtonElement>) => void;
@@ -37,6 +37,11 @@ const StyledSessionIconButton = styled.button<{ color?: string; $isSelected?: bo
         };`}
   }
 
+  color: ${props =>
+    props.color || props.$isSelected
+      ? 'var(--button-icon-stroke-selected-color)'
+      : 'var(--button-icon-stroke-color)'};
+
   ${props => props.disabled && 'cursor: not-allowed;'}
 
   &:hover svg path {
@@ -52,6 +57,7 @@ const SessionIconButtonInner = forwardRef<HTMLButtonElement, SessionIconButtonPr
       iconSize,
       iconColor,
       iconRotation,
+      rotateDuration,
       isSelected: $isSelected,
       glowDuration,
       glowStartDelay,
@@ -112,6 +118,7 @@ const SessionIconButtonInner = forwardRef<HTMLButtonElement, SessionIconButtonPr
           iconSize={iconSize}
           iconColor={iconColor}
           iconRotation={iconRotation}
+          rotateDuration={rotateDuration}
           glowDuration={glowDuration}
           glowStartDelay={glowStartDelay}
           noScale={noScale}
@@ -127,3 +134,84 @@ const SessionIconButtonInner = forwardRef<HTMLButtonElement, SessionIconButtonPr
 );
 
 export const SessionIconButton = memo(SessionIconButtonInner, _.isEqual);
+
+export type SessionLucideIconButtonProps = Pick<
+  SessionIconButtonProps,
+  | 'onClick'
+  | 'disabled'
+  | 'isSelected'
+  | 'margin'
+  | 'padding'
+  | 'ariaLabel'
+  | 'title'
+  | 'dataTestId'
+  | 'dataTestIdIcon'
+  | 'style'
+  | 'tabIndex'
+  | 'children'
+> &
+  Pick<LucideIconProps, 'unicode' | 'iconSize' | 'iconColor'>;
+
+export const SessionLucideIconButton = forwardRef<HTMLButtonElement, SessionLucideIconButtonProps>(
+  (props, ref) => {
+    const {
+      unicode,
+      iconSize,
+      isSelected: $isSelected,
+      margin,
+      padding,
+      ariaLabel,
+      title,
+      dataTestId,
+      dataTestIdIcon,
+      style,
+      iconColor,
+      tabIndex,
+      disabled,
+      onClick,
+      children,
+    } = props;
+
+    const clickHandler = (e: MouseEvent<HTMLButtonElement>) => {
+      if (!disabled && onClick) {
+        e.stopPropagation();
+        onClick(e);
+      }
+    };
+    const keyPressHandler = (e: KeyboardEvent<HTMLButtonElement>) => {
+      if (e.currentTarget.tabIndex > -1 && e.key === 'Enter' && !disabled && onClick) {
+        e.stopPropagation();
+        onClick();
+      }
+    };
+
+    return (
+      <StyledSessionIconButton
+        color={iconColor}
+        $isSelected={$isSelected}
+        title={title}
+        aria-label={ariaLabel}
+        onClick={clickHandler}
+        style={{
+          ...style,
+          display: style?.display ? style.display : 'flex',
+          margin: margin || '',
+          padding: padding || '',
+        }}
+        tabIndex={tabIndex}
+        onKeyDown={keyPressHandler}
+        disabled={disabled}
+        data-testid={dataTestId}
+        ref={ref}
+      >
+        <LucideIcon
+          unicode={unicode}
+          iconSize={iconSize}
+          iconColor={iconColor}
+          dataTestId={dataTestIdIcon}
+        />
+        {children}
+      </StyledSessionIconButton>
+    );
+  }
+);

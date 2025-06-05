@@ -2,7 +2,7 @@
   "name": "session-desktop",
   "productName": "Session",
   "description": "Private messaging from your desktop",
-  "version": "1.16.1",
+  "version": "1.16.2",
   "license": "GPL-3.0",
   "author": {
     "name": "Session Foundation",
@@ -118,6 +118,7 @@
     "semver": "^7.7.1",
     "styled-components": "^6.1.15",
     "uuid": "11.1.0",
+    "viem": "^2.26.0",
     "webrtc-adapter": "^4.2.2",
     "zod": "^3.24.2"
   },

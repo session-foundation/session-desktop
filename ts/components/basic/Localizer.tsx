@@ -62,12 +62,17 @@ export const Localizer = <T extends MergedLocalizerTokens>(
   const containsFormattingTags = createSupportedFormattingTagsRegex().test(rawString);
   const cleanArgs = args && containsFormattingTags ? sanitizeArgs(args) : args;
 
+  const containsIcons = !!(cleanArgs && Object.keys(cleanArgs).includes('icon'));
+  if (containsIcons && (cleanArgs as any).icon) {
+    rawString = rawString.replaceAll(/\{icon}/g, `<span role='img'>{icon}</span>`);
+  }
+
   const i18nString = window.i18n.formatMessageWithArgs(
     rawString,
     cleanArgs as GetMessageArgs<T>[1]
   );
 
-  return containsFormattingTags ? (
+  return containsFormattingTags || containsIcons ? (
     /** If the string contains a relevant formatting tag, render it as HTML */
     <StyledHtmlRenderer>
       <SessionHtmlRenderer tag={props.asTag} html={i18nString} className={props.className} />

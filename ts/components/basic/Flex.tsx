@@ -1,4 +1,3 @@
-import { SessionDataTestId } from 'react';
 import { HTMLMotionProps, motion } from 'framer-motion';
 import styled from 'styled-components';
 import { HTMLDirection } from '../../util/i18n/rtlSupport';
@@ -7,7 +6,6 @@ export interface FlexProps {
   children?: any;
   className?: string;
   $container?: boolean;
-  $dataTestId?: SessionDataTestId;
   // Container Props
   $flexDirection?: 'row' | 'row-reverse' | 'column' | 'column-reverse';
   $justifyContent?:
@@ -16,6 +14,7 @@ export interface FlexProps {
     | 'center'
     | 'space-between'
     | 'space-around'
+    | 'space-evenly'
     | 'initial'
     | 'inherit';
   $flexWrap?: 'wrap' | 'nowrap' | 'wrap-reverse';
@@ -30,19 +29,26 @@ export interface FlexProps {
     | 'inherit';
   // Child Props
   $flexGrow?: number;
-  gap?: string;
   $flexShrink?: number;
   $flexBasis?: number;
   // Common Layout Props
   padding?: string;
   margin?: string;
   width?: string;
-  height?: string;
   maxWidth?: string;
   minWidth?: string;
+  height?: string;
   maxHeight?: string;
+  minHeight?: string;
+  overflow?: 'hidden' | 'visible' | 'scroll' | 'auto';
+  overflowX?: 'hidden' | 'visible' | 'scroll' | 'auto';
+  overflowY?: 'hidden' | 'visible' | 'scroll' | 'auto';
   // RTL support
   dir?: HTMLDirection;
+  paddingInline?: string;
+  paddingBlock?: string;
+  marginInline?: string;
+  marginBlock?: string;
 }
 
 export const Flex = styled.div<FlexProps>`
@@ -53,15 +59,24 @@ export const Flex = styled.div<FlexProps>`
   flex-basis: ${props => (props.$flexBasis !== undefined ? props.$flexBasis : 'auto')};
   flex-shrink: ${props => (props.$flexShrink !== undefined ? props.$flexShrink : '1')};
   flex-wrap: ${props => (props.$flexWrap !== undefined ? props.$flexWrap : 'nowrap')};
-  gap: ${props => (props.$flexGap !== undefined ? props.$flexGap : undefined)};
+  gap: ${props => props.$flexGap || undefined};
   align-items: ${props => props.$alignItems || 'stretch'};
   margin: ${props => props.margin || '0'};
   padding: ${props => props.padding || '0'};
   width: ${props => props.width || 'auto'};
-  height: ${props => props.height || 'auto'};
   max-width: ${props => props.maxWidth || 'none'};
   min-width: ${props => props.minWidth || 'none'};
+  height: ${props => props.height || 'auto'};
+  max-height: ${props => props.maxHeight || 'none'};
+  min-height: ${props => props.minHeight || 'none'};
+  overflow: ${props => (props.overflow !== undefined ? props.overflow : undefined)};
+  overflow-x: ${props => (props.overflowX !== undefined ? props.overflowX : undefined)};
+  overflow-y: ${props => (props.overflowY !== undefined ? props.overflowY : undefined)};
   direction: ${props => props.dir || undefined};
+  padding-inline: ${props => props.paddingInline || undefined};
+  padding-block: ${props => props.paddingBlock || undefined};
+  margin-inline: ${props => props.marginInline || undefined};
+  margin-block: ${props => props.marginBlock || undefined};
 `;
 
 export const AnimatedFlex = styled(motion.div)<HTMLMotionProps<'div'> & FlexProps>`
@@ -72,14 +87,20 @@ export const AnimatedFlex = styled(motion.div)<HTMLMotionProps<'div'> & FlexProp
   flex-basis: ${props => (props.$flexBasis !== undefined ? props.$flexBasis : 'auto')};
   flex-shrink: ${props => (props.$flexShrink !== undefined ? props.$flexShrink : '1')};
   flex-wrap: ${props => (props.$flexWrap !== undefined ? props.$flexWrap : 'nowrap')};
-  gap: ${props => (props.$flexGap !== undefined ? props.$flexGap : undefined)};
+  gap: ${props => props.$flexGap || undefined};
   align-items: ${props => props.$alignItems || 'stretch'};
   margin: ${props => props.margin || '0'};
   padding: ${props => props.padding || '0'};
-  gap: ${props => props.gap || undefined};
   width: ${props => props.width || 'auto'};
-  height: ${props => props.height || 'auto'};
   max-width: ${props => props.maxWidth || 'none'};
   min-width: ${props => props.minWidth || 'none'};
+  height: ${props => props.height || 'auto'};
+  max-height: ${props => props.maxHeight || 'none'};
+  min-height: ${props => props.minHeight || 'none'};
+  overflow: ${props => (props.overflow !== undefined ? props.overflow : undefined)};
   direction: ${props => props.dir || undefined};
+  padding-inline: ${props => props.paddingInline || undefined};
+  padding-block: ${props => props.paddingBlock || undefined};
+  margin-inline: ${props => props.marginInline || undefined};
+  margin-block: ${props => props.marginBlock || undefined};
 `;

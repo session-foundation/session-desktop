@@ -22,6 +22,7 @@ import { sleepFor } from '../../../../session/utils/Promise';
 import { UserSync } from '../../../../session/utils/job_runners/jobs/UserSyncJob';
 import { TestUtils } from '../../../test-utils';
 import { generateFakeSnodes, stubData } from '../../../test-utils/utils';
+import { ReduxOnionSelectors } from '../../../../state/selectors/onions';
 
 const { expect } = chai;
 
@@ -71,10 +72,11 @@ describe('SwarmPolling:pollForAllKeys', () => {
 
     Sinon.stub(SnodePool, 'getSwarmFor').resolves(generateFakeSnodes(5));
     Sinon.stub(SnodeAPIRetrieve, 'retrieveNextMessagesNoRetries').resolves([]);
+    Sinon.stub(ReduxOnionSelectors, 'isOnlineOutsideRedux').returns(true);
 
-    TestUtils.stubWindow('inboxStore', undefined);
-    TestUtils.stubWindow('getGlobalOnlineStatus', () => true);
     TestUtils.stubWindowLog();
+    TestUtils.stubWindow('inboxStore', undefined);
+    TestUtils.stubWindow('isOnline', true);
 
     const convoController = ConvoHub.use();
     await convoController.load();

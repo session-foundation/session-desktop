@@ -16,3 +16,10 @@ export type RecursiveKeys<T> = T extends object
         | (T[K] extends object ? `${K}.${RecursiveKeys<T[K]>}` : never);
     }[Extract<keyof T, string>]
   : never;
+
+export type DeepNullable<T> = {
+  [P in keyof T]: T[P] extends object ? DeepNullable<T[P]> : T[P] | null;
+};
+
+// eslint-disable-next-line @typescript-eslint/array-type
+export type NonEmptyArray<T> = [T, ...T[]];

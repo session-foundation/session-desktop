@@ -1,7 +1,7 @@
 import { createSelector } from '@reduxjs/toolkit';
 
 import { useSelector } from 'react-redux';
-import { OnionState } from '../ducks/onion';
+import { OnionState } from '../ducks/onions';
 import { SectionType } from '../ducks/section';
 import { StateType } from '../reducer';
 
@@ -38,4 +38,16 @@ export const useFirstOnionPathLength = () => {
 
 export const useFirstOnionPath = () => {
   return useSelector(getFirstOnionPath);
+};
+
+// outside of redux
+function isOnlineOutsideRedux() {
+  if (!window.inboxStore) {
+    return false;
+  }
+  return !!window.inboxStore?.getState()?.onionPaths.isOnline;
+}
+
+export const ReduxOnionSelectors = {
+  isOnlineOutsideRedux,
 };

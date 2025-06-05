@@ -5,33 +5,14 @@ import { Store } from '@reduxjs/toolkit';
 import { Persistor } from 'redux-persist/es/types';
 
 import { PrimaryColorStateType, ThemeStateType } from './themes/constants/colors';
-import type { GetMessageArgs } from './types/localizer';
+import type { GetMessageArgs, MergedLocalizerTokens } from './localization/localeTools';
 import type { I18nMethods } from './types/I18nMethods';
-import type { MergedLocalizerTokens } from './localization/localeTools';
 import type { EventEmitter } from './shared/event_emitter';
+import type { SessionFlags } from './state/ducks/types/releasedFeaturesReduxTypes';
 
 export interface LibTextsecure {
   messaging: boolean;
 }
-
-export type SessionFeatureFlags = {
-  useOnionRequests: boolean;
-  useTestNet: boolean;
-  useClosedGroupV2QAButtons: boolean;
-  replaceLocalizedStringsWithKeys: boolean;
-  useReleaseChannels: boolean;
-  debug: {
-    debugLogging: boolean;
-    debugLibsessionDumps: boolean;
-    debugBuiltSnodeRequests: boolean;
-    debugSwarmPolling: boolean;
-    debugFileServerRequests: boolean;
-    debugNonSnodeRequests: boolean;
-    debugOnionRequests: boolean;
-  };
-};
-
-export type SessionFeatureFlagsKeys = RecursiveKeys<SessionFeatureFlags>;
 
 /*
 We declare window stuff here instead of global.d.ts because we are importing other declarations.
@@ -117,7 +98,7 @@ declare global {
       inEnglish: I18nMethods['inEnglish'];
     };
     log: any;
-    sessionFeatureFlags: SessionFeatureFlags;
+    sessionFeatureFlags: SessionFlags;
     onLogin: (pw: string) => Promise<void>; // only set on the password window
     onTryPassword: (pw: string) => Promise<void>; // only set on the main window
     persistStore?: Persistor;
@@ -142,7 +123,7 @@ declare global {
     drawAttention: () => void;
 
     platform: string;
-    openFromNotification: (convoId: string) => void;
+    openFromNotification: (conversationKey?: string) => void;
     getEnvironment: () => string;
     getNodeVersion: () => string;
 
@@ -152,7 +133,6 @@ declare global {
     askForMediaAccess: () => void;
     getMediaPermissions: () => boolean;
     nodeSetImmediate: any;
-    globalOnlineStatus: boolean;
 
     getTitle: () => string;
     getAppInstance: () => string;
@@ -169,7 +149,6 @@ declare global {
       conversationKey: string;
       messageId: string | null;
     }) => Promise<void>;
-    getGlobalOnlineStatus: () => boolean;
     setStartInTray: (val: boolean) => Promise<void>;
     getStartInTray: () => Promise<boolean>;
     getOpengroupPruning: () => Promise<boolean>;

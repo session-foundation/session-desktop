@@ -104,6 +104,7 @@ async function confirmPushedAndDump(
         assertUnreachable(namespace, 'buildAndSaveDumpsToDB assertUnreachable');
     }
   }
+
   try {
     await MetaGroupWrapperActions.metaConfirmPushed(...toConfirm);
     await LibSessionUtil.saveDumpsToDb(groupPk);

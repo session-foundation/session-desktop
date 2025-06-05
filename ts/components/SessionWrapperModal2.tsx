@@ -12,9 +12,9 @@ import { StyledRootDialog } from './dialog/StyledRootDialog';
 
 const DEFAULT_MODAL_WIDTH = '410px';
 
-const StyledModalHeader = styled(Flex)`
+const StyledModalHeader = styled(Flex)<{ bigHeader?: boolean }>`
   font-family: var(--font-default);
-  font-size: var(--font-size-xl);
+  font-size: ${props => (props.bigHeader ? 'var(--font-size-h4)' : 'var(--font-size-xl)')};
   font-weight: 500;
   text-align: center;
   line-height: 18px;
@@ -26,6 +26,7 @@ const StyledModal = styled.div<{
   contentWidth?: string;
   padding?: string;
   border: boolean;
+  bigHeader?: boolean;
 }>`
   animation: fadein var(--default-duration);
   z-index: 150;
@@ -70,9 +71,10 @@ const StyledModal = styled.div<{
   }
 
   ${StyledModalHeader} {
-    ${props =>
-      props.scrolled &&
-      `margin-bottom: var(--margins-xs); border-bottom: 1px solid var(--border-color); box-shadow: 0px 0px 20px 8px var(--modal-shadow-color);`}
+    box-shadow: ${props => (props.scrolled ? '0px 0px 20px 8px var(--modal-shadow-color)' : '')};
+    border-bottom: ${props =>
+      props.scrolled ? '1px solid var(--border-color)' : '1px solid var(--transparent-color)'};
+    margin-bottom: ${props => (props.bigHeader ? 'var(--margins-sm)' : 'var(--margins-xs)')};
   }
 `;
 
@@ -94,11 +96,12 @@ const StyledModalBody = styled.div<{ shouldOverflow: boolean }>`
   }
 `;
 
-const StyledTitle = styled.div`
+const StyledTitle = styled.div<{ bigHeader?: boolean }>`
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
-  padding: var(--margins-xs) var(--margins-sm);
+  padding: ${props =>
+    props.bigHeader ? 'var(--margins-sm)' : 'var(--margins-xs) var(--margins-sm)'};
 `;
 
 export type SessionWrapperModalType2 = {
@@ -115,12 +118,16 @@ export type SessionWrapperModalType2 = {
   padding?: string;
   classes?: string;
   allowOutsideClick?: boolean;
+  bigHeader?: boolean;
 };
 
 const ModalHeader = (
-  props: Pick<SessionWrapperModalType2, 'showExitIcon' | 'onClose' | 'headerIconButtons' | 'title'>
+  props: Pick<
+    SessionWrapperModalType2,
+    'showExitIcon' | 'onClose' | 'headerIconButtons' | 'title' | 'bigHeader'
+  >
 ) => {
-  const { showExitIcon, headerIconButtons, title, onClose } = props;
+  const { showExitIcon, headerIconButtons, title, onClose, bigHeader } = props;
   const htmlDirection = useHTMLDirection();
 
   return (
@@ -132,6 +139,7 @@ const ModalHeader = (
       $alignItems={'center'}
       padding={'var(--margins-lg) var(--margins-sm) var(--margins-md) var(--margins-lg)'}
       margin={'0 calc(-1 * var(--margins-sm)) 0 calc(-1 * var(--margins-lg))'}
+      bigHeader={bigHeader}
     >
       <Flex
         $container={true}
@@ -146,7 +154,7 @@ const ModalHeader = (
               <SessionIconButton
                 key={iconItem.iconType}
                 iconType={iconItem.iconType}
-                iconSize={'medium'}
+                iconSize={bigHeader ? 'large' : 'medium'}
                 iconRotation={iconItem.iconRotation}
                 rotateDuration={iconItem.rotateDuration}
                 onClick={iconItem.onClick}
@@ -163,6 +171,7 @@ const ModalHeader = (
         ) : null}
       </Flex>
       <StyledTitle
+        bigHeader={bigHeader}
         tabIndex={!showExitIcon && !headerIconButtons?.length ? 0 : undefined}
         data-testid="modal-heading"
       >
@@ -189,7 +198,7 @@ const ModalHeader = (
         {showExitIcon ? (
           <SessionIconButton
             iconType="exit"
-            iconSize="small"
+            iconSize={bigHeader ? 'medium' : 'small'}
             onClick={() => {
               if (onClose) {
                 onClose();
@@ -218,6 +227,7 @@ export const SessionWrapperModal2 = (props: SessionWrapperModalType2) => {
     padding,
     classes,
     allowOutsideClick,
+    bigHeader,
   } = props;
 
   const [scrolled, setScrolled] = useState(false);
@@ -268,6 +278,7 @@ export const SessionWrapperModal2 = (props: SessionWrapperModalType2) => {
           scrolled={scrolled}
           padding={padding}
           border={contentBorder}
+          bigHeader={bigHeader}
         >
           {showHeader ? (
             <ModalHeader
@@ -275,6 +286,7 @@ export const SessionWrapperModal2 = (props: SessionWrapperModalType2) => {
               headerIconButtons={headerIconButtons}
               title={title}
               onClose={onClose}
+              bigHeader={bigHeader}
             />
           ) : null}
 

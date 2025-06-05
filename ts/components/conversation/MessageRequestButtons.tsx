@@ -100,13 +100,14 @@ export const ConversationMessageRequestButtons = () => {
     <MessageRequestContainer>
       <ConversationBannerRow>
         <SessionButton
+          buttonColor={SessionButtonColor.PrimaryDark}
+          text={window.i18n('accept')}
           onClick={() => {
             void handleAcceptConversationRequest({
               convoId: selectedConvoId,
               approvalMessageTimestamp: NetworkTime.now(),
             });
           }}
-          text={window.i18n('accept')}
           dataTestId="accept-message-request"
         />
         <SessionButton

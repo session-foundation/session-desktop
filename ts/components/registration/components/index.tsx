@@ -7,7 +7,7 @@ import { OnboardContainer } from './OnboardingContainer';
 const OnboardHeading = styled.h3`
   padding: 0;
   margin: 0;
-  font-size: var(--font-size-h2);
+  font-size: var(--font-size-h4);
 `;
 
 const OnboardDescription = styled.p`
