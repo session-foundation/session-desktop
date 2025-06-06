@@ -1,0 +1,10 @@
+name: 'QA-specific sed tweak'
+description: 'QA-specific sed tweak'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Sed for QA build
+      shell: bash
+      run: |
+        sed -i 's/const isPackaged = app.isPackaged;/const isPackaged = app.isPackaged \&\& false;/g' ts/node/config.ts
