@@ -121,7 +121,6 @@
   "banUser": "Sekat Pengguna",
   "banUserBanned": "Pengguna diharamkan",
   "block": "Sekat",
-  "blockBlockedDescription": "Nyahsekat kontak ini untuk menghantar mesej.",
   "blockBlockedNone": "Tiada kenalan yang disekat",
   "blockBlockedUser": "{name} disekat",
   "blockDescription": "Adakah anda pasti mahu menyekat <b>{name}</b>? Pengguna yang disekat tidak boleh menghantar permintaan mesej, jemputan kumpulan atau menghubungi anda.",

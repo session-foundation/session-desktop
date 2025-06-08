@@ -7,6 +7,10 @@ import { isAudioNotificationSupported } from '../types/Settings';
 import { isWindowFocused } from './focusListener';
 import { Storage } from './storage';
 import { LOCALE_DEFAULTS } from '../localization/constants';
+import {
+  isSessionFeatureFlag,
+  type SessionFeatureFlagKeys,
+} from '../state/ducks/types/releasedFeaturesReduxTypes';
 
 function filter(text?: string) {
   return (text || '')
@@ -20,13 +24,12 @@ function filter(text?: string) {
 let sound: any;
 
 export type SessionNotification = {
-  conversationId: string;
-  iconUrl: string | null;
-  isExpiringMessage: boolean;
-  message: string;
-  messageId?: string;
-  messageSentAt: number;
   title: string;
+  message: string;
+  iconUrl?: string;
+  messageId?: string;
+  conversationId?: string;
+  isExpiringMessage?: boolean;
 };
 
 let isEnabled: boolean = false;
@@ -92,6 +95,20 @@ function addPreviewNotification(notif: SessionNotification) {
   update(true);
 }
 
+/**
+ * Only use this for release notifications
+ */
+function addReleaseNotification(feature: SessionFeatureFlagKeys, notif: SessionNotification) {
+  if (!isSessionFeatureFlag(feature)) {
+    window.log.warn(`[releasedFeature] Notification failed. Invalid feature flag "${feature}"`);
+    return;
+  }
+
+  window.log.info(`[releasedFeature] Notification for "${feature}"\n\n  ${JSON.stringify(notif)}`);
+  currentNotifications.push(notif);
+  update(true);
+}
+
 function clearByConversationID(convoId: string) {
   const oldLength = currentNotifications.length;
   currentNotifications = currentNotifications.filter(n => n.conversationId === convoId);
@@ -114,7 +131,7 @@ function clearByMessageId(messageId: string) {
 function getNotificationDetails(
   notifications: Array<SessionNotification>,
   userSetting: UserSetting
-) {
+): SessionNotification | null {
   if (!notifications.length) {
     return null;
   }
@@ -170,7 +187,6 @@ function getNotificationDetails(
       return {
         title: LOCALE_DEFAULTS.app_name,
         message: newMessageCountLabel,
-        iconUrl: null,
       };
   }
 }
@@ -241,7 +257,12 @@ function update(forceRefresh = false) {
   }
   currentNotification = new Notification(details.title || '', {
     body: window.platform === 'linux' ? filter(details.message) : details.message,
-    icon: details.iconUrl || undefined,
+    // NOTE only Linux needs a fallback, macOS and Windows already show the app icon
+    icon: details.iconUrl
+      ? details.iconUrl
+      : window.platform === 'linux'
+        ? 'images/session/session_icon.png'
+        : undefined,
     silent: true,
   });
   currentNotification.onclick = () => {
@@ -259,6 +280,7 @@ function onRemove() {
 export const Notifications = {
   addNotification,
   addPreviewNotification,
+  addReleaseNotification,
   disable,
   enable,
   clear,

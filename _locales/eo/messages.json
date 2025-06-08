@@ -121,7 +121,6 @@
   "banUser": "Forbari uzanton",
   "banUserBanned": "Uzanto forigita",
   "block": "Bloki",
-  "blockBlockedDescription": "Malbloki tiun kontakton por sendi mesaĝon.",
   "blockBlockedNone": "Neniu blokata kontakto",
   "blockBlockedUser": "Blokis {name}",
   "blockDescription": "Ĉu vi certas, ke vi volas bloki <b>{name}</b>? Blokitaj uzantoj ne povas sendi al vi mesaĝpetojn, grupinvitadojn aŭ telefonvokojn.",

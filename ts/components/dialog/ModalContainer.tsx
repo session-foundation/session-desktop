@@ -19,6 +19,7 @@ import {
   getReactListDialog,
   getRemoveModeratorsModal,
   getServerBanOrUnbanUserModalState,
+  getSessionNetworkModalState,
   getSessionPasswordDialog,
   getUpdateGroupMembersModal,
   getUpdateGroupNameModal,
@@ -37,7 +38,6 @@ import { RemoveModeratorsDialog } from './ModeratorsRemoveDialog';
 import { OnionPathModal } from './OnionStatusPathDialog';
 import { ReactClearAllModal } from './ReactClearAllModal';
 import { ReactListModal } from './ReactListModal';
-import { SessionConfirm } from './SessionConfirm';
 import { SessionNicknameDialog } from './SessionNicknameDialog';
 import { SessionSetPasswordDialog } from './SessionSetPasswordDialog';
 import { UpdateGroupMembersDialog } from './UpdateGroupMembersDialog';
@@ -48,6 +48,8 @@ import { OpenUrlModal } from './OpenUrlModal';
 import { BlockOrUnblockDialog } from './blockOrUnblock/BlockOrUnblockDialog';
 import { UpdateGroupPermissionsDialog } from './UpdateGroupPermissionsDialog';
 import { DebugMenuModal } from './debug/DebugMenuModal';
+import { SessionNetworkModal } from './network/SessionNetworkModal';
+import { SessionConfirm } from './SessionConfirm';
 
 export const ModalContainer = () => {
   const confirmModalState = useSelector(getConfirmModal);
@@ -74,12 +76,14 @@ export const ModalContainer = () => {
   const openUrlModalState = useSelector(getOpenUrlModalState);
   const lightBoxOptions = useSelector(getLightBoxOptions);
   const debugMenuModalState = useSelector(getDebugMenuModalState);
+  const sessionNetworkModalState = useSelector(getSessionNetworkModalState);
 
   // NOTE the order of the modals is important for the z-index
   return (
     <>
       {/* Screens */}
       {sessionPasswordModalState && <SessionSetPasswordDialog {...sessionPasswordModalState} />}
+      {sessionNetworkModalState && <SessionNetworkModal {...sessionNetworkModalState} />}
       {editProfileModalState && <EditProfileDialog {...editProfileModalState} />}
       {onionPathModalState && <OnionPathModal {...onionPathModalState} />}
       {reactListModalState && <ReactListModal {...reactListModalState} />}

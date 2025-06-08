@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import { SettingsKey } from '../../data/settings-key';
 import { isAudioNotificationSupported } from '../../types/Settings';
 import { Notifications } from '../../util/notifications';
-import { SessionButton } from '../basic/SessionButton';
+import { SessionButton, SessionButtonColor } from '../basic/SessionButton';
 import { SessionRadioGroup, SessionRadioItems } from '../basic/SessionRadioGroup';
 import { SpacerLG } from '../basic/Text';
 import { SessionSettingsItemWrapper, SessionToggleWithDescription } from './SessionSettingListItem';
@@ -58,9 +58,7 @@ export const SessionNotificationGroupSettings = () => {
       conversationId: `preview-notification-${Date.now()}`,
       message: items.find(m => m.value === initialNotificationEnabled)?.label || 'Message body',
       title: window.i18n('preview'),
-      iconUrl: null,
       isExpiringMessage: false,
-      messageSentAt: Date.now(),
     });
   };
 
@@ -107,7 +105,11 @@ export const SessionNotificationGroupSettings = () => {
           />
           <StyledButtonContainer>
             <SpacerLG />
-            <SessionButton text={window.i18n('preview')} onClick={onClickPreview} />
+            <SessionButton
+              text={window.i18n('preview')}
+              onClick={onClickPreview}
+              buttonColor={SessionButtonColor.PrimaryDark}
+            />
           </StyledButtonContainer>
         </SessionSettingsItemWrapper>
       ) : null}

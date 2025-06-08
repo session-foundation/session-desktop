@@ -8,7 +8,6 @@ export enum LOCALE_DEFAULTS {
   staking_reward_pool = 'Staking Reward Pool',
   token_name_short = 'SESH',
   usd_name_short = 'USD',
-  session_network_data_price = 'Price data powered by CoinGecko<br/>Accurate at {date_time}',
 }
 
 export const rtlLocales = ['ar', 'fa', 'he', 'ps', 'ur'];
@@ -102,4 +101,3 @@ export type CrowdinLocale = (typeof crowdinLocales)[number];
 export function isCrowdinLocale(locale: string): locale is CrowdinLocale {
   return crowdinLocales.includes(locale as CrowdinLocale);
 }
-

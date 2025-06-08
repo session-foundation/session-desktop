@@ -138,7 +138,6 @@
   "banUser": "Gebruiker verbannen",
   "banUserBanned": "Gebruiker verbannen",
   "block": "Blokkeren",
-  "blockBlockedDescription": "Deblokkeer dit contact om een bericht te verzenden.",
   "blockBlockedNone": "Geen geblokkeerde contactpersonen",
   "blockBlockedUser": "{name} geblokkeerd",
   "blockDescription": "Weet u zeker dat u <b>{name}</b> wilt blokkeren? Geblokkeerde gebruikers kunnen u geen berichtverzoeken, groepsuitnodiging sturen of bellen.",

@@ -18,7 +18,7 @@ import {
   updateBanOrUnbanUserModal,
   updateServerBanOrUnbanUserModal,
 } from '../../state/ducks/modalDialog';
-import { useIsDarkTheme } from '../../state/selectors/theme';
+import { useIsDarkTheme } from '../../state/theme/selectors/theme';
 import { SessionHeaderSearchInput } from '../SessionHeaderSearchInput';
 import { SessionWrapperModal } from '../SessionWrapperModal';
 import { Flex } from '../basic/Flex';

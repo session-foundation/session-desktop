@@ -279,5 +279,5 @@ export function pushNoMediaUntilApproved() {
 }
 
 export function pushRateLimitHitReactions() {
-  pushToastInfo('reactRateLimit', window?.i18n?.('emojiReactsCoolDown')); // because otherwise test fails
+  pushToastInfo('reactRateLimit', window?.i18n?.('emojiReactsCoolDown'));
 }

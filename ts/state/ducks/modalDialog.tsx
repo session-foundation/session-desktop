@@ -62,6 +62,7 @@ export type LightBoxOptions = {
 } | null;
 
 export type DebugMenuModalState = object | null;
+export type SessionNetworkModalState = object | null;
 
 export type ModalState = {
   confirmModal: ConfirmModalState;
@@ -88,6 +89,7 @@ export type ModalState = {
   openUrlModal: OpenUrlModalState;
   lightBoxOptions: LightBoxOptions;
   debugMenuModal: DebugMenuModalState;
+  sessionNetworkModal: SessionNetworkModalState;
 };
 
 export const initialModalState: ModalState = {
@@ -115,6 +117,7 @@ export const initialModalState: ModalState = {
   openUrlModal: null,
   lightBoxOptions: null,
   debugMenuModal: null,
+  sessionNetworkModal: null,
 };
 
 const ModalSlice = createSlice({
@@ -213,6 +216,9 @@ const ModalSlice = createSlice({
     updateDebugMenuModal(state, action: PayloadAction<DebugMenuModalState>) {
       return { ...state, debugMenuModal: action.payload };
     },
+    updateSessionNetworkModal(state, action: PayloadAction<SessionNetworkModalState>) {
+      return { ...state, sessionNetworkModal: action.payload };
+    },
   },
 });
 
@@ -242,5 +248,6 @@ export const {
   updateOpenUrlModal,
   updateLightBoxOptions,
   updateDebugMenuModal,
+  updateSessionNetworkModal,
 } = actions;
 export const modalReducer = reducer;

@@ -121,7 +121,6 @@
   "banUser": "Estä käyttäjä",
   "banUserBanned": "Käyttäjä estettiin",
   "block": "Estä",
-  "blockBlockedDescription": "Lähettääksesi viestin tälle yhteystiedolle sinun tulee ensin poistaa asettamasi esto.",
   "blockBlockedNone": "Ei estettyjä yhteystietoja",
   "blockBlockedUser": "Estetty {name}",
   "blockDescription": "Haluatko varmasti estää käyttäjän <b>{name}</b>? Estetyt käyttäjät eivät voi lähettää sinulle viestipyyntöjä, ryhmäkutsuja tai soittaa sinulle.",

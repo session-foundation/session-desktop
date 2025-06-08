@@ -91,20 +91,19 @@ type ArgsTypeStrToTypes<T extends DynamicArgStr> = T extends 'string'
     : never;
 
 // those are still a string of the type "string" | "number" and not the typescript types themselves
-type ArgsFromTokenStr<T extends SimpleLocalizerTokens | PluralLocalizerTokens> =
-  T extends SimpleLocalizerTokens
-    ? SimpleDictionary[T] extends { args: infer A }
+type ArgsFromTokenStr<T extends MergedLocalizerTokens> = T extends SimpleLocalizerTokens
+  ? SimpleDictionary[T] extends { args: infer A }
+    ? A extends Record<string, any>
+      ? A
+      : never
+    : never
+  : T extends PluralLocalizerTokens
+    ? PluralDictionary[T] extends { args: infer A }
       ? A extends Record<string, any>
         ? A
         : never
       : never
-    : T extends PluralLocalizerTokens
-      ? PluralDictionary[T] extends { args: infer A }
-        ? A extends Record<string, any>
-          ? A
-          : never
-        : never
-      : never;
+    : never;
 
 export type ArgsFromToken<T extends MergedLocalizerTokens> = MappedToTsTypes<ArgsFromTokenStr<T>>;
 

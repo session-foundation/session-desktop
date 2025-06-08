@@ -138,7 +138,6 @@
   "banUser": "Bannlys användare",
   "banUserBanned": "Användare bannlyst",
   "block": "Blockera",
-  "blockBlockedDescription": "Avblockera denna kontakt för att skicka meddelanden.",
   "blockBlockedNone": "Inga blockerade kontakter",
   "blockBlockedUser": "Blockerade {name}",
   "blockDescription": "Är du säker på att du vill blockera <b>{name}</b>? Blockerade användare kan inte skicka meddelandeförfrågningar, gruppinbjudningar eller ringa dig.",

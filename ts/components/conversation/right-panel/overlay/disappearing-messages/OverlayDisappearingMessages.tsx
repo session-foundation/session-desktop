@@ -15,7 +15,7 @@ import {
   useSelectedIsGroupOrCommunity,
 } from '../../../../../state/selectors/selectedConversation';
 import { Flex } from '../../../../basic/Flex';
-import { SessionButton } from '../../../../basic/SessionButton';
+import { SessionButton, SessionButtonColor } from '../../../../basic/SessionButton';
 import { SpacerLG } from '../../../../basic/Text';
 import { Header, HeaderSubtitle, HeaderTitle, StyledScrollContainer } from '../components';
 import { DisappearingModes } from './DisappearingModes';
@@ -193,6 +193,7 @@ export const OverlayDisappearingMessages = () => {
 
         <StyledButtonContainer>
           <SessionButton
+            buttonColor={SessionButtonColor.PrimaryDark}
             onClick={handleSetMode}
             disabled={
               singleMode

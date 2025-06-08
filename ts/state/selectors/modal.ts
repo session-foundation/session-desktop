@@ -1,28 +1,12 @@
 import { createSelector } from '@reduxjs/toolkit';
 
 import {
-  AddModeratorsModalState,
-  BanOrUnbanUserModalState,
-  ChangeNickNameModalState,
-  ConfirmModalState,
-  DeleteAccountModalState,
-  EditProfileModalState,
-  EditProfilePictureModalState,
-  EnterPasswordModalState,
-  HideRecoveryPasswordModalState,
-  InviteContactModalState,
-  LightBoxOptions,
+  type LightBoxOptions,
   ModalState,
-  OnionPathModalState,
-  ReactModalsState,
-  RemoveModeratorsModalState,
   ServerBanOrUnbanUserModalState,
-  SessionPasswordModalState,
-  UpdateGroupMembersModalState,
-  UpdateGroupNameModalState,
   UpdateGroupPermissionsModalState,
-  UserDetailsModalState,
 } from '../ducks/modalDialog';
+
 import { StateType } from '../reducer';
 
 export const getModal = (state: StateType): ModalState => {
@@ -40,115 +24,59 @@ export const getIsModalVisible = createSelector(getModal, (state: ModalState): b
   return false;
 });
 
-export const getConfirmModal = createSelector(
-  getModal,
-  (state: ModalState): ConfirmModalState => state.confirmModal
-);
+export const getConfirmModal = (state: StateType) => getModal(state).confirmModal;
 
-export const getInviteContactModal = createSelector(
-  getModal,
-  (state: ModalState): InviteContactModalState => state.inviteContactModal
-);
+export const getInviteContactModal = (state: StateType) => getModal(state).inviteContactModal;
 
-export const getAddModeratorsModal = createSelector(
-  getModal,
-  (state: ModalState): AddModeratorsModalState => state.addModeratorsModal
-);
+export const getAddModeratorsModal = (state: StateType) => getModal(state).addModeratorsModal;
 
-export const getRemoveModeratorsModal = createSelector(
-  getModal,
-  (state: ModalState): RemoveModeratorsModalState => state.removeModeratorsModal
-);
+export const getRemoveModeratorsModal = (state: StateType) => getModal(state).removeModeratorsModal;
 
-export const getBanOrUnbanUserModalState = createSelector(
-  getModal,
-  (state: ModalState): BanOrUnbanUserModalState => state.banOrUnbanUserModal
-);
+export const getBanOrUnbanUserModalState = (state: StateType) =>
+  getModal(state).banOrUnbanUserModal;
 
 export const getServerBanOrUnbanUserModalState = createSelector(
   getModal,
   (state: ModalState): ServerBanOrUnbanUserModalState => state.serverBanOrUnbanUserModal
 );
 
-export const getBlockOrUnblockUserModalState = createSelector(
-  getModal,
-  (state: ModalState) => state.blockOrUnblockModal
-);
+export const getBlockOrUnblockUserModalState = (state: StateType) =>
+  getModal(state).blockOrUnblockModal;
 
-export const getUpdateGroupNameModal = createSelector(
-  getModal,
-  (state: ModalState): UpdateGroupNameModalState => state.groupNameModal
-);
+export const getUpdateGroupNameModal = (state: StateType) => getModal(state).groupNameModal;
 
-export const getUpdateGroupMembersModal = createSelector(
-  getModal,
-  (state: ModalState): UpdateGroupMembersModalState => state.groupMembersModal
-);
+export const getUpdateGroupMembersModal = (state: StateType) => getModal(state).groupMembersModal;
 
 export const getUpdateGroupPermissionsModal = createSelector(
   getModal,
   (state: ModalState): UpdateGroupPermissionsModalState => state.groupPermissionsModal
 );
 
-export const getUserDetailsModal = createSelector(
-  getModal,
-  (state: ModalState): UserDetailsModalState => state.userDetailsModal
-);
+export const getUserDetailsModal = (state: StateType) => getModal(state).userDetailsModal;
 
-export const getChangeNickNameDialog = createSelector(
-  getModal,
-  (state: ModalState): ChangeNickNameModalState => state.nickNameModal
-);
+export const getChangeNickNameDialog = (state: StateType) => getModal(state).nickNameModal;
 
-export const getEditProfileDialog = createSelector(
-  getModal,
-  (state: ModalState): EditProfileModalState => state.editProfileModal
-);
+export const getEditProfileDialog = (state: StateType) => getModal(state).editProfileModal;
 
-export const getOnionPathDialog = createSelector(
-  getModal,
-  (state: ModalState): OnionPathModalState => state.onionPathModal
-);
+export const getOnionPathDialog = (state: StateType) => getModal(state).onionPathModal;
 
-export const getEnterPasswordModalState = createSelector(
-  getModal,
-  (state: ModalState): EnterPasswordModalState => state.enterPasswordModal
-);
+export const getEnterPasswordModalState = (state: StateType) => getModal(state).enterPasswordModal;
 
-export const getSessionPasswordDialog = createSelector(
-  getModal,
-  (state: ModalState): SessionPasswordModalState => state.sessionPasswordModal
-);
+export const getSessionPasswordDialog = (state: StateType) => getModal(state).sessionPasswordModal;
 
-export const getDeleteAccountModalState = createSelector(
-  getModal,
-  (state: ModalState): DeleteAccountModalState => state.deleteAccountModal
-);
+export const getDeleteAccountModalState = (state: StateType) => getModal(state).deleteAccountModal;
 
-export const getReactListDialog = createSelector(
-  getModal,
-  (state: ModalState): ReactModalsState => state.reactListModalState
-);
+export const getReactListDialog = (state: StateType) => getModal(state).reactListModalState;
 
-export const getReactClearAllDialog = createSelector(
-  getModal,
-  (state: ModalState): ReactModalsState => state.reactClearAllModalState
-);
+export const getReactClearAllDialog = (state: StateType) => getModal(state).reactClearAllModalState;
 
-export const getEditProfilePictureModalState = createSelector(
-  getModal,
-  (state: ModalState): EditProfilePictureModalState => state.editProfilePictureModalState
-);
+export const getEditProfilePictureModalState = (state: StateType) =>
+  getModal(state).editProfilePictureModalState;
 
-export const getHideRecoveryPasswordModalState = createSelector(
-  getModal,
-  (state: ModalState): HideRecoveryPasswordModalState => state.hideRecoveryPasswordModalState
-);
+export const getHideRecoveryPasswordModalState = (state: StateType) =>
+  getModal(state).hideRecoveryPasswordModalState;
 
-export const getOpenUrlModalState = createSelector(
-  getModal,
-  (state: ModalState) => state.openUrlModal
-);
+export const getOpenUrlModalState = (state: StateType) => getModal(state).openUrlModal;
 
 export const getLightBoxOptions = createSelector(
   getModal,
@@ -156,3 +84,6 @@ export const getLightBoxOptions = createSelector(
 );
 
 export const getDebugMenuModalState = (state: StateType) => getModal(state).debugMenuModal;
+
+export const getSessionNetworkModalState = (state: StateType) =>
+  getModal(state).sessionNetworkModal;

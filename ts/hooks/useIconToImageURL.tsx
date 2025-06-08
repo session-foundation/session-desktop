@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import useMount from 'react-use/lib/useMount';
 import { SessionIcon, SessionIconProps, SessionIconType } from '../components/icon';
 import { sleepFor } from '../session/utils/Promise';
-import { useIsDarkTheme } from '../state/selectors/theme';
+import { useIsDarkTheme } from '../state/theme/selectors/theme';
 import { ThemeKeys, getThemeValue } from '../themes/globals';
 
 const chooseIconColors = (

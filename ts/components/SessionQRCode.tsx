@@ -1,4 +1,4 @@
-import { MouseEvent, useEffect, useRef, useState } from 'react';
+import { MouseEvent, useEffect, useRef, useState, type SessionDataTestId } from 'react';
 import { QRCode } from 'react-qrcode-logo';
 import styled, { CSSProperties } from 'styled-components';
 import { THEME_GLOBALS } from '../themes/globals';
@@ -30,7 +30,7 @@ export type SessionQRCodeProps = {
   loading?: boolean;
   onClick?: (fileName: string, dataUrl: string) => void;
   ariaLabel?: string;
-  dataTestId?: string;
+  dataTestId?: SessionDataTestId;
   style?: CSSProperties;
 };
 
@@ -119,7 +119,7 @@ export function SessionQRCode(props: SessionQRCodeProps) {
         event.preventDefault();
         void handleOnClick();
       }}
-      data-testId={dataTestId || 'session-qr-code'}
+      data-testid={dataTestId}
       initial={{ opacity: 0 }}
       animate={{ opacity: loading ? 0 : 1 }}
       transition={{ duration: THEME_GLOBALS['--default-duration-seconds'] }}

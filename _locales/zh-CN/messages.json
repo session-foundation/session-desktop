@@ -122,7 +122,6 @@
   "banUser": "禁言该用户",
   "banUserBanned": "用户已被封禁",
   "block": "屏蔽",
-  "blockBlockedDescription": "取消屏蔽此联系人以发送消息。",
   "blockBlockedNone": "没有屏蔽的联系人",
   "blockBlockedUser": "已屏蔽{name}",
   "blockDescription": "您确定要屏蔽<b>{name}</b>吗？被屏蔽的用户将无法向您发送消息请求、群聊邀请或者语音通话。",

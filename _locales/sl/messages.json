@@ -121,7 +121,6 @@
   "banUser": "Onemogoči uporabnika",
   "banUserBanned": "Uporabnik je blokiran",
   "block": "Blokiraj",
-  "blockBlockedDescription": "Za pošiljanje sporočila morate najprej odblokirati ta stik.",
   "blockBlockedNone": "Ni blokiranih stikov",
   "blockBlockedUser": "Blokiram {name}",
   "blockDescription": "Ali ste prepričani, da želite blokirati <b>{name}?</b> Blokirani uporabniki vam ne morejo poslati zahtev za sporočila, povabil v skupino ali vas poklicati.",

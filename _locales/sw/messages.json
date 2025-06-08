@@ -121,7 +121,6 @@
   "banUser": "Piga marufuku mtumiaji",
   "banUserBanned": "Mtumiaji amepigwa marufuku",
   "block": "Zuia",
-  "blockBlockedDescription": "Ondolea kizuizi kwa mawasiliano haya kutuma ujumbe.",
   "blockBlockedNone": "Hakuna mawasiliano yaliyofungiwa",
   "blockBlockedUser": "Amezuiliwa {name}",
   "blockDescription": "Una uhakika unataka kumzuia <b>{name}?</b> Watumiaji waliodhamiriwa hawawezi kukutumia maombi ya ujumbe, mialiko ya kikundi au kukupigia simu.",

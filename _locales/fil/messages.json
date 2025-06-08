@@ -121,7 +121,6 @@
   "banUser": "Ipagbawal ang taong ito",
   "banUserBanned": "User banned",
   "block": "Harangin",
-  "blockBlockedDescription": "I-unblock ang contact na ito para magpadala ng mensahe.",
   "blockBlockedNone": "Walang naka-block na contact",
   "blockBlockedUser": "Na-block na si {name}",
   "blockDescription": "Sigurado ka bang gusto mong harangin si <b>{name}?</b> Ang mga hinarang na user ay hindi makakapagpadala ng mga kahilingan sa pagmemensahe, mga imbitasyon sa grupo o tira-tawag sa'yo.",

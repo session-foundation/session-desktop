@@ -121,7 +121,6 @@
   "banUser": "Felhasználó kitiltása",
   "banUserBanned": "Felhasználó kitiltva",
   "block": "Letiltás",
-  "blockBlockedDescription": "Üzenet küldéséhez oldd fel a kontakt letiltását.",
   "blockBlockedNone": "Nincsenek blokkolt kontaktok",
   "blockBlockedUser": "{name} letiltva",
   "blockDescription": "Biztos, hogy blokkolni szeretnéd <b>{name}</b>-t? A blokkolt felhasználók nem küldhetnek üzenetkérelmeket, csoportmeghívókat, és nem hívhatnak fel.",

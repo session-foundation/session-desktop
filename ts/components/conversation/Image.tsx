@@ -77,15 +77,13 @@ export const Image = (props: Props) => {
   const { loading, urlToLoad } = useEncryptedFileFetch(url, attachment.contentType, false);
 
   const { caption } = attachment || { caption: null };
-  const [pending, setPending] = useState<boolean>(attachment.pending || true);
-  const [mounted, setMounted] = useState<boolean>(
-    (!loading || !pending) && urlToLoad === undefined
-  );
+  const [pending, setPending] = useState(attachment.pending ?? true);
+  const [mounted, setMounted] = useState((!loading || !pending) && urlToLoad === undefined);
 
   const canClick = onClick && !pending;
   const role = canClick ? 'button' : undefined;
 
-  const onErrorUrlFilterering = useCallback(() => {
+  const onErrorUrlFiltering = useCallback(() => {
     if (mounted && url && urlToLoad === '' && onError) {
       onError();
       setPending(false);
@@ -98,19 +96,19 @@ export const Image = (props: Props) => {
   useEffect(() => {
     if (mounted && url === '') {
       setPending(false);
-      onErrorUrlFilterering();
+      onErrorUrlFiltering();
     }
 
     if (mounted && imageBroken && urlToLoad === '') {
       setPending(false);
-      onErrorUrlFilterering();
+      onErrorUrlFiltering();
     }
 
     if (url) {
       setPending(false);
       setMounted(!loading && !pending);
     }
-  }, [imageBroken, loading, mounted, onErrorUrlFilterering, pending, url, urlToLoad]);
+  }, [imageBroken, loading, mounted, onErrorUrlFiltering, pending, url, urlToLoad]);
 
   if (mounted && imageBroken) {
     return (
@@ -147,7 +145,7 @@ export const Image = (props: Props) => {
       }}
       data-attachmentindex={attachmentIndex}
     >
-      {!mounted ? (
+      {!mounted || !urlToLoad ? (
         <div
           className="module-image__loading-placeholder"
           style={{
@@ -163,7 +161,7 @@ export const Image = (props: Props) => {
         </div>
       ) : (
         <img
-          onError={onErrorUrlFilterering}
+          onError={onErrorUrlFiltering}
           className={clsx('module-image__image', forceSquare ? 'module-image__image-cover' : '')}
           alt={alt}
           style={{
