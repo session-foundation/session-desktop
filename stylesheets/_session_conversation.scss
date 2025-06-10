@@ -118,6 +118,8 @@
   align-items: center;
   flex-grow: 1;
   outline: none;
+  margin-left: var(--margins-md);
+  margin-right: var(--margins-md);
 
   $actions-element-size: 30px;
 

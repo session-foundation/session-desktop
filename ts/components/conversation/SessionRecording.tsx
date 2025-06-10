@@ -213,11 +213,11 @@ export class SessionRecording extends Component<Props, State> {
           <div>
             <SessionIconButton
               iconType="send"
-              iconSize={'large'}
+              iconSize="large"
               iconRotation={90}
               onClick={this.onSendVoiceMessage}
-              margin={'var(--margins-sm)'}
               dataTestId="send-message-button"
+              margin="0"
             />
           </div>
         )}
