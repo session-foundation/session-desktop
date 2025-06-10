@@ -12,20 +12,16 @@ import {
 } from 'react';
 import useDebounce from 'react-use/lib/useDebounce';
 import type { CSSProperties } from 'styled-components';
-import { isString } from 'lodash';
-import { Localizer, type LocalizerProps } from './basic/Localizer';
-import { SessionHtmlRenderer } from './basic/SessionHTMLRenderer';
-
-type TipPosition = 'center' | 'left' | 'right';
 
 const TIP_LENGTH = 22;
+const VIEWPORT_MARGIN = 8;
 
 const StyledTooltip = styled.div<{
-  tooltipPosition: TipPosition;
   readyToShow: boolean;
   x: number;
   y: number;
   maxWidth?: string;
+  pointerOffset?: number;
 }>`
   background-color: var(--message-bubbles-received-background-color);
   color: var(--message-bubbles-received-text-color);
@@ -60,16 +56,15 @@ const StyledTooltip = styled.div<{
     clip-path: polygon(100% 100%, 7.2px 100%, 100% 7.2px);
     position: absolute;
     bottom: 0;
-    left: calc(50% - ${Math.floor(TIP_LENGTH / 2)}px);
+    left: ${({ pointerOffset }) => `${pointerOffset ?? 0}px`};
   }
 `;
 
 type Props = {
   reference: RefObject<HTMLDivElement>;
-  content: LocalizerProps | string;
+  content: ReactNode;
+  pointerOffset?: number;
   readyToShow: boolean;
-  htmlString?: boolean;
-  tooltipPosition?: TipPosition;
   x: number;
   y: number;
   maxWidth?: string;
@@ -77,45 +72,27 @@ type Props = {
 };
 
 const SessionTooltipContent = (props: Props) => {
-  const {
-    reference,
-    content,
-    readyToShow,
-    htmlString,
-    tooltipPosition = 'center',
-    x,
-    y,
-    maxWidth,
-    onClick,
-  } = props;
+  const { reference, content, readyToShow, x, y, pointerOffset, maxWidth, onClick } = props;
 
   return (
     <StyledTooltip
       ref={reference}
-      tooltipPosition={tooltipPosition}
       readyToShow={readyToShow}
       onClick={onClick}
       x={x}
       y={y}
       maxWidth={maxWidth}
+      pointerOffset={pointerOffset}
     >
-      {isString(content) ? (
-        !htmlString ? (
-          content
-        ) : (
-          <SessionHtmlRenderer html={content} />
-        )
-      ) : (
-        <Localizer {...content} />
-      )}
+      {content}
     </StyledTooltip>
   );
 };
 
 const StyledTooltipTrigger = styled.div`
   position: relative;
-  width: fit-content;
-  height: fit-content;
+  width: max-content;
+  height: max-content;
 `;
 
 export const SessionTooltip = ({
@@ -127,23 +104,22 @@ export const SessionTooltip = ({
   loading = false,
   style,
   dataTestId,
-  htmlString,
 }: {
   children: ReactNode;
-  content: LocalizerProps | string;
+  content: ReactNode;
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
   maxContentWidth?: string;
   loading?: boolean;
   style?: CSSProperties;
   dataTestId?: SessionDataTestId;
-  htmlString?: boolean;
 }) => {
   const [readyToShow, setReadyToShow] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [debouncedHover, setDebouncedHover] = useState(false);
   const [x, setX] = useState<number>();
   const [y, setY] = useState<number>();
+  const [pointerOffset, setPointerOffset] = useState<number>();
 
   useDebounce(
     () => {
@@ -160,10 +136,47 @@ export const SessionTooltip = ({
   const { elW: contentW, elH: contentH } = useMouse(contentRef);
 
   const updatePosition = useCallback(() => {
-    const _x = triggerX - Math.floor(contentW / 2) + Math.floor(triggerW / 2);
-    const _y = triggerY - triggerH - contentH;
-    setX(_x);
-    setY(_y);
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    // Center horizontally on the trigger
+    let newX = triggerX - Math.floor(contentW / 2) + Math.floor(triggerW / 2);
+
+    /**
+     * Clamp horizontally within viewport.
+     * If `x` is too far left, set `x` to the left margin.
+     * If `x` is too far right, set `x` to the right margin minus the content width.
+     *
+     * NOTE: the tooltip content `x` anchor is on the left of the tooltip content
+    */
+    if (newX < VIEWPORT_MARGIN) {
+      newX = VIEWPORT_MARGIN;
+    } else if (newX + contentW + VIEWPORT_MARGIN > viewportWidth) {
+      newX = viewportWidth - contentW - VIEWPORT_MARGIN;
+    }
+
+    // Position the content above the trigger.
+    let newY = triggerY - triggerH - contentH;
+
+    /**
+     * Position the content above the trigger.
+     * If `y + contentHeight` is above the viewport, position the tooltip content below the trigger.
+     */
+    if (newY < VIEWPORT_MARGIN) {
+      newY = triggerY + triggerH + VIEWPORT_MARGIN;
+    }
+
+    if (newY + contentH + VIEWPORT_MARGIN > viewportHeight) {
+      newY = viewportHeight - contentH - VIEWPORT_MARGIN;
+    }
+
+    setX(newX);
+    setY(newY);
+
+    const triggerCenterX = triggerX + triggerW / 2;
+    // we want the triangle’s center (TIP_LENGTH/2) to land under triggerCenterX
+    const offset = triggerCenterX - newX - TIP_LENGTH / 2;
+    setPointerOffset(offset);
   }, [contentH, contentW, triggerH, triggerW, triggerX, triggerY]);
 
   useEffect(() => {
@@ -204,10 +217,10 @@ export const SessionTooltip = ({
           reference={contentRef}
           content={content}
           readyToShow={readyToShow}
-          htmlString={htmlString}
           x={x}
           y={y}
           maxWidth={maxContentWidth}
+          pointerOffset={pointerOffset}
         />
       ) : null}
     </StyledTooltipTrigger>
