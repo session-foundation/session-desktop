@@ -6,7 +6,7 @@ import styled from 'styled-components';
 import { AbortController } from 'abort-controller';
 
 import autoBind from 'auto-bind';
-import { Component, RefObject, createRef } from 'react';
+import type { MentionsRef } from 'rc-mentions/lib/Mentions';
 import * as MIME from '../../../types/MIME';
 
 import { SessionEmojiPanel, StyledEmojiPanel } from '../SessionEmojiPanel';
@@ -246,7 +246,7 @@ const StyledRightCompositionBoxButtonContainer = styled.div`
 `;
 
 class CompositionBoxInner extends Component<Props, State> {
-  private readonly textarea: RefObject<any>;
+  private readonly textarea: RefObject<MentionsRef>;
   private readonly fileInput: RefObject<HTMLInputElement>;
   private container: RefObject<HTMLDivElement>;
   private readonly emojiPanel: RefObject<HTMLDivElement>;
@@ -374,6 +374,14 @@ class CompositionBoxInner extends Component<Props, State> {
     this.setState({
       showEmojiPanel: false,
     });
+
+    const textarea = this.textarea.current?.textarea;
+
+    if (textarea) {
+      textarea.focus();
+      this.updateCursorPosition(this.lastCursorPosition ?? this.getCursorPosition());
+      this.lastCursorPosition = undefined;
+    }
   }
 
   private getCursorPosition() {
