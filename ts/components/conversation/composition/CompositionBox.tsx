@@ -945,46 +945,15 @@ class CompositionBoxInner extends Component<Props, State> {
   }
 
   private onEmojiClick(emoji: FixedBaseEmoji) {
-    if (!this.props.selectedConversationKey) {
-      throw new Error('selectedConversationKey is needed');
+    if (emoji.native) {
+      FrequentlyUsed.add(emoji);
+      this.typeInTextArea(emoji.native);
     }
-    const messageBox = this.textarea.current;
-    if (!messageBox) {
-      return;
-    }
-
-    const { draft } = this.state;
-
-    const currentSelectionStart = Number(messageBox.selectionStart);
-
-    const realSelectionStart = getSelectionBasedOnMentions(draft, currentSelectionStart);
-
-    const before = draft.slice(0, realSelectionStart);
-    const end = draft.slice(realSelectionStart);
-
-    const newMessage = `${before}${emoji.native}${end}`;
-    this.setState({ draft: newMessage });
-    updateDraftForConversation({
-      conversationKey: this.props.selectedConversationKey,
-      draft: newMessage,
-    });
-
-    // update our selection because updating text programmatically
-    // will put the selection at the end of the textarea
-    // const selectionStart = currentSelectionStart + Number(1);
-    // messageBox.selectionStart = selectionStart;
-    // messageBox.selectionEnd = selectionStart;
-
-    // // Sometimes, we have to repeat the set of the selection position with a timeout to be effective
-    // setTimeout(() => {
-    //   messageBox.selectionStart = selectionStart;
-    //   messageBox.selectionEnd = selectionStart;
-    // }, 20);
   }
 
   private focusCompositionBox() {
     // Focus the textarea when user clicks anywhere in the composition box
-    this.textarea.current?.focus();
+    this.textarea.current?.textarea?.focus();
   }
 }
 
