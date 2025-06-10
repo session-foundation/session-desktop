@@ -1,7 +1,9 @@
 import { RefObject, useState } from 'react';
-import { Mention, MentionsInput } from 'react-mentions';
+import Mentions from 'rc-mentions';
+import { type MentionsRef } from 'rc-mentions/lib/Mentions';
 import { uniq } from 'lodash';
 import { useSelector } from 'react-redux';
+import type { OptionProps } from 'rc-mentions/es/Option';
 import {
   useSelectedConversationKey,
   useSelectedIsBlocked,
@@ -13,10 +15,9 @@ import {
 } from '../../../state/selectors/selectedConversation';
 import { updateDraftForConversation } from '../SessionConversationDrafts';
 import { renderEmojiQuickResultRow, searchEmojiForQuery } from './EmojiQuickResult';
-import { renderUserMentionRow, styleForCompositionBoxSuggestions } from './UserMentions';
-import { HTMLDirection, useHTMLDirection } from '../../../util/i18n/rtlSupport';
+import { renderUserMentionRow } from './UserMentions';
+import { useHTMLDirection } from '../../../util/i18n/rtlSupport';
 import { ConvoHub } from '../../../session/conversations';
-import { Constants } from '../../../session';
 import type { SessionSuggestionDataItem } from './types';
 import { getMentionsInput } from '../../../state/selectors/conversations';
 import { UserUtils } from '../../../session/utils';
@@ -25,50 +26,17 @@ import { PubKey } from '../../../session/types';
 import { useLibGroupMembers } from '../../../state/selectors/groups';
 import { use05GroupMembers } from '../../../hooks/useParamSelector';
 
-const sendMessageStyle = (dir?: HTMLDirection) => {
-  return {
-    control: {
-      wordBreak: 'break-all',
-    },
-    input: {
-      overflow: 'auto',
-      maxHeight: '50vh',
-      wordBreak: 'break-word',
-      padding: '0px',
-      margin: '0px',
-    },
-    highlighter: {
-      boxSizing: 'border-box',
-      overflow: 'hidden',
-      maxHeight: '50vh',
-    },
-    flexGrow: 1,
-    minHeight: '24px',
-    width: '100%',
-    ...styleForCompositionBoxSuggestions(dir),
-  } as const;
-};
-
 type Props = {
   draft: string;
   setDraft: (draft: string) => void;
   container: RefObject<HTMLDivElement>;
-  textAreaRef: RefObject<HTMLTextAreaElement>;
+  textAreaRef: RefObject<MentionsRef>;
+  updateCursorPosition: (pos: number) => void;
+  getCurrentCursorPosition: () => number;
   typingEnabled: boolean;
   onKeyDown: (event: any) => void;
+  setIsMentioning: (mode: boolean) => void;
 };
-
-function filterMentionDataByQuery(query: string, mentionData: Array<SessionSuggestionDataItem>) {
-  return (
-    mentionData
-      .filter(d => !!d)
-      .filter(
-        d =>
-          d.display?.toLowerCase()?.includes(query.toLowerCase()) ||
-          d.id?.toLowerCase()?.includes(query.toLowerCase())
-      ) || []
-  );
-}
 
 function useMembersInThisChat(): Array<SessionSuggestionDataItem> {
   const selectedConvoKey = useSelectedConversationKey();
@@ -101,22 +69,31 @@ function useMembersInThisChat(): Array<SessionSuggestionDataItem> {
   });
 }
 
-function fetchMentionData(
-  query: string,
-  fetchedMembersInThisChat: Array<SessionSuggestionDataItem>
-): Array<SessionSuggestionDataItem> {
-  let overriddenQuery = query;
-  if (!query) {
-    overriddenQuery = '';
-  }
-
-  return filterMentionDataByQuery(overriddenQuery, fetchedMembersInThisChat);
+enum PREFIX {
+  USER = '@',
+  EMOJI = ':',
 }
 
+const prefixes = Object.values(PREFIX);
+
+const isPrefix = (val: string): val is PREFIX => prefixes.includes(val as PREFIX);
+
 export const CompositionTextArea = (props: Props) => {
-  const { draft, setDraft, container, textAreaRef, typingEnabled, onKeyDown } = props;
+  const {
+    draft,
+    setDraft,
+    setIsMentioning,
+    textAreaRef,
+    typingEnabled,
+    onKeyDown,
+    getCurrentCursorPosition,
+    updateCursorPosition,
+  } = props;
 
   const [lastBumpTypingMessageLength, setLastBumpTypingMessageLength] = useState(0);
+  const [emojiResults, setEmojiResults] = useState<Array<SessionSuggestionDataItem>>([]);
+  const [mentionSearch, setMentionSearch] = useState<string>('');
+  const [currentPrefix, setCurrentPrefix] = useState<PREFIX | null>(null);
 
   const selectedConversationKey = useSelectedConversationKey();
   const htmlDirection = useHTMLDirection();
@@ -144,24 +121,20 @@ export const CompositionTextArea = (props: Props) => {
   };
 
   const messagePlaceHolder = makeMessagePlaceHolderText();
-  const neverMatchingRegex = /($a)/;
+  // const neverMatchingRegex = /($a)/;
+  // const style = sendMessageStyle(htmlDirection);
 
-  const style = sendMessageStyle(htmlDirection);
-
-  const handleOnChange = (event: any) => {
+  const handleOnChange = (text: string) => {
     if (!selectedConversationKey) {
       throw new Error('selectedConversationKey is needed');
     }
 
-    const newDraft = (event.target.value ?? '').slice(
-      0,
-      Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT
-    );
+    const newDraft = text ?? '';
     setDraft(newDraft);
     updateDraftForConversation({ conversationKey: selectedConversationKey, draft: newDraft });
   };
 
-  const handleKeyUp = async () => {
+  const handleKeyUp = () => {
     if (!selectedConversationKey) {
       throw new Error('selectedConversationKey is needed');
     }
@@ -178,46 +151,114 @@ export const CompositionTextArea = (props: Props) => {
     }
   };
 
+  const handleSearch = (input: string, prefix: string) => {
+    if (!isPrefix(prefix)) {
+      return;
+    }
+
+    // This is only used by the emoji onSelect logic.
+    setMentionSearch(input);
+
+    /**
+     * Because the emoji list is so long, only the 10 most relevant emojis are shown.
+     */
+    if (prefix === PREFIX.EMOJI) {
+      setEmojiResults(searchEmojiForQuery(input, 10));
+    }
+
+    setIsMentioning(true);
+    setCurrentPrefix(prefix);
+  };
+
+  // @ts-expect-error -- this is fine for now TODO: fix
+  const filterOption = (input: string, { display, value }: OptionProps) => {
+    // Because we handle emoji list rendering via a query we can't also filter by display
+    if (currentPrefix === PREFIX.EMOJI) {
+      return true;
+    }
+
+    const lowerInput = input?.toLowerCase();
+    const lowerDisplay = display?.toLowerCase();
+    const lowerValue = value?.toLowerCase();
+    return lowerDisplay?.indexOf(lowerInput) !== -1 || lowerValue?.indexOf(lowerInput) !== -1;
+  };
+
+  const handleSelect = (option: OptionProps, prefix: string) => {
+    if (!isPrefix(prefix)) {
+      return;
+    }
+
+    /**
+     * Emoji mention searching removes the `:` prefix, so we need to handle this case manually
+     */
+    if (prefix === PREFIX.EMOJI) {
+      const val = option.value ?? '';
+      const pos = getCurrentCursorPosition();
+      const searchInput = prefix + mentionSearch;
+
+      /**
+       * Finds the start of the emoji search input, it returns the last occurrence of the user's
+       * search input, not going past the user's cursor. This means the text we are going to remove
+       * is the text the user input into the search, so it is safe to replace it with the emoji.
+       */
+      const inputStart = draft.lastIndexOf(searchInput, pos);
+      const draftStart = draft.substring(0, inputStart);
+      const draftEnd = draft.substring(inputStart + searchInput.length, draft.length + 1);
+      const newDraft = draftStart + val + draftEnd;
+      setDraft(newDraft);
+
+      // The timeout ensures the cursor placement happens after the input has been updated, without it the cursor placement is incorrect.
+      setTimeout(() => {
+        updateCursorPosition(draftStart.length + val.length);
+      }, 25);
+    }
+
+    setCurrentPrefix(null);
+    setMentionSearch('');
+    setEmojiResults([]);
+    setIsMentioning(false);
+  };
+
   return (
-    <MentionsInput
-      value={draft}
-      onChange={handleOnChange}
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      onKeyDown={onKeyDown}
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      onKeyUp={handleKeyUp}
-      placeholder={messagePlaceHolder}
-      spellCheck={true}
-      dir={htmlDirection}
-      inputRef={textAreaRef}
-      maxLength={Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT}
-      disabled={!typingEnabled}
-      rows={1}
-      data-testid="message-input-text-area"
-      style={style}
-      suggestionsPortalHost={container.current || undefined}
-      forceSuggestionsAboveCursor={true} // force mentions to be rendered on top of the cursor, this is working with a fork of react-mentions for now
-    >
-      <Mention
-        appendSpaceOnAdd={true}
-        // this will be cleaned on cleanMentions()
-        markup="@ￒ__id__ￗ__display__ￒ" // ￒ = \uFFD2 is one of the forbidden char for a display name (check displayNameRegex)
-        trigger="@"
-        // this is only for the composition box visible content. The real stuff on the backend box is the @markup
-        displayTransform={(_id, display) => {
-          return htmlDirection === 'rtl' ? `${display}@` : `@${display}`;
-        }}
-        data={(query: string) => fetchMentionData(query, membersInThisChat)}
-        renderSuggestion={renderUserMentionRow}
-      />
-      <Mention
-        trigger=":"
-        markup="__id__"
-        appendSpaceOnAdd={true}
-        regex={neverMatchingRegex}
-        data={searchEmojiForQuery}
-        renderSuggestion={renderEmojiQuickResultRow}
-      />
-    </MentionsInput>
+    <>
+      <div className="textarea-layout">
+        <span>{draft}</span>
+      </div>
+      <Mentions
+        value={draft}
+        onChange={handleOnChange}
+        onKeyDown={onKeyDown}
+        onKeyUp={handleKeyUp}
+        placeholder={messagePlaceHolder}
+        spellCheck={true}
+        dir={htmlDirection}
+        disabled={!typingEnabled}
+        data-testid="message-input-text-area"
+        className="textarea-container"
+        prefix={prefixes}
+        autoFocus={true}
+        filterOption={filterOption}
+        ref={textAreaRef}
+        onSearch={handleSearch}
+        onSelect={handleSelect}
+        notFoundContent={null}
+      >
+        {currentPrefix === PREFIX.USER
+          ? membersInThisChat.map(({ id, display }) => (
+              // @ts-expect-error -- display is fine here TODO: fix
+              <Mentions.Option value={id} display={display} key={id}>
+                {renderUserMentionRow(id)}
+              </Mentions.Option>
+            ))
+          : currentPrefix === PREFIX.EMOJI
+            ? emojiResults.map(({ id, display }) => (
+                // @ts-expect-error -- display is fine here TODO: fix
+                <Mentions.Option value={id} display={display} key={id}>
+                  {renderEmojiQuickResultRow(id, display)}
+                </Mentions.Option>
+              ))
+            : null}
+      </Mentions>
+    </>
   );
 };

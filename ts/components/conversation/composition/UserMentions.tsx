@@ -1,4 +1,3 @@
-import type { SuggestionDataItem } from 'react-mentions';
 import { MemberListItem } from '../../MemberListItem';
 import { HTMLDirection } from '../../../util/i18n/rtlSupport';
 
@@ -36,12 +35,12 @@ export const styleForCompositionBoxSuggestions = (dir: HTMLDirection = 'ltr') =>
   return styles;
 };
 
-export const renderUserMentionRow = (suggestion: Pick<SuggestionDataItem, 'id'>) => {
+export const renderUserMentionRow = (id: string) => {
   return (
     <MemberListItem
-      key={`suggestion-list-${suggestion.id}`}
+      key={`suggestion-list-${id}`}
       isSelected={false}
-      pubkey={`${suggestion.id}`}
+      pubkey={id}
       inMentions={true}
       dataTestId="mentions-popup-row"
       maxNameWidth="100%"
