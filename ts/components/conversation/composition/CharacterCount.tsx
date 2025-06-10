@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { Constants } from '../../../session';
 import { SessionTooltip } from '../../SessionTooltip';
 import { Localizer } from '../../basic/Localizer';
+import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 // TODO: uncomment with pro
 // import { StyledCTA } from '../../cta/StyledCTA';
 // import { Localizer } from '../../basic/Localizer';
@@ -33,6 +34,7 @@ const StyledRemainingNumber = styled.span<{ pastLimit: boolean }>`
 `;
 
 export function CharacterCount({ text }: CharacterCountProps) {
+  const alwaysShowFlag = getFeatureFlag('useAlwaysShowRemainingChars');
   // TODO: implement with pro
   // const dispatch = useDispatch();
   // const isProAvailable = getFeatureFlag('useProAvailable');
@@ -60,7 +62,7 @@ export function CharacterCount({ text }: CharacterCountProps) {
   //   );
   // };
 
-  return remaining <= CHARACTER_SHOW_REMAINING_BUFFER ? (
+  return alwaysShowFlag || remaining <= CHARACTER_SHOW_REMAINING_BUFFER ? (
     <StyledCharacterCountContainer>
       {/* TODO: implement with pro */}
       {/* {isProAvailable && !hasPro ? ( */}
