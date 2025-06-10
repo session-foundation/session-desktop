@@ -244,6 +244,9 @@ class CompositionBoxInner extends Component<Props, State> {
   private readonly emojiPanelButton: any;
   private linkPreviewAbortController?: AbortController;
 
+
+  private lastCursorPosition?: number;
+
   constructor(props: Props) {
     super(props);
     this.state = getDefaultState(props.selectedConversationKey);
@@ -362,6 +365,56 @@ class CompositionBoxInner extends Component<Props, State> {
     this.setState({
       showEmojiPanel: false,
     });
+  }
+
+  private getCursorPosition() {
+    const textarea = this.textarea.current?.textarea;
+    if (!textarea) {
+      return 0;
+    }
+
+    const { draft } = this.state;
+
+    const currentSelectionStart = Number(textarea.selectionStart ?? draft.length);
+
+    this.lastCursorPosition = currentSelectionStart;
+    return currentSelectionStart;
+  }
+
+  private updateCursorPosition(pos: number) {
+    const textarea = this.textarea.current?.textarea;
+
+    if (!textarea) {
+      return;
+    }
+
+    textarea.selectionStart = pos;
+    textarea.selectionEnd = pos;
+
+    this.lastCursorPosition = pos;
+  }
+
+  private typeInTextArea(content: string) {
+    const conversationKey = this.props.selectedConversationKey;
+
+    if (isUndefined(conversationKey)) {
+      return;
+    }
+
+    const pos = this.lastCursorPosition ?? this.getCursorPosition();
+    const { draft } = this.state;
+
+    const before = draft.slice(0, pos);
+    const end = draft.slice(pos);
+
+    const newMessage = `${before}${content}${end}`;
+    this.setState({ draft: newMessage });
+    updateDraftForConversation({
+      conversationKey,
+      draft: newMessage,
+    });
+
+    this.updateCursorPosition(pos + content.length);
   }
 
   private toggleEmojiPanel() {
