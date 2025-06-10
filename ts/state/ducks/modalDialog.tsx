@@ -7,6 +7,7 @@ import { MediaItemType } from '../../components/lightbox/LightboxGallery';
 import { AttachmentTypeWithPath } from '../../types/Attachment';
 import type { EditProfilePictureModalProps, PasswordAction } from '../../types/ReduxTypes';
 import { WithConvoId } from '../../session/types/with';
+import type { SessionProInfoVariant } from '../../components/dialog/SessionProInfoModal';
 
 export type BanType = 'ban' | 'unban';
 
@@ -29,6 +30,7 @@ export type OnionPathModalState = EditProfileModalState;
 export type EnterPasswordModalState = EnterPasswordModalProps | null;
 export type DeleteAccountModalState = EditProfileModalState;
 export type OpenUrlModalState = { urlToOpen: string } | null;
+export type SessionProInfoState = { variant: SessionProInfoVariant } | null;
 
 export type SessionPasswordModalState = { passwordAction: PasswordAction; onOk: () => void } | null;
 
@@ -78,6 +80,7 @@ export type ModalState = {
   editProfilePictureModalState: EditProfilePictureModalState;
   hideRecoveryPasswordModalState: HideRecoveryPasswordModalState;
   openUrlModal: OpenUrlModalState;
+  sessionProInfoModal: SessionProInfoState;
   lightBoxOptions: LightBoxOptions;
   debugMenuModal: DebugMenuModalState;
   sessionNetworkModal: SessionNetworkModalState;
@@ -104,6 +107,7 @@ export const initialModalState: ModalState = {
   editProfilePictureModalState: null,
   hideRecoveryPasswordModalState: null,
   openUrlModal: null,
+  sessionProInfoModal: null,
   lightBoxOptions: null,
   debugMenuModal: null,
   sessionNetworkModal: null,
@@ -173,6 +177,9 @@ const ModalSlice = createSlice({
     updateOpenUrlModal(state, action: PayloadAction<OpenUrlModalState>) {
       return { ...state, openUrlModal: action.payload };
     },
+    updateSessionProInfoModal(state, action: PayloadAction<SessionProInfoState>) {
+      return { ...state, sessionProInfoModal: action.payload };
+    },
     updateLightBoxOptions(state, action: PayloadAction<LightBoxOptions>) {
       const lightBoxOptions = action.payload;
 
@@ -221,6 +228,7 @@ export const {
   updateEditProfilePictureModal,
   updateHideRecoveryPasswordModal,
   updateOpenUrlModal,
+  updateSessionProInfoModal,
   updateLightBoxOptions,
   updateDebugMenuModal,
   updateSessionNetworkModal,

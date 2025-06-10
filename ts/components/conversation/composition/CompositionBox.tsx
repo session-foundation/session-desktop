@@ -55,7 +55,9 @@ import { CompositionTextArea } from './CompositionTextArea';
 import { cleanMentions } from './UserMentions';
 import { HTMLDirection } from '../../../util/i18n/rtlSupport';
 import type { FixedBaseEmoji } from '../../../types/Reaction';
+import { CharacterCount } from './CharacterCount';
 import { Constants } from '../../../session';
+import { SessionProInfoVariant, showSessionProInfoDialog } from '../../dialog/SessionProInfoModal';
 
 export interface ReplyingToMessageProps {
   convoId: string;
@@ -677,6 +679,7 @@ class CompositionBoxInner extends Component<Props, State> {
             />
           </StyledEmojiPanelContainer>
         )}
+        <CharacterCount text={this.state.draft} />
       </Flex>
     );
   }
@@ -791,11 +794,11 @@ class CompositionBoxInner extends Component<Props, State> {
         // if we were not aborted, it's probably just an error on the fetch. Nothing to do except mark the fetch as done (with errors)
 
         if (aborted) {
-        this.setState({
+          this.setState({
             stagedLinkPreview: undefined,
           });
-      } else {
-        this.setState({
+        } else {
+          this.setState({
             stagedLinkPreview: {
               isLoaded: true,
               title: null,
@@ -928,7 +931,24 @@ class CompositionBoxInner extends Component<Props, State> {
     }
     this.linkPreviewAbortController?.abort();
 
+    // TODO: implement with pro
+    // const isProAvailable = getFeatureFlag('useProAvailable');
+    // const mockHasPro = getFeatureFlag('useMockUserHasPro');
+
+    // TODO: get pro status from store once available
+    // const hasPro = mockHasPro;
+    // const charLimit = hasPro
+    //   ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
+    //   : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
+
     if (this.state.draft.length > Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT) {
+      const dispatch = window.inboxStore?.dispatch;
+      if (dispatch) {
+        // const variant = hasPro
+        //   ? SessionProInfoVariant.MESSAGE_TOO_LONG
+        //   : SessionProInfoVariant.MESSAGE_TOO_LONG_CTA;
+        showSessionProInfoDialog(SessionProInfoVariant.MESSAGE_TOO_LONG, dispatch);
+      }
       return;
     }
 

@@ -62,6 +62,9 @@ export const getHideRecoveryPasswordModalState = (state: StateType) =>
 
 export const getOpenUrlModalState = (state: StateType) => getModal(state).openUrlModal;
 
+export const getSessionProInfoModalState = (state: StateType) =>
+  getModal(state).sessionProInfoModal;
+
 export const getLightBoxOptions = createSelector(
   getModal,
   (state: ModalState): LightBoxOptions => state.lightBoxOptions

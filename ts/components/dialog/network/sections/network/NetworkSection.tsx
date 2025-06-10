@@ -177,9 +177,9 @@ const CurrentPriceBlock = () => {
           ariaLabel="Network price explanation tooltip"
           iconType="question"
           iconSize={10}
-          iconPadding='0'
+          iconPadding="0"
           iconColor="var(--text-primary-color)"
-          padding='0'
+          padding="0"
           style={{
             border: '1px solid var(--text-primary-color)',
             borderRadius: '9999px',

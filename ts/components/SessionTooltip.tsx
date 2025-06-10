@@ -148,7 +148,7 @@ export const SessionTooltip = ({
      * If `x` is too far right, set `x` to the right margin minus the content width.
      *
      * NOTE: the tooltip content `x` anchor is on the left of the tooltip content
-    */
+     */
     if (newX < VIEWPORT_MARGIN) {
       newX = VIEWPORT_MARGIN;
     } else if (newX + contentW + VIEWPORT_MARGIN > viewportWidth) {
