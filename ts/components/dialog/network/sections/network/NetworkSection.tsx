@@ -2,6 +2,7 @@
 import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 import type { CSSProperties } from 'styled-components';
+import { useMemo } from 'react';
 import { localize } from '../../../../../localization/localeTools';
 import { Flex } from '../../../../basic/Flex';
 import { SpacerMD, SpacerXS } from '../../../../basic/Text';
@@ -122,6 +123,23 @@ const CurrentPriceBlock = () => {
         ? localize('loading')
         : localize('unavailable').toString();
 
+  const tooltipContent = useMemo(
+    () => (
+      <Localizer
+        token="sessionNetworkDataPrice"
+        args={{
+          date_time: priceTimestamp
+            ? formatDateWithLocale({
+                date: new Date(priceTimestamp * 1000),
+                formatStr: 'd MMM yyyy hh:mm a',
+              })
+            : '-',
+        }}
+      />
+    ),
+    [priceTimestamp]
+  );
+
   return (
     <Block
       $container={true}
@@ -146,20 +164,9 @@ const CurrentPriceBlock = () => {
         <BlockSecondaryText>{LOCALE_DEFAULTS.token_name_long}</BlockSecondaryText>
       </Flex>
       <SessionTooltip
-        content={{
-          token: 'sessionNetworkDataPrice',
-          args: {
-            date_time: !priceTimestamp
-              ? '-'
-              : formatDateWithLocale({
-                  date: new Date(priceTimestamp * 1000),
-                  formatStr: 'd MMM yyyy hh:mm a',
-                }),
-          },
-        }}
+        content={tooltipContent}
         loading={infoLoading || isFakeRefreshing || dataIsStale}
         dataTestId="tooltip-info"
-        htmlString={true}
         style={{
           position: 'absolute',
           top: 'var(--margins-xs)',
@@ -169,10 +176,10 @@ const CurrentPriceBlock = () => {
         <SessionIconButton
           ariaLabel="Network price explanation tooltip"
           iconType="question"
-          iconSize={9}
-          iconPadding="2px"
+          iconSize={10}
+          iconPadding='0'
           iconColor="var(--text-primary-color)"
-          padding={'0'}
+          padding='0'
           style={{
             border: '1px solid var(--text-primary-color)',
             borderRadius: '9999px',
