@@ -236,6 +236,15 @@ const StyledSendMessageInput = styled.div<{ dir?: HTMLDirection }>`
   }
 `;
 
+const StyledRightCompositionBoxButtonContainer = styled.div`
+  position: absolute;
+  right: var(--margins-md);
+  display: flex;
+  flex-direction: row;
+  width: max-content;
+  z-index: 2;
+`;
+
 class CompositionBoxInner extends Component<Props, State> {
   private readonly textarea: RefObject<any>;
   private readonly fileInput: RefObject<HTMLInputElement>;
@@ -460,8 +469,10 @@ class CompositionBoxInner extends Component<Props, State> {
         dir={this.props.htmlDirection}
         $container={true}
         $flexDirection={'row'}
-        $alignItems={'center'}
+        $alignItems={'flex-end'}
+        padding={'var(--margins-sm) 0 var(--margins-sm) var(--margins-md)'}
         width={'100%'}
+        style={{ position: 'relative' }}
       >
         {typingEnabled && <AddStagedAttachmentButton onClick={this.onChooseAttachment} />}
         <input
@@ -472,7 +483,6 @@ class CompositionBoxInner extends Component<Props, State> {
           type="file"
           onChange={this.onChoseAttachment}
         />
-        {typingEnabled && <StartRecordingButton onClick={this.onLoadVoiceNoteView} />}
         <StyledSendMessageInput
           role="main"
           dir={this.props.htmlDirection}
@@ -491,10 +501,16 @@ class CompositionBoxInner extends Component<Props, State> {
             onKeyDown={this.onKeyDown}
           />
         </StyledSendMessageInput>
+        <StyledRightCompositionBoxButtonContainer>
         {typingEnabled && (
           <ToggleEmojiButton ref={this.emojiPanelButton} onClick={this.toggleEmojiPanel} />
         )}
-        {showSendButton && <SendMessageButton onClick={this.onSendMessage} />}
+          {showSendButton ? (
+            <SendMessageButton onClick={this.onSendMessage} />
+          ) : (
+            <StartRecordingButton onClick={this.onLoadVoiceNoteView} />
+          )}
+        </StyledRightCompositionBoxButtonContainer>
         {showEmojiPanel && (
           <StyledEmojiPanelContainer role="button" dir={this.props.htmlDirection}>
             <SessionEmojiPanel
