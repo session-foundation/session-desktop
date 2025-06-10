@@ -30,7 +30,7 @@ const StyledRail = styled.div`
   margin-top: 12px;
   margin-inline-start: 16px;
   padding-inline-end: 16px;
-  overflow-x: scroll;
+  overflow-x: auto;
   max-height: 142px;
   white-space: nowrap;
   overflow-y: hidden;
