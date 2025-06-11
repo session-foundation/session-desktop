@@ -18,6 +18,7 @@ import { StyledModalDescriptionContainer } from '../shared/ModalDescriptionConta
 import { BlockOrUnblockModalState } from './BlockOrUnblockModalState';
 import { useSelectedConversationKey } from '../../../state/selectors/selectedConversation';
 import { resetConversationExternal } from '../../../state/ducks/conversations';
+import { localize } from '../../../localization/localeTools';
 
 type ModalState = NonNullable<BlockOrUnblockModalState>;
 
@@ -58,7 +59,8 @@ function useBlockUnblockI18nDescriptionArgs({
 export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullable<ModalState>) => {
   const dispatch = useDispatch();
 
-  const localizedAction = action === 'block' ? window.i18n('block') : window.i18n('blockUnblock');
+  const localizedAction =
+    action === 'block' ? localize('block').toString() : localize('blockUnblock').toString();
 
   const args = useBlockUnblockI18nDescriptionArgs({ action, pubkeys });
   const selectedConversation = useSelectedConversationKey();

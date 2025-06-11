@@ -8,6 +8,7 @@ import { getConversationsCount } from '../state/selectors/conversations';
 import { getLeftOverlayMode } from '../state/selectors/section';
 import { SessionIconButton } from './icon';
 import { useHotkey } from '../hooks/useHotkey';
+import { localize } from '../localization/localeTools';
 
 const StyledSearchInput = styled.div`
   height: var(--search-input-height);
@@ -65,6 +66,7 @@ function updateSearch(dispatch: Dispatch<any>, searchTerm: string) {
 
   debouncedSearch(dispatch, searchTerm);
 }
+
 export const SessionSearchInput = () => {
   const [currentSearchTerm, setCurrentSearchTerm] = useState('');
   const dispatch = useDispatch();
@@ -85,7 +87,9 @@ export const SessionSearchInput = () => {
     return null;
   }
 
-  const placeholder = isGroupCreationSearch ? window.i18n('searchContacts') : window.i18n('search');
+  const placeholder = isGroupCreationSearch
+    ? localize('searchContacts').toString()
+    : localize('search').toString();
 
   return (
     <StyledSearchInput data-testid={isGroupCreationSearch ? 'search-contacts-field' : undefined}>

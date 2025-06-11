@@ -182,7 +182,6 @@ export const OverlayClosedGroupV2 = () => {
           editable={!noContactsForClosedGroup && !isCreatingGroup}
         />
         <SpacerMD />
-        {/* TODO: localize those strings once out releasing those buttons for real Remove after QA */}
         {hasClosedGroupV2QAButtons() && (
           <>
             <span

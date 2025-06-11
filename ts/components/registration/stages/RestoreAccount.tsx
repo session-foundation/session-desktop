@@ -155,7 +155,7 @@ const RecoveryPhraseInput = ({
           setRecoveryPasswordError(!seed ? window.i18n('recoveryPasswordEnter') : undefined)
         );
       }}
-      onEnterPressed={onEnterPressed}
+      onEnterPressed={() => void onEnterPressed()}
       providedError={recoveryPasswordError}
       errorDataTestId="error-message"
       inputDataTestId="recovery-phrase-input"

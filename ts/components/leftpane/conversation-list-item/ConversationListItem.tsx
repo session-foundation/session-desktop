@@ -67,7 +67,6 @@ type Props = { conversationId: string; style?: CSSProperties };
 
 export const ConversationListItem = (props: Props) => {
   const { conversationId, style } = props;
-  const dispatch = useDispatch();
   const key = `conversation-item-${conversationId}`;
 
   const hasUnread = useHasUnread(conversationId);
@@ -102,7 +101,7 @@ export const ConversationListItem = (props: Props) => {
         }
       }
     },
-    [conversationId, isSelectedConvo, dispatch]
+    [conversationId, isSelectedConvo, showConvoSettingsCb]
   );
 
   return (

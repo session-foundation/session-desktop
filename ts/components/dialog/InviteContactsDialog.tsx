@@ -64,6 +64,43 @@ async function submitForOpenGroup(convoId: string, pubkeys: Array<string>) {
   }
 }
 
+function ContactsToInvite({
+  validContactsForInvite,
+  selectedContacts,
+  selectContact,
+  unselectContact,
+}: {
+  validContactsForInvite: Array<PubkeyType>;
+  selectedContacts: Array<string>;
+  selectContact: (member: string) => void;
+  unselectContact: (member: string) => void;
+}) {
+  // SessionSearchInput
+  const hasContacts = validContactsForInvite.length > 0;
+  
+  return hasContacts ? (
+    validContactsForInvite.map((member: string) => (
+      <MemberListItem
+        key={`contacts-list-${member}`}
+        pubkey={member}
+        isSelected={selectedContacts.includes(member)}
+        onSelect={selectContact}
+        onUnselect={unselectContact}
+        disableBg={true}
+        maxNameWidth="100%"
+      />
+    ))
+  ) : (
+    <>
+      <SpacerLG />
+      <p className="no-contacts">
+        <Localizer token="contactNone" />
+      </p>
+      <SpacerLG />
+    </>
+  );
+}
+
 const InviteContactsDialogInner = (props: Props) => {
   const { conversationId } = props;
   const dispatch = useDispatch();
@@ -138,7 +175,6 @@ const InviteContactsDialogInner = (props: Props) => {
 
       <SpacerLG />
 
-      {/* TODO: localize those strings once out releasing those buttons for real Remove after QA */}
       {isGroupV2 && hasClosedGroupV2QAButtons() && (
         <>
           <span
@@ -155,27 +191,12 @@ const InviteContactsDialogInner = (props: Props) => {
         </>
       )}
       <div className="contact-selection-list">
-        {hasContacts ? (
-          validContactsForInvite.map((member: string) => (
-            <MemberListItem
-              key={`contacts-list-${member}`}
-              pubkey={member}
-              isSelected={selectedContacts.includes(member)}
-              onSelect={addTo}
-              onUnselect={removeFrom}
-              disableBg={true}
-              maxNameWidth="100%"
-            />
-          ))
-        ) : (
-          <>
-            <SpacerLG />
-            <p className="no-contacts">
-              <Localizer token="contactNone" />
-            </p>
-            <SpacerLG />
-          </>
-        )}
+        <ContactsToInvite
+          validContactsForInvite={validContactsForInvite}
+          selectedContacts={selectedContacts}
+          selectContact={addTo}
+          unselectContact={removeFrom}
+        />
       </div>
       <SpacerLG />
       <SpacerLG />

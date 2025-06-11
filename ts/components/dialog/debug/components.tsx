@@ -5,6 +5,7 @@ import { useState } from 'react';
 import useAsyncFn from 'react-use/lib/useAsyncFn';
 import useInterval from 'react-use/lib/useInterval';
 import { filesize } from 'filesize';
+import styled from 'styled-components';
 
 import type { PubkeyType } from 'libsession_util_nodejs';
 import { chunk, toNumber } from 'lodash';
@@ -39,7 +40,6 @@ import {
 import { formatAbbreviatedExpireDoubleTimer } from '../../../util/i18n/formatting/expirationTimer';
 import { handleReleaseNotification } from '../../../util/releasedFeatures';
 import { networkDataActions } from '../../../state/ducks/networkData';
-import styled from 'styled-components';
 
 const hexRef = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
 
