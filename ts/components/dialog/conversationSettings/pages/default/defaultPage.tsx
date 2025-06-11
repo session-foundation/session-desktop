@@ -17,7 +17,6 @@ import {
   UpdateGroupMembersButton,
   AttachmentsButton,
   UpdateDisappearingMessagesButton,
-  ConversationSettingsQAButtons,
   ClearAllMessagesButton,
   LeaveGroupPanelButton,
   DeleteGroupPanelButton,
@@ -55,13 +54,11 @@ function GroupV2AdminActions({ conversationId }: WithConvoId) {
 
   return (
     <>
-      <SpacerSM />
       <AdminSettingsTitle />
       <PanelButtonGroup>
         <InviteContactsToGroupV2Button conversationId={conversationId} />
         <UpdateGroupMembersButton conversationId={conversationId} asAdmin={true} />
         <UpdateDisappearingMessagesButton conversationId={conversationId} asAdmin={true} />
-        <ConversationSettingsQAButtons conversationId={conversationId} />
       </PanelButtonGroup>
     </>
   );

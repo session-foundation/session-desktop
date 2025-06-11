@@ -22,6 +22,7 @@ import { UserGroupsWrapperActions } from '../../webworker/workers/browser/libses
 import { NetworkTime } from '../../util/NetworkTime';
 import { MessageQueue } from '../../session/sending';
 import { WithLocalMessageDeletionType } from '../../session/types/with';
+import { localize } from '../../localization/localeTools';
 
 async function unsendMessagesForEveryone1o1AndLegacy(
   conversation: ConversationModel,
@@ -535,7 +536,7 @@ export async function deleteMessagesById(messageIds: Array<string>, conversation
 
   window.inboxStore?.dispatch(
     updateConfirmModal({
-      title: window.i18n('deleteMessage', { count: selectedMessages.length }),
+      title: localize('deleteMessage').withArgs({ count: selectedMessages.length }).toString(),
       radioOptions: !isMe
         ? [
             {

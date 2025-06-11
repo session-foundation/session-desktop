@@ -1,6 +1,8 @@
 import { ReactNode, SessionDataTestId, type PropsWithChildren } from 'react';
 import styled, { CSSProperties } from 'styled-components';
 import { Flex } from '../basic/Flex';
+import { H8 } from '../basic/Heading';
+import { SpacerXS } from '../basic/Text';
 
 // NOTE Used for descendant components
 export const StyledContent = styled.div<{ disabled: boolean }>`
@@ -10,23 +12,12 @@ export const StyledContent = styled.div<{ disabled: boolean }>`
   color: ${props => (props.disabled ? 'var(--disabled-color)' : 'inherit')};
 `;
 
-export const StyledText = styled.span<{ color?: string }>`
-  font-size: var(--font-size-md);
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  width: 100%;
-  text-align: start;
-  ${props => props.color && `color: ${props.color};`}
-`;
-
 export const PanelLabel = styled.p`
   color: var(--text-secondary-color);
   width: 100%;
   margin: 0;
   padding-left: calc(var(--margins-lg) * 2 + var(--margins-sm));
-  padding-bottom: var(--margins-sm);
+  padding-block: var(--margins-sm);
 `;
 
 const StyledRoundedPanelButtonGroup = styled.div`
@@ -43,7 +34,7 @@ const StyledRoundedPanelButtonGroup = styled.div`
 
 const PanelButtonContainer = styled.div`
   overflow: auto;
-  min-height: 65px;
+  min-height: 50px;
   max-height: 100%;
 `;
 
@@ -72,7 +63,7 @@ const StyledPanelButton = styled.button<{
   flex-shrink: 0;
   flex-grow: 1;
   font-family: var(--font-default);
-  height: 65px;
+  height: 50px;
   width: 100%;
   transition: var(--default-duration);
   color: ${props => (props.disabled ? 'var(--disabled-color)' : props.color)};
@@ -111,7 +102,7 @@ export const PanelButton = (props: PanelButtonProps) => {
 };
 
 const StyledSubtitle = styled.p<{ color?: string }>`
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
   line-height: 1.1;
   margin-top: 0;
   margin-bottom: 0;
@@ -153,9 +144,20 @@ const PanelButtonTextInternal = (props: PropsWithChildren) => {
 
 function TextOnly(props: PanelButtonTextBaseProps) {
   return (
-    <StyledText color={props.color} data-testid={props.textDataTestId}>
+    <H8
+      color={props.color}
+      data-testid={props.textDataTestId}
+      fontWeight={500}
+      style={{
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        width: '100%',
+        textAlign: 'start',
+      }}
+    >
       {props.text}
-    </StyledText>
+    </H8>
   );
 }
 
@@ -164,7 +166,8 @@ export const PanelButtonTextWithSubText = (
 ) => {
   return (
     <PanelButtonTextInternal>
-      <TextOnly color={props.color} textDataTestId={props.textDataTestId} text={props.text} />{' '}
+      <TextOnly color={props.color} textDataTestId={props.textDataTestId} text={props.text} />
+      <SpacerXS />
       <StyledSubtitle color={props.color} data-testid={props.subTextDataTestId}>
         {props.subText}
       </StyledSubtitle>

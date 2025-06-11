@@ -24,7 +24,6 @@ import {
   resetConversationExternal,
 } from '../state/ducks/conversations';
 import {
-  updateBlockOrUnblockModal,
   updateConfirmModal,
   updateConversationSettingsModal,
   updateGroupMembersModal,
@@ -61,24 +60,6 @@ export async function copyPublicKeyByConvoId(convoId: string) {
   } else {
     window.clipboard.writeText(convoId);
   }
-}
-
-export async function blockConvoById(conversationId: string) {
-  window.inboxStore?.dispatch(
-    updateBlockOrUnblockModal({
-      action: 'block',
-      pubkeys: [conversationId],
-    })
-  );
-}
-
-export async function unblockConvoById(conversationId: string) {
-  window.inboxStore?.dispatch(
-    updateBlockOrUnblockModal({
-      action: 'unblock',
-      pubkeys: [conversationId],
-    })
-  );
 }
 
 /**
@@ -364,7 +345,6 @@ export async function leaveGroupOrCommunityByConvoId({
     });
   }
 }
-
 
 export async function showLeaveGroupByConvoId(conversationId: string, name: string | undefined) {
   const conversation = ConvoHub.use().get(conversationId);

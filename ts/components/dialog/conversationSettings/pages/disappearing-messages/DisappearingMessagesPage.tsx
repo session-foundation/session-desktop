@@ -51,7 +51,7 @@ const StyledNonAdminDescription = styled.div`
   align-items: center;
   margin: 0 var(--margins-lg);
   color: var(--text-secondary-color);
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
   text-align: center;
   line-height: 15px;
 `;
@@ -165,7 +165,6 @@ export const DisappearingMessagesPage = () => {
         />
         {(hasOnlyOneMode || modeSelected !== 'off') && (
           <>
-            {!hasOnlyOneMode && <SpacerLG />}
             <TimeOptions
               options={timerOptions}
               selected={timeSelected}

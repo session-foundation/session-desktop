@@ -295,7 +295,7 @@ export const DeleteMessagesMenuItem = () => {
   return (
     <ItemWithDataTestId onClick={clearAllMessagesCb}>
       {/* just more than 1 to have the string Delete Messages */}
-      {window.i18n('deleteMessage', { count: 2 })}
+      {localize('clearMessages').toString()}
     </ItemWithDataTestId>
   );
 };

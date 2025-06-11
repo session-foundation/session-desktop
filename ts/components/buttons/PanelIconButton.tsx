@@ -57,7 +57,7 @@ export const PanelIconButton = (
 
 export const PanelIconLucideIcon = ({ iconUnicode }: { iconUnicode: string }) => {
   // we shouldn't need to provide a color here, as the Icon should match what the PanelButton color is.
-  return <LucideIcon unicode={iconUnicode} iconSize={IconSizeToPxStr.huge} />;
+  return <LucideIcon unicode={iconUnicode} iconSize={IconSizeToPxStr.large} />;
 };
 
 export const PanelIconSessionLegacyIcon = ({
@@ -67,5 +67,5 @@ export const PanelIconSessionLegacyIcon = ({
   iconType: SessionIconType;
   iconColor: string;
 }) => {
-  return <SessionIcon iconType={iconType} iconSize="huge" iconColor={iconColor} />;
+  return <SessionIcon iconType={iconType} iconSize="large" iconColor={iconColor} />;
 };

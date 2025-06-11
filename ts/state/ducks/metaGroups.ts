@@ -1241,33 +1241,35 @@ const currentDeviceGroupMembersChange = createAsyncThunk(
   }
 );
 
-const triggerFakeDeleteMsgBeforeNow = createAsyncThunk(
-  'group/triggerFakeDeleteMsgBeforeNow',
+const triggerDeleteMsgBeforeNow = createAsyncThunk(
+  'group/triggerDeleteMsgBeforeNow',
   async (
     {
       groupPk,
       messagesWithAttachmentsOnly,
+      onDeleted,
+      onDeletionFailed,
     }: {
       groupPk: GroupPubkeyType;
       messagesWithAttachmentsOnly: boolean;
+      onDeleted: () => void;
+      onDeletionFailed: (error: string) => void;
     },
     payloadCreator
   ): Promise<void> => {
     const state = payloadCreator.getState() as StateType;
     if (!state.groups.infos[groupPk]) {
-      throw new PreConditionFailed(
-        'triggerFakeDeleteMsgBeforeNow group not present in redux slice'
-      );
+      throw new PreConditionFailed('triggerDeleteMsgBeforeNow group not present in redux slice');
     }
     const convo = ConvoHub.use().get(groupPk);
     const group = await UserGroupsWrapperActions.getGroup(groupPk);
     if (!convo || !group || !group.secretKey || isEmpty(group.secretKey)) {
       throw new Error(
-        'triggerFakeDeleteMsgBeforeNow: tried to make change to group but we do not have the admin secret key'
+        'triggerDeleteMsgBeforeNow: tried to make change to group but we do not have the admin secret key'
       );
     }
 
-    const nowSeconds = Math.floor(NetworkTime.now() / 1000);
+    const nowSeconds = NetworkTime.getNowWithNetworkOffsetSeconds();
     const infoGet = await MetaGroupWrapperActions.infoGet(groupPk);
     if (messagesWithAttachmentsOnly) {
       infoGet.deleteAttachBeforeSeconds = nowSeconds;
@@ -1290,11 +1292,13 @@ const triggerFakeDeleteMsgBeforeNow = createAsyncThunk(
         );
         throw new Error('failed to send deleteBeforeSeconds/deleteAttachBeforeSeconds message');
       }
+      onDeleted();
     } catch (e) {
       window.log.warn(
         'currentDeviceGroupMembersChange: pushChangesToGroupSwarmIfNeeded failed with:',
         e.message
       );
+      onDeletionFailed(e.message);
     }
   }
 );
@@ -1783,7 +1787,7 @@ export const groupInfoActions = {
   currentDeviceGroupNameChange,
   currentDeviceGroupAvatarChange,
   currentDeviceGroupAvatarRemoval,
-  triggerFakeDeleteMsgBeforeNow,
+  triggerDeleteMsgBeforeNow,
   ...metaGroupSlice.actions,
 };
 export const groupReducer = metaGroupSlice.reducer;

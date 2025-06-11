@@ -1,5 +1,3 @@
-import type { SessionDataTestId } from 'react';
-
 import {
   useDisappearingMessageSettingText,
   useIsClosedGroup,
@@ -12,9 +10,6 @@ import {
 import { showUpdateGroupMembersByConvoId } from '../../../interactions/conversationInteractions';
 import { localize } from '../../../localization/localeTools';
 import type { ConversationNotificationSettingType } from '../../../models/conversationAttributes';
-import { PubKey } from '../../../session/types';
-import { hasClosedGroupV2QAButtons } from '../../../shared/env_vars';
-import { groupInfoActions } from '../../../state/ducks/metaGroups';
 import { PanelIconButton } from '../../buttons';
 import { PanelIconLucideIcon, PanelIconSessionLegacyIcon } from '../../buttons/PanelIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
@@ -196,51 +191,6 @@ export const PinUnpinButton = ({ conversationId }: WithConvoId) => {
       }}
       dataTestId="pin-conversation-menu-option"
     />
-  );
-};
-
-export const ConversationSettingsQAButtons = ({ conversationId }: WithConvoId) => {
-  const isGroupV2 = useIsGroupV2(conversationId);
-
-  if (!hasClosedGroupV2QAButtons() || !isGroupV2) {
-    return null;
-  }
-
-  return (
-    <>
-      <PanelIconButton
-        iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.BUG} />}
-        text={'trigger delete message before now'}
-        onClick={() => {
-          if (!PubKey.is03Pubkey(conversationId)) {
-            throw new Error('We need a 03 pubkey');
-          }
-          window.inboxStore?.dispatch(
-            groupInfoActions.triggerFakeDeleteMsgBeforeNow({
-              groupPk: conversationId,
-              messagesWithAttachmentsOnly: false,
-            }) as any
-          );
-        }}
-        dataTestId={'' as SessionDataTestId}
-      />
-      <PanelIconButton
-        iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.BUG} />}
-        text={'delete message with attachments before now'}
-        onClick={() => {
-          if (!PubKey.is03Pubkey(conversationId)) {
-            throw new Error('We need a 03 pubkey');
-          }
-          window.inboxStore?.dispatch(
-            groupInfoActions.triggerFakeDeleteMsgBeforeNow({
-              groupPk: conversationId,
-              messagesWithAttachmentsOnly: true,
-            }) as any
-          );
-        }}
-        dataTestId={'' as SessionDataTestId}
-      />
-    </>
   );
 };
 
@@ -530,7 +480,7 @@ export function BlockUnblockButton({ conversationId }: WithConvoId) {
 
   return (
     <PanelIconButton
-      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.BAN} />}
+      iconElement={<PanelIconLucideIcon iconUnicode={showBlockUnblock.icon} />}
       text={localize(showBlockUnblock.token).toString()}
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       onClick={showBlockUnblock.cb}

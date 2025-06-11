@@ -1,5 +1,5 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { PubkeyType } from 'libsession_util_nodejs';
+import { PubkeyType, type GroupPubkeyType } from 'libsession_util_nodejs';
 import { compact, isEmpty, isFinite, isNumber, pick } from 'lodash';
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
@@ -191,9 +191,12 @@ export function useNotificationSetting(convoId?: string) {
   return convoProps?.currentNotificationSetting || 'all';
 }
 
-export function useIsGroupV2(convoId?: string) {
+export function useIsGroupV2(convoId?: string): convoId is GroupPubkeyType {
   const convoProps = useConversationPropsById(convoId);
-  return convoId && convoProps?.type === ConversationTypeEnum.GROUPV2 && PubKey.is03Pubkey(convoId);
+  return (
+    (convoId && convoProps?.type === ConversationTypeEnum.GROUPV2 && PubKey.is03Pubkey(convoId)) ||
+    false
+  );
 }
 
 export function useIsPublic(convoId?: string) {

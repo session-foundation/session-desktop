@@ -17,7 +17,7 @@ export const HeaderTitle = styled.h2`
 
 export const HeaderSubtitle = styled.h3`
   font-family: var(--font-default);
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
   font-weight: 400;
   text-align: center;
   padding-top: 0px;

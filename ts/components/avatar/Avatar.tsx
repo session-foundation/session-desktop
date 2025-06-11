@@ -8,6 +8,7 @@ import {
   useAvatarPath,
   useConversationUsername,
   useIsClosedGroup,
+  useIsPublic,
 } from '../../hooks/useParamSelector';
 import { SessionIcon } from '../icon';
 import { AvatarPlaceHolder } from './AvatarPlaceHolder/AvatarPlaceHolder';
@@ -137,6 +138,7 @@ const AvatarInner = (props: Props) => {
   const isClosedGroup = useIsClosedGroup(pubkey);
   const avatarPath = useAvatarPath(pubkey);
   const name = useConversationUsername(pubkey);
+  const isCommunity = useIsPublic(pubkey);
   // contentType is not important
   const { urlToLoad } = useEncryptedFileFetch(forcedAvatarPath || avatarPath || '', '', true);
 
@@ -157,7 +159,7 @@ const AvatarInner = (props: Props) => {
    */
   const hasImage = (base64Data || ((forcedAvatarPath || avatarPath) && urlToLoad)) && !imageBroken;
 
-  const isClickable = !!onAvatarClick;
+  const isClickable = !!onAvatarClick || (isCommunity && onPlusAvatarClick);
 
   return (
     <div
@@ -173,10 +175,14 @@ const AvatarInner = (props: Props) => {
           // but this just disable opening the new Conversation dialog with that user while selecting messages
           return;
         }
-        if (props.onAvatarClick) {
+        if (isCommunity && onPlusAvatarClick) {
           e.stopPropagation();
           e.preventDefault();
-          props.onAvatarClick?.();
+          onPlusAvatarClick();
+        } else if (onAvatarClick) {
+          e.stopPropagation();
+          e.preventDefault();
+          onAvatarClick();
         }
       }}
       role="button"

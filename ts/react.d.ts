@@ -234,6 +234,10 @@ declare module 'react' {
     | 'label-name'
     | 'input-count'
     | 'label-count'
+    | 'clear-everyone-radio-option'
+    | 'clear-device-radio-option'
+    | 'clear-everyone-radio-option-label'
+    | 'clear-device-radio-option-label'
 
     // links
     | 'session-website-link'

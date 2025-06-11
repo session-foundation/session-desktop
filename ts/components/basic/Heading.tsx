@@ -11,6 +11,7 @@ export type HeadingProps = {
   padding?: string;
   margin?: string;
   dataTestId?: SessionDataTestId;
+  onClick?: (event: React.MouseEvent<HTMLHeadingElement>) => void;
 };
 
 type StyledHeadingProps = HeadingProps & {

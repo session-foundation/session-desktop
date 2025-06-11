@@ -100,7 +100,7 @@ const StyledInput = styled(motion.input)<{
   }
 `;
 
-export const StyledTextAreaContainer = styled(motion.div)<{
+const StyledTextAreaContainer = styled(motion.div)<{
   error: boolean;
   textSize: TextSizes;
   centerText?: boolean;

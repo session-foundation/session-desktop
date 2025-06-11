@@ -18,7 +18,7 @@ import {
   useNicknameOrProfileNameOrShortenedPubkey,
 } from '../../../hooks/useParamSelector';
 import { PubKey } from '../../../session/types';
-import { H4 } from '../../basic/Heading';
+import { H7 } from '../../basic/Heading';
 import { localize } from '../../../localization/localeTools';
 import { useChangeNickname } from '../../menuAndSettingsHooks/useChangeNickname';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
@@ -27,6 +27,7 @@ import { useEditProfilePictureCallback } from '../../menuAndSettingsHooks/useEdi
 import { useRoomDescription } from '../../../state/selectors/sogsRoomInfo';
 import { useLibGroupDescription } from '../../../state/selectors/groups';
 import { useShowUpdateGroupNameDescriptionCb } from '../../menuAndSettingsHooks/useShowUpdateGroupNameDescription';
+import { useHTMLDirection } from '../../../util/i18n/rtlSupport';
 
 function AccountId({ conversationId }: WithConvoId) {
   const isPrivate = useIsPrivate(conversationId);
@@ -56,6 +57,15 @@ function EditGenericButton({
       dataTestId={dataTestId}
     />
   );
+}
+
+/**
+ * Return the callback to use for the title click event, if one is allowed
+ */
+function useOnTitleClickCb(conversationId: string) {
+  const changeNicknameCb = useChangeNickname(conversationId);
+  const updateNameDescCb = useShowUpdateGroupNameDescriptionCb({ conversationId });
+  return changeNicknameCb || updateNameDescCb;
 }
 
 function ChangeNicknameButton({ conversationId }: WithConvoId) {
@@ -148,23 +158,13 @@ function Description({ conversationId }: WithConvoId) {
   );
 }
 
-export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
-  const dispatch = useDispatch();
-
+const ConversationTitle = ({ conversationId }: WithConvoId) => {
   const nicknameOrDisplayName = useNicknameOrProfileNameOrShortenedPubkey(conversationId);
-  // if a nickname is set, we still want to display the real name of the user, as he defined it
-  const conversationRealName = useConversationRealName(conversationId);
-  const hasNickname = useHasNickname(conversationId);
-  const isMe = useIsMe(conversationId);
-
   const isCommunity = useIsPublic(conversationId);
   const isClosedGroup = useIsClosedGroup(conversationId);
+  const isMe = useIsMe(conversationId);
 
-  const editProfilePictureCb = useEditProfilePictureCallback({ conversationId });
-
-  if (!conversationId) {
-    return null;
-  }
+  const onClickCb = useOnTitleClickCb(conversationId);
 
   // the data-test-id depends on the type of conversation
   const dataTestId = isCommunity
@@ -173,6 +173,36 @@ export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
       ? 'group-name'
       : // for 1o1, this will hold the nickname if set, or the display name
         'preferred-display-name';
+
+  return (
+    <H7
+      dataTestId={dataTestId}
+      style={{
+        wordBreak: 'break-all',
+        textAlign: 'center',
+        cursor: onClickCb ? 'pointer' : 'inherit',
+      }}
+      onClick={onClickCb || undefined}
+    >
+      {isMe ? localize('noteToSelf').toString() : nicknameOrDisplayName}
+    </H7>
+  );
+};
+
+export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
+  const dispatch = useDispatch();
+
+  // if a nickname is set, we still want to display the real name of the user, as he defined it
+  const conversationRealName = useConversationRealName(conversationId);
+  const hasNickname = useHasNickname(conversationId);
+  const isMe = useIsMe(conversationId);
+
+  const editProfilePictureCb = useEditProfilePictureCallback({ conversationId });
+  const htmlDirection = useHTMLDirection();
+
+  if (!conversationId) {
+    return null;
+  }
 
   return (
     <Header
@@ -197,17 +227,18 @@ export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
           size={AvatarSize.XL}
           pubkey={conversationId}
           dataTestId="profile-picture"
-          onPlusAvatarClick={editProfilePictureCb}
+          // we don't want to show the plus button for the current user
+          // as he needs to change his avatar through the EditProfileDialog
+          onPlusAvatarClick={!isMe ? editProfilePictureCb : undefined}
         />
         <Flex
           $container={true}
           $alignItems={'center'}
           $flexDirection={'row'}
           $flexGap="var(--margins-xs)"
+          style={{ direction: htmlDirection }}
         >
-          <H4 dataTestId={dataTestId} style={{ wordBreak: 'break-all' }}>
-            {isMe ? localize('noteToSelf').toString() : nicknameOrDisplayName}
-          </H4>
+          <ConversationTitle conversationId={conversationId} />
           <ChangeNicknameButton conversationId={conversationId} />
           <UpdateNameDescriptionButton conversationId={conversationId} />
         </Flex>

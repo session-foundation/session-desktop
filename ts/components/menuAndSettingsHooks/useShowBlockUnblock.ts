@@ -7,6 +7,7 @@ import {
 } from '../../hooks/useParamSelector';
 import { PubKey } from '../../session/types';
 import { updateBlockOrUnblockModal } from '../../state/ducks/modalDialog';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 export function useShowBlockUnblock(convoId: string) {
   const isMe = useIsMe(convoId);
@@ -14,6 +15,7 @@ export function useShowBlockUnblock(convoId: string) {
   const isPrivate = useIsPrivate(convoId);
   const isIncomingRequest = useIsIncomingRequest(convoId);
   const dispatch = useDispatch();
+
 
   const showBlockUnblock = !isMe && isPrivate && !isIncomingRequest && !PubKey.isBlinded(convoId);
 
@@ -32,6 +34,7 @@ export function useShowBlockUnblock(convoId: string) {
           })
         ),
       token: 'blockUnblock' as const,
+      icon: LUCIDE_ICONS_UNICODE.USER_ROUND_CHECK,
     };
   }
   return {
@@ -44,5 +47,6 @@ export function useShowBlockUnblock(convoId: string) {
         })
       ),
     token: 'block' as const,
+    icon: LUCIDE_ICONS_UNICODE.USER_ROUND_X,
   };
 }

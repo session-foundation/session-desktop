@@ -1,5 +1,6 @@
 import type { SessionDataTestId } from 'react';
 import { SessionIconButton } from '../icon';
+import { useIsRtl } from '../../util/i18n/rtlSupport';
 
 export const PlusAvatarButton = ({
   onClick,
@@ -8,6 +9,8 @@ export const PlusAvatarButton = ({
   onClick?: () => void;
   dataTestId?: SessionDataTestId;
 }) => {
+  const isRtl = useIsRtl();
+
   return (
     <SessionIconButton
       iconType="plusFat"
@@ -19,7 +22,12 @@ export const PlusAvatarButton = ({
       onClick={onClick}
       dataTestId={dataTestId}
       padding="0"
-      style={{ position: 'absolute', bottom: 0, right: 0 }}
+      style={{
+        position: 'absolute',
+        bottom: 0,
+        right: isRtl ? undefined : 0,
+        left: isRtl ? 0 : undefined,
+      }}
     />
   );
 };

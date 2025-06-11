@@ -114,6 +114,7 @@ export function ConversationSettingsDialog(props: ConversationSettingsModalState
         allowOutsideClick={false}
         headerIconButtons={backButton}
         $contentMinWidth="400px"
+        bigHeader={true}
       >
         <StyledContent
           $container={true}
