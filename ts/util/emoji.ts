@@ -93,7 +93,7 @@ export async function initialiseEmojiData(data: any): Promise<void> {
 
 // Synchronous version of Emoji Mart's SearchIndex.search()
 // If we upgrade the package things will probably break
-export function searchSync(query: string, args?: any): Array<any> {
+export function searchSync(query: string, args?: any): Array<FixedBaseEmoji> {
   if (!nativeEmojiData) {
     window.log.error('No native emoji data found');
     return [];
@@ -163,4 +163,79 @@ export function searchSync(query: string, args?: any): Array<any> {
     results = results.slice(0, maxResults);
   }
   return results;
+}
+
+enum EmojiMartLocalStorageKey {
+  // Users frequently used emojis
+  FREQUENTLY_USED = 'emoji-mart.frequently',
+  // Last emoji the user used via emoji mart
+  LAST = 'emoji-mart.last',
+  // Skin tone preference the user set via emoji mart
+  SKIN = 'emoji-mart.skin',
+}
+
+/**
+ * Get the user's frequently used emojis from local storage.
+ * This is sorted in descending order of frequency. This is a mirror of what emoji mart does internally.
+ * TODO: consider if we need to cache the localStorage item
+ */
+export function getFrequentlyUsedEmojis(): Array<string> {
+  try {
+    const data = localStorage.getItem(EmojiMartLocalStorageKey.FREQUENTLY_USED);
+    if (!data) {
+      return [];
+    }
+    return Object.entries(JSON.parse(data) as Record<string, number>)
+      .sort(([, a], [, b]) => b - a)
+      .map(([key]) => key);
+  } catch (e) {
+    window.log.error(e);
+    return [];
+  }
+}
+
+enum EmojiMartSkinTone {
+  // 👍
+  Default = 0,
+  // 👍🏻
+  Light = 1,
+  // 👍🏼
+  MediumLight = 2,
+  // 👍🏽
+  Medium = 3,
+  // 👍🏾
+  MediumDark = 4,
+  // 👍🏿
+  Dark = 5,
+}
+
+const validSkinTones = Object.values(EmojiMartSkinTone) as Array<EmojiMartSkinTone>;
+
+const isEmojiMartSkinTone = (tone: unknown): tone is EmojiMartSkinTone =>
+  validSkinTones.includes(tone as EmojiMartSkinTone);
+
+/**
+ * Get the user's emoji skin tone preference from local storage.
+ * NOTE: This value is the index in the emoji skin array.
+ * TODO: consider if we need to cache the localStorage item
+ */
+export function getEmojiSkinTonePreferenceIndex(): EmojiMartSkinTone {
+  try {
+    const preference = localStorage.getItem(EmojiMartLocalStorageKey.SKIN);
+    if (!preference) {
+      return EmojiMartSkinTone.Default;
+    }
+    const num = Number(preference);
+    if (Number.isNaN(num) || num < 1) {
+      return EmojiMartSkinTone.Default;
+    }
+
+    // Emoji mart stores this as a number from 1 to 6, not the index, so we need to subtract 1.
+    const idx = num - 1;
+
+    return isEmojiMartSkinTone(idx) ? idx : EmojiMartSkinTone.Default;
+  } catch (e) {
+    window.log.error(e);
+    return EmojiMartSkinTone.Default;
+  }
 }

@@ -1,4 +1,4 @@
-import _, { debounce, isEmpty } from 'lodash';
+import _, { debounce, isEmpty, isUndefined } from 'lodash';
 
 import { connect } from 'react-redux';
 import styled from 'styled-components';
@@ -6,7 +6,9 @@ import styled from 'styled-components';
 import { AbortController } from 'abort-controller';
 
 import autoBind from 'auto-bind';
-import { Component, RefObject, createRef } from 'react';
+import { Component, createRef, RefObject } from 'react';
+import { FrequentlyUsed } from 'emoji-mart';
+import type { MentionsRef } from 'rc-mentions/lib/Mentions';
 import * as MIME from '../../../types/MIME';
 
 import { SessionEmojiPanel, StyledEmojiPanel } from '../SessionEmojiPanel';
@@ -38,9 +40,9 @@ import { getMediaPermissionsSettings } from '../../settings/SessionSettings';
 import { getDraftForConversation, updateDraftForConversation } from '../SessionConversationDrafts';
 import { SessionQuotedMessageComposition } from '../SessionQuotedMessageComposition';
 import {
+  getPreview,
   LINK_PREVIEW_TIMEOUT,
   SessionStagedLinkPreview,
-  getPreview,
 } from '../SessionStagedLinkPreview';
 import { StagedAttachmentList } from '../StagedAttachmentList';
 import {
@@ -50,9 +52,12 @@ import {
   ToggleEmojiButton,
 } from './CompositionButtons';
 import { CompositionTextArea } from './CompositionTextArea';
-import { cleanMentions, mentionsRegex } from './UserMentions';
+import { cleanMentions } from './UserMentions';
 import { HTMLDirection } from '../../../util/i18n/rtlSupport';
 import type { FixedBaseEmoji } from '../../../types/Reaction';
+import { CharacterCount } from './CharacterCount';
+import { Constants } from '../../../session';
+import { SessionProInfoVariant, showSessionProInfoDialog } from '../../dialog/SessionProInfoModal';
 
 export interface ReplyingToMessageProps {
   convoId: string;
@@ -124,104 +129,242 @@ const getDefaultState = (newConvoId?: string) => {
   };
 };
 
-const getSelectionBasedOnMentions = (draft: string, index: number) => {
-  // we have to get the real selectionStart/end of an index in the mentions box.
-  // this is kind of a pain as the mentions box has two inputs, one with the real text, and one with the extracted mentions
-
-  // the index shown to the user is actually just the visible part of the mentions (so the part between ￗ...ￒ
-  const matches = draft.match(mentionsRegex);
-
-  let lastMatchStartIndex = 0;
-  let lastMatchEndIndex = 0;
-  let lastRealMatchEndIndex = 0;
-
-  if (!matches) {
-    return index;
-  }
-  const mapStartToLengthOfMatches = matches.map(match => {
-    const displayNameStart = match.indexOf('\uFFD7') + 1;
-    const displayNameEnd = match.lastIndexOf('\uFFD2');
-    const displayName = match.substring(displayNameStart, displayNameEnd);
-
-    const currentMatchStartIndex = draft.indexOf(match) + lastMatchStartIndex;
-    lastMatchStartIndex = currentMatchStartIndex;
-    lastMatchEndIndex = currentMatchStartIndex + match.length;
-
-    const realLength = displayName.length + 1;
-    lastRealMatchEndIndex += realLength;
-
-    // the +1 is for the @
-    return {
-      length: displayName.length + 1,
-      lastRealMatchEndIndex,
-      start: lastMatchStartIndex,
-      end: lastMatchEndIndex,
-    };
-  });
-
-  const beforeFirstMatch = index < mapStartToLengthOfMatches[0].start;
-  if (beforeFirstMatch) {
-    // those first char are always just char, so the mentions logic does not come into account
-    return index;
-  }
-  const lastMatchMap = _.last(mapStartToLengthOfMatches);
-
-  if (!lastMatchMap) {
-    return Number.MAX_SAFE_INTEGER;
-  }
-
-  const indexIsAfterEndOfLastMatch = lastMatchMap.lastRealMatchEndIndex <= index;
-  if (indexIsAfterEndOfLastMatch) {
-    const lastEnd = lastMatchMap.end;
-    const diffBetweenEndAndLastRealEnd = index - lastMatchMap.lastRealMatchEndIndex;
-    return lastEnd + diffBetweenEndAndLastRealEnd - 1;
-  }
-  // now this is the hard part, the cursor is currently between the end of the first match and the start of the last match
-  // for now, just append it to the end
-  return Number.MAX_SAFE_INTEGER;
-};
+// TODO: re-implement this
+// const getSelectionBasedOnMentions = (draft: string, index: number) => {
+//   // we have to get the real selectionStart/end of an index in the mentions box.
+//   // this is kind of a pain as the mentions box has two inputs, one with the real text, and one with the extracted mentions
+//
+//   // the index shown to the user is actually just the visible part of the mentions (so the part between ￗ...ￒ
+//   const matches = draft.match(mentionsRegex);
+//
+//   let lastMatchStartIndex = 0;
+//   let lastMatchEndIndex = 0;
+//   let lastRealMatchEndIndex = 0;
+//
+//   if (!matches) {
+//     return index;
+//   }
+//   const mapStartToLengthOfMatches = matches.map(match => {
+//     const displayNameStart = match.indexOf('\uFFD7') + 1;
+//     const displayNameEnd = match.lastIndexOf('\uFFD2');
+//     const displayName = match.substring(displayNameStart, displayNameEnd);
+//
+//     const currentMatchStartIndex = draft.indexOf(match) + lastMatchStartIndex;
+//     lastMatchStartIndex = currentMatchStartIndex;
+//     lastMatchEndIndex = currentMatchStartIndex + match.length;
+//
+//     const realLength = displayName.length + 1;
+//     lastRealMatchEndIndex += realLength;
+//
+//     // the +1 is for the @
+//     return {
+//       length: displayName.length + 1,
+//       lastRealMatchEndIndex,
+//       start: lastMatchStartIndex,
+//       end: lastMatchEndIndex,
+//     };
+//   });
+//
+//   const beforeFirstMatch = index < mapStartToLengthOfMatches[0].start;
+//   if (beforeFirstMatch) {
+//     // those first char are always just char, so the mentions logic does not come into account
+//     return index;
+//   }
+//   const lastMatchMap = _.last(mapStartToLengthOfMatches);
+//
+//   if (!lastMatchMap) {
+//     return Number.MAX_SAFE_INTEGER;
+//   }
+//
+//   const indexIsAfterEndOfLastMatch = lastMatchMap.lastRealMatchEndIndex <= index;
+//   if (indexIsAfterEndOfLastMatch) {
+//     const lastEnd = lastMatchMap.end;
+//     const diffBetweenEndAndLastRealEnd = index - lastMatchMap.lastRealMatchEndIndex;
+//     return lastEnd + diffBetweenEndAndLastRealEnd - 1;
+//   }
+//   // now this is the hard part, the cursor is currently between the end of the first match and the start of the last match
+//   // for now, just append it to the end
+//   return Number.MAX_SAFE_INTEGER;
+// };
 
 const StyledEmojiPanelContainer = styled.div<{ dir?: HTMLDirection }>`
   ${StyledEmojiPanel} {
     position: absolute;
     bottom: 68px;
+    z-index: 11;
     ${props => (props.dir === 'rtl' ? 'left: 0px' : 'right: 0px;')}
   }
 `;
 
+// TODO: check rtl still works correctly
 const StyledSendMessageInput = styled.div<{ dir?: HTMLDirection }>`
   position: relative;
   cursor: text;
   display: flex;
+  align-self: center;
   align-items: center;
   flex-grow: 1;
-  min-height: var(--composition-container-height);
-  padding: var(--margins-xs) 0;
   ${props => props.dir === 'rtl' && 'margin-inline-start: var(--margins-sm);'}
   z-index: 1;
   background-color: inherit;
+  margin-top: var(--margins-xs);
 
   ul {
     max-height: 70vh;
     overflow: auto;
   }
 
-  textarea {
-    font-family: var(--font-default);
-    min-height: calc(var(--composition-container-height) / 3);
-    max-height: calc(3 * var(--composition-container-height));
-    margin-right: var(--margins-md);
-    color: var(--text-color-primary);
+  .textarea-layout {
+    position: relative;
+    box-sizing: border-box;
+    height: 100%;
+    width: 100%;
+    flex-grow: 1;
+    color: transparent;
+    overflow: hidden;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    border: 1px solid transparent;
+    text-align: start;
+    max-height: 50vh;
+    line-height: var(--font-size-h2);
+    padding: 0 140px 0.25em 0.375em;
+  }
 
-    background: transparent;
+  .textarea-container {
+    position: absolute;
+    flex-grow: 1;
+    height: 100%;
+    min-height: 28px;
+    width: 100%;
+  }
+
+  textarea {
+    scrollbar-gutter: stable;
+    padding-right: 140px;
+    min-height: 28px;
+    display: block;
+    padding-top: 0;
+    width: 100%;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    box-sizing: border-box;
+    background-color: transparent;
+    font-family: inherit;
+    font-size: inherit;
+    letter-spacing: inherit;
+    height: 100%;
+    bottom: 0px;
+    overflow: auto;
     resize: none;
-    display: flex;
+    max-height: 50vh;
+    word-break: break-word;
+    font-family: var(--font-default);
+    color: var(--text-color-primary);
+    background: transparent;
     flex-grow: 1;
     outline: none;
     border: none;
-    font-size: 14px;
     line-height: var(--font-size-h2);
-    letter-spacing: 0.5px;
+  }
+
+  highlighter {
+    box-sizing: border-box;
+    overflow: hidden;
+    max-height: 50vh;
+ }
+}
+
+.rc-mentions {
+
+  // ================= Input Area =================
+
+  > &-measure {
+    font-size: inherit;
+    font-size-adjust: inherit;
+    font-style: inherit;
+    font-variant: inherit;
+    font-stretch: inherit;
+    font-weight: inherit;
+    font-family: inherit;
+
+    padding: 0;
+    margin: 0;
+    line-height: inherit;
+    vertical-align: top;
+    overflow: inherit;
+    word-break: inherit;
+    white-space: inherit;
+    word-wrap: break-word;
+    overflow-x: initial;
+    overflow-y: auto;
+    text-align: inherit;
+    letter-spacing: inherit;
+    tab-size: inherit;
+    direction: inherit;
+  }
+
+  &-measure {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    pointer-events: none;
+    // color: rgba(255, 0, 0, 0.3);
+    color: transparent;
+    z-index: -1;
+  }
+
+  // ================== Dropdown ==================
+
+  &-dropdown {
+    position: absolute;
+    // NOTE: I tried to make the popover scrollable with arrow key support but I couldn't get it to
+    // work. There is an open issue about it https://github.com/react-component/mentions/issues/194
+    &-menu {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+
+      &-item {
+        cursor: pointer;
+      }
+    }
+  }
+}
+
+// Customize style
+.rc-mentions {
+
+  &-dropdown {
+    border-radius: var(--border-radius);
+    font-size: 14px;
+    box-shadow: var(--suggestions-shadow);
+    background-color: var(--suggestions-background-color);
+    color: var(--suggestions-text-color);
+    z-index: 3;
+
+    &-menu {
+      &-item {
+        height: auto;
+        padding-top: 5px;
+        padding-bottom: 5px;
+        background-color: var(--suggestions-background-color);
+        color: var(--suggestions-text-color);
+        transition: var(--default-duration);
+
+        &-active {
+          background-color: var(--suggestions-background-hover-color);
+        }
+
+        &-disabled {
+          opacity: 0.5;
+        }
+      }
+    }
+  }
   }
 
   &__emoji-overlay {
@@ -236,13 +379,25 @@ const StyledSendMessageInput = styled.div<{ dir?: HTMLDirection }>`
   }
 `;
 
+const StyledRightCompositionBoxButtonContainer = styled.div`
+  position: absolute;
+  right: var(--margins-md);
+  display: flex;
+  flex-direction: row;
+  width: max-content;
+  z-index: 2;
+`;
+
 class CompositionBoxInner extends Component<Props, State> {
-  private readonly textarea: RefObject<any>;
+  private readonly textarea: RefObject<MentionsRef>;
   private readonly fileInput: RefObject<HTMLInputElement>;
   private container: RefObject<HTMLDivElement>;
   private readonly emojiPanel: RefObject<HTMLDivElement>;
   private readonly emojiPanelButton: any;
   private linkPreviewAbortController?: AbortController;
+
+  private lastCursorPosition?: number;
+  private isMentioning: boolean = false;
 
   constructor(props: Props) {
     super(props);
@@ -291,6 +446,14 @@ class CompositionBoxInner extends Component<Props, State> {
 
   public render() {
     const { showRecordingView } = this.state;
+    const { typingEnabled, isBlocked } = this.props;
+
+    // we completely hide the composition box when typing is not enabled now.
+    // Actually not anymore. We want the above, except when we can't write because that user is blocked.
+    // When that user is blocked, **and only then**, we want to show the composition box, disabled with the placeholder "unblock to send".
+    if (!typingEnabled && !isBlocked) {
+      return null;
+    }
 
     return (
       <Flex $flexDirection="column">
@@ -362,6 +525,68 @@ class CompositionBoxInner extends Component<Props, State> {
     this.setState({
       showEmojiPanel: false,
     });
+
+    const textarea = this.textarea.current?.textarea;
+
+    if (textarea) {
+      textarea.focus();
+      this.updateCursorPosition(this.lastCursorPosition ?? this.getCursorPosition());
+      this.lastCursorPosition = undefined;
+    }
+  }
+
+  private getCursorPosition() {
+    const textarea = this.textarea.current?.textarea;
+    if (!textarea) {
+      return 0;
+    }
+
+    const { draft } = this.state;
+
+    const currentSelectionStart = Number(textarea.selectionStart ?? draft.length);
+
+    this.lastCursorPosition = currentSelectionStart;
+    return currentSelectionStart;
+  }
+
+  private updateCursorPosition(pos: number) {
+    const textarea = this.textarea.current?.textarea;
+
+    if (!textarea) {
+      return;
+    }
+
+    textarea.selectionStart = pos;
+    textarea.selectionEnd = pos;
+
+    this.lastCursorPosition = pos;
+  }
+
+  private typeInTextArea(content: string) {
+    const conversationKey = this.props.selectedConversationKey;
+
+    if (isUndefined(conversationKey)) {
+      return;
+    }
+
+    const pos = this.lastCursorPosition ?? this.getCursorPosition();
+    const { draft } = this.state;
+
+    const before = draft.slice(0, pos);
+    const end = draft.slice(pos);
+
+    const newMessage = `${before}${content}${end}`;
+    this.setState({ draft: newMessage });
+    updateDraftForConversation({
+      conversationKey,
+      draft: newMessage,
+    });
+
+    this.updateCursorPosition(pos + content.length);
+  }
+
+  private setIsMentioning(bool: boolean) {
+    this.isMentioning = bool;
   }
 
   private toggleEmojiPanel() {
@@ -376,7 +601,6 @@ class CompositionBoxInner extends Component<Props, State> {
     return (
       <SessionRecording
         sendVoiceMessage={this.sendVoiceMessage}
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onLoadVoiceNoteView={this.onLoadVoiceNoteView}
         onExitVoiceNoteView={this.onExitVoiceNoteView}
       />
@@ -395,22 +619,17 @@ class CompositionBoxInner extends Component<Props, State> {
 
     /* eslint-disable @typescript-eslint/no-misused-promises */
 
-    // we completely hide the composition box when typing is not enabled now.
-    // Actually not anymore. We want the above, except when we can't write because that user is blocked.
-    // When that user is blocked, **and only then**, we want to show the composition box, disabled with the placeholder "unblock to send".
-    if (!typingEnabled && !isBlocked) {
-      return null;
-    }
-
     return (
       <Flex
         dir={this.props.htmlDirection}
         $container={true}
         $flexDirection={'row'}
-        $alignItems={'center'}
+        $alignItems={'flex-end'}
+        padding={'var(--margins-sm) 0 var(--margins-sm) var(--margins-md)'}
         width={'100%'}
+        style={{ position: 'relative' }}
       >
-        {typingEnabled && <AddStagedAttachmentButton onClick={this.onChooseAttachment} />}
+        {<AddStagedAttachmentButton onClick={this.onChooseAttachment} isBlocked={isBlocked} />}
         <input
           className="hidden"
           placeholder="Attachment"
@@ -419,7 +638,6 @@ class CompositionBoxInner extends Component<Props, State> {
           type="file"
           onChange={this.onChoseAttachment}
         />
-        {typingEnabled && <StartRecordingButton onClick={this.onLoadVoiceNoteView} />}
         <StyledSendMessageInput
           role="main"
           dir={this.props.htmlDirection}
@@ -436,12 +654,21 @@ class CompositionBoxInner extends Component<Props, State> {
             textAreaRef={this.textarea}
             typingEnabled={this.props.typingEnabled}
             onKeyDown={this.onKeyDown}
+            getCurrentCursorPosition={this.getCursorPosition}
+            updateCursorPosition={this.updateCursorPosition}
+            setIsMentioning={this.setIsMentioning}
           />
         </StyledSendMessageInput>
-        {typingEnabled && (
-          <ToggleEmojiButton ref={this.emojiPanelButton} onClick={this.toggleEmojiPanel} />
-        )}
-        {showSendButton && <SendMessageButton onClick={this.onSendMessage} />}
+        <StyledRightCompositionBoxButtonContainer>
+          {typingEnabled && (
+            <ToggleEmojiButton ref={this.emojiPanelButton} onClick={this.toggleEmojiPanel} />
+          )}
+          {showSendButton ? (
+            <SendMessageButton onClick={this.onSendMessage} />
+          ) : (
+            <StartRecordingButton onClick={this.onLoadVoiceNoteView} isBlocked={isBlocked} />
+          )}
+        </StyledRightCompositionBoxButtonContainer>
         {showEmojiPanel && (
           <StyledEmojiPanelContainer role="button" dir={this.props.htmlDirection}>
             <SessionEmojiPanel
@@ -452,6 +679,7 @@ class CompositionBoxInner extends Component<Props, State> {
             />
           </StyledEmojiPanelContainer>
         )}
+        <CharacterCount text={this.state.draft} />
       </Flex>
     );
   }
@@ -664,6 +892,16 @@ class CompositionBoxInner extends Component<Props, State> {
   }
 
   private async onKeyDown(event: any) {
+    // NOTE: this does not work at all, the onKeyDown event isnt called when inside the emoji panel
+    if (event.key === 'Escape' && this.state.showEmojiPanel) {
+      this.hideEmojiPanel();
+      return;
+    }
+
+    if (this.isMentioning) {
+      return;
+    }
+
     const isEnter = event.key === 'Enter';
     const isShiftEnter = event.shiftKey && isEnter;
     const isShiftSendEnabled = window.getSettingValue(SettingsKey.hasShiftSendEnabled) as boolean;
@@ -674,13 +912,12 @@ class CompositionBoxInner extends Component<Props, State> {
       if (isShiftEnter) {
         await this.onSendMessage();
       } else {
-        this.insertNewLine();
+        this.typeInTextArea('\n');
       }
     } else if (isEnter && !event.shiftKey && isNotComposing) {
       event.preventDefault();
       await this.onSendMessage();
-    } else if (event.key === 'Escape' && this.state.showEmojiPanel) {
-      this.hideEmojiPanel();
+      // TODO: remove this, doesnt seem to do anything
     } else if (event.key === 'PageUp' || event.key === 'PageDown') {
       // swallow pageUp events if they occurs on the composition box (it breaks the app layout)
       event.preventDefault();
@@ -688,39 +925,32 @@ class CompositionBoxInner extends Component<Props, State> {
     }
   }
 
-  private insertNewLine() {
-    const messageBox = this.textarea.current;
-    if (!messageBox) {
-      return;
-    }
-
-    const { draft } = this.state;
-    const { selectedConversationKey } = this.props;
-
-    if (!selectedConversationKey) {
-      return; // add this check to prevent undefined from being used
-    }
-
-    const currentSelectionStart = Number(messageBox.selectionStart);
-    const realSelectionStart = getSelectionBasedOnMentions(draft, currentSelectionStart);
-
-    const before = draft.slice(0, realSelectionStart);
-    const after = draft.slice(realSelectionStart);
-
-    const updatedDraft = `${before}\n${after}`;
-
-    this.setState({ draft: updatedDraft });
-    updateDraftForConversation({
-      conversationKey: selectedConversationKey,
-      draft: updatedDraft,
-    });
-  }
-
   private async onSendMessage() {
     if (!this.props.selectedConversationKey) {
       throw new Error('selectedConversationKey is needed');
     }
     this.linkPreviewAbortController?.abort();
+
+    // TODO: implement with pro
+    // const isProAvailable = getFeatureFlag('useProAvailable');
+    // const mockHasPro = getFeatureFlag('useMockUserHasPro');
+
+    // TODO: get pro status from store once available
+    // const hasPro = mockHasPro;
+    // const charLimit = hasPro
+    //   ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
+    //   : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
+
+    if (this.state.draft.length > Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT) {
+      const dispatch = window.inboxStore?.dispatch;
+      if (dispatch) {
+        // const variant = hasPro
+        //   ? SessionProInfoVariant.MESSAGE_TOO_LONG
+        //   : SessionProInfoVariant.MESSAGE_TOO_LONG_CTA;
+        showSessionProInfoDialog(SessionProInfoVariant.MESSAGE_TOO_LONG, dispatch);
+      }
+      return;
+    }
 
     const messagePlaintext = cleanMentions(this.state.draft);
 
@@ -876,7 +1106,7 @@ class CompositionBoxInner extends Component<Props, State> {
     this.onExitVoiceNoteView();
   }
 
-  private async onLoadVoiceNoteView() {
+  private onLoadVoiceNoteView() {
     if (!getMediaPermissionsSettings()) {
       ToastUtils.pushAudioPermissionNeeded();
       return;
@@ -892,46 +1122,15 @@ class CompositionBoxInner extends Component<Props, State> {
   }
 
   private onEmojiClick(emoji: FixedBaseEmoji) {
-    if (!this.props.selectedConversationKey) {
-      throw new Error('selectedConversationKey is needed');
+    if (emoji.native) {
+      FrequentlyUsed.add(emoji);
+      this.typeInTextArea(emoji.native);
     }
-    const messageBox = this.textarea.current;
-    if (!messageBox) {
-      return;
-    }
-
-    const { draft } = this.state;
-
-    const currentSelectionStart = Number(messageBox.selectionStart);
-
-    const realSelectionStart = getSelectionBasedOnMentions(draft, currentSelectionStart);
-
-    const before = draft.slice(0, realSelectionStart);
-    const end = draft.slice(realSelectionStart);
-
-    const newMessage = `${before}${emoji.native}${end}`;
-    this.setState({ draft: newMessage });
-    updateDraftForConversation({
-      conversationKey: this.props.selectedConversationKey,
-      draft: newMessage,
-    });
-
-    // update our selection because updating text programmatically
-    // will put the selection at the end of the textarea
-    // const selectionStart = currentSelectionStart + Number(1);
-    // messageBox.selectionStart = selectionStart;
-    // messageBox.selectionEnd = selectionStart;
-
-    // // Sometimes, we have to repeat the set of the selection position with a timeout to be effective
-    // setTimeout(() => {
-    //   messageBox.selectionStart = selectionStart;
-    //   messageBox.selectionEnd = selectionStart;
-    // }, 20);
   }
 
   private focusCompositionBox() {
     // Focus the textarea when user clicks anywhere in the composition box
-    this.textarea.current?.focus();
+    this.textarea.current?.textarea?.focus();
   }
 }
 

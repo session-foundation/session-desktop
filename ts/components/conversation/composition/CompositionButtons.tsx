@@ -4,6 +4,11 @@ import { useIsOutgoingRequest } from '../../../hooks/useParamSelector';
 import { useSelectedConversationKey } from '../../../state/selectors/selectedConversation';
 import { SessionIconButton } from '../../icon';
 
+type CompositionButtonProps = {
+  onClick: () => void;
+  isBlocked?: boolean;
+};
+
 const StyledChatButtonContainer = styled.div<{ disabled?: boolean }>`
   .session-icon-button {
     svg {
@@ -15,15 +20,23 @@ const StyledChatButtonContainer = styled.div<{ disabled?: boolean }>`
       `&:hover svg {
       background-color: var(--chat-buttons-background-hover-color);
     }`}
+
+    ${props =>
+      props.disabled &&
+      `svg path {
+      fill: var(--disabled-color);
+    }`}
   }
 `;
 
-export const AddStagedAttachmentButton = (props: { onClick: () => void }) => {
+export const AddStagedAttachmentButton = ({ onClick, isBlocked }: CompositionButtonProps) => {
   const selectedConvoKey = useSelectedConversationKey();
   const isOutgoingRequest = useIsOutgoingRequest(selectedConvoKey);
 
+  const disabled = isOutgoingRequest || isBlocked;
+
   return (
-    <StyledChatButtonContainer disabled={isOutgoingRequest}>
+    <StyledChatButtonContainer disabled={disabled}>
       <SessionIconButton
         iconType="plusThin"
         backgroundColor={'var(--chat-buttons-background-color)'}
@@ -31,20 +44,22 @@ export const AddStagedAttachmentButton = (props: { onClick: () => void }) => {
         iconSize={'huge2'}
         borderRadius="300px"
         iconPadding="8px"
-        onClick={props.onClick}
+        onClick={onClick}
         dataTestId="attachments-button"
-        disabled={isOutgoingRequest}
+        disabled={disabled}
       />
     </StyledChatButtonContainer>
   );
 };
 
-export const StartRecordingButton = (props: { onClick: () => void }) => {
+export const StartRecordingButton = ({ onClick, isBlocked }: CompositionButtonProps) => {
   const selectedConvoKey = useSelectedConversationKey();
   const isOutgoingRequest = useIsOutgoingRequest(selectedConvoKey);
 
+  const disabled = isOutgoingRequest || isBlocked;
+
   return (
-    <StyledChatButtonContainer disabled={isOutgoingRequest}>
+    <StyledChatButtonContainer disabled={disabled}>
       <SessionIconButton
         iconType="microphone"
         iconSize={'huge2'}
@@ -52,16 +67,15 @@ export const StartRecordingButton = (props: { onClick: () => void }) => {
         iconColor={'var(--chat-buttons-icon-color)'}
         borderRadius="300px"
         iconPadding="6px"
-        onClick={props.onClick}
-        disabled={isOutgoingRequest}
+        onClick={onClick}
         dataTestId="microphone-button"
+        disabled={disabled}
       />
     </StyledChatButtonContainer>
   );
 };
 
-// eslint-disable-next-line react/display-name
-export const ToggleEmojiButton = forwardRef<HTMLButtonElement, { onClick: () => void }>(
+export const ToggleEmojiButton = forwardRef<HTMLButtonElement, CompositionButtonProps>(
   (props, ref) => {
     return (
       <StyledChatButtonContainer>
@@ -81,9 +95,9 @@ export const ToggleEmojiButton = forwardRef<HTMLButtonElement, { onClick: () => 
   }
 );
 
-export const SendMessageButton = (props: { onClick: () => void }) => {
+export const SendMessageButton = ({ onClick, isBlocked }: CompositionButtonProps) => {
   return (
-    <StyledChatButtonContainer>
+    <StyledChatButtonContainer disabled={isBlocked}>
       <SessionIconButton
         iconType="send"
         backgroundColor={'var(--chat-buttons-background-color)'}
@@ -92,8 +106,9 @@ export const SendMessageButton = (props: { onClick: () => void }) => {
         iconRotation={90}
         borderRadius="300px"
         iconPadding="6px"
-        onClick={props.onClick}
+        onClick={onClick}
         dataTestId="send-message-button"
+        disabled={isBlocked}
       />
     </StyledChatButtonContainer>
   );

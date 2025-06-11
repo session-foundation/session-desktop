@@ -62,6 +62,9 @@ window.sessionFeatureFlags = {
   useReleaseChannels: true,
   useSESH101: true,
   useTestNet: isTestNet() || isTestIntegration(),
+  useAlwaysShowRemainingChars: false,
+  // useProAvailable: false,
+  // useMockUserHasPro: false,
   debug: {
     debugLogging: !isEmpty(process.env.SESSION_DEBUG),
     debugLibsessionDumps: !isEmpty(process.env.SESSION_DEBUG_LIBSESSION_DUMPS),
