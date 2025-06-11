@@ -885,6 +885,7 @@
   "warning": "Uwaga",
   "window": "Okno",
   "yes": "Tak",
-  "you": "Ty"
+  "you": "Ty",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

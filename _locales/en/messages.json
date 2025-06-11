@@ -616,6 +616,8 @@
   "messageVoiceSnippetGroup": "{author}: {emoji} Voice Message",
   "messages": "Messages",
   "minimize": "Minimize",
+  "modalMessageTooLongDescription": "Please shorten your message to {count} characters or less.",
+  "modalMessageTooLongTitle": "Your message is too long",
   "next": "Next",
   "nicknameDescription": "Choose a nickname for <b>{name}</b>. This will appear to you in your one-to-one and group conversations.",
   "nicknameEnter": "Enter nickname",
@@ -798,6 +800,8 @@
   "recoveryPasswordWarningSendDescription": "This is your recovery password. If you send it to someone they'll have full access to your account.",
   "recreateGroup": "Recreate Group",
   "redo": "Redo",
+  "remainingCharactersOverTooltip": "Message is too long",
+  "remainingCharactersTooltip": "{count} characters remaining",
   "remove": "Remove",
   "removePasswordFail": "Failed to remove password",
   "reply": "Reply",
@@ -839,7 +843,6 @@
   "sessionInviteAFriend": "Invite a Friend",
   "sessionMessageRequests": "Message Requests",
   "sessionNetworkCurrentPrice": "Current SESH price",
-  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {datetime}",
   "sessionNetworkDescription": "Messages are sent using the Session Network. The network is comprised of nodes incentivized with Session Token, which keeps Session decentralized and secure. <span><b>Learn More</b> {icon}</span>",
   "sessionNetworkLearnAboutStaking": "Learn About Staking",
   "sessionNetworkMarketCap": "Market Cap",
@@ -911,6 +914,7 @@
   "warning": "Warning",
   "window": "Window",
   "yes": "Yes",
-  "you": "You"
+  "you": "You",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

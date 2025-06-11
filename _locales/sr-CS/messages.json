@@ -777,6 +777,7 @@
   "warning": "Upozorenje",
   "window": "Prozor",
   "yes": "Da",
-  "you": "Ti"
+  "you": "Ti",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

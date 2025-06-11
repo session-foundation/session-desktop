@@ -778,6 +778,7 @@
   "warning": "Isilumkiso",
   "window": "Window",
   "yes": "Ewe",
-  "you": "Gwe"
+  "you": "Gwe",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

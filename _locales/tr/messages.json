@@ -824,6 +824,7 @@
   "warning": "Uyarı",
   "window": "Pencere",
   "yes": "Evet",
-  "you": "Siz"
+  "you": "Siz",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

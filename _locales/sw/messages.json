@@ -778,6 +778,7 @@
   "warning": "Onyo",
   "window": "Dirisha",
   "yes": "Ndio",
-  "you": "Wewe"
+  "you": "Wewe",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

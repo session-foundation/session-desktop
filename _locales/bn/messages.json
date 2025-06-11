@@ -777,6 +777,7 @@
   "warning": "Warning",
   "window": "Window",
   "yes": "হ্যাঁ",
-  "you": "তুমি"
+  "you": "তুমি",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

@@ -777,6 +777,7 @@
   "warning": "გაფრთხილება",
   "window": "ფანჯარა",
   "yes": "Yes",
-  "you": "თქვენ"
+  "you": "თქვენ",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

@@ -777,6 +777,7 @@
   "warning": "Paralajmërim",
   "window": "Dritare",
   "yes": "Po",
-  "you": "Ju"
+  "you": "Ju",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

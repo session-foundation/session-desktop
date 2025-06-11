@@ -788,6 +788,7 @@
   "warning": "Varoitus",
   "window": "Ikkuna",
   "yes": "Kyllä",
-  "you": "Sinä"
+  "you": "Sinä",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

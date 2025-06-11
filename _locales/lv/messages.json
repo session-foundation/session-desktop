@@ -729,6 +729,7 @@
   "warning": "Brīdinājums",
   "window": "Logs",
   "yes": "Jā",
-  "you": "Jūs"
+  "you": "Jūs",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 
