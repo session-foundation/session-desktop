@@ -41,7 +41,6 @@ import {
 } from '../../webworker/workers/browser/libsession_worker_interface';
 import { StateType } from '../reducer';
 import { openConversationWithMessages } from './conversations';
-import { resetLeftOverlayMode } from './section';
 import { ConversationTypeEnum } from '../../models/types';
 import { NetworkTime } from '../../util/NetworkTime';
 import { GroupUpdateMessageFactory } from '../../session/messages/message_factory/group/groupUpdateMessageFactory';
@@ -60,6 +59,7 @@ import { encryptProfile } from '../../util/crypto/profileEncrypter';
 import { processNewAttachment } from '../../types/MessageAttachment';
 import { MIME } from '../../types';
 import type { StoreGroupMessageSubRequest } from '../../session/apis/snode_api/SnodeRequestTypes';
+import { sectionActions } from './section';
 
 export type GroupState = {
   infos: Record<GroupPubkeyType, GroupInfoGet>;
@@ -254,7 +254,7 @@ const initNewGroupInWrapper = createAsyncThunk(
       convo.set({ active_at: Date.now() });
       await convo.commit();
       convo.updateLastMessage();
-      dispatch(resetLeftOverlayMode());
+      dispatch(sectionActions.resetLeftOverlayMode());
 
       // Everything is setup for this group, we now need to send the invites to each members,
       // privately and asynchronously, and gracefully handle errors with toasts.

@@ -6,7 +6,7 @@ import { setDisappearingMessagesByConvoId } from '../../../../../interactions/co
 import { TimerOptions } from '../../../../../session/disappearing_messages/timerOptions';
 import { DisappearingMessageConversationModeType } from '../../../../../session/disappearing_messages/types';
 import { closeRightPanel } from '../../../../../state/ducks/conversations';
-import { resetRightOverlayMode } from '../../../../../state/ducks/section';
+
 import {
   getSelectedConversationExpirationModes,
   useSelectedConversationDisappearingMode,
@@ -26,6 +26,7 @@ import { TimeOptions } from './TimeOptions';
 import { useConversationSettingsModalIsStandalone } from '../../../../../state/selectors/modal';
 import { updateConversationSettingsModal } from '../../../../../state/ducks/modalDialog';
 import { useShowConversationSettingsFor } from '../../../../menuAndSettingsHooks/useShowConversationSettingsFor';
+import { sectionActions } from '../../../../../state/ducks/section';
 
 const ButtonSpacer = styled.div`
   height: 80px;
@@ -114,7 +115,7 @@ export const DisappearingMessagesPage = () => {
           timeSelected
         );
         dispatch(closeRightPanel());
-        dispatch(resetRightOverlayMode());
+        dispatch(sectionActions.resetRightOverlayMode());
       }
       return;
     }

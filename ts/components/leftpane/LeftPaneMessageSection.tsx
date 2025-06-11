@@ -1,12 +1,12 @@
 import { isEmpty } from 'lodash';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+
 import { AutoSizer, List, ListRowProps } from 'react-virtualized';
 import styled from 'styled-components';
 import { SearchResults } from '../search/SearchResults';
 import { LeftPaneSectionHeader } from './LeftPaneSectionHeader';
 import { MessageRequestsBanner } from './MessageRequestsBanner';
 
-import { setLeftOverlayMode } from '../../state/ducks/section';
 import { getLeftPaneConversationIds } from '../../state/selectors/conversations';
 import { getSearchTerm } from '../../state/selectors/search';
 import { getLeftOverlayMode } from '../../state/selectors/section';
@@ -20,6 +20,7 @@ import { OverlayInvite } from './overlay/OverlayInvite';
 import { OverlayMessage } from './overlay/OverlayMessage';
 import { OverlayMessageRequest } from './overlay/OverlayMessageRequest';
 import { OverlayChooseAction } from './overlay/choose-action/OverlayChooseAction';
+import { sectionActions } from '../../state/ducks/section';
 
 const StyledLeftPaneContent = styled.div`
   display: flex;
@@ -118,6 +119,7 @@ const ConversationList = () => {
 
 export const LeftPaneMessageSection = () => {
   const leftOverlayMode = useSelector(getLeftOverlayMode);
+  const dispatch = useDispatch();
 
   return (
     <StyledLeftPaneContent>
@@ -129,7 +131,7 @@ export const LeftPaneMessageSection = () => {
           <SessionSearchInput />
           <MessageRequestsBanner
             handleOnClick={() => {
-              window.inboxStore?.dispatch(setLeftOverlayMode('message-requests'));
+              dispatch(sectionActions.setLeftOverlayMode('message-requests'));
             }}
           />
           <ConversationList />

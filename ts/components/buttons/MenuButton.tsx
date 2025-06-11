@@ -1,9 +1,9 @@
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { clearSearch } from '../../state/ducks/search';
-import { resetLeftOverlayMode, setLeftOverlayMode } from '../../state/ducks/section';
 import { getLeftOverlayMode } from '../../state/selectors/section';
 import { SessionIcon } from '../icon';
+import { sectionActions } from '../../state/ducks/section';
 
 const StyledMenuButton = styled.button`
   position: relative;
@@ -43,7 +43,11 @@ export const MenuButton = () => {
 
   const onClickFn = () => {
     dispatch(clearSearch());
-    dispatch(isToggled ? resetLeftOverlayMode() : setLeftOverlayMode('choose-action'));
+    dispatch(
+      isToggled
+        ? sectionActions.resetLeftOverlayMode()
+        : sectionActions.setLeftOverlayMode('choose-action')
+    );
   };
 
   return (

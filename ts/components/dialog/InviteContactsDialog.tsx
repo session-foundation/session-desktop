@@ -23,6 +23,7 @@ import { GroupInviteRequiredVersionBanner } from '../NoticeBanner';
 import { hasClosedGroupV2QAButtons } from '../../shared/env_vars';
 import { ConversationTypeEnum } from '../../models/types';
 import { Localizer } from '../basic/Localizer';
+import { localize } from '../../localization/localeTools';
 
 type Props = {
   conversationId: string;
@@ -77,7 +78,7 @@ function ContactsToInvite({
 }) {
   // SessionSearchInput
   const hasContacts = validContactsForInvite.length > 0;
-  
+
   return hasContacts ? (
     validContactsForInvite.map((member: string) => (
       <MemberListItem
@@ -163,14 +164,14 @@ const InviteContactsDialogInner = (props: Props) => {
     return event.key === 'Esc' || event.key === 'Escape';
   }, closeDialog);
 
-  const titleText = window.i18n('membersInvite');
-  const cancelText = window.i18n('cancel');
-  const okText = window.i18n('okay');
-
   const hasContacts = validContactsForInvite.length > 0;
 
   return (
-    <SessionWrapperModal title={titleText} onClose={closeDialog} showExitIcon={true}>
+    <SessionWrapperModal
+      title={localize('membersInvite').toString()}
+      onClose={closeDialog}
+      showExitIcon={true}
+    >
       {hasContacts && isGroupV2 && <GroupInviteRequiredVersionBanner />}
 
       <SpacerLG />
@@ -202,14 +203,14 @@ const InviteContactsDialogInner = (props: Props) => {
       <SpacerLG />
       <div className="session-modal__button-group">
         <SessionButton
-          text={okText}
+          text={localize('okay').toString()}
           buttonType={SessionButtonType.Simple}
           disabled={!hasContacts}
           onClick={onClickOK}
           dataTestId="session-confirm-ok-button"
         />
         <SessionButton
-          text={cancelText}
+          text={localize('cancel').toString()}
           buttonColor={SessionButtonColor.Danger}
           buttonType={SessionButtonType.Simple}
           onClick={closeDialog}

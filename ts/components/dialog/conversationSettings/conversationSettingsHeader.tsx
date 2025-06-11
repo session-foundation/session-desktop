@@ -3,7 +3,6 @@ import styled from 'styled-components';
 import { useEffect, useRef, useState, type SessionDataTestId } from 'react';
 
 import { closeRightPanel } from '../../../state/ducks/conversations';
-import { resetRightOverlayMode } from '../../../state/ducks/section';
 import { Avatar, AvatarSize } from '../../avatar/Avatar';
 import { Flex } from '../../basic/Flex';
 import { Header } from '../../conversation/right-panel/overlay/components';
@@ -28,6 +27,7 @@ import { useRoomDescription } from '../../../state/selectors/sogsRoomInfo';
 import { useLibGroupDescription } from '../../../state/selectors/groups';
 import { useShowUpdateGroupNameDescriptionCb } from '../../menuAndSettingsHooks/useShowUpdateGroupNameDescription';
 import { useHTMLDirection } from '../../../util/i18n/rtlSupport';
+import { sectionActions } from '../../../state/ducks/section';
 
 function AccountId({ conversationId }: WithConvoId) {
   const isPrivate = useIsPrivate(conversationId);
@@ -209,7 +209,7 @@ export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
       backButtonDirection="right"
       backButtonOnClick={() => {
         dispatch(closeRightPanel());
-        dispatch(resetRightOverlayMode());
+        dispatch(sectionActions.resetRightOverlayMode());
       }}
       hideCloseButton={true}
       hideBackButton={true}

@@ -11,7 +11,7 @@ import { SessionIconButton } from '../icon';
 import { SessionNotificationGroupSettings } from './SessionNotificationGroupSettings';
 
 import { sessionPassword } from '../../state/ducks/modalDialog';
-import { SectionType, showLeftPaneSection } from '../../state/ducks/section';
+import { sectionActions, SectionType } from '../../state/ducks/section';
 import type { PasswordAction, SessionSettingCategory } from '../../types/ReduxTypes';
 import { getPasswordHash } from '../../util/storage';
 import { SettingsCategoryAppearance } from './section/CategoryAppearance';
@@ -171,7 +171,7 @@ export const SessionSettingsView = (props: SettingsViewProps) => {
   function onPasswordUpdated(action: string) {
     if (action === 'set' || action === 'change') {
       setHasPassword(true);
-      dispatch(showLeftPaneSection(SectionType.Message));
+      dispatch(sectionActions.showLeftPaneSection(SectionType.Message));
     }
 
     if (action === 'remove') {

@@ -2,9 +2,9 @@ import { ReactNode } from 'react';
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { closeRightPanel } from '../../../../../state/ducks/conversations';
-import { resetRightOverlayMode } from '../../../../../state/ducks/section';
 import { Flex } from '../../../../basic/Flex';
 import { SessionIconButton } from '../../../../icon';
+import { sectionActions } from '../../../../../state/ducks/section';
 
 export const HeaderTitle = styled.h2`
   font-family: var(--font-default);
@@ -61,7 +61,7 @@ export const Header = (props: HeaderProps) => {
             if (backButtonOnClick) {
               backButtonOnClick();
             } else {
-              dispatch(resetRightOverlayMode());
+              dispatch(sectionActions.resetRightOverlayMode());
             }
           }}
           dataTestId="back-button-conversation-options"
@@ -86,7 +86,7 @@ export const Header = (props: HeaderProps) => {
               closeButtonOnClick();
             } else {
               dispatch(closeRightPanel());
-              dispatch(resetRightOverlayMode());
+              dispatch(sectionActions.resetRightOverlayMode());
             }
           }}
         />

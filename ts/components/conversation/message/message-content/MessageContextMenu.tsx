@@ -18,7 +18,6 @@ import {
   showMessageInfoView,
   toggleSelectedMessageId,
 } from '../../../../state/ducks/conversations';
-import { setRightOverlayMode } from '../../../../state/ducks/section';
 import {
   useMessageAttachments,
   useMessageBody,
@@ -57,6 +56,7 @@ import { ConvoHub } from '../../../../session/conversations';
 import { PubKey } from '../../../../session/types';
 import { ToastUtils } from '../../../../session/utils';
 import { localize } from '../../../../localization/localeTools';
+import { sectionActions } from '../../../../state/ducks/section';
 
 export type MessageContextMenuSelectorProps = Pick<
   MessageRenderingProps,
@@ -200,7 +200,7 @@ export const showMessageInfoOverlay = async ({
   if (found) {
     dispatch(showMessageInfoView(messageId));
     dispatch(
-      setRightOverlayMode({
+      sectionActions.setRightOverlayMode({
         type: 'message_info',
         params: { messageId, visibleAttachmentIndex: 0 },
       })

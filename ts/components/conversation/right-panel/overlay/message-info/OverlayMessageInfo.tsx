@@ -6,7 +6,6 @@ import styled from 'styled-components';
 import useKey from 'react-use/lib/useKey';
 import { clipboard } from 'electron';
 import { PropsForAttachment, closeRightPanel } from '../../../../../state/ducks/conversations';
-import { resetRightOverlayMode, setRightOverlayMode } from '../../../../../state/ducks/section';
 import { getMessageInfoId } from '../../../../../state/selectors/conversations';
 import { Flex } from '../../../../basic/Flex';
 import { Header, HeaderTitle, StyledScrollContainer } from '../components';
@@ -53,6 +52,7 @@ import { LUCIDE_ICONS_UNICODE } from '../../../../icon/lucide';
 import { PanelIconLucideIcon } from '../../../../buttons/PanelIconButton';
 import { useShowCopyAccountIdCb } from '../../../../menuAndSettingsHooks/useCopyAccountId';
 import { localize } from '../../../../../localization/localeTools';
+import { sectionActions } from '../../../../../state/ducks/section';
 
 // NOTE we override the default max-widths when in the detail isDetailView
 const StyledMessageBody = styled.div`
@@ -227,7 +227,7 @@ function ReplyToMessageButton({ messageId }: WithMessageIdOpt) {
         void replyToMessage(messageId).then(foundIt => {
           if (foundIt) {
             dispatch(closeRightPanel());
-            dispatch(resetRightOverlayMode());
+            dispatch(sectionActions.resetRightOverlayMode());
           }
         });
       }}
@@ -274,7 +274,7 @@ export const OverlayMessageInfo = () => {
 
   const closePanel = useCallback(() => {
     dispatch(closeRightPanel());
-    dispatch(resetRightOverlayMode());
+    dispatch(sectionActions.resetRightOverlayMode());
   }, [dispatch]);
 
   useKey('Escape', closePanel);
@@ -315,7 +315,7 @@ export const OverlayMessageInfo = () => {
 
     if (attachments[newVisibleIndex]) {
       dispatch(
-        setRightOverlayMode({
+        sectionActions.setRightOverlayMode({
           type: 'message_info',
           params: { messageId, visibleAttachmentIndex: newVisibleIndex },
         })
@@ -374,7 +374,7 @@ export const OverlayMessageInfo = () => {
                 onClick={() => {
                   void resendMessage(messageId);
                   dispatch(closeRightPanel());
-                  dispatch(resetRightOverlayMode());
+                  dispatch(sectionActions.resetRightOverlayMode());
                 }}
                 dataTestId="resend-msg-from-details"
               />

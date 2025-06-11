@@ -11,7 +11,7 @@ import { Data } from '../../data/data';
 import { ConvoHub } from '../../session/conversations';
 
 import { clearSearch } from '../../state/ducks/search';
-import { resetLeftOverlayMode, SectionType, showLeftPaneSection } from '../../state/ducks/section';
+import { sectionActions, SectionType } from '../../state/ducks/section';
 import {
   getOurPrimaryConversation,
   useGlobalUnreadMessageCount,
@@ -90,8 +90,8 @@ const Section = (props: { type: SectionType }) => {
     } else {
       // message section
       dispatch(clearSearch());
-      dispatch(showLeftPaneSection(type));
-      dispatch(resetLeftOverlayMode());
+      dispatch(sectionActions.showLeftPaneSection(type));
+      dispatch(sectionActions.resetLeftOverlayMode());
     }
   };
 
@@ -101,8 +101,8 @@ const Section = (props: { type: SectionType }) => {
     if (type === SectionType.Settings && !isModalVisible) {
       settingsIconRef.current?.blur();
       dispatch(clearSearch());
-      dispatch(showLeftPaneSection(SectionType.Message));
-      dispatch(resetLeftOverlayMode());
+      dispatch(sectionActions.showLeftPaneSection(SectionType.Message));
+      dispatch(sectionActions.resetLeftOverlayMode());
     }
   });
 

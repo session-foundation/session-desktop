@@ -1,13 +1,7 @@
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { clearSearch } from '../../state/ducks/search';
-import {
-  LeftOverlayMode,
-  SectionType,
-  setLeftOverlayMode,
-  showLeftPaneSection,
-  showSettingsSection,
-} from '../../state/ducks/section';
+import { LeftOverlayMode, sectionActions, SectionType } from '../../state/ducks/section';
 import { disableRecoveryPhrasePrompt } from '../../state/ducks/userConfig';
 import { getFocusedSection, getLeftOverlayMode } from '../../state/selectors/section';
 import { useHideRecoveryPasswordEnabled } from '../../state/selectors/settings';
@@ -128,8 +122,8 @@ export const LeftPaneBanner = () => {
 
   const showRecoveryPhraseModal = () => {
     dispatch(disableRecoveryPhrasePrompt());
-    dispatch(showLeftPaneSection(SectionType.Settings));
-    dispatch(showSettingsSection('recovery-password'));
+    dispatch(sectionActions.showLeftPaneSection(SectionType.Settings));
+    dispatch(sectionActions.showSettingsSection('recovery-password'));
   };
 
   if (section !== SectionType.Message || isSignInWithRecoveryPhrase || hideRecoveryPassword) {
@@ -182,7 +176,7 @@ export const LeftPaneSectionHeader = () => {
     if (leftOverlayMode === 'closed-group') {
       dispatch(clearSearch());
     }
-    dispatch(setLeftOverlayMode('choose-action'));
+    dispatch(sectionActions.setLeftOverlayMode('choose-action'));
   };
 
   const label = getLeftPaneHeaderLabel(leftOverlayMode, focusedSection);

@@ -15,7 +15,6 @@ import { PubKey } from '../../session/types';
 import { ToastUtils, UserUtils } from '../../session/utils';
 import { closeRightPanel, resetSelectedMessageIds } from '../../state/ducks/conversations';
 import { updateConfirmModal } from '../../state/ducks/modalDialog';
-import { resetRightOverlayMode } from '../../state/ducks/section';
 import { ed25519Str } from '../../session/utils/String';
 
 import { UserGroupsWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
@@ -23,6 +22,7 @@ import { NetworkTime } from '../../util/NetworkTime';
 import { MessageQueue } from '../../session/sending';
 import { WithLocalMessageDeletionType } from '../../session/types/with';
 import { localize } from '../../localization/localeTools';
+import { sectionActions } from '../../state/ducks/section';
 
 async function unsendMessagesForEveryone1o1AndLegacy(
   conversation: ConversationModel,
@@ -563,7 +563,7 @@ export async function deleteMessagesById(messageIds: Array<string>, conversation
         });
         window.inboxStore?.dispatch(updateConfirmModal(null));
         window.inboxStore?.dispatch(closeRightPanel());
-        window.inboxStore?.dispatch(resetRightOverlayMode());
+        window.inboxStore?.dispatch(sectionActions.resetRightOverlayMode());
       },
       closeAfterInput: false,
       onClickClose: closeDialog,

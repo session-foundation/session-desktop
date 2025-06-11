@@ -17,9 +17,9 @@ import { MediaItemType } from '../../../lightbox/LightboxGallery';
 import { MediaGallery } from '../../media-gallery/MediaGallery';
 import { Header, HeaderTitle, StyledScrollContainer } from './components';
 import { closeRightPanel } from '../../../../state/ducks/conversations';
-import { resetRightOverlayMode } from '../../../../state/ducks/section';
 import { useConversationUsername } from '../../../../hooks/useParamSelector';
 import { PubKey } from '../../../../session/types';
+import { sectionActions } from '../../../../state/ducks/section';
 
 async function getMediaGalleryProps(conversationId: string): Promise<{
   documents: Array<MediaItemType>;
@@ -103,7 +103,7 @@ export const OverlayRightPanelSettings = () => {
 
   const closePanel = () => {
     dispatch(closeRightPanel());
-    dispatch(resetRightOverlayMode());
+    dispatch(sectionActions.resetRightOverlayMode());
   };
 
   useEffect(() => {

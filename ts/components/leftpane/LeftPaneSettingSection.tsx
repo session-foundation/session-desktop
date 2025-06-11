@@ -4,12 +4,7 @@ import styled from 'styled-components';
 
 import { resetConversationExternal } from '../../state/ducks/conversations';
 import { updateDeleteAccountModal, updateSessionNetworkModal } from '../../state/ducks/modalDialog';
-import {
-  SectionType,
-  setLeftOverlayMode,
-  showLeftPaneSection,
-  showSettingsSection,
-} from '../../state/ducks/section';
+import { sectionActions, SectionType } from '../../state/ducks/section';
 import { getFocusedSettingsSection } from '../../state/selectors/section';
 import { useHideRecoveryPasswordEnabled } from '../../state/selectors/settings';
 import type { SessionSettingCategory } from '../../types/ReduxTypes';
@@ -153,8 +148,8 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
       onClick={() => {
         switch (id) {
           case 'message-requests':
-            dispatch(showLeftPaneSection(SectionType.Message));
-            dispatch(setLeftOverlayMode('message-requests'));
+            dispatch(sectionActions.showLeftPaneSection(SectionType.Message));
+            dispatch(sectionActions.setLeftOverlayMode('message-requests'));
             dispatch(resetConversationExternal());
             break;
           case 'session-network':
@@ -168,7 +163,7 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
             dispatch(updateDeleteAccountModal({}));
             break;
           default:
-            dispatch(showSettingsSection(id));
+            dispatch(sectionActions.showSettingsSection(id));
         }
       }}
       data-testid={dataTestId}

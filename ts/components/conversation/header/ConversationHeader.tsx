@@ -22,12 +22,12 @@ import { ConversationHeaderTitle } from './ConversationHeaderTitle';
 import { localize } from '../../../localization/localeTools';
 import { groupInfoActions } from '../../../state/ducks/metaGroups';
 import { updateConfirmModal } from '../../../state/ducks/modalDialog';
-import { setLeftOverlayMode } from '../../../state/ducks/section';
 import { SessionButtonColor, SessionButton, SessionButtonType } from '../../basic/SessionButton';
 import { ConvoHub } from '../../../session/conversations';
 import { ConversationTypeEnum } from '../../../models/types';
 import { Constants } from '../../../session';
 import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useShowConversationSettingsFor';
+import { sectionActions } from '../../../state/ducks/section';
 
 export const ConversationHeaderWithDetails = () => {
   const isSelectionMode = useIsMessageSelectionMode();
@@ -104,7 +104,7 @@ function useShowRecreateModal() {
           cancelText: localize('cancel').toString(),
           okTheme: SessionButtonColor.Danger,
           onClickOk: () => {
-            dispatch(setLeftOverlayMode('closed-group'));
+            dispatch(sectionActions.setLeftOverlayMode('closed-group'));
             dispatch(groupInfoActions.updateGroupCreationName({ name }));
             dispatch(groupInfoActions.setSelectedGroupMembers({ membersToSet: members }));
           },

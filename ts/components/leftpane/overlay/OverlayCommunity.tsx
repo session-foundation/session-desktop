@@ -10,7 +10,6 @@ import {
   JoinSogsRoomUICallbackArgs,
 } from '../../../session/apis/open_group_api/opengroupV2/JoinOpenGroupV2';
 import { openGroupV2CompleteURLRegex } from '../../../session/apis/open_group_api/utils/OpenGroupUtils';
-import { resetLeftOverlayMode } from '../../../state/ducks/section';
 import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
 import { SessionSpinner } from '../../loading';
 
@@ -23,6 +22,7 @@ import { Spacer2XL } from '../../basic/Text';
 import { SessionInput } from '../../inputs';
 import { StyledLeftPaneOverlay } from './OverlayMessage';
 import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_constants';
+import { sectionActions } from '../../../state/ducks/section';
 
 async function joinOpenGroup(
   serverUrl: string,
@@ -52,7 +52,7 @@ export const OverlayCommunity = () => {
   const overlayModeIsCommunity = useSelector(getLeftOverlayMode) === 'open-group';
 
   function closeOverlay() {
-    dispatch(resetLeftOverlayMode());
+    dispatch(sectionActions.resetLeftOverlayMode());
   }
 
   async function onTryJoinRoom(completeUrl?: string) {

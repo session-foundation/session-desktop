@@ -1,10 +1,9 @@
 /* eslint-disable no-restricted-syntax */
-import _, { isNaN } from 'lodash';
+import _ from 'lodash';
 import { Data } from '../../data/data';
-import { AdvancedSearchOptions, SearchOptions } from '../../types/Search';
+import { SearchOptions } from '../../types/Search';
 import { cleanSearchTerm } from '../../util/cleanSearchTerm';
 
-import { PubKey } from '../../session/types';
 import { UserUtils } from '../../session/utils';
 import { MessageResultProps } from '../../types/message';
 import { ReduxConversationType } from './conversations';
@@ -13,7 +12,6 @@ import { ReduxConversationType } from './conversations';
 
 export type SearchStateType = {
   query: string;
-  normalizedPhoneNumber?: string;
   // For conversations we store just the id, and pull conversation props in the selector
   contactsAndGroups: Array<string>;
   messages?: Array<MessageResultProps>;
@@ -22,7 +20,6 @@ export type SearchStateType = {
 // Actions
 type SearchResultsPayloadType = {
   query: string;
-  normalizedPhoneNumber?: string;
   contactsAndGroups: Array<string>;
   messages?: Array<MessageResultProps>;
 };
@@ -75,9 +72,7 @@ async function doSearch(query: string): Promise<SearchResultsPayloadType> {
     savedMessages: window.i18n('savedMessages').toLowerCase(),
     ourNumber: UserUtils.getOurPubKeyStrFromCache(),
   };
-  const advancedSearchOptions = getAdvancedSearchOptionsFromQuery(query);
-  const processedQuery = advancedSearchOptions.query;
-  // const isAdvancedQuery = query !== processedQuery;
+  const processedQuery = query;
 
   const [contactsAndGroups, messages] = await Promise.all([
     queryContactsAndGroups(processedQuery, options),
@@ -87,7 +82,6 @@ async function doSearch(query: string): Promise<SearchResultsPayloadType> {
 
   return {
     query,
-    normalizedPhoneNumber: PubKey.normalize(query),
     contactsAndGroups,
     messages: filteredMessages,
   };
@@ -107,86 +101,6 @@ export function updateSearchTerm(query: string): UpdateSearchTermActionType {
       query,
     },
   };
-}
-
-// Helper functions for search
-
-// function advancedFilterMessages(
-//   messages: Array<MessageResultProps>,
-//   filters: AdvancedSearchOptions,
-//   contacts: Array<string>
-// ): Array<MessageResultProps> {
-//   let filteredMessages = messages;
-//   if (filters.from && filters.from.length > 0) {
-//     if (filters.from === '@me') {
-//       filteredMessages = filteredMessages.filter(message => message.sent);
-//     } else {
-//       filteredMessages = [];
-//       for (const contact of contacts) {
-//         for (const message of messages) {
-//           if (message.source === contact) {
-//             filteredMessages.push(message);
-//           }
-//         }
-//       }
-//     }
-//   }
-//   if (filters.before > 0) {
-//     filteredMessages = filteredMessages.filter(message => message.received_at < filters.before);
-//   }
-//   if (filters.after > 0) {
-//     filteredMessages = filteredMessages.filter(message => message.received_at > filters.after);
-//   }
-
-//   return filteredMessages;
-// }
-
-function getUnixMillisecondsTimestamp(timestamp: string): number {
-  const timestampInt = parseInt(timestamp, 10);
-  if (!isNaN(timestampInt)) {
-    try {
-      if (timestampInt > 10000) {
-        return new Date(timestampInt).getTime();
-      }
-
-      return new Date(timestamp).getTime();
-    } catch (error) {
-      window?.log?.warn('Advanced Search: ', error);
-
-      return 0;
-    }
-  }
-
-  return 0;
-}
-
-function getAdvancedSearchOptionsFromQuery(query: string): AdvancedSearchOptions {
-  const filterSeperator = ':';
-  const filters: any = {
-    query: null,
-    from: null,
-    before: null,
-    after: null,
-  };
-
-  let newQuery = query;
-  const splitQuery = query.toLowerCase().split(' ');
-  const filtersList = Object.keys(filters);
-  for (const queryPart of splitQuery) {
-    for (const filter of filtersList) {
-      const filterMatcher = filter + filterSeperator;
-      if (queryPart.startsWith(filterMatcher)) {
-        filters[filter] = queryPart.replace(filterMatcher, '');
-        newQuery = newQuery.replace(queryPart, '').trim();
-      }
-    }
-  }
-
-  filters.before = getUnixMillisecondsTimestamp(filters.before);
-  filters.after = getUnixMillisecondsTimestamp(filters.after);
-  filters.query = newQuery;
-
-  return filters;
 }
 
 async function queryMessages(query: string): Promise<Array<MessageResultProps>> {
@@ -258,7 +172,7 @@ export function reducer(state: SearchStateType | undefined, action: SEARCH_TYPES
 
   if (action.type === 'SEARCH_RESULTS_FULFILLED') {
     const { payload } = action;
-    const { query, normalizedPhoneNumber, contactsAndGroups, messages } = payload;
+    const { query, contactsAndGroups, messages } = payload;
     // Reject if the associated query is not the most recent user-provided query
     if (state.query !== query) {
       return state;
@@ -267,7 +181,6 @@ export function reducer(state: SearchStateType | undefined, action: SEARCH_TYPES
     return {
       ...state,
       query,
-      normalizedPhoneNumber,
       contactsAndGroups,
       messages,
     };
