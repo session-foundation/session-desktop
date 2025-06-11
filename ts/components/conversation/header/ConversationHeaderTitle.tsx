@@ -1,4 +1,3 @@
-import { isEmpty } from 'lodash';
 import { useEffect, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useDisappearingMessageSettingText } from '../../../hooks/useParamSelector';
@@ -119,23 +118,11 @@ export const ConversationHeaderTitle = (props: ConversationHeaderTitleProps) => 
   };
 
   useEffect(() => {
-    if (visibleSubtitle !== 'disappearingMessages') {
-      if (!isEmpty(disappearingMessageSubtitle)) {
-        setVisibleSubtitle('disappearingMessages');
-      } else {
-        setVisibleSubtitle('notifications');
-      }
-    }
-    // We only want this to change when a new conversation is selected or disappearing messages is toggled
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [convoId, disappearingMessageSubtitle]);
-
-  useEffect(() => {
     const newSubtitlesArray: any = [];
     const newSubtitlesStrings: any = {};
 
-    if (disappearingMessageSubtitle) {
-      newSubtitlesStrings.disappearingMessages = disappearingMessageSubtitle;
+    if (disappearingMessageSubtitle.id !== 'off') {
+      newSubtitlesStrings.disappearingMessages = disappearingMessageSubtitle.label;
       newSubtitlesArray.push('disappearingMessages');
     }
 

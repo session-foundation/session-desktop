@@ -266,7 +266,7 @@ export function UpdateDisappearingMessagesButton({
     <PanelIconButton
       iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.TIMER} />}
       text={localize('disappearingMessages').toString()}
-      subText={disappearingMessagesSubtitle}
+      subText={disappearingMessagesSubtitle.label}
       dataTestId="disappearing-messages-menu-option"
       onClick={() => {
         showConvoSettingsCb?.({ settingsModalPage: 'disappearing_message', standalonePage: false });

@@ -27,6 +27,7 @@ import {
   useLibGroupKicked,
 } from '../state/selectors/userGroups';
 import { ConversationInteractionStatus, ConversationInteractionType } from '../interactions/types';
+import { localize } from '../localization/localeTools';
 
 export function useAvatarPath(convoId: string | undefined) {
   const convoProps = useConversationPropsById(convoId);
@@ -500,10 +501,12 @@ export function useDisappearingMessageSettingText({
 }: {
   convoId?: string;
   abbreviate?: boolean;
-}): string {
+}) {
   const convoProps = useConversationPropsById(convoId);
+
+  const offReturn = { id: 'off', label: localize('off').toString() };
   if (!convoProps) {
-    return '';
+    return offReturn;
   }
 
   const { expirationMode, expireTimer } = convoProps;
@@ -515,14 +518,24 @@ export function useDisappearingMessageSettingText({
     : null;
 
   if (!expireTimerText) {
-    return '';
+    return offReturn;
   }
 
   return expirationMode === 'deleteAfterRead'
-    ? window.i18n('disappearingMessagesDisappearAfterReadState', { time: expireTimerText })
+    ? {
+        id: expirationMode,
+        label: localize('disappearingMessagesDisappearAfterReadState')
+          .withArgs({ time: expireTimerText })
+          .toString(),
+      }
     : expirationMode === 'deleteAfterSend'
-      ? window.i18n('disappearingMessagesDisappearAfterSendState', { time: expireTimerText })
-      : '';
+      ? {
+          id: expirationMode,
+          label: localize('disappearingMessagesDisappearAfterSendState')
+            .withArgs({ time: expireTimerText })
+            .toString(),
+        }
+      : offReturn;
 }
 
 export function useLastMessage(convoId?: string) {
