@@ -446,6 +446,14 @@ class CompositionBoxInner extends Component<Props, State> {
 
   public render() {
     const { showRecordingView } = this.state;
+    const { typingEnabled, isBlocked } = this.props;
+
+    // we completely hide the composition box when typing is not enabled now.
+    // Actually not anymore. We want the above, except when we can't write because that user is blocked.
+    // When that user is blocked, **and only then**, we want to show the composition box, disabled with the placeholder "unblock to send".
+    if (!typingEnabled && !isBlocked) {
+      return null;
+    }
 
     return (
       <Flex $flexDirection="column">
@@ -593,7 +601,6 @@ class CompositionBoxInner extends Component<Props, State> {
     return (
       <SessionRecording
         sendVoiceMessage={this.sendVoiceMessage}
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onLoadVoiceNoteView={this.onLoadVoiceNoteView}
         onExitVoiceNoteView={this.onExitVoiceNoteView}
       />
@@ -612,13 +619,6 @@ class CompositionBoxInner extends Component<Props, State> {
 
     /* eslint-disable @typescript-eslint/no-misused-promises */
 
-    // we completely hide the composition box when typing is not enabled now.
-    // Actually not anymore. We want the above, except when we can't write because that user is blocked.
-    // When that user is blocked, **and only then**, we want to show the composition box, disabled with the placeholder "unblock to send".
-    if (!typingEnabled && !isBlocked) {
-      return null;
-    }
-
     return (
       <Flex
         dir={this.props.htmlDirection}
@@ -629,7 +629,7 @@ class CompositionBoxInner extends Component<Props, State> {
         width={'100%'}
         style={{ position: 'relative' }}
       >
-        {typingEnabled && <AddStagedAttachmentButton onClick={this.onChooseAttachment} />}
+        {<AddStagedAttachmentButton onClick={this.onChooseAttachment} isBlocked={isBlocked} />}
         <input
           className="hidden"
           placeholder="Attachment"
@@ -666,7 +666,7 @@ class CompositionBoxInner extends Component<Props, State> {
           {showSendButton ? (
             <SendMessageButton onClick={this.onSendMessage} />
           ) : (
-            <StartRecordingButton onClick={this.onLoadVoiceNoteView} />
+            <StartRecordingButton onClick={this.onLoadVoiceNoteView} isBlocked={isBlocked} />
           )}
         </StyledRightCompositionBoxButtonContainer>
         {showEmojiPanel && (
@@ -1106,7 +1106,7 @@ class CompositionBoxInner extends Component<Props, State> {
     this.onExitVoiceNoteView();
   }
 
-  private async onLoadVoiceNoteView() {
+  private onLoadVoiceNoteView() {
     if (!getMediaPermissionsSettings()) {
       ToastUtils.pushAudioPermissionNeeded();
       return;
