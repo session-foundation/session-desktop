@@ -3,7 +3,7 @@ import { debounce } from 'lodash';
 import { useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
-import { clearSearch, search, updateSearchTerm } from '../state/ducks/search';
+import { searchActions } from '../state/ducks/search';
 import { getConversationsCount } from '../state/selectors/conversations';
 import { getLeftOverlayMode } from '../state/selectors/section';
 import { SessionIconButton } from './icon';
@@ -50,19 +50,19 @@ const StyledInput = styled.input`
 `;
 
 const doTheSearch = (dispatch: Dispatch<any>, cleanedTerm: string) => {
-  dispatch(search(cleanedTerm));
+  dispatch(searchActions.search(cleanedTerm));
 };
 
 const debouncedSearch = debounce(doTheSearch, 50);
 
 function updateSearch(dispatch: Dispatch<any>, searchTerm: string) {
   if (!searchTerm) {
-    dispatch(clearSearch());
+    dispatch(searchActions.clearSearch());
     return;
   }
 
   // this updates our current state and text field.
-  dispatch(updateSearchTerm(searchTerm));
+  dispatch(searchActions.updateSearchTerm(searchTerm));
 
   debouncedSearch(dispatch, searchTerm);
 }
@@ -78,7 +78,7 @@ export const SessionSearchInput = () => {
   useHotkey('Escape', () => {
     if (inputRef.current !== null && inputRef.current === document.activeElement) {
       setCurrentSearchTerm('');
-      dispatch(clearSearch());
+      dispatch(searchActions.clearSearch());
     }
   });
 
@@ -115,7 +115,7 @@ export const SessionSearchInput = () => {
           iconType="exit"
           onClick={() => {
             setCurrentSearchTerm('');
-            dispatch(clearSearch());
+            dispatch(searchActions.clearSearch());
           }}
         />
       )}

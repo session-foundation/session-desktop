@@ -14,7 +14,6 @@ import { VALIDATION } from '../../../session/constants';
 import { ToastUtils } from '../../../session/utils';
 import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_constants';
 import { groupInfoActions } from '../../../state/ducks/metaGroups';
-import { clearSearch } from '../../../state/ducks/search';
 import { sectionActions } from '../../../state/ducks/section';
 import { useContactsToInviteToGroup } from '../../../state/selectors/conversations';
 import { useIsCreatingGroupFromUIPending } from '../../../state/selectors/groups';
@@ -36,6 +35,7 @@ import { StyledLeftPaneOverlay } from './OverlayMessage';
 import { hasClosedGroupV2QAButtons } from '../../../shared/env_vars';
 import type { StateType } from '../../../state/reducer';
 import { PubKey } from '../../../session/types';
+import { searchActions } from '../../../state/ducks/search';
 
 const StyledMemberListNoContacts = styled.div`
   text-align: center;
@@ -94,7 +94,7 @@ export const OverlayClosedGroupV2 = () => {
   }
 
   function closeOverlay() {
-    dispatch(clearSearch());
+    dispatch(searchActions.clearSearch());
     dispatch(sectionActions.resetLeftOverlayMode());
   }
 

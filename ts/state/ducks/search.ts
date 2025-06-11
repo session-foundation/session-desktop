@@ -1,4 +1,4 @@
-/* eslint-disable no-restricted-syntax */
+import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import _ from 'lodash';
 import { Data } from '../../data/data';
 import { SearchOptions } from '../../types/Search';
@@ -7,6 +7,7 @@ import { cleanSearchTerm } from '../../util/cleanSearchTerm';
 import { UserUtils } from '../../session/utils';
 import { MessageResultProps } from '../../types/message';
 import { ReduxConversationType } from './conversations';
+import { localize } from '../../localization/localeTools';
 
 // State
 
@@ -24,84 +25,32 @@ type SearchResultsPayloadType = {
   messages?: Array<MessageResultProps>;
 };
 
-type SearchResultsKickoffActionType = {
-  type: 'SEARCH_RESULTS';
-  payload: Promise<SearchResultsPayloadType>;
-};
-type SearchResultsFulfilledActionType = {
-  type: 'SEARCH_RESULTS_FULFILLED';
-  payload: SearchResultsPayloadType;
-};
-type UpdateSearchTermActionType = {
-  type: 'SEARCH_UPDATE';
-  payload: {
-    query: string;
-  };
-};
-type ClearSearchActionType = {
-  type: 'SEARCH_CLEAR';
-  payload: null;
-};
+const doSearch = createAsyncThunk(
+  'search/doSearch',
+  async (query: string): Promise<SearchResultsPayloadType> => {
+    const options: SearchOptions = {
+      noteToSelf: [
+        localize('noteToSelf').toLowerCase(),
+        localize('noteToSelf').forceEnglish().toLowerCase(),
+      ],
+      savedMessages: window.i18n('savedMessages').toLowerCase(),
+      ourNumber: UserUtils.getOurPubKeyStrFromCache(),
+    };
+    const processedQuery = query;
 
-export type SEARCH_TYPES =
-  | SearchResultsFulfilledActionType
-  | UpdateSearchTermActionType
-  | ClearSearchActionType;
+    const [contactsAndGroups, messages] = await Promise.all([
+      queryContactsAndGroups(processedQuery, options),
+      queryMessages(processedQuery),
+    ]);
+    const filteredMessages = _.compact(messages);
 
-// Action Creators
-
-export const actions = {
-  search,
-  clearSearch,
-  updateSearchTerm,
-};
-
-export function search(query: string): SearchResultsKickoffActionType {
-  return {
-    type: 'SEARCH_RESULTS',
-    payload: doSearch(query), // this uses redux-promise-middleware
-  };
-}
-
-async function doSearch(query: string): Promise<SearchResultsPayloadType> {
-  const options: SearchOptions = {
-    noteToSelf: [
-      window.i18n('noteToSelf').toLowerCase(),
-      window.i18n.inEnglish('noteToSelf').toLowerCase(),
-    ],
-    savedMessages: window.i18n('savedMessages').toLowerCase(),
-    ourNumber: UserUtils.getOurPubKeyStrFromCache(),
-  };
-  const processedQuery = query;
-
-  const [contactsAndGroups, messages] = await Promise.all([
-    queryContactsAndGroups(processedQuery, options),
-    queryMessages(processedQuery),
-  ]);
-  const filteredMessages = _.compact(messages);
-
-  return {
-    query,
-    contactsAndGroups,
-    messages: filteredMessages,
-  };
-}
-
-export function clearSearch(): ClearSearchActionType {
-  return {
-    type: 'SEARCH_CLEAR',
-    payload: null,
-  };
-}
-
-export function updateSearchTerm(query: string): UpdateSearchTermActionType {
-  return {
-    type: 'SEARCH_UPDATE',
-    payload: {
+    return {
       query,
-    },
-  };
-}
+      contactsAndGroups,
+      messages: filteredMessages,
+    };
+  }
+);
 
 async function queryMessages(query: string): Promise<Array<MessageResultProps>> {
   try {
@@ -147,44 +96,43 @@ export const initialSearchState: SearchStateType = {
   messages: [],
 };
 
-function getEmptyState(): SearchStateType {
-  return initialSearchState;
-}
+const searchSlice = createSlice({
+  name: 'searchSlice',
+  initialState: initialSearchState,
+  reducers: {
+    clearSearch() {
+      return initialSearchState;
+    },
+    updateSearchTerm(state, action: PayloadAction<string>) {
+      return {
+        ...state,
+        query: action.payload,
+      };
+    },
+  },
+  extraReducers: builder => {
+    builder.addCase(
+      doSearch.fulfilled,
+      (state, action: PayloadAction<SearchResultsPayloadType>) => {
+        const { query, contactsAndGroups, messages } = action.payload;
+        // Reject if the associated query is not the most recent user-provided query
+        if (state.query !== query) {
+          return state;
+        }
 
-export function reducer(state: SearchStateType | undefined, action: SEARCH_TYPES): SearchStateType {
-  if (!state) {
-    return getEmptyState();
-  }
+        return {
+          ...state,
+          query,
+          contactsAndGroups,
+          messages,
+        };
+      }
+    );
+  },
+});
 
-  if (action.type === 'SEARCH_CLEAR') {
-    return getEmptyState();
-  }
-
-  if (action.type === 'SEARCH_UPDATE') {
-    const { payload } = action;
-    const { query } = payload;
-
-    return {
-      ...state,
-      query,
-    };
-  }
-
-  if (action.type === 'SEARCH_RESULTS_FULFILLED') {
-    const { payload } = action;
-    const { query, contactsAndGroups, messages } = payload;
-    // Reject if the associated query is not the most recent user-provided query
-    if (state.query !== query) {
-      return state;
-    }
-
-    return {
-      ...state,
-      query,
-      contactsAndGroups,
-      messages,
-    };
-  }
-
-  return state;
-}
+export const reducer = searchSlice.reducer;
+export const searchActions = {
+  ...searchSlice.actions,
+  search: doSearch,
+};

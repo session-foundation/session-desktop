@@ -10,7 +10,6 @@ import useThrottleFn from 'react-use/lib/useThrottleFn';
 import { Data } from '../../data/data';
 import { ConvoHub } from '../../session/conversations';
 
-import { clearSearch } from '../../state/ducks/search';
 import { sectionActions, SectionType } from '../../state/ducks/section';
 import {
   getOurPrimaryConversation,
@@ -56,6 +55,7 @@ import { useCheckReleasedFeatures } from '../../hooks/useCheckReleasedFeatures';
 import { useDebugMode } from '../../state/selectors/debug';
 import { networkDataActions } from '../../state/ducks/networkData';
 import { isSesh101ReadyOutsideRedux } from '../../state/selectors/releasedFeatures';
+import { searchActions } from '../../state/ducks/search';
 
 const Section = (props: { type: SectionType }) => {
   const ourNumber = useSelector(getOurNumber);
@@ -89,7 +89,7 @@ const Section = (props: { type: SectionType }) => {
       dispatch(updateDebugMenuModal({}));
     } else {
       // message section
-      dispatch(clearSearch());
+      dispatch(searchActions.clearSearch());
       dispatch(sectionActions.showLeftPaneSection(type));
       dispatch(sectionActions.resetLeftOverlayMode());
     }
@@ -100,7 +100,7 @@ const Section = (props: { type: SectionType }) => {
   useHotkey('Escape', () => {
     if (type === SectionType.Settings && !isModalVisible) {
       settingsIconRef.current?.blur();
-      dispatch(clearSearch());
+      dispatch(searchActions.clearSearch());
       dispatch(sectionActions.showLeftPaneSection(SectionType.Message));
       dispatch(sectionActions.resetLeftOverlayMode());
     }

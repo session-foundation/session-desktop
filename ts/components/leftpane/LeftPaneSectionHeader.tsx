@@ -1,6 +1,5 @@
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
-import { clearSearch } from '../../state/ducks/search';
 import { LeftOverlayMode, sectionActions, SectionType } from '../../state/ducks/section';
 import { disableRecoveryPhrasePrompt } from '../../state/ducks/userConfig';
 import { getFocusedSection, getLeftOverlayMode } from '../../state/selectors/section';
@@ -15,6 +14,7 @@ import { MenuButton } from '../buttons';
 import { SessionIcon, SessionIconButton } from '../icon';
 import { Localizer } from '../basic/Localizer';
 import { H4 } from '../basic/Heading';
+import { searchActions } from '../../state/ducks/search';
 
 const StyledLeftPaneSectionHeader = styled(Flex)`
   height: var(--main-view-header-height);
@@ -174,7 +174,7 @@ export const LeftPaneSectionHeader = () => {
   const dispatch = useDispatch();
   const returnToActionChooser = () => {
     if (leftOverlayMode === 'closed-group') {
-      dispatch(clearSearch());
+      dispatch(searchActions.clearSearch());
     }
     dispatch(sectionActions.setLeftOverlayMode('choose-action'));
   };
