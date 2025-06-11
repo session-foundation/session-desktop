@@ -777,6 +777,7 @@
   "warning": "ការព្រមាន",
   "window": "ផ្ទាំងបង្អួច",
   "yes": "បាទ",
-  "you": "អ្នក"
+  "you": "អ្នក",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

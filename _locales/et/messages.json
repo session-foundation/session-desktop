@@ -777,6 +777,7 @@
   "warning": "Hoiatus",
   "window": "Aken",
   "yes": "Jah",
-  "you": "Sina"
+  "you": "Sina",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

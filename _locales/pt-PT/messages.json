@@ -787,6 +787,7 @@
   "warning": "Aviso",
   "window": "Janela",
   "yes": "Sim",
-  "you": "Você"
+  "you": "Você",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

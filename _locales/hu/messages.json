@@ -780,6 +780,7 @@
   "warning": "Figyelmeztetés",
   "window": "Ablak",
   "yes": "Igen",
-  "you": "Te"
+  "you": "Te",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

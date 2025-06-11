@@ -777,6 +777,7 @@
   "warning": "Waarskuwing",
   "window": "Venster",
   "yes": "Ja",
-  "you": "Jy"
+  "you": "Jy",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

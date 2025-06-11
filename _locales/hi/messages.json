@@ -800,6 +800,7 @@
   "warning": "चेतावनी",
   "window": "विंडो",
   "yes": "हाँ",
-  "you": "आप"
+  "you": "आप",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

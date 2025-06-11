@@ -777,6 +777,7 @@
   "warning": "Предупредување",
   "window": "Прозорец",
   "yes": "Да",
-  "you": "Вие"
+  "you": "Вие",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

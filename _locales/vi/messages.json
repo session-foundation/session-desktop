@@ -846,6 +846,7 @@
   "warning": "Cảnh báo",
   "window": "Cửa sổ",
   "yes": "Có",
-  "you": "Bạn"
+  "you": "Bạn",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

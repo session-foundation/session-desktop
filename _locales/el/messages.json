@@ -787,6 +787,7 @@
   "warning": "Προειδοποίηση",
   "window": "Παράθυρο",
   "yes": "Ναι",
-  "you": "Εσείς"
+  "you": "Εσείς",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

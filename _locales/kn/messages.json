@@ -777,6 +777,7 @@
   "warning": "ಎಚ್ಚರಿಕೆ",
   "window": "ಕಿಟಕಿ",
   "yes": "ಹೌದು",
-  "you": "ನೀವು"
+  "you": "ನೀವು",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

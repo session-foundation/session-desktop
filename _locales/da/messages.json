@@ -883,6 +883,7 @@
   "warning": "Advarsel",
   "window": "Vindue",
   "yes": "Ja",
-  "you": "Du"
+  "you": "Du",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

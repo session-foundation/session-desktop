@@ -777,6 +777,7 @@
   "warning": "Warning",
   "window": "Window",
   "yes": "ဟုတ်ကဲ့",
-  "you": "သင်"
+  "you": "သင်",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

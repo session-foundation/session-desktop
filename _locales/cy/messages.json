@@ -787,6 +787,7 @@
   "warning": "Rhybudd",
   "window": "Ffenestr",
   "yes": "Iawn",
-  "you": "Chi"
+  "you": "Chi",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

@@ -775,6 +775,7 @@
   "warning": "चेतावनी",
   "window": "सञ्झ्याल",
   "yes": "हो",
-  "you": "तपाईं"
+  "you": "तपाईं",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

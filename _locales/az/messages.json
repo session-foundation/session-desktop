@@ -883,6 +883,7 @@
   "warning": "Xəbərdarlıq",
   "window": "Pəncərə",
   "yes": "Bəli",
-  "you": "Siz"
+  "you": "Siz",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

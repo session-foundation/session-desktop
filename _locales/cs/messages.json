@@ -891,6 +891,7 @@
   "warning": "Varování",
   "window": "Okno",
   "yes": "Ano",
-  "you": "Vy"
+  "you": "Vy",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

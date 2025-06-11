@@ -777,6 +777,7 @@
   "warning": "انتباہ",
   "window": "ونڈو",
   "yes": "ہاں",
-  "you": "شما"
+  "you": "شما",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

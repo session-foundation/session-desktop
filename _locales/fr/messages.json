@@ -893,6 +893,7 @@
   "warning": "Attention",
   "window": "Fenêtre",
   "yes": "Oui",
-  "you": "Vous"
+  "you": "Vous",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 
