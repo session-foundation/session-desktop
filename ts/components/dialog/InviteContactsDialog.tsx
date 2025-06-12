@@ -2,28 +2,28 @@ import { useState } from 'react';
 import useKey from 'react-use/lib/useKey';
 
 import { PubkeyType } from 'libsession_util_nodejs';
-import { difference, uniq } from 'lodash';
 import { useDispatch } from 'react-redux';
 import { ConvoHub } from '../../session/conversations';
 import { updateGroupMembersModal, updateInviteContactModal } from '../../state/ducks/modalDialog';
 import { SpacerLG } from '../basic/Text';
 
-import { useIsPrivate, useIsPublic, useSortedGroupMembers } from '../../hooks/useParamSelector';
+import { useIsPrivate, useIsPublic } from '../../hooks/useParamSelector';
 import { useSet } from '../../hooks/useSet';
 import { PubKey } from '../../session/types';
 import { SessionUtilUserGroups } from '../../session/utils/libsession/libsession_utils_user_groups';
 import { groupInfoActions } from '../../state/ducks/metaGroups';
-import { useContactsToInviteToGroup } from '../../state/selectors/conversations';
 import { useSelectedIsGroupV2 } from '../../state/selectors/selectedConversation';
 import { MemberListItem } from '../MemberListItem';
 import { SessionWrapperModal } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionToggle } from '../basic/SessionToggle';
-import { GroupInviteRequiredVersionBanner } from '../NoticeBanner';
 import { hasClosedGroupV2QAButtons } from '../../shared/env_vars';
 import { ConversationTypeEnum } from '../../models/types';
 import { Localizer } from '../basic/Localizer';
 import { localize } from '../../localization/localeTools';
+import { useContactsToInviteTo } from '../../hooks/useContactsToInviteToGroup';
+import { SessionSearchInput } from '../SessionSearchInput';
+import { NoResultsForSearch } from '../search/NoResults';
 
 type Props = {
   conversationId: string;
@@ -76,7 +76,6 @@ function ContactsToInvite({
   selectContact: (member: string) => void;
   unselectContact: (member: string) => void;
 }) {
-  // SessionSearchInput
   const hasContacts = validContactsForInvite.length > 0;
 
   return hasContacts ? (
@@ -106,10 +105,12 @@ const InviteContactsDialogInner = (props: Props) => {
   const { conversationId } = props;
   const dispatch = useDispatch();
 
-  const privateContactPubkeys = useContactsToInviteToGroup() as Array<PubkeyType>;
+  const { contactsToInvite, isSearch, searchTerm, hasSearchResults } = useContactsToInviteTo(
+    'invite-contact-to',
+    conversationId
+  );
   const isPrivate = useIsPrivate(conversationId);
   const isPublic = useIsPublic(conversationId);
-  const membersFromRedux = useSortedGroupMembers(conversationId) || [];
   const isGroupV2 = useSelectedIsGroupV2();
   const [shareHistory, setShareHistory] = useState(false);
 
@@ -118,11 +119,6 @@ const InviteContactsDialogInner = (props: Props) => {
   if (isPrivate) {
     throw new Error('InviteContactsDialogInner must be a group');
   }
-  const members = uniq(membersFromRedux);
-
-  const validContactsForInvite = isPublic
-    ? privateContactPubkeys
-    : difference(privateContactPubkeys, members);
 
   const closeDialog = () => {
     dispatch(updateInviteContactModal(null));
@@ -164,7 +160,7 @@ const InviteContactsDialogInner = (props: Props) => {
     return event.key === 'Esc' || event.key === 'Escape';
   }, closeDialog);
 
-  const hasContacts = validContactsForInvite.length > 0;
+  const hasContacts = contactsToInvite.length > 0;
 
   return (
     <SessionWrapperModal
@@ -172,8 +168,6 @@ const InviteContactsDialogInner = (props: Props) => {
       onClose={closeDialog}
       showExitIcon={true}
     >
-      {hasContacts && isGroupV2 && <GroupInviteRequiredVersionBanner />}
-
       <SpacerLG />
 
       {isGroupV2 && hasClosedGroupV2QAButtons() && (
@@ -191,14 +185,20 @@ const InviteContactsDialogInner = (props: Props) => {
           </span>
         </>
       )}
-      <div className="contact-selection-list">
-        <ContactsToInvite
-          validContactsForInvite={validContactsForInvite}
-          selectedContacts={selectedContacts}
-          selectContact={addTo}
-          unselectContact={removeFrom}
-        />
-      </div>
+      <SessionSearchInput searchType="invite-contact-to" />
+      {isSearch && !hasSearchResults ? (
+        <NoResultsForSearch searchTerm={searchTerm || ''} />
+      ) : (
+        <div className="contact-selection-list">
+          <ContactsToInvite
+            validContactsForInvite={contactsToInvite}
+            selectedContacts={selectedContacts}
+            selectContact={addTo}
+            unselectContact={removeFrom}
+          />
+        </div>
+      )}
+
       <SpacerLG />
       <SpacerLG />
       <div className="session-modal__button-group">

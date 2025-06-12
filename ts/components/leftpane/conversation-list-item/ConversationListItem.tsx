@@ -23,7 +23,7 @@ import {
   useIsPrivate,
   useMentionedUs,
 } from '../../../hooks/useParamSelector';
-import { useIsSearching } from '../../../state/selectors/search';
+import { useIsSearchingForType } from '../../../state/selectors/search';
 import { useSelectedConversationKey } from '../../../state/selectors/selectedConversation';
 import { SpacerXS } from '../../basic/Text';
 import { MemoConversationListItemContextMenu } from '../../menu/ConversationListItemContextMenu';
@@ -73,7 +73,7 @@ export const ConversationListItem = (props: Props) => {
 
   let hasUnreadMentionedUs = useMentionedUs(conversationId);
   let isBlocked = useIsBlocked(conversationId);
-  const isSearch = useIsSearching();
+  const isSearch = useIsSearchingForType('global');
   const selectedConvo = useSelectedConversationKey();
 
   const showConvoSettingsCb = useShowConversationSettingsFor(conversationId);

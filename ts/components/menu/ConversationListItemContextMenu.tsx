@@ -3,7 +3,7 @@ import { Menu } from 'react-contexify';
 import { useConvoIdFromContext } from '../../contexts/ConvoIdContext';
 import { useIsLegacyGroup, useIsPinned } from '../../hooks/useParamSelector';
 import { ConvoHub } from '../../session/conversations';
-import { useIsSearching } from '../../state/selectors/search';
+import { useIsSearchingForType } from '../../state/selectors/search';
 import { SessionContextMenuContainer } from '../SessionContextMenuContainer';
 import {
   AcceptMsgRequestMenuItem,
@@ -41,7 +41,7 @@ export type PropsContextConversationItem = {
 
 const ConversationListItemContextMenu = (props: PropsContextConversationItem) => {
   const { triggerId } = props;
-  const isSearching = useIsSearching();
+  const isSearching = useIsSearchingForType('global');
 
   const convoIdFromContext = useConvoIdFromContext();
 

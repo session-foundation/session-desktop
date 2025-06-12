@@ -15,18 +15,10 @@ import { ToastUtils } from '../../../session/utils';
 import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_constants';
 import { groupInfoActions } from '../../../state/ducks/metaGroups';
 import { sectionActions } from '../../../state/ducks/section';
-import { useContactsToInviteToGroup } from '../../../state/selectors/conversations';
 import { useIsCreatingGroupFromUIPending } from '../../../state/selectors/groups';
-import {
-  getSearchResultsContactOnly,
-  getSearchTerm,
-  useIsSearching,
-} from '../../../state/selectors/search';
 import { useOurPkStr } from '../../../state/selectors/user';
-import { GroupInviteRequiredVersionBanner } from '../../NoticeBanner';
 import { SessionSearchInput } from '../../SessionSearchInput';
 import { Flex } from '../../basic/Flex';
-import { Localizer } from '../../basic/Localizer';
 import { SessionToggle } from '../../basic/SessionToggle';
 import { SpacerLG, SpacerMD } from '../../basic/Text';
 import { SessionInput } from '../../inputs';
@@ -36,20 +28,8 @@ import { hasClosedGroupV2QAButtons } from '../../../shared/env_vars';
 import type { StateType } from '../../../state/reducer';
 import { PubKey } from '../../../session/types';
 import { searchActions } from '../../../state/ducks/search';
-
-const StyledMemberListNoContacts = styled.div`
-  text-align: center;
-  align-self: center;
-  padding: 20px;
-`;
-
-const StyledNoResults = styled.div`
-  width: 100%;
-  min-height: 40px;
-  max-height: 400px;
-  padding: var(--margins-xl) var(--margins-sm);
-  text-align: center;
-`;
+import { useContactsToInviteTo } from '../../../hooks/useContactsToInviteToGroup';
+import { NoContacts, NoResultsForSearch } from '../../search/NoResults';
 
 const StyledGroupMemberListContainer = styled.div`
   display: flex;
@@ -60,26 +40,14 @@ const StyledGroupMemberListContainer = styled.div`
   overflow-y: auto;
 `;
 
-const NoContacts = () => {
-  return (
-    <StyledMemberListNoContacts>
-      <Localizer token="contactNone" />
-    </StyledMemberListNoContacts>
-  );
-};
-
-// duplicated from the legacy one below because this one is a lot more tightly linked with redux async thunks logic
 export const OverlayClosedGroupV2 = () => {
   const dispatch = useDispatch();
   const us = useOurPkStr();
-  const privateContactsPubkeys = useContactsToInviteToGroup();
+  const { contactsToInvite, searchTerm } = useContactsToInviteTo('create-group');
   const isCreatingGroup = useIsCreatingGroupFromUIPending();
   const groupName = useSelector((state: StateType) => state.groups.creationGroupName) || '';
   const [inviteAsAdmin, setInviteAsAdmin] = useBoolean(false);
   const [groupNameError, setGroupNameError] = useState<string | undefined>();
-  const isSearch = useIsSearching();
-  const searchTerm = useSelector(getSearchTerm);
-  const searchResultContactsOnly = useSelector(getSearchResultsContactOnly);
 
   const selectedMemberIds = useSelector(
     (state: StateType) => state.groups.creationMembersSelected || []
@@ -142,11 +110,8 @@ export const OverlayClosedGroupV2 = () => {
   }
 
   useKey('Escape', closeOverlay);
-  const contactsToRender = isSearch
-    ? searchResultContactsOnly.filter(m => PubKey.is05Pubkey(m))
-    : privateContactsPubkeys;
 
-  const noContactsForClosedGroup = isEmpty(searchTerm) && contactsToRender.length === 0;
+  const noContactsForClosedGroup = isEmpty(searchTerm) && contactsToInvite.length === 0;
 
   const disableCreateButton = isCreatingGroup || (!selectedMemberIds.length && !groupName.length);
 
@@ -207,18 +172,15 @@ export const OverlayClosedGroupV2 = () => {
         <SpacerLG />
       </Flex>
 
-      <SessionSearchInput />
-      {!noContactsForClosedGroup && <GroupInviteRequiredVersionBanner />}
+      <SessionSearchInput searchType="create-group" />
 
       <StyledGroupMemberListContainer>
         {noContactsForClosedGroup ? (
           <NoContacts />
-        ) : searchTerm && !contactsToRender.length ? (
-          <StyledNoResults>
-            <Localizer token="searchMatchesNoneSpecific" args={{ query: searchTerm }} />
-          </StyledNoResults>
+        ) : searchTerm && !contactsToInvite.length ? (
+          <NoResultsForSearch searchTerm={searchTerm} />
         ) : (
-          contactsToRender.map((memberPubkey: string) => {
+          contactsToInvite.map((memberPubkey: string) => {
             if (!PubKey.is05Pubkey(memberPubkey)) {
               throw new Error('Invalid member rendered in member list');
             }

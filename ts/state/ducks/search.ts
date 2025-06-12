@@ -9,38 +9,47 @@ import { MessageResultProps } from '../../types/message';
 import { ReduxConversationType } from './conversations';
 import { localize } from '../../localization/localeTools';
 
-// State
+export type SearchType = 'global' | 'create-group' | 'invite-contact-to';
 
 export type SearchStateType = {
+  /**
+   * We can do a search globally (left pane) or to invite contacts/create a group.
+   * This field is used to make sure we don't update multiple parts of the UI.
+   * */
+  searchType: SearchType | null;
   query: string;
   // For conversations we store just the id, and pull conversation props in the selector
   contactsAndGroups: Array<string>;
   messages?: Array<MessageResultProps>;
 };
 
-// Actions
-type SearchResultsPayloadType = {
+type SearchResultsPayloadType = Pick<
+  SearchStateType,
+  'searchType' | 'query' | 'contactsAndGroups' | 'messages'
+>;
+
+export type DoSearchActionType = {
   query: string;
-  contactsAndGroups: Array<string>;
-  messages?: Array<MessageResultProps>;
+  searchType: SearchType;
 };
 
 const doSearch = createAsyncThunk(
   'search/doSearch',
-  async (query: string): Promise<SearchResultsPayloadType> => {
+  async ({ query, searchType }: DoSearchActionType): Promise<SearchResultsPayloadType> => {
     const options: SearchOptions = {
       noteToSelf: [
         localize('noteToSelf').toLowerCase(),
         localize('noteToSelf').forceEnglish().toLowerCase(),
       ],
-      savedMessages: window.i18n('savedMessages').toLowerCase(),
+      savedMessages: localize('savedMessages').toString().toLowerCase(),
       ourNumber: UserUtils.getOurPubKeyStrFromCache(),
     };
     const processedQuery = query;
 
     const [contactsAndGroups, messages] = await Promise.all([
       queryContactsAndGroups(processedQuery, options),
-      queryMessages(processedQuery),
+      // we only need to query messages for the global search
+      searchType === 'global' ? queryMessages(processedQuery) : Promise.resolve([]),
     ]);
     const filteredMessages = _.compact(messages);
 
@@ -48,6 +57,7 @@ const doSearch = createAsyncThunk(
       query,
       contactsAndGroups,
       messages: filteredMessages,
+      searchType,
     };
   }
 );
@@ -91,6 +101,7 @@ async function queryContactsAndGroups(providedQuery: string, options: SearchOpti
 // Reducer
 
 export const initialSearchState: SearchStateType = {
+  searchType: null, // by default the search is off
   query: '',
   contactsAndGroups: [],
   messages: [],
@@ -103,10 +114,11 @@ const searchSlice = createSlice({
     clearSearch() {
       return initialSearchState;
     },
-    updateSearchTerm(state, action: PayloadAction<string>) {
+    updateSearchTerm(state, action: PayloadAction<{ query: string; searchType: SearchType }>) {
       return {
         ...state,
-        query: action.payload,
+        query: action.payload.query,
+        searchType: action.payload.searchType,
       };
     },
   },
@@ -114,17 +126,22 @@ const searchSlice = createSlice({
     builder.addCase(
       doSearch.fulfilled,
       (state, action: PayloadAction<SearchResultsPayloadType>) => {
-        const { query, contactsAndGroups, messages } = action.payload;
+        const { query, contactsAndGroups, messages, searchType } = action.payload;
         // Reject if the associated query is not the most recent user-provided query
         if (state.query !== query) {
           return state;
         }
-
+        // Reject if the associated searchType does not correspond to the most recent user-provided searchType
+        if (state.searchType !== searchType) {
+          window.log.warn('doSearch: searchType does not match: ', state.searchType, searchType);
+          return state;
+        }
         return {
           ...state,
           query,
           contactsAndGroups,
           messages,
+          searchType,
         };
       }
     );

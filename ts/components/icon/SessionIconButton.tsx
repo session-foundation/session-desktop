@@ -168,6 +168,7 @@ export const SessionLucideIconButton = (
         display: style?.display ? style.display : 'flex',
         margin: margin || '',
         padding: padding || '',
+        
       }}
       tabIndex={tabIndex}
       onKeyDown={keyPressHandler}

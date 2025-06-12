@@ -17,7 +17,7 @@ import {
   openConversationToSpecificMessage,
   openConversationWithMessages,
 } from '../../../state/ducks/conversations';
-import { useIsSearching } from '../../../state/selectors/search';
+import { useIsSearchingForType } from '../../../state/selectors/search';
 import { useIsMessageSection } from '../../../state/selectors/section';
 import { Timestamp } from '../../conversation/Timestamp';
 import { SessionIcon } from '../../icon';
@@ -171,7 +171,7 @@ const UnreadCount = ({ convoId }: { convoId: string }) => {
 export const ConversationListItemHeaderItem = () => {
   const conversationId = useConvoIdFromContext();
 
-  const isSearching = useIsSearching();
+  const isSearching = useIsSearchingForType('global');
 
   const hasUnread = useHasUnread(conversationId);
   const activeAt = useActiveAt(conversationId);

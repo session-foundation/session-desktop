@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
 
 import { SessionJoinableRooms } from './SessionJoinableDefaultRooms';
@@ -17,7 +17,7 @@ import {
   markConversationInitialLoadingInProgress,
   openConversationWithMessages,
 } from '../../../state/ducks/conversations';
-import { getLeftOverlayMode } from '../../../state/selectors/section';
+import { useLeftOverlayMode } from '../../../state/selectors/section';
 import { Spacer2XL } from '../../basic/Text';
 import { SessionInput } from '../../inputs';
 import { StyledLeftPaneOverlay } from './OverlayMessage';
@@ -49,7 +49,7 @@ export const OverlayCommunity = () => {
   const [groupUrlError, setGroupUrlError] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
 
-  const overlayModeIsCommunity = useSelector(getLeftOverlayMode) === 'open-group';
+  const overlayModeIsCommunity = useLeftOverlayMode() === 'open-group';
 
   function closeOverlay() {
     dispatch(sectionActions.resetLeftOverlayMode());

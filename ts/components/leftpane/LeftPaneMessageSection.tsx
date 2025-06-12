@@ -8,8 +8,8 @@ import { LeftPaneSectionHeader } from './LeftPaneSectionHeader';
 import { MessageRequestsBanner } from './MessageRequestsBanner';
 
 import { getLeftPaneConversationIds } from '../../state/selectors/conversations';
-import { getSearchTerm } from '../../state/selectors/search';
-import { getLeftOverlayMode } from '../../state/selectors/section';
+import { useSearchTermForType } from '../../state/selectors/search';
+import { useLeftOverlayMode } from '../../state/selectors/section';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { SessionSearchInput } from '../SessionSearchInput';
 import { StyledLeftPaneList } from './LeftPaneList';
@@ -39,7 +39,7 @@ const StyledConversationListContent = styled.div`
 `;
 
 const ClosableOverlay = () => {
-  const leftOverlayMode = useSelector(getLeftOverlayMode);
+  const leftOverlayMode = useLeftOverlayMode();
 
   switch (leftOverlayMode) {
     case 'choose-action':
@@ -84,7 +84,7 @@ const ConversationRow = (
 };
 
 const ConversationList = () => {
-  const searchTerm = useSelector(getSearchTerm);
+  const searchTerm = useSearchTermForType('global');
   const conversationIds = useSelector(getLeftPaneConversationIds);
 
   if (!isEmpty(searchTerm)) {
@@ -118,7 +118,7 @@ const ConversationList = () => {
 };
 
 export const LeftPaneMessageSection = () => {
-  const leftOverlayMode = useSelector(getLeftOverlayMode);
+  const leftOverlayMode = useLeftOverlayMode();
   const dispatch = useDispatch();
 
   return (
@@ -128,7 +128,7 @@ export const LeftPaneMessageSection = () => {
         <ClosableOverlay />
       ) : (
         <StyledConversationListContent>
-          <SessionSearchInput />
+          <SessionSearchInput searchType="global" />
           <MessageRequestsBanner
             handleOnClick={() => {
               dispatch(sectionActions.setLeftOverlayMode('message-requests'));
