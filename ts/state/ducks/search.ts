@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import _ from 'lodash';
+import { compact } from 'lodash';
 import { Data } from '../../data/data';
 import { SearchOptions } from '../../types/Search';
 import { cleanSearchTerm } from '../../util/cleanSearchTerm';
@@ -8,6 +8,7 @@ import { UserUtils } from '../../session/utils';
 import { MessageResultProps } from '../../types/message';
 import { ReduxConversationType } from './conversations';
 import { localize } from '../../localization/localeTools';
+import { BlockedNumberController } from '../../util';
 
 export type SearchType = 'global' | 'create-group' | 'invite-contact-to';
 
@@ -43,6 +44,7 @@ const doSearch = createAsyncThunk(
       ],
       savedMessages: localize('savedMessages').toString().toLowerCase(),
       ourNumber: UserUtils.getOurPubKeyStrFromCache(),
+      excludeBlocked: searchType !== 'global',
     };
     const processedQuery = query;
 
@@ -51,7 +53,7 @@ const doSearch = createAsyncThunk(
       // we only need to query messages for the global search
       searchType === 'global' ? queryMessages(processedQuery) : Promise.resolve([]),
     ]);
-    const filteredMessages = _.compact(messages);
+    const filteredMessages = compact(messages);
 
     return {
       query,
@@ -80,7 +82,10 @@ async function queryContactsAndGroups(providedQuery: string, options: SearchOpti
   const { ourNumber, noteToSelf, savedMessages } = options;
   // we don't need to use cleanSearchTerm here because the query is wrapped as a wild card and is not referenced in the SQL query directly
   const query = providedQuery.replace(/[+-.()]*/g, '');
-  const searchResults: Array<ReduxConversationType> = await Data.searchConversations(query);
+
+  const searchResults: Array<ReduxConversationType> = (
+    await Data.searchConversations(query)
+  ).filter(c => (options.excludeBlocked ? !BlockedNumberController.isBlocked(c.id) : true));
 
   let contactsAndGroups: Array<string> = searchResults.map(conversation => conversation.id);
 

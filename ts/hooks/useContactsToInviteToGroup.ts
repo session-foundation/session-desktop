@@ -12,7 +12,6 @@ import { useSortedGroupMembers } from './useParamSelector';
 import { getPrivateContactsPubkeys } from '../state/selectors/conversations';
 import type { SearchType } from '../state/ducks/search';
 
-const blockedPubkeys: Array<string> = [];
 
 /**
  * Returns the 05 pubkeys of contacts that we can invite to a group.
@@ -33,8 +32,8 @@ export const useContactsToInviteTo = (searchType: SearchType, conversationId?: s
     : privateContactsPubkeys;
 
   const validContactsForInvite = useMemo(() => {
-    return difference(contactsToRender, members, blockedPubkeys);
-  }, [contactsToRender, members, blockedPubkeys]);
+    return difference(contactsToRender, members);
+  }, [contactsToRender, members]);
 
   return {
     contactsToInvite: validContactsForInvite as Array<PubkeyType>,

@@ -2,7 +2,7 @@ import _ from 'lodash';
 import { KeyboardEvent, MouseEvent, SessionDataTestId, ReactNode, forwardRef, memo } from 'react';
 import clsx from 'clsx';
 
-import { StyledSessionIconButton } from './StyledSessionIconButton';
+import { StyledSessionIconButton } from './SessionIconButtonStyled';
 import { SessionIcon, SessionIconProps } from './SessionIcon';
 import { LucideIcon, type LucideIconProps } from './LucideIcon';
 
@@ -168,7 +168,6 @@ export const SessionLucideIconButton = (
         display: style?.display ? style.display : 'flex',
         margin: margin || '',
         padding: padding || '',
-        
       }}
       tabIndex={tabIndex}
       onKeyDown={keyPressHandler}

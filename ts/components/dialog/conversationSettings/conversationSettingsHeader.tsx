@@ -1,8 +1,6 @@
-import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { useEffect, useRef, useState, type SessionDataTestId } from 'react';
 
-import { closeRightPanel } from '../../../state/ducks/conversations';
 import { Avatar, AvatarSize } from '../../avatar/Avatar';
 import { Flex } from '../../basic/Flex';
 import { Header } from '../../conversation/right-panel/overlay/components';
@@ -27,7 +25,6 @@ import { useRoomDescription } from '../../../state/selectors/sogsRoomInfo';
 import { useLibGroupDescription } from '../../../state/selectors/groups';
 import { useShowUpdateGroupNameDescriptionCb } from '../../menuAndSettingsHooks/useShowUpdateGroupNameDescription';
 import { useHTMLDirection } from '../../../util/i18n/rtlSupport';
-import { sectionActions } from '../../../state/ducks/section';
 
 function AccountId({ conversationId }: WithConvoId) {
   const isPrivate = useIsPrivate(conversationId);
@@ -190,8 +187,6 @@ const ConversationTitle = ({ conversationId }: WithConvoId) => {
 };
 
 export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
-  const dispatch = useDispatch();
-
   // if a nickname is set, we still want to display the real name of the user, as he defined it
   const conversationRealName = useConversationRealName(conversationId);
   const hasNickname = useHasNickname(conversationId);
@@ -205,16 +200,7 @@ export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
   }
 
   return (
-    <Header
-      backButtonDirection="right"
-      backButtonOnClick={() => {
-        dispatch(closeRightPanel());
-        dispatch(sectionActions.resetRightOverlayMode());
-      }}
-      hideCloseButton={true}
-      hideBackButton={true}
-      paddingTop="var(--margins-xs)"
-    >
+    <Header hideCloseButton={true} paddingTop="var(--margins-xs)">
       <Flex
         $container={true}
         $justifyContent={'center'}

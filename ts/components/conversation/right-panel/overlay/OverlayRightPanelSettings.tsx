@@ -156,7 +156,6 @@ export const OverlayRightPanelSettings = () => {
     <StyledScrollContainer>
       <Flex $container={true} $flexDirection={'column'} $alignItems={'center'}>
         <Header
-          hideBackButton={true}
           hideCloseButton={false}
           closeButtonOnClick={closePanel}
           paddingTop="var(--margins-2xl)"

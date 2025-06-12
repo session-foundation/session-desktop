@@ -5,7 +5,6 @@ import { useTimerOptionsByMode } from '../../../../../hooks/useParamSelector';
 import { setDisappearingMessagesByConvoId } from '../../../../../interactions/conversationInteractions';
 import { TimerOptions } from '../../../../../session/disappearing_messages/timerOptions';
 import { DisappearingMessageConversationModeType } from '../../../../../session/disappearing_messages/types';
-import { closeRightPanel } from '../../../../../state/ducks/conversations';
 
 import {
   getSelectedConversationExpirationModes,
@@ -26,14 +25,14 @@ import { TimeOptions } from './TimeOptions';
 import { useConversationSettingsModalIsStandalone } from '../../../../../state/selectors/modal';
 import { updateConversationSettingsModal } from '../../../../../state/ducks/modalDialog';
 import { useShowConversationSettingsFor } from '../../../../menuAndSettingsHooks/useShowConversationSettingsFor';
-import { sectionActions } from '../../../../../state/ducks/section';
+import { localize } from '../../../../../localization/localeTools';
+import { SessionSpinner } from '../../../../loading';
 
 const ButtonSpacer = styled.div`
   height: 80px;
 `;
 
 const StyledButtonContainer = styled.div`
-  background: linear-gradient(0deg, var(--background-primary-color), transparent);
   position: absolute;
   width: 100%;
   bottom: 0px;
@@ -104,30 +103,45 @@ export const DisappearingMessagesPage = () => {
   const timerOptions = useTimerOptionsByMode(modeSelected, hasOnlyOneMode);
   const isStandalone = useConversationSettingsModalIsStandalone();
 
+  const [loading, setLoading] = useState(false);
+
   const showConvoSettingsCb = useShowConversationSettingsFor(selectedConversationKey);
 
+  function closeOrBackInPage() {
+    if (isStandalone) {
+      dispatch(updateConversationSettingsModal(null));
+    } else {
+      showConvoSettingsCb?.({
+        settingsModalPage: 'default',
+      });
+    }
+  }
+
   const handleSetMode = async () => {
+    if (!selectedConversationKey) {
+      return;
+    }
     if (hasOnlyOneMode) {
-      if (selectedConversationKey && singleMode) {
-        await setDisappearingMessagesByConvoId(
-          selectedConversationKey,
-          timeSelected === 0 ? 'off' : singleMode,
-          timeSelected
-        );
-        dispatch(closeRightPanel());
-        dispatch(sectionActions.resetRightOverlayMode());
+      if (singleMode) {
+        try {
+          await setDisappearingMessagesByConvoId(
+            selectedConversationKey,
+            timeSelected === 0 ? 'off' : singleMode,
+            timeSelected
+          );
+          closeOrBackInPage();
+        } finally {
+          setLoading(false);
+        }
       }
       return;
     }
-    if (selectedConversationKey && modeSelected) {
+    setLoading(true);
+    try {
       await setDisappearingMessagesByConvoId(selectedConversationKey, modeSelected, timeSelected);
-      if (isStandalone) {
-        dispatch(updateConversationSettingsModal(null));
-      } else {
-        showConvoSettingsCb?.({
-          settingsModalPage: 'default',
-        });
-      }
+      closeOrBackInPage();
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -153,10 +167,10 @@ export const DisappearingMessagesPage = () => {
       <Flex $container={true} $flexDirection={'column'} $alignItems={'center'}>
         <HeaderSubtitle>
           {singleMode === 'deleteAfterRead'
-            ? window.i18n('disappearingMessagesDisappearAfterReadDescription')
+            ? localize('disappearingMessagesDisappearAfterReadDescription').toString()
             : singleMode === 'deleteAfterSend'
-              ? window.i18n('disappearingMessagesDisappearAfterSendDescription')
-              : window.i18n('disappearingMessagesDescription1')}
+              ? localize('disappearingMessagesDisappearAfterSendDescription').toString()
+              : localize('disappearingMessagesDescription1').toString()}
         </HeaderSubtitle>
         <DisappearingModes
           options={disappearingModeOptions}
@@ -187,29 +201,33 @@ export const DisappearingMessagesPage = () => {
             <SpacerLG />
             {/* We want those to be shown no matter our admin rights in a group. */}
             <StyledNonAdminDescription>
-              {window.i18n('disappearingMessagesDescription')}
+              {localize('disappearingMessagesDescription').toString()}
               <br />
-              {window.i18n('disappearingMessagesOnlyAdmins')}
+              {localize('disappearingMessagesOnlyAdmins').toString()}
             </StyledNonAdminDescription>
           </>
         )}
         <ButtonSpacer />
 
         <StyledButtonContainer>
-          <SessionButton
-            buttonColor={SessionButtonColor.PrimaryDark}
-            onClick={handleSetMode}
-            disabled={
-              singleMode
-                ? disappearingModeOptions[singleMode]
-                : modeSelected
-                  ? disappearingModeOptions[modeSelected]
-                  : undefined
-            }
-            dataTestId={'disappear-set-button'}
-          >
-            {window.i18n('set')}
-          </SessionButton>
+          {loading ? (
+            <SessionSpinner loading={true} />
+          ) : (
+            <SessionButton
+              buttonColor={SessionButtonColor.PrimaryDark}
+              onClick={handleSetMode}
+              disabled={
+                singleMode
+                  ? disappearingModeOptions[singleMode]
+                  : modeSelected
+                    ? disappearingModeOptions[modeSelected]
+                    : undefined
+              }
+              dataTestId={'disappear-set-button'}
+            >
+              {localize('set').toString()}
+            </SessionButton>
+          )}
         </StyledButtonContainer>
       </Flex>
     </StyledScrollContainer>

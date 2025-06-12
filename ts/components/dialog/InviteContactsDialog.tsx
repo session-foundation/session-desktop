@@ -14,7 +14,6 @@ import { SessionUtilUserGroups } from '../../session/utils/libsession/libsession
 import { groupInfoActions } from '../../state/ducks/metaGroups';
 import { useSelectedIsGroupV2 } from '../../state/selectors/selectedConversation';
 import { MemberListItem } from '../MemberListItem';
-import { SessionWrapperModal } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionToggle } from '../basic/SessionToggle';
 import { hasClosedGroupV2QAButtons } from '../../shared/env_vars';
@@ -24,6 +23,8 @@ import { localize } from '../../localization/localeTools';
 import { useContactsToInviteTo } from '../../hooks/useContactsToInviteToGroup';
 import { SessionSearchInput } from '../SessionSearchInput';
 import { NoResultsForSearch } from '../search/NoResults';
+import { SessionWrapperModal2 } from '../SessionWrapperModal2';
+import { useHotkey } from '../../hooks/useHotkey';
 
 type Props = {
   conversationId: string;
@@ -151,22 +152,42 @@ const InviteContactsDialogInner = (props: Props) => {
     closeDialog();
     dispatch(updateGroupMembersModal({ conversationId }));
   };
+  useHotkey('Escape', closeDialog);
 
   useKey((event: KeyboardEvent) => {
     return event.key === 'Enter';
   }, onClickOK);
 
-  useKey((event: KeyboardEvent) => {
-    return event.key === 'Esc' || event.key === 'Escape';
-  }, closeDialog);
-
   const hasContacts = contactsToInvite.length > 0;
 
   return (
-    <SessionWrapperModal
+    <SessionWrapperModal2
       title={localize('membersInvite').toString()}
       onClose={closeDialog}
       showExitIcon={true}
+      $contentMaxWidth="500px"
+      $contentMinWidth="500px"
+      buttonChildren={
+        <>
+          <SpacerLG />
+          <div className="session-modal__button-group">
+            <SessionButton
+              text={localize('okay').toString()}
+              buttonType={SessionButtonType.Simple}
+              disabled={!hasContacts}
+              onClick={onClickOK}
+              dataTestId="session-confirm-ok-button"
+            />
+            <SessionButton
+              text={localize('cancel').toString()}
+              buttonColor={SessionButtonColor.Danger}
+              buttonType={SessionButtonType.Simple}
+              onClick={closeDialog}
+              dataTestId="session-confirm-cancel-button"
+            />
+          </div>
+        </>
+      }
     >
       <SpacerLG />
 
@@ -198,26 +219,7 @@ const InviteContactsDialogInner = (props: Props) => {
           />
         </div>
       )}
-
-      <SpacerLG />
-      <SpacerLG />
-      <div className="session-modal__button-group">
-        <SessionButton
-          text={localize('okay').toString()}
-          buttonType={SessionButtonType.Simple}
-          disabled={!hasContacts}
-          onClick={onClickOK}
-          dataTestId="session-confirm-ok-button"
-        />
-        <SessionButton
-          text={localize('cancel').toString()}
-          buttonColor={SessionButtonColor.Danger}
-          buttonType={SessionButtonType.Simple}
-          onClick={closeDialog}
-          dataTestId="session-confirm-cancel-button"
-        />
-      </div>
-    </SessionWrapperModal>
+    </SessionWrapperModal2>
   );
 };
 

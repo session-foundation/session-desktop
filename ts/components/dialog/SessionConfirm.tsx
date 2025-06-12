@@ -188,7 +188,7 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
       onClose={onClickClose}
       showExitIcon={showExitIcon}
       showHeader={showHeader}
-      contentMaxWidth={contentMaxWidth}
+      $contentMaxWidth={contentMaxWidth}
       $contentMinWidth={contentMinWidth}
       buttonChildren={
         <ConfirmationButtons

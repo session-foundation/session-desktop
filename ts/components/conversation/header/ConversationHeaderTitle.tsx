@@ -19,6 +19,7 @@ import {
 import { ConversationHeaderSubtitle } from './ConversationHeaderSubtitle';
 import { useLocalisedNotificationOf } from '../../menuAndSettingsHooks/useLocalisedNotificationFor';
 import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useShowConversationSettingsFor';
+import { localize } from '../../../localization/localeTools';
 
 export type SubtitleStrings = Record<string, string> & {
   notifications?: string;
@@ -66,8 +67,6 @@ export const ConversationHeaderTitle = (props: ConversationHeaderTitleProps) => 
   const [subtitleStrings, setSubtitleStrings] = useState<SubtitleStrings>({});
   const [subtitleArray, setSubtitleArray] = useState<Array<SubtitleStringsType>>([]);
 
-  const { i18n } = window;
-
   const notificationSubtitle = useLocalisedNotificationOf(notification, 'title');
 
   const memberCountSubtitle = useMemo(() => {
@@ -81,11 +80,13 @@ export const ConversationHeaderTitle = (props: ConversationHeaderTitleProps) => 
     }
 
     if (isGroup && count > 0 && !isKickedFromGroup) {
-      return isPublic ? i18n('membersActive', { count }) : i18n('members', { count });
+      return localize(isPublic ? 'membersActive' : 'members')
+        .withArgs({ count })
+        .toString();
     }
 
     return null;
-  }, [i18n, isGroup, isKickedFromGroup, isPublic, selectedMembersCount, subscriberCount]);
+  }, [isGroup, isKickedFromGroup, isPublic, selectedMembersCount, subscriberCount]);
 
   const showConvoSettingsCb = useShowConversationSettingsFor(convoId);
 
@@ -145,7 +146,7 @@ export const ConversationHeaderTitle = (props: ConversationHeaderTitleProps) => 
   }, [disappearingMessageSubtitle, memberCountSubtitle, notificationSubtitle, visibleSubtitle]);
 
   const className = isMe ? '' : 'module-contact-name__profile-name';
-  const displayName = isMe ? i18n('noteToSelf') : convoName;
+  const displayName = isMe ? localize('noteToSelf').toString() : convoName;
 
   return (
     <div className="module-conversation-header__title-container">

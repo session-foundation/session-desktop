@@ -13,19 +13,17 @@ import { LUCIDE_ICONS_UNICODE } from './icon/lucide';
 
 const StyledSearchInput = styled.div`
   height: var(--search-input-height);
+  background-color: var(--background-secondary-color);
   width: 100%;
+  // max width because it doesn't look good on a wide dialog otherwise
+  max-width: 300px;
   margin-inline-end: 1px;
   margin-bottom: 10px;
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
-
-  .session-icon-button {
-    margin: auto 10px;
-    &:hover svg path {
-      fill: var(--search-bar-icon-hover-color);
-    }
-  }
+  border-radius: 100px;
+  padding-inline: var(--margins-sm);
 `;
 
 const StyledInput = styled.input`
@@ -109,6 +107,7 @@ export const SessionSearchInput = ({ searchType }: { searchType: SearchType }) =
           });
         }}
         placeholder={placeholder}
+        style={{ borderWidth: '0' }}
       />
       {Boolean(currentSearchTerm.length) && (
         <SessionLucideIconButton

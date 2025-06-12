@@ -22,7 +22,6 @@ const ButtonSpacer = styled.div`
 `;
 
 const StyledButtonContainer = styled.div`
-  background: linear-gradient(0deg, var(--background-primary-color), transparent);
   position: absolute;
   width: 100%;
   bottom: 0px;

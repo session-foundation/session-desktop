@@ -24,26 +24,22 @@ export const HeaderSubtitle = styled.h3`
   margin-top: 0;
 `;
 
-type HeaderProps = {
-  hideBackButton?: boolean;
-  backButtonDirection?: 'left' | 'right';
-  backButtonOnClick?: () => void;
-  hideCloseButton?: boolean;
-  closeButtonOnClick?: () => void;
+type HeaderProps = (
+  | {
+      hideCloseButton: false;
+      closeButtonOnClick: () => void;
+    }
+  | {
+      hideCloseButton: true;
+      closeButtonOnClick?: undefined;
+    }
+) & {
   children?: ReactNode;
   paddingTop: string;
 };
 
 export const Header = (props: HeaderProps) => {
-  const {
-    children,
-    hideBackButton = false,
-    backButtonDirection = 'left',
-    backButtonOnClick,
-    hideCloseButton = false,
-    closeButtonOnClick,
-    paddingTop,
-  } = props;
+  const { children, hideCloseButton, closeButtonOnClick, paddingTop } = props;
   const dispatch = useDispatch();
 
   return (
@@ -52,21 +48,6 @@ export const Header = (props: HeaderProps) => {
       width={'100%'}
       padding={`${paddingTop} var(--margins-lg) var(--margins-md)`}
     >
-      {!hideBackButton && (
-        <SessionIconButton
-          iconSize={'medium'}
-          iconType={'chevron'}
-          iconRotation={backButtonDirection === 'left' ? 90 : 270}
-          onClick={() => {
-            if (backButtonOnClick) {
-              backButtonOnClick();
-            } else {
-              dispatch(sectionActions.resetRightOverlayMode());
-            }
-          }}
-          dataTestId="back-button-conversation-options"
-        />
-      )}
       <Flex
         $container={true}
         $flexDirection={'column'}

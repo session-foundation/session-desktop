@@ -202,7 +202,7 @@ function CopyMessageBodyButton({ messageId }: WithMessageIdOpt) {
   }
   return (
     <PanelIconButton
-      text={window.i18n('copy')}
+      text={localize('copy').toString()}
       iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.COPY} />}
       onClick={() => {
         clipboard.writeText(messageBody || '');
@@ -220,7 +220,7 @@ function ReplyToMessageButton({ messageId }: WithMessageIdOpt) {
   }
   return (
     <PanelIconButton
-      text={window.i18n('reply')}
+      text={localize('reply').toString()}
       iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.REPLY} />}
       onClick={() => {
         // eslint-disable-next-line more/no-then
@@ -327,11 +327,11 @@ export const OverlayMessageInfo = () => {
     <StyledScrollContainer>
       <Flex $container={true} $flexDirection={'column'} $alignItems={'center'}>
         <Header
-          hideBackButton={true}
+          hideCloseButton={false}
           closeButtonOnClick={closePanel}
           paddingTop="var(--margins-2xl)"
         >
-          <HeaderTitle>{window.i18n('messageInfo')}</HeaderTitle>
+          <HeaderTitle>{localize('messageInfo').toString()}</HeaderTitle>
         </Header>
         <StyledMessageInfoContainer>
           <MessageBody
@@ -369,7 +369,7 @@ export const OverlayMessageInfo = () => {
             <CopySenderSessionId messageId={messageId} />
             {hasErrors && !isLegacyGroup && direction === 'outgoing' && (
               <PanelIconButton
-                text={window.i18n('resend')}
+                text={localize('resend').toString()}
                 iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.REFRESH_CW} />}
                 onClick={() => {
                   void resendMessage(messageId);
@@ -381,7 +381,7 @@ export const OverlayMessageInfo = () => {
             )}
             {hasAttachments && (
               <PanelIconButton
-                text={window.i18n('save')}
+                text={localize('save').toString()}
                 iconElement={
                   <PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.CIRCLE_ARROW_DOWN} />
                 }
@@ -401,7 +401,7 @@ export const OverlayMessageInfo = () => {
             )}
             {isDeletable && !isLegacyGroup && (
               <PanelIconButton
-                text={window.i18n('delete')}
+                text={localize('delete').toString()}
                 iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.TRASH2} />}
                 color={'var(--danger-color)'}
                 dataTestId="delete-from-details"

@@ -22,7 +22,7 @@ const StyledModalHeader = styled(Flex)<{ bigHeader?: boolean }>`
 
 const StyledModal = styled.div<{
   scrolled: boolean;
-  contentMaxWidth?: string;
+  $contentMaxWidth?: string;
   $contentMinWidth?: string;
   padding?: string;
   border: boolean;
@@ -31,7 +31,7 @@ const StyledModal = styled.div<{
   animation: fadein var(--default-duration);
   z-index: 150;
   max-height: 90vh;
-  max-width: ${props => (props.contentMaxWidth ? props.contentMaxWidth : DEFAULT_MODAL_WIDTH)};
+  max-width: ${props => (props.$contentMaxWidth ? props.$contentMaxWidth : DEFAULT_MODAL_WIDTH)};
   min-width: ${props => (props.$contentMinWidth ? props.$contentMinWidth : DEFAULT_MODAL_WIDTH)};
   box-sizing: border-box;
   font-family: var(--font-default);
@@ -120,7 +120,7 @@ export type SessionWrapperModalType2 = {
   headerIconButtons?: Array<Omit<SessionIconButtonProps, 'iconSize'>>;
   children: ReactNode;
   buttonChildren?: ReactNode;
-  contentMaxWidth?: string;
+  $contentMaxWidth?: string;
   $contentMinWidth?: string;
   contentBorder?: boolean;
   shouldOverflow?: boolean;
@@ -231,7 +231,7 @@ export const SessionWrapperModal2 = (props: SessionWrapperModalType2) => {
     showExitIcon,
     headerIconButtons,
     $contentMinWidth,
-    contentMaxWidth,
+    $contentMaxWidth,
     contentBorder = true,
     shouldOverflow = false,
     padding,
@@ -283,7 +283,7 @@ export const SessionWrapperModal2 = (props: SessionWrapperModalType2) => {
       >
         <StyledModal
           ref={modalRef}
-          contentMaxWidth={contentMaxWidth}
+          $contentMaxWidth={$contentMaxWidth}
           $contentMinWidth={$contentMinWidth}
           scrolled={scrolled}
           padding={padding}

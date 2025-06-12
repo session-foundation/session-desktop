@@ -48,9 +48,18 @@ const sectionSlice = createSlice({
   initialState: initialSectionState,
   reducers: {
     showLeftPaneSection(state, action: PayloadAction<SectionType>) {
+      if (action.payload === SectionType.Settings) {
+        // on click on the gear icon: show the 'privacy' tab by default
+        return {
+          ...state,
+          focusedSection: action.payload,
+          focusedSettingsSection: 'privacy',
+        };
+      }
       return {
         ...state,
         focusedSection: action.payload,
+        focusedSettingsSection: undefined,
       };
     },
     setLeftOverlayMode(state, action: PayloadAction<LeftOverlayMode>) {
@@ -77,26 +86,11 @@ const sectionSlice = createSlice({
         rightOverlayMode: undefined,
       };
     },
-    setFocusedSection(state, action: PayloadAction<SectionType>) {
-      if (action.payload !== SectionType.Settings) {
-        return {
-          ...state,
-          focusedSection: action.payload,
-          focusedSettingsSection: undefined,
-        };
-      }
-
-      // on click on the gear icon: show the appearance tab by default
-      return {
-        ...state,
-        focusedSection: action.payload,
-        focusedSettingsSection: 'privacy',
-      };
-    },
     showSettingsSection(state, action: PayloadAction<SessionSettingCategory>) {
       return {
         ...state,
         focusedSettingsSection: action.payload,
+        focusedSection: SectionType.Settings,
       };
     },
     setIsAppFocused(state, action: PayloadAction<boolean>) {
