@@ -1,7 +1,7 @@
 import styled from 'styled-components';
-import { SessionDataTestId } from 'react';
+import { SessionDataTestId, type ReactNode } from 'react';
 import { SessionRadio } from '../basic/SessionRadio';
-import { PanelButton, PanelButtonProps, PanelButtonText, StyledContent } from './PanelButton';
+import { PanelButton, PanelButtonProps, StyledContent } from './PanelButton';
 
 const StyledPanelButton = styled(PanelButton)`
   padding-top: var(--margins-lg);
@@ -14,27 +14,29 @@ const StyledCheckContainer = styled.div`
   align-items: center;
 `;
 
-interface PanelRadioButtonProps extends Omit<PanelButtonProps, 'children' | 'onClick'> {
+type PanelRadioButtonProps = Omit<PanelButtonProps, 'children' | 'onClick' | 'dataTestId'> & {
   value: any;
-  text: string;
-  subtitle?: string;
+  textElement: ReactNode;
   isSelected: boolean;
   onSelect?: (...args: Array<any>) => void;
   onUnselect?: (...args: Array<any>) => void;
+  // the row dataTestId is used to identify the whole row, not the radio button
+  rowDataTestId: SessionDataTestId;
+  // the radio input dataTestId is used to identify the radio button only.
+  // the textElement will have its own dataTestId
   radioInputDataTestId: SessionDataTestId;
-}
+};
 
 export const PanelRadioButton = (props: PanelRadioButtonProps) => {
   const {
     value,
-    text,
-    subtitle,
     isSelected,
     onSelect,
     onUnselect,
     disabled = false,
-    dataTestId,
+    rowDataTestId,
     radioInputDataTestId,
+    textElement,
   } = props;
 
   return (
@@ -43,10 +45,10 @@ export const PanelRadioButton = (props: PanelRadioButtonProps) => {
       onClick={() => {
         return isSelected ? onUnselect?.('bye') : onSelect?.('hi');
       }}
-      dataTestId={dataTestId}
+      dataTestId={rowDataTestId}
     >
       <StyledContent disabled={disabled}>
-        <PanelButtonText text={text} subtitle={subtitle} />
+        {textElement}
         <StyledCheckContainer>
           <SessionRadio
             active={isSelected}

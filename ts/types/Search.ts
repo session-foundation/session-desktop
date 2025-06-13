@@ -2,6 +2,7 @@ export type SearchOptions = {
   ourNumber: string;
   noteToSelf: Array<string>;
   savedMessages: string;
+  excludeBlocked: boolean;
 };
 
 export type AdvancedSearchOptions = {

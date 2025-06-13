@@ -1,43 +1,38 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { useState } from 'react';
 
-import { motion } from 'framer-motion';
 import { useDispatch } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
-import styled from 'styled-components';
 import { useIsClosedGroup, useIsPublic } from '../../hooks/useParamSelector';
 import { ConvoHub } from '../../session/conversations';
-import { initiateOpenGroupUpdate } from '../../session/group/open-group';
 import { PubKey } from '../../session/types';
 import LIBSESSION_CONSTANTS from '../../session/utils/libsession/libsession_constants';
 import { groupInfoActions } from '../../state/ducks/metaGroups';
 import { updateGroupNameModal } from '../../state/ducks/modalDialog';
-import { useGroupNameChangeFromUIPending } from '../../state/selectors/groups';
-import { THEME_GLOBALS } from '../../themes/globals';
+import {
+  useGroupNameChangeFromUIPending,
+  useLibGroupDescription,
+} from '../../state/selectors/groups';
 import { pickFileForAvatar } from '../../types/attachments/VisualAttachment';
-import { SessionWrapperModal } from '../SessionWrapperModal';
 import { Avatar, AvatarSize } from '../avatar/Avatar';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
-import { SpacerMD } from '../basic/Text';
+import { SpacerMD, SpacerSM } from '../basic/Text';
 import { SessionSpinner } from '../loading';
-
-const StyledErrorMessage = styled(motion.p)`
-  text-align: center;
-  color: var(--danger-color);
-  display: block;
-  user-select: none;
-`;
+import { localize } from '../../localization/localeTools';
+import { SimpleSessionInput, SimpleSessionTextarea } from '../inputs/SessionInput';
+import { SessionWrapperModal2 } from '../SessionWrapperModal2';
+import { ClearInputButton } from '../inputs/ClearInputButton';
 
 function GroupAvatar({
   isPublic,
   conversationId,
   fireInputEvent,
-  newAvatarObjecturl,
+  newAvatarObjectUrl,
   oldAvatarPath,
 }: {
   isPublic: boolean;
   conversationId: string;
-  newAvatarObjecturl: string | null;
+  newAvatarObjectUrl: string | null;
   oldAvatarPath: string | null;
   fireInputEvent: () => Promise<void>;
 }) {
@@ -49,7 +44,7 @@ function GroupAvatar({
     <div className="avatar-center">
       <div className="avatar-center-inner">
         <Avatar
-          forcedAvatarPath={newAvatarObjecturl || oldAvatarPath}
+          forcedAvatarPath={newAvatarObjectUrl || oldAvatarPath}
           size={AvatarSize.XL}
           pubkey={conversationId}
         />
@@ -62,9 +57,7 @@ function GroupAvatar({
 export function UpdateGroupNameDialog(props: { conversationId: string }) {
   const dispatch = useDispatch();
   const { conversationId } = props;
-  const [errorMsg, setErrorMsg] = useState('');
-  const [errorDisplayed, setErrorDisplayed] = useState(false);
-  const [newAvatarObjecturl, setNewAvatarObjecturl] = useState<string | null>(null);
+  const [newAvatarObjectUrl, setNewAvatarObjectUrl] = useState<string | null>(null);
   const isCommunity = useIsPublic(conversationId);
   const isClosedGroup = useIsClosedGroup(conversationId);
   const convo = ConvoHub.use().get(conversationId);
@@ -74,30 +67,24 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
     throw new Error('UpdateGroupNameDialog corresponding convo not found');
   }
 
+  if (!isClosedGroup) {
+    throw new Error('groupNameUpdate dialog only works closed groups');
+  }
+
   const oldAvatarPath = convo?.getAvatarPath() || null;
   const originalGroupName = convo?.getRealSessionUsername();
+  const originalGroupDescription = useLibGroupDescription(conversationId);
   const [newGroupName, setNewGroupName] = useState(originalGroupName);
+  const [newGroupDescription, setNewGroupDescription] = useState(originalGroupDescription);
 
   function closeDialog() {
     dispatch(updateGroupNameModal(null));
   }
 
-  function onShowError(msg: string) {
-    if (errorMsg === msg) {
-      return;
-    }
-    setErrorMsg(msg);
-    setErrorDisplayed(true);
-
-    setTimeout(() => {
-      setErrorDisplayed(false);
-    }, 3000);
-  }
-
   async function fireInputEvent() {
     const scaledObjectUrl = await pickFileForAvatar();
     if (scaledObjectUrl) {
-      setNewAvatarObjecturl(scaledObjectUrl);
+      setNewAvatarObjectUrl(scaledObjectUrl);
     }
   }
 
@@ -105,121 +92,131 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
     if (isNameChangePending) {
       return;
     }
-    const trimmedGroupName = newGroupName?.trim();
+    // When the user wants to apply the changes, we truncate
+    // the group name and description if needed, silently (errors are displayed on input changes)
+    const trimmedGroupName = newGroupName
+      ?.slice(0, LIBSESSION_CONSTANTS.BASE_GROUP_MAX_NAME_LENGTH)
+      .trim();
+    const trimmedGroupDescription = newGroupDescription
+      ?.slice(0, LIBSESSION_CONSTANTS.GROUP_INFO_DESCRIPTION_MAX_LENGTH)
+      .trim();
+
     if (!trimmedGroupName) {
-      onShowError(window.i18n('groupNameEnterPlease'));
-
       return;
     }
 
-    if (trimmedGroupName.length > LIBSESSION_CONSTANTS.BASE_GROUP_MAX_NAME_LENGTH) {
-      onShowError(window.i18n('groupNameEnterShorter'));
-
-      return;
-    }
-    onShowError('');
-
-    if (trimmedGroupName !== originalGroupName || newAvatarObjecturl !== oldAvatarPath) {
-      if (isCommunity) {
-        void initiateOpenGroupUpdate(conversationId, trimmedGroupName, {
-          objectUrl: newAvatarObjecturl,
-        });
-        closeDialog();
-      } else {
-        if (!PubKey.is03Pubkey(conversationId)) {
-          throw new Error('Only 03-group are supported here');
-        }
-        const updateNameAction = groupInfoActions.currentDeviceGroupNameChange({
-          groupPk: conversationId,
-          newName: trimmedGroupName,
-        });
-        dispatch(updateNameAction as any);
-        // keeping the dialog open until the async thunk is done (via isNameChangePending)
+    if (
+      trimmedGroupName !== originalGroupName ||
+      trimmedGroupDescription !== originalGroupDescription ||
+      newAvatarObjectUrl !== oldAvatarPath
+    ) {
+      if (!PubKey.is03Pubkey(conversationId)) {
+        throw new Error('Only 03-group are supported here');
       }
+      const updateNameAction = groupInfoActions.currentDeviceGroupNameChange({
+        groupPk: conversationId,
+        newName: trimmedGroupName,
+        newDescription: trimmedGroupDescription,
+      });
+      dispatch(updateNameAction as any);
+      // keeping the dialog open until the async thunk is done (via isNameChangePending)
     }
   }
 
   useKey('Escape', closeDialog);
   useKey('Esc', closeDialog);
-  useKey('Enter', onClickOK);
 
-  if (!isClosedGroup && !isCommunity) {
-    throw new Error('groupNameUpdate dialog only works for communities and closed groups');
-  }
-
-  const okText = window.i18n('okay');
-  const cancelText = window.i18n('cancel');
-
-  const isAdmin = !isCommunity;
+  const errorStringName = !newGroupName
+    ? localize('groupNameEnterPlease').toString()
+    : newGroupName.length > LIBSESSION_CONSTANTS.BASE_GROUP_MAX_NAME_LENGTH
+      ? localize('groupNameEnterShorter').toString()
+      : '';
+  const errorStringDescription =
+    newGroupDescription &&
+    newGroupDescription.length > LIBSESSION_CONSTANTS.GROUP_INFO_DESCRIPTION_MAX_LENGTH
+      ? localize('updateGroupInformationEnterShorterDescription').toString()
+      : '';
 
   return (
-    <SessionWrapperModal
-      title={window.i18n('groupName')}
-      onClose={() => closeDialog()}
-      additionalClassName="update-group-dialog"
+    <SessionWrapperModal2
+      title={localize('updateGroupInformation').toString()}
+      onClose={closeDialog}
     >
-      {errorMsg ? (
-        <>
-          <SpacerMD />
-          <StyledErrorMessage
-            initial={{ opacity: 0 }}
-            animate={{ opacity: errorDisplayed ? 1 : 0 }}
-            transition={{ duration: THEME_GLOBALS['--duration-modal-error-shown'] }}
-            style={{ marginTop: errorDisplayed ? '0' : '-5px' }}
-            data-testid="error-message"
-          >
-            {errorMsg}
-          </StyledErrorMessage>
-          <SpacerMD />
-        </>
-      ) : null}
-
       <GroupAvatar
         conversationId={conversationId}
         fireInputEvent={fireInputEvent}
         isPublic={isCommunity}
-        newAvatarObjecturl={newAvatarObjecturl}
+        newAvatarObjectUrl={newAvatarObjectUrl}
         oldAvatarPath={oldAvatarPath}
       />
       <SpacerMD />
 
-      {isAdmin ? (
-        <input
-          type="text"
-          value={newGroupName}
-          placeholder={window.i18n('groupNameEnter')}
-          onKeyDown={e => {
-            if (e.key === 'Enter') {
-              onClickOK();
-              e.preventDefault();
-            }
-          }}
-          onChange={e => setNewGroupName(e.target.value)}
-          tabIndex={0}
-          required={true}
-          aria-required={true}
-          autoFocus={true}
-          maxLength={LIBSESSION_CONSTANTS.BASE_GROUP_MAX_NAME_LENGTH}
-          data-testid="group-name-input"
-        />
-      ) : null}
+      <SimpleSessionInput
+        ariaLabel="group name input"
+        value={newGroupName}
+        textSize="md"
+        padding="var(--margins-md) var(--margins-sm)"
+        inputDataTestId="update-group-info-name-input"
+        onValueChanged={setNewGroupName}
+        placeholder={localize('groupNameEnter').toString()}
+        onEnterPressed={onClickOK}
+        errorDataTestId="error-message"
+        providedError={errorStringName}
+        autoFocus={true}
+        required={true}
+        tabIndex={0}
+        buttonEnd={
+          <ClearInputButton
+            dataTestId={'clear-group-info-name-button'}
+            onClearInputClicked={() => {
+              setNewGroupName('');
+            }}
+            show={!!newGroupName}
+          />
+        }
+      />
+      <SpacerSM />
+
+      <SimpleSessionTextarea
+        ariaLabel="group description input"
+        value={newGroupDescription}
+        textSize="md"
+        padding="var(--margins-md) var(--margins-sm)"
+        inputDataTestId="update-group-info-description-input"
+        onValueChanged={setNewGroupDescription}
+        placeholder={localize('groupDescriptionEnter').toString()}
+        errorDataTestId="error-message"
+        providedError={errorStringDescription}
+        autoFocus={false}
+        tabIndex={1}
+        required={false}
+        buttonEnd={
+          <ClearInputButton
+            dataTestId={'clear-group-info-description-button'}
+            onClearInputClicked={() => {
+              setNewGroupDescription('');
+            }}
+            show={!!newGroupDescription}
+          />
+        }
+      />
 
       <SessionSpinner loading={isNameChangePending} />
 
       <div className="session-modal__button-group">
         <SessionButton
-          text={okText}
+          text={localize('save').toString()}
           onClick={onClickOK}
           buttonType={SessionButtonType.Simple}
-          disabled={isNameChangePending}
+          disabled={isNameChangePending || !newGroupName}
         />
         <SessionButton
-          text={cancelText}
+          text={localize('cancel').toString()}
           buttonColor={SessionButtonColor.Danger}
           buttonType={SessionButtonType.Simple}
           onClick={closeDialog}
         />
       </div>
-    </SessionWrapperModal>
+    </SessionWrapperModal2>
   );
 }

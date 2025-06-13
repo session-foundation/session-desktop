@@ -13,7 +13,10 @@ import { useMessageSelected } from '../../../../state/selectors';
 import { getGenericReadableMessageSelectorProps } from '../../../../state/selectors/conversations';
 import { MessageContentWithStatuses } from '../message-content/MessageContentWithStatus';
 import { StyledMessageReactionsContainer } from '../message-content/MessageReactions';
-import { useIsMessageSelectionMode } from '../../../../state/selectors/selectedConversation';
+import {
+  useIsMessageSelectionMode,
+  useSelectedIsBlocked,
+} from '../../../../state/selectors/selectedConversation';
 
 export type GenericReadableMessageSelectorProps = Pick<
   MessageRenderingProps,
@@ -72,6 +75,7 @@ export const GenericReadableMessage = (props: Props) => {
   );
 
   const isMessageSelected = useMessageSelected(props.messageId);
+  const selectedIsBlocked = useSelectedIsBlocked();
 
   const multiSelectMode = useIsMessageSelectionMode();
 
@@ -88,7 +92,8 @@ export const GenericReadableMessage = (props: Props) => {
       // and the context menu save attachment item to save the right attachment I did not find a better way for now.
 
       // Note: If you change this, also make sure to update the `saveAttachment()` in MessageContextMenu.tsx
-      const enableContextMenu = !multiSelectMode && !msgProps?.isKickedFromGroup;
+      const enableContextMenu =
+        !selectedIsBlocked && !multiSelectMode && !msgProps?.isKickedFromGroup;
       const attachmentIndexStr = (e?.target as any)?.parentElement?.getAttribute?.(
         'data-attachmentindex'
       );
@@ -108,7 +113,7 @@ export const GenericReadableMessage = (props: Props) => {
       }
       setIsRightClicked(enableContextMenu);
     },
-    [ctxMenuID, multiSelectMode, msgProps?.isKickedFromGroup]
+    [selectedIsBlocked, ctxMenuID, multiSelectMode, msgProps?.isKickedFromGroup]
   );
 
   useEffect(() => {

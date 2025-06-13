@@ -1,8 +1,8 @@
 import { ipcRenderer } from 'electron';
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { setIsAppFocused } from '../state/ducks/section';
 import { getIsAppFocused } from '../state/selectors/section';
+import { sectionActions } from '../state/ducks/section';
 
 /**
  * This custom hook should be called on the top of the app only once.
@@ -14,7 +14,7 @@ export function useAppIsFocused() {
 
   const ipcCallback = (_event: unknown, isFocused: unknown) => {
     if (isFocusedFromStore !== isFocused) {
-      dispatch(setIsAppFocused(Boolean(isFocused)));
+      dispatch(sectionActions.setIsAppFocused(Boolean(isFocused)));
     }
   };
 

@@ -125,8 +125,8 @@ type ThemeColors = {
   DANGER: string;
   WARNING: string;
   DISABLED: string;
-  COLOR0: string;
   COLOR1: string;
+  COLOR0: string;
   COLOR2: string;
   COLOR3: string;
   COLOR4: string;

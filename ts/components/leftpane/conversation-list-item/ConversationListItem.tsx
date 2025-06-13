@@ -9,7 +9,6 @@ import { useDispatch } from 'react-redux';
 import { CSSProperties } from 'styled-components';
 import { Avatar, AvatarSize } from '../../avatar/Avatar';
 
-import { openConversationWithMessages } from '../../../state/ducks/conversations';
 import { updateUserDetailsModal } from '../../../state/ducks/modalDialog';
 
 import {
@@ -24,12 +23,14 @@ import {
   useIsPrivate,
   useMentionedUs,
 } from '../../../hooks/useParamSelector';
-import { useIsSearching } from '../../../state/selectors/search';
+import { useIsSearchingForType } from '../../../state/selectors/search';
 import { useSelectedConversationKey } from '../../../state/selectors/selectedConversation';
 import { SpacerXS } from '../../basic/Text';
 import { MemoConversationListItemContextMenu } from '../../menu/ConversationListItemContextMenu';
 import { ConversationListItemHeaderItem } from './HeaderItem';
 import { MessageItem } from './MessageItem';
+import { openConversationWithMessages } from '../../../state/ducks/conversations';
+import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useShowConversationSettingsFor';
 
 const Portal = ({ children }: { children: ReactNode }) => {
   return createPortal(children, document.querySelector('.inbox.index') as Element);
@@ -72,8 +73,10 @@ export const ConversationListItem = (props: Props) => {
 
   let hasUnreadMentionedUs = useMentionedUs(conversationId);
   let isBlocked = useIsBlocked(conversationId);
-  const isSearch = useIsSearching();
+  const isSearch = useIsSearchingForType('global');
   const selectedConvo = useSelectedConversationKey();
+
+  const showConvoSettingsCb = useShowConversationSettingsFor(conversationId);
 
   const isSelectedConvo = conversationId === selectedConvo && !isNil(selectedConvo);
 
@@ -89,10 +92,16 @@ export const ConversationListItem = (props: Props) => {
     (e: MouseEvent<HTMLDivElement>) => {
       // mousedown is invoked sooner than onClick, but for both right and left click
       if (e.button === 0) {
-        void openConversationWithMessages({ conversationKey: conversationId, messageId: null });
+        if (isSelectedConvo) {
+          showConvoSettingsCb?.({
+            settingsModalPage: 'default',
+          });
+        } else {
+          void openConversationWithMessages({ conversationKey: conversationId, messageId: null });
+        }
       }
     },
-    [conversationId]
+    [conversationId, isSelectedConvo, showConvoSettingsCb]
   );
 
   return (

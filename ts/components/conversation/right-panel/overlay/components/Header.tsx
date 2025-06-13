@@ -2,9 +2,9 @@ import { ReactNode } from 'react';
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { closeRightPanel } from '../../../../../state/ducks/conversations';
-import { resetRightOverlayMode } from '../../../../../state/ducks/section';
 import { Flex } from '../../../../basic/Flex';
 import { SessionIconButton } from '../../../../icon';
+import { sectionActions } from '../../../../../state/ducks/section';
 
 export const HeaderTitle = styled.h2`
   font-family: var(--font-default);
@@ -17,50 +17,37 @@ export const HeaderTitle = styled.h2`
 
 export const HeaderSubtitle = styled.h3`
   font-family: var(--font-default);
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
   font-weight: 400;
   text-align: center;
   padding-top: 0px;
   margin-top: 0;
 `;
 
-type HeaderProps = {
-  hideBackButton?: boolean;
-  backButtonDirection?: 'left' | 'right';
-  backButtonOnClick?: () => void;
-  hideCloseButton?: boolean;
-  closeButtonOnClick?: () => void;
+type HeaderProps = (
+  | {
+      hideCloseButton: false;
+      closeButtonOnClick: () => void;
+    }
+  | {
+      hideCloseButton: true;
+      closeButtonOnClick?: undefined;
+    }
+) & {
   children?: ReactNode;
+  paddingTop: string;
 };
 
 export const Header = (props: HeaderProps) => {
-  const {
-    children,
-    hideBackButton = false,
-    backButtonDirection = 'left',
-    backButtonOnClick,
-    hideCloseButton = false,
-    closeButtonOnClick,
-  } = props;
+  const { children, hideCloseButton, closeButtonOnClick, paddingTop } = props;
   const dispatch = useDispatch();
 
   return (
-    <Flex $container={true} width={'100%'} padding={'32px var(--margins-lg) var(--margins-md)'}>
-      {!hideBackButton && (
-        <SessionIconButton
-          iconSize={'medium'}
-          iconType={'chevron'}
-          iconRotation={backButtonDirection === 'left' ? 90 : 270}
-          onClick={() => {
-            if (backButtonOnClick) {
-              backButtonOnClick();
-            } else {
-              dispatch(resetRightOverlayMode());
-            }
-          }}
-          dataTestId="back-button-conversation-options"
-        />
-      )}
+    <Flex
+      $container={true}
+      width={'100%'}
+      padding={`${paddingTop} var(--margins-lg) var(--margins-md)`}
+    >
       <Flex
         $container={true}
         $flexDirection={'column'}
@@ -80,7 +67,7 @@ export const Header = (props: HeaderProps) => {
               closeButtonOnClick();
             } else {
               dispatch(closeRightPanel());
-              dispatch(resetRightOverlayMode());
+              dispatch(sectionActions.resetRightOverlayMode());
             }
           }}
         />

@@ -3,36 +3,36 @@ import { useCallback, useEffect } from 'react';
 import { isEmpty, isString } from 'lodash';
 import { useDispatch } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
-import { resetLeftOverlayMode, setLeftOverlayMode } from '../../../../state/ducks/section';
 import { SpacerSM } from '../../../basic/Text';
 import { StyledLeftPaneOverlay } from '../OverlayMessage';
 import { ActionRow, StyledActionRowContainer } from './ActionRow';
 import { ContactsListWithBreaks } from './ContactsListWithBreaks';
 import { groupInfoActions } from '../../../../state/ducks/metaGroups';
+import { sectionActions } from '../../../../state/ducks/section';
 
 export const OverlayChooseAction = () => {
   const dispatch = useDispatch();
 
   function closeOverlay() {
-    dispatch(resetLeftOverlayMode());
+    dispatch(sectionActions.resetLeftOverlayMode());
   }
 
   const openNewMessage = useCallback(() => {
-    dispatch(setLeftOverlayMode('message'));
+    dispatch(sectionActions.setLeftOverlayMode('message'));
   }, [dispatch]);
 
   const openCreateGroup = useCallback(() => {
-    dispatch(setLeftOverlayMode('closed-group'));
+    dispatch(sectionActions.setLeftOverlayMode('closed-group'));
     dispatch(groupInfoActions.updateGroupCreationName({ name: '' }));
     dispatch(groupInfoActions.setSelectedGroupMembers({ membersToSet: [] }));
   }, [dispatch]);
 
   const openJoinCommunity = useCallback(() => {
-    dispatch(setLeftOverlayMode('open-group'));
+    dispatch(sectionActions.setLeftOverlayMode('open-group'));
   }, [dispatch]);
 
   const inviteAFriend = useCallback(() => {
-    dispatch(setLeftOverlayMode('invite-a-friend'));
+    dispatch(sectionActions.setLeftOverlayMode('invite-a-friend'));
   }, [dispatch]);
 
   useKey('Escape', closeOverlay);
