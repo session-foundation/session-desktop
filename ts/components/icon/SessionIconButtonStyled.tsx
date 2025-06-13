@@ -17,6 +17,11 @@ export const StyledSessionIconButton = styled.button<{ color?: string; $isSelect
         };`}
   }
 
+  color: ${props =>
+    props.color || props.$isSelected
+      ? 'var(--button-icon-stroke-selected-color)'
+      : 'var(--button-icon-stroke-color)'};
+
   ${props => props.disabled && 'cursor: not-allowed;'}
 
   &:hover svg path {

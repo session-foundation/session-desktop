@@ -778,6 +778,7 @@
   "warning": "คำเตือน",
   "window": "หน้าต่าง",
   "yes": "ใช่",
-  "you": "คุณ"
+  "you": "คุณ",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

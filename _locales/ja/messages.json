@@ -787,6 +787,7 @@
   "warning": "警告",
   "window": "ウィンドウ",
   "yes": "はい",
-  "you": "あなた"
+  "you": "あなた",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

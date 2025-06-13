@@ -149,7 +149,7 @@ const CurrentPriceBlock = () => {
         content={{
           token: 'sessionNetworkDataPrice',
           args: {
-            datetime: !priceTimestamp
+            date_time: !priceTimestamp
               ? '-'
               : formatDateWithLocale({
                   date: new Date(priceTimestamp * 1000),

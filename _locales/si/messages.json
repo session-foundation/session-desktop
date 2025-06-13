@@ -777,6 +777,7 @@
   "warning": "අවවාදයයි",
   "window": "කවුළුව",
   "yes": "ඔව්",
-  "you": "ඔබ"
+  "you": "ඔබ",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

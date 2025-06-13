@@ -816,6 +816,7 @@
   "warning": "Avís",
   "window": "Finestra",
   "yes": "Sí",
-  "you": "Vós"
+  "you": "Vós",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

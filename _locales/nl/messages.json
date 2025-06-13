@@ -852,6 +852,7 @@
   "warning": "Waarschuwing",
   "window": "Venster",
   "yes": "Ja",
-  "you": "Uw"
+  "you": "Uw",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

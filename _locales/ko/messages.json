@@ -800,6 +800,7 @@
   "warning": "경고",
   "window": "창",
   "yes": "예",
-  "you": "사용자"
+  "you": "사용자",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 
