@@ -16,7 +16,7 @@ import {
   useSelectedNotificationSetting,
   useSelectedSubscriberCount,
 } from '../../../state/selectors/selectedConversation';
-import { ConversationHeaderSubtitle } from './ConversationHeaderSubtitle';
+import { ConversationHeaderSubtitle, type SubTitleArray } from './ConversationHeaderSubtitle';
 import { useLocalisedNotificationOf } from '../../menuAndSettingsHooks/useLocalisedNotificationFor';
 import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useShowConversationSettingsFor';
 import { localize } from '../../../localization/localeTools';
@@ -33,39 +33,22 @@ export type SubtitleStringsType = keyof Pick<
 >;
 
 type ConversationHeaderTitleProps = {
-  showSubtitle?: boolean;
+  showSubtitle: boolean;
 };
 
-export const ConversationHeaderTitle = (props: ConversationHeaderTitleProps) => {
-  const { showSubtitle = true } = props;
-
-  const dispatch = useDispatch();
-  const convoId = useSelectedConversationKey();
-  const convoName = useSelectedNicknameOrProfileNameOrShortenedPubkey();
-
-  const isRightPanelOn = useIsRightPanelShowing();
+function useSubtitleArray(convoId?: string) {
   const subscriberCount = useSelectedSubscriberCount();
 
   const isPublic = useSelectedIsPublic();
   const isKickedFromGroup = useSelectedIsKickedFromGroup();
-  const isMe = useSelectedIsNoteToSelf();
   const isGroup = useSelectedIsGroupOrCommunity();
   const selectedMembersCount = useSelectedMembersCount();
 
-  const isLegacyGroup = useSelectedIsLegacyGroup();
   const notification = useSelectedNotificationSetting();
-
-  const expirationMode = useSelectedConversationDisappearingMode();
   const disappearingMessageSubtitle = useDisappearingMessageSettingText({
     convoId,
     abbreviate: true,
   });
-
-  const [visibleSubtitle, setVisibleSubtitle] =
-    useState<SubtitleStringsType>('disappearingMessages');
-
-  const [subtitleStrings, setSubtitleStrings] = useState<SubtitleStrings>({});
-  const [subtitleArray, setSubtitleArray] = useState<Array<SubtitleStringsType>>([]);
 
   const notificationSubtitle = useLocalisedNotificationOf(notification, 'title');
 
@@ -88,7 +71,49 @@ export const ConversationHeaderTitle = (props: ConversationHeaderTitleProps) => 
     return null;
   }, [isGroup, isKickedFromGroup, isPublic, selectedMembersCount, subscriberCount]);
 
+  const subtitleArray = useMemo(() => {
+    const innerSubtitleArray: SubTitleArray = [];
+    if (disappearingMessageSubtitle.id !== 'off') {
+      innerSubtitleArray.push({
+        type: 'disappearingMessages',
+        label: disappearingMessageSubtitle.label,
+      });
+    }
+
+    if (notificationSubtitle) {
+      innerSubtitleArray.push({ type: 'notifications', label: notificationSubtitle });
+    }
+
+    if (memberCountSubtitle) {
+      innerSubtitleArray.push({ type: 'members', label: memberCountSubtitle });
+    }
+    return innerSubtitleArray;
+  }, [disappearingMessageSubtitle, notificationSubtitle, memberCountSubtitle]);
+  return subtitleArray;
+}
+
+export const ConversationHeaderTitle = ({ showSubtitle }: ConversationHeaderTitleProps) => {
+  const dispatch = useDispatch();
+  const convoId = useSelectedConversationKey();
+  const convoName = useSelectedNicknameOrProfileNameOrShortenedPubkey();
+
+  const isRightPanelOn = useIsRightPanelShowing();
+  const isMe = useSelectedIsNoteToSelf();
+
+  const isLegacyGroup = useSelectedIsLegacyGroup();
+
+  const expirationMode = useSelectedConversationDisappearingMode();
+
+  const [subtitleIndex, setSubtitleIndex] = useState(0);
+
+  // reset the subtitle selected index when the convoId changes (so the page is always 0 by default)
+  useEffect(() => {
+    setSubtitleIndex(0);
+  }, [convoId]);
+
   const showConvoSettingsCb = useShowConversationSettingsFor(convoId);
+
+  const subtitles = useSubtitleArray(convoId);
 
   const onHeaderClick = () => {
     if (isLegacyGroup || !convoId) {
@@ -103,12 +128,12 @@ export const ConversationHeaderTitle = (props: ConversationHeaderTitleProps) => 
     }
 
     // NOTE If disappearing messages is defined we must show it first
-    if (visibleSubtitle === 'disappearingMessages') {
+    if (subtitles?.[subtitleIndex]?.type === 'disappearingMessages') {
       showConvoSettingsCb({
         settingsModalPage: 'disappearing_message',
         standalonePage: true,
       });
-    } else if (visibleSubtitle === 'notifications') {
+    } else if (subtitles?.[subtitleIndex]?.type === 'notifications') {
       showConvoSettingsCb({
         settingsModalPage: 'notifications',
         standalonePage: true,
@@ -118,35 +143,17 @@ export const ConversationHeaderTitle = (props: ConversationHeaderTitleProps) => 
     }
   };
 
-  useEffect(() => {
-    const newSubtitlesArray: any = [];
-    const newSubtitlesStrings: any = {};
-
-    if (disappearingMessageSubtitle.id !== 'off') {
-      newSubtitlesStrings.disappearingMessages = disappearingMessageSubtitle.label;
-      newSubtitlesArray.push('disappearingMessages');
-    }
-
-    if (notificationSubtitle) {
-      newSubtitlesStrings.notifications = notificationSubtitle;
-      newSubtitlesArray.push('notifications');
-    }
-
-    if (memberCountSubtitle) {
-      newSubtitlesStrings.members = memberCountSubtitle;
-      newSubtitlesArray.push('members');
-    }
-
-    if (newSubtitlesArray.indexOf(visibleSubtitle) < 0) {
-      setVisibleSubtitle('notifications');
-    }
-
-    setSubtitleStrings(newSubtitlesStrings);
-    setSubtitleArray(newSubtitlesArray);
-  }, [disappearingMessageSubtitle, memberCountSubtitle, notificationSubtitle, visibleSubtitle]);
-
   const className = isMe ? '' : 'module-contact-name__profile-name';
   const displayName = isMe ? localize('noteToSelf').toString() : convoName;
+
+  const clampedSubtitleIndex = useMemo(() => {
+    return Math.max(0, Math.min(subtitles.length - 1, subtitleIndex));
+  }, [subtitles, subtitleIndex]);
+  const visibleSubtitle = subtitles?.[clampedSubtitleIndex];
+
+  const handleTitleCycle = (direction: 1 | -1) => {
+    setSubtitleIndex((clampedSubtitleIndex + direction) % subtitles.length);
+  };
 
   return (
     <div className="module-conversation-header__title-container">
@@ -160,18 +167,17 @@ export const ConversationHeaderTitle = (props: ConversationHeaderTitleProps) => 
           >
             {displayName}
           </span>
-          {showSubtitle && subtitleArray.indexOf(visibleSubtitle) > -1 && (
+          {showSubtitle && subtitles?.[clampedSubtitleIndex] ? (
             <ConversationHeaderSubtitle
-              currentSubtitle={visibleSubtitle}
-              setCurrentSubtitle={setVisibleSubtitle}
-              subtitlesArray={subtitleArray}
-              subtitleStrings={subtitleStrings}
+              subtitleIndex={clampedSubtitleIndex}
+              onCycle={handleTitleCycle}
+              subtitlesArray={subtitles}
               onClickFunction={onHeaderClick}
               showDisappearingMessageIcon={
-                visibleSubtitle === 'disappearingMessages' && expirationMode !== 'off'
+                visibleSubtitle.type === 'disappearingMessages' && expirationMode !== 'off'
               }
             />
-          )}
+          ) : null}
         </div>
       </div>
     </div>
