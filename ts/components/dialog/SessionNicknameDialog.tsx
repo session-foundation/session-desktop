@@ -106,14 +106,14 @@ export const SessionNicknameDialog = (props: Props) => {
       />
       <div className="session-modal__button-group">
         <SessionButton
-          text={window.i18n('save')}
+          text={localize('save').toString()}
           disabled={!nickname}
           buttonType={SessionButtonType.Simple}
           onClick={() => saveNickname(nickname)}
           dataTestId="set-nickname-confirm-button"
         />
         <SessionButton
-          text={window.i18n('remove')}
+          text={localize('remove').toString()}
           buttonColor={SessionButtonColor.Danger}
           buttonType={SessionButtonType.Simple}
           onClick={onClickRemove}

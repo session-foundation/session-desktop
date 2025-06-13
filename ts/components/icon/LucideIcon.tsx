@@ -1,18 +1,21 @@
 import type { CSSProperties, SessionDataTestId } from 'react';
 import styled from 'styled-components';
+import type { SessionIconSize } from './Icons';
+import { IconSizeToPxStr } from './SessionIcon';
 
-const LucideIconWrapper = styled.div<{ iconColor?: string; iconSize: string }>`
+const LucideIconWrapper = styled.div<{ $iconColor?: string; $iconSize: SessionIconSize }>`
   font-family: var(--font-icon);
-  font-size: ${({ iconSize }) => iconSize};
-  color: ${({ iconColor }) => iconColor};
+  font-size: ${props => IconSizeToPxStr[props.$iconSize]};
+  color: ${props => props.$iconColor};
 `;
 
 export type LucideIconProps = {
   unicode: string;
   iconColor?: string;
-  iconSize: string;
+  iconSize: SessionIconSize;
   dataTestId?: SessionDataTestId;
   style?: CSSProperties;
+  ariaLabel?: string;
 };
 
 /**
@@ -24,13 +27,15 @@ export const LucideIcon = ({
   iconSize,
   dataTestId,
   style,
+  ariaLabel,
 }: LucideIconProps) => {
   return (
     <LucideIconWrapper
-      iconColor={iconColor}
-      iconSize={iconSize}
+      $iconColor={iconColor}
+      $iconSize={iconSize}
       data-testid={dataTestId}
       style={style}
+      aria-label={ariaLabel}
     >
       {unicode}
     </LucideIconWrapper>

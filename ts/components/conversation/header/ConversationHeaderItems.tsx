@@ -14,6 +14,8 @@ import {
 import { Avatar, AvatarSize } from '../../avatar/Avatar';
 import { SessionIconButton } from '../../icon';
 import { useIsLegacyGroup } from '../../../hooks/useParamSelector';
+import { SessionLucideIconButton } from '../../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 
 export const AvatarHeader = (props: { pubkey: string; onAvatarClick?: () => void }) => {
   const { pubkey, onAvatarClick } = props;
@@ -77,12 +79,9 @@ export const CallButton = () => {
   }
 
   return (
-    <SessionIconButton
-      iconType="phone"
+    <SessionLucideIconButton
+      unicode={LUCIDE_ICONS_UNICODE.PHONE}
       iconSize="large"
-      iconPadding="2px"
-      // negative margin to keep conversation header title centered
-      margin="0 10px 0 -32px"
       onClick={() => {
         void callRecipient(selectedConvoKey, canCall);
       }}

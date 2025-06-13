@@ -125,7 +125,7 @@ const Section = (props: { type: SectionType }) => {
   const unreadToShow = type === SectionType.Message ? globalUnreadMessageCount : undefined;
 
   const buttonProps = {
-    iconSize: '22px',
+    iconSize: 'medium',
     padding: 'var(--margins-lg)',
     onClick: handleClick,
     isSelected,

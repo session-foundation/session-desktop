@@ -9,6 +9,8 @@ import { StyledRootDialog } from './dialog/StyledRootDialog';
 import { SessionFocusTrap } from './SessionFocusTrap';
 import { Flex } from './basic/Flex';
 import { SpacerXL } from './basic/Text';
+import { SessionLucideIconButton } from './icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from './icon/lucide';
 
 const StyledTitle = styled.div`
   white-space: nowrap;
@@ -101,9 +103,9 @@ export const SessionWrapperModal = (props: SessionWrapperModalType) => {
                   className={'session-modal__header__close'}
                 >
                   {showExitIcon ? (
-                    <SessionIconButton
-                      iconType="exit"
-                      iconSize="small"
+                    <SessionLucideIconButton
+                      unicode={LUCIDE_ICONS_UNICODE.X}
+                      iconSize="medium"
                       onClick={() => {
                         props.onClose?.();
                       }}

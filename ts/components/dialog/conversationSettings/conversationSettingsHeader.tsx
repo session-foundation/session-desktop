@@ -32,7 +32,15 @@ function AccountId({ conversationId }: WithConvoId) {
   if (!isPrivate || PubKey.isBlinded(conversationId)) {
     return null;
   }
-  return <StyledAccountId data-testid="account-id">{conversationId}</StyledAccountId>;
+  const len = conversationId.length;
+
+  return (
+    <StyledAccountId data-testid="account-id">
+      {conversationId.slice(0, len / 2)}
+      <br />
+      {conversationId.slice(len / 2)}
+    </StyledAccountId>
+  );
 }
 
 function EditGenericButton({
@@ -49,7 +57,7 @@ function EditGenericButton({
   return (
     <SessionLucideIconButton
       unicode={LUCIDE_ICONS_UNICODE.PENCIL}
-      iconSize="large"
+      iconSize="medium"
       onClick={cb}
       dataTestId={dataTestId}
     />

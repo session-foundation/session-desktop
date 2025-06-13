@@ -5,10 +5,11 @@ import useKey from 'react-use/lib/useKey';
 import { Flex } from './basic/Flex';
 import { SpacerXL } from './basic/Text';
 import { SessionIconButton } from './icon';
-import { SessionIconButtonProps } from './icon/SessionIconButton';
+import { SessionIconButtonProps, SessionLucideIconButton } from './icon/SessionIconButton';
 import { SessionFocusTrap } from './SessionFocusTrap';
 import { useHTMLDirection } from '../util/i18n/rtlSupport';
 import { StyledRootDialog } from './dialog/StyledRootDialog';
+import { LUCIDE_ICONS_UNICODE } from './icon/lucide';
 
 const DEFAULT_MODAL_WIDTH = '410px';
 
@@ -205,9 +206,9 @@ const ModalHeader = (
             })
           : null}
         {showExitIcon ? (
-          <SessionIconButton
-            iconType="exit"
-            iconSize={bigHeader ? 'medium' : 'small'}
+          <SessionLucideIconButton
+            unicode={LUCIDE_ICONS_UNICODE.X}
+            iconSize={'medium'}
             onClick={() => {
               if (onClose) {
                 onClose();

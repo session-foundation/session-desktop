@@ -9,6 +9,8 @@ import { ActionRow, StyledActionRowContainer } from './ActionRow';
 import { ContactsListWithBreaks } from './ContactsListWithBreaks';
 import { groupInfoActions } from '../../../../state/ducks/metaGroups';
 import { sectionActions } from '../../../../state/ducks/section';
+import { localize } from '../../../../localization/localeTools';
+import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 
 export const OverlayChooseAction = () => {
   const dispatch = useDispatch();
@@ -72,34 +74,30 @@ export const OverlayChooseAction = () => {
         $alignItems={'flex-start'}
       >
         <ActionRow
-          title={window.i18n('messageNew', { count: 1 })}
+          title={localize('messageNew').withArgs({ count: 1 }).toString()}
           ariaLabel={'New message button'}
-          iconType={'chatBubble'}
-          iconSize={20}
+          lucideUnicode={LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE}
           onClick={openNewMessage}
           dataTestId="chooser-new-conversation-button"
         />
         <ActionRow
-          title={window.i18n('groupCreate')}
+          title={localize('groupCreate').toString()}
           ariaLabel={'Create a group button'}
-          iconType={'group'}
-          iconSize={30}
+          lucideUnicode={LUCIDE_ICONS_UNICODE.USERS_ROUND}
           onClick={openCreateGroup}
           dataTestId="chooser-new-group"
         />
         <ActionRow
-          title={window.i18n('communityJoin')}
+          title={localize('communityJoin').toString()}
           ariaLabel={'Join a community button'}
-          iconType={'communities'}
-          iconSize={20}
+          lucideUnicode={LUCIDE_ICONS_UNICODE.GLOBE}
           onClick={openJoinCommunity}
           dataTestId="chooser-new-community"
         />
         <ActionRow
-          title={window.i18n('sessionInviteAFriend')}
+          title={localize('sessionInviteAFriend').toString()}
           ariaLabel={'Invite a friend button'}
-          iconType={'addUser'}
-          iconSize={20}
+          lucideUnicode={LUCIDE_ICONS_UNICODE.USER_ROUND_PLUS}
           onClick={inviteAFriend}
           dataTestId="chooser-invite-friend"
         />

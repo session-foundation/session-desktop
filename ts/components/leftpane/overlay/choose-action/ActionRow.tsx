@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import { SessionDataTestId } from 'react';
 import { Flex } from '../../../basic/Flex';
-import { SessionIcon, SessionIconSize, SessionIconType } from '../../../icon';
+import { LucideIcon } from '../../../icon/LucideIcon';
 
 const StyledActionRow = styled.button`
   border: none;
@@ -50,21 +50,20 @@ export const StyledActionRowContainer = styled(Flex)`
 type ActionRowProps = {
   title: string;
   ariaLabel: string;
-  iconType: SessionIconType;
-  iconSize?: number | SessionIconSize;
+  lucideUnicode: string;
   onClick: () => void;
   dataTestId: SessionDataTestId;
 };
 
 export function ActionRow(props: ActionRowProps) {
-  const { title, ariaLabel, iconType, iconSize, onClick, dataTestId } = props;
+  const { title, ariaLabel, lucideUnicode, onClick, dataTestId } = props;
 
   return (
     <StyledActionRow onClick={onClick} data-testid={dataTestId} aria-label={ariaLabel}>
       <StyledIcon>
-        <SessionIcon
-          iconType={iconType}
-          iconSize={iconSize || 'large'}
+        <LucideIcon
+          unicode={lucideUnicode}
+          iconSize={'medium'}
           iconColor="var(--text-primary-color)"
         />
       </StyledIcon>
