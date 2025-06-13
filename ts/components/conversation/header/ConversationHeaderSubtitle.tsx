@@ -2,6 +2,8 @@ import styled, { CSSProperties } from 'styled-components';
 import { Flex } from '../../basic/Flex';
 import { SessionIconButton } from '../../icon';
 import { SubtitleStringsType } from './ConversationHeaderTitle';
+import { SessionLucideIconButton } from '../../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 
 function loadDataTestId(currentSubtitle: SubtitleStringsType) {
   if (currentSubtitle === 'disappearingMessages') {
@@ -66,13 +68,42 @@ export const SubtitleDotMenu = ({
 
 export type SubTitleArray = Array<{ type: SubtitleStringsType; label: string | null }>;
 
+type CycleDirection = 1 | -1;
+
 type ConversationHeaderSubtitleProps = {
   subtitlesArray: SubTitleArray;
   subtitleIndex: number;
-  onCycle: (direction: 1 | -1) => void;
+  onCycle: (direction: CycleDirection) => void;
   onClickFunction: () => void;
   showDisappearingMessageIcon: boolean;
 };
+
+function CycleButton({
+  onCycle,
+  direction,
+  cannotCycle,
+}: {
+  onCycle: (direction: CycleDirection) => void;
+  direction: CycleDirection;
+  cannotCycle: boolean;
+}) {
+  if (cannotCycle) {
+    return null;
+  }
+  return (
+    <SessionLucideIconButton
+      iconColor={'var(--button-icon-stroke-selected-color)'}
+      iconSize={'medium'}
+      unicode={
+        direction === 1 ? LUCIDE_ICONS_UNICODE.CHEVRON_RIGHT : LUCIDE_ICONS_UNICODE.CHEVRON_LEFT
+      }
+      margin={direction === 1 ? '0 0 0 3px' : '0 3px 0 0'}
+      padding="0 var(--margins-xs)"
+      onClick={() => onCycle(direction)}
+      tabIndex={0}
+    />
+  );
+}
 
 export const ConversationHeaderSubtitle = (props: ConversationHeaderSubtitleProps) => {
   const { subtitlesArray, subtitleIndex, onClickFunction, showDisappearingMessageIcon, onCycle } =
@@ -84,31 +115,22 @@ export const ConversationHeaderSubtitle = (props: ConversationHeaderSubtitleProp
     throw new Error('currentSubtitle is undefined');
   }
 
+  const cannotCycle = subtitlesArray.length < 2;
+
   return (
     <StyledSubtitleContainer>
       <Flex
         $container={true}
         $flexDirection={'row'}
-        $justifyContent={subtitlesArray.length < 2 ? 'center' : 'space-between'}
+        $justifyContent={cannotCycle ? 'center' : 'space-between'}
         $alignItems={'center'}
         width={'100%'}
       >
-        <SessionIconButton
-          iconColor={'var(--button-icon-stroke-selected-color)'}
-          iconSize={'small'}
-          iconType="chevron"
-          iconRotation={90}
-          margin={'0 3px 0 0'}
-          onClick={() => {
-            onCycle(-1);
-          }}
-          isHidden={subtitlesArray.length < 2}
-          tabIndex={0}
-        />
+        <CycleButton onCycle={onCycle} direction={-1} cannotCycle={cannotCycle} />
         {showDisappearingMessageIcon && (
           <SessionIconButton
             iconColor={'var(--button-icon-stroke-selected-color)'}
-            iconSize={'tiny'}
+            iconSize={'small'}
             iconType="timerFixed"
             margin={'0 var(--margins-xs) 0 0'}
           />
@@ -128,18 +150,7 @@ export const ConversationHeaderSubtitle = (props: ConversationHeaderSubtitleProp
         >
           {currentSubtitle.label}
         </span>
-        <SessionIconButton
-          iconColor={'var(--button-icon-stroke-selected-color)'}
-          iconSize={'small'}
-          iconType="chevron"
-          iconRotation={270}
-          margin={'0 0 0 3px'}
-          onClick={() => {
-            onCycle(1);
-          }}
-          isHidden={subtitlesArray.length < 2}
-          tabIndex={0}
-        />
+        <CycleButton onCycle={onCycle} direction={1} cannotCycle={cannotCycle} />
       </Flex>
       <SubtitleDotMenu
         id={'conversation-header-subtitle-dots'}

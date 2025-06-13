@@ -76,28 +76,28 @@ export const OverlayChooseAction = () => {
         <ActionRow
           title={localize('messageNew').withArgs({ count: 1 }).toString()}
           ariaLabel={'New message button'}
-          lucideUnicode={LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE}
+          unicode={LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE}
           onClick={openNewMessage}
           dataTestId="chooser-new-conversation-button"
         />
         <ActionRow
           title={localize('groupCreate').toString()}
           ariaLabel={'Create a group button'}
-          lucideUnicode={LUCIDE_ICONS_UNICODE.USERS_ROUND}
+          unicode={LUCIDE_ICONS_UNICODE.USERS_ROUND}
           onClick={openCreateGroup}
           dataTestId="chooser-new-group"
         />
         <ActionRow
           title={localize('communityJoin').toString()}
           ariaLabel={'Join a community button'}
-          lucideUnicode={LUCIDE_ICONS_UNICODE.GLOBE}
+          unicode={LUCIDE_ICONS_UNICODE.GLOBE}
           onClick={openJoinCommunity}
           dataTestId="chooser-new-community"
         />
         <ActionRow
           title={localize('sessionInviteAFriend').toString()}
           ariaLabel={'Invite a friend button'}
-          lucideUnicode={LUCIDE_ICONS_UNICODE.USER_ROUND_PLUS}
+          unicode={LUCIDE_ICONS_UNICODE.USER_ROUND_PLUS}
           onClick={inviteAFriend}
           dataTestId="chooser-invite-friend"
         />

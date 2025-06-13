@@ -17,16 +17,16 @@ import { getCurrentRecoveryPhrase } from '../../../util/storage';
 import { QRCodeLogoProps, SessionQRCode } from '../../SessionQRCode';
 import { AnimatedFlex } from '../../basic/Flex';
 import { Localizer } from '../../basic/Localizer';
-import { SessionButtonColor } from '../../basic/SessionButton';
+import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
 import { SpacerMD, SpacerSM } from '../../basic/Text';
 import { CopyToClipboardIcon } from '../../buttons/CopyToClipboardButton';
-import { SessionIconButton } from '../../icon';
 import {
   SessionSettingButtonItem,
   SessionSettingsItemWrapper,
   StyledSettingItem,
 } from '../SessionSettingListItem';
 import { sectionActions } from '../../../state/ducks/section';
+import { localize } from '../../../localization/localeTools';
 
 const StyledSettingsItemContainer = styled.div`
   p {
@@ -102,7 +102,7 @@ export const SettingsCategoryRecoveryPassword = () => {
   return (
     <StyledSettingsItemContainer>
       <SessionSettingsItemWrapper
-        title={window.i18n('sessionRecoveryPassword')}
+        title={localize('sessionRecoveryPassword').toString()}
         icon={{
           iconType: 'recoveryPasswordFill',
           iconSize: 18,
@@ -156,15 +156,11 @@ export const SettingsCategoryRecoveryPassword = () => {
         )}
 
         <SpacerMD />
-        <SessionIconButton
+        <SessionButton
           aria-label={isQRVisible ? 'View as password button' : 'View as QR code button'}
-          iconType={isQRVisible ? 'password' : 'qr'}
-          iconSize={isQRVisible ? 48 : 'huge'}
-          iconColor={'var(--text-primary-color)'}
           onClick={() => {
             setIsQRVisible(!isQRVisible);
           }}
-          padding="0"
           style={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -173,17 +169,19 @@ export const SettingsCategoryRecoveryPassword = () => {
             marginLeft: isQRVisible ? '-8px' : undefined,
           }}
         >
-          {isQRVisible ? window.i18n('recoveryPasswordView') : window.i18n('qrView')}
-        </SessionIconButton>
+          {isQRVisible
+            ? localize('recoveryPasswordView').toString()
+            : localize('qrView').toString()}
+        </SessionButton>
       </SessionSettingsItemWrapper>
       {!hideRecoveryPassword ? (
         <SessionSettingButtonItem
-          title={window.i18n('recoveryPasswordHideRecoveryPassword')}
-          description={window.i18n('recoveryPasswordHideRecoveryPasswordDescription')}
+          title={localize('recoveryPasswordHideRecoveryPassword').toString()}
+          description={localize('recoveryPasswordHideRecoveryPasswordDescription').toString()}
           onClick={() => {
             dispatch(updateHideRecoveryPasswordModal({ state: 'firstWarning' }));
           }}
-          buttonText={window.i18n('hide')}
+          buttonText={localize('hide').toString()}
           buttonColor={SessionButtonColor.Danger}
           dataTestId={'hide-recovery-password-button'}
         />

@@ -10,7 +10,7 @@ import { useSelectedIsGroupOrCommunity } from '../../../../state/selectors/selec
 import { SpacerXS } from '../../../basic/Text';
 import { ExpireTimer } from '../../ExpireTimer';
 import { saveLogToDesktop } from '../../../../util/logger/renderer_process_logging';
-import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
+import { LUCIDE_ICONS_UNICODE, type WithLucideUnicode } from '../../../icon/lucide';
 import { LucideIcon } from '../../../icon/LucideIcon';
 import { localize } from '../../../../localization/localeTools';
 
@@ -100,10 +100,8 @@ const TextDetails = ({ text, textColor }: { text: string; textColor: string }) =
   );
 };
 
-function IconNormal({ lucideUnicode }: { lucideUnicode: string }) {
-  return (
-    <LucideIcon iconColor={'var(--text-secondary-color)'} unicode={lucideUnicode} iconSize="tiny" />
-  );
+function IconNormal({ unicode }: WithLucideUnicode) {
+  return <LucideIcon iconColor={'var(--text-secondary-color)'} unicode={unicode} iconSize="tiny" />;
 }
 
 function useIsExpiring(messageId: string) {
@@ -147,7 +145,7 @@ const MessageStatusSending = ({ dataTestId }: Omit<Props, 'isDetailView'>) => {
       clickable={false}
     >
       <TextDetails text={localize('sending').toString()} textColor="var(--text-secondary-color)" />
-      <IconNormal lucideUnicode={LUCIDE_ICONS_UNICODE.CIRCLE_ELLIPSES} />
+      <IconNormal unicode={LUCIDE_ICONS_UNICODE.CIRCLE_ELLIPSES} />
     </MessageStatusContainer>
   );
 };
@@ -158,14 +156,14 @@ const MessageStatusSending = ({ dataTestId }: Omit<Props, 'isDetailView'>) => {
  */
 function IconForExpiringMessageId({
   messageId,
-  lucideUnicode,
-}: Pick<Props, 'messageId'> & { lucideUnicode: string }) {
+  unicode,
+}: Pick<Props, 'messageId'> & WithLucideUnicode) {
   const isExpiring = useIsExpiring(messageId);
 
   return isExpiring ? (
     <MessageStatusExpireTimer messageId={messageId} />
   ) : (
-    <IconNormal lucideUnicode={lucideUnicode} />
+    <IconNormal unicode={unicode} />
   );
 }
 
@@ -190,7 +188,7 @@ const MessageStatusSent = ({ dataTestId, messageId }: Omit<Props, 'isDetailView'
         text={window.i18n('disappearingMessagesSent')}
         textColor="var(--text-secondary-color)"
       />
-      <IconForExpiringMessageId messageId={messageId} lucideUnicode={LUCIDE_ICONS_UNICODE.CHECK} />
+      <IconForExpiringMessageId messageId={messageId} unicode={LUCIDE_ICONS_UNICODE.CHECK} />
     </MessageStatusContainer>
   );
 };
@@ -219,7 +217,7 @@ const MessageStatusRead = ({
       clickable={false}
     >
       <TextDetails text={localize('read').toString()} textColor="var(--text-secondary-color)" />
-      <IconForExpiringMessageId messageId={messageId} lucideUnicode={LUCIDE_ICONS_UNICODE.EYE} />
+      <IconForExpiringMessageId messageId={messageId} unicode={LUCIDE_ICONS_UNICODE.EYE} />
     </MessageStatusContainer>
   );
 };

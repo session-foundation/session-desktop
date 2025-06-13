@@ -2,6 +2,7 @@ import type { CSSProperties, SessionDataTestId } from 'react';
 import styled from 'styled-components';
 import type { SessionIconSize } from './Icons';
 import { IconSizeToPxStr } from './SessionIcon';
+import type { WithLucideUnicode } from './lucide';
 
 const LucideIconWrapper = styled.div<{ $iconColor?: string; $iconSize: SessionIconSize }>`
   font-family: var(--font-icon);
@@ -9,8 +10,7 @@ const LucideIconWrapper = styled.div<{ $iconColor?: string; $iconSize: SessionIc
   color: ${props => props.$iconColor};
 `;
 
-export type LucideIconProps = {
-  unicode: string;
+export type LucideIconProps = WithLucideUnicode & {
   iconColor?: string;
   iconSize: SessionIconSize;
   dataTestId?: SessionDataTestId;

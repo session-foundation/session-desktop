@@ -102,7 +102,7 @@ async function removeSenderFromCommunityAdmin(sender: string, convoId: string) {
 
     const userDisplayName =
       ConvoHub.use().get(sender)?.getNicknameOrRealUsernameOrPlaceholder() ||
-      window.i18n('unknown');
+      localize('unknown').toString();
 
     const roomInfo = convo.toOpenGroupV2();
     const res = await sogsV3RemoveAdmins([pubKeyToRemove], roomInfo);
@@ -134,7 +134,7 @@ async function addSenderAsCommunityAdmin(sender: string, convoId: string) {
       window?.log?.info(`${pubKeyToAdd.key} added to moderators...`);
       const userDisplayName =
         ConvoHub.use().get(sender)?.getNicknameOrRealUsernameOrPlaceholder() ||
-        window.i18n('unknown');
+        localize('unknown').toString();
       ToastUtils.pushUserAddedToModerators([userDisplayName]);
     }
   } catch (e) {
@@ -376,10 +376,10 @@ export const MessageContextMenu = (props: Props) => {
           >
             {attachments?.length && attachments.every(m => !m.pending && m.path) ? (
               <ItemWithDataTestId onClick={saveAttachment}>
-                {window.i18n('save')}
+                {localize('save').toString()}
               </ItemWithDataTestId>
             ) : null}
-            <ItemWithDataTestId onClick={copyText}>{window.i18n('copy')}</ItemWithDataTestId>
+            <ItemWithDataTestId onClick={copyText}>{localize('copy').toString()}</ItemWithDataTestId>
             <ItemWithDataTestId
               onClick={() => {
                 void showMessageInfoOverlay({ messageId, dispatch });
@@ -423,11 +423,11 @@ export const MessageContextMenu = (props: Props) => {
             />
           )}
           {attachments?.length && attachments.every(m => !m.pending && m.path) ? (
-            <ItemWithDataTestId onClick={saveAttachment}>{window.i18n('save')}</ItemWithDataTestId>
+            <ItemWithDataTestId onClick={saveAttachment}>{localize('save').toString()}</ItemWithDataTestId>
           ) : null}
-          <ItemWithDataTestId onClick={copyText}>{window.i18n('copy')}</ItemWithDataTestId>
+          <ItemWithDataTestId onClick={copyText}>{localize('copy').toString()}</ItemWithDataTestId>
           {(isSent || !isOutgoing) && (
-            <ItemWithDataTestId onClick={onReply}>{window.i18n('reply')}</ItemWithDataTestId>
+            <ItemWithDataTestId onClick={onReply}>{localize('reply').toString()}</ItemWithDataTestId>
           )}
           <ItemWithDataTestId
             onClick={() => {

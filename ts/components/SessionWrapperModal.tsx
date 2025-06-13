@@ -142,7 +142,7 @@ export const SessionWrapperModal = (props: SessionWrapperModalType) => {
                         <SessionIconButton
                           key={iconItem.iconType}
                           iconType={iconItem.iconType}
-                          iconSize={'large'}
+                          iconSize={'medium'}
                           iconRotation={iconItem.iconRotation}
                           onClick={iconItem.onClick}
                           padding={'0'}

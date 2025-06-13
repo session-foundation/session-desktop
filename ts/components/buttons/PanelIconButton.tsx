@@ -12,6 +12,7 @@ import {
 import { LucideIcon } from '../icon/LucideIcon';
 import { SessionIcon } from '../icon/SessionIcon';
 import type { SessionIconType } from '../icon';
+import type { WithLucideUnicode } from '../icon/lucide';
 
 type PanelIconButtonProps = Omit<PanelButtonProps, 'children' | 'subText' | 'subTextDataTestId'> & {
   text: string;
@@ -55,9 +56,9 @@ export const PanelIconButton = (
   );
 };
 
-export const PanelIconLucideIcon = ({ iconUnicode }: { iconUnicode: string }) => {
+export const PanelIconLucideIcon = ({ unicode }: WithLucideUnicode) => {
   // we shouldn't need to provide a color here, as the Icon should match what the PanelButton color is.
-  return <LucideIcon unicode={iconUnicode} iconSize={'large'} />;
+  return <LucideIcon unicode={unicode} iconSize={'large'} />;
 };
 
 export const PanelIconSessionLegacyIcon = ({

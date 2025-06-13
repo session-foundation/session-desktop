@@ -4,13 +4,16 @@ export enum LUCIDE_ICONS_UNICODE {
   BUG = '',
   CHECK = '',
   CHECK_CHECK = '',
+  CHEVRON_DOWN = '',
   CHEVRON_LEFT = '',
+  CHEVRON_UP = '',
   CHEVRON_RIGHT = '',
   CIRCLE_ARROW_DOWN = '',
   CIRCLE_CHECK = '',
   CIRCLE_ELLIPSES = '',
   CIRCLE_HELP = '',
   COPY = '',
+  DOWNLOAD = '',
   EYE = '',
   EYE_OFF = '',
   EXTERNAL_LINK_ICON = '',
@@ -18,6 +21,7 @@ export enum LUCIDE_ICONS_UNICODE {
   GLOBE = '',
   HEART = '',
   INFO = '',
+  LINK = '',
   LOCK_KEYHOLE = '',
   LOG_OUT = '',
   MESSAGE_SQUARE = '',
@@ -27,10 +31,17 @@ export enum LUCIDE_ICONS_UNICODE {
   OCTAGON_X = '',
   PAINTBRUSH_VERTICAL = '',
   PENCIL = '',
+  PHONE = '',
+  PHONE_CALL = '',
+  PHONE_INCOMING = '',
+  PHONE_MISSED = '',
+  PHONE_OFF = '',
+  PHONE_OUTGOING = '',
   PIN = '',
   PIN_OFF = '',
   PLUS = '',
-  PHONE = '',
+  QR_CODE = '',
+  RECTANGLE_ELLIPSES = '',
   REFRESH_CW = '',
   REPLY = '',
   SEARCH = '',
@@ -49,6 +60,9 @@ export enum LUCIDE_ICONS_UNICODE {
   VOLUME_OFF = '',
   X = '',
 }
+
+export type WithLucideUnicode = { unicode: LUCIDE_ICONS_UNICODE };
+export type WithOptLucideUnicode = Partial<WithLucideUnicode>;
 
 /**
  * Used for rendering icons inside of the Localizer component

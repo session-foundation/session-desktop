@@ -2,6 +2,7 @@ import styled from 'styled-components';
 import { SessionDataTestId } from 'react';
 import { Flex } from '../../../basic/Flex';
 import { LucideIcon } from '../../../icon/LucideIcon';
+import type { WithLucideUnicode } from '../../../icon/lucide';
 
 const StyledActionRow = styled.button`
   border: none;
@@ -47,22 +48,21 @@ export const StyledActionRowContainer = styled(Flex)`
   }
 `;
 
-type ActionRowProps = {
+type ActionRowProps = WithLucideUnicode & {
   title: string;
   ariaLabel: string;
-  lucideUnicode: string;
   onClick: () => void;
   dataTestId: SessionDataTestId;
 };
 
 export function ActionRow(props: ActionRowProps) {
-  const { title, ariaLabel, lucideUnicode, onClick, dataTestId } = props;
+  const { title, ariaLabel, unicode, onClick, dataTestId } = props;
 
   return (
     <StyledActionRow onClick={onClick} data-testid={dataTestId} aria-label={ariaLabel}>
       <StyledIcon>
         <LucideIcon
-          unicode={lucideUnicode}
+          unicode={unicode}
           iconSize={'medium'}
           iconColor="var(--text-primary-color)"
         />

@@ -22,6 +22,8 @@ export const HeaderSubtitle = styled.h3`
   text-align: center;
   padding-top: 0px;
   margin-top: 0;
+  // limit the width of the subtitle to have a nicer look (and not one long line)
+  max-width: 50ch;
 `;
 
 type HeaderProps = (

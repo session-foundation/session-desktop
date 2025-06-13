@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 import type { ReactNode } from 'react';
-import { SessionIcon, SessionIconType } from '../../../../icon';
+import type { WithOptLucideUnicode } from '../../../../icon/lucide';
+import { LucideIcon } from '../../../../icon/LucideIcon';
 
 const NotificationBubbleFlex = styled.div`
   display: flex;
@@ -27,26 +28,27 @@ const NotificationBubbleIconContainer = styled.div`
   height: 25px;
 `;
 
-export const NotificationBubble = (props: {
-  iconType?: SessionIconType;
-  iconColor?: string;
-  children: ReactNode;
-}) => {
-  const { children, iconType, iconColor } = props;
+export const NotificationBubble = (
+  props: WithOptLucideUnicode & {
+    iconColor?: string;
+    children: ReactNode;
+  }
+) => {
+  const { children, unicode, iconColor } = props;
   return (
     <NotificationBubbleFlex>
-      {iconType && (
+      {unicode && (
         <NotificationBubbleIconContainer>
-          <SessionIcon
+          <LucideIcon
             iconSize="small"
-            iconType={iconType}
+            unicode={unicode}
             iconColor={iconColor}
-            iconPadding="auto 10px"
+            style={{ padding: 'auto 10px' }}
           />
         </NotificationBubbleIconContainer>
       )}
       <NotificationBubbleText>{children}</NotificationBubbleText>
-      {iconType && <NotificationBubbleIconContainer />}
+      {unicode && <NotificationBubbleIconContainer />}
     </NotificationBubbleFlex>
   );
 };

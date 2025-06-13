@@ -5,6 +5,7 @@ import { useMessageAuthor, useMessageDataExtractionType } from '../../../../stat
 import { useNicknameOrProfileNameOrShortenedPubkey } from '../../../../hooks/useParamSelector';
 import type { WithMessageId } from '../../../../session/types/with';
 import { SignalService } from '../../../../protobuf';
+import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 
 export const DataExtractionNotification = (props: WithMessageId) => {
   const { messageId } = props;
@@ -24,7 +25,7 @@ export const DataExtractionNotification = (props: WithMessageId) => {
       key={`readable-message-${messageId}`}
       isControlMessage={true}
     >
-      <NotificationBubble iconType="save">
+      <NotificationBubble unicode={LUCIDE_ICONS_UNICODE.DOWNLOAD}>
         <Localizer
           token={
             dataExtractionType === SignalService.DataExtractionNotification.Type.MEDIA_SAVED

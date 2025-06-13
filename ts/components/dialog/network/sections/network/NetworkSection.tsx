@@ -163,8 +163,8 @@ const CurrentPriceBlock = () => {
         htmlString={true}
         style={{
           position: 'absolute',
-          top: 0,
-          right: 0,
+          top: '3px',
+          right: '3px',
         }}
       >
         <SessionLucideIconButton

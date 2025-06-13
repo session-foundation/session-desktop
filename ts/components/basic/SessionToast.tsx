@@ -47,7 +47,7 @@ function DescriptionPubkeysReplaced({ description }: { description: string }) {
 export const SessionToast = (props: Props) => {
   const { description, type } = props;
 
-  let toastIcon: string | undefined;
+  let toastIcon: LUCIDE_ICONS_UNICODE | undefined;
   if (!toastIcon) {
     switch (type) {
       case SessionToastType.Success:

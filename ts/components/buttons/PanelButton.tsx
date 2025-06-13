@@ -67,6 +67,7 @@ const StyledPanelButton = styled.button<{
   width: 100%;
   transition: var(--default-duration);
   color: ${props => (props.disabled ? 'var(--disabled-color)' : props.color)};
+  padding-inline: var(--margins-xs);
 
   &:not(:last-child) {
     border-bottom: 1px solid var(--border-color);
