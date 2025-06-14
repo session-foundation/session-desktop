@@ -225,6 +225,20 @@ export const MessageContextMenu = (props: Props) => {
     MessageInteraction.copyBodyToClipboard(text);
   }, [text]);
 
+  const copyLinkFromMessage = useCallback(() => {
+  const linkMatch = text?.match(/https?:\/\/[^\s]+/);
+  const firstLink = linkMatch?.[0];
+
+  if (firstLink) {
+    navigator.clipboard.writeText(firstLink).then(() => {
+      window.log.info('Link copied to clipboard');
+    });
+  } else {
+    window.log.warn('No link found in message');
+  }
+}, [text]);
+
+
   const onSelect = useCallback(() => {
     dispatch(toggleSelectedMessageId(messageId));
   }, [dispatch, messageId]);
@@ -331,6 +345,7 @@ export const MessageContextMenu = (props: Props) => {
               </ItemWithDataTestId>
             ) : null}
             <ItemWithDataTestId onClick={copyText}>{window.i18n('copy')}</ItemWithDataTestId>
+            <ItemWithDataTestId onClick={copyLinkFromMessage}>{window.i18n('copyMessageLink') ?? 'Copy link in message'}</ItemWithDataTestId>
             <ItemWithDataTestId
               onClick={() => {
                 void showMessageInfoOverlay({ messageId, dispatch });
