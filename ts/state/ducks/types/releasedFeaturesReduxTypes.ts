@@ -11,6 +11,7 @@ export type SessionFeatureFlags = {
   useReleaseChannels: boolean;
   useSESH101: boolean;
   useAlwaysShowRemainingChars: boolean;
+  useShowPopoverAnchors: boolean;
   // useProAvailable: boolean;
   // useMockUserHasPro: boolean;
 };

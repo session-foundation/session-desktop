@@ -63,6 +63,7 @@ window.sessionFeatureFlags = {
   useSESH101: true,
   useTestNet: isTestNet() || isTestIntegration(),
   useAlwaysShowRemainingChars: false,
+  useShowPopoverAnchors: false,
   // useProAvailable: false,
   // useMockUserHasPro: false,
   debug: {

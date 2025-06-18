@@ -25,7 +25,6 @@ import { formatNumber, formatDateWithLocale } from '../../../../../util/i18n/for
 import { abbreviateNumber } from '../../../../../util/numbers';
 import { SessionIconButton } from '../../../../icon';
 import { SessionSpinner } from '../../../../loading';
-import { SessionTooltip } from '../../../../SessionTooltip';
 import { useHTMLDirection } from '../../../../../util/i18n/rtlSupport';
 import {
   usePriceTimestamp,
@@ -36,6 +35,7 @@ import {
 } from '../../../../../state/selectors/networkData';
 import { Grid } from '../../../../basic/Grid';
 import { useInfoFakeRefreshing, useInfoLoading } from '../../../../../state/selectors/networkModal';
+import { SessionTooltip } from '../../../../SessionTooltip';
 
 const StyledStatsNumber = styled.strong`
   font-size: var(--font-size-h3-new);
