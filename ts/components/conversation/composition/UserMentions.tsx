@@ -47,17 +47,3 @@ export const renderUserMentionRow = (id: string) => {
     />
   );
 };
-
-// this is dirty but we have to replace all @(xxx) by @xxx manually here
-export function cleanMentions(text: string): string {
-  const matches = text.match(mentionsRegex);
-  let replacedMentions = text;
-  (matches || []).forEach(match => {
-    const replacedMention = match.substring(2, match.indexOf('\uFFD7'));
-    replacedMentions = replacedMentions.replace(match, `@${replacedMention}`);
-  });
-
-  return replacedMentions;
-}
-
-export const mentionsRegex = /@\uFFD2[0-1]5[0-9a-f]{64}\uFFD7[^\uFFD2]+\uFFD2/gu;

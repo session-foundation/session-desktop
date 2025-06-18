@@ -1,9 +1,9 @@
 import styled from 'styled-components';
 // import { useDispatch } from 'react-redux';
 import { Constants } from '../../../session';
-import { SessionTooltip } from '../../SessionTooltip';
 import { Localizer } from '../../basic/Localizer';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { SessionTooltip } from '../../SessionTooltip';
 // TODO: uncomment with pro
 // import { StyledCTA } from '../../cta/StyledCTA';
 // import { Localizer } from '../../basic/Localizer';
@@ -12,7 +12,7 @@ import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesRedux
 // import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 export type CharacterCountProps = {
-  text: string;
+  count: number;
 };
 
 const CHARACTER_SHOW_REMAINING_BUFFER = 200;
@@ -25,15 +25,14 @@ const StyledCharacterCountContainer = styled.div`
   gap: var(--margins-xs);
   position: absolute;
   top: var(--margins-sm);
-  right: var(--margins-md);
-  z-index: 3;
+  inset-inline-end: var(--margins-lg);
 `;
 
 const StyledRemainingNumber = styled.span<{ pastLimit: boolean }>`
   color: ${props => (props.pastLimit ? 'var(--danger-color)' : 'var(--text-primary-color)')};
 `;
 
-export function CharacterCount({ text }: CharacterCountProps) {
+export function CharacterCount({ count }: CharacterCountProps) {
   const alwaysShowFlag = getFeatureFlag('useAlwaysShowRemainingChars');
   // TODO: implement with pro
   // const dispatch = useDispatch();
@@ -47,7 +46,7 @@ export function CharacterCount({ text }: CharacterCountProps) {
   //   : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
   const charLimit = Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT;
 
-  const remaining = charLimit - text.length;
+  const remaining = charLimit - count;
   const pastLimit = remaining < 0;
 
   // TODO: implement with pro
@@ -71,6 +70,8 @@ export function CharacterCount({ text }: CharacterCountProps) {
       {/*  </StyledCTA> */}
       {/* ) : null} */}
       <SessionTooltip
+        horizontalPosition="center"
+        verticalPosition="bottom"
         content={
           pastLimit ? (
             <Localizer token="remainingCharactersOverTooltip" />

@@ -1,9 +1,16 @@
-import { RefObject, useState } from 'react';
-import Mentions from 'rc-mentions';
-import { type MentionsRef } from 'rc-mentions/lib/Mentions';
+import {
+  type KeyboardEventHandler,
+  type KeyboardEvent,
+  RefObject,
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { uniq } from 'lodash';
 import { useSelector } from 'react-redux';
-import type { OptionProps } from 'rc-mentions/es/Option';
+import { renderToString } from 'react-dom/server';
 import {
   useSelectedConversationKey,
   useSelectedIsBlocked,
@@ -21,24 +28,28 @@ import { ConvoHub } from '../../../session/conversations';
 import type { SessionSuggestionDataItem } from './types';
 import { getMentionsInput } from '../../../state/selectors/conversations';
 import { UserUtils } from '../../../session/utils';
-import { localize } from '../../../localization/localeTools';
+import { localize, type MergedLocalizerTokens } from '../../../localization/localeTools';
 import { PubKey } from '../../../session/types';
 import { useLibGroupMembers } from '../../../state/selectors/groups';
 import { use05GroupMembers } from '../../../hooks/useParamSelector';
+import CompositionInput, {
+  type CompositionInputRef,
+  type ContentEditableEvent,
+} from './CompositionInput';
+import { SessionPopoverContent } from '../../SessionPopover';
+import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_constants';
+import { Mention } from '../AddMentions';
 
 type Props = {
   draft: string;
   setDraft: (draft: string) => void;
   container: RefObject<HTMLDivElement>;
-  textAreaRef: RefObject<MentionsRef>;
-  updateCursorPosition: (pos: number) => void;
-  getCurrentCursorPosition: () => number;
+  inputRef: RefObject<CompositionInputRef>;
   typingEnabled: boolean;
-  onKeyDown: (event: any) => void;
-  setIsMentioning: (mode: boolean) => void;
+  onKeyDown: KeyboardEventHandler<HTMLDivElement>;
 };
 
-function useMembersInThisChat(): Array<SessionSuggestionDataItem> {
+function useMembersInThisChat(): Array<SessionSuggestionDataItem & { searchable?: Array<string> }> {
   const selectedConvoKey = useSelectedConversationKey();
   const isPrivate = useSelectedIsPrivate();
   const isPublic = useSelectedIsPublic();
@@ -59,12 +70,39 @@ function useMembersInThisChat(): Array<SessionSuggestionDataItem> {
       ? membersFor03Group
       : membersFor05LegacyGroup;
 
-  return members.map(m => {
+  const convo = ConvoHub.use();
+
+  return members.map(id => {
+    const model = convo.get(id);
+    const searchable: Array<string> = [id];
+
+    const nickname = model.getNicknameOrRealUsernameOrPlaceholder();
+    if (nickname) {
+      searchable.push(nickname.toLowerCase());
+    }
+
+    const username = model.getRealSessionUsername();
+    if (username && username !== nickname) {
+      searchable.push(username.toLowerCase());
+    }
+
+    const isYou = UserUtils.isUsFromCache(id);
+    const display = isYou ? localize('you').toString() : nickname || PubKey.shorten(id);
+
+    if (display && display !== nickname) {
+      searchable.push(display.toLowerCase());
+      if (isYou) {
+        const enYou = localize('you').forceEnglish().toString();
+        if (enYou !== display) {
+          searchable.push(localize('you').forceEnglish().toString().toLowerCase());
+        }
+      }
+    }
+
     return {
-      id: m,
-      display: UserUtils.isUsFromCache(m)
-        ? localize('you').toString()
-        : ConvoHub.use().get(m)?.getNicknameOrRealUsernameOrPlaceholder() || PubKey.shorten(m),
+      id,
+      display,
+      searchable,
     };
   });
 }
@@ -74,26 +112,66 @@ enum PREFIX {
   EMOJI = ':',
 }
 
-const prefixes = Object.values(PREFIX);
+type MentionDetails = {
+  prefix: PREFIX;
+  content: string;
+};
 
-const isPrefix = (val: string): val is PREFIX => prefixes.includes(val as PREFIX);
+const MENTION_ESCAPE_STRINGS = [' ', '\n'];
+
+function findValidMention(val: string, cursorPosition: number, prefix: PREFIX) {
+  const pos = val.lastIndexOf(prefix);
+  if (pos === -1) {
+    return null;
+  }
+
+  const content = val.substring(pos + 1, cursorPosition);
+
+  if (MENTION_ESCAPE_STRINGS.some(char => content.lastIndexOf(char) !== -1)) {
+    return null;
+  }
+
+  return {
+    content,
+    prefix,
+  };
+}
+
+function getMentionDetails(
+  val: string,
+  cursorPosition: number,
+  maxLength: number
+): MentionDetails | null {
+  if (!val || cursorPosition > val.length || maxLength <= 0) {
+    return null;
+  }
+
+  const startIdx = Math.max(0, cursorPosition - maxLength);
+  const searchableVal = val.slice(startIdx, cursorPosition);
+
+  const userMention = findValidMention(searchableVal, cursorPosition, PREFIX.USER);
+  if (userMention) {
+    return userMention;
+  }
+
+  const emojiMention = findValidMention(searchableVal, cursorPosition, PREFIX.EMOJI);
+  if (emojiMention) {
+    return emojiMention;
+  }
+
+  return null;
+}
+
+function createUserMentionHtml({ id, display }: SessionSuggestionDataItem) {
+  return renderToString(<Mention dataUserId={id} key={id} text={display} allowSelecting={true} />);
+}
 
 export const CompositionTextArea = (props: Props) => {
-  const {
-    draft,
-    setDraft,
-    setIsMentioning,
-    textAreaRef,
-    typingEnabled,
-    onKeyDown,
-    getCurrentCursorPosition,
-    updateCursorPosition,
-  } = props;
+  const { draft, setDraft, inputRef, typingEnabled, onKeyDown } = props;
 
   const [lastBumpTypingMessageLength, setLastBumpTypingMessageLength] = useState(0);
-  const [emojiResults, setEmojiResults] = useState<Array<SessionSuggestionDataItem>>([]);
-  const [mentionSearch, setMentionSearch] = useState<string>('');
-  const [currentPrefix, setCurrentPrefix] = useState<PREFIX | null>(null);
+  const [mention, setMention] = useState<MentionDetails | null>(null);
+  const [focusedMentionItem, setFocusedMentionItem] = useState<number>(0);
 
   const selectedConversationKey = useSelectedConversationKey();
   const htmlDirection = useHTMLDirection();
@@ -103,36 +181,152 @@ export const CompositionTextArea = (props: Props) => {
   const groupName = useSelectedNicknameOrProfileNameOrShortenedPubkey();
   const membersInThisChat = useMembersInThisChat();
 
-  if (!selectedConversationKey) {
-    return null;
-  }
+  const selectedMentionRef = useRef<HTMLLIElement | null>(null);
 
-  const makeMessagePlaceHolderText = () => {
+  const [popoverX, setPopoverX] = useState<number | null>(null);
+  const [popoverY, setPopoverY] = useState<number | null>(null);
+
+  const handleMentionCleanup = () => {
+    setMention(null);
+    setFocusedMentionItem(0);
+  };
+
+  const results = useMemo(
+    () =>
+      mention?.prefix === PREFIX.USER
+        ? membersInThisChat.filter(({ id, display, searchable }) => {
+            if (!mention.content) {
+              return true;
+            }
+
+            const lowerInput = mention.content.toLowerCase();
+            if (searchable) {
+              return searchable.some(str => str.indexOf(lowerInput) !== -1);
+            }
+
+            const lowerDisplay = display.toLowerCase();
+            const lowerId = id.toLowerCase();
+            return lowerDisplay?.indexOf(lowerInput) !== -1 || lowerId?.indexOf(lowerInput) !== -1;
+          })
+        : mention?.prefix === PREFIX.EMOJI
+          ? searchEmojiForQuery(mention.content, 10)
+          : [],
+    [membersInThisChat, mention]
+  );
+
+  const handleSelect = useCallback(
+    (idx?: number) => {
+      const index = idx ?? focusedMentionItem;
+      if (!mention || !results.length || index >= results.length) {
+        return;
+      }
+
+      const selected = results[index];
+      const val = mention.prefix === PREFIX.EMOJI ? selected.id : createUserMentionHtml(selected);
+
+      /**
+       *  We cant use the input's typeAtPosition because we need to be able to remove the search text.
+       *  TODO: It would be nice to have a function on the input that handles replacement of a html index range.
+       */
+      const pos = inputRef.current?.getCaretIndex() ?? draft.length;
+      const searchInput = mention.prefix + mention.content;
+
+      /**
+       * Finds the start of the emoji search input, it returns the last occurrence of the user's
+       * search input, not going past the user's cursor. This means the text we are going to remove
+       * is the text the user input into the search, so it is safe to replace it with the emoji.
+       */
+      const inputStart = draft.lastIndexOf(searchInput, pos);
+      const draftStart = draft.substring(0, inputStart);
+      const draftEnd = draft.substring(inputStart + searchInput.length, draft.length + 1);
+      const newDraft = draftStart + val + draftEnd;
+      setDraft(newDraft);
+
+      // The timeout ensures the cursor placement happens after the input has been updated, without it the cursor placement is incorrect.
+      setTimeout(() => {
+        inputRef.current?.setCaretIndex(draftStart.length + val.length);
+        /**
+         * This is a workaround to force an update of the input node and trigger a re-render of the
+         * character counter. Without this, when a mention is selected and inserted the character
+         * count does not update until another character is entered or removed by the user.
+         */
+        inputRef.current?.typeAtCaret('');
+      }, 25);
+      handleMentionCleanup();
+    },
+    [draft, focusedMentionItem, inputRef, mention, results, setDraft]
+  );
+
+  const handleOptionClick = useCallback(
+    (idx: number) => {
+      setFocusedMentionItem(idx);
+      handleSelect(idx);
+    },
+    [setFocusedMentionItem, handleSelect]
+  );
+
+  const popoverContent = useMemo(() => {
+    if (!mention || !results.length) {
+      return null;
+    }
+
+    const selectedId = results[focusedMentionItem]?.id;
+    return (
+      <ul role="listbox">
+        {results.map(({ id, display }, i) => {
+          const selected = selectedId === id;
+          return (
+            <li
+              role="option"
+              id={id}
+              key={id}
+              value={id}
+              onClick={() => handleOptionClick(i)}
+              className={selected ? 'selected-option' : undefined}
+              autoFocus={selected}
+              aria-selected={selected}
+              ref={selected ? selectedMentionRef : undefined}
+            >
+              {mention.prefix === PREFIX.USER
+                ? renderUserMentionRow(id)
+                : renderEmojiQuickResultRow(id, display)}
+            </li>
+          );
+        })}
+      </ul>
+    );
+  }, [mention, results, focusedMentionItem, handleOptionClick]);
+
+  const handleUpdatePopoverPosition = useCallback(() => {
+    const pos = inputRef.current?.getCaretCoordinates();
+    if (pos) {
+      setPopoverX(pos.left);
+      setPopoverY(pos.top);
+    }
+  }, [inputRef]);
+
+  /** Handles scrolling of the mentions container */
+  useLayoutEffect(() => {
+    if (mention) {
+      handleUpdatePopoverPosition();
+      const el = selectedMentionRef.current;
+      if (el) {
+        el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      }
+    }
+  }, [mention, focusedMentionItem, handleUpdatePopoverPosition]);
+
+  const messagePlaceHolder = useMemo(() => {
+    let localizerToken: MergedLocalizerTokens = 'message';
     if (isGroupDestroyed) {
-      return window.i18n('groupDeletedMemberDescription', { group_name: groupName });
+      localizerToken = 'groupDeletedMemberDescription';
+    } else if (isKickedFromGroup) {
+      localizerToken = 'groupRemovedYou';
+    } else if (isBlocked) {
+      localizerToken = 'blockBlockedDescription';
     }
-    if (isKickedFromGroup) {
-      return window.i18n('groupRemovedYou', { group_name: groupName });
-    }
-    if (isBlocked) {
-      return window.i18n('blockBlockedDescription');
-    }
-    return window.i18n('message');
-  };
-
-  const messagePlaceHolder = makeMessagePlaceHolderText();
-  // const neverMatchingRegex = /($a)/;
-  // const style = sendMessageStyle(htmlDirection);
-
-  const handleOnChange = (text: string) => {
-    if (!selectedConversationKey) {
-      throw new Error('selectedConversationKey is needed');
-    }
-
-    const newDraft = text ?? '';
-    setDraft(newDraft);
-    updateDraftForConversation({ conversationKey: selectedConversationKey, draft: newDraft });
-  };
+    return localize(localizerToken).withArgs({ group_name: groupName }).toString();
+  }, [groupName, isBlocked, isGroupDestroyed, isKickedFromGroup]);
 
   const handleKeyUp = () => {
     if (!selectedConversationKey) {
@@ -151,114 +345,123 @@ export const CompositionTextArea = (props: Props) => {
     }
   };
 
-  const handleSearch = (input: string, prefix: string) => {
-    if (!isPrefix(prefix)) {
-      return;
-    }
+  const handleMentionCheck = useCallback(
+    (content: string, htmlIndex?: number) => {
+      const pos = htmlIndex ?? inputRef.current?.getCaretIndex() ?? content.length;
+      const newMention = getMentionDetails(
+        content,
+        pos,
+        LIBSESSION_CONSTANTS.CONTACT_MAX_NAME_LENGTH
+      );
+      setMention(newMention);
+    },
+    [inputRef]
+  );
 
-    // This is only used by the emoji onSelect logic.
-    setMentionSearch(input);
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLDivElement>) => {
+      if (!mention) {
+        onKeyDown(e);
+        return;
+      }
 
-    /**
-     * Because the emoji list is so long, only the 10 most relevant emojis are shown.
-     */
-    if (prefix === PREFIX.EMOJI) {
-      setEmojiResults(searchEmojiForQuery(input, 10));
-    }
+      if (e.key === 'Escape') {
+        // Exit mention mode and disable escape default behaviour
+        e.preventDefault();
+        handleMentionCleanup();
+      } else if (e.key === 'ArrowUp') {
+        // Navigate through mentions options and disable input text navigation
+        e.preventDefault();
+        setFocusedMentionItem(prev => (prev === 0 ? results.length - 1 : prev - 1));
+      } else if (e.key === 'ArrowDown') {
+        // Navigate through mentions options and disable input text navigation
+        e.preventDefault();
+        setFocusedMentionItem(prev => (prev === results.length - 1 ? 0 : prev + 1));
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        // Update mention search content for where the new cursor position will be
+        const pos = inputRef.current?.getCaretIndex() ?? 0;
+        const dirModifier = htmlDirection === 'ltr' ? 1 : -1;
+        const delta = (e.key === 'ArrowRight' ? 1 : -1) * dirModifier;
+        handleMentionCheck(draft, pos + delta);
+      } else if (e.key === 'Enter') {
+        /**
+         *  Exit mention mode and hand off control to the parent onKeyDown if there are no mention results.
+         *  We can't use `mention.content` to define this behaviour because for user mentions we count
+         *  "mention mode" as having just the @ prefix, but for emoji mentions, mention mode needs a
+         *  prefix and content.
+         */
+        if (!results.length) {
+          handleMentionCleanup();
+          onKeyDown(e);
+        } else {
+          // The Enter key can insert new lines and/or send a message, we want to prevent then when selecting a mention.
+          e.preventDefault();
+          handleSelect();
+        }
+      } else {
+        onKeyDown(e);
+      }
+    },
+    [
+      draft,
+      handleMentionCheck,
+      handleSelect,
+      htmlDirection,
+      inputRef,
+      mention,
+      onKeyDown,
+      results.length,
+    ]
+  );
 
-    setIsMentioning(true);
-    setCurrentPrefix(prefix);
-  };
+  const handleOnChange = useCallback(
+    (e: ContentEditableEvent) => {
+      if (!selectedConversationKey) {
+        throw new Error('selectedConversationKey is needed');
+      }
 
-  // @ts-expect-error -- this is fine for now TODO: fix
-  const filterOption = (input: string, { display, value }: OptionProps) => {
-    // Because we handle emoji list rendering via a query we can't also filter by display
-    if (currentPrefix === PREFIX.EMOJI) {
-      return true;
-    }
+      const content = e.target.value;
 
-    const lowerInput = input?.toLowerCase();
-    const lowerDisplay = display?.toLowerCase();
-    const lowerValue = value?.toLowerCase();
-    return lowerDisplay?.indexOf(lowerInput) !== -1 || lowerValue?.indexOf(lowerInput) !== -1;
-  };
+      handleMentionCheck(content);
+      setDraft(content);
+      updateDraftForConversation({ conversationKey: selectedConversationKey, draft: content });
+    },
+    [handleMentionCheck, selectedConversationKey, setDraft]
+  );
 
-  const handleSelect = (option: OptionProps, prefix: string) => {
-    if (!isPrefix(prefix)) {
-      return;
-    }
+  if (!selectedConversationKey) {
+    return null;
+  }
 
-    /**
-     * Emoji mention searching removes the `:` prefix, so we need to handle this case manually
-     */
-    if (prefix === PREFIX.EMOJI) {
-      const val = option.value ?? '';
-      const pos = getCurrentCursorPosition();
-      const searchInput = prefix + mentionSearch;
-
-      /**
-       * Finds the start of the emoji search input, it returns the last occurrence of the user's
-       * search input, not going past the user's cursor. This means the text we are going to remove
-       * is the text the user input into the search, so it is safe to replace it with the emoji.
-       */
-      const inputStart = draft.lastIndexOf(searchInput, pos);
-      const draftStart = draft.substring(0, inputStart);
-      const draftEnd = draft.substring(inputStart + searchInput.length, draft.length + 1);
-      const newDraft = draftStart + val + draftEnd;
-      setDraft(newDraft);
-
-      // The timeout ensures the cursor placement happens after the input has been updated, without it the cursor placement is incorrect.
-      setTimeout(() => {
-        updateCursorPosition(draftStart.length + val.length);
-      }, 25);
-    }
-
-    setCurrentPrefix(null);
-    setMentionSearch('');
-    setEmojiResults([]);
-    setIsMentioning(false);
-  };
+  const showPopover = !!(popoverX && popoverY && popoverContent);
 
   return (
     <>
-      <div className="textarea-layout">
-        <span>{draft}</span>
-      </div>
-      <Mentions
-        value={draft}
-        onChange={handleOnChange}
-        onKeyDown={onKeyDown}
-        onKeyUp={handleKeyUp}
+      <CompositionInput
         placeholder={messagePlaceHolder}
+        html={draft}
+        onChange={handleOnChange}
+        onKeyDown={handleKeyDown}
+        onKeyUp={handleKeyUp}
         spellCheck={true}
-        dir={htmlDirection}
         disabled={!typingEnabled}
-        data-testid="message-input-text-area"
-        className="textarea-container"
-        prefix={prefixes}
         autoFocus={true}
-        filterOption={filterOption}
-        ref={textAreaRef}
-        onSearch={handleSearch}
-        onSelect={handleSelect}
-        notFoundContent={null}
-      >
-        {currentPrefix === PREFIX.USER
-          ? membersInThisChat.map(({ id, display }) => (
-              // @ts-expect-error -- display is fine here TODO: fix
-              <Mentions.Option value={id} display={display} key={id}>
-                {renderUserMentionRow(id)}
-              </Mentions.Option>
-            ))
-          : currentPrefix === PREFIX.EMOJI
-            ? emojiResults.map(({ id, display }) => (
-                // @ts-expect-error -- display is fine here TODO: fix
-                <Mentions.Option value={id} display={display} key={id}>
-                  {renderEmojiQuickResultRow(id, display)}
-                </Mentions.Option>
-              ))
-            : null}
-      </Mentions>
+        ref={inputRef}
+        scrollbarPadding={140}
+      />
+      {showPopover ? (
+        <SessionPopoverContent
+          className="mention-container"
+          open={showPopover}
+          triggerX={popoverX}
+          triggerY={popoverY}
+          triggerHeight={18}
+          triggerWidth={1}
+          horizontalPosition='right'
+        >
+          {popoverContent}
+        </SessionPopoverContent>
+      ) : null}
     </>
   );
 };
