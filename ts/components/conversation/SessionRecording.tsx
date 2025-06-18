@@ -9,7 +9,7 @@ import styled, { keyframes } from 'styled-components';
 import { Constants } from '../../session';
 import { MAX_ATTACHMENT_FILESIZE_BYTES } from '../../session/constants';
 import { ToastUtils } from '../../session/utils';
-import { SessionIconButton, type SessionIconSize } from '../icon';
+import { type SessionIconSize } from '../icon';
 import { useFormattedDuration } from '../../hooks/useFormattedDuration';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
@@ -188,11 +188,12 @@ export class SessionRecording extends Component<Props, State> {
         <div className="session-recording--actions">
           <StyledFlexWrapper marginHorizontal="5px">
             {isRecording && (
-              <SessionIconButton
-                iconType="stop"
-                iconSize="medium"
+              <SessionLucideIconButton
                 iconColor={'var(--danger-color)'}
+                unicode={LUCIDE_ICONS_UNICODE.SQUARE}
                 onClick={actionPauseFn}
+                iconSize={'large'}
+                makeSquare={true}
                 dataTestId="end-voice-message"
               />
             )}

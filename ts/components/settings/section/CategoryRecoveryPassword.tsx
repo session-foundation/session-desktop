@@ -148,7 +148,7 @@ export const SettingsCategoryRecoveryPassword = () => {
             <SpacerSM />
             <CopyToClipboardIcon
               copyContent={recoveryPhrase}
-              iconSize={'huge'}
+              iconSize={'large'}
               iconColor={'var(--text-primary-color)'}
               hotkey={!isModalVisible}
             />
