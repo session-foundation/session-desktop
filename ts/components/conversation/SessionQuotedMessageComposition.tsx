@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
 import styled from 'styled-components';
-import { SessionIcon, SessionIconButton } from '../icon';
+import { SessionIcon } from '../icon';
 
 import { quoteMessage } from '../../state/ducks/conversations';
 import { getQuotedMessage } from '../../state/selectors/conversations';
@@ -13,6 +13,9 @@ import { Image } from './Image';
 import { findAndFormatContact } from '../../models/message';
 import { getAbsoluteAttachmentPath } from '../../types/MessageAttachment';
 import { GoogleChrome } from '../../util';
+import { localize } from '../../localization/localeTools';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 const QuotedMessageComposition = styled(Flex)`
   border-top: 1px solid var(--border-color);
@@ -161,13 +164,15 @@ export const SessionQuotedMessageComposition = () => {
           {subtitleText && <Subtle>{subtitleText}</Subtle>}
         </StyledText>
       </QuotedMessageCompositionReply>
-      <SessionIconButton
-        iconType="exit"
+
+      <SessionLucideIconButton
+        unicode={LUCIDE_ICONS_UNICODE.X}
         iconColor="var(--chat-buttons-icon-color)"
-        iconSize="small"
+        iconSize="medium"
         onClick={removeQuotedMessage}
         margin={'0 var(--margins-sm) 0 0'}
-        aria-label={window.i18n('close')}
+        aria-label={localize('close').toString()}
+        dataTestId="link-preview-close"
       />
     </QuotedMessageComposition>
   );
