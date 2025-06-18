@@ -301,7 +301,7 @@ export const CompositionTextArea = (props: Props) => {
     const pos = inputRef.current?.getCaretCoordinates();
     if (pos) {
       setPopoverX(pos.left);
-      setPopoverY(pos.top);
+      setPopoverY(pos.top - 6);
     }
   }, [inputRef]);
 

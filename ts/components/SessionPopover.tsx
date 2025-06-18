@@ -132,7 +132,7 @@ export const SessionPopoverContent = (props: PopoverProps) => {
       };
     }
 
-    const coreContentWidth = contentW - CONTENT_BORDER_RADIUS;
+    const coreContentWidth = contentW - (isTooltip ? CONTENT_BORDER_RADIUS : 0);
 
     const newAnchorX = triggerX + triggerWidth / 2;
 
@@ -141,7 +141,7 @@ export const SessionPopoverContent = (props: PopoverProps) => {
       newX -= coreContentWidth;
     } else if (horizontalPosition === 'center') {
       newX -= Math.floor(contentW / 2);
-    } else if (horizontalPosition === 'right') {
+    } else if (horizontalPosition === 'right' && isTooltip) {
       newX -= TIP_LENGTH;
     }
 
@@ -176,26 +176,7 @@ export const SessionPopoverContent = (props: PopoverProps) => {
       newY = viewportHeight - contentH - VIEWPORT_MARGIN;
     }
 
-    // const halfContentWidth = Math.floor(contentW / 2)
-
     const offset = newAnchorX - newX - TIP_LENGTH / 2;
-    /**
-     *  we want the triangle’s center (TIP_LENGTH/2) to land under triggerCenterX. Because the content
-     *  has a border radius, the offset needs to be capped at the edge of the border radius.
-     */
-    // const pointerMinOffset= CONTENT_BORDER_RADIUS;
-    // const pointerMaxOffset= contentW - CONTENT_BORDER_RADIUS - TIP_LENGTH/2;
-
-    // if (horizontalPosition === 'left') {
-    //   offset = Math.min(offset + halfContentWidth, pointerMaxOffset)
-    // } else if (horizontalPosition === 'right') {
-    //   offset = Math.max(offset - halfContentWidth, pointerMinOffset)
-    // }
-
-    // const offset = Math.min(
-    //   triggerCenterX - newX - TIP_LENGTH / 2,
-    //   horizontalPosition === 'left' ? CONTENT_BORDER_RADIUS : contentW - CONTENT_BORDER_RADIUS
-    // );
 
     return {
       x: newX,
@@ -203,19 +184,7 @@ export const SessionPopoverContent = (props: PopoverProps) => {
       pointerOffset: offset,
       anchorX: newAnchorX,
     };
-  }, [
-    contentH,
-    contentW,
-    readyToShow,
-    triggerHeight,
-    triggerWidth,
-    triggerX,
-    triggerY,
-    viewportWidth,
-    viewportHeight,
-    verticalPosition,
-    horizontalPosition,
-  ]);
+  }, [readyToShow, contentW, isTooltip, triggerX, triggerWidth, horizontalPosition, viewportWidth, verticalPosition, contentH, viewportHeight, triggerY, triggerHeight]);
 
   return (
     <>
