@@ -6,7 +6,8 @@ import { useEncryptedFileFetch } from '../../../../../hooks/useEncryptedFileFetc
 
 import { QuoteIcon } from './QuoteIconContainer';
 import { AriaLabels } from '../../../../../util/hardcodedAriaLabels';
-import { icons } from '../../../../icon/Icons';
+import { LucideIcon } from '../../../../icon/LucideIcon';
+import { LUCIDE_ICONS_UNICODE } from '../../../../icon/lucide';
 
 const StyledQuoteImage = styled.div`
   flex: initial;
@@ -45,18 +46,6 @@ const StyledPlayButton = styled.div`
     width: 32px;
     border-radius: 50%;
     background-color: var(--chat-buttons-background-color);
-
-    padding-left: 3px;
-
-    &:hover {
-      background-color: var(--chat-buttons-background-hover-color);
-    }
-  }
-
-  svg {
-    width: 14px;
-    height: 14px;
-    fill: var(--chat-buttons-icon-color);
   }
 `;
 
@@ -85,14 +74,21 @@ export const QuoteImage = (props: {
       {showPlayButton && (
         <StyledPlayButton>
           <div>
-            <svg viewBox={icons.play.viewBox}>
-              <path d={icons.play.path} />
-            </svg>
+            <LucideIcon
+              unicode={LUCIDE_ICONS_UNICODE.PLAY}
+              iconSize="small"
+              iconColor="var(--chat-buttons-icon-color)"
+              style={{
+                backgroundColor: 'var(--chat-buttons-background-color)',
+              }}
+            />
           </div>
         </StyledPlayButton>
       )}
     </StyledQuoteImage>
   ) : (
-    <QuoteIcon icon={showPlayButton ? 'movie' : 'image'} />
+    <QuoteIcon
+      unicode={showPlayButton ? LUCIDE_ICONS_UNICODE.CLAPERBOARD : LUCIDE_ICONS_UNICODE.IMAGE}
+    />
   );
 };

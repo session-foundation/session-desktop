@@ -379,7 +379,9 @@ export const MessageContextMenu = (props: Props) => {
                 {localize('save').toString()}
               </ItemWithDataTestId>
             ) : null}
-            <ItemWithDataTestId onClick={copyText}>{localize('copy').toString()}</ItemWithDataTestId>
+            <ItemWithDataTestId onClick={copyText}>
+              {localize('copy').toString()}
+            </ItemWithDataTestId>
             <ItemWithDataTestId
               onClick={() => {
                 void showMessageInfoOverlay({ messageId, dispatch });
@@ -423,11 +425,15 @@ export const MessageContextMenu = (props: Props) => {
             />
           )}
           {attachments?.length && attachments.every(m => !m.pending && m.path) ? (
-            <ItemWithDataTestId onClick={saveAttachment}>{localize('save').toString()}</ItemWithDataTestId>
+            <ItemWithDataTestId onClick={saveAttachment}>
+              {localize('save').toString()}
+            </ItemWithDataTestId>
           ) : null}
           <ItemWithDataTestId onClick={copyText}>{localize('copy').toString()}</ItemWithDataTestId>
           {(isSent || !isOutgoing) && (
-            <ItemWithDataTestId onClick={onReply}>{localize('reply').toString()}</ItemWithDataTestId>
+            <ItemWithDataTestId onClick={onReply}>
+              {localize('reply').toString()}
+            </ItemWithDataTestId>
           )}
           <ItemWithDataTestId
             onClick={() => {

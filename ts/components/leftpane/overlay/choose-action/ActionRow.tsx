@@ -61,11 +61,7 @@ export function ActionRow(props: ActionRowProps) {
   return (
     <StyledActionRow onClick={onClick} data-testid={dataTestId} aria-label={ariaLabel}>
       <StyledIcon>
-        <LucideIcon
-          unicode={unicode}
-          iconSize={'medium'}
-          iconColor="var(--text-primary-color)"
-        />
+        <LucideIcon unicode={unicode} iconSize={'medium'} iconColor="var(--text-primary-color)" />
       </StyledIcon>
       <Flex
         $container={true}

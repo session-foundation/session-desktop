@@ -146,7 +146,7 @@ const RecoveryPhraseInput = ({
     <SimpleSessionInput
       ariaLabel="Recovery password input"
       autoFocus={true}
-      type="password"
+      type={forceShow ? 'text' : 'password'}
       placeholder={window.i18n('recoveryPasswordEnter')}
       value={recoveryPassword}
       onValueChanged={(seed: string) => {

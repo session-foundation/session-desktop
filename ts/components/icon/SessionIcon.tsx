@@ -1,8 +1,9 @@
 import { memo, SessionDataTestId } from 'react';
 import styled, { css, CSSProperties, keyframes } from 'styled-components';
 
-import { icons, SessionIconSize, SessionIconType } from '.';
-import { ClipRule, FillRule } from './Icons';
+import { SessionIconSize, SessionIconType } from '.';
+
+import { ClipRule, FillRule, icons } from './Icons';
 
 export type SessionIconProps = {
   iconType: SessionIconType;
