@@ -8,7 +8,6 @@ import { useDisableDrag } from '../../hooks/useDisableDrag';
 import { useEncryptedFileFetch } from '../../hooks/useEncryptedFileFetch';
 import { updateLightBoxOptions } from '../../state/ducks/modalDialog';
 import * as MIME from '../../types/MIME';
-import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { GoogleChrome } from '../../util';
 import { Flex } from '../basic/Flex';
 import { SessionIconSize } from '../icon';
@@ -139,34 +138,29 @@ const StyledIconButton = styled.div`
 interface IconButtonProps {
   onClick?: () => void;
   style?: CSSProperties;
-  type: 'save' | 'close' | 'previous' | 'next';
+  unicode:
+    | LUCIDE_ICONS_UNICODE.CHEVRON_RIGHT
+    | LUCIDE_ICONS_UNICODE.CHEVRON_LEFT
+    | LUCIDE_ICONS_UNICODE.X
+    | LUCIDE_ICONS_UNICODE.DOWNLOAD;
 }
 
-const IconButton = ({ onClick, type }: IconButtonProps) => {
+const IconButton = ({ onClick, unicode }: IconButtonProps) => {
   const clickHandler = (): void => {
     if (!onClick) {
       return;
     }
     onClick();
   };
-  let unicode: LUCIDE_ICONS_UNICODE = LUCIDE_ICONS_UNICODE.CHEVRON_RIGHT;
+
+  // default to huge, only download is bigger
   let iconSize: SessionIconSize = 'huge';
-  switch (type) {
-    case 'next':
-      unicode = LUCIDE_ICONS_UNICODE.CHEVRON_RIGHT;
-      break;
-    case 'previous':
-      unicode = LUCIDE_ICONS_UNICODE.CHEVRON_LEFT;
-      break;
-    case 'close':
-      unicode = LUCIDE_ICONS_UNICODE.X;
-      break;
-    case 'save':
-      unicode = LUCIDE_ICONS_UNICODE.DOWNLOAD;
+  switch (unicode) {
+    case LUCIDE_ICONS_UNICODE.DOWNLOAD:
       iconSize = 'huge2';
       break;
     default:
-      assertUnreachable(type, `Invalid button type: ${type}`);
+      break;
   }
 
   return (
@@ -315,19 +309,29 @@ export const Lightbox = (props: Props) => {
         </div>
         <div style={styles.controls as any}>
           <Flex $container={true}>
-            <IconButton type="close" onClick={handleClose} />
+            <IconButton unicode={LUCIDE_ICONS_UNICODE.X} onClick={handleClose} />
           </Flex>
 
-          {onSave ? <IconButton type="save" onClick={onSave} style={styles.saveButton} /> : null}
+          {onSave ? (
+            <IconButton
+              unicode={LUCIDE_ICONS_UNICODE.DOWNLOAD}
+              onClick={onSave}
+              style={styles.saveButton}
+            />
+          ) : null}
         </div>
       </div>
       <div style={styles.navigationContainer as any}>
         {onPrevious ? (
-          <IconButton type="previous" onClick={onPrevious} />
+          <IconButton unicode={LUCIDE_ICONS_UNICODE.CHEVRON_LEFT} onClick={onPrevious} />
         ) : (
           <IconButtonPlaceholder />
         )}
-        {onNext ? <IconButton type="next" onClick={onNext} /> : <IconButtonPlaceholder />}
+        {onNext ? (
+          <IconButton unicode={LUCIDE_ICONS_UNICODE.CHEVRON_RIGHT} onClick={onNext} />
+        ) : (
+          <IconButtonPlaceholder />
+        )}
       </div>
     </div>
   );

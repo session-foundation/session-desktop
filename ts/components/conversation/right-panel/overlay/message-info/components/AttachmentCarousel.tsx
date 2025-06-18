@@ -16,10 +16,11 @@ import { LUCIDE_ICONS_UNICODE, type WithLucideUnicode } from '../../../../../ico
 const CarouselButton = (props: WithLucideUnicode & { visible: boolean; onClick: () => void }) => {
   return (
     <SessionLucideIconButton
-      iconSize={'huge'}
+      iconSize={'medium'}
       unicode={props.unicode}
       onClick={props.onClick}
       padding={'var(--margins-xs)'}
+      iconColor={'var(--button-icon-stroke-color)'}
       style={{
         visibility: props.visible ? 'visible' : 'hidden',
       }}
@@ -33,10 +34,11 @@ const FullscreenButton = (props: { onClick: () => void; style?: CSSProperties })
   return (
     <StyledFullscreenButton style={props.style}>
       <SessionLucideIconButton
-        iconSize={'large'}
+        iconSize={'medium'}
         iconColor={'var(--button-icon-stroke-hover-color)'}
         unicode={LUCIDE_ICONS_UNICODE.MAXIMIZE}
         onClick={props.onClick}
+        makeSquare={true}
       />
     </StyledFullscreenButton>
   );
