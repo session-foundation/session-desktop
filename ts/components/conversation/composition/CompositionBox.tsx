@@ -655,6 +655,7 @@ class CompositionBoxInner extends Component<Props, State> {
       isShiftSendEnabled === event.shiftKey
     ) {
       event.preventDefault();
+      event.stopPropagation();
       await this.onSendMessage();
     }
     // TODO: Add support for closing the emoji panel, probably should pass an onClose function to it
