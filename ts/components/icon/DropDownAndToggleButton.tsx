@@ -101,7 +101,6 @@ export const DropDownAndToggleButton = (props: SProps) => {
 
   return (
     <StyledContainer
-      className="session-call-button"
       isFullScreen={isFullScreen}
       isMuted={isMuted || false}
     >
