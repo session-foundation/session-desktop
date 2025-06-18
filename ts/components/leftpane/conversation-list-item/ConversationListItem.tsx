@@ -30,7 +30,6 @@ import { MemoConversationListItemContextMenu } from '../../menu/ConversationList
 import { ConversationListItemHeaderItem } from './HeaderItem';
 import { MessageItem } from './MessageItem';
 import { openConversationWithMessages } from '../../../state/ducks/conversations';
-import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useShowConversationSettingsFor';
 
 const Portal = ({ children }: { children: ReactNode }) => {
   return createPortal(children, document.querySelector('.inbox.index') as Element);
@@ -76,8 +75,6 @@ export const ConversationListItem = (props: Props) => {
   const isSearch = useIsSearchingForType('global');
   const selectedConvo = useSelectedConversationKey();
 
-  const showConvoSettingsCb = useShowConversationSettingsFor(conversationId);
-
   const isSelectedConvo = conversationId === selectedConvo && !isNil(selectedConvo);
 
   if (isSearch) {
@@ -92,16 +89,10 @@ export const ConversationListItem = (props: Props) => {
     (e: MouseEvent<HTMLDivElement>) => {
       // mousedown is invoked sooner than onClick, but for both right and left click
       if (e.button === 0) {
-        if (isSelectedConvo) {
-          showConvoSettingsCb?.({
-            settingsModalPage: 'default',
-          });
-        } else {
-          void openConversationWithMessages({ conversationKey: conversationId, messageId: null });
-        }
+        void openConversationWithMessages({ conversationKey: conversationId, messageId: null });
       }
     },
-    [conversationId, isSelectedConvo, showConvoSettingsCb]
+    [conversationId]
   );
 
   return (

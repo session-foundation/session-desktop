@@ -82,7 +82,7 @@ export const OverlayInvite = () => {
               value={ourSessionID}
               editable={false}
               centerText={true}
-              isTextArea={false}
+              isTextArea={true}
               padding={'var(--margins-xl) var(--margins-sm)'}
               ariaLabel={localize('accountId').toString()}
               inputDataTestId="your-account-id"
