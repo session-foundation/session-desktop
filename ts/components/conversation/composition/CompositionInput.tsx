@@ -85,7 +85,11 @@ function normalizeHtml(str?: string): string {
   return str?.replace(/&nbsp;|\u202F|\u00A0/g, ' ').replace(/<br \/>/g, '<br>') ?? '';
 }
 
-// TODO: see is this can be replaced by `setCaretAtHtmlIndex`
+/**
+ * Append an empty text node to an element, if the element is focused the caret will go to the end
+ * and the element will be refocused in the new text node.
+ * @param el - Element to replace the caret in
+ */
 function replaceCaret(el: HTMLElement) {
   const target = document.createTextNode('');
   el.appendChild(target);
@@ -131,216 +135,213 @@ export interface CompositionInputRef {
   typeAtCaret: (content: string) => void;
 }
 
-// TODO: cleanup these types
-type Modify<T, R> = Omit<T, keyof R> & R;
-type DivProps = Modify<
-  JSX.IntrinsicElements['div'],
-  { onChange?: (e: ContentEditableEvent) => void }
->;
+export type ContentEditableProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> &
+  React.RefAttributes<HTMLDivElement> & {
+    /** The current HTML content. */
+    html: string;
+    /** Called when the content changes. */
+    onChange?: (e: ContentEditableEvent) => void;
+    /** If true, disables editing (e.g., remove contentEditable or make read-only). */
+    disabled?: boolean;
+    innerRef?: React.Ref<HTMLDivElement>;
+  };
 
-export interface Props extends DivProps {
-  html: string;
-  onChange?: (e: ContentEditableEvent) => void;
-  disabled?: boolean;
-  className?: string;
-  style?: React.CSSProperties;
-  innerRef?: React.Ref<HTMLDivElement>;
-}
+const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditableProps>(
+  (props, ref) => {
+    const {
+      html,
+      onChange,
+      disabled = false,
+      innerRef,
+      className,
+      style,
+      onKeyUp,
+      onKeyDown,
+      children,
+      ...rest
+    } = props;
 
-const UnstyledCompositionInput = forwardRef<CompositionInputRef, Props>((props, ref) => {
-  const {
-    html,
-    onChange,
-    disabled = false,
-    innerRef,
-    className,
-    style,
-    onKeyUp,
-    onKeyDown,
-    children,
-    ...rest
-  } = props;
+    const elRef = useRef<HTMLDivElement | null>(null);
+    const lastHtml = useRef(html);
+    const isMount = useRef(true);
+    const lastPosition = useRef<number | null>(null);
+    const lastHtmlIndex = useRef<number>(0);
+    useImperativeHandle(
+      ref,
+      () => ({
+        focus: () => elRef.current?.focus(),
 
-  const elRef = useRef<HTMLDivElement | null>(null);
-  const lastHtml = useRef(html);
-  const isMount = useRef(true);
-  const lastPosition = useRef<number | null>(null);
-  const lastHtmlIndex = useRef<number>(0);
-  useImperativeHandle(
-    ref,
-    () => ({
-      focus: () => elRef.current?.focus(),
+        getVisibleText: () => elRef.current?.innerText ?? '',
 
-      getVisibleText: () => elRef.current?.innerText ?? '',
-
-      getRawValue: mutator => {
-        const el = elRef.current;
-        if (!el) {
-          return '';
-        }
-
-        const clone = el.cloneNode(true) as HTMLElement;
-        mutator?.(clone);
-        return clone.innerText;
-      },
-
-      getCaretCoordinates: () => {
-        const el = elRef.current;
-        const sel = window.getSelection();
-        if (!el || !sel || !sel.rangeCount || !el.contains(sel.anchorNode)) {
-          return null;
-        }
-
-        const range = sel.getRangeAt(0).cloneRange();
-        range.collapse(true);
-        let rect = range.getClientRects()[0];
-        let marker: Text | null = null;
-        if (!rect) {
-          marker = document.createTextNode('\u200b');
-          range.insertNode(marker);
-          range.selectNode(marker);
-          rect = range.getClientRects()[0]!;
-          if (marker.parentNode) {
-            marker.parentNode.removeChild(marker);
+        getRawValue: mutator => {
+          const el = elRef.current;
+          if (!el) {
+            return '';
           }
-        }
 
-        return { left: rect.left + window.pageXOffset, top: rect.bottom + window.pageYOffset };
-      },
+          const clone = el.cloneNode(true) as HTMLElement;
+          mutator?.(clone);
+          return clone.innerText;
+        },
 
-      getCaretIndex: () => {
+        getCaretCoordinates: () => {
+          const el = elRef.current;
+          const sel = window.getSelection();
+          if (!el || !sel || !sel.rangeCount || !el.contains(sel.anchorNode)) {
+            return null;
+          }
+
+          const range = sel.getRangeAt(0).cloneRange();
+          range.collapse(true);
+          let rect = range.getClientRects()[0];
+          let marker: Text | null = null;
+          if (!rect) {
+            marker = document.createTextNode('\u200b');
+            range.insertNode(marker);
+            range.selectNode(marker);
+            rect = range.getClientRects()[0]!;
+            if (marker.parentNode) {
+              marker.parentNode.removeChild(marker);
+            }
+          }
+
+          return { left: rect.left + window.pageXOffset, top: rect.bottom + window.pageYOffset };
+        },
+
+        getCaretIndex: () => {
+          const el = elRef.current;
+          if (!el || document.activeElement !== el) {
+            return lastHtmlIndex.current;
+          }
+
+          const idx = getHtmlIndexFromSelection(el);
+          lastHtmlIndex.current = idx;
+          return idx;
+        },
+
+        setCaretIndex: index => {
+          const el = elRef.current;
+          if (!el) {
+            return;
+          }
+
+          setCaretAtHtmlIndex(el, index);
+          lastHtmlIndex.current = index;
+          lastPosition.current = null;
+        },
+
+        typeAtCaret: content => {
+          const el = elRef.current;
+          if (!el) {
+            return;
+          }
+
+          const htmlIndex = lastHtmlIndex.current;
+          const { newHtml, newIndex } = insertHtmlAtIndex(el.innerHTML, htmlIndex, content);
+          el.innerHTML = newHtml;
+          lastHtml.current = newHtml;
+          lastHtmlIndex.current = newIndex;
+          setCaretAtHtmlIndex(el, newIndex);
+
+          if (onChange) {
+            onChange({ target: { value: newHtml } } as any);
+          }
+        },
+      }),
+      [onChange]
+    );
+
+    // Track selection changes when focused
+    useEffect(() => {
+      const handler = () => {
         const el = elRef.current;
         if (!el || document.activeElement !== el) {
-          return lastHtmlIndex.current;
-        }
-
-        const idx = getHtmlIndexFromSelection(el);
-        lastHtmlIndex.current = idx;
-        return idx;
-      },
-
-      setCaretIndex: index => {
-        const el = elRef.current;
-        if (!el) {
           return;
         }
 
-        setCaretAtHtmlIndex(el, index);
-        lastHtmlIndex.current = index;
-        lastPosition.current = null;
-      },
+        lastPosition.current = getHtmlIndexFromSelection(el);
+        lastHtmlIndex.current = lastPosition.current;
+      };
 
-      typeAtCaret: content => {
+      document.addEventListener('selectionchange', handler);
+      return () => document.removeEventListener('selectionchange', handler);
+    }, []);
+
+    // Handle innerRef prop
+    useLayoutEffect(() => {
+      if (!innerRef) {
+        return;
+      }
+
+      if (typeof innerRef === 'function') {
+        innerRef(elRef.current);
+      } else {
+        (innerRef as React.MutableRefObject<HTMLDivElement | null>).current = elRef.current;
+      }
+    }, [innerRef]);
+
+    const emitChange = useCallback(
+      (e: Omit<ContentEditableEvent, 'target'>) => {
         const el = elRef.current;
-        if (!el) {
+        if (!el || !onChange) {
           return;
         }
 
-        const htmlIndex = lastHtmlIndex.current;
-        const { newHtml, newIndex } = insertHtmlAtIndex(el.innerHTML, htmlIndex, content);
-        el.innerHTML = newHtml;
-        lastHtml.current = newHtml;
-        lastHtmlIndex.current = newIndex;
-        setCaretAtHtmlIndex(el, newIndex);
+        const currentHtml = el.innerHTML;
 
-        if (onChange) {
-          onChange({ target: { value: newHtml } } as any);
+        /**
+         * After first edit the input html will minimally contain only a br tag, so even if the user deletes
+         * everything the html will just be a single br tag. If the value is just one br tag we want to remove
+         * it so the input is empty and the placeholder appears.
+         */
+        const cleanHtml = currentHtml === '<br>' ? '' : currentHtml;
+
+        if (cleanHtml !== lastHtml.current) {
+          // TODO: clean up this type assertion
+          onChange({ ...e, target: { value: cleanHtml } } as ContentEditableEvent);
+          lastHtml.current = cleanHtml;
         }
       },
-    }),
-    [onChange]
-  );
+      [onChange]
+    );
 
-  // Track selection changes when focused
-  useEffect(() => {
-    const handler = () => {
+    // Update DOM on html change
+    useLayoutEffect(() => {
       const el = elRef.current;
-      if (!el || document.activeElement !== el) {
+      if (!el) {
         return;
       }
 
-      lastPosition.current = getHtmlIndexFromSelection(el);
-      lastHtmlIndex.current = lastPosition.current;
-    };
-
-    document.addEventListener('selectionchange', handler);
-    return () => document.removeEventListener('selectionchange', handler);
-  }, []);
-
-  // Handle innerRef prop
-  useLayoutEffect(() => {
-    if (!innerRef) {
-      return;
-    }
-
-    if (typeof innerRef === 'function') {
-      innerRef(elRef.current);
-    } else {
-      (innerRef as React.MutableRefObject<HTMLDivElement | null>).current = elRef.current;
-    }
-  }, [innerRef]);
-
-  const emitChange = useCallback(
-    (e: Omit<ContentEditableEvent, 'target'>) => {
-      const el = elRef.current;
-      if (!el || !onChange) {
-        return;
+      if (isMount.current) {
+        el.innerHTML = html;
+        lastHtml.current = html;
+        isMount.current = false;
+      } else if (normalizeHtml(html) !== normalizeHtml(el.innerHTML)) {
+        el.innerHTML = html;
+        lastHtml.current = html;
+        replaceCaret(el);
       }
+    }, [html]);
 
-      const currentHtml = el.innerHTML;
-
-      /**
-       * After first edit the input html will minimally contain only a br tag, so even if the user deletes
-       * everything the html will just be a single br tag. If the value is just one br tag we want to remove
-       * it so the input is empty and the placeholder appears.
-       */
-      const cleanHtml = currentHtml === '<br>' ? '' : currentHtml;
-
-      if (cleanHtml !== lastHtml.current) {
-        // TODO: clean up this type assertion
-        onChange({ ...e, target: { value: cleanHtml } } as ContentEditableEvent);
-        lastHtml.current = cleanHtml;
-      }
-    },
-    [onChange]
-  );
-
-  // Update DOM on html change
-  useLayoutEffect(() => {
-    const el = elRef.current;
-    if (!el) {
-      return;
-    }
-
-    if (isMount.current) {
-      el.innerHTML = html;
-      lastHtml.current = html;
-      isMount.current = false;
-    } else if (normalizeHtml(html) !== normalizeHtml(el.innerHTML)) {
-      el.innerHTML = html;
-      lastHtml.current = html;
-      replaceCaret(el);
-    }
-  }, [html]);
-
-  return (
-    <div
-      {...rest}
-      ref={elRef}
-      // We don't want rich html editing
-      contentEditable={disabled ? false : 'plaintext-only'}
-      aria-disabled={disabled}
-      suppressContentEditableWarning
-      className={className}
-      style={style}
-      onInput={emitChange}
-      onKeyUp={onKeyUp || emitChange}
-      onKeyDown={onKeyDown || emitChange}
-    >
-      {children}
-    </div>
-  );
-});
+    return (
+      <div
+        {...rest}
+        ref={elRef}
+        // We don't want rich html editing
+        contentEditable={disabled ? false : 'plaintext-only'}
+        aria-disabled={disabled}
+        suppressContentEditableWarning
+        className={className}
+        style={style}
+        onInput={emitChange}
+        onKeyUp={onKeyUp || emitChange}
+        onKeyDown={onKeyDown || emitChange}
+      >
+        {children}
+      </div>
+    );
+  }
+);
 
 const CompositionInput = styled(UnstyledCompositionInput)<{
   placeholder?: string;
