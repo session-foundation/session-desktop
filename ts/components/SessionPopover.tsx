@@ -41,7 +41,6 @@ const StyledPopover = styled.div<{
   overflow-wrap: break-word;
 
   border-radius: ${props => props.borderRadius}px;
-  cursor: pointer;
   z-index: 5;
 
   position: fixed;
