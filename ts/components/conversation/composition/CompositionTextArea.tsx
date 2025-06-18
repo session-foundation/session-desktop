@@ -7,6 +7,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useEffect,
 } from 'react';
 import { uniq } from 'lodash';
 import { useSelector } from 'react-redux';
@@ -172,6 +173,8 @@ export const CompositionTextArea = (props: Props) => {
   const [lastBumpTypingMessageLength, setLastBumpTypingMessageLength] = useState(0);
   const [mention, setMention] = useState<MentionDetails | null>(null);
   const [focusedMentionItem, setFocusedMentionItem] = useState<number>(0);
+  const [popoverX, setPopoverX] = useState<number | null>(null);
+  const [popoverY, setPopoverY] = useState<number | null>(null);
 
   const selectedConversationKey = useSelectedConversationKey();
   const htmlDirection = useHTMLDirection();
@@ -183,31 +186,42 @@ export const CompositionTextArea = (props: Props) => {
 
   const selectedMentionRef = useRef<HTMLLIElement | null>(null);
 
-  const [popoverX, setPopoverX] = useState<number | null>(null);
-  const [popoverY, setPopoverY] = useState<number | null>(null);
-
   const handleMentionCleanup = () => {
     setMention(null);
     setFocusedMentionItem(0);
+    setPopoverX(null);
   };
+
+  /**
+   * Resets the state when the conversation id changes
+   * TODO: remove this once the CompositionBox has become a functional component and we don't need to rely on the
+   *   conversation id state
+   */
+  useEffect(() => {
+    handleMentionCleanup();
+  }, [selectedConversationKey]);
 
   const results = useMemo(
     () =>
       mention?.prefix === PREFIX.USER
-        ? membersInThisChat.filter(({ id, display, searchable }) => {
-            if (!mention.content) {
-              return true;
-            }
+        ? membersInThisChat
+            .filter(({ id, display, searchable }) => {
+              if (!mention.content) {
+                return true;
+              }
 
-            const lowerInput = mention.content.toLowerCase();
-            if (searchable) {
-              return searchable.some(str => str.indexOf(lowerInput) !== -1);
-            }
+              const lowerInput = mention.content.toLowerCase();
+              if (searchable) {
+                return searchable.some(str => str.indexOf(lowerInput) !== -1);
+              }
 
-            const lowerDisplay = display.toLowerCase();
-            const lowerId = id.toLowerCase();
-            return lowerDisplay?.indexOf(lowerInput) !== -1 || lowerId?.indexOf(lowerInput) !== -1;
-          })
+              const lowerDisplay = display.toLowerCase();
+              const lowerId = id.toLowerCase();
+              return (
+                lowerDisplay?.indexOf(lowerInput) !== -1 || lowerId?.indexOf(lowerInput) !== -1
+              );
+            })
+            .sort(({ id }) => (UserUtils.isUsFromCache(id) ? -1 : 1))
         : mention?.prefix === PREFIX.EMOJI
           ? searchEmojiForQuery(mention.content, 10)
           : [],
@@ -448,6 +462,10 @@ export const CompositionTextArea = (props: Props) => {
         autoFocus={true}
         ref={inputRef}
         scrollbarPadding={140}
+        autoCorrect="off"
+        aria-haspopup="listbox"
+        aria-autocomplete="list"
+        aria-label={messagePlaceHolder}
       />
       {showPopover ? (
         <SessionPopoverContent
