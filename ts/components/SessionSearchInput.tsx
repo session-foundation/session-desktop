@@ -10,6 +10,7 @@ import { useHotkey } from '../hooks/useHotkey';
 import { localize } from '../localization/localeTools';
 import { SessionLucideIconButton } from './icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from './icon/lucide';
+import { LucideIcon } from './icon/LucideIcon';
 
 const StyledSearchInput = styled.div`
   height: var(--search-input-height);
@@ -89,11 +90,10 @@ export const SessionSearchInput = ({ searchType }: { searchType: SearchType }) =
 
   return (
     <StyledSearchInput data-testid={isGroupCreationSearch ? 'search-contacts-field' : undefined}>
-      <SessionLucideIconButton
+      <LucideIcon
         iconColor="var(--search-bar-icon-color)"
         iconSize={iconSize}
         unicode={LUCIDE_ICONS_UNICODE.SEARCH}
-        style={{ cursor: 'default', pointerEvents: 'none' }} // that magnifying glass icon is not clickable
       />
       <StyledInput
         ref={inputRef}
