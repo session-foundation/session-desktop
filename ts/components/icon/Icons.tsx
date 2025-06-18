@@ -1,42 +1,40 @@
 /* eslint-disable max-len */
 /* eslint-disable no-multi-str */
 export type SessionIconType =
-  | 'addModerator'
   | 'bell'
-  | 'brand'
-  | 'brandThin'
   | 'circle'
-  | 'crown' // lucide icon for crown does not look good for our use case (too small)
-  | 'deleteModerator'
-  | 'error'
   | 'exit'
   | 'hangup'
-  | 'messageRequest'
-  | 'messageTrash'
   | 'microphone'
   | 'mute'
   | 'pin'
-  | 'recoveryPasswordFill'
-  | 'recoveryPasswordOutline'
-  | 'removeUser'
-  | 'sessionToken'
-  | 'session'
-  | 'sessionTokenLogoWithText'
-  | 'shield'
-  | 'timer00'
-  | 'timer05'
-  | 'timer10'
-  | 'timer15'
-  | 'timer20'
-  | 'timer25'
-  | 'timer30'
-  | 'timer35'
-  | 'timer40'
-  | 'timer45'
-  | 'timer50'
-  | 'timer55'
-  | 'timer60'
-  | 'timerFixed';
+  | 'crown' // lucide icon for crown does not look good for our use case (too small)
+  | 'messageTrash' // no lucide alternative yet
+  | 'addModerator' // no lucide alternative yet
+  | 'deleteModerator' // no lucide alternative yet
+  | 'removeUser' // could have an alternative with lucide, but we need all platforms to agree (backlog)
+  | 'brand' // no lucide alternative (app specific)
+  | 'brandThin' // no lucide alternative (app specific)
+  | 'recoveryPasswordFill' // no lucide alternative (app specific)
+  | 'recoveryPasswordOutline' // no lucide alternative (app specific)
+  | 'sessionToken' // no lucide alternative (app specific)
+  | 'session' // no lucide alternative (app specific)
+  | 'sessionTokenLogoWithText' // no lucide alternative (app specific)
+  | 'shield' // no lucide alternative (app specific)
+  | 'timer00' // no lucide alternative yet
+  | 'timer05' // no lucide alternative yet
+  | 'timer10' // no lucide alternative yet
+  | 'timer15' // no lucide alternative yet
+  | 'timer20' // no lucide alternative yet
+  | 'timer25' // no lucide alternative yet
+  | 'timer30' // no lucide alternative yet
+  | 'timer35' // no lucide alternative yet
+  | 'timer40' // no lucide alternative yet
+  | 'timer45' // no lucide alternative yet
+  | 'timer50' // no lucide alternative yet
+  | 'timer55' // no lucide alternative yet
+  | 'timer60' // no lucide alternative yet
+  | 'timerFixed'; // no lucide alternative yet
 
 export type SessionIconSize = 'tiny' | 'small' | 'medium' | 'large' | 'huge' | 'huge2' | 'max';
 
@@ -91,11 +89,6 @@ export const icons: Record<SessionIconType, IconProps> = {
     viewBox: '0 0 512 512',
     ratio: 1,
   },
-  error: {
-    path: 'M164.666,0C73.871,0,0.004,73.871,0.004,164.672c0.009,90.792,73.876,164.656,164.662,164.656 c90.793,0,164.658-73.865,164.658-164.658C329.324,73.871,255.459,0,164.666,0z M164.666,30c31.734,0,60.933,11.042,83.975,29.477 L59.478,248.638c-18.431-23.04-29.471-52.237-29.474-83.967C30.004,90.413,90.413,30,164.666,30z M164.666,299.328 c-31.733,0-60.934-11.042-83.977-29.477L269.854,80.691c18.431,23.043,29.471,52.244,29.471,83.979 C299.324,238.921,238.917,299.328,164.666,299.328z',
-    viewBox: '0 0 329.328 329.328',
-    ratio: 1,
-  },
   exit: {
     path: 'M32.7243 1.22699C33.7802 2.28288 33.7802 3.99482 32.7243 5.05072L20.8237 16.9513L32.8214 28.949C33.8773 30.0049 33.8773 31.7169 32.8214 32.7728C31.7656 33.8286 30.0536 33.8286 28.9977 32.7728L17 20.775L5.00225 32.7728C3.94635 33.8287 2.23441 33.8287 1.17852 32.7728C0.122624 31.7169 0.122623 30.0049 1.17852 28.949L13.1763 16.9513L1.27568 5.05071C0.219787 3.99481 0.219787 2.28287 1.27568 1.22698C2.33157 0.171085 4.04352 0.171085 5.09941 1.22698L17 13.1276L28.9006 1.22699C29.9565 0.171092 31.6684 0.171092 32.7243 1.22699Z',
     viewBox: '0 0 34 34',
@@ -107,11 +100,6 @@ export const icons: Record<SessionIconType, IconProps> = {
     path: 'M983.7,530.6c7.7,53.1,12.6,125.7-11.1,153.6c-39.4,46-288.8,46-288.8-46c0-46.3,41-76.7,1.7-122.7c-38.7-45.2-108.2-46-185.4-46s-146.7,0.7-185.4,46c-39.4,46,1.7,76.3,1.7,122.7c0,92-249.4,92-288.8,46C3.7,656.4,8.7,583.7,16.3,530.6c5.9-35.5,20.8-73.7,68.5-122.5l0,0c71.5-66.8,179.8-121.3,411.4-122.5v0c1.3,0,2.5,0,3.8,0s2.5,0,3.8,0v0c231.6,1.2,339.8,55.7,411.4,122.5l0,0C962.9,456.9,977.8,495.2,983.7,530.6z',
     viewBox: '0 0 1000 1000',
     ratio: 1,
-  },
-  messageRequest: {
-    path: 'M1.27225 19.1234c-.09912 0-.19825-.0141-.289744-.0495-.289745-.1063-.47274-.3682-.47274-.6585V3.5461c0-1.47277 1.288604-2.676471 2.882194-2.676471H17.6276c1.5859 0 2.8822 1.196621 2.8822 2.676471v9.6792c0 1.4727-1.2886 2.6764-2.8822 2.6764H5.02368l-3.20244 3.0164c-.14487.1345-.34312.2124-.54137.2124l-.00762-.0071ZM3.39196 2.28575c-.74724 0-1.35722.56645-1.35722 1.26035v13.1487l2.11971-1.9968c.14487-.1345.33549-.2124.54136-.2124H17.6199c.7473 0 1.3573-.5664 1.3573-1.2603V3.5461c0-.6939-.61-1.26035-1.3573-1.26035H3.38434h.00762Zm7.19634 2.06191c-1.61188 0-2.65237.67619-2.68596 2.2829H9.3682c.07836-.88152.5597-1.11672 1.2201-1.11672.6605 0 .9958.3626.9958.79333 0 .73499-.2666.88199-1.70098 1.70518v1.13632h1.47758v-.96972c.8278-.3626 1.759-.95059 1.759-2.01831s-.8752-1.81298-2.5314-1.81298Zm.8614 5.5556H9.74879v1.40094h1.70091V9.90326Z',
-    viewBox: '0 0 21 20',
-    ratio: 21 / 20,
   },
   messageTrash: {
     path: 'M9.344 21.457h5.388v.063h.5c.501 0 .844.35.844.817 0 .468-.343.818-.844.818H9.716l-.146.143-4.864 4.769a6.225 6.225 0 0 0-.118.12l-.004.003a3.978 3.978 0 0 1-.091.092.504.504 0 0 1-.106.086c-.024.012-.104.054-.395.003-.472-.085-.74-.447-.74-.826V6.651c0-1.375.782-2.63 2.121-3.176l.016-.007.015-.007c.415-.204.841-.263 1.38-.263h18.56c1.418 0 2.697.775 3.252 2.08l.007.016.008.016c.205.403.265.815.265 1.341v5.333c0 .468-.343.818-.844.818-.501 0-.844-.35-.844-.818V6.588c0-.503-.177-.948-.534-1.298a1.815 1.815 0 0 0-1.31-.52H6.656c-.505 0-.953.17-1.31.52-.357.35-.534.795-.534 1.298v18.947l.85-.833 3.072-3.012a.818.818 0 0 1 .61-.233Zm20.8-4.327h-2.368v-.377c0-.502-.256-1.067-.64-1.506a2.101 2.101 0 0 0-1.536-.627h-2.624c-.512 0-1.088.25-1.536.627a2.02 2.02 0 0 0-.64 1.506v.376h-2.368c-.512 0-.896.377-.896.879s.384.878.896.878h.384v8.032c0 .502.256 1.066.64 1.506.448.439.96.627 1.536.627h6.464c.512 0 1.088-.251 1.536-.627.448-.44.64-.942.64-1.506v-8.032h.384c.512 0 .896-.376.896-.878s-.384-.879-.896-.879h.128Zm-7.552 0v-.377s0-.126.128-.251.192-.125.256-.125H25.6s.128 0 .256.125.128.188.128.25v.377h-3.392Zm5.312 1.694v8.03s0 .126-.128.252c-.128.125-.192.125-.256.125h-6.464s-.128 0-.256-.125c-.128-.126-.128-.188-.128-.251v-8.032h7.296-.064Zm-4.928 7.027c.512 0 .896-.377.896-.878v-3.828c0-.502-.384-.878-.896-.878s-.896.376-.896.878v3.828c0 .502.384.878.896.878Zm2.624 0c.512 0 .896-.377.896-.878v-3.828c0-.502-.384-.878-.896-.878s-.896.376-.896.878v3.828c0 .502.384.878.896.878Z',
