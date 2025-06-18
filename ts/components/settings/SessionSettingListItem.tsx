@@ -13,7 +13,9 @@ import {
 import { SessionToggle } from '../basic/SessionToggle';
 import { SpacerSM } from '../basic/Text';
 import { SessionConfirmDialogProps } from '../dialog/SessionConfirm';
-import { SessionIcon, SessionIconButton, SessionIconProps } from '../icon';
+import { SessionIcon, SessionIconProps } from '../icon';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 type ButtonSettingsProps = {
   title?: string;
@@ -143,10 +145,10 @@ export const SessionSettingsTitleWithLink = (props: { title: string; link: strin
       }}
     >
       <SettingsTitleAndDescription title={title} />
-      <SessionIconButton
+      <SessionLucideIconButton
         title={link}
-        iconSize={'medium'}
-        iconType="externalLink"
+        iconSize={'large'}
+        unicode={LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}
         isSelected={true}
       />
     </StyledSettingItemClickable>
