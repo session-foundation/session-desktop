@@ -16,6 +16,8 @@ import { DefaultConversationSettingsPage } from './pages/default/defaultPage';
 import { assertUnreachable } from '../../../types/sqlSharedTypes';
 import { NotificationsPage } from './pages/notifications/NotificationPage';
 import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useShowConversationSettingsFor';
+import { SessionLucideIconButton } from '../../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 
 const StyledContent = styled(Flex)`
   /* position: absolute; */
@@ -59,7 +61,7 @@ function useCloseActionFromPage(props: ConversationSettingsModalState) {
   }
 }
 
-function useBackButtonForPage(modalState: ConversationSettingsModalState) {
+function useBackActionForPage(modalState: ConversationSettingsModalState) {
   const showConvoSettingsCb = useShowConversationSettingsFor(modalState?.conversationId);
 
   if (
@@ -72,23 +74,17 @@ function useBackButtonForPage(modalState: ConversationSettingsModalState) {
     return undefined;
   }
 
-  return [
-    {
-      iconType: 'chevron' as const,
-      iconRotation: 90,
-      onClick: () => {
-        showConvoSettingsCb({
-          settingsModalPage: 'default',
-        });
-      },
-    },
-  ];
+  return () => {
+    showConvoSettingsCb({
+      settingsModalPage: 'default',
+    });
+  };
 }
 
 export function ConversationSettingsDialog(props: ConversationSettingsModalState) {
   const onClose = useCloseActionFromPage(props);
   const title = useTitleFromPage(props?.settingsModalPage);
-  const backButton = useBackButtonForPage(props);
+  const backAction = useBackActionForPage(props);
 
   if (!props?.conversationId) {
     return null;
@@ -108,11 +104,21 @@ export function ConversationSettingsDialog(props: ConversationSettingsModalState
       <SessionWrapperModal2
         title={title}
         onClose={onClose}
-        showExitIcon={!backButton}
+        showExitIcon={!backAction}
         contentBorder={false}
         shouldOverflow={true}
         allowOutsideClick={false}
-        headerIconButtons={backButton}
+        headerIconButtons={
+          backAction
+            ? [
+                <SessionLucideIconButton
+                  unicode={LUCIDE_ICONS_UNICODE.CHEVRON_LEFT}
+                  onClick={backAction}
+                  iconSize="medium"
+                />,
+              ]
+            : undefined
+        }
         $contentMaxWidth="500px"
         $contentMinWidth="400px"
         bigHeader={true}

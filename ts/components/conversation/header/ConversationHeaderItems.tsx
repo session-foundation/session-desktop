@@ -12,7 +12,6 @@ import {
   useSelectedIsPrivateFriend,
 } from '../../../state/selectors/selectedConversation';
 import { Avatar, AvatarSize } from '../../avatar/Avatar';
-import { SessionIconButton } from '../../icon';
 import { useIsLegacyGroup } from '../../../hooks/useParamSelector';
 import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
@@ -34,23 +33,6 @@ export const AvatarHeader = (props: { pubkey: string; onAvatarClick?: () => void
         dataTestId="conversation-options-avatar"
       />
     </span>
-  );
-};
-
-export const BackButton = (props: { onGoBack: () => void; showBackButton: boolean }) => {
-  const { onGoBack, showBackButton } = props;
-  if (!showBackButton) {
-    return null;
-  }
-
-  return (
-    <SessionIconButton
-      iconType="chevron"
-      iconSize="large"
-      iconRotation={90}
-      onClick={onGoBack}
-      dataTestId="back-button-message-details"
-    />
   );
 };
 

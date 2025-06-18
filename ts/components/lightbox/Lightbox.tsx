@@ -11,8 +11,10 @@ import * as MIME from '../../types/MIME';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { GoogleChrome } from '../../util';
 import { Flex } from '../basic/Flex';
-import { SessionIconButton, SessionIconSize, SessionIconType } from '../icon';
+import { SessionIconSize } from '../icon';
 import { AriaLabels } from '../../util/hardcodedAriaLabels';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
 
 const colorSVG = (url: string, color: string) => {
   return {
@@ -110,7 +112,7 @@ const styles = {
     flexDirection: 'row',
     justifyContent: 'center',
     padding: 10,
-    height: '50px', // force it so the buttons stick to the bottom
+    height: '70px', // force it so the buttons stick to the bottom
   } as CSSProperties,
   saveButton: {
     marginTop: 10,
@@ -147,21 +149,20 @@ const IconButton = ({ onClick, type }: IconButtonProps) => {
     }
     onClick();
   };
-  let iconRotation = 0;
-  let iconType: SessionIconType = 'chevron';
+  let unicode: LUCIDE_ICONS_UNICODE = LUCIDE_ICONS_UNICODE.CHEVRON_RIGHT;
   let iconSize: SessionIconSize = 'huge';
   switch (type) {
     case 'next':
-      iconRotation = 270;
+      unicode = LUCIDE_ICONS_UNICODE.CHEVRON_RIGHT;
       break;
     case 'previous':
-      iconRotation = 90;
+      unicode = LUCIDE_ICONS_UNICODE.CHEVRON_LEFT;
       break;
     case 'close':
-      iconType = 'exit';
+      unicode = LUCIDE_ICONS_UNICODE.X;
       break;
     case 'save':
-      iconType = 'save';
+      unicode = LUCIDE_ICONS_UNICODE.DOWNLOAD;
       iconSize = 'huge2';
       break;
     default:
@@ -170,10 +171,9 @@ const IconButton = ({ onClick, type }: IconButtonProps) => {
 
   return (
     <StyledIconButton>
-      <SessionIconButton
-        iconType={iconType}
+      <SessionLucideIconButton
+        unicode={unicode}
         iconSize={iconSize}
-        iconRotation={iconRotation}
         // the lightbox has a dark background
         iconColor="var(--lightbox-icon-stroke-color)"
         onClick={clickHandler}

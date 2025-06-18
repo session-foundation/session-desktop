@@ -4,8 +4,7 @@ import { ReactNode, useState, useRef } from 'react';
 import useKey from 'react-use/lib/useKey';
 import { Flex } from './basic/Flex';
 import { SpacerXL } from './basic/Text';
-import { SessionIconButton } from './icon';
-import { SessionIconButtonProps, SessionLucideIconButton } from './icon/SessionIconButton';
+import { SessionLucideIconButton } from './icon/SessionIconButton';
 import { SessionFocusTrap } from './SessionFocusTrap';
 import { useHTMLDirection } from '../util/i18n/rtlSupport';
 import { StyledRootDialog } from './dialog/StyledRootDialog';
@@ -118,7 +117,7 @@ export type SessionWrapperModalType2 = {
   showHeader?: boolean;
   onClose?: (event?: KeyboardEvent) => void;
   showExitIcon?: boolean;
-  headerIconButtons?: Array<Omit<SessionIconButtonProps, 'iconSize'>>;
+  headerIconButtons?: Array<React.ReactNode>;
   children: ReactNode;
   buttonChildren?: ReactNode;
   $contentMaxWidth?: string;
@@ -158,27 +157,7 @@ const ModalHeader = (
         padding={'0'}
         margin={'0'}
       >
-        {headerIconButtons?.length ? (
-          headerIconButtons.map(iconItem => {
-            return (
-              <SessionIconButton
-                key={iconItem.iconType}
-                iconType={iconItem.iconType}
-                iconSize={bigHeader ? 'large' : 'medium'}
-                iconRotation={iconItem.iconRotation}
-                rotateDuration={iconItem.rotateDuration}
-                onClick={iconItem.onClick}
-                padding={'0'}
-                margin={'0'}
-                disabled={iconItem.disabled}
-                dataTestId={iconItem.dataTestId}
-                dataTestIdIcon={iconItem.dataTestIdIcon}
-              />
-            );
-          })
-        ) : showExitIcon ? (
-          <SpacerXL />
-        ) : null}
+        {headerIconButtons?.length ? headerIconButtons : showExitIcon ? <SpacerXL /> : null}
       </Flex>
       <StyledTitle
         bigHeader={bigHeader}

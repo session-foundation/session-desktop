@@ -260,7 +260,7 @@ export const EditProfileDialog = () => {
   return (
     <StyledEditProfileDialog className="edit-profile-dialog" data-testid="edit-profile-dialog">
       <SessionWrapperModal
-        title={window.i18n('profile')}
+        title={localize('profile').toString()}
         headerIconButtons={backButton}
         headerReverse={true}
         showExitIcon={true}
@@ -354,7 +354,7 @@ export const EditProfileDialog = () => {
               />
               {mode === 'default' ? (
                 <SessionButton
-                  text={window.i18n('qrView')}
+                  text={localize('qrView').toString()}
                   onClick={() => {
                     setMode('qr');
                   }}
@@ -366,7 +366,7 @@ export const EditProfileDialog = () => {
           ) : (
             !loading && (
               <SessionButton
-                text={window.i18n('save')}
+                text={localize('save').toString()}
                 onClick={onClickOK}
                 disabled={cannotContinue}
                 buttonColor={SessionButtonColor.PrimaryDark}

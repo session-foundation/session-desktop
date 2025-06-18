@@ -4,7 +4,6 @@ import styled, { CSSProperties } from 'styled-components';
 import { PropsForAttachment } from '../../../../../../state/ducks/conversations';
 import { getAlt, getThumbnailUrl, isVideoAttachment } from '../../../../../../types/Attachment';
 import { Flex } from '../../../../../basic/Flex';
-import { SessionIconButton } from '../../../../../icon';
 import { Image } from '../../../../Image';
 import {
   StyledSubtitleDotMenu,
@@ -12,16 +11,15 @@ import {
 } from '../../../../header/ConversationHeaderSubtitle';
 import { showLightboxFromAttachmentProps } from '../../../../message/message-content/MessageAttachment';
 import { SessionLucideIconButton } from '../../../../../icon/SessionIconButton';
-import { LUCIDE_ICONS_UNICODE } from '../../../../../icon/lucide';
+import { LUCIDE_ICONS_UNICODE, type WithLucideUnicode } from '../../../../../icon/lucide';
 
-const CarouselButton = (props: { visible: boolean; rotation: number; onClick: () => void }) => {
+const CarouselButton = (props: WithLucideUnicode & { visible: boolean; onClick: () => void }) => {
   return (
-    <SessionIconButton
+    <SessionLucideIconButton
       iconSize={'huge'}
-      iconType={'chevron'}
-      iconRotation={props.rotation}
+      unicode={props.unicode}
       onClick={props.onClick}
-      iconPadding={'var(--margins-xs)'}
+      padding={'var(--margins-xs)'}
       style={{
         visibility: props.visible ? 'visible' : 'hidden',
       }}
@@ -103,7 +101,11 @@ export const AttachmentCarousel = (props: Props) => {
       $justifyContent={'center'}
       $alignItems={'center'}
     >
-      <CarouselButton visible={visibleIndex > 0} onClick={previousAction} rotation={90} />
+      <CarouselButton
+        visible={visibleIndex > 0}
+        onClick={previousAction}
+        unicode={LUCIDE_ICONS_UNICODE.CHEVRON_LEFT}
+      />
       <ImageContainer>
         <Image
           alt={getAlt(attachments[visibleIndex])}
@@ -140,7 +142,7 @@ export const AttachmentCarousel = (props: Props) => {
       <CarouselButton
         visible={visibleIndex < attachments.length - 1}
         onClick={nextAction}
-        rotation={270}
+        unicode={LUCIDE_ICONS_UNICODE.CHEVRON_RIGHT}
       />
     </Flex>
   );

@@ -3,8 +3,9 @@ import styled from 'styled-components';
 import { getShowScrollButton } from '../state/selectors/conversations';
 
 import { useSelectedUnreadCount } from '../state/selectors/selectedConversation';
-import { SessionIconButton } from './icon';
 import { SessionUnreadCount } from './icon/SessionNotificationCount';
+import { SessionLucideIconButton } from './icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from './icon/lucide';
 
 const SessionScrollButtonDiv = styled.div`
   position: fixed;
@@ -24,15 +25,18 @@ export const SessionScrollButton = (props: { onClickScrollBottom: () => void }) 
 
   return (
     <SessionScrollButtonDiv>
-      <SessionIconButton
-        iconType="chevron"
-        iconSize={'huge'}
-        isHidden={!show}
-        onClick={props.onClickScrollBottom}
-        dataTestId="scroll-to-bottom-button"
-      >
-        {Boolean(unreadCount) && <SessionUnreadCount count={unreadCount} />}
-      </SessionIconButton>
+      {show ? (
+        <SessionLucideIconButton
+          unicode={LUCIDE_ICONS_UNICODE.CHEVRON_DOWN}
+          iconSize={'large'}
+          onClick={props.onClickScrollBottom}
+          dataTestId="scroll-to-bottom-button"
+          makeSquare={true}
+          style={{ backgroundColor: 'var(--chat-buttons-background-color)', borderRadius: '50%' }}
+        >
+          {Boolean(unreadCount) && <SessionUnreadCount count={unreadCount} />}
+        </SessionLucideIconButton>
+      ) : null}
     </SessionScrollButtonDiv>
   );
 };
