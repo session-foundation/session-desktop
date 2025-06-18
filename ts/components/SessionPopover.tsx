@@ -184,7 +184,20 @@ export const SessionPopoverContent = (props: PopoverProps) => {
       pointerOffset: offset,
       anchorX: newAnchorX,
     };
-  }, [readyToShow, contentW, isTooltip, triggerX, triggerWidth, horizontalPosition, viewportWidth, verticalPosition, contentH, viewportHeight, triggerY, triggerHeight]);
+  }, [
+    readyToShow,
+    contentW,
+    isTooltip,
+    triggerX,
+    triggerWidth,
+    horizontalPosition,
+    viewportWidth,
+    verticalPosition,
+    contentH,
+    viewportHeight,
+    triggerY,
+    triggerHeight,
+  ]);
 
   return (
     <>

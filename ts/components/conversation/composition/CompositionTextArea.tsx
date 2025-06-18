@@ -457,7 +457,7 @@ export const CompositionTextArea = (props: Props) => {
           triggerY={popoverY}
           triggerHeight={18}
           triggerWidth={1}
-          horizontalPosition='right'
+          horizontalPosition="right"
         >
           {popoverContent}
         </SessionPopoverContent>
