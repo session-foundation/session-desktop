@@ -13,6 +13,7 @@ import {
   getHideRecoveryPasswordModalState,
   getInviteContactModal,
   getLightBoxOptions,
+  getSessionProInfoModalState,
   getOnionPathDialog,
   getOpenUrlModalState,
   getReactClearAllDialog,
@@ -47,6 +48,7 @@ import { BlockOrUnblockDialog } from './blockOrUnblock/BlockOrUnblockDialog';
 import { DebugMenuModal } from './debug/DebugMenuModal';
 import { SessionNetworkModal } from './network/SessionNetworkModal';
 import { SessionConfirm } from './SessionConfirm';
+import { SessionProInfoModal } from './SessionProInfoModal';
 
 export const ModalContainer = () => {
   const confirmModalState = useSelector(getConfirmModal);
@@ -69,6 +71,7 @@ export const ModalContainer = () => {
   const editProfilePictureModalState = useSelector(getEditProfilePictureModalState);
   const hideRecoveryPasswordModalState = useSelector(getHideRecoveryPasswordModalState);
   const openUrlModalState = useSelector(getOpenUrlModalState);
+  const sessionProInfoState = useSelector(getSessionProInfoModalState);
   const lightBoxOptions = useSelector(getLightBoxOptions);
   const debugMenuModalState = useSelector(getDebugMenuModalState);
   const sessionNetworkModalState = useSelector(getSessionNetworkModalState);
@@ -106,6 +109,7 @@ export const ModalContainer = () => {
       )}
       {lightBoxOptions && <LightboxGallery {...lightBoxOptions} />}
       {openUrlModalState && <OpenUrlModal {...openUrlModalState} />}
+      {sessionProInfoState && <SessionProInfoModal {...sessionProInfoState} />}
       {/* Should be on top of all other modals */}
       {confirmModalState && <SessionConfirm {...confirmModalState} />}
     </>

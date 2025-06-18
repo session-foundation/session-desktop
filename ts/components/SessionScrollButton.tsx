@@ -8,7 +8,6 @@ import { SessionUnreadCount } from './icon/SessionNotificationCount';
 
 const SessionScrollButtonDiv = styled.div`
   position: fixed;
-  z-index: 2;
   right: 60px;
   animation: fadein var(--default-duration);
 

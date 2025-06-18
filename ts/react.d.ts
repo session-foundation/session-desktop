@@ -276,7 +276,9 @@ declare module 'react' {
     | 'avatar-placeholder'
     | `input-releases-${ReleaseChannels}`
     | `label-releases-${ReleaseChannels}`
-    | 'last-updated-timestamp';
+    | 'last-updated-timestamp'
+    | 'tooltip-character-count'
+    | 'modal-button-session-pro-ok';
 
   interface HTMLAttributes {
     'data-testid'?: SessionDataTestId;

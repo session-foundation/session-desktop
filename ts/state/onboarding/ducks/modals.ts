@@ -1,19 +1,25 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 import { TermsOfServicePrivacyDialogProps } from '../../../components/dialog/TermsOfServicePrivacyDialog';
-import { ConfirmModalState, type OpenUrlModalState } from '../../ducks/modalDialog';
+import {
+  ConfirmModalState,
+  type SessionProInfoState,
+  type OpenUrlModalState,
+} from '../../ducks/modalDialog';
 
 export type TermsOfServicePrivacyModalState = TermsOfServicePrivacyDialogProps | null;
 
 export type ModalsState = {
-  quitModalState: ConfirmModalState | null;
-  termsOfServicePrivacyModalState: TermsOfServicePrivacyModalState | null;
+  quitModalState: ConfirmModalState;
+  termsOfServicePrivacyModalState: TermsOfServicePrivacyModalState;
   openUrlModal: OpenUrlModalState;
+  sessionProInfoModal: SessionProInfoState;
 };
 
 const initialState: ModalsState = {
   quitModalState: null,
   termsOfServicePrivacyModalState: null,
   openUrlModal: null,
+  sessionProInfoModal: null,
 };
 
 export const modalsSlice = createSlice({
@@ -31,6 +37,9 @@ export const modalsSlice = createSlice({
     },
     updateOpenUrlModal(state, action: PayloadAction<OpenUrlModalState>) {
       return { ...state, openUrlModal: action.payload };
+    },
+    updateSessionProInfoModal(state, action: PayloadAction<SessionProInfoState>) {
+      return { ...state, sessionProInfoModal: action.payload };
     },
   },
 });

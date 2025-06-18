@@ -3,17 +3,20 @@ import { ConvoHub } from '../../session/conversations';
 import { isUsAnySogsFromCache } from '../../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import { PubKey } from '../../session/types';
 import { RenderTextCallbackType } from '../../types/Util';
+import { localize } from '../../localization/localeTools';
 
 interface MentionProps {
   key: string;
+  dataUserId?: string;
   text: string;
+  allowSelecting?: boolean;
 }
 
-const StyledMentionAnother = styled.span`
+const StyledMentionAnother = styled.span<{ allowSelecting?: boolean }>`
   border-radius: 4px;
   margin: 2px;
   padding: 2px;
-  user-select: none;
+  user-select: ${props => (props.allowSelecting ? 'text' : 'none')};
   font-weight: bold;
 `;
 
@@ -23,17 +26,29 @@ const StyledMentionedUs = styled(StyledMentionAnother)`
   border-radius: 5px;
 `;
 
-const Mention = (props: MentionProps) => {
+export const Mention = (props: MentionProps) => {
   const blindedOrNotPubkey = props.text.slice(1);
   const foundConvo = ConvoHub.use().get(blindedOrNotPubkey);
 
   // this call takes care of finding if we have a blindedId of ourself on any sogs we have joined.
   if (isUsAnySogsFromCache(blindedOrNotPubkey)) {
-    return <StyledMentionedUs>@{window.i18n('you')}</StyledMentionedUs>;
+    return (
+      <StyledMentionedUs
+        data-user-id={props.dataUserId}
+        contentEditable={false}
+        allowSelecting={props.allowSelecting}
+      >
+        @{localize('you')}
+      </StyledMentionedUs>
+    );
   }
 
   return (
-    <StyledMentionAnother>
+    <StyledMentionAnother
+      data-user-id={props.dataUserId}
+      contentEditable={false}
+      allowSelecting={props.allowSelecting}
+    >
       @{foundConvo?.getNicknameOrRealUsernameOrPlaceholder() || PubKey.shorten(props.text)}
     </StyledMentionAnother>
   );

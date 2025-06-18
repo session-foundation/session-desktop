@@ -13,6 +13,8 @@ import { Image } from './Image';
 import { findAndFormatContact } from '../../models/message';
 import { getAbsoluteAttachmentPath } from '../../types/MessageAttachment';
 import { GoogleChrome } from '../../util';
+import { QuoteText } from './message/message-content/Quote';
+import { localize } from '../../localization/localeTools';
 
 const QuotedMessageComposition = styled(Flex)`
   border-top: 1px solid var(--border-color);
@@ -30,6 +32,7 @@ const Subtle = styled.div`
   -webkit-box-orient: vertical;
   display: -webkit-box;
   color: var(--text-primary-color);
+  font-size: var(--font-display-size-md);
 `;
 
 const StyledImage = styled.div`
@@ -57,26 +60,6 @@ function checkHasAttachments(attachments: Array<any> | undefined) {
       : undefined;
 
   return { hasAttachments, firstImageLikeAttachment };
-}
-
-function renderSubtitleText(
-  quoteText: string | undefined,
-  hasAudioAttachment: boolean,
-  isGenericFile: boolean,
-  isVideo: boolean,
-  isImage: boolean
-): string | null {
-  return quoteText && quoteText !== ''
-    ? quoteText
-    : hasAudioAttachment
-      ? window.i18n('audio')
-      : isGenericFile
-        ? window.i18n('document')
-        : isVideo
-          ? window.i18n('video')
-          : isImage
-            ? window.i18n('image')
-            : null;
 }
 
 export const SessionQuotedMessageComposition = () => {
@@ -110,12 +93,20 @@ export const SessionQuotedMessageComposition = () => {
   const hasAudioAttachment = Boolean(hasAttachments && isAudio(attachments));
   const isGenericFile = !hasAudioAttachment && !isVideo && !isImage;
 
-  const subtitleText = renderSubtitleText(
-    quoteText,
-    hasAudioAttachment,
-    isGenericFile,
-    isVideo,
-    isImage
+  const subtitleText = quoteText ? (
+    <QuoteText isIncoming={!contact.isMe} text={quoteText} />
+  ) : (
+    localize(
+      hasAudioAttachment
+        ? 'audio'
+        : isGenericFile
+          ? 'document'
+          : isVideo
+            ? 'video'
+            : isImage
+              ? 'image'
+              : 'messageErrorOriginal'
+    )
   );
 
   return (

@@ -87,39 +87,39 @@ export const ConversationMessageRequestButtons = () => {
   if (
     !selectedConvoId ||
     isPrivateAndFriend || // if we are already friends, there is no need for the msg request buttons
-    (isGroupV2 && !isGroupPendingInvite)
+    (isGroupV2 && !isGroupPendingInvite) ||
+    (!isIncomingRequest && !isOutgoingRequest) // if it's not a message request
   ) {
-    return null;
-  }
-
-  if (!isIncomingRequest) {
     return null;
   }
 
   return (
     <MessageRequestContainer>
-      <ConversationBannerRow>
-        <SessionButton
-          buttonColor={SessionButtonColor.PrimaryDark}
-          text={window.i18n('accept')}
-          onClick={() => {
-            void handleAcceptConversationRequest({
-              convoId: selectedConvoId,
-              approvalMessageTimestamp: NetworkTime.now(),
-            });
-          }}
-          dataTestId="accept-message-request"
-        />
-        <SessionButton
-          buttonColor={SessionButtonColor.Danger}
-          text={window.i18n('delete')}
-          onClick={() => {
-            handleDeclineConversationRequest(selectedConvoId, selectedConvoId, convoOrigin);
-          }}
-          dataTestId="delete-message-request"
-        />
-      </ConversationBannerRow>
-      <ConversationIncomingRequestExplanation />
+      {isIncomingRequest ? (
+        <ConversationBannerRow>
+          <SessionButton
+            buttonColor={SessionButtonColor.PrimaryDark}
+            text={window.i18n('accept')}
+            onClick={() => {
+              void handleAcceptConversationRequest({
+                convoId: selectedConvoId,
+                approvalMessageTimestamp: NetworkTime.now(),
+              });
+            }}
+            dataTestId="accept-message-request"
+          />
+          <SessionButton
+            buttonColor={SessionButtonColor.Danger}
+            text={window.i18n('delete')}
+            onClick={() => {
+              handleDeclineConversationRequest(selectedConvoId, selectedConvoId, convoOrigin);
+            }}
+            dataTestId="delete-message-request"
+          />
+        </ConversationBannerRow>
+      ) : null}
+
+      {isIncomingRequest ? <ConversationIncomingRequestExplanation /> : null}
 
       {isOutgoingRequest ? (
         <ConversationOutgoingRequestExplanation />
