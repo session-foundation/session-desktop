@@ -70,10 +70,7 @@ const StyledGridContainer = styled.div`
   }
 `;
 
-export const CircularIcon = (props: {
-  iconType: SessionIconType;
-  iconSize: SessionIconSize | number;
-}) => {
+const CircularIcon = (props: { iconType: SessionIconType; iconSize: SessionIconSize | number }) => {
   const { iconSize, iconType } = props;
 
   return (

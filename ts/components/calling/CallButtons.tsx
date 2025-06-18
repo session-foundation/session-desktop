@@ -12,6 +12,8 @@ import { DropDownAndToggleButton } from '../icon/DropDownAndToggleButton';
 import { SessionContextMenuContainer } from '../SessionContextMenuContainer';
 import { ItemWithDataTestId } from '../menu/items/MenuItemWithDataTestId';
 import { getMenuAnimation } from '../menu/MenuAnimation';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 const VideoInputMenu = ({
   triggerId,
@@ -253,11 +255,11 @@ const ShowInFullScreenButton = ({ isFullScreen }: { isFullScreen: boolean }) => 
 
   return (
     <StyledCallActionButton isFullScreen={isFullScreen}>
-      <SessionIconButton
-        iconSize={60}
-        iconPadding="20px"
-        iconType="fullscreen"
-        borderRadius="50%"
+      <SessionLucideIconButton
+        iconSize={'max'}
+        // iconPadding="20px"
+        unicode={LUCIDE_ICONS_UNICODE.MAXIMIZE}
+        // borderRadius="50%"
         onClick={showInFullScreen}
         iconColor="var(--call-buttons-action-icon-color)"
         margin="10px"

@@ -4,7 +4,6 @@ import { useMemo } from 'react';
 import clsx from 'clsx';
 
 import { acceptOpenGroupInvitation } from '../../../../interactions/messageInteractions';
-import { SessionIconButton } from '../../../icon';
 import { ExpirableReadableMessage } from './ExpirableReadableMessage';
 import {
   useMessageCommunityInvitationFullUrl,
@@ -12,6 +11,9 @@ import {
   useMessageDirection,
 } from '../../../../state/selectors';
 import type { WithMessageId } from '../../../../session/types/with';
+import { SessionLucideIconButton } from '../../../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
+import { localize } from '../../../../localization/localeTools';
 
 const StyledCommunityInvitation = styled.div`
   background-color: var(--message-bubbles-received-background-color);
@@ -66,6 +68,8 @@ const StyledCommunityInvitation = styled.div`
       background-color: var(--primary-color);
     }
   }
+
+  cursor: pointer;
 `;
 
 const StyledIconContainer = styled.div`
@@ -104,25 +108,32 @@ export const CommunityInvitation = ({ messageId }: WithMessageId) => {
       key={`readable-message-${messageId}`}
       dataTestId="control-message"
     >
-      <StyledCommunityInvitation className={clsx(classes)}>
+      <StyledCommunityInvitation
+        className={clsx(classes)}
+        onClick={() => {
+          acceptOpenGroupInvitation(fullUrl, communityName);
+        }}
+      >
         <div className="contents">
           <StyledIconContainer>
-            <SessionIconButton
+            <SessionLucideIconButton
               iconColor={
                 messageDirection === 'outgoing'
                   ? 'var(--message-bubbles-sent-text-color)'
                   : 'var(--message-bubbles-received-text-color)'
               }
-              iconType={messageDirection === 'outgoing' ? 'communities' : 'plus'}
+              unicode={LUCIDE_ICONS_UNICODE.GLOBE}
               iconSize={'large'}
-              onClick={() => {
-                acceptOpenGroupInvitation(fullUrl, communityName);
+              style={{
+                aspectRatio: 1,
+                height: '2.5em',
+                justifyContent: 'center',
               }}
             />
           </StyledIconContainer>
           <span className="group-details">
             <span className="group-name">{communityName}</span>
-            <span className="group-type">{window.i18n('communityInvitation')}</span>
+            <span className="group-type">{localize('communityInvitation').toString()}</span>
             <span className="group-address">{hostname}</span>
           </span>
         </div>

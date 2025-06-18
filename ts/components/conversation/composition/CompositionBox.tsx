@@ -409,6 +409,7 @@ class CompositionBoxInner extends Component<Props, State> {
         $flexDirection={'row'}
         $alignItems={'center'}
         width={'100%'}
+        $flexGap='var(--margins-xs)'
       >
         {typingEnabled && <AddStagedAttachmentButton onClick={this.onChooseAttachment} />}
         <input

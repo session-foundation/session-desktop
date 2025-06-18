@@ -124,7 +124,7 @@ export type SessionLucideIconButtonProps = Pick<
   | 'tabIndex'
   | 'children'
 > &
-  Pick<LucideIconProps, 'unicode' | 'iconSize' | 'iconColor'>;
+  Pick<LucideIconProps, 'unicode' | 'iconSize' | 'iconColor'> & { makeSquare?: boolean };
 
 export const SessionLucideIconButton = forwardRef<HTMLButtonElement, SessionLucideIconButtonProps>(
   (props, ref) => {
@@ -144,6 +144,7 @@ export const SessionLucideIconButton = forwardRef<HTMLButtonElement, SessionLuci
       disabled,
       onClick,
       children,
+      makeSquare,
     } = props;
 
     const clickHandler = (e: MouseEvent<HTMLButtonElement>) => {
@@ -183,6 +184,7 @@ export const SessionLucideIconButton = forwardRef<HTMLButtonElement, SessionLuci
           iconSize={iconSize}
           iconColor={iconColor}
           dataTestId={dataTestIdIcon}
+          style={{ width: makeSquare ? '1.5em' : '' }}
         />
         {children}
       </StyledSessionIconButton>

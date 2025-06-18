@@ -11,6 +11,8 @@ import {
   SubtitleDotMenu,
 } from '../../../../header/ConversationHeaderSubtitle';
 import { showLightboxFromAttachmentProps } from '../../../../message/message-content/MessageAttachment';
+import { SessionLucideIconButton } from '../../../../../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../../../../../icon/lucide';
 
 const CarouselButton = (props: { visible: boolean; rotation: number; onClick: () => void }) => {
   return (
@@ -32,12 +34,11 @@ const StyledFullscreenButton = styled.div``;
 const FullscreenButton = (props: { onClick: () => void; style?: CSSProperties }) => {
   return (
     <StyledFullscreenButton style={props.style}>
-      <SessionIconButton
+      <SessionLucideIconButton
         iconSize={'large'}
         iconColor={'var(--button-icon-stroke-hover-color)'}
-        iconType={'fullscreen'}
+        unicode={LUCIDE_ICONS_UNICODE.MAXIMIZE}
         onClick={props.onClick}
-        iconPadding={'6px'}
       />
     </StyledFullscreenButton>
   );

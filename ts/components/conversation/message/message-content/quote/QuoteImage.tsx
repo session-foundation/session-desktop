@@ -4,9 +4,9 @@ import styled from 'styled-components';
 import { useDisableDrag } from '../../../../../hooks/useDisableDrag';
 import { useEncryptedFileFetch } from '../../../../../hooks/useEncryptedFileFetch';
 
-import { icons } from '../../../../icon';
 import { QuoteIcon } from './QuoteIconContainer';
 import { AriaLabels } from '../../../../../util/hardcodedAriaLabels';
+import { icons } from '../../../../icon/Icons';
 
 const StyledQuoteImage = styled.div`
   flex: initial;
