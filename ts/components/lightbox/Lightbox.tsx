@@ -15,14 +15,6 @@ import { AriaLabels } from '../../util/hardcodedAriaLabels';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 
-const colorSVG = (url: string, color: string) => {
-  return {
-    WebkitMask: `url(${url}) no-repeat center`,
-    WebkitMaskSize: '100%',
-    backgroundColor: color,
-  };
-};
-
 type Props = {
   contentType: MIME.MIMEType | undefined;
   objectURL: string;
@@ -178,24 +170,6 @@ const IconButton = ({ onClick, unicode }: IconButtonProps) => {
 
 const IconButtonPlaceholder = () => <div style={styles.iconButtonPlaceholder} />;
 
-const Icon = ({
-  onClick,
-  url,
-}: {
-  onClick?: (event: MouseEvent<HTMLImageElement | HTMLDivElement>) => void;
-  url: string;
-}) => (
-  <div
-    style={{
-      ...(styles.object as any),
-      ...colorSVG(url, 'var(--lightbox-icon-stroke-color)'),
-      maxWidth: 200,
-    }}
-    onClick={onClick}
-    role="button"
-  />
-);
-
 export const LightboxObject = ({
   objectURL,
   contentType,
@@ -256,14 +230,28 @@ export const LightboxObject = ({
   const isUnsupportedImageType = !isImageTypeSupported && MIME.isImage(contentType);
   const isUnsupportedVideoType = !isVideoTypeSupported && MIME.isVideo(contentType);
   if (isUnsupportedImageType || isUnsupportedVideoType) {
-    const iconUrl = isUnsupportedVideoType ? 'images/video.svg' : 'images/image.svg';
-
-    return <Icon url={iconUrl} onClick={onObjectClick} />;
+    return (
+      <SessionLucideIconButton
+        unicode={
+          isUnsupportedVideoType ? LUCIDE_ICONS_UNICODE.CLAPERBOARD : LUCIDE_ICONS_UNICODE.IMAGE
+        }
+        iconSize="huge2"
+        onClick={onObjectClick}
+        iconColor="var(--lightbox-icon-stroke-color)"
+      />
+    );
   }
 
   window.log.info('Lightbox: Unexpected content type', { contentType });
 
-  return <Icon onClick={onObjectClick} url="images/file.svg" />;
+  return (
+    <SessionLucideIconButton
+      unicode={LUCIDE_ICONS_UNICODE.FILE}
+      iconSize="huge2"
+      onClick={onObjectClick}
+      iconColor="var(--lightbox-icon-stroke-color)"
+    />
+  );
 };
 
 export const Lightbox = (props: Props) => {

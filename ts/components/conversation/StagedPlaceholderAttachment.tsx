@@ -1,5 +1,7 @@
 import { MouseEvent } from 'react';
 import styled from 'styled-components';
+import { LucideIcon } from '../icon/LucideIcon';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 interface Props {
   onClick: (e: MouseEvent<HTMLDivElement>) => void;
@@ -26,7 +28,16 @@ export const StagedPlaceholderAttachment = (props: Props) => {
 
   return (
     <StyledStagedPlaceholderAttachment role="button" onClick={onClick}>
-      <div className="module-staged-placeholder-attachment__plus-icon" />
+      <LucideIcon
+        unicode={LUCIDE_ICONS_UNICODE.PLUS}
+        iconSize="huge2"
+        style={{
+          width: '100%',
+          height: '100%',
+          alignContent: 'center',
+          textAlign: 'center',
+        }}
+      />
     </StyledStagedPlaceholderAttachment>
   );
 };

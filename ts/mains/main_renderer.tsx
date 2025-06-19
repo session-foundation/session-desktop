@@ -50,34 +50,6 @@ document.body.addEventListener(
   false
 );
 
-// Load these images now to ensure that they don't flicker on first use
-const images = [];
-
-function preload(list: Array<string>) {
-  for (let index = 0, max = list.length; index < max; index += 1) {
-    const image = new Image();
-    image.src = `./images/${list[index]}`;
-    images.push(image);
-  }
-}
-
-preload([
-  'alert-outline.svg',
-  'check.svg',
-  'error.svg',
-  'file-gradient.svg',
-  'file.svg',
-  'image.svg',
-  'microphone.svg',
-  'movie.svg',
-  'save.svg',
-  'shield.svg',
-  'timer.svg',
-  'video.svg',
-  'warning.svg',
-  'x.svg',
-]);
-
 // We add this to window here because the default Node context is erased at the end
 //   of preload.js processing
 window.setImmediate = window.nodeSetImmediate;
