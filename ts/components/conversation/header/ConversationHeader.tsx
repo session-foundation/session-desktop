@@ -7,6 +7,7 @@ import styled from 'styled-components';
 import {
   use05GroupMembers,
   useConversationUsername,
+  useIsIncomingRequest,
   useIsOutgoingRequest,
 } from '../../../hooks/useParamSelector';
 import {
@@ -33,6 +34,7 @@ export const ConversationHeaderWithDetails = () => {
   const isSelectionMode = useIsMessageSelectionMode();
   const selectedConvoKey = useSelectedConversationKey();
   const isOutgoingRequest = useIsOutgoingRequest(selectedConvoKey);
+  const isIncomingRequest = useIsIncomingRequest(selectedConvoKey);
 
   const showConvoSettingsCb = useShowConversationSettingsFor(selectedConvoKey);
 
