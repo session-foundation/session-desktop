@@ -30,6 +30,7 @@ export const SessionScrollButton = (props: { onClickScrollBottom: () => void }) 
           style={{
             backgroundColor: 'var(--message-bubbles-received-background-color)',
             boxShadow: 'var(--scroll-button-shadow)',
+            borderRadius: '50%',
           }}
         >
           {Boolean(unreadCount) && <SessionUnreadCount count={unreadCount} />}
