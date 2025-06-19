@@ -15,7 +15,6 @@ import type { SearchType } from '../state/ducks/search';
 /**
  * Returns the 05 pubkeys of contacts that we can invite to a group.
  * The group can be empty so we can use that list on creation
- *
  */
 export const useContactsToInviteTo = (searchType: SearchType, conversationId?: string) => {
   const isSearch = useIsSearchingForType(searchType);

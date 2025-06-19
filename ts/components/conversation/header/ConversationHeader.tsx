@@ -161,7 +161,7 @@ function RecreateGroupButton() {
           showRecreateGroupModal(name || localize('groupUnknown').toString(), members);
         }}
       >
-        {localize('recreateGroup').toString()}
+        {localize('recreateGroup')}
       </SessionButton>
     </RecreateGroupContainer>
   );

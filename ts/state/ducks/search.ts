@@ -83,11 +83,13 @@ async function queryContactsAndGroups(providedQuery: string, options: SearchOpti
   // we don't need to use cleanSearchTerm here because the query is wrapped as a wild card and is not referenced in the SQL query directly
   const query = providedQuery.replace(/[+-.()]*/g, '');
 
-  const searchResults: Array<ReduxConversationType> = (
-    await Data.searchConversations(query)
-  ).filter(c => (options.excludeBlocked ? !BlockedNumberController.isBlocked(c.id) : true));
+  const searchResults: Array<ReduxConversationType> = await Data.searchConversations(query);
 
-  let contactsAndGroups: Array<string> = searchResults.map(conversation => conversation.id);
+  const filteredResults = options.excludeBlocked
+    ? searchResults.filter(c => !BlockedNumberController.isBlocked(c.id))
+    : searchResults;
+
+  let contactsAndGroups: Array<string> = filteredResults.map(conversation => conversation.id);
 
   const queryLowered = query.toLowerCase();
   if (
