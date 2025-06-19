@@ -111,6 +111,7 @@ export const ConversationHeaderSubtitle = (props: ConversationHeaderSubtitleProp
 
   const currentSubtitle = subtitlesArray[subtitleIndex];
 
+
   if (!currentSubtitle) {
     throw new Error('currentSubtitle is undefined');
   }

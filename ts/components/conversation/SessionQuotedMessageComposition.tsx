@@ -1,7 +1,6 @@
 import { useDispatch, useSelector } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
 import styled from 'styled-components';
-import { SessionIcon } from '../icon';
 
 import { quoteMessage } from '../../state/ducks/conversations';
 import { getQuotedMessage } from '../../state/selectors/conversations';
@@ -16,6 +15,7 @@ import { GoogleChrome } from '../../util';
 import { localize } from '../../localization/localeTools';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { LucideIcon } from '../icon/LucideIcon';
 
 const QuotedMessageComposition = styled(Flex)`
   border-top: 1px solid var(--border-color);
@@ -149,7 +149,7 @@ export const SessionQuotedMessageComposition = () => {
               />
             ) : hasAudioAttachment ? (
               <div style={{ margin: '0 var(--margins-xs) 0 0' }}>
-                <SessionIcon iconType="microphone" iconSize="huge" />
+                <LucideIcon unicode={LUCIDE_ICONS_UNICODE.MIC} iconSize="huge" />
               </div>
             ) : null}
           </StyledImage>

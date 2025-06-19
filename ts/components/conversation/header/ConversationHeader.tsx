@@ -49,7 +49,7 @@ export const ConversationHeaderWithDetails = () => {
         width="100%"
         $flexGrow={1}
       >
-        <ConversationHeaderTitle showSubtitle={!isOutgoingRequest} />
+        <ConversationHeaderTitle showSubtitle={!isOutgoingRequest && !isIncomingRequest} />
 
         {!isOutgoingRequest && !isSelectionMode && (
           <Flex
