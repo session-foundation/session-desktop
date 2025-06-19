@@ -174,7 +174,7 @@ export const SessionLucideIconButton = forwardRef<HTMLButtonElement, SessionLuci
           iconSize={iconSize}
           iconColor={iconColor}
           dataTestId={dataTestIdIcon}
-          style={{ width: makeSquare ? '1.5em' : '' }}
+          style={{ width: makeSquare ? '1.5em' : undefined }}
         />
         {children}
       </StyledSessionIconButton>

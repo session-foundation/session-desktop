@@ -178,7 +178,6 @@ export const MessageReactBar = ({ action, additionalAction, messageId }: Props) 
           makeSquare={true}
           style={{
             backgroundColor: 'var(--emoji-reaction-bar-icon-background-color)',
-            borderRadius: '50%',
           }}
         />
       </StyledMessageReactBar>

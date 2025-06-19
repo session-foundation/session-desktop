@@ -6,8 +6,8 @@ import { useEncryptedFileFetch } from '../../../../../hooks/useEncryptedFileFetc
 
 import { QuoteIcon } from './QuoteIconContainer';
 import { AriaLabels } from '../../../../../util/hardcodedAriaLabels';
-import { LucideIcon } from '../../../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../../../icon/lucide';
+import { PlayButtonCenteredAbsolute } from '../../../../buttons/PlayButton';
 
 const StyledQuoteImage = styled.div`
   flex: initial;
@@ -22,30 +22,6 @@ const StyledQuoteImage = styled.div`
     width: 100%;
     height: 100%;
     object-fit: cover;
-  }
-`;
-
-const StyledPlayButton = styled.div`
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  div {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    height: 32px;
-    width: 32px;
-    border-radius: 50%;
-    background-color: var(--chat-buttons-background-color);
   }
 `;
 
@@ -71,20 +47,7 @@ export const QuoteImage = (props: {
         onError={handleImageErrorBound}
         alt={AriaLabels.quoteImageThumbnail}
       />
-      {showPlayButton && (
-        <StyledPlayButton>
-          <div>
-            <LucideIcon
-              unicode={LUCIDE_ICONS_UNICODE.PLAY}
-              iconSize="small"
-              iconColor="var(--chat-buttons-icon-color)"
-              style={{
-                backgroundColor: 'var(--chat-buttons-background-color)',
-              }}
-            />
-          </div>
-        </StyledPlayButton>
-      )}
+      {showPlayButton && <PlayButtonCenteredAbsolute iconSize="small" />}
     </StyledQuoteImage>
   ) : (
     <QuoteIcon

@@ -29,6 +29,6 @@ export const StyledSessionIconButton = styled.button<{ color?: string; $isSelect
   }
 
   &:hover {
-    ${props => (props.disabled ? '' : props.$isSelected ? '' : 'opacity: 0.6;')}
+    ${props => (props.disabled ? '' : props.$isSelected ? '' : 'filter: brightness(0.5);')}
   }
 `;

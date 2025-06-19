@@ -70,8 +70,6 @@ preload([
   'image.svg',
   'microphone.svg',
   'movie.svg',
-  'open_link.svg',
-  'play.svg',
   'save.svg',
   'shield.svg',
   'timer.svg',

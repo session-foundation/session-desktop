@@ -521,17 +521,6 @@
   }
 }
 
-.module-media-grid-item__play-overlay {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-
-  height: 36px;
-  width: 36px;
-  @include color-svg('../images/play.svg', var(--chat-buttons-icon-color));
-}
-
 .module-media-grid-item__icon-video {
   @include color-svg('../images/movie.svg', var(--button-icon-stroke-color));
 }
@@ -710,34 +699,6 @@
   &-cover {
     object-fit: cover;
   }
-}
-
-.module-image__play-overlay__circle {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-
-  width: 48px;
-  height: 48px;
-  background-color: var(--chat-buttons-background-color);
-  border-radius: 24px;
-  z-index: 1;
-
-  &:hover {
-    background-color: var(--chat-buttons-background-hover-color);
-  }
-}
-
-.module-image__play-overlay__icon {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-
-  height: 36px;
-  width: 36px;
-  @include color-svg('../images/play.svg', var(--chat-buttons-icon-color));
 }
 
 .module-image__text-container {

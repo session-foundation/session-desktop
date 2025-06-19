@@ -7,6 +7,7 @@ import { LightBoxOptions, updateLightBoxOptions } from '../../../state/ducks/mod
 import { isImageTypeSupported, isVideoTypeSupported } from '../../../util/GoogleChrome';
 import { MediaItemType } from '../../lightbox/LightboxGallery';
 import { AriaLabels } from '../../../util/hardcodedAriaLabels';
+import { PlayButtonCenteredAbsolute } from '../../buttons/PlayButton';
 
 type Props = {
   mediaItem: MediaItemType;
@@ -72,9 +73,7 @@ const MediaGridItemContent = (props: Props) => {
           onError={onImageError}
           onDragStart={disableDrag}
         />
-        <div className="module-media-grid-item__circle-overlay">
-          <div className="module-media-grid-item__play-overlay" />
-        </div>
+        <PlayButtonCenteredAbsolute iconSize="medium" />
       </div>
     );
   }

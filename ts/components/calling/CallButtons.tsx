@@ -290,7 +290,6 @@ export const HangUpButton = ({ isFullScreen }: { isFullScreen: boolean }) => {
         dataTestId="end-call"
         makeSquare={true}
         style={{
-          borderRadius: '50%',
           backgroundColor: 'var(--danger-color)',
         }}
       />

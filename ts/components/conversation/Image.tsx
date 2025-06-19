@@ -11,6 +11,7 @@ import { useEncryptedFileFetch } from '../../hooks/useEncryptedFileFetch';
 import { useMessageIdFromContext } from '../../contexts/MessageIdContext';
 import { useMessageDirection, useMessageSelected } from '../../state/selectors';
 import { AriaLabels } from '../../util/hardcodedAriaLabels';
+import { PlayButtonCenteredAbsolute } from '../buttons/PlayButton';
 
 type Props = {
   alt: string;
@@ -201,11 +202,7 @@ export const Image = (props: Props) => {
           className="module-image__close-button"
         />
       ) : null}
-      {mounted && playIconOverlay ? (
-        <div className="module-image__play-overlay__circle">
-          <div className="module-image__play-overlay__icon" />
-        </div>
-      ) : null}
+      {mounted && playIconOverlay ? <PlayButtonCenteredAbsolute iconSize="huge" /> : null}
       {overlayText ? (
         <div className="module-image__text-container" style={{ lineHeight: height }}>
           {overlayText}
