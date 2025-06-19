@@ -25,7 +25,7 @@ const StyledRoundedPanelButtonGroup = styled.div`
   flex-direction: column;
   justify-content: center;
   overflow: hidden;
-  background: var(--right-panel-item-background-color);
+  background: var(--background-tertiary-color);
   border-radius: 16px;
   padding: 0 var(--margins-lg) var(--margins-xs);
   margin: 0 var(--margins-lg);
