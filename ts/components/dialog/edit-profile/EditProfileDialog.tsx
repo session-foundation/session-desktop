@@ -23,6 +23,8 @@ import { localize } from '../../../localization/localeTools';
 import { sanitizeDisplayNameOrToast } from '../../registration/utils';
 import { useEditProfilePictureCallback } from '../../menuAndSettingsHooks/useEditProfilePictureCallback';
 import { SimpleSessionInput } from '../../inputs/SessionInput';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
+import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 
 // #region Shortcuts
 const handleKeyQRMode = (
@@ -175,16 +177,16 @@ export const EditProfileDialog = () => {
   const backButton =
     mode === 'edit' || mode === 'qr'
       ? [
-          {
-            iconType: 'chevron',
-            iconRotation: 90,
-            onClick: () => {
+          <SessionLucideIconButton
+            unicode={LUCIDE_ICONS_UNICODE.CHEVRON_LEFT}
+            onClick={() => {
               if (loading) {
                 return;
               }
               setMode('default');
-            },
-          },
+            }}
+            iconSize="medium"
+          />,
         ]
       : undefined;
 

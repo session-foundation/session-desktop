@@ -2,7 +2,6 @@ import { ReactNode, useRef } from 'react';
 import useKey from 'react-use/lib/useKey';
 import { clsx } from 'clsx';
 import styled from 'styled-components';
-import { SessionIconButton } from './icon';
 
 import { SessionButton, SessionButtonColor, SessionButtonType } from './basic/SessionButton';
 import { StyledRootDialog } from './dialog/StyledRootDialog';
@@ -28,7 +27,7 @@ export type SessionWrapperModalType = {
   confirmText?: string;
   cancelText?: string;
   showExitIcon?: boolean;
-  headerIconButtons?: Array<any>;
+  headerIconButtons?: Array<React.ReactNode>;
   children: ReactNode;
   headerReverse?: boolean;
   additionalClassName?: string;
@@ -137,19 +136,7 @@ export const SessionWrapperModal = (props: SessionWrapperModalType) => {
                   margin={'0'}
                 >
                   {headerIconButtons?.length ? (
-                    headerIconButtons.map((iconItem: any) => {
-                      return (
-                        <SessionIconButton
-                          key={iconItem.iconType}
-                          iconType={iconItem.iconType}
-                          iconSize={'medium'}
-                          iconRotation={iconItem.iconRotation}
-                          onClick={iconItem.onClick}
-                          padding={'0'}
-                          margin={'0'}
-                        />
-                      );
-                    })
+                    headerIconButtons
                   ) : showExitIcon ? (
                     <SpacerXL />
                   ) : null}
