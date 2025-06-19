@@ -679,7 +679,6 @@ class CompositionBoxInner extends Component<Props, State> {
       }
     } else if (isEnter && !event.shiftKey && isNotComposing) {
       event.preventDefault();
-      event.stopPropagation();
       await this.onSendMessage();
     } else if (event.key === 'Escape' && this.state.showEmojiPanel) {
       this.hideEmojiPanel();
