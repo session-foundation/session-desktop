@@ -47,7 +47,6 @@ function useSubtitleArray(convoId?: string) {
   const notification = useSelectedNotificationSetting();
   const disappearingMessageSubtitle = useDisappearingMessageSettingText({
     convoId,
-    abbreviate: true,
   });
 
   const notificationSubtitle = useLocalisedNotificationOf(notification, 'title');

@@ -495,13 +495,12 @@ export function useSortedGroupMembers(convoId: string | undefined): Array<Pubkey
   return compact(members.slice()?.sort());
 }
 
-export function useDisappearingMessageSettingText({
-  convoId,
-  abbreviate,
-}: {
-  convoId?: string;
-  abbreviate?: boolean;
-}) {
+/**
+ * Returns the disappearing message setting text for the convoId.
+ * Note: the time is not localised and displayed always in its shortened version (i.e. 2weeks -> 2w).
+ * This is because 2w is assumed to understood by every locales as 2 weeks, but 2 weeks might not be.
+ */
+export function useDisappearingMessageSettingText({ convoId }: { convoId?: string }) {
   const convoProps = useConversationPropsById(convoId);
 
   const offReturn = { id: 'off', label: localize('off').toString() };
@@ -511,11 +510,7 @@ export function useDisappearingMessageSettingText({
 
   const { expirationMode, expireTimer } = convoProps;
 
-  const expireTimerText = isNumber(expireTimer)
-    ? abbreviate
-      ? TimerOptions.getAbbreviated(expireTimer)
-      : TimerOptions.getName(expireTimer)
-    : null;
+  const expireTimerText = isNumber(expireTimer) ? TimerOptions.getAbbreviated(expireTimer) : null;
 
   if (!expireTimerText) {
     return offReturn;
