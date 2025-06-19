@@ -1,9 +1,8 @@
 /* eslint-disable max-len */
 /* eslint-disable no-multi-str */
 export type SessionIconType =
-  | 'circle'
-  | 'mute'
-  | 'pin'
+  | 'mute' // lucide equivalent, but because bell doesn't have one we need to keep this one (so the style of icons matches)
+  | 'pin' // lucide equivalent, but because bell doesn't have one we need to keep this one (so the style of icons matches)
   | 'bell' // no lucide alternative (this bell has the @ in it)
   | 'crown' // lucide icon for crown does not look good for our use case (too small)
   | 'messageTrash' // no lucide alternative yet
@@ -69,11 +68,6 @@ export const icons: Record<SessionIconType, IconProps> = {
   brandThin: {
     path: 'm27.35 20.56-6.52-4.03h4.42c1.84 0 3.62-.81 4.92-2.27a8.24 8.24 0 0 0 2.05-5.5c0-2.05-.74-4.03-2.05-5.49A6.63 6.63 0 0 0 25.25 1H9.8a8.31 8.31 0 0 0-6.17 2.85 10.33 10.33 0 0 0-2.56 6.88c0 1.88.45 3.73 1.31 5.34a10.02 10.02 0 0 0 3.56 3.87l6.53 4.03H8.05a6.35 6.35 0 0 0-2.7.56c-.85.39-1.62.96-2.28 1.68a7.87 7.87 0 0 0-1.53 2.53 8.54 8.54 0 0 0 0 5.99c.35.94.87 1.8 1.53 2.53.66.72 1.43 1.29 2.29 1.67.85.39 1.77.58 2.7.57h15.42a8.31 8.31 0 0 0 6.18-2.85 10.33 10.33 0 0 0 2.56-6.88c0-1.88-.46-3.73-1.31-5.34a10.02 10.02 0 0 0-3.56-3.87ZM7 17.83a7.72 7.72 0 0 1-2.7-2.9 8.82 8.82 0 0 1-1.06-4C3.16 6.78 6.27 3.4 9.98 3.4H25.1c2.58 0 4.81 2.2 4.94 5.09.03.72-.07 1.45-.3 2.13a5.5 5.5 0 0 1-1.02 1.83c-.45.52-.99.94-1.59 1.23a4.4 4.4 0 0 1-1.9.44h-8.7c-.26 0-.5.11-.69.31-.18.2-.28.48-.28.76v7.93L7 17.83ZM23.32 37.1H8.19c-2.59 0-4.82-2.2-4.94-5.09-.03-.72.07-1.45.3-2.13a5.5 5.5 0 0 1 1.02-1.83c.45-.52.99-.94 1.59-1.23a4.4 4.4 0 0 1 1.9-.44h8.7c.13 0 .26-.02.37-.08a.97.97 0 0 0 .32-.23 1.18 1.18 0 0 0 .28-.76v-7.93l8.57 5.3a7.72 7.72 0 0 1 2.7 2.9 8.82 8.82 0 0 1 1.05 4.01c.1 4.13-3.02 7.51-6.73 7.51Z',
     viewBox: '0 0 34 41',
-    ratio: 1,
-  },
-  circle: {
-    path: 'M 0, 50a 50,50 0 1,1 100,0a 50,50 0 1,1 -100,0',
-    viewBox: '0 0 100 100',
     ratio: 1,
   },
   deleteModerator: {

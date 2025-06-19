@@ -92,7 +92,6 @@ type ThemeGlobals = {
   '--duration-spinner': string;
   '--duration-pulse': string;
   '--duration-right-panel': string;
-  '--duration-onion-status-glow': string;
   '--duration-progress-bar': string;
   '--duration-fadein': string;
   '--duration-modal-error-faded': string;
@@ -241,7 +240,6 @@ export const THEME_GLOBALS: ThemeGlobals = {
   '--duration-spinner': setDuration('3000ms'),
   '--duration-pulse': setDuration('1s'),
   '--duration-right-panel': setDuration('0.3s'),
-  '--duration-onion-status-glow': setDuration(10),
   '--duration-progress-bar': setDuration(0.5),
   '--duration-fadein': setDuration(1),
   '--duration-modal-error-faded': setDuration('100ms'),

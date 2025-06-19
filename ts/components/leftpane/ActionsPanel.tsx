@@ -164,11 +164,7 @@ const Section = (props: { type: SectionType }) => {
       );
     case SectionType.PathIndicator:
       return (
-        <ActionPanelOnionStatusLight
-          handleClick={handleClick}
-          isSelected={isSelected}
-          id={'onion-path-indicator-led-id'}
-        />
+        <ActionPanelOnionStatusLight handleClick={handleClick} id={'onion-path-indicator-led-id'} />
       );
     case SectionType.ColorMode:
     default:

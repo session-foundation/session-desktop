@@ -30,12 +30,7 @@ const SessionIconButtonInner = forwardRef<HTMLButtonElement, SessionIconButtonPr
       iconType,
       iconSize,
       iconColor,
-      iconRotation,
-      rotateDuration,
       isSelected: $isSelected,
-      glowDuration,
-      glowStartDelay,
-      noScale,
       isHidden,
       borderRadius,
       iconPadding,
@@ -91,11 +86,6 @@ const SessionIconButtonInner = forwardRef<HTMLButtonElement, SessionIconButtonPr
           iconType={iconType}
           iconSize={iconSize}
           iconColor={iconColor}
-          iconRotation={iconRotation}
-          rotateDuration={rotateDuration}
-          glowDuration={glowDuration}
-          glowStartDelay={glowStartDelay}
-          noScale={noScale}
           borderRadius={borderRadius}
           iconPadding={iconPadding}
           dataTestId={dataTestIdIcon}

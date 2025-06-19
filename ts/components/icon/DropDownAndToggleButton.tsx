@@ -100,10 +100,7 @@ export const DropDownAndToggleButton = (props: SProps) => {
     iconType === 'microphone' ? MicrophoneIcon : iconType === 'camera' ? CameraIcon : SpeakerIcon;
 
   return (
-    <StyledContainer
-      isFullScreen={isFullScreen}
-      isMuted={isMuted || false}
-    >
+    <StyledContainer isFullScreen={isFullScreen} isMuted={isMuted || false}>
       <StyledMainIcon onClick={mainButtonClickHandler}>{iconToRender}</StyledMainIcon>
       {!isFullScreen && (
         <StyledArrowIcon isFullScreen={isFullScreen} isMuted={false} onClick={arrowClickHandler}>
