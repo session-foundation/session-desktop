@@ -1,16 +1,17 @@
 import {
   ChangeEvent,
-  RefObject,
   SessionDataTestId,
   useCallback,
   useEffect,
   useRef,
-  useState,
+  type CSSProperties,
+  type KeyboardEvent,
   type PropsWithChildren,
   type ReactNode,
+  type RefObject,
 } from 'react';
 import { motion } from 'framer-motion';
-import { isEmpty, isEqual, isString } from 'lodash';
+import { isEmpty, isString } from 'lodash';
 import styled from 'styled-components';
 import { THEME_GLOBALS } from '../../themes/globals';
 import { AnimatedFlex, Flex } from '../basic/Flex';
@@ -146,56 +147,6 @@ const StyledTextAreaContainer = styled(motion.div)<{
   }
 `;
 
-const ErrorItem = (props: {
-  id: string;
-  error: LocalizerProps | string | undefined;
-  hasError: boolean;
-  setHasError: (value: boolean) => void;
-  setTextErrorStyle: (value: boolean) => void;
-  loading?: boolean;
-  dataTestId?: SessionDataTestId;
-}) => {
-  const { loading, error, hasError, setTextErrorStyle, setHasError, id } = props;
-  const [errorValue, setErrorValue] = useState<LocalizerProps | string | undefined>(undefined);
-
-  useEffect(() => {
-    // if we have an error we want to continue to show that error unless it changes to a new error, we don't care if the input value changes
-    if (error && !isEmpty(error)) {
-      setTextErrorStyle(true);
-
-      if (!isEqual(error, errorValue)) {
-        setErrorValue(error);
-        setHasError(true);
-      }
-    }
-
-    // if the input value has been submitted somewhere check if we have an error and if we do clear it
-    if (loading && hasError && errorValue && isEmpty(error)) {
-      setErrorValue(undefined);
-      setTextErrorStyle(false);
-      setHasError(false);
-    }
-  }, [error, errorValue, hasError, loading, setHasError, setTextErrorStyle]);
-
-  if (!errorValue) {
-    return null;
-  }
-
-  return (
-    <motion.label
-      aria-label="Error message"
-      htmlFor={id}
-      className={'filled error'}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: THEME_GLOBALS['--default-duration-seconds'] }}
-      data-testid={props.dataTestId || 'session-error-message'}
-    >
-      {isString(errorValue) ? errorValue : <Localizer {...errorValue} />}
-    </motion.label>
-  );
-};
-
 function BorderWithErrorState({ hasError, children }: { hasError: boolean } & PropsWithChildren) {
   const inputShape = 'round';
   return (
@@ -262,7 +213,6 @@ type Props = {
   onEnterPressed?: (value: string) => any;
   autoFocus?: boolean;
   disableOnBlurEvent?: boolean;
-  inputRef?: RefObject<HTMLInputElement | HTMLTextAreaElement>;
   inputDataTestId?: SessionDataTestId;
   errorDataTestId?: SessionDataTestId;
   monospaced?: boolean;
@@ -275,122 +225,27 @@ type Props = {
   loading?: boolean;
 };
 
-export const SessionInput = (props: Props) => {
-  const {
-    placeholder,
-    value,
-    ariaLabel,
-    maxLength,
-    error,
-    onValueChanged,
-    onEnterPressed,
-    autoFocus,
-    disableOnBlurEvent,
-    inputRef,
-    inputDataTestId,
-    errorDataTestId,
-    monospaced,
-    textSize = 'sm',
-    centerText,
-    editable = true,
-    padding,
-    required,
-    tabIndex,
-    loading,
-  } = props;
-  const [inputValue, setInputValue] = useState('');
-  const [hasError, setHasError] = useState(false);
-  const [textErrorStyle, setTextErrorStyle] = useState(false);
-  const [isFocused, setIsFocused] = useState(props.autoFocus || false);
-
-  const updateInputValue = (e: ChangeEvent<HTMLInputElement>) => {
-    if (!editable) {
-      return;
-    }
-    e.preventDefault();
-    const val = e.target.value;
-    setInputValue(val);
-    setTextErrorStyle(false);
-    if (onValueChanged) {
-      onValueChanged(val);
-    }
-  };
-
-  const id = 'session-input-floating-label';
-
-  const inputProps: any = {
-    type: 'text',
-    placeholder,
-    value,
-    textSize,
-    disabled: !editable,
-    maxLength,
-    padding,
-    autoFocus,
-    'data-testid': inputDataTestId,
-    required,
-    'aria-required': required,
-    tabIndex,
-    onChange: updateInputValue,
-    // just in case onChange isn't triggered
-    onBlur: (event: ChangeEvent<HTMLInputElement>) => {
-      if (editable && !disableOnBlurEvent) {
-        updateInputValue(event);
-        if (isEmpty(value) && !autoFocus && isFocused) {
-          setIsFocused(false);
-        }
-      }
-    },
-    onKeyDown: (event: KeyboardEvent) => {
-      if (!editable) {
-        return;
-      }
-      if (event.key === 'Enter' && onEnterPressed) {
-        event.preventDefault();
-        onEnterPressed(inputValue);
-      }
-    },
-  };
-
-  const containerProps = {
-    error: textErrorStyle,
-    centerText,
-    textSize,
-    monospaced,
-    padding,
-  };
-
-  return (
-    <StyledSessionInput
-      $container={true}
-      $flexDirection="column"
-      $justifyContent="center"
-      $alignItems="center"
-      error={hasError}
-      textSize={textSize}
-    >
-      <BorderWithErrorState hasError={hasError}>
-        <StyledInput
-          {...inputProps}
-          {...containerProps}
-          ref={inputRef}
-          aria-label={ariaLabel || 'session input'}
-        />
-      </BorderWithErrorState>
-
-      {hasError ? <SpacerMD /> : null}
-      <ErrorItem
-        id={id}
-        error={error}
-        hasError={hasError}
-        setHasError={setHasError}
-        setTextErrorStyle={setTextErrorStyle}
-        loading={loading}
-        dataTestId={errorDataTestId}
-      />
-    </StyledSessionInput>
-  );
+type InputProps = Pick<
+  Props,
+  | 'type'
+  | 'placeholder'
+  | 'value'
+  | 'textSize'
+  | 'maxLength'
+  | 'padding'
+  | 'autoFocus'
+  | 'required'
+  | 'tabIndex'
+> & {
+  'data-testid'?: SessionDataTestId;
+  'aria-required'?: boolean;
+  style?: CSSProperties;
+  disabled?: boolean;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
 };
+
+type WithInputRef = { inputRef?: RefObject<HTMLInputElement> };
+type WithTextAreaRef = { inputRef?: RefObject<HTMLTextAreaElement> };
 
 function useUpdateInputValue(onValueChanged: (val: string) => void, disabled?: boolean) {
   return useCallback(
@@ -425,7 +280,6 @@ export const SimpleSessionInput = (
     | 'ariaLabel'
     | 'maxLength'
     | 'autoFocus'
-    | 'inputRef'
     | 'inputDataTestId'
     | 'textSize'
     | 'padding'
@@ -433,6 +287,7 @@ export const SimpleSessionInput = (
     | 'tabIndex'
     | 'centerText'
   > &
+    WithInputRef &
     Required<Pick<Props, 'errorDataTestId'>> & {
       onValueChanged: (str: string) => void;
       onEnterPressed: () => void;
@@ -471,7 +326,7 @@ export const SimpleSessionInput = (
     hasButtonInlineEnd: !!buttonEnd && hasValue,
   });
 
-  const inputProps: any = {
+  const inputProps: InputProps = {
     type,
     placeholder,
     value,
@@ -486,15 +341,16 @@ export const SimpleSessionInput = (
     tabIndex,
     onChange: updateInputValue,
     style: { paddingInlineEnd, textAlign: centerText ? 'center' : undefined },
-    onKeyDown: (event: KeyboardEvent) => {
-      if (disabled) {
-        return;
-      }
-      if (event.key === 'Enter' && onEnterPressed) {
-        event.preventDefault();
-        onEnterPressed();
-      }
-    },
+  };
+
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (disabled) {
+      return;
+    }
+    if (event.key === 'Enter' && onEnterPressed) {
+      event.preventDefault();
+      onEnterPressed();
+    }
   };
 
   const containerProps = {
@@ -513,7 +369,13 @@ export const SimpleSessionInput = (
       textSize={textSize}
     >
       <BorderWithErrorState hasError={hasError}>
-        <StyledInput {...inputProps} {...containerProps} ref={inputRef} aria-label={ariaLabel} />
+        <StyledInput
+          {...inputProps}
+          {...containerProps}
+          onKeyDown={onKeyDown}
+          ref={inputRef}
+          aria-label={ariaLabel}
+        />
         {buttonEnd}
       </BorderWithErrorState>
 
@@ -528,8 +390,6 @@ export const SimpleSessionInput = (
 };
 
 /**
- * A simpler version of the SessionInput component as a TextArea.
- * Does not handle CTA, centered placeholder, nor monospaced fonts.
  *
  * Also, and just like SimpleSessionInput, error handling and value management is to be done by the parent component.
  * Providing `error` will make the textarea red and the error string displayed below it.
@@ -544,13 +404,13 @@ export const SimpleSessionTextarea = (
     | 'ariaLabel'
     | 'maxLength'
     | 'autoFocus'
-    | 'inputRef'
     | 'inputDataTestId'
     | 'textSize'
     | 'padding'
     | 'required'
     | 'tabIndex'
   > &
+    WithTextAreaRef &
     Required<Pick<Props, 'errorDataTestId'>> & {
       onValueChanged: (str: string) => void;
       providedError: string | LocalizerProps | undefined;
