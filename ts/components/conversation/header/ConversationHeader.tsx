@@ -12,6 +12,7 @@ import {
 import {
   useIsMessageSelectionMode,
   useSelectedConversationKey,
+  useSelectedIsBlocked,
   useSelectedIsLegacyGroup,
   useSelectedWeAreAdmin,
 } from '../../../state/selectors/selectedConversation';
@@ -33,6 +34,7 @@ export const ConversationHeaderWithDetails = () => {
   const isSelectionMode = useIsMessageSelectionMode();
   const selectedConvoKey = useSelectedConversationKey();
   const isOutgoingRequest = useIsOutgoingRequest(selectedConvoKey);
+  const isBlocked = useSelectedIsBlocked();
 
   const showConvoSettingsCb = useShowConversationSettingsFor(selectedConvoKey);
 
@@ -49,7 +51,7 @@ export const ConversationHeaderWithDetails = () => {
         width="100%"
         $flexGrow={1}
       >
-        <ConversationHeaderTitle showSubtitle={!isOutgoingRequest} />
+        <ConversationHeaderTitle showSubtitle={!isOutgoingRequest && !isBlocked} />
 
         {!isOutgoingRequest && !isSelectionMode && (
           <Flex
