@@ -172,17 +172,15 @@ const CommunityAdminActionItems = ({ messageId }: WithMessageId) => {
 
   return (
     <>
-      <ItemWithDataTestId onClick={banUserCb}>{localize('banUser').toString()}</ItemWithDataTestId>
-      <ItemWithDataTestId onClick={unbanUserCb}>
-        {localize('banUnbanUser').toString()}
-      </ItemWithDataTestId>
+      <ItemWithDataTestId onClick={banUserCb}>{localize('banUser')}</ItemWithDataTestId>
+      <ItemWithDataTestId onClick={unbanUserCb}>{localize('banUnbanUser')}</ItemWithDataTestId>
       {isSenderAdmin ? (
         <ItemWithDataTestId onClick={removeModerator}>
-          {localize('adminRemoveAsAdmin').toString()}
+          {localize('adminRemoveAsAdmin')}
         </ItemWithDataTestId>
       ) : (
         <ItemWithDataTestId onClick={addModerator}>
-          {localize('adminPromoteToAdmin').toString()}
+          {localize('adminPromoteToAdmin')}
         </ItemWithDataTestId>
       )}
     </>

@@ -156,7 +156,7 @@ function Description({ conversationId }: WithConvoId) {
       </StyledDescription>
       {isClamped && (
         <StyledViewMoreButton onClick={() => setExpanded(!expanded)}>
-          {expanded ? localize('viewLess').toString() : localize('viewMore').toString()}
+          {expanded ? localize('viewLess') : localize('viewMore')}
         </StyledViewMoreButton>
       )}
     </>

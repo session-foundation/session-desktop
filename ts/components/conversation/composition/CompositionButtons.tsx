@@ -1,7 +1,10 @@
 import { forwardRef } from 'react';
 import styled from 'styled-components';
 import { useIsOutgoingRequest } from '../../../hooks/useParamSelector';
-import { useSelectedConversationKey } from '../../../state/selectors/selectedConversation';
+import {
+  useSelectedConversationKey,
+  useSelectedIsBlocked,
+} from '../../../state/selectors/selectedConversation';
 import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import type { SessionIconSize } from '../../icon';
@@ -27,13 +30,16 @@ export const AddStagedAttachmentButton = (props: { onClick: () => void }) => {
   const selectedConvoKey = useSelectedConversationKey();
   const isOutgoingRequest = useIsOutgoingRequest(selectedConvoKey);
 
+  const isBlocked = useSelectedIsBlocked();
+  const disabled = isOutgoingRequest || isBlocked;
+
   return (
-    <StyledChatButtonContainer disabled={isOutgoingRequest}>
+    <StyledChatButtonContainer disabled={disabled}>
       <SessionLucideIconButton
         unicode={LUCIDE_ICONS_UNICODE.PLUS}
         onClick={props.onClick}
         dataTestId="attachments-button"
-        disabled={isOutgoingRequest}
+        disabled={disabled}
         {...sharedButtonProps}
       />
     </StyledChatButtonContainer>
@@ -43,13 +49,15 @@ export const AddStagedAttachmentButton = (props: { onClick: () => void }) => {
 export const StartRecordingButton = (props: { onClick: () => void }) => {
   const selectedConvoKey = useSelectedConversationKey();
   const isOutgoingRequest = useIsOutgoingRequest(selectedConvoKey);
+  const isBlocked = useSelectedIsBlocked();
+  const disabled = isOutgoingRequest || isBlocked;
 
   return (
-    <StyledChatButtonContainer disabled={isOutgoingRequest}>
+    <StyledChatButtonContainer disabled={disabled}>
       <SessionLucideIconButton
         unicode={LUCIDE_ICONS_UNICODE.MIC}
         onClick={props.onClick}
-        disabled={isOutgoingRequest}
+        disabled={disabled}
         dataTestId="microphone-button"
         {...sharedButtonProps}
       />

@@ -158,10 +158,10 @@ export const DisappearingMessagesPage = () => {
       <Flex $container={true} $flexDirection={'column'} $alignItems={'center'}>
         <HeaderSubtitle>
           {singleMode === 'deleteAfterRead'
-            ? localize('disappearingMessagesDisappearAfterReadDescription').toString()
+            ? localize('disappearingMessagesDisappearAfterReadDescription')
             : singleMode === 'deleteAfterSend'
-              ? localize('disappearingMessagesDisappearAfterSendDescription').toString()
-              : localize('disappearingMessagesDescription1').toString()}
+              ? localize('disappearingMessagesDisappearAfterSendDescription')
+              : localize('disappearingMessagesDescription1')}
         </HeaderSubtitle>
         <DisappearingModes
           options={disappearingModeOptions}
@@ -192,9 +192,9 @@ export const DisappearingMessagesPage = () => {
             <SpacerLG />
             {/* We want those to be shown no matter our admin rights in a group. */}
             <StyledNonAdminDescription>
-              {localize('disappearingMessagesDescription').toString()}
+              {localize('disappearingMessagesDescription')}
               <br />
-              {localize('disappearingMessagesOnlyAdmins').toString()}
+              {localize('disappearingMessagesOnlyAdmins')}
             </StyledNonAdminDescription>
           </>
         )}
@@ -216,7 +216,7 @@ export const DisappearingMessagesPage = () => {
               }
               dataTestId={'disappear-set-button'}
             >
-              {localize('set').toString()}
+              {localize('set')}
             </SessionButton>
           )}
         </StyledButtonContainer>

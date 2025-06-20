@@ -58,7 +58,7 @@ export const InviteContactMenuItem = (): JSX.Element | null => {
   if (showInviteContactCb) {
     return (
       <ItemWithDataTestId onClick={showInviteContactCb}>
-        {localize('membersInvite').toString()}
+        {localize('membersInvite')}
       </ItemWithDataTestId>
     );
   }
@@ -108,7 +108,7 @@ export const DeletePrivateContactMenuItem = () => {
 
   return (
     <ItemWithDataTestId onClick={showDeletePrivateContactCb}>
-      {localize('contactDelete').toString()}
+      {localize('contactDelete')}
     </ItemWithDataTestId>
   );
 };
@@ -134,7 +134,7 @@ export const ShowUserDetailsMenuItem = () => {
           );
         }}
       >
-        {window.i18n('contactUserDetails')}
+        {localize('contactUserDetails')}
       </ItemWithDataTestId>
     );
   }
@@ -155,7 +155,7 @@ export const UpdateGroupNameMenuItem = () => {
           void showUpdateGroupNameByConvoId(convoId);
         }}
       >
-        {localize('groupEdit').toString()}
+        {localize('groupEdit')}
       </ItemWithDataTestId>
     );
   }
@@ -171,7 +171,7 @@ export const RemoveModeratorsMenuItem = (): JSX.Element | null => {
   }
   return (
     <ItemWithDataTestId onClick={showRemoveModeratorsCb}>
-      {localize('adminRemove').toString()}
+      {localize('adminRemove')}
     </ItemWithDataTestId>
   );
 };
@@ -185,7 +185,7 @@ export const AddModeratorsMenuItem = (): JSX.Element | null => {
   }
   return (
     <ItemWithDataTestId onClick={addRemoveModeratorsCb}>
-      {localize('adminPromote').toString()}
+      {localize('adminPromote')}
     </ItemWithDataTestId>
   );
 };
@@ -198,9 +198,7 @@ export const UnbanMenuItem = (): JSX.Element | null => {
     return null;
   }
   return (
-    <ItemWithDataTestId onClick={showUnbanUserCb}>
-      {localize('banUnbanUser').toString()}
-    </ItemWithDataTestId>
+    <ItemWithDataTestId onClick={showUnbanUserCb}>{localize('banUnbanUser')}</ItemWithDataTestId>
   );
 };
 
@@ -212,11 +210,7 @@ export const BanMenuItem = (): JSX.Element | null => {
   if (!showBanUserCb) {
     return null;
   }
-  return (
-    <ItemWithDataTestId onClick={showBanUserCb}>
-      {localize('banUser').toString()}
-    </ItemWithDataTestId>
-  );
+  return <ItemWithDataTestId onClick={showBanUserCb}>{localize('banUser')}</ItemWithDataTestId>;
 };
 
 export const MarkAllReadMenuItem = (): JSX.Element | null => {
@@ -226,7 +220,7 @@ export const MarkAllReadMenuItem = (): JSX.Element | null => {
     return (
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       <ItemWithDataTestId onClick={async () => markAllReadByConvoId(convoId)}>
-        {window.i18n('messageMarkRead')}
+        {localize('messageMarkRead')}
       </ItemWithDataTestId>
     );
   }
@@ -243,7 +237,7 @@ export const BlockMenuItem = (): JSX.Element | null => {
 
   return (
     <ItemWithDataTestId onClick={showBlockUnblock.cb}>
-      {localize(showBlockUnblock.token).toString()}
+      {localize(showBlockUnblock.token)}
     </ItemWithDataTestId>
   );
 };
@@ -295,7 +289,7 @@ export const DeleteMessagesMenuItem = () => {
   return (
     <ItemWithDataTestId onClick={clearAllMessagesCb}>
       {/* just more than 1 to have the string Delete Messages */}
-      {localize('clearMessages').toString()}
+      {localize('clearMessages')}
     </ItemWithDataTestId>
   );
 };
@@ -444,7 +438,7 @@ export const NotificationForConvoMenuItem = (): JSX.Element | null => {
   return (
     // Remove the && false to make context menu work with RTL support
     <Submenu
-      label={window.i18n('sessionNotifications') as any}
+      label={localize('sessionNotifications')}
       // rtl={isRtlMode && false}
     >
       {(notificationForConvoOptions || []).map(item => {

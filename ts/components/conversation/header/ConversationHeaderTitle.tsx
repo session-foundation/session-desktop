@@ -6,6 +6,7 @@ import { closeRightPanel } from '../../../state/ducks/conversations';
 import {
   useSelectedConversationDisappearingMode,
   useSelectedConversationKey,
+  useSelectedIsBlocked,
   useSelectedIsGroupOrCommunity,
   useSelectedIsKickedFromGroup,
   useSelectedIsLegacyGroup,
@@ -32,10 +33,6 @@ export type SubtitleStringsType = keyof Pick<
   'notifications' | 'members' | 'disappearingMessages'
 >;
 
-type ConversationHeaderTitleProps = {
-  showSubtitle: boolean;
-};
-
 function useSubtitleArray(convoId?: string) {
   const subscriberCount = useSelectedSubscriberCount();
 
@@ -47,7 +44,6 @@ function useSubtitleArray(convoId?: string) {
   const notification = useSelectedNotificationSetting();
   const disappearingMessageSubtitle = useDisappearingMessageSettingText({
     convoId,
-    abbreviate: true,
   });
 
   const notificationSubtitle = useLocalisedNotificationOf(notification, 'title');
@@ -92,11 +88,10 @@ function useSubtitleArray(convoId?: string) {
   return subtitleArray;
 }
 
-export const ConversationHeaderTitle = ({ showSubtitle }: ConversationHeaderTitleProps) => {
+export const ConversationHeaderTitle = ({ showSubtitle }: { showSubtitle: boolean }) => {
   const dispatch = useDispatch();
   const convoId = useSelectedConversationKey();
   const convoName = useSelectedNicknameOrProfileNameOrShortenedPubkey();
-
   const isRightPanelOn = useIsRightPanelShowing();
   const isMe = useSelectedIsNoteToSelf();
 
@@ -114,6 +109,7 @@ export const ConversationHeaderTitle = ({ showSubtitle }: ConversationHeaderTitl
   const showConvoSettingsCb = useShowConversationSettingsFor(convoId);
 
   const subtitles = useSubtitleArray(convoId);
+  const isBlocked = useSelectedIsBlocked();
 
   const onHeaderClick = () => {
     if (isLegacyGroup || !convoId) {
@@ -124,6 +120,12 @@ export const ConversationHeaderTitle = ({ showSubtitle }: ConversationHeaderTitl
       return;
     }
     if (!showConvoSettingsCb) {
+      return;
+    }
+
+    // when the conversation is blocked, only show the default page of the modal (the other pages are not available)
+    if (isBlocked) {
+      showConvoSettingsCb({ settingsModalPage: 'default' });
       return;
     }
 

@@ -132,7 +132,7 @@ export const NotificationsPage = () => {
         <ButtonSpacer />
         <StyledButtonContainer>
           <SessionButton onClick={handleSetNotifications} dataTestId={'notifications-set-button'}>
-            {localize('set').toString()}
+            {localize('set')}
           </SessionButton>
         </StyledButtonContainer>
       </Flex>

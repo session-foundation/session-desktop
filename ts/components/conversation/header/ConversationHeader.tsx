@@ -13,6 +13,7 @@ import {
 import {
   useIsMessageSelectionMode,
   useSelectedConversationKey,
+  useSelectedIsBlocked,
   useSelectedIsLegacyGroup,
   useSelectedWeAreAdmin,
 } from '../../../state/selectors/selectedConversation';
@@ -35,6 +36,7 @@ export const ConversationHeaderWithDetails = () => {
   const selectedConvoKey = useSelectedConversationKey();
   const isOutgoingRequest = useIsOutgoingRequest(selectedConvoKey);
   const isIncomingRequest = useIsIncomingRequest(selectedConvoKey);
+  const isBlocked = useSelectedIsBlocked();
 
   const showConvoSettingsCb = useShowConversationSettingsFor(selectedConvoKey);
 
@@ -51,7 +53,9 @@ export const ConversationHeaderWithDetails = () => {
         width="100%"
         $flexGrow={1}
       >
-        <ConversationHeaderTitle showSubtitle={!isOutgoingRequest && !isIncomingRequest} />
+        <ConversationHeaderTitle
+          showSubtitle={!isOutgoingRequest && !isIncomingRequest && !isBlocked}
+        />
 
         {!isOutgoingRequest && !isSelectionMode && (
           <Flex
@@ -163,7 +167,7 @@ function RecreateGroupButton() {
           showRecreateGroupModal(name || localize('groupUnknown').toString(), members);
         }}
       >
-        {localize('recreateGroup').toString()}
+        {localize('recreateGroup')}
       </SessionButton>
     </RecreateGroupContainer>
   );

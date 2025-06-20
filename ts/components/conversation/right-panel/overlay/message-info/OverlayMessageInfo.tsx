@@ -331,7 +331,7 @@ export const OverlayMessageInfo = () => {
           closeButtonOnClick={closePanel}
           paddingTop="var(--margins-2xl)"
         >
-          <HeaderTitle>{localize('messageInfo').toString()}</HeaderTitle>
+          <HeaderTitle>{localize('messageInfo')}</HeaderTitle>
         </Header>
         <StyledMessageInfoContainer>
           <MessageBody

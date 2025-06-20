@@ -9,14 +9,15 @@ import { PubKey } from '../../session/types';
 import { updateBlockOrUnblockModal } from '../../state/ducks/modalDialog';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
-export function useShowBlockUnblock(convoId: string) {
+export function useShowBlockUnblock(convoId?: string) {
   const isMe = useIsMe(convoId);
   const isBlocked = useIsBlocked(convoId);
   const isPrivate = useIsPrivate(convoId);
   const isIncomingRequest = useIsIncomingRequest(convoId);
   const dispatch = useDispatch();
 
-  const showBlockUnblock = !isMe && isPrivate && !isIncomingRequest && !PubKey.isBlinded(convoId);
+  const showBlockUnblock =
+    convoId && !isMe && isPrivate && !isIncomingRequest && !PubKey.isBlinded(convoId);
 
   if (!showBlockUnblock) {
     return null;

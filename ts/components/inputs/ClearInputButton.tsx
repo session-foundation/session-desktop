@@ -1,8 +1,8 @@
 import type { SessionDataTestId } from 'react';
-import { useHTMLDirection } from '../../util/i18n/rtlSupport';
-import { alignButtonEndAbsoluteButtonStyle } from './sharedStyles';
+
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { alignButtonEndAbsoluteButtonStyle } from './sharedStyles';
 
 export const ClearInputButton = ({
   onClearInputClicked,
@@ -13,8 +13,7 @@ export const ClearInputButton = ({
   dataTestId: SessionDataTestId;
   show: boolean;
 }) => {
-  const htmlDirection = useHTMLDirection();
-  const style = alignButtonEndAbsoluteButtonStyle(htmlDirection);
+  const style = alignButtonEndAbsoluteButtonStyle();
 
   if (!show) {
     return null;

@@ -53,7 +53,6 @@ export const CallButton = () => {
     !isPrivate ||
     isMe ||
     !selectedConvoKey ||
-    isBlocked ||
     !isActive ||
     !isPrivateAndFriend // call requires us to be friends
   ) {
@@ -69,6 +68,7 @@ export const CallButton = () => {
       }}
       dataTestId="call-button"
       margin="0 var(--margins-sm) 0 0"
+      disabled={isBlocked || !canCall}
     />
   );
 };

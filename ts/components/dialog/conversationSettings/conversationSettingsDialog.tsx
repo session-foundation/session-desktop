@@ -1,5 +1,4 @@
 import { AnimatePresence } from 'framer-motion';
-import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 import { noop } from 'lodash';
 
@@ -18,12 +17,6 @@ import { NotificationsPage } from './pages/notifications/NotificationPage';
 import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useShowConversationSettingsFor';
 import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
-
-const StyledContent = styled(Flex)`
-  /* position: absolute; */
-  /* top: 10vh;
-  max-height: 80vh; */
-`;
 
 function useTitleFromPage(page: ConversationSettingsModalPage | undefined) {
   switch (page) {
@@ -123,7 +116,7 @@ export function ConversationSettingsDialog(props: ConversationSettingsModalState
         $contentMinWidth="400px"
         bigHeader={true}
       >
-        <StyledContent
+        <Flex
           $container={true}
           $flexDirection="column"
           $alignItems="flex-start"
@@ -131,7 +124,7 @@ export function ConversationSettingsDialog(props: ConversationSettingsModalState
           width="100%"
         >
           <PageToRender conversationId={props.conversationId} />
-        </StyledContent>
+        </Flex>
       </SessionWrapperModal2>
     </AnimatePresence>
   );

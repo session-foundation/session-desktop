@@ -11,7 +11,7 @@ function useShowCopyAccountId(conversationId?: string) {
 export function useShowCopyAccountIdCb(conversationId?: string) {
   const canCopy = useShowCopyAccountId(conversationId);
 
-  if (!canCopy && conversationId) {
+  if (!canCopy || !conversationId) {
     return null;
   }
 

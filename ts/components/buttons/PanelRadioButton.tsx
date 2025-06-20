@@ -57,6 +57,7 @@ export const PanelRadioButton = (props: PanelRadioButtonProps) => {
             label=""
             disabled={disabled}
             inputDataTestId={radioInputDataTestId}
+            style={{ paddingInlineEnd: 'var(--margins-xs)' }}
           />
         </StyledCheckContainer>
       </StyledContent>
