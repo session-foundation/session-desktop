@@ -10,7 +10,7 @@ import {
   useLastMessage,
 } from '../../../hooks/useParamSelector';
 import { LastMessageStatusType } from '../../../state/ducks/types';
-import { useIsSearching } from '../../../state/selectors/search';
+import { useIsSearchingForType } from '../../../state/selectors/search';
 import { useIsMessageRequestOverlayShown } from '../../../state/selectors/section';
 import { assertUnreachable } from '../../../types/sqlSharedTypes';
 import { TypingAnimation } from '../../conversation/TypingAnimation';
@@ -28,7 +28,7 @@ export const MessageItem = () => {
   const isMessageRequest = useIsMessageRequestOverlayShown();
   const isOutgoingRequest = useIsOutgoingRequest(conversationId);
 
-  const isSearching = useIsSearching();
+  const isSearching = useIsSearchingForType('global');
 
   if (isOutgoingRequest) {
     return null;

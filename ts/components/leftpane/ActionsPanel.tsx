@@ -10,13 +10,7 @@ import useThrottleFn from 'react-use/lib/useThrottleFn';
 import { Data } from '../../data/data';
 import { ConvoHub } from '../../session/conversations';
 
-import { clearSearch } from '../../state/ducks/search';
-import {
-  resetLeftOverlayMode,
-  resetRightOverlayMode,
-  SectionType,
-  showLeftPaneSection,
-} from '../../state/ducks/section';
+import { sectionActions, SectionType } from '../../state/ducks/section';
 import {
   getOurPrimaryConversation,
   useGlobalUnreadMessageCount,
@@ -28,7 +22,7 @@ import { DecryptedAttachmentsManager } from '../../session/crypto/DecryptedAttac
 
 import { DURATION } from '../../session/constants';
 
-import { uploadOurAvatar } from '../../interactions/conversationInteractions';
+import { reuploadCurrentAvatarUs } from '../../interactions/avatar-interactions/nts-avatar-interactions';
 import {
   editProfileModal,
   onionPathModal,
@@ -64,6 +58,7 @@ import { useCheckReleasedFeatures } from '../../hooks/useCheckReleasedFeatures';
 import { useDebugMode } from '../../state/selectors/debug';
 import { networkDataActions } from '../../state/ducks/networkData';
 import { isSesh101ReadyOutsideRedux } from '../../state/selectors/releasedFeatures';
+import { searchActions } from '../../state/ducks/search';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 const Section = (props: { type: SectionType }) => {
@@ -98,9 +93,9 @@ const Section = (props: { type: SectionType }) => {
       dispatch(updateDebugMenuModal({}));
     } else {
       // message section
-      dispatch(clearSearch());
-      dispatch(showLeftPaneSection(type));
-      dispatch(resetLeftOverlayMode());
+      dispatch(searchActions.clearSearch());
+      dispatch(sectionActions.showLeftPaneSection(type));
+      dispatch(sectionActions.resetLeftOverlayMode());
     }
   };
 
@@ -109,9 +104,9 @@ const Section = (props: { type: SectionType }) => {
   useHotkey('Escape', () => {
     if (type === SectionType.Settings && !isModalVisible) {
       settingsIconRef.current?.blur();
-      dispatch(clearSearch());
-      dispatch(showLeftPaneSection(SectionType.Message));
-      dispatch(resetLeftOverlayMode());
+      dispatch(searchActions.clearSearch());
+      dispatch(sectionActions.showLeftPaneSection(SectionType.Message));
+      dispatch(sectionActions.resetLeftOverlayMode());
     }
   });
 
@@ -208,7 +203,7 @@ const triggerAvatarReUploadIfNeeded = async () => {
   if (Date.now() - lastTimeStampAvatarUpload > DURATION.DAYS * 14) {
     window.log.info('Reuploading avatar...');
     // reupload the avatar
-    await uploadOurAvatar();
+    await reuploadCurrentAvatarUs();
   }
 };
 
@@ -252,12 +247,6 @@ const doAppStartUp = async () => {
     // Note: this also starts periodic jobs, so we don't need to keep doing it
     void UserSync.queueNewJobIfNeeded();
   }, 20000);
-
-  if (window.sessionFeatureFlags.showSettingsOnStart) {
-    window.inboxStore?.dispatch(showLeftPaneSection(SectionType.Settings));
-    window.inboxStore?.dispatch(resetLeftOverlayMode());
-    window.inboxStore?.dispatch(resetRightOverlayMode());
-  }
 };
 
 function useUpdateBadgeCount() {

@@ -8,12 +8,12 @@ import { MessageSearchResult } from './MessageSearchResults';
 
 import {
   SearchResultsMergedListItem,
-  getHasSearchResults,
   getSearchResultsList,
-  getSearchTerm,
+  useHasSearchResultsForSearchType,
+  useSearchTermForType,
 } from '../../state/selectors/search';
 import { calcContactRowHeight } from '../leftpane/overlay/choose-action/ContactsListWithBreaks';
-import { Localizer } from '../basic/Localizer';
+import { NoResultsForSearch } from './NoResults';
 
 const StyledSeparatorSection = styled.div<{ isSubtitle: boolean }>`
   height: 36px;
@@ -35,12 +35,6 @@ const SearchResultsContainer = styled.div`
   color: var(--text-secondary-color);
   flex-grow: 1;
   width: -webkit-fill-available;
-`;
-
-const NoResults = styled.div`
-  width: 100%;
-  padding: var(--margins-xl) var(--margins-sm) 0;
-  text-align: center;
 `;
 
 const SectionHeader = ({
@@ -108,18 +102,12 @@ const VirtualizedList = () => {
 };
 
 export const SearchResults = () => {
-  const query = useSelector(getSearchTerm);
-  const hasSearchResults = useSelector(getHasSearchResults);
+  const query = useSearchTermForType('global');
+  const hasSearchResults = useHasSearchResultsForSearchType('global');
 
   return (
     <SearchResultsContainer>
-      {!hasSearchResults ? (
-        <NoResults>
-          <Localizer token="searchMatchesNoneSpecific" args={{ query }} />
-        </NoResults>
-      ) : (
-        <VirtualizedList />
-      )}
+      {!hasSearchResults ? <NoResultsForSearch searchTerm={query || ''} /> : <VirtualizedList />}
     </SearchResultsContainer>
   );
 };

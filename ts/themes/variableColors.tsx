@@ -7,6 +7,7 @@ export type ThemeColorVariables = {
   /* Backgrounds */
   '--background-primary-color': string;
   '--background-secondary-color': string;
+  '--background-tertiary-color': string;
 
   /* Text */
   '--text-primary-color': string;
@@ -156,12 +157,6 @@ export type ThemeColorVariables = {
   '--toast-text-color': string;
   '--toast-color-strip-color': string;
   '--toast-progress-color': string;
-
-  /* Right Panel Items */
-  /* Also used for Session Dropdown */
-  '--right-panel-item-background-color': string;
-  '--right-panel-item-background-hover-color': string;
-  '--right-panel-item-text-color': string;
 
   /* Session Text Logo */
   /* Loads SVG as IMG and uses a filter to change color */

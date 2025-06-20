@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
 
 import { SessionJoinableRooms } from './SessionJoinableDefaultRooms';
@@ -10,7 +10,6 @@ import {
   JoinSogsRoomUICallbackArgs,
 } from '../../../session/apis/open_group_api/opengroupV2/JoinOpenGroupV2';
 import { openGroupV2CompleteURLRegex } from '../../../session/apis/open_group_api/utils/OpenGroupUtils';
-import { resetLeftOverlayMode } from '../../../state/ducks/section';
 import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
 import { SessionSpinner } from '../../loading';
 
@@ -18,11 +17,12 @@ import {
   markConversationInitialLoadingInProgress,
   openConversationWithMessages,
 } from '../../../state/ducks/conversations';
-import { getLeftOverlayMode } from '../../../state/selectors/section';
+import { useLeftOverlayMode } from '../../../state/selectors/section';
 import { Spacer2XL } from '../../basic/Text';
 import { SessionInput } from '../../inputs';
 import { StyledLeftPaneOverlay } from './OverlayMessage';
 import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_constants';
+import { sectionActions } from '../../../state/ducks/section';
 
 async function joinOpenGroup(
   serverUrl: string,
@@ -49,10 +49,10 @@ export const OverlayCommunity = () => {
   const [groupUrlError, setGroupUrlError] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
 
-  const overlayModeIsCommunity = useSelector(getLeftOverlayMode) === 'open-group';
+  const overlayModeIsCommunity = useLeftOverlayMode() === 'open-group';
 
   function closeOverlay() {
-    dispatch(resetLeftOverlayMode());
+    dispatch(sectionActions.resetLeftOverlayMode());
   }
 
   async function onTryJoinRoom(completeUrl?: string) {

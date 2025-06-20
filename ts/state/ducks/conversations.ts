@@ -15,7 +15,6 @@ import {
   DisappearingMessageType,
 } from '../../session/disappearing_messages/types';
 import { ReactionList } from '../../types/Reaction';
-import { resetRightOverlayMode } from './section';
 import {
   LastMessageStatusType,
   LastMessageType,
@@ -30,6 +29,7 @@ import { cancelUpdatesToDispatch } from '../../models/message';
 import type { SessionSuggestionDataItem } from '../../components/conversation/composition/types';
 import { Storage } from '../../util/storage';
 import { SettingsKey } from '../../data/settings-key';
+import { sectionActions } from './section';
 
 export type MessageModelPropsWithoutConvoProps = {
   propsForMessage: PropsForMessageWithoutConvoProps;
@@ -1131,7 +1131,7 @@ export async function openConversationWithMessages(args: {
       initialQuotes,
     })
   );
-  window.inboxStore?.dispatch(resetRightOverlayMode());
+  window.inboxStore?.dispatch(sectionActions.resetRightOverlayMode());
 }
 
 export async function openConversationToSpecificMessage(args: {

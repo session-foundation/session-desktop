@@ -9,6 +9,7 @@ export const classicLight: ThemeColorVariables = {
 
   '--background-primary-color': THEMES.CLASSIC_LIGHT.COLOR6,
   '--background-secondary-color': THEMES.CLASSIC_LIGHT.COLOR5,
+  '--background-tertiary-color': THEMES.CLASSIC_LIGHT.COLOR4,
 
   '--text-primary-color': THEMES.CLASSIC_LIGHT.COLOR0,
   '--text-secondary-color': THEMES.CLASSIC_LIGHT.COLOR1,
@@ -125,10 +126,6 @@ export const classicLight: ThemeColorVariables = {
   '--toast-text-color': 'var(--text-primary-color)',
   '--toast-color-strip-color': 'var(--primary-color)',
   '--toast-progress-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.1)`,
-
-  '--right-panel-item-background-color': 'var(--background-secondary-color)',
-  '--right-panel-item-background-hover-color': THEMES.CLASSIC_LIGHT.COLOR4,
-  '--right-panel-item-text-color': 'var(--text-primary-color)',
 
   '--session-logo-text-light-filter': 'brightness(0) saturate(100%)',
   '--session-logo-text-dark-filter': 'none',

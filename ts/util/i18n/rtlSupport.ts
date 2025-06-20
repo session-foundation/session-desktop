@@ -9,3 +9,7 @@ export function isRtlBody(): boolean {
 }
 
 export const useHTMLDirection = (): HTMLDirection => (isRtlBody() ? 'rtl' : 'ltr');
+
+export function useIsRtl() {
+  return isRtlBody();
+}

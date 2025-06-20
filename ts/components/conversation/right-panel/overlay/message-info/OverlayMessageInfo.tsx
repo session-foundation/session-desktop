@@ -6,7 +6,6 @@ import styled from 'styled-components';
 import useKey from 'react-use/lib/useKey';
 import { clipboard } from 'electron';
 import { PropsForAttachment, closeRightPanel } from '../../../../../state/ducks/conversations';
-import { resetRightOverlayMode, setRightOverlayMode } from '../../../../../state/ducks/section';
 import { getMessageInfoId } from '../../../../../state/selectors/conversations';
 import { Flex } from '../../../../basic/Flex';
 import { Header, HeaderTitle, StyledScrollContainer } from '../components';
@@ -33,10 +32,7 @@ import {
 } from '../../../../../state/selectors';
 import {
   useSelectedConversationKey,
-  useSelectedIsGroupOrCommunity,
   useSelectedIsLegacyGroup,
-  useSelectedIsPrivate,
-  useSelectedIsPublic,
 } from '../../../../../state/selectors/selectedConversation';
 import { canDisplayImagePreview } from '../../../../../types/Attachment';
 import { isAudio } from '../../../../../types/MIME';
@@ -52,7 +48,11 @@ import { Message } from '../../../message/message-item/Message';
 import { AttachmentInfo, MessageInfo } from './components';
 import { AttachmentCarousel } from './components/AttachmentCarousel';
 import { ToastUtils } from '../../../../../session/utils';
-import { showCopyAccountIdAction } from '../../../../menu/items/CopyAccountId/guard';
+import { LUCIDE_ICONS_UNICODE } from '../../../../icon/lucide';
+import { PanelIconLucideIcon } from '../../../../buttons/PanelIconButton';
+import { useShowCopyAccountIdCb } from '../../../../menuAndSettingsHooks/useCopyAccountId';
+import { localize } from '../../../../../localization/localeTools';
+import { sectionActions } from '../../../../../state/ducks/section';
 
 // NOTE we override the default max-widths when in the detail isDetailView
 const StyledMessageBody = styled.div`
@@ -202,8 +202,8 @@ function CopyMessageBodyButton({ messageId }: WithMessageIdOpt) {
   }
   return (
     <PanelIconButton
-      text={window.i18n('copy')}
-      iconType="copy"
+      text={localize('copy').toString()}
+      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.COPY} />}
       onClick={() => {
         clipboard.writeText(messageBody || '');
         ToastUtils.pushCopiedToClipBoard();
@@ -220,14 +220,14 @@ function ReplyToMessageButton({ messageId }: WithMessageIdOpt) {
   }
   return (
     <PanelIconButton
-      text={window.i18n('reply')}
-      iconType="reply"
+      text={localize('reply').toString()}
+      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.REPLY} />}
       onClick={() => {
         // eslint-disable-next-line more/no-then
         void replyToMessage(messageId).then(foundIt => {
           if (foundIt) {
             dispatch(closeRightPanel());
-            dispatch(resetRightOverlayMode());
+            dispatch(sectionActions.resetRightOverlayMode());
           }
         });
       }}
@@ -237,29 +237,21 @@ function ReplyToMessageButton({ messageId }: WithMessageIdOpt) {
 }
 
 function CopySenderSessionId({ messageId }: WithMessageIdOpt) {
-  const isGroupOrCommunity = useSelectedIsGroupOrCommunity();
-  const isPrivate = useSelectedIsPrivate();
-  const isPublic = useSelectedIsPublic();
   const senderId = useMessageAuthor(messageId);
+  const copySenderIdCb = useShowCopyAccountIdCb(senderId);
 
-  const isGroup = isGroupOrCommunity && !isPublic;
-  const isPrivateAndShouldShow =
-    senderId && showCopyAccountIdAction({ isPrivate, pubkey: senderId });
-
-  if (senderId && (isGroup || isPrivateAndShouldShow)) {
-    return (
-      <PanelIconButton
-        text={window.i18n('accountIDCopy')}
-        iconType="copy"
-        onClick={() => {
-          clipboard.writeText(senderId);
-          ToastUtils.pushCopiedToClipBoard();
-        }}
-        dataTestId="copy-sender-from-details"
-      />
-    );
+  if (!copySenderIdCb || !senderId) {
+    return null;
   }
-  return null;
+
+  return (
+    <PanelIconButton
+      text={localize('accountIDCopy').toString()}
+      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.COPY} />}
+      onClick={copySenderIdCb}
+      dataTestId="copy-sender-from-details"
+    />
+  );
 }
 
 export const OverlayMessageInfo = () => {
@@ -282,7 +274,7 @@ export const OverlayMessageInfo = () => {
 
   const closePanel = useCallback(() => {
     dispatch(closeRightPanel());
-    dispatch(resetRightOverlayMode());
+    dispatch(sectionActions.resetRightOverlayMode());
   }, [dispatch]);
 
   useKey('Escape', closePanel);
@@ -323,7 +315,7 @@ export const OverlayMessageInfo = () => {
 
     if (attachments[newVisibleIndex]) {
       dispatch(
-        setRightOverlayMode({
+        sectionActions.setRightOverlayMode({
           type: 'message_info',
           params: { messageId, visibleAttachmentIndex: newVisibleIndex },
         })
@@ -334,8 +326,12 @@ export const OverlayMessageInfo = () => {
   return (
     <StyledScrollContainer>
       <Flex $container={true} $flexDirection={'column'} $alignItems={'center'}>
-        <Header hideBackButton={true} closeButtonOnClick={closePanel}>
-          <HeaderTitle>{window.i18n('messageInfo')}</HeaderTitle>
+        <Header
+          hideCloseButton={false}
+          closeButtonOnClick={closePanel}
+          paddingTop="var(--margins-2xl)"
+        >
+          <HeaderTitle>{localize('messageInfo')}</HeaderTitle>
         </Header>
         <StyledMessageInfoContainer>
           <MessageBody
@@ -373,20 +369,22 @@ export const OverlayMessageInfo = () => {
             <CopySenderSessionId messageId={messageId} />
             {hasErrors && !isLegacyGroup && direction === 'outgoing' && (
               <PanelIconButton
-                text={window.i18n('resend')}
-                iconType="resend"
+                text={localize('resend').toString()}
+                iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.REFRESH_CW} />}
                 onClick={() => {
                   void resendMessage(messageId);
                   dispatch(closeRightPanel());
-                  dispatch(resetRightOverlayMode());
+                  dispatch(sectionActions.resetRightOverlayMode());
                 }}
                 dataTestId="resend-msg-from-details"
               />
             )}
             {hasAttachments && (
               <PanelIconButton
-                text={window.i18n('save')}
-                iconType="saveToDisk"
+                text={localize('save').toString()}
+                iconElement={
+                  <PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.CIRCLE_ARROW_DOWN} />
+                }
                 dataTestId="save-attachment-from-details"
                 onClick={() => {
                   if (hasAttachments) {
@@ -403,8 +401,8 @@ export const OverlayMessageInfo = () => {
             )}
             {isDeletable && !isLegacyGroup && (
               <PanelIconButton
-                text={window.i18n('delete')}
-                iconType="delete"
+                text={localize('delete').toString()}
+                iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.TRASH2} />}
                 color={'var(--danger-color)'}
                 dataTestId="delete-from-details"
                 onClick={() => {

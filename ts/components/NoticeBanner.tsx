@@ -2,7 +2,6 @@ import { SessionDataTestId } from 'react';
 import styled from 'styled-components';
 import { Flex } from './basic/Flex';
 import { SessionIconButton, SessionIconType } from './icon';
-import { StyledRootDialog } from './dialog/StyledRootDialog';
 
 const StyledNoticeBanner = styled(Flex)<{ isClickable: boolean }>`
   background-color: var(--primary-color);
@@ -52,30 +51,5 @@ export const NoticeBanner = (props: NoticeBannerProps) => {
       <StyledText>{text}</StyledText>
       {icon ? <SessionIconButton iconType={icon} iconColor="inherit" iconSize="small" /> : null}
     </StyledNoticeBanner>
-  );
-};
-
-const StyledGroupInviteBanner = styled(Flex)`
-  position: relative;
-  color: var(--black-color);
-  background-color: var(--orange-color);
-  font-size: var(--font-size-sm);
-  padding: var(--margins-xs) var(--margins-lg);
-  text-align: center;
-  flex-shrink: 0;
-
-  // when part a a dialog, invert it and make it narrower (as the dialog grows to make it fit)
-  ${StyledRootDialog} & {
-    max-width: 300px;
-    color: var(--warning-color);
-    background-color: inherit;
-  }
-`;
-
-export const GroupInviteRequiredVersionBanner = () => {
-  return (
-    <StyledGroupInviteBanner data-testid="version-warning">
-      {window.i18n('groupInviteVersion')}
-    </StyledGroupInviteBanner>
   );
 };

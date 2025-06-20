@@ -3,7 +3,6 @@ import { useDispatch } from 'react-redux';
 import type { PubkeyType } from 'libsession_util_nodejs';
 import { useCallback } from 'react';
 import styled from 'styled-components';
-import { openRightPanel } from '../../../state/ducks/conversations';
 
 import {
   use05GroupMembers,
@@ -13,6 +12,7 @@ import {
 import {
   useIsMessageSelectionMode,
   useSelectedConversationKey,
+  useSelectedIsBlocked,
   useSelectedIsLegacyGroup,
   useSelectedWeAreAdmin,
 } from '../../../state/selectors/selectedConversation';
@@ -23,18 +23,20 @@ import { ConversationHeaderTitle } from './ConversationHeaderTitle';
 import { localize } from '../../../localization/localeTools';
 import { groupInfoActions } from '../../../state/ducks/metaGroups';
 import { updateConfirmModal } from '../../../state/ducks/modalDialog';
-import { setLeftOverlayMode } from '../../../state/ducks/section';
 import { SessionButtonColor, SessionButton, SessionButtonType } from '../../basic/SessionButton';
 import { ConvoHub } from '../../../session/conversations';
 import { ConversationTypeEnum } from '../../../models/types';
 import { Constants } from '../../../session';
+import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useShowConversationSettingsFor';
+import { sectionActions } from '../../../state/ducks/section';
 
 export const ConversationHeaderWithDetails = () => {
   const isSelectionMode = useIsMessageSelectionMode();
   const selectedConvoKey = useSelectedConversationKey();
   const isOutgoingRequest = useIsOutgoingRequest(selectedConvoKey);
+  const isBlocked = useSelectedIsBlocked();
 
-  const dispatch = useDispatch();
+  const showConvoSettingsCb = useShowConversationSettingsFor(selectedConvoKey);
 
   if (!selectedConvoKey) {
     return null;
@@ -49,7 +51,7 @@ export const ConversationHeaderWithDetails = () => {
         width="100%"
         $flexGrow={1}
       >
-        <ConversationHeaderTitle showSubtitle={!isOutgoingRequest} />
+        <ConversationHeaderTitle showSubtitle={!isOutgoingRequest && !isBlocked} />
 
         {!isOutgoingRequest && !isSelectionMode && (
           <Flex
@@ -62,9 +64,13 @@ export const ConversationHeaderWithDetails = () => {
             <RecreateGroupButton />
             <CallButton />
             <AvatarHeader
-              onAvatarClick={() => {
-                dispatch(openRightPanel());
-              }}
+              onAvatarClick={
+                showConvoSettingsCb
+                  ? () => {
+                      showConvoSettingsCb({ settingsModalPage: 'default' });
+                    }
+                  : undefined
+              }
               pubkey={selectedConvoKey}
             />
           </Flex>
@@ -100,7 +106,7 @@ function useShowRecreateModal() {
           cancelText: localize('cancel').toString(),
           okTheme: SessionButtonColor.Danger,
           onClickOk: () => {
-            dispatch(setLeftOverlayMode('closed-group'));
+            dispatch(sectionActions.setLeftOverlayMode('closed-group'));
             dispatch(groupInfoActions.updateGroupCreationName({ name }));
             dispatch(groupInfoActions.setSelectedGroupMembers({ membersToSet: members }));
           },
@@ -157,7 +163,7 @@ function RecreateGroupButton() {
           showRecreateGroupModal(name || localize('groupUnknown').toString(), members);
         }}
       >
-        {localize('recreateGroup').toString()}
+        {localize('recreateGroup')}
       </SessionButton>
     </RecreateGroupContainer>
   );

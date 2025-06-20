@@ -1,7 +1,10 @@
 import { forwardRef } from 'react';
 import styled from 'styled-components';
 import { useIsOutgoingRequest } from '../../../hooks/useParamSelector';
-import { useSelectedConversationKey } from '../../../state/selectors/selectedConversation';
+import {
+  useSelectedConversationKey,
+  useSelectedIsBlocked,
+} from '../../../state/selectors/selectedConversation';
 import { SessionIconButton } from '../../icon';
 
 const StyledChatButtonContainer = styled.div<{ disabled?: boolean }>`
@@ -22,8 +25,11 @@ export const AddStagedAttachmentButton = (props: { onClick: () => void }) => {
   const selectedConvoKey = useSelectedConversationKey();
   const isOutgoingRequest = useIsOutgoingRequest(selectedConvoKey);
 
+  const isBlocked = useSelectedIsBlocked();
+  const disabled = isOutgoingRequest || isBlocked;
+
   return (
-    <StyledChatButtonContainer disabled={isOutgoingRequest}>
+    <StyledChatButtonContainer disabled={disabled}>
       <SessionIconButton
         iconType="plusThin"
         backgroundColor={'var(--chat-buttons-background-color)'}
@@ -33,7 +39,7 @@ export const AddStagedAttachmentButton = (props: { onClick: () => void }) => {
         iconPadding="8px"
         onClick={props.onClick}
         dataTestId="attachments-button"
-        disabled={isOutgoingRequest}
+        disabled={disabled}
       />
     </StyledChatButtonContainer>
   );
@@ -42,9 +48,11 @@ export const AddStagedAttachmentButton = (props: { onClick: () => void }) => {
 export const StartRecordingButton = (props: { onClick: () => void }) => {
   const selectedConvoKey = useSelectedConversationKey();
   const isOutgoingRequest = useIsOutgoingRequest(selectedConvoKey);
+  const isBlocked = useSelectedIsBlocked();
+  const disabled = isOutgoingRequest || isBlocked;
 
   return (
-    <StyledChatButtonContainer disabled={isOutgoingRequest}>
+    <StyledChatButtonContainer disabled={disabled}>
       <SessionIconButton
         iconType="microphone"
         iconSize={'huge2'}
@@ -53,7 +61,7 @@ export const StartRecordingButton = (props: { onClick: () => void }) => {
         borderRadius="300px"
         iconPadding="6px"
         onClick={props.onClick}
-        disabled={isOutgoingRequest}
+        disabled={disabled}
         dataTestId="microphone-button"
       />
     </StyledChatButtonContainer>

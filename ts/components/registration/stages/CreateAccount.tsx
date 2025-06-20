@@ -28,13 +28,13 @@ import {
 import { Storage, setSignWithRecoveryPhrase } from '../../../util/storage';
 import { Flex } from '../../basic/Flex';
 import { SpacerLG, SpacerSM } from '../../basic/Text';
-import { SessionInput } from '../../inputs';
 import { resetRegistration } from '../RegistrationStages';
 import { ContinueButton, OnboardDescription, OnboardHeading } from '../components';
 import { BackButtonWithinContainer } from '../components/BackButton';
 import { sanitizeDisplayNameOrToast } from '../utils';
 import { EmptyDisplayNameError, RetrieveDisplayNameError } from '../../../session/utils/errors';
 import { localize } from '../../../localization/localeTools';
+import { SimpleSessionInput } from '../../inputs/SessionInput';
 
 type AccountCreateDetails = {
   recoveryPassword: string;
@@ -147,20 +147,19 @@ export const CreateAccount = () => {
         <SpacerSM />
         <OnboardDescription>{window.i18n('displayNameDescription')}</OnboardDescription>
         <SpacerLG />
-        <SessionInput
-          ariaLabel={window.i18n('displayNameEnter')}
+        <SimpleSessionInput
+          ariaLabel={localize('displayNameEnter').toString()}
           autoFocus={true}
-          disableOnBlurEvent={true}
-          type="text"
-          placeholder={window.i18n('displayNameEnter')}
+          placeholder={localize('displayNameEnter').toString()}
           value={displayName}
           onValueChanged={(name: string) => {
             dispatch(setDisplayName(name));
             setCannotContinue(false);
           }}
-          onEnterPressed={signUpWithDetails}
-          error={displayNameError}
+          onEnterPressed={() => void signUpWithDetails()}
+          providedError={displayNameError}
           inputDataTestId="display-name-input"
+          errorDataTestId="error-message"
         />
         <SpacerLG />
         <ContinueButton onClick={signUpWithDetails} disabled={cannotContinue} />

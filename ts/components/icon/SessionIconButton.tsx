@@ -1,7 +1,8 @@
 import _ from 'lodash';
 import { KeyboardEvent, MouseEvent, SessionDataTestId, ReactNode, forwardRef, memo } from 'react';
 import clsx from 'clsx';
-import styled from 'styled-components';
+
+import { StyledSessionIconButton } from './SessionIconButtonStyled';
 import { SessionIcon, SessionIconProps } from './SessionIcon';
 import { LucideIcon, type LucideIconProps } from './LucideIcon';
 
@@ -22,33 +23,6 @@ export type SessionIconButtonProps = SessionIconProps & {
   disabled?: boolean;
 };
 
-const StyledSessionIconButton = styled.button<{ color?: string; $isSelected?: boolean }>`
-  background-color: var(--button-icon-background-color);
-
-  svg path {
-    transition: var(--default-duration);
-    ${props =>
-      !props.color &&
-      `fill:
-        ${
-          props.$isSelected
-            ? 'var(--button-icon-stroke-selected-color)'
-            : 'var(--button-icon-stroke-color)'
-        };`}
-  }
-
-  color: ${props =>
-    props.color || props.$isSelected
-      ? 'var(--button-icon-stroke-selected-color)'
-      : 'var(--button-icon-stroke-color)'};
-
-  ${props => props.disabled && 'cursor: not-allowed;'}
-
-  &:hover svg path {
-    ${props => !props.disabled && !props.color && 'fill: var(--button-icon-stroke-hover-color);'}
-  }
-`;
-
 // eslint-disable-next-line react/display-name
 const SessionIconButtonInner = forwardRef<HTMLButtonElement, SessionIconButtonProps>(
   (props, ref) => {
@@ -63,7 +37,6 @@ const SessionIconButtonInner = forwardRef<HTMLButtonElement, SessionIconButtonPr
       glowStartDelay,
       noScale,
       isHidden,
-      backgroundColor,
       borderRadius,
       iconPadding,
       margin,
@@ -78,6 +51,7 @@ const SessionIconButtonInner = forwardRef<HTMLButtonElement, SessionIconButtonPr
       className,
       children,
       disabled,
+      backgroundColor,
     } = props;
     const clickHandler = (e: MouseEvent<HTMLButtonElement>) => {
       if (!disabled && props.onClick) {
@@ -122,10 +96,10 @@ const SessionIconButtonInner = forwardRef<HTMLButtonElement, SessionIconButtonPr
           glowDuration={glowDuration}
           glowStartDelay={glowStartDelay}
           noScale={noScale}
-          backgroundColor={backgroundColor}
           borderRadius={borderRadius}
           iconPadding={iconPadding}
           dataTestId={dataTestIdIcon}
+          backgroundColor={backgroundColor}
         />
         {children}
       </StyledSessionIconButton>

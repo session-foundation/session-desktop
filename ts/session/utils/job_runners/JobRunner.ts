@@ -125,7 +125,7 @@ export class PersistedJobRunner<T extends TypeOfPersistedData> {
         j => j.persistedData.identifier === job.persistedData.identifier
       )
     ) {
-      window.log.info(
+      window.log.debug(
         `job runner (${this.jobRunnerType}) has already a job with id:"${job.persistedData.identifier}" planned so not adding another one`
       );
       return 'identifier_exists';

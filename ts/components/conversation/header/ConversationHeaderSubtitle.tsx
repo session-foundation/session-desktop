@@ -1,7 +1,7 @@
 import styled, { CSSProperties } from 'styled-components';
 import { Flex } from '../../basic/Flex';
 import { SessionIconButton } from '../../icon';
-import { SubtitleStrings, SubtitleStringsType } from './ConversationHeaderTitle';
+import { SubtitleStringsType } from './ConversationHeaderTitle';
 
 function loadDataTestId(currentSubtitle: SubtitleStringsType) {
   if (currentSubtitle === 'disappearingMessages') {
@@ -64,39 +64,25 @@ export const SubtitleDotMenu = ({
   </StyledSubtitleDotMenu>
 );
 
+export type SubTitleArray = Array<{ type: SubtitleStringsType; label: string | null }>;
+
 type ConversationHeaderSubtitleProps = {
-  subtitlesArray: Array<SubtitleStringsType>;
-  subtitleStrings: SubtitleStrings;
-  currentSubtitle: SubtitleStringsType;
-  setCurrentSubtitle: (index: SubtitleStringsType) => void;
+  subtitlesArray: SubTitleArray;
+  subtitleIndex: number;
+  onCycle: (direction: 1 | -1) => void;
   onClickFunction: () => void;
   showDisappearingMessageIcon: boolean;
 };
 
 export const ConversationHeaderSubtitle = (props: ConversationHeaderSubtitleProps) => {
-  const {
-    subtitlesArray,
-    subtitleStrings,
-    currentSubtitle,
-    setCurrentSubtitle,
-    onClickFunction,
-    showDisappearingMessageIcon,
-  } = props;
+  const { subtitlesArray, subtitleIndex, onClickFunction, showDisappearingMessageIcon, onCycle } =
+    props;
 
-  const handleTitleCycle = (direction: 1 | -1) => {
-    let newIndex = subtitlesArray.indexOf(currentSubtitle) + direction;
-    if (newIndex > subtitlesArray.length - 1) {
-      newIndex = 0;
-    }
+  const currentSubtitle = subtitlesArray[subtitleIndex];
 
-    if (newIndex < 0) {
-      newIndex = subtitlesArray.length - 1;
-    }
-
-    if (subtitlesArray[newIndex]) {
-      setCurrentSubtitle(subtitlesArray[newIndex]);
-    }
-  };
+  if (!currentSubtitle) {
+    throw new Error('currentSubtitle is undefined');
+  }
 
   return (
     <StyledSubtitleContainer>
@@ -114,7 +100,7 @@ export const ConversationHeaderSubtitle = (props: ConversationHeaderSubtitleProp
           iconRotation={90}
           margin={'0 3px 0 0'}
           onClick={() => {
-            handleTitleCycle(-1);
+            onCycle(-1);
           }}
           isHidden={subtitlesArray.length < 2}
           tabIndex={0}
@@ -138,9 +124,9 @@ export const ConversationHeaderSubtitle = (props: ConversationHeaderSubtitleProp
             }
           }}
           tabIndex={0}
-          data-testid={loadDataTestId(currentSubtitle)}
+          data-testid={loadDataTestId(currentSubtitle.type)}
         >
-          {subtitleStrings[currentSubtitle]}
+          {currentSubtitle.label}
         </span>
         <SessionIconButton
           iconColor={'var(--button-icon-stroke-selected-color)'}
@@ -149,7 +135,7 @@ export const ConversationHeaderSubtitle = (props: ConversationHeaderSubtitleProp
           iconRotation={270}
           margin={'0 0 0 3px'}
           onClick={() => {
-            handleTitleCycle(1);
+            onCycle(1);
           }}
           isHidden={subtitlesArray.length < 2}
           tabIndex={0}

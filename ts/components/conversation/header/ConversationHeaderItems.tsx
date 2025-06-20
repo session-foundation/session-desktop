@@ -5,6 +5,7 @@ import { getHasIncomingCall, getHasOngoingCall } from '../../../state/selectors/
 import {
   useSelectedConversationKey,
   useSelectedIsActive,
+  useSelectedIsApproved,
   useSelectedIsBlocked,
   useSelectedIsNoteToSelf,
   useSelectedIsPrivate,
@@ -16,10 +17,11 @@ import { useIsLegacyGroup } from '../../../hooks/useParamSelector';
 
 export const AvatarHeader = (props: { pubkey: string; onAvatarClick?: () => void }) => {
   const { pubkey, onAvatarClick } = props;
+  const isApproved = useSelectedIsApproved();
 
   const isLegacyGroup = useIsLegacyGroup(pubkey);
 
-  const optOnAvatarClick = !isLegacyGroup ? onAvatarClick : undefined;
+  const optOnAvatarClick = !isLegacyGroup && isApproved ? onAvatarClick : undefined;
 
   return (
     <span className="module-conversation-header__avatar">
@@ -67,7 +69,6 @@ export const CallButton = () => {
     !isPrivate ||
     isMe ||
     !selectedConvoKey ||
-    isBlocked ||
     !isActive ||
     !isPrivateAndFriend // call requires us to be friends
   ) {
@@ -85,6 +86,7 @@ export const CallButton = () => {
         void callRecipient(selectedConvoKey, canCall);
       }}
       dataTestId="call-button"
+      disabled={isBlocked || !canCall}
     />
   );
 };

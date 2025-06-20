@@ -9,6 +9,7 @@ export const oceanDark: ThemeColorVariables = {
 
   '--background-primary-color': THEMES.OCEAN_DARK.COLOR1,
   '--background-secondary-color': THEMES.OCEAN_DARK.COLOR2,
+  '--background-tertiary-color': THEMES.OCEAN_DARK.COLOR0,
 
   '--text-primary-color': THEMES.OCEAN_DARK.COLOR7!,
   '--text-secondary-color': THEMES.OCEAN_DARK.COLOR5,
@@ -125,10 +126,6 @@ export const oceanDark: ThemeColorVariables = {
   '--toast-text-color': 'var(--text-primary-color)',
   '--toast-color-strip-color': 'var(--primary-color)',
   '--toast-progress-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.1)`,
-
-  '--right-panel-item-background-color': 'var(--background-secondary-color)',
-  '--right-panel-item-background-hover-color': THEMES.OCEAN_DARK.COLOR4,
-  '--right-panel-item-text-color': 'var(--text-primary-color)',
 
   '--session-logo-text-light-filter': 'none',
   '--session-logo-text-dark-filter': 'none',

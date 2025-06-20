@@ -7,14 +7,14 @@ import {
   useIsMe,
 } from '../../../hooks/useParamSelector';
 import { PubKey } from '../../../session/types';
-import { useIsSearching } from '../../../state/selectors/search';
+import { useIsSearchingForType } from '../../../state/selectors/search';
 import { ContactName } from '../../conversation/ContactName';
 
 export const UserItem = () => {
   const conversationId = useConvoIdFromContext();
 
   // we want to show the nickname in brackets if a nickname is set for search results
-  const isSearchResultsMode = useIsSearching();
+  const isSearchResultsMode = useIsSearchingForType('global');
 
   const shortenedPubkey = PubKey.shorten(conversationId);
   const username = useConversationUsername(conversationId);

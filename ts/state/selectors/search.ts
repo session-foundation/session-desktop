@@ -8,7 +8,7 @@ import { UserUtils } from '../../session/utils';
 import { MessageResultProps } from '../../types/message';
 
 import { ConversationLookupType } from '../ducks/conversations';
-import { SearchStateType } from '../ducks/search';
+import { SearchStateType, type SearchType } from '../ducks/search';
 import { getConversationLookup } from './conversations';
 import { ConversationTypeEnum } from '../../models/types';
 
@@ -16,7 +16,7 @@ export const getSearch = (state: StateType): SearchStateType => state.search;
 
 export const getQuery = (state: StateType): string => getSearch(state).query;
 
-const isSearching = (state: StateType) => {
+const getIsSearching = (state: StateType) => {
   return !!getSearch(state)?.query?.trim();
 };
 
@@ -42,13 +42,21 @@ const getSearchResults = createSelector(
       ),
       messages: compact(searchState.messages),
       searchTerm: searchState.query,
+      searchType: searchState.searchType,
     };
   }
 );
 
-export const getSearchTerm = createSelector([getSearchResults], searchResult => {
+const getSearchTerm = createSelector([getSearchResults], searchResult => {
   return searchResult.searchTerm;
 });
+
+export const useSearchTermForType = (searchType: SearchType) => {
+  const searchTypeInState = useSelector(getSearchType);
+
+  const searchTerm = useSelector(getSearchTerm);
+  return searchTypeInState === searchType ? searchTerm : undefined;
+};
 
 export const getSearchResultsIdsOnly = createSelector([getSearchResults], searchState => {
   return {
@@ -57,9 +65,21 @@ export const getSearchResultsIdsOnly = createSelector([getSearchResults], search
   };
 });
 
-export const getHasSearchResults = createSelector([getSearchResults], searchState => {
+const getHasSearchResults = (state: StateType) => {
+  const searchState = getSearch(state);
   return !isEmpty(searchState.contactsAndGroups) || !isEmpty(searchState.messages);
-});
+};
+
+const getSearchType = (state: StateType) => {
+  return getSearch(state)?.searchType;
+};
+
+export const useHasSearchResultsForSearchType = (searchType: SearchType) => {
+  const hasSearchResults = useSelector(getHasSearchResults);
+  const searchTypeInState = useSelector(getSearchType);
+
+  return hasSearchResults && searchTypeInState === searchType;
+};
 
 export const getSearchResultsContactOnly = createSelector([getSearchResults], searchState => {
   return searchState.contactsAndGroups.filter(m => m.isPrivate).map(m => m.id);
@@ -124,6 +144,8 @@ export const getSearchResultsList = createSelector([getSearchResults], searchSta
   return builtList;
 });
 
-export function useIsSearching() {
-  return useSelector(isSearching);
+export function useIsSearchingForType(searchType: SearchType) {
+  const isSearching = useSelector(getIsSearching);
+  const searchTypeInState = useSelector(getSearchType);
+  return isSearching && searchTypeInState === searchType;
 }
