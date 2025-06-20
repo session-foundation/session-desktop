@@ -223,7 +223,7 @@ export function useIsKickedFromGroup(convoId?: string) {
   const convoProps = useConversationPropsById(convoId);
   const libIsKicked = useLibGroupKicked(convoId);
   if (convoId && PubKey.is03Pubkey(convoId)) {
-    return libIsKicked;
+    return libIsKicked ?? false;
   }
   return Boolean(convoProps && (convoProps.isKickedFromGroup || libIsKicked)); // not ideal, but until we trust what we get from libsession for all cases, we have to either trust what we have in the DB
 }

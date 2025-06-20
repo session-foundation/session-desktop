@@ -12,7 +12,7 @@ import { useIsMessageRequestOverlayShown } from '../../state/selectors/section';
 
 export function useShowLeaveGroupCb(conversationId?: string) {
   const isClosedGroup = useIsClosedGroup(conversationId);
-  const isKickedFromGroup = useIsKickedFromGroup(conversationId) || false;
+  const isKickedFromGroup = useIsKickedFromGroup(conversationId);
   const isGroupDestroyed = useIsGroupDestroyed(conversationId);
   const isMessageRequestShown = useIsMessageRequestOverlayShown();
   const username = useConversationUsername(conversationId) || conversationId;

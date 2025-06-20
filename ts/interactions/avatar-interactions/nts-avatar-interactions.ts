@@ -16,7 +16,6 @@ import type { ConversationModel } from '../../models/conversation';
 /**
  * This function can be used for reupload our avatar to the file server.
  * It will reuse the same profileKey and avatarContent if we have some, or do nothing if one of those is missing.
- *
  */
 export async function reuploadCurrentAvatarUs() {
   const ourConvo = ConvoHub.use().get(UserUtils.getOurPubKeyStrFromCache());

@@ -1,5 +1,4 @@
 import type { SessionDataTestId } from 'react';
-import { useHTMLDirection } from '../../util/i18n/rtlSupport';
 import { SessionIconButton } from '../icon';
 import { alignButtonEndAbsoluteButtonStyle } from './sharedStyles';
 
@@ -12,8 +11,7 @@ export const ClearInputButton = ({
   dataTestId: SessionDataTestId;
   show: boolean;
 }) => {
-  const htmlDirection = useHTMLDirection();
-  const style = alignButtonEndAbsoluteButtonStyle(htmlDirection);
+  const style = alignButtonEndAbsoluteButtonStyle();
 
   if (!show) {
     return null;

@@ -16,7 +16,8 @@ export function useShowBlockUnblock(convoId?: string) {
   const isIncomingRequest = useIsIncomingRequest(convoId);
   const dispatch = useDispatch();
 
-  const showBlockUnblock = convoId && !isMe && isPrivate && !isIncomingRequest && !PubKey.isBlinded(convoId);
+  const showBlockUnblock =
+    convoId && !isMe && isPrivate && !isIncomingRequest && !PubKey.isBlinded(convoId);
 
   if (!showBlockUnblock) {
     return null;
