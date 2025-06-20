@@ -146,37 +146,6 @@ const StyledTextAreaContainer = styled(motion.div)<{
   }
 `;
 
-const StyledPlaceholder = styled(motion.div)<{
-  error: boolean;
-  textSize: TextSizes;
-  editable: boolean;
-  centerText?: boolean;
-  monospaced?: boolean;
-  padding?: string;
-}>`
-  position: relative;
-  width: 100%;
-  height: 100%;
-  transition: opacity var(--default-duration) color var(--default-duration);
-  ${props => props.editable && 'cursor: pointer;'}
-  line-height: 1;
-  ${props => !props.centerText && props.padding && `padding: ${props.padding};`}
-
-  background: transparent;
-  color: ${props =>
-    props.error
-      ? 'var(--danger-color)'
-      : props.editable
-        ? 'var(--input-text-placeholder-color)'
-        : 'var(--input-text-color)'};
-
-  font-family: ${props => (props.monospaced ? 'var(--font-mono)' : 'var(--font-default)')};
-  font-size: ${props => `var(--font-size-${props.textSize})`};
-  ${props =>
-    props.centerText &&
-    'text-align: center; display: flex; align-items: center; justify-content: center;'}
-`;
-
 const ErrorItem = (props: {
   id: string;
   error: LocalizerProps | string | undefined;
@@ -284,7 +253,7 @@ const SimpleErrorItem = ({
 
 type Props = {
   error?: LocalizerProps | string;
-  type?: string;
+  type?: 'text' | 'password';
   value?: string;
   placeholder?: string;
   ariaLabel?: string;
@@ -300,7 +269,6 @@ type Props = {
   textSize?: TextSizes;
   centerText?: boolean;
   editable?: boolean;
-  isTextArea?: boolean;
   padding?: string;
   required?: boolean;
   tabIndex?: number;
@@ -325,7 +293,6 @@ export const SessionInput = (props: Props) => {
     textSize = 'sm',
     centerText,
     editable = true,
-    isTextArea,
     padding,
     required,
     tabIndex,
@@ -336,8 +303,6 @@ export const SessionInput = (props: Props) => {
   const [textErrorStyle, setTextErrorStyle] = useState(false);
   const [isFocused, setIsFocused] = useState(props.autoFocus || false);
 
-  const textAreaRef = useRef(inputRef?.current || null);
-
   const updateInputValue = (e: ChangeEvent<HTMLInputElement>) => {
     if (!editable) {
       return;
@@ -346,16 +311,6 @@ export const SessionInput = (props: Props) => {
     const val = e.target.value;
     setInputValue(val);
     setTextErrorStyle(false);
-    if (isTextArea && textAreaRef && textAreaRef.current !== null) {
-      const scrollHeight = `${textAreaRef.current.scrollHeight}px`;
-      if (!autoFocus && isEmpty(val)) {
-        // resets the height of the text area so it's centered if we clear the text
-        textAreaRef.current.style.height = 'unset';
-      }
-      if (scrollHeight !== textAreaRef.current.style.height) {
-        textAreaRef.current.style.height = `${textAreaRef.current.scrollHeight}px`;
-      }
-    }
     if (onValueChanged) {
       onValueChanged(val);
     }
@@ -391,9 +346,6 @@ export const SessionInput = (props: Props) => {
         return;
       }
       if (event.key === 'Enter' && onEnterPressed) {
-        if (isTextArea && event.shiftKey) {
-          return;
-        }
         event.preventDefault();
         onEnterPressed(inputValue);
       }
@@ -408,12 +360,6 @@ export const SessionInput = (props: Props) => {
     padding,
   };
 
-  useEffect(() => {
-    if (isTextArea && editable && isFocused && textAreaRef && textAreaRef.current !== null) {
-      textAreaRef.current.focus();
-    }
-  }, [editable, isFocused, isTextArea]);
-
   return (
     <StyledSessionInput
       $container={true}
@@ -424,42 +370,12 @@ export const SessionInput = (props: Props) => {
       textSize={textSize}
     >
       <BorderWithErrorState hasError={hasError}>
-        {isTextArea ? (
-          <StyledTextAreaContainer {...containerProps}>
-            {isFocused ? (
-              <textarea
-                {...inputProps}
-                placeholder={!autoFocus ? '' : editable ? placeholder : value}
-                ref={inputRef || textAreaRef}
-                aria-label={ariaLabel || 'session input text area'}
-              />
-            ) : (
-              <StyledPlaceholder
-                error={textErrorStyle}
-                data-testid={inputDataTestId}
-                textSize={textSize}
-                editable={editable}
-                centerText={centerText}
-                monospaced={monospaced}
-                padding={padding}
-                onClick={() => {
-                  if (editable) {
-                    setIsFocused(true);
-                  }
-                }}
-              >
-                {editable ? placeholder : value}
-              </StyledPlaceholder>
-            )}
-          </StyledTextAreaContainer>
-        ) : (
-          <StyledInput
-            {...inputProps}
-            {...containerProps}
-            ref={inputRef}
-            aria-label={ariaLabel || 'session input'}
-          />
-        )}
+        <StyledInput
+          {...inputProps}
+          {...containerProps}
+          ref={inputRef}
+          aria-label={ariaLabel || 'session input'}
+        />
       </BorderWithErrorState>
 
       {hasError ? <SpacerMD /> : null}
@@ -640,7 +556,7 @@ export const SimpleSessionTextarea = (
       providedError: string | LocalizerProps | undefined;
       disabled?: boolean;
       buttonEnd?: ReactNode;
-    }
+    } & ({ singleLine: false } | { singleLine: true; onEnterPressed: () => void })
 ) => {
   const {
     placeholder,
@@ -686,7 +602,6 @@ export const SimpleSessionTextarea = (
     tabIndex,
     onChange: updateInputValue,
     style: { paddingInlineEnd, lineHeight: 1.5 },
-    // no onEnterPressed/onKeyDown here, as this is a textarea (and multi lines are allowed)
   };
 
   const containerProps = {
@@ -721,6 +636,16 @@ export const SimpleSessionTextarea = (
             placeholder={disabled ? value : placeholder}
             ref={ref}
             aria-label={ariaLabel}
+            spellCheck={false} // maybe we should make this a prop, but it seems we never want spellcheck for those fields
+            onKeyDown={e => {
+              if (!props.singleLine) {
+                return;
+              }
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                props?.onEnterPressed();
+              }
+            }}
           />
         </StyledTextAreaContainer>
 

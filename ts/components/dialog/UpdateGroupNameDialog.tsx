@@ -190,6 +190,7 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
         autoFocus={false}
         tabIndex={1}
         required={false}
+        singleLine={false}
         buttonEnd={
           <ClearInputButton
             dataTestId={'clear-group-info-description-button'}
