@@ -3,7 +3,6 @@ import type { RecursiveKeys } from '../../../types/Util';
 
 export type SessionFeatureFlags = {
   replaceLocalizedStringsWithKeys: boolean;
-  showSettingsOnStart: boolean;
   // Hooks
   useOnionRequests: boolean;
   useTestNet: boolean;

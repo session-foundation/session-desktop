@@ -1,9 +1,9 @@
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
-import { clearSearch } from '../../state/ducks/search';
-import { resetLeftOverlayMode, setLeftOverlayMode } from '../../state/ducks/section';
-import { getLeftOverlayMode } from '../../state/selectors/section';
+import { useLeftOverlayMode } from '../../state/selectors/section';
 import { SessionIcon } from '../icon';
+import { sectionActions } from '../../state/ducks/section';
+import { searchActions } from '../../state/ducks/search';
 
 const StyledMenuButton = styled.button`
   position: relative;
@@ -36,14 +36,18 @@ const StyledMenuButton = styled.button`
  * It has two state: selected or not and so we use an checkbox input to keep the state in sync.
  */
 export const MenuButton = () => {
-  const leftOverlayMode = useSelector(getLeftOverlayMode);
+  const leftOverlayMode = useLeftOverlayMode();
   const dispatch = useDispatch();
 
   const isToggled = Boolean(leftOverlayMode);
 
   const onClickFn = () => {
-    dispatch(clearSearch());
-    dispatch(isToggled ? resetLeftOverlayMode() : setLeftOverlayMode('choose-action'));
+    dispatch(searchActions.clearSearch());
+    dispatch(
+      isToggled
+        ? sectionActions.resetLeftOverlayMode()
+        : sectionActions.setLeftOverlayMode('choose-action')
+    );
   };
 
   return (

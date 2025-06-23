@@ -9,6 +9,7 @@ export const oceanLight: ThemeColorVariables = {
 
   '--background-primary-color': THEMES.OCEAN_LIGHT.COLOR7!,
   '--background-secondary-color': THEMES.OCEAN_LIGHT.COLOR6,
+  '--background-tertiary-color': THEMES.OCEAN_LIGHT.COLOR5,
 
   '--text-primary-color': THEMES.OCEAN_LIGHT.COLOR1,
   '--text-secondary-color': THEMES.OCEAN_LIGHT.COLOR2,
@@ -125,10 +126,6 @@ export const oceanLight: ThemeColorVariables = {
   '--toast-text-color': 'var(--text-primary-color)',
   '--toast-color-strip-color': 'var(--primary-color)',
   '--toast-progress-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.1)`,
-
-  '--right-panel-item-background-color': 'var(--background-secondary-color)',
-  '--right-panel-item-background-hover-color': THEMES.OCEAN_LIGHT.COLOR4,
-  '--right-panel-item-text-color': 'var(--text-primary-color)',
 
   '--session-logo-text-light-filter': 'brightness(0) saturate(100%)',
   '--session-logo-text-dark-filter': 'none',

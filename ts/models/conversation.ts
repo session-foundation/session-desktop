@@ -112,6 +112,7 @@ import {
 import {
   getCanWriteOutsideRedux,
   getModeratorsOutsideRedux,
+  getRoomDescriptionOutsideRedux,
   getSubscriberCountOutsideRedux,
 } from '../state/selectors/sogsRoomInfo'; // decide it it makes sense to move this to a redux slice?
 
@@ -134,6 +135,7 @@ import { NetworkTime } from '../util/NetworkTime';
 import { MessageQueue } from '../session/sending';
 import type { WithMessageHashOrNull } from '../session/types/with';
 import { Model } from './models';
+import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
 import { ReduxOnionSelectors } from '../state/selectors/onions';
 
 type InMemoryConvoInfos = {
@@ -1268,18 +1270,16 @@ export class ConversationModel extends Model<ConversationAttributes> {
       return;
     }
     const trimmed = nickname && nickname.trim();
-    if (this.get('nickname') === trimmed) {
+    const truncatedNickname = trimmed?.slice(0, LIBSESSION_CONSTANTS.CONTACT_MAX_NAME_LENGTH);
+
+    if (this.get('nickname') === truncatedNickname) {
       return;
     }
-    // make sure to save the lokiDisplayName as name in the db. so a search of conversation returns it.
-    // (we look for matches in name too)
-    const realUserName = this.getRealSessionUsername();
 
-    if (!trimmed || !trimmed.length) {
-      this.set({ nickname: undefined, displayNameInProfile: realUserName });
-    } else {
-      this.set({ nickname: trimmed, displayNameInProfile: realUserName });
-    }
+    this.set({
+      nickname: truncatedNickname || undefined,
+      displayNameInProfile: this.getRealSessionUsername(),
+    });
 
     if (shouldCommit) {
       await this.commit();
@@ -1619,6 +1619,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       moderators?: Array<string>;
       hidden_admins?: Array<string>;
       hidden_moderators?: Array<string>;
+      description?: string;
     };
   }) {
     if (!this.isPublic()) {
@@ -1652,13 +1653,16 @@ export class ConversationModel extends Model<ConversationAttributes> {
       hiddenModsOrAdmins: details.hidden_moderators,
       type: 'mods',
     });
+    hasChange = hasChange || modsChanged;
 
     if (details.name && details.name !== this.getRealSessionUsername()) {
       hasChange = hasChange || true;
       this.setSessionDisplayNameNoCommit(details.name);
     }
 
-    hasChange = hasChange || modsChanged;
+    if (this.handleRoomDescriptionChange({ description: details.description || '' })) {
+      hasChange = hasChange || true;
+    }
 
     if (this.isPublic() && details.image_id && isNumber(details.image_id)) {
       const roomInfos = OpenGroupData.getV2OpenGroupRoom(this.id);
@@ -2539,6 +2543,15 @@ export class ConversationModel extends Model<ConversationAttributes> {
           assertUnreachable(type, `handleSogsModsOrAdminsChanges: unhandled switch case: ${type}`);
       }
     }
+    return false;
+  }
+
+  private handleRoomDescriptionChange({ description }: { description: string }) {
+    if (getRoomDescriptionOutsideRedux(this.id) !== description) {
+      ReduxSogsRoomInfos.setRoomDescriptionOutsideRedux(this.id, description);
+      return true;
+    }
+
     return false;
   }
 

@@ -11,7 +11,7 @@ import { ConvoHub } from '../../../session/conversations';
 
 import { PubKey } from '../../../session/types';
 import { openConversationWithMessages } from '../../../state/ducks/conversations';
-import { resetLeftOverlayMode } from '../../../state/ducks/section';
+import { sectionActions } from '../../../state/ducks/section';
 import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
 import { SessionSpinner } from '../../loading';
 
@@ -65,7 +65,7 @@ export const OverlayMessage = () => {
   const dispatch = useDispatch();
 
   function closeOverlay() {
-    dispatch(resetLeftOverlayMode());
+    dispatch(sectionActions.resetLeftOverlayMode());
   }
 
   useKey('Escape', closeOverlay);

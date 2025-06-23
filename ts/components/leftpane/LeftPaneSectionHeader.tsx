@@ -1,15 +1,8 @@
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
-import { clearSearch } from '../../state/ducks/search';
-import {
-  LeftOverlayMode,
-  SectionType,
-  setLeftOverlayMode,
-  showLeftPaneSection,
-  showSettingsSection,
-} from '../../state/ducks/section';
+import { LeftOverlayMode, sectionActions, SectionType } from '../../state/ducks/section';
 import { disableRecoveryPhrasePrompt } from '../../state/ducks/userConfig';
-import { getFocusedSection, getLeftOverlayMode } from '../../state/selectors/section';
+import { getFocusedSection, useLeftOverlayMode } from '../../state/selectors/section';
 import { useHideRecoveryPasswordEnabled } from '../../state/selectors/settings';
 import { useIsDarkTheme } from '../../state/theme/selectors/theme';
 import { getShowRecoveryPhrasePrompt } from '../../state/selectors/userConfig';
@@ -21,6 +14,7 @@ import { MenuButton } from '../buttons';
 import { SessionIcon, SessionIconButton } from '../icon';
 import { Localizer } from '../basic/Localizer';
 import { H4 } from '../basic/Heading';
+import { searchActions } from '../../state/ducks/search';
 
 const StyledLeftPaneSectionHeader = styled(Flex)`
   height: var(--main-view-header-height);
@@ -128,8 +122,8 @@ export const LeftPaneBanner = () => {
 
   const showRecoveryPhraseModal = () => {
     dispatch(disableRecoveryPhrasePrompt());
-    dispatch(showLeftPaneSection(SectionType.Settings));
-    dispatch(showSettingsSection('recovery-password'));
+    dispatch(sectionActions.showLeftPaneSection(SectionType.Settings));
+    dispatch(sectionActions.showSettingsSection('recovery-password'));
   };
 
   if (section !== SectionType.Message || isSignInWithRecoveryPhrase || hideRecoveryPassword) {
@@ -175,14 +169,14 @@ export const LeftPaneBanner = () => {
 export const LeftPaneSectionHeader = () => {
   const showRecoveryPhrasePrompt = useSelector(getShowRecoveryPhrasePrompt);
   const focusedSection = useSelector(getFocusedSection);
-  const leftOverlayMode = useSelector(getLeftOverlayMode);
+  const leftOverlayMode = useLeftOverlayMode();
 
   const dispatch = useDispatch();
   const returnToActionChooser = () => {
     if (leftOverlayMode === 'closed-group') {
-      dispatch(clearSearch());
+      dispatch(searchActions.clearSearch());
     }
-    dispatch(setLeftOverlayMode('choose-action'));
+    dispatch(sectionActions.setLeftOverlayMode('choose-action'));
   };
 
   const label = getLeftPaneHeaderLabel(leftOverlayMode, focusedSection);

@@ -1,5 +1,5 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { PubkeyType } from 'libsession_util_nodejs';
+import { PubkeyType, type GroupPubkeyType } from 'libsession_util_nodejs';
 import { compact, isEmpty, isFinite, isNumber, pick } from 'lodash';
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
@@ -27,6 +27,7 @@ import {
   useLibGroupKicked,
 } from '../state/selectors/userGroups';
 import { ConversationInteractionStatus, ConversationInteractionType } from '../interactions/types';
+import { localize } from '../localization/localeTools';
 
 export function useAvatarPath(convoId: string | undefined) {
   const convoProps = useConversationPropsById(convoId);
@@ -69,6 +70,15 @@ export function useNicknameOrProfileNameOrShortenedPubkey(convoId?: string) {
     (convoId && PubKey.shorten(convoId)) ||
     window.i18n('unknown')
   );
+}
+
+/**
+ * Returns the nickname set for this conversation if it has one, or undefined
+ */
+export function useNickname(convoId?: string) {
+  const convoProps = useConversationPropsById(convoId);
+
+  return convoProps?.nickname;
 }
 
 /**
@@ -145,7 +155,7 @@ export function useIsClosedGroup(convoId?: string) {
 export function useIsLegacyGroup(convoId?: string) {
   const isGroup = useIsClosedGroup(convoId);
 
-  return isGroup && convoId && PubKey.is05Pubkey(convoId);
+  return isGroup && !!convoId && PubKey.is05Pubkey(convoId);
 }
 
 export function useIsPrivate(convoId?: string) {
@@ -182,9 +192,12 @@ export function useNotificationSetting(convoId?: string) {
   return convoProps?.currentNotificationSetting || 'all';
 }
 
-export function useIsGroupV2(convoId?: string) {
+export function useIsGroupV2(convoId?: string): convoId is GroupPubkeyType {
   const convoProps = useConversationPropsById(convoId);
-  return convoId && convoProps?.type === ConversationTypeEnum.GROUPV2 && PubKey.is03Pubkey(convoId);
+  return (
+    (convoId && convoProps?.type === ConversationTypeEnum.GROUPV2 && PubKey.is03Pubkey(convoId)) ||
+    false
+  );
 }
 
 export function useIsPublic(convoId?: string) {
@@ -210,7 +223,7 @@ export function useIsKickedFromGroup(convoId?: string) {
   const convoProps = useConversationPropsById(convoId);
   const libIsKicked = useLibGroupKicked(convoId);
   if (convoId && PubKey.is03Pubkey(convoId)) {
-    return libIsKicked;
+    return libIsKicked ?? false;
   }
   return Boolean(convoProps && (convoProps.isKickedFromGroup || libIsKicked)); // not ideal, but until we trust what we get from libsession for all cases, we have to either trust what we have in the DB
 }
@@ -482,35 +495,42 @@ export function useSortedGroupMembers(convoId: string | undefined): Array<Pubkey
   return compact(members.slice()?.sort());
 }
 
-export function useDisappearingMessageSettingText({
-  convoId,
-  abbreviate,
-}: {
-  convoId?: string;
-  abbreviate?: boolean;
-}): string {
+/**
+ * Returns the disappearing message setting text for the convoId.
+ * Note: the time is not localised and displayed always in its shortened version (i.e. 2weeks -> 2w).
+ * This is because 2w is assumed to understood by every locales as 2 weeks, but 2 weeks might not be.
+ */
+export function useDisappearingMessageSettingText({ convoId }: { convoId?: string }) {
   const convoProps = useConversationPropsById(convoId);
+
+  const offReturn = { id: 'off', label: localize('off').toString() };
   if (!convoProps) {
-    return '';
+    return offReturn;
   }
 
   const { expirationMode, expireTimer } = convoProps;
 
-  const expireTimerText = isNumber(expireTimer)
-    ? abbreviate
-      ? TimerOptions.getAbbreviated(expireTimer)
-      : TimerOptions.getName(expireTimer)
-    : null;
+  const expireTimerText = isNumber(expireTimer) ? TimerOptions.getAbbreviated(expireTimer) : null;
 
   if (!expireTimerText) {
-    return '';
+    return offReturn;
   }
 
   return expirationMode === 'deleteAfterRead'
-    ? window.i18n('disappearingMessagesDisappearAfterReadState', { time: expireTimerText })
+    ? {
+        id: expirationMode,
+        label: localize('disappearingMessagesDisappearAfterReadState')
+          .withArgs({ time: expireTimerText })
+          .toString(),
+      }
     : expirationMode === 'deleteAfterSend'
-      ? window.i18n('disappearingMessagesDisappearAfterSendState', { time: expireTimerText })
-      : '';
+      ? {
+          id: expirationMode,
+          label: localize('disappearingMessagesDisappearAfterSendState')
+            .withArgs({ time: expireTimerText })
+            .toString(),
+        }
+      : offReturn;
 }
 
 export function useLastMessage(convoId?: string) {

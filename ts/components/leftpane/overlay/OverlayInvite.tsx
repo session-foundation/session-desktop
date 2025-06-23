@@ -3,8 +3,6 @@ import styled from 'styled-components';
 
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { resetLeftOverlayMode } from '../../../state/ducks/section';
-
 import { UserUtils } from '../../../session/utils';
 import { Flex } from '../../basic/Flex';
 import { SpacerLG, SpacerMD, SpacerSM } from '../../basic/Text';
@@ -14,6 +12,8 @@ import { SessionIcon } from '../../icon';
 import { SessionInput } from '../../inputs';
 import { StyledLeftPaneOverlay } from './OverlayMessage';
 import { SessionButtonColor } from '../../basic/SessionButton';
+import { localize } from '../../../localization/localeTools';
+import { sectionActions } from '../../../state/ducks/section';
 
 const StyledHeadingContainer = styled(Flex)`
   .session-icon-button {
@@ -61,7 +61,7 @@ export const OverlayInvite = () => {
   const dispatch = useDispatch();
 
   function closeOverlay() {
-    dispatch(resetLeftOverlayMode());
+    dispatch(sectionActions.resetLeftOverlayMode());
   }
 
   useKey('Escape', closeOverlay);
@@ -84,7 +84,7 @@ export const OverlayInvite = () => {
               centerText={true}
               isTextArea={true}
               padding={'var(--margins-xl) var(--margins-sm)'}
-              ariaLabel="Account ID"
+              ariaLabel={localize('accountId').toString()}
               inputDataTestId="your-account-id"
             />
           </Flex>

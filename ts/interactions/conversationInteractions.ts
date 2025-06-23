@@ -1,11 +1,8 @@
-import { isEmpty, isNil, uniq } from 'lodash';
+import { isEmpty, uniq } from 'lodash';
 import { PubkeyType, WithGroupPubkey } from 'libsession_util_nodejs';
 import AbortController from 'abort-controller';
-import {
-  ConversationNotificationSettingType,
-  READ_MESSAGE_STATE,
-} from '../models/conversationAttributes';
-import { CallManager, PromiseUtils, SyncUtils, ToastUtils, UserUtils } from '../session/utils';
+import { READ_MESSAGE_STATE } from '../models/conversationAttributes';
+import { CallManager, PromiseUtils, ToastUtils, UserUtils } from '../session/utils';
 
 import { SessionButtonColor } from '../components/basic/SessionButton';
 import { getCallMediaPermissionsSettings } from '../components/settings/SessionSettings';
@@ -15,13 +12,11 @@ import { ConversationTypeEnum } from '../models/types';
 import { OpenGroupUtils } from '../session/apis/open_group_api/utils';
 import { getSwarmPollingInstance } from '../session/apis/snode_api';
 import { ConvoHub } from '../session/conversations';
-import { getSodiumRenderer } from '../session/crypto';
-import { DecryptedAttachmentsManager } from '../session/crypto/DecryptedAttachmentsManager';
 import { DisappearingMessageConversationModeType } from '../session/disappearing_messages/types';
 import { PubKey } from '../session/types';
 import { perfEnd, perfStart } from '../session/utils/Performance';
 import { sleepFor, timeoutWithAbort } from '../session/utils/Promise';
-import { ed25519Str, fromHexToArray, toHex } from '../session/utils/String';
+import { ed25519Str } from '../session/utils/String';
 import { SessionUtilContact } from '../session/utils/libsession/libsession_utils_contacts';
 import {
   conversationReset,
@@ -29,35 +24,25 @@ import {
   resetConversationExternal,
 } from '../state/ducks/conversations';
 import {
-  changeNickNameModal,
-  updateAddModeratorsModal,
-  updateBanOrUnbanUserModal,
-  updateBlockOrUnblockModal,
   updateConfirmModal,
+  updateConversationSettingsModal,
   updateGroupMembersModal,
   updateGroupNameModal,
-  updateInviteContactModal,
-  updateRemoveModeratorsModal,
 } from '../state/ducks/modalDialog';
-import { MIME } from '../types';
-import { IMAGE_JPEG } from '../types/MIME';
-import { processNewAttachment } from '../types/MessageAttachment';
-import { urlToBlob } from '../types/attachments/VisualAttachment';
-import { encryptProfile } from '../util/crypto/profileEncrypter';
 import { Storage } from '../util/storage';
 import { UserGroupsWrapperActions } from '../webworker/workers/browser/libsession_worker_interface';
 import { ConversationInteractionStatus, ConversationInteractionType } from './types';
 import { BlockedNumberController } from '../util';
 import { sendInviteResponseToGroup } from '../session/sending/group/GroupInviteResponse';
 import { NetworkTime } from '../util/NetworkTime';
-import { ClosedGroup } from '../session';
+import { ClosedGroup } from '../session/group/closed-group';
 import { GroupUpdateMessageFactory } from '../session/messages/message_factory/group/groupUpdateMessageFactory';
 import { MessageSender } from '../session/sending';
 import { StoreGroupRequestFactory } from '../session/apis/snode_api/factories/StoreGroupRequestFactory';
 import { DURATION } from '../session/constants';
 import { GroupInvite } from '../session/utils/job_runners/jobs/GroupInviteJob';
 import type { LocalizerProps } from '../components/basic/Localizer';
-import { uploadFileToFsWithOnionV4 } from '../session/apis/file_server_api/FileServerApi';
+import { localize } from '../localization/localeTools';
 
 export async function copyPublicKeyByConvoId(convoId: string) {
   if (OpenGroupUtils.isOpenGroupV2(convoId)) {
@@ -75,24 +60,6 @@ export async function copyPublicKeyByConvoId(convoId: string) {
   } else {
     window.clipboard.writeText(convoId);
   }
-}
-
-export async function blockConvoById(conversationId: string) {
-  window.inboxStore?.dispatch(
-    updateBlockOrUnblockModal({
-      action: 'block',
-      pubkeys: [conversationId],
-    })
-  );
-}
-
-export async function unblockConvoById(conversationId: string) {
-  window.inboxStore?.dispatch(
-    updateBlockOrUnblockModal({
-      action: 'unblock',
-      pubkeys: [conversationId],
-    })
-  );
 }
 
 /**
@@ -326,55 +293,7 @@ export async function showUpdateGroupMembersByConvoId(conversationId: string) {
   window.inboxStore?.dispatch(updateGroupMembersModal({ conversationId }));
 }
 
-export function showDeletePrivateConversationByConvoId(conversationId: string) {
-  const conversation = ConvoHub.use().get(conversationId);
-  const isMe = conversation.isMe();
-
-  if (!conversation.isPrivate()) {
-    throw new Error('showLeavePrivateConversationDialog() called with a non private convo.');
-  }
-
-  const onClickClose = () => {
-    window?.inboxStore?.dispatch(updateConfirmModal(null));
-  };
-
-  const onClickOk = async () => {
-    try {
-      // no network calls are made when we hide/delete a private chat, so no need to have a
-      // ConversationInteractionType state
-      onClickClose();
-      await ConvoHub.use().delete1o1(conversationId, {
-        fromSyncMessage: false,
-        justHidePrivate: true,
-        keepMessages: isMe,
-      });
-      await clearConversationInteractionState({ conversationId });
-    } catch (err) {
-      window.log.warn(`showDeletePrivateConversationByConvoId error: ${err}`);
-    }
-  };
-
-  window?.inboxStore?.dispatch(
-    updateConfirmModal({
-      title: isMe ? window.i18n('noteToSelfHide') : window.i18n('conversationsDelete'),
-      i18nMessage: isMe
-        ? { token: 'noteToSelfHideDescription' }
-        : {
-            token: 'conversationsDeleteDescription',
-            args: {
-              name: conversation.getNicknameOrRealUsernameOrPlaceholder(),
-            },
-          },
-      onClickOk,
-      okText: isMe ? window.i18n('hide') : window.i18n('delete'),
-      okTheme: SessionButtonColor.Danger,
-      onClickClose,
-      conversationId,
-    })
-  );
-}
-
-async function leaveGroupOrCommunityByConvoId({
+export async function leaveGroupOrCommunityByConvoId({
   conversationId,
   sendLeaveMessage,
   isPublic,
@@ -430,18 +349,15 @@ async function leaveGroupOrCommunityByConvoId({
 export async function showLeaveGroupByConvoId(conversationId: string, name: string | undefined) {
   const conversation = ConvoHub.use().get(conversationId);
 
-  if (!conversation.isGroup()) {
+  if (!conversation.isClosedGroup()) {
     throw new Error('showLeaveGroupDialog() called with a non group convo.');
   }
 
-  const isClosedGroup = conversation.isClosedGroup() || false;
-  const isPublic = conversation.isPublic() || false;
   const admins = conversation.getGroupAdmins();
-  const isAdmin = admins.includes(UserUtils.getOurPubKeyStrFromCache());
-  const showOnlyGroupAdminWarning = isClosedGroup && isAdmin;
+  const weAreAdmin = admins.includes(UserUtils.getOurPubKeyStrFromCache());
   const weAreLastAdmin =
     (PubKey.is05Pubkey(conversationId) || PubKey.is03Pubkey(conversationId)) &&
-    isAdmin &&
+    weAreAdmin &&
     admins.length === 1;
 
   // if this is a community, or we legacy group are not admin, we can just show a confirmation dialog
@@ -453,14 +369,14 @@ export async function showLeaveGroupByConvoId(conversationId: string, name: stri
   const onClickOk = async () => {
     await leaveGroupOrCommunityByConvoId({
       conversationId,
-      isPublic,
+      isPublic: false,
       sendLeaveMessage: !weAreLastAdmin, // we don't need to send a leave message when we are the last admin: the group is removed.
       onClickClose,
     });
+    window?.inboxStore?.dispatch(updateConversationSettingsModal(null));
   };
 
-  if (showOnlyGroupAdminWarning) {
-    // NOTE For legacy closed groups
+  if (weAreLastAdmin) {
     window?.inboxStore?.dispatch(
       updateConfirmModal({
         title: window.i18n('groupLeave'),
@@ -477,19 +393,17 @@ export async function showLeaveGroupByConvoId(conversationId: string, name: stri
     );
     return;
   }
-  if (isPublic || (isClosedGroup && !isAdmin)) {
-    window?.inboxStore?.dispatch(
-      updateConfirmModal({
-        title: isPublic ? window.i18n('communityLeave') : window.i18n('groupLeave'),
-        i18nMessage: { token: 'groupLeaveDescription', args: { group_name: name ?? '' } },
-        onClickOk,
-        okText: window.i18n('leave'),
-        okTheme: SessionButtonColor.Danger,
-        onClickClose,
-        conversationId,
-      })
-    );
-  }
+  window?.inboxStore?.dispatch(
+    updateConfirmModal({
+      title: localize('groupLeave').toString(),
+      i18nMessage: { token: 'groupLeaveDescription', args: { group_name: name ?? '' } },
+      onClickOk,
+      okText: window.i18n('leave'),
+      okTheme: SessionButtonColor.Danger,
+      onClickClose,
+      conversationId,
+    })
+  );
 }
 
 /**
@@ -517,6 +431,7 @@ export async function showDeleteGroupByConvoId(conversationId: string, name: str
       sendLeaveMessage: false,
       onClickClose,
     });
+    window?.inboxStore?.dispatch(updateConversationSettingsModal(null));
   };
 
   window?.inboxStore?.dispatch(
@@ -532,30 +447,6 @@ export async function showDeleteGroupByConvoId(conversationId: string, name: str
   );
 }
 
-export function showInviteContactByConvoId(conversationId: string) {
-  window.inboxStore?.dispatch(updateInviteContactModal({ conversationId }));
-}
-
-export function showAddModeratorsByConvoId(conversationId: string) {
-  window.inboxStore?.dispatch(updateAddModeratorsModal({ conversationId }));
-}
-
-export function showRemoveModeratorsByConvoId(conversationId: string) {
-  window.inboxStore?.dispatch(updateRemoveModeratorsModal({ conversationId }));
-}
-
-export function showBanUserByConvoId(conversationId: string, pubkey?: string) {
-  window.inboxStore?.dispatch(
-    updateBanOrUnbanUserModal({ banType: 'ban', conversationId, pubkey })
-  );
-}
-
-export function showUnbanUserByConvoId(conversationId: string, pubkey?: string) {
-  window.inboxStore?.dispatch(
-    updateBanOrUnbanUserModal({ banType: 'unban', conversationId, pubkey })
-  );
-}
-
 export async function markAllReadByConvoId(conversationId: string) {
   const conversation = ConvoHub.use().get(conversationId);
   perfStart(`markAllReadByConvoId-${conversationId}`);
@@ -563,28 +454,6 @@ export async function markAllReadByConvoId(conversationId: string) {
   await conversation?.markAllAsRead();
 
   perfEnd(`markAllReadByConvoId-${conversationId}`, 'markAllReadByConvoId');
-}
-
-export async function setNotificationForConvoId(
-  conversationId: string,
-  selected: ConversationNotificationSettingType
-) {
-  const conversation = ConvoHub.use().get(conversationId);
-
-  const existingSettings = conversation.getNotificationsFor();
-  if (existingSettings !== selected) {
-    conversation.set({ triggerNotificationsFor: selected });
-    await conversation.commit();
-  }
-}
-
-export async function clearNickNameByConvoId(conversationId: string) {
-  const conversation = ConvoHub.use().get(conversationId);
-  await conversation.setNickname(null, true);
-}
-
-export function showChangeNickNameByConvoId(conversationId: string) {
-  window.inboxStore?.dispatch(changeNickNameModal({ conversationId }));
 }
 
 export async function deleteAllMessagesByConvoIdNoConfirmation(conversationId: string) {
@@ -601,27 +470,6 @@ export async function deleteAllMessagesByConvoIdNoConfirmation(conversationId: s
 
   await conversation.commit();
   window.inboxStore?.dispatch(conversationReset(conversationId));
-}
-
-export function deleteAllMessagesByConvoIdWithConfirmation(conversationId: string) {
-  const onClickClose = () => {
-    window?.inboxStore?.dispatch(updateConfirmModal(null));
-  };
-
-  const onClickOk = async () => {
-    await deleteAllMessagesByConvoIdNoConfirmation(conversationId);
-    onClickClose();
-  };
-
-  window?.inboxStore?.dispatch(
-    updateConfirmModal({
-      title: window.i18n('deleteMessage', { count: 2 }), // count of 2 to get the plural "Messages Deleted"
-      i18nMessage: { token: 'deleteAfterGroupPR3DeleteMessagesConfirmation' },
-      onClickOk,
-      okTheme: SessionButtonColor.Danger,
-      onClickClose,
-    })
-  );
 }
 
 export async function setDisappearingMessagesByConvoId(
@@ -657,135 +505,6 @@ export async function setDisappearingMessagesByConvoId(
     });
   }
 }
-
-/**
- * This function can be used for reupload our avatar to the file server or upload a new avatar.
- *
- * If this is a reupload, the old profileKey is used, otherwise a new one is generated
- */
-export async function uploadOurAvatar(newAvatarDecrypted?: ArrayBuffer) {
-  const ourConvo = ConvoHub.use().get(UserUtils.getOurPubKeyStrFromCache());
-  if (!ourConvo) {
-    window.log.warn('ourConvo not found... This is not a valid case');
-    return null;
-  }
-
-  let profileKey: Uint8Array | null;
-  let decryptedAvatarData;
-  if (newAvatarDecrypted) {
-    // Encrypt with a new key every time
-    profileKey = (await getSodiumRenderer()).randombytes_buf(32);
-    decryptedAvatarData = newAvatarDecrypted;
-  } else {
-    // this is a reupload. no need to generate a new profileKey
-    const ourConvoProfileKey =
-      ConvoHub.use().get(UserUtils.getOurPubKeyStrFromCache())?.getProfileKey() || null;
-
-    profileKey = ourConvoProfileKey ? fromHexToArray(ourConvoProfileKey) : null;
-    if (!profileKey) {
-      window.log.info('our profileKey not found. Not reuploading our avatar');
-      return null;
-    }
-    const currentAttachmentPath = ourConvo.getAvatarPath();
-
-    if (!currentAttachmentPath) {
-      window.log.warn('No attachment currently set for our convo.. Nothing to do.');
-      return null;
-    }
-
-    const decryptedAvatarUrl = await DecryptedAttachmentsManager.getDecryptedMediaUrl(
-      currentAttachmentPath,
-      IMAGE_JPEG,
-      true
-    );
-
-    if (!decryptedAvatarUrl) {
-      window.log.warn('Could not decrypt avatar stored locally..');
-      return null;
-    }
-    const blob = await urlToBlob(decryptedAvatarUrl);
-
-    decryptedAvatarData = await blob.arrayBuffer();
-  }
-
-  if (!decryptedAvatarData?.byteLength) {
-    window.log.warn('Could not read content of avatar ...');
-    return null;
-  }
-
-  const encryptedData = await encryptProfile(decryptedAvatarData, profileKey);
-
-  const avatarPointer = await uploadFileToFsWithOnionV4(encryptedData);
-  if (!avatarPointer) {
-    window.log.warn('failed to upload avatar to file server');
-    return null;
-  }
-  const { fileUrl, fileId } = avatarPointer;
-
-  ourConvo.setKey('avatarPointer', fileUrl);
-
-  // this encrypts and save the new avatar and returns a new attachment path
-  const upgraded = await processNewAttachment({
-    isRaw: true,
-    data: decryptedAvatarData,
-    contentType: MIME.IMAGE_UNKNOWN, // contentType is mostly used to generate previews and screenshot. We do not care for those in this case.
-  });
-  // Replace our temporary image with the attachment pointer from the server:
-  ourConvo.setKey('avatarInProfile', undefined);
-  const displayName = ourConvo.getRealSessionUsername();
-
-  // write the profileKey even if it did not change
-  ourConvo.set({ profileKey: toHex(profileKey) });
-  // Replace our temporary image with the attachment pointer from the server:
-  // this commits already
-  await ourConvo.setSessionProfile({
-    avatarPath: upgraded.path,
-    displayName,
-    avatarImageId: fileId,
-  });
-  const newTimestampReupload = Date.now();
-  await Storage.put(SettingsKey.lastAvatarUploadTimestamp, newTimestampReupload);
-
-  if (!newAvatarDecrypted) {
-    window.log.info(
-      `Reuploading avatar finished at ${newTimestampReupload}, newAttachmentPointer ${fileUrl}`
-    );
-  }
-  return {
-    avatarPointer: ourConvo.getAvatarPointer(),
-    profileKey: ourConvo.getProfileKey(),
-  };
-}
-
-/**
- * This function can be used for clearing our avatar.
- */
-export async function clearOurAvatar(commit: boolean = true) {
-  const ourConvo = ConvoHub.use().get(UserUtils.getOurPubKeyStrFromCache());
-  if (!ourConvo) {
-    window.log.warn('ourConvo not found... This is not a valid case');
-    return;
-  }
-
-  // return early if no change are needed at all
-  if (
-    isNil(ourConvo.get('avatarPointer')) &&
-    isNil(ourConvo.get('avatarInProfile')) &&
-    isNil(ourConvo.get('profileKey'))
-  ) {
-    return;
-  }
-
-  ourConvo.setKey('avatarPointer', undefined);
-  ourConvo.setKey('avatarInProfile', undefined);
-  ourConvo.setKey('profileKey', undefined);
-
-  if (commit) {
-    await ourConvo.commit();
-    await SyncUtils.forceSyncConfigurationNowIfNeeded(true);
-  }
-}
-
 export async function replyToMessage(messageId: string) {
   const quotedMessageModel = await Data.getMessageById(messageId);
   if (!quotedMessageModel) {

@@ -5,8 +5,7 @@ import { useTimerOptionsByMode } from '../../../../../hooks/useParamSelector';
 import { setDisappearingMessagesByConvoId } from '../../../../../interactions/conversationInteractions';
 import { TimerOptions } from '../../../../../session/disappearing_messages/timerOptions';
 import { DisappearingMessageConversationModeType } from '../../../../../session/disappearing_messages/types';
-import { closeRightPanel } from '../../../../../state/ducks/conversations';
-import { resetRightOverlayMode } from '../../../../../state/ducks/section';
+
 import {
   getSelectedConversationExpirationModes,
   useSelectedConversationDisappearingMode,
@@ -17,16 +16,23 @@ import {
 import { Flex } from '../../../../basic/Flex';
 import { SessionButton, SessionButtonColor } from '../../../../basic/SessionButton';
 import { SpacerLG } from '../../../../basic/Text';
-import { Header, HeaderSubtitle, HeaderTitle, StyledScrollContainer } from '../components';
+import {
+  HeaderSubtitle,
+  StyledScrollContainer,
+} from '../../../../conversation/right-panel/overlay/components';
 import { DisappearingModes } from './DisappearingModes';
 import { TimeOptions } from './TimeOptions';
+import { useConversationSettingsModalIsStandalone } from '../../../../../state/selectors/modal';
+import { updateConversationSettingsModal } from '../../../../../state/ducks/modalDialog';
+import { useShowConversationSettingsFor } from '../../../../menuAndSettingsHooks/useShowConversationSettingsFor';
+import { localize } from '../../../../../localization/localeTools';
+import { SessionSpinner } from '../../../../loading';
 
 const ButtonSpacer = styled.div`
   height: 80px;
 `;
 
 const StyledButtonContainer = styled.div`
-  background: linear-gradient(0deg, var(--background-primary-color), transparent);
   position: absolute;
   width: 100%;
   bottom: 0px;
@@ -45,7 +51,7 @@ const StyledNonAdminDescription = styled.div`
   align-items: center;
   margin: 0 var(--margins-lg);
   color: var(--text-secondary-color);
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
   text-align: center;
   line-height: 15px;
 `;
@@ -78,14 +84,7 @@ function useSingleMode(disappearingModeOptions: Record<string, boolean> | undefi
   return { singleMode };
 }
 
-export type PropsForExpirationSettings = {
-  expirationMode: DisappearingMessageConversationModeType | undefined;
-  expireTimer: number | undefined;
-  isGroup: boolean | undefined;
-  weAreAdmin: boolean | undefined;
-};
-
-export const OverlayDisappearingMessages = () => {
+export const DisappearingMessagesPage = () => {
   const dispatch = useDispatch();
   const selectedConversationKey = useSelectedConversationKey();
   const disappearingModeOptions = useSelector(getSelectedConversationExpirationModes);
@@ -102,24 +101,47 @@ export const OverlayDisappearingMessages = () => {
 
   const [timeSelected, setTimeSelected] = useState(expireTimer || 0);
   const timerOptions = useTimerOptionsByMode(modeSelected, hasOnlyOneMode);
+  const isStandalone = useConversationSettingsModalIsStandalone();
+
+  const [loading, setLoading] = useState(false);
+
+  const showConvoSettingsCb = useShowConversationSettingsFor(selectedConversationKey);
+
+  function closeOrBackInPage() {
+    if (isStandalone) {
+      dispatch(updateConversationSettingsModal(null));
+    } else {
+      showConvoSettingsCb?.({
+        settingsModalPage: 'default',
+      });
+    }
+  }
 
   const handleSetMode = async () => {
+    if (!selectedConversationKey) {
+      return;
+    }
     if (hasOnlyOneMode) {
-      if (selectedConversationKey && singleMode) {
-        await setDisappearingMessagesByConvoId(
-          selectedConversationKey,
-          timeSelected === 0 ? 'off' : singleMode,
-          timeSelected
-        );
-        dispatch(closeRightPanel());
-        dispatch(resetRightOverlayMode());
+      if (singleMode) {
+        try {
+          await setDisappearingMessagesByConvoId(
+            selectedConversationKey,
+            timeSelected === 0 ? 'off' : singleMode,
+            timeSelected
+          );
+          closeOrBackInPage();
+        } finally {
+          setLoading(false);
+        }
       }
       return;
     }
-    if (selectedConversationKey && modeSelected) {
+    setLoading(true);
+    try {
       await setDisappearingMessagesByConvoId(selectedConversationKey, modeSelected, timeSelected);
-      dispatch(closeRightPanel());
-      dispatch(resetRightOverlayMode());
+      closeOrBackInPage();
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -141,18 +163,15 @@ export const OverlayDisappearingMessages = () => {
   }
 
   return (
-    <StyledScrollContainer>
+    <StyledScrollContainer style={{ position: 'relative' }}>
       <Flex $container={true} $flexDirection={'column'} $alignItems={'center'}>
-        <Header>
-          <HeaderTitle>{window.i18n('disappearingMessages')}</HeaderTitle>
-          <HeaderSubtitle>
-            {singleMode === 'deleteAfterRead'
-              ? window.i18n('disappearingMessagesDisappearAfterReadDescription')
-              : singleMode === 'deleteAfterSend'
-                ? window.i18n('disappearingMessagesDisappearAfterSendDescription')
-                : window.i18n('disappearingMessagesDescription1')}
-          </HeaderSubtitle>
-        </Header>
+        <HeaderSubtitle>
+          {singleMode === 'deleteAfterRead'
+            ? localize('disappearingMessagesDisappearAfterReadDescription')
+            : singleMode === 'deleteAfterSend'
+              ? localize('disappearingMessagesDisappearAfterSendDescription')
+              : localize('disappearingMessagesDescription1')}
+        </HeaderSubtitle>
         <DisappearingModes
           options={disappearingModeOptions}
           selected={modeSelected}
@@ -161,7 +180,6 @@ export const OverlayDisappearingMessages = () => {
         />
         {(hasOnlyOneMode || modeSelected !== 'off') && (
           <>
-            {!hasOnlyOneMode && <SpacerLG />}
             <TimeOptions
               options={timerOptions}
               selected={timeSelected}
@@ -183,29 +201,33 @@ export const OverlayDisappearingMessages = () => {
             <SpacerLG />
             {/* We want those to be shown no matter our admin rights in a group. */}
             <StyledNonAdminDescription>
-              {window.i18n('disappearingMessagesDescription')}
+              {localize('disappearingMessagesDescription')}
               <br />
-              {window.i18n('disappearingMessagesOnlyAdmins')}
+              {localize('disappearingMessagesOnlyAdmins')}
             </StyledNonAdminDescription>
           </>
         )}
         <ButtonSpacer />
 
         <StyledButtonContainer>
-          <SessionButton
-            buttonColor={SessionButtonColor.PrimaryDark}
-            onClick={handleSetMode}
-            disabled={
-              singleMode
-                ? disappearingModeOptions[singleMode]
-                : modeSelected
-                  ? disappearingModeOptions[modeSelected]
-                  : undefined
-            }
-            dataTestId={'disappear-set-button'}
-          >
-            {window.i18n('set')}
-          </SessionButton>
+          {loading ? (
+            <SessionSpinner loading={true} />
+          ) : (
+            <SessionButton
+              buttonColor={SessionButtonColor.PrimaryDark}
+              onClick={handleSetMode}
+              disabled={
+                singleMode
+                  ? disappearingModeOptions[singleMode]
+                  : modeSelected
+                    ? disappearingModeOptions[modeSelected]
+                    : undefined
+              }
+              dataTestId={'disappear-set-button'}
+            >
+              {localize('set')}
+            </SessionButton>
+          )}
         </StyledButtonContainer>
       </Flex>
     </StyledScrollContainer>

@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
-import { clearOurAvatar, uploadOurAvatar } from '../../interactions/conversationInteractions';
-import { ToastUtils } from '../../session/utils';
+import { ToastUtils, UserUtils } from '../../session/utils';
 import { editProfileModal, updateEditProfilePictureModal } from '../../state/ducks/modalDialog';
 import type { EditProfilePictureModalProps } from '../../types/ReduxTypes';
 import { pickFileForAvatar } from '../../types/attachments/VisualAttachment';
@@ -12,6 +11,22 @@ import { SpacerLG } from '../basic/Text';
 import { SessionIconButton } from '../icon';
 import { SessionSpinner } from '../loading';
 import { ProfileAvatar } from './edit-profile/components';
+import { PlusAvatarButton } from '../buttons/PlusAvatarButton';
+import {
+  useAvatarPath,
+  useConversationUsername,
+  useIsMe,
+  useIsPublic,
+} from '../../hooks/useParamSelector';
+import { localize } from '../../localization/localeTools';
+import { OpenGroupUtils } from '../../session/apis/open_group_api/utils';
+import { PubKey } from '../../session/types';
+import { groupInfoActions } from '../../state/ducks/metaGroups';
+import { useGroupAvatarChangeFromUIPending } from '../../state/selectors/groups';
+import { userActions } from '../../state/ducks/user';
+import { ReduxSogsRoomInfos } from '../../state/ducks/sogsRoomInfo';
+import { useOurAvatarIsUploading } from '../../state/selectors/user';
+import { useAvatarOfRoomIsUploading } from '../../state/selectors/sogsRoomInfo';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
@@ -29,27 +44,43 @@ const UploadImageButton = () => {
       <StyledUploadButton>
         <SessionIconButton iconType="thumbnail" iconSize={80} iconPadding="16px" />
       </StyledUploadButton>
-      <SessionIconButton
-        iconType="plusFat"
-        iconSize={23}
-        iconColor="var(--modal-background-content-color)"
-        iconPadding="5px"
-        borderRadius="50%"
-        backgroundColor="var(--primary-color)"
-        style={{ position: 'absolute', bottom: 0, right: 0 }}
-      />
+      <PlusAvatarButton dataTestId="image-upload-section" />
     </div>
   );
 };
 
-const uploadProfileAvatar = async (scaledAvatarUrl: string | null) => {
+const triggerUploadProfileAvatar = async (
+  scaledAvatarUrl: string | null,
+  conversationId: string
+) => {
   if (scaledAvatarUrl?.length) {
     try {
-      const blobContent = await (await fetch(scaledAvatarUrl)).blob();
+      const fetched = await fetch(scaledAvatarUrl);
+      const blobContent = await fetched.blob();
       if (!blobContent || !blobContent.size) {
         throw new Error('Failed to fetch blob content from scaled avatar');
       }
-      await uploadOurAvatar(await blobContent.arrayBuffer());
+
+      if (conversationId === UserUtils.getOurPubKeyStrFromCache()) {
+        const newAvatarDecrypted = await blobContent.arrayBuffer();
+        window.inboxStore?.dispatch(userActions.updateOurAvatar({ newAvatarDecrypted }) as any);
+      } else if (OpenGroupUtils.isOpenGroupV2(conversationId)) {
+        window.inboxStore?.dispatch(
+          ReduxSogsRoomInfos.changeCommunityAvatar({
+            conversationId,
+            avatarObjectUrl: scaledAvatarUrl,
+          }) as any
+        );
+      } else if (PubKey.is03Pubkey(conversationId)) {
+        window.inboxStore?.dispatch(
+          groupInfoActions.currentDeviceGroupAvatarChange({
+            objectUrl: scaledAvatarUrl,
+            groupPk: conversationId,
+          }) as any
+        );
+      } else {
+        throw new Error('uploadProfileAvatar: unsupported case');
+      }
     } catch (error) {
       if (error.message && error.message.length) {
         ToastUtils.pushToastError('edit-profile', error.message);
@@ -62,21 +93,50 @@ const uploadProfileAvatar = async (scaledAvatarUrl: string | null) => {
   }
 };
 
-export const EditProfilePictureModal = (props: EditProfilePictureModalProps) => {
+const triggerRemovalProfileAvatar = async (conversationId: string) => {
+  try {
+    if (OpenGroupUtils.isOpenGroupV2(conversationId)) {
+      throw new Error('triggerRemovalProfileAvatar: not supported for communities');
+    }
+
+    if (conversationId === UserUtils.getOurPubKeyStrFromCache()) {
+      window.inboxStore?.dispatch(userActions.clearOurAvatar() as any);
+    } else if (PubKey.is03Pubkey(conversationId)) {
+      window.inboxStore?.dispatch(
+        groupInfoActions.currentDeviceGroupAvatarRemoval({
+          groupPk: conversationId,
+        }) as any
+      );
+    } else {
+      throw new Error('triggerRemovalProfileAvatar: unsupported case');
+    }
+  } catch (error) {
+    if (error.message && error.message.length) {
+      ToastUtils.pushToastError('edit-profile', error.message);
+    }
+  }
+};
+
+export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureModalProps) => {
   const dispatch = useDispatch();
 
-  const [newAvatarObjectUrl, setNewAvatarObjectUrl] = useState<string | null>(props.avatarPath);
-  const [loading, setLoading] = useState(false);
+  const isMe = useIsMe(conversationId);
+  const isCommunity = useIsPublic(conversationId);
 
-  if (!props) {
-    return null;
-  }
+  const avatarPath = useAvatarPath(conversationId) || '';
+  const profileName = useConversationUsername(conversationId) || '';
 
-  const { avatarPath, profileName, ourId } = props;
+  const groupAvatarChangePending = useGroupAvatarChangeFromUIPending();
+  const ourAvatarIsUploading = useOurAvatarIsUploading();
+  const sogsAvatarIsUploading = useAvatarOfRoomIsUploading(conversationId);
+
+  const [newAvatarObjectUrl, setNewAvatarObjectUrl] = useState<string | null>(avatarPath);
 
   const closeDialog = () => {
     dispatch(updateEditProfilePictureModal(null));
-    dispatch(editProfileModal({}));
+    if (isMe) {
+      dispatch(editProfileModal({}));
+    }
   };
 
   const handleAvatarClick = async () => {
@@ -87,28 +147,29 @@ export const EditProfilePictureModal = (props: EditProfilePictureModalProps) => 
   };
 
   const handleUpload = async () => {
-    setLoading(true);
     if (newAvatarObjectUrl === avatarPath) {
       window.log.debug('Avatar Object URL has not changed!');
       return;
     }
 
-    await uploadProfileAvatar(newAvatarObjectUrl);
-    setLoading(false);
-    dispatch(updateEditProfilePictureModal(null));
+    await triggerUploadProfileAvatar(newAvatarObjectUrl, conversationId);
   };
 
   const handleRemove = async () => {
-    setLoading(true);
-    await clearOurAvatar();
+    if (isCommunity) {
+      throw new Error('community do not support removing avatars, only changing them');
+    }
+    await triggerRemovalProfileAvatar(conversationId);
     setNewAvatarObjectUrl(null);
-    setLoading(false);
-    dispatch(updateEditProfilePictureModal(null));
+  };
+
+  const handleClick = () => {
+    void handleAvatarClick();
   };
 
   return (
     <SessionWrapperModal
-      title={window.i18n('profileDisplayPictureSet')}
+      title={localize('profileDisplayPictureSet').toString()}
       onClose={closeDialog}
       showHeader={true}
       headerReverse={true}
@@ -117,7 +178,7 @@ export const EditProfilePictureModal = (props: EditProfilePictureModalProps) => 
       <div
         className="avatar-center"
         role="button"
-        onClick={() => void handleAvatarClick()}
+        onClick={handleClick}
         data-testid={'image-upload-click'}
       >
         <StyledAvatarContainer className="avatar-center-inner">
@@ -126,7 +187,8 @@ export const EditProfilePictureModal = (props: EditProfilePictureModalProps) => 
               newAvatarObjectUrl={newAvatarObjectUrl}
               avatarPath={avatarPath}
               profileName={profileName}
-              ourId={ourId}
+              conversationId={conversationId}
+              onPlusAvatarClick={handleClick}
             />
           ) : (
             <UploadImageButton />
@@ -134,26 +196,29 @@ export const EditProfilePictureModal = (props: EditProfilePictureModalProps) => 
         </StyledAvatarContainer>
       </div>
 
-      {loading ? (
-        <SessionSpinner loading={loading} />
+      {ourAvatarIsUploading || groupAvatarChangePending || sogsAvatarIsUploading ? (
+        <SessionSpinner loading={true} />
       ) : (
         <>
           <SpacerLG />
           <div className="session-modal__button-group">
             <SessionButton
-              text={window.i18n('save')}
+              text={localize('save').toString()}
               buttonType={SessionButtonType.Simple}
               onClick={handleUpload}
               disabled={newAvatarObjectUrl === avatarPath}
               dataTestId="save-button-profile-update"
             />
-            <SessionButton
-              text={window.i18n('remove')}
-              buttonColor={SessionButtonColor.Danger}
-              buttonType={SessionButtonType.Simple}
-              onClick={handleRemove}
-              disabled={!avatarPath}
-            />
+            {/* we cannot remove avatars from communities, only change them */}
+            {!isCommunity ? (
+              <SessionButton
+                text={localize('remove').toString()}
+                buttonColor={SessionButtonColor.Danger}
+                buttonType={SessionButtonType.Simple}
+                onClick={handleRemove}
+                disabled={!avatarPath}
+              />
+            ) : null}
           </div>
         </>
       )}

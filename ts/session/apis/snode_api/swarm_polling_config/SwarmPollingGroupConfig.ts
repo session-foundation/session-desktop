@@ -8,7 +8,7 @@ import {
   MetaGroupWrapperActions,
   UserGroupsWrapperActions,
 } from '../../../../webworker/workers/browser/libsession_worker_interface';
-import { ed25519Str, fromBase64ToArray } from '../../../utils/String';
+import { ed25519Str, fromBase64ToArray, toHex } from '../../../utils/String';
 import { GroupPendingRemovals } from '../../../utils/job_runners/jobs/GroupPendingRemovalsJob';
 import { LibSessionUtil } from '../../../utils/libsession/libsession_utils';
 import { SnodeNamespaces } from '../namespaces';
@@ -19,6 +19,7 @@ import { UserUtils } from '../../../utils';
 import { GroupSync } from '../../../utils/job_runners/jobs/GroupSyncJob';
 import { destroyMessagesAndUpdateRedux } from '../../../disappearing_messages';
 import { ConversationTypeEnum } from '../../../../models/types';
+import { AvatarDownload } from '../../../utils/job_runners/jobs/AvatarDownloadJob';
 
 /**
  * This is a basic optimization to avoid running the logic when the `deleteBeforeSeconds`
@@ -242,6 +243,8 @@ async function handleGroupSharedConfigMessages(
     // save updated dumps to the DB right away
     await LibSessionUtil.saveDumpsToDb(groupPk);
 
+    await scheduleAvatarDownloadJobIfNeeded(groupPk);
+
     // refresh the redux slice with the merged result
     window.inboxStore?.dispatch(
       groupInfoActions.refreshGroupDetailsFromWrapper({
@@ -253,6 +256,61 @@ async function handleGroupSharedConfigMessages(
       `handleGroupSharedConfigMessages of ${groupConfigMessages.length} failed with ${e.message}`
     );
     // not rethrowing
+  }
+}
+
+async function scheduleAvatarDownloadJobIfNeeded(groupPk: GroupPubkeyType) {
+  try {
+    const updatedInfo = await MetaGroupWrapperActions.infoGet(groupPk);
+
+    const conversation = ConvoHub.use().get(groupPk);
+    if (!conversation) {
+      window.log.warn('scheduleAvatarDownloadJobIfNeeded: group: no corresponding conversation');
+
+      return;
+    }
+
+    const profileUrl = updatedInfo.profilePicture?.url || null;
+    const profileKeyHex = updatedInfo.profilePicture?.key
+      ? toHex(updatedInfo.profilePicture?.key)
+      : null;
+
+    if (!profileUrl || !profileKeyHex) {
+      // no avatar set for this group: make sure we also remove the one we might have locally.
+      if (conversation.get('avatarPointer') || conversation.get('profileKey')) {
+        conversation.set({
+          avatarPointer: undefined,
+          profileKey: undefined,
+          avatarInProfile: undefined, // we want to remove the avatar here
+        });
+        await conversation.commit();
+      }
+
+      return;
+    }
+
+    // here, an avatar for this group is set. First we need to make sure if that's the same as we already have
+    const prevPointer = conversation.getAvatarPointer();
+    const prevProfileKey = conversation.getProfileKey();
+
+    if (prevPointer !== profileUrl || prevProfileKey !== profileKeyHex) {
+      // set the avatar for this group, it will be downloaded by the job scheduled below
+      conversation.set({
+        avatarPointer: profileUrl || undefined,
+        profileKey: profileKeyHex || undefined,
+      });
+      await conversation.commit();
+
+      // if the avatar data we had before is not the same of what we received, we need to schedule a new avatar download job.
+      // this call will download the new avatar or reset the local filepath if needed
+      await AvatarDownload.addAvatarDownloadJob({
+        conversationId: groupPk,
+      });
+    }
+  } catch (e) {
+    window.log.error(
+      `[profileupdate] Could not schedule avatar download job for ${groupPk}: ${e.message}`
+    );
   }
 }
 
