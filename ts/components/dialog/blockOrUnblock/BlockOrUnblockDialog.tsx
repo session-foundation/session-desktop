@@ -5,7 +5,10 @@ import { useCallback } from 'react';
 import useAsyncFn from 'react-use/lib/useAsyncFn';
 import { useHotkey } from '../../../hooks/useHotkey';
 import { useConversationsNicknameRealNameOrShortenPubkey } from '../../../hooks/useParamSelector';
-import { updateBlockOrUnblockModal } from '../../../state/ducks/modalDialog';
+import {
+  updateBlockOrUnblockModal,
+  updateConversationSettingsModal,
+} from '../../../state/ducks/modalDialog';
 import { BlockedNumberController } from '../../../util';
 import { SessionWrapperModal } from '../../SessionWrapperModal';
 import { Flex } from '../../basic/Flex';
@@ -13,6 +16,9 @@ import { Localizer, type LocalizerProps } from '../../basic/Localizer';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../../basic/SessionButton';
 import { StyledModalDescriptionContainer } from '../shared/ModalDescriptionContainer';
 import { BlockOrUnblockModalState } from './BlockOrUnblockModalState';
+import { useSelectedConversationKey } from '../../../state/selectors/selectedConversation';
+import { resetConversationExternal } from '../../../state/ducks/conversations';
+import { localize } from '../../../localization/localeTools';
 
 type ModalState = NonNullable<BlockOrUnblockModalState>;
 
@@ -53,9 +59,11 @@ function useBlockUnblockI18nDescriptionArgs({
 export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullable<ModalState>) => {
   const dispatch = useDispatch();
 
-  const localizedAction = action === 'block' ? window.i18n('block') : window.i18n('blockUnblock');
+  const localizedAction =
+    action === 'block' ? localize('block').toString() : localize('blockUnblock').toString();
 
   const args = useBlockUnblockI18nDescriptionArgs({ action, pubkeys });
+  const selectedConversation = useSelectedConversationKey();
 
   const closeModal = useCallback(() => {
     dispatch(updateBlockOrUnblockModal(null));
@@ -64,12 +72,19 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
 
   const [, onConfirm] = useAsyncFn(async () => {
     if (action === 'block') {
+      const firstPubkeyBlocked = pubkeys?.[0] || undefined;
       // we never block more than one user from the UI, so this is not very useful, just a type guard
       for (let index = 0; index < pubkeys.length; index++) {
         const pubkey = pubkeys[index];
         // TODO: make BlockedNumberController.block take an array and do the change in a single call.
         // eslint-disable-next-line no-await-in-loop
         await BlockedNumberController.block(pubkey);
+      }
+      // close the conversation settings dialog if it was shown (only for the 'block' action)
+      dispatch(updateConversationSettingsModal(null));
+      // also reset the selected convo if it was the one we blocked
+      if (firstPubkeyBlocked && selectedConversation === firstPubkeyBlocked) {
+        dispatch(resetConversationExternal());
       }
     } else {
       await BlockedNumberController.unblockAll(pubkeys);

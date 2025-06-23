@@ -17,10 +17,10 @@ export class BlockedNumberController {
    *
    * @param number The device.
    */
-  public static isBlocked(device: string | PubKey): boolean {
+  public static isBlocked(pubkey: string | PubKey): boolean {
     // This function is not `async` because the old `isBlocked` function in js was also not async.
     // To convert it means we'll have to re-wire all our UI components to work with async.
-    const stringValue = device instanceof PubKey ? device.key : device.toLowerCase();
+    const stringValue = pubkey instanceof PubKey ? pubkey.key : pubkey.toLowerCase();
     return this.blockedNumbers.has(stringValue);
   }
 

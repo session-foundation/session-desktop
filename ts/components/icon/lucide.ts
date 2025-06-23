@@ -22,6 +22,8 @@ export enum LUCIDE_ICONS_UNICODE {
   USER_ROUND_X = '',
   USER_ROUND_CHECK = '',
   PENCIL = '',
+  SEARCH = '',
+  X = '',
   HEART = '',
   LOCK_KEYHOLE = '',
   MESSAGE_SQUARE = '',
@@ -32,6 +34,7 @@ export enum LUCIDE_ICONS_UNICODE {
   SUN_MEDIUM = '',
   SETTINGS = '',
   SQUARE_CODE = '',
+  CHEVRON_LEFT = '',
   CHEVRON_RIGHT = '',
 }
 

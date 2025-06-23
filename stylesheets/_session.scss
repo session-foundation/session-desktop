@@ -270,29 +270,6 @@ label {
   }
 }
 
-.image-upload-section {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: absolute;
-  cursor: pointer;
-  width: 80px;
-  height: 80px;
-  border-radius: 100%;
-  background-color: var(--lightbox-background-color);
-  opacity: 0;
-  transition: var(--default-duration);
-
-  &:after {
-    content: 'Edit';
-    color: var(--white-color);
-  }
-
-  &:hover {
-    opacity: 1;
-  }
-}
-
 .conversation-loader {
   position: absolute;
   top: 50%;

@@ -1,4 +1,5 @@
 import { createSelector } from '@reduxjs/toolkit';
+import { useSelector } from 'react-redux';
 
 import { ModalState, type LightBoxOptions } from '../ducks/modalDialog';
 import { StateType } from '../reducer';
@@ -72,5 +73,20 @@ export const getLightBoxOptions = createSelector(
 
 export const getDebugMenuModalState = (state: StateType) => getModal(state).debugMenuModal;
 
+export const getConversationSettingsModalState = (state: StateType) =>
+  getModal(state).conversationSettingsModal;
+
+const getConversationSettingsModalIsStandalone = (state: StateType) => {
+  const convoSettingsModal = getConversationSettingsModalState(state);
+
+  return (
+    (convoSettingsModal?.settingsModalPage !== 'default' && convoSettingsModal?.standalonePage) ||
+    false
+  );
+};
+
+export const useConversationSettingsModalIsStandalone = () => {
+  return useSelector(getConversationSettingsModalIsStandalone);
+};
 export const getSessionNetworkModalState = (state: StateType) =>
   getModal(state).sessionNetworkModal;

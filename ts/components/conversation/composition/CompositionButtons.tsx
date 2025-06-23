@@ -1,12 +1,14 @@
 import { forwardRef } from 'react';
 import styled from 'styled-components';
 import { useIsOutgoingRequest } from '../../../hooks/useParamSelector';
-import { useSelectedConversationKey } from '../../../state/selectors/selectedConversation';
+import {
+  useSelectedConversationKey,
+  useSelectedIsBlocked,
+} from '../../../state/selectors/selectedConversation';
 import { SessionIconButton } from '../../icon';
 
 type CompositionButtonProps = {
   onClick: () => void;
-  isBlocked?: boolean;
 };
 
 const StyledChatButtonContainer = styled.div<{ disabled?: boolean }>`
@@ -29,10 +31,11 @@ const StyledChatButtonContainer = styled.div<{ disabled?: boolean }>`
   }
 `;
 
-export const AddStagedAttachmentButton = ({ onClick, isBlocked }: CompositionButtonProps) => {
+export const AddStagedAttachmentButton = ({ onClick }: CompositionButtonProps) => {
   const selectedConvoKey = useSelectedConversationKey();
   const isOutgoingRequest = useIsOutgoingRequest(selectedConvoKey);
 
+  const isBlocked = useSelectedIsBlocked();
   const disabled = isOutgoingRequest || isBlocked;
 
   return (
@@ -52,14 +55,14 @@ export const AddStagedAttachmentButton = ({ onClick, isBlocked }: CompositionBut
   );
 };
 
-export const StartRecordingButton = ({ onClick, isBlocked }: CompositionButtonProps) => {
+export const StartRecordingButton = ({ onClick }: CompositionButtonProps) => {
   const selectedConvoKey = useSelectedConversationKey();
   const isOutgoingRequest = useIsOutgoingRequest(selectedConvoKey);
-
+  const isBlocked = useSelectedIsBlocked();
   const disabled = isOutgoingRequest || isBlocked;
 
   return (
-    <StyledChatButtonContainer disabled={disabled}>
+    <StyledChatButtonContainer disabled={isOutgoingRequest}>
       <SessionIconButton
         iconType="microphone"
         iconSize={'huge2'}
@@ -68,8 +71,8 @@ export const StartRecordingButton = ({ onClick, isBlocked }: CompositionButtonPr
         borderRadius="300px"
         iconPadding="6px"
         onClick={onClick}
-        dataTestId="microphone-button"
         disabled={disabled}
+        dataTestId="microphone-button"
       />
     </StyledChatButtonContainer>
   );
@@ -95,7 +98,8 @@ export const ToggleEmojiButton = forwardRef<HTMLButtonElement, CompositionButton
   }
 );
 
-export const SendMessageButton = ({ onClick, isBlocked }: CompositionButtonProps) => {
+export const SendMessageButton = ({ onClick }: CompositionButtonProps) => {
+  const isBlocked = useSelectedIsBlocked();
   return (
     <StyledChatButtonContainer disabled={isBlocked}>
       <SessionIconButton

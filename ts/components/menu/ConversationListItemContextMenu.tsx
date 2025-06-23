@@ -1,19 +1,9 @@
 import { Menu } from 'react-contexify';
 
-import { useSelector } from 'react-redux';
 import { useConvoIdFromContext } from '../../contexts/ConvoIdContext';
-import {
-  useIsLegacyGroup,
-  useIsPinned,
-  useIsPrivate,
-  useIsPrivateAndFriend,
-} from '../../hooks/useParamSelector';
+import { useIsLegacyGroup, useIsPinned } from '../../hooks/useParamSelector';
 import { ConvoHub } from '../../session/conversations';
-import {
-  getIsMessageSection,
-  useIsMessageRequestOverlayShown,
-} from '../../state/selectors/section';
-import { useIsSearching } from '../../state/selectors/search';
+import { useIsSearchingForType } from '../../state/selectors/search';
 import { SessionContextMenuContainer } from '../SessionContextMenuContainer';
 import {
   AcceptMsgRequestMenuItem,
@@ -25,6 +15,7 @@ import {
   DeclineMsgRequestMenuItem,
   DeleteMessagesMenuItem,
   DeletePrivateConversationMenuItem,
+  HideNoteToSelfMenuItem,
   InviteContactMenuItem,
   MarkAllReadMenuItem,
   MarkConversationUnreadMenuItem,
@@ -42,6 +33,7 @@ import {
   DeleteDeprecatedLegacyGroupMenuItem,
   DeleteGroupMenuItem,
 } from './items/LeaveAndDeleteGroup/DeleteGroupMenuItem';
+import { useShowPinUnpin } from '../menuAndSettingsHooks/usePinUnpin';
 
 export type PropsContextConversationItem = {
   triggerId: string;
@@ -49,7 +41,7 @@ export type PropsContextConversationItem = {
 
 const ConversationListItemContextMenu = (props: PropsContextConversationItem) => {
   const { triggerId } = props;
-  const isSearching = useIsSearching();
+  const isSearching = useIsSearchingForType('global');
 
   const convoIdFromContext = useConvoIdFromContext();
 
@@ -114,6 +106,7 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
         <InviteContactMenuItem />
         <DeleteMessagesMenuItem />
         <DeletePrivateConversationMenuItem />
+        <HideNoteToSelfMenuItem />
         <LeaveCommunityMenuItem />
         <LeaveGroupMenuItem />
         <DeleteGroupMenuItem />
@@ -127,21 +120,18 @@ export const MemoConversationListItemContextMenu = ConversationListItemContextMe
 
 export const PinConversationMenuItem = (): JSX.Element | null => {
   const conversationId = useConvoIdFromContext();
-  const isMessagesSection = useSelector(getIsMessageSection);
-  const isPrivateAndFriend = useIsPrivateAndFriend(conversationId);
-  const isPrivate = useIsPrivate(conversationId);
+  const showPinUnpin = useShowPinUnpin(conversationId);
   const isPinned = useIsPinned(conversationId);
-  const isMessageRequest = useIsMessageRequestOverlayShown();
 
-  if (isMessagesSection && !isMessageRequest && (!isPrivate || (isPrivate && isPrivateAndFriend))) {
-    const conversation = ConvoHub.use().get(conversationId);
-
-    const togglePinConversation = () => {
-      void conversation?.togglePinned();
-    };
-
-    const menuText = isPinned ? window.i18n('pinUnpin') : window.i18n('pin');
-    return <ItemWithDataTestId onClick={togglePinConversation}>{menuText}</ItemWithDataTestId>;
+  if (!showPinUnpin) {
+    return null;
   }
-  return null;
+  const conversation = ConvoHub.use().get(conversationId);
+
+  const togglePinConversation = () => {
+    void conversation?.togglePinned();
+  };
+
+  const menuText = isPinned ? window.i18n('pinUnpin') : window.i18n('pin');
+  return <ItemWithDataTestId onClick={togglePinConversation}>{menuText}</ItemWithDataTestId>;
 };

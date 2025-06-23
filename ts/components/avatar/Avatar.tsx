@@ -1,4 +1,3 @@
-import { isEqual } from 'lodash';
 import { memo, SessionDataTestId, useState } from 'react';
 import styled from 'styled-components';
 import clsx from 'clsx';
@@ -9,11 +8,13 @@ import {
   useAvatarPath,
   useConversationUsername,
   useIsClosedGroup,
+  useIsPublic,
 } from '../../hooks/useParamSelector';
 import { SessionIcon } from '../icon';
 import { AvatarPlaceHolder } from './AvatarPlaceHolder/AvatarPlaceHolder';
 import { ClosedGroupAvatar } from './AvatarPlaceHolder/ClosedGroupAvatar';
 import { useIsMessageSelectionMode } from '../../state/selectors/selectedConversation';
+import { PlusAvatarButton } from '../buttons/PlusAvatarButton';
 
 export enum AvatarSize {
   XS = 28,
@@ -33,6 +34,11 @@ type Props = {
   onAvatarClick?: () => void;
   dataTestId?: SessionDataTestId;
   imageDataTestId?: SessionDataTestId;
+  /**
+   * If this is set, show the `+` button to change the avatar.
+   * This will be the callback to call on click on that `+` button.
+   */
+  onPlusAvatarClick?: () => void;
 };
 
 const Identicon = (props: Pick<Props, 'forcedName' | 'pubkey' | 'size'>) => {
@@ -77,7 +83,7 @@ const NoImage = memo(
     }
   ) => {
     const { forcedName, size, pubkey, isClosedGroup, onAvatarClick } = props;
-    // if no image but we have conversations set for the group, renders group members avatars
+
     if (pubkey && isClosedGroup) {
       return <ClosedGroupAvatar size={size} convoId={pubkey} onAvatarClick={onAvatarClick} />;
     }
@@ -123,6 +129,7 @@ const AvatarInner = (props: Props) => {
     dataTestId,
     imageDataTestId,
     onAvatarClick,
+    onPlusAvatarClick,
   } = props;
   const [imageBroken, setImageBroken] = useState(false);
 
@@ -131,8 +138,10 @@ const AvatarInner = (props: Props) => {
   const isClosedGroup = useIsClosedGroup(pubkey);
   const avatarPath = useAvatarPath(pubkey);
   const name = useConversationUsername(pubkey);
+  const isCommunity = useIsPublic(pubkey);
   // contentType is not important
   const { urlToLoad } = useEncryptedFileFetch(forcedAvatarPath || avatarPath || '', '', true);
+
   const handleImageError = () => {
     window.log.warn(
       'Avatar: Image failed to load; failing over to placeholder',
@@ -142,9 +151,15 @@ const AvatarInner = (props: Props) => {
     setImageBroken(true);
   };
 
-  const hasImage = (base64Data || urlToLoad) && !imageBroken && !isClosedGroup;
+  /**
+   * base64Data is used for in memory avatars (like before joining a community from the Join a Community left pane section)
+   * Somehow, sometimes (only in the left pane) urlToLoad is set (to a wrong avatar) but `forcedAvatarPath || avatarPath` are both unset.
+   * I suspect that it comes from the virtualisation of the list, but I am not 100% sure.
+   * I didn't find the root cause but to avoid it we enforce that urlToLoad is used only when one of the avatar path is set.
+   */
+  const hasImage = (base64Data || ((forcedAvatarPath || avatarPath) && urlToLoad)) && !imageBroken;
 
-  const isClickable = !!onAvatarClick;
+  const isClickable = !!onAvatarClick || (isCommunity && onPlusAvatarClick);
 
   return (
     <div
@@ -160,10 +175,14 @@ const AvatarInner = (props: Props) => {
           // but this just disable opening the new Conversation dialog with that user while selecting messages
           return;
         }
-        if (props.onAvatarClick) {
+        if (isCommunity && onPlusAvatarClick) {
           e.stopPropagation();
           e.preventDefault();
-          props.onAvatarClick?.();
+          onPlusAvatarClick();
+        } else if (onAvatarClick) {
+          e.stopPropagation();
+          e.preventDefault();
+          onAvatarClick();
         }
       }}
       role="button"
@@ -187,8 +206,11 @@ const AvatarInner = (props: Props) => {
           onAvatarClick={onAvatarClick}
         />
       )}
+      {onPlusAvatarClick ? (
+        <PlusAvatarButton onClick={onPlusAvatarClick} dataTestId="image-upload-section" />
+      ) : null}
     </div>
   );
 };
 
-export const Avatar = memo(AvatarInner, isEqual);
+export const Avatar = AvatarInner;

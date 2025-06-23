@@ -5,7 +5,7 @@ import {
   TimerOptionsArray,
   TimerSeconds,
 } from '../../../../../session/disappearing_messages/timerOptions';
-import { PanelButtonGroup, PanelLabel } from '../../../../buttons/PanelButton';
+import { PanelButtonGroup, PanelButtonText, PanelLabel } from '../../../../buttons/PanelButton';
 import { PanelRadioButton } from '../../../../buttons/PanelRadioButton';
 import { Localizer } from '../../../../basic/Localizer';
 import { assertUnreachable } from '../../../../../types/sqlSharedTypes';
@@ -90,14 +90,19 @@ export const TimeOptions = (props: TimerOptionsProps) => {
           return (
             <PanelRadioButton
               key={option.name}
-              text={option.name}
+              textElement={
+                <PanelButtonText
+                  text={option.name}
+                  textDataTestId="disappearing-messages-menu-option"
+                />
+              }
               value={option.name}
               isSelected={selected === option.value}
               onSelect={() => {
                 setSelected(option.value);
               }}
               disabled={disabled}
-              dataTestId={parentDataTestId}
+              rowDataTestId={parentDataTestId}
               radioInputDataTestId={`input-${parentDataTestId}`}
             />
           );
