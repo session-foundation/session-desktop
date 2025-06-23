@@ -31,6 +31,7 @@ import {
 import { useSelectedIsGroupV2 } from '../../state/selectors/selectedConversation';
 import { SessionSpinner } from '../loading';
 import { SessionToggle } from '../basic/SessionToggle';
+import { localize } from '../../localization/localeTools';
 
 type Props = {
   conversationId: string;
@@ -167,7 +168,12 @@ export const UpdateGroupMembersDialog = (props: Props) => {
   const showNoMembersMessage = existingMembers.length === 0;
 
   return (
-    <SessionWrapperModal title={window.i18n('groupMembers')} onClose={closeDialog}>
+    <SessionWrapperModal
+      title={
+        weAreAdmin ? localize('manageMembers').toString() : localize('groupMembers').toString()
+      }
+      onClose={closeDialog}
+    >
       {hasClosedGroupV2QAButtons() && weAreAdmin && PubKey.is03Pubkey(conversationId) ? (
         <>
           <span
