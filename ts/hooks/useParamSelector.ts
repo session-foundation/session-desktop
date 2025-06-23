@@ -269,6 +269,16 @@ export function useIsPinned(convoId?: string) {
   );
 }
 
+export function useIsHidden(convoId?: string) {
+  const convoProps = useConversationPropsById(convoId);
+  return Boolean(
+    convoProps &&
+      isNumber(convoProps.priority) &&
+      isFinite(convoProps.priority) &&
+      convoProps.priority < 0
+  );
+}
+
 export function useIsApproved(convoId?: string) {
   const convoProps = useConversationPropsById(convoId);
   return Boolean(convoProps && convoProps.isApproved);

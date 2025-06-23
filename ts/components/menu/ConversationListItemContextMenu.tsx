@@ -20,6 +20,7 @@ import {
   MarkAllReadMenuItem,
   MarkConversationUnreadMenuItem,
   NotificationForConvoMenuItem,
+  ShowNoteToSelfMenuItem,
   ShowUserDetailsMenuItem,
   UnbanMenuItem,
 } from './Menu';
@@ -76,6 +77,7 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
           <LeaveCommunityMenuItem />
           <LeaveGroupMenuItem />
           <DeleteGroupMenuItem />
+          <ShowNoteToSelfMenuItem />
         </Menu>
       </SessionContextMenuContainer>
     );
@@ -107,6 +109,7 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
         <DeleteMessagesMenuItem />
         <DeletePrivateConversationMenuItem />
         <HideNoteToSelfMenuItem />
+        <ShowNoteToSelfMenuItem />
         <LeaveCommunityMenuItem />
         <LeaveGroupMenuItem />
         <DeleteGroupMenuItem />

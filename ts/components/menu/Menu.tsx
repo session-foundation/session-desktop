@@ -48,6 +48,7 @@ import { useSetNotificationsFor } from '../menuAndSettingsHooks/useSetNotificati
 import { useClearNickname } from '../menuAndSettingsHooks/useClearNickname';
 import { Localizer } from '../basic/Localizer';
 import { useChangeNickname } from '../menuAndSettingsHooks/useChangeNickname';
+import { useShowNoteToSelfCb } from '../menuAndSettingsHooks/useShowNoteToSelf';
 
 /** Menu items standardized */
 
@@ -335,6 +336,26 @@ export const HideNoteToSelfMenuItem = () => {
       }}
     >
       {window.i18n('noteToSelfHide')}
+    </ItemWithDataTestId>
+  );
+};
+
+export const ShowNoteToSelfMenuItem = () => {
+  const convoId = useConvoIdFromContext();
+
+  const showShowNoteToSelfCb = useShowNoteToSelfCb({ conversationId: convoId });
+
+  if (!convoId || !showShowNoteToSelfCb) {
+    return null;
+  }
+
+  return (
+    <ItemWithDataTestId
+      onClick={() => {
+        showShowNoteToSelfCb();
+      }}
+    >
+      {window.i18n('showNoteToSelf')}
     </ItemWithDataTestId>
   );
 };

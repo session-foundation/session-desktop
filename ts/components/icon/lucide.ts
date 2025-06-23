@@ -18,6 +18,7 @@ export enum LUCIDE_ICONS_UNICODE {
   PIN = '',
   PIN_OFF = '',
   BAN = '',
+  EYE = '',
   EYE_OFF = '',
   USER_ROUND_X = '',
   USER_ROUND_CHECK = '',

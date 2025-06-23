@@ -5,22 +5,20 @@ import { ConvoHub } from '../../session/conversations';
 import { updateConfirmModal } from '../../state/ducks/modalDialog';
 import { SessionButtonColor } from '../basic/SessionButton';
 
-function useShowHideNoteToSelf({ conversationId }: { conversationId: string }) {
+function useShowNoteToSelf({ conversationId }: { conversationId: string }) {
   const isMe = useIsMe(conversationId);
   const isHidden = useIsHidden(conversationId);
 
-  return isMe && !isHidden;
+  return isMe && isHidden;
 }
 
-export function useHideNoteToSelfCb({ conversationId }: { conversationId: string }) {
-  const showHideNTS = useShowHideNoteToSelf({ conversationId });
+export function useShowNoteToSelfCb({ conversationId }: { conversationId: string }) {
+  const showNTS = useShowNoteToSelf({ conversationId });
   const dispatch = useDispatch();
 
-  if (!showHideNTS) {
+  if (!showNTS) {
     return null;
   }
-
-  const menuItemText = localize('noteToSelfHide').toString();
 
   const onClickClose = () => {
     dispatch(updateConfirmModal(null));
@@ -29,19 +27,16 @@ export function useHideNoteToSelfCb({ conversationId }: { conversationId: string
   const showConfirmationModal = () => {
     dispatch(
       updateConfirmModal({
-        title: menuItemText,
-        i18nMessage: { token: 'noteToSelfHideDescription' },
+        title: localize('showNoteToSelf').toString(),
+        i18nMessage: { token: 'showNoteToSelfDescription' },
         onClickClose,
-        okTheme: SessionButtonColor.Danger,
+        closeTheme: SessionButtonColor.White,
         onClickOk: async () => {
-          await ConvoHub.use().delete1o1(conversationId, {
-            fromSyncMessage: false,
-            justHidePrivate: true,
-            keepMessages: false,
-          });
-          // Note: We don't want to close the modal for the hide NTS action.
+          const convo = ConvoHub.use().get(conversationId);
+          await convo.unhideIfNeeded(true);
+          // Note: We don't want to close the modal for the show NTS action.
         },
-        okText: localize('hide').toString(),
+        okText: localize('show').toString(),
       })
     );
   };
