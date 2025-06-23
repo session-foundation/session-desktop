@@ -37,7 +37,7 @@ export function useHideNoteToSelfCb({ conversationId }: { conversationId: string
           await ConvoHub.use().delete1o1(conversationId, {
             fromSyncMessage: false,
             justHidePrivate: true,
-            keepMessages: false,
+            keepMessages: true, // Note: we want want to keep messages for the hide NTS action.
           });
           // Note: We don't want to close the modal for the hide NTS action.
         },
