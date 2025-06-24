@@ -198,7 +198,6 @@ declare module 'react' {
     // settings toggle and buttons
     | 'remove-password-settings-button'
     | 'change-password-settings-button'
-    | 'enable-read-receipts'
     | 'set-password-button'
     | 'enable-read-receipts'
     | 'enable-calls'
@@ -313,7 +312,6 @@ declare module 'react' {
     | 'hide-input-text-toggle'
     | 'show-input-text-toggle'
     | 'save-button-profile-update'
-    | 'save-button-profile-update'
     | 'copy-button-profile-update'
     | 'create-group-button'
     | 'delete-message-request'
@@ -337,9 +335,8 @@ declare module 'react' {
     | 'avatar-placeholder'
     | `input-releases-${ReleaseChannels}`
     | `label-releases-${ReleaseChannels}`
-    | 'last-updated-timestamp'
     | 'tooltip-character-count'
-    | 'modal-button-session-pro-ok';
+    | 'modal-button-session-pro-ok'
     | `${MenuOption}-menu-option`
     | `${MenuOptionDetails}-menu-option`
     | `${SetButton}-set-button`
