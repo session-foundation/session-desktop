@@ -11,16 +11,20 @@ type CompositionButtonProps = {
   onClick: () => void;
 };
 
-const StyledChatButtonContainer = styled.div<{ disabled?: boolean }>`
+const StyledChatButtonContainer = styled.div<{
+  disabled?: boolean;
+  backgroundColor?: string;
+  backgroundColorHover?: string;
+}>`
   .session-icon-button {
     svg {
-      background-color: var(--chat-buttons-background-color);
+      background-color: ${props => props.backgroundColor || 'var(--chat-buttons-background-color)'};
     }
 
     ${props =>
       !props.disabled &&
       `&:hover svg {
-      background-color: var(--chat-buttons-background-hover-color);
+      background-color: ${props.backgroundColorHover || 'var(--chat-buttons-background-hover-color)'};
     }`}
 
     ${props =>
@@ -42,7 +46,6 @@ export const AddStagedAttachmentButton = ({ onClick }: CompositionButtonProps) =
     <StyledChatButtonContainer disabled={disabled}>
       <SessionIconButton
         iconType="plusThin"
-        backgroundColor={'var(--chat-buttons-background-color)'}
         iconColor={'var(--chat-buttons-icon-color)'}
         iconSize={'huge2'}
         borderRadius="300px"
@@ -62,11 +65,10 @@ export const StartRecordingButton = ({ onClick }: CompositionButtonProps) => {
   const disabled = isOutgoingRequest || isBlocked;
 
   return (
-    <StyledChatButtonContainer disabled={isOutgoingRequest}>
+    <StyledChatButtonContainer disabled={disabled}>
       <SessionIconButton
         iconType="microphone"
         iconSize={'huge2'}
-        backgroundColor={'var(--chat-buttons-background-color)'}
         iconColor={'var(--chat-buttons-icon-color)'}
         borderRadius="300px"
         iconPadding="6px"
@@ -85,7 +87,6 @@ export const ToggleEmojiButton = forwardRef<HTMLButtonElement, CompositionButton
         <SessionIconButton
           iconType="emoji"
           ref={ref}
-          backgroundColor={'var(--chat-buttons-background-color)'}
           iconColor={'var(--chat-buttons-icon-color)'}
           iconSize={'huge2'}
           borderRadius="300px"
@@ -101,10 +102,9 @@ export const ToggleEmojiButton = forwardRef<HTMLButtonElement, CompositionButton
 export const SendMessageButton = ({ onClick }: CompositionButtonProps) => {
   const isBlocked = useSelectedIsBlocked();
   return (
-    <StyledChatButtonContainer disabled={isBlocked}>
+    <StyledChatButtonContainer disabled={isBlocked} backgroundColor={'var(--primary-color)'}>
       <SessionIconButton
         iconType="send"
-        backgroundColor={'var(--chat-buttons-background-color)'}
         iconColor={'var(--chat-buttons-icon-color)'}
         iconSize={'huge2'}
         iconRotation={90}

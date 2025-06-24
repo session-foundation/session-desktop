@@ -74,7 +74,7 @@ export function CharacterCount({ count }: CharacterCountProps) {
         verticalPosition="bottom"
         content={
           pastLimit ? (
-            <Localizer token="remainingCharactersOverTooltip" />
+            <Localizer token="remainingCharactersOverTooltip" args={{ count: remaining * -1 }} />
           ) : (
             <Localizer token="remainingCharactersTooltip" args={{ count: remaining }} />
           )

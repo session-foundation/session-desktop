@@ -398,7 +398,6 @@ class CompositionBoxInner extends Component<Props, State> {
         width="100%"
         onClick={this.focusCompositionBox} // used to focus on the textarea when clicking in its container
       >
-        {<AddStagedAttachmentButton onClick={this.onChooseAttachment} isBlocked={isBlocked} />}
         {typingEnabled || isBlocked ? (
           <AddStagedAttachmentButton onClick={this.onChooseAttachment} />
         ) : null}
@@ -410,9 +409,6 @@ class CompositionBoxInner extends Component<Props, State> {
           type="file"
           onChange={this.onChoseAttachment}
         />
-        {typingEnabled || isBlocked ? (
-          <StartRecordingButton onClick={this.onLoadVoiceNoteView} />
-        ) : null}
         <StyledSendMessageInput
           role="main"
           dir={this.props.htmlDirection}
@@ -435,7 +431,7 @@ class CompositionBoxInner extends Component<Props, State> {
           {showSendButton ? (
             <SendMessageButton onClick={this.onSendMessage} />
           ) : (
-            <StartRecordingButton onClick={this.onLoadVoiceNoteView} isBlocked={isBlocked} />
+            <StartRecordingButton onClick={this.onLoadVoiceNoteView} />
           )}
         </StyledRightCompositionBoxButtonContainer>
         {showEmojiPanel ? (
