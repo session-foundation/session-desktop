@@ -72,7 +72,7 @@ export const ClosedGroupAvatar = ({
   const firstMemberId = memberAvatars?.firstMember || '';
   const secondMemberID = memberAvatars?.secondMember || '';
 
-  const avatarSize = containerSize * 0.727272727272;
+  const avatarSize = Math.floor((containerSize * 8) / 11);
 
   if (!avatarSize) {
     throw new Error(`Invalid avatar size ${containerSize}`);
