@@ -3,6 +3,7 @@ import {
   useIsKickedFromGroup,
   useIsGroupDestroyed,
   useConversationUsername,
+  useWeAreAdmin,
 } from '../../hooks/useParamSelector';
 import {
   showDeleteGroupByConvoId,
@@ -16,6 +17,7 @@ export function useShowLeaveGroupCb(conversationId?: string) {
   const isGroupDestroyed = useIsGroupDestroyed(conversationId);
   const isMessageRequestShown = useIsMessageRequestOverlayShown();
   const username = useConversationUsername(conversationId) || conversationId;
+  const weAreAdmin = useWeAreAdmin(conversationId);
 
   // Note: if we are the only admin, leaving it will warn that it will actually delete it for everyone.
 
@@ -24,7 +26,8 @@ export function useShowLeaveGroupCb(conversationId?: string) {
     isMessageRequestShown ||
     isGroupDestroyed ||
     isKickedFromGroup ||
-    !conversationId
+    !conversationId ||
+    weAreAdmin
   ) {
     return null;
   }
