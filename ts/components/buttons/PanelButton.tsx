@@ -52,7 +52,7 @@ export const PanelButtonGroup = (props: PanelButtonGroupProps) => {
   );
 };
 
-const StyledPanelButton = styled.button<{
+export const StyledPanelButton = styled.button<{
   disabled: boolean;
   color?: string;
 }>`
@@ -63,11 +63,11 @@ const StyledPanelButton = styled.button<{
   flex-shrink: 0;
   flex-grow: 1;
   font-family: var(--font-default);
-  height: 50px;
   width: 100%;
   transition: var(--default-duration);
   color: ${props => (props.disabled ? 'var(--disabled-color)' : props.color)};
   padding-inline: var(--margins-xs);
+  padding-block: var(--margins-sm);
 
   &:not(:last-child) {
     border-bottom: 1px solid var(--border-color);

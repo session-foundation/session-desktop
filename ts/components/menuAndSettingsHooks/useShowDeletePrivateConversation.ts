@@ -37,7 +37,7 @@ export function useShowDeletePrivateConversationCb({ conversationId }: { convers
     dispatch(
       updateConfirmModal({
         title: menuItemText,
-        i18nMessage: { token: 'conversationsDeleteDescription', args: { name } },
+        i18nMessage: { token: 'deleteConversationDescription', args: { name } },
         onClickClose,
         okTheme: SessionButtonColor.Danger,
         onClickOk: async () => {

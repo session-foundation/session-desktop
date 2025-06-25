@@ -1,13 +1,7 @@
 import styled from 'styled-components';
 import { SessionDataTestId, type ReactNode } from 'react';
 import { SessionRadio } from '../basic/SessionRadio';
-import { PanelButton, PanelButtonProps, StyledContent } from './PanelButton';
-
-const StyledPanelButton = styled(PanelButton)`
-  padding-top: var(--margins-lg);
-  padding-bottom: var(--margins-lg);
-  text-align: start;
-`;
+import { PanelButtonProps, StyledContent, StyledPanelButton } from './PanelButton';
 
 const StyledCheckContainer = styled.div`
   display: flex;
@@ -45,7 +39,7 @@ export const PanelRadioButton = (props: PanelRadioButtonProps) => {
       onClick={() => {
         return isSelected ? onUnselect?.('bye') : onSelect?.('hi');
       }}
-      dataTestId={rowDataTestId}
+      data-testid={rowDataTestId}
     >
       <StyledContent disabled={disabled}>
         {textElement}

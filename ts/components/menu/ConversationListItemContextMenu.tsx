@@ -14,12 +14,14 @@ import {
   DeclineAndBlockMsgRequestMenuItem,
   DeclineMsgRequestMenuItem,
   DeleteMessagesMenuItem,
+  DeletePrivateContactMenuItem,
   DeletePrivateConversationMenuItem,
   HideNoteToSelfMenuItem,
   InviteContactMenuItem,
   MarkAllReadMenuItem,
   MarkConversationUnreadMenuItem,
   NotificationForConvoMenuItem,
+  ShowNoteToSelfMenuItem,
   ShowUserDetailsMenuItem,
   UnbanMenuItem,
 } from './Menu';
@@ -76,6 +78,7 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
           <LeaveCommunityMenuItem />
           <LeaveGroupMenuItem />
           <DeleteGroupMenuItem />
+          <ShowNoteToSelfMenuItem />
         </Menu>
       </SessionContextMenuContainer>
     );
@@ -106,7 +109,9 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
         <InviteContactMenuItem />
         <DeleteMessagesMenuItem />
         <DeletePrivateConversationMenuItem />
+        <DeletePrivateContactMenuItem />
         <HideNoteToSelfMenuItem />
+        <ShowNoteToSelfMenuItem />
         <LeaveCommunityMenuItem />
         <LeaveGroupMenuItem />
         <DeleteGroupMenuItem />

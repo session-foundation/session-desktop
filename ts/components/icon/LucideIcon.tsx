@@ -8,6 +8,8 @@ const LucideIconWrapper = styled.div<{ $iconColor?: string; $iconSize: SessionIc
   font-family: var(--font-icon);
   font-size: ${props => IconSizeToPxStr[props.$iconSize]};
   color: ${props => props.$iconColor};
+  aspect-ratio: 1;
+  align-content: center;
 `;
 
 export type LucideIconProps = WithLucideUnicode & {

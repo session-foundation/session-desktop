@@ -10,19 +10,36 @@ import {
   useSelectedIsNoteToSelf,
   useSelectedIsPrivate,
   useSelectedIsPrivateFriend,
+  useSelectedIsPublic,
+  useSelectedWeAreAdmin,
 } from '../../../state/selectors/selectedConversation';
 import { Avatar, AvatarSize } from '../../avatar/Avatar';
-import { useIsLegacyGroup } from '../../../hooks/useParamSelector';
 import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
+import { useIsGroupV2, useIsLegacyGroup } from '../../../hooks/useParamSelector';
+import { useLibGroupInvitePending } from '../../../state/selectors/userGroups';
 
 export const AvatarHeader = (props: { pubkey: string; onAvatarClick?: () => void }) => {
   const { pubkey, onAvatarClick } = props;
   const isApproved = useSelectedIsApproved();
 
   const isLegacyGroup = useIsLegacyGroup(pubkey);
+  const invitePending = useLibGroupInvitePending(pubkey);
+  const isPrivate = useSelectedIsPrivate();
+  const isGroupV2 = useIsGroupV2(pubkey);
 
-  const optOnAvatarClick = !isLegacyGroup && isApproved ? onAvatarClick : undefined;
+  const isPublic = useSelectedIsPublic();
+  const weAreAdmin = useSelectedWeAreAdmin();
+
+  const canClickLegacy = isLegacyGroup && false; // we can never click the avatar if it's a legacy group
+  const canClickPrivateApproved = isApproved && isPrivate; // we can only click the avatar if it's a private and approved conversation
+  const canClick03GroupAccepted = isGroupV2 && !invitePending; // we can only click the avatar if it's a group and have accepted the invite already
+  const canClickCommunity = isPublic && weAreAdmin;
+
+  const optOnAvatarClick =
+    canClickLegacy || canClickPrivateApproved || canClick03GroupAccepted || canClickCommunity
+      ? onAvatarClick
+      : undefined;
 
   return (
     <span className="module-conversation-header__avatar">

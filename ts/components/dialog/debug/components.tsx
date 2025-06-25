@@ -32,7 +32,6 @@ import { ConversationTypeEnum } from '../../../models/types';
 import { ContactsWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { usePolling } from '../../../hooks/usePolling';
 import { releasedFeaturesActions } from '../../../state/ducks/releasedFeatures';
-import { SessionInput } from '../../inputs';
 import {
   useReleasedFeaturesRefreshedAt,
   useSesh101NotificationAt,
@@ -40,6 +39,7 @@ import {
 import { formatAbbreviatedExpireDoubleTimer } from '../../../util/i18n/formatting/expirationTimer';
 import { handleReleaseNotification } from '../../../util/releasedFeatures';
 import { networkDataActions } from '../../../state/ducks/networkData';
+import { SimpleSessionInput } from '../../inputs/SessionInput';
 
 const hexRef = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
 
@@ -426,11 +426,31 @@ function AddDummyContactButton() {
     'AddDummyContactButton'
   );
 
+  async function doIt() {
+    if (loading) {
+      return;
+    }
+    try {
+      setLoading(true);
+      setAddedCount(0);
+      const chunkSize = 10;
+      const allIndexes = Array.from({ length: countToAdd }).map((_unused, i) => i);
+      const chunks = chunk(allIndexes, chunkSize);
+      for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
+        // eslint-disable-next-line no-await-in-loop
+        await Promise.all(chunks[chunkIndex].map(() => generateOneRandomContact()));
+        setAddedCount(Math.min(chunkIndex * chunkSize, countToAdd));
+      }
+    } finally {
+      setLoading(false);
+      setAddedCount(0);
+    }
+  }
+
   return (
     <StyledDummyContactsContainer>
-      <SessionInput
+      <SimpleSessionInput
         autoFocus={false}
-        disableOnBlurEvent={true}
         type="text"
         value={`${countToAdd}`}
         onValueChanged={(value: string) => {
@@ -439,33 +459,13 @@ function AddDummyContactButton() {
             setCountToAdd(asNumber);
           }
         }}
-        loading={loading}
-        maxLength={10}
-        editable={!loading}
-      />
-      <SessionButton
-        onClick={async () => {
-          if (loading) {
-            return;
-          }
-          try {
-            setLoading(true);
-            setAddedCount(0);
-            const chunkSize = 10;
-            const allIndexes = Array.from({ length: countToAdd }).map((_unused, i) => i);
-            const chunks = chunk(allIndexes, chunkSize);
-            for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
-              // eslint-disable-next-line no-await-in-loop
-              await Promise.all(chunks[chunkIndex].map(() => generateOneRandomContact()));
-              setAddedCount(Math.min(chunkIndex * chunkSize, countToAdd));
-            }
-          } finally {
-            setLoading(false);
-            setAddedCount(0);
-          }
-        }}
         disabled={loading}
-      >
+        maxLength={10}
+        errorDataTestId="invalid-data-testid"
+        onEnterPressed={() => void doIt()}
+        providedError={undefined}
+      />
+      <SessionButton onClick={doIt} disabled={loading}>
         {loading ? (
           <>
             {addedCount}/{countToAdd}...

@@ -8,10 +8,10 @@ import { Avatar, AvatarSize } from '../avatar/Avatar';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
 import { SpacerLG } from '../basic/Text';
 import { CopyToClipboardButton } from '../buttons/CopyToClipboardButton';
-import { SessionInput } from '../inputs';
 import { SessionWrapperModal } from '../SessionWrapperModal';
 import { ConversationTypeEnum } from '../../models/types';
 import { Flex } from '../basic/Flex';
+import { SessionIDNonEditable } from '../basic/YourSessionIDPill';
 
 export const UserDetailsDialog = (props: UserDetailsModalState) => {
   const [isEnlargedImageShown, setIsEnlargedImageShown] = useState(false);
@@ -71,15 +71,7 @@ export const UserDetailsDialog = (props: UserDetailsModalState) => {
       </div>
       <SpacerLG />
       <Flex $container={true} width={'100%'} $justifyContent="center" $alignItems="center">
-        <SessionInput
-          value={props.conversationId}
-          textSize="md"
-          editable={false}
-          monospaced={true}
-          centerText={true}
-          isTextArea={true}
-          padding={'var(--margins-xl) var(--margins-md)'}
-        />
+        <SessionIDNonEditable dataTestId="invalid-data-testid" sessionId={props.conversationId} />
       </Flex>
       <SpacerLG />
       <div className="session-modal__button-group__center">

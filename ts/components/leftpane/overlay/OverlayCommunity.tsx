@@ -19,10 +19,11 @@ import {
 } from '../../../state/ducks/conversations';
 import { useLeftOverlayMode } from '../../../state/selectors/section';
 import { Spacer2XL } from '../../basic/Text';
-import { SessionInput } from '../../inputs';
 import { StyledLeftPaneOverlay } from './OverlayMessage';
 import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_constants';
 import { sectionActions } from '../../../state/ducks/section';
+import { SimpleSessionTextarea } from '../../inputs/SessionInput';
+import { localize } from '../../../localization/localeTools';
 
 async function joinOpenGroup(
   serverUrl: string,
@@ -39,7 +40,7 @@ async function joinOpenGroup(
     );
     return groupCreated;
   }
-  throw new Error(window.i18n('communityEnterUrlErrorInvalid'));
+  throw new Error(localize('communityEnterUrlErrorInvalid').toString());
 }
 
 export const OverlayCommunity = () => {
@@ -97,27 +98,26 @@ export const OverlayCommunity = () => {
       $alignItems={'center'}
       padding={'var(--margins-md)'}
     >
-      <SessionInput
+      <SimpleSessionTextarea
+        // not monospaced. This is a plain text input for a community url
         autoFocus={true}
-        type="text"
-        placeholder={window.i18n('communityEnterUrl')}
+        placeholder={localize('communityEnterUrl').toString()}
         value={groupUrl}
         onValueChanged={setGroupUrl}
+        singleLine={true}
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEnterPressed={onTryJoinRoom}
-        editable={!loading}
-        error={groupUrlError}
+        providedError={groupUrlError}
+        disabled={loading}
         // - 1 for null terminator
         maxLength={LIBSESSION_CONSTANTS.COMMUNITY_FULL_URL_MAX_LENGTH - 1}
         textSize="md"
-        monospaced={true}
-        centerText={true}
-        isTextArea={true}
-        loading={loading}
         inputDataTestId="join-community-conversation"
+        errorDataTestId="error-message"
       />
       <Spacer2XL />
       <SessionButton
-        text={window.i18n('join')}
+        text={localize('join').toString()}
         disabled={!groupUrl || loading}
         onClick={onTryJoinRoom}
         dataTestId="join-community-button"
