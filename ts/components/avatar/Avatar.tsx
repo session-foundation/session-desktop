@@ -15,13 +15,14 @@ import { AvatarPlaceHolder } from './AvatarPlaceHolder/AvatarPlaceHolder';
 import { ClosedGroupAvatar } from './AvatarPlaceHolder/ClosedGroupAvatar';
 import { useIsMessageSelectionMode } from '../../state/selectors/selectedConversation';
 import { PlusAvatarButton } from '../buttons/PlusAvatarButton';
+import { StyledAvatar } from './AvatarPlaceHolder/StyledAvatar';
 
 export enum AvatarSize {
   XS = 28,
   S = 36,
   M = 48,
-  L = 64,
-  XL = 80,
+  L = 80,
+  XL = 110,
   HUGE = 300,
 }
 
@@ -91,6 +92,7 @@ const NoImage = memo(
     return <Identicon size={size} forcedName={forcedName} pubkey={pubkey} />;
   }
 );
+
 
 const AvatarImage = (
   props: Pick<Props, 'base64Data' | 'dataTestId'> & {
@@ -162,13 +164,9 @@ const AvatarInner = (props: Props) => {
   const isClickable = !!onAvatarClick || (isCommunity && onPlusAvatarClick);
 
   return (
-    <div
-      className={clsx(
-        'module-avatar',
-        `module-avatar--${size}`,
-        hasImage ? 'module-avatar--with-image' : 'module-avatar--no-image',
-        isClickable && 'module-avatar-clickable'
-      )}
+    <StyledAvatar
+      $diameter={size}
+      className={clsx('module-avatar', isClickable && 'module-avatar-clickable')}
       onClick={e => {
         if (isSelectingMessages) {
           // we could toggle the selection of this message,
@@ -209,7 +207,7 @@ const AvatarInner = (props: Props) => {
       {onPlusAvatarClick ? (
         <PlusAvatarButton onClick={onPlusAvatarClick} dataTestId="image-upload-section" />
       ) : null}
-    </div>
+    </StyledAvatar>
   );
 };
 
