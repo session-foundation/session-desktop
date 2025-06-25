@@ -25,6 +25,7 @@ import { SessionSearchInput } from '../SessionSearchInput';
 import { NoResultsForSearch } from '../search/NoResults';
 import { SessionWrapperModal2 } from '../SessionWrapperModal2';
 import { useHotkey } from '../../hooks/useHotkey';
+import { searchActions } from '../../state/ducks/search';
 
 type Props = {
   conversationId: string;
@@ -123,6 +124,7 @@ const InviteContactsDialogInner = (props: Props) => {
 
   const closeDialog = () => {
     dispatch(updateInviteContactModal(null));
+    dispatch(searchActions.clearSearch());
   };
 
   const onClickOK = () => {
