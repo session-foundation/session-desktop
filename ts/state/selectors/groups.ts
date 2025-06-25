@@ -9,7 +9,10 @@ import { type GroupMemberGetRedux } from '../ducks/types/groupReduxTypes';
 import { StateType } from '../reducer';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { UserUtils } from '../../session/utils';
-import { useConversationsNicknameRealNameOrShortenPubkey } from '../../hooks/useParamSelector';
+import {
+  useConversationsNicknameRealNameOrShortenPubkey,
+  useWeAreAdmin,
+} from '../../hooks/useParamSelector';
 
 const selectLibGroupsState = (state: StateType): GroupState => state.groups;
 
@@ -266,7 +269,22 @@ export function useGroupAvatarChangeFromUIPending() {
   return useSelector(selectGroupAvatarChangeFromUIPending);
 }
 
-function getSortingOrderForStatus(memberStatus: MemberStateGroupV2) {
+function getSortingOrderForStatus(memberStatus: MemberStateGroupV2, weAreAdmin: boolean) {
+  // Non-admins don't need to see the details as they cannot do anything to change their state.
+  // so we only group members by You, Members,
+  if (!weAreAdmin) {
+    switch (memberStatus) {
+      case 'PROMOTION_FAILED':
+      case 'PROMOTION_NOT_SENT':
+      case 'PROMOTION_SENDING':
+      case 'PROMOTION_SENT':
+      case 'PROMOTION_UNKNOWN':
+      case 'PROMOTION_ACCEPTED':
+        return 0;
+      default:
+        return 10;
+    }
+  }
   switch (memberStatus) {
     case 'INVITE_FAILED':
       return 0;
@@ -305,23 +323,35 @@ function getSortingOrderForStatus(memberStatus: MemberStateGroupV2) {
 export function useStateOf03GroupMembers(convoId?: string) {
   const us = UserUtils.getOurPubKeyStrFromCache();
   const unsortedMembers = useSelector((state: StateType) => selectMembersOfGroup(state, convoId));
+  const weAreAdmin = useWeAreAdmin(convoId);
 
   const names = useConversationsNicknameRealNameOrShortenPubkey(
     unsortedMembers.map(m => m.pubkeyHex)
   );
 
+  // Damn this sorting logic is overkill x2.
+  // The sorting logic is as follows:
+  //  - when **we are** an admin, we want to sort by the following order:
+  //    - Each states of invite/promotion/etc separate, but You always at the top **per section**
+  //  - when we **are not** an admin, we want to sort by the following order:
+  //    - You (at the top, always)
+  //    - Admins (without You as it is already at the top)
+  //    - Others (same as above)
   const sorted = useMemo(() => {
-    // damn this is overkill
     return sortBy(
       unsortedMembers,
       item => {
-        const sortingOrder = getSortingOrderForStatus(item.memberStatus);
+        // when we are not an admin, we want the current user (You) to be always be at the top
+        if (!weAreAdmin && item.pubkeyHex === us) {
+          return -1;
+        }
+
+        const sortingOrder = getSortingOrderForStatus(item.memberStatus, weAreAdmin);
         return sortingOrder;
       },
       item => {
-        // per section, we want "us"  first, then "nickname || displayName || pubkey"
-
-        if (item.pubkeyHex === us) {
+        // when we are an admin, we want to sort "You" at the top per sections
+        if (weAreAdmin && item.pubkeyHex === us) {
           return -1;
         }
         const index = unsortedMembers.findIndex(p => p.pubkeyHex === item.pubkeyHex);
@@ -332,6 +362,7 @@ export function useStateOf03GroupMembers(convoId?: string) {
         return names[index].toLowerCase();
       }
     );
-  }, [unsortedMembers, us, names]);
+  }, [unsortedMembers, us, names, weAreAdmin]);
+
   return sorted;
 }

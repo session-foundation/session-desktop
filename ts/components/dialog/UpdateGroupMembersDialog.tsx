@@ -56,12 +56,12 @@ const MemberList = (props: {
   const isV2Group = useSelectedIsGroupV2();
 
   const groupAdmins = useGroupAdmins(convoId);
-  const groupMembers = useSortedGroupMembers(convoId);
+  const groupMembersLegacy = useSortedGroupMembers(convoId);
   const groupMembers03Group = useStateOf03GroupMembers(convoId);
 
   const sortedMembersNon03 = useMemo(
-    () => [...groupMembers].sort(m => (groupAdmins?.includes(m) ? -1 : 0)),
-    [groupMembers, groupAdmins]
+    () => [...groupMembersLegacy].sort(m => (groupAdmins?.includes(m) ? -1 : 0)),
+    [groupMembersLegacy, groupAdmins]
   );
 
   const sortedMembers = isV2Group ? groupMembers03Group.map(m => m.pubkeyHex) : sortedMembersNon03;
