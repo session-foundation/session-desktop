@@ -10,6 +10,8 @@ import {
   useSelectedIsNoteToSelf,
   useSelectedIsPrivate,
   useSelectedIsPrivateFriend,
+  useSelectedIsPublic,
+  useSelectedWeAreAdmin,
 } from '../../../state/selectors/selectedConversation';
 import { Avatar, AvatarSize } from '../../avatar/Avatar';
 import { SessionIconButton } from '../../icon';
@@ -25,12 +27,16 @@ export const AvatarHeader = (props: { pubkey: string; onAvatarClick?: () => void
   const isPrivate = useSelectedIsPrivate();
   const isGroupV2 = useIsGroupV2(pubkey);
 
+  const isPublic = useSelectedIsPublic();
+  const weAreAdmin = useSelectedWeAreAdmin();
+
   const canClickLegacy = isLegacyGroup && false; // we can never click the avatar if it's a legacy group
   const canClickPrivateApproved = isApproved && isPrivate; // we can only click the avatar if it's a private and approved conversation
   const canClick03GroupAccepted = isGroupV2 && !invitePending; // we can only click the avatar if it's a group and have accepted the invite already
+  const canClickCommunity = isPublic && weAreAdmin;
 
   const optOnAvatarClick =
-    canClickLegacy || canClickPrivateApproved || canClick03GroupAccepted
+    canClickLegacy || canClickPrivateApproved || canClick03GroupAccepted || canClickCommunity
       ? onAvatarClick
       : undefined;
 

@@ -93,7 +93,6 @@ const NoImage = memo(
   }
 );
 
-
 const AvatarImage = (
   props: Pick<Props, 'base64Data' | 'dataTestId'> & {
     avatarPath?: string;
