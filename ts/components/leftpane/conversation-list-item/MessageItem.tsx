@@ -4,7 +4,6 @@ import clsx from 'clsx';
 import { useConvoIdFromContext } from '../../../contexts/ConvoIdContext';
 import {
   useHasUnread,
-  useIsOutgoingRequest,
   useIsPrivate,
   useIsTyping,
   useLastMessage,
@@ -27,13 +26,8 @@ export const MessageItem = () => {
   const hasUnread = useHasUnread(conversationId);
   const isConvoTyping = useIsTyping(conversationId);
   const isMessageRequest = useIsMessageRequestOverlayShown();
-  const isOutgoingRequest = useIsOutgoingRequest(conversationId);
 
   const isSearching = useIsSearchingForType('global');
-
-  if (isOutgoingRequest) {
-    return null;
-  }
 
   if (lastMessage?.interactionType && lastMessage?.interactionStatus) {
     return <InteractionItem conversationId={conversationId} lastMessage={lastMessage} />;

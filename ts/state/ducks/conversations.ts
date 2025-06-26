@@ -30,6 +30,7 @@ import type { SessionSuggestionDataItem } from '../../components/conversation/co
 import { Storage } from '../../util/storage';
 import { SettingsKey } from '../../data/settings-key';
 import { sectionActions } from './section';
+import { ed25519Str } from '../../session/utils/String';
 
 export type MessageModelPropsWithoutConvoProps = {
   propsForMessage: PropsForMessageWithoutConvoProps;
@@ -339,7 +340,9 @@ async function getMessages({
     return m.getMessageModelProps();
   });
   const time = Date.now() - beforeTimestamp;
-  window?.log?.info(`Loading ${messagesProps.length} messages took ${time}ms to load.`);
+  window?.log?.info(
+    `Loading ${messagesProps.length} messages took ${time}ms to load for convo ${ed25519Str(conversationKey)}.`
+  );
 
   const quotesProps: QuoteLookupType = {};
 

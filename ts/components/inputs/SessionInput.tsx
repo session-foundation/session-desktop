@@ -503,6 +503,7 @@ export const SimpleSessionTextarea = (
               }
               if (e.key === 'Enter') {
                 e.preventDefault();
+                e.stopPropagation();
                 props?.onEnterPressed();
               }
             }}

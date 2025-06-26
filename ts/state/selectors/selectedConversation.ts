@@ -262,7 +262,7 @@ export function useSelectedIsBlocked() {
 
 export function useSelectedIsApproved() {
   return useSelector((state: StateType): boolean => {
-    return getSelectedConversation(state)?.isApproved || false;
+    return getSelectedConversation(state)?.isApproved ?? false;
   });
 }
 

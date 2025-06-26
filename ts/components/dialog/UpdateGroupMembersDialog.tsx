@@ -52,7 +52,7 @@ function useSortedListOfMembers(convoId: string) {
   const groupAdmins = useGroupAdmins(convoId);
 
   const sortedMembersNon03 = useMemo(
-    () => [...groupMembersLegacy].sort(m => (groupAdmins?.includes(m) ? -1 : 0)),
+    () => groupMembersLegacy.toSorted(m => (groupAdmins?.includes(m) ? -1 : 0)),
     [groupMembersLegacy, groupAdmins]
   );
   const sortedMembers = isV2Group ? groupMembers03Group.map(m => m.pubkeyHex) : sortedMembersNon03;

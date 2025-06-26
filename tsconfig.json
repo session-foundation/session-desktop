@@ -5,7 +5,7 @@
     "module": "commonjs", // Specify module code generation: 'none', 'commonjs', 'amd', 'system', 'umd', 'es2015', or 'ESNext'.
     "lib": [
       "dom", // Required to access `window`
-      "es2021"
+      "ES2023"
     ],
     "jsx": "react-jsx", // Specify JSX code generation: 'preserve', 'react-native', or 'react-jsx'.
     // "noEmitHelpers": false,
