@@ -5,6 +5,8 @@ const LucideIconWrapper = styled.div<{ iconColor?: string; iconSize: string }>`
   font-family: var(--font-icon);
   font-size: ${({ iconSize }) => iconSize};
   color: ${({ iconColor }) => iconColor};
+  aspect-ratio: 1;
+  align-content: center;
 `;
 
 export type LucideIconProps = {

@@ -7,6 +7,7 @@ import useTimeoutFn from 'react-use/lib/useTimeoutFn';
 
 import useMount from 'react-use/lib/useMount';
 import useThrottleFn from 'react-use/lib/useThrottleFn';
+import styled from 'styled-components';
 import { Data } from '../../data/data';
 import { ConvoHub } from '../../session/conversations';
 
@@ -61,6 +62,10 @@ import { isSesh101ReadyOutsideRedux } from '../../state/selectors/releasedFeatur
 import { searchActions } from '../../state/ducks/search';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
+const StyledContainerAvatar = styled.div`
+  padding: var(--margins-lg);
+`;
+
 const Section = (props: { type: SectionType }) => {
   const ourNumber = useSelector(getOurNumber);
   const globalUnreadMessageCount = useGlobalUnreadMessageCount();
@@ -112,13 +117,15 @@ const Section = (props: { type: SectionType }) => {
 
   if (type === SectionType.Profile) {
     return (
-      <Avatar
-        size={AvatarSize.XS}
-        onAvatarClick={handleClick}
-        pubkey={ourNumber}
-        dataTestId="leftpane-primary-avatar"
-        imageDataTestId={`img-leftpane-primary-avatar`}
-      />
+      <StyledContainerAvatar>
+        <Avatar
+          size={AvatarSize.XS}
+          onAvatarClick={handleClick}
+          pubkey={ourNumber}
+          dataTestId="leftpane-primary-avatar"
+          imageDataTestId={`img-leftpane-primary-avatar`}
+        />
+      </StyledContainerAvatar>
     );
   }
 

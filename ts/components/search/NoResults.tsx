@@ -23,10 +23,18 @@ const StyledMemberListNoContacts = styled.div`
   padding: 20px;
 `;
 
-export function NoContacts() {
+function NoneAtStart({ token }: { token: 'contactNone' | 'groupMembersNone' }) {
   return (
     <StyledMemberListNoContacts>
-      <Localizer token="contactNone" />
+      <Localizer token={token} />
     </StyledMemberListNoContacts>
   );
+}
+
+export function NoContacts() {
+  return <NoneAtStart token="contactNone" />;
+}
+
+export function NoGroupMembers() {
+  return <NoneAtStart token="groupMembersNone" />;
 }

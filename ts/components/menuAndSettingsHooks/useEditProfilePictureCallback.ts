@@ -18,7 +18,7 @@ function useEditProfilePicture({ conversationId }: { conversationId: string }) {
 
   const hasQAButtonsOn = hasClosedGroupV2QAButtons();
 
-  return isMe || ((isPublic || isGroup) && weAreAdmin && hasQAButtonsOn);
+  return isMe || ((isPublic || (isGroup && hasQAButtonsOn)) && weAreAdmin);
 }
 
 export function useEditProfilePictureCallback({ conversationId }: { conversationId: string }) {

@@ -5,7 +5,7 @@ import styled from 'styled-components';
 
 import { Dispatch } from '@reduxjs/toolkit';
 import { UserUtils } from '../../../session/utils';
-import { YourSessionIDPill, YourSessionIDSelectable } from '../../basic/YourSessionIDPill';
+import { SessionIDNonEditable, YourSessionIDPill } from '../../basic/YourSessionIDPill';
 
 import { useHotkey } from '../../../hooks/useHotkey';
 import { useOurAvatarPath, useOurConversationUsername } from '../../../hooks/useParamSelector';
@@ -334,7 +334,7 @@ export const EditProfileDialog = () => {
         >
           <YourSessionIDPill />
           <SpacerLG />
-          <YourSessionIDSelectable />
+          <SessionIDNonEditable dataTestId="your-account-id" sessionId={us} />
           <SessionSpinner loading={loading} height={'74px'} />
           {!loading ? <Spacer2XL /> : null}
           {mode === 'default' || mode === 'qr' || mode === 'lightbox' ? (

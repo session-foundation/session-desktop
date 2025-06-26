@@ -40,6 +40,7 @@ declare module 'react' {
     | 'delete-contact'
     | 'block-user'
     | 'hide-nts'
+    | 'show-nts'
     | 'copy-community-url'
     | 'leave-community'
     | 'add-admins'

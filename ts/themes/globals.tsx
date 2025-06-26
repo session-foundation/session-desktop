@@ -129,9 +129,6 @@ type ThemeGlobals = {
   '--lightbox-caption-background-color': string;
   '--lightbox-icon-stroke-color': string;
 
-  /* Avatar Border */
-  '--avatar-border-color': string;
-
   /* Message Link Preview */
   /* Also used for Images */
   /* Also used for the Media Grid Items */
@@ -273,8 +270,6 @@ export const THEME_GLOBALS: ThemeGlobals = {
   '--lightbox-background-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.8)`,
   '--lightbox-caption-background-color': 'rgba(192, 192, 192, .40)',
   '--lightbox-icon-stroke-color': 'var(--white-color)',
-
-  '--avatar-border-color': 'var(--transparent-color)',
 
   '--message-link-preview-background-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.06)`,
 

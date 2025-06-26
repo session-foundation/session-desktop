@@ -10,7 +10,7 @@ import { ReduxConversationType } from './conversations';
 import { localize } from '../../localization/localeTools';
 import { BlockedNumberController } from '../../util';
 
-export type SearchType = 'global' | 'create-group' | 'invite-contact-to';
+export type SearchType = 'global' | 'create-group' | 'invite-contact-to' | 'manage-group-members';
 
 export type SearchStateType = {
   /**

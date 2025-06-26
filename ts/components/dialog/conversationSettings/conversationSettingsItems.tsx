@@ -39,6 +39,7 @@ import {
 import { useShowAttachments } from '../../menuAndSettingsHooks/useShowAttachments';
 import { useGroupCommonNoShow } from '../../menuAndSettingsHooks/useGroupCommonNoShow';
 import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useShowConversationSettingsFor';
+import { useShowNoteToSelfCb } from '../../menuAndSettingsHooks/useShowNoteToSelf';
 
 type WithAsAdmin = { asAdmin: boolean };
 
@@ -447,6 +448,23 @@ export function HideNoteToSelfButton({ conversationId }: WithConvoId) {
       onClick={showHideNoteToSelfCb}
       dataTestId="hide-nts-menu-option"
       color="var(--danger-color)"
+    />
+  );
+}
+
+export function ShowNoteToSelfButton({ conversationId }: WithConvoId) {
+  const showShowNoteToSelfCb = useShowNoteToSelfCb({ conversationId });
+
+  if (!showShowNoteToSelfCb) {
+    return null;
+  }
+
+  return (
+    <PanelIconButton
+      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.EYE} />}
+      text={localize('showNoteToSelf').toString()}
+      onClick={showShowNoteToSelfCb}
+      dataTestId="show-nts-menu-option"
     />
   );
 }
