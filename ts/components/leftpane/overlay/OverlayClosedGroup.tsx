@@ -71,7 +71,7 @@ export const OverlayClosedGroupV2 = () => {
     dispatch(groupInfoActions.updateGroupCreationName({ name: value }));
   }
 
-  async function onEnterPressed() {
+  function onEnterPressed() {
     setGroupNameError(undefined);
     if (isCreatingGroup) {
       window?.log?.warn('Closed group creation already in progress');
@@ -140,7 +140,6 @@ export const OverlayClosedGroupV2 = () => {
           value={groupName}
           onValueChanged={onValueChanged}
           singleLine={true}
-          // eslint-disable-next-line @typescript-eslint/no-misused-promises
           onEnterPressed={onEnterPressed}
           providedError={groupNameError}
           disabled={isCreatingGroup || noContactsForClosedGroup}
