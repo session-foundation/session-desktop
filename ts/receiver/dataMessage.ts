@@ -27,6 +27,7 @@ import { toLogFormat } from '../types/attachments/Errors';
 import { Reactions } from '../util/reactions';
 import { GroupV2Receiver } from './groupv2/handleGroupV2Message';
 import { ConversationTypeEnum } from '../models/types';
+import { ed25519Str } from '../session/utils/String';
 
 function cleanAttachment(attachment: any) {
   return {
@@ -211,7 +212,7 @@ export async function handleSwarmDataMessage({
   }
 
   window?.log?.info(
-    `Handle dataMessage about convo ${convoIdToAddTheMessageTo} from user: ${convoIdOfSender}`
+    `Handle dataMessage about convo ${ed25519Str(convoIdToAddTheMessageTo)} from user: ${ed25519Str(convoIdOfSender)}`
   );
 
   // remove the prefix from the source object so this is correct for all other
