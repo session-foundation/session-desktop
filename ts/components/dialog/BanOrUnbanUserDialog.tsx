@@ -77,6 +77,8 @@ export const BanOrUnBanUserDialog = (props: {
 
   const displayName = useConversationUsername(pubkey);
 
+  const hasPubkeyOnLoad = pubkey?.length;
+
   const inputTextToDisplay =
     !!pubkey && displayName ? `${displayName} ${PubKey.shorten(pubkey)}` : undefined;
 
@@ -129,7 +131,14 @@ export const BanOrUnBanUserDialog = (props: {
             disabled={inProgress}
             dataTestId={isBan ? 'ban-user-confirm-button' : 'unban-user-confirm-button'}
           />
-          {isBan ? (
+          {/*
+           * Note: we can only ban-and-delete-all when we have a pubkey on load currently.
+           * The reason is that there is an issue (sogs side), and the server won't lookup a blindedId from a
+           * sessionID, for the delete_all endpoint specifically.
+           * When hasPubkeyOnLoad is true, the dialog was shown from a right click on the messages list,
+           * so we do have the blindedId already in this case.
+           */}
+          {isBan && hasPubkeyOnLoad ? (
             <SessionButton
               buttonType={SessionButtonType.Simple}
               buttonColor={SessionButtonColor.Danger}
