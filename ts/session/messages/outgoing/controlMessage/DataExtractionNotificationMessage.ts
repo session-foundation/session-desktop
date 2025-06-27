@@ -57,6 +57,7 @@ export const sendDataExtractionNotification = async (
     !convo ||
     !convo.isPrivate() ||
     convo.isMe() ||
+    convo.isIncomingRequest() ||
     UserUtils.isUsFromCache(attachmentSender) ||
     convo.isBlocked()
   ) {

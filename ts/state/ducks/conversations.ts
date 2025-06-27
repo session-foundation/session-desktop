@@ -636,14 +636,8 @@ const conversationsSlice = createSlice({
       ) {
         return state;
       }
-      const selected = state.conversationLookup[state.selectedConversation];
 
-      // we can open the right panel always for non private chats. and also when the chat is private, and we are friends with the other person
-      if (!selected.isPrivate || (selected.isApproved && selected.didApproveMe)) {
-        return { ...state, showRightPanel: true };
-      }
-
-      return state;
+      return { ...state, showRightPanel: true };
     },
     closeRightPanel(state: ConversationsStateType) {
       return { ...state, showRightPanel: false, messageInfoId: undefined };
