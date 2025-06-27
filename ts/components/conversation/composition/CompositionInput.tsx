@@ -5,8 +5,24 @@ import React, {
   useEffect,
   forwardRef,
   useImperativeHandle,
+  type HTMLAttributes,
+  type ClipboardEvent,
 } from 'react';
 import styled from 'styled-components';
+
+enum DATA_ATTRIBUTE {
+  NODE = 'data-con-node',
+  CHARS = 'data-con-chars',
+}
+
+export enum DATA_CON_NODE {
+  ZERO = 'zero',
+}
+
+type ConvoSpanProps = HTMLAttributes<HTMLSpanElement> & {
+  [DATA_ATTRIBUTE.NODE]: DATA_CON_NODE;
+  [DATA_ATTRIBUTE.CHARS]: number;
+};
 
 /**
  * Compute the HTML-based character index of the caret in `el`.
@@ -107,8 +123,59 @@ function replaceCaret(el: HTMLElement) {
   }
 }
 
+function ConSpan(props: ConvoSpanProps) {
+  return <span {...props} />;
+}
+
+export function ZeroWidthNode() {
+  return (
+    <ConSpan data-con-node={DATA_CON_NODE.ZERO} data-con-chars={0} contentEditable={false}>
+      {'﻿'}
+    </ConSpan>
+  );
+}
+
+function isElementNode(el: Node): boolean {
+  return el.nodeType === Node.ELEMENT_NODE;
+}
+
+function isCaratElement(el: Node) {
+  return el.nodeType === Node.TEXT_NODE && !el.nodeValue;
+}
+
+function isNoneElement(el?: Node | null) {
+  return !el || isCaratElement(el);
+}
+
+function isZeroWidthNode(el: Node | null) {
+  return el && isElementNode(el) && 'getAttribute' in el && typeof el.getAttribute === 'function'
+    ? el.getAttribute(DATA_ATTRIBUTE.NODE) === DATA_CON_NODE.ZERO
+    : false;
+}
+
+export function createInputNode(
+  type: DATA_CON_NODE,
+  chars: number | undefined,
+  childNode: ChildNode | null
+) {
+  const node = document.createElement('span');
+
+  node.setAttribute('contenteditable', 'false');
+  node.setAttribute(DATA_ATTRIBUTE.NODE, type);
+
+  if (chars !== null) {
+    node.setAttribute(DATA_ATTRIBUTE.CHARS, `${chars}`);
+  }
+
+  if (childNode !== null) {
+    node.appendChild(childNode);
+  }
+
+  return node;
+}
+
 export type ContentEditableEvent = React.SyntheticEvent<HTMLDivElement> & {
-  target: { value: string };
+  target: { value: string; caratHtmlIndex: number | null };
 };
 
 export interface CompositionInputRef {
@@ -166,6 +233,7 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
     const isMount = useRef(true);
     const lastPosition = useRef<number | null>(null);
     const lastHtmlIndex = useRef<number>(0);
+
     useImperativeHandle(
       ref,
       () => ({
@@ -280,6 +348,169 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
       }
     }, [innerRef]);
 
+    const handleChange = useCallback(() => {
+      const el = elRef.current;
+      if (!el) {
+        return false;
+      }
+
+      const readerChildren = el.childNodes;
+      // TODO: see if we can replace this with in-line .remove() calls.
+      const nodesToDelete = [];
+
+      if (readerChildren.length === 1) {
+        const lastEl = el.lastElementChild;
+        if (lastEl && lastEl?.tagName === 'BR') {
+          lastEl.remove();
+        }
+      }
+
+      for (let i = 0; i < readerChildren.length; i++) {
+        const node = readerChildren[i];
+
+        if (!node || !isZeroWidthNode(node)) {
+          continue;
+        }
+
+        const next = node.nextSibling;
+        const prev = node.previousSibling;
+
+        /**
+         * TODO: check this for accuracy, the in-line comments are more accurate and updated
+         * Note: "none" here means null or carat.
+         *
+         * If n is ZN:
+         *  - If n - 1 is none: // means it's at the start of the DOM
+         *    - If n + 1 is a ZN:
+         *      - If n + 2 is an Element:
+         *        Mark n and n + 1 for deletion.
+         *    - Else:
+         *        Mark n for deletion. (log a warning)
+         *
+         *  - If n + 1 is none: // means it's at the end of the DOM (can also be at the start)
+         *    - If n - 1 is an Element and not ZN:
+         *    Mark n and n - 1 for deletion
+         *  - Else If n + 1 is ZN:
+         *    - If n + 2 is not none:
+         *      Mark n and n + 1 for deletion.
+         *
+         *  - If n + 1 and n - 1 are not a ZN:
+         *    Mark n for deletion // log warning
+         */
+
+        // If n - 1 is none - this should mean it's at the start
+        if (isNoneElement(prev)) {
+          // NOTE: n is the first element
+          // If n + 1 is a ZN
+          if (next && isZeroWidthNode(next)) {
+            const nextNextNode = next.nextSibling;
+            // If n + 2 is none or not an Element
+            // TODO: if nextNextNode is none we know the dom is empty and can be erased (exit early)
+            if (isNoneElement(nextNextNode) || (nextNextNode && !isElementNode(nextNextNode))) {
+              // NOTE: n and n + 1 are at the start and don't have an element next
+              // Mark n and n + 1 for deletion
+              nodesToDelete.push(node, next);
+            }
+            // orphan ZN pair (no ZN sibling, delete it)
+          } else {
+            // Mark n for deletion. (log a warning)
+            nodesToDelete.push(next);
+            window.log.warn('Start node is Zero width with no next sibling, deleting!');
+          }
+          // If n + 1 is none (to get here n - 1 has to exist and be anything, so this pair is not at the start)
+        } else if (isNoneElement(next)) {
+          // If n - 1 is an Element and not ZN
+          if (prev && isElementNode(prev) && !isZeroWidthNode(prev)) {
+            // NOTE: this means the ZN forward sibling has been deleted, so we need to delete this node and the element it is attached to
+            // Mark n and n - 1 for deletion
+            nodesToDelete.push(prev, prev.previousSibling);
+          }
+          // If n + 1 is ZN
+        } else if (next && isZeroWidthNode(next)) {
+          const nextNextNode = next.nextSibling;
+          // If n + 2 is none
+          if (isNoneElement(nextNextNode)) {
+            // Mark n and n + 1 for deletion
+            // TODO: commented out because i think this is a bug, check
+            // nodesToDelete.push(node, next);
+          }
+        }
+
+        // If n + 1 and n - 1 are not ZN
+        if ((!prev || !isZeroWidthNode(prev)) && (!next || !isZeroWidthNode(next))) {
+          nodesToDelete.push(node);
+          window.log.warn('Zero width node marked for deletion with no siblings!');
+        }
+      }
+
+      for (let i = 0; i < nodesToDelete.length; i++) {
+        const node = nodesToDelete[i];
+        if (node) {
+          node.remove();
+        }
+      }
+
+      const lastChild = el.lastChild;
+
+      /**
+       * If the last node is an element. Because the carat counts as a valueless Node.TEXT_NODE, it
+       * is also possible for the last element (in this check) to be the carat.
+       * If the last node is not an element we need to check if the last element looks like the carat
+       * and that its previous sibling is an element.
+       */
+      const appendZeroWidth =
+        lastChild &&
+        ((isElementNode(lastChild) && !isZeroWidthNode(lastChild) && !isCaratElement(lastChild)) ||
+          (isCaratElement(lastChild) &&
+            lastChild.previousSibling &&
+            isElementNode(lastChild.previousSibling) &&
+            !isZeroWidthNode(lastChild)));
+
+      if (appendZeroWidth) {
+        const textNode = document.createTextNode('﻿');
+        const node = createInputNode(DATA_CON_NODE.ZERO, 0, textNode);
+        el.appendChild(node);
+        el.appendChild(node.cloneNode(true));
+      }
+
+      /**
+       * If the first node is an element we need to prepend a zero width element.
+       */
+      const firstChild = el.firstChild;
+
+      const prependZeroWidth =
+        firstChild &&
+        isElementNode(firstChild) &&
+        !isNoneElement(firstChild) &&
+        !isZeroWidthNode(firstChild);
+
+      if (prependZeroWidth) {
+        const textNode = document.createTextNode('﻿');
+        const node = createInputNode(DATA_CON_NODE.ZERO, 0, textNode);
+        const nodeClone = node.cloneNode(true);
+        el.prepend(node, nodeClone);
+      }
+
+      const renderedHtml = el.innerHTML;
+
+      let idx = getHtmlIndexFromSelection(el);
+
+      if (idx > renderedHtml.length) {
+        window.log.warn(
+          'Input index is greater than the length! Setting the index to the end of the input'
+        );
+        idx = renderedHtml.length;
+      }
+
+      if (renderedHtml !== lastHtml.current) {
+        lastHtml.current = renderedHtml;
+        lastHtmlIndex.current = idx;
+        setCaretAtHtmlIndex(el, idx);
+        return true;
+      }
+      return false;
+    }, []);
+
     const emitChange = useCallback(
       (e: Omit<ContentEditableEvent, 'target'>) => {
         const el = elRef.current;
@@ -287,41 +518,58 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
           return;
         }
 
-        const currentHtml = el.innerHTML;
-
-        /**
-         * After first edit the input html will minimally contain only a br tag, so even if the user deletes
-         * everything the html will just be a single br tag. If the value is just one br tag we want to remove
-         * it so the input is empty and the placeholder appears.
-         */
-        const cleanHtml = currentHtml === '<br>' ? '' : currentHtml;
-
-        if (cleanHtml !== lastHtml.current) {
-          // TODO: clean up this type assertion
-          onChange({ ...e, target: { value: cleanHtml } } as ContentEditableEvent);
-          lastHtml.current = cleanHtml;
-        }
+        const caratHtmlIndex = lastHtmlIndex.current;
+        const value = lastHtml.current;
+        // TODO: clean up this type assertion
+        onChange({ ...e, target: { value, caratHtmlIndex } } as ContentEditableEvent);
       },
       [onChange]
     );
 
+    const onInput = useCallback(
+      (e: Omit<ContentEditableEvent, 'target'>) => {
+        const hasChanged = handleChange();
+        if (hasChanged) {
+          emitChange(e);
+        }
+      },
+      [emitChange, handleChange]
+    );
+
+    const onCopy = useCallback((e: ClipboardEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      const selection = window.getSelection();
+      const selectedText = selection?.toString() ?? '';
+      const cleanedContent = selectedText.replaceAll('﻿', '');
+      e.clipboardData.setData('text/plain', cleanedContent);
+    }, []);
+
     // Update DOM on html change
     useLayoutEffect(() => {
+      /**
+       * After first edit the input html will minimally contain only a br tag, so even if the user deletes
+       * everything the html will just be a single br tag. If the value is just one br tag we want to remove
+       * it so the input is empty and the placeholder appears.
+       */
       const el = elRef.current;
       if (!el) {
         return;
       }
 
+      const normalizedHtml = normalizeHtml(html);
+      const normalizedCurrentHtml = normalizeHtml(el.innerHTML);
+
       if (isMount.current) {
         el.innerHTML = html;
         lastHtml.current = html;
         isMount.current = false;
-      } else if (normalizeHtml(html) !== normalizeHtml(el.innerHTML)) {
+      } else if (normalizedHtml !== normalizedCurrentHtml) {
         el.innerHTML = html;
         lastHtml.current = html;
+        handleChange();
         replaceCaret(el);
       }
-    }, [html]);
+    }, [handleChange, html]);
 
     return (
       <div
@@ -329,13 +577,17 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
         ref={elRef}
         // We don't want rich html editing
         contentEditable={disabled ? false : 'plaintext-only'}
+        role="textbox"
+        spellCheck={true}
         aria-disabled={disabled}
+        aria-multiline={true}
         suppressContentEditableWarning
         className={className}
         style={style}
-        onInput={emitChange}
-        onKeyUp={onKeyUp || emitChange}
-        onKeyDown={onKeyDown || emitChange}
+        onInput={onInput}
+        onKeyUp={onKeyUp}
+        onKeyDown={onKeyDown}
+        onCopy={onCopy}
       >
         {children}
       </div>
@@ -368,6 +620,12 @@ const CompositionInput = styled(UnstyledCompositionInput)<{
   scrollbar-gutter: stable;
   outline: none;
   border: none;
+  text-rendering: optimizeLegibility;
+
+  user-select: text;
+  * {
+    user-select: text;
+  }
 
   &:empty:before {
     content: attr(placeholder);

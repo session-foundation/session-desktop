@@ -36,10 +36,12 @@ import { use05GroupMembers } from '../../../hooks/useParamSelector';
 import CompositionInput, {
   type CompositionInputRef,
   type ContentEditableEvent,
+  ZeroWidthNode,
 } from './CompositionInput';
 import { SessionPopoverContent } from '../../SessionPopover';
 import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_constants';
 import { Mention } from '../AddMentions';
+import { useDebugInputCommands } from '../../dialog/debug/hooks/useDebugInputCommands';
 
 type Props = {
   draft: string;
@@ -164,7 +166,11 @@ function getMentionDetails(
 }
 
 function createUserMentionHtml({ id, display }: SessionSuggestionDataItem) {
-  return renderToString(<Mention dataUserId={id} key={id} text={display} allowSelecting={true} />);
+  return `${renderToString(
+    <Mention dataUserId={id} key={id} text={display} inComposableElement={true}>
+      <ZeroWidthNode />
+    </Mention>
+  )} `;
 }
 
 export const CompositionTextArea = (props: Props) => {
@@ -185,6 +191,8 @@ export const CompositionTextArea = (props: Props) => {
   const membersInThisChat = useMembersInThisChat();
 
   const selectedMentionRef = useRef<HTMLLIElement | null>(null);
+
+  useDebugInputCommands({ value: draft, setValue: setDraft });
 
   const handleMentionCleanup = () => {
     setMention(null);
@@ -238,12 +246,18 @@ export const CompositionTextArea = (props: Props) => {
       const selected = results[index];
       const val = mention.prefix === PREFIX.EMOJI ? selected.id : createUserMentionHtml(selected);
 
+      const searchInput = mention.prefix + mention.content;
+      if (inputRef.current?.getVisibleText() === searchInput) {
+        setDraft(val);
+        handleMentionCleanup();
+        return;
+      }
+
       /**
        *  We cant use the input's typeAtPosition because we need to be able to remove the search text.
        *  TODO: It would be nice to have a function on the input that handles replacement of a html index range.
        */
       const pos = inputRef.current?.getCaretIndex() ?? draft.length;
-      const searchInput = mention.prefix + mention.content;
 
       /**
        * Finds the start of the emoji search input, it returns the last occurrence of the user's
@@ -264,7 +278,7 @@ export const CompositionTextArea = (props: Props) => {
          * character counter. Without this, when a mention is selected and inserted the character
          * count does not update until another character is entered or removed by the user.
          */
-        inputRef.current?.typeAtCaret('');
+        // inputRef.current?.typeAtCaret('');
       }, 25);
       handleMentionCleanup();
     },
@@ -359,18 +373,15 @@ export const CompositionTextArea = (props: Props) => {
     }
   };
 
-  const handleMentionCheck = useCallback(
-    (content: string, htmlIndex?: number) => {
-      const pos = htmlIndex ?? inputRef.current?.getCaretIndex() ?? content.length;
-      const newMention = getMentionDetails(
-        content,
-        pos,
-        LIBSESSION_CONSTANTS.CONTACT_MAX_NAME_LENGTH
-      );
-      setMention(newMention);
-    },
-    [inputRef]
-  );
+  const handleMentionCheck = useCallback((content: string, htmlIndex?: number | null) => {
+    const pos = htmlIndex ?? content.length;
+    const newMention = getMentionDetails(
+      content,
+      pos,
+      LIBSESSION_CONSTANTS.CONTACT_MAX_NAME_LENGTH
+    );
+    setMention(newMention);
+  }, []);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLDivElement>) => {
@@ -436,7 +447,7 @@ export const CompositionTextArea = (props: Props) => {
 
       const content = e.target.value;
 
-      handleMentionCheck(content);
+      handleMentionCheck(content, e.target.caratHtmlIndex);
       setDraft(content);
       updateDraftForConversation({ conversationKey: selectedConversationKey, draft: content });
     },
