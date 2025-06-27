@@ -115,8 +115,6 @@ export const AvatarPlaceHolder = (props: Props) => {
           r={rWithoutBorder}
           fill={bgColor}
           shapeRendering="geometricPrecision"
-          stroke={'var(--avatar-border-color)'}
-          strokeWidth="1"
         />
         <text
           fontSize={fontSize}

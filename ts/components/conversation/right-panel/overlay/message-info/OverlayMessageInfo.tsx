@@ -53,6 +53,7 @@ import { PanelIconLucideIcon } from '../../../../buttons/PanelIconButton';
 import { useShowCopyAccountIdCb } from '../../../../menuAndSettingsHooks/useCopyAccountId';
 import { localize } from '../../../../../localization/localeTools';
 import { sectionActions } from '../../../../../state/ducks/section';
+import { useIsIncomingRequest } from '../../../../../hooks/useParamSelector';
 
 // NOTE we override the default max-widths when in the detail isDetailView
 const StyledMessageBody = styled.div`
@@ -272,6 +273,8 @@ export const OverlayMessageInfo = () => {
   // is always the currently selected conversation
   const convoId = useSelectedConversationKey();
 
+  const isIncomingMessageRequest = useIsIncomingRequest(convoId);
+
   const closePanel = useCallback(() => {
     dispatch(closeRightPanel());
     dispatch(sectionActions.resetRightOverlayMode());
@@ -379,7 +382,8 @@ export const OverlayMessageInfo = () => {
                 dataTestId="resend-msg-from-details"
               />
             )}
-            {hasAttachments && (
+            {/* Saving attachments sends a data extraction message so it must be disabled for message requests. */}
+            {hasAttachments && !isIncomingMessageRequest && (
               <PanelIconButton
                 text={localize('save').toString()}
                 iconElement={
@@ -399,7 +403,8 @@ export const OverlayMessageInfo = () => {
                 }}
               />
             )}
-            {isDeletable && !isLegacyGroup && (
+            {/* Deleting messages sends a "delete message" message so it must be disabled for message requests. */}
+            {isDeletable && !isLegacyGroup && !isIncomingMessageRequest && (
               <PanelIconButton
                 text={localize('delete').toString()}
                 iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.TRASH2} />}

@@ -103,6 +103,8 @@ export const NotificationsPage = () => {
     return null;
   }
 
+  const noChanges = notificationSelected === notification;
+
   return (
     <StyledScrollContainer style={{ position: 'relative' }}>
       <Flex $container={true} $flexDirection={'column'} $alignItems={'center'}>
@@ -131,7 +133,11 @@ export const NotificationsPage = () => {
         </PanelButtonGroup>
         <ButtonSpacer />
         <StyledButtonContainer>
-          <SessionButton onClick={handleSetNotifications} dataTestId={'notifications-set-button'}>
+          <SessionButton
+            onClick={handleSetNotifications}
+            dataTestId={'notifications-set-button'}
+            disabled={noChanges}
+          >
             {localize('set')}
           </SessionButton>
         </StyledButtonContainer>

@@ -30,6 +30,7 @@ import type { SessionSuggestionDataItem } from '../../components/conversation/co
 import { Storage } from '../../util/storage';
 import { SettingsKey } from '../../data/settings-key';
 import { sectionActions } from './section';
+import { ed25519Str } from '../../session/utils/String';
 
 export type MessageModelPropsWithoutConvoProps = {
   propsForMessage: PropsForMessageWithoutConvoProps;
@@ -339,7 +340,9 @@ async function getMessages({
     return m.getMessageModelProps();
   });
   const time = Date.now() - beforeTimestamp;
-  window?.log?.info(`Loading ${messagesProps.length} messages took ${time}ms to load.`);
+  window?.log?.info(
+    `Loading ${messagesProps.length} messages took ${time}ms to load for convo ${ed25519Str(conversationKey)}.`
+  );
 
   const quotesProps: QuoteLookupType = {};
 
@@ -633,14 +636,8 @@ const conversationsSlice = createSlice({
       ) {
         return state;
       }
-      const selected = state.conversationLookup[state.selectedConversation];
 
-      // we can open the right panel always for non private chats. and also when the chat is private, and we are friends with the other person
-      if (!selected.isPrivate || (selected.isApproved && selected.didApproveMe)) {
-        return { ...state, showRightPanel: true };
-      }
-
-      return state;
+      return { ...state, showRightPanel: true };
     },
     closeRightPanel(state: ConversationsStateType) {
       return { ...state, showRightPanel: false, messageInfoId: undefined };

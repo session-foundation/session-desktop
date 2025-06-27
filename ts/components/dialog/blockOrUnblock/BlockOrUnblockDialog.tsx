@@ -5,10 +5,7 @@ import { useCallback } from 'react';
 import useAsyncFn from 'react-use/lib/useAsyncFn';
 import { useHotkey } from '../../../hooks/useHotkey';
 import { useConversationsNicknameRealNameOrShortenPubkey } from '../../../hooks/useParamSelector';
-import {
-  updateBlockOrUnblockModal,
-  updateConversationSettingsModal,
-} from '../../../state/ducks/modalDialog';
+import { updateBlockOrUnblockModal } from '../../../state/ducks/modalDialog';
 import { BlockedNumberController } from '../../../util';
 import { SessionWrapperModal } from '../../SessionWrapperModal';
 import { Flex } from '../../basic/Flex';
@@ -80,9 +77,8 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
         // eslint-disable-next-line no-await-in-loop
         await BlockedNumberController.block(pubkey);
       }
-      // close the conversation settings dialog if it was shown (only for the 'block' action)
-      dispatch(updateConversationSettingsModal(null));
-      // also reset the selected convo if it was the one we blocked
+      // Note we don't want to close the CS modal if it was shown, now.
+      // reset the selected convo if it was the one we blocked
       if (firstPubkeyBlocked && selectedConversation === firstPubkeyBlocked) {
         dispatch(resetConversationExternal());
       }

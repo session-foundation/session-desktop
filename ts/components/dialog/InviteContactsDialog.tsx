@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import useKey from 'react-use/lib/useKey';
+import { clone } from 'lodash';
 
 import { PubkeyType } from 'libsession_util_nodejs';
 import { useDispatch } from 'react-redux';
@@ -25,6 +26,8 @@ import { SessionSearchInput } from '../SessionSearchInput';
 import { NoResultsForSearch } from '../search/NoResults';
 import { SessionWrapperModal2 } from '../SessionWrapperModal2';
 import { useHotkey } from '../../hooks/useHotkey';
+import { searchActions } from '../../state/ducks/search';
+import { ToastUtils } from '../../session/utils';
 
 type Props = {
   conversationId: string;
@@ -44,6 +47,10 @@ async function submitForOpenGroup(convoId: string, pubkeys: Array<string>) {
       url: roomDetails?.fullUrlWithPubkey,
       name: convo.getNicknameOrRealUsernameOrPlaceholder(),
     };
+    ToastUtils.pushToastInfo(
+      'sendingInvites',
+      localize('groupInviteSending').withArgs({ count: pubkeys.length }).toString()
+    );
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     pubkeys.forEach(async pubkeyStr => {
       const privateConvo = await ConvoHub.use().getOrCreateAndWait(
@@ -123,6 +130,7 @@ const InviteContactsDialogInner = (props: Props) => {
 
   const closeDialog = () => {
     dispatch(updateInviteContactModal(null));
+    dispatch(searchActions.clearSearch());
   };
 
   const onClickOK = () => {
@@ -131,7 +139,8 @@ const InviteContactsDialogInner = (props: Props) => {
       return;
     }
     if (isPublic) {
-      void submitForOpenGroup(conversationId, selectedContacts);
+      void submitForOpenGroup(conversationId, clone(selectedContacts));
+      empty();
       return;
     }
     if (!PubKey.is03Pubkey(conversationId)) {

@@ -21,7 +21,6 @@ import { SessionSearchInput } from '../../SessionSearchInput';
 import { Flex } from '../../basic/Flex';
 import { SessionToggle } from '../../basic/SessionToggle';
 import { SpacerLG, SpacerMD } from '../../basic/Text';
-import { SessionInput } from '../../inputs';
 import { SessionSpinner } from '../../loading';
 import { StyledLeftPaneOverlay } from './OverlayMessage';
 import { hasClosedGroupV2QAButtons } from '../../../shared/env_vars';
@@ -30,6 +29,8 @@ import { PubKey } from '../../../session/types';
 import { searchActions } from '../../../state/ducks/search';
 import { useContactsToInviteTo } from '../../../hooks/useContactsToInviteToGroup';
 import { NoContacts, NoResultsForSearch } from '../../search/NoResults';
+import { SimpleSessionTextarea } from '../../inputs/SessionInput';
+import { localize } from '../../../localization/localeTools';
 
 const StyledGroupMemberListContainer = styled.div`
   display: flex;
@@ -70,7 +71,7 @@ export const OverlayClosedGroupV2 = () => {
     dispatch(groupInfoActions.updateGroupCreationName({ name: value }));
   }
 
-  async function onEnterPressed() {
+  function onEnterPressed() {
     setGroupNameError(undefined);
     if (isCreatingGroup) {
       window?.log?.warn('Closed group creation already in progress');
@@ -79,11 +80,11 @@ export const OverlayClosedGroupV2 = () => {
 
     // Validate groupName and groupMembers length
     if (groupName.length === 0) {
-      ToastUtils.pushToastError('invalidGroupName', window.i18n('groupNameEnterPlease'));
+      ToastUtils.pushToastError('invalidGroupName', localize('groupNameEnterPlease').toString());
       return;
     }
     if (groupName.length > LIBSESSION_CONSTANTS.BASE_GROUP_MAX_NAME_LENGTH) {
-      setGroupNameError(window.i18n('groupNameEnterShorter'));
+      setGroupNameError(localize('groupNameEnterShorter').toString());
       return;
     }
 
@@ -91,11 +92,14 @@ export const OverlayClosedGroupV2 = () => {
     // the same is valid with groups count < 1
 
     if (selectedMemberIds.length < 1) {
-      ToastUtils.pushToastError('pickClosedGroupMember', window.i18n('groupCreateErrorNoMembers'));
+      ToastUtils.pushToastError(
+        'pickClosedGroupMember',
+        localize('groupCreateErrorNoMembers').toString()
+      );
       return;
     }
     if (selectedMemberIds.length >= VALIDATION.CLOSED_GROUP_SIZE_LIMIT) {
-      ToastUtils.pushToastError('closedGroupMaxSize', window.i18n('groupAddMemberMaximum'));
+      ToastUtils.pushToastError('closedGroupMaxSize', localize('groupAddMemberMaximum').toString());
       return;
     }
     // trigger the add through redux.
@@ -129,22 +133,20 @@ export const OverlayClosedGroupV2 = () => {
         $alignItems="center"
         padding={'var(--margins-md)'}
       >
-        <SessionInput
+        <SimpleSessionTextarea
+          // not monospaced. This is a plain text input for a group name
           autoFocus={true}
-          type="text"
-          placeholder={window.i18n('groupNameEnter')}
+          placeholder={localize('groupNameEnter').toString()}
           value={groupName}
           onValueChanged={onValueChanged}
+          singleLine={true}
           onEnterPressed={onEnterPressed}
-          error={groupNameError}
-          loading={isCreatingGroup}
+          providedError={groupNameError}
+          disabled={isCreatingGroup || noContactsForClosedGroup}
           maxLength={LIBSESSION_CONSTANTS.BASE_GROUP_MAX_NAME_LENGTH}
           textSize="md"
-          centerText={true}
-          monospaced={true}
-          isTextArea={true}
           inputDataTestId="new-closed-group-name"
-          editable={!noContactsForClosedGroup && !isCreatingGroup}
+          errorDataTestId="error-message"
         />
         <SpacerMD />
         {hasClosedGroupV2QAButtons() && (
@@ -204,7 +206,7 @@ export const OverlayClosedGroupV2 = () => {
       <SpacerLG style={{ flexShrink: 0 }} />
       <Flex $container={true} width={'100%'} $flexDirection="column" padding={'var(--margins-md)'}>
         <SessionButton
-          text={window.i18n('create')}
+          text={localize('create').toString()}
           disabled={disableCreateButton}
           onClick={onEnterPressed}
           dataTestId="create-group-button"

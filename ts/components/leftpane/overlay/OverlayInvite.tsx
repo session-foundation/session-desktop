@@ -9,11 +9,10 @@ import { SpacerLG, SpacerMD, SpacerSM } from '../../basic/Text';
 import { HelpDeskButton } from '../../buttons';
 import { CopyToClipboardButton } from '../../buttons/CopyToClipboardButton';
 import { SessionIcon } from '../../icon';
-import { SessionInput } from '../../inputs';
 import { StyledLeftPaneOverlay } from './OverlayMessage';
 import { SessionButtonColor } from '../../basic/SessionButton';
-import { localize } from '../../../localization/localeTools';
 import { sectionActions } from '../../../state/ducks/section';
+import { SessionIDNonEditable } from '../../basic/YourSessionIDPill';
 
 const StyledHeadingContainer = styled(Flex)`
   .session-icon-button {
@@ -77,16 +76,7 @@ export const OverlayInvite = () => {
       {!idCopied ? (
         <>
           <Flex $container={true} width={'100%'} $justifyContent="center" $alignItems="center">
-            <SessionInput
-              type="text"
-              value={ourSessionID}
-              editable={false}
-              centerText={true}
-              isTextArea={true}
-              padding={'var(--margins-xl) var(--margins-sm)'}
-              ariaLabel={localize('accountId').toString()}
-              inputDataTestId="your-account-id"
-            />
+            <SessionIDNonEditable dataTestId="your-account-id" sessionId={ourSessionID} />
           </Flex>
           <SpacerMD />
           <StyledDescription>{window.i18n('accountIdCopyDescription')}</StyledDescription>

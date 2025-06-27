@@ -158,6 +158,19 @@ describe('libsession_metagroup', () => {
       metaGroupWrapper.infoSet(info);
       expect(metaGroupWrapper.infoGet().description).to.be.deep.eq(expected);
     });
+
+    it('can set and clear group description', () => {
+      const expected = 'group description <set>';
+      expect(metaGroupWrapper.infoGet().description).to.be.deep.eq('');
+      const info = metaGroupWrapper.infoGet();
+      info.description = expected;
+      metaGroupWrapper.infoSet(info);
+      expect(metaGroupWrapper.infoGet().description).to.be.deep.eq(expected);
+      const info2 = metaGroupWrapper.infoGet();
+      info2.description = '';
+      metaGroupWrapper.infoSet(info2);
+      expect(metaGroupWrapper.infoGet().description).to.be.deep.eq('');
+    });
   });
 
   describe('members', () => {
