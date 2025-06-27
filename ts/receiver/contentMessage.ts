@@ -386,7 +386,11 @@ export async function innerHandleSwarmContentMessage({
     window.log.info('innerHandleSwarmContentMessage');
 
     const content = SignalService.Content.decode(new Uint8Array(contentDecrypted));
-    if (!shouldProcessContentMessage(envelope, content, false)) {
+    // This function gets called with an inbox content from a community. When that's the case,
+    // the messageHash is empty.
+    // `shouldProcessContentMessage` is a lot less strict in terms of timestamps for community messages, and needs to be.
+    // Not having this isCommunity flag set to true would make any incoming message from a blinded message request be dropped.
+    if (!shouldProcessContentMessage(envelope, content, !messageHash)) {
       window.log.info(
         `innerHandleSwarmContentMessage: dropping invalid content message ${envelope.timestamp}`
       );
