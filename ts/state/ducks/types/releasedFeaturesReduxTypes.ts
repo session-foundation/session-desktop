@@ -11,8 +11,9 @@ export type SessionFeatureFlags = {
   useSESH101: boolean;
   useAlwaysShowRemainingChars: boolean;
   useShowPopoverAnchors: boolean;
-  // useProAvailable: boolean;
-  // useMockUserHasPro: boolean;
+  useDebugInputCommands: boolean;
+  useProAvailable: boolean;
+  useMockUserHasPro: boolean;
 };
 
 export type SessionFeatureFlagKeys = RecursiveKeys<SessionFeatureFlags>;

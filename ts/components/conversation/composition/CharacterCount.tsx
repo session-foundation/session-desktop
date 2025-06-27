@@ -4,12 +4,9 @@ import { Constants } from '../../../session';
 import { Localizer } from '../../basic/Localizer';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { SessionTooltip } from '../../SessionTooltip';
-// TODO: uncomment with pro
-// import { StyledCTA } from '../../cta/StyledCTA';
-// import { Localizer } from '../../basic/Localizer';
-// import { LOCALE_DEFAULTS } from '../../../localization/constants';
 // import { SessionProInfoVariant, showSessionProInfoDialog } from '../../dialog/SessionProInfoModal';
-// import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { SessionIcon } from '../../icon';
+import { StyledCTA } from '../../basic/StyledCTA';
 
 export type CharacterCountProps = {
   count: number;
@@ -18,6 +15,7 @@ export type CharacterCountProps = {
 const CHARACTER_SHOW_REMAINING_BUFFER = 200;
 
 const StyledCharacterCountContainer = styled.div`
+  font-size: var(--font-size-sm);
   display: flex;
   justify-items: end;
   align-items: end;
@@ -25,7 +23,7 @@ const StyledCharacterCountContainer = styled.div`
   gap: var(--margins-xs);
   position: absolute;
   top: var(--margins-sm);
-  inset-inline-end: var(--margins-lg);
+  inset-inline-end: var(--margins-md);
 `;
 
 const StyledRemainingNumber = styled.span<{ pastLimit: boolean }>`
@@ -34,41 +32,40 @@ const StyledRemainingNumber = styled.span<{ pastLimit: boolean }>`
 
 export function CharacterCount({ count }: CharacterCountProps) {
   const alwaysShowFlag = getFeatureFlag('useAlwaysShowRemainingChars');
-  // TODO: implement with pro
   // const dispatch = useDispatch();
-  // const isProAvailable = getFeatureFlag('useProAvailable');
-  // const mockHasPro = getFeatureFlag('useMockUserHasPro');
+  const isProAvailable = getFeatureFlag('useProAvailable');
+  const mockHasPro = getFeatureFlag('useMockUserHasPro');
 
   // TODO: get pro status from store once available
-  // const hasPro = mockHasPro;
-  // const charLimit = hasPro
-  //   ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
-  //   : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
-  const charLimit = Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT;
+  const hasPro = mockHasPro;
+  const charLimit = hasPro
+    ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
+    : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
 
   const remaining = charLimit - count;
   const pastLimit = remaining < 0;
 
-  // TODO: implement with pro
   // const handleClick = () => {
-  //   const variant = hasPro
-  //     ? SessionProInfoVariant.MESSAGE_TOO_LONG
-  //     : SessionProInfoVariant.MESSAGE_TOO_LONG_CTA;
-  //
-  //   showSessionProInfoDialog(
-  //     isProAvailable ? variant : SessionProInfoVariant.MESSAGE_TOO_LONG,
-  //     dispatch
-  //   );
+    // if (isProAvailable && !hasPro) {
+      // showSessionProInfoDialog(SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT, dispatch);
+    // }
   // };
 
   return alwaysShowFlag || remaining <= CHARACTER_SHOW_REMAINING_BUFFER ? (
     <StyledCharacterCountContainer>
-      {/* TODO: implement with pro */}
-      {/* {isProAvailable && !hasPro ? ( */}
-      {/*  <StyledCTA onClick={handleClick}> */}
-      {/*    <Localizer token="ctaMessageTooLong" /> */}
-      {/*  </StyledCTA> */}
-      {/* ) : null} */}
+      {isProAvailable && !hasPro ? (
+        <StyledCTA>
+          Send more with{' '}
+          <SessionIcon
+            sizeIsWidth={true}
+            iconType={'sessionPro'}
+            iconSize={'huge'}
+            backgroundColor={'var(--primary-color)'}
+            borderRadius={'3px'}
+            iconColor={'var(--black-color)'}
+          />
+        </StyledCTA>
+      ) : null}
       <SessionTooltip
         horizontalPosition="center"
         verticalPosition="bottom"
@@ -81,9 +78,7 @@ export function CharacterCount({ count }: CharacterCountProps) {
         }
         dataTestId="tooltip-character-count"
       >
-        <div>
-          <StyledRemainingNumber pastLimit={pastLimit}>{remaining}</StyledRemainingNumber>
-        </div>
+        <StyledRemainingNumber pastLimit={pastLimit}>{remaining}</StyledRemainingNumber>
       </SessionTooltip>
     </StyledCharacterCountContainer>
   ) : null;
