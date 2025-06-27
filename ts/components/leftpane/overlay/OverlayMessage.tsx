@@ -190,7 +190,7 @@ export const OverlayMessage = () => {
               <Localizer token="messageNewDescriptionDesktop" />
             </SessionIDDescription>
             <HelpDeskButton
-              iconSize="tiny"
+              iconSize="small"
               style={{ display: 'inline-flex' }}
               iconColor="var(--text-secondary-color)"
             />

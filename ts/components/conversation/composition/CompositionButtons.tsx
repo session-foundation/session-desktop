@@ -23,7 +23,6 @@ const sharedButtonProps = {
   iconColor: 'var(--chat-buttons-icon-color)',
   iconSize: 'large' satisfies SessionIconSize as SessionIconSize,
   style: sharedButtonStyle,
-  makeSquare: true,
 };
 
 export const AddStagedAttachmentButton = (props: { onClick: () => void }) => {

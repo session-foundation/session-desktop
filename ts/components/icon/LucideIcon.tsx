@@ -8,7 +8,6 @@ const LucideIconWrapper = styled.div<{ $iconColor?: string; $iconSize: SessionIc
   font-family: var(--font-icon);
   font-size: ${props => IconSizeToPxStr[props.$iconSize]};
   color: ${props => props.$iconColor};
-  aspect-ratio: 1;
   align-content: center;
 `;
 
@@ -36,7 +35,7 @@ export const LucideIcon = ({
       $iconColor={iconColor}
       $iconSize={iconSize}
       data-testid={dataTestId}
-      style={style}
+      style={{ ...style, lineHeight: 1 }}
       aria-label={ariaLabel}
     >
       {unicode}

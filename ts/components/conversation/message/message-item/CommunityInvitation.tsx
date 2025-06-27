@@ -128,6 +128,7 @@ export const CommunityInvitation = ({ messageId }: WithMessageId) => {
                 aspectRatio: 1,
                 height: '2.5em',
                 justifyContent: 'center',
+                alignItems: 'center',
               }}
             />
           </StyledIconContainer>

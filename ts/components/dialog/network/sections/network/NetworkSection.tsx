@@ -163,15 +163,15 @@ const CurrentPriceBlock = () => {
         htmlString={true}
         style={{
           position: 'absolute',
-          top: '3px',
-          right: '3px',
+          top: '1px',
+          right: '1px',
         }}
       >
         <SessionLucideIconButton
           ariaLabel="Network price explanation tooltip"
           unicode={LUCIDE_ICONS_UNICODE.CIRCLE_HELP}
           iconColor="var(--text-primary-color)"
-          iconSize="tiny"
+          iconSize="small"
           dataTestId="tooltip"
         />
       </SessionTooltip>

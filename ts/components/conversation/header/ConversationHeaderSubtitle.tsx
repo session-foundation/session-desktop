@@ -152,12 +152,6 @@ export const ConversationHeaderSubtitle = (props: ConversationHeaderSubtitleProp
         </span>
         <CycleButton onCycle={onCycle} direction={1} cannotCycle={cannotCycle} />
       </Flex>
-      <SubtitleDotMenu
-        id={'conversation-header-subtitle-dots'}
-        selectedOptionIndex={subtitlesArray.indexOf(currentSubtitle)}
-        optionsCount={subtitlesArray.length}
-        style={{ display: subtitlesArray.length < 2 ? 'none' : undefined, margin: '8px 0' }}
-      />
     </StyledSubtitleContainer>
   );
 };

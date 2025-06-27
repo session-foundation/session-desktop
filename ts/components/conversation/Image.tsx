@@ -11,8 +11,7 @@ import { useEncryptedFileFetch } from '../../hooks/useEncryptedFileFetch';
 import { useMessageIdFromContext } from '../../contexts/MessageIdContext';
 import { useMessageDirection, useMessageSelected } from '../../state/selectors';
 import { PlayButtonCenteredAbsolute } from '../buttons/PlayButton';
-import { SessionLucideIconButton } from '../icon/SessionIconButton';
-import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { StagedAttachmentsCloseButton } from './StagedAttachementsCloseButton';
 
 type Props = {
   alt: string;
@@ -184,18 +183,9 @@ export const Image = (props: Props) => {
         softCorners={softCorners}
       />
       {closeButton ? (
-        <SessionLucideIconButton
-          iconSize="huge"
-          iconColor="var(--black-color)"
-          unicode={LUCIDE_ICONS_UNICODE.X}
+        <StagedAttachmentsCloseButton
           onClick={() => {
             onClickClose?.(attachment);
-          }}
-          style={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            zIndex: 1,
           }}
         />
       ) : null}

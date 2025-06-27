@@ -26,11 +26,9 @@ export const SessionScrollButton = (props: { onClickScrollBottom: () => void }) 
           iconSize={'large'}
           onClick={props.onClickScrollBottom}
           dataTestId="scroll-to-bottom-button"
-          makeSquare={true}
+          backgroundColor="var(--message-bubbles-received-background-color)"
           style={{
-            backgroundColor: 'var(--message-bubbles-received-background-color)',
             boxShadow: 'var(--scroll-button-shadow)',
-            borderRadius: '50%',
           }}
         >
           {Boolean(unreadCount) && <SessionUnreadCount count={unreadCount} />}

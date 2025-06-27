@@ -22,11 +22,7 @@ export const PlayButtonCenteredAbsolute = ({ iconSize }: WithIconSize) => {
         unicode={LUCIDE_ICONS_UNICODE.PLAY}
         iconSize={iconSize}
         iconColor="var(--chat-buttons-icon-color)"
-        makeSquare={true}
-        style={{
-          backgroundColor: 'var(--chat-buttons-background-color)',
-          borderRadius: '50%',
-        }}
+        backgroundColor="var(--chat-buttons-background-color)"
       />
     </PlayButtonCentered>
   );

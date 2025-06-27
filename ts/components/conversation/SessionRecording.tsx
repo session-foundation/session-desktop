@@ -48,7 +48,6 @@ const sharedButtonProps = {
   iconColor: 'var(--chat-buttons-icon-color)',
   iconSize: 'large' satisfies SessionIconSize as SessionIconSize,
   style: sharedButtonStyle,
-  makeSquare: true,
 };
 
 const pulseColorAnimation = keyframes`
@@ -193,7 +192,6 @@ export class SessionRecording extends Component<Props, State> {
                 unicode={LUCIDE_ICONS_UNICODE.SQUARE}
                 onClick={actionPauseFn}
                 iconSize={'large'}
-                makeSquare={true}
                 dataTestId="end-voice-message"
               />
             )}

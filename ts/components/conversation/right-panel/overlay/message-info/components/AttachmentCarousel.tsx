@@ -38,7 +38,6 @@ const FullscreenButton = (props: { onClick: () => void; style?: CSSProperties })
         iconColor={'var(--button-icon-stroke-hover-color)'}
         unicode={LUCIDE_ICONS_UNICODE.MAXIMIZE}
         onClick={props.onClick}
-        makeSquare={true}
       />
     </StyledFullscreenButton>
   );

@@ -107,7 +107,7 @@ export const MessageRequestsBanner = (props: { handleOnClick: () => any }) => {
         <StyledGridContainer>
           <LucideIcon
             unicode={LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE_WARNING}
-            iconSize="large"
+            iconSize="medium"
             iconColor="var(--black-color)"
           />
         </StyledGridContainer>

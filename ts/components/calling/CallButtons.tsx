@@ -288,9 +288,12 @@ export const HangUpButton = ({ isFullScreen }: { isFullScreen: boolean }) => {
         onClick={handleEndCall}
         margin="10px"
         dataTestId="end-call"
-        makeSquare={true}
+        backgroundColor="var(--danger-color)"
         style={{
-          backgroundColor: 'var(--danger-color)',
+          width: '60px',
+          height: '60px',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
       />
     </StyledCallActionButton>

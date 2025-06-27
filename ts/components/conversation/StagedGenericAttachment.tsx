@@ -1,6 +1,5 @@
 import { AttachmentType, getExtensionForDisplay } from '../../types/Attachment';
-import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
-import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { StagedAttachmentsCloseButton } from './StagedAttachementsCloseButton';
 
 type Props = {
   attachment: AttachmentType;
@@ -14,18 +13,9 @@ export function StagedGenericAttachment(props: Props) {
 
   return (
     <div className="module-staged-generic-attachment">
-      <SessionLucideIconButton
-        iconSize="huge"
-        iconColor="var(--black-color)"
-        unicode={LUCIDE_ICONS_UNICODE.X}
+      <StagedAttachmentsCloseButton
         onClick={() => {
           onClose?.(attachment);
-        }}
-        style={{
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          zIndex: 1,
         }}
       />
       <div className="module-staged-generic-attachment__icon">

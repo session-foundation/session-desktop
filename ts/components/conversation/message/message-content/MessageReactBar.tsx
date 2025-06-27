@@ -175,10 +175,7 @@ export const MessageReactBar = ({ action, additionalAction, messageId }: Props) 
           iconSize={'large'}
           unicode={LUCIDE_ICONS_UNICODE.PLUS}
           onClick={additionalAction}
-          makeSquare={true}
-          style={{
-            backgroundColor: 'var(--emoji-reaction-bar-icon-background-color)',
-          }}
+          backgroundColor="var(--emoji-reaction-bar-icon-background-color)"
         />
       </StyledMessageReactBar>
       <ExpiresInItem expirationTimestamp={expirationTimestamp} />

@@ -78,7 +78,7 @@ function IconMessageStatus({ status }: { status: LastMessageStatusType }) {
         <LucideIcon
           unicode={LUCIDE_ICONS_UNICODE.OCTAGON_ALERT}
           iconColor={'var(--danger-color)'}
-          iconSize="tiny"
+          iconSize="small"
           style={{ flexShrink: 0 }}
         />
       );
@@ -87,7 +87,7 @@ function IconMessageStatus({ status }: { status: LastMessageStatusType }) {
         <LucideIcon
           unicode={LUCIDE_ICONS_UNICODE.EYE}
           iconColor={nonErrorIconColor}
-          iconSize="tiny"
+          iconSize="small"
           style={{ flexShrink: 0 }}
         />
       );
@@ -96,7 +96,7 @@ function IconMessageStatus({ status }: { status: LastMessageStatusType }) {
         <LucideIcon
           unicode={LUCIDE_ICONS_UNICODE.CIRCLE_ELLIPSES}
           iconColor={nonErrorIconColor}
-          iconSize="tiny"
+          iconSize="small"
           style={{ flexShrink: 0 }}
         />
       );
@@ -105,7 +105,7 @@ function IconMessageStatus({ status }: { status: LastMessageStatusType }) {
         <LucideIcon
           unicode={LUCIDE_ICONS_UNICODE.CIRCLE_CHECK}
           iconColor={nonErrorIconColor}
-          iconSize="tiny"
+          iconSize="small"
           style={{ flexShrink: 0 }}
         />
       );

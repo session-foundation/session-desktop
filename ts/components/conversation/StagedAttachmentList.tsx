@@ -32,7 +32,7 @@ const StyledRail = styled.div`
   margin-top: 12px;
   margin-inline-start: 16px;
   padding-inline-end: 16px;
-  overflow-x: scroll;
+  overflow-x: auto;
   max-height: 142px;
   white-space: nowrap;
   overflow-y: hidden;
@@ -71,7 +71,7 @@ export const StagedAttachmentList = (props: Props) => {
         <div className="module-attachments__header">
           <SessionLucideIconButton
             iconSize="huge"
-            iconColor="var(--black-color)"
+            iconColor="var(--text-primary-color)"
             unicode={LUCIDE_ICONS_UNICODE.X}
             onClick={onRemoveAllStaged}
             style={{

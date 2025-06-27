@@ -101,7 +101,7 @@ const TextDetails = ({ text, textColor }: { text: string; textColor: string }) =
 };
 
 function IconNormal({ unicode }: WithLucideUnicode) {
-  return <LucideIcon iconColor={'var(--text-secondary-color)'} unicode={unicode} iconSize="tiny" />;
+  return <LucideIcon iconColor={'var(--text-secondary-color)'} unicode={unicode} iconSize="small" />;
 }
 
 function useIsExpiring(messageId: string) {
@@ -245,7 +245,7 @@ const MessageStatusError = ({ dataTestId }: Omit<Props, 'isDetailView'>) => {
       <LucideIcon
         unicode={LUCIDE_ICONS_UNICODE.OCTAGON_ALERT}
         iconColor="var(--danger-color)"
-        iconSize="tiny"
+        iconSize="small"
       />
     </MessageStatusContainer>
   );

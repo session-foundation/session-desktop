@@ -24,6 +24,7 @@ const NotificationBubbleText = styled.div`
 
 const NotificationBubbleIconContainer = styled.div`
   margin: auto 10px;
+  align-content: center;
   width: 15px;
   height: 25px;
 `;

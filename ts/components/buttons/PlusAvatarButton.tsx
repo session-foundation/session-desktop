@@ -16,14 +16,12 @@ export const PlusAvatarButton = ({
       iconColor="var(--modal-background-content-color)"
       onClick={onClick}
       dataTestId={dataTestId}
-      padding="3px 0 0 0 "
+      backgroundColor="var(--primary-color)"
       style={{
         position: 'absolute',
-        bottom: 0,
-        borderRadius: '50%',
-        backgroundColor: 'var(--primary-color)',
-        aspectRatio: '1',
+        bottom: '11%',
         insetInlineEnd: 0,
+        boxShadow: '0px 0px 3px 2px var(--border-color)',
       }}
     />
   );

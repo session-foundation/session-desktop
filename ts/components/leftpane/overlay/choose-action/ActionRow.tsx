@@ -27,7 +27,6 @@ export const StyledChooseActionTitle = styled.span`
 
 const StyledIcon = styled.div`
   width: 58px;
-  margin: var(--margins-md) var(--margins-sm);
 `;
 
 const StyledHR = styled.hr`
