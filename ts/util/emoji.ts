@@ -2,7 +2,7 @@
 /* eslint-disable no-continue */
 /* eslint-disable no-param-reassign */
 /* eslint-disable import/no-mutable-exports  */
-import { init, I18n } from 'emoji-mart';
+import { init, I18n, FrequentlyUsed } from 'emoji-mart';
 import { FixedBaseEmoji, NativeEmojiData } from '../types/Reaction';
 import { loadEmojiPanelI18n } from './i18n/emojiPanelI18n';
 
@@ -183,7 +183,7 @@ export function getFrequentlyUsedEmojis(): Array<string> {
   try {
     const data = localStorage.getItem(EmojiMartLocalStorageKey.FREQUENTLY_USED);
     if (!data) {
-      return [];
+      return FrequentlyUsed.DEFAULTS;
     }
     return Object.entries(JSON.parse(data) as Record<string, number>)
       .sort(([, a], [, b]) => b - a)

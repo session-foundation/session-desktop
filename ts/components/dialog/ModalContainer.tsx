@@ -25,6 +25,7 @@ import {
   getUpdateGroupMembersModal,
   getUpdateGroupNameModal,
   getUserDetailsModal,
+  getLocalizedPopupDialogState,
 } from '../../state/selectors/modal';
 import { LightboxGallery } from '../lightbox/LightboxGallery';
 import { BanOrUnBanUserDialog } from './BanOrUnbanUserDialog';
@@ -51,6 +52,7 @@ import { ConversationSettingsDialog } from './conversationSettings/conversationS
 import { SessionNetworkModal } from './network/SessionNetworkModal';
 import { SessionConfirm } from './SessionConfirm';
 import { SessionProInfoModal } from './SessionProInfoModal';
+import { LocalizedPopupDialog } from './LocalizedPopupDialog';
 
 export const ModalContainer = () => {
   const confirmModalState = useSelector(getConfirmModal);
@@ -73,6 +75,7 @@ export const ModalContainer = () => {
   const editProfilePictureModalState = useSelector(getEditProfilePictureModalState);
   const hideRecoveryPasswordModalState = useSelector(getHideRecoveryPasswordModalState);
   const openUrlModalState = useSelector(getOpenUrlModalState);
+  const localizedPopupDialogState = useSelector(getLocalizedPopupDialogState);
   const sessionProInfoState = useSelector(getSessionProInfoModalState);
   const lightBoxOptions = useSelector(getLightBoxOptions);
   const debugMenuModalState = useSelector(getDebugMenuModalState);
@@ -113,6 +116,7 @@ export const ModalContainer = () => {
       {hideRecoveryPasswordModalState && (
         <HideRecoveryPasswordDialog {...hideRecoveryPasswordModalState} />
       )}
+      {localizedPopupDialogState && <LocalizedPopupDialog {...localizedPopupDialogState} />}
       {lightBoxOptions && <LightboxGallery {...lightBoxOptions} />}
       {openUrlModalState && <OpenUrlModal {...openUrlModalState} />}
       {sessionProInfoState && <SessionProInfoModal {...sessionProInfoState} />}

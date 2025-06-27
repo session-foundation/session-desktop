@@ -63,6 +63,9 @@ export const getHideRecoveryPasswordModalState = (state: StateType) =>
 
 export const getOpenUrlModalState = (state: StateType) => getModal(state).openUrlModal;
 
+export const getLocalizedPopupDialogState = (state: StateType) =>
+  getModal(state).localizedPopupDialog;
+
 export const getSessionProInfoModalState = (state: StateType) =>
   getModal(state).sessionProInfoModal;
 

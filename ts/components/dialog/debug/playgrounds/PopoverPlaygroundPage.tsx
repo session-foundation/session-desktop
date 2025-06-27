@@ -4,11 +4,11 @@ import useUpdate from 'react-use/lib/useUpdate';
 import { SessionTooltip, type TooltipProps, useTriggerPosition } from '../../../SessionTooltip';
 import { FlagToggle } from '../FeatureFlags';
 import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
-import { SessionInput } from '../../../inputs';
 import { SessionHtmlRenderer } from '../../../basic/SessionHTMLRenderer';
 import { type PopoverProps, SessionPopoverContent } from '../../../SessionPopover';
 import { SessionButton } from '../../../basic/SessionButton';
 import { SpacerXS } from '../../../basic/Text';
+import { SimpleSessionInput } from '../../../inputs/SessionInput';
 
 const StyledPopoverContainer = styled.div<{ marginTop?: number; marginBottom?: number }>`
   display: grid;
@@ -146,7 +146,15 @@ export function PopoverPlaygroundPage() {
         {'You may need to move the mouse to trigger a re-render after some input changes.'}
       </span>
       <SpacerXS />
-      <SessionInput onValueChanged={setContent} value={content} placeholder="content" />
+
+      <SimpleSessionInput
+        onValueChanged={setContent}
+        value={content}
+        placeholder="content"
+        errorDataTestId="invalid-data-testid"
+        onEnterPressed={() => undefined}
+        providedError={undefined}
+      />
       <h2>Tooltip</h2>
       <h3>Controlled</h3>
       <SessionButton onClick={() => setTooltipsOpen(prev => !prev)}>
