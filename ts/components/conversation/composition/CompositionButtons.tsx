@@ -105,7 +105,7 @@ export const SendMessageButton = ({ onClick }: CompositionButtonProps) => {
     <StyledChatButtonContainer disabled={isBlocked} backgroundColor={'var(--primary-color)'}>
       <SessionIconButton
         iconType="send"
-        iconColor={'var(--chat-buttons-icon-color)'}
+        iconColor={'var(--background-primary-color)'}
         iconSize={'huge2'}
         iconRotation={90}
         borderRadius="300px"

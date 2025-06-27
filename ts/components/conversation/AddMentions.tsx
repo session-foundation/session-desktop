@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import type { ReactNode } from 'react';
 import { ConvoHub } from '../../session/conversations';
 import { isUsAnySogsFromCache } from '../../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import { PubKey } from '../../session/types';
@@ -9,14 +10,17 @@ interface MentionProps {
   key: string;
   dataUserId?: string;
   text: string;
-  allowSelecting?: boolean;
+  inComposableElement?: boolean;
+  children?: ReactNode;
 }
 
-const StyledMentionAnother = styled.span<{ allowSelecting?: boolean }>`
+const StyledMentionAnother = styled.span<{ inComposableElement?: boolean }>`
   border-radius: 4px;
   margin: 2px;
   padding: 2px;
-  user-select: ${props => (props.allowSelecting ? 'text' : 'none')};
+  user-select: ${props => (props.inComposableElement ? 'text' : 'none')};
+  cursor: ${props => (props.inComposableElement ? 'default' : 'auto')};
+  unicode-bidi: plaintext;
   font-weight: bold;
 `;
 
@@ -36,9 +40,10 @@ export const Mention = (props: MentionProps) => {
       <StyledMentionedUs
         data-user-id={props.dataUserId}
         contentEditable={false}
-        allowSelecting={props.allowSelecting}
+        inComposableElement={props.inComposableElement}
       >
         @{localize('you')}
+        {props.children}
       </StyledMentionedUs>
     );
   }
@@ -47,9 +52,10 @@ export const Mention = (props: MentionProps) => {
     <StyledMentionAnother
       data-user-id={props.dataUserId}
       contentEditable={false}
-      allowSelecting={props.allowSelecting}
+      inComposableElement={props.inComposableElement}
     >
       @{foundConvo?.getNicknameOrRealUsernameOrPlaceholder() || PubKey.shorten(props.text)}
+      {props.children}
     </StyledMentionAnother>
   );
 };
