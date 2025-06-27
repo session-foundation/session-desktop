@@ -56,9 +56,12 @@ import { HTMLDirection } from '../../../util/i18n/rtlSupport';
 import type { FixedBaseEmoji } from '../../../types/Reaction';
 import { CharacterCount } from './CharacterCount';
 import { Constants } from '../../../session';
-import { SessionProInfoVariant, showSessionProInfoDialog } from '../../dialog/SessionProInfoModal';
+// import { SessionProInfoVariant, showSessionProInfoDialog } from '../../dialog/SessionProInfoModal';
 import type { CompositionInputRef } from './CompositionInput';
 import { useShowBlockUnblock } from '../../menuAndSettingsHooks/useShowBlockUnblock';
+import { showLocalizedPopupDialog } from '../../dialog/LocalizedPopupDialog';
+import { formatNumber } from '../../../util/i18n/formatting/generics';
+import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 export interface ReplyingToMessageProps {
   convoId: string;
@@ -705,22 +708,37 @@ class CompositionBoxInner extends Component<Props, State> {
 
     // TODO: implement with pro
     // const isProAvailable = getFeatureFlag('useProAvailable');
-    // const mockHasPro = getFeatureFlag('useMockUserHasPro');
+    const mockHasPro = getFeatureFlag('useMockUserHasPro');
 
     // TODO: get pro status from store once available
-    // const hasPro = mockHasPro;
-    // const charLimit = hasPro
-    //   ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
-    //   : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
+    const hasPro = mockHasPro;
+    const charLimit = hasPro
+      ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
+      : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
+
     const text = this.getSendableText();
 
-    if (text.length > Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT) {
+    if (text.length > charLimit) {
       const dispatch = window.inboxStore?.dispatch;
       if (dispatch) {
-        // const variant = hasPro
-        //   ? SessionProInfoVariant.MESSAGE_TOO_LONG
-        //   : SessionProInfoVariant.MESSAGE_TOO_LONG_CTA;
-        showSessionProInfoDialog(SessionProInfoVariant.MESSAGE_TOO_LONG, dispatch);
+        // if (isProAvailable && !hasPro) {
+        //   showSessionProInfoDialog(SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT, dispatch);
+        // } else {
+        showLocalizedPopupDialog(
+          {
+            title: {
+              token: 'modalMessageTooLongTitle',
+            },
+            description: {
+              token: 'modalMessageTooLongDescription',
+              args: {
+                limit: formatNumber(charLimit),
+              },
+            },
+          },
+          dispatch
+        );
+        // }
       }
       return;
     }

@@ -46,9 +46,9 @@ export function CharacterCount({ count }: CharacterCountProps) {
   const pastLimit = remaining < 0;
 
   // const handleClick = () => {
-    // if (isProAvailable && !hasPro) {
-      // showSessionProInfoDialog(SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT, dispatch);
-    // }
+  // if (isProAvailable && !hasPro) {
+  // showSessionProInfoDialog(SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT, dispatch);
+  // }
   // };
 
   return alwaysShowFlag || remaining <= CHARACTER_SHOW_REMAINING_BUFFER ? (
