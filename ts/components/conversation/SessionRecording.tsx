@@ -39,15 +39,10 @@ interface StyledFlexWrapperProps {
   marginHorizontal: string;
 }
 
-const sharedButtonStyle = {
-  borderRadius: '300px',
-  backgroundColor: 'var(--chat-buttons-background-color)',
-};
-
 const sharedButtonProps = {
   iconColor: 'var(--chat-buttons-icon-color)',
   iconSize: 'large' satisfies SessionIconSize as SessionIconSize,
-  style: sharedButtonStyle,
+  backgroundColor: 'var(--chat-buttons-background-color)',
 };
 
 const pulseColorAnimation = keyframes`

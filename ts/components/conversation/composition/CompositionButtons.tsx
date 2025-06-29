@@ -14,15 +14,11 @@ const StyledChatButtonContainer = styled.div<{ disabled?: boolean }>`
   pointer-events: ${props => (props.disabled ? 'none' : 'auto')};
 `;
 
-const sharedButtonStyle = {
-  borderRadius: '300px',
-  backgroundColor: 'var(--chat-buttons-background-color)',
-};
-
 const sharedButtonProps = {
   iconColor: 'var(--chat-buttons-icon-color)',
   iconSize: 'large' satisfies SessionIconSize as SessionIconSize,
-  style: sharedButtonStyle,
+  backgroundColor: 'var(--chat-buttons-background-color)',
+  padding: 'var(--margins-sm)',
 };
 
 export const AddStagedAttachmentButton = (props: { onClick: () => void }) => {

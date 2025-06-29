@@ -256,9 +256,7 @@ const ShowInFullScreenButton = ({ isFullScreen }: { isFullScreen: boolean }) => 
     <StyledCallActionButton isFullScreen={isFullScreen}>
       <SessionLucideIconButton
         iconSize={'max'}
-        // iconPadding="20px"
         unicode={LUCIDE_ICONS_UNICODE.MAXIMIZE}
-        // borderRadius="50%"
         onClick={showInFullScreen}
         iconColor="var(--call-buttons-action-icon-color)"
         margin="10px"
