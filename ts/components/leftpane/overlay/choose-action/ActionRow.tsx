@@ -1,7 +1,8 @@
 import styled from 'styled-components';
 import { SessionDataTestId } from 'react';
 import { Flex } from '../../../basic/Flex';
-import { SessionIcon, SessionIconSize, SessionIconType } from '../../../icon';
+import { LucideIcon } from '../../../icon/LucideIcon';
+import type { WithLucideUnicode } from '../../../icon/lucide';
 
 const StyledActionRow = styled.button`
   border: none;
@@ -26,7 +27,6 @@ export const StyledChooseActionTitle = styled.span`
 
 const StyledIcon = styled.div`
   width: 58px;
-  margin: var(--margins-md) var(--margins-sm);
 `;
 
 const StyledHR = styled.hr`
@@ -47,26 +47,20 @@ export const StyledActionRowContainer = styled(Flex)`
   }
 `;
 
-type ActionRowProps = {
+type ActionRowProps = WithLucideUnicode & {
   title: string;
   ariaLabel: string;
-  iconType: SessionIconType;
-  iconSize?: number | SessionIconSize;
   onClick: () => void;
   dataTestId: SessionDataTestId;
 };
 
 export function ActionRow(props: ActionRowProps) {
-  const { title, ariaLabel, iconType, iconSize, onClick, dataTestId } = props;
+  const { title, ariaLabel, unicode, onClick, dataTestId } = props;
 
   return (
     <StyledActionRow onClick={onClick} data-testid={dataTestId} aria-label={ariaLabel}>
       <StyledIcon>
-        <SessionIcon
-          iconType={iconType}
-          iconSize={iconSize || 'large'}
-          iconColor="var(--text-primary-color)"
-        />
+        <LucideIcon unicode={unicode} iconSize={'medium'} iconColor="var(--text-primary-color)" />
       </StyledIcon>
       <Flex
         $container={true}

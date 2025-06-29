@@ -16,6 +16,8 @@ import { Image } from './Image';
 import { StagedGenericAttachment } from './StagedGenericAttachment';
 import { StagedPlaceholderAttachment } from './StagedPlaceholderAttachment';
 import { AriaLabels } from '../../util/hardcodedAriaLabels';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
 
 type Props = {
   attachments: Array<AttachmentType>;
@@ -30,7 +32,7 @@ const StyledRail = styled.div`
   margin-top: 12px;
   margin-inline-start: 16px;
   padding-inline-end: 16px;
-  overflow-x: scroll;
+  overflow-x: auto;
   max-height: 142px;
   white-space: nowrap;
   overflow-y: hidden;
@@ -67,10 +69,17 @@ export const StagedAttachmentList = (props: Props) => {
     <div className="module-attachments">
       {attachments.length > 1 ? (
         <div className="module-attachments__header">
-          <div
-            role="button"
+          <SessionLucideIconButton
+            iconSize="huge"
+            iconColor="var(--text-primary-color)"
+            unicode={LUCIDE_ICONS_UNICODE.X}
             onClick={onRemoveAllStaged}
-            className="module-attachments__close-button"
+            style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              zIndex: 1,
+            }}
           />
         </div>
       ) : null}

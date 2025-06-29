@@ -16,6 +16,7 @@ import { NotificationBubble } from './notification-bubble/NotificationBubble';
 import type { WithMessageId } from '../../../../session/types/with';
 import { useMessageGroupUpdateChange } from '../../../../state/selectors';
 import { assertUnreachable } from '../../../../types/sqlSharedTypes';
+import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 
 // This component is used to display group updates in the conversation view.
 
@@ -77,7 +78,7 @@ export const GroupUpdateMessage = ({ messageId }: WithMessageId) => {
       dataTestId="group-update-message"
       isControlMessage={true}
     >
-      <NotificationBubble iconType="users">
+      <NotificationBubble unicode={LUCIDE_ICONS_UNICODE.USERS_ROUND}>
         <Localizer {...changeProps} />
       </NotificationBubble>
     </ExpirableReadableMessage>

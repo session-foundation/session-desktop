@@ -165,3 +165,8 @@ a {
 .inbox {
   position: relative;
 }
+
+// overwrite sanitize.css default padding for buttons
+button {
+  padding: 0;
+}

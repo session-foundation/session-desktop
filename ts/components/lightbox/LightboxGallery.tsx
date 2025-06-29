@@ -42,7 +42,7 @@ export const LightboxGallery = (props: Props) => {
   });
 
   const selectedMedia = media[currentIndex];
-  const objectURL = selectedMedia?.objectURL || 'images/alert-outline.svg';
+  const objectURL = selectedMedia?.objectURL || '';
   const isDataBlob = objectURL.startsWith('data:');
 
   const firstIndex = 0;

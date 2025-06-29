@@ -4,8 +4,9 @@ import { clipboard } from 'electron';
 import { useHotkey } from '../../hooks/useHotkey';
 import { ToastUtils } from '../../session/utils';
 import { SessionButton, SessionButtonProps } from '../basic/SessionButton';
-import { SessionIconButton } from '../icon';
-import { SessionIconButtonProps } from '../icon/SessionIconButton';
+import { SessionIconButtonProps, SessionLucideIconButton } from '../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import type { SessionIconSize } from '../icon';
 
 type CopyProps = {
   copyContent?: string;
@@ -50,10 +51,15 @@ export const CopyToClipboardButton = (props: CopyToClipboardButtonProps) => {
   );
 };
 
-type CopyToClipboardIconProps = Omit<SessionIconButtonProps, 'children' | 'onClick' | 'iconType'> &
+type CopyToClipboardIconProps = Omit<
+  SessionIconButtonProps,
+  'children' | 'onClick' | 'iconType' | 'iconSize'
+> &
   CopyProps;
 
-export const CopyToClipboardIcon = (props: CopyToClipboardIconProps & { copyContent: string }) => {
+export const CopyToClipboardIcon = (
+  props: CopyToClipboardIconProps & { copyContent: string; iconSize: SessionIconSize }
+) => {
   const { copyContent, onCopyComplete, hotkey = false } = props;
 
   const onClick = () => {
@@ -68,12 +74,12 @@ export const CopyToClipboardIcon = (props: CopyToClipboardIconProps & { copyCont
   useHotkey('c', onClick, !hotkey);
 
   return (
-    <SessionIconButton
+    <SessionLucideIconButton
       aria-label={'copy to clipboard icon button'}
       padding="0"
       margin="0"
       {...props}
-      iconType={'copy'}
+      unicode={LUCIDE_ICONS_UNICODE.COPY}
       onClick={onClick}
     />
   );

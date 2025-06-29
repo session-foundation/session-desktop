@@ -7,11 +7,12 @@ import { CallManager, ToastUtils } from '../../session/utils';
 import { InputItem } from '../../session/utils/calling/CallManager';
 import { setFullScreenCall } from '../../state/ducks/call';
 import { getHasOngoingCallWithPubkey } from '../../state/selectors/call';
-import { SessionIconButton } from '../icon';
 import { DropDownAndToggleButton } from '../icon/DropDownAndToggleButton';
 import { SessionContextMenuContainer } from '../SessionContextMenuContainer';
 import { ItemWithDataTestId } from '../menu/items/MenuItemWithDataTestId';
 import { getMenuAnimation } from '../menu/MenuAnimation';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 const VideoInputMenu = ({
   triggerId,
@@ -253,11 +254,9 @@ const ShowInFullScreenButton = ({ isFullScreen }: { isFullScreen: boolean }) => 
 
   return (
     <StyledCallActionButton isFullScreen={isFullScreen}>
-      <SessionIconButton
-        iconSize={60}
-        iconPadding="20px"
-        iconType="fullscreen"
-        borderRadius="50%"
+      <SessionLucideIconButton
+        iconSize={'max'}
+        unicode={LUCIDE_ICONS_UNICODE.MAXIMIZE}
         onClick={showInFullScreen}
         iconColor="var(--call-buttons-action-icon-color)"
         margin="10px"
@@ -278,16 +277,22 @@ export const HangUpButton = ({ isFullScreen }: { isFullScreen: boolean }) => {
 
   return (
     <StyledCallActionButton isFullScreen={isFullScreen}>
-      <SessionIconButton
-        iconSize={60}
-        iconPadding="20px"
-        iconType="hangup"
-        iconColor="var(--danger-color)"
-        borderRadius="50%"
+      <SessionLucideIconButton
+        iconSize="large"
+        padding="10px"
+        unicode={LUCIDE_ICONS_UNICODE.PHONE_OFF}
+        iconColor="var(--black-color)"
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onClick={handleEndCall}
         margin="10px"
         dataTestId="end-call"
+        backgroundColor="var(--danger-color)"
+        style={{
+          width: '60px',
+          height: '60px',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
       />
     </StyledCallActionButton>
   );

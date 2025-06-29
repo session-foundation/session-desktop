@@ -5,8 +5,9 @@ import { MIME } from '../../../../../types';
 import { GoogleChrome } from '../../../../../util';
 import { QuotedAttachmentThumbnailType, QuoteProps } from './Quote';
 
-import { icons, SessionIconType } from '../../../../icon';
 import { QuoteImage } from './QuoteImage';
+import { LUCIDE_ICONS_UNICODE, type WithLucideUnicode } from '../../../../icon/lucide';
+import { LucideIcon } from '../../../../icon/LucideIcon';
 
 function getObjectUrl(thumbnail: QuotedAttachmentThumbnailType | undefined): string | undefined {
   if (thumbnail && thumbnail.objectUrl) {
@@ -50,31 +51,16 @@ const StyledQuoteIconBackground = styled.div`
   &:hover {
     background-color: var(--message-link-preview-background-color);
   }
-
-  svg {
-    width: 29px;
-    height: 29px;
-    fill: currentColor;
-  }
 `;
 
-type QuoteIconTypes = Extract<SessionIconType, 'file' | 'image' | 'play' | 'movie' | 'microphone'>;
-
-type QuoteIconProps = {
-  icon: QuoteIconTypes;
-};
-
-export const QuoteIcon = (props: QuoteIconProps) => {
-  const { icon } = props;
-  const iconProps = icons[icon];
+export const QuoteIcon = (props: WithLucideUnicode) => {
+  const { unicode } = props;
 
   return (
     <StyledQuoteIconContainer>
       <StyledQuoteIcon>
         <StyledQuoteIconBackground>
-          <svg viewBox={iconProps.viewBox}>
-            <path d={iconProps.path} />
-          </svg>
+          <LucideIcon unicode={unicode} iconSize="medium" iconColor="currentColor" />
         </StyledQuoteIconBackground>
       </StyledQuoteIcon>
     </StyledQuoteIconContainer>
@@ -106,7 +92,7 @@ export const QuoteIconContainer = (
         handleImageErrorBound={noop}
       />
     ) : (
-      <QuoteIcon icon="movie" />
+      <QuoteIcon unicode={LUCIDE_ICONS_UNICODE.CLAPERBOARD} />
     );
   }
 
@@ -119,13 +105,13 @@ export const QuoteIconContainer = (
         handleImageErrorBound={handleImageErrorBound}
       />
     ) : (
-      <QuoteIcon icon="image" />
+      <QuoteIcon unicode={LUCIDE_ICONS_UNICODE.IMAGE} />
     );
   }
 
   if (MIME.isAudio(contentType)) {
-    return <QuoteIcon icon="microphone" />;
+    return <QuoteIcon unicode={LUCIDE_ICONS_UNICODE.MIC} />;
   }
 
-  return <QuoteIcon icon="file" />;
+  return <QuoteIcon unicode={LUCIDE_ICONS_UNICODE.FILE} />;
 };

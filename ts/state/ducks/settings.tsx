@@ -4,7 +4,6 @@ import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 import { SettingsKey } from '../../data/settings-key';
 
 const SettingsBoolsKeyTrackedInRedux = [
-  SettingsKey.someDeviceOutdatedSyncing,
   SettingsKey.settingsLinkPreview,
   SettingsKey.hasBlindedMsgRequestsEnabled,
   SettingsKey.hasFollowSystemThemeEnabled,
@@ -20,7 +19,6 @@ export type SettingsState = {
 export function getSettingsInitialState() {
   return {
     settingsBools: {
-      someDeviceOutdatedSyncing: false,
       'link-preview-setting': false, // this is the value of SettingsKey.settingsLinkPreview
       hasBlindedMsgRequestsEnabled: false,
       hasFollowSystemThemeEnabled: false,
@@ -53,7 +51,6 @@ const settingsSlice = createSlice({
         payload,
       }: PayloadAction<{
         settingsLinkPreview: boolean;
-        someDeviceOutdatedSyncing: boolean;
         hasBlindedMsgRequestsEnabled: boolean;
         hasFollowSystemThemeEnabled: boolean;
         hasShiftSendEnabled: boolean;
@@ -65,13 +62,11 @@ const settingsSlice = createSlice({
         hasBlindedMsgRequestsEnabled,
         hasFollowSystemThemeEnabled,
         settingsLinkPreview,
-        someDeviceOutdatedSyncing,
         hasShiftSendEnabled,
         hideRecoveryPassword,
         showOnboardingAccountJustCreated,
       } = payload;
 
-      state.settingsBools.someDeviceOutdatedSyncing = someDeviceOutdatedSyncing;
       state.settingsBools['link-preview-setting'] = settingsLinkPreview;
       state.settingsBools.hasBlindedMsgRequestsEnabled = hasBlindedMsgRequestsEnabled;
       state.settingsBools.hasFollowSystemThemeEnabled = hasFollowSystemThemeEnabled;

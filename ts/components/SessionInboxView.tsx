@@ -34,11 +34,9 @@ import { groupInfoActions, initialGroupState } from '../state/ducks/metaGroups';
 import { makeUserGroupGetRedux } from '../state/ducks/types/groupReduxTypes';
 import { getSettingsInitialState, updateAllOnStorageReady } from '../state/ducks/settings';
 import { initialSogsRoomInfoState } from '../state/ducks/sogsRoomInfo';
-import { useHasDeviceOutdatedSyncing } from '../state/selectors/settings';
 import { SessionTheme } from '../themes/SessionTheme';
 import { Storage } from '../util/storage';
 import { UserGroupsWrapperActions } from '../webworker/workers/browser/libsession_worker_interface';
-import { NoticeBanner } from './NoticeBanner';
 import { Flex } from './basic/Flex';
 import { initialReleasedFeaturesState } from '../state/ducks/releasedFeatures';
 import { initialDebugState } from '../state/ducks/debug';
@@ -115,7 +113,6 @@ async function setupLeftPane(forceUpdateInboxComponent: () => void) {
         SettingsKey.hasBlindedMsgRequestsEnabled,
         false
       ),
-      someDeviceOutdatedSyncing: Storage.getBoolOr(SettingsKey.someDeviceOutdatedSyncing, false),
       settingsLinkPreview: Storage.getBoolOr(SettingsKey.settingsLinkPreview, false),
       hasFollowSystemThemeEnabled: Storage.getBoolOr(
         SettingsKey.hasFollowSystemThemeEnabled,
@@ -133,26 +130,6 @@ async function setupLeftPane(forceUpdateInboxComponent: () => void) {
   forceUpdateInboxComponent();
   window.getState = window.inboxStore.getState;
 }
-
-const SomeDeviceOutdatedSyncingNotice = () => {
-  const outdatedBannerShouldBeShown = useHasDeviceOutdatedSyncing();
-
-  const dismiss = () => {
-    void Storage.put(SettingsKey.someDeviceOutdatedSyncing, false);
-  };
-
-  if (!outdatedBannerShouldBeShown) {
-    return null;
-  }
-  return (
-    <NoticeBanner
-      text={window.i18n('deleteAfterGroupFirstReleaseConfigOutdated')}
-      onBannerClick={dismiss}
-      icon="exit"
-      dataTestId="some-of-your-devices-outdated-inbox"
-    />
-  );
-};
 
 export const SessionInboxView = () => {
   const update = useUpdate();
@@ -173,7 +150,6 @@ export const SessionInboxView = () => {
       <Provider store={window.inboxStore}>
         <PersistGate loading={null} persistor={persistor}>
           <SessionTheme>
-            <SomeDeviceOutdatedSyncingNotice />
             <AnimatePresence>
               <Flex $container={true} height="0" $flexShrink={100} $flexGrow={1}>
                 <StyledGutter>

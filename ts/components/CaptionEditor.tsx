@@ -2,6 +2,8 @@ import * as GoogleChrome from '../util/GoogleChrome';
 
 import { AttachmentType } from '../types/Attachment';
 import { AriaLabels } from '../util/hardcodedAriaLabels';
+import { LUCIDE_ICONS_UNICODE } from './icon/lucide';
+import { SessionLucideIconButton } from './icon/SessionIconButton';
 
 type Props = {
   attachment: AttachmentType;
@@ -48,7 +50,18 @@ export const CaptionEditor = (props: Props) => {
 
   return (
     <div role="dialog" className="module-caption-editor">
-      <div role="button" onClick={onClose} className="module-caption-editor__close-button" />
+      <SessionLucideIconButton
+        iconSize="huge"
+        iconColor="var(--white-color)"
+        unicode={LUCIDE_ICONS_UNICODE.X}
+        onClick={onClose}
+        style={{
+          position: 'absolute',
+          top: 'var(--margins-sm)',
+          right: 'var(--margins-sm)',
+          zIndex: 1,
+        }}
+      />
       <div className="module-caption-editor__media-container">
         <CaptionEditorObject {...props} />
       </div>

@@ -82,7 +82,7 @@ export const SessionSearchInput = ({ searchType }: { searchType: SearchType }) =
     return null;
   }
 
-  const iconSize = '20px';
+  const iconSize = 'medium';
 
   const placeholder = isGroupCreationSearch
     ? localize('searchContacts').toString()

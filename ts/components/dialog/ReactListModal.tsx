@@ -24,10 +24,11 @@ import { Flex } from '../basic/Flex';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { ContactName } from '../conversation/ContactName';
 import { MessageReactions } from '../conversation/message/message-content/MessageReactions';
-import { SessionIconButton } from '../icon';
 import { SessionWrapperModal } from '../SessionWrapperModal';
 import { findAndFormatContact } from '../../models/message';
 import { Localizer } from '../basic/Localizer';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
 
 const StyledReactListContainer = styled(Flex)`
   width: 376px;
@@ -160,9 +161,10 @@ const ReactionSenders = (props: ReactionSendersProps) => {
             )}
           </Flex>
           {sender === me && (
-            <SessionIconButton
-              iconType="exit"
-              iconSize="small"
+            <SessionLucideIconButton
+              unicode={LUCIDE_ICONS_UNICODE.X}
+              iconColor="var(--chat-buttons-icon-color)"
+              iconSize="medium"
               onClick={() => {
                 void handleRemoveReaction();
               }}

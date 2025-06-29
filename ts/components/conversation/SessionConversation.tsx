@@ -69,6 +69,7 @@ import {
   useSelectedIsPublic,
   useSelectedWeAreAdmin,
 } from '../../state/selectors/selectedConversation';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 const DEFAULT_JPEG_QUALITY = 0.85;
 
@@ -114,7 +115,7 @@ const GroupMarkedAsExpired = () => {
   }
   return (
     <NoticeBanner
-      text={window.i18n('groupNotUpdatedWarning')}
+      text={localize('groupNotUpdatedWarning').toString()}
       dataTestId="group-not-updated-30-days-banner"
     />
   );
@@ -671,7 +672,7 @@ function OutdatedLegacyGroupBanner() {
       onBannerClick={() => {
         showLinkVisitWarningDialog('https://getsession.org/groups', dispatch);
       }}
-      icon="externalLink"
+      unicode={LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}
       dataTestId="legacy-group-banner"
     />
   ) : null;

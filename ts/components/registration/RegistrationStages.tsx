@@ -15,11 +15,13 @@ import {
 } from '../../state/onboarding/selectors/registration';
 import { Storage } from '../../util/storage';
 import { Flex } from '../basic/Flex';
-import { SpacerSM, SpacerXL, SpacerXS } from '../basic/Text';
-import { SessionIcon, SessionIconButton } from '../icon';
+import { SpacerXL, SpacerXS } from '../basic/Text';
+import { SessionIcon } from '../icon';
 import { OnboardContainer } from './components';
 import { CreateAccount, RestoreAccount, Start } from './stages';
 import { showLinkVisitWarningDialog } from '../dialog/OpenUrlModal';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 export async function resetRegistration() {
   await Data.removeAll();
@@ -54,31 +56,15 @@ export const RegistrationStages = () => {
             <SessionIcon iconSize={140} iconType="session" iconColor="var(--text-primary-color)" />
           </div>
           <Flex $container={true} $alignItems="center">
-            <SessionIconButton
+            <SessionLucideIconButton
               ariaLabel="FAQ Link"
-              iconType="question"
+              unicode={LUCIDE_ICONS_UNICODE.CIRCLE_HELP}
               iconSize={'medium'}
-              iconPadding="4px"
+              padding="4px"
               iconColor="var(--text-primary-color)"
-              padding={'0'}
-              style={{ border: '2px solid var(--text-primary-color)', borderRadius: '9999px' }}
               dataTestId="session-faq-link"
               onClick={() => {
                 showLinkVisitWarningDialog('https://getsession.org/faq', dispatch);
-              }}
-            />
-            <SpacerSM />
-            <SessionIconButton
-              ariaLabel="Session website link"
-              iconType="link"
-              iconSize="medium"
-              iconColor="var(--text-primary-color)"
-              iconPadding="4px"
-              padding={'0'}
-              style={{ border: '2px solid var(--text-primary-color)', borderRadius: '9999px' }}
-              dataTestId="session-website-link"
-              onClick={() => {
-                showLinkVisitWarningDialog('https://getsession.org', dispatch);
               }}
             />
           </Flex>

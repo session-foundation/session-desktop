@@ -10,7 +10,6 @@ const settingsStartInTray = 'start-in-tray-setting';
 const settingsOpengroupPruning = 'prune-setting';
 const settingsNotification = 'notification-setting';
 const settingsAudioNotification = 'audio-notification-setting';
-const someDeviceOutdatedSyncing = 'someDeviceOutdatedSyncing';
 const hasSyncedInitialConfigurationItem = 'hasSyncedInitialConfigurationItem';
 const lastAvatarUploadTimestamp = 'lastAvatarUploadTimestamp';
 const hasLinkPreviewPopupBeenDisplayed = 'hasLinkPreviewPopupBeenDisplayed';
@@ -36,7 +35,6 @@ export const SettingsKey = {
   hasBlindedMsgRequestsEnabled,
   settingsNotification,
   settingsAudioNotification,
-  someDeviceOutdatedSyncing,
   hasSyncedInitialConfigurationItem,
   lastAvatarUploadTimestamp,
   hasLinkPreviewPopupBeenDisplayed,

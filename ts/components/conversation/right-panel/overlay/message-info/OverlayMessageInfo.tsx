@@ -204,7 +204,7 @@ function CopyMessageBodyButton({ messageId }: WithMessageIdOpt) {
   return (
     <PanelIconButton
       text={localize('copy').toString()}
-      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.COPY} />}
+      iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.COPY} />}
       onClick={() => {
         clipboard.writeText(messageBody || '');
         ToastUtils.pushCopiedToClipBoard();
@@ -222,7 +222,7 @@ function ReplyToMessageButton({ messageId }: WithMessageIdOpt) {
   return (
     <PanelIconButton
       text={localize('reply').toString()}
-      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.REPLY} />}
+      iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.REPLY} />}
       onClick={() => {
         // eslint-disable-next-line more/no-then
         void replyToMessage(messageId).then(foundIt => {
@@ -248,7 +248,7 @@ function CopySenderSessionId({ messageId }: WithMessageIdOpt) {
   return (
     <PanelIconButton
       text={localize('accountIDCopy').toString()}
-      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.COPY} />}
+      iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.COPY} />}
       onClick={copySenderIdCb}
       dataTestId="copy-sender-from-details"
     />
@@ -373,7 +373,7 @@ export const OverlayMessageInfo = () => {
             {hasErrors && !isLegacyGroup && direction === 'outgoing' && (
               <PanelIconButton
                 text={localize('resend').toString()}
-                iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.REFRESH_CW} />}
+                iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.REFRESH_CW} />}
                 onClick={() => {
                   void resendMessage(messageId);
                   dispatch(closeRightPanel());
@@ -387,7 +387,7 @@ export const OverlayMessageInfo = () => {
               <PanelIconButton
                 text={localize('save').toString()}
                 iconElement={
-                  <PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.CIRCLE_ARROW_DOWN} />
+                  <PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.CIRCLE_ARROW_DOWN} />
                 }
                 dataTestId="save-attachment-from-details"
                 onClick={() => {
@@ -407,7 +407,7 @@ export const OverlayMessageInfo = () => {
             {isDeletable && !isLegacyGroup && !isIncomingMessageRequest && (
               <PanelIconButton
                 text={localize('delete').toString()}
-                iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.TRASH2} />}
+                iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.TRASH2} />}
                 color={'var(--danger-color)'}
                 dataTestId="delete-from-details"
                 onClick={() => {

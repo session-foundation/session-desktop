@@ -9,8 +9,9 @@ import { MemberListItem } from '../MemberListItem';
 import { Localizer } from '../basic/Localizer';
 import { SessionButton, SessionButtonColor } from '../basic/SessionButton';
 import { SpacerLG, SpacerSM } from '../basic/Text';
-import { SessionIconButton } from '../icon';
 import { SessionSettingsItemWrapper, SettingsTitleAndDescription } from './SessionSettingListItem';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 const BlockedEntriesContainer = styled.div`
   display: flex;
@@ -140,11 +141,12 @@ export const BlockedContactsList = () => {
                 />
               ) : null}
               <SpacerLG />
-              <SessionIconButton
+              <SessionLucideIconButton
                 iconSize={'large'}
-                iconType={'chevron'}
+                unicode={
+                  expanded ? LUCIDE_ICONS_UNICODE.CHEVRON_UP : LUCIDE_ICONS_UNICODE.CHEVRON_DOWN
+                }
                 onClick={toggleUnblockList}
-                iconRotation={expanded ? 0 : 180}
                 dataTestId="reveal-blocked-user-settings"
               />
             </BlockedContactListTitleButtons>

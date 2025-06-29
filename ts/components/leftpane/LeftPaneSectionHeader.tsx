@@ -11,10 +11,12 @@ import { Flex } from '../basic/Flex';
 import { SessionButton, SessionButtonColor } from '../basic/SessionButton';
 import { SpacerMD, SpacerSM } from '../basic/Text';
 import { MenuButton } from '../buttons';
-import { SessionIcon, SessionIconButton } from '../icon';
+import { SessionIcon } from '../icon';
 import { Localizer } from '../basic/Localizer';
 import { H4 } from '../basic/Heading';
 import { searchActions } from '../../state/ducks/search';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
 
 const StyledLeftPaneSectionHeader = styled(Flex)`
   height: var(--main-view-header-height);
@@ -193,11 +195,10 @@ export const LeftPaneSectionHeader = () => {
         {leftOverlayMode &&
         leftOverlayMode !== 'choose-action' &&
         leftOverlayMode !== 'message-requests' ? (
-          <SessionIconButton
+          <SessionLucideIconButton
             ariaLabel="Back button"
-            iconSize="medium"
-            iconType="chevron"
-            iconRotation={90}
+            iconSize="large"
+            unicode={LUCIDE_ICONS_UNICODE.CHEVRON_LEFT}
             onClick={returnToActionChooser}
             dataTestId="back-button"
           />

@@ -4,22 +4,23 @@ import styled, { CSSProperties } from 'styled-components';
 import { PropsForAttachment } from '../../../../../../state/ducks/conversations';
 import { getAlt, getThumbnailUrl, isVideoAttachment } from '../../../../../../types/Attachment';
 import { Flex } from '../../../../../basic/Flex';
-import { SessionIconButton } from '../../../../../icon';
 import { Image } from '../../../../Image';
 import {
   StyledSubtitleDotMenu,
   SubtitleDotMenu,
 } from '../../../../header/ConversationHeaderSubtitle';
 import { showLightboxFromAttachmentProps } from '../../../../message/message-content/MessageAttachment';
+import { SessionLucideIconButton } from '../../../../../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE, type WithLucideUnicode } from '../../../../../icon/lucide';
 
-const CarouselButton = (props: { visible: boolean; rotation: number; onClick: () => void }) => {
+const CarouselButton = (props: WithLucideUnicode & { visible: boolean; onClick: () => void }) => {
   return (
-    <SessionIconButton
-      iconSize={'huge'}
-      iconType={'chevron'}
-      iconRotation={props.rotation}
+    <SessionLucideIconButton
+      iconSize={'medium'}
+      unicode={props.unicode}
       onClick={props.onClick}
-      iconPadding={'var(--margins-xs)'}
+      padding={'var(--margins-xs)'}
+      iconColor={'var(--button-icon-stroke-color)'}
       style={{
         visibility: props.visible ? 'visible' : 'hidden',
       }}
@@ -32,12 +33,11 @@ const StyledFullscreenButton = styled.div``;
 const FullscreenButton = (props: { onClick: () => void; style?: CSSProperties }) => {
   return (
     <StyledFullscreenButton style={props.style}>
-      <SessionIconButton
-        iconSize={'large'}
+      <SessionLucideIconButton
+        iconSize={'medium'}
         iconColor={'var(--button-icon-stroke-hover-color)'}
-        iconType={'fullscreen'}
+        unicode={LUCIDE_ICONS_UNICODE.MAXIMIZE}
         onClick={props.onClick}
-        iconPadding={'6px'}
       />
     </StyledFullscreenButton>
   );
@@ -102,7 +102,11 @@ export const AttachmentCarousel = (props: Props) => {
       $justifyContent={'center'}
       $alignItems={'center'}
     >
-      <CarouselButton visible={visibleIndex > 0} onClick={previousAction} rotation={90} />
+      <CarouselButton
+        visible={visibleIndex > 0}
+        onClick={previousAction}
+        unicode={LUCIDE_ICONS_UNICODE.CHEVRON_LEFT}
+      />
       <ImageContainer>
         <Image
           alt={getAlt(attachments[visibleIndex])}
@@ -139,7 +143,7 @@ export const AttachmentCarousel = (props: Props) => {
       <CarouselButton
         visible={visibleIndex < attachments.length - 1}
         onClick={nextAction}
-        rotation={270}
+        unicode={LUCIDE_ICONS_UNICODE.CHEVRON_RIGHT}
       />
     </Flex>
   );

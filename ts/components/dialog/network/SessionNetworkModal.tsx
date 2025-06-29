@@ -13,8 +13,29 @@ import {
   useLastRefreshedTimestamp,
 } from '../../../state/selectors/networkModal';
 import { NetworkSection } from './sections/network/NetworkSection';
-import { networkDataActions } from '../../../state/ducks/networkData';
 import { useDataIsStale } from '../../../state/selectors/networkData';
+import { SessionLucideIconButton } from '../../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
+import { networkDataActions } from '../../../state/ducks/networkData';
+
+function ReloadButton({ loading }: { loading: boolean }) {
+  const dispatch = useDispatch();
+
+  return (
+    <SessionLucideIconButton
+      iconSize="medium"
+      unicode={LUCIDE_ICONS_UNICODE.REFRESH_CW}
+      dataTestId="refresh-button"
+      disabled={loading}
+      onClick={() => {
+        if (loading) {
+          return;
+        }
+        dispatch(networkDataActions.refreshInfoFromSeshServer() as any);
+      }}
+    />
+  );
+}
 
 export function SessionNetworkModal() {
   const infoLoading = useInfoLoading();
@@ -40,20 +61,7 @@ export function SessionNetworkModal() {
         contentBorder={false}
         shouldOverflow={true}
         showExitIcon={true}
-        headerIconButtons={[
-          {
-            rotateDuration: loading ? 1.5 : undefined,
-            iconType: 'resend',
-            onClick: () => {
-              if (loading) {
-                return;
-              }
-              dispatch(networkDataActions.refreshInfoFromSeshServer() as any);
-            },
-            dataTestIdIcon: 'refresh-button',
-            disabled: loading,
-          },
-        ]}
+        headerIconButtons={[<ReloadButton loading={loading} />]}
       >
         <NetworkSection />
         <StakeSection />

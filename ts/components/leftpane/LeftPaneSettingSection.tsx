@@ -17,7 +17,7 @@ import { Localizer } from '../basic/Localizer';
 import { localize } from '../../localization/localeTools';
 import { networkDataActions } from '../../state/ducks/networkData';
 import { showLinkVisitWarningDialog } from '../dialog/OpenUrlModal';
-import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { LUCIDE_ICONS_UNICODE, type WithLucideUnicode } from '../icon/lucide';
 import { LucideIcon } from '../icon/LucideIcon';
 
 const StyledSettingsSectionTitle = styled.span<{
@@ -61,10 +61,9 @@ type CategoryIcon = { color?: string } & (
   | {
       type: SessionIconType;
     }
-  | {
+  | (WithLucideUnicode & {
       type: 'lucide';
-      unicode: LUCIDE_ICONS_UNICODE;
-    }
+    })
 );
 
 type Categories = {
@@ -133,7 +132,7 @@ const categories: Array<Categories> = (
     {
       id: 'help',
       title: localize('sessionHelp'),
-      icon: { type: 'question' },
+      icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.CIRCLE_HELP },
     },
     {
       id: 'clear-data',
@@ -158,7 +157,7 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
     [focusedSettingsSection, id, sessionNetworkModalState]
   );
 
-  const iconSize = 22;
+  const iconSize = 'medium';
 
   return (
     <StyledSettingsListItem
@@ -199,7 +198,7 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
     >
       <StyledIconContainer>
         {icon.type === 'lucide' ? (
-          <LucideIcon unicode={icon.unicode} iconSize={`${iconSize}px`} iconColor={icon.color} />
+          <LucideIcon unicode={icon.unicode} iconSize={iconSize} iconColor={icon.color} />
         ) : (
           <SessionIcon
             iconType={icon.type}
@@ -221,7 +220,7 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
 
       {isSelected ? (
         <LucideIcon
-          iconSize={`${iconSize}px`}
+          iconSize={iconSize}
           unicode={LUCIDE_ICONS_UNICODE.CHEVRON_RIGHT}
           style={{ marginInlineStart: 'auto' }}
         />

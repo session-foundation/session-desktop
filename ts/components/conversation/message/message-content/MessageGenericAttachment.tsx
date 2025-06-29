@@ -2,10 +2,12 @@ import styled from 'styled-components';
 import clsx from 'clsx';
 
 import { PropsForAttachment } from '../../../../state/ducks/conversations';
-import { AttachmentTypeWithPath, getExtensionForDisplay } from '../../../../types/Attachment';
+import { AttachmentTypeWithPath } from '../../../../types/Attachment';
 import { Spinner } from '../../../loading';
 import { MessageModelType } from '../../../../models/messageType';
 import { MessageHighlighter } from './MessageHighlighter';
+import { LucideIcon } from '../../../icon/LucideIcon';
+import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 
 const StyledGenericAttachmentContainer = styled(MessageHighlighter)<{
   highlight: boolean;
@@ -30,8 +32,7 @@ export function MessageGenericAttachment({
   direction?: MessageModelType;
   onClick?: (e: any) => void;
 }) {
-  const { fileName, fileSize, contentType } = attachment;
-  const extension = getExtensionForDisplay({ contentType, fileName });
+  const { fileName, fileSize } = attachment;
 
   return (
     <StyledGenericAttachmentContainer
@@ -45,13 +46,15 @@ export function MessageGenericAttachment({
           <Spinner size="small" />
         </div>
       ) : (
-        <div className="module-message__generic-attachment__icon-container">
-          <div role="button" className="module-message__generic-attachment__icon">
-            {extension ? (
-              <div className="module-message__generic-attachment__icon__extension">{extension}</div>
-            ) : null}
-          </div>
-        </div>
+        <LucideIcon
+          iconSize="medium"
+          unicode={LUCIDE_ICONS_UNICODE.FILE}
+          iconColor={
+            direction === 'incoming'
+              ? 'var(--message-bubbles-received-text-color)'
+              : 'var(--message-bubbles-sent-text-color)'
+          }
+        />
       )}
       <div className="module-message__generic-attachment__text">
         <div

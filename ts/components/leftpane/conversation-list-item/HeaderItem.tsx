@@ -77,6 +77,12 @@ const PinIcon = () => {
 };
 
 const ListItemIcons = () => {
+  const isSearching = useIsSearchingForType('global');
+
+  if (isSearching) {
+    return null;
+  }
+
   return (
     <StyledConversationListItemIconWrapper>
       <PinIcon />

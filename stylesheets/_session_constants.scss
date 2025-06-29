@@ -15,10 +15,6 @@
 
 $session-subtle-factor: 0.6;
 
-@function subtle($color) {
-  @return rgba($color, $session-subtle-factor);
-}
-
 // Animations
 
 @keyframes fadein {

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import clsx from 'clsx';
 
 import { useDisableDrag } from '../../../hooks/useDisableDrag';
 import { useEncryptedFileFetch } from '../../../hooks/useEncryptedFileFetch';
@@ -7,6 +6,9 @@ import { LightBoxOptions, updateLightBoxOptions } from '../../../state/ducks/mod
 import { isImageTypeSupported, isVideoTypeSupported } from '../../../util/GoogleChrome';
 import { MediaItemType } from '../../lightbox/LightboxGallery';
 import { AriaLabels } from '../../../util/hardcodedAriaLabels';
+import { PlayButtonCenteredAbsolute } from '../../buttons/PlayButton';
+import { LucideIcon } from '../../icon/LucideIcon';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 
 type Props = {
   mediaItem: MediaItemType;
@@ -38,8 +40,10 @@ const MediaGridItemContent = (props: Props) => {
   if (contentType && isImageTypeSupported(contentType)) {
     if (imageBroken || !srcData) {
       return (
-        <div
-          className={clsx('module-media-grid-item__icon', 'module-media-grid-item__icon-image')}
+        <LucideIcon
+          iconColor="var(--button-icon-stroke-color)"
+          iconSize="small"
+          unicode={LUCIDE_ICONS_UNICODE.IMAGE}
         />
       );
     }
@@ -57,8 +61,10 @@ const MediaGridItemContent = (props: Props) => {
   if (contentType && isVideoTypeSupported(contentType)) {
     if (imageBroken || !srcData) {
       return (
-        <div
-          className={clsx('module-media-grid-item__icon', 'module-media-grid-item__icon-video')}
+        <LucideIcon
+          iconColor="var(--button-icon-stroke-color)"
+          iconSize="small"
+          unicode={LUCIDE_ICONS_UNICODE.CLAPERBOARD}
         />
       );
     }
@@ -72,16 +78,12 @@ const MediaGridItemContent = (props: Props) => {
           onError={onImageError}
           onDragStart={disableDrag}
         />
-        <div className="module-media-grid-item__circle-overlay">
-          <div className="module-media-grid-item__play-overlay" />
-        </div>
+        <PlayButtonCenteredAbsolute iconSize="medium" />
       </div>
     );
   }
 
-  return (
-    <div className={clsx('module-media-grid-item__icon', 'module-media-grid-item__icon-generic')} />
-  );
+  return <LucideIcon iconSize="small" unicode={LUCIDE_ICONS_UNICODE.FILE} />;
 };
 
 export const MediaGridItem = (props: Props) => {

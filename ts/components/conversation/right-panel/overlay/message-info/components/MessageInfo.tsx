@@ -63,7 +63,7 @@ export const LabelWithInfo = (props: LabelWithInfoProps) => {
         <MessageInfoData color={props.dataColor}>{props.info}</MessageInfoData>
         {isDev ? (
           <CopyToClipboardIcon
-            iconSize={'medium'}
+            iconSize={'small'}
             copyContent={props.info}
             margin={'0 0 0 var(--margins-xs)'}
           />

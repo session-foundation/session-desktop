@@ -22,7 +22,6 @@ import { showLinkVisitWarningDialog } from '../../../OpenUrlModal';
 import { useSecuringNodesCount } from './hooks/useSecuringNodesCount';
 import { formatNumber, formatDateWithLocale } from '../../../../../util/i18n/formatting/generics';
 import { abbreviateNumber } from '../../../../../util/numbers';
-import { SessionIconButton } from '../../../../icon';
 import { SessionSpinner } from '../../../../loading';
 import { SessionTooltip } from '../../../../SessionTooltip';
 import { useHTMLDirection } from '../../../../../util/i18n/rtlSupport';
@@ -35,6 +34,8 @@ import {
 } from '../../../../../state/selectors/networkData';
 import { Grid } from '../../../../basic/Grid';
 import { useInfoFakeRefreshing, useInfoLoading } from '../../../../../state/selectors/networkModal';
+import { SessionLucideIconButton } from '../../../../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../../../../icon/lucide';
 
 const StyledStatsNumber = styled.strong`
   font-size: var(--font-size-h3-new);
@@ -162,21 +163,15 @@ const CurrentPriceBlock = () => {
         htmlString={true}
         style={{
           position: 'absolute',
-          top: 'var(--margins-xs)',
-          insetInlineEnd: 'var(--margins-xs)',
+          top: '1px',
+          right: '1px',
         }}
       >
-        <SessionIconButton
+        <SessionLucideIconButton
           ariaLabel="Network price explanation tooltip"
-          iconType="question"
-          iconSize={9}
-          iconPadding="2px"
+          unicode={LUCIDE_ICONS_UNICODE.CIRCLE_HELP}
           iconColor="var(--text-primary-color)"
-          padding={'0'}
-          style={{
-            border: '1px solid var(--text-primary-color)',
-            borderRadius: '9999px',
-          }}
+          iconSize="small"
           dataTestId="tooltip"
         />
       </SessionTooltip>

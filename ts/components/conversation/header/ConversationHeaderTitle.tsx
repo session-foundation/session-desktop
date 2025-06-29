@@ -154,7 +154,12 @@ export const ConversationHeaderTitle = ({ showSubtitle }: { showSubtitle: boolea
   const visibleSubtitle = subtitles?.[clampedSubtitleIndex];
 
   const handleTitleCycle = (direction: 1 | -1) => {
-    setSubtitleIndex((clampedSubtitleIndex + direction) % subtitles.length);
+    const modulo = (clampedSubtitleIndex + direction) % subtitles.length;
+    if (modulo < 0) {
+      setSubtitleIndex(subtitles.length - 1);
+    } else {
+      setSubtitleIndex(modulo);
+    }
   };
 
   return (

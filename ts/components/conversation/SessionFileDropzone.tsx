@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 import { Flex } from '../basic/Flex';
-import { SessionIcon } from '../icon';
+import { LucideIcon } from '../icon/LucideIcon';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 const DropZoneContainer = styled.div`
   display: inline-block;
@@ -28,10 +29,10 @@ export const SessionFileDropzone = () => {
     <DropZoneContainer>
       <DropZoneWithBorder>
         <Flex $container={true} $justifyContent="space-around" height="100%" $alignItems="center">
-          <SessionIcon
+          <LucideIcon
             iconColor="var(--file-dropzone-border-color)"
             iconSize={'max'}
-            iconType="circlePlus"
+            unicode={LUCIDE_ICONS_UNICODE.CIRCLE_PLUS}
           />
         </Flex>
       </DropZoneWithBorder>
