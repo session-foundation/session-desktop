@@ -209,7 +209,7 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
           text={localize('save').toString()}
           onClick={onClickOK}
           buttonType={SessionButtonType.Simple}
-          disabled={isNameChangePending || !newGroupName}
+          disabled={isNameChangePending || !newGroupName || !newGroupName.trim()}
         />
         <SessionButton
           text={localize('cancel').toString()}
