@@ -9,11 +9,11 @@ export type SessionFeatureFlags = {
   useClosedGroupV2QAButtons: boolean;
   useReleaseChannels: boolean;
   useSESH101: boolean;
-  useAlwaysShowRemainingChars: boolean;
-  useShowPopoverAnchors: boolean;
-  useDebugInputCommands: boolean;
-  useProAvailable: boolean;
-  useMockUserHasPro: boolean;
+  alwaysShowRemainingChars: boolean;
+  showPopoverAnchors: boolean;
+  debugInputCommands: boolean;
+  proAvailable: boolean;
+  mockUserHasPro: boolean;
 };
 
 export type SessionFeatureFlagKeys = RecursiveKeys<SessionFeatureFlags>;

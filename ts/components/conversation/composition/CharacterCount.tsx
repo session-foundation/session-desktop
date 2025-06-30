@@ -31,10 +31,10 @@ const StyledRemainingNumber = styled.span<{ pastLimit: boolean }>`
 `;
 
 export function CharacterCount({ count }: CharacterCountProps) {
-  const alwaysShowFlag = getFeatureFlag('useAlwaysShowRemainingChars');
+  const alwaysShowFlag = getFeatureFlag('alwaysShowRemainingChars');
   // const dispatch = useDispatch();
-  const isProAvailable = getFeatureFlag('useProAvailable');
-  const mockHasPro = getFeatureFlag('useMockUserHasPro');
+  const isProAvailable = getFeatureFlag('proAvailable');
+  const mockHasPro = getFeatureFlag('mockUserHasPro');
 
   // TODO: get pro status from store once available
   const hasPro = mockHasPro;

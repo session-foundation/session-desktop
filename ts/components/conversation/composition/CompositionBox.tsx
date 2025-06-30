@@ -709,7 +709,7 @@ class CompositionBoxInner extends Component<Props, State> {
 
     // TODO: implement with pro
     // const isProAvailable = getFeatureFlag('useProAvailable');
-    const mockHasPro = getFeatureFlag('useMockUserHasPro');
+    const mockHasPro = getFeatureFlag('mockUserHasPro');
 
     // TODO: get pro status from store once available
     const hasPro = mockHasPro;
