@@ -24,6 +24,7 @@ const StyledSearchInput = styled.div`
   align-items: center;
   flex-shrink: 0;
   padding-inline: var(--margins-sm);
+  border-radius: 100px;
 `;
 
 const StyledInput = styled.input`
@@ -87,12 +88,14 @@ export const SessionSearchInput = ({ searchType }: { searchType: SearchType }) =
     ? localize('searchContacts').toString()
     : localize('search').toString();
 
-  const borderRadius = searchType === 'global' || searchType === 'create-group' ? '0' : '100px';
+  const isInMainScreen = searchType === 'global' || searchType === 'create-group';
+
+  const backgroundColor = isInMainScreen ? 'transparent' : undefined;
 
   return (
     <StyledSearchInput
       data-testid={isGroupCreationSearch ? 'search-contacts-field' : undefined}
-      style={{ borderRadius }}
+      style={{ backgroundColor }}
     >
       <LucideIcon
         iconColor="var(--search-bar-icon-color)"
