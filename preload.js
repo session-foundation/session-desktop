@@ -64,7 +64,7 @@ window.sessionFeatureFlags = {
   useDebugInputCommands: false,
   useAlwaysShowRemainingChars: false,
   useShowPopoverAnchors: false,
-  useProAvailable: true,
+  useProAvailable: false,
   useMockUserHasPro: false,
   debug: {
     debugLogging: !isEmpty(process.env.SESSION_DEBUG),
