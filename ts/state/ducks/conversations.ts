@@ -31,6 +31,7 @@ import { Storage } from '../../util/storage';
 import { SettingsKey } from '../../data/settings-key';
 import { sectionActions } from './section';
 import { ed25519Str } from '../../session/utils/String';
+import { UserUtils } from '../../session/utils';
 
 export type MessageModelPropsWithoutConvoProps = {
   propsForMessage: PropsForMessageWithoutConvoProps;
@@ -1038,13 +1039,14 @@ function applyConversationsChanged(
     }
 
     if (
-      state.selectedConversation &&
+      selectedConversation &&
       convoProps.isPrivate &&
       convoProps.id === selectedConversation &&
       convoProps.priority &&
-      convoProps.priority < CONVERSATION_PRIORITIES.default
+      convoProps.priority < CONVERSATION_PRIORITIES.default &&
+      selectedConversation !== UserUtils.getOurPubKeyStrFromCache()
     ) {
-      // A private conversation hidden cannot be a selected.
+      // A private conversation hidden cannot be selected (except the Note To Self)
       // When opening a hidden conversation, we unhide it so it can be selected again.
       state.selectedConversation = undefined;
     }

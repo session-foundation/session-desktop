@@ -96,7 +96,6 @@ const Themes = () => {
           <StyledTitleSettingsItem>{theme.title}</StyledTitleSettingsItem>
           <SessionRadio
             active={selectedTheme === theme.id}
-            label={''}
             value={theme.id}
             inputName={'theme-switcher'}
             style={{ padding: '0 0 0 var(--margins-lg)' }}
@@ -131,7 +130,6 @@ export const SettingsThemeSwitcher = () => {
               key={item.id}
               active={item.id === selectedPrimaryColor}
               value={item.id}
-              inputName="primary-colors"
               ariaLabel={item.ariaLabel}
               color={item.color}
               onClick={() => {

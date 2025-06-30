@@ -96,7 +96,6 @@ function DestructiveActions({ conversationId }: WithConvoId) {
     <PanelButtonGroup>
       <BlockUnblockButton conversationId={conversationId} />
       <HideNoteToSelfButton conversationId={conversationId} />
-      <ShowNoteToSelfButton conversationId={conversationId} />
       <ClearAllMessagesButton conversationId={conversationId} />
       <DeletePrivateConversationButton conversationId={conversationId} />
       <DeletePrivateContactButton conversationId={conversationId} />
@@ -126,6 +125,7 @@ function DefaultPageForPrivate({ conversationId }: WithConvoId) {
         <PinUnpinButton conversationId={conversationId} />
         <NotificationPanelButton convoId={conversationId} />
         <AttachmentsButton conversationId={conversationId} />
+        <ShowNoteToSelfButton conversationId={conversationId} />
       </PanelButtonGroup>
 
       {/* Below are "destructive" actions */}

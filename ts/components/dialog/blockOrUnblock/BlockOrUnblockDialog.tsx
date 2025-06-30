@@ -13,8 +13,6 @@ import { Localizer, type LocalizerProps } from '../../basic/Localizer';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../../basic/SessionButton';
 import { StyledModalDescriptionContainer } from '../shared/ModalDescriptionContainer';
 import { BlockOrUnblockModalState } from './BlockOrUnblockModalState';
-import { useSelectedConversationKey } from '../../../state/selectors/selectedConversation';
-import { resetConversationExternal } from '../../../state/ducks/conversations';
 import { localize } from '../../../localization/localeTools';
 
 type ModalState = NonNullable<BlockOrUnblockModalState>;
@@ -60,7 +58,6 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
     action === 'block' ? localize('block').toString() : localize('blockUnblock').toString();
 
   const args = useBlockUnblockI18nDescriptionArgs({ action, pubkeys });
-  const selectedConversation = useSelectedConversationKey();
 
   const closeModal = useCallback(() => {
     dispatch(updateBlockOrUnblockModal(null));
@@ -69,7 +66,6 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
 
   const [, onConfirm] = useAsyncFn(async () => {
     if (action === 'block') {
-      const firstPubkeyBlocked = pubkeys?.[0] || undefined;
       // we never block more than one user from the UI, so this is not very useful, just a type guard
       for (let index = 0; index < pubkeys.length; index++) {
         const pubkey = pubkeys[index];
@@ -77,11 +73,8 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
         // eslint-disable-next-line no-await-in-loop
         await BlockedNumberController.block(pubkey);
       }
-      // Note we don't want to close the CS modal if it was shown, now.
-      // reset the selected convo if it was the one we blocked
-      if (firstPubkeyBlocked && selectedConversation === firstPubkeyBlocked) {
-        dispatch(resetConversationExternal());
-      }
+      // Note: we don't want to close the CS modal if it was shown, now.
+      // Nor reset the conversation if it was shown.
     } else {
       await BlockedNumberController.unblockAll(pubkeys);
     }

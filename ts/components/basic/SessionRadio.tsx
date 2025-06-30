@@ -1,66 +1,97 @@
-import { ChangeEvent, SessionDataTestId, SyntheticEvent } from 'react';
+import { ChangeEvent, SessionDataTestId, type MouseEventHandler } from 'react';
 
 import styled, { CSSProperties } from 'styled-components';
 import { Flex } from './Flex';
 
-const StyledButton = styled.button<{ disabled: boolean }>`
+const StyledContainer = styled.div<{ disabled: boolean }>`
   cursor: ${props => (props.disabled ? 'not-allowed' : 'pointer')};
   min-height: 30px;
   background-color: var(--transparent-color);
 `;
 
-const StyledInput = styled.input<{
-  filledSize: number;
-  outlineOffset: number;
-  selectedColor?: string;
-}>`
-  opacity: 0;
-  position: absolute;
-  width: ${props => props.filledSize + props.outlineOffset}px;
-  height: ${props => props.filledSize + props.outlineOffset}px;
-
-  &:checked + label:before {
-    background: ${props =>
-      props.disabled
-        ? 'var(--disabled-color)'
-        : props.selectedColor
-          ? props.selectedColor
-          : 'var(--primary-color)'};
-  }
+const StyledRadioOuter = styled.div<{ $disabled: boolean; $diameterRadioBorder: number }>`
+  width: ${props => props.$diameterRadioBorder}px;
+  height: ${props => props.$diameterRadioBorder}px;
+  border: 1px solid var(--text-primary-color);
+  border-radius: 50%;
+  background-color: transparent;
+  cursor: ${props => (props.$disabled ? 'not-allowed' : 'pointer')};
+  position: relative;
 `;
 
-// NOTE (Will): We don't use a transition because it's too slow and creates flickering when changing buttons.
-const StyledLabel = styled.label<{
+const StyledSelectedInner = styled.div<{
+  $disabled: boolean;
+  $selected: boolean;
+  $diameterRadioBg: number;
+}>`
+  width: ${props => props.$diameterRadioBg}px;
+  height: ${props => props.$diameterRadioBg}px;
+  border-radius: 50%;
+  opacity: ${props => (props.$selected ? 1 : 0)};
+  background: ${props => (props.$disabled ? 'var(--disabled-color)' : 'var(--primary-color)')};
+  pointer-events: none;
+  transition-duration: var(--default-duration);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+`;
+
+function RadioButton({
+  disabled,
+  onClick,
+  selected,
+  dataTestId,
+  diameterRadioBg,
+  diameterRadioBorder,
+  style,
+  ariaLabel,
+}: {
+  selected: boolean;
+  onClick: MouseEventHandler<HTMLDivElement>;
   disabled: boolean;
-  filledSize: number;
-  outlineOffset: number;
-  beforeMargins?: string;
+  dataTestId: SessionDataTestId | undefined;
+  diameterRadioBg: number;
+  diameterRadioBorder: number;
+  style?: CSSProperties;
+  ariaLabel?: string;
+}) {
+  // clickHandler is on the parent button, so we need to skip this input while pressing Tab
+  return (
+    <StyledRadioOuter
+      onClick={onClick}
+      $disabled={disabled}
+      tabIndex={-1}
+      data-testid={dataTestId}
+      $diameterRadioBorder={diameterRadioBorder}
+      style={style}
+      aria-label={ariaLabel}
+    >
+      <StyledSelectedInner
+        $disabled={disabled}
+        $selected={selected}
+        $diameterRadioBg={diameterRadioBg}
+      />
+    </StyledRadioOuter>
+  );
+}
+
+// NOTE (): We don't use a transition because it's too slow and creates flickering when changing buttons.
+const StyledLabel = styled.label<{
+  $disabled: boolean;
 }>`
   cursor: pointer;
-  color: ${props => (props.disabled ? 'var(--disabled-color)' : 'var(--text-primary-color)')};
-
-  &:before {
-    content: '';
-    display: inline-block;
-    border-radius: 100%;
-
-    padding: ${props => props.filledSize}px;
-    border: none;
-    outline: 1px solid currentColor; /* CSS variables don't work here */
-    outline-offset: ${props => props.outlineOffset}px;
-    ${props => props.beforeMargins && `margin: ${props.beforeMargins};`};
-  }
+  color: ${props => (props.$disabled ? 'var(--disabled-color)' : 'var(--text-primary-color)')};
+  margin-inline-end: var(--margins-sm);
 `;
 
 type SessionRadioProps = {
-  label: string;
+  label?: string;
   value: string;
   active: boolean;
   inputName?: string;
-  beforeMargins?: string;
   onClick?: (value: string) => void;
   disabled?: boolean;
-  radioPosition?: 'left' | 'right';
   style?: CSSProperties;
   labelDataTestId?: SessionDataTestId;
   inputDataTestId?: SessionDataTestId;
@@ -69,19 +100,16 @@ type SessionRadioProps = {
 export const SessionRadio = (props: SessionRadioProps) => {
   const {
     label,
-    inputName,
     value,
     active,
     onClick,
-    beforeMargins,
     disabled = false,
-    radioPosition = 'left',
     style,
     labelDataTestId,
     inputDataTestId,
   } = props;
 
-  const clickHandler = (e: SyntheticEvent<any>) => {
+  const clickHandler = (e: React.MouseEvent<any> | React.KeyboardEvent<any>) => {
     if (!disabled && onClick) {
       // let something else catch the event if our click handler is not set
       e.stopPropagation();
@@ -89,11 +117,11 @@ export const SessionRadio = (props: SessionRadioProps) => {
     }
   };
 
-  const filledSize = 15 / 2;
-  const outlineOffset = 2;
+  const diameterRadioBorder = 26;
+  const diameterRadioBg = 20;
 
   return (
-    <StyledButton
+    <StyledContainer
       onKeyDown={e => {
         if (e.code === 'Space') {
           clickHandler(e);
@@ -104,112 +132,77 @@ export const SessionRadio = (props: SessionRadioProps) => {
     >
       <Flex
         $container={true}
-        $flexDirection={radioPosition === 'left' ? 'row' : 'row-reverse'}
-        $justifyContent={radioPosition === 'left' ? 'flex-start' : 'flex-end'}
-        style={{ ...style, position: 'relative' }}
+        $flexDirection={'row'}
+        $justifyContent={'flex-start'}
+        style={{ ...style, alignItems: 'center', justifyContent: 'space-between' }}
       >
-        <StyledInput
-          type="radio"
-          name={inputName || ''}
-          value={value}
-          aria-checked={active}
-          checked={active}
-          onChange={clickHandler}
-          tabIndex={-1} // clickHandler is on the parent button, so we need to skip this input while pressing Tab
-          filledSize={filledSize * 2}
-          outlineOffset={outlineOffset}
-          disabled={disabled}
-          data-testid={inputDataTestId}
-        />
-        <StyledLabel
-          role="button"
+        {label ? (
+          <StyledLabel
+            role="button"
+            onClick={clickHandler}
+            aria-label={label}
+            $disabled={disabled}
+            data-testid={labelDataTestId}
+          >
+            {label}
+          </StyledLabel>
+        ) : null}
+
+        <RadioButton
+          selected={active}
           onClick={clickHandler}
-          filledSize={filledSize - 1}
-          outlineOffset={outlineOffset}
-          beforeMargins={beforeMargins}
-          aria-label={label}
           disabled={disabled}
-          data-testid={labelDataTestId}
-        >
-          {label}
-        </StyledLabel>
+          dataTestId={inputDataTestId}
+          diameterRadioBorder={diameterRadioBorder}
+          diameterRadioBg={diameterRadioBg}
+        />
       </Flex>
-    </StyledButton>
+    </StyledContainer>
   );
 };
 
-const StyledInputOutlineSelected = styled(StyledInput)`
-  color: ${props => (props.disabled ? 'var(--disabled-color)' : 'var(--text-primary-color)')};
-
-  label:before,
-  label:before {
-    outline: none;
-  }
-
-  &:checked + label:before {
-    outline: 1px solid currentColor;
-  }
-`;
-const StyledLabelOutlineSelected = styled(StyledLabel)<{ selectedColor: string }>`
-  &:before {
-    background: ${props =>
-      props.disabled
-        ? 'var(--disabled-color)'
-        : props.selectedColor
-          ? props.selectedColor
-          : 'var(--primary-color)'};
-    outline: 1px solid transparent; /* CSS variables don't work here */
-  }
-`;
-
 /**
- * Keeping this component here so we can reuse the `StyledInput` and `StyledLabel` defined locally rather than exporting them
+ * This is slightly different that the classic SessionRadio as this one has
+ *  - no padding between the selected background and the border,
+ *  - they all have a background color (even when not selected), but the border is present on the selected one
+ *
+ * Keeping it here so we don't have to export
  */
 export const SessionRadioPrimaryColors = (props: {
   value: string;
   active: boolean;
-  inputName?: string;
   onClick: (value: string) => void;
-  ariaLabel?: string;
+  ariaLabel: string;
   color: string; // by default, we use the theme accent color but for the settings screen we need to be able to force it
-  disabled?: boolean;
 }) => {
-  const { inputName, value, active, onClick, color, ariaLabel, disabled = false } = props;
+  const { value, active, onClick, color, ariaLabel } = props;
 
   function clickHandler(e: ChangeEvent<any>) {
     e.stopPropagation();
     onClick(value);
   }
 
-  const filledSize = 31 / 2;
-  const outlineOffset = 5;
+  // this component has no padding between the selected background and the border
+  const diameterRadioBorder = 26;
+  const diameterRadioBg = 22;
+
+  const overriddenColorsVars = {
+    '--primary-color': color,
+    '--text-primary-color': active ? undefined : 'transparent',
+  } as React.CSSProperties;
 
   return (
     <Flex $container={true} padding="0 0 5px 0">
-      <StyledInputOutlineSelected
-        type="radio"
-        name={inputName || ''}
-        value={value}
-        aria-checked={active}
-        checked={active}
-        onChange={clickHandler}
-        filledSize={filledSize}
-        outlineOffset={outlineOffset}
-        selectedColor={color}
-        aria-label={ariaLabel}
-        disabled={disabled}
-      />
-
-      <StyledLabelOutlineSelected
-        role="button"
+      <RadioButton
+        selected={true}
         onClick={clickHandler}
-        selectedColor={color}
-        filledSize={filledSize}
-        outlineOffset={outlineOffset}
-        disabled={disabled}
-      >
-        {''}
-      </StyledLabelOutlineSelected>
+        disabled={false}
+        dataTestId={undefined}
+        diameterRadioBorder={diameterRadioBorder}
+        diameterRadioBg={diameterRadioBg}
+        style={overriddenColorsVars}
+        ariaLabel={ariaLabel}
+      />
     </Flex>
   );
 };
