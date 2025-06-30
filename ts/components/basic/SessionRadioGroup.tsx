@@ -33,9 +33,6 @@ const StyledFieldSet = styled.fieldset`
   & > div {
     padding: var(--margins-md) 7px;
   }
-  & > div + div {
-    border-top: 1px solid var(--border-color);
-  }
 `;
 
 export const SessionRadioGroup = (props: Props) => {
