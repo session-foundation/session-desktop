@@ -41,7 +41,11 @@ const DescriptionBeforeAskingConfirmation = (props: {
 
   return (
     <>
-      <span className="session-confirm-main-message" data-testid="modal-description">
+      <span
+        className="session-confirm-main-message"
+        data-testid="modal-description"
+        style={{ maxWidth: '60ch' }}
+      >
         <Localizer token="clearDataAllDescription" />
       </span>
 
