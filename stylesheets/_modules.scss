@@ -764,7 +764,6 @@
   right: 8px;
   width: 20px;
   height: 20px;
-  z-index: 2;
   background-image: url('../images/x-shadow-16.svg');
 }
 
@@ -787,8 +786,6 @@
 
   width: 20px;
   height: 20px;
-
-  z-index: 2;
   @include color-svg('../images/x-16.svg', var(--button-icon-stroke-color));
 }
 
@@ -813,7 +810,6 @@
   right: 5px;
   width: 16px;
   height: 16px;
-  z-index: 2;
   @include color-svg('../images/x-16.svg', var(--button-icon-stroke-color));
 }
 

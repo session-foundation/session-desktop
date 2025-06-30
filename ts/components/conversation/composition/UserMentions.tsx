@@ -1,4 +1,3 @@
-import type { SuggestionDataItem } from 'react-mentions';
 import { MemberListItem } from '../../MemberListItem';
 import { HTMLDirection } from '../../../util/i18n/rtlSupport';
 
@@ -36,29 +35,15 @@ export const styleForCompositionBoxSuggestions = (dir: HTMLDirection = 'ltr') =>
   return styles;
 };
 
-export const renderUserMentionRow = (suggestion: Pick<SuggestionDataItem, 'id'>) => {
+export const renderUserMentionRow = (id: string) => {
   return (
     <MemberListItem
-      key={`suggestion-list-${suggestion.id}`}
+      key={`suggestion-list-${id}`}
       isSelected={false}
-      pubkey={`${suggestion.id}`}
+      pubkey={id}
       inMentions={true}
       dataTestId="mentions-popup-row"
       maxNameWidth="100%"
     />
   );
 };
-
-// this is dirty but we have to replace all @(xxx) by @xxx manually here
-export function cleanMentions(text: string): string {
-  const matches = text.match(mentionsRegex);
-  let replacedMentions = text;
-  (matches || []).forEach(match => {
-    const replacedMention = match.substring(2, match.indexOf('\uFFD7'));
-    replacedMentions = replacedMentions.replace(match, `@${replacedMention}`);
-  });
-
-  return replacedMentions;
-}
-
-export const mentionsRegex = /@\uFFD2[0-1]5[0-9a-f]{64}\uFFD7[^\uFFD2]+\uFFD2/gu;

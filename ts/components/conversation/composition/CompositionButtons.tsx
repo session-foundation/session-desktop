@@ -7,21 +7,35 @@ import {
 } from '../../../state/selectors/selectedConversation';
 import { SessionIconButton } from '../../icon';
 
-const StyledChatButtonContainer = styled.div<{ disabled?: boolean }>`
+type CompositionButtonProps = {
+  onClick: () => void;
+};
+
+const StyledChatButtonContainer = styled.div<{
+  disabled?: boolean;
+  backgroundColor?: string;
+  backgroundColorHover?: string;
+}>`
   .session-icon-button {
     svg {
-      background-color: var(--chat-buttons-background-color);
+      background-color: ${props => props.backgroundColor || 'var(--chat-buttons-background-color)'};
     }
 
     ${props =>
       !props.disabled &&
       `&:hover svg {
-      background-color: var(--chat-buttons-background-hover-color);
+      background-color: ${props.backgroundColorHover || 'var(--chat-buttons-background-hover-color)'};
+    }`}
+
+    ${props =>
+      props.disabled &&
+      `svg path {
+      fill: var(--disabled-color);
     }`}
   }
 `;
 
-export const AddStagedAttachmentButton = (props: { onClick: () => void }) => {
+export const AddStagedAttachmentButton = ({ onClick }: CompositionButtonProps) => {
   const selectedConvoKey = useSelectedConversationKey();
   const isOutgoingRequest = useIsOutgoingRequest(selectedConvoKey);
 
@@ -32,12 +46,11 @@ export const AddStagedAttachmentButton = (props: { onClick: () => void }) => {
     <StyledChatButtonContainer disabled={disabled}>
       <SessionIconButton
         iconType="plusThin"
-        backgroundColor={'var(--chat-buttons-background-color)'}
         iconColor={'var(--chat-buttons-icon-color)'}
         iconSize={'huge2'}
         borderRadius="300px"
         iconPadding="8px"
-        onClick={props.onClick}
+        onClick={onClick}
         dataTestId="attachments-button"
         disabled={disabled}
       />
@@ -45,7 +58,7 @@ export const AddStagedAttachmentButton = (props: { onClick: () => void }) => {
   );
 };
 
-export const StartRecordingButton = (props: { onClick: () => void }) => {
+export const StartRecordingButton = ({ onClick }: CompositionButtonProps) => {
   const selectedConvoKey = useSelectedConversationKey();
   const isOutgoingRequest = useIsOutgoingRequest(selectedConvoKey);
   const isBlocked = useSelectedIsBlocked();
@@ -56,11 +69,10 @@ export const StartRecordingButton = (props: { onClick: () => void }) => {
       <SessionIconButton
         iconType="microphone"
         iconSize={'huge2'}
-        backgroundColor={'var(--chat-buttons-background-color)'}
         iconColor={'var(--chat-buttons-icon-color)'}
         borderRadius="300px"
         iconPadding="6px"
-        onClick={props.onClick}
+        onClick={onClick}
         disabled={disabled}
         dataTestId="microphone-button"
       />
@@ -68,15 +80,13 @@ export const StartRecordingButton = (props: { onClick: () => void }) => {
   );
 };
 
-// eslint-disable-next-line react/display-name
-export const ToggleEmojiButton = forwardRef<HTMLButtonElement, { onClick: () => void }>(
+export const ToggleEmojiButton = forwardRef<HTMLButtonElement, CompositionButtonProps>(
   (props, ref) => {
     return (
       <StyledChatButtonContainer>
         <SessionIconButton
           iconType="emoji"
           ref={ref}
-          backgroundColor={'var(--chat-buttons-background-color)'}
           iconColor={'var(--chat-buttons-icon-color)'}
           iconSize={'huge2'}
           borderRadius="300px"
@@ -89,19 +99,20 @@ export const ToggleEmojiButton = forwardRef<HTMLButtonElement, { onClick: () => 
   }
 );
 
-export const SendMessageButton = (props: { onClick: () => void }) => {
+export const SendMessageButton = ({ onClick }: CompositionButtonProps) => {
+  const isBlocked = useSelectedIsBlocked();
   return (
-    <StyledChatButtonContainer>
+    <StyledChatButtonContainer disabled={isBlocked} backgroundColor={'var(--primary-color)'}>
       <SessionIconButton
         iconType="send"
-        backgroundColor={'var(--chat-buttons-background-color)'}
-        iconColor={'var(--chat-buttons-icon-color)'}
+        iconColor={'var(--background-primary-color)'}
         iconSize={'huge2'}
         iconRotation={90}
         borderRadius="300px"
         iconPadding="6px"
-        onClick={props.onClick}
+        onClick={onClick}
         dataTestId="send-message-button"
+        disabled={isBlocked}
       />
     </StyledChatButtonContainer>
   );
