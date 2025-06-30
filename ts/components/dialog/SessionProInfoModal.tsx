@@ -10,6 +10,7 @@ import { Flex } from '../basic/Flex';
 import { SpacerSM, SpacerXS } from '../basic/Text';
 import { localize } from '../../localization/localeTools';
 import { Constants } from '../../session';
+import { formatNumber } from '../../util/i18n/formatting/generics';
 
 export enum SessionProInfoVariant {
   MESSAGE_TOO_LONG_CTA = 0,
@@ -56,7 +57,7 @@ function getDescription(variant: SessionProInfoVariant, charLimit: number): Reac
           localizerProps={{
             token: 'modalMessageTooLongDescription',
             asTag: 'span',
-            args: { count: charLimit },
+            args: { limit: formatNumber(charLimit) },
           }}
           dataTestId="modal-description"
         />
@@ -84,7 +85,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
   // const charLimit = hasPro
   //   ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
   //   : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
-  const charLimit = Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT;
+  const charLimit = Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
 
   return (
     <SessionWrapperModal2
