@@ -16,8 +16,7 @@ interface MentionProps {
 
 const StyledMentionAnother = styled.span<{ inComposableElement?: boolean }>`
   border-radius: var(--border-radius);
-  padding: ${props => props.inComposableElement ? '0' : '2px'};
-  margin: ${props => props.inComposableElement ? '0' : '2px'};
+  padding: ${props => (props.inComposableElement ? '0' : '1px')};
   user-select: ${props => (props.inComposableElement ? 'all !important' : 'none')};
   cursor: ${props => (props.inComposableElement ? 'default' : 'auto')};
   unicode-bidi: plaintext;

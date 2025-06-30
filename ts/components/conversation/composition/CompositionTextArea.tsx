@@ -250,39 +250,11 @@ export const CompositionTextArea = (props: Props) => {
       if (inputRef.current?.getVisibleText() === searchInput) {
         setDraft(val);
         handleMentionCleanup();
-        return;
+      } else {
+        inputRef.current?.typeAtCaret(val, searchInput.length);
       }
-
-      /**
-       *  We cant use the input's typeAtPosition because we need to be able to remove the search text.
-       *  TODO: It would be nice to have a function on the input that handles replacement of a html index range.
-       */
-      const pos = inputRef.current?.getCaretIndex() ?? draft.length;
-
-      /**
-       * Finds the start of the emoji search input, it returns the last occurrence of the user's
-       * search input, not going past the user's cursor. This means the text we are going to remove
-       * is the text the user input into the search, so it is safe to replace it with the emoji.
-       */
-      const inputStart = draft.lastIndexOf(searchInput, pos);
-      const draftStart = draft.substring(0, inputStart);
-      const draftEnd = draft.substring(inputStart + searchInput.length, draft.length + 1);
-      const newDraft = draftStart + val + draftEnd;
-      setDraft(newDraft);
-
-      // The timeout ensures the cursor placement happens after the input has been updated, without it the cursor placement is incorrect.
-      setTimeout(() => {
-        inputRef.current?.setCaretIndex(draftStart.length + val.length);
-        /**
-         * This is a workaround to force an update of the input node and trigger a re-render of the
-         * character counter. Without this, when a mention is selected and inserted the character
-         * count does not update until another character is entered or removed by the user.
-         */
-        // inputRef.current?.typeAtCaret('');
-      }, 25);
-      handleMentionCleanup();
     },
-    [draft, focusedMentionItem, inputRef, mention, results, setDraft]
+    [focusedMentionItem, inputRef, mention, results, setDraft]
   );
 
   const handleOptionClick = useCallback(
