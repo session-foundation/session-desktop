@@ -23,7 +23,6 @@ const StyledSearchInput = styled.div`
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
-  border-radius: 100px;
   padding-inline: var(--margins-sm);
 `;
 
@@ -88,8 +87,13 @@ export const SessionSearchInput = ({ searchType }: { searchType: SearchType }) =
     ? localize('searchContacts').toString()
     : localize('search').toString();
 
+  const borderRadius = searchType === 'global' || searchType === 'create-group' ? '0' : '100px';
+
   return (
-    <StyledSearchInput data-testid={isGroupCreationSearch ? 'search-contacts-field' : undefined}>
+    <StyledSearchInput
+      data-testid={isGroupCreationSearch ? 'search-contacts-field' : undefined}
+      style={{ borderRadius }}
+    >
       <LucideIcon
         iconColor="var(--search-bar-icon-color)"
         iconSize={iconSize}
