@@ -18,7 +18,7 @@ const StyledMentionAnother = styled.span<{ inComposableElement?: boolean }>`
   border-radius: 4px;
   margin: 2px;
   padding: 2px;
-  user-select: ${props => (props.inComposableElement ? 'text' : 'none')};
+  user-select: ${props => (props.inComposableElement ? 'all !important' : 'none')};
   cursor: ${props => (props.inComposableElement ? 'default' : 'auto')};
   unicode-bidi: plaintext;
   font-weight: bold;

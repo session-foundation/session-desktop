@@ -163,6 +163,7 @@ const StyledSendMessageInput = styled.div<{ dir?: HTMLDirection }>`
     min-width: 80px;
 
     ul {
+      border-radius: var(--border-radius);
       max-height: 70vh;
       border: none;
       background: transparent;

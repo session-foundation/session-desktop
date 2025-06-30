@@ -306,7 +306,7 @@ window.getSeedNodeList = () => {
 };
 
 window.addEventListener('contextmenu', e => {
-  const editable = e && e.target.closest('textarea, input, [contenteditable="true"]');
+  const editable = e && e.target.closest('textarea, input, div, [contenteditable="true"]');
   const link = e && e.target.closest('a');
   const selection = Boolean(window && window.getSelection() && window.getSelection().toString());
   if (!editable && !selection && !link) {
