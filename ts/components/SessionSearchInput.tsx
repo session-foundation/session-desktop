@@ -14,7 +14,7 @@ import { LucideIcon } from './icon/LucideIcon';
 
 const StyledSearchInput = styled.div`
   height: var(--search-input-height);
-  background-color: var(--background-secondary-color);
+  background-color: var(--background-tertiary-color);
   width: 100%;
   // max width because it doesn't look good on a wide dialog otherwise
   max-width: 300px;
