@@ -26,6 +26,7 @@ export type TooltipProps = {
   dataTestId?: SessionDataTestId;
   verticalPosition?: VerticalPosition;
   horizontalPosition?: HorizontalAlignment;
+  debounceTimeout?: number;
 };
 
 export const useTriggerPosition = (ref: RefObject<Element>) => {
@@ -41,6 +42,7 @@ export const SessionTooltip = ({
   maxContentWidth,
   open,
   loading = false,
+  debounceTimeout = 150,
   style,
   dataTestId,
   verticalPosition,
@@ -57,7 +59,7 @@ export const SessionTooltip = ({
     () => {
       setDebouncedHover(hovered);
     },
-    150,
+    debounceTimeout,
     [hovered]
   );
 

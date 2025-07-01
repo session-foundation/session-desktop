@@ -9,6 +9,7 @@ import { localize } from '../../localization/localeTools';
 interface MentionProps {
   key: string;
   dataUserId?: string;
+  isPublic?: boolean;
   text: string;
   inComposableElement?: boolean;
   children?: ReactNode;
@@ -47,13 +48,18 @@ export const Mention = (props: MentionProps) => {
     );
   }
 
+  const resolvedName =
+    foundConvo?.getNicknameOrRealUsernameOrPlaceholder() || PubKey.shorten(props.text);
+  const shortPubkey = PubKey.shorten(blindedOrNotPubkey);
+  const suffix = props.isPublic && resolvedName !== shortPubkey ? shortPubkey : '';
+
   return (
     <StyledMentionAnother
       data-user-id={props.dataUserId}
       contentEditable={false}
       inComposableElement={props.inComposableElement}
     >
-      @{foundConvo?.getNicknameOrRealUsernameOrPlaceholder() || PubKey.shorten(props.text)}
+      @{resolvedName} {suffix}
       {props.children}
     </StyledMentionAnother>
   );
@@ -63,12 +69,13 @@ type Props = {
   text: string;
   renderOther?: RenderTextCallbackType;
   isGroup: boolean;
+  isPublic: boolean;
 };
 
 const defaultRenderOther = ({ text }: { text: string }) => <>{text}</>;
 
 export const AddMentions = (props: Props): JSX.Element => {
-  const { text, renderOther, isGroup } = props;
+  const { text, renderOther, isGroup, isPublic } = props;
   const results: Array<JSX.Element> = [];
   const FIND_MENTIONS = new RegExp(`@${PubKey.regexForPubkeys}`, 'g');
 
@@ -78,7 +85,7 @@ export const AddMentions = (props: Props): JSX.Element => {
   let last = 0;
   let count = 1000;
   if (!match) {
-    return renderWith({ text, key: 0, isGroup });
+    return renderWith({ text, key: 0, isGroup, isPublic });
   }
 
   while (match) {
@@ -86,18 +93,18 @@ export const AddMentions = (props: Props): JSX.Element => {
     const key = count;
     if (last < match.index) {
       const otherText = text.slice(last, match.index);
-      results.push(renderWith({ text: otherText, key, isGroup }));
+      results.push(renderWith({ text: otherText, key, isGroup, isPublic }));
     }
 
     const pubkeyWithAt = text.slice(match.index, FIND_MENTIONS.lastIndex);
-    results.push(<Mention text={pubkeyWithAt} key={`${key}`} />);
+    results.push(<Mention text={pubkeyWithAt} key={`${key}`} isPublic={isPublic} />);
 
     last = FIND_MENTIONS.lastIndex;
     match = FIND_MENTIONS.exec(text);
   }
 
   if (last < text.length) {
-    results.push(renderWith({ text: text.slice(last), key: count++, isGroup }));
+    results.push(renderWith({ text: text.slice(last), key: count++, isGroup, isPublic }));
   }
 
   return <>{results}</>;

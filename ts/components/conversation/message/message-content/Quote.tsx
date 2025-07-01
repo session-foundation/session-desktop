@@ -231,6 +231,7 @@ export const QuoteText = (
   const { text, attachment, isIncoming } = props;
 
   const isGroup = !useSelectedIsPrivate();
+  const isPublic = useSelectedIsPublic();
 
   if (text) {
     return (
@@ -241,7 +242,13 @@ export const QuoteText = (
           isIncoming ? 'module-quote__primary__text--incoming' : null
         )}
       >
-        <MessageBody text={text} disableLinks={true} disableJumbomoji={true} isGroup={isGroup} />
+        <MessageBody
+          text={text}
+          disableLinks={true}
+          disableJumbomoji={true}
+          isGroup={isGroup}
+          isPublic={isPublic}
+        />
       </div>
     );
   }

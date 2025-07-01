@@ -5,6 +5,7 @@ import { useConvoIdFromContext } from '../../../contexts/ConvoIdContext';
 import {
   useHasUnread,
   useIsPrivate,
+  useIsPublic,
   useIsTyping,
   useLastMessage,
 } from '../../../hooks/useParamSelector';
@@ -21,6 +22,7 @@ export const MessageItem = () => {
   const conversationId = useConvoIdFromContext();
   const lastMessage = useLastMessage(conversationId);
   const isGroup = !useIsPrivate(conversationId);
+  const isPublic = useIsPublic(conversationId);
 
   const hasUnread = useHasUnread(conversationId);
   const isConvoTyping = useIsTyping(conversationId);
@@ -59,6 +61,7 @@ export const MessageItem = () => {
             disableJumbomoji={true}
             disableLinks={true}
             isGroup={isGroup}
+            isPublic={isPublic}
           />
         )}
       </div>

@@ -15,6 +15,8 @@ import { getAbsoluteAttachmentPath } from '../../types/MessageAttachment';
 import { GoogleChrome } from '../../util';
 import { QuoteText } from './message/message-content/Quote';
 import { localize } from '../../localization/localeTools';
+import { ContactName } from './ContactName';
+import { useIsPublic } from '../../hooks/useParamSelector';
 
 const QuotedMessageComposition = styled(Flex)`
   border-top: 1px solid var(--border-color);
@@ -68,6 +70,8 @@ export const SessionQuotedMessageComposition = () => {
 
   const { author, attachments, text: quoteText } = quotedMessageProps || {};
 
+  const isPublic = useIsPublic(quotedMessageProps?.convoId);
+
   const removeQuotedMessage = () => {
     dispatch(quoteMessage(undefined));
   };
@@ -79,7 +83,6 @@ export const SessionQuotedMessageComposition = () => {
   }
 
   const contact = findAndFormatContact(author);
-  const authorName = contact?.profileName || contact?.name || author || window.i18n('unknown');
 
   const { hasAttachments, firstImageLikeAttachment } = checkHasAttachments(attachments);
   const isImage = Boolean(
@@ -148,7 +151,12 @@ export const SessionQuotedMessageComposition = () => {
           $justifyContent={'center'}
           $alignItems={'flex-start'}
         >
-          <p>{authorName}</p>
+          <ContactName
+            pubkey={contact.pubkey}
+            shouldShowPubkey={false}
+            isPublic={isPublic}
+            boldProfileName={true}
+          />
           {subtitleText && <Subtle>{subtitleText}</Subtle>}
         </StyledText>
       </QuotedMessageCompositionReply>
