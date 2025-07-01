@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { getPrimaryColor } from '../../state/selectors/primaryColor';
-import { useTheme } from '../../state/selectors/theme';
+import { useTheme } from '../../state/theme/selectors/theme';
 import {
   StyleSessionSwitcher,
   getPrimaryColors,
@@ -96,7 +96,6 @@ const Themes = () => {
           <StyledTitleSettingsItem>{theme.title}</StyledTitleSettingsItem>
           <SessionRadio
             active={selectedTheme === theme.id}
-            label={''}
             value={theme.id}
             inputName={'theme-switcher'}
             style={{ padding: '0 0 0 var(--margins-lg)' }}
@@ -131,7 +130,6 @@ export const SettingsThemeSwitcher = () => {
               key={item.id}
               active={item.id === selectedPrimaryColor}
               value={item.id}
-              inputName="primary-colors"
               ariaLabel={item.ariaLabel}
               color={item.color}
               onClick={() => {

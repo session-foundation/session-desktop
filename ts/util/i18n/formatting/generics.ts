@@ -6,9 +6,10 @@ import {
   formatDistanceToNowStrict,
   formatRelative,
 } from 'date-fns';
-import { upperFirst } from 'lodash';
+import { omit, upperFirst } from 'lodash';
 import { getBrowserLocale, getTimeLocaleDictionary } from '../shared';
-import { getForcedEnglishTimeLocale } from '../timeLocaleMap';
+import { getForcedEnglishTimeLocale, timeLocaleMap } from '../timeLocaleMap';
+import type { CrowdinLocale } from '../../../localization/constants';
 
 /**
  * Formats a duration in milliseconds into a localized human-readable string.
@@ -27,8 +28,20 @@ export const formatTimeDurationMs = (
   });
 };
 
+export const formatToTimeWithLocale = (date: Date) => {
+  return new Intl.DateTimeFormat(getBrowserLocale(), {
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: undefined, // am/pm depending on the locale
+  }).format(date);
+};
+
 export const formatDateWithLocale = ({ date, formatStr }: { date: Date; formatStr: string }) => {
   return format(date, formatStr, { locale: getTimeLocaleDictionary() });
+};
+
+export const formatDateOnlyInEnglish = ({ date, formatStr }: { date: Date; formatStr: string }) => {
+  return format(date, formatStr, { locale: timeLocaleMap.en });
 };
 
 /**
@@ -67,4 +80,48 @@ export const formatTimeDistanceToNow = (
     locale: getForcedEnglishTimeLocale(),
     ...options,
   });
+};
+
+/**
+ * Formats a number as a string using the browser's locale.
+ * If the value is not a finite number, it returns the value as a string.
+ *
+ * @param value - The number to format.
+ * @param options - An optional object containing formatting options
+ */
+export const formatNumber = (
+  value: number,
+  options: Intl.NumberFormatOptions & { locale?: CrowdinLocale } = {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }
+): string => {
+  if (!Number.isFinite(value)) {
+    return value.toString();
+  }
+
+  const locale = options.locale || getBrowserLocale();
+  return new Intl.NumberFormat(locale, omit(options, 'locale')).format(value);
+};
+
+/**
+ * Returns an English formatted date like `12 June 2024`
+ */
+export const formatToDateOnlyInEnglish = (date: Date) => {
+  return new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(date);
+};
+
+/**
+ * Returns an English formatted time like `2:29 PM`
+ */
+export const formatToTimeOnlyInEnglish = (date: Date) => {
+  return new Intl.DateTimeFormat('en-GB', {
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: true,
+  }).format(date);
 };

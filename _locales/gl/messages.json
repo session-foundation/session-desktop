@@ -114,7 +114,6 @@
   "banUser": "Bloquear usuario",
   "banUserBanned": "Usuario bloqueado",
   "block": "Bloquear",
-  "blockBlockedDescription": "Desbloquea este contacto para enviar unha mensaxe.",
   "blockBlockedNone": "Ningún contacto bloqueado",
   "blockBlockedUser": "Bloqueouse a {name}",
   "blockDescription": "Tes a certeza de querer bloquear a <b>{name}?</b> Os usuarios bloqueados non poderán enviar solicitudes de mensaxes, invitacións a grupos nin chamarte.",
@@ -701,6 +700,7 @@
   "warning": "Aviso",
   "window": "Xanela",
   "yes": "Si",
-  "you": "Ti"
+  "you": "Ti",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

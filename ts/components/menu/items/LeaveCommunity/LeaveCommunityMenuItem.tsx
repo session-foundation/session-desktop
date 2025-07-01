@@ -1,25 +1,19 @@
 import { useConvoIdFromContext } from '../../../../contexts/ConvoIdContext';
-import { useConversationUsername, useIsPublic } from '../../../../hooks/useParamSelector';
-import { showLeaveGroupByConvoId } from '../../../../interactions/conversationInteractions';
 import { Localizer } from '../../../basic/Localizer';
+import { useShowLeaveCommunityCb } from '../../../menuAndSettingsHooks/useShowLeaveCommunity';
 import { ItemWithDataTestId } from '../MenuItemWithDataTestId';
-import { showLeaveCommunityItem } from './guard';
 
 export const LeaveCommunityMenuItem = () => {
   const convoId = useConvoIdFromContext();
-  const username = useConversationUsername(convoId) || convoId;
-  const isPublic = useIsPublic(convoId);
 
-  if (!showLeaveCommunityItem({ isPublic })) {
+  const cb = useShowLeaveCommunityCb(convoId);
+
+  if (!cb) {
     return null;
   }
 
   return (
-    <ItemWithDataTestId
-      onClick={() => {
-        void showLeaveGroupByConvoId(convoId, username);
-      }}
-    >
+    <ItemWithDataTestId onClick={cb}>
       <Localizer token="communityLeave" />
     </ItemWithDataTestId>
   );

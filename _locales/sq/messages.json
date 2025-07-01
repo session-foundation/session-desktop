@@ -121,7 +121,6 @@
   "banUser": "Dëboni përdorues",
   "banUserBanned": "Përdoruesi u dëbua",
   "block": "Bllokoni",
-  "blockBlockedDescription": "Që t’i dërgohet një mesazh, zhbllokojeni këtë kontakt.",
   "blockBlockedNone": "S’ka kontakte të bllokuara",
   "blockBlockedUser": "Të bllokohet {name}",
   "blockDescription": "A jeni të sigurt që doni ta bllokoni <b>{name}</b>? Përdoruesit e bllokuar nuk mund t'ju dërgojnë kërkesa për mesazhe, ftesa grupi apo t’ju telefonojnë.",
@@ -778,6 +777,7 @@
   "warning": "Paralajmërim",
   "window": "Dritare",
   "yes": "Po",
-  "you": "Ju"
+  "you": "Ju",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

@@ -136,7 +136,6 @@
   "banUser": "Cấm người dùng",
   "banUserBanned": "Người dùng bị cấm",
   "block": "Chặn",
-  "blockBlockedDescription": "Mở khóa người (liên lạc) này để gởi thông báo.",
   "blockBlockedNone": "Không có liên lạc bị chặn",
   "blockBlockedUser": "Đã chặn {name}",
   "blockDescription": "Bạn có chắc chắn rằng bạn muốn chặn <b>{name}?</b> Người dùng bị chặn không thể gửi yêu cầu tin nhắn, lời mời nhóm hoặc gọi cho bạn.",
@@ -847,6 +846,7 @@
   "warning": "Cảnh báo",
   "window": "Cửa sổ",
   "yes": "Có",
-  "you": "Bạn"
+  "you": "Bạn",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

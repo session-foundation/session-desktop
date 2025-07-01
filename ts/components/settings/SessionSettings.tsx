@@ -1,4 +1,3 @@
-import { shell } from 'electron';
 import { useState } from 'react';
 import styled from 'styled-components';
 
@@ -11,7 +10,7 @@ import { SessionIconButton } from '../icon';
 import { SessionNotificationGroupSettings } from './SessionNotificationGroupSettings';
 
 import { sessionPassword } from '../../state/ducks/modalDialog';
-import { SectionType, showLeftPaneSection } from '../../state/ducks/section';
+import { sectionActions, SectionType } from '../../state/ducks/section';
 import type { PasswordAction, SessionSettingCategory } from '../../types/ReduxTypes';
 import { getPasswordHash } from '../../util/storage';
 import { SettingsCategoryAppearance } from './section/CategoryAppearance';
@@ -21,6 +20,7 @@ import { SettingsCategoryPermissions } from './section/CategoryPermissions';
 import { SettingsCategoryPrivacy } from './section/CategoryPrivacy';
 import { SettingsCategoryRecoveryPassword } from './section/CategoryRecoveryPassword';
 import { setDebugMode } from '../../state/ducks/debug';
+import { showLinkVisitWarningDialog } from '../dialog/OpenUrlModal';
 
 export function displayPasswordModal(
   passwordAction: PasswordAction,
@@ -51,14 +51,15 @@ export interface SettingsViewProps {
 const StyledVersionInfo = styled.div`
   display: flex;
   justify-content: space-between;
+  align-items: center;
 
   padding: var(--margins-sm) var(--margins-md);
   background: none;
   font-size: var(--font-size-xs);
 `;
 
-const StyledSpanSessionInfo = styled.span`
-  opacity: 0.4;
+const StyledSpanSessionInfo = styled.span<{ opacity?: number }>`
+  opacity: ${props => props.opacity ?? 0.5};
   transition: var(--default-duration);
   user-select: text;
   cursor: pointer;
@@ -77,19 +78,20 @@ const SessionInfo = () => {
     <StyledVersionInfo>
       <StyledSpanSessionInfo
         onClick={() => {
-          void shell.openExternal(
-            `https://github.com/session-foundation/session-desktop/releases/tag/v${window.versionInfo.version}`
+          showLinkVisitWarningDialog(
+            `https://github.com/session-foundation/session-desktop/releases/tag/v${window.versionInfo.version}`,
+            dispatch
           );
         }}
       >
         v{window.versionInfo.version}
       </StyledSpanSessionInfo>
-      <StyledSpanSessionInfo>
+      <StyledSpanSessionInfo opacity={0.8}>
         <SessionIconButton
           iconSize="medium"
-          iconType="oxen"
+          iconType="sessionTokenLogoWithText"
           onClick={() => {
-            void shell.openExternal('https://oxen.io/');
+            showLinkVisitWarningDialog('https://token.getsession.org/', dispatch);
           }}
         />
       </StyledSpanSessionInfo>
@@ -134,9 +136,10 @@ const SettingInCategory = (props: {
     case 'recovery-password':
       return <SettingsCategoryRecoveryPassword />;
 
-    // these are just buttons and don't have screens
-    case 'clear-data':
+    // these are just buttons or modals and don't have screens
     case 'message-requests':
+    case 'session-network':
+    case 'clear-data':
     default:
       return null;
   }
@@ -170,7 +173,7 @@ export const SessionSettingsView = (props: SettingsViewProps) => {
   function onPasswordUpdated(action: string) {
     if (action === 'set' || action === 'change') {
       setHasPassword(true);
-      dispatch(showLeftPaneSection(SectionType.Message));
+      dispatch(sectionActions.showLeftPaneSection(SectionType.Message));
     }
 
     if (action === 'remove') {

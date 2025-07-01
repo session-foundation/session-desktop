@@ -121,7 +121,6 @@
   "banUser": "Banir Usuário",
   "banUserBanned": "Usuário banido",
   "block": "Bloquear",
-  "blockBlockedDescription": "Desbloquear este contato para enviar uma mensagem.",
   "blockBlockedNone": "Nenhum contato bloqueado",
   "blockBlockedUser": "Bloqueado {name}",
   "blockDescription": "Tem certeza que deseja bloquear <b>{name}?</b> Usuários bloqueados não podem enviar mensagens, pedidos de grupo para você ou ligar para você.",
@@ -789,6 +788,7 @@
   "warning": "Aviso",
   "window": "Janela",
   "yes": "Sim",
-  "you": "Você"
+  "you": "Você",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

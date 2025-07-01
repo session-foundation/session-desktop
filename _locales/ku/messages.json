@@ -121,7 +121,6 @@
   "banUser": "دەسەڵاتدانە کەسی",
   "banUserBanned": "بەکارهێنەر بەرچاوکرا",
   "block": "دووری دەخەیتەوە‬",
-  "blockBlockedDescription": "ئەم پەیوەندە لابردن بۆ بریتیە لە ناردنی پەیامێک.",
   "blockBlockedNone": "هیچ پەیوەندیکەرێکی بڵاوکراو نییە",
   "blockBlockedUser": "{name} دوورکرایەوە",
   "blockDescription": "دڵنیایت لەوەی ناو بەچەندەی <b>{name} </b>? بەچەندەکانی بەچەرمی نەتوانێ بمەMarker دووبارە.",
@@ -779,6 +778,7 @@
   "warning": "ئاگاداری",
   "window": "پەنجەرە",
   "yes": "بەڵێ",
-  "you": "تۆ"
+  "you": "تۆ",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

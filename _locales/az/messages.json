@@ -142,7 +142,6 @@
   "banUserBanned": "İstifadəçi yasaqlandı",
   "banUserDescription": "Ban etdiyiniz istifadəçinin Hesab ID-sini daxil edin",
   "block": "Əngəllə",
-  "blockBlockedDescription": "Mesaj göndərmək üçün bu kontaktı əngəldən çıxardın.",
   "blockBlockedNone": "Əngəllənmiş kontakt yoxdur",
   "blockBlockedUser": "{name} əngəlləndi",
   "blockDescription": "<b>{name}</b> əngəllənsin? Əngəllənmiş istifadəçilər sizə mesaj tələbi, qrup dəvəti göndərə və ya sizə zəng edə bilməz.",
@@ -884,6 +883,7 @@
   "warning": "Xəbərdarlıq",
   "window": "Pəncərə",
   "yes": "Bəli",
-  "you": "Siz"
+  "you": "Siz",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

@@ -3,12 +3,19 @@ import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 import useUpdate from 'react-use/lib/useUpdate';
 import { Flex } from '../../basic/Flex';
-import { SpacerMD, SpacerSM } from '../../basic/Text';
 import { updateDebugMenuModal } from '../../../state/ducks/modalDialog';
-import { AboutInfo, DataGenerationActions, DebugActions, OtherInfo } from './components';
+import {
+  AboutInfo,
+  DataGenerationActions,
+  DebugActions,
+  ExperimentalActions,
+  LoggingActions,
+  OtherInfo,
+} from './components';
 import { SessionWrapperModal2 } from '../../SessionWrapperModal2';
 import { FeatureFlags } from './FeatureFlags';
 import { ReleaseChannel } from './ReleaseChannel';
+import { useHotkey } from '../../../hooks/useHotkey';
 
 const StyledContent = styled(Flex)`
   padding-inline: var(--margins-sm);
@@ -43,6 +50,27 @@ export function DebugMenuModal() {
     dispatch(updateDebugMenuModal(null));
   };
 
+  const makeTogglesActive = (query: string, active: boolean) => {
+    const elements = document.querySelectorAll(query);
+    for (let i = 0; i < elements.length; i++) {
+      const toggleElement = elements[i] as any; // See SessionToggle
+      if (active && toggleElement.getAttribute('data-active') === 'false') {
+        toggleElement.click();
+      }
+      if (!active && toggleElement.getAttribute('data-active') === 'true') {
+        toggleElement.click();
+      }
+    }
+  };
+
+  useHotkey('d', () => {
+    makeTogglesActive('[id*="feature-flag-toggle-debug-debug"] > [role="button"]', true);
+  });
+
+  useHotkey('s', () => {
+    makeTogglesActive('[id*="feature-flag-toggle-debug-debug"] > [role="button"]', false);
+  });
+
   return (
     <AnimatePresence>
       <SessionWrapperModal2
@@ -50,7 +78,7 @@ export function DebugMenuModal() {
         onClose={onClose}
         showExitIcon={true}
         contentBorder={false}
-        contentWidth={'75%'}
+        $contentMaxWidth={'75%'}
         shouldOverflow={true}
         allowOutsideClick={false}
       >
@@ -58,19 +86,16 @@ export function DebugMenuModal() {
           $container={true}
           $flexDirection="column"
           $alignItems="flex-start"
-          padding="var(--margins-sm) 0"
+          padding="var(--margins-sm) 0 var(--margins-xl)"
         >
           <DebugActions />
-          <SpacerSM />
+          <LoggingActions />
+          <ExperimentalActions forceUpdate={forceUpdate} />
           <DataGenerationActions />
-          <SpacerSM />
           <FeatureFlags flags={window.sessionFeatureFlags} forceUpdate={forceUpdate} />
-          <SpacerSM />
           <ReleaseChannel />
-          <SpacerSM />
           <AboutInfo />
           <OtherInfo />
-          <SpacerMD />
         </StyledContent>
       </SessionWrapperModal2>
     </AnimatePresence>

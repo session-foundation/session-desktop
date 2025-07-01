@@ -121,7 +121,6 @@
   "banUser": "Hana Mai Amfani",
   "banUserBanned": "Mai amfani ya kulle",
   "block": "To'she",
-  "blockBlockedDescription": "Cire katanga wannan saduwa don aika saƙo.",
   "blockBlockedNone": "Babu an toshe lambobin sadarwa",
   "blockBlockedUser": "{name} an toshe",
   "blockDescription": "Kana tabbata kana so ka toshe <b>{name}?</b>? Ba za su iya aiko maka da roƙon saƙonni, gayyatar rukuni ko kira ba idan an toshe su.",
@@ -778,6 +777,7 @@
   "warning": "Gargadi",
   "window": "Window",
   "yes": "Na'am",
-  "you": "Kai"
+  "you": "Kai",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

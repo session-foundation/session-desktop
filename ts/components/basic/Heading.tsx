@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, type SessionDataTestId } from 'react';
 import styled, { CSSProperties } from 'styled-components';
 
 export type HeadingProps = {
@@ -10,31 +10,34 @@ export type HeadingProps = {
   fontWeight?: 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
   padding?: string;
   margin?: string;
+  dataTestId?: SessionDataTestId;
+  onClick?: (event: React.MouseEvent<HTMLHeadingElement>) => void;
 };
 
 type StyledHeadingProps = HeadingProps & {
   size: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'h7' | 'h8' | 'h9';
 };
 
-const headingStyles = (props: StyledHeadingProps) => `
-margin: ${props.margin ? props.margin : '0'};
-padding: ${props.padding ? props.padding : '0'};
-font-weight: ${props.fontWeight ? props.fontWeight : '700'};
-${props.size ? `font-size: var(--font-size-${props.size});` : ''}
-${props.color ? `color: ${props.color};` : ''}
-${props.alignText ? `text-align: ${props.alignText};` : ''}
+const StyledHeading = styled.h1<StyledHeadingProps>`
+  margin: ${props => props.margin || '0'};
+  padding: ${props => props.padding || '0'};
+  font-weight: ${props => props.fontWeight || '700'};
+  ${props => props.size && `font-size: var(--font-size-${props.size});`}
+  ${props => props.color && `color: ${props.color};`}
+  ${props => props.alignText && `text-align: ${props.alignText};`}
+  line-height: 1.0;
 `;
-const Heading = (headerProps: StyledHeadingProps) => {
-  const StyledHeading =
-    headerProps.size === 'h7' || headerProps.size === 'h8' || headerProps.size === 'h9'
-      ? styled.h6<StyledHeadingProps>`
-          ${props => headingStyles(props)}
-        `
-      : styled(headerProps.size)<StyledHeadingProps>`
-          ${props => headingStyles(props)}
-        `;
 
-  return <StyledHeading {...headerProps}>{headerProps.children}</StyledHeading>;
+const squashAsH6 = ['h6', 'h7', 'h8', 'h9'];
+
+const Heading = (props: StyledHeadingProps) => {
+  const tag = squashAsH6.includes(props.size) ? 'h6' : props.size;
+
+  return (
+    <StyledHeading as={tag} {...props} data-testid={props.dataTestId}>
+      {props.children}
+    </StyledHeading>
+  );
 };
 
 /** --font-size-h1 30px */

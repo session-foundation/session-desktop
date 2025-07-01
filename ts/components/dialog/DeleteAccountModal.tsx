@@ -41,7 +41,11 @@ const DescriptionBeforeAskingConfirmation = (props: {
 
   return (
     <>
-      <span className="session-confirm-main-message" data-testid="modal-description">
+      <span
+        className="session-confirm-main-message"
+        data-testid="modal-description"
+        style={{ maxWidth: '40ch' }}
+      >
         <Localizer token="clearDataAllDescription" />
       </span>
 
@@ -158,7 +162,7 @@ export const DeleteAccountModal = () => {
             dataTestId="session-confirm-cancel-button"
           />
         </div>
-        <SpacerLG />
+        {isLoading && <SpacerLG />}
         <SessionSpinner loading={isLoading} />
       </div>
     </SessionWrapperModal>

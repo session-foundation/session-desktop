@@ -7,13 +7,13 @@ import { reducer as primaryColor } from './ducks/primaryColor';
 import { reducer as search, SearchStateType } from './ducks/search';
 import { reducer as section, SectionStateType } from './ducks/section';
 import { ReduxSogsRoomInfos, SogsRoomInfoState } from './ducks/sogsRoomInfo';
-import { reducer as theme } from './ducks/theme';
-import { reducer as user, UserStateType } from './ducks/user';
+import { userReducer as user, UserStateType } from './ducks/user';
 
+import themeReducer from './theme/ducks/theme';
 import { PrimaryColorStateType, ThemeStateType } from '../themes/constants/colors';
 import { groupReducer, GroupState } from './ducks/metaGroups';
 import { modalReducer as modals, ModalState } from './ducks/modalDialog';
-import { defaultOnionReducer as onionPaths, OnionState } from './ducks/onion';
+import { defaultOnionReducer as onionPaths, OnionState } from './ducks/onions';
 import { settingsReducer, SettingsState } from './ducks/settings';
 import {
   reducer as stagedAttachments,
@@ -21,8 +21,10 @@ import {
 } from './ducks/stagedAttachments';
 import { userConfigReducer as userConfig, UserConfigState } from './ducks/userConfig';
 import { userGroupReducer, UserGroupState } from './ducks/userGroups';
-import { releasedFeaturesReducer, ReleasedFeaturesState } from './ducks/releasedFeatures';
+import releasedFeaturesReducer, { type ReleasedFeaturesState } from './ducks/releasedFeatures';
 import { debugReducer, type DebugState } from './ducks/debug';
+import networkModalReducer, { type NetworkModalState } from './ducks/networkModal';
+import networkDataReducer, { type NetworkDataState } from './ducks/networkData';
 
 export type StateType = {
   search: SearchStateType;
@@ -43,13 +45,15 @@ export type StateType = {
   userGroups: UserGroupState;
   releasedFeatures: ReleasedFeaturesState;
   debug: DebugState;
+  networkModal: NetworkModalState;
+  networkData: NetworkDataState;
 };
 
 const reducers = {
   search,
-  conversations,
   user,
-  theme,
+  conversations,
+  theme: themeReducer,
   primaryColor,
   section,
   defaultRooms,
@@ -64,6 +68,8 @@ const reducers = {
   userGroups: userGroupReducer,
   releasedFeatures: releasedFeaturesReducer,
   debug: debugReducer,
+  networkModal: networkModalReducer,
+  networkData: networkDataReducer,
 };
 
 // Making this work would require that our reducer signature supported AnyAction, not

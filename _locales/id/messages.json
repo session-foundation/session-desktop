@@ -125,7 +125,6 @@
   "banUser": "Larang pengguna",
   "banUserBanned": "Pengguna diblokir",
   "block": "Blokir",
-  "blockBlockedDescription": "Lepaskan blokir kontak ini untuk mengirim pesan.",
   "blockBlockedNone": "Tidak ada kontak yang diblokir",
   "blockBlockedUser": "Blokir {name}",
   "blockDescription": "Apakah Anda yakin ingin memblokir <b>{name}?</b> Pengguna yang diblokir tidak bisa mengirimkan Anda permintaan pesan, undangan grup, atau menelepon Anda.",
@@ -822,6 +821,7 @@
   "warning": "Peringatan",
   "window": "Jendela",
   "yes": "Ya",
-  "you": "Anda"
+  "you": "Anda",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

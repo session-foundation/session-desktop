@@ -121,7 +121,6 @@
   "banUser": "Zabrani korisnika",
   "banUserBanned": "Korisnik zabranjen",
   "block": "Blokiraj korisnika",
-  "blockBlockedDescription": "Одблокирајте дописника да би послали поруку.",
   "blockBlockedNone": "Nema blokiranih kontakata",
   "blockBlockedUser": "Blokiran {name}",
   "blockDescription": "Da li ste sigurni da želite da blokirate <b>{name}?</b> Blokirani korisnici ne mogu vam slati zahteve za porukama, pozivnice za grupu ili vas pozivati.",
@@ -778,6 +777,7 @@
   "warning": "Upozorenje",
   "window": "Prozor",
   "yes": "Da",
-  "you": "Ti"
+  "you": "Ti",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

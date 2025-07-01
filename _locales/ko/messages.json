@@ -124,7 +124,6 @@
   "banUser": "사용자 차단",
   "banUserBanned": "사용자 금지됨",
   "block": "차단",
-  "blockBlockedDescription": "보내기 차단 해제하기",
   "blockBlockedNone": "차단된 연락처가 없습니다.",
   "blockBlockedUser": "{name} 차단됨",
   "blockDescription": "Are you sure you want to block <b>{name}?</b> Blocked users cannot send you message requests, group invites or call you.",
@@ -801,6 +800,7 @@
   "warning": "경고",
   "window": "창",
   "yes": "예",
-  "you": "사용자"
+  "you": "사용자",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

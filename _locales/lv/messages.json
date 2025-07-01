@@ -115,7 +115,6 @@
   "banUser": "Aizliegt lietotāju",
   "banUserBanned": "Lietotājs bloķēts",
   "block": "Bloķēt",
-  "blockBlockedDescription": "Atbloķējiet šo kontaktu, lai nosūtītu ziņojumu.",
   "blockBlockedNone": "Nav bloķētu kontaktu",
   "blockBlockedUser": "Bloķēts {name}",
   "blockDescription": "Vai esat pārliecināts, ka vēlaties bloķēt <b>{name}?</b> Bloķētie lietotāji nevarēs jums nosūtīt ziņojumu pieprasījumus, grupu uzaicinājumus vai zvanīt jums.",
@@ -730,6 +729,7 @@
   "warning": "Brīdinājums",
   "window": "Logs",
   "yes": "Jā",
-  "you": "Jūs"
+  "you": "Jūs",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

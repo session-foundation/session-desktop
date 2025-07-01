@@ -9,80 +9,8 @@
   img {
     object-fit: cover;
     border-radius: 50%;
-    border: 1px solid var(--avatar-border-color);
-  }
-}
-
-.module-avatar__icon-closed .module-avatar--28,
-.module-avatar--28 {
-  height: 28px;
-  width: 28px;
-
-  img {
-    height: 28px;
-    width: 28px;
-  }
-}
-
-.module-avatar__icon-closed .module-avatar--36,
-.module-avatar--36 {
-  height: 36px;
-  width: 36px;
-
-  img {
-    height: 36px;
-    width: 36px;
-  }
-}
-
-.module-avatar__icon-closed .module-avatar--48,
-.module-avatar--48 {
-  height: 48px;
-  width: 48px;
-
-  img {
-    height: 48px;
-    width: 48px;
-  }
-}
-
-.module-avatar__icon-closed .module-avatar--64,
-.module-avatar--64 {
-  height: 64px;
-  width: 64px;
-
-  img {
-    height: 64px;
-    width: 64px;
-  }
-}
-
-.module-avatar__icon-closed .module-avatar--80,
-.module-avatar--80 {
-  height: 80px;
-  width: 80px;
-
-  img {
-    height: 80px;
-    width: 80px;
-  }
-}
-
-.module-avatar--300 {
-  height: 300px;
-  width: 300px;
-
-  img {
-    height: 300px;
-    width: 300px;
-  }
-}
-
-.module-avatar__icon-closed {
-  .module-avatar:last-child {
-    position: absolute;
-    right: 0px;
-    bottom: 0px;
+    height: 100%;
+    width: 100%;
   }
 }
 

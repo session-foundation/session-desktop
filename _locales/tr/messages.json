@@ -124,7 +124,6 @@
   "banUser": "Kullanıcıyı Engelle",
   "banUserBanned": "Kullanıcı yasaklandı",
   "block": "Engelle",
-  "blockBlockedDescription": "İleti göndermek için bu kişinin engellenmesini kaldırın.",
   "blockBlockedNone": "Engellenmiş kişi yok",
   "blockBlockedUser": "{name} engellendi",
   "blockDescription": "<b>{name}</b>'i engellemek istediğinizden emin misiniz? Engelli kullanıcılar size ileti isteği gönderemez, grup davetiyeleri gönderemez veya sizi arayamaz.",
@@ -825,6 +824,7 @@
   "warning": "Uyarı",
   "window": "Pencere",
   "yes": "Evet",
-  "you": "Siz"
+  "you": "Siz",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

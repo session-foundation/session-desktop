@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { SettingsViewProps } from './SessionSettings';
+import { localize, type MergedLocalizerTokens } from '../../localization/localeTools';
 
 type Props = Pick<SettingsViewProps, 'category'>;
 
@@ -23,29 +24,32 @@ const StyledHeaderTittle = styled.div`
 export const SettingsHeader = (props: Props) => {
   const { category } = props;
 
-  let categoryTitle: string | null = null;
+  let categoryTitleKey: MergedLocalizerTokens | null = null;
   switch (category) {
     case 'appearance':
-      categoryTitle = window.i18n('sessionAppearance');
+      categoryTitleKey = 'sessionAppearance';
       break;
     case 'conversations':
-      categoryTitle = window.i18n('sessionConversations');
+      categoryTitleKey = 'sessionConversations';
       break;
     case 'notifications':
-      categoryTitle = window.i18n('sessionNotifications');
+      categoryTitleKey = 'sessionNotifications';
       break;
     case 'help':
-      categoryTitle = window.i18n('sessionHelp');
+      categoryTitleKey = 'sessionHelp';
       break;
     case 'permissions':
-      categoryTitle = window.i18n('sessionPermissions');
+      categoryTitleKey = 'sessionPermissions';
       break;
     case 'privacy':
-      categoryTitle = window.i18n('sessionPrivacy');
+      categoryTitleKey = 'sessionPrivacy';
       break;
     case 'recovery-password':
-      categoryTitle = window.i18n('sessionRecoveryPassword');
+      categoryTitleKey = 'sessionRecoveryPassword';
       break;
+    // these are modals or other screens
+    case 'session-network':
+    case 'donate':
     case 'clear-data':
     case 'message-requests':
       throw new Error(`no header for should be tried to be rendered for "${category}"`);
@@ -56,7 +60,9 @@ export const SettingsHeader = (props: Props) => {
 
   return (
     <StyledSettingsHeader>
-      <StyledHeaderTittle>{categoryTitle}</StyledHeaderTittle>
+      <StyledHeaderTittle>
+        {categoryTitleKey ? localize(categoryTitleKey) : null}
+      </StyledHeaderTittle>
     </StyledSettingsHeader>
   );
 };

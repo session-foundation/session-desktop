@@ -121,7 +121,6 @@
   "banUser": "صارف کو بین کریں",
   "banUserBanned": "صارف بین کیا گیا",
   "block": "بلاک کریں",
-  "blockBlockedDescription": "پیغام بھیجنے کے لیے اس رابطے کو ان بلاک کریں.",
   "blockBlockedNone": "کوئی بلاک شدہ رابطہ نہیں ہے",
   "blockBlockedUser": "{name} کو بلاک کر دیا گیا",
   "blockDescription": "کیا آپ واقعی <b>{name}</b> کو بلاک کرنا چاہتے ہیں؟ بلاک کئے گئے صارفین آپ کو میسیج کی درخواستیں، گروپ دعوتیں یا کال نہیں بھیج سکتے۔",
@@ -784,6 +783,7 @@
   "warning": "انتباہ",
   "window": "ونڈو",
   "yes": "جی ہاں",
-  "you": "آپ"
+  "you": "آپ",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

@@ -5,7 +5,7 @@
     "module": "commonjs", // Specify module code generation: 'none', 'commonjs', 'amd', 'system', 'umd', 'es2015', or 'ESNext'.
     "lib": [
       "dom", // Required to access `window`
-      "es2021"
+      "ES2023"
     ],
     "jsx": "react-jsx", // Specify JSX code generation: 'preserve', 'react-native', or 'react-jsx'.
     // "noEmitHelpers": false,
@@ -27,6 +27,7 @@
     "resolveJsonModule": true,
     // Module Resolution Options
     // "baseUrl": "./", // Base directory to resolve non-absolute module names.
+    // "paths": {},                           // A series of entries which re-map imports to lookup locations relative to the 'baseUrl'.
     // "rootDirs": [],                        // List of root folders whose combined content represents the structure of the project at runtime.
     // "typeRoots": [],                       // List of folders to include type definitions from.
     // "types": [],                           // Type declaration files to be included in compilation.

@@ -121,7 +121,6 @@
   "banUser": "I-ban ang user",
   "banUserBanned": "Na-ban ang user",
   "block": "I-block",
-  "blockBlockedDescription": "I-unblock ang contact na ito upang magpadala ng mensahe.",
   "blockBlockedNone": "Walang naka-block na contact",
   "blockBlockedUser": "Naka-block {name}",
   "blockDescription": "Sigurado ka bang gusto mong i-block si <b>{name}?</b> Ang mga na-block na gumagamit ay hindi maaaring magpadala sa iyo ng mga kahilingan sa mensahe, mga paanyaya sa grupo, o tumawag sa iyo.",
@@ -779,6 +778,7 @@
   "warning": "Babala",
   "window": "Window",
   "yes": "Oo",
-  "you": "Ikaw"
+  "you": "Ikaw",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

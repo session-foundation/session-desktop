@@ -134,7 +134,6 @@
   "banUser": "Bloquejar usuari",
   "banUserBanned": "Usuari exclòs",
   "block": "Bloqueu",
-  "blockBlockedDescription": "Desbloca aquest contacte per a enviar-li un missatge.",
   "blockBlockedNone": "No hi ha contactes bloquejats",
   "blockBlockedUser": "Bloquejat {name}",
   "blockDescription": "Esteu segur que voleu blocar <b>{name}?</b> Els usuaris bloquejats no us poden enviar sol·licituds de missatges, invitacions de grups ni trucar-vos.",
@@ -817,6 +816,7 @@
   "warning": "Avís",
   "window": "Finestra",
   "yes": "Sí",
-  "you": "Vós"
+  "you": "Vós",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

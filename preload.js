@@ -54,17 +54,19 @@ window.getUserKeys = async () => {
 };
 
 window.sessionFeatureFlags = {
-  useOnionRequests: true,
-  useTestNet: isTestNet() || isTestIntegration(),
-  useClosedGroupV2QAButtons: false, // TODO DO NOT MERGE Remove after QA
   replaceLocalizedStringsWithKeys: false,
+  // Hooks
+  useClosedGroupV2QAButtons: false, // TODO DO NOT MERGE Remove after QA
+  useOnionRequests: true,
   useReleaseChannels: true,
+  useSESH101: true,
+  useTestNet: isTestNet() || isTestIntegration(),
   debug: {
     debugLogging: !isEmpty(process.env.SESSION_DEBUG),
     debugLibsessionDumps: !isEmpty(process.env.SESSION_DEBUG_LIBSESSION_DUMPS),
     debugBuiltSnodeRequests: !isEmpty(process.env.SESSION_DEBUG_BUILT_SNODE_REQUEST),
     debugSwarmPolling: !isEmpty(process.env.SESSION_DEBUG_SWARM_POLLING),
-    debugFileServerRequests: false,
+    debugServerRequests: false,
     debugNonSnodeRequests: false,
     debugOnionRequests: false,
   },
@@ -199,6 +201,9 @@ ipc.on('get-theme-setting', () => {
   ipc.send('get-success-theme-setting', theme);
 });
 
+// Assume we are online until we are told otherwise (needed for restore from seed to work)
+window.isOnline = true;
+
 window.getSettingValue = (settingID, comparisonValue = null) => {
   // Comparison value allows you to pull boolean values from any type.
   // Eg. window.getSettingValue('theme', 'classic-dark')
@@ -283,15 +288,17 @@ setInterval(() => {
 
 window.clipboard = clipboard;
 
-window.getSeedNodeList = () =>
-  window.sessionFeatureFlags.useTestNet
-    ? ['http://seed2.getsession.org:38157']
-    : [
-        // Note: for each of the seed nodes, the cert pinned is the one provided on the port 4443 and not the 4433, because the 4443 is a 10year one
-        'https://seed1.getsession.org:4443/',
-        'https://seed2.getsession.org:4443/',
-        'https://seed3.getsession.org:4443/',
-      ];
+window.getSeedNodeList = () => {
+  if (window.sessionFeatureFlags.useTestNet) {
+    return ['http://seed2.getsession.org:38157'];
+  }
+  return [
+    // Note: for each of the seed nodes, the cert pinned is the one provided on the port 4443 and not the 4433, because the 4443 is a 10year one
+    'https://seed1.getsession.org:4443/',
+    'https://seed2.getsession.org:4443/',
+    'https://seed3.getsession.org:4443/',
+  ];
+};
 
 window.addEventListener('contextmenu', e => {
   const editable = e && e.target.closest('textarea, input, [contenteditable="true"]');

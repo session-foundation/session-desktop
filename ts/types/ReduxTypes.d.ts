@@ -7,19 +7,19 @@
 
 export type SessionSettingCategory =
   | 'privacy'
+  | 'donate'
   | 'notifications'
   | 'conversations'
   | 'message-requests'
   | 'appearance'
   | 'permissions'
-  | 'help'
+  | 'session-network'
   | 'recovery-password'
+  | 'help'
   | 'clear-data';
 
 export type PasswordAction = 'set' | 'change' | 'remove' | 'enter';
 
 export type EditProfilePictureModalProps = {
-  avatarPath: string | null;
-  profileName: string | undefined;
-  ourId: string;
+  conversationId: string;
 };

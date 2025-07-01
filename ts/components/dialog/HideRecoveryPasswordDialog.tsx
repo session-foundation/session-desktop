@@ -3,7 +3,7 @@ import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { SettingsKey } from '../../data/settings-key';
 import { updateHideRecoveryPasswordModal } from '../../state/ducks/modalDialog';
-import { showSettingsSection } from '../../state/ducks/section';
+import { sectionActions } from '../../state/ducks/section';
 import { SessionWrapperModal } from '../SessionWrapperModal';
 import { Flex } from '../basic/Flex';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
@@ -12,7 +12,7 @@ import { Localizer } from '../basic/Localizer';
 
 const StyledDescriptionContainer = styled.div`
   width: 280px;
-  line-height: 120%;
+  line-height: var(--font-line-height);
 `;
 
 export type HideRecoveryPasswordDialogProps = {
@@ -31,7 +31,7 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
   const onConfirmation = async () => {
     await window.setSettingValue(SettingsKey.hideRecoveryPassword, true);
     onClose();
-    dispatch(showSettingsSection('privacy'));
+    dispatch(sectionActions.showSettingsSection('privacy'));
   };
 
   if (isEmpty(state)) {

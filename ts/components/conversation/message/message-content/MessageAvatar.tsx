@@ -63,7 +63,7 @@ export const MessageAvatar = (props: Props) => {
     }
     if (isPublic && !PubKey.isBlinded(sender)) {
       // public chat but account id not blinded. disable showing user details if we do not have an active convo with that user.
-      // an unactive convo with that user means that we never chatted with that id directyly, but only through a sogs
+      // an inactive convo with that user means that we never chatted with that id directly, but only through a sogs
       const convoWithSender = ConvoHub.use().get(sender);
       if (!convoWithSender || !convoWithSender.getActiveAt()) {
         // for some time, we might still get some unblinded messages, as in message sent unblinded because
@@ -102,7 +102,11 @@ export const MessageAvatar = (props: Props) => {
         privateConvoToOpen = foundRealSessionId || privateConvoToOpen;
       }
 
-      await ConvoHub.use().get(privateConvoToOpen).setOriginConversationID(selectedConvoKey, true);
+      if (!privateConvoToOpen.startsWith(KeyPrefixType.standard)) {
+        await ConvoHub.use()
+          .get(privateConvoToOpen)
+          .setOriginConversationID(selectedConvoKey, true);
+      }
 
       // public and blinded key for that message, we should open the convo as is and see if the user wants
       // to send a sogs blinded message request.

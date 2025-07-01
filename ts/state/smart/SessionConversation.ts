@@ -12,7 +12,6 @@ import {
 } from '../selectors/conversations';
 import { getSelectedConversationKey } from '../selectors/selectedConversation';
 import { getStagedAttachmentsForCurrentConversation } from '../selectors/stagedAttachments';
-import { getTheme } from '../selectors/theme';
 import { getOurDisplayNameInProfile, getOurNumber } from '../selectors/user';
 import { HTMLDirection } from '../../util/i18n/rtlSupport';
 
@@ -24,7 +23,6 @@ const mapStateToProps = (state: StateType, ownProps: SmartSessionConversationOwn
   return {
     selectedConversation: getSelectedConversation(state),
     selectedConversationKey: getSelectedConversationKey(state),
-    theme: getTheme(state),
     messagesProps: getSortedMessagesOfSelectedConversation(state),
     ourDisplayNameInProfile: getOurDisplayNameInProfile(state),
     ourNumber: getOurNumber(state),

@@ -138,7 +138,6 @@
   "banUser": "Mitglied blockieren",
   "banUserBanned": "Mitglied gesperrt",
   "block": "Blockieren",
-  "blockBlockedDescription": "Gib die Blockierung dieses Kontakts frei, um eine Nachricht zu senden.",
   "blockBlockedNone": "Keine blockierten Kontakte",
   "blockBlockedUser": "Blockiert {name}",
   "blockDescription": "Möchtest du <b>{name}</b> blockieren? Blockierte Personen können dir keine Nachrichtenanfragen, Gruppeneinladungen oder Anrufe senden.",
@@ -853,6 +852,7 @@
   "warning": "Warnung",
   "window": "Fenster",
   "yes": "Ja",
-  "you": "Du"
+  "you": "Du",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

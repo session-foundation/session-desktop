@@ -96,10 +96,10 @@ export async function openGroupV2GetRoomInfoViaOnionV4({
   });
   const room = result?.body as Record<string, any> | undefined;
   if (room) {
-    const { token: id, name, image_id: imageId } = room;
+    const { token: id, name, image_id: imageId, description } = room;
 
     if (!id || !name) {
-      window?.log?.warn('getRoominfo Parsing failed');
+      window?.log?.warn('getRoomInfo Parsing failed');
       return null;
     }
 
@@ -107,6 +107,7 @@ export async function openGroupV2GetRoomInfoViaOnionV4({
       id,
       name,
       imageId,
+      description: description || '',
       capabilities: caps ? uniq(caps) : undefined,
     };
     return info;

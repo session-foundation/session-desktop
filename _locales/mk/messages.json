@@ -121,7 +121,6 @@
   "banUser": "Забрани корисник",
   "banUserBanned": "Корисникот е забранет",
   "block": "Блокирај",
-  "blockBlockedDescription": "Одблокирај го овој контакт за да испратиш порака.",
   "blockBlockedNone": "Нема блокирани контакти",
   "blockBlockedUser": "Корисникот {name} е блокиран",
   "blockDescription": "Дали сте сигурни дека сакате да го блокирате <b>{name}?</b> Блокираните корисници не можат да ви испраќаат барања за пораки, покани за групи или да ве повикуваат.",
@@ -778,6 +777,7 @@
   "warning": "Предупредување",
   "window": "Прозорец",
   "yes": "Да",
-  "you": "Вие"
+  "you": "Вие",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

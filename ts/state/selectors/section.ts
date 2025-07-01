@@ -16,6 +16,10 @@ export const getIsMessageSection = (state: StateType) => {
   return state.section.focusedSection === SectionType.Message;
 };
 
+export function useIsMessageSection() {
+  return useSelector(getIsMessageSection);
+}
+
 export const getFocusedSettingsSection = createSelector(
   getSection,
   (state: SectionStateType): SessionSettingCategory | undefined => state.focusedSettingsSection
@@ -26,10 +30,14 @@ export const getIsAppFocused = createSelector(
   (state: SectionStateType): boolean => state.isAppFocused
 );
 
-export const getLeftOverlayMode = createSelector(
+const getLeftOverlayMode = createSelector(
   getSection,
   (state: SectionStateType): LeftOverlayMode | undefined => state.leftOverlayMode
 );
+
+export const useLeftOverlayMode = () => {
+  return useSelector(getLeftOverlayMode);
+};
 
 export const getRightOverlayMode = (state: StateType) => {
   return state.section.rightOverlayMode;

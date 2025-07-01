@@ -121,7 +121,6 @@
   "banUser": "Αποκλεισμός Χρήστη",
   "banUserBanned": "Ο χρήστης αποκλείστηκε",
   "block": "Φραγή",
-  "blockBlockedDescription": "Καταργήστε τη φραγή αυτής τη επαφής για να στείλετε ένα μήνυμα.",
   "blockBlockedNone": "Καμία μπλοκαρισμένη επαφή",
   "blockBlockedUser": "Σε φραγή {name}",
   "blockDescription": "Είστε σίγουροι ότι θέλετε να θέσετε σε φραγή <b>{name}</b>; Οι μπλοκαρισμένοι χρήστες δεν μπορούν να σας στείλουν αιτήματα μηνύματα, προσκλήσεις ομάδας ή να σας καλέσουν.",
@@ -788,6 +787,7 @@
   "warning": "Προειδοποίηση",
   "window": "Παράθυρο",
   "yes": "Ναι",
-  "you": "Εσείς"
+  "you": "Εσείς",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

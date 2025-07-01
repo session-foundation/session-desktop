@@ -52,6 +52,10 @@ export const getConversationsCount = createSelector(getConversationLookup, (stat
   return Object.keys(state).length;
 });
 
+export const getGroupConversationsCount = createSelector(getConversationLookup, (state): number => {
+  return Object.values(state).filter(convo => !convo.isPrivate && !convo.isPublic).length;
+});
+
 const getConversationQuotes = (state: StateType): QuoteLookupType | undefined => {
   return state.conversations.quotes;
 };
@@ -395,10 +399,6 @@ export const getLeftPaneConversationIds = createSelector(
   _getLeftPaneConversationIds
 );
 
-export const useContactsToInviteToGroup = () => {
-  const contacts = useSelector(getPrivateContactsPubkeys);
-  return contacts;
-};
 export const getLeftPaneConversationIdsCount = createSelector(
   getLeftPaneConversationIds,
   (convoIds: Array<string>) => {

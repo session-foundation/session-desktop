@@ -121,7 +121,6 @@
   "banUser": "ユーザーを禁止する",
   "banUserBanned": "ユーザーが禁止されました",
   "block": "ブロック",
-  "blockBlockedDescription": "この連絡先にメッセージを送るためにブロックを解除する。",
   "blockBlockedNone": "ブロックしている連絡先はありません",
   "blockBlockedUser": "{name} をブロックしました",
   "blockDescription": "本当に<b>{name}</b>をブロックしますか？ブロックされたユーザーは、メッセージリクエスト、グループ招待や通話を送ることができません。",
@@ -788,6 +787,7 @@
   "warning": "警告",
   "window": "ウィンドウ",
   "yes": "はい",
-  "you": "あなた"
+  "you": "あなた",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

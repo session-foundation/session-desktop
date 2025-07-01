@@ -24,7 +24,7 @@ Remember, you can preview this before saving it.
 Describe briefly what your pull request changes. Focus on the value provided to users.
 
 Does it address any outstanding issues in this project?
-  https://github.com/loki-project/loki-messenger/issues?utf8=%E2%9C%93&q=is%3Aissue
+  https://github.com/session-foundation/session-desktop/issues?q=sort%3Aupdated-desc+is%3Aissue+is%3Aopen
   Reference an issue with the hash symbol: "#222"
   If you're fixing it, use something like "Fixes #222"
 

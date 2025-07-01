@@ -18,11 +18,12 @@ import { getOurPubKeyStrFromCache } from '../session/utils/User';
 import { LibSessionUtil } from '../session/utils/libsession/libsession_utils';
 import { forceSyncConfigurationNowIfNeeded } from '../session/utils/sync/syncUtils';
 import { updateConfirmModal, updateDeleteAccountModal } from '../state/ducks/modalDialog';
-import { actions as userActions } from '../state/ducks/user';
+import { userActions } from '../state/ducks/user';
 import { Registration } from './registration';
 import { Storage, saveRecoveryPhrase, setLocalPubKey, setSignInByLinking } from './storage';
 import { PromiseUtils } from '../session/utils';
 import { SnodeAPI } from '../session/apis/snode_api/SNodeAPI';
+import { ReduxOnionSelectors } from '../state/selectors/onions';
 
 /**
  * Might throw
@@ -237,7 +238,6 @@ export async function registrationDone(ourPubkey: string, displayName: string) {
   const user = {
     ourDisplayNameInProfile: displayName,
     ourNumber: getOurPubKeyStrFromCache(),
-    ourPrimary: ourPubkey,
   };
   window.inboxStore?.dispatch(userActions.userChanged(user));
 
@@ -272,7 +272,7 @@ export async function sendConfigMessageAndDeleteEverything() {
   try {
     // DELETE LOCAL DATA ONLY, NOTHING ON NETWORK
     window?.log?.info('DeleteAccount => Sending a last SyncConfiguration');
-    if (window.isOnline) {
+    if (ReduxOnionSelectors.isOnlineOutsideRedux()) {
       // be sure to wait for the message being effectively sent. Otherwise we won't be able to encrypt it for our devices !
       await forceSyncConfigurationNowIfNeeded(true);
       window?.log?.info('Last configuration message sent!');

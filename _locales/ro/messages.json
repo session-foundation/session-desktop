@@ -121,7 +121,6 @@
   "banUser": "Interzice utilizatorul",
   "banUserBanned": "Utilizator interzis",
   "block": "Blochează",
-  "blockBlockedDescription": "Deblochează acest contact pentru a putea trimite mesaje.",
   "blockBlockedNone": "Nu aveți contacte blocate",
   "blockBlockedUser": "Blocat {name}",
   "blockDescription": "Ești sigur/ă că vrei să blochezi pe <b>{name}?</b> Utilizatorii blocați nu îți pot trimite solicitări de mesaje, invitații de grup sau să te apeleze.",
@@ -788,6 +787,7 @@
   "warning": "Atenţie",
   "window": "Fereastră",
   "yes": "Da",
-  "you": "Tu"
+  "you": "Tu",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

@@ -31,6 +31,11 @@ import {
 import { useSelectedIsGroupV2 } from '../../state/selectors/selectedConversation';
 import { SessionSpinner } from '../loading';
 import { SessionToggle } from '../basic/SessionToggle';
+import { localize } from '../../localization/localeTools';
+import { SessionSearchInput } from '../SessionSearchInput';
+import { NoGroupMembers } from '../search/NoResults';
+import { useContactsToInviteTo } from '../../hooks/useContactsToInviteToGroup';
+import { searchActions } from '../../state/ducks/search';
 
 type Props = {
   conversationId: string;
@@ -40,10 +45,35 @@ const StyledMemberList = styled.div`
   max-height: 240px;
 `;
 
-/**
- * Admins are always put first in the list of group members.
- * Also, admins have a little crown on their avatar.
- */
+function useSortedListOfMembers(convoId: string) {
+  const groupMembersLegacy = useSortedGroupMembers(convoId);
+  const groupMembers03Group = useStateOf03GroupMembers(convoId);
+  const isV2Group = useSelectedIsGroupV2();
+  const groupAdmins = useGroupAdmins(convoId);
+
+  const sortedMembersNon03 = useMemo(
+    () => groupMembersLegacy.toSorted(m => (groupAdmins?.includes(m) ? -1 : 0)),
+    [groupMembersLegacy, groupAdmins]
+  );
+  const sortedMembers = isV2Group ? groupMembers03Group.map(m => m.pubkeyHex) : sortedMembersNon03;
+
+  return sortedMembers;
+}
+
+const useFilteredSortedListOfMembers = (convoId: string) => {
+  const sortedMembers = useSortedListOfMembers(convoId);
+  const { contactsToInvite: globalSearchResults, searchTerm } =
+    useContactsToInviteTo('manage-group-members');
+
+  return useMemo(
+    () =>
+      !searchTerm || globalSearchResults === undefined
+        ? sortedMembers
+        : sortedMembers.filter(m => globalSearchResults.includes(m)),
+    [sortedMembers, globalSearchResults, searchTerm]
+  );
+};
+
 const MemberList = (props: {
   convoId: string;
   selectedMembers: Array<string>;
@@ -53,17 +83,8 @@ const MemberList = (props: {
   const { onSelect, convoId, onUnselect, selectedMembers } = props;
   const weAreAdmin = useWeAreAdmin(convoId);
   const isV2Group = useSelectedIsGroupV2();
-
   const groupAdmins = useGroupAdmins(convoId);
-  const groupMembers = useSortedGroupMembers(convoId);
-  const groupMembers03Group = useStateOf03GroupMembers(convoId);
-
-  const sortedMembersNon03 = useMemo(
-    () => [...groupMembers].sort(m => (groupAdmins?.includes(m) ? -1 : 0)),
-    [groupMembers, groupAdmins]
-  );
-
-  const sortedMembers = isV2Group ? groupMembers03Group.map(m => m.pubkeyHex) : sortedMembersNon03;
+  const sortedMembers = useFilteredSortedListOfMembers(convoId);
 
   return (
     <>
@@ -113,6 +134,7 @@ export const UpdateGroupMembersDialog = (props: Props) => {
 
   const closeDialog = () => {
     dispatch(updateGroupMembersModal(null));
+    dispatch(searchActions.clearSearch());
   };
 
   const onClickOK = async () => {
@@ -164,30 +186,46 @@ export const UpdateGroupMembersDialog = (props: Props) => {
     removeFrom(member);
   };
 
-  const showNoMembersMessage = existingMembers.length === 0;
-
   return (
-    <SessionWrapperModal title={window.i18n('groupMembers')} onClose={closeDialog}>
+    <SessionWrapperModal
+      title={
+        weAreAdmin ? localize('manageMembers').toString() : localize('groupMembers').toString()
+      }
+      onClose={closeDialog}
+    >
       {hasClosedGroupV2QAButtons() && weAreAdmin && PubKey.is03Pubkey(conversationId) ? (
         <>
-          Also remove messages:
-          <SessionToggle
-            active={alsoRemoveMessages}
-            onClick={() => {
-              setAlsoRemoveMessages(!alsoRemoveMessages);
+          <span
+            style={{
+              display: 'flex',
+              justifyContent: 'space-evenly',
+              alignItems: 'center',
+              width: '400px',
             }}
-          />
+          >
+            Also remove messages:
+            <SessionToggle
+              active={alsoRemoveMessages}
+              onClick={() => {
+                setAlsoRemoveMessages(!alsoRemoveMessages);
+              }}
+            />
+          </span>
         </>
       ) : null}
+      <SessionSearchInput searchType="manage-group-members" />
       <StyledMemberList className="contact-selection-list">
-        <MemberList
-          convoId={conversationId}
-          onSelect={onSelect}
-          onUnselect={onUnselect}
-          selectedMembers={membersToRemove}
-        />
+        {!existingMembers.length ? (
+          <NoGroupMembers />
+        ) : (
+          <MemberList
+            convoId={conversationId}
+            onSelect={onSelect}
+            onUnselect={onUnselect}
+            selectedMembers={membersToRemove}
+          />
+        )}
       </StyledMemberList>
-      {showNoMembersMessage && <p>{window.i18n('groupMembersNone')}</p>}
 
       <SpacerLG />
       <SessionSpinner loading={isProcessingUIChange} />

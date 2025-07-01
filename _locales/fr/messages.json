@@ -147,7 +147,6 @@
   "banUserBanned": "Utilisateur banni",
   "banUserDescription": "Entrez l'identifiant du compte de l'utilisateur que vous souhaitez débannir",
   "block": "Bloquer",
-  "blockBlockedDescription": "Débloquez ce contact pour envoyer un message.",
   "blockBlockedNone": "Aucun contact n’est bloqué",
   "blockBlockedUser": "Bloqué {name}",
   "blockDescription": "Êtes-vous sûr·e de vouloir bloquer <b>{name}?</b> Les utilisateurs bloqués ne peuvent pas vous envoyer de demandes de message, d'invitations de groupe ou vous appeler.",
@@ -894,6 +893,7 @@
   "warning": "Attention",
   "window": "Fenêtre",
   "yes": "Oui",
-  "you": "Vous"
+  "you": "Vous",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

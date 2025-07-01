@@ -1,16 +1,17 @@
 import { ipcRenderer } from 'electron';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 import useInterval from 'react-use/lib/useInterval';
 import useTimeoutFn from 'react-use/lib/useTimeoutFn';
-import useThrottleFn from 'react-use/lib/useThrottleFn';
 
+import useMount from 'react-use/lib/useMount';
+import useThrottleFn from 'react-use/lib/useThrottleFn';
+import styled from 'styled-components';
 import { Data } from '../../data/data';
 import { ConvoHub } from '../../session/conversations';
 
-import { clearSearch } from '../../state/ducks/search';
-import { resetLeftOverlayMode, SectionType, showLeftPaneSection } from '../../state/ducks/section';
+import { sectionActions, SectionType } from '../../state/ducks/section';
 import {
   getOurPrimaryConversation,
   useGlobalUnreadMessageCount,
@@ -22,7 +23,7 @@ import { DecryptedAttachmentsManager } from '../../session/crypto/DecryptedAttac
 
 import { DURATION } from '../../session/constants';
 
-import { uploadOurAvatar } from '../../interactions/conversationInteractions';
+import { reuploadCurrentAvatarUs } from '../../interactions/avatar-interactions/nts-avatar-interactions';
 import {
   editProfileModal,
   onionPathModal,
@@ -35,7 +36,10 @@ import { getSwarmPollingInstance } from '../../session/apis/snode_api';
 import { UserUtils } from '../../session/utils';
 import { Avatar, AvatarSize } from '../avatar/Avatar';
 import { ActionPanelOnionStatusLight } from '../dialog/OnionStatusPathDialog';
-import { SessionIconButton } from '../icon/SessionIconButton';
+import {
+  SessionLucideIconButton,
+  type SessionLucideIconButtonProps,
+} from '../icon/SessionIconButton';
 import { LeftPaneSectionContainer } from './LeftPaneSectionContainer';
 
 import { SettingsKey } from '../../data/settings-key';
@@ -44,15 +48,23 @@ import { UserSync } from '../../session/utils/job_runners/jobs/UserSyncJob';
 import { forceSyncConfigurationNowIfNeeded } from '../../session/utils/sync/syncUtils';
 import { useFetchLatestReleaseFromFileServer } from '../../hooks/useFetchLatestReleaseFromFileServer';
 import { useHotkey } from '../../hooks/useHotkey';
-import { useIsDarkTheme } from '../../state/selectors/theme';
+import { useIsDarkTheme } from '../../state/theme/selectors/theme';
 import { switchThemeTo } from '../../themes/switchTheme';
 import { getOppositeTheme } from '../../util/theme';
 import { SessionNotificationCount } from '../icon/SessionNotificationCount';
 import { getIsModalVisible } from '../../state/selectors/modal';
 
 import { MessageQueue } from '../../session/sending';
-import { useRefreshReleasedFeaturesTimestamp } from '../../hooks/useRefreshReleasedFeaturesTimestamp';
+import { useCheckReleasedFeatures } from '../../hooks/useCheckReleasedFeatures';
 import { useDebugMode } from '../../state/selectors/debug';
+import { networkDataActions } from '../../state/ducks/networkData';
+import { isSesh101ReadyOutsideRedux } from '../../state/selectors/releasedFeatures';
+import { searchActions } from '../../state/ducks/search';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+
+const StyledContainerAvatar = styled.div`
+  padding: var(--margins-lg);
+`;
 
 const Section = (props: { type: SectionType }) => {
   const ourNumber = useSelector(getOurNumber);
@@ -63,7 +75,7 @@ const Section = (props: { type: SectionType }) => {
   const isModalVisible = useSelector(getIsModalVisible);
   const isDarkTheme = useIsDarkTheme();
   const focusedSection = useSelector(getFocusedSection);
-  const isSelected = focusedSection === props.type;
+  const isSelected = focusedSection === type;
 
   const handleClick = () => {
     if (type === SectionType.Profile) {
@@ -86,9 +98,9 @@ const Section = (props: { type: SectionType }) => {
       dispatch(updateDebugMenuModal({}));
     } else {
       // message section
-      dispatch(clearSearch());
-      dispatch(showLeftPaneSection(type));
-      dispatch(resetLeftOverlayMode());
+      dispatch(searchActions.clearSearch());
+      dispatch(sectionActions.showLeftPaneSection(type));
+      dispatch(sectionActions.resetLeftOverlayMode());
     }
   };
 
@@ -97,58 +109,64 @@ const Section = (props: { type: SectionType }) => {
   useHotkey('Escape', () => {
     if (type === SectionType.Settings && !isModalVisible) {
       settingsIconRef.current?.blur();
-      dispatch(clearSearch());
-      dispatch(showLeftPaneSection(SectionType.Message));
-      dispatch(resetLeftOverlayMode());
+      dispatch(searchActions.clearSearch());
+      dispatch(sectionActions.showLeftPaneSection(SectionType.Message));
+      dispatch(sectionActions.resetLeftOverlayMode());
     }
   });
 
   if (type === SectionType.Profile) {
     return (
-      <Avatar
-        size={AvatarSize.XS}
-        onAvatarClick={handleClick}
-        pubkey={ourNumber}
-        dataTestId="leftpane-primary-avatar"
-        imageDataTestId={`img-leftpane-primary-avatar`}
-      />
+      <StyledContainerAvatar>
+        <Avatar
+          size={AvatarSize.XS}
+          onAvatarClick={handleClick}
+          pubkey={ourNumber}
+          dataTestId="leftpane-primary-avatar"
+          imageDataTestId={`img-leftpane-primary-avatar`}
+        />
+      </StyledContainerAvatar>
     );
   }
 
   const unreadToShow = type === SectionType.Message ? globalUnreadMessageCount : undefined;
 
+  const buttonProps = {
+    iconSize: '22px',
+    padding: 'var(--margins-lg)',
+    onClick: handleClick,
+    isSelected,
+  } satisfies Omit<SessionLucideIconButtonProps, 'unicode' | 'dataTestId'>;
+
   switch (type) {
     case SectionType.Message:
       return (
-        <SessionIconButton
-          iconSize="medium"
+        <SessionLucideIconButton
+          {...buttonProps}
           dataTestId="message-section"
-          iconType={'chatBubble'}
-          onClick={handleClick}
-          isSelected={isSelected}
+          unicode={LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE}
+          style={{
+            position: 'relative',
+          }}
         >
           {Boolean(unreadToShow) && <SessionNotificationCount count={unreadToShow} />}
-        </SessionIconButton>
+        </SessionLucideIconButton>
       );
     case SectionType.Settings:
       return (
-        <SessionIconButton
-          iconSize="medium"
+        <SessionLucideIconButton
+          {...buttonProps}
           dataTestId="settings-section"
-          iconType={'gear'}
-          onClick={handleClick}
-          isSelected={isSelected}
+          unicode={LUCIDE_ICONS_UNICODE.SETTINGS}
           ref={settingsIconRef}
         />
       );
     case SectionType.DebugMenu:
       return (
-        <SessionIconButton
-          iconSize="medium"
+        <SessionLucideIconButton
+          {...buttonProps}
+          unicode={LUCIDE_ICONS_UNICODE.SQUARE_CODE}
           dataTestId="debug-menu-section"
-          iconType={'debug'}
-          onClick={handleClick}
-          isSelected={isSelected}
         />
       );
     case SectionType.PathIndicator:
@@ -162,12 +180,10 @@ const Section = (props: { type: SectionType }) => {
     case SectionType.ColorMode:
     default:
       return (
-        <SessionIconButton
-          iconSize="medium"
-          iconType={isDarkTheme ? 'moon' : 'sun'}
+        <SessionLucideIconButton
+          {...buttonProps}
+          unicode={isDarkTheme ? LUCIDE_ICONS_UNICODE.MOON : LUCIDE_ICONS_UNICODE.SUN_MEDIUM}
           dataTestId="theme-section"
-          onClick={handleClick}
-          isSelected={isSelected}
         />
       );
   }
@@ -194,7 +210,7 @@ const triggerAvatarReUploadIfNeeded = async () => {
   if (Date.now() - lastTimeStampAvatarUpload > DURATION.DAYS * 14) {
     window.log.info('Reuploading avatar...');
     // reupload the avatar
-    await uploadOurAvatar();
+    await reuploadCurrentAvatarUs();
   }
 };
 
@@ -209,7 +225,13 @@ const doAppStartUp = async () => {
   void triggerSyncIfNeeded();
   void getSwarmPollingInstance().start();
   void loadDefaultRooms();
-  void SnodePool.getFreshSwarmFor(UserUtils.getOurPubKeyStrFromCache()); // refresh our swarm on start to speed up the first message fetching event
+  // eslint-disable-next-line more/no-then
+  void SnodePool.getFreshSwarmFor(UserUtils.getOurPubKeyStrFromCache()).then(() => {
+    // trigger any other actions that need to be done after the swarm is ready
+    if (isSesh101ReadyOutsideRedux()) {
+      window.inboxStore?.dispatch(networkDataActions.fetchInfoFromSeshServer() as any);
+    }
+  }); // refresh our swarm on start to speed up the first message fetching event
   void Data.cleanupOrphanedAttachments();
 
   // TODOLATER make this a job of the JobRunner
@@ -259,19 +281,19 @@ export const ActionsPanel = () => {
   const ourPrimaryConversation = useSelector(getOurPrimaryConversation);
   const showDebugMenu = useDebugMode();
 
-  // this maxi useEffect is called only once: when the component is mounted.
+  // this useMount is called only once: when the component is mounted.
   // For the action panel, it means this is called only one per app start/with a user logged in
-  useEffect(() => {
+  useMount(() => {
     void doAppStartUp();
-  }, []);
+  });
 
   // wait for cleanUpMediasInterval and then start cleaning up medias
   // this would be way easier to just be able to not trigger a call with the setInterval
-  useEffect(() => {
+  useMount(() => {
     const timeout = setTimeout(() => setStartCleanUpMedia(true), cleanUpMediasInterval);
 
     return () => clearTimeout(timeout);
-  }, []);
+  });
 
   useUpdateBadgeCount();
 
@@ -293,9 +315,10 @@ export const ActionsPanel = () => {
     if (!ourPrimaryConversation) {
       return;
     }
-    // trigger an updates from the snodes every hour
 
+    // trigger an updates from the snodes and swarm every hour
     void SnodePool.forceRefreshRandomSnodePool();
+    void SnodePool.getFreshSwarmFor(UserUtils.getOurPubKeyStrFromCache());
   }, DURATION.HOURS * 1);
 
   useTimeoutFn(() => {
@@ -314,7 +337,7 @@ export const ActionsPanel = () => {
     void triggerAvatarReUploadIfNeeded();
   }, DURATION.DAYS * 1);
 
-  useRefreshReleasedFeaturesTimestamp();
+  useCheckReleasedFeatures();
 
   if (!ourPrimaryConversation) {
     window?.log?.warn('ActionsPanel: ourPrimaryConversation is not set');

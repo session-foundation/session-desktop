@@ -5,11 +5,12 @@ import { useState } from 'react';
 import useAsyncFn from 'react-use/lib/useAsyncFn';
 import useInterval from 'react-use/lib/useInterval';
 import { filesize } from 'filesize';
+import styled from 'styled-components';
 
 import type { PubkeyType } from 'libsession_util_nodejs';
 import { chunk, toNumber } from 'lodash';
 import { Flex } from '../../basic/Flex';
-import { SpacerXS } from '../../basic/Text';
+import { SpacerSM, SpacerXS } from '../../basic/Text';
 import { localize } from '../../../localization/localeTools';
 import { CopyToClipboardIcon } from '../../buttons';
 import { Localizer } from '../../basic/Localizer';
@@ -30,7 +31,15 @@ import { ConvoHub } from '../../../session/conversations';
 import { ConversationTypeEnum } from '../../../models/types';
 import { ContactsWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { usePolling } from '../../../hooks/usePolling';
-import { SessionInput } from '../../inputs';
+import { releasedFeaturesActions } from '../../../state/ducks/releasedFeatures';
+import {
+  useReleasedFeaturesRefreshedAt,
+  useSesh101NotificationAt,
+} from '../../../state/selectors/releasedFeatures';
+import { formatAbbreviatedExpireDoubleTimer } from '../../../util/i18n/formatting/expirationTimer';
+import { handleReleaseNotification } from '../../../util/releasedFeatures';
+import { networkDataActions } from '../../../state/ducks/networkData';
+import { SimpleSessionInput } from '../../inputs/SessionInput';
 
 const hexRef = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
 
@@ -216,6 +225,49 @@ const ClearOldLogsButton = () => {
   );
 };
 
+function OfflineButton() {
+  const [isOnline, setIsOnline] = useState(window.isOnline);
+
+  return (
+    <SessionButton
+      onClick={() => {
+        window.isOnline = !isOnline;
+        setIsOnline(!isOnline);
+        window.log.warn(`[debugMenu] OfflineButton: Going ${isOnline ? 'offline' : 'online'}`);
+      }}
+    >
+      Go {isOnline ? 'offline' : 'online'}
+    </SessionButton>
+  );
+}
+
+export const LoggingActions = () => {
+  return (
+    <>
+      <h2>Logging</h2>
+      <SpacerXS />
+      <Flex
+        $container={true}
+        maxWidth="900px"
+        $justifyContent="flex-start"
+        $alignItems="flex-start"
+        $flexWrap="wrap"
+        $flexGap="var(--margins-lg)"
+      >
+        <SessionButton
+          onClick={() => {
+            void saveLogToDesktop();
+          }}
+        >
+          <Localizer token="helpReportABugExportLogs" />
+        </SessionButton>
+        <ClearOldLogsButton />
+      </Flex>
+      <SpacerSM />
+    </>
+  );
+};
+
 export const DebugActions = () => {
   const dispatch = useDispatch();
 
@@ -240,15 +292,7 @@ export const DebugActions = () => {
         >
           Exit Debug Mode
         </SessionButton>
-
-        <SessionButton
-          onClick={() => {
-            void saveLogToDesktop();
-          }}
-        >
-          <Localizer token="helpReportABugExportLogs" />
-        </SessionButton>
-
+        <OfflineButton />
         {window.getCommitHash() ? (
           <SessionButton
             onClick={() => {
@@ -260,7 +304,6 @@ export const DebugActions = () => {
             Go to commit
           </SessionButton>
         ) : null}
-
         <SessionButton
           onClick={() => {
             void shell.openExternal(
@@ -271,12 +314,12 @@ export const DebugActions = () => {
           <Localizer token="updateReleaseNotes" />
         </SessionButton>
         <CheckForUpdatesButton />
-        <ClearOldLogsButton />
         <CheckVersionButton channelToCheck="stable" />
         {window.sessionFeatureFlags.useReleaseChannels ? (
           <CheckVersionButton channelToCheck="alpha" />
         ) : null}
         <SessionButton
+          width="180px"
           onClick={async () => {
             const storageProfile = await ipcRenderer.invoke('get-storage-profile');
             void shell.openPath(storageProfile);
@@ -285,6 +328,79 @@ export const DebugActions = () => {
           Open storage profile
         </SessionButton>
       </Flex>
+      <SpacerSM />
+    </>
+  );
+};
+
+export const ExperimentalActions = ({ forceUpdate }: { forceUpdate: () => void }) => {
+  const dispatch = useDispatch();
+  const refreshedAt = useReleasedFeaturesRefreshedAt();
+  const sesh101NotificationAt = useSesh101NotificationAt();
+
+  const [countdown, setCountdown] = useState(false);
+
+  const timeLeftMs = sesh101NotificationAt - Date.now();
+
+  // TODO [SES-2606] uncomment before release but after QA
+  // if (!process.env.SESSION_DEV) {
+  //   return null;
+  // }
+
+  return (
+    <>
+      <h2>Experimental Actions 🚨</h2>
+      <SpacerXS />
+      <Flex
+        $container={true}
+        maxWidth="900px"
+        $justifyContent="flex-start"
+        $alignItems="flex-start"
+        $flexWrap="wrap"
+        $flexGap="var(--margins-lg)"
+      >
+        <SessionButton
+          onClick={() => {
+            dispatch(releasedFeaturesActions.resetExperiments() as any);
+            forceUpdate();
+          }}
+        >
+          Reset experiments
+        </SessionButton>
+        {window.sessionFeatureFlags.useSESH101 ? (
+          <SessionButton
+            onClick={() => {
+              const notifyAt = handleReleaseNotification({
+                featureName: 'useSESH101',
+                message: localize('sessionNetworkNotificationLive').toString(),
+                lastRefreshedAt: refreshedAt,
+                notifyAt: sesh101NotificationAt,
+                delayMs: 10 * DURATION.SECONDS,
+                force: true,
+              });
+              dispatch(releasedFeaturesActions.updateSesh101NotificationAt(notifyAt));
+              setCountdown(true);
+            }}
+          >
+            Notify Sesh 101
+            <span style={{ marginInlineStart: 'var(--margins-xs)' }}>
+              {countdown
+                ? Math.floor(timeLeftMs / 1000) > 0
+                  ? `(${formatAbbreviatedExpireDoubleTimer(Math.floor(timeLeftMs / 1000))})`
+                  : '🎉'
+                : '(10s)'}
+            </span>
+          </SessionButton>
+        ) : null}
+        <SessionButton
+          onClick={() => {
+            dispatch(networkDataActions.fetchInfoFromSeshServer() as any);
+          }}
+        >
+          Network Info Request (Force)
+        </SessionButton>
+      </Flex>
+      <SpacerSM />
     </>
   );
 };
@@ -297,6 +413,8 @@ async function fetchContactsCountAndUpdate() {
   return 0;
 }
 
+const StyledDummyContactsContainer = styled.div``;
+
 function AddDummyContactButton() {
   const [loading, setLoading] = useState(false);
   const [addedCount, setAddedCount] = useState(0);
@@ -308,11 +426,31 @@ function AddDummyContactButton() {
     'AddDummyContactButton'
   );
 
+  async function doIt() {
+    if (loading) {
+      return;
+    }
+    try {
+      setLoading(true);
+      setAddedCount(0);
+      const chunkSize = 10;
+      const allIndexes = Array.from({ length: countToAdd }).map((_unused, i) => i);
+      const chunks = chunk(allIndexes, chunkSize);
+      for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
+        // eslint-disable-next-line no-await-in-loop
+        await Promise.all(chunks[chunkIndex].map(() => generateOneRandomContact()));
+        setAddedCount(Math.min(chunkIndex * chunkSize, countToAdd));
+      }
+    } finally {
+      setLoading(false);
+      setAddedCount(0);
+    }
+  }
+
   return (
-    <div style={{ display: 'flex', alignItems: 'center' }}>
-      <SessionInput
+    <StyledDummyContactsContainer>
+      <SimpleSessionInput
         autoFocus={false}
-        disableOnBlurEvent={true}
         type="text"
         value={`${countToAdd}`}
         onValueChanged={(value: string) => {
@@ -321,72 +459,42 @@ function AddDummyContactButton() {
             setCountToAdd(asNumber);
           }
         }}
-        loading={loading}
+        disabled={loading}
         maxLength={10}
-        ctaButton={
-          <SessionButton
-            onClick={async () => {
-              if (loading) {
-                return;
-              }
-              try {
-                setLoading(true);
-                setAddedCount(0);
-                const chunkSize = 10;
-                const allIndexes = Array.from({ length: countToAdd }).map((_unused, i) => i);
-                const chunks = chunk(allIndexes, chunkSize);
-                for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
-                  // eslint-disable-next-line no-await-in-loop
-                  await Promise.all(chunks[chunkIndex].map(() => generateOneRandomContact()));
-                  setAddedCount(Math.min(chunkIndex * chunkSize, countToAdd));
-                }
-              } finally {
-                setLoading(false);
-                setAddedCount(0);
-              }
-            }}
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                {addedCount}/{countToAdd}...
-              </>
-            ) : (
-              `Add ${countToAdd} contacts (current: ${contactsCount})`
-            )}
-          </SessionButton>
-        }
+        errorDataTestId="invalid-data-testid"
+        onEnterPressed={() => void doIt()}
+        providedError={undefined}
       />
-    </div>
+      <SessionButton onClick={doIt} disabled={loading}>
+        {loading ? (
+          <>
+            {addedCount}/{countToAdd}...
+          </>
+        ) : (
+          `Add ${countToAdd} contacts (current: ${contactsCount})`
+        )}
+      </SessionButton>
+    </StyledDummyContactsContainer>
   );
 }
 
 export const DataGenerationActions = () => {
   return (
-    <Flex
-      $container={true}
-      width={'100%'}
-      $flexDirection="column"
-      $justifyContent="flex-start"
-      $alignItems="flex-start"
-      $flexWrap="wrap"
-    >
+    <>
+      <h2>Data generation</h2>
       <SpacerXS />
-      <Flex $container={true} width="100%" $alignItems="center" $flexGap="var(--margins-xs)">
-        <h2>Data generation</h2>
-      </Flex>
       <Flex
         $container={true}
-        width="100%"
-        $flexDirection="column"
-        $justifyContent="space-between"
+        maxWidth="900px"
+        $justifyContent="flex-start"
         $alignItems="flex-start"
-        $flexGap="var(--margins-xs)"
+        $flexWrap="wrap"
+        $flexGap="var(--margins-lg)"
       >
         <AddDummyContactButton />
-        <SpacerXS />
       </Flex>
-    </Flex>
+      <SpacerSM />
+    </>
   );
 };
 
@@ -408,6 +516,7 @@ export const AboutInfo = () => {
     `Libsession Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_UTIL_VERSION || localize('unknown').toString()}`,
     `Libsession NodeJS Version: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_VERSION || localize('unknown').toString()}`,
     `Libsession NodeJS Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_COMMIT || localize('unknown').toString()}`,
+    `User Agent:${window.navigator.userAgent ? `\n\t${window.navigator.userAgent.split(') ').join(') \n\t')}` : localize('unknown').toString()}`,
     `${environmentStates.join(' - ')}`,
   ];
 

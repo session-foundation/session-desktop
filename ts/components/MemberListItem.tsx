@@ -2,6 +2,7 @@ import styled from 'styled-components';
 
 import { GroupPubkeyType, MemberStateGroupV2, PubkeyType } from 'libsession_util_nodejs';
 import { isEmpty } from 'lodash';
+import type { SessionDataTestId } from 'react';
 import {
   useNicknameOrProfileNameOrShortenedPubkey,
   useWeAreAdmin,
@@ -114,7 +115,7 @@ type MemberListItemProps<T extends string> = {
   isAdmin?: boolean; // if true,  we add a small crown on top of their avatar
   onSelect?: (pubkey: T) => void;
   onUnselect?: (pubkey: T) => void;
-  dataTestId?: React.SessionDataTestId;
+  dataTestId?: SessionDataTestId;
   displayGroupStatus?: boolean;
   groupPk?: string;
   disabled?: boolean;
@@ -139,9 +140,9 @@ const ResendContainer = ({
     return (
       <Flex
         $container={true}
+        $flexGap="var(--margins-sm)"
         margin="0 0 0 auto"
         padding="0 var(--margins-lg)"
-        gap="var(--margins-sm)"
       >
         <ResendButton groupPk={groupPk} pubkey={pubkey} />
         <PromoteButton groupPk={groupPk} pubkey={pubkey} />
@@ -304,7 +305,7 @@ const PromoteButton = ({ groupPk, pubkey }: { pubkey: PubkeyType; groupPk: Group
       buttonShape={SessionButtonShape.Square}
       buttonType={SessionButtonType.Solid}
       buttonColor={SessionButtonColor.Danger}
-      text={window.i18n('promote')} // TODO DO NOT MERGE Remove after QA
+      text={window.i18n('promote')}
       onClick={() => {
         void promoteUsersInGroup({
           groupPk,
@@ -377,7 +378,6 @@ export const MemberListItem = <T extends string>({
             active={isSelected}
             value={pubkey}
             inputName={pubkey}
-            label=""
             inputDataTestId="select-contact"
           />
         </StyledCheckContainer>

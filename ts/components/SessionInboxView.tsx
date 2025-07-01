@@ -20,12 +20,11 @@ import {
 } from '../state/ducks/conversations';
 import { initialDefaultRoomState } from '../state/ducks/defaultRooms';
 import { initialModalState } from '../state/ducks/modalDialog';
-import { initialOnionPathState } from '../state/ducks/onion';
+import { initialOnionPathState } from '../state/ducks/onions';
 import { initialPrimaryColorState } from '../state/ducks/primaryColor';
 import { initialSearchState } from '../state/ducks/search';
 import { initialSectionState } from '../state/ducks/section';
 import { getEmptyStagedAttachmentsState } from '../state/ducks/stagedAttachments';
-import { initialThemeState } from '../state/ducks/theme';
 import { initialUserConfigState } from '../state/ducks/userConfig';
 import { StateType } from '../state/reducer';
 import { SessionMainPanel } from './SessionMainPanel';
@@ -44,6 +43,9 @@ import { Flex } from './basic/Flex';
 import { initialReleasedFeaturesState } from '../state/ducks/releasedFeatures';
 import { initialDebugState } from '../state/ducks/debug';
 import type { UserGroupState } from '../state/ducks/userGroups';
+import { initialThemeState } from '../state/theme/ducks/theme';
+import { initialNetworkModalState } from '../state/ducks/networkModal';
+import { initialNetworkDataState } from '../state/ducks/networkData';
 
 function makeLookup<T>(items: Array<T>, key: string): { [key: string]: T } {
   // Yep, we can't index into item without knowing what it is. True. But we want to.
@@ -77,6 +79,7 @@ async function createSessionInboxStore() {
     user: {
       ourDisplayNameInProfile: UserUtils.getOurProfile()?.displayName || '',
       ourNumber: UserUtils.getOurPubKeyStrFromCache(),
+      uploadingNewAvatarCurrentUser: false,
     },
     section: initialSectionState,
     defaultRooms: initialDefaultRoomState,
@@ -94,6 +97,8 @@ async function createSessionInboxStore() {
     userGroups: { userGroups },
     releasedFeatures: initialReleasedFeaturesState,
     debug: initialDebugState,
+    networkModal: initialNetworkModalState,
+    networkData: initialNetworkDataState,
   };
 
   return createStore(initialState);

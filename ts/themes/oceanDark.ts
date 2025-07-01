@@ -9,6 +9,7 @@ export const oceanDark: ThemeColorVariables = {
 
   '--background-primary-color': THEMES.OCEAN_DARK.COLOR1,
   '--background-secondary-color': THEMES.OCEAN_DARK.COLOR2,
+  '--background-tertiary-color': THEMES.OCEAN_DARK.COLOR0,
 
   '--text-primary-color': THEMES.OCEAN_DARK.COLOR7!,
   '--text-secondary-color': THEMES.OCEAN_DARK.COLOR5,
@@ -43,24 +44,21 @@ export const oceanDark: ThemeColorVariables = {
   '--settings-tab-text-color': 'var(--text-primary-color)',
 
   '--button-outline-background-color': 'var(--transparent-color)',
-  '--button-outline-background-hover-color': `rgba(${hexColorToRGB(
-    THEMES.OCEAN_DARK.COLOR7!
-  )}, 0.3)`,
-  '--button-outline-text-color': 'var(--primary-color)',
-  '--button-outline-text-hover-color': 'var(--text-primary-color)',
-  '--button-outline-border-color': 'var(--primary-color)',
+  '--button-outline-background-hover-color': 'var(--text-primary-color)',
+  '--button-outline-text-color': 'var(--text-primary-color)',
+  '--button-outline-text-hover-color': THEMES.OCEAN_DARK.COLOR1,
+  '--button-outline-border-color': 'var(--text-primary-color)',
   '--button-outline-border-hover-color': 'var(--text-primary-color)',
   '--button-outline-disabled-color': 'var(--disabled-color)',
 
-  '--button-solid-background-color': 'var(--background-secondary-color)',
-  '--button-solid-background-hover-color': THEMES.OCEAN_DARK.COLOR4,
-  '--button-solid-text-color': 'var(--text-primary-color)',
+  '--button-solid-background-color': 'var(--text-primary-color)',
+  '--button-solid-background-hover-color': 'var(--transparent-color)',
+  '--button-solid-text-color': THEMES.OCEAN_DARK.COLOR1,
   '--button-solid-text-hover-color': 'var(--text-primary-color)',
-  '--button-solid-disabled-color': THEMES.OCEAN_DARK.COLOR4,
-  '--button-solid-shadow-color': 'none',
+  '--button-solid-disabled-color': 'var(--disabled-color)',
 
   '--button-ghost-background-color': 'none',
-  '--button-ghost-background-hover-color': THEMES.OCEAN_DARK.COLOR6,
+  '--button-ghost-background-hover-color': THEMES.OCEAN_DARK.COLOR3,
   '--button-ghost-disabled-color': 'none',
 
   '--button-simple-text-color': 'var(--text-primary-color)',
@@ -128,10 +126,6 @@ export const oceanDark: ThemeColorVariables = {
   '--toast-text-color': 'var(--text-primary-color)',
   '--toast-color-strip-color': 'var(--primary-color)',
   '--toast-progress-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.1)`,
-
-  '--right-panel-item-background-color': 'var(--background-secondary-color)',
-  '--right-panel-item-background-hover-color': THEMES.OCEAN_DARK.COLOR4,
-  '--right-panel-item-text-color': 'var(--text-primary-color)',
 
   '--session-logo-text-light-filter': 'none',
   '--session-logo-text-dark-filter': 'none',

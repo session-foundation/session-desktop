@@ -3,16 +3,16 @@ import styled from 'styled-components';
 
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { resetLeftOverlayMode } from '../../../state/ducks/section';
-
 import { UserUtils } from '../../../session/utils';
 import { Flex } from '../../basic/Flex';
 import { SpacerLG, SpacerMD, SpacerSM } from '../../basic/Text';
 import { HelpDeskButton } from '../../buttons';
 import { CopyToClipboardButton } from '../../buttons/CopyToClipboardButton';
 import { SessionIcon } from '../../icon';
-import { SessionInput } from '../../inputs';
 import { StyledLeftPaneOverlay } from './OverlayMessage';
+import { SessionButtonColor } from '../../basic/SessionButton';
+import { sectionActions } from '../../../state/ducks/section';
+import { SessionIDNonEditable } from '../../basic/YourSessionIDPill';
 
 const StyledHeadingContainer = styled(Flex)`
   .session-icon-button {
@@ -60,7 +60,7 @@ export const OverlayInvite = () => {
   const dispatch = useDispatch();
 
   function closeOverlay() {
-    dispatch(resetLeftOverlayMode());
+    dispatch(sectionActions.resetLeftOverlayMode());
   }
 
   useKey('Escape', closeOverlay);
@@ -76,22 +76,14 @@ export const OverlayInvite = () => {
       {!idCopied ? (
         <>
           <Flex $container={true} width={'100%'} $justifyContent="center" $alignItems="center">
-            <SessionInput
-              type="text"
-              value={ourSessionID}
-              editable={false}
-              centerText={true}
-              isTextArea={true}
-              padding={'var(--margins-xl) var(--margins-sm)'}
-              ariaLabel="Account ID"
-              inputDataTestId="your-account-id"
-            />
+            <SessionIDNonEditable dataTestId="your-account-id" sessionId={ourSessionID} />
           </Flex>
           <SpacerMD />
           <StyledDescription>{window.i18n('accountIdCopyDescription')}</StyledDescription>
           <SpacerLG />
           <StyledButtonerContainer>
             <CopyToClipboardButton
+              buttonColor={SessionButtonColor.PrimaryDark}
               copyContent={ourSessionID}
               onCopyComplete={() => setIdCopied(true)}
               hotkey={true}

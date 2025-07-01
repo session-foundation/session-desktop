@@ -121,7 +121,6 @@
   "banUser": "მომხმარებლის დაბლოკვა",
   "banUserBanned": "მომხმარებელი დაბლოკილია",
   "block": "დაბლოკვა",
-  "blockBlockedDescription": "შეტყობინების გაგზავნისთვის ბლოკი მოხსენით.",
   "blockBlockedNone": "არ არის დაბლოკილი კონტაქტები",
   "blockBlockedUser": "დაბლოკილი {name}",
   "blockDescription": "დარწმუნებული ხართ, რომ გსურთ დაბლოკოთ <b>{name}?</b> დაბლოკილი მომხმარებლები ვერ გამოგიგზავნიან შეტყობინების მოთხოვნებს, ჯგუფის მოწვევებს ან ვერ დაგირეკავენ.",
@@ -778,6 +777,7 @@
   "warning": "გაფრთხილება",
   "window": "ფანჯარა",
   "yes": "Yes",
-  "you": "თქვენ"
+  "you": "თქვენ",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

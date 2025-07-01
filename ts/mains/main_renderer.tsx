@@ -83,8 +83,6 @@ preload([
 // We add this to window here because the default Node context is erased at the end
 //   of preload.js processing
 window.setImmediate = window.nodeSetImmediate;
-window.globalOnlineStatus = true; // default to true as we don't get an event on app start
-window.getGlobalOnlineStatus = () => window.globalOnlineStatus;
 
 window.log.info('background page reloaded');
 
@@ -397,7 +395,7 @@ async function start() {
   };
 
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
-  window.openFromNotification = async conversationKey => {
+  window.openFromNotification = async (conversationKey?: string) => {
     window.showWindow();
     if (conversationKey) {
       // do not put the messageId here so the conversation is loaded on the last unread instead
@@ -427,7 +425,6 @@ let disconnectTimer: NodeJS.Timeout | null = null;
 
 function onOffline() {
   window.log.info('offline');
-  window.globalOnlineStatus = false;
 
   window.removeEventListener('offline', onOffline);
   window.addEventListener('online', onOnline);
@@ -440,7 +437,6 @@ function onOffline() {
 
 function onOnline() {
   window.log.info('online');
-  window.globalOnlineStatus = true;
 
   window.removeEventListener('online', onOnline);
   window.addEventListener('offline', onOffline);
@@ -465,6 +461,8 @@ function disconnect() {
   // Clear timer, since we're only called when the timer is expired
   disconnectTimer = null;
   AttachmentDownloads.stop();
+
+  window.isOnline = false;
 }
 
 let connectCount = 0;

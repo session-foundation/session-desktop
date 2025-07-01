@@ -121,7 +121,6 @@
   "banUser": "ব্যবহারকারীকে ব্যান করুন",
   "banUserBanned": "ইউজার ব্যান করা হয়েছে",
   "block": "ব্লক",
-  "blockBlockedDescription": "মেসেজ পাঠাতে এই কন্টাক্টটি আনব্লক করুন।",
   "blockBlockedNone": "কোনো ব্লক করা যোগাযোগ নেই",
   "blockBlockedUser": "{name} কে ব্লক করবেন",
   "blockDescription": "আপনি কি নিশ্চিত যে আপনি <b>{name}</b> কে ব্লক করতে চান? ব্লক করা ব্যবহারকারীরা আপনাকে বার্তা অনুরোধ, গ্রুপ আমন্ত্রণ বা কল করতে পারবেন না।",
@@ -778,6 +777,7 @@
   "warning": "Warning",
   "window": "Window",
   "yes": "হ্যাঁ",
-  "you": "তুমি"
+  "you": "তুমি",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

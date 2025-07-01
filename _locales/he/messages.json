@@ -121,7 +121,6 @@
   "banUser": "חסום משתמש",
   "banUserBanned": "משתמש נחסם",
   "block": "חסום",
-  "blockBlockedDescription": "בטל חסימה של איש קשר זה כדי לשלוח הודעה.",
   "blockBlockedNone": "אין אנשי קשר חסומים",
   "blockBlockedUser": "נחסם {name}",
   "blockDescription": "האם אתה בטוח שברצונך לחסום את <b>{name}?</b> משתמשים חסומים אינם יכולים לשלוח לך בקשות הודעות, הזמנות לקבוצות או להתקשר אליך.",
@@ -778,6 +777,7 @@
   "warning": "אזהרה",
   "window": "חלון",
   "yes": "כן",
-  "you": "את/ה"
+  "you": "את/ה",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

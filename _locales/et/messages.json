@@ -121,7 +121,6 @@
   "banUser": "Blokeeri kasutaja",
   "banUserBanned": "Kasutaja blokeerimine",
   "block": "Blokeeri",
-  "blockBlockedDescription": "Sõnumi saatmiseks eemalda selle kontakti blokeering.",
   "blockBlockedNone": "Blokeeritud kontakte pole",
   "blockBlockedUser": "Blokeeritud {name}",
   "blockDescription": "Kas olete kindel, et soovite blokeerida <b>{name}</b>? Blokeeritud kasutajad ei saa teile saata sõnumitaotlusi, grupikutseid ega helistada.",
@@ -778,6 +777,7 @@
   "warning": "Hoiatus",
   "window": "Aken",
   "yes": "Jah",
-  "you": "Sina"
+  "you": "Sina",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

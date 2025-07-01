@@ -121,7 +121,6 @@
   "banUser": "Zakázať používateľa",
   "banUserBanned": "Používateľ zakázaný",
   "block": "Blokovať",
-  "blockBlockedDescription": "Pre odoslanie správy kontakt odblokujte.",
   "blockBlockedNone": "Žiadne zablokované kontakty",
   "blockBlockedUser": "Zablokovaný {name}",
   "blockDescription": "Ste si istý, že chcete zablokovať <b>{name}</b>? Zablokovaní používatelia vám nemôžu posielať žiadosti o správy, pozvánky do skupín alebo vám volať.",
@@ -779,6 +778,7 @@
   "warning": "Varovanie",
   "window": "Okno",
   "yes": "Áno",
-  "you": "Vy"
+  "you": "Vy",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

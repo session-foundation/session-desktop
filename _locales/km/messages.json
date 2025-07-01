@@ -121,7 +121,6 @@
   "banUser": "ហាមឃាត់អ្នកប្រើ",
   "banUserBanned": "បានហាមឃាត់អ្នកប្រើ",
   "block": "ទប់ស្កាត់",
-  "blockBlockedDescription": "ដោះការហាមឃាត់លេខទំនាក់ទំនងនេះ ដើម្បីផ្ញើសារ។",
   "blockBlockedNone": "ពុំមានលេខដែលបានបិទ",
   "blockBlockedUser": "បានទប់ស្កាត់ {name}",
   "blockDescription": "តើអ្នកប្រាកដទេថាអ្នកចង់រារាំង <b>{name}?</b> អ្នកប្រើប្រាស់ដែលត្រូវបានរារាំងមិនអាចផ្ញើសំណើសារ ការអញ្ជើញក្រុម ឬហៅអ្នកបានទេ។",
@@ -778,6 +777,7 @@
   "warning": "ការព្រមាន",
   "window": "ផ្ទាំងបង្អួច",
   "yes": "បាទ",
-  "you": "អ្នក"
+  "you": "អ្នក",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

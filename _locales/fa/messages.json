@@ -121,7 +121,6 @@
   "banUser": "مسدود کردن کاربر",
   "banUserBanned": "کاربر ممنوع شد",
   "block": "مسدود کردن",
-  "blockBlockedDescription": "برای ارسال پیام،‌ ابتدا این مخاطب را از مسدود بودن درآورید!",
   "blockBlockedNone": "هیج مخاطبی مسدود نشده",
   "blockBlockedUser": "مسدود شد {name}",
   "blockDescription": "آیا مطمئنید می‌خواهید <b>{name} را مسدود کنید؟</b> کاربران مسدود شده نمی‌توانند درخواست پیام، دعوت گروهی یا تماس ارسال کنند.",
@@ -777,6 +776,7 @@
   "warning": "هشدار",
   "window": "پنجره",
   "yes": "بله",
-  "you": "شما"
+  "you": "شما",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

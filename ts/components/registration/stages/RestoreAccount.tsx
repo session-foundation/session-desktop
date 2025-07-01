@@ -39,7 +39,6 @@ import { setSignInByLinking, setSignWithRecoveryPhrase } from '../../../util/sto
 import { Flex } from '../../basic/Flex';
 import { SpacerLG, SpacerSM } from '../../basic/Text';
 import { SessionIcon } from '../../icon';
-import { SessionInput } from '../../inputs';
 import { SessionProgressBar } from '../../loading';
 import { resetRegistration } from '../RegistrationStages';
 import { ContinueButton, OnboardDescription, OnboardHeading } from '../components';
@@ -47,6 +46,8 @@ import { BackButtonWithinContainer } from '../components/BackButton';
 import { useRecoveryProgressEffect } from '../hooks';
 import { localize } from '../../../localization/localeTools';
 import { sanitizeDisplayNameOrToast } from '../utils';
+import { SimpleSessionInput } from '../../inputs/SessionInput';
+import { ShowHideButton } from '../../inputs/ShowHidePasswordButton';
 
 type AccountRestoreDetails = {
   recoveryPassword: string;
@@ -118,6 +119,62 @@ async function signInWithNewDisplayName({
 }
 
 let abortController = new AbortController();
+
+const showHideButtonAriaLabels = {
+  hide: 'Hide recovery password toggle',
+  show: 'Reveal recovery password toggle',
+} as const;
+
+const showHideButtonDataTestIds = {
+  hide: 'hide-recovery-phrase-toggle',
+  show: 'reveal-recovery-phrase-toggle',
+} as const;
+
+const RecoveryPhraseInput = ({
+  hasError,
+  onEnterPressed,
+}: {
+  hasError: boolean;
+  onEnterPressed: () => Promise<void>;
+}) => {
+  const dispatch = useDispatch();
+  const recoveryPassword = useRecoveryPassword();
+  const recoveryPasswordError = useRecoveryPasswordError();
+
+  const [forceShow, setForceShow] = useState(false);
+  return (
+    <SimpleSessionInput
+      ariaLabel="Recovery password input"
+      autoFocus={true}
+      type={forceShow ? 'text' : 'password'}
+      placeholder={window.i18n('recoveryPasswordEnter')}
+      value={recoveryPassword}
+      onValueChanged={(seed: string) => {
+        dispatch(setRecoveryPassword(seed));
+        dispatch(
+          setRecoveryPasswordError(!seed ? window.i18n('recoveryPasswordEnter') : undefined)
+        );
+      }}
+      onEnterPressed={() => void onEnterPressed()}
+      providedError={recoveryPasswordError}
+      errorDataTestId="error-message"
+      inputDataTestId="recovery-phrase-input"
+      buttonEnd={
+        showHideButtonDataTestIds ? (
+          <ShowHideButton
+            forceShow={forceShow}
+            toggleForceShow={() => {
+              setForceShow(!forceShow);
+            }}
+            hasError={hasError}
+            ariaLabels={showHideButtonAriaLabels}
+            dataTestIds={showHideButtonDataTestIds}
+          />
+        ) : undefined
+      }
+    />
+  );
+};
 
 export const RestoreAccount = () => {
   const step = useOnboardAccountRestorationStep();
@@ -272,31 +329,9 @@ export const RestoreAccount = () => {
               {window.i18n('recoveryPasswordRestoreDescription')}
             </OnboardDescription>
             <SpacerLG />
-            <SessionInput
-              ariaLabel="Recovery password input"
-              autoFocus={true}
-              disableOnBlurEvent={true}
-              type="password"
-              placeholder={window.i18n('recoveryPasswordEnter')}
-              value={recoveryPassword}
-              onValueChanged={(seed: string) => {
-                dispatch(setRecoveryPassword(seed));
-                dispatch(
-                  setRecoveryPasswordError(!seed ? window.i18n('recoveryPasswordEnter') : undefined)
-                );
-              }}
+            <RecoveryPhraseInput
+              hasError={!!recoveryPasswordError}
               onEnterPressed={recoverAndFetchDisplayName}
-              error={recoveryPasswordError}
-              enableShowHideButton={true}
-              showHideButtonAriaLabels={{
-                hide: 'Hide recovery password toggle',
-                show: 'Reveal recovery password toggle',
-              }}
-              showHideButtonDataTestIds={{
-                hide: 'hide-recovery-phrase-toggle',
-                show: 'reveal-recovery-phrase-toggle',
-              }}
-              inputDataTestId="recovery-phrase-input"
             />
             <SpacerLG />
             <ContinueButton
@@ -310,20 +345,19 @@ export const RestoreAccount = () => {
             <SpacerSM />
             <OnboardDescription>{window.i18n('displayNameErrorNew')}</OnboardDescription>
             <SpacerLG />
-            <SessionInput
-              ariaLabel={window.i18n('displayNameEnter')}
+            <SimpleSessionInput
+              ariaLabel={localize('displayNameEnter').toString()}
               autoFocus={true}
-              disableOnBlurEvent={true}
-              type="text"
-              placeholder={window.i18n('displayNameEnter')}
+              placeholder={localize('displayNameEnter').toString()}
               value={displayName}
               onValueChanged={(name: string) => {
                 dispatch(setDisplayName(name));
                 setCannotContinue(false);
               }}
-              onEnterPressed={recoverAndEnterDisplayName}
-              error={displayNameError}
+              onEnterPressed={() => void recoverAndEnterDisplayName()}
+              providedError={displayNameError}
               inputDataTestId="display-name-input"
+              errorDataTestId="error-message"
             />
             <SpacerLG />
             <ContinueButton

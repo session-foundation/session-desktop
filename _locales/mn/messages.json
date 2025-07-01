@@ -121,7 +121,6 @@
   "banUser": "Хэрэглэгчийг хориглох",
   "banUserBanned": "Хэрэглэгчийг хөндийлсөн",
   "block": "Хаах",
-  "blockBlockedDescription": "Түгжээг арилгаж, мессеж илгээх боломжтой болно.",
   "blockBlockedNone": "Хаасан контакт байхгүй",
   "blockBlockedUser": "{name} -г хориглосон",
   "blockDescription": "Та <b>{name}</b>-ийг хаахыг хүсэж байгаадаа итгэлтэй байна уу? Хаагдсан хэрэглэгчид танд мессеж хүсэлт илгээж, бүлгийн урилга илгээж эсвэл залгах боломжгүй.",
@@ -788,6 +787,7 @@
   "warning": "Анхааруулга",
   "window": "Цонхнууд",
   "yes": "Тийм",
-  "you": "Та"
+  "you": "Та",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

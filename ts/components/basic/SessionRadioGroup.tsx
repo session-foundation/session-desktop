@@ -17,7 +17,6 @@ interface Props {
   items: SessionRadioItems;
   group: string;
   onClick: (selectedValue: string) => void;
-  radioPosition?: 'left' | 'right';
   style?: CSSProperties;
 }
 
@@ -29,16 +28,15 @@ const StyledFieldSet = styled.fieldset`
   margin-inline-start: var(--margins-sm);
   margin-top: var(--margins-sm);
 
+  min-width: 300px; // so it doesn't look too weird on the modal (which is 410px wide)
+
   & > div {
     padding: var(--margins-md) 7px;
-  }
-  & > div + div {
-    border-top: 1px solid var(--border-color);
   }
 `;
 
 export const SessionRadioGroup = (props: Props) => {
-  const { items, group, initialItem, radioPosition, style } = props;
+  const { items, group, initialItem, style } = props;
   const [activeItem, setActiveItem] = useState('');
 
   useMount(() => {
@@ -63,8 +61,6 @@ export const SessionRadioGroup = (props: Props) => {
               setActiveItem(value);
               props.onClick(value);
             }}
-            beforeMargins={'0 var(--margins-sm) 0 0 '}
-            radioPosition={radioPosition}
             style={{ textAlign: 'start' }}
           />
         );

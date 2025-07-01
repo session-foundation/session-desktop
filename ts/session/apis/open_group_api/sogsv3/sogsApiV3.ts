@@ -89,6 +89,7 @@ async function handlePollInfoResponse(
       moderators?: Array<string>;
       hidden_admins?: Array<string>;
       hidden_moderators?: Array<string>;
+      description?: string;
     };
   },
   serverUrl: string
@@ -132,7 +133,8 @@ async function handlePollInfoResponse(
       'moderators',
       'hidden_admins',
       'hidden_moderators',
-      'name'
+      'name',
+      'description'
     ),
   });
 }

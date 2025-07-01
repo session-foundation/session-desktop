@@ -55,6 +55,19 @@ export type LightBoxOptions = {
 } | null;
 
 export type DebugMenuModalState = object | null;
+export type SessionNetworkModalState = object | null;
+
+export type ConversationSettingsModalPage = 'default' | 'disappearing_message' | 'notifications';
+type SettingsPageThatCannotBeStandalone = Extract<ConversationSettingsModalPage, 'default'>;
+type SettingsPageThatCanBeStandalone = Exclude<ConversationSettingsModalPage, 'default'>;
+
+export type ConversationSettingsPage =
+  | { settingsModalPage: SettingsPageThatCannotBeStandalone }
+  | {
+      settingsModalPage: SettingsPageThatCanBeStandalone;
+      standalonePage: boolean;
+    };
+export type ConversationSettingsModalState = (WithConvoId & ConversationSettingsPage) | null;
 
 export type ModalState = {
   confirmModal: ConfirmModalState;
@@ -79,6 +92,8 @@ export type ModalState = {
   openUrlModal: OpenUrlModalState;
   lightBoxOptions: LightBoxOptions;
   debugMenuModal: DebugMenuModalState;
+  conversationSettingsModal: ConversationSettingsModalState;
+  sessionNetworkModal: SessionNetworkModalState;
 };
 
 export const initialModalState: ModalState = {
@@ -104,6 +119,8 @@ export const initialModalState: ModalState = {
   openUrlModal: null,
   lightBoxOptions: null,
   debugMenuModal: null,
+  conversationSettingsModal: null,
+  sessionNetworkModal: null,
 };
 
 const ModalSlice = createSlice({
@@ -190,6 +207,12 @@ const ModalSlice = createSlice({
     updateDebugMenuModal(state, action: PayloadAction<DebugMenuModalState>) {
       return { ...state, debugMenuModal: action.payload };
     },
+    updateConversationSettingsModal(state, action: PayloadAction<ConversationSettingsModalState>) {
+      return { ...state, conversationSettingsModal: action.payload };
+    },
+    updateSessionNetworkModal(state, action: PayloadAction<SessionNetworkModalState>) {
+      return { ...state, sessionNetworkModal: action.payload };
+    },
   },
 });
 
@@ -217,5 +240,7 @@ export const {
   updateOpenUrlModal,
   updateLightBoxOptions,
   updateDebugMenuModal,
+  updateConversationSettingsModal,
+  updateSessionNetworkModal,
 } = actions;
 export const modalReducer = reducer;

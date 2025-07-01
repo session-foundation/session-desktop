@@ -121,7 +121,6 @@
   "banUser": "Bannlys bruker",
   "banUserBanned": "Bruker utestengt",
   "block": "Blokker",
-  "blockBlockedDescription": "Opphev blokkeringen på denne kontakten for å sende en melding.",
   "blockBlockedNone": "Ingen blokkerte kontakter",
   "blockBlockedUser": "Blokkert {name}",
   "blockDescription": "Er du sikker på at du vil blokkere <b>{name}</b>? Blokkerte brukere kan ikke sende deg meldingsforespørsler, gruppeinvitasjoner eller ringe deg.",
@@ -780,6 +779,7 @@
   "warning": "Advarsel",
   "window": "Vindu",
   "yes": "Ja",
-  "you": "Du"
+  "you": "Du",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

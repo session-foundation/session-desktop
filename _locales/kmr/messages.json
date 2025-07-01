@@ -122,7 +122,6 @@
   "banUser": "Bikarhênerê Asteng bike",
   "banUserBanned": "Bikarhênker astengî bû",
   "block": "Blok bike",
-  "blockBlockedDescription": "Ji bo şandina peyamê vê bloka vî kontaktê rake.",
   "blockBlockedNone": "Kontaktên astengkirî nehatin dîtin",
   "blockBlockedUser": "{name} asteng kir",
   "blockDescription": "Tu piştrast î ku tu dixwazî <b>{name}</b> blok bikî? Bikarhênerên blokkirî nikarin daxwazên peyamê bişînin, dawetên li grûban bişînin an telefona te bikin.",
@@ -792,6 +791,7 @@
   "warning": "Hişyarî",
   "window": "Pencere",
   "yes": "Erê",
-  "you": "Tu"
+  "you": "Tu",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 
