@@ -93,10 +93,8 @@ export const AvatarPlaceHolder = (props: Props) => {
 
   const { bgColor, loading } = useAvatarBgColor(pubkey);
 
-  const diameterWithoutBorder = diameter;
   const viewBox = `0 0 ${diameter} ${diameter}`;
   const r = diameter / 2;
-  const rWithoutBorder = diameterWithoutBorder / 2;
   const initials = getInitials(name);
 
   if (loading || !initials) {
@@ -109,13 +107,7 @@ export const AvatarPlaceHolder = (props: Props) => {
   return (
     <svg viewBox={viewBox} data-testid={dataTestId}>
       <g id="UrTavla">
-        <circle
-          cx={r}
-          cy={r}
-          r={rWithoutBorder}
-          fill={bgColor}
-          shapeRendering="geometricPrecision"
-        />
+        <circle cx={r} cy={r} r={r} fill={bgColor} shapeRendering="geometricPrecision" />
         <text
           fontSize={fontSize}
           x="50%"

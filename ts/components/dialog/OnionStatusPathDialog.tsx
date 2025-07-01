@@ -22,6 +22,7 @@ import { Snode } from '../../data/types';
 import { SessionWrapperModal } from '../SessionWrapperModal';
 import { SessionSpinner } from '../loading';
 import { getCrowdinLocale } from '../../util/i18n/shared';
+import { localize } from '../../localization/localeTools';
 
 type StatusLightType = {
   glowing?: boolean;
@@ -77,11 +78,11 @@ function useOnionPathWithUsAndNetwork() {
 
   return [
     {
-      label: window.i18n('you'),
+      label: localize('you').toString(),
     },
     ...onionPath,
     {
-      label: window.i18n('onionRoutingPathDestination'),
+      label: localize('onionRoutingPathDestination').toString(),
     },
   ];
 }
