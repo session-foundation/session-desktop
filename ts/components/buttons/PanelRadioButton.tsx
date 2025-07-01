@@ -48,7 +48,6 @@ export const PanelRadioButton = (props: PanelRadioButtonProps) => {
             active={isSelected}
             value={value}
             inputName={value}
-            label=""
             disabled={disabled}
             inputDataTestId={radioInputDataTestId}
             style={{ paddingInlineEnd: 'var(--margins-xs)' }}
