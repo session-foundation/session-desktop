@@ -76,7 +76,7 @@ export const QuoteText = (
     <StyledQuoteText isIncoming={isIncoming} dir="auto">
       <MessageBody
         text={text || window.i18n('messageErrorOriginal')}
-        disableLinks={true}
+        disableRichContent={true}
         disableJumbomoji={true}
         isGroup={isGroup}
       />

@@ -3,6 +3,7 @@ import LinkifyIt from 'linkify-it';
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 
+import type { ReactNode } from 'react';
 import { RenderTextCallbackType } from '../../../../types/Util';
 import { getEmojiSizeClass, SizeClassType } from '../../../../util/emoji';
 import { LinkPreviews } from '../../../../util/linkPreviews';
@@ -18,7 +19,7 @@ type Props = {
   /** If set, all emoji will be the same size. Otherwise, just one emoji will be large. */
   disableJumbomoji: boolean;
   /** If set, links will be left alone instead of turned into clickable `<a>` tags. Used in quotes, convo list item, etc */
-  disableLinks: boolean;
+  disableRichContent: boolean;
   isGroup: boolean;
 };
 
@@ -60,33 +61,6 @@ const renderEmoji = ({
     isGroup={isGroup}
   />
 );
-
-/**
- * This component makes it very easy to use all three of our message formatting
- * components: `Emojify`, `Linkify`, and `AddNewLines`. Because each of them is fully
- * configurable with their `renderXXX` props, this component will assemble all three of
- * them for you.
- */
-
-const JsxSelectable = (jsx: JSX.Element): JSX.Element => {
-  return (
-    <span
-      className="text-selectable"
-      onDragStart={(e: any) => {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-      }}
-      onDragEnd={(e: any) => {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-      }}
-    >
-      {jsx}
-    </span>
-  );
-};
 
 type LinkifyProps = {
   text: string;
@@ -149,32 +123,84 @@ const Linkify = (props: LinkifyProps): JSX.Element => {
 };
 
 const StyledPre = styled.pre`
-  backdrop-filter: brightness(0.8);
+  background-color: var(--background-primary-color);
+  color: var(--text-primary-color);
+  border: 1px solid var(--text-primary-color);
   padding: var(--margins-xs);
   user-select: text;
+  border-radius: var(--border-radius);
+  margin-inline-start: var(--margins-xs);
+  margin-inline-end: var(--margins-xs);
 `;
 
+function parsePreTags(content: string, messageBodyProps: Props) {
+  const segments: Array<ReactNode> = [];
+  const regex = /```([a-zA-Z]*)\n?([\s\S]*?)```/g;
+  let lastIndex = 0;
+  let match;
+
+  // eslint-disable-next-line no-cond-assign
+  while ((match = regex.exec(content)) !== null) {
+    if (match.index > lastIndex) {
+      const text = content.slice(lastIndex, match.index);
+      if (text.replaceAll('\n', '')) {
+        window.log.debug(text);
+        segments.push(
+          <MessageBody
+            {...messageBodyProps}
+            text={content.slice(lastIndex, match.index)}
+            disableRichContent={true}
+          />
+        );
+      }
+    }
+
+    // match[1] is the "language/caption"
+    segments.push(<StyledPre title={match[1]}>{match[2]}</StyledPre>);
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < content.length) {
+    const text = content.slice(lastIndex).replaceAll('\n', '');
+    if (text) {
+      window.log.debug(text);
+      segments.push(
+        <MessageBody
+          {...messageBodyProps}
+          text={content.slice(lastIndex)}
+          disableRichContent={true}
+        />
+      );
+    }
+  }
+
+  return segments.length ? (
+    segments
+  ) : (
+    <MessageBody {...messageBodyProps} text={content} disableRichContent={true} />
+  );
+}
+
 export const MessageBody = (props: Props) => {
-  const { text, disableJumbomoji, disableLinks, isGroup } = props;
+  const { text, disableJumbomoji, disableRichContent, isGroup } = props;
   const sizeClass: SizeClassType = disableJumbomoji ? 'default' : getEmojiSizeClass(text);
 
-  if (disableLinks) {
-    return JsxSelectable(
-      renderEmoji({
-        text,
-        sizeClass,
-        key: 0,
-        renderNonEmoji: renderNewLines,
-        isGroup,
-      })
-    );
+  if (disableRichContent) {
+    return renderEmoji({
+      text,
+      sizeClass,
+      key: 0,
+      renderNonEmoji: renderNewLines,
+      isGroup,
+    });
   }
 
-  if (text && text.startsWith('```') && text.endsWith('```') && text.length > 6) {
-    return <StyledPre className="text-selectable">{text.substring(4, text.length - 3)}</StyledPre>;
+  if (text && text.length > 6 && text.includes('```')) {
+    return parsePreTags(text, props);
   }
 
-  return JsxSelectable(
+  return (
     <Linkify
       text={text}
       isGroup={isGroup}

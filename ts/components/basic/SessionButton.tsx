@@ -29,6 +29,7 @@ export enum SessionButtonColor {
   Black = 'black',
   Grey = 'gray',
   Primary = 'primary',
+  Tertiary = 'background-tertiary',
   PrimaryDark = 'renderer-span-primary', // use primary in dark modes only since it has poor contrast in light mode
   Danger = 'danger',
   None = 'transparent',
@@ -120,7 +121,9 @@ const StyledSolidButton = styled(StyledBaseButton)<{ isDarkTheme: boolean }>`
   background-color: ${props =>
     props.color ? `var(--${props.color}-color)` : `var(--button-solid-background-color)`};
   color: ${props =>
-    props.color && props.color !== SessionButtonColor.PrimaryDark && !props.isDarkTheme
+    props.color &&
+    ((props.color !== SessionButtonColor.PrimaryDark && !props.isDarkTheme) ||
+      (props.isDarkTheme && props.color === SessionButtonColor.Tertiary))
       ? 'var(--text-primary-color)'
       : `var(--button-solid-text-color)`};
   border: 1px solid
@@ -136,7 +139,7 @@ const StyledSolidButton = styled(StyledBaseButton)<{ isDarkTheme: boolean }>`
     &:hover {
       background-color: var(--transparent-color);
       color: ${props =>
-        props.isDarkTheme && props.color
+        props.isDarkTheme && props.color && props.color !== SessionButtonColor.Tertiary
           ? `var(--${props.color}-color)`
           : `var(--button-solid-text-hover-color)`};
       border: 1px solid
