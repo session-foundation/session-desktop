@@ -93,7 +93,7 @@ export const AvatarPlaceHolder = (props: Props) => {
 
   const { bgColor, loading } = useAvatarBgColor(pubkey);
 
-  const diameterWithoutBorder = diameter - 2;
+  const diameterWithoutBorder = diameter;
   const viewBox = `0 0 ${diameter} ${diameter}`;
   const r = diameter / 2;
   const rWithoutBorder = diameterWithoutBorder / 2;
