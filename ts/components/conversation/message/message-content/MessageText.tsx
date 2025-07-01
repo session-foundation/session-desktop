@@ -11,8 +11,10 @@ import {
 import {
   useIsMessageSelectionMode,
   useSelectedIsGroupOrCommunity,
+  useSelectedIsPublic,
 } from '../../../../state/selectors/selectedConversation';
 import type { WithMessageId } from '../../../../session/types/with';
+import { localize } from '../../../../localization/localeTools';
 
 type Props = WithMessageId;
 
@@ -37,7 +39,8 @@ export const MessageText = ({ messageId }: Props) => {
   const isDeleted = useMessageIsDeleted(messageId);
   const text = useMessageText(messageId);
   const isOpenOrClosedGroup = useSelectedIsGroupOrCommunity();
-  const contents = isDeleted ? window.i18n('deleteMessageDeletedGlobally') : text?.trim();
+  const isPublic = useSelectedIsPublic();
+  const contents = isDeleted ? localize('deleteMessageDeletedGlobally').toString() : text?.trim();
 
   if (!contents) {
     return null;
@@ -52,10 +55,11 @@ export const MessageText = ({ messageId }: Props) => {
     <StyledMessageText dir="auto" className={clsx('module-message__text')} isDeleted={isDeleted}>
       {isDeleted && <SessionIcon iconType="delete" iconSize="small" iconColor={iconColor} />}
       <MessageBody
-        text={contents || ''}
+        text={contents}
         disableLinks={multiSelectMode}
         disableJumbomoji={false}
         isGroup={isOpenOrClosedGroup}
+        isPublic={isPublic}
       />
     </StyledMessageText>
   );

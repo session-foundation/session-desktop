@@ -8,8 +8,14 @@ import {
   renderTextDefault,
 } from '../conversation/message/message-content/MessageBody';
 
-const renderNewLines: RenderTextCallbackType = ({ text, key, isGroup }) => (
-  <AddNewLines key={key} text={text} renderNonNewLine={renderTextDefault} isGroup={isGroup} />
+const renderNewLines: RenderTextCallbackType = ({ text, key, isGroup, isPublic }) => (
+  <AddNewLines
+    key={key}
+    text={text}
+    renderNonNewLine={renderTextDefault}
+    isGroup={isGroup}
+    isPublic={isPublic}
+  />
 );
 
 const SnippetHighlight = styled.span`
@@ -23,10 +29,12 @@ const renderEmoji = ({
   sizeClass,
   renderNonEmoji,
   isGroup,
+  isPublic,
 }: {
   text: string;
   key: number;
   isGroup: boolean;
+  isPublic: boolean;
   sizeClass: SizeClassType;
   renderNonEmoji: RenderTextCallbackType;
 }) => (
@@ -36,11 +44,16 @@ const renderEmoji = ({
     sizeClass={sizeClass}
     renderNonEmoji={renderNonEmoji}
     isGroup={isGroup}
+    isPublic={isPublic}
   />
 );
 
-export const MessageBodyHighlight = (props: { text: string; isGroup: boolean }) => {
-  const { text, isGroup } = props;
+export const MessageBodyHighlight = (props: {
+  text: string;
+  isGroup: boolean;
+  isPublic: boolean;
+}) => {
+  const { text, isGroup, isPublic } = props;
   const results: Array<JSX.Element> = [];
   // this is matching what sqlite fts5 is giving us back
   const FIND_BEGIN_END = /<<left>>(.+?)<<right>>/g;
@@ -51,7 +64,13 @@ export const MessageBodyHighlight = (props: { text: string; isGroup: boolean }) 
 
   if (!match) {
     return (
-      <MessageBody disableJumbomoji={true} disableLinks={true} text={text} isGroup={isGroup} />
+      <MessageBody
+        disableJumbomoji={true}
+        disableLinks={true}
+        text={text}
+        isGroup={isGroup}
+        isPublic={isPublic}
+      />
     );
   }
 
@@ -67,6 +86,7 @@ export const MessageBodyHighlight = (props: { text: string; isGroup: boolean }) 
           key: count++,
           renderNonEmoji: renderNewLines,
           isGroup,
+          isPublic,
         })
       );
     }
@@ -80,6 +100,7 @@ export const MessageBodyHighlight = (props: { text: string; isGroup: boolean }) 
           key: count++,
           renderNonEmoji: renderNewLines,
           isGroup,
+          isPublic,
         })}
       </SnippetHighlight>
     );
@@ -96,6 +117,7 @@ export const MessageBodyHighlight = (props: { text: string; isGroup: boolean }) 
         key: count++,
         renderNonEmoji: renderNewLines,
         isGroup,
+        isPublic,
       })
     );
   }

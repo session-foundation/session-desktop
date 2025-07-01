@@ -209,6 +209,7 @@ export const MessageSearchResult = (props: MessageSearchResultProps) => {
    */
   const me = UserUtils.getOurPubKeyStrFromCache();
   const convoIsPrivate = useIsPrivate(conversationId);
+  const isPublic = useIsPublic(conversationId);
 
   const destination =
     direction === 'incoming' ? conversationId : convoIsPrivate ? me : conversationId;
@@ -243,7 +244,11 @@ export const MessageSearchResult = (props: MessageSearchResultProps) => {
         </ResultsHeader>
         <ResultBody>
           <FromUserInGroup authorPubkey={source} conversationId={conversationId} />
-          <MessageBodyHighlight text={snippet || ''} isGroup={!convoIsPrivate} />
+          <MessageBodyHighlight
+            text={snippet || ''}
+            isGroup={!convoIsPrivate}
+            isPublic={isPublic}
+          />
         </ResultBody>
       </StyledResultText>
     </StyledSearchResults>
