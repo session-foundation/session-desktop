@@ -43,6 +43,7 @@ const sharedButtonProps = {
   iconColor: 'var(--chat-buttons-icon-color)',
   iconSize: 'large' satisfies SessionIconSize as SessionIconSize,
   backgroundColor: 'var(--chat-buttons-background-color)',
+  padding: 'var(--margins-sm)',
 };
 
 const pulseColorAnimation = keyframes`
