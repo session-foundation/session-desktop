@@ -31,6 +31,7 @@ import { Storage } from '../../util/storage';
 import { SettingsKey } from '../../data/settings-key';
 import { sectionActions } from './section';
 import { ed25519Str } from '../../session/utils/String';
+import { UserUtils } from '../../session/utils';
 
 export type MessageModelPropsWithoutConvoProps = {
   propsForMessage: PropsForMessageWithoutConvoProps;
@@ -636,14 +637,8 @@ const conversationsSlice = createSlice({
       ) {
         return state;
       }
-      const selected = state.conversationLookup[state.selectedConversation];
 
-      // we can open the right panel always for non private chats. and also when the chat is private, and we are friends with the other person
-      if (!selected.isPrivate || (selected.isApproved && selected.didApproveMe)) {
-        return { ...state, showRightPanel: true };
-      }
-
-      return state;
+      return { ...state, showRightPanel: true };
     },
     closeRightPanel(state: ConversationsStateType) {
       return { ...state, showRightPanel: false, messageInfoId: undefined };
@@ -1044,13 +1039,14 @@ function applyConversationsChanged(
     }
 
     if (
-      state.selectedConversation &&
+      selectedConversation &&
       convoProps.isPrivate &&
       convoProps.id === selectedConversation &&
       convoProps.priority &&
-      convoProps.priority < CONVERSATION_PRIORITIES.default
+      convoProps.priority < CONVERSATION_PRIORITIES.default &&
+      selectedConversation !== UserUtils.getOurPubKeyStrFromCache()
     ) {
-      // A private conversation hidden cannot be a selected.
+      // A private conversation hidden cannot be selected (except the Note To Self)
       // When opening a hidden conversation, we unhide it so it can be selected again.
       state.selectedConversation = undefined;
     }
