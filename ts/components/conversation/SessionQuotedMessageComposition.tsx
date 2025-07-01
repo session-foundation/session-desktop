@@ -16,7 +16,7 @@ import { GoogleChrome } from '../../util';
 import { QuoteText } from './message/message-content/Quote';
 import { localize } from '../../localization/localeTools';
 import { ContactName } from './ContactName';
-import { useIsPublic } from '../../hooks/useParamSelector';
+import { useSelectedIsPublic } from '../../state/selectors/selectedConversation';
 
 const QuotedMessageComposition = styled(Flex)`
   border-top: 1px solid var(--border-color);
@@ -70,7 +70,7 @@ export const SessionQuotedMessageComposition = () => {
 
   const { author, attachments, text: quoteText } = quotedMessageProps || {};
 
-  const isPublic = useIsPublic(quotedMessageProps?.convoId);
+  const isPublic = useSelectedIsPublic();
 
   const removeQuotedMessage = () => {
     dispatch(quoteMessage(undefined));
