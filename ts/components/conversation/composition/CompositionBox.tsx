@@ -62,6 +62,7 @@ import { useShowBlockUnblock } from '../../menuAndSettingsHooks/useShowBlockUnbl
 import { showLocalizedPopupDialog } from '../../dialog/LocalizedPopupDialog';
 import { formatNumber } from '../../../util/i18n/formatting/generics';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { SessionProInfoVariant, showSessionProInfoDialog } from '../../dialog/SessionProInfoModal';
 
 export interface ReplyingToMessageProps {
   convoId: string;
@@ -708,7 +709,7 @@ class CompositionBoxInner extends Component<Props, State> {
     this.linkPreviewAbortController?.abort();
 
     // TODO: implement with pro
-    // const isProAvailable = getFeatureFlag('useProAvailable');
+    const isProAvailable = getFeatureFlag('useProAvailable');
     const mockHasPro = getFeatureFlag('useMockUserHasPro');
 
     // TODO: get pro status from store once available
@@ -722,24 +723,24 @@ class CompositionBoxInner extends Component<Props, State> {
     if (text.length > charLimit) {
       const dispatch = window.inboxStore?.dispatch;
       if (dispatch) {
-        // if (isProAvailable && !hasPro) {
-        //   showSessionProInfoDialog(SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT, dispatch);
-        // } else {
-        showLocalizedPopupDialog(
-          {
-            title: {
-              token: 'modalMessageTooLongTitle',
-            },
-            description: {
-              token: 'modalMessageTooLongDescription',
-              args: {
-                limit: formatNumber(charLimit),
+        if (isProAvailable && !hasPro) {
+          showSessionProInfoDialog(SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT, dispatch);
+        } else {
+          showLocalizedPopupDialog(
+            {
+              title: {
+                token: 'modalMessageTooLongTitle',
+              },
+              description: {
+                token: 'modalMessageTooLongDescription',
+                args: {
+                  limit: formatNumber(charLimit),
+                },
               },
             },
-          },
-          dispatch
-        );
-        // }
+            dispatch
+          );
+        }
       }
       return;
     }
