@@ -24,6 +24,7 @@ export function useDebugInputCommands({ value, setValue }: DebugInputCommandsArg
     return null;
   }
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks -- Conditional doesn't change at runtime
   const debugInputCommands = useFeatureFlag('debugInputCommands');
 
   // eslint-disable-next-line react-hooks/rules-of-hooks

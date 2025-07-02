@@ -3,7 +3,7 @@ import styled, { css } from 'styled-components';
 import { Constants } from '../../../../session';
 import { localize } from '../../../../localization/localeTools';
 
-const Bubble = styled.div<{ expanded: boolean }>`
+export const StyledMessageBubble = styled.div<{ expanded: boolean }>`
   position: relative;
   display: flex;
   flex-direction: column;
@@ -17,7 +17,6 @@ const Bubble = styled.div<{ expanded: boolean }>`
         -webkit-line-clamp: ${Constants.CONVERSATION.MAX_MESSAGE_MAX_LINES_BEFORE_READ_MORE};
         -webkit-box-orient: vertical;
         overflow: hidden;
-        user-select: text !important;
       }
       pre {
         overflow-x: auto;
@@ -92,9 +91,9 @@ export function MessageBubble({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <Bubble ref={containerRef} expanded={expanded}>
+      <StyledMessageBubble ref={containerRef} expanded={expanded}>
         {children}
-      </Bubble>
+      </StyledMessageBubble>
       {showReadMore && !expanded ? (
         <ReadMoreButton onClick={() => setExpanded(prev => !prev)}>
           {localize('messageBubbleReadMore')}
