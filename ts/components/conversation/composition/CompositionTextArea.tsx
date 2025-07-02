@@ -178,7 +178,9 @@ export const CompositionTextArea = (props: Props) => {
 
   const [lastBumpTypingMessageLength, setLastBumpTypingMessageLength] = useState(0);
   const [mention, setMention] = useState<MentionDetails | null>(null);
-  const [focusedMentionItem, setFocusedMentionItem] = useState<number>(0);
+  const [focusedMentionItem, setFocusedMentionItem] = useState<SessionSuggestionDataItem | null>(
+    null
+  );
   const [popoverX, setPopoverX] = useState<number | null>(null);
   const [popoverY, setPopoverY] = useState<number | null>(null);
 
@@ -196,7 +198,7 @@ export const CompositionTextArea = (props: Props) => {
 
   const handleMentionCleanup = () => {
     setMention(null);
-    setFocusedMentionItem(0);
+    setFocusedMentionItem(null);
     setPopoverX(null);
   };
 
@@ -235,53 +237,53 @@ export const CompositionTextArea = (props: Props) => {
           : [],
     [membersInThisChat, mention]
   );
+  /**
+   * The focused item should remain selected as long as it is one of the results. This means if you have focused
+   * the 3rd result "Alice" and continue to type such that "Alice" becomes the second result, "Alice" is still
+   * focused. If you continue typing such that "Alice" is no longer one of the results, the first result will become
+   * the focused result until "Alice" is visible again, or you focus a new result.
+   */
+  const focusedItem = useMemo(
+    () => results.find(({ id }) => focusedMentionItem?.id === id) ?? results[0],
+    [results, focusedMentionItem]
+  );
 
   const handleSelect = useCallback(
-    (idx?: number) => {
-      const index = idx ?? focusedMentionItem;
-      if (!mention || !results.length || index >= results.length) {
+    (item?: SessionSuggestionDataItem) => {
+      const selected = item ?? focusedItem;
+      if (!mention || !results.length || !selected) {
         return;
       }
 
-      const selected = results[index];
       const val = mention.prefix === PREFIX.EMOJI ? selected.id : createUserMentionHtml(selected);
 
       const searchInput = mention.prefix + mention.content;
       if (inputRef.current?.getVisibleText() === searchInput) {
         setDraft(val);
-        handleMentionCleanup();
       } else {
         inputRef.current?.typeAtCaret(val, searchInput.length);
       }
+      handleMentionCleanup();
     },
-    [focusedMentionItem, inputRef, mention, results, setDraft]
-  );
-
-  const handleOptionClick = useCallback(
-    (idx: number) => {
-      setFocusedMentionItem(idx);
-      handleSelect(idx);
-    },
-    [setFocusedMentionItem, handleSelect]
+    [inputRef, mention, results, setDraft, focusedItem]
   );
 
   const popoverContent = useMemo(() => {
     if (!mention || !results.length) {
       return null;
     }
-
-    const selectedId = results[focusedMentionItem]?.id;
     return (
       <ul role="listbox">
-        {results.map(({ id, display }, i) => {
-          const selected = selectedId === id;
+        {results.map(item => {
+          const { id, display } = item;
+          const selected = focusedItem.id === id;
           return (
             <li
               role="option"
               id={id}
               key={id}
               value={id}
-              onClick={() => handleOptionClick(i)}
+              onClick={() => handleSelect(item)}
               className={selected ? 'selected-option' : undefined}
               autoFocus={selected}
               aria-selected={selected}
@@ -295,7 +297,7 @@ export const CompositionTextArea = (props: Props) => {
         })}
       </ul>
     );
-  }, [mention, results, focusedMentionItem, handleOptionClick]);
+  }, [mention, results, focusedItem, handleSelect]);
 
   const handleUpdatePopoverPosition = useCallback(() => {
     const pos = inputRef.current?.getCaretCoordinates();
@@ -366,14 +368,24 @@ export const CompositionTextArea = (props: Props) => {
         // Exit mention mode and disable escape default behaviour
         e.preventDefault();
         handleMentionCleanup();
-      } else if (e.key === 'ArrowUp') {
+      } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         // Navigate through mentions options and disable input text navigation
         e.preventDefault();
-        setFocusedMentionItem(prev => (prev === 0 ? results.length - 1 : prev - 1));
-      } else if (e.key === 'ArrowDown') {
-        // Navigate through mentions options and disable input text navigation
-        e.preventDefault();
-        setFocusedMentionItem(prev => (prev === results.length - 1 ? 0 : prev + 1));
+        const idx = results.findIndex(({ id }) => id === focusedItem?.id);
+
+        if (idx !== -1) {
+          let newIdx = 0;
+          if (e.key === 'ArrowDown') {
+            newIdx = idx === results.length - 1 ? 0 : idx + 1;
+          } else if (e.key === 'ArrowUp') {
+            newIdx = idx ? idx - 1 : results.length - 1;
+          }
+
+          const item = results[newIdx];
+          if (item) {
+            setFocusedMentionItem(item);
+          }
+        }
       } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
         // Update mention search content for where the new cursor position will be
         const pos = inputRef.current?.getCaretIndex() ?? 0;
@@ -407,7 +419,8 @@ export const CompositionTextArea = (props: Props) => {
       inputRef,
       mention,
       onKeyDown,
-      results.length,
+      results,
+      focusedItem,
     ]
   );
 
