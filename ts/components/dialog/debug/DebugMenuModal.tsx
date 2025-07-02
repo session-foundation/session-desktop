@@ -78,7 +78,7 @@ export function DebugMenuModal() {
         onClose={onClose}
         showExitIcon={true}
         contentBorder={false}
-        contentWidth={'75%'}
+        $contentMaxWidth={'75%'}
         shouldOverflow={true}
         allowOutsideClick={false}
       >

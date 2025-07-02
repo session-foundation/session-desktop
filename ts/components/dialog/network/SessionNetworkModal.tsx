@@ -3,7 +3,7 @@ import { AnimatePresence } from 'framer-motion';
 import { updateSessionNetworkModal } from '../../../state/ducks/modalDialog';
 import { SessionWrapperModal2 } from '../../SessionWrapperModal2';
 import { LOCALE_DEFAULTS } from '../../../localization/constants';
-import { showSettingsSection } from '../../../state/ducks/section';
+import { sectionActions } from '../../../state/ducks/section';
 import { StakeSection } from './sections/StakeSection';
 import { ExtraSmallText, LastRefreshedText } from './components';
 import { SpacerMD, SpacerXL, SpacerXS } from '../../basic/Text';
@@ -25,7 +25,7 @@ export function SessionNetworkModal() {
 
   const dispatch = useDispatch();
   const onClose = () => {
-    dispatch(showSettingsSection('privacy'));
+    dispatch(sectionActions.showSettingsSection('privacy'));
     dispatch(updateSessionNetworkModal(null));
   };
 

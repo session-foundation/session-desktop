@@ -5,23 +5,24 @@ import styled from 'styled-components';
 
 import { Dispatch } from '@reduxjs/toolkit';
 import { UserUtils } from '../../../session/utils';
-import { YourSessionIDPill, YourSessionIDSelectable } from '../../basic/YourSessionIDPill';
+import { SessionIDNonEditable, YourSessionIDPill } from '../../basic/YourSessionIDPill';
 
 import { useHotkey } from '../../../hooks/useHotkey';
 import { useOurAvatarPath, useOurConversationUsername } from '../../../hooks/useParamSelector';
 import { ProfileManager } from '../../../session/profile_manager/ProfileManager';
-import { editProfileModal, updateEditProfilePictureModal } from '../../../state/ducks/modalDialog';
+import { editProfileModal } from '../../../state/ducks/modalDialog';
 import { SessionWrapperModal } from '../../SessionWrapperModal';
 import { Flex } from '../../basic/Flex';
 import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
 import { Spacer2XL, Spacer3XL, SpacerLG, SpacerSM, SpacerXL } from '../../basic/Text';
 import { CopyToClipboardButton } from '../../buttons/CopyToClipboardButton';
-import { SessionInput } from '../../inputs';
 import { SessionSpinner } from '../../loading';
 import { ProfileHeader, ProfileName, QRView } from './components';
 import { EmptyDisplayNameError, RetrieveDisplayNameError } from '../../../session/utils/errors';
 import { localize } from '../../../localization/localeTools';
 import { sanitizeDisplayNameOrToast } from '../../registration/utils';
+import { useEditProfilePictureCallback } from '../../menuAndSettingsHooks/useEditProfilePictureCallback';
+import { SimpleSessionInput } from '../../inputs/SessionInput';
 
 // #region Shortcuts
 const handleKeyQRMode = (
@@ -130,29 +131,6 @@ const StyledEditProfileDialog = styled.div`
 
   .avatar-center-inner {
     position: relative;
-
-    .qr-view-button {
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: absolute;
-      top: -8px;
-      right: -8px;
-      height: 34px;
-      width: 34px;
-      border-radius: 50%;
-      background-color: var(--white-color);
-      transition: var(--default-duration);
-
-      &:hover {
-        filter: brightness(90%);
-      }
-
-      .session-icon-button {
-        opacity: 1;
-      }
-    }
   }
 
   input {
@@ -181,8 +159,9 @@ export const EditProfileDialog = () => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const avatarPath = useOurAvatarPath() || '';
-  const ourId = UserUtils.getOurPubKeyStrFromCache();
+  const us = UserUtils.getOurPubKeyStrFromCache();
 
+  const editProfilePictureCb = useEditProfilePictureCallback({ conversationId: us });
   const [mode, setMode] = useState<ProfileDialogModes>('default');
   const [loading, setLoading] = useState(false);
 
@@ -190,7 +169,7 @@ export const EditProfileDialog = () => {
     if (event?.key || loading) {
       return;
     }
-    window.inboxStore?.dispatch(editProfileModal(null));
+    dispatch(editProfileModal(null));
   };
 
   const backButton =
@@ -244,13 +223,7 @@ export const EditProfileDialog = () => {
       return;
     }
     closeDialog();
-    dispatch(
-      updateEditProfilePictureModal({
-        avatarPath,
-        profileName,
-        ourId,
-      })
-    );
+    editProfilePictureCb?.();
   };
 
   useHotkey('v', () => handleKeyQRMode(mode, setMode, loading), loading);
@@ -295,14 +268,14 @@ export const EditProfileDialog = () => {
         additionalClassName={mode === 'default' ? 'edit-profile-default' : undefined}
       >
         {mode === 'qr' ? (
-          <QRView sessionID={ourId} setMode={setMode} />
+          <QRView sessionID={us} setMode={setMode} />
         ) : (
           <>
             <SpacerXL />
             <ProfileHeader
               avatarPath={avatarPath}
               profileName={profileName}
-              ourId={ourId}
+              conversationId={us}
               onClick={handleProfileHeaderClick}
               onQRClick={() => {
                 if (loading) {
@@ -329,25 +302,24 @@ export const EditProfileDialog = () => {
         )}
 
         {mode === 'edit' && (
-          <SessionInput
+          <SimpleSessionInput
             autoFocus={true}
-            disableOnBlurEvent={true}
-            type="text"
-            placeholder={window.i18n('displayNameEnter')}
+            placeholder={localize('displayNameEnter').toString()}
             value={profileName}
             onValueChanged={(name: string) => {
               setProfileName(name);
               setCannotContinue(false);
             }}
-            loading={loading}
-            editable={!loading}
+            onEnterPressed={() => void onClickOK()}
+            disabled={loading}
             tabIndex={0}
             required={true}
-            error={profileNameError}
-            textSize={'xl'}
             centerText={true}
+            providedError={profileNameError}
+            textSize={'xl'}
             inputRef={inputRef}
             inputDataTestId="profile-name-input"
+            errorDataTestId="error-message"
           />
         )}
 
@@ -362,7 +334,7 @@ export const EditProfileDialog = () => {
         >
           <YourSessionIDPill />
           <SpacerLG />
-          <YourSessionIDSelectable />
+          <SessionIDNonEditable dataTestId="your-account-id" sessionId={us} />
           <SessionSpinner loading={loading} height={'74px'} />
           {!loading ? <Spacer2XL /> : null}
           {mode === 'default' || mode === 'qr' || mode === 'lightbox' ? (
@@ -375,7 +347,7 @@ export const EditProfileDialog = () => {
             >
               <CopyToClipboardButton
                 buttonColor={SessionButtonColor.PrimaryDark}
-                copyContent={ourId}
+                copyContent={us}
                 hotkey={true}
                 reference={copyButtonRef}
                 dataTestId="copy-button-profile-update"

@@ -777,6 +777,7 @@
   "warning": "Kyeɛjo",
   "window": "Enju",
   "yes": "Nedda",
-  "you": "Ggwe"
+  "you": "Ggwe",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

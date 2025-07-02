@@ -6,7 +6,7 @@ import { useLastMessage } from '../../hooks/useParamSelector';
 import { updateConversationInteractionState } from '../../interactions/conversationInteractions';
 import { ConversationInteractionStatus } from '../../interactions/types';
 import { updateConfirmModal } from '../../state/ducks/modalDialog';
-import { SessionWrapperModal2 } from '../SessionWrapperModal2';
+import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionRadioGroup, SessionRadioItems } from '../basic/SessionRadioGroup';
 import { SessionSpinner } from '../loading';
@@ -42,13 +42,7 @@ const ConfirmationButtons = ({
     <>
       <SessionSpinner loading={isLoading} />
       <SpacerSM />
-      <Flex
-        $container={true}
-        width={'100%'}
-        $justifyContent="center"
-        $alignItems="center"
-        $flexGap="var(--margins-md)"
-      >
+      <ButtonChildrenContainer>
         <SessionButton
           text={okText}
           buttonColor={okTheme}
@@ -69,7 +63,7 @@ const ConfirmationButtons = ({
             dataTestId="session-confirm-cancel-button"
           />
         )}
-      </Flex>
+      </ButtonChildrenContainer>
       <SpacerXS />
     </>
   );
@@ -83,7 +77,8 @@ export interface SessionConfirmDialogProps {
   onOk?: any;
   onClose?: any;
   closeAfterInput?: boolean;
-  contentWidth?: string;
+  contentMaxWidth?: string;
+  contentMinWidth?: string;
 
   /**
    * function to run on ok click. Closes modal after execution by default
@@ -126,7 +121,8 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
     showExitIcon,
     closeAfterInput = true,
     conversationId,
-    contentWidth,
+    contentMaxWidth,
+    contentMinWidth,
   } = props;
 
   const lastMessage = useLastMessage(conversationId);
@@ -192,7 +188,8 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
       onClose={onClickClose}
       showExitIcon={showExitIcon}
       showHeader={showHeader}
-      contentWidth={contentWidth}
+      $contentMaxWidth={contentMaxWidth}
+      $contentMinWidth={contentMinWidth}
       buttonChildren={
         <ConfirmationButtons
           isLoading={isLoading}
@@ -222,7 +219,6 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
           group="session-confirm-radio-group"
           initialItem={chosenOption}
           items={radioOptions}
-          radioPosition="right"
           onClick={value => {
             if (value) {
               setChosenOption(value);

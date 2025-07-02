@@ -879,6 +879,7 @@
   "warning": "Попередження",
   "window": "Вікно",
   "yes": "Так",
-  "you": "Ви"
+  "you": "Ви",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

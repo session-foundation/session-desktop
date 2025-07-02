@@ -55,9 +55,8 @@ window.getUserKeys = async () => {
 
 window.sessionFeatureFlags = {
   replaceLocalizedStringsWithKeys: false,
-  showSettingsOnStart: false,
   // Hooks
-  useClosedGroupV2QAButtons: false, // TODO DO NOT MERGE Remove after QA
+  useClosedGroupV2QAButtons: false, // TODO DO NOT MERGE
   useOnionRequests: true,
   useReleaseChannels: true,
   useSESH101: true,

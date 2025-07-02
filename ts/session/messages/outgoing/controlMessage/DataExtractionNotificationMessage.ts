@@ -53,7 +53,14 @@ export const sendDataExtractionNotification = async (
   referencedAttachmentTimestamp: number
 ) => {
   const convo = ConvoHub.use().get(conversationId);
-  if (!convo || !convo.isPrivate() || convo.isMe() || UserUtils.isUsFromCache(attachmentSender)) {
+  if (
+    !convo ||
+    !convo.isPrivate() ||
+    convo.isMe() ||
+    convo.isIncomingRequest() ||
+    UserUtils.isUsFromCache(attachmentSender) ||
+    convo.isBlocked()
+  ) {
     window.log.warn('Not sending saving attachment notification for', attachmentSender);
     return;
   }

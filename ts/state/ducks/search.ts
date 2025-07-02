@@ -1,193 +1,68 @@
-/* eslint-disable no-restricted-syntax */
-import _, { isNaN } from 'lodash';
+import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { compact } from 'lodash';
 import { Data } from '../../data/data';
-import { AdvancedSearchOptions, SearchOptions } from '../../types/Search';
+import { SearchOptions } from '../../types/Search';
 import { cleanSearchTerm } from '../../util/cleanSearchTerm';
 
-import { PubKey } from '../../session/types';
 import { UserUtils } from '../../session/utils';
 import { MessageResultProps } from '../../types/message';
 import { ReduxConversationType } from './conversations';
+import { localize } from '../../localization/localeTools';
+import { BlockedNumberController } from '../../util';
 
-// State
+export type SearchType = 'global' | 'create-group' | 'invite-contact-to' | 'manage-group-members';
 
 export type SearchStateType = {
+  /**
+   * We can do a search globally (left pane) or to invite contacts/create a group.
+   * This field is used to make sure we don't update multiple parts of the UI.
+   * */
+  searchType: SearchType | null;
   query: string;
-  normalizedPhoneNumber?: string;
   // For conversations we store just the id, and pull conversation props in the selector
   contactsAndGroups: Array<string>;
   messages?: Array<MessageResultProps>;
 };
 
-// Actions
-type SearchResultsPayloadType = {
+type SearchResultsPayloadType = Pick<
+  SearchStateType,
+  'searchType' | 'query' | 'contactsAndGroups' | 'messages'
+>;
+
+export type DoSearchActionType = {
   query: string;
-  normalizedPhoneNumber?: string;
-  contactsAndGroups: Array<string>;
-  messages?: Array<MessageResultProps>;
+  searchType: SearchType;
 };
 
-type SearchResultsKickoffActionType = {
-  type: 'SEARCH_RESULTS';
-  payload: Promise<SearchResultsPayloadType>;
-};
-type SearchResultsFulfilledActionType = {
-  type: 'SEARCH_RESULTS_FULFILLED';
-  payload: SearchResultsPayloadType;
-};
-type UpdateSearchTermActionType = {
-  type: 'SEARCH_UPDATE';
-  payload: {
-    query: string;
-  };
-};
-type ClearSearchActionType = {
-  type: 'SEARCH_CLEAR';
-  payload: null;
-};
+const doSearch = createAsyncThunk(
+  'search/doSearch',
+  async ({ query, searchType }: DoSearchActionType): Promise<SearchResultsPayloadType> => {
+    const options: SearchOptions = {
+      noteToSelf: [
+        localize('noteToSelf').toLowerCase(),
+        localize('noteToSelf').forceEnglish().toLowerCase(),
+      ],
+      savedMessages: localize('savedMessages').toString().toLowerCase(),
+      ourNumber: UserUtils.getOurPubKeyStrFromCache(),
+      excludeBlocked: searchType !== 'global',
+    };
+    const processedQuery = query;
 
-export type SEARCH_TYPES =
-  | SearchResultsFulfilledActionType
-  | UpdateSearchTermActionType
-  | ClearSearchActionType;
+    const [contactsAndGroups, messages] = await Promise.all([
+      queryContactsAndGroups(processedQuery, options),
+      // we only need to query messages for the global search
+      searchType === 'global' ? queryMessages(processedQuery) : Promise.resolve([]),
+    ]);
+    const filteredMessages = compact(messages);
 
-// Action Creators
-
-export const actions = {
-  search,
-  clearSearch,
-  updateSearchTerm,
-};
-
-export function search(query: string): SearchResultsKickoffActionType {
-  return {
-    type: 'SEARCH_RESULTS',
-    payload: doSearch(query), // this uses redux-promise-middleware
-  };
-}
-
-async function doSearch(query: string): Promise<SearchResultsPayloadType> {
-  const options: SearchOptions = {
-    noteToSelf: [
-      window.i18n('noteToSelf').toLowerCase(),
-      window.i18n.inEnglish('noteToSelf').toLowerCase(),
-    ],
-    savedMessages: window.i18n('savedMessages').toLowerCase(),
-    ourNumber: UserUtils.getOurPubKeyStrFromCache(),
-  };
-  const advancedSearchOptions = getAdvancedSearchOptionsFromQuery(query);
-  const processedQuery = advancedSearchOptions.query;
-  // const isAdvancedQuery = query !== processedQuery;
-
-  const [contactsAndGroups, messages] = await Promise.all([
-    queryContactsAndGroups(processedQuery, options),
-    queryMessages(processedQuery),
-  ]);
-  const filteredMessages = _.compact(messages);
-
-  return {
-    query,
-    normalizedPhoneNumber: PubKey.normalize(query),
-    contactsAndGroups,
-    messages: filteredMessages,
-  };
-}
-
-export function clearSearch(): ClearSearchActionType {
-  return {
-    type: 'SEARCH_CLEAR',
-    payload: null,
-  };
-}
-
-export function updateSearchTerm(query: string): UpdateSearchTermActionType {
-  return {
-    type: 'SEARCH_UPDATE',
-    payload: {
+    return {
       query,
-    },
-  };
-}
-
-// Helper functions for search
-
-// function advancedFilterMessages(
-//   messages: Array<MessageResultProps>,
-//   filters: AdvancedSearchOptions,
-//   contacts: Array<string>
-// ): Array<MessageResultProps> {
-//   let filteredMessages = messages;
-//   if (filters.from && filters.from.length > 0) {
-//     if (filters.from === '@me') {
-//       filteredMessages = filteredMessages.filter(message => message.sent);
-//     } else {
-//       filteredMessages = [];
-//       for (const contact of contacts) {
-//         for (const message of messages) {
-//           if (message.source === contact) {
-//             filteredMessages.push(message);
-//           }
-//         }
-//       }
-//     }
-//   }
-//   if (filters.before > 0) {
-//     filteredMessages = filteredMessages.filter(message => message.received_at < filters.before);
-//   }
-//   if (filters.after > 0) {
-//     filteredMessages = filteredMessages.filter(message => message.received_at > filters.after);
-//   }
-
-//   return filteredMessages;
-// }
-
-function getUnixMillisecondsTimestamp(timestamp: string): number {
-  const timestampInt = parseInt(timestamp, 10);
-  if (!isNaN(timestampInt)) {
-    try {
-      if (timestampInt > 10000) {
-        return new Date(timestampInt).getTime();
-      }
-
-      return new Date(timestamp).getTime();
-    } catch (error) {
-      window?.log?.warn('Advanced Search: ', error);
-
-      return 0;
-    }
+      contactsAndGroups,
+      messages: filteredMessages,
+      searchType,
+    };
   }
-
-  return 0;
-}
-
-function getAdvancedSearchOptionsFromQuery(query: string): AdvancedSearchOptions {
-  const filterSeperator = ':';
-  const filters: any = {
-    query: null,
-    from: null,
-    before: null,
-    after: null,
-  };
-
-  let newQuery = query;
-  const splitQuery = query.toLowerCase().split(' ');
-  const filtersList = Object.keys(filters);
-  for (const queryPart of splitQuery) {
-    for (const filter of filtersList) {
-      const filterMatcher = filter + filterSeperator;
-      if (queryPart.startsWith(filterMatcher)) {
-        filters[filter] = queryPart.replace(filterMatcher, '');
-        newQuery = newQuery.replace(queryPart, '').trim();
-      }
-    }
-  }
-
-  filters.before = getUnixMillisecondsTimestamp(filters.before);
-  filters.after = getUnixMillisecondsTimestamp(filters.after);
-  filters.query = newQuery;
-
-  return filters;
-}
+);
 
 async function queryMessages(query: string): Promise<Array<MessageResultProps>> {
   try {
@@ -207,9 +82,14 @@ async function queryContactsAndGroups(providedQuery: string, options: SearchOpti
   const { ourNumber, noteToSelf, savedMessages } = options;
   // we don't need to use cleanSearchTerm here because the query is wrapped as a wild card and is not referenced in the SQL query directly
   const query = providedQuery.replace(/[+-.()]*/g, '');
+
   const searchResults: Array<ReduxConversationType> = await Data.searchConversations(query);
 
-  let contactsAndGroups: Array<string> = searchResults.map(conversation => conversation.id);
+  const filteredResults = options.excludeBlocked
+    ? searchResults.filter(c => !BlockedNumberController.isBlocked(c.id))
+    : searchResults;
+
+  let contactsAndGroups: Array<string> = filteredResults.map(conversation => conversation.id);
 
   const queryLowered = query.toLowerCase();
   if (
@@ -228,50 +108,55 @@ async function queryContactsAndGroups(providedQuery: string, options: SearchOpti
 // Reducer
 
 export const initialSearchState: SearchStateType = {
+  searchType: null, // by default the search is off
   query: '',
   contactsAndGroups: [],
   messages: [],
 };
 
-function getEmptyState(): SearchStateType {
-  return initialSearchState;
-}
+const searchSlice = createSlice({
+  name: 'searchSlice',
+  initialState: initialSearchState,
+  reducers: {
+    clearSearch() {
+      return initialSearchState;
+    },
+    updateSearchTerm(state, action: PayloadAction<{ query: string; searchType: SearchType }>) {
+      return {
+        ...state,
+        query: action.payload.query,
+        searchType: action.payload.searchType,
+      };
+    },
+  },
+  extraReducers: builder => {
+    builder.addCase(
+      doSearch.fulfilled,
+      (state, action: PayloadAction<SearchResultsPayloadType>) => {
+        const { query, contactsAndGroups, messages, searchType } = action.payload;
+        // Reject if the associated query is not the most recent user-provided query
+        if (state.query !== query) {
+          return state;
+        }
+        // Reject if the associated searchType does not correspond to the most recent user-provided searchType
+        if (state.searchType !== searchType) {
+          window.log.warn('doSearch: searchType does not match: ', state.searchType, searchType);
+          return state;
+        }
+        return {
+          ...state,
+          query,
+          contactsAndGroups,
+          messages,
+          searchType,
+        };
+      }
+    );
+  },
+});
 
-export function reducer(state: SearchStateType | undefined, action: SEARCH_TYPES): SearchStateType {
-  if (!state) {
-    return getEmptyState();
-  }
-
-  if (action.type === 'SEARCH_CLEAR') {
-    return getEmptyState();
-  }
-
-  if (action.type === 'SEARCH_UPDATE') {
-    const { payload } = action;
-    const { query } = payload;
-
-    return {
-      ...state,
-      query,
-    };
-  }
-
-  if (action.type === 'SEARCH_RESULTS_FULFILLED') {
-    const { payload } = action;
-    const { query, normalizedPhoneNumber, contactsAndGroups, messages } = payload;
-    // Reject if the associated query is not the most recent user-provided query
-    if (state.query !== query) {
-      return state;
-    }
-
-    return {
-      ...state,
-      query,
-      normalizedPhoneNumber,
-      contactsAndGroups,
-      messages,
-    };
-  }
-
-  return state;
-}
+export const reducer = searchSlice.reducer;
+export const searchActions = {
+  ...searchSlice.actions,
+  search: doSearch,
+};

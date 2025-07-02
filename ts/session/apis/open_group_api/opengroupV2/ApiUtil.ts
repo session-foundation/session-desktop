@@ -22,6 +22,7 @@ export type OpenGroupCapabilityRequest = {
 export type OpenGroupV2Info = {
   id: string;
   name: string;
+  description: string;
   imageId?: string;
   capabilities?: Array<string>;
 };

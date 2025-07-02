@@ -24,3 +24,7 @@ export const getIntl = createSelector(getUser, (): LocalizerType => window.i18n)
 export function useOurPkStr() {
   return useSelector((state: StateType) => getOurNumber(state));
 }
+
+export function useOurAvatarIsUploading() {
+  return useSelector((state: StateType) => getUser(state).uploadingNewAvatarCurrentUser);
+}

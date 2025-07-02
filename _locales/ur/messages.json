@@ -783,6 +783,7 @@
   "warning": "انتباہ",
   "window": "ونڈو",
   "yes": "جی ہاں",
-  "you": "آپ"
+  "you": "آپ",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

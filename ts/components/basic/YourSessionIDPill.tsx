@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { UserUtils } from '../../session/utils';
+import type { SessionDataTestId } from 'react';
 
 const StyledPillDividerLine = styled.div`
   border-bottom: 1px solid var(--border-color);
@@ -33,7 +33,7 @@ export const YourSessionIDPill = () => {
   );
 };
 
-const StyledYourSessionIDSelectable = styled.p`
+const StyledSessionIDNonEditable = styled.p`
   user-select: none;
   text-align: center;
   word-break: break-all;
@@ -41,15 +41,24 @@ const StyledYourSessionIDSelectable = styled.p`
   font-size: var(--font-size-sm);
   color: var(--text-primary-color);
   flex-shrink: 0;
+  font-family: var(--font-mono);
 `;
 
-export const YourSessionIDSelectable = () => {
-  const ourSessionID = UserUtils.getOurPubKeyStrFromCache();
+export const SessionIDNonEditable = ({
+  sessionId,
+  dataTestId,
+}: {
+  sessionId: string;
+  dataTestId?: SessionDataTestId;
+}) => {
+  if (sessionId.length !== 66) {
+    throw new Error('Unsupported case for SessionIDNonEditable: sessionId.length !== 66');
+  }
   return (
-    <StyledYourSessionIDSelectable data-testid="your-session-id">
-      {ourSessionID.slice(0, 33)}
+    <StyledSessionIDNonEditable data-testid={dataTestId}>
+      {sessionId.slice(0, 33)}
       <br />
-      {ourSessionID.slice(33)}
-    </StyledYourSessionIDSelectable>
+      {sessionId.slice(33)}
+    </StyledSessionIDNonEditable>
   );
 };

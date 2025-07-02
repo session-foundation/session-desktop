@@ -1,28 +1,33 @@
 import { useState } from 'react';
 import useKey from 'react-use/lib/useKey';
+import { clone } from 'lodash';
 
 import { PubkeyType } from 'libsession_util_nodejs';
-import { difference, uniq } from 'lodash';
 import { useDispatch } from 'react-redux';
 import { ConvoHub } from '../../session/conversations';
 import { updateGroupMembersModal, updateInviteContactModal } from '../../state/ducks/modalDialog';
 import { SpacerLG } from '../basic/Text';
 
-import { useIsPrivate, useIsPublic, useSortedGroupMembers } from '../../hooks/useParamSelector';
+import { useIsPrivate, useIsPublic } from '../../hooks/useParamSelector';
 import { useSet } from '../../hooks/useSet';
 import { PubKey } from '../../session/types';
 import { SessionUtilUserGroups } from '../../session/utils/libsession/libsession_utils_user_groups';
 import { groupInfoActions } from '../../state/ducks/metaGroups';
-import { useContactsToInviteToGroup } from '../../state/selectors/conversations';
 import { useSelectedIsGroupV2 } from '../../state/selectors/selectedConversation';
 import { MemberListItem } from '../MemberListItem';
-import { SessionWrapperModal } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionToggle } from '../basic/SessionToggle';
-import { GroupInviteRequiredVersionBanner } from '../NoticeBanner';
 import { hasClosedGroupV2QAButtons } from '../../shared/env_vars';
 import { ConversationTypeEnum } from '../../models/types';
 import { Localizer } from '../basic/Localizer';
+import { localize } from '../../localization/localeTools';
+import { useContactsToInviteTo } from '../../hooks/useContactsToInviteToGroup';
+import { SessionSearchInput } from '../SessionSearchInput';
+import { NoResultsForSearch } from '../search/NoResults';
+import { SessionWrapperModal2 } from '../SessionWrapperModal2';
+import { useHotkey } from '../../hooks/useHotkey';
+import { searchActions } from '../../state/ducks/search';
+import { ToastUtils } from '../../session/utils';
 
 type Props = {
   conversationId: string;
@@ -42,6 +47,10 @@ async function submitForOpenGroup(convoId: string, pubkeys: Array<string>) {
       url: roomDetails?.fullUrlWithPubkey,
       name: convo.getNicknameOrRealUsernameOrPlaceholder(),
     };
+    ToastUtils.pushToastInfo(
+      'sendingInvites',
+      localize('groupInviteSending').withArgs({ count: pubkeys.length }).toString()
+    );
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     pubkeys.forEach(async pubkeyStr => {
       const privateConvo = await ConvoHub.use().getOrCreateAndWait(
@@ -64,14 +73,52 @@ async function submitForOpenGroup(convoId: string, pubkeys: Array<string>) {
   }
 }
 
+function ContactsToInvite({
+  validContactsForInvite,
+  selectedContacts,
+  selectContact,
+  unselectContact,
+}: {
+  validContactsForInvite: Array<PubkeyType>;
+  selectedContacts: Array<string>;
+  selectContact: (member: string) => void;
+  unselectContact: (member: string) => void;
+}) {
+  const hasContacts = validContactsForInvite.length > 0;
+
+  return hasContacts ? (
+    validContactsForInvite.map((member: string) => (
+      <MemberListItem
+        key={`contacts-list-${member}`}
+        pubkey={member}
+        isSelected={selectedContacts.includes(member)}
+        onSelect={selectContact}
+        onUnselect={unselectContact}
+        disableBg={true}
+        maxNameWidth="100%"
+      />
+    ))
+  ) : (
+    <>
+      <SpacerLG />
+      <p className="no-contacts">
+        <Localizer token="contactNone" />
+      </p>
+      <SpacerLG />
+    </>
+  );
+}
+
 const InviteContactsDialogInner = (props: Props) => {
   const { conversationId } = props;
   const dispatch = useDispatch();
 
-  const privateContactPubkeys = useContactsToInviteToGroup() as Array<PubkeyType>;
+  const { contactsToInvite, isSearch, searchTerm, hasSearchResults } = useContactsToInviteTo(
+    'invite-contact-to',
+    conversationId
+  );
   const isPrivate = useIsPrivate(conversationId);
   const isPublic = useIsPublic(conversationId);
-  const membersFromRedux = useSortedGroupMembers(conversationId) || [];
   const isGroupV2 = useSelectedIsGroupV2();
   const [shareHistory, setShareHistory] = useState(false);
 
@@ -80,14 +127,10 @@ const InviteContactsDialogInner = (props: Props) => {
   if (isPrivate) {
     throw new Error('InviteContactsDialogInner must be a group');
   }
-  const members = uniq(membersFromRedux);
-
-  const validContactsForInvite = isPublic
-    ? privateContactPubkeys
-    : difference(privateContactPubkeys, members);
 
   const closeDialog = () => {
     dispatch(updateInviteContactModal(null));
+    dispatch(searchActions.clearSearch());
   };
 
   const onClickOK = () => {
@@ -96,7 +139,8 @@ const InviteContactsDialogInner = (props: Props) => {
       return;
     }
     if (isPublic) {
-      void submitForOpenGroup(conversationId, selectedContacts);
+      void submitForOpenGroup(conversationId, clone(selectedContacts));
+      empty();
       return;
     }
     if (!PubKey.is03Pubkey(conversationId)) {
@@ -117,28 +161,45 @@ const InviteContactsDialogInner = (props: Props) => {
     closeDialog();
     dispatch(updateGroupMembersModal({ conversationId }));
   };
+  useHotkey('Escape', closeDialog);
 
   useKey((event: KeyboardEvent) => {
     return event.key === 'Enter';
   }, onClickOK);
 
-  useKey((event: KeyboardEvent) => {
-    return event.key === 'Esc' || event.key === 'Escape';
-  }, closeDialog);
-
-  const titleText = window.i18n('membersInvite');
-  const cancelText = window.i18n('cancel');
-  const okText = window.i18n('okay');
-
-  const hasContacts = validContactsForInvite.length > 0;
+  const hasContacts = contactsToInvite.length > 0;
 
   return (
-    <SessionWrapperModal title={titleText} onClose={closeDialog} showExitIcon={true}>
-      {hasContacts && isGroupV2 && <GroupInviteRequiredVersionBanner />}
-
+    <SessionWrapperModal2
+      title={localize('membersInvite').toString()}
+      onClose={closeDialog}
+      showExitIcon={true}
+      $contentMaxWidth="500px"
+      $contentMinWidth="500px"
+      buttonChildren={
+        <>
+          <SpacerLG />
+          <div className="session-modal__button-group">
+            <SessionButton
+              text={localize('okay').toString()}
+              buttonType={SessionButtonType.Simple}
+              disabled={!hasContacts}
+              onClick={onClickOK}
+              dataTestId="session-confirm-ok-button"
+            />
+            <SessionButton
+              text={localize('cancel').toString()}
+              buttonColor={SessionButtonColor.Danger}
+              buttonType={SessionButtonType.Simple}
+              onClick={closeDialog}
+              dataTestId="session-confirm-cancel-button"
+            />
+          </div>
+        </>
+      }
+    >
       <SpacerLG />
 
-      {/* TODO: localize those strings once out releasing those buttons for real Remove after QA */}
       {isGroupV2 && hasClosedGroupV2QAButtons() && (
         <>
           <span
@@ -154,48 +215,20 @@ const InviteContactsDialogInner = (props: Props) => {
           </span>
         </>
       )}
-      <div className="contact-selection-list">
-        {hasContacts ? (
-          validContactsForInvite.map((member: string) => (
-            <MemberListItem
-              key={`contacts-list-${member}`}
-              pubkey={member}
-              isSelected={selectedContacts.includes(member)}
-              onSelect={addTo}
-              onUnselect={removeFrom}
-              disableBg={true}
-              maxNameWidth="100%"
-            />
-          ))
-        ) : (
-          <>
-            <SpacerLG />
-            <p className="no-contacts">
-              <Localizer token="contactNone" />
-            </p>
-            <SpacerLG />
-          </>
-        )}
-      </div>
-      <SpacerLG />
-      <SpacerLG />
-      <div className="session-modal__button-group">
-        <SessionButton
-          text={okText}
-          buttonType={SessionButtonType.Simple}
-          disabled={!hasContacts}
-          onClick={onClickOK}
-          dataTestId="session-confirm-ok-button"
-        />
-        <SessionButton
-          text={cancelText}
-          buttonColor={SessionButtonColor.Danger}
-          buttonType={SessionButtonType.Simple}
-          onClick={closeDialog}
-          dataTestId="session-confirm-cancel-button"
-        />
-      </div>
-    </SessionWrapperModal>
+      <SessionSearchInput searchType="invite-contact-to" />
+      {isSearch && !hasSearchResults ? (
+        <NoResultsForSearch searchTerm={searchTerm || ''} />
+      ) : (
+        <div className="contact-selection-list">
+          <ContactsToInvite
+            validContactsForInvite={contactsToInvite}
+            selectedContacts={selectedContacts}
+            selectContact={addTo}
+            unselectContact={removeFrom}
+          />
+        </div>
+      )}
+    </SessionWrapperModal2>
   );
 };
 

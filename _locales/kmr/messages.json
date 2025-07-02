@@ -791,6 +791,7 @@
   "warning": "Hişyarî",
   "window": "Pencere",
   "yes": "Erê",
-  "you": "Tu"
+  "you": "Tu",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

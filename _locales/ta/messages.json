@@ -782,6 +782,7 @@
   "warning": "எச்சரிக்கை",
   "window": "விந்டோ",
   "yes": "ஆம்",
-  "you": "நீங்கள்"
+  "you": "நீங்கள்",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

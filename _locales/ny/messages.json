@@ -777,6 +777,7 @@
   "warning": "Chenjezo",
   "window": "Zenera",
   "yes": "Ari",
-  "you": "Inu"
+  "you": "Inu",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

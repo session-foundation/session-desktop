@@ -804,6 +804,7 @@
   "warning": "Advertencia",
   "window": "Ventana",
   "yes": "Sí",
-  "you": "Tú"
+  "you": "Tú",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

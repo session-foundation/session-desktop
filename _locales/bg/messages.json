@@ -777,6 +777,7 @@
   "warning": "Предупреждение",
   "window": "Прозорец",
   "yes": "Да",
-  "you": "Ти"
+  "you": "Ти",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

@@ -777,6 +777,7 @@
   "warning": "خبرداری",
   "window": "کړکۍ",
   "yes": "هو",
-  "you": "تاسو"
+  "you": "تاسو",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 
