@@ -66,6 +66,8 @@ function RadioButton({
       $diameterRadioBorder={diameterRadioBorder}
       style={style}
       aria-label={ariaLabel}
+      data-checked={selected}
+      data-disabled={disabled}
     >
       <StyledSelectedInner
         $disabled={disabled}
