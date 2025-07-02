@@ -1,11 +1,9 @@
 import styled from 'styled-components';
-// import { useDispatch } from 'react-redux';
 import { useDispatch } from 'react-redux';
 import { Constants } from '../../../session';
 import { Localizer } from '../../basic/Localizer';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { SessionTooltip } from '../../SessionTooltip';
-// import { SessionProInfoVariant, showSessionProInfoDialog } from '../../dialog/SessionProInfoModal';
 import { SessionIcon } from '../../icon';
 import { StyledCTA } from '../../basic/StyledCTA';
 import { SessionProInfoVariant, showSessionProInfoDialog } from '../../dialog/SessionProInfoModal';

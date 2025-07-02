@@ -56,7 +56,6 @@ import { HTMLDirection } from '../../../util/i18n/rtlSupport';
 import type { FixedBaseEmoji } from '../../../types/Reaction';
 import { CharacterCount } from './CharacterCount';
 import { Constants } from '../../../session';
-// import { SessionProInfoVariant, showSessionProInfoDialog } from '../../dialog/SessionProInfoModal';
 import type { CompositionInputRef } from './CompositionInput';
 import { useShowBlockUnblock } from '../../menuAndSettingsHooks/useShowBlockUnblock';
 import { showLocalizedPopupDialog } from '../../dialog/LocalizedPopupDialog';
