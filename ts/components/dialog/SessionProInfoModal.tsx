@@ -18,6 +18,7 @@ import { LucideIcon } from '../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { Localizer } from '../basic/Localizer';
 import { localize, type MergedLocalizerTokens } from '../../localization/localeTools';
+import { FileIcon } from '../icon/FileIcon';
 
 export enum SessionProInfoVariant {
   MESSAGE_CHARACTER_LIMIT = 0,
@@ -34,7 +35,7 @@ const StyledContentContainer = styled.div`
 
 const StyledScrollDescriptionContainer = styled.div`
   text-align: center;
-  font-size: var(--text-size-lg);
+  font-size: var(--font-size-lg);
   color: var(--text-secondary-color);
 `;
 
@@ -77,13 +78,13 @@ const StyledCTAImage = styled.img`
 // }
 
 const StyledCTATitle = styled.span`
-  font-size: 22px;
+  font-size: var(--font-size-h4);
   font-weight: bold;
   line-height: normal;
   display: inline-flex;
   flex-direction: row;
   align-items: center;
-  gap: 3px;
+  gap: var(--margins-xs);
   padding: 3px;
 `;
 
@@ -92,23 +93,35 @@ const StyledFeatureList = styled.ul`
   padding-inline-start: 0;
   text-align: start;
   display: grid;
-  font-size: var(--text-size-xl);
+  font-size: var(--font-size-lg);
   grid-row-gap: var(--margins-md);
 `;
 
 const StyledListItem = styled.li`
   display: inline-flex;
   gap: 8px;
+  align-items: end;
+  line-height: normal;
 `;
 
-function FeatureListItem({ children }: { children: ReactNode }) {
+function FeatureListItem({
+  children,
+  customIconSrc,
+}: {
+  children: ReactNode;
+  customIconSrc?: string;
+}) {
   return (
     <StyledListItem>
-      <LucideIcon
-        unicode={LUCIDE_ICONS_UNICODE.CIRCLE_CHECK}
-        iconSize={'var(--font-size-lg)'}
-        iconColor={'var(--primary-color)'}
-      />
+      {customIconSrc ? (
+        <FileIcon iconSize={'var(--font-size-xl)'} src={customIconSrc} />
+      ) : (
+        <LucideIcon
+          unicode={LUCIDE_ICONS_UNICODE.CIRCLE_CHECK}
+          iconSize={'var(--font-size-xl)'}
+          iconColor={'var(--primary-color)'}
+        />
+      )}
       {children}
     </StyledListItem>
   );
@@ -117,11 +130,7 @@ function FeatureListItem({ children }: { children: ReactNode }) {
 function getFeatureList(variant: SessionProInfoVariant): Array<MergedLocalizerTokens> {
   switch (variant) {
     default:
-      return [
-        'proFeatureListLongerMessages',
-        'proFeatureListLargerGroups',
-        'proFeatureListLoadsMore',
-      ];
+      return ['proFeatureListLongerMessages', 'proFeatureListLargerGroups'];
   }
 }
 
@@ -158,7 +167,7 @@ const buttonProps = {
   buttonType: SessionButtonType.Solid,
   fontWeight: 400,
   style: {
-    height: '42px',
+    height: '46px',
     width: '100%',
   },
 } satisfies SessionButtonProps;
@@ -181,8 +190,8 @@ export function SessionProInfoModal(props: SessionProInfoState) {
       showHeader={false}
       padding="0"
       removeScrollbarGutter={true}
-      $contentMinWidth={'340px'}
-      $contentMaxWidth={'340px'}
+      $contentMinWidth={'420px'}
+      $contentMaxWidth={'420px'}
     >
       {getImage(props.variant)}
       <SpacerSM />
@@ -191,7 +200,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
         <SessionIcon
           sizeIsWidth={false}
           iconType={'sessionPro'}
-          iconSize={'large'}
+          iconSize={'huge'}
           backgroundColor={'var(--primary-color)'}
           borderRadius={'6px'}
           iconColor={'var(--black-color)'}
@@ -206,6 +215,9 @@ export function SessionProInfoModal(props: SessionProInfoState) {
           {getFeatureList(props.variant).map(token => (
             <FeatureListItem>{localize(token)}</FeatureListItem>
           ))}
+          <FeatureListItem customIconSrc={'images/sparkle-animated.svg'}>
+            {localize('proFeatureListLoadsMore')}
+          </FeatureListItem>
         </StyledFeatureList>
         <Flex
           $container={true}
@@ -218,6 +230,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
             {...buttonProps}
             buttonColor={SessionButtonColor.Primary}
             onClick={onClose}
+            shineAnimation={true}
             dataTestId="modal-button-session-pro-ok"
           >
             {localize('theContinue')}
