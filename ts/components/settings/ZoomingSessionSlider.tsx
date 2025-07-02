@@ -35,8 +35,8 @@ export const ZoomingSessionSlider = (props: { onSliderChange?: (value: number) =
       >
         <Slider
           dots={true}
-          step={20}
-          min={60}
+          step={10}
+          min={50}
           max={200}
           value={value}
           onChange={(val: number | Array<number>) => {
