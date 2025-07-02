@@ -9,6 +9,7 @@ import { SessionTooltip } from '../../SessionTooltip';
 import { SessionIcon } from '../../icon';
 import { StyledCTA } from '../../basic/StyledCTA';
 import { SessionProInfoVariant, showSessionProInfoDialog } from '../../dialog/SessionProInfoModal';
+import { formatNumber } from '../../../util/i18n/formatting/generics';
 
 export type CharacterCountProps = {
   count: number;
@@ -80,7 +81,9 @@ export function CharacterCount({ count }: CharacterCountProps) {
         }
         dataTestId="tooltip-character-count"
       >
-        <StyledRemainingNumber pastLimit={pastLimit}>{remaining}</StyledRemainingNumber>
+        <StyledRemainingNumber pastLimit={pastLimit}>
+          {formatNumber(remaining)}
+        </StyledRemainingNumber>
       </SessionTooltip>
     </StyledCharacterCountContainer>
   ) : null;
