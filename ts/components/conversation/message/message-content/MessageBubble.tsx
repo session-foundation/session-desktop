@@ -87,7 +87,7 @@ export function MessageBubble({ children }: { children: ReactNode }) {
 
     hiddenHeight.current = innerHeight - maxHeight;
     setShowReadMore(overflowsLines);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- children changing will chance el.lineHeight and el.ScrollHeight
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- children changing will change el.lineHeight and el.ScrollHeight
   }, [children]);
 
   return (

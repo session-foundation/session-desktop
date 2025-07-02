@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import useUpdate from 'react-use/lib/useUpdate';
 import { SessionTooltip, type TooltipProps, useTriggerPosition } from '../../../SessionTooltip';
 import { FlagToggle } from '../FeatureFlags';
-import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { useFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { SessionHtmlRenderer } from '../../../basic/SessionHTMLRenderer';
 import { type PopoverProps, SessionPopoverContent } from '../../../SessionPopover';
 import { SessionButton } from '../../../basic/SessionButton';
@@ -138,7 +138,7 @@ export function PopoverPlaygroundPage() {
       <FlagToggle
         forceUpdate={forceUpdate}
         flag="showPopoverAnchors"
-        value={getFeatureFlag('showPopoverAnchors')}
+        value={useFeatureFlag('showPopoverAnchors')}
       />
       <h2>Settings</h2>
       <span>

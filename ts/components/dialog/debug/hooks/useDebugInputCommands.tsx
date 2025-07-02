@@ -1,7 +1,7 @@
 import { type Dispatch, useEffect } from 'react';
 import { isDevProd } from '../../../../shared/env_vars';
 import { Constants } from '../../../../session';
-import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { useFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 type DebugInputCommandsArgs = {
   value: string;
@@ -24,7 +24,7 @@ export function useDebugInputCommands({ value, setValue }: DebugInputCommandsArg
     return null;
   }
 
-  const debugInputCommands = getFeatureFlag('debugInputCommands');
+  const debugInputCommands = useFeatureFlag('debugInputCommands');
 
   // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {

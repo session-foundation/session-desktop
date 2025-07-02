@@ -2,7 +2,7 @@ import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 import { Constants } from '../../../session';
 import { Localizer } from '../../basic/Localizer';
-import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { useFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { SessionTooltip } from '../../SessionTooltip';
 import { SessionIcon } from '../../icon';
 import { StyledCTA } from '../../basic/StyledCTA';
@@ -32,10 +32,10 @@ const StyledRemainingNumber = styled.span<{ pastLimit: boolean }>`
 `;
 
 export function CharacterCount({ count }: CharacterCountProps) {
-  const alwaysShowFlag = getFeatureFlag('useAlwaysShowRemainingChars');
+  const alwaysShowFlag = useFeatureFlag('useAlwaysShowRemainingChars');
   const dispatch = useDispatch();
-  const isProAvailable = getFeatureFlag('useProAvailable');
-  const mockHasPro = getFeatureFlag('useMockUserHasPro');
+  const isProAvailable = useFeatureFlag('useProAvailable');
+  const mockHasPro = useFeatureFlag('useMockUserHasPro');
 
   // TODO: get pro status from store once available
   const hasPro = mockHasPro;

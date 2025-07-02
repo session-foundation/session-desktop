@@ -144,7 +144,6 @@ function parsePreTags(content: string, messageBodyProps: Props) {
     if (match.index > lastIndex) {
       const text = content.slice(lastIndex, match.index);
       if (text.replaceAll('\n', '')) {
-        window.log.debug(text);
         segments.push(
           <MessageBody
             {...messageBodyProps}
@@ -164,7 +163,6 @@ function parsePreTags(content: string, messageBodyProps: Props) {
   if (lastIndex < content.length) {
     const text = content.slice(lastIndex).replaceAll('\n', '');
     if (text) {
-      window.log.debug(text);
       segments.push(
         <MessageBody
           {...messageBodyProps}

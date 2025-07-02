@@ -27,7 +27,7 @@ export const isSessionFeatureFlag = (flag: unknown): flag is SessionFeatureFlagK
   return !strFlag.startsWith('debug') && Object.keys(window.sessionFeatureFlags).includes(strFlag);
 };
 
-export const getFeatureFlag = (flag: SessionFeatureFlagKeys) => window.sessionFeatureFlags[flag];
+export const useFeatureFlag = (flag: SessionFeatureFlagKeys) => window.sessionFeatureFlags[flag];
 
 export type SessionFlags = SessionFeatureFlags & {
   debug: {

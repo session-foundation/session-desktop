@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import { type ReactNode, useMemo, useRef } from 'react';
-import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
+import { useFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
 
 const TIP_LENGTH = 18;
 const VIEWPORT_MARGIN = 4;
@@ -109,7 +109,7 @@ export const SessionPopoverContent = (props: PopoverProps) => {
     verticalPosition = 'top',
   } = props;
 
-  const showPopoverAnchors = getFeatureFlag('showPopoverAnchors');
+  const showPopoverAnchors = useFeatureFlag('showPopoverAnchors');
 
   const ref = useRef<HTMLDivElement | null>(null);
 

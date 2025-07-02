@@ -60,7 +60,7 @@ import type { CompositionInputRef } from './CompositionInput';
 import { useShowBlockUnblock } from '../../menuAndSettingsHooks/useShowBlockUnblock';
 import { showLocalizedPopupDialog } from '../../dialog/LocalizedPopupDialog';
 import { formatNumber } from '../../../util/i18n/formatting/generics';
-import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { useFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { SessionProInfoVariant, showSessionProInfoDialog } from '../../dialog/SessionProInfoModal';
 
 export interface ReplyingToMessageProps {
@@ -717,8 +717,8 @@ class CompositionBoxInner extends Component<Props, State> {
     }
     this.linkPreviewAbortController?.abort();
 
-    const isProAvailable = getFeatureFlag('useProAvailable');
-    const mockHasPro = getFeatureFlag('useMockUserHasPro');
+    const isProAvailable = useFeatureFlag('useProAvailable');
+    const mockHasPro = useFeatureFlag('useMockUserHasPro');
 
     // TODO: get pro status from store once available
     const hasPro = mockHasPro;
