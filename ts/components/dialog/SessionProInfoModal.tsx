@@ -182,7 +182,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
   if (!props || isEmpty(props) || isNull(props.variant) || isUndefined(props.variant)) {
     return null;
   }
-
+  
   return (
     <SessionWrapperModal2
       onClose={onClose}

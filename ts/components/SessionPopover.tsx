@@ -109,7 +109,7 @@ export const SessionPopoverContent = (props: PopoverProps) => {
     verticalPosition = 'top',
   } = props;
 
-  const showPopoverAnchors = getFeatureFlag('useShowPopoverAnchors');
+  const showPopoverAnchors = getFeatureFlag('showPopoverAnchors');
 
   const ref = useRef<HTMLDivElement | null>(null);
 

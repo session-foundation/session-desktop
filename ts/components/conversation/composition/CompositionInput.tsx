@@ -72,8 +72,8 @@ function setCaretAtHtmlIndex(el: HTMLElement, idx: number) {
 /**
  * Insert html at a html index.
  * @param originalHtml - Html to mutate.
- * @param htmlIdx - Html index to inset at. @see {@link getHtmlIndexFromSelection}
- * @param htmlToInsert - Html to inset.
+ * @param htmlIdx - Html index to insert at. @see {@link getHtmlIndexFromSelection}
+ * @param htmlToInsert - Html to insert.
  */
 function insertHtmlAtIndex(
   originalHtml: string,
@@ -88,6 +88,25 @@ function insertHtmlAtIndex(
 }
 
 /**
+ * Remove html at a html index.
+ * @param originalHtml - Html to mutate
+ * @param htmlIdx - Html index to insert at. @see {@link getHtmlIndexFromSelection}
+ * @param numberOfCharactersToRemove - Number of characters to remove before the index.
+ */
+function removeHtmlBeforeIndex(
+  originalHtml: string,
+  htmlIdx: number,
+  numberOfCharactersToRemove: number
+): { newHtml: string; newIndex: number } {
+  // TODO: handle when htmlIdx - toRemove < 0
+  const before = originalHtml.slice(0, htmlIdx - numberOfCharactersToRemove);
+  const after = originalHtml.slice(htmlIdx);
+  const newHtml = before + after;
+  const newIndex = htmlIdx - numberOfCharactersToRemove;
+  return { newHtml, newIndex };
+}
+
+/**
  * Normalize an HTML string by converting all non-breaking spaces to regular spaces
  * and standardizing self-closing `<br />` tags to `<br>`.
  *
@@ -98,7 +117,7 @@ function insertHtmlAtIndex(
  * @param str - The HTML string to normalize.
  */
 function normalizeHtml(str?: string): string {
-  return str?.replace(/&nbsp;|\u202F|\u00A0/g, ' ').replace(/<br \/>/g, '<br>') ?? '';
+  return str?.replace(/&nbsp;|\u202F|\u00A0/g, ' ')?.replace(/<br>|<br\/>|<br \/>/g, '') ?? '';
 }
 
 /**
@@ -135,7 +154,7 @@ export function ZeroWidthNode() {
   );
 }
 
-function isElementNode(el: Node): boolean {
+function isElementNode(el: Node): el is Element {
   return el.nodeType === Node.ELEMENT_NODE;
 }
 
@@ -174,6 +193,11 @@ export function createInputNode(
   return node;
 }
 
+function markNodeForDeletion(queue: Array<Node>, reason: string, ...nodes: Array<Node>) {
+  queue.push(...nodes);
+  window.log.debug('COMP-DELETE', reason, nodes);
+}
+
 export type ContentEditableEvent = React.SyntheticEvent<HTMLDivElement> & {
   target: { value: string; caratHtmlIndex: number | null };
 };
@@ -199,7 +223,7 @@ export interface CompositionInputRef {
   getRawValue: (mutator?: (nodeClone: HTMLElement) => void) => string;
   getCaretIndex: () => number;
   setCaretIndex: (htmlIndex: number) => void;
-  typeAtCaret: (content: string) => void;
+  typeAtCaret: (content: string, previousCharactersToRemove?: number) => void;
 }
 
 export type ContentEditableProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> &
@@ -298,14 +322,21 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
           lastPosition.current = null;
         },
 
-        typeAtCaret: content => {
+        typeAtCaret: (content, previousCharactersToRemove = 0) => {
           const el = elRef.current;
           if (!el) {
             return;
           }
 
-          const htmlIndex = lastHtmlIndex.current;
-          const { newHtml, newIndex } = insertHtmlAtIndex(el.innerHTML, htmlIndex, content);
+          let htmlIndex = lastHtmlIndex.current;
+          let htmlToEdit = el.innerHTML;
+          if (previousCharactersToRemove) {
+            const res = removeHtmlBeforeIndex(htmlToEdit, htmlIndex, previousCharactersToRemove);
+            htmlToEdit = res.newHtml;
+            htmlIndex = res.newIndex;
+          }
+
+          const { newHtml, newIndex } = insertHtmlAtIndex(htmlToEdit, htmlIndex, content);
           el.innerHTML = newHtml;
           lastHtml.current = newHtml;
           lastHtmlIndex.current = newIndex;
@@ -356,19 +387,21 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
 
       const readerChildren = el.childNodes;
       // TODO: see if we can replace this with in-line .remove() calls.
-      const nodesToDelete = [];
-
-      if (readerChildren.length === 1) {
-        const lastEl = el.lastElementChild;
-        if (lastEl && lastEl?.tagName === 'BR') {
-          lastEl.remove();
-        }
-      }
+      const nodesToDelete: Array<ChildNode> = [];
 
       for (let i = 0; i < readerChildren.length; i++) {
         const node = readerChildren[i];
 
-        if (!node || !isZeroWidthNode(node)) {
+        if (isNoneElement(node)) {
+          continue;
+        }
+
+        if (isElementNode(node) && node?.tagName === 'BR') {
+          markNodeForDeletion(nodesToDelete, 'BR tag is forbidden', node);
+          continue;
+        }
+
+        if (!isZeroWidthNode(node)) {
           continue;
         }
 
@@ -409,13 +442,14 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
             if (isNoneElement(nextNextNode) || (nextNextNode && !isElementNode(nextNextNode))) {
               // NOTE: n and n + 1 are at the start and don't have an element next
               // Mark n and n + 1 for deletion
-              nodesToDelete.push(node, next);
+              markNodeForDeletion(nodesToDelete, 'Dom is empty, erase ZN', node, next);
             }
             // orphan ZN pair (no ZN sibling, delete it)
           } else {
             // Mark n for deletion. (log a warning)
-            nodesToDelete.push(next);
-            window.log.warn('Start node is Zero width with no next sibling, deleting!');
+            const msg = 'Start node is Zero width with no next sibling';
+            markNodeForDeletion(nodesToDelete, msg, node);
+            window.log.warn(msg);
           }
           // If n + 1 is none (to get here n - 1 has to exist and be anything, so this pair is not at the start)
         } else if (isNoneElement(next)) {
@@ -423,7 +457,27 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
           if (prev && isElementNode(prev) && !isZeroWidthNode(prev)) {
             // NOTE: this means the ZN forward sibling has been deleted, so we need to delete this node and the element it is attached to
             // Mark n and n - 1 for deletion
-            nodesToDelete.push(prev, prev.previousSibling);
+            markNodeForDeletion(nodesToDelete, 'ZN forward sibling deleted', node, prev);
+
+            // NOTE: there is an edge case where the n - 2 and n - 3 are also ZN and n - 3 is the first node, we need to delete these too in this case.
+            // This is possible if the only things in the dom are [ZN, ZN, E, ZN, ZN]
+            const prevPrev = prev.previousSibling;
+            const prevPrevPrev = prevPrev?.previousSibling ?? null;
+            const prevPrevPrevPrev = prevPrevPrev?.previousSibling ?? null;
+            if (
+              prevPrev &&
+              isZeroWidthNode(prevPrev) &&
+              prevPrevPrev &&
+              isZeroWidthNode(prevPrevPrev) &&
+              isNoneElement(prevPrevPrevPrev)
+            ) {
+              markNodeForDeletion(
+                nodesToDelete,
+                'ZN forward sibling deleted (Leading ZN edge case)',
+                prevPrev,
+                prevPrevPrev
+              );
+            }
           }
           // If n + 1 is ZN
         } else if (next && isZeroWidthNode(next)) {
@@ -438,8 +492,9 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
 
         // If n + 1 and n - 1 are not ZN
         if ((!prev || !isZeroWidthNode(prev)) && (!next || !isZeroWidthNode(next))) {
-          nodesToDelete.push(node);
-          window.log.warn('Zero width node marked for deletion with no siblings!');
+          const msg = 'Zero width node marked for deletion with no siblings!';
+          markNodeForDeletion(nodesToDelete, msg, node);
+          window.log.warn(msg);
         }
       }
 
@@ -506,6 +561,9 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
         lastHtml.current = renderedHtml;
         lastHtmlIndex.current = idx;
         setCaretAtHtmlIndex(el, idx);
+
+        window.log.debug('COMP', renderedHtml);
+
         return true;
       }
       return false;
@@ -559,13 +617,17 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
       const normalizedHtml = normalizeHtml(html);
       const normalizedCurrentHtml = normalizeHtml(el.innerHTML);
 
+      if (normalizedHtml.includes('<br>')) {
+        window.log.error('There is a BR tag inside the composition input!! This is really bad!');
+      }
+
       if (isMount.current) {
-        el.innerHTML = html;
-        lastHtml.current = html;
+        el.innerHTML = normalizedHtml;
+        lastHtml.current = normalizedHtml;
         isMount.current = false;
       } else if (normalizedHtml !== normalizedCurrentHtml) {
-        el.innerHTML = html;
-        lastHtml.current = html;
+        el.innerHTML = normalizedHtml;
+        lastHtml.current = normalizedHtml;
         handleChange();
         replaceCaret(el);
       }

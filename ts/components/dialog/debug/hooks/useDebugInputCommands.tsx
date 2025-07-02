@@ -24,7 +24,7 @@ export function useDebugInputCommands({ value, setValue }: DebugInputCommandsArg
     return null;
   }
 
-  const debugInputCommands = getFeatureFlag('useDebugInputCommands');
+  const debugInputCommands = getFeatureFlag('debugInputCommands');
 
   // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {

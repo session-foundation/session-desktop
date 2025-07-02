@@ -137,8 +137,8 @@ export function PopoverPlaygroundPage() {
       <h2>Flags</h2>
       <FlagToggle
         forceUpdate={forceUpdate}
-        flag="useShowPopoverAnchors"
-        value={getFeatureFlag('useShowPopoverAnchors')}
+        flag="showPopoverAnchors"
+        value={getFeatureFlag('showPopoverAnchors')}
       />
       <h2>Settings</h2>
       <span>

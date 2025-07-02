@@ -381,7 +381,7 @@ class CompositionBoxInner extends Component<Props, State> {
     // - we've got a message body OR
     // - we've got a staged attachments
     const showSendButton =
-      typingEnabled && (!isEmpty(this.state.draft) || !isEmpty(this.props.stagedAttachments));
+      typingEnabled && (this.isTextSendable() || !isEmpty(this.props.stagedAttachments));
 
     /* eslint-disable @typescript-eslint/no-misused-promises */
 
@@ -692,13 +692,23 @@ class CompositionBoxInner extends Component<Props, State> {
       return '';
     }
 
-    return input.getRawValue(nodeTree =>
-      nodeTree.querySelectorAll('span[data-user-id]').forEach(span => {
-        const id = span.getAttribute('data-user-id');
-        // eslint-disable-next-line no-param-reassign -- intentional mutation of the clone to replace display with id
-        span.textContent = id ? `@${id}` : span.textContent;
-      })
-    );
+    return input
+      .getRawValue(nodeTree =>
+        nodeTree.querySelectorAll('span[data-user-id]').forEach(span => {
+          const id = span.getAttribute('data-user-id');
+          // eslint-disable-next-line no-param-reassign -- intentional mutation of the clone to replace display with id
+          span.textContent = id ? `@${id}` : span.textContent;
+        })
+      )
+      .trim()
+      .replace(/^\n+|\n+$/g, '');
+  }
+
+  /**
+   * This is a significantly cheaper version of calling @see {@link getSendableText} and getting the length
+   */
+  private isTextSendable(): boolean {
+    return this.state.draft.trim().replace(/^\n+|\n+$/g, '').length > 0;
   }
 
   private async onSendMessage() {
@@ -707,7 +717,6 @@ class CompositionBoxInner extends Component<Props, State> {
     }
     this.linkPreviewAbortController?.abort();
 
-    // TODO: implement with pro
     const isProAvailable = getFeatureFlag('useProAvailable');
     const mockHasPro = getFeatureFlag('useMockUserHasPro');
 
