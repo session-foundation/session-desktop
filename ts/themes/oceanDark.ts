@@ -9,7 +9,7 @@ export const oceanDark: ThemeColorVariables = {
 
   '--background-primary-color': THEMES.OCEAN_DARK.COLOR1,
   '--background-secondary-color': THEMES.OCEAN_DARK.COLOR2,
-  '--background-tertiary-color': THEMES.OCEAN_DARK.COLOR0,
+  '--background-tertiary-color': THEMES.OCEAN_DARK.COLOR3,
 
   '--text-primary-color': THEMES.OCEAN_DARK.COLOR7!,
   '--text-secondary-color': THEMES.OCEAN_DARK.COLOR5,
