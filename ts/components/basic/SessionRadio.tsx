@@ -9,32 +9,32 @@ const StyledContainer = styled.div<{ disabled: boolean }>`
   background-color: var(--transparent-color);
 `;
 
-const StyledRadioOuter = styled.div<{ $disabled: boolean; $diameterRadioBorder: number }>`
+const StyledRadioOuter = styled.div<{
+  $disabled: boolean;
+  $selected: boolean;
+  $diameterRadioBorder: number;
+}>`
   width: ${props => props.$diameterRadioBorder}px;
   height: ${props => props.$diameterRadioBorder}px;
   border: 1px solid var(--text-primary-color);
   border-radius: 50%;
-  background-color: transparent;
+
   cursor: ${props => (props.$disabled ? 'not-allowed' : 'pointer')};
   position: relative;
-`;
 
-const StyledSelectedInner = styled.div<{
-  $disabled: boolean;
-  $selected: boolean;
-  $diameterRadioBg: number;
-}>`
-  width: ${props => props.$diameterRadioBg}px;
-  height: ${props => props.$diameterRadioBg}px;
-  border-radius: 50%;
-  opacity: ${props => (props.$selected ? 1 : 0)};
-  background: ${props => (props.$disabled ? 'var(--disabled-color)' : 'var(--primary-color)')};
-  pointer-events: none;
-  transition-duration: var(--default-duration);
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: ${props =>
+      props.$disabled
+        ? 'var(--disabled-color)'
+        : 'radial-gradient(circle, var(--primary-color) 0%, var(--primary-color) 60%, transparent 60%, transparent 100%)'};
+    opacity: ${props => (props.$selected ? 1 : 0)};
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
 `;
 
 function RadioButton({
@@ -42,7 +42,6 @@ function RadioButton({
   onClick,
   selected,
   dataTestId,
-  diameterRadioBg,
   diameterRadioBorder,
   style,
   ariaLabel,
@@ -51,7 +50,6 @@ function RadioButton({
   onClick: MouseEventHandler<HTMLDivElement>;
   disabled: boolean;
   dataTestId: SessionDataTestId | undefined;
-  diameterRadioBg: number;
   diameterRadioBorder: number;
   style?: CSSProperties;
   ariaLabel?: string;
@@ -68,13 +66,8 @@ function RadioButton({
       aria-label={ariaLabel}
       data-checked={selected}
       data-disabled={disabled}
-    >
-      <StyledSelectedInner
-        $disabled={disabled}
-        $selected={selected}
-        $diameterRadioBg={diameterRadioBg}
-      />
-    </StyledRadioOuter>
+      $selected={selected}
+    />
   );
 }
 
@@ -120,7 +113,6 @@ export const SessionRadio = (props: SessionRadioProps) => {
   };
 
   const diameterRadioBorder = 26;
-  const diameterRadioBg = 20;
 
   return (
     <StyledContainer
@@ -156,7 +148,6 @@ export const SessionRadio = (props: SessionRadioProps) => {
           disabled={disabled}
           dataTestId={inputDataTestId}
           diameterRadioBorder={diameterRadioBorder}
-          diameterRadioBg={diameterRadioBg}
         />
       </Flex>
     </StyledContainer>
@@ -186,7 +177,6 @@ export const SessionRadioPrimaryColors = (props: {
 
   // this component has no padding between the selected background and the border
   const diameterRadioBorder = 26;
-  const diameterRadioBg = 22;
 
   const overriddenColorsVars = {
     '--primary-color': color,
@@ -201,7 +191,6 @@ export const SessionRadioPrimaryColors = (props: {
         disabled={false}
         dataTestId={undefined}
         diameterRadioBorder={diameterRadioBorder}
-        diameterRadioBg={diameterRadioBg}
         style={overriddenColorsVars}
         ariaLabel={ariaLabel}
       />

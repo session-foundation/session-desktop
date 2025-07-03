@@ -2,6 +2,8 @@ import styled from 'styled-components';
 import { SessionDataTestId, type ReactNode } from 'react';
 import { SessionRadio } from '../basic/SessionRadio';
 import { PanelButtonProps, StyledContent, StyledPanelButton } from './PanelButton';
+import { useIsDarkTheme } from '../../state/theme/selectors/theme';
+import { StyledPanelButtonSeparator } from './StyledPanelButtonGroupSeparator';
 
 const StyledCheckContainer = styled.div`
   display: flex;
@@ -32,28 +34,33 @@ export const PanelRadioButton = (props: PanelRadioButtonProps) => {
     radioInputDataTestId,
     textElement,
   } = props;
+  const isDarkTheme = useIsDarkTheme();
 
   return (
-    <StyledPanelButton
-      disabled={disabled}
-      onClick={() => {
-        return isSelected ? onUnselect?.('bye') : onSelect?.('hi');
-      }}
-      data-testid={rowDataTestId}
-    >
-      <StyledContent disabled={disabled}>
-        {textElement}
-        <StyledCheckContainer>
-          <SessionRadio
-            active={isSelected}
-            value={value}
-            inputName={value}
-            disabled={disabled}
-            inputDataTestId={radioInputDataTestId}
-            style={{ paddingInlineEnd: 'var(--margins-xs)' }}
-          />
-        </StyledCheckContainer>
-      </StyledContent>
-    </StyledPanelButton>
+    <>
+      <StyledPanelButton
+        disabled={disabled}
+        onClick={() => {
+          return isSelected ? onUnselect?.('bye') : onSelect?.('hi');
+        }}
+        data-testid={rowDataTestId}
+        isDarkTheme={isDarkTheme}
+      >
+        <StyledContent disabled={disabled}>
+          {textElement}
+          <StyledCheckContainer>
+            <SessionRadio
+              active={isSelected}
+              value={value}
+              inputName={value}
+              disabled={disabled}
+              inputDataTestId={radioInputDataTestId}
+              style={{ paddingInlineEnd: 'var(--margins-xs)' }}
+            />
+          </StyledCheckContainer>
+        </StyledContent>
+      </StyledPanelButton>
+      <StyledPanelButtonSeparator />
+    </>
   );
 };
