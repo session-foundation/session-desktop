@@ -466,7 +466,11 @@ class ConvoController {
     } else {
       window.log.info(`deleteContact isPrivate, reset fields and removing from wrapper: ${id}`);
 
-      await conversation.setHidden();
+      await conversation.setHidden(false);
+      await conversation.setIsApproved(false, false);
+      await conversation.setDidApproveMe(false, false);
+      await conversation.setNickname(null, false);
+
       conversation.setKey('active_at', 0);
       await BlockedNumberController.unblockAll([conversation.id]);
       await conversation.commit(); // first commit to DB so the DB knows about the changes
