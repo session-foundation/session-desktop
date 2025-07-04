@@ -99,7 +99,12 @@ export const InteractionItem = (props: InteractionItemProps) => {
         className="module-conversation-list-item__message__text"
         isError={Boolean(interactionStatus === ConversationInteractionStatus.Error)}
       >
-        <MessageBody text={text} disableJumbomoji={true} disableLinks={true} isGroup={isGroup} />
+        <MessageBody
+          text={text}
+          disableJumbomoji={true}
+          disableRichContent={true}
+          isGroup={isGroup}
+        />
       </StyledInteractionItemText>
     </div>
   );

@@ -4,68 +4,173 @@ import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { type SessionProInfoState, updateSessionProInfoModal } from '../../state/ducks/modalDialog';
 import { SessionWrapperModal2 } from '../SessionWrapperModal2';
-import { SessionButton, SessionButtonType } from '../basic/SessionButton';
-import { I18nSubText } from '../basic/I18nSubText';
+import {
+  SessionButton,
+  SessionButtonColor,
+  type SessionButtonProps,
+  SessionButtonShape,
+  SessionButtonType,
+} from '../basic/SessionButton';
 import { Flex } from '../basic/Flex';
-import { SpacerSM, SpacerXS } from '../basic/Text';
-import { localize } from '../../localization/localeTools';
-import { Constants } from '../../session';
-import { formatNumber } from '../../util/i18n/formatting/generics';
+import { SpacerLG, SpacerSM } from '../basic/Text';
+import { SessionIcon } from '../icon';
+import { LucideIcon } from '../icon/LucideIcon';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { Localizer } from '../basic/Localizer';
+import { localize, type MergedLocalizerTokens } from '../../localization/localeTools';
+import { FileIcon } from '../icon/FileIcon';
 
 export enum SessionProInfoVariant {
-  MESSAGE_TOO_LONG_CTA = 0,
-  MESSAGE_TOO_LONG = 1,
+  MESSAGE_CHARACTER_LIMIT = 0,
+  PROFILE_PICTURE_ANIMATED = 1,
 }
 
-const StyledScrollDescriptionContainer = styled.div`
-  max-height: 150px;
-  overflow-y: auto;
-  text-align: center;
+const StyledContentContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin-inline: var(--margins-lg);
+  margin-bottom: var(--margins-lg);
+  gap: var(--margins-sm);
 `;
 
-function getTitle(variant: SessionProInfoVariant): string {
+const StyledScrollDescriptionContainer = styled.div`
+  text-align: center;
+  font-size: var(--font-size-lg);
+  color: var(--text-secondary-color);
+`;
+
+const StyledCTAImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: right center;
+  background-color: var(--primary-color);
+
+  mask-image: linear-gradient(to bottom, black 66%, transparent 97%);
+  mask-size: 100% 100%;
+`;
+
+// TODO: implement with animated profile pictures
+// const StyledAnimationImage = styled.img`
+//   position: absolute;
+//   width: 100%;
+//   height: 100%;
+//   inset-inline-start: 0;
+// `;
+//
+// const StyledAnimatedCTAImageContainer = styled.div`
+//   position: relative;
+// `;
+//
+// function AnimatedCTAImage({
+//   ctaLayerSrc,
+//   animatedLayerSrc,
+// }: {
+//   ctaLayerSrc: string;
+//   animatedLayerSrc: string;
+// }) {
+//   return (
+//     <StyledAnimatedCTAImageContainer>
+//       <StyledCTAImage src={ctaLayerSrc} />
+//       <StyledAnimationImage src={animatedLayerSrc} />
+//     </StyledAnimatedCTAImageContainer>
+//   );
+// }
+
+const StyledCTATitle = styled.span`
+  font-size: var(--font-size-h4);
+  font-weight: bold;
+  line-height: normal;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--margins-xs);
+  padding: 3px;
+`;
+
+const StyledFeatureList = styled.ul`
+  list-style: none;
+  padding-inline-start: 0;
+  text-align: start;
+  display: grid;
+  font-size: var(--font-size-lg);
+  grid-row-gap: var(--margins-md);
+`;
+
+const StyledListItem = styled.li`
+  display: inline-flex;
+  gap: 8px;
+  align-items: end;
+  line-height: normal;
+`;
+
+function FeatureListItem({
+  children,
+  customIconSrc,
+}: {
+  children: ReactNode;
+  customIconSrc?: string;
+}) {
+  return (
+    <StyledListItem>
+      {customIconSrc ? (
+        <FileIcon iconSize={'var(--font-size-xl)'} src={customIconSrc} />
+      ) : (
+        <LucideIcon
+          unicode={LUCIDE_ICONS_UNICODE.CIRCLE_CHECK}
+          iconSize={'var(--font-size-xl)'}
+          iconColor={'var(--primary-color)'}
+        />
+      )}
+      {children}
+    </StyledListItem>
+  );
+}
+
+function getFeatureList(variant: SessionProInfoVariant): Array<MergedLocalizerTokens> {
   switch (variant) {
-    // TODO: implement with pro
-    // case SessionProInfoVariant.MESSAGE_TOO_LONG_CTA:
-    //   return localize('modalMessageTooLongCTATitle').toString();
-    case SessionProInfoVariant.MESSAGE_TOO_LONG:
-      return localize('modalMessageTooLongTitle').toString();
+    default:
+      return ['proFeatureListLongerMessages', 'proFeatureListLargerGroups'];
+  }
+}
+
+function getDescription(variant: SessionProInfoVariant): ReactNode {
+  switch (variant) {
+    case SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT:
+      return <Localizer token="proCallToActionLongerMessages" />;
     default:
       throw new Error('Invalid Variant');
   }
 }
 
-function getDescription(variant: SessionProInfoVariant, charLimit: number): ReactNode {
+function getImage(variant: SessionProInfoVariant): ReactNode {
   switch (variant) {
-    // TODO: implement with pro
-    // case SessionProInfoVariant.MESSAGE_TOO_LONG_CTA:
+    case SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT:
+      return <StyledCTAImage src="images/cta_hero_char_limit.webp" />;
+
+    // TODO: implement with animated profile pictures
+    // case SessionProInfoVariant.PROFILE_PICTURE_ANIMATED:
     //   return (
-    //     <I18nSubText
-    //       localizerProps={{
-    //         token: 'modalMessageTooLongCTADescription',
-    //         asTag: 'span',
-    //         args: {
-    //           count: Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO,
-    //         },
-    //       }}
-    //       dataTestId="modal-description"
+    //     <AnimatedCTAImage
+    //       ctaLayerSrc="images/cta_hero_generic.webp"
+    //       animatedLayerSrc="images/cta_hero_dog_animated.webp"
     //     />
     //   );
-    case SessionProInfoVariant.MESSAGE_TOO_LONG:
-      return (
-        <I18nSubText
-          localizerProps={{
-            token: 'modalMessageTooLongDescription',
-            asTag: 'span',
-            args: { limit: formatNumber(charLimit) },
-          }}
-          dataTestId="modal-description"
-        />
-      );
+
     default:
       throw new Error('Invalid Variant');
   }
 }
+
+const buttonProps = {
+  buttonShape: SessionButtonShape.Square,
+  buttonType: SessionButtonType.Solid,
+  fontWeight: 400,
+  style: {
+    height: '46px',
+    width: '100%',
+  },
+} satisfies SessionButtonProps;
 
 export function SessionProInfoModal(props: SessionProInfoState) {
   const dispatch = useDispatch();
@@ -78,43 +183,68 @@ export function SessionProInfoModal(props: SessionProInfoState) {
     return null;
   }
 
-  // const mockHasPro = getFeatureFlag('useMockUserHasPro');
-
-  // TODO: get pro status from store once available
-  // const hasPro = mockHasPro;
-  // const charLimit = hasPro
-  //   ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
-  //   : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
-  const charLimit = Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
-
   return (
     <SessionWrapperModal2
-      title={getTitle(props.variant)}
       onClose={onClose}
-      showExitIcon={true}
-      showHeader={true}
+      showExitIcon={false}
+      showHeader={false}
+      padding="0"
+      removeScrollbarGutter={true}
+      $contentMinWidth={'420px'}
+      $contentMaxWidth={'420px'}
     >
-      <StyledScrollDescriptionContainer>
-        {getDescription(props.variant, charLimit)}
-      </StyledScrollDescriptionContainer>
+      {getImage(props.variant)}
       <SpacerSM />
-
-      <Flex
-        $container={true}
-        width={'100%'}
-        $justifyContent="center"
-        $alignItems="center"
-        $flexGap="var(--margins-md)"
-      >
-        <SessionButton
-          buttonType={SessionButtonType.Simple}
-          onClick={onClose}
-          dataTestId="modal-button-session-pro-ok"
+      <StyledCTATitle>
+        {localize('upgradeTo')}
+        <SessionIcon
+          sizeIsWidth={false}
+          iconType={'sessionPro'}
+          iconSize={'huge'}
+          backgroundColor={'var(--primary-color)'}
+          borderRadius={'6px'}
+          iconColor={'var(--black-color)'}
+        />
+      </StyledCTATitle>
+      <SpacerLG />
+      <StyledContentContainer>
+        <StyledScrollDescriptionContainer>
+          {getDescription(props.variant)}
+        </StyledScrollDescriptionContainer>
+        <StyledFeatureList>
+          {getFeatureList(props.variant).map(token => (
+            <FeatureListItem>{localize(token)}</FeatureListItem>
+          ))}
+          <FeatureListItem customIconSrc={'images/sparkle-animated.svg'}>
+            {localize('proFeatureListLoadsMore')}
+          </FeatureListItem>
+        </StyledFeatureList>
+        <Flex
+          $container={true}
+          width={'100%'}
+          $justifyContent="center"
+          $alignItems="center"
+          $flexGap="var(--margins-sm)"
         >
-          {localize('okay')}
-        </SessionButton>
-      </Flex>
-      <SpacerXS />
+          <SessionButton
+            {...buttonProps}
+            buttonColor={SessionButtonColor.Primary}
+            onClick={onClose}
+            shineAnimation={true}
+            dataTestId="modal-button-session-pro-ok"
+          >
+            {localize('theContinue')}
+          </SessionButton>
+          <SessionButton
+            {...buttonProps}
+            buttonColor={SessionButtonColor.Tertiary}
+            onClick={onClose}
+            dataTestId="modal-button-session-pro-ok"
+          >
+            {localize('cancel')}
+          </SessionButton>
+        </Flex>
+      </StyledContentContainer>
     </SessionWrapperModal2>
   );
 }

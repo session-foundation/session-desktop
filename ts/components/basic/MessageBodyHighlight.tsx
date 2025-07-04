@@ -51,7 +51,12 @@ export const MessageBodyHighlight = (props: { text: string; isGroup: boolean }) 
 
   if (!match) {
     return (
-      <MessageBody disableJumbomoji={true} disableLinks={true} text={text} isGroup={isGroup} />
+      <MessageBody
+        disableJumbomoji={true}
+        disableRichContent={true}
+        text={text}
+        isGroup={isGroup}
+      />
     );
   }
 

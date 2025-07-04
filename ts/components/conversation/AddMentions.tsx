@@ -14,11 +14,11 @@ interface MentionProps {
   children?: ReactNode;
 }
 
-const StyledMentionAnother = styled.span<{ inComposableElement?: boolean }>`
+export const StyledMentionAnother = styled.span<{ inComposableElement?: boolean }>`
   border-radius: var(--border-radius);
   padding: ${props => (props.inComposableElement ? '0' : '1px')};
-  user-select: ${props => (props.inComposableElement ? 'all !important' : 'none')};
   cursor: ${props => (props.inComposableElement ? 'default' : 'auto')};
+  ${props => (props.inComposableElement ? 'user-select: all;' : '')}
   unicode-bidi: plaintext;
   font-weight: bold;
 `;

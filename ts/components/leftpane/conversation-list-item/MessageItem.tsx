@@ -57,7 +57,7 @@ export const MessageItem = () => {
           <MessageBody
             text={withoutHtmlTags}
             disableJumbomoji={true}
-            disableLinks={true}
+            disableRichContent={true}
             isGroup={isGroup}
           />
         )}

@@ -42,7 +42,6 @@ export function LocalizedPopupDialog(props: LocalizedPopupDialogState) {
     <SessionWrapperModal2
       title={<Localizer {...props.title} />}
       onClose={onClose}
-      showExitIcon={true}
       showHeader={true}
     >
       <StyledScrollDescriptionContainer>
