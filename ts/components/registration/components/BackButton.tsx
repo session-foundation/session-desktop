@@ -85,7 +85,7 @@ const BackButton = ({
       iconSize="large"
       unicode={LUCIDE_ICONS_UNICODE.CHEVRON_LEFT}
       iconColor="var(--color-text-primary)"
-      padding={'0'}
+      dataTestId="back-button"
       onClick={() => {
         if (shouldQuitOnClick && quitI18nMessageArgs) {
           if (onQuitVisible) {

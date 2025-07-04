@@ -13,6 +13,7 @@ import { LucideIcon } from '../icon/LucideIcon';
 import { SessionIcon } from '../icon/SessionIcon';
 import type { SessionIconType } from '../icon';
 import type { WithLucideUnicode } from '../icon/lucide';
+import { StyledPanelButtonSeparator } from './StyledPanelButtonGroupSeparator';
 
 type PanelIconButtonProps = Omit<PanelButtonProps, 'children' | 'subText' | 'subTextDataTestId'> & {
   text: string;
@@ -37,22 +38,31 @@ export const PanelIconButton = (
       : undefined;
 
   return (
-    <PanelButton disabled={disabled} onClick={onClick} dataTestId={dataTestId} color={color}>
-      <StyledContent disabled={disabled}>
-        <IconContainer>{props.iconElement}</IconContainer>
+    <>
+      <PanelButton
+        disabled={disabled}
+        onClick={onClick}
+        dataTestId={dataTestId}
+        color={color}
+        style={{ minHeight: '55px' }}
+      >
+        <StyledContent disabled={disabled}>
+          <IconContainer>{props.iconElement}</IconContainer>
 
-        {subTextProps ? (
-          <PanelButtonTextWithSubText
-            text={text}
-            textDataTestId={props.dataTestId}
-            subText={subTextProps.subText}
-            subTextDataTestId={subTextProps.subTextDataTestId}
-          />
-        ) : (
-          <PanelButtonText text={text} textDataTestId={props.dataTestId} />
-        )}
-      </StyledContent>
-    </PanelButton>
+          {subTextProps ? (
+            <PanelButtonTextWithSubText
+              text={text}
+              textDataTestId={props.dataTestId}
+              subText={subTextProps.subText}
+              subTextDataTestId={subTextProps.subTextDataTestId}
+            />
+          ) : (
+            <PanelButtonText text={text} textDataTestId={props.dataTestId} />
+          )}
+        </StyledContent>
+      </PanelButton>
+      <StyledPanelButtonSeparator />
+    </>
   );
 };
 

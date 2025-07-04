@@ -116,13 +116,7 @@ export function ConversationSettingsDialog(props: ConversationSettingsModalState
         $contentMinWidth="400px"
         bigHeader={true}
       >
-        <Flex
-          $container={true}
-          $flexDirection="column"
-          $alignItems="flex-start"
-          padding="var(--margins-sm) 0"
-          width="100%"
-        >
+        <Flex $container={true} $flexDirection="column" $alignItems="flex-start" width="100%">
           <PageToRender conversationId={props.conversationId} />
         </Flex>
       </SessionWrapperModal2>

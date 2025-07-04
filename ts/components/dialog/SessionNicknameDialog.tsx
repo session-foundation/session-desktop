@@ -89,6 +89,7 @@ export const SessionNicknameDialog = (props: Props) => {
       onClose={onClickClose}
       showExitIcon={true}
       showHeader={true}
+      headerReverse={true}
     >
       <StyledMaxWidth className="session-modal__centered">
         <Localizer

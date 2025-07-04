@@ -103,13 +103,13 @@ const StyledDescription = styled.p<{ expanded: boolean }>`
   background: transparent;
   width: 100%;
   white-space: pre-wrap;
+  word-break: break-word;
   overflow: hidden;
   -webkit-line-clamp: ${({ expanded }) => (expanded ? 'unset' : '2')};
   display: -webkit-box;
   -webkit-box-orient: vertical;
   // some padding so we always have room to show the ellipsis, if needed
   padding-inline: var(--margins-sm);
-  word-break: break-all;
 `;
 
 const StyledViewMoreButton = styled.button`
