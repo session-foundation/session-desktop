@@ -9,6 +9,8 @@ import React, {
   type ClipboardEvent,
 } from 'react';
 import styled from 'styled-components';
+import { useDebouncedSpellcheck } from '../../../hooks/useDebuncedSpellcheck';
+import { useDebouncedSelectAllOnTripleClickHandler } from '../../../hooks/useDebouncedSelectAllOnTripleClickHandler';
 
 enum DATA_ATTRIBUTE {
   NODE = 'data-con-node',
@@ -257,6 +259,10 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
     const isMount = useRef(true);
     const lastPosition = useRef<number | null>(null);
     const lastHtmlIndex = useRef<number>(0);
+
+    useDebouncedSpellcheck({
+      elementRef: elRef,
+    });
 
     useImperativeHandle(
       ref,
@@ -597,10 +603,16 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
     const onCopy = useCallback((e: ClipboardEvent<HTMLDivElement>) => {
       e.preventDefault();
       const selection = window.getSelection();
-      const selectedText = selection?.toString() ?? '';
-      const cleanedContent = selectedText.replaceAll('﻿', '');
-      e.clipboardData.setData('text/plain', cleanedContent);
+      const cleanedContent = selection?.toString().replaceAll('﻿', '');
+      if (cleanedContent) {
+        e.clipboardData.setData('text/plain', cleanedContent);
+      }
     }, []);
+
+    const onClick = useDebouncedSelectAllOnTripleClickHandler({
+      elementRef: elRef,
+      onClick: props.onClick,
+    });
 
     // Update DOM on html change
     useLayoutEffect(() => {
@@ -650,6 +662,7 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
         onKeyUp={onKeyUp}
         onKeyDown={onKeyDown}
         onCopy={onCopy}
+        onClick={onClick}
       >
         {children}
       </div>
