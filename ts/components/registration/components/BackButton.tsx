@@ -84,6 +84,7 @@ export const BackButton = ({
       iconType="chevron"
       iconColor="var(--color-text-primary)"
       iconRotation={90}
+      dataTestId="back-button"
       padding={'0'}
       onClick={() => {
         if (shouldQuitOnClick && quitI18nMessageArgs) {
