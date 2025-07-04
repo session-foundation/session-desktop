@@ -3,6 +3,7 @@ import { SessionDataTestId, useEffect, useRef, useState } from 'react';
 import H5AudioPlayer, { RHAP_UI } from 'react-h5-audio-player';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
+import { contextMenu } from 'react-contexify';
 import { useEncryptedFileFetch } from '../../hooks/useEncryptedFileFetch';
 import { setNextMessageToPlayId } from '../../state/ducks/conversations';
 import { useMessageDirection, useMessageSelected } from '../../state/selectors';
@@ -221,6 +222,15 @@ export const AudioPlayerWithEncryptedFile = (props: {
       // NOTE we can't assign the value using dataset.testId because the result is data-test-id not data-testid which is our convention
       player.current.container.current.setAttribute('data-testid', dataTestId);
     }
+    player.current?.progressBar.current?.addEventListener('mousedown', e => {
+      if (e.button === 0) {
+        contextMenu.hideAll();
+
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+    });
   }, [dataTestId, player]);
 
   useEffect(() => {
