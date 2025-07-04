@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import clsx from 'clsx';
-import { ReactNode, useState, useRef } from 'react';
+import { ReactNode, useState, useRef, type SessionDataTestId } from 'react';
 import useKey from 'react-use/lib/useKey';
 import { Flex } from './basic/Flex';
 import { SpacerXL } from './basic/Text';
@@ -128,15 +128,16 @@ export type SessionWrapperModalType2 = {
   classes?: string;
   allowOutsideClick?: boolean;
   bigHeader?: boolean;
+  modalDataTestId?: SessionDataTestId;
 };
 
 const ModalHeader = (
   props: Pick<
     SessionWrapperModalType2,
-    'showExitIcon' | 'onClose' | 'headerIconButtons' | 'title' | 'bigHeader'
+    'showExitIcon' | 'onClose' | 'headerIconButtons' | 'title' | 'bigHeader' | 'modalDataTestId'
   >
 ) => {
-  const { showExitIcon, headerIconButtons, title, onClose, bigHeader } = props;
+  const { showExitIcon, headerIconButtons, title, onClose, bigHeader, modalDataTestId } = props;
   const htmlDirection = useHTMLDirection();
 
   return (
@@ -149,6 +150,7 @@ const ModalHeader = (
       padding={'var(--margins-lg) var(--margins-sm)  var(--margins-sm) var(--margins-lg)'}
       margin={'0 calc(-1 * var(--margins-md)) 0 calc(-1 * var(--margins-lg))'}
       bigHeader={bigHeader}
+      data-testid={modalDataTestId}
     >
       <Flex
         $container={true}
@@ -218,6 +220,7 @@ export const SessionWrapperModal2 = (props: SessionWrapperModalType2) => {
     classes,
     allowOutsideClick,
     bigHeader,
+    modalDataTestId,
   } = props;
 
   const [scrolled, setScrolled] = useState(false);
@@ -260,6 +263,7 @@ export const SessionWrapperModal2 = (props: SessionWrapperModalType2) => {
         className={clsx('modal', classes)}
         onMouseDown={handleClick}
         role="dialog"
+        data-testid={modalDataTestId}
       >
         <StyledModal
           ref={modalRef}

@@ -174,6 +174,7 @@ const InviteContactsDialogInner = (props: Props) => {
       title={localize('membersInvite').toString()}
       onClose={closeDialog}
       showExitIcon={true}
+      modalDataTestId="invite-contacts-dialog"
       $contentMaxWidth="500px"
       $contentMinWidth="500px"
       buttonChildren={
