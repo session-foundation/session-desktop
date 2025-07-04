@@ -8,7 +8,6 @@ import { pickFileForAvatar } from '../../types/attachments/VisualAttachment';
 import { SessionWrapperModal } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SpacerLG } from '../basic/Text';
-import { SessionIconButton } from '../icon';
 import { SessionSpinner } from '../loading';
 import { ProfileAvatar } from './edit-profile/components';
 import { PlusAvatarButton } from '../buttons/PlusAvatarButton';
@@ -27,6 +26,8 @@ import { userActions } from '../../state/ducks/user';
 import { ReduxSogsRoomInfos } from '../../state/ducks/sogsRoomInfo';
 import { useOurAvatarIsUploading } from '../../state/selectors/user';
 import { useAvatarOfRoomIsUploading } from '../../state/selectors/sogsRoomInfo';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
@@ -36,13 +37,19 @@ const StyledUploadButton = styled.div`
   background-color: var(--chat-buttons-background-color);
   border-radius: 50%;
   overflow: hidden;
+  padding: 16px;
+  aspect-ratio: 1;
 `;
 
 const UploadImageButton = () => {
   return (
     <div style={{ position: 'relative' }}>
       <StyledUploadButton>
-        <SessionIconButton iconType="thumbnail" iconSize={80} iconPadding="16px" />
+        <SessionLucideIconButton
+          unicode={LUCIDE_ICONS_UNICODE.IMAGE}
+          iconSize={'huge2'}
+          margin="13px 0 0 0"
+        />
       </StyledUploadButton>
       <PlusAvatarButton dataTestId="image-upload-section" />
     </div>

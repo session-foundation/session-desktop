@@ -23,6 +23,8 @@ import { localize } from '../../../localization/localeTools';
 import { sanitizeDisplayNameOrToast } from '../../registration/utils';
 import { useEditProfilePictureCallback } from '../../menuAndSettingsHooks/useEditProfilePictureCallback';
 import { SimpleSessionInput } from '../../inputs/SessionInput';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
+import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 
 // #region Shortcuts
 const handleKeyQRMode = (
@@ -175,16 +177,16 @@ export const EditProfileDialog = () => {
   const backButton =
     mode === 'edit' || mode === 'qr'
       ? [
-          {
-            iconType: 'chevron',
-            iconRotation: 90,
-            onClick: () => {
+          <SessionLucideIconButton
+            unicode={LUCIDE_ICONS_UNICODE.CHEVRON_LEFT}
+            onClick={() => {
               if (loading) {
                 return;
               }
               setMode('default');
-            },
-          },
+            }}
+            iconSize="medium"
+          />,
         ]
       : undefined;
 
@@ -260,7 +262,7 @@ export const EditProfileDialog = () => {
   return (
     <StyledEditProfileDialog className="edit-profile-dialog" data-testid="edit-profile-dialog">
       <SessionWrapperModal
-        title={window.i18n('profile')}
+        title={localize('profile').toString()}
         headerIconButtons={backButton}
         headerReverse={true}
         showExitIcon={true}
@@ -354,7 +356,7 @@ export const EditProfileDialog = () => {
               />
               {mode === 'default' ? (
                 <SessionButton
-                  text={window.i18n('qrView')}
+                  text={localize('qrView').toString()}
                   onClick={() => {
                     setMode('qr');
                   }}
@@ -366,7 +368,7 @@ export const EditProfileDialog = () => {
           ) : (
             !loading && (
               <SessionButton
-                text={window.i18n('save')}
+                text={localize('save').toString()}
                 onClick={onClickOK}
                 disabled={cannotContinue}
                 buttonColor={SessionButtonColor.PrimaryDark}

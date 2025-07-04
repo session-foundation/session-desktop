@@ -16,8 +16,10 @@ import {
 import { deleteDbLocally } from '../../../util/accountManager';
 import { Flex } from '../../basic/Flex';
 import { SessionButtonColor } from '../../basic/SessionButton';
-import { SessionIconButton } from '../../icon';
 import type { LocalizerProps } from '../../basic/Localizer';
+import { SessionLucideIconButton } from '../../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
+import { localize } from '../../../localization/localeTools';
 
 /** Min height should match the onboarding step with the largest height this prevents the loading spinner from jumping around while still keeping things centered  */
 const StyledBackButtonContainer = styled(Flex)`
@@ -61,7 +63,7 @@ export const BackButtonWithinContainer = ({
   );
 };
 
-export const BackButton = ({
+const BackButton = ({
   callback,
   onQuitVisible,
   shouldQuitOnClick,
@@ -78,14 +80,12 @@ export const BackButton = ({
   const dispatch = useDispatch();
 
   return (
-    <SessionIconButton
+    <SessionLucideIconButton
       ariaLabel="Back button"
-      iconSize="huge"
-      iconType="chevron"
+      iconSize="large"
+      unicode={LUCIDE_ICONS_UNICODE.CHEVRON_LEFT}
       iconColor="var(--color-text-primary)"
-      iconRotation={90}
       dataTestId="back-button"
-      padding={'0'}
       onClick={() => {
         if (shouldQuitOnClick && quitI18nMessageArgs) {
           if (onQuitVisible) {
@@ -94,10 +94,10 @@ export const BackButton = ({
 
           dispatch(
             updateQuitModal({
-              title: window.i18n('warning'),
+              title: localize('warning').toString(),
               i18nMessage: quitI18nMessageArgs,
               okTheme: SessionButtonColor.Danger,
-              okText: window.i18n('quitButton'),
+              okText: localize('quitButton').toString(),
               onClickOk: async () => {
                 try {
                   window.log.warn(

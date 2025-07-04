@@ -8,11 +8,13 @@ import { Flex } from '../../basic/Flex';
 import { SpacerLG, SpacerMD, SpacerSM } from '../../basic/Text';
 import { HelpDeskButton } from '../../buttons';
 import { CopyToClipboardButton } from '../../buttons/CopyToClipboardButton';
-import { SessionIcon } from '../../icon';
 import { StyledLeftPaneOverlay } from './OverlayMessage';
 import { SessionButtonColor } from '../../basic/SessionButton';
 import { sectionActions } from '../../../state/ducks/section';
+import { LucideIcon } from '../../icon/LucideIcon';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { SessionIDNonEditable } from '../../basic/YourSessionIDPill';
+import { localize } from '../../../localization/localeTools';
 
 const StyledHeadingContainer = styled(Flex)`
   .session-icon-button {
@@ -79,7 +81,7 @@ export const OverlayInvite = () => {
             <SessionIDNonEditable dataTestId="your-account-id" sessionId={ourSessionID} />
           </Flex>
           <SpacerMD />
-          <StyledDescription>{window.i18n('accountIdCopyDescription')}</StyledDescription>
+          <StyledDescription>{localize('accountIdCopyDescription').toString()}</StyledDescription>
           <SpacerLG />
           <StyledButtonerContainer>
             <CopyToClipboardButton
@@ -93,21 +95,24 @@ export const OverlayInvite = () => {
         </>
       ) : (
         <>
-          <SessionIcon
-            iconType={'checkCircle'}
+          <LucideIcon
+            unicode={LUCIDE_ICONS_UNICODE.CIRCLE_CHECK}
             iconSize={'huge2'}
             iconColor={'var(--primary-color)'}
           />
           <SpacerMD />
           <StyledHeadingContainer $container={true} $justifyContent="center" $alignItems="center">
-            <StyledHeading>{window.i18n('accountIdCopied')}</StyledHeading>
+            <StyledHeading>{localize('accountIdCopied').toString()}</StyledHeading>
             <HelpDeskButton
-              iconColor={'var(--text-primary-color)'}
               style={{ display: 'inline-flex' }}
+              iconSize="small"
+              iconColor="var(--text-primary-color)"
             />
           </StyledHeadingContainer>
           <SpacerSM />
-          <StyledDescription>{window.i18n('shareAccountIdDescriptionCopied')}</StyledDescription>
+          <StyledDescription>
+            {localize('shareAccountIdDescriptionCopied').toString()}
+          </StyledDescription>
         </>
       )}
     </StyledLeftPaneOverlay>

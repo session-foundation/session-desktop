@@ -13,8 +13,9 @@ import {
 } from '../../state/selectors/conversations';
 import { getAudioAutoplay } from '../../state/selectors/userConfig';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
-import { SessionIcon } from '../icon';
 import { useIsMessageSelectionMode } from '../../state/selectors/selectedConversation';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 const StyledSpeedButton = styled.div`
   padding: var(--margins-xs);
@@ -277,8 +278,20 @@ export const AudioPlayerWithEncryptedFile = (props: {
       ]}
       customProgressBarSection={[RHAP_UI.CURRENT_LEFT_TIME, RHAP_UI.PROGRESS_BAR]}
       customIcons={{
-        play: <SessionIcon iconType="play" iconSize="small" iconColor={iconColor} />,
-        pause: <SessionIcon iconType="pause" iconSize="small" iconColor={iconColor} />,
+        play: (
+          <SessionLucideIconButton
+            unicode={LUCIDE_ICONS_UNICODE.PLAY}
+            iconSize="medium"
+            iconColor={iconColor}
+          />
+        ),
+        pause: (
+          <SessionLucideIconButton
+            unicode={LUCIDE_ICONS_UNICODE.PAUSE}
+            iconSize="medium"
+            iconColor={iconColor}
+          />
+        ),
       }}
       dropShadow={selected}
     />

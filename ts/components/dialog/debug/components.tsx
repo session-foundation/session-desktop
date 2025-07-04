@@ -532,7 +532,7 @@ export const AboutInfo = () => {
       <SpacerXS />
       <Flex $container={true} width="100%" $alignItems="center" $flexGap="var(--margins-xs)">
         <h2>About</h2>
-        <CopyToClipboardIcon iconSize={'medium'} copyContent={aboutInfo.join('\n')} />
+        <CopyToClipboardIcon iconSize={'small'} copyContent={aboutInfo.join('\n')} />
       </Flex>
       <Flex
         $container={true}
@@ -555,7 +555,7 @@ export const AboutInfo = () => {
               $flexGap="var(--margins-xs)"
             >
               <p style={{ userSelect: 'text', lineHeight: 1.5 }}>{info}</p>
-              <CopyToClipboardIcon iconSize={'medium'} copyContent={info} />
+              <CopyToClipboardIcon iconSize={'small'} copyContent={info} />
             </Flex>
           );
         })}
@@ -584,7 +584,7 @@ export const OtherInfo = () => {
       <Flex $container={true} width="100%" $alignItems="center" $flexGap="var(--margins-xs)">
         <h2>Other Info</h2>
         {otherInfo.value ? (
-          <CopyToClipboardIcon iconSize={'medium'} copyContent={otherInfo.value.join('\n')} />
+          <CopyToClipboardIcon iconSize={'small'} copyContent={otherInfo.value.join('\n')} />
         ) : null}
       </Flex>
       <Flex
@@ -612,7 +612,7 @@ export const OtherInfo = () => {
                 $flexGap="var(--margins-xs)"
               >
                 <p style={{ userSelect: 'text', lineHeight: 1.5 }}>{info}</p>
-                <CopyToClipboardIcon iconSize={'medium'} copyContent={info} />
+                <CopyToClipboardIcon iconSize={'small'} copyContent={info} />
               </Flex>
             ))
           : null}

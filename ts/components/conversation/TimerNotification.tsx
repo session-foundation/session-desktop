@@ -194,7 +194,7 @@ export const TimerNotification = (props: WithMessageId) => {
           <>
             <SessionIcon
               iconType="timerFixed"
-              iconSize={'tiny'}
+              iconSize={'small'}
               iconColor="var(--text-secondary-color)"
             />
             <SpacerMD />

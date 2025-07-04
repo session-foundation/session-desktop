@@ -1,10 +1,12 @@
 import _ from 'lodash';
 import { KeyboardEvent, MouseEvent, SessionDataTestId, ReactNode, forwardRef, memo } from 'react';
+import type { CSSProperties } from 'styled-components';
 import clsx from 'clsx';
 
 import { StyledSessionIconButton } from './SessionIconButtonStyled';
 import { SessionIcon, SessionIconProps } from './SessionIcon';
 import { LucideIcon, type LucideIconProps } from './LucideIcon';
+import { useIsDarkTheme } from '../../state/theme/selectors/theme';
 
 export type SessionIconButtonProps = SessionIconProps & {
   onClick?: (e?: MouseEvent<HTMLButtonElement>) => void;
@@ -30,12 +32,7 @@ const SessionIconButtonInner = forwardRef<HTMLButtonElement, SessionIconButtonPr
       iconType,
       iconSize,
       iconColor,
-      iconRotation,
-      rotateDuration,
       isSelected: $isSelected,
-      glowDuration,
-      glowStartDelay,
-      noScale,
       isHidden,
       borderRadius,
       iconPadding,
@@ -66,6 +63,8 @@ const SessionIconButtonInner = forwardRef<HTMLButtonElement, SessionIconButtonPr
       }
     };
 
+    const isDarkTheme = useIsDarkTheme();
+
     return (
       <StyledSessionIconButton
         color={iconColor}
@@ -86,16 +85,12 @@ const SessionIconButtonInner = forwardRef<HTMLButtonElement, SessionIconButtonPr
         onKeyDown={keyPressHandler}
         disabled={disabled}
         data-testid={dataTestId}
+        $isDarkTheme={isDarkTheme}
       >
         <SessionIcon
           iconType={iconType}
           iconSize={iconSize}
           iconColor={iconColor}
-          iconRotation={iconRotation}
-          rotateDuration={rotateDuration}
-          glowDuration={glowDuration}
-          glowStartDelay={glowStartDelay}
-          noScale={noScale}
           borderRadius={borderRadius}
           iconPadding={iconPadding}
           dataTestId={dataTestIdIcon}
@@ -120,11 +115,15 @@ export type SessionLucideIconButtonProps = Pick<
   | 'title'
   | 'dataTestId'
   | 'dataTestIdIcon'
-  | 'style'
   | 'tabIndex'
   | 'children'
+  // backgroundColor is a dedicated prop (forbidden from the `style` prop)
+  | 'backgroundColor'
 > &
-  Pick<LucideIconProps, 'unicode' | 'iconSize' | 'iconColor'>;
+  Pick<LucideIconProps, 'unicode' | 'iconSize' | 'iconColor'> & {
+    // margin and backgroundColor have a dedicated prop
+    style?: Omit<CSSProperties, 'backgroundColor' | 'margin' | 'padding'>;
+  };
 
 export const SessionLucideIconButton = forwardRef<HTMLButtonElement, SessionLucideIconButtonProps>(
   (props, ref) => {
@@ -144,6 +143,7 @@ export const SessionLucideIconButton = forwardRef<HTMLButtonElement, SessionLuci
       disabled,
       onClick,
       children,
+      backgroundColor,
     } = props;
 
     const clickHandler = (e: MouseEvent<HTMLButtonElement>) => {
@@ -158,6 +158,7 @@ export const SessionLucideIconButton = forwardRef<HTMLButtonElement, SessionLuci
         onClick();
       }
     };
+    const isDarkTheme = useIsDarkTheme();
 
     return (
       <StyledSessionIconButton
@@ -168,15 +169,19 @@ export const SessionLucideIconButton = forwardRef<HTMLButtonElement, SessionLuci
         onClick={clickHandler}
         style={{
           ...style,
+          backgroundColor,
           display: style?.display ? style.display : 'flex',
           margin: margin || '',
           padding: padding || '',
+          // pretty sure we always want the border-radius here.
+          borderRadius: '50%',
         }}
         tabIndex={tabIndex}
         onKeyDown={keyPressHandler}
         disabled={disabled}
         data-testid={dataTestId}
         ref={ref}
+        $isDarkTheme={isDarkTheme}
       >
         <LucideIcon
           unicode={unicode}

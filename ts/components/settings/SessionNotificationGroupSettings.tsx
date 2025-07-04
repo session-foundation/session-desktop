@@ -102,6 +102,7 @@ export const SessionNotificationGroupSettings = () => {
               await window.setSettingValue(SettingsKey.settingsNotification, selectedRadioValue);
               forceUpdate();
             }}
+            style={{ maxWidth: '400px' }}
           />
           <StyledButtonContainer>
             <SpacerLG />

@@ -1,9 +1,11 @@
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { useLeftOverlayMode } from '../../state/selectors/section';
-import { SessionIcon } from '../icon';
 import { sectionActions } from '../../state/ducks/section';
 import { searchActions } from '../../state/ducks/search';
+import { LucideIcon } from '../icon/LucideIcon';
+import { localize } from '../../localization/localeTools';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 const StyledMenuButton = styled.button`
   position: relative;
@@ -22,12 +24,12 @@ const StyledMenuButton = styled.button`
 
   transition: var(--default-duration);
 
+  color: var(--menu-button-icon-color);
+
   &:hover {
     background: var(--menu-button-background-hover-color);
     border-color: var(--menu-button-border-hover-color);
-    svg path {
-      fill: var(--menu-button-icon-hover-color);
-    }
+    color: var(--menu-button-icon-hover-color);
   }
 `;
 
@@ -52,13 +54,10 @@ export const MenuButton = () => {
 
   return (
     <StyledMenuButton data-testid="new-conversation-button" onClick={onClickFn}>
-      <SessionIcon
-        iconSize="medium"
-        iconType="plus"
-        iconColor="var(--menu-button-icon-color)"
-        iconRotation={isToggled ? 45 : 0}
-        iconPadding="2px"
-        aria-label={window.i18n('contentDescriptionChooseConversationType')}
+      <LucideIcon
+        unicode={LUCIDE_ICONS_UNICODE.PLUS}
+        iconSize="large"
+        aria-label={localize('contentDescriptionChooseConversationType')}
       />
     </StyledMenuButton>
   );
