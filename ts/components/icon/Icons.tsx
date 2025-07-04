@@ -32,7 +32,7 @@ export type SessionIconType =
   | 'timer60' // no lucide alternative yet
   | 'timerFixed'; // no lucide alternative yet
 
-export type SessionIconSize =  'small' | 'medium' | 'large' | 'huge' | 'huge2' | 'max';
+export type SessionIconSize = 'small' | 'medium' | 'large' | 'huge' | 'huge2' | 'max';
 
 export type WithIconSize = { iconSize: SessionIconSize };
 export type WithIconColor = { iconColor: string };

@@ -142,9 +142,8 @@ export const SettingsCategoryRecoveryPassword = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: THEME_GLOBALS['--default-duration-seconds'] }}
-            data-testid="recovery-password-seed-modal"
           >
-            {recoveryPhrase}
+            <span data-testid="recovery-password-seed-modal">{recoveryPhrase}</span>
             <SpacerSM />
             <CopyToClipboardIcon
               copyContent={recoveryPhrase}

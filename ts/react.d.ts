@@ -102,6 +102,8 @@ declare module 'react' {
     | 'ban-user'
     | 'unban-user';
 
+  type Dialog = 'invite-contacts' | 'edit-profile';
+
   type SessionDataTestId =
     | 'group-member-status-text'
     | 'loading-spinner'
@@ -125,7 +127,6 @@ declare module 'react' {
     | 'group-description'
     | 'preferred-display-name'
     | 'fallback-display-name'
-    | 'edit-profile-dialog'
     | 'image-upload-section'
     | 'profile-picture'
     | 'display-name'
@@ -174,6 +175,9 @@ declare module 'react' {
     | DisappearOptionDataTestId
     | `input-${DisappearTimeOptionDataTestId}`
     | `input-${DisappearOptionDataTestId}`
+
+    // dialog roots
+    | `${Dialog}-dialog`
 
     // generic readably message (not control message)
     | 'message-content'

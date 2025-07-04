@@ -101,7 +101,9 @@ const TextDetails = ({ text, textColor }: { text: string; textColor: string }) =
 };
 
 function IconNormal({ unicode }: WithLucideUnicode) {
-  return <LucideIcon iconColor={'var(--text-secondary-color)'} unicode={unicode} iconSize="small" />;
+  return (
+    <LucideIcon iconColor={'var(--text-secondary-color)'} unicode={unicode} iconSize="small" />
+  );
 }
 
 function useIsExpiring(messageId: string) {
