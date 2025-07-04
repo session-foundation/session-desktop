@@ -30,7 +30,7 @@ const StyledRail = styled.div`
   margin-top: 12px;
   margin-inline-start: 16px;
   padding-inline-end: 16px;
-  overflow-x: scroll;
+  overflow-x: auto;
   max-height: 142px;
   white-space: nowrap;
   overflow-y: hidden;
@@ -77,13 +77,11 @@ export const StagedAttachmentList = (props: Props) => {
       <StyledRail>
         {(attachments || []).map((attachment, index) => {
           const { contentType } = attachment;
+          const key = getUrl(attachment) || attachment.fileName || index;
           if (isImageTypeSupported(contentType) || isVideoTypeSupported(contentType)) {
-            const imageKey = getUrl(attachment) || attachment.fileName || index;
-            const clickCallback = attachments.length > 1 ? onClickAttachment : undefined;
-
             return (
               <Image
-                key={imageKey}
+                key={key}
                 alt={AriaLabels.stagedAttachment}
                 attachment={attachment}
                 softCorners={true}
@@ -93,7 +91,7 @@ export const StagedAttachmentList = (props: Props) => {
                 forceSquare={true}
                 url={getUrl(attachment)}
                 closeButton={true}
-                onClick={clickCallback}
+                onClick={onClickAttachment}
                 onClickClose={() => {
                   onRemoveByFilename(attachment.fileName);
                 }}
@@ -101,11 +99,9 @@ export const StagedAttachmentList = (props: Props) => {
             );
           }
 
-          const genericKey = getUrl(attachment) || attachment.fileName || index;
-
           return (
             <StagedGenericAttachment
-              key={genericKey}
+              key={key}
               attachment={attachment}
               onClose={() => {
                 onRemoveByFilename(attachment.fileName);

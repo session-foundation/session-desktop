@@ -81,7 +81,9 @@ export const CONVERSATION = {
    * the maximum chars that can be typed/pasted in the composition box.
    * Same as android.
    */
-  MAX_MESSAGE_CHAR_COUNT: 2000,
+  MAX_MESSAGE_CHAR_COUNT_STANDARD: 2_000,
+  MAX_MESSAGE_CHAR_COUNT_PRO: 10_000,
+  MAX_MESSAGE_MAX_LINES_BEFORE_READ_MORE: 25,
 } as const;
 
 /**

@@ -61,6 +61,11 @@ window.sessionFeatureFlags = {
   useReleaseChannels: true,
   useSESH101: true,
   useTestNet: isTestNet() || isTestIntegration(),
+  debugInputCommands: false,
+  alwaysShowRemainingChars: false,
+  showPopoverAnchors: false,
+  proAvailable: false,
+  mockUserHasPro: false,
   debug: {
     debugLogging: !isEmpty(process.env.SESSION_DEBUG),
     debugLibsessionDumps: !isEmpty(process.env.SESSION_DEBUG_LIBSESSION_DUMPS),
@@ -301,7 +306,7 @@ window.getSeedNodeList = () => {
 };
 
 window.addEventListener('contextmenu', e => {
-  const editable = e && e.target.closest('textarea, input, [contenteditable="true"]');
+  const editable = e && e.target.closest('textarea, input, div, [contenteditable="true"]');
   const link = e && e.target.closest('a');
   const selection = Boolean(window && window.getSelection() && window.getSelection().toString());
   if (!editable && !selection && !link) {

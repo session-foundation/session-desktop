@@ -82,6 +82,8 @@ export const formatTimeDistanceToNow = (
   });
 };
 
+type FormatNumberOptionsType = Intl.NumberFormatOptions & { locale?: CrowdinLocale };
+
 /**
  * Formats a number as a string using the browser's locale.
  * If the value is not a finite number, it returns the value as a string.
@@ -89,18 +91,12 @@ export const formatTimeDistanceToNow = (
  * @param value - The number to format.
  * @param options - An optional object containing formatting options
  */
-export const formatNumber = (
-  value: number,
-  options: Intl.NumberFormatOptions & { locale?: CrowdinLocale } = {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }
-): string => {
+export const formatNumber = (value: number, options?: FormatNumberOptionsType): string => {
   if (!Number.isFinite(value)) {
     return value.toString();
   }
 
-  const locale = options.locale || getBrowserLocale();
+  const locale = options?.locale || getBrowserLocale();
   return new Intl.NumberFormat(locale, omit(options, 'locale')).format(value);
 };
 

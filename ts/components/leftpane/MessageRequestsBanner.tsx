@@ -11,32 +11,23 @@ import { MessageRequestBannerContextMenu } from '../menu/MessageRequestBannerCon
 import { Localizer } from '../basic/Localizer';
 
 const StyledMessageRequestBanner = styled.div`
+  // The conversation list item row is set to 64px height
   height: 64px;
-  width: 100%;
-  max-width: 300px;
-  display: flex;
-  flex-direction: row;
-  padding: 8px 12px; // adjusting for unread border always being active
-  align-items: center;
-  cursor: pointer;
-  background: var(--conversation-tab-background-color);
-
-  &:hover {
-    background: var(--conversation-tab-background-hover-color);
-  }
+  min-height: 64px;
 `;
 
 const StyledMessageRequestBannerHeader = styled.span`
   font-weight: bold;
   font-size: var(--font-size-md);
   color: var(--text-primary-color);
-  padding-left: var(--margins-xs);
-  margin-inline-start: 12px;
   line-height: 18px;
   overflow-x: hidden;
   overflow-y: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: row;
 `;
 
 const StyledUnreadCounter = styled.div`
@@ -44,7 +35,7 @@ const StyledUnreadCounter = styled.div`
   border-radius: var(--margins-sm);
   color: var(--unread-messages-alert-text-color);
   background-color: var(--unread-messages-alert-background-color);
-  margin-left: var(--margins-sm);
+  margin-left: var(--margins-xs);
   min-width: 20px;
   height: 20px;
   line-height: 20px;
@@ -117,6 +108,7 @@ export const MessageRequestsBanner = (props: { handleOnClick: () => any }) => {
   return (
     <>
       <StyledMessageRequestBanner
+        className="module-conversation-list-item"
         onContextMenu={handleOnContextMenu}
         onClick={openRequests}
         onMouseUp={e => {
@@ -126,12 +118,12 @@ export const MessageRequestsBanner = (props: { handleOnClick: () => any }) => {
         data-testid="message-request-banner"
       >
         <CircularIcon iconType="messageRequest" iconSize={22} />
-        <StyledMessageRequestBannerHeader>
+        <StyledMessageRequestBannerHeader className="module-conversation-list-item__content">
           <Localizer token="sessionMessageRequests" />
+          <StyledUnreadCounter>
+            <div>{conversationRequestsUnread || 0}</div>
+          </StyledUnreadCounter>
         </StyledMessageRequestBannerHeader>
-        <StyledUnreadCounter>
-          <div>{conversationRequestsUnread || 0}</div>
-        </StyledUnreadCounter>
       </StyledMessageRequestBanner>
       <Portal>
         <MessageRequestBannerContextMenu triggerId={triggerId} />

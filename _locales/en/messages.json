@@ -1,4 +1,8 @@
 {
+  "modalMessageTooLongTitle": "Your message is too long",
+  "modalMessageTooLongDescription": "Shorten your message to {count} characters or less",
+  "remainingCharactersTooltip": "{count} characters remaining",
+  "remainingCharactersOverTooltip": "Message is too long",
   "about": "About",
   "accept": "Accept",
   "accountIDCopy": "Copy Account ID",

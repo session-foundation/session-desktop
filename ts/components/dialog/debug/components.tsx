@@ -39,6 +39,7 @@ import {
 import { formatAbbreviatedExpireDoubleTimer } from '../../../util/i18n/formatting/expirationTimer';
 import { handleReleaseNotification } from '../../../util/releasedFeatures';
 import { networkDataActions } from '../../../state/ducks/networkData';
+import { DEBUG_MENU_PAGE, type DebugMenuPageProps } from './DebugMenuModal';
 import { SimpleSessionInput } from '../../inputs/SessionInput';
 
 const hexRef = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
@@ -264,6 +265,17 @@ export const LoggingActions = () => {
         <ClearOldLogsButton />
       </Flex>
       <SpacerSM />
+    </>
+  );
+};
+
+export const Playgrounds = ({ setPage }: DebugMenuPageProps) => {
+  return (
+    <>
+      <h2>Playgrounds</h2>
+      <SessionButton onClick={() => setPage(DEBUG_MENU_PAGE.POPOVER)}>
+        Popover Playground
+      </SessionButton>
     </>
   );
 };

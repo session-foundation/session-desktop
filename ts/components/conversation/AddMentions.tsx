@@ -1,40 +1,60 @@
 import styled from 'styled-components';
+import type { ReactNode } from 'react';
 import { ConvoHub } from '../../session/conversations';
 import { isUsAnySogsFromCache } from '../../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import { PubKey } from '../../session/types';
 import { RenderTextCallbackType } from '../../types/Util';
+import { localize } from '../../localization/localeTools';
 
 interface MentionProps {
   key: string;
+  dataUserId?: string;
   text: string;
+  inComposableElement?: boolean;
+  children?: ReactNode;
 }
 
-const StyledMentionAnother = styled.span`
-  border-radius: 4px;
-  margin: 2px;
-  padding: 2px;
-  user-select: none;
+const StyledMentionAnother = styled.span<{ inComposableElement?: boolean }>`
+  border-radius: var(--border-radius);
+  padding: ${props => (props.inComposableElement ? '0' : '1px')};
+  user-select: ${props => (props.inComposableElement ? 'all !important' : 'none')};
+  cursor: ${props => (props.inComposableElement ? 'default' : 'auto')};
+  unicode-bidi: plaintext;
   font-weight: bold;
 `;
 
 const StyledMentionedUs = styled(StyledMentionAnother)`
   background-color: var(--primary-color);
   color: var(--black-color);
-  border-radius: 5px;
+  border-radius: var(--border-radius);
 `;
 
-const Mention = (props: MentionProps) => {
+export const Mention = (props: MentionProps) => {
   const blindedOrNotPubkey = props.text.slice(1);
   const foundConvo = ConvoHub.use().get(blindedOrNotPubkey);
 
   // this call takes care of finding if we have a blindedId of ourself on any sogs we have joined.
   if (isUsAnySogsFromCache(blindedOrNotPubkey)) {
-    return <StyledMentionedUs>@{window.i18n('you')}</StyledMentionedUs>;
+    return (
+      <StyledMentionedUs
+        data-user-id={props.dataUserId}
+        contentEditable={false}
+        inComposableElement={props.inComposableElement}
+      >
+        @{localize('you')}
+        {props.children}
+      </StyledMentionedUs>
+    );
   }
 
   return (
-    <StyledMentionAnother>
+    <StyledMentionAnother
+      data-user-id={props.dataUserId}
+      contentEditable={false}
+      inComposableElement={props.inComposableElement}
+    >
       @{foundConvo?.getNicknameOrRealUsernameOrPlaceholder() || PubKey.shorten(props.text)}
+      {props.children}
     </StyledMentionAnother>
   );
 };
