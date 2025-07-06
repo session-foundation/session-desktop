@@ -85,7 +85,7 @@ describe('libsession_metagroup', () => {
     it('all fields are accounted for', () => {
       const info = metaGroupWrapper.infoGet();
       expect(Object.keys(info).length).to.be.eq(
-        7, // if you change this value, also make sure you add a test, testing that field, below
+        8, // if you change this value, also make sure you add a test, testing that field, below
         'this test is designed to fail if you need to add tests to test a new field of libsession'
       );
     });
@@ -148,6 +148,28 @@ describe('libsession_metagroup', () => {
       info.profilePicture = expected;
       metaGroupWrapper.infoSet(info);
       expect(metaGroupWrapper.infoGet().profilePicture).to.be.deep.eq(expected);
+    });
+
+    it('can set and recover group description', () => {
+      const expected = 'group description <set>';
+      expect(metaGroupWrapper.infoGet().description).to.be.deep.eq('');
+      const info = metaGroupWrapper.infoGet();
+      info.description = expected;
+      metaGroupWrapper.infoSet(info);
+      expect(metaGroupWrapper.infoGet().description).to.be.deep.eq(expected);
+    });
+
+    it('can set and clear group description', () => {
+      const expected = 'group description <set>';
+      expect(metaGroupWrapper.infoGet().description).to.be.deep.eq('');
+      const info = metaGroupWrapper.infoGet();
+      info.description = expected;
+      metaGroupWrapper.infoSet(info);
+      expect(metaGroupWrapper.infoGet().description).to.be.deep.eq(expected);
+      const info2 = metaGroupWrapper.infoGet();
+      info2.description = '';
+      metaGroupWrapper.infoSet(info2);
+      expect(metaGroupWrapper.infoGet().description).to.be.deep.eq('');
     });
   });
 

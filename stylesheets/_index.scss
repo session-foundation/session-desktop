@@ -9,33 +9,3 @@
   flex-direction: column;
   background-color: var(--background-primary-color);
 }
-
-.edit-profile-dialog,
-.update-group-dialog {
-  .content {
-    max-width: 100% !important;
-  }
-
-  .buttons {
-    margin: 8px;
-  }
-
-  .title-text {
-    font-size: large;
-    text-align: center;
-  }
-
-  .module-avatar {
-    display: block;
-    margin-bottom: 1rem;
-  }
-
-  .avatar-center {
-    display: flex;
-    justify-content: center;
-  }
-
-  .avatar-center-inner {
-    display: flex;
-  }
-}

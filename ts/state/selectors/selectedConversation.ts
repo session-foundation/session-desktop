@@ -178,12 +178,8 @@ const getSelectedGroupAdmins = (state: StateType): Array<string> => {
   return selected.groupAdmins || [];
 };
 
-const getSelectedSubscriberCount = (state: StateType): number | undefined => {
-  const convo = getSelectedConversation(state);
-  if (!convo) {
-    return undefined;
-  }
-  return getSubscriberCount(state, convo.id);
+const getSelectedSubscriberCount = (state: StateType): number => {
+  return getSubscriberCount(state, getSelectedConversationKey(state));
 };
 
 export const getSelectedConversationExpirationModes = (state: StateType) => {
@@ -266,7 +262,7 @@ export function useSelectedIsBlocked() {
 
 export function useSelectedIsApproved() {
   return useSelector((state: StateType): boolean => {
-    return !!(getSelectedConversation(state)?.isApproved || false);
+    return getSelectedConversation(state)?.isApproved ?? false;
   });
 }
 

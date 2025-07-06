@@ -778,6 +778,7 @@
   "warning": "ئاگاداری",
   "window": "پەنجەرە",
   "yes": "بەڵێ",
-  "you": "تۆ"
+  "you": "تۆ",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

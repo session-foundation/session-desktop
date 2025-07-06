@@ -252,6 +252,7 @@
   "updateError": "ບໍ່ສາມາດອັບເດດໄດ້",
   "updateNewVersion": "ວິທີໃຫມ່ຂອງ Session ມີໃຫ້, ກົດເພື່ອອັບເດດ",
   "updateSession": "ອັບເດດ Session",
-  "urlCopy": "ເສັກກີ້າບເອີຢ໇ລໍ້າ"
+  "urlCopy": "ເສັກກີ້າບເອີຢ໇ລໍ້າ",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

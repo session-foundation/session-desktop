@@ -27,6 +27,81 @@ declare module 'react' {
     | 'time-option-1-days'
     | 'time-option-7-days'
     | 'time-option-14-days';
+
+  type MenuOption =
+    | 'attachments'
+    | 'group-members'
+    | 'manage-members'
+    | 'notifications'
+    | 'invite-contacts'
+    | 'clear-all-messages'
+    | 'copy-account-id'
+    | 'delete-conversation'
+    | 'delete-contact'
+    | 'block-user'
+    | 'hide-nts'
+    | 'show-nts'
+    | 'copy-community-url'
+    | 'leave-community'
+    | 'add-admins'
+    | 'remove-admins'
+    | 'pin-conversation'
+    | 'unban-user'
+    | 'ban-user'
+    | 'disappearing-messages' // one of those two might be incorrect. FIXME
+    | 'disappearing-messages-timer';
+
+  type MenuOptionDetails = `${MenuOption}-details`;
+  type NotificationsOptions = 'mute' | 'all-messages' | 'mentions-only';
+  type NotificationButtons = `notifications-${NotificationsOptions}-button`;
+  type NotificationRadioButtons = `notifications-${NotificationsOptions}-radio-button`;
+
+  type SetButton = 'notifications' | 'disappear';
+
+  type ConfirmButtons =
+    | 'set-nickname'
+    | 'open-url'
+    | 'add-admins'
+    | 'update-group-info'
+    | 'ban-user'
+    | 'unban-user'
+    | 'ban-user-delete-all';
+
+  type CancelButtons = 'update-group-info' | 'add-admins' | 'unban-user';
+
+  type ClearButtons = 'group-info-description' | 'group-info-name' | 'nickname' | 'add-admins';
+
+  // left pane section types
+  type Sections = 'theme' | 'settings' | 'message' | 'privacy' | 'debug-menu';
+
+  type SettingsMenuItems =
+    | 'message-requests'
+    | 'recovery-password'
+    | 'privacy'
+    | 'notifications'
+    | 'conversations'
+    | 'appearance'
+    | 'help'
+    | 'permissions'
+    | 'clear-data'
+    | 'session-network'
+    | 'donate';
+
+  type MenuItems = 'block' | 'delete' | 'accept';
+
+  type Inputs =
+    | 'password'
+    | 'nickname'
+    | 'profile-name'
+    | 'message'
+    | 'update-group-info-name'
+    | 'update-group-info-description'
+    | 'recovery-phrase'
+    | 'display-name'
+    | 'add-admins'
+    | 'ban-user'
+    | 'unban-user';
+
   type SessionDataTestId =
     | 'group-member-status-text'
     | 'loading-spinner'
@@ -39,23 +114,24 @@ declare module 'react' {
     | 'new-conversation-button'
     | 'message-request-banner'
     | 'leftpane-section-container'
-    | 'group-name-input'
     | 'open-url'
     | 'recovery-password-seed-modal'
     | 'password-input-reconfirm'
     | 'conversation-header-subtitle'
-    | 'password-input'
-    | 'nickname-input'
     | 'image-upload-click'
-    | 'profile-name-input'
     | 'your-profile-name'
+    | 'community-name'
+    | 'group-name'
+    | 'group-description'
+    | 'preferred-display-name'
+    | 'fallback-display-name'
     | 'edit-profile-dialog'
     | 'image-upload-section'
-    | 'right-panel-group-name'
+    | 'profile-picture'
+    | 'display-name'
     | 'control-message'
     | 'header-conversation-name'
     | 'disappear-messages-type-and-time'
-    | 'message-input'
     | 'message-input-text-area'
     | 'messages-container'
     | 'decline-and-block-message-request'
@@ -77,33 +153,21 @@ declare module 'react' {
     | 'some-of-your-devices-outdated-conversation'
     | 'some-of-your-devices-outdated-inbox'
     | 'legacy-group-banner'
+    | 'account-id'
+    | 'set-nickname-remove-button'
 
     // generic button types
     | 'emoji-button'
     | 'reveal-blocked-user-settings'
-
-    // left pane section types
-    | 'theme-section'
-    | 'settings-section'
-    | 'message-section'
-    | 'privacy-section'
-    | 'debug-menu-section'
+    | `${Sections}-section`
 
     // settings menu item types
-    | 'block-menu-item'
-    | 'delete-menu-item'
-    | 'accept-menu-item'
-    | 'message-requests-settings-menu-item'
-    | 'recovery-password-settings-menu-item'
-    | 'privacy-settings-menu-item'
-    | 'notifications-settings-menu-item'
-    | 'conversations-settings-menu-item'
-    | 'appearance-settings-menu-item'
-    | 'help-settings-menu-item'
-    | 'permissions-settings-menu-item'
-    | 'clear-data-settings-menu-item'
-    | 'session-network-settings-menu-item'
-    | 'donate-settings-menu-item'
+    | `${MenuItems}-menu-item`
+    | `${ConfirmButtons}-confirm-button`
+    | `${CancelButtons}-cancel-button`
+    | `clear-${ClearButtons}-button`
+    | `${SettingsMenuItems}-settings-menu-item`
+    | `${Inputs}-input`
 
     // timer options
     | DisappearTimeOptionDataTestId
@@ -148,8 +212,6 @@ declare module 'react' {
     | 'leave-group-button'
     | 'disappearing-messages'
     | 'group-members'
-    | 'remove-moderators'
-    | 'add-moderators'
     | 'edit-group-name'
     | 'delete-group-button'
 
@@ -174,6 +236,10 @@ declare module 'react' {
     | 'label-name'
     | 'input-count'
     | 'label-count'
+    | 'clear-everyone-radio-option'
+    | 'clear-device-radio-option'
+    | 'clear-everyone-radio-option-label'
+    | 'clear-device-radio-option-label'
 
     // links
     | 'session-website-link'
@@ -216,7 +282,6 @@ declare module 'react' {
     | 'contact' // this is way too generic
     | 'contact-status'
     | 'version-warning'
-    | 'open-url-confirm-button'
     | 'copy-url-button'
     | 'continue-session-button'
     | 'next-new-conversation-button'
@@ -251,7 +316,6 @@ declare module 'react' {
     | 'save-button-profile-update'
     | 'save-button-profile-update'
     | 'copy-button-profile-update'
-    | 'disappear-set-button'
     | 'create-group-button'
     | 'delete-message-request'
     | 'accept-message-request'
@@ -259,8 +323,6 @@ declare module 'react' {
     | 'session-id-signup'
     | 'search-contacts-field'
     | 'three-dot-loading-animation'
-    | 'recovery-phrase-input'
-    | 'display-name-input'
     | 'new-session-conversation'
     | 'new-closed-group-name'
     | 'leftpane-primary-avatar'
@@ -276,7 +338,14 @@ declare module 'react' {
     | 'avatar-placeholder'
     | `input-releases-${ReleaseChannels}`
     | `label-releases-${ReleaseChannels}`
-    | 'last-updated-timestamp';
+    | `${MenuOption}-menu-option`
+    | `${MenuOptionDetails}-menu-option`
+    | `${SetButton}-set-button`
+    | `${NotificationButtons}`
+    | `${NotificationRadioButtons}`
+    | 'last-updated-timestamp'
+    // Once the whole app have datatestId when required, this `invalid-data-testid` will be removed
+    | 'invalid-data-testid';
 
   interface HTMLAttributes {
     'data-testid'?: SessionDataTestId;

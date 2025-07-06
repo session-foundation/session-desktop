@@ -11,10 +11,6 @@ import { Data } from '../../../../data/data';
 
 import { MessageInteraction } from '../../../../interactions';
 import { replyToMessage } from '../../../../interactions/conversationInteractions';
-import {
-  addSenderAsModerator,
-  removeSenderFromModerator,
-} from '../../../../interactions/messageInteractions';
 import { MessageRenderingProps } from '../../../../models/messageType';
 import { pushUnblockToSend } from '../../../../session/utils/Toast';
 import {
@@ -22,7 +18,6 @@ import {
   showMessageInfoView,
   toggleSelectedMessageId,
 } from '../../../../state/ducks/conversations';
-import { setRightOverlayMode } from '../../../../state/ducks/section';
 import {
   useMessageAttachments,
   useMessageBody,
@@ -38,9 +33,6 @@ import {
   useSelectedConversationKey,
   useSelectedIsBlocked,
   useSelectedIsLegacyGroup,
-  useSelectedIsPublic,
-  useSelectedWeAreAdmin,
-  useSelectedWeAreModerator,
 } from '../../../../state/selectors/selectedConversation';
 import { saveAttachmentToDisk } from '../../../../util/attachmentsUtil';
 import { Reactions } from '../../../../util/reactions';
@@ -54,7 +46,19 @@ import { getMenuAnimation } from '../../../menu/MenuAnimation';
 import { WithMessageId } from '../../../../session/types/with';
 import { DeleteItem } from '../../../menu/items/DeleteMessage/DeleteMessageMenuItem';
 import { RetryItem } from '../../../menu/items/RetrySend/RetrySendMenuItem';
-import { showCopyAccountIdAction } from '../../../menu/items/CopyAccountId/guard';
+import { useBanUserCb } from '../../../menuAndSettingsHooks/useBanUser';
+import { useUnbanUserCb } from '../../../menuAndSettingsHooks/useUnbanUser';
+import {
+  sogsV3RemoveAdmins,
+  sogsV3AddAdmin,
+} from '../../../../session/apis/open_group_api/sogsv3/sogsV3AddRemoveMods';
+import { ConvoHub } from '../../../../session/conversations';
+import { PubKey } from '../../../../session/types';
+import { ToastUtils } from '../../../../session/utils';
+import { localize } from '../../../../localization/localeTools';
+import { sectionActions } from '../../../../state/ducks/section';
+import { useServerBanUserCb } from '../../../menuAndSettingsHooks/useServerBanUser';
+import { useServerUnbanUserCb } from '../../../menuAndSettingsHooks/useServerUnbanUser';
 
 export type MessageContextMenuSelectorProps = Pick<
   MessageRenderingProps,
@@ -93,42 +97,81 @@ const StyledEmojiPanelContainer = styled.div<{ x: number; y: number }>`
   }
 `;
 
-const AdminActionItems = ({ messageId }: WithMessageId) => {
+async function removeSenderFromCommunityAdmin(sender: string, convoId: string) {
+  try {
+    const pubKeyToRemove = PubKey.cast(sender);
+    const convo = ConvoHub.use().getOrThrow(convoId);
+
+    const userDisplayName =
+      ConvoHub.use().get(sender)?.getNicknameOrRealUsernameOrPlaceholder() ||
+      window.i18n('unknown');
+
+    const roomInfo = convo.toOpenGroupV2();
+    const res = await sogsV3RemoveAdmins([pubKeyToRemove], roomInfo);
+    if (!res) {
+      window?.log?.warn('failed to remove moderator:', res);
+
+      ToastUtils.pushFailedToRemoveFromModerator([userDisplayName]);
+    } else {
+      window?.log?.info(`${pubKeyToRemove.key} removed from moderators...`);
+      ToastUtils.pushUserRemovedFromModerators([userDisplayName]);
+    }
+  } catch (e) {
+    window?.log?.error('Got error while removing moderator:', e);
+  }
+}
+
+async function addSenderAsCommunityAdmin(sender: string, convoId: string) {
+  try {
+    const pubKeyToAdd = PubKey.cast(sender);
+    const convo = ConvoHub.use().getOrThrow(convoId);
+
+    const roomInfo = convo.toOpenGroupV2();
+    const res = await sogsV3AddAdmin([pubKeyToAdd], roomInfo);
+    if (!res) {
+      window?.log?.warn('failed to add moderator:', res);
+
+      ToastUtils.pushFailedToAddAsModerator();
+    } else {
+      window?.log?.info(`${pubKeyToAdd.key} added to moderators...`);
+      const userDisplayName =
+        ConvoHub.use().get(sender)?.getNicknameOrRealUsernameOrPlaceholder() ||
+        window.i18n('unknown');
+      ToastUtils.pushUserAddedToModerators([userDisplayName]);
+    }
+  } catch (e) {
+    window?.log?.error('Got error while adding moderator:', e);
+  }
+}
+
+const CommunityAdminActionItems = ({ messageId }: WithMessageId) => {
   const convoId = useSelectedConversationKey();
-  const isPublic = useSelectedIsPublic();
-  const weAreModerator = useSelectedWeAreModerator();
-  const weAreAdmin = useSelectedWeAreAdmin();
-  const showAdminActions = (weAreAdmin || weAreModerator) && isPublic;
 
   const sender = useMessageSender(messageId);
   const isSenderAdmin = useMessageSenderIsAdmin(messageId);
 
-  if (!convoId || !sender) {
+  const banUserCb = useBanUserCb(convoId, sender);
+  const unbanUserCb = useUnbanUserCb(convoId, sender);
+  const serverBanUser = useServerBanUserCb(convoId, sender);
+  const serverUnbanUser = useServerUnbanUserCb(convoId, sender);
+
+  if (!convoId || !sender || !banUserCb || !unbanUserCb || !serverBanUser || !serverUnbanUser) {
     return null;
   }
 
+  /**
+   * Ideally we'd make those calls use a loader, but because this is part of the message context
+   * menu, we don't have one.
+   * Also, those are not using the `useRemoveModeratorsCb/useAddModeratorsCb` hooks.
+   * The reason is that when we do the action as part of the message context menu,
+   * we want to do the action of the right-clicked user, without showing the corresponding modal.
+   */
   const addModerator = () => {
-    void addSenderAsModerator(sender, convoId);
+    void addSenderAsCommunityAdmin(sender, convoId);
   };
 
   const removeModerator = () => {
-    void removeSenderFromModerator(sender, convoId);
-  };
-
-  const onBan = () => {
-    MessageInteraction.banUser(sender, convoId);
-  };
-
-  const onUnban = () => {
-    MessageInteraction.unbanUser(sender, convoId);
-  };
-
-  const onServerBan = () => {
-    MessageInteraction.serverBanUser(sender, convoId);
-  };
-
-  const onServerUnban = () => {
-    MessageInteraction.serverUnbanUser(sender, convoId);
+    void removeSenderFromCommunityAdmin(sender, convoId);
   };
 
   const addUploadPermission = () => {
@@ -145,39 +188,41 @@ const AdminActionItems = ({ messageId }: WithMessageId) => {
   const canSenderUpload = true;
   const canSenderNotUpload = true;
 
-  return showAdminActions ? (
+  return (
     <>
-      <ItemWithDataTestId onClick={onBan}>{window.i18n('banUser')}</ItemWithDataTestId>
-      <ItemWithDataTestId onClick={onUnban}>{window.i18n('banUnbanUser')}</ItemWithDataTestId>
+      <ItemWithDataTestId onClick={banUserCb}>{localize('banUser')}</ItemWithDataTestId>
+      <ItemWithDataTestId onClick={unbanUserCb}>{localize('banUnbanUser')}</ItemWithDataTestId>
       {isSenderAdmin ? (
         <ItemWithDataTestId onClick={removeModerator}>
-          {window.i18n('adminRemoveAsAdmin')}
+          {localize('adminRemoveAsAdmin')}
         </ItemWithDataTestId>
       ) : (
         <ItemWithDataTestId onClick={addModerator}>
-          {window.i18n('adminPromoteToAdmin')}
+          {localize('adminPromoteToAdmin')}
         </ItemWithDataTestId>
       )}
-      <ItemWithDataTestId onClick={onServerBan}>{window.i18n('serverBanUser')}</ItemWithDataTestId>
-      <ItemWithDataTestId onClick={onServerUnban}>
-        {window.i18n('serverUnbanUser')}
+      <ItemWithDataTestId onClick={serverBanUser}>
+        {localize('serverBanUser').toString()}
       </ItemWithDataTestId>
-      {isPublic && !isSenderAdmin && isRoomUploadRestricted && (
+      <ItemWithDataTestId onClick={serverUnbanUser}>
+        {localize('serverUnbanUser').toString()}
+      </ItemWithDataTestId>
+      {!isSenderAdmin && isRoomUploadRestricted && (
         <>
           {canSenderUpload && (
             <ItemWithDataTestId onClick={addUploadPermission}>
-              {window.i18n('addUploadPermission')}
+              {localize('addUploadPermission').toString()}
             </ItemWithDataTestId>
           )}
           {canSenderNotUpload && (
             <ItemWithDataTestId onClick={clearUploadPermission}>
-              {window.i18n('clearUploadPermission')}
+              {localize('clearUploadPermission').toString()}
             </ItemWithDataTestId>
           )}
         </>
       )}
     </>
-  ) : null;
+  );
 };
 
 export const showMessageInfoOverlay = async ({
@@ -191,7 +236,7 @@ export const showMessageInfoOverlay = async ({
   if (found) {
     dispatch(showMessageInfoView(messageId));
     dispatch(
-      setRightOverlayMode({
+      sectionActions.setRightOverlayMode({
         type: 'message_info',
         params: { messageId, visibleAttachmentIndex: 0 },
       })
@@ -378,10 +423,7 @@ export const MessageContextMenu = (props: Props) => {
             >
               <Localizer token="info" />
             </ItemWithDataTestId>
-            {/* this is a message in the view, so always private */}
-            {sender && showCopyAccountIdAction({ isPrivate: true, pubkey: sender }) ? (
-              <CopyAccountIdMenuItem pubkey={sender} />
-            ) : null}
+            {sender ? <CopyAccountIdMenuItem pubkey={sender} /> : null}
           </Menu>
         </SessionContextMenuContainer>
       </StyledMessageContextMenu>
@@ -430,10 +472,7 @@ export const MessageContextMenu = (props: Props) => {
           >
             <Localizer token="info" />
           </ItemWithDataTestId>
-          {/* this is a message in the view, so always private */}
-          {sender && showCopyAccountIdAction({ isPrivate: true, pubkey: sender }) ? (
-            <CopyAccountIdMenuItem pubkey={sender} />
-          ) : null}
+          {sender ? <CopyAccountIdMenuItem pubkey={sender} /> : null}
           <RetryItem messageId={messageId} />
           {isDeletable ? (
             <ItemWithDataTestId onClick={onSelect}>
@@ -441,7 +480,7 @@ export const MessageContextMenu = (props: Props) => {
             </ItemWithDataTestId>
           ) : null}
           <DeleteItem messageId={messageId} />
-          <AdminActionItems messageId={messageId} />
+          <CommunityAdminActionItems messageId={messageId} />
         </Menu>
       </SessionContextMenuContainer>
     </StyledMessageContextMenu>

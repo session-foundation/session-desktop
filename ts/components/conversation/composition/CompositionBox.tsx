@@ -23,6 +23,8 @@ import {
   getIsSelectedBlocked,
   getSelectedCanWrite,
   getSelectedConversationKey,
+  useSelectedConversationKey,
+  useSelectedIsBlocked,
 } from '../../../state/selectors/selectedConversation';
 import { AttachmentType } from '../../../types/Attachment';
 import { processNewAttachment } from '../../../types/MessageAttachment';
@@ -53,6 +55,7 @@ import { CompositionTextArea } from './CompositionTextArea';
 import { cleanMentions, mentionsRegex } from './UserMentions';
 import { HTMLDirection } from '../../../util/i18n/rtlSupport';
 import type { FixedBaseEmoji } from '../../../types/Reaction';
+import { useShowBlockUnblock } from '../../menuAndSettingsHooks/useShowBlockUnblock';
 
 export interface ReplyingToMessageProps {
   convoId: string;
@@ -299,6 +302,7 @@ class CompositionBoxInner extends Component<Props, State> {
         {this.renderAttachmentsStaged()}
         <div className="composition-container">
           {showRecordingView ? this.renderRecordingView() : this.renderCompositionView()}
+          <BlockedOverlayOnCompositionBox />
         </div>
       </Flex>
     );
@@ -397,7 +401,8 @@ class CompositionBoxInner extends Component<Props, State> {
 
     // we completely hide the composition box when typing is not enabled now.
     // Actually not anymore. We want the above, except when we can't write because that user is blocked.
-    // When that user is blocked, **and only then**, we want to show the composition box, disabled with the placeholder "unblock to send".
+    // When that user is blocked, **and only then**, we want to show the composition box, disabled with the placeholder "unblock to send", and the buttons disabled.
+    // A click on the composition box should bring the "unblock user" dialog.
     if (!typingEnabled && !isBlocked) {
       return null;
     }
@@ -410,7 +415,9 @@ class CompositionBoxInner extends Component<Props, State> {
         $alignItems={'center'}
         width={'100%'}
       >
-        {typingEnabled && <AddStagedAttachmentButton onClick={this.onChooseAttachment} />}
+        {typingEnabled || isBlocked ? (
+          <AddStagedAttachmentButton onClick={this.onChooseAttachment} />
+        ) : null}
         <input
           className="hidden"
           placeholder="Attachment"
@@ -419,7 +426,9 @@ class CompositionBoxInner extends Component<Props, State> {
           type="file"
           onChange={this.onChoseAttachment}
         />
-        {typingEnabled && <StartRecordingButton onClick={this.onLoadVoiceNoteView} />}
+        {typingEnabled || isBlocked ? (
+          <StartRecordingButton onClick={this.onLoadVoiceNoteView} />
+        ) : null}
         <StyledSendMessageInput
           role="main"
           dir={this.props.htmlDirection}
@@ -948,3 +957,36 @@ const mapStateToProps = (state: StateType) => {
 const smart = connect(mapStateToProps);
 
 export const CompositionBox = smart(CompositionBoxInner);
+
+const StyledBlockedOverlayOnCompositionBox = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  background-color: transparent;
+  cursor: pointer;
+`;
+
+/**
+ * Note: This component is to be removed once we get the updated composition box PR merged.
+ * It is only used to hijack the clicks on the composition box and display the "unblock user dialog",
+ * when that user is currently blocked.
+ * The reason it was easier to do it this way is because the buttons of the composition box do not react
+ * to click events when they are disabled.
+ *
+ * Note2: Actually having this component offer the unblock user dialog on click right away is convenient as a UX.
+ * Maybe we should keep it?
+ */
+function BlockedOverlayOnCompositionBox() {
+  const selectedConvoKey = useSelectedConversationKey();
+  const isBlocked = useSelectedIsBlocked();
+  const blockUnblockCb = useShowBlockUnblock(selectedConvoKey);
+
+  if (!isBlocked) {
+    return null;
+  }
+
+  return <StyledBlockedOverlayOnCompositionBox onClick={blockUnblockCb?.cb} />;
+}

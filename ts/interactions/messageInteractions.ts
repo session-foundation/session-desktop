@@ -156,7 +156,7 @@ export async function addSenderAsModerator(sender: string, convoId: string) {
       const userDisplayName =
         ConvoHub.use().get(sender)?.getNicknameOrRealUsernameOrPlaceholder() ||
         window.i18n('unknown');
-      ToastUtils.pushUserAddedToModerators(userDisplayName);
+      ToastUtils.pushUserAddedToModerators([userDisplayName]);
     }
   } catch (e) {
     window?.log?.error('Got error while adding moderator:', e);

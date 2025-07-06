@@ -777,6 +777,7 @@
   "warning": "Babala",
   "window": "Window",
   "yes": "Oo",
-  "you": "Ikaw"
+  "you": "Ikaw",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

@@ -787,6 +787,7 @@
   "warning": "Amaran",
   "window": "Tetingkap",
   "yes": "Ya",
-  "you": "Anda"
+  "you": "Anda",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

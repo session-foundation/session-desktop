@@ -835,6 +835,7 @@
   "warning": "تحذير",
   "window": "نافذة",
   "yes": "نعم",
-  "you": "أنت"
+  "you": "أنت",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

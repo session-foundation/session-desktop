@@ -777,6 +777,7 @@
   "warning": "Averto",
   "window": "Fenestro",
   "yes": "Jes",
-  "you": "Vi"
+  "you": "Vi",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

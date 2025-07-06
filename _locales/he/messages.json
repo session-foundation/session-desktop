@@ -777,6 +777,7 @@
   "warning": "אזהרה",
   "window": "חלון",
   "yes": "כן",
-  "you": "את/ה"
+  "you": "את/ה",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

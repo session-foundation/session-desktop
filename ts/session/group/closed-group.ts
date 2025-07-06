@@ -9,7 +9,7 @@ import type { WithMessageHashOrNull } from '../types/with';
 
 export type GroupDiff = PropsForGroupUpdateType;
 
-export async function addUpdateMessage({
+async function addUpdateMessage({
   convo,
   diff,
   sender,

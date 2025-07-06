@@ -1,14 +1,24 @@
 import styled from 'styled-components';
-import { SessionIcon, SessionIconSize, SessionIconType } from '../icon';
-import { PanelButton, PanelButtonProps, PanelButtonText, StyledContent } from './PanelButton';
 
-interface PanelIconButton extends Omit<PanelButtonProps, 'children'> {
+import type { ReactNode } from 'react';
+import {
+  PanelButton,
+  PanelButtonProps,
+  PanelButtonText,
+  PanelButtonTextWithSubText,
+  StyledContent,
+  type PanelButtonSubtextProps,
+} from './PanelButton';
+import { LucideIcon } from '../icon/LucideIcon';
+import { IconSizeToPxStr, SessionIcon } from '../icon/SessionIcon';
+import type { SessionIconType } from '../icon';
+import { StyledPanelButtonSeparator } from './StyledPanelButtonGroupSeparator';
+
+type PanelIconButtonProps = Omit<PanelButtonProps, 'children' | 'subText' | 'subTextDataTestId'> & {
   text: string;
-  iconType: SessionIconType;
-  iconSize?: SessionIconSize;
-  subtitle?: string;
+  iconElement: ReactNode;
   color?: string;
-}
+};
 
 const IconContainer = styled.div`
   flex-shrink: 0;
@@ -16,26 +26,56 @@ const IconContainer = styled.div`
   padding: 0;
 `;
 
-export const PanelIconButton = (props: PanelIconButton) => {
-  const {
-    text,
-    subtitle,
-    iconType,
-    iconSize,
-    color,
-    disabled = false,
-    onClick,
-    dataTestId,
-  } = props;
+export const PanelIconButton = (
+  props: PanelIconButtonProps | (PanelIconButtonProps & PanelButtonSubtextProps)
+) => {
+  const { text, color, disabled = false, onClick, dataTestId } = props;
+
+  const subTextProps =
+    'subText' in props
+      ? { subText: props.subText, subTextDataTestId: props.subTextDataTestId }
+      : undefined;
 
   return (
-    <PanelButton disabled={disabled} onClick={onClick} dataTestId={dataTestId}>
-      <StyledContent disabled={disabled}>
-        <IconContainer>
-          <SessionIcon iconType={iconType} iconColor={color} iconSize={iconSize || 'large'} />
-        </IconContainer>
-        <PanelButtonText text={text} subtitle={subtitle} color={color} />
-      </StyledContent>
-    </PanelButton>
+    <>
+      <PanelButton
+        disabled={disabled}
+        onClick={onClick}
+        dataTestId={dataTestId}
+        color={color}
+        style={{ minHeight: '55px' }}
+      >
+        <StyledContent disabled={disabled}>
+          <IconContainer>{props.iconElement}</IconContainer>
+
+          {subTextProps ? (
+            <PanelButtonTextWithSubText
+              text={text}
+              textDataTestId={props.dataTestId}
+              subText={subTextProps.subText}
+              subTextDataTestId={subTextProps.subTextDataTestId}
+            />
+          ) : (
+            <PanelButtonText text={text} textDataTestId={props.dataTestId} />
+          )}
+        </StyledContent>
+      </PanelButton>
+      <StyledPanelButtonSeparator />
+    </>
   );
+};
+
+export const PanelIconLucideIcon = ({ iconUnicode }: { iconUnicode: string }) => {
+  // we shouldn't need to provide a color here, as the Icon should match what the PanelButton color is.
+  return <LucideIcon unicode={iconUnicode} iconSize={IconSizeToPxStr.large} />;
+};
+
+export const PanelIconSessionLegacyIcon = ({
+  iconType,
+  iconColor,
+}: {
+  iconType: SessionIconType;
+  iconColor: string;
+}) => {
+  return <SessionIcon iconType={iconType} iconSize="large" iconColor={iconColor} />;
 };

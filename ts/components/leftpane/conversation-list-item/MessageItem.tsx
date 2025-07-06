@@ -4,13 +4,12 @@ import clsx from 'clsx';
 import { useConvoIdFromContext } from '../../../contexts/ConvoIdContext';
 import {
   useHasUnread,
-  useIsOutgoingRequest,
   useIsPrivate,
   useIsTyping,
   useLastMessage,
 } from '../../../hooks/useParamSelector';
 import { LastMessageStatusType } from '../../../state/ducks/types';
-import { useIsSearching } from '../../../state/selectors/search';
+import { useIsSearchingForType } from '../../../state/selectors/search';
 import { useIsMessageRequestOverlayShown } from '../../../state/selectors/section';
 import { assertUnreachable } from '../../../types/sqlSharedTypes';
 import { TypingAnimation } from '../../conversation/TypingAnimation';
@@ -26,13 +25,8 @@ export const MessageItem = () => {
   const hasUnread = useHasUnread(conversationId);
   const isConvoTyping = useIsTyping(conversationId);
   const isMessageRequest = useIsMessageRequestOverlayShown();
-  const isOutgoingRequest = useIsOutgoingRequest(conversationId);
 
-  const isSearching = useIsSearching();
-
-  if (isOutgoingRequest) {
-    return null;
-  }
+  const isSearching = useIsSearchingForType('global');
 
   if (lastMessage?.interactionType && lastMessage?.interactionStatus) {
     return <InteractionItem conversationId={conversationId} lastMessage={lastMessage} />;

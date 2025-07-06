@@ -1,13 +1,12 @@
-import { isEmpty } from 'lodash';
 import { useEffect, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useDisappearingMessageSettingText } from '../../../hooks/useParamSelector';
 import { useIsRightPanelShowing } from '../../../hooks/useUI';
-import { closeRightPanel, openRightPanel } from '../../../state/ducks/conversations';
-import { resetRightOverlayMode, setRightOverlayMode } from '../../../state/ducks/section';
+import { closeRightPanel } from '../../../state/ducks/conversations';
 import {
   useSelectedConversationDisappearingMode,
   useSelectedConversationKey,
+  useSelectedIsBlocked,
   useSelectedIsGroupOrCommunity,
   useSelectedIsKickedFromGroup,
   useSelectedIsLegacyGroup,
@@ -18,7 +17,10 @@ import {
   useSelectedNotificationSetting,
   useSelectedSubscriberCount,
 } from '../../../state/selectors/selectedConversation';
-import { ConversationHeaderSubtitle } from './ConversationHeaderSubtitle';
+import { ConversationHeaderSubtitle, type SubTitleArray } from './ConversationHeaderSubtitle';
+import { useLocalisedNotificationOf } from '../../menuAndSettingsHooks/useLocalisedNotificationFor';
+import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useShowConversationSettingsFor';
+import { localize } from '../../../localization/localeTools';
 
 export type SubtitleStrings = Record<string, string> & {
   notifications?: string;
@@ -31,56 +33,20 @@ export type SubtitleStringsType = keyof Pick<
   'notifications' | 'members' | 'disappearingMessages'
 >;
 
-type ConversationHeaderTitleProps = {
-  showSubtitle?: boolean;
-};
-
-function useLocalizedNotificationText() {
-  const currentNotificationSetting = useSelectedNotificationSetting();
-  switch (currentNotificationSetting) {
-    case 'mentions_only':
-      return window.i18n('notificationsHeaderMentionsOnly');
-    case 'disabled':
-      return window.i18n('notificationsHeaderMute');
-    case 'all':
-    default:
-      return window.i18n('notificationsHeaderAllMessages');
-  }
-}
-
-export const ConversationHeaderTitle = (props: ConversationHeaderTitleProps) => {
-  const { showSubtitle = true } = props;
-
-  const dispatch = useDispatch();
-  const convoId = useSelectedConversationKey();
-  const convoName = useSelectedNicknameOrProfileNameOrShortenedPubkey();
-
-  const isRightPanelOn = useIsRightPanelShowing();
+function useSubtitleArray(convoId?: string) {
   const subscriberCount = useSelectedSubscriberCount();
 
   const isPublic = useSelectedIsPublic();
   const isKickedFromGroup = useSelectedIsKickedFromGroup();
-  const isMe = useSelectedIsNoteToSelf();
   const isGroup = useSelectedIsGroupOrCommunity();
   const selectedMembersCount = useSelectedMembersCount();
 
-  const isLegacyGroup = useSelectedIsLegacyGroup();
-
-  const expirationMode = useSelectedConversationDisappearingMode();
+  const notification = useSelectedNotificationSetting();
   const disappearingMessageSubtitle = useDisappearingMessageSettingText({
     convoId,
-    abbreviate: true,
   });
 
-  const [visibleSubtitle, setVisibleSubtitle] =
-    useState<SubtitleStringsType>('disappearingMessages');
-
-  const [subtitleStrings, setSubtitleStrings] = useState<SubtitleStrings>({});
-  const [subtitleArray, setSubtitleArray] = useState<Array<SubtitleStringsType>>([]);
-
-  const { i18n } = window;
-
-  const notificationSubtitle = useLocalizedNotificationText();
+  const notificationSubtitle = useLocalisedNotificationOf(notification, 'title');
 
   const memberCountSubtitle = useMemo(() => {
     let count = 0;
@@ -93,108 +59,127 @@ export const ConversationHeaderTitle = (props: ConversationHeaderTitleProps) => 
     }
 
     if (isGroup && count > 0 && !isKickedFromGroup) {
-      return isPublic ? i18n('membersActive', { count }) : i18n('members', { count });
+      return localize(isPublic ? 'membersActive' : 'members')
+        .withArgs({ count })
+        .toString();
     }
 
     return null;
-  }, [i18n, isGroup, isKickedFromGroup, isPublic, selectedMembersCount, subscriberCount]);
+  }, [isGroup, isKickedFromGroup, isPublic, selectedMembersCount, subscriberCount]);
 
-  const handleRightPanelToggle = () => {
-    if (isLegacyGroup) {
+  const subtitleArray = useMemo(() => {
+    const innerSubtitleArray: SubTitleArray = [];
+    if (disappearingMessageSubtitle.id !== 'off') {
+      innerSubtitleArray.push({
+        type: 'disappearingMessages',
+        label: disappearingMessageSubtitle.label,
+      });
+    }
+
+    if (notificationSubtitle) {
+      innerSubtitleArray.push({ type: 'notifications', label: notificationSubtitle });
+    }
+
+    if (memberCountSubtitle) {
+      innerSubtitleArray.push({ type: 'members', label: memberCountSubtitle });
+    }
+    return innerSubtitleArray;
+  }, [disappearingMessageSubtitle, notificationSubtitle, memberCountSubtitle]);
+  return subtitleArray;
+}
+
+export const ConversationHeaderTitle = ({ showSubtitle }: { showSubtitle: boolean }) => {
+  const dispatch = useDispatch();
+  const convoId = useSelectedConversationKey();
+  const convoName = useSelectedNicknameOrProfileNameOrShortenedPubkey();
+  const isRightPanelOn = useIsRightPanelShowing();
+  const isMe = useSelectedIsNoteToSelf();
+
+  const isLegacyGroup = useSelectedIsLegacyGroup();
+
+  const expirationMode = useSelectedConversationDisappearingMode();
+
+  const [subtitleIndex, setSubtitleIndex] = useState(0);
+
+  // reset the subtitle selected index when the convoId changes (so the page is always 0 by default)
+  useEffect(() => {
+    setSubtitleIndex(0);
+  }, [convoId]);
+
+  const showConvoSettingsCb = useShowConversationSettingsFor(convoId);
+
+  const subtitles = useSubtitleArray(convoId);
+  const isBlocked = useSelectedIsBlocked();
+
+  const onHeaderClick = () => {
+    if (isLegacyGroup || !convoId) {
       return;
     }
     if (isRightPanelOn) {
       dispatch(closeRightPanel());
       return;
     }
+    if (!showConvoSettingsCb) {
+      return;
+    }
+
+    // when the conversation is blocked, only show the default page of the modal (the other pages are not available)
+    if (isBlocked) {
+      showConvoSettingsCb({ settingsModalPage: 'default' });
+      return;
+    }
 
     // NOTE If disappearing messages is defined we must show it first
-    if (visibleSubtitle === 'disappearingMessages') {
-      dispatch(
-        setRightOverlayMode({
-          type: 'disappearing_messages',
-          params: null,
-        })
-      );
+    if (subtitles?.[subtitleIndex]?.type === 'disappearingMessages') {
+      showConvoSettingsCb({
+        settingsModalPage: 'disappearing_message',
+        standalonePage: true,
+      });
+    } else if (subtitles?.[subtitleIndex]?.type === 'notifications') {
+      showConvoSettingsCb({
+        settingsModalPage: 'notifications',
+        standalonePage: true,
+      });
     } else {
-      dispatch(resetRightOverlayMode());
+      showConvoSettingsCb({ settingsModalPage: 'default' });
     }
-    dispatch(openRightPanel());
   };
 
-  useEffect(() => {
-    if (visibleSubtitle !== 'disappearingMessages') {
-      if (!isEmpty(disappearingMessageSubtitle)) {
-        setVisibleSubtitle('disappearingMessages');
-      } else {
-        setVisibleSubtitle('notifications');
-      }
-    }
-    // We only want this to change when a new conversation is selected or disappearing messages is toggled
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [convoId, disappearingMessageSubtitle]);
+  const className = isMe ? '' : 'module-contact-name__profile-name';
+  const displayName = isMe ? localize('noteToSelf').toString() : convoName;
 
-  useEffect(() => {
-    const newSubtitlesArray: any = [];
-    const newSubtitlesStrings: any = {};
+  const clampedSubtitleIndex = useMemo(() => {
+    return Math.max(0, Math.min(subtitles.length - 1, subtitleIndex));
+  }, [subtitles, subtitleIndex]);
+  const visibleSubtitle = subtitles?.[clampedSubtitleIndex];
 
-    if (disappearingMessageSubtitle) {
-      newSubtitlesStrings.disappearingMessages = disappearingMessageSubtitle;
-      newSubtitlesArray.push('disappearingMessages');
-    }
-
-    if (notificationSubtitle) {
-      newSubtitlesStrings.notifications = notificationSubtitle;
-      newSubtitlesArray.push('notifications');
-    }
-
-    if (memberCountSubtitle) {
-      newSubtitlesStrings.members = memberCountSubtitle;
-      newSubtitlesArray.push('members');
-    }
-
-    if (newSubtitlesArray.indexOf(visibleSubtitle) < 0) {
-      setVisibleSubtitle('notifications');
-    }
-
-    setSubtitleStrings(newSubtitlesStrings);
-    setSubtitleArray(newSubtitlesArray);
-  }, [disappearingMessageSubtitle, memberCountSubtitle, notificationSubtitle, visibleSubtitle]);
+  const handleTitleCycle = (direction: 1 | -1) => {
+    setSubtitleIndex((clampedSubtitleIndex + direction) % subtitles.length);
+  };
 
   return (
     <div className="module-conversation-header__title-container">
       <div className="module-conversation-header__title-flex">
         <div className="module-conversation-header__title">
-          {isMe ? (
-            <span
-              onClick={handleRightPanelToggle}
-              role="button"
-              data-testid="header-conversation-name"
-            >
-              {i18n('noteToSelf')}
-            </span>
-          ) : (
-            <span
-              className="module-contact-name__profile-name"
-              onClick={handleRightPanelToggle}
-              role="button"
-              data-testid="header-conversation-name"
-            >
-              {convoName}
-            </span>
-          )}
-          {showSubtitle && subtitleArray.indexOf(visibleSubtitle) > -1 && (
+          <span
+            className={className}
+            onClick={onHeaderClick}
+            role="button"
+            data-testid="header-conversation-name"
+          >
+            {displayName}
+          </span>
+          {showSubtitle && subtitles?.[clampedSubtitleIndex] ? (
             <ConversationHeaderSubtitle
-              currentSubtitle={visibleSubtitle}
-              setCurrentSubtitle={setVisibleSubtitle}
-              subtitlesArray={subtitleArray}
-              subtitleStrings={subtitleStrings}
-              onClickFunction={handleRightPanelToggle}
+              subtitleIndex={clampedSubtitleIndex}
+              onCycle={handleTitleCycle}
+              subtitlesArray={subtitles}
+              onClickFunction={onHeaderClick}
               showDisappearingMessageIcon={
-                visibleSubtitle === 'disappearingMessages' && expirationMode !== 'off'
+                visibleSubtitle.type === 'disappearingMessages' && expirationMode !== 'off'
               }
             />
-          )}
+          ) : null}
         </div>
       </div>
     </div>

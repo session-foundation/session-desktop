@@ -11,7 +11,7 @@ import { ConvoHub } from '../../../session/conversations';
 
 import { PubKey } from '../../../session/types';
 import { openConversationWithMessages } from '../../../state/ducks/conversations';
-import { resetLeftOverlayMode } from '../../../state/ducks/section';
+import { sectionActions } from '../../../state/ducks/section';
 import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
 import { SessionSpinner } from '../../loading';
 
@@ -21,9 +21,10 @@ import { THEME_GLOBALS } from '../../../themes/globals';
 import { Flex } from '../../basic/Flex';
 import { SpacerLG, SpacerMD } from '../../basic/Text';
 import { HelpDeskButton } from '../../buttons';
-import { SessionInput } from '../../inputs';
 import { ConversationTypeEnum } from '../../../models/types';
 import { Localizer } from '../../basic/Localizer';
+import { SimpleSessionTextarea } from '../../inputs/SessionInput';
+import { localize } from '../../../localization/localeTools';
 
 const StyledDescriptionContainer = styled(motion.div)`
   margin: 0 auto;
@@ -65,7 +66,7 @@ export const OverlayMessage = () => {
   const dispatch = useDispatch();
 
   function closeOverlay() {
-    dispatch(resetLeftOverlayMode());
+    dispatch(sectionActions.resetLeftOverlayMode());
   }
 
   useKey('Escape', closeOverlay);
@@ -159,19 +160,20 @@ export const OverlayMessage = () => {
       $alignItems={'center'}
       padding={'var(--margins-md)'}
     >
-      <SessionInput
+      <SimpleSessionTextarea
         ariaLabel="New conversation input"
         autoFocus={true}
-        type="text"
-        placeholder={window.i18n('accountIdOrOnsEnter')}
+        placeholder={localize('accountIdOrOnsEnter').toString()}
         value={pubkeyOrOns}
         onValueChanged={setPubkeyOrOns}
-        onEnterPressed={handleMessageButtonClick}
-        error={pubkeyOrOnsError}
-        centerText={true}
-        isTextArea={true}
-        loading={loading}
+        providedError={pubkeyOrOnsError}
+        // centerText={true}
+        disabled={loading}
+        errorDataTestId="error-message"
         inputDataTestId="new-session-conversation"
+        singleLine={true}
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        onEnterPressed={handleMessageButtonClick}
       />
       <SpacerMD />
       <SessionSpinner loading={loading} />

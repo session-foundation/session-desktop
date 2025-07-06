@@ -21,9 +21,9 @@ const StyledModalHeader = styled(Flex)<{ bigHeader?: boolean }>`
 `;
 
 const StyledModal = styled.div<{
-  shouldOverflow: boolean;
   scrolled: boolean;
-  contentWidth?: string;
+  $contentMaxWidth?: string;
+  $contentMinWidth?: string;
   padding?: string;
   border: boolean;
   bigHeader?: boolean;
@@ -31,7 +31,8 @@ const StyledModal = styled.div<{
   animation: fadein var(--default-duration);
   z-index: 150;
   max-height: 90vh;
-  max-width: ${props => (props.contentWidth ? props.contentWidth : DEFAULT_MODAL_WIDTH)};
+  max-width: ${props => (props.$contentMaxWidth ? props.$contentMaxWidth : DEFAULT_MODAL_WIDTH)};
+  min-width: ${props => (props.$contentMinWidth ? props.$contentMinWidth : DEFAULT_MODAL_WIDTH)};
   box-sizing: border-box;
   font-family: var(--font-default);
   background-color: var(--modal-background-content-color);
@@ -42,11 +43,7 @@ const StyledModal = styled.div<{
 
   margin: auto auto;
   padding: ${props =>
-    props.padding
-      ? props.padding
-      : props.shouldOverflow
-        ? '0 var(--margins-sm) var(--margins-sm) var(--margins-lg)' // offset scrollbar on the right with smaller right padding
-        : '0  var(--margins-lg) var(--margins-sm)'};
+    props.padding ? props.padding : '0  var(--margins-md) var(--margins-sm) var(--margins-lg)'};
 
   overflow: hidden;
   display: flex;
@@ -71,18 +68,15 @@ const StyledModal = styled.div<{
   }
 
   ${StyledModalHeader} {
+    z-index: 3;
     box-shadow: ${props => (props.scrolled ? '0px 0px 20px 8px var(--modal-shadow-color)' : '')};
     border-bottom: ${props =>
       props.scrolled ? '1px solid var(--border-color)' : '1px solid var(--transparent-color)'};
-    margin-bottom: ${props => (props.bigHeader ? 'var(--margins-sm)' : 'var(--margins-xs)')};
   }
 `;
 
 const StyledModalBody = styled.div<{ shouldOverflow: boolean }>`
-  padding: ${props =>
-    props.shouldOverflow
-      ? '0 var(--margins-sm) 0 0' // right padding balances the space around the scrollbar
-      : '0'};
+  scrollbar-gutter: stable;
   margin: 0;
   font-family: var(--font-default);
   line-height: var(--font-size-md);
@@ -104,6 +98,20 @@ const StyledTitle = styled.div<{ bigHeader?: boolean }>`
     props.bigHeader ? 'var(--margins-sm)' : 'var(--margins-xs) var(--margins-sm)'};
 `;
 
+export const ButtonChildrenContainer = (props: { children: ReactNode }) => {
+  return (
+    <Flex
+      $container={true}
+      width={'100%'}
+      $justifyContent="center"
+      $alignItems="center"
+      $flexGap="var(--margins-md)"
+    >
+      {props.children}
+    </Flex>
+  );
+};
+
 export type SessionWrapperModalType2 = {
   title?: string;
   showHeader?: boolean;
@@ -112,7 +120,8 @@ export type SessionWrapperModalType2 = {
   headerIconButtons?: Array<Omit<SessionIconButtonProps, 'iconSize'>>;
   children: ReactNode;
   buttonChildren?: ReactNode;
-  contentWidth?: string;
+  $contentMaxWidth?: string;
+  $contentMinWidth?: string;
   contentBorder?: boolean;
   shouldOverflow?: boolean;
   padding?: string;
@@ -137,8 +146,8 @@ const ModalHeader = (
       $flexDirection={'row'}
       $justifyContent={'space-between'}
       $alignItems={'center'}
-      padding={'var(--margins-lg) var(--margins-sm) var(--margins-md) var(--margins-lg)'}
-      margin={'0 calc(-1 * var(--margins-sm)) 0 calc(-1 * var(--margins-lg))'}
+      padding={'var(--margins-lg) var(--margins-sm)  var(--margins-sm) var(--margins-lg)'}
+      margin={'0 calc(-1 * var(--margins-md)) 0 calc(-1 * var(--margins-lg))'}
       bigHeader={bigHeader}
     >
       <Flex
@@ -149,7 +158,7 @@ const ModalHeader = (
         margin={'0'}
       >
         {headerIconButtons?.length ? (
-          headerIconButtons.map((iconItem: any) => {
+          headerIconButtons.map(iconItem => {
             return (
               <SessionIconButton
                 key={iconItem.iconType}
@@ -221,7 +230,8 @@ export const SessionWrapperModal2 = (props: SessionWrapperModalType2) => {
     showHeader = true,
     showExitIcon,
     headerIconButtons,
-    contentWidth,
+    $contentMinWidth,
+    $contentMaxWidth,
     contentBorder = true,
     shouldOverflow = false,
     padding,
@@ -273,8 +283,8 @@ export const SessionWrapperModal2 = (props: SessionWrapperModalType2) => {
       >
         <StyledModal
           ref={modalRef}
-          contentWidth={contentWidth}
-          shouldOverflow={shouldOverflow}
+          $contentMaxWidth={$contentMaxWidth}
+          $contentMinWidth={$contentMinWidth}
           scrolled={scrolled}
           padding={padding}
           border={contentBorder}

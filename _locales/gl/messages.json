@@ -700,6 +700,7 @@
   "warning": "Aviso",
   "window": "Xanela",
   "yes": "Si",
-  "you": "Ti"
+  "you": "Ti",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

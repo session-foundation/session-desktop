@@ -13,6 +13,7 @@ import { Localizer, type LocalizerProps } from '../../basic/Localizer';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../../basic/SessionButton';
 import { StyledModalDescriptionContainer } from '../shared/ModalDescriptionContainer';
 import { BlockOrUnblockModalState } from './BlockOrUnblockModalState';
+import { localize } from '../../../localization/localeTools';
 
 type ModalState = NonNullable<BlockOrUnblockModalState>;
 
@@ -53,7 +54,8 @@ function useBlockUnblockI18nDescriptionArgs({
 export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullable<ModalState>) => {
   const dispatch = useDispatch();
 
-  const localizedAction = action === 'block' ? window.i18n('block') : window.i18n('blockUnblock');
+  const localizedAction =
+    action === 'block' ? localize('block').toString() : localize('blockUnblock').toString();
 
   const args = useBlockUnblockI18nDescriptionArgs({ action, pubkeys });
 
@@ -71,6 +73,8 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
         // eslint-disable-next-line no-await-in-loop
         await BlockedNumberController.block(pubkey);
       }
+      // Note: we don't want to close the CS modal if it was shown, now.
+      // Nor reset the conversation if it was shown.
     } else {
       await BlockedNumberController.unblockAll(pubkeys);
     }
@@ -84,7 +88,7 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
   }
 
   return (
-    <SessionWrapperModal showExitIcon={true} title={localizedAction} onClose={closeModal}>
+    <SessionWrapperModal showExitIcon={false} title={localizedAction} onClose={closeModal}>
       <StyledModalDescriptionContainer data-testid="modal-description">
         <Localizer {...args} />
       </StyledModalDescriptionContainer>

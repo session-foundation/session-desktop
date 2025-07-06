@@ -305,7 +305,7 @@ const PromoteButton = ({ groupPk, pubkey }: { pubkey: PubkeyType; groupPk: Group
       buttonShape={SessionButtonShape.Square}
       buttonType={SessionButtonType.Solid}
       buttonColor={SessionButtonColor.Danger}
-      text={window.i18n('promote')} // TODO DO NOT MERGE Remove after QA
+      text={window.i18n('promote')}
       onClick={() => {
         void promoteUsersInGroup({
           groupPk,
@@ -378,7 +378,6 @@ export const MemberListItem = <T extends string>({
             active={isSelected}
             value={pubkey}
             inputName={pubkey}
-            label=""
             inputDataTestId="select-contact"
           />
         </StyledCheckContainer>

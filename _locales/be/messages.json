@@ -777,6 +777,7 @@
   "warning": "Папярэджанне",
   "window": "Акно",
   "yes": "Так",
-  "you": "Вы"
+  "you": "Вы",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

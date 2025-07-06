@@ -1,30 +1,10 @@
-import { isEmpty } from 'lodash';
-
+import styled from 'styled-components';
 import { useIsClosedGroup, useSortedGroupMembers } from '../../../hooks/useParamSelector';
 import { UserUtils } from '../../../session/utils';
-import { assertUnreachable } from '../../../types/sqlSharedTypes';
+import { MemberAvatarPlaceHolder } from '../../icon/MemberAvatarPlaceHolder';
 import { Avatar, AvatarSize } from '../Avatar';
-
-function getClosedGroupAvatarsSize(size: AvatarSize): AvatarSize {
-  // Always use the size directly under the one requested
-  switch (size) {
-    case AvatarSize.XS:
-      throw new Error('AvatarSize.XS is not supported for closed group avatar sizes');
-    case AvatarSize.S:
-      return AvatarSize.XS;
-    case AvatarSize.M:
-      return AvatarSize.S;
-    case AvatarSize.L:
-      return AvatarSize.M;
-    case AvatarSize.XL:
-      return AvatarSize.L;
-    case AvatarSize.HUGE:
-      return AvatarSize.XL;
-    default:
-      assertUnreachable(size, `Invalid size request for closed group avatar "${size}"`);
-      return AvatarSize.XL; // just to make eslint happy
-  }
-}
+import { useAvatarBgColor } from './AvatarPlaceHolder';
+import { StyledAvatar } from './StyledAvatar';
 
 /**
  * Move our pubkey at the end of the list if we are in the list of members.
@@ -55,31 +35,70 @@ function useGroupMembersAvatars(convoId: string | undefined) {
   const isClosedGroup = useIsClosedGroup(convoId);
   const sortedMembers = useSortedGroupMembers(convoId);
 
-  if (!convoId || !isClosedGroup || isEmpty(sortedMembers)) {
+  if (!convoId || !isClosedGroup) {
     return undefined;
+  }
+
+  // for avatar purposes, we are always part of the group, even when there are no members at all
+  if (!sortedMembers || sortedMembers.length < 2) {
+    return { firstMember: us, secondMember: undefined };
   }
 
   return sortAndSlice(sortedMembers, us);
 }
 
+const StyledAvatarClosedContainer = styled.div<{ containerSize: number }>`
+  width: ${({ containerSize }) => containerSize}px;
+  height: ${({ containerSize }) => containerSize}px;
+  mask-image: url(images/avatar-svg-mask.svg);
+
+  .module-avatar:last-child {
+    position: absolute;
+    right: 0px;
+    bottom: 0px;
+  }
+`;
+
 export const ClosedGroupAvatar = ({
   convoId,
-  size,
+  size: containerSize,
   onAvatarClick,
 }: {
-  size: number;
+  size: AvatarSize;
   convoId: string;
   onAvatarClick?: () => void;
 }) => {
   const memberAvatars = useGroupMembersAvatars(convoId);
-  const avatarsDiameter = getClosedGroupAvatarsSize(size);
   const firstMemberId = memberAvatars?.firstMember || '';
   const secondMemberID = memberAvatars?.secondMember || '';
 
+  const avatarSize = Math.floor((containerSize * 8) / 11);
+
+  if (!avatarSize) {
+    throw new Error(`Invalid avatar size ${containerSize}`);
+  }
+
+  const { bgColor } = useAvatarBgColor(secondMemberID || convoId);
+
+  if (firstMemberId && secondMemberID) {
+    return (
+      <StyledAvatarClosedContainer containerSize={containerSize}>
+        <Avatar size={avatarSize} pubkey={firstMemberId} onAvatarClick={onAvatarClick} />
+        <Avatar size={avatarSize} pubkey={secondMemberID} onAvatarClick={onAvatarClick} />
+      </StyledAvatarClosedContainer>
+    );
+  }
+
   return (
-    <div className="module-avatar__icon-closed">
-      <Avatar size={avatarsDiameter} pubkey={firstMemberId} onAvatarClick={onAvatarClick} />
-      <Avatar size={avatarsDiameter} pubkey={secondMemberID} onAvatarClick={onAvatarClick} />
-    </div>
+    <StyledAvatarClosedContainer containerSize={containerSize}>
+      <Avatar
+        size={avatarSize}
+        pubkey={UserUtils.getOurPubKeyStrFromCache()}
+        onAvatarClick={onAvatarClick}
+      />
+      <StyledAvatar $diameter={avatarSize} className={`module-avatar`}>
+        <MemberAvatarPlaceHolder bgColor={bgColor} />
+      </StyledAvatar>
+    </StyledAvatarClosedContainer>
   );
 };

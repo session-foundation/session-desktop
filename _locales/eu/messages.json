@@ -777,6 +777,7 @@
   "warning": "Adierazpena",
   "window": "Leihoa",
   "yes": "Bai",
-  "you": "Zuk"
+  "you": "Zuk",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

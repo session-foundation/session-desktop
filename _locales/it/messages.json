@@ -813,6 +813,7 @@
   "warning": "Attenzione",
   "window": "Finestra",
   "yes": "Sì",
-  "you": "Tu"
+  "you": "Tu",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 

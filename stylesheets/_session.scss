@@ -145,16 +145,6 @@ label {
   user-select: none;
 }
 
-.conversation-header {
-  .module-avatar img {
-    box-shadow: 0px 0px 5px 0px rgba(255, 255, 255, 0.2);
-  }
-
-  .search-icon {
-    margin-inline-end: 10px;
-  }
-}
-
 .module-conversation-header {
   position: relative;
   padding: 0px var(--margins-lg) 0px var(--margins-sm);
@@ -267,29 +257,6 @@ label {
   &-sub-message {
     text-align: center;
     margin-top: 20px;
-  }
-}
-
-.image-upload-section {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: absolute;
-  cursor: pointer;
-  width: 80px;
-  height: 80px;
-  border-radius: 100%;
-  background-color: var(--lightbox-background-color);
-  opacity: 0;
-  transition: var(--default-duration);
-
-  &:after {
-    content: 'Edit';
-    color: var(--white-color);
-  }
-
-  &:hover {
-    opacity: 1;
   }
 }
 

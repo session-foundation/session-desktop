@@ -144,8 +144,8 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           tag: v${{ steps.get_version.outputs.VERSION_TAG }}
+          name: 'Session ${{ steps.get_version.outputs.VERSION_TAG }}'
           draft: true
-          name: 'Draft'
           bodyFile: ${{ env.SHOULD_PUBLISH_ALPHA == 'true' && 'build/release-notes-alpha.md' || 'build/release-notes.md' }}
           artifacts: 'dist/latest-linux.yml'
           allowUpdates: true

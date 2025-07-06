@@ -75,28 +75,36 @@ function useHashBasedOnPubkey(pubkey: string) {
   return { loading, hash };
 }
 
+export function useAvatarBgColor(pubkey: string) {
+  const { hash, loading } = useHashBasedOnPubkey(pubkey);
+
+  if (!hash || loading) {
+    return { bgColor: 'var(--primary-color)', loading };
+  }
+
+  const bgColorIndex = hash % avatarPlaceholderColors.length;
+
+  const bgColor = avatarPlaceholderColors[bgColorIndex];
+  return { bgColor, loading };
+}
+
 export const AvatarPlaceHolder = (props: Props) => {
   const { pubkey, diameter, name, dataTestId } = props;
 
-  const { hash, loading } = useHashBasedOnPubkey(pubkey);
+  const { bgColor, loading } = useAvatarBgColor(pubkey);
 
   const diameterWithoutBorder = diameter - 2;
   const viewBox = `0 0 ${diameter} ${diameter}`;
   const r = diameter / 2;
   const rWithoutBorder = diameterWithoutBorder / 2;
-
-  if (loading || !hash) {
-    // return avatar placeholder circle
-    return <MemberAvatarPlaceHolder dataTestId={dataTestId} />;
-  }
-
   const initials = getInitials(name);
 
+  if (loading || !initials) {
+    // return avatar placeholder circle
+    return <MemberAvatarPlaceHolder dataTestId={dataTestId} bgColor={bgColor} />;
+  }
+
   const fontSize = Math.floor(initials.length > 1 ? diameter * 0.4 : diameter * 0.5);
-
-  const bgColorIndex = hash % avatarPlaceholderColors.length;
-
-  const bgColor = avatarPlaceholderColors[bgColorIndex];
 
   return (
     <svg viewBox={viewBox} data-testid={dataTestId}>
@@ -107,8 +115,6 @@ export const AvatarPlaceHolder = (props: Props) => {
           r={rWithoutBorder}
           fill={bgColor}
           shapeRendering="geometricPrecision"
-          stroke={'var(--avatar-border-color)'}
-          strokeWidth="1"
         />
         <text
           fontSize={fontSize}

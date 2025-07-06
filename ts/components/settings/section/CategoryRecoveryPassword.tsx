@@ -9,7 +9,6 @@ import {
   updateHideRecoveryPasswordModal,
   updateLightBoxOptions,
 } from '../../../state/ducks/modalDialog';
-import { showSettingsSection } from '../../../state/ducks/section';
 import { getIsModalVisible } from '../../../state/selectors/modal';
 import { useHideRecoveryPasswordEnabled } from '../../../state/selectors/settings';
 import { THEME_GLOBALS } from '../../../themes/globals';
@@ -27,6 +26,7 @@ import {
   SessionSettingsItemWrapper,
   StyledSettingItem,
 } from '../SessionSettingListItem';
+import { sectionActions } from '../../../state/ducks/section';
 
 const StyledSettingsItemContainer = styled.div`
   p {
@@ -81,7 +81,7 @@ export const SettingsCategoryRecoveryPassword = () => {
 
   const { hasPassword, passwordValid } = usePasswordModal({
     onClose: () => {
-      dispatch(showSettingsSection('privacy'));
+      dispatch(sectionActions.showSettingsSection('privacy'));
     },
   });
 

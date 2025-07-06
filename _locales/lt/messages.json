@@ -780,6 +780,7 @@
   "warning": "Įspėjimas",
   "window": "Langas",
   "yes": "Taip",
-  "you": "Jūs"
+  "you": "Jūs",
+  "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 
