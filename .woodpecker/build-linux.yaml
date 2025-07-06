@@ -2,7 +2,7 @@ when:
   - path:
       exclude: ['*.md']
     event: ["push", "tag"]
-    branch: ["woodpecker-ci", "dev-gravel"]
+    branch: ["woodpecker-ci"]
     evaluate: 'not (CI_COMMIT_MESSAGE contains "[nolinux]") and not (CI_COMMIT_TAG contains "releasetest")'
 
 steps:
