@@ -11,6 +11,7 @@ import { ConversationListItem } from '../conversation-list-item/ConversationList
 import { ed25519Str } from '../../../session/utils/String';
 import { Localizer } from '../../basic/Localizer';
 import { sectionActions } from '../../../state/ducks/section';
+import { localize } from '../../../localization/localeTools';
 
 const MessageRequestListPlaceholder = styled.div`
   color: var(--conversation-tab-text-color);
@@ -61,7 +62,7 @@ export const OverlayMessageRequest = () => {
 
     dispatch(
       updateConfirmModal({
-        title: window.i18n('clearAll'),
+        title: localize('clearAll').toString(),
         i18nMessage: { token: 'messageRequestsClearAllExplanation' },
         onClose,
         okTheme: SessionButtonColor.Danger,
