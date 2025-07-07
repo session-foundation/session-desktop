@@ -57,12 +57,13 @@ export const MessageText = ({ messageId }: Props) => {
       {isDeleted && <SessionIcon iconType="delete" iconSize="small" iconColor={iconColor} />}
       <MessageBubble>
         <MessageBody
-        text={contents || ''}
-        disableRichContent={multiSelectMode}
-        disableJumbomoji={false}
-        isGroup={isOpenOrClosedGroup}
-        isPublic={isPublic}
-      /></MessageBubble>
+          text={contents || ''}
+          disableRichContent={multiSelectMode}
+          disableJumbomoji={false}
+          isGroup={isOpenOrClosedGroup}
+          isPublic={isPublic}
+        />
+      </MessageBubble>
     </StyledMessageText>
   );
 };

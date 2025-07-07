@@ -197,13 +197,13 @@ export const MessageBody = (props: Props) => {
 
   if (disableRichContent) {
     return renderEmoji({
-        text,
-        sizeClass,
-        key: 0,
-        renderNonEmoji: renderNewLines,
-        isGroup,
-        isPublic,
-      });
+      text,
+      sizeClass,
+      key: 0,
+      renderNonEmoji: renderNewLines,
+      isGroup,
+      isPublic,
+    });
   }
 
   if (text && text.length > 6 && text.includes('```')) {

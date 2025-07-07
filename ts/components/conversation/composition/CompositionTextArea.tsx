@@ -300,7 +300,7 @@ export const CompositionTextArea = (props: Props) => {
         })}
       </ul>
     );
-  }, [mention, results, isPublic, handleSelect]);
+  }, [mention, results, focusedItem, isPublic, handleSelect]);
 
   const handleUpdatePopoverPosition = useCallback(() => {
     const pos = inputRef.current?.getCaretCoordinates();
