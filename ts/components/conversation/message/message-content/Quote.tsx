@@ -241,7 +241,12 @@ export const QuoteText = (
           isIncoming ? 'module-quote__primary__text--incoming' : null
         )}
       >
-        <MessageBody text={text} disableLinks={true} disableJumbomoji={true} isGroup={isGroup} />
+        <MessageBody
+          text={text}
+          disableRichContent={true}
+          disableJumbomoji={true}
+          isGroup={isGroup}
+        />
       </div>
     );
   }

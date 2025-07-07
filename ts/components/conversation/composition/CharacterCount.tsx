@@ -1,12 +1,13 @@
 import styled from 'styled-components';
-// import { useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { Constants } from '../../../session';
 import { Localizer } from '../../basic/Localizer';
-import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { useFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { SessionTooltip } from '../../SessionTooltip';
-// import { SessionProInfoVariant, showSessionProInfoDialog } from '../../dialog/SessionProInfoModal';
 import { SessionIcon } from '../../icon';
 import { StyledCTA } from '../../basic/StyledCTA';
+import { SessionProInfoVariant, showSessionProInfoDialog } from '../../dialog/SessionProInfoModal';
+import { formatNumber } from '../../../util/i18n/formatting/generics';
 
 export type CharacterCountProps = {
   count: number;
@@ -31,10 +32,10 @@ const StyledRemainingNumber = styled.span<{ pastLimit: boolean }>`
 `;
 
 export function CharacterCount({ count }: CharacterCountProps) {
-  const alwaysShowFlag = getFeatureFlag('alwaysShowRemainingChars');
-  // const dispatch = useDispatch();
-  const isProAvailable = getFeatureFlag('proAvailable');
-  const mockHasPro = getFeatureFlag('mockUserHasPro');
+  const alwaysShowFlag = useFeatureFlag('alwaysShowRemainingChars');
+  const dispatch = useDispatch();
+  const isProAvailable = useFeatureFlag('proAvailable');
+  const mockHasPro = useFeatureFlag('mockUserHasPro');
 
   // TODO: get pro status from store once available
   const hasPro = mockHasPro;
@@ -45,16 +46,16 @@ export function CharacterCount({ count }: CharacterCountProps) {
   const remaining = charLimit - count;
   const pastLimit = remaining < 0;
 
-  // const handleClick = () => {
-  // if (isProAvailable && !hasPro) {
-  // showSessionProInfoDialog(SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT, dispatch);
-  // }
-  // };
+  const handleClick = () => {
+    if (isProAvailable && !hasPro) {
+      showSessionProInfoDialog(SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT, dispatch);
+    }
+  };
 
   return alwaysShowFlag || remaining <= CHARACTER_SHOW_REMAINING_BUFFER ? (
     <StyledCharacterCountContainer>
       {isProAvailable && !hasPro ? (
-        <StyledCTA>
+        <StyledCTA onClick={handleClick}>
           Send more with{' '}
           <SessionIcon
             sizeIsWidth={true}
@@ -78,7 +79,9 @@ export function CharacterCount({ count }: CharacterCountProps) {
         }
         dataTestId="tooltip-character-count"
       >
-        <StyledRemainingNumber pastLimit={pastLimit}>{remaining}</StyledRemainingNumber>
+        <StyledRemainingNumber pastLimit={pastLimit}>
+          {formatNumber(remaining)}
+        </StyledRemainingNumber>
       </SessionTooltip>
     </StyledCharacterCountContainer>
   ) : null;

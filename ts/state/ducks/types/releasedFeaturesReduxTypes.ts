@@ -28,6 +28,7 @@ export const isSessionFeatureFlag = (flag: unknown): flag is SessionFeatureFlagK
 };
 
 export const getFeatureFlag = (flag: SessionFeatureFlagKeys) => window.sessionFeatureFlags[flag];
+export const useFeatureFlag = (flag: SessionFeatureFlagKeys) => getFeatureFlag(flag);
 
 export type SessionFlags = SessionFeatureFlags & {
   debug: {
