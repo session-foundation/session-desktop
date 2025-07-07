@@ -43,7 +43,6 @@ export const MessageItem = () => {
   if (isEmpty(text)) {
     return null;
   }
-  const withoutHtmlTags = text.replaceAll(/(<([^>]+)>)/gi, '');
 
   return (
     <div className="module-conversation-list-item__message">
@@ -57,7 +56,7 @@ export const MessageItem = () => {
           <TypingAnimation />
         ) : (
           <MessageBody
-            text={withoutHtmlTags}
+            text={text}
             disableJumbomoji={true}
             disableRichContent={true}
             isGroup={isGroup}
