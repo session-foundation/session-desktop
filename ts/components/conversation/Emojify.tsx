@@ -40,5 +40,9 @@ export const Emojify = (props: Props): JSX.Element => {
   }
 
   // NOTE (Will): This should be em and not rem because we want to keep the inherited font size from the parent element and not the root
-  return <span style={{ fontSize: `${size}em`, userSelect: 'inherit' }}>{rendered}</span>;
+  return (
+    <span style={{ fontSize: `${size}em`, userSelect: 'inherit' }} className="message-body">
+      {rendered}
+    </span>
+  );
 };

@@ -102,7 +102,7 @@ export const InteractionItem = (props: InteractionItemProps) => {
         <MessageBody
           text={text}
           disableJumbomoji={true}
-          disableLinks={true}
+          disableRichContent={true}
           isGroup={isGroup}
           isPublic={isCommunity}
         />

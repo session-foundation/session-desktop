@@ -66,7 +66,7 @@ export const MessageBodyHighlight = (props: {
     return (
       <MessageBody
         disableJumbomoji={true}
-        disableLinks={true}
+        disableRichContent={true}
         text={text}
         isGroup={isGroup}
         isPublic={isPublic}

@@ -27,6 +27,8 @@ import {
 import { getSelectedConversationKey } from '../../state/selectors/selectedConversation';
 import { SessionMessagesList } from './SessionMessagesList';
 import { TypingBubble } from './TypingBubble';
+import { StyledMessageBubble } from './message/message-content/MessageBubble';
+import { StyledMentionAnother } from './AddMentions';
 
 export type SessionMessageListProps = {
   messageContainerRef: RefObject<HTMLDivElement>;
@@ -61,6 +63,14 @@ const StyledMessagesContainer = styled.div`
     height: 40px;
     width: 40px;
     border-radius: 50%;
+  }
+
+  ${StyledMessageBubble} {
+    user-select: text;
+  }
+
+  ${StyledMentionAnother} {
+    user-select: all;
   }
 `;
 

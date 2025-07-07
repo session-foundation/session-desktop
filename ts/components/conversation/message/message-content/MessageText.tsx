@@ -15,6 +15,7 @@ import {
 } from '../../../../state/selectors/selectedConversation';
 import type { WithMessageId } from '../../../../session/types/with';
 import { localize } from '../../../../localization/localeTools';
+import { MessageBubble } from './MessageBubble';
 
 type Props = WithMessageId;
 
@@ -54,13 +55,14 @@ export const MessageText = ({ messageId }: Props) => {
   return (
     <StyledMessageText dir="auto" className={clsx('module-message__text')} isDeleted={isDeleted}>
       {isDeleted && <SessionIcon iconType="delete" iconSize="small" iconColor={iconColor} />}
-      <MessageBody
-        text={contents}
-        disableLinks={multiSelectMode}
+      <MessageBubble>
+        <MessageBody
+        text={contents || ''}
+        disableRichContent={multiSelectMode}
         disableJumbomoji={false}
         isGroup={isOpenOrClosedGroup}
         isPublic={isPublic}
-      />
+      /></MessageBubble>
     </StyledMessageText>
   );
 };

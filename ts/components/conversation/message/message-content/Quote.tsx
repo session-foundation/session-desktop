@@ -244,7 +244,7 @@ export const QuoteText = (
       >
         <MessageBody
           text={text}
-          disableLinks={true}
+          disableRichContent={true}
           disableJumbomoji={true}
           isGroup={isGroup}
           isPublic={isPublic}
