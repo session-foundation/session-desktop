@@ -11,12 +11,12 @@ import { Flex } from '../basic/Flex';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
 import { SessionSpinner } from '../loading';
 import { localize } from '../../localization/localeTools';
-import { I18nSubText } from '../basic/I18nSubText';
 import { MAX_SUBREQUESTS_COUNT } from '../../session/apis/snode_api/SnodeRequestTypes';
 import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
 import { SimpleSessionInput } from '../inputs/SessionInput';
 import { SpacerMD } from '../basic/Text';
 import { ClearInputButton } from '../inputs/ClearInputButton';
+import { ModalDescription } from './shared/ModalDescriptionContainer';
 
 type Props = {
   conversationId: string;
@@ -106,10 +106,11 @@ export const AddModeratorsDialog = (props: Props) => {
       }
     >
       <Flex $container={true} $flexDirection="column" $alignItems="center">
-        <I18nSubText
+        <ModalDescription
           dataTestId="modal-description"
           localizerProps={{ token: 'addAdminsDescription' }}
         />
+
         <SimpleSessionInput
           placeholder={localize('accountId').toString()}
           onValueChanged={setInputBoxValue}

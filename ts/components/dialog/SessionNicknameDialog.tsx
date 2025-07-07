@@ -4,16 +4,14 @@ import { useDispatch } from 'react-redux';
 import { ConvoHub } from '../../session/conversations';
 import { changeNickNameModal } from '../../state/ducks/modalDialog';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
-import { SpacerLG } from '../basic/Text';
 import { useConversationRealName, useNickname } from '../../hooks/useParamSelector';
 import { PubKey } from '../../session/types';
-import { Localizer } from '../basic/Localizer';
 import { localize } from '../../localization/localeTools';
 import LIBSESSION_CONSTANTS from '../../session/utils/libsession/libsession_constants';
 import { SimpleSessionInput } from '../inputs/SessionInput';
 import { ClearInputButton } from '../inputs/ClearInputButton';
 import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
-import { StyledModalDescriptionContainer } from './shared/ModalDescriptionContainer';
+import { ModalDescription } from './shared/ModalDescriptionContainer';
 
 type Props = {
   conversationId: string;
@@ -104,15 +102,13 @@ export const SessionNicknameDialog = (props: Props) => {
         </ButtonChildrenContainer>
       }
     >
-      <StyledModalDescriptionContainer>
-        <Localizer
-          token="nicknameDescription"
-          args={{
-            name: displayName || PubKey.shorten(conversationId),
-          }}
-        />
-        <SpacerLG />
-      </StyledModalDescriptionContainer>
+      <ModalDescription
+        dataTestId="modal-description"
+        localizerProps={{
+          token: 'nicknameDescription',
+          args: { name: displayName || PubKey.shorten(conversationId) },
+        }}
+      />
       <NicknameInput
         onConfirm={() => void saveNickname(nickname)}
         nickname={nickname}

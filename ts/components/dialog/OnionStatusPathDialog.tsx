@@ -24,7 +24,7 @@ import { getCrowdinLocale } from '../../util/i18n/shared';
 import { localize } from '../../localization/localeTools';
 import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
-import { StyledModalDescriptionContainer } from './shared/ModalDescriptionContainer';
+import { ModalDescription } from './shared/ModalDescriptionContainer';
 
 type StatusLightType = {
   glowing?: boolean;
@@ -130,9 +130,10 @@ const OnionPathModalInner = () => {
 
   return (
     <>
-      <StyledModalDescriptionContainer>
-        {localize('onionRoutingPathDescription')}
-      </StyledModalDescriptionContainer>
+      <ModalDescription
+        dataTestId="modal-description"
+        localizerProps={{ token: 'onionRoutingPathDescription' }}
+      />
       <StyledOnionNodeList>
         <Flex $container={true}>
           <StyledLightsContainer>

@@ -7,9 +7,9 @@ import { useHotkey } from '../../../hooks/useHotkey';
 import { useConversationsNicknameRealNameOrShortenPubkey } from '../../../hooks/useParamSelector';
 import { updateBlockOrUnblockModal } from '../../../state/ducks/modalDialog';
 import { BlockedNumberController } from '../../../util';
-import { Localizer, type LocalizerProps } from '../../basic/Localizer';
+import { type LocalizerProps } from '../../basic/Localizer';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../../basic/SessionButton';
-import { StyledModalDescriptionContainer } from '../shared/ModalDescriptionContainer';
+import { ModalDescription } from '../shared/ModalDescriptionContainer';
 import { BlockOrUnblockModalState } from './BlockOrUnblockModalState';
 import { localize } from '../../../localization/localeTools';
 import { ButtonChildrenContainer, SessionWrapperModal2 } from '../../SessionWrapperModal2';
@@ -103,15 +103,13 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
           <SessionButton
             buttonType={SessionButtonType.Simple}
             onClick={closeModal}
-            text={window.i18n('cancel')}
+            text={localize('cancel').toString()}
             dataTestId="session-confirm-cancel-button"
           />
         </ButtonChildrenContainer>
       }
     >
-      <StyledModalDescriptionContainer data-testid="modal-description">
-        <Localizer {...args} />
-      </StyledModalDescriptionContainer>
+      <ModalDescription dataTestId="modal-description" localizerProps={args} />
     </SessionWrapperModal2>
   );
 };

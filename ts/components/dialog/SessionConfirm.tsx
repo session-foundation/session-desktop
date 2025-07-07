@@ -9,11 +9,11 @@ import { updateConfirmModal } from '../../state/ducks/modalDialog';
 import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionRadioGroup, SessionRadioItems } from '../basic/SessionRadioGroup';
-import { I18nSubText } from '../basic/I18nSubText';
 import { Flex } from '../basic/Flex';
 import type { LocalizerProps } from '../basic/Localizer';
 import { SpacerSM } from '../basic/Text';
 import { SessionSpinner } from '../loading';
+import { ModalDescription } from './shared/ModalDescriptionContainer';
 
 const StyledMessageContainer = styled(Flex)`
   text-align: center;
@@ -203,7 +203,7 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
         $alignItems="center"
       >
         {i18nMessage ? (
-          <I18nSubText localizerProps={i18nMessage} dataTestId="modal-description" />
+          <ModalDescription dataTestId="modal-description" localizerProps={i18nMessage} />
         ) : null}
       </StyledMessageContainer>
       {radioOptions && chosenOption !== '' ? (

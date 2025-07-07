@@ -4,8 +4,7 @@ import useKey from 'react-use/lib/useKey';
 import { updateQuitModal, type QuitModalProps } from '../../state/onboarding/ducks/modals';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
-import { Localizer } from '../basic/Localizer';
-import { StyledModalDescriptionContainer } from './shared/ModalDescriptionContainer';
+import { ModalDescription } from './shared/ModalDescriptionContainer';
 import { localize } from '../../localization/localeTools';
 
 export const QuitModal = (props: QuitModalProps) => {
@@ -76,9 +75,7 @@ export const QuitModal = (props: QuitModalProps) => {
         </ButtonChildrenContainer>
       }
     >
-      <StyledModalDescriptionContainer data-testid="modal-description">
-        <Localizer {...i18nMessage} />
-      </StyledModalDescriptionContainer>
+      <ModalDescription dataTestId="modal-description" localizerProps={i18nMessage} />
     </SessionWrapperModal2>
   );
 };

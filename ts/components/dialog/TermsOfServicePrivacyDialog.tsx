@@ -4,7 +4,7 @@ import { updateTermsOfServicePrivacyModal } from '../../state/onboarding/ducks/m
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
 import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
 import { localize } from '../../localization/localeTools';
-import { StyledModalDescriptionContainer } from './shared/ModalDescriptionContainer';
+import { ModalDescription } from './shared/ModalDescriptionContainer';
 
 export type TermsOfServicePrivacyDialogProps = {
   show: boolean;
@@ -52,9 +52,12 @@ export function TermsOfServicePrivacyDialog(props: TermsOfServicePrivacyDialogPr
         </ButtonChildrenContainer>
       }
     >
-      <StyledModalDescriptionContainer>
-        {localize('urlOpenBrowser')}
-      </StyledModalDescriptionContainer>
+      <ModalDescription
+        dataTestId="modal-description"
+        localizerProps={{
+          token: 'urlOpenBrowser',
+        }}
+      />
     </SessionWrapperModal2>
   );
 }

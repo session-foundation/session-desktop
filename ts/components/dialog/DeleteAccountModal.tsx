@@ -11,10 +11,9 @@ import {
   sendConfigMessageAndDeleteEverything,
 } from '../../util/accountManager';
 import { SessionRadioGroup } from '../basic/SessionRadioGroup';
-import { Localizer } from '../basic/Localizer';
 import { localize } from '../../localization/localeTools';
 import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
-import { StyledModalDescriptionContainer } from './shared/ModalDescriptionContainer';
+import { ModalDescription } from './shared/ModalDescriptionContainer';
 
 const DEVICE_ONLY = 'device_only' as const;
 const DEVICE_AND_NETWORK = 'device_and_network' as const;
@@ -43,9 +42,11 @@ const DescriptionBeforeAskingConfirmation = (props: {
 
   return (
     <>
-      <StyledModalDescriptionContainer data-testid="modal-description" style={{ maxWidth: '40ch' }}>
-        <Localizer token="clearDataAllDescription" />
-      </StyledModalDescriptionContainer>
+      <ModalDescription
+        dataTestId="modal-description"
+        style={{ maxWidth: '40ch' }}
+        localizerProps={{ token: 'clearDataAllDescription' }}
+      />
       <SessionRadioGroup
         group="delete_account"
         initialItem={deleteMode}
@@ -63,11 +64,15 @@ const DescriptionBeforeAskingConfirmation = (props: {
 
 const DescriptionWhenAskingConfirmation = (props: { deleteMode: DeleteModes }) => {
   return (
-    <StyledModalDescriptionContainer data-testid="modal-description">
-      {props.deleteMode === 'device_and_network'
-        ? localize('clearDeviceAndNetworkConfirm').toString()
-        : localize('clearDeviceDescription').toString()}
-    </StyledModalDescriptionContainer>
+    <ModalDescription
+      dataTestId="modal-description"
+      localizerProps={{
+        token:
+          props.deleteMode === 'device_and_network'
+            ? 'clearDeviceAndNetworkConfirm'
+            : 'clearDeviceDescription',
+      }}
+    />
   );
 };
 

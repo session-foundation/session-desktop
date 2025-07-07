@@ -8,7 +8,7 @@ import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/S
 import { SessionSpinner } from '../loading';
 import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
 import { localize } from '../../localization/localeTools';
-import { StyledModalDescriptionContainer } from './shared/ModalDescriptionContainer';
+import { ModalDescription } from './shared/ModalDescriptionContainer';
 
 type Props = {
   reaction: string;
@@ -68,9 +68,10 @@ export const ReactClearAllModal = (props: Props) => {
         </ButtonChildrenContainer>
       }
     >
-      <StyledModalDescriptionContainer>
-        {localize('emojiReactsClearAll').withArgs({ emoji: reaction }).toString()}
-      </StyledModalDescriptionContainer>
+      <ModalDescription
+        dataTestId="modal-description"
+        localizerProps={{ token: 'emojiReactsClearAll', args: { emoji: reaction } }}
+      />
 
       <SessionSpinner loading={clearingInProgress} />
     </SessionWrapperModal2>

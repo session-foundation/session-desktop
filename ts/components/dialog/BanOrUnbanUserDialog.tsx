@@ -18,8 +18,8 @@ import { SessionSpinner } from '../loading';
 import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
 import { localize } from '../../localization/localeTools';
 import { SimpleSessionInput } from '../inputs/SessionInput';
-import { I18nSubText } from '../basic/I18nSubText';
 import { SpacerSM } from '../basic/Text';
+import { ModalDescription } from './shared/ModalDescriptionContainer';
 
 async function banOrUnBanUserCall(
   convo: ConversationModel,
@@ -159,10 +159,9 @@ export const BanOrUnBanUserDialog = (props: {
       }
     >
       <Flex $container={true} $flexDirection="column" $alignItems="center" width="100%">
-        <I18nSubText
+        <ModalDescription
           dataTestId="modal-description"
           localizerProps={{ token: isBan ? 'banUserDescription' : 'banUnbanUserDescription' }}
-          style={{ textAlign: 'center' }}
         />
         <SimpleSessionInput
           inputRef={inputRef}

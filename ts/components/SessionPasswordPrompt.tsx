@@ -16,8 +16,8 @@ import { localize } from '../localization/localeTools';
 import { ButtonChildrenContainer, SessionWrapperModal2 } from './SessionWrapperModal2';
 import { themeStore } from '../state/theme/store';
 import { ShowHideSessionInput } from './inputs/SessionInput';
-import { StyledModalDescriptionContainer } from './dialog/shared/ModalDescriptionContainer';
 import { sleepFor } from '../session/utils/Promise';
+import { ModalDescription } from './dialog/shared/ModalDescriptionContainer';
 
 const MAX_LOGIN_TRIES = 3;
 
@@ -195,9 +195,12 @@ const SessionPasswordPromptInner = () => {
       {loading ? (
         <SessionSpinner loading={true} />
       ) : clearDataView ? (
-        <StyledModalDescriptionContainer>
-          <Localizer token="clearDeviceDescription" />
-        </StyledModalDescriptionContainer>
+        <ModalDescription
+          dataTestId="modal-description"
+          localizerProps={{
+            token: 'clearDeviceDescription',
+          }}
+        />
       ) : (
         <PasswordPrompt
           onEnterPressed={initLogin}

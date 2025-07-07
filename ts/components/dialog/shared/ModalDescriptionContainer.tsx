@@ -1,9 +1,24 @@
+import type { SessionDataTestId } from 'react';
 import styled from 'styled-components';
+import type { CSSProperties } from 'styled-components';
+import { Localizer, type LocalizerProps } from '../../basic/Localizer';
 
-export const StyledModalDescriptionContainer = styled.div`
+const StyledModalDescriptionContainer = styled.div`
   padding: var(--margins-md);
   max-width: 500px;
   line-height: 1.2;
   text-align: justify;
   font-size: var(--font-size-md);
 `;
+
+export function ModalDescription(props: {
+  localizerProps: LocalizerProps;
+  dataTestId: SessionDataTestId;
+  style?: CSSProperties;
+}) {
+  return (
+    <StyledModalDescriptionContainer data-testid={props.dataTestId} style={props.style}>
+      <Localizer {...props.localizerProps} />
+    </StyledModalDescriptionContainer>
+  );
+}

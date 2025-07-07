@@ -7,8 +7,8 @@ import { MessageInteraction } from '../../interactions';
 import { OpenUrlModalState, updateOpenUrlModal } from '../../state/ducks/modalDialog';
 import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
-import { I18nSubText } from '../basic/I18nSubText';
 import { SpacerSM, SpacerXS } from '../basic/Text';
+import { ModalDescription } from './shared/ModalDescriptionContainer';
 
 const StyledScrollDescriptionContainer = styled.div`
   max-height: 150px;
@@ -63,9 +63,9 @@ export function OpenUrlModal(props: OpenUrlModalState) {
       }
     >
       <StyledScrollDescriptionContainer>
-        <I18nSubText
-          localizerProps={{ token: 'urlOpenDescription', asTag: 'span', args: { url } }}
+        <ModalDescription
           dataTestId="modal-description"
+          localizerProps={{ token: 'urlOpenDescription', asTag: 'span', args: { url } }}
         />
       </StyledScrollDescriptionContainer>
       <SpacerSM />
