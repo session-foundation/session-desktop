@@ -321,7 +321,6 @@ export const ReactListModal = (props: Props) => {
   };
 
   const handleClearReactions = () => {
-    handleClose();
     dispatch(
       updateReactClearAllModal({
         reaction: currentReact,

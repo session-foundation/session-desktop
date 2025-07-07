@@ -122,15 +122,6 @@ const handleKeyEscape = (
 // #endregion
 
 const StyledEditProfileDialog = styled.div`
-  .session-modal {
-    width: 468px;
-    .session-modal__body {
-      width: calc(100% - 80px);
-      margin: 0 auto;
-      overflow: initial;
-    }
-  }
-
   .avatar-center-inner {
     position: relative;
   }
