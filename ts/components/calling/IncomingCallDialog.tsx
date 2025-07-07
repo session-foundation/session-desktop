@@ -7,9 +7,10 @@ import { CallManager } from '../../session/utils';
 import { ed25519Str } from '../../session/utils/String';
 import { callTimeoutMs } from '../../session/utils/calling/CallManager';
 import { getHasIncomingCall, getHasIncomingCallFrom } from '../../state/selectors/call';
-import { SessionWrapperModal } from '../SessionWrapperModal';
 import { Avatar, AvatarSize } from '../avatar/Avatar';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
+import { localize } from '../../localization/localeTools';
+import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
 
 export const CallWindow = styled.div`
   position: absolute;
@@ -76,28 +77,32 @@ export const IncomingCallDialog = () => {
 
   if (hasIncomingCall) {
     return (
-      <SessionWrapperModal
-        title={window.i18n('callsIncoming', {
-          name: from ?? window.i18n('unknown'),
-        })}
+      <SessionWrapperModal2
+        title={localize('callsIncoming')
+          .withArgs({
+            name: from ?? localize('unknown').toString(),
+          })
+          .toString()}
+        buttonChildren={
+          <ButtonChildrenContainer>
+            <SessionButton
+              text={localize('accept').toString()}
+              buttonType={SessionButtonType.Simple}
+              onClick={handleAcceptIncomingCall}
+            />
+            <SessionButton
+              text={localize('decline').toString()}
+              buttonColor={SessionButtonColor.Danger}
+              buttonType={SessionButtonType.Simple}
+              onClick={handleDeclineIncomingCall}
+            />
+          </ButtonChildrenContainer>
+        }
       >
         <IncomingCallAvatarContainer>
           <Avatar size={AvatarSize.XL} pubkey={incomingCallFromPubkey} />
         </IncomingCallAvatarContainer>
-        <div className="session-modal__button-group">
-          <SessionButton
-            text={window.i18n('accept')}
-            buttonType={SessionButtonType.Simple}
-            onClick={handleAcceptIncomingCall}
-          />
-          <SessionButton
-            text={window.i18n('decline')}
-            buttonColor={SessionButtonColor.Danger}
-            buttonType={SessionButtonType.Simple}
-            onClick={handleDeclineIncomingCall}
-          />
-        </div>
-      </SessionWrapperModal>
+      </SessionWrapperModal2>
     );
   }
   // display spinner while connecting

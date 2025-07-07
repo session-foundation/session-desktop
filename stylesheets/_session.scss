@@ -243,11 +243,6 @@ label {
 }
 
 .session-confirm {
-  &-wrapper {
-    .session-modal__body .session-modal__centered {
-      text-align: center;
-    }
-  }
 
   &-main-message {
     font-size: var(--font-size-md);
@@ -285,15 +280,6 @@ label {
 
 input {
   user-select: text;
-}
-
-.contact-selection-list {
-  display: flex;
-  flex-direction: column;
-  width: 400px;
-  max-height: 240px;
-  overflow-y: auto;
-  margin: var(--margins-sm);
 }
 
 .session-confirm-wrapper {

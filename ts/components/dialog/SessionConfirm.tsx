@@ -9,18 +9,17 @@ import { updateConfirmModal } from '../../state/ducks/modalDialog';
 import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionRadioGroup, SessionRadioItems } from '../basic/SessionRadioGroup';
-import { SessionSpinner } from '../loading';
 import { I18nSubText } from '../basic/I18nSubText';
 import { Flex } from '../basic/Flex';
-import { SpacerSM, SpacerXS } from '../basic/Text';
 import type { LocalizerProps } from '../basic/Localizer';
+import { SpacerSM } from '../basic/Text';
+import { SessionSpinner } from '../loading';
 
 const StyledMessageContainer = styled(Flex)`
   text-align: center;
 `;
 
 const ConfirmationButtons = ({
-  isLoading,
   okText,
   cancelText,
   hideCancel,
@@ -29,7 +28,6 @@ const ConfirmationButtons = ({
   onClickOkHandler,
   onClickCancelHandler,
 }: {
-  isLoading: boolean;
   okText: string;
   cancelText: string;
   hideCancel: boolean;
@@ -39,33 +37,28 @@ const ConfirmationButtons = ({
   onClickCancelHandler: () => Promise<void> | void;
 }) => {
   return (
-    <>
-      <SessionSpinner loading={isLoading} />
-      <SpacerSM />
-      <ButtonChildrenContainer>
+    <ButtonChildrenContainer>
+      <SessionButton
+        text={okText}
+        buttonColor={okTheme}
+        buttonType={SessionButtonType.Simple}
+        fontWeight={500}
+        onClick={onClickOkHandler}
+        margin={'var(--margins-xs)'}
+        dataTestId="session-confirm-ok-button"
+      />
+      {!hideCancel && (
         <SessionButton
-          text={okText}
-          buttonColor={okTheme}
+          text={cancelText}
+          buttonColor={!okTheme ? closeTheme : undefined}
           buttonType={SessionButtonType.Simple}
           fontWeight={500}
-          onClick={onClickOkHandler}
+          onClick={onClickCancelHandler}
           margin={'var(--margins-xs)'}
-          dataTestId="session-confirm-ok-button"
+          dataTestId="session-confirm-cancel-button"
         />
-        {!hideCancel && (
-          <SessionButton
-            text={cancelText}
-            buttonColor={!okTheme ? closeTheme : undefined}
-            buttonType={SessionButtonType.Simple}
-            fontWeight={500}
-            onClick={onClickCancelHandler}
-            margin={'var(--margins-xs)'}
-            dataTestId="session-confirm-cancel-button"
-          />
-        )}
-      </ButtonChildrenContainer>
-      <SpacerXS />
-    </>
+      )}
+    </ButtonChildrenContainer>
   );
 };
 
@@ -192,7 +185,6 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
       $contentMinWidth={contentMinWidth}
       buttonChildren={
         <ConfirmationButtons
-          isLoading={isLoading}
           okText={okText}
           cancelText={cancelText}
           hideCancel={hideCancel}
@@ -227,6 +219,8 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
         />
       ) : null}
       {children}
+      <SessionSpinner loading={isLoading} />
+      <SpacerSM />
     </SessionWrapperModal2>
   );
 };

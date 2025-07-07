@@ -113,7 +113,6 @@ export function ConversationSettingsDialog(props: ConversationSettingsModalState
             : undefined
         }
         $contentMaxWidth="500px"
-        $contentMinWidth="400px"
         bigHeader={true}
       >
         <Flex $container={true} $flexDirection="column" $alignItems="flex-start" width="100%">

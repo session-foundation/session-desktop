@@ -15,11 +15,9 @@ import {
 } from '../../../state/onboarding/selectors/registration';
 import { deleteDbLocally } from '../../../util/accountManager';
 import { Flex } from '../../basic/Flex';
-import { SessionButtonColor } from '../../basic/SessionButton';
 import type { LocalizerProps } from '../../basic/Localizer';
 import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
-import { localize } from '../../../localization/localeTools';
 
 /** Min height should match the onboarding step with the largest height this prevents the loading spinner from jumping around while still keeping things centered  */
 const StyledBackButtonContainer = styled(Flex)`
@@ -94,10 +92,6 @@ const BackButton = ({
 
           dispatch(
             updateQuitModal({
-              title: localize('warning').toString(),
-              i18nMessage: quitI18nMessageArgs,
-              okTheme: SessionButtonColor.Danger,
-              okText: localize('quitButton').toString(),
               onClickOk: async () => {
                 try {
                   window.log.warn(
@@ -116,6 +110,7 @@ const BackButton = ({
               onClickCancel: () => {
                 window.inboxStore?.dispatch(updateQuitModal(null));
               },
+              i18nMessage: quitI18nMessageArgs,
             })
           );
           return;

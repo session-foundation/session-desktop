@@ -40,37 +40,6 @@
   }
 }
 
-.add-moderators-dialog,
-.remove-moderators-dialog {
-  .content {
-    max-width: 100% !important;
-  }
-  .contact-selection-list {
-    width: 100%;
-  }
-
-  .buttons {
-    margin: 8px;
-  }
-
-  .group-name {
-    font-size: larger;
-  }
-
-  .titleText {
-    font-size: large;
-    text-align: center;
-  }
-
-  .no-contacts {
-    text-align: center;
-  }
-
-  .hidden {
-    display: none;
-  }
-}
-
 .loki-dialog {
   display: flex;
   align-items: center;
@@ -116,28 +85,6 @@
   .session-confirm-wrapper {
     .session-modal__body {
       width: 376px;
-    }
-  }
-}
-
-.no-body-padding {
-  .session-confirm-wrapper {
-    .session-modal__body {
-      padding: 0;
-      .session-modal__centered {
-        margin: 0;
-      }
-    }
-  }
-}
-
-.user-details-dialog {
-  .session-confirm-wrapper {
-    .session-modal__header {
-      max-width: 400px;
-    }
-    .session-modal__body {
-      width: 400px;
     }
   }
 }

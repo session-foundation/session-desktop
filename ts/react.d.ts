@@ -310,6 +310,8 @@ declare module 'react' {
     | 'your-account-id'
     | 'hide-recovery-phrase-toggle'
     | 'reveal-recovery-phrase-toggle'
+    | 'hide-password-input-toggle'
+    | 'reveal-password-input-toggle'
     | 'resend-promote-button'
     | 'continue-button'
     | 'back-button'

@@ -4,11 +4,11 @@ import styled from 'styled-components';
 import { SettingsKey } from '../../data/settings-key';
 import { updateHideRecoveryPasswordModal } from '../../state/ducks/modalDialog';
 import { sectionActions } from '../../state/ducks/section';
-import { SessionWrapperModal } from '../SessionWrapperModal';
-import { Flex } from '../basic/Flex';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SpacerMD } from '../basic/Text';
 import { Localizer } from '../basic/Localizer';
+import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import { localize } from '../../localization/localeTools';
 
 const StyledDescriptionContainer = styled.div`
   width: 280px;
@@ -41,7 +41,7 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
   const leftButtonProps =
     state === 'firstWarning'
       ? {
-          text: window.i18n('theContinue'),
+          text: localize('theContinue').toString(),
           buttonColor: SessionButtonColor.Danger,
           onClick: () => {
             dispatch(updateHideRecoveryPasswordModal({ state: 'secondWarning' }));
@@ -49,7 +49,7 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
           dataTestId: 'session-confirm-ok-button' as const,
         }
       : {
-          text: window.i18n('cancel'),
+          text: localize('cancel').toString(),
           onClick: onClose,
           dataTestId: 'session-confirm-cancel-button' as const,
         };
@@ -57,12 +57,12 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
   const rightButtonProps =
     state === 'firstWarning'
       ? {
-          text: window.i18n('cancel'),
+          text: localize('cancel').toString(),
           onClick: onClose,
           dataTestId: 'session-confirm-cancel-button' as const,
         }
       : {
-          text: window.i18n('yes'),
+          text: localize('yes').toString(),
           buttonColor: SessionButtonColor.Danger,
           onClick: () => {
             void onConfirmation();
@@ -71,12 +71,16 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
         };
 
   return (
-    <SessionWrapperModal
-      title={window.i18n('recoveryPasswordHidePermanently')}
+    <SessionWrapperModal2
+      title={localize('recoveryPasswordHidePermanently').toString()}
       onClose={onClose}
       showExitIcon={false}
-      showHeader={true}
-      additionalClassName="no-body-padding"
+      buttonChildren={
+        <ButtonChildrenContainer>
+          <SessionButton {...leftButtonProps} buttonType={SessionButtonType.Simple} />
+          <SessionButton {...rightButtonProps} buttonType={SessionButtonType.Simple} />
+        </ButtonChildrenContainer>
+      }
     >
       <StyledDescriptionContainer data-testid="modal-description">
         <Localizer
@@ -88,10 +92,6 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
         />
       </StyledDescriptionContainer>
       <SpacerMD />
-      <Flex $container={true} $justifyContent="center" $alignItems="center" width="100%">
-        <SessionButton {...leftButtonProps} buttonType={SessionButtonType.Ghost} />
-        <SessionButton {...rightButtonProps} buttonType={SessionButtonType.Ghost} />
-      </Flex>
-    </SessionWrapperModal>
+    </SessionWrapperModal2>
   );
 }

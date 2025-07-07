@@ -110,6 +110,7 @@ const StyledDescription = styled.p<{ expanded: boolean }>`
   -webkit-box-orient: vertical;
   // some padding so we always have room to show the ellipsis, if needed
   padding-inline: var(--margins-sm);
+  max-width: 300px; // setting max width so the dialog doesn't look too wide when there is a description set
 `;
 
 const StyledViewMoreButton = styled.button`

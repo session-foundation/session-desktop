@@ -4,7 +4,8 @@ import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 type ShowHideButtonStrings<T extends string> = { hide: T; show: T };
-type ShowHideButtonProps = {
+
+export type ShowHideButtonProps = {
   forceShow: boolean;
   toggleForceShow: () => void;
   hasError: boolean;

@@ -11,7 +11,6 @@ import { useHotkey } from '../../../hooks/useHotkey';
 import { useOurAvatarPath, useOurConversationUsername } from '../../../hooks/useParamSelector';
 import { ProfileManager } from '../../../session/profile_manager/ProfileManager';
 import { editProfileModal } from '../../../state/ducks/modalDialog';
-import { SessionWrapperModal } from '../../SessionWrapperModal';
 import { Flex } from '../../basic/Flex';
 import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
 import { Spacer2XL, Spacer3XL, SpacerLG, SpacerSM, SpacerXL } from '../../basic/Text';
@@ -25,6 +24,7 @@ import { useEditProfilePictureCallback } from '../../menuAndSettingsHooks/useEdi
 import { SimpleSessionInput } from '../../inputs/SessionInput';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { SessionLucideIconButton } from '../../icon/SessionIconButton';
+import { ButtonChildrenContainer, SessionWrapperModal2 } from '../../SessionWrapperModal2';
 
 // #region Shortcuts
 const handleKeyQRMode = (
@@ -261,13 +261,12 @@ export const EditProfileDialog = () => {
 
   return (
     <StyledEditProfileDialog className="edit-profile-dialog" data-testid="edit-profile-dialog">
-      <SessionWrapperModal
+      <SessionWrapperModal2
         title={localize('profile').toString()}
         headerIconButtons={backButton}
-        headerReverse={true}
+        // headerReverse={true}
         showExitIcon={true}
         onClose={closeDialog}
-        additionalClassName={mode === 'default' ? 'edit-profile-default' : undefined}
       >
         {mode === 'qr' ? (
           <QRView sessionID={us} setMode={setMode} />
@@ -340,13 +339,7 @@ export const EditProfileDialog = () => {
           <SessionSpinner loading={loading} height={'74px'} />
           {!loading ? <Spacer2XL /> : null}
           {mode === 'default' || mode === 'qr' || mode === 'lightbox' ? (
-            <Flex
-              $container={true}
-              $justifyContent={mode === 'default' ? 'space-between' : 'center'}
-              $alignItems="center"
-              $flexGap="var(--margins-lg)"
-              width={'100%'}
-            >
+            <ButtonChildrenContainer>
               <CopyToClipboardButton
                 buttonColor={SessionButtonColor.PrimaryDark}
                 copyContent={us}
@@ -364,22 +357,24 @@ export const EditProfileDialog = () => {
                   dataTestId="view-qr-code-button"
                 />
               ) : null}
-            </Flex>
+            </ButtonChildrenContainer>
           ) : (
             !loading && (
-              <SessionButton
-                text={localize('save').toString()}
-                onClick={onClickOK}
-                disabled={cannotContinue}
-                buttonColor={SessionButtonColor.PrimaryDark}
-                dataTestId="save-button-profile-update"
-              />
+              <ButtonChildrenContainer>
+                <SessionButton
+                  text={localize('save').toString()}
+                  onClick={onClickOK}
+                  disabled={cannotContinue}
+                  buttonColor={SessionButtonColor.PrimaryDark}
+                  dataTestId="save-button-profile-update"
+                />
+              </ButtonChildrenContainer>
             )
           )}
 
           {!loading ? <SpacerSM /> : null}
         </StyledSessionIdSection>
-      </SessionWrapperModal>
+      </SessionWrapperModal2>
     </StyledEditProfileDialog>
   );
 };

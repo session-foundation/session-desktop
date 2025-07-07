@@ -145,7 +145,7 @@ export const SessionWrapperModal = (props: SessionWrapperModalType) => {
             ) : null}
 
             <div className="session-modal__body">
-              <div className="session-modal__centered">
+              <Flex $container={true} $alignItems="center" $flexDirection="column">
                 {props.children}
 
                 <div className="session-modal__button-group">
@@ -164,7 +164,7 @@ export const SessionWrapperModal = (props: SessionWrapperModalType) => {
                     </SessionButton>
                   ) : null}
                 </div>
-              </div>
+              </Flex>
             </div>
           </div>
         </div>

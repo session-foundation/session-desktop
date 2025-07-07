@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import styled from 'styled-components';
 
 import { ConvoHub } from '../../session/conversations';
 import { changeNickNameModal } from '../../state/ducks/modalDialog';
-import { SessionWrapperModal } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SpacerLG } from '../basic/Text';
 import { useConversationRealName, useNickname } from '../../hooks/useParamSelector';
@@ -14,14 +12,12 @@ import { localize } from '../../localization/localeTools';
 import LIBSESSION_CONSTANTS from '../../session/utils/libsession/libsession_constants';
 import { SimpleSessionInput } from '../inputs/SessionInput';
 import { ClearInputButton } from '../inputs/ClearInputButton';
+import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import { StyledModalDescriptionContainer } from './shared/ModalDescriptionContainer';
 
 type Props = {
   conversationId: string;
 };
-
-const StyledMaxWidth = styled.span`
-  max-width: 30ch;
-`;
 
 function NicknameInput({
   onConfirm,
@@ -84,14 +80,31 @@ export const SessionNicknameDialog = (props: Props) => {
   };
 
   return (
-    <SessionWrapperModal
-      title={window.i18n('nicknameSet')}
+    <SessionWrapperModal2
+      title={localize('nicknameSet').toString()}
       onClose={onClickClose}
       showExitIcon={true}
-      showHeader={true}
-      headerReverse={true}
+      buttonChildren={
+        <ButtonChildrenContainer>
+          <SessionButton
+            text={localize('save').toString()}
+            disabled={!nickname}
+            buttonType={SessionButtonType.Simple}
+            onClick={() => saveNickname(nickname)}
+            dataTestId="set-nickname-confirm-button"
+          />
+          <SessionButton
+            text={localize('remove').toString()}
+            buttonColor={SessionButtonColor.Danger}
+            buttonType={SessionButtonType.Simple}
+            onClick={onClickRemove}
+            dataTestId="set-nickname-remove-button"
+            disabled={!currentNickname} // "remove" disabled if no nickname were set for that user, on load
+          />
+        </ButtonChildrenContainer>
+      }
     >
-      <StyledMaxWidth className="session-modal__centered">
+      <StyledModalDescriptionContainer>
         <Localizer
           token="nicknameDescription"
           args={{
@@ -99,29 +112,12 @@ export const SessionNicknameDialog = (props: Props) => {
           }}
         />
         <SpacerLG />
-      </StyledMaxWidth>
+      </StyledModalDescriptionContainer>
       <NicknameInput
         onConfirm={() => void saveNickname(nickname)}
         nickname={nickname}
         setStateNickname={setStateNickname}
       />
-      <div className="session-modal__button-group">
-        <SessionButton
-          text={localize('save').toString()}
-          disabled={!nickname}
-          buttonType={SessionButtonType.Simple}
-          onClick={() => saveNickname(nickname)}
-          dataTestId="set-nickname-confirm-button"
-        />
-        <SessionButton
-          text={localize('remove').toString()}
-          buttonColor={SessionButtonColor.Danger}
-          buttonType={SessionButtonType.Simple}
-          onClick={onClickRemove}
-          dataTestId="set-nickname-remove-button"
-          disabled={!currentNickname} // "remove" disabled if no nickname were set for that user, on load
-        />
-      </div>
-    </SessionWrapperModal>
+    </SessionWrapperModal2>
   );
 };

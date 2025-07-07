@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import clsx from 'clsx';
+import type { CSSProperties } from 'styled-components';
 import { ReactNode, useState, useRef, type SessionDataTestId } from 'react';
 import useKey from 'react-use/lib/useKey';
 import { Flex } from './basic/Flex';
@@ -119,6 +120,9 @@ export type SessionWrapperModalType2 = {
   showExitIcon?: boolean;
   headerIconButtons?: Array<React.ReactNode>;
   children: ReactNode;
+  /**
+   * *Should* be some SessionButtons enclosed in a ButtonChildrenContainer
+   */
   buttonChildren?: ReactNode;
   $contentMaxWidth?: string;
   $contentMinWidth?: string;
@@ -129,6 +133,7 @@ export type SessionWrapperModalType2 = {
   allowOutsideClick?: boolean;
   bigHeader?: boolean;
   modalDataTestId?: SessionDataTestId;
+  style?: Omit<CSSProperties, 'maxWidth' | 'minWidth' | 'padding' | 'border'>;
 };
 
 const ModalHeader = (
@@ -221,6 +226,7 @@ export const SessionWrapperModal2 = (props: SessionWrapperModalType2) => {
     allowOutsideClick,
     bigHeader,
     modalDataTestId,
+    style,
   } = props;
 
   const [scrolled, setScrolled] = useState(false);
@@ -273,6 +279,7 @@ export const SessionWrapperModal2 = (props: SessionWrapperModalType2) => {
           padding={padding}
           border={contentBorder}
           bigHeader={bigHeader}
+          style={style}
         >
           {showHeader ? (
             <ModalHeader
@@ -290,10 +297,10 @@ export const SessionWrapperModal2 = (props: SessionWrapperModalType2) => {
             }}
             shouldOverflow={shouldOverflow}
           >
-            <div className="session-modal__centered">
+            <Flex $container={true} $alignItems="center" $flexDirection="column">
               {props.children}
               {props.buttonChildren}
-            </div>
+            </Flex>
           </StyledModalBody>
         </StyledModal>
       </StyledRootDialog>

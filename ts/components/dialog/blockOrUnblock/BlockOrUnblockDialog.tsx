@@ -7,13 +7,12 @@ import { useHotkey } from '../../../hooks/useHotkey';
 import { useConversationsNicknameRealNameOrShortenPubkey } from '../../../hooks/useParamSelector';
 import { updateBlockOrUnblockModal } from '../../../state/ducks/modalDialog';
 import { BlockedNumberController } from '../../../util';
-import { SessionWrapperModal } from '../../SessionWrapperModal';
-import { Flex } from '../../basic/Flex';
 import { Localizer, type LocalizerProps } from '../../basic/Localizer';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../../basic/SessionButton';
 import { StyledModalDescriptionContainer } from '../shared/ModalDescriptionContainer';
 import { BlockOrUnblockModalState } from './BlockOrUnblockModalState';
 import { localize } from '../../../localization/localeTools';
+import { ButtonChildrenContainer, SessionWrapperModal2 } from '../../SessionWrapperModal2';
 
 type ModalState = NonNullable<BlockOrUnblockModalState>;
 
@@ -88,29 +87,31 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
   }
 
   return (
-    <SessionWrapperModal showExitIcon={false} title={localizedAction} onClose={closeModal}>
+    <SessionWrapperModal2
+      showExitIcon={false}
+      title={localizedAction}
+      onClose={closeModal}
+      buttonChildren={
+        <ButtonChildrenContainer>
+          <SessionButton
+            buttonType={SessionButtonType.Simple}
+            buttonColor={SessionButtonColor.Danger}
+            onClick={onConfirm}
+            text={localizedAction}
+            dataTestId="session-confirm-ok-button"
+          />
+          <SessionButton
+            buttonType={SessionButtonType.Simple}
+            onClick={closeModal}
+            text={window.i18n('cancel')}
+            dataTestId="session-confirm-cancel-button"
+          />
+        </ButtonChildrenContainer>
+      }
+    >
       <StyledModalDescriptionContainer data-testid="modal-description">
         <Localizer {...args} />
       </StyledModalDescriptionContainer>
-      <Flex $container={true} $flexDirection="column" $alignItems="center">
-        <Flex $container={true}>
-          <div className="session-modal__button-group">
-            <SessionButton
-              buttonType={SessionButtonType.Simple}
-              buttonColor={SessionButtonColor.Danger}
-              onClick={onConfirm}
-              text={localizedAction}
-              dataTestId="session-confirm-ok-button"
-            />
-            <SessionButton
-              buttonType={SessionButtonType.Simple}
-              onClick={closeModal}
-              text={window.i18n('cancel')}
-              dataTestId="session-confirm-cancel-button"
-            />
-          </div>
-        </Flex>
-      </Flex>
-    </SessionWrapperModal>
+    </SessionWrapperModal2>
   );
 };

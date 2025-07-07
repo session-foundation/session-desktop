@@ -12,11 +12,12 @@ import { SessionTheme } from '../themes/SessionTheme';
 import { switchPrimaryColorTo } from '../themes/switchPrimaryColor';
 import { switchThemeTo } from '../themes/switchTheme';
 import { SessionToastContainer } from './SessionToastContainer';
-import { SessionWrapperModal } from './SessionWrapperModal';
 import { SessionToast } from './basic/SessionToast';
 import { SessionSpinner } from './loading';
 import { Localizer } from './basic/Localizer';
 import { themeStore } from '../state/theme/store';
+import { SessionWrapperModal2 } from './SessionWrapperModal2';
+import { localize } from '../localization/localeTools';
 
 interface State {
   errorCount: number;
@@ -86,7 +87,7 @@ class SessionPasswordPromptInner extends PureComponent<unknown, State> {
           type="password"
           id="password-prompt-input"
           defaultValue=""
-          placeholder={window.i18n('passwordEnter')}
+          placeholder={localize('passwordEnter').toString()}
           onKeyUp={this.onKeyUp}
           ref={input => {
             this.inputRef = input;
@@ -96,15 +97,19 @@ class SessionPasswordPromptInner extends PureComponent<unknown, State> {
     );
 
     return (
-      <SessionWrapperModal
-        title={this.state.clearDataView ? window.i18n('clearDevice') : window.i18n('passwordEnter')}
+      <SessionWrapperModal2
+        title={
+          this.state.clearDataView
+            ? localize('clearDevice').toString()
+            : localize('passwordEnter').toString()
+        }
       >
         {spinner || featureElement}
         <TextPleaseWait isLoading={isLoading} />
         {this.state.clearDataView
           ? this.renderClearDataViewButtons()
           : this.renderPasswordViewButtons()}
-      </SessionWrapperModal>
+      </SessionWrapperModal2>
     );
   }
 
@@ -171,7 +176,7 @@ class SessionPasswordPromptInner extends PureComponent<unknown, State> {
         {showResetElements && (
           <>
             <SessionButton
-              text={window.i18n('clearDevice')}
+              text={localize('clearDevice').toString()}
               buttonColor={SessionButtonColor.Danger}
               buttonType={SessionButtonType.Simple}
               onClick={this.initClearDataView}
@@ -180,7 +185,7 @@ class SessionPasswordPromptInner extends PureComponent<unknown, State> {
         )}
         {!this.state.loading && (
           <SessionButton
-            text={showResetElements ? window.i18n('tryAgain') : window.i18n('done')}
+            text={showResetElements ? localize('tryAgain').toString() : localize('done').toString()}
             buttonType={SessionButtonType.Simple}
             onClick={this.initLogin}
             disabled={this.state.loading}
@@ -194,13 +199,13 @@ class SessionPasswordPromptInner extends PureComponent<unknown, State> {
     return (
       <div className="session-modal__button-group">
         <SessionButton
-          text={window.i18n('clearDevice')}
+          text={localize('clearDevice').toString()}
           buttonColor={SessionButtonColor.Danger}
           buttonType={SessionButtonType.Simple}
           onClick={window.clearLocalData}
         />
         <SessionButton
-          text={window.i18n('cancel')}
+          text={localize('cancel').toString()}
           buttonType={SessionButtonType.Simple}
           onClick={() => {
             this.setState({ clearDataView: false });

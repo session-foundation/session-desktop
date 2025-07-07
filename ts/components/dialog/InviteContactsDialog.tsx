@@ -24,10 +24,11 @@ import { localize } from '../../localization/localeTools';
 import { useContactsToInviteTo } from '../../hooks/useContactsToInviteToGroup';
 import { SessionSearchInput } from '../SessionSearchInput';
 import { NoResultsForSearch } from '../search/NoResults';
-import { SessionWrapperModal2 } from '../SessionWrapperModal2';
+import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
 import { useHotkey } from '../../hooks/useHotkey';
 import { searchActions } from '../../state/ducks/search';
 import { ToastUtils } from '../../session/utils';
+import { StyledContactListInModal } from '../list/StyledContactList';
 
 type Props = {
   conversationId: string;
@@ -175,28 +176,23 @@ const InviteContactsDialogInner = (props: Props) => {
       onClose={closeDialog}
       showExitIcon={true}
       modalDataTestId="invite-contacts-dialog"
-      $contentMaxWidth="500px"
-      $contentMinWidth="500px"
       buttonChildren={
-        <>
-          <SpacerLG />
-          <div className="session-modal__button-group">
-            <SessionButton
-              text={localize('okay').toString()}
-              buttonType={SessionButtonType.Simple}
-              disabled={!hasContacts}
-              onClick={onClickOK}
-              dataTestId="session-confirm-ok-button"
-            />
-            <SessionButton
-              text={localize('cancel').toString()}
-              buttonColor={SessionButtonColor.Danger}
-              buttonType={SessionButtonType.Simple}
-              onClick={closeDialog}
-              dataTestId="session-confirm-cancel-button"
-            />
-          </div>
-        </>
+        <ButtonChildrenContainer>
+          <SessionButton
+            text={localize('okay').toString()}
+            buttonType={SessionButtonType.Simple}
+            disabled={!hasContacts}
+            onClick={onClickOK}
+            dataTestId="session-confirm-ok-button"
+          />
+          <SessionButton
+            text={localize('cancel').toString()}
+            buttonColor={SessionButtonColor.Danger}
+            buttonType={SessionButtonType.Simple}
+            onClick={closeDialog}
+            dataTestId="session-confirm-cancel-button"
+          />
+        </ButtonChildrenContainer>
       }
     >
       <SpacerLG />
@@ -220,14 +216,14 @@ const InviteContactsDialogInner = (props: Props) => {
       {isSearch && !hasSearchResults ? (
         <NoResultsForSearch searchTerm={searchTerm || ''} />
       ) : (
-        <div className="contact-selection-list">
+        <StyledContactListInModal>
           <ContactsToInvite
             validContactsForInvite={contactsToInvite}
             selectedContacts={selectedContacts}
             selectContact={addTo}
             unselectContact={removeFrom}
           />
-        </div>
+        </StyledContactListInModal>
       )}
     </SessionWrapperModal2>
   );

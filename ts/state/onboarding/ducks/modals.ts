@@ -1,11 +1,18 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 import { TermsOfServicePrivacyDialogProps } from '../../../components/dialog/TermsOfServicePrivacyDialog';
-import { ConfirmModalState, type OpenUrlModalState } from '../../ducks/modalDialog';
+import { type OpenUrlModalState } from '../../ducks/modalDialog';
+import type { SessionConfirmDialogProps } from '../../../components/dialog/SessionConfirm';
 
 export type TermsOfServicePrivacyModalState = TermsOfServicePrivacyDialogProps | null;
 
+export type QuitModalProps = Required<
+  Pick<SessionConfirmDialogProps, 'onClickOk' | 'onClickCancel' | 'i18nMessage'>
+>;
+
+export type QuitModalState = QuitModalProps | null;
+
 export type ModalsState = {
-  quitModalState: ConfirmModalState | null;
+  quitModalState: QuitModalState;
   termsOfServicePrivacyModalState: TermsOfServicePrivacyModalState | null;
   openUrlModal: OpenUrlModalState;
 };
@@ -20,7 +27,7 @@ export const modalsSlice = createSlice({
   name: 'modals',
   initialState,
   reducers: {
-    updateQuitModal(state, action: PayloadAction<ConfirmModalState>) {
+    updateQuitModal(state, action: PayloadAction<QuitModalState>) {
       return { ...state, quitModalState: action.payload };
     },
     updateTermsOfServicePrivacyModal(

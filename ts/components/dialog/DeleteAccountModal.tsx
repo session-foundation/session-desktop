@@ -2,7 +2,6 @@ import { useCallback, useState } from 'react';
 import { useDispatch } from 'react-redux';
 
 import { updateDeleteAccountModal } from '../../state/ducks/modalDialog';
-import { SessionWrapperModal } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SpacerLG } from '../basic/Text';
 import { SessionSpinner } from '../loading';
@@ -13,6 +12,9 @@ import {
 } from '../../util/accountManager';
 import { SessionRadioGroup } from '../basic/SessionRadioGroup';
 import { Localizer } from '../basic/Localizer';
+import { localize } from '../../localization/localeTools';
+import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import { StyledModalDescriptionContainer } from './shared/ModalDescriptionContainer';
 
 const DEVICE_ONLY = 'device_only' as const;
 const DEVICE_AND_NETWORK = 'device_and_network' as const;
@@ -26,11 +28,11 @@ const DescriptionBeforeAskingConfirmation = (props: {
 
   const items = [
     {
-      label: window.i18n('clearDeviceOnly'),
+      label: localize('clearDeviceOnly').toString(),
       value: DEVICE_ONLY,
     },
     {
-      label: window.i18n('clearDeviceAndNetwork'),
+      label: localize('clearDeviceAndNetwork').toString(),
       value: DEVICE_AND_NETWORK,
     },
   ].map(m => ({
@@ -41,18 +43,13 @@ const DescriptionBeforeAskingConfirmation = (props: {
 
   return (
     <>
-      <span
-        className="session-confirm-main-message"
-        data-testid="modal-description"
-        style={{ maxWidth: '40ch' }}
-      >
+      <StyledModalDescriptionContainer data-testid="modal-description" style={{ maxWidth: '40ch' }}>
         <Localizer token="clearDataAllDescription" />
-      </span>
-
-      <SpacerLG />
+      </StyledModalDescriptionContainer>
       <SessionRadioGroup
         group="delete_account"
         initialItem={deleteMode}
+        style={{ gap: 'var(--margins-md)' }}
         onClick={value => {
           if (value === DEVICE_ONLY || value === DEVICE_AND_NETWORK) {
             setDeleteMode(value);
@@ -66,11 +63,11 @@ const DescriptionBeforeAskingConfirmation = (props: {
 
 const DescriptionWhenAskingConfirmation = (props: { deleteMode: DeleteModes }) => {
   return (
-    <span className="session-confirm-main-message" data-testid="modal-description">
+    <StyledModalDescriptionContainer data-testid="modal-description">
       {props.deleteMode === 'device_and_network'
-        ? window.i18n('clearDeviceAndNetworkConfirm')
-        : window.i18n('clearDeviceDescription')}
-    </span>
+        ? localize('clearDeviceAndNetworkConfirm').toString()
+        : localize('clearDeviceDescription').toString()}
+    </StyledModalDescriptionContainer>
   );
 };
 
@@ -118,23 +115,14 @@ export const DeleteAccountModal = () => {
   }, [dispatch]);
 
   return (
-    <SessionWrapperModal
-      title={window.i18n('clearDataAll')}
+    <SessionWrapperModal2
+      title={localize('clearDataAll').toString()}
       onClose={onClickCancelHandler}
-      showExitIcon={true}
-    >
-      {askingConfirmation ? (
-        <DescriptionWhenAskingConfirmation deleteMode={deleteMode} />
-      ) : (
-        <DescriptionBeforeAskingConfirmation
-          deleteMode={deleteMode}
-          setDeleteMode={setDeleteMode}
-        />
-      )}
-      <div className="session-modal__centered">
-        <div className="session-modal__button-group">
+      showExitIcon={false}
+      buttonChildren={
+        <ButtonChildrenContainer>
           <SessionButton
-            text={window.i18n('clear')}
+            text={localize('clear').toString()}
             buttonColor={SessionButtonColor.Danger}
             buttonType={SessionButtonType.Simple}
             onClick={() => {
@@ -153,7 +141,7 @@ export const DeleteAccountModal = () => {
           />
 
           <SessionButton
-            text={window.i18n('cancel')}
+            text={localize('cancel').toString()}
             buttonType={SessionButtonType.Simple}
             onClick={() => {
               dispatch(updateDeleteAccountModal(null));
@@ -161,10 +149,19 @@ export const DeleteAccountModal = () => {
             disabled={isLoading}
             dataTestId="session-confirm-cancel-button"
           />
-        </div>
-        {isLoading && <SpacerLG />}
-        <SessionSpinner loading={isLoading} />
-      </div>
-    </SessionWrapperModal>
+        </ButtonChildrenContainer>
+      }
+    >
+      {askingConfirmation ? (
+        <DescriptionWhenAskingConfirmation deleteMode={deleteMode} />
+      ) : (
+        <DescriptionBeforeAskingConfirmation
+          deleteMode={deleteMode}
+          setDeleteMode={setDeleteMode}
+        />
+      )}
+      {isLoading && <SpacerLG />}
+      <SessionSpinner loading={isLoading} />
+    </SessionWrapperModal2>
   );
 };

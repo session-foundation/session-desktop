@@ -1,6 +1,5 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { ConfirmModalState } from '../../ducks/modalDialog';
-import { ModalsState, TermsOfServicePrivacyModalState } from '../ducks/modals';
+import { ModalsState } from '../ducks/modals';
 import { OnboardingStoreState } from '../store';
 
 const getModals = (state: OnboardingStoreState): ModalsState => {
@@ -9,10 +8,10 @@ const getModals = (state: OnboardingStoreState): ModalsState => {
 
 export const getQuitModalState = createSelector(
   getModals,
-  (state: ModalsState): ConfirmModalState => state.quitModalState
+  (state: ModalsState) => state.quitModalState
 );
 
 export const getTermsOfServicePrivacyModalState = createSelector(
   getModals,
-  (state: ModalsState): TermsOfServicePrivacyModalState => state.termsOfServicePrivacyModalState
+  (state: ModalsState) => state.termsOfServicePrivacyModalState
 );

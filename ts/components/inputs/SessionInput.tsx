@@ -4,6 +4,7 @@ import {
   useCallback,
   useEffect,
   useRef,
+  useState,
   type CSSProperties,
   type KeyboardEvent,
   type PropsWithChildren,
@@ -17,6 +18,7 @@ import { THEME_GLOBALS } from '../../themes/globals';
 import { AnimatedFlex, Flex } from '../basic/Flex';
 import { SpacerMD } from '../basic/Text';
 import { Localizer, type LocalizerProps } from '../basic/Localizer';
+import { ShowHideButton, type ShowHideButtonProps } from './ShowHidePasswordButton';
 
 type TextSizes = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
@@ -262,6 +264,30 @@ function useUpdateInputValue(onValueChanged: (val: string) => void, disabled?: b
   );
 }
 
+type SimpleSessionInputProps = Pick<
+  Props,
+  | 'type'
+  | 'placeholder'
+  | 'value'
+  | 'ariaLabel'
+  | 'maxLength'
+  | 'autoFocus'
+  | 'inputDataTestId'
+  | 'textSize'
+  | 'padding'
+  | 'required'
+  | 'tabIndex'
+  | 'centerText'
+> &
+  WithInputRef &
+  Required<Pick<Props, 'errorDataTestId'>> & {
+    onValueChanged: (str: string) => void;
+    onEnterPressed: () => void;
+    providedError: string | LocalizerProps | undefined;
+    disabled?: boolean;
+    buttonEnd?: ReactNode;
+  };
+
 /**
  * A simpler version of the SessionInput component.
  * Does not handle CTA, textarea, nor monospaced fonts.
@@ -271,31 +297,7 @@ function useUpdateInputValue(onValueChanged: (val: string) => void, disabled?: b
  * This component should only be used for input that does not need remote validations, as the error
  * state is live. For remote validations, use the SessionInput component.
  */
-export const SimpleSessionInput = (
-  props: Pick<
-    Props,
-    | 'type'
-    | 'placeholder'
-    | 'value'
-    | 'ariaLabel'
-    | 'maxLength'
-    | 'autoFocus'
-    | 'inputDataTestId'
-    | 'textSize'
-    | 'padding'
-    | 'required'
-    | 'tabIndex'
-    | 'centerText'
-  > &
-    WithInputRef &
-    Required<Pick<Props, 'errorDataTestId'>> & {
-      onValueChanged: (str: string) => void;
-      onEnterPressed: () => void;
-      providedError: string | LocalizerProps | undefined;
-      disabled?: boolean;
-      buttonEnd?: ReactNode;
-    }
-) => {
+export const SimpleSessionInput = (props: SimpleSessionInputProps) => {
   const {
     type = 'text',
     placeholder,
@@ -522,3 +524,49 @@ export const SimpleSessionTextarea = (
     </StyledSessionInput>
   );
 };
+
+export function ShowHideSessionInput(
+  props: Pick<
+    SimpleSessionInputProps,
+    | 'onEnterPressed'
+    | 'onValueChanged'
+    | 'placeholder'
+    | 'value'
+    | 'errorDataTestId'
+    | 'inputDataTestId'
+    | 'providedError'
+    | 'ariaLabel'
+    | 'padding'
+  > & {
+    showHideButtonAriaLabels: ShowHideButtonProps['ariaLabels'];
+    showHideButtonDataTestIds: ShowHideButtonProps['dataTestIds'];
+  }
+) {
+  const [forceShow, setForceShow] = useState(false);
+  return (
+    <SimpleSessionInput
+      ariaLabel={props.ariaLabel}
+      autoFocus={true}
+      type={forceShow ? 'text' : 'password'}
+      placeholder={props.placeholder}
+      value={props.value}
+      onValueChanged={props.onValueChanged}
+      onEnterPressed={props.onEnterPressed}
+      providedError={props.providedError}
+      errorDataTestId={props.errorDataTestId}
+      inputDataTestId={props.inputDataTestId}
+      padding={props.padding}
+      buttonEnd={
+        <ShowHideButton
+          forceShow={forceShow}
+          toggleForceShow={() => {
+            setForceShow(!forceShow);
+          }}
+          hasError={!!props.providedError}
+          ariaLabels={props.showHideButtonAriaLabels}
+          dataTestIds={props.showHideButtonDataTestIds}
+        />
+      }
+    />
+  );
+}

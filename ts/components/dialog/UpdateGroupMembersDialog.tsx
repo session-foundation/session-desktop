@@ -1,14 +1,12 @@
 import { useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
-import styled from 'styled-components';
 
 import { PubkeyType } from 'libsession_util_nodejs';
 import { ToastUtils } from '../../session/utils';
 
 import { updateGroupMembersModal } from '../../state/ducks/modalDialog';
 import { MemberListItem } from '../MemberListItem';
-import { SessionWrapperModal } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SpacerLG } from '../basic/Text';
 
@@ -36,14 +34,12 @@ import { SessionSearchInput } from '../SessionSearchInput';
 import { NoGroupMembers } from '../search/NoResults';
 import { useContactsToInviteTo } from '../../hooks/useContactsToInviteToGroup';
 import { searchActions } from '../../state/ducks/search';
+import { StyledContactListInModal } from '../list/StyledContactList';
+import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
 
 type Props = {
   conversationId: string;
 };
-
-const StyledMemberList = styled.div`
-  max-height: 240px;
-`;
 
 function useSortedListOfMembers(convoId: string) {
   const groupMembersLegacy = useSortedGroupMembers(convoId);
@@ -187,11 +183,35 @@ export const UpdateGroupMembersDialog = (props: Props) => {
   };
 
   return (
-    <SessionWrapperModal
+    <SessionWrapperModal2
       title={
         weAreAdmin ? localize('manageMembers').toString() : localize('groupMembers').toString()
       }
       onClose={closeDialog}
+      showExitIcon={false}
+      $contentMinWidth="500px"
+      $contentMaxWidth="500px"
+      buttonChildren={
+        <ButtonChildrenContainer>
+          {weAreAdmin && (
+            <SessionButton
+              text={window.i18n('remove')}
+              onClick={onClickOK}
+              buttonType={SessionButtonType.Simple}
+              buttonColor={SessionButtonColor.Danger}
+              disabled={isProcessingUIChange || !membersToRemove.length}
+              dataTestId="session-confirm-ok-button"
+            />
+          )}
+          <SessionButton
+            text={window.i18n('cancel')}
+            buttonType={SessionButtonType.Simple}
+            onClick={closeDialog}
+            disabled={isProcessingUIChange}
+            dataTestId="session-confirm-cancel-button"
+          />
+        </ButtonChildrenContainer>
+      }
     >
       {hasClosedGroupV2QAButtons() && weAreAdmin && PubKey.is03Pubkey(conversationId) ? (
         <>
@@ -214,7 +234,7 @@ export const UpdateGroupMembersDialog = (props: Props) => {
         </>
       ) : null}
       <SessionSearchInput searchType="manage-group-members" />
-      <StyledMemberList className="contact-selection-list">
+      <StyledContactListInModal>
         {!existingMembers.length ? (
           <NoGroupMembers />
         ) : (
@@ -225,31 +245,11 @@ export const UpdateGroupMembersDialog = (props: Props) => {
             selectedMembers={membersToRemove}
           />
         )}
-      </StyledMemberList>
+      </StyledContactListInModal>
 
       <SpacerLG />
       <SessionSpinner loading={isProcessingUIChange} />
       <SpacerLG />
-
-      <div className="session-modal__button-group">
-        {weAreAdmin && (
-          <SessionButton
-            text={window.i18n('remove')}
-            onClick={onClickOK}
-            buttonType={SessionButtonType.Simple}
-            buttonColor={SessionButtonColor.Danger}
-            disabled={isProcessingUIChange || !membersToRemove.length}
-            dataTestId="session-confirm-ok-button"
-          />
-        )}
-        <SessionButton
-          text={window.i18n('cancel')}
-          buttonType={SessionButtonType.Simple}
-          onClick={closeDialog}
-          disabled={isProcessingUIChange}
-          dataTestId="session-confirm-cancel-button"
-        />
-      </div>
-    </SessionWrapperModal>
+    </SessionWrapperModal2>
   );
 };

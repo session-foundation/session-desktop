@@ -1,38 +1,19 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
-import { CSSProperties } from 'styled-components';
-import { updateQuitModal } from '../../state/onboarding/ducks/modals';
-import { SessionWrapperModal } from '../SessionWrapperModal';
-import { Flex } from '../basic/Flex';
+import { updateQuitModal, type QuitModalProps } from '../../state/onboarding/ducks/modals';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
-import { SpacerLG, SpacerSM } from '../basic/Text';
-import { SessionConfirmDialogProps } from './SessionConfirm';
-import { I18nSubText } from '../basic/I18nSubText';
+import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import { Localizer } from '../basic/Localizer';
+import { StyledModalDescriptionContainer } from './shared/ModalDescriptionContainer';
+import { localize } from '../../localization/localeTools';
 
-const modalStyle: CSSProperties = {
-  maxWidth: '300px',
-  width: '100%',
-  lineHeight: 1.4,
-};
-
-export const QuitModal = (props: SessionConfirmDialogProps) => {
+export const QuitModal = (props: QuitModalProps) => {
   const dispatch = useDispatch();
-  const {
-    title = '',
-    i18nMessage,
-    okTheme,
-    closeTheme = SessionButtonColor.Danger,
-    onClickOk,
-    onClickClose,
-    onClickCancel,
-    closeAfterInput = true,
-  } = props;
+  const { onClickOk, onClickCancel, i18nMessage } = props;
+  const title = localize('warning').toString();
 
   const [isLoading, setIsLoading] = useState(false);
-
-  const okText = props.okText || window.i18n('okay');
-  const cancelText = props.cancelText || window.i18n('cancel');
 
   const onClickOkHandler = async () => {
     if (onClickOk) {
@@ -46,9 +27,7 @@ export const QuitModal = (props: SessionConfirmDialogProps) => {
       }
     }
 
-    if (closeAfterInput) {
-      dispatch(updateQuitModal(null));
-    }
+    dispatch(updateQuitModal(null));
   };
 
   /**
@@ -56,7 +35,10 @@ export const QuitModal = (props: SessionConfirmDialogProps) => {
    */
   const onClickCancelHandler = () => {
     onClickCancel?.();
-    onClickClose?.();
+    dispatch(updateQuitModal(null));
+  };
+
+  const onClickClose = () => {
     dispatch(updateQuitModal(null));
   };
 
@@ -69,45 +51,34 @@ export const QuitModal = (props: SessionConfirmDialogProps) => {
   });
 
   return (
-    <SessionWrapperModal
+    <SessionWrapperModal2
       title={title}
       onClose={onClickClose}
       showExitIcon={false}
-      showHeader={true}
-      additionalClassName={'no-body-padding'}
+      buttonChildren={
+        <ButtonChildrenContainer>
+          <SessionButton
+            text={localize('quitButton').toString()}
+            buttonColor={SessionButtonColor.Danger}
+            buttonType={SessionButtonType.Simple}
+            onClick={onClickOkHandler}
+            disabled={isLoading}
+            dataTestId="session-confirm-ok-button"
+          />
+          <SessionButton
+            text={localize('cancel').toString()}
+            buttonColor={undefined}
+            buttonType={SessionButtonType.Simple}
+            onClick={onClickCancelHandler}
+            disabled={isLoading}
+            dataTestId="session-confirm-cancel-button"
+          />
+        </ButtonChildrenContainer>
+      }
     >
-      {i18nMessage ? (
-        <Flex
-          $container={true}
-          width={'100%'}
-          $justifyContent="center"
-          $alignItems="center"
-          style={modalStyle}
-        >
-          <SpacerLG />
-          <I18nSubText localizerProps={i18nMessage} dataTestId="modal-description" />
-          <SpacerLG />
-        </Flex>
-      ) : null}
-      <SpacerSM />
-      <Flex $container={true} width={'100%'} $justifyContent="center" $alignItems="center">
-        <SessionButton
-          text={okText}
-          buttonColor={okTheme}
-          buttonType={SessionButtonType.Ghost}
-          onClick={onClickOkHandler}
-          disabled={isLoading}
-          dataTestId="session-confirm-ok-button"
-        />
-        <SessionButton
-          text={cancelText}
-          buttonColor={!okTheme ? closeTheme : undefined}
-          buttonType={SessionButtonType.Ghost}
-          onClick={onClickCancelHandler}
-          disabled={isLoading}
-          dataTestId="session-confirm-cancel-button"
-        />
-      </Flex>
-    </SessionWrapperModal>
+      <StyledModalDescriptionContainer data-testid="modal-description">
+        <Localizer {...i18nMessage} />
+      </StyledModalDescriptionContainer>
+    </SessionWrapperModal2>
   );
 };

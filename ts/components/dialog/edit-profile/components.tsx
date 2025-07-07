@@ -81,8 +81,8 @@ const QrViewButton = styled.div`
   align-items: center;
   justify-content: center;
   position: absolute;
-  top: -8px;
-  right: -8px;
+  top: 0;
+  right: 0;
   height: 34px;
   width: 34px;
   border-radius: 50%;
