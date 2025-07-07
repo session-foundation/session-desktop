@@ -386,7 +386,6 @@ export const MemberListItem = <T extends string>({
             active={isSelected}
             value={pubkey}
             inputName={pubkey}
-            label=""
             inputDataTestId="select-contact"
           />
         </StyledCheckContainer>

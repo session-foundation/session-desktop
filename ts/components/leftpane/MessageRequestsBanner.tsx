@@ -6,13 +6,26 @@ import styled from 'styled-components';
 import { getUnreadConversationRequests } from '../../state/selectors/conversations';
 import { useIsSearchingForType } from '../../state/selectors/search';
 import { getHideMessageRequestBanner } from '../../state/selectors/userConfig';
-import { SessionIcon, SessionIconSize, SessionIconType } from '../icon';
 import { MessageRequestBannerContextMenu } from '../menu/MessageRequestBannerContextMenu';
 import { Localizer } from '../basic/Localizer';
+import { LucideIcon } from '../icon/LucideIcon';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 const StyledMessageRequestBanner = styled.div`
   // The conversation list item row is set to 64px height
   height: 64px;
+  width: 100%;
+  max-width: 300px;
+  display: flex;
+  flex-direction: row;
+  padding: 8px 16px; // adjusting for unread border always being active
+  align-items: center;
+  cursor: pointer;
+  background: var(--conversation-tab-background-color);
+
+  &:hover {
+    background: var(--conversation-tab-background-hover-color);
+  }
   min-height: 64px;
 `;
 
@@ -54,29 +67,7 @@ const StyledGridContainer = styled.div`
   align-items: center;
   border-radius: 50%;
   background-color: var(--primary-color);
-  color: var(--unread-messages-alert-background-color);
-
-  svg > path {
-    fill: var(--unread-messages-alert-text-color);
-  }
 `;
-
-export const CircularIcon = (props: {
-  iconType: SessionIconType;
-  iconSize: SessionIconSize | number;
-}) => {
-  const { iconSize, iconType } = props;
-
-  return (
-    <StyledGridContainer>
-      <SessionIcon
-        iconType={iconType}
-        iconSize={iconSize}
-        iconColor="var(--background-primary-color)"
-      />
-    </StyledGridContainer>
-  );
-};
 
 export const MessageRequestsBanner = (props: { handleOnClick: () => any }) => {
   const { handleOnClick } = props;
@@ -117,8 +108,14 @@ export const MessageRequestsBanner = (props: { handleOnClick: () => any }) => {
         }}
         data-testid="message-request-banner"
       >
-        <CircularIcon iconType="messageRequest" iconSize={22} />
-        <StyledMessageRequestBannerHeader className="module-conversation-list-item__content">
+        <StyledGridContainer>
+          <LucideIcon
+            unicode={LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE_WARNING}
+            iconSize="medium"
+            iconColor="var(--black-color)"
+          />
+        </StyledGridContainer>
+        <StyledMessageRequestBannerHeader>
           <Localizer token="sessionMessageRequests" />
           <StyledUnreadCounter>
             <div>{conversationRequestsUnread || 0}</div>

@@ -9,9 +9,10 @@ import { useSelectedIsGroupOrCommunity } from '../../../../state/selectors/selec
 import { SortedReactionList } from '../../../../types/Reaction';
 import { nativeEmojiData } from '../../../../util/emoji';
 import { Flex } from '../../../basic/Flex';
-import { SessionIcon } from '../../../icon';
 import { Reaction, ReactionProps } from '../reactions/Reaction';
 import { Localizer } from '../../../basic/Localizer';
+import { LucideIcon } from '../../../icon/LucideIcon';
+import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 
 export const StyledMessageReactionsContainer = styled(Flex)<{
   noAvatar: boolean;
@@ -47,9 +48,6 @@ const StyledReadLess = styled.span`
   font-size: var(--font-size-xs);
   margin-top: 8px;
   cursor: pointer;
-  svg {
-    margin-right: 5px;
-  }
 `;
 
 type ReactionsProps = Omit<ReactionProps, 'emoji'>;
@@ -114,7 +112,11 @@ const ExpandedReactions = (props: ExpandReactionsProps) => {
     <Flex $container={true} $flexDirection={'column'} $alignItems={'center'} margin="4px 0 0">
       <Reactions {...props} />
       <StyledReadLess onClick={handleExpand}>
-        <SessionIcon iconType="chevron" iconSize="medium" iconRotation={180} />
+        <LucideIcon
+          unicode={LUCIDE_ICONS_UNICODE.CHEVRON_UP}
+          iconSize="medium"
+          style={{ textAlign: 'center' }}
+        />
         <Localizer token="showLess" />
       </StyledReadLess>
     </Flex>

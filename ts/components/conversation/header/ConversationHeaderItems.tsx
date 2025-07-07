@@ -11,10 +11,10 @@ import {
   useSelectedIsPrivate,
   useSelectedIsPrivateFriend,
   useSelectedIsPublic,
-  useSelectedWeAreAdmin,
 } from '../../../state/selectors/selectedConversation';
 import { Avatar, AvatarSize } from '../../avatar/Avatar';
-import { SessionIconButton } from '../../icon';
+import { SessionLucideIconButton } from '../../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { useIsGroupV2, useIsLegacyGroup } from '../../../hooks/useParamSelector';
 import { useLibGroupInvitePending } from '../../../state/selectors/userGroups';
 
@@ -28,12 +28,11 @@ export const AvatarHeader = (props: { pubkey: string; onAvatarClick?: () => void
   const isGroupV2 = useIsGroupV2(pubkey);
 
   const isPublic = useSelectedIsPublic();
-  const weAreAdmin = useSelectedWeAreAdmin();
 
   const canClickLegacy = isLegacyGroup && false; // we can never click the avatar if it's a legacy group
   const canClickPrivateApproved = isApproved && isPrivate; // we can only click the avatar if it's a private and approved conversation
   const canClick03GroupAccepted = isGroupV2 && !invitePending; // we can only click the avatar if it's a group and have accepted the invite already
-  const canClickCommunity = isPublic && weAreAdmin;
+  const canClickCommunity = isPublic; // we can always click the settings for a community (even if we are not an admin)
 
   const optOnAvatarClick =
     canClickLegacy || canClickPrivateApproved || canClick03GroupAccepted || canClickCommunity
@@ -49,23 +48,6 @@ export const AvatarHeader = (props: { pubkey: string; onAvatarClick?: () => void
         dataTestId="conversation-options-avatar"
       />
     </span>
-  );
-};
-
-export const BackButton = (props: { onGoBack: () => void; showBackButton: boolean }) => {
-  const { onGoBack, showBackButton } = props;
-  if (!showBackButton) {
-    return null;
-  }
-
-  return (
-    <SessionIconButton
-      iconType="chevron"
-      iconSize="large"
-      iconRotation={90}
-      onClick={onGoBack}
-      dataTestId="back-button-message-details"
-    />
   );
 };
 
@@ -93,16 +75,14 @@ export const CallButton = () => {
   }
 
   return (
-    <SessionIconButton
-      iconType="phone"
+    <SessionLucideIconButton
+      unicode={LUCIDE_ICONS_UNICODE.PHONE}
       iconSize="large"
-      iconPadding="2px"
-      // negative margin to keep conversation header title centered
-      margin="0 10px 0 -32px"
       onClick={() => {
         void callRecipient(selectedConvoKey, canCall);
       }}
       dataTestId="call-button"
+      margin="0 var(--margins-sm) 0 0"
       disabled={isBlocked || !canCall}
     />
   );

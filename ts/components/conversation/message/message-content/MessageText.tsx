@@ -1,7 +1,6 @@
 import styled from 'styled-components';
 import clsx from 'clsx';
 
-import { SessionIcon } from '../../../icon';
 import { MessageBody } from './MessageBody';
 import {
   useMessageDirection,
@@ -14,6 +13,8 @@ import {
   useSelectedIsPublic,
 } from '../../../../state/selectors/selectedConversation';
 import type { WithMessageId } from '../../../../session/types/with';
+import { LucideIcon } from '../../../icon/LucideIcon';
+import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { localize } from '../../../../localization/localeTools';
 import { MessageBubble } from './MessageBubble';
 
@@ -54,7 +55,14 @@ export const MessageText = ({ messageId }: Props) => {
 
   return (
     <StyledMessageText dir="auto" className={clsx('module-message__text')} isDeleted={isDeleted}>
-      {isDeleted && <SessionIcon iconType="delete" iconSize="small" iconColor={iconColor} />}
+      {isDeleted && (
+        <LucideIcon
+          unicode={LUCIDE_ICONS_UNICODE.TRASH2}
+          iconSize="small"
+          iconColor={iconColor}
+          style={{ padding: '0 var(--margins-xs)' }}
+        />
+      )}
       <MessageBubble>
         <MessageBody
           text={contents || ''}

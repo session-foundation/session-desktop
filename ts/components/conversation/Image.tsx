@@ -10,7 +10,8 @@ import { MessageGenericAttachment } from './message/message-content/MessageGener
 import { useEncryptedFileFetch } from '../../hooks/useEncryptedFileFetch';
 import { useMessageIdFromContext } from '../../contexts/MessageIdContext';
 import { useMessageDirection, useMessageSelected } from '../../state/selectors';
-import { AriaLabels } from '../../util/hardcodedAriaLabels';
+import { PlayButtonCenteredAbsolute } from '../buttons/PlayButton';
+import { StagedAttachmentsCloseButton } from './StagedAttachementsCloseButton';
 
 type Props = {
   alt: string;
@@ -75,7 +76,6 @@ export const Image = (props: Props) => {
   const disableDrag = useDisableDrag();
   const { loading, urlToLoad } = useEncryptedFileFetch(url, attachment.contentType, false);
 
-  const { caption } = attachment || { caption: null };
   const [pending, setPending] = useState(attachment.pending ?? true);
   const [mounted, setMounted] = useState((!loading || !pending) && urlToLoad === undefined);
 
@@ -175,36 +175,20 @@ export const Image = (props: Props) => {
           onDragStart={disableDrag}
         />
       )}
-      {caption ? (
-        <img
-          className="module-image__caption-icon"
-          src="images/caption-shadow.svg"
-          alt={AriaLabels.imageCaptionAlt}
-          onDragStart={disableDrag}
-        />
-      ) : null}
+
       <StyledOverlay
         className={clsx(softCorners ? 'module-image--soft-corners' : null)}
         darkOverlay={darkOverlay}
         softCorners={softCorners}
       />
       {closeButton ? (
-        <div
-          role="button"
-          onClick={(e: any) => {
-            e.stopPropagation();
-            if (onClickClose) {
-              onClickClose(attachment);
-            }
+        <StagedAttachmentsCloseButton
+          onClick={() => {
+            onClickClose?.(attachment);
           }}
-          className="module-image__close-button"
         />
       ) : null}
-      {mounted && playIconOverlay ? (
-        <div className="module-image__play-overlay__circle">
-          <div className="module-image__play-overlay__icon" />
-        </div>
-      ) : null}
+      {mounted && playIconOverlay ? <PlayButtonCenteredAbsolute iconSize="huge" /> : null}
       {overlayText ? (
         <div className="module-image__text-container" style={{ lineHeight: height }}>
           {overlayText}

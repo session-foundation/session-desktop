@@ -1,11 +1,10 @@
-import { noop } from 'lodash';
-
 import styled from 'styled-components';
 
 import { Flex } from './Flex';
 
-import { SessionIcon, SessionIconType } from '../icon';
 import { SessionHtmlRenderer } from './SessionHTMLRenderer';
+import { LucideIcon } from '../icon/LucideIcon';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 // NOTE We don't change the color strip on the left based on the type. 16/09/2022
 export enum SessionToastType {
@@ -19,7 +18,6 @@ type Props = {
   description: string;
   id?: string;
   type?: SessionToastType;
-  icon?: SessionIconType;
   closeToast?: any;
   onToastClick?: () => void;
 };
@@ -47,44 +45,36 @@ function DescriptionPubkeysReplaced({ description }: { description: string }) {
 }
 
 export const SessionToast = (props: Props) => {
-  const { description, type, icon } = props;
+  const { description, type } = props;
 
-  const toastDesc = description || '';
-  const toastIconSize = toastDesc ? 'huge' : 'medium';
-
-  // Set a custom icon or allow the theme to define the icon
-  let toastIcon = icon || undefined;
+  let toastIcon: LUCIDE_ICONS_UNICODE | undefined;
   if (!toastIcon) {
     switch (type) {
-      case SessionToastType.Info:
-        toastIcon = 'info';
-        break;
       case SessionToastType.Success:
-        toastIcon = 'check';
+        toastIcon = LUCIDE_ICONS_UNICODE.CHECK;
         break;
       case SessionToastType.Error:
-        toastIcon = 'error';
+        toastIcon = LUCIDE_ICONS_UNICODE.OCTAGON_ALERT;
         break;
       case SessionToastType.Warning:
-        toastIcon = 'warning';
+        toastIcon = LUCIDE_ICONS_UNICODE.OCTAGON_X;
         break;
+      case SessionToastType.Info:
       default:
-        toastIcon = 'info';
+        toastIcon = LUCIDE_ICONS_UNICODE.INFO;
     }
   }
-
-  const onToastClick = props?.onToastClick || noop;
 
   return (
     <Flex
       $container={true}
       $alignItems="center"
-      onClick={onToastClick}
+      onClick={props.onToastClick}
       data-testid="session-toast"
       padding="var(--margins-sm) 0"
     >
       <IconDiv>
-        <SessionIcon iconType={toastIcon} iconSize={toastIconSize} />
+        <LucideIcon iconSize="huge" unicode={toastIcon} />
       </IconDiv>
       <Flex
         $container={true}
@@ -92,7 +82,7 @@ export const SessionToast = (props: Props) => {
         $flexDirection="column"
         className="session-toast"
       >
-        <DescriptionPubkeysReplaced description={toastDesc} />
+        <DescriptionPubkeysReplaced description={description} />
       </Flex>
     </Flex>
   );

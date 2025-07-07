@@ -1,5 +1,7 @@
 import type { SessionDataTestId } from 'react';
-import { SessionIconButton } from '../icon';
+
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { alignButtonEndAbsoluteButtonStyle } from './sharedStyles';
 
 export const ClearInputButton = ({
@@ -18,9 +20,9 @@ export const ClearInputButton = ({
   }
 
   return (
-    <SessionIconButton
+    <SessionLucideIconButton
       ariaLabel="clear input"
-      iconType={'cross'}
+      unicode={LUCIDE_ICONS_UNICODE.X}
       iconColor={'var(--text-primary-color)'}
       iconSize="medium"
       onClick={onClearInputClicked}

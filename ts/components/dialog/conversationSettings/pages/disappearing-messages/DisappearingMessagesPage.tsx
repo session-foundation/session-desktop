@@ -29,20 +29,11 @@ import { localize } from '../../../../../localization/localeTools';
 import { SessionSpinner } from '../../../../loading';
 
 const ButtonSpacer = styled.div`
-  height: 80px;
+  height: 20px;
 `;
 
 const StyledButtonContainer = styled.div`
-  position: absolute;
-  width: 100%;
-  bottom: 0px;
-
-  .session-button {
-    font-weight: 500;
-    min-width: 90px;
-    width: fit-content;
-    margin: 35px auto 10px;
-  }
+  justify-items: center;
 `;
 
 const StyledNonAdminDescription = styled.div`

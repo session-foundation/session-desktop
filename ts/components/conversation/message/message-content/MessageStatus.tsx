@@ -8,9 +8,11 @@ import { useIsDetailMessageView } from '../../../../contexts/isDetailViewContext
 import { getMostRecentOutgoingMessageId } from '../../../../state/selectors/conversations';
 import { useSelectedIsGroupOrCommunity } from '../../../../state/selectors/selectedConversation';
 import { SpacerXS } from '../../../basic/Text';
-import { SessionIcon, SessionIconType } from '../../../icon';
 import { ExpireTimer } from '../../ExpireTimer';
 import { saveLogToDesktop } from '../../../../util/logger/renderer_process_logging';
+import { LUCIDE_ICONS_UNICODE, type WithLucideUnicode } from '../../../icon/lucide';
+import { LucideIcon } from '../../../icon/LucideIcon';
+import { localize } from '../../../../localization/localeTools';
 
 type Props = {
   messageId: string;
@@ -84,38 +86,23 @@ const MessageStatusContainer = styled.div<{
     props.isGroup || !props.isIncoming ? 'var(--width-avatar-group-msg-list)' : 0};
 `;
 
-const StyledStatusText = styled.div<{ textColor: string }>`
+const StyledStatusText = styled.div<{ $textColor: string }>`
   font-size: small;
-  color: ${props => props.textColor};
+  color: ${props => props.$textColor};
 `;
 
 const TextDetails = ({ text, textColor }: { text: string; textColor: string }) => {
   return (
     <>
-      <StyledStatusText textColor={textColor}>{text}</StyledStatusText>
+      <StyledStatusText $textColor={textColor}>{text}</StyledStatusText>
       <SpacerXS />
     </>
   );
 };
 
-function IconDanger({ iconType }: { iconType: SessionIconType }) {
-  return <SessionIcon iconColor={'var(--danger-color'} iconType={iconType} iconSize="tiny" />;
-}
-
-function IconNormal({
-  iconType,
-  rotateDuration,
-}: {
-  iconType: SessionIconType;
-  rotateDuration?: number | undefined;
-}) {
+function IconNormal({ unicode }: WithLucideUnicode) {
   return (
-    <SessionIcon
-      rotateDuration={rotateDuration}
-      iconColor={'var(--text-secondary-color)'}
-      iconType={iconType}
-      iconSize="tiny"
-    />
+    <LucideIcon iconColor={'var(--text-secondary-color)'} unicode={unicode} iconSize="small" />
   );
 }
 
@@ -159,8 +146,8 @@ const MessageStatusSending = ({ dataTestId }: Omit<Props, 'isDetailView'>) => {
       isGroup={false}
       clickable={false}
     >
-      <TextDetails text={window.i18n('sending')} textColor="var(--text-secondary-color)" />
-      <IconNormal rotateDuration={2} iconType="sending" />
+      <TextDetails text={localize('sending').toString()} textColor="var(--text-secondary-color)" />
+      <IconNormal unicode={LUCIDE_ICONS_UNICODE.CIRCLE_ELLIPSES} />
     </MessageStatusContainer>
   );
 };
@@ -171,14 +158,14 @@ const MessageStatusSending = ({ dataTestId }: Omit<Props, 'isDetailView'>) => {
  */
 function IconForExpiringMessageId({
   messageId,
-  iconType,
-}: Pick<Props, 'messageId'> & { iconType: SessionIconType }) {
+  unicode,
+}: Pick<Props, 'messageId'> & WithLucideUnicode) {
   const isExpiring = useIsExpiring(messageId);
 
   return isExpiring ? (
     <MessageStatusExpireTimer messageId={messageId} />
   ) : (
-    <IconNormal iconType={iconType} />
+    <IconNormal unicode={unicode} />
   );
 }
 
@@ -203,7 +190,7 @@ const MessageStatusSent = ({ dataTestId, messageId }: Omit<Props, 'isDetailView'
         text={window.i18n('disappearingMessagesSent')}
         textColor="var(--text-secondary-color)"
       />
-      <IconForExpiringMessageId messageId={messageId} iconType="circleCheck" />
+      <IconForExpiringMessageId messageId={messageId} unicode={LUCIDE_ICONS_UNICODE.CHECK} />
     </MessageStatusContainer>
   );
 };
@@ -231,8 +218,8 @@ const MessageStatusRead = ({
       isGroup={isGroup}
       clickable={false}
     >
-      <TextDetails text={window.i18n('read')} textColor="var(--text-secondary-color)" />
-      <IconForExpiringMessageId messageId={messageId} iconType="doubleCheckCircleFilled" />
+      <TextDetails text={localize('read').toString()} textColor="var(--text-secondary-color)" />
+      <IconForExpiringMessageId messageId={messageId} unicode={LUCIDE_ICONS_UNICODE.EYE} />
     </MessageStatusContainer>
   );
 };
@@ -245,7 +232,7 @@ const MessageStatusError = ({ dataTestId }: Omit<Props, 'isDetailView'>) => {
     <MessageStatusContainer
       data-testid={dataTestId}
       data-testtype="failed"
-      title={window.i18n('messageStatusFailedToSend')}
+      title={localize('messageStatusFailedToSend').toString()}
       onClick={() => {
         void saveLogToDesktop();
       }}
@@ -254,10 +241,14 @@ const MessageStatusError = ({ dataTestId }: Omit<Props, 'isDetailView'>) => {
       isGroup={isGroup}
     >
       <TextDetails
-        text={window.i18n('messageStatusFailedToSend')}
+        text={localize('messageStatusFailedToSend').toString()}
         textColor="var(--danger-color)"
       />
-      <IconDanger iconType="error" />
+      <LucideIcon
+        unicode={LUCIDE_ICONS_UNICODE.OCTAGON_ALERT}
+        iconColor="var(--danger-color)"
+        iconSize="small"
+      />
     </MessageStatusContainer>
   );
 };

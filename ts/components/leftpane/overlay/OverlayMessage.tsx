@@ -189,7 +189,11 @@ export const OverlayMessage = () => {
             <SessionIDDescription>
               <Localizer token="messageNewDescriptionDesktop" />
             </SessionIDDescription>
-            <HelpDeskButton style={{ display: 'inline-flex' }} />
+            <HelpDeskButton
+              iconSize="small"
+              style={{ display: 'inline-flex' }}
+              iconColor="var(--text-secondary-color)"
+            />
           </StyledDescriptionContainer>
           <SpacerLG />
         </>

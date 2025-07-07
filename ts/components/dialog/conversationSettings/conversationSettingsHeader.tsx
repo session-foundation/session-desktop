@@ -32,7 +32,15 @@ function AccountId({ conversationId }: WithConvoId) {
   if (!isPrivate || PubKey.isBlinded(conversationId)) {
     return null;
   }
-  return <StyledAccountId data-testid="account-id">{conversationId}</StyledAccountId>;
+  const len = conversationId.length;
+
+  return (
+    <StyledAccountId data-testid="account-id">
+      {conversationId.slice(0, len / 2)}
+      <br />
+      {conversationId.slice(len / 2)}
+    </StyledAccountId>
+  );
 }
 
 function EditGenericButton({
@@ -49,7 +57,7 @@ function EditGenericButton({
   return (
     <SessionLucideIconButton
       unicode={LUCIDE_ICONS_UNICODE.PENCIL}
-      iconSize="large"
+      iconSize="medium"
       onClick={cb}
       dataTestId={dataTestId}
     />
@@ -95,13 +103,13 @@ const StyledDescription = styled.p<{ expanded: boolean }>`
   background: transparent;
   width: 100%;
   white-space: pre-wrap;
+  word-break: break-word;
   overflow: hidden;
   -webkit-line-clamp: ${({ expanded }) => (expanded ? 'unset' : '2')};
   display: -webkit-box;
   -webkit-box-orient: vertical;
   // some padding so we always have room to show the ellipsis, if needed
   padding-inline: var(--margins-sm);
-  word-break: break-all;
 `;
 
 const StyledViewMoreButton = styled.button`

@@ -1,14 +1,14 @@
 import styled from 'styled-components';
 import clsx from 'clsx';
-import { ReactNode, useState, useRef } from 'react';
+import { ReactNode, useState, useRef, type SessionDataTestId } from 'react';
 import useKey from 'react-use/lib/useKey';
 import { Flex } from './basic/Flex';
 import { SpacerXL } from './basic/Text';
-import { SessionIconButton } from './icon';
-import { SessionIconButtonProps } from './icon/SessionIconButton';
+import { SessionLucideIconButton } from './icon/SessionIconButton';
 import { SessionFocusTrap } from './SessionFocusTrap';
 import { useHTMLDirection } from '../util/i18n/rtlSupport';
 import { StyledRootDialog } from './dialog/StyledRootDialog';
+import { LUCIDE_ICONS_UNICODE } from './icon/lucide';
 
 const DEFAULT_MODAL_WIDTH = '410px';
 
@@ -68,10 +68,10 @@ const StyledModal = styled.div<{
   }
 
   ${StyledModalHeader} {
+    z-index: 3;
     box-shadow: ${props => (props.scrolled ? '0px 0px 20px 8px var(--modal-shadow-color)' : '')};
     border-bottom: ${props =>
       props.scrolled ? '1px solid var(--border-color)' : '1px solid var(--transparent-color)'};
-    margin-bottom: ${props => (props.bigHeader ? 'var(--margins-sm)' : 'var(--margins-xs)')};
   }
 `;
 
@@ -117,7 +117,7 @@ export type SessionWrapperModalType2 = {
   showHeader?: boolean;
   onClose?: (event?: KeyboardEvent) => void;
   showExitIcon?: boolean;
-  headerIconButtons?: Array<Omit<SessionIconButtonProps, 'iconSize'>>;
+  headerIconButtons?: Array<React.ReactNode>;
   children: ReactNode;
   buttonChildren?: ReactNode;
   $contentMaxWidth?: string;
@@ -129,15 +129,16 @@ export type SessionWrapperModalType2 = {
   allowOutsideClick?: boolean;
   bigHeader?: boolean;
   removeScrollbarGutter?: boolean;
+  modalDataTestId?: SessionDataTestId;
 };
 
 const ModalHeader = (
   props: Pick<
     SessionWrapperModalType2,
-    'showExitIcon' | 'onClose' | 'headerIconButtons' | 'title' | 'bigHeader'
+    'showExitIcon' | 'onClose' | 'headerIconButtons' | 'title' | 'bigHeader' | 'modalDataTestId'
   >
 ) => {
-  const { showExitIcon, headerIconButtons, title, onClose, bigHeader } = props;
+  const { showExitIcon, headerIconButtons, title, onClose, bigHeader, modalDataTestId } = props;
   const htmlDirection = useHTMLDirection();
 
   return (
@@ -150,6 +151,7 @@ const ModalHeader = (
       padding={'var(--margins-lg) var(--margins-sm)  var(--margins-sm) var(--margins-lg)'}
       margin={'0 calc(-1 * var(--margins-md)) 0 calc(-1 * var(--margins-lg))'}
       bigHeader={bigHeader}
+      data-testid={modalDataTestId}
     >
       <Flex
         $container={true}
@@ -158,27 +160,7 @@ const ModalHeader = (
         padding={'0'}
         margin={'0'}
       >
-        {headerIconButtons?.length ? (
-          headerIconButtons.map(iconItem => {
-            return (
-              <SessionIconButton
-                key={iconItem.iconType}
-                iconType={iconItem.iconType}
-                iconSize={bigHeader ? 'large' : 'medium'}
-                iconRotation={iconItem.iconRotation}
-                rotateDuration={iconItem.rotateDuration}
-                onClick={iconItem.onClick}
-                padding={'0'}
-                margin={'0'}
-                disabled={iconItem.disabled}
-                dataTestId={iconItem.dataTestId}
-                dataTestIdIcon={iconItem.dataTestIdIcon}
-              />
-            );
-          })
-        ) : showExitIcon ? (
-          <SpacerXL />
-        ) : null}
+        {headerIconButtons?.length ? headerIconButtons : showExitIcon ? <SpacerXL /> : null}
       </Flex>
       <StyledTitle
         bigHeader={bigHeader}
@@ -206,9 +188,9 @@ const ModalHeader = (
             })
           : null}
         {showExitIcon ? (
-          <SessionIconButton
-            iconType="exit"
-            iconSize={bigHeader ? 'medium' : 'small'}
+          <SessionLucideIconButton
+            unicode={LUCIDE_ICONS_UNICODE.X}
+            iconSize={'medium'}
             onClick={() => {
               if (onClose) {
                 onClose();
@@ -239,6 +221,7 @@ export const SessionWrapperModal2 = (props: SessionWrapperModalType2) => {
     classes,
     allowOutsideClick,
     bigHeader,
+    modalDataTestId,
     removeScrollbarGutter,
   } = props;
 
@@ -282,6 +265,7 @@ export const SessionWrapperModal2 = (props: SessionWrapperModalType2) => {
         className={clsx('modal', classes)}
         onMouseDown={handleClick}
         role="dialog"
+        data-testid={modalDataTestId}
       >
         <StyledModal
           ref={modalRef}

@@ -2,13 +2,14 @@ import { ReactNode, useRef } from 'react';
 import useKey from 'react-use/lib/useKey';
 import { clsx } from 'clsx';
 import styled from 'styled-components';
-import { SessionIconButton } from './icon';
 
 import { SessionButton, SessionButtonColor, SessionButtonType } from './basic/SessionButton';
 import { StyledRootDialog } from './dialog/StyledRootDialog';
 import { SessionFocusTrap } from './SessionFocusTrap';
 import { Flex } from './basic/Flex';
 import { SpacerXL } from './basic/Text';
+import { SessionLucideIconButton } from './icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from './icon/lucide';
 
 const StyledTitle = styled.div`
   white-space: nowrap;
@@ -26,7 +27,7 @@ export type SessionWrapperModalType = {
   confirmText?: string;
   cancelText?: string;
   showExitIcon?: boolean;
-  headerIconButtons?: Array<any>;
+  headerIconButtons?: Array<React.ReactNode>;
   children: ReactNode;
   headerReverse?: boolean;
   additionalClassName?: string;
@@ -101,9 +102,9 @@ export const SessionWrapperModal = (props: SessionWrapperModalType) => {
                   className={'session-modal__header__close'}
                 >
                   {showExitIcon ? (
-                    <SessionIconButton
-                      iconType="exit"
-                      iconSize="small"
+                    <SessionLucideIconButton
+                      unicode={LUCIDE_ICONS_UNICODE.X}
+                      iconSize="medium"
                       onClick={() => {
                         props.onClose?.();
                       }}
@@ -135,19 +136,7 @@ export const SessionWrapperModal = (props: SessionWrapperModalType) => {
                   margin={'0'}
                 >
                   {headerIconButtons?.length ? (
-                    headerIconButtons.map((iconItem: any) => {
-                      return (
-                        <SessionIconButton
-                          key={iconItem.iconType}
-                          iconType={iconItem.iconType}
-                          iconSize={'large'}
-                          iconRotation={iconItem.iconRotation}
-                          onClick={iconItem.onClick}
-                          padding={'0'}
-                          margin={'0'}
-                        />
-                      );
-                    })
+                    headerIconButtons
                   ) : showExitIcon ? (
                     <SpacerXL />
                   ) : null}

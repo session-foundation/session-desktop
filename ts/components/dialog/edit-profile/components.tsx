@@ -6,8 +6,9 @@ import { QRCodeLogoProps, SessionQRCode } from '../../SessionQRCode';
 import { Avatar, AvatarSize } from '../../avatar/Avatar';
 import { Flex } from '../../basic/Flex';
 import { SpacerSM } from '../../basic/Text';
-import { SessionIconButton } from '../../icon';
 import { ProfileDialogModes } from './EditProfileDialog';
+import { SessionLucideIconButton } from '../../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 
 const qrLogoProps: QRCodeLogoProps = {
   iconType: 'brandThin',
@@ -110,7 +111,11 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
           onPlusAvatarClick={onClick}
         />
         <QrViewButton onClick={onQRClick} role="button">
-          <SessionIconButton iconType="qr" iconSize={26} iconColor="var(--black-color)" />
+          <SessionLucideIconButton
+            unicode={LUCIDE_ICONS_UNICODE.QR_CODE}
+            iconSize={'large'}
+            iconColor="var(--black-color)"
+          />
         </QrViewButton>
       </div>
     </div>
@@ -141,9 +146,9 @@ export const ProfileName = (props: { profileName: string; onClick: () => void })
 
   return (
     <StyledProfileName $container={true} $justifyContent="center" $alignItems="center">
-      <SessionIconButton
-        iconType="pencil"
-        iconSize="large"
+      <SessionLucideIconButton
+        unicode={LUCIDE_ICONS_UNICODE.PENCIL}
+        iconSize="medium"
         onClick={onClick}
         dataTestId="edit-profile-icon"
       />

@@ -3,6 +3,7 @@ import styled, { CSSProperties } from 'styled-components';
 import { Flex } from '../basic/Flex';
 import { H8 } from '../basic/Heading';
 import { SpacerXS } from '../basic/Text';
+import { useIsDarkTheme } from '../../state/theme/selectors/theme';
 
 // NOTE Used for descendant components
 export const StyledContent = styled.div<{ disabled: boolean }>`
@@ -16,7 +17,7 @@ export const PanelLabel = styled.p`
   color: var(--text-secondary-color);
   width: 100%;
   margin: 0;
-  padding-left: calc(var(--margins-lg) * 2 + var(--margins-sm));
+  padding-left: var(--margins-lg);
   padding-block: var(--margins-sm);
 `;
 
@@ -27,8 +28,9 @@ const StyledRoundedPanelButtonGroup = styled.div`
   overflow: hidden;
   background: var(--background-tertiary-color);
   border-radius: 16px;
-  padding: 0 var(--margins-lg) var(--margins-xs);
-  margin: 0 var(--margins-lg);
+  // Note: we need no padding here so we can change the bg color on hover
+  padding: 0;
+  margin: 0 var(--margins-xs);
   width: -webkit-fill-available;
 `;
 
@@ -55,6 +57,7 @@ export const PanelButtonGroup = (props: PanelButtonGroupProps) => {
 export const StyledPanelButton = styled.button<{
   disabled: boolean;
   color?: string;
+  isDarkTheme: boolean;
 }>`
   cursor: ${props => (props.disabled ? 'not-allowed' : 'pointer')};
   display: flex;
@@ -66,11 +69,15 @@ export const StyledPanelButton = styled.button<{
   width: 100%;
   transition: var(--default-duration);
   color: ${props => (props.disabled ? 'var(--disabled-color)' : props.color)};
-  padding-inline: var(--margins-xs);
+  padding-inline: var(--margins-lg);
   padding-block: var(--margins-sm);
 
-  &:not(:last-child) {
-    border-bottom: 1px solid var(--border-color);
+  &:hover {
+    background-color: ${props =>
+      !props.disabled &&
+      (props.isDarkTheme
+        ? 'var(--background-primary-color)'
+        : 'var(--background-secondary-color)')};
   }
 `;
 
@@ -88,6 +95,8 @@ export type PanelButtonProps = {
 export const PanelButton = (props: PanelButtonProps) => {
   const { className, disabled = false, children, onClick, dataTestId, style, color } = props;
 
+  const isDarkTheme = useIsDarkTheme();
+
   return (
     <StyledPanelButton
       className={className}
@@ -96,6 +105,7 @@ export const PanelButton = (props: PanelButtonProps) => {
       style={style}
       data-testid={dataTestId}
       color={color}
+      isDarkTheme={isDarkTheme}
     >
       {children}
     </StyledPanelButton>

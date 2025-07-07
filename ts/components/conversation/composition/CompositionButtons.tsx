@@ -5,35 +5,25 @@ import {
   useSelectedConversationKey,
   useSelectedIsBlocked,
 } from '../../../state/selectors/selectedConversation';
-import { SessionIconButton } from '../../icon';
+import { SessionLucideIconButton } from '../../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
+import type { SessionIconSize } from '../../icon';
 
 type CompositionButtonProps = {
   onClick: () => void;
 };
 
-const StyledChatButtonContainer = styled.div<{
-  disabled?: boolean;
-  backgroundColor?: string;
-  backgroundColorHover?: string;
-}>`
-  .session-icon-button {
-    svg {
-      background-color: ${props => props.backgroundColor || 'var(--chat-buttons-background-color)'};
-    }
-
-    ${props =>
-      !props.disabled &&
-      `&:hover svg {
-      background-color: ${props.backgroundColorHover || 'var(--chat-buttons-background-hover-color)'};
-    }`}
-
-    ${props =>
-      props.disabled &&
-      `svg path {
-      fill: var(--disabled-color);
-    }`}
-  }
+const StyledChatButtonContainer = styled.div<{ disabled?: boolean }>`
+  cursor: ${props => (props.disabled ? 'not-allowed' : 'pointer')};
+  pointer-events: ${props => (props.disabled ? 'none' : 'auto')};
 `;
+
+const sharedButtonProps = {
+  iconColor: 'var(--chat-buttons-icon-color)',
+  iconSize: 'large' satisfies SessionIconSize as SessionIconSize,
+  backgroundColor: 'var(--chat-buttons-background-color)',
+  padding: 'var(--margins-sm)',
+};
 
 export const AddStagedAttachmentButton = ({ onClick }: CompositionButtonProps) => {
   const selectedConvoKey = useSelectedConversationKey();
@@ -44,15 +34,12 @@ export const AddStagedAttachmentButton = ({ onClick }: CompositionButtonProps) =
 
   return (
     <StyledChatButtonContainer disabled={disabled}>
-      <SessionIconButton
-        iconType="plusThin"
-        iconColor={'var(--chat-buttons-icon-color)'}
-        iconSize={'huge2'}
-        borderRadius="300px"
-        iconPadding="8px"
+      <SessionLucideIconButton
+        unicode={LUCIDE_ICONS_UNICODE.PLUS}
         onClick={onClick}
         dataTestId="attachments-button"
         disabled={disabled}
+        {...sharedButtonProps}
       />
     </StyledChatButtonContainer>
   );
@@ -66,15 +53,12 @@ export const StartRecordingButton = ({ onClick }: CompositionButtonProps) => {
 
   return (
     <StyledChatButtonContainer disabled={disabled}>
-      <SessionIconButton
-        iconType="microphone"
-        iconSize={'huge2'}
-        iconColor={'var(--chat-buttons-icon-color)'}
-        borderRadius="300px"
-        iconPadding="6px"
+      <SessionLucideIconButton
+        unicode={LUCIDE_ICONS_UNICODE.MIC}
         onClick={onClick}
         disabled={disabled}
         dataTestId="microphone-button"
+        {...sharedButtonProps}
       />
     </StyledChatButtonContainer>
   );
@@ -84,15 +68,12 @@ export const ToggleEmojiButton = forwardRef<HTMLButtonElement, CompositionButton
   (props, ref) => {
     return (
       <StyledChatButtonContainer>
-        <SessionIconButton
-          iconType="emoji"
+        <SessionLucideIconButton
+          unicode={LUCIDE_ICONS_UNICODE.SMILE_PLUS}
           ref={ref}
-          iconColor={'var(--chat-buttons-icon-color)'}
-          iconSize={'huge2'}
-          borderRadius="300px"
-          iconPadding="6px"
           onClick={props.onClick}
           dataTestId="emoji-button"
+          {...sharedButtonProps}
         />
       </StyledChatButtonContainer>
     );
@@ -103,16 +84,11 @@ export const SendMessageButton = ({ onClick }: CompositionButtonProps) => {
   const isBlocked = useSelectedIsBlocked();
   return (
     <StyledChatButtonContainer disabled={isBlocked} backgroundColor={'var(--primary-color)'}>
-      <SessionIconButton
-        iconType="send"
-        iconColor={'var(--background-primary-color)'}
-        iconSize={'huge2'}
-        iconRotation={90}
-        borderRadius="300px"
-        iconPadding="6px"
+      <SessionLucideIconButton
+        unicode={LUCIDE_ICONS_UNICODE.ARROW_UP}
         onClick={onClick}
         dataTestId="send-message-button"
-        disabled={isBlocked}
+        {...sharedButtonProps}
       />
     </StyledChatButtonContainer>
   );

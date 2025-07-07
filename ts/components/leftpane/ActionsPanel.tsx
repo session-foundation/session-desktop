@@ -132,7 +132,7 @@ const Section = (props: { type: SectionType }) => {
   const unreadToShow = type === SectionType.Message ? globalUnreadMessageCount : undefined;
 
   const buttonProps = {
-    iconSize: '22px',
+    iconSize: 'medium',
     padding: 'var(--margins-lg)',
     onClick: handleClick,
     isSelected,
@@ -171,11 +171,7 @@ const Section = (props: { type: SectionType }) => {
       );
     case SectionType.PathIndicator:
       return (
-        <ActionPanelOnionStatusLight
-          handleClick={handleClick}
-          isSelected={isSelected}
-          id={'onion-path-indicator-led-id'}
-        />
+        <ActionPanelOnionStatusLight handleClick={handleClick} id={'onion-path-indicator-led-id'} />
       );
     case SectionType.ColorMode:
     default:

@@ -404,6 +404,7 @@ class CompositionBoxInner extends Component<Props, State> {
         $alignItems="flex-end"
         width="100%"
         onClick={this.focusCompositionBox} // used to focus on the textarea when clicking in its container
+        $flexGap="var(--margins-xs)"
       >
         {typingEnabled || isBlocked ? (
           <AddStagedAttachmentButton onClick={this.onChooseAttachment} />

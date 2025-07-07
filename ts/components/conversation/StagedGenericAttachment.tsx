@@ -1,4 +1,5 @@
 import { AttachmentType, getExtensionForDisplay } from '../../types/Attachment';
+import { StagedAttachmentsCloseButton } from './StagedAttachementsCloseButton';
 
 type Props = {
   attachment: AttachmentType;
@@ -12,13 +13,9 @@ export function StagedGenericAttachment(props: Props) {
 
   return (
     <div className="module-staged-generic-attachment">
-      <div
-        className="module-staged-generic-attachment__close-button"
-        role="button"
+      <StagedAttachmentsCloseButton
         onClick={() => {
-          if (onClose) {
-            onClose(attachment);
-          }
+          onClose?.(attachment);
         }}
       />
       <div className="module-staged-generic-attachment__icon">

@@ -49,7 +49,7 @@ export const MessageFrom = (props: { sender: string; isSenderAdmin: boolean }) =
         <MessageInfoLabel>{from}</MessageInfoLabel>
         {isDev ? (
           <CopyToClipboardIcon
-            iconSize={'medium'}
+            iconSize={'small'}
             copyContent={`${profileName} ${sender}`}
             margin={'0 0 0 var(--margins-xs)'}
           />

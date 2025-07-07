@@ -3,8 +3,9 @@ import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { closeRightPanel } from '../../../../../state/ducks/conversations';
 import { Flex } from '../../../../basic/Flex';
-import { SessionIconButton } from '../../../../icon';
 import { sectionActions } from '../../../../../state/ducks/section';
+import { SessionLucideIconButton } from '../../../../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../../../../icon/lucide';
 
 export const HeaderTitle = styled.h2`
   font-family: var(--font-default);
@@ -22,6 +23,8 @@ export const HeaderSubtitle = styled.h3`
   text-align: center;
   padding-top: 0px;
   margin-top: 0;
+  // limit the width of the subtitle to have a nicer look (and not one long line)
+  max-width: 50ch;
 `;
 
 type HeaderProps = (
@@ -59,9 +62,9 @@ export const Header = (props: HeaderProps) => {
         {children}
       </Flex>
       {!hideCloseButton && (
-        <SessionIconButton
-          iconSize={'tiny'}
-          iconType={'exit'}
+        <SessionLucideIconButton
+          iconSize={'medium'}
+          unicode={LUCIDE_ICONS_UNICODE.X}
           onClick={() => {
             if (closeButtonOnClick) {
               closeButtonOnClick();

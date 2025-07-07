@@ -14,7 +14,7 @@ import { LucideIcon } from './icon/LucideIcon';
 
 const StyledSearchInput = styled.div`
   height: var(--search-input-height);
-  background-color: var(--background-secondary-color);
+  background-color: var(--background-tertiary-color);
   width: 100%;
   // max width because it doesn't look good on a wide dialog otherwise
   max-width: 300px;
@@ -23,8 +23,8 @@ const StyledSearchInput = styled.div`
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
-  border-radius: 100px;
   padding-inline: var(--margins-sm);
+  border-radius: 100px;
 `;
 
 const StyledInput = styled.input`
@@ -82,14 +82,21 @@ export const SessionSearchInput = ({ searchType }: { searchType: SearchType }) =
     return null;
   }
 
-  const iconSize = '20px';
+  const iconSize = 'medium';
 
   const placeholder = isGroupCreationSearch
     ? localize('searchContacts').toString()
     : localize('search').toString();
 
+  const isInMainScreen = searchType === 'global' || searchType === 'create-group';
+
+  const backgroundColor = isInMainScreen ? 'transparent' : undefined;
+
   return (
-    <StyledSearchInput data-testid={isGroupCreationSearch ? 'search-contacts-field' : undefined}>
+    <StyledSearchInput
+      data-testid={isGroupCreationSearch ? 'search-contacts-field' : undefined}
+      style={{ backgroundColor }}
+    >
       <LucideIcon
         iconColor="var(--search-bar-icon-color)"
         iconSize={iconSize}

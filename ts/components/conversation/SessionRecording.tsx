@@ -9,8 +9,10 @@ import styled, { keyframes } from 'styled-components';
 import { Constants } from '../../session';
 import { MAX_ATTACHMENT_FILESIZE_BYTES } from '../../session/constants';
 import { ToastUtils } from '../../session/utils';
-import { SessionIconButton } from '../icon';
+import { type SessionIconSize } from '../icon';
 import { useFormattedDuration } from '../../hooks/useFormattedDuration';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 interface Props {
   onExitVoiceNoteView: () => void;
@@ -36,6 +38,13 @@ function getTimestamp() {
 interface StyledFlexWrapperProps {
   marginHorizontal: string;
 }
+
+const sharedButtonProps = {
+  iconColor: 'var(--chat-buttons-icon-color)',
+  iconSize: 'large' satisfies SessionIconSize as SessionIconSize,
+  backgroundColor: 'var(--chat-buttons-background-color)',
+  padding: 'var(--margins-sm)',
+};
 
 const pulseColorAnimation = keyframes`
     0% {
@@ -70,6 +79,7 @@ const StyledFlexWrapper = styled.div<StyledFlexWrapperProps>`
   display: flex;
   flex-direction: row;
   align-items: center;
+  gap: var(--margins-xs);
 
   .session-button {
     margin: ${props => props.marginHorizontal};
@@ -173,30 +183,40 @@ export class SessionRecording extends Component<Props, State> {
         <div className="session-recording--actions">
           <StyledFlexWrapper marginHorizontal="5px">
             {isRecording && (
-              <SessionIconButton
-                iconType="stop"
-                iconSize="medium"
+              <SessionLucideIconButton
                 iconColor={'var(--danger-color)'}
+                unicode={LUCIDE_ICONS_UNICODE.SQUARE}
                 onClick={actionPauseFn}
+                iconSize={'large'}
                 dataTestId="end-voice-message"
               />
             )}
             {actionPauseAudio && (
-              <SessionIconButton iconType="pause" iconSize="medium" onClick={actionPauseFn} />
+              <SessionLucideIconButton
+                unicode={LUCIDE_ICONS_UNICODE.PAUSE}
+                {...sharedButtonProps}
+                onClick={actionPauseFn}
+              />
             )}
             {hasRecordingAndPaused && (
-              <SessionIconButton iconType="play" iconSize="medium" onClick={this.playAudio} />
+              <SessionLucideIconButton
+                unicode={LUCIDE_ICONS_UNICODE.PLAY}
+                {...sharedButtonProps}
+                onClick={this.playAudio}
+              />
             )}
             {hasRecording && (
-              <SessionIconButton
-                iconType="delete"
-                iconSize="medium"
+              <SessionLucideIconButton
+                unicode={LUCIDE_ICONS_UNICODE.TRASH2}
                 onClick={this.onDeleteVoiceMessage}
+                {...sharedButtonProps}
               />
             )}
           </StyledFlexWrapper>
 
-          {actionDefault && <SessionIconButton iconType="microphone" iconSize={'huge'} />}
+          {actionDefault && (
+            <SessionLucideIconButton unicode={LUCIDE_ICONS_UNICODE.MIC} iconSize="large" />
+          )}
         </div>
 
         {hasRecording && !isRecording ? (
@@ -211,13 +231,11 @@ export class SessionRecording extends Component<Props, State> {
 
         {!isRecording && (
           <div>
-            <SessionIconButton
-              iconType="send"
-              iconSize="large"
-              iconRotation={90}
+            <SessionLucideIconButton
+              unicode={LUCIDE_ICONS_UNICODE.ARROW_UP}
               onClick={this.onSendVoiceMessage}
               dataTestId="send-message-button"
-              margin="0"
+              {...sharedButtonProps}
             />
           </div>
         )}
