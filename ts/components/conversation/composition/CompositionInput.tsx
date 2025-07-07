@@ -7,10 +7,14 @@ import React, {
   useImperativeHandle,
   type HTMLAttributes,
   type ClipboardEvent,
+  type KeyboardEvent,
+  type SyntheticEvent,
 } from 'react';
 import styled from 'styled-components';
+import { isUndefined } from 'lodash';
 import { useDebouncedSpellcheck } from '../../../hooks/useDebuncedSpellcheck';
 import { useDebouncedSelectAllOnTripleClickHandler } from '../../../hooks/useDebouncedSelectAllOnTripleClickHandler';
+import { useHistory } from '../../../hooks/useHistory';
 
 enum DATA_ATTRIBUTE {
   NODE = 'data-con-node',
@@ -200,7 +204,8 @@ function markNodeForDeletion(queue: Array<Node>, reason: string, ...nodes: Array
   window.log.debug('COMP-DELETE', reason, nodes);
 }
 
-export type ContentEditableEvent = React.SyntheticEvent<HTMLDivElement> & {
+type ContentEditableEventWithoutTarget = Omit<React.SyntheticEvent<HTMLDivElement>, 'target'>;
+export type ContentEditableEvent = ContentEditableEventWithoutTarget & {
   target: { value: string; caratHtmlIndex: number | null };
 };
 
@@ -226,6 +231,7 @@ export interface CompositionInputRef {
   getCaretIndex: () => number;
   setCaretIndex: (htmlIndex: number) => void;
   typeAtCaret: (content: string, previousCharactersToRemove?: number) => void;
+  resetState: (content: string) => void;
 }
 
 export type ContentEditableProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> &
@@ -250,6 +256,7 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
       style,
       onKeyUp,
       onKeyDown,
+      onClick,
       children,
       ...rest
     } = props;
@@ -263,6 +270,8 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
     useDebouncedSpellcheck({
       elementRef: elRef,
     });
+
+    const { undo, redo, commit, reset } = useHistory<string>(html);
 
     useImperativeHandle(
       ref,
@@ -352,8 +361,15 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
             onChange({ target: { value: newHtml } } as any);
           }
         },
+
+        /**
+         * Exposed to allow for manual resetting, Should only be used if required. (Eg: if in a class component)
+         */
+        resetState: (content: string) => {
+          reset(content);
+        },
       }),
-      [onChange]
+      [onChange, reset]
     );
 
     // Track selection changes when focused
@@ -575,8 +591,8 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
       return false;
     }, []);
 
-    const emitChange = useCallback(
-      (e: Omit<ContentEditableEvent, 'target'>) => {
+    const emitChangeEvent = useCallback(
+      (e: ContentEditableEventWithoutTarget, preventUndoStackCommit = false) => {
         const el = elRef.current;
         if (!el || !onChange) {
           return;
@@ -586,18 +602,21 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
         const value = lastHtml.current;
         // TODO: clean up this type assertion
         onChange({ ...e, target: { value, caratHtmlIndex } } as ContentEditableEvent);
+        if (!preventUndoStackCommit) {
+          commit(value);
+        }
       },
-      [onChange]
+      [onChange, commit]
     );
 
     const onInput = useCallback(
       (e: Omit<ContentEditableEvent, 'target'>) => {
         const hasChanged = handleChange();
         if (hasChanged) {
-          emitChange(e);
+          emitChangeEvent(e);
         }
       },
-      [emitChange, handleChange]
+      [emitChangeEvent, handleChange]
     );
 
     const onCopy = useCallback((e: ClipboardEvent<HTMLDivElement>) => {
@@ -609,10 +628,125 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
       }
     }, []);
 
-    const onClick = useDebouncedSelectAllOnTripleClickHandler({
+    const _onClick = useDebouncedSelectAllOnTripleClickHandler({
       elementRef: elRef,
-      onClick: props.onClick,
+      onClick,
     });
+
+    const handleUndo = useCallback(
+      (e: ContentEditableEventWithoutTarget) => {
+        let item = undo();
+        if (!isUndefined(item)) {
+          if (item === lastHtml.current) {
+            item = undo();
+          }
+          if (!isUndefined(item)) {
+            lastHtml.current = item;
+            emitChangeEvent(e, true);
+          }
+        }
+      },
+      [emitChangeEvent, undo]
+    );
+
+    const handleRedo = useCallback(
+      (e: ContentEditableEventWithoutTarget) => {
+        const item = redo();
+        if (item) {
+          lastHtml.current = item;
+          emitChangeEvent(e, true);
+        }
+      },
+      [emitChangeEvent, redo]
+    );
+
+    const _onKeyDown = useCallback(
+      (e: KeyboardEvent<HTMLDivElement>) => {
+        if (e.ctrlKey || e.metaKey) {
+          if (e.key === 'y' || (e.key === 'z' && e.shiftKey)) {
+            // Ctrl+Y or Cmd+Y
+            // Ctrl+Shift+Z or Cmd+Shift+Z
+            e.preventDefault();
+            handleRedo(e);
+          } else if (e.key === 'z' && !e.shiftKey) {
+            // Ctrl+Z or Cmd+Z (without Shift)
+            e.preventDefault();
+            handleUndo(e);
+          }
+        }
+        onKeyDown?.(e);
+      },
+      [onKeyDown, handleRedo, handleUndo]
+    );
+
+    const createSyntheticEvent = useCallback(
+      ({
+        event,
+        preventDefault,
+        stopPropagation,
+      }: {
+        event: InputEvent;
+        preventDefault?: boolean;
+        stopPropagation?: boolean;
+      }) => {
+        const el = elRef.current;
+        if (!el) {
+          return null;
+        }
+
+        if (preventDefault) {
+          event.preventDefault();
+        }
+
+        if (stopPropagation) {
+          event.stopPropagation();
+        }
+
+        return {
+          ...event,
+          currentTarget: el,
+          target: el,
+          isDefaultPrevented: () => preventDefault || false,
+          isPropagationStopped: () => stopPropagation || false,
+          persist: () => false,
+          nativeEvent: {} as Event,
+        } satisfies SyntheticEvent<HTMLDivElement>;
+      },
+      []
+    );
+
+    const handleBeforeInput = useCallback(
+      (e: InputEvent) => {
+        if (e.inputType === 'historyUndo') {
+          const event = createSyntheticEvent({
+            event: e,
+            preventDefault: true,
+          });
+          if (event) {
+            handleUndo(event);
+          }
+        } else if (e.inputType === 'historyRedo') {
+          const event = createSyntheticEvent({
+            event: e,
+            preventDefault: true,
+          });
+          if (event) {
+            handleRedo(event);
+          }
+        }
+      },
+      [handleUndo, createSyntheticEvent, handleRedo]
+    );
+
+    useEffect(() => {
+      const el = elRef.current;
+      if (!el) {
+        return;
+      }
+      el.addEventListener('beforeinput', handleBeforeInput);
+      // eslint-disable-next-line consistent-return
+      return () => el.removeEventListener('beforeinput', handleBeforeInput);
+    }, [elRef, handleBeforeInput]);
 
     // Update DOM on html change
     useLayoutEffect(() => {
@@ -660,9 +794,9 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
         style={style}
         onInput={onInput}
         onKeyUp={onKeyUp}
-        onKeyDown={onKeyDown}
+        onKeyDown={_onKeyDown}
         onCopy={onCopy}
-        onClick={onClick}
+        onClick={_onClick}
       >
         {children}
       </div>

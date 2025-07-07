@@ -115,6 +115,7 @@ interface Props {
 
 interface State {
   showRecordingView: boolean;
+  initialDraft: string;
   draft: string;
   showEmojiPanel: boolean;
   ignoredLink?: string; // set the ignored url when users closed the link preview
@@ -124,8 +125,10 @@ interface State {
 }
 
 const getDefaultState = (newConvoId?: string) => {
+  const draft = getDraftForConversation(newConvoId);
   return {
-    draft: getDraftForConversation(newConvoId),
+    draft,
+    initialDraft: draft,
     showRecordingView: false,
     showEmojiPanel: false,
     ignoredLink: undefined,
@@ -421,6 +424,7 @@ class CompositionBoxInner extends Component<Props, State> {
         >
           <CompositionTextArea
             draft={this.state.draft}
+            initialDraft={this.state.initialDraft}
             setDraft={this.setDraft}
             container={this.container}
             inputRef={this.inputRef}

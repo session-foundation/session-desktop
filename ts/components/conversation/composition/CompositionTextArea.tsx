@@ -44,6 +44,7 @@ import { Mention } from '../AddMentions';
 import { useDebugInputCommands } from '../../dialog/debug/hooks/useDebugInputCommands';
 
 type Props = {
+  initialDraft: string;
   draft: string;
   setDraft: (draft: string) => void;
   container: RefObject<HTMLDivElement>;
@@ -174,7 +175,7 @@ function createUserMentionHtml({ id, display }: SessionSuggestionDataItem) {
 }
 
 export const CompositionTextArea = (props: Props) => {
-  const { draft, setDraft, inputRef, typingEnabled, onKeyDown } = props;
+  const { draft, initialDraft, setDraft, inputRef, typingEnabled, onKeyDown } = props;
 
   const [lastBumpTypingMessageLength, setLastBumpTypingMessageLength] = useState(0);
   const [mention, setMention] = useState<MentionDetails | null>(null);
@@ -209,7 +210,8 @@ export const CompositionTextArea = (props: Props) => {
    */
   useEffect(() => {
     handleMentionCleanup();
-  }, [selectedConversationKey]);
+    inputRef.current?.resetState(initialDraft);
+  }, [initialDraft, inputRef, selectedConversationKey]);
 
   const results = useMemo(
     () =>
