@@ -12,14 +12,13 @@ import { Image } from './Image';
 import { findAndFormatContact } from '../../models/message';
 import { getAbsoluteAttachmentPath } from '../../types/MessageAttachment';
 import { GoogleChrome } from '../../util';
-import { localize } from '../../localization/localeTools';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { LucideIcon } from '../icon/LucideIcon';
-import { QuoteText } from './message/message-content/Quote';
 import { localize } from '../../localization/localeTools';
 import { ContactName } from './ContactName';
 import { useSelectedIsPublic } from '../../state/selectors/selectedConversation';
+import { QuoteText } from './message/message-content/quote/QuoteText';
 
 const QuotedMessageComposition = styled(Flex)`
   border-top: 1px solid var(--border-color);
@@ -100,7 +99,7 @@ export const SessionQuotedMessageComposition = () => {
   const isGenericFile = !hasAudioAttachment && !isVideo && !isImage;
 
   const subtitleText = quoteText ? (
-    <QuoteText isIncoming={!contact.isMe} text={quoteText} />
+    <QuoteText isIncoming={!contact.isMe} text={quoteText} referencedMessageNotFound={true} />
   ) : (
     localize(
       hasAudioAttachment

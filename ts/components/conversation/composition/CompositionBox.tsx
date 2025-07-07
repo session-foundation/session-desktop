@@ -201,6 +201,7 @@ const StyledSendMessageInput = styled.div<{ dir?: HTMLDirection }>`
 const StyledRightCompositionBoxButtonContainer = styled.div`
   position: absolute;
   inset-inline-end: var(--margins-md);
+  gap: var(--margins-sm);
   display: flex;
   flex-direction: row;
   width: max-content;

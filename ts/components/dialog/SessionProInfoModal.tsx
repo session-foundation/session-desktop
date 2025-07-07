@@ -118,7 +118,7 @@ function FeatureListItem({
       ) : (
         <LucideIcon
           unicode={LUCIDE_ICONS_UNICODE.CIRCLE_CHECK}
-          iconSize={'var(--font-size-xl)'}
+          iconSize={'medium'}
           iconColor={'var(--primary-color)'}
         />
       )}

@@ -14,18 +14,6 @@ import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 const StyledMessageRequestBanner = styled.div`
   // The conversation list item row is set to 64px height
   height: 64px;
-  width: 100%;
-  max-width: 300px;
-  display: flex;
-  flex-direction: row;
-  padding: 8px 16px; // adjusting for unread border always being active
-  align-items: center;
-  cursor: pointer;
-  background: var(--conversation-tab-background-color);
-
-  &:hover {
-    background: var(--conversation-tab-background-hover-color);
-  }
   min-height: 64px;
 `;
 
@@ -115,7 +103,7 @@ export const MessageRequestsBanner = (props: { handleOnClick: () => any }) => {
             iconColor="var(--black-color)"
           />
         </StyledGridContainer>
-        <StyledMessageRequestBannerHeader>
+        <StyledMessageRequestBannerHeader className="module-conversation-list-item__content">
           <Localizer token="sessionMessageRequests" />
           <StyledUnreadCounter>
             <div>{conversationRequestsUnread || 0}</div>
