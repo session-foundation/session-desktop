@@ -231,6 +231,7 @@ export const QuoteText = (
   const { text, attachment, isIncoming } = props;
 
   const isGroup = !useSelectedIsPrivate();
+  const isPublic = useSelectedIsPublic();
 
   if (text) {
     return (
@@ -246,6 +247,7 @@ export const QuoteText = (
           disableRichContent={true}
           disableJumbomoji={true}
           isGroup={isGroup}
+          isPublic={isPublic}
         />
       </div>
     );

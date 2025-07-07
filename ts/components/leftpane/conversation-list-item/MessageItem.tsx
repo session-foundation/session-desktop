@@ -5,6 +5,7 @@ import { useConvoIdFromContext } from '../../../contexts/ConvoIdContext';
 import {
   useHasUnread,
   useIsPrivate,
+  useIsPublic,
   useIsTyping,
   useLastMessage,
 } from '../../../hooks/useParamSelector';
@@ -21,6 +22,7 @@ export const MessageItem = () => {
   const conversationId = useConvoIdFromContext();
   const lastMessage = useLastMessage(conversationId);
   const isGroup = !useIsPrivate(conversationId);
+  const isPublic = useIsPublic(conversationId);
 
   const hasUnread = useHasUnread(conversationId);
   const isConvoTyping = useIsTyping(conversationId);
@@ -41,7 +43,6 @@ export const MessageItem = () => {
   if (isEmpty(text)) {
     return null;
   }
-  const withoutHtmlTags = text.replaceAll(/(<([^>]+)>)/gi, '');
 
   return (
     <div className="module-conversation-list-item__message">
@@ -55,10 +56,11 @@ export const MessageItem = () => {
           <TypingAnimation />
         ) : (
           <MessageBody
-            text={withoutHtmlTags}
+            text={text}
             disableJumbomoji={true}
             disableRichContent={true}
             isGroup={isGroup}
+            isPublic={isPublic}
           />
         )}
       </div>

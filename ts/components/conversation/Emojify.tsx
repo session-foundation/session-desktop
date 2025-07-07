@@ -9,16 +9,17 @@ type Props = {
   /** Allows you to customize now non-newlines are rendered. Simplest is just a <span>. */
   renderNonEmoji?: RenderTextCallbackType;
   isGroup: boolean;
+  isPublic?: boolean;
 };
 
 const defaultRenderNonEmoji = (text: string | undefined) => <>{text || ''}</>;
 
 export const Emojify = (props: Props): JSX.Element => {
-  const { text, renderNonEmoji, sizeClass, isGroup } = props;
+  const { text, renderNonEmoji, sizeClass, isGroup, isPublic = false } = props;
   if (!renderNonEmoji) {
     return <>{defaultRenderNonEmoji(text)}</>;
   }
-  const rendered = renderNonEmoji?.({ text: text || '', key: 1, isGroup });
+  const rendered = renderNonEmoji?.({ text: text || '', key: 1, isGroup, isPublic });
   let size = 1.0;
   switch (sizeClass) {
     case 'jumbo':

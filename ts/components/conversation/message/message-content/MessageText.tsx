@@ -11,8 +11,10 @@ import {
 import {
   useIsMessageSelectionMode,
   useSelectedIsGroupOrCommunity,
+  useSelectedIsPublic,
 } from '../../../../state/selectors/selectedConversation';
 import type { WithMessageId } from '../../../../session/types/with';
+import { localize } from '../../../../localization/localeTools';
 import { MessageBubble } from './MessageBubble';
 
 type Props = WithMessageId;
@@ -38,7 +40,8 @@ export const MessageText = ({ messageId }: Props) => {
   const isDeleted = useMessageIsDeleted(messageId);
   const text = useMessageText(messageId);
   const isOpenOrClosedGroup = useSelectedIsGroupOrCommunity();
-  const contents = isDeleted ? window.i18n('deleteMessageDeletedGlobally') : text?.trim();
+  const isPublic = useSelectedIsPublic();
+  const contents = isDeleted ? localize('deleteMessageDeletedGlobally').toString() : text?.trim();
 
   if (!contents) {
     return null;
@@ -58,6 +61,7 @@ export const MessageText = ({ messageId }: Props) => {
           disableRichContent={multiSelectMode}
           disableJumbomoji={false}
           isGroup={isOpenOrClosedGroup}
+          isPublic={isPublic}
         />
       </MessageBubble>
     </StyledMessageText>

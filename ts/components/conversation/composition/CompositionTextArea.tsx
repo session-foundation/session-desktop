@@ -190,6 +190,7 @@ export const CompositionTextArea = (props: Props) => {
   const isKickedFromGroup = useSelectedIsKickedFromGroup();
   const isGroupDestroyed = useSelectedIsGroupDestroyed();
   const isBlocked = useSelectedIsBlocked();
+  const isPublic = useSelectedIsPublic();
   const groupName = useSelectedNicknameOrProfileNameOrShortenedPubkey();
   const membersInThisChat = useMembersInThisChat();
 
@@ -292,14 +293,14 @@ export const CompositionTextArea = (props: Props) => {
               ref={selected ? selectedMentionRef : undefined}
             >
               {mention.prefix === PREFIX.USER
-                ? renderUserMentionRow(id)
+                ? renderUserMentionRow(id, isPublic)
                 : renderEmojiQuickResultRow(id, display)}
             </li>
           );
         })}
       </ul>
     );
-  }, [mention, results, focusedItem, handleSelect]);
+  }, [mention, results, focusedItem, isPublic, handleSelect]);
 
   const handleUpdatePopoverPosition = useCallback(() => {
     const pos = inputRef.current?.getCaretCoordinates();

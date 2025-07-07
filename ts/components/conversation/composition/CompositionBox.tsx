@@ -163,7 +163,7 @@ const StyledSendMessageInput = styled.div<{ dir?: HTMLDirection }>`
     box-shadow: var(--suggestions-shadow);
     background-color: var(--suggestions-background-color);
     z-index: 3;
-    min-width: 80px;
+    min-width: 120px;
 
     ul {
       border-radius: var(--border-radius);

@@ -21,21 +21,28 @@ type Props = {
   /** If set, links will be left alone instead of turned into clickable `<a>` tags. Used in quotes, convo list item, etc */
   disableRichContent: boolean;
   isGroup: boolean;
+  isPublic: boolean;
 };
 
-const renderMentions: RenderTextCallbackType = ({ text, key, isGroup }) => (
-  <AddMentions key={key} text={text} isGroup={isGroup} />
+const renderMentions: RenderTextCallbackType = ({ text, key, isGroup, isPublic }) => (
+  <AddMentions key={key} text={text} isGroup={isGroup} isPublic={isPublic} />
 );
 
 export const renderTextDefault: RenderTextCallbackType = ({ text }) => <>{text}</>;
 
-const renderNewLines: RenderTextCallbackType = ({ text: textWithNewLines, key, isGroup }) => {
+const renderNewLines: RenderTextCallbackType = ({
+  text: textWithNewLines,
+  key,
+  isGroup,
+  isPublic,
+}) => {
   return (
     <AddNewLines
       key={key}
       text={textWithNewLines}
       renderNonNewLine={renderMentions}
       isGroup={isGroup}
+      isPublic={isPublic}
     />
   );
 };
@@ -46,12 +53,14 @@ const renderEmoji = ({
   sizeClass,
   renderNonEmoji,
   isGroup,
+  isPublic,
 }: {
   text: string;
   key: number;
   sizeClass: SizeClassType;
   renderNonEmoji: RenderTextCallbackType;
   isGroup: boolean;
+  isPublic: boolean;
 }) => (
   <Emojify
     key={key}
@@ -59,6 +68,7 @@ const renderEmoji = ({
     sizeClass={sizeClass}
     renderNonEmoji={renderNonEmoji}
     isGroup={isGroup}
+    isPublic={isPublic}
   />
 );
 
@@ -67,12 +77,13 @@ type LinkifyProps = {
   /** Allows you to customize now non-links are rendered. Simplest is just a <span>. */
   renderNonLink: RenderTextCallbackType;
   isGroup: boolean;
+  isPublic: boolean;
 };
 
 const SUPPORTED_PROTOCOLS = /^(http|https):/i;
 
 const Linkify = (props: LinkifyProps): JSX.Element => {
-  const { text, isGroup, renderNonLink } = props;
+  const { text, isGroup, renderNonLink, isPublic } = props;
   const results: Array<any> = [];
   let count = 1;
   const dispatch = useDispatch();
@@ -80,13 +91,13 @@ const Linkify = (props: LinkifyProps): JSX.Element => {
   let last = 0;
 
   if (matchData.length === 0) {
-    return renderNonLink({ text, key: 0, isGroup });
+    return renderNonLink({ text, key: 0, isGroup, isPublic });
   }
 
   matchData.forEach((match: { index: number; url: string; lastIndex: number; text: string }) => {
     if (last < match.index) {
       const textWithNoLink = text.slice(last, match.index);
-      results.push(renderNonLink({ text: textWithNoLink, isGroup, key: count++ }));
+      results.push(renderNonLink({ text: textWithNoLink, isGroup, key: count++, isPublic }));
     }
 
     const { url, text: originalText } = match;
@@ -109,14 +120,14 @@ const Linkify = (props: LinkifyProps): JSX.Element => {
         </a>
       );
     } else {
-      results.push(renderNonLink({ text: originalText, isGroup, key: count++ }));
+      results.push(renderNonLink({ text: originalText, isGroup, key: count++, isPublic }));
     }
 
     last = match.lastIndex;
   });
 
   if (last < text.length) {
-    results.push(renderNonLink({ text: text.slice(last), isGroup, key: count++ }));
+    results.push(renderNonLink({ text: text.slice(last), isGroup, key: count++, isPublic }));
   }
 
   return <>{results}</>;
@@ -181,7 +192,7 @@ function parsePreTags(content: string, messageBodyProps: Props) {
 }
 
 export const MessageBody = (props: Props) => {
-  const { text, disableJumbomoji, disableRichContent, isGroup } = props;
+  const { text, disableJumbomoji, disableRichContent, isGroup, isPublic } = props;
   const sizeClass: SizeClassType = disableJumbomoji ? 'default' : getEmojiSizeClass(text);
 
   if (disableRichContent) {
@@ -191,6 +202,7 @@ export const MessageBody = (props: Props) => {
       key: 0,
       renderNonEmoji: renderNewLines,
       isGroup,
+      isPublic,
     });
   }
 
@@ -202,6 +214,7 @@ export const MessageBody = (props: Props) => {
     <Linkify
       text={text}
       isGroup={isGroup}
+      isPublic={isPublic}
       renderNonLink={({ key, text: nonLinkText }) => {
         return renderEmoji({
           text: nonLinkText,
@@ -209,6 +222,7 @@ export const MessageBody = (props: Props) => {
           key,
           renderNonEmoji: renderNewLines,
           isGroup,
+          isPublic,
         });
       }}
     />

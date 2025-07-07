@@ -104,6 +104,7 @@ export const InteractionItem = (props: InteractionItemProps) => {
           disableJumbomoji={true}
           disableRichContent={true}
           isGroup={isGroup}
+          isPublic={isCommunity}
         />
       </StyledInteractionItemText>
     </div>

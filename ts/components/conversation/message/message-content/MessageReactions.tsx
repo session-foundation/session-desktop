@@ -11,24 +11,11 @@ import { nativeEmojiData } from '../../../../util/emoji';
 import { Flex } from '../../../basic/Flex';
 import { SessionIcon } from '../../../icon';
 import { Reaction, ReactionProps } from '../reactions/Reaction';
-import { StyledPopupContainer } from '../reactions/ReactionPopup';
 import { Localizer } from '../../../basic/Localizer';
 
-export const popupXDefault = -81;
-export const popupYDefault = -90;
-
 export const StyledMessageReactionsContainer = styled(Flex)<{
-  x: number;
-  y: number;
   noAvatar: boolean;
 }>`
-  ${StyledPopupContainer} {
-    position: absolute;
-    top: ${props => `${props.y}px;`};
-    left: ${props => `${props.x}px;`};
-  }
-
-  // MessageAvatar width + margin-inline-end
   ${props => !props.noAvatar && 'margin-inline-start: var(--width-avatar-group-msg-list);'}
 `;
 
@@ -76,7 +63,7 @@ const Reactions = (props: ReactionsProps) => {
       $alignItems={'center'}
       fullWidth={inModal}
     >
-      {reactions.map(([emoji, _]) => (
+      {reactions.map(([emoji]) => (
         <Reaction key={`${messageId}-${emoji}`} emoji={emoji} {...props} />
       ))}
     </StyledMessageReactions>
@@ -96,14 +83,14 @@ const CompressedReactions = (props: ExpandReactionsProps) => {
       $alignItems={'center'}
       fullWidth={true}
     >
-      {reactions.slice(0, 4).map(([emoji, _]) => (
+      {reactions.slice(0, 4).map(([emoji]) => (
         <Reaction key={`${messageId}-${emoji}`} emoji={emoji} {...props} />
       ))}
       <StyledReactionOverflow onClick={handleExpand}>
         {reactions
           .slice(4, 7)
           .reverse()
-          .map(([emoji, _]) => {
+          .map(([emoji]) => {
             return (
               <span
                 key={`${messageId}-${emoji}`}
@@ -143,9 +130,7 @@ type Props = {
   messageId: string;
   hasReactLimit?: boolean;
   onClick: (emoji: string) => void;
-  popupReaction?: string;
-  setPopupReaction?: (emoji: string) => void;
-  onPopupClick?: () => void;
+  onPopupClick?: (emoji: string) => void;
   inModal?: boolean;
   onSelected?: (emoji: string) => boolean;
   noAvatar: boolean;
@@ -158,8 +143,6 @@ export const MessageReactions = (props: Props) => {
     messageId,
     hasReactLimit = true,
     onClick,
-    popupReaction,
-    setPopupReaction,
     onPopupClick,
     inModal = false,
     onSelected,
@@ -171,9 +154,6 @@ export const MessageReactions = (props: Props) => {
   const handleExpand = () => {
     setIsExpanded(!isExpanded);
   };
-
-  const [popupX, setPopupX] = useState(popupXDefault);
-  const [popupY, setPopupY] = useState(popupYDefault);
 
   const msgProps = useMessageReactsPropsById(messageId);
 
@@ -204,12 +184,8 @@ export const MessageReactions = (props: Props) => {
     reactions,
     inModal,
     inGroup,
-    handlePopupX: setPopupX,
-    handlePopupY: setPopupY,
     onClick: !isDetailView ? onClick : undefined,
-    popupReaction,
     onSelected,
-    handlePopupReaction: !isDetailView ? setPopupReaction : undefined,
     handlePopupClick: onPopupClick,
   };
 
@@ -221,8 +197,6 @@ export const MessageReactions = (props: Props) => {
       $flexDirection={'column'}
       $justifyContent={'center'}
       $alignItems={inModal ? 'flex-start' : 'center'}
-      x={popupX}
-      y={popupY}
       noAvatar={noAvatar}
     >
       {sortedReacts &&

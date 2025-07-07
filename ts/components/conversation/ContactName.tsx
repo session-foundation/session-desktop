@@ -7,6 +7,8 @@ import {
 } from '../../hooks/useParamSelector';
 import { Emojify } from './Emojify';
 import { PubKey } from '../../session/types';
+import { UserUtils } from '../../session/utils';
+import { localize } from '../../localization/localeTools';
 
 type Props = {
   pubkey: string;
@@ -18,14 +20,16 @@ type Props = {
     | 'module-message__author';
   boldProfileName?: boolean;
   shouldShowPubkey: boolean;
+  isPublic?: boolean;
 };
 
 export const ContactName = (props: Props) => {
-  const { pubkey, name, profileName, module, boldProfileName, shouldShowPubkey } = props;
+  const { pubkey, name, profileName, module, boldProfileName, shouldShowPubkey, isPublic } = props;
   const prefix = module || 'module-contact-name';
 
   const convoName = useNicknameOrProfileNameOrShortenedPubkey(pubkey);
   const isPrivate = useIsPrivate(pubkey);
+  const isYou = pubkey === UserUtils.getOurPubKeyStrFromCache();
   const shouldShowProfile = Boolean(convoName || profileName || name);
 
   const commonStyles = {
@@ -42,7 +46,13 @@ export const ContactName = (props: Props) => {
         }
       : commonStyles
   ) as CSSProperties;
-  const textProfile = profileName || name || convoName || PubKey.shorten(pubkey);
+
+  const shortPubkey = PubKey.shorten(pubkey);
+  const textProfile = profileName || name || convoName || shortPubkey;
+  const displayedName =
+    shouldShowProfile && isPublic && textProfile !== shortPubkey
+      ? `${textProfile} ${shortPubkey}`.trim()
+      : textProfile;
 
   return (
     <span
@@ -58,7 +68,11 @@ export const ContactName = (props: Props) => {
     >
       {shouldShowProfile ? (
         <div style={styles} className={`${prefix}__profile-name`}>
-          <Emojify text={textProfile} sizeClass="small" isGroup={!isPrivate} />
+          <Emojify
+            text={isYou ? localize('you').toString() : displayedName}
+            sizeClass="small"
+            isGroup={!isPrivate}
+          />
         </div>
       ) : null}
       {shouldShowPubkey ? <div className={`${prefix}__profile-number`}>{pubkey}</div> : null}
