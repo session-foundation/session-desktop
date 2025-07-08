@@ -269,6 +269,7 @@
   "create": "Erstellen",
   "creatingCall": "Anruf wird erstellt",
   "cut": "Ausschneiden",
+  "databaseErrorGeneric": "Ein Datenbankfehler ist aufgetreten.<br/><br/> Exportiere deine App-Logs, um diese für eine Fehleranalyse zu teilen. Wenn dies nicht erfolgreich ist, installiere die Session  neu und stelle deinen Account wieder her.",
   "databaseErrorTimeout": "Wir haben bemerkt, dass Session lange zum Starten braucht.<br/><br/>Du kannst weiter warten, deine Geräteprotokolle zur Fehlerbehebung exportieren oder versuchen, Session neu zu starten.",
   "databaseErrorUpdate": "Deine App-Datenbank ist mit dieser Version von Session nicht kompatibel. Installiere die App neu und stelle deinen Account wieder her, um eine neue Datenbank zu erstellen und Session weiter zu verwenden.<br/><br/>Warnung: Dadurch gehen alle Nachrichten und Anhänge verloren, die älter als zwei Wochen sind.",
   "databaseOptimizing": "Optimiere Datenbank",
