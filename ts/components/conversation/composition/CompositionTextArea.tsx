@@ -8,6 +8,8 @@ import {
   useRef,
   useState,
   useEffect,
+  type Dispatch,
+  type MutableRefObject,
 } from 'react';
 import { uniq } from 'lodash';
 import { useSelector } from 'react-redux';
@@ -53,7 +55,9 @@ type Props = {
   onKeyDown: KeyboardEventHandler<HTMLDivElement>;
 };
 
-function useMembersInThisChat(): Array<SessionSuggestionDataItem & { searchable?: Array<string> }> {
+type SearchableSuggestion = SessionSuggestionDataItem & { searchable?: Array<string> };
+
+function useMembersInThisChat(): Array<SearchableSuggestion> {
   const selectedConvoKey = useSelectedConversationKey();
   const isPrivate = useSelectedIsPrivate();
   const isPublic = useSelectedIsPublic();
@@ -174,47 +178,9 @@ function createUserMentionHtml({ id, display }: SessionSuggestionDataItem) {
   )} `;
 }
 
-export const CompositionTextArea = (props: Props) => {
-  const { draft, initialDraft, setDraft, inputRef, typingEnabled, onKeyDown } = props;
-
-  const [lastBumpTypingMessageLength, setLastBumpTypingMessageLength] = useState(0);
-  const [mention, setMention] = useState<MentionDetails | null>(null);
-  const [focusedMentionItem, setFocusedMentionItem] = useState<SessionSuggestionDataItem | null>(
-    null
-  );
-  const [popoverX, setPopoverX] = useState<number | null>(null);
-  const [popoverY, setPopoverY] = useState<number | null>(null);
-
-  const selectedConversationKey = useSelectedConversationKey();
-  const htmlDirection = useHTMLDirection();
-  const isKickedFromGroup = useSelectedIsKickedFromGroup();
-  const isGroupDestroyed = useSelectedIsGroupDestroyed();
-  const isBlocked = useSelectedIsBlocked();
-  const isPublic = useSelectedIsPublic();
-  const groupName = useSelectedNicknameOrProfileNameOrShortenedPubkey();
+function useMentionResults(mention: MentionDetails | null) {
   const membersInThisChat = useMembersInThisChat();
-
-  const selectedMentionRef = useRef<HTMLLIElement | null>(null);
-
-  useDebugInputCommands({ value: draft, setValue: setDraft });
-
-  const handleMentionCleanup = () => {
-    setMention(null);
-    setFocusedMentionItem(null);
-    setPopoverX(null);
-  };
-
-  /**
-   * Resets the state when the conversation id changes
-   * TODO: remove this once the CompositionBox has become a functional component and we don't need to rely on the
-   *   conversation id state
-   */
-  useEffect(() => {
-    handleMentionCleanup();
-    inputRef.current?.resetState(initialDraft);
-  }, [initialDraft, inputRef, selectedConversationKey]);
-
-  const results = useMemo(
+  return useMemo(
     () =>
       mention?.prefix === PREFIX.USER
         ? membersInThisChat
@@ -240,18 +206,24 @@ export const CompositionTextArea = (props: Props) => {
           : [],
     [membersInThisChat, mention]
   );
-  /**
-   * The focused item should remain selected as long as it is one of the results. This means if you have focused
-   * the 3rd result "Alice" and continue to type such that "Alice" becomes the second result, "Alice" is still
-   * focused. If you continue typing such that "Alice" is no longer one of the results, the first result will become
-   * the focused result until "Alice" is visible again, or you focus a new result.
-   */
-  const focusedItem = useMemo(
-    () => results.find(({ id }) => focusedMentionItem?.id === id) ?? results[0],
-    [results, focusedMentionItem]
-  );
+}
 
-  const handleSelect = useCallback(
+function useHandleSelect({
+  focusedItem,
+  handleMentionCleanup,
+  inputRef,
+  mention,
+  results,
+  setDraft,
+}: {
+  focusedItem: SearchableSuggestion;
+  handleMentionCleanup: () => void;
+  inputRef: RefObject<CompositionInputRef>;
+  mention: MentionDetails | null;
+  results: Array<SearchableSuggestion>;
+  setDraft: Dispatch<string>;
+}) {
+  return useCallback(
     (item?: SessionSuggestionDataItem) => {
       const selected = item ?? focusedItem;
       if (!mention || !results.length || !selected) {
@@ -268,10 +240,25 @@ export const CompositionTextArea = (props: Props) => {
       }
       handleMentionCleanup();
     },
-    [inputRef, mention, results, setDraft, focusedItem]
+    [focusedItem, mention, results.length, inputRef, handleMentionCleanup, setDraft]
   );
+}
 
-  const popoverContent = useMemo(() => {
+function usePopoverContent({
+  focusedItem,
+  handleSelect,
+  mention,
+  results,
+  selectedMentionRef,
+}: {
+  focusedItem: SearchableSuggestion;
+  handleSelect: (item?: SessionSuggestionDataItem) => void;
+  mention: MentionDetails | null;
+  results: Array<SearchableSuggestion>;
+  selectedMentionRef: MutableRefObject<HTMLLIElement | null>;
+}) {
+  const isPublic = useSelectedIsPublic();
+  return useMemo(() => {
     if (!mention || !results.length) {
       return null;
     }
@@ -300,28 +287,16 @@ export const CompositionTextArea = (props: Props) => {
         })}
       </ul>
     );
-  }, [mention, results, focusedItem, isPublic, handleSelect]);
+  }, [mention, focusedItem, handleSelect, isPublic, results, selectedMentionRef]);
+}
 
-  const handleUpdatePopoverPosition = useCallback(() => {
-    const pos = inputRef.current?.getCaretCoordinates();
-    if (pos) {
-      setPopoverX(pos.left);
-      setPopoverY(pos.top - 6);
-    }
-  }, [inputRef]);
+function useMessagePlaceholder() {
+  const isKickedFromGroup = useSelectedIsKickedFromGroup();
+  const isGroupDestroyed = useSelectedIsGroupDestroyed();
+  const isBlocked = useSelectedIsBlocked();
+  const groupName = useSelectedNicknameOrProfileNameOrShortenedPubkey();
 
-  /** Handles scrolling of the mentions container */
-  useLayoutEffect(() => {
-    if (mention) {
-      handleUpdatePopoverPosition();
-      const el = selectedMentionRef.current;
-      if (el) {
-        el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-      }
-    }
-  }, [mention, focusedMentionItem, handleUpdatePopoverPosition]);
-
-  const messagePlaceHolder = useMemo(() => {
+  return useMemo(() => {
     let localizerToken: MergedLocalizerTokens = 'message';
     if (isGroupDestroyed) {
       localizerToken = 'groupDeletedMemberDescription';
@@ -332,35 +307,33 @@ export const CompositionTextArea = (props: Props) => {
     }
     return localize(localizerToken).withArgs({ group_name: groupName }).toString();
   }, [groupName, isBlocked, isGroupDestroyed, isKickedFromGroup]);
+}
 
-  const handleKeyUp = () => {
-    if (!selectedConversationKey) {
-      throw new Error('selectedConversationKey is needed');
-    }
-    /** Called whenever the user changes the message composition field. But only fires if there's content in the message field after the change.
-    Also, check for a message length change before firing it up, to avoid catching ESC, tab, or whatever which is not typing
-     */
-    if (draft && draft.length && draft.length !== lastBumpTypingMessageLength) {
-      const conversationModel = ConvoHub.use().get(selectedConversationKey);
-      if (!conversationModel) {
-        return;
-      }
-      conversationModel.throttledBumpTyping();
-      setLastBumpTypingMessageLength(draft.length);
-    }
-  };
-
-  const handleMentionCheck = useCallback((content: string, htmlIndex?: number | null) => {
-    const pos = htmlIndex ?? content.length;
-    const newMention = getMentionDetails(
-      content,
-      pos,
-      LIBSESSION_CONSTANTS.CONTACT_MAX_NAME_LENGTH
-    );
-    setMention(newMention);
-  }, []);
-
-  const handleKeyDown = useCallback(
+function useHandleKeyDown({
+  draft,
+  mention,
+  results,
+  focusedItem,
+  handleSelect,
+  inputRef,
+  setFocusedMentionItem,
+  onKeyDown,
+  handleMentionCleanup,
+  handleMentionCheck,
+}: {
+  draft: string;
+  focusedItem: SearchableSuggestion;
+  handleMentionCheck: (content: string, htmlIndex?: number | null) => void;
+  handleMentionCleanup: () => void;
+  handleSelect: (item?: SessionSuggestionDataItem) => void;
+  inputRef: RefObject<CompositionInputRef>;
+  mention: MentionDetails | null;
+  onKeyDown: KeyboardEventHandler<HTMLDivElement>;
+  results: Array<SearchableSuggestion>;
+  setFocusedMentionItem: Dispatch<SearchableSuggestion>;
+}) {
+  const htmlDirection = useHTMLDirection();
+  return useCallback(
     (e: KeyboardEvent<HTMLDivElement>) => {
       if (!mention) {
         onKeyDown(e);
@@ -416,16 +389,160 @@ export const CompositionTextArea = (props: Props) => {
     },
     [
       draft,
+      focusedItem,
       handleMentionCheck,
+      handleMentionCleanup,
       handleSelect,
       htmlDirection,
       inputRef,
       mention,
       onKeyDown,
       results,
-      focusedItem,
+      setFocusedMentionItem,
     ]
   );
+}
+
+function useHandleKeyUp({
+  draft,
+  lastBumpTypingMessageLength,
+  selectedConversationKey,
+  setLastBumpTypingMessageLength,
+}: {
+  draft: string;
+  lastBumpTypingMessageLength: number;
+  selectedConversationKey?: string;
+  setLastBumpTypingMessageLength: Dispatch<number>;
+}) {
+  return useCallback(() => {
+    if (!selectedConversationKey) {
+      throw new Error('selectedConversationKey is needed');
+    }
+    /** Called whenever the user changes the message composition field. But only fires if there's content in the message field after the change.
+     Also, check for a message length change before firing it up, to avoid catching ESC, tab, or whatever which is not typing
+     */
+    if (draft && draft.length && draft.length !== lastBumpTypingMessageLength) {
+      const conversationModel = ConvoHub.use().get(selectedConversationKey);
+      if (!conversationModel) {
+        return;
+      }
+      conversationModel.throttledBumpTyping();
+      setLastBumpTypingMessageLength(draft.length);
+    }
+  }, [draft, lastBumpTypingMessageLength, selectedConversationKey, setLastBumpTypingMessageLength]);
+}
+
+export const CompositionTextArea = (props: Props) => {
+  const { draft, initialDraft, setDraft, inputRef, typingEnabled, onKeyDown } = props;
+
+  const [lastBumpTypingMessageLength, setLastBumpTypingMessageLength] = useState(0);
+  const [mention, setMention] = useState<MentionDetails | null>(null);
+  const [focusedMentionItem, setFocusedMentionItem] = useState<SessionSuggestionDataItem | null>(
+    null
+  );
+  const [popoverX, setPopoverX] = useState<number | null>(null);
+  const [popoverY, setPopoverY] = useState<number | null>(null);
+
+  const selectedConversationKey = useSelectedConversationKey();
+  const messagePlaceHolder = useMessagePlaceholder();
+  const selectedMentionRef = useRef<HTMLLIElement | null>(null);
+
+  useDebugInputCommands({ value: draft, setValue: setDraft });
+
+  const handleMentionCleanup = useCallback(() => {
+    setMention(null);
+    setFocusedMentionItem(null);
+    setPopoverX(null);
+  }, []);
+
+  /**
+   * Resets the state when the conversation id changes
+   * TODO: remove this once the CompositionBox has become a functional component and we don't need to rely on the
+   *   conversation id state
+   */
+  useEffect(() => {
+    handleMentionCleanup();
+    inputRef.current?.resetState(initialDraft);
+  }, [handleMentionCleanup, initialDraft, inputRef, selectedConversationKey]);
+
+  const results = useMentionResults(mention);
+
+  /**
+   * The focused item should remain selected as long as it is one of the results. This means if you have focused
+   * the 3rd result "Alice" and continue to type such that "Alice" becomes the second result, "Alice" is still
+   * focused. If you continue typing such that "Alice" is no longer one of the results, the first result will become
+   * the focused result until "Alice" is visible again, or you focus a new result.
+   */
+  const focusedItem = useMemo(
+    () => results.find(({ id }) => focusedMentionItem?.id === id) ?? results[0],
+    [results, focusedMentionItem]
+  );
+
+  const handleSelect = useHandleSelect({
+    focusedItem,
+    handleMentionCleanup,
+    inputRef,
+    mention,
+    results,
+    setDraft,
+  });
+
+  const popoverContent = usePopoverContent({
+    focusedItem,
+    handleSelect,
+    mention,
+    results,
+    selectedMentionRef,
+  });
+
+  const handleUpdatePopoverPosition = useCallback(() => {
+    const pos = inputRef.current?.getCaretCoordinates();
+    if (pos) {
+      setPopoverX(pos.left);
+      setPopoverY(pos.top - 6);
+    }
+  }, [inputRef]);
+
+  /** Handles scrolling of the mentions container */
+  useLayoutEffect(() => {
+    if (mention) {
+      handleUpdatePopoverPosition();
+      const el = selectedMentionRef.current;
+      if (el) {
+        el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      }
+    }
+  }, [mention, focusedMentionItem, handleUpdatePopoverPosition]);
+
+  const handleKeyUp = useHandleKeyUp({
+    draft,
+    lastBumpTypingMessageLength,
+    selectedConversationKey,
+    setLastBumpTypingMessageLength,
+  });
+
+  const handleMentionCheck = useCallback((content: string, htmlIndex?: number | null) => {
+    const pos = htmlIndex ?? content.length;
+    const newMention = getMentionDetails(
+      content,
+      pos,
+      LIBSESSION_CONSTANTS.CONTACT_MAX_NAME_LENGTH
+    );
+    setMention(newMention);
+  }, []);
+
+  const handleKeyDown = useHandleKeyDown({
+    draft,
+    focusedItem,
+    handleMentionCheck,
+    handleMentionCleanup,
+    handleSelect,
+    inputRef,
+    mention,
+    onKeyDown,
+    results,
+    setFocusedMentionItem,
+  });
 
   const handleOnChange = useCallback(
     (e: ContentEditableEvent) => {
