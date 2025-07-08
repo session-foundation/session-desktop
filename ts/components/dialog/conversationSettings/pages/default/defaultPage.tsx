@@ -5,6 +5,7 @@ import {
   useWeAreAdmin,
 } from '../../../../../hooks/useParamSelector';
 import type { WithConvoId } from '../../../../../session/types/with';
+import { useWeAreCommunityAdminOrModerator } from '../../../../../state/selectors/conversations';
 import { Localizer } from '../../../../basic/Localizer';
 import { SpacerSM } from '../../../../basic/Text';
 import { PanelButtonGroup } from '../../../../buttons';
@@ -68,9 +69,9 @@ function GroupV2AdminActions({ conversationId }: WithConvoId) {
 function CommunityAdminActions({ conversationId }: WithConvoId) {
   const isPublic = useIsPublic(conversationId);
   const isGroupV2 = useIsGroupV2(conversationId);
-  const weAreAdmin = useWeAreAdmin(conversationId);
+  const weAreCommunityAdminOrModerator = useWeAreCommunityAdminOrModerator(conversationId);
 
-  if ((!isPublic && !isGroupV2) || !weAreAdmin) {
+  if ((!isPublic && !isGroupV2) || !weAreCommunityAdminOrModerator) {
     return null;
   }
 
