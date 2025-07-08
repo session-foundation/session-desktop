@@ -76,7 +76,7 @@ function IconMessageStatus({ status }: { status: LastMessageStatusType }) {
     case 'error':
       return (
         <LucideIcon
-          unicode={LUCIDE_ICONS_UNICODE.OCTAGON_ALERT}
+          unicode={LUCIDE_ICONS_UNICODE.TRIANGLE_ALERT}
           iconColor={'var(--danger-color)'}
           iconSize="small"
           style={{ flexShrink: 0 }}
