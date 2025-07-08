@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
 import { GroupPubkeyType, MemberStateGroupV2, PubkeyType } from 'libsession_util_nodejs';
 import { isEmpty } from 'lodash';
@@ -79,9 +79,14 @@ const StyledSessionMemberItem = styled.button<{
     border-bottom: 1px solid var(--border-color);
   }`}
 
-  &:hover {
-    background-color: var(--conversation-tab-background-hover-color);
-  }
+  ${props =>
+    !props.inMentions
+      ? css`
+          &:hover {
+            background-color: var(--conversation-tab-background-hover-color);
+          }
+        `
+      : ''}
 `;
 
 const StyledInfo = styled.div`

@@ -176,10 +176,6 @@ const StyledSendMessageInput = styled.div<{ dir?: HTMLDirection }>`
       overflow-x: hidden;
       overflow-y: auto;
 
-      .selected-option {
-        background-color: var(--suggestions-background-hover-color);
-      }
-
       li {
         font-size: 14px;
         cursor: pointer;
@@ -190,7 +186,8 @@ const StyledSendMessageInput = styled.div<{ dir?: HTMLDirection }>`
         color: var(--suggestions-text-color);
         transition: var(--default-duration);
 
-        &:hover {
+        &:hover,
+        &.selected-option {
           background-color: var(--suggestions-background-hover-color);
         }
       }
