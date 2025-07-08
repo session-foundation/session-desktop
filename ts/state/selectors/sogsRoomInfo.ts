@@ -33,7 +33,7 @@ export function getSubscriberCount(state: StateType, selectedConvo?: string): nu
   return isNil(subscriberCount) ? 0 : subscriberCount;
 }
 
-export function getModerators(state: StateType, selectedConvo?: string): Array<string> {
+function getModerators(state: StateType, selectedConvo?: string): Array<string> {
   if (!selectedConvo) {
     return [];
   }
@@ -76,4 +76,8 @@ export function useAvatarOfRoomIsUploading(convoId?: string) {
 
 export function useRoomDescription(convoId?: string) {
   return useSelector((state: StateType) => getRoomDescription(state, convoId));
+}
+
+export function useModerators(convoId?: string) {
+  return useSelector((state: StateType) => getModerators(state, convoId));
 }

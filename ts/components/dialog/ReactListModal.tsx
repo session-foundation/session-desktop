@@ -12,9 +12,8 @@ import {
   updateUserDetailsModal,
 } from '../../state/ducks/modalDialog';
 import {
+  useSelectedConversationKey,
   useSelectedIsPublic,
-  useSelectedWeAreAdmin,
-  useSelectedWeAreModerator,
 } from '../../state/selectors/selectedConversation';
 import { SortedReactionList } from '../../types/Reaction';
 import { nativeEmojiData } from '../../util/emoji';
@@ -29,6 +28,7 @@ import { findAndFormatContact } from '../../models/message';
 import { Localizer } from '../basic/Localizer';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { useWeAreCommunityAdminOrModerator } from '../../state/selectors/conversations';
 
 const StyledReactListContainer = styled(Flex)`
   width: 376px;
@@ -236,8 +236,8 @@ export const ReactListModal = (props: Props) => {
 
   const msgProps = useMessageReactsPropsById(messageId);
   const isPublic = useSelectedIsPublic();
-  const weAreAdmin = useSelectedWeAreAdmin();
-  const weAreModerator = useSelectedWeAreModerator();
+  const selectedConvoKey = useSelectedConversationKey();
+  const weAreCommunityAdminOrModerator = useWeAreCommunityAdminOrModerator(selectedConvoKey);
   const me = UserUtils.getOurPubKeyStrFromCache();
 
   const reactionsMap = useMemo(() => {
@@ -372,7 +372,7 @@ export const ReactListModal = (props: Props) => {
                   </>
                 )}
               </p>
-              {isPublic && (weAreAdmin || weAreModerator) && (
+              {weAreCommunityAdminOrModerator && (
                 <SessionButton
                   text={window.i18n('clearAll')}
                   buttonColor={SessionButtonColor.Danger}

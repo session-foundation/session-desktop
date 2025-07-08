@@ -1,13 +1,14 @@
 import { useDispatch } from 'react-redux';
-import { useIsPublic, useWeAreAdmin } from '../../hooks/useParamSelector';
+import { useIsPublic } from '../../hooks/useParamSelector';
 import { updateBanOrUnbanUserModal } from '../../state/ducks/modalDialog';
+import { useWeAreCommunityAdminOrModerator } from '../../state/selectors/conversations';
 
 export function useBanUserCb(conversationId?: string, pubkey?: string) {
   const dispatch = useDispatch();
   const isPublic = useIsPublic(conversationId);
-  const weAreAdmin = useWeAreAdmin(conversationId);
+  const weAreCommunityAdminOrModerator = useWeAreCommunityAdminOrModerator(conversationId);
 
-  if (!isPublic || !weAreAdmin || !conversationId) {
+  if (!isPublic || !weAreCommunityAdminOrModerator || !conversationId) {
     return null;
   }
 
