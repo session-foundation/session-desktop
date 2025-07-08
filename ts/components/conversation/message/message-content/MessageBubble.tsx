@@ -7,6 +7,7 @@ export const StyledMessageBubble = styled.div<{ expanded: boolean }>`
   position: relative;
   display: flex;
   flex-direction: column;
+  width: 100%;
 
   ${({ expanded }) =>
     !expanded &&
