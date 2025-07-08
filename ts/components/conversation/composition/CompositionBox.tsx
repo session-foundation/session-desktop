@@ -142,7 +142,6 @@ const StyledEmojiPanelContainer = styled.div<{ dir?: HTMLDirection }>`
   ${StyledEmojiPanel} {
     position: absolute;
     bottom: 68px;
-    z-index: 11;
     ${props => (props.dir === 'rtl' ? 'left: 0px' : 'right: 0px;')}
   }
 `;

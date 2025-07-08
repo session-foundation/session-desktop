@@ -14,12 +14,5 @@ export type FileIconProps = {
 };
 
 export const FileIcon = ({ iconSize, dataTestId, src, style }: FileIconProps) => {
-  return (
-    <FileIconWrapper
-      iconSize={iconSize}
-      data-testid={dataTestId}
-      style={style}
-      src={src}
-    ></FileIconWrapper>
-  );
+  return <FileIconWrapper iconSize={iconSize} data-testid={dataTestId} style={style} src={src} />;
 };

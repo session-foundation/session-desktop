@@ -105,7 +105,6 @@ const StyledBaseButton = styled.button<StyledButtonProps>`
   ${props =>
     props.shineAnimation
       ? css`
-          transition: all 0.2s ease;
           &::before {
             content: '';
             position: absolute;

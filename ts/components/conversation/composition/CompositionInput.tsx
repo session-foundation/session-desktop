@@ -81,7 +81,7 @@ function setCaretAtHtmlIndex(el: HTMLElement, idx: number) {
  * @param htmlIdx - Html index to insert at. @see {@link getHtmlIndexFromSelection}
  * @param htmlToInsert - Html to insert.
  */
-function insertHtmlAtIndex(
+function insertHtmlCharactersAtIndex(
   originalHtml: string,
   htmlIdx: number,
   htmlToInsert: string
@@ -95,11 +95,11 @@ function insertHtmlAtIndex(
 
 /**
  * Remove html at a html index.
- * @param originalHtml - Html to mutate
- * @param htmlIdx - Html index to insert at. @see {@link getHtmlIndexFromSelection}
+ * @param originalHtml - String to mutate
+ * @param htmlIdx - Html index to remove from (not including the character at this index). @see {@link getHtmlIndexFromSelection}
  * @param numberOfCharactersToRemove - Number of characters to remove before the index.
  */
-function removeHtmlBeforeIndex(
+function removeHtmlCharactersBeforeIndex(
   originalHtml: string,
   htmlIdx: number,
   numberOfCharactersToRemove: number
@@ -360,12 +360,16 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
           let htmlIndex = lastHtmlIndex.current;
           let htmlToEdit = el.innerHTML;
           if (previousCharactersToRemove) {
-            const res = removeHtmlBeforeIndex(htmlToEdit, htmlIndex, previousCharactersToRemove);
+            const res = removeHtmlCharactersBeforeIndex(
+              htmlToEdit,
+              htmlIndex,
+              previousCharactersToRemove
+            );
             htmlToEdit = res.newHtml;
             htmlIndex = res.newIndex;
           }
 
-          const { newHtml, newIndex } = insertHtmlAtIndex(htmlToEdit, htmlIndex, content);
+          const { newHtml, newIndex } = insertHtmlCharactersAtIndex(htmlToEdit, htmlIndex, content);
           el.innerHTML = newHtml;
           lastHtml.current = newHtml;
           lastHtmlIndex.current = newIndex;
@@ -853,7 +857,7 @@ const CompositionInput = styled(UnstyledCompositionInput)<{
   &:empty:before {
     content: attr(placeholder);
     display: block;
-    color: #aaa;
+    color: var(--text-secondary-color);
     font-size: inherit;
   }
 `;

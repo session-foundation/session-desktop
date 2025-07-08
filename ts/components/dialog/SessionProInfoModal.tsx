@@ -1,4 +1,4 @@
-import { isEmpty, isNull, isUndefined } from 'lodash';
+import { isNil } from 'lodash';
 import { Dispatch, type ReactNode } from 'react';
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
@@ -19,6 +19,7 @@ import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { Localizer } from '../basic/Localizer';
 import { localize, type MergedLocalizerTokens } from '../../localization/localeTools';
 import { FileIcon } from '../icon/FileIcon';
+import { useFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 
 export enum SessionProInfoVariant {
   MESSAGE_CHARACTER_LIMIT = 0,
@@ -99,7 +100,7 @@ const StyledFeatureList = styled.ul`
 
 const StyledListItem = styled.li`
   display: inline-flex;
-  gap: 8px;
+  gap: var(--margins-sm);
   align-items: end;
   line-height: normal;
 `;
@@ -179,7 +180,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
     dispatch(updateSessionProInfoModal(null));
   }
 
-  if (!props || isEmpty(props) || isNull(props.variant) || isUndefined(props.variant)) {
+  if (isNil(props?.variant)) {
     return null;
   }
 
@@ -190,6 +191,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
       showHeader={false}
       padding="0"
       removeScrollbarGutter={true}
+      shouldOverflow={true}
       $contentMinWidth={'420px'}
       $contentMaxWidth={'420px'}
     >
@@ -258,4 +260,19 @@ export const showSessionProInfoDialog = (
       variant,
     })
   );
+};
+
+export const useShowSessionProInfoDialogCb = (variant: SessionProInfoVariant) => {
+  const dispatch = useDispatch();
+  const isProAvailable = useFeatureFlag('proAvailable');
+  const mockHasPro = useFeatureFlag('mockUserHasPro');
+
+  // TODO: get pro status from store once available
+  const hasPro = mockHasPro;
+
+  if (!isProAvailable || hasPro) {
+    return () => null;
+  }
+
+  return () => showSessionProInfoDialog(variant, dispatch);
 };

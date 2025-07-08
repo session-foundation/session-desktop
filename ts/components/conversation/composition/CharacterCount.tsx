@@ -1,12 +1,14 @@
 import styled from 'styled-components';
-import { useDispatch } from 'react-redux';
 import { Constants } from '../../../session';
 import { Localizer } from '../../basic/Localizer';
 import { useFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { SessionTooltip } from '../../SessionTooltip';
 import { SessionIcon } from '../../icon';
 import { StyledCTA } from '../../basic/StyledCTA';
-import { SessionProInfoVariant, showSessionProInfoDialog } from '../../dialog/SessionProInfoModal';
+import {
+  SessionProInfoVariant,
+  useShowSessionProInfoDialogCb,
+} from '../../dialog/SessionProInfoModal';
 import { formatNumber } from '../../../util/i18n/formatting/generics';
 
 export type CharacterCountProps = {
@@ -33,7 +35,6 @@ const StyledRemainingNumber = styled.span<{ pastLimit: boolean }>`
 
 export function CharacterCount({ count }: CharacterCountProps) {
   const alwaysShowFlag = useFeatureFlag('alwaysShowRemainingChars');
-  const dispatch = useDispatch();
   const isProAvailable = useFeatureFlag('proAvailable');
   const mockHasPro = useFeatureFlag('mockUserHasPro');
 
@@ -46,11 +47,7 @@ export function CharacterCount({ count }: CharacterCountProps) {
   const remaining = charLimit - count;
   const pastLimit = remaining < 0;
 
-  const handleClick = () => {
-    if (isProAvailable && !hasPro) {
-      showSessionProInfoDialog(SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT, dispatch);
-    }
-  };
+  const handleClick = useShowSessionProInfoDialogCb(SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT);
 
   return alwaysShowFlag || remaining <= CHARACTER_SHOW_REMAINING_BUFFER ? (
     <StyledCharacterCountContainer>

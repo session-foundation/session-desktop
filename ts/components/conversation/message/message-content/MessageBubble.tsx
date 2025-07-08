@@ -27,8 +27,7 @@ export const StyledMessageBubble = styled.div<{ expanded: boolean }>`
 
 const ReadMoreButton = styled.button`
   font-weight: bold;
-  margin-top: var(--margins-xs);
-  margin-bottom: var(--margins-xs);
+  margin-block: var(--margins-xs);
   border: none;
   background: none;
   cursor: pointer;
