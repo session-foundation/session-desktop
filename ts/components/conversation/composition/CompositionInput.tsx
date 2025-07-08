@@ -276,7 +276,21 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
     useImperativeHandle(
       ref,
       () => ({
-        focus: () => elRef.current?.focus(),
+        focus: () => {
+          const el = elRef.current;
+          if (!el) {
+            return;
+          }
+
+          el.focus();
+
+          if (
+            el.lastChild?.isEqualNode(el.lastElementChild) &&
+            isZeroWidthNode(el.lastElementChild)
+          ) {
+            replaceCaret(el);
+          }
+        },
 
         getVisibleText: () => elRef.current?.innerText ?? '',
 
