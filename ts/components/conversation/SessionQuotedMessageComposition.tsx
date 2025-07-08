@@ -99,7 +99,8 @@ export const SessionQuotedMessageComposition = () => {
   const isGenericFile = !hasAudioAttachment && !isVideo && !isImage;
 
   const subtitleText = quoteText ? (
-    <QuoteText isIncoming={!contact.isMe} text={quoteText} referencedMessageNotFound={true} />
+    /** isIncoming must be true here otherwise the text content is the same color as the background */
+    <QuoteText isIncoming={true} text={quoteText} referencedMessageNotFound={true} />
   ) : (
     localize(
       hasAudioAttachment
