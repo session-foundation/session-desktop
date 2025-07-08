@@ -11,7 +11,6 @@ import {
   SessionButtonShape,
   SessionButtonType,
 } from '../basic/SessionButton';
-import { Flex } from '../basic/Flex';
 import { SpacerLG, SpacerSM } from '../basic/Text';
 import { SessionIcon } from '../icon';
 import { LucideIcon } from '../icon/LucideIcon';
@@ -20,6 +19,7 @@ import { Localizer } from '../basic/Localizer';
 import { localize, type MergedLocalizerTokens } from '../../localization/localeTools';
 import { FileIcon } from '../icon/FileIcon';
 import { useFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import { SessionButtonShiny } from '../basic/SessionButtonShiny';
 
 export enum SessionProInfoVariant {
   MESSAGE_CHARACTER_LIMIT = 0,
@@ -38,6 +38,14 @@ const StyledScrollDescriptionContainer = styled.div`
   text-align: center;
   font-size: var(--font-size-lg);
   color: var(--text-secondary-color);
+`;
+
+const StyledButtonContainer = styled.div`
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  grid-template-columns: 1fr 1fr;
+  column-gap: var(--margins-sm);
 `;
 
 const StyledCTAImage = styled.img`
@@ -221,22 +229,15 @@ export function SessionProInfoModal(props: SessionProInfoState) {
             {localize('proFeatureListLoadsMore')}
           </FeatureListItem>
         </StyledFeatureList>
-        <Flex
-          $container={true}
-          width={'100%'}
-          $justifyContent="center"
-          $alignItems="center"
-          $flexGap="var(--margins-sm)"
-        >
-          <SessionButton
+        <StyledButtonContainer>
+          <SessionButtonShiny
             {...buttonProps}
             buttonColor={SessionButtonColor.Primary}
             onClick={onClose}
-            shineAnimation={true}
             dataTestId="modal-button-session-pro-ok"
           >
             {localize('theContinue')}
-          </SessionButton>
+          </SessionButtonShiny>
           <SessionButton
             {...buttonProps}
             buttonColor={SessionButtonColor.Tertiary}
@@ -245,7 +246,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
           >
             {localize('cancel')}
           </SessionButton>
-        </Flex>
+        </StyledButtonContainer>
       </StyledContentContainer>
     </SessionWrapperModal2>
   );
