@@ -71,10 +71,6 @@ export const createTemplate = (
           label: i18n('paste'),
         },
         {
-          role: 'delete',
-          label: i18n('delete'),
-        },
-        {
           role: 'selectall',
           label: i18n('selectAll'),
         },

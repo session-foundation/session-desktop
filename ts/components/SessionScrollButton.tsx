@@ -9,7 +9,6 @@ import { LUCIDE_ICONS_UNICODE } from './icon/lucide';
 
 const SessionScrollButtonDiv = styled.div`
   position: fixed;
-  z-index: 2;
   right: 60px;
   animation: fadein var(--default-duration);
 `;

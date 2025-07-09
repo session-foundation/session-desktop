@@ -54,7 +54,7 @@ export const SessionToast = (props: Props) => {
         toastIcon = LUCIDE_ICONS_UNICODE.CHECK;
         break;
       case SessionToastType.Error:
-        toastIcon = LUCIDE_ICONS_UNICODE.OCTAGON_ALERT;
+        toastIcon = LUCIDE_ICONS_UNICODE.TRIANGLE_ALERT;
         break;
       case SessionToastType.Warning:
         toastIcon = LUCIDE_ICONS_UNICODE.OCTAGON_X;

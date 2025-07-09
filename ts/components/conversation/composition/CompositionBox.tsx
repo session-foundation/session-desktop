@@ -1,4 +1,4 @@
-import _, { debounce, isEmpty } from 'lodash';
+import _, { debounce, isEmpty, isUndefined } from 'lodash';
 
 import { connect } from 'react-redux';
 import styled from 'styled-components';
@@ -6,9 +6,9 @@ import styled from 'styled-components';
 import { AbortController } from 'abort-controller';
 
 import autoBind from 'auto-bind';
-import { Component, RefObject, createRef } from 'react';
+import { Component, createRef, RefObject, KeyboardEvent } from 'react';
+import { FrequentlyUsed } from 'emoji-mart';
 import * as MIME from '../../../types/MIME';
-
 import { SessionEmojiPanel, StyledEmojiPanel } from '../SessionEmojiPanel';
 import { SessionRecording } from '../SessionRecording';
 
@@ -40,9 +40,9 @@ import { getMediaPermissionsSettings } from '../../settings/SessionSettings';
 import { getDraftForConversation, updateDraftForConversation } from '../SessionConversationDrafts';
 import { SessionQuotedMessageComposition } from '../SessionQuotedMessageComposition';
 import {
+  getPreview,
   LINK_PREVIEW_TIMEOUT,
   SessionStagedLinkPreview,
-  getPreview,
 } from '../SessionStagedLinkPreview';
 import { StagedAttachmentList } from '../StagedAttachmentList';
 import {
@@ -52,10 +52,16 @@ import {
   ToggleEmojiButton,
 } from './CompositionButtons';
 import { CompositionTextArea } from './CompositionTextArea';
-import { cleanMentions, mentionsRegex } from './UserMentions';
 import { HTMLDirection } from '../../../util/i18n/rtlSupport';
 import type { FixedBaseEmoji } from '../../../types/Reaction';
+import { CharacterCount } from './CharacterCount';
+import { Constants } from '../../../session';
+import type { CompositionInputRef } from './CompositionInput';
 import { useShowBlockUnblock } from '../../menuAndSettingsHooks/useShowBlockUnblock';
+import { showLocalizedPopupDialog } from '../../dialog/LocalizedPopupDialog';
+import { formatNumber } from '../../../util/i18n/formatting/generics';
+import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { SessionProInfoVariant, showSessionProInfoDialog } from '../../dialog/SessionProInfoModal';
 
 export interface ReplyingToMessageProps {
   convoId: string;
@@ -109,79 +115,27 @@ interface Props {
 
 interface State {
   showRecordingView: boolean;
+  initialDraft: string;
   draft: string;
   showEmojiPanel: boolean;
   ignoredLink?: string; // set the ignored url when users closed the link preview
   stagedLinkPreview?: StagedLinkPreviewData;
   showCaptionEditor?: AttachmentType;
+  characterCount?: number;
 }
 
 const getDefaultState = (newConvoId?: string) => {
+  const draft = getDraftForConversation(newConvoId);
   return {
-    draft: getDraftForConversation(newConvoId),
+    draft,
+    initialDraft: draft,
     showRecordingView: false,
     showEmojiPanel: false,
     ignoredLink: undefined,
     stagedLinkPreview: undefined,
     showCaptionEditor: undefined,
+    characterCount: undefined,
   };
-};
-
-const getSelectionBasedOnMentions = (draft: string, index: number) => {
-  // we have to get the real selectionStart/end of an index in the mentions box.
-  // this is kind of a pain as the mentions box has two inputs, one with the real text, and one with the extracted mentions
-
-  // the index shown to the user is actually just the visible part of the mentions (so the part between ￗ...ￒ
-  const matches = draft.match(mentionsRegex);
-
-  let lastMatchStartIndex = 0;
-  let lastMatchEndIndex = 0;
-  let lastRealMatchEndIndex = 0;
-
-  if (!matches) {
-    return index;
-  }
-  const mapStartToLengthOfMatches = matches.map(match => {
-    const displayNameStart = match.indexOf('\uFFD7') + 1;
-    const displayNameEnd = match.lastIndexOf('\uFFD2');
-    const displayName = match.substring(displayNameStart, displayNameEnd);
-
-    const currentMatchStartIndex = draft.indexOf(match) + lastMatchStartIndex;
-    lastMatchStartIndex = currentMatchStartIndex;
-    lastMatchEndIndex = currentMatchStartIndex + match.length;
-
-    const realLength = displayName.length + 1;
-    lastRealMatchEndIndex += realLength;
-
-    // the +1 is for the @
-    return {
-      length: displayName.length + 1,
-      lastRealMatchEndIndex,
-      start: lastMatchStartIndex,
-      end: lastMatchEndIndex,
-    };
-  });
-
-  const beforeFirstMatch = index < mapStartToLengthOfMatches[0].start;
-  if (beforeFirstMatch) {
-    // those first char are always just char, so the mentions logic does not come into account
-    return index;
-  }
-  const lastMatchMap = _.last(mapStartToLengthOfMatches);
-
-  if (!lastMatchMap) {
-    return Number.MAX_SAFE_INTEGER;
-  }
-
-  const indexIsAfterEndOfLastMatch = lastMatchMap.lastRealMatchEndIndex <= index;
-  if (indexIsAfterEndOfLastMatch) {
-    const lastEnd = lastMatchMap.end;
-    const diffBetweenEndAndLastRealEnd = index - lastMatchMap.lastRealMatchEndIndex;
-    return lastEnd + diffBetweenEndAndLastRealEnd - 1;
-  }
-  // now this is the hard part, the cursor is currently between the end of the first match and the start of the last match
-  // for now, just append it to the end
-  return Number.MAX_SAFE_INTEGER;
 };
 
 const StyledEmojiPanelContainer = styled.div<{ dir?: HTMLDirection }>`
@@ -196,51 +150,70 @@ const StyledSendMessageInput = styled.div<{ dir?: HTMLDirection }>`
   position: relative;
   cursor: text;
   display: flex;
+  align-self: center;
   align-items: center;
   flex-grow: 1;
-  min-height: var(--composition-container-height);
-  padding: var(--margins-xs) 0;
   ${props => props.dir === 'rtl' && 'margin-inline-start: var(--margins-sm);'}
-  z-index: 1;
   background-color: inherit;
+  margin-top: var(--margins-xs);
 
-  ul {
-    max-height: 70vh;
-    overflow: auto;
-  }
+  .mention-container {
+    border-radius: var(--border-radius);
+    box-shadow: var(--suggestions-shadow);
+    background-color: var(--suggestions-background-color);
+    z-index: 3;
+    min-width: 100px;
 
-  textarea {
-    font-family: var(--font-default);
-    min-height: calc(var(--composition-container-height) / 3);
-    max-height: calc(3 * var(--composition-container-height));
-    margin-right: var(--margins-md);
-    color: var(--text-color-primary);
+    ul {
+      border-radius: var(--border-radius);
+      max-height: 70vh;
+      border: none;
+      background: transparent;
+      outline: none;
+      padding: 0;
+      margin: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
 
-    background: transparent;
-    resize: none;
-    display: flex;
-    flex-grow: 1;
-    outline: none;
-    border: none;
-    font-size: 14px;
-    line-height: var(--font-size-h2);
-    letter-spacing: 0.5px;
-  }
+      li {
+        font-size: 14px;
+        cursor: pointer;
+        height: auto;
+        padding-top: var(--margins-xs);
+        padding-bottom: var(--margins-xs);
+        background-color: var(--suggestions-background-color);
+        color: var(--suggestions-text-color);
+        transition: var(--default-duration);
 
-  &__emoji-overlay {
-    // Should have identical properties to the textarea above to line up perfectly.
-    position: absolute;
-    font-size: 14px;
-    font-family: var(--font-default);
-    margin-left: 2px;
-    line-height: var(--font-size-h2);
-    letter-spacing: 0.5px;
-    color: var(--transparent-color);
+        &:hover,
+        &.selected-option {
+          background-color: var(--suggestions-background-hover-color);
+        }
+      }
+    }
   }
 `;
 
+const StyledRightCompositionBoxButtonContainer = styled.div`
+  position: absolute;
+  inset-inline-end: var(--margins-md);
+  gap: var(--margins-sm);
+  display: flex;
+  flex-direction: row;
+  width: max-content;
+  z-index: 2;
+`;
+
+const StyledCompositionBoxContainer = styled(Flex)`
+  position: relative;
+  padding-inline-start: var(--margins-md);
+  padding-inline-end: 0;
+  padding-top: var(--margins-sm);
+  padding-bottom: var(--margins-sm);
+`;
+
 class CompositionBoxInner extends Component<Props, State> {
-  private readonly textarea: RefObject<any>;
+  private readonly inputRef: RefObject<CompositionInputRef>;
   private readonly fileInput: RefObject<HTMLInputElement>;
   private container: RefObject<HTMLDivElement>;
   private readonly emojiPanel: RefObject<HTMLDivElement>;
@@ -251,7 +224,7 @@ class CompositionBoxInner extends Component<Props, State> {
     super(props);
     this.state = getDefaultState(props.selectedConversationKey);
 
-    this.textarea = createRef();
+    this.inputRef = createRef();
     this.fileInput = createRef();
     this.container = createRef();
 
@@ -294,6 +267,14 @@ class CompositionBoxInner extends Component<Props, State> {
 
   public render() {
     const { showRecordingView } = this.state;
+    const { typingEnabled, isBlocked } = this.props;
+
+    // we completely hide the composition box when typing is not enabled now.
+    // Actually not anymore. We want the above, except when we can't write because that user is blocked.
+    // When that user is blocked, **and only then**, we want to show the composition box, disabled with the placeholder "unblock to send".
+    if (!typingEnabled && !isBlocked) {
+      return null;
+    }
 
     return (
       <Flex $flexDirection="column">
@@ -366,6 +347,12 @@ class CompositionBoxInner extends Component<Props, State> {
     this.setState({
       showEmojiPanel: false,
     });
+
+    this.focusCompositionBox();
+  }
+
+  private setDraft(draft: string) {
+    this.setState({ draft, characterCount: this.getSendableText().length });
   }
 
   private toggleEmojiPanel() {
@@ -380,7 +367,6 @@ class CompositionBoxInner extends Component<Props, State> {
     return (
       <SessionRecording
         sendVoiceMessage={this.sendVoiceMessage}
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onLoadVoiceNoteView={this.onLoadVoiceNoteView}
         onExitVoiceNoteView={this.onExitVoiceNoteView}
       />
@@ -388,14 +374,14 @@ class CompositionBoxInner extends Component<Props, State> {
   }
 
   private renderCompositionView() {
-    const { showEmojiPanel } = this.state;
+    const { showEmojiPanel, characterCount } = this.state;
     const { typingEnabled, isBlocked } = this.props;
 
     // we can only send a message if the conversation allows writing in it AND
     // - we've got a message body OR
     // - we've got a staged attachments
     const showSendButton =
-      typingEnabled && (!isEmpty(this.state.draft) || !isEmpty(this.props.stagedAttachments));
+      typingEnabled && (this.isTextSendable() || !isEmpty(this.props.stagedAttachments));
 
     /* eslint-disable @typescript-eslint/no-misused-promises */
 
@@ -408,12 +394,13 @@ class CompositionBoxInner extends Component<Props, State> {
     }
 
     return (
-      <Flex
+      <StyledCompositionBoxContainer
         dir={this.props.htmlDirection}
         $container={true}
-        $flexDirection={'row'}
-        $alignItems={'center'}
-        width={'100%'}
+        $flexDirection="row"
+        $alignItems="flex-end"
+        width="100%"
+        onClick={this.focusCompositionBox} // used to focus on the textarea when clicking in its container
         $flexGap="var(--margins-xs)"
       >
         {typingEnabled || isBlocked ? (
@@ -427,32 +414,33 @@ class CompositionBoxInner extends Component<Props, State> {
           type="file"
           onChange={this.onChoseAttachment}
         />
-        {typingEnabled || isBlocked ? (
-          <StartRecordingButton onClick={this.onLoadVoiceNoteView} />
-        ) : null}
         <StyledSendMessageInput
           role="main"
           dir={this.props.htmlDirection}
-          onClick={this.focusCompositionBox} // used to focus on the textarea when clicking in its container
           ref={this.container}
           data-testid="message-input"
         >
           <CompositionTextArea
             draft={this.state.draft}
-            setDraft={newDraft => {
-              this.setState({ draft: newDraft });
-            }}
+            initialDraft={this.state.initialDraft}
+            setDraft={this.setDraft}
             container={this.container}
-            textAreaRef={this.textarea}
+            inputRef={this.inputRef}
             typingEnabled={this.props.typingEnabled}
             onKeyDown={this.onKeyDown}
           />
         </StyledSendMessageInput>
-        {typingEnabled && (
-          <ToggleEmojiButton ref={this.emojiPanelButton} onClick={this.toggleEmojiPanel} />
-        )}
-        {showSendButton && <SendMessageButton onClick={this.onSendMessage} />}
-        {showEmojiPanel && (
+        <StyledRightCompositionBoxButtonContainer>
+          {typingEnabled && (
+            <ToggleEmojiButton ref={this.emojiPanelButton} onClick={this.toggleEmojiPanel} />
+          )}
+          {showSendButton ? (
+            <SendMessageButton onClick={this.onSendMessage} />
+          ) : (
+            <StartRecordingButton onClick={this.onLoadVoiceNoteView} />
+          )}
+        </StyledRightCompositionBoxButtonContainer>
+        {showEmojiPanel ? (
           <StyledEmojiPanelContainer role="button" dir={this.props.htmlDirection}>
             <SessionEmojiPanel
               ref={this.emojiPanel}
@@ -461,8 +449,9 @@ class CompositionBoxInner extends Component<Props, State> {
               onKeyDown={this.onKeyDown}
             />
           </StyledEmojiPanelContainer>
-        )}
-      </Flex>
+        ) : null}
+        {!isUndefined(characterCount) ? <CharacterCount count={characterCount} /> : null}
+      </StyledCompositionBoxContainer>
     );
   }
   private renderStagedLinkPreview(): JSX.Element | null {
@@ -673,57 +662,55 @@ class CompositionBoxInner extends Component<Props, State> {
     this.props.onChoseAttachments(attachmentsFileList);
   }
 
-  private async onKeyDown(event: any) {
-    const isEnter = event.key === 'Enter';
-    const isShiftEnter = event.shiftKey && isEnter;
-    const isShiftSendEnabled = window.getSettingValue(SettingsKey.hasShiftSendEnabled) as boolean;
-    const isNotComposing = !event.nativeEvent.isComposing;
-
-    if (isShiftSendEnabled && isEnter && isNotComposing) {
+  /**
+   * This onKeyDown method is called conditionally by the composition input.
+   * If the input is in mentioning mode, this **will NOT** be called.
+   * @param event - Keyboard event.
+   */
+  private async onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    const isShiftSendEnabled = !!window.getSettingValue(SettingsKey.hasShiftSendEnabled);
+    if (
+      !event.nativeEvent.isComposing &&
+      event.key === 'Enter' &&
+      isShiftSendEnabled === event.shiftKey
+    ) {
       event.preventDefault();
-      if (isShiftEnter) {
-        await this.onSendMessage();
-      } else {
-        this.insertNewLine();
-      }
-    } else if (isEnter && !event.shiftKey && isNotComposing) {
-      event.preventDefault();
+      event.stopPropagation();
       await this.onSendMessage();
-    } else if (event.key === 'Escape' && this.state.showEmojiPanel) {
-      this.hideEmojiPanel();
-    } else if (event.key === 'PageUp' || event.key === 'PageDown') {
-      // swallow pageUp events if they occurs on the composition box (it breaks the app layout)
+    }
+    // TODO: Add support for closing the emoji panel, probably should pass an onClose function to it
+
+    // TODO: fix the bug with the pageup/down keys popping out the right panel when the box has text in it.
+    if (this.state.draft.length && (event.key === 'PageUp' || event.key === 'PageDown')) {
       event.preventDefault();
       event.stopPropagation();
     }
   }
 
-  private insertNewLine() {
-    const messageBox = this.textarea.current;
-    if (!messageBox) {
-      return;
+  private getSendableText(): string {
+    const input = this.inputRef.current;
+
+    if (!input) {
+      return '';
     }
 
-    const { draft } = this.state;
-    const { selectedConversationKey } = this.props;
+    return input
+      .getRawValue(nodeTree =>
+        nodeTree.querySelectorAll('span[data-user-id]').forEach(span => {
+          const id = span.getAttribute('data-user-id');
+          // eslint-disable-next-line no-param-reassign -- intentional mutation of the clone to replace display with id
+          span.textContent = id ? `@${id}` : span.textContent;
+        })
+      )
+      .trim()
+      .replace(/^\n+|\n+$/g, '');
+  }
 
-    if (!selectedConversationKey) {
-      return; // add this check to prevent undefined from being used
-    }
-
-    const currentSelectionStart = Number(messageBox.selectionStart);
-    const realSelectionStart = getSelectionBasedOnMentions(draft, currentSelectionStart);
-
-    const before = draft.slice(0, realSelectionStart);
-    const after = draft.slice(realSelectionStart);
-
-    const updatedDraft = `${before}\n${after}`;
-
-    this.setState({ draft: updatedDraft });
-    updateDraftForConversation({
-      conversationKey: selectedConversationKey,
-      draft: updatedDraft,
-    });
+  /**
+   * This is a significantly cheaper version of calling @see {@link getSendableText} and getting the length
+   */
+  private isTextSendable(): boolean {
+    return this.state.draft.trim().replace(/^\n+|\n+$/g, '').length > 0;
   }
 
   private async onSendMessage() {
@@ -732,7 +719,41 @@ class CompositionBoxInner extends Component<Props, State> {
     }
     this.linkPreviewAbortController?.abort();
 
-    const messagePlaintext = cleanMentions(this.state.draft);
+    const isProAvailable = getFeatureFlag('proAvailable');
+    const mockHasPro = getFeatureFlag('mockUserHasPro');
+
+    // TODO: get pro status from store once available
+    const hasPro = mockHasPro;
+    const charLimit = hasPro
+      ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
+      : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
+
+    const text = this.getSendableText();
+
+    if (text.length > charLimit) {
+      const dispatch = window.inboxStore?.dispatch;
+      if (dispatch) {
+        if (isProAvailable && !hasPro) {
+          showSessionProInfoDialog(SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT, dispatch);
+        } else {
+          showLocalizedPopupDialog(
+            {
+              title: {
+                token: 'modalMessageTooLongTitle',
+              },
+              description: {
+                token: 'modalMessageTooLongDescription',
+                args: {
+                  limit: formatNumber(charLimit),
+                },
+              },
+            },
+            dispatch
+          );
+        }
+      }
+      return;
+    }
 
     const { selectedConversation } = this.props;
 
@@ -745,7 +766,7 @@ class CompositionBoxInner extends Component<Props, State> {
       return;
     }
     // Verify message length
-    const msgLen = messagePlaintext?.length || 0;
+    const msgLen = text?.length || 0;
     if (msgLen === 0 && this.props.stagedAttachments?.length === 0) {
       return;
     }
@@ -777,7 +798,7 @@ class CompositionBoxInner extends Component<Props, State> {
     try {
       const { attachments, previews } = await this.getFiles(linkPreview);
       this.props.sendMessage({
-        body: messagePlaintext.trim(),
+        body: text.trim(),
         attachments: attachments || [],
         quote: extractedQuotedMessageProps,
         preview: previews,
@@ -886,7 +907,7 @@ class CompositionBoxInner extends Component<Props, State> {
     this.onExitVoiceNoteView();
   }
 
-  private async onLoadVoiceNoteView() {
+  private onLoadVoiceNoteView() {
     if (!getMediaPermissionsSettings()) {
       ToastUtils.pushAudioPermissionNeeded();
       return;
@@ -902,46 +923,14 @@ class CompositionBoxInner extends Component<Props, State> {
   }
 
   private onEmojiClick(emoji: FixedBaseEmoji) {
-    if (!this.props.selectedConversationKey) {
-      throw new Error('selectedConversationKey is needed');
+    if (emoji.native) {
+      FrequentlyUsed.add(emoji);
+      this.inputRef.current?.typeAtCaret(emoji.native);
     }
-    const messageBox = this.textarea.current;
-    if (!messageBox) {
-      return;
-    }
-
-    const { draft } = this.state;
-
-    const currentSelectionStart = Number(messageBox.selectionStart);
-
-    const realSelectionStart = getSelectionBasedOnMentions(draft, currentSelectionStart);
-
-    const before = draft.slice(0, realSelectionStart);
-    const end = draft.slice(realSelectionStart);
-
-    const newMessage = `${before}${emoji.native}${end}`;
-    this.setState({ draft: newMessage });
-    updateDraftForConversation({
-      conversationKey: this.props.selectedConversationKey,
-      draft: newMessage,
-    });
-
-    // update our selection because updating text programmatically
-    // will put the selection at the end of the textarea
-    // const selectionStart = currentSelectionStart + Number(1);
-    // messageBox.selectionStart = selectionStart;
-    // messageBox.selectionEnd = selectionStart;
-
-    // // Sometimes, we have to repeat the set of the selection position with a timeout to be effective
-    // setTimeout(() => {
-    //   messageBox.selectionStart = selectionStart;
-    //   messageBox.selectionEnd = selectionStart;
-    // }, 20);
   }
 
   private focusCompositionBox() {
-    // Focus the textarea when user clicks anywhere in the composition box
-    this.textarea.current?.focus();
+    this.inputRef.current?.focus();
   }
 }
 

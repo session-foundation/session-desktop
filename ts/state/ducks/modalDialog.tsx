@@ -7,6 +7,8 @@ import { MediaItemType } from '../../components/lightbox/LightboxGallery';
 import { AttachmentTypeWithPath } from '../../types/Attachment';
 import type { EditProfilePictureModalProps, PasswordAction } from '../../types/ReduxTypes';
 import { WithConvoId } from '../../session/types/with';
+import type { SessionProInfoVariant } from '../../components/dialog/SessionProInfoModal';
+import type { LocalizerProps } from '../../components/basic/Localizer';
 
 export type BanType = 'ban' | 'unban';
 
@@ -29,6 +31,11 @@ export type OnionPathModalState = EditProfileModalState;
 export type EnterPasswordModalState = EnterPasswordModalProps | null;
 export type DeleteAccountModalState = EditProfileModalState;
 export type OpenUrlModalState = { urlToOpen: string } | null;
+export type LocalizedPopupDialogState = {
+  title: LocalizerProps;
+  description: LocalizerProps;
+} | null;
+export type SessionProInfoState = { variant: SessionProInfoVariant } | null;
 
 export type SessionPasswordModalState = { passwordAction: PasswordAction; onOk: () => void } | null;
 
@@ -90,6 +97,8 @@ export type ModalState = {
   editProfilePictureModalState: EditProfilePictureModalState;
   hideRecoveryPasswordModalState: HideRecoveryPasswordModalState;
   openUrlModal: OpenUrlModalState;
+  localizedPopupDialog: LocalizedPopupDialogState;
+  sessionProInfoModal: SessionProInfoState;
   lightBoxOptions: LightBoxOptions;
   debugMenuModal: DebugMenuModalState;
   conversationSettingsModal: ConversationSettingsModalState;
@@ -117,6 +126,8 @@ export const initialModalState: ModalState = {
   editProfilePictureModalState: null,
   hideRecoveryPasswordModalState: null,
   openUrlModal: null,
+  localizedPopupDialog: null,
+  sessionProInfoModal: null,
   lightBoxOptions: null,
   debugMenuModal: null,
   conversationSettingsModal: null,
@@ -187,6 +198,12 @@ const ModalSlice = createSlice({
     updateOpenUrlModal(state, action: PayloadAction<OpenUrlModalState>) {
       return { ...state, openUrlModal: action.payload };
     },
+    updateLocalizedPopupDialog(state, action: PayloadAction<LocalizedPopupDialogState>) {
+      return { ...state, localizedPopupDialog: action.payload };
+    },
+    updateSessionProInfoModal(state, action: PayloadAction<SessionProInfoState>) {
+      return { ...state, sessionProInfoModal: action.payload };
+    },
     updateLightBoxOptions(state, action: PayloadAction<LightBoxOptions>) {
       const lightBoxOptions = action.payload;
 
@@ -238,6 +255,8 @@ export const {
   updateEditProfilePictureModal,
   updateHideRecoveryPasswordModal,
   updateOpenUrlModal,
+  updateLocalizedPopupDialog,
+  updateSessionProInfoModal,
   updateLightBoxOptions,
   updateDebugMenuModal,
   updateConversationSettingsModal,

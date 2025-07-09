@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
 import { GroupPubkeyType, MemberStateGroupV2, PubkeyType } from 'libsession_util_nodejs';
 import { isEmpty } from 'lodash';
@@ -79,9 +79,14 @@ const StyledSessionMemberItem = styled.button<{
     border-bottom: 1px solid var(--border-color);
   }`}
 
-  &:hover {
-    background-color: var(--conversation-tab-background-hover-color);
-  }
+  ${props =>
+    !props.inMentions
+      ? css`
+          &:hover {
+            background-color: var(--conversation-tab-background-hover-color);
+          }
+        `
+      : ''}
 `;
 
 const StyledInfo = styled.div`
@@ -109,6 +114,7 @@ type MemberListItemProps<T extends string> = {
   // this bool is used to make a zombie appear with less opacity than a normal member
   isZombie?: boolean;
   inMentions?: boolean; // set to true if we are rendering members but in the Mentions picker
+  isPublic?: boolean;
   disableBg?: boolean;
   withBorder?: boolean;
   maxNameWidth?: string;
@@ -323,6 +329,7 @@ export const MemberListItem = <T extends string>({
   disableBg,
   displayGroupStatus,
   inMentions,
+  isPublic,
   isAdmin,
   isZombie,
   onSelect,
@@ -334,7 +341,13 @@ export const MemberListItem = <T extends string>({
   hideRadioButton,
 }: MemberListItemProps<T>) => {
   const memberName = useNicknameOrProfileNameOrShortenedPubkey(pubkey);
-  const ourName = isUsAnySogsFromCache(pubkey) ? localize('you').toString() : null;
+  const isYou = isUsAnySogsFromCache(pubkey);
+  const ourName = isYou ? localize('you').toString() : null;
+  const shortPubkey = PubKey.shorten(pubkey);
+  const nameSuffix =
+    isPublic && inMentions && !isYou && memberName !== shortPubkey ? shortPubkey : '';
+
+  const displayedName = `${ourName || memberName} ${nameSuffix}`.trim();
 
   return (
     <StyledSessionMemberItem
@@ -360,7 +373,7 @@ export const MemberListItem = <T extends string>({
           minWidth="0"
         >
           <StyledName data-testid={'contact'} maxName={maxNameWidth}>
-            {ourName || memberName}
+            {displayedName}
           </StyledName>
           <GroupStatusContainer
             pubkey={pubkey}

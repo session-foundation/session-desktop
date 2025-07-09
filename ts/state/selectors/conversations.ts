@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-syntax */
 
 import { createSelector } from '@reduxjs/toolkit';
-import { filter, isEmpty, isFinite, isNumber, pick, sortBy, toNumber } from 'lodash';
+import { filter, isEmpty, isFinite, isNumber, isString, pick, sortBy, toNumber } from 'lodash';
 
 import { useSelector } from 'react-redux';
 import {
@@ -39,8 +39,9 @@ import { isUsAnySogsFromCache } from '../../session/apis/open_group_api/sogsv3/k
 import { PubKey } from '../../session/types';
 import { UserGroupsWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { getSelectedConversationKey } from './selectedConversation';
-import { getModeratorsOutsideRedux } from './sogsRoomInfo';
+import { getModeratorsOutsideRedux, useModerators } from './sogsRoomInfo';
 import type { SessionSuggestionDataItem } from '../../components/conversation/composition/types';
+import { useIsPublic, useWeAreAdmin } from '../../hooks/useParamSelector';
 
 export const getConversations = (state: StateType): ConversationsStateType => state.conversations;
 
@@ -991,4 +992,18 @@ export function useConversationIdOrigin(convoId: string | undefined) {
   return useSelector((state: StateType) =>
     convoId ? state.conversations.conversationLookup?.[convoId]?.conversationIdOrigin : undefined
   );
+}
+
+/**
+ * Returns true if we are an admin or a moderator in the corresponding community.
+ * Note: Some actions can only be done by an admin, like promoting a user to mod, or removing a mod.
+ */
+export function useWeAreCommunityAdminOrModerator(convoId?: string) {
+  const isPublic = useIsPublic(convoId);
+  const us = UserUtils.getOurPubKeyStrFromCache();
+  const weAreAdmin = useWeAreAdmin(convoId);
+  const mods = useModerators(convoId);
+
+  const weAreAdminOrModerator = weAreAdmin || mods.includes(us);
+  return isPublic && isString(convoId) && weAreAdminOrModerator;
 }

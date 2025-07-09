@@ -1,7 +1,11 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 import { TermsOfServicePrivacyDialogProps } from '../../../components/dialog/TermsOfServicePrivacyDialog';
-import { type OpenUrlModalState } from '../../ducks/modalDialog';
 import type { SessionConfirmDialogProps } from '../../../components/dialog/SessionConfirm';
+import {
+  type SessionProInfoState,
+  type OpenUrlModalState,
+  type LocalizedPopupDialogState,
+} from '../../ducks/modalDialog';
 
 export type TermsOfServicePrivacyModalState = TermsOfServicePrivacyDialogProps | null;
 
@@ -13,14 +17,18 @@ export type QuitModalState = QuitModalProps | null;
 
 export type ModalsState = {
   quitModalState: QuitModalState;
-  termsOfServicePrivacyModalState: TermsOfServicePrivacyModalState | null;
+  termsOfServicePrivacyModalState: TermsOfServicePrivacyModalState;
   openUrlModal: OpenUrlModalState;
+  localizedPopupDialog: LocalizedPopupDialogState;
+  sessionProInfoModal: SessionProInfoState;
 };
 
 const initialState: ModalsState = {
   quitModalState: null,
   termsOfServicePrivacyModalState: null,
   openUrlModal: null,
+  localizedPopupDialog: null,
+  sessionProInfoModal: null,
 };
 
 export const modalsSlice = createSlice({
@@ -38,6 +46,12 @@ export const modalsSlice = createSlice({
     },
     updateOpenUrlModal(state, action: PayloadAction<OpenUrlModalState>) {
       return { ...state, openUrlModal: action.payload };
+    },
+    updateLocalizedPopupDialogModal(state, action: PayloadAction<LocalizedPopupDialogState>) {
+      return { ...state, localizedPopupDialog: action.payload };
+    },
+    updateSessionProInfoModal(state, action: PayloadAction<SessionProInfoState>) {
+      return { ...state, sessionProInfoModal: action.payload };
     },
   },
 });

@@ -12,9 +12,8 @@ import {
   updateUserDetailsModal,
 } from '../../state/ducks/modalDialog';
 import {
+  useSelectedConversationKey,
   useSelectedIsPublic,
-  useSelectedWeAreAdmin,
-  useSelectedWeAreModerator,
 } from '../../state/selectors/selectedConversation';
 import { SortedReactionList } from '../../types/Reaction';
 import { nativeEmojiData } from '../../util/emoji';
@@ -30,6 +29,7 @@ import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { SessionWrapperModal2 } from '../SessionWrapperModal2';
 import { localize } from '../../localization/localeTools';
+import { useWeAreCommunityAdminOrModerator } from '../../state/selectors/conversations';
 
 const StyledReactListContainer = styled(Flex)`
   width: 100%;
@@ -108,6 +108,7 @@ type ReactionSendersProps = {
 const ReactionSenders = (props: ReactionSendersProps) => {
   const { messageId, currentReact, senders, me, handleClose } = props;
   const dispatch = useDispatch();
+  const isPublic = useSelectedIsPublic();
 
   const handleAvatarClick = async (sender: string) => {
     const message = await Data.getMessageById(messageId);
@@ -157,6 +158,7 @@ const ReactionSenders = (props: ReactionSendersProps) => {
                   pubkey={sender}
                   module="module-conversation__user"
                   shouldShowPubkey={false}
+                  isPublic={isPublic}
                 />
               </StyledContactContainer>
             )}
@@ -237,8 +239,8 @@ export const ReactListModal = (props: Props) => {
 
   const msgProps = useMessageReactsPropsById(messageId);
   const isPublic = useSelectedIsPublic();
-  const weAreAdmin = useSelectedWeAreAdmin();
-  const weAreModerator = useSelectedWeAreModerator();
+  const selectedConvoKey = useSelectedConversationKey();
+  const weAreCommunityAdminOrModerator = useWeAreCommunityAdminOrModerator(selectedConvoKey);
   const me = UserUtils.getOurPubKeyStrFromCache();
 
   const reactionsMap = useMemo(() => {
@@ -368,7 +370,7 @@ export const ReactListModal = (props: Props) => {
                   </>
                 )}
               </p>
-              {isPublic && (weAreAdmin || weAreModerator) && (
+              {weAreCommunityAdminOrModerator && (
                 <SessionButton
                   text={localize('clearAll').toString()}
                   buttonColor={SessionButtonColor.Danger}

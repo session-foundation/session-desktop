@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 import { MessageFrom } from '.';
 import {
+  useMessageBody,
   useMessageDirection,
   useMessageExpirationDurationMs,
   useMessageExpirationTimestamp,
@@ -24,6 +25,7 @@ import {
   formatTimeDistanceToNow,
   formatTimeDurationMs,
   formatDateWithLocale,
+  formatNumber,
 } from '../../../../../../util/i18n/formatting/generics';
 import { saveLogToDesktop } from '../../../../../../util/logger/renderer_process_logging';
 
@@ -84,6 +86,7 @@ const DebugMessageInfo = ({ messageId }: { messageId: string }) => {
   const expirationTimestamp = useMessageExpirationTimestamp(messageId);
   const timestamp = useMessageTimestamp(messageId);
   const serverTimestamp = useMessageServerTimestamp(messageId);
+  const message = useMessageBody(messageId);
 
   if (!isDevProd()) {
     return null;
@@ -110,6 +113,9 @@ const DebugMessageInfo = ({ messageId }: { messageId: string }) => {
           label={`Disappears:`}
           info={formatTimeDistanceToNow(Math.floor(expirationTimestamp / 1000))}
         />
+      ) : null}
+      {message ? (
+        <LabelWithInfo label={'Characters:'} info={formatNumber(message.length ?? 0)} />
       ) : null}
     </>
   );

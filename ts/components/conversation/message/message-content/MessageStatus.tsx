@@ -245,7 +245,7 @@ const MessageStatusError = ({ dataTestId }: Omit<Props, 'isDetailView'>) => {
         textColor="var(--danger-color)"
       />
       <LucideIcon
-        unicode={LUCIDE_ICONS_UNICODE.OCTAGON_ALERT}
+        unicode={LUCIDE_ICONS_UNICODE.TRIANGLE_ALERT}
         iconColor="var(--danger-color)"
         iconSize="small"
       />
