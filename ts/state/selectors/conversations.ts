@@ -57,6 +57,19 @@ export const getGroupConversationsCount = createSelector(getConversationLookup, 
   return Object.values(state).filter(convo => !convo.isPrivate && !convo.isPublic).length;
 });
 
+export const getPinnedConversationsCount = createSelector(
+  getConversationLookup,
+  (state): number => {
+    return Object.values(state).filter(
+      convo =>
+        convo &&
+        convo.priority &&
+        isFinite(convo.priority) &&
+        convo.priority > CONVERSATION_PRIORITIES.default
+    ).length;
+  }
+);
+
 const getConversationQuotes = (state: StateType): QuoteLookupType | undefined => {
   return state.conversations.quotes;
 };
