@@ -1,7 +1,6 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
-import styled from 'styled-components';
 import { useLastMessage } from '../../hooks/useParamSelector';
 import { updateConversationInteractionState } from '../../interactions/conversationInteractions';
 import { ConversationInteractionStatus } from '../../interactions/types';
@@ -9,58 +8,9 @@ import { updateConfirmModal } from '../../state/ducks/modalDialog';
 import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionRadioGroup, SessionRadioItems } from '../basic/SessionRadioGroup';
-import { Flex } from '../basic/Flex';
 import type { LocalizerProps } from '../basic/Localizer';
-import { SpacerSM } from '../basic/Text';
 import { SessionSpinner } from '../loading';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
-
-const StyledMessageContainer = styled(Flex)`
-  text-align: center;
-`;
-
-const ConfirmationButtons = ({
-  okText,
-  cancelText,
-  hideCancel,
-  okTheme,
-  closeTheme,
-  onClickOkHandler,
-  onClickCancelHandler,
-}: {
-  okText: string;
-  cancelText: string;
-  hideCancel: boolean;
-  okTheme: SessionButtonColor | undefined;
-  closeTheme: SessionButtonColor;
-  onClickOkHandler: () => Promise<void> | void;
-  onClickCancelHandler: () => Promise<void> | void;
-}) => {
-  return (
-    <ButtonChildrenContainer>
-      <SessionButton
-        text={okText}
-        buttonColor={okTheme}
-        buttonType={SessionButtonType.Simple}
-        fontWeight={500}
-        onClick={onClickOkHandler}
-        margin={'var(--margins-xs)'}
-        dataTestId="session-confirm-ok-button"
-      />
-      {!hideCancel && (
-        <SessionButton
-          text={cancelText}
-          buttonColor={!okTheme ? closeTheme : undefined}
-          buttonType={SessionButtonType.Simple}
-          fontWeight={500}
-          onClick={onClickCancelHandler}
-          margin={'var(--margins-xs)'}
-          dataTestId="session-confirm-cancel-button"
-        />
-      )}
-    </ButtonChildrenContainer>
-  );
-};
 
 export interface SessionConfirmDialogProps {
   children?: ReactNode;
@@ -184,28 +134,33 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
       $contentMaxWidth={contentMaxWidth}
       $contentMinWidth={contentMinWidth}
       buttonChildren={
-        <ConfirmationButtons
-          okText={okText}
-          cancelText={cancelText}
-          hideCancel={hideCancel}
-          okTheme={okTheme}
-          closeTheme={closeTheme}
-          onClickOkHandler={onClickOkHandler}
-          onClickCancelHandler={onClickCancelHandler}
-        />
+        <ButtonChildrenContainer>
+          <SessionButton
+            text={okText}
+            buttonColor={okTheme}
+            buttonType={SessionButtonType.Simple}
+            fontWeight={500}
+            onClick={onClickOkHandler}
+            margin={'var(--margins-xs)'}
+            dataTestId="session-confirm-ok-button"
+          />
+          {!hideCancel && (
+            <SessionButton
+              text={cancelText}
+              buttonColor={!okTheme ? closeTheme : undefined}
+              buttonType={SessionButtonType.Simple}
+              fontWeight={500}
+              onClick={onClickCancelHandler}
+              margin={'var(--margins-xs)'}
+              dataTestId="session-confirm-cancel-button"
+            />
+          )}
+        </ButtonChildrenContainer>
       }
-      classes="session-confirm"
     >
-      <StyledMessageContainer
-        $container={true}
-        $flexDirection="column"
-        width={'100%'}
-        $alignItems="center"
-      >
-        {i18nMessage ? (
-          <ModalDescription dataTestId="modal-description" localizerProps={i18nMessage} />
-        ) : null}
-      </StyledMessageContainer>
+      {i18nMessage ? (
+        <ModalDescription dataTestId="modal-description" localizerProps={i18nMessage} />
+      ) : null}
       {radioOptions && chosenOption !== '' ? (
         <SessionRadioGroup
           group="session-confirm-radio-group"
@@ -220,7 +175,6 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
       ) : null}
       {children}
       <SessionSpinner loading={isLoading} />
-      <SpacerSM />
     </SessionWrapperModal2>
   );
 };

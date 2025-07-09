@@ -43,7 +43,6 @@ export function OpenUrlModal(props: OpenUrlModalState) {
       title={window.i18n('urlOpen')}
       onClose={onClose}
       showExitIcon={true}
-      showHeader={true}
       buttonChildren={
         <ButtonChildrenContainer>
           <SessionButton

@@ -256,6 +256,9 @@ declare module 'react' {
     | 'link-preview-title'
     | 'link-preview-close'
 
+    // spacers
+    | `spacer-${'xxs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl'}`
+
     // modules profile name
     | 'module-conversation__user__profile-name'
     | 'module-message-search-result__header__name__profile-name'

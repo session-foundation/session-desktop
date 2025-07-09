@@ -180,8 +180,6 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
     <SessionWrapperModal2
       title={localize('profileDisplayPictureSet').toString()}
       onClose={closeDialog}
-      showHeader={true}
-      // headerReverse={true}
       showExitIcon={true}
       buttonChildren={
         <ButtonChildrenContainer>

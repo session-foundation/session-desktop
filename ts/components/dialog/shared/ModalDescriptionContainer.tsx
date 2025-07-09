@@ -4,10 +4,10 @@ import type { CSSProperties } from 'styled-components';
 import { Localizer, type LocalizerProps } from '../../basic/Localizer';
 
 const StyledModalDescriptionContainer = styled.div`
-  padding: var(--margins-md);
+  padding: 0 var(--margins-md); // no margins top&bottom here, as it depends on if actions are displayed or not
   max-width: 500px;
   line-height: 1.2;
-  text-align: justify;
+  text-align: center;
   font-size: var(--font-size-md);
 `;
 

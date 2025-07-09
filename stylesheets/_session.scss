@@ -159,18 +159,6 @@ label {
   visibility: hidden;
 }
 
-.session-confirm {
-  &-main-message {
-    font-size: var(--font-size-md);
-    line-height: 1.5;
-  }
-
-  &-sub-message {
-    text-align: center;
-    margin-top: 20px;
-  }
-}
-
 .conversation-loader {
   position: absolute;
   top: 50%;

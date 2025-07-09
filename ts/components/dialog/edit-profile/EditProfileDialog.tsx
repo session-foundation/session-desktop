@@ -22,9 +22,8 @@ import { localize } from '../../../localization/localeTools';
 import { sanitizeDisplayNameOrToast } from '../../registration/utils';
 import { useEditProfilePictureCallback } from '../../menuAndSettingsHooks/useEditProfilePictureCallback';
 import { SimpleSessionInput } from '../../inputs/SessionInput';
-import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
-import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import { ButtonChildrenContainer, SessionWrapperModal2 } from '../../SessionWrapperModal2';
+import { ModalBackButton } from '../shared/ModalBackButton';
 
 // #region Shortcuts
 const handleKeyQRMode = (
@@ -165,22 +164,6 @@ export const EditProfileDialog = () => {
     dispatch(editProfileModal(null));
   };
 
-  const backButton =
-    mode === 'edit' || mode === 'qr'
-      ? [
-          <SessionLucideIconButton
-            unicode={LUCIDE_ICONS_UNICODE.CHEVRON_LEFT}
-            onClick={() => {
-              if (loading) {
-                return;
-              }
-              setMode('default');
-            }}
-            iconSize="medium"
-          />,
-        ]
-      : undefined;
-
   const onClickOK = async () => {
     try {
       setLoading(true);
@@ -254,8 +237,20 @@ export const EditProfileDialog = () => {
     <StyledEditProfileDialog className="edit-profile-dialog" data-testid="edit-profile-dialog">
       <SessionWrapperModal2
         title={localize('profile').toString()}
-        headerIconButtons={backButton}
-        // headerReverse={true}
+        headerIconButtons={
+          mode === 'edit' || mode === 'qr'
+            ? [
+                <ModalBackButton
+                  onClick={() => {
+                    if (loading) {
+                      return;
+                    }
+                    setMode('default');
+                  }}
+                />,
+              ]
+            : undefined
+        }
         showExitIcon={true}
         onClose={closeDialog}
       >

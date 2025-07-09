@@ -5,11 +5,13 @@ import {
   useWeAreAdmin,
 } from '../../../../../hooks/useParamSelector';
 import type { WithConvoId } from '../../../../../session/types/with';
+import { Flex } from '../../../../basic/Flex';
 import { Localizer } from '../../../../basic/Localizer';
 import { SpacerSM } from '../../../../basic/Text';
 import { PanelButtonGroup } from '../../../../buttons';
 import { PanelLabel } from '../../../../buttons/PanelButton';
 import { useShowAttachments } from '../../../../menuAndSettingsHooks/useShowAttachments';
+import { SessionWrapperModal2 } from '../../../../SessionWrapperModal2';
 import { ConversationSettingsHeader } from '../../conversationSettingsHeader';
 import {
   PinUnpinButton,
@@ -35,6 +37,8 @@ import {
   RemoveAdminCommunityButton,
   ShowNoteToSelfButton,
 } from '../../conversationSettingsItems';
+import { useCloseActionFromPage, useTitleFromPage } from '../conversationSettingsHooks';
+import type { ConversationSettingsModalState } from '../../../../../state/ducks/modalDialog';
 
 function AdminSettingsTitle() {
   return (
@@ -196,7 +200,7 @@ function DefaultPageForGroupV2({ conversationId }: WithConvoId) {
   );
 }
 
-export function DefaultConversationSettingsPage(props: WithConvoId) {
+function DefaultConversationSettingsPage(props: WithConvoId) {
   const isPrivate = useIsPrivate(props?.conversationId);
   const isPublic = useIsPublic(props?.conversationId);
   const isGroupV2 = useIsGroupV2(props?.conversationId);
@@ -218,4 +222,30 @@ export function DefaultConversationSettingsPage(props: WithConvoId) {
   }
 
   return <DefaultPageForGroupV2 conversationId={props.conversationId} />;
+}
+
+export function DefaultConversationSettingsModal(props: ConversationSettingsModalState) {
+  const onClose = useCloseActionFromPage(props);
+  const title = useTitleFromPage(props?.settingsModalPage);
+
+  if (!props?.conversationId) {
+    return null;
+  }
+
+  return (
+    <SessionWrapperModal2
+      title={title}
+      onClose={onClose}
+      showExitIcon={true}
+      contentBorder={false}
+      shouldOverflow={true}
+      allowOutsideClick={false}
+      $contentMaxWidth="500px"
+      bigHeader={true}
+    >
+      <Flex $container={true} $flexDirection="column" $alignItems="flex-start" width="100%">
+        <DefaultConversationSettingsPage conversationId={props.conversationId} />
+      </Flex>
+    </SessionWrapperModal2>
+  );
 }

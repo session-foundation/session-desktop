@@ -28,7 +28,6 @@ export function TermsOfServicePrivacyDialog(props: TermsOfServicePrivacyDialogPr
       title={localize('urlOpen').toString()}
       onClose={onClose}
       showExitIcon={true}
-      showHeader={true}
       buttonChildren={
         <ButtonChildrenContainer>
           <SessionButton
