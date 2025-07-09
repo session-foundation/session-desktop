@@ -2,7 +2,6 @@ import { Menu } from 'react-contexify';
 
 import { useConvoIdFromContext } from '../../contexts/ConvoIdContext';
 import { useIsLegacyGroup, useIsPinned } from '../../hooks/useParamSelector';
-import { ConvoHub } from '../../session/conversations';
 import { useIsSearchingForType } from '../../state/selectors/search';
 import { SessionContextMenuContainer } from '../SessionContextMenuContainer';
 import {
@@ -36,6 +35,8 @@ import {
   DeleteGroupMenuItem,
 } from './items/LeaveAndDeleteGroup/DeleteGroupMenuItem';
 import { useShowPinUnpin } from '../menuAndSettingsHooks/usePinUnpin';
+import { localize } from '../../localization/localeTools';
+import { useTogglePinConversationHandler } from '../menuAndSettingsHooks/UseTogglePinConversationHandler';
 
 export type PropsContextConversationItem = {
   triggerId: string;
@@ -128,15 +129,12 @@ export const PinConversationMenuItem = (): JSX.Element | null => {
   const showPinUnpin = useShowPinUnpin(conversationId);
   const isPinned = useIsPinned(conversationId);
 
+  const togglePinConversation = useTogglePinConversationHandler(conversationId);
+
   if (!showPinUnpin) {
     return null;
   }
-  const conversation = ConvoHub.use().get(conversationId);
 
-  const togglePinConversation = () => {
-    void conversation?.togglePinned();
-  };
-
-  const menuText = isPinned ? window.i18n('pinUnpin') : window.i18n('pin');
+  const menuText = localize(isPinned ? 'pinUnpin' : 'pin');
   return <ItemWithDataTestId onClick={togglePinConversation}>{menuText}</ItemWithDataTestId>;
 };

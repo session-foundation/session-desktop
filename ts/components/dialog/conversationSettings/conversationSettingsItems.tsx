@@ -15,7 +15,6 @@ import { PanelIconLucideIcon, PanelIconSessionLegacyIcon } from '../../buttons/P
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { useShowNotificationFor } from '../../menuAndSettingsHooks/useShowNotificationFor';
 import type { WithConvoId } from '../../../session/types/with';
-import { ConvoHub } from '../../../session/conversations';
 import { useShowPinUnpin } from '../../menuAndSettingsHooks/usePinUnpin';
 import { useLocalisedNotificationOf } from '../../menuAndSettingsHooks/useLocalisedNotificationFor';
 import { useShowBlockUnblock } from '../../menuAndSettingsHooks/useShowBlockUnblock';
@@ -40,6 +39,7 @@ import { useShowAttachments } from '../../menuAndSettingsHooks/useShowAttachment
 import { useGroupCommonNoShow } from '../../menuAndSettingsHooks/useGroupCommonNoShow';
 import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useShowConversationSettingsFor';
 import { useShowNoteToSelfCb } from '../../menuAndSettingsHooks/useShowNoteToSelf';
+import { useTogglePinConversationHandler } from '../../menuAndSettingsHooks/UseTogglePinConversationHandler';
 
 type WithAsAdmin = { asAdmin: boolean };
 
@@ -175,6 +175,8 @@ export const PinUnpinButton = ({ conversationId }: WithConvoId) => {
   const showPinUnpin = useShowPinUnpin(conversationId);
   const isPinned = useIsPinned(conversationId);
 
+  const togglePinConversation = useTogglePinConversationHandler(conversationId);
+
   if (!showPinUnpin) {
     return null;
   }
@@ -187,9 +189,7 @@ export const PinUnpinButton = ({ conversationId }: WithConvoId) => {
         />
       }
       text={localize(isPinned ? 'pinUnpinConversation' : 'pinConversation').toString()}
-      onClick={() => {
-        void ConvoHub.use().get(conversationId)?.togglePinned();
-      }}
+      onClick={togglePinConversation}
       dataTestId="pin-conversation-menu-option"
     />
   );

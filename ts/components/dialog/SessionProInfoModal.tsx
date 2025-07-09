@@ -18,12 +18,15 @@ import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { Localizer } from '../basic/Localizer';
 import { localize, type MergedLocalizerTokens } from '../../localization/localeTools';
 import { FileIcon } from '../icon/FileIcon';
-import { useFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { SessionButtonShiny } from '../basic/SessionButtonShiny';
+import { useHasPro } from '../../hooks/useHasPro';
+import { useIsProAvailable } from '../../hooks/useIsProAvailable';
 
 export enum SessionProInfoVariant {
   MESSAGE_CHARACTER_LIMIT = 0,
-  PROFILE_PICTURE_ANIMATED = 1,
+  PINNED_CONVERSATION_LIMIT = 1,
+  PINNED_CONVERSATION_LIMIT_GRANDFATHERED = 2,
+  PROFILE_PICTURE_ANIMATED = 3,
 }
 
 const StyledContentContainer = styled.div`
@@ -138,6 +141,10 @@ function FeatureListItem({
 
 function getFeatureList(variant: SessionProInfoVariant): Array<MergedLocalizerTokens> {
   switch (variant) {
+    case SessionProInfoVariant.PINNED_CONVERSATION_LIMIT:
+    case SessionProInfoVariant.PINNED_CONVERSATION_LIMIT_GRANDFATHERED:
+      return ['proFeatureListPinnedConversations', 'proFeatureListLargerGroups'];
+    case SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT:
     default:
       return ['proFeatureListLongerMessages', 'proFeatureListLargerGroups'];
   }
@@ -147,6 +154,10 @@ function getDescription(variant: SessionProInfoVariant): ReactNode {
   switch (variant) {
     case SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT:
       return <Localizer token="proCallToActionLongerMessages" />;
+    case SessionProInfoVariant.PINNED_CONVERSATION_LIMIT:
+      return <Localizer token="proCallToActionPinnedConversationsMoreThan" />;
+    case SessionProInfoVariant.PINNED_CONVERSATION_LIMIT_GRANDFATHERED:
+      return <Localizer token="proCallToActionPinnedConversations" />;
     default:
       throw new Error('Invalid Variant');
   }
@@ -156,6 +167,9 @@ function getImage(variant: SessionProInfoVariant): ReactNode {
   switch (variant) {
     case SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT:
       return <StyledCTAImage src="images/cta_hero_char_limit.webp" />;
+    case SessionProInfoVariant.PINNED_CONVERSATION_LIMIT:
+    case SessionProInfoVariant.PINNED_CONVERSATION_LIMIT_GRANDFATHERED:
+      return <StyledCTAImage src="images/cta_hero_pin_convo_limit.webp" />;
 
     // TODO: implement with animated profile pictures
     // case SessionProInfoVariant.PROFILE_PICTURE_ANIMATED:
@@ -265,15 +279,26 @@ export const showSessionProInfoDialog = (
 
 export const useShowSessionProInfoDialogCb = (variant: SessionProInfoVariant) => {
   const dispatch = useDispatch();
-  const isProAvailable = useFeatureFlag('proAvailable');
-  const mockHasPro = useFeatureFlag('mockUserHasPro');
+  const hasPro = useHasPro();
 
-  // TODO: get pro status from store once available
-  const hasPro = mockHasPro;
-
+  // TODO: remove once pro is released
+  const isProAvailable = useIsProAvailable();
   if (!isProAvailable || hasPro) {
     return () => null;
   }
 
   return () => showSessionProInfoDialog(variant, dispatch);
+};
+
+export const useShowSessionProInfoDialogCbWithVariant = () => {
+  const dispatch = useDispatch();
+  const hasPro = useHasPro();
+
+  // TODO: remove once pro is released
+  const isProAvailable = useIsProAvailable();
+  if (!isProAvailable || hasPro) {
+    return (_: SessionProInfoVariant) => null;
+  }
+
+  return (variant: SessionProInfoVariant) => showSessionProInfoDialog(variant, dispatch);
 };
