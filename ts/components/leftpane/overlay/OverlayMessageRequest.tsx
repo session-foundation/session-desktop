@@ -58,13 +58,10 @@ export const OverlayMessageRequest = () => {
    * @returns void
    */
   function handleClearAllRequestsClick() {
-    const onClose = dispatch(updateConfirmModal(null));
-
     dispatch(
       updateConfirmModal({
         title: localize('clearAll').toString(),
         i18nMessage: { token: 'messageRequestsClearAllExplanation' },
-        onClose,
         okTheme: SessionButtonColor.Danger,
         okText: window.i18n('clear'),
         onClickOk: async () => {

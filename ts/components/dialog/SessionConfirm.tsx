@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
 import { useLastMessage } from '../../hooks/useParamSelector';
 import { updateConversationInteractionState } from '../../interactions/conversationInteractions';
@@ -51,7 +50,6 @@ export interface SessionConfirmDialogProps {
 }
 
 export const SessionConfirm = (props: SessionConfirmDialogProps) => {
-  const dispatch = useDispatch();
   const {
     title,
     i18nMessage,
@@ -63,7 +61,6 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
     hideCancel = false,
     onClickCancel,
     showExitIcon,
-    closeAfterInput = true,
     conversationId,
   } = props;
 
@@ -87,10 +84,6 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
       } finally {
         setIsLoading(false);
       }
-    }
-
-    if (closeAfterInput) {
-      dispatch(updateConfirmModal(null));
     }
   };
 

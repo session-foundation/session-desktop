@@ -94,7 +94,6 @@ function useFollowSettingsButtonClick({ messageId }: WithMessageId) {
             timespanSeconds ?? undefined
           );
         },
-        showExitIcon: false,
         onClickClose: onExit,
       })
     );
