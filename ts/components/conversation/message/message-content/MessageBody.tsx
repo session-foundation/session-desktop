@@ -192,6 +192,14 @@ function parsePreTags(content: string, messageBodyProps: Props) {
 }
 
 export const MessageBody = (props: Props) => {
+  return (
+    <span style={{ userSelect: 'inherit' }} className="message-body">
+      <MessageBodyContent {...props} />
+    </span>
+  );
+};
+
+const MessageBodyContent = (props: Props) => {
   const { text, disableJumbomoji, disableRichContent, isGroup, isPublic } = props;
   const sizeClass: SizeClassType = disableJumbomoji ? 'default' : getEmojiSizeClass(text);
 
