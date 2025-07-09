@@ -35,7 +35,12 @@ import {
   useCloseActionFromPage,
   useTitleFromPage,
 } from '../conversationSettingsHooks';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../../../../SessionWrapperModal2';
+import {
+  BasicModalHeader,
+  ButtonChildrenContainer,
+  SessionWrapperModal2,
+  WrapperModalWidth,
+} from '../../../../SessionWrapperModal2';
 import { ModalBackButton } from '../../../shared/ModalBackButton';
 
 const StyledNonAdminDescription = styled.div`
@@ -160,15 +165,19 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
 
   return (
     <SessionWrapperModal2
-      title={title}
+      headerChildren={
+        <BasicModalHeader
+          title={title}
+          showExitIcon={false}
+          bigHeader={true}
+          leftButton={backAction ? <ModalBackButton onClick={backAction} /> : undefined}
+        />
+      }
       onClose={onClose}
-      showExitIcon={false}
       contentBorder={false}
       shouldOverflow={true}
       allowOutsideClick={false}
-      $contentMinWidth="350px"
-      bigHeader={true}
-      headerIconButtons={backAction ? [<ModalBackButton onClick={backAction} />] : undefined}
+      $contentMinWidth={WrapperModalWidth.narrow}
       buttonChildren={
         <ButtonChildrenContainer>
           {loading ? (

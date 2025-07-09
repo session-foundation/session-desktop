@@ -1,3 +1,4 @@
+/* eslint-disable no-unneeded-ternary */
 import { AnimatePresence } from 'framer-motion';
 import styled from 'styled-components';
 import clsx from 'clsx';
@@ -11,6 +12,8 @@ import { SessionFocusTrap } from './SessionFocusTrap';
 import { useHTMLDirection } from '../util/i18n/rtlSupport';
 import { StyledRootDialog } from './dialog/StyledRootDialog';
 import { LUCIDE_ICONS_UNICODE } from './icon/lucide';
+import { IsModalScrolledContext, useIsModalScrolled } from '../contexts/IsModalScrolledContext';
+import { OnModalCloseContext, useOnModalClose } from '../contexts/OnModalCloseContext';
 
 const DEFAULT_MODAL_WIDTH = '410px';
 
@@ -42,12 +45,17 @@ const StyledModalHeader = styled(Flex)<{ bigHeader?: boolean; scrolled: boolean 
     props.scrolled ? '1px solid var(--border-color)' : '1px solid var(--transparent-color)'};
 `;
 
+export enum WrapperModalWidth {
+  narrow = '350px',
+  normal = '410px',
+  wide = '500px',
+}
+
 const StyledModal = styled.div<{
   $contentMaxWidth?: string;
   $contentMinWidth?: string;
   padding?: string;
   border: boolean;
-  bigHeader?: boolean;
 }>`
   animation: fadein var(--default-duration);
   z-index: 150;
@@ -115,7 +123,13 @@ const StyledTitle = styled.div<{ bigHeader?: boolean }>`
     props.bigHeader ? 'var(--margins-sm)' : 'var(--margins-xs) var(--margins-sm)'};
 `;
 
-export const ButtonChildrenContainer = (props: { children: ReactNode }) => {
+export const ButtonChildrenContainer = ({
+  children,
+  style = {},
+}: {
+  children: ReactNode;
+  style?: CSSProperties;
+}) => {
   return (
     <Flex
       $container={true}
@@ -125,19 +139,15 @@ export const ButtonChildrenContainer = (props: { children: ReactNode }) => {
       $alignItems="center"
       $flexGap="var(--margins-md)"
       height="59px"
-      style={{ justifySelf: 'center' }}
+      style={{ justifySelf: 'center', ...style }}
     >
-      {props.children}
+      {children}
     </Flex>
   );
 };
 
 export type SessionWrapperModalType2 = {
-  title?: ReactNode;
-  showHeader?: boolean;
-  onClose?: (event?: KeyboardEvent) => void;
-  showExitIcon?: boolean;
-  headerIconButtons?: Array<React.ReactNode>;
+  headerChildren: ReactNode | null;
   children: ReactNode;
   /**
    * *Should* be some SessionButtons enclosed in a ButtonChildrenContainer
@@ -150,24 +160,27 @@ export type SessionWrapperModalType2 = {
   padding?: string;
   classes?: string;
   allowOutsideClick?: boolean;
-  bigHeader?: boolean;
   removeScrollbarGutter?: boolean;
   modalDataTestId?: SessionDataTestId;
   style?: Omit<CSSProperties, 'maxWidth' | 'minWidth' | 'padding' | 'border'>;
 };
 
-const ModalHeader = (
-  props: Pick<
-    SessionWrapperModalType2,
-    'showExitIcon' | 'onClose' | 'headerIconButtons' | 'title' | 'bigHeader' | 'modalDataTestId'
-  > & { scrolled: boolean }
-) => {
-  const { showExitIcon, headerIconButtons, title, onClose, bigHeader, modalDataTestId, scrolled } =
-    props;
+export const BasicModalHeader = (props: {
+  title?: ReactNode;
+  showExitIcon?: boolean;
+  leftButton?: ReactNode;
+  bigHeader?: boolean;
+  modalHeaderDataTestId?: SessionDataTestId;
+}) => {
+  const { showExitIcon, leftButton, title, bigHeader, modalHeaderDataTestId } = props;
   const htmlDirection = useHTMLDirection();
+
+  const onClose = useOnModalClose();
+  const scrolled = useIsModalScrolled();
 
   return (
     <StyledModalHeader
+      data-testid={modalHeaderDataTestId}
       dir={htmlDirection}
       $container={true}
       $flexDirection={'row'}
@@ -175,7 +188,6 @@ const ModalHeader = (
       $alignItems={'center'}
       padding={'var(--margins-lg) var(--margins-sm)  var(--margins-sm) var(--margins-lg)'}
       bigHeader={bigHeader}
-      data-testid={modalDataTestId}
       scrolled={scrolled}
     >
       <Flex
@@ -185,11 +197,12 @@ const ModalHeader = (
         padding={'0'}
         margin={'0'}
       >
-        {headerIconButtons?.length ? headerIconButtons : showExitIcon ? <SpacerXL /> : null}
+        {/* Note: add a spacer if no left button is set but we have an exit icon */}
+        {leftButton ? leftButton : showExitIcon ? <SpacerXL /> : null}
       </Flex>
       <StyledTitle
         bigHeader={bigHeader}
-        tabIndex={!showExitIcon && !headerIconButtons?.length ? 0 : undefined}
+        tabIndex={!showExitIcon && !leftButton ? 0 : undefined}
         data-testid="modal-heading"
       >
         {title}
@@ -201,26 +214,11 @@ const ModalHeader = (
         padding={'0'}
         margin={'0'}
       >
-        {headerIconButtons?.length
-          ? headerIconButtons.map((_, index) => {
-              const offset = showExitIcon
-                ? headerIconButtons.length - 2
-                : headerIconButtons.length - 1;
-              if (index > offset) {
-                return null;
-              }
-              return <SpacerXL key={`session-modal__header_space-${index}`} />;
-            })
-          : null}
         {showExitIcon ? (
           <SessionLucideIconButton
             unicode={LUCIDE_ICONS_UNICODE.X}
             iconSize={'medium'}
-            onClick={() => {
-              if (onClose) {
-                onClose();
-              }
-            }}
+            onClick={onClose ?? undefined}
             padding={'0 var(--margins-xs) 0 var(--margins-xs)'}
             margin={'0'}
             dataTestId="modal-close-button"
@@ -231,13 +229,10 @@ const ModalHeader = (
   );
 };
 
-export const SessionWrapperModal2 = (props: SessionWrapperModalType2) => {
+export const SessionWrapperModal2 = (
+  props: SessionWrapperModalType2 & { onClose?: () => void }
+) => {
   const {
-    title,
-    onClose,
-    showHeader = true,
-    showExitIcon,
-    headerIconButtons,
     $contentMinWidth,
     $contentMaxWidth,
     contentBorder = true,
@@ -245,37 +240,37 @@ export const SessionWrapperModal2 = (props: SessionWrapperModalType2) => {
     padding,
     classes,
     allowOutsideClick,
-    bigHeader,
     modalDataTestId,
     style,
     removeScrollbarGutter,
+    onClose,
   } = props;
 
   const [scrolled, setScrolled] = useState(false);
 
   useKey(
     'Esc',
-    event => {
-      props.onClose?.(event);
+    _event => {
+      onClose?.();
     },
     undefined,
-    [props.onClose]
+    [onClose]
   );
 
   useKey(
     'Escape',
-    event => {
-      props.onClose?.(event);
+    _event => {
+      onClose?.();
     },
     undefined,
-    [props.onClose]
+    [onClose]
   );
 
   const modalRef = useRef<HTMLDivElement>(null);
 
   const handleClick = (e: any) => {
     if (!modalRef.current?.contains(e.target)) {
-      props.onClose?.();
+      onClose?.();
     }
   };
 
@@ -287,52 +282,46 @@ export const SessionWrapperModal2 = (props: SessionWrapperModalType2) => {
   return (
     <AnimatePresence>
       <SessionFocusTrap allowOutsideClick={allowOutsideClick}>
-        <StyledRootDialog
-          shouldOverflow={shouldOverflow}
-          className={clsx('modal', classes)}
-          onMouseDown={handleClick}
-          role="dialog"
-          data-testid={modalDataTestId}
-        >
-          <StyledModal
-            ref={modalRef}
-            $contentMaxWidth={$contentMaxWidth}
-            $contentMinWidth={$contentMinWidth}
-            padding={padding}
-            border={contentBorder}
-            bigHeader={bigHeader}
-            style={style}
-          >
-            {showHeader ? (
-              <ModalHeader
-                showExitIcon={showExitIcon}
-                headerIconButtons={headerIconButtons}
-                title={title}
-                onClose={onClose}
-                bigHeader={bigHeader}
-                scrolled={scrolled}
-              />
-            ) : null}
-
-            <StyledModalBody
-              onScroll={event => {
-                handleScroll(event);
-              }}
+        <IsModalScrolledContext.Provider value={scrolled}>
+          <OnModalCloseContext.Provider value={onClose ?? null}>
+            <StyledRootDialog
               shouldOverflow={shouldOverflow}
-              removeScrollbarGutter={removeScrollbarGutter}
+              className={clsx('modal', classes)}
+              onMouseDown={handleClick}
+              role="dialog"
+              data-testid={modalDataTestId}
             >
-              <Flex
-                $container={true}
-                $alignItems="center"
-                $flexDirection="column"
-                paddingInline="var(--margins-lg)" // add the padding here so that the rest of the modal isn't affected (including buttonChildren/ModalHeader)
+              <StyledModal
+                ref={modalRef}
+                $contentMaxWidth={$contentMaxWidth}
+                $contentMinWidth={$contentMinWidth}
+                padding={padding}
+                border={contentBorder}
+                style={style}
               >
-                {props.children}
-              </Flex>
-              {props.buttonChildren ? props.buttonChildren : <SpacerLG />}
-            </StyledModalBody>
-          </StyledModal>
-        </StyledRootDialog>
+                {props.headerChildren ? props.headerChildren : null}
+
+                <StyledModalBody
+                  onScroll={event => {
+                    handleScroll(event);
+                  }}
+                  shouldOverflow={shouldOverflow}
+                  removeScrollbarGutter={removeScrollbarGutter}
+                >
+                  <Flex
+                    $container={true}
+                    $alignItems="center"
+                    $flexDirection="column"
+                    paddingInline="var(--margins-lg)" // add the padding here so that the rest of the modal isn't affected (including buttonChildren/ModalHeader)
+                  >
+                    {props.children}
+                  </Flex>
+                  {props.buttonChildren ? props.buttonChildren : <SpacerLG />}
+                </StyledModalBody>
+              </StyledModal>
+            </StyledRootDialog>
+          </OnModalCloseContext.Provider>
+        </IsModalScrolledContext.Provider>
       </SessionFocusTrap>
     </AnimatePresence>
   );

@@ -12,7 +12,11 @@ import { SessionButton, SessionButtonType } from '../basic/SessionButton';
 import { SessionSpinner } from '../loading';
 import { localize } from '../../localization/localeTools';
 import { MAX_SUBREQUESTS_COUNT } from '../../session/apis/snode_api/SnodeRequestTypes';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import {
+  BasicModalHeader,
+  ButtonChildrenContainer,
+  SessionWrapperModal2,
+} from '../SessionWrapperModal2';
 import { SimpleSessionInput } from '../inputs/SessionInput';
 import { SpacerMD } from '../basic/Text';
 import { ClearInputButton } from '../inputs/ClearInputButton';
@@ -85,7 +89,7 @@ export const AddModeratorsDialog = (props: Props) => {
 
   return (
     <SessionWrapperModal2
-      title={localize('addAdmins').toString()}
+      headerChildren={<BasicModalHeader title={localize('addAdmins').toString()} />}
       onClose={onClose}
       buttonChildren={
         <ButtonChildrenContainer>

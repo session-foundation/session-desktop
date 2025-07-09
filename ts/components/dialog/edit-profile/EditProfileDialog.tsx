@@ -20,7 +20,11 @@ import { localize } from '../../../localization/localeTools';
 import { sanitizeDisplayNameOrToast } from '../../registration/utils';
 import { useEditProfilePictureCallback } from '../../menuAndSettingsHooks/useEditProfilePictureCallback';
 import { SimpleSessionInput } from '../../inputs/SessionInput';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../../SessionWrapperModal2';
+import {
+  BasicModalHeader,
+  ButtonChildrenContainer,
+  SessionWrapperModal2,
+} from '../../SessionWrapperModal2';
 import { ModalBackButton } from '../shared/ModalBackButton';
 import { SessionButtonColor, SessionButton } from '../../basic/SessionButton';
 import { CopyToClipboardButton } from '../../buttons';
@@ -236,10 +240,12 @@ export const EditProfileDialog = () => {
   return (
     <StyledEditProfileDialog className="edit-profile-dialog" data-testid="edit-profile-dialog">
       <SessionWrapperModal2
-        title={localize('profile').toString()}
-        headerIconButtons={
-          mode === 'edit' || mode === 'qr'
-            ? [
+        headerChildren={
+          <BasicModalHeader
+            title={localize('profile').toString()}
+            showExitIcon={true}
+            leftButton={
+              mode === 'edit' || mode === 'qr' ? (
                 <ModalBackButton
                   onClick={() => {
                     if (loading) {
@@ -247,11 +253,11 @@ export const EditProfileDialog = () => {
                     }
                     setMode('default');
                   }}
-                />,
-              ]
-            : undefined
+                />
+              ) : undefined
+            }
+          />
         }
-        showExitIcon={true}
         onClose={closeDialog}
         buttonChildren={
           mode === 'default' || mode === 'qr' || mode === 'lightbox' ? (

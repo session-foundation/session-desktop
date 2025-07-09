@@ -1,6 +1,6 @@
 import { useDispatch } from 'react-redux';
 import { updateSessionNetworkModal } from '../../../state/ducks/modalDialog';
-import { SessionWrapperModal2 } from '../../SessionWrapperModal2';
+import { BasicModalHeader, SessionWrapperModal2 } from '../../SessionWrapperModal2';
 import { LOCALE_DEFAULTS } from '../../../localization/constants';
 import { sectionActions } from '../../../state/ducks/section';
 import { StakeSection } from './sections/StakeSection';
@@ -53,13 +53,17 @@ export function SessionNetworkModal() {
 
   return (
     <SessionWrapperModal2
-      title={LOCALE_DEFAULTS.network_name}
-      bigHeader={true}
+      headerChildren={
+        <BasicModalHeader
+          title={LOCALE_DEFAULTS.network_name}
+          bigHeader={true}
+          showExitIcon={true}
+          leftButton={<ReloadButton loading={loading} />}
+        />
+      }
       onClose={onClose}
       contentBorder={false}
       shouldOverflow={true}
-      showExitIcon={true}
-      headerIconButtons={[<ReloadButton loading={loading} />]}
     >
       <NetworkSection />
       <StakeSection />

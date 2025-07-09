@@ -5,7 +5,11 @@ import { updateHideRecoveryPasswordModal } from '../../state/ducks/modalDialog';
 import { sectionActions } from '../../state/ducks/section';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SpacerMD } from '../basic/Text';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import {
+  BasicModalHeader,
+  ButtonChildrenContainer,
+  SessionWrapperModal2,
+} from '../SessionWrapperModal2';
 import { localize } from '../../localization/localeTools';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
 
@@ -66,9 +70,13 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
 
   return (
     <SessionWrapperModal2
-      title={localize('recoveryPasswordHidePermanently').toString()}
+      headerChildren={
+        <BasicModalHeader
+          title={localize('recoveryPasswordHidePermanently').toString()}
+          showExitIcon={false}
+        />
+      }
       onClose={onClose}
-      showExitIcon={false}
       buttonChildren={
         <ButtonChildrenContainer>
           <SessionButton {...leftButtonProps} buttonType={SessionButtonType.Simple} />

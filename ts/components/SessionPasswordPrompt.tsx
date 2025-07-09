@@ -13,7 +13,12 @@ import { SessionToast } from './basic/SessionToast';
 import { SessionSpinner } from './loading';
 import { Localizer } from './basic/Localizer';
 import { localize } from '../localization/localeTools';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from './SessionWrapperModal2';
+import {
+  BasicModalHeader,
+  ButtonChildrenContainer,
+  SessionWrapperModal2,
+  WrapperModalWidth,
+} from './SessionWrapperModal2';
 import { themeStore } from '../state/theme/store';
 import { ShowHideSessionInput } from './inputs/SessionInput';
 import { sleepFor } from '../session/utils/Promise';
@@ -187,11 +192,13 @@ const SessionPasswordPromptInner = () => {
 
   return (
     <SessionWrapperModal2
-      title={
-        clearDataView ? localize('clearDevice').toString() : localize('passwordEnter').toString()
+      headerChildren={
+        <BasicModalHeader
+          title={localize(clearDataView ? 'clearDevice' : 'passwordEnter').toString()}
+          showExitIcon={false}
+        />
       }
-      showExitIcon={false}
-      $contentMinWidth="350px"
+      $contentMinWidth={WrapperModalWidth.narrow}
       buttonChildren={
         clearDataView ? (
           <ClearDataViewButtons

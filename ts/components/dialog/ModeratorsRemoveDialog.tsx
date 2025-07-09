@@ -14,7 +14,11 @@ import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/S
 import { SessionSpinner } from '../loading';
 import { Localizer } from '../basic/Localizer';
 import { StyledContactListInModal } from '../list/StyledContactList';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import {
+  BasicModalHeader,
+  ButtonChildrenContainer,
+  SessionWrapperModal2,
+} from '../SessionWrapperModal2';
 import { localize } from '../../localization/localeTools';
 
 type Props = {
@@ -88,9 +92,8 @@ export const RemoveModeratorsDialog = (props: Props) => {
 
   return (
     <SessionWrapperModal2
-      title={localize('adminRemove').toString()}
+      headerChildren={<BasicModalHeader title={localize('adminRemove').toString()} />}
       onClose={closeDialog}
-      showExitIcon={false}
       buttonChildren={
         <ButtonChildrenContainer>
           <SessionButton

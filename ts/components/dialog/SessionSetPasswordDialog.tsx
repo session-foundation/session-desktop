@@ -11,7 +11,12 @@ import { matchesHash, validatePassword } from '../../util/passwordUtils';
 import { getPasswordHash, Storage } from '../../util/storage';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { localize } from '../../localization/localeTools';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import {
+  BasicModalHeader,
+  ButtonChildrenContainer,
+  SessionWrapperModal2,
+  WrapperModalWidth,
+} from '../SessionWrapperModal2';
 import { SimpleSessionInput } from '../inputs/SessionInput';
 import { Flex } from '../basic/Flex';
 
@@ -95,11 +100,10 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
 
     return (
       <SessionWrapperModal2
-        title={titleString()}
+        headerChildren={<BasicModalHeader title={titleString()} showExitIcon={false} />}
         onClose={this.closeDialog}
-        showExitIcon={false}
-        $contentMinWidth="350px"
-        $contentMaxWidth="350px"
+        $contentMinWidth={WrapperModalWidth.narrow}
+        $contentMaxWidth={WrapperModalWidth.narrow}
         buttonChildren={
           <ButtonChildrenContainer>
             <SessionButton

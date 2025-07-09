@@ -14,7 +14,7 @@ import {
   OtherInfo,
   Playgrounds,
 } from './components';
-import { SessionWrapperModal2 } from '../../SessionWrapperModal2';
+import { BasicModalHeader, SessionWrapperModal2 } from '../../SessionWrapperModal2';
 import { FeatureFlags } from './FeatureFlags';
 import { ReleaseChannel } from './ReleaseChannel';
 import { useHotkey } from '../../../hooks/useHotkey';
@@ -113,9 +113,8 @@ export function DebugMenuModal() {
   return (
     <AnimatePresence>
       <SessionWrapperModal2
-        title={'Debug Menu'}
+        headerChildren={<BasicModalHeader title="Debug Menu" showExitIcon={true} />}
         onClose={onClose}
-        showExitIcon={true}
         contentBorder={false}
         $contentMaxWidth={'75%'}
         shouldOverflow={true}

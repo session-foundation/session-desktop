@@ -6,7 +6,12 @@ import { SpacerSM } from '../basic/Text';
 
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { localize } from '../../localization/localeTools';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import {
+  BasicModalHeader,
+  ButtonChildrenContainer,
+  SessionWrapperModal2,
+  WrapperModalWidth,
+} from '../SessionWrapperModal2';
 import { ShowHideSessionInput } from '../inputs/SessionInput';
 
 export type EnterPasswordModalProps = {
@@ -62,10 +67,9 @@ export const EnterPasswordModal = (props: EnterPasswordModalProps) => {
 
   return (
     <SessionWrapperModal2
-      title={title}
       onClose={onClose}
-      showExitIcon={true}
-      $contentMinWidth="300px"
+      headerChildren={<BasicModalHeader title={title} showExitIcon={true} />}
+      $contentMinWidth={WrapperModalWidth.narrow}
       buttonChildren={
         <ButtonChildrenContainer>
           <SessionButton

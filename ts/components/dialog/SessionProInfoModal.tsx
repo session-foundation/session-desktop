@@ -3,7 +3,11 @@ import { Dispatch, type ReactNode } from 'react';
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { type SessionProInfoState, updateSessionProInfoModal } from '../../state/ducks/modalDialog';
-import { SessionWrapperModal2 } from '../SessionWrapperModal2';
+import {
+  SessionWrapperModal2,
+  WrapperModalWidth,
+  ButtonChildrenContainer,
+} from '../SessionWrapperModal2';
 import {
   SessionButton,
   SessionButtonColor,
@@ -29,7 +33,6 @@ export enum SessionProInfoVariant {
 const StyledContentContainer = styled.div`
   display: flex;
   flex-direction: column;
-  margin-inline: var(--margins-lg);
   margin-bottom: var(--margins-lg);
   gap: var(--margins-sm);
 `;
@@ -38,14 +41,6 @@ const StyledScrollDescriptionContainer = styled.div`
   text-align: center;
   font-size: var(--font-size-lg);
   color: var(--text-secondary-color);
-`;
-
-const StyledButtonContainer = styled.div`
-  display: grid;
-  align-items: center;
-  justify-items: center;
-  grid-template-columns: 1fr 1fr;
-  column-gap: var(--margins-sm);
 `;
 
 const StyledCTAImage = styled.img`
@@ -195,15 +190,41 @@ export function SessionProInfoModal(props: SessionProInfoState) {
   return (
     <SessionWrapperModal2
       onClose={onClose}
-      showExitIcon={false}
-      showHeader={false}
+      headerChildren={getImage(props.variant)}
       padding="0"
       removeScrollbarGutter={true}
       shouldOverflow={true}
-      $contentMinWidth={'420px'}
-      $contentMaxWidth={'420px'}
+      $contentMinWidth={WrapperModalWidth.normal}
+      $contentMaxWidth={WrapperModalWidth.normal}
+      buttonChildren={
+        <ButtonChildrenContainer
+          style={{
+            display: 'grid',
+            alignItems: 'center',
+            justifyItems: 'center',
+            gridTemplateColumns: '1fr 1fr',
+            columnGap: 'var(--margins-sm)',
+          }}
+        >
+          <SessionButtonShiny
+            {...buttonProps}
+            buttonColor={SessionButtonColor.Primary}
+            onClick={onClose}
+            dataTestId="modal-button-session-pro-ok"
+          >
+            {localize('theContinue')}
+          </SessionButtonShiny>
+          <SessionButton
+            {...buttonProps}
+            buttonColor={SessionButtonColor.Tertiary}
+            onClick={onClose}
+            dataTestId="modal-button-session-pro-ok"
+          >
+            {localize('cancel')}
+          </SessionButton>
+        </ButtonChildrenContainer>
+      }
     >
-      {getImage(props.variant)}
       <SpacerSM />
       <StyledCTATitle>
         {localize('upgradeTo')}
@@ -229,24 +250,6 @@ export function SessionProInfoModal(props: SessionProInfoState) {
             {localize('proFeatureListLoadsMore')}
           </FeatureListItem>
         </StyledFeatureList>
-        <StyledButtonContainer>
-          <SessionButtonShiny
-            {...buttonProps}
-            buttonColor={SessionButtonColor.Primary}
-            onClick={onClose}
-            dataTestId="modal-button-session-pro-ok"
-          >
-            {localize('theContinue')}
-          </SessionButtonShiny>
-          <SessionButton
-            {...buttonProps}
-            buttonColor={SessionButtonColor.Tertiary}
-            onClick={onClose}
-            dataTestId="modal-button-session-pro-ok"
-          >
-            {localize('cancel')}
-          </SessionButton>
-        </StyledButtonContainer>
       </StyledContentContainer>
     </SessionWrapperModal2>
   );

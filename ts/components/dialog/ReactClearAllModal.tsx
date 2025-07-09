@@ -6,7 +6,11 @@ import { ConvoHub } from '../../session/conversations';
 import { updateReactClearAllModal } from '../../state/ducks/modalDialog';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionSpinner } from '../loading';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import {
+  BasicModalHeader,
+  ButtonChildrenContainer,
+  SessionWrapperModal2,
+} from '../SessionWrapperModal2';
 import { localize } from '../../localization/localeTools';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
 
@@ -48,8 +52,7 @@ export const ReactClearAllModal = (props: Props) => {
   return (
     <SessionWrapperModal2
       onClose={handleClose}
-      showExitIcon={false}
-      title={localize('clearAll').toString()}
+      headerChildren={<BasicModalHeader title={localize('clearAll').toString()} />}
       buttonChildren={
         <ButtonChildrenContainer>
           <SessionButton

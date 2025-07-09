@@ -10,7 +10,11 @@ import { localize } from '../../localization/localeTools';
 import LIBSESSION_CONSTANTS from '../../session/utils/libsession/libsession_constants';
 import { SimpleSessionInput } from '../inputs/SessionInput';
 import { ClearInputButton } from '../inputs/ClearInputButton';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import {
+  BasicModalHeader,
+  ButtonChildrenContainer,
+  SessionWrapperModal2,
+} from '../SessionWrapperModal2';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
 
 type Props = {
@@ -79,9 +83,10 @@ export const SessionNicknameDialog = (props: Props) => {
 
   return (
     <SessionWrapperModal2
-      title={localize('nicknameSet').toString()}
+      headerChildren={
+        <BasicModalHeader title={localize('nicknameSet').toString()} showExitIcon={true} />
+      }
       onClose={onClickClose}
-      showExitIcon={true}
       buttonChildren={
         <ButtonChildrenContainer>
           <SessionButton

@@ -2,7 +2,11 @@ import { shell } from 'electron';
 import { useDispatch } from 'react-redux';
 import { updateTermsOfServicePrivacyModal } from '../../state/onboarding/ducks/modals';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import {
+  BasicModalHeader,
+  ButtonChildrenContainer,
+  SessionWrapperModal2,
+} from '../SessionWrapperModal2';
 import { localize } from '../../localization/localeTools';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
 
@@ -25,9 +29,10 @@ export function TermsOfServicePrivacyDialog(props: TermsOfServicePrivacyDialogPr
 
   return (
     <SessionWrapperModal2
-      title={localize('urlOpen').toString()}
+      headerChildren={
+        <BasicModalHeader title={localize('urlOpen').toString()} showExitIcon={true} />
+      }
       onClose={onClose}
-      showExitIcon={true}
       buttonChildren={
         <ButtonChildrenContainer>
           <SessionButton

@@ -22,7 +22,11 @@ import { Snode } from '../../data/types';
 import { SessionSpinner } from '../loading';
 import { getCrowdinLocale } from '../../util/i18n/shared';
 import { localize } from '../../localization/localeTools';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import {
+  BasicModalHeader,
+  ButtonChildrenContainer,
+  SessionWrapperModal2,
+} from '../SessionWrapperModal2';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
 
@@ -274,9 +278,10 @@ export const OnionPathModal = () => {
   const dispatch = useDispatch();
   return (
     <SessionWrapperModal2
-      title={localize('onionRoutingPath').toString()}
       onClose={() => dispatch(onionPathModal(null))}
-      showExitIcon={true}
+      headerChildren={
+        <BasicModalHeader title={localize('onionRoutingPath').toString()} showExitIcon={true} />
+      }
       buttonChildren={
         <ButtonChildrenContainer>
           <SessionButton

@@ -12,7 +12,11 @@ import {
 } from '../../util/accountManager';
 import { SessionRadioGroup } from '../basic/SessionRadioGroup';
 import { localize } from '../../localization/localeTools';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import {
+  BasicModalHeader,
+  ButtonChildrenContainer,
+  SessionWrapperModal2,
+} from '../SessionWrapperModal2';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
 
 const DEVICE_ONLY = 'device_only' as const;
@@ -121,9 +125,13 @@ export const DeleteAccountModal = () => {
 
   return (
     <SessionWrapperModal2
-      title={localize('clearDataAll').toString()}
+      headerChildren={
+        <BasicModalHeader
+          title={localize('clearDataAll').toString()}
+          showExitIcon={false}
+        />
+      }
       onClose={onClickCancelHandler}
-      showExitIcon={false}
       buttonChildren={
         <ButtonChildrenContainer>
           <SessionButton

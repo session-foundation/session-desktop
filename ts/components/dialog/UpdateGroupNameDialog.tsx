@@ -20,7 +20,11 @@ import { SpacerMD, SpacerSM } from '../basic/Text';
 import { SessionSpinner } from '../loading';
 import { localize } from '../../localization/localeTools';
 import { SimpleSessionInput, SimpleSessionTextarea } from '../inputs/SessionInput';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import {
+  BasicModalHeader,
+  ButtonChildrenContainer,
+  SessionWrapperModal2,
+} from '../SessionWrapperModal2';
 import { ClearInputButton } from '../inputs/ClearInputButton';
 
 function GroupAvatar({
@@ -139,7 +143,7 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
 
   return (
     <SessionWrapperModal2
-      title={localize('updateGroupInformation').toString()}
+      headerChildren={<BasicModalHeader title={localize('updateGroupInformation').toString()} />}
       onClose={closeDialog}
       buttonChildren={
         <ButtonChildrenContainer>

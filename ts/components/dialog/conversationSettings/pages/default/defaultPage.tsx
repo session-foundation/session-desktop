@@ -12,7 +12,7 @@ import { SpacerSM } from '../../../../basic/Text';
 import { PanelButtonGroup } from '../../../../buttons';
 import { PanelLabel } from '../../../../buttons/PanelButton';
 import { useShowAttachments } from '../../../../menuAndSettingsHooks/useShowAttachments';
-import { SessionWrapperModal2 } from '../../../../SessionWrapperModal2';
+import { BasicModalHeader, SessionWrapperModal2 } from '../../../../SessionWrapperModal2';
 import { ConversationSettingsHeader } from '../../conversationSettingsHeader';
 import {
   PinUnpinButton,
@@ -235,16 +235,14 @@ export function DefaultConversationSettingsModal(props: ConversationSettingsModa
 
   return (
     <SessionWrapperModal2
-      title={title}
+      headerChildren={<BasicModalHeader title={title} showExitIcon={true} bigHeader={true} />}
       onClose={onClose}
-      showExitIcon={true}
       contentBorder={false}
       shouldOverflow={true}
       // Note: we do not set a min/max width here as we want the modal to be fixed
       // (no matter the nickname/display name of the shown conversation).
       // We do this to have some consistency with the width of the modals that open on top of this one
       allowOutsideClick={false}
-      bigHeader={true}
     >
       <Flex $container={true} $flexDirection="column" $alignItems="flex-start" width="100%">
         <DefaultConversationSettingsPage conversationId={props.conversationId} />

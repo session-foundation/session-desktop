@@ -24,7 +24,11 @@ import { localize } from '../../localization/localeTools';
 import { useContactsToInviteTo } from '../../hooks/useContactsToInviteToGroup';
 import { SessionSearchInput } from '../SessionSearchInput';
 import { NoResultsForSearch } from '../search/NoResults';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import {
+  BasicModalHeader,
+  ButtonChildrenContainer,
+  SessionWrapperModal2,
+} from '../SessionWrapperModal2';
 import { useHotkey } from '../../hooks/useHotkey';
 import { searchActions } from '../../state/ducks/search';
 import { ToastUtils } from '../../session/utils';
@@ -172,9 +176,10 @@ const InviteContactsDialogInner = (props: Props) => {
 
   return (
     <SessionWrapperModal2
-      title={localize('membersInvite').toString()}
       onClose={closeDialog}
-      showExitIcon={true}
+      headerChildren={
+        <BasicModalHeader title={localize('membersInvite').toString()} showExitIcon={true} />
+      }
       modalDataTestId="invite-contacts-dialog"
       buttonChildren={
         <ButtonChildrenContainer>

@@ -5,10 +5,15 @@ import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { MessageInteraction } from '../../interactions';
 import { OpenUrlModalState, updateOpenUrlModal } from '../../state/ducks/modalDialog';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import {
+  BasicModalHeader,
+  ButtonChildrenContainer,
+  SessionWrapperModal2,
+} from '../SessionWrapperModal2';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SpacerSM, SpacerXS } from '../basic/Text';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
+import { localize } from '../../localization/localeTools';
 
 const StyledScrollDescriptionContainer = styled.div`
   max-height: 150px;
@@ -40,20 +45,21 @@ export function OpenUrlModal(props: OpenUrlModalState) {
 
   return (
     <SessionWrapperModal2
-      title={window.i18n('urlOpen')}
+      headerChildren={
+        <BasicModalHeader title={localize('urlOpen').toString()} showExitIcon={true} />
+      }
       onClose={onClose}
-      showExitIcon={true}
       buttonChildren={
         <ButtonChildrenContainer>
           <SessionButton
-            text={window.i18n('open')}
+            text={localize('open').toString()}
             buttonColor={SessionButtonColor.Danger}
             buttonType={SessionButtonType.Simple}
             onClick={onClickOpen}
             dataTestId="open-url-confirm-button"
           />
           <SessionButton
-            text={window.i18n('urlCopy')}
+            text={localize('urlCopy').toString()}
             buttonType={SessionButtonType.Simple}
             onClick={onClickCopy}
             dataTestId="copy-url-button"

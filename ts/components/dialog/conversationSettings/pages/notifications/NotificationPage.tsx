@@ -23,7 +23,12 @@ import {
   useCloseActionFromPage,
   useTitleFromPage,
 } from '../conversationSettingsHooks';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../../../../SessionWrapperModal2';
+import {
+  BasicModalHeader,
+  ButtonChildrenContainer,
+  SessionWrapperModal2,
+  WrapperModalWidth,
+} from '../../../../SessionWrapperModal2';
 import { ModalBackButton } from '../../../shared/ModalBackButton';
 
 const getDataTestIdForButton = (
@@ -106,15 +111,19 @@ export function NotificationForConversationModal(props: Required<ConversationSet
 
   return (
     <SessionWrapperModal2
-      title={title}
+      headerChildren={
+        <BasicModalHeader
+          title={title}
+          showExitIcon={false}
+          bigHeader={true}
+          leftButton={backAction ? <ModalBackButton onClick={backAction} /> : undefined}
+        />
+      }
       onClose={onClose}
-      showExitIcon={false}
       contentBorder={false}
       shouldOverflow={true}
       allowOutsideClick={false}
-      $contentMinWidth="350px" // the content is radio buttons and it looks weird on a large modal
-      bigHeader={true}
-      headerIconButtons={backAction ? [<ModalBackButton onClick={backAction} />] : undefined}
+      $contentMinWidth={WrapperModalWidth.narrow} // the content is radio buttons and it looks weird on a large modal
       buttonChildren={
         <ButtonChildrenContainer>
           <SessionButton

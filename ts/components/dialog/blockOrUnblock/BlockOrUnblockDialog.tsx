@@ -12,7 +12,11 @@ import { SessionButton, SessionButtonColor, SessionButtonType } from '../../basi
 import { ModalDescription } from '../shared/ModalDescriptionContainer';
 import { BlockOrUnblockModalState } from './BlockOrUnblockModalState';
 import { localize } from '../../../localization/localeTools';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../../SessionWrapperModal2';
+import {
+  BasicModalHeader,
+  ButtonChildrenContainer,
+  SessionWrapperModal2,
+} from '../../SessionWrapperModal2';
 
 type ModalState = NonNullable<BlockOrUnblockModalState>;
 
@@ -88,8 +92,7 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
 
   return (
     <SessionWrapperModal2
-      showExitIcon={false}
-      title={localizedAction}
+      headerChildren={<BasicModalHeader title={localizedAction} showExitIcon={false} />}
       onClose={closeModal}
       buttonChildren={
         <ButtonChildrenContainer>

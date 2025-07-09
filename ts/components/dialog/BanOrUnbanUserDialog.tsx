@@ -15,7 +15,11 @@ import { BanType, updateBanOrUnbanUserModal } from '../../state/ducks/modalDialo
 import { Flex } from '../basic/Flex';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionSpinner } from '../loading';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import {
+  BasicModalHeader,
+  ButtonChildrenContainer,
+  SessionWrapperModal2,
+} from '../SessionWrapperModal2';
 import { localize } from '../../localization/localeTools';
 import { SimpleSessionInput } from '../inputs/SessionInput';
 import { SpacerSM } from '../basic/Text';
@@ -120,7 +124,7 @@ export const BanOrUnBanUserDialog = (props: {
 
   return (
     <SessionWrapperModal2
-      title={title}
+      headerChildren={<BasicModalHeader title={title} />}
       onClose={onClose}
       buttonChildren={
         <ButtonChildrenContainer>

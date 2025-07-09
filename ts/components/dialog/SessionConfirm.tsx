@@ -5,7 +5,11 @@ import { useLastMessage } from '../../hooks/useParamSelector';
 import { updateConversationInteractionState } from '../../interactions/conversationInteractions';
 import { ConversationInteractionStatus } from '../../interactions/types';
 import { updateConfirmModal } from '../../state/ducks/modalDialog';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import {
+  BasicModalHeader,
+  ButtonChildrenContainer,
+  SessionWrapperModal2,
+} from '../SessionWrapperModal2';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionRadioGroup, SessionRadioItems } from '../basic/SessionRadioGroup';
 import type { LocalizerProps } from '../basic/Localizer';
@@ -72,7 +76,6 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
 
   const okText = props.okText || localize('okay').toString();
   const cancelText = props.cancelText || localize('cancel').toString();
-  const showHeader = !!title;
 
   const onClickOkHandler = async () => {
     if (onClickOk) {
@@ -122,10 +125,8 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
 
   return (
     <SessionWrapperModal2
-      title={title}
+      headerChildren={title ? <BasicModalHeader title={title} showExitIcon={showExitIcon} /> : null}
       onClose={onClickClose}
-      showExitIcon={showExitIcon}
-      showHeader={showHeader}
       buttonChildren={
         <ButtonChildrenContainer>
           <SessionButton

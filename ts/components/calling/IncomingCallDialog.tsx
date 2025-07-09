@@ -10,7 +10,11 @@ import { getHasIncomingCall, getHasIncomingCallFrom } from '../../state/selector
 import { Avatar, AvatarSize } from '../avatar/Avatar';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { localize } from '../../localization/localeTools';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import {
+  BasicModalHeader,
+  ButtonChildrenContainer,
+  SessionWrapperModal2,
+} from '../SessionWrapperModal2';
 
 export const CallWindow = styled.div`
   position: absolute;
@@ -78,11 +82,15 @@ export const IncomingCallDialog = () => {
   if (hasIncomingCall) {
     return (
       <SessionWrapperModal2
-        title={localize('callsIncoming')
-          .withArgs({
-            name: from ?? localize('unknown').toString(),
-          })
-          .toString()}
+        headerChildren={
+          <BasicModalHeader
+            title={localize('callsIncoming')
+              .withArgs({
+                name: from ?? localize('unknown').toString(),
+              })
+              .toString()}
+          />
+        }
         buttonChildren={
           <ButtonChildrenContainer>
             <SessionButton

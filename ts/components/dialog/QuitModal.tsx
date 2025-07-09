@@ -3,7 +3,11 @@ import { useDispatch } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
 import { updateQuitModal, type QuitModalProps } from '../../state/onboarding/ducks/modals';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import {
+  BasicModalHeader,
+  ButtonChildrenContainer,
+  SessionWrapperModal2,
+} from '../SessionWrapperModal2';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
 import { localize } from '../../localization/localeTools';
 
@@ -51,9 +55,8 @@ export const QuitModal = (props: QuitModalProps) => {
 
   return (
     <SessionWrapperModal2
-      title={title}
+      headerChildren={<BasicModalHeader title={title} />}
       onClose={onClickClose}
-      showExitIcon={false}
       buttonChildren={
         <ButtonChildrenContainer>
           <SessionButton

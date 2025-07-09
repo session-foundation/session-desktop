@@ -26,7 +26,11 @@ import { useOurAvatarIsUploading } from '../../state/selectors/user';
 import { useAvatarOfRoomIsUploading } from '../../state/selectors/sogsRoomInfo';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import {
+  BasicModalHeader,
+  ButtonChildrenContainer,
+  SessionWrapperModal2,
+} from '../SessionWrapperModal2';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
@@ -177,9 +181,13 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
 
   return (
     <SessionWrapperModal2
-      title={localize('profileDisplayPictureSet').toString()}
       onClose={closeDialog}
-      showExitIcon={true}
+      headerChildren={
+        <BasicModalHeader
+          title={localize('profileDisplayPictureSet').toString()}
+          showExitIcon={true}
+        />
+      }
       buttonChildren={
         <ButtonChildrenContainer>
           <SessionButton

@@ -11,7 +11,11 @@ import { CopyToClipboardButton } from '../buttons/CopyToClipboardButton';
 import { ConversationTypeEnum } from '../../models/types';
 import { Flex } from '../basic/Flex';
 import { SessionIDNonEditable } from '../basic/YourSessionIDPill';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import {
+  BasicModalHeader,
+  ButtonChildrenContainer,
+  SessionWrapperModal2,
+} from '../SessionWrapperModal2';
 import { localize } from '../../localization/localeTools';
 
 export const UserDetailsDialog = (props: UserDetailsModalState) => {
@@ -54,9 +58,8 @@ export const UserDetailsDialog = (props: UserDetailsModalState) => {
 
   return (
     <SessionWrapperModal2
-      title={props.userName}
+      headerChildren={<BasicModalHeader title={props.userName} showExitIcon={true} />}
       onClose={closeDialog}
-      showExitIcon={true}
       buttonChildren={
         <ButtonChildrenContainer>
           <SessionButton

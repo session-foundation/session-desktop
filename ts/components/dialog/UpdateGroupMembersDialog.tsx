@@ -35,7 +35,12 @@ import { NoGroupMembers } from '../search/NoResults';
 import { useContactsToInviteTo } from '../../hooks/useContactsToInviteToGroup';
 import { searchActions } from '../../state/ducks/search';
 import { StyledContactListInModal } from '../list/StyledContactList';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import {
+  BasicModalHeader,
+  ButtonChildrenContainer,
+  SessionWrapperModal2,
+  WrapperModalWidth,
+} from '../SessionWrapperModal2';
 
 type Props = {
   conversationId: string;
@@ -184,13 +189,15 @@ export const UpdateGroupMembersDialog = (props: Props) => {
 
   return (
     <SessionWrapperModal2
-      title={
-        weAreAdmin ? localize('manageMembers').toString() : localize('groupMembers').toString()
+      headerChildren={
+        <BasicModalHeader
+          title={localize(weAreAdmin ? 'manageMembers' : 'groupMembers').toString()}
+          showExitIcon={false}
+        />
       }
       onClose={closeDialog}
-      showExitIcon={false}
-      $contentMinWidth="500px"
-      $contentMaxWidth="500px"
+      $contentMinWidth={WrapperModalWidth.wide}
+      $contentMaxWidth={WrapperModalWidth.wide}
       buttonChildren={
         <ButtonChildrenContainer>
           {weAreAdmin && (
