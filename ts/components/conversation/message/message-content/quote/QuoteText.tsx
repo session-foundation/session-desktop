@@ -1,7 +1,10 @@
 import { isEmpty } from 'lodash';
 
 import styled from 'styled-components';
-import { useSelectedIsGroupOrCommunity } from '../../../../../state/selectors/selectedConversation';
+import {
+  useSelectedIsGroupOrCommunity,
+  useSelectedIsPublic,
+} from '../../../../../state/selectors/selectedConversation';
 import { MIME } from '../../../../../types';
 import { GoogleChrome } from '../../../../../util';
 import { MessageBody } from '../MessageBody';
@@ -62,6 +65,7 @@ export const QuoteText = (
   const { text, attachment, isIncoming, referencedMessageNotFound } = props;
 
   const isGroup = useSelectedIsGroupOrCommunity();
+  const isPublic = useSelectedIsPublic();
 
   if (!referencedMessageNotFound && attachment && !isEmpty(attachment)) {
     const { contentType, isVoiceMessage } = attachment;
@@ -76,9 +80,10 @@ export const QuoteText = (
     <StyledQuoteText isIncoming={isIncoming} dir="auto">
       <MessageBody
         text={text || window.i18n('messageErrorOriginal')}
-        disableLinks={true}
+        disableRichContent={true}
         disableJumbomoji={true}
         isGroup={isGroup}
+        isPublic={isPublic}
       />
     </StyledQuoteText>
   );

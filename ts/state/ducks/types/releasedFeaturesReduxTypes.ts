@@ -9,6 +9,11 @@ export type SessionFeatureFlags = {
   useClosedGroupV2QAButtons: boolean;
   useReleaseChannels: boolean;
   useSESH101: boolean;
+  alwaysShowRemainingChars: boolean;
+  showPopoverAnchors: boolean;
+  debugInputCommands: boolean;
+  proAvailable: boolean;
+  mockUserHasPro: boolean;
 };
 
 export type SessionFeatureFlagKeys = RecursiveKeys<SessionFeatureFlags>;
@@ -21,6 +26,9 @@ export const isSessionFeatureFlag = (flag: unknown): flag is SessionFeatureFlagK
   const strFlag = flag as string;
   return !strFlag.startsWith('debug') && Object.keys(window.sessionFeatureFlags).includes(strFlag);
 };
+
+export const getFeatureFlag = (flag: SessionFeatureFlagKeys) => window.sessionFeatureFlags[flag];
+export const useFeatureFlag = (flag: SessionFeatureFlagKeys) => getFeatureFlag(flag);
 
 export type SessionFlags = SessionFeatureFlags & {
   debug: {

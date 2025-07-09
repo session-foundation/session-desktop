@@ -2,6 +2,7 @@
 import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 import type { CSSProperties } from 'styled-components';
+import { useMemo } from 'react';
 import { localize } from '../../../../../localization/localeTools';
 import { Flex } from '../../../../basic/Flex';
 import { SpacerMD, SpacerXS } from '../../../../basic/Text';
@@ -23,7 +24,6 @@ import { useSecuringNodesCount } from './hooks/useSecuringNodesCount';
 import { formatNumber, formatDateWithLocale } from '../../../../../util/i18n/formatting/generics';
 import { abbreviateNumber } from '../../../../../util/numbers';
 import { SessionSpinner } from '../../../../loading';
-import { SessionTooltip } from '../../../../SessionTooltip';
 import { useHTMLDirection } from '../../../../../util/i18n/rtlSupport';
 import {
   usePriceTimestamp,
@@ -36,6 +36,7 @@ import { Grid } from '../../../../basic/Grid';
 import { useInfoFakeRefreshing, useInfoLoading } from '../../../../../state/selectors/networkModal';
 import { SessionLucideIconButton } from '../../../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../../../icon/lucide';
+import { SessionTooltip } from '../../../../SessionTooltip';
 
 const StyledStatsNumber = styled.strong`
   font-size: var(--font-size-h3-new);
@@ -123,6 +124,23 @@ const CurrentPriceBlock = () => {
         ? localize('loading')
         : localize('unavailable').toString();
 
+  const tooltipContent = useMemo(
+    () => (
+      <Localizer
+        token="sessionNetworkDataPrice"
+        args={{
+          date_time: priceTimestamp
+            ? formatDateWithLocale({
+                date: new Date(priceTimestamp * 1000),
+                formatStr: 'd MMM yyyy hh:mm a',
+              })
+            : '-',
+        }}
+      />
+    ),
+    [priceTimestamp]
+  );
+
   return (
     <Block
       $container={true}
@@ -147,20 +165,9 @@ const CurrentPriceBlock = () => {
         <BlockSecondaryText>{LOCALE_DEFAULTS.token_name_long}</BlockSecondaryText>
       </Flex>
       <SessionTooltip
-        content={{
-          token: 'sessionNetworkDataPrice',
-          args: {
-            date_time: !priceTimestamp
-              ? '-'
-              : formatDateWithLocale({
-                  date: new Date(priceTimestamp * 1000),
-                  formatStr: 'd MMM yyyy hh:mm a',
-                }),
-          },
-        }}
+        content={tooltipContent}
         loading={infoLoading || isFakeRefreshing || dataIsStale}
         dataTestId="tooltip-info"
-        htmlString={true}
         style={{
           position: 'absolute',
           top: '1px',

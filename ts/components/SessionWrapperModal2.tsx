@@ -75,8 +75,8 @@ const StyledModal = styled.div<{
   }
 `;
 
-const StyledModalBody = styled.div<{ shouldOverflow: boolean }>`
-  scrollbar-gutter: stable;
+const StyledModalBody = styled.div<{ shouldOverflow: boolean; removeScrollbarGutter?: boolean }>`
+  ${props => (!props.removeScrollbarGutter ? 'scrollbar-gutter: stable;' : '')}
   margin: 0;
   font-family: var(--font-default);
   line-height: var(--font-size-md);
@@ -113,7 +113,7 @@ export const ButtonChildrenContainer = (props: { children: ReactNode }) => {
 };
 
 export type SessionWrapperModalType2 = {
-  title?: string;
+  title?: ReactNode;
   showHeader?: boolean;
   onClose?: (event?: KeyboardEvent) => void;
   showExitIcon?: boolean;
@@ -128,6 +128,7 @@ export type SessionWrapperModalType2 = {
   classes?: string;
   allowOutsideClick?: boolean;
   bigHeader?: boolean;
+  removeScrollbarGutter?: boolean;
   modalDataTestId?: SessionDataTestId;
 };
 
@@ -221,6 +222,7 @@ export const SessionWrapperModal2 = (props: SessionWrapperModalType2) => {
     allowOutsideClick,
     bigHeader,
     modalDataTestId,
+    removeScrollbarGutter,
   } = props;
 
   const [scrolled, setScrolled] = useState(false);
@@ -289,6 +291,7 @@ export const SessionWrapperModal2 = (props: SessionWrapperModalType2) => {
               handleScroll(event);
             }}
             shouldOverflow={shouldOverflow}
+            removeScrollbarGutter={removeScrollbarGutter}
           >
             <div className="session-modal__centered">
               {props.children}

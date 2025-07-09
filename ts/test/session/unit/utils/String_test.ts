@@ -221,48 +221,55 @@ describe('String Utils', () => {
     });
   });
 
-  describe('sanitizeSessionUsername', () => {
-    it('should remove invalid characters', () => {
-      const invalidChars = ['\uFFD2', '\uFFD2\uFFD2', '\uFFD2\uFFD2\uFFD2'];
+  // NOTE: these utility functions help printing the unicode chars when a test fails
+  function replaceUnicodeWithCode(text: string) {
+    // Regular expression to match any character outside the basic Latin ASCII range (printable characters).
+    // The 'g' flag ensures all occurrences are replaced.
+    // The 'u' flag enables full Unicode support for the regex.
+    return text.replace(/[\u0080-\uffff]/gu, char => {
+      // Convert the character's Unicode code point to its hexadecimal representation.
+      // Pad with leading zeros to ensure a four-digit hex code for \uXXXX.
+      const hexCode = char.charCodeAt(0).toString(16).padStart(4, '0');
+      return `\\u${hexCode}`;
+    });
+  }
 
-      invalidChars.forEach(invalidChar => {
-        const validUsername = StringUtils.sanitizeSessionUsername(invalidChar);
-        expect(
-          validUsername,
-          'should return an empty string if there are no valid characters'
-        ).to.equal('');
+  function formatError(idx: number, input: string, expected: string) {
+    return `(${idx}) Expected: ${replaceUnicodeWithCode(input)} to equal ${replaceUnicodeWithCode(expected)}`;
+  }
+
+  describe('trimWhitespace', () => {
+    it('should remove invalid outer characters', () => {
+      const invalidStrings = ['word ', ' word ', '​word​', '‎‎​word ​​​'];
+      const expected = 'word';
+      invalidStrings.forEach((inputString, i) => {
+        const trimmedString = StringUtils.trimWhitespace(inputString);
+        expect(trimmedString, formatError(i, trimmedString, expected)).to.equal(expected);
       });
     });
 
-    it('should not remove valid characters', () => {
-      const validChars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'];
-
-      validChars.forEach(validChar => {
-        const validUsername = StringUtils.sanitizeSessionUsername(validChar);
-        expect(validUsername).to.equal(validChar);
-      });
+    it('should not remove whitespace on the inside of the string', () => {
+      const invalidStrings = ['wor d ', 'wor​d​', 'wor‎‎​d ​​​'];
+      const validStrings = ['wor d', 'wor​d', 'wor‎‎​d'];
+      for (let i = 0; i < invalidStrings.length; i++) {
+        const input = invalidStrings[i];
+        const expected = validStrings[i];
+        expect(StringUtils.trimWhitespace(input), formatError(i, input, expected)).to.equal(
+          expected
+        );
+      }
     });
 
-    it('should remove invalid characters and keep valid characters', () => {
-      const input = 'a\uFFD2b\uFFD2c\uFFD2d\uFFD2e\uFFD2f\uFFD2g\uFFD2h\uFFD2i\uFFD2j';
-      const expected = 'abcdefghij';
-      const validUsername = StringUtils.sanitizeSessionUsername(input);
-      expect(validUsername).to.equal(expected);
-    });
-
-    it('should remove invalid characters and keep valid characters with spaces', () => {
-      const input = 'a\uFFD2 b\uFFD2 c\uFFD2 d\uFFD2 e\uFFD2 f\uFFD2 g\uFFD2 h\uFFD2 i\uFFD2 j';
-      const expected = 'a b c d e f g h i j';
-      const validUsername = StringUtils.sanitizeSessionUsername(input);
-      expect(validUsername).to.equal(expected);
-    });
-
-    it('should remove invalid characters and keep valid characters with spaces and special characters', () => {
-      const input =
-        'a\uFFD2 b\uFFD2 c\uFFD2 d\uFFD2 e\uFFD2 f\uFFD2 g\uFFD2 h\uFFD2 i\uFFD2 j\uFFD2 !@#$%^&*()_+';
-      const expected = 'a b c d e f g h i j !@#$%^&*()_+';
-      const validUsername = StringUtils.sanitizeSessionUsername(input);
-      expect(validUsername).to.equal(expected);
+    it('should not modify strings without outer whitespace', () => {
+      const invalidStrings = ['wor d', 'wor​d', 'wor‎‎​d'];
+      const validStrings = ['wor d', 'wor​d', 'wor‎‎​d'];
+      for (let i = 0; i < invalidStrings.length; i++) {
+        const input = invalidStrings[i];
+        const expected = validStrings[i];
+        expect(StringUtils.trimWhitespace(input), formatError(i, input, expected)).to.equal(
+          expected
+        );
+      }
     });
   });
 });

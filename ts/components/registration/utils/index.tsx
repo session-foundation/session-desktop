@@ -1,8 +1,8 @@
 import { EmptyDisplayNameError } from '../../../session/utils/errors';
-import { sanitizeSessionUsername, trimWhitespace } from '../../../session/utils/String';
+import { trimWhitespace } from '../../../session/utils/String';
 
 export function sanitizeDisplayNameOrToast(displayName: string) {
-  const sanitizedName = trimWhitespace(sanitizeSessionUsername(displayName));
+  const sanitizedName = trimWhitespace(displayName);
 
   if (!sanitizedName) {
     throw new EmptyDisplayNameError();

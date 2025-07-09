@@ -107,6 +107,7 @@ type ReactionSendersProps = {
 const ReactionSenders = (props: ReactionSendersProps) => {
   const { messageId, currentReact, senders, me, handleClose } = props;
   const dispatch = useDispatch();
+  const isPublic = useSelectedIsPublic();
 
   const handleAvatarClick = async (sender: string) => {
     const message = await Data.getMessageById(messageId);
@@ -156,6 +157,7 @@ const ReactionSenders = (props: ReactionSendersProps) => {
                   pubkey={sender}
                   module="module-conversation__user"
                   shouldShowPubkey={false}
+                  isPublic={isPublic}
                 />
               </StyledContactContainer>
             )}
