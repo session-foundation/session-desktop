@@ -26,7 +26,7 @@ export function useTogglePinConversationHandler(id: string) {
     hasPro ||
     pinnedConversationsCount < Constants.CONVERSATION.MAX_PINNED_CONVERSATIONS_STANDARD
   ) {
-    return () => conversation.togglePinned();
+    return () => conversation?.togglePinned();
   }
 
   return () =>
