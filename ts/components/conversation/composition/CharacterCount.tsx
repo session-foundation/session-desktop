@@ -10,6 +10,8 @@ import {
   useShowSessionProInfoDialogCb,
 } from '../../dialog/SessionProInfoModal';
 import { formatNumber } from '../../../util/i18n/formatting/generics';
+import { useHasPro } from '../../../hooks/useHasPro';
+import { useIsProAvailable } from '../../../hooks/useIsProAvailable';
 
 export type CharacterCountProps = {
   count: number;
@@ -35,11 +37,10 @@ const StyledRemainingNumber = styled.span<{ pastLimit: boolean }>`
 
 export function CharacterCount({ count }: CharacterCountProps) {
   const alwaysShowFlag = useFeatureFlag('alwaysShowRemainingChars');
-  const isProAvailable = useFeatureFlag('proAvailable');
-  const mockHasPro = useFeatureFlag('mockUserHasPro');
+  const isProAvailable = useIsProAvailable();
 
-  // TODO: get pro status from store once available
-  const hasPro = mockHasPro;
+  const hasPro = useHasPro();
+
   const charLimit = hasPro
     ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
     : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
