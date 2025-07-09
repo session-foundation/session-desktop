@@ -2,13 +2,47 @@ import { useSelector } from 'react-redux';
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
 import { useHasPro } from '../../hooks/useHasPro';
 import { ConvoHub } from '../../session/conversations';
-import { useIsPinned } from '../../hooks/useParamSelector';
+import {
+  useIsKickedFromGroup,
+  useIsLegacyGroup,
+  useIsPinned,
+  useIsPrivate,
+  useIsPrivateAndFriend,
+} from '../../hooks/useParamSelector';
 import {
   SessionProInfoVariant,
   useShowSessionProInfoDialogCbWithVariant,
 } from '../dialog/SessionProInfoModal';
 import { Constants } from '../../session';
 import { getPinnedConversationsCount } from '../../state/selectors/conversations';
+import {
+  useIsMessageRequestOverlayShown,
+  useIsMessageSection,
+} from '../../state/selectors/section';
+
+function useShowPinUnpin(conversationId: string) {
+  const isMessagesSection = useIsMessageSection();
+  const isPrivateAndFriend = useIsPrivateAndFriend(conversationId);
+  const isPrivate = useIsPrivate(conversationId);
+  const isMessageRequest = useIsMessageRequestOverlayShown();
+  const isLegacyGroup = useIsLegacyGroup(conversationId);
+  const isPinned = useIsPinned(conversationId);
+  const isKicked = useIsKickedFromGroup(conversationId);
+
+  // legacy groups are read only. Pinning is not allowed
+  if (isLegacyGroup && !isPinned) {
+    return false;
+  }
+
+  if (isKicked) {
+    // When we got kicked, we can only unpin
+    return false;
+  }
+
+  return (
+    isMessagesSection && !isMessageRequest && (!isPrivate || (isPrivate && isPrivateAndFriend))
+  );
+}
 
 export function useTogglePinConversationHandler(id: string) {
   const conversation = ConvoHub.use().get(id);
@@ -19,6 +53,12 @@ export function useTogglePinConversationHandler(id: string) {
   const hasPro = useHasPro();
 
   const handleShowProDialog = useShowSessionProInfoDialogCbWithVariant();
+
+  const showPinUnpin = useShowPinUnpin(id);
+
+  if (!showPinUnpin) {
+    return null;
+  }
 
   if (
     isPinned ||

@@ -34,7 +34,6 @@ import {
   DeleteDeprecatedLegacyGroupMenuItem,
   DeleteGroupMenuItem,
 } from './items/LeaveAndDeleteGroup/DeleteGroupMenuItem';
-import { useShowPinUnpin } from '../menuAndSettingsHooks/usePinUnpin';
 import { localize } from '../../localization/localeTools';
 import { useTogglePinConversationHandler } from '../menuAndSettingsHooks/UseTogglePinConversationHandler';
 
@@ -126,12 +125,10 @@ export const MemoConversationListItemContextMenu = ConversationListItemContextMe
 
 export const PinConversationMenuItem = (): JSX.Element | null => {
   const conversationId = useConvoIdFromContext();
-  const showPinUnpin = useShowPinUnpin(conversationId);
   const isPinned = useIsPinned(conversationId);
-
   const togglePinConversation = useTogglePinConversationHandler(conversationId);
 
-  if (!showPinUnpin) {
+  if (!togglePinConversation) {
     return null;
   }
 
