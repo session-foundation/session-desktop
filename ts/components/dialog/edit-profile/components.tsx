@@ -122,10 +122,8 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
   );
 };
 
-// We center the name in the modal by offsetting the pencil icon
-// we have a transparent border to match the dimensions of the SessionInput
+// We have a transparent border to match the dimensions of the SessionInput
 const StyledProfileName = styled(Flex)`
-  margin-inline-start: calc((25px + var(--margins-sm)) * -1);
   padding: 8px;
   border: 1px solid var(--transparent-color);
 

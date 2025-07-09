@@ -60,7 +60,6 @@ export function SessionNetworkModal() {
       shouldOverflow={true}
       showExitIcon={true}
       headerIconButtons={[<ReloadButton loading={loading} />]}
-      padding="0 var(--margins-lg)"
     >
       <NetworkSection />
       <StakeSection />

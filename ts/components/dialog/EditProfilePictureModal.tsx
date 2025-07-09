@@ -27,7 +27,6 @@ import { useAvatarOfRoomIsUploading } from '../../state/selectors/sogsRoomInfo';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
-import { SpacerLG } from '../basic/Text';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
@@ -224,7 +223,6 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
         </StyledAvatarContainer>
       </div>
       <SessionSpinner loading={loading} />
-      <SpacerLG />
     </SessionWrapperModal2>
   );
 };

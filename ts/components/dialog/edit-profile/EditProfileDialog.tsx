@@ -12,9 +12,7 @@ import { useOurAvatarPath, useOurConversationUsername } from '../../../hooks/use
 import { ProfileManager } from '../../../session/profile_manager/ProfileManager';
 import { editProfileModal } from '../../../state/ducks/modalDialog';
 import { Flex } from '../../basic/Flex';
-import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
-import { Spacer2XL, Spacer3XL, SpacerLG, SpacerSM, SpacerXL } from '../../basic/Text';
-import { CopyToClipboardButton } from '../../buttons/CopyToClipboardButton';
+import { Spacer3XL, SpacerLG, SpacerSM, SpacerXL } from '../../basic/Text';
 import { SessionSpinner } from '../../loading';
 import { ProfileHeader, ProfileName, QRView } from './components';
 import { EmptyDisplayNameError, RetrieveDisplayNameError } from '../../../session/utils/errors';
@@ -24,6 +22,8 @@ import { useEditProfilePictureCallback } from '../../menuAndSettingsHooks/useEdi
 import { SimpleSessionInput } from '../../inputs/SessionInput';
 import { ButtonChildrenContainer, SessionWrapperModal2 } from '../../SessionWrapperModal2';
 import { ModalBackButton } from '../shared/ModalBackButton';
+import { SessionButtonColor, SessionButton } from '../../basic/SessionButton';
+import { CopyToClipboardButton } from '../../buttons';
 
 // #region Shortcuts
 const handleKeyQRMode = (
@@ -253,6 +253,44 @@ export const EditProfileDialog = () => {
         }
         showExitIcon={true}
         onClose={closeDialog}
+        buttonChildren={
+          mode === 'default' || mode === 'qr' || mode === 'lightbox' ? (
+            <ButtonChildrenContainer>
+              <CopyToClipboardButton
+                buttonColor={SessionButtonColor.PrimaryDark}
+                copyContent={us}
+                hotkey={true}
+                reference={copyButtonRef}
+                dataTestId="copy-button-profile-update"
+                style={{ minWidth: '125px' }}
+              />
+              {mode === 'default' ? (
+                <SessionButton
+                  text={localize('qrView').toString()}
+                  onClick={() => {
+                    setMode('qr');
+                  }}
+                  buttonColor={SessionButtonColor.PrimaryDark}
+                  dataTestId="view-qr-code-button"
+                  style={{ minWidth: '125px' }}
+                />
+              ) : null}
+            </ButtonChildrenContainer>
+          ) : (
+            !loading && (
+              <ButtonChildrenContainer>
+                <SessionButton
+                  text={localize('save').toString()}
+                  onClick={onClickOK}
+                  disabled={cannotContinue}
+                  buttonColor={SessionButtonColor.PrimaryDark}
+                  dataTestId="save-button-profile-update"
+                  style={{ minWidth: '125px' }}
+                />
+              </ButtonChildrenContainer>
+            )
+          )
+        }
       >
         {mode === 'qr' ? (
           <QRView sessionID={us} setMode={setMode} />
@@ -320,45 +358,8 @@ export const EditProfileDialog = () => {
           width={'100%'}
         >
           <YourSessionIDPill />
-          <SpacerLG />
           <SessionIDNonEditable dataTestId="your-account-id" sessionId={us} />
           <SessionSpinner loading={loading} height={'74px'} />
-          {!loading ? <Spacer2XL /> : null}
-          {mode === 'default' || mode === 'qr' || mode === 'lightbox' ? (
-            <ButtonChildrenContainer>
-              <CopyToClipboardButton
-                buttonColor={SessionButtonColor.PrimaryDark}
-                copyContent={us}
-                hotkey={true}
-                reference={copyButtonRef}
-                dataTestId="copy-button-profile-update"
-              />
-              {mode === 'default' ? (
-                <SessionButton
-                  text={localize('qrView').toString()}
-                  onClick={() => {
-                    setMode('qr');
-                  }}
-                  buttonColor={SessionButtonColor.PrimaryDark}
-                  dataTestId="view-qr-code-button"
-                />
-              ) : null}
-            </ButtonChildrenContainer>
-          ) : (
-            !loading && (
-              <ButtonChildrenContainer>
-                <SessionButton
-                  text={localize('save').toString()}
-                  onClick={onClickOK}
-                  disabled={cannotContinue}
-                  buttonColor={SessionButtonColor.PrimaryDark}
-                  dataTestId="save-button-profile-update"
-                />
-              </ButtonChildrenContainer>
-            )
-          )}
-
-          {!loading ? <SpacerSM /> : null}
         </StyledSessionIdSection>
       </SessionWrapperModal2>
     </StyledEditProfileDialog>

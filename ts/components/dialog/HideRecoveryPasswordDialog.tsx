@@ -1,19 +1,13 @@
 import { isEmpty } from 'lodash';
 import { useDispatch } from 'react-redux';
-import styled from 'styled-components';
 import { SettingsKey } from '../../data/settings-key';
 import { updateHideRecoveryPasswordModal } from '../../state/ducks/modalDialog';
 import { sectionActions } from '../../state/ducks/section';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SpacerMD } from '../basic/Text';
-import { Localizer } from '../basic/Localizer';
 import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
 import { localize } from '../../localization/localeTools';
-
-const StyledDescriptionContainer = styled.div`
-  width: 280px;
-  line-height: var(--font-line-height);
-`;
+import { ModalDescription } from './shared/ModalDescriptionContainer';
 
 export type HideRecoveryPasswordDialogProps = {
   state: 'firstWarning' | 'secondWarning';
@@ -82,15 +76,16 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
         </ButtonChildrenContainer>
       }
     >
-      <StyledDescriptionContainer data-testid="modal-description">
-        <Localizer
-          token={
+      <ModalDescription
+        dataTestId="modal-description"
+        localizerProps={{
+          token:
             state === 'firstWarning'
               ? 'recoveryPasswordHidePermanentlyDescription1'
-              : 'recoveryPasswordHidePermanentlyDescription2'
-          }
-        />
-      </StyledDescriptionContainer>
+              : 'recoveryPasswordHidePermanentlyDescription2',
+        }}
+      />
+
       <SpacerMD />
     </SessionWrapperModal2>
   );

@@ -318,7 +318,12 @@ export const SessionWrapperModal2 = (props: SessionWrapperModalType2) => {
               }}
               shouldOverflow={shouldOverflow}
             >
-              <Flex $container={true} $alignItems="center" $flexDirection="column">
+              <Flex
+                $container={true}
+                $alignItems="center"
+                $flexDirection="column"
+                paddingInline="var(--margins-lg)" // add the padding here so that the rest of the modal isn't affected (including buttonChildren/ModalHeader)
+              >
                 {props.children}
               </Flex>
               {props.buttonChildren ? props.buttonChildren : <SpacerLG />}

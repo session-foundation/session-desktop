@@ -239,8 +239,10 @@ export function DefaultConversationSettingsModal(props: ConversationSettingsModa
       showExitIcon={true}
       contentBorder={false}
       shouldOverflow={true}
+      // Note: we do not set a min/max width here as we want the modal to be fixed
+      // (no matter the nickname/display name of the shown conversation).
+      // We do this to have some consistency with the width of the modals that open on top of this one
       allowOutsideClick={false}
-      $contentMaxWidth="500px"
       bigHeader={true}
     >
       <Flex $container={true} $flexDirection="column" $alignItems="flex-start" width="100%">
