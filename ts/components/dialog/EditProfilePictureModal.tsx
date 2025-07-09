@@ -28,7 +28,7 @@ import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import {
   BasicModalHeader,
-  ButtonChildrenContainer,
+  ModalActionsContainer,
   SessionWrapperModal2,
 } from '../SessionWrapperModal2';
 
@@ -189,7 +189,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
         />
       }
       buttonChildren={
-        <ButtonChildrenContainer>
+        <ModalActionsContainer>
           <SessionButton
             text={localize('save').toString()}
             buttonType={SessionButtonType.Simple}
@@ -207,7 +207,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
               disabled={!avatarPath || loading}
             />
           ) : null}
-        </ButtonChildrenContainer>
+        </ModalActionsContainer>
       }
     >
       <div

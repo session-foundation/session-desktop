@@ -24,7 +24,7 @@ import { getCrowdinLocale } from '../../util/i18n/shared';
 import { localize } from '../../localization/localeTools';
 import {
   BasicModalHeader,
-  ButtonChildrenContainer,
+  ModalActionsContainer,
   SessionWrapperModal2,
 } from '../SessionWrapperModal2';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
@@ -283,7 +283,7 @@ export const OnionPathModal = () => {
         <BasicModalHeader title={localize('onionRoutingPath').toString()} showExitIcon={true} />
       }
       buttonChildren={
-        <ButtonChildrenContainer>
+        <ModalActionsContainer>
           <SessionButton
             text={localize('learnMore').toString()}
             buttonType={SessionButtonType.Simple}
@@ -291,7 +291,7 @@ export const OnionPathModal = () => {
               void shell.openExternal('https://getsession.org/faq/#onion-routing');
             }}
           />
-        </ButtonChildrenContainer>
+        </ModalActionsContainer>
       }
     >
       <OnionPathModalInner />

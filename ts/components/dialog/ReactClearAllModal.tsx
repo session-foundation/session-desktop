@@ -8,7 +8,7 @@ import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/S
 import { SessionSpinner } from '../loading';
 import {
   BasicModalHeader,
-  ButtonChildrenContainer,
+  ModalActionsContainer,
   SessionWrapperModal2,
 } from '../SessionWrapperModal2';
 import { localize } from '../../localization/localeTools';
@@ -54,7 +54,7 @@ export const ReactClearAllModal = (props: Props) => {
       onClose={handleClose}
       headerChildren={<BasicModalHeader title={localize('clearAll').toString()} />}
       buttonChildren={
-        <ButtonChildrenContainer>
+        <ModalActionsContainer>
           <SessionButton
             text={localize('clear').toString()}
             buttonColor={SessionButtonColor.Danger}
@@ -68,7 +68,7 @@ export const ReactClearAllModal = (props: Props) => {
             onClick={handleClose}
             disabled={clearingInProgress}
           />
-        </ButtonChildrenContainer>
+        </ModalActionsContainer>
       }
     >
       <ModalDescription

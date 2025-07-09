@@ -16,7 +16,7 @@ import { Localizer } from '../basic/Localizer';
 import { StyledContactListInModal } from '../list/StyledContactList';
 import {
   BasicModalHeader,
-  ButtonChildrenContainer,
+  ModalActionsContainer,
   SessionWrapperModal2,
 } from '../SessionWrapperModal2';
 import { localize } from '../../localization/localeTools';
@@ -95,12 +95,12 @@ export const RemoveModeratorsDialog = (props: Props) => {
       headerChildren={<BasicModalHeader title={localize('adminRemove').toString()} />}
       onClose={closeDialog}
       buttonChildren={
-        <ButtonChildrenContainer>
+        <ModalActionsContainer>
           <SessionButton
             buttonType={SessionButtonType.Simple}
             onClick={removeModsCall}
             disabled={removingInProgress}
-            text={localize('okay').toString()}
+            text={localize('remove').toString()}
           />
           <SessionButton
             buttonType={SessionButtonType.Simple}
@@ -109,7 +109,7 @@ export const RemoveModeratorsDialog = (props: Props) => {
             disabled={removingInProgress}
             text={localize('cancel').toString()}
           />
-        </ButtonChildrenContainer>
+        </ModalActionsContainer>
       }
     >
       {hasMods ? (

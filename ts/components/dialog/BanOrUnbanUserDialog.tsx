@@ -17,7 +17,7 @@ import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/S
 import { SessionSpinner } from '../loading';
 import {
   BasicModalHeader,
-  ButtonChildrenContainer,
+  ModalActionsContainer,
   SessionWrapperModal2,
 } from '../SessionWrapperModal2';
 import { localize } from '../../localization/localeTools';
@@ -127,7 +127,7 @@ export const BanOrUnBanUserDialog = (props: {
       headerChildren={<BasicModalHeader title={title} />}
       onClose={onClose}
       buttonChildren={
-        <ButtonChildrenContainer>
+        <ModalActionsContainer>
           <SessionButton
             buttonType={SessionButtonType.Simple}
             onClick={banOrUnBanUser}
@@ -159,7 +159,7 @@ export const BanOrUnBanUserDialog = (props: {
               dataTestId="unban-user-cancel-button"
             />
           )}
-        </ButtonChildrenContainer>
+        </ModalActionsContainer>
       }
     >
       <Flex $container={true} $flexDirection="column" $alignItems="center" width="100%">

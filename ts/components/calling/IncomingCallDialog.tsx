@@ -12,7 +12,7 @@ import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/S
 import { localize } from '../../localization/localeTools';
 import {
   BasicModalHeader,
-  ButtonChildrenContainer,
+  ModalActionsContainer,
   SessionWrapperModal2,
 } from '../SessionWrapperModal2';
 
@@ -92,7 +92,7 @@ export const IncomingCallDialog = () => {
           />
         }
         buttonChildren={
-          <ButtonChildrenContainer>
+          <ModalActionsContainer>
             <SessionButton
               text={localize('accept').toString()}
               buttonType={SessionButtonType.Simple}
@@ -104,7 +104,7 @@ export const IncomingCallDialog = () => {
               buttonType={SessionButtonType.Simple}
               onClick={handleDeclineIncomingCall}
             />
-          </ButtonChildrenContainer>
+          </ModalActionsContainer>
         }
       >
         <IncomingCallAvatarContainer>

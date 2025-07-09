@@ -22,7 +22,7 @@ import { useEditProfilePictureCallback } from '../../menuAndSettingsHooks/useEdi
 import { SimpleSessionInput } from '../../inputs/SessionInput';
 import {
   BasicModalHeader,
-  ButtonChildrenContainer,
+  ModalActionsContainer,
   SessionWrapperModal2,
 } from '../../SessionWrapperModal2';
 import { ModalBackButton } from '../shared/ModalBackButton';
@@ -261,7 +261,7 @@ export const EditProfileDialog = () => {
         onClose={closeDialog}
         buttonChildren={
           mode === 'default' || mode === 'qr' || mode === 'lightbox' ? (
-            <ButtonChildrenContainer>
+            <ModalActionsContainer>
               <CopyToClipboardButton
                 buttonColor={SessionButtonColor.PrimaryDark}
                 copyContent={us}
@@ -281,10 +281,10 @@ export const EditProfileDialog = () => {
                   style={{ minWidth: '125px' }}
                 />
               ) : null}
-            </ButtonChildrenContainer>
+            </ModalActionsContainer>
           ) : (
             !loading && (
-              <ButtonChildrenContainer>
+              <ModalActionsContainer>
                 <SessionButton
                   text={localize('save').toString()}
                   onClick={onClickOK}
@@ -293,7 +293,7 @@ export const EditProfileDialog = () => {
                   dataTestId="save-button-profile-update"
                   style={{ minWidth: '125px' }}
                 />
-              </ButtonChildrenContainer>
+              </ModalActionsContainer>
             )
           )
         }

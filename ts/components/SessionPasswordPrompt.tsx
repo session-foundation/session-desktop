@@ -15,7 +15,7 @@ import { Localizer } from './basic/Localizer';
 import { localize } from '../localization/localeTools';
 import {
   BasicModalHeader,
-  ButtonChildrenContainer,
+  ModalActionsContainer,
   SessionWrapperModal2,
   WrapperModalWidth,
 } from './SessionWrapperModal2';
@@ -55,7 +55,7 @@ function pushToastError(id: string, description: string) {
 
 function ClearDataViewButtons({ onCancel }: { onCancel: () => void }) {
   return (
-    <ButtonChildrenContainer>
+    <ModalActionsContainer>
       <SessionButton
         text={localize('clearDevice').toString()}
         buttonColor={SessionButtonColor.Danger}
@@ -67,7 +67,7 @@ function ClearDataViewButtons({ onCancel }: { onCancel: () => void }) {
         buttonType={SessionButtonType.Simple}
         onClick={onCancel}
       />
-    </ButtonChildrenContainer>
+    </ModalActionsContainer>
   );
 }
 
@@ -89,7 +89,7 @@ function PasswordViewButtons({
   }
 
   return (
-    <ButtonChildrenContainer>
+    <ModalActionsContainer>
       {showResetElements && (
         <SessionButton
           text={localize('clearDevice').toString()}
@@ -106,7 +106,7 @@ function PasswordViewButtons({
           disabled={loading}
         />
       )}
-    </ButtonChildrenContainer>
+    </ModalActionsContainer>
   );
 }
 
@@ -195,7 +195,6 @@ const SessionPasswordPromptInner = () => {
       headerChildren={
         <BasicModalHeader
           title={localize(clearDataView ? 'clearDevice' : 'passwordEnter').toString()}
-          showExitIcon={false}
         />
       }
       $contentMinWidth={WrapperModalWidth.narrow}

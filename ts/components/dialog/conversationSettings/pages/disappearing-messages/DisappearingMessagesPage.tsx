@@ -37,7 +37,7 @@ import {
 } from '../conversationSettingsHooks';
 import {
   BasicModalHeader,
-  ButtonChildrenContainer,
+  ModalActionsContainer,
   SessionWrapperModal2,
   WrapperModalWidth,
 } from '../../../../SessionWrapperModal2';
@@ -168,18 +168,16 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
       headerChildren={
         <BasicModalHeader
           title={title}
-          showExitIcon={false}
           bigHeader={true}
           leftButton={backAction ? <ModalBackButton onClick={backAction} /> : undefined}
         />
       }
       onClose={onClose}
-      contentBorder={false}
       shouldOverflow={true}
       allowOutsideClick={false}
       $contentMinWidth={WrapperModalWidth.narrow}
       buttonChildren={
-        <ButtonChildrenContainer>
+        <ModalActionsContainer>
           {loading ? (
             <SessionSpinner loading={true} />
           ) : (
@@ -198,7 +196,7 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
               {localize('set')}
             </SessionButton>
           )}
-        </ButtonChildrenContainer>
+        </ModalActionsContainer>
       }
     >
       <StyledScrollContainer style={{ position: 'relative' }}>

@@ -14,7 +14,11 @@ import {
   OtherInfo,
   Playgrounds,
 } from './components';
-import { BasicModalHeader, SessionWrapperModal2 } from '../../SessionWrapperModal2';
+import {
+  BasicModalHeader,
+  SessionWrapperModal2,
+  WrapperModalWidth,
+} from '../../SessionWrapperModal2';
 import { FeatureFlags } from './FeatureFlags';
 import { ReleaseChannel } from './ReleaseChannel';
 import { useHotkey } from '../../../hooks/useHotkey';
@@ -115,8 +119,7 @@ export function DebugMenuModal() {
       <SessionWrapperModal2
         headerChildren={<BasicModalHeader title="Debug Menu" showExitIcon={true} />}
         onClose={onClose}
-        contentBorder={false}
-        $contentMaxWidth={'75%'}
+        $contentMaxWidth={WrapperModalWidth.debug}
         shouldOverflow={true}
         allowOutsideClick={false}
       >

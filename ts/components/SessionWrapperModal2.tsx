@@ -15,8 +15,6 @@ import { LUCIDE_ICONS_UNICODE } from './icon/lucide';
 import { IsModalScrolledContext, useIsModalScrolled } from '../contexts/IsModalScrolledContext';
 import { OnModalCloseContext, useOnModalClose } from '../contexts/OnModalCloseContext';
 
-const DEFAULT_MODAL_WIDTH = '410px';
-
 const StyledModalHeader = styled(Flex)<{ bigHeader?: boolean; scrolled: boolean }>`
   position: relative;
   font-family: var(--font-default);
@@ -49,24 +47,26 @@ export enum WrapperModalWidth {
   narrow = '350px',
   normal = '410px',
   wide = '500px',
+  debug = '75%',
 }
 
 const StyledModal = styled.div<{
-  $contentMaxWidth?: string;
-  $contentMinWidth?: string;
+  $contentMaxWidth?: WrapperModalWidth;
+  $contentMinWidth?: WrapperModalWidth;
   padding?: string;
-  border: boolean;
 }>`
   animation: fadein var(--default-duration);
   z-index: 150;
   max-height: 90vh;
-  max-width: ${props => (props.$contentMaxWidth ? props.$contentMaxWidth : DEFAULT_MODAL_WIDTH)};
-  min-width: ${props => (props.$contentMinWidth ? props.$contentMinWidth : DEFAULT_MODAL_WIDTH)};
+  max-width: ${props =>
+    props.$contentMaxWidth ? props.$contentMaxWidth : WrapperModalWidth.normal};
+  min-width: ${props =>
+    props.$contentMinWidth ? props.$contentMinWidth : WrapperModalWidth.normal};
   box-sizing: border-box;
   font-family: var(--font-default);
   background-color: var(--modal-background-content-color);
   color: var(--modal-text-color);
-  border: 1px solid ${props => (props.border ? 'var(--border-color)' : 'var(--transparent-color)')};
+  border: 1px solid var(--border-color);
   border-radius: 13px;
   box-shadow: var(--modal-drop-shadow);
 
@@ -123,7 +123,7 @@ const StyledTitle = styled.div<{ bigHeader?: boolean }>`
     props.bigHeader ? 'var(--margins-sm)' : 'var(--margins-xs) var(--margins-sm)'};
 `;
 
-export const ButtonChildrenContainer = ({
+export const ModalActionsContainer = ({
   children,
   style = {},
 }: {
@@ -140,6 +140,7 @@ export const ButtonChildrenContainer = ({
       $flexGap="var(--margins-md)"
       height="59px"
       style={{ justifySelf: 'center', ...style }}
+      data-testid="modal-actions-container"
     >
       {children}
     </Flex>
@@ -150,12 +151,11 @@ export type SessionWrapperModalType2 = {
   headerChildren: ReactNode | null;
   children: ReactNode;
   /**
-   * *Should* be some SessionButtons enclosed in a ButtonChildrenContainer
+   * *Should* be some SessionButtons enclosed in a ModalActionsContainer
    */
   buttonChildren?: ReactNode;
-  $contentMaxWidth?: string;
-  $contentMinWidth?: string;
-  contentBorder?: boolean;
+  $contentMaxWidth?: WrapperModalWidth;
+  $contentMinWidth?: WrapperModalWidth;
   shouldOverflow?: boolean;
   padding?: string;
   classes?: string;
@@ -165,6 +165,10 @@ export type SessionWrapperModalType2 = {
   style?: Omit<CSSProperties, 'maxWidth' | 'minWidth' | 'padding' | 'border'>;
 };
 
+/**
+ * A basic modal header with a title, an optional left button and/or exit icon.
+ * To be used as `headerChildren` prop as part of SessionWrapperModal2.
+ */
 export const BasicModalHeader = (props: {
   title?: ReactNode;
   showExitIcon?: boolean;
@@ -229,13 +233,17 @@ export const BasicModalHeader = (props: {
   );
 };
 
+/**
+ * A generic modal component that is constructed from a provided header, body and some actions.
+ *
+ *
+ */
 export const SessionWrapperModal2 = (
   props: SessionWrapperModalType2 & { onClose?: () => void }
 ) => {
   const {
     $contentMinWidth,
     $contentMaxWidth,
-    contentBorder = true,
     shouldOverflow = false,
     padding,
     classes,
@@ -296,7 +304,6 @@ export const SessionWrapperModal2 = (
                 $contentMaxWidth={$contentMaxWidth}
                 $contentMinWidth={$contentMinWidth}
                 padding={padding}
-                border={contentBorder}
                 style={style}
               >
                 {props.headerChildren ? props.headerChildren : null}

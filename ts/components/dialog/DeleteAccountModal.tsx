@@ -14,7 +14,7 @@ import { SessionRadioGroup } from '../basic/SessionRadioGroup';
 import { localize } from '../../localization/localeTools';
 import {
   BasicModalHeader,
-  ButtonChildrenContainer,
+  ModalActionsContainer,
   SessionWrapperModal2,
 } from '../SessionWrapperModal2';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
@@ -125,15 +125,10 @@ export const DeleteAccountModal = () => {
 
   return (
     <SessionWrapperModal2
-      headerChildren={
-        <BasicModalHeader
-          title={localize('clearDataAll').toString()}
-          showExitIcon={false}
-        />
-      }
+      headerChildren={<BasicModalHeader title={localize('clearDataAll').toString()} />}
       onClose={onClickCancelHandler}
       buttonChildren={
-        <ButtonChildrenContainer>
+        <ModalActionsContainer>
           <SessionButton
             text={localize('clear').toString()}
             buttonColor={SessionButtonColor.Danger}
@@ -162,7 +157,7 @@ export const DeleteAccountModal = () => {
             disabled={isLoading}
             dataTestId="session-confirm-cancel-button"
           />
-        </ButtonChildrenContainer>
+        </ModalActionsContainer>
       }
     >
       {askingConfirmation ? (

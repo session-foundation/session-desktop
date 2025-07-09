@@ -6,7 +6,7 @@ import { type SessionProInfoState, updateSessionProInfoModal } from '../../state
 import {
   SessionWrapperModal2,
   WrapperModalWidth,
-  ButtonChildrenContainer,
+  ModalActionsContainer,
 } from '../SessionWrapperModal2';
 import {
   SessionButton,
@@ -197,7 +197,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
       $contentMinWidth={WrapperModalWidth.normal}
       $contentMaxWidth={WrapperModalWidth.normal}
       buttonChildren={
-        <ButtonChildrenContainer
+        <ModalActionsContainer
           style={{
             display: 'grid',
             alignItems: 'center',
@@ -222,7 +222,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
           >
             {localize('cancel')}
           </SessionButton>
-        </ButtonChildrenContainer>
+        </ModalActionsContainer>
       }
     >
       <SpacerSM />

@@ -37,7 +37,7 @@ import { searchActions } from '../../state/ducks/search';
 import { StyledContactListInModal } from '../list/StyledContactList';
 import {
   BasicModalHeader,
-  ButtonChildrenContainer,
+  ModalActionsContainer,
   SessionWrapperModal2,
   WrapperModalWidth,
 } from '../SessionWrapperModal2';
@@ -192,14 +192,13 @@ export const UpdateGroupMembersDialog = (props: Props) => {
       headerChildren={
         <BasicModalHeader
           title={localize(weAreAdmin ? 'manageMembers' : 'groupMembers').toString()}
-          showExitIcon={false}
         />
       }
       onClose={closeDialog}
       $contentMinWidth={WrapperModalWidth.wide}
       $contentMaxWidth={WrapperModalWidth.wide}
       buttonChildren={
-        <ButtonChildrenContainer>
+        <ModalActionsContainer>
           {weAreAdmin && (
             <SessionButton
               text={window.i18n('remove')}
@@ -217,7 +216,7 @@ export const UpdateGroupMembersDialog = (props: Props) => {
             disabled={isProcessingUIChange}
             dataTestId="session-confirm-cancel-button"
           />
-        </ButtonChildrenContainer>
+        </ModalActionsContainer>
       }
     >
       {hasClosedGroupV2QAButtons() && weAreAdmin && PubKey.is03Pubkey(conversationId) ? (

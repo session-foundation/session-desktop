@@ -8,7 +8,7 @@ import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/S
 import { localize } from '../../localization/localeTools';
 import {
   BasicModalHeader,
-  ButtonChildrenContainer,
+  ModalActionsContainer,
   SessionWrapperModal2,
   WrapperModalWidth,
 } from '../SessionWrapperModal2';
@@ -71,7 +71,7 @@ export const EnterPasswordModal = (props: EnterPasswordModalProps) => {
       headerChildren={<BasicModalHeader title={title} showExitIcon={true} />}
       $contentMinWidth={WrapperModalWidth.narrow}
       buttonChildren={
-        <ButtonChildrenContainer>
+        <ModalActionsContainer>
           <SessionButton
             text={localize('done').toString()}
             buttonType={SessionButtonType.Simple}
@@ -85,7 +85,7 @@ export const EnterPasswordModal = (props: EnterPasswordModalProps) => {
             onClick={onClose}
             dataTestId="session-confirm-cancel-button"
           />
-        </ButtonChildrenContainer>
+        </ModalActionsContainer>
       }
     >
       <SpacerSM />

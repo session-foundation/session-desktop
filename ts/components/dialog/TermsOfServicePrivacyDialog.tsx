@@ -4,7 +4,7 @@ import { updateTermsOfServicePrivacyModal } from '../../state/onboarding/ducks/m
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
 import {
   BasicModalHeader,
-  ButtonChildrenContainer,
+  ModalActionsContainer,
   SessionWrapperModal2,
 } from '../SessionWrapperModal2';
 import { localize } from '../../localization/localeTools';
@@ -34,7 +34,7 @@ export function TermsOfServicePrivacyDialog(props: TermsOfServicePrivacyDialogPr
       }
       onClose={onClose}
       buttonChildren={
-        <ButtonChildrenContainer>
+        <ModalActionsContainer>
           <SessionButton
             ariaLabel={'Terms of service button'}
             text={localize('onboardingTos').toString()}
@@ -53,7 +53,7 @@ export function TermsOfServicePrivacyDialog(props: TermsOfServicePrivacyDialogPr
             }}
             dataTestId="privacy-policy-button"
           />
-        </ButtonChildrenContainer>
+        </ModalActionsContainer>
       }
     >
       <ModalDescription

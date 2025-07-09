@@ -22,7 +22,7 @@ import { localize } from '../../localization/localeTools';
 import { SimpleSessionInput, SimpleSessionTextarea } from '../inputs/SessionInput';
 import {
   BasicModalHeader,
-  ButtonChildrenContainer,
+  ModalActionsContainer,
   SessionWrapperModal2,
 } from '../SessionWrapperModal2';
 import { ClearInputButton } from '../inputs/ClearInputButton';
@@ -146,7 +146,7 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
       headerChildren={<BasicModalHeader title={localize('updateGroupInformation').toString()} />}
       onClose={closeDialog}
       buttonChildren={
-        <ButtonChildrenContainer>
+        <ModalActionsContainer>
           <SessionButton
             text={localize('save').toString()}
             onClick={onClickOK}
@@ -159,7 +159,7 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
             buttonType={SessionButtonType.Simple}
             onClick={closeDialog}
           />
-        </ButtonChildrenContainer>
+        </ModalActionsContainer>
       }
     >
       <GroupAvatar

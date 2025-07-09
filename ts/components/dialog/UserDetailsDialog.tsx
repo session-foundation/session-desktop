@@ -13,7 +13,7 @@ import { Flex } from '../basic/Flex';
 import { SessionIDNonEditable } from '../basic/YourSessionIDPill';
 import {
   BasicModalHeader,
-  ButtonChildrenContainer,
+  ModalActionsContainer,
   SessionWrapperModal2,
 } from '../SessionWrapperModal2';
 import { localize } from '../../localization/localeTools';
@@ -61,7 +61,7 @@ export const UserDetailsDialog = (props: UserDetailsModalState) => {
       headerChildren={<BasicModalHeader title={props.userName} showExitIcon={true} />}
       onClose={closeDialog}
       buttonChildren={
-        <ButtonChildrenContainer>
+        <ModalActionsContainer>
           <SessionButton
             text={localize('conversationsNew').toString()}
             buttonType={SessionButtonType.Simple}
@@ -72,7 +72,7 @@ export const UserDetailsDialog = (props: UserDetailsModalState) => {
             buttonType={SessionButtonType.Simple}
             hotkey={true}
           />
-        </ButtonChildrenContainer>
+        </ModalActionsContainer>
       }
     >
       <div className="avatar-center">

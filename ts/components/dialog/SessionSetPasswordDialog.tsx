@@ -13,7 +13,7 @@ import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/S
 import { localize } from '../../localization/localeTools';
 import {
   BasicModalHeader,
-  ButtonChildrenContainer,
+  ModalActionsContainer,
   SessionWrapperModal2,
   WrapperModalWidth,
 } from '../SessionWrapperModal2';
@@ -100,12 +100,12 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
 
     return (
       <SessionWrapperModal2
-        headerChildren={<BasicModalHeader title={titleString()} showExitIcon={false} />}
+        headerChildren={<BasicModalHeader title={titleString()} />}
         onClose={this.closeDialog}
         $contentMinWidth={WrapperModalWidth.narrow}
         $contentMaxWidth={WrapperModalWidth.narrow}
         buttonChildren={
-          <ButtonChildrenContainer>
+          <ModalActionsContainer>
             <SessionButton
               text={confirmButtonText}
               buttonColor={passwordAction === 'remove' ? SessionButtonColor.Danger : undefined}
@@ -126,7 +126,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
                 onClick={this.closeDialog}
               />
             )}
-          </ButtonChildrenContainer>
+          </ModalActionsContainer>
         }
       >
         <Flex

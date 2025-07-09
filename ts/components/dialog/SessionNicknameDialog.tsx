@@ -12,7 +12,7 @@ import { SimpleSessionInput } from '../inputs/SessionInput';
 import { ClearInputButton } from '../inputs/ClearInputButton';
 import {
   BasicModalHeader,
-  ButtonChildrenContainer,
+  ModalActionsContainer,
   SessionWrapperModal2,
 } from '../SessionWrapperModal2';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
@@ -88,7 +88,7 @@ export const SessionNicknameDialog = (props: Props) => {
       }
       onClose={onClickClose}
       buttonChildren={
-        <ButtonChildrenContainer>
+        <ModalActionsContainer>
           <SessionButton
             text={localize('save').toString()}
             disabled={!nickname}
@@ -104,7 +104,7 @@ export const SessionNicknameDialog = (props: Props) => {
             dataTestId="set-nickname-remove-button"
             disabled={!currentNickname} // "remove" disabled if no nickname were set for that user, on load
           />
-        </ButtonChildrenContainer>
+        </ModalActionsContainer>
       }
     >
       <ModalDescription

@@ -7,7 +7,7 @@ import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/S
 import { SpacerMD } from '../basic/Text';
 import {
   BasicModalHeader,
-  ButtonChildrenContainer,
+  ModalActionsContainer,
   SessionWrapperModal2,
 } from '../SessionWrapperModal2';
 import { localize } from '../../localization/localeTools';
@@ -71,17 +71,14 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
   return (
     <SessionWrapperModal2
       headerChildren={
-        <BasicModalHeader
-          title={localize('recoveryPasswordHidePermanently').toString()}
-          showExitIcon={false}
-        />
+        <BasicModalHeader title={localize('recoveryPasswordHidePermanently').toString()} />
       }
       onClose={onClose}
       buttonChildren={
-        <ButtonChildrenContainer>
+        <ModalActionsContainer>
           <SessionButton {...leftButtonProps} buttonType={SessionButtonType.Simple} />
           <SessionButton {...rightButtonProps} buttonType={SessionButtonType.Simple} />
-        </ButtonChildrenContainer>
+        </ModalActionsContainer>
       }
     >
       <ModalDescription

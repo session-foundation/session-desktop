@@ -7,7 +7,7 @@ import { ConversationInteractionStatus } from '../../interactions/types';
 import { updateConfirmModal } from '../../state/ducks/modalDialog';
 import {
   BasicModalHeader,
-  ButtonChildrenContainer,
+  ModalActionsContainer,
   SessionWrapperModal2,
 } from '../SessionWrapperModal2';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
@@ -128,7 +128,7 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
       headerChildren={title ? <BasicModalHeader title={title} showExitIcon={showExitIcon} /> : null}
       onClose={onClickClose}
       buttonChildren={
-        <ButtonChildrenContainer>
+        <ModalActionsContainer>
           <SessionButton
             text={okText}
             buttonColor={okTheme}
@@ -149,7 +149,7 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
               dataTestId="session-confirm-cancel-button"
             />
           )}
-        </ButtonChildrenContainer>
+        </ModalActionsContainer>
       }
     >
       {i18nMessage ? (

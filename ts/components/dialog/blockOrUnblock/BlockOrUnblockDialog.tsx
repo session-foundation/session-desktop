@@ -14,7 +14,7 @@ import { BlockOrUnblockModalState } from './BlockOrUnblockModalState';
 import { localize } from '../../../localization/localeTools';
 import {
   BasicModalHeader,
-  ButtonChildrenContainer,
+  ModalActionsContainer,
   SessionWrapperModal2,
 } from '../../SessionWrapperModal2';
 
@@ -92,10 +92,10 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
 
   return (
     <SessionWrapperModal2
-      headerChildren={<BasicModalHeader title={localizedAction} showExitIcon={false} />}
+      headerChildren={<BasicModalHeader title={localizedAction} />}
       onClose={closeModal}
       buttonChildren={
-        <ButtonChildrenContainer>
+        <ModalActionsContainer>
           <SessionButton
             buttonType={SessionButtonType.Simple}
             buttonColor={SessionButtonColor.Danger}
@@ -109,7 +109,7 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
             text={localize('cancel').toString()}
             dataTestId="session-confirm-cancel-button"
           />
-        </ButtonChildrenContainer>
+        </ModalActionsContainer>
       }
     >
       <ModalDescription dataTestId="modal-description" localizerProps={args} />

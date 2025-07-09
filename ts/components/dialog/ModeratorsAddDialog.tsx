@@ -14,7 +14,7 @@ import { localize } from '../../localization/localeTools';
 import { MAX_SUBREQUESTS_COUNT } from '../../session/apis/snode_api/SnodeRequestTypes';
 import {
   BasicModalHeader,
-  ButtonChildrenContainer,
+  ModalActionsContainer,
   SessionWrapperModal2,
 } from '../SessionWrapperModal2';
 import { SimpleSessionInput } from '../inputs/SessionInput';
@@ -92,7 +92,7 @@ export const AddModeratorsDialog = (props: Props) => {
       headerChildren={<BasicModalHeader title={localize('addAdmins').toString()} />}
       onClose={onClose}
       buttonChildren={
-        <ButtonChildrenContainer>
+        <ModalActionsContainer>
           <SessionButton
             buttonType={SessionButtonType.Simple}
             onClick={addAsModerator}
@@ -106,7 +106,7 @@ export const AddModeratorsDialog = (props: Props) => {
             text={localize('cancel').toString()}
             dataTestId="add-admins-cancel-button"
           />
-        </ButtonChildrenContainer>
+        </ModalActionsContainer>
       }
     >
       <Flex $container={true} $flexDirection="column" $alignItems="center">

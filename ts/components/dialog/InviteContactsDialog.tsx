@@ -26,7 +26,7 @@ import { SessionSearchInput } from '../SessionSearchInput';
 import { NoResultsForSearch } from '../search/NoResults';
 import {
   BasicModalHeader,
-  ButtonChildrenContainer,
+  ModalActionsContainer,
   SessionWrapperModal2,
 } from '../SessionWrapperModal2';
 import { useHotkey } from '../../hooks/useHotkey';
@@ -182,9 +182,9 @@ const InviteContactsDialogInner = (props: Props) => {
       }
       modalDataTestId="invite-contacts-dialog"
       buttonChildren={
-        <ButtonChildrenContainer>
+        <ModalActionsContainer>
           <SessionButton
-            text={localize('okay').toString()}
+            text={localize('membersInviteTitle').toString()}
             buttonType={SessionButtonType.Simple}
             disabled={!hasContacts}
             onClick={onClickOK}
@@ -197,7 +197,7 @@ const InviteContactsDialogInner = (props: Props) => {
             onClick={closeDialog}
             dataTestId="session-confirm-cancel-button"
           />
-        </ButtonChildrenContainer>
+        </ModalActionsContainer>
       }
     >
       <SpacerLG />

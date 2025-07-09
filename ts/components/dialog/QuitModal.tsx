@@ -5,7 +5,7 @@ import { updateQuitModal, type QuitModalProps } from '../../state/onboarding/duc
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import {
   BasicModalHeader,
-  ButtonChildrenContainer,
+  ModalActionsContainer,
   SessionWrapperModal2,
 } from '../SessionWrapperModal2';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
@@ -58,7 +58,7 @@ export const QuitModal = (props: QuitModalProps) => {
       headerChildren={<BasicModalHeader title={title} />}
       onClose={onClickClose}
       buttonChildren={
-        <ButtonChildrenContainer>
+        <ModalActionsContainer>
           <SessionButton
             text={localize('quitButton').toString()}
             buttonColor={SessionButtonColor.Danger}
@@ -75,7 +75,7 @@ export const QuitModal = (props: QuitModalProps) => {
             disabled={isLoading}
             dataTestId="session-confirm-cancel-button"
           />
-        </ButtonChildrenContainer>
+        </ModalActionsContainer>
       }
     >
       <ModalDescription dataTestId="modal-description" localizerProps={i18nMessage} />

@@ -62,7 +62,6 @@ export function SessionNetworkModal() {
         />
       }
       onClose={onClose}
-      contentBorder={false}
       shouldOverflow={true}
     >
       <NetworkSection />

@@ -156,6 +156,7 @@ declare module 'react' {
     | 'legacy-group-banner'
     | 'account-id'
     | 'set-nickname-remove-button'
+    | 'modal-actions-container'
 
     // generic button types
     | 'emoji-button'

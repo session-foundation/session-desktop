@@ -25,7 +25,7 @@ import {
 } from '../conversationSettingsHooks';
 import {
   BasicModalHeader,
-  ButtonChildrenContainer,
+  ModalActionsContainer,
   SessionWrapperModal2,
   WrapperModalWidth,
 } from '../../../../SessionWrapperModal2';
@@ -114,18 +114,16 @@ export function NotificationForConversationModal(props: Required<ConversationSet
       headerChildren={
         <BasicModalHeader
           title={title}
-          showExitIcon={false}
           bigHeader={true}
           leftButton={backAction ? <ModalBackButton onClick={backAction} /> : undefined}
         />
       }
       onClose={onClose}
-      contentBorder={false}
       shouldOverflow={true}
       allowOutsideClick={false}
       $contentMinWidth={WrapperModalWidth.narrow} // the content is radio buttons and it looks weird on a large modal
       buttonChildren={
-        <ButtonChildrenContainer>
+        <ModalActionsContainer>
           <SessionButton
             onClick={handleSetNotifications}
             dataTestId={'notifications-set-button'}
@@ -133,7 +131,7 @@ export function NotificationForConversationModal(props: Required<ConversationSet
           >
             {localize('set')}
           </SessionButton>
-        </ButtonChildrenContainer>
+        </ModalActionsContainer>
       }
     >
       <StyledScrollContainer style={{ position: 'relative' }}>

@@ -7,7 +7,7 @@ import { MessageInteraction } from '../../interactions';
 import { OpenUrlModalState, updateOpenUrlModal } from '../../state/ducks/modalDialog';
 import {
   BasicModalHeader,
-  ButtonChildrenContainer,
+  ModalActionsContainer,
   SessionWrapperModal2,
 } from '../SessionWrapperModal2';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
@@ -50,7 +50,7 @@ export function OpenUrlModal(props: OpenUrlModalState) {
       }
       onClose={onClose}
       buttonChildren={
-        <ButtonChildrenContainer>
+        <ModalActionsContainer>
           <SessionButton
             text={localize('open').toString()}
             buttonColor={SessionButtonColor.Danger}
@@ -64,7 +64,7 @@ export function OpenUrlModal(props: OpenUrlModalState) {
             onClick={onClickCopy}
             dataTestId="copy-url-button"
           />
-        </ButtonChildrenContainer>
+        </ModalActionsContainer>
       }
     >
       <StyledScrollDescriptionContainer>
