@@ -179,7 +179,7 @@ export const SessionButton = (props: SessionButtonProps) => {
     ariaLabel,
     disabled = false,
     onClick = null,
-    fontWeight,
+    fontWeight = SessionButtonType.Simple ? 500 : undefined,
     width,
     margin,
     style,

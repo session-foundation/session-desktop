@@ -18,6 +18,7 @@ import { themeStore } from '../state/theme/store';
 import { ShowHideSessionInput } from './inputs/SessionInput';
 import { sleepFor } from '../session/utils/Promise';
 import { ModalDescription } from './dialog/shared/ModalDescriptionContainer';
+import { SpacerMD } from './basic/Text';
 
 const MAX_LOGIN_TRIES = 3;
 
@@ -191,9 +192,29 @@ const SessionPasswordPromptInner = () => {
       }
       showExitIcon={false}
       $contentMinWidth="350px"
+      buttonChildren={
+        clearDataView ? (
+          <ClearDataViewButtons
+            onCancel={() => {
+              setClearDataView(false);
+            }}
+          />
+        ) : (
+          <PasswordViewButtons
+            errorCount={errorCount}
+            loading={loading}
+            initLogin={initLogin}
+            onShowClearDataView={showClearDataView}
+          />
+        )
+      }
     >
       {loading ? (
-        <SessionSpinner loading={true} />
+        <>
+          <SessionSpinner loading={true} />
+          <TextPleaseWait isLoading={loading} />
+          <SpacerMD />
+        </>
       ) : clearDataView ? (
         <ModalDescription
           dataTestId="modal-description"
@@ -206,21 +227,6 @@ const SessionPasswordPromptInner = () => {
           onEnterPressed={initLogin}
           onPasswordChange={setPassword}
           password={password}
-        />
-      )}
-      <TextPleaseWait isLoading={loading} />
-      {clearDataView ? (
-        <ClearDataViewButtons
-          onCancel={() => {
-            setClearDataView(false);
-          }}
-        />
-      ) : (
-        <PasswordViewButtons
-          errorCount={errorCount}
-          loading={loading}
-          initLogin={initLogin}
-          onShowClearDataView={showClearDataView}
         />
       )}
     </SessionWrapperModal2>

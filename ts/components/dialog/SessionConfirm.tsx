@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
 import { useLastMessage } from '../../hooks/useParamSelector';
@@ -11,9 +11,9 @@ import { SessionRadioGroup, SessionRadioItems } from '../basic/SessionRadioGroup
 import type { LocalizerProps } from '../basic/Localizer';
 import { SessionSpinner } from '../loading';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
+import { localize } from '../../localization/localeTools';
 
 export interface SessionConfirmDialogProps {
-  children?: ReactNode;
   i18nMessage?: LocalizerProps;
   title?: string;
   radioOptions?: SessionRadioItems;
@@ -49,8 +49,7 @@ export interface SessionConfirmDialogProps {
 export const SessionConfirm = (props: SessionConfirmDialogProps) => {
   const dispatch = useDispatch();
   const {
-    children,
-    title = '',
+    title,
     i18nMessage,
     radioOptions,
     okTheme,
@@ -71,9 +70,9 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
     radioOptions?.length ? radioOptions[0].value : ''
   );
 
-  const okText = props.okText || window.i18n('okay');
-  const cancelText = props.cancelText || window.i18n('cancel');
-  const showHeader = !!props.title;
+  const okText = props.okText || localize('okay').toString();
+  const cancelText = props.cancelText || localize('cancel').toString();
+  const showHeader = !!title;
 
   const onClickOkHandler = async () => {
     if (onClickOk) {
@@ -167,7 +166,6 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
           }}
         />
       ) : null}
-      {children}
       <SessionSpinner loading={isLoading} />
     </SessionWrapperModal2>
   );
