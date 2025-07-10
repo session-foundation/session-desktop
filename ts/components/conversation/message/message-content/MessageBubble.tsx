@@ -67,9 +67,12 @@ export function MessageBubble({ children }: { children: ReactNode }) {
       return;
     }
 
+    // We need the body's child to find the line height as long as it exists
+    const textEl = el.firstElementChild ?? el;
+    const textStyle = window.getComputedStyle(textEl);
     const style = window.getComputedStyle(el);
 
-    const lineHeight = parseFloat(style.lineHeight);
+    const lineHeight = parseFloat(textStyle.lineHeight);
     const paddingTop = parseFloat(style.paddingTop);
     const paddingBottom = parseFloat(style.paddingBottom);
     const borderTopWidth = parseFloat(style.borderTopWidth);
