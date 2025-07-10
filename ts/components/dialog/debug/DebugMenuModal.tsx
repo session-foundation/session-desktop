@@ -1,4 +1,3 @@
-import { AnimatePresence } from 'framer-motion';
 import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 import useUpdate from 'react-use/lib/useUpdate';
@@ -115,23 +114,21 @@ export function DebugMenuModal() {
   });
 
   return (
-    <AnimatePresence>
-      <SessionWrapperModal2
-        headerChildren={<BasicModalHeader title="Debug Menu" showExitIcon={true} />}
-        onClose={onClose}
-        $contentMaxWidth={WrapperModalWidth.debug}
-        shouldOverflow={true}
-        allowOutsideClick={false}
+    <SessionWrapperModal2
+      headerChildren={<BasicModalHeader title="Debug Menu" showExitIcon={true} />}
+      onClose={onClose}
+      $contentMaxWidth={WrapperModalWidth.debug}
+      shouldOverflow={true}
+      allowOutsideClick={false}
+    >
+      <StyledContent
+        $container={true}
+        $flexDirection="column"
+        $alignItems="flex-start"
+        padding="var(--margins-sm) 0 var(--margins-xl)"
       >
-        <StyledContent
-          $container={true}
-          $flexDirection="column"
-          $alignItems="flex-start"
-          padding="var(--margins-sm) 0 var(--margins-xl)"
-        >
-          {getPage(page, setPage)}
-        </StyledContent>
-      </SessionWrapperModal2>
-    </AnimatePresence>
+        {getPage(page, setPage)}
+      </StyledContent>
+    </SessionWrapperModal2>
   );
 }
