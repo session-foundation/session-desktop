@@ -30,7 +30,7 @@ export const CallWindow = styled.div`
 `;
 
 const IncomingCallAvatarContainer = styled.div`
-  padding: 0 0 2rem 0;
+  padding: 15px;
 `;
 
 export const IncomingCallDialog = () => {
@@ -97,10 +97,10 @@ export const IncomingCallDialog = () => {
               text={localize('accept').toString()}
               buttonType={SessionButtonType.Simple}
               onClick={handleAcceptIncomingCall}
+              buttonColor={SessionButtonColor.Danger}
             />
             <SessionButton
               text={localize('decline').toString()}
-              buttonColor={SessionButtonColor.Danger}
               buttonType={SessionButtonType.Simple}
               onClick={handleDeclineIncomingCall}
             />

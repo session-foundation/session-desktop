@@ -416,6 +416,8 @@ export async function showDeleteGroupByConvoId(conversationId: string, name: str
 
   const isPublic = conversation.isPublic();
 
+  const weAreAdmin = conversation.weAreAdminUnblinded();
+
   if (!conversation.isGroup() || isPublic) {
     throw new Error('showDeleteGroupByConvoId() called with a non group convo.');
   }
@@ -436,10 +438,13 @@ export async function showDeleteGroupByConvoId(conversationId: string, name: str
 
   window?.inboxStore?.dispatch(
     updateConfirmModal({
-      title: window.i18n('groupDelete'),
-      i18nMessage: { token: 'groupDeleteDescriptionMember', args: { group_name: name ?? '' } },
+      title: localize('groupDelete').toString(),
+      i18nMessage: {
+        token: weAreAdmin ? 'groupDeleteDescription' : 'groupDeleteDescriptionMember',
+        args: { group_name: name ?? '' },
+      },
       onClickOk,
-      okText: window.i18n('delete'),
+      okText: localize('delete').toString(),
       okTheme: SessionButtonColor.Danger,
       onClickClose,
       conversationId,

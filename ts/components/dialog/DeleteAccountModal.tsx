@@ -54,7 +54,6 @@ const DescriptionBeforeAskingConfirmation = (props: {
       <SessionRadioGroup
         group="delete_account"
         initialItem={deleteMode}
-        style={{ gap: 'var(--margins-md)' }}
         onClick={value => {
           if (value === DEVICE_ONLY || value === DEVICE_AND_NETWORK) {
             setDeleteMode(value);

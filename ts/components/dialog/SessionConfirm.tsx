@@ -1,3 +1,4 @@
+import { useDispatch } from 'react-redux';
 import { useEffect, useState } from 'react';
 import useKey from 'react-use/lib/useKey';
 import { useLastMessage } from '../../hooks/useParamSelector';
@@ -37,7 +38,7 @@ export interface SessionConfirmDialogProps {
    */
   onClickCancel?: () => any;
 
-  okText?: string;
+  okText: string;
   cancelText?: string;
   hideCancel?: boolean;
   okTheme?: SessionButtonColor;
@@ -64,6 +65,7 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
     conversationId,
   } = props;
 
+  const dispatch = useDispatch();
   const lastMessage = useLastMessage(conversationId);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -71,7 +73,7 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
     radioOptions?.length ? radioOptions[0].value : ''
   );
 
-  const okText = props.okText || localize('okay').toString();
+  const okText = props.okText;
   const cancelText = props.cancelText || localize('cancel').toString();
 
   const onClickOkHandler = async () => {
@@ -84,6 +86,9 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
       } finally {
         setIsLoading(false);
       }
+      // all Confirm dialogs are expected to close on OK click.
+      // If you need to show an error, use a custom dialog.
+      dispatch(updateConfirmModal(null));
     }
   };
 

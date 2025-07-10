@@ -230,7 +230,7 @@ export class SessionConversation extends Component<Props, State> {
           title: localize('warning').toString(),
           i18nMessage: { token: 'recoveryPasswordWarningSendDescription' },
           okTheme: SessionButtonColor.Danger,
-          okText: localize('okay').toString(),
+          okText: localize('send').toString(),
           onClickOk: () => {
             void sendAndScroll();
           },

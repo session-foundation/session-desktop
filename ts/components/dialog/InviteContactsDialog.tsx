@@ -146,6 +146,8 @@ const InviteContactsDialogInner = (props: Props) => {
     if (isPublic) {
       void submitForOpenGroup(conversationId, clone(selectedContacts));
       empty();
+      // for a community, we want to keep that dialog open until the user is done with his invitations
+
       return;
     }
     if (!PubKey.is03Pubkey(conversationId)) {

@@ -7,28 +7,30 @@ import { updateConfirmModal } from '../../../state/ducks/modalDialog';
 import { SessionButtonColor } from '../../basic/SessionButton';
 
 import { SessionToggleWithDescription } from '../SessionSettingListItem';
+import { localize } from '../../../localization/localeTools';
 
 const toggleCallMediaPermissions = async (triggerUIUpdate: () => void) => {
   const currentValue = window.getCallMediaPermissions();
+  const onClose = () => window.inboxStore?.dispatch(updateConfirmModal(null));
   if (!currentValue) {
     window.inboxStore?.dispatch(
       updateConfirmModal({
-        title: window.i18n('callsVoiceAndVideoBeta'),
+        title: localize('callsVoiceAndVideoBeta').toString(),
         i18nMessage: { token: 'callsVoiceAndVideoModalDescription' },
         okTheme: SessionButtonColor.Danger,
-        okText: window.i18n('theContinue'),
+        okText: localize('theContinue').toString(),
         onClickOk: async () => {
           await window.toggleCallMediaPermissionsTo(true);
           triggerUIUpdate();
           CallManager.onTurnedOnCallMediaPermissions();
+          onClose();
         },
         onClickCancel: async () => {
           await window.toggleCallMediaPermissionsTo(false);
           triggerUIUpdate();
+          onClose();
         },
-        onClickClose: () => {
-          window.inboxStore?.dispatch(updateConfirmModal(null));
-        },
+        onClickClose: onClose,
       })
     );
   } else {
