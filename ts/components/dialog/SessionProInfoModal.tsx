@@ -198,16 +198,23 @@ export function SessionProInfoModal(props: SessionProInfoState) {
       $contentMaxWidth={WrapperModalWidth.normal}
       buttonChildren={
         <ModalActionsContainer
+          maxWidth="unset"
           style={{
             display: 'grid',
             alignItems: 'center',
             justifyItems: 'center',
             gridTemplateColumns: '1fr 1fr',
             columnGap: 'var(--margins-sm)',
+            paddingBottom: 'var(--margins-md)',
+            paddingInline: 'var(--margins-md)',
+            height: 'unset',
           }}
         >
           <SessionButtonShiny
             {...buttonProps}
+            shinyContainerStyle={{
+              width: '100%',
+            }}
             buttonColor={SessionButtonColor.Primary}
             onClick={onClose}
             dataTestId="modal-button-session-pro-ok"
@@ -220,7 +227,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
             onClick={onClose}
             dataTestId="modal-button-session-pro-ok"
           >
-            {localize('cancel')}
+            {localize('cancel').toString()}
           </SessionButton>
         </ModalActionsContainer>
       }

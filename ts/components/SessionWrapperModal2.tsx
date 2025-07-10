@@ -125,17 +125,19 @@ const StyledTitle = styled.div<{ bigHeader?: boolean }>`
 
 export const ModalActionsContainer = ({
   children,
+  maxWidth,
   style = {},
 }: {
   children: ReactNode;
   style?: CSSProperties;
+  maxWidth?: string;
 }) => {
   return (
     <Flex
       $container={true}
       width={'100%'}
       $justifyContent="space-evenly"
-      maxWidth="300px"
+      maxWidth={maxWidth || '300px'}
       $alignItems="center"
       $flexGap="var(--margins-md)"
       height="50px"

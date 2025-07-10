@@ -1,5 +1,6 @@
 import styled, { keyframes } from 'styled-components';
 import { SessionButton, type SessionButtonProps, StyledBaseButton } from './SessionButton';
+import type { CSSProperties } from 'styled-components';
 
 const shine = keyframes`
   0% {
@@ -27,9 +28,12 @@ const ShinyButtonContainer = styled.div`
   }
 `;
 
-export function SessionButtonShiny(props: SessionButtonProps) {
+export function SessionButtonShiny({
+  shinyContainerStyle,
+  ...props
+}: SessionButtonProps & { shinyContainerStyle: CSSProperties }) {
   return (
-    <ShinyButtonContainer style={props.style}>
+    <ShinyButtonContainer style={shinyContainerStyle}>
       <SessionButton {...props} />
     </ShinyButtonContainer>
   );
