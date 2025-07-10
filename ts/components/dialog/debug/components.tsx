@@ -327,9 +327,7 @@ export const DebugActions = () => {
         </SessionButton>
         <CheckForUpdatesButton />
         <CheckVersionButton channelToCheck="stable" />
-        {window.sessionFeatureFlags.useReleaseChannels ? (
-          <CheckVersionButton channelToCheck="alpha" />
-        ) : null}
+        <CheckVersionButton channelToCheck="alpha" />
         <SessionButton
           width="180px"
           onClick={async () => {

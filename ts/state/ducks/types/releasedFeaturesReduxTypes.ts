@@ -7,7 +7,6 @@ export type SessionFeatureFlags = {
   useOnionRequests: boolean;
   useTestNet: boolean;
   useClosedGroupV2QAButtons: boolean;
-  useReleaseChannels: boolean;
   useSESH101: boolean;
   alwaysShowRemainingChars: boolean;
   showPopoverAnchors: boolean;

@@ -25,7 +25,6 @@ const resetExperiments = createAsyncThunk(
   'releasedFeatures/resetExperiments',
   async (_, payloadCreator): Promise<void> => {
     // reset the feature flags
-    window.sessionFeatureFlags.useReleaseChannels = false;
     window.sessionFeatureFlags.useSESH101 = false;
 
     // reset the redux state
