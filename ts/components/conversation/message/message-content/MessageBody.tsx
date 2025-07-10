@@ -142,6 +142,7 @@ const StyledPre = styled.pre`
   border-radius: var(--border-radius);
   margin-inline-start: var(--margins-xs);
   margin-inline-end: var(--margins-xs);
+  width: 100%;
 `;
 
 function parsePreTags(content: string, messageBodyProps: Props) {
