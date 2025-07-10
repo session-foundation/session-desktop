@@ -113,6 +113,25 @@ function removeHtmlCharactersBeforeIndex(
 }
 
 /**
+ * Remove html at a html index.
+ * @param originalHtml - String to mutate
+ * @param htmlIdx - Html index to remove from (not including the character at this index). @see {@link getHtmlIndexFromSelection}
+ * @param numberOfCharactersToRemove - Number of characters to remove before the index.
+ */
+function removeHtmlCharactersAfterIndex(
+  originalHtml: string,
+  htmlIdx: number,
+  numberOfCharactersToRemove: number
+): { newHtml: string; newIndex: number } {
+  // TODO: handle when htmlIdx - toRemove < 0
+  const before = originalHtml.slice(0, htmlIdx);
+  const after = originalHtml.slice(htmlIdx + numberOfCharactersToRemove);
+  const newHtml = before + after;
+  const newIndex = htmlIdx;
+  return { newHtml, newIndex };
+}
+
+/**
  * Normalize an HTML string by converting all non-breaking spaces to regular spaces
  * and standardizing self-closing `<br />` tags to `<br>`.
  *
@@ -230,7 +249,11 @@ export interface CompositionInputRef {
   getRawValue: (mutator?: (nodeClone: HTMLElement) => void) => string;
   getCaretIndex: () => number;
   setCaretIndex: (htmlIndex: number) => void;
-  typeAtCaret: (content: string, previousCharactersToRemove?: number) => void;
+  typeAtCaret: (
+    content: string,
+    previousCharactersToRemove?: number,
+    forwardCharactersToRemove?: number
+  ) => void;
   resetState: (content: string) => void;
 }
 
@@ -278,7 +301,7 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
       () => ({
         focus: () => {
           const el = elRef.current;
-          if (!el) {
+          if (!el || document.activeElement === el) {
             return;
           }
 
@@ -289,6 +312,14 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
             isZeroWidthNode(el.lastElementChild)
           ) {
             replaceCaret(el);
+          } else {
+            /** Return the carat to its last index if we have it, otherwise to the end of the content */
+            const caratIdx = lastHtmlIndex.current;
+            if (caratIdx) {
+              setCaretAtHtmlIndex(el, caratIdx);
+            } else {
+              replaceCaret(el);
+            }
           }
         },
 
@@ -351,7 +382,7 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
           lastPosition.current = null;
         },
 
-        typeAtCaret: (content, previousCharactersToRemove = 0) => {
+        typeAtCaret: (content, previousCharactersToRemove = 0, forwardCharactersToRemove = 0) => {
           const el = elRef.current;
           if (!el) {
             return;
@@ -359,6 +390,16 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
 
           let htmlIndex = lastHtmlIndex.current;
           let htmlToEdit = el.innerHTML;
+          if (forwardCharactersToRemove) {
+            const res = removeHtmlCharactersAfterIndex(
+              htmlToEdit,
+              htmlIndex,
+              forwardCharactersToRemove
+            );
+            htmlToEdit = res.newHtml;
+            htmlIndex = res.newIndex;
+          }
+
           if (previousCharactersToRemove) {
             const res = removeHtmlCharactersBeforeIndex(
               htmlToEdit,
@@ -377,6 +418,7 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
 
           if (onChange) {
             onChange({ target: { value: newHtml } } as any);
+            commit(newHtml);
           }
         },
 
@@ -387,7 +429,7 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
           reset(content);
         },
       }),
-      [onChange, reset]
+      [commit, onChange, reset]
     );
 
     // Track selection changes when focused
@@ -601,9 +643,6 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
         lastHtml.current = renderedHtml;
         lastHtmlIndex.current = idx;
         setCaretAtHtmlIndex(el, idx);
-
-        window.log.debug('COMP', renderedHtml);
-
         return true;
       }
       return false;
@@ -651,12 +690,13 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
       onClick,
     });
 
-    const handleUndo = useCallback(
-      (e: ContentEditableEventWithoutTarget) => {
-        let item = undo();
+    const handleHistory = useCallback(
+      (e: ContentEditableEventWithoutTarget, action: 'undo' | 'redo') => {
+        const callback = action === 'redo' ? redo : undo;
+        let item = callback();
         if (!isUndefined(item)) {
           if (item === lastHtml.current) {
-            item = undo();
+            item = callback();
           }
           if (!isUndefined(item)) {
             lastHtml.current = item;
@@ -664,37 +704,26 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
           }
         }
       },
-      [emitChangeEvent, undo]
-    );
-
-    const handleRedo = useCallback(
-      (e: ContentEditableEventWithoutTarget) => {
-        const item = redo();
-        if (item) {
-          lastHtml.current = item;
-          emitChangeEvent(e, true);
-        }
-      },
-      [emitChangeEvent, redo]
+      [emitChangeEvent, undo, redo]
     );
 
     const _onKeyDown = useCallback(
       (e: KeyboardEvent<HTMLDivElement>) => {
         if (e.ctrlKey || e.metaKey) {
-          if (e.key === 'y' || (e.key === 'z' && e.shiftKey)) {
+          if (e.key === 'y' || (e.key === 'Z' && e.shiftKey)) {
             // Ctrl+Y or Cmd+Y
             // Ctrl+Shift+Z or Cmd+Shift+Z
             e.preventDefault();
-            handleRedo(e);
+            handleHistory(e, 'redo');
           } else if (e.key === 'z' && !e.shiftKey) {
             // Ctrl+Z or Cmd+Z (without Shift)
             e.preventDefault();
-            handleUndo(e);
+            handleHistory(e, 'undo');
           }
         }
         onKeyDown?.(e);
       },
-      [onKeyDown, handleRedo, handleUndo]
+      [onKeyDown, handleHistory]
     );
 
     const createSyntheticEvent = useCallback(
@@ -741,7 +770,7 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
             preventDefault: true,
           });
           if (event) {
-            handleUndo(event);
+            handleHistory(event, 'undo');
           }
         } else if (e.inputType === 'historyRedo') {
           const event = createSyntheticEvent({
@@ -749,11 +778,11 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
             preventDefault: true,
           });
           if (event) {
-            handleRedo(event);
+            handleHistory(event, 'redo');
           }
         }
       },
-      [handleUndo, createSyntheticEvent, handleRedo]
+      [createSyntheticEvent, handleHistory]
     );
 
     useEffect(() => {

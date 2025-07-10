@@ -118,6 +118,7 @@ interface State {
   initialDraft: string;
   draft: string;
   showEmojiPanel: boolean;
+  lastSelectedLength: number; // used for emoji panel replacement
   ignoredLink?: string; // set the ignored url when users closed the link preview
   stagedLinkPreview?: StagedLinkPreviewData;
   showCaptionEditor?: AttachmentType;
@@ -131,6 +132,7 @@ const getDefaultState = (newConvoId?: string) => {
     initialDraft: draft,
     showRecordingView: false,
     showEmojiPanel: false,
+    lastSelectedLength: 0,
     ignoredLink: undefined,
     stagedLinkPreview: undefined,
     showCaptionEditor: undefined,
@@ -335,6 +337,7 @@ class CompositionBoxInner extends Component<Props, State> {
 
   private showEmojiPanel() {
     document.addEventListener('mousedown', this.handleClick, false);
+    this.setState({ lastSelectedLength: window.getSelection()?.toString().length ?? 0 });
 
     this.setState({
       showEmojiPanel: true,
@@ -343,6 +346,7 @@ class CompositionBoxInner extends Component<Props, State> {
 
   private hideEmojiPanel() {
     document.removeEventListener('mousedown', this.handleClick, false);
+    this.setState({ lastSelectedLength: 0 });
 
     this.setState({
       showEmojiPanel: false,
@@ -925,7 +929,8 @@ class CompositionBoxInner extends Component<Props, State> {
   private onEmojiClick(emoji: FixedBaseEmoji) {
     if (emoji.native) {
       FrequentlyUsed.add(emoji);
-      this.inputRef.current?.typeAtCaret(emoji.native);
+      this.inputRef.current?.typeAtCaret(emoji.native, 0, this.state.lastSelectedLength);
+      this.setState({ lastSelectedLength: 0 });
     }
   }
 
