@@ -60,7 +60,7 @@ export function LocalizedPopupDialog(props: LocalizedPopupDialogState) {
         <SessionButton
           buttonType={SessionButtonType.Simple}
           onClick={onClose}
-          dataTestId="modal-button-session-pro-ok"
+          dataTestId="session-confirm-ok-button"
         >
           {localize('okay')}
         </SessionButton>
