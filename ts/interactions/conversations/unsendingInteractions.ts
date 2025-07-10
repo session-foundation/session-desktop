@@ -23,6 +23,7 @@ import { MessageQueue } from '../../session/sending';
 import { WithLocalMessageDeletionType } from '../../session/types/with';
 import { localize } from '../../localization/localeTools';
 import { sectionActions } from '../../state/ducks/section';
+import type { LocalizerProps } from '../../components/basic/Localizer';
 
 async function unsendMessagesForEveryone1o1AndLegacy(
   conversation: ConversationModel,
@@ -518,7 +519,6 @@ export async function deleteMessagesByIdForEveryone(
       },
       onClickCancel: closeDialog,
       onClickClose: closeDialog,
-      closeAfterInput: false,
     })
   );
 }
@@ -530,9 +530,15 @@ export async function deleteMessagesById(messageIds: Array<string>, conversation
   );
 
   const isMe = conversation.isMe();
+  const count = messageIds.length;
 
   const closeDialog = () => window.inboxStore?.dispatch(updateConfirmModal(null));
   const clearMessagesForEveryone = 'clearMessagesForEveryone';
+
+  // Note: the isMe case has no radio buttons, so we just show the description below
+  const i18nMessage: LocalizerProps | undefined = isMe
+    ? { token: 'deleteMessageDescriptionDevice', args: { count } }
+    : undefined;
 
   window.inboxStore?.dispatch(
     updateConfirmModal({
@@ -553,6 +559,7 @@ export async function deleteMessagesById(messageIds: Array<string>, conversation
             },
           ]
         : undefined,
+      i18nMessage,
       okText: window.i18n('delete'),
       okTheme: SessionButtonColor.Danger,
       onClickOk: async args => {
@@ -565,7 +572,6 @@ export async function deleteMessagesById(messageIds: Array<string>, conversation
         window.inboxStore?.dispatch(closeRightPanel());
         window.inboxStore?.dispatch(sectionActions.resetRightOverlayMode());
       },
-      closeAfterInput: false,
       onClickClose: closeDialog,
     })
   );

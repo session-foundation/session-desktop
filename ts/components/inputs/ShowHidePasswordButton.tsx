@@ -4,7 +4,8 @@ import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 type ShowHideButtonStrings<T extends string> = { hide: T; show: T };
-type ShowHideButtonProps = {
+
+export type ShowHideButtonProps = {
   forceShow: boolean;
   toggleForceShow: () => void;
   hasError: boolean;
@@ -21,7 +22,7 @@ export const ShowHideButton = (props: ShowHideButtonProps) => {
     <SessionLucideIconButton
       ariaLabel={forceShow ? ariaLabels.hide : ariaLabels.show}
       unicode={forceShow ? LUCIDE_ICONS_UNICODE.EYE_OFF : LUCIDE_ICONS_UNICODE.EYE}
-      iconColor={hasError ? 'var(--danger-color)' : 'var(--text-primary-color)'}
+      iconColor={hasError ? 'var(--danger-color)' : 'var(--text-secondary-color)'}
       iconSize="large"
       onClick={toggleForceShow}
       style={style}

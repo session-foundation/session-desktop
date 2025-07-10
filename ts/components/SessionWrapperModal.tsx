@@ -1,174 +1,331 @@
-import { ReactNode, useRef } from 'react';
-import useKey from 'react-use/lib/useKey';
-import { clsx } from 'clsx';
+/* eslint-disable no-unneeded-ternary */
+import { AnimatePresence } from 'framer-motion';
 import styled from 'styled-components';
-
-import { SessionButton, SessionButtonColor, SessionButtonType } from './basic/SessionButton';
-import { StyledRootDialog } from './dialog/StyledRootDialog';
-import { SessionFocusTrap } from './SessionFocusTrap';
+import clsx from 'clsx';
+import type { CSSProperties } from 'styled-components';
+import { ReactNode, useState, useRef, type SessionDataTestId } from 'react';
+import useKey from 'react-use/lib/useKey';
 import { Flex } from './basic/Flex';
-import { SpacerXL } from './basic/Text';
+import { SpacerLG, SpacerXL } from './basic/Text';
 import { SessionLucideIconButton } from './icon/SessionIconButton';
+import { SessionFocusTrap } from './SessionFocusTrap';
+import { useHTMLDirection } from '../util/i18n/rtlSupport';
+import { StyledRootDialog } from './dialog/StyledRootDialog';
 import { LUCIDE_ICONS_UNICODE } from './icon/lucide';
+import { IsModalScrolledContext, useIsModalScrolled } from '../contexts/IsModalScrolledContext';
+import { OnModalCloseContext, useOnModalClose } from '../contexts/OnModalCloseContext';
 
-const StyledTitle = styled.div`
+const StyledModalHeader = styled(Flex)<{ bigHeader?: boolean; scrolled: boolean }>`
+  position: relative;
+  font-family: var(--font-default);
+  font-size: ${props => (props.bigHeader ? 'var(--font-size-h4)' : 'var(--font-size-xl)')};
+  font-weight: 500;
+  text-align: center;
+  line-height: 18px;
+
+  z-index: 3;
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -16px; // bottom and height have to match for the border to be correctly placed
+    height: 16px; // bottom and height have to match for the border to be correctly placed
+    width: 100%;
+    ${props =>
+      props.scrolled
+        ? 'background: linear-gradient(to bottom, var(--modal-shadow-color), transparent)'
+        : ''};
+    pointer-events: none;
+  }
+
+  border-bottom: ${props =>
+    props.scrolled ? '1px solid var(--border-color)' : '1px solid var(--transparent-color)'};
+`;
+
+export enum WrapperModalWidth {
+  narrow = '350px',
+  normal = '410px',
+  wide = '500px',
+  debug = '75%',
+}
+
+const StyledModal = styled.div<{
+  $contentMaxWidth?: WrapperModalWidth;
+  $contentMinWidth?: WrapperModalWidth;
+  padding?: string;
+}>`
+  animation: fadein var(--default-duration);
+  z-index: 150;
+  max-height: 90vh;
+  max-width: ${props =>
+    props.$contentMaxWidth ? props.$contentMaxWidth : WrapperModalWidth.normal};
+  min-width: ${props =>
+    props.$contentMinWidth ? props.$contentMinWidth : WrapperModalWidth.normal};
+  box-sizing: border-box;
+  font-family: var(--font-default);
+  background-color: var(--modal-background-content-color);
+  color: var(--modal-text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 13px;
+  box-shadow: var(--modal-drop-shadow);
+
+  margin: auto auto;
+  padding: ${props =>
+    props.padding
+      ? props.padding
+      : // Note: no padding by default as it depends on what is rendered, see the ModalMap before you change something here
+        '0'};
+
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+
+  &__centered {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    // to allow new lines
+    white-space: pre-wrap;
+  }
+
+  &__text-highlight {
+    @include text-highlight(var(--primary-color));
+
+    color: var(--black-color);
+
+    font-family: var(--font-mono);
+    font-style: normal;
+    font-size: var(--font-size-xs);
+  }
+`;
+
+const StyledModalBody = styled.div<{ shouldOverflow: boolean; removeScrollbarGutter?: boolean }>`
+  ${props => (!props.removeScrollbarGutter ? 'scrollbar-gutter: stable;' : '')}
+  margin: 0;
+  font-family: var(--font-default);
+  line-height: var(--font-size-md);
+  font-size: var(--font-size-md);
+  height: 100%;
+  overflow-y: ${props => (props.shouldOverflow ? 'auto' : 'hidden')};
+  overflow-x: hidden;
+
+  .message {
+    text-align: center;
+  }
+`;
+
+const StyledTitle = styled.div<{ bigHeader?: boolean }>`
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
-  padding: 0 var(--margins-sm);
+  padding: ${props =>
+    props.bigHeader ? 'var(--margins-sm)' : 'var(--margins-xs) var(--margins-sm)'};
 `;
 
-export type SessionWrapperModalType = {
-  title?: string;
-  showHeader?: boolean;
-  onConfirm?: () => void;
-  onClose?: (event?: KeyboardEvent) => void;
-  showClose?: boolean;
-  confirmText?: string;
-  cancelText?: string;
-  showExitIcon?: boolean;
-  headerIconButtons?: Array<React.ReactNode>;
+export const ModalActionsContainer = ({
+  children,
+  maxWidth,
+  style = {},
+}: {
   children: ReactNode;
-  headerReverse?: boolean;
-  additionalClassName?: string;
+  style?: CSSProperties;
+  maxWidth?: string;
+}) => {
+  return (
+    <Flex
+      $container={true}
+      width={'100%'}
+      $justifyContent="space-evenly"
+      maxWidth={maxWidth || '300px'}
+      $alignItems="center"
+      $flexGap="var(--margins-md)"
+      height="50px"
+      style={{ justifySelf: 'center', ...style }}
+      data-testid="modal-actions-container"
+    >
+      {children}
+    </Flex>
+  );
 };
 
-export const SessionWrapperModal = (props: SessionWrapperModalType) => {
+export type SessionWrapperModalType = {
+  headerChildren: ReactNode | null;
+  children: ReactNode;
+  /**
+   * *Should* be some SessionButtons enclosed in a ModalActionsContainer
+   */
+  buttonChildren?: ReactNode;
+  $contentMaxWidth?: WrapperModalWidth;
+  $contentMinWidth?: WrapperModalWidth;
+  shouldOverflow?: boolean;
+  padding?: string;
+  classes?: string;
+  allowOutsideClick?: boolean;
+  removeScrollbarGutter?: boolean;
+  modalDataTestId?: SessionDataTestId;
+  style?: Omit<CSSProperties, 'maxWidth' | 'minWidth' | 'padding' | 'border'>;
+};
+
+/**
+ * A basic modal header with a title, an optional left button and/or exit icon.
+ * To be used as `headerChildren` prop as part of SessionWrapperModal.
+ */
+export const ModalBasicHeader = (props: {
+  title?: ReactNode;
+  showExitIcon?: boolean;
+  leftButton?: ReactNode;
+  bigHeader?: boolean;
+  modalHeaderDataTestId?: SessionDataTestId;
+}) => {
+  const { showExitIcon, leftButton, title, bigHeader, modalHeaderDataTestId } = props;
+  const htmlDirection = useHTMLDirection();
+
+  const onClose = useOnModalClose();
+  const scrolled = useIsModalScrolled();
+
+  return (
+    <StyledModalHeader
+      data-testid={modalHeaderDataTestId}
+      dir={htmlDirection}
+      $container={true}
+      $flexDirection={'row'}
+      $justifyContent={'space-between'}
+      $alignItems={'center'}
+      padding={'var(--margins-lg) var(--margins-sm)  var(--margins-sm) var(--margins-lg)'}
+      bigHeader={bigHeader}
+      scrolled={scrolled}
+    >
+      <Flex
+        $container={true}
+        $flexDirection={'row'}
+        $alignItems={'center'}
+        padding={'0'}
+        margin={'0'}
+      >
+        {/* Note: add a spacer if no left button is set but we have an exit icon */}
+        {leftButton ? leftButton : showExitIcon ? <SpacerXL /> : null}
+      </Flex>
+      <StyledTitle
+        bigHeader={bigHeader}
+        tabIndex={!showExitIcon && !leftButton ? 0 : undefined}
+        data-testid="modal-heading"
+      >
+        {title}
+      </StyledTitle>
+      <Flex
+        $container={true}
+        $flexDirection={'row'}
+        $alignItems={'center'}
+        padding={'0'}
+        margin={'0'}
+      >
+        {showExitIcon ? (
+          <SessionLucideIconButton
+            unicode={LUCIDE_ICONS_UNICODE.X}
+            iconSize={'medium'}
+            onClick={onClose ?? undefined}
+            padding={'0 var(--margins-xs) 0 var(--margins-xs)'}
+            margin={'0'}
+            dataTestId="modal-close-button"
+          />
+        ) : null}
+      </Flex>
+    </StyledModalHeader>
+  );
+};
+
+/**
+ * A generic modal component that is constructed from a provided header, body and some actions.
+ */
+export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?: () => void }) => {
   const {
-    title,
-    onConfirm,
+    $contentMinWidth,
+    $contentMaxWidth,
+    shouldOverflow = false,
+    padding,
+    classes,
+    allowOutsideClick,
+    modalDataTestId,
+    style,
+    removeScrollbarGutter,
     onClose,
-    showHeader = true,
-    showClose = false,
-    confirmText,
-    cancelText,
-    showExitIcon,
-    headerIconButtons,
-    headerReverse,
-    additionalClassName,
   } = props;
+
+  const [scrolled, setScrolled] = useState(false);
 
   useKey(
     'Esc',
-    event => {
-      props.onClose?.(event);
+    _event => {
+      onClose?.();
     },
     undefined,
-    [props.onClose]
+    [onClose]
   );
 
   useKey(
     'Escape',
-    event => {
-      props.onClose?.(event);
+    _event => {
+      onClose?.();
     },
     undefined,
-    [props.onClose]
+    [onClose]
   );
 
   const modalRef = useRef<HTMLDivElement>(null);
 
   const handleClick = (e: any) => {
     if (!modalRef.current?.contains(e.target)) {
-      props.onClose?.();
+      onClose?.();
     }
   };
 
+  const handleScroll = (e: any) => {
+    const { scrollTop } = e.target;
+    setScrolled(!!scrollTop);
+  };
+
   return (
-    <SessionFocusTrap>
-      <StyledRootDialog
-        shouldOverflow={true}
-        className={clsx('loki-dialog modal', additionalClassName || null)}
-        onClick={handleClick}
-        role="dialog"
-      >
-        <div className="session-confirm-wrapper">
-          <div ref={modalRef} className="session-modal">
-            {showHeader ? (
-              <Flex
-                $container={true}
-                $flexDirection={headerReverse ? 'row-reverse' : 'row'}
-                $justifyContent={'space-between'}
-                $alignItems={'center'}
-                padding={'var(--margins-lg)'}
-                className={'session-modal__header'}
+    <AnimatePresence>
+      <SessionFocusTrap allowOutsideClick={allowOutsideClick}>
+        <IsModalScrolledContext.Provider value={scrolled}>
+          <OnModalCloseContext.Provider value={onClose ?? null}>
+            <StyledRootDialog
+              shouldOverflow={shouldOverflow}
+              className={clsx('modal', classes)}
+              onMouseDown={handleClick}
+              role="dialog"
+              data-testid={modalDataTestId}
+            >
+              <StyledModal
+                ref={modalRef}
+                $contentMaxWidth={$contentMaxWidth}
+                $contentMinWidth={$contentMinWidth}
+                padding={padding}
+                style={style}
               >
-                <Flex
-                  $container={true}
-                  $flexDirection={headerReverse ? 'row-reverse' : 'row'}
-                  $alignItems={'center'}
-                  padding={'0'}
-                  margin={'0'}
-                  className={'session-modal__header__close'}
-                >
-                  {showExitIcon ? (
-                    <SessionLucideIconButton
-                      unicode={LUCIDE_ICONS_UNICODE.X}
-                      iconSize="medium"
-                      onClick={() => {
-                        props.onClose?.();
-                      }}
-                      padding={'5px'}
-                      margin={'0'}
-                      dataTestId="modal-close-button"
-                    />
-                  ) : null}
-                  {headerIconButtons?.length
-                    ? headerIconButtons.map((_, index) => {
-                        const offset = showExitIcon
-                          ? headerIconButtons.length - 2
-                          : headerIconButtons.length - 1;
-                        if (index > offset) {
-                          return null;
-                        }
-                        return <SpacerXL key={`session-modal__header_space-${index}`} />;
-                      })
-                    : null}
-                </Flex>
-                <StyledTitle className="session-modal__header__title" data-testid="modal-heading">
-                  {title}
-                </StyledTitle>
-                <Flex
-                  $container={true}
-                  $flexDirection={headerReverse ? 'row-reverse' : 'row'}
-                  $alignItems={'center'}
-                  padding={'0'}
-                  margin={'0'}
-                >
-                  {headerIconButtons?.length ? (
-                    headerIconButtons
-                  ) : showExitIcon ? (
-                    <SpacerXL />
-                  ) : null}
-                </Flex>
-              </Flex>
-            ) : null}
+                {props.headerChildren ? props.headerChildren : null}
 
-            <div className="session-modal__body">
-              <div className="session-modal__centered">
-                {props.children}
-
-                <div className="session-modal__button-group">
-                  {onConfirm ? (
-                    <SessionButton buttonType={SessionButtonType.Simple} onClick={props.onConfirm}>
-                      {confirmText || window.i18n('okay')}
-                    </SessionButton>
-                  ) : null}
-                  {onClose && showClose ? (
-                    <SessionButton
-                      buttonType={SessionButtonType.Simple}
-                      buttonColor={SessionButtonColor.Danger}
-                      onClick={props.onClose}
-                    >
-                      {cancelText || window.i18n('close')}
-                    </SessionButton>
-                  ) : null}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </StyledRootDialog>
-    </SessionFocusTrap>
+                <StyledModalBody
+                  onScroll={handleScroll}
+                  shouldOverflow={shouldOverflow}
+                  removeScrollbarGutter={removeScrollbarGutter}
+                >
+                  <Flex
+                    $container={true}
+                    $alignItems="center"
+                    $flexDirection="column"
+                    paddingInline="var(--margins-lg)" // add the padding here so that the rest of the modal isn't affected (including buttonChildren/ModalHeader)
+                  >
+                    {props.children}
+                  </Flex>
+                  {props.buttonChildren ? props.buttonChildren : <SpacerLG />}
+                </StyledModalBody>
+              </StyledModal>
+            </StyledRootDialog>
+          </OnModalCloseContext.Provider>
+        </IsModalScrolledContext.Provider>
+      </SessionFocusTrap>
+    </AnimatePresence>
   );
 };

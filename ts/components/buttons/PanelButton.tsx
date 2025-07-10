@@ -30,7 +30,7 @@ const StyledRoundedPanelButtonGroup = styled.div`
   border-radius: 16px;
   // Note: we need no padding here so we can change the bg color on hover
   padding: 0;
-  margin: 0 var(--margins-xs);
+  margin-inline: var(--margins-sm);
   width: -webkit-fill-available;
 `;
 

@@ -19,10 +19,16 @@ import {
 import { Flex } from '../basic/Flex';
 
 import { Snode } from '../../data/types';
-import { SessionWrapperModal } from '../SessionWrapperModal';
 import { SessionSpinner } from '../loading';
 import { getCrowdinLocale } from '../../util/i18n/shared';
 import { localize } from '../../localization/localeTools';
+import {
+  ModalBasicHeader,
+  ModalActionsContainer,
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
+import { SessionButton, SessionButtonType } from '../basic/SessionButton';
+import { ModalDescription } from './shared/ModalDescriptionContainer';
 
 type StatusLightType = {
   glowing?: boolean;
@@ -42,12 +48,6 @@ const StyledOnionNodeList = styled.div`
   align-items: center;
   min-width: 10vw;
   position: relative;
-`;
-
-const StyledOnionDescription = styled.p`
-  min-width: 400px;
-  width: 0;
-  line-height: 1.3333;
 `;
 
 const StyledVerticalLine = styled.div`
@@ -134,7 +134,10 @@ const OnionPathModalInner = () => {
 
   return (
     <>
-      <StyledOnionDescription>{window.i18n('onionRoutingPathDescription')}</StyledOnionDescription>
+      <ModalDescription
+        dataTestId="modal-description"
+        localizerProps={{ token: 'onionRoutingPathDescription' }}
+      />
       <StyledOnionNodeList>
         <Flex $container={true}>
           <StyledLightsContainer>
@@ -155,7 +158,7 @@ const OnionPathModalInner = () => {
                 countryNamesAsAny?.[locale] || // try to find the country name based on the user local first
                 // eslint-disable-next-line dot-notation
                 countryNamesAsAny?.['en'] || // if not found, fallback to the country in english
-                window.i18n('onionRoutingPathUnknownCountry');
+                localize('onionRoutingPathUnknownCountry').toString();
 
               return (
                 <OnionCountryDisplay
@@ -238,7 +241,7 @@ function OnionPathDot({
         filter: glowing
           ? `drop-shadow(0px 0px 4px ${iconColor})`
           : `drop-shadow(0px 0px 6px ${iconColor})`,
-        scale: glowing ? '1.1' : '1',
+        scale: glowing ? '1.3' : '1',
       }}
     >
       <path fill={iconColor} d="M 0, 50a 50,50 0 1,1 100,0a 50,50 0 1,1 -100,0"></path>
@@ -272,18 +275,24 @@ export const ActionPanelOnionStatusLight = (props: { handleClick: () => void; id
 };
 
 export const OnionPathModal = () => {
-  const onConfirm = () => {
-    void shell.openExternal('https://getsession.org/faq/#onion-routing');
-  };
   const dispatch = useDispatch();
   return (
     <SessionWrapperModal
-      title={window.i18n('onionRoutingPath')}
-      confirmText={window.i18n('learnMore')}
-      cancelText={window.i18n('cancel')}
-      onConfirm={onConfirm}
       onClose={() => dispatch(onionPathModal(null))}
-      showExitIcon={true}
+      headerChildren={
+        <ModalBasicHeader title={localize('onionRoutingPath').toString()} showExitIcon={true} />
+      }
+      buttonChildren={
+        <ModalActionsContainer>
+          <SessionButton
+            text={localize('learnMore').toString()}
+            buttonType={SessionButtonType.Simple}
+            onClick={() => {
+              void shell.openExternal('https://getsession.org/faq/#onion-routing');
+            }}
+          />
+        </ModalActionsContainer>
+      }
     >
       <OnionPathModalInner />
     </SessionWrapperModal>

@@ -1,21 +1,18 @@
 import { useDispatch } from 'react-redux';
-import styled from 'styled-components';
-
-import { useRef } from 'react';
-import useAsyncFn from 'react-use/lib/useAsyncFn';
-import useMount from 'react-use/lib/useMount';
-import { ToastUtils } from '../../session/utils';
+import { useState } from 'react';
 
 import { updateEnterPasswordModal } from '../../state/ducks/modalDialog';
 import { SpacerSM } from '../basic/Text';
 
-import { useHotkey } from '../../hooks/useHotkey';
-import { SessionWrapperModal } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
-
-const StyledModalContainer = styled.div`
-  margin: var(--margins-md) var(--margins-sm);
-`;
+import { localize } from '../../localization/localeTools';
+import {
+  ModalBasicHeader,
+  ModalActionsContainer,
+  SessionWrapperModal,
+  WrapperModalWidth,
+} from '../SessionWrapperModal';
+import { ShowHideSessionInput } from '../inputs/SessionInput';
 
 export type EnterPasswordModalProps = {
   setPasswordValid: (value: boolean) => void;
@@ -23,43 +20,43 @@ export type EnterPasswordModalProps = {
   onClickClose?: () => void;
 };
 
+const showHideButtonAriaLabels = {
+  hide: 'Hide recovery password toggle',
+  show: 'Reveal recovery password toggle',
+} as const;
+
+const showHideButtonDataTestIds = {
+  hide: 'hide-password-input-toggle',
+  show: 'reveal-password-input-toggle',
+} as const;
+
 export const EnterPasswordModal = (props: EnterPasswordModalProps) => {
   const { setPasswordValid, onClickOk, onClickClose } = props;
-  const title = window.i18n('sessionRecoveryPassword');
+  const title = localize('sessionRecoveryPassword').toString();
 
-  const passwordInputRef = useRef<HTMLInputElement>(null);
+  const [password, setPassword] = useState('');
+  const [providedError, setProvidedError] = useState<string | undefined>(undefined);
   const dispatch = useDispatch();
 
-  const onPasswordVerified = () => {
-    onClickOk?.();
-    dispatch(updateEnterPasswordModal(null));
-  };
-
-  const [, verifyPassword] = useAsyncFn(async () => {
+  const verifyPassword = async () => {
     try {
-      const passwordValue = passwordInputRef.current?.value;
-      if (!passwordValue) {
-        ToastUtils.pushToastError(
-          'enterPasswordErrorToast',
-          window.i18n.stripped('passwordIncorrect')
-        );
+      if (!password) {
+        setProvidedError(localize('passwordIncorrect').toString());
 
         return;
       }
 
       // this throws if the password is invalid.
-      await window.onTryPassword(passwordValue);
+      await window.onTryPassword(password);
 
       setPasswordValid(true);
-      onPasswordVerified();
+      onClickOk?.();
+      dispatch(updateEnterPasswordModal(null));
     } catch (e) {
       window.log.error('window.onTryPassword failed with', e);
-      ToastUtils.pushToastError(
-        'enterPasswordErrorToast',
-        window.i18n.stripped('passwordIncorrect')
-      );
+      setProvidedError(localize('passwordIncorrect').toString());
     }
-  });
+  };
 
   const onClose = () => {
     if (onClickClose) {
@@ -68,57 +65,48 @@ export const EnterPasswordModal = (props: EnterPasswordModalProps) => {
     dispatch(updateEnterPasswordModal(null));
   };
 
-  useMount(() => {
-    if (passwordInputRef.current) {
-      passwordInputRef.current.focus();
-    }
-  });
-
-  useHotkey('Enter', (event: KeyboardEvent) => {
-    if (event.target === passwordInputRef.current) {
-      void verifyPassword();
-    }
-  });
-
   return (
     <SessionWrapperModal
-      title={title || window.i18n('passwordEnter')}
       onClose={onClose}
-      showExitIcon={true}
-    >
-      <StyledModalContainer>
-        <SpacerSM />
-
-        <div className="session-modal__input-group">
-          <input
-            type="password"
-            ref={passwordInputRef}
-            data-testid="password-input"
-            placeholder={window.i18n('passwordEnter')}
-          />
-        </div>
-
-        <SpacerSM />
-
-        <div
-          className="session-modal__button-group"
-          style={{ justifyContent: 'center', width: '100%' }}
-        >
+      headerChildren={<ModalBasicHeader title={title} showExitIcon={true} />}
+      $contentMinWidth={WrapperModalWidth.narrow}
+      buttonChildren={
+        <ModalActionsContainer>
           <SessionButton
-            text={window.i18n('done')}
+            text={localize('done').toString()}
             buttonType={SessionButtonType.Simple}
             onClick={verifyPassword}
             dataTestId="session-confirm-ok-button"
           />
           <SessionButton
-            text={window.i18n('cancel')}
+            text={localize('cancel').toString()}
             buttonType={SessionButtonType.Simple}
             buttonColor={SessionButtonColor.Danger}
             onClick={onClose}
             dataTestId="session-confirm-cancel-button"
           />
-        </div>
-      </StyledModalContainer>
+        </ModalActionsContainer>
+      }
+    >
+      <SpacerSM />
+      <ShowHideSessionInput
+        ariaLabel="password input"
+        placeholder={localize('passwordEnter').toString()}
+        value={password}
+        onValueChanged={str => {
+          setPassword(str);
+          if (providedError) {
+            setProvidedError(undefined);
+          }
+        }}
+        padding="var(--margins-sm) var(--margins-md)"
+        onEnterPressed={() => void verifyPassword()}
+        providedError={providedError}
+        errorDataTestId="error-message"
+        inputDataTestId="password-input"
+        showHideButtonAriaLabels={showHideButtonAriaLabels}
+        showHideButtonDataTestIds={showHideButtonDataTestIds}
+      />
     </SessionWrapperModal>
   );
 };

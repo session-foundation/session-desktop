@@ -23,15 +23,16 @@ import { Flex } from '../basic/Flex';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { ContactName } from '../conversation/ContactName';
 import { MessageReactions } from '../conversation/message/message-content/MessageReactions';
-import { SessionWrapperModal } from '../SessionWrapperModal';
 import { findAndFormatContact } from '../../models/message';
 import { Localizer } from '../basic/Localizer';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { SessionWrapperModal } from '../SessionWrapperModal';
+import { localize } from '../../localization/localeTools';
 import { useWeAreCommunityAdminOrModerator } from '../../state/selectors/conversations';
 
 const StyledReactListContainer = styled(Flex)`
-  width: 376px;
+  width: 100%;
 `;
 
 const StyledReactionsContainer = styled.div`
@@ -150,7 +151,7 @@ const ReactionSenders = (props: ReactionSendersProps) => {
               }}
             />
             {sender === me ? (
-              window.i18n('you')
+              localize('you').toString()
             ) : (
               <StyledContactContainer>
                 <ContactName
@@ -322,7 +323,6 @@ export const ReactListModal = (props: Props) => {
   };
 
   const handleClearReactions = () => {
-    handleClose();
     dispatch(
       updateReactClearAllModal({
         reaction: currentReact,
@@ -332,11 +332,7 @@ export const ReactListModal = (props: Props) => {
   };
 
   return (
-    <SessionWrapperModal
-      additionalClassName={'reaction-list-modal no-body-padding'}
-      showHeader={false}
-      onClose={handleClose}
-    >
+    <SessionWrapperModal onClose={handleClose} headerChildren={null}>
       <StyledReactListContainer
         $container={true}
         $flexDirection={'column'}
@@ -376,7 +372,7 @@ export const ReactListModal = (props: Props) => {
               </p>
               {weAreCommunityAdminOrModerator && (
                 <SessionButton
-                  text={window.i18n('clearAll')}
+                  text={localize('clearAll').toString()}
                   buttonColor={SessionButtonColor.Danger}
                   buttonType={SessionButtonType.Simple}
                   onClick={handleClearReactions}

@@ -29,10 +29,6 @@ const StyledFieldSet = styled.fieldset`
   margin-top: var(--margins-sm);
 
   min-width: 300px; // so it doesn't look too weird on the modal (which is 410px wide)
-
-  & > div {
-    padding: var(--margins-md) 7px;
-  }
 `;
 
 export const SessionRadioGroup = (props: Props) => {

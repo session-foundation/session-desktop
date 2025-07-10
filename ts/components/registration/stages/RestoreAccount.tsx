@@ -46,8 +46,7 @@ import { BackButtonWithinContainer } from '../components/BackButton';
 import { useRecoveryProgressEffect } from '../hooks';
 import { localize } from '../../../localization/localeTools';
 import { sanitizeDisplayNameOrToast } from '../utils';
-import { SimpleSessionInput } from '../../inputs/SessionInput';
-import { ShowHideButton } from '../../inputs/ShowHidePasswordButton';
+import { ShowHideSessionInput, SimpleSessionInput } from '../../inputs/SessionInput';
 
 type AccountRestoreDetails = {
   recoveryPassword: string;
@@ -130,48 +129,28 @@ const showHideButtonDataTestIds = {
   show: 'reveal-recovery-phrase-toggle',
 } as const;
 
-const RecoveryPhraseInput = ({
-  hasError,
-  onEnterPressed,
-}: {
-  hasError: boolean;
-  onEnterPressed: () => Promise<void>;
-}) => {
+const RecoveryPhraseInput = ({ onEnterPressed }: { onEnterPressed: () => Promise<void> }) => {
   const dispatch = useDispatch();
   const recoveryPassword = useRecoveryPassword();
   const recoveryPasswordError = useRecoveryPasswordError();
 
-  const [forceShow, setForceShow] = useState(false);
   return (
-    <SimpleSessionInput
+    <ShowHideSessionInput
       ariaLabel="Recovery password input"
-      autoFocus={true}
-      type={forceShow ? 'text' : 'password'}
-      placeholder={window.i18n('recoveryPasswordEnter')}
+      placeholder={localize('recoveryPasswordEnter').toString()}
       value={recoveryPassword}
       onValueChanged={(seed: string) => {
         dispatch(setRecoveryPassword(seed));
         dispatch(
-          setRecoveryPasswordError(!seed ? window.i18n('recoveryPasswordEnter') : undefined)
+          setRecoveryPasswordError(!seed ? localize('recoveryPasswordEnter').toString() : undefined)
         );
       }}
       onEnterPressed={() => void onEnterPressed()}
       providedError={recoveryPasswordError}
       errorDataTestId="error-message"
       inputDataTestId="recovery-phrase-input"
-      buttonEnd={
-        showHideButtonDataTestIds ? (
-          <ShowHideButton
-            forceShow={forceShow}
-            toggleForceShow={() => {
-              setForceShow(!forceShow);
-            }}
-            hasError={hasError}
-            ariaLabels={showHideButtonAriaLabels}
-            dataTestIds={showHideButtonDataTestIds}
-          />
-        ) : undefined
-      }
+      showHideButtonAriaLabels={showHideButtonAriaLabels}
+      showHideButtonDataTestIds={showHideButtonDataTestIds}
     />
   );
 };
@@ -219,11 +198,17 @@ export const RestoreAccount = () => {
       }
 
       if (e instanceof NotEnoughWordsError) {
-        dispatch(setRecoveryPasswordError(window.i18n('recoveryPasswordErrorMessageShort')));
+        dispatch(
+          setRecoveryPasswordError(localize('recoveryPasswordErrorMessageShort').toString())
+        );
       } else if (e instanceof InvalidWordsError) {
-        dispatch(setRecoveryPasswordError(window.i18n('recoveryPasswordErrorMessageIncorrect')));
+        dispatch(
+          setRecoveryPasswordError(localize('recoveryPasswordErrorMessageIncorrect').toString())
+        );
       } else {
-        dispatch(setRecoveryPasswordError(window.i18n('recoveryPasswordErrorMessageGeneric')));
+        dispatch(
+          setRecoveryPasswordError(localize('recoveryPasswordErrorMessageGeneric').toString())
+        );
       }
       dispatch(setAccountRestorationStep(AccountRestoration.RecoveryPassword));
     }
@@ -273,7 +258,7 @@ export const RestoreAccount = () => {
 
   return (
     <BackButtonWithinContainer
-      margin={'3px 0 0 -36px'}
+      margin={'6px 0 0 -36px'}
       shouldQuitOnClick={step !== AccountRestoration.RecoveryPassword}
       quitI18nMessageArgs={{ token: 'onboardingBackLoadAccount' }}
       onQuitVisible={() => {
@@ -316,7 +301,7 @@ export const RestoreAccount = () => {
         {step === AccountRestoration.RecoveryPassword ? (
           <>
             <Flex $container={true} width={'100%'} $alignItems="center">
-              <OnboardHeading>{window.i18n('sessionRecoveryPassword')}</OnboardHeading>
+              <OnboardHeading>{localize('sessionRecoveryPassword')}</OnboardHeading>
               <SessionIcon
                 iconType="recoveryPasswordOutline"
                 iconSize="medium"
@@ -326,13 +311,10 @@ export const RestoreAccount = () => {
             </Flex>
             <SpacerSM />
             <OnboardDescription>
-              {window.i18n('recoveryPasswordRestoreDescription')}
+              {localize('recoveryPasswordRestoreDescription')}
             </OnboardDescription>
             <SpacerLG />
-            <RecoveryPhraseInput
-              hasError={!!recoveryPasswordError}
-              onEnterPressed={recoverAndFetchDisplayName}
-            />
+            <RecoveryPhraseInput onEnterPressed={recoverAndFetchDisplayName} />
             <SpacerLG />
             <ContinueButton
               onClick={recoverAndFetchDisplayName}
@@ -341,9 +323,9 @@ export const RestoreAccount = () => {
           </>
         ) : step === AccountRestoration.DisplayName ? (
           <Flex $container={true} width="100%" $flexDirection="column" $alignItems="flex-start">
-            <OnboardHeading>{window.i18n('displayNameNew')}</OnboardHeading>
+            <OnboardHeading>{localize('displayNameNew')}</OnboardHeading>
             <SpacerSM />
-            <OnboardDescription>{window.i18n('displayNameErrorNew')}</OnboardDescription>
+            <OnboardDescription>{localize('displayNameErrorNew')}</OnboardDescription>
             <SpacerLG />
             <SimpleSessionInput
               ariaLabel={localize('displayNameEnter').toString()}
@@ -376,8 +358,8 @@ export const RestoreAccount = () => {
             }
             progress={progress}
             margin={'0'}
-            title={window.i18n('waitOneMoment')}
-            subtitle={window.i18n('loadAccountProgressMessage')}
+            title={localize('waitOneMoment').toString()}
+            subtitle={localize('loadAccountProgressMessage').toString()}
             showPercentage={true}
           />
         )}

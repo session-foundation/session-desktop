@@ -5,9 +5,7 @@ import { ToastUtils, UserUtils } from '../../session/utils';
 import { editProfileModal, updateEditProfilePictureModal } from '../../state/ducks/modalDialog';
 import type { EditProfilePictureModalProps } from '../../types/ReduxTypes';
 import { pickFileForAvatar } from '../../types/attachments/VisualAttachment';
-import { SessionWrapperModal } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
-import { SpacerLG } from '../basic/Text';
 import { SessionSpinner } from '../loading';
 import { ProfileAvatar } from './edit-profile/components';
 import { PlusAvatarButton } from '../buttons/PlusAvatarButton';
@@ -28,6 +26,11 @@ import { useOurAvatarIsUploading } from '../../state/selectors/user';
 import { useAvatarOfRoomIsUploading } from '../../state/selectors/sogsRoomInfo';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import {
+  ModalBasicHeader,
+  ModalActionsContainer,
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
@@ -48,7 +51,7 @@ const UploadImageButton = () => {
         <SessionLucideIconButton
           unicode={LUCIDE_ICONS_UNICODE.IMAGE}
           iconSize={'huge2'}
-          margin="13px 0 0 0"
+          margin="0"
         />
       </StyledUploadButton>
       <PlusAvatarButton dataTestId="image-upload-section" />
@@ -174,13 +177,38 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
     void handleAvatarClick();
   };
 
+  const loading = ourAvatarIsUploading || groupAvatarChangePending || sogsAvatarIsUploading;
+
   return (
     <SessionWrapperModal
-      title={localize('profileDisplayPictureSet').toString()}
       onClose={closeDialog}
-      showHeader={true}
-      headerReverse={true}
-      showExitIcon={true}
+      headerChildren={
+        <ModalBasicHeader
+          title={localize('profileDisplayPictureSet').toString()}
+          showExitIcon={true}
+        />
+      }
+      buttonChildren={
+        <ModalActionsContainer>
+          <SessionButton
+            text={localize('save').toString()}
+            buttonType={SessionButtonType.Simple}
+            onClick={handleUpload}
+            disabled={newAvatarObjectUrl === avatarPath || loading}
+            dataTestId="save-button-profile-update"
+          />
+          {/* we cannot remove avatars from communities, only change them */}
+          {!isCommunity ? (
+            <SessionButton
+              text={localize('remove').toString()}
+              buttonColor={SessionButtonColor.Danger}
+              buttonType={SessionButtonType.Simple}
+              onClick={handleRemove}
+              disabled={!avatarPath || loading}
+            />
+          ) : null}
+        </ModalActionsContainer>
+      }
     >
       <div
         className="avatar-center"
@@ -202,33 +230,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
           )}
         </StyledAvatarContainer>
       </div>
-
-      {ourAvatarIsUploading || groupAvatarChangePending || sogsAvatarIsUploading ? (
-        <SessionSpinner loading={true} />
-      ) : (
-        <>
-          <SpacerLG />
-          <div className="session-modal__button-group">
-            <SessionButton
-              text={localize('save').toString()}
-              buttonType={SessionButtonType.Simple}
-              onClick={handleUpload}
-              disabled={newAvatarObjectUrl === avatarPath}
-              dataTestId="save-button-profile-update"
-            />
-            {/* we cannot remove avatars from communities, only change them */}
-            {!isCommunity ? (
-              <SessionButton
-                text={localize('remove').toString()}
-                buttonColor={SessionButtonColor.Danger}
-                buttonType={SessionButtonType.Simple}
-                onClick={handleRemove}
-                disabled={!avatarPath}
-              />
-            ) : null}
-          </div>
-        </>
-      )}
+      <SessionSpinner loading={loading} />
     </SessionWrapperModal>
   );
 };

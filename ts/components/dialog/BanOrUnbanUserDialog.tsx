@@ -15,11 +15,15 @@ import { BanType, updateBanOrUnbanUserModal } from '../../state/ducks/modalDialo
 import { Flex } from '../basic/Flex';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionSpinner } from '../loading';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import {
+  ModalBasicHeader,
+  ModalActionsContainer,
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
 import { localize } from '../../localization/localeTools';
 import { SimpleSessionInput } from '../inputs/SessionInput';
-import { I18nSubText } from '../basic/I18nSubText';
 import { SpacerSM } from '../basic/Text';
+import { ModalDescription } from './shared/ModalDescriptionContainer';
 
 async function banOrUnBanUserCall(
   convo: ConversationModel,
@@ -119,11 +123,11 @@ export const BanOrUnBanUserDialog = (props: {
   const buttonText = isBan ? localize('banUser').toString() : localize('banUnbanUser').toString();
 
   return (
-    <SessionWrapperModal2
-      title={title}
+    <SessionWrapperModal
+      headerChildren={<ModalBasicHeader title={title} />}
       onClose={onClose}
       buttonChildren={
-        <ButtonChildrenContainer>
+        <ModalActionsContainer>
           <SessionButton
             buttonType={SessionButtonType.Simple}
             onClick={banOrUnBanUser}
@@ -155,14 +159,13 @@ export const BanOrUnBanUserDialog = (props: {
               dataTestId="unban-user-cancel-button"
             />
           )}
-        </ButtonChildrenContainer>
+        </ModalActionsContainer>
       }
     >
       <Flex $container={true} $flexDirection="column" $alignItems="center" width="100%">
-        <I18nSubText
+        <ModalDescription
           dataTestId="modal-description"
           localizerProps={{ token: isBan ? 'banUserDescription' : 'banUnbanUserDescription' }}
-          style={{ textAlign: 'center' }}
         />
         <SimpleSessionInput
           inputRef={inputRef}
@@ -180,6 +183,6 @@ export const BanOrUnBanUserDialog = (props: {
         <SessionSpinner loading={inProgress} />
         <SpacerSM />
       </Flex>
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 };

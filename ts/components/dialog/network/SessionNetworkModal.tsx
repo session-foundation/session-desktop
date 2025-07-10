@@ -1,7 +1,6 @@
 import { useDispatch } from 'react-redux';
-import { AnimatePresence } from 'framer-motion';
 import { updateSessionNetworkModal } from '../../../state/ducks/modalDialog';
-import { SessionWrapperModal2 } from '../../SessionWrapperModal2';
+import { ModalBasicHeader, SessionWrapperModal } from '../../SessionWrapperModal';
 import { LOCALE_DEFAULTS } from '../../../localization/constants';
 import { sectionActions } from '../../../state/ducks/section';
 import { StakeSection } from './sections/StakeSection';
@@ -53,30 +52,31 @@ export function SessionNetworkModal() {
   const loading = infoLoading || isFakeRefreshing;
 
   return (
-    <AnimatePresence>
-      <SessionWrapperModal2
-        title={LOCALE_DEFAULTS.network_name}
-        bigHeader={true}
-        onClose={onClose}
-        contentBorder={false}
-        shouldOverflow={true}
-        showExitIcon={true}
-        headerIconButtons={[<ReloadButton loading={loading} />]}
-      >
-        <NetworkSection />
-        <StakeSection />
-        {!dataIsStale && lastRefreshedTimestamp && !loading ? (
-          <>
-            <SpacerXL />
-            <ExtraSmallText color={'var(--text-secondary-color)'} textAlignment="center">
-              <LastRefreshedText />
-            </ExtraSmallText>
-            <SpacerXS />
-          </>
-        ) : (
-          <SpacerMD />
-        )}
-      </SessionWrapperModal2>
-    </AnimatePresence>
+    <SessionWrapperModal
+      headerChildren={
+        <ModalBasicHeader
+          title={LOCALE_DEFAULTS.network_name}
+          bigHeader={true}
+          showExitIcon={true}
+          leftButton={<ReloadButton loading={loading} />}
+        />
+      }
+      onClose={onClose}
+      shouldOverflow={true}
+    >
+      <NetworkSection />
+      <StakeSection />
+      {!dataIsStale && lastRefreshedTimestamp && !loading ? (
+        <>
+          <SpacerXL />
+          <ExtraSmallText color={'var(--text-secondary-color)'} textAlignment="center">
+            <LastRefreshedText />
+          </ExtraSmallText>
+          <SpacerXS />
+        </>
+      ) : (
+        <SpacerMD />
+      )}
+    </SessionWrapperModal>
   );
 }

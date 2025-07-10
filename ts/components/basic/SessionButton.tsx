@@ -7,7 +7,6 @@ export enum SessionButtonType {
   Outline = 'outline',
   Simple = 'simple',
   Solid = 'solid',
-  Ghost = 'ghost',
 }
 
 export enum SessionButtonShape {
@@ -152,13 +151,6 @@ const StyledSolidButton = styled(StyledBaseButton)<{ isDarkTheme: boolean }>`
   }
 `;
 
-const StyledGhostButton = styled(StyledBaseButton)`
-  width: 100%;
-  height: unset;
-  min-height: unset;
-  padding: 18px 24px 22px;
-`;
-
 export type SessionButtonProps = {
   text?: string;
   ariaLabel?: string;
@@ -182,9 +174,7 @@ export const SessionButton = (props: SessionButtonProps) => {
 
   const {
     buttonType = SessionButtonType.Outline,
-    buttonShape = buttonType === SessionButtonType.Ghost
-      ? SessionButtonShape.None
-      : SessionButtonShape.Round,
+    buttonShape = SessionButtonShape.Round,
     reference,
     className,
     dataTestId,
@@ -193,7 +183,7 @@ export const SessionButton = (props: SessionButtonProps) => {
     ariaLabel,
     disabled = false,
     onClick = null,
-    fontWeight,
+    fontWeight = SessionButtonType.Simple ? 500 : undefined,
     width,
     margin,
     style,
@@ -213,9 +203,7 @@ export const SessionButton = (props: SessionButtonProps) => {
       ? StyledOutlineButton
       : buttonType === SessionButtonType.Solid
         ? StyledSolidButton
-        : buttonType === SessionButtonType.Ghost
-          ? StyledGhostButton
-          : StyledBaseButton;
+        : StyledBaseButton;
 
   return (
     <Comp

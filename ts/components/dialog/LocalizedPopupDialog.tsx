@@ -6,13 +6,13 @@ import {
   type LocalizedPopupDialogState,
   updateLocalizedPopupDialog,
 } from '../../state/ducks/modalDialog';
-import { SessionWrapperModal2 } from '../SessionWrapperModal2';
+import { ModalBasicHeader, SessionWrapperModal } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
 import { Flex } from '../basic/Flex';
 import { SpacerSM, SpacerXS } from '../basic/Text';
 import { localize } from '../../localization/localeTools';
 import { Localizer } from '../basic/Localizer';
-import { I18nSubText } from '../basic/I18nSubText';
+import { ModalDescription } from './shared/ModalDescriptionContainer';
 
 const StyledScrollDescriptionContainer = styled.div`
   max-height: 150px;
@@ -39,13 +39,14 @@ export function LocalizedPopupDialog(props: LocalizedPopupDialogState) {
   }
 
   return (
-    <SessionWrapperModal2
-      title={<Localizer {...props.title} />}
+    <SessionWrapperModal
+      headerChildren={
+        <ModalBasicHeader title={<Localizer {...props.title} />} showExitIcon={true} />
+      }
       onClose={onClose}
-      showHeader={true}
     >
       <StyledScrollDescriptionContainer>
-        <I18nSubText localizerProps={props.description} dataTestId="modal-description" />
+        <ModalDescription localizerProps={props.description} dataTestId="modal-description" />
       </StyledScrollDescriptionContainer>
       <SpacerSM />
 
@@ -59,13 +60,13 @@ export function LocalizedPopupDialog(props: LocalizedPopupDialogState) {
         <SessionButton
           buttonType={SessionButtonType.Simple}
           onClick={onClose}
-          dataTestId="modal-button-session-pro-ok"
+          dataTestId="session-confirm-ok-button"
         >
           {localize('okay')}
         </SessionButton>
       </Flex>
       <SpacerXS />
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 }
 

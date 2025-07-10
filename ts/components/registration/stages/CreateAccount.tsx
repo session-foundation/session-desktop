@@ -127,7 +127,7 @@ export const CreateAccount = () => {
 
   return (
     <BackButtonWithinContainer
-      margin={'3px 0 0 -36px'}
+      margin={'6px 0 0 -36px'}
       shouldQuitOnClick={true}
       quitI18nMessageArgs={{ token: 'onboardingBackAccountCreation' }}
       callback={() => {

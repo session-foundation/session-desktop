@@ -166,7 +166,8 @@ a {
   position: relative;
 }
 
-// overwrite sanitize.css default padding for buttons
-button {
+// overwrite sanitize.css default padding for buttons and fieldsets
+button,
+fieldset {
   padding: 0;
 }

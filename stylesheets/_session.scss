@@ -158,107 +158,6 @@ label {
   visibility: hidden;
 }
 
-.session-modal {
-  animation: fadein var(--default-duration);
-  z-index: 150;
-  min-width: 300px;
-  box-sizing: border-box;
-  max-height: 90vh;
-  max-width: calc(min(70vw, 800px));
-  font-family: var(--font-default);
-  background-color: var(--modal-background-content-color);
-  color: var(--modal-text-color);
-  border: 1px solid var(--border-color);
-  border-radius: 14px;
-  box-shadow: var(--modal-drop-shadow);
-
-  overflow: hidden;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-
-  &__header {
-    font-family: var(--font-default);
-    font-size: var(--font-size-lg);
-    font-weight: 500;
-    text-align: center;
-    line-height: 18px;
-  }
-
-  &__body {
-    padding: 0px var(--margins-lg) var(--margins-lg) var(--margins-lg);
-    font-family: var(--font-default);
-    line-height: var(--font-size-md);
-    font-size: var(--font-size-md);
-    overflow-y: auto;
-    overflow-x: hidden;
-
-    .message {
-      text-align: center;
-    }
-  }
-
-  &__centered {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    // to allow new lines
-    white-space: pre-wrap;
-  }
-
-  &__button-group {
-    display: flex;
-    justify-content: flex-end;
-
-    .session-button {
-      margin: var(--margins-xs);
-      font-weight: 500;
-    }
-
-    &__center {
-      display: flex;
-      justify-content: center;
-
-      .session-button {
-        margin: var(--margins-xs);
-      }
-    }
-  }
-
-  &__text-highlight {
-    @include text-highlight(var(--primary-color));
-
-    color: var(--black-color);
-
-    font-family: var(--font-mono);
-    font-style: normal;
-    font-size: var(--font-size-xs);
-  }
-}
-
-.session-modal__body {
-  display: flex;
-  flex-direction: column;
-}
-
-.session-confirm {
-  &-wrapper {
-    .session-modal__body .session-modal__centered {
-      text-align: center;
-    }
-  }
-
-  &-main-message {
-    font-size: var(--font-size-md);
-    line-height: 1.5;
-  }
-
-  &-sub-message {
-    text-align: center;
-    margin-top: 20px;
-  }
-}
-
 .conversation-loader {
   position: absolute;
   top: 50%;
@@ -270,38 +169,10 @@ label {
   }
 }
 
-.session-settings {
-  width: var(--main-panel-content-width);
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--background-secondary-color);
-}
-
 .messages li {
   transition: var(--default-duration) !important;
 }
 
 input {
   user-select: text;
-}
-
-.contact-selection-list {
-  display: flex;
-  flex-direction: column;
-  width: 400px;
-  max-height: 240px;
-  overflow-y: auto;
-  margin: var(--margins-sm);
-}
-
-.session-confirm-wrapper {
-  position: absolute;
-  height: 100%;
-  width: 100%;
-  display: flex;
-
-  .session-modal {
-    margin: auto auto;
-  }
 }

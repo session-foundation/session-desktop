@@ -5,16 +5,21 @@ import { useDispatch } from 'react-redux';
 import { ConvoHub } from '../../session/conversations';
 import { PubKey } from '../../session/types';
 import { ToastUtils } from '../../session/utils';
-import { Flex } from '../basic/Flex';
 
 import { useGroupAdmins, useIsPublic, useWeAreAdmin } from '../../hooks/useParamSelector';
 import { sogsV3RemoveAdmins } from '../../session/apis/open_group_api/sogsv3/sogsV3AddRemoveMods';
 import { updateRemoveModeratorsModal } from '../../state/ducks/modalDialog';
 import { MemberListItem } from '../MemberListItem';
-import { SessionWrapperModal } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionSpinner } from '../loading';
 import { Localizer } from '../basic/Localizer';
+import { StyledContactListInModal } from '../list/StyledContactList';
+import {
+  ModalBasicHeader,
+  ModalActionsContainer,
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
+import { localize } from '../../localization/localeTools';
 
 type Props = {
   conversationId: string;
@@ -29,7 +34,8 @@ async function removeMods(convoId: string, modsToRemove: Array<string>) {
   const modsToRemovePubkey = compact(modsToRemove.map(m => PubKey.from(m)));
   const modsToRemoveNames = modsToRemovePubkey.map(
     m =>
-      ConvoHub.use().get(m.key)?.getNicknameOrRealUsernameOrPlaceholder() || window.i18n('unknown')
+      ConvoHub.use().get(m.key)?.getNicknameOrRealUsernameOrPlaceholder() ||
+      localize('unknown').toString()
   );
   try {
     const convo = ConvoHub.use().get(convoId);
@@ -57,7 +63,6 @@ export const RemoveModeratorsDialog = (props: Props) => {
   const { conversationId } = props;
   const [removingInProgress, setRemovingInProgress] = useState(false);
   const [modsToRemove, setModsToRemove] = useState<Array<string>>([]);
-  const { i18n } = window;
   const dispatch = useDispatch();
   const closeDialog = () => {
     dispatch(updateRemoveModeratorsModal(null));
@@ -86,52 +91,54 @@ export const RemoveModeratorsDialog = (props: Props) => {
   const hasMods = existingMods.length !== 0;
 
   return (
-    <SessionWrapperModal title={i18n('adminRemove')} onClose={closeDialog}>
-      <Flex $container={true} $flexDirection="column" $alignItems="center">
-        {hasMods ? (
-          <div className="contact-selection-list">
-            {existingMods.map(modId => (
-              <MemberListItem
-                key={`mod-list-${modId}`}
-                pubkey={modId}
-                isSelected={modsToRemove.some(m => m === modId)}
-                onSelect={(selectedMember: string) => {
-                  const updatedList = [...modsToRemove, selectedMember];
-                  setModsToRemove(updatedList);
-                }}
-                onUnselect={(selectedMember: string) => {
-                  const updatedList = modsToRemove.filter(m => m !== selectedMember);
-                  setModsToRemove(updatedList);
-                }}
-                disableBg={true}
-                maxNameWidth="100%"
-              />
-            ))}
-          </div>
-        ) : (
-          <p>
-            <Localizer token="adminRemoveCommunityNone" />
-          </p>
-        )}
-
-        <div className="session-modal__button-group">
+    <SessionWrapperModal
+      headerChildren={<ModalBasicHeader title={localize('adminRemove').toString()} />}
+      onClose={closeDialog}
+      buttonChildren={
+        <ModalActionsContainer>
           <SessionButton
             buttonType={SessionButtonType.Simple}
             onClick={removeModsCall}
             disabled={removingInProgress}
-            text={i18n('okay')}
+            text={localize('remove').toString()}
           />
           <SessionButton
             buttonType={SessionButtonType.Simple}
             buttonColor={SessionButtonColor.Danger}
             onClick={closeDialog}
             disabled={removingInProgress}
-            text={i18n('cancel')}
+            text={localize('cancel').toString()}
           />
-        </div>
+        </ModalActionsContainer>
+      }
+    >
+      {hasMods ? (
+        <StyledContactListInModal>
+          {existingMods.map(modId => (
+            <MemberListItem
+              key={`mod-list-${modId}`}
+              pubkey={modId}
+              isSelected={modsToRemove.some(m => m === modId)}
+              onSelect={(selectedMember: string) => {
+                const updatedList = [...modsToRemove, selectedMember];
+                setModsToRemove(updatedList);
+              }}
+              onUnselect={(selectedMember: string) => {
+                const updatedList = modsToRemove.filter(m => m !== selectedMember);
+                setModsToRemove(updatedList);
+              }}
+              disableBg={true}
+              maxNameWidth="100%"
+            />
+          ))}
+        </StyledContactListInModal>
+      ) : (
+        <p>
+          <Localizer token="adminRemoveCommunityNone" />
+        </p>
+      )}
 
-        <SessionSpinner loading={removingInProgress} />
-      </Flex>
+      <SessionSpinner loading={removingInProgress} />
     </SessionWrapperModal>
   );
 };

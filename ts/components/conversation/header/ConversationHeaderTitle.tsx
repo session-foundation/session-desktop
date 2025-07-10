@@ -168,7 +168,9 @@ export const ConversationHeaderTitle = ({ showSubtitle }: { showSubtitle: boolea
         <div className="module-conversation-header__title">
           <span
             className={className}
-            onClick={onHeaderClick}
+            onClick={() => {
+              showConvoSettingsCb?.({ settingsModalPage: 'default' });
+            }}
             role="button"
             data-testid="header-conversation-name"
           >

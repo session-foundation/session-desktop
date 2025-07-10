@@ -17,14 +17,16 @@ import { Storage } from '../../../util/storage';
 import { SessionSettingButtonItem, SessionToggleWithDescription } from '../SessionSettingListItem';
 import { displayPasswordModal } from '../SessionSettings';
 import { ConversationTypeEnum } from '../../../models/types';
+import { localize } from '../../../localization/localeTools';
 
 async function toggleLinkPreviews(isToggleOn: boolean, forceUpdate: () => void) {
   if (!isToggleOn) {
     window.inboxStore?.dispatch(
       updateConfirmModal({
-        title: window.i18n('linkPreviewsSend'),
+        title: localize('linkPreviewsSend').toString(),
         i18nMessage: { token: 'linkPreviewsSendModalDescription' },
         okTheme: SessionButtonColor.Danger,
+        okText: localize('theContinue').toString(),
         onClickOk: async () => {
           const newValue = !isToggleOn;
           await window.setSettingValue(SettingsKey.settingsLinkPreview, newValue);
@@ -67,8 +69,8 @@ export const SettingsCategoryPrivacy = (props: {
           await window.setSettingValue(SettingsKey.settingsReadReceipt, !old);
           forceUpdate();
         }}
-        title={window.i18n('readReceipts')}
-        description={window.i18n('readReceiptsDescription')}
+        title={localize('readReceipts').toString()}
+        description={localize('readReceiptsDescription').toString()}
         active={window.getSettingValue(SettingsKey.settingsReadReceipt)}
         dataTestId="enable-read-receipts"
       />
@@ -78,8 +80,8 @@ export const SettingsCategoryPrivacy = (props: {
           await window.setSettingValue(SettingsKey.settingsTypingIndicator, !old);
           forceUpdate();
         }}
-        title={window.i18n('typingIndicators')}
-        description={window.i18n('typingIndicatorsDescription')}
+        title={localize('typingIndicators').toString()}
+        description={localize('typingIndicatorsDescription').toString()}
         active={Boolean(window.getSettingValue(SettingsKey.settingsTypingIndicator))}
         childrenDescription={<TypingBubbleItem />}
       />
@@ -87,8 +89,8 @@ export const SettingsCategoryPrivacy = (props: {
         onClickToggle={() => {
           void toggleLinkPreviews(isLinkPreviewsOn, forceUpdate);
         }}
-        title={window.i18n('linkPreviewsSend')}
-        description={window.i18n('linkPreviewsDescription')}
+        title={localize('linkPreviewsSend').toString()}
+        description={localize('linkPreviewsDescription').toString()}
         active={isLinkPreviewsOn}
       />
       <SessionToggleWithDescription
@@ -100,44 +102,44 @@ export const SettingsCategoryPrivacy = (props: {
           );
           forceUpdate();
         }}
-        title={window.i18n('messageRequestsCommunities')}
-        description={window.i18n('messageRequestsCommunitiesDescription')}
+        title={localize('messageRequestsCommunities').toString()}
+        description={localize('messageRequestsCommunitiesDescription').toString()}
         active={areBlindedRequestsEnabled}
       />
 
       {!props.hasPassword ? (
         <SessionSettingButtonItem
-          title={window.i18n('lockApp')}
-          description={window.i18n('passwordDescription')}
+          title={localize('lockApp').toString()}
+          description={localize('passwordDescription').toString()}
           onClick={() => {
             displayPasswordModal('set', props.onPasswordUpdated);
             forceUpdate();
           }}
-          buttonText={window.i18n('passwordSet')}
+          buttonText={localize('passwordSet').toString()}
           dataTestId={'set-password-button'}
         />
       ) : (
         <>
           {/* We have a password, let's show the 'change' and 'remove' password buttons */}
           <SessionSettingButtonItem
-            title={window.i18n('passwordChange')}
-            description={window.i18n('passwordChangeDescription')}
+            title={localize('passwordChange').toString()}
+            description={localize('passwordChangeDescription').toString()}
             onClick={() => {
               displayPasswordModal('change', props.onPasswordUpdated);
               forceUpdate();
             }}
-            buttonText={window.i18n('passwordChange')}
+            buttonText={localize('passwordChange').toString()}
             dataTestId="change-password-settings-button"
           />
           <SessionSettingButtonItem
-            title={window.i18n('passwordRemove')}
-            description={window.i18n('passwordRemoveDescription')}
+            title={localize('passwordRemove').toString()}
+            description={localize('passwordRemoveDescription').toString()}
             onClick={() => {
               displayPasswordModal('remove', props.onPasswordUpdated);
               forceUpdate();
             }}
             buttonColor={SessionButtonColor.Danger}
-            buttonText={window.i18n('passwordRemove')}
+            buttonText={localize('passwordRemove').toString()}
             dataTestId="remove-password-settings-button"
           />
         </>

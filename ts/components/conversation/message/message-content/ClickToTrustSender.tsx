@@ -116,7 +116,8 @@ export const ClickToTrustSender = (props: { messageId: string }) => {
         onClickClose: () => {
           window.inboxStore?.dispatch(updateConfirmModal(null));
         },
-        okText: localize('download').toString(),
+        okText: localize('yes').toString(),
+        cancelText: localize('no').toString(),
       })
     );
   };

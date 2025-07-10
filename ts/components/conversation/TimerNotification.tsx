@@ -93,8 +93,8 @@ function useFollowSettingsButtonClick({ messageId }: WithMessageId) {
             expirationMode,
             timespanSeconds ?? undefined
           );
+          onExit();
         },
-        showExitIcon: false,
         onClickClose: onExit,
       })
     );

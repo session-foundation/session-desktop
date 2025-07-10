@@ -1,4 +1,3 @@
-import { AnimatePresence } from 'framer-motion';
 import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 import useUpdate from 'react-use/lib/useUpdate';
@@ -14,7 +13,11 @@ import {
   OtherInfo,
   Playgrounds,
 } from './components';
-import { SessionWrapperModal2 } from '../../SessionWrapperModal2';
+import {
+  ModalBasicHeader,
+  SessionWrapperModal,
+  WrapperModalWidth,
+} from '../../SessionWrapperModal';
 import { FeatureFlags } from './FeatureFlags';
 import { ReleaseChannel } from './ReleaseChannel';
 import { useHotkey } from '../../../hooks/useHotkey';
@@ -111,25 +114,21 @@ export function DebugMenuModal() {
   });
 
   return (
-    <AnimatePresence>
-      <SessionWrapperModal2
-        title={'Debug Menu'}
-        onClose={onClose}
-        showExitIcon={true}
-        contentBorder={false}
-        $contentMaxWidth={'75%'}
-        shouldOverflow={true}
-        allowOutsideClick={false}
+    <SessionWrapperModal
+      headerChildren={<ModalBasicHeader title="Debug Menu" showExitIcon={true} />}
+      onClose={onClose}
+      $contentMaxWidth={WrapperModalWidth.debug}
+      shouldOverflow={true}
+      allowOutsideClick={false}
+    >
+      <StyledContent
+        $container={true}
+        $flexDirection="column"
+        $alignItems="flex-start"
+        padding="var(--margins-sm) 0 var(--margins-xl)"
       >
-        <StyledContent
-          $container={true}
-          $flexDirection="column"
-          $alignItems="flex-start"
-          padding="var(--margins-sm) 0 var(--margins-xl)"
-        >
-          {getPage(page, setPage)}
-        </StyledContent>
-      </SessionWrapperModal2>
-    </AnimatePresence>
+        {getPage(page, setPage)}
+      </StyledContent>
+    </SessionWrapperModal>
   );
 }

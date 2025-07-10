@@ -65,9 +65,10 @@ declare module 'react' {
     | 'update-group-info'
     | 'ban-user'
     | 'unban-user'
-    | 'ban-user-delete-all';
+    | 'ban-user-delete-all'
+    | 'modal-session-pro';
 
-  type CancelButtons = 'update-group-info' | 'add-admins' | 'unban-user';
+  type CancelButtons = 'update-group-info' | 'add-admins' | 'unban-user' | 'modal-session-pro';
 
   type ClearButtons = 'group-info-description' | 'group-info-name' | 'nickname' | 'add-admins';
 
@@ -156,6 +157,7 @@ declare module 'react' {
     | 'legacy-group-banner'
     | 'account-id'
     | 'set-nickname-remove-button'
+    | 'modal-actions-container'
 
     // generic button types
     | 'emoji-button'
@@ -255,6 +257,9 @@ declare module 'react' {
     | 'link-preview-title'
     | 'link-preview-close'
 
+    // spacers
+    | `spacer-${'xxs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl'}`
+
     // modules profile name
     | 'module-conversation__user__profile-name'
     | 'module-message-search-result__header__name__profile-name'
@@ -309,6 +314,8 @@ declare module 'react' {
     | 'your-account-id'
     | 'hide-recovery-phrase-toggle'
     | 'reveal-recovery-phrase-toggle'
+    | 'hide-password-input-toggle'
+    | 'reveal-password-input-toggle'
     | 'resend-promote-button'
     | 'continue-button'
     | 'back-button'
@@ -341,7 +348,6 @@ declare module 'react' {
     | `input-releases-${ReleaseChannels}`
     | `label-releases-${ReleaseChannels}`
     | 'tooltip-character-count'
-    | 'modal-button-session-pro-ok'
     | `${MenuOption}-menu-option`
     | `${MenuOptionDetails}-menu-option`
     | `${SetButton}-set-button`

@@ -20,7 +20,11 @@ import { SpacerMD, SpacerSM } from '../basic/Text';
 import { SessionSpinner } from '../loading';
 import { localize } from '../../localization/localeTools';
 import { SimpleSessionInput, SimpleSessionTextarea } from '../inputs/SessionInput';
-import { SessionWrapperModal2 } from '../SessionWrapperModal2';
+import {
+  ModalBasicHeader,
+  ModalActionsContainer,
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
 import { ClearInputButton } from '../inputs/ClearInputButton';
 
 function GroupAvatar({
@@ -138,9 +142,25 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
       : '';
 
   return (
-    <SessionWrapperModal2
-      title={localize('updateGroupInformation').toString()}
+    <SessionWrapperModal
+      headerChildren={<ModalBasicHeader title={localize('updateGroupInformation').toString()} />}
       onClose={closeDialog}
+      buttonChildren={
+        <ModalActionsContainer>
+          <SessionButton
+            text={localize('save').toString()}
+            onClick={onClickOK}
+            buttonType={SessionButtonType.Simple}
+            disabled={isNameChangePending || !newGroupName || !newGroupName.trim()}
+          />
+          <SessionButton
+            text={localize('cancel').toString()}
+            buttonColor={SessionButtonColor.Danger}
+            buttonType={SessionButtonType.Simple}
+            onClick={closeDialog}
+          />
+        </ModalActionsContainer>
+      }
     >
       <GroupAvatar
         conversationId={conversationId}
@@ -203,21 +223,6 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
       />
 
       <SessionSpinner loading={isNameChangePending} />
-
-      <div className="session-modal__button-group">
-        <SessionButton
-          text={localize('save').toString()}
-          onClick={onClickOK}
-          buttonType={SessionButtonType.Simple}
-          disabled={isNameChangePending || !newGroupName || !newGroupName.trim()}
-        />
-        <SessionButton
-          text={localize('cancel').toString()}
-          buttonColor={SessionButtonColor.Danger}
-          buttonType={SessionButtonType.Simple}
-          onClick={closeDialog}
-        />
-      </div>
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 }
