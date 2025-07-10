@@ -58,7 +58,6 @@ window.sessionFeatureFlags = {
   // Hooks
   useClosedGroupV2QAButtons: false, // TODO DO NOT MERGE
   useOnionRequests: true,
-  useSESH101: true,
   useTestNet: isTestNet() || isTestIntegration(),
   debugInputCommands: !isEmpty(process.env.SESSION_DEBUG),
   alwaysShowRemainingChars: false,

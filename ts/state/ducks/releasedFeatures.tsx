@@ -8,13 +8,11 @@ import { localize } from '../../localization/localeTools';
 
 export interface ReleasedFeaturesState {
   refreshedAt: number;
-  sesh101Ready: boolean;
   sesh101NotificationAt: number;
 }
 
 export const initialReleasedFeaturesState = {
   refreshedAt: Date.now(),
-  sesh101Ready: window.sessionFeatureFlags.useSESH101,
   sesh101NotificationAt: 0,
 };
 
@@ -24,11 +22,7 @@ export const initialReleasedFeaturesState = {
 const resetExperiments = createAsyncThunk(
   'releasedFeatures/resetExperiments',
   async (_, payloadCreator): Promise<void> => {
-    // reset the feature flags
-    window.sessionFeatureFlags.useSESH101 = false;
-
     // reset the redux state
-    payloadCreator.dispatch(releasedFeaturesActions.updateSesh101Ready(false));
     payloadCreator.dispatch(releasedFeaturesActions.updateSesh101NotificationAt(0));
 
     // reset the storage
@@ -57,22 +51,15 @@ const releasedFeaturesSlice = createSlice({
       const { refreshedAt } = action.payload;
 
       state.refreshedAt = refreshedAt;
-      state.sesh101Ready = window.sessionFeatureFlags.useSESH101;
 
-      if (state.sesh101Ready) {
-        state.sesh101NotificationAt = handleReleaseNotification({
-          featureName: 'useSESH101',
-          message: localize('sessionNetworkNotificationLive').toString(),
-          lastRefreshedAt: state.refreshedAt,
-          notifyAt: state.sesh101NotificationAt,
-          delayMs: 1 * DURATION.HOURS,
-        });
-      }
+      state.sesh101NotificationAt = handleReleaseNotification({
+        featureName: 'useSESH101',
+        message: localize('sessionNetworkNotificationLive').toString(),
+        lastRefreshedAt: state.refreshedAt,
+        notifyAt: state.sesh101NotificationAt,
+        delayMs: 1 * DURATION.HOURS,
+      });
 
-      return state;
-    },
-    updateSesh101Ready: (state, action: PayloadAction<boolean>) => {
-      state.sesh101Ready = action.payload;
       return state;
     },
     updateSesh101NotificationAt(state, action: PayloadAction<number>) {

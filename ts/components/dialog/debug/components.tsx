@@ -377,31 +377,29 @@ export const ExperimentalActions = ({ forceUpdate }: { forceUpdate: () => void }
         >
           Reset experiments
         </SessionButton>
-        {window.sessionFeatureFlags.useSESH101 ? (
-          <SessionButton
-            onClick={() => {
-              const notifyAt = handleReleaseNotification({
-                featureName: 'useSESH101',
-                message: localize('sessionNetworkNotificationLive').toString(),
-                lastRefreshedAt: refreshedAt,
-                notifyAt: sesh101NotificationAt,
-                delayMs: 10 * DURATION.SECONDS,
-                force: true,
-              });
-              dispatch(releasedFeaturesActions.updateSesh101NotificationAt(notifyAt));
-              setCountdown(true);
-            }}
-          >
-            Notify Sesh 101
-            <span style={{ marginInlineStart: 'var(--margins-xs)' }}>
-              {countdown
-                ? Math.floor(timeLeftMs / 1000) > 0
-                  ? `(${formatAbbreviatedExpireDoubleTimer(Math.floor(timeLeftMs / 1000))})`
-                  : '🎉'
-                : '(10s)'}
-            </span>
-          </SessionButton>
-        ) : null}
+        <SessionButton
+          onClick={() => {
+            const notifyAt = handleReleaseNotification({
+              featureName: 'useSESH101',
+              message: localize('sessionNetworkNotificationLive').toString(),
+              lastRefreshedAt: refreshedAt,
+              notifyAt: sesh101NotificationAt,
+              delayMs: 10 * DURATION.SECONDS,
+              force: true,
+            });
+            dispatch(releasedFeaturesActions.updateSesh101NotificationAt(notifyAt));
+            setCountdown(true);
+          }}
+        >
+          Notify Sesh 101
+          <span style={{ marginInlineStart: 'var(--margins-xs)' }}>
+            {countdown
+              ? Math.floor(timeLeftMs / 1000) > 0
+                ? `(${formatAbbreviatedExpireDoubleTimer(Math.floor(timeLeftMs / 1000))})`
+                : '🎉'
+              : '(10s)'}
+          </span>
+        </SessionButton>
         <SessionButton
           onClick={() => {
             dispatch(networkDataActions.fetchInfoFromSeshServer() as any);

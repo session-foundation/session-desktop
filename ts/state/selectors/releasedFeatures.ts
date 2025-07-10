@@ -7,10 +7,7 @@ export const useReleasedFeaturesRefreshedAt = (): number => {
   });
 };
 
-export function useIsSesh101Ready() {
-  const sesh101 = useSelector((state: StateType) => state.releasedFeatures.sesh101Ready);
-  return window.sessionFeatureFlags.useSESH101 || sesh101;
-}
+
 
 export function useSesh101NotificationAt() {
   const sesh101NotificationAt = useSelector(
@@ -19,12 +16,3 @@ export function useSesh101NotificationAt() {
   return sesh101NotificationAt;
 }
 
-// outside of redux
-
-export function isSesh101ReadyOutsideRedux() {
-  if (!window.inboxStore) {
-    return false;
-  }
-  const sesh101 = !!window.inboxStore?.getState()?.releasedFeatures.sesh101;
-  return window.sessionFeatureFlags.useSESH101 || sesh101;
-}

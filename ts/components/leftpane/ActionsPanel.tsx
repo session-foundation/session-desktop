@@ -58,7 +58,6 @@ import { MessageQueue } from '../../session/sending';
 import { useCheckReleasedFeatures } from '../../hooks/useCheckReleasedFeatures';
 import { useDebugMode } from '../../state/selectors/debug';
 import { networkDataActions } from '../../state/ducks/networkData';
-import { isSesh101ReadyOutsideRedux } from '../../state/selectors/releasedFeatures';
 import { searchActions } from '../../state/ducks/search';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
@@ -224,9 +223,7 @@ const doAppStartUp = async () => {
   // eslint-disable-next-line more/no-then
   void SnodePool.getFreshSwarmFor(UserUtils.getOurPubKeyStrFromCache()).then(() => {
     // trigger any other actions that need to be done after the swarm is ready
-    if (isSesh101ReadyOutsideRedux()) {
-      window.inboxStore?.dispatch(networkDataActions.fetchInfoFromSeshServer() as any);
-    }
+    window.inboxStore?.dispatch(networkDataActions.fetchInfoFromSeshServer() as any);
   }); // refresh our swarm on start to speed up the first message fetching event
   void Data.cleanupOrphanedAttachments();
 
