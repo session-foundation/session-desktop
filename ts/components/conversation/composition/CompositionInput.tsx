@@ -32,7 +32,7 @@ type ConvoSpanProps = HTMLAttributes<HTMLSpanElement> & {
 
 /**
  * Compute the HTML-based character index of the caret in `el`.
- * @param el - Html element to get the carat index for.
+ * @param el - Html element to get the caret index for.
  */
 function getHtmlIndexFromSelection(el: HTMLElement): number {
   const sel = window.getSelection();
@@ -51,8 +51,8 @@ function getHtmlIndexFromSelection(el: HTMLElement): number {
 
 /**
  * Move the caret to `index` within the HTML content of `el`.
- * @param el - Html element to set the carat for.
- * @param idx - Html index to set the carat to.
+ * @param el - Html element to set the caret for.
+ * @param idx - Html index to set the caret to.
  */
 function setCaretAtHtmlIndex(el: HTMLElement, idx: number) {
   const originalHtml = el.innerHTML;
@@ -104,11 +104,37 @@ function removeHtmlCharactersBeforeIndex(
   htmlIdx: number,
   numberOfCharactersToRemove: number
 ): { newHtml: string; newIndex: number } {
-  // TODO: handle when htmlIdx - toRemove < 0
-  const before = originalHtml.slice(0, htmlIdx - numberOfCharactersToRemove);
+  if (htmlIdx < 1 || numberOfCharactersToRemove > htmlIdx) {
+    return { newHtml: originalHtml, newIndex: 0 };
+  }
+
+  const newIndex = htmlIdx - numberOfCharactersToRemove;
+  const before = originalHtml.slice(0, newIndex);
   const after = originalHtml.slice(htmlIdx);
   const newHtml = before + after;
-  const newIndex = htmlIdx - numberOfCharactersToRemove;
+  return { newHtml, newIndex };
+}
+
+/**
+ * Remove html at a html index.
+ * @param originalHtml - String to mutate
+ * @param htmlIdx - Html index to remove from (not including the character at this index). @see {@link getHtmlIndexFromSelection}
+ * @param numberOfCharactersToRemove - Number of characters to remove before the index.
+ */
+function removeHtmlCharactersAfterIndex(
+  originalHtml: string,
+  htmlIdx: number,
+  numberOfCharactersToRemove: number
+): { newHtml: string; newIndex: number } {
+  if (htmlIdx > originalHtml.length) {
+    return { newHtml: originalHtml, newIndex: originalHtml.length };
+  }
+
+  const removeIdx = Math.min(htmlIdx + numberOfCharactersToRemove, originalHtml.length);
+  const before = originalHtml.slice(0, htmlIdx);
+  const after = originalHtml.slice(removeIdx);
+  const newHtml = before + after;
+  const newIndex = htmlIdx;
   return { newHtml, newIndex };
 }
 
@@ -164,12 +190,12 @@ function isElementNode(el: Node): el is Element {
   return el.nodeType === Node.ELEMENT_NODE;
 }
 
-function isCaratElement(el: Node) {
+function isCaretElement(el: Node) {
   return el.nodeType === Node.TEXT_NODE && !el.nodeValue;
 }
 
 function isNoneElement(el?: Node | null) {
-  return !el || isCaratElement(el);
+  return !el || isCaretElement(el);
 }
 
 function isZeroWidthNode(el: Node | null) {
@@ -206,7 +232,7 @@ function markNodeForDeletion(queue: Array<Node>, reason: string, ...nodes: Array
 
 type ContentEditableEventWithoutTarget = Omit<React.SyntheticEvent<HTMLDivElement>, 'target'>;
 export type ContentEditableEvent = ContentEditableEventWithoutTarget & {
-  target: { value: string; caratHtmlIndex: number | null };
+  target: { value: string; caretIndex: number | null };
 };
 
 export interface CompositionInputRef {
@@ -230,7 +256,11 @@ export interface CompositionInputRef {
   getRawValue: (mutator?: (nodeClone: HTMLElement) => void) => string;
   getCaretIndex: () => number;
   setCaretIndex: (htmlIndex: number) => void;
-  typeAtCaret: (content: string, previousCharactersToRemove?: number) => void;
+  typeAtCaret: (
+    content: string,
+    previousCharactersToRemove?: number,
+    forwardCharactersToRemove?: number
+  ) => void;
   resetState: (content: string) => void;
 }
 
@@ -278,7 +308,7 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
       () => ({
         focus: () => {
           const el = elRef.current;
-          if (!el) {
+          if (!el || document.activeElement === el) {
             return;
           }
 
@@ -289,6 +319,14 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
             isZeroWidthNode(el.lastElementChild)
           ) {
             replaceCaret(el);
+          } else {
+            /** Return the caret to its last index if we have it, otherwise to the end of the content */
+            const idx = lastHtmlIndex.current;
+            if (idx) {
+              setCaretAtHtmlIndex(el, idx);
+            } else {
+              replaceCaret(el);
+            }
           }
         },
 
@@ -351,7 +389,7 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
           lastPosition.current = null;
         },
 
-        typeAtCaret: (content, previousCharactersToRemove = 0) => {
+        typeAtCaret: (content, previousCharactersToRemove = 0, forwardCharactersToRemove = 0) => {
           const el = elRef.current;
           if (!el) {
             return;
@@ -359,6 +397,16 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
 
           let htmlIndex = lastHtmlIndex.current;
           let htmlToEdit = el.innerHTML;
+          if (forwardCharactersToRemove) {
+            const res = removeHtmlCharactersAfterIndex(
+              htmlToEdit,
+              htmlIndex,
+              forwardCharactersToRemove
+            );
+            htmlToEdit = res.newHtml;
+            htmlIndex = res.newIndex;
+          }
+
           if (previousCharactersToRemove) {
             const res = removeHtmlCharactersBeforeIndex(
               htmlToEdit,
@@ -377,6 +425,7 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
 
           if (onChange) {
             onChange({ target: { value: newHtml } } as any);
+            commit(newHtml);
           }
         },
 
@@ -387,7 +436,7 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
           reset(content);
         },
       }),
-      [onChange, reset]
+      [commit, onChange, reset]
     );
 
     // Track selection changes when focused
@@ -447,29 +496,6 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
 
         const next = node.nextSibling;
         const prev = node.previousSibling;
-
-        /**
-         * TODO: check this for accuracy, the in-line comments are more accurate and updated
-         * Note: "none" here means null or carat.
-         *
-         * If n is ZN:
-         *  - If n - 1 is none: // means it's at the start of the DOM
-         *    - If n + 1 is a ZN:
-         *      - If n + 2 is an Element:
-         *        Mark n and n + 1 for deletion.
-         *    - Else:
-         *        Mark n for deletion. (log a warning)
-         *
-         *  - If n + 1 is none: // means it's at the end of the DOM (can also be at the start)
-         *    - If n - 1 is an Element and not ZN:
-         *    Mark n and n - 1 for deletion
-         *  - Else If n + 1 is ZN:
-         *    - If n + 2 is not none:
-         *      Mark n and n + 1 for deletion.
-         *
-         *  - If n + 1 and n - 1 are not a ZN:
-         *    Mark n for deletion // log warning
-         */
 
         // If n - 1 is none - this should mean it's at the start
         if (isNoneElement(prev)) {
@@ -548,15 +574,15 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
       const lastChild = el.lastChild;
 
       /**
-       * If the last node is an element. Because the carat counts as a valueless Node.TEXT_NODE, it
-       * is also possible for the last element (in this check) to be the carat.
-       * If the last node is not an element we need to check if the last element looks like the carat
+       * If the last node is an element. Because the caret counts as a valueless Node.TEXT_NODE, it
+       * is also possible for the last element (in this check) to be the caret.
+       * If the last node is not an element we need to check if the last element looks like the caret
        * and that its previous sibling is an element.
        */
       const appendZeroWidth =
         lastChild &&
-        ((isElementNode(lastChild) && !isZeroWidthNode(lastChild) && !isCaratElement(lastChild)) ||
-          (isCaratElement(lastChild) &&
+        ((isElementNode(lastChild) && !isZeroWidthNode(lastChild) && !isCaretElement(lastChild)) ||
+          (isCaretElement(lastChild) &&
             lastChild.previousSibling &&
             isElementNode(lastChild.previousSibling) &&
             !isZeroWidthNode(lastChild)));
@@ -601,9 +627,6 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
         lastHtml.current = renderedHtml;
         lastHtmlIndex.current = idx;
         setCaretAtHtmlIndex(el, idx);
-
-        window.log.debug('COMP', renderedHtml);
-
         return true;
       }
       return false;
@@ -616,10 +639,10 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
           return;
         }
 
-        const caratHtmlIndex = lastHtmlIndex.current;
+        const caretIndex = lastHtmlIndex.current;
         const value = lastHtml.current;
         // TODO: clean up this type assertion
-        onChange({ ...e, target: { value, caratHtmlIndex } } as ContentEditableEvent);
+        onChange({ ...e, target: { value, caretIndex } } as ContentEditableEvent);
         if (!preventUndoStackCommit) {
           commit(value);
         }
@@ -651,12 +674,13 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
       onClick,
     });
 
-    const handleUndo = useCallback(
-      (e: ContentEditableEventWithoutTarget) => {
-        let item = undo();
+    const handleHistory = useCallback(
+      (e: ContentEditableEventWithoutTarget, action: 'undo' | 'redo') => {
+        const callback = action === 'redo' ? redo : undo;
+        let item = callback();
         if (!isUndefined(item)) {
           if (item === lastHtml.current) {
-            item = undo();
+            item = callback();
           }
           if (!isUndefined(item)) {
             lastHtml.current = item;
@@ -664,37 +688,26 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
           }
         }
       },
-      [emitChangeEvent, undo]
-    );
-
-    const handleRedo = useCallback(
-      (e: ContentEditableEventWithoutTarget) => {
-        const item = redo();
-        if (item) {
-          lastHtml.current = item;
-          emitChangeEvent(e, true);
-        }
-      },
-      [emitChangeEvent, redo]
+      [emitChangeEvent, undo, redo]
     );
 
     const _onKeyDown = useCallback(
       (e: KeyboardEvent<HTMLDivElement>) => {
         if (e.ctrlKey || e.metaKey) {
-          if (e.key === 'y' || (e.key === 'z' && e.shiftKey)) {
+          if (e.key === 'y' || (e.key === 'Z' && e.shiftKey)) {
             // Ctrl+Y or Cmd+Y
             // Ctrl+Shift+Z or Cmd+Shift+Z
             e.preventDefault();
-            handleRedo(e);
+            handleHistory(e, 'redo');
           } else if (e.key === 'z' && !e.shiftKey) {
             // Ctrl+Z or Cmd+Z (without Shift)
             e.preventDefault();
-            handleUndo(e);
+            handleHistory(e, 'undo');
           }
         }
         onKeyDown?.(e);
       },
-      [onKeyDown, handleRedo, handleUndo]
+      [onKeyDown, handleHistory]
     );
 
     const createSyntheticEvent = useCallback(
@@ -741,7 +754,7 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
             preventDefault: true,
           });
           if (event) {
-            handleUndo(event);
+            handleHistory(event, 'undo');
           }
         } else if (e.inputType === 'historyRedo') {
           const event = createSyntheticEvent({
@@ -749,11 +762,11 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
             preventDefault: true,
           });
           if (event) {
-            handleRedo(event);
+            handleHistory(event, 'redo');
           }
         }
       },
-      [handleUndo, createSyntheticEvent, handleRedo]
+      [createSyntheticEvent, handleHistory]
     );
 
     useEffect(() => {
