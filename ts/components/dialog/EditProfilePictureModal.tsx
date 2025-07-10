@@ -27,10 +27,10 @@ import { useAvatarOfRoomIsUploading } from '../../state/selectors/sogsRoomInfo';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import {
-  BasicModalHeader,
+  ModalBasicHeader,
   ModalActionsContainer,
-  SessionWrapperModal2,
-} from '../SessionWrapperModal2';
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
@@ -51,7 +51,7 @@ const UploadImageButton = () => {
         <SessionLucideIconButton
           unicode={LUCIDE_ICONS_UNICODE.IMAGE}
           iconSize={'huge2'}
-          margin="0 0 0 0"
+          margin="0"
         />
       </StyledUploadButton>
       <PlusAvatarButton dataTestId="image-upload-section" />
@@ -180,10 +180,10 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
   const loading = ourAvatarIsUploading || groupAvatarChangePending || sogsAvatarIsUploading;
 
   return (
-    <SessionWrapperModal2
+    <SessionWrapperModal
       onClose={closeDialog}
       headerChildren={
-        <BasicModalHeader
+        <ModalBasicHeader
           title={localize('profileDisplayPictureSet').toString()}
           showExitIcon={true}
         />
@@ -231,6 +231,6 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
         </StyledAvatarContainer>
       </div>
       <SessionSpinner loading={loading} />
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 };

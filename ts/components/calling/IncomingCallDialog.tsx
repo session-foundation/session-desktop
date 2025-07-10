@@ -11,10 +11,10 @@ import { Avatar, AvatarSize } from '../avatar/Avatar';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { localize } from '../../localization/localeTools';
 import {
-  BasicModalHeader,
+  ModalBasicHeader,
   ModalActionsContainer,
-  SessionWrapperModal2,
-} from '../SessionWrapperModal2';
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
 
 export const CallWindow = styled.div`
   position: absolute;
@@ -81,9 +81,9 @@ export const IncomingCallDialog = () => {
 
   if (hasIncomingCall) {
     return (
-      <SessionWrapperModal2
+      <SessionWrapperModal
         headerChildren={
-          <BasicModalHeader
+          <ModalBasicHeader
             title={localize('callsIncoming')
               .withArgs({
                 name: from ?? localize('unknown').toString(),
@@ -110,7 +110,7 @@ export const IncomingCallDialog = () => {
         <IncomingCallAvatarContainer>
           <Avatar size={AvatarSize.XL} pubkey={incomingCallFromPubkey} />
         </IncomingCallAvatarContainer>
-      </SessionWrapperModal2>
+      </SessionWrapperModal>
     );
   }
   // display spinner while connecting

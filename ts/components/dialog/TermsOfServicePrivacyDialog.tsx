@@ -3,10 +3,10 @@ import { useDispatch } from 'react-redux';
 import { updateTermsOfServicePrivacyModal } from '../../state/onboarding/ducks/modals';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
 import {
-  BasicModalHeader,
+  ModalBasicHeader,
   ModalActionsContainer,
-  SessionWrapperModal2,
-} from '../SessionWrapperModal2';
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
 import { localize } from '../../localization/localeTools';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
 
@@ -28,9 +28,9 @@ export function TermsOfServicePrivacyDialog(props: TermsOfServicePrivacyDialogPr
   }
 
   return (
-    <SessionWrapperModal2
+    <SessionWrapperModal
       headerChildren={
-        <BasicModalHeader title={localize('urlOpen').toString()} showExitIcon={true} />
+        <ModalBasicHeader title={localize('urlOpen').toString()} showExitIcon={true} />
       }
       onClose={onClose}
       buttonChildren={
@@ -62,6 +62,6 @@ export function TermsOfServicePrivacyDialog(props: TermsOfServicePrivacyDialogPr
           token: 'urlOpenBrowser',
         }}
       />
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 }

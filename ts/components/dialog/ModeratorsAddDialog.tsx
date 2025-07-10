@@ -13,10 +13,10 @@ import { SessionSpinner } from '../loading';
 import { localize } from '../../localization/localeTools';
 import { MAX_SUBREQUESTS_COUNT } from '../../session/apis/snode_api/SnodeRequestTypes';
 import {
-  BasicModalHeader,
+  ModalBasicHeader,
   ModalActionsContainer,
-  SessionWrapperModal2,
-} from '../SessionWrapperModal2';
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
 import { SimpleSessionInput } from '../inputs/SessionInput';
 import { SpacerMD } from '../basic/Text';
 import { ClearInputButton } from '../inputs/ClearInputButton';
@@ -88,8 +88,8 @@ export const AddModeratorsDialog = (props: Props) => {
   const tooManyModerators = pubkeys.length > MAX_SUBREQUESTS_COUNT;
 
   return (
-    <SessionWrapperModal2
-      headerChildren={<BasicModalHeader title={localize('addAdmins').toString()} />}
+    <SessionWrapperModal
+      headerChildren={<ModalBasicHeader title={localize('addAdmins').toString()} />}
       onClose={onClose}
       buttonChildren={
         <ModalActionsContainer>
@@ -142,6 +142,6 @@ export const AddModeratorsDialog = (props: Props) => {
         <SessionSpinner loading={addingInProgress} />
         <SpacerMD />
       </Flex>
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 };

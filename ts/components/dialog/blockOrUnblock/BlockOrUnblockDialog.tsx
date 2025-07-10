@@ -13,10 +13,10 @@ import { ModalDescription } from '../shared/ModalDescriptionContainer';
 import { BlockOrUnblockModalState } from './BlockOrUnblockModalState';
 import { localize } from '../../../localization/localeTools';
 import {
-  BasicModalHeader,
+  ModalBasicHeader,
   ModalActionsContainer,
-  SessionWrapperModal2,
-} from '../../SessionWrapperModal2';
+  SessionWrapperModal,
+} from '../../SessionWrapperModal';
 
 type ModalState = NonNullable<BlockOrUnblockModalState>;
 
@@ -91,8 +91,8 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
   }
 
   return (
-    <SessionWrapperModal2
-      headerChildren={<BasicModalHeader title={localizedAction} />}
+    <SessionWrapperModal
+      headerChildren={<ModalBasicHeader title={localizedAction} />}
       onClose={closeModal}
       buttonChildren={
         <ModalActionsContainer>
@@ -113,6 +113,6 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
       }
     >
       <ModalDescription dataTestId="modal-description" localizerProps={args} />
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 };

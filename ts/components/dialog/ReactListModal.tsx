@@ -27,7 +27,7 @@ import { findAndFormatContact } from '../../models/message';
 import { Localizer } from '../basic/Localizer';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
-import { SessionWrapperModal2 } from '../SessionWrapperModal2';
+import { SessionWrapperModal } from '../SessionWrapperModal';
 import { localize } from '../../localization/localeTools';
 import { useWeAreCommunityAdminOrModerator } from '../../state/selectors/conversations';
 
@@ -332,7 +332,7 @@ export const ReactListModal = (props: Props) => {
   };
 
   return (
-    <SessionWrapperModal2 onClose={handleClose} headerChildren={null}>
+    <SessionWrapperModal onClose={handleClose} headerChildren={null}>
       <StyledReactListContainer
         $container={true}
         $flexDirection={'column'}
@@ -394,6 +394,6 @@ export const ReactListModal = (props: Props) => {
           </StyledSendersContainer>
         )}
       </StyledReactListContainer>
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 };

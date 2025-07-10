@@ -16,10 +16,10 @@ import { Flex } from '../basic/Flex';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionSpinner } from '../loading';
 import {
-  BasicModalHeader,
+  ModalBasicHeader,
   ModalActionsContainer,
-  SessionWrapperModal2,
-} from '../SessionWrapperModal2';
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
 import { localize } from '../../localization/localeTools';
 import { SimpleSessionInput } from '../inputs/SessionInput';
 import { SpacerSM } from '../basic/Text';
@@ -123,8 +123,8 @@ export const BanOrUnBanUserDialog = (props: {
   const buttonText = isBan ? localize('banUser').toString() : localize('banUnbanUser').toString();
 
   return (
-    <SessionWrapperModal2
-      headerChildren={<BasicModalHeader title={title} />}
+    <SessionWrapperModal
+      headerChildren={<ModalBasicHeader title={title} />}
       onClose={onClose}
       buttonChildren={
         <ModalActionsContainer>
@@ -183,6 +183,6 @@ export const BanOrUnBanUserDialog = (props: {
         <SessionSpinner loading={inProgress} />
         <SpacerSM />
       </Flex>
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 };

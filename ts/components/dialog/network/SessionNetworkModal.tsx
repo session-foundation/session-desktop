@@ -1,6 +1,6 @@
 import { useDispatch } from 'react-redux';
 import { updateSessionNetworkModal } from '../../../state/ducks/modalDialog';
-import { BasicModalHeader, SessionWrapperModal2 } from '../../SessionWrapperModal2';
+import { ModalBasicHeader, SessionWrapperModal } from '../../SessionWrapperModal';
 import { LOCALE_DEFAULTS } from '../../../localization/constants';
 import { sectionActions } from '../../../state/ducks/section';
 import { StakeSection } from './sections/StakeSection';
@@ -52,9 +52,9 @@ export function SessionNetworkModal() {
   const loading = infoLoading || isFakeRefreshing;
 
   return (
-    <SessionWrapperModal2
+    <SessionWrapperModal
       headerChildren={
-        <BasicModalHeader
+        <ModalBasicHeader
           title={LOCALE_DEFAULTS.network_name}
           bigHeader={true}
           showExitIcon={true}
@@ -77,6 +77,6 @@ export function SessionNetworkModal() {
       ) : (
         <SpacerMD />
       )}
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 }

@@ -12,7 +12,7 @@ import { SpacerSM } from '../../../../basic/Text';
 import { PanelButtonGroup } from '../../../../buttons';
 import { PanelLabel } from '../../../../buttons/PanelButton';
 import { useShowAttachments } from '../../../../menuAndSettingsHooks/useShowAttachments';
-import { BasicModalHeader, SessionWrapperModal2 } from '../../../../SessionWrapperModal2';
+import { ModalBasicHeader, SessionWrapperModal } from '../../../../SessionWrapperModal';
 import { ConversationSettingsHeader } from '../../conversationSettingsHeader';
 import {
   PinUnpinButton,
@@ -234,8 +234,8 @@ export function DefaultConversationSettingsModal(props: ConversationSettingsModa
   }
 
   return (
-    <SessionWrapperModal2
-      headerChildren={<BasicModalHeader title={title} showExitIcon={true} bigHeader={true} />}
+    <SessionWrapperModal
+      headerChildren={<ModalBasicHeader title={title} showExitIcon={true} bigHeader={true} />}
       onClose={onClose}
       shouldOverflow={true}
       // Note: we do not set a min/max width here as we want the modal to be fixed
@@ -246,6 +246,6 @@ export function DefaultConversationSettingsModal(props: ConversationSettingsModa
       <Flex $container={true} $flexDirection="column" $alignItems="flex-start" width="100%">
         <DefaultConversationSettingsPage conversationId={props.conversationId} />
       </Flex>
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 }

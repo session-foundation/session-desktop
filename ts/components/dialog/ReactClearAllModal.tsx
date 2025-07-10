@@ -7,10 +7,10 @@ import { updateReactClearAllModal } from '../../state/ducks/modalDialog';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionSpinner } from '../loading';
 import {
-  BasicModalHeader,
+  ModalBasicHeader,
   ModalActionsContainer,
-  SessionWrapperModal2,
-} from '../SessionWrapperModal2';
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
 import { localize } from '../../localization/localeTools';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
 
@@ -50,9 +50,9 @@ export const ReactClearAllModal = (props: Props) => {
   };
 
   return (
-    <SessionWrapperModal2
+    <SessionWrapperModal
       onClose={handleClose}
-      headerChildren={<BasicModalHeader title={localize('clearAll').toString()} />}
+      headerChildren={<ModalBasicHeader title={localize('clearAll').toString()} />}
       buttonChildren={
         <ModalActionsContainer>
           <SessionButton
@@ -77,6 +77,6 @@ export const ReactClearAllModal = (props: Props) => {
       />
 
       <SessionSpinner loading={clearingInProgress} />
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 };

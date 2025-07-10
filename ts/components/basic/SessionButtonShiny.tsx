@@ -1,6 +1,5 @@
-import styled, { keyframes } from 'styled-components';
+import styled, { keyframes, type CSSProperties } from 'styled-components';
 import { SessionButton, type SessionButtonProps, StyledBaseButton } from './SessionButton';
-import type { CSSProperties } from 'styled-components';
 
 const shine = keyframes`
   0% {

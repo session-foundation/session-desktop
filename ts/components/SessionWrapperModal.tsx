@@ -149,7 +149,7 @@ export const ModalActionsContainer = ({
   );
 };
 
-export type SessionWrapperModalType2 = {
+export type SessionWrapperModalType = {
   headerChildren: ReactNode | null;
   children: ReactNode;
   /**
@@ -169,9 +169,9 @@ export type SessionWrapperModalType2 = {
 
 /**
  * A basic modal header with a title, an optional left button and/or exit icon.
- * To be used as `headerChildren` prop as part of SessionWrapperModal2.
+ * To be used as `headerChildren` prop as part of SessionWrapperModal.
  */
-export const BasicModalHeader = (props: {
+export const ModalBasicHeader = (props: {
   title?: ReactNode;
   showExitIcon?: boolean;
   leftButton?: ReactNode;
@@ -237,12 +237,8 @@ export const BasicModalHeader = (props: {
 
 /**
  * A generic modal component that is constructed from a provided header, body and some actions.
- *
- *
  */
-export const SessionWrapperModal2 = (
-  props: SessionWrapperModalType2 & { onClose?: () => void }
-) => {
+export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?: () => void }) => {
   const {
     $contentMinWidth,
     $contentMaxWidth,
@@ -311,9 +307,7 @@ export const SessionWrapperModal2 = (
                 {props.headerChildren ? props.headerChildren : null}
 
                 <StyledModalBody
-                  onScroll={event => {
-                    handleScroll(event);
-                  }}
+                  onScroll={handleScroll}
                   shouldOverflow={shouldOverflow}
                   removeScrollbarGutter={removeScrollbarGutter}
                 >

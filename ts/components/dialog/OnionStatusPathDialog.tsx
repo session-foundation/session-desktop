@@ -23,10 +23,10 @@ import { SessionSpinner } from '../loading';
 import { getCrowdinLocale } from '../../util/i18n/shared';
 import { localize } from '../../localization/localeTools';
 import {
-  BasicModalHeader,
+  ModalBasicHeader,
   ModalActionsContainer,
-  SessionWrapperModal2,
-} from '../SessionWrapperModal2';
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
 
@@ -277,10 +277,10 @@ export const ActionPanelOnionStatusLight = (props: { handleClick: () => void; id
 export const OnionPathModal = () => {
   const dispatch = useDispatch();
   return (
-    <SessionWrapperModal2
+    <SessionWrapperModal
       onClose={() => dispatch(onionPathModal(null))}
       headerChildren={
-        <BasicModalHeader title={localize('onionRoutingPath').toString()} showExitIcon={true} />
+        <ModalBasicHeader title={localize('onionRoutingPath').toString()} showExitIcon={true} />
       }
       buttonChildren={
         <ModalActionsContainer>
@@ -295,6 +295,6 @@ export const OnionPathModal = () => {
       }
     >
       <OnionPathModalInner />
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 };

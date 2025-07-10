@@ -6,10 +6,10 @@ import { sectionActions } from '../../state/ducks/section';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SpacerMD } from '../basic/Text';
 import {
-  BasicModalHeader,
+  ModalBasicHeader,
   ModalActionsContainer,
-  SessionWrapperModal2,
-} from '../SessionWrapperModal2';
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
 import { localize } from '../../localization/localeTools';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
 
@@ -69,9 +69,9 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
         };
 
   return (
-    <SessionWrapperModal2
+    <SessionWrapperModal
       headerChildren={
-        <BasicModalHeader title={localize('recoveryPasswordHidePermanently').toString()} />
+        <ModalBasicHeader title={localize('recoveryPasswordHidePermanently').toString()} />
       }
       onClose={onClose}
       buttonChildren={
@@ -92,6 +92,6 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
       />
 
       <SpacerMD />
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 }

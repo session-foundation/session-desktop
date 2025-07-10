@@ -6,10 +6,10 @@ import styled from 'styled-components';
 import { MessageInteraction } from '../../interactions';
 import { OpenUrlModalState, updateOpenUrlModal } from '../../state/ducks/modalDialog';
 import {
-  BasicModalHeader,
+  ModalBasicHeader,
   ModalActionsContainer,
-  SessionWrapperModal2,
-} from '../SessionWrapperModal2';
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SpacerSM, SpacerXS } from '../basic/Text';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
@@ -44,9 +44,9 @@ export function OpenUrlModal(props: OpenUrlModalState) {
   }
 
   return (
-    <SessionWrapperModal2
+    <SessionWrapperModal
       headerChildren={
-        <BasicModalHeader title={localize('urlOpen').toString()} showExitIcon={true} />
+        <ModalBasicHeader title={localize('urlOpen').toString()} showExitIcon={true} />
       }
       onClose={onClose}
       buttonChildren={
@@ -76,7 +76,7 @@ export function OpenUrlModal(props: OpenUrlModalState) {
       <SpacerSM />
 
       <SpacerXS />
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 }
 

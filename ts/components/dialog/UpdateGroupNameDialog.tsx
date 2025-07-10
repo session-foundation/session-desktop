@@ -21,10 +21,10 @@ import { SessionSpinner } from '../loading';
 import { localize } from '../../localization/localeTools';
 import { SimpleSessionInput, SimpleSessionTextarea } from '../inputs/SessionInput';
 import {
-  BasicModalHeader,
+  ModalBasicHeader,
   ModalActionsContainer,
-  SessionWrapperModal2,
-} from '../SessionWrapperModal2';
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
 import { ClearInputButton } from '../inputs/ClearInputButton';
 
 function GroupAvatar({
@@ -142,8 +142,8 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
       : '';
 
   return (
-    <SessionWrapperModal2
-      headerChildren={<BasicModalHeader title={localize('updateGroupInformation').toString()} />}
+    <SessionWrapperModal
+      headerChildren={<ModalBasicHeader title={localize('updateGroupInformation').toString()} />}
       onClose={closeDialog}
       buttonChildren={
         <ModalActionsContainer>
@@ -223,6 +223,6 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
       />
 
       <SessionSpinner loading={isNameChangePending} />
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 }

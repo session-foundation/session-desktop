@@ -15,10 +15,10 @@ import { SessionSpinner } from '../loading';
 import { Localizer } from '../basic/Localizer';
 import { StyledContactListInModal } from '../list/StyledContactList';
 import {
-  BasicModalHeader,
+  ModalBasicHeader,
   ModalActionsContainer,
-  SessionWrapperModal2,
-} from '../SessionWrapperModal2';
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
 import { localize } from '../../localization/localeTools';
 
 type Props = {
@@ -91,8 +91,8 @@ export const RemoveModeratorsDialog = (props: Props) => {
   const hasMods = existingMods.length !== 0;
 
   return (
-    <SessionWrapperModal2
-      headerChildren={<BasicModalHeader title={localize('adminRemove').toString()} />}
+    <SessionWrapperModal
+      headerChildren={<ModalBasicHeader title={localize('adminRemove').toString()} />}
       onClose={closeDialog}
       buttonChildren={
         <ModalActionsContainer>
@@ -139,6 +139,6 @@ export const RemoveModeratorsDialog = (props: Props) => {
       )}
 
       <SessionSpinner loading={removingInProgress} />
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 };

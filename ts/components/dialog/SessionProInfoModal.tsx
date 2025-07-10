@@ -4,10 +4,10 @@ import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { type SessionProInfoState, updateSessionProInfoModal } from '../../state/ducks/modalDialog';
 import {
-  SessionWrapperModal2,
+  SessionWrapperModal,
   WrapperModalWidth,
   ModalActionsContainer,
-} from '../SessionWrapperModal2';
+} from '../SessionWrapperModal';
 import {
   SessionButton,
   SessionButtonColor,
@@ -188,7 +188,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
   }
 
   return (
-    <SessionWrapperModal2
+    <SessionWrapperModal
       onClose={onClose}
       headerChildren={getImage(props.variant)}
       padding="0"
@@ -258,7 +258,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
           </FeatureListItem>
         </StyledFeatureList>
       </StyledContentContainer>
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 }
 

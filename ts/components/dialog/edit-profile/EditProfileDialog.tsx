@@ -21,10 +21,10 @@ import { sanitizeDisplayNameOrToast } from '../../registration/utils';
 import { useEditProfilePictureCallback } from '../../menuAndSettingsHooks/useEditProfilePictureCallback';
 import { SimpleSessionInput } from '../../inputs/SessionInput';
 import {
-  BasicModalHeader,
+  ModalBasicHeader,
   ModalActionsContainer,
-  SessionWrapperModal2,
-} from '../../SessionWrapperModal2';
+  SessionWrapperModal,
+} from '../../SessionWrapperModal';
 import { ModalBackButton } from '../shared/ModalBackButton';
 import { SessionButtonColor, SessionButton } from '../../basic/SessionButton';
 import { CopyToClipboardButton } from '../../buttons';
@@ -239,9 +239,9 @@ export const EditProfileDialog = () => {
 
   return (
     <StyledEditProfileDialog className="edit-profile-dialog" data-testid="edit-profile-dialog">
-      <SessionWrapperModal2
+      <SessionWrapperModal
         headerChildren={
-          <BasicModalHeader
+          <ModalBasicHeader
             title={localize('profile').toString()}
             showExitIcon={true}
             leftButton={
@@ -367,7 +367,7 @@ export const EditProfileDialog = () => {
           <SessionIDNonEditable dataTestId="your-account-id" sessionId={us} />
           <SessionSpinner loading={loading} height={'74px'} />
         </StyledSessionIdSection>
-      </SessionWrapperModal2>
+      </SessionWrapperModal>
     </StyledEditProfileDialog>
   );
 };

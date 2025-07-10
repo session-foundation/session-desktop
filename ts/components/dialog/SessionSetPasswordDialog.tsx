@@ -12,11 +12,11 @@ import { getPasswordHash, Storage } from '../../util/storage';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { localize } from '../../localization/localeTools';
 import {
-  BasicModalHeader,
+  ModalBasicHeader,
   ModalActionsContainer,
-  SessionWrapperModal2,
+  SessionWrapperModal,
   WrapperModalWidth,
-} from '../SessionWrapperModal2';
+} from '../SessionWrapperModal';
 import { SimpleSessionInput } from '../inputs/SessionInput';
 import { Flex } from '../basic/Flex';
 
@@ -99,8 +99,8 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
     } as const;
 
     return (
-      <SessionWrapperModal2
-        headerChildren={<BasicModalHeader title={titleString()} />}
+      <SessionWrapperModal
+        headerChildren={<ModalBasicHeader title={titleString()} />}
         onClose={this.closeDialog}
         $contentMinWidth={WrapperModalWidth.narrow}
         $contentMaxWidth={WrapperModalWidth.narrow}
@@ -161,7 +161,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
             />
           )}
         </Flex>
-      </SessionWrapperModal2>
+      </SessionWrapperModal>
     );
   }
 

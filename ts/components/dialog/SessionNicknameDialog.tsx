@@ -11,10 +11,10 @@ import LIBSESSION_CONSTANTS from '../../session/utils/libsession/libsession_cons
 import { SimpleSessionInput } from '../inputs/SessionInput';
 import { ClearInputButton } from '../inputs/ClearInputButton';
 import {
-  BasicModalHeader,
+  ModalBasicHeader,
   ModalActionsContainer,
-  SessionWrapperModal2,
-} from '../SessionWrapperModal2';
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
 
 type Props = {
@@ -82,9 +82,9 @@ export const SessionNicknameDialog = (props: Props) => {
   };
 
   return (
-    <SessionWrapperModal2
+    <SessionWrapperModal
       headerChildren={
-        <BasicModalHeader title={localize('nicknameSet').toString()} showExitIcon={true} />
+        <ModalBasicHeader title={localize('nicknameSet').toString()} showExitIcon={true} />
       }
       onClose={onClickClose}
       buttonChildren={
@@ -119,6 +119,6 @@ export const SessionNicknameDialog = (props: Props) => {
         nickname={nickname}
         setStateNickname={setStateNickname}
       />
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 };

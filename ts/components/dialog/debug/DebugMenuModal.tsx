@@ -14,10 +14,10 @@ import {
   Playgrounds,
 } from './components';
 import {
-  BasicModalHeader,
-  SessionWrapperModal2,
+  ModalBasicHeader,
+  SessionWrapperModal,
   WrapperModalWidth,
-} from '../../SessionWrapperModal2';
+} from '../../SessionWrapperModal';
 import { FeatureFlags } from './FeatureFlags';
 import { ReleaseChannel } from './ReleaseChannel';
 import { useHotkey } from '../../../hooks/useHotkey';
@@ -114,8 +114,8 @@ export function DebugMenuModal() {
   });
 
   return (
-    <SessionWrapperModal2
-      headerChildren={<BasicModalHeader title="Debug Menu" showExitIcon={true} />}
+    <SessionWrapperModal
+      headerChildren={<ModalBasicHeader title="Debug Menu" showExitIcon={true} />}
       onClose={onClose}
       $contentMaxWidth={WrapperModalWidth.debug}
       shouldOverflow={true}
@@ -129,6 +129,6 @@ export function DebugMenuModal() {
       >
         {getPage(page, setPage)}
       </StyledContent>
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 }

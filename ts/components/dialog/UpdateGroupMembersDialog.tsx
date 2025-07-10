@@ -36,11 +36,11 @@ import { useContactsToInviteTo } from '../../hooks/useContactsToInviteToGroup';
 import { searchActions } from '../../state/ducks/search';
 import { StyledContactListInModal } from '../list/StyledContactList';
 import {
-  BasicModalHeader,
+  ModalBasicHeader,
   ModalActionsContainer,
-  SessionWrapperModal2,
+  SessionWrapperModal,
   WrapperModalWidth,
-} from '../SessionWrapperModal2';
+} from '../SessionWrapperModal';
 
 type Props = {
   conversationId: string;
@@ -188,9 +188,9 @@ export const UpdateGroupMembersDialog = (props: Props) => {
   };
 
   return (
-    <SessionWrapperModal2
+    <SessionWrapperModal
       headerChildren={
-        <BasicModalHeader
+        <ModalBasicHeader
           title={localize(weAreAdmin ? 'manageMembers' : 'groupMembers').toString()}
         />
       }
@@ -256,6 +256,6 @@ export const UpdateGroupMembersDialog = (props: Props) => {
       <SpacerLG />
       <SessionSpinner loading={isProcessingUIChange} />
       <SpacerLG />
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 };

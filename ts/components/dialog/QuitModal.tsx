@@ -4,10 +4,10 @@ import useKey from 'react-use/lib/useKey';
 import { updateQuitModal, type QuitModalProps } from '../../state/onboarding/ducks/modals';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import {
-  BasicModalHeader,
+  ModalBasicHeader,
   ModalActionsContainer,
-  SessionWrapperModal2,
-} from '../SessionWrapperModal2';
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
 import { localize } from '../../localization/localeTools';
 
@@ -54,8 +54,8 @@ export const QuitModal = (props: QuitModalProps) => {
   });
 
   return (
-    <SessionWrapperModal2
-      headerChildren={<BasicModalHeader title={title} />}
+    <SessionWrapperModal
+      headerChildren={<ModalBasicHeader title={title} />}
       onClose={onClickClose}
       buttonChildren={
         <ModalActionsContainer>
@@ -79,6 +79,6 @@ export const QuitModal = (props: QuitModalProps) => {
       }
     >
       <ModalDescription dataTestId="modal-description" localizerProps={i18nMessage} />
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 };

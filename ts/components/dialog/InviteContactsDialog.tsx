@@ -25,10 +25,10 @@ import { useContactsToInviteTo } from '../../hooks/useContactsToInviteToGroup';
 import { SessionSearchInput } from '../SessionSearchInput';
 import { NoResultsForSearch } from '../search/NoResults';
 import {
-  BasicModalHeader,
+  ModalBasicHeader,
   ModalActionsContainer,
-  SessionWrapperModal2,
-} from '../SessionWrapperModal2';
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
 import { useHotkey } from '../../hooks/useHotkey';
 import { searchActions } from '../../state/ducks/search';
 import { ToastUtils } from '../../session/utils';
@@ -177,10 +177,10 @@ const InviteContactsDialogInner = (props: Props) => {
   const hasContacts = contactsToInvite.length > 0;
 
   return (
-    <SessionWrapperModal2
+    <SessionWrapperModal
       onClose={closeDialog}
       headerChildren={
-        <BasicModalHeader title={localize('membersInvite').toString()} showExitIcon={true} />
+        <ModalBasicHeader title={localize('membersInvite').toString()} showExitIcon={true} />
       }
       modalDataTestId="invite-contacts-dialog"
       buttonChildren={
@@ -232,7 +232,7 @@ const InviteContactsDialogInner = (props: Props) => {
           />
         </StyledContactListInModal>
       )}
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 };
 

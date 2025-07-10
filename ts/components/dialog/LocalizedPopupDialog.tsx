@@ -6,7 +6,7 @@ import {
   type LocalizedPopupDialogState,
   updateLocalizedPopupDialog,
 } from '../../state/ducks/modalDialog';
-import { BasicModalHeader, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import { ModalBasicHeader, SessionWrapperModal } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
 import { Flex } from '../basic/Flex';
 import { SpacerSM, SpacerXS } from '../basic/Text';
@@ -39,9 +39,9 @@ export function LocalizedPopupDialog(props: LocalizedPopupDialogState) {
   }
 
   return (
-    <SessionWrapperModal2
+    <SessionWrapperModal
       headerChildren={
-        <BasicModalHeader title={<Localizer {...props.title} />} showExitIcon={true} />
+        <ModalBasicHeader title={<Localizer {...props.title} />} showExitIcon={true} />
       }
       onClose={onClose}
     >
@@ -66,7 +66,7 @@ export function LocalizedPopupDialog(props: LocalizedPopupDialogState) {
         </SessionButton>
       </Flex>
       <SpacerXS />
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 }
 

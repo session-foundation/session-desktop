@@ -6,10 +6,10 @@ import { updateConversationInteractionState } from '../../interactions/conversat
 import { ConversationInteractionStatus } from '../../interactions/types';
 import { updateConfirmModal } from '../../state/ducks/modalDialog';
 import {
-  BasicModalHeader,
+  ModalBasicHeader,
   ModalActionsContainer,
-  SessionWrapperModal2,
-} from '../SessionWrapperModal2';
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionRadioGroup, SessionRadioItems } from '../basic/SessionRadioGroup';
 import type { LocalizerProps } from '../basic/Localizer';
@@ -122,8 +122,8 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
   };
 
   return (
-    <SessionWrapperModal2
-      headerChildren={title ? <BasicModalHeader title={title} showExitIcon={showExitIcon} /> : null}
+    <SessionWrapperModal
+      headerChildren={title ? <ModalBasicHeader title={title} showExitIcon={showExitIcon} /> : null}
       onClose={onClickClose}
       buttonChildren={
         <ModalActionsContainer>
@@ -166,6 +166,6 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
         />
       ) : null}
       <SessionSpinner loading={isLoading} />
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 };

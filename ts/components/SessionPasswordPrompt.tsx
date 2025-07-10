@@ -14,11 +14,11 @@ import { SessionSpinner } from './loading';
 import { Localizer } from './basic/Localizer';
 import { localize } from '../localization/localeTools';
 import {
-  BasicModalHeader,
+  ModalBasicHeader,
   ModalActionsContainer,
-  SessionWrapperModal2,
+  SessionWrapperModal,
   WrapperModalWidth,
-} from './SessionWrapperModal2';
+} from './SessionWrapperModal';
 import { themeStore } from '../state/theme/store';
 import { ShowHideSessionInput } from './inputs/SessionInput';
 import { sleepFor } from '../session/utils/Promise';
@@ -191,9 +191,9 @@ const SessionPasswordPromptInner = () => {
   };
 
   return (
-    <SessionWrapperModal2
+    <SessionWrapperModal
       headerChildren={
-        <BasicModalHeader
+        <ModalBasicHeader
           title={localize(clearDataView ? 'clearDevice' : 'passwordEnter').toString()}
         />
       }
@@ -235,7 +235,7 @@ const SessionPasswordPromptInner = () => {
           password={password}
         />
       )}
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 };
 

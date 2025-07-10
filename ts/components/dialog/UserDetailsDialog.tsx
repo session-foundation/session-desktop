@@ -12,10 +12,10 @@ import { ConversationTypeEnum } from '../../models/types';
 import { Flex } from '../basic/Flex';
 import { SessionIDNonEditable } from '../basic/YourSessionIDPill';
 import {
-  BasicModalHeader,
+  ModalBasicHeader,
   ModalActionsContainer,
-  SessionWrapperModal2,
-} from '../SessionWrapperModal2';
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
 import { localize } from '../../localization/localeTools';
 
 export const UserDetailsDialog = (props: UserDetailsModalState) => {
@@ -57,8 +57,8 @@ export const UserDetailsDialog = (props: UserDetailsModalState) => {
   }
 
   return (
-    <SessionWrapperModal2
-      headerChildren={<BasicModalHeader title={props.userName} showExitIcon={true} />}
+    <SessionWrapperModal
+      headerChildren={<ModalBasicHeader title={props.userName} showExitIcon={true} />}
       onClose={closeDialog}
       buttonChildren={
         <ModalActionsContainer>
@@ -90,6 +90,6 @@ export const UserDetailsDialog = (props: UserDetailsModalState) => {
       <Flex $container={true} width={'100%'} $justifyContent="center" $alignItems="center">
         <SessionIDNonEditable dataTestId="invalid-data-testid" sessionId={props.conversationId} />
       </Flex>
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 };

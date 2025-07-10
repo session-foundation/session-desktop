@@ -36,11 +36,11 @@ import {
   useTitleFromPage,
 } from '../conversationSettingsHooks';
 import {
-  BasicModalHeader,
+  ModalBasicHeader,
   ModalActionsContainer,
-  SessionWrapperModal2,
+  SessionWrapperModal,
   WrapperModalWidth,
-} from '../../../../SessionWrapperModal2';
+} from '../../../../SessionWrapperModal';
 import { ModalBackButton } from '../../../shared/ModalBackButton';
 
 const StyledNonAdminDescription = styled.div`
@@ -164,9 +164,9 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
   }
 
   return (
-    <SessionWrapperModal2
+    <SessionWrapperModal
       headerChildren={
-        <BasicModalHeader
+        <ModalBasicHeader
           title={title}
           bigHeader={true}
           leftButton={backAction ? <ModalBackButton onClick={backAction} /> : undefined}
@@ -245,6 +245,6 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
           )}
         </Flex>
       </StyledScrollContainer>
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 };

@@ -13,10 +13,10 @@ import {
 import { SessionRadioGroup } from '../basic/SessionRadioGroup';
 import { localize } from '../../localization/localeTools';
 import {
-  BasicModalHeader,
+  ModalBasicHeader,
   ModalActionsContainer,
-  SessionWrapperModal2,
-} from '../SessionWrapperModal2';
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
 
 const DEVICE_ONLY = 'device_only' as const;
@@ -123,8 +123,8 @@ export const DeleteAccountModal = () => {
   }, [dispatch]);
 
   return (
-    <SessionWrapperModal2
-      headerChildren={<BasicModalHeader title={localize('clearDataAll').toString()} />}
+    <SessionWrapperModal
+      headerChildren={<ModalBasicHeader title={localize('clearDataAll').toString()} />}
       onClose={onClickCancelHandler}
       buttonChildren={
         <ModalActionsContainer>
@@ -169,6 +169,6 @@ export const DeleteAccountModal = () => {
       )}
       {isLoading && <SpacerLG />}
       <SessionSpinner loading={isLoading} />
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 };
