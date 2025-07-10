@@ -552,7 +552,7 @@ export const CompositionTextArea = (props: Props) => {
 
       const content = e.target.value;
 
-      handleMentionCheck(content, e.target.caratHtmlIndex);
+      handleMentionCheck(content, e.target.caretIndex);
       setDraft(content);
       updateDraftForConversation({ conversationKey: selectedConversationKey, draft: content });
     },
