@@ -65,9 +65,10 @@ declare module 'react' {
     | 'update-group-info'
     | 'ban-user'
     | 'unban-user'
-    | 'ban-user-delete-all';
+    | 'ban-user-delete-all'
+    | 'modal-session-pro';
 
-  type CancelButtons = 'update-group-info' | 'add-admins' | 'unban-user';
+  type CancelButtons = 'update-group-info' | 'add-admins' | 'unban-user' | 'modal-session-pro';
 
   type ClearButtons = 'group-info-description' | 'group-info-name' | 'nickname' | 'add-admins';
 
@@ -347,7 +348,6 @@ declare module 'react' {
     | `input-releases-${ReleaseChannels}`
     | `label-releases-${ReleaseChannels}`
     | 'tooltip-character-count'
-    | 'modal-button-session-pro-ok'
     | `${MenuOption}-menu-option`
     | `${MenuOptionDetails}-menu-option`
     | `${SetButton}-set-button`

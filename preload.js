@@ -61,7 +61,7 @@ window.sessionFeatureFlags = {
   useReleaseChannels: true,
   useSESH101: true,
   useTestNet: isTestNet() || isTestIntegration(),
-  debugInputCommands: false,
+  debugInputCommands: !isEmpty(process.env.SESSION_DEBUG),
   alwaysShowRemainingChars: false,
   showPopoverAnchors: false,
   proAvailable: false,

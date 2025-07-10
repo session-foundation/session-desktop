@@ -217,7 +217,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
             }}
             buttonColor={SessionButtonColor.Primary}
             onClick={onClose}
-            dataTestId="modal-button-session-pro-ok"
+            dataTestId="modal-session-pro-confirm-button"
           >
             {localize('theContinue')}
           </SessionButtonShiny>
@@ -225,7 +225,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
             {...buttonProps}
             buttonColor={SessionButtonColor.Tertiary}
             onClick={onClose}
-            dataTestId="modal-button-session-pro-ok"
+            dataTestId="modal-session-pro-cancel-button"
           >
             {localize('cancel').toString()}
           </SessionButton>
