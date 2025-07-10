@@ -8,7 +8,7 @@ interface Props {
 }
 
 const StyledStagedPlaceholderAttachment = styled.div`
-  margin: 1px var(--margins-sm);
+  margin: 1px 0;
   border-radius: var(--border-radius-message-box);
   border: 1px solid var(--border-color);
   height: 120px;

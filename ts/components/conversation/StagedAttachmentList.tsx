@@ -29,6 +29,8 @@ const IMAGE_WIDTH = 120;
 const IMAGE_HEIGHT = 120;
 
 const StyledRail = styled.div`
+  display: flex;
+  gap: var(--margins-xs);
   margin-top: 12px;
   margin-inline-start: 16px;
   padding-inline-end: 16px;
