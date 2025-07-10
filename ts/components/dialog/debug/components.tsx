@@ -32,12 +32,6 @@ import { ConversationTypeEnum } from '../../../models/types';
 import { ContactsWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { usePolling } from '../../../hooks/usePolling';
 import { releasedFeaturesActions } from '../../../state/ducks/releasedFeatures';
-import {
-  useReleasedFeaturesRefreshedAt,
-  useSesh101NotificationAt,
-} from '../../../state/selectors/releasedFeatures';
-import { formatAbbreviatedExpireDoubleTimer } from '../../../util/i18n/formatting/expirationTimer';
-import { handleReleaseNotification } from '../../../util/releasedFeatures';
 import { networkDataActions } from '../../../state/ducks/networkData';
 import { DEBUG_MENU_PAGE, type DebugMenuPageProps } from './DebugMenuModal';
 import { SimpleSessionInput } from '../../inputs/SessionInput';
@@ -345,12 +339,11 @@ export const DebugActions = () => {
 
 export const ExperimentalActions = ({ forceUpdate }: { forceUpdate: () => void }) => {
   const dispatch = useDispatch();
-  const refreshedAt = useReleasedFeaturesRefreshedAt();
-  const sesh101NotificationAt = useSesh101NotificationAt();
+  // const refreshedAt = useReleasedFeaturesRefreshedAt();
+  // const sesh101NotificationAt = useSesh101NotificationAt();
 
-  const [countdown, setCountdown] = useState(false);
-
-  const timeLeftMs = sesh101NotificationAt - Date.now();
+  // const [countdown, setCountdown] = useState(false);
+  // const timeLeftMs = sesh101NotificationAt - Date.now();
 
   // TODO [SES-2606] uncomment before release but after QA
   // if (!process.env.SESSION_DEV) {
@@ -377,16 +370,8 @@ export const ExperimentalActions = ({ forceUpdate }: { forceUpdate: () => void }
         >
           Reset experiments
         </SessionButton>
-        <SessionButton
+        {/* <SessionButton
           onClick={() => {
-            const notifyAt = handleReleaseNotification({
-              featureName: 'useSESH101',
-              message: localize('sessionNetworkNotificationLive').toString(),
-              lastRefreshedAt: refreshedAt,
-              notifyAt: sesh101NotificationAt,
-              delayMs: 10 * DURATION.SECONDS,
-              force: true,
-            });
             dispatch(releasedFeaturesActions.updateSesh101NotificationAt(notifyAt));
             setCountdown(true);
           }}
@@ -399,7 +384,7 @@ export const ExperimentalActions = ({ forceUpdate }: { forceUpdate: () => void }
                 : '🎉'
               : '(10s)'}
           </span>
-        </SessionButton>
+        </SessionButton> */}
         <SessionButton
           onClick={() => {
             dispatch(networkDataActions.fetchInfoFromSeshServer() as any);

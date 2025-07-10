@@ -6,13 +6,3 @@ export const useReleasedFeaturesRefreshedAt = (): number => {
     return state?.releasedFeatures.refreshedAt || 0;
   });
 };
-
-
-
-export function useSesh101NotificationAt() {
-  const sesh101NotificationAt = useSelector(
-    (state: StateType) => state.releasedFeatures.sesh101NotificationAt
-  );
-  return sesh101NotificationAt;
-}
-
