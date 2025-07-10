@@ -23,6 +23,7 @@ export const PlayButtonCenteredAbsolute = ({ iconSize }: WithIconSize) => {
         iconSize={iconSize}
         iconColor="var(--chat-buttons-icon-color)"
         backgroundColor="var(--chat-buttons-background-color)"
+        iconStyle={{ padding: '0.4em' }} // em, because we reuse that component with different font-size
       />
     </PlayButtonCentered>
   );

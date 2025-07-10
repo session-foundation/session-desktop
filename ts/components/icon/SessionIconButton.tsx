@@ -125,72 +125,75 @@ export type SessionLucideIconButtonProps = Pick<
     style?: Omit<CSSProperties, 'backgroundColor' | 'margin' | 'padding'>;
   };
 
-export const SessionLucideIconButton = forwardRef<HTMLButtonElement, SessionLucideIconButtonProps>(
-  (props, ref) => {
-    const {
-      unicode,
-      iconSize,
-      isSelected: $isSelected,
-      margin,
-      padding,
-      ariaLabel,
-      title,
-      dataTestId,
-      dataTestIdIcon,
-      style,
-      iconColor,
-      tabIndex,
-      disabled,
-      onClick,
-      children,
-      backgroundColor,
-    } = props;
+export const SessionLucideIconButton = forwardRef<
+  HTMLButtonElement,
+  SessionLucideIconButtonProps & { iconStyle?: CSSProperties }
+>((props, ref) => {
+  const {
+    unicode,
+    iconSize,
+    isSelected: $isSelected,
+    margin,
+    padding,
+    ariaLabel,
+    title,
+    dataTestId,
+    dataTestIdIcon,
+    style,
+    iconStyle,
+    iconColor,
+    tabIndex,
+    disabled,
+    onClick,
+    children,
+    backgroundColor,
+  } = props;
 
-    const clickHandler = (e: MouseEvent<HTMLButtonElement>) => {
-      if (!disabled && onClick) {
-        e.stopPropagation();
-        onClick(e);
-      }
-    };
-    const keyPressHandler = (e: KeyboardEvent<HTMLButtonElement>) => {
-      if (e.currentTarget.tabIndex > -1 && e.key === 'Enter' && !disabled && onClick) {
-        e.stopPropagation();
-        onClick();
-      }
-    };
-    const isDarkTheme = useIsDarkTheme();
+  const clickHandler = (e: MouseEvent<HTMLButtonElement>) => {
+    if (!disabled && onClick) {
+      e.stopPropagation();
+      onClick(e);
+    }
+  };
+  const keyPressHandler = (e: KeyboardEvent<HTMLButtonElement>) => {
+    if (e.currentTarget.tabIndex > -1 && e.key === 'Enter' && !disabled && onClick) {
+      e.stopPropagation();
+      onClick();
+    }
+  };
+  const isDarkTheme = useIsDarkTheme();
 
-    return (
-      <StyledSessionIconButton
-        color={iconColor}
-        $isSelected={$isSelected}
-        title={title}
-        aria-label={ariaLabel}
-        onClick={clickHandler}
-        style={{
-          ...style,
-          backgroundColor,
-          display: style?.display ? style.display : 'flex',
-          margin: margin || '',
-          padding: padding || '',
-          // pretty sure we always want the border-radius here.
-          borderRadius: '50%',
-        }}
-        tabIndex={tabIndex}
-        onKeyDown={keyPressHandler}
-        disabled={disabled}
-        data-testid={dataTestId}
-        ref={ref}
-        $isDarkTheme={isDarkTheme}
-      >
-        <LucideIcon
-          unicode={unicode}
-          iconSize={iconSize}
-          iconColor={iconColor}
-          dataTestId={dataTestIdIcon}
-        />
-        {children}
-      </StyledSessionIconButton>
-    );
-  }
-);
+  return (
+    <StyledSessionIconButton
+      color={iconColor}
+      $isSelected={$isSelected}
+      title={title}
+      aria-label={ariaLabel}
+      onClick={clickHandler}
+      style={{
+        ...style,
+        backgroundColor,
+        display: style?.display ? style.display : 'flex',
+        margin: margin || '',
+        padding: padding || '',
+        // pretty sure we always want the border-radius here.
+        borderRadius: '50%',
+      }}
+      tabIndex={tabIndex}
+      onKeyDown={keyPressHandler}
+      disabled={disabled}
+      data-testid={dataTestId}
+      ref={ref}
+      $isDarkTheme={isDarkTheme}
+    >
+      <LucideIcon
+        unicode={unicode}
+        iconSize={iconSize}
+        iconColor={iconColor}
+        dataTestId={dataTestIdIcon}
+        style={iconStyle}
+      />
+      {children}
+    </StyledSessionIconButton>
+  );
+});
