@@ -163,7 +163,7 @@ const ResultBody = styled.div`
   -webkit-box-orient: vertical;
 `;
 
-const StyledTimestampContaimer = styled.div`
+const StyledTimestampContainer = styled.div`
   flex-shrink: 0;
   margin-inline-start: 6px;
 
@@ -235,12 +235,12 @@ export const MessageSearchResult = (props: MessageSearchResultProps) => {
       <StyledResultText>
         <ResultsHeader>
           <ConversationHeader source={destination} conversationId={conversationId} />
-          <StyledTimestampContaimer>
+          <StyledTimestampContainer>
             <Timestamp
               timestamp={serverTimestamp || timestamp || sent_at || received_at}
               isConversationSearchResult={true}
             />
-          </StyledTimestampContaimer>
+          </StyledTimestampContainer>
         </ResultsHeader>
         <ResultBody>
           <FromUserInGroup authorPubkey={source} conversationId={conversationId} />
