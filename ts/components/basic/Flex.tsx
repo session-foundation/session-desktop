@@ -61,8 +61,8 @@ export const Flex = styled.div<FlexProps>`
   flex-wrap: ${props => (props.$flexWrap !== undefined ? props.$flexWrap : 'nowrap')};
   gap: ${props => props.$flexGap || undefined};
   align-items: ${props => props.$alignItems || 'stretch'};
-  margin: ${props => props.margin || '0'};
-  padding: ${props => props.padding || '0'};
+  margin: ${props => props.margin || ''};
+  padding: ${props => props.padding || ''};
   width: ${props => props.width || 'auto'};
   max-width: ${props => props.maxWidth || 'none'};
   min-width: ${props => props.minWidth || 'none'};

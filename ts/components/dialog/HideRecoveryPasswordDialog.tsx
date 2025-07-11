@@ -12,6 +12,7 @@ import {
 } from '../SessionWrapperModal';
 import { localize } from '../../localization/localeTools';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
+import { ModalFlexContainer } from './shared/ModalFlexContainer';
 
 export type HideRecoveryPasswordDialogProps = {
   state: 'firstWarning' | 'secondWarning';
@@ -81,16 +82,17 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
         </ModalActionsContainer>
       }
     >
-      <ModalDescription
-        dataTestId="modal-description"
-        localizerProps={{
-          token:
-            state === 'firstWarning'
-              ? 'recoveryPasswordHidePermanentlyDescription1'
-              : 'recoveryPasswordHidePermanentlyDescription2',
-        }}
-      />
-
+      <ModalFlexContainer>
+        <ModalDescription
+          dataTestId="modal-description"
+          localizerProps={{
+            token:
+              state === 'firstWarning'
+                ? 'recoveryPasswordHidePermanentlyDescription1'
+                : 'recoveryPasswordHidePermanentlyDescription2',
+          }}
+        />
+      </ModalFlexContainer>
       <SpacerMD />
     </SessionWrapperModal>
   );

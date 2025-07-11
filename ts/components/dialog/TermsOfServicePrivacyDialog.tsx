@@ -9,6 +9,7 @@ import {
 } from '../SessionWrapperModal';
 import { localize } from '../../localization/localeTools';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
+import { ModalFlexContainer } from './shared/ModalFlexContainer';
 
 export type TermsOfServicePrivacyDialogProps = {
   show: boolean;
@@ -56,12 +57,14 @@ export function TermsOfServicePrivacyDialog(props: TermsOfServicePrivacyDialogPr
         </ModalActionsContainer>
       }
     >
-      <ModalDescription
-        dataTestId="modal-description"
-        localizerProps={{
-          token: 'urlOpenBrowser',
-        }}
-      />
+      <ModalFlexContainer>
+        <ModalDescription
+          dataTestId="modal-description"
+          localizerProps={{
+            token: 'urlOpenBrowser',
+          }}
+        />
+      </ModalFlexContainer>
     </SessionWrapperModal>
   );
 }

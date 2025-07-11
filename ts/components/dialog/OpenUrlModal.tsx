@@ -11,7 +11,7 @@ import {
   SessionWrapperModal,
 } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
-import { SpacerSM, SpacerXS } from '../basic/Text';
+import { SpacerXS } from '../basic/Text';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
 import { localize } from '../../localization/localeTools';
 
@@ -73,7 +73,6 @@ export function OpenUrlModal(props: OpenUrlModalState) {
           localizerProps={{ token: 'urlOpenDescription', asTag: 'span', args: { url } }}
         />
       </StyledScrollDescriptionContainer>
-      <SpacerSM />
 
       <SpacerXS />
     </SessionWrapperModal>

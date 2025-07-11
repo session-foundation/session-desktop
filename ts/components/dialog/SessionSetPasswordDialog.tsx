@@ -18,7 +18,7 @@ import {
   WrapperModalWidth,
 } from '../SessionWrapperModal';
 import { SimpleSessionInput } from '../inputs/SessionInput';
-import { Flex } from '../basic/Flex';
+import { ModalFlexContainer } from './shared/ModalFlexContainer';
 
 interface Props {
   passwordAction: PasswordAction;
@@ -129,14 +129,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
           </ModalActionsContainer>
         }
       >
-        <Flex
-          $container={true}
-          $justifyContent="center"
-          $alignItems="center"
-          $flexDirection="column"
-          width="100%"
-          $flexGap="var(--margins-md)"
-        >
+        <ModalFlexContainer>
           <SimpleSessionInput
             {...sharedInputProps}
             placeholder={placeholders[0]}
@@ -160,7 +153,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
               data-testid="password-input-reconfirm"
             />
           )}
-        </Flex>
+        </ModalFlexContainer>
       </SessionWrapperModal>
     );
   }

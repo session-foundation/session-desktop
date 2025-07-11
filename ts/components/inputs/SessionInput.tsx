@@ -391,6 +391,10 @@ export const SimpleSessionInput = (props: SimpleSessionInputProps) => {
   );
 };
 
+export const ModalSimpleSessionInput = (props: Omit<SimpleSessionInputProps, 'padding'>) => {
+  return <SimpleSessionInput {...props} padding={'var(--margins-sm) var(--margins-md)'} />;
+};
+
 /**
  *
  * Also, and just like SimpleSessionInput, error handling and value management is to be done by the parent component.

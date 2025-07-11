@@ -13,6 +13,7 @@ import {
 } from '../SessionWrapperModal';
 import { localize } from '../../localization/localeTools';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
+import { ModalFlexContainer } from './shared/ModalFlexContainer';
 
 type Props = {
   reaction: string;
@@ -71,12 +72,14 @@ export const ReactClearAllModal = (props: Props) => {
         </ModalActionsContainer>
       }
     >
-      <ModalDescription
-        dataTestId="modal-description"
-        localizerProps={{ token: 'emojiReactsClearAll', args: { emoji: reaction } }}
-      />
+      <ModalFlexContainer>
+        <ModalDescription
+          dataTestId="modal-description"
+          localizerProps={{ token: 'emojiReactsClearAll', args: { emoji: reaction } }}
+        />
 
-      <SessionSpinner loading={clearingInProgress} />
+        <SessionSpinner loading={clearingInProgress} />
+      </ModalFlexContainer>
     </SessionWrapperModal>
   );
 };

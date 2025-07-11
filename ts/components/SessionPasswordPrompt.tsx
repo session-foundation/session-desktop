@@ -24,6 +24,7 @@ import { ShowHideSessionInput } from './inputs/SessionInput';
 import { sleepFor } from '../session/utils/Promise';
 import { ModalDescription } from './dialog/shared/ModalDescriptionContainer';
 import { SpacerMD } from './basic/Text';
+import { ModalFlexContainer } from './dialog/shared/ModalFlexContainer';
 
 const MAX_LOGIN_TRIES = 3;
 
@@ -215,26 +216,28 @@ const SessionPasswordPromptInner = () => {
         )
       }
     >
-      {loading ? (
-        <>
-          <SessionSpinner loading={true} />
-          <TextPleaseWait isLoading={loading} />
-          <SpacerMD />
-        </>
-      ) : clearDataView ? (
-        <ModalDescription
-          dataTestId="modal-description"
-          localizerProps={{
-            token: 'clearDeviceDescription',
-          }}
-        />
-      ) : (
-        <PasswordPrompt
-          onEnterPressed={initLogin}
-          onPasswordChange={setPassword}
-          password={password}
-        />
-      )}
+      <ModalFlexContainer>
+        {loading ? (
+          <>
+            <SessionSpinner loading={true} />
+            <TextPleaseWait isLoading={loading} />
+            <SpacerMD />
+          </>
+        ) : clearDataView ? (
+          <ModalDescription
+            dataTestId="modal-description"
+            localizerProps={{
+              token: 'clearDeviceDescription',
+            }}
+          />
+        ) : (
+          <PasswordPrompt
+            onEnterPressed={initLogin}
+            onPasswordChange={setPassword}
+            password={password}
+          />
+        )}
+      </ModalFlexContainer>
     </SessionWrapperModal>
   );
 };

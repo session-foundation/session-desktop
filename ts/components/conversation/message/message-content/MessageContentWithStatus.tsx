@@ -137,7 +137,8 @@ export const MessageContentWithStatuses = (props: Props) => {
           $container={true}
           $flexDirection="column"
           $flexShrink={0}
-          $alignItems="flex-end"
+          // we need this to prevent short messages from being misaligned (incoming)
+          $alignItems={isIncoming ? 'flex-start' : 'flex-end'}
           maxWidth="100%"
         >
           <StyledMessageWithAuthor>
