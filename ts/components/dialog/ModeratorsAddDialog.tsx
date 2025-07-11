@@ -7,7 +7,6 @@ import { PubKey } from '../../session/types';
 import { ToastUtils } from '../../session/utils';
 import { ConvoHub } from '../../session/conversations';
 import { updateAddModeratorsModal } from '../../state/ducks/modalDialog';
-import { Flex } from '../basic/Flex';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
 import { SessionSpinner } from '../loading';
 import { localize } from '../../localization/localeTools';
@@ -17,10 +16,10 @@ import {
   ModalActionsContainer,
   SessionWrapperModal,
 } from '../SessionWrapperModal';
-import { SimpleSessionInput } from '../inputs/SessionInput';
-import { SpacerMD } from '../basic/Text';
+import { ModalSimpleSessionInput } from '../inputs/SessionInput';
 import { ClearInputButton } from '../inputs/ClearInputButton';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
+import { ModalFlexContainer } from './shared/ModalFlexContainer';
 
 type Props = {
   conversationId: string;
@@ -109,20 +108,19 @@ export const AddModeratorsDialog = (props: Props) => {
         </ModalActionsContainer>
       }
     >
-      <Flex $container={true} $flexDirection="column" $alignItems="center">
+      <ModalFlexContainer>
         <ModalDescription
           dataTestId="modal-description"
           localizerProps={{ token: 'addAdminsDescription' }}
         />
 
-        <SimpleSessionInput
+        <ModalSimpleSessionInput
           placeholder={localize('accountId').toString()}
           onValueChanged={setInputBoxValue}
           disabled={addingInProgress}
           value={inputBoxValue}
           ariaLabel="account Id input"
           textSize="md"
-          padding={'var(--margins-md) var(--margins-md)'}
           inputDataTestId="add-admins-input"
           onEnterPressed={() => void addAsModerator()}
           errorDataTestId="error-message"
@@ -140,8 +138,7 @@ export const AddModeratorsDialog = (props: Props) => {
         />
 
         <SessionSpinner loading={addingInProgress} />
-        <SpacerMD />
-      </Flex>
+      </ModalFlexContainer>
     </SessionWrapperModal>
   );
 };

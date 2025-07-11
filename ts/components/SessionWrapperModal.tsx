@@ -127,10 +127,15 @@ export const ModalActionsContainer = ({
   children,
   maxWidth,
   style = {},
+  extraBottomMargin,
 }: {
   children: ReactNode;
   style?: CSSProperties;
   maxWidth?: string;
+  /**
+   * some buttons have border/background and need some extra margin to not appear to close to the edge
+   */
+  extraBottomMargin?: boolean;
 }) => {
   return (
     <Flex
@@ -141,7 +146,11 @@ export const ModalActionsContainer = ({
       $alignItems="center"
       $flexGap="var(--margins-md)"
       height="50px"
-      style={{ justifySelf: 'center', ...style }}
+      style={{
+        justifySelf: 'center',
+        marginBottom: extraBottomMargin ? 'var(--margins-sm)' : '',
+        ...style,
+      }}
       data-testid="modal-actions-container"
     >
       {children}

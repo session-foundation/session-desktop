@@ -9,7 +9,6 @@ import {
   BanMenuItem,
   BlockMenuItem,
   ChangeNicknameMenuItem,
-  ClearNicknameMenuItem,
   DeclineAndBlockMsgRequestMenuItem,
   DeclineMsgRequestMenuItem,
   DeleteMessagesMenuItem,
@@ -102,7 +101,6 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
         <MarkConversationUnreadMenuItem />
         {/* Nickname actions */}
         <ChangeNicknameMenuItem />
-        <ClearNicknameMenuItem />
         {/* Communities actions */}
         <BanMenuItem />
         <UnbanMenuItem />

@@ -1,3 +1,4 @@
+import styled from 'styled-components';
 import { useState } from 'react';
 
 import { useDisableDrag } from '../../../hooks/useDisableDrag';
@@ -14,6 +15,25 @@ type Props = {
   mediaItem: MediaItemType;
   mediaItems: Array<MediaItemType>;
 };
+
+const StyledMediaGridItem = styled.div`
+  cursor: pointer;
+  background-color: var(--message-link-preview-background-color);
+  position: relative;
+  width: 100%;
+  height: 100%;
+`;
+
+const StyledMediaGridItemImage = styled.img`
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+`;
+
+const StyledMediaGridItemImageContainer = styled.div`
+  object-fit: cover;
+  position: relative;
+`;
 
 const MediaGridItemContent = (props: Props) => {
   const { mediaItem } = props;
@@ -49,8 +69,7 @@ const MediaGridItemContent = (props: Props) => {
     }
 
     return (
-      <img
-        className="module-media-grid-item__image"
+      <StyledMediaGridItemImage
         src={srcData}
         alt={AriaLabels.imageSentInConversation}
         onError={onImageError}
@@ -70,16 +89,15 @@ const MediaGridItemContent = (props: Props) => {
     }
 
     return (
-      <div className="module-media-grid-item__image-container">
-        <img
-          className="module-media-grid-item__image"
+      <StyledMediaGridItemImageContainer>
+        <StyledMediaGridItemImage
           src={srcData}
           alt={AriaLabels.imageSentInConversation}
           onError={onImageError}
           onDragStart={disableDrag}
         />
         <PlayButtonCenteredAbsolute iconSize="medium" />
-      </div>
+      </StyledMediaGridItemImageContainer>
     );
   }
 
@@ -88,8 +106,7 @@ const MediaGridItemContent = (props: Props) => {
 
 export const MediaGridItem = (props: Props) => {
   return (
-    <div
-      className="module-media-grid-item"
+    <StyledMediaGridItem
       role="button"
       onClick={() => {
         const lightBoxOptions: LightBoxOptions = {
@@ -101,6 +118,6 @@ export const MediaGridItem = (props: Props) => {
       }}
     >
       <MediaGridItemContent {...props} />
-    </div>
+    </StyledMediaGridItem>
   );
 };

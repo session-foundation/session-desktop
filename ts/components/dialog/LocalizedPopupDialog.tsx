@@ -8,11 +8,11 @@ import {
 } from '../../state/ducks/modalDialog';
 import { ModalBasicHeader, SessionWrapperModal } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
-import { Flex } from '../basic/Flex';
 import { SpacerSM, SpacerXS } from '../basic/Text';
 import { localize } from '../../localization/localeTools';
 import { Localizer } from '../basic/Localizer';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
+import { ModalFlexContainer } from './shared/ModalFlexContainer';
 
 const StyledScrollDescriptionContainer = styled.div`
   max-height: 150px;
@@ -50,13 +50,7 @@ export function LocalizedPopupDialog(props: LocalizedPopupDialogState) {
       </StyledScrollDescriptionContainer>
       <SpacerSM />
 
-      <Flex
-        $container={true}
-        width={'100%'}
-        $justifyContent="center"
-        $alignItems="center"
-        $flexGap="var(--margins-md)"
-      >
+      <ModalFlexContainer>
         <SessionButton
           buttonType={SessionButtonType.Simple}
           onClick={onClose}
@@ -64,7 +58,7 @@ export function LocalizedPopupDialog(props: LocalizedPopupDialogState) {
         >
           {localize('okay')}
         </SessionButton>
-      </Flex>
+      </ModalFlexContainer>
       <SpacerXS />
     </SessionWrapperModal>
   );

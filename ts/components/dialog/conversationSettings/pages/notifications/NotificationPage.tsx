@@ -30,6 +30,7 @@ import {
   WrapperModalWidth,
 } from '../../../../SessionWrapperModal';
 import { ModalBackButton } from '../../../shared/ModalBackButton';
+import { SpacerMD } from '../../../../basic/Text';
 
 const getDataTestIdForButton = (
   value: ConversationNotificationSettingType
@@ -123,7 +124,7 @@ export function NotificationForConversationModal(props: Required<ConversationSet
       allowOutsideClick={false}
       $contentMinWidth={WrapperModalWidth.narrow} // the content is radio buttons and it looks weird on a large modal
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer extraBottomMargin={true}>
           <SessionButton
             onClick={handleSetNotifications}
             dataTestId={'notifications-set-button'}
@@ -161,6 +162,7 @@ export function NotificationForConversationModal(props: Required<ConversationSet
           </PanelButtonGroup>
         </Flex>
       </StyledScrollContainer>
+      <SpacerMD />
     </SessionWrapperModal>
   );
 }

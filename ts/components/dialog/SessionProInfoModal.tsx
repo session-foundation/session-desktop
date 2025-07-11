@@ -219,10 +219,10 @@ export function SessionProInfoModal(props: SessionProInfoState) {
             justifyItems: 'center',
             gridTemplateColumns: '1fr 1fr',
             columnGap: 'var(--margins-sm)',
-            paddingBottom: 'var(--margins-md)',
             paddingInline: 'var(--margins-md)',
             height: 'unset',
           }}
+          extraBottomMargin={true}
         >
           <SessionButtonShiny
             {...buttonProps}

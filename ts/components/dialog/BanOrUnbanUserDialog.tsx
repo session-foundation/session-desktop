@@ -12,7 +12,6 @@ import { ConvoHub } from '../../session/conversations/ConversationController';
 import { PubKey } from '../../session/types';
 import { ToastUtils } from '../../session/utils';
 import { BanType, updateBanOrUnbanUserModal } from '../../state/ducks/modalDialog';
-import { Flex } from '../basic/Flex';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionSpinner } from '../loading';
 import {
@@ -22,8 +21,8 @@ import {
 } from '../SessionWrapperModal';
 import { localize } from '../../localization/localeTools';
 import { SimpleSessionInput } from '../inputs/SessionInput';
-import { SpacerSM } from '../basic/Text';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
+import { ModalFlexContainer } from './shared/ModalFlexContainer';
 
 async function banOrUnBanUserCall(
   convo: ConversationModel,
@@ -133,6 +132,7 @@ export const BanOrUnBanUserDialog = (props: {
             onClick={banOrUnBanUser}
             text={buttonText}
             disabled={inProgress}
+            buttonColor={isBan && !hasPubkeyOnLoad ? SessionButtonColor.Danger : undefined}
             dataTestId={isBan ? 'ban-user-confirm-button' : 'unban-user-confirm-button'}
           />
           {/*
@@ -162,11 +162,12 @@ export const BanOrUnBanUserDialog = (props: {
         </ModalActionsContainer>
       }
     >
-      <Flex $container={true} $flexDirection="column" $alignItems="center" width="100%">
+      <ModalFlexContainer>
         <ModalDescription
           dataTestId="modal-description"
           localizerProps={{ token: isBan ? 'banUserDescription' : 'banUnbanUserDescription' }}
         />
+
         <SimpleSessionInput
           inputRef={inputRef}
           placeholder={localize('accountId').toString()}
@@ -174,15 +175,14 @@ export const BanOrUnBanUserDialog = (props: {
           disabled={inProgress || !!pubkey}
           value={pubkey ? inputTextToDisplay : inputBoxValue}
           errorDataTestId="error-message"
+          padding="var(--margins-sm) var(--margins-md)"
           providedError={''}
           // don't do anything on enter as we don't know if the user wants to ban or ban-delete-all
           onEnterPressed={() => {}}
           inputDataTestId={isBan ? 'ban-user-input' : 'unban-user-input'}
         />
-
         <SessionSpinner loading={inProgress} />
-        <SpacerSM />
-      </Flex>
+      </ModalFlexContainer>
     </SessionWrapperModal>
   );
 };

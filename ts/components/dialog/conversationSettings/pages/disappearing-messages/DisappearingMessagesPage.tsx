@@ -14,7 +14,7 @@ import {
   useSelectedIsGroupOrCommunity,
 } from '../../../../../state/selectors/selectedConversation';
 import { Flex } from '../../../../basic/Flex';
-import { SpacerLG } from '../../../../basic/Text';
+import { SpacerLG, SpacerMD } from '../../../../basic/Text';
 import {
   HeaderSubtitle,
   StyledScrollContainer,
@@ -177,7 +177,7 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
       allowOutsideClick={false}
       $contentMinWidth={WrapperModalWidth.narrow}
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer extraBottomMargin={true}>
           {loading ? (
             <SessionSpinner loading={true} />
           ) : (
@@ -245,6 +245,7 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
           )}
         </Flex>
       </StyledScrollContainer>
+      <SpacerMD />
     </SessionWrapperModal>
   );
 };

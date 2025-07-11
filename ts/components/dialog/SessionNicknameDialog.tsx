@@ -8,7 +8,7 @@ import { useConversationRealName, useNickname } from '../../hooks/useParamSelect
 import { PubKey } from '../../session/types';
 import { localize } from '../../localization/localeTools';
 import LIBSESSION_CONSTANTS from '../../session/utils/libsession/libsession_constants';
-import { SimpleSessionInput } from '../inputs/SessionInput';
+import { ModalSimpleSessionInput } from '../inputs/SessionInput';
 import { ClearInputButton } from '../inputs/ClearInputButton';
 import {
   ModalBasicHeader,
@@ -16,6 +16,7 @@ import {
   SessionWrapperModal,
 } from '../SessionWrapperModal';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
+import { ModalFlexContainer } from './shared/ModalFlexContainer';
 
 type Props = {
   conversationId: string;
@@ -35,11 +36,10 @@ function NicknameInput({
       ? localize('nicknameErrorShorter').toString()
       : '';
   return (
-    <SimpleSessionInput
+    <ModalSimpleSessionInput
       ariaLabel="nickname input"
       value={nickname}
       textSize="md"
-      padding={'var(--margins-xl) var(--margins-md)'}
       inputDataTestId="nickname-input"
       onValueChanged={setStateNickname}
       placeholder={localize('nicknameEnter').toString()}
@@ -107,18 +107,20 @@ export const SessionNicknameDialog = (props: Props) => {
         </ModalActionsContainer>
       }
     >
-      <ModalDescription
-        dataTestId="modal-description"
-        localizerProps={{
-          token: 'nicknameDescription',
-          args: { name: displayName || PubKey.shorten(conversationId) },
-        }}
-      />
-      <NicknameInput
-        onConfirm={() => void saveNickname(nickname)}
-        nickname={nickname}
-        setStateNickname={setStateNickname}
-      />
+      <ModalFlexContainer>
+        <ModalDescription
+          dataTestId="modal-description"
+          localizerProps={{
+            token: 'nicknameDescription',
+            args: { name: displayName || PubKey.shorten(conversationId) },
+          }}
+        />
+        <NicknameInput
+          onConfirm={() => void saveNickname(nickname)}
+          nickname={nickname}
+          setStateNickname={setStateNickname}
+        />
+      </ModalFlexContainer>
     </SessionWrapperModal>
   );
 };

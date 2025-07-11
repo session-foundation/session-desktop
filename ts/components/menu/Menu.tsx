@@ -45,7 +45,6 @@ import { useRemoveModeratorsCb } from '../menuAndSettingsHooks/useRemoveModerato
 import { useUnbanUserCb } from '../menuAndSettingsHooks/useUnbanUser';
 import { useBanUserCb } from '../menuAndSettingsHooks/useBanUser';
 import { useSetNotificationsFor } from '../menuAndSettingsHooks/useSetNotificationsFor';
-import { useClearNickname } from '../menuAndSettingsHooks/useClearNickname';
 import { Localizer } from '../basic/Localizer';
 import { useChangeNickname } from '../menuAndSettingsHooks/useChangeNickname';
 import { useShowNoteToSelfCb } from '../menuAndSettingsHooks/useShowNoteToSelf';
@@ -239,23 +238,6 @@ export const BlockMenuItem = (): JSX.Element | null => {
   return (
     <ItemWithDataTestId onClick={showBlockUnblock.cb}>
       {localize(showBlockUnblock.token)}
-    </ItemWithDataTestId>
-  );
-};
-
-export const ClearNicknameMenuItem = (): JSX.Element | null => {
-  const convoId = useConvoIdFromContext();
-
-  const clearNicknameCb = useClearNickname(convoId);
-
-  if (!clearNicknameCb) {
-    return null;
-  }
-
-  return (
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    <ItemWithDataTestId onClick={clearNicknameCb}>
-      {window.i18n('nicknameRemove')}
     </ItemWithDataTestId>
   );
 };

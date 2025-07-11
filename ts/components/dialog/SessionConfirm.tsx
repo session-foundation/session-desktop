@@ -16,6 +16,7 @@ import type { LocalizerProps } from '../basic/Localizer';
 import { SessionSpinner } from '../loading';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
 import { localize } from '../../localization/localeTools';
+import { ModalFlexContainer } from './shared/ModalFlexContainer';
 
 export interface SessionConfirmDialogProps {
   i18nMessage?: LocalizerProps;
@@ -150,22 +151,24 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
         </ModalActionsContainer>
       }
     >
-      {i18nMessage ? (
-        <ModalDescription dataTestId="modal-description" localizerProps={i18nMessage} />
-      ) : null}
-      {radioOptions && chosenOption !== '' ? (
-        <SessionRadioGroup
-          group="session-confirm-radio-group"
-          initialItem={chosenOption}
-          items={radioOptions}
-          onClick={value => {
-            if (value) {
-              setChosenOption(value);
-            }
-          }}
-        />
-      ) : null}
-      <SessionSpinner loading={isLoading} />
+      <ModalFlexContainer>
+        {i18nMessage ? (
+          <ModalDescription dataTestId="modal-description" localizerProps={i18nMessage} />
+        ) : null}
+        {radioOptions && chosenOption !== '' ? (
+          <SessionRadioGroup
+            group="session-confirm-radio-group"
+            initialItem={chosenOption}
+            items={radioOptions}
+            onClick={value => {
+              if (value) {
+                setChosenOption(value);
+              }
+            }}
+          />
+        ) : null}
+        <SessionSpinner loading={isLoading} />
+      </ModalFlexContainer>
     </SessionWrapperModal>
   );
 };

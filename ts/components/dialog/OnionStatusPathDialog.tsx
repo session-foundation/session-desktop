@@ -29,6 +29,7 @@ import {
 } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
+import { ModalFlexContainer } from './shared/ModalFlexContainer';
 
 type StatusLightType = {
   glowing?: boolean;
@@ -133,7 +134,7 @@ const OnionPathModalInner = () => {
   }
 
   return (
-    <>
+    <ModalFlexContainer>
       <ModalDescription
         dataTestId="modal-description"
         localizerProps={{ token: 'onionRoutingPathDescription' }}
@@ -171,7 +172,7 @@ const OnionPathModalInner = () => {
           </Flex>
         </Flex>
       </StyledOnionNodeList>
-    </>
+    </ModalFlexContainer>
   );
 };
 

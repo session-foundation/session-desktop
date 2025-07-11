@@ -17,6 +17,7 @@ import {
   ModalActionsContainer,
   SessionWrapperModal,
 } from '../../SessionWrapperModal';
+import { ModalFlexContainer } from '../shared/ModalFlexContainer';
 
 type ModalState = NonNullable<BlockOrUnblockModalState>;
 
@@ -112,7 +113,9 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
         </ModalActionsContainer>
       }
     >
-      <ModalDescription dataTestId="modal-description" localizerProps={args} />
+      <ModalFlexContainer>
+        <ModalDescription dataTestId="modal-description" localizerProps={args} />
+      </ModalFlexContainer>
     </SessionWrapperModal>
   );
 };

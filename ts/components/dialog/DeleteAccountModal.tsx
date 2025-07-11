@@ -3,7 +3,6 @@ import { useDispatch } from 'react-redux';
 
 import { updateDeleteAccountModal } from '../../state/ducks/modalDialog';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
-import { SpacerLG } from '../basic/Text';
 import { SessionSpinner } from '../loading';
 
 import {
@@ -18,6 +17,7 @@ import {
   SessionWrapperModal,
 } from '../SessionWrapperModal';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
+import { ModalFlexContainer } from './shared/ModalFlexContainer';
 
 const DEVICE_ONLY = 'device_only' as const;
 const DEVICE_AND_NETWORK = 'device_and_network' as const;
@@ -159,16 +159,17 @@ export const DeleteAccountModal = () => {
         </ModalActionsContainer>
       }
     >
-      {askingConfirmation ? (
-        <DescriptionWhenAskingConfirmation deleteMode={deleteMode} />
-      ) : (
-        <DescriptionBeforeAskingConfirmation
-          deleteMode={deleteMode}
-          setDeleteMode={setDeleteMode}
-        />
-      )}
-      {isLoading && <SpacerLG />}
-      <SessionSpinner loading={isLoading} />
+      <ModalFlexContainer>
+        {askingConfirmation ? (
+          <DescriptionWhenAskingConfirmation deleteMode={deleteMode} />
+        ) : (
+          <DescriptionBeforeAskingConfirmation
+            deleteMode={deleteMode}
+            setDeleteMode={setDeleteMode}
+          />
+        )}
+        <SessionSpinner loading={isLoading} />
+      </ModalFlexContainer>
     </SessionWrapperModal>
   );
 };

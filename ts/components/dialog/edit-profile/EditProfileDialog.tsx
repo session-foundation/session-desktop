@@ -261,7 +261,8 @@ export const EditProfileDialog = () => {
         onClose={closeDialog}
         buttonChildren={
           mode === 'default' || mode === 'qr' || mode === 'lightbox' ? (
-            <ModalActionsContainer>
+            // some bottom margin as the buttons have a border and appear to close to the edge
+            <ModalActionsContainer extraBottomMargin={true}>
               <CopyToClipboardButton
                 buttonColor={SessionButtonColor.PrimaryDark}
                 copyContent={us}
@@ -284,7 +285,7 @@ export const EditProfileDialog = () => {
             </ModalActionsContainer>
           ) : (
             !loading && (
-              <ModalActionsContainer>
+              <ModalActionsContainer extraBottomMargin={true}>
                 <SessionButton
                   text={localize('save').toString()}
                   onClick={onClickOK}
