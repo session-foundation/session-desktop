@@ -4,7 +4,7 @@ import { PASSWORD_LENGTH } from '../session/constants';
 
 const ERRORS = {
   TYPE: 'Password must be a string',
-  LENGTH: 'Password must be between 6 and 64 characters long',
+  LENGTH: 'Password must be between 6 and 256 characters long',
   CHARACTER: 'Password must only contain letters, numbers and symbols',
 };
 

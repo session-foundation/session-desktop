@@ -711,7 +711,7 @@
   "passwordEnterCurrent": "Please enter your current password",
   "passwordEnterNew": "Please enter your new password",
   "passwordError": "Password must only contain letters, numbers and symbols",
-  "passwordErrorLength": "Password must be between 6 and 64 characters long",
+  "passwordErrorLength": "Password must be between 6 and 256 characters long",
   "passwordErrorMatch": "Passwords do not match",
   "passwordFailed": "Failed to set password",
   "passwordIncorrect": "Incorrect password",
