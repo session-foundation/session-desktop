@@ -144,7 +144,7 @@ export function propsToTuple<T extends MergedLocalizerTokens>(
  *
  * @returns The localized message string with substitutions applied.
  */
-export function getMessageDefault<T extends MergedLocalizerTokens>(
+function getMessageDefault<T extends MergedLocalizerTokens>(
   ...props: GetMessageArgs<T>
 ): string {
   const token = props[0];

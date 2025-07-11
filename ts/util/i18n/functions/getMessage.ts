@@ -4,11 +4,10 @@ import type { SetupI18nReturnType } from '../../../types/localizer';
 import {
   formatMessageWithArgs,
   getRawMessage,
-  getMessageDefault,
   strippedWithObj,
 } from '../../../localization/localeTools';
 
-const getMessageDefaultCopy: any = getMessageDefault;
+const getMessageDefaultCopy: any = {};
 
 getMessageDefaultCopy.strippedWithObj = strippedWithObj;
 getMessageDefaultCopy.getRawMessage = getRawMessage;
