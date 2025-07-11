@@ -12,7 +12,7 @@ import { ExpireTimer } from '../../ExpireTimer';
 import { saveLogToDesktop } from '../../../../util/logger/renderer_process_logging';
 import { LUCIDE_ICONS_UNICODE, type WithLucideUnicode } from '../../../icon/lucide';
 import { LucideIcon } from '../../../icon/LucideIcon';
-import { localize } from '../../../../localization/localeTools';
+import { localize, tr } from '../../../../localization/localeTools';
 
 type Props = {
   messageId: string;
@@ -186,10 +186,7 @@ const MessageStatusSent = ({ dataTestId, messageId }: Omit<Props, 'isDetailView'
       isGroup={isGroup}
       clickable={false}
     >
-      <TextDetails
-        text={window.i18n('disappearingMessagesSent')}
-        textColor="var(--text-secondary-color)"
-      />
+      <TextDetails text={tr('disappearingMessagesSent')} textColor="var(--text-secondary-color)" />
       <IconForExpiringMessageId messageId={messageId} unicode={LUCIDE_ICONS_UNICODE.CHECK} />
     </MessageStatusContainer>
   );

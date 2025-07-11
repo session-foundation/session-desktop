@@ -128,39 +128,13 @@ type MappedToTsTypes<T extends Record<string, DynamicArgStr>> = {
   [K in keyof T]: ArgsTypeStrToTypes<T[K]>;
 };
 
-function propsToTuple<T extends MergedLocalizerTokens>(
+export function propsToTuple<T extends MergedLocalizerTokens>(
   opts: LocalizerComponentProps<T, string>
 ): GetMessageArgs<T> {
   return (
     isTokenWithArgs(opts.token) ? [opts.token, opts.args] : [opts.token]
   ) as GetMessageArgs<T>;
 }
-
-/** NOTE: Because of docstring limitations changes MUST be manually synced between {@link setupI18n.inEnglish } and {@link window.i18n.inEnglish } */
-/**
- * Retrieves a message string in the {@link en} locale, substituting variables where necessary.
- *
- * NOTE: This does not work for plural strings. This function should only be used for debug and
- * non-user-facing strings. Plural string support can be added splitting out the logic for
- * {@link setupI18n.formatMessageWithArgs} and creating a new getMessageFromDictionary, which
- * specifies takes a dictionary as an argument. This is left as an exercise for the reader.
- * @deprecated this will eventually be replaced by LocalizedStringBuilder
- *
- * @param token - The token identifying the message to retrieve.
- * @param args - An optional record of substitution variables and their replacement values. This is required if the string has dynamic variables.
- */
-export const inEnglish: I18nMethods['inEnglish'] = token => {
-  if (!isSimpleToken(token)) {
-    throw new Error('inEnglish only supports simple strings for now');
-  }
-  const rawMessage = simpleDictionary[token].en;
-
-  if (!rawMessage) {
-    log(`Attempted to get forced en string for nonexistent key: '${token}' in fallback dictionary`);
-    return token;
-  }
-  return formatMessageWithArgs(rawMessage);
-};
 
 /**
  * Retrieves a localized message string, substituting variables where necessary.
@@ -192,7 +166,9 @@ export function getMessageDefault<T extends MergedLocalizerTokens>(
  *
  * @returns The localized message string with substitutions applied. Any HTML and custom tags are removed.
  */
-export const stripped: I18nMethods['stripped'] = (...[token, args]) => {
+function stripped<T extends MergedLocalizerTokens>(
+  ...[token, args]: GetMessageArgs<T>
+): string | T {
   const sanitizedArgs = args ? sanitizeArgs(args, '\u200B') : undefined;
 
   // Note: the `as any` is needed because we don't have the <T> template argument available
@@ -202,7 +178,7 @@ export const stripped: I18nMethods['stripped'] = (...[token, args]) => {
   const strippedString = i18nString.replaceAll(/<[^>]*>/g, '');
 
   return deSanitizeHtmlTags(strippedString, '\u200B');
-};
+}
 
 export const strippedWithObj: I18nMethods['strippedWithObj'] = opts => {
   return stripped(...propsToTuple(opts));
@@ -515,6 +491,28 @@ export function localize<T extends MergedLocalizerTokens>(token: T) {
 
 export function localizeFromOld<T extends MergedLocalizerTokens>(token: T, args: ArgsFromToken<T>) {
   return localize(token).withArgs(args);
+}
+
+export function tr<T extends MergedLocalizerTokens>(
+  token: T,
+  ...args: ArgsFromToken<T> extends never ? [] : [args: ArgsFromToken<T>]
+): string {
+  const builder = new LocalizedStringBuilder<T>(token, localeInUse);
+  if (args.length) {
+    builder.withArgs(args[0]);
+  }
+  return builder.toString();
+}
+
+export function tStripped<T extends MergedLocalizerTokens>(
+  token: T,
+  ...args: ArgsFromToken<T> extends never ? [] : [args: ArgsFromToken<T>]
+): string {
+  const builder = new LocalizedStringBuilder<T>(token, localeInUse).strip();
+  if (args.length) {
+    builder.withArgs(args[0]);
+  }
+  return builder.toString();
 }
 
 export type LocalizerHtmlTag = 'span' | 'div';

@@ -7,7 +7,5 @@ describe('setupI18n', () => {
     expect(setupI18nReturn).to.be.a('function');
     expect(setupI18nReturn.getRawMessage).to.be.a('function');
     expect(setupI18nReturn.formatMessageWithArgs).to.be.a('function');
-    expect(setupI18nReturn.stripped).to.be.a('function');
-    expect(setupI18nReturn.inEnglish).to.be.a('function');
   });
 });

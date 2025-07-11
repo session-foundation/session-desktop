@@ -12,6 +12,7 @@ import { SpacerLG, SpacerSM } from '../basic/Text';
 import { SessionSettingsItemWrapper, SettingsTitleAndDescription } from './SessionSettingListItem';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { tr } from '../../localization/localeTools';
 
 const BlockedEntriesContainer = styled.div`
   display: flex;
@@ -127,7 +128,7 @@ export const BlockedContactsList = () => {
         expanded={!noBlockedNumbers && expanded}
       >
         <BlockedContactListTitle onClick={toggleUnblockList}>
-          <SettingsTitleAndDescription title={window.i18n('conversationsBlockedContacts')} />
+          <SettingsTitleAndDescription title={tr('conversationsBlockedContacts')} />
           {noBlockedNumbers ? (
             <NoBlockedContacts />
           ) : (
@@ -135,7 +136,7 @@ export const BlockedContactsList = () => {
               {hasAtLeastOneSelected && expanded ? (
                 <SessionButton
                   buttonColor={SessionButtonColor.Danger}
-                  text={window.i18n('blockUnblock')}
+                  text={tr('blockUnblock')}
                   onClick={unBlockThoseUsers}
                   dataTestId="unblock-button-settings-screen"
                 />

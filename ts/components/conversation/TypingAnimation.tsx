@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { tr } from '../../localization/localeTools';
 
 const StyledTypingContainer = styled.div`
   display: inline-flex;
@@ -73,7 +74,7 @@ const StyledSpacer = styled.div`
 
 export const TypingAnimation = () => {
   return (
-    <StyledTypingContainer aria-label={window.i18n('typingIndicators')}>
+    <StyledTypingContainer aria-label={tr('typingIndicators')}>
       <StyledTypingDot index={0} />
       <StyledSpacer />
       <StyledTypingDot index={1} />

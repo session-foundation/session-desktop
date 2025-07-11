@@ -33,7 +33,7 @@ import { useLibGroupDestroyed } from '../../state/selectors/userGroups';
 import { NetworkTime } from '../../util/NetworkTime';
 import { useShowNotificationFor } from '../menuAndSettingsHooks/useShowNotificationFor';
 import { useLocalisedNotificationOptions } from '../menuAndSettingsHooks/useLocalisedNotificationFor';
-import { localize } from '../../localization/localeTools';
+import { localize, tr } from '../../localization/localeTools';
 import { useShowBlockUnblock } from '../menuAndSettingsHooks/useShowBlockUnblock';
 import { useShowDeletePrivateContactCb } from '../menuAndSettingsHooks/useShowDeletePrivateContact';
 import { useClearAllMessagesCb } from '../menuAndSettingsHooks/useClearAllMessages';
@@ -83,11 +83,7 @@ export const MarkConversationUnreadMenuItem = (): JSX.Element | null => {
       void conversation?.markAsUnread(true);
     };
 
-    return (
-      <ItemWithDataTestId onClick={markUnread}>
-        {window.i18n('messageMarkUnread')}
-      </ItemWithDataTestId>
-    );
+    return <ItemWithDataTestId onClick={markUnread}>{tr('messageMarkUnread')}</ItemWithDataTestId>;
   }
   return null;
 };
@@ -297,7 +293,7 @@ export const DeletePrivateConversationMenuItem = () => {
         showDeleteConversationContactCb();
       }}
     >
-      {window.i18n('conversationsDelete')}
+      {tr('conversationsDelete')}
     </ItemWithDataTestId>
   );
 };
@@ -317,7 +313,7 @@ export const HideNoteToSelfMenuItem = () => {
         showHideNoteToSelfCb();
       }}
     >
-      {window.i18n('noteToSelfHide')}
+      {tr('noteToSelfHide')}
     </ItemWithDataTestId>
   );
 };
@@ -337,7 +333,7 @@ export const ShowNoteToSelfMenuItem = () => {
         showShowNoteToSelfCb();
       }}
     >
-      {window.i18n('showNoteToSelf')}
+      {tr('showNoteToSelf')}
     </ItemWithDataTestId>
   );
 };
@@ -359,7 +355,7 @@ export const AcceptMsgRequestMenuItem = () => {
         }}
         dataTestId="accept-menu-item"
       >
-        {window.i18n('accept')}
+        {tr('accept')}
       </ItemWithDataTestId>
     );
   }
@@ -386,7 +382,7 @@ export const DeclineMsgRequestMenuItem = () => {
         }}
         dataTestId="delete-menu-item"
       >
-        {window.i18n('delete')}
+        {tr('delete')}
       </ItemWithDataTestId>
     );
   }
@@ -416,7 +412,7 @@ export const DeclineAndBlockMsgRequestMenuItem = () => {
         }}
         dataTestId="block-menu-item"
       >
-        {window.i18n('block')}
+        {tr('block')}
       </ItemWithDataTestId>
     );
   }

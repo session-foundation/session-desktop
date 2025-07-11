@@ -33,7 +33,7 @@ import { ContinueButton, OnboardDescription, OnboardHeading } from '../component
 import { BackButtonWithinContainer } from '../components/BackButton';
 import { sanitizeDisplayNameOrToast } from '../utils';
 import { EmptyDisplayNameError, RetrieveDisplayNameError } from '../../../session/utils/errors';
-import { localize } from '../../../localization/localeTools';
+import { localize, tr } from '../../../localization/localeTools';
 import { SimpleSessionInput } from '../../inputs/SessionInput';
 
 type AccountCreateDetails = {
@@ -143,9 +143,9 @@ export const CreateAccount = () => {
         $alignItems="flex-start"
         margin={'0 0 0 8px'}
       >
-        <OnboardHeading>{window.i18n('displayNamePick')}</OnboardHeading>
+        <OnboardHeading>{tr('displayNamePick')}</OnboardHeading>
         <SpacerSM />
-        <OnboardDescription>{window.i18n('displayNameDescription')}</OnboardDescription>
+        <OnboardDescription>{tr('displayNameDescription')}</OnboardDescription>
         <SpacerLG />
         <SimpleSessionInput
           ariaLabel={localize('displayNameEnter').toString()}

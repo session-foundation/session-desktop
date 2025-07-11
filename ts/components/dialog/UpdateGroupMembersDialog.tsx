@@ -29,7 +29,7 @@ import {
 import { useSelectedIsGroupV2 } from '../../state/selectors/selectedConversation';
 import { SessionSpinner } from '../loading';
 import { SessionToggle } from '../basic/SessionToggle';
-import { localize } from '../../localization/localeTools';
+import { localize, tr } from '../../localization/localeTools';
 import { SessionSearchInput } from '../SessionSearchInput';
 import { NoGroupMembers } from '../search/NoResults';
 import { useContactsToInviteTo } from '../../hooks/useContactsToInviteToGroup';
@@ -201,7 +201,7 @@ export const UpdateGroupMembersDialog = (props: Props) => {
         <ModalActionsContainer>
           {weAreAdmin && (
             <SessionButton
-              text={window.i18n('remove')}
+              text={tr('remove')}
               onClick={onClickOK}
               buttonType={SessionButtonType.Simple}
               buttonColor={SessionButtonColor.Danger}
@@ -210,7 +210,7 @@ export const UpdateGroupMembersDialog = (props: Props) => {
             />
           )}
           <SessionButton
-            text={window.i18n('cancel')}
+            text={tr('cancel')}
             buttonType={SessionButtonType.Simple}
             onClick={closeDialog}
             disabled={isProcessingUIChange}

@@ -27,7 +27,7 @@ import {
   useLibGroupKicked,
 } from '../state/selectors/userGroups';
 import { ConversationInteractionStatus, ConversationInteractionType } from '../interactions/types';
-import { localize } from '../localization/localeTools';
+import { localize, tr } from '../localization/localeTools';
 
 export function useAvatarPath(convoId: string | undefined) {
   const convoProps = useConversationPropsById(convoId);
@@ -68,7 +68,7 @@ export function useNicknameOrProfileNameOrShortenedPubkey(convoId?: string) {
     convoProps?.nickname ||
     convoProps?.displayNameInProfile ||
     (convoId && PubKey.shorten(convoId)) ||
-    window.i18n('unknown')
+    tr('unknown')
   );
 }
 
@@ -92,7 +92,7 @@ export function useConversationRealName(convoId?: string) {
 
 function usernameForQuoteOrFullPk(pubkey: string, state: StateType) {
   if (pubkey === UserUtils.getOurPubKeyStrFromCache() || pubkey.toLowerCase() === 'you') {
-    return window.i18n('you');
+    return tr('you');
   }
   // use the name from the cached libsession wrappers if available
   if (PubKey.is03Pubkey(pubkey)) {
@@ -130,7 +130,7 @@ export function useConversationsNicknameRealNameOrShortenPubkey(pubkeys: Array<s
   return useSelector((state: StateType) => {
     return pubkeys.map(pk => {
       if (pk === UserUtils.getOurPubKeyStrFromCache() || pk.toLowerCase() === 'you') {
-        return window.i18n('you');
+        return tr('you');
       }
       const convo = state.conversations.conversationLookup[pk];
 
@@ -469,7 +469,7 @@ export function useQuoteAuthorName(authorId?: string): {
 
   const isMe = Boolean(authorId && isUsAnySogsFromCache(authorId));
   const authorName = isMe
-    ? window.i18n('you')
+    ? tr('you')
     : convoProps?.nickname || convoProps?.isPrivate
       ? convoProps?.displayNameInProfile
       : undefined;

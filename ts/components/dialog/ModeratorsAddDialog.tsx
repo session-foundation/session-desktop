@@ -9,7 +9,7 @@ import { ConvoHub } from '../../session/conversations';
 import { updateAddModeratorsModal } from '../../state/ducks/modalDialog';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
 import { SessionSpinner } from '../loading';
-import { localize } from '../../localization/localeTools';
+import { localize, tr } from '../../localization/localeTools';
 import { MAX_SUBREQUESTS_COUNT } from '../../session/apis/snode_api/SnodeRequestTypes';
 import {
   ModalBasicHeader,
@@ -63,9 +63,7 @@ export const AddModeratorsDialog = (props: Props) => {
         ToastUtils.pushFailedToAddAsModerator();
       } else {
         const userNames = pubkeys.map(
-          p =>
-            ConvoHub.use().get(p.key)?.getNicknameOrRealUsernameOrPlaceholder() ||
-            window.i18n('unknown')
+          p => ConvoHub.use().get(p.key)?.getNicknameOrRealUsernameOrPlaceholder() || tr('unknown')
         );
         window?.log?.info(`${userNames.join(', ')} added as moderator(s)...`);
         ToastUtils.pushUserAddedToModerators(userNames);

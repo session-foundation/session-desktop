@@ -24,6 +24,7 @@ import { Storage, saveRecoveryPhrase, setLocalPubKey, setSignInByLinking } from 
 import { PromiseUtils } from '../session/utils';
 import { SnodeAPI } from '../session/apis/snode_api/SNodeAPI';
 import { ReduxOnionSelectors } from '../state/selectors/onions';
+import { tr } from '../localization/localeTools';
 
 /**
  * Might throw
@@ -356,11 +357,11 @@ export async function deleteEverythingAndNetworkData() {
       // open a new confirm dialog to ask user what to do
       window?.inboxStore?.dispatch(
         updateConfirmModal({
-          title: window.i18n('clearDataAll'),
+          title: tr('clearDataAll'),
           i18nMessage: { token: 'clearDataErrorDescriptionGeneric' },
           okTheme: SessionButtonColor.Danger,
-          okText: window.i18n('clearDevice'),
-          cancelText: window.i18n('cancel'),
+          okText: tr('clearDevice'),
+          cancelText: tr('cancel'),
           onClickOk: async () => {
             await deleteDbLocally();
             window.restart();

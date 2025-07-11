@@ -66,36 +66,7 @@ declare global {
        */
       formatMessageWithArgs: I18nMethods['formatMessageWithArgs'];
 
-      /** NOTE: Because of docstring limitations changes MUST be manually synced between {@link setupI18n.stripped } and {@link window.i18n.stripped } */
-      /**
-       * Retrieves a localized message string, substituting variables where necessary. Then strips the message of any HTML and custom tags.
-       *
-       * @deprecated
-       *
-       * @param token - The token identifying the message to retrieve.
-       * @param args - An optional record of substitution variables and their replacement values. This is required if the string has dynamic variables.
-       *
-       * @returns The localized message string with substitutions applied. Any HTML and custom tags are removed.
-       */
-      stripped: I18nMethods['stripped'];
-
       strippedWithObj: I18nMethods['strippedWithObj'];
-
-      /** NOTE: Because of docstring limitations changes MUST be manually synced between {@link setupI18n.inEnglish } and {@link window.i18n.inEnglish } */
-      /**
-       * Retrieves a message string in the {@link en} locale, substituting variables where necessary.
-       *
-       * NOTE: This does not work for plural strings. This function should only be used for debug and
-       * non-user-facing strings. Plural string support can be added splitting out the logic for
-       * {@link setupI18n.formatMessageWithArgs} and creating a new getMessageFromDictionary, which
-       * specifies takes a dictionary as an argument. This is left as an exercise for the reader.
-       *
-       * @deprecated
-       *
-       * @param token - The token identifying the message to retrieve.
-       * @param args - An optional record of substitution variables and their replacement values. This is required if the string has dynamic variables.
-       */
-      inEnglish: I18nMethods['inEnglish'];
     };
     log: any;
     sessionFeatureFlags: SessionFlags;

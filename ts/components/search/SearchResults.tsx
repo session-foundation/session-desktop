@@ -14,6 +14,7 @@ import {
 } from '../../state/selectors/search';
 import { calcContactRowHeight } from '../leftpane/overlay/choose-action/ContactsListWithBreaks';
 import { NoResultsForSearch } from './NoResults';
+import { tr } from '../../localization/localeTools';
 
 const StyledSeparatorSection = styled.div<{ isSubtitle: boolean }>`
   height: 36px;
@@ -79,9 +80,7 @@ const VirtualizedList = () => {
                 <SectionHeader
                   key={key}
                   title={row}
-                  isSubtitle={
-                    row !== window.i18n('sessionConversations') && row !== window.i18n('messages')
-                  }
+                  isSubtitle={row !== tr('sessionConversations') && row !== tr('messages')}
                   style={style as CSSProperties}
                 />
               );

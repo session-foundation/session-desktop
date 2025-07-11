@@ -2,7 +2,7 @@ import styled from 'styled-components';
 import { LabelWithInfo } from '.';
 import { PropsForAttachment } from '../../../../../../state/ducks/conversations';
 import { Flex } from '../../../../../basic/Flex';
-import { localize } from '../../../../../../localization/localeTools';
+import { localize, tr } from '../../../../../../localization/localeTools';
 import { saveLogToDesktop } from '../../../../../../util/logger/renderer_process_logging';
 
 type Props = {
@@ -25,31 +25,29 @@ export const AttachmentInfo = (props: Props) => {
   return (
     <Flex $container={true} $flexDirection="column">
       <LabelWithInfo
-        label={window.i18n('attachmentsFileId')}
-        info={attachment?.id ? String(attachment.id) : window.i18n('attachmentsNa')}
+        label={tr('attachmentsFileId')}
+        info={attachment?.id ? String(attachment.id) : tr('attachmentsNa')}
       />
       <StyledLabelContainer $container={true} $flexDirection="row" $flexWrap="wrap">
         <LabelWithInfo
-          label={window.i18n('attachmentsFileType')}
-          info={
-            attachment?.contentType ? String(attachment.contentType) : window.i18n('attachmentsNa')
-          }
+          label={tr('attachmentsFileType')}
+          info={attachment?.contentType ? String(attachment.contentType) : tr('attachmentsNa')}
         />
         <LabelWithInfo
-          label={window.i18n('attachmentsFileSize')}
-          info={attachment?.fileSize ? String(attachment.fileSize) : window.i18n('attachmentsNa')}
+          label={tr('attachmentsFileSize')}
+          info={attachment?.fileSize ? String(attachment.fileSize) : tr('attachmentsNa')}
         />
         <LabelWithInfo
-          label={window.i18n('attachmentsResolution')}
+          label={tr('attachmentsResolution')}
           info={
             attachment?.width && attachment.height
               ? `${attachment.width}x${attachment.height}`
-              : window.i18n('attachmentsNa')
+              : tr('attachmentsNa')
           }
         />
         <LabelWithInfo
-          label={window.i18n('attachmentsDuration')}
-          info={attachment?.duration ? attachment.duration : window.i18n('attachmentsNa')}
+          label={tr('attachmentsDuration')}
+          info={attachment?.duration ? attachment.duration : tr('attachmentsNa')}
         />
         {hasError ? (
           <LabelWithInfo
