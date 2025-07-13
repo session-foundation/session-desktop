@@ -1,11 +1,10 @@
 import { CrowdinLocale } from './constants';
-import type { I18nMethods } from './I18nMethods';
 import { pluralsDictionary, simpleDictionary } from './locales';
 
 type SimpleDictionary = typeof simpleDictionary;
 type PluralDictionary = typeof pluralsDictionary;
 
-export type SimpleLocalizerTokens = keyof SimpleDictionary;
+type SimpleLocalizerTokens = keyof SimpleDictionary;
 type PluralLocalizerTokens = keyof PluralDictionary;
 
 export type MergedLocalizerTokens = SimpleLocalizerTokens | PluralLocalizerTokens;
@@ -56,11 +55,11 @@ function log(message: Parameters<Logger>[0]) {
   logger(message);
 }
 
-export function isSimpleToken(token: string): token is SimpleLocalizerTokens {
+function isSimpleToken(token: string): token is SimpleLocalizerTokens {
   return token in simpleDictionary;
 }
 
-export function isPluralToken(token: string): token is PluralLocalizerTokens {
+function isPluralToken(token: string): token is PluralLocalizerTokens {
   return token in pluralsDictionary;
 }
 
@@ -73,16 +72,7 @@ type TokenWithArgs<Dict> = {
 
 type MergedTokenWithArgs = TokenWithArgs<SimpleDictionary> | TokenWithArgs<PluralDictionary>;
 
-export function isTokenWithArgs(token: string): token is MergedTokenWithArgs {
-  return (
-    (isSimpleToken(token) && !isEmptyObject(simpleDictionary[token]?.args)) ||
-    (isPluralToken(token) && !isEmptyObject(pluralsDictionary[token]?.args))
-  );
-}
-
 type DynamicArgStr = 'string' | 'number';
-
-export type LocalizerDictionary = SimpleDictionary;
 
 type ArgsTypeStrToTypes<T extends DynamicArgStr> = T extends 'string'
   ? string
@@ -128,61 +118,18 @@ type MappedToTsTypes<T extends Record<string, DynamicArgStr>> = {
   [K in keyof T]: ArgsTypeStrToTypes<T[K]>;
 };
 
-export function propsToTuple<T extends MergedLocalizerTokens>(
+export function strippedWithObj<T extends MergedLocalizerTokens>(
   opts: LocalizerComponentProps<T, string>
-): GetMessageArgs<T> {
-  return (
-    isTokenWithArgs(opts.token) ? [opts.token, opts.args] : [opts.token]
-  ) as GetMessageArgs<T>;
-}
-
-/**
- * Retrieves a localized message string, substituting variables where necessary.
- *
- * @param token - The token identifying the message to retrieve.
- * @param args - An optional record of substitution variables and their replacement values. This is required if the string has dynamic variables.
- *
- * @returns The localized message string with substitutions applied.
- */
-function getMessageDefault<T extends MergedLocalizerTokens>(
-  ...props: GetMessageArgs<T>
-): string {
-  const token = props[0];
-  try {
-    return localizeFromOld(props[0], props[1] as ArgsFromToken<T>).toString();
-  } catch (error) {
-    log(error.message);
-    return token;
-  }
-}
-
-/**
- * Retrieves a localized message string, substituting variables where necessary. Then strips the message of any HTML and custom tags.
- *
- * @deprecated This will eventually be replaced altogether by LocalizedStringBuilder
- *
- * @param token - The token identifying the message to retrieve.
- * @param args - An optional record of substitution variables and their replacement values. This is required if the string has dynamic variables.
- *
- * @returns The localized message string with substitutions applied. Any HTML and custom tags are removed.
- */
-function stripped<T extends MergedLocalizerTokens>(
-  ...[token, args]: GetMessageArgs<T>
 ): string | T {
-  const sanitizedArgs = args ? sanitizeArgs(args, '\u200B') : undefined;
+  const sanitizedArgs = opts.args ? sanitizeArgs(opts.args, '\u200B') : undefined;
 
-  // Note: the `as any` is needed because we don't have the <T> template argument available
-  // when enforcing the type of the stripped function to be the one defined by I18nMethods
-  const i18nString = getMessageDefault(...([token, sanitizedArgs] as GetMessageArgs<any>));
+  // Note: the `as any` is needed sanitizeArgs does not preserve types
+  const i18nString = localizeFromOld(opts.token, sanitizedArgs as any).toString();
 
   const strippedString = i18nString.replaceAll(/<[^>]*>/g, '');
 
   return deSanitizeHtmlTags(strippedString, '\u200B');
 }
-
-export const strippedWithObj: I18nMethods['strippedWithObj'] = opts => {
-  return stripped(...propsToTuple(opts));
-};
 
 /**
  * Sanitizes the args to be used in the i18n function
@@ -213,14 +160,17 @@ export function sanitizeArgs(
  * @deprecated
  *
  */
-export const formatMessageWithArgs: I18nMethods['formatMessageWithArgs'] = (rawMessage, args) => {
+export function formatMessageWithArgs<T extends MergedLocalizerTokens>(
+  rawMessage: string,
+  args?: ArgsFromToken<T>
+): string | T {
   /** Find and replace the dynamic variables in a localized string and substitute the variables with the provided values */
   return rawMessage.replace(/\{(\w+)\}/g, (match: any, arg: string) => {
     const matchedArg = args ? args[arg as keyof typeof args] : undefined;
 
     return matchedArg?.toString() ?? match;
   });
-};
+}
 
 /**
  * Retrieves a localized message string, without substituting any variables. This resolves any plural forms using the given args
@@ -231,7 +181,10 @@ export const formatMessageWithArgs: I18nMethods['formatMessageWithArgs'] = (rawM
  *
  * NOTE: This is intended to be used to get the raw string then format it with {@link formatMessageWithArgs}
  */
-export const getRawMessage: I18nMethods['getRawMessage'] = (crowdinLocale, ...[token, args]) => {
+export function getRawMessage<T extends MergedLocalizerTokens>(
+  crowdinLocale: CrowdinLocale,
+  ...[token, args]: GetMessageArgs<T>
+): string | T {
   try {
     if (
       typeof window !== 'undefined' &&
@@ -275,7 +228,7 @@ export const getRawMessage: I18nMethods['getRawMessage'] = (crowdinLocale, ...[t
     log(error.message);
     return token;
   }
-};
+}
 
 function getStringForRule({
   dictionary,
@@ -489,7 +442,7 @@ export function localize<T extends MergedLocalizerTokens>(token: T) {
   return new LocalizedStringBuilder<T>(token, localeInUse);
 }
 
-export function localizeFromOld<T extends MergedLocalizerTokens>(token: T, args: ArgsFromToken<T>) {
+function localizeFromOld<T extends MergedLocalizerTokens>(token: T, args: ArgsFromToken<T>) {
   return localize(token).withArgs(args);
 }
 

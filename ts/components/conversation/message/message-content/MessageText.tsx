@@ -26,7 +26,7 @@ const StyledMessageText = styled.div`
 
 const StyledMessageDeleted = styled.div`
   display: flex;
-  flexgap: var(--margins-xs);
+  gap: var(--margins-xs);
   flex-direction: row;
   align-items: center;
 `;

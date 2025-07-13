@@ -381,7 +381,7 @@ export class MessageModel extends Model<MessageAttributes> {
         timespanSeconds: expireTimer,
       });
 
-      return window.i18n.strippedWithObj(i18nProps);
+      return strippedWithObj(i18nProps);
     }
     const body = this.get('body');
     if (body) {

@@ -30,7 +30,6 @@ import { ConvoHub } from '../../session/conversations';
 import { UserUtils } from '../../session/utils';
 import { BlockedNumberController } from '../../util';
 import { Storage } from '../../util/storage';
-import { getIntl } from './user';
 
 import { MessageReactsSelectorProps } from '../../components/conversation/message/message-content/MessageReactions';
 import { processQuoteAttachment } from '../../models/message';
@@ -233,8 +232,6 @@ export const _getConversationComparator = () => {
   };
 };
 
-export const getConversationComparator = createSelector(getIntl, _getConversationComparator);
-
 const _getLeftPaneConversationIds = (
   sortedConversations: Array<ReduxConversationType>
 ): Array<string> => {
@@ -345,7 +342,7 @@ export const _getSortedConversations = (
 
 export const getSortedConversations = createSelector(
   getConversationLookup,
-  getConversationComparator,
+  _getConversationComparator,
   getSelectedConversationKey,
   _getSortedConversations
 );

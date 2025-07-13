@@ -2,8 +2,9 @@
 // @ts-nocheck - TODO: add generic type to setupI18n to fix this
 
 import { expect } from 'chai';
+import { tr } from '../../../../../localization/localeTools';
 
-describe('formatMessageWithArgs', () => {
+describe('localised string: format message with args', () => {
   beforeEach(() => {});
 
   it('returns the message with args for a message', () => {
