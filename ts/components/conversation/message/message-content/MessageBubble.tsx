@@ -41,7 +41,6 @@ const ReadMoreButton = styled.button`
 export function MessageBubble({ children }: { children: ReactNode }) {
   const [expanded, setExpanded] = useState(false);
   const [showReadMore, setShowReadMore] = useState(false);
-  const hiddenHeight = useRef<number>(0);
   const msgBubbleRef = useRef<HTMLDivElement>(null);
 
   const messagesContainerRef = useMessagesContainerRef();
@@ -80,13 +79,11 @@ export function MessageBubble({ children }: { children: ReactNode }) {
 
     const msgContainerBefore = messagesContainerRef.current;
 
-    if (!msgContainerBefore) {
-      return;
+    if (msgContainerBefore) {
+      const { scrollTop: scrollTopBefore, scrollHeight: scrollHeightBefore } = msgContainerBefore;
+
+      scrollBefore.current = { scrollTop: scrollTopBefore, scrollHeight: scrollHeightBefore };
     }
-
-    const { scrollTop: scrollTopBefore, scrollHeight: scrollHeightBefore } = msgContainerBefore;
-
-    scrollBefore.current = { scrollTop: scrollTopBefore, scrollHeight: scrollHeightBefore };
 
     // we cannot "show less", only show more
     setExpanded(true);
@@ -118,8 +115,6 @@ export function MessageBubble({ children }: { children: ReactNode }) {
         el.scrollHeight - (paddingTop + paddingBottom + borderTopWidth + borderBottomWidth);
 
       const overflowsLines = innerHeight > maxHeight;
-
-      hiddenHeight.current = innerHeight - maxHeight;
 
       setShowReadMore(overflowsLines);
     },
