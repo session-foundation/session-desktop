@@ -10,7 +10,7 @@ import { themeStore } from '../state/theme/store';
 import { SessionButton, SessionButtonType } from './basic/SessionButton';
 import { Localizer } from './basic/Localizer';
 import { CopyToClipboardButton } from './buttons';
-import { localize } from '../localization/localeTools';
+import { tr } from '../localization/localeTools';
 
 const StyledContent = styled(Flex)`
   background-color: var(--background-primary-color);
@@ -60,18 +60,13 @@ export const AboutView = () => {
   }
 
   const version = window.getVersion();
-  const versionInfo = localize('updateVersion').withArgs({ version }).toString();
-  const systemInfo = localize('systemInformationDesktop')
-    .withArgs({
-      information: window.getOSRelease(),
-    })
-    .toString();
-  const commitInfo = localize('commitHashDesktop')
-    .withArgs({
-      hash: window.getCommitHash() || localize('unknown').toString(),
-    })
-    .toString();
-
+  const versionInfo = tr('updateVersion', { version });
+  const systemInfo = tr('systemInformationDesktop', {
+    information: window.getOSRelease(),
+  });
+  const commitInfo = tr('commitHashDesktop', {
+    hash: window.getCommitHash() || tr('unknown'),
+  });
   useEffect(() => {
     if (window.theme) {
       void switchThemeTo({

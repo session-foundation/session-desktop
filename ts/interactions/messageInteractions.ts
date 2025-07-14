@@ -1,3 +1,4 @@
+import { tr } from '../localization/localeTools';
 import { joinOpenGroupV2WithUIEvents } from '../session/apis/open_group_api/opengroupV2/JoinOpenGroupV2';
 import { openGroupV2CompleteURLRegex } from '../session/apis/open_group_api/utils/OpenGroupUtils';
 import { ToastUtils } from '../session/utils';
@@ -19,11 +20,11 @@ const acceptOpenGroupInvitationV2 = (completeUrl: string, roomName?: string) => 
 
   window.inboxStore?.dispatch(
     updateConfirmModal({
-      title: window.i18n('communityJoin'),
+      title: tr('communityJoin'),
       i18nMessage: {
         token: 'communityJoinDescription',
         args: {
-          community_name: roomName || window.i18n('unknown'),
+          community_name: roomName || tr('unknown'),
         },
       },
       onClickOk: async () => {
@@ -31,7 +32,7 @@ const acceptOpenGroupInvitationV2 = (completeUrl: string, roomName?: string) => 
       },
 
       onClickClose,
-      okText: window.i18n('join'),
+      okText: tr('join'),
     })
   );
   // this function does not throw, and will showToasts if anything happens

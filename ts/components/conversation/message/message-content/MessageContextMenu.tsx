@@ -48,7 +48,7 @@ import { DeleteItem } from '../../../menu/items/DeleteMessage/DeleteMessageMenuI
 import { RetryItem } from '../../../menu/items/RetrySend/RetrySendMenuItem';
 import { useBanUserCb } from '../../../menuAndSettingsHooks/useBanUser';
 import { useUnbanUserCb } from '../../../menuAndSettingsHooks/useUnbanUser';
-import { localize } from '../../../../localization/localeTools';
+import { tr } from '../../../../localization/localeTools';
 import { sectionActions } from '../../../../state/ducks/section';
 import { useRemoveSenderFromCommunityAdmin } from '../../../menuAndSettingsHooks/useRemoveSenderFromCommunityAdmin';
 import { useAddSenderAsCommunityAdmin } from '../../../menuAndSettingsHooks/useAddSenderAsCommunityAdmin';
@@ -116,18 +116,18 @@ const CommunityAdminActionItems = ({ messageId }: WithMessageId) => {
 
   return (
     <>
-      <ItemWithDataTestId onClick={banUserCb}>{localize('banUser')}</ItemWithDataTestId>
-      <ItemWithDataTestId onClick={unbanUserCb}>{localize('banUnbanUser')}</ItemWithDataTestId>
+      <ItemWithDataTestId onClick={banUserCb}>{tr('banUser')}</ItemWithDataTestId>
+      <ItemWithDataTestId onClick={unbanUserCb}>{tr('banUnbanUser')}</ItemWithDataTestId>
       {/* only an admin can promote/remove moderators from a community. Another moderator cannot. */}
       {isSenderAdmin ? (
         removeSenderFromCommunityAdminCb ? (
           <ItemWithDataTestId onClick={removeSenderFromCommunityAdminCb}>
-            {localize('adminRemoveAsAdmin')}
+            {tr('adminRemoveAsAdmin')}
           </ItemWithDataTestId>
         ) : null
       ) : addSenderAsCommunityAdminCb ? (
         <ItemWithDataTestId onClick={addSenderAsCommunityAdminCb}>
-          {localize('adminPromoteToAdmin')}
+          {tr('adminPromoteToAdmin')}
         </ItemWithDataTestId>
       ) : null}
     </>
@@ -320,13 +320,9 @@ export const MessageContextMenu = (props: Props) => {
             animation={getMenuAnimation()}
           >
             {attachments?.length && attachments.every(m => !m.pending && m.path) ? (
-              <ItemWithDataTestId onClick={saveAttachment}>
-                {localize('save').toString()}
-              </ItemWithDataTestId>
+              <ItemWithDataTestId onClick={saveAttachment}>{tr('save')}</ItemWithDataTestId>
             ) : null}
-            <ItemWithDataTestId onClick={copyText}>
-              {localize('copy').toString()}
-            </ItemWithDataTestId>
+            <ItemWithDataTestId onClick={copyText}>{tr('copy')}</ItemWithDataTestId>
             <ItemWithDataTestId
               onClick={() => {
                 void showMessageInfoOverlay({ messageId, dispatch });
@@ -370,15 +366,11 @@ export const MessageContextMenu = (props: Props) => {
             />
           )}
           {attachments?.length && attachments.every(m => !m.pending && m.path) ? (
-            <ItemWithDataTestId onClick={saveAttachment}>
-              {localize('save').toString()}
-            </ItemWithDataTestId>
+            <ItemWithDataTestId onClick={saveAttachment}>{tr('save')}</ItemWithDataTestId>
           ) : null}
-          <ItemWithDataTestId onClick={copyText}>{localize('copy').toString()}</ItemWithDataTestId>
+          <ItemWithDataTestId onClick={copyText}>{tr('copy')}</ItemWithDataTestId>
           {(isSent || !isOutgoing) && (
-            <ItemWithDataTestId onClick={onReply}>
-              {localize('reply').toString()}
-            </ItemWithDataTestId>
+            <ItemWithDataTestId onClick={onReply}>{tr('reply')}</ItemWithDataTestId>
           )}
           <ItemWithDataTestId
             onClick={() => {

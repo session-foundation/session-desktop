@@ -1,7 +1,7 @@
 import { useState, useRef, type ReactNode, useLayoutEffect } from 'react';
 import styled, { css } from 'styled-components';
 import { Constants } from '../../../../session';
-import { localize } from '../../../../localization/localeTools';
+import { tr } from '../../../../localization/localeTools';
 
 export const StyledMessageBubble = styled.div<{ expanded: boolean }>`
   position: relative;
@@ -99,7 +99,7 @@ export function MessageBubble({ children }: { children: ReactNode }) {
       </StyledMessageBubble>
       {showReadMore && !expanded ? (
         <ReadMoreButton onClick={() => setExpanded(prev => !prev)}>
-          {localize('messageBubbleReadMore')}
+          {tr('messageBubbleReadMore')}
         </ReadMoreButton>
       ) : null}
     </>

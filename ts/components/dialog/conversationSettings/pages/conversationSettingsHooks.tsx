@@ -1,6 +1,6 @@
 import { noop } from 'lodash';
 import { useDispatch } from 'react-redux';
-import { localize } from '../../../../localization/localeTools';
+import { tr } from '../../../../localization/localeTools';
 import {
   ConversationSettingsModalPage,
   ConversationSettingsModalState,
@@ -12,12 +12,12 @@ import { useShowConversationSettingsFor } from '../../../menuAndSettingsHooks/us
 export function useTitleFromPage(page: ConversationSettingsModalPage | undefined) {
   switch (page) {
     case 'disappearing_message':
-      return localize('disappearingMessages').toString();
+      return tr('disappearingMessages');
     case 'notifications':
-      return localize('sessionNotifications').toString();
+      return tr('sessionNotifications');
     case 'default':
     case undefined:
-      return localize('sessionSettings').toString();
+      return tr('sessionSettings');
     default:
       assertUnreachable(page, "useTitleFromPage doesn't support this page");
       throw new Error('useTitleFromPage does not support this page');

@@ -23,7 +23,7 @@ const { initializeRendererProcessLogger } = require('./ts/util/logger/renderer_p
 
 initializeRendererProcessLogger();
 
-window.i18n = setupI18n({ crowdinLocale });
+setupI18n({ crowdinLocale });
 
 let title = config.name;
 if (config.environment !== 'production') {

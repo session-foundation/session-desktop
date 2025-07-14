@@ -10,6 +10,7 @@ import {
   useSelectedIsPublic,
 } from '../../../../state/selectors/selectedConversation';
 import { ItemWithDataTestId } from '../MenuItemWithDataTestId';
+import { tr } from '../../../../localization/localeTools';
 
 export const DeleteItem = ({ messageId }: { messageId: string }) => {
   const convoId = useSelectedConversationKey();
@@ -31,5 +32,5 @@ export const DeleteItem = ({ messageId }: { messageId: string }) => {
     return null;
   }
 
-  return <ItemWithDataTestId onClick={onDelete}>{window.i18n('delete')}</ItemWithDataTestId>;
+  return <ItemWithDataTestId onClick={onDelete}>{tr('delete')}</ItemWithDataTestId>;
 };

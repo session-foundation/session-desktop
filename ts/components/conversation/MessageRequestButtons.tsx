@@ -17,6 +17,7 @@ import {
   ConversationOutgoingRequestExplanation,
 } from './SubtleNotification';
 import { NetworkTime } from '../../util/NetworkTime';
+import { tr } from '../../localization/localeTools';
 
 const MessageRequestContainer = styled.div`
   display: flex;
@@ -99,7 +100,7 @@ export const ConversationMessageRequestButtons = () => {
         <ConversationBannerRow>
           <SessionButton
             buttonColor={SessionButtonColor.PrimaryDark}
-            text={window.i18n('accept')}
+            text={tr('accept')}
             onClick={() => {
               void handleAcceptConversationRequest({
                 convoId: selectedConvoId,
@@ -110,7 +111,7 @@ export const ConversationMessageRequestButtons = () => {
           />
           <SessionButton
             buttonColor={SessionButtonColor.Danger}
-            text={window.i18n('delete')}
+            text={tr('delete')}
             onClick={() => {
               handleDeclineConversationRequest(selectedConvoId, selectedConvoId, convoOrigin);
             }}
@@ -136,7 +137,7 @@ export const ConversationMessageRequestButtons = () => {
               }}
               data-testid="decline-and-block-message-request"
             >
-              {window.i18n('block')}
+              {tr('block')}
             </StyledBlockUserText>
           ) : null}
         </>

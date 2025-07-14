@@ -44,7 +44,7 @@ import { resetRegistration } from '../RegistrationStages';
 import { ContinueButton, OnboardDescription, OnboardHeading } from '../components';
 import { BackButtonWithinContainer } from '../components/BackButton';
 import { useRecoveryProgressEffect } from '../hooks';
-import { localize } from '../../../localization/localeTools';
+import { tr } from '../../../localization/localeTools';
 import { sanitizeDisplayNameOrToast } from '../utils';
 import { ShowHideSessionInput, SimpleSessionInput } from '../../inputs/SessionInput';
 
@@ -137,13 +137,11 @@ const RecoveryPhraseInput = ({ onEnterPressed }: { onEnterPressed: () => Promise
   return (
     <ShowHideSessionInput
       ariaLabel="Recovery password input"
-      placeholder={localize('recoveryPasswordEnter').toString()}
+      placeholder={tr('recoveryPasswordEnter')}
       value={recoveryPassword}
       onValueChanged={(seed: string) => {
         dispatch(setRecoveryPassword(seed));
-        dispatch(
-          setRecoveryPasswordError(!seed ? localize('recoveryPasswordEnter').toString() : undefined)
-        );
+        dispatch(setRecoveryPasswordError(!seed ? tr('recoveryPasswordEnter') : undefined));
       }}
       onEnterPressed={() => void onEnterPressed()}
       providedError={recoveryPasswordError}
@@ -198,17 +196,11 @@ export const RestoreAccount = () => {
       }
 
       if (e instanceof NotEnoughWordsError) {
-        dispatch(
-          setRecoveryPasswordError(localize('recoveryPasswordErrorMessageShort').toString())
-        );
+        dispatch(setRecoveryPasswordError(tr('recoveryPasswordErrorMessageShort')));
       } else if (e instanceof InvalidWordsError) {
-        dispatch(
-          setRecoveryPasswordError(localize('recoveryPasswordErrorMessageIncorrect').toString())
-        );
+        dispatch(setRecoveryPasswordError(tr('recoveryPasswordErrorMessageIncorrect')));
       } else {
-        dispatch(
-          setRecoveryPasswordError(localize('recoveryPasswordErrorMessageGeneric').toString())
-        );
+        dispatch(setRecoveryPasswordError(tr('recoveryPasswordErrorMessageGeneric')));
       }
       dispatch(setAccountRestorationStep(AccountRestoration.RecoveryPassword));
     }
@@ -247,11 +239,11 @@ export const RestoreAccount = () => {
       dispatch(setAccountRestorationStep(AccountRestoration.DisplayName));
 
       if (err instanceof EmptyDisplayNameError || err instanceof RetrieveDisplayNameError) {
-        dispatch(setDisplayNameError(localize('displayNameErrorDescription').toString()));
+        dispatch(setDisplayNameError(tr('displayNameErrorDescription')));
       } else {
         // Note: we have to assume here that libsession threw an error because the name was too long since we covered the other cases.
         // The error reported by libsession is not localized
-        dispatch(setDisplayNameError(localize('displayNameErrorDescriptionShorter').toString()));
+        dispatch(setDisplayNameError(tr('displayNameErrorDescriptionShorter')));
       }
     }
   };
@@ -301,7 +293,7 @@ export const RestoreAccount = () => {
         {step === AccountRestoration.RecoveryPassword ? (
           <>
             <Flex $container={true} width={'100%'} $alignItems="center">
-              <OnboardHeading>{localize('sessionRecoveryPassword')}</OnboardHeading>
+              <OnboardHeading>{tr('sessionRecoveryPassword')}</OnboardHeading>
               <SessionIcon
                 iconType="recoveryPasswordOutline"
                 iconSize="medium"
@@ -310,9 +302,7 @@ export const RestoreAccount = () => {
               />
             </Flex>
             <SpacerSM />
-            <OnboardDescription>
-              {localize('recoveryPasswordRestoreDescription')}
-            </OnboardDescription>
+            <OnboardDescription>{tr('recoveryPasswordRestoreDescription')}</OnboardDescription>
             <SpacerLG />
             <RecoveryPhraseInput onEnterPressed={recoverAndFetchDisplayName} />
             <SpacerLG />
@@ -323,14 +313,14 @@ export const RestoreAccount = () => {
           </>
         ) : step === AccountRestoration.DisplayName ? (
           <Flex $container={true} width="100%" $flexDirection="column" $alignItems="flex-start">
-            <OnboardHeading>{localize('displayNameNew')}</OnboardHeading>
+            <OnboardHeading>{tr('displayNameNew')}</OnboardHeading>
             <SpacerSM />
-            <OnboardDescription>{localize('displayNameErrorNew')}</OnboardDescription>
+            <OnboardDescription>{tr('displayNameErrorNew')}</OnboardDescription>
             <SpacerLG />
             <SimpleSessionInput
-              ariaLabel={localize('displayNameEnter').toString()}
+              ariaLabel={tr('displayNameEnter')}
               autoFocus={true}
-              placeholder={localize('displayNameEnter').toString()}
+              placeholder={tr('displayNameEnter')}
               value={displayName}
               onValueChanged={(name: string) => {
                 dispatch(setDisplayName(name));
@@ -358,8 +348,8 @@ export const RestoreAccount = () => {
             }
             progress={progress}
             margin={'0'}
-            title={localize('waitOneMoment').toString()}
-            subtitle={localize('loadAccountProgressMessage').toString()}
+            title={tr('waitOneMoment')}
+            subtitle={tr('loadAccountProgressMessage')}
             showPercentage={true}
           />
         )}

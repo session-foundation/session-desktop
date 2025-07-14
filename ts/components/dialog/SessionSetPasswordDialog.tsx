@@ -10,7 +10,7 @@ import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { matchesHash, validatePassword } from '../../util/passwordUtils';
 import { getPasswordHash, Storage } from '../../util/storage';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
-import { localize } from '../../localization/localeTools';
+import { tr, tStripped } from '../../localization/localeTools';
 import {
   ModalBasicHeader,
   ModalActionsContainer,
@@ -52,38 +52,30 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
     let placeholders: Array<string> = [];
     switch (passwordAction) {
       case 'change':
-        placeholders = [
-          localize('passwordEnterCurrent').toString(),
-          localize('passwordEnterNew').toString(),
-          localize('passwordConfirm').toString(),
-        ];
+        placeholders = [tr('passwordEnterCurrent'), tr('passwordEnterNew'), tr('passwordConfirm')];
         break;
       case 'remove':
-        placeholders = [localize('passwordRemove').toString()];
+        placeholders = [tr('passwordRemove')];
         break;
       case 'enter':
-        placeholders = [localize('passwordCreate').toString()];
+        placeholders = [tr('passwordCreate')];
         break;
       default:
-        placeholders = [
-          localize('passwordCreate').toString(),
-          localize('passwordConfirm').toString(),
-        ];
+        placeholders = [tr('passwordCreate'), tr('passwordConfirm')];
     }
 
-    const confirmButtonText =
-      passwordAction === 'remove' ? localize('remove').toString() : localize('save').toString();
+    const confirmButtonText = passwordAction === 'remove' ? tr('remove') : tr('save');
 
     const titleString = () => {
       switch (passwordAction) {
         case 'change':
-          return localize('passwordChange').toString();
+          return tr('passwordChange');
         case 'remove':
-          return localize('passwordRemove').toString();
+          return tr('passwordRemove');
         case 'enter':
-          return localize('passwordEnter').toString();
+          return tr('passwordEnter');
         default:
-          return localize('passwordSet').toString();
+          return tr('passwordSet');
       }
     };
 
@@ -120,7 +112,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
             />
             {passwordAction !== 'enter' && (
               <SessionButton
-                text={localize('cancel').toString()}
+                text={tr('cancel')}
                 buttonColor={passwordAction !== 'remove' ? SessionButtonColor.Danger : undefined}
                 buttonType={SessionButtonType.Simple}
                 onClick={this.closeDialog}
@@ -207,7 +199,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
 
     if (enteredPassword !== enteredPasswordConfirm) {
       this.setState({
-        error: localize('passwordErrorMatch').toString(),
+        error: tr('passwordErrorMatch'),
       });
       this.showError();
       return;
@@ -219,17 +211,14 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
       }
       await Storage.put('passHash', updatedHash);
 
-      ToastUtils.pushToastSuccess(
-        'setPasswordSuccessToast',
-        localize('passwordSetDescription').strip().toString()
-      );
+      ToastUtils.pushToastSuccess('setPasswordSuccessToast', tStripped('passwordSetDescription'));
 
       this.props.onOk();
       this.closeDialog();
     } catch (err) {
       window.log.error(err);
       this.setState({
-        error: localize('passwordFailed').toString(),
+        error: tr('passwordFailed'),
       });
       this.showError();
     }
@@ -249,7 +238,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
     // Check the retyped password matches the new password
     if (newPassword !== newConfirmedPassword) {
       this.setState({
-        error: localize('passwordErrorMatch').toString(),
+        error: tr('passwordErrorMatch'),
       });
       this.showError();
       return;
@@ -258,7 +247,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
     const isValidWithStoredInDB = this.validatePasswordHash(oldPassword);
     if (!isValidWithStoredInDB) {
       this.setState({
-        error: localize('passwordCurrentIncorrect').toString(),
+        error: tr('passwordCurrentIncorrect'),
       });
       this.showError();
       return;
@@ -273,7 +262,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
 
       ToastUtils.pushToastSuccess(
         'setPasswordSuccessToast',
-        localize('passwordChangedDescription').strip().toString()
+        tStripped('passwordChangedDescription')
       );
 
       this.props.onOk();
@@ -281,7 +270,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
     } catch (err) {
       window.log.error(err);
       this.setState({
-        error: localize('changePasswordFail').toString(),
+        error: tr('changePasswordFail'),
       });
       this.showError();
     }
@@ -297,7 +286,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
     const isValidWithStoredInDB = this.validatePasswordHash(oldPassword);
     if (!isValidWithStoredInDB) {
       this.setState({
-        error: localize('passwordIncorrect').toString(),
+        error: tr('passwordIncorrect'),
       });
       this.showError();
       return;
@@ -312,7 +301,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
 
       ToastUtils.pushToastWarning(
         'setPasswordSuccessToast',
-        localize('passwordRemovedDescription').strip().toString()
+        tStripped('passwordRemovedDescription')
       );
 
       this.props.onOk();
@@ -320,7 +309,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
     } catch (err) {
       window.log.error(err);
       this.setState({
-        error: localize('removePasswordFail').toString(),
+        error: tr('removePasswordFail'),
       });
       this.showError();
     }
@@ -335,7 +324,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
     const isValidWithStoredInDB = this.validatePasswordHash(enteredPassword);
     if (!isValidWithStoredInDB) {
       this.setState({
-        error: localize('passwordIncorrect').toString(),
+        error: tr('passwordIncorrect'),
       });
       this.showError();
       return;

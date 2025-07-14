@@ -16,6 +16,7 @@ import {
 import { selectLibMembersPubkeys, useLibGroupName } from './groups';
 import { getCanWrite, getSubscriberCount } from './sogsRoomInfo';
 import { getLibGroupDestroyed, getLibGroupKicked, useLibGroupDestroyed } from './userGroups';
+import { tr } from '../../localization/localeTools';
 
 const getIsSelectedPrivate = (state: StateType): boolean => {
   return Boolean(getSelectedConversation(state)?.isPrivate) || false;
@@ -370,7 +371,7 @@ export function useSelectedShortenedPubkeyOrFallback() {
   if (isPrivate && selected) {
     return PubKey.shorten(selected);
   }
-  return window.i18n('unknown');
+  return tr('unknown');
 }
 
 /**
@@ -385,7 +386,7 @@ export function useSelectedNicknameOrProfileNameOrShortenedPubkey() {
   const isMe = useSelectedIsNoteToSelf();
   const libGroupName = useLibGroupName(selectedId);
   if (isMe) {
-    return window.i18n('noteToSelf');
+    return tr('noteToSelf');
   }
   if (selectedId && PubKey.is03Pubkey(selectedId)) {
     return libGroupName || profileName || shortenedPubkey;

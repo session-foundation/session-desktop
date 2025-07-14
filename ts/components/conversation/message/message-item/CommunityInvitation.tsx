@@ -13,7 +13,7 @@ import {
 import type { WithMessageId } from '../../../../session/types/with';
 import { SessionLucideIconButton } from '../../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
-import { localize } from '../../../../localization/localeTools';
+import { tr } from '../../../../localization/localeTools';
 
 const StyledCommunityInvitation = styled.div`
   background-color: var(--message-bubbles-received-background-color);
@@ -134,7 +134,7 @@ export const CommunityInvitation = ({ messageId }: WithMessageId) => {
           </StyledIconContainer>
           <span className="group-details">
             <span className="group-name">{communityName}</span>
-            <span className="group-type">{localize('communityInvitation').toString()}</span>
+            <span className="group-type">{tr('communityInvitation')}</span>
             <span className="group-address">{hostname}</span>
           </span>
         </div>

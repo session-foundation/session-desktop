@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 import type { CSSProperties } from 'styled-components';
 import { useMemo } from 'react';
-import { localize } from '../../../../../localization/localeTools';
+import { tr } from '../../../../../localization/localeTools';
 import { Flex } from '../../../../basic/Flex';
 import { SpacerMD, SpacerXS } from '../../../../basic/Text';
 import {
@@ -121,8 +121,8 @@ const CurrentPriceBlock = () => {
     usdPrice && !isFakeRefreshing && !dataIsStale
       ? `$${formatNumber(usdPrice, { currency: LOCALE_DEFAULTS.usd_name_short, minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true })} ${LOCALE_DEFAULTS.usd_name_short}`
       : infoLoading || isFakeRefreshing
-        ? localize('loading')
-        : localize('unavailable').toString();
+        ? tr('loading')
+        : tr('unavailable');
 
   const tooltipContent = useMemo(
     () => (
@@ -198,8 +198,8 @@ const SecuredByBlock = () => {
     securedBySESH && !isFakeRefreshing && !dataIsStale
       ? `${abbreviateNumber(securedBySESH, 0).toUpperCase()} ${LOCALE_DEFAULTS.token_name_short}`
       : infoLoading || isFakeRefreshing
-        ? localize('loading')
-        : localize('unavailable').toString();
+        ? tr('loading')
+        : tr('unavailable');
 
   const formattedNumberOrFallback =
     securedByUSD && !isFakeRefreshing && !dataIsStale
@@ -224,7 +224,7 @@ const SecuredByBlock = () => {
       backgroundColor={isDarkTheme ? undefined : 'var(--background-secondary-color)'}
       borderColor={isDarkTheme ? undefined : 'var(--transparent-color)'}
     >
-      <BlockText>{localize('sessionNetworkSecuredBy')}</BlockText>
+      <BlockText>{tr('sessionNetworkSecuredBy')}</BlockText>
       <SpacerXS />
       <BlockPrimaryText dataTestId={'network-secured-amount'}>
         <b>{securedAmountSESH}</b>

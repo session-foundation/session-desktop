@@ -37,7 +37,7 @@ export const CallNotification = (props: WithMessageId) => {
 
   const notificationType = useMessageCallNotificationType(messageId);
 
-  const name = useSelectedNicknameOrProfileNameOrShortenedPubkey() ?? window.i18n('unknown');
+  const name = useSelectedNicknameOrProfileNameOrShortenedPubkey();
 
   if (!notificationType) {
     return null;

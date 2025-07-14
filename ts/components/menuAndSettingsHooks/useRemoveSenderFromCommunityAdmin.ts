@@ -1,5 +1,5 @@
 import { useIsPublic, useWeAreAdmin } from '../../hooks/useParamSelector';
-import { localize } from '../../localization/localeTools';
+import { tr } from '../../localization/localeTools';
 import { sogsV3RemoveAdmins } from '../../session/apis/open_group_api/sogsv3/sogsV3AddRemoveMods';
 import { ConvoHub } from '../../session/conversations';
 import { PubKey } from '../../session/types';
@@ -11,8 +11,7 @@ async function removeSenderFromCommunityAdmin(sender: string, convoId: string) {
     const convo = ConvoHub.use().getOrThrow(convoId);
 
     const userDisplayName =
-      ConvoHub.use().get(sender)?.getNicknameOrRealUsernameOrPlaceholder() ||
-      localize('unknown').toString();
+      ConvoHub.use().get(sender)?.getNicknameOrRealUsernameOrPlaceholder() || tr('unknown');
 
     const roomInfo = convo.toOpenGroupV2();
     const res = await sogsV3RemoveAdmins([pubKeyToRemove], roomInfo);

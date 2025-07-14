@@ -10,7 +10,7 @@ import { SessionButtonColor } from '../../../basic/SessionButton';
 import { Localizer } from '../../../basic/Localizer';
 import { LucideIcon } from '../../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
-import { localize } from '../../../../localization/localeTools';
+import { tr } from '../../../../localization/localeTools';
 
 const StyledTrustSenderUI = styled.div`
   padding-inline: var(--margins-lg);
@@ -44,7 +44,7 @@ export const ClickToTrustSender = (props: { messageId: string }) => {
     const convo = ConvoHub.use().get(sender);
     window.inboxStore?.dispatch(
       updateConfirmModal({
-        title: localize('attachmentsAutoDownloadModalTitle').toString(),
+        title: tr('attachmentsAutoDownloadModalTitle'),
         i18nMessage: {
           token: 'attachmentsAutoDownloadModalDescription',
           args: {
@@ -116,8 +116,8 @@ export const ClickToTrustSender = (props: { messageId: string }) => {
         onClickClose: () => {
           window.inboxStore?.dispatch(updateConfirmModal(null));
         },
-        okText: localize('yes').toString(),
-        cancelText: localize('no').toString(),
+        okText: tr('yes'),
+        cancelText: tr('no'),
       })
     );
   };
@@ -125,10 +125,10 @@ export const ClickToTrustSender = (props: { messageId: string }) => {
   const firstMimeType = attachments?.[0].contentType || 'unknown';
 
   const fileType = isAudio(firstMimeType)
-    ? localize('audio').toString()
+    ? tr('audio')
     : isVideoTypeSupported(firstMimeType) || isImageTypeSupported(firstMimeType)
-      ? localize('media').toString()
-      : localize('file').toString();
+      ? tr('media')
+      : tr('file');
 
   return (
     // eslint-disable-next-line @typescript-eslint/no-misused-promises

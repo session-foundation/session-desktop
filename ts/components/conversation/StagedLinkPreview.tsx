@@ -9,8 +9,8 @@ import { SessionSpinner } from '../loading';
 import { StagedLinkPreviewImage } from './composition/CompositionBox';
 import { AriaLabels } from '../../util/hardcodedAriaLabels';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
-import { localize } from '../../localization/localeTools';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { tr } from '../../localization/localeTools';
 
 type Props = {
   isLoaded: boolean;
@@ -101,7 +101,7 @@ export const StagedLinkPreview = (props: Props) => {
           onClose(url || '');
         }}
         margin={'0 var(--margins-sm) 0 0'}
-        aria-label={localize('close').toString()}
+        aria-label={tr('close')}
         dataTestId="link-preview-close"
         style={{
           position: isLoading ? 'absolute' : undefined,
