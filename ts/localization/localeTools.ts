@@ -350,6 +350,8 @@ function deSanitizeHtmlTags(str: string, identifier: string): string {
     .replace(new RegExp(`${identifier}&gt;${identifier}`, 'g'), '>');
 }
 
+const pluralKey = 'count' as const;
+
 class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends String {
   private readonly token: T;
   private args?: ArgsFromToken<T>;
@@ -437,8 +439,6 @@ class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends String {
   }
 
   private resolvePluralString(): string {
-    const pluralKey = 'count' as const;
-
     let num: number | string | undefined = this.args?.[pluralKey as keyof ArgsFromToken<T>];
 
     if (num === undefined) {
@@ -494,17 +494,19 @@ class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends String {
       }
     }
 
-    return pluralString.replaceAll('#', `${num}`);
+    return pluralString;
   }
 
   private formatStringWithArgs(str: string): string {
     /** Find and replace the dynamic variables in a localized string and substitute the variables with the provided values */
     return str.replace(/\{(\w+)\}/g, (match, arg: string) => {
-      const matchedArg = this.args
-        ? this.args[arg as keyof ArgsFromToken<T>]?.toString()
-        : undefined;
+      const matchedArg = this.args ? this.args[arg as keyof ArgsFromToken<T>] : undefined;
 
-      return matchedArg ?? match;
+      if (arg === pluralKey && typeof matchedArg === 'number' && Number.isFinite(matchedArg)) {
+        return new Intl.NumberFormat(this.crowdinLocale).format(matchedArg);
+      }
+
+      return matchedArg?.toString() ?? match;
     });
   }
 }
