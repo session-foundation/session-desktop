@@ -118,6 +118,16 @@ type MappedToTsTypes<T extends Record<string, DynamicArgStr>> = {
   [K in keyof T]: ArgsTypeStrToTypes<T[K]>;
 };
 
+export function tStrippedWithObj<T extends MergedLocalizerTokens>(
+  opts: LocalizerComponentProps<T, string>
+): string {
+  const builder = new LocalizedStringBuilder<T>(opts.token as unknown as T, localeInUse).strip();
+  if (opts.args) {
+    builder.withArgs(opts.args as unknown as ArgsFromToken<T>);
+  }
+  return builder.toString();
+}
+
 export function strippedWithObj<T extends MergedLocalizerTokens>(
   opts: LocalizerComponentProps<T, string>
 ): string | T {
