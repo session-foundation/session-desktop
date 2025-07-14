@@ -83,9 +83,7 @@ export const IncomingCallDialog = () => {
     return (
       <SessionWrapperModal
         headerChildren={
-          <ModalBasicHeader
-            title={tr('callsIncoming', { name: from ?? tr('unknown') })}
-          />
+          <ModalBasicHeader title={tr('callsIncoming', { name: from ?? tr('unknown') })} />
         }
         buttonChildren={
           <ModalActionsContainer>

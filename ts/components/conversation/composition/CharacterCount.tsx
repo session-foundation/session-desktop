@@ -11,7 +11,7 @@ import {
 import { formatNumber } from '../../../util/i18n/formatting/generics';
 import { useHasPro } from '../../../hooks/useHasPro';
 import { useIsProAvailable } from '../../../hooks/useIsProAvailable';
-import { localize } from '../../../localization/localeTools';
+import { tr } from '../../../localization/localeTools';
 
 export type CharacterCountProps = {
   count: number;
@@ -68,9 +68,9 @@ export function CharacterCount({ count }: CharacterCountProps) {
       <SessionTooltip
         horizontalPosition="center"
         verticalPosition="bottom"
-        content={localize(
-          pastLimit ? 'remainingCharactersOverTooltip' : 'remainingCharactersTooltip'
-        ).withArgs({ count: pastLimit ? remaining * -1 : remaining })}
+        content={tr(pastLimit ? 'remainingCharactersOverTooltip' : 'remainingCharactersTooltip', {
+          count: pastLimit ? remaining * -1 : remaining,
+        })}
         dataTestId="tooltip-character-count"
       >
         <StyledRemainingNumber pastLimit={pastLimit}>

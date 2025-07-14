@@ -92,10 +92,7 @@ export const OverlayClosedGroupV2 = () => {
     // the same is valid with groups count < 1
 
     if (selectedMemberIds.length < 1) {
-      ToastUtils.pushToastError(
-        'pickClosedGroupMember',
-        tr('groupCreateErrorNoMembers')
-      );
+      ToastUtils.pushToastError('pickClosedGroupMember', tr('groupCreateErrorNoMembers'));
       return;
     }
     if (selectedMemberIds.length >= VALIDATION.CLOSED_GROUP_SIZE_LIMIT) {
