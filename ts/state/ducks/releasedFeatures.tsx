@@ -4,7 +4,7 @@ import { Storage } from '../../util/storage';
 import { DURATION } from '../../session/constants';
 import { isValidUnixTimestamp } from '../../session/utils/Timestamps';
 import { handleReleaseNotification } from '../../util/releasedFeatures';
-import { localize } from '../../localization/localeTools';
+import { tr } from '../../localization/localeTools';
 
 export interface ReleasedFeaturesState {
   refreshedAt: number;
@@ -63,7 +63,7 @@ const releasedFeaturesSlice = createSlice({
       if (state.sesh101Ready) {
         state.sesh101NotificationAt = handleReleaseNotification({
           featureName: 'useSESH101',
-          message: localize('sessionNetworkNotificationLive').toString(),
+          message: tr('sessionNetworkNotificationLive'),
           lastRefreshedAt: state.refreshedAt,
           notifyAt: state.sesh101NotificationAt,
           delayMs: 1 * DURATION.HOURS,

@@ -27,7 +27,7 @@ import {
   type ConversationSettingsModalState,
 } from '../../../../../state/ducks/modalDialog';
 import { useShowConversationSettingsFor } from '../../../../menuAndSettingsHooks/useShowConversationSettingsFor';
-import { localize } from '../../../../../localization/localeTools';
+import { tr } from '../../../../../localization/localeTools';
 import { SessionSpinner } from '../../../../loading';
 import { SessionButton, SessionButtonColor } from '../../../../basic/SessionButton';
 import {
@@ -193,7 +193,7 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
               }
               dataTestId={'disappear-set-button'}
             >
-              {localize('set')}
+              {tr('set')}
             </SessionButton>
           )}
         </ModalActionsContainer>
@@ -203,10 +203,10 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
         <Flex $container={true} $flexDirection={'column'} $alignItems={'center'}>
           <HeaderSubtitle>
             {singleMode === 'deleteAfterRead'
-              ? localize('disappearingMessagesDisappearAfterReadDescription')
+              ? tr('disappearingMessagesDisappearAfterReadDescription')
               : singleMode === 'deleteAfterSend'
-                ? localize('disappearingMessagesDisappearAfterSendDescription')
-                : localize('disappearingMessagesDescription1')}
+                ? tr('disappearingMessagesDisappearAfterSendDescription')
+                : tr('disappearingMessagesDescription1')}
           </HeaderSubtitle>
           <DisappearingModes
             options={disappearingModeOptions}
@@ -237,9 +237,9 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
               <SpacerLG />
               {/* We want those to be shown no matter our admin rights in a group. */}
               <StyledNonAdminDescription>
-                {localize('disappearingMessagesDescription')}
+                {tr('disappearingMessagesDescription')}
                 <br />
-                {localize('disappearingMessagesOnlyAdmins')}
+                {tr('disappearingMessagesOnlyAdmins')}
               </StyledNonAdminDescription>
             </>
           )}

@@ -2,7 +2,7 @@ import styled from 'styled-components';
 import { LabelWithInfo } from '.';
 import { PropsForAttachment } from '../../../../../../state/ducks/conversations';
 import { Flex } from '../../../../../basic/Flex';
-import { localize, tr } from '../../../../../../localization/localeTools';
+import { tr } from '../../../../../../localization/localeTools';
 import { saveLogToDesktop } from '../../../../../../util/logger/renderer_process_logging';
 
 type Props = {
@@ -51,9 +51,9 @@ export const AttachmentInfo = (props: Props) => {
         />
         {hasError ? (
           <LabelWithInfo
-            title={localize('helpReportABugExportLogsDescription').toString()}
-            label={`${localize('attachment').toString()} ${localize('theError').toString()}:`}
-            info={localize('errorUnknown').toString()}
+            title={tr('helpReportABugExportLogsDescription')}
+            label={`${tr('attachment')} ${tr('theError')}:`}
+            info={tr('errorUnknown')}
             dataColor={'var(--danger-color)'}
             onClick={() => {
               void saveLogToDesktop();

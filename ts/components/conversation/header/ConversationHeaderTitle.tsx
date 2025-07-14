@@ -20,7 +20,7 @@ import {
 import { ConversationHeaderSubtitle, type SubTitleArray } from './ConversationHeaderSubtitle';
 import { useLocalisedNotificationOf } from '../../menuAndSettingsHooks/useLocalisedNotificationFor';
 import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useShowConversationSettingsFor';
-import { localize } from '../../../localization/localeTools';
+import { tr } from '../../../localization/localeTools';
 
 export type SubtitleStrings = Record<string, string> & {
   notifications?: string;
@@ -59,9 +59,7 @@ function useSubtitleArray(convoId?: string) {
     }
 
     if (isGroup && count > 0 && !isKickedFromGroup) {
-      return localize(isPublic ? 'membersActive' : 'members')
-        .withArgs({ count })
-        .toString();
+      return tr(isPublic ? 'membersActive' : 'members', { count });
     }
 
     return null;
@@ -146,7 +144,7 @@ export const ConversationHeaderTitle = ({ showSubtitle }: { showSubtitle: boolea
   };
 
   const className = isMe ? '' : 'module-contact-name__profile-name';
-  const displayName = isMe ? localize('noteToSelf').toString() : convoName;
+  const displayName = isMe ? tr('noteToSelf') : convoName;
 
   const clampedSubtitleIndex = useMemo(() => {
     return Math.max(0, Math.min(subtitles.length - 1, subtitleIndex));

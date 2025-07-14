@@ -31,7 +31,7 @@ import { ConvoHub } from '../../../session/conversations';
 import type { SessionSuggestionDataItem } from './types';
 import { getMentionsInput } from '../../../state/selectors/conversations';
 import { UserUtils } from '../../../session/utils';
-import { localize, type MergedLocalizerTokens } from '../../../localization/localeTools';
+import { tEnglish, tr, type MergedLocalizerTokens } from '../../../localization/localeTools';
 import { PubKey } from '../../../session/types';
 import { useLibGroupMembers } from '../../../state/selectors/groups';
 import { use05GroupMembers } from '../../../hooks/useParamSelector';
@@ -95,14 +95,14 @@ function useMembersInThisChat(): Array<SearchableSuggestion> {
     }
 
     const isYou = UserUtils.isUsFromCache(id);
-    const display = isYou ? localize('you').toString() : nickname || PubKey.shorten(id);
+    const display = isYou ? tr('you') : nickname || PubKey.shorten(id);
 
     if (display && display !== nickname) {
       searchable.push(display.toLowerCase());
       if (isYou) {
-        const enYou = localize('you').forceEnglish().toString();
+        const enYou = tEnglish('you');
         if (enYou !== display) {
-          searchable.push(localize('you').forceEnglish().toString().toLowerCase());
+          searchable.push(tEnglish('you').toLowerCase());
         }
       }
     }
@@ -305,7 +305,7 @@ function useMessagePlaceholder() {
     } else if (isBlocked) {
       localizerToken = 'blockBlockedDescription';
     }
-    return localize(localizerToken).withArgs({ group_name: groupName }).toString();
+    return tr(localizerToken, { group_name: groupName });
   }, [groupName, isBlocked, isGroupDestroyed, isKickedFromGroup]);
 }
 

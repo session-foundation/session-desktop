@@ -24,7 +24,7 @@ import { HelpDeskButton } from '../../buttons';
 import { ConversationTypeEnum } from '../../../models/types';
 import { Localizer } from '../../basic/Localizer';
 import { SimpleSessionTextarea } from '../../inputs/SessionInput';
-import { localize, tr } from '../../../localization/localeTools';
+import { tr } from '../../../localization/localeTools';
 
 const StyledDescriptionContainer = styled(motion.div)`
   margin: 0 auto;
@@ -163,7 +163,7 @@ export const OverlayMessage = () => {
       <SimpleSessionTextarea
         ariaLabel="New conversation input"
         autoFocus={true}
-        placeholder={localize('accountIdOrOnsEnter').toString()}
+        placeholder={tr('accountIdOrOnsEnter')}
         value={pubkeyOrOns}
         onValueChanged={setPubkeyOrOns}
         providedError={pubkeyOrOnsError}

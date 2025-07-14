@@ -42,7 +42,7 @@ import { StoreGroupRequestFactory } from '../session/apis/snode_api/factories/St
 import { DURATION } from '../session/constants';
 import { GroupInvite } from '../session/utils/job_runners/jobs/GroupInviteJob';
 import type { LocalizerProps } from '../components/basic/Localizer';
-import { localize, tr } from '../localization/localeTools';
+import { tr } from '../localization/localeTools';
 
 export async function copyPublicKeyByConvoId(convoId: string) {
   if (OpenGroupUtils.isOpenGroupV2(convoId)) {
@@ -395,7 +395,7 @@ export async function showLeaveGroupByConvoId(conversationId: string, name: stri
   }
   window?.inboxStore?.dispatch(
     updateConfirmModal({
-      title: localize('groupLeave').toString(),
+      title: tr('groupLeave'),
       i18nMessage: { token: 'groupLeaveDescription', args: { group_name: name ?? '' } },
       onClickOk,
       okText: tr('leave'),
@@ -438,13 +438,13 @@ export async function showDeleteGroupByConvoId(conversationId: string, name: str
 
   window?.inboxStore?.dispatch(
     updateConfirmModal({
-      title: localize('groupDelete').toString(),
+      title: tr('groupDelete'),
       i18nMessage: {
         token: weAreAdmin ? 'groupDeleteDescription' : 'groupDeleteDescriptionMember',
         args: { group_name: name ?? '' },
       },
       onClickOk,
-      okText: localize('delete').toString(),
+      okText: tr('delete'),
       okTheme: SessionButtonColor.Danger,
       onClickClose,
       conversationId,

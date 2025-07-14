@@ -15,7 +15,7 @@ import { SessionRadioGroup, SessionRadioItems } from '../basic/SessionRadioGroup
 import type { LocalizerProps } from '../basic/Localizer';
 import { SessionSpinner } from '../loading';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
-import { localize } from '../../localization/localeTools';
+import { tr } from '../../localization/localeTools';
 import { ModalFlexContainer } from './shared/ModalFlexContainer';
 
 export interface SessionConfirmDialogProps {
@@ -75,7 +75,7 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
   );
 
   const okText = props.okText;
-  const cancelText = props.cancelText || localize('cancel').toString();
+  const cancelText = props.cancelText || tr('cancel');
 
   const onClickOkHandler = async () => {
     if (onClickOk) {

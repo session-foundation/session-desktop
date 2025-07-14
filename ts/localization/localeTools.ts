@@ -123,8 +123,10 @@ export function strippedWithObj<T extends MergedLocalizerTokens>(
 ): string | T {
   const sanitizedArgs = opts.args ? sanitizeArgs(opts.args, '\u200B') : undefined;
 
-  // Note: the `as any` is needed sanitizeArgs does not preserve types
-  const i18nString = localizeFromOld(opts.token, sanitizedArgs as any).toString();
+  // Note: the `as any` is needed sanitizeArgs does not preserve argument types
+  const i18nString = new LocalizedStringBuilder<T>(opts.token as any, localeInUse)
+    .withArgs(sanitizedArgs as any)
+    .toString();
 
   const strippedString = i18nString.replaceAll(/<[^>]*>/g, '');
 
@@ -438,19 +440,22 @@ class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends String {
   }
 }
 
-export function localize<T extends MergedLocalizerTokens>(token: T) {
-  return new LocalizedStringBuilder<T>(token, localeInUse);
-}
-
-function localizeFromOld<T extends MergedLocalizerTokens>(token: T, args: ArgsFromToken<T>) {
-  return localize(token).withArgs(args);
-}
-
 export function tr<T extends MergedLocalizerTokens>(
   token: T,
   ...args: ArgsFromToken<T> extends never ? [] : [args: ArgsFromToken<T>]
 ): string {
   const builder = new LocalizedStringBuilder<T>(token, localeInUse);
+  if (args.length) {
+    builder.withArgs(args[0]);
+  }
+  return builder.toString();
+}
+
+export function tEnglish<T extends MergedLocalizerTokens>(
+  token: T,
+  ...args: ArgsFromToken<T> extends never ? [] : [args: ArgsFromToken<T>]
+): string {
+  const builder = new LocalizedStringBuilder<T>(token, localeInUse).forceEnglish();
   if (args.length) {
     builder.withArgs(args[0]);
   }

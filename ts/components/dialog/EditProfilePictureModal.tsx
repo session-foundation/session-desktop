@@ -15,7 +15,7 @@ import {
   useIsMe,
   useIsPublic,
 } from '../../hooks/useParamSelector';
-import { localize } from '../../localization/localeTools';
+import { tr } from '../../localization/localeTools';
 import { OpenGroupUtils } from '../../session/apis/open_group_api/utils';
 import { PubKey } from '../../session/types';
 import { groupInfoActions } from '../../state/ducks/metaGroups';
@@ -183,15 +183,12 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
     <SessionWrapperModal
       onClose={closeDialog}
       headerChildren={
-        <ModalBasicHeader
-          title={localize('profileDisplayPictureSet').toString()}
-          showExitIcon={true}
-        />
+        <ModalBasicHeader title={tr('profileDisplayPictureSet')} showExitIcon={true} />
       }
       buttonChildren={
         <ModalActionsContainer>
           <SessionButton
-            text={localize('save').toString()}
+            text={tr('save')}
             buttonType={SessionButtonType.Simple}
             onClick={handleUpload}
             disabled={newAvatarObjectUrl === avatarPath || loading}
@@ -200,7 +197,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
           {/* we cannot remove avatars from communities, only change them */}
           {!isCommunity ? (
             <SessionButton
-              text={localize('remove').toString()}
+              text={tr('remove')}
               buttonColor={SessionButtonColor.Danger}
               buttonType={SessionButtonType.Simple}
               onClick={handleRemove}

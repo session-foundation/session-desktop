@@ -7,7 +7,7 @@ import { updateConfirmModal } from '../../../state/ducks/modalDialog';
 import { SessionButtonColor } from '../../basic/SessionButton';
 
 import { SessionToggleWithDescription } from '../SessionSettingListItem';
-import { localize, tr } from '../../../localization/localeTools';
+import { tr } from '../../../localization/localeTools';
 
 const toggleCallMediaPermissions = async (triggerUIUpdate: () => void) => {
   const currentValue = window.getCallMediaPermissions();
@@ -15,10 +15,10 @@ const toggleCallMediaPermissions = async (triggerUIUpdate: () => void) => {
   if (!currentValue) {
     window.inboxStore?.dispatch(
       updateConfirmModal({
-        title: localize('callsVoiceAndVideoBeta').toString(),
+        title: tr('callsVoiceAndVideoBeta'),
         i18nMessage: { token: 'callsVoiceAndVideoModalDescription' },
         okTheme: SessionButtonColor.Danger,
-        okText: localize('theContinue').toString(),
+        okText: tr('theContinue'),
         onClickOk: async () => {
           await window.toggleCallMediaPermissionsTo(true);
           triggerUIUpdate();

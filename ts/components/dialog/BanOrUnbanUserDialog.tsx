@@ -19,7 +19,7 @@ import {
   ModalActionsContainer,
   SessionWrapperModal,
 } from '../SessionWrapperModal';
-import { localize } from '../../localization/localeTools';
+import { tr } from '../../localization/localeTools';
 import { SimpleSessionInput } from '../inputs/SessionInput';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
 import { ModalFlexContainer } from './shared/ModalFlexContainer';
@@ -106,7 +106,7 @@ export const BanOrUnBanUserDialog = (props: {
     setInProgress(false);
   };
 
-  const title = isBan ? localize('banUser').toString() : localize('banUnbanUser').toString();
+  const title = isBan ? tr('banUser') : tr('banUnbanUser');
 
   /**
    * Starts procedure for banning/unbanning user and all their messages using dialog
@@ -119,7 +119,7 @@ export const BanOrUnBanUserDialog = (props: {
     dispatch(updateBanOrUnbanUserModal(null));
   };
 
-  const buttonText = isBan ? localize('banUser').toString() : localize('banUnbanUser').toString();
+  const buttonText = isBan ? tr('banUser') : tr('banUnbanUser');
 
   return (
     <SessionWrapperModal
@@ -147,7 +147,7 @@ export const BanOrUnBanUserDialog = (props: {
               buttonType={SessionButtonType.Simple}
               buttonColor={SessionButtonColor.Danger}
               onClick={startBanAndDeleteAllSequence}
-              text={localize('banDeleteAll').toString()}
+              text={tr('banDeleteAll')}
               disabled={inProgress}
               dataTestId="ban-user-delete-all-confirm-button"
             />
@@ -155,7 +155,7 @@ export const BanOrUnBanUserDialog = (props: {
             <SessionButton
               buttonType={SessionButtonType.Simple}
               onClick={onClose}
-              text={localize('cancel').toString()}
+              text={tr('cancel')}
               dataTestId="unban-user-cancel-button"
             />
           )}
@@ -170,7 +170,7 @@ export const BanOrUnBanUserDialog = (props: {
 
         <SimpleSessionInput
           inputRef={inputRef}
-          placeholder={localize('accountId').toString()}
+          placeholder={tr('accountId')}
           onValueChanged={setInputBoxValue}
           disabled={inProgress || !!pubkey}
           value={pubkey ? inputTextToDisplay : inputBoxValue}

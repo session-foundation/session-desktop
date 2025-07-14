@@ -5,7 +5,7 @@ import { updateEnterPasswordModal } from '../../state/ducks/modalDialog';
 import { SpacerSM } from '../basic/Text';
 
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
-import { localize } from '../../localization/localeTools';
+import { tr } from '../../localization/localeTools';
 import {
   ModalBasicHeader,
   ModalActionsContainer,
@@ -32,7 +32,7 @@ const showHideButtonDataTestIds = {
 
 export const EnterPasswordModal = (props: EnterPasswordModalProps) => {
   const { setPasswordValid, onClickOk, onClickClose } = props;
-  const title = localize('sessionRecoveryPassword').toString();
+  const title = tr('sessionRecoveryPassword');
 
   const [password, setPassword] = useState('');
   const [providedError, setProvidedError] = useState<string | undefined>(undefined);
@@ -41,7 +41,7 @@ export const EnterPasswordModal = (props: EnterPasswordModalProps) => {
   const verifyPassword = async () => {
     try {
       if (!password) {
-        setProvidedError(localize('passwordIncorrect').toString());
+        setProvidedError(tr('passwordIncorrect'));
 
         return;
       }
@@ -54,7 +54,7 @@ export const EnterPasswordModal = (props: EnterPasswordModalProps) => {
       dispatch(updateEnterPasswordModal(null));
     } catch (e) {
       window.log.error('window.onTryPassword failed with', e);
-      setProvidedError(localize('passwordIncorrect').toString());
+      setProvidedError(tr('passwordIncorrect'));
     }
   };
 
@@ -73,13 +73,13 @@ export const EnterPasswordModal = (props: EnterPasswordModalProps) => {
       buttonChildren={
         <ModalActionsContainer>
           <SessionButton
-            text={localize('done').toString()}
+            text={tr('done')}
             buttonType={SessionButtonType.Simple}
             onClick={verifyPassword}
             dataTestId="session-confirm-ok-button"
           />
           <SessionButton
-            text={localize('cancel').toString()}
+            text={tr('cancel')}
             buttonType={SessionButtonType.Simple}
             buttonColor={SessionButtonColor.Danger}
             onClick={onClose}
@@ -91,7 +91,7 @@ export const EnterPasswordModal = (props: EnterPasswordModalProps) => {
       <SpacerSM />
       <ShowHideSessionInput
         ariaLabel="password input"
-        placeholder={localize('passwordEnter').toString()}
+        placeholder={tr('passwordEnter')}
         value={password}
         onValueChanged={str => {
           setPassword(str);

@@ -15,7 +15,7 @@ import {
   SessionButtonType,
 } from '../../basic/SessionButton';
 import { SessionFocusTrap } from '../../SessionFocusTrap';
-import { localize, tr } from '../../../localization/localeTools';
+import { tr } from '../../../localization/localeTools';
 import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 
@@ -78,7 +78,7 @@ export const SelectionOverlay = () => {
             iconColor="var(--chat-buttons-icon-color)"
             iconSize="large"
             onClick={onCloseOverlay}
-            aria-label={localize('close').toString()}
+            aria-label={tr('close')}
           />
         </div>
 

@@ -15,7 +15,7 @@ import { GoogleChrome } from '../../util';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { LucideIcon } from '../icon/LucideIcon';
-import { localize } from '../../localization/localeTools';
+import { tr } from '../../localization/localeTools';
 import { ContactName } from './ContactName';
 import { useSelectedIsPublic } from '../../state/selectors/selectedConversation';
 import { QuoteText } from './message/message-content/quote/QuoteText';
@@ -102,7 +102,7 @@ export const SessionQuotedMessageComposition = () => {
     /** isIncoming must be true here otherwise the text content is the same color as the background */
     <QuoteText isIncoming={true} text={quoteText} referencedMessageNotFound={true} />
   ) : (
-    localize(
+    tr(
       hasAudioAttachment
         ? 'audio'
         : isGenericFile
@@ -170,7 +170,7 @@ export const SessionQuotedMessageComposition = () => {
         iconSize="medium"
         onClick={removeQuotedMessage}
         margin={'0 var(--margins-sm) 0 0'}
-        aria-label={localize('close').toString()}
+        aria-label={tr('close')}
         dataTestId="link-preview-close"
       />
     </QuotedMessageComposition>

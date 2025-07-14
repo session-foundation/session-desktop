@@ -6,7 +6,6 @@ import { Flex } from '../../../../basic/Flex';
 import { SessionButton } from '../../../../basic/SessionButton';
 import { StyledScrollContainer } from '../../../../conversation/right-panel/overlay/components';
 import { type ConversationNotificationSettingType } from '../../../../../models/conversationAttributes';
-import { localize } from '../../../../../localization/localeTools';
 import { PanelButtonGroup } from '../../../../buttons';
 import { PanelRadioButton } from '../../../../buttons/PanelRadioButton';
 import {
@@ -31,6 +30,7 @@ import {
 } from '../../../../SessionWrapperModal';
 import { ModalBackButton } from '../../../shared/ModalBackButton';
 import { SpacerMD } from '../../../../basic/Text';
+import { tr } from '../../../../../localization/localeTools';
 
 const getDataTestIdForButton = (
   value: ConversationNotificationSettingType
@@ -130,7 +130,7 @@ export function NotificationForConversationModal(props: Required<ConversationSet
             dataTestId={'notifications-set-button'}
             disabled={noChanges}
           >
-            {localize('set')}
+            {tr('set')}
           </SessionButton>
         </ModalActionsContainer>
       }

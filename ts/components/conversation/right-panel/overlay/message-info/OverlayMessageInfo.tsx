@@ -51,9 +51,9 @@ import { ToastUtils } from '../../../../../session/utils';
 import { LUCIDE_ICONS_UNICODE } from '../../../../icon/lucide';
 import { PanelIconLucideIcon } from '../../../../buttons/PanelIconButton';
 import { useShowCopyAccountIdCb } from '../../../../menuAndSettingsHooks/useCopyAccountId';
-import { localize } from '../../../../../localization/localeTools';
 import { sectionActions } from '../../../../../state/ducks/section';
 import { useIsIncomingRequest } from '../../../../../hooks/useParamSelector';
+import { tr } from '../../../../../localization/localeTools';
 
 // NOTE we override the default max-widths when in the detail isDetailView
 const StyledMessageBody = styled.div`
@@ -203,7 +203,7 @@ function CopyMessageBodyButton({ messageId }: WithMessageIdOpt) {
   }
   return (
     <PanelIconButton
-      text={localize('copy').toString()}
+      text={tr('copy')}
       iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.COPY} />}
       onClick={() => {
         clipboard.writeText(messageBody || '');
@@ -221,7 +221,7 @@ function ReplyToMessageButton({ messageId }: WithMessageIdOpt) {
   }
   return (
     <PanelIconButton
-      text={localize('reply').toString()}
+      text={tr('reply')}
       iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.REPLY} />}
       onClick={() => {
         // eslint-disable-next-line more/no-then
@@ -247,7 +247,7 @@ function CopySenderSessionId({ messageId }: WithMessageIdOpt) {
 
   return (
     <PanelIconButton
-      text={localize('accountIDCopy').toString()}
+      text={tr('accountIDCopy')}
       iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.COPY} />}
       onClick={copySenderIdCb}
       dataTestId="copy-sender-from-details"
@@ -334,7 +334,7 @@ export const OverlayMessageInfo = () => {
           closeButtonOnClick={closePanel}
           paddingTop="var(--margins-2xl)"
         >
-          <HeaderTitle>{localize('messageInfo')}</HeaderTitle>
+          <HeaderTitle>{tr('messageInfo')}</HeaderTitle>
         </Header>
         <StyledMessageInfoContainer>
           <MessageBody
@@ -372,7 +372,7 @@ export const OverlayMessageInfo = () => {
             <CopySenderSessionId messageId={messageId} />
             {hasErrors && !isLegacyGroup && direction === 'outgoing' && (
               <PanelIconButton
-                text={localize('resend').toString()}
+                text={tr('resend')}
                 iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.REFRESH_CW} />}
                 onClick={() => {
                   void resendMessage(messageId);
@@ -385,7 +385,7 @@ export const OverlayMessageInfo = () => {
             {/* Saving attachments sends a data extraction message so it must be disabled for message requests. */}
             {hasAttachments && !isIncomingMessageRequest && (
               <PanelIconButton
-                text={localize('save').toString()}
+                text={tr('save')}
                 iconElement={
                   <PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.CIRCLE_ARROW_DOWN} />
                 }
@@ -406,7 +406,7 @@ export const OverlayMessageInfo = () => {
             {/* Deleting messages sends a "delete message" message so it must be disabled for message requests. */}
             {isDeletable && !isLegacyGroup && !isIncomingMessageRequest && (
               <PanelIconButton
-                text={localize('delete').toString()}
+                text={tr('delete')}
                 iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.TRASH2} />}
                 color={'var(--danger-color)'}
                 dataTestId="delete-from-details"

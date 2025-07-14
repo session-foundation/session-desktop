@@ -15,7 +15,7 @@ import {
 import type { WithMessageId } from '../../../../session/types/with';
 import { LucideIcon } from '../../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
-import { localize } from '../../../../localization/localeTools';
+import { tr } from '../../../../localization/localeTools';
 import { MessageBubble } from './MessageBubble';
 
 type Props = WithMessageId;
@@ -38,7 +38,7 @@ export const MessageText = ({ messageId }: Props) => {
   const text = useMessageText(messageId);
   const isOpenOrClosedGroup = useSelectedIsGroupOrCommunity();
   const isPublic = useSelectedIsPublic();
-  const contents = isDeleted ? localize('deleteMessageDeletedGlobally').toString() : text?.trim();
+  const contents = isDeleted ? tr('deleteMessageDeletedGlobally') : text?.trim();
 
   if (!contents) {
     return null;

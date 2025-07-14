@@ -61,7 +61,7 @@ import { showLinkVisitWarningDialog } from '../dialog/OpenUrlModal';
 import { InvitedToGroup, NoMessageInConversation } from './SubtleNotification';
 import { PubKey } from '../../session/types';
 import { isUsAnySogsFromCache } from '../../session/apis/open_group_api/sogsv3/knownBlindedkeys';
-import { localize } from '../../localization/localeTools';
+import { tr } from '../../localization/localeTools';
 import {
   useConversationIsExpired03Group,
   useSelectedConversationKey,
@@ -115,7 +115,7 @@ const GroupMarkedAsExpired = () => {
   }
   return (
     <NoticeBanner
-      text={localize('groupNotUpdatedWarning').toString()}
+      text={tr('groupNotUpdatedWarning')}
       dataTestId="group-not-updated-30-days-banner"
     />
   );
@@ -227,10 +227,10 @@ export class SessionConversation extends Component<Props, State> {
     if (msg.body.replace(/\s/g, '').includes(recoveryPhrase.replace(/\s/g, ''))) {
       window.inboxStore?.dispatch(
         updateConfirmModal({
-          title: localize('warning').toString(),
+          title: tr('warning'),
           i18nMessage: { token: 'recoveryPasswordWarningSendDescription' },
           okTheme: SessionButtonColor.Danger,
-          okText: localize('send').toString(),
+          okText: tr('send'),
           onClickOk: () => {
             void sendAndScroll();
           },
@@ -546,7 +546,7 @@ export class SessionConversation extends Component<Props, State> {
       return {
         id: pubKey,
         display: isUsAnySogsFromCache(pubKey)
-          ? localize('you').toString()
+          ? tr('you')
           : ConvoHub.use().get(pubKey)?.getNicknameOrRealUsernameOrPlaceholder() ||
             PubKey.shorten(pubKey),
       };
@@ -663,9 +663,9 @@ function OutdatedLegacyGroupBanner() {
     selectedConversationKey &&
     PubKey.is05Pubkey(selectedConversationKey);
 
-  const text = localize(
+  const text = tr(
     weAreAdmin ? 'legacyGroupAfterDeprecationAdmin' : 'legacyGroupAfterDeprecationMember'
-  ).toString();
+  );
 
   return isLegacyGroup ? (
     <NoticeBanner

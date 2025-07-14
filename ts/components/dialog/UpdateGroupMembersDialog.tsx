@@ -29,7 +29,7 @@ import {
 import { useSelectedIsGroupV2 } from '../../state/selectors/selectedConversation';
 import { SessionSpinner } from '../loading';
 import { SessionToggle } from '../basic/SessionToggle';
-import { localize, tr } from '../../localization/localeTools';
+import { tr } from '../../localization/localeTools';
 import { SessionSearchInput } from '../SessionSearchInput';
 import { NoGroupMembers } from '../search/NoResults';
 import { useContactsToInviteTo } from '../../hooks/useContactsToInviteToGroup';
@@ -190,9 +190,7 @@ export const UpdateGroupMembersDialog = (props: Props) => {
   return (
     <SessionWrapperModal
       headerChildren={
-        <ModalBasicHeader
-          title={localize(weAreAdmin ? 'manageMembers' : 'groupMembers').toString()}
-        />
+        <ModalBasicHeader title={tr(weAreAdmin ? 'manageMembers' : 'groupMembers')} />
       }
       onClose={closeDialog}
       $contentMinWidth={WrapperModalWidth.wide}

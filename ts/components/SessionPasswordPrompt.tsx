@@ -12,7 +12,7 @@ import { SessionToastContainer } from './SessionToastContainer';
 import { SessionToast } from './basic/SessionToast';
 import { SessionSpinner } from './loading';
 import { Localizer } from './basic/Localizer';
-import { localize } from '../localization/localeTools';
+import { tr } from '../localization/localeTools';
 import {
   ModalBasicHeader,
   ModalActionsContainer,
@@ -58,16 +58,12 @@ function ClearDataViewButtons({ onCancel }: { onCancel: () => void }) {
   return (
     <ModalActionsContainer>
       <SessionButton
-        text={localize('clearDevice').toString()}
+        text={tr('clearDevice')}
         buttonColor={SessionButtonColor.Danger}
         buttonType={SessionButtonType.Simple}
         onClick={window.clearLocalData}
       />
-      <SessionButton
-        text={localize('cancel').toString()}
-        buttonType={SessionButtonType.Simple}
-        onClick={onCancel}
-      />
+      <SessionButton text={tr('cancel')} buttonType={SessionButtonType.Simple} onClick={onCancel} />
     </ModalActionsContainer>
   );
 }
@@ -93,7 +89,7 @@ function PasswordViewButtons({
     <ModalActionsContainer>
       {showResetElements && (
         <SessionButton
-          text={localize('clearDevice').toString()}
+          text={tr('clearDevice')}
           buttonColor={SessionButtonColor.Danger}
           buttonType={SessionButtonType.Simple}
           onClick={onShowClearDataView}
@@ -101,7 +97,7 @@ function PasswordViewButtons({
       )}
       {!loading && (
         <SessionButton
-          text={showResetElements ? localize('tryAgain').toString() : localize('done').toString()}
+          text={showResetElements ? tr('tryAgain') : tr('done')}
           buttonType={SessionButtonType.Simple}
           onClick={initLogin}
           disabled={loading}
@@ -148,7 +144,7 @@ const PasswordPrompt = ({
 }) => {
   return (
     <ShowHideSessionInput
-      placeholder={localize('passwordEnter').toString()}
+      placeholder={tr('passwordEnter')}
       onEnterPressed={onEnterPressed}
       onValueChanged={onPasswordChange}
       ariaLabel="password input"
@@ -194,9 +190,7 @@ const SessionPasswordPromptInner = () => {
   return (
     <SessionWrapperModal
       headerChildren={
-        <ModalBasicHeader
-          title={localize(clearDataView ? 'clearDevice' : 'passwordEnter').toString()}
-        />
+        <ModalBasicHeader title={tr(clearDataView ? 'clearDevice' : 'passwordEnter')} />
       }
       $contentMinWidth={WrapperModalWidth.narrow}
       buttonChildren={

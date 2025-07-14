@@ -20,7 +20,7 @@ import { SessionIcon } from '../icon';
 import { LucideIcon } from '../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { Localizer } from '../basic/Localizer';
-import { localize, type MergedLocalizerTokens } from '../../localization/localeTools';
+import { tr } from '../../localization/localeTools';
 import { FileIcon } from '../icon/FileIcon';
 import { SessionButtonShiny } from '../basic/SessionButtonShiny';
 import { useHasPro } from '../../hooks/useHasPro';
@@ -134,14 +134,14 @@ function FeatureListItem({
   );
 }
 
-function getFeatureList(variant: SessionProInfoVariant): Array<MergedLocalizerTokens> {
+function getFeatureList(variant: SessionProInfoVariant) {
   switch (variant) {
     case SessionProInfoVariant.PINNED_CONVERSATION_LIMIT:
     case SessionProInfoVariant.PINNED_CONVERSATION_LIMIT_GRANDFATHERED:
-      return ['proFeatureListPinnedConversations', 'proFeatureListLargerGroups'];
+      return ['proFeatureListPinnedConversations', 'proFeatureListLargerGroups'] as const;
     case SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT:
     default:
-      return ['proFeatureListLongerMessages', 'proFeatureListLargerGroups'];
+      return ['proFeatureListLongerMessages', 'proFeatureListLargerGroups'] as const;
   }
 }
 
@@ -233,7 +233,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
             onClick={onClose}
             dataTestId="modal-session-pro-confirm-button"
           >
-            {localize('theContinue')}
+            {tr('theContinue')}
           </SessionButtonShiny>
           <SessionButton
             {...buttonProps}
@@ -241,14 +241,14 @@ export function SessionProInfoModal(props: SessionProInfoState) {
             onClick={onClose}
             dataTestId="modal-session-pro-cancel-button"
           >
-            {localize('cancel').toString()}
+            {tr('cancel')}
           </SessionButton>
         </ModalActionsContainer>
       }
     >
       <SpacerSM />
       <StyledCTATitle>
-        {localize('upgradeTo')}
+        {tr('upgradeTo')}
         <SessionIcon
           sizeIsWidth={false}
           iconType={'sessionPro'}
@@ -265,10 +265,10 @@ export function SessionProInfoModal(props: SessionProInfoState) {
         </StyledScrollDescriptionContainer>
         <StyledFeatureList>
           {getFeatureList(props.variant).map(token => (
-            <FeatureListItem>{localize(token)}</FeatureListItem>
+            <FeatureListItem>{tr(token)}</FeatureListItem>
           ))}
           <FeatureListItem customIconSrc={'images/sparkle-animated.svg'}>
-            {localize('proFeatureListLoadsMore')}
+            {tr('proFeatureListLoadsMore')}
           </FeatureListItem>
         </StyledFeatureList>
       </StyledContentContainer>

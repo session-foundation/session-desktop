@@ -4,7 +4,7 @@ import { useLeftOverlayMode } from '../../state/selectors/section';
 import { sectionActions } from '../../state/ducks/section';
 import { searchActions } from '../../state/ducks/search';
 import { LucideIcon } from '../icon/LucideIcon';
-import { localize } from '../../localization/localeTools';
+import { tr } from '../../localization/localeTools';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 const StyledMenuButton = styled.button`
@@ -57,7 +57,7 @@ export const MenuButton = () => {
       <LucideIcon
         unicode={LUCIDE_ICONS_UNICODE.PLUS}
         iconSize="large"
-        aria-label={localize('contentDescriptionChooseConversationType')}
+        aria-label={tr('contentDescriptionChooseConversationType')}
       />
     </StyledMenuButton>
   );

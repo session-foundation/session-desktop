@@ -21,7 +21,7 @@ import { UserGroupsWrapperActions } from '../../webworker/workers/browser/libses
 import { NetworkTime } from '../../util/NetworkTime';
 import { MessageQueue } from '../../session/sending';
 import { WithLocalMessageDeletionType } from '../../session/types/with';
-import { localize, tr } from '../../localization/localeTools';
+import { tr } from '../../localization/localeTools';
 import { sectionActions } from '../../state/ducks/section';
 import type { LocalizerProps } from '../../components/basic/Localizer';
 
@@ -538,7 +538,7 @@ export async function deleteMessagesById(messageIds: Array<string>, conversation
 
   window.inboxStore?.dispatch(
     updateConfirmModal({
-      title: localize('deleteMessage').withArgs({ count: selectedMessages.length }).toString(),
+      title: tr('deleteMessage', { count: selectedMessages.length }),
       radioOptions: !isMe
         ? [
             {

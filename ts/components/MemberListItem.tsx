@@ -33,7 +33,7 @@ import {
 } from '../webworker/workers/browser/libsession_worker_interface';
 import { assertUnreachable } from '../types/sqlSharedTypes';
 import { isUsAnySogsFromCache } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
-import { localize, tr } from '../localization/localeTools';
+import { tr } from '../localization/localeTools';
 
 const AvatarContainer = styled.div`
   position: relative;
@@ -342,7 +342,7 @@ export const MemberListItem = <T extends string>({
 }: MemberListItemProps<T>) => {
   const memberName = useNicknameOrProfileNameOrShortenedPubkey(pubkey);
   const isYou = isUsAnySogsFromCache(pubkey);
-  const ourName = isYou ? localize('you').toString() : null;
+  const ourName = isYou ? tr('you') : null;
   const shortPubkey = PubKey.shorten(pubkey);
   const nameSuffix =
     isPublic && inMentions && !isYou && memberName !== shortPubkey ? shortPubkey : '';

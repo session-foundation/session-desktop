@@ -30,7 +30,7 @@ import { searchActions } from '../../../state/ducks/search';
 import { useContactsToInviteTo } from '../../../hooks/useContactsToInviteToGroup';
 import { NoContacts, NoResultsForSearch } from '../../search/NoResults';
 import { SimpleSessionTextarea } from '../../inputs/SessionInput';
-import { localize } from '../../../localization/localeTools';
+import { tr } from '../../../localization/localeTools';
 
 const StyledGroupMemberListContainer = styled.div`
   display: flex;
@@ -80,11 +80,11 @@ export const OverlayClosedGroupV2 = () => {
 
     // Validate groupName and groupMembers length
     if (groupName.length === 0) {
-      ToastUtils.pushToastError('invalidGroupName', localize('groupNameEnterPlease').toString());
+      ToastUtils.pushToastError('invalidGroupName', tr('groupNameEnterPlease'));
       return;
     }
     if (groupName.length > LIBSESSION_CONSTANTS.BASE_GROUP_MAX_NAME_LENGTH) {
-      setGroupNameError(localize('groupNameEnterShorter').toString());
+      setGroupNameError(tr('groupNameEnterShorter'));
       return;
     }
 
@@ -94,12 +94,12 @@ export const OverlayClosedGroupV2 = () => {
     if (selectedMemberIds.length < 1) {
       ToastUtils.pushToastError(
         'pickClosedGroupMember',
-        localize('groupCreateErrorNoMembers').toString()
+        tr('groupCreateErrorNoMembers').toString()
       );
       return;
     }
     if (selectedMemberIds.length >= VALIDATION.CLOSED_GROUP_SIZE_LIMIT) {
-      ToastUtils.pushToastError('closedGroupMaxSize', localize('groupAddMemberMaximum').toString());
+      ToastUtils.pushToastError('closedGroupMaxSize', tr('groupAddMemberMaximum'));
       return;
     }
     // trigger the add through redux.
@@ -136,7 +136,7 @@ export const OverlayClosedGroupV2 = () => {
         <SimpleSessionTextarea
           // not monospaced. This is a plain text input for a group name
           autoFocus={true}
-          placeholder={localize('groupNameEnter').toString()}
+          placeholder={tr('groupNameEnter')}
           value={groupName}
           onValueChanged={onValueChanged}
           singleLine={true}
@@ -206,7 +206,7 @@ export const OverlayClosedGroupV2 = () => {
       <SpacerLG style={{ flexShrink: 0 }} />
       <Flex $container={true} width={'100%'} $flexDirection="column" padding={'var(--margins-md)'}>
         <SessionButton
-          text={localize('create').toString()}
+          text={tr('create')}
           disabled={disableCreateButton}
           onClick={onEnterPressed}
           dataTestId="create-group-button"
