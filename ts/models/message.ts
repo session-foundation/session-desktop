@@ -93,7 +93,7 @@ import { getTimerNotificationStr } from './timerNotifications';
 import { ExpirationTimerUpdate } from '../session/disappearing_messages/types';
 import { Model } from './models';
 import { ReduxOnionSelectors } from '../state/selectors/onions';
-import { strippedWithObj, tr, tStripped } from '../localization/localeTools';
+import { tStrippedWithObj, tr, tStripped } from '../localization/localeTools';
 
 // tslint:disable: cyclomatic-complexity
 
@@ -246,20 +246,20 @@ export class MessageModel extends Model<MessageAttributes> {
         this.getConversation()?.getNicknameOrRealUsernameOrPlaceholder() || tr('unknown');
 
       if (groupUpdate.left) {
-        return strippedWithObj(getLeftGroupUpdateChangeStr(groupUpdate.left));
+        return tStrippedWithObj(getLeftGroupUpdateChangeStr(groupUpdate.left));
       }
 
       if (groupUpdate.name) {
-        return strippedWithObj(getGroupNameChangeStr(groupUpdate.name));
+        return tStrippedWithObj(getGroupNameChangeStr(groupUpdate.name));
       }
 
       if (groupUpdate.avatarChange) {
-        return strippedWithObj(getGroupDisplayPictureChangeStr());
+        return tStrippedWithObj(getGroupDisplayPictureChangeStr());
       }
 
       if (groupUpdate.joined?.length) {
         const opts = getJoinedGroupUpdateChangeStr(groupUpdate.joined, isGroupV2, false, groupName);
-        return strippedWithObj(opts);
+        return tStrippedWithObj(opts);
       }
 
       if (groupUpdate.joinedWithHistory?.length) {
@@ -269,16 +269,16 @@ export class MessageModel extends Model<MessageAttributes> {
           true,
           groupName
         );
-        return strippedWithObj(opts);
+        return tStrippedWithObj(opts);
       }
 
       if (groupUpdate.kicked?.length) {
         const opts = getKickedGroupUpdateStr(groupUpdate.kicked, groupName);
-        return strippedWithObj(opts);
+        return tStrippedWithObj(opts);
       }
       if (groupUpdate.promoted?.length) {
         const opts = getPromotedGroupUpdateChangeStr(groupUpdate.promoted);
-        return strippedWithObj(opts);
+        return tStrippedWithObj(opts);
       }
       window.log.warn('did not build a specific change for getDescription of ', groupUpdate);
 
@@ -381,7 +381,7 @@ export class MessageModel extends Model<MessageAttributes> {
         timespanSeconds: expireTimer,
       });
 
-      return strippedWithObj(i18nProps);
+      return tStrippedWithObj(i18nProps);
     }
     const body = this.get('body');
     if (body) {

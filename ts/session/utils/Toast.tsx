@@ -2,7 +2,7 @@ import { toast } from 'react-toastify';
 import { SessionToast, SessionToastType } from '../../components/basic/SessionToast';
 import { sectionActions, SectionType } from '../../state/ducks/section';
 import { getPromotedGroupUpdateChangeStr } from '../../models/groupUpdate';
-import { strippedWithObj, tStripped } from '../../localization/localeTools';
+import { tStripped, tStrippedWithObj } from '../../localization/localeTools';
 
 // if you push a toast manually with toast...() be sure to set the type attribute of the SessionToast component
 export function pushToastError(id: string, description: string) {
@@ -212,7 +212,7 @@ export function pushFailedToRemoveFromModerator(names: Array<string>) {
 
 export function pushUserAddedToModerators(userNames: Array<string>) {
   const opts = getPromotedGroupUpdateChangeStr(userNames);
-  pushToastSuccess('adminPromotedToAdmin', strippedWithObj(opts));
+  pushToastSuccess('adminPromotedToAdmin', tStrippedWithObj(opts));
 }
 
 export function pushUserRemovedFromModerators(names: Array<string>) {

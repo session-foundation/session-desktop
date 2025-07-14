@@ -128,21 +128,6 @@ export function tStrippedWithObj<T extends MergedLocalizerTokens>(
   return builder.toString();
 }
 
-export function strippedWithObj<T extends MergedLocalizerTokens>(
-  opts: LocalizerComponentProps<T, string>
-): string | T {
-  const sanitizedArgs = opts.args ? sanitizeArgs(opts.args, '\u200B') : undefined;
-
-  // Note: the `as any` is needed sanitizeArgs does not preserve argument types
-  const i18nString = new LocalizedStringBuilder<T>(opts.token as any, localeInUse)
-    .withArgs(sanitizedArgs as any)
-    .toString();
-
-  const strippedString = i18nString.replaceAll(/<[^>]*>/g, '');
-
-  return deSanitizeHtmlTags(strippedString, '\u200B');
-}
-
 /**
  * Sanitizes the args to be used in the i18n function
  * @param args The args to sanitize
