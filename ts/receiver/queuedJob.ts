@@ -304,11 +304,13 @@ async function handleRegularMessage(
 
   handleLinkPreviews(rawDataMessage.body, rawDataMessage.preview, message);
 
-  // TODO: add pro status check for sender
-  const isSenderPro = false;
-  const maxChars = isSenderPro
-    ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
-    : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
+  // TODO: Once pro proof validation is available make this dynamic
+  // const maxChars = isSenderPro
+  //   ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
+  //   : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
+  // NOTE: The truncation value must be the Pro count so when Pro is released older clients wont truncate pro messages.
+  const maxChars = Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO;
+
   const body =
     rawDataMessage.body.length > maxChars
       ? rawDataMessage.body.slice(0, maxChars)
