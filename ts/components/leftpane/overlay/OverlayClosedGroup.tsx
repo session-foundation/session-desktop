@@ -30,7 +30,7 @@ import { searchActions } from '../../../state/ducks/search';
 import { useContactsToInviteTo } from '../../../hooks/useContactsToInviteToGroup';
 import { NoContacts, NoResultsForSearch } from '../../search/NoResults';
 import { SimpleSessionTextarea } from '../../inputs/SessionInput';
-import { tr } from '../../../localization/localeTools';
+import { tr, tStripped } from '../../../localization/localeTools';
 
 const StyledGroupMemberListContainer = styled.div`
   display: flex;
@@ -94,12 +94,12 @@ export const OverlayClosedGroupV2 = () => {
     if (selectedMemberIds.length < 1) {
       ToastUtils.pushToastError(
         'pickClosedGroupMember',
-        tr('groupCreateErrorNoMembers').toString()
+        tr('groupCreateErrorNoMembers')
       );
       return;
     }
     if (selectedMemberIds.length >= VALIDATION.CLOSED_GROUP_SIZE_LIMIT) {
-      ToastUtils.pushToastError('closedGroupMaxSize', tr('groupAddMemberMaximum'));
+      ToastUtils.pushToastError('closedGroupMaxSize', tStripped('groupAddMemberMaximum'));
       return;
     }
     // trigger the add through redux.

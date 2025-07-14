@@ -48,7 +48,7 @@ const releasedFeaturesSlice = createSlice({
 
       // state.sesh101NotificationAt = handleReleaseNotification({
       //   featureName: 'useSESH101',
-      //   message: tr('sessionNetworkNotificationLive').toString(),
+      //   message: tr('sessionNetworkNotificationLive'),
       //   lastRefreshedAt: state.refreshedAt,
       //   notifyAt: state.sesh101NotificationAt,
       //   delayMs: 1 * DURATION.HOURS,

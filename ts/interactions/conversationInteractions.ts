@@ -396,7 +396,7 @@ export async function showLeaveGroupByConvoId(conversationId: string, name: stri
   window?.inboxStore?.dispatch(
     updateConfirmModal({
       title: tr('groupLeave'),
-      i18nMessage: { token: 'groupLeaveDescription', args: { group_name: name ?? '' } },
+      i18nMessage: { token: 'groupLeaveDescription', args: { group_name: name ?? tr('unknown') } },
       onClickOk,
       okText: tr('leave'),
       okTheme: SessionButtonColor.Danger,
@@ -441,7 +441,7 @@ export async function showDeleteGroupByConvoId(conversationId: string, name: str
       title: tr('groupDelete'),
       i18nMessage: {
         token: weAreAdmin ? 'groupDeleteDescription' : 'groupDeleteDescriptionMember',
-        args: { group_name: name ?? '' },
+        args: { group_name: name ?? tr('unknown') },
       },
       onClickOk,
       okText: tr('delete'),

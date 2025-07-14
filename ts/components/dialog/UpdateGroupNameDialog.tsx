@@ -154,7 +154,7 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
             disabled={isNameChangePending || !newGroupName || !newGroupName.trim()}
           />
           <SessionButton
-            text={tr('cancel').toString()}
+            text={tr('cancel')}
             buttonColor={SessionButtonColor.Danger}
             buttonType={SessionButtonType.Simple}
             onClick={closeDialog}

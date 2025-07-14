@@ -4,7 +4,7 @@ import { useSelectedNicknameOrProfileNameOrShortenedPubkey } from '../../../../.
 import { ExpirableReadableMessage } from '../ExpirableReadableMessage';
 import { NotificationBubble } from './NotificationBubble';
 import { Localizer } from '../../../../basic/Localizer';
-import { MergedLocalizerTokens, tr } from '../../../../../localization/localeTools';
+import { MergedLocalizerTokens } from '../../../../../localization/localeTools';
 import type { WithMessageId } from '../../../../../session/types/with';
 import { useMessageCallNotificationType } from '../../../../../state/selectors';
 import { LUCIDE_ICONS_UNICODE } from '../../../../icon/lucide';
@@ -37,7 +37,7 @@ export const CallNotification = (props: WithMessageId) => {
 
   const notificationType = useMessageCallNotificationType(messageId);
 
-  const name = useSelectedNicknameOrProfileNameOrShortenedPubkey() ?? tr('unknown');
+  const name = useSelectedNicknameOrProfileNameOrShortenedPubkey();
 
   if (!notificationType) {
     return null;

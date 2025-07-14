@@ -69,7 +69,7 @@ export const ContactName = (props: Props) => {
       {shouldShowProfile ? (
         <div style={styles} className={`${prefix}__profile-name`}>
           <Emojify
-            text={isYou ? tr('you').toString() : displayedName}
+            text={isYou ? tr('you') : displayedName}
             sizeClass="small"
             isGroup={!isPrivate}
           />

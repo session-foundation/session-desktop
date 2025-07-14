@@ -84,19 +84,19 @@ export const IncomingCallDialog = () => {
       <SessionWrapperModal
         headerChildren={
           <ModalBasicHeader
-            title={tr('callsIncoming', { name: from ?? tr('unknown').toString() })}
+            title={tr('callsIncoming', { name: from ?? tr('unknown') })}
           />
         }
         buttonChildren={
           <ModalActionsContainer>
             <SessionButton
-              text={tr('accept').toString()}
+              text={tr('accept')}
               buttonType={SessionButtonType.Simple}
               onClick={handleAcceptIncomingCall}
               buttonColor={SessionButtonColor.Danger}
             />
             <SessionButton
-              text={tr('decline').toString()}
+              text={tr('decline')}
               buttonType={SessionButtonType.Simple}
               onClick={handleDeclineIncomingCall}
             />

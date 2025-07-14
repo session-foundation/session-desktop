@@ -178,7 +178,7 @@ export const SettingsCategoryRecoveryPassword = () => {
           onClick={() => {
             dispatch(updateHideRecoveryPasswordModal({ state: 'firstWarning' }));
           }}
-          buttonText={tr('hide').toString()}
+          buttonText={tr('hide')}
           buttonColor={SessionButtonColor.Danger}
           dataTestId={'hide-recovery-password-button'}
         />
