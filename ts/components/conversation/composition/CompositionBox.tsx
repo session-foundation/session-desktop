@@ -820,6 +820,7 @@ class CompositionBoxInner extends Component<Props, State> {
         stagedLinkPreview: undefined,
         ignoredLink: undefined,
         draft: '',
+        characterCount: 0,
       });
       updateDraftForConversation({
         conversationKey: this.props.selectedConversationKey,
