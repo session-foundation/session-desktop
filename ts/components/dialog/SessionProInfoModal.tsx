@@ -36,13 +36,14 @@ export enum SessionProInfoVariant {
 const StyledContentContainer = styled.div`
   display: flex;
   flex-direction: column;
-  margin-bottom: var(--margins-lg);
+  margin-bottom: var(--margins-md);
   gap: var(--margins-sm);
 `;
 
 const StyledScrollDescriptionContainer = styled.div`
   text-align: center;
   font-size: var(--font-size-lg);
+  line-height: var(--font-size-xl);
   color: var(--text-secondary-color);
 `;
 
