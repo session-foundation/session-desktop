@@ -40,7 +40,8 @@ export const useDebouncedSelectAllOnTripleClickHandler = ({
   const resetClickCount = useCallback(
     debounce(() => {
       clickCount.current = 0;
-    }, 300),
+      // NOTE: This value needs to be >= the browser's default triple click interval
+    }, 500),
     []
   );
 
