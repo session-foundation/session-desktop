@@ -98,7 +98,6 @@ const getSslAgentForSeedNode = async (seedNodeHost: string, isSsl = false) => {
     // so in production, rejectUnauthorized must be true.
     rejectUnauthorized: true,
     keepAlive: true,
-
     checkServerIdentity: (host: string, cert: any) => {
       window.log.info(`seednode checkServerIdentity: ${host}`);
       // Make sure the certificate is issued to the host we are connected to
