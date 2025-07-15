@@ -486,11 +486,9 @@ async function buildNewOnionPathsWorker() {
           'Too few nodes "unique by ip" to build an onion path. Even after fetching from seed.'
         );
       }
-      let otherNodes = _.differenceBy(
-        oneNodeForEachSubnet24KeepingRatio,
-        guardNodes,
-        'pubkey_ed25519'
-      );
+      let otherNodes = window.sessionFeatureFlags?.useLocalDevNet
+        ? allNodes
+        : _.differenceBy(oneNodeForEachSubnet24KeepingRatio, guardNodes, 'pubkey_ed25519');
       const guards = _.shuffle(guardNodes);
 
       // Create path for every guard node:

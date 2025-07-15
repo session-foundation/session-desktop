@@ -64,6 +64,16 @@ const getSslAgentForSeedNode = async (seedNodeHost: string, isSsl = false) => {
     return undefined;
   }
 
+  if (window.sessionFeatureFlags?.useLocalDevNet) {
+    const sslOptions: https.AgentOptions = {
+      // local devnet: allow unauthorized
+      rejectUnauthorized: false,
+      keepAlive: true,
+    };
+
+    return new https.Agent(sslOptions);
+  }
+
   switch (seedNodeHost) {
     case 'seed1.getsession.org':
       certContent = isLinux() ? storageSeed1Crt : Buffer.from(storageSeed1Crt, 'utf-8').toString();
