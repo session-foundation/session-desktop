@@ -582,6 +582,7 @@ export const CompositionTextArea = (props: Props) => {
         aria-haspopup="listbox"
         aria-autocomplete="list"
         aria-label={messagePlaceHolder}
+        data-testid="message-input-text-area"
       />
       {showPopover ? (
         <SessionPopoverContent

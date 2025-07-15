@@ -314,7 +314,7 @@ export async function testGuardNode(snode: Snode) {
   try {
     // Log this line for testing
     // curl -k -X POST -H 'Content-Type: application/json' -d '"+fetchOptions.body.replace(/"/g, "\\'")+"'", url
-    window?.log?.info('insecureNodeFetch => plaintext for testGuardNode');
+    window?.log?.info('insecureNodeFetch => plaintext for testGuardNode:', url);
 
     response = await insecureNodeFetch(url, fetchOptions);
   } catch (e) {
