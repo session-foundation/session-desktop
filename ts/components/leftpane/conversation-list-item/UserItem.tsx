@@ -9,7 +9,6 @@ import {
 import { PubKey } from '../../../session/types';
 import { useIsSearchingForType } from '../../../state/selectors/search';
 import { ContactName } from '../../conversation/ContactName';
-import { tr } from '../../../localization/localeTools';
 
 export const UserItem = () => {
   const conversationId = useConvoIdFromContext();
@@ -25,7 +24,7 @@ export const UserItem = () => {
 
   const displayedPubkey = username ? shortenedPubkey : conversationId;
   const displayName = isMe
-    ? tr('noteToSelf')
+    ? window.i18n('noteToSelf')
     : isSearchResultsMode && hasNickname && realName
       ? `${realName} (${username})`
       : username;

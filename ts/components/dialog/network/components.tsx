@@ -6,9 +6,9 @@ import { getThemeValue } from '../../../themes/globals';
 import { hexColorToRGB } from '../../../util/hexColorToRGB';
 import { formatAbbreviatedExpireDoubleTimer } from '../../../util/i18n/formatting/expirationTimer';
 import { DURATION } from '../../../session/constants';
+import { localize } from '../../../localization/localeTools';
 import { useInfoLoading, useLastRefreshedTimestamp } from '../../../state/selectors/networkModal';
 import { SessionButton, type SessionButtonProps } from '../../basic/SessionButton';
-import { tr } from '../../../localization/localeTools';
 
 export const SessionNetworkButton = styled(SessionButton)<SessionButtonProps>`
   font-size: var(--font-display-size-lg);
@@ -224,7 +224,7 @@ function formatTimeRefreshed({ timeRefreshed }: { timeRefreshed: number }) {
     // NOTE if the time is less than 60 seconds, we want to show 0 minutes. So we follow the time format in formatAbbreviatedExpireDoubleTimer()
     const relative_time = timeRefreshedSeconds <= 60 ? '0m' : time_large || time_small;
 
-    return tr('updated', { relative_time });
+    return localize('updated').withArgs({ relative_time }).toString();
   }
 
   throw new Error('formatTimeLeft unexpected duration given');

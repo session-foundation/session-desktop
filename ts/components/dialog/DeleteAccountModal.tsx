@@ -10,7 +10,7 @@ import {
   sendConfigMessageAndDeleteEverything,
 } from '../../util/accountManager';
 import { SessionRadioGroup } from '../basic/SessionRadioGroup';
-import { tr } from '../../localization/localeTools';
+import { localize } from '../../localization/localeTools';
 import {
   ModalBasicHeader,
   ModalActionsContainer,
@@ -31,11 +31,11 @@ const DescriptionBeforeAskingConfirmation = (props: {
 
   const items = [
     {
-      label: tr('clearDeviceOnly'),
+      label: localize('clearDeviceOnly').toString(),
       value: DEVICE_ONLY,
     },
     {
-      label: tr('clearDeviceAndNetwork'),
+      label: localize('clearDeviceAndNetwork').toString(),
       value: DEVICE_AND_NETWORK,
     },
   ].map(m => ({
@@ -124,12 +124,12 @@ export const DeleteAccountModal = () => {
 
   return (
     <SessionWrapperModal
-      headerChildren={<ModalBasicHeader title={tr('clearDataAll')} />}
+      headerChildren={<ModalBasicHeader title={localize('clearDataAll').toString()} />}
       onClose={onClickCancelHandler}
       buttonChildren={
         <ModalActionsContainer>
           <SessionButton
-            text={tr('clear')}
+            text={localize('clear').toString()}
             buttonColor={SessionButtonColor.Danger}
             buttonType={SessionButtonType.Simple}
             onClick={() => {
@@ -148,7 +148,7 @@ export const DeleteAccountModal = () => {
           />
 
           <SessionButton
-            text={tr('cancel')}
+            text={localize('cancel').toString()}
             buttonType={SessionButtonType.Simple}
             onClick={() => {
               dispatch(updateDeleteAccountModal(null));

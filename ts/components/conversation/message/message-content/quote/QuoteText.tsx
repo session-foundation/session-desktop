@@ -9,7 +9,6 @@ import { MIME } from '../../../../../types';
 import { GoogleChrome } from '../../../../../util';
 import { MessageBody } from '../MessageBody';
 import { QuoteProps } from './Quote';
-import { tr } from '../../../../../localization/localeTools';
 
 const StyledQuoteText = styled.div<{ isIncoming: boolean }>`
   display: -webkit-box;
@@ -46,18 +45,18 @@ function getTypeLabel({
   isVoiceMessage: boolean;
 }): string | undefined {
   if (GoogleChrome.isVideoTypeSupported(contentType)) {
-    return tr('video');
+    return window.i18n('video');
   }
   if (GoogleChrome.isImageTypeSupported(contentType)) {
-    return tr('image');
+    return window.i18n('image');
   }
   if (MIME.isAudio(contentType) && isVoiceMessage) {
-    return tr('messageVoice');
+    return window.i18n('messageVoice');
   }
   if (MIME.isAudio(contentType)) {
-    return tr('audio');
+    return window.i18n('audio');
   }
-  return tr('document');
+  return window.i18n('document');
 }
 
 export const QuoteText = (
@@ -80,7 +79,7 @@ export const QuoteText = (
   return (
     <StyledQuoteText isIncoming={isIncoming} dir="auto">
       <MessageBody
-        text={text || tr('messageErrorOriginal')}
+        text={text || window.i18n('messageErrorOriginal')}
         disableRichContent={true}
         disableJumbomoji={true}
         isGroup={isGroup}

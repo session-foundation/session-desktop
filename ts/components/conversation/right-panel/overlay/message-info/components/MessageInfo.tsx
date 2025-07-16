@@ -28,7 +28,6 @@ import {
   formatNumber,
 } from '../../../../../../util/i18n/formatting/generics';
 import { saveLogToDesktop } from '../../../../../../util/logger/renderer_process_logging';
-import { tr } from '../../../../../../localization/localeTools';
 
 export const MessageInfoLabel = styled.label<{ color?: string }>`
   font-size: var(--font-size-lg);
@@ -145,11 +144,11 @@ export const MessageInfo = ({ messageId, errors }: { messageId: string; errors?:
 
   return (
     <Flex $container={true} $flexDirection="column">
-      <LabelWithInfo label={tr('sent')} info={sentAtStr} />
+      <LabelWithInfo label={window.i18n('sent')} info={sentAtStr} />
       <DebugMessageInfo messageId={messageId} />
 
       {direction === 'incoming' ? (
-        <LabelWithInfo label={tr('received')} info={receivedAtStr} />
+        <LabelWithInfo label={window.i18n('received')} info={receivedAtStr} />
       ) : null}
       <SpacerSM />
       <MessageFrom sender={sender} isSenderAdmin={isSenderAdmin} />
@@ -157,9 +156,9 @@ export const MessageInfo = ({ messageId, errors }: { messageId: string; errors?:
         <>
           <SpacerSM />
           <LabelWithInfo
-            title={tr('helpReportABugExportLogsDescription')}
-            label={`${tr('theError')}:`}
-            info={errors || tr('errorUnknown')}
+            title={window.i18n('helpReportABugExportLogsDescription')}
+            label={`${window.i18n('theError')}:`}
+            info={errors || window.i18n('errorUnknown')}
             dataColor={'var(--danger-color)'}
             onClick={() => {
               void saveLogToDesktop();

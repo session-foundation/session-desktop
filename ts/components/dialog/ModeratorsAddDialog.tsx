@@ -9,7 +9,7 @@ import { ConvoHub } from '../../session/conversations';
 import { updateAddModeratorsModal } from '../../state/ducks/modalDialog';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
 import { SessionSpinner } from '../loading';
-import { tr } from '../../localization/localeTools';
+import { localize } from '../../localization/localeTools';
 import { MAX_SUBREQUESTS_COUNT } from '../../session/apis/snode_api/SnodeRequestTypes';
 import {
   ModalBasicHeader,
@@ -63,7 +63,9 @@ export const AddModeratorsDialog = (props: Props) => {
         ToastUtils.pushFailedToAddAsModerator();
       } else {
         const userNames = pubkeys.map(
-          p => ConvoHub.use().get(p.key)?.getNicknameOrRealUsernameOrPlaceholder() || tr('unknown')
+          p =>
+            ConvoHub.use().get(p.key)?.getNicknameOrRealUsernameOrPlaceholder() ||
+            window.i18n('unknown')
         );
         window?.log?.info(`${userNames.join(', ')} added as moderator(s)...`);
         ToastUtils.pushUserAddedToModerators(userNames);
@@ -86,21 +88,21 @@ export const AddModeratorsDialog = (props: Props) => {
 
   return (
     <SessionWrapperModal
-      headerChildren={<ModalBasicHeader title={tr('addAdmins')} />}
+      headerChildren={<ModalBasicHeader title={localize('addAdmins').toString()} />}
       onClose={onClose}
       buttonChildren={
         <ModalActionsContainer>
           <SessionButton
             buttonType={SessionButtonType.Simple}
             onClick={addAsModerator}
-            text={tr('add')}
+            text={localize('add').toString()}
             disabled={addingInProgress || inputBoxValue.length === 0 || tooManyModerators}
             dataTestId="add-admins-confirm-button"
           />
           <SessionButton
             buttonType={SessionButtonType.Simple}
             onClick={onClose}
-            text={tr('cancel')}
+            text={localize('cancel').toString()}
             dataTestId="add-admins-cancel-button"
           />
         </ModalActionsContainer>
@@ -113,7 +115,7 @@ export const AddModeratorsDialog = (props: Props) => {
         />
 
         <ModalSimpleSessionInput
-          placeholder={tr('accountId')}
+          placeholder={localize('accountId').toString()}
           onValueChanged={setInputBoxValue}
           disabled={addingInProgress}
           value={inputBoxValue}

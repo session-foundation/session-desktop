@@ -314,7 +314,7 @@ export async function testGuardNode(snode: Snode) {
   try {
     // Log this line for testing
     // curl -k -X POST -H 'Content-Type: application/json' -d '"+fetchOptions.body.replace(/"/g, "\\'")+"'", url
-    window?.log?.info('insecureNodeFetch => plaintext for testGuardNode:', url);
+    window?.log?.info('insecureNodeFetch => plaintext for testGuardNode');
 
     response = await insecureNodeFetch(url, fetchOptions);
   } catch (e) {
@@ -486,9 +486,11 @@ async function buildNewOnionPathsWorker() {
           'Too few nodes "unique by ip" to build an onion path. Even after fetching from seed.'
         );
       }
-      let otherNodes = window.sessionFeatureFlags?.useLocalDevNet
-        ? allNodes
-        : _.differenceBy(oneNodeForEachSubnet24KeepingRatio, guardNodes, 'pubkey_ed25519');
+      let otherNodes = _.differenceBy(
+        oneNodeForEachSubnet24KeepingRatio,
+        guardNodes,
+        'pubkey_ed25519'
+      );
       const guards = _.shuffle(guardNodes);
 
       // Create path for every guard node:

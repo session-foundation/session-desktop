@@ -23,7 +23,7 @@ import { StyledLeftPaneOverlay } from './OverlayMessage';
 import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_constants';
 import { sectionActions } from '../../../state/ducks/section';
 import { SimpleSessionTextarea } from '../../inputs/SessionInput';
-import { tr } from '../../../localization/localeTools';
+import { localize } from '../../../localization/localeTools';
 
 async function joinOpenGroup(
   serverUrl: string,
@@ -40,7 +40,7 @@ async function joinOpenGroup(
     );
     return groupCreated;
   }
-  throw new Error(tr('communityEnterUrlErrorInvalid'));
+  throw new Error(localize('communityEnterUrlErrorInvalid').toString());
 }
 
 export const OverlayCommunity = () => {
@@ -101,7 +101,7 @@ export const OverlayCommunity = () => {
       <SimpleSessionTextarea
         // not monospaced. This is a plain text input for a community url
         autoFocus={true}
-        placeholder={tr('communityEnterUrl')}
+        placeholder={localize('communityEnterUrl').toString()}
         value={groupUrl}
         onValueChanged={setGroupUrl}
         singleLine={true}
@@ -117,7 +117,7 @@ export const OverlayCommunity = () => {
       />
       <Spacer2XL />
       <SessionButton
-        text={tr('join')}
+        text={localize('join').toString()}
         disabled={!groupUrl || loading}
         onClick={onTryJoinRoom}
         dataTestId="join-community-button"

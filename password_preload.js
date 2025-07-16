@@ -17,7 +17,7 @@ const { initializeRendererProcessLogger } = require('./ts/util/logger/renderer_p
 
 initializeRendererProcessLogger();
 
-setupI18n({
+window.i18n = setupI18n({
   crowdinLocale,
 });
 

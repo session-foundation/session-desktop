@@ -33,7 +33,7 @@ import {
 } from '../webworker/workers/browser/libsession_worker_interface';
 import { assertUnreachable } from '../types/sqlSharedTypes';
 import { isUsAnySogsFromCache } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
-import { tr } from '../localization/localeTools';
+import { localize } from '../localization/localeTools';
 
 const AvatarContainer = styled.div`
   position: relative;
@@ -169,29 +169,29 @@ const StyledGroupStatusText = styled.span<{ isFailure: boolean }>`
 function localisedStatusFromMemberStatus(memberStatus: MemberStateGroupV2) {
   switch (memberStatus) {
     case 'INVITE_FAILED':
-      return tr('groupInviteFailed');
+      return window.i18n('groupInviteFailed');
     case 'INVITE_NOT_SENT':
-      return tr('groupInviteNotSent');
+      return window.i18n('groupInviteNotSent');
     case 'INVITE_SENDING':
-      return tr('groupInviteSending', { count: 1 });
+      return window.i18n('groupInviteSending', { count: 1 });
     case 'INVITE_SENT':
-      return tr('groupInviteSent');
+      return window.i18n('groupInviteSent');
     case 'INVITE_UNKNOWN': // fallback, hopefully won't happen in production
-      return tr('groupInviteStatusUnknown');
+      return window.i18n('groupInviteStatusUnknown');
     case 'PROMOTION_UNKNOWN': // fallback, hopefully won't happen in production
-      return tr('adminPromotionStatusUnknown');
+      return window.i18n('adminPromotionStatusUnknown');
     case 'REMOVED_UNKNOWN': // fallback, hopefully won't happen in production
     case 'REMOVED_MEMBER': // we want pending removal members at the end of the "invite" states
     case 'REMOVED_MEMBER_AND_MESSAGES':
-      return tr('groupPendingRemoval');
+      return window.i18n('groupPendingRemoval');
     case 'PROMOTION_FAILED':
-      return tr('adminPromotionFailed');
+      return window.i18n('adminPromotionFailed');
     case 'PROMOTION_NOT_SENT':
-      return tr('adminPromotionNotSent');
+      return window.i18n('adminPromotionNotSent');
     case 'PROMOTION_SENDING':
-      return tr('adminSendingPromotion', { count: 1 });
+      return window.i18n('adminSendingPromotion', { count: 1 });
     case 'PROMOTION_SENT':
-      return tr('adminPromotionSent');
+      return window.i18n('adminPromotionSent');
     case 'PROMOTION_ACCEPTED':
       return null; // no statuses for accepted state;
     case 'INVITE_ACCEPTED':
@@ -269,7 +269,7 @@ const ResendButton = ({ groupPk, pubkey }: { pubkey: PubkeyType; groupPk: GroupP
       dataTestId={'resend-invite-button'}
       buttonShape={SessionButtonShape.Square}
       buttonType={SessionButtonType.Solid}
-      text={tr('resend')}
+      text={window.i18n('resend')}
       disabled={resendButtonDisabled}
       onClick={async () => {
         const group = await UserGroupsWrapperActions.getGroup(groupPk);
@@ -311,7 +311,7 @@ const PromoteButton = ({ groupPk, pubkey }: { pubkey: PubkeyType; groupPk: Group
       buttonShape={SessionButtonShape.Square}
       buttonType={SessionButtonType.Solid}
       buttonColor={SessionButtonColor.Danger}
-      text={tr('promote')}
+      text={window.i18n('promote')}
       onClick={() => {
         void promoteUsersInGroup({
           groupPk,
@@ -342,7 +342,7 @@ export const MemberListItem = <T extends string>({
 }: MemberListItemProps<T>) => {
   const memberName = useNicknameOrProfileNameOrShortenedPubkey(pubkey);
   const isYou = isUsAnySogsFromCache(pubkey);
-  const ourName = isYou ? tr('you') : null;
+  const ourName = isYou ? localize('you').toString() : null;
   const shortPubkey = PubKey.shorten(pubkey);
   const nameSuffix =
     isPublic && inMentions && !isYou && memberName !== shortPubkey ? shortPubkey : '';

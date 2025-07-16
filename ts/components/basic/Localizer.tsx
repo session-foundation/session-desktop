@@ -1,12 +1,10 @@
 import styled from 'styled-components';
 import { SessionHtmlRenderer } from './SessionHTMLRenderer';
 import {
-  formatMessageWithArgs,
   GetMessageArgs,
   isArgsFromTokenWithIcon,
   MergedLocalizerTokens,
   sanitizeArgs,
-  getRawMessage,
   type LocalizerComponentProps,
 } from '../../localization/localeTools';
 import { getCrowdinLocale } from '../../util/i18n/shared';
@@ -51,7 +49,7 @@ export const Localizer = <T extends MergedLocalizerTokens>(
 ) => {
   const args = 'args' in props ? props.args : undefined;
 
-  let rawString: string = getRawMessage<T>(
+  let rawString: string = window.i18n.getRawMessage<T>(
     getCrowdinLocale(),
     ...([props.token, args] as GetMessageArgs<T>)
   );
@@ -69,7 +67,10 @@ export const Localizer = <T extends MergedLocalizerTokens>(
     rawString = rawString.replaceAll(/\{icon}/g, `<span role='img'>{icon}</span>`);
   }
 
-  const i18nString = formatMessageWithArgs(rawString, cleanArgs as GetMessageArgs<T>[1]);
+  const i18nString = window.i18n.formatMessageWithArgs(
+    rawString,
+    cleanArgs as GetMessageArgs<T>[1]
+  );
 
   return containsFormattingTags || containsIcons ? (
     /** If the string contains a relevant formatting tag, render it as HTML */

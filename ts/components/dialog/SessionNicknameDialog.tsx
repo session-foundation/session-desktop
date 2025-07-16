@@ -6,7 +6,7 @@ import { changeNickNameModal } from '../../state/ducks/modalDialog';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { useConversationRealName, useNickname } from '../../hooks/useParamSelector';
 import { PubKey } from '../../session/types';
-import { tr } from '../../localization/localeTools';
+import { localize } from '../../localization/localeTools';
 import LIBSESSION_CONSTANTS from '../../session/utils/libsession/libsession_constants';
 import { ModalSimpleSessionInput } from '../inputs/SessionInput';
 import { ClearInputButton } from '../inputs/ClearInputButton';
@@ -33,7 +33,7 @@ function NicknameInput({
 }) {
   const errorString =
     nickname.length > LIBSESSION_CONSTANTS.CONTACT_MAX_NAME_LENGTH
-      ? tr('nicknameErrorShorter')
+      ? localize('nicknameErrorShorter').toString()
       : '';
   return (
     <ModalSimpleSessionInput
@@ -42,7 +42,7 @@ function NicknameInput({
       textSize="md"
       inputDataTestId="nickname-input"
       onValueChanged={setStateNickname}
-      placeholder={tr('nicknameEnter')}
+      placeholder={localize('nicknameEnter').toString()}
       onEnterPressed={onConfirm}
       errorDataTestId="error-message"
       providedError={errorString}
@@ -83,19 +83,21 @@ export const SessionNicknameDialog = (props: Props) => {
 
   return (
     <SessionWrapperModal
-      headerChildren={<ModalBasicHeader title={tr('nicknameSet')} showExitIcon={true} />}
+      headerChildren={
+        <ModalBasicHeader title={localize('nicknameSet').toString()} showExitIcon={true} />
+      }
       onClose={onClickClose}
       buttonChildren={
         <ModalActionsContainer>
           <SessionButton
-            text={tr('save')}
+            text={localize('save').toString()}
             disabled={!nickname}
             buttonType={SessionButtonType.Simple}
             onClick={() => saveNickname(nickname)}
             dataTestId="set-nickname-confirm-button"
           />
           <SessionButton
-            text={tr('remove')}
+            text={localize('remove').toString()}
             buttonColor={SessionButtonColor.Danger}
             buttonType={SessionButtonType.Simple}
             onClick={onClickRemove}

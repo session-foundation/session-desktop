@@ -2,7 +2,6 @@ import clsx from 'clsx';
 import { useConversationUsername, useIsMe, useIsPrivate } from '../../hooks/useParamSelector';
 import { Avatar, AvatarSize } from '../avatar/Avatar';
 import { Emojify } from '../conversation/Emojify';
-import { tr } from '../../localization/localeTools';
 
 type Props = {
   pubkey: string;
@@ -23,7 +22,7 @@ export const ContactListItem = (props: Props) => {
   const isGroup = !useIsPrivate(pubkey);
 
   const title = name || pubkey;
-  const displayName = isMe ? tr('you') : title;
+  const displayName = isMe ? window.i18n('you') : title;
 
   return (
     <div

@@ -33,7 +33,7 @@ import { ContinueButton, OnboardDescription, OnboardHeading } from '../component
 import { BackButtonWithinContainer } from '../components/BackButton';
 import { sanitizeDisplayNameOrToast } from '../utils';
 import { EmptyDisplayNameError, RetrieveDisplayNameError } from '../../../session/utils/errors';
-import { tr } from '../../../localization/localeTools';
+import { localize } from '../../../localization/localeTools';
 import { SimpleSessionInput } from '../../inputs/SessionInput';
 
 type AccountCreateDetails = {
@@ -116,11 +116,11 @@ export const CreateAccount = () => {
       dispatch(setAccountCreationStep(AccountCreation.DisplayName));
 
       if (err instanceof EmptyDisplayNameError || err instanceof RetrieveDisplayNameError) {
-        dispatch(setDisplayNameError(tr('displayNameErrorDescription')));
+        dispatch(setDisplayNameError(localize('displayNameErrorDescription').toString()));
       } else {
         // Note: we have to assume here that libsession threw an error because the name was too long since we covered the other cases.
         // The error reported by libsession is not localized
-        dispatch(setDisplayNameError(tr('displayNameErrorDescriptionShorter')));
+        dispatch(setDisplayNameError(localize('displayNameErrorDescriptionShorter').toString()));
       }
     }
   };
@@ -143,14 +143,14 @@ export const CreateAccount = () => {
         $alignItems="flex-start"
         margin={'0 0 0 8px'}
       >
-        <OnboardHeading>{tr('displayNamePick')}</OnboardHeading>
+        <OnboardHeading>{window.i18n('displayNamePick')}</OnboardHeading>
         <SpacerSM />
-        <OnboardDescription>{tr('displayNameDescription')}</OnboardDescription>
+        <OnboardDescription>{window.i18n('displayNameDescription')}</OnboardDescription>
         <SpacerLG />
         <SimpleSessionInput
-          ariaLabel={tr('displayNameEnter')}
+          ariaLabel={localize('displayNameEnter').toString()}
           autoFocus={true}
-          placeholder={tr('displayNameEnter')}
+          placeholder={localize('displayNameEnter').toString()}
           value={displayName}
           onValueChanged={(name: string) => {
             dispatch(setDisplayName(name));

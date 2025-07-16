@@ -5,7 +5,6 @@ import { PubKey } from '../session/types';
 import { UserUtils } from '../session/utils';
 import { TimerOptions } from '../session/disappearing_messages/timerOptions';
 import type { LocalizerProps } from '../components/basic/Localizer';
-import { tr } from '../localization/localeTools';
 
 export function getTimerNotificationStr({
   expirationMode,
@@ -28,8 +27,8 @@ export function getTimerNotificationStr({
 
   const disappearing_messages_type =
     expirationMode === 'deleteAfterRead'
-      ? tr('disappearingMessagesTypeRead')
-      : tr('disappearingMessagesTypeSent');
+      ? window.i18n('disappearingMessagesTypeRead')
+      : window.i18n('disappearingMessagesTypeSent');
 
   if (isLegacyGroup || isGroup) {
     if (disabled) {

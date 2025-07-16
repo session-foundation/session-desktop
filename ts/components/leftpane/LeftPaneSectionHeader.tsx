@@ -17,7 +17,6 @@ import { H4 } from '../basic/Heading';
 import { searchActions } from '../../state/ducks/search';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
-import { tr } from '../../localization/localeTools';
 
 const StyledLeftPaneSectionHeader = styled(Flex)`
   height: var(--main-view-header-height);
@@ -85,28 +84,28 @@ function getLeftPaneHeaderLabel(
 
   switch (leftOverlayMode) {
     case 'open-group':
-      label = tr('communityJoin');
+      label = window.i18n('communityJoin');
       break;
     case 'closed-group':
-      label = tr('groupCreate');
+      label = window.i18n('groupCreate');
       break;
     case 'message':
-      label = tr('messageNew', { count: 1 });
+      label = window.i18n('messageNew', { count: 1 });
       break;
     case 'message-requests':
-      label = tr('sessionMessageRequests');
+      label = window.i18n('sessionMessageRequests');
       break;
     case 'invite-a-friend':
-      label = tr('sessionInviteAFriend');
+      label = window.i18n('sessionInviteAFriend');
       break;
     case 'choose-action':
     default:
-      label = tr('messages');
+      label = window.i18n('messages');
   }
 
   switch (focusedSection) {
     case SectionType.Settings:
-      label = tr('sessionSettings');
+      label = window.i18n('sessionSettings');
       break;
     case SectionType.Message:
     default:
@@ -155,11 +154,11 @@ export const LeftPaneBanner = () => {
             iconColor="var(--text-primary-color)"
           />
         </Flex>
-        <p>{tr('recoveryPasswordBannerDescription')}</p>
+        <p>{window.i18n('recoveryPasswordBannerDescription')}</p>
         <SpacerMD />
         <SessionButton
           ariaLabel="Reveal recovery phrase button"
-          text={tr('theContinue')}
+          text={window.i18n('theContinue')}
           onClick={showRecoveryPhraseModal}
           buttonColor={SessionButtonColor.PrimaryDark}
           dataTestId="reveal-recovery-phrase"

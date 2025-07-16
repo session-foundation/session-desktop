@@ -7,7 +7,7 @@ import { searchActions, type DoSearchActionType, type SearchType } from '../stat
 import { getConversationsCount } from '../state/selectors/conversations';
 import { useLeftOverlayMode } from '../state/selectors/section';
 import { useHotkey } from '../hooks/useHotkey';
-import { tr } from '../localization/localeTools';
+import { localize } from '../localization/localeTools';
 import { SessionLucideIconButton } from './icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from './icon/lucide';
 import { LucideIcon } from './icon/LucideIcon';
@@ -84,7 +84,9 @@ export const SessionSearchInput = ({ searchType }: { searchType: SearchType }) =
 
   const iconSize = 'medium';
 
-  const placeholder = isGroupCreationSearch ? tr('searchContacts') : tr('search');
+  const placeholder = isGroupCreationSearch
+    ? localize('searchContacts').toString()
+    : localize('search').toString();
 
   const isInMainScreen = searchType === 'global' || searchType === 'create-group';
 

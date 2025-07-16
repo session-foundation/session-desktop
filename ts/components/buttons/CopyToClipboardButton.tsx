@@ -7,7 +7,6 @@ import { SessionButton, SessionButtonProps } from '../basic/SessionButton';
 import { SessionIconButtonProps, SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import type { SessionIconSize } from '../icon';
-import { tr } from '../../localization/localeTools';
 
 type CopyProps = {
   copyContent?: string;
@@ -46,7 +45,7 @@ export const CopyToClipboardButton = (props: CopyToClipboardButtonProps) => {
     <SessionButton
       aria-label={'copy to clipboard button'}
       {...props}
-      text={!isEmpty(text) ? text : copied ? tr('copied') : tr('copy')}
+      text={!isEmpty(text) ? text : copied ? window.i18n('copied') : window.i18n('copy')}
       onClick={onClick}
     />
   );

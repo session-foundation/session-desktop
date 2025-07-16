@@ -10,6 +10,7 @@ import { filesize } from 'filesize';
 import { windowMarkShouldQuit } from '../node/window_state';
 
 import { DURATION, UPDATER_INTERVAL_MS } from '../session/constants';
+import type { SetupI18nReturnType } from '../types/localizer';
 import { showCannotUpdateDialog, showDownloadUpdateDialog, showUpdateDialog } from './common';
 import { getLatestRelease } from '../node/latest_desktop_release';
 import { Errors } from '../types/Errors';
@@ -26,7 +27,11 @@ autoUpdater.on(DOWNLOAD_PROGRESS, eventDownloadProgress => {
   );
 });
 
-export async function start(getMainWindow: () => BrowserWindow | null, logger: LoggerType) {
+export async function start(
+  getMainWindow: () => BrowserWindow | null,
+  i18n: SetupI18nReturnType,
+  logger: LoggerType
+) {
   if (interval) {
     logger.info('[updater] auto-update: Already running');
 
@@ -40,7 +45,7 @@ export async function start(getMainWindow: () => BrowserWindow | null, logger: L
 
   interval = global.setInterval(async () => {
     try {
-      await checkForUpdates(getMainWindow, logger);
+      await checkForUpdates(getMainWindow, i18n, logger);
     } catch (error) {
       logger.error('[updater] auto-update: error:', Errors.toString(error));
     }
@@ -49,7 +54,7 @@ export async function start(getMainWindow: () => BrowserWindow | null, logger: L
 
   global.setTimeout(async () => {
     try {
-      await checkForUpdates(getMainWindow, logger);
+      await checkForUpdates(getMainWindow, i18n, logger);
     } catch (error) {
       logger.error('[updater] auto-update: error:', Errors.toString(error));
     }
@@ -70,6 +75,7 @@ export function stop() {
  * */
 export async function checkForUpdates(
   getMainWindow: () => BrowserWindow | null,
+  i18n: SetupI18nReturnType,
   logger: LoggerType,
   force?: boolean
 ) {
@@ -143,7 +149,11 @@ export async function checkForUpdates(
       }
       logger.info('[updater] showing download dialog...');
 
-      const shouldDownload = await showDownloadUpdateDialog(mainWindow, result.updateInfo.version);
+      const shouldDownload = await showDownloadUpdateDialog(
+        mainWindow,
+        i18n,
+        result.updateInfo.version
+      );
       logger.info('[updater] shouldDownload:', shouldDownload);
 
       if (!shouldDownload) {
@@ -159,7 +169,7 @@ export async function checkForUpdates(
         logger.error('[updater] cannot showDownloadUpdateDialog, mainWindow is unset');
         return false;
       }
-      await showCannotUpdateDialog(mainWindow);
+      await showCannotUpdateDialog(mainWindow, i18n);
       throw error;
     }
 
@@ -170,7 +180,7 @@ export async function checkForUpdates(
     }
     // Update downloaded successfully, we should ask the user to update
     logger.info('[updater] showing update dialog...');
-    const shouldUpdate = await showUpdateDialog(window);
+    const shouldUpdate = await showUpdateDialog(window, i18n);
     if (!shouldUpdate) {
       return false;
     }

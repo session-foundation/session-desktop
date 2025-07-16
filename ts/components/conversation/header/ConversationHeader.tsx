@@ -21,7 +21,7 @@ import { Flex } from '../../basic/Flex';
 import { AvatarHeader, CallButton } from './ConversationHeaderItems';
 import { SelectionOverlay } from './ConversationHeaderSelectionOverlay';
 import { ConversationHeaderTitle } from './ConversationHeaderTitle';
-import { tr } from '../../../localization/localeTools';
+import { localize } from '../../../localization/localeTools';
 import { groupInfoActions } from '../../../state/ducks/metaGroups';
 import { updateConfirmModal } from '../../../state/ducks/modalDialog';
 import { SessionButtonColor, SessionButton, SessionButtonType } from '../../basic/SessionButton';
@@ -104,10 +104,10 @@ function useShowRecreateModal() {
     (name: string, members: Array<PubkeyType>) => {
       dispatch(
         updateConfirmModal({
-          title: tr('recreateGroup'),
+          title: localize('recreateGroup').toString(),
           i18nMessage: { token: 'legacyGroupChatHistory' },
-          okText: tr('theContinue'),
-          cancelText: tr('cancel'),
+          okText: localize('theContinue').toString(),
+          cancelText: localize('cancel').toString(),
           okTheme: SessionButtonColor.Danger,
           onClickOk: () => {
             dispatch(sectionActions.setLeftOverlayMode('closed-group'));
@@ -164,10 +164,10 @@ function RecreateGroupButton() {
           } catch (e) {
             window.log.warn('recreate group: failed to recreate a member convo', e.message);
           }
-          showRecreateGroupModal(name || tr('groupUnknown'), members);
+          showRecreateGroupModal(name || localize('groupUnknown').toString(), members);
         }}
       >
-        {tr('recreateGroup')}
+        {localize('recreateGroup')}
       </SessionButton>
     </RecreateGroupContainer>
   );

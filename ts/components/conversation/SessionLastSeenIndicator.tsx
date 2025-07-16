@@ -3,7 +3,6 @@ import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { useScrollToLoadedMessage } from '../../contexts/ScrollToLoadedMessage';
 import { getQuotedMessageToAnimate } from '../../state/selectors/conversations';
-import { tr } from '../../localization/localeTools';
 
 const LastSeenBar = styled.div`
   height: 2px;
@@ -74,7 +73,7 @@ export const SessionLastSeenIndicator = (props: {
   return (
     <LastSeenBarContainer id="unread-indicator">
       <LastSeenBar />
-      <LastSeenText>{tr('messageUnread')}</LastSeenText>
+      <LastSeenText>{window.i18n('messageUnread')}</LastSeenText>
 
       <LastSeenBar />
     </LastSeenBarContainer>

@@ -2,7 +2,7 @@ import styled from 'styled-components';
 import { LabelWithInfo } from '.';
 import { PropsForAttachment } from '../../../../../../state/ducks/conversations';
 import { Flex } from '../../../../../basic/Flex';
-import { tr } from '../../../../../../localization/localeTools';
+import { localize } from '../../../../../../localization/localeTools';
 import { saveLogToDesktop } from '../../../../../../util/logger/renderer_process_logging';
 
 type Props = {
@@ -25,35 +25,37 @@ export const AttachmentInfo = (props: Props) => {
   return (
     <Flex $container={true} $flexDirection="column">
       <LabelWithInfo
-        label={tr('attachmentsFileId')}
-        info={attachment?.id ? String(attachment.id) : tr('attachmentsNa')}
+        label={window.i18n('attachmentsFileId')}
+        info={attachment?.id ? String(attachment.id) : window.i18n('attachmentsNa')}
       />
       <StyledLabelContainer $container={true} $flexDirection="row" $flexWrap="wrap">
         <LabelWithInfo
-          label={tr('attachmentsFileType')}
-          info={attachment?.contentType ? String(attachment.contentType) : tr('attachmentsNa')}
-        />
-        <LabelWithInfo
-          label={tr('attachmentsFileSize')}
-          info={attachment?.fileSize ? String(attachment.fileSize) : tr('attachmentsNa')}
-        />
-        <LabelWithInfo
-          label={tr('attachmentsResolution')}
+          label={window.i18n('attachmentsFileType')}
           info={
-            attachment?.width && attachment.height
-              ? `${attachment.width}x${attachment.height}`
-              : tr('attachmentsNa')
+            attachment?.contentType ? String(attachment.contentType) : window.i18n('attachmentsNa')
           }
         />
         <LabelWithInfo
-          label={tr('attachmentsDuration')}
-          info={attachment?.duration ? attachment.duration : tr('attachmentsNa')}
+          label={window.i18n('attachmentsFileSize')}
+          info={attachment?.fileSize ? String(attachment.fileSize) : window.i18n('attachmentsNa')}
+        />
+        <LabelWithInfo
+          label={window.i18n('attachmentsResolution')}
+          info={
+            attachment?.width && attachment.height
+              ? `${attachment.width}x${attachment.height}`
+              : window.i18n('attachmentsNa')
+          }
+        />
+        <LabelWithInfo
+          label={window.i18n('attachmentsDuration')}
+          info={attachment?.duration ? attachment.duration : window.i18n('attachmentsNa')}
         />
         {hasError ? (
           <LabelWithInfo
-            title={tr('helpReportABugExportLogsDescription')}
-            label={`${tr('attachment')} ${tr('theError')}:`}
-            info={tr('errorUnknown')}
+            title={localize('helpReportABugExportLogsDescription').toString()}
+            label={`${localize('attachment').toString()} ${localize('theError').toString()}:`}
+            info={localize('errorUnknown').toString()}
             dataColor={'var(--danger-color)'}
             onClick={() => {
               void saveLogToDesktop();

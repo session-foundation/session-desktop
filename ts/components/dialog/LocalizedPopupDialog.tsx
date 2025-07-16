@@ -9,7 +9,7 @@ import {
 import { ModalBasicHeader, SessionWrapperModal } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
 import { SpacerSM, SpacerXS } from '../basic/Text';
-import { tr } from '../../localization/localeTools';
+import { localize } from '../../localization/localeTools';
 import { Localizer } from '../basic/Localizer';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
 import { ModalFlexContainer } from './shared/ModalFlexContainer';
@@ -56,7 +56,7 @@ export function LocalizedPopupDialog(props: LocalizedPopupDialogState) {
           onClick={onClose}
           dataTestId="session-confirm-ok-button"
         >
-          {tr('okay')}
+          {localize('okay')}
         </SessionButton>
       </ModalFlexContainer>
       <SpacerXS />

@@ -45,7 +45,7 @@ const StyledModalHeader = styled(Flex)<{ bigHeader?: boolean; scrolled: boolean 
 
 export enum WrapperModalWidth {
   narrow = '350px',
-  normal = '420px',
+  normal = '410px',
   wide = '500px',
   debug = '75%',
 }

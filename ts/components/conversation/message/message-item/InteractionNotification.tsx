@@ -15,7 +15,6 @@ import {
 } from '../../../../state/selectors/selectedConversation';
 import { useMessageInteractionNotification, useMessageIsUnread } from '../../../../state/selectors';
 import type { WithMessageId } from '../../../../session/types/with';
-import { tr } from '../../../../localization/localeTools';
 
 const StyledFailText = styled.div`
   color: var(--danger-color);
@@ -53,12 +52,12 @@ export const InteractionNotification = (props: WithMessageId) => {
       return null;
     case ConversationInteractionType.Leave:
       text = isCommunity
-        ? tr('communityLeaveError', {
-            community_name: displayName || tr('communityUnknown'),
+        ? window.i18n('communityLeaveError', {
+            community_name: displayName || window.i18n('communityUnknown'),
           })
         : isGroup
-          ? tr('groupLeaveErrorFailed', {
-              group_name: displayName || tr('groupUnknown'),
+          ? window.i18n('groupLeaveErrorFailed', {
+              group_name: displayName || window.i18n('groupUnknown'),
             })
           : ''; // we cannot fail to do other actions, so not printing anything
       break;

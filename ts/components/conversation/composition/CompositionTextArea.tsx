@@ -31,7 +31,7 @@ import { ConvoHub } from '../../../session/conversations';
 import type { SessionSuggestionDataItem } from './types';
 import { getMentionsInput } from '../../../state/selectors/conversations';
 import { UserUtils } from '../../../session/utils';
-import { tEnglish, tr, type MergedLocalizerTokens } from '../../../localization/localeTools';
+import { localize, type MergedLocalizerTokens } from '../../../localization/localeTools';
 import { PubKey } from '../../../session/types';
 import { useLibGroupMembers } from '../../../state/selectors/groups';
 import { use05GroupMembers } from '../../../hooks/useParamSelector';
@@ -95,14 +95,14 @@ function useMembersInThisChat(): Array<SearchableSuggestion> {
     }
 
     const isYou = UserUtils.isUsFromCache(id);
-    const display = isYou ? tr('you') : nickname || PubKey.shorten(id);
+    const display = isYou ? localize('you').toString() : nickname || PubKey.shorten(id);
 
     if (display && display !== nickname) {
       searchable.push(display.toLowerCase());
       if (isYou) {
-        const enYou = tEnglish('you');
+        const enYou = localize('you').forceEnglish().toString();
         if (enYou !== display) {
-          searchable.push(tEnglish('you').toLowerCase());
+          searchable.push(localize('you').forceEnglish().toString().toLowerCase());
         }
       }
     }
@@ -305,7 +305,7 @@ function useMessagePlaceholder() {
     } else if (isBlocked) {
       localizerToken = 'blockBlockedDescription';
     }
-    return tr(localizerToken, { group_name: groupName });
+    return localize(localizerToken).withArgs({ group_name: groupName }).toString();
   }, [groupName, isBlocked, isGroupDestroyed, isKickedFromGroup]);
 }
 
@@ -582,7 +582,6 @@ export const CompositionTextArea = (props: Props) => {
         aria-haspopup="listbox"
         aria-autocomplete="list"
         aria-label={messagePlaceHolder}
-        data-testid="message-input-text-area"
       />
       {showPopover ? (
         <SessionPopoverContent

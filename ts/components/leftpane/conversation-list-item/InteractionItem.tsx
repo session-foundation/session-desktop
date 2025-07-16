@@ -12,7 +12,6 @@ import {
   ConversationInteractionStatus,
 } from '../../../interactions/types';
 import { LastMessageType } from '../../../state/ducks/types';
-import { tr } from '../../../localization/localeTools';
 
 const StyledInteractionItemText = styled.div<{ isError: boolean }>`
   ${props => props.isError && 'color: var(--danger-color) !important;'}
@@ -69,18 +68,18 @@ export const InteractionItem = (props: InteractionItemProps) => {
       return null;
     case ConversationInteractionType.Leave:
       errorText = isCommunity
-        ? tr('communityLeaveError', {
-            community_name: name || tr('unknown'),
+        ? window.i18n('communityLeaveError', {
+            community_name: name || window.i18n('unknown'),
           })
         : isGroup
-          ? tr('groupLeaveErrorFailed', { group_name: name })
+          ? window.i18n('groupLeaveErrorFailed', { group_name: name })
           : ''; // this cannot happen
       text =
         interactionStatus === ConversationInteractionStatus.Error
           ? errorText
           : interactionStatus === ConversationInteractionStatus.Start ||
               interactionStatus === ConversationInteractionStatus.Loading
-            ? tr('leaving')
+            ? window.i18n('leaving')
             : text;
       break;
     default:

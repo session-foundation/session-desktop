@@ -6,7 +6,6 @@ import { isHideMenuBarSupported } from '../../../types/Settings';
 import { SessionToggleWithDescription } from '../SessionSettingListItem';
 import { SettingsThemeSwitcher } from '../SettingsThemeSwitcher';
 import { ZoomingSessionSlider } from '../ZoomingSessionSlider';
-import { tr } from '../../../localization/localeTools';
 
 export const SettingsCategoryAppearance = () => {
   const forceUpdate = useUpdate();
@@ -27,8 +26,8 @@ export const SettingsCategoryAppearance = () => {
             window.toggleMenuBar();
             forceUpdate();
           }}
-          title={tr('appearanceHideMenuBar')}
-          description={tr('hideMenuBarDescription')}
+          title={window.i18n('appearanceHideMenuBar')}
+          description={window.i18n('hideMenuBarDescription')}
           active={isHideMenuBarActive}
         />
       )}
@@ -41,8 +40,8 @@ export const SettingsCategoryAppearance = () => {
             await ensureThemeConsistency();
           }
         }}
-        title={tr('appearanceAutoDarkMode')}
-        description={tr('followSystemSettings')}
+        title={window.i18n('appearanceAutoDarkMode')}
+        description={window.i18n('followSystemSettings')}
         active={isFollowSystemThemeEnabled}
         dataTestId="enable-follow-system-theme"
       />

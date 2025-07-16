@@ -16,7 +16,7 @@ import {
   ModalActionsContainer,
   SessionWrapperModal,
 } from '../SessionWrapperModal';
-import { tr } from '../../localization/localeTools';
+import { localize } from '../../localization/localeTools';
 
 export const UserDetailsDialog = (props: UserDetailsModalState) => {
   const [isEnlargedImageShown, setIsEnlargedImageShown] = useState(false);
@@ -63,7 +63,7 @@ export const UserDetailsDialog = (props: UserDetailsModalState) => {
       buttonChildren={
         <ModalActionsContainer>
           <SessionButton
-            text={tr('conversationsNew')}
+            text={localize('conversationsNew').toString()}
             buttonType={SessionButtonType.Simple}
             onClick={onClickStartConversation}
           />

@@ -28,7 +28,7 @@ import { Localizer } from '../basic/Localizer';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { SessionWrapperModal } from '../SessionWrapperModal';
-import { tr } from '../../localization/localeTools';
+import { localize } from '../../localization/localeTools';
 import { useWeAreCommunityAdminOrModerator } from '../../state/selectors/conversations';
 
 const StyledReactListContainer = styled(Flex)`
@@ -151,7 +151,7 @@ const ReactionSenders = (props: ReactionSendersProps) => {
               }}
             />
             {sender === me ? (
-              tr('you')
+              localize('you').toString()
             ) : (
               <StyledContactContainer>
                 <ContactName
@@ -372,7 +372,7 @@ export const ReactListModal = (props: Props) => {
               </p>
               {weAreCommunityAdminOrModerator && (
                 <SessionButton
-                  text={tr('clearAll')}
+                  text={localize('clearAll').toString()}
                   buttonColor={SessionButtonColor.Danger}
                   buttonType={SessionButtonType.Simple}
                   onClick={handleClearReactions}

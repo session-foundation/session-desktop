@@ -31,7 +31,6 @@ import { GroupSync } from './GroupSyncJob';
 import { DURATION } from '../../../constants';
 import { timeoutWithAbort } from '../../Promise';
 import { StoreGroupRequestFactory } from '../../../apis/snode_api/factories/StoreGroupRequestFactory';
-import { tr } from '../../../../localization/localeTools';
 
 const defaultMsBetweenRetries = 10000;
 const defaultMaxAttempts = 1;
@@ -95,7 +94,7 @@ function displayFailedInvitesForGroup(groupPk: GroupPubkeyType) {
     void showUpdateGroupMembersByConvoId(groupPk);
   };
   const count = thisGroupFailures.failedMembers.length;
-  const groupName = ConvoHub.use().get(groupPk)?.getRealSessionUsername() || tr('unknown');
+  const groupName = ConvoHub.use().get(groupPk)?.getRealSessionUsername() || window.i18n('unknown');
   const firstUserName = ConvoHub.use()
     .get(thisGroupFailures.failedMembers?.[0])
     ?.getNicknameOrRealUsernameOrPlaceholder();
@@ -106,14 +105,14 @@ function displayFailedInvitesForGroup(groupPk: GroupPubkeyType) {
     case 1:
       ToastUtils.pushToastWarning(
         `invite-failed${groupPk}`,
-        tr('groupInviteFailedUser', { group_name: groupName, name: firstUserName }),
+        window.i18n('groupInviteFailedUser', { group_name: groupName, name: firstUserName }),
         onToastClick
       );
       break;
     case 2:
       ToastUtils.pushToastWarning(
         `invite-failed${groupPk}`,
-        tr('groupInviteFailedTwo', {
+        window.i18n('groupInviteFailedTwo', {
           group_name: groupName,
           name: firstUserName,
           other_name: secondUserName,
@@ -124,7 +123,7 @@ function displayFailedInvitesForGroup(groupPk: GroupPubkeyType) {
     default:
       ToastUtils.pushToastWarning(
         `invite-failed${groupPk}`,
-        tr('groupInviteFailedMultiple', {
+        window.i18n('groupInviteFailedMultiple', {
           group_name: groupName,
           name: firstUserName,
           count: thisGroupFailures.failedMembers.length - 1,

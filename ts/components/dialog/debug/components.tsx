@@ -11,7 +11,7 @@ import type { PubkeyType } from 'libsession_util_nodejs';
 import { chunk, toNumber } from 'lodash';
 import { Flex } from '../../basic/Flex';
 import { SpacerSM, SpacerXS } from '../../basic/Text';
-import { tr } from '../../../localization/localeTools';
+import { localize } from '../../../localization/localeTools';
 import { CopyToClipboardIcon } from '../../buttons';
 import { Localizer } from '../../basic/Localizer';
 import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
@@ -370,7 +370,6 @@ export const ExperimentalActions = ({ forceUpdate }: { forceUpdate: () => void }
         >
           Reset experiments
         </SessionButton>
-
         {/* <SessionButton
           onClick={() => {
             dispatch(releasedFeaturesActions.updateSesh101NotificationAt(notifyAt));
@@ -504,13 +503,13 @@ export const AboutInfo = () => {
   }
 
   const aboutInfo = [
-    `${tr('updateVersion', { version: window.getVersion() })}`,
-    `${tr('systemInformationDesktop', { information: window.getOSRelease() })}`,
-    `${tr('commitHashDesktop', { hash: window.getCommitHash() || tr('unknown') })}`,
-    `Libsession Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_UTIL_VERSION || tr('unknown')}`,
-    `Libsession NodeJS Version: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_VERSION || tr('unknown')}`,
-    `Libsession NodeJS Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_COMMIT || tr('unknown')}`,
-    `User Agent:${window.navigator.userAgent ? `\n\t${window.navigator.userAgent.split(') ').join(') \n\t')}` : tr('unknown')}`,
+    `${localize('updateVersion').withArgs({ version: window.getVersion() })}`,
+    `${localize('systemInformationDesktop').withArgs({ information: window.getOSRelease() })}`,
+    `${localize('commitHashDesktop').withArgs({ hash: window.getCommitHash() || localize('unknown').toString() })}`,
+    `Libsession Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_UTIL_VERSION || localize('unknown').toString()}`,
+    `Libsession NodeJS Version: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_VERSION || localize('unknown').toString()}`,
+    `Libsession NodeJS Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_COMMIT || localize('unknown').toString()}`,
+    `User Agent:${window.navigator.userAgent ? `\n\t${window.navigator.userAgent.split(') ').join(') \n\t')}` : localize('unknown').toString()}`,
     `${environmentStates.join(' - ')}`,
   ];
 
@@ -562,7 +561,7 @@ export const AboutInfo = () => {
 export const OtherInfo = () => {
   const otherInfo = useAsync(async () => {
     const { id, vbid } = await window.getUserKeys();
-    return [`${tr('accountIdYours')}: ${id}`, `VBID: ${vbid}`];
+    return [`${localize('accountIdYours')}: ${id}`, `VBID: ${vbid}`];
   }, []);
 
   return (
@@ -590,10 +589,10 @@ export const OtherInfo = () => {
         $flexGap="var(--margins-xs)"
       >
         {otherInfo.loading ? (
-          <p>{tr('loading')}</p>
+          <p>{localize('loading')}</p>
         ) : otherInfo.error ? (
           <p style={{ color: 'var(--danger-color)', userSelect: 'text' }}>
-            {tr('theError')}: {otherInfo.error.message || tr('errorUnknown')}
+            {localize('theError')}: {otherInfo.error.message || localize('errorUnknown')}
           </p>
         ) : null}
         {otherInfo.value

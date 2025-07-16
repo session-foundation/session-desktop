@@ -10,7 +10,7 @@ import {
   ModalActionsContainer,
   SessionWrapperModal,
 } from '../SessionWrapperModal';
-import { tr } from '../../localization/localeTools';
+import { localize } from '../../localization/localeTools';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
 import { ModalFlexContainer } from './shared/ModalFlexContainer';
 
@@ -40,7 +40,7 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
   const leftButtonProps =
     state === 'firstWarning'
       ? {
-          text: tr('theContinue'),
+          text: localize('theContinue').toString(),
           buttonColor: SessionButtonColor.Danger,
           onClick: () => {
             dispatch(updateHideRecoveryPasswordModal({ state: 'secondWarning' }));
@@ -48,7 +48,7 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
           dataTestId: 'session-confirm-ok-button' as const,
         }
       : {
-          text: tr('cancel'),
+          text: localize('cancel').toString(),
           onClick: onClose,
           dataTestId: 'session-confirm-cancel-button' as const,
         };
@@ -56,12 +56,12 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
   const rightButtonProps =
     state === 'firstWarning'
       ? {
-          text: tr('cancel'),
+          text: localize('cancel').toString(),
           onClick: onClose,
           dataTestId: 'session-confirm-cancel-button' as const,
         }
       : {
-          text: tr('yes'),
+          text: localize('yes').toString(),
           buttonColor: SessionButtonColor.Danger,
           onClick: () => {
             void onConfirmation();
@@ -71,7 +71,9 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
 
   return (
     <SessionWrapperModal
-      headerChildren={<ModalBasicHeader title={tr('recoveryPasswordHidePermanently')} />}
+      headerChildren={
+        <ModalBasicHeader title={localize('recoveryPasswordHidePermanently').toString()} />
+      }
       onClose={onClose}
       buttonChildren={
         <ModalActionsContainer>

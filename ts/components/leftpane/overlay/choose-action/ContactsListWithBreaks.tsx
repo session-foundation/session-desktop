@@ -15,7 +15,6 @@ import { ContactRow, ContactRowBreak } from './ContactRow';
 import { getThemeValue, pxValueToNumber } from '../../../../themes/globals';
 import { SearchResultsMergedListItem } from '../../../../state/selectors/search';
 import { Localizer } from '../../../basic/Localizer';
-import { tr } from '../../../../localization/localeTools';
 
 const StyledContactSection = styled.div`
   display: flex;
@@ -120,7 +119,7 @@ export const ContactsListWithBreaks = () => {
 
   return (
     <StyledContactSection>
-      <StyledContactsTitle tabIndex={0}>{tr('contactContacts')}</StyledContactsTitle>
+      <StyledContactsTitle tabIndex={0}>{window.i18n('contactContacts')}</StyledContactsTitle>
       {contactsCount > 0 ? (
         <ContactListItemSection />
       ) : (

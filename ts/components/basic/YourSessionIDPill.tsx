@@ -1,6 +1,5 @@
 import styled from 'styled-components';
 import type { SessionDataTestId } from 'react';
-import { tr } from '../../localization/localeTools';
 
 const StyledPillDividerLine = styled.div`
   border-bottom: 1px solid var(--border-color);
@@ -28,7 +27,7 @@ export const YourSessionIDPill = () => {
   return (
     <StyledPillDivider>
       <StyledPillDividerLine />
-      <StyledPillSpan>{tr('accountIdYours')}</StyledPillSpan>
+      <StyledPillSpan>{window.i18n('accountIdYours')}</StyledPillSpan>
       <StyledPillDividerLine />
     </StyledPillDivider>
   );

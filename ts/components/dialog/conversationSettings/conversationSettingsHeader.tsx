@@ -16,7 +16,7 @@ import {
 } from '../../../hooks/useParamSelector';
 import { PubKey } from '../../../session/types';
 import { H7 } from '../../basic/Heading';
-import { tr } from '../../../localization/localeTools';
+import { localize } from '../../../localization/localeTools';
 import { useChangeNickname } from '../../menuAndSettingsHooks/useChangeNickname';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { SessionLucideIconButton } from '../../icon/SessionIconButton';
@@ -156,7 +156,7 @@ function Description({ conversationId }: WithConvoId) {
       </StyledDescription>
       {isClamped && (
         <StyledViewMoreButton onClick={() => setExpanded(!expanded)}>
-          {expanded ? tr('viewLess') : tr('viewMore')}
+          {expanded ? localize('viewLess') : localize('viewMore')}
         </StyledViewMoreButton>
       )}
     </>
@@ -189,7 +189,7 @@ const ConversationTitle = ({ conversationId }: WithConvoId) => {
       }}
       onClick={onClickCb || undefined}
     >
-      {isMe ? tr('noteToSelf') : nicknameOrDisplayName}
+      {isMe ? localize('noteToSelf').toString() : nicknameOrDisplayName}
     </H7>
   );
 };

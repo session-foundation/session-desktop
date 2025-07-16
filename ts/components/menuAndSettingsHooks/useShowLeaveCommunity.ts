@@ -1,6 +1,6 @@
 import { useDispatch } from 'react-redux';
 import { useConversationUsername, useIsPublic } from '../../hooks/useParamSelector';
-import { tr } from '../../localization/localeTools';
+import { localize } from '../../localization/localeTools';
 import { ConvoHub } from '../../session/conversations';
 import { updateConfirmModal, updateConversationSettingsModal } from '../../state/ducks/modalDialog';
 import { SessionButtonColor } from '../basic/SessionButton';
@@ -40,10 +40,10 @@ export function useShowLeaveCommunityCb(conversationId?: string) {
 
     dispatch(
       updateConfirmModal({
-        title: tr('communityLeave'),
+        title: localize('communityLeave').toString(),
         i18nMessage: { token: 'groupLeaveDescription', args: { group_name: username ?? '' } },
         onClickOk,
-        okText: tr('leave'),
+        okText: localize('leave').toString(),
         okTheme: SessionButtonColor.Danger,
         onClickClose,
         conversationId,

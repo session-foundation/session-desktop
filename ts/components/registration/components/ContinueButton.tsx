@@ -1,4 +1,3 @@
-import { tr } from '../../../localization/localeTools';
 import { SessionButton } from '../../basic/SessionButton';
 
 type Props = {
@@ -11,9 +10,9 @@ export const ContinueButton = (props: Props) => {
 
   return (
     <SessionButton
-      ariaLabel={tr('theContinue')}
+      ariaLabel={window.i18n('theContinue')}
       onClick={onClick}
-      text={tr('theContinue')}
+      text={window.i18n('theContinue')}
       disabled={disabled}
       dataTestId="continue-button"
     />

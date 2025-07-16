@@ -2,7 +2,6 @@ import { toast } from 'react-toastify';
 import { SessionToast, SessionToastType } from '../../components/basic/SessionToast';
 import { sectionActions, SectionType } from '../../state/ducks/section';
 import { getPromotedGroupUpdateChangeStr } from '../../models/groupUpdate';
-import { tStripped, tStrippedWithObj } from '../../localization/localeTools';
 
 // if you push a toast manually with toast...() be sure to set the type attribute of the SessionToast component
 export function pushToastError(id: string, description: string) {
@@ -46,71 +45,74 @@ export function pushToastSuccess(id: string, description: string) {
 
 export function pushLoadAttachmentFailure(message?: string) {
   if (message) {
-    pushToastError('unableToLoadAttachment', `${tStripped('attachmentsErrorLoad')} ${message}`);
+    pushToastError(
+      'unableToLoadAttachment',
+      `${window.i18n.stripped('attachmentsErrorLoad')} ${message}`
+    );
   } else {
-    pushToastError('unableToLoadAttachment', tStripped('attachmentsErrorLoad'));
+    pushToastError('unableToLoadAttachment', window.i18n.stripped('attachmentsErrorLoad'));
   }
 }
 
 // TODOLATER pushToast functions should take I18nArgs and then run strip in the function itself.
 
 export function pushFileSizeErrorAsByte() {
-  pushToastError('fileSizeWarning', tStripped('attachmentsErrorSize'));
+  pushToastError('fileSizeWarning', window.i18n.stripped('attachmentsErrorSize'));
 }
 
 export function pushMultipleNonImageError() {
-  pushToastError('attachmentsErrorTypes', tStripped('attachmentsErrorTypes'));
+  pushToastError('attachmentsErrorTypes', window.i18n.stripped('attachmentsErrorTypes'));
 }
 
 export function pushCannotMixError() {
-  pushToastError('attachmentsErrorTypes', tStripped('attachmentsErrorTypes'));
+  pushToastError('attachmentsErrorTypes', window.i18n.stripped('attachmentsErrorTypes'));
 }
 
 export function pushMaximumAttachmentsError() {
-  pushToastError('attachmentsErrorNumber', tStripped('attachmentsErrorNumber'));
+  pushToastError('attachmentsErrorNumber', window.i18n.stripped('attachmentsErrorNumber'));
 }
 
 export function pushCopiedToClipBoard() {
-  pushToastInfo('copiedToClipboard', tStripped('copied'));
+  pushToastInfo('copiedToClipboard', window.i18n.stripped('copied'));
 }
 
 export function pushRestartNeeded() {
-  pushToastInfo('restartNeeded', tStripped('settingsRestartDescription'));
+  pushToastInfo('restartNeeded', window.i18n.stripped('settingsRestartDescription'));
 }
 
 export function pushAlreadyMemberOpenGroup() {
-  pushToastInfo('publicChatExists', tStripped('communityJoinedAlready'));
+  pushToastInfo('publicChatExists', window.i18n.stripped('communityJoinedAlready'));
 }
 
 export function pushUserBanSuccess() {
-  pushToastSuccess('userBanned', tStripped('banUserBanned'));
+  pushToastSuccess('userBanned', window.i18n.stripped('banUserBanned'));
 }
 
 export function pushUserBanFailure() {
-  pushToastError('userBanFailed', tStripped('banErrorFailed'));
+  pushToastError('userBanFailed', window.i18n.stripped('banErrorFailed'));
 }
 
 export function pushUserUnbanSuccess() {
-  pushToastSuccess('userUnbanned', tStripped('banUnbanUserUnbanned'));
+  pushToastSuccess('userUnbanned', window.i18n.stripped('banUnbanUserUnbanned'));
 }
 
 export function pushUserUnbanFailure() {
-  pushToastError('userUnbanFailed', tStripped('banUnbanErrorFailed'));
+  pushToastError('userUnbanFailed', window.i18n.stripped('banUnbanErrorFailed'));
 }
 
 export function pushMessageDeleteForbidden() {
   pushToastError(
     'messageDeletionForbidden',
-    tStripped('deleteAfterMessageDeletionStandardisationMessageDeletionForbidden')
+    window.i18n.stripped('deleteAfterMessageDeletionStandardisationMessageDeletionForbidden')
   );
 }
 
 export function pushUnableToCall() {
-  pushToastError('unableToCall', tStripped('callsCannotStart'));
+  pushToastError('unableToCall', window.i18n.stripped('callsCannotStart'));
 }
 
 export function pushedMissedCall(userName: string) {
-  pushToastInfo('missedCall', tStripped('callsMissedCallFrom', { name: userName }));
+  pushToastInfo('missedCall', window.i18n.stripped('callsMissedCallFrom', { name: userName }));
 }
 
 const openPermissionsSettings = () => {
@@ -122,7 +124,7 @@ export function pushedMissedCallCauseOfPermission(conversationName: string) {
   const id = 'missedCallPermission';
   toast.info(
     <SessionToast
-      description={tStripped('callsYouMissedCallPermissions', {
+      description={window.i18n.stripped('callsYouMissedCallPermissions', {
         name: conversationName,
       })}
       type={SessionToastType.Info}
@@ -135,7 +137,7 @@ export function pushedMissedCallCauseOfPermission(conversationName: string) {
 export function pushVideoCallPermissionNeeded() {
   pushToastInfo(
     'videoCallPermissionNeeded',
-    tStripped('callsPermissionsRequiredDescription'),
+    window.i18n.stripped('callsPermissionsRequiredDescription'),
     openPermissionsSettings
   );
 }
@@ -143,45 +145,45 @@ export function pushVideoCallPermissionNeeded() {
 export function pushAudioPermissionNeeded() {
   pushToastInfo(
     'audioPermissionNeeded',
-    tStripped('permissionsMicrophoneAccessRequiredDesktop'),
+    window.i18n.stripped('permissionsMicrophoneAccessRequiredDesktop'),
     openPermissionsSettings
   );
 }
 
 export function pushOriginalNotFound() {
-  pushToastError('messageErrorOriginal', tStripped('messageErrorOriginal'));
+  pushToastError('messageErrorOriginal', window.i18n.stripped('messageErrorOriginal'));
 }
 
 export function pushTooManyMembers() {
-  pushToastError('groupAddMemberMaximum', tStripped('groupAddMemberMaximum'));
+  pushToastError('groupAddMemberMaximum', window.i18n.stripped('groupAddMemberMaximum'));
 }
 
 export function pushMessageRequestPending() {
-  pushToastInfo('messageRequestPending', tStripped('messageRequestPending'));
+  pushToastInfo('messageRequestPending', window.i18n.stripped('messageRequestPending'));
 }
 
 export function pushUnblockToSend() {
-  pushToastInfo('unblockToSend', tStripped('blockBlockedDescription'));
+  pushToastInfo('unblockToSend', window.i18n.stripped('blockBlockedDescription'));
 }
 
 export function pushYouLeftTheGroup() {
-  pushToastError('youLeftTheGroup', tStripped('groupMemberYouLeft'));
+  pushToastError('youLeftTheGroup', window.i18n.stripped('groupMemberYouLeft'));
 }
 
 export function someDeletionsFailed(count: number) {
-  pushToastWarning('deletionError', tStripped('deleteMessageFailed', { count }));
+  pushToastWarning('deletionError', window.i18n.stripped('deleteMessageFailed', { count }));
 }
 
 export function pushDeleted(count: number) {
-  pushToastSuccess('deleted', tStripped('deleteMessageDeleted', { count }));
+  pushToastSuccess('deleted', window.i18n.stripped('deleteMessageDeleted', { count }));
 }
 
 export function pushCannotRemoveGroupAdmin() {
-  pushToastWarning('adminCannotBeRemoved', tStripped('adminCannotBeRemoved'));
+  pushToastWarning('adminCannotBeRemoved', window.i18n.stripped('adminCannotBeRemoved'));
 }
 
 export function pushFailedToAddAsModerator() {
-  pushToastWarning('adminPromotionFailed', tStripped('adminPromotionFailed'));
+  pushToastWarning('adminPromotionFailed', window.i18n.stripped('adminPromotionFailed'));
 }
 
 export function pushFailedToRemoveFromModerator(names: Array<string>) {
@@ -190,18 +192,18 @@ export function pushFailedToRemoveFromModerator(names: Array<string>) {
     case 0:
       throw new Error('pushFailedToRemoveFromModerator invalid case error');
     case 1:
-      localizedString = tStripped('adminRemoveFailed', {
+      localizedString = window.i18n.stripped('adminRemoveFailed', {
         name: names[0],
       });
       break;
     case 2:
-      localizedString = tStripped('adminRemoveFailedOther', {
+      localizedString = window.i18n.stripped('adminRemoveFailedOther', {
         name: names[0],
         other_name: names[1],
       });
       break;
     default:
-      localizedString = tStripped('adminRemoveFailedMultiple', {
+      localizedString = window.i18n.stripped('adminRemoveFailedMultiple', {
         name: names[0],
         count: names.length - 1,
       });
@@ -211,8 +213,8 @@ export function pushFailedToRemoveFromModerator(names: Array<string>) {
 }
 
 export function pushUserAddedToModerators(userNames: Array<string>) {
-  const opts = getPromotedGroupUpdateChangeStr(userNames);
-  pushToastSuccess('adminPromotedToAdmin', tStrippedWithObj(opts));
+  const args = getPromotedGroupUpdateChangeStr(userNames);
+  pushToastSuccess('adminPromotedToAdmin', window.i18n.stripped(args.token, args.args));
 }
 
 export function pushUserRemovedFromModerators(names: Array<string>) {
@@ -221,18 +223,18 @@ export function pushUserRemovedFromModerators(names: Array<string>) {
     case 0:
       throw new Error('pushUserRemovedFromModerators invalid case error');
     case 1:
-      localizedString = tStripped('adminRemovedUser', {
+      localizedString = window.i18n.stripped('adminRemovedUser', {
         name: names[0],
       });
       break;
     case 2:
-      localizedString = tStripped('adminRemovedUserOther', {
+      localizedString = window.i18n.stripped('adminRemovedUserOther', {
         name: names[0],
         other_name: names[1],
       });
       break;
     default:
-      localizedString = tStripped('adminRemovedUserMultiple', {
+      localizedString = window.i18n.stripped('adminRemovedUserMultiple', {
         name: names[0],
         count: names.length - 1,
       });
@@ -243,25 +245,25 @@ export function pushUserRemovedFromModerators(names: Array<string>) {
 }
 
 export function pushInvalidPubKey() {
-  pushToastSuccess('accountIdErrorInvalid', tStripped('accountIdErrorInvalid'));
+  pushToastSuccess('accountIdErrorInvalid', window.i18n.stripped('accountIdErrorInvalid'));
 }
 
 export function pushNoCameraFound() {
-  pushToastWarning('noCameraFound', tStripped('cameraErrorNotFound'));
+  pushToastWarning('noCameraFound', window.i18n.stripped('cameraErrorNotFound'));
 }
 
 export function pushNoAudioInputFound() {
-  pushToastWarning('noAudioInputFound', tStripped('audioNoInput'));
+  pushToastWarning('noAudioInputFound', window.i18n.stripped('audioNoInput'));
 }
 
 export function pushNoAudioOutputFound() {
-  pushToastWarning('noAudioOutputFound', tStripped('audioNoOutput'));
+  pushToastWarning('noAudioOutputFound', window.i18n.stripped('audioNoOutput'));
 }
 
 export function pushNoMediaUntilApproved() {
-  pushToastError('noMediaUntilApproved', tStripped('messageRequestPendingDescription'));
+  pushToastError('noMediaUntilApproved', window.i18n.stripped('messageRequestPendingDescription'));
 }
 
 export function pushRateLimitHitReactions() {
-  pushToastInfo('reactRateLimit', tStripped('emojiReactsCoolDown'));
+  pushToastInfo('reactRateLimit', window?.i18n?.('emojiReactsCoolDown'));
 }

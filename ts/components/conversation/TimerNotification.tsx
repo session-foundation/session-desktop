@@ -33,7 +33,6 @@ import {
   useMessageExpirationUpdateTimespanSeconds,
   useMessageExpirationUpdateTimespanText,
 } from '../../state/selectors';
-import { tr } from '../../localization/localeTools';
 
 const FollowSettingButton = styled.button`
   color: var(--primary-color);
@@ -52,8 +51,8 @@ function useFollowSettingsButtonClick({ messageId }: WithMessageId) {
   const doIt = () => {
     const localizedMode =
       expirationMode === 'deleteAfterRead'
-        ? tr('disappearingMessagesTypeRead')
-        : tr('disappearingMessagesTypeSent');
+        ? window.i18n('disappearingMessagesTypeRead')
+        : window.i18n('disappearingMessagesTypeSent');
 
     const i18nMessage: LocalizerProps = disabled
       ? {
@@ -67,11 +66,11 @@ function useFollowSettingsButtonClick({ messageId }: WithMessageId) {
           },
         };
 
-    const okText = tr('confirm');
+    const okText = window.i18n('confirm');
 
     dispatch(
       updateConfirmModal({
-        title: tr('disappearingMessagesFollowSetting'),
+        title: window.i18n('disappearingMessagesFollowSetting'),
         i18nMessage,
         okText,
         okTheme: SessionButtonColor.Danger,
@@ -142,7 +141,7 @@ const FollowSettingsButton = ({ messageId }: WithMessageId) => {
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       onClick={() => click.doIt()}
     >
-      {tr('disappearingMessagesFollowSetting')}
+      {window.i18n('disappearingMessagesFollowSetting')}
     </FollowSettingButton>
   );
 };

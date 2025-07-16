@@ -15,7 +15,7 @@ import {
   SessionButtonType,
 } from '../../basic/SessionButton';
 import { SessionFocusTrap } from '../../SessionFocusTrap';
-import { tr } from '../../../localization/localeTools';
+import { localize } from '../../../localization/localeTools';
 import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 
@@ -78,7 +78,7 @@ export const SelectionOverlay = () => {
             iconColor="var(--chat-buttons-icon-color)"
             iconSize="large"
             onClick={onCloseOverlay}
-            aria-label={tr('close')}
+            aria-label={localize('close').toString()}
           />
         </div>
 
@@ -87,7 +87,7 @@ export const SelectionOverlay = () => {
             buttonColor={SessionButtonColor.Danger}
             buttonShape={SessionButtonShape.Square}
             buttonType={SessionButtonType.Solid}
-            text={tr('delete')}
+            text={window.i18n('delete')}
             onClick={async () => {
               if (selectedConversationKey) {
                 await deleteMessagesForX(

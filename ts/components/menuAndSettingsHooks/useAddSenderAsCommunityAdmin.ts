@@ -1,5 +1,5 @@
 import { useIsPublic, useWeAreAdmin } from '../../hooks/useParamSelector';
-import { tr } from '../../localization/localeTools';
+import { localize } from '../../localization/localeTools';
 import { sogsV3AddAdmin } from '../../session/apis/open_group_api/sogsv3/sogsV3AddRemoveMods';
 import { ConvoHub } from '../../session/conversations';
 import { PubKey } from '../../session/types';
@@ -19,7 +19,8 @@ async function addSenderAsCommunityAdmin(sender: string, convoId: string) {
     } else {
       window?.log?.info(`${pubKeyToAdd.key} added to moderators...`);
       const userDisplayName =
-        ConvoHub.use().get(sender)?.getNicknameOrRealUsernameOrPlaceholder() || tr('unknown');
+        ConvoHub.use().get(sender)?.getNicknameOrRealUsernameOrPlaceholder() ||
+        localize('unknown').toString();
       ToastUtils.pushUserAddedToModerators([userDisplayName]);
     }
   } catch (e) {

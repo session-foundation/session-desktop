@@ -1,6 +1,5 @@
 import { GroupPubkeyType, PubkeyType } from 'libsession_util_nodejs';
 import { fromHexToArray } from '../utils/String';
-import { tr } from '../../localization/localeTools';
 
 export enum KeyPrefixType {
   /**
@@ -139,7 +138,7 @@ export class PubKey {
     // Check if it's hex
     const isHex = pubkey.replace(/[\s]*/g, '').match(/^[0-9a-fA-F]+$/);
     if (!isHex) {
-      return tr('accountIdErrorInvalid');
+      return window.i18n('accountIdErrorInvalid');
     }
 
     // Check if the pubkey length is 33 and leading with 05 or of length 32
@@ -150,7 +149,7 @@ export class PubKey {
 
     // dev pubkey on testnet are now 66 chars too with the prefix, so every sessionID needs 66 chars and the prefix to be valid
     if (!isProdOrDevValid) {
-      return tr('accountIdErrorInvalid');
+      return window.i18n('accountIdErrorInvalid');
     }
     return undefined;
   }

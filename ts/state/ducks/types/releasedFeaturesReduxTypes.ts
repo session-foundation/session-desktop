@@ -6,7 +6,6 @@ export type SessionFeatureFlags = {
   // Hooks
   useOnionRequests: boolean;
   useTestNet: boolean;
-  useLocalDevNet: string;
   useClosedGroupV2QAButtons: boolean;
   alwaysShowRemainingChars: boolean;
   showPopoverAnchors: boolean;

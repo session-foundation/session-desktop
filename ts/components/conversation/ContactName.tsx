@@ -8,7 +8,7 @@ import {
 import { Emojify } from './Emojify';
 import { PubKey } from '../../session/types';
 import { UserUtils } from '../../session/utils';
-import { tr } from '../../localization/localeTools';
+import { localize } from '../../localization/localeTools';
 
 type Props = {
   pubkey: string;
@@ -69,7 +69,7 @@ export const ContactName = (props: Props) => {
       {shouldShowProfile ? (
         <div style={styles} className={`${prefix}__profile-name`}>
           <Emojify
-            text={isYou ? tr('you') : displayedName}
+            text={isYou ? localize('you').toString() : displayedName}
             sizeClass="small"
             isGroup={!isPrivate}
           />

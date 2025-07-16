@@ -5,6 +5,7 @@ import { SessionNetworkParagraph, SectionHeading, SessionNetworkButton } from '.
 import { LOCALE_DEFAULTS } from '../../../../localization/constants';
 import { Localizer } from '../../../basic/Localizer';
 import { Flex } from '../../../basic/Flex';
+import { localize } from '../../../../localization/localeTools';
 import { SessionButtonColor, SessionButtonShape } from '../../../basic/SessionButton';
 import { SpacerXS } from '../../../basic/Text';
 import { showLinkVisitWarningDialog } from '../../OpenUrlModal';
@@ -17,7 +18,6 @@ import {
   useUSDMarketCap,
 } from '../../../../state/selectors/networkData';
 import { useInfoFakeRefreshing, useInfoLoading } from '../../../../state/selectors/networkModal';
-import { tr } from '../../../../localization/localeTools';
 
 const StyledTokenSection = styled(Flex)<{ loading: boolean }>`
   font-size: var(--font-display-size-lg);
@@ -82,8 +82,8 @@ export function StakeSection() {
           useGrouping: true,
         })} ${LOCALE_DEFAULTS.token_name_short}`
       : infoLoading || isFakeRefreshing
-        ? tr('loading')
-        : tr('unavailable');
+        ? localize('loading').toString()
+        : localize('unavailable').toString();
 
   const networkMarketCapValue =
     usdMarketCap && !isFakeRefreshing && !dataIsStale
@@ -94,8 +94,8 @@ export function StakeSection() {
           useGrouping: true,
         })} ${LOCALE_DEFAULTS.usd_name_short}`
       : infoLoading || isFakeRefreshing
-        ? tr('loading')
-        : tr('unavailable');
+        ? localize('loading').toString()
+        : localize('unavailable').toString();
 
   return (
     <Flex
@@ -120,7 +120,7 @@ export function StakeSection() {
           dataTestId={'staking-reward-pool-amount'}
         />
         <TokenSection
-          text={tr('sessionNetworkMarketCap')}
+          text={localize('sessionNetworkMarketCap').toString()}
           value={networkMarketCapValue}
           loading={infoLoading || !usdMarketCap || isFakeRefreshing || dataIsStale}
           dataTestId={'market-cap-amount'}

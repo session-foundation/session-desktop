@@ -26,7 +26,7 @@ import {
   StyledSettingItem,
 } from '../SessionSettingListItem';
 import { sectionActions } from '../../../state/ducks/section';
-import { tr } from '../../../localization/localeTools';
+import { localize } from '../../../localization/localeTools';
 
 const StyledSettingsItemContainer = styled.div`
   p {
@@ -102,7 +102,7 @@ export const SettingsCategoryRecoveryPassword = () => {
   return (
     <StyledSettingsItemContainer>
       <SessionSettingsItemWrapper
-        title={tr('sessionRecoveryPassword')}
+        title={localize('sessionRecoveryPassword').toString()}
         icon={{
           iconType: 'recoveryPasswordFill',
           iconSize: 18,
@@ -168,17 +168,19 @@ export const SettingsCategoryRecoveryPassword = () => {
             marginLeft: isQRVisible ? '-8px' : undefined,
           }}
         >
-          {isQRVisible ? tr('recoveryPasswordView') : tr('qrView')}
+          {isQRVisible
+            ? localize('recoveryPasswordView').toString()
+            : localize('qrView').toString()}
         </SessionButton>
       </SessionSettingsItemWrapper>
       {!hideRecoveryPassword ? (
         <SessionSettingButtonItem
-          title={tr('recoveryPasswordHideRecoveryPassword')}
-          description={tr('recoveryPasswordHideRecoveryPasswordDescription')}
+          title={localize('recoveryPasswordHideRecoveryPassword').toString()}
+          description={localize('recoveryPasswordHideRecoveryPasswordDescription').toString()}
           onClick={() => {
             dispatch(updateHideRecoveryPasswordModal({ state: 'firstWarning' }));
           }}
-          buttonText={tr('hide')}
+          buttonText={localize('hide').toString()}
           buttonColor={SessionButtonColor.Danger}
           dataTestId={'hide-recovery-password-button'}
         />

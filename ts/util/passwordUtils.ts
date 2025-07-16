@@ -1,7 +1,6 @@
 import * as crypto from 'crypto';
 import { isString } from 'lodash';
 import { PASSWORD_LENGTH } from '../session/constants';
-import { tr } from '../localization/localeTools';
 
 const ERRORS = {
   TYPE: 'Password must be a string',
@@ -21,24 +20,24 @@ export const matchesHash = (phrase: string | null, hash: string) =>
 
 export const validatePassword = (phrase: string) => {
   if (!isString(phrase)) {
-    return tr('passwordError');
+    return window?.i18n ? window.i18n('passwordError') : ERRORS.TYPE;
   }
 
   if (phrase.length === 0) {
-    return tr('passwordErrorLength');
+    return window?.i18n ? window?.i18n('passwordErrorLength') : ERRORS.LENGTH;
   }
 
   if (
     phrase.length < PASSWORD_LENGTH.MIN_PASSWORD_LEN ||
     phrase.length > PASSWORD_LENGTH.MAX_PASSWORD_LEN
   ) {
-    return tr('passwordErrorLength');
+    return window?.i18n ? window?.i18n('passwordErrorLength') : ERRORS.LENGTH;
   }
 
   // Restrict characters to letters, numbers and symbols
   const characterRegex = /^[a-zA-Z0-9-!?/\\()._`~@#$%^&*+=[\]{}|<>,;: ]+$/;
   if (!characterRegex.test(phrase)) {
-    return tr('passwordError');
+    return window?.i18n ? window.i18n('passwordError') : ERRORS.CHARACTER;
   }
 
   return null;

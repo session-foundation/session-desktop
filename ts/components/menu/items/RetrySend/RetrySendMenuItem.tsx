@@ -3,7 +3,6 @@ import { WithMessageId } from '../../../../session/types/with';
 import { useMessageDirection, useMessageStatus } from '../../../../state/selectors';
 import { ItemWithDataTestId } from '../MenuItemWithDataTestId';
 import { Data } from '../../../../data/data';
-import { tr } from '../../../../localization/localeTools';
 
 export const RetryItem = ({ messageId }: WithMessageId) => {
   const direction = useMessageDirection(messageId);
@@ -22,6 +21,6 @@ export const RetryItem = ({ messageId }: WithMessageId) => {
 
   return showRetry ? (
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    <ItemWithDataTestId onClick={() => doResend()}>{tr('resend')}</ItemWithDataTestId>
+    <ItemWithDataTestId onClick={() => doResend()}>{window.i18n('resend')}</ItemWithDataTestId>
   ) : null;
 };

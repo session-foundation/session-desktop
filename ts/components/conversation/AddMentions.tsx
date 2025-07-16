@@ -4,7 +4,7 @@ import { ConvoHub } from '../../session/conversations';
 import { isUsAnySogsFromCache } from '../../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import { PubKey } from '../../session/types';
 import { RenderTextCallbackType } from '../../types/Util';
-import { tr } from '../../localization/localeTools';
+import { localize } from '../../localization/localeTools';
 
 interface MentionProps {
   key: string;
@@ -42,7 +42,7 @@ export const Mention = (props: MentionProps) => {
         contentEditable={false}
         inComposableElement={props.inComposableElement}
       >
-        @{tr('you')}
+        @{localize('you')}
         {props.children}
       </StyledMentionedUs>
     );

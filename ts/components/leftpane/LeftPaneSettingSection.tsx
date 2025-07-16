@@ -14,7 +14,7 @@ import { LeftPaneSectionHeader } from './LeftPaneSectionHeader';
 import { getSessionNetworkModalState } from '../../state/selectors/modal';
 import { LOCALE_DEFAULTS } from '../../localization/constants';
 import { Localizer } from '../basic/Localizer';
-import { tr } from '../../localization/localeTools';
+import { localize } from '../../localization/localeTools';
 import { networkDataActions } from '../../state/ducks/networkData';
 import { showLinkVisitWarningDialog } from '../dialog/OpenUrlModal';
 import { LUCIDE_ICONS_UNICODE, type WithLucideUnicode } from '../icon/lucide';
@@ -80,12 +80,12 @@ const categories: Array<Categories> = (
   [
     {
       id: 'privacy',
-      title: tr('sessionPrivacy'),
+      title: localize('sessionPrivacy'),
       icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.LOCK_KEYHOLE },
     },
     {
       id: 'donate',
-      title: tr('donate'),
+      title: localize('donate'),
       titleColor: 'var(--renderer-span-primary-color)',
       icon: {
         type: 'lucide',
@@ -101,42 +101,42 @@ const categories: Array<Categories> = (
     },
     {
       id: 'notifications',
-      title: tr('sessionNotifications'),
+      title: localize('sessionNotifications'),
       icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.VOLUME_2 },
     },
     {
       id: 'conversations',
-      title: tr('sessionConversations'),
+      title: localize('sessionConversations'),
       icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE },
     },
     {
       id: 'message-requests',
-      title: tr('sessionMessageRequests'),
+      title: localize('sessionMessageRequests'),
       icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE_WARNING },
     },
     {
       id: 'appearance',
-      title: tr('sessionAppearance'),
+      title: localize('sessionAppearance'),
       icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.PAINTBRUSH_VERTICAL },
     },
     {
       id: 'permissions',
-      title: tr('sessionPermissions'),
+      title: localize('sessionPermissions'),
       icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.CIRCLE_CHECK },
     },
     {
       id: 'recovery-password',
-      title: tr('sessionRecoveryPassword'),
+      title: localize('sessionRecoveryPassword'),
       icon: { type: 'recoveryPasswordFill' },
     },
     {
       id: 'help',
-      title: tr('sessionHelp'),
+      title: localize('sessionHelp'),
       icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.CIRCLE_HELP },
     },
     {
       id: 'clear-data',
-      title: tr('sessionClearData'),
+      title: localize('sessionClearData'),
       titleColor: 'var(--danger-color)',
       icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.TRASH2, color: 'var(--danger-color)' },
     },

@@ -42,7 +42,7 @@ import { StoreGroupRequestFactory } from '../session/apis/snode_api/factories/St
 import { DURATION } from '../session/constants';
 import { GroupInvite } from '../session/utils/job_runners/jobs/GroupInviteJob';
 import type { LocalizerProps } from '../components/basic/Localizer';
-import { tr } from '../localization/localeTools';
+import { localize } from '../localization/localeTools';
 
 export async function copyPublicKeyByConvoId(convoId: string) {
   if (OpenGroupUtils.isOpenGroupV2(convoId)) {
@@ -244,9 +244,9 @@ export const declineConversationWithConfirm = ({
 
   window?.inboxStore?.dispatch(
     updateConfirmModal({
-      okText: alsoBlock ? tr('block') : tr('delete'),
-      cancelText: tr('cancel'),
-      title: alsoBlock ? tr('block') : tr('delete'),
+      okText: alsoBlock ? window.i18n('block') : window.i18n('delete'),
+      cancelText: window.i18n('cancel'),
+      title: alsoBlock ? window.i18n('block') : window.i18n('delete'),
       i18nMessage,
       okTheme: SessionButtonColor.Danger,
       onClickOk: async () => {
@@ -379,13 +379,13 @@ export async function showLeaveGroupByConvoId(conversationId: string, name: stri
   if (weAreLastAdmin) {
     window?.inboxStore?.dispatch(
       updateConfirmModal({
-        title: tr('groupLeave'),
+        title: window.i18n('groupLeave'),
         i18nMessage: {
           token: 'groupDeleteDescription',
-          args: { group_name: name || tr('unknown') },
+          args: { group_name: name || window.i18n('unknown') },
         },
         onClickOk,
-        okText: tr('leave'),
+        okText: window.i18n('leave'),
         okTheme: SessionButtonColor.Danger,
         onClickClose,
         conversationId,
@@ -395,10 +395,10 @@ export async function showLeaveGroupByConvoId(conversationId: string, name: stri
   }
   window?.inboxStore?.dispatch(
     updateConfirmModal({
-      title: tr('groupLeave'),
-      i18nMessage: { token: 'groupLeaveDescription', args: { group_name: name ?? tr('unknown') } },
+      title: localize('groupLeave').toString(),
+      i18nMessage: { token: 'groupLeaveDescription', args: { group_name: name ?? '' } },
       onClickOk,
-      okText: tr('leave'),
+      okText: window.i18n('leave'),
       okTheme: SessionButtonColor.Danger,
       onClickClose,
       conversationId,
@@ -438,13 +438,13 @@ export async function showDeleteGroupByConvoId(conversationId: string, name: str
 
   window?.inboxStore?.dispatch(
     updateConfirmModal({
-      title: tr('groupDelete'),
+      title: localize('groupDelete').toString(),
       i18nMessage: {
         token: weAreAdmin ? 'groupDeleteDescription' : 'groupDeleteDescriptionMember',
-        args: { group_name: name ?? tr('unknown') },
+        args: { group_name: name ?? '' },
       },
       onClickOk,
-      okText: tr('delete'),
+      okText: localize('delete').toString(),
       okTheme: SessionButtonColor.Danger,
       onClickClose,
       conversationId,
@@ -553,7 +553,7 @@ export async function showLinkSharingConfirmationModalDialog(e: any) {
     if (!alreadyDisplayedPopup) {
       window.inboxStore?.dispatch(
         updateConfirmModal({
-          title: tr('linkPreviewsEnable'),
+          title: window.i18n('linkPreviewsEnable'),
           i18nMessage: { token: 'linkPreviewsFirstDescription' },
           okTheme: SessionButtonColor.Danger,
           onClickOk: async () => {
@@ -562,7 +562,7 @@ export async function showLinkSharingConfirmationModalDialog(e: any) {
           onClickClose: async () => {
             await Storage.put(SettingsKey.hasLinkPreviewPopupBeenDisplayed, true);
           },
-          okText: tr('enable'),
+          okText: window.i18n('enable'),
         })
       );
     }

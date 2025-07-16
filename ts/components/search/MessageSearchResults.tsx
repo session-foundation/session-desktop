@@ -16,7 +16,6 @@ import { MessageBodyHighlight } from '../basic/MessageBodyHighlight';
 import { ContactName } from '../conversation/ContactName';
 import { Timestamp } from '../conversation/Timestamp';
 import { leftPaneListWidth } from '../leftpane/LeftPane';
-import { tr } from '../../localization/localeTools';
 
 const StyledConversationTitleResults = styled.div`
   flex-grow: 1;
@@ -81,11 +80,13 @@ const FromName = (props: { source: string; conversationId: string }) => {
   const isNoteToSelf = conversationId === getOurPubKeyStrFromCache() && source === conversationId;
 
   if (isNoteToSelf) {
-    return <StyledMessageResultsHeaderName>{tr('noteToSelf')}</StyledMessageResultsHeaderName>;
+    return (
+      <StyledMessageResultsHeaderName>{window.i18n('noteToSelf')}</StyledMessageResultsHeaderName>
+    );
   }
 
   if (source === getOurPubKeyStrFromCache()) {
-    return <StyledMessageResultsHeaderName>{tr('you')}</StyledMessageResultsHeaderName>;
+    return <StyledMessageResultsHeaderName>{window.i18n('you')}</StyledMessageResultsHeaderName>;
   }
 
   return (
@@ -135,7 +136,9 @@ const FromUserInGroup = (props: { authorPubkey: string; conversationId: string }
     authorPubkey === ourKey ||
     (isPublic && PubKey.isBlinded(authorPubkey) && isUsAnySogsFromCache(authorPubkey))
   ) {
-    return <StyledConversationFromUserInGroup>{tr('you')}: </StyledConversationFromUserInGroup>;
+    return (
+      <StyledConversationFromUserInGroup>{window.i18n('you')}: </StyledConversationFromUserInGroup>
+    );
   }
   return <StyledConversationFromUserInGroup>{authorConvoName}: </StyledConversationFromUserInGroup>;
 };
@@ -160,7 +163,7 @@ const ResultBody = styled.div`
   -webkit-box-orient: vertical;
 `;
 
-const StyledTimestampContainer = styled.div`
+const StyledTimestampContaimer = styled.div`
   flex-shrink: 0;
   margin-inline-start: 6px;
 
@@ -232,12 +235,12 @@ export const MessageSearchResult = (props: MessageSearchResultProps) => {
       <StyledResultText>
         <ResultsHeader>
           <ConversationHeader source={destination} conversationId={conversationId} />
-          <StyledTimestampContainer>
+          <StyledTimestampContaimer>
             <Timestamp
               timestamp={serverTimestamp || timestamp || sent_at || received_at}
               isConversationSearchResult={true}
             />
-          </StyledTimestampContainer>
+          </StyledTimestampContaimer>
         </ResultsHeader>
         <ResultBody>
           <FromUserInGroup authorPubkey={source} conversationId={conversationId} />

@@ -1,5 +1,4 @@
 import { OpenGroupV2Room } from '../../../../data/types';
-import { tr, tStripped } from '../../../../localization/localeTools';
 import { ConversationModel } from '../../../../models/conversation';
 import { ConvoHub } from '../../../conversations';
 import { PromiseUtils, ToastUtils } from '../../../utils';
@@ -90,7 +89,7 @@ async function joinOpenGroupV2(room: OpenGroupV2Room): Promise<ConversationModel
 
     if (!conversation) {
       window?.log?.warn('Failed to join open group v2');
-      throw new Error(tr('communityJoinError'));
+      throw new Error(window.i18n('communityJoinError'));
     }
 
     return conversation;
@@ -129,10 +128,13 @@ export async function joinOpenGroupV2WithUIEvents(
     const parsedRoom = parseOpenGroupV2(completeUrl);
     if (!parsedRoom) {
       if (showToasts) {
-        ToastUtils.pushToastError('connectToServer', tStripped('communityEnterUrlErrorInvalid'));
+        ToastUtils.pushToastError(
+          'connectToServer',
+          window.i18n.stripped('communityEnterUrlErrorInvalid')
+        );
       }
       if (errorHandler) {
-        errorHandler(tr('communityEnterUrlErrorInvalid'));
+        errorHandler(window.i18n('communityEnterUrlErrorInvalid'));
       }
       return false;
     }
@@ -144,15 +146,18 @@ export async function joinOpenGroupV2WithUIEvents(
       await existingConvo.setIsApproved(true, false);
       await existingConvo.commit();
       if (showToasts) {
-        ToastUtils.pushToastError('communityJoinedAlready', tStripped('communityJoinedAlready'));
+        ToastUtils.pushToastError(
+          'communityJoinedAlready',
+          window.i18n.stripped('communityJoinedAlready')
+        );
       }
       if (errorHandler) {
-        errorHandler(tr('communityJoinedAlready'));
+        errorHandler(window.i18n('communityJoinedAlready'));
       }
       return false;
     }
     if (showToasts) {
-      ToastUtils.pushToastInfo('connectingToServer', tStripped('callsConnecting'));
+      ToastUtils.pushToastInfo('connectingToServer', window.i18n.stripped('callsConnecting'));
     }
 
     uiCallback?.({ loadingState: 'started', conversationKey: conversationID });
@@ -161,27 +166,30 @@ export async function joinOpenGroupV2WithUIEvents(
 
     if (convoCreated) {
       if (showToasts) {
-        ToastUtils.pushToastSuccess('connectToServerSuccess', tStripped('communityJoined'));
+        ToastUtils.pushToastSuccess(
+          'connectToServerSuccess',
+          window.i18n.stripped('communityJoined')
+        );
       }
       uiCallback?.({ loadingState: 'finished', conversationKey: convoCreated?.id });
 
       return true;
     }
     if (showToasts) {
-      ToastUtils.pushToastError('communityJoinError', tStripped('communityJoinError'));
+      ToastUtils.pushToastError('communityJoinError', window.i18n.stripped('communityJoinError'));
     }
     if (errorHandler) {
-      errorHandler(tr('communityJoinError'));
+      errorHandler(window.i18n('communityJoinError'));
     }
 
     uiCallback?.({ loadingState: 'failed', conversationKey: conversationID });
   } catch (error) {
     window?.log?.warn('got error while joining open group:', error.message);
     if (showToasts) {
-      ToastUtils.pushToastError('communityJoinError', tStripped('communityJoinError'));
+      ToastUtils.pushToastError('communityJoinError', window.i18n.stripped('communityJoinError'));
     }
     if (errorHandler) {
-      errorHandler(tr('communityJoinError'));
+      errorHandler(window.i18n('communityJoinError'));
     }
     uiCallback?.({ loadingState: 'failed', conversationKey: null });
   }

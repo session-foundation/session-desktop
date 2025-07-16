@@ -62,7 +62,6 @@ import { showLocalizedPopupDialog } from '../../dialog/LocalizedPopupDialog';
 import { formatNumber } from '../../../util/i18n/formatting/generics';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { SessionProInfoVariant, showSessionProInfoDialog } from '../../dialog/SessionProInfoModal';
-import { tStripped } from '../../../localization/localeTools';
 
 export interface ReplyingToMessageProps {
   convoId: string;
@@ -419,7 +418,12 @@ class CompositionBoxInner extends Component<Props, State> {
           type="file"
           onChange={this.onChoseAttachment}
         />
-        <StyledSendMessageInput role="main" dir={this.props.htmlDirection} ref={this.container}>
+        <StyledSendMessageInput
+          role="main"
+          dir={this.props.htmlDirection}
+          ref={this.container}
+          data-testid="message-input"
+        >
           <CompositionTextArea
             draft={this.state.draft}
             initialDraft={this.state.initialDraft}
@@ -591,7 +595,7 @@ class CompositionBoxInner extends Component<Props, State> {
       const onSave = (caption: string) => {
         // eslint-disable-next-line no-param-reassign
         attachment.caption = caption;
-        ToastUtils.pushToastInfo('saved', tStripped('saved'));
+        ToastUtils.pushToastInfo('saved', window.i18n.stripped('saved'));
         // close the light box on save
         this.setState({
           showCaptionEditor: undefined,
@@ -816,7 +820,6 @@ class CompositionBoxInner extends Component<Props, State> {
         stagedLinkPreview: undefined,
         ignoredLink: undefined,
         draft: '',
-        characterCount: 0,
       });
       updateDraftForConversation({
         conversationKey: this.props.selectedConversationKey,

@@ -1,6 +1,6 @@
 import { useDispatch } from 'react-redux';
 import useUpdate from 'react-use/lib/useUpdate';
-import { tr } from '../../../../localization/localeTools';
+import { localize } from '../../../../localization/localeTools';
 import { Storage } from '../../../../util/storage';
 import { updateConfirmModal } from '../../../../state/ducks/modalDialog';
 import { SessionButtonColor } from '../../../basic/SessionButton';
@@ -25,10 +25,10 @@ export const useReleaseChannel = (): {
       );
       dispatch(
         updateConfirmModal({
-          title: tr('warning'),
+          title: localize('warning').toString(),
           i18nMessage: { token: 'settingsRestartDescription' },
           okTheme: SessionButtonColor.Danger,
-          okText: tr('restart'),
+          okText: localize('restart').toString(),
           onClickOk: async () => {
             try {
               await Storage.put('releaseChannel', channel);

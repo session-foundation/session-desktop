@@ -9,12 +9,12 @@ import {
   SessionWrapperModal,
 } from '../SessionWrapperModal';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
-import { tr } from '../../localization/localeTools';
+import { localize } from '../../localization/localeTools';
 
 export const QuitModal = (props: QuitModalProps) => {
   const dispatch = useDispatch();
   const { onClickOk, onClickCancel, i18nMessage } = props;
-  const title = tr('warning');
+  const title = localize('warning').toString();
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -60,7 +60,7 @@ export const QuitModal = (props: QuitModalProps) => {
       buttonChildren={
         <ModalActionsContainer>
           <SessionButton
-            text={tr('quitButton')}
+            text={localize('quitButton').toString()}
             buttonColor={SessionButtonColor.Danger}
             buttonType={SessionButtonType.Simple}
             onClick={onClickOkHandler}
@@ -68,7 +68,7 @@ export const QuitModal = (props: QuitModalProps) => {
             dataTestId="session-confirm-ok-button"
           />
           <SessionButton
-            text={tr('cancel')}
+            text={localize('cancel').toString()}
             buttonColor={undefined}
             buttonType={SessionButtonType.Simple}
             onClick={onClickCancelHandler}

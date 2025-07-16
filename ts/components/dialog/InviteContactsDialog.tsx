@@ -20,7 +20,7 @@ import { SessionToggle } from '../basic/SessionToggle';
 import { hasClosedGroupV2QAButtons } from '../../shared/env_vars';
 import { ConversationTypeEnum } from '../../models/types';
 import { Localizer } from '../basic/Localizer';
-import { tr } from '../../localization/localeTools';
+import { localize } from '../../localization/localeTools';
 import { useContactsToInviteTo } from '../../hooks/useContactsToInviteToGroup';
 import { SessionSearchInput } from '../SessionSearchInput';
 import { NoResultsForSearch } from '../search/NoResults';
@@ -52,7 +52,10 @@ async function submitForOpenGroup(convoId: string, pubkeys: Array<string>) {
       url: roomDetails?.fullUrlWithPubkey,
       name: convo.getNicknameOrRealUsernameOrPlaceholder(),
     };
-    ToastUtils.pushToastInfo('sendingInvites', tr('groupInviteSending', { count: pubkeys.length }));
+    ToastUtils.pushToastInfo(
+      'sendingInvites',
+      localize('groupInviteSending').withArgs({ count: pubkeys.length }).toString()
+    );
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     pubkeys.forEach(async pubkeyStr => {
       const privateConvo = await ConvoHub.use().getOrCreateAndWait(
@@ -176,19 +179,21 @@ const InviteContactsDialogInner = (props: Props) => {
   return (
     <SessionWrapperModal
       onClose={closeDialog}
-      headerChildren={<ModalBasicHeader title={tr('membersInvite')} showExitIcon={true} />}
+      headerChildren={
+        <ModalBasicHeader title={localize('membersInvite').toString()} showExitIcon={true} />
+      }
       modalDataTestId="invite-contacts-dialog"
       buttonChildren={
         <ModalActionsContainer>
           <SessionButton
-            text={tr('membersInviteTitle')}
+            text={localize('membersInviteTitle').toString()}
             buttonType={SessionButtonType.Simple}
             disabled={!hasContacts}
             onClick={onClickOK}
             dataTestId="session-confirm-ok-button"
           />
           <SessionButton
-            text={tr('cancel')}
+            text={localize('cancel').toString()}
             buttonColor={SessionButtonColor.Danger}
             buttonType={SessionButtonType.Simple}
             onClick={closeDialog}

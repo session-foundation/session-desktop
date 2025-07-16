@@ -33,7 +33,7 @@ import { useLibGroupDestroyed } from '../../state/selectors/userGroups';
 import { NetworkTime } from '../../util/NetworkTime';
 import { useShowNotificationFor } from '../menuAndSettingsHooks/useShowNotificationFor';
 import { useLocalisedNotificationOptions } from '../menuAndSettingsHooks/useLocalisedNotificationFor';
-import { tr } from '../../localization/localeTools';
+import { localize } from '../../localization/localeTools';
 import { useShowBlockUnblock } from '../menuAndSettingsHooks/useShowBlockUnblock';
 import { useShowDeletePrivateContactCb } from '../menuAndSettingsHooks/useShowDeletePrivateContact';
 import { useClearAllMessagesCb } from '../menuAndSettingsHooks/useClearAllMessages';
@@ -57,7 +57,9 @@ export const InviteContactMenuItem = (): JSX.Element | null => {
 
   if (showInviteContactCb) {
     return (
-      <ItemWithDataTestId onClick={showInviteContactCb}>{tr('membersInvite')}</ItemWithDataTestId>
+      <ItemWithDataTestId onClick={showInviteContactCb}>
+        {localize('membersInvite')}
+      </ItemWithDataTestId>
     );
   }
   return null;
@@ -81,7 +83,11 @@ export const MarkConversationUnreadMenuItem = (): JSX.Element | null => {
       void conversation?.markAsUnread(true);
     };
 
-    return <ItemWithDataTestId onClick={markUnread}>{tr('messageMarkUnread')}</ItemWithDataTestId>;
+    return (
+      <ItemWithDataTestId onClick={markUnread}>
+        {window.i18n('messageMarkUnread')}
+      </ItemWithDataTestId>
+    );
   }
   return null;
 };
@@ -102,7 +108,7 @@ export const DeletePrivateContactMenuItem = () => {
 
   return (
     <ItemWithDataTestId onClick={showDeletePrivateContactCb}>
-      {tr('contactDelete')}
+      {localize('contactDelete')}
     </ItemWithDataTestId>
   );
 };
@@ -128,7 +134,7 @@ export const ShowUserDetailsMenuItem = () => {
           );
         }}
       >
-        {tr('contactUserDetails')}
+        {localize('contactUserDetails')}
       </ItemWithDataTestId>
     );
   }
@@ -149,7 +155,7 @@ export const UpdateGroupNameMenuItem = () => {
           void showUpdateGroupNameByConvoId(convoId);
         }}
       >
-        {tr('groupEdit')}
+        {localize('groupEdit')}
       </ItemWithDataTestId>
     );
   }
@@ -164,7 +170,9 @@ export const RemoveModeratorsMenuItem = (): JSX.Element | null => {
     return null;
   }
   return (
-    <ItemWithDataTestId onClick={showRemoveModeratorsCb}>{tr('adminRemove')}</ItemWithDataTestId>
+    <ItemWithDataTestId onClick={showRemoveModeratorsCb}>
+      {localize('adminRemove')}
+    </ItemWithDataTestId>
   );
 };
 
@@ -176,7 +184,9 @@ export const AddModeratorsMenuItem = (): JSX.Element | null => {
     return null;
   }
   return (
-    <ItemWithDataTestId onClick={addRemoveModeratorsCb}>{tr('adminPromote')}</ItemWithDataTestId>
+    <ItemWithDataTestId onClick={addRemoveModeratorsCb}>
+      {localize('adminPromote')}
+    </ItemWithDataTestId>
   );
 };
 
@@ -187,7 +197,9 @@ export const UnbanMenuItem = (): JSX.Element | null => {
   if (!showUnbanUserCb) {
     return null;
   }
-  return <ItemWithDataTestId onClick={showUnbanUserCb}>{tr('banUnbanUser')}</ItemWithDataTestId>;
+  return (
+    <ItemWithDataTestId onClick={showUnbanUserCb}>{localize('banUnbanUser')}</ItemWithDataTestId>
+  );
 };
 
 export const BanMenuItem = (): JSX.Element | null => {
@@ -198,7 +210,7 @@ export const BanMenuItem = (): JSX.Element | null => {
   if (!showBanUserCb) {
     return null;
   }
-  return <ItemWithDataTestId onClick={showBanUserCb}>{tr('banUser')}</ItemWithDataTestId>;
+  return <ItemWithDataTestId onClick={showBanUserCb}>{localize('banUser')}</ItemWithDataTestId>;
 };
 
 export const MarkAllReadMenuItem = (): JSX.Element | null => {
@@ -208,7 +220,7 @@ export const MarkAllReadMenuItem = (): JSX.Element | null => {
     return (
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       <ItemWithDataTestId onClick={async () => markAllReadByConvoId(convoId)}>
-        {tr('messageMarkRead')}
+        {localize('messageMarkRead')}
       </ItemWithDataTestId>
     );
   }
@@ -225,7 +237,7 @@ export const BlockMenuItem = (): JSX.Element | null => {
 
   return (
     <ItemWithDataTestId onClick={showBlockUnblock.cb}>
-      {tr(showBlockUnblock.token)}
+      {localize(showBlockUnblock.token)}
     </ItemWithDataTestId>
   );
 };
@@ -260,7 +272,7 @@ export const DeleteMessagesMenuItem = () => {
   return (
     <ItemWithDataTestId onClick={clearAllMessagesCb}>
       {/* just more than 1 to have the string Delete Messages */}
-      {tr('clearMessages')}
+      {localize('clearMessages')}
     </ItemWithDataTestId>
   );
 };
@@ -285,7 +297,7 @@ export const DeletePrivateConversationMenuItem = () => {
         showDeleteConversationContactCb();
       }}
     >
-      {tr('conversationsDelete')}
+      {window.i18n('conversationsDelete')}
     </ItemWithDataTestId>
   );
 };
@@ -305,7 +317,7 @@ export const HideNoteToSelfMenuItem = () => {
         showHideNoteToSelfCb();
       }}
     >
-      {tr('noteToSelfHide')}
+      {window.i18n('noteToSelfHide')}
     </ItemWithDataTestId>
   );
 };
@@ -325,7 +337,7 @@ export const ShowNoteToSelfMenuItem = () => {
         showShowNoteToSelfCb();
       }}
     >
-      {tr('showNoteToSelf')}
+      {window.i18n('showNoteToSelf')}
     </ItemWithDataTestId>
   );
 };
@@ -347,7 +359,7 @@ export const AcceptMsgRequestMenuItem = () => {
         }}
         dataTestId="accept-menu-item"
       >
-        {tr('accept')}
+        {window.i18n('accept')}
       </ItemWithDataTestId>
     );
   }
@@ -374,7 +386,7 @@ export const DeclineMsgRequestMenuItem = () => {
         }}
         dataTestId="delete-menu-item"
       >
-        {tr('delete')}
+        {window.i18n('delete')}
       </ItemWithDataTestId>
     );
   }
@@ -404,7 +416,7 @@ export const DeclineAndBlockMsgRequestMenuItem = () => {
         }}
         dataTestId="block-menu-item"
       >
-        {tr('block')}
+        {window.i18n('block')}
       </ItemWithDataTestId>
     );
   }
@@ -429,7 +441,7 @@ export const NotificationForConvoMenuItem = (): JSX.Element | null => {
   return (
     // Remove the && false to make context menu work with RTL support
     <Submenu
-      label={tr('sessionNotifications')}
+      label={localize('sessionNotifications')}
       // rtl={isRtlMode && false}
     >
       {(notificationForConvoOptions || []).map(item => {

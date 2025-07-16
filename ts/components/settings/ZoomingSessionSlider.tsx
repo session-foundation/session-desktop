@@ -7,7 +7,6 @@ import useUpdate from 'react-use/lib/useUpdate';
 import styled from 'styled-components';
 import { Flex } from '../basic/Flex';
 import { SessionSettingsItemWrapper } from './SessionSettingListItem';
-import { tr } from '../../localization/localeTools';
 
 const StyledZoomValue = styled.p`
   min-width: 40px;
@@ -27,7 +26,7 @@ export const ZoomingSessionSlider = (props: { onSliderChange?: (value: number) =
   };
 
   return (
-    <SessionSettingsItemWrapper title={tr('appearanceZoom')} inline={false}>
+    <SessionSettingsItemWrapper title={window.i18n('appearanceZoom')} inline={false}>
       <Flex
         $container={true}
         $justifyContent={'flex-start'}

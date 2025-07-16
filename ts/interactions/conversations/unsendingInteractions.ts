@@ -21,7 +21,7 @@ import { UserGroupsWrapperActions } from '../../webworker/workers/browser/libses
 import { NetworkTime } from '../../util/NetworkTime';
 import { MessageQueue } from '../../session/sending';
 import { WithLocalMessageDeletionType } from '../../session/types/with';
-import { tr } from '../../localization/localeTools';
+import { localize } from '../../localization/localeTools';
 import { sectionActions } from '../../state/ducks/section';
 import type { LocalizerProps } from '../../components/basic/Localizer';
 
@@ -503,9 +503,13 @@ export async function deleteMessagesByIdForEveryone(
 
   window.inboxStore?.dispatch(
     updateConfirmModal({
-      title: isMe ? tr('deleteMessageDevicesAll') : tr('clearMessagesForEveryone'),
+      title: isMe
+        ? window.i18n('deleteMessageDevicesAll')
+        : window.i18n('clearMessagesForEveryone'),
       i18nMessage: { token: 'deleteMessageConfirm', args: { count: selectedMessages.length } },
-      okText: isMe ? tr('deleteMessageDevicesAll') : tr('clearMessagesForEveryone'),
+      okText: isMe
+        ? window.i18n('deleteMessageDevicesAll')
+        : window.i18n('clearMessagesForEveryone'),
       okTheme: SessionButtonColor.Danger,
       onClickOk: async () => {
         await doDeleteSelectedMessages({ selectedMessages, conversation, deleteForEveryone: true });
@@ -538,17 +542,17 @@ export async function deleteMessagesById(messageIds: Array<string>, conversation
 
   window.inboxStore?.dispatch(
     updateConfirmModal({
-      title: tr('deleteMessage', { count: selectedMessages.length }),
+      title: localize('deleteMessage').withArgs({ count: selectedMessages.length }).toString(),
       radioOptions: !isMe
         ? [
             {
-              label: tr('clearMessagesForMe'),
+              label: window.i18n('clearMessagesForMe'),
               value: 'clearMessagesForMe' as const,
               inputDataTestId: 'input-deleteJustForMe' as const,
               labelDataTestId: 'label-deleteJustForMe' as const,
             },
             {
-              label: tr('clearMessagesForEveryone'),
+              label: window.i18n('clearMessagesForEveryone'),
               value: clearMessagesForEveryone,
               inputDataTestId: 'input-deleteForEveryone' as const,
               labelDataTestId: 'label-deleteForEveryone' as const,
@@ -556,7 +560,7 @@ export async function deleteMessagesById(messageIds: Array<string>, conversation
           ]
         : undefined,
       i18nMessage,
-      okText: tr('delete'),
+      okText: window.i18n('delete'),
       okTheme: SessionButtonColor.Danger,
       onClickOk: async args => {
         await doDeleteSelectedMessages({

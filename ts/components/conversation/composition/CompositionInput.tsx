@@ -694,7 +694,7 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
     const _onKeyDown = useCallback(
       (e: KeyboardEvent<HTMLDivElement>) => {
         if (e.ctrlKey || e.metaKey) {
-          if (e.key === 'y' || (e.shiftKey && (e.key === 'z' || e.key === 'Z'))) {
+          if (e.key === 'y' || (e.key === 'Z' && e.shiftKey)) {
             // Ctrl+Y or Cmd+Y
             // Ctrl+Shift+Z or Cmd+Shift+Z
             e.preventDefault();

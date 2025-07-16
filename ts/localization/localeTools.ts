@@ -1,10 +1,11 @@
 import { CrowdinLocale } from './constants';
+import type { I18nMethods } from './I18nMethods';
 import { pluralsDictionary, simpleDictionary } from './locales';
 
 type SimpleDictionary = typeof simpleDictionary;
 type PluralDictionary = typeof pluralsDictionary;
 
-type SimpleLocalizerTokens = keyof SimpleDictionary;
+export type SimpleLocalizerTokens = keyof SimpleDictionary;
 type PluralLocalizerTokens = keyof PluralDictionary;
 
 export type MergedLocalizerTokens = SimpleLocalizerTokens | PluralLocalizerTokens;
@@ -55,11 +56,11 @@ function log(message: Parameters<Logger>[0]) {
   logger(message);
 }
 
-function isSimpleToken(token: string): token is SimpleLocalizerTokens {
+export function isSimpleToken(token: string): token is SimpleLocalizerTokens {
   return token in simpleDictionary;
 }
 
-function isPluralToken(token: string): token is PluralLocalizerTokens {
+export function isPluralToken(token: string): token is PluralLocalizerTokens {
   return token in pluralsDictionary;
 }
 
@@ -72,7 +73,16 @@ type TokenWithArgs<Dict> = {
 
 type MergedTokenWithArgs = TokenWithArgs<SimpleDictionary> | TokenWithArgs<PluralDictionary>;
 
+export function isTokenWithArgs(token: string): token is MergedTokenWithArgs {
+  return (
+    (isSimpleToken(token) && !isEmptyObject(simpleDictionary[token]?.args)) ||
+    (isPluralToken(token) && !isEmptyObject(pluralsDictionary[token]?.args))
+  );
+}
+
 type DynamicArgStr = 'string' | 'number';
+
+export type LocalizerDictionary = SimpleDictionary;
 
 type ArgsTypeStrToTypes<T extends DynamicArgStr> = T extends 'string'
   ? string
@@ -118,15 +128,85 @@ type MappedToTsTypes<T extends Record<string, DynamicArgStr>> = {
   [K in keyof T]: ArgsTypeStrToTypes<T[K]>;
 };
 
-export function tStrippedWithObj<T extends MergedLocalizerTokens>(
+function propsToTuple<T extends MergedLocalizerTokens>(
   opts: LocalizerComponentProps<T, string>
-): string {
-  const builder = new LocalizedStringBuilder<T>(opts.token as unknown as T, localeInUse).strip();
-  if (opts.args) {
-    builder.withArgs(opts.args as unknown as ArgsFromToken<T>);
-  }
-  return builder.toString();
+): GetMessageArgs<T> {
+  return (
+    isTokenWithArgs(opts.token) ? [opts.token, opts.args] : [opts.token]
+  ) as GetMessageArgs<T>;
 }
+
+/** NOTE: Because of docstring limitations changes MUST be manually synced between {@link setupI18n.inEnglish } and {@link window.i18n.inEnglish } */
+/**
+ * Retrieves a message string in the {@link en} locale, substituting variables where necessary.
+ *
+ * NOTE: This does not work for plural strings. This function should only be used for debug and
+ * non-user-facing strings. Plural string support can be added splitting out the logic for
+ * {@link setupI18n.formatMessageWithArgs} and creating a new getMessageFromDictionary, which
+ * specifies takes a dictionary as an argument. This is left as an exercise for the reader.
+ * @deprecated this will eventually be replaced by LocalizedStringBuilder
+ *
+ * @param token - The token identifying the message to retrieve.
+ * @param args - An optional record of substitution variables and their replacement values. This is required if the string has dynamic variables.
+ */
+export const inEnglish: I18nMethods['inEnglish'] = token => {
+  if (!isSimpleToken(token)) {
+    throw new Error('inEnglish only supports simple strings for now');
+  }
+  const rawMessage = simpleDictionary[token].en;
+
+  if (!rawMessage) {
+    log(`Attempted to get forced en string for nonexistent key: '${token}' in fallback dictionary`);
+    return token;
+  }
+  return formatMessageWithArgs(rawMessage);
+};
+
+/**
+ * Retrieves a localized message string, substituting variables where necessary.
+ *
+ * @param token - The token identifying the message to retrieve.
+ * @param args - An optional record of substitution variables and their replacement values. This is required if the string has dynamic variables.
+ *
+ * @returns The localized message string with substitutions applied.
+ */
+export function getMessageDefault<T extends MergedLocalizerTokens>(
+  ...props: GetMessageArgs<T>
+): string {
+  const token = props[0];
+  try {
+    return localizeFromOld(props[0], props[1] as ArgsFromToken<T>).toString();
+  } catch (error) {
+    log(error.message);
+    return token;
+  }
+}
+
+/**
+ * Retrieves a localized message string, substituting variables where necessary. Then strips the message of any HTML and custom tags.
+ *
+ * @deprecated This will eventually be replaced altogether by LocalizedStringBuilder
+ *
+ * @param token - The token identifying the message to retrieve.
+ * @param args - An optional record of substitution variables and their replacement values. This is required if the string has dynamic variables.
+ *
+ * @returns The localized message string with substitutions applied. Any HTML and custom tags are removed.
+ */
+export const stripped: I18nMethods['stripped'] = (...[token, args]) => {
+  const sanitizedArgs = args ? sanitizeArgs(args, '\u200B') : undefined;
+
+  // Note: the `as any` is needed because we don't have the <T> template argument available
+  // when enforcing the type of the stripped function to be the one defined by I18nMethods
+  const i18nString = getMessageDefault(...([token, sanitizedArgs] as GetMessageArgs<any>));
+
+  const strippedString = i18nString.replaceAll(/<[^>]*>/g, '');
+
+  return deSanitizeHtmlTags(strippedString, '\u200B');
+};
+
+export const strippedWithObj: I18nMethods['strippedWithObj'] = opts => {
+  return stripped(...propsToTuple(opts));
+};
 
 /**
  * Sanitizes the args to be used in the i18n function
@@ -157,17 +237,14 @@ export function sanitizeArgs(
  * @deprecated
  *
  */
-export function formatMessageWithArgs<T extends MergedLocalizerTokens>(
-  rawMessage: string,
-  args?: ArgsFromToken<T>
-): string | T {
+export const formatMessageWithArgs: I18nMethods['formatMessageWithArgs'] = (rawMessage, args) => {
   /** Find and replace the dynamic variables in a localized string and substitute the variables with the provided values */
   return rawMessage.replace(/\{(\w+)\}/g, (match: any, arg: string) => {
     const matchedArg = args ? args[arg as keyof typeof args] : undefined;
 
     return matchedArg?.toString() ?? match;
   });
-}
+};
 
 /**
  * Retrieves a localized message string, without substituting any variables. This resolves any plural forms using the given args
@@ -178,10 +255,7 @@ export function formatMessageWithArgs<T extends MergedLocalizerTokens>(
  *
  * NOTE: This is intended to be used to get the raw string then format it with {@link formatMessageWithArgs}
  */
-export function getRawMessage<T extends MergedLocalizerTokens>(
-  crowdinLocale: CrowdinLocale,
-  ...[token, args]: GetMessageArgs<T>
-): string | T {
+export const getRawMessage: I18nMethods['getRawMessage'] = (crowdinLocale, ...[token, args]) => {
   try {
     if (
       typeof window !== 'undefined' &&
@@ -225,7 +299,7 @@ export function getRawMessage<T extends MergedLocalizerTokens>(
     log(error.message);
     return token;
   }
-}
+};
 
 function getStringForRule({
   dictionary,
@@ -275,8 +349,6 @@ function deSanitizeHtmlTags(str: string, identifier: string): string {
     .replace(new RegExp(`${identifier}&lt;${identifier}`, 'g'), '<')
     .replace(new RegExp(`${identifier}&gt;${identifier}`, 'g'), '>');
 }
-
-const pluralKey = 'count' as const;
 
 class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends String {
   private readonly token: T;
@@ -365,6 +437,8 @@ class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends String {
   }
 
   private resolvePluralString(): string {
+    const pluralKey = 'count' as const;
+
     let num: number | string | undefined = this.args?.[pluralKey as keyof ArgsFromToken<T>];
 
     if (num === undefined) {
@@ -420,54 +494,27 @@ class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends String {
       }
     }
 
-    return pluralString;
+    return pluralString.replaceAll('#', `${num}`);
   }
 
   private formatStringWithArgs(str: string): string {
     /** Find and replace the dynamic variables in a localized string and substitute the variables with the provided values */
     return str.replace(/\{(\w+)\}/g, (match, arg: string) => {
-      const matchedArg = this.args ? this.args[arg as keyof ArgsFromToken<T>] : undefined;
+      const matchedArg = this.args
+        ? this.args[arg as keyof ArgsFromToken<T>]?.toString()
+        : undefined;
 
-      if (arg === pluralKey && typeof matchedArg === 'number' && Number.isFinite(matchedArg)) {
-        return new Intl.NumberFormat(this.crowdinLocale).format(matchedArg);
-      }
-
-      return matchedArg?.toString() ?? match;
+      return matchedArg ?? match;
     });
   }
 }
 
-export function tr<T extends MergedLocalizerTokens>(
-  token: T,
-  ...args: ArgsFromToken<T> extends never ? [] : [args: ArgsFromToken<T>]
-): string {
-  const builder = new LocalizedStringBuilder<T>(token, localeInUse);
-  if (args.length) {
-    builder.withArgs(args[0]);
-  }
-  return builder.toString();
+export function localize<T extends MergedLocalizerTokens>(token: T) {
+  return new LocalizedStringBuilder<T>(token, localeInUse);
 }
 
-export function tEnglish<T extends MergedLocalizerTokens>(
-  token: T,
-  ...args: ArgsFromToken<T> extends never ? [] : [args: ArgsFromToken<T>]
-): string {
-  const builder = new LocalizedStringBuilder<T>(token, localeInUse).forceEnglish();
-  if (args.length) {
-    builder.withArgs(args[0]);
-  }
-  return builder.toString();
-}
-
-export function tStripped<T extends MergedLocalizerTokens>(
-  token: T,
-  ...args: ArgsFromToken<T> extends never ? [] : [args: ArgsFromToken<T>]
-): string {
-  const builder = new LocalizedStringBuilder<T>(token, localeInUse).strip();
-  if (args.length) {
-    builder.withArgs(args[0]);
-  }
-  return builder.toString();
+export function localizeFromOld<T extends MergedLocalizerTokens>(token: T, args: ArgsFromToken<T>) {
+  return localize(token).withArgs(args);
 }
 
 export type LocalizerHtmlTag = 'span' | 'div';

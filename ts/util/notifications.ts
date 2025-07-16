@@ -11,7 +11,6 @@ import {
   isSessionFeatureFlag,
   type SessionFeatureFlagKeys,
 } from '../state/ducks/types/releasedFeaturesReduxTypes';
-import { tr } from '../localization/localeTools';
 
 function filter(text?: string) {
   return (text || '')
@@ -146,7 +145,7 @@ function getNotificationDetails(
   // distinguishing between zero (0) and other (non-zero),
   // e.g. Russian:
   // http://docs.translatehouse.org/projects/localization-guide/en/latest/l10n/pluralforms.html
-  const newMessageCountLabel = tr('messageNew', { count: messagesNotificationCount });
+  const newMessageCountLabel = window.i18n('messageNew', { count: messagesNotificationCount });
 
   const lastNotification = last(currentNotifications);
 
@@ -155,7 +154,7 @@ function getNotificationDetails(
   }
   const lastNotificationTitle = lastNotification.title;
   const lastNotificationMessage = lastNotification.message;
-  const mostRecentFrom = tr('notificationsMostRecent', { name: lastNotificationTitle });
+  const mostRecentFrom = window.i18n('notificationsMostRecent', { name: lastNotificationTitle });
 
   // if the last message is an expiring one, fallback to the COUNT only option so we don't leak the message in the notification status
   // on macos.
@@ -169,7 +168,7 @@ function getNotificationDetails(
         iconUrl: lastNotification.iconUrl,
         message:
           messagesNotificationCount === 1
-            ? `${tr('from')} ${lastNotificationTitle}`
+            ? `${window.i18n('from')} ${lastNotificationTitle}`
             : mostRecentFrom,
       };
     }

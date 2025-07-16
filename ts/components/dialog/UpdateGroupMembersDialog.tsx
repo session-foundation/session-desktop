@@ -29,7 +29,7 @@ import {
 import { useSelectedIsGroupV2 } from '../../state/selectors/selectedConversation';
 import { SessionSpinner } from '../loading';
 import { SessionToggle } from '../basic/SessionToggle';
-import { tr } from '../../localization/localeTools';
+import { localize } from '../../localization/localeTools';
 import { SessionSearchInput } from '../SessionSearchInput';
 import { NoGroupMembers } from '../search/NoResults';
 import { useContactsToInviteTo } from '../../hooks/useContactsToInviteToGroup';
@@ -190,7 +190,9 @@ export const UpdateGroupMembersDialog = (props: Props) => {
   return (
     <SessionWrapperModal
       headerChildren={
-        <ModalBasicHeader title={tr(weAreAdmin ? 'manageMembers' : 'groupMembers')} />
+        <ModalBasicHeader
+          title={localize(weAreAdmin ? 'manageMembers' : 'groupMembers').toString()}
+        />
       }
       onClose={closeDialog}
       $contentMinWidth={WrapperModalWidth.wide}
@@ -199,7 +201,7 @@ export const UpdateGroupMembersDialog = (props: Props) => {
         <ModalActionsContainer>
           {weAreAdmin && (
             <SessionButton
-              text={tr('remove')}
+              text={window.i18n('remove')}
               onClick={onClickOK}
               buttonType={SessionButtonType.Simple}
               buttonColor={SessionButtonColor.Danger}
@@ -208,7 +210,7 @@ export const UpdateGroupMembersDialog = (props: Props) => {
             />
           )}
           <SessionButton
-            text={tr('cancel')}
+            text={window.i18n('cancel')}
             buttonType={SessionButtonType.Simple}
             onClick={closeDialog}
             disabled={isProcessingUIChange}

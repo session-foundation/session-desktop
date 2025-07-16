@@ -11,7 +11,7 @@ import { type LocalizerProps } from '../../basic/Localizer';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../../basic/SessionButton';
 import { ModalDescription } from '../shared/ModalDescriptionContainer';
 import { BlockOrUnblockModalState } from './BlockOrUnblockModalState';
-import { tr } from '../../../localization/localeTools';
+import { localize } from '../../../localization/localeTools';
 import {
   ModalBasicHeader,
   ModalActionsContainer,
@@ -58,7 +58,8 @@ function useBlockUnblockI18nDescriptionArgs({
 export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullable<ModalState>) => {
   const dispatch = useDispatch();
 
-  const localizedAction = action === 'block' ? tr('block') : tr('blockUnblock');
+  const localizedAction =
+    action === 'block' ? localize('block').toString() : localize('blockUnblock').toString();
 
   const args = useBlockUnblockI18nDescriptionArgs({ action, pubkeys });
 
@@ -106,7 +107,7 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
           <SessionButton
             buttonType={SessionButtonType.Simple}
             onClick={closeModal}
-            text={tr('cancel')}
+            text={localize('cancel').toString()}
             dataTestId="session-confirm-cancel-button"
           />
         </ModalActionsContainer>

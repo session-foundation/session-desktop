@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { SettingsViewProps } from './SessionSettings';
-import { tr, type MergedLocalizerTokens } from '../../localization/localeTools';
+import { localize, type MergedLocalizerTokens } from '../../localization/localeTools';
 
 type Props = Pick<SettingsViewProps, 'category'>;
 
@@ -60,7 +60,9 @@ export const SettingsHeader = (props: Props) => {
 
   return (
     <StyledSettingsHeader>
-      <StyledHeaderTittle>{categoryTitleKey ? tr(categoryTitleKey) : null}</StyledHeaderTittle>
+      <StyledHeaderTittle>
+        {categoryTitleKey ? localize(categoryTitleKey) : null}
+      </StyledHeaderTittle>
     </StyledSettingsHeader>
   );
 };

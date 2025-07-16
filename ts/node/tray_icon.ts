@@ -1,15 +1,18 @@
 import path from 'path';
 
 import { app, type BrowserWindow, Menu, Tray } from 'electron';
+import type { SetupI18nReturnType } from '../types/localizer';
 import { getAppRootPath } from './getRootPath';
 import { LOCALE_DEFAULTS } from '../localization/constants';
-import { tr } from '../localization/localeTools';
 
 let trayContextMenu = null;
 let tray: Tray | null = null;
 let trayAny: any;
 
-export function createTrayIcon(getMainWindow: () => BrowserWindow | null) {
+export function createTrayIcon(
+  getMainWindow: () => BrowserWindow | null,
+  i18n: SetupI18nReturnType
+) {
   // keep the duplicated part to allow for search and find
   const iconFile = process.platform === 'darwin' ? 'session_icon_16.png' : 'session_icon_32.png';
   const iconNoNewMessages = path.join(getAppRootPath(), 'images', 'session', iconFile);
@@ -62,12 +65,12 @@ export function createTrayIcon(getMainWindow: () => BrowserWindow | null) {
     trayContextMenu = Menu.buildFromTemplate([
       {
         id: 'toggleWindowVisibility',
-        label: mainWindow?.isVisible() ? tr('hide') : tr('show'),
+        label: mainWindow?.isVisible() ? i18n('hide') : i18n('show'),
         click: trayAny.toggleWindowVisibility,
       },
       {
         id: 'quit',
-        label: tr('quit'),
+        label: i18n('quit'),
         click: app.quit.bind(app),
       },
     ]);

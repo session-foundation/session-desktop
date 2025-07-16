@@ -9,7 +9,7 @@ import { callTimeoutMs } from '../../session/utils/calling/CallManager';
 import { getHasIncomingCall, getHasIncomingCallFrom } from '../../state/selectors/call';
 import { Avatar, AvatarSize } from '../avatar/Avatar';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
-import { tr } from '../../localization/localeTools';
+import { localize } from '../../localization/localeTools';
 import {
   ModalBasicHeader,
   ModalActionsContainer,
@@ -83,18 +83,24 @@ export const IncomingCallDialog = () => {
     return (
       <SessionWrapperModal
         headerChildren={
-          <ModalBasicHeader title={tr('callsIncoming', { name: from ?? tr('unknown') })} />
+          <ModalBasicHeader
+            title={localize('callsIncoming')
+              .withArgs({
+                name: from ?? localize('unknown').toString(),
+              })
+              .toString()}
+          />
         }
         buttonChildren={
           <ModalActionsContainer>
             <SessionButton
-              text={tr('accept')}
+              text={localize('accept').toString()}
               buttonType={SessionButtonType.Simple}
               onClick={handleAcceptIncomingCall}
               buttonColor={SessionButtonColor.Danger}
             />
             <SessionButton
-              text={tr('decline')}
+              text={localize('decline').toString()}
               buttonType={SessionButtonType.Simple}
               onClick={handleDeclineIncomingCall}
             />

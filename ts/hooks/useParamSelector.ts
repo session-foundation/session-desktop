@@ -27,7 +27,7 @@ import {
   useLibGroupKicked,
 } from '../state/selectors/userGroups';
 import { ConversationInteractionStatus, ConversationInteractionType } from '../interactions/types';
-import { tr } from '../localization/localeTools';
+import { localize } from '../localization/localeTools';
 
 export function useAvatarPath(convoId: string | undefined) {
   const convoProps = useConversationPropsById(convoId);
@@ -68,7 +68,7 @@ export function useNicknameOrProfileNameOrShortenedPubkey(convoId?: string) {
     convoProps?.nickname ||
     convoProps?.displayNameInProfile ||
     (convoId && PubKey.shorten(convoId)) ||
-    tr('unknown')
+    window.i18n('unknown')
   );
 }
 
@@ -92,7 +92,7 @@ export function useConversationRealName(convoId?: string) {
 
 function usernameForQuoteOrFullPk(pubkey: string, state: StateType) {
   if (pubkey === UserUtils.getOurPubKeyStrFromCache() || pubkey.toLowerCase() === 'you') {
-    return tr('you');
+    return window.i18n('you');
   }
   // use the name from the cached libsession wrappers if available
   if (PubKey.is03Pubkey(pubkey)) {
@@ -130,7 +130,7 @@ export function useConversationsNicknameRealNameOrShortenPubkey(pubkeys: Array<s
   return useSelector((state: StateType) => {
     return pubkeys.map(pk => {
       if (pk === UserUtils.getOurPubKeyStrFromCache() || pk.toLowerCase() === 'you') {
-        return tr('you');
+        return window.i18n('you');
       }
       const convo = state.conversations.conversationLookup[pk];
 
@@ -469,7 +469,7 @@ export function useQuoteAuthorName(authorId?: string): {
 
   const isMe = Boolean(authorId && isUsAnySogsFromCache(authorId));
   const authorName = isMe
-    ? tr('you')
+    ? window.i18n('you')
     : convoProps?.nickname || convoProps?.isPrivate
       ? convoProps?.displayNameInProfile
       : undefined;
@@ -513,7 +513,7 @@ export function useSortedGroupMembers(convoId: string | undefined): Array<Pubkey
 export function useDisappearingMessageSettingText({ convoId }: { convoId?: string }) {
   const convoProps = useConversationPropsById(convoId);
 
-  const offReturn = { id: 'off', label: tr('off') };
+  const offReturn = { id: 'off', label: localize('off').toString() };
   if (!convoProps) {
     return offReturn;
   }
@@ -529,12 +529,16 @@ export function useDisappearingMessageSettingText({ convoId }: { convoId?: strin
   return expirationMode === 'deleteAfterRead'
     ? {
         id: expirationMode,
-        label: tr('disappearingMessagesDisappearAfterReadState', { time: expireTimerText }),
+        label: localize('disappearingMessagesDisappearAfterReadState')
+          .withArgs({ time: expireTimerText })
+          .toString(),
       }
     : expirationMode === 'deleteAfterSend'
       ? {
           id: expirationMode,
-          label: tr('disappearingMessagesDisappearAfterSendState', { time: expireTimerText }),
+          label: localize('disappearingMessagesDisappearAfterSendState')
+            .withArgs({ time: expireTimerText })
+            .toString(),
         }
       : offReturn;
 }

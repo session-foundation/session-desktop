@@ -28,6 +28,7 @@ const StyledRightPanel = styled(Flex)`
   &-item + &-item {
     border-top: none;
   }
+
 `;
 
 const ClosableOverlay = () => {

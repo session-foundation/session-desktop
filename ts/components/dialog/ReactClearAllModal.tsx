@@ -11,9 +11,9 @@ import {
   ModalActionsContainer,
   SessionWrapperModal,
 } from '../SessionWrapperModal';
+import { localize } from '../../localization/localeTools';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
 import { ModalFlexContainer } from './shared/ModalFlexContainer';
-import { tr } from '../../localization/localeTools';
 
 type Props = {
   reaction: string;
@@ -53,18 +53,18 @@ export const ReactClearAllModal = (props: Props) => {
   return (
     <SessionWrapperModal
       onClose={handleClose}
-      headerChildren={<ModalBasicHeader title={tr('clearAll')} />}
+      headerChildren={<ModalBasicHeader title={localize('clearAll').toString()} />}
       buttonChildren={
         <ModalActionsContainer>
           <SessionButton
-            text={tr('clear')}
+            text={localize('clear').toString()}
             buttonColor={SessionButtonColor.Danger}
             buttonType={SessionButtonType.Simple}
             onClick={handleClearAll}
             disabled={clearingInProgress}
           />
           <SessionButton
-            text={tr('cancel')}
+            text={localize('cancel').toString()}
             buttonType={SessionButtonType.Simple}
             onClick={handleClose}
             disabled={clearingInProgress}

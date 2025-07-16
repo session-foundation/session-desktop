@@ -1,6 +1,6 @@
 import { useDispatch } from 'react-redux';
 import { useIsHidden, useIsMe } from '../../hooks/useParamSelector';
-import { tr } from '../../localization/localeTools';
+import { localize } from '../../localization/localeTools';
 import { ConvoHub } from '../../session/conversations';
 import { updateConfirmModal } from '../../state/ducks/modalDialog';
 import { SessionButtonColor } from '../basic/SessionButton';
@@ -20,7 +20,7 @@ export function useHideNoteToSelfCb({ conversationId }: { conversationId: string
     return null;
   }
 
-  const menuItemText = tr('noteToSelfHide');
+  const menuItemText = localize('noteToSelfHide').toString();
 
   const onClickClose = () => {
     dispatch(updateConfirmModal(null));
@@ -41,7 +41,7 @@ export function useHideNoteToSelfCb({ conversationId }: { conversationId: string
           });
           // Note: We don't want to close the modal for the hide NTS action.
         },
-        okText: tr('hide'),
+        okText: localize('hide').toString(),
       })
     );
   };

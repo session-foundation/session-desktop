@@ -14,7 +14,7 @@ import { sectionActions } from '../../../state/ducks/section';
 import { LucideIcon } from '../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { SessionIDNonEditable } from '../../basic/YourSessionIDPill';
-import { tr } from '../../../localization/localeTools';
+import { localize } from '../../../localization/localeTools';
 
 const StyledHeadingContainer = styled(Flex)`
   .session-icon-button {
@@ -81,7 +81,7 @@ export const OverlayInvite = () => {
             <SessionIDNonEditable dataTestId="your-account-id" sessionId={ourSessionID} />
           </Flex>
           <SpacerMD />
-          <StyledDescription>{tr('accountIdCopyDescription')}</StyledDescription>
+          <StyledDescription>{localize('accountIdCopyDescription').toString()}</StyledDescription>
           <SpacerLG />
           <StyledButtonerContainer>
             <CopyToClipboardButton
@@ -102,7 +102,7 @@ export const OverlayInvite = () => {
           />
           <SpacerMD />
           <StyledHeadingContainer $container={true} $justifyContent="center" $alignItems="center">
-            <StyledHeading>{tr('accountIdCopied')}</StyledHeading>
+            <StyledHeading>{localize('accountIdCopied').toString()}</StyledHeading>
             <HelpDeskButton
               style={{ display: 'inline-flex' }}
               iconSize="small"
@@ -110,7 +110,9 @@ export const OverlayInvite = () => {
             />
           </StyledHeadingContainer>
           <SpacerSM />
-          <StyledDescription>{tr('shareAccountIdDescriptionCopied')}</StyledDescription>
+          <StyledDescription>
+            {localize('shareAccountIdDescriptionCopied').toString()}
+          </StyledDescription>
         </>
       )}
     </StyledLeftPaneOverlay>

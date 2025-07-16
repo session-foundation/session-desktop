@@ -12,7 +12,6 @@ import {
   SessionSettingsItemWrapper,
   SessionToggleWithDescription,
 } from '../SessionSettingListItem';
-import { tr } from '../../../localization/localeTools';
 
 async function toggleCommunitiesPruning() {
   try {
@@ -39,8 +38,8 @@ const CommunitiesPruningSetting = () => {
         await toggleCommunitiesPruning();
         forceUpdate();
       }}
-      title={tr('conversationsMessageTrimmingTrimCommunities')}
-      description={tr('conversationsMessageTrimmingTrimCommunitiesDescription')}
+      title={window.i18n('conversationsMessageTrimmingTrimCommunities')}
+      description={window.i18n('conversationsMessageTrimmingTrimCommunitiesDescription')}
       active={isOpengroupPruningEnabled}
     />
   );
@@ -59,8 +58,8 @@ const SpellCheckSetting = () => {
         window.toggleSpellCheck();
         forceUpdate();
       }}
-      title={tr('conversationsSpellCheck')}
-      description={tr('conversationsSpellCheckDescription')}
+      title={window.i18n('conversationsSpellCheck')}
+      description={window.i18n('conversationsSpellCheckDescription')}
       active={isSpellCheckActive}
     />
   );
@@ -77,8 +76,8 @@ const AudioMessageAutoPlaySetting = () => {
         dispatch(toggleAudioAutoplay());
         forceUpdate();
       }}
-      title={tr('conversationsAutoplayAudioMessage')}
-      description={tr('conversationsAutoplayAudioMessageDescription')}
+      title={window.i18n('conversationsAutoplayAudioMessage')}
+      description={window.i18n('conversationsAutoplayAudioMessageDescription')}
       active={audioAutoPlay}
     />
   );
@@ -90,13 +89,13 @@ const EnterKeyFunctionSetting = () => {
 
   const items: SessionRadioItems = [
     {
-      label: tr('conversationsEnterSends'),
+      label: window.i18n('conversationsEnterSends'),
       value: 'enterForSend',
       inputDataTestId: 'input-enterForSend',
       labelDataTestId: 'label-enterForSend',
     },
     {
-      label: tr('conversationsEnterNewLine'),
+      label: window.i18n('conversationsEnterNewLine'),
       value: selectedWithSettingTrue,
       inputDataTestId: `input-${selectedWithSettingTrue}`,
       labelDataTestId: `label-${selectedWithSettingTrue}`,
@@ -105,8 +104,8 @@ const EnterKeyFunctionSetting = () => {
 
   return (
     <SessionSettingsItemWrapper
-      title={tr('conversationsEnter')}
-      description={tr('conversationsEnterDescription')}
+      title={window.i18n('conversationsEnter')}
+      description={window.i18n('conversationsEnterDescription')}
       inline={false}
     >
       <SessionRadioGroup

@@ -9,7 +9,6 @@ import { SessionButton, SessionButtonColor } from '../basic/SessionButton';
 import { SessionRadioGroup, SessionRadioItems } from '../basic/SessionRadioGroup';
 import { SpacerLG } from '../basic/Text';
 import { SessionSettingsItemWrapper, SessionToggleWithDescription } from './SessionSettingListItem';
-import { tr } from '../../localization/localeTools';
 
 const NotificationType = { message: 'message', name: 'name', count: 'count', off: 'off' } as const;
 
@@ -34,12 +33,12 @@ export const SessionNotificationGroupSettings = () => {
 
   const options = [
     {
-      label: tr('notificationsContentShowNameAndContent'),
+      label: window.i18n('notificationsContentShowNameAndContent'),
       value: NotificationType.message,
     },
-    { label: tr('notificationsContentShowNameOnly'), value: NotificationType.name },
+    { label: window.i18n('notificationsContentShowNameOnly'), value: NotificationType.name },
     {
-      label: tr('notificationsContentShowNoNameOrContent'),
+      label: window.i18n('notificationsContentShowNoNameOrContent'),
       value: NotificationType.count,
     },
   ] as const;
@@ -58,7 +57,7 @@ export const SessionNotificationGroupSettings = () => {
     Notifications.addPreviewNotification({
       conversationId: `preview-notification-${Date.now()}`,
       message: items.find(m => m.value === initialNotificationEnabled)?.label || 'Message body',
-      title: tr('preview'),
+      title: window.i18n('preview'),
       isExpiringMessage: false,
     });
   };
@@ -73,7 +72,7 @@ export const SessionNotificationGroupSettings = () => {
           );
           forceUpdate();
         }}
-        title={tr('sessionNotifications')}
+        title={window.i18n('sessionNotifications')}
         active={notificationsAreEnabled}
       />
       {notificationsAreEnabled && isAudioNotificationSupported() && (
@@ -85,14 +84,14 @@ export const SessionNotificationGroupSettings = () => {
             );
             forceUpdate();
           }}
-          title={tr('notificationsSoundDesktop')}
+          title={window.i18n('notificationsSoundDesktop')}
           active={initialAudioNotificationEnabled}
         />
       )}
       {notificationsAreEnabled ? (
         <SessionSettingsItemWrapper
-          title={tr('notificationsContent')}
-          description={tr('notificationsContentDescription')}
+          title={window.i18n('notificationsContent')}
+          description={window.i18n('notificationsContentDescription')}
           inline={false}
         >
           <SessionRadioGroup
@@ -108,7 +107,7 @@ export const SessionNotificationGroupSettings = () => {
           <StyledButtonContainer>
             <SpacerLG />
             <SessionButton
-              text={tr('preview')}
+              text={window.i18n('preview')}
               onClick={onClickPreview}
               buttonColor={SessionButtonColor.PrimaryDark}
             />

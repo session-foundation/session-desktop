@@ -7,7 +7,7 @@ import {
   ModalActionsContainer,
   SessionWrapperModal,
 } from '../SessionWrapperModal';
-import { tr } from '../../localization/localeTools';
+import { localize } from '../../localization/localeTools';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
 import { ModalFlexContainer } from './shared/ModalFlexContainer';
 
@@ -30,13 +30,15 @@ export function TermsOfServicePrivacyDialog(props: TermsOfServicePrivacyDialogPr
 
   return (
     <SessionWrapperModal
-      headerChildren={<ModalBasicHeader title={tr('urlOpen')} showExitIcon={true} />}
+      headerChildren={
+        <ModalBasicHeader title={localize('urlOpen').toString()} showExitIcon={true} />
+      }
       onClose={onClose}
       buttonChildren={
         <ModalActionsContainer>
           <SessionButton
             ariaLabel={'Terms of service button'}
-            text={tr('onboardingTos')}
+            text={localize('onboardingTos').toString()}
             buttonType={SessionButtonType.Simple}
             onClick={() => {
               void shell.openExternal('https://getsession.org/terms-of-service');
@@ -45,7 +47,7 @@ export function TermsOfServicePrivacyDialog(props: TermsOfServicePrivacyDialogPr
           />
           <SessionButton
             ariaLabel={'Privacy policy button'}
-            text={tr('onboardingPrivacy')}
+            text={localize('onboardingPrivacy').toString()}
             buttonType={SessionButtonType.Simple}
             onClick={() => {
               void shell.openExternal('https://getsession.org/privacy-policy');

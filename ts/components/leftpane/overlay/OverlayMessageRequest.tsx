@@ -11,7 +11,7 @@ import { ConversationListItem } from '../conversation-list-item/ConversationList
 import { ed25519Str } from '../../../session/utils/String';
 import { Localizer } from '../../basic/Localizer';
 import { sectionActions } from '../../../state/ducks/section';
-import { tr } from '../../../localization/localeTools';
+import { localize } from '../../../localization/localeTools';
 
 const MessageRequestListPlaceholder = styled.div`
   color: var(--conversation-tab-text-color);
@@ -51,7 +51,7 @@ export const OverlayMessageRequest = () => {
   const messageRequests = useSelector(getConversationRequestsIds);
   const hasRequests = messageRequests.length;
 
-  const buttonText = tr('clearAll');
+  const buttonText = window.i18n('clearAll');
 
   /**
    * Blocks all message request conversations and synchronizes across linked devices
@@ -60,10 +60,10 @@ export const OverlayMessageRequest = () => {
   function handleClearAllRequestsClick() {
     dispatch(
       updateConfirmModal({
-        title: tr('clearAll'),
+        title: localize('clearAll').toString(),
         i18nMessage: { token: 'messageRequestsClearAllExplanation' },
         okTheme: SessionButtonColor.Danger,
-        okText: tr('clear'),
+        okText: window.i18n('clear'),
         onClickOk: async () => {
           window?.log?.info('Blocking all message requests');
           if (!hasRequests) {

@@ -93,7 +93,6 @@ import { getTimerNotificationStr } from './timerNotifications';
 import { ExpirationTimerUpdate } from '../session/disappearing_messages/types';
 import { Model } from './models';
 import { ReduxOnionSelectors } from '../state/selectors/onions';
-import { tStrippedWithObj, tr, tStripped } from '../localization/localeTools';
 
 // tslint:disable: cyclomatic-complexity
 
@@ -243,23 +242,23 @@ export class MessageModel extends Model<MessageAttributes> {
     if (groupUpdate) {
       const isGroupV2 = PubKey.is03Pubkey(this.get('conversationId'));
       const groupName =
-        this.getConversation()?.getNicknameOrRealUsernameOrPlaceholder() || tr('unknown');
+        this.getConversation()?.getNicknameOrRealUsernameOrPlaceholder() || window.i18n('unknown');
 
       if (groupUpdate.left) {
-        return tStrippedWithObj(getLeftGroupUpdateChangeStr(groupUpdate.left));
+        return window.i18n.strippedWithObj(getLeftGroupUpdateChangeStr(groupUpdate.left));
       }
 
       if (groupUpdate.name) {
-        return tStrippedWithObj(getGroupNameChangeStr(groupUpdate.name));
+        return window.i18n.strippedWithObj(getGroupNameChangeStr(groupUpdate.name));
       }
 
       if (groupUpdate.avatarChange) {
-        return tStrippedWithObj(getGroupDisplayPictureChangeStr());
+        return window.i18n.strippedWithObj(getGroupDisplayPictureChangeStr());
       }
 
       if (groupUpdate.joined?.length) {
         const opts = getJoinedGroupUpdateChangeStr(groupUpdate.joined, isGroupV2, false, groupName);
-        return tStrippedWithObj(opts);
+        return window.i18n.strippedWithObj(opts);
       }
 
       if (groupUpdate.joinedWithHistory?.length) {
@@ -269,24 +268,24 @@ export class MessageModel extends Model<MessageAttributes> {
           true,
           groupName
         );
-        return tStrippedWithObj(opts);
+        return window.i18n.strippedWithObj(opts);
       }
 
       if (groupUpdate.kicked?.length) {
         const opts = getKickedGroupUpdateStr(groupUpdate.kicked, groupName);
-        return tStrippedWithObj(opts);
+        return window.i18n.strippedWithObj(opts);
       }
       if (groupUpdate.promoted?.length) {
         const opts = getPromotedGroupUpdateChangeStr(groupUpdate.promoted);
-        return tStrippedWithObj(opts);
+        return window.i18n.strippedWithObj(opts);
       }
       window.log.warn('did not build a specific change for getDescription of ', groupUpdate);
 
-      return tStripped('groupUpdated');
+      return window.i18n.stripped('groupUpdated');
     }
 
     if (this.isCommunityInvitation()) {
-      return `😎 ${tStripped('communityInvitation')}`;
+      return `😎 ${window.i18n.stripped('communityInvitation')}`;
     }
 
     if (this.isDataExtractionNotification()) {
@@ -296,7 +295,7 @@ export class MessageModel extends Model<MessageAttributes> {
       const authorName = ConvoHub.use().getNicknameOrRealUsernameOrPlaceholder(this.get('source'));
       const isScreenshot =
         dataExtraction.type === SignalService.DataExtractionNotification.Type.SCREENSHOT;
-      return tStripped(isScreenshot ? 'screenshotTaken' : 'attachmentsMediaSaved', {
+      return window.i18n.stripped(isScreenshot ? 'screenshotTaken' : 'attachmentsMediaSaved', {
         name: authorName,
       });
     }
@@ -306,13 +305,13 @@ export class MessageModel extends Model<MessageAttributes> {
       );
       const callNotificationType = this.get('callNotificationType');
       if (callNotificationType === 'missed-call') {
-        return tStripped('callsMissedCallFrom', { name });
+        return window.i18n.stripped('callsMissedCallFrom', { name });
       }
       if (callNotificationType === 'started-call') {
-        return tStripped('callsYouCalled', { name });
+        return window.i18n.stripped('callsYouCalled', { name });
       }
       if (callNotificationType === 'answered-a-call') {
-        return tStripped('callsInProgress');
+        return window.i18n.stripped('callsInProgress');
       }
     }
 
@@ -334,11 +333,11 @@ export class MessageModel extends Model<MessageAttributes> {
               return '';
             case ConversationInteractionType.Leave:
               return isCommunity
-                ? tStripped('communityLeaveError', {
+                ? window.i18n.stripped('communityLeaveError', {
                     community_name: convo.getNicknameOrRealUsernameOrPlaceholder(),
                   })
                 : isGroup
-                  ? tStripped('groupLeaveErrorFailed', {
+                  ? window.i18n.stripped('groupLeaveErrorFailed', {
                       group_name: convo.getNicknameOrRealUsernameOrPlaceholder(),
                     })
                   : '';
@@ -355,7 +354,7 @@ export class MessageModel extends Model<MessageAttributes> {
     if (this.get('reaction')) {
       const reaction = this.get('reaction');
       if (reaction && reaction.emoji && reaction.emoji !== '') {
-        return tStripped('emojiReactsNotification', { emoji: reaction.emoji });
+        return window.i18n.stripped('emojiReactsNotification', { emoji: reaction.emoji });
       }
     }
     if (this.isExpirationTimerUpdate()) {
@@ -381,7 +380,7 @@ export class MessageModel extends Model<MessageAttributes> {
         timespanSeconds: expireTimer,
       });
 
-      return tStrippedWithObj(i18nProps);
+      return window.i18n.strippedWithObj(i18nProps);
     }
     const body = this.get('body');
     if (body) {
@@ -396,7 +395,7 @@ export class MessageModel extends Model<MessageAttributes> {
         if (isUS) {
           bodyMentionsMappedToNames = bodyMentionsMappedToNames?.replace(
             pubkeyWithAt,
-            `@${tr('you')}`
+            `@${window.i18n('you')}`
           );
         } else if (displayName && displayName.length) {
           bodyMentionsMappedToNames = bodyMentionsMappedToNames?.replace(
@@ -410,7 +409,7 @@ export class MessageModel extends Model<MessageAttributes> {
 
     // Note: we want this after the check for a body as we want to display the body if we have one.
     if ((this.get('attachments') || []).length) {
-      return tStripped('contentDescriptionMediaMessage');
+      return window.i18n.stripped('contentDescriptionMediaMessage');
     }
 
     return '';
@@ -850,7 +849,7 @@ export class MessageModel extends Model<MessageAttributes> {
   public async markAsDeleted() {
     this.set({
       isDeleted: true,
-      body: tr('deleteMessageDeletedGlobally'),
+      body: window.i18n('deleteMessageDeletedGlobally'),
       quote: undefined,
       groupInvitation: undefined,
       dataExtractionNotification: undefined,
@@ -1382,7 +1381,7 @@ export function findAndFormatContact(pubkey: string): FindAndFormatContactType {
     pubkey === UserUtils.getOurPubKeyStrFromCache() ||
     (pubkey && PubKey.isBlinded(pubkey) && isUsAnySogsFromCache(pubkey))
   ) {
-    profileName = tr('you');
+    profileName = window.i18n('you');
     isMe = true;
   } else {
     profileName = contactModel?.getNicknameOrRealUsername() || null;

@@ -1,17 +1,18 @@
 import { BrowserWindow, dialog } from 'electron';
-import { tr } from '../localization/localeTools';
+import type { SetupI18nReturnType } from '../types/localizer';
 
 export async function showDownloadUpdateDialog(
   mainWindow: BrowserWindow,
+  i18n: SetupI18nReturnType,
   version: string
 ): Promise<boolean> {
   const DOWNLOAD_BUTTON = 0;
   const LATER_BUTTON = 1;
   const options = {
     type: 'info' as const,
-    buttons: [tr('download'), tr('later')],
-    title: tr('updateSession'),
-    message: tr('updateNewVersionDescription', { version }),
+    buttons: [i18n('download'), i18n('later')],
+    title: i18n('updateSession'),
+    message: i18n('updateNewVersionDescription', { version }),
     defaultId: LATER_BUTTON,
     cancelId: DOWNLOAD_BUTTON,
   };
@@ -21,14 +22,17 @@ export async function showDownloadUpdateDialog(
   return ret.response === DOWNLOAD_BUTTON;
 }
 
-export async function showUpdateDialog(mainWindow: BrowserWindow): Promise<boolean> {
+export async function showUpdateDialog(
+  mainWindow: BrowserWindow,
+  i18n: SetupI18nReturnType
+): Promise<boolean> {
   const RESTART_BUTTON = 0;
   const LATER_BUTTON = 1;
   const options: Electron.MessageBoxOptions = {
     type: 'info' as const,
-    buttons: [tr('restart'), tr('later')],
-    title: tr('updateSession'),
-    message: tr('updateDownloaded'),
+    buttons: [i18n('restart'), i18n('later')],
+    title: i18n('updateSession'),
+    message: i18n('updateDownloaded'),
     defaultId: LATER_BUTTON,
     cancelId: RESTART_BUTTON,
   };
@@ -37,12 +41,12 @@ export async function showUpdateDialog(mainWindow: BrowserWindow): Promise<boole
   return ret.response === RESTART_BUTTON;
 }
 
-export async function showCannotUpdateDialog(mainWindow: BrowserWindow) {
+export async function showCannotUpdateDialog(mainWindow: BrowserWindow, i18n: SetupI18nReturnType) {
   const options = {
     type: 'error' as const,
-    buttons: [tr('okay')],
-    title: tr('updateError'),
-    message: tr('updateErrorDescription'),
+    buttons: [i18n('okay')],
+    title: i18n('updateError'),
+    message: i18n('updateErrorDescription'),
   };
   await dialog.showMessageBox(mainWindow, options);
 }

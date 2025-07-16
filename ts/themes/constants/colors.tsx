@@ -3,8 +3,6 @@
  * Primary color -> Default accent color for a theme
  */
 
-import { tr } from '../../localization/localeTools';
-
 // Colors
 export type ColorsType = {
   PRIMARY: {
@@ -265,7 +263,7 @@ export type StyleSessionSwitcher = {
 export const getThemeColors = (): Array<ThemeType> => [
   {
     id: 'classic-dark',
-    title: tr('appearanceThemesClassicDark'),
+    title: window.i18n('appearanceThemesClassicDark'),
     style: {
       background: THEMES.CLASSIC_DARK.COLOR0,
       border: THEMES.CLASSIC_DARK.COLOR3,
@@ -275,7 +273,7 @@ export const getThemeColors = (): Array<ThemeType> => [
   },
   {
     id: 'classic-light',
-    title: tr('appearanceThemesClassicLight'),
+    title: window.i18n('appearanceThemesClassicLight'),
     style: {
       background: THEMES.CLASSIC_LIGHT.COLOR6,
       border: THEMES.CLASSIC_LIGHT.COLOR3,
@@ -285,7 +283,7 @@ export const getThemeColors = (): Array<ThemeType> => [
   },
   {
     id: 'ocean-dark',
-    title: tr('appearanceThemesOceanDark'),
+    title: window.i18n('appearanceThemesOceanDark'),
     style: {
       background: THEMES.OCEAN_DARK.COLOR2,
       border: THEMES.OCEAN_DARK.COLOR4,
@@ -295,7 +293,7 @@ export const getThemeColors = (): Array<ThemeType> => [
   },
   {
     id: 'ocean-light',
-    title: tr('appearanceThemesOceanLight'),
+    title: window.i18n('appearanceThemesOceanLight'),
     style: {
       background: THEMES.OCEAN_LIGHT.COLOR7!,
       border: THEMES.OCEAN_LIGHT.COLOR3,

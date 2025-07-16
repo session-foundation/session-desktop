@@ -20,7 +20,7 @@ import { SessionIcon } from '../icon';
 import { LucideIcon } from '../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { Localizer } from '../basic/Localizer';
-import { tr } from '../../localization/localeTools';
+import { localize, type MergedLocalizerTokens } from '../../localization/localeTools';
 import { FileIcon } from '../icon/FileIcon';
 import { SessionButtonShiny } from '../basic/SessionButtonShiny';
 import { useHasPro } from '../../hooks/useHasPro';
@@ -36,14 +36,13 @@ export enum SessionProInfoVariant {
 const StyledContentContainer = styled.div`
   display: flex;
   flex-direction: column;
-  margin-bottom: var(--margins-md);
+  margin-bottom: var(--margins-lg);
   gap: var(--margins-sm);
 `;
 
 const StyledScrollDescriptionContainer = styled.div`
   text-align: center;
   font-size: var(--font-size-lg);
-  line-height: var(--font-size-xl);
   color: var(--text-secondary-color);
 `;
 
@@ -135,14 +134,14 @@ function FeatureListItem({
   );
 }
 
-function getFeatureList(variant: SessionProInfoVariant) {
+function getFeatureList(variant: SessionProInfoVariant): Array<MergedLocalizerTokens> {
   switch (variant) {
     case SessionProInfoVariant.PINNED_CONVERSATION_LIMIT:
     case SessionProInfoVariant.PINNED_CONVERSATION_LIMIT_GRANDFATHERED:
-      return ['proFeatureListPinnedConversations', 'proFeatureListLargerGroups'] as const;
+      return ['proFeatureListPinnedConversations', 'proFeatureListLargerGroups'];
     case SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT:
     default:
-      return ['proFeatureListLongerMessages', 'proFeatureListLargerGroups'] as const;
+      return ['proFeatureListLongerMessages', 'proFeatureListLargerGroups'];
   }
 }
 
@@ -234,7 +233,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
             onClick={onClose}
             dataTestId="modal-session-pro-confirm-button"
           >
-            {tr('theContinue')}
+            {localize('theContinue')}
           </SessionButtonShiny>
           <SessionButton
             {...buttonProps}
@@ -242,14 +241,14 @@ export function SessionProInfoModal(props: SessionProInfoState) {
             onClick={onClose}
             dataTestId="modal-session-pro-cancel-button"
           >
-            {tr('cancel')}
+            {localize('cancel').toString()}
           </SessionButton>
         </ModalActionsContainer>
       }
     >
       <SpacerSM />
       <StyledCTATitle>
-        {tr('upgradeTo')}
+        {localize('upgradeTo')}
         <SessionIcon
           sizeIsWidth={false}
           iconType={'sessionPro'}
@@ -266,10 +265,10 @@ export function SessionProInfoModal(props: SessionProInfoState) {
         </StyledScrollDescriptionContainer>
         <StyledFeatureList>
           {getFeatureList(props.variant).map(token => (
-            <FeatureListItem>{tr(token)}</FeatureListItem>
+            <FeatureListItem>{localize(token)}</FeatureListItem>
           ))}
           <FeatureListItem customIconSrc={'images/sparkle-animated.svg'}>
-            {tr('proFeatureListLoadsMore')}
+            {localize('proFeatureListLoadsMore')}
           </FeatureListItem>
         </StyledFeatureList>
       </StyledContentContainer>

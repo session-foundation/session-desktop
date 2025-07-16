@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import { Constants } from '../../../session';
+import { Localizer } from '../../basic/Localizer';
 import { useFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { SessionTooltip } from '../../SessionTooltip';
 import { SessionIcon } from '../../icon';
@@ -11,7 +12,6 @@ import {
 import { formatNumber } from '../../../util/i18n/formatting/generics';
 import { useHasPro } from '../../../hooks/useHasPro';
 import { useIsProAvailable } from '../../../hooks/useIsProAvailable';
-import { tr } from '../../../localization/localeTools';
 
 export type CharacterCountProps = {
   count: number;
@@ -68,9 +68,13 @@ export function CharacterCount({ count }: CharacterCountProps) {
       <SessionTooltip
         horizontalPosition="center"
         verticalPosition="bottom"
-        content={tr(pastLimit ? 'remainingCharactersOverTooltip' : 'remainingCharactersTooltip', {
-          count: pastLimit ? remaining * -1 : remaining,
-        })}
+        content={
+          pastLimit ? (
+            <Localizer token="remainingCharactersOverTooltip" args={{ count: remaining * -1 }} />
+          ) : (
+            <Localizer token="remainingCharactersTooltip" args={{ count: remaining }} />
+          )
+        }
         dataTestId="tooltip-character-count"
       >
         <StyledRemainingNumber pastLimit={pastLimit}>

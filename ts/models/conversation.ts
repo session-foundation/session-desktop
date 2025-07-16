@@ -137,7 +137,6 @@ import type { WithMessageHashOrNull } from '../session/types/with';
 import { Model } from './models';
 import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
 import { ReduxOnionSelectors } from '../state/selectors/onions';
-import { tr, tStripped } from '../localization/localeTools';
 
 type InMemoryConvoInfos = {
   mentionedUs: boolean;
@@ -1373,9 +1372,9 @@ export class ConversationModel extends Model<ConversationAttributes> {
       return PubKey.shorten(this.id);
     }
     if (this.isPublic()) {
-      return tr('communityUnknown');
+      return window.i18n('communityUnknown');
     }
-    return tr('unknown');
+    return window.i18n('unknown');
   }
 
   public isAdmin(pubKey?: string) {
@@ -1769,7 +1768,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
     const pubkey = this.id;
     if (UserUtils.isUsFromCache(pubkey)) {
-      return tr('you');
+      return window.i18n('you');
     }
 
     const profileName = this.getRealSessionUsername();
@@ -1838,7 +1837,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       const isFirstMessageOfConvo =
         (await Data.getMessagesByConversation(this.id, { messageId: null })).messages.length === 1;
       if (hadNoRequestsPrior && isFirstMessageOfConvo) {
-        friendRequestText = tr('messageRequestsNew');
+        friendRequestText = window.i18n('messageRequestsNew');
       } else {
         window?.log?.info(
           'notification cancelled for as pending requests already exist',
@@ -1919,7 +1918,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       conversationId,
       iconUrl,
       isExpiringMessage: false,
-      message: tr('callsIncoming', {
+      message: window.i18n('callsIncoming', {
         name: this.getNicknameOrRealUsername() || PubKey.shorten(conversationId),
       }),
       title: this.getNicknameOrRealUsernameOrPlaceholder(),
@@ -2163,7 +2162,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     const roomInfo = OpenGroupData.getV2OpenGroupRoom(groupUrl);
 
     if (!roomInfo || !roomInfo.serverPublicKey) {
-      ToastUtils.pushToastError('no-sogs-matching', tStripped('communityJoinError'));
+      ToastUtils.pushToastError('no-sogs-matching', window.i18n.stripped('communityJoinError'));
       window?.log?.error('Could not find room with matching server url', groupUrl);
       throw new Error(`Could not find room with matching server url: ${groupUrl}`);
     }

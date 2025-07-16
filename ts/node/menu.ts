@@ -1,6 +1,6 @@
 import { isString } from 'lodash';
+import type { SetupI18nReturnType } from '../types/localizer';
 import { LOCALE_DEFAULTS } from '../localization/constants';
-import { tr } from '../localization/localeTools';
 
 /**
  * Adds the accelerator prefix to the label for the menu item
@@ -13,14 +13,17 @@ const withAcceleratorPrefix = (label: string) => {
   return `&${label}`;
 };
 
-export const createTemplate = (options: {
-  openReleaseNotes: () => void;
-  openSupportPage: () => void;
-  platform: string;
-  showAbout: () => void;
-  saveDebugLog: (_event: any, additionalInfo?: string) => void;
-  showWindow: () => void;
-}) => {
+export const createTemplate = (
+  options: {
+    openReleaseNotes: () => void;
+    openSupportPage: () => void;
+    platform: string;
+    showAbout: () => void;
+    saveDebugLog: (_event: any, additionalInfo?: string) => void;
+    showWindow: () => void;
+  },
+  i18n: SetupI18nReturnType
+) => {
   if (!isString(options.platform)) {
     throw new TypeError('`options.platform` must be a string');
   }
@@ -30,114 +33,114 @@ export const createTemplate = (options: {
 
   const template = [
     {
-      label: withAcceleratorPrefix(tr('file')),
+      label: withAcceleratorPrefix(i18n('file')),
       submenu: [
         {
           type: 'separator',
         },
         {
           role: 'quit',
-          label: tr('quit'),
+          label: i18n('quit'),
         },
       ],
     },
     {
-      label: withAcceleratorPrefix(tr('edit')),
+      label: withAcceleratorPrefix(i18n('edit')),
       submenu: [
         {
           role: 'undo',
-          label: tr('undo'),
+          label: i18n('undo'),
         },
         {
           role: 'redo',
-          label: tr('redo'),
+          label: i18n('redo'),
         },
         {
           type: 'separator',
         },
         {
           role: 'cut',
-          label: tr('cut'),
+          label: i18n('cut'),
         },
         {
           role: 'copy',
-          label: tr('copy'),
+          label: i18n('copy'),
         },
         {
           role: 'paste',
-          label: tr('paste'),
+          label: i18n('paste'),
         },
         {
           role: 'selectall',
-          label: tr('selectAll'),
+          label: i18n('selectAll'),
         },
       ],
     },
     {
-      label: withAcceleratorPrefix(tr('view')),
+      label: withAcceleratorPrefix(i18n('view')),
       submenu: [
         {
           role: 'resetzoom',
-          label: tr('actualSize'),
+          label: i18n('actualSize'),
         },
         {
           accelerator: platform === 'darwin' ? 'Command+=' : 'Control+Plus',
           role: 'zoomin',
-          label: tr('appearanceZoomIn'),
+          label: i18n('appearanceZoomIn'),
         },
         {
           role: 'zoomout',
-          label: tr('appearanceZoomOut'),
+          label: i18n('appearanceZoomOut'),
         },
         {
           type: 'separator',
         },
         {
           role: 'togglefullscreen',
-          label: tr('fullScreenToggle'),
+          label: i18n('fullScreenToggle'),
         },
         {
           type: 'separator',
         },
         {
-          label: tr('helpReportABugExportLogs'),
+          label: i18n('helpReportABugExportLogs'),
           click: () => {
             saveDebugLog('export-logs');
           },
         },
         {
           role: 'toggledevtools',
-          label: tr('developerToolsToggle'),
+          label: i18n('developerToolsToggle'),
         },
       ],
     },
     {
-      label: withAcceleratorPrefix(tr('window')),
+      label: withAcceleratorPrefix(i18n('window')),
       role: 'window',
       submenu: [
         {
           role: 'minimize',
-          label: tr('minimize'),
+          label: i18n('minimize'),
         },
       ],
     },
     {
-      label: withAcceleratorPrefix(tr('sessionHelp')),
+      label: withAcceleratorPrefix(i18n('sessionHelp')),
       role: 'help',
       submenu: [
         {
-          label: tr('updateReleaseNotes'),
+          label: i18n('updateReleaseNotes'),
           click: openReleaseNotes,
         },
         {
-          label: tr('supportGoTo'),
+          label: i18n('supportGoTo'),
           click: openSupportPage,
         },
         {
           type: 'separator',
         },
         {
-          label: tr('about'),
+          label: i18n('about'),
           click: showAbout,
         },
       ],
@@ -145,7 +148,7 @@ export const createTemplate = (options: {
   ];
 
   if (platform === 'darwin') {
-    return updateForMac(template, {
+    return updateForMac(template, i18n, {
       showAbout,
       showWindow,
     });
@@ -154,7 +157,11 @@ export const createTemplate = (options: {
   return template;
 };
 
-function updateForMac(template: any, options: { showAbout: () => void; showWindow: () => void }) {
+function updateForMac(
+  template: any,
+  i18n: SetupI18nReturnType,
+  options: { showAbout: () => void; showWindow: () => void }
+) {
   const { showAbout, showWindow } = options;
 
   // Remove About item and separator from Help menu, since it's on the first menu
@@ -169,7 +176,7 @@ function updateForMac(template: any, options: { showAbout: () => void; showWindo
     label: LOCALE_DEFAULTS.app_name,
     submenu: [
       {
-        label: tr('about'),
+        label: i18n('about'),
         click: showAbout,
       },
       {
@@ -179,22 +186,22 @@ function updateForMac(template: any, options: { showAbout: () => void; showWindo
         type: 'separator',
       },
       {
-        label: tr('hide'),
+        label: i18n('hide'),
         role: 'hide',
       },
       {
-        label: tr('hideOthers'),
+        label: i18n('hideOthers'),
         role: 'hideothers',
       },
       {
-        label: tr('showAll'),
+        label: i18n('showAll'),
         role: 'unhide',
       },
       {
         type: 'separator',
       },
       {
-        label: tr('quit'),
+        label: i18n('quit'),
         role: 'quit',
       },
     ],
@@ -205,21 +212,21 @@ function updateForMac(template: any, options: { showAbout: () => void; showWindo
   // eslint-disable-next-line no-param-reassign
   template[windowMenuTemplateIndex].submenu = [
     {
-      label: tr('closeWindow'),
+      label: i18n('closeWindow'),
       accelerator: 'CmdOrCtrl+W',
       role: 'close',
     },
     {
-      label: tr('minimize'),
+      label: i18n('minimize'),
       accelerator: 'CmdOrCtrl+M',
       role: 'minimize',
     },
     {
-      label: tr('appearanceZoom'),
+      label: i18n('appearanceZoom'),
       role: 'zoom',
     },
     {
-      label: tr('show'),
+      label: i18n('show'),
       click: showWindow,
     },
   ];
