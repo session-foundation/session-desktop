@@ -20,7 +20,6 @@ ts/localization/locales.ts
 
 about_preload.js
 commitlint.config.js
-libsession.worker.config.js
 password_preload.js
 sass.config.js
-utils.worker.config.js
+*.worker.config.js

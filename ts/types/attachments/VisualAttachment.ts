@@ -12,7 +12,6 @@ import { isAudio } from '../MIME';
 import { formatTimeDurationMs } from '../../util/i18n/formatting/generics';
 import { isTestIntegration } from '../../shared/env_vars';
 
-export const THUMBNAIL_SIDE = 200;
 export const THUMBNAIL_CONTENT_TYPE = 'image/png';
 
 export const urlToBlob = async (dataUrl: string) => {
@@ -182,7 +181,7 @@ export const revokeObjectUrl = (objectUrl: string) => {
   URL.revokeObjectURL(objectUrl);
 };
 
-export async function autoScaleAvatarBlob(file: File) {
+async function autoScaleAvatarBlob(file: File) {
   try {
     const scaled = await autoScaleForAvatar({ blob: file, contentType: file.type });
 

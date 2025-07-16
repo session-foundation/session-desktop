@@ -28,7 +28,7 @@
     "build-everything:soft": "yarn print-deps && yarn clean && yarn protobuf && yarn update-git-info && yarn sass && yarn build:locales-soft && tsc && yarn build:workers",
     "build-everything:watch": "yarn clean && yarn protobuf && yarn update-git-info && yarn sass && yarn build:locales-soft && yarn build:workers && yarn tsc -w",
     "start-dev:pretty": "yarn start-dev | npx pino-pretty",
-    "build:workers": "yarn worker:utils && yarn worker:libsession",
+    "build:workers": "yarn worker:utils && yarn worker:libsession && yarn worker:image_processor",
     "build:locales": "python3 ./tools/localization/generateLocales.py --generate-types --print-problems --error-on-problems --error-old-dynamic-variables",
     "build:locales-soft": "python3 ./tools/localization/generateLocales.py --generate-types --print-problems --print-problem-strings",
     "watch": "yarn clean && yarn protobuf && yarn update-git-info && yarn build-everything:watch",
@@ -47,6 +47,7 @@
     "update-git-info": "node ./build/updateLocalConfig.js",
     "worker:utils": "webpack  --config=./utils.worker.config.js",
     "worker:libsession": "rimraf --glob 'ts/webworker/workers/node/libsession/*.node' && webpack  --config=./libsession.worker.config.js",
+    "worker:image_processor": "webpack  --config=./image_processor.worker.config.js",
     "dedup": "npx --yes yarn-deduplicate yarn.lock",
     "prepare": "husky",
     "print-deps": "node -v  && python3 --version"
@@ -113,6 +114,7 @@
     "rimraf": "6.0.1",
     "sanitize.css": "^12.0.1",
     "semver": "^7.7.1",
+    "sharp": "^0.34.3",
     "styled-components": "^6.1.15",
     "uuid": "11.1.0",
     "viem": "^2.26.0",
@@ -253,7 +255,9 @@
       "node_modules/@signalapp/better-sqlite3/build/Release/better_sqlite3.node",
       "node_modules/libsession_util_nodejs/build/Release/libsession_util_nodejs.node",
       "ts/webworker/workers/node/libsession/*.node",
-      "ts/mains/main_node.js"
+      "ts/mains/main_node.js",
+       "**/node_modules/sharp/**/*",
+      "**/node_modules/@img/**/*"
     ],
     "deb": {
       "depends": [

@@ -3,7 +3,6 @@ import imageType from 'image-type';
 
 import { arrayBufferToBlob } from 'blob-util';
 import loadImage from 'blueimp-load-image';
-import { filesize } from 'filesize';
 import { StagedAttachmentType } from '../components/conversation/composition/CompositionBox';
 import { SignalService } from '../protobuf';
 import { DecryptedAttachmentsManager } from '../session/crypto/DecryptedAttachmentsManager';
@@ -11,10 +10,15 @@ import { sendDataExtractionNotification } from '../session/messages/outgoing/con
 import { AttachmentType, save } from '../types/Attachment';
 import { IMAGE_GIF, IMAGE_JPEG, IMAGE_PNG, IMAGE_TIFF, IMAGE_UNKNOWN } from '../types/MIME';
 import { getAbsoluteAttachmentPath, processNewAttachment } from '../types/MessageAttachment';
-import { THUMBNAIL_SIDE } from '../types/attachments/VisualAttachment';
 
-import { FILESIZE, MAX_ATTACHMENT_FILESIZE_BYTES } from '../session/constants';
+import { MAX_ATTACHMENT_FILESIZE_BYTES } from '../session/constants';
 import { perfEnd, perfStart } from '../session/utils/Performance';
+import {
+  ATTACHMENT_DEFAULT_MAX_SIDE,
+  maxAvatarDetails,
+  maxThumbnailDetails,
+} from './attachmentSizes';
+import { callImageProcessorWorker } from '../webworker/workers/browser/image_processor_interface';
 
 /**
  * The logic for sending attachments is as follow:
@@ -42,21 +46,12 @@ export interface MaxScaleSize {
   maxSide?: number; // use this to make avatars cropped if too big and centered if too small.
 }
 
-export const ATTACHMENT_DEFAULT_MAX_SIDE = 4096;
-
-export const AVATAR_MAX_SIDE = 640;
-
 /**
  * Resize a jpg/gif/png file to our definition on an avatar before upload
  */
 export async function autoScaleForAvatar<T extends { contentType: string; blob: Blob }>(
   attachment: T
 ) {
-  const maxMeasurements = {
-    maxSide: AVATAR_MAX_SIDE,
-    maxSize: 5 * FILESIZE.MB,
-  };
-
   // we can only upload jpeg, gif, or png as avatar/opengroup
 
   if (
@@ -69,20 +64,15 @@ export async function autoScaleForAvatar<T extends { contentType: string; blob: 
   }
 
   if (DEBUG_ATTACHMENTS_SCALE) {
-    window.log.debug('autoscale for avatar', maxMeasurements);
+    window.log.debug('autoscale for avatar', maxAvatarDetails);
   }
-  return autoScale(attachment, maxMeasurements);
+  return autoScale(attachment, { ...maxAvatarDetails });
 }
 
 /**
  * Resize an avatar when we receive it, before saving it locally.
  */
 export async function autoScaleForIncomingAvatar(incomingAvatar: ArrayBuffer) {
-  const maxMeasurements = {
-    maxSide: AVATAR_MAX_SIDE,
-    maxSize: 5 * FILESIZE.MB,
-  };
-
   // the avatar url send in a message does not contain anything related to the avatar MIME type, so
   // we use imageType to find the MIMEtype from the buffer itself
 
@@ -98,7 +88,7 @@ export async function autoScaleForIncomingAvatar(incomingAvatar: ArrayBuffer) {
   }
 
   if (DEBUG_ATTACHMENTS_SCALE) {
-    window.log.debug('autoscale for incoming avatar', maxMeasurements);
+    window.log.debug('autoscale for incoming avatar', maxAvatarDetails);
   }
 
   return autoScale(
@@ -106,7 +96,7 @@ export async function autoScaleForIncomingAvatar(incomingAvatar: ArrayBuffer) {
       blob,
       contentType,
     },
-    maxMeasurements
+    maxAvatarDetails
   );
 }
 
@@ -117,16 +107,11 @@ export async function autoScaleForIncomingAvatar(incomingAvatar: ArrayBuffer) {
 export async function autoScaleForThumbnail<T extends { contentType: string; blob: Blob }>(
   attachment: T
 ) {
-  const maxMeasurements = {
-    maxSide: THUMBNAIL_SIDE,
-    maxSize: 200 * 1000, // 200 ko
-  };
-
   if (DEBUG_ATTACHMENTS_SCALE) {
-    window.log.debug('autoScaleForThumbnail', maxMeasurements);
+    window.log.debug('autoScaleForThumbnail', maxThumbnailDetails);
   }
 
-  return autoScale(attachment, maxMeasurements);
+  return autoScale(attachment, maxThumbnailDetails);
 }
 
 async function canvasToBlob(
@@ -183,12 +168,24 @@ export async function autoScale<T extends { contentType: string; blob: Blob }>(
   const maxWidth =
     maxMeasurements?.maxWidth || maxMeasurements?.maxSide || ATTACHMENT_DEFAULT_MAX_SIDE;
 
-  if (blob.type === IMAGE_GIF && blob.size <= maxSize) {
-    return attachment;
-  }
+  if (blob.type === IMAGE_GIF) {
+    const buffer = await blob.arrayBuffer();
+    const { resizedBuffer, height, width } = await callImageProcessorWorker(
+      'cropAnimatedAvatar',
+      buffer,
+      maxWidth
+    );
 
-  if (blob.type === IMAGE_GIF && blob.size > maxSize) {
-    throw new Error(`GIF is too large. Max size: ${filesize(maxSize, { base: 10, round: 0 })}`);
+    const resizedBlob = new Blob([new Uint8Array(resizedBuffer)], {
+      type: 'application/octet-stream',
+    });
+
+    return {
+      blob: resizedBlob,
+      contentType: attachment.contentType,
+      width,
+      height,
+    };
   }
 
   perfStart(`loadimage-*${blob.size}`);
