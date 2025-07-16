@@ -6,6 +6,7 @@ import { SessionContextMenuContainer } from '../SessionContextMenuContainer';
 import { hideMessageRequestBanner } from '../../state/ducks/userConfig';
 import { ItemWithDataTestId } from './items/MenuItemWithDataTestId';
 import { getMenuAnimation } from './MenuAnimation';
+import { tr } from '../../localization/localeTools';
 
 export type PropsContextConversationItem = {
   triggerId: string;
@@ -19,7 +20,7 @@ const HideBannerMenuItem = (): JSX.Element => {
         dispatch(hideMessageRequestBanner());
       }}
     >
-      {window.i18n('hide')}
+      {tr('hide')}
     </ItemWithDataTestId>
   );
 };

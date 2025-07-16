@@ -12,7 +12,7 @@ import { ExpireTimer } from '../../ExpireTimer';
 import { saveLogToDesktop } from '../../../../util/logger/renderer_process_logging';
 import { LUCIDE_ICONS_UNICODE, type WithLucideUnicode } from '../../../icon/lucide';
 import { LucideIcon } from '../../../icon/LucideIcon';
-import { localize } from '../../../../localization/localeTools';
+import { tr } from '../../../../localization/localeTools';
 
 type Props = {
   messageId: string;
@@ -146,7 +146,7 @@ const MessageStatusSending = ({ dataTestId }: Omit<Props, 'isDetailView'>) => {
       isGroup={false}
       clickable={false}
     >
-      <TextDetails text={localize('sending').toString()} textColor="var(--text-secondary-color)" />
+      <TextDetails text={tr('sending')} textColor="var(--text-secondary-color)" />
       <IconNormal unicode={LUCIDE_ICONS_UNICODE.CIRCLE_ELLIPSES} />
     </MessageStatusContainer>
   );
@@ -186,10 +186,7 @@ const MessageStatusSent = ({ dataTestId, messageId }: Omit<Props, 'isDetailView'
       isGroup={isGroup}
       clickable={false}
     >
-      <TextDetails
-        text={window.i18n('disappearingMessagesSent')}
-        textColor="var(--text-secondary-color)"
-      />
+      <TextDetails text={tr('disappearingMessagesSent')} textColor="var(--text-secondary-color)" />
       <IconForExpiringMessageId messageId={messageId} unicode={LUCIDE_ICONS_UNICODE.CHECK} />
     </MessageStatusContainer>
   );
@@ -218,7 +215,7 @@ const MessageStatusRead = ({
       isGroup={isGroup}
       clickable={false}
     >
-      <TextDetails text={localize('read').toString()} textColor="var(--text-secondary-color)" />
+      <TextDetails text={tr('read')} textColor="var(--text-secondary-color)" />
       <IconForExpiringMessageId messageId={messageId} unicode={LUCIDE_ICONS_UNICODE.EYE} />
     </MessageStatusContainer>
   );
@@ -232,7 +229,7 @@ const MessageStatusError = ({ dataTestId }: Omit<Props, 'isDetailView'>) => {
     <MessageStatusContainer
       data-testid={dataTestId}
       data-testtype="failed"
-      title={localize('messageStatusFailedToSend').toString()}
+      title={tr('messageStatusFailedToSend')}
       onClick={() => {
         void saveLogToDesktop();
       }}
@@ -240,10 +237,7 @@ const MessageStatusError = ({ dataTestId }: Omit<Props, 'isDetailView'>) => {
       clickable={true}
       isGroup={isGroup}
     >
-      <TextDetails
-        text={localize('messageStatusFailedToSend').toString()}
-        textColor="var(--danger-color)"
-      />
+      <TextDetails text={tr('messageStatusFailedToSend')} textColor="var(--danger-color)" />
       <LucideIcon
         unicode={LUCIDE_ICONS_UNICODE.TRIANGLE_ALERT}
         iconColor="var(--danger-color)"

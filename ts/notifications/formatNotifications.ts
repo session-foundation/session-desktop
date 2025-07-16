@@ -1,4 +1,5 @@
 import { ConversationInteractionStatus, ConversationInteractionType } from '../interactions/types';
+import { tr } from '../localization/localeTools';
 import { ConvoHub } from '../session/conversations';
 import { InteractionNotificationType } from '../state/ducks/types';
 import { assertUnreachable } from '../types/sqlSharedTypes';
@@ -16,7 +17,7 @@ function formatInteractionNotification(
     if (convo) {
       const isGroup = !convo.isPrivate();
       const isCommunity = convo.isPublic();
-      const conversationName = convo?.getRealSessionUsername() || window.i18n('unknown');
+      const conversationName = convo?.getRealSessionUsername() || tr('unknown');
 
       switch (interactionType) {
         case ConversationInteractionType.Hide:
@@ -24,9 +25,9 @@ function formatInteractionNotification(
           return '';
         case ConversationInteractionType.Leave:
           return isCommunity
-            ? window.i18n('communityLeaveError', { community_name: conversationName })
+            ? tr('communityLeaveError', { community_name: conversationName })
             : isGroup
-              ? window.i18n('groupLeaveErrorFailed', { group_name: conversationName })
+              ? tr('groupLeaveErrorFailed', { group_name: conversationName })
               : null;
         default:
           assertUnreachable(

@@ -2,6 +2,7 @@ import { Duration, formatDuration, intervalToDuration } from 'date-fns';
 import { DURATION_SECONDS } from '../../../session/constants';
 import { getForcedEnglishTimeLocale } from '../timeLocaleMap';
 import { getTimeLocaleDictionary } from '../shared';
+import { tr } from '../../../localization/localeTools';
 
 /**
  * We decided against localizing the abbreviated durations like 1h, 1m, 1s as most apps don't.
@@ -72,7 +73,7 @@ function assertIsValidExpirationTimerSeconds(timerSeconds: number) {
 export const formatAbbreviatedExpireTimer = (timerSeconds: number) => {
   assertIsValidExpirationTimerSeconds(timerSeconds);
   if (timerSeconds <= 0) {
-    return window.i18n('off');
+    return tr('off');
   }
 
   const duration = secondsToDuration(timerSeconds);
@@ -95,7 +96,7 @@ export const formatNonAbbreviatedExpireTimer = (timerSeconds: number) => {
   assertIsValidExpirationTimerSeconds(timerSeconds);
 
   if (timerSeconds <= 0) {
-    return window.i18n('off');
+    return tr('off');
   }
 
   const duration = secondsToDuration(timerSeconds);

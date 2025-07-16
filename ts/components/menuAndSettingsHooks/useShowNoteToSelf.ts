@@ -1,9 +1,9 @@
 import { useDispatch } from 'react-redux';
 import { useIsHidden, useIsMe } from '../../hooks/useParamSelector';
-import { localize } from '../../localization/localeTools';
 import { ConvoHub } from '../../session/conversations';
 import { updateConfirmModal } from '../../state/ducks/modalDialog';
 import { SessionButtonColor } from '../basic/SessionButton';
+import { tr } from '../../localization/localeTools';
 
 function useShowNoteToSelf({ conversationId }: { conversationId: string }) {
   const isMe = useIsMe(conversationId);
@@ -27,7 +27,7 @@ export function useShowNoteToSelfCb({ conversationId }: { conversationId: string
   const showConfirmationModal = () => {
     dispatch(
       updateConfirmModal({
-        title: localize('showNoteToSelf').toString(),
+        title: tr('showNoteToSelf'),
         i18nMessage: { token: 'showNoteToSelfDescription' },
         onClickClose,
         closeTheme: SessionButtonColor.White,
@@ -36,7 +36,7 @@ export function useShowNoteToSelfCb({ conversationId }: { conversationId: string
           await convo.unhideIfNeeded(true);
           // Note: We don't want to close the modal for the show NTS action.
         },
-        okText: localize('show').toString(),
+        okText: tr('show'),
       })
     );
   };

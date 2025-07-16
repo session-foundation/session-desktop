@@ -1,7 +1,8 @@
 import { useState, useRef, type ReactNode, useLayoutEffect } from 'react';
 import styled, { css } from 'styled-components';
 import { Constants } from '../../../../session';
-import { localize } from '../../../../localization/localeTools';
+import { tr } from '../../../../localization/localeTools';
+import { useMessagesContainerRef } from '../../../../contexts/MessagesContainerRefContext';
 
 export const StyledMessageBubble = styled.div<{ expanded: boolean }>`
   position: relative;
@@ -40,67 +41,95 @@ const ReadMoreButton = styled.button`
 export function MessageBubble({ children }: { children: ReactNode }) {
   const [expanded, setExpanded] = useState(false);
   const [showReadMore, setShowReadMore] = useState(false);
-  const hiddenHeight = useRef<number>(0);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const msgBubbleRef = useRef<HTMLDivElement>(null);
+
+  const messagesContainerRef = useMessagesContainerRef();
+
+  const scrollBefore = useRef<{ scrollTop: number; scrollHeight: number }>({
+    scrollTop: 0,
+    scrollHeight: 0,
+  });
 
   useLayoutEffect(() => {
     if (expanded) {
-      // TODO: find the perfect magic number, 1 is almost perfect
-      // 21 is the ReadMore height, 10 is its vertical padding and 1 is from testing
-      const scrollDownBy = hiddenHeight.current - 21 - 10 + 1;
+      const msgContainerAfter = messagesContainerRef.current;
+      if (!msgBubbleRef.current || !msgContainerAfter) {
+        return;
+      }
+      const { scrollTop: scrollTopAfter, scrollHeight: scrollHeightAfter } = msgContainerAfter;
 
-      document.getElementById('messages-container')?.scrollBy({
-        top: -scrollDownBy,
+      const { scrollTop: scrollTopBefore, scrollHeight: scrollHeightBefore } = scrollBefore.current;
+
+      const topDidChange = scrollTopAfter !== scrollTopBefore;
+      const heightDiff = scrollHeightAfter - scrollHeightBefore;
+      const scrollTo = topDidChange ? scrollTopBefore - heightDiff : scrollTopAfter - heightDiff;
+
+      msgContainerAfter.scrollTo({
+        top: scrollTo,
         behavior: 'instant',
       });
     }
-  }, [expanded]);
+  }, [expanded, messagesContainerRef]);
 
-  useLayoutEffect(() => {
-    const container = containerRef.current;
-    if (!container) {
-      return;
-    }
-
-    const el = container.firstElementChild;
+  const onShowMore = () => {
+    const el = msgBubbleRef.current;
     if (!el) {
       return;
     }
 
-    // We need the body's child to find the line height as long as it exists
-    const textEl = el.firstElementChild ?? el;
-    const textStyle = window.getComputedStyle(textEl);
-    const style = window.getComputedStyle(el);
+    const msgContainerBefore = messagesContainerRef.current;
 
-    const lineHeight = parseFloat(textStyle.lineHeight);
-    const paddingTop = parseFloat(style.paddingTop);
-    const paddingBottom = parseFloat(style.paddingBottom);
-    const borderTopWidth = parseFloat(style.borderTopWidth);
-    const borderBottomWidth = parseFloat(style.borderBottomWidth);
+    if (msgContainerBefore) {
+      const { scrollTop: scrollTopBefore, scrollHeight: scrollHeightBefore } = msgContainerBefore;
 
-    // We need to allow for a 1 pixel buffer in maxHeight
-    const maxHeight =
-      lineHeight * Constants.CONVERSATION.MAX_MESSAGE_MAX_LINES_BEFORE_READ_MORE + 1;
+      scrollBefore.current = { scrollTop: scrollTopBefore, scrollHeight: scrollHeightBefore };
+    }
 
-    const innerHeight =
-      el.scrollHeight - (paddingTop + paddingBottom + borderTopWidth + borderBottomWidth);
+    // we cannot "show less", only show more
+    setExpanded(true);
+  };
 
-    const overflowsLines = innerHeight > maxHeight;
+  useLayoutEffect(
+    () => {
+      const el = msgBubbleRef?.current?.firstElementChild;
+      if (!el) {
+        return;
+      }
 
-    hiddenHeight.current = innerHeight - maxHeight;
-    setShowReadMore(overflowsLines);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- children changing will change el.lineHeight and el.ScrollHeight
-  }, [children]);
+      // We need the body's child to find the line height as long as it exists
+      const textEl = el.firstElementChild ?? el;
+      const textStyle = window.getComputedStyle(textEl);
+      const style = window.getComputedStyle(el);
+
+      const lineHeight = parseFloat(textStyle.lineHeight);
+      const paddingTop = parseFloat(style.paddingTop);
+      const paddingBottom = parseFloat(style.paddingBottom);
+      const borderTopWidth = parseFloat(style.borderTopWidth);
+      const borderBottomWidth = parseFloat(style.borderBottomWidth);
+
+      // We need to allow for a 1 pixel buffer in maxHeight
+      const maxHeight =
+        lineHeight * Constants.CONVERSATION.MAX_MESSAGE_MAX_LINES_BEFORE_READ_MORE + 1;
+
+      const innerHeight =
+        el.scrollHeight - (paddingTop + paddingBottom + borderTopWidth + borderBottomWidth);
+
+      const overflowsLines = innerHeight > maxHeight;
+
+      setShowReadMore(overflowsLines);
+    },
+    // Note: no need to provide a dependency here (and if we provide children, this hook reruns every second for every messages).
+    // The only dependency is msgBubbleRef, but as it's a ref it's unneeded
+    []
+  );
 
   return (
     <>
-      <StyledMessageBubble ref={containerRef} expanded={expanded}>
+      <StyledMessageBubble ref={msgBubbleRef} expanded={expanded}>
         {children}
       </StyledMessageBubble>
       {showReadMore && !expanded ? (
-        <ReadMoreButton onClick={() => setExpanded(prev => !prev)}>
-          {localize('messageBubbleReadMore')}
-        </ReadMoreButton>
+        <ReadMoreButton onClick={onShowMore}>{tr('messageBubbleReadMore')}</ReadMoreButton>
       ) : null}
     </>
   );

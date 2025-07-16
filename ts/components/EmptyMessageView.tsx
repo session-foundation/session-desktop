@@ -6,6 +6,7 @@ import { Flex } from './basic/Flex';
 import { Spacer2XL, SpacerXS } from './basic/Text';
 import { Localizer } from './basic/Localizer';
 import { useShowOnboardingAccountJustCreated } from '../state/selectors/settings';
+import { tr } from '../localization/localeTools';
 
 const StyledPlaceholder = styled(Flex)`
   background-color: var(--background-secondary-color);
@@ -87,7 +88,7 @@ export const EmptyMessageView = () => {
         <>
           <StyledPartyPopper src="images/party-popper.svg" alt="party popper emoji" />
           <Spacer2XL />
-          <StyledHeading>{window.i18n('onboardingAccountCreated')}</StyledHeading>
+          <StyledHeading>{tr('onboardingAccountCreated')}</StyledHeading>
           <StyledSessionWelcome color={'var(--renderer-span-primary-color)'}>
             <Localizer token="onboardingBubbleWelcomeToSession" args={{ emoji: '👋' }} />
           </StyledSessionWelcome>
@@ -109,10 +110,10 @@ export const EmptyMessageView = () => {
         <>
           <StyledHR />
           <StyledNoConversations data-testid="empty-conversation">
-            {window.i18n('conversationsNone')}
+            {tr('conversationsNone')}
           </StyledNoConversations>
           <SpacerXS />
-          <StyledP style={{ width: '360px' }}>{window.i18n('onboardingHitThePlusButton')}</StyledP>
+          <StyledP style={{ width: '360px' }}>{tr('onboardingHitThePlusButton')}</StyledP>
         </>
       ) : null}
     </StyledPlaceholder>

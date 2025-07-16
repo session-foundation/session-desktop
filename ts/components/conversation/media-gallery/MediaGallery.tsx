@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { MediaItemType } from '../../lightbox/LightboxGallery';
 import { AttachmentSection } from './AttachmentSection';
 import { EmptyState } from './EmptyState';
-import { localize } from '../../../localization/localeTools';
+import { tr } from '../../../localization/localeTools';
 
 type Props = {
   documents: Array<MediaItemType>;
@@ -93,10 +93,7 @@ const Sections = (props: Props & { selectedTab: TabType }) => {
   const type = selectedTab;
 
   if (!mediaItems || mediaItems.length === 0) {
-    const label =
-      type === 'media'
-        ? localize('attachmentsMediaEmpty').toString()
-        : localize('attachmentsFilesEmpty').toString();
+    const label = type === 'media' ? tr('attachmentsMediaEmpty') : tr('attachmentsFilesEmpty');
 
     return <EmptyState data-testid="EmptyState" label={label} />;
   }
@@ -125,16 +122,8 @@ export const MediaGallery = (props: Props) => {
   return (
     <StyledMediaGallery>
       <StyledMediaGalleryTabContainer>
-        <Tab
-          label={localize('media').toString()}
-          isSelected={isMediaSelected}
-          onSelect={setMediaTab}
-        />
-        <Tab
-          label={localize('files').toString()}
-          isSelected={isDocumentSelected}
-          onSelect={setDocumentsTab}
-        />
+        <Tab label={tr('media')} isSelected={isMediaSelected} onSelect={setMediaTab} />
+        <Tab label={tr('files')} isSelected={isDocumentSelected} onSelect={setDocumentsTab} />
       </StyledMediaGalleryTabContainer>
       <StyledMediaGalleryContent>
         <Sections {...props} selectedTab={selectedTab} />

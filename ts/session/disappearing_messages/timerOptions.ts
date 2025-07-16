@@ -1,3 +1,4 @@
+import { tr } from '../../localization/localeTools';
 import { isDevProd } from '../../shared/env_vars';
 import {
   formatAbbreviatedExpireTimer,
@@ -54,7 +55,7 @@ const VALUES: Array<TimerSeconds> = [
 
 function getName(seconds = 0) {
   if (seconds === 0) {
-    return window.i18n('off');
+    return tr('off');
   }
   if (seconds > 0) {
     return formatNonAbbreviatedExpireTimer(seconds);

@@ -52,7 +52,7 @@ export function getKickedGroupUpdateStr(kicked: Array<string>, _groupName: strin
   }
 }
 
-export function getLeftGroupUpdateChangeStr(left: Array<string>): LocalizerProps {
+export function getLeftGroupUpdateChangeStr(left: Array<string>) {
   const { others, us } = usAndXOthers(left);
 
   if (left.length !== 1) {
@@ -60,13 +60,13 @@ export function getLeftGroupUpdateChangeStr(left: Array<string>): LocalizerProps
   }
 
   return us
-    ? { token: 'groupMemberYouLeft' }
-    : {
+    ? ({ token: 'groupMemberYouLeft' } as const)
+    : ({
         token: 'groupMemberLeft',
         args: {
           name: ConvoHub.use().getNicknameOrRealUsernameOrPlaceholder(others[0]),
         },
-      };
+      } as const);
 }
 
 export function getJoinedGroupUpdateChangeStr(

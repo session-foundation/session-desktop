@@ -3,17 +3,21 @@
 
 import { expect } from 'chai';
 import { initI18n } from './util';
+import { getRawMessage } from '../../../../../localization/localeTools';
 
 describe('getRawMessage', () => {
+  beforeEach(() => {
+    initI18n();
+  });
   it('returns the raw message for a token', () => {
-    const rawMessage = initI18n().getRawMessage('en', 'adminPromoteDescription', { name: 'Alice' });
+    const rawMessage = getRawMessage('en', 'adminPromoteDescription', { name: 'Alice' });
     expect(rawMessage).to.equal(
       'Are you sure you want to promote <b>{name}</b> to admin? Admins cannot be removed.'
     );
   });
 
   it('returns the raw message for a plural token', () => {
-    const rawMessage = initI18n().getRawMessage('en', 'searchMatches', {
+    const rawMessage = getRawMessage('en', 'searchMatches', {
       count: 1,
       found_count: 2,
     });
@@ -21,12 +25,12 @@ describe('getRawMessage', () => {
   });
 
   it('returns the raw message for a token with no args', () => {
-    const rawMessage = initI18n().getRawMessage('en', 'adminCannotBeRemoved');
+    const rawMessage = getRawMessage('en', 'adminCannotBeRemoved');
     expect(rawMessage).to.equal('Admins cannot be removed.');
   });
 
   it('returns the raw message for a token with args', () => {
-    const rawMessage = initI18n().getRawMessage('en', 'adminPromotionFailedDescription', {
+    const rawMessage = getRawMessage('en', 'adminPromotionFailedDescription', {
       name: 'Alice',
       group_name: 'Group',
     });
@@ -34,12 +38,12 @@ describe('getRawMessage', () => {
   });
 
   it('returns the raw message for a token with a tag', () => {
-    const message = initI18n().getRawMessage('en', 'screenshotTaken', { name: 'Alice' });
+    const message = getRawMessage('en', 'screenshotTaken', { name: 'Alice' });
     expect(message).to.equal('<b>{name}</b> took a screenshot.');
   });
 
   it('returns the raw message for a token with a tag and args', () => {
-    const message = initI18n().getRawMessage('en', 'adminPromoteTwoDescription', {
+    const message = getRawMessage('en', 'adminPromoteTwoDescription', {
       name: 'Alice',
       other_name: 'Bob',
     });

@@ -33,7 +33,7 @@ import {
   DeleteDeprecatedLegacyGroupMenuItem,
   DeleteGroupMenuItem,
 } from './items/LeaveAndDeleteGroup/DeleteGroupMenuItem';
-import { localize } from '../../localization/localeTools';
+import { tr } from '../../localization/localeTools';
 import { useTogglePinConversationHandler } from '../menuAndSettingsHooks/UseTogglePinConversationHandler';
 
 export type PropsContextConversationItem = {
@@ -130,6 +130,6 @@ export const PinConversationMenuItem = (): JSX.Element | null => {
     return null;
   }
 
-  const menuText = localize(isPinned ? 'pinUnpin' : 'pin');
+  const menuText = tr(isPinned ? 'pinUnpin' : 'pin');
   return <ItemWithDataTestId onClick={togglePinConversation}>{menuText}</ItemWithDataTestId>;
 };

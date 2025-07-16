@@ -30,7 +30,6 @@ import { ConvoHub } from '../../session/conversations';
 import { UserUtils } from '../../session/utils';
 import { BlockedNumberController } from '../../util';
 import { Storage } from '../../util/storage';
-import { getIntl } from './user';
 
 import { MessageReactsSelectorProps } from '../../components/conversation/message/message-content/MessageReactions';
 import { processQuoteAttachment } from '../../models/message';
@@ -42,6 +41,7 @@ import { getSelectedConversationKey } from './selectedConversation';
 import { getModeratorsOutsideRedux, useModerators } from './sogsRoomInfo';
 import type { SessionSuggestionDataItem } from '../../components/conversation/composition/types';
 import { useIsPublic, useWeAreAdmin } from '../../hooks/useParamSelector';
+import { tr } from '../../localization/localeTools';
 
 export const getConversations = (state: StateType): ConversationsStateType => state.conversations;
 
@@ -195,7 +195,7 @@ function getConversationTitle(conversation: ReduxConversationType): string {
   }
 
   if (isOpenOrClosedGroup(conversation.type)) {
-    return window.i18n('unknown');
+    return tr('unknown');
   }
   return conversation.id;
 }
@@ -231,8 +231,6 @@ export const _getConversationComparator = () => {
     return collator.compare(leftTitle, rightTitle);
   };
 };
-
-export const getConversationComparator = createSelector(getIntl, _getConversationComparator);
 
 const _getLeftPaneConversationIds = (
   sortedConversations: Array<ReduxConversationType>
@@ -344,7 +342,7 @@ export const _getSortedConversations = (
 
 export const getSortedConversations = createSelector(
   getConversationLookup,
-  getConversationComparator,
+  _getConversationComparator,
   getSelectedConversationKey,
   _getSortedConversations
 );
@@ -498,7 +496,7 @@ export const getSortedContactsWithBreaks = createSelector(
 
     contactsWithBreaks.unshift({
       id: UserUtils.getOurPubKeyStrFromCache(),
-      displayName: window.i18n('noteToSelf'),
+      displayName: tr('noteToSelf'),
     });
 
     return contactsWithBreaks;

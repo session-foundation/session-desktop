@@ -16,7 +16,7 @@ import { Spacer3XL, SpacerLG, SpacerSM, SpacerXL } from '../../basic/Text';
 import { SessionSpinner } from '../../loading';
 import { ProfileHeader, ProfileName, QRView } from './components';
 import { EmptyDisplayNameError, RetrieveDisplayNameError } from '../../../session/utils/errors';
-import { localize } from '../../../localization/localeTools';
+import { tr } from '../../../localization/localeTools';
 import { sanitizeDisplayNameOrToast } from '../../registration/utils';
 import { useEditProfilePictureCallback } from '../../menuAndSettingsHooks/useEditProfilePictureCallback';
 import { SimpleSessionInput } from '../../inputs/SessionInput';
@@ -189,9 +189,9 @@ export const EditProfileDialog = () => {
       setCannotContinue(true);
 
       if (err instanceof EmptyDisplayNameError || err instanceof RetrieveDisplayNameError) {
-        setProfileNameError(localize('displayNameErrorDescription').toString());
+        setProfileNameError(tr('displayNameErrorDescription'));
       } else {
-        setProfileNameError(localize('errorUnknown').toString());
+        setProfileNameError(tr('errorUnknown'));
       }
     } finally {
       setLoading(false);
@@ -242,7 +242,7 @@ export const EditProfileDialog = () => {
       <SessionWrapperModal
         headerChildren={
           <ModalBasicHeader
-            title={localize('profile').toString()}
+            title={tr('profile')}
             showExitIcon={true}
             leftButton={
               mode === 'edit' || mode === 'qr' ? (
@@ -273,7 +273,7 @@ export const EditProfileDialog = () => {
               />
               {mode === 'default' ? (
                 <SessionButton
-                  text={localize('qrView').toString()}
+                  text={tr('qrView')}
                   onClick={() => {
                     setMode('qr');
                   }}
@@ -287,7 +287,7 @@ export const EditProfileDialog = () => {
             !loading && (
               <ModalActionsContainer extraBottomMargin={true}>
                 <SessionButton
-                  text={localize('save').toString()}
+                  text={tr('save')}
                   onClick={onClickOK}
                   disabled={cannotContinue}
                   buttonColor={SessionButtonColor.PrimaryDark}
@@ -336,7 +336,7 @@ export const EditProfileDialog = () => {
         {mode === 'edit' && (
           <SimpleSessionInput
             autoFocus={true}
-            placeholder={localize('displayNameEnter').toString()}
+            placeholder={tr('displayNameEnter')}
             value={profileName}
             onValueChanged={(name: string) => {
               setProfileName(name);

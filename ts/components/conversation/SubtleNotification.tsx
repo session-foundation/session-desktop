@@ -34,6 +34,7 @@ import {
   useLibGroupWeHaveSecretKey,
 } from '../../state/selectors/userGroups';
 import { Localizer, type LocalizerProps } from '../basic/Localizer';
+import { tr } from '../../localization/localeTools';
 
 const Container = styled.div<{ noExtraPadding: boolean }>`
   display: flex;
@@ -100,7 +101,7 @@ export const ConversationOutgoingRequestExplanation = () => {
         style={{ padding: 0 }}
         noExtraPadding={true}
       >
-        <TextInner>{window.i18n('messageRequestPendingDescription')}</TextInner>
+        <TextInner>{tr('messageRequestPendingDescription')}</TextInner>
       </Container>
     );
   }
@@ -164,10 +165,10 @@ const InvitedToGroupControlMessage = () => {
   const hasMessages = useSelectedHasMessages();
   const isApproved = useSelectedIsApproved();
 
-  const groupName = useLibGroupInviteGroupName(selectedConversation) || window.i18n('unknown');
+  const groupName = useLibGroupInviteGroupName(selectedConversation) || tr('unknown');
   const conversationOrigin = useSelectedConversationIdOrigin();
   const adminNameInvitedUs =
-    useNicknameOrProfileNameOrShortenedPubkey(conversationOrigin) || window.i18n('unknown');
+    useNicknameOrProfileNameOrShortenedPubkey(conversationOrigin) || tr('unknown');
   const isGroupPendingInvite = useLibGroupInvitePending(selectedConversation);
   const weHaveSecretKey = useLibGroupWeHaveSecretKey(selectedConversation);
 

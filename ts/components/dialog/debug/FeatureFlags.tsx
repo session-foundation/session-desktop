@@ -59,7 +59,7 @@ export const FlagToggle = ({
   );
 };
 
-type FlagValues = boolean | object;
+type FlagValues = boolean | object | string;
 
 export const FeatureFlags = ({
   flags,

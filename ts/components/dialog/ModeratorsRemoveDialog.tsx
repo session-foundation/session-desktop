@@ -19,7 +19,7 @@ import {
   ModalActionsContainer,
   SessionWrapperModal,
 } from '../SessionWrapperModal';
-import { localize } from '../../localization/localeTools';
+import { tr } from '../../localization/localeTools';
 
 type Props = {
   conversationId: string;
@@ -33,9 +33,7 @@ async function removeMods(convoId: string, modsToRemove: Array<string>) {
   window?.log?.info(`asked to remove moderators: ${modsToRemove}`);
   const modsToRemovePubkey = compact(modsToRemove.map(m => PubKey.from(m)));
   const modsToRemoveNames = modsToRemovePubkey.map(
-    m =>
-      ConvoHub.use().get(m.key)?.getNicknameOrRealUsernameOrPlaceholder() ||
-      localize('unknown').toString()
+    m => ConvoHub.use().get(m.key)?.getNicknameOrRealUsernameOrPlaceholder() || tr('unknown')
   );
   try {
     const convo = ConvoHub.use().get(convoId);
@@ -92,7 +90,7 @@ export const RemoveModeratorsDialog = (props: Props) => {
 
   return (
     <SessionWrapperModal
-      headerChildren={<ModalBasicHeader title={localize('adminRemove').toString()} />}
+      headerChildren={<ModalBasicHeader title={tr('adminRemove')} />}
       onClose={closeDialog}
       buttonChildren={
         <ModalActionsContainer>
@@ -100,14 +98,14 @@ export const RemoveModeratorsDialog = (props: Props) => {
             buttonType={SessionButtonType.Simple}
             onClick={removeModsCall}
             disabled={removingInProgress}
-            text={localize('remove').toString()}
+            text={tr('remove')}
           />
           <SessionButton
             buttonType={SessionButtonType.Simple}
             buttonColor={SessionButtonColor.Danger}
             onClick={closeDialog}
             disabled={removingInProgress}
-            text={localize('cancel').toString()}
+            text={tr('cancel')}
           />
         </ModalActionsContainer>
       }

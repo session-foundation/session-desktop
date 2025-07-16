@@ -36,6 +36,7 @@ import { ed25519Str } from '../String';
 import { WithMessageHash } from '../../types/with';
 import { NetworkTime } from '../../../util/NetworkTime';
 import { sleepFor } from '../Promise';
+import { tr } from '../../../localization/localeTools';
 
 export type InputItem = { deviceId: string; label: string };
 
@@ -1296,7 +1297,7 @@ export async function handleMissedCall(
   const displayname =
     incomingCallConversation?.getNickname() ||
     incomingCallConversation?.getRealSessionUsername() ||
-    window.i18n('unknown');
+    tr('unknown');
 
   switch (reason) {
     case 'permissions':

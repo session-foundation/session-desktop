@@ -21,7 +21,7 @@ import { Flex } from '../basic/Flex';
 import { Snode } from '../../data/types';
 import { SessionSpinner } from '../loading';
 import { getCrowdinLocale } from '../../util/i18n/shared';
-import { localize } from '../../localization/localeTools';
+import { tr } from '../../localization/localeTools';
 import {
   ModalBasicHeader,
   ModalActionsContainer,
@@ -79,11 +79,11 @@ function useOnionPathWithUsAndNetwork() {
 
   return [
     {
-      label: localize('you').toString(),
+      label: tr('you'),
     },
     ...onionPath,
     {
-      label: localize('onionRoutingPathDestination').toString(),
+      label: tr('onionRoutingPathDestination'),
     },
   ];
 }
@@ -159,7 +159,7 @@ const OnionPathModalInner = () => {
                 countryNamesAsAny?.[locale] || // try to find the country name based on the user local first
                 // eslint-disable-next-line dot-notation
                 countryNamesAsAny?.['en'] || // if not found, fallback to the country in english
-                localize('onionRoutingPathUnknownCountry').toString();
+                tr('onionRoutingPathUnknownCountry');
 
               return (
                 <OnionCountryDisplay
@@ -280,13 +280,11 @@ export const OnionPathModal = () => {
   return (
     <SessionWrapperModal
       onClose={() => dispatch(onionPathModal(null))}
-      headerChildren={
-        <ModalBasicHeader title={localize('onionRoutingPath').toString()} showExitIcon={true} />
-      }
+      headerChildren={<ModalBasicHeader title={tr('onionRoutingPath')} showExitIcon={true} />}
       buttonChildren={
         <ModalActionsContainer>
           <SessionButton
-            text={localize('learnMore').toString()}
+            text={tr('learnMore')}
             buttonType={SessionButtonType.Simple}
             onClick={() => {
               void shell.openExternal('https://getsession.org/faq/#onion-routing');

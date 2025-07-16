@@ -13,7 +13,7 @@ import {
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SpacerXS } from '../basic/Text';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
-import { localize } from '../../localization/localeTools';
+import { tr } from '../../localization/localeTools';
 
 const StyledScrollDescriptionContainer = styled.div`
   max-height: 150px;
@@ -45,21 +45,19 @@ export function OpenUrlModal(props: OpenUrlModalState) {
 
   return (
     <SessionWrapperModal
-      headerChildren={
-        <ModalBasicHeader title={localize('urlOpen').toString()} showExitIcon={true} />
-      }
+      headerChildren={<ModalBasicHeader title={tr('urlOpen')} showExitIcon={true} />}
       onClose={onClose}
       buttonChildren={
         <ModalActionsContainer>
           <SessionButton
-            text={localize('open').toString()}
+            text={tr('open')}
             buttonColor={SessionButtonColor.Danger}
             buttonType={SessionButtonType.Simple}
             onClick={onClickOpen}
             dataTestId="open-url-confirm-button"
           />
           <SessionButton
-            text={localize('urlCopy').toString()}
+            text={tr('urlCopy')}
             buttonType={SessionButtonType.Simple}
             onClick={onClickCopy}
             dataTestId="copy-url-button"
