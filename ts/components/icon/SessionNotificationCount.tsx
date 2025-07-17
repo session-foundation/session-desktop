@@ -6,6 +6,7 @@ type Props = {
   centeredOnTop: boolean;
   count?: number;
 };
+
 const StyledCountContainer = styled.div<{ $centeredOnTop: boolean }>`
   background: var(--unread-messages-alert-background-color);
   color: var(--unread-messages-alert-text-color);
@@ -14,7 +15,7 @@ const StyledCountContainer = styled.div<{ $centeredOnTop: boolean }>`
   padding: ${props => (props.$centeredOnTop ? '1px 3px 0' : '1px 4px')};
 
   position: absolute;
-  top: ${props => (props.$centeredOnTop ? '-10px' : '22px')};
+  top: ${props => (props.$centeredOnTop ? '-10px' : '13px')};
   left: ${props => (props.$centeredOnTop ? '50%' : '28px')};
 
   font-size: var(--font-size-xs);
