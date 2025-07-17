@@ -30,6 +30,7 @@ import { AttachmentType } from '../../../types/Attachment';
 import { processNewAttachment } from '../../../types/MessageAttachment';
 import { AttachmentUtil } from '../../../util';
 import {
+  type BetterBlob,
   StagedAttachmentImportedType,
   StagedPreviewImportedType,
 } from '../../../util/attachmentsUtil';
@@ -73,20 +74,13 @@ export interface ReplyingToMessageProps {
   attachments?: Array<any>;
 }
 
-export type StagedLinkPreviewImage = {
-  data: ArrayBuffer;
-  size: number;
-  width: number;
-  height: number;
-  contentType: string;
-};
-
 export interface StagedLinkPreviewData {
   isLoaded: boolean;
   title: string | null;
   url: string | null;
   domain: string | null;
-  image?: StagedLinkPreviewImage;
+  image?: BetterBlob,
+  imageData?: string;
 }
 
 export interface StagedAttachmentType extends AttachmentType {
@@ -497,7 +491,7 @@ class CompositionBoxInner extends Component<Props, State> {
       return null;
     }
 
-    const { isLoaded, title, domain, image } = this.state.stagedLinkPreview;
+    const { isLoaded, title, domain, image, imageData } = this.state.stagedLinkPreview;
 
     return (
       <SessionStagedLinkPreview
@@ -505,6 +499,7 @@ class CompositionBoxInner extends Component<Props, State> {
         title={title}
         domain={domain}
         image={image}
+        imageData={imageData}
         url={firstLink}
         onClose={url => {
           this.setState({ ignoredLink: url });
@@ -521,6 +516,7 @@ class CompositionBoxInner extends Component<Props, State> {
         url: firstLink,
         domain: null,
         image: undefined,
+        imageData: undefined,
         title: null,
       },
     });
@@ -544,6 +540,7 @@ class CompositionBoxInner extends Component<Props, State> {
               url: ret?.url || null,
               domain: (ret?.url && LinkPreviews.getDomain(ret.url)) || '',
               image: ret?.image,
+              imageData: ret?.imageData,
             },
           });
         } else if (this.linkPreviewAbortController) {
@@ -554,6 +551,7 @@ class CompositionBoxInner extends Component<Props, State> {
               url: null,
               domain: null,
               image: undefined,
+              imageData: undefined,
             },
           });
           this.linkPreviewAbortController = undefined;
@@ -581,6 +579,7 @@ class CompositionBoxInner extends Component<Props, State> {
               url: firstLink,
               domain: null,
               image: undefined,
+              imageData: undefined,
             },
           });
         }
@@ -802,6 +801,7 @@ class CompositionBoxInner extends Component<Props, State> {
 
     try {
       const { attachments, previews } = await this.getFiles(linkPreview);
+
       this.props.sendMessage({
         body: text.trim(),
         attachments: attachments || [],
@@ -860,8 +860,8 @@ class CompositionBoxInner extends Component<Props, State> {
       // store the first image preview locally and get the path and details back to include them in the message
       const firstLinkPreviewImage = linkPreview.image;
       if (firstLinkPreviewImage && !isEmpty(firstLinkPreviewImage)) {
-        const storedLinkPreviewAttachment = await AttachmentUtil.getFileAndStoreLocallyImageBuffer(
-          firstLinkPreviewImage.data
+        const storedLinkPreviewAttachment = await AttachmentUtil.getFileAndStoreLocallyImageBlob(
+          firstLinkPreviewImage
         );
         if (storedLinkPreviewAttachment) {
           previews = [{ ...sharedDetails, image: storedLinkPreviewAttachment }];

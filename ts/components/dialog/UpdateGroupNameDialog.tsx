@@ -86,9 +86,9 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
   }
 
   async function fireInputEvent() {
-    const scaledObjectUrl = await pickFileForAvatar();
-    if (scaledObjectUrl) {
-      setNewAvatarObjectUrl(scaledObjectUrl);
+    const res = await pickFileForAvatar();
+    if (res) {
+      setNewAvatarObjectUrl(res.imageUrl);
     }
   }
 

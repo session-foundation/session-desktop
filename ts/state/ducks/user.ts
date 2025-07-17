@@ -5,6 +5,7 @@ import { SyncUtils, UserUtils } from '../../session/utils';
 import { getSodiumRenderer } from '../../session/crypto';
 import { uploadAndSetOurAvatarShared } from '../../interactions/avatar-interactions/nts-avatar-interactions';
 import { ed25519Str } from '../../session/utils/String';
+import { editProfileModal, updateEditProfilePictureModal } from './modalDialog';
 
 export type UserStateType = {
   ourDisplayNameInProfile: string;
@@ -36,11 +37,17 @@ const updateOurAvatar = createAsyncThunk(
     // Uploading a new avatar, we want to encrypt its data with a new key.
     const profileKey = sodium.randombytes_buf(32);
 
-    return uploadAndSetOurAvatarShared({
+
+    const res = await uploadAndSetOurAvatarShared({
       decryptedAvatarData: newAvatarDecrypted,
       ourConvo,
       profileKey,
     });
+
+    window.inboxStore?.dispatch(updateEditProfilePictureModal(null));
+    window.inboxStore?.dispatch(editProfileModal({}));
+
+    return res
   }
 );
 

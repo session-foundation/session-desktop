@@ -408,12 +408,9 @@ export class SessionConversation extends Component<Props, State> {
     let blob = null;
 
     try {
-      blob = await AttachmentUtil.autoScale({
-        contentType,
-        blob: file,
-      });
+      blob = MIME.isImage(contentType) ? await AttachmentUtil.autoScaleBlob(file) : file;
 
-      if (blob.blob.size > MAX_ATTACHMENT_FILESIZE_BYTES) {
+      if (blob.size > MAX_ATTACHMENT_FILESIZE_BYTES) {
         ToastUtils.pushFileSizeErrorAsByte();
         return;
       }

@@ -7,6 +7,7 @@ import { downloadAttachmentSogsV3 } from '../../receiver/attachments';
 import { uploadImageForRoomSogsV3 } from '../../session/apis/open_group_api/sogsv3/sogsV3RoomImage';
 import { MIME } from '../../types';
 import { processNewAttachment } from '../../types/MessageAttachment';
+import { updateEditProfilePictureModal } from './modalDialog';
 
 type RoomInfo = {
   canWrite: boolean;
@@ -100,6 +101,9 @@ const changeCommunityAvatar = createAsyncThunk(
       avatarPath: upgraded.path,
       avatarImageId,
     });
+
+    window.inboxStore?.dispatch(updateEditProfilePictureModal(null));
+
     return true;
   }
 );

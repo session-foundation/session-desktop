@@ -4,17 +4,28 @@ import imageType from 'image-type';
 import { arrayBufferToBlob } from 'blob-util';
 import loadImage from 'blueimp-load-image';
 import { filesize } from 'filesize';
+import { isUndefined } from 'lodash';
 import { StagedAttachmentType } from '../components/conversation/composition/CompositionBox';
 import { SignalService } from '../protobuf';
 import { DecryptedAttachmentsManager } from '../session/crypto/DecryptedAttachmentsManager';
 import { sendDataExtractionNotification } from '../session/messages/outgoing/controlMessage/DataExtractionNotificationMessage';
 import { AttachmentType, save } from '../types/Attachment';
-import { IMAGE_GIF, IMAGE_JPEG, IMAGE_PNG, IMAGE_TIFF, IMAGE_UNKNOWN } from '../types/MIME';
+import {
+  IMAGE_GIF,
+  IMAGE_JPEG,
+  IMAGE_PNG,
+  IMAGE_TIFF,
+  IMAGE_UNKNOWN,
+  IMAGE_WEBP, type MIMEType,
+} from '../types/MIME';
 import { getAbsoluteAttachmentPath, processNewAttachment } from '../types/MessageAttachment';
 import { THUMBNAIL_SIDE } from '../types/attachments/VisualAttachment';
 
 import { FILESIZE, MAX_ATTACHMENT_FILESIZE_BYTES } from '../session/constants';
 import { perfEnd, perfStart } from '../session/utils/Performance';
+import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
+import { isImageAnimated } from '../types/attachments/animated';
+import { MIME } from '../types';
 
 /**
  * The logic for sending attachments is as follow:
@@ -34,7 +45,71 @@ import { perfEnd, perfStart } from '../session/utils/Performance';
  *
  * 10. We use the grabbed data for upload of the attachments, get an url for each of them and send the url with the attachments details to the user/opengroup/closed group
  */
-const DEBUG_ATTACHMENTS_SCALE = false;
+const DEBUG_ATTACHMENTS_SCALE = true;
+type HandleContentTypeCallback = (contentType: MIMEType) => void
+
+export type BetterBlob = Blob & { __brand: 'BetterBlob',
+  /** @deprecated -- `type` should not be used, it can be tampered with, use @see {@link contentType} */
+  type: Blob['type'],
+  contentType: MIMEType,
+  animated: boolean
+  width?: number;
+  height?: number;
+};
+
+async function createBetterBlobFromBlob(
+  blob: Blob,
+  contentType?: MIMEType,
+  isAnimated?: boolean
+): Promise<BetterBlob> {
+  if (!MIME.isImage(blob.type)) {
+    return blob as unknown as BetterBlob;
+  }
+  const arrayBuffer = await blob.arrayBuffer();
+
+  const _blob = blob as unknown as BetterBlob;
+
+  _blob.contentType = contentType ?? imageTypeFromArrayBuffer(arrayBuffer);
+  _blob.animated = isAnimated ?? await isImageAnimated(arrayBuffer, _blob.contentType);
+
+  return _blob;
+}
+
+async function createBetterBlobFromArrayBuffer(
+  arrayBuffer: ArrayBuffer,
+  contentType?: MIMEType,
+  isAnimated?: boolean
+): Promise<BetterBlob> {
+  const type = contentType ?? imageTypeFromArrayBuffer(arrayBuffer);
+  const blob = arrayBufferToBlob(arrayBuffer, type) satisfies Blob as unknown as BetterBlob;
+
+  blob.contentType = type;
+  blob.animated = isAnimated ?? await isImageAnimated(arrayBuffer, blob.contentType);
+
+  return blob;
+}
+
+async function createBetterBlobFromCanvas(
+  canvas: HTMLCanvasElement,
+  contentType: MIMEType,
+  quality: number,
+  isAnimated?: boolean
+): Promise<BetterBlob | null> {
+  const blob = await canvasToBlob(canvas, contentType, quality) as unknown as BetterBlob | null;
+
+  if (!blob) {
+    return null;
+  }
+
+  blob.contentType = contentType;
+  if (isUndefined(isAnimated)) {
+    const arrayBuffer= await blob.arrayBuffer();
+    blob.animated = await isImageAnimated(arrayBuffer, contentType);
+  }
+
+  return blob;
+}
+
 export interface MaxScaleSize {
   maxSize?: number;
   maxHeight?: number;
@@ -42,91 +117,116 @@ export interface MaxScaleSize {
   maxSide?: number; // use this to make avatars cropped if too big and centered if too small.
 }
 
+type Options = {
+  handleContentTypeCallback?: HandleContentTypeCallback;
+  maxScaleSize?: MaxScaleSize;
+}
+
 export const ATTACHMENT_DEFAULT_MAX_SIDE = 4096;
 
 export const AVATAR_MAX_SIDE = 640;
 
-/**
- * Resize a jpg/gif/png file to our definition on an avatar before upload
- */
-export async function autoScaleForAvatar<T extends { contentType: string; blob: Blob }>(
-  attachment: T
-) {
-  const maxMeasurements = {
-    maxSide: AVATAR_MAX_SIDE,
-    maxSize: 5 * FILESIZE.MB,
-  };
+function isSupportedAvatarContentType(contentType: MIMEType) {
+  // WEBP is only supported after the pro release
+  const proAvailable = getFeatureFlag('proAvailable');
 
-  // we can only upload jpeg, gif, or png as avatar/opengroup
+  return (contentType === IMAGE_PNG ||
+    contentType === IMAGE_GIF ||
+    contentType === IMAGE_JPEG ||
+    (proAvailable && contentType === IMAGE_WEBP))
+}
 
-  if (
-    attachment.contentType !== IMAGE_PNG &&
-    attachment.contentType !== IMAGE_GIF &&
-    attachment.contentType !== IMAGE_JPEG
-  ) {
-    // nothing to do
-    throw new Error('Cannot autoScaleForAvatar another file than PNG, GIF or JPEG.');
+const optionsAvatar = {
+  maxSide: AVATAR_MAX_SIDE,
+  maxSize: 5 * FILESIZE.MB,
+};
+
+const optionsThumbnail = {
+  maxSide: THUMBNAIL_SIDE,
+  maxSize: 200 * FILESIZE.KB,
+};
+
+const handleContentTypeCallbackAvatar = (contentType: MIMEType) => {
+  if (!isSupportedAvatarContentType(contentType)) {
+    throw new Error(
+      `Cannot processImageAvatar ${contentType} file. Only PNG, GIF or JPEG.`
+    );
   }
+}
 
-  if (DEBUG_ATTACHMENTS_SCALE) {
-    window.log.debug('autoscale for avatar', maxMeasurements);
-  }
-  return autoScale(attachment, maxMeasurements);
+async function processImage(arrayBuffer: ArrayBuffer, options: Options) {
+  const blob = await createBetterBlobFromArrayBuffer(arrayBuffer);
+  options.handleContentTypeCallback?.(blob.contentType);
+
+  return autoScale(blob, options.maxScaleSize);
+}
+
+function imageTypeFromArrayBuffer(arrayBuffer: ArrayBuffer) {
+  const data = new Uint8Array(arrayBuffer);
+  return imageType(data)?.mime ?? IMAGE_UNKNOWN;
+}
+
+async function processImageBlob(blob: Blob, options: Options = {}) {
+  const arrayBuffer = await blob.arrayBuffer();
+  return processImage(arrayBuffer, options);
 }
 
 /**
- * Resize an avatar when we receive it, before saving it locally.
+ * Resize a jpg/gif/png file to our definition on an avatar before upload
  */
-export async function autoScaleForIncomingAvatar(incomingAvatar: ArrayBuffer) {
-  const maxMeasurements = {
-    maxSide: AVATAR_MAX_SIDE,
-    maxSize: 5 * FILESIZE.MB,
-  };
-
-  // the avatar url send in a message does not contain anything related to the avatar MIME type, so
-  // we use imageType to find the MIMEtype from the buffer itself
-
-  const imageTypeParsed = imageType(new Uint8Array(incomingAvatar));
-  const contentType = imageTypeParsed?.mime || IMAGE_UNKNOWN;
-  const blob = arrayBufferToBlob(incomingAvatar, contentType);
-  // we do not know how to resize an incoming gif avatar, so just keep it full sized.
-  if (contentType === IMAGE_GIF) {
-    return {
-      contentType,
-      blob,
-    };
-  }
-
+export async function processAvatarImageBlob(blob: Blob) {
   if (DEBUG_ATTACHMENTS_SCALE) {
-    window.log.debug('autoscale for incoming avatar', maxMeasurements);
+    window.log.debug('autoscale for avatar', optionsAvatar);
   }
 
-  return autoScale(
-    {
-      blob,
-      contentType,
-    },
-    maxMeasurements
-  );
+  return processImageBlob(blob, {
+    handleContentTypeCallback: handleContentTypeCallbackAvatar,
+    maxScaleSize: optionsAvatar,
+  });
+}
+
+export async function processAvatarImageArrayBuffer(arrayBuffer: ArrayBuffer) {
+  if (DEBUG_ATTACHMENTS_SCALE) {
+    window.log.debug('autoscale for avatar', optionsAvatar);
+  }
+
+  return processImage(arrayBuffer, {
+    handleContentTypeCallback: handleContentTypeCallbackAvatar,
+    maxScaleSize: optionsAvatar,
+  });
 }
 
 /**
  * Auto scale an attachment to get a thumbnail from it. We consider that a thumbnail is currently at most 200 ko, is a square and has a maxSize of THUMBNAIL_SIDE
  * @param attachment the attachment to auto scale
  */
-export async function autoScaleForThumbnail<T extends { contentType: string; blob: Blob }>(
-  attachment: T
+export async function autoScaleForThumbnailBlob(
+  blob: Blob
 ) {
-  const maxMeasurements = {
-    maxSide: THUMBNAIL_SIDE,
-    maxSize: 200 * 1000, // 200 ko
-  };
-
   if (DEBUG_ATTACHMENTS_SCALE) {
-    window.log.debug('autoScaleForThumbnail', maxMeasurements);
+    window.log.debug('autoScaleForThumbnail', optionsThumbnail);
   }
 
-  return autoScale(attachment, maxMeasurements);
+  return processImageBlob(blob, {
+    maxScaleSize: optionsThumbnail,
+  })
+}
+
+
+/**
+ * Auto scale an attachment to get a thumbnail from it. We consider that a thumbnail is currently at most 200 ko, is a square and has a maxSize of THUMBNAIL_SIDE
+ * @param attachment the attachment to auto scale
+ */
+export async function autoScaleForThumbnailArrayBuffer(
+  arrayBuffer: ArrayBuffer
+) {
+  if (DEBUG_ATTACHMENTS_SCALE) {
+    window.log.debug('autoScaleForThumbnail', optionsThumbnail);
+  }
+
+  return processImage(arrayBuffer, {
+    maxScaleSize: optionsThumbnail,
+  })
 }
 
 async function canvasToBlob(
@@ -145,25 +245,38 @@ async function canvasToBlob(
   });
 }
 
+export async function autoScaleBlob(
+  blob: Blob,
+  maxMeasurements?: MaxScaleSize,
+  removeAnimation?: boolean
+) {
+  const betterBlob = await createBetterBlobFromBlob(blob);
+  if (betterBlob.contentType === IMAGE_UNKNOWN || !MIME.isImage(betterBlob.contentType)) {
+    betterBlob.contentType = blob.type;
+    return betterBlob;
+  }
+  return autoScale(betterBlob, maxMeasurements, removeAnimation);
+}
+
 /**
  * Scale down an image to fit in the required dimension.
  * Note: This method won't crop if needed,
  * @param attachment The attachment to scale down
  * @param maxMeasurements any of those will be used if set
  */
-
-export async function autoScale<T extends { contentType: string; blob: Blob }>(
-  attachment: T,
-  maxMeasurements?: MaxScaleSize
-): Promise<{
-  contentType: string;
-  blob: Blob;
-  width?: number;
-  height?: number;
-}> {
+export async function autoScale(
+  attachment: BetterBlob,
+  maxMeasurements?: MaxScaleSize,
+  removeAnimation?: boolean
+): Promise<BetterBlob> {
   const start = Date.now();
-  const { contentType, blob } = attachment;
-  if (contentType.split('/')[0] !== 'image' || contentType === IMAGE_TIFF) {
+  const contentType = attachment.contentType
+
+  if (DEBUG_ATTACHMENTS_SCALE) {
+    window.log.debug('autoscale', attachment, maxMeasurements);
+  }
+
+  if (!MIME.isImage(contentType) || contentType === IMAGE_TIFF) {
     // nothing to do
     return attachment;
   }
@@ -183,16 +296,18 @@ export async function autoScale<T extends { contentType: string; blob: Blob }>(
   const maxWidth =
     maxMeasurements?.maxWidth || maxMeasurements?.maxSide || ATTACHMENT_DEFAULT_MAX_SIDE;
 
-  if (blob.type === IMAGE_GIF && blob.size <= maxSize) {
-    return attachment;
+  if (attachment.animated && !removeAnimation) {
+    if (attachment.size <= maxSize) {
+      return attachment;
+    }
+    const imgType = attachment.contentType === IMAGE_WEBP ? 'WEBP' : 'GIF';
+    throw new Error(
+      `${imgType} is too large. Max size: ${filesize(maxSize, { base: 10, round: 0 })}`
+    );
   }
 
-  if (blob.type === IMAGE_GIF && blob.size > maxSize) {
-    throw new Error(`GIF is too large. Max size: ${filesize(maxSize, { base: 10, round: 0 })}`);
-  }
-
-  perfStart(`loadimage-*${blob.size}`);
-  const canvasLoad = await loadImage(blob, {});
+  perfStart(`loadimage-*${attachment.size}`);
+  const canvasLoad = await loadImage(attachment, {});
   const canvasScaled = loadImage.scale(
     canvasLoad.image, // img or canvas element
     {
@@ -206,49 +321,42 @@ export async function autoScale<T extends { contentType: string; blob: Blob }>(
       meta: false,
     }
   );
-  perfEnd(`loadimage-*${blob.size}`, `loadimage-*${blob.size}`);
+  perfEnd(`loadimage-*${attachment.size}`, `loadimage-*${attachment.size}`);
   if (!canvasScaled || !canvasScaled.width || !canvasScaled.height) {
     throw new Error('failed to scale image');
   }
 
-  let readAndResizedBlob = blob;
-
-  if (
-    canvasScaled.width <= maxWidth &&
-    canvasScaled.height <= maxHeight &&
-    blob.size <= maxSize &&
-    !makeSquare
-  ) {
-    if (DEBUG_ATTACHMENTS_SCALE) {
-      window.log.debug('canvasScaled used right away as width, height and size are fine', {
-        canvasScaledWidth: canvasScaled.width,
-        canvasScaledHeight: canvasScaled.height,
-        maxWidth,
-        maxHeight,
-        blobsize: blob.size,
-        maxSize,
-        makeSquare,
-      });
-    }
-    // the canvas has a size of whatever was given by the caller of autoscale().
-    // so we have to return those measures as the loaded file has now those measures.
-    return {
-      blob,
-      contentType: attachment.contentType,
-      width: canvasScaled.width,
-      height: canvasScaled.height,
-    };
-  }
-  if (DEBUG_ATTACHMENTS_SCALE) {
-    window.log.debug('canvasOri.originalWidth', {
+  const debugData = DEBUG_ATTACHMENTS_SCALE ? {
       canvasOriginalWidth: canvasScaled.width,
       canvasOriginalHeight: canvasScaled.height,
       maxWidth,
       maxHeight,
-      blobsize: blob.size,
+      blobsize: attachment.size,
       maxSize,
       makeSquare,
-    });
+    } : null;
+
+  let readAndResizedBlob = attachment;
+  if (
+    canvasScaled.width <= maxWidth &&
+    canvasScaled.height <= maxHeight &&
+    attachment.size <= maxSize &&
+    !makeSquare
+  ) {
+    if (DEBUG_ATTACHMENTS_SCALE) {
+      window.log.debug('canvasScaled used right away as width, height and size are fine', debugData);
+    }
+    // the canvas has a size of whatever was given by the caller of autoscale().
+    // so we have to return those measures as the loaded file has now those measures.
+    // eslint-disable-next-line no-param-reassign
+    attachment.width = canvasScaled.width;
+    // eslint-disable-next-line no-param-reassign
+    attachment.height = canvasScaled.height;
+
+    return attachment;
+  }
+  if (DEBUG_ATTACHMENTS_SCALE) {
+    window.log.debug('canvasOri.originalWidth', debugData);
   }
   let quality = 0.95;
   const startI = 4;
@@ -259,11 +367,11 @@ export async function autoScale<T extends { contentType: string; blob: Blob }>(
       window.log.debug(`autoscale iteration: [${i}] for:`, JSON.stringify(readAndResizedBlob.size));
     }
     // eslint-disable-next-line no-await-in-loop
-    const tempBlob = await canvasToBlob(canvasScaled, 'image/jpeg', quality);
-
+    const tempBlob = await createBetterBlobFromCanvas(canvasScaled, IMAGE_JPEG, quality);
     if (!tempBlob) {
       throw new Error('Failed to get blob during canvasToBlob.');
     }
+
     readAndResizedBlob = tempBlob;
     quality = (quality * maxSize) / (readAndResizedBlob.size * (i === 1 ? 2 : 1)); // make the last iteration decrease drastically quality of the image
 
@@ -277,13 +385,10 @@ export async function autoScale<T extends { contentType: string; blob: Blob }>(
   }
   window.log.debug(`[perf] autoscale took ${Date.now() - start}ms `);
 
-  return {
-    contentType: attachment.contentType,
-    blob: readAndResizedBlob,
+  readAndResizedBlob.width = canvasScaled.width;
+  readAndResizedBlob.height = canvasScaled.height;
 
-    width: canvasScaled.width,
-    height: canvasScaled.height,
-  };
+  return readAndResizedBlob;
 }
 
 export type StagedAttachmentImportedType = Omit<
@@ -324,19 +429,11 @@ export async function getFileAndStoreLocally(
     ? (SignalService.AttachmentPointer.Flags.VOICE_MESSAGE as number)
     : null;
 
-  const blob: Blob = attachment.file;
-
-  const scaled = await autoScale(
-    {
-      ...attachment,
-      blob,
-    },
-    maxMeasurements
-  );
+  const scaled = MIME.isImage(attachment.contentType) ?  await autoScaleBlob(attachment.file, maxMeasurements) : attachment.file;
 
   // this operation might change the file size, so be sure to rely on it on return here.
   const attachmentSavedLocally = await processNewAttachment({
-    data: await scaled.blob.arrayBuffer(),
+    data: await scaled.arrayBuffer(),
     contentType: attachment.contentType,
     fileName: attachment.fileName,
   });
@@ -355,25 +452,11 @@ export async function getFileAndStoreLocally(
   };
 }
 
-export async function getFileAndStoreLocallyImageBuffer(imageBuffer: ArrayBuffer) {
-  if (!imageBuffer || !imageBuffer.byteLength) {
-    return null;
-  }
-
-  const imageTypeParsed = imageType(new Uint8Array(imageBuffer));
-
-  const contentType = imageTypeParsed?.mime || IMAGE_UNKNOWN;
-
-  const blob = new Blob([imageBuffer], { type: contentType });
-
-  const scaled = await autoScaleForThumbnail({
-    contentType,
-    blob,
-  });
-
+export async function getFileAndStoreLocallyImageBlob(blob: BetterBlob) {
+  const scaled = await autoScaleForThumbnailBlob(blob);
   // this operation might change the file size, so be sure to rely on it on return here.
   const attachmentSavedLocally = await processNewAttachment({
-    data: await scaled.blob.arrayBuffer(),
+    data: await scaled.arrayBuffer(),
     contentType: scaled.contentType,
   });
 

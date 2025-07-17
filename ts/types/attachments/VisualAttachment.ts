@@ -7,10 +7,14 @@ import { toLogFormat } from './Errors';
 import { DecryptedAttachmentsManager } from '../../session/crypto/DecryptedAttachmentsManager';
 import { ToastUtils } from '../../session/utils';
 import { GoogleChrome } from '../../util';
-import { autoScaleForAvatar, autoScaleForThumbnail } from '../../util/attachmentsUtil';
+import {
+  processAvatarImageBlob,
+  autoScaleForThumbnailBlob,
+} from '../../util/attachmentsUtil';
 import { isAudio } from '../MIME';
 import { formatTimeDurationMs } from '../../util/i18n/formatting/generics';
 import { isTestIntegration } from '../../shared/env_vars';
+import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 
 export const THUMBNAIL_SIDE = 200;
 export const THUMBNAIL_CONTENT_TYPE = 'image/png';
@@ -60,9 +64,9 @@ export const makeImageThumbnailBuffer = async ({
     );
   }
   const decryptedBlob = await DecryptedAttachmentsManager.getDecryptedBlob(objectUrl, contentType);
-  const scaled = await autoScaleForThumbnail({ contentType, blob: decryptedBlob });
+  const scaled = await autoScaleForThumbnailBlob(decryptedBlob);
 
-  return blobToArrayBuffer(scaled.blob);
+  return blobToArrayBuffer(scaled);
 };
 
 export const makeVideoScreenshot = async ({
@@ -184,11 +188,9 @@ export const revokeObjectUrl = (objectUrl: string) => {
 
 export async function autoScaleAvatarBlob(file: File) {
   try {
-    const scaled = await autoScaleForAvatar({ blob: file, contentType: file.type });
+    const scaled = await processAvatarImageBlob(file);
 
-    const url = window.URL.createObjectURL(scaled.blob);
-
-    return url;
+    return { imageUrl: window.URL.createObjectURL(scaled), isAnimated: scaled.animated };
   } catch (e) {
     ToastUtils.pushToastError(
       'pickFileForAvatar',
@@ -202,7 +204,10 @@ export async function autoScaleAvatarBlob(file: File) {
 /**
  * Shows the system file picker for images, scale the image down for avatar/opengroup measurements and return the blob objectURL on success
  */
-export async function pickFileForAvatar(): Promise<string | null> {
+export async function pickFileForAvatar(): Promise<{
+  imageUrl: string | null;
+  isAnimated: boolean;
+} | null> {
   if (isTestIntegration()) {
     window.log.warn(
       'shorting pickFileForAvatar as it does not work in playwright/notsending the filechooser event'
@@ -221,18 +226,24 @@ export async function pickFileForAvatar(): Promise<string | null> {
       canvas.toBlob(blob => {
         const file = new File([blob as Blob], 'image.png', { type: 'image/png' });
         void autoScaleAvatarBlob(file)
-          .then(url => resolve(url))
+          .then(resolve)
           // eslint-disable-next-line no-console
           .catch(console.error);
       });
     });
   }
+
+  const acceptedImages = ['.png', '.gif', '.jpeg', '.jpg'];
+  if (getFeatureFlag('proAvailable')) {
+    acceptedImages.push('.webp')
+  }
+
   const [fileHandle] = await (window as any).showOpenFilePicker({
     types: [
       {
         description: 'Images',
         accept: {
-          'image/*': ['.png', '.gif', '.jpeg', '.jpg'],
+          'image/*': acceptedImages,
         },
       },
     ],

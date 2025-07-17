@@ -4,7 +4,6 @@ import { UserUtils } from '../..';
 import { downloadAttachment } from '../../../../receiver/attachments';
 import { MIME } from '../../../../types';
 import { processNewAttachment } from '../../../../types/MessageAttachment';
-import { autoScaleForIncomingAvatar } from '../../../../util/attachmentsUtil';
 import { decryptProfile } from '../../../../util/crypto/profileEncrypter';
 import { ConvoHub } from '../../../conversations';
 import { fromHexToArray } from '../../String';
@@ -15,6 +14,7 @@ import {
   PersistedJob,
   RunJobResult,
 } from '../PersistedJob';
+import { processAvatarImageArrayBuffer } from '../../../../util/attachmentsUtil';
 
 const defaultMsBetweenRetries = 10000;
 const defaultMaxAttempts = 3;
@@ -148,10 +148,10 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
           );
 
           // we autoscale incoming avatars because our app keeps decrypted avatars in memory and some platforms allows large avatars to be uploaded.
-          const scaledData = await autoScaleForIncomingAvatar(decryptedData);
+          const scaledData = await processAvatarImageArrayBuffer(decryptedData);
 
           const upgraded = await processNewAttachment({
-            data: await scaledData.blob.arrayBuffer(),
+            data: await scaledData.arrayBuffer(),
             contentType: MIME.IMAGE_UNKNOWN, // contentType is mostly used to generate previews and screenshot. We do not care for those in this case.
           });
           conversation = ConvoHub.use().getOrThrow(convoId);

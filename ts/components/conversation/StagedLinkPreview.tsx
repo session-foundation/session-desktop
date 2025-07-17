@@ -2,23 +2,22 @@ import styled from 'styled-components';
 
 import { Image } from './Image';
 
-import { fromArrayBufferToBase64 } from '../../session/utils/String';
 import { isImage } from '../../types/MIME';
 import { Flex } from '../basic/Flex';
 import { SessionSpinner } from '../loading';
-import { StagedLinkPreviewImage } from './composition/CompositionBox';
 import { AriaLabels } from '../../util/hardcodedAriaLabels';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { tr } from '../../localization/localeTools';
+import type { BetterBlob } from '../../util/attachmentsUtil';
 
 type Props = {
   isLoaded: boolean;
   title: null | string;
   url: null | string;
   domain: null | string;
-  image?: StagedLinkPreviewImage;
-
+  image?: BetterBlob;
+  imageData?: string;
   onClose: (url: string) => void;
 };
 
@@ -49,7 +48,7 @@ const StyledText = styled(Flex)`
 `;
 
 export const StagedLinkPreview = (props: Props) => {
-  const { isLoaded, onClose, title, image, domain, url } = props;
+  const { isLoaded, onClose, title, image, imageData, domain, url } = props;
 
   const isContentTypeImage = image && isImage(image.contentType);
 
@@ -58,10 +57,6 @@ export const StagedLinkPreview = (props: Props) => {
   }
 
   const isLoading = !isLoaded;
-
-  const dataToRender = image?.data
-    ? `data:image/jpeg;base64, ${fromArrayBufferToBase64(image?.data)}`
-    : '';
 
   return (
     <StyledStagedLinkPreview
@@ -86,7 +81,7 @@ export const StagedLinkPreview = (props: Props) => {
               attachment={image as any}
               height={100}
               width={100}
-              url={dataToRender}
+              url={imageData}
               softCorners={true}
             />
           </StyledImage>
