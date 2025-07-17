@@ -10,6 +10,7 @@ export type SessionRadioItems = Array<{
   label: string;
   inputDataTestId: SessionDataTestId;
   labelDataTestId: SessionDataTestId;
+  disabled?: boolean;
 }>;
 
 interface Props {
@@ -50,6 +51,7 @@ export const SessionRadioGroup = (props: Props) => {
             label={item.label}
             active={itemIsActive}
             value={item.value}
+            disabled={item.disabled}
             inputDataTestId={item.inputDataTestId}
             labelDataTestId={item.labelDataTestId}
             inputName={group}

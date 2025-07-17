@@ -738,12 +738,6 @@ export const getMessagePropsByMessageId = createSelector(
     const isDeletable =
       sender === ourPubkey || !isPublic || (isPublic && (weAreAdmin || weAreModerator));
 
-    // A message is deletable for everyone if
-    // either we sent it no matter what the conversation type,
-    // or the convo is public and we are an admin or moderator
-    const isDeletableForEveryone =
-      sender === ourPubkey || (isPublic && (weAreAdmin || weAreModerator)) || false;
-
     const isSenderAdmin = groupAdmins.includes(sender);
 
     const messageProps: MessageModelPropsWithConvoProps = {
@@ -754,7 +748,6 @@ export const getMessagePropsByMessageId = createSelector(
         isPublic: !!isPublic,
         isSenderAdmin,
         isDeletable,
-        isDeletableForEveryone,
         weAreAdmin,
         conversationType: selectedConvo.type,
         sender,
