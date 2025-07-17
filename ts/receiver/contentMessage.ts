@@ -745,6 +745,7 @@ async function handleMessageRequestResponse(
 
       avatarInProfile: convosToMerge[0].get('avatarInProfile'),
       avatarPointer: convosToMerge[0].getAvatarPointer(), // don't set the avatar pointer
+      isApproved: convosToMerge[0].isApproved(),
       // nickname might be set already in conversationToApprove, so don't overwrite it
     });
 
