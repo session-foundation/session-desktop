@@ -58,12 +58,12 @@ describe('Password Util', () => {
       });
     });
 
-    it('should return an error if password is not between 6 and 64 characters', () => {
-      const invalid = ['a', 'abcde', '#'.repeat(65), '#'.repeat(100)];
+    it('should return an error if password is not between 6 and 256 characters', () => {
+      const invalid = ['a', 'abcde', '#'.repeat(257), '#'.repeat(300)];
       invalid.forEach(pass => {
         assert.strictEqual(
           PasswordUtil.validatePassword(pass),
-          'Password must be between 6 and 64 characters long'
+          'Password must be between 6 and 256 characters long'
         );
       });
     });
