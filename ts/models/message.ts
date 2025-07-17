@@ -183,7 +183,9 @@ export class MessageModel extends Model<MessageAttributes> {
       this.isExpirationTimerUpdate() ||
       this.isDataExtractionNotification() ||
       this.isMessageRequestResponse() ||
-      this.isGroupUpdate()
+      this.isGroupUpdate() ||
+      this.isCallNotification() ||
+      this.isInteractionNotification()
     );
   }
 

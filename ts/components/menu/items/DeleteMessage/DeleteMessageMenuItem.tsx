@@ -1,36 +1,24 @@
-import { useCallback } from 'react';
-import { deleteMessagesForX } from '../../../../interactions/conversations/unsendingInteractions';
-import {
-  useMessageIsDeletable,
-  useMessageIsDeletableForEveryone,
-  useMessageStatus,
-} from '../../../../state/selectors';
-import {
-  useSelectedConversationKey,
-  useSelectedIsPublic,
-} from '../../../../state/selectors/selectedConversation';
+import { useSelectedConversationKey } from '../../../../state/selectors/selectedConversation';
 import { ItemWithDataTestId } from '../MenuItemWithDataTestId';
 import { tr } from '../../../../localization/localeTools';
+import { useDeleteMessagesCb } from '../../../menuAndSettingsHooks/useDeleteMessagesCb';
 
 export const DeleteItem = ({ messageId }: { messageId: string }) => {
   const convoId = useSelectedConversationKey();
-  const isPublic = useSelectedIsPublic();
 
-  const isDeletable = useMessageIsDeletable(messageId);
-  const isDeletableForEveryone = useMessageIsDeletableForEveryone(messageId);
-  const messageStatus = useMessageStatus(messageId);
+  const deleteMessagesCb = useDeleteMessagesCb(convoId);
 
-  const enforceDeleteServerSide = isPublic && messageStatus !== 'error';
-
-  const onDelete = useCallback(() => {
-    if (convoId) {
-      void deleteMessagesForX([messageId], convoId, enforceDeleteServerSide);
-    }
-  }, [convoId, enforceDeleteServerSide, messageId]);
-
-  if (!convoId || (isPublic && !isDeletableForEveryone) || (!isPublic && !isDeletable)) {
+  if (!deleteMessagesCb) {
     return null;
   }
 
-  return <ItemWithDataTestId onClick={onDelete}>{tr('delete')}</ItemWithDataTestId>;
+  return (
+    <ItemWithDataTestId
+      onClick={() => {
+        void deleteMessagesCb?.(messageId);
+      }}
+    >
+      {tr('delete')}
+    </ItemWithDataTestId>
+  );
 };

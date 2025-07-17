@@ -5,7 +5,7 @@ import { v4 } from 'uuid';
 import AbortController from 'abort-controller';
 import { StringUtils } from '../..';
 import { Data } from '../../../../data/data';
-import { deleteMessagesFromSwarmOnly } from '../../../../interactions/conversations/unsendingInteractions';
+import { deleteMessagesFromSwarmAndMarkAsDeletedLocally } from '../../../../interactions/conversations/unsendingInteractions';
 import {
   MetaGroupWrapperActions,
   MultiEncryptWrapperActions,
@@ -226,20 +226,9 @@ class GroupPendingRemovalsJob extends PersistedJob<GroupPendingRemovalsPersisted
 
           const messageHashes = compact(models.map(m => m.getMessageHash()));
 
-          if (messageHashes.length) {
-            await deleteMessagesFromSwarmOnly(messageHashes, groupPk);
-          }
-          for (let index = 0; index < models.length; index++) {
-            const messageModel = models[index];
-            try {
-              // eslint-disable-next-line no-await-in-loop
-              await messageModel.markAsDeleted();
-            } catch (e) {
-              window.log.warn(
-                `GroupPendingRemoval markAsDeleted of ${messageModel.getMessageHash()} failed with`,
-                e.message
-              );
-            }
+          const convo = models?.[0].getConversation();
+          if (convo && messageHashes.length) {
+            await deleteMessagesFromSwarmAndMarkAsDeletedLocally(convo, models);
           }
         }
       } catch (e) {

@@ -75,6 +75,18 @@ declare module 'react' {
   // left pane section types
   type Sections = 'theme' | 'settings' | 'message' | 'privacy' | 'debug-menu';
 
+  type RadioOptions =
+    | 'device_and_network'
+    | 'device_only'
+    | 'deleteMessageEveryone'
+    | 'deleteMessageDevicesAll'
+    | 'deleteMessageDeviceOnly'
+    | 'enterForSend'
+    | 'enterForNewLine'
+    | 'message'
+    | 'name'
+    | 'count';
+
   type SettingsMenuItems =
     | 'message-requests'
     | 'recovery-password'
@@ -223,24 +235,8 @@ declare module 'react' {
     // SessionRadioGroup & SessionRadio
     | 'password-input-confirm'
     | 'msg-status'
-    | 'input-device_and_network'
-    | 'label-device_and_network'
-    | 'input-device_only'
-    | 'label-device_only'
-    | 'input-deleteForEveryone'
-    | 'label-deleteForEveryone'
-    | 'input-deleteJustForMe'
-    | 'label-deleteJustForMe'
-    | 'input-enterForSend'
-    | 'label-enterForSend'
-    | 'input-enterForNewLine'
-    | 'label-enterForNewLine'
-    | 'input-message'
-    | 'label-message'
-    | 'input-name'
-    | 'label-name'
-    | 'input-count'
-    | 'label-count'
+    | `input-${RadioOptions}`
+    | `label-${RadioOptions}`
     | 'clear-everyone-radio-option'
     | 'clear-device-radio-option'
     | 'clear-everyone-radio-option-label'
