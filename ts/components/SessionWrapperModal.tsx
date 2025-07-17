@@ -145,10 +145,10 @@ export const ModalActionsContainer = ({
       maxWidth={maxWidth || '300px'}
       $alignItems="center"
       $flexGap="var(--margins-md)"
-      height="50px"
+      height="unset"
       style={{
         justifySelf: 'center',
-        marginBottom: extraBottomMargin ? 'var(--margins-sm)' : '',
+        marginBottom: extraBottomMargin ? 'var(--margins-lg)' : 'var(--margins-md)',
         ...style,
       }}
       data-testid="modal-actions-container"
