@@ -15,13 +15,13 @@ import {
 } from '../MessageAttachment';
 import {
   THUMBNAIL_CONTENT_TYPE,
-  THUMBNAIL_SIDE,
   getImageDimensions,
   makeImageThumbnailBuffer,
   makeObjectUrl,
   makeVideoScreenshot,
   revokeObjectUrl,
 } from './VisualAttachment';
+import { maxThumbnailDetails } from '../../util/attachmentSizes';
 
 // Returns true if `rawAttachment` is a valid attachment based on our current schema.
 // Over time, we can expand this definition to become more narrow, e.g. require certain
@@ -254,8 +254,8 @@ export const captureDimensionsAndScreenshot = async (
         thumbnail: {
           path: thumbnailPath,
           contentType: THUMBNAIL_CONTENT_TYPE,
-          width: THUMBNAIL_SIDE,
-          height: THUMBNAIL_SIDE,
+          width: maxThumbnailDetails.maxSide,
+          height: maxThumbnailDetails.maxSide,
         },
         screenshot: null,
       };
@@ -302,8 +302,8 @@ export const captureDimensionsAndScreenshot = async (
       thumbnail: {
         path: thumbnailPath,
         contentType: THUMBNAIL_CONTENT_TYPE,
-        width: THUMBNAIL_SIDE,
-        height: THUMBNAIL_SIDE,
+        width: maxThumbnailDetails.maxSide,
+        height: maxThumbnailDetails.maxSide,
       },
       width,
       height,

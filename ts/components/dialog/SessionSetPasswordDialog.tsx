@@ -126,7 +126,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
             {...sharedInputProps}
             placeholder={placeholders[0]}
             onValueChanged={this.onPasswordInput}
-            data-testid="password-input"
+            inputDataTestId="password-input"
             autoFocus={true}
           />
           {passwordAction !== 'enter' && passwordAction !== 'remove' && (
@@ -134,7 +134,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
               {...sharedInputProps}
               placeholder={placeholders[1]}
               onValueChanged={this.onPasswordConfirmInput}
-              data-testid="password-input-confirm"
+              inputDataTestId="password-input-confirm"
             />
           )}
           {passwordAction === 'change' && (
@@ -142,7 +142,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
               {...sharedInputProps}
               placeholder={placeholders[2]}
               onValueChanged={this.onPasswordRetypeInput}
-              data-testid="password-input-reconfirm"
+              inputDataTestId="password-input-reconfirm"
             />
           )}
         </ModalFlexContainer>

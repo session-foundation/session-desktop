@@ -3,16 +3,15 @@ import { isUndefined, padStart } from 'lodash';
 import { format } from 'date-fns';
 import { SignalService } from '../protobuf';
 import { isImageTypeSupported, isVideoTypeSupported } from '../util/GoogleChrome';
-import { ATTACHMENT_DEFAULT_MAX_SIDE } from '../util/attachmentsUtil';
 import { saveURLAsFile } from '../util/saveURLAsFile';
 import * as MIME from './MIME';
-import { THUMBNAIL_SIDE } from './attachments/VisualAttachment';
 import { AriaLabels } from '../util/hardcodedAriaLabels';
+import { ATTACHMENT_DEFAULT_MAX_SIDE, maxThumbnailDetails } from '../util/attachmentSizes';
 
-const MAX_WIDTH = THUMBNAIL_SIDE;
-const MAX_HEIGHT = THUMBNAIL_SIDE;
-const MIN_WIDTH = THUMBNAIL_SIDE;
-const MIN_HEIGHT = THUMBNAIL_SIDE;
+const MAX_WIDTH = maxThumbnailDetails.maxSide;
+const MAX_HEIGHT = maxThumbnailDetails.maxSide;
+const MIN_WIDTH = maxThumbnailDetails.maxSide;
+const MIN_HEIGHT = maxThumbnailDetails.maxSide;
 
 // Used for displaying attachments in the UI
 export type AttachmentScreenshot = {

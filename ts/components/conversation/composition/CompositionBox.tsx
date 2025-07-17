@@ -413,12 +413,7 @@ class CompositionBoxInner extends Component<Props, State> {
           type="file"
           onChange={this.onChoseAttachment}
         />
-        <StyledSendMessageInput
-          role="main"
-          dir={this.props.htmlDirection}
-          ref={this.container}
-          data-testid="message-input"
-        >
+        <StyledSendMessageInput role="main" dir={this.props.htmlDirection} ref={this.container}>
           <CompositionTextArea
             draft={this.state.draft}
             initialDraft={this.state.initialDraft}

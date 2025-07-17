@@ -59,6 +59,9 @@ window.sessionFeatureFlags = {
   useClosedGroupV2QAButtons: false, // TODO DO NOT MERGE
   useOnionRequests: true,
   useTestNet: isTestNet() || isTestIntegration(),
+  useLocalDevNet: !isEmpty(process.env.LOCAL_DEVNET_SEED_URL)
+    ? process.env.LOCAL_DEVNET_SEED_URL
+    : undefined,
   debugInputCommands: !isEmpty(process.env.SESSION_DEBUG),
   alwaysShowRemainingChars: false,
   showPopoverAnchors: false,
@@ -292,6 +295,10 @@ setInterval(() => {
 window.clipboard = clipboard;
 
 window.getSeedNodeList = () => {
+  if (window.sessionFeatureFlags.useLocalDevNet) {
+    return [window.sessionFeatureFlags.useLocalDevNet];
+  }
+
   if (window.sessionFeatureFlags.useTestNet) {
     return ['http://seed2.getsession.org:38157'];
   }
