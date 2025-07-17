@@ -16,6 +16,8 @@ import { Image } from './Image';
 import { StagedGenericAttachment } from './StagedGenericAttachment';
 import { StagedPlaceholderAttachment } from './StagedPlaceholderAttachment';
 import { AriaLabels } from '../../util/hardcodedAriaLabels';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
 
 type Props = {
   attachments: Array<AttachmentType>;
@@ -27,10 +29,12 @@ const IMAGE_WIDTH = 120;
 const IMAGE_HEIGHT = 120;
 
 const StyledRail = styled.div`
+  display: flex;
+  gap: var(--margins-xs);
   margin-top: 12px;
   margin-inline-start: 16px;
   padding-inline-end: 16px;
-  overflow-x: scroll;
+  overflow-x: auto;
   max-height: 142px;
   white-space: nowrap;
   overflow-y: hidden;
@@ -67,23 +71,28 @@ export const StagedAttachmentList = (props: Props) => {
     <div className="module-attachments">
       {attachments.length > 1 ? (
         <div className="module-attachments__header">
-          <div
-            role="button"
+          <SessionLucideIconButton
+            iconSize="huge"
+            iconColor="var(--text-primary-color)"
+            unicode={LUCIDE_ICONS_UNICODE.X}
             onClick={onRemoveAllStaged}
-            className="module-attachments__close-button"
+            style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              zIndex: 1,
+            }}
           />
         </div>
       ) : null}
       <StyledRail>
         {(attachments || []).map((attachment, index) => {
           const { contentType } = attachment;
+          const key = getUrl(attachment) || attachment.fileName || index;
           if (isImageTypeSupported(contentType) || isVideoTypeSupported(contentType)) {
-            const imageKey = getUrl(attachment) || attachment.fileName || index;
-            const clickCallback = attachments.length > 1 ? onClickAttachment : undefined;
-
             return (
               <Image
-                key={imageKey}
+                key={key}
                 alt={AriaLabels.stagedAttachment}
                 attachment={attachment}
                 softCorners={true}
@@ -93,7 +102,7 @@ export const StagedAttachmentList = (props: Props) => {
                 forceSquare={true}
                 url={getUrl(attachment)}
                 closeButton={true}
-                onClick={clickCallback}
+                onClick={onClickAttachment}
                 onClickClose={() => {
                   onRemoveByFilename(attachment.fileName);
                 }}
@@ -101,11 +110,9 @@ export const StagedAttachmentList = (props: Props) => {
             );
           }
 
-          const genericKey = getUrl(attachment) || attachment.fileName || index;
-
           return (
             <StagedGenericAttachment
-              key={genericKey}
+              key={key}
               attachment={attachment}
               onClose={() => {
                 onRemoveByFilename(attachment.fileName);

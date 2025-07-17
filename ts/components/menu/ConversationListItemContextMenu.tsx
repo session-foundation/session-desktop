@@ -2,7 +2,6 @@ import { Menu } from 'react-contexify';
 
 import { useConvoIdFromContext } from '../../contexts/ConvoIdContext';
 import { useIsLegacyGroup, useIsPinned } from '../../hooks/useParamSelector';
-import { ConvoHub } from '../../session/conversations';
 import { useIsSearchingForType } from '../../state/selectors/search';
 import { SessionContextMenuContainer } from '../SessionContextMenuContainer';
 import {
@@ -10,7 +9,6 @@ import {
   BanMenuItem,
   BlockMenuItem,
   ChangeNicknameMenuItem,
-  ClearNicknameMenuItem,
   DeclineAndBlockMsgRequestMenuItem,
   DeclineMsgRequestMenuItem,
   DeleteMessagesMenuItem,
@@ -35,7 +33,8 @@ import {
   DeleteDeprecatedLegacyGroupMenuItem,
   DeleteGroupMenuItem,
 } from './items/LeaveAndDeleteGroup/DeleteGroupMenuItem';
-import { useShowPinUnpin } from '../menuAndSettingsHooks/usePinUnpin';
+import { tr } from '../../localization/localeTools';
+import { useTogglePinConversationHandler } from '../menuAndSettingsHooks/UseTogglePinConversationHandler';
 
 export type PropsContextConversationItem = {
   triggerId: string;
@@ -102,7 +101,6 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
         <MarkConversationUnreadMenuItem />
         {/* Nickname actions */}
         <ChangeNicknameMenuItem />
-        <ClearNicknameMenuItem />
         {/* Communities actions */}
         <BanMenuItem />
         <UnbanMenuItem />
@@ -125,18 +123,13 @@ export const MemoConversationListItemContextMenu = ConversationListItemContextMe
 
 export const PinConversationMenuItem = (): JSX.Element | null => {
   const conversationId = useConvoIdFromContext();
-  const showPinUnpin = useShowPinUnpin(conversationId);
   const isPinned = useIsPinned(conversationId);
+  const togglePinConversation = useTogglePinConversationHandler(conversationId);
 
-  if (!showPinUnpin) {
+  if (!togglePinConversation) {
     return null;
   }
-  const conversation = ConvoHub.use().get(conversationId);
 
-  const togglePinConversation = () => {
-    void conversation?.togglePinned();
-  };
-
-  const menuText = isPinned ? window.i18n('pinUnpin') : window.i18n('pin');
+  const menuText = tr(isPinned ? 'pinUnpin' : 'pin');
   return <ItemWithDataTestId onClick={togglePinConversation}>{menuText}</ItemWithDataTestId>;
 };

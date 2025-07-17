@@ -1,9 +1,11 @@
 import type { SessionDataTestId } from 'react';
 import { alignButtonEndAbsoluteButtonStyle } from './sharedStyles';
-import { SessionIconButton } from '../icon';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 type ShowHideButtonStrings<T extends string> = { hide: T; show: T };
-type ShowHideButtonProps = {
+
+export type ShowHideButtonProps = {
   forceShow: boolean;
   toggleForceShow: () => void;
   hasError: boolean;
@@ -17,11 +19,11 @@ export const ShowHideButton = (props: ShowHideButtonProps) => {
   const style = alignButtonEndAbsoluteButtonStyle();
 
   return (
-    <SessionIconButton
+    <SessionLucideIconButton
       ariaLabel={forceShow ? ariaLabels.hide : ariaLabels.show}
-      iconType={forceShow ? 'eyeDisabled' : 'eye'}
-      iconColor={hasError ? 'var(--danger-color)' : 'var(--text-primary-color)'}
-      iconSize="huge"
+      unicode={forceShow ? LUCIDE_ICONS_UNICODE.EYE_OFF : LUCIDE_ICONS_UNICODE.EYE}
+      iconColor={hasError ? 'var(--danger-color)' : 'var(--text-secondary-color)'}
+      iconSize="large"
       onClick={toggleForceShow}
       style={style}
       dataTestId={forceShow ? dataTestIds.hide : dataTestIds.show}

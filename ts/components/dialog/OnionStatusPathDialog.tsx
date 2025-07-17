@@ -4,6 +4,7 @@ import { useState, SessionDataTestId } from 'react';
 import { useDispatch } from 'react-redux';
 import useHover from 'react-use/lib/useHover';
 import styled from 'styled-components';
+import useInterval from 'react-use/lib/useInterval';
 
 import { isEmpty, isTypedArray } from 'lodash';
 import { CityResponse, Reader } from 'maxmind';
@@ -18,16 +19,21 @@ import {
 import { Flex } from '../basic/Flex';
 
 import { Snode } from '../../data/types';
-import { THEME_GLOBALS } from '../../themes/globals';
-import { SessionWrapperModal } from '../SessionWrapperModal';
-import { SessionIcon, SessionIconButton } from '../icon';
 import { SessionSpinner } from '../loading';
 import { getCrowdinLocale } from '../../util/i18n/shared';
+import { tr } from '../../localization/localeTools';
+import {
+  ModalBasicHeader,
+  ModalActionsContainer,
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
+import { SessionButton, SessionButtonType } from '../basic/SessionButton';
+import { ModalDescription } from './shared/ModalDescriptionContainer';
+import { ModalFlexContainer } from './shared/ModalFlexContainer';
 
-export type StatusLightType = {
-  glowStartDelay: number;
-  glowDuration: number;
-  color?: string;
+type StatusLightType = {
+  glowing?: boolean;
+  color: string;
   dataTestId?: SessionDataTestId;
 };
 
@@ -43,12 +49,6 @@ const StyledOnionNodeList = styled.div`
   align-items: center;
   min-width: 10vw;
   position: relative;
-`;
-
-const StyledOnionDescription = styled.p`
-  min-width: 400px;
-  width: 0;
-  line-height: 1.3333;
 `;
 
 const StyledVerticalLine = styled.div`
@@ -70,24 +70,53 @@ const StyledGrowingIcon = styled.div`
   align-items: center;
 `;
 
+function useOnionPathWithUsAndNetwork() {
+  const onionPath = useFirstOnionPath();
+
+  if (onionPath.length === 0) {
+    return [];
+  }
+
+  return [
+    {
+      label: tr('you'),
+    },
+    ...onionPath,
+    {
+      label: tr('onionRoutingPathDestination'),
+    },
+  ];
+}
+
+function GlowingNodes() {
+  const onionPath = useOnionPathWithUsAndNetwork();
+  const countDotsTotal = onionPath.length;
+
+  const [glowingIndex, setGlowingIndex] = useState(0);
+  useInterval(() => {
+    setGlowingIndex((glowingIndex + 1) % countDotsTotal);
+  }, 1000);
+
+  return onionPath.map((_snode: Snode | any, index: number) => {
+    return <OnionNodeStatusLight glowing={index === glowingIndex} key={`light-${index}`} />;
+  });
+}
+
 const OnionCountryDisplay = ({ labelText, snodeIp }: { snodeIp?: string; labelText: string }) => {
   const element = (hovered: boolean) => (
     <StyledCountry>{hovered && snodeIp ? snodeIp : labelText}</StyledCountry>
   );
-  const [hoverable] = useHover(element);
-
-  return hoverable;
+  return useHover(element);
 };
 
 let reader: Reader<CityResponse> | null;
 
 const OnionPathModalInner = () => {
-  const onionPath = useFirstOnionPath();
+  const nodes = useOnionPathWithUsAndNetwork();
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_dataLoaded, setDataLoaded] = useState(false);
   const isOnline = useIsOnline();
-
-  const glowDuration = onionPath.length + 2;
 
   useMount(() => {
     ipcRenderer.once('load-maxmind-data-complete', (_event, content) => {
@@ -100,37 +129,22 @@ const OnionPathModalInner = () => {
     ipcRenderer.send('load-maxmind-data');
   });
 
-  if (!isOnline || !onionPath || onionPath.length === 0) {
+  if (!isOnline || !nodes || nodes.length <= 0) {
     return <SessionSpinner loading={true} />;
   }
 
-  const nodes = [
-    {
-      label: window.i18n('you'),
-    },
-    ...onionPath,
-    {
-      label: window.i18n('onionRoutingPathDestination'),
-    },
-  ];
-
   return (
-    <>
-      <StyledOnionDescription>{window.i18n('onionRoutingPathDescription')}</StyledOnionDescription>
+    <ModalFlexContainer>
+      <ModalDescription
+        dataTestId="modal-description"
+        localizerProps={{ token: 'onionRoutingPathDescription' }}
+      />
       <StyledOnionNodeList>
         <Flex $container={true}>
           <StyledLightsContainer>
             <StyledVerticalLine />
             <Flex $container={true} $flexDirection="column" $alignItems="center" height="100%">
-              {nodes.map((_snode: Snode | any, index: number) => {
-                return (
-                  <OnionNodeStatusLight
-                    glowDuration={glowDuration}
-                    glowStartDelay={index}
-                    key={`light-${index}`}
-                  />
-                );
-              })}
+              <GlowingNodes />
             </Flex>
           </StyledLightsContainer>
           <Flex $container={true} $flexDirection="column" $alignItems="flex-start">
@@ -145,7 +159,7 @@ const OnionPathModalInner = () => {
                 countryNamesAsAny?.[locale] || // try to find the country name based on the user local first
                 // eslint-disable-next-line dot-notation
                 countryNamesAsAny?.['en'] || // if not found, fallback to the country in english
-                window.i18n('onionRoutingPathUnknownCountry');
+                tr('onionRoutingPathUnknownCountry');
 
               return (
                 <OnionCountryDisplay
@@ -158,26 +172,24 @@ const OnionPathModalInner = () => {
           </Flex>
         </Flex>
       </StyledOnionNodeList>
-    </>
+    </ModalFlexContainer>
   );
 };
 
-export type OnionNodeStatusLightType = {
-  glowStartDelay: number;
-  glowDuration: number;
+type OnionNodeStatusLightType = {
+  glowing: boolean;
   dataTestId?: SessionDataTestId;
 };
 
 /**
  * Component containing a coloured status light.
  */
-export const OnionNodeStatusLight = (props: OnionNodeStatusLightType): JSX.Element => {
-  const { glowStartDelay, glowDuration, dataTestId } = props;
+const OnionNodeStatusLight = (props: OnionNodeStatusLightType): JSX.Element => {
+  const { glowing, dataTestId } = props;
 
   return (
     <ModalStatusLight
-      glowDuration={glowDuration}
-      glowStartDelay={glowStartDelay}
+      glowing={glowing}
       color={'var(--button-path-default-color)'}
       dataTestId={dataTestId}
     />
@@ -187,43 +199,66 @@ export const OnionNodeStatusLight = (props: OnionNodeStatusLightType): JSX.Eleme
 /**
  * An icon with a pulsating glow emission.
  */
-export const ModalStatusLight = (props: StatusLightType) => {
-  const { glowStartDelay, glowDuration, color } = props;
+const ModalStatusLight = (props: StatusLightType) => {
+  const { glowing, color } = props;
 
   return (
     <StyledGrowingIcon>
-      <SessionIcon
-        borderRadius={'50px'}
-        iconColor={color}
-        glowDuration={glowDuration}
-        glowStartDelay={glowStartDelay}
-        iconType="circle"
-        iconSize={'tiny'}
-      />
+      <OnionPathDot iconColor={color} glowing={glowing} />
     </StyledGrowingIcon>
   );
 };
 
+// Set icon color based on result
+const errorColor = 'var(--button-path-error-color)';
+const defaultColor = 'var(--button-path-default-color)';
+const connectingColor = 'var(--button-path-connecting-color)';
+
+const OnionPathContainer = styled.button`
+  display: flex;
+  padding: var(--margins-lg);
+`;
+
+function OnionPathDot({
+  dataTestId,
+  iconColor,
+  glowing,
+}: {
+  dataTestId?: SessionDataTestId;
+  iconColor: string;
+  glowing?: boolean;
+}) {
+  return (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 100 100"
+      clip-rule="nonzero"
+      fill-rule="nonzero"
+      data-testid={dataTestId}
+      style={{
+        transition: 'all var(--default-duration) ease-in-out',
+
+        filter: glowing
+          ? `drop-shadow(0px 0px 4px ${iconColor})`
+          : `drop-shadow(0px 0px 6px ${iconColor})`,
+        scale: glowing ? '1.3' : '1',
+      }}
+    >
+      <path fill={iconColor} d="M 0, 50a 50,50 0 1,1 100,0a 50,50 0 1,1 -100,0"></path>
+    </svg>
+  );
+}
+
 /**
  * A status light specifically for the action panel. Color is based on aggregate node states instead of individual onion node state
  */
-export const ActionPanelOnionStatusLight = (props: {
-  isSelected: boolean;
-  handleClick: () => void;
-  id: string;
-}) => {
-  const { isSelected, handleClick, id } = props;
+export const ActionPanelOnionStatusLight = (props: { handleClick: () => void; id: string }) => {
+  const { handleClick, id } = props;
 
   const onionPathsCount = useOnionPathsCount();
   const firstPathLength = useFirstOnionPathLength();
   const isOnline = useIsOnline();
-
-  const glowDuration = Number(THEME_GLOBALS['--duration-onion-status-glow']); // 10 seconds
-
-  // Set icon color based on result
-  const errorColor = 'var(--button-path-error-color)';
-  const defaultColor = 'var(--button-path-default-color)';
-  const connectingColor = 'var(--button-path-connecting-color)';
 
   // start with red
   let iconColor = errorColor;
@@ -234,35 +269,29 @@ export const ActionPanelOnionStatusLight = (props: {
   }
 
   return (
-    <SessionIconButton
-      iconSize={'small'}
-      iconType="circle"
-      iconColor={iconColor}
-      onClick={handleClick}
-      glowDuration={glowDuration}
-      glowStartDelay={0}
-      noScale={true}
-      isSelected={isSelected}
-      dataTestId={'path-light-container'}
-      dataTestIdIcon={'path-light-svg'}
-      id={id}
-    />
+    <OnionPathContainer id={id} data-testid="path-light-container" onClick={handleClick}>
+      <OnionPathDot dataTestId="path-light-svg" iconColor={iconColor} />
+    </OnionPathContainer>
   );
 };
 
 export const OnionPathModal = () => {
-  const onConfirm = () => {
-    void shell.openExternal('https://getsession.org/faq/#onion-routing');
-  };
   const dispatch = useDispatch();
   return (
     <SessionWrapperModal
-      title={window.i18n('onionRoutingPath')}
-      confirmText={window.i18n('learnMore')}
-      cancelText={window.i18n('cancel')}
-      onConfirm={onConfirm}
       onClose={() => dispatch(onionPathModal(null))}
-      showExitIcon={true}
+      headerChildren={<ModalBasicHeader title={tr('onionRoutingPath')} showExitIcon={true} />}
+      buttonChildren={
+        <ModalActionsContainer>
+          <SessionButton
+            text={tr('learnMore')}
+            buttonType={SessionButtonType.Simple}
+            onClick={() => {
+              void shell.openExternal('https://getsession.org/faq/#onion-routing');
+            }}
+          />
+        </ModalActionsContainer>
+      }
     >
       <OnionPathModalInner />
     </SessionWrapperModal>

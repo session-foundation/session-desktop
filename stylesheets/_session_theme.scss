@@ -62,8 +62,8 @@
     .module-message__text {
       color: var(--message-bubbles-received-text-color);
       display: flex;
-      flex-direction: row;
-      align-items: center;
+      flex-direction: column;
+      align-items: flex-start;
 
       a {
         text-decoration: underline;

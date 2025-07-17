@@ -11,7 +11,7 @@ import type { PubkeyType } from 'libsession_util_nodejs';
 import { chunk, toNumber } from 'lodash';
 import { Flex } from '../../basic/Flex';
 import { SpacerSM, SpacerXS } from '../../basic/Text';
-import { localize } from '../../../localization/localeTools';
+import { tr } from '../../../localization/localeTools';
 import { CopyToClipboardIcon } from '../../buttons';
 import { Localizer } from '../../basic/Localizer';
 import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
@@ -32,13 +32,8 @@ import { ConversationTypeEnum } from '../../../models/types';
 import { ContactsWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { usePolling } from '../../../hooks/usePolling';
 import { releasedFeaturesActions } from '../../../state/ducks/releasedFeatures';
-import {
-  useReleasedFeaturesRefreshedAt,
-  useSesh101NotificationAt,
-} from '../../../state/selectors/releasedFeatures';
-import { formatAbbreviatedExpireDoubleTimer } from '../../../util/i18n/formatting/expirationTimer';
-import { handleReleaseNotification } from '../../../util/releasedFeatures';
 import { networkDataActions } from '../../../state/ducks/networkData';
+import { DEBUG_MENU_PAGE, type DebugMenuPageProps } from './DebugMenuModal';
 import { SimpleSessionInput } from '../../inputs/SessionInput';
 
 const hexRef = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
@@ -268,6 +263,17 @@ export const LoggingActions = () => {
   );
 };
 
+export const Playgrounds = ({ setPage }: DebugMenuPageProps) => {
+  return (
+    <>
+      <h2>Playgrounds</h2>
+      <SessionButton onClick={() => setPage(DEBUG_MENU_PAGE.POPOVER)}>
+        Popover Playground
+      </SessionButton>
+    </>
+  );
+};
+
 export const DebugActions = () => {
   const dispatch = useDispatch();
 
@@ -315,9 +321,7 @@ export const DebugActions = () => {
         </SessionButton>
         <CheckForUpdatesButton />
         <CheckVersionButton channelToCheck="stable" />
-        {window.sessionFeatureFlags.useReleaseChannels ? (
-          <CheckVersionButton channelToCheck="alpha" />
-        ) : null}
+        <CheckVersionButton channelToCheck="alpha" />
         <SessionButton
           width="180px"
           onClick={async () => {
@@ -335,12 +339,11 @@ export const DebugActions = () => {
 
 export const ExperimentalActions = ({ forceUpdate }: { forceUpdate: () => void }) => {
   const dispatch = useDispatch();
-  const refreshedAt = useReleasedFeaturesRefreshedAt();
-  const sesh101NotificationAt = useSesh101NotificationAt();
+  // const refreshedAt = useReleasedFeaturesRefreshedAt();
+  // const sesh101NotificationAt = useSesh101NotificationAt();
 
-  const [countdown, setCountdown] = useState(false);
-
-  const timeLeftMs = sesh101NotificationAt - Date.now();
+  // const [countdown, setCountdown] = useState(false);
+  // const timeLeftMs = sesh101NotificationAt - Date.now();
 
   // TODO [SES-2606] uncomment before release but after QA
   // if (!process.env.SESSION_DEV) {
@@ -367,31 +370,22 @@ export const ExperimentalActions = ({ forceUpdate }: { forceUpdate: () => void }
         >
           Reset experiments
         </SessionButton>
-        {window.sessionFeatureFlags.useSESH101 ? (
-          <SessionButton
-            onClick={() => {
-              const notifyAt = handleReleaseNotification({
-                featureName: 'useSESH101',
-                message: localize('sessionNetworkNotificationLive').toString(),
-                lastRefreshedAt: refreshedAt,
-                notifyAt: sesh101NotificationAt,
-                delayMs: 10 * DURATION.SECONDS,
-                force: true,
-              });
-              dispatch(releasedFeaturesActions.updateSesh101NotificationAt(notifyAt));
-              setCountdown(true);
-            }}
-          >
-            Notify Sesh 101
-            <span style={{ marginInlineStart: 'var(--margins-xs)' }}>
-              {countdown
-                ? Math.floor(timeLeftMs / 1000) > 0
-                  ? `(${formatAbbreviatedExpireDoubleTimer(Math.floor(timeLeftMs / 1000))})`
-                  : '🎉'
-                : '(10s)'}
-            </span>
-          </SessionButton>
-        ) : null}
+
+        {/* <SessionButton
+          onClick={() => {
+            dispatch(releasedFeaturesActions.updateSesh101NotificationAt(notifyAt));
+            setCountdown(true);
+          }}
+        >
+          Notify Sesh 101
+          <span style={{ marginInlineStart: 'var(--margins-xs)' }}>
+            {countdown
+              ? Math.floor(timeLeftMs / 1000) > 0
+                ? `(${formatAbbreviatedExpireDoubleTimer(Math.floor(timeLeftMs / 1000))})`
+                : '🎉'
+              : '(10s)'}
+          </span>
+        </SessionButton> */}
         <SessionButton
           onClick={() => {
             dispatch(networkDataActions.fetchInfoFromSeshServer() as any);
@@ -510,13 +504,13 @@ export const AboutInfo = () => {
   }
 
   const aboutInfo = [
-    `${localize('updateVersion').withArgs({ version: window.getVersion() })}`,
-    `${localize('systemInformationDesktop').withArgs({ information: window.getOSRelease() })}`,
-    `${localize('commitHashDesktop').withArgs({ hash: window.getCommitHash() || localize('unknown').toString() })}`,
-    `Libsession Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_UTIL_VERSION || localize('unknown').toString()}`,
-    `Libsession NodeJS Version: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_VERSION || localize('unknown').toString()}`,
-    `Libsession NodeJS Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_COMMIT || localize('unknown').toString()}`,
-    `User Agent:${window.navigator.userAgent ? `\n\t${window.navigator.userAgent.split(') ').join(') \n\t')}` : localize('unknown').toString()}`,
+    `${tr('updateVersion', { version: window.getVersion() })}`,
+    `${tr('systemInformationDesktop', { information: window.getOSRelease() })}`,
+    `${tr('commitHashDesktop', { hash: window.getCommitHash() || tr('unknown') })}`,
+    `Libsession Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_UTIL_VERSION || tr('unknown')}`,
+    `Libsession NodeJS Version: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_VERSION || tr('unknown')}`,
+    `Libsession NodeJS Hash: ${LIBSESSION_CONSTANTS.LIBSESSION_NODEJS_COMMIT || tr('unknown')}`,
+    `User Agent:${window.navigator.userAgent ? `\n\t${window.navigator.userAgent.split(') ').join(') \n\t')}` : tr('unknown')}`,
     `${environmentStates.join(' - ')}`,
   ];
 
@@ -532,7 +526,7 @@ export const AboutInfo = () => {
       <SpacerXS />
       <Flex $container={true} width="100%" $alignItems="center" $flexGap="var(--margins-xs)">
         <h2>About</h2>
-        <CopyToClipboardIcon iconSize={'medium'} copyContent={aboutInfo.join('\n')} />
+        <CopyToClipboardIcon iconSize={'small'} copyContent={aboutInfo.join('\n')} />
       </Flex>
       <Flex
         $container={true}
@@ -555,7 +549,7 @@ export const AboutInfo = () => {
               $flexGap="var(--margins-xs)"
             >
               <p style={{ userSelect: 'text', lineHeight: 1.5 }}>{info}</p>
-              <CopyToClipboardIcon iconSize={'medium'} copyContent={info} />
+              <CopyToClipboardIcon iconSize={'small'} copyContent={info} />
             </Flex>
           );
         })}
@@ -568,7 +562,7 @@ export const AboutInfo = () => {
 export const OtherInfo = () => {
   const otherInfo = useAsync(async () => {
     const { id, vbid } = await window.getUserKeys();
-    return [`${localize('accountIdYours')}: ${id}`, `VBID: ${vbid}`];
+    return [`${tr('accountIdYours')}: ${id}`, `VBID: ${vbid}`];
   }, []);
 
   return (
@@ -584,7 +578,7 @@ export const OtherInfo = () => {
       <Flex $container={true} width="100%" $alignItems="center" $flexGap="var(--margins-xs)">
         <h2>Other Info</h2>
         {otherInfo.value ? (
-          <CopyToClipboardIcon iconSize={'medium'} copyContent={otherInfo.value.join('\n')} />
+          <CopyToClipboardIcon iconSize={'small'} copyContent={otherInfo.value.join('\n')} />
         ) : null}
       </Flex>
       <Flex
@@ -596,10 +590,10 @@ export const OtherInfo = () => {
         $flexGap="var(--margins-xs)"
       >
         {otherInfo.loading ? (
-          <p>{localize('loading')}</p>
+          <p>{tr('loading')}</p>
         ) : otherInfo.error ? (
           <p style={{ color: 'var(--danger-color)', userSelect: 'text' }}>
-            {localize('theError')}: {otherInfo.error.message || localize('errorUnknown')}
+            {tr('theError')}: {otherInfo.error.message || tr('errorUnknown')}
           </p>
         ) : null}
         {otherInfo.value
@@ -612,7 +606,7 @@ export const OtherInfo = () => {
                 $flexGap="var(--margins-xs)"
               >
                 <p style={{ userSelect: 'text', lineHeight: 1.5 }}>{info}</p>
-                <CopyToClipboardIcon iconSize={'medium'} copyContent={info} />
+                <CopyToClipboardIcon iconSize={'small'} copyContent={info} />
               </Flex>
             ))
           : null}

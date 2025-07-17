@@ -33,7 +33,7 @@ import { useLibGroupDestroyed } from '../../state/selectors/userGroups';
 import { NetworkTime } from '../../util/NetworkTime';
 import { useShowNotificationFor } from '../menuAndSettingsHooks/useShowNotificationFor';
 import { useLocalisedNotificationOptions } from '../menuAndSettingsHooks/useLocalisedNotificationFor';
-import { localize } from '../../localization/localeTools';
+import { tr } from '../../localization/localeTools';
 import { useShowBlockUnblock } from '../menuAndSettingsHooks/useShowBlockUnblock';
 import { useShowDeletePrivateContactCb } from '../menuAndSettingsHooks/useShowDeletePrivateContact';
 import { useClearAllMessagesCb } from '../menuAndSettingsHooks/useClearAllMessages';
@@ -45,7 +45,6 @@ import { useRemoveModeratorsCb } from '../menuAndSettingsHooks/useRemoveModerato
 import { useUnbanUserCb } from '../menuAndSettingsHooks/useUnbanUser';
 import { useBanUserCb } from '../menuAndSettingsHooks/useBanUser';
 import { useSetNotificationsFor } from '../menuAndSettingsHooks/useSetNotificationsFor';
-import { useClearNickname } from '../menuAndSettingsHooks/useClearNickname';
 import { Localizer } from '../basic/Localizer';
 import { useChangeNickname } from '../menuAndSettingsHooks/useChangeNickname';
 import { useShowNoteToSelfCb } from '../menuAndSettingsHooks/useShowNoteToSelf';
@@ -58,9 +57,7 @@ export const InviteContactMenuItem = (): JSX.Element | null => {
 
   if (showInviteContactCb) {
     return (
-      <ItemWithDataTestId onClick={showInviteContactCb}>
-        {localize('membersInvite')}
-      </ItemWithDataTestId>
+      <ItemWithDataTestId onClick={showInviteContactCb}>{tr('membersInvite')}</ItemWithDataTestId>
     );
   }
   return null;
@@ -84,11 +81,7 @@ export const MarkConversationUnreadMenuItem = (): JSX.Element | null => {
       void conversation?.markAsUnread(true);
     };
 
-    return (
-      <ItemWithDataTestId onClick={markUnread}>
-        {window.i18n('messageMarkUnread')}
-      </ItemWithDataTestId>
-    );
+    return <ItemWithDataTestId onClick={markUnread}>{tr('messageMarkUnread')}</ItemWithDataTestId>;
   }
   return null;
 };
@@ -109,7 +102,7 @@ export const DeletePrivateContactMenuItem = () => {
 
   return (
     <ItemWithDataTestId onClick={showDeletePrivateContactCb}>
-      {localize('contactDelete')}
+      {tr('contactDelete')}
     </ItemWithDataTestId>
   );
 };
@@ -135,7 +128,7 @@ export const ShowUserDetailsMenuItem = () => {
           );
         }}
       >
-        {localize('contactUserDetails')}
+        {tr('contactUserDetails')}
       </ItemWithDataTestId>
     );
   }
@@ -156,7 +149,7 @@ export const UpdateGroupNameMenuItem = () => {
           void showUpdateGroupNameByConvoId(convoId);
         }}
       >
-        {localize('groupEdit')}
+        {tr('groupEdit')}
       </ItemWithDataTestId>
     );
   }
@@ -171,9 +164,7 @@ export const RemoveModeratorsMenuItem = (): JSX.Element | null => {
     return null;
   }
   return (
-    <ItemWithDataTestId onClick={showRemoveModeratorsCb}>
-      {localize('adminRemove')}
-    </ItemWithDataTestId>
+    <ItemWithDataTestId onClick={showRemoveModeratorsCb}>{tr('adminRemove')}</ItemWithDataTestId>
   );
 };
 
@@ -185,9 +176,7 @@ export const AddModeratorsMenuItem = (): JSX.Element | null => {
     return null;
   }
   return (
-    <ItemWithDataTestId onClick={addRemoveModeratorsCb}>
-      {localize('adminPromote')}
-    </ItemWithDataTestId>
+    <ItemWithDataTestId onClick={addRemoveModeratorsCb}>{tr('adminPromote')}</ItemWithDataTestId>
   );
 };
 
@@ -198,9 +187,7 @@ export const UnbanMenuItem = (): JSX.Element | null => {
   if (!showUnbanUserCb) {
     return null;
   }
-  return (
-    <ItemWithDataTestId onClick={showUnbanUserCb}>{localize('banUnbanUser')}</ItemWithDataTestId>
-  );
+  return <ItemWithDataTestId onClick={showUnbanUserCb}>{tr('banUnbanUser')}</ItemWithDataTestId>;
 };
 
 export const BanMenuItem = (): JSX.Element | null => {
@@ -211,7 +198,7 @@ export const BanMenuItem = (): JSX.Element | null => {
   if (!showBanUserCb) {
     return null;
   }
-  return <ItemWithDataTestId onClick={showBanUserCb}>{localize('banUser')}</ItemWithDataTestId>;
+  return <ItemWithDataTestId onClick={showBanUserCb}>{tr('banUser')}</ItemWithDataTestId>;
 };
 
 export const MarkAllReadMenuItem = (): JSX.Element | null => {
@@ -221,7 +208,7 @@ export const MarkAllReadMenuItem = (): JSX.Element | null => {
     return (
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       <ItemWithDataTestId onClick={async () => markAllReadByConvoId(convoId)}>
-        {localize('messageMarkRead')}
+        {tr('messageMarkRead')}
       </ItemWithDataTestId>
     );
   }
@@ -238,24 +225,7 @@ export const BlockMenuItem = (): JSX.Element | null => {
 
   return (
     <ItemWithDataTestId onClick={showBlockUnblock.cb}>
-      {localize(showBlockUnblock.token)}
-    </ItemWithDataTestId>
-  );
-};
-
-export const ClearNicknameMenuItem = (): JSX.Element | null => {
-  const convoId = useConvoIdFromContext();
-
-  const clearNicknameCb = useClearNickname(convoId);
-
-  if (!clearNicknameCb) {
-    return null;
-  }
-
-  return (
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    <ItemWithDataTestId onClick={clearNicknameCb}>
-      {window.i18n('nicknameRemove')}
+      {tr(showBlockUnblock.token)}
     </ItemWithDataTestId>
   );
 };
@@ -290,7 +260,7 @@ export const DeleteMessagesMenuItem = () => {
   return (
     <ItemWithDataTestId onClick={clearAllMessagesCb}>
       {/* just more than 1 to have the string Delete Messages */}
-      {localize('clearMessages')}
+      {tr('clearMessages')}
     </ItemWithDataTestId>
   );
 };
@@ -315,7 +285,7 @@ export const DeletePrivateConversationMenuItem = () => {
         showDeleteConversationContactCb();
       }}
     >
-      {window.i18n('conversationsDelete')}
+      {tr('conversationsDelete')}
     </ItemWithDataTestId>
   );
 };
@@ -335,7 +305,7 @@ export const HideNoteToSelfMenuItem = () => {
         showHideNoteToSelfCb();
       }}
     >
-      {window.i18n('noteToSelfHide')}
+      {tr('noteToSelfHide')}
     </ItemWithDataTestId>
   );
 };
@@ -355,7 +325,7 @@ export const ShowNoteToSelfMenuItem = () => {
         showShowNoteToSelfCb();
       }}
     >
-      {window.i18n('showNoteToSelf')}
+      {tr('showNoteToSelf')}
     </ItemWithDataTestId>
   );
 };
@@ -377,7 +347,7 @@ export const AcceptMsgRequestMenuItem = () => {
         }}
         dataTestId="accept-menu-item"
       >
-        {window.i18n('accept')}
+        {tr('accept')}
       </ItemWithDataTestId>
     );
   }
@@ -404,7 +374,7 @@ export const DeclineMsgRequestMenuItem = () => {
         }}
         dataTestId="delete-menu-item"
       >
-        {window.i18n('delete')}
+        {tr('delete')}
       </ItemWithDataTestId>
     );
   }
@@ -434,7 +404,7 @@ export const DeclineAndBlockMsgRequestMenuItem = () => {
         }}
         dataTestId="block-menu-item"
       >
-        {window.i18n('block')}
+        {tr('block')}
       </ItemWithDataTestId>
     );
   }
@@ -459,7 +429,7 @@ export const NotificationForConvoMenuItem = (): JSX.Element | null => {
   return (
     // Remove the && false to make context menu work with RTL support
     <Submenu
-      label={localize('sessionNotifications')}
+      label={tr('sessionNotifications')}
       // rtl={isRtlMode && false}
     >
       {(notificationForConvoOptions || []).map(item => {

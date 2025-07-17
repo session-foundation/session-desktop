@@ -1,7 +1,7 @@
-import { AnimatePresence } from 'framer-motion';
 import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 import useUpdate from 'react-use/lib/useUpdate';
+import { type Dispatch, useState } from 'react';
 import { Flex } from '../../basic/Flex';
 import { updateDebugMenuModal } from '../../../state/ducks/modalDialog';
 import {
@@ -11,11 +11,17 @@ import {
   ExperimentalActions,
   LoggingActions,
   OtherInfo,
+  Playgrounds,
 } from './components';
-import { SessionWrapperModal2 } from '../../SessionWrapperModal2';
+import {
+  ModalBasicHeader,
+  SessionWrapperModal,
+  WrapperModalWidth,
+} from '../../SessionWrapperModal';
 import { FeatureFlags } from './FeatureFlags';
 import { ReleaseChannel } from './ReleaseChannel';
 import { useHotkey } from '../../../hooks/useHotkey';
+import { PopoverPlaygroundPage } from './playgrounds/PopoverPlaygroundPage';
 
 const StyledContent = styled(Flex)`
   padding-inline: var(--margins-sm);
@@ -40,11 +46,47 @@ const StyledContent = styled(Flex)`
   }
 `;
 
+export enum DEBUG_MENU_PAGE {
+  MAIN = 0,
+  POPOVER = 1,
+}
+
+export type DebugMenuPageProps = {
+  setPage: Dispatch<DEBUG_MENU_PAGE>;
+};
+
+function MainPage({ setPage }: DebugMenuPageProps) {
+  // NOTE we use forceUpdate here and pass it through so the entire modal refreshes when a flag is toggled
+  const forceUpdate = useUpdate();
+  return (
+    <>
+      <DebugActions />
+      <LoggingActions />
+      <Playgrounds setPage={setPage} />
+      <ExperimentalActions forceUpdate={forceUpdate} />
+      <DataGenerationActions />
+      <FeatureFlags flags={window.sessionFeatureFlags} forceUpdate={forceUpdate} />
+      <ReleaseChannel />
+      <AboutInfo />
+      <OtherInfo />
+    </>
+  );
+}
+
+function getPage(page: DEBUG_MENU_PAGE, setPage: Dispatch<DEBUG_MENU_PAGE>) {
+  switch (page) {
+    case DEBUG_MENU_PAGE.POPOVER:
+      return <PopoverPlaygroundPage />;
+    case DEBUG_MENU_PAGE.MAIN:
+    default:
+      return <MainPage setPage={setPage} />;
+  }
+}
+
 export function DebugMenuModal() {
   const dispatch = useDispatch();
 
-  // NOTE we use forceUpdate here and pass it through so the entire modal refreshes when a flag is toggled
-  const forceUpdate = useUpdate();
+  const [page, setPage] = useState<DEBUG_MENU_PAGE>(DEBUG_MENU_PAGE.MAIN);
 
   const onClose = () => {
     dispatch(updateDebugMenuModal(null));
@@ -72,32 +114,21 @@ export function DebugMenuModal() {
   });
 
   return (
-    <AnimatePresence>
-      <SessionWrapperModal2
-        title={'Debug Menu'}
-        onClose={onClose}
-        showExitIcon={true}
-        contentBorder={false}
-        $contentMaxWidth={'75%'}
-        shouldOverflow={true}
-        allowOutsideClick={false}
+    <SessionWrapperModal
+      headerChildren={<ModalBasicHeader title="Debug Menu" showExitIcon={true} />}
+      onClose={onClose}
+      $contentMaxWidth={WrapperModalWidth.debug}
+      shouldOverflow={true}
+      allowOutsideClick={false}
+    >
+      <StyledContent
+        $container={true}
+        $flexDirection="column"
+        $alignItems="flex-start"
+        padding="var(--margins-sm) 0 var(--margins-xl)"
       >
-        <StyledContent
-          $container={true}
-          $flexDirection="column"
-          $alignItems="flex-start"
-          padding="var(--margins-sm) 0 var(--margins-xl)"
-        >
-          <DebugActions />
-          <LoggingActions />
-          <ExperimentalActions forceUpdate={forceUpdate} />
-          <DataGenerationActions />
-          <FeatureFlags flags={window.sessionFeatureFlags} forceUpdate={forceUpdate} />
-          <ReleaseChannel />
-          <AboutInfo />
-          <OtherInfo />
-        </StyledContent>
-      </SessionWrapperModal2>
-    </AnimatePresence>
+        {getPage(page, setPage)}
+      </StyledContent>
+    </SessionWrapperModal>
   );
 }

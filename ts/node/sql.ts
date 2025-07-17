@@ -15,7 +15,6 @@ import {
   intersection,
   isArray,
   isEmpty,
-  isFunction,
   isNumber,
   isObject,
   isString,
@@ -49,7 +48,6 @@ import {
   SEEN_MESSAGE_TABLE,
   toSqliteBoolean,
 } from './database_utility';
-import type { SetupI18nReturnType } from '../types/localizer';
 import { StorageItem } from './storage_item';
 
 import {
@@ -89,6 +87,7 @@ import {
   isInstanceInitialized,
 } from './sqlInstance';
 import { OpenGroupV2Room } from '../data/types';
+import { tr } from '../localization/localeTools';
 
 // eslint:disable: function-name non-literal-fs-path
 
@@ -148,12 +147,10 @@ function showFailedToStart() {
 async function initializeSql({
   configDir,
   key,
-  i18n,
   passwordAttempt,
 }: {
   configDir: string;
   key: string;
-  i18n: SetupI18nReturnType;
   passwordAttempt: boolean;
 }) {
   console.info('initializeSql sql node');
@@ -166,9 +163,6 @@ async function initializeSql({
   }
   if (!isString(key)) {
     throw new Error('initialize: key is required!');
-  }
-  if (!isFunction(i18n)) {
-    throw new Error('initialize: i18n is required!');
   }
 
   _initializePaths(configDir);
@@ -218,10 +212,10 @@ async function initializeSql({
     }
     console.log('Database startup error:', error.stack);
     const button = await dialog.showMessageBox({
-      buttons: [i18n('errorCopyAndQuit'), i18n('clearDataAll')],
+      buttons: [tr('errorCopyAndQuit'), tr('clearDataAll')],
       defaultId: 0,
       detail: redactAll(error.stack),
-      message: i18n('errorDatabase'),
+      message: tr('errorDatabase'),
       noLink: true,
       type: 'error',
     });

@@ -5,11 +5,14 @@ import {
   useWeAreAdmin,
 } from '../../../../../hooks/useParamSelector';
 import type { WithConvoId } from '../../../../../session/types/with';
+import { Flex } from '../../../../basic/Flex';
+import { useWeAreCommunityAdminOrModerator } from '../../../../../state/selectors/conversations';
 import { Localizer } from '../../../../basic/Localizer';
 import { SpacerSM } from '../../../../basic/Text';
 import { PanelButtonGroup } from '../../../../buttons';
 import { PanelLabel } from '../../../../buttons/PanelButton';
 import { useShowAttachments } from '../../../../menuAndSettingsHooks/useShowAttachments';
+import { ModalBasicHeader, SessionWrapperModal } from '../../../../SessionWrapperModal';
 import { ConversationSettingsHeader } from '../../conversationSettingsHeader';
 import {
   PinUnpinButton,
@@ -35,6 +38,8 @@ import {
   RemoveAdminCommunityButton,
   ShowNoteToSelfButton,
 } from '../../conversationSettingsItems';
+import { useCloseActionFromPage, useTitleFromPage } from '../conversationSettingsHooks';
+import type { ConversationSettingsModalState } from '../../../../../state/ducks/modalDialog';
 
 function AdminSettingsTitle() {
   return (
@@ -68,9 +73,9 @@ function GroupV2AdminActions({ conversationId }: WithConvoId) {
 function CommunityAdminActions({ conversationId }: WithConvoId) {
   const isPublic = useIsPublic(conversationId);
   const isGroupV2 = useIsGroupV2(conversationId);
-  const weAreAdmin = useWeAreAdmin(conversationId);
+  const weAreCommunityAdminOrModerator = useWeAreCommunityAdminOrModerator(conversationId);
 
-  if ((!isPublic && !isGroupV2) || !weAreAdmin) {
+  if ((!isPublic && !isGroupV2) || !weAreCommunityAdminOrModerator) {
     return null;
   }
 
@@ -196,7 +201,7 @@ function DefaultPageForGroupV2({ conversationId }: WithConvoId) {
   );
 }
 
-export function DefaultConversationSettingsPage(props: WithConvoId) {
+function DefaultConversationSettingsPage(props: WithConvoId) {
   const isPrivate = useIsPrivate(props?.conversationId);
   const isPublic = useIsPublic(props?.conversationId);
   const isGroupV2 = useIsGroupV2(props?.conversationId);
@@ -218,4 +223,29 @@ export function DefaultConversationSettingsPage(props: WithConvoId) {
   }
 
   return <DefaultPageForGroupV2 conversationId={props.conversationId} />;
+}
+
+export function DefaultConversationSettingsModal(props: ConversationSettingsModalState) {
+  const onClose = useCloseActionFromPage(props);
+  const title = useTitleFromPage(props?.settingsModalPage);
+
+  if (!props?.conversationId) {
+    return null;
+  }
+
+  return (
+    <SessionWrapperModal
+      headerChildren={<ModalBasicHeader title={title} showExitIcon={true} bigHeader={true} />}
+      onClose={onClose}
+      shouldOverflow={true}
+      // Note: we do not set a min/max width here as we want the modal to be fixed
+      // (no matter the nickname/display name of the shown conversation).
+      // We do this to have some consistency with the width of the modals that open on top of this one
+      allowOutsideClick={false}
+    >
+      <Flex $container={true} $flexDirection="column" $alignItems="flex-start" width="100%">
+        <DefaultConversationSettingsPage conversationId={props.conversationId} />
+      </Flex>
+    </SessionWrapperModal>
+  );
 }

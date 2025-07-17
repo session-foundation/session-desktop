@@ -69,12 +69,6 @@ export type ThemeColorVariables = {
   '--button-solid-text-hover-color': string;
   '--button-solid-disabled-color': string;
 
-  /* Ghost */
-  '--button-ghost-background-color': string;
-  '--button-ghost-background-hover-color': string;
-  /* Ghost buttons don't change color and use a disabled pointer instead */
-  '--button-ghost-disabled-color': string;
-
   /* Simple */
   '--button-simple-text-color': string;
   '--button-simple-disabled-color': string;

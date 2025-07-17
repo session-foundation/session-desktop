@@ -51,7 +51,7 @@ import {
   WithRemoveMembers,
 } from '../../session/types/with';
 import { updateEditProfilePictureModal, updateGroupNameModal } from './modalDialog';
-import { localize } from '../../localization/localeTools';
+import { tr } from '../../localization/localeTools';
 import { type GroupMemberGetRedux, makeGroupMemberGetRedux } from './types/groupReduxTypes';
 import { uploadFileToFsWithOnionV4 } from '../../session/apis/file_server_api/FileServerApi';
 import { urlToBlob } from '../../types/attachments/VisualAttachment';
@@ -285,7 +285,7 @@ const initNewGroupInWrapper = createAsyncThunk(
           clearFetchedHashes: true,
         });
       }
-      ToastUtils.pushToastError('groupCreateFailed', localize('groupErrorCreate').toString());
+      ToastUtils.pushToastError('groupCreateFailed', tr('groupErrorCreate'));
       throw e;
     }
   }

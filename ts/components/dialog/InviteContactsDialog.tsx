@@ -20,14 +20,19 @@ import { SessionToggle } from '../basic/SessionToggle';
 import { hasClosedGroupV2QAButtons } from '../../shared/env_vars';
 import { ConversationTypeEnum } from '../../models/types';
 import { Localizer } from '../basic/Localizer';
-import { localize } from '../../localization/localeTools';
+import { tr } from '../../localization/localeTools';
 import { useContactsToInviteTo } from '../../hooks/useContactsToInviteToGroup';
 import { SessionSearchInput } from '../SessionSearchInput';
 import { NoResultsForSearch } from '../search/NoResults';
-import { SessionWrapperModal2 } from '../SessionWrapperModal2';
+import {
+  ModalBasicHeader,
+  ModalActionsContainer,
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
 import { useHotkey } from '../../hooks/useHotkey';
 import { searchActions } from '../../state/ducks/search';
 import { ToastUtils } from '../../session/utils';
+import { StyledContactListInModal } from '../list/StyledContactList';
 
 type Props = {
   conversationId: string;
@@ -47,10 +52,7 @@ async function submitForOpenGroup(convoId: string, pubkeys: Array<string>) {
       url: roomDetails?.fullUrlWithPubkey,
       name: convo.getNicknameOrRealUsernameOrPlaceholder(),
     };
-    ToastUtils.pushToastInfo(
-      'sendingInvites',
-      localize('groupInviteSending').withArgs({ count: pubkeys.length }).toString()
-    );
+    ToastUtils.pushToastInfo('sendingInvites', tr('groupInviteSending', { count: pubkeys.length }));
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     pubkeys.forEach(async pubkeyStr => {
       const privateConvo = await ConvoHub.use().getOrCreateAndWait(
@@ -141,6 +143,8 @@ const InviteContactsDialogInner = (props: Props) => {
     if (isPublic) {
       void submitForOpenGroup(conversationId, clone(selectedContacts));
       empty();
+      // for a community, we want to keep that dialog open until the user is done with his invitations
+
       return;
     }
     if (!PubKey.is03Pubkey(conversationId)) {
@@ -170,32 +174,27 @@ const InviteContactsDialogInner = (props: Props) => {
   const hasContacts = contactsToInvite.length > 0;
 
   return (
-    <SessionWrapperModal2
-      title={localize('membersInvite').toString()}
+    <SessionWrapperModal
       onClose={closeDialog}
-      showExitIcon={true}
-      $contentMaxWidth="500px"
-      $contentMinWidth="500px"
+      headerChildren={<ModalBasicHeader title={tr('membersInvite')} showExitIcon={true} />}
+      modalDataTestId="invite-contacts-dialog"
       buttonChildren={
-        <>
-          <SpacerLG />
-          <div className="session-modal__button-group">
-            <SessionButton
-              text={localize('okay').toString()}
-              buttonType={SessionButtonType.Simple}
-              disabled={!hasContacts}
-              onClick={onClickOK}
-              dataTestId="session-confirm-ok-button"
-            />
-            <SessionButton
-              text={localize('cancel').toString()}
-              buttonColor={SessionButtonColor.Danger}
-              buttonType={SessionButtonType.Simple}
-              onClick={closeDialog}
-              dataTestId="session-confirm-cancel-button"
-            />
-          </div>
-        </>
+        <ModalActionsContainer>
+          <SessionButton
+            text={tr('membersInviteTitle')}
+            buttonType={SessionButtonType.Simple}
+            disabled={!hasContacts}
+            onClick={onClickOK}
+            dataTestId="session-confirm-ok-button"
+          />
+          <SessionButton
+            text={tr('cancel')}
+            buttonColor={SessionButtonColor.Danger}
+            buttonType={SessionButtonType.Simple}
+            onClick={closeDialog}
+            dataTestId="session-confirm-cancel-button"
+          />
+        </ModalActionsContainer>
       }
     >
       <SpacerLG />
@@ -219,16 +218,16 @@ const InviteContactsDialogInner = (props: Props) => {
       {isSearch && !hasSearchResults ? (
         <NoResultsForSearch searchTerm={searchTerm || ''} />
       ) : (
-        <div className="contact-selection-list">
+        <StyledContactListInModal>
           <ContactsToInvite
             validContactsForInvite={contactsToInvite}
             selectedContacts={selectedContacts}
             selectContact={addTo}
             unselectContact={removeFrom}
           />
-        </div>
+        </StyledContactListInModal>
       )}
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 };
 

@@ -11,6 +11,7 @@ import { ConversationLookupType } from '../ducks/conversations';
 import { SearchStateType, type SearchType } from '../ducks/search';
 import { getConversationLookup } from './conversations';
 import { ConversationTypeEnum } from '../../models/types';
+import { tr } from '../../localization/localeTools';
 
 export const getSearch = (state: StateType): SearchStateType => state.search;
 
@@ -130,14 +131,14 @@ export const getSearchResultsList = createSelector([getSearchResults], searchSta
     const hasUs = remove(builtList, m => m.contactConvoId === us);
 
     if (hasUs.length) {
-      builtList.unshift({ contactConvoId: us, displayName: window.i18n('noteToSelf') });
+      builtList.unshift({ contactConvoId: us, displayName: tr('noteToSelf') });
     }
 
-    builtList.unshift(window.i18n('sessionConversations'));
+    builtList.unshift(tr('sessionConversations'));
   }
 
   if (messages.length) {
-    builtList.push(window.i18n('messages'));
+    builtList.push(tr('messages'));
     builtList.push(...messages);
   }
 

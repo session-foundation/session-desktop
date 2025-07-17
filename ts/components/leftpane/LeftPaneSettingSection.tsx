@@ -14,10 +14,10 @@ import { LeftPaneSectionHeader } from './LeftPaneSectionHeader';
 import { getSessionNetworkModalState } from '../../state/selectors/modal';
 import { LOCALE_DEFAULTS } from '../../localization/constants';
 import { Localizer } from '../basic/Localizer';
-import { localize } from '../../localization/localeTools';
+import { tr } from '../../localization/localeTools';
 import { networkDataActions } from '../../state/ducks/networkData';
 import { showLinkVisitWarningDialog } from '../dialog/OpenUrlModal';
-import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { LUCIDE_ICONS_UNICODE, type WithLucideUnicode } from '../icon/lucide';
 import { LucideIcon } from '../icon/LucideIcon';
 
 const StyledSettingsSectionTitle = styled.span<{
@@ -61,10 +61,9 @@ type CategoryIcon = { color?: string } & (
   | {
       type: SessionIconType;
     }
-  | {
+  | (WithLucideUnicode & {
       type: 'lucide';
-      unicode: LUCIDE_ICONS_UNICODE;
-    }
+    })
 );
 
 type Categories = {
@@ -81,12 +80,12 @@ const categories: Array<Categories> = (
   [
     {
       id: 'privacy',
-      title: localize('sessionPrivacy'),
+      title: tr('sessionPrivacy'),
       icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.LOCK_KEYHOLE },
     },
     {
       id: 'donate',
-      title: localize('donate'),
+      title: tr('donate'),
       titleColor: 'var(--renderer-span-primary-color)',
       icon: {
         type: 'lucide',
@@ -102,42 +101,42 @@ const categories: Array<Categories> = (
     },
     {
       id: 'notifications',
-      title: localize('sessionNotifications'),
+      title: tr('sessionNotifications'),
       icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.VOLUME_2 },
     },
     {
       id: 'conversations',
-      title: localize('sessionConversations'),
+      title: tr('sessionConversations'),
       icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE },
     },
     {
       id: 'message-requests',
-      title: localize('sessionMessageRequests'),
+      title: tr('sessionMessageRequests'),
       icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE_WARNING },
     },
     {
       id: 'appearance',
-      title: localize('sessionAppearance'),
+      title: tr('sessionAppearance'),
       icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.PAINTBRUSH_VERTICAL },
     },
     {
       id: 'permissions',
-      title: localize('sessionPermissions'),
+      title: tr('sessionPermissions'),
       icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.CIRCLE_CHECK },
     },
     {
       id: 'recovery-password',
-      title: localize('sessionRecoveryPassword'),
+      title: tr('sessionRecoveryPassword'),
       icon: { type: 'recoveryPasswordFill' },
     },
     {
       id: 'help',
-      title: localize('sessionHelp'),
-      icon: { type: 'question' },
+      title: tr('sessionHelp'),
+      icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.CIRCLE_HELP },
     },
     {
       id: 'clear-data',
-      title: localize('sessionClearData'),
+      title: tr('sessionClearData'),
       titleColor: 'var(--danger-color)',
       icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.TRASH2, color: 'var(--danger-color)' },
     },
@@ -158,7 +157,7 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
     [focusedSettingsSection, id, sessionNetworkModalState]
   );
 
-  const iconSize = 22;
+  const iconSize = 'medium';
 
   return (
     <StyledSettingsListItem
@@ -199,7 +198,7 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
     >
       <StyledIconContainer>
         {icon.type === 'lucide' ? (
-          <LucideIcon unicode={icon.unicode} iconSize={`${iconSize}px`} iconColor={icon.color} />
+          <LucideIcon unicode={icon.unicode} iconSize={iconSize} iconColor={icon.color} />
         ) : (
           <SessionIcon
             iconType={icon.type}
@@ -221,7 +220,7 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
 
       {isSelected ? (
         <LucideIcon
-          iconSize={`${iconSize}px`}
+          iconSize={iconSize}
           unicode={LUCIDE_ICONS_UNICODE.CHEVRON_RIGHT}
           style={{ marginInlineStart: 'auto' }}
         />

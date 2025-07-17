@@ -7,6 +7,7 @@ const StyledContainer = styled.div<{ disabled: boolean }>`
   cursor: ${props => (props.disabled ? 'not-allowed' : 'pointer')};
   min-height: 30px;
   background-color: var(--transparent-color);
+  padding-block: var(--margins-sm);
 `;
 
 const StyledRadioOuter = styled.div<{

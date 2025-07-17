@@ -18,9 +18,13 @@ import { Avatar, AvatarSize } from '../avatar/Avatar';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SpacerMD, SpacerSM } from '../basic/Text';
 import { SessionSpinner } from '../loading';
-import { localize } from '../../localization/localeTools';
+import { tr } from '../../localization/localeTools';
 import { SimpleSessionInput, SimpleSessionTextarea } from '../inputs/SessionInput';
-import { SessionWrapperModal2 } from '../SessionWrapperModal2';
+import {
+  ModalBasicHeader,
+  ModalActionsContainer,
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
 import { ClearInputButton } from '../inputs/ClearInputButton';
 
 function GroupAvatar({
@@ -127,20 +131,36 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
   useKey('Esc', closeDialog);
 
   const errorStringName = !newGroupName
-    ? localize('groupNameEnterPlease').toString()
+    ? tr('groupNameEnterPlease')
     : newGroupName.length > LIBSESSION_CONSTANTS.BASE_GROUP_MAX_NAME_LENGTH
-      ? localize('groupNameEnterShorter').toString()
+      ? tr('groupNameEnterShorter')
       : '';
   const errorStringDescription =
     newGroupDescription &&
     newGroupDescription.length > LIBSESSION_CONSTANTS.GROUP_INFO_DESCRIPTION_MAX_LENGTH
-      ? localize('updateGroupInformationEnterShorterDescription').toString()
+      ? tr('updateGroupInformationEnterShorterDescription')
       : '';
 
   return (
-    <SessionWrapperModal2
-      title={localize('updateGroupInformation').toString()}
+    <SessionWrapperModal
+      headerChildren={<ModalBasicHeader title={tr('updateGroupInformation')} />}
       onClose={closeDialog}
+      buttonChildren={
+        <ModalActionsContainer>
+          <SessionButton
+            text={tr('save')}
+            onClick={onClickOK}
+            buttonType={SessionButtonType.Simple}
+            disabled={isNameChangePending || !newGroupName || !newGroupName.trim()}
+          />
+          <SessionButton
+            text={tr('cancel')}
+            buttonColor={SessionButtonColor.Danger}
+            buttonType={SessionButtonType.Simple}
+            onClick={closeDialog}
+          />
+        </ModalActionsContainer>
+      }
     >
       <GroupAvatar
         conversationId={conversationId}
@@ -158,7 +178,7 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
         padding="var(--margins-md) var(--margins-sm)"
         inputDataTestId="update-group-info-name-input"
         onValueChanged={setNewGroupName}
-        placeholder={localize('groupNameEnter').toString()}
+        placeholder={tr('groupNameEnter')}
         onEnterPressed={onClickOK}
         errorDataTestId="error-message"
         providedError={errorStringName}
@@ -184,7 +204,7 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
         padding="var(--margins-md) var(--margins-sm)"
         inputDataTestId="update-group-info-description-input"
         onValueChanged={setNewGroupDescription}
-        placeholder={localize('groupDescriptionEnter').toString()}
+        placeholder={tr('groupDescriptionEnter')}
         errorDataTestId="error-message"
         providedError={errorStringDescription}
         autoFocus={false}
@@ -203,21 +223,6 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
       />
 
       <SessionSpinner loading={isNameChangePending} />
-
-      <div className="session-modal__button-group">
-        <SessionButton
-          text={localize('save').toString()}
-          onClick={onClickOK}
-          buttonType={SessionButtonType.Simple}
-          disabled={isNameChangePending || !newGroupName || !newGroupName.trim()}
-        />
-        <SessionButton
-          text={localize('cancel').toString()}
-          buttonColor={SessionButtonColor.Danger}
-          buttonType={SessionButtonType.Simple}
-          onClick={closeDialog}
-        />
-      </div>
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 }

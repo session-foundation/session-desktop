@@ -21,8 +21,9 @@ import { UserGroupsWrapperActions } from '../../webworker/workers/browser/libses
 import { NetworkTime } from '../../util/NetworkTime';
 import { MessageQueue } from '../../session/sending';
 import { WithLocalMessageDeletionType } from '../../session/types/with';
-import { localize } from '../../localization/localeTools';
+import { tr } from '../../localization/localeTools';
 import { sectionActions } from '../../state/ducks/section';
+import type { LocalizerProps } from '../../components/basic/Localizer';
 
 async function unsendMessagesForEveryone1o1AndLegacy(
   conversation: ConversationModel,
@@ -502,13 +503,9 @@ export async function deleteMessagesByIdForEveryone(
 
   window.inboxStore?.dispatch(
     updateConfirmModal({
-      title: isMe
-        ? window.i18n('deleteMessageDevicesAll')
-        : window.i18n('clearMessagesForEveryone'),
+      title: isMe ? tr('deleteMessageDevicesAll') : tr('clearMessagesForEveryone'),
       i18nMessage: { token: 'deleteMessageConfirm', args: { count: selectedMessages.length } },
-      okText: isMe
-        ? window.i18n('deleteMessageDevicesAll')
-        : window.i18n('clearMessagesForEveryone'),
+      okText: isMe ? tr('deleteMessageDevicesAll') : tr('clearMessagesForEveryone'),
       okTheme: SessionButtonColor.Danger,
       onClickOk: async () => {
         await doDeleteSelectedMessages({ selectedMessages, conversation, deleteForEveryone: true });
@@ -518,7 +515,6 @@ export async function deleteMessagesByIdForEveryone(
       },
       onClickCancel: closeDialog,
       onClickClose: closeDialog,
-      closeAfterInput: false,
     })
   );
 }
@@ -530,30 +526,37 @@ export async function deleteMessagesById(messageIds: Array<string>, conversation
   );
 
   const isMe = conversation.isMe();
+  const count = messageIds.length;
 
   const closeDialog = () => window.inboxStore?.dispatch(updateConfirmModal(null));
   const clearMessagesForEveryone = 'clearMessagesForEveryone';
 
+  // Note: the isMe case has no radio buttons, so we just show the description below
+  const i18nMessage: LocalizerProps | undefined = isMe
+    ? { token: 'deleteMessageDescriptionDevice', args: { count } }
+    : undefined;
+
   window.inboxStore?.dispatch(
     updateConfirmModal({
-      title: localize('deleteMessage').withArgs({ count: selectedMessages.length }).toString(),
+      title: tr('deleteMessage', { count: selectedMessages.length }),
       radioOptions: !isMe
         ? [
             {
-              label: window.i18n('clearMessagesForMe'),
+              label: tr('clearMessagesForMe'),
               value: 'clearMessagesForMe' as const,
               inputDataTestId: 'input-deleteJustForMe' as const,
               labelDataTestId: 'label-deleteJustForMe' as const,
             },
             {
-              label: window.i18n('clearMessagesForEveryone'),
+              label: tr('clearMessagesForEveryone'),
               value: clearMessagesForEveryone,
               inputDataTestId: 'input-deleteForEveryone' as const,
               labelDataTestId: 'label-deleteForEveryone' as const,
             },
           ]
         : undefined,
-      okText: window.i18n('delete'),
+      i18nMessage,
+      okText: tr('delete'),
       okTheme: SessionButtonColor.Danger,
       onClickOk: async args => {
         await doDeleteSelectedMessages({
@@ -565,7 +568,6 @@ export async function deleteMessagesById(messageIds: Array<string>, conversation
         window.inboxStore?.dispatch(closeRightPanel());
         window.inboxStore?.dispatch(sectionActions.resetRightOverlayMode());
       },
-      closeAfterInput: false,
       onClickClose: closeDialog,
     })
   );

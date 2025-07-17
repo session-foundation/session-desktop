@@ -1,26 +1,41 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 import { TermsOfServicePrivacyDialogProps } from '../../../components/dialog/TermsOfServicePrivacyDialog';
-import { ConfirmModalState, type OpenUrlModalState } from '../../ducks/modalDialog';
+import type { SessionConfirmDialogProps } from '../../../components/dialog/SessionConfirm';
+import {
+  type SessionProInfoState,
+  type OpenUrlModalState,
+  type LocalizedPopupDialogState,
+} from '../../ducks/modalDialog';
 
 export type TermsOfServicePrivacyModalState = TermsOfServicePrivacyDialogProps | null;
 
+export type QuitModalProps = Required<
+  Pick<SessionConfirmDialogProps, 'onClickOk' | 'onClickCancel' | 'i18nMessage'>
+>;
+
+export type QuitModalState = QuitModalProps | null;
+
 export type ModalsState = {
-  quitModalState: ConfirmModalState | null;
-  termsOfServicePrivacyModalState: TermsOfServicePrivacyModalState | null;
+  quitModalState: QuitModalState;
+  termsOfServicePrivacyModalState: TermsOfServicePrivacyModalState;
   openUrlModal: OpenUrlModalState;
+  localizedPopupDialog: LocalizedPopupDialogState;
+  sessionProInfoModal: SessionProInfoState;
 };
 
 const initialState: ModalsState = {
   quitModalState: null,
   termsOfServicePrivacyModalState: null,
   openUrlModal: null,
+  localizedPopupDialog: null,
+  sessionProInfoModal: null,
 };
 
 export const modalsSlice = createSlice({
   name: 'modals',
   initialState,
   reducers: {
-    updateQuitModal(state, action: PayloadAction<ConfirmModalState>) {
+    updateQuitModal(state, action: PayloadAction<QuitModalState>) {
       return { ...state, quitModalState: action.payload };
     },
     updateTermsOfServicePrivacyModal(
@@ -31,6 +46,12 @@ export const modalsSlice = createSlice({
     },
     updateOpenUrlModal(state, action: PayloadAction<OpenUrlModalState>) {
       return { ...state, openUrlModal: action.payload };
+    },
+    updateLocalizedPopupDialogModal(state, action: PayloadAction<LocalizedPopupDialogState>) {
+      return { ...state, localizedPopupDialog: action.payload };
+    },
+    updateSessionProInfoModal(state, action: PayloadAction<SessionProInfoState>) {
+      return { ...state, sessionProInfoModal: action.payload };
     },
   },
 });

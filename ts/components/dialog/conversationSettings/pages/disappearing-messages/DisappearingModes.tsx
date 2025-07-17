@@ -1,3 +1,4 @@
+import { tr } from '../../../../../localization/localeTools';
 import { DisappearingMessageConversationModeType } from '../../../../../session/disappearing_messages/types';
 import { Localizer } from '../../../../basic/Localizer';
 import {
@@ -44,16 +45,16 @@ export const DisappearingModes = (props: DisappearingModesProps) => {
           const mode = _mode as DisappearingMessageConversationModeType;
           const optionI18n =
             mode === 'deleteAfterRead'
-              ? window.i18n('disappearingMessagesDisappearAfterRead')
+              ? tr('disappearingMessagesDisappearAfterRead')
               : mode === 'deleteAfterSend'
-                ? window.i18n('disappearingMessagesDisappearAfterSend')
-                : window.i18n('off');
+                ? tr('disappearingMessagesDisappearAfterSend')
+                : tr('off');
 
           const subtitleI18n =
             mode === 'deleteAfterRead'
-              ? window.i18n('disappearingMessagesDisappearAfterReadDescription')
+              ? tr('disappearingMessagesDisappearAfterReadDescription')
               : mode === 'deleteAfterSend'
-                ? window.i18n('disappearingMessagesDisappearAfterSendDescription')
+                ? tr('disappearingMessagesDisappearAfterSendDescription')
                 : undefined;
           const parentDataTestId = toDataTestId(mode);
 

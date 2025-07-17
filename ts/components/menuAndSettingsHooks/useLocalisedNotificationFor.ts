@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { localize, type MergedLocalizerTokens } from '../../localization/localeTools';
+import { tr } from '../../localization/localeTools';
 import {
   ConversationNotificationSetting,
   type ConversationNotificationSettingType,
@@ -10,27 +10,27 @@ type Context = 'action' | 'state' | 'title';
 function tokenForContextAndNotification(
   context: Context,
   notification: ConversationNotificationSettingType
-): MergedLocalizerTokens {
+) {
   switch (context) {
     case 'action':
       return notification === 'disabled'
-        ? 'notificationsMute'
+        ? ('notificationsMute' as const)
         : notification === 'mentions_only'
-          ? 'notificationsMentionsOnly'
-          : 'notificationsAllMessages';
+          ? ('notificationsMentionsOnly' as const)
+          : ('notificationsAllMessages' as const);
     case 'state':
       return notification === 'disabled'
-        ? 'notificationsMuted'
+        ? ('notificationsMuted' as const)
         : notification === 'mentions_only'
-          ? 'notificationsMentionsOnly'
-          : 'notificationsAllMessages';
+          ? ('notificationsMentionsOnly' as const)
+          : ('notificationsAllMessages' as const);
     case 'title':
     default:
       return notification === 'disabled'
-        ? 'notificationsHeaderMute'
+        ? ('notificationsHeaderMute' as const)
         : notification === 'mentions_only'
-          ? 'notificationsHeaderMentionsOnly'
-          : 'notificationsHeaderAllMessages';
+          ? ('notificationsHeaderMentionsOnly' as const)
+          : ('notificationsHeaderAllMessages' as const);
   }
 }
 
@@ -45,7 +45,7 @@ export const useLocalisedNotificationOptions = (context: Context) => {
     return ConversationNotificationSetting.map((n: ConversationNotificationSettingType) => {
       const token = tokenForContextAndNotification(context, n);
 
-      return { value: n, name: localize(token).toString() };
+      return { value: n, name: tr(token) };
     });
   }, [context]);
 };

@@ -24,7 +24,7 @@ import { HelpDeskButton } from '../../buttons';
 import { ConversationTypeEnum } from '../../../models/types';
 import { Localizer } from '../../basic/Localizer';
 import { SimpleSessionTextarea } from '../../inputs/SessionInput';
-import { localize } from '../../../localization/localeTools';
+import { tr } from '../../../localization/localeTools';
 
 const StyledDescriptionContainer = styled(motion.div)`
   margin: 0 auto;
@@ -102,7 +102,7 @@ export const OverlayMessage = () => {
     setPubkeyOrOnsError(undefined);
 
     if ((!pubkeyOrOns && !pubkeyOrOns.length) || !pubkeyOrOns.trim().length) {
-      setPubkeyOrOnsError(window.i18n('accountIdErrorInvalid'));
+      setPubkeyOrOnsError(tr('accountIdErrorInvalid'));
       return;
     }
 
@@ -124,7 +124,7 @@ export const OverlayMessage = () => {
     // this might be an ONS, validate the regex first
     const mightBeOnsName = new RegExp(ONSResolve.onsNameRegex, 'g').test(pubkeyOrOnsTrimmed);
     if (!mightBeOnsName) {
-      setPubkeyOrOnsError(window.i18n('onsErrorNotRecognized'));
+      setPubkeyOrOnsError(tr('onsErrorNotRecognized'));
       return;
     }
 
@@ -134,7 +134,7 @@ export const OverlayMessage = () => {
       const idValidationError = PubKey.validateWithErrorNoBlinding(resolvedSessionID);
 
       if (idValidationError) {
-        setPubkeyOrOnsError(window.i18n('onsErrorNotRecognized'));
+        setPubkeyOrOnsError(tr('onsErrorNotRecognized'));
         return;
       }
 
@@ -142,10 +142,10 @@ export const OverlayMessage = () => {
     } catch (e) {
       setPubkeyOrOnsError(
         e instanceof SnodeResponseError
-          ? window.i18n('onsErrorUnableToSearch')
+          ? tr('onsErrorUnableToSearch')
           : e instanceof NotFoundError
-            ? window.i18n('onsErrorNotRecognized')
-            : window.i18n('onsErrorUnableToSearch')
+            ? tr('onsErrorNotRecognized')
+            : tr('onsErrorUnableToSearch')
       );
     } finally {
       setLoading(false);
@@ -163,7 +163,7 @@ export const OverlayMessage = () => {
       <SimpleSessionTextarea
         ariaLabel="New conversation input"
         autoFocus={true}
-        placeholder={localize('accountIdOrOnsEnter').toString()}
+        placeholder={tr('accountIdOrOnsEnter')}
         value={pubkeyOrOns}
         onValueChanged={setPubkeyOrOns}
         providedError={pubkeyOrOnsError}
@@ -189,7 +189,11 @@ export const OverlayMessage = () => {
             <SessionIDDescription>
               <Localizer token="messageNewDescriptionDesktop" />
             </SessionIDDescription>
-            <HelpDeskButton style={{ display: 'inline-flex' }} />
+            <HelpDeskButton
+              iconSize="small"
+              style={{ display: 'inline-flex' }}
+              iconColor="var(--text-secondary-color)"
+            />
           </StyledDescriptionContainer>
           <SpacerLG />
         </>
@@ -197,8 +201,8 @@ export const OverlayMessage = () => {
 
       {!isEmpty(pubkeyOrOns) ? (
         <SessionButton
-          ariaLabel={window.i18n('next')}
-          text={window.i18n('next')}
+          ariaLabel={tr('next')}
+          text={tr('next')}
           disabled={disableNextButton}
           onClick={handleMessageButtonClick}
           buttonColor={SessionButtonColor.PrimaryDark}

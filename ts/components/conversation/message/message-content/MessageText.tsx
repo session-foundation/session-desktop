@@ -1,7 +1,6 @@
 import styled from 'styled-components';
 import clsx from 'clsx';
 
-import { SessionIcon } from '../../../icon';
 import { MessageBody } from './MessageBody';
 import {
   useMessageDirection,
@@ -11,24 +10,25 @@ import {
 import {
   useIsMessageSelectionMode,
   useSelectedIsGroupOrCommunity,
+  useSelectedIsPublic,
 } from '../../../../state/selectors/selectedConversation';
 import type { WithMessageId } from '../../../../session/types/with';
+import { LucideIcon } from '../../../icon/LucideIcon';
+import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
+import { tr } from '../../../../localization/localeTools';
+import { MessageBubble } from './MessageBubble';
 
 type Props = WithMessageId;
 
-const StyledMessageText = styled.div<{ isDeleted?: boolean }>`
+const StyledMessageText = styled.div`
   white-space: pre-wrap;
+`;
 
-  svg {
-    margin-inline-end: var(--margins-xs);
-  }
-
-  ${({ isDeleted }) =>
-    isDeleted &&
-    `
-    display: flex;
-    align-items: center;
-    `}
+const StyledMessageDeleted = styled.div`
+  display: flex;
+  gap: var(--margins-xs);
+  flex-direction: row;
+  align-items: center;
 `;
 
 export const MessageText = ({ messageId }: Props) => {
@@ -37,7 +37,8 @@ export const MessageText = ({ messageId }: Props) => {
   const isDeleted = useMessageIsDeleted(messageId);
   const text = useMessageText(messageId);
   const isOpenOrClosedGroup = useSelectedIsGroupOrCommunity();
-  const contents = isDeleted ? window.i18n('deleteMessageDeletedGlobally') : text?.trim();
+  const isPublic = useSelectedIsPublic();
+  const contents = isDeleted ? tr('deleteMessageDeletedGlobally') : text?.trim();
 
   if (!contents) {
     return null;
@@ -48,15 +49,31 @@ export const MessageText = ({ messageId }: Props) => {
       ? 'var(--message-bubbles-received-text-color)'
       : 'var(--message-bubbles-sent-text-color)';
 
+  if (isDeleted) {
+    return (
+      <StyledMessageDeleted>
+        <LucideIcon
+          unicode={LUCIDE_ICONS_UNICODE.TRASH2}
+          iconSize="small"
+          iconColor={iconColor}
+          style={{ padding: '0 var(--margins-xs)' }}
+        />
+        {contents}
+      </StyledMessageDeleted>
+    );
+  }
+
   return (
-    <StyledMessageText dir="auto" className={clsx('module-message__text')} isDeleted={isDeleted}>
-      {isDeleted && <SessionIcon iconType="delete" iconSize="small" iconColor={iconColor} />}
-      <MessageBody
-        text={contents || ''}
-        disableLinks={multiSelectMode}
-        disableJumbomoji={false}
-        isGroup={isOpenOrClosedGroup}
-      />
+    <StyledMessageText dir="auto" className={clsx('module-message__text')}>
+      <MessageBubble>
+        <MessageBody
+          text={contents || ''}
+          disableRichContent={multiSelectMode}
+          disableJumbomoji={false}
+          isGroup={isOpenOrClosedGroup}
+          isPublic={isPublic}
+        />
+      </MessageBubble>
     </StyledMessageText>
   );
 };

@@ -1,6 +1,10 @@
 import styled from 'styled-components';
 
-export const StyledSessionIconButton = styled.button<{ color?: string; $isSelected?: boolean }>`
+export const StyledSessionIconButton = styled.button<{
+  color?: string;
+  $isSelected?: boolean;
+  $isDarkTheme: boolean;
+}>`
   background-color: var(--button-icon-background-color);
   transition: var(--default-duration);
   // Note: this styled component is used for both the Lucide (font) and the Legacy Icons (svg)
@@ -29,6 +33,13 @@ export const StyledSessionIconButton = styled.button<{ color?: string; $isSelect
   }
 
   &:hover {
-    ${props => (props.disabled ? '' : props.$isSelected ? '' : 'opacity: 0.6;')}
+    ${props =>
+      props.disabled
+        ? ''
+        : props.$isSelected
+          ? ''
+          : props.$isDarkTheme
+            ? 'filter: brightness(0.5);'
+            : 'filter: opacity(0.5)'}// not ideal to use opacity for a hover effect, but on light theme I couldn't find another filter that worked
   }
 `;

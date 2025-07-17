@@ -5,10 +5,12 @@ import { Image } from './Image';
 import { fromArrayBufferToBase64 } from '../../session/utils/String';
 import { isImage } from '../../types/MIME';
 import { Flex } from '../basic/Flex';
-import { SessionIconButton } from '../icon';
 import { SessionSpinner } from '../loading';
 import { StagedLinkPreviewImage } from './composition/CompositionBox';
 import { AriaLabels } from '../../util/hardcodedAriaLabels';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { tr } from '../../localization/localeTools';
 
 type Props = {
   isLoaded: boolean;
@@ -91,15 +93,15 @@ export const StagedLinkPreview = (props: Props) => {
         ) : null}
         {isLoaded ? <StyledText data-testid="link-preview-title">{title}</StyledText> : null}
       </Flex>
-      <SessionIconButton
-        iconType="exit"
+      <SessionLucideIconButton
+        unicode={LUCIDE_ICONS_UNICODE.X}
         iconColor="var(--chat-buttons-icon-color)"
-        iconSize="small"
+        iconSize="medium"
         onClick={() => {
           onClose(url || '');
         }}
         margin={'0 var(--margins-sm) 0 0'}
-        aria-label={window.i18n('close')}
+        aria-label={tr('close')}
         dataTestId="link-preview-close"
         style={{
           position: isLoading ? 'absolute' : undefined,

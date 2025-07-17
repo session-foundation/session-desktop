@@ -1,7 +1,5 @@
-import { MouseEvent, type SessionDataTestId } from 'react';
-import { useDispatch } from 'react-redux';
+import { type SessionDataTestId } from 'react';
 import styled from 'styled-components';
-import { updateConfirmModal } from '../../state/ducks/modalDialog';
 
 const StyledKnob = styled.div<{ active: boolean }>`
   position: absolute;
@@ -44,57 +42,24 @@ const StyledSessionToggle = styled.div<{ active: boolean }>`
       : 'var(--toggle-switch-off-border-color)'};
 `;
 
-type Props = {
+export const SessionToggle = ({
+  active,
+  dataTestId,
+  onClick,
+}: {
   active: boolean;
   onClick: () => void;
-  confirmationDialogParams?: any | undefined;
   dataTestId?: SessionDataTestId;
-};
-
-export const SessionToggle = (props: Props) => {
-  const dispatch = useDispatch();
-
-  const clickHandler = (event: MouseEvent<HTMLDivElement>) => {
-    const stateManager = (e: any) => {
-      e.stopPropagation();
-      props.onClick();
-    };
-
-    if (props.confirmationDialogParams) {
-      // If item needs a confirmation dialog to turn ON, render it
-      const closeConfirmModal = () => {
-        dispatch(updateConfirmModal(null));
-      };
-
-      dispatch(
-        updateConfirmModal({
-          onClickOk: () => {
-            stateManager(event);
-            closeConfirmModal();
-          },
-          onClickClose: () => {
-            updateConfirmModal(null);
-          },
-          ...props.confirmationDialogParams,
-          updateConfirmModal,
-        })
-      );
-
-      return;
-    }
-
-    stateManager(event);
-  };
-
+}) => {
   return (
     <StyledSessionToggle
       role="button"
-      onClick={clickHandler}
-      active={props.active}
-      data-testid={props.dataTestId}
-      data-active={props.active}
+      active={active}
+      data-testid={dataTestId}
+      data-active={active}
+      onClick={onClick}
     >
-      <StyledKnob active={props.active} />
+      <StyledKnob active={active} />
     </StyledSessionToggle>
   );
 };

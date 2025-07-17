@@ -5,10 +5,15 @@ import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { MessageInteraction } from '../../interactions';
 import { OpenUrlModalState, updateOpenUrlModal } from '../../state/ducks/modalDialog';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
+import {
+  ModalBasicHeader,
+  ModalActionsContainer,
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
-import { I18nSubText } from '../basic/I18nSubText';
-import { SpacerSM, SpacerXS } from '../basic/Text';
+import { SpacerXS } from '../basic/Text';
+import { ModalDescription } from './shared/ModalDescriptionContainer';
+import { tr } from '../../localization/localeTools';
 
 const StyledScrollDescriptionContainer = styled.div`
   max-height: 150px;
@@ -39,39 +44,36 @@ export function OpenUrlModal(props: OpenUrlModalState) {
   }
 
   return (
-    <SessionWrapperModal2
-      title={window.i18n('urlOpen')}
+    <SessionWrapperModal
+      headerChildren={<ModalBasicHeader title={tr('urlOpen')} showExitIcon={true} />}
       onClose={onClose}
-      showExitIcon={true}
-      showHeader={true}
       buttonChildren={
-        <ButtonChildrenContainer>
+        <ModalActionsContainer>
           <SessionButton
-            text={window.i18n('open')}
+            text={tr('open')}
             buttonColor={SessionButtonColor.Danger}
             buttonType={SessionButtonType.Simple}
             onClick={onClickOpen}
             dataTestId="open-url-confirm-button"
           />
           <SessionButton
-            text={window.i18n('urlCopy')}
+            text={tr('urlCopy')}
             buttonType={SessionButtonType.Simple}
             onClick={onClickCopy}
             dataTestId="copy-url-button"
           />
-        </ButtonChildrenContainer>
+        </ModalActionsContainer>
       }
     >
       <StyledScrollDescriptionContainer>
-        <I18nSubText
-          localizerProps={{ token: 'urlOpenDescription', asTag: 'span', args: { url } }}
+        <ModalDescription
           dataTestId="modal-description"
+          localizerProps={{ token: 'urlOpenDescription', asTag: 'span', args: { url } }}
         />
       </StyledScrollDescriptionContainer>
-      <SpacerSM />
 
       <SpacerXS />
-    </SessionWrapperModal2>
+    </SessionWrapperModal>
   );
 }
 

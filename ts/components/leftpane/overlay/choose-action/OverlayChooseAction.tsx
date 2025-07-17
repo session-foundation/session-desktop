@@ -9,6 +9,8 @@ import { ActionRow, StyledActionRowContainer } from './ActionRow';
 import { ContactsListWithBreaks } from './ContactsListWithBreaks';
 import { groupInfoActions } from '../../../../state/ducks/metaGroups';
 import { sectionActions } from '../../../../state/ducks/section';
+import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
+import { tr } from '../../../../localization/localeTools';
 
 export const OverlayChooseAction = () => {
   const dispatch = useDispatch();
@@ -72,34 +74,30 @@ export const OverlayChooseAction = () => {
         $alignItems={'flex-start'}
       >
         <ActionRow
-          title={window.i18n('messageNew', { count: 1 })}
+          title={tr('messageNew', { count: 1 })}
           ariaLabel={'New message button'}
-          iconType={'chatBubble'}
-          iconSize={20}
+          unicode={LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE}
           onClick={openNewMessage}
           dataTestId="chooser-new-conversation-button"
         />
         <ActionRow
-          title={window.i18n('groupCreate')}
+          title={tr('groupCreate')}
           ariaLabel={'Create a group button'}
-          iconType={'group'}
-          iconSize={30}
+          unicode={LUCIDE_ICONS_UNICODE.USERS_ROUND}
           onClick={openCreateGroup}
           dataTestId="chooser-new-group"
         />
         <ActionRow
-          title={window.i18n('communityJoin')}
+          title={tr('communityJoin')}
           ariaLabel={'Join a community button'}
-          iconType={'communities'}
-          iconSize={20}
+          unicode={LUCIDE_ICONS_UNICODE.GLOBE}
           onClick={openJoinCommunity}
           dataTestId="chooser-new-community"
         />
         <ActionRow
-          title={window.i18n('sessionInviteAFriend')}
+          title={tr('sessionInviteAFriend')}
           ariaLabel={'Invite a friend button'}
-          iconType={'addUser'}
-          iconSize={20}
+          unicode={LUCIDE_ICONS_UNICODE.USER_ROUND_PLUS}
           onClick={inviteAFriend}
           dataTestId="chooser-invite-friend"
         />

@@ -2,7 +2,8 @@
 import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 import type { CSSProperties } from 'styled-components';
-import { localize } from '../../../../../localization/localeTools';
+import { useMemo } from 'react';
+import { tr } from '../../../../../localization/localeTools';
 import { Flex } from '../../../../basic/Flex';
 import { SpacerMD, SpacerXS } from '../../../../basic/Text';
 import {
@@ -22,9 +23,7 @@ import { showLinkVisitWarningDialog } from '../../../OpenUrlModal';
 import { useSecuringNodesCount } from './hooks/useSecuringNodesCount';
 import { formatNumber, formatDateWithLocale } from '../../../../../util/i18n/formatting/generics';
 import { abbreviateNumber } from '../../../../../util/numbers';
-import { SessionIconButton } from '../../../../icon';
 import { SessionSpinner } from '../../../../loading';
-import { SessionTooltip } from '../../../../SessionTooltip';
 import { useHTMLDirection } from '../../../../../util/i18n/rtlSupport';
 import {
   usePriceTimestamp,
@@ -35,6 +34,9 @@ import {
 } from '../../../../../state/selectors/networkData';
 import { Grid } from '../../../../basic/Grid';
 import { useInfoFakeRefreshing, useInfoLoading } from '../../../../../state/selectors/networkModal';
+import { SessionLucideIconButton } from '../../../../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../../../../icon/lucide';
+import { SessionTooltip } from '../../../../SessionTooltip';
 
 const StyledStatsNumber = styled.strong`
   font-size: var(--font-size-h3-new);
@@ -119,8 +121,25 @@ const CurrentPriceBlock = () => {
     usdPrice && !isFakeRefreshing && !dataIsStale
       ? `$${formatNumber(usdPrice, { currency: LOCALE_DEFAULTS.usd_name_short, minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true })} ${LOCALE_DEFAULTS.usd_name_short}`
       : infoLoading || isFakeRefreshing
-        ? localize('loading')
-        : localize('unavailable').toString();
+        ? tr('loading')
+        : tr('unavailable');
+
+  const tooltipContent = useMemo(
+    () => (
+      <Localizer
+        token="sessionNetworkDataPrice"
+        args={{
+          date_time: priceTimestamp
+            ? formatDateWithLocale({
+                date: new Date(priceTimestamp * 1000),
+                formatStr: 'd MMM yyyy hh:mm a',
+              })
+            : '-',
+        }}
+      />
+    ),
+    [priceTimestamp]
+  );
 
   return (
     <Block
@@ -146,37 +165,20 @@ const CurrentPriceBlock = () => {
         <BlockSecondaryText>{LOCALE_DEFAULTS.token_name_long}</BlockSecondaryText>
       </Flex>
       <SessionTooltip
-        content={{
-          token: 'sessionNetworkDataPrice',
-          args: {
-            date_time: !priceTimestamp
-              ? '-'
-              : formatDateWithLocale({
-                  date: new Date(priceTimestamp * 1000),
-                  formatStr: 'd MMM yyyy hh:mm a',
-                }),
-          },
-        }}
+        content={tooltipContent}
         loading={infoLoading || isFakeRefreshing || dataIsStale}
         dataTestId="tooltip-info"
-        htmlString={true}
         style={{
           position: 'absolute',
-          top: 'var(--margins-xs)',
-          insetInlineEnd: 'var(--margins-xs)',
+          top: '1px',
+          right: '1px',
         }}
       >
-        <SessionIconButton
+        <SessionLucideIconButton
           ariaLabel="Network price explanation tooltip"
-          iconType="question"
-          iconSize={9}
-          iconPadding="2px"
+          unicode={LUCIDE_ICONS_UNICODE.CIRCLE_HELP}
           iconColor="var(--text-primary-color)"
-          padding={'0'}
-          style={{
-            border: '1px solid var(--text-primary-color)',
-            borderRadius: '9999px',
-          }}
+          iconSize="small"
           dataTestId="tooltip"
         />
       </SessionTooltip>
@@ -196,8 +198,8 @@ const SecuredByBlock = () => {
     securedBySESH && !isFakeRefreshing && !dataIsStale
       ? `${abbreviateNumber(securedBySESH, 0).toUpperCase()} ${LOCALE_DEFAULTS.token_name_short}`
       : infoLoading || isFakeRefreshing
-        ? localize('loading')
-        : localize('unavailable').toString();
+        ? tr('loading')
+        : tr('unavailable');
 
   const formattedNumberOrFallback =
     securedByUSD && !isFakeRefreshing && !dataIsStale
@@ -222,7 +224,7 @@ const SecuredByBlock = () => {
       backgroundColor={isDarkTheme ? undefined : 'var(--background-secondary-color)'}
       borderColor={isDarkTheme ? undefined : 'var(--transparent-color)'}
     >
-      <BlockText>{localize('sessionNetworkSecuredBy')}</BlockText>
+      <BlockText>{tr('sessionNetworkSecuredBy')}</BlockText>
       <SpacerXS />
       <BlockPrimaryText dataTestId={'network-secured-amount'}>
         <b>{securedAmountSESH}</b>

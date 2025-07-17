@@ -10,8 +10,15 @@ import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { matchesHash, validatePassword } from '../../util/passwordUtils';
 import { getPasswordHash, Storage } from '../../util/storage';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
-import { SpacerSM } from '../basic/Text';
-import { SessionWrapperModal } from '../SessionWrapperModal';
+import { tr, tStripped } from '../../localization/localeTools';
+import {
+  ModalBasicHeader,
+  ModalActionsContainer,
+  SessionWrapperModal,
+  WrapperModalWidth,
+} from '../SessionWrapperModal';
+import { SimpleSessionInput } from '../inputs/SessionInput';
+import { ModalFlexContainer } from './shared/ModalFlexContainer';
 
 interface Props {
   passwordAction: PasswordAction;
@@ -26,9 +33,7 @@ interface State {
 }
 
 export class SessionSetPasswordDialog extends Component<Props, State> {
-  private passportInput: HTMLInputElement | null = null;
-
-  constructor(props: any) {
+  constructor(props: Props) {
     super(props);
 
     this.state = {
@@ -41,118 +46,106 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
     autoBind(this);
   }
 
-  public componentDidMount() {
-    document.addEventListener('keyup', this.onEnterPressed);
-
-    setTimeout(() => {
-      this.passportInput?.focus();
-    }, 1);
-  }
-
-  public componentWillUnmount() {
-    document.removeEventListener('keyup', this.onEnterPressed);
-  }
-
   public render() {
     const { passwordAction } = this.props;
     const { currentPasswordEntered } = this.state;
     let placeholders: Array<string> = [];
     switch (passwordAction) {
       case 'change':
-        placeholders = [
-          window.i18n('passwordEnterCurrent'),
-          window.i18n('passwordEnterNew'),
-          window.i18n('passwordConfirm'),
-        ];
+        placeholders = [tr('passwordEnterCurrent'), tr('passwordEnterNew'), tr('passwordConfirm')];
         break;
       case 'remove':
-        placeholders = [window.i18n('passwordRemove')];
+        placeholders = [tr('passwordRemove')];
         break;
       case 'enter':
-        placeholders = [window.i18n('passwordCreate')];
+        placeholders = [tr('passwordCreate')];
         break;
       default:
-        placeholders = [window.i18n('passwordCreate'), window.i18n('passwordConfirm')];
+        placeholders = [tr('passwordCreate'), tr('passwordConfirm')];
     }
 
-    const confirmButtonText =
-      passwordAction === 'remove' ? window.i18n('remove') : window.i18n('save');
+    const confirmButtonText = passwordAction === 'remove' ? tr('remove') : tr('save');
 
     const titleString = () => {
       switch (passwordAction) {
         case 'change':
-          return window.i18n('passwordChange');
+          return tr('passwordChange');
         case 'remove':
-          return window.i18n('passwordRemove');
+          return tr('passwordRemove');
         case 'enter':
-          return window.i18n('passwordEnter');
+          return tr('passwordEnter');
         default:
-          return window.i18n('passwordSet');
+          return tr('passwordSet');
       }
     };
 
-    return (
-      <SessionWrapperModal title={titleString()} onClose={this.closeDialog}>
-        <SpacerSM />
+    const sharedInputProps = {
+      type: 'password',
+      padding: 'var(--margins-sm) var(--margins-md)',
+      errorDataTestId: 'error-message',
+      providedError: undefined,
+      textSize: 'md',
+      onEnterPressed: () => {
+        void this.setPassword();
+      },
+    } as const;
 
-        <div className="session-modal__input-group">
-          <input
-            type="password"
-            id="password-modal-input"
-            ref={input => {
-              this.passportInput = input;
-            }}
+    return (
+      <SessionWrapperModal
+        headerChildren={<ModalBasicHeader title={titleString()} />}
+        onClose={this.closeDialog}
+        $contentMinWidth={WrapperModalWidth.narrow}
+        $contentMaxWidth={WrapperModalWidth.narrow}
+        buttonChildren={
+          <ModalActionsContainer>
+            <SessionButton
+              text={confirmButtonText}
+              buttonColor={passwordAction === 'remove' ? SessionButtonColor.Danger : undefined}
+              buttonType={SessionButtonType.Simple}
+              onClick={this.setPassword}
+              disabled={
+                (passwordAction === 'change' ||
+                  passwordAction === 'set' ||
+                  passwordAction === 'remove') &&
+                isEmpty(currentPasswordEntered)
+              }
+            />
+            {passwordAction !== 'enter' && (
+              <SessionButton
+                text={tr('cancel')}
+                buttonColor={passwordAction !== 'remove' ? SessionButtonColor.Danger : undefined}
+                buttonType={SessionButtonType.Simple}
+                onClick={this.closeDialog}
+              />
+            )}
+          </ModalActionsContainer>
+        }
+      >
+        <ModalFlexContainer>
+          <SimpleSessionInput
+            {...sharedInputProps}
             placeholder={placeholders[0]}
-            onChange={this.onPasswordInput}
-            onPaste={this.onPasswordInput}
-            data-testid="password-input"
+            onValueChanged={this.onPasswordInput}
+            inputDataTestId="password-input"
+            autoFocus={true}
           />
           {passwordAction !== 'enter' && passwordAction !== 'remove' && (
-            <input
-              type="password"
-              id="password-modal-input-confirm"
+            <SimpleSessionInput
+              {...sharedInputProps}
               placeholder={placeholders[1]}
-              onChange={this.onPasswordConfirmInput}
-              onPaste={this.onPasswordConfirmInput}
-              data-testid="password-input-confirm"
+              onValueChanged={this.onPasswordConfirmInput}
+              inputDataTestId="password-input-confirm"
             />
           )}
           {passwordAction === 'change' && (
-            <input
-              type="password"
-              id="password-modal-input-reconfirm"
+            <SimpleSessionInput
+              {...sharedInputProps}
               placeholder={placeholders[2]}
-              onPaste={this.onPasswordRetypeInput}
-              onChange={this.onPasswordRetypeInput}
-              data-testid="password-input-reconfirm"
+              onValueChanged={this.onPasswordRetypeInput}
+              inputDataTestId="password-input-reconfirm"
             />
           )}
-        </div>
-
-        <SpacerSM />
-
-        <div className="session-modal__button-group">
-          <SessionButton
-            text={confirmButtonText}
-            buttonColor={passwordAction === 'remove' ? SessionButtonColor.Danger : undefined}
-            buttonType={SessionButtonType.Simple}
-            onClick={this.setPassword}
-            disabled={
-              (passwordAction === 'change' ||
-                passwordAction === 'set' ||
-                passwordAction === 'remove') &&
-              isEmpty(currentPasswordEntered)
-            }
-          />
-          {passwordAction !== 'enter' && (
-            <SessionButton
-              text={window.i18n('cancel')}
-              buttonColor={passwordAction !== 'remove' ? SessionButtonColor.Danger : undefined}
-              buttonType={SessionButtonType.Simple}
-              onClick={this.closeDialog}
-            />
-          )}
-        </div>
+        </ModalFlexContainer>
       </SessionWrapperModal>
     );
   }
@@ -206,7 +199,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
 
     if (enteredPassword !== enteredPasswordConfirm) {
       this.setState({
-        error: window.i18n('passwordErrorMatch'),
+        error: tr('passwordErrorMatch'),
       });
       this.showError();
       return;
@@ -218,17 +211,14 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
       }
       await Storage.put('passHash', updatedHash);
 
-      ToastUtils.pushToastSuccess(
-        'setPasswordSuccessToast',
-        window.i18n.stripped('passwordSetDescription')
-      );
+      ToastUtils.pushToastSuccess('setPasswordSuccessToast', tStripped('passwordSetDescription'));
 
       this.props.onOk();
       this.closeDialog();
     } catch (err) {
       window.log.error(err);
       this.setState({
-        error: window.i18n('passwordFailed'),
+        error: tr('passwordFailed'),
       });
       this.showError();
     }
@@ -248,7 +238,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
     // Check the retyped password matches the new password
     if (newPassword !== newConfirmedPassword) {
       this.setState({
-        error: window.i18n('passwordErrorMatch'),
+        error: tr('passwordErrorMatch'),
       });
       this.showError();
       return;
@@ -257,7 +247,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
     const isValidWithStoredInDB = this.validatePasswordHash(oldPassword);
     if (!isValidWithStoredInDB) {
       this.setState({
-        error: window.i18n('passwordCurrentIncorrect'),
+        error: tr('passwordCurrentIncorrect'),
       });
       this.showError();
       return;
@@ -272,7 +262,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
 
       ToastUtils.pushToastSuccess(
         'setPasswordSuccessToast',
-        window.i18n.stripped('passwordChangedDescription')
+        tStripped('passwordChangedDescription')
       );
 
       this.props.onOk();
@@ -280,7 +270,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
     } catch (err) {
       window.log.error(err);
       this.setState({
-        error: window.i18n('changePasswordFail'),
+        error: tr('changePasswordFail'),
       });
       this.showError();
     }
@@ -296,7 +286,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
     const isValidWithStoredInDB = this.validatePasswordHash(oldPassword);
     if (!isValidWithStoredInDB) {
       this.setState({
-        error: window.i18n('passwordIncorrect'),
+        error: tr('passwordIncorrect'),
       });
       this.showError();
       return;
@@ -311,7 +301,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
 
       ToastUtils.pushToastWarning(
         'setPasswordSuccessToast',
-        window.i18n.stripped('passwordRemovedDescription')
+        tStripped('passwordRemovedDescription')
       );
 
       this.props.onOk();
@@ -319,16 +309,9 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
     } catch (err) {
       window.log.error(err);
       this.setState({
-        error: window.i18n('removePasswordFail'),
+        error: tr('removePasswordFail'),
       });
       this.showError();
-    }
-  }
-
-  private async onEnterPressed(event: any) {
-    if (event.key === 'Enter') {
-      event.stopPropagation();
-      await this.setPassword();
     }
   }
 
@@ -341,7 +324,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
     const isValidWithStoredInDB = this.validatePasswordHash(enteredPassword);
     if (!isValidWithStoredInDB) {
       this.setState({
-        error: window.i18n('passwordIncorrect'),
+        error: tr('passwordIncorrect'),
       });
       this.showError();
       return;
@@ -392,18 +375,18 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
     window.inboxStore?.dispatch(sessionPassword(null));
   }
 
-  private onPasswordInput(event: any) {
-    const currentPasswordEntered = event.target.value;
+  private onPasswordInput(value: string) {
+    const currentPasswordEntered = value;
     this.setState({ currentPasswordEntered });
   }
 
-  private onPasswordConfirmInput(event: any) {
-    const currentPasswordConfirmEntered = event.target.value;
+  private onPasswordConfirmInput(value: string) {
+    const currentPasswordConfirmEntered = value;
     this.setState({ currentPasswordConfirmEntered });
   }
 
-  private onPasswordRetypeInput(event: any) {
-    const currentPasswordRetypeEntered = event.target.value;
+  private onPasswordRetypeInput(value: string) {
+    const currentPasswordRetypeEntered = value;
     this.setState({ currentPasswordRetypeEntered });
   }
 }

@@ -5,6 +5,7 @@ import { THEME_GLOBALS } from '../themes/globals';
 import { renderQRCode } from '../util/qrCodes';
 import { AnimatedFlex } from './basic/Flex';
 import { SessionIconType } from './icon';
+import { tr } from '../localization/localeTools';
 
 // AnimatedFlex because we fade in the QR code a flicker on first render
 const StyledQRView = styled(AnimatedFlex)<{
@@ -113,7 +114,7 @@ export function SessionQRCode(props: SessionQRCodeProps) {
       $alignItems="center"
       size={size}
       id={id}
-      title={window.i18n('download')}
+      title={tr('download')}
       aria-label={ariaLabel || 'QR code'}
       onClick={(event: MouseEvent<HTMLDivElement>) => {
         event.preventDefault();

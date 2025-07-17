@@ -5,7 +5,7 @@ import {
   useIsPrivate,
   useNicknameOrProfileNameOrShortenedPubkey,
 } from '../../hooks/useParamSelector';
-import { localize } from '../../localization/localeTools';
+import { tr } from '../../localization/localeTools';
 import { ConvoHub } from '../../session/conversations';
 import { updateConfirmModal, updateConversationSettingsModal } from '../../state/ducks/modalDialog';
 import { SessionButtonColor } from '../basic/SessionButton';
@@ -27,7 +27,7 @@ export function useShowDeletePrivateContactCb({ conversationId }: { conversation
     return null;
   }
 
-  const menuItemText = localize('contactDelete').toString();
+  const menuItemText = tr('contactDelete');
 
   const onClickClose = () => {
     dispatch(updateConfirmModal(null));
@@ -48,7 +48,7 @@ export function useShowDeletePrivateContactCb({ conversationId }: { conversation
           });
           dispatch(updateConversationSettingsModal(null));
         },
-        okText: localize('delete').toString(),
+        okText: tr('delete'),
       })
     );
   };

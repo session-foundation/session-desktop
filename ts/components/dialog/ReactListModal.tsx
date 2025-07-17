@@ -12,9 +12,8 @@ import {
   updateUserDetailsModal,
 } from '../../state/ducks/modalDialog';
 import {
+  useSelectedConversationKey,
   useSelectedIsPublic,
-  useSelectedWeAreAdmin,
-  useSelectedWeAreModerator,
 } from '../../state/selectors/selectedConversation';
 import { SortedReactionList } from '../../types/Reaction';
 import { nativeEmojiData } from '../../util/emoji';
@@ -24,13 +23,16 @@ import { Flex } from '../basic/Flex';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { ContactName } from '../conversation/ContactName';
 import { MessageReactions } from '../conversation/message/message-content/MessageReactions';
-import { SessionIconButton } from '../icon';
-import { SessionWrapperModal } from '../SessionWrapperModal';
 import { findAndFormatContact } from '../../models/message';
 import { Localizer } from '../basic/Localizer';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { SessionWrapperModal } from '../SessionWrapperModal';
+import { tr } from '../../localization/localeTools';
+import { useWeAreCommunityAdminOrModerator } from '../../state/selectors/conversations';
 
 const StyledReactListContainer = styled(Flex)`
-  width: 376px;
+  width: 100%;
 `;
 
 const StyledReactionsContainer = styled.div`
@@ -106,6 +108,7 @@ type ReactionSendersProps = {
 const ReactionSenders = (props: ReactionSendersProps) => {
   const { messageId, currentReact, senders, me, handleClose } = props;
   const dispatch = useDispatch();
+  const isPublic = useSelectedIsPublic();
 
   const handleAvatarClick = async (sender: string) => {
     const message = await Data.getMessageById(messageId);
@@ -148,21 +151,23 @@ const ReactionSenders = (props: ReactionSendersProps) => {
               }}
             />
             {sender === me ? (
-              window.i18n('you')
+              tr('you')
             ) : (
               <StyledContactContainer>
                 <ContactName
                   pubkey={sender}
                   module="module-conversation__user"
                   shouldShowPubkey={false}
+                  isPublic={isPublic}
                 />
               </StyledContactContainer>
             )}
           </Flex>
           {sender === me && (
-            <SessionIconButton
-              iconType="exit"
-              iconSize="small"
+            <SessionLucideIconButton
+              unicode={LUCIDE_ICONS_UNICODE.X}
+              iconColor="var(--chat-buttons-icon-color)"
+              iconSize="medium"
               onClick={() => {
                 void handleRemoveReaction();
               }}
@@ -234,8 +239,8 @@ export const ReactListModal = (props: Props) => {
 
   const msgProps = useMessageReactsPropsById(messageId);
   const isPublic = useSelectedIsPublic();
-  const weAreAdmin = useSelectedWeAreAdmin();
-  const weAreModerator = useSelectedWeAreModerator();
+  const selectedConvoKey = useSelectedConversationKey();
+  const weAreCommunityAdminOrModerator = useWeAreCommunityAdminOrModerator(selectedConvoKey);
   const me = UserUtils.getOurPubKeyStrFromCache();
 
   const reactionsMap = useMemo(() => {
@@ -318,7 +323,6 @@ export const ReactListModal = (props: Props) => {
   };
 
   const handleClearReactions = () => {
-    handleClose();
     dispatch(
       updateReactClearAllModal({
         reaction: currentReact,
@@ -328,11 +332,7 @@ export const ReactListModal = (props: Props) => {
   };
 
   return (
-    <SessionWrapperModal
-      additionalClassName={'reaction-list-modal no-body-padding'}
-      showHeader={false}
-      onClose={handleClose}
-    >
+    <SessionWrapperModal onClose={handleClose} headerChildren={null}>
       <StyledReactListContainer
         $container={true}
         $flexDirection={'column'}
@@ -370,9 +370,9 @@ export const ReactListModal = (props: Props) => {
                   </>
                 )}
               </p>
-              {isPublic && (weAreAdmin || weAreModerator) && (
+              {weAreCommunityAdminOrModerator && (
                 <SessionButton
-                  text={window.i18n('clearAll')}
+                  text={tr('clearAll')}
                   buttonColor={SessionButtonColor.Danger}
                   buttonType={SessionButtonType.Simple}
                   onClick={handleClearReactions}

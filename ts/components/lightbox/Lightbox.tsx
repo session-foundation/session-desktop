@@ -8,19 +8,12 @@ import { useDisableDrag } from '../../hooks/useDisableDrag';
 import { useEncryptedFileFetch } from '../../hooks/useEncryptedFileFetch';
 import { updateLightBoxOptions } from '../../state/ducks/modalDialog';
 import * as MIME from '../../types/MIME';
-import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { GoogleChrome } from '../../util';
 import { Flex } from '../basic/Flex';
-import { SessionIconButton, SessionIconSize, SessionIconType } from '../icon';
+import { SessionIconSize } from '../icon';
 import { AriaLabels } from '../../util/hardcodedAriaLabels';
-
-const colorSVG = (url: string, color: string) => {
-  return {
-    WebkitMask: `url(${url}) no-repeat center`,
-    WebkitMaskSize: '100%',
-    backgroundColor: color,
-  };
-};
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
 
 type Props = {
   contentType: MIME.MIMEType | undefined;
@@ -110,7 +103,7 @@ const styles = {
     flexDirection: 'row',
     justifyContent: 'center',
     padding: 10,
-    height: '50px', // force it so the buttons stick to the bottom
+    height: '70px', // force it so the buttons stick to the bottom
   } as CSSProperties,
   saveButton: {
     marginTop: 10,
@@ -137,43 +130,36 @@ const StyledIconButton = styled.div`
 interface IconButtonProps {
   onClick?: () => void;
   style?: CSSProperties;
-  type: 'save' | 'close' | 'previous' | 'next';
+  unicode:
+    | LUCIDE_ICONS_UNICODE.CHEVRON_RIGHT
+    | LUCIDE_ICONS_UNICODE.CHEVRON_LEFT
+    | LUCIDE_ICONS_UNICODE.X
+    | LUCIDE_ICONS_UNICODE.DOWNLOAD;
 }
 
-const IconButton = ({ onClick, type }: IconButtonProps) => {
+const IconButton = ({ onClick, unicode }: IconButtonProps) => {
   const clickHandler = (): void => {
     if (!onClick) {
       return;
     }
     onClick();
   };
-  let iconRotation = 0;
-  let iconType: SessionIconType = 'chevron';
+
+  // default to huge, only download is bigger
   let iconSize: SessionIconSize = 'huge';
-  switch (type) {
-    case 'next':
-      iconRotation = 270;
-      break;
-    case 'previous':
-      iconRotation = 90;
-      break;
-    case 'close':
-      iconType = 'exit';
-      break;
-    case 'save':
-      iconType = 'save';
+  switch (unicode) {
+    case LUCIDE_ICONS_UNICODE.DOWNLOAD:
       iconSize = 'huge2';
       break;
     default:
-      assertUnreachable(type, `Invalid button type: ${type}`);
+      break;
   }
 
   return (
     <StyledIconButton>
-      <SessionIconButton
-        iconType={iconType}
+      <SessionLucideIconButton
+        unicode={unicode}
         iconSize={iconSize}
-        iconRotation={iconRotation}
         // the lightbox has a dark background
         iconColor="var(--lightbox-icon-stroke-color)"
         onClick={clickHandler}
@@ -183,24 +169,6 @@ const IconButton = ({ onClick, type }: IconButtonProps) => {
 };
 
 const IconButtonPlaceholder = () => <div style={styles.iconButtonPlaceholder} />;
-
-const Icon = ({
-  onClick,
-  url,
-}: {
-  onClick?: (event: MouseEvent<HTMLImageElement | HTMLDivElement>) => void;
-  url: string;
-}) => (
-  <div
-    style={{
-      ...(styles.object as any),
-      ...colorSVG(url, 'var(--lightbox-icon-stroke-color)'),
-      maxWidth: 200,
-    }}
-    onClick={onClick}
-    role="button"
-  />
-);
 
 export const LightboxObject = ({
   objectURL,
@@ -262,14 +230,28 @@ export const LightboxObject = ({
   const isUnsupportedImageType = !isImageTypeSupported && MIME.isImage(contentType);
   const isUnsupportedVideoType = !isVideoTypeSupported && MIME.isVideo(contentType);
   if (isUnsupportedImageType || isUnsupportedVideoType) {
-    const iconUrl = isUnsupportedVideoType ? 'images/video.svg' : 'images/image.svg';
-
-    return <Icon url={iconUrl} onClick={onObjectClick} />;
+    return (
+      <SessionLucideIconButton
+        unicode={
+          isUnsupportedVideoType ? LUCIDE_ICONS_UNICODE.CLAPERBOARD : LUCIDE_ICONS_UNICODE.IMAGE
+        }
+        iconSize="huge2"
+        onClick={onObjectClick}
+        iconColor="var(--lightbox-icon-stroke-color)"
+      />
+    );
   }
 
   window.log.info('Lightbox: Unexpected content type', { contentType });
 
-  return <Icon onClick={onObjectClick} url="images/file.svg" />;
+  return (
+    <SessionLucideIconButton
+      unicode={LUCIDE_ICONS_UNICODE.FILE}
+      iconSize="huge2"
+      onClick={onObjectClick}
+      iconColor="var(--lightbox-icon-stroke-color)"
+    />
+  );
 };
 
 export const Lightbox = (props: Props) => {
@@ -315,19 +297,29 @@ export const Lightbox = (props: Props) => {
         </div>
         <div style={styles.controls as any}>
           <Flex $container={true}>
-            <IconButton type="close" onClick={handleClose} />
+            <IconButton unicode={LUCIDE_ICONS_UNICODE.X} onClick={handleClose} />
           </Flex>
 
-          {onSave ? <IconButton type="save" onClick={onSave} style={styles.saveButton} /> : null}
+          {onSave ? (
+            <IconButton
+              unicode={LUCIDE_ICONS_UNICODE.DOWNLOAD}
+              onClick={onSave}
+              style={styles.saveButton}
+            />
+          ) : null}
         </div>
       </div>
       <div style={styles.navigationContainer as any}>
         {onPrevious ? (
-          <IconButton type="previous" onClick={onPrevious} />
+          <IconButton unicode={LUCIDE_ICONS_UNICODE.CHEVRON_LEFT} onClick={onPrevious} />
         ) : (
           <IconButtonPlaceholder />
         )}
-        {onNext ? <IconButton type="next" onClick={onNext} /> : <IconButtonPlaceholder />}
+        {onNext ? (
+          <IconButton unicode={LUCIDE_ICONS_UNICODE.CHEVRON_RIGHT} onClick={onNext} />
+        ) : (
+          <IconButtonPlaceholder />
+        )}
       </div>
     </div>
   );

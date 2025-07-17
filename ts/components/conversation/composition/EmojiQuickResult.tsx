@@ -1,8 +1,8 @@
 import { SearchIndex } from 'emoji-mart';
 import styled from 'styled-components';
-import type { SuggestionDataItem } from 'react-mentions';
-import { searchSync } from '../../../util/emoji';
+import { getEmojiSkinTonePreferenceIndex, searchSync } from '../../../util/emoji';
 import type { SessionSuggestionDataItem } from './types';
+import type { FixedBaseEmoji } from '../../../types/Reaction';
 
 const EmojiQuickResult = styled.span`
   display: flex;
@@ -17,36 +17,56 @@ const EmojiQuickResultIcon = styled.span`
   padding-inline-start: 10px;
   font-size: 1.4rem;
 `;
-const EmojiQuickResultText = styled.span``;
 
-export const renderEmojiQuickResultRow = (suggestion: SuggestionDataItem) => {
+export const renderEmojiQuickResultRow = (id: string, display: string) => {
   return (
     <EmojiQuickResult>
-      <EmojiQuickResultIcon>{suggestion.id}</EmojiQuickResultIcon>
-      <EmojiQuickResultText>{suggestion.display}</EmojiQuickResultText>
+      <EmojiQuickResultIcon>{id}</EmojiQuickResultIcon>
+      <span>{display}</span>
     </EmojiQuickResult>
   );
 };
 
-export const searchEmojiForQuery = (query: string): Array<SessionSuggestionDataItem> => {
+export const searchEmojiForQuery = (
+  query: string,
+  maxResults: number
+): Array<SessionSuggestionDataItem> => {
   if (query.length === 0 || !SearchIndex) {
     return [];
   }
 
   const results1 = searchSync(`:${query}`);
   const results2 = searchSync(query);
-  const results = [...new Set(results1.concat(results2))];
-  if (!results || !results.length) {
+
+  const addedIds = new Set<string>();
+  const results: Array<FixedBaseEmoji> = [];
+
+  function parseResults(res: Array<FixedBaseEmoji>) {
+    for (let i = 0; i < res.length; i++) {
+      const emoji = res[i];
+      if (!addedIds.has(emoji.id)) {
+        results.push(emoji);
+        addedIds.add(emoji.id);
+      }
+    }
+  }
+
+  parseResults(results1);
+  parseResults(results2);
+
+  if (!results.length) {
     return [];
   }
 
-  const cleanResults = results
-    .map(emoji => {
+  const skinToneIdx = getEmojiSkinTonePreferenceIndex();
+
+  return results
+    .map((emoji: FixedBaseEmoji) => {
+      const skin = emoji.skins[skinToneIdx] ?? emoji.skins[0];
       return {
-        id: emoji.skins[0].native,
+        id: skin.native,
         display: `:${emoji.id}:`,
       };
     })
-    .slice(0, 8);
-  return cleanResults;
+    .slice(0, maxResults);
 };

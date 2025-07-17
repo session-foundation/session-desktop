@@ -7,28 +7,30 @@ import { updateConfirmModal } from '../../../state/ducks/modalDialog';
 import { SessionButtonColor } from '../../basic/SessionButton';
 
 import { SessionToggleWithDescription } from '../SessionSettingListItem';
+import { tr } from '../../../localization/localeTools';
 
 const toggleCallMediaPermissions = async (triggerUIUpdate: () => void) => {
   const currentValue = window.getCallMediaPermissions();
+  const onClose = () => window.inboxStore?.dispatch(updateConfirmModal(null));
   if (!currentValue) {
     window.inboxStore?.dispatch(
       updateConfirmModal({
-        title: window.i18n('callsVoiceAndVideoBeta'),
+        title: tr('callsVoiceAndVideoBeta'),
         i18nMessage: { token: 'callsVoiceAndVideoModalDescription' },
         okTheme: SessionButtonColor.Danger,
-        okText: window.i18n('theContinue'),
+        okText: tr('theContinue'),
         onClickOk: async () => {
           await window.toggleCallMediaPermissionsTo(true);
           triggerUIUpdate();
           CallManager.onTurnedOnCallMediaPermissions();
+          onClose();
         },
         onClickCancel: async () => {
           await window.toggleCallMediaPermissionsTo(false);
           triggerUIUpdate();
+          onClose();
         },
-        onClickClose: () => {
-          window.inboxStore?.dispatch(updateConfirmModal(null));
-        },
+        onClickClose: onClose,
       })
     );
   } else {
@@ -63,8 +65,8 @@ export const SettingsCategoryPermissions = () => {
           await window.toggleMediaPermissions();
           forceUpdate();
         }}
-        title={window.i18n('permissionsMicrophone')}
-        description={window.i18n('permissionsMicrophoneDescription')}
+        title={tr('permissionsMicrophone')}
+        description={tr('permissionsMicrophoneDescription')}
         active={Boolean(window.getSettingValue('media-permissions'))}
         dataTestId="enable-microphone"
       />
@@ -73,8 +75,8 @@ export const SettingsCategoryPermissions = () => {
           await toggleCallMediaPermissions(forceUpdate);
           forceUpdate();
         }}
-        title={window.i18n('callsVoiceAndVideoBeta')}
-        description={window.i18n('callsVoiceAndVideoToggleDescription')}
+        title={tr('callsVoiceAndVideoBeta')}
+        description={tr('callsVoiceAndVideoToggleDescription')}
         active={Boolean(window.getCallMediaPermissions())}
         dataTestId="enable-calls"
       />
@@ -84,8 +86,8 @@ export const SettingsCategoryPermissions = () => {
           await window.setSettingValue(SettingsKey.settingsAutoUpdate, !old);
           forceUpdate();
         }}
-        title={window.i18n('permissionsAutoUpdate')}
-        description={window.i18n('permissionsAutoUpdateDescription')}
+        title={tr('permissionsAutoUpdate')}
+        description={tr('permissionsAutoUpdateDescription')}
         active={Boolean(window.getSettingValue(SettingsKey.settingsAutoUpdate))}
       />
       <SessionToggleWithDescription
@@ -93,8 +95,8 @@ export const SettingsCategoryPermissions = () => {
           await toggleStartInTray();
           forceUpdate();
         }}
-        title={window.i18n('permissionsKeepInSystemTray')}
-        description={window.i18n('permissionsKeepInSystemTrayDescription')}
+        title={tr('permissionsKeepInSystemTray')}
+        description={tr('permissionsKeepInSystemTrayDescription')}
         active={isStartInTrayActive}
       />
     </>

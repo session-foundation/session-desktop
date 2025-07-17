@@ -1,10 +1,15 @@
 import { shell } from 'electron';
 import { useDispatch } from 'react-redux';
 import { updateTermsOfServicePrivacyModal } from '../../state/onboarding/ducks/modals';
-import { SessionWrapperModal } from '../SessionWrapperModal';
-import { Flex } from '../basic/Flex';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
-import { SpacerSM } from '../basic/Text';
+import {
+  ModalBasicHeader,
+  ModalActionsContainer,
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
+import { tr } from '../../localization/localeTools';
+import { ModalDescription } from './shared/ModalDescriptionContainer';
+import { ModalFlexContainer } from './shared/ModalFlexContainer';
 
 export type TermsOfServicePrivacyDialogProps = {
   show: boolean;
@@ -25,35 +30,39 @@ export function TermsOfServicePrivacyDialog(props: TermsOfServicePrivacyDialogPr
 
   return (
     <SessionWrapperModal
-      title={window.i18n('urlOpen')}
+      headerChildren={<ModalBasicHeader title={tr('urlOpen')} showExitIcon={true} />}
       onClose={onClose}
-      showExitIcon={true}
-      showHeader={true}
-      headerReverse={true}
-      additionalClassName={'no-body-padding'}
+      buttonChildren={
+        <ModalActionsContainer>
+          <SessionButton
+            ariaLabel={'Terms of service button'}
+            text={tr('onboardingTos')}
+            buttonType={SessionButtonType.Simple}
+            onClick={() => {
+              void shell.openExternal('https://getsession.org/terms-of-service');
+            }}
+            dataTestId="terms-of-service-button"
+          />
+          <SessionButton
+            ariaLabel={'Privacy policy button'}
+            text={tr('onboardingPrivacy')}
+            buttonType={SessionButtonType.Simple}
+            onClick={() => {
+              void shell.openExternal('https://getsession.org/privacy-policy');
+            }}
+            dataTestId="privacy-policy-button"
+          />
+        </ModalActionsContainer>
+      }
     >
-      <span>{window.i18n('urlOpenBrowser')}</span>
-      <SpacerSM />
-      <Flex $container={true} width={'100%'} $justifyContent="center" $alignItems="center">
-        <SessionButton
-          ariaLabel={'Terms of service button'}
-          text={window.i18n('onboardingTos')}
-          buttonType={SessionButtonType.Ghost}
-          onClick={() => {
-            void shell.openExternal('https://getsession.org/terms-of-service');
+      <ModalFlexContainer>
+        <ModalDescription
+          dataTestId="modal-description"
+          localizerProps={{
+            token: 'urlOpenBrowser',
           }}
-          dataTestId="terms-of-service-button"
         />
-        <SessionButton
-          ariaLabel={'Privacy policy button'}
-          text={window.i18n('onboardingPrivacy')}
-          buttonType={SessionButtonType.Ghost}
-          onClick={() => {
-            void shell.openExternal('https://getsession.org/privacy-policy');
-          }}
-          dataTestId="privacy-policy-button"
-        />
-      </Flex>
+      </ModalFlexContainer>
     </SessionWrapperModal>
   );
 }

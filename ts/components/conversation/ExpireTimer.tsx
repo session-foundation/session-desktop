@@ -47,7 +47,7 @@ export const ExpireTimer = (props: Props) => {
 
   return (
     <ExpireTimerBucket style={style}>
-      <SessionIcon iconType={bucket} iconSize="tiny" iconColor={'var(--secondary-text-color)'} />
+      <SessionIcon iconType={bucket} iconSize="small" iconColor={'var(--secondary-text-color)'} />
     </ExpireTimerBucket>
   );
 };

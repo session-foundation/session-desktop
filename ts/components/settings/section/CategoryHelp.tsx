@@ -1,3 +1,4 @@
+import { tr } from '../../../localization/localeTools';
 import { saveLogToDesktop } from '../../../util/logger/renderer_process_logging';
 import { SessionButtonShape, SessionButtonType } from '../../basic/SessionButton';
 
@@ -12,24 +13,21 @@ export const SettingsCategoryHelp = () => {
         }}
         buttonShape={SessionButtonShape.Square}
         buttonType={SessionButtonType.Solid}
-        buttonText={window.i18n('helpReportABugExportLogs')}
-        title={window.i18n('helpReportABug')}
-        description={window.i18n('helpReportABugExportLogsSaveToDesktopDescription')}
+        buttonText={tr('helpReportABugExportLogs')}
+        title={tr('helpReportABug')}
+        description={tr('helpReportABugExportLogsSaveToDesktopDescription')}
       />
       <SessionSettingsTitleWithLink
-        title={window.i18n('helpWedLoveYourFeedback')}
+        title={tr('helpWedLoveYourFeedback')}
         link={'https://getsession.org/survey'}
       />
       <SessionSettingsTitleWithLink
-        title={window.i18n('helpHelpUsTranslateSession')}
+        title={tr('helpHelpUsTranslateSession')}
         link={'https://getsession.org/translate'}
       />
+      <SessionSettingsTitleWithLink title={tr('helpFAQ')} link={'https://getsession.org/faq'} />
       <SessionSettingsTitleWithLink
-        title={window.i18n('helpFAQ')}
-        link={'https://getsession.org/faq'}
-      />
-      <SessionSettingsTitleWithLink
-        title={window.i18n('helpSupport')}
+        title={tr('helpSupport')}
         link={'https://sessionapp.zendesk.com/hc/en-us'}
       />
     </>

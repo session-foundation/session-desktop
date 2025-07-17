@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-syntax */
 
 import { createSelector } from '@reduxjs/toolkit';
-import { filter, isEmpty, isFinite, isNumber, pick, sortBy, toNumber } from 'lodash';
+import { filter, isEmpty, isFinite, isNumber, isString, pick, sortBy, toNumber } from 'lodash';
 
 import { useSelector } from 'react-redux';
 import {
@@ -30,7 +30,6 @@ import { ConvoHub } from '../../session/conversations';
 import { UserUtils } from '../../session/utils';
 import { BlockedNumberController } from '../../util';
 import { Storage } from '../../util/storage';
-import { getIntl } from './user';
 
 import { MessageReactsSelectorProps } from '../../components/conversation/message/message-content/MessageReactions';
 import { processQuoteAttachment } from '../../models/message';
@@ -39,8 +38,10 @@ import { isUsAnySogsFromCache } from '../../session/apis/open_group_api/sogsv3/k
 import { PubKey } from '../../session/types';
 import { UserGroupsWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { getSelectedConversationKey } from './selectedConversation';
-import { getModeratorsOutsideRedux } from './sogsRoomInfo';
+import { getModeratorsOutsideRedux, useModerators } from './sogsRoomInfo';
 import type { SessionSuggestionDataItem } from '../../components/conversation/composition/types';
+import { useIsPublic, useWeAreAdmin } from '../../hooks/useParamSelector';
+import { tr } from '../../localization/localeTools';
 
 export const getConversations = (state: StateType): ConversationsStateType => state.conversations;
 
@@ -55,6 +56,19 @@ export const getConversationsCount = createSelector(getConversationLookup, (stat
 export const getGroupConversationsCount = createSelector(getConversationLookup, (state): number => {
   return Object.values(state).filter(convo => !convo.isPrivate && !convo.isPublic).length;
 });
+
+export const getPinnedConversationsCount = createSelector(
+  getConversationLookup,
+  (state): number => {
+    return Object.values(state).filter(
+      convo =>
+        convo &&
+        convo.priority &&
+        isFinite(convo.priority) &&
+        convo.priority > CONVERSATION_PRIORITIES.default
+    ).length;
+  }
+);
 
 const getConversationQuotes = (state: StateType): QuoteLookupType | undefined => {
   return state.conversations.quotes;
@@ -181,7 +195,7 @@ function getConversationTitle(conversation: ReduxConversationType): string {
   }
 
   if (isOpenOrClosedGroup(conversation.type)) {
-    return window.i18n('unknown');
+    return tr('unknown');
   }
   return conversation.id;
 }
@@ -217,8 +231,6 @@ export const _getConversationComparator = () => {
     return collator.compare(leftTitle, rightTitle);
   };
 };
-
-export const getConversationComparator = createSelector(getIntl, _getConversationComparator);
 
 const _getLeftPaneConversationIds = (
   sortedConversations: Array<ReduxConversationType>
@@ -330,7 +342,7 @@ export const _getSortedConversations = (
 
 export const getSortedConversations = createSelector(
   getConversationLookup,
-  getConversationComparator,
+  _getConversationComparator,
   getSelectedConversationKey,
   _getSortedConversations
 );
@@ -484,7 +496,7 @@ export const getSortedContactsWithBreaks = createSelector(
 
     contactsWithBreaks.unshift({
       id: UserUtils.getOurPubKeyStrFromCache(),
-      displayName: window.i18n('noteToSelf'),
+      displayName: tr('noteToSelf'),
     });
 
     return contactsWithBreaks;
@@ -991,4 +1003,18 @@ export function useConversationIdOrigin(convoId: string | undefined) {
   return useSelector((state: StateType) =>
     convoId ? state.conversations.conversationLookup?.[convoId]?.conversationIdOrigin : undefined
   );
+}
+
+/**
+ * Returns true if we are an admin or a moderator in the corresponding community.
+ * Note: Some actions can only be done by an admin, like promoting a user to mod, or removing a mod.
+ */
+export function useWeAreCommunityAdminOrModerator(convoId?: string) {
+  const isPublic = useIsPublic(convoId);
+  const us = UserUtils.getOurPubKeyStrFromCache();
+  const weAreAdmin = useWeAreAdmin(convoId);
+  const mods = useModerators(convoId);
+
+  const weAreAdminOrModerator = weAreAdmin || mods.includes(us);
+  return isPublic && isString(convoId) && weAreAdminOrModerator;
 }

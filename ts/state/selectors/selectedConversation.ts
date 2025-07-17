@@ -1,4 +1,3 @@
-import { isString } from 'lodash';
 import { useSelector } from 'react-redux';
 import { useUnreadCount } from '../../hooks/useParamSelector';
 import { isOpenOrClosedGroup } from '../../models/conversationAttributes';
@@ -8,7 +7,6 @@ import {
   DisappearingMessageConversationModes,
 } from '../../session/disappearing_messages/types';
 import { PubKey } from '../../session/types';
-import { UserUtils } from '../../session/utils';
 import { StateType } from '../reducer';
 import {
   getIsMessageSelectionMode,
@@ -16,8 +14,9 @@ import {
   getSelectedMessageIds,
 } from './conversations';
 import { selectLibMembersPubkeys, useLibGroupName } from './groups';
-import { getCanWrite, getModerators, getSubscriberCount } from './sogsRoomInfo';
+import { getCanWrite, getSubscriberCount } from './sogsRoomInfo';
 import { getLibGroupDestroyed, getLibGroupKicked, useLibGroupDestroyed } from './userGroups';
+import { tr } from '../../localization/localeTools';
 
 const getIsSelectedPrivate = (state: StateType): boolean => {
   return Boolean(getSelectedConversation(state)?.isPrivate) || false;
@@ -372,7 +371,7 @@ export function useSelectedShortenedPubkeyOrFallback() {
   if (isPrivate && selected) {
     return PubKey.shorten(selected);
   }
-  return window.i18n('unknown');
+  return tr('unknown');
 }
 
 /**
@@ -387,7 +386,7 @@ export function useSelectedNicknameOrProfileNameOrShortenedPubkey() {
   const isMe = useSelectedIsNoteToSelf();
   const libGroupName = useLibGroupName(selectedId);
   if (isMe) {
-    return window.i18n('noteToSelf');
+    return tr('noteToSelf');
   }
   if (selectedId && PubKey.is03Pubkey(selectedId)) {
     return libGroupName || profileName || shortenedPubkey;
@@ -397,21 +396,6 @@ export function useSelectedNicknameOrProfileNameOrShortenedPubkey() {
 
 export function useSelectedWeAreAdmin() {
   return useSelector((state: StateType) => getSelectedConversation(state)?.weAreAdmin || false);
-}
-
-/**
- * Only for communities.
- * @returns true if the selected convo is a community and we are one of the moderators
- */
-export function useSelectedWeAreModerator() {
-  // TODO might be something to memoize let's see
-  const isPublic = useSelectedIsPublic();
-  const selectedConvoKey = useSelectedConversationKey();
-  const us = UserUtils.getOurPubKeyStrFromCache();
-  const mods = useSelector((state: StateType) => getModerators(state, selectedConvoKey));
-
-  const weAreModerator = mods.includes(us);
-  return isPublic && isString(selectedConvoKey) && weAreModerator;
 }
 
 export function useIsMessageSelectionMode() {

@@ -165,7 +165,6 @@ import { getAppRootPath } from '../node/getRootPath';
 import { setLatestRelease } from '../node/latest_desktop_release';
 import { isDevProd, isTestIntegration } from '../shared/env_vars';
 import { classicDark } from '../themes';
-import type { SetupI18nReturnType } from '../types/localizer';
 
 import { isSessionLocaleSet, getCrowdinLocale } from '../util/i18n/shared';
 import { loadLocalizedDictionary } from '../node/locale';
@@ -177,9 +176,7 @@ import { initializeMainProcessLogger } from '../util/logger/main_process_logging
 
 import * as log from '../util/logger/log';
 import { DURATION } from '../session/constants';
-
-// Both of these will be set after app fires the 'ready' event
-let i18n: SetupI18nReturnType;
+import { tr } from '../localization/localeTools';
 
 function prepareURL(pathSegments: Array<string>, moreKeys?: { theme: any }) {
   const urlObject: url.UrlObject = {
@@ -352,7 +349,7 @@ async function createWindow() {
   // Create the browser window.
   mainWindow = new BrowserWindow(windowOptions);
 
-  setupSpellChecker(mainWindow, i18n);
+  setupSpellChecker(mainWindow);
 
   const setWindowFocus = () => {
     if (!mainWindow) {
@@ -522,7 +519,7 @@ async function readyForUpdates() {
   // Second, start checking for app updates
   try {
     // if the user disabled auto updates, this will actually not start the updater
-    await updater.start(getMainWindow, userConfig, i18n, log);
+    await updater.start(getMainWindow, userConfig, log);
   } catch (error) {
     (log || console).error(
       '[updater] Error starting update checks:',
@@ -550,7 +547,7 @@ ipc.handle('force-update-check', async () => {
       throw new Error('Cannot use auto update! See canAutoUpdate() for more info.');
     }
 
-    const success = await checkForUpdates(getMainWindow, i18n, log, true);
+    const success = await checkForUpdates(getMainWindow, log, true);
     if (!success) {
       throw new Error('Failed to check for updates');
     }
@@ -665,7 +662,7 @@ async function showAbout() {
     width: 550,
     height: 550,
     resizeable: true,
-    title: i18n('about'),
+    title: tr('about'),
     autoHideMenuBar: true,
     backgroundColor: classicDark['--background-primary-color'],
     show: false,
@@ -738,7 +735,6 @@ app.on('ready', async () => {
   if (!isSessionLocaleSet()) {
     const appLocale = process.env.LANGUAGE || app.getLocale() || 'en';
     const loadedLocale = loadLocalizedDictionary({ appLocale });
-    i18n = loadedLocale.i18n;
     console.log(`appLocale is ${appLocale}`);
     console.log(`crowdin locale is ${loadedLocale.crowdinLocale}`);
   }
@@ -801,7 +797,6 @@ async function showMainWindow(sqlKey: string, passwordAttempt = false) {
   await sqlNode.initializeSql({
     configDir: userDataPath,
     key: sqlKey,
-    i18n,
     passwordAttempt,
   });
   appStartInitialSpellcheckSetting = await getSpellCheckSetting();
@@ -816,7 +811,7 @@ async function showMainWindow(sqlKey: string, passwordAttempt = false) {
   await createWindow();
 
   if (getStartInTray().usingTrayIcon) {
-    tray = createTrayIcon(getMainWindow, i18n);
+    tray = createTrayIcon(getMainWindow);
   }
 
   setupMenu();
@@ -833,7 +828,7 @@ function setupMenu() {
     openSupportPage,
     platform,
   };
-  const template = createTemplate(menuOptions, i18n);
+  const template = createTemplate(menuOptions);
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
 }
@@ -974,7 +969,7 @@ ipc.on('password-window-login', async (event, passPhrase) => {
     await showMainWindow(passPhrase, passwordAttempt);
     sendResponse(undefined);
   } catch (e) {
-    sendResponse(i18n('passwordIncorrect'));
+    sendResponse(tr('passwordIncorrect'));
   }
 });
 
@@ -1005,7 +1000,7 @@ ipc.on('start-in-tray-on-start', (event, newValue) => {
     userConfig.set('startInTray', newValue);
     if (newValue) {
       if (!tray) {
-        tray = createTrayIcon(getMainWindow, i18n);
+        tray = createTrayIcon(getMainWindow);
       }
     } else {
       // destroy is not working for a lot of desktop env. So for simplicity, we don't destroy it here but just
@@ -1063,7 +1058,7 @@ ipc.on('set-password', async (event, passPhrase, oldPhrase) => {
 
     const hashMatches = oldPhrase && PasswordUtil.matchesHash(oldPhrase, hash);
     if (hash && !hashMatches) {
-      sendResponse(i18n('passwordCurrentIncorrect'));
+      sendResponse(tr('passwordCurrentIncorrect'));
       return;
     }
 
@@ -1082,7 +1077,7 @@ ipc.on('set-password', async (event, passPhrase, oldPhrase) => {
       sendResponse(updatedHash);
     }
   } catch (e) {
-    sendResponse(i18n('passwordFailed'));
+    sendResponse(tr('passwordFailed'));
   }
 });
 

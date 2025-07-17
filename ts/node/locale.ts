@@ -1,4 +1,3 @@
-import type { SetupI18nReturnType } from '../types/localizer';
 import { setupI18n } from '../util/i18n/i18n';
 import { CrowdinLocale, isCrowdinLocale } from '../localization/constants';
 
@@ -38,7 +37,6 @@ function resolveLocale(crowdinLocale: string): CrowdinLocale {
 
 export function loadLocalizedDictionary({ appLocale }: { appLocale: string }): {
   crowdinLocale: CrowdinLocale;
-  i18n: SetupI18nReturnType;
 } {
   if (!appLocale) {
     throw new TypeError('`appLocale` is required');
@@ -51,12 +49,11 @@ export function loadLocalizedDictionary({ appLocale }: { appLocale: string }): {
   // https://github.com/electron/electron/blob/master/docs/api/locales.md
   const crowdinLocale = resolveLocale(appLocale);
 
-  const i18n = setupI18n({
+  setupI18n({
     crowdinLocale,
   });
 
   return {
     crowdinLocale,
-    i18n,
   };
 }

@@ -7,6 +7,7 @@ import styled from 'styled-components';
 import {
   use05GroupMembers,
   useConversationUsername,
+  useIsIncomingRequest,
   useIsOutgoingRequest,
 } from '../../../hooks/useParamSelector';
 import {
@@ -20,7 +21,7 @@ import { Flex } from '../../basic/Flex';
 import { AvatarHeader, CallButton } from './ConversationHeaderItems';
 import { SelectionOverlay } from './ConversationHeaderSelectionOverlay';
 import { ConversationHeaderTitle } from './ConversationHeaderTitle';
-import { localize } from '../../../localization/localeTools';
+import { tr } from '../../../localization/localeTools';
 import { groupInfoActions } from '../../../state/ducks/metaGroups';
 import { updateConfirmModal } from '../../../state/ducks/modalDialog';
 import { SessionButtonColor, SessionButton, SessionButtonType } from '../../basic/SessionButton';
@@ -34,6 +35,7 @@ export const ConversationHeaderWithDetails = () => {
   const isSelectionMode = useIsMessageSelectionMode();
   const selectedConvoKey = useSelectedConversationKey();
   const isOutgoingRequest = useIsOutgoingRequest(selectedConvoKey);
+  const isIncomingRequest = useIsIncomingRequest(selectedConvoKey);
   const isBlocked = useSelectedIsBlocked();
 
   const showConvoSettingsCb = useShowConversationSettingsFor(selectedConvoKey);
@@ -51,7 +53,9 @@ export const ConversationHeaderWithDetails = () => {
         width="100%"
         $flexGrow={1}
       >
-        <ConversationHeaderTitle showSubtitle={!isOutgoingRequest && !isBlocked} />
+        <ConversationHeaderTitle
+          showSubtitle={!isOutgoingRequest && !isIncomingRequest && !isBlocked}
+        />
 
         {!isOutgoingRequest && !isSelectionMode && (
           <Flex
@@ -100,10 +104,10 @@ function useShowRecreateModal() {
     (name: string, members: Array<PubkeyType>) => {
       dispatch(
         updateConfirmModal({
-          title: localize('recreateGroup').toString(),
+          title: tr('recreateGroup'),
           i18nMessage: { token: 'legacyGroupChatHistory' },
-          okText: localize('theContinue').toString(),
-          cancelText: localize('cancel').toString(),
+          okText: tr('theContinue'),
+          cancelText: tr('cancel'),
           okTheme: SessionButtonColor.Danger,
           onClickOk: () => {
             dispatch(sectionActions.setLeftOverlayMode('closed-group'));
@@ -160,10 +164,10 @@ function RecreateGroupButton() {
           } catch (e) {
             window.log.warn('recreate group: failed to recreate a member convo', e.message);
           }
-          showRecreateGroupModal(name || localize('groupUnknown').toString(), members);
+          showRecreateGroupModal(name || tr('groupUnknown'), members);
         }}
       >
-        {localize('recreateGroup')}
+        {tr('recreateGroup')}
       </SessionButton>
     </RecreateGroupContainer>
   );

@@ -8,8 +8,11 @@ import { DURATION } from '../../../../session/constants';
 import { nativeEmojiData } from '../../../../util/emoji';
 import { getRecentReactions } from '../../../../util/storage';
 import { SpacerSM } from '../../../basic/Text';
-import { SessionIcon, SessionIconButton } from '../../../icon';
+import { SessionIcon } from '../../../icon';
 import { formatAbbreviatedExpireDoubleTimer } from '../../../../util/i18n/formatting/expirationTimer';
+import { SessionLucideIconButton } from '../../../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
+import { tr } from '../../../../localization/localeTools';
 
 type Props = {
   action: (...args: Array<any>) => void;
@@ -105,13 +108,13 @@ function formatTimeLeft({ timeLeftMs }: { timeLeftMs: number }) {
 
   const [time_large, time_small] = formatAbbreviatedExpireDoubleTimer(timeLeftSeconds);
   if (time_large && time_small) {
-    return window.i18n('disappearingMessagesCountdownBigSmall', {
+    return tr('disappearingMessagesCountdownBigSmall', {
       time_large,
       time_small,
     });
   }
   if (time_large) {
-    return window.i18n('disappearingMessagesCountdownBig', {
+    return tr('disappearingMessagesCountdownBig', {
       time_large,
     });
   }
@@ -168,14 +171,12 @@ export const MessageReactBar = ({ action, additionalAction, messageId }: Props) 
               {emoji}
             </ReactButton>
           ))}
-        <SessionIconButton
+        <SessionLucideIconButton
           iconColor={'var(--emoji-reaction-bar-icon-color)'}
-          iconPadding={'8px'}
-          iconSize={'huge'}
-          iconType="plusThin"
-          backgroundColor={'var(--emoji-reaction-bar-icon-background-color)'}
-          borderRadius="300px"
+          iconSize={'large'}
+          unicode={LUCIDE_ICONS_UNICODE.PLUS}
           onClick={additionalAction}
+          backgroundColor="var(--emoji-reaction-bar-icon-background-color)"
         />
       </StyledMessageReactBar>
       <ExpiresInItem expirationTimestamp={expirationTimestamp} />

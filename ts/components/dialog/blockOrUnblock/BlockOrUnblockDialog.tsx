@@ -7,13 +7,17 @@ import { useHotkey } from '../../../hooks/useHotkey';
 import { useConversationsNicknameRealNameOrShortenPubkey } from '../../../hooks/useParamSelector';
 import { updateBlockOrUnblockModal } from '../../../state/ducks/modalDialog';
 import { BlockedNumberController } from '../../../util';
-import { SessionWrapperModal } from '../../SessionWrapperModal';
-import { Flex } from '../../basic/Flex';
-import { Localizer, type LocalizerProps } from '../../basic/Localizer';
+import { type LocalizerProps } from '../../basic/Localizer';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../../basic/SessionButton';
-import { StyledModalDescriptionContainer } from '../shared/ModalDescriptionContainer';
+import { ModalDescription } from '../shared/ModalDescriptionContainer';
 import { BlockOrUnblockModalState } from './BlockOrUnblockModalState';
-import { localize } from '../../../localization/localeTools';
+import { tr } from '../../../localization/localeTools';
+import {
+  ModalBasicHeader,
+  ModalActionsContainer,
+  SessionWrapperModal,
+} from '../../SessionWrapperModal';
+import { ModalFlexContainer } from '../shared/ModalFlexContainer';
 
 type ModalState = NonNullable<BlockOrUnblockModalState>;
 
@@ -54,8 +58,7 @@ function useBlockUnblockI18nDescriptionArgs({
 export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullable<ModalState>) => {
   const dispatch = useDispatch();
 
-  const localizedAction =
-    action === 'block' ? localize('block').toString() : localize('blockUnblock').toString();
+  const localizedAction = action === 'block' ? tr('block') : tr('blockUnblock');
 
   const args = useBlockUnblockI18nDescriptionArgs({ action, pubkeys });
 
@@ -88,29 +91,30 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
   }
 
   return (
-    <SessionWrapperModal showExitIcon={false} title={localizedAction} onClose={closeModal}>
-      <StyledModalDescriptionContainer data-testid="modal-description">
-        <Localizer {...args} />
-      </StyledModalDescriptionContainer>
-      <Flex $container={true} $flexDirection="column" $alignItems="center">
-        <Flex $container={true}>
-          <div className="session-modal__button-group">
-            <SessionButton
-              buttonType={SessionButtonType.Simple}
-              buttonColor={SessionButtonColor.Danger}
-              onClick={onConfirm}
-              text={localizedAction}
-              dataTestId="session-confirm-ok-button"
-            />
-            <SessionButton
-              buttonType={SessionButtonType.Simple}
-              onClick={closeModal}
-              text={window.i18n('cancel')}
-              dataTestId="session-confirm-cancel-button"
-            />
-          </div>
-        </Flex>
-      </Flex>
+    <SessionWrapperModal
+      headerChildren={<ModalBasicHeader title={localizedAction} />}
+      onClose={closeModal}
+      buttonChildren={
+        <ModalActionsContainer>
+          <SessionButton
+            buttonType={SessionButtonType.Simple}
+            buttonColor={SessionButtonColor.Danger}
+            onClick={onConfirm}
+            text={localizedAction}
+            dataTestId="session-confirm-ok-button"
+          />
+          <SessionButton
+            buttonType={SessionButtonType.Simple}
+            onClick={closeModal}
+            text={tr('cancel')}
+            dataTestId="session-confirm-cancel-button"
+          />
+        </ModalActionsContainer>
+      }
+    >
+      <ModalFlexContainer>
+        <ModalDescription dataTestId="modal-description" localizerProps={args} />
+      </ModalFlexContainer>
     </SessionWrapperModal>
   );
 };

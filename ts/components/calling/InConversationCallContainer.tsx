@@ -22,6 +22,7 @@ import { CallWindowControls } from './CallButtons';
 
 import { useFormattedDuration } from '../../hooks/useFormattedDuration';
 import { SessionSpinner } from '../loading';
+import { tr } from '../../localization/localeTools';
 
 const VideoContainer = styled.div`
   height: 100%;
@@ -75,7 +76,7 @@ const StyledCenteredLabel = styled.div`
 const RingingLabel = () => {
   const ongoingCallWithFocusedIsRinging = useSelector(getCallWithFocusedConvoIsOffering);
 
-  const modulatedStr = useModuloWithTripleDots(window.i18n('callsRinging'), 3, 1000);
+  const modulatedStr = useModuloWithTripleDots(tr('callsRinging'), 3, 1000);
   if (!ongoingCallWithFocusedIsRinging) {
     return null;
   }
@@ -85,7 +86,7 @@ const RingingLabel = () => {
 const ConnectingLabel = () => {
   const ongoingCallWithFocusedIsConnecting = useSelector(getCallWithFocusedConvosIsConnecting);
 
-  const modulatedStr = useModuloWithTripleDots(window.i18n('callsConnecting'), 3, 1000);
+  const modulatedStr = useModuloWithTripleDots(tr('callsConnecting'), 3, 1000);
 
   if (!ongoingCallWithFocusedIsConnecting) {
     return null;

@@ -1,3 +1,4 @@
+import styled from 'styled-components';
 import { missingCaseError } from '../../../util/missingCaseError';
 import { MediaItemType } from '../../lightbox/LightboxGallery';
 import { DocumentListItem } from './DocumentListItem';
@@ -45,16 +46,45 @@ const Items = (props: Props): JSX.Element => {
   );
 };
 
+const StyledAttachmentSection = styled.div`
+  width: 100%;
+`;
+
+const StyledAttachmentSectionItems = styled.div`
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: flex-start;
+`;
+
+const StyledAttachmentSectionItemsMedia = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  width: 100%;
+  grid-gap: var(--margins-sm);
+`;
+
+const StyledAttachmentSectionItemsDocuments = styled.div`
+  width: 100%;
+`;
+
 export const AttachmentSection = (props: Props) => {
   const { type } = props;
 
   return (
-    <div className="module-attachment-section">
-      <div className="module-attachment-section__items">
-        <div className={`module-attachment-section__items-${type}`}>
-          <Items {...props} />
-        </div>
-      </div>
-    </div>
+    <StyledAttachmentSection>
+      <StyledAttachmentSectionItems>
+        {type === 'media' ? (
+          <StyledAttachmentSectionItemsMedia>
+            <Items {...props} />
+          </StyledAttachmentSectionItemsMedia>
+        ) : (
+          <StyledAttachmentSectionItemsDocuments>
+            <Items {...props} />
+          </StyledAttachmentSectionItemsDocuments>
+        )}
+      </StyledAttachmentSectionItems>
+    </StyledAttachmentSection>
   );
 };

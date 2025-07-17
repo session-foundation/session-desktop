@@ -14,8 +14,10 @@ import {
   SessionButtonShape,
   SessionButtonType,
 } from '../../basic/SessionButton';
-import { SessionIconButton } from '../../icon';
 import { SessionFocusTrap } from '../../SessionFocusTrap';
+import { tr } from '../../../localization/localeTools';
+import { SessionLucideIconButton } from '../../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 
 export const SelectionOverlay = () => {
   const selectedMessageIds = useSelector(getSelectedMessageIds);
@@ -71,7 +73,13 @@ export const SelectionOverlay = () => {
     <SessionFocusTrap>
       <div className={classNameAndId} id={classNameAndId}>
         <div className="close-button">
-          <SessionIconButton iconType="exit" iconSize="medium" onClick={onCloseOverlay} />
+          <SessionLucideIconButton
+            unicode={LUCIDE_ICONS_UNICODE.X}
+            iconColor="var(--chat-buttons-icon-color)"
+            iconSize="large"
+            onClick={onCloseOverlay}
+            aria-label={tr('close')}
+          />
         </div>
 
         <div className="button-group">
@@ -79,7 +87,7 @@ export const SelectionOverlay = () => {
             buttonColor={SessionButtonColor.Danger}
             buttonShape={SessionButtonShape.Square}
             buttonType={SessionButtonType.Solid}
-            text={window.i18n('delete')}
+            text={tr('delete')}
             onClick={async () => {
               if (selectedConversationKey) {
                 await deleteMessagesForX(

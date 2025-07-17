@@ -65,9 +65,10 @@ declare module 'react' {
     | 'update-group-info'
     | 'ban-user'
     | 'unban-user'
-    | 'ban-user-delete-all';
+    | 'ban-user-delete-all'
+    | 'modal-session-pro';
 
-  type CancelButtons = 'update-group-info' | 'add-admins' | 'unban-user';
+  type CancelButtons = 'update-group-info' | 'add-admins' | 'unban-user' | 'modal-session-pro';
 
   type ClearButtons = 'group-info-description' | 'group-info-name' | 'nickname' | 'add-admins';
 
@@ -102,6 +103,8 @@ declare module 'react' {
     | 'ban-user'
     | 'unban-user';
 
+  type Dialog = 'invite-contacts' | 'edit-profile';
+
   type SessionDataTestId =
     | 'group-member-status-text'
     | 'loading-spinner'
@@ -125,7 +128,6 @@ declare module 'react' {
     | 'group-description'
     | 'preferred-display-name'
     | 'fallback-display-name'
-    | 'edit-profile-dialog'
     | 'image-upload-section'
     | 'profile-picture'
     | 'display-name'
@@ -155,6 +157,7 @@ declare module 'react' {
     | 'legacy-group-banner'
     | 'account-id'
     | 'set-nickname-remove-button'
+    | 'modal-actions-container'
 
     // generic button types
     | 'emoji-button'
@@ -174,6 +177,9 @@ declare module 'react' {
     | DisappearOptionDataTestId
     | `input-${DisappearTimeOptionDataTestId}`
     | `input-${DisappearOptionDataTestId}`
+
+    // dialog roots
+    | `${Dialog}-dialog`
 
     // generic readably message (not control message)
     | 'message-content'
@@ -199,7 +205,6 @@ declare module 'react' {
     // settings toggle and buttons
     | 'remove-password-settings-button'
     | 'change-password-settings-button'
-    | 'enable-read-receipts'
     | 'set-password-button'
     | 'enable-read-receipts'
     | 'enable-calls'
@@ -251,6 +256,9 @@ declare module 'react' {
     | 'link-preview-image'
     | 'link-preview-title'
     | 'link-preview-close'
+
+    // spacers
+    | `spacer-${'xxs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl'}`
 
     // modules profile name
     | 'module-conversation__user__profile-name'
@@ -306,6 +314,8 @@ declare module 'react' {
     | 'your-account-id'
     | 'hide-recovery-phrase-toggle'
     | 'reveal-recovery-phrase-toggle'
+    | 'hide-password-input-toggle'
+    | 'reveal-password-input-toggle'
     | 'resend-promote-button'
     | 'continue-button'
     | 'back-button'
@@ -313,7 +323,6 @@ declare module 'react' {
     | 'session-error-message'
     | 'hide-input-text-toggle'
     | 'show-input-text-toggle'
-    | 'save-button-profile-update'
     | 'save-button-profile-update'
     | 'copy-button-profile-update'
     | 'create-group-button'
@@ -338,6 +347,7 @@ declare module 'react' {
     | 'avatar-placeholder'
     | `input-releases-${ReleaseChannels}`
     | `label-releases-${ReleaseChannels}`
+    | 'tooltip-character-count'
     | `${MenuOption}-menu-option`
     | `${MenuOptionDetails}-menu-option`
     | `${SetButton}-set-button`

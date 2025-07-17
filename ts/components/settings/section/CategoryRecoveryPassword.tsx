@@ -17,16 +17,16 @@ import { getCurrentRecoveryPhrase } from '../../../util/storage';
 import { QRCodeLogoProps, SessionQRCode } from '../../SessionQRCode';
 import { AnimatedFlex } from '../../basic/Flex';
 import { Localizer } from '../../basic/Localizer';
-import { SessionButtonColor } from '../../basic/SessionButton';
+import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
 import { SpacerMD, SpacerSM } from '../../basic/Text';
 import { CopyToClipboardIcon } from '../../buttons/CopyToClipboardButton';
-import { SessionIconButton } from '../../icon';
 import {
   SessionSettingButtonItem,
   SessionSettingsItemWrapper,
   StyledSettingItem,
 } from '../SessionSettingListItem';
 import { sectionActions } from '../../../state/ducks/section';
+import { tr } from '../../../localization/localeTools';
 
 const StyledSettingsItemContainer = styled.div`
   p {
@@ -102,7 +102,7 @@ export const SettingsCategoryRecoveryPassword = () => {
   return (
     <StyledSettingsItemContainer>
       <SessionSettingsItemWrapper
-        title={window.i18n('sessionRecoveryPassword')}
+        title={tr('sessionRecoveryPassword')}
         icon={{
           iconType: 'recoveryPasswordFill',
           iconSize: 18,
@@ -142,13 +142,12 @@ export const SettingsCategoryRecoveryPassword = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: THEME_GLOBALS['--default-duration-seconds'] }}
-            data-testid="recovery-password-seed-modal"
           >
-            {recoveryPhrase}
+            <span data-testid="recovery-password-seed-modal">{recoveryPhrase}</span>
             <SpacerSM />
             <CopyToClipboardIcon
               copyContent={recoveryPhrase}
-              iconSize={'huge'}
+              iconSize={'large'}
               iconColor={'var(--text-primary-color)'}
               hotkey={!isModalVisible}
             />
@@ -156,15 +155,11 @@ export const SettingsCategoryRecoveryPassword = () => {
         )}
 
         <SpacerMD />
-        <SessionIconButton
+        <SessionButton
           aria-label={isQRVisible ? 'View as password button' : 'View as QR code button'}
-          iconType={isQRVisible ? 'password' : 'qr'}
-          iconSize={isQRVisible ? 48 : 'huge'}
-          iconColor={'var(--text-primary-color)'}
           onClick={() => {
             setIsQRVisible(!isQRVisible);
           }}
-          padding="0"
           style={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -173,17 +168,17 @@ export const SettingsCategoryRecoveryPassword = () => {
             marginLeft: isQRVisible ? '-8px' : undefined,
           }}
         >
-          {isQRVisible ? window.i18n('recoveryPasswordView') : window.i18n('qrView')}
-        </SessionIconButton>
+          {isQRVisible ? tr('recoveryPasswordView') : tr('qrView')}
+        </SessionButton>
       </SessionSettingsItemWrapper>
       {!hideRecoveryPassword ? (
         <SessionSettingButtonItem
-          title={window.i18n('recoveryPasswordHideRecoveryPassword')}
-          description={window.i18n('recoveryPasswordHideRecoveryPasswordDescription')}
+          title={tr('recoveryPasswordHideRecoveryPassword')}
+          description={tr('recoveryPasswordHideRecoveryPasswordDescription')}
           onClick={() => {
             dispatch(updateHideRecoveryPasswordModal({ state: 'firstWarning' }));
           }}
-          buttonText={window.i18n('hide')}
+          buttonText={tr('hide')}
           buttonColor={SessionButtonColor.Danger}
           dataTestId={'hide-recovery-password-button'}
         />

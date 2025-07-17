@@ -6,8 +6,9 @@ import { QRCodeLogoProps, SessionQRCode } from '../../SessionQRCode';
 import { Avatar, AvatarSize } from '../../avatar/Avatar';
 import { Flex } from '../../basic/Flex';
 import { SpacerSM } from '../../basic/Text';
-import { SessionIconButton } from '../../icon';
 import { ProfileDialogModes } from './EditProfileDialog';
+import { SessionLucideIconButton } from '../../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 
 const qrLogoProps: QRCodeLogoProps = {
   iconType: 'brandThin',
@@ -80,8 +81,8 @@ const QrViewButton = styled.div`
   align-items: center;
   justify-content: center;
   position: absolute;
-  top: -8px;
-  right: -8px;
+  top: 0;
+  right: 0;
   height: 34px;
   width: 34px;
   border-radius: 50%;
@@ -110,17 +111,19 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
           onPlusAvatarClick={onClick}
         />
         <QrViewButton onClick={onQRClick} role="button">
-          <SessionIconButton iconType="qr" iconSize={26} iconColor="var(--black-color)" />
+          <SessionLucideIconButton
+            unicode={LUCIDE_ICONS_UNICODE.QR_CODE}
+            iconSize={'large'}
+            iconColor="var(--black-color)"
+          />
         </QrViewButton>
       </div>
     </div>
   );
 };
 
-// We center the name in the modal by offsetting the pencil icon
-// we have a transparent border to match the dimensions of the SessionInput
+// We have a transparent border to match the dimensions of the SessionInput
 const StyledProfileName = styled(Flex)`
-  margin-inline-start: calc((25px + var(--margins-sm)) * -1);
   padding: 8px;
   border: 1px solid var(--transparent-color);
 
@@ -141,9 +144,9 @@ export const ProfileName = (props: { profileName: string; onClick: () => void })
 
   return (
     <StyledProfileName $container={true} $justifyContent="center" $alignItems="center">
-      <SessionIconButton
-        iconType="pencil"
-        iconSize="large"
+      <SessionLucideIconButton
+        unicode={LUCIDE_ICONS_UNICODE.PENCIL}
+        iconSize="medium"
         onClick={onClick}
         dataTestId="edit-profile-icon"
       />

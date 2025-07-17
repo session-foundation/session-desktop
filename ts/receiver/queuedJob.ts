@@ -25,6 +25,7 @@ import { getHideMessageRequestBannerOutsideRedux } from '../state/selectors/user
 import { GoogleChrome } from '../util';
 import { LinkPreviews } from '../util/linkPreviews';
 import { GroupV2Receiver } from './groupv2/handleGroupV2Message';
+import { Constants } from '../session';
 
 function contentTypeSupported(type: string): boolean {
   const Chrome = GoogleChrome;
@@ -302,11 +303,24 @@ async function handleRegularMessage(
   }
 
   handleLinkPreviews(rawDataMessage.body, rawDataMessage.preview, message);
+
+  // TODO: Once pro proof validation is available make this dynamic
+  // const maxChars = isSenderPro
+  //   ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
+  //   : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
+  // NOTE: The truncation value must be the Pro count so when Pro is released older clients wont truncate pro messages.
+  const maxChars = Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO;
+
+  const body =
+    rawDataMessage.body.length > maxChars
+      ? rawDataMessage.body.slice(0, maxChars)
+      : rawDataMessage.body;
+
   message.set({
     flags: rawDataMessage.flags,
     // quote: rawDataMessage.quote, // do not do this copy here, it must be done only in copyFromQuotedMessage()
     attachments: rawDataMessage.attachments,
-    body: rawDataMessage.body,
+    body,
     conversationId: conversation.id,
     messageHash,
     errors: undefined,

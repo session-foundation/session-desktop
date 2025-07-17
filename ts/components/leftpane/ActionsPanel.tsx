@@ -58,7 +58,6 @@ import { MessageQueue } from '../../session/sending';
 import { useCheckReleasedFeatures } from '../../hooks/useCheckReleasedFeatures';
 import { useDebugMode } from '../../state/selectors/debug';
 import { networkDataActions } from '../../state/ducks/networkData';
-import { isSesh101ReadyOutsideRedux } from '../../state/selectors/releasedFeatures';
 import { searchActions } from '../../state/ducks/search';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
@@ -132,7 +131,7 @@ const Section = (props: { type: SectionType }) => {
   const unreadToShow = type === SectionType.Message ? globalUnreadMessageCount : undefined;
 
   const buttonProps = {
-    iconSize: '22px',
+    iconSize: 'medium',
     padding: 'var(--margins-lg)',
     onClick: handleClick,
     isSelected,
@@ -171,11 +170,7 @@ const Section = (props: { type: SectionType }) => {
       );
     case SectionType.PathIndicator:
       return (
-        <ActionPanelOnionStatusLight
-          handleClick={handleClick}
-          isSelected={isSelected}
-          id={'onion-path-indicator-led-id'}
-        />
+        <ActionPanelOnionStatusLight handleClick={handleClick} id={'onion-path-indicator-led-id'} />
       );
     case SectionType.ColorMode:
     default:
@@ -228,9 +223,7 @@ const doAppStartUp = async () => {
   // eslint-disable-next-line more/no-then
   void SnodePool.getFreshSwarmFor(UserUtils.getOurPubKeyStrFromCache()).then(() => {
     // trigger any other actions that need to be done after the swarm is ready
-    if (isSesh101ReadyOutsideRedux()) {
-      window.inboxStore?.dispatch(networkDataActions.fetchInfoFromSeshServer() as any);
-    }
+    window.inboxStore?.dispatch(networkDataActions.fetchInfoFromSeshServer() as any);
   }); // refresh our swarm on start to speed up the first message fetching event
   void Data.cleanupOrphanedAttachments();
 

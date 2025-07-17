@@ -1,4 +1,4 @@
-import { SessionDataTestId, MouseEvent, useCallback, useState } from 'react';
+import { SessionDataTestId, MouseEvent, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { clsx } from 'clsx';
 import styled from 'styled-components';
@@ -44,7 +44,6 @@ const StyledMessageContentContainer = styled.div<{ isIncoming: boolean; isDetail
   padding-right: ${props => (props.isDetailView || !props.isIncoming ? 0 : '25%')};
   width: 100%;
   max-width: '100%';
-  margin-right: var(--margins-md);
 `;
 
 const StyledMessageWithAuthor = styled.div`
@@ -101,7 +100,6 @@ export const MessageContentWithStatuses = (props: Props) => {
   };
 
   const { messageId, ctxMenuID, dataTestId, enableReactions } = props;
-  const [popupReaction, setPopupReaction] = useState('');
 
   if (!contentProps) {
     return null;
@@ -116,23 +114,17 @@ export const MessageContentWithStatuses = (props: Props) => {
     await Reactions.sendMessageReaction(messageId, emoji);
   };
 
-  const handlePopupClick = () => {
+  const handlePopupClick = (emoji: string) => {
     dispatch(
       updateReactListModal({
-        reaction: popupReaction,
+        reaction: emoji,
         messageId,
       })
     );
   };
 
   return (
-    <StyledMessageContentContainer
-      isIncoming={isIncoming}
-      isDetailView={isDetailView}
-      onMouseLeave={() => {
-        setPopupReaction('');
-      }}
-    >
+    <StyledMessageContentContainer isIncoming={isIncoming} isDetailView={isDetailView}>
       <ExpirableReadableMessage
         messageId={messageId}
         className={clsx('module-message', `module-message--${direction}`)}
@@ -145,7 +137,8 @@ export const MessageContentWithStatuses = (props: Props) => {
           $container={true}
           $flexDirection="column"
           $flexShrink={0}
-          $alignItems="flex-end"
+          // we need this to prevent short messages from being misaligned (incoming)
+          $alignItems={isIncoming ? 'flex-start' : 'flex-end'}
           maxWidth="100%"
         >
           <StyledMessageWithAuthor>
@@ -167,8 +160,6 @@ export const MessageContentWithStatuses = (props: Props) => {
           messageId={messageId}
           // eslint-disable-next-line @typescript-eslint/no-misused-promises
           onClick={handleMessageReaction}
-          popupReaction={popupReaction}
-          setPopupReaction={setPopupReaction}
           onPopupClick={handlePopupClick}
           noAvatar={hideAvatar}
         />

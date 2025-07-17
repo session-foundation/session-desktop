@@ -12,8 +12,9 @@ import {
 } from '../basic/SessionButton';
 import { SessionToggle } from '../basic/SessionToggle';
 import { SpacerSM } from '../basic/Text';
-import { SessionConfirmDialogProps } from '../dialog/SessionConfirm';
-import { SessionIcon, SessionIconButton, SessionIconProps } from '../icon';
+import { SessionIcon, SessionIconProps } from '../icon';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 type ButtonSettingsProps = {
   title?: string;
@@ -143,10 +144,10 @@ export const SessionSettingsTitleWithLink = (props: { title: string; link: strin
       }}
     >
       <SettingsTitleAndDescription title={title} />
-      <SessionIconButton
+      <SessionLucideIconButton
         title={link}
-        iconSize={'medium'}
-        iconType="externalLink"
+        iconSize={'large'}
+        unicode={LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}
         isSelected={true}
       />
     </StyledSettingItemClickable>
@@ -158,19 +159,10 @@ export const SessionToggleWithDescription = (props: {
   description?: string;
   active: boolean;
   onClickToggle: () => void;
-  confirmationDialogParams?: SessionConfirmDialogProps;
   childrenDescription?: ReactNode; // if set, those elements will be appended next to description field (only used for typing message settings as of now)
   dataTestId?: SessionDataTestId;
 }) => {
-  const {
-    title,
-    description,
-    active,
-    onClickToggle,
-    confirmationDialogParams,
-    childrenDescription,
-    dataTestId,
-  } = props;
+  const { title, description, active, onClickToggle, childrenDescription, dataTestId } = props;
 
   return (
     <SessionSettingsItemWrapper
@@ -179,12 +171,7 @@ export const SessionToggleWithDescription = (props: {
       inline={true}
       childrenDescription={childrenDescription}
     >
-      <SessionToggle
-        active={active}
-        onClick={onClickToggle}
-        confirmationDialogParams={confirmationDialogParams}
-        dataTestId={dataTestId}
-      />
+      <SessionToggle active={active} onClick={onClickToggle} dataTestId={dataTestId} />
     </SessionSettingsItemWrapper>
   );
 };

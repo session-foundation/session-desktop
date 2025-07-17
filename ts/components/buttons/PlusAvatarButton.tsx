@@ -1,5 +1,6 @@
 import type { SessionDataTestId } from 'react';
-import { SessionIconButton } from '../icon';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 export const PlusAvatarButton = ({
   onClick,
@@ -9,20 +10,18 @@ export const PlusAvatarButton = ({
   dataTestId?: SessionDataTestId;
 }) => {
   return (
-    <SessionIconButton
-      iconType="plusFat"
-      iconSize={23}
+    <SessionLucideIconButton
+      unicode={LUCIDE_ICONS_UNICODE.PLUS}
+      iconSize={'medium'}
       iconColor="var(--modal-background-content-color)"
-      iconPadding="5px"
-      borderRadius="50%"
-      backgroundColor="var(--primary-color)"
       onClick={onClick}
       dataTestId={dataTestId}
-      padding="0"
+      backgroundColor="var(--primary-color)"
       style={{
         position: 'absolute',
-        bottom: 0,
+        bottom: '11%',
         insetInlineEnd: 0,
+        boxShadow: '0px 0px 3px 2px var(--border-color)',
       }}
     />
   );

@@ -7,7 +7,7 @@ import { cleanSearchTerm } from '../../util/cleanSearchTerm';
 import { UserUtils } from '../../session/utils';
 import { MessageResultProps } from '../../types/message';
 import { ReduxConversationType } from './conversations';
-import { localize } from '../../localization/localeTools';
+import { tEnglish, tr } from '../../localization/localeTools';
 import { BlockedNumberController } from '../../util';
 
 export type SearchType = 'global' | 'create-group' | 'invite-contact-to' | 'manage-group-members';
@@ -38,11 +38,8 @@ const doSearch = createAsyncThunk(
   'search/doSearch',
   async ({ query, searchType }: DoSearchActionType): Promise<SearchResultsPayloadType> => {
     const options: SearchOptions = {
-      noteToSelf: [
-        localize('noteToSelf').toLowerCase(),
-        localize('noteToSelf').forceEnglish().toLowerCase(),
-      ],
-      savedMessages: localize('savedMessages').toString().toLowerCase(),
+      noteToSelf: [tr('noteToSelf').toLowerCase(), tEnglish('noteToSelf').toLowerCase()],
+      savedMessages: tr('savedMessages').toLowerCase(),
       ourNumber: UserUtils.getOurPubKeyStrFromCache(),
       excludeBlocked: searchType !== 'global',
     };
