@@ -313,6 +313,7 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
 
     useDebouncedSpellcheck({
       elementRef: elRef,
+      disabled: isComposing.current,
     });
 
     const { undo, redo, commit, reset } = useHistory<string>(html);

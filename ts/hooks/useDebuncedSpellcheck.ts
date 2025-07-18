@@ -4,9 +4,14 @@ import { debounce } from 'lodash';
 interface DebouncedSpellcheckProps {
   elementRef: RefObject<HTMLDivElement | HTMLInputElement | HTMLTextAreaElement>;
   delay?: number;
+  disabled?: boolean;
 }
 
-export const useDebouncedSpellcheck = ({ delay = 300, elementRef }: DebouncedSpellcheckProps) => {
+export const useDebouncedSpellcheck = ({
+  delay = 300,
+  elementRef,
+  disabled,
+}: DebouncedSpellcheckProps) => {
   const enableSpellcheck = useCallback(() => {
     elementRef.current?.setAttribute('spellcheck', 'true');
   }, [elementRef]);
@@ -19,7 +24,7 @@ export const useDebouncedSpellcheck = ({ delay = 300, elementRef }: DebouncedSpe
 
   useEffect(() => {
     const el = elementRef.current;
-    if (!el) {
+    if (!el || disabled) {
       return;
     }
 
@@ -34,5 +39,5 @@ export const useDebouncedSpellcheck = ({ delay = 300, elementRef }: DebouncedSpe
     return () => {
       el.removeEventListener('input', handleInput);
     };
-  }, [debouncedSpellcheck, elementRef]);
+  }, [debouncedSpellcheck, elementRef, disabled]);
 };
