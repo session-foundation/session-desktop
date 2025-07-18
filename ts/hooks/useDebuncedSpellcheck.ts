@@ -13,8 +13,10 @@ export const useDebouncedSpellcheck = ({
   disabled,
 }: DebouncedSpellcheckProps) => {
   const enableSpellcheck = useCallback(() => {
-    elementRef.current?.setAttribute('spellcheck', 'true');
-  }, [elementRef]);
+    if (!disabled) {
+      elementRef.current?.setAttribute('spellcheck', 'true');
+    }
+  }, [elementRef, disabled]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps -- TODO: see if we can create our own useDebounce hook
   const debouncedSpellcheck = useCallback(debounce(enableSpellcheck, delay), [
