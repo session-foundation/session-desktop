@@ -11,7 +11,7 @@ import {
 
 import { useIsMessageVisible } from '../../contexts/isMessageVisibleContext';
 import { Image } from './Image';
-import { maxThumbnailDetails } from '../../util/attachmentSizes';
+import { maxThumbnailDetails } from '../../util/attachment/attachmentSizes';
 
 type Props = {
   attachments: Array<AttachmentTypeWithPath>;

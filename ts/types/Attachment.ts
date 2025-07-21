@@ -6,7 +6,7 @@ import { isImageTypeSupported, isVideoTypeSupported } from '../util/GoogleChrome
 import { saveURLAsFile } from '../util/saveURLAsFile';
 import * as MIME from './MIME';
 import { AriaLabels } from '../util/hardcodedAriaLabels';
-import { ATTACHMENT_DEFAULT_MAX_SIDE, maxThumbnailDetails } from '../util/attachmentSizes';
+import { ATTACHMENT_DEFAULT_MAX_SIDE, maxThumbnailDetails } from '../util/attachment/attachmentSizes';
 
 const MAX_WIDTH = maxThumbnailDetails.maxSide;
 const MAX_HEIGHT = maxThumbnailDetails.maxSide;
@@ -268,24 +268,12 @@ export const isFile = (attachment: Attachment): boolean => {
   return true;
 };
 
-export const isVoiceMessage = (attachment: Attachment): boolean => {
+export const isVoiceMessage = (attachment: Pick<Attachment, 'flags'>): boolean => {
   const flag = SignalService.AttachmentPointer.Flags.VOICE_MESSAGE;
   const hasFlag =
     // eslint-disable-next-line no-bitwise
     !isUndefined(attachment.flags) && (attachment.flags & flag) === flag;
-  if (hasFlag) {
-    return true;
-  }
-
-  const isLegacyAndroidVoiceMessage =
-    !isUndefined(attachment.contentType) &&
-    MIME.isAudio(attachment.contentType) &&
-    !attachment.fileName;
-  if (isLegacyAndroidVoiceMessage) {
-    return true;
-  }
-
-  return false;
+  return hasFlag;
 };
 
 export const save = ({

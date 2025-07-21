@@ -114,6 +114,7 @@ const LOKI_SCHEMA_VERSIONS = [
   updateToSessionSchemaVersion43,
   updateToSessionSchemaVersion44,
   updateToSessionSchemaVersion45,
+  updateToSessionSchemaVersion46,
 ];
 
 function updateToSessionSchemaVersion1(currentVersion: number, db: BetterSqlite3.Database) {
@@ -2127,6 +2128,27 @@ function updateToSessionSchemaVersion45(currentVersion: number, db: BetterSqlite
     } catch (e) {
       // if no users are logged in, we can just continue here. Nothing is due to clean
     }
+
+    writeSessionSchemaVersion(targetVersion, db);
+  })();
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
+}
+
+function updateToSessionSchemaVersion46(currentVersion: number, db: BetterSqlite3.Database) {
+  const targetVersion = 46;
+  if (currentVersion >= targetVersion) {
+    return;
+  }
+  console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
+
+  db.transaction(() => {
+    db.exec(`
+          ALTER TABLE ${CONVERSATIONS_TABLE} ADD COLUMN fallbackAvatarInProfile TEXT;
+         `);
+
+    // FIXME: maybe we should just drop the current avatarPointer for any animated avatar?
+    // So that we force a redownload of it and extract the first frame as required.
 
     writeSessionSchemaVersion(targetVersion, db);
   })();

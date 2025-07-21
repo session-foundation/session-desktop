@@ -12,6 +12,7 @@ import { IMAGE_JPEG } from '../../types/MIME';
 import { encryptProfile } from '../../util/crypto/profileEncrypter';
 import { Storage } from '../../util/storage';
 import type { ConversationModel } from '../../models/conversation';
+import { processLocalAvatarChange } from '../../util/avatar/processLocalAvatarChange';
 
 /**
  * This function can be used for reupload our avatar to the file server.
@@ -33,15 +34,17 @@ export async function reuploadCurrentAvatarUs() {
     window.log.info('reuploadCurrentAvatarUs: our profileKey empty');
     return null;
   }
-  const currentAttachmentPath = ourConvo.getAvatarPath();
+  // Note: we do want to grab the current non-static avatar path here
+  // to reupload it, no matter if we are a pro user or not.
+  const currentNonStaticAvatarPath = ourConvo.getAvatarInProfilePath();
 
-  if (!currentAttachmentPath) {
+  if (!currentNonStaticAvatarPath) {
     window.log.info('No attachment currently set for our convo.. Nothing to do.');
     return null;
   }
 
   const decryptedAvatarUrl = await DecryptedAttachmentsManager.getDecryptedMediaUrl(
-    currentAttachmentPath,
+    currentNonStaticAvatarPath,
     IMAGE_JPEG,
     true
   );
@@ -82,22 +85,32 @@ export async function uploadAndSetOurAvatarShared({
 
   ourConvo.setKey('avatarPointer', fileUrl);
 
+  const { avatarFallback, mainAvatarDetails } = await processLocalAvatarChange(decryptedAvatarData);
+
   // this encrypts and save the new avatar and returns a new attachment path
-  const upgraded = await processNewAttachment({
+  const savedMainAvatar = await processNewAttachment({
     isRaw: true,
-    data: decryptedAvatarData,
+    data: mainAvatarDetails.outputBuffer,
     contentType: MIME.IMAGE_UNKNOWN, // contentType is mostly used to generate previews and screenshot. We do not care for those in this case.
   });
-  // Replace our temporary image with the attachment pointer from the server:
-  ourConvo.setKey('avatarInProfile', undefined);
+
+  const processedFallbackAvatar = avatarFallback
+    ? await processNewAttachment({
+        isRaw: true,
+        data: avatarFallback.outputBuffer,
+        contentType: MIME.IMAGE_UNKNOWN, // contentType is mostly used to generate previews and screenshot. We do not care for those in this case.
+      })
+    : null;
+
   const displayName = ourConvo.getRealSessionUsername();
 
   // write the profileKey even if it did not change
   ourConvo.set({ profileKey: toHex(profileKey) });
-  // Replace our temporary image with the attachment pointer from the server:
-  // this commits already
+  // Replace our temporary image with the attachment pointer from the server.
+  // Note: this commits already to the DB.
   await ourConvo.setSessionProfile({
-    avatarPath: upgraded.path,
+    avatarPath: savedMainAvatar.path,
+    fallbackAvatarPath: processedFallbackAvatar?.path || savedMainAvatar.path,
     displayName,
     avatarImageId: fileId,
   });

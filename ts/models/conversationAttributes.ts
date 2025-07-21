@@ -59,7 +59,22 @@ export interface ConversationAttributes {
   left: boolean; // LEGACY GROUPS ONLY: if we left the group (communities are removed right away so it not relevant to communities) // TODOLATER to remove after legacy closed group are dropped
   isKickedFromGroup: boolean; // LEGACY GROUPS ONLY: if we got kicked from the group (communities just stop polling and a message sent get rejected, so not relevant to communities) // TODOLATER to remove after legacy closed group are dropped
 
-  avatarInProfile?: string; // this is the avatar path locally once downloaded and stored in the application attachments folder
+  /**
+   * We now require all avatars stored on desktop to have in additions of their normal avatars
+   * a static version of it. Static as in not-animated.
+   * So:
+   * - if the avatarPath points to a file that is animated, staticAvatarPath must point to file containing its first frame,
+   * - if the avatarPath points to a file that is not animated, staticAvatarPath is the same as avatarPath
+   *
+   * avatarInProfile is the avatar as the user set it, once downloaded and stored in the application attachments folder.
+   */
+  avatarInProfile?: string;
+  /**
+   * This is the always static version of the avatar in profile.
+   * If the user has pro, avatarInProfile will be used (and so his avatar will be animated if it was already).
+   * If the user doesn't have pro, fallbackAvatarInProfile will be used, and the avatar will be displayed as a static image.
+   */
+  fallbackAvatarInProfile?: string;
 
   isTrustedForAttachmentDownload: boolean; // not synced across devices, this field is used if we should auto download attachments from this conversation or not
 

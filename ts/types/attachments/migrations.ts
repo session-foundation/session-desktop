@@ -21,28 +21,9 @@ import {
   makeVideoScreenshot,
   revokeObjectUrl,
 } from './VisualAttachment';
-import { maxThumbnailDetails } from '../../util/attachmentSizes';
+import { maxThumbnailDetails } from '../../util/attachment/attachmentSizes';
 
-// Returns true if `rawAttachment` is a valid attachment based on our current schema.
-// Over time, we can expand this definition to become more narrow, e.g. require certain
-// fields, etc.
-export const isValid = (rawAttachment: any) => {
-  // NOTE: We cannot use `_.isPlainObject` because `rawAttachment` is
-  // deserialized by protobuf:
-  if (!rawAttachment) {
-    return false;
-  }
-
-  return true;
-};
-
-const UNICODE_LEFT_TO_RIGHT_OVERRIDE = '\u202D';
-const UNICODE_RIGHT_TO_LEFT_OVERRIDE = '\u202E';
 const UNICODE_REPLACEMENT_CHARACTER = '\uFFFD';
-const INVALID_CHARACTERS_PATTERN = new RegExp(
-  `[${UNICODE_LEFT_TO_RIGHT_OVERRIDE}${UNICODE_RIGHT_TO_LEFT_OVERRIDE}]`,
-  'g'
-);
 
 // Upgrade steps
 // NOTE: This step strips all EXIF metadata from JPEG images as
@@ -76,25 +57,6 @@ export const autoOrientJPEGAttachment = async (attachment: {
     data: newDataArrayBuffer,
   };
 };
-// NOTE: Expose synchronous version to do property-based testing using `testcheck`,
-// which currently doesn’t support async testing:
-// https://github.com/leebyron/testcheck-js/issues/45
-export const _replaceUnicodeOrderOverridesSync = (attachment: any) => {
-  if (!isString(attachment.fileName)) {
-    return attachment;
-  }
-
-  const normalizedFilename = attachment.fileName.replace(
-    INVALID_CHARACTERS_PATTERN,
-    UNICODE_REPLACEMENT_CHARACTER
-  );
-  const newAttachment = { ...attachment, fileName: normalizedFilename };
-
-  return newAttachment;
-};
-
-// const replaceUnicodeOrderOverrides = async (attachment: any) =>
-//   _replaceUnicodeOrderOverridesSync(attachment);
 
 // \u202A-\u202E is LRE, RLE, PDF, LRO, RLO
 // \u2066-\u2069 is LRI, RLI, FSI, PDI
@@ -111,29 +73,13 @@ export const replaceUnicodeV2 = (fileName: string) => {
   return fileName.replace(V2_UNWANTED_UNICODE, UNICODE_REPLACEMENT_CHARACTER);
 };
 
-// const removeSchemaVersion = ({ attachment }: any) => {
-//   if (!isValid(attachment)) {
-//     window.log.error('Attachment.removeSchemaVersion: Invalid input attachment:', attachment);
-//     return attachment;
-//   }
-
-//   const attachmentWithoutSchemaVersion = { ...attachment };
-//   delete attachmentWithoutSchemaVersion.schemaVersion;
-//   return attachmentWithoutSchemaVersion;
-// };
-
-//      hasData :: Attachment -> Boolean
-export const hasData = (attachment: any) =>
-  attachment.data instanceof ArrayBuffer || ArrayBuffer.isView(attachment.data);
-
 export const loadData = async (attachment: any) => {
-  if (!isValid(attachment)) {
+  if (!attachment) {
     throw new TypeError("'attachment' is not valid");
   }
 
-  const isAlreadyLoaded = hasData(attachment);
-
-  if (isAlreadyLoaded) {
+  // attachment is already loaded
+  if (attachment.data instanceof ArrayBuffer || ArrayBuffer.isView(attachment.data)) {
     return attachment;
   }
 
@@ -145,15 +91,12 @@ export const loadData = async (attachment: any) => {
   return { ...attachment, data };
 };
 
-//      deleteData :: (RelativePath -> IO Unit)
-//                    Attachment ->
-//                    IO Unit
 export const deleteData = async (attachment: {
   path: string | undefined;
   thumbnail: any;
   screenshot: any;
 }) => {
-  if (!isValid(attachment)) {
+  if (!attachment) {
     throw new TypeError('deleteData: attachment is not valid');
   }
 

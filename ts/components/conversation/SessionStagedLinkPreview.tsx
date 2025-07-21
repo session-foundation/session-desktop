@@ -8,7 +8,7 @@ import { AttachmentUtil, LinkPreviewUtil } from '../../util';
 import { fetchLinkPreviewImage } from '../../util/linkPreviewFetch';
 import { LinkPreviews } from '../../util/linkPreviews';
 import { StagedLinkPreview } from './StagedLinkPreview';
-import type { BetterBlob } from '../../util/attachmentsUtil';
+import type { BetterBlob } from '../../util/attachment/attachmentsUtil';
 import { fromArrayBufferToBase64 } from '../../session/utils/String';
 
 export interface StagedLinkPreviewProps extends StagedLinkPreviewData {

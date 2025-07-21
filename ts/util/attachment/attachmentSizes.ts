@@ -1,4 +1,4 @@
-import { FILESIZE } from '../session/constants';
+import { FILESIZE } from '../../session/constants';
 
 export const ATTACHMENT_DEFAULT_MAX_SIDE = 4096;
 

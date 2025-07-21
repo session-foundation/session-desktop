@@ -94,6 +94,7 @@ import { ExpirationTimerUpdate } from '../session/disappearing_messages/types';
 import { Model } from './models';
 import { ReduxOnionSelectors } from '../state/selectors/onions';
 import { tStrippedWithObj, tr, tStripped } from '../localization/localeTools';
+import type { QuotedAttachmentType } from '../components/conversation/message/message-content/quote/Quote';
 
 // tslint:disable: cyclomatic-complexity
 
@@ -1390,20 +1391,22 @@ export function findAndFormatContact(pubkey: string): FindAndFormatContactType {
 
   return {
     pubkey,
-    avatarPath: contactModel ? contactModel.getAvatarPath() : null,
+    avatarPath: contactModel?.getProOrNotAvatarPath() || null,
     name: contactModel?.getRealSessionUsername() || null,
     profileName,
     isMe,
   };
 }
 
-export function processQuoteAttachment(attachment: any) {
+export function processQuoteAttachment(attachment: any): QuotedAttachmentType {
   const { thumbnail } = attachment;
   const path = thumbnail && thumbnail.path && getAbsoluteAttachmentPath(thumbnail.path);
   const objectUrl = thumbnail && thumbnail.objectUrl;
 
   const thumbnailWithObjectUrl =
-    !path && !objectUrl ? null : { ...(attachment.thumbnail || {}), objectUrl: path || objectUrl };
+    !path && !objectUrl
+      ? undefined
+      : { ...(attachment.thumbnail || {}), objectUrl: path || objectUrl };
 
   return {
     ...attachment,

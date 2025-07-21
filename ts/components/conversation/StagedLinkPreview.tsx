@@ -9,7 +9,7 @@ import { AriaLabels } from '../../util/hardcodedAriaLabels';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { tr } from '../../localization/localeTools';
-import type { BetterBlob } from '../../util/attachmentsUtil';
+import type { BetterBlob } from '../../util/attachment/attachmentsUtil';
 
 type Props = {
   isLoaded: boolean;

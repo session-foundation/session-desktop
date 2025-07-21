@@ -33,7 +33,7 @@ import {
   type BetterBlob,
   StagedAttachmentImportedType,
   StagedPreviewImportedType,
-} from '../../../util/attachmentsUtil';
+} from '../../../util/attachment/attachmentsUtil';
 import { LinkPreviews } from '../../../util/linkPreviews';
 import { CaptionEditor } from '../../CaptionEditor';
 import { Flex } from '../../basic/Flex';

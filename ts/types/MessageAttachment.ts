@@ -6,7 +6,7 @@ import {
   createAbsolutePathGetter,
   createReader,
   createWriterForNew,
-} from '../util/attachments_files';
+} from '../util/attachment/attachments_files';
 import {
   autoOrientJPEGAttachment,
   captureDimensionsAndScreenshot,
@@ -200,14 +200,7 @@ export const writeNewAttachmentData = async (arrayBuffer: ArrayBuffer): Promise<
   return internalWriteNewAttachmentData(arrayBuffer);
 };
 
-// type Context :: {
-//   writeNewAttachmentData :: ArrayBuffer -> Promise (IO Path)
-// }
-//
-//      migrateDataToFileSystem :: Attachment ->
-//                                 Context ->
-//                                 Promise Attachment
-export const migrateDataToFileSystem = async (data?: ArrayBuffer) => {
+const migrateDataToFileSystem = async (data?: ArrayBuffer) => {
   const hasDataField = !isUndefined(data);
 
   if (!hasDataField) {
@@ -225,15 +218,20 @@ export const migrateDataToFileSystem = async (data?: ArrayBuffer) => {
 };
 
 export async function deleteExternalFilesOfConversation(
-  conversationAttributes: Readonly<Pick<ConversationAttributes, 'avatarInProfile'>>
+  conversationAttributes: Readonly<
+    Pick<ConversationAttributes, 'avatarInProfile' | 'fallbackAvatarInProfile'>
+  >
 ) {
   if (!conversationAttributes) {
     return;
   }
 
-  const { avatarInProfile } = conversationAttributes;
+  const { avatarInProfile, fallbackAvatarInProfile } = conversationAttributes;
 
   if (isString(avatarInProfile) && avatarInProfile.length) {
     await deleteOnDisk(avatarInProfile);
+  }
+  if (isString(fallbackAvatarInProfile) && fallbackAvatarInProfile.length) {
+    await deleteOnDisk(fallbackAvatarInProfile);
   }
 }

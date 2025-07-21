@@ -88,7 +88,9 @@ const triggerUploadProfileAvatar = async (
 
       if (conversationId === UserUtils.getOurPubKeyStrFromCache()) {
         const newAvatarDecrypted = await blobContent.arrayBuffer();
-        window.inboxStore?.dispatch(userActions.updateOurAvatar({ newAvatarDecrypted }) as any);
+        window.inboxStore?.dispatch(
+          userActions.updateOurAvatar({ mainAvatarDecrypted: newAvatarDecrypted }) as any
+        );
       } else if (OpenGroupUtils.isOpenGroupV2(conversationId)) {
         window.inboxStore?.dispatch(
           ReduxSogsRoomInfos.changeCommunityAvatar({
@@ -176,9 +178,21 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
 
   const handleAvatarClick = async () => {
     const res = await pickFileForAvatar();
+
+    if (!res) {
+      window.log.error('Failed to pick avatar');
+      resetState();
+
+      return;
+    }
+
     if (res) {
-      setIsNewAvatarAnimated(res.isAnimated);
-      setNewAvatarObjectUrl(res.imageUrl);
+      setIsNewAvatarAnimated(res.mainAvatarDetails.isAnimated);
+      const blob = new Blob([res.mainAvatarDetails.outputBuffer], {
+        type: res.mainAvatarDetails.format,
+      });
+      const blobUrl = URL.createObjectURL(blob);
+      setNewAvatarObjectUrl(blobUrl);
     }
   };
 

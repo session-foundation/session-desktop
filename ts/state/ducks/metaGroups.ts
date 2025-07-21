@@ -1106,7 +1106,8 @@ async function handleClearAvatarFromUI({ groupPk }: WithGroupPubkey) {
   // return early if no change are needed at all
   if (
     isNil(convo.get('avatarPointer')) &&
-    isNil(convo.get('avatarInProfile')) &&
+    isNil(convo.getAvatarInProfilePath()) &&
+    isNil(convo.getFallbackAvatarInProfilePath()) &&
     isNil(convo.get('profileKey'))
   ) {
     return;
@@ -1131,9 +1132,12 @@ async function handleClearAvatarFromUI({ groupPk }: WithGroupPubkey) {
   }
 
   await checkWeAreAdminOrThrow(groupPk, 'handleAvatarChangeFromUI');
-  convo.setKey('avatarPointer', undefined);
-  convo.setKey('avatarInProfile', undefined);
-  convo.setKey('profileKey', undefined);
+  convo.set({
+    avatarPointer: undefined,
+    avatarInProfile: undefined,
+    fallbackAvatarInProfile: undefined,
+    profileKey: undefined,
+  });
 
   const createAtNetworkTimestamp = NetworkTime.now();
   // we want to add an update message even if the change was done remotely

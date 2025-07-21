@@ -5,11 +5,11 @@ import { arrayBufferToBlob } from 'blob-util';
 import loadImage from 'blueimp-load-image';
 import { filesize } from 'filesize';
 import { isUndefined } from 'lodash';
-import { StagedAttachmentType } from '../components/conversation/composition/CompositionBox';
-import { SignalService } from '../protobuf';
-import { DecryptedAttachmentsManager } from '../session/crypto/DecryptedAttachmentsManager';
-import { sendDataExtractionNotification } from '../session/messages/outgoing/controlMessage/DataExtractionNotificationMessage';
-import { AttachmentType, save } from '../types/Attachment';
+import { StagedAttachmentType } from '../../components/conversation/composition/CompositionBox';
+import { SignalService } from '../../protobuf';
+import { DecryptedAttachmentsManager } from '../../session/crypto/DecryptedAttachmentsManager';
+import { sendDataExtractionNotification } from '../../session/messages/outgoing/controlMessage/DataExtractionNotificationMessage';
+import { AttachmentType, save } from '../../types/Attachment';
 import {
   IMAGE_GIF,
   IMAGE_JPEG,
@@ -18,20 +18,20 @@ import {
   IMAGE_UNKNOWN,
   IMAGE_WEBP,
   type MIMEType,
-} from '../types/MIME';
-import { getAbsoluteAttachmentPath, processNewAttachment } from '../types/MessageAttachment';
+} from '../../types/MIME';
+import { getAbsoluteAttachmentPath, processNewAttachment } from '../../types/MessageAttachment';
 
-import { MAX_ATTACHMENT_FILESIZE_BYTES } from '../session/constants';
-import { perfEnd, perfStart } from '../session/utils/Performance';
-import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
-import { isImageAnimated } from '../types/attachments/animated';
-import { MIME } from '../types';
+import { MAX_ATTACHMENT_FILESIZE_BYTES } from '../../session/constants';
+import { perfEnd, perfStart } from '../../session/utils/Performance';
+import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import { isImageAnimated } from '../../types/attachments/animated';
+import { MIME } from '../../types';
 import {
   ATTACHMENT_DEFAULT_MAX_SIDE,
   maxAvatarDetails,
   maxThumbnailDetails,
 } from './attachmentSizes';
-import { callImageProcessorWorker } from '../webworker/workers/browser/image_processor_interface';
+import { callImageProcessorWorker } from '../../webworker/workers/browser/image_processor_interface';
 
 /**
  * The logic for sending attachments is as follow:
@@ -249,7 +249,7 @@ export async function autoScaleBlob(blob: Blob, maxMeasurements?: MaxScaleSize) 
  * @param attachment The attachment to scale down
  * @param maxMeasurements any of those will be used if set
  */
-export async function autoScale(
+async function autoScale(
   attachment: BetterBlob,
   maxMeasurements?: MaxScaleSize
 ): Promise<BetterBlob> {

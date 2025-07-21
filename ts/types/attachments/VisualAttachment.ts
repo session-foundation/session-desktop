@@ -7,14 +7,13 @@ import { toLogFormat } from './Errors';
 import { DecryptedAttachmentsManager } from '../../session/crypto/DecryptedAttachmentsManager';
 import { ToastUtils } from '../../session/utils';
 import { GoogleChrome } from '../../util';
-import {
-  processAvatarImageBlob,
-  autoScaleForThumbnailBlob,
-} from '../../util/attachmentsUtil';
+import { autoScaleForThumbnailBlob } from '../../util/attachment/attachmentsUtil';
 import { isAudio } from '../MIME';
 import { formatTimeDurationMs } from '../../util/i18n/formatting/generics';
 import { isTestIntegration } from '../../shared/env_vars';
 import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import { processLocalAvatarChange } from '../../util/avatar/processLocalAvatarChange';
+import type { ProcessedLocalAvatarChangeType } from '../../webworker/workers/node/image_processor/image_processor';
 
 export const THUMBNAIL_CONTENT_TYPE = 'image/png';
 
@@ -185,11 +184,11 @@ export const revokeObjectUrl = (objectUrl: string) => {
   URL.revokeObjectURL(objectUrl);
 };
 
-async function autoScaleAvatarBlob(file: File) {
+async function autoScaleAvatarBlob(file: File): Promise<ProcessedLocalAvatarChangeType | null> {
   try {
-    const scaled = await processAvatarImageBlob(file);
-
-    return { imageUrl: window.URL.createObjectURL(scaled), isAnimated: scaled.animated };
+    const arrayBuffer = await file.arrayBuffer();
+    const processed = await processLocalAvatarChange(arrayBuffer);
+    return processed;
   } catch (e) {
     ToastUtils.pushToastError(
       'pickFileForAvatar',
@@ -203,10 +202,7 @@ async function autoScaleAvatarBlob(file: File) {
 /**
  * Shows the system file picker for images, scale the image down for avatar/opengroup measurements and return the blob objectURL on success
  */
-export async function pickFileForAvatar(): Promise<{
-  imageUrl: string | null;
-  isAnimated: boolean;
-} | null> {
+export async function pickFileForAvatar(): Promise<ProcessedLocalAvatarChangeType | null> {
   if (isTestIntegration()) {
     window.log.warn(
       'shorting pickFileForAvatar as it does not work in playwright/notsending the filechooser event'
@@ -234,7 +230,7 @@ export async function pickFileForAvatar(): Promise<{
 
   const acceptedImages = ['.png', '.gif', '.jpeg', '.jpg'];
   if (getFeatureFlag('proAvailable')) {
-    acceptedImages.push('.webp')
+    acceptedImages.push('.webp');
   }
 
   const [fileHandle] = await (window as any).showOpenFilePicker({

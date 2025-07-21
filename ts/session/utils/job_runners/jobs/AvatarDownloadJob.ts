@@ -14,7 +14,7 @@ import {
   PersistedJob,
   RunJobResult,
 } from '../PersistedJob';
-import { processAvatarImageArrayBuffer } from '../../../../util/attachmentsUtil';
+import { processAvatarImageArrayBuffer } from '../../../../util/attachment/attachmentsUtil';
 
 const defaultMsBetweenRetries = 10000;
 const defaultMaxAttempts = 3;
@@ -161,7 +161,10 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
           return RunJobResult.RetryJobIfPossible; // so we retry this job
         }
 
-        conversation.set({ avatarInProfile: path || undefined });
+        await conversation.setSessionProfile({
+          displayName: null, // null to not update the display name.
+          avatarPath: path || undefined,
+        });
 
         changes = true;
       } catch (e) {
@@ -177,10 +180,14 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
         );
         return RunJobResult.RetryJobIfPossible;
       }
-    } else if (conversation.get('avatarInProfile')) {
+    } else if (
+      conversation.getAvatarInProfilePath() ||
+      conversation.getFallbackAvatarInProfilePath()
+    ) {
       // there is no valid avatar to download, make sure the local file of the avatar of that user is removed
       conversation.set({
         avatarInProfile: undefined,
+        fallbackAvatarInProfile: undefined,
       });
       changes = true;
     }

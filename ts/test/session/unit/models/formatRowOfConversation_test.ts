@@ -226,6 +226,7 @@ describe('formatRowOfConversation', () => {
           profileKey: '',
           avatarPointer: 'avatarPointer',
           avatarInProfile: 'avatarInProfile',
+          fallbackAvatarInProfile: 'fallbackAvatarInProfile',
           avatarImageId: 1234,
         } as ConversationAttributes),
         'test',
@@ -244,6 +245,7 @@ describe('formatRowOfConversation', () => {
           profileKey: '',
           avatarPointer: 'avatarPointer',
           avatarInProfile: 'avatarInProfile',
+          fallbackAvatarInProfile: 'fallbackAvatarInProfile',
           avatarImageId: 1234,
         } as ConversationAttributes),
         'test',
@@ -251,5 +253,43 @@ describe('formatRowOfConversation', () => {
         false
       )
     ).have.deep.property('displayNameInProfile', 'displayNameInProfile');
+
+    expect(
+      formatRowOfConversation(
+        fillConvoAttributesWithDefaults({
+          id: '1234565',
+          type: ConversationTypeEnum.GROUPV2,
+          nickname: 'nickname',
+          displayNameInProfile: 'displayNameInProfile',
+          profileKey: '',
+          avatarPointer: 'avatarPointer',
+          avatarInProfile: 'avatarInProfile',
+          fallbackAvatarInProfile: 'fallbackAvatarInProfile',
+          avatarImageId: 1234,
+        } as ConversationAttributes),
+        'test',
+        0,
+        false
+      )
+    ).have.deep.property('avatarInProfile', 'avatarInProfile');
+
+    expect(
+      formatRowOfConversation(
+        fillConvoAttributesWithDefaults({
+          id: '1234565',
+          type: ConversationTypeEnum.GROUPV2,
+          nickname: 'nickname',
+          displayNameInProfile: 'displayNameInProfile',
+          profileKey: '',
+          avatarPointer: 'avatarPointer',
+          avatarInProfile: 'avatarInProfile',
+          fallbackAvatarInProfile: 'fallbackAvatarInProfile',
+          avatarImageId: 1234,
+        } as ConversationAttributes),
+        'test',
+        0,
+        false
+      )
+    ).have.deep.property('fallbackAvatarInProfile', 'fallbackAvatarInProfile');
   });
 });

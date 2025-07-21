@@ -481,6 +481,7 @@ function saveConversation(data: ConversationAttributes): SaveConversationReturn 
     isApproved,
     didApproveMe,
     avatarInProfile,
+    fallbackAvatarInProfile,
     displayNameInProfile,
     conversationIdOrigin,
     priority,
@@ -535,6 +536,7 @@ function saveConversation(data: ConversationAttributes): SaveConversationReturn 
       isApproved: toSqliteBoolean(isApproved),
       didApproveMe: toSqliteBoolean(didApproveMe),
       avatarInProfile,
+      fallbackAvatarInProfile,
       displayNameInProfile,
       conversationIdOrigin,
       markedAsUnread: toSqliteBoolean(markedAsUnread),
@@ -2286,8 +2288,10 @@ function removeKnownAttachments(allAttachments: Array<string>) {
 
     forEach(conversations, conversation => {
       const avatar = (conversation as ConversationAttributes)?.avatarInProfile;
-      const externalFiles = getExternalFilesForConversation(avatar);
-      forEach(externalFiles, file => {
+      const fallbackAvatar = (conversation as ConversationAttributes)?.fallbackAvatarInProfile;
+      const externalFilesAvatar = getExternalFilesForConversation(avatar);
+      const externalFilesFallbackAvatar = getExternalFilesForConversation(fallbackAvatar);
+      forEach(externalFilesAvatar.concat(externalFilesFallbackAvatar), file => {
         delete lookup[file];
       });
     });

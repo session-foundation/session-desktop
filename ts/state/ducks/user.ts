@@ -26,7 +26,7 @@ export const initialUserState: UserStateType = {
  */
 const updateOurAvatar = createAsyncThunk(
   'user/updateOurAvatar',
-  async ({ newAvatarDecrypted }: { newAvatarDecrypted: ArrayBuffer }) => {
+  async ({ mainAvatarDecrypted }: { mainAvatarDecrypted: ArrayBuffer }) => {
     const ourConvo = ConvoHub.use().get(UserUtils.getOurPubKeyStrFromCache());
     if (!ourConvo) {
       window.log.warn('ourConvo not found... This is not a valid case');
@@ -37,9 +37,8 @@ const updateOurAvatar = createAsyncThunk(
     // Uploading a new avatar, we want to encrypt its data with a new key.
     const profileKey = sodium.randombytes_buf(32);
 
-
     const res = await uploadAndSetOurAvatarShared({
-      decryptedAvatarData: newAvatarDecrypted,
+      decryptedAvatarData: mainAvatarDecrypted,
       ourConvo,
       profileKey,
     });
@@ -47,7 +46,7 @@ const updateOurAvatar = createAsyncThunk(
     window.inboxStore?.dispatch(updateEditProfilePictureModal(null));
     window.inboxStore?.dispatch(editProfileModal({}));
 
-    return res
+    return res;
   }
 );
 
@@ -68,15 +67,14 @@ const clearOurAvatar = createAsyncThunk('user/clearOurAvatar', async () => {
   // return early if no change are needed at all
   if (
     isNil(convo.get('avatarPointer')) &&
-    isNil(convo.get('avatarInProfile')) &&
+    isNil(convo.getAvatarInProfilePath()) &&
+    isNil(convo.getFallbackAvatarInProfilePath()) &&
     isNil(convo.get('profileKey'))
   ) {
     return;
   }
 
-  convo.setKey('avatarPointer', undefined);
-  convo.setKey('avatarInProfile', undefined);
-  convo.setKey('profileKey', undefined);
+  convo.set({ avatarPointer: undefined, avatarInProfile: undefined, profileKey: undefined });
 
   await convo.commit();
   await SyncUtils.forceSyncConfigurationNowIfNeeded(true);

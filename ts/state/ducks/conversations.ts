@@ -219,7 +219,13 @@ export interface ReduxConversationType {
   isTyping?: boolean;
   isBlocked?: boolean;
   isKickedFromGroup?: boolean;
-  avatarPath?: string | null; // absolute filepath to the avatar
+  /**
+   * Absolute path to the avatar to display for that user.
+   * Note:
+   *  - if the corresponding user is a pro user, his (potentially) animated avatar will be set in this `avatarPath` field.
+   *  - if the corresponding user is not a pro user, his fallback avatar path will be set in this `avatarPath` field.
+   */
+  avatarPath?: string | null;
   groupAdmins?: Array<string>; // admins for closed groups and admins for open groups
   members?: Array<string>; // members for closed groups only
 
@@ -240,6 +246,7 @@ export interface ReduxConversationType {
   isMarkedUnread?: boolean;
 
   blocksSogsMsgReqsTimestamp?: number; // undefined means 0
+  isProUser?: boolean;
 }
 
 export interface NotificationForConvoOption {
