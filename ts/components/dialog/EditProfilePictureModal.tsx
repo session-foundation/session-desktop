@@ -9,7 +9,12 @@ import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/S
 import { SessionSpinner } from '../loading';
 import { ProfileAvatar } from './edit-profile/components';
 import { PlusAvatarButton } from '../buttons/PlusAvatarButton';
-import { useAvatarPath, useConversationUsername, useIsMe, useIsPublic } from '../../hooks/useParamSelector';
+import {
+  useAvatarPath,
+  useConversationUsername,
+  useIsMe,
+  useIsPublic,
+} from '../../hooks/useParamSelector';
 import { tr } from '../../localization/localeTools';
 import { OpenGroupUtils } from '../../session/apis/open_group_api/utils';
 import { PubKey } from '../../session/types';
@@ -21,11 +26,18 @@ import { useOurAvatarIsUploading } from '../../state/selectors/user';
 import { useAvatarOfRoomIsUploading } from '../../state/selectors/sogsRoomInfo';
 import { SessionIconButton, SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
-import { ModalActionsContainer, ModalBasicHeader, SessionWrapperModal } from '../SessionWrapperModal';
+import {
+  ModalActionsContainer,
+  ModalBasicHeader,
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
 import { useHasPro } from '../../hooks/useHasPro';
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
 import { SpacerLG } from '../basic/Text';
-import { SessionProInfoVariant, useShowSessionProInfoDialogCbWithVariant } from './SessionProInfoModal';
+import {
+  SessionProInfoVariant,
+  useShowSessionProInfoDialogCbWithVariant,
+} from './SessionProInfoModal';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
@@ -186,17 +198,14 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
      */
     if (isProAvailable && isNewAvatarAnimated && !hasPro && !isCommunity) {
       handleShowProInfoModal(SessionProInfoVariant.PROFILE_PICTURE_ANIMATED);
-      window.log.debug('Attempted to upload an animated profile picture without pro!')
+      window.log.debug('Attempted to upload an animated profile picture without pro!');
       return;
     }
 
     await triggerUploadProfileAvatar(newAvatarObjectUrl, conversationId);
   };
 
-  const loading =
-    ourAvatarIsUploading ||
-    groupAvatarChangePending ||
-    sogsAvatarIsUploading;
+  const loading = ourAvatarIsUploading || groupAvatarChangePending || sogsAvatarIsUploading;
 
   const newAvatarLoaded = newAvatarObjectUrl !== avatarPath;
 

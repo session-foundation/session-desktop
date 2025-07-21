@@ -31,6 +31,7 @@ import {
   maxAvatarDetails,
   maxThumbnailDetails,
 } from './attachmentSizes';
+import { callImageProcessorWorker } from '../webworker/workers/browser/image_processor_interface';
 
 /**
  * The logic for sending attachments is as follow:
@@ -73,12 +74,12 @@ async function createBetterBlobFromBlob(
   }
   const arrayBuffer = await blob.arrayBuffer();
 
-  const _blob = blob as unknown as BetterBlob;
+  const betterBlob = blob as unknown as BetterBlob;
 
-  _blob.contentType = contentType ?? imageTypeFromArrayBuffer(arrayBuffer);
-  _blob.animated = isAnimated ?? (await isImageAnimated(arrayBuffer, _blob.contentType));
+  betterBlob.contentType = contentType ?? imageTypeFromArrayBuffer(arrayBuffer);
+  betterBlob.animated = isAnimated ?? (await isImageAnimated(arrayBuffer, betterBlob.contentType));
 
-  return _blob;
+  return betterBlob;
 }
 
 async function createBetterBlobFromArrayBuffer(
@@ -116,12 +117,12 @@ async function createBetterBlobFromCanvas(
   return blob;
 }
 
-export interface MaxScaleSize {
+type MaxScaleSize = {
   maxSize?: number;
   maxHeight?: number;
   maxWidth?: number;
   maxSide?: number; // use this to make avatars cropped if too big and centered if too small.
-}
+};
 
 type Options = {
   handleContentTypeCallback?: HandleContentTypeCallback;
@@ -168,7 +169,7 @@ async function processImageBlob(blob: Blob, options: Options = {}) {
  */
 export async function processAvatarImageBlob(blob: Blob) {
   if (DEBUG_ATTACHMENTS_SCALE) {
-    window.log.debug('autoscale for avatar', maxAvatarDetails);
+    window.log.debug('processAvatarImageBlob: autoscale for avatar', maxAvatarDetails);
   }
 
   return processImageBlob(blob, {
@@ -179,7 +180,7 @@ export async function processAvatarImageBlob(blob: Blob) {
 
 export async function processAvatarImageArrayBuffer(arrayBuffer: ArrayBuffer) {
   if (DEBUG_ATTACHMENTS_SCALE) {
-    window.log.debug('autoscale for avatar', maxAvatarDetails);
+    window.log.debug('processAvatarImageArrayBuffer: autoscale for avatar', maxAvatarDetails);
   }
 
   return processImage(arrayBuffer, {
@@ -189,7 +190,8 @@ export async function processAvatarImageArrayBuffer(arrayBuffer: ArrayBuffer) {
 }
 
 /**
- * Auto scale an attachment to get a thumbnail from it. We consider that a thumbnail is currently at most 200 ko, is a square and has a maxSize of THUMBNAIL_SIDE
+ * Auto scale an attachment to get a thumbnail from it.
+ * We consider that a thumbnail is currently at most 200 ko, is a square and has a maxSize of THUMBNAIL_SIDE
  * @param attachment the attachment to auto scale
  */
 export async function autoScaleForThumbnailBlob(blob: Blob) {
@@ -232,17 +234,13 @@ async function canvasToBlob(
   });
 }
 
-export async function autoScaleBlob(
-  blob: Blob,
-  maxMeasurements?: MaxScaleSize,
-  removeAnimation?: boolean
-) {
+export async function autoScaleBlob(blob: Blob, maxMeasurements?: MaxScaleSize) {
   const betterBlob = await createBetterBlobFromBlob(blob);
   if (betterBlob.contentType === IMAGE_UNKNOWN || !MIME.isImage(betterBlob.contentType)) {
     betterBlob.contentType = blob.type;
     return betterBlob;
   }
-  return autoScale(betterBlob, maxMeasurements, removeAnimation);
+  return autoScale(betterBlob, maxMeasurements);
 }
 
 /**
@@ -253,8 +251,7 @@ export async function autoScaleBlob(
  */
 export async function autoScale(
   attachment: BetterBlob,
-  maxMeasurements?: MaxScaleSize,
-  removeAnimation?: boolean
+  maxMeasurements?: MaxScaleSize
 ): Promise<BetterBlob> {
   const start = Date.now();
   const contentType = attachment.contentType;
@@ -283,10 +280,29 @@ export async function autoScale(
   const maxWidth =
     maxMeasurements?.maxWidth || maxMeasurements?.maxSide || ATTACHMENT_DEFAULT_MAX_SIDE;
 
-  if (attachment.animated && !removeAnimation) {
-    if (attachment.size <= maxSize) {
+  if (attachment.animated) {
+    if (
+      attachment.size <= maxSize &&
+      (attachment.width || 0) <= maxWidth &&
+      (attachment.height || 0) <= maxHeight
+    ) {
       return attachment;
     }
+
+    const resized = await callImageProcessorWorker(
+      'cropAnimatedAvatar',
+      await attachment.arrayBuffer(),
+      20
+    );
+
+    if (resized.resizedBuffer.byteLength <= maxSize) {
+      return createBetterBlobFromArrayBuffer(
+        resized.resizedBuffer,
+        attachment.contentType,
+        attachment.animated
+      );
+    }
+
     const imgType = attachment.contentType === IMAGE_WEBP ? 'WEBP' : 'GIF';
     throw new Error(
       `${imgType} is too large. Max size: ${filesize(maxSize, { base: 10, round: 0 })}`
