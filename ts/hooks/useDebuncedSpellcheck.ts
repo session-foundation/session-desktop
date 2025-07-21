@@ -36,7 +36,7 @@ const cssStyles = `
   }
 `;
 
-export const useDebouncedSpellcheck = ({ delay = 300, elementRef }: DebouncedSpellcheckProps) => {
+export const useDebouncedSpellcheck = ({ delay = 600, elementRef }: DebouncedSpellcheckProps) => {
   // Inject CSS styles if they don't exist
   useEffect(() => {
     hookUsageCount++;
