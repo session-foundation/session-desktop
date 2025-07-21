@@ -354,7 +354,7 @@ async function autoScale(
         debugData
       );
     }
-    // the canvas has a size of whatever was given by the caller of autoscale().
+    // the canvas has a size of whatever was given by the caller of autoscale
     // so we have to return those measures as the loaded file has now those measures.
     // eslint-disable-next-line no-param-reassign
     attachment.width = canvasScaled.width;

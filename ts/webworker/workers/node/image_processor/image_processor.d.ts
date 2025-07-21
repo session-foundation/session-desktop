@@ -55,6 +55,20 @@ export type ImageProcessorWorkerActions = {
     avatarFallback: FallbackAvatarType | null;
   }>;
 
+  /**
+   * Process an image to get a thumbnail matching our required details.
+   * A link preview thumbnail is always a jpeg
+   */
+  processForLinkPreviewThumbnail: (
+    input: ArrayBufferLike,
+    maxSidePx: number
+  ) => Promise<FallbackAvatarType>;
+
+  testIntegrationFakeAvatar: (
+    maxSidePx: number,
+    background: { r: number; g: number; b: number } // { r: 0, g: 0, b: 255 } for fully blue
+  ) => Promise<MainAvatarType>;
+
   imageMetadata: (
     input: ArrayBufferLike
   ) => Promise<WithIsAnimated & WithSharpFormat & WithSharpSize & WithSharpWidth & WithSharpHeight>;

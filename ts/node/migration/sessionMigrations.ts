@@ -2145,6 +2145,7 @@ function updateToSessionSchemaVersion46(currentVersion: number, db: BetterSqlite
   db.transaction(() => {
     db.exec(`
           ALTER TABLE ${CONVERSATIONS_TABLE} ADD COLUMN fallbackAvatarInProfile TEXT;
+          ALTER TABLE ${CONVERSATIONS_TABLE} DROP COLUMN avatarImageId;
          `);
 
     // FIXME: maybe we should just drop the current avatarPointer for any animated avatar?

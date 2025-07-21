@@ -1,5 +1,5 @@
 import sharp from 'sharp';
-import type { ImageProcessorWorkerActions } from './image_processor';
+import type { ImageProcessorWorkerActions, MainAvatarType } from './image_processor';
 /* eslint-disable no-console */
 /* eslint-disable strict */
 
@@ -161,6 +161,74 @@ const processLocalAvatarChange: ImageProcessorWorkerActions['processLocalAvatarC
   return { mainAvatarDetails, avatarFallback };
 };
 
+const testIntegrationFakeAvatar: ImageProcessorWorkerActions['testIntegrationFakeAvatar'] = async (
+  maxSidePx: number,
+  background: { r: number; g: number; b: number }
+) => {
+  const created = sharp({
+    create: {
+      width: maxSidePx,
+      height: maxSidePx,
+      channels: 3, // RGB
+      background,
+    },
+  }).jpeg({ quality: 90 });
+
+  const createdBuffer = await created.toBuffer();
+  const createdMetadata = await sharp(createdBuffer).metadata(); // rotate() is done as part of resized above
+
+  if (!createdMetadata.size) {
+    throw new Error('testIntegrationFakeAvatar: Could not get size of the createdBuffer image');
+  }
+
+  const mainAvatarDetails: MainAvatarType = {
+    outputBuffer: createdBuffer.buffer,
+    height: createdMetadata.height,
+    width: createdMetadata.width,
+    isAnimated: false,
+    format: createdMetadata.format,
+    size: createdMetadata.size,
+  };
+
+  return mainAvatarDetails;
+};
+
+const processForLinkPreviewThumbnail: ImageProcessorWorkerActions['processForLinkPreviewThumbnail'] =
+  async (inputBuffer: ArrayBufferLike, maxSidePx: number) => {
+    if (!inputBuffer?.byteLength) {
+      throw new Error('processForLinkPreviewThumbnail: inputBuffer is required');
+    }
+
+    const parsed = sharp(new Uint8Array(inputBuffer), { animated: false }).rotate();
+    const metadata = await parsed.metadata();
+
+    if (!metadata.size) {
+      throw new Error('processForLinkPreviewThumbnail: Could not get size of the input');
+    }
+
+    const resized = parsed.resize({
+      height: maxSidePx,
+      width: maxSidePx,
+      position: 'center', // default
+      fit: 'cover', // cover as we want the image to be cropped on the sides if needed, but take the full maxSide
+    });
+
+    const resizedBuffer = await resized.toBuffer();
+    const resizedMetadata = await sharp(resizedBuffer).metadata();
+
+    if (!resizedMetadata.size) {
+      throw new Error('processForLinkPreviewThumbnail: Could not get size of the resized image');
+    }
+
+    return {
+      outputBuffer: resizedBuffer.buffer,
+      height: resizedMetadata.height,
+      width: resizedMetadata.width,
+      format: resizedMetadata.format,
+      size: resizedMetadata.size,
+    };
+  };
+
 const imageMetadata: ImageProcessorWorkerActions['imageMetadata'] = async inputBuffer => {
   if (!inputBuffer?.byteLength) {
     throw new Error('imageMetadata: inputBuffer is required');
@@ -186,4 +254,6 @@ const functions = {
   extractFirstFrameJpeg,
   imageMetadata,
   processLocalAvatarChange,
+  testIntegrationFakeAvatar,
+  processForLinkPreviewThumbnail,
 };

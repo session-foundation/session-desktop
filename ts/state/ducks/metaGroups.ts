@@ -1021,7 +1021,7 @@ async function handleAvatarChangeFromUI({
     window?.log?.warn('File upload for groupv2 to file server failed');
     throw new Error('File upload for groupv2 to file server failed');
   }
-  const { fileUrl, fileId } = uploadedFileDetails;
+  const { fileUrl } = uploadedFileDetails;
 
   const upgraded = await processNewAttachment({
     data: dataResizedUnencrypted,
@@ -1031,7 +1031,7 @@ async function handleAvatarChangeFromUI({
   await convo.setSessionProfile({
     displayName: null, // null so we don't overwrite it
     avatarPath: upgraded.path,
-    avatarImageId: fileId,
+    avatarPointer: fileUrl,
   });
   infos.profilePicture = { url: fileUrl, key: profileKey };
   await MetaGroupWrapperActions.infoSet(groupPk, infos);

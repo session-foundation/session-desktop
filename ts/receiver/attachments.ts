@@ -30,21 +30,17 @@ export async function downloadAttachment(attachment: {
   const defaultFileServer = startsWith(serverUrl, fileServerURL);
 
   let res: ArrayBuffer | null = null;
+  // try to get the fileId from the end of the URL
 
-  if (defaultFileServer) {
-    let attachmentId = attachment.id;
-    if (!attachmentId) {
-      // try to get the fileId from the end of the URL
-      attachmentId = attachment.url;
-    }
-    window?.log?.info('Download v2 file server attachment', attachmentId);
-    res = await downloadFileFromFileServer(attachmentId);
-  } else {
+  const attachmentId = attachment.id || attachment.url;
+  if (!defaultFileServer) {
     window.log.warn(
       `downloadAttachment attachment is neither opengroup attachment nor fileserver... Dropping it ${asURL.href}`
     );
     throw new Error('Attachment url is not opengroupv2 nor fileserver. Unsupported');
   }
+  window?.log?.info('Download v2 file server attachment', attachmentId);
+  res = await downloadFileFromFileServer(attachmentId);
 
   if (!res?.byteLength) {
     window?.log?.error('Failed to download attachment. Length is 0');

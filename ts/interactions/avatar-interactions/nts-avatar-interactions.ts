@@ -81,9 +81,7 @@ export async function uploadAndSetOurAvatarShared({
     window.log.warn('failed to upload avatar to file server');
     return null;
   }
-  const { fileUrl, fileId } = avatarPointer;
-
-  ourConvo.setKey('avatarPointer', fileUrl);
+  const { fileUrl } = avatarPointer;
 
   const { avatarFallback, mainAvatarDetails } = await processLocalAvatarChange(decryptedAvatarData);
 
@@ -112,7 +110,7 @@ export async function uploadAndSetOurAvatarShared({
     avatarPath: savedMainAvatar.path,
     fallbackAvatarPath: processedFallbackAvatar?.path || savedMainAvatar.path,
     displayName,
-    avatarImageId: fileId,
+    avatarPointer: fileUrl,
   });
   await Storage.put(SettingsKey.lastAvatarUploadTimestamp, Date.now());
 

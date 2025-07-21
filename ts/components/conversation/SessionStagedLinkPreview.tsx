@@ -1,9 +1,7 @@
 import { AbortSignal } from 'abort-controller';
 import insecureNodeFetch from 'node-fetch';
-import { isUndefined } from 'lodash';
 import { StagedLinkPreviewData } from './composition/CompositionBox';
 
-import { getImageDimensions } from '../../types/attachments/VisualAttachment';
 import { AttachmentUtil, LinkPreviewUtil } from '../../util';
 import { fetchLinkPreviewImage } from '../../util/linkPreviewFetch';
 import { LinkPreviews } from '../../util/linkPreviews';
@@ -46,7 +44,6 @@ export const getPreview = async (
   const { title, imageHref, date } = linkPreviewMetadata;
 
   let image: BetterBlob | undefined;
-  let objectUrl: undefined | string;
   if (imageHref && LinkPreviews.isLinkSafeToPreview(imageHref)) {
     try {
       window?.log?.info('insecureNodeFetch => plaintext for getPreview()');
@@ -59,22 +56,9 @@ export const getPreview = async (
       // Ensure that this file is either small enough or is resized to meet our
       //   requirements for attachments
       image = await AttachmentUtil.autoScaleForThumbnailArrayBuffer(fullSizeImage.data);
-      objectUrl = URL.createObjectURL(image);
-
-      if (isUndefined(image.width) || isUndefined(image.height)) {
-        const dimensions = await getImageDimensions({
-          objectUrl,
-        });
-        image.width = dimensions.width;
-        image.height = dimensions.height;
-      }
     } catch (error) {
       // We still want to show the preview if we failed to get an image
       window?.log?.error('getPreview failed to get image for link preview:', error.message);
-    } finally {
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-      }
     }
   }
 

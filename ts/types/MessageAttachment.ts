@@ -228,10 +228,17 @@ export async function deleteExternalFilesOfConversation(
 
   const { avatarInProfile, fallbackAvatarInProfile } = conversationAttributes;
 
+  const filesToDelete = [];
+
   if (isString(avatarInProfile) && avatarInProfile.length) {
-    await deleteOnDisk(avatarInProfile);
+    filesToDelete.push(avatarInProfile);
   }
   if (isString(fallbackAvatarInProfile) && fallbackAvatarInProfile.length) {
-    await deleteOnDisk(fallbackAvatarInProfile);
+    filesToDelete.push(fallbackAvatarInProfile);
   }
+
+  if (filesToDelete.length) {
+    await Promise.all(filesToDelete.map(deleteOnDisk));
+  }
+
 }

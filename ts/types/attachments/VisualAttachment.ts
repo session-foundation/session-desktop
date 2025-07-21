@@ -14,6 +14,7 @@ import { isTestIntegration } from '../../shared/env_vars';
 import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { processLocalAvatarChange } from '../../util/avatar/processLocalAvatarChange';
 import type { ProcessedLocalAvatarChangeType } from '../../webworker/workers/node/image_processor/image_processor';
+import { callImageProcessorWorker } from '../../webworker/workers/browser/image_processor_interface';
 
 export const THUMBNAIL_CONTENT_TYPE = 'image/png';
 
@@ -199,35 +200,7 @@ async function autoScaleAvatarBlob(file: File): Promise<ProcessedLocalAvatarChan
   }
 }
 
-/**
- * Shows the system file picker for images, scale the image down for avatar/opengroup measurements and return the blob objectURL on success
- */
-export async function pickFileForAvatar(): Promise<ProcessedLocalAvatarChangeType | null> {
-  if (isTestIntegration()) {
-    window.log.warn(
-      'shorting pickFileForAvatar as it does not work in playwright/notsending the filechooser event'
-    );
-
-    const canvas = document.createElement('canvas');
-    canvas.width = 500;
-    canvas.height = 500;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      throw new Error('we need a context');
-    }
-    ctx.fillStyle = 'blue';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    return new Promise(resolve => {
-      canvas.toBlob(blob => {
-        const file = new File([blob as Blob], 'image.png', { type: 'image/png' });
-        void autoScaleAvatarBlob(file)
-          .then(resolve)
-          // eslint-disable-next-line no-console
-          .catch(console.error);
-      });
-    });
-  }
-
+async function pickFileForReal() {
   const acceptedImages = ['.png', '.gif', '.jpeg', '.jpg'];
   if (getFeatureFlag('proAvailable')) {
     acceptedImages.push('.webp');
@@ -247,5 +220,26 @@ export async function pickFileForAvatar(): Promise<ProcessedLocalAvatarChangeTyp
   });
 
   const file = (await fileHandle.getFile()) as File;
+  return file;
+}
+
+async function pickFileForTestIntegration() {
+  const blueAvatarDetails = await callImageProcessorWorker('testIntegrationFakeAvatar', 500, {
+    r: 0,
+    g: 0,
+    b: 255,
+  });
+  const file = new File([blueAvatarDetails.outputBuffer], 'testIntegrationFakeAvatar.jpeg', {
+    type: blueAvatarDetails.format,
+  });
+  return file;
+}
+
+/**
+ * Shows the system file picker for images, scale the image down for avatar/opengroup measurements and return the blob objectURL on success
+ */
+export async function pickFileForAvatar(): Promise<ProcessedLocalAvatarChangeType | null> {
+  const file = isTestIntegration() ? await pickFileForTestIntegration() : await pickFileForReal();
+
   return autoScaleAvatarBlob(file);
 }

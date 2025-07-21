@@ -99,7 +99,8 @@ const changeCommunityAvatar = createAsyncThunk(
     await convo.setSessionProfile({
       displayName: null, // null so we don't overwrite it
       avatarPath: upgraded.path,
-      avatarImageId,
+      avatarPointer: fileUrl,
+      fallbackAvatarPath: upgraded.path, // no need for a fallback for a community
     });
 
     window.inboxStore?.dispatch(updateEditProfilePictureModal(null));

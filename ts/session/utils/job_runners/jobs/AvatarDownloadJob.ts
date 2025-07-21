@@ -2,7 +2,6 @@ import { isEmpty, isNumber, isString } from 'lodash';
 import { v4 } from 'uuid';
 import { UserUtils } from '../..';
 import { downloadAttachment } from '../../../../receiver/attachments';
-import { MIME } from '../../../../types';
 import { processNewAttachment } from '../../../../types/MessageAttachment';
 import { decryptProfile } from '../../../../util/crypto/profileEncrypter';
 import { ConvoHub } from '../../../conversations';
@@ -14,7 +13,7 @@ import {
   PersistedJob,
   RunJobResult,
 } from '../PersistedJob';
-import { processAvatarImageArrayBuffer } from '../../../../util/attachment/attachmentsUtil';
+import { processLocalAvatarChange } from '../../../../util/avatar/processLocalAvatarChange';
 
 const defaultMsBetweenRetries = 10000;
 const defaultMaxAttempts = 3;
@@ -128,7 +127,8 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
         }
 
         // null => use placeholder with color and first letter
-        let path = null;
+        let mainAvatarPath: string | null = null;
+        let fallbackAvatarPath: string | null = null;
 
         try {
           const profileKeyArrayBuffer = fromHexToArray(toDownloadProfileKey);
@@ -148,14 +148,21 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
           );
 
           // we autoscale incoming avatars because our app keeps decrypted avatars in memory and some platforms allows large avatars to be uploaded.
-          const scaledData = await processAvatarImageArrayBuffer(decryptedData);
+          const processed = await processLocalAvatarChange(decryptedData);
 
-          const upgraded = await processNewAttachment({
-            data: await scaledData.arrayBuffer(),
-            contentType: MIME.IMAGE_UNKNOWN, // contentType is mostly used to generate previews and screenshot. We do not care for those in this case.
+          const upgradedMainAvatar = await processNewAttachment({
+            data: processed.mainAvatarDetails.outputBuffer,
+            contentType: processed.mainAvatarDetails.format,
           });
+          const upgradedFallbackAvatar = processed.avatarFallback
+            ? await processNewAttachment({
+                data: processed.avatarFallback.outputBuffer,
+                contentType: processed.avatarFallback.format,
+              })
+            : null;
           conversation = ConvoHub.use().getOrThrow(convoId);
-          ({ path } = upgraded);
+          mainAvatarPath = upgradedMainAvatar.path;
+          fallbackAvatarPath = upgradedFallbackAvatar?.path || upgradedMainAvatar.path;
         } catch (e) {
           window?.log?.error(`[profileupdate] Could not decrypt profile image: ${e}`);
           return RunJobResult.RetryJobIfPossible; // so we retry this job
@@ -163,7 +170,9 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
 
         await conversation.setSessionProfile({
           displayName: null, // null to not update the display name.
-          avatarPath: path || undefined,
+          avatarPath: mainAvatarPath,
+          fallbackAvatarPath,
+          avatarPointer: toDownloadPointer,
         });
 
         changes = true;

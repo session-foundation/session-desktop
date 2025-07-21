@@ -203,6 +203,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
     }
 
     // TODO: Add way to check if group and if group is pro
+    console.warn('TODO: Add way to check if group and if group is pro');
 
     /**
      * Can upload animated profile picture if:
@@ -210,7 +211,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
      * B. Group admin uploading a group profile picture and at least 1 admin is Pro.
      * C. Community admin uploading a community profile picture
      */
-    if (isProAvailable && isNewAvatarAnimated && !hasPro && !isCommunity) {
+    if (isProAvailable && !hasPro && isNewAvatarAnimated && !isCommunity) {
       handleShowProInfoModal(SessionProInfoVariant.PROFILE_PICTURE_ANIMATED);
       window.log.debug('Attempted to upload an animated profile picture without pro!');
       return;

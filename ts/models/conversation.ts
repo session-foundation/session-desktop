@@ -61,7 +61,10 @@ import {
   isUsAnySogsFromCache,
 } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import { SogsBlinding } from '../session/apis/open_group_api/sogsv3/sogsBlinding';
-import { sogsV3FetchPreviewAndSaveIt } from '../session/apis/open_group_api/sogsv3/sogsV3FetchFile';
+import {
+  fileDetailsToURL,
+  sogsV3FetchPreviewAndSaveIt,
+} from '../session/apis/open_group_api/sogsv3/sogsV3FetchFile';
 import { SnodeNamespaces } from '../session/apis/snode_api/namespaces';
 import { getSodiumRenderer } from '../session/crypto';
 import { addMessagePadding } from '../session/crypto/BufferPadding';
@@ -1294,7 +1297,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
   }
 
   /**
-   * Updates this conversation with the provided displayName, avatarPath, staticAvatarPath and avatarImageId.
+   * Updates this conversation with the provided displayName, avatarPath, staticAvatarPath and avatarPointer.
    * - displayName can be set to null to not update the display name.
    * - if any of the avatar fields is set, they all need to be set.
    *
@@ -1305,12 +1308,12 @@ export class ConversationModel extends Model<ConversationAttributes> {
       | {
           avatarPath: undefined;
           fallbackAvatarPath: undefined;
-          avatarImageId: undefined;
+          avatarPointer: undefined;
         }
       | {
           avatarPath: string;
           fallbackAvatarPath: string;
-          avatarImageId: number;
+          avatarPointer: string;
         }
     )
   ) {
@@ -1336,10 +1339,10 @@ export class ConversationModel extends Model<ConversationAttributes> {
         this.set({ fallbackAvatarInProfile: newProfile.fallbackAvatarPath });
         changes = true;
       }
-      const existingImageId = this.getAvatarImageId();
+      const existingAvatarPointer = this.getAvatarPointer();
 
-      if (existingImageId !== newProfile.avatarImageId) {
-        this.set({ avatarImageId: newProfile.avatarImageId });
+      if (existingAvatarPointer !== newProfile.avatarPointer) {
+        this.set({ avatarPointer: newProfile.avatarPointer });
         changes = true;
       }
     }
@@ -1373,10 +1376,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
    */
   public getNickname(): string | undefined {
     return this.isPrivate() ? this.get('nickname') || undefined : undefined;
-  }
-
-  public getAvatarImageId(): number | undefined {
-    return this.isPublic() ? this.get('avatarImageId') || undefined : undefined;
   }
 
   public getProfileKey(): string | undefined {
@@ -1699,7 +1698,14 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (this.isPublic() && details.image_id && isNumber(details.image_id)) {
       const roomInfos = OpenGroupData.getV2OpenGroupRoom(this.id);
       if (roomInfos) {
-        void sogsV3FetchPreviewAndSaveIt({ ...roomInfos, imageID: `${details.image_id}` });
+        void sogsV3FetchPreviewAndSaveIt({
+          ...roomInfos,
+          imageFullUrl: fileDetailsToURL({
+            fileId: details.image_id,
+            roomId: roomInfos.roomId,
+            serverUrl: roomInfos.serverUrl,
+          }),
+        });
       }
     }
 
