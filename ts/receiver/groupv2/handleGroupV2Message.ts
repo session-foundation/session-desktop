@@ -2,7 +2,6 @@ import { GroupPubkeyType, PubkeyType, WithGroupPubkey } from 'libsession_util_no
 import { isEmpty, isFinite, isNumber } from 'lodash';
 import { Data } from '../../data/data';
 import { deleteAllMessagesByConvoIdNoConfirmation } from '../../interactions/conversationInteractions';
-import { deleteMessagesFromSwarmOnly } from '../../interactions/conversations/unsendingInteractions';
 import { CONVERSATION_PRIORITIES, ConversationTypeEnum } from '../../models/types';
 import { HexString } from '../../node/hexStrings';
 import { SignalService } from '../../protobuf';
@@ -27,6 +26,7 @@ import {
   UserGroupsWrapperActions,
 } from '../../webworker/workers/browser/libsession_worker_interface';
 import { sendInviteResponseToGroup } from '../../session/sending/group/GroupInviteResponse';
+import { deleteMessagesFromSwarmOnly } from '../../interactions/conversations/deleteMessagesFromSwarmOnly';
 
 type WithSignatureTimestamp = { signatureTimestamp: number };
 type WithAuthor = { author: PubkeyType };

@@ -123,9 +123,6 @@ export function useMessageSender(messageId: string | undefined) {
   return useMessagePropsByMessageId(messageId)?.propsForMessage.sender;
 }
 
-export function useMessageIsDeletableForEveryone(messageId: string | undefined) {
-  return useMessagePropsByMessageId(messageId)?.propsForMessage.isDeletableForEveryone;
-}
 
 export function useMessageServerTimestamp(messageId: string | undefined) {
   return useMessagePropsByMessageId(messageId)?.propsForMessage.serverTimestamp;
