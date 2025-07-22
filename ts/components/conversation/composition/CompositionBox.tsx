@@ -79,7 +79,7 @@ export interface StagedLinkPreviewData {
   title: string | null;
   url: string | null;
   domain: string | null;
-  image?: BetterBlob,
+  image?: BetterBlob;
   imageData?: string;
 }
 
@@ -855,9 +855,8 @@ class CompositionBoxInner extends Component<Props, State> {
       // store the first image preview locally and get the path and details back to include them in the message
       const firstLinkPreviewImage = linkPreview.image;
       if (firstLinkPreviewImage && !isEmpty(firstLinkPreviewImage)) {
-        const storedLinkPreviewAttachment = await AttachmentUtil.getFileAndStoreLocallyImageBlob(
-          firstLinkPreviewImage
-        );
+        const storedLinkPreviewAttachment =
+          await AttachmentUtil.getFileAndStoreLocallyImageBlob(firstLinkPreviewImage);
         if (storedLinkPreviewAttachment) {
           previews = [{ ...sharedDetails, image: storedLinkPreviewAttachment }];
         } else {

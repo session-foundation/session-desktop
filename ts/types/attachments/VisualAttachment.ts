@@ -1,13 +1,12 @@
 /* eslint-disable more/no-then */
 /* global document, URL, Blob */
 
-import { blobToArrayBuffer, dataURLToBlob } from 'blob-util';
+import { dataURLToBlob } from 'blob-util';
 import { toLogFormat } from './Errors';
 
 import { DecryptedAttachmentsManager } from '../../session/crypto/DecryptedAttachmentsManager';
 import { ToastUtils } from '../../session/utils';
 import { GoogleChrome } from '../../util';
-import { autoScaleForThumbnailBlob } from '../../util/attachment/attachmentsUtil';
 import { isAudio } from '../MIME';
 import { formatTimeDurationMs } from '../../util/i18n/formatting/generics';
 import { isTestIntegration } from '../../shared/env_vars';
@@ -15,6 +14,7 @@ import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTyp
 import { processLocalAvatarChange } from '../../util/avatar/processLocalAvatarChange';
 import type { ProcessedLocalAvatarChangeType } from '../../webworker/workers/node/image_processor/image_processor';
 import { callImageProcessorWorker } from '../../webworker/workers/browser/image_processor_interface';
+import { maxThumbnailDetails } from '../../util/attachment/attachmentSizes';
 
 export const THUMBNAIL_CONTENT_TYPE = 'image/png';
 
@@ -63,9 +63,18 @@ export const makeImageThumbnailBuffer = async ({
     );
   }
   const decryptedBlob = await DecryptedAttachmentsManager.getDecryptedBlob(objectUrl, contentType);
-  const scaled = await autoScaleForThumbnailBlob(decryptedBlob);
 
-  return blobToArrayBuffer(scaled);
+  // Calling processForLinkPreviewThumbnail here means the generated thumbnail will be static, even if the original image is animated.
+  // Let's fix this separately in the future, but we'd want to use processForInConversationThumbnail
+  // so that we have a webp when the source was animated.
+  // Note: when we decide to change this, we will also need to update a bunch of things regarding `THUMBNAIL_CONTENT_TYPE` assumed type.
+  const processed = await callImageProcessorWorker(
+    'processForLinkPreviewThumbnail',
+    await decryptedBlob.arrayBuffer(),
+    maxThumbnailDetails.maxSide
+  );
+
+  return processed.outputBuffer;
 };
 
 export const makeVideoScreenshot = async ({

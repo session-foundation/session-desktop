@@ -5,7 +5,6 @@ import { ConvoHub } from '../../session/conversations';
 import { DecryptedAttachmentsManager } from '../../session/crypto/DecryptedAttachmentsManager';
 import { UserUtils } from '../../session/utils';
 import { fromHexToArray, toHex } from '../../session/utils/String';
-import { MIME } from '../../types';
 import { urlToBlob } from '../../types/attachments/VisualAttachment';
 import { processNewAttachment } from '../../types/MessageAttachment';
 import { IMAGE_JPEG } from '../../types/MIME';
@@ -89,14 +88,14 @@ export async function uploadAndSetOurAvatarShared({
   const savedMainAvatar = await processNewAttachment({
     isRaw: true,
     data: mainAvatarDetails.outputBuffer,
-    contentType: MIME.IMAGE_UNKNOWN, // contentType is mostly used to generate previews and screenshot. We do not care for those in this case.
+    contentType: mainAvatarDetails.contentType,
   });
 
   const processedFallbackAvatar = avatarFallback
     ? await processNewAttachment({
         isRaw: true,
         data: avatarFallback.outputBuffer,
-        contentType: MIME.IMAGE_UNKNOWN, // contentType is mostly used to generate previews and screenshot. We do not care for those in this case.
+        contentType: avatarFallback.contentType, // contentType is mostly used to generate previews and screenshot. We do not care for those in this case.
       })
     : null;
 

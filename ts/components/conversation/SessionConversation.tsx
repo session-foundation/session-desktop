@@ -405,10 +405,12 @@ export class SessionConversation extends Component<Props, State> {
       return;
     }
 
-    let blob = null;
-
     try {
-      blob = MIME.isImage(contentType) ? await AttachmentUtil.autoScaleBlob(file) : file;
+      // Here, we just try to scale the attachment to something that is not too big for the file server.
+      // If we can, we use the scaled version, otherwise we use the original (and the filesize check will fail)
+      // Note: we do not save that scaled version here, we just check if will be fine when sending the attachment.
+      // Later, when the message is being sent, we will fetch the file again and scale it down again for upload.
+      const blob = MIME.isImage(contentType) ? await AttachmentUtil.autoScaleFile(file) : file;
 
       if (blob.size > MAX_ATTACHMENT_FILESIZE_BYTES) {
         ToastUtils.pushFileSizeErrorAsByte();

@@ -152,12 +152,12 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
 
           const upgradedMainAvatar = await processNewAttachment({
             data: processed.mainAvatarDetails.outputBuffer,
-            contentType: processed.mainAvatarDetails.format,
+            contentType: processed.mainAvatarDetails.contentType,
           });
           const upgradedFallbackAvatar = processed.avatarFallback
             ? await processNewAttachment({
                 data: processed.avatarFallback.outputBuffer,
-                contentType: processed.avatarFallback.format,
+                contentType: processed.avatarFallback.contentType,
               })
             : null;
           conversation = ConvoHub.use().getOrThrow(convoId);

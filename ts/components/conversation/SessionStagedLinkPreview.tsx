@@ -2,12 +2,17 @@ import { AbortSignal } from 'abort-controller';
 import insecureNodeFetch from 'node-fetch';
 import { StagedLinkPreviewData } from './composition/CompositionBox';
 
-import { AttachmentUtil, LinkPreviewUtil } from '../../util';
+import { LinkPreviewUtil } from '../../util';
 import { fetchLinkPreviewImage } from '../../util/linkPreviewFetch';
 import { LinkPreviews } from '../../util/linkPreviews';
 import { StagedLinkPreview } from './StagedLinkPreview';
-import type { BetterBlob } from '../../util/attachment/attachmentsUtil';
+import {
+  createBetterBlobFromArrayBuffer,
+  type BetterBlob,
+} from '../../util/attachment/attachmentsUtil';
 import { fromArrayBufferToBase64 } from '../../session/utils/String';
+import { callImageProcessorWorker } from '../../webworker/workers/browser/image_processor_interface';
+import { maxThumbnailDetails } from '../../util/attachment/attachmentSizes';
 
 export interface StagedLinkPreviewProps extends StagedLinkPreviewData {
   onClose: (url: string) => void;
@@ -54,8 +59,14 @@ export const getPreview = async (
       }
 
       // Ensure that this file is either small enough or is resized to meet our
-      //   requirements for attachments
-      image = await AttachmentUtil.autoScaleForThumbnailArrayBuffer(fullSizeImage.data);
+      //   requirements for link preview thumbnails
+      const processed = await callImageProcessorWorker(
+        'processForLinkPreviewThumbnail',
+        fullSizeImage.data,
+        maxThumbnailDetails.maxSide
+      );
+
+      image = await createBetterBlobFromArrayBuffer(processed.outputBuffer);
     } catch (error) {
       // We still want to show the preview if we failed to get an image
       window?.log?.error('getPreview failed to get image for link preview:', error.message);
