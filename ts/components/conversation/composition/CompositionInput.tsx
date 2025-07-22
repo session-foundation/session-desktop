@@ -273,6 +273,12 @@ export type ContentEditableProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'o
     /** If true, disables editing (e.g., remove contentEditable or make read-only). */
     disabled?: boolean;
     innerRef?: React.Ref<HTMLDivElement>;
+    /** Called when IME composition starts */
+    onCompositionStart?: (e: React.CompositionEvent<HTMLDivElement>) => void;
+    /** Called when IME composition updates */
+    onCompositionUpdate?: (e: React.CompositionEvent<HTMLDivElement>) => void;
+    /** Called when IME composition ends */
+    onCompositionEnd?: (e: React.CompositionEvent<HTMLDivElement>) => void;
   };
 
 const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditableProps>(
@@ -287,6 +293,9 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
       onKeyUp,
       onKeyDown,
       onClick,
+      onCompositionStart,
+      onCompositionUpdate,
+      onCompositionEnd,
       children,
       ...rest
     } = props;
@@ -296,6 +305,11 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
     const isMount = useRef(true);
     const lastPosition = useRef<number | null>(null);
     const lastHtmlIndex = useRef<number>(0);
+
+    // IME composition state
+    const isComposing = useRef(false);
+    const compositionStartIndex = useRef<number>(0);
+    const compositionData = useRef<string>('');
 
     useDebouncedSpellcheck({
       elementRef: elRef,
@@ -444,6 +458,11 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
       const handler = () => {
         const el = elRef.current;
         if (!el || document.activeElement !== el) {
+          return;
+        }
+
+        // Don't update selection during IME composition
+        if (isComposing.current) {
           return;
         }
 
@@ -652,6 +671,11 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
 
     const onInput = useCallback(
       (e: Omit<ContentEditableEvent, 'target'>) => {
+        // Skip input handling during IME composition
+        if (isComposing.current) {
+          return;
+        }
+
         const hasChanged = handleChange();
         if (hasChanged) {
           emitChangeEvent(e);
@@ -769,6 +793,45 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
       [createSyntheticEvent, handleHistory]
     );
 
+    // IME Composition Event Handlers
+    const handleCompositionStart = useCallback(
+      (e: React.CompositionEvent<HTMLDivElement>) => {
+        isComposing.current = true;
+        compositionStartIndex.current = lastHtmlIndex.current;
+        compositionData.current = '';
+
+        onCompositionStart?.(e);
+      },
+      [onCompositionStart]
+    );
+
+    const handleCompositionUpdate = useCallback(
+      (e: React.CompositionEvent<HTMLDivElement>) => {
+        if (isComposing.current) {
+          compositionData.current = e.data;
+        }
+
+        onCompositionUpdate?.(e);
+      },
+      [onCompositionUpdate]
+    );
+
+    const handleCompositionEnd = useCallback(
+      (e: React.CompositionEvent<HTMLDivElement>) => {
+        isComposing.current = false;
+
+        // Process the final composition result
+        const hasChanged = handleChange();
+        if (hasChanged) {
+          emitChangeEvent(e as any);
+        }
+
+        compositionData.current = '';
+        onCompositionEnd?.(e);
+      },
+      [handleChange, emitChangeEvent, onCompositionEnd]
+    );
+
     useEffect(() => {
       const el = elRef.current;
       if (!el) {
@@ -802,7 +865,8 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
         el.innerHTML = normalizedHtml;
         lastHtml.current = normalizedHtml;
         isMount.current = false;
-      } else if (normalizedHtml !== normalizedCurrentHtml) {
+      } else if (normalizedHtml !== normalizedCurrentHtml && !isComposing.current) {
+        // Don't update DOM during IME composition
         el.innerHTML = normalizedHtml;
         lastHtml.current = normalizedHtml;
         handleChange();
@@ -828,6 +892,9 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
         onKeyDown={_onKeyDown}
         onCopy={onCopy}
         onClick={_onClick}
+        onCompositionStart={handleCompositionStart}
+        onCompositionUpdate={handleCompositionUpdate}
+        onCompositionEnd={handleCompositionEnd}
       >
         {children}
       </div>
