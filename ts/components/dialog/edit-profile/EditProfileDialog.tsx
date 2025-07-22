@@ -11,18 +11,23 @@ import { useHotkey } from '../../../hooks/useHotkey';
 import { useOurAvatarPath, useOurConversationUsername } from '../../../hooks/useParamSelector';
 import { ProfileManager } from '../../../session/profile_manager/ProfileManager';
 import { editProfileModal } from '../../../state/ducks/modalDialog';
-import { SessionWrapperModal } from '../../SessionWrapperModal';
 import { Flex } from '../../basic/Flex';
-import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
-import { Spacer2XL, Spacer3XL, SpacerLG, SpacerSM, SpacerXL } from '../../basic/Text';
-import { CopyToClipboardButton } from '../../buttons/CopyToClipboardButton';
+import { Spacer3XL, SpacerLG, SpacerSM, SpacerXL } from '../../basic/Text';
 import { SessionSpinner } from '../../loading';
 import { ProfileHeader, ProfileName, QRView } from './components';
 import { EmptyDisplayNameError, RetrieveDisplayNameError } from '../../../session/utils/errors';
-import { localize } from '../../../localization/localeTools';
+import { tr } from '../../../localization/localeTools';
 import { sanitizeDisplayNameOrToast } from '../../registration/utils';
 import { useEditProfilePictureCallback } from '../../menuAndSettingsHooks/useEditProfilePictureCallback';
 import { SimpleSessionInput } from '../../inputs/SessionInput';
+import {
+  ModalBasicHeader,
+  ModalActionsContainer,
+  SessionWrapperModal,
+} from '../../SessionWrapperModal';
+import { ModalBackButton } from '../shared/ModalBackButton';
+import { SessionButtonColor, SessionButton } from '../../basic/SessionButton';
+import { CopyToClipboardButton } from '../../buttons';
 
 // #region Shortcuts
 const handleKeyQRMode = (
@@ -120,15 +125,6 @@ const handleKeyEscape = (
 // #endregion
 
 const StyledEditProfileDialog = styled.div`
-  .session-modal {
-    width: 468px;
-    .session-modal__body {
-      width: calc(100% - 80px);
-      margin: 0 auto;
-      overflow: initial;
-    }
-  }
-
   .avatar-center-inner {
     position: relative;
   }
@@ -172,22 +168,6 @@ export const EditProfileDialog = () => {
     dispatch(editProfileModal(null));
   };
 
-  const backButton =
-    mode === 'edit' || mode === 'qr'
-      ? [
-          {
-            iconType: 'chevron',
-            iconRotation: 90,
-            onClick: () => {
-              if (loading) {
-                return;
-              }
-              setMode('default');
-            },
-          },
-        ]
-      : undefined;
-
   const onClickOK = async () => {
     try {
       setLoading(true);
@@ -209,9 +189,9 @@ export const EditProfileDialog = () => {
       setCannotContinue(true);
 
       if (err instanceof EmptyDisplayNameError || err instanceof RetrieveDisplayNameError) {
-        setProfileNameError(localize('displayNameErrorDescription').toString());
+        setProfileNameError(tr('displayNameErrorDescription'));
       } else {
-        setProfileNameError(localize('errorUnknown').toString());
+        setProfileNameError(tr('errorUnknown'));
       }
     } finally {
       setLoading(false);
@@ -260,12 +240,64 @@ export const EditProfileDialog = () => {
   return (
     <StyledEditProfileDialog className="edit-profile-dialog" data-testid="edit-profile-dialog">
       <SessionWrapperModal
-        title={window.i18n('profile')}
-        headerIconButtons={backButton}
-        headerReverse={true}
-        showExitIcon={true}
+        headerChildren={
+          <ModalBasicHeader
+            title={tr('profile')}
+            showExitIcon={true}
+            leftButton={
+              mode === 'edit' || mode === 'qr' ? (
+                <ModalBackButton
+                  onClick={() => {
+                    if (loading) {
+                      return;
+                    }
+                    setMode('default');
+                  }}
+                />
+              ) : undefined
+            }
+          />
+        }
         onClose={closeDialog}
-        additionalClassName={mode === 'default' ? 'edit-profile-default' : undefined}
+        buttonChildren={
+          mode === 'default' || mode === 'qr' || mode === 'lightbox' ? (
+            // some bottom margin as the buttons have a border and appear to close to the edge
+            <ModalActionsContainer extraBottomMargin={true}>
+              <CopyToClipboardButton
+                buttonColor={SessionButtonColor.PrimaryDark}
+                copyContent={us}
+                hotkey={true}
+                reference={copyButtonRef}
+                dataTestId="copy-button-profile-update"
+                style={{ minWidth: '125px' }}
+              />
+              {mode === 'default' ? (
+                <SessionButton
+                  text={tr('qrView')}
+                  onClick={() => {
+                    setMode('qr');
+                  }}
+                  buttonColor={SessionButtonColor.PrimaryDark}
+                  dataTestId="view-qr-code-button"
+                  style={{ minWidth: '125px' }}
+                />
+              ) : null}
+            </ModalActionsContainer>
+          ) : (
+            !loading && (
+              <ModalActionsContainer extraBottomMargin={true}>
+                <SessionButton
+                  text={tr('save')}
+                  onClick={onClickOK}
+                  disabled={cannotContinue}
+                  buttonColor={SessionButtonColor.PrimaryDark}
+                  dataTestId="save-button-profile-update"
+                  style={{ minWidth: '125px' }}
+                />
+              </ModalActionsContainer>
+            )
+          )
+        }
       >
         {mode === 'qr' ? (
           <QRView sessionID={us} setMode={setMode} />
@@ -304,7 +336,7 @@ export const EditProfileDialog = () => {
         {mode === 'edit' && (
           <SimpleSessionInput
             autoFocus={true}
-            placeholder={localize('displayNameEnter').toString()}
+            placeholder={tr('displayNameEnter')}
             value={profileName}
             onValueChanged={(name: string) => {
               setProfileName(name);
@@ -333,49 +365,8 @@ export const EditProfileDialog = () => {
           width={'100%'}
         >
           <YourSessionIDPill />
-          <SpacerLG />
           <SessionIDNonEditable dataTestId="your-account-id" sessionId={us} />
           <SessionSpinner loading={loading} height={'74px'} />
-          {!loading ? <Spacer2XL /> : null}
-          {mode === 'default' || mode === 'qr' || mode === 'lightbox' ? (
-            <Flex
-              $container={true}
-              $justifyContent={mode === 'default' ? 'space-between' : 'center'}
-              $alignItems="center"
-              $flexGap="var(--margins-lg)"
-              width={'100%'}
-            >
-              <CopyToClipboardButton
-                buttonColor={SessionButtonColor.PrimaryDark}
-                copyContent={us}
-                hotkey={true}
-                reference={copyButtonRef}
-                dataTestId="copy-button-profile-update"
-              />
-              {mode === 'default' ? (
-                <SessionButton
-                  text={window.i18n('qrView')}
-                  onClick={() => {
-                    setMode('qr');
-                  }}
-                  buttonColor={SessionButtonColor.PrimaryDark}
-                  dataTestId="view-qr-code-button"
-                />
-              ) : null}
-            </Flex>
-          ) : (
-            !loading && (
-              <SessionButton
-                text={window.i18n('save')}
-                onClick={onClickOK}
-                disabled={cannotContinue}
-                buttonColor={SessionButtonColor.PrimaryDark}
-                dataTestId="save-button-profile-update"
-              />
-            )
-          )}
-
-          {!loading ? <SpacerSM /> : null}
         </StyledSessionIdSection>
       </SessionWrapperModal>
     </StyledEditProfileDialog>

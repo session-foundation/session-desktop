@@ -13,7 +13,8 @@ import {
   useSelectedIsPublic,
 } from '../../../state/selectors/selectedConversation';
 import { Avatar, AvatarSize } from '../../avatar/Avatar';
-import { SessionIconButton } from '../../icon';
+import { SessionLucideIconButton } from '../../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { useIsGroupV2, useIsLegacyGroup } from '../../../hooks/useParamSelector';
 import { useLibGroupInvitePending } from '../../../state/selectors/userGroups';
 
@@ -50,23 +51,6 @@ export const AvatarHeader = (props: { pubkey: string; onAvatarClick?: () => void
   );
 };
 
-export const BackButton = (props: { onGoBack: () => void; showBackButton: boolean }) => {
-  const { onGoBack, showBackButton } = props;
-  if (!showBackButton) {
-    return null;
-  }
-
-  return (
-    <SessionIconButton
-      iconType="chevron"
-      iconSize="large"
-      iconRotation={90}
-      onClick={onGoBack}
-      dataTestId="back-button-message-details"
-    />
-  );
-};
-
 export const CallButton = () => {
   const isPrivate = useSelectedIsPrivate();
   const isBlocked = useSelectedIsBlocked();
@@ -91,16 +75,14 @@ export const CallButton = () => {
   }
 
   return (
-    <SessionIconButton
-      iconType="phone"
+    <SessionLucideIconButton
+      unicode={LUCIDE_ICONS_UNICODE.PHONE}
       iconSize="large"
-      iconPadding="2px"
-      // negative margin to keep conversation header title centered
-      margin="0 10px 0 -32px"
       onClick={() => {
         void callRecipient(selectedConvoKey, canCall);
       }}
       dataTestId="call-button"
+      margin="0 var(--margins-sm) 0 0"
       disabled={isBlocked || !canCall}
     />
   );

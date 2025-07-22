@@ -5,53 +5,18 @@ import { PubKey } from '../../../../session/types/PubKey';
 
 import { Localizer, type LocalizerProps } from '../../../basic/Localizer';
 import { nativeEmojiData } from '../../../../util/emoji';
+import { useSelectedIsPublic } from '../../../../state/selectors/selectedConversation';
 
-export type TipPosition = 'center' | 'left' | 'right';
-
-// TODO: Look into adjusting the width to match the new strings better
-export const POPUP_WIDTH = 216; // px
-
-export const StyledPopupContainer = styled.div<{ tooltipPosition: TipPosition }>`
+export const StyledPopupContainer = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: ${POPUP_WIDTH}px;
-  height: 72px;
-  z-index: 5;
-
-  background-color: var(--message-bubbles-received-background-color);
-  color: var(--message-bubbles-received-text-color);
-  box-shadow: 0px 0px 13px rgba(0, 0, 0, 0.51);
-  font-size: 12px;
-  font-weight: 600;
+  min-height: 72px;
+  width: 100%;
+  font-size: var(--font-size-sm);
+  font-weight: bold;
   overflow-wrap: break-word;
-  padding: 16px;
-  border-radius: 12px;
   cursor: pointer;
-
-  &:after {
-    content: '';
-    position: absolute;
-    top: calc(100% - 19px);
-    left: ${props => {
-      switch (props.tooltipPosition) {
-        case 'left':
-          return '24px';
-        case 'right':
-          return 'calc(100% - 78px)';
-        case 'center':
-        default:
-          return 'calc(100% - 118px)';
-      }
-    }};
-    width: 22px;
-    height: 22px;
-    background-color: var(--message-bubbles-received-background-color);
-    transform: rotate(45deg);
-    border-radius: 3px;
-    transform: scaleY(1.4) rotate(45deg);
-    clip-path: polygon(100% 100%, 7.2px 100%, 100% 7.2px);
-  }
 `;
 
 const StyledEmoji = styled.span`
@@ -60,17 +25,27 @@ const StyledEmoji = styled.span`
 `;
 
 const generateContactsString = (
-  senders: Array<string>
+  senders: Array<string>,
+  isPublic: boolean
 ): { contacts: Array<string>; hasMe: boolean } => {
   const contacts: Array<string> = [];
   let hasMe = false;
   senders.forEach(sender => {
-    // TODO truncate with ellipsis if too long?
     const contact = findAndFormatContact(sender);
+
     if (contact.isMe) {
       hasMe = true;
     } else {
-      contacts.push(contact?.profileName ?? contact?.name ?? PubKey.shorten(sender));
+      const shortPubkey = PubKey.shorten(contact.pubkey);
+      let resolvedName = contact?.profileName ?? contact?.name;
+
+      // Shorten the name if it's too long, the box these names are listed in is pretty small
+      if (resolvedName && resolvedName.length > 13) {
+        resolvedName = `${resolvedName.slice(0, 10)}…`;
+      }
+
+      const nameSuffix = isPublic && resolvedName ? shortPubkey : '';
+      contacts.push(`${resolvedName ?? shortPubkey} ${nameSuffix}`.trim());
     }
   });
   return { contacts, hasMe };
@@ -109,17 +84,21 @@ type Props = {
   emoji: string;
   count: number;
   senders: Array<string>;
-  tooltipPosition?: TipPosition;
   onClick: (...args: Array<any>) => void;
 };
 
 export const ReactionPopup = (props: Props) => {
-  const { emoji, senders, tooltipPosition = 'center', count, onClick } = props;
+  const { emoji, senders, count, onClick } = props;
+
+  const isPublic = useSelectedIsPublic();
 
   const emojiName = nativeEmojiData?.ids?.[emoji];
   const emojiAriaLabel = nativeEmojiData?.ariaLabels?.[emoji];
 
-  const { contacts, hasMe } = useMemo(() => generateContactsString(senders), [senders]);
+  const { contacts, hasMe } = useMemo(
+    () => generateContactsString(senders, isPublic),
+    [senders, isPublic]
+  );
 
   const i18nProps = useMemo(
     () => getI18nComponentProps(hasMe, contacts, count, emoji, emojiName),
@@ -127,7 +106,7 @@ export const ReactionPopup = (props: Props) => {
   );
 
   return (
-    <StyledPopupContainer tooltipPosition={tooltipPosition} onClick={onClick}>
+    <StyledPopupContainer onClick={onClick}>
       <Localizer {...i18nProps} />
       <StyledEmoji role={'img'} aria-label={emojiAriaLabel}>
         {emoji}

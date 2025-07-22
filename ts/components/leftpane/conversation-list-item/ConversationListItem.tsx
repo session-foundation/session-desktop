@@ -25,7 +25,6 @@ import {
 } from '../../../hooks/useParamSelector';
 import { useIsSearchingForType } from '../../../state/selectors/search';
 import { useSelectedConversationKey } from '../../../state/selectors/selectedConversation';
-import { SpacerXS } from '../../basic/Text';
 import { MemoConversationListItemContextMenu } from '../../menu/ConversationListItemContextMenu';
 import { ConversationListItemHeaderItem } from './HeaderItem';
 import { MessageItem } from './MessageItem';
@@ -123,12 +122,7 @@ export const ConversationListItem = (props: Props) => {
           <AvatarItem />
           <div className="module-conversation-list-item__content">
             <ConversationListItemHeaderItem />
-            {!isSearch ? (
-              <>
-                <SpacerXS />
-                <MessageItem />
-              </>
-            ) : null}
+            {!isSearch ? <MessageItem /> : null}
           </div>
         </div>
         <Portal>

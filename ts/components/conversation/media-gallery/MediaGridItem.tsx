@@ -1,5 +1,5 @@
+import styled from 'styled-components';
 import { useState } from 'react';
-import clsx from 'clsx';
 
 import { useDisableDrag } from '../../../hooks/useDisableDrag';
 import { useEncryptedFileFetch } from '../../../hooks/useEncryptedFileFetch';
@@ -7,11 +7,33 @@ import { LightBoxOptions, updateLightBoxOptions } from '../../../state/ducks/mod
 import { isImageTypeSupported, isVideoTypeSupported } from '../../../util/GoogleChrome';
 import { MediaItemType } from '../../lightbox/LightboxGallery';
 import { AriaLabels } from '../../../util/hardcodedAriaLabels';
+import { PlayButtonCenteredAbsolute } from '../../buttons/PlayButton';
+import { LucideIcon } from '../../icon/LucideIcon';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 
 type Props = {
   mediaItem: MediaItemType;
   mediaItems: Array<MediaItemType>;
 };
+
+const StyledMediaGridItem = styled.div`
+  cursor: pointer;
+  background-color: var(--message-link-preview-background-color);
+  position: relative;
+  width: 100%;
+  height: 100%;
+`;
+
+const StyledMediaGridItemImage = styled.img`
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+`;
+
+const StyledMediaGridItemImageContainer = styled.div`
+  object-fit: cover;
+  position: relative;
+`;
 
 const MediaGridItemContent = (props: Props) => {
   const { mediaItem } = props;
@@ -38,15 +60,16 @@ const MediaGridItemContent = (props: Props) => {
   if (contentType && isImageTypeSupported(contentType)) {
     if (imageBroken || !srcData) {
       return (
-        <div
-          className={clsx('module-media-grid-item__icon', 'module-media-grid-item__icon-image')}
+        <LucideIcon
+          iconColor="var(--button-icon-stroke-color)"
+          iconSize="small"
+          unicode={LUCIDE_ICONS_UNICODE.IMAGE}
         />
       );
     }
 
     return (
-      <img
-        className="module-media-grid-item__image"
+      <StyledMediaGridItemImage
         src={srcData}
         alt={AriaLabels.imageSentInConversation}
         onError={onImageError}
@@ -57,37 +80,33 @@ const MediaGridItemContent = (props: Props) => {
   if (contentType && isVideoTypeSupported(contentType)) {
     if (imageBroken || !srcData) {
       return (
-        <div
-          className={clsx('module-media-grid-item__icon', 'module-media-grid-item__icon-video')}
+        <LucideIcon
+          iconColor="var(--button-icon-stroke-color)"
+          iconSize="small"
+          unicode={LUCIDE_ICONS_UNICODE.CLAPERBOARD}
         />
       );
     }
 
     return (
-      <div className="module-media-grid-item__image-container">
-        <img
-          className="module-media-grid-item__image"
+      <StyledMediaGridItemImageContainer>
+        <StyledMediaGridItemImage
           src={srcData}
           alt={AriaLabels.imageSentInConversation}
           onError={onImageError}
           onDragStart={disableDrag}
         />
-        <div className="module-media-grid-item__circle-overlay">
-          <div className="module-media-grid-item__play-overlay" />
-        </div>
-      </div>
+        <PlayButtonCenteredAbsolute iconSize="medium" />
+      </StyledMediaGridItemImageContainer>
     );
   }
 
-  return (
-    <div className={clsx('module-media-grid-item__icon', 'module-media-grid-item__icon-generic')} />
-  );
+  return <LucideIcon iconSize="small" unicode={LUCIDE_ICONS_UNICODE.FILE} />;
 };
 
 export const MediaGridItem = (props: Props) => {
   return (
-    <div
-      className="module-media-grid-item"
+    <StyledMediaGridItem
       role="button"
       onClick={() => {
         const lightBoxOptions: LightBoxOptions = {
@@ -99,6 +118,6 @@ export const MediaGridItem = (props: Props) => {
       }}
     >
       <MediaGridItemContent {...props} />
-    </div>
+    </StyledMediaGridItem>
   );
 };

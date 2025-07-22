@@ -1,3 +1,4 @@
+import { tr } from '../localization/localeTools';
 import { joinOpenGroupV2WithUIEvents } from '../session/apis/open_group_api/opengroupV2/JoinOpenGroupV2';
 import {
   sogsV3AddAdmin,
@@ -122,8 +123,7 @@ export async function removeSenderFromModerator(sender: string, convoId: string)
     const convo = ConvoHub.use().getOrThrow(convoId);
 
     const userDisplayName =
-      ConvoHub.use().get(sender)?.getNicknameOrRealUsernameOrPlaceholder() ||
-      window.i18n('unknown');
+      ConvoHub.use().get(sender)?.getNicknameOrRealUsernameOrPlaceholder() || tr('unknown');
 
     const roomInfo = convo.toOpenGroupV2();
     const res = await sogsV3RemoveAdmins([pubKeyToRemove], roomInfo);
@@ -154,8 +154,7 @@ export async function addSenderAsModerator(sender: string, convoId: string) {
     } else {
       window?.log?.info(`${pubKeyToAdd.key} added to moderators...`);
       const userDisplayName =
-        ConvoHub.use().get(sender)?.getNicknameOrRealUsernameOrPlaceholder() ||
-        window.i18n('unknown');
+        ConvoHub.use().get(sender)?.getNicknameOrRealUsernameOrPlaceholder() || tr('unknown');
       ToastUtils.pushUserAddedToModerators([userDisplayName]);
     }
   } catch (e) {
@@ -164,11 +163,15 @@ export async function addSenderAsModerator(sender: string, convoId: string) {
 }
 
 export async function addUserPermissions(
-  sender: string,
-  convoId: string,
+  sender: string | undefined,
+  convoId: string | undefined,
   permissions: Array<OpenGroupPermissionType>
 ) {
   try {
+    if (typeof convoId === 'undefined') {
+      window?.log?.warn('undefined convo passed to clearUserPermissions');
+      return;
+    }
     const user = PubKey.cast(sender);
     const convo = ConvoHub.use().getOrThrow(convoId);
 
@@ -189,11 +192,15 @@ export async function addUserPermissions(
 }
 
 export async function clearUserPermissions(
-  sender: string,
-  convoId: string,
+  sender: string | undefined,
+  convoId: string | undefined,
   permissions: Array<OpenGroupPermissionType>
 ) {
   try {
+    if (typeof convoId === 'undefined') {
+      window?.log?.warn('undefined convo passed to clearUserPermissions');
+      return;
+    }
     const user = PubKey.cast(sender);
     const convo = ConvoHub.use().getOrThrow(convoId);
 
@@ -220,11 +227,11 @@ const acceptOpenGroupInvitationV2 = (completeUrl: string, roomName?: string) => 
 
   window.inboxStore?.dispatch(
     updateConfirmModal({
-      title: window.i18n('communityJoin'),
+      title: tr('communityJoin'),
       i18nMessage: {
         token: 'communityJoinDescription',
         args: {
-          community_name: roomName || window.i18n('unknown'),
+          community_name: roomName || tr('unknown'),
         },
       },
       onClickOk: async () => {
@@ -232,7 +239,7 @@ const acceptOpenGroupInvitationV2 = (completeUrl: string, roomName?: string) => 
       },
 
       onClickClose,
-      okText: window.i18n('join'),
+      okText: tr('join'),
     })
   );
   // this function does not throw, and will showToasts if anything happens

@@ -8,10 +8,15 @@ import { Avatar, AvatarSize } from '../avatar/Avatar';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
 import { SpacerLG } from '../basic/Text';
 import { CopyToClipboardButton } from '../buttons/CopyToClipboardButton';
-import { SessionWrapperModal } from '../SessionWrapperModal';
 import { ConversationTypeEnum } from '../../models/types';
 import { Flex } from '../basic/Flex';
 import { SessionIDNonEditable } from '../basic/YourSessionIDPill';
+import {
+  ModalBasicHeader,
+  ModalActionsContainer,
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
+import { tr } from '../../localization/localeTools';
 
 export const UserDetailsDialog = (props: UserDetailsModalState) => {
   const [isEnlargedImageShown, setIsEnlargedImageShown] = useState(false);
@@ -53,10 +58,22 @@ export const UserDetailsDialog = (props: UserDetailsModalState) => {
 
   return (
     <SessionWrapperModal
-      title={props.userName}
+      headerChildren={<ModalBasicHeader title={props.userName} showExitIcon={true} />}
       onClose={closeDialog}
-      showExitIcon={true}
-      additionalClassName="user-details-dialog"
+      buttonChildren={
+        <ModalActionsContainer>
+          <SessionButton
+            text={tr('conversationsNew')}
+            buttonType={SessionButtonType.Simple}
+            onClick={onClickStartConversation}
+          />
+          <CopyToClipboardButton
+            copyContent={props.conversationId}
+            buttonType={SessionButtonType.Simple}
+            hotkey={true}
+          />
+        </ModalActionsContainer>
+      }
     >
       <div className="avatar-center">
         <div className="avatar-center-inner">
@@ -73,19 +90,6 @@ export const UserDetailsDialog = (props: UserDetailsModalState) => {
       <Flex $container={true} width={'100%'} $justifyContent="center" $alignItems="center">
         <SessionIDNonEditable dataTestId="invalid-data-testid" sessionId={props.conversationId} />
       </Flex>
-      <SpacerLG />
-      <div className="session-modal__button-group__center">
-        <SessionButton
-          text={window.i18n('conversationsNew')}
-          buttonType={SessionButtonType.Simple}
-          onClick={onClickStartConversation}
-        />
-        <CopyToClipboardButton
-          copyContent={props.conversationId}
-          buttonType={SessionButtonType.Simple}
-          hotkey={true}
-        />
-      </div>
     </SessionWrapperModal>
   );
 };

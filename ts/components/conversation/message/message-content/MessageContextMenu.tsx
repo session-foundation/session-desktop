@@ -48,15 +48,10 @@ import { DeleteItem } from '../../../menu/items/DeleteMessage/DeleteMessageMenuI
 import { RetryItem } from '../../../menu/items/RetrySend/RetrySendMenuItem';
 import { useBanUserCb } from '../../../menuAndSettingsHooks/useBanUser';
 import { useUnbanUserCb } from '../../../menuAndSettingsHooks/useUnbanUser';
-import {
-  sogsV3RemoveAdmins,
-  sogsV3AddAdmin,
-} from '../../../../session/apis/open_group_api/sogsv3/sogsV3AddRemoveMods';
-import { ConvoHub } from '../../../../session/conversations';
-import { PubKey } from '../../../../session/types';
-import { ToastUtils } from '../../../../session/utils';
-import { localize } from '../../../../localization/localeTools';
+import { tr } from '../../../../localization/localeTools';
 import { sectionActions } from '../../../../state/ducks/section';
+import { useRemoveSenderFromCommunityAdmin } from '../../../menuAndSettingsHooks/useRemoveSenderFromCommunityAdmin';
+import { useAddSenderAsCommunityAdmin } from '../../../menuAndSettingsHooks/useAddSenderAsCommunityAdmin';
 import { useServerBanUserCb } from '../../../menuAndSettingsHooks/useServerBanUser';
 import { useServerUnbanUserCb } from '../../../menuAndSettingsHooks/useServerUnbanUser';
 
@@ -97,53 +92,6 @@ const StyledEmojiPanelContainer = styled.div<{ x: number; y: number }>`
   }
 `;
 
-async function removeSenderFromCommunityAdmin(sender: string, convoId: string) {
-  try {
-    const pubKeyToRemove = PubKey.cast(sender);
-    const convo = ConvoHub.use().getOrThrow(convoId);
-
-    const userDisplayName =
-      ConvoHub.use().get(sender)?.getNicknameOrRealUsernameOrPlaceholder() ||
-      window.i18n('unknown');
-
-    const roomInfo = convo.toOpenGroupV2();
-    const res = await sogsV3RemoveAdmins([pubKeyToRemove], roomInfo);
-    if (!res) {
-      window?.log?.warn('failed to remove moderator:', res);
-
-      ToastUtils.pushFailedToRemoveFromModerator([userDisplayName]);
-    } else {
-      window?.log?.info(`${pubKeyToRemove.key} removed from moderators...`);
-      ToastUtils.pushUserRemovedFromModerators([userDisplayName]);
-    }
-  } catch (e) {
-    window?.log?.error('Got error while removing moderator:', e);
-  }
-}
-
-async function addSenderAsCommunityAdmin(sender: string, convoId: string) {
-  try {
-    const pubKeyToAdd = PubKey.cast(sender);
-    const convo = ConvoHub.use().getOrThrow(convoId);
-
-    const roomInfo = convo.toOpenGroupV2();
-    const res = await sogsV3AddAdmin([pubKeyToAdd], roomInfo);
-    if (!res) {
-      window?.log?.warn('failed to add moderator:', res);
-
-      ToastUtils.pushFailedToAddAsModerator();
-    } else {
-      window?.log?.info(`${pubKeyToAdd.key} added to moderators...`);
-      const userDisplayName =
-        ConvoHub.use().get(sender)?.getNicknameOrRealUsernameOrPlaceholder() ||
-        window.i18n('unknown');
-      ToastUtils.pushUserAddedToModerators([userDisplayName]);
-    }
-  } catch (e) {
-    window?.log?.error('Got error while adding moderator:', e);
-  }
-}
-
 const CommunityAdminActionItems = ({ messageId }: WithMessageId) => {
   const convoId = useSelectedConversationKey();
 
@@ -155,24 +103,15 @@ const CommunityAdminActionItems = ({ messageId }: WithMessageId) => {
   const serverBanUser = useServerBanUserCb(convoId, sender);
   const serverUnbanUser = useServerUnbanUserCb(convoId, sender);
 
-  if (!convoId || !sender || !banUserCb || !unbanUserCb || !serverBanUser || !serverUnbanUser) {
-    return null;
-  }
+  const removeSenderFromCommunityAdminCb = useRemoveSenderFromCommunityAdmin({
+    conversationId: convoId,
+    senderId: sender,
+  });
 
-  /**
-   * Ideally we'd make those calls use a loader, but because this is part of the message context
-   * menu, we don't have one.
-   * Also, those are not using the `useRemoveModeratorsCb/useAddModeratorsCb` hooks.
-   * The reason is that when we do the action as part of the message context menu,
-   * we want to do the action of the right-clicked user, without showing the corresponding modal.
-   */
-  const addModerator = () => {
-    void addSenderAsCommunityAdmin(sender, convoId);
-  };
-
-  const removeModerator = () => {
-    void removeSenderFromCommunityAdmin(sender, convoId);
-  };
+  const addSenderAsCommunityAdminCb = useAddSenderAsCommunityAdmin({
+    conversationId: convoId,
+    senderId: sender,
+  });
 
   const addUploadPermission = () => {
     void MessageInteraction.addUserPermissions(sender, convoId, ['upload']);
@@ -188,35 +127,43 @@ const CommunityAdminActionItems = ({ messageId }: WithMessageId) => {
   const canSenderUpload = true;
   const canSenderNotUpload = true;
 
+  // Note: add/removeSenderFromCommunityAdminCb can be null if we are a moderator only, see below
+  if (!convoId || !sender || !banUserCb || !unbanUserCb || !serverBanUser || !serverUnbanUser) {
+    return null;
+  }
+
   return (
     <>
-      <ItemWithDataTestId onClick={banUserCb}>{localize('banUser')}</ItemWithDataTestId>
-      <ItemWithDataTestId onClick={unbanUserCb}>{localize('banUnbanUser')}</ItemWithDataTestId>
+      <ItemWithDataTestId onClick={banUserCb}>{tr('banUser')}</ItemWithDataTestId>
+      <ItemWithDataTestId onClick={unbanUserCb}>{tr('banUnbanUser')}</ItemWithDataTestId>
+      {/* only an admin can promote/remove moderators from a community. Another moderator cannot. */}
       {isSenderAdmin ? (
-        <ItemWithDataTestId onClick={removeModerator}>
-          {localize('adminRemoveAsAdmin')}
+        removeSenderFromCommunityAdminCb ? (
+          <ItemWithDataTestId onClick={removeSenderFromCommunityAdminCb}>
+            {tr('adminRemoveAsAdmin')}
+          </ItemWithDataTestId>
+        ) : null
+      ) : addSenderAsCommunityAdminCb ? (
+        <ItemWithDataTestId onClick={addSenderAsCommunityAdminCb}>
+          {tr('adminPromoteToAdmin')}
         </ItemWithDataTestId>
-      ) : (
-        <ItemWithDataTestId onClick={addModerator}>
-          {localize('adminPromoteToAdmin')}
-        </ItemWithDataTestId>
-      )}
+      ) : null}
       <ItemWithDataTestId onClick={serverBanUser}>
-        {localize('serverBanUser').toString()}
+        {tr('serverBanUser').toString()}
       </ItemWithDataTestId>
       <ItemWithDataTestId onClick={serverUnbanUser}>
-        {localize('serverUnbanUser').toString()}
+        {tr('serverUnbanUser').toString()}
       </ItemWithDataTestId>
       {!isSenderAdmin && isRoomUploadRestricted && (
         <>
           {canSenderUpload && (
             <ItemWithDataTestId onClick={addUploadPermission}>
-              {localize('addUploadPermission').toString()}
+              {tr('addUploadPermission').toString()}
             </ItemWithDataTestId>
           )}
           {canSenderNotUpload && (
             <ItemWithDataTestId onClick={clearUploadPermission}>
-              {localize('clearUploadPermission').toString()}
+              {tr('clearUploadPermission').toString()}
             </ItemWithDataTestId>
           )}
         </>
@@ -411,11 +358,9 @@ export const MessageContextMenu = (props: Props) => {
             animation={getMenuAnimation()}
           >
             {attachments?.length && attachments.every(m => !m.pending && m.path) ? (
-              <ItemWithDataTestId onClick={saveAttachment}>
-                {window.i18n('save')}
-              </ItemWithDataTestId>
+              <ItemWithDataTestId onClick={saveAttachment}>{tr('save')}</ItemWithDataTestId>
             ) : null}
-            <ItemWithDataTestId onClick={copyText}>{window.i18n('copy')}</ItemWithDataTestId>
+            <ItemWithDataTestId onClick={copyText}>{tr('copy')}</ItemWithDataTestId>
             <ItemWithDataTestId
               onClick={() => {
                 void showMessageInfoOverlay({ messageId, dispatch });
@@ -459,11 +404,11 @@ export const MessageContextMenu = (props: Props) => {
             />
           )}
           {attachments?.length && attachments.every(m => !m.pending && m.path) ? (
-            <ItemWithDataTestId onClick={saveAttachment}>{window.i18n('save')}</ItemWithDataTestId>
+            <ItemWithDataTestId onClick={saveAttachment}>{tr('save')}</ItemWithDataTestId>
           ) : null}
-          <ItemWithDataTestId onClick={copyText}>{window.i18n('copy')}</ItemWithDataTestId>
+          <ItemWithDataTestId onClick={copyText}>{tr('copy')}</ItemWithDataTestId>
           {(isSent || !isOutgoing) && (
-            <ItemWithDataTestId onClick={onReply}>{window.i18n('reply')}</ItemWithDataTestId>
+            <ItemWithDataTestId onClick={onReply}>{tr('reply')}</ItemWithDataTestId>
           )}
           <ItemWithDataTestId
             onClick={() => {

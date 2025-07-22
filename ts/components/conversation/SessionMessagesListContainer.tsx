@@ -27,6 +27,9 @@ import {
 import { getSelectedConversationKey } from '../../state/selectors/selectedConversation';
 import { SessionMessagesList } from './SessionMessagesList';
 import { TypingBubble } from './TypingBubble';
+import { StyledMessageBubble } from './message/message-content/MessageBubble';
+import { StyledMentionAnother } from './AddMentions';
+import { MessagesContainerRefContext } from '../../contexts/MessagesContainerRefContext';
 
 export type SessionMessageListProps = {
   messageContainerRef: RefObject<HTMLDivElement>;
@@ -61,6 +64,14 @@ const StyledMessagesContainer = styled.div`
     height: 40px;
     width: 40px;
     border-radius: 50%;
+  }
+
+  ${StyledMessageBubble} {
+    user-select: text;
+  }
+
+  ${StyledMentionAnother} {
+    user-select: all;
   }
 `;
 
@@ -111,42 +122,44 @@ class SessionMessagesListContainerInner extends Component<Props> {
     }
 
     return (
-      <StyledMessagesContainer
-        className="messages-container"
-        id={messageContainerDomID}
-        onScroll={this.handleScroll}
-        ref={this.props.messageContainerRef}
-        data-testid="messages-container"
-      >
-        <StyledTypingBubbleContainer>
-          <TypingBubble
-            conversationType={conversation.type}
-            isTyping={!!conversation.isTyping}
-            key="typing-bubble"
-          />
-        </StyledTypingBubbleContainer>
+      <MessagesContainerRefContext.Provider value={this.props.messageContainerRef}>
+        <StyledMessagesContainer
+          className="messages-container"
+          id={messageContainerDomID}
+          onScroll={this.handleScroll}
+          ref={this.props.messageContainerRef}
+          data-testid="messages-container"
+        >
+          <StyledTypingBubbleContainer>
+            <TypingBubble
+              conversationType={conversation.type}
+              isTyping={!!conversation.isTyping}
+              key="typing-bubble"
+            />
+          </StyledTypingBubbleContainer>
 
-        <ScrollToLoadedMessageContext.Provider value={this.scrollToLoadedMessage}>
-          <SessionMessagesList
-            scrollAfterLoadMore={(
-              messageIdToScrollTo: string,
-              type: 'load-more-top' | 'load-more-bottom'
-            ) => {
-              this.scrollToMessage(messageIdToScrollTo, type);
-            }}
-            onPageDownPressed={this.scrollPgDown}
-            onPageUpPressed={this.scrollPgUp}
-            onHomePressed={this.scrollTop}
-            onEndPressed={this.scrollEnd}
-          />
-        </ScrollToLoadedMessageContext.Provider>
+          <ScrollToLoadedMessageContext.Provider value={this.scrollToLoadedMessage}>
+            <SessionMessagesList
+              scrollAfterLoadMore={(
+                messageIdToScrollTo: string,
+                type: 'load-more-top' | 'load-more-bottom'
+              ) => {
+                this.scrollToMessage(messageIdToScrollTo, type);
+              }}
+              onPageDownPressed={this.scrollPgDown}
+              onPageUpPressed={this.scrollPgUp}
+              onHomePressed={this.scrollTop}
+              onEndPressed={this.scrollEnd}
+            />
+          </ScrollToLoadedMessageContext.Provider>
 
-        <SessionScrollButton
-          // eslint-disable-next-line @typescript-eslint/no-misused-promises
-          onClickScrollBottom={this.props.scrollToNow}
-          key="scroll-down-button"
-        />
-      </StyledMessagesContainer>
+          <SessionScrollButton
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
+            onClickScrollBottom={this.props.scrollToNow}
+            key="scroll-down-button"
+          />
+        </StyledMessagesContainer>
+      </MessagesContainerRefContext.Provider>
     );
   }
 

@@ -14,6 +14,7 @@ import {
   getHideRecoveryPasswordModalState,
   getInviteContactModal,
   getLightBoxOptions,
+  getSessionProInfoModalState,
   getOnionPathDialog,
   getOpenUrlModalState,
   getReactClearAllDialog,
@@ -26,6 +27,7 @@ import {
   getUpdateGroupNameModal,
   getUpdateGroupPermissionsModal,
   getUserDetailsModal,
+  getLocalizedPopupDialogState,
 } from '../../state/selectors/modal';
 import { LightboxGallery } from '../lightbox/LightboxGallery';
 import { BanOrUnBanUserDialog, ServerBanOrUnBanUserDialog } from './BanOrUnbanUserDialog';
@@ -52,6 +54,8 @@ import { DebugMenuModal } from './debug/DebugMenuModal';
 import { ConversationSettingsDialog } from './conversationSettings/conversationSettingsDialog';
 import { SessionNetworkModal } from './network/SessionNetworkModal';
 import { SessionConfirm } from './SessionConfirm';
+import { SessionProInfoModal } from './SessionProInfoModal';
+import { LocalizedPopupDialog } from './LocalizedPopupDialog';
 
 export const ModalContainer = () => {
   const confirmModalState = useSelector(getConfirmModal);
@@ -76,6 +80,8 @@ export const ModalContainer = () => {
   const editProfilePictureModalState = useSelector(getEditProfilePictureModalState);
   const hideRecoveryPasswordModalState = useSelector(getHideRecoveryPasswordModalState);
   const openUrlModalState = useSelector(getOpenUrlModalState);
+  const localizedPopupDialogState = useSelector(getLocalizedPopupDialogState);
+  const sessionProInfoState = useSelector(getSessionProInfoModalState);
   const lightBoxOptions = useSelector(getLightBoxOptions);
   const debugMenuModalState = useSelector(getDebugMenuModalState);
   const conversationSettingsModalState = useSelector(getConversationSettingsModalState);
@@ -121,8 +127,10 @@ export const ModalContainer = () => {
       {hideRecoveryPasswordModalState && (
         <HideRecoveryPasswordDialog {...hideRecoveryPasswordModalState} />
       )}
+      {localizedPopupDialogState && <LocalizedPopupDialog {...localizedPopupDialogState} />}
       {lightBoxOptions && <LightboxGallery {...lightBoxOptions} />}
       {openUrlModalState && <OpenUrlModal {...openUrlModalState} />}
+      {sessionProInfoState && <SessionProInfoModal {...sessionProInfoState} />}
       {/* Should be on top of all other modals */}
       {confirmModalState && <SessionConfirm {...confirmModalState} />}
     </>

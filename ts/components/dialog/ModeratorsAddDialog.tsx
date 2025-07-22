@@ -7,16 +7,19 @@ import { PubKey } from '../../session/types';
 import { ToastUtils } from '../../session/utils';
 import { ConvoHub } from '../../session/conversations';
 import { updateAddModeratorsModal } from '../../state/ducks/modalDialog';
-import { Flex } from '../basic/Flex';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
 import { SessionSpinner } from '../loading';
-import { localize } from '../../localization/localeTools';
-import { I18nSubText } from '../basic/I18nSubText';
+import { tr } from '../../localization/localeTools';
 import { MAX_SUBREQUESTS_COUNT } from '../../session/apis/snode_api/SnodeRequestTypes';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
-import { SimpleSessionInput } from '../inputs/SessionInput';
-import { SpacerMD } from '../basic/Text';
+import {
+  ModalBasicHeader,
+  ModalActionsContainer,
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
+import { ModalSimpleSessionInput } from '../inputs/SessionInput';
 import { ClearInputButton } from '../inputs/ClearInputButton';
+import { ModalDescription } from './shared/ModalDescriptionContainer';
+import { ModalFlexContainer } from './shared/ModalFlexContainer';
 
 type Props = {
   conversationId: string;
@@ -60,9 +63,7 @@ export const AddModeratorsDialog = (props: Props) => {
         ToastUtils.pushFailedToAddAsModerator();
       } else {
         const userNames = pubkeys.map(
-          p =>
-            ConvoHub.use().get(p.key)?.getNicknameOrRealUsernameOrPlaceholder() ||
-            window.i18n('unknown')
+          p => ConvoHub.use().get(p.key)?.getNicknameOrRealUsernameOrPlaceholder() || tr('unknown')
         );
         window?.log?.info(`${userNames.join(', ')} added as moderator(s)...`);
         ToastUtils.pushUserAddedToModerators(userNames);
@@ -84,40 +85,40 @@ export const AddModeratorsDialog = (props: Props) => {
   const tooManyModerators = pubkeys.length > MAX_SUBREQUESTS_COUNT;
 
   return (
-    <SessionWrapperModal2
-      title={localize('addAdmins').toString()}
+    <SessionWrapperModal
+      headerChildren={<ModalBasicHeader title={tr('addAdmins')} />}
       onClose={onClose}
       buttonChildren={
-        <ButtonChildrenContainer>
+        <ModalActionsContainer>
           <SessionButton
             buttonType={SessionButtonType.Simple}
             onClick={addAsModerator}
-            text={localize('add').toString()}
+            text={tr('add')}
             disabled={addingInProgress || inputBoxValue.length === 0 || tooManyModerators}
             dataTestId="add-admins-confirm-button"
           />
           <SessionButton
             buttonType={SessionButtonType.Simple}
             onClick={onClose}
-            text={localize('cancel').toString()}
+            text={tr('cancel')}
             dataTestId="add-admins-cancel-button"
           />
-        </ButtonChildrenContainer>
+        </ModalActionsContainer>
       }
     >
-      <Flex $container={true} $flexDirection="column" $alignItems="center">
-        <I18nSubText
+      <ModalFlexContainer>
+        <ModalDescription
           dataTestId="modal-description"
           localizerProps={{ token: 'addAdminsDescription' }}
         />
-        <SimpleSessionInput
-          placeholder={localize('accountId').toString()}
+
+        <ModalSimpleSessionInput
+          placeholder={tr('accountId')}
           onValueChanged={setInputBoxValue}
           disabled={addingInProgress}
           value={inputBoxValue}
           ariaLabel="account Id input"
           textSize="md"
-          padding={'var(--margins-md) var(--margins-md)'}
           inputDataTestId="add-admins-input"
           onEnterPressed={() => void addAsModerator()}
           errorDataTestId="error-message"
@@ -135,8 +136,7 @@ export const AddModeratorsDialog = (props: Props) => {
         />
 
         <SessionSpinner loading={addingInProgress} />
-        <SpacerMD />
-      </Flex>
-    </SessionWrapperModal2>
+      </ModalFlexContainer>
+    </SessionWrapperModal>
   );
 };

@@ -7,7 +7,7 @@ import styled from 'styled-components';
 import { ConversationModel } from '../../models/conversation';
 import { updateGroupPermissionsModal } from '../../state/ducks/modalDialog';
 import { THEME_GLOBALS } from '../../themes/globals';
-import { SessionWrapperModal } from '../SessionWrapperModal';
+import { ModalBasicHeader, SessionWrapperModal } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SpacerMD } from '../basic/Text';
 import { SessionToggleWithDescription } from '../settings/SessionSettingListItem';
@@ -17,6 +17,7 @@ import {
   sogsV3SetRoomPermissions,
 } from '../../session/apis/open_group_api/sogsv3/sogsV3RoomPermissions';
 import { ConvoHub } from '../../session/conversations';
+import { tr } from '../../localization/localeTools';
 
 const StyledErrorMessage = styled(motion.p)`
   text-align: center;
@@ -86,15 +87,14 @@ export class UpdateGroupPermissionsDialog extends Component<Props, State> {
 
   public render() {
     const okText = 'Apply';
-    const cancelText = window.i18n('cancel');
+    const cancelText = tr('cancel');
 
     const errorMsg = this.state.errorMessage;
 
     return (
       <SessionWrapperModal
-        title={window.i18n('groupChangePermissions')}
+        headerChildren={<ModalBasicHeader title={tr('groupChangePermissions')} />}
         onClose={() => this.closeDialog()}
-        additionalClassName="update-group-dialog"
       >
         {this.state.errorDisplayed ? (
           <>

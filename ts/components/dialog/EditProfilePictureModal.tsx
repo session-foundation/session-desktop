@@ -5,10 +5,7 @@ import { ToastUtils, UserUtils } from '../../session/utils';
 import { editProfileModal, updateEditProfilePictureModal } from '../../state/ducks/modalDialog';
 import type { EditProfilePictureModalProps } from '../../types/ReduxTypes';
 import { pickFileForAvatar } from '../../types/attachments/VisualAttachment';
-import { SessionWrapperModal } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
-import { SpacerLG } from '../basic/Text';
-import { SessionIconButton } from '../icon';
 import { SessionSpinner } from '../loading';
 import { ProfileAvatar } from './edit-profile/components';
 import { PlusAvatarButton } from '../buttons/PlusAvatarButton';
@@ -18,7 +15,7 @@ import {
   useIsMe,
   useIsPublic,
 } from '../../hooks/useParamSelector';
-import { localize } from '../../localization/localeTools';
+import { tr } from '../../localization/localeTools';
 import { OpenGroupUtils } from '../../session/apis/open_group_api/utils';
 import { PubKey } from '../../session/types';
 import { groupInfoActions } from '../../state/ducks/metaGroups';
@@ -27,6 +24,13 @@ import { userActions } from '../../state/ducks/user';
 import { ReduxSogsRoomInfos } from '../../state/ducks/sogsRoomInfo';
 import { useOurAvatarIsUploading } from '../../state/selectors/user';
 import { useAvatarOfRoomIsUploading } from '../../state/selectors/sogsRoomInfo';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import {
+  ModalBasicHeader,
+  ModalActionsContainer,
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
@@ -36,13 +40,19 @@ const StyledUploadButton = styled.div`
   background-color: var(--chat-buttons-background-color);
   border-radius: 50%;
   overflow: hidden;
+  padding: 16px;
+  aspect-ratio: 1;
 `;
 
 const UploadImageButton = () => {
   return (
     <div style={{ position: 'relative' }}>
       <StyledUploadButton>
-        <SessionIconButton iconType="thumbnail" iconSize={80} iconPadding="16px" />
+        <SessionLucideIconButton
+          unicode={LUCIDE_ICONS_UNICODE.IMAGE}
+          iconSize={'huge2'}
+          margin="0"
+        />
       </StyledUploadButton>
       <PlusAvatarButton dataTestId="image-upload-section" />
     </div>
@@ -167,13 +177,35 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
     void handleAvatarClick();
   };
 
+  const loading = ourAvatarIsUploading || groupAvatarChangePending || sogsAvatarIsUploading;
+
   return (
     <SessionWrapperModal
-      title={localize('profileDisplayPictureSet').toString()}
       onClose={closeDialog}
-      showHeader={true}
-      headerReverse={true}
-      showExitIcon={true}
+      headerChildren={
+        <ModalBasicHeader title={tr('profileDisplayPictureSet')} showExitIcon={true} />
+      }
+      buttonChildren={
+        <ModalActionsContainer>
+          <SessionButton
+            text={tr('save')}
+            buttonType={SessionButtonType.Simple}
+            onClick={handleUpload}
+            disabled={newAvatarObjectUrl === avatarPath || loading}
+            dataTestId="save-button-profile-update"
+          />
+          {/* we cannot remove avatars from communities, only change them */}
+          {!isCommunity ? (
+            <SessionButton
+              text={tr('remove')}
+              buttonColor={SessionButtonColor.Danger}
+              buttonType={SessionButtonType.Simple}
+              onClick={handleRemove}
+              disabled={!avatarPath || loading}
+            />
+          ) : null}
+        </ModalActionsContainer>
+      }
     >
       <div
         className="avatar-center"
@@ -195,33 +227,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
           )}
         </StyledAvatarContainer>
       </div>
-
-      {ourAvatarIsUploading || groupAvatarChangePending || sogsAvatarIsUploading ? (
-        <SessionSpinner loading={true} />
-      ) : (
-        <>
-          <SpacerLG />
-          <div className="session-modal__button-group">
-            <SessionButton
-              text={localize('save').toString()}
-              buttonType={SessionButtonType.Simple}
-              onClick={handleUpload}
-              disabled={newAvatarObjectUrl === avatarPath}
-              dataTestId="save-button-profile-update"
-            />
-            {/* we cannot remove avatars from communities, only change them */}
-            {!isCommunity ? (
-              <SessionButton
-                text={localize('remove').toString()}
-                buttonColor={SessionButtonColor.Danger}
-                buttonType={SessionButtonType.Simple}
-                onClick={handleRemove}
-                disabled={!avatarPath}
-              />
-            ) : null}
-          </div>
-        </>
-      )}
+      <SessionSpinner loading={loading} />
     </SessionWrapperModal>
   );
 };

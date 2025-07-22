@@ -2,7 +2,7 @@ import { useDispatch } from 'react-redux';
 import { deleteAllMessagesByConvoIdNoConfirmation } from '../../interactions/conversationInteractions';
 import { updateConfirmModal } from '../../state/ducks/modalDialog';
 import { SessionButtonColor } from '../basic/SessionButton';
-import { localize } from '../../localization/localeTools';
+import { tr } from '../../localization/localeTools';
 import {
   useConversationUsername,
   useIsGroupV2,
@@ -27,8 +27,7 @@ export function useClearAllMessagesCb({ conversationId }: { conversationId: stri
   const isGroupV2 = useIsGroupV2(conversationId);
   const weAreAdmin = useWeAreAdmin(conversationId);
   const isLegacyGroup = useIsLegacyGroup(conversationId);
-  const conversationTitle =
-    useConversationUsername(conversationId) || localize('unknown').toString();
+  const conversationTitle = useConversationUsername(conversationId) || tr('unknown');
   const isPrivate = useIsPrivate(conversationId);
 
   if (isKickedFromGroup) {
@@ -97,23 +96,23 @@ export function useClearAllMessagesCb({ conversationId }: { conversationId: stri
   const cb = () =>
     dispatch(
       updateConfirmModal({
-        title: localize('clearMessages').toString(),
+        title: tr('clearMessages'),
         i18nMessage,
         onClickOk,
         okTheme: SessionButtonColor.Danger,
         onClickClose,
-        okText: localize('clear').toString(),
+        okText: tr('clear'),
         radioOptions: isGroupV2AndAdmin
           ? [
               {
                 value: 'clearOnThisDevice',
-                label: localize('clearOnThisDevice').toString(),
+                label: tr('clearOnThisDevice'),
                 inputDataTestId: 'clear-device-radio-option',
                 labelDataTestId: 'clear-device-radio-option-label',
               },
               {
                 value: clearMessagesForEveryone,
-                label: localize(clearMessagesForEveryone).toString(),
+                label: tr(clearMessagesForEveryone),
                 inputDataTestId: 'clear-everyone-radio-option',
                 labelDataTestId: 'clear-everyone-radio-option-label',
               },

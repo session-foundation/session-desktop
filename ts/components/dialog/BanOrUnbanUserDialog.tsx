@@ -18,15 +18,17 @@ import {
   updateBanOrUnbanUserModal,
   updateServerBanOrUnbanUserModal,
 } from '../../state/ducks/modalDialog';
-import { SessionWrapperModal } from '../SessionWrapperModal';
-import { Flex } from '../basic/Flex';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionSpinner } from '../loading';
-import { ButtonChildrenContainer, SessionWrapperModal2 } from '../SessionWrapperModal2';
-import { localize } from '../../localization/localeTools';
+import {
+  ModalBasicHeader,
+  ModalActionsContainer,
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
+import { tr } from '../../localization/localeTools';
 import { SimpleSessionInput } from '../inputs/SessionInput';
-import { I18nSubText } from '../basic/I18nSubText';
-import { SpacerSM } from '../basic/Text';
+import { ModalDescription } from './shared/ModalDescriptionContainer';
+import { ModalFlexContainer } from './shared/ModalFlexContainer';
 
 async function banOrUnBanUserCall(
   convo: ConversationModel,
@@ -127,7 +129,7 @@ export const BanOrUnBanUserDialog = (props: {
     setInProgress(false);
   };
 
-  const title = isBan ? localize('banUser').toString() : localize('banUnbanUser').toString();
+  const title = isBan ? tr('banUser') : tr('banUnbanUser');
 
   /**
    * Starts procedure for banning/unbanning user and all their messages using dialog
@@ -140,19 +142,20 @@ export const BanOrUnBanUserDialog = (props: {
     dispatch(updateBanOrUnbanUserModal(null));
   };
 
-  const buttonText = isBan ? localize('banUser').toString() : localize('banUnbanUser').toString();
+  const buttonText = isBan ? tr('banUser') : tr('banUnbanUser');
 
   return (
-    <SessionWrapperModal2
-      title={title}
+    <SessionWrapperModal
+      headerChildren={<ModalBasicHeader title={title} />}
       onClose={onClose}
       buttonChildren={
-        <ButtonChildrenContainer>
+        <ModalActionsContainer>
           <SessionButton
             buttonType={SessionButtonType.Simple}
             onClick={banOrUnBanUser}
             text={buttonText}
             disabled={inProgress}
+            buttonColor={isBan && !hasPubkeyOnLoad ? SessionButtonColor.Danger : undefined}
             dataTestId={isBan ? 'ban-user-confirm-button' : 'unban-user-confirm-button'}
           />
           {/*
@@ -167,7 +170,7 @@ export const BanOrUnBanUserDialog = (props: {
               buttonType={SessionButtonType.Simple}
               buttonColor={SessionButtonColor.Danger}
               onClick={startBanAndDeleteAllSequence}
-              text={localize('banDeleteAll').toString()}
+              text={tr('banDeleteAll')}
               disabled={inProgress}
               dataTestId="ban-user-delete-all-confirm-button"
             />
@@ -175,36 +178,35 @@ export const BanOrUnBanUserDialog = (props: {
             <SessionButton
               buttonType={SessionButtonType.Simple}
               onClick={onClose}
-              text={localize('cancel').toString()}
+              text={tr('cancel')}
               dataTestId="unban-user-cancel-button"
             />
           )}
-        </ButtonChildrenContainer>
+        </ModalActionsContainer>
       }
     >
-      <Flex $container={true} $flexDirection="column" $alignItems="center" width="100%">
-        <I18nSubText
+      <ModalFlexContainer>
+        <ModalDescription
           dataTestId="modal-description"
           localizerProps={{ token: isBan ? 'banUserDescription' : 'banUnbanUserDescription' }}
-          style={{ textAlign: 'center' }}
         />
+
         <SimpleSessionInput
           inputRef={inputRef}
-          placeholder={localize('accountId').toString()}
+          placeholder={tr('accountId')}
           onValueChanged={setInputBoxValue}
           disabled={inProgress || !!pubkey}
           value={pubkey ? inputTextToDisplay : inputBoxValue}
           errorDataTestId="error-message"
+          padding="var(--margins-sm) var(--margins-md)"
           providedError={''}
           // don't do anything on enter as we don't know if the user wants to ban or ban-delete-all
           onEnterPressed={() => {}}
           inputDataTestId={isBan ? 'ban-user-input' : 'unban-user-input'}
         />
-
         <SessionSpinner loading={inProgress} />
-        <SpacerSM />
-      </Flex>
-    </SessionWrapperModal2>
+      </ModalFlexContainer>
+    </SessionWrapperModal>
   );
 };
 
@@ -215,7 +217,6 @@ export const ServerBanOrUnBanUserDialog = (props: {
   pubkey?: string;
 }) => {
   const { conversationId, banType, pubkey } = props;
-  const { i18n } = window;
   const isBan = banType === 'ban';
   const dispatch = useDispatch();
   const convo = ConvoHub.use().get(conversationId);
@@ -254,7 +255,7 @@ export const ServerBanOrUnBanUserDialog = (props: {
   };
 
   const serverHost = new window.URL(convo.toOpenGroupV2().serverUrl).host;
-  const title = `${isBan ? window.i18n('banUser') : window.i18n('banUnbanUser')} @ ${serverHost}`;
+  const title = `${isBan ? tr('banUser') : tr('banUnbanUser')} @ ${serverHost}`;
 
   /**
    * Starts procedure for banning/unbanning user and all their messages using dialog
@@ -263,29 +264,17 @@ export const ServerBanOrUnBanUserDialog = (props: {
     await banOrUnBanUser(true);
   };
 
-  const buttonText = isBan ? i18n('banUser') : i18n('banUnbanUser');
+  const buttonText = isBan ? tr('banUser') : tr('banUnbanUser');
 
+  const onClose = () => {
+    dispatch(updateServerBanOrUnbanUserModal(null));
+  };
   return (
     <SessionWrapperModal
-      showExitIcon={true}
-      title={title}
-      onClose={() => {
-        dispatch(updateServerBanOrUnbanUserModal(null));
-      }}
-    >
-      <Flex $container={true} $flexDirection="column" $alignItems="center">
-        <SimpleSessionInput
-          inputRef={inputRef}
-          type="text"
-          placeholder={i18n('accountIdEnter')}
-          onValueChanged={setInputBoxValue}
-          disabled={inProgress || !!pubkey}
-          value={pubkey ? inputTextToDisplay : inputBoxValue}
-          errorDataTestId="error-message"
-          providedError={''}
-          onEnterPressed={() => {}}
-        />
-        <Flex $container={true}>
+      headerChildren={<ModalBasicHeader title={title} />}
+      onClose={onClose}
+      buttonChildren={
+        <ModalActionsContainer>
           <SessionButton
             buttonType={SessionButtonType.Simple}
             onClick={banOrUnBanUser}
@@ -294,19 +283,33 @@ export const ServerBanOrUnBanUserDialog = (props: {
           />
           {isBan && (
             <>
-              <SpacerSM />
               <SessionButton
                 buttonType={SessionButtonType.Simple}
                 buttonColor={SessionButtonColor.Danger}
                 onClick={startBanAndDeleteAllSequence}
-                text={i18n('serverBanUserAndDeleteAll')}
+                text={tr('serverBanUserAndDeleteAll')}
                 disabled={inProgress}
               />
             </>
           )}
-        </Flex>
+        </ModalActionsContainer>
+      }
+    >
+      <ModalFlexContainer>
+        <SimpleSessionInput
+          inputRef={inputRef}
+          placeholder={tr('accountIdEnter')}
+          onValueChanged={setInputBoxValue}
+          disabled={inProgress || !!pubkey}
+          value={pubkey ? inputTextToDisplay : inputBoxValue}
+          errorDataTestId="error-message"
+          padding="var(--margins-sm) var(--margins-md)"
+          providedError={''}
+          // don't do anything on enter as we don't know if the user wants to ban or ban-delete-all
+          onEnterPressed={() => {}}
+        />
         <SessionSpinner loading={inProgress} />
-      </Flex>
+      </ModalFlexContainer>
     </SessionWrapperModal>
   );
 };

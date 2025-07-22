@@ -11,14 +11,11 @@ def get_localization_regex_list(string):
     fr"\{{ token: '{key}'(, args: {{.*}})? \}}",
     # This also captures the same group as `basic_object` but this is fine because basic_object shortcuts before reaching here if found.
     fr"{{\s+token: '{key}',?\s+(\s*args: {{[\S\s.]*}},)?\s+\}}",
-    fr"window\.i18n\.(stripped|inEnglish|getRawMessage)\('{key}'(, {{[\S\s.]*}})?\)",
     fr"<I18n[\S\s.]*token=\{{?['\"]{key}['\"]\}}?",
     fr"<I18n[\S\s.]*token=[\S\s.]*{key}[\S\s.]*",
     fr"i18n\('{key}'\)",
     fr"i18n\('{key}'(, {{[\S\s.]*}})?\)",
-    fr"i18n\.(stripped|inEnglish|getRawMessage)\('{key}'(, {{[\S\s.]*}})?\)",
-    fr"window\?\.i18n\?\.\('{key}'(, {{[\S\s.]*}})?\)",
-    fr"<I18nSubText[\S\s.]*token=[\S\s.]*{key}[\S\s.]*"
+    fr"window\?\.i18n\?\.\('{key}'(, {{[\S\s.]*}})?\)"
   ]
 
 

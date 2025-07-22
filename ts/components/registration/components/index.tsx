@@ -1,5 +1,4 @@
 import styled from 'styled-components';
-import { BackButton } from './BackButton';
 import { ContinueButton } from './ContinueButton';
 import { Hero } from './Hero';
 import { OnboardContainer } from './OnboardingContainer';
@@ -16,4 +15,4 @@ const OnboardDescription = styled.p`
   letter-spacing: normal;
 `;
 
-export { BackButton, ContinueButton, Hero, OnboardContainer, OnboardDescription, OnboardHeading };
+export { ContinueButton, Hero, OnboardContainer, OnboardDescription, OnboardHeading };

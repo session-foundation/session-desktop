@@ -145,6 +145,14 @@ const SettingInCategory = (props: {
   }
 };
 
+const StyledSettings = styled.div`
+  width: var(--main-panel-content-width);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--background-secondary-color);
+`;
+
 const StyledSettingsView = styled.div`
   flex-grow: 1;
   display: flex;
@@ -182,7 +190,7 @@ export const SessionSettingsView = (props: SettingsViewProps) => {
   }
 
   return (
-    <div className="session-settings">
+    <StyledSettings>
       <SettingsHeader category={category} />
       <StyledSettingsView>
         <StyledSettingsList>
@@ -194,6 +202,6 @@ export const SessionSettingsView = (props: SettingsViewProps) => {
         </StyledSettingsList>
         <SessionInfo />
       </StyledSettingsView>
-    </div>
+    </StyledSettings>
   );
 };

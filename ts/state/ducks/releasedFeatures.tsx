@@ -1,21 +1,13 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { ToastUtils } from '../../session/utils';
 import { Storage } from '../../util/storage';
-import { DURATION } from '../../session/constants';
-import { isValidUnixTimestamp } from '../../session/utils/Timestamps';
-import { handleReleaseNotification } from '../../util/releasedFeatures';
-import { localize } from '../../localization/localeTools';
 
 export interface ReleasedFeaturesState {
   refreshedAt: number;
-  sesh101Ready: boolean;
-  sesh101NotificationAt: number;
 }
 
 export const initialReleasedFeaturesState = {
   refreshedAt: Date.now(),
-  sesh101Ready: window.sessionFeatureFlags.useSESH101,
-  sesh101NotificationAt: 0,
 };
 
 // #region - Async Thunks
@@ -23,14 +15,9 @@ export const initialReleasedFeaturesState = {
 // NOTE as features are released in production they will be removed from this list
 const resetExperiments = createAsyncThunk(
   'releasedFeatures/resetExperiments',
-  async (_, payloadCreator): Promise<void> => {
-    // reset the feature flags
-    window.sessionFeatureFlags.useReleaseChannels = false;
-    window.sessionFeatureFlags.useSESH101 = false;
-
+  async (_, _payloadCreator): Promise<void> => {
     // reset the redux state
-    payloadCreator.dispatch(releasedFeaturesActions.updateSesh101Ready(false));
-    payloadCreator.dispatch(releasedFeaturesActions.updateSesh101NotificationAt(0));
+    // payloadCreator.dispatch(releasedFeaturesActions.updateSesh101NotificationAt(0));
 
     // reset the storage
     await Storage.remove(`releaseNotification-useSESH101`);
@@ -58,35 +45,28 @@ const releasedFeaturesSlice = createSlice({
       const { refreshedAt } = action.payload;
 
       state.refreshedAt = refreshedAt;
-      state.sesh101Ready = window.sessionFeatureFlags.useSESH101;
 
-      if (state.sesh101Ready) {
-        state.sesh101NotificationAt = handleReleaseNotification({
-          featureName: 'useSESH101',
-          message: localize('sessionNetworkNotificationLive').toString(),
-          lastRefreshedAt: state.refreshedAt,
-          notifyAt: state.sesh101NotificationAt,
-          delayMs: 1 * DURATION.HOURS,
-        });
-      }
+      // state.sesh101NotificationAt = handleReleaseNotification({
+      //   featureName: 'useSESH101',
+      //   message: tr('sessionNetworkNotificationLive'),
+      //   lastRefreshedAt: state.refreshedAt,
+      //   notifyAt: state.sesh101NotificationAt,
+      //   delayMs: 1 * DURATION.HOURS,
+      // });
 
       return state;
     },
-    updateSesh101Ready: (state, action: PayloadAction<boolean>) => {
-      state.sesh101Ready = action.payload;
-      return state;
-    },
-    updateSesh101NotificationAt(state, action: PayloadAction<number>) {
-      if (isValidUnixTimestamp(action.payload)) {
-        state.sesh101NotificationAt = action.payload;
-      } else {
-        window.log.error(
-          `[releasedFeatures/updateSesh101NotificationAt] invalid timestamp ${action.payload}`
-        );
-      }
+    // updateSesh101NotificationAt(state, action: PayloadAction<number>) {
+    //   if (isValidUnixTimestamp(action.payload)) {
+    //     state.sesh101NotificationAt = action.payload;
+    //   } else {
+    //     window.log.error(
+    //       `[releasedFeatures/updateSesh101NotificationAt] invalid timestamp ${action.payload}`
+    //     );
+    //   }
 
-      return state;
-    },
+    //   return state;
+    // },
   },
   extraReducers: builder => {
     builder.addCase(resetExperiments.fulfilled, (_state, _action) => {

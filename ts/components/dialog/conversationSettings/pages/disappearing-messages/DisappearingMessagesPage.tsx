@@ -14,8 +14,7 @@ import {
   useSelectedIsGroupOrCommunity,
 } from '../../../../../state/selectors/selectedConversation';
 import { Flex } from '../../../../basic/Flex';
-import { SessionButton, SessionButtonColor } from '../../../../basic/SessionButton';
-import { SpacerLG } from '../../../../basic/Text';
+import { SpacerLG, SpacerMD } from '../../../../basic/Text';
 import {
   HeaderSubtitle,
   StyledScrollContainer,
@@ -23,27 +22,26 @@ import {
 import { DisappearingModes } from './DisappearingModes';
 import { TimeOptions } from './TimeOptions';
 import { useConversationSettingsModalIsStandalone } from '../../../../../state/selectors/modal';
-import { updateConversationSettingsModal } from '../../../../../state/ducks/modalDialog';
+import {
+  updateConversationSettingsModal,
+  type ConversationSettingsModalState,
+} from '../../../../../state/ducks/modalDialog';
 import { useShowConversationSettingsFor } from '../../../../menuAndSettingsHooks/useShowConversationSettingsFor';
-import { localize } from '../../../../../localization/localeTools';
+import { tr } from '../../../../../localization/localeTools';
 import { SessionSpinner } from '../../../../loading';
-
-const ButtonSpacer = styled.div`
-  height: 80px;
-`;
-
-const StyledButtonContainer = styled.div`
-  position: absolute;
-  width: 100%;
-  bottom: 0px;
-
-  .session-button {
-    font-weight: 500;
-    min-width: 90px;
-    width: fit-content;
-    margin: 35px auto 10px;
-  }
-`;
+import { SessionButton, SessionButtonColor } from '../../../../basic/SessionButton';
+import {
+  useBackActionForPage,
+  useCloseActionFromPage,
+  useTitleFromPage,
+} from '../conversationSettingsHooks';
+import {
+  ModalBasicHeader,
+  ModalActionsContainer,
+  SessionWrapperModal,
+  WrapperModalWidth,
+} from '../../../../SessionWrapperModal';
+import { ModalBackButton } from '../../../shared/ModalBackButton';
 
 const StyledNonAdminDescription = styled.div`
   display: flex;
@@ -84,8 +82,10 @@ function useSingleMode(disappearingModeOptions: Record<string, boolean> | undefi
   return { singleMode };
 }
 
-export const DisappearingMessagesPage = () => {
+export const DisappearingMessagesForConversationModal = (props: ConversationSettingsModalState) => {
   const dispatch = useDispatch();
+  const onClose = useCloseActionFromPage(props);
+  const title = useTitleFromPage(props?.settingsModalPage);
   const selectedConversationKey = useSelectedConversationKey();
   const disappearingModeOptions = useSelector(getSelectedConversationExpirationModes);
   const { singleMode } = useSingleMode(disappearingModeOptions);
@@ -94,6 +94,7 @@ export const DisappearingMessagesPage = () => {
   const isGroup = useSelectedIsGroupOrCommunity();
   const expirationMode = useSelectedConversationDisappearingMode() || 'off';
   const expireTimer = useSelectedExpireTimer();
+  const backAction = useBackActionForPage(props);
 
   const [modeSelected, setModeSelected] = useState<DisappearingMessageConversationModeType>(
     hasOnlyOneMode ? singleMode : expirationMode
@@ -163,53 +164,20 @@ export const DisappearingMessagesPage = () => {
   }
 
   return (
-    <StyledScrollContainer style={{ position: 'relative' }}>
-      <Flex $container={true} $flexDirection={'column'} $alignItems={'center'}>
-        <HeaderSubtitle>
-          {singleMode === 'deleteAfterRead'
-            ? localize('disappearingMessagesDisappearAfterReadDescription')
-            : singleMode === 'deleteAfterSend'
-              ? localize('disappearingMessagesDisappearAfterSendDescription')
-              : localize('disappearingMessagesDescription1')}
-        </HeaderSubtitle>
-        <DisappearingModes
-          options={disappearingModeOptions}
-          selected={modeSelected}
-          setSelected={setModeSelected}
-          hasOnlyOneMode={hasOnlyOneMode}
+    <SessionWrapperModal
+      headerChildren={
+        <ModalBasicHeader
+          title={title}
+          bigHeader={true}
+          leftButton={backAction ? <ModalBackButton onClick={backAction} /> : undefined}
         />
-        {(hasOnlyOneMode || modeSelected !== 'off') && (
-          <>
-            <TimeOptions
-              options={timerOptions}
-              selected={timeSelected}
-              setSelected={setTimeSelected}
-              hasOnlyOneMode={hasOnlyOneMode}
-              disabled={
-                singleMode
-                  ? disappearingModeOptions[singleMode]
-                  : modeSelected
-                    ? disappearingModeOptions[modeSelected]
-                    : undefined
-              }
-            />
-          </>
-        )}
-
-        {isGroup && (
-          <>
-            <SpacerLG />
-            {/* We want those to be shown no matter our admin rights in a group. */}
-            <StyledNonAdminDescription>
-              {localize('disappearingMessagesDescription')}
-              <br />
-              {localize('disappearingMessagesOnlyAdmins')}
-            </StyledNonAdminDescription>
-          </>
-        )}
-        <ButtonSpacer />
-
-        <StyledButtonContainer>
+      }
+      onClose={onClose}
+      shouldOverflow={true}
+      allowOutsideClick={false}
+      $contentMinWidth={WrapperModalWidth.narrow}
+      buttonChildren={
+        <ModalActionsContainer extraBottomMargin={true}>
           {loading ? (
             <SessionSpinner loading={true} />
           ) : (
@@ -225,11 +193,59 @@ export const DisappearingMessagesPage = () => {
               }
               dataTestId={'disappear-set-button'}
             >
-              {localize('set')}
+              {tr('set')}
             </SessionButton>
           )}
-        </StyledButtonContainer>
-      </Flex>
-    </StyledScrollContainer>
+        </ModalActionsContainer>
+      }
+    >
+      <StyledScrollContainer style={{ position: 'relative' }}>
+        <Flex $container={true} $flexDirection={'column'} $alignItems={'center'}>
+          <HeaderSubtitle>
+            {singleMode === 'deleteAfterRead'
+              ? tr('disappearingMessagesDisappearAfterReadDescription')
+              : singleMode === 'deleteAfterSend'
+                ? tr('disappearingMessagesDisappearAfterSendDescription')
+                : tr('disappearingMessagesDescription1')}
+          </HeaderSubtitle>
+          <DisappearingModes
+            options={disappearingModeOptions}
+            selected={modeSelected}
+            setSelected={setModeSelected}
+            hasOnlyOneMode={hasOnlyOneMode}
+          />
+          {(hasOnlyOneMode || modeSelected !== 'off') && (
+            <>
+              <TimeOptions
+                options={timerOptions}
+                selected={timeSelected}
+                setSelected={setTimeSelected}
+                hasOnlyOneMode={hasOnlyOneMode}
+                disabled={
+                  singleMode
+                    ? disappearingModeOptions[singleMode]
+                    : modeSelected
+                      ? disappearingModeOptions[modeSelected]
+                      : undefined
+                }
+              />
+            </>
+          )}
+
+          {isGroup && (
+            <>
+              <SpacerLG />
+              {/* We want those to be shown no matter our admin rights in a group. */}
+              <StyledNonAdminDescription>
+                {tr('disappearingMessagesDescription')}
+                <br />
+                {tr('disappearingMessagesOnlyAdmins')}
+              </StyledNonAdminDescription>
+            </>
+          )}
+        </Flex>
+      </StyledScrollContainer>
+      <SpacerMD />
+    </SessionWrapperModal>
   );
 };

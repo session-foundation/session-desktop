@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
 import { GroupPubkeyType, MemberStateGroupV2, PubkeyType } from 'libsession_util_nodejs';
 import { isEmpty } from 'lodash';
@@ -33,7 +33,7 @@ import {
 } from '../webworker/workers/browser/libsession_worker_interface';
 import { assertUnreachable } from '../types/sqlSharedTypes';
 import { isUsAnySogsFromCache } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
-import { localize } from '../localization/localeTools';
+import { tr } from '../localization/localeTools';
 
 const AvatarContainer = styled.div`
   position: relative;
@@ -79,9 +79,14 @@ const StyledSessionMemberItem = styled.button<{
     border-bottom: 1px solid var(--border-color);
   }`}
 
-  &:hover {
-    background-color: var(--conversation-tab-background-hover-color);
-  }
+  ${props =>
+    !props.inMentions
+      ? css`
+          &:hover {
+            background-color: var(--conversation-tab-background-hover-color);
+          }
+        `
+      : ''}
 `;
 
 const StyledInfo = styled.div`
@@ -109,6 +114,7 @@ type MemberListItemProps<T extends string> = {
   // this bool is used to make a zombie appear with less opacity than a normal member
   isZombie?: boolean;
   inMentions?: boolean; // set to true if we are rendering members but in the Mentions picker
+  isPublic?: boolean;
   disableBg?: boolean;
   withBorder?: boolean;
   maxNameWidth?: string;
@@ -163,29 +169,29 @@ const StyledGroupStatusText = styled.span<{ isFailure: boolean }>`
 function localisedStatusFromMemberStatus(memberStatus: MemberStateGroupV2) {
   switch (memberStatus) {
     case 'INVITE_FAILED':
-      return window.i18n('groupInviteFailed');
+      return tr('groupInviteFailed');
     case 'INVITE_NOT_SENT':
-      return window.i18n('groupInviteNotSent');
+      return tr('groupInviteNotSent');
     case 'INVITE_SENDING':
-      return window.i18n('groupInviteSending', { count: 1 });
+      return tr('groupInviteSending', { count: 1 });
     case 'INVITE_SENT':
-      return window.i18n('groupInviteSent');
+      return tr('groupInviteSent');
     case 'INVITE_UNKNOWN': // fallback, hopefully won't happen in production
-      return window.i18n('groupInviteStatusUnknown');
+      return tr('groupInviteStatusUnknown');
     case 'PROMOTION_UNKNOWN': // fallback, hopefully won't happen in production
-      return window.i18n('adminPromotionStatusUnknown');
+      return tr('adminPromotionStatusUnknown');
     case 'REMOVED_UNKNOWN': // fallback, hopefully won't happen in production
     case 'REMOVED_MEMBER': // we want pending removal members at the end of the "invite" states
     case 'REMOVED_MEMBER_AND_MESSAGES':
-      return window.i18n('groupPendingRemoval');
+      return tr('groupPendingRemoval');
     case 'PROMOTION_FAILED':
-      return window.i18n('adminPromotionFailed');
+      return tr('adminPromotionFailed');
     case 'PROMOTION_NOT_SENT':
-      return window.i18n('adminPromotionNotSent');
+      return tr('adminPromotionNotSent');
     case 'PROMOTION_SENDING':
-      return window.i18n('adminSendingPromotion', { count: 1 });
+      return tr('adminSendingPromotion', { count: 1 });
     case 'PROMOTION_SENT':
-      return window.i18n('adminPromotionSent');
+      return tr('adminPromotionSent');
     case 'PROMOTION_ACCEPTED':
       return null; // no statuses for accepted state;
     case 'INVITE_ACCEPTED':
@@ -263,7 +269,7 @@ const ResendButton = ({ groupPk, pubkey }: { pubkey: PubkeyType; groupPk: GroupP
       dataTestId={'resend-invite-button'}
       buttonShape={SessionButtonShape.Square}
       buttonType={SessionButtonType.Solid}
-      text={window.i18n('resend')}
+      text={tr('resend')}
       disabled={resendButtonDisabled}
       onClick={async () => {
         const group = await UserGroupsWrapperActions.getGroup(groupPk);
@@ -305,7 +311,7 @@ const PromoteButton = ({ groupPk, pubkey }: { pubkey: PubkeyType; groupPk: Group
       buttonShape={SessionButtonShape.Square}
       buttonType={SessionButtonType.Solid}
       buttonColor={SessionButtonColor.Danger}
-      text={window.i18n('promote')}
+      text={tr('promote')}
       onClick={() => {
         void promoteUsersInGroup({
           groupPk,
@@ -323,6 +329,7 @@ export const MemberListItem = <T extends string>({
   disableBg,
   displayGroupStatus,
   inMentions,
+  isPublic,
   isAdmin,
   isZombie,
   onSelect,
@@ -334,7 +341,13 @@ export const MemberListItem = <T extends string>({
   hideRadioButton,
 }: MemberListItemProps<T>) => {
   const memberName = useNicknameOrProfileNameOrShortenedPubkey(pubkey);
-  const ourName = isUsAnySogsFromCache(pubkey) ? localize('you').toString() : null;
+  const isYou = isUsAnySogsFromCache(pubkey);
+  const ourName = isYou ? tr('you') : null;
+  const shortPubkey = PubKey.shorten(pubkey);
+  const nameSuffix =
+    isPublic && inMentions && !isYou && memberName !== shortPubkey ? shortPubkey : '';
+
+  const displayedName = `${ourName || memberName} ${nameSuffix}`.trim();
 
   return (
     <StyledSessionMemberItem
@@ -360,7 +373,7 @@ export const MemberListItem = <T extends string>({
           minWidth="0"
         >
           <StyledName data-testid={'contact'} maxName={maxNameWidth}>
-            {ourName || memberName}
+            {displayedName}
           </StyledName>
           <GroupStatusContainer
             pubkey={pubkey}

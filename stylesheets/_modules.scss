@@ -22,28 +22,6 @@
 }
 // Module: Message
 
-.module-message__error-container {
-  width: 28px;
-  position: relative;
-}
-
-.module-message__error {
-  width: 20px;
-  height: 20px;
-  display: inline-block;
-  position: absolute;
-  bottom: 4px;
-  @include color-svg('../images/error.svg', var(--danger-color));
-}
-
-.module-message__error--outgoing {
-  left: 8px;
-}
-
-.module-message__error--incoming {
-  right: 8px;
-}
-
 .module-message__img-attachment {
   cursor: pointer;
 }
@@ -73,40 +51,6 @@
 .module-message__generic-attachment__spinner-container {
   padding-inline-start: 4px;
   padding-inline-end: 4px;
-}
-
-.module-message__generic-attachment__icon {
-  background: url('../images/file-gradient.svg') no-repeat center;
-  height: 44px;
-  width: 56px;
-  margin-inline-start: -13px;
-  margin-inline-end: -14px;
-  margin-bottom: -4px;
-
-  // So we can center the extension text inside this icon
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-}
-
-.module-message__generic-attachment__icon__extension {
-  font-size: 9px;
-  line-height: 13px;
-  letter-spacing: 0.1px;
-  text-transform: uppercase;
-
-  // Along with flow layout in parent item, centers text
-  text-align: center;
-  width: 25px;
-  margin-inline-start: auto;
-  margin-inline-end: auto;
-
-  // We don't have much room for text here, cut it off without ellipse
-  overflow-x: hidden;
-  white-space: nowrap;
-  text-overflow: clip;
-
-  color: var(--black-color);
 }
 
 .module-message__generic-attachment__text {
@@ -354,65 +298,6 @@
   }
 }
 
-// Module: Media Gallery
-
-.module-media-gallery {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  width: 100%;
-  overflow: hidden;
-}
-
-.module-media-gallery__tab-container {
-  display: flex;
-  flex-grow: 0;
-  flex-shrink: 0;
-  cursor: pointer;
-  width: 100%;
-}
-
-.module-media-gallery__tab {
-  width: 100%;
-  padding: 20px;
-  text-align: center;
-}
-
-.module-media-gallery__content {
-  display: flex;
-  flex-grow: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 20px;
-}
-
-.module-media-gallery__sections {
-  display: flex;
-  flex-grow: 1;
-  flex-direction: column;
-  width: 100%;
-}
-
-// Module: Attachment Section
-
-.module-attachment-section {
-  width: 100%;
-}
-
-.module-attachment-section__header {
-  font-size: 14px;
-  font-weight: normal;
-  line-height: 28px;
-}
-
-.module-attachment-section__items {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  align-items: flex-start;
-}
-
 // Module: Document List Item
 
 .module-document-list-item {
@@ -432,14 +317,6 @@
   flex-wrap: nowrap;
   align-items: center;
   height: 100%;
-}
-
-.module-document-list-item__icon {
-  flex-shrink: 0;
-
-  width: 48px;
-  height: 48px;
-  @include color-svg('../images/file.svg', var(--button-icon-stroke-color));
 }
 
 .module-document-list-item__metadata {
@@ -467,88 +344,6 @@
 .module-document-list-item__date {
   display: inline-block;
   flex-shrink: 0;
-}
-
-// Module: Media Grid Item
-
-.module-media-grid-item {
-  height: 94px;
-  width: 94px;
-  cursor: pointer;
-  background-color: var(--message-link-preview-background-color);
-  margin-inline-end: 4px;
-  margin-bottom: 4px;
-  position: relative;
-}
-
-.module-media-grid-item__image {
-  height: 94px;
-  width: 94px;
-  object-fit: cover;
-}
-
-.module-media-grid-item__icon {
-  position: absolute;
-  top: 15px;
-  bottom: 15px;
-  left: 15px;
-  right: 15px;
-}
-
-.module-media-grid-item__icon-image {
-  @include color-svg('../images/image.svg', var(--button-icon-stroke-color));
-}
-
-.module-media-grid-item__image-container {
-  object-fit: cover;
-  position: relative;
-}
-
-.module-media-grid-item__circle-overlay {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-
-  transform: translate(-50%, -50%);
-
-  width: 42px;
-  height: 42px;
-  background-color: var(--chat-buttons-background-color);
-  border-radius: 21px;
-
-  &:hover {
-    background-color: var(--chat-buttons-background-hover-color);
-  }
-}
-
-.module-media-grid-item__play-overlay {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-
-  height: 36px;
-  width: 36px;
-  @include color-svg('../images/play.svg', var(--chat-buttons-icon-color));
-}
-
-.module-media-grid-item__icon-video {
-  @include color-svg('../images/movie.svg', var(--button-icon-stroke-color));
-}
-
-.module-media-grid-item__icon-generic {
-  @include color-svg('../images/file.svg', var(--button-icon-stroke-color));
-}
-
-/* Module: Empty State*/
-
-.module-empty-state {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-grow: 1;
-  margin-top: var(--margins-sm);
-  font-size: 16px;
 }
 
 // Module: Conversation List Item
@@ -712,34 +507,6 @@
   }
 }
 
-.module-image__play-overlay__circle {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-
-  width: 48px;
-  height: 48px;
-  background-color: var(--chat-buttons-background-color);
-  border-radius: 24px;
-  z-index: 1;
-
-  &:hover {
-    background-color: var(--chat-buttons-background-hover-color);
-  }
-}
-
-.module-image__play-overlay__icon {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-
-  height: 36px;
-  width: 36px;
-  @include color-svg('../images/play.svg', var(--chat-buttons-icon-color));
-}
-
 .module-image__text-container {
   position: absolute;
   top: 0;
@@ -757,17 +524,6 @@
   background-color: rgba(0, 0, 0, 0.7);
 }
 
-.module-image__close-button {
-  cursor: pointer;
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 20px;
-  height: 20px;
-  z-index: 2;
-  background-image: url('../images/x-shadow-16.svg');
-}
-
 // Module: Attachments
 
 .module-attachments {
@@ -779,95 +535,9 @@
   position: relative;
 }
 
-.module-attachments__close-button {
-  cursor: pointer;
-  position: absolute;
-  top: 8px;
-  right: 16px;
 
-  width: 20px;
-  height: 20px;
 
-  z-index: 2;
-  @include color-svg('../images/x-16.svg', var(--button-icon-stroke-color));
-}
 
-// Module: Staged Generic Attachment
-
-.module-staged-generic-attachment {
-  height: 120px;
-  width: 120px;
-  margin: 1px;
-  display: inline-block;
-  position: relative;
-  border-radius: 4px;
-  box-shadow: inset 0px 0px 0px 1px var(--border-color);
-  background-color: var(--message-link-preview-background-color);
-  vertical-align: middle;
-}
-
-.module-staged-generic-attachment__close-button {
-  cursor: pointer;
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  width: 16px;
-  height: 16px;
-  z-index: 2;
-  @include color-svg('../images/x-16.svg', var(--button-icon-stroke-color));
-}
-
-.module-staged-generic-attachment__icon {
-  margin-top: 30px;
-
-  background: url('../images/file-gradient.svg') no-repeat center;
-  height: 44px;
-  width: 56px;
-  margin-inline-start: 32px;
-  margin-inline-end: 32px;
-  margin-bottom: -4px;
-
-  // So we can center the extension text inside this icon
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-}
-
-.module-staged-generic-attachment__icon__extension {
-  font-size: 10px;
-  line-height: 13px;
-  letter-spacing: 0.1px;
-  text-transform: uppercase;
-
-  // Along with flow layout in parent item, centers text
-  text-align: center;
-  width: 25px;
-  margin-inline-start: auto;
-  margin-inline-end: auto;
-
-  // We don't have much room for text here, cut it off without ellipse
-  overflow-x: hidden;
-  white-space: nowrap;
-  text-overflow: clip;
-
-  color: var(--black-color);
-}
-
-.module-staged-generic-attachment__filename {
-  margin: 7px;
-  margin-top: 5px;
-  text-align: center;
-
-  font-family: var(--font-default);
-  font-size: 14px;
-
-  overflow: hidden;
-  height: 2.4rem;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  text-overflow: ellipsis;
-}
 
 // Module: Caption Editor
 .module-caption-editor {
@@ -889,19 +559,6 @@
   }
 }
 
-.module-caption-editor__close-button {
-  z-index: 21;
-  cursor: pointer;
-  position: absolute;
-
-  top: 12px;
-  right: 16px;
-  width: 30px;
-  height: 30px;
-  z-index: 2;
-  // the background of the lightbox is dark
-  @include color-svg('../images/x-16.svg', var(--white-color));
-}
 .module-caption-editor__media-container {
   flex-grow: 1;
   flex-shrink: 1;
@@ -933,21 +590,6 @@
 
   flex-grow: 1;
   flex-shrink: 1;
-}
-
-// Module: Staged Placeholder Attachment
-
-.module-staged-placeholder-attachment__plus-icon {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-
-  transform: translate(-50%, -50%);
-
-  height: 36px;
-  width: 36px;
-
-  @include color-svg('../images/plus-36.svg', var(--chat-buttons-icon-color));
 }
 
 // Module: Left Pane

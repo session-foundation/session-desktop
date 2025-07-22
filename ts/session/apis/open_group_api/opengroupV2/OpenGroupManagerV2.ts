@@ -20,6 +20,7 @@ import { openGroupV2GetRoomInfoViaOnionV4 } from '../sogsv3/sogsV3RoomInfos';
 import { UserGroupsWrapperActions } from '../../../../webworker/workers/browser/libsession_worker_interface';
 import { OpenGroupRequestCommonType, OpenGroupV2Room } from '../../../../data/types';
 import { ConversationTypeEnum, CONVERSATION_PRIORITIES } from '../../../../models/types';
+import { tr } from '../../../../localization/localeTools';
 
 let instance: OpenGroupManagerV2 | undefined;
 
@@ -151,7 +152,7 @@ export class OpenGroupManagerV2 {
 
     if (ConvoHub.use().get(conversationId)) {
       // Url incorrect or server not compatible
-      throw new Error(window.i18n('communityJoinedAlready'));
+      throw new Error(tr('communityJoinedAlready'));
     }
 
     try {

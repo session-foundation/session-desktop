@@ -8,15 +8,13 @@ import {
   useWeAreAdmin,
 } from '../../../hooks/useParamSelector';
 import { showUpdateGroupMembersByConvoId } from '../../../interactions/conversationInteractions';
-import { localize } from '../../../localization/localeTools';
+import { tr } from '../../../localization/localeTools';
 import type { ConversationNotificationSettingType } from '../../../models/conversationAttributes';
 import { PanelIconButton } from '../../buttons';
 import { PanelIconLucideIcon, PanelIconSessionLegacyIcon } from '../../buttons/PanelIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { useShowNotificationFor } from '../../menuAndSettingsHooks/useShowNotificationFor';
 import type { WithConvoId } from '../../../session/types/with';
-import { ConvoHub } from '../../../session/conversations';
-import { useShowPinUnpin } from '../../menuAndSettingsHooks/usePinUnpin';
 import { useLocalisedNotificationOf } from '../../menuAndSettingsHooks/useLocalisedNotificationFor';
 import { useShowBlockUnblock } from '../../menuAndSettingsHooks/useShowBlockUnblock';
 import { useShowDeletePrivateContactCb } from '../../menuAndSettingsHooks/useShowDeletePrivateContact';
@@ -41,6 +39,7 @@ import { useGroupCommonNoShow } from '../../menuAndSettingsHooks/useGroupCommonN
 import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useShowConversationSettingsFor';
 import { useShowNoteToSelfCb } from '../../menuAndSettingsHooks/useShowNoteToSelf';
 import { useChangeCommunityPermissionsCb } from '../../menuAndSettingsHooks/useChangeCommunityPermissions';
+import { useTogglePinConversationHandler } from '../../menuAndSettingsHooks/UseTogglePinConversationHandler';
 
 type WithAsAdmin = { asAdmin: boolean };
 
@@ -53,11 +52,11 @@ export const LeaveCommunityPanelButton = ({ conversationId }: WithConvoId) => {
 
   return (
     <PanelIconButton
-      text={localize('communityLeave').toString()}
+      text={tr('communityLeave')}
       dataTestId="leave-community-menu-option"
       onClick={cb}
       color={'var(--danger-color)'}
-      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.LOG_OUT} />}
+      iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.LOG_OUT} />}
     />
   );
 };
@@ -71,11 +70,11 @@ export const DeleteGroupPanelButton = ({ conversationId }: WithConvoId) => {
 
   return (
     <PanelIconButton
-      text={localize('groupDelete').toString()}
+      text={tr('groupDelete')}
       dataTestId="leave-group-button"
       onClick={cb}
       color={'var(--danger-color)'}
-      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.TRASH2} />}
+      iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.TRASH2} />}
     />
   );
 };
@@ -89,11 +88,11 @@ export const LeaveGroupPanelButton = ({ conversationId }: WithConvoId) => {
 
   return (
     <PanelIconButton
-      text={localize('groupLeave').toString()}
+      text={tr('groupLeave')}
       dataTestId="leave-group-button"
       onClick={cb}
       color={'var(--danger-color)'}
-      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.LOG_OUT} />}
+      iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.LOG_OUT} />}
     />
   );
 };
@@ -124,8 +123,8 @@ export const NotificationPanelButton = ({ convoId }: { convoId: string }) => {
 
   return (
     <PanelIconButton
-      iconElement={<PanelIconLucideIcon iconUnicode={NotificationPanelIconButton(notification)} />}
-      text={localize('sessionNotifications').toString()}
+      iconElement={<PanelIconLucideIcon unicode={NotificationPanelIconButton(notification)} />}
+      text={tr('sessionNotifications')}
       onClick={() => {
         showConvoSettingsCb({
           settingsModalPage: 'notifications',
@@ -147,8 +146,8 @@ export const AttachmentsButton = (_props: WithConvoId) => {
   }
   return (
     <PanelIconButton
-      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.FILE} />}
-      text={localize('attachments').toString()}
+      iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.FILE} />}
+      text={tr('attachments')}
       onClick={showAttachmentsCb}
       dataTestId="attachments-menu-option"
     />
@@ -164,8 +163,8 @@ export const CopyAccountIdButton = ({ conversationId }: WithConvoId) => {
 
   return (
     <PanelIconButton
-      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.COPY} />}
-      text={localize('accountIDCopy').toString()}
+      iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.COPY} />}
+      text={tr('accountIDCopy')}
       onClick={showCopyAccountId}
       dataTestId="copy-account-id-menu-option"
     />
@@ -173,10 +172,10 @@ export const CopyAccountIdButton = ({ conversationId }: WithConvoId) => {
 };
 
 export const PinUnpinButton = ({ conversationId }: WithConvoId) => {
-  const showPinUnpin = useShowPinUnpin(conversationId);
   const isPinned = useIsPinned(conversationId);
+  const togglePinConversation = useTogglePinConversationHandler(conversationId);
 
-  if (!showPinUnpin) {
+  if (!togglePinConversation) {
     return null;
   }
 
@@ -184,13 +183,11 @@ export const PinUnpinButton = ({ conversationId }: WithConvoId) => {
     <PanelIconButton
       iconElement={
         <PanelIconLucideIcon
-          iconUnicode={isPinned ? LUCIDE_ICONS_UNICODE.PIN_OFF : LUCIDE_ICONS_UNICODE.PIN}
+          unicode={isPinned ? LUCIDE_ICONS_UNICODE.PIN_OFF : LUCIDE_ICONS_UNICODE.PIN}
         />
       }
-      text={localize(isPinned ? 'pinUnpinConversation' : 'pinConversation').toString()}
-      onClick={() => {
-        void ConvoHub.use().get(conversationId)?.togglePinned();
-      }}
+      text={tr(isPinned ? 'pinUnpinConversation' : 'pinConversation')}
+      onClick={togglePinConversation}
       dataTestId="pin-conversation-menu-option"
     />
   );
@@ -219,8 +216,8 @@ export function UpdateGroupMembersButton({
   }
   return (
     <PanelIconButton
-      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.USER_ROUND} />}
-      text={asAdmin ? localize('manageMembers').toString() : localize('groupMembers').toString()}
+      iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.USER_ROUND} />}
+      text={asAdmin ? tr('manageMembers') : tr('groupMembers')}
       onClick={() => {
         void showUpdateGroupMembersByConvoId(conversationId);
       }}
@@ -266,8 +263,8 @@ export function UpdateDisappearingMessagesButton({
 
   return (
     <PanelIconButton
-      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.TIMER} />}
-      text={localize('disappearingMessages').toString()}
+      iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.TIMER} />}
+      text={tr('disappearingMessages')}
       subText={disappearingMessagesSubtitle.label}
       dataTestId="disappearing-messages-menu-option"
       onClick={() => {
@@ -288,7 +285,7 @@ export function ChangeCommunityPermissionsButton({ conversationId }: WithConvoId
       iconElement={
         <PanelIconSessionLegacyIcon iconType={'padlock'} iconColor="var(--text-primary-color" />
       }
-      text={localize('groupChangePermissions').toString()}
+      text={tr('groupChangePermissions').toString()}
       onClick={cb}
       dataTestId="edit-group-name"
     />
@@ -309,7 +306,7 @@ export function AddAdminCommunityButton({ conversationId }: WithConvoId) {
           iconColor="var(--text-primary-color"
         />
       }
-      text={localize('addAdmins').toString()}
+      text={tr('addAdmins')}
       onClick={cb}
       dataTestId="add-admins-menu-option"
     />
@@ -329,7 +326,7 @@ export function RemoveAdminCommunityButton({ conversationId }: WithConvoId) {
           iconColor="var(--text-primary-color"
         />
       }
-      text={localize('adminRemove').toString()}
+      text={tr('adminRemove')}
       onClick={cb}
       dataTestId="remove-admins-menu-option"
     />
@@ -344,8 +341,8 @@ export function BanFromCommunityButton({ conversationId }: WithConvoId) {
   }
   return (
     <PanelIconButton
-      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.USER_ROUND_X} />}
-      text={localize('banUser').toString()}
+      iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.USER_ROUND_X} />}
+      text={tr('banUser')}
       onClick={showBanUserCb}
       dataTestId="ban-user-menu-option"
     />
@@ -360,8 +357,8 @@ export function UnbanFromCommunityButton({ conversationId }: WithConvoId) {
   }
   return (
     <PanelIconButton
-      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.USER_ROUND_CHECK} />}
-      text={localize('banUnbanUser').toString()}
+      iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.USER_ROUND_CHECK} />}
+      text={tr('banUnbanUser')}
       onClick={showUnbanUserCb}
       dataTestId="unban-user-menu-option"
     />
@@ -376,8 +373,8 @@ export function InviteContactsToCommunityButton({ conversationId }: WithConvoId)
   }
   return (
     <PanelIconButton
-      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.USER_ROUND_PLUS} />}
-      text={localize('membersInvite').toString()}
+      iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.USER_ROUND_PLUS} />}
+      text={tr('membersInvite')}
       onClick={showInviteContactCb}
       dataTestId="invite-contacts-menu-option"
     />
@@ -392,8 +389,8 @@ export function CopyCommunityUrlButton({ conversationId }: WithConvoId) {
   }
   return (
     <PanelIconButton
-      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.COPY} />}
-      text={localize('communityUrlCopy').toString()}
+      iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.COPY} />}
+      text={tr('communityUrlCopy')}
       onClick={copyCommunityUrlCb}
       dataTestId="copy-community-url-menu-option"
     />
@@ -408,8 +405,8 @@ export function InviteContactsToGroupV2Button({ conversationId }: WithConvoId) {
   }
   return (
     <PanelIconButton
-      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.USER_ROUND_PLUS} />}
-      text={localize('membersInvite').toString()}
+      iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.USER_ROUND_PLUS} />}
+      text={tr('membersInvite')}
       onClick={showInviteContactToGroupCb}
       dataTestId="invite-contacts-menu-option"
     />
@@ -427,7 +424,7 @@ export function ClearAllMessagesButton({ conversationId }: WithConvoId) {
       iconElement={
         <PanelIconSessionLegacyIcon iconType={'messageTrash'} iconColor="var(--danger-color)" />
       }
-      text={localize('clearMessages').toString()}
+      text={tr('clearMessages')}
       onClick={clearAllMessagesCb}
       dataTestId="clear-all-messages-menu-option"
       color="var(--danger-color)"
@@ -444,8 +441,8 @@ export function DeletePrivateConversationButton({ conversationId }: WithConvoId)
 
   return (
     <PanelIconButton
-      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.TRASH2} />}
-      text={localize('conversationsDelete').toString()}
+      iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.TRASH2} />}
+      text={tr('conversationsDelete')}
       onClick={showDeleteConversationContactCb}
       dataTestId="delete-conversation-menu-option"
       color="var(--danger-color)"
@@ -462,8 +459,8 @@ export function HideNoteToSelfButton({ conversationId }: WithConvoId) {
 
   return (
     <PanelIconButton
-      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.EYE_OFF} />}
-      text={localize('noteToSelfHide').toString()}
+      iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.EYE_OFF} />}
+      text={tr('noteToSelfHide')}
       onClick={showHideNoteToSelfCb}
       dataTestId="hide-nts-menu-option"
       color="var(--danger-color)"
@@ -480,8 +477,8 @@ export function ShowNoteToSelfButton({ conversationId }: WithConvoId) {
 
   return (
     <PanelIconButton
-      iconElement={<PanelIconLucideIcon iconUnicode={LUCIDE_ICONS_UNICODE.EYE} />}
-      text={localize('showNoteToSelf').toString()}
+      iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.EYE} />}
+      text={tr('showNoteToSelf')}
       onClick={showShowNoteToSelfCb}
       dataTestId="show-nts-menu-option"
     />
@@ -500,7 +497,7 @@ export function DeletePrivateContactButton({ conversationId }: WithConvoId) {
       iconElement={
         <PanelIconSessionLegacyIcon iconType={'removeUser'} iconColor="var(--danger-color)" />
       }
-      text={localize('contactDelete').toString()}
+      text={tr('contactDelete')}
       onClick={showDeletePrivateContactCb}
       dataTestId="delete-contact-menu-option"
       color="var(--danger-color)"
@@ -517,8 +514,8 @@ export function BlockUnblockButton({ conversationId }: WithConvoId) {
 
   return (
     <PanelIconButton
-      iconElement={<PanelIconLucideIcon iconUnicode={showBlockUnblock.icon} />}
-      text={localize(showBlockUnblock.token).toString()}
+      iconElement={<PanelIconLucideIcon unicode={showBlockUnblock.icon} />}
+      text={tr(showBlockUnblock.token)}
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       onClick={showBlockUnblock.cb}
       dataTestId="block-user-menu-option"

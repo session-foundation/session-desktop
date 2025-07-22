@@ -48,7 +48,7 @@ import { StoreGroupRequestFactory } from '../session/apis/snode_api/factories/St
 import { DURATION } from '../session/constants';
 import { GroupInvite } from '../session/utils/job_runners/jobs/GroupInviteJob';
 import type { LocalizerProps } from '../components/basic/Localizer';
-import { localize } from '../localization/localeTools';
+import { tr } from '../localization/localeTools';
 
 export async function copyPublicKeyByConvoId(convoId: string) {
   if (OpenGroupUtils.isOpenGroupV2(convoId)) {
@@ -250,9 +250,9 @@ export const declineConversationWithConfirm = ({
 
   window?.inboxStore?.dispatch(
     updateConfirmModal({
-      okText: alsoBlock ? window.i18n('block') : window.i18n('delete'),
-      cancelText: window.i18n('cancel'),
-      title: alsoBlock ? window.i18n('block') : window.i18n('delete'),
+      okText: alsoBlock ? tr('block') : tr('delete'),
+      cancelText: tr('cancel'),
+      title: alsoBlock ? tr('block') : tr('delete'),
       i18nMessage,
       okTheme: SessionButtonColor.Danger,
       onClickOk: async () => {
@@ -392,13 +392,13 @@ export async function showLeaveGroupByConvoId(conversationId: string, name: stri
   if (weAreLastAdmin) {
     window?.inboxStore?.dispatch(
       updateConfirmModal({
-        title: window.i18n('groupLeave'),
+        title: tr('groupLeave'),
         i18nMessage: {
           token: 'groupDeleteDescription',
-          args: { group_name: name || window.i18n('unknown') },
+          args: { group_name: name || tr('unknown') },
         },
         onClickOk,
-        okText: window.i18n('leave'),
+        okText: tr('leave'),
         okTheme: SessionButtonColor.Danger,
         onClickClose,
         conversationId,
@@ -408,10 +408,10 @@ export async function showLeaveGroupByConvoId(conversationId: string, name: stri
   }
   window?.inboxStore?.dispatch(
     updateConfirmModal({
-      title: localize('groupLeave').toString(),
-      i18nMessage: { token: 'groupLeaveDescription', args: { group_name: name ?? '' } },
+      title: tr('groupLeave'),
+      i18nMessage: { token: 'groupLeaveDescription', args: { group_name: name ?? tr('unknown') } },
       onClickOk,
-      okText: window.i18n('leave'),
+      okText: tr('leave'),
       okTheme: SessionButtonColor.Danger,
       onClickClose,
       conversationId,
@@ -428,6 +428,8 @@ export async function showDeleteGroupByConvoId(conversationId: string, name: str
   const conversation = ConvoHub.use().get(conversationId);
 
   const isPublic = conversation.isPublic();
+
+  const weAreAdmin = conversation.weAreAdminUnblinded();
 
   if (!conversation.isGroup() || isPublic) {
     throw new Error('showDeleteGroupByConvoId() called with a non group convo.');
@@ -449,10 +451,13 @@ export async function showDeleteGroupByConvoId(conversationId: string, name: str
 
   window?.inboxStore?.dispatch(
     updateConfirmModal({
-      title: window.i18n('groupDelete'),
-      i18nMessage: { token: 'groupDeleteDescriptionMember', args: { group_name: name ?? '' } },
+      title: tr('groupDelete'),
+      i18nMessage: {
+        token: weAreAdmin ? 'groupDeleteDescription' : 'groupDeleteDescriptionMember',
+        args: { group_name: name ?? tr('unknown') },
+      },
       onClickOk,
-      okText: window.i18n('delete'),
+      okText: tr('delete'),
       okTheme: SessionButtonColor.Danger,
       onClickClose,
       conversationId,
@@ -597,7 +602,7 @@ export async function showLinkSharingConfirmationModalDialog(e: any) {
     if (!alreadyDisplayedPopup) {
       window.inboxStore?.dispatch(
         updateConfirmModal({
-          title: window.i18n('linkPreviewsEnable'),
+          title: tr('linkPreviewsEnable'),
           i18nMessage: { token: 'linkPreviewsFirstDescription' },
           okTheme: SessionButtonColor.Danger,
           onClickOk: async () => {
@@ -606,7 +611,7 @@ export async function showLinkSharingConfirmationModalDialog(e: any) {
           onClickClose: async () => {
             await Storage.put(SettingsKey.hasLinkPreviewPopupBeenDisplayed, true);
           },
-          okText: window.i18n('enable'),
+          okText: tr('enable'),
         })
       );
     }

@@ -1,38 +1,36 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import styled from 'styled-components';
 import { useIsLegacyGroup, useNotificationSetting } from '../../../../../hooks/useParamSelector';
 import { useSelectedConversationKey } from '../../../../../state/selectors/selectedConversation';
 import { Flex } from '../../../../basic/Flex';
 import { SessionButton } from '../../../../basic/SessionButton';
 import { StyledScrollContainer } from '../../../../conversation/right-panel/overlay/components';
 import { type ConversationNotificationSettingType } from '../../../../../models/conversationAttributes';
-import { localize } from '../../../../../localization/localeTools';
 import { PanelButtonGroup } from '../../../../buttons';
 import { PanelRadioButton } from '../../../../buttons/PanelRadioButton';
-import { updateConversationSettingsModal } from '../../../../../state/ducks/modalDialog';
+import {
+  updateConversationSettingsModal,
+  type ConversationSettingsModalState,
+} from '../../../../../state/ducks/modalDialog';
 import { useConversationSettingsModalIsStandalone } from '../../../../../state/selectors/modal';
 import { PanelButtonText } from '../../../../buttons/PanelButton';
 import { useLocalisedNotificationOptions } from '../../../../menuAndSettingsHooks/useLocalisedNotificationFor';
 import { useSetNotificationsFor } from '../../../../menuAndSettingsHooks/useSetNotificationsFor';
 import { useShowConversationSettingsFor } from '../../../../menuAndSettingsHooks/useShowConversationSettingsFor';
-
-const ButtonSpacer = styled.div`
-  height: 80px;
-`;
-
-const StyledButtonContainer = styled.div`
-  position: absolute;
-  width: 100%;
-  bottom: 0px;
-
-  .session-button {
-    font-weight: 500;
-    min-width: 90px;
-    width: fit-content;
-    margin: 35px auto 10px;
-  }
-`;
+import {
+  useBackActionForPage,
+  useCloseActionFromPage,
+  useTitleFromPage,
+} from '../conversationSettingsHooks';
+import {
+  ModalBasicHeader,
+  ModalActionsContainer,
+  SessionWrapperModal,
+  WrapperModalWidth,
+} from '../../../../SessionWrapperModal';
+import { ModalBackButton } from '../../../shared/ModalBackButton';
+import { SpacerMD } from '../../../../basic/Text';
+import { tr } from '../../../../../localization/localeTools';
 
 const getDataTestIdForButton = (
   value: ConversationNotificationSettingType
@@ -62,7 +60,11 @@ const getDataTestIdForRadioButton = (
   }
 };
 
-export const NotificationsPage = () => {
+export function NotificationForConversationModal(props: Required<ConversationSettingsModalState>) {
+  const onClose = useCloseActionFromPage(props);
+  const title = useTitleFromPage(props?.settingsModalPage);
+  const backAction = useBackActionForPage(props);
+
   const dispatch = useDispatch();
   const selectedConversationKey = useSelectedConversationKey();
   const notification = useNotificationSetting(selectedConversationKey);
@@ -90,6 +92,9 @@ export const NotificationsPage = () => {
       }
     }
   };
+  if (!props?.conversationId) {
+    return null;
+  }
 
   if (!notificationSelected) {
     return null;
@@ -106,42 +111,58 @@ export const NotificationsPage = () => {
   const noChanges = notificationSelected === notification;
 
   return (
-    <StyledScrollContainer style={{ position: 'relative' }}>
-      <Flex $container={true} $flexDirection={'column'} $alignItems={'center'}>
-        <PanelButtonGroup>
-          {notificationOptions.map(option => {
-            const rowDataTestId = getDataTestIdForButton(option.value);
-            const tickDataTestId = getDataTestIdForRadioButton(option.value);
-
-            return (
-              <PanelRadioButton
-                key={option.value}
-                // when we have a radio button, we need to have a text element, but we don't have a text element for notifications
-                textElement={
-                  <PanelButtonText text={option.name} textDataTestId="invalid-data-testid" />
-                }
-                value={option}
-                isSelected={notificationSelected === option.value}
-                onSelect={() => {
-                  setNotificationSelected(option.value);
-                }}
-                rowDataTestId={rowDataTestId}
-                radioInputDataTestId={tickDataTestId}
-              />
-            );
-          })}
-        </PanelButtonGroup>
-        <ButtonSpacer />
-        <StyledButtonContainer>
+    <SessionWrapperModal
+      headerChildren={
+        <ModalBasicHeader
+          title={title}
+          bigHeader={true}
+          leftButton={backAction ? <ModalBackButton onClick={backAction} /> : undefined}
+        />
+      }
+      onClose={onClose}
+      shouldOverflow={true}
+      allowOutsideClick={false}
+      $contentMinWidth={WrapperModalWidth.narrow} // the content is radio buttons and it looks weird on a large modal
+      buttonChildren={
+        <ModalActionsContainer extraBottomMargin={true}>
           <SessionButton
             onClick={handleSetNotifications}
             dataTestId={'notifications-set-button'}
             disabled={noChanges}
           >
-            {localize('set')}
+            {tr('set')}
           </SessionButton>
-        </StyledButtonContainer>
-      </Flex>
-    </StyledScrollContainer>
+        </ModalActionsContainer>
+      }
+    >
+      <StyledScrollContainer style={{ position: 'relative' }}>
+        <Flex $container={true} $flexDirection={'column'} $alignItems={'center'}>
+          <PanelButtonGroup>
+            {notificationOptions.map(option => {
+              const rowDataTestId = getDataTestIdForButton(option.value);
+              const tickDataTestId = getDataTestIdForRadioButton(option.value);
+
+              return (
+                <PanelRadioButton
+                  key={option.value}
+                  // when we have a radio button, we need to have a text element, but we don't have a text element for notifications
+                  textElement={
+                    <PanelButtonText text={option.name} textDataTestId="invalid-data-testid" />
+                  }
+                  value={option}
+                  isSelected={notificationSelected === option.value}
+                  onSelect={() => {
+                    setNotificationSelected(option.value);
+                  }}
+                  rowDataTestId={rowDataTestId}
+                  radioInputDataTestId={tickDataTestId}
+                />
+              );
+            })}
+          </PanelButtonGroup>
+        </Flex>
+      </StyledScrollContainer>
+      <SpacerMD />
+    </SessionWrapperModal>
   );
-};
+}

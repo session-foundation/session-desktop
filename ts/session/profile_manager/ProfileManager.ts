@@ -2,7 +2,7 @@ import { isEmpty, isNil } from 'lodash';
 import { ConvoHub } from '../conversations';
 import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { SyncUtils, UserUtils } from '../utils';
-import { fromHexToArray, sanitizeSessionUsername, toHex } from '../utils/String';
+import { fromHexToArray, toHex, trimWhitespace } from '../utils/String';
 import { AvatarDownload } from '../utils/job_runners/jobs/AvatarDownloadJob';
 import { CONVERSATION_PRIORITIES, ConversationTypeEnum } from '../../models/types';
 import { RetrieveDisplayNameError } from '../utils/errors';
@@ -136,7 +136,7 @@ async function updateOurProfileDisplayName(newName: string) {
   const dbPriority = conversation.get('priority') || CONVERSATION_PRIORITIES.default;
 
   // we don't want to throw if somehow our display name in the DB is too long here, so we use the truncated version.
-  await UserConfigWrapperActions.setNameTruncated(sanitizeSessionUsername(newName).trim());
+  await UserConfigWrapperActions.setNameTruncated(trimWhitespace(newName));
   const truncatedName = await UserConfigWrapperActions.getName();
   if (isNil(truncatedName)) {
     throw new RetrieveDisplayNameError();

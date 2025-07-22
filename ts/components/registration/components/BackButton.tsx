@@ -15,9 +15,9 @@ import {
 } from '../../../state/onboarding/selectors/registration';
 import { deleteDbLocally } from '../../../util/accountManager';
 import { Flex } from '../../basic/Flex';
-import { SessionButtonColor } from '../../basic/SessionButton';
-import { SessionIconButton } from '../../icon';
 import type { LocalizerProps } from '../../basic/Localizer';
+import { SessionLucideIconButton } from '../../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 
 /** Min height should match the onboarding step with the largest height this prevents the loading spinner from jumping around while still keeping things centered  */
 const StyledBackButtonContainer = styled(Flex)`
@@ -61,7 +61,7 @@ export const BackButtonWithinContainer = ({
   );
 };
 
-export const BackButton = ({
+const BackButton = ({
   callback,
   onQuitVisible,
   shouldQuitOnClick,
@@ -78,13 +78,12 @@ export const BackButton = ({
   const dispatch = useDispatch();
 
   return (
-    <SessionIconButton
+    <SessionLucideIconButton
       ariaLabel="Back button"
-      iconSize="huge"
-      iconType="chevron"
+      iconSize="large"
+      unicode={LUCIDE_ICONS_UNICODE.CHEVRON_LEFT}
       iconColor="var(--color-text-primary)"
-      iconRotation={90}
-      padding={'0'}
+      dataTestId="back-button"
       onClick={() => {
         if (shouldQuitOnClick && quitI18nMessageArgs) {
           if (onQuitVisible) {
@@ -93,10 +92,6 @@ export const BackButton = ({
 
           dispatch(
             updateQuitModal({
-              title: window.i18n('warning'),
-              i18nMessage: quitI18nMessageArgs,
-              okTheme: SessionButtonColor.Danger,
-              okText: window.i18n('quitButton'),
               onClickOk: async () => {
                 try {
                   window.log.warn(
@@ -115,6 +110,7 @@ export const BackButton = ({
               onClickCancel: () => {
                 window.inboxStore?.dispatch(updateQuitModal(null));
               },
+              i18nMessage: quitI18nMessageArgs,
             })
           );
           return;

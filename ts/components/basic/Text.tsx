@@ -34,14 +34,13 @@ type SpacerProps = {
   size: 'xxs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
   style?: CSSProperties;
 };
-
 const SpacerStyled = styled.div<SpacerProps>`
   width: ${props => `var(--margins-${props.size})`};
   height: ${props => `var(--margins-${props.size})`};
 `;
 
 const Spacer = (props: SpacerProps) => {
-  return <SpacerStyled {...props} />;
+  return <SpacerStyled {...props} data-testid={`spacer-${props.size}`} />;
 };
 
 /** --margins-xxs 2.5px */

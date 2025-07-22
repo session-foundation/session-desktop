@@ -115,7 +115,7 @@ const userSlice = createSlice({
       return state;
     });
     builder.addCase(clearOurAvatar.fulfilled, (state, action) => {
-      window.log.error('a clearOurAvatar was fulfilled with:', action.payload);
+      window.log.debug('a clearOurAvatar was fulfilled with:', action.payload);
 
       state.uploadingNewAvatarCurrentUser = false;
       return state;

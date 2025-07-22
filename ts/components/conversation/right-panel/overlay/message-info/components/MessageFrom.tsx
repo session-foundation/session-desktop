@@ -5,6 +5,7 @@ import { isDevProd } from '../../../../../../shared/env_vars';
 import { Avatar, AvatarSize, CrownIcon } from '../../../../../avatar/Avatar';
 import { Flex } from '../../../../../basic/Flex';
 import { CopyToClipboardIcon } from '../../../../../buttons';
+import { tr } from '../../../../../../localization/localeTools';
 
 const StyledFromContainer = styled.div`
   display: flex;
@@ -39,7 +40,7 @@ const StyledAvatar = styled.div`
 export const MessageFrom = (props: { sender: string; isSenderAdmin: boolean }) => {
   const { sender, isSenderAdmin } = props;
   const profileName = useConversationUsername(sender);
-  const from = window.i18n('from');
+  const from = tr('from');
 
   const isDev = isDevProd();
 
@@ -49,7 +50,7 @@ export const MessageFrom = (props: { sender: string; isSenderAdmin: boolean }) =
         <MessageInfoLabel>{from}</MessageInfoLabel>
         {isDev ? (
           <CopyToClipboardIcon
-            iconSize={'medium'}
+            iconSize={'small'}
             copyContent={`${profileName} ${sender}`}
             margin={'0 0 0 var(--margins-xs)'}
           />

@@ -16,7 +16,7 @@ import {
 } from '../../../hooks/useParamSelector';
 import { PubKey } from '../../../session/types';
 import { H7 } from '../../basic/Heading';
-import { localize } from '../../../localization/localeTools';
+import { tr } from '../../../localization/localeTools';
 import { useChangeNickname } from '../../menuAndSettingsHooks/useChangeNickname';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { SessionLucideIconButton } from '../../icon/SessionIconButton';
@@ -32,7 +32,15 @@ function AccountId({ conversationId }: WithConvoId) {
   if (!isPrivate || PubKey.isBlinded(conversationId)) {
     return null;
   }
-  return <StyledAccountId data-testid="account-id">{conversationId}</StyledAccountId>;
+  const len = conversationId.length;
+
+  return (
+    <StyledAccountId data-testid="account-id">
+      {conversationId.slice(0, len / 2)}
+      <br />
+      {conversationId.slice(len / 2)}
+    </StyledAccountId>
+  );
 }
 
 function EditGenericButton({
@@ -49,7 +57,7 @@ function EditGenericButton({
   return (
     <SessionLucideIconButton
       unicode={LUCIDE_ICONS_UNICODE.PENCIL}
-      iconSize="large"
+      iconSize="medium"
       onClick={cb}
       dataTestId={dataTestId}
     />
@@ -148,7 +156,7 @@ function Description({ conversationId }: WithConvoId) {
       </StyledDescription>
       {isClamped && (
         <StyledViewMoreButton onClick={() => setExpanded(!expanded)}>
-          {expanded ? localize('viewLess') : localize('viewMore')}
+          {expanded ? tr('viewLess') : tr('viewMore')}
         </StyledViewMoreButton>
       )}
     </>
@@ -181,7 +189,7 @@ const ConversationTitle = ({ conversationId }: WithConvoId) => {
       }}
       onClick={onClickCb || undefined}
     >
-      {isMe ? localize('noteToSelf').toString() : nicknameOrDisplayName}
+      {isMe ? tr('noteToSelf') : nicknameOrDisplayName}
     </H7>
   );
 };

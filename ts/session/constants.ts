@@ -79,9 +79,11 @@ export const CONVERSATION = {
   LAST_JOINED_FALLBACK_TIMESTAMP: 1,
   /**
    * the maximum chars that can be typed/pasted in the composition box.
-   * Increased to accommodate PGP payloads.
    */
-  MAX_MESSAGE_CHAR_COUNT: 10000,
+  MAX_MESSAGE_CHAR_COUNT_STANDARD: 2_000,
+  MAX_MESSAGE_CHAR_COUNT_PRO: 10_000,
+  MAX_MESSAGE_MAX_LINES_BEFORE_READ_MORE: 25,
+  MAX_PINNED_CONVERSATIONS_STANDARD: 5,
 } as const;
 
 /**

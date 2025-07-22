@@ -6,6 +6,8 @@ import { useSelectedConversationKey } from '../../../state/selectors/selectedCon
 import { saveAttachmentToDisk } from '../../../util/attachmentsUtil';
 import { MediaItemType } from '../../lightbox/LightboxGallery';
 import { formatDateWithLocale } from '../../../util/i18n/formatting/generics';
+import { LucideIcon } from '../../icon/LucideIcon';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 
 type Props = {
   // Required
@@ -55,7 +57,7 @@ export const DocumentListItem = (props: Props) => {
         role="button"
         onClick={saveAttachmentCallback}
       >
-        <div className="module-document-list-item__icon" />
+        <LucideIcon iconSize="huge" unicode={LUCIDE_ICONS_UNICODE.FILE} />
         <div className="module-document-list-item__metadata">
           <span className="module-document-list-item__file-name">{fileName}</span>
           <span className="module-document-list-item__file-size">

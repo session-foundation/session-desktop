@@ -7,8 +7,10 @@ import { useMessageAttachments } from '../../../../state/selectors';
 import { isAudio } from '../../../../types/MIME';
 import { isImageTypeSupported, isVideoTypeSupported } from '../../../../util/GoogleChrome';
 import { SessionButtonColor } from '../../../basic/SessionButton';
-import { SessionIcon } from '../../../icon';
 import { Localizer } from '../../../basic/Localizer';
+import { LucideIcon } from '../../../icon/LucideIcon';
+import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
+import { tr } from '../../../../localization/localeTools';
 
 const StyledTrustSenderUI = styled.div`
   padding-inline: var(--margins-lg);
@@ -42,7 +44,7 @@ export const ClickToTrustSender = (props: { messageId: string }) => {
     const convo = ConvoHub.use().get(sender);
     window.inboxStore?.dispatch(
       updateConfirmModal({
-        title: window.i18n('attachmentsAutoDownloadModalTitle'),
+        title: tr('attachmentsAutoDownloadModalTitle'),
         i18nMessage: {
           token: 'attachmentsAutoDownloadModalDescription',
           args: {
@@ -114,7 +116,8 @@ export const ClickToTrustSender = (props: { messageId: string }) => {
         onClickClose: () => {
           window.inboxStore?.dispatch(updateConfirmModal(null));
         },
-        okText: window.i18n('download'),
+        okText: tr('yes'),
+        cancelText: tr('no'),
       })
     );
   };
@@ -122,15 +125,15 @@ export const ClickToTrustSender = (props: { messageId: string }) => {
   const firstMimeType = attachments?.[0].contentType || 'unknown';
 
   const fileType = isAudio(firstMimeType)
-    ? window.i18n('audio')
+    ? tr('audio')
     : isVideoTypeSupported(firstMimeType) || isImageTypeSupported(firstMimeType)
-      ? window.i18n('media')
-      : window.i18n('file');
+      ? tr('media')
+      : tr('file');
 
   return (
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     <StyledTrustSenderUI onClick={openConfirmationModal}>
-      <SessionIcon iconSize="small" iconType="gallery" />
+      <LucideIcon iconSize="small" unicode={LUCIDE_ICONS_UNICODE.IMAGE} />
       <ClickToDownload>
         <Localizer
           token="attachmentsClickToDownload"

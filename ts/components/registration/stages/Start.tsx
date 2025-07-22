@@ -17,6 +17,7 @@ import { SessionButton } from '../../basic/SessionButton';
 import { SpacerLG } from '../../basic/Text';
 import { resetRegistration } from '../RegistrationStages';
 import { TermsAndConditions } from '../TermsAndConditions';
+import { tr } from '../../../localization/localeTools';
 
 // NOTE we want to prevent the buttons from flashing when the app starts
 const StyledStart = styled.div<{ ready: boolean }>`
@@ -49,7 +50,7 @@ export const Start = () => {
           dispatch(setAccountCreationStep(AccountCreation.DisplayName));
           dispatch(setOnboardingStep(Onboarding.CreateAccount));
         }}
-        text={window.i18n('onboardingAccountCreate')}
+        text={tr('onboardingAccountCreate')}
         dataTestId="create-account-button"
       />
       <SpacerLG />
@@ -60,7 +61,7 @@ export const Start = () => {
           dispatch(setOnboardingStep(Onboarding.RestoreAccount));
           dispatch(setAccountRestorationStep(AccountRestoration.RecoveryPassword));
         }}
-        text={window.i18n('onboardingAccountExists')}
+        text={tr('onboardingAccountExists')}
         dataTestId="existing-account-button"
       />
       <SpacerLG />

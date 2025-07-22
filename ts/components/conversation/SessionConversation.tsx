@@ -61,7 +61,7 @@ import { showLinkVisitWarningDialog } from '../dialog/OpenUrlModal';
 import { InvitedToGroup, NoMessageInConversation } from './SubtleNotification';
 import { PubKey } from '../../session/types';
 import { isUsAnySogsFromCache } from '../../session/apis/open_group_api/sogsv3/knownBlindedkeys';
-import { localize } from '../../localization/localeTools';
+import { tr } from '../../localization/localeTools';
 import {
   useConversationIsExpired03Group,
   useSelectedConversationKey,
@@ -69,6 +69,7 @@ import {
   useSelectedIsPublic,
   useSelectedWeAreAdmin,
 } from '../../state/selectors/selectedConversation';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 const DEFAULT_JPEG_QUALITY = 0.85;
 
@@ -114,7 +115,7 @@ const GroupMarkedAsExpired = () => {
   }
   return (
     <NoticeBanner
-      text={window.i18n('groupNotUpdatedWarning')}
+      text={tr('groupNotUpdatedWarning')}
       dataTestId="group-not-updated-30-days-banner"
     />
   );
@@ -226,9 +227,10 @@ export class SessionConversation extends Component<Props, State> {
     if (msg.body.replace(/\s/g, '').includes(recoveryPhrase.replace(/\s/g, ''))) {
       window.inboxStore?.dispatch(
         updateConfirmModal({
-          title: window.i18n('warning'),
+          title: tr('warning'),
           i18nMessage: { token: 'recoveryPasswordWarningSendDescription' },
           okTheme: SessionButtonColor.Danger,
+          okText: tr('send'),
           onClickOk: () => {
             void sendAndScroll();
           },
@@ -544,7 +546,7 @@ export class SessionConversation extends Component<Props, State> {
       return {
         id: pubKey,
         display: isUsAnySogsFromCache(pubKey)
-          ? localize('you').toString()
+          ? tr('you')
           : ConvoHub.use().get(pubKey)?.getNicknameOrRealUsernameOrPlaceholder() ||
             PubKey.shorten(pubKey),
       };
@@ -661,9 +663,9 @@ function OutdatedLegacyGroupBanner() {
     selectedConversationKey &&
     PubKey.is05Pubkey(selectedConversationKey);
 
-  const text = localize(
+  const text = tr(
     weAreAdmin ? 'legacyGroupAfterDeprecationAdmin' : 'legacyGroupAfterDeprecationMember'
-  ).toString();
+  );
 
   return isLegacyGroup ? (
     <NoticeBanner
@@ -671,7 +673,7 @@ function OutdatedLegacyGroupBanner() {
       onBannerClick={() => {
         showLinkVisitWarningDialog('https://getsession.org/groups', dispatch);
       }}
-      icon="externalLink"
+      unicode={LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}
       dataTestId="legacy-group-banner"
     />
   ) : null;

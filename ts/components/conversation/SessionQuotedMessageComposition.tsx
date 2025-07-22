@@ -1,7 +1,6 @@
 import { useDispatch, useSelector } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
 import styled from 'styled-components';
-import { SessionIcon, SessionIconButton } from '../icon';
 
 import { quoteMessage } from '../../state/ducks/conversations';
 import { getQuotedMessage } from '../../state/selectors/conversations';
@@ -13,6 +12,13 @@ import { Image } from './Image';
 import { findAndFormatContact } from '../../models/message';
 import { getAbsoluteAttachmentPath } from '../../types/MessageAttachment';
 import { GoogleChrome } from '../../util';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { LucideIcon } from '../icon/LucideIcon';
+import { tr } from '../../localization/localeTools';
+import { ContactName } from './ContactName';
+import { useSelectedIsPublic } from '../../state/selectors/selectedConversation';
+import { QuoteText } from './message/message-content/quote/QuoteText';
 
 const QuotedMessageComposition = styled(Flex)`
   border-top: 1px solid var(--border-color);
@@ -30,6 +36,7 @@ const Subtle = styled.div`
   -webkit-box-orient: vertical;
   display: -webkit-box;
   color: var(--text-primary-color);
+  font-size: var(--font-display-size-md);
 `;
 
 const StyledImage = styled.div`
@@ -59,31 +66,13 @@ function checkHasAttachments(attachments: Array<any> | undefined) {
   return { hasAttachments, firstImageLikeAttachment };
 }
 
-function renderSubtitleText(
-  quoteText: string | undefined,
-  hasAudioAttachment: boolean,
-  isGenericFile: boolean,
-  isVideo: boolean,
-  isImage: boolean
-): string | null {
-  return quoteText && quoteText !== ''
-    ? quoteText
-    : hasAudioAttachment
-      ? window.i18n('audio')
-      : isGenericFile
-        ? window.i18n('document')
-        : isVideo
-          ? window.i18n('video')
-          : isImage
-            ? window.i18n('image')
-            : null;
-}
-
 export const SessionQuotedMessageComposition = () => {
   const dispatch = useDispatch();
   const quotedMessageProps = useSelector(getQuotedMessage);
 
   const { author, attachments, text: quoteText } = quotedMessageProps || {};
+
+  const isPublic = useSelectedIsPublic();
 
   const removeQuotedMessage = () => {
     dispatch(quoteMessage(undefined));
@@ -96,7 +85,6 @@ export const SessionQuotedMessageComposition = () => {
   }
 
   const contact = findAndFormatContact(author);
-  const authorName = contact?.profileName || contact?.name || author || window.i18n('unknown');
 
   const { hasAttachments, firstImageLikeAttachment } = checkHasAttachments(attachments);
   const isImage = Boolean(
@@ -110,12 +98,21 @@ export const SessionQuotedMessageComposition = () => {
   const hasAudioAttachment = Boolean(hasAttachments && isAudio(attachments));
   const isGenericFile = !hasAudioAttachment && !isVideo && !isImage;
 
-  const subtitleText = renderSubtitleText(
-    quoteText,
-    hasAudioAttachment,
-    isGenericFile,
-    isVideo,
-    isImage
+  const subtitleText = quoteText ? (
+    /** isIncoming must be true here otherwise the text content is the same color as the background */
+    <QuoteText isIncoming={true} text={quoteText} referencedMessageNotFound={true} />
+  ) : (
+    tr(
+      hasAudioAttachment
+        ? 'audio'
+        : isGenericFile
+          ? 'document'
+          : isVideo
+            ? 'video'
+            : isImage
+              ? 'image'
+              : 'messageErrorOriginal'
+    )
   );
 
   return (
@@ -146,7 +143,7 @@ export const SessionQuotedMessageComposition = () => {
               />
             ) : hasAudioAttachment ? (
               <div style={{ margin: '0 var(--margins-xs) 0 0' }}>
-                <SessionIcon iconType="microphone" iconSize="huge" />
+                <LucideIcon unicode={LUCIDE_ICONS_UNICODE.MIC} iconSize="huge" />
               </div>
             ) : null}
           </StyledImage>
@@ -157,17 +154,24 @@ export const SessionQuotedMessageComposition = () => {
           $justifyContent={'center'}
           $alignItems={'flex-start'}
         >
-          <p>{authorName}</p>
+          <ContactName
+            pubkey={contact.pubkey}
+            shouldShowPubkey={false}
+            isPublic={isPublic}
+            boldProfileName={true}
+          />
           {subtitleText && <Subtle>{subtitleText}</Subtle>}
         </StyledText>
       </QuotedMessageCompositionReply>
-      <SessionIconButton
-        iconType="exit"
+
+      <SessionLucideIconButton
+        unicode={LUCIDE_ICONS_UNICODE.X}
         iconColor="var(--chat-buttons-icon-color)"
-        iconSize="small"
+        iconSize="medium"
         onClick={removeQuotedMessage}
         margin={'0 var(--margins-sm) 0 0'}
-        aria-label={window.i18n('close')}
+        aria-label={tr('close')}
+        dataTestId="link-preview-close"
       />
     </QuotedMessageComposition>
   );

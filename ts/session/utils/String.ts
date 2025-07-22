@@ -47,24 +47,11 @@ export const stringToUint8Array = (str?: string): Uint8Array => {
   return new Uint8Array(stringToArrayBuffer(str));
 };
 
-// Regex to match all characters which are forbidden in display names
-const forbiddenDisplayCharRegex = /\uFFD2*/g;
-
-/**
- *
- * This function removes any forbidden char from a given display name.
- * This does not trim it as otherwise, a user cannot type User A as when he hits the space, it gets trimmed right away.
- * The trimming should hence happen after calling this and on saving the display name.
- * @param inputName the input to sanitize
- * @returns a sanitized string, untrimmed
- */
-export const sanitizeSessionUsername = (inputName: string) => {
-  const validChars = inputName.replace(forbiddenDisplayCharRegex, '');
-  return validChars;
-};
-
 export const ed25519Str = (ed25519Key: string) =>
   `(...${ed25519Key.length > 58 ? ed25519Key.substr(58) : ed25519Key})`;
+
+// eslint-disable-next-line no-misleading-character-class -- We specifically want these unicode chars
+const OUTER_WHITESPACE_REGEX = /^[\s\u200B-\u200F\u2060\uFEFF]+|[\s\u200B-\u200F\u2060\uFEFF]+$/g;
 
 /**
  * Trims a string including any special whitespace characters.
@@ -81,20 +68,5 @@ export const ed25519Str = (ed25519Key: string) =>
  * - U+FEFF ZERO WIDTH NO-BREAK SPACE https://unicode-explorer.com/c/FEFF
  */
 export const trimWhitespace = (value: string): string => {
-  const blacklist = ['​', '‌', '‍', '‎', '‏', '⁠', ''];
-
-  let trimmedValue = value.trim();
-
-  while (trimmedValue[0] && blacklist.includes(trimmedValue[0])) {
-    trimmedValue = trimmedValue.slice(1);
-  }
-
-  while (
-    trimmedValue[trimmedValue.length - 1] &&
-    blacklist.includes(trimmedValue[trimmedValue.length - 1])
-  ) {
-    trimmedValue = trimmedValue.slice(0, -1);
-  }
-
-  return trimmedValue;
+  return value.replace(OUTER_WHITESPACE_REGEX, '');
 };

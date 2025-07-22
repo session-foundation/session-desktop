@@ -5,6 +5,7 @@ import { useConvoIdFromContext } from '../../../contexts/ConvoIdContext';
 import {
   useHasUnread,
   useIsPrivate,
+  useIsPublic,
   useIsTyping,
   useLastMessage,
 } from '../../../hooks/useParamSelector';
@@ -14,13 +15,15 @@ import { useIsMessageRequestOverlayShown } from '../../../state/selectors/sectio
 import { assertUnreachable } from '../../../types/sqlSharedTypes';
 import { TypingAnimation } from '../../conversation/TypingAnimation';
 import { MessageBody } from '../../conversation/message/message-content/MessageBody';
-import { SessionIcon } from '../../icon';
 import { InteractionItem } from './InteractionItem';
+import { LucideIcon } from '../../icon/LucideIcon';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 
 export const MessageItem = () => {
   const conversationId = useConvoIdFromContext();
   const lastMessage = useLastMessage(conversationId);
   const isGroup = !useIsPrivate(conversationId);
+  const isPublic = useIsPublic(conversationId);
 
   const hasUnread = useHasUnread(conversationId);
   const isConvoTyping = useIsTyping(conversationId);
@@ -41,7 +44,6 @@ export const MessageItem = () => {
   if (isEmpty(text)) {
     return null;
   }
-  const withoutHtmlTags = text.replaceAll(/(<([^>]+)>)/gi, '');
 
   return (
     <div className="module-conversation-list-item__message">
@@ -55,10 +57,11 @@ export const MessageItem = () => {
           <TypingAnimation />
         ) : (
           <MessageBody
-            text={withoutHtmlTags}
+            text={text}
             disableJumbomoji={true}
-            disableLinks={true}
+            disableRichContent={true}
             isGroup={isGroup}
+            isPublic={isPublic}
           />
         )}
       </div>
@@ -70,42 +73,41 @@ export const MessageItem = () => {
 };
 
 function IconMessageStatus({ status }: { status: LastMessageStatusType }) {
-  const nonErrorIconColor = 'var(--text-secondary-color';
+  const nonErrorIconColor = 'var(--text-secondary-color)';
   switch (status) {
     case 'error':
       return (
-        <SessionIcon
-          iconColor={'var(--danger-color'}
-          iconType="error"
-          iconSize="tiny"
+        <LucideIcon
+          unicode={LUCIDE_ICONS_UNICODE.TRIANGLE_ALERT}
+          iconColor={'var(--danger-color)'}
+          iconSize="small"
           style={{ flexShrink: 0 }}
         />
       );
     case 'read':
       return (
-        <SessionIcon
+        <LucideIcon
+          unicode={LUCIDE_ICONS_UNICODE.EYE}
           iconColor={nonErrorIconColor}
-          iconType="doubleCheckCircleFilled"
-          iconSize="tiny"
+          iconSize="small"
           style={{ flexShrink: 0 }}
         />
       );
     case 'sending':
       return (
-        <SessionIcon
-          rotateDuration={2}
+        <LucideIcon
+          unicode={LUCIDE_ICONS_UNICODE.CIRCLE_ELLIPSES}
           iconColor={nonErrorIconColor}
-          iconType="sending"
-          iconSize="tiny"
+          iconSize="small"
           style={{ flexShrink: 0 }}
         />
       );
     case 'sent':
       return (
-        <SessionIcon
+        <LucideIcon
+          unicode={LUCIDE_ICONS_UNICODE.CIRCLE_CHECK}
           iconColor={nonErrorIconColor}
-          iconType="circleCheck"
-          iconSize="tiny"
+          iconSize="small"
           style={{ flexShrink: 0 }}
         />
       );

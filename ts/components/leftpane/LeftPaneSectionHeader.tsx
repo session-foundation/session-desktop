@@ -11,10 +11,13 @@ import { Flex } from '../basic/Flex';
 import { SessionButton, SessionButtonColor } from '../basic/SessionButton';
 import { SpacerMD, SpacerSM } from '../basic/Text';
 import { MenuButton } from '../buttons';
-import { SessionIcon, SessionIconButton } from '../icon';
+import { SessionIcon } from '../icon';
 import { Localizer } from '../basic/Localizer';
 import { H4 } from '../basic/Heading';
 import { searchActions } from '../../state/ducks/search';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { tr } from '../../localization/localeTools';
 
 const StyledLeftPaneSectionHeader = styled(Flex)`
   height: var(--main-view-header-height);
@@ -82,28 +85,28 @@ function getLeftPaneHeaderLabel(
 
   switch (leftOverlayMode) {
     case 'open-group':
-      label = window.i18n('communityJoin');
+      label = tr('communityJoin');
       break;
     case 'closed-group':
-      label = window.i18n('groupCreate');
+      label = tr('groupCreate');
       break;
     case 'message':
-      label = window.i18n('messageNew', { count: 1 });
+      label = tr('messageNew', { count: 1 });
       break;
     case 'message-requests':
-      label = window.i18n('sessionMessageRequests');
+      label = tr('sessionMessageRequests');
       break;
     case 'invite-a-friend':
-      label = window.i18n('sessionInviteAFriend');
+      label = tr('sessionInviteAFriend');
       break;
     case 'choose-action':
     default:
-      label = window.i18n('messages');
+      label = tr('messages');
   }
 
   switch (focusedSection) {
     case SectionType.Settings:
-      label = window.i18n('sessionSettings');
+      label = tr('sessionSettings');
       break;
     case SectionType.Message:
     default:
@@ -152,11 +155,11 @@ export const LeftPaneBanner = () => {
             iconColor="var(--text-primary-color)"
           />
         </Flex>
-        <p>{window.i18n('recoveryPasswordBannerDescription')}</p>
+        <p>{tr('recoveryPasswordBannerDescription')}</p>
         <SpacerMD />
         <SessionButton
           ariaLabel="Reveal recovery phrase button"
-          text={window.i18n('theContinue')}
+          text={tr('theContinue')}
           onClick={showRecoveryPhraseModal}
           buttonColor={SessionButtonColor.PrimaryDark}
           dataTestId="reveal-recovery-phrase"
@@ -193,11 +196,10 @@ export const LeftPaneSectionHeader = () => {
         {leftOverlayMode &&
         leftOverlayMode !== 'choose-action' &&
         leftOverlayMode !== 'message-requests' ? (
-          <SessionIconButton
+          <SessionLucideIconButton
             ariaLabel="Back button"
-            iconSize="medium"
-            iconType="chevron"
-            iconRotation={90}
+            iconSize="large"
+            unicode={LUCIDE_ICONS_UNICODE.CHEVRON_LEFT}
             onClick={returnToActionChooser}
             dataTestId="back-button"
           />

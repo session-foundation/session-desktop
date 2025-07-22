@@ -1,33 +1,33 @@
 import { CallNotificationType } from '../../../../../state/ducks/types';
 
 import { useSelectedNicknameOrProfileNameOrShortenedPubkey } from '../../../../../state/selectors/selectedConversation';
-import { SessionIconType } from '../../../../icon';
 import { ExpirableReadableMessage } from '../ExpirableReadableMessage';
 import { NotificationBubble } from './NotificationBubble';
 import { Localizer } from '../../../../basic/Localizer';
 import { MergedLocalizerTokens } from '../../../../../localization/localeTools';
 import type { WithMessageId } from '../../../../../session/types/with';
 import { useMessageCallNotificationType } from '../../../../../state/selectors';
+import { LUCIDE_ICONS_UNICODE } from '../../../../icon/lucide';
 
 type StyleType = Record<
   CallNotificationType,
-  { notificationTextKey: MergedLocalizerTokens; iconType: SessionIconType; iconColor: string }
+  { notificationTextKey: MergedLocalizerTokens; unicode: LUCIDE_ICONS_UNICODE; iconColor: string }
 >;
 
 const style = {
   'missed-call': {
     notificationTextKey: 'callsMissedCallFrom',
-    iconType: 'callMissed',
+    unicode: LUCIDE_ICONS_UNICODE.PHONE_MISSED,
     iconColor: 'var(--danger-color)',
   },
   'started-call': {
     notificationTextKey: 'callsYouCalled',
-    iconType: 'callOutgoing',
+    unicode: LUCIDE_ICONS_UNICODE.PHONE_OUTGOING,
     iconColor: 'inherit',
   },
   'answered-a-call': {
     notificationTextKey: 'callsInProgress',
-    iconType: 'callIncoming',
+    unicode: LUCIDE_ICONS_UNICODE.PHONE_INCOMING,
     iconColor: 'inherit',
   },
 } satisfies StyleType;
@@ -37,13 +37,13 @@ export const CallNotification = (props: WithMessageId) => {
 
   const notificationType = useMessageCallNotificationType(messageId);
 
-  const name = useSelectedNicknameOrProfileNameOrShortenedPubkey() ?? window.i18n('unknown');
+  const name = useSelectedNicknameOrProfileNameOrShortenedPubkey();
 
   if (!notificationType) {
     return null;
   }
 
-  const { iconColor, iconType, notificationTextKey } = style[notificationType];
+  const { iconColor, unicode, notificationTextKey } = style[notificationType];
 
   return (
     <ExpirableReadableMessage
@@ -52,7 +52,7 @@ export const CallNotification = (props: WithMessageId) => {
       dataTestId={`call-notification-${notificationType}`}
       isControlMessage={true}
     >
-      <NotificationBubble iconType={iconType} iconColor={iconColor}>
+      <NotificationBubble unicode={unicode} iconColor={iconColor}>
         {notificationTextKey === 'callsInProgress' ? (
           <Localizer token={notificationTextKey} />
         ) : (

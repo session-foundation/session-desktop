@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 import { MessageFrom } from '.';
 import {
+  useMessageBody,
   useMessageDirection,
   useMessageExpirationDurationMs,
   useMessageExpirationTimestamp,
@@ -24,8 +25,10 @@ import {
   formatTimeDistanceToNow,
   formatTimeDurationMs,
   formatDateWithLocale,
+  formatNumber,
 } from '../../../../../../util/i18n/formatting/generics';
 import { saveLogToDesktop } from '../../../../../../util/logger/renderer_process_logging';
+import { tr } from '../../../../../../localization/localeTools';
 
 export const MessageInfoLabel = styled.label<{ color?: string }>`
   font-size: var(--font-size-lg);
@@ -63,7 +66,7 @@ export const LabelWithInfo = (props: LabelWithInfoProps) => {
         <MessageInfoData color={props.dataColor}>{props.info}</MessageInfoData>
         {isDev ? (
           <CopyToClipboardIcon
-            iconSize={'medium'}
+            iconSize={'small'}
             copyContent={props.info}
             margin={'0 0 0 var(--margins-xs)'}
           />
@@ -84,6 +87,7 @@ const DebugMessageInfo = ({ messageId }: { messageId: string }) => {
   const expirationTimestamp = useMessageExpirationTimestamp(messageId);
   const timestamp = useMessageTimestamp(messageId);
   const serverTimestamp = useMessageServerTimestamp(messageId);
+  const message = useMessageBody(messageId);
 
   if (!isDevProd()) {
     return null;
@@ -110,6 +114,9 @@ const DebugMessageInfo = ({ messageId }: { messageId: string }) => {
           label={`Disappears:`}
           info={formatTimeDistanceToNow(Math.floor(expirationTimestamp / 1000))}
         />
+      ) : null}
+      {message ? (
+        <LabelWithInfo label={'Characters:'} info={formatNumber(message.length ?? 0)} />
       ) : null}
     </>
   );
@@ -138,11 +145,11 @@ export const MessageInfo = ({ messageId, errors }: { messageId: string; errors?:
 
   return (
     <Flex $container={true} $flexDirection="column">
-      <LabelWithInfo label={window.i18n('sent')} info={sentAtStr} />
+      <LabelWithInfo label={tr('sent')} info={sentAtStr} />
       <DebugMessageInfo messageId={messageId} />
 
       {direction === 'incoming' ? (
-        <LabelWithInfo label={window.i18n('received')} info={receivedAtStr} />
+        <LabelWithInfo label={tr('received')} info={receivedAtStr} />
       ) : null}
       <SpacerSM />
       <MessageFrom sender={sender} isSenderAdmin={isSenderAdmin} />
@@ -150,9 +157,9 @@ export const MessageInfo = ({ messageId, errors }: { messageId: string; errors?:
         <>
           <SpacerSM />
           <LabelWithInfo
-            title={window.i18n('helpReportABugExportLogsDescription')}
-            label={`${window.i18n('theError')}:`}
-            info={errors || window.i18n('errorUnknown')}
+            title={tr('helpReportABugExportLogsDescription')}
+            label={`${tr('theError')}:`}
+            info={errors || tr('errorUnknown')}
             dataColor={'var(--danger-color)'}
             onClick={() => {
               void saveLogToDesktop();

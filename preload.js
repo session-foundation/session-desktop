@@ -23,7 +23,7 @@ const { initializeRendererProcessLogger } = require('./ts/util/logger/renderer_p
 
 initializeRendererProcessLogger();
 
-window.i18n = setupI18n({ crowdinLocale });
+setupI18n({ crowdinLocale });
 
 let title = config.name;
 if (config.environment !== 'production') {
@@ -58,9 +58,15 @@ window.sessionFeatureFlags = {
   // Hooks
   useClosedGroupV2QAButtons: false, // TODO DO NOT MERGE
   useOnionRequests: true,
-  useReleaseChannels: true,
-  useSESH101: true,
   useTestNet: isTestNet() || isTestIntegration(),
+  useLocalDevNet: !isEmpty(process.env.LOCAL_DEVNET_SEED_URL)
+    ? process.env.LOCAL_DEVNET_SEED_URL
+    : undefined,
+  debugInputCommands: !isEmpty(process.env.SESSION_DEBUG),
+  alwaysShowRemainingChars: false,
+  showPopoverAnchors: false,
+  proAvailable: false,
+  mockUserHasPro: false,
   debug: {
     debugLogging: !isEmpty(process.env.SESSION_DEBUG),
     debugLibsessionDumps: !isEmpty(process.env.SESSION_DEBUG_LIBSESSION_DUMPS),
@@ -289,6 +295,10 @@ setInterval(() => {
 window.clipboard = clipboard;
 
 window.getSeedNodeList = () => {
+  if (window.sessionFeatureFlags.useLocalDevNet) {
+    return [window.sessionFeatureFlags.useLocalDevNet];
+  }
+
   if (window.sessionFeatureFlags.useTestNet) {
     return ['http://seed2.getsession.org:38157'];
   }
@@ -301,7 +311,7 @@ window.getSeedNodeList = () => {
 };
 
 window.addEventListener('contextmenu', e => {
-  const editable = e && e.target.closest('textarea, input, [contenteditable="true"]');
+  const editable = e && e.target.closest('textarea, input, div, [contenteditable="true"]');
   const link = e && e.target.closest('a');
   const selection = Boolean(window && window.getSelection() && window.getSelection().toString());
   if (!editable && !selection && !link) {

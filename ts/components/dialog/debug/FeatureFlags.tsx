@@ -27,7 +27,7 @@ const handleFeatureFlagToggle = ({ flag, parentFlag, forceUpdate }: FeatureFlagT
   forceUpdate();
 };
 
-const FlagToggle = ({
+export const FlagToggle = ({
   flag,
   value,
   forceUpdate,
@@ -59,7 +59,7 @@ const FlagToggle = ({
   );
 };
 
-type FlagValues = boolean | object;
+type FlagValues = boolean | object | string;
 
 export const FeatureFlags = ({
   flags,

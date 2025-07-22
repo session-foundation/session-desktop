@@ -13,6 +13,7 @@ import { LastMessageStatusType } from '../ducks/types';
 import { PubKey } from '../../session/types';
 import { useIsMe } from '../../hooks/useParamSelector';
 import { UserUtils } from '../../session/utils';
+import { tr } from '../../localization/localeTools';
 
 function useMessagePropsByMessageId(messageId: string | undefined) {
   return useSelector((state: StateType) => getMessagePropsByMessageId(state, messageId));
@@ -39,11 +40,11 @@ export const useAuthorProfileName = (messageId: string): string | null => {
   }
 
   const authorProfileName = senderIsUs
-    ? window.i18n('you')
+    ? tr('you')
     : senderProps.nickname ||
       senderProps.displayNameInProfile ||
       PubKey.shorten(msg.propsForMessage.sender);
-  return authorProfileName || window.i18n('unknown');
+  return authorProfileName || tr('unknown');
 };
 
 export const useAuthorName = (messageId: string): string | null => {
