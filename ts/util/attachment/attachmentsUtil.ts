@@ -100,6 +100,7 @@ export async function autoScaleFile(blob: Blob, maxMeasurements?: MaxScaleSize) 
     maxMeasurements?.maxSizeBytes ?? MAX_ATTACHMENT_FILESIZE_BYTES
   );
 
+  // if for some reason we couldn't process it, just return the original blob
   if (!processed) {
     return betterBlob;
   }

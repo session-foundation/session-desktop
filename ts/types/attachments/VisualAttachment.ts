@@ -26,29 +26,19 @@ export const getImageDimensions = async ({
   objectUrl,
 }: {
   objectUrl: string;
-}): Promise<{ height: number; width: number }> =>
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
-  new Promise((resolve, reject) => {
-    const image = document.createElement('img');
+}): Promise<{ height: number; width: number }> => {
+  const blob = await urlToBlob(objectUrl);
+  const metadata = await callImageProcessorWorker('imageMetadata', await blob.arrayBuffer());
 
-    image.addEventListener('load', () => {
-      resolve({
-        height: image.naturalHeight,
-        width: image.naturalWidth,
-      });
-    });
-    image.addEventListener('error', error => {
-      window.log.error('getImageDimensions error', toLogFormat(error));
-      reject(error);
-    });
-    // image/jpg is hard coded here but does not look to cause any issues
-    void DecryptedAttachmentsManager.getDecryptedMediaUrl(objectUrl, 'image/jpg', false)
-      .then(decryptedUrl => {
-        image.src = decryptedUrl;
-      })
-      // eslint-disable-next-line no-console
-      .catch(console.error);
-  });
+  if (!metadata || !metadata.height || !metadata.width) {
+    throw new Error('getImageDimensions: metadata is empty');
+  }
+
+  return {
+    height: metadata.height,
+    width: metadata.width,
+  };
+};
 
 export const makeImageThumbnailBuffer = async ({
   objectUrl,
@@ -64,12 +54,12 @@ export const makeImageThumbnailBuffer = async ({
   }
   const decryptedBlob = await DecryptedAttachmentsManager.getDecryptedBlob(objectUrl, contentType);
 
-  // Calling processForLinkPreviewThumbnail here means the generated thumbnail will be static, even if the original image is animated.
+  // Calling processForInConversationThumbnail here means the generated thumbnail will be static, even if the original image is animated.
   // Let's fix this separately in the future, but we'd want to use processForInConversationThumbnail
   // so that we have a webp when the source was animated.
   // Note: when we decide to change this, we will also need to update a bunch of things regarding `THUMBNAIL_CONTENT_TYPE` assumed type.
   const processed = await callImageProcessorWorker(
-    'processForLinkPreviewThumbnail',
+    'processForInConversationThumbnail',
     await decryptedBlob.arrayBuffer(),
     maxThumbnailDetails.maxSide
   );

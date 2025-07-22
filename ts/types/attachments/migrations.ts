@@ -1,18 +1,12 @@
 /* eslint-disable no-param-reassign */
-import { arrayBufferToBlob, blobToArrayBuffer } from 'blob-util';
+import { blobToArrayBuffer } from 'blob-util';
 
 import fse from 'fs-extra';
 import { isString } from 'lodash';
 import * as GoogleChrome from '../../util/GoogleChrome';
-import * as MIME from '../MIME';
 import { toLogFormat } from './Errors';
 
-import {
-  deleteOnDisk,
-  getAbsoluteAttachmentPath,
-  readAttachmentData,
-  writeNewAttachmentData,
-} from '../MessageAttachment';
+import { deleteOnDisk, readAttachmentData, writeNewAttachmentData } from '../MessageAttachment';
 import {
   THUMBNAIL_CONTENT_TYPE,
   getImageDimensions,
@@ -24,39 +18,6 @@ import {
 import { maxThumbnailDetails } from '../../util/attachment/attachmentSizes';
 
 const UNICODE_REPLACEMENT_CHARACTER = '\uFFFD';
-
-// Upgrade steps
-// NOTE: This step strips all EXIF metadata from JPEG images as
-// part of re-encoding the image:
-export const autoOrientJPEGAttachment = async (attachment: {
-  contentType: string;
-  data: ArrayBuffer;
-}): Promise<{ contentType: string; data: ArrayBuffer; shouldDeleteDigest: boolean }> => {
-  if (!attachment.contentType || !MIME.isJPEG(attachment.contentType)) {
-    return { ...attachment, shouldDeleteDigest: false };
-  }
-
-  // If we haven't downloaded the attachment yet, we won't have the data
-  if (!attachment.data) {
-    return { ...attachment, shouldDeleteDigest: false };
-  }
-
-  const dataBlob = arrayBufferToBlob(attachment.data, attachment.contentType);
-  const newDataArrayBuffer = await blobToArrayBuffer(dataBlob);
-
-  // IMPORTANT: We overwrite the existing `data` `ArrayBuffer` losing the original
-  // image data. Ideally, we’d preserve the original image data for users who want to
-  // retain it but due to reports of data loss, we don’t want to overburden IndexedDB
-  // by potentially doubling stored image data.
-  // See: https://github.com/signalapp/Signal-Desktop/issues/1589
-  // Also, `digest` is no longer valid for auto-oriented image data, so we discard it:
-
-  return {
-    contentType: attachment.contentType,
-    shouldDeleteDigest: true,
-    data: newDataArrayBuffer,
-  };
-};
 
 // \u202A-\u202E is LRE, RLE, PDF, LRO, RLO
 // \u2066-\u2069 is LRI, RLI, FSI, PDI
@@ -139,59 +100,62 @@ export const deleteDataSuccessful = async (attachment: {
   });
 };
 
-type CaptureDimensionType = { contentType: string; path: string };
+export const captureDimensionsAndScreenshot = async (opts: {
+  data: ArrayBufferLike;
+  contentType: string;
+}): Promise<{
+  width?: number;
+  height?: number;
 
-export const captureDimensionsAndScreenshot = async (
-  attachment: CaptureDimensionType
-): Promise<
-  CaptureDimensionType & {
-    width?: number;
-    height?: number;
+  thumbnail: {
+    path: string;
+    contentType: string;
+    width: number;
+    height: number;
+  } | null;
+  screenshot: {
+    path: string;
+    contentType: string;
+    width: number;
+    height: number;
+  } | null;
+}> => {
+  const { contentType } = opts;
 
-    thumbnail: {
-      path: string;
-      contentType: string;
-      width: number;
-      height: number;
-    } | null;
-    screenshot: {
-      path: string;
-      contentType: string;
-      width: number;
-      height: number;
-    } | null;
-  }
-> => {
-  const { contentType } = attachment;
+  const fallbackResult = {
+    width: undefined,
+    height: undefined,
+    screenshot: null,
+    thumbnail: null,
+  };
 
   if (
     !contentType ||
     (!GoogleChrome.isImageTypeSupported(contentType) &&
       !GoogleChrome.isVideoTypeSupported(contentType))
   ) {
-    return { ...attachment, screenshot: null, thumbnail: null };
+    return fallbackResult;
   }
 
-  // If the attachment hasn't been downloaded yet, we won't have a path
-  if (!attachment.path) {
-    return { ...attachment, screenshot: null, thumbnail: null };
+  // If the attachment hasn't been downloaded yet, we won't have any data
+  if (!opts.data.byteLength) {
+    return fallbackResult;
   }
 
-  const absolutePath = getAbsoluteAttachmentPath(attachment.path);
+  const objectUrl = URL.createObjectURL(new Blob([opts.data]));
 
   if (GoogleChrome.isImageTypeSupported(contentType)) {
     try {
       const { width, height } = await getImageDimensions({
-        objectUrl: absolutePath,
+        objectUrl,
       });
       const thumbnailBuffer = await makeImageThumbnailBuffer({
-        objectUrl: absolutePath,
+        objectUrl,
         contentType,
       });
 
       const thumbnailPath = await writeNewAttachmentData(thumbnailBuffer);
       return {
-        ...attachment,
         width,
         height,
         thumbnail: {
@@ -208,15 +172,20 @@ export const captureDimensionsAndScreenshot = async (
         'error processing image; skipping screenshot generation',
         toLogFormat(error)
       );
-      return { ...attachment, screenshot: null, thumbnail: null };
+      return fallbackResult;
     }
+  }
+
+  if (!GoogleChrome.isImageTypeSupported(contentType)) {
+    window.log.error('captureDimensionsAndScreenshot: this should have returned earlier');
+    return fallbackResult;
   }
 
   let screenshotObjectUrl;
   try {
     const screenshotBuffer = await blobToArrayBuffer(
       await makeVideoScreenshot({
-        objectUrl: absolutePath,
+        objectUrl,
         contentType: THUMBNAIL_CONTENT_TYPE,
       })
     );
@@ -235,7 +204,6 @@ export const captureDimensionsAndScreenshot = async (
     const thumbnailPath = await writeNewAttachmentData(thumbnailBuffer);
 
     return {
-      ...attachment,
       screenshot: {
         contentType: THUMBNAIL_CONTENT_TYPE,
         path: screenshotPath,
@@ -256,7 +224,7 @@ export const captureDimensionsAndScreenshot = async (
       'captureDimensionsAndScreenshot: error processing video; skipping screenshot generation',
       toLogFormat(error)
     );
-    return { ...attachment, screenshot: null, thumbnail: null };
+    return fallbackResult;
   } finally {
     if (screenshotObjectUrl) {
       revokeObjectUrl(screenshotObjectUrl);

@@ -61,7 +61,6 @@
     "abort-controller": "3.0.0",
     "auto-bind": "^4.0.0",
     "blob-util": "2.0.2",
-    "blueimp-load-image": "^5.16.0",
     "buffer-crc32": "1.0.0",
     "bytebuffer": "^5.0.1",
     "clsx": "^2.1.1",
@@ -127,7 +126,6 @@
     "@testing-library/jest-dom": "^6.4.6",
     "@testing-library/react": "^15.0.7",
     "@testing-library/user-event": "^14.6.1",
-    "@types/blueimp-load-image": "^5.16.6",
     "@types/buffer-crc32": "^0.2.4",
     "@types/bytebuffer": "^5.0.49",
     "@types/chai": "4.3.20",
@@ -256,7 +254,7 @@
       "node_modules/libsession_util_nodejs/build/Release/libsession_util_nodejs.node",
       "ts/webworker/workers/node/libsession/*.node",
       "ts/mains/main_node.js",
-       "**/node_modules/sharp/**/*",
+      "**/node_modules/sharp/**/*",
       "**/node_modules/@img/**/*"
     ],
     "deb": {
