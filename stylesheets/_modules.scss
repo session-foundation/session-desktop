@@ -533,55 +533,9 @@
   position: relative;
 }
 
-// Module: Staged Generic Attachment
 
-.module-staged-generic-attachment {
-  height: 120px;
-  width: 120px;
-  margin: 1px;
-  display: inline-block;
-  position: relative;
-  border-radius: 4px;
-  box-shadow: inset 0px 0px 0px 1px var(--border-color);
-  background-color: var(--message-link-preview-background-color);
-  vertical-align: middle;
-}
 
-.module-staged-generic-attachment__icon__extension {
-  font-size: 10px;
-  line-height: 13px;
-  letter-spacing: 0.1px;
-  text-transform: uppercase;
 
-  // Along with flow layout in parent item, centers text
-  text-align: center;
-  width: 25px;
-  margin-inline-start: auto;
-  margin-inline-end: auto;
-
-  // We don't have much room for text here, cut it off without ellipse
-  overflow-x: hidden;
-  white-space: nowrap;
-  text-overflow: clip;
-
-  color: var(--black-color);
-}
-
-.module-staged-generic-attachment__filename {
-  margin: 7px;
-  margin-top: 5px;
-  text-align: center;
-
-  font-family: var(--font-default);
-  font-size: 14px;
-
-  overflow: hidden;
-  height: 2.4rem;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  text-overflow: ellipsis;
-}
 
 // Module: Caption Editor
 .module-caption-editor {
