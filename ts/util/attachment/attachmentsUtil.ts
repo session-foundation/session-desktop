@@ -11,7 +11,7 @@ import { IMAGE_UNKNOWN, type MIMEType } from '../../types/MIME';
 import { getAbsoluteAttachmentPath, processNewAttachment } from '../../types/MessageAttachment';
 
 import { MAX_ATTACHMENT_FILESIZE_BYTES } from '../../session/constants';
-import { callImageProcessorWorker } from '../../webworker/workers/browser/image_processor_interface';
+import { ImageProcessor } from '../../webworker/workers/browser/image_processor_interface';
 import type { ProcessedLinkPreviewThumbnailType } from '../../webworker/workers/node/image_processor/image_processor';
 
 /**
@@ -53,8 +53,7 @@ export async function createBetterBlobFromArrayBuffer(
 
   blob.contentType = type;
   blob.animated =
-    isAnimated ??
-    ((await callImageProcessorWorker('imageMetadata', arrayBuffer))?.isAnimated || false);
+    isAnimated ?? ((await ImageProcessor.imageMetadata(arrayBuffer))?.isAnimated || false);
 
   return blob;
 }
@@ -73,8 +72,7 @@ function imageTypeFromArrayBuffer(arrayBuffer: ArrayBuffer) {
 
 export async function autoScaleFile(blob: Blob, maxMeasurements?: MaxScaleSize) {
   // this call returns null if not an image, or not one we can process, or we cannot scale it down enough
-  const processed = await callImageProcessorWorker(
-    'processForFileServerUpload',
+  const processed = await ImageProcessor.processForFileServerUpload(
     await blob.arrayBuffer(),
     maxMeasurements?.maxSidePx ?? 2000,
     maxMeasurements?.maxSizeBytes ?? MAX_ATTACHMENT_FILESIZE_BYTES

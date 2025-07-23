@@ -13,7 +13,7 @@ import { isTestIntegration } from '../../shared/env_vars';
 import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { processLocalAvatarChange } from '../../util/avatar/processLocalAvatarChange';
 import type { ProcessedLocalAvatarChangeType } from '../../webworker/workers/node/image_processor/image_processor';
-import { callImageProcessorWorker } from '../../webworker/workers/browser/image_processor_interface';
+import { ImageProcessor } from '../../webworker/workers/browser/image_processor_interface';
 import { maxThumbnailDetails } from '../../util/attachment/attachmentSizes';
 
 export const THUMBNAIL_CONTENT_TYPE = 'image/png';
@@ -28,7 +28,7 @@ export const getImageDimensions = async ({
   objectUrl: string;
 }): Promise<{ height: number; width: number }> => {
   const blob = await urlToBlob(objectUrl);
-  const metadata = await callImageProcessorWorker('imageMetadata', await blob.arrayBuffer());
+  const metadata = await ImageProcessor.imageMetadata(await blob.arrayBuffer());
 
   if (!metadata || !metadata.height || !metadata.width) {
     throw new Error('getImageDimensions: metadata is empty');
@@ -58,8 +58,7 @@ export const makeImageThumbnailBuffer = async ({
   // Let's fix this separately in the future, but we'd want to use processForInConversationThumbnail
   // so that we have a webp when the source was animated.
   // Note: when we decide to change this, we will also need to update a bunch of things regarding `THUMBNAIL_CONTENT_TYPE` assumed type.
-  const processed = await callImageProcessorWorker(
-    'processForInConversationThumbnail',
+  const processed = await ImageProcessor.processForInConversationThumbnail(
     await decryptedBlob.arrayBuffer(),
     maxThumbnailDetails.maxSide
   );
@@ -223,7 +222,7 @@ async function pickFileForReal() {
 }
 
 async function pickFileForTestIntegration() {
-  const blueAvatarDetails = await callImageProcessorWorker('testIntegrationFakeAvatar', 500, {
+  const blueAvatarDetails = await ImageProcessor.testIntegrationFakeAvatar(500, {
     r: 0,
     g: 0,
     b: 255,

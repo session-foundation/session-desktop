@@ -1,5 +1,5 @@
 import { isArrayBuffer } from 'lodash';
-import { callImageProcessorWorker } from '../../webworker/workers/browser/image_processor_interface';
+import { ImageProcessor } from '../../webworker/workers/browser/image_processor_interface';
 import { maxAvatarDetails } from '../attachment/attachmentSizes';
 import { MAX_ATTACHMENT_FILESIZE_BYTES } from '../../session/constants';
 
@@ -22,8 +22,7 @@ export async function processLocalAvatarChange(arrayBuffer: ArrayBuffer) {
    * 2. a fallback avatar in case the user looses its pro (static image, even if the main avatar is animated)
    */
   // this is step 1, we generate a scaled down avatar, but keep its nature (animated or not)
-  const { mainAvatarDetails, avatarFallback } = await callImageProcessorWorker(
-    'processLocalAvatarChange',
+  const { mainAvatarDetails, avatarFallback } = await ImageProcessor.processLocalAvatarChange(
     arrayBuffer,
     maxAvatarDetails.maxSide
   );

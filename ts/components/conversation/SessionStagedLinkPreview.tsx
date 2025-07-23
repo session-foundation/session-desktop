@@ -1,7 +1,8 @@
 import { AbortSignal } from 'abort-controller';
-
+import { useEffect, useMemo } from 'react';
 import styled from 'styled-components';
 import insecureNodeFetch from 'node-fetch';
+
 import { StagedLinkPreviewData } from './composition/CompositionBox';
 
 import { Image } from './Image';
@@ -17,9 +18,8 @@ import { tr } from '../../localization/localeTools';
 import { LinkPreviewUtil } from '../../util';
 import { fetchLinkPreviewImage } from '../../util/linkPreviewFetch';
 import { LinkPreviews } from '../../util/linkPreviews';
-import { callImageProcessorWorker } from '../../webworker/workers/browser/image_processor_interface';
 import { maxThumbnailDetails } from '../../util/attachment/attachmentSizes';
-import { useEffect, useMemo } from 'react';
+import { ImageProcessor } from '../../webworker/workers/browser/image_processor_interface';
 
 interface StagedLinkPreviewProps extends StagedLinkPreviewData {
   onClose: (url: string) => void;
@@ -55,8 +55,7 @@ export const getPreview = async (url: string, abortSignal: AbortSignal) => {
 
       // Ensure that this file is either small enough or is resized to meet our
       //   requirements for link preview thumbnails
-      const processed = await callImageProcessorWorker(
-        'processForLinkPreviewThumbnail',
+      const processed = await ImageProcessor.processForLinkPreviewThumbnail(
         fullSizeImage.data,
         maxThumbnailDetails.maxSide
       );

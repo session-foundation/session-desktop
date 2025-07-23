@@ -1346,11 +1346,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
         changes = true;
       }
     }
-    console.warn(
-      'setSessionProfile of convo',
-      this.idForLogging(),
-      ` avatar paths: ${newProfile.avatarPath}: ${newProfile.fallbackAvatarPath}`
-    );
 
     if (changes) {
       await this.commit();

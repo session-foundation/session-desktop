@@ -62,7 +62,6 @@ export const MessageLinkPreview = (props: Props) => {
       showLinkVisitWarningDialog(previews[0].url, dispatch);
     }
   }
-  console.warn('first', first);
 
   return (
     <div

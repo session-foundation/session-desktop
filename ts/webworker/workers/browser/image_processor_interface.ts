@@ -27,9 +27,38 @@ const internalCallImageProcessorWorker = async (
   return imageProcessorWorkerInterface?.callWorker(fnName, ...args);
 };
 
-export async function callImageProcessorWorker<T extends WorkerAllowedFunctionName>(
+async function callImageProcessorWorker<T extends WorkerAllowedFunctionName>(
   fnName: T,
   ...args: Parameters<ImageProcessorWorkerActions[T]>
 ): Promise<Awaited<ReturnType<ImageProcessorWorkerActions[T]>>> {
   return internalCallImageProcessorWorker(fnName, ...args);
 }
+
+export const ImageProcessor: ImageProcessorWorkerActions = {
+  extractFirstFrameJpeg: (
+    ...args: Parameters<ImageProcessorWorkerActions['extractFirstFrameJpeg']>
+  ) => callImageProcessorWorker('extractFirstFrameJpeg', ...args),
+
+  imageMetadata: (...args: Parameters<ImageProcessorWorkerActions['imageMetadata']>) =>
+    callImageProcessorWorker('imageMetadata', ...args),
+
+  processForFileServerUpload: (
+    ...args: Parameters<ImageProcessorWorkerActions['processForFileServerUpload']>
+  ) => callImageProcessorWorker('processForFileServerUpload', ...args),
+
+  processForInConversationThumbnail: (
+    ...args: Parameters<ImageProcessorWorkerActions['processForInConversationThumbnail']>
+  ) => callImageProcessorWorker('processForInConversationThumbnail', ...args),
+
+  processForLinkPreviewThumbnail: (
+    ...args: Parameters<ImageProcessorWorkerActions['processForLinkPreviewThumbnail']>
+  ) => callImageProcessorWorker('processForLinkPreviewThumbnail', ...args),
+
+  testIntegrationFakeAvatar: (
+    ...args: Parameters<ImageProcessorWorkerActions['testIntegrationFakeAvatar']>
+  ) => callImageProcessorWorker('testIntegrationFakeAvatar', ...args),
+
+  processLocalAvatarChange: (
+    ...args: Parameters<ImageProcessorWorkerActions['processLocalAvatarChange']>
+  ) => callImageProcessorWorker('processLocalAvatarChange', ...args),
+};

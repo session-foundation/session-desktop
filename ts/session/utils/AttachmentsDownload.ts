@@ -25,7 +25,7 @@ const RETRY_BACKOFF = {
 let enabled = false;
 let timeout: any;
 let logger: any;
-const _activeAttachmentDownloadJobs: any = {};
+const _activeAttachmentDownloadJobs: Record<string, Promise<void>> = {};
 
 // TODOLATER type those `any` properties
 
