@@ -114,19 +114,11 @@ export function canDisplayImagePreview(attachments?: Array<AttachmentType>) {
 }
 
 export function getThumbnailUrl(attachment: AttachmentType): string {
-  if (attachment.thumbnail && attachment.thumbnail.url) {
-    return attachment.thumbnail.url;
-  }
-
-  return getUrl(attachment);
+  return attachment?.thumbnail?.url || getUrl(attachment);
 }
 
 export function getUrl(attachment: AttachmentType): string {
-  if (attachment.screenshot && attachment.screenshot.url) {
-    return attachment.screenshot.url as string;
-  }
-
-  return attachment.url;
+  return attachment?.screenshot?.url || attachment.url;
 }
 
 export function isImage(attachments?: Array<AttachmentType>) {

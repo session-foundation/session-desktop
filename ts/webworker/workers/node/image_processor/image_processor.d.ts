@@ -30,16 +30,18 @@ type StaticOutputType = WithOutputBuffer & WithSharpSize & WithSharpWidth & With
  */
 type MaybeAnimatedOutputType = StaticOutputType & WithIsAnimated;
 
-export type ProcessedLocalAvatarChangeType = Awaited<
-  ReturnType<ImageProcessorWorkerActions['processLocalAvatarChange']>
+export type ProcessedLocalAvatarChangeType = NonNullable<
+  Awaited<ReturnType<ImageProcessorWorkerActions['processLocalAvatarChange']>>
 >;
 
-export type ProcessedLinkPreviewThumbnailType = Awaited<
-  ReturnType<ImageProcessorWorkerActions['processForLinkPreviewThumbnail']>
+export type ProcessedLinkPreviewThumbnailType = NonNullable<
+  Awaited<ReturnType<ImageProcessorWorkerActions['processForLinkPreviewThumbnail']>>
 >;
 
 export type ImageProcessorWorkerActions = {
-  extractFirstFrameJpeg: (input: ArrayBufferLike) => Promise<StaticOutputType & WithJpegFormat>;
+  extractFirstFrameJpeg: (
+    input: ArrayBufferLike
+  ) => Promise<(StaticOutputType & WithJpegFormat) | null>;
 
   /**
    * Process a local avatar change.
@@ -54,7 +56,7 @@ export type ImageProcessorWorkerActions = {
   ) => Promise<{
     mainAvatarDetails: MaybeAnimatedOutputType & (WithWebpFormat | WithJpegFormat);
     avatarFallback: (StaticOutputType & WithJpegFormat) | null;
-  }>;
+  } | null>;
 
   /**
    * Process an image to get a thumbnail matching our required details for link previews
@@ -63,21 +65,21 @@ export type ImageProcessorWorkerActions = {
   processForLinkPreviewThumbnail: (
     input: ArrayBufferLike,
     maxSidePx: number
-  ) => Promise<StaticOutputType & WithPngFormat>;
+  ) => Promise<(StaticOutputType & WithPngFormat) | null>;
 
   /**
    * Process an image to get a thumbnail matching our required details for in conversation thumbnails
    * This is about the thumbnail in the conversation list (for attachments in messages). We generate a preview to avoid loading huge files until we show them in fullscreen.
    *
-   * Note: an animated image or not animated will always be returned as a jpeg. Otherwise a png will be returned.
+   * Note: an animated image or not animated will always be returned as a png.
    * Note: eventually we want to support animated images as previews too. When we do, we will need to
    * convert them to webp and resize their preview heavily for performance reasons.
-   * A in conversation thumbnail is always resized to "fill" the image.
+   * A 'in conversation thumbnail' is always resized to "fill" the image.
    */
   processForInConversationThumbnail: (
     input: ArrayBufferLike,
     maxSidePx: number
-  ) => Promise<MaybeAnimatedOutputType & (WithWebpFormat | WithPngFormat)>;
+  ) => Promise<(MaybeAnimatedOutputType & WithPngFormat) | null>;
 
   /**
    * Process an image to get something that we can upload to the file server.
@@ -115,7 +117,10 @@ export type ImageProcessorWorkerActions = {
   ) => Promise<MaybeAnimatedOutputType & WithJpegFormat>;
 
   /**
-   * Extract the metadata retrieved from the image
+   * Extract the metadata retrieved from the image.
+   * Returns null if sharp cannot part the buffer at all.
    */
-  imageMetadata: (input: ArrayBufferLike) => Promise<Omit<MaybeAnimatedOutputType, 'outputBuffer'>>;
+  imageMetadata: (
+    input: ArrayBufferLike
+  ) => Promise<Omit<MaybeAnimatedOutputType, 'outputBuffer'> | null>;
 };

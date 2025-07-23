@@ -6,6 +6,12 @@ import type { ImageProcessorWorkerActions } from './image_processor';
 
 const DEBUG_IMAGE_PROCESSOR_WORKER = true;
 
+function logIfOn(...args: Array<any>) {
+  if (DEBUG_IMAGE_PROCESSOR_WORKER) {
+    console.log(...args);
+  }
+}
+
 onmessage = async (e: any) => {
   const [jobId, fnName, ...args] = e.data;
 
@@ -14,9 +20,8 @@ onmessage = async (e: any) => {
     if (!fn) {
       throw new Error(`Worker: job ${jobId} did not find function ${fnName}`);
     }
-    if (DEBUG_IMAGE_PROCESSOR_WORKER) {
-      console.log(`[imageProcessorWorker] ${fnName} called with args:`, ...args);
-    }
+    logIfOn(`[imageProcessorWorker] ${fnName}() called with:`, ...args);
+
     const result = await fn(...args);
     postMessage([jobId, null, result]);
   } catch (error) {
@@ -73,12 +78,35 @@ function sharpFrom(inputBuffer: ArrayBufferLike | Buffer, options?: sharp.SharpO
   return sharp(new Uint8Array(inputBuffer), options).rotate();
 }
 
+/**
+ * Wrapper around `sharp.metadata` as it throws if not a valid image, and we usually
+ * want to just return null.
+ *
+ * Note: this will also orient a jpeg if needed. (i.e. calls rotate() through sharpFrom)
+ */
+async function metadataFromBuffer(
+  inputBuffer: ArrayBufferLike | Buffer,
+  options?: sharp.SharpOptions
+) {
+  try {
+    const metadata = await sharpFrom(inputBuffer, options).metadata();
+    // we do need the await above so the try/catch does its job
+    return metadata;
+  } catch (e) {
+    console.info('metadataFromBuffer failed with', e.message);
+    return null;
+  }
+}
+
 const workerActions: ImageProcessorWorkerActions = {
   extractFirstFrameJpeg: async inputBuffer => {
     if (!inputBuffer?.byteLength) {
       throw new Error('inputBuffer is required');
     }
-    const inputMetadata = await sharpFrom(inputBuffer).metadata();
+    const inputMetadata = await metadataFromBuffer(inputBuffer);
+    if (!inputMetadata) {
+      return null;
+    }
 
     metadataSizeIsSetOrThrow(inputMetadata, 'extractFirstFrameJpeg');
 
@@ -89,7 +117,10 @@ const workerActions: ImageProcessorWorkerActions = {
     const parsed = sharpFrom(inputBuffer, { pages: 1 });
     const jpeg = parsed.jpeg();
     const outputBuffer = await jpeg.toBuffer();
-    const outputMetadata = await sharpFrom(outputBuffer).metadata();
+    const outputMetadata = await metadataFromBuffer(outputBuffer);
+    if (!outputMetadata) {
+      return null;
+    }
 
     const outputMetadataSize = metadataSizeIsSetOrThrow(outputMetadata, 'extractFirstFrameJpeg');
 
@@ -112,8 +143,11 @@ const workerActions: ImageProcessorWorkerActions = {
       throw new Error('imageMetadata: inputBuffer is required');
     }
 
-    const parsed = sharpFrom(inputBuffer, { animated: true });
-    const metadata = await parsed.metadata();
+    const metadata = await metadataFromBuffer(inputBuffer, { animated: true });
+
+    if (!metadata) {
+      return null;
+    }
 
     const metadataSize = metadataSizeIsSetOrThrow(metadata, 'imageMetadata');
 
@@ -132,7 +166,10 @@ const workerActions: ImageProcessorWorkerActions = {
     }
     const start = Date.now();
 
-    const metadata = await sharpFrom(inputBuffer, { animated: true }).metadata();
+    const metadata = await metadataFromBuffer(inputBuffer, { animated: true });
+    if (!metadata) {
+      return null;
+    }
 
     const avatarIsAnimated = isAnimated(metadata);
 
@@ -154,19 +191,21 @@ const workerActions: ImageProcessorWorkerActions = {
     const resizedBuffer = await resized.toBuffer();
 
     // Note: we need to use the resized buffer here, not the original one,
-    // as metadata is always linked to the source buffer (even if a resize() is done before the metadata() call)
-    const resizedMetadata = await sharpFrom(resizedBuffer).metadata(); // rotate() is done as part of resized above
+    // as metadata is always linked to the source buffer (even if a resize() is done before the metadata call)
+    const resizedMetadata = await metadataFromBuffer(resizedBuffer);
+
+    if (!resizedMetadata) {
+      return null;
+    }
 
     const resizedMetadataSize = metadataSizeIsSetOrThrow(
       resizedMetadata,
       'processLocalAvatarChange'
     );
 
-    if (DEBUG_IMAGE_PROCESSOR_WORKER) {
-      console.log(
-        `[imageProcessorWorker] processLocalAvatarChange mainAvatar resize took ${Date.now() - start}ms for ${inputBuffer.byteLength} bytes`
-      );
-    }
+    logIfOn(
+      `[imageProcessorWorker] processLocalAvatarChange mainAvatar resize took ${Date.now() - start}ms for ${inputBuffer.byteLength} bytes`
+    );
 
     const resizedIsAnimated = isAnimated(resizedMetadata);
 
@@ -188,6 +227,9 @@ const workerActions: ImageProcessorWorkerActions = {
     if (resizedIsAnimated) {
       // also extract the first frame of the resized (animated) avatar
       const firstFrameJpeg = await workerActions.extractFirstFrameJpeg(resizedBuffer.buffer);
+      if (!firstFrameJpeg) {
+        throw new Error('processLocalAvatarChange: failed to extract first frame as jpeg');
+      }
       const fallbackFormat = 'jpeg' as const;
 
       avatarFallback = {
@@ -200,11 +242,9 @@ const workerActions: ImageProcessorWorkerActions = {
       };
     }
 
-    if (DEBUG_IMAGE_PROCESSOR_WORKER) {
-      console.log(
-        `[imageProcessorWorker] processLocalAvatarChange sizes: main: ${mainAvatarDetails.size} bytes, fallback: ${avatarFallback ? avatarFallback.size : 0} bytes`
-      );
-    }
+    logIfOn(
+      `[imageProcessorWorker] processLocalAvatarChange sizes: main: ${mainAvatarDetails.size} bytes, fallback: ${avatarFallback ? avatarFallback.size : 0} bytes`
+    );
 
     return { mainAvatarDetails, avatarFallback };
   },
@@ -223,7 +263,12 @@ const workerActions: ImageProcessorWorkerActions = {
     }).jpeg({ quality: 90 });
 
     const createdBuffer = await created.toBuffer();
-    const createdMetadata = await sharp(createdBuffer).metadata(); // rotate() is done as part of resized above
+    const createdMetadata = await metadataFromBuffer(createdBuffer);
+
+    if (!createdMetadata) {
+      // Note: throwing here is fine, as we control the source buffer
+      throw new Error('testIntegrationFakeAvatar: failed to get metadata');
+    }
 
     const size = metadataSizeIsSetOrThrow(createdMetadata, 'testIntegrationFakeAvatar');
 
@@ -245,14 +290,22 @@ const workerActions: ImageProcessorWorkerActions = {
     }
 
     const parsed = sharpFrom(inputBuffer, { animated: false });
-    const metadata = await parsed.metadata();
+    const metadata = await metadataFromBuffer(inputBuffer, { animated: false });
+
+    if (!metadata) {
+      return null;
+    }
 
     metadataSizeIsSetOrThrow(metadata, 'processForLinkPreviewThumbnail');
 
     const resized = parsed.resize(centerCoverOpts(maxSidePx));
 
     const resizedBuffer = await resized.png().toBuffer();
-    const resizedMetadata = await sharpFrom(resizedBuffer).metadata();
+    const resizedMetadata = await metadataFromBuffer(resizedBuffer);
+
+    if (!resizedMetadata) {
+      return null;
+    }
 
     const resizedSize = metadataSizeIsSetOrThrow(resizedMetadata, 'processForLinkPreviewThumbnail');
 
@@ -273,19 +326,25 @@ const workerActions: ImageProcessorWorkerActions = {
       throw new Error('processForInConversationThumbnail: inputBuffer is required');
     }
 
-    // Note: this is true here because we want to keep an animated image as is (just scaled down)
-    const parsed = sharpFrom(inputBuffer, { animated: true }).resize(centerCoverOpts(maxSidePx));
-    const metadata = await parsed.metadata();
+    // Note: this is false here because we want to force a static image (so no need to extract all the frames)
+    const parsed = sharpFrom(inputBuffer, { animated: false }).resize(centerCoverOpts(maxSidePx));
+    const metadata = await metadataFromBuffer(inputBuffer, { animated: false });
+
+    if (!metadata) {
+      return null;
+    }
 
     const animated = isAnimated(metadata);
-    const resizedBuffer = animated ? await parsed.webp().toBuffer() : await parsed.png().toBuffer();
-    const resizedMetadata = await sharpFrom(resizedBuffer).metadata();
+    const resizedBuffer = await parsed.png().toBuffer(); // animated ? await parsed.webp().toBuffer() : ;
+    const resizedMetadata = await metadataFromBuffer(resizedBuffer);
+
+    if (!resizedMetadata) {
+      return null;
+    }
 
     const size = metadataSizeIsSetOrThrow(resizedMetadata, 'processForInConversationThumbnail');
 
-    const formatDetails = animated
-      ? { format: 'webp' as const, contentType: 'image/webp' as const }
-      : { format: 'png' as const, contentType: 'image/png' as const };
+    const formatDetails = { format: 'png' as const, contentType: 'image/png' as const };
 
     return {
       outputBuffer: resizedBuffer.buffer,
@@ -301,17 +360,44 @@ const workerActions: ImageProcessorWorkerActions = {
     if (!inputBuffer?.byteLength) {
       throw new Error('processForFileServerUpload: inputBuffer is required');
     }
+    const lossyFormats = ['jpeg', 'webp', 'avif'];
     const start = Date.now();
-    const metadata = await sharpFrom(inputBuffer).metadata();
+    const metadata = await metadataFromBuffer(inputBuffer);
 
-    if (!metadata.format || !sharp.format[metadata.format]?.output) {
-      console.warn(`Unsupported format: ${metadata.format}`);
+    if (!metadata || !metadata.format || !sharp.format[metadata.format]?.output) {
+      logIfOn(`Unsupported format: ${metadata?.format}`);
       return null;
     }
 
     const animated = isAnimated(metadata);
 
     const base = sharpFrom(inputBuffer, { animated }).rotate();
+    const isLossyFormat = lossyFormats.includes(metadata.format);
+
+    // Note: this will resize
+    const isLossyFormatButFits =
+      isLossyFormat &&
+      inputBuffer.byteLength < maxSizeBytes &&
+      metadata.width <= maxSidePx &&
+      metadata.height <= maxSidePx;
+
+    // If the image is lossy but fits in the max size, we can just return it as is.
+    // This is to speed up large image additions to the staged attachments list.
+    if (isLossyFormatButFits) {
+      const size = metadataSizeIsSetOrThrow(metadata, 'processForFileServerUpload');
+      logIfOn(
+        `isLossyFormatButFits: returning buffer of size ${size} and WxH: ${metadata.width}x${metadata.height}`
+      );
+
+      return {
+        format: metadata.format,
+        outputBuffer: inputBuffer,
+        size,
+        width: metadata.width,
+        height: metadata.height,
+        isAnimated: isAnimated(metadata),
+      };
+    }
 
     // Resize if needed
     if (metadata.width > maxSidePx || metadata.height > maxSidePx) {
@@ -323,17 +409,25 @@ const workerActions: ImageProcessorWorkerActions = {
       });
     }
 
-    // If format is a lossless format, no quality to adjust
-    // return the buffer resized to the maxSide
-    const lossyFormats = ['jpeg', 'webp', 'avif'];
-    if (!lossyFormats.includes(metadata.format)) {
+    // If image is lossless, we cannot adjust the quality, so we just return the buffer resized to the maxSide
+    if (!isLossyFormat) {
       const output = await base.toBuffer();
       if (output.length >= maxSizeBytes) {
+        logIfOn(`not lossy format and does not fit`);
+
         return null;
       }
-      const outputMetadata = await sharpFrom(output).metadata();
+      const outputMetadata = await metadataFromBuffer(output);
+
+      if (!outputMetadata) {
+        return null;
+      }
 
       const size = metadataSizeIsSetOrThrow(outputMetadata, 'processForFileServerUpload');
+      logIfOn(
+        `not lossy format but fits, returning buffer of size ${size} and WxH: ${outputMetadata.width}x${outputMetadata.height}`
+      );
+
       return {
         format: outputMetadata.format,
         outputBuffer: output.buffer,
@@ -370,22 +464,25 @@ const workerActions: ImageProcessorWorkerActions = {
 
       if (buffer.length < maxSizeBytes) {
         // eslint-disable-next-line no-await-in-loop
-        const outputMetadata = await sharpFrom(buffer).metadata();
+        const outputMetadata = await metadataFromBuffer(buffer);
+
+        if (!outputMetadata) {
+          return null;
+        }
 
         const size = metadataSizeIsSetOrThrow(outputMetadata, 'processForFileServerUpload');
-        if (DEBUG_IMAGE_PROCESSOR_WORKER) {
-          console.log(
-            `[imageProcessorWorker] processForFileServerUpload: DONE quality ${quality} took ${
-              Date.now() - start
-            }ms for}`
-          );
-          console.log(
-            `\t src${formattedMetadata({ width: metadata.width, format: metadata.format, height: metadata.height, size: inputBuffer.byteLength })} `
-          );
-          console.log(
-            `\t dest${formattedMetadata({ width: outputMetadata.width, format: outputMetadata.format, height: outputMetadata.height, size: buffer.buffer.byteLength })} `
-          );
-        }
+        logIfOn(
+          `[imageProcessorWorker] processForFileServerUpload: DONE quality ${quality} took ${
+            Date.now() - start
+          }ms for}`
+        );
+        logIfOn(
+          `\t src${formattedMetadata({ width: metadata.width, format: metadata.format, height: metadata.height, size: inputBuffer.byteLength })} `
+        );
+        logIfOn(
+          `\t dest${formattedMetadata({ width: outputMetadata.width, format: outputMetadata.format, height: outputMetadata.height, size: buffer.buffer.byteLength })} `
+        );
+
         return {
           format: outputMetadata.format,
           outputBuffer: buffer.buffer,
@@ -395,29 +492,26 @@ const workerActions: ImageProcessorWorkerActions = {
           isAnimated: isAnimated(outputMetadata),
         };
       }
-      if (DEBUG_IMAGE_PROCESSOR_WORKER) {
-        console.log(
-          `[imageProcessorWorker] processForFileServerUpload: iteration[${qualityRangeIndex}] took so far ${
-            Date.now() - start
-          }ms with quality ${quality}`
-        );
-        console.log(
-          `\t src${formattedMetadata({ width: metadata.width, format: metadata.format, height: metadata.height, size: inputBuffer.byteLength })} `
-        );
-      }
-      qualityRangeIndex++;
-    }
-    if (DEBUG_IMAGE_PROCESSOR_WORKER) {
-      console.log(
-        `[imageProcessorWorker] processForFileServerUpload: failed to get a buffer of size ${maxSizeBytes} for ${inputBuffer.byteLength} bytes for image of ${metadata.width}x${metadata.height} with format ${metadata.format}`
+      logIfOn(
+        `[imageProcessorWorker] processForFileServerUpload: iteration[${qualityRangeIndex}] took so far ${
+          Date.now() - start
+        }ms with quality ${quality}`
       );
-      console.log(
-        `[imageProcessorWorker] processForFileServerUpload: failed after ${Date.now() - start}ms`
-      );
-      console.log(
+      logIfOn(
         `\t src${formattedMetadata({ width: metadata.width, format: metadata.format, height: metadata.height, size: inputBuffer.byteLength })} `
       );
     }
+    qualityRangeIndex++;
+
+    logIfOn(
+      `[imageProcessorWorker] processForFileServerUpload: failed to get a buffer of size ${maxSizeBytes} for ${inputBuffer.byteLength} bytes for image of ${metadata.width}x${metadata.height} with format ${metadata.format}`
+    );
+    logIfOn(
+      `[imageProcessorWorker] processForFileServerUpload: failed after ${Date.now() - start}ms`
+    );
+    logIfOn(
+      `\t src${formattedMetadata({ width: metadata.width, format: metadata.format, height: metadata.height, size: inputBuffer.byteLength })} `
+    );
 
     return null;
   },

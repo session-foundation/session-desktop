@@ -62,6 +62,9 @@ export const makeImageThumbnailBuffer = async ({
     await decryptedBlob.arrayBuffer(),
     maxThumbnailDetails.maxSide
   );
+  if (!processed) {
+    throw new Error('makeImageThumbnailBuffer failed to processForInConversationThumbnail');
+  }
 
   return processed.outputBuffer;
 };

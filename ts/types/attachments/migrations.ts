@@ -174,9 +174,10 @@ export const captureDimensionsAndScreenshot = async (opts: {
       );
       return fallbackResult;
     }
+    return fallbackResult;
   }
 
-  if (!GoogleChrome.isImageTypeSupported(contentType)) {
+  if (!GoogleChrome.isVideoTypeSupported(contentType)) {
     window.log.error('captureDimensionsAndScreenshot: this should have returned earlier');
     return fallbackResult;
   }

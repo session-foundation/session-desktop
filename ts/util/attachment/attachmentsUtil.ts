@@ -70,15 +70,20 @@ function imageTypeFromArrayBuffer(arrayBuffer: ArrayBuffer) {
   return imageType(data)?.mime ?? IMAGE_UNKNOWN;
 }
 
-export async function autoScaleFile(blob: Blob, maxMeasurements?: MaxScaleSize) {
+export async function autoScaleFile(file: File, maxMeasurements?: MaxScaleSize) {
   // this call returns null if not an image, or not one we can process, or we cannot scale it down enough
-  const processed = await ImageProcessor.processForFileServerUpload(
-    await blob.arrayBuffer(),
-    maxMeasurements?.maxSidePx ?? 2000,
-    maxMeasurements?.maxSizeBytes ?? MAX_ATTACHMENT_FILESIZE_BYTES
-  );
+  try {
+    const processed = await ImageProcessor.processForFileServerUpload(
+      await file.arrayBuffer(),
+      maxMeasurements?.maxSidePx ?? 2000,
+      maxMeasurements?.maxSizeBytes ?? MAX_ATTACHMENT_FILESIZE_BYTES
+    );
 
-  return processed;
+    return processed;
+  } catch (e) {
+    window.log.warn('autoScaleFile failed with', e.message);
+    return null;
+  }
 }
 
 export type StagedAttachmentImportedType = Omit<
