@@ -30,7 +30,6 @@ import { AttachmentType } from '../../../types/Attachment';
 import { processNewAttachment } from '../../../types/MessageAttachment';
 import { AttachmentUtil } from '../../../util';
 import {
-  type BetterBlob,
   StagedAttachmentImportedType,
   StagedPreviewImportedType,
 } from '../../../util/attachment/attachmentsUtil';
@@ -64,6 +63,7 @@ import { formatNumber } from '../../../util/i18n/formatting/generics';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { SessionProInfoVariant, showSessionProInfoDialog } from '../../dialog/SessionProInfoModal';
 import { tStripped } from '../../../localization/localeTools';
+import type { ProcessedLinkPreviewThumbnailType } from '../../../webworker/workers/node/image_processor/image_processor';
 
 export interface ReplyingToMessageProps {
   convoId: string;
@@ -79,8 +79,7 @@ export interface StagedLinkPreviewData {
   title: string | null;
   url: string | null;
   domain: string | null;
-  image?: BetterBlob;
-  imageData?: string;
+  scaledDown: ProcessedLinkPreviewThumbnailType | null;
 }
 
 export interface StagedAttachmentType extends AttachmentType {
@@ -486,15 +485,14 @@ class CompositionBoxInner extends Component<Props, State> {
       return null;
     }
 
-    const { isLoaded, title, domain, image, imageData } = this.state.stagedLinkPreview;
+    const { isLoaded, title, domain, scaledDown } = this.state.stagedLinkPreview;
 
     return (
       <SessionStagedLinkPreview
         isLoaded={isLoaded}
         title={title}
         domain={domain}
-        image={image}
-        imageData={imageData}
+        scaledDown={scaledDown}
         url={firstLink}
         onClose={url => {
           this.setState({ ignoredLink: url });
@@ -510,9 +508,8 @@ class CompositionBoxInner extends Component<Props, State> {
         isLoaded: false,
         url: firstLink,
         domain: null,
-        image: undefined,
-        imageData: undefined,
         title: null,
+        scaledDown: null,
       },
     });
     const abortController = new AbortController();
@@ -534,8 +531,7 @@ class CompositionBoxInner extends Component<Props, State> {
               title: ret?.title || null,
               url: ret?.url || null,
               domain: (ret?.url && LinkPreviews.getDomain(ret.url)) || '',
-              image: ret?.image,
-              imageData: ret?.imageData,
+              scaledDown: ret?.scaledDown,
             },
           });
         } else if (this.linkPreviewAbortController) {
@@ -545,8 +541,7 @@ class CompositionBoxInner extends Component<Props, State> {
               title: null,
               url: null,
               domain: null,
-              image: undefined,
-              imageData: undefined,
+              scaledDown: null,
             },
           });
           this.linkPreviewAbortController = undefined;
@@ -573,8 +568,7 @@ class CompositionBoxInner extends Component<Props, State> {
               title: null,
               url: firstLink,
               domain: null,
-              image: undefined,
-              imageData: undefined,
+              scaledDown: null,
             },
           });
         }
@@ -791,7 +785,7 @@ class CompositionBoxInner extends Component<Props, State> {
     // we consider that a link preview without a title at least is not a preview
     const linkPreview =
       stagedLinkPreview?.isLoaded && stagedLinkPreview.title?.length
-        ? _.pick(stagedLinkPreview, 'url', 'image', 'title')
+        ? _.pick(stagedLinkPreview, 'url', 'scaledDown', 'title')
         : undefined;
 
     try {
@@ -828,9 +822,10 @@ class CompositionBoxInner extends Component<Props, State> {
     }
   }
 
-  // this function is called right before sending a message, to gather really the files behind attachments.
+  // This function is called right before sending a message, to gather really the
+  // files content behind the staged attachments.
   private async getFiles(
-    linkPreview?: Pick<StagedLinkPreviewData, 'url' | 'title' | 'image'>
+    linkPreview?: Pick<StagedLinkPreviewData, 'url' | 'title' | 'scaledDown'>
   ): Promise<{
     attachments: Array<StagedAttachmentImportedType>;
     previews: Array<StagedPreviewImportedType>;
@@ -852,20 +847,15 @@ class CompositionBoxInner extends Component<Props, State> {
       previews = [];
     } else {
       const sharedDetails = { url: linkPreview.url, title: linkPreview.title };
+      previews = [sharedDetails];
       // store the first image preview locally and get the path and details back to include them in the message
-      const firstLinkPreviewImage = linkPreview.image;
-      if (firstLinkPreviewImage && !isEmpty(firstLinkPreviewImage)) {
-        const storedLinkPreviewAttachment =
-          await AttachmentUtil.getFileAndStoreLocallyImageBlob(firstLinkPreviewImage);
+      if (linkPreview.scaledDown && !isEmpty(linkPreview.scaledDown)) {
+        const storedLinkPreviewAttachment = await AttachmentUtil.getFileAndStoreLocallyImageBlob(
+          linkPreview.scaledDown
+        );
         if (storedLinkPreviewAttachment) {
           previews = [{ ...sharedDetails, image: storedLinkPreviewAttachment }];
-        } else {
-          // we couldn't save the image or whatever error happened, just return the url + title
-          previews = [sharedDetails];
         }
-      } else {
-        // we did not fetch an image from the server
-        previews = [sharedDetails];
       }
     }
 

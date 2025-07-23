@@ -6,7 +6,10 @@ import { isImageTypeSupported, isVideoTypeSupported } from '../util/GoogleChrome
 import { saveURLAsFile } from '../util/saveURLAsFile';
 import * as MIME from './MIME';
 import { AriaLabels } from '../util/hardcodedAriaLabels';
-import { ATTACHMENT_DEFAULT_MAX_SIDE, maxThumbnailDetails } from '../util/attachment/attachmentSizes';
+import {
+  ATTACHMENT_DEFAULT_MAX_SIDE,
+  maxThumbnailDetails,
+} from '../util/attachment/attachmentSizes';
 
 const MAX_WIDTH = maxThumbnailDetails.maxSide;
 const MAX_HEIGHT = maxThumbnailDetails.maxSide;

@@ -403,11 +403,25 @@ export class SessionConversation extends Component<Props, State> {
     try {
       // Here, we just try to scale the attachment to something that is not too big for the file server.
       // If we can, we use the scaled version, otherwise we use the original (and the filesize check will fail)
-      // Note: we do not save that scaled version here, we just check if will be fine when sending the attachment.
-      // Later, when the message is being sent, we will fetch the file again and scale it down again for upload.
-      const blob = MIME.isImage(contentType) ? await AttachmentUtil.autoScaleFile(file) : file;
+      //
+      // Note: we do not save that scaled version here,
+      // we just check if will be fine when sending the attachment.
+      // Later, when the message is being sent, we will fetch the
+      // file again and scale it down again for upload.
+      //
+      // The reason is simply that we'd need to store that in memory for the lifetime
+      // of the app if we were, as the user could switch conversations
+      // before sending a message with attachments.
 
-      if (blob.size > MAX_ATTACHMENT_FILESIZE_BYTES) {
+      const scaledOrNot = await AttachmentUtil.autoScaleFile(file);
+
+      // `autoScaleFile` either
+      // - returns null if it cannot process the file (i.e. not an image for instance)
+      // - returns a scaled down images if it could process and resize it down, or the size was fine to begin with
+      const failedToResizeAndOversized = !scaledOrNot && file.size > MAX_ATTACHMENT_FILESIZE_BYTES;
+      const resizedAndOverSized = scaledOrNot && scaledOrNot.size > MAX_ATTACHMENT_FILESIZE_BYTES;
+
+      if (failedToResizeAndOversized || resizedAndOverSized) {
         ToastUtils.pushFileSizeErrorAsByte();
         return;
       }

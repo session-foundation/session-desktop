@@ -34,6 +34,10 @@ export type ProcessedLocalAvatarChangeType = Awaited<
   ReturnType<ImageProcessorWorkerActions['processLocalAvatarChange']>
 >;
 
+export type ProcessedLinkPreviewThumbnailType = Awaited<
+  ReturnType<ImageProcessorWorkerActions['processForLinkPreviewThumbnail']>
+>;
+
 export type ImageProcessorWorkerActions = {
   extractFirstFrameJpeg: (input: ArrayBufferLike) => Promise<StaticOutputType & WithJpegFormat>;
 

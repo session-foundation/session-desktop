@@ -11,9 +11,8 @@ import { IMAGE_UNKNOWN, type MIMEType } from '../../types/MIME';
 import { getAbsoluteAttachmentPath, processNewAttachment } from '../../types/MessageAttachment';
 
 import { MAX_ATTACHMENT_FILESIZE_BYTES } from '../../session/constants';
-import { MIME } from '../../types';
-import { maxThumbnailDetails } from './attachmentSizes';
 import { callImageProcessorWorker } from '../../webworker/workers/browser/image_processor_interface';
+import type { ProcessedLinkPreviewThumbnailType } from '../../webworker/workers/node/image_processor/image_processor';
 
 /**
  * The logic for sending attachments is as follow:
@@ -44,21 +43,6 @@ export type BetterBlob = Blob & {
   height?: number;
 };
 
-async function createBetterBlobFromBlob(blob: Blob): Promise<BetterBlob> {
-  if (!MIME.isImage(blob.type)) {
-    return blob as unknown as BetterBlob;
-  }
-  const arrayBuffer = await blob.arrayBuffer();
-
-  const betterBlob = blob as unknown as BetterBlob;
-
-  betterBlob.contentType = imageTypeFromArrayBuffer(arrayBuffer);
-  betterBlob.animated =
-    (await callImageProcessorWorker('imageMetadata', arrayBuffer))?.isAnimated || false;
-
-  return betterBlob;
-}
-
 export async function createBetterBlobFromArrayBuffer(
   arrayBuffer: ArrayBuffer,
   contentType?: MIMEType,
@@ -88,11 +72,7 @@ function imageTypeFromArrayBuffer(arrayBuffer: ArrayBuffer) {
 }
 
 export async function autoScaleFile(blob: Blob, maxMeasurements?: MaxScaleSize) {
-  const betterBlob = await createBetterBlobFromBlob(blob);
-  if (betterBlob.contentType === IMAGE_UNKNOWN || !MIME.isImage(betterBlob.contentType)) {
-    betterBlob.contentType = blob.type;
-    return betterBlob;
-  }
+  // this call returns null if not an image, or not one we can process, or we cannot scale it down enough
   const processed = await callImageProcessorWorker(
     'processForFileServerUpload',
     await blob.arrayBuffer(),
@@ -100,11 +80,7 @@ export async function autoScaleFile(blob: Blob, maxMeasurements?: MaxScaleSize) 
     maxMeasurements?.maxSizeBytes ?? MAX_ATTACHMENT_FILESIZE_BYTES
   );
 
-  // if for some reason we couldn't process it, just return the original blob
-  if (!processed) {
-    return betterBlob;
-  }
-  return createBetterBlobFromArrayBuffer(processed.outputBuffer);
+  return processed;
 }
 
 export type StagedAttachmentImportedType = Omit<
@@ -145,13 +121,23 @@ export async function getFileAndStoreLocally(
     ? (SignalService.AttachmentPointer.Flags.VOICE_MESSAGE as number)
     : null;
 
-  const scaled = MIME.isImage(attachment.contentType)
-    ? await autoScaleFile(attachment.file, maxMeasurements)
-    : attachment.file;
+  const scaledOrNot = await autoScaleFile(attachment.file, maxMeasurements);
+  // `autoScaleFile` either
+  // - returns null if it cannot process the file (i.e. not an image for instance)
+  // - returns a scaled down images if it could process and resize it down, or the size was fine to begin with
+  const failedToResizeAndOversized =
+    !scaledOrNot && attachment.file.size > MAX_ATTACHMENT_FILESIZE_BYTES;
+  const resizedAndOverSized = scaledOrNot && scaledOrNot.size > MAX_ATTACHMENT_FILESIZE_BYTES;
+
+  if (failedToResizeAndOversized || resizedAndOverSized) {
+    throw new Error(
+      'Attachment is too big, it should not have been possible to staged it in the first place.'
+    );
+  }
 
   // this operation might change the file size, so be sure to rely on it on return here.
   const attachmentSavedLocally = await processNewAttachment({
-    data: await scaled.arrayBuffer(),
+    data: scaledOrNot?.outputBuffer || (await attachment.file.arrayBuffer()),
     contentType: attachment.contentType,
     fileName: attachment.fileName,
   });
@@ -170,23 +156,19 @@ export async function getFileAndStoreLocally(
   };
 }
 
-export async function getFileAndStoreLocallyImageBlob(blob: BetterBlob) {
-  const scaled = await callImageProcessorWorker(
-    'processForInConversationThumbnail',
-    await blob.arrayBuffer(),
-    maxThumbnailDetails.maxSide
-  );
-  // this operation might change the file size, so be sure to rely on it on return here.
+export async function getFileAndStoreLocallyImageBlob(
+  processedLinkPreview: ProcessedLinkPreviewThumbnailType
+) {
   const attachmentSavedLocally = await processNewAttachment({
-    data: scaled.outputBuffer,
-    contentType: scaled.contentType,
+    data: processedLinkPreview.outputBuffer,
+    contentType: processedLinkPreview.contentType,
   });
 
   return {
-    contentType: scaled.contentType,
+    contentType: processedLinkPreview.contentType,
     path: attachmentSavedLocally.path,
-    width: scaled.width,
-    height: scaled.height,
+    width: processedLinkPreview.width,
+    height: processedLinkPreview.height,
     size: attachmentSavedLocally.size,
   };
 }
