@@ -11,8 +11,8 @@ import { isAudio } from '../MIME';
 import { formatTimeDurationMs } from '../../util/i18n/formatting/generics';
 import { isTestIntegration } from '../../shared/env_vars';
 import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
-import { processLocalAvatarChange } from '../../util/avatar/processLocalAvatarChange';
-import type { ProcessedLocalAvatarChangeType } from '../../webworker/workers/node/image_processor/image_processor';
+import { processAvatarData } from '../../util/avatar/processAvatarData';
+import type { ProcessedAvatarDataType } from '../../webworker/workers/node/image_processor/image_processor';
 import { ImageProcessor } from '../../webworker/workers/browser/image_processor_interface';
 import { maxThumbnailDetails } from '../../util/attachment/attachmentSizes';
 
@@ -186,10 +186,10 @@ export const revokeObjectUrl = (objectUrl: string) => {
   URL.revokeObjectURL(objectUrl);
 };
 
-async function autoScaleAvatarBlob(file: File): Promise<ProcessedLocalAvatarChangeType | null> {
+async function autoScaleAvatarBlob(file: File): Promise<ProcessedAvatarDataType | null> {
   try {
     const arrayBuffer = await file.arrayBuffer();
-    const processed = await processLocalAvatarChange(arrayBuffer);
+    const processed = await processAvatarData(arrayBuffer);
     return processed;
   } catch (e) {
     ToastUtils.pushToastError(
@@ -239,7 +239,7 @@ async function pickFileForTestIntegration() {
 /**
  * Shows the system file picker for images, scale the image down for avatar/opengroup measurements and return the blob objectURL on success
  */
-export async function pickFileForAvatar(): Promise<ProcessedLocalAvatarChangeType | null> {
+export async function pickFileForAvatar(): Promise<ProcessedAvatarDataType | null> {
   const file = isTestIntegration() ? await pickFileForTestIntegration() : await pickFileForReal();
 
   return autoScaleAvatarBlob(file);

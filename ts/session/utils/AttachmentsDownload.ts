@@ -204,6 +204,10 @@ async function _runJob(job: any) {
     if (!attachment.contentType) {
       window.log.warn('incoming attachment has no contentType');
     }
+    /**
+     * processNewAttachment will generate the thumbnails and screenshot on save, but won't resize the downloaded image.
+     * This is on purpose as we want to allow the user to download the attachment that the sender uploaded, as is if required.
+     */
     const upgradedAttachment = await processNewAttachment({
       ...downloaded,
       fileName: attachment.fileName,

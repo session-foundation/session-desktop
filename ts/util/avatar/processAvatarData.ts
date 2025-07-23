@@ -4,16 +4,17 @@ import { maxAvatarDetails } from '../attachment/attachmentSizes';
 import { MAX_ATTACHMENT_FILESIZE_BYTES } from '../../session/constants';
 
 /**
- * When the current device makes a change to his avatar, or a group/communities avatar we need to process it.
- * This function will create the required buffers of data, depending on the type of avatar.
+ * When the current device makes a change to its avatar, or a group/communities avatar we need to process it.
+ * The same applies for an incoming avatar downloaded.
  *
- * - mainAvatarDetails will be animated (webp enforced) if the source was animated, or a jpg of the original image
+ * This function will create the required buffers of data, depending on the type of avatar.
+ * - mainAvatarDetails will be animated (webp enforced) if the source was animated, or a jpeg of the original image
  * - avatarFallback will be an image (jpeg enforced) of the first frame of `mainAvatarDetails` if it was animated, or null
  *
  */
-export async function processLocalAvatarChange(arrayBuffer: ArrayBuffer) {
+export async function processAvatarData(arrayBuffer: ArrayBuffer) {
   if (!arrayBuffer || arrayBuffer.byteLength === 0 || !isArrayBuffer(arrayBuffer)) {
-    throw new Error('processLocalAvatarChange: arrayBuffer is empty');
+    throw new Error('processAvatarData: arrayBuffer is empty');
   }
 
   /**
@@ -22,7 +23,7 @@ export async function processLocalAvatarChange(arrayBuffer: ArrayBuffer) {
    * 2. a fallback avatar in case the user looses its pro (static image, even if the main avatar is animated)
    */
   // this is step 1, we generate a scaled down avatar, but keep its nature (animated or not)
-  const processed = await ImageProcessor.processLocalAvatarChange(
+  const processed = await ImageProcessor.processAvatarData(
     arrayBuffer,
     maxAvatarDetails.maxSide
   );

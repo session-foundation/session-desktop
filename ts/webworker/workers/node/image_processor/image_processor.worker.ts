@@ -160,9 +160,9 @@ const workerActions: ImageProcessorWorkerActions = {
     };
   },
 
-  processLocalAvatarChange: async (inputBuffer: ArrayBufferLike, maxSidePx: number) => {
+  processAvatarData: async (inputBuffer: ArrayBufferLike, maxSidePx: number) => {
     if (!inputBuffer?.byteLength) {
-      throw new Error('processLocalAvatarChange: inputBuffer is required');
+      throw new Error('processAvatarData: inputBuffer is required');
     }
     const start = Date.now();
 
@@ -174,7 +174,7 @@ const workerActions: ImageProcessorWorkerActions = {
     const avatarIsAnimated = isAnimated(metadata);
 
     if (avatarIsAnimated && metadata.format !== 'webp' && metadata.format !== 'gif') {
-      throw new Error('processLocalAvatarChange: we only support animated images in webp or gif');
+      throw new Error('processAvatarData: we only support animated images in webp or gif');
     }
 
     // generate a square image of the avatar, scaled down or up to `maxSide`
@@ -198,13 +198,10 @@ const workerActions: ImageProcessorWorkerActions = {
       return null;
     }
 
-    const resizedMetadataSize = metadataSizeIsSetOrThrow(
-      resizedMetadata,
-      'processLocalAvatarChange'
-    );
+    const resizedMetadataSize = metadataSizeIsSetOrThrow(resizedMetadata, 'processAvatarData');
 
     logIfOn(
-      `[imageProcessorWorker] processLocalAvatarChange mainAvatar resize took ${Date.now() - start}ms for ${inputBuffer.byteLength} bytes`
+      `[imageProcessorWorker] processAvatarData mainAvatar resize took ${Date.now() - start}ms for ${inputBuffer.byteLength} bytes`
     );
 
     const resizedIsAnimated = isAnimated(resizedMetadata);
@@ -228,7 +225,7 @@ const workerActions: ImageProcessorWorkerActions = {
       // also extract the first frame of the resized (animated) avatar
       const firstFrameJpeg = await workerActions.extractFirstFrameJpeg(resizedBuffer.buffer);
       if (!firstFrameJpeg) {
-        throw new Error('processLocalAvatarChange: failed to extract first frame as jpeg');
+        throw new Error('processAvatarData: failed to extract first frame as jpeg');
       }
       const fallbackFormat = 'jpeg' as const;
 
@@ -243,7 +240,7 @@ const workerActions: ImageProcessorWorkerActions = {
     }
 
     logIfOn(
-      `[imageProcessorWorker] processLocalAvatarChange sizes: main: ${mainAvatarDetails.size} bytes, fallback: ${avatarFallback ? avatarFallback.size : 0} bytes`
+      `[imageProcessorWorker] processAvatarData sizes: main: ${mainAvatarDetails.size} bytes, fallback: ${avatarFallback ? avatarFallback.size : 0} bytes`
     );
 
     return { mainAvatarDetails, avatarFallback };

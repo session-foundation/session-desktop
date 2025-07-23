@@ -59,7 +59,7 @@ import { encryptProfile } from '../../util/crypto/profileEncrypter';
 import { processNewAttachment } from '../../types/MessageAttachment';
 import type { StoreGroupMessageSubRequest } from '../../session/apis/snode_api/SnodeRequestTypes';
 import { sectionActions } from './section';
-import { processLocalAvatarChange } from '../../util/avatar/processLocalAvatarChange';
+import { processAvatarData } from '../../util/avatar/processAvatarData';
 
 export type GroupState = {
   infos: Record<GroupPubkeyType, GroupInfoGet>;
@@ -1012,7 +1012,7 @@ async function handleAvatarChangeFromUI({
 
   const dataUnencrypted = await blobAvatarAlreadyScaled.arrayBuffer();
 
-  const processed = await processLocalAvatarChange(dataUnencrypted);
+  const processed = await processAvatarData(dataUnencrypted);
 
   if (!processed) {
     throw new Error('Failed to process avatar');

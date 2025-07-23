@@ -11,7 +11,7 @@ import { IMAGE_JPEG } from '../../types/MIME';
 import { encryptProfile } from '../../util/crypto/profileEncrypter';
 import { Storage } from '../../util/storage';
 import type { ConversationModel } from '../../models/conversation';
-import { processLocalAvatarChange } from '../../util/avatar/processLocalAvatarChange';
+import { processAvatarData } from '../../util/avatar/processAvatarData';
 
 /**
  * This function can be used for reupload our avatar to the file server.
@@ -82,7 +82,7 @@ export async function uploadAndSetOurAvatarShared({
   }
   const { fileUrl } = avatarPointer;
 
-  const { avatarFallback, mainAvatarDetails } = await processLocalAvatarChange(decryptedAvatarData);
+  const { avatarFallback, mainAvatarDetails } = await processAvatarData(decryptedAvatarData);
 
   // this encrypts and save the new avatar and returns a new attachment path
   const savedMainAvatar = await processNewAttachment({

@@ -13,7 +13,7 @@ import {
   PersistedJob,
   RunJobResult,
 } from '../PersistedJob';
-import { processLocalAvatarChange } from '../../../../util/avatar/processLocalAvatarChange';
+import { processAvatarData } from '../../../../util/avatar/processAvatarData';
 
 const defaultMsBetweenRetries = 10000;
 const defaultMaxAttempts = 3;
@@ -115,6 +115,8 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
     if (toDownloadPointer && toDownloadProfileKey) {
       try {
         window.log.debug(`[profileupdate] starting downloading task for  ${conversation.id}`);
+        // This is an avatar download, we are free to resize/compress/convert what is downloaded as we wish.
+        // Desktop will generate a normal avatar and a forced static one. Both resized and converted if required.
         const downloaded = await downloadAttachment({
           url: toDownloadPointer,
           isRaw: true,
@@ -148,7 +150,7 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
           );
 
           // we autoscale incoming avatars because our app keeps decrypted avatars in memory and some platforms allows large avatars to be uploaded.
-          const processed = await processLocalAvatarChange(decryptedData);
+          const processed = await processAvatarData(decryptedData);
 
           const upgradedMainAvatar = await processNewAttachment({
             data: processed.mainAvatarDetails.outputBuffer,

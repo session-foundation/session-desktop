@@ -26,12 +26,12 @@ type WithWebpFormat = WithImageFormat<'webp'>;
 type StaticOutputType = WithOutputBuffer & WithSharpSize & WithSharpWidth & WithSharpHeight;
 
 /**
- * Can be animated or not
+ * Can be animated or not. Another `With` will be needed to express the type of the content.
  */
 type MaybeAnimatedOutputType = StaticOutputType & WithIsAnimated;
 
-export type ProcessedLocalAvatarChangeType = NonNullable<
-  Awaited<ReturnType<ImageProcessorWorkerActions['processLocalAvatarChange']>>
+export type ProcessedAvatarDataType = NonNullable<
+  Awaited<ReturnType<ImageProcessorWorkerActions['processAvatarData']>>
 >;
 
 export type ProcessedLinkPreviewThumbnailType = NonNullable<
@@ -44,13 +44,13 @@ export type ImageProcessorWorkerActions = {
   ) => Promise<(StaticOutputType & WithJpegFormat) | null>;
 
   /**
-   * Process a local avatar change.
+   * Process an avatar change.
    * This function will generate a mainAvatar, and a fallbackAvatar if needed.
    *
    * The mainAvatar can be animated or not. If animated it is a webp, if not it is a jpeg.
-   * The fallbackAvatar, if set, it is a always a jpeg.
+   * The fallbackAvatar, if set, is a always a jpeg.
    */
-  processLocalAvatarChange: (
+  processAvatarData: (
     input: ArrayBufferLike,
     maxSidePx: number
   ) => Promise<{
