@@ -13,11 +13,13 @@ Any helper functions that are exported from a helper file must run checkTargetMi
 import { V31 } from './v31';
 import { V33 } from './v33';
 import { V34 } from './v34';
+import { V47 } from './v47';
 
 const MIGRATION_HELPERS = {
   V31,
   V33,
   V34,
+  V47,
 };
 
 export default MIGRATION_HELPERS;

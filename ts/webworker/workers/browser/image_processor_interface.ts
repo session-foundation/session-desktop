@@ -58,7 +58,6 @@ export const ImageProcessor: ImageProcessorWorkerActions = {
     ...args: Parameters<ImageProcessorWorkerActions['testIntegrationFakeAvatar']>
   ) => callImageProcessorWorker('testIntegrationFakeAvatar', ...args),
 
-  processAvatarData: (
-    ...args: Parameters<ImageProcessorWorkerActions['processAvatarData']>
-  ) => callImageProcessorWorker('processAvatarData', ...args),
+  processAvatarData: (...args: Parameters<ImageProcessorWorkerActions['processAvatarData']>) =>
+    callImageProcessorWorker('processAvatarData', ...args),
 };

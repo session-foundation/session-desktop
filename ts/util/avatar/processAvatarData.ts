@@ -23,10 +23,7 @@ export async function processAvatarData(arrayBuffer: ArrayBuffer) {
    * 2. a fallback avatar in case the user looses its pro (static image, even if the main avatar is animated)
    */
   // this is step 1, we generate a scaled down avatar, but keep its nature (animated or not)
-  const processed = await ImageProcessor.processAvatarData(
-    arrayBuffer,
-    maxAvatarDetails.maxSide
-  );
+  const processed = await ImageProcessor.processAvatarData(arrayBuffer, maxAvatarDetails.maxSide);
 
   if (!processed) {
     throw new Error('processLocalAvatarChange: failed to process avatar');
