@@ -368,7 +368,6 @@ const workerActions: ImageProcessorWorkerActions = {
 
     const animated = isAnimated(metadata);
 
-    const base = sharpFrom(inputBuffer, { animated }).rotate();
     const isLossyFormat = lossyFormats.includes(metadata.format);
 
     // Note: this will resize
@@ -396,6 +395,32 @@ const workerActions: ImageProcessorWorkerActions = {
       };
     }
 
+    // If image is lossless, we cannot adjust the quality and we assume we don't want to scale it down either (as it can be slow)
+    // so just return the source buffer
+    if (!isLossyFormat) {
+      if (inputBuffer.byteLength >= maxSizeBytes) {
+        logIfOn(`not lossy format and does not fit`);
+
+        return null;
+      }
+
+      const size = metadataSizeIsSetOrThrow(metadata, 'processForFileServerUpload');
+      logIfOn(
+        `not lossy format but fits, returning buffer of size ${size} and WxH: ${metadata.width}x${metadata.height}`
+      );
+
+      return {
+        format: metadata.format,
+        outputBuffer: inputBuffer,
+        size,
+        width: metadata.width,
+        height: metadata.height,
+        isAnimated: isAnimated(metadata),
+      };
+    }
+
+    const base = sharpFrom(inputBuffer, { animated }).rotate();
+
     // Resize if needed
     if (metadata.width > maxSidePx || metadata.height > maxSidePx) {
       base.resize({
@@ -404,35 +429,6 @@ const workerActions: ImageProcessorWorkerActions = {
         fit: 'inside',
         withoutEnlargement: true,
       });
-    }
-
-    // If image is lossless, we cannot adjust the quality, so we just return the buffer resized to the maxSide
-    if (!isLossyFormat) {
-      const output = await base.toBuffer();
-      if (output.length >= maxSizeBytes) {
-        logIfOn(`not lossy format and does not fit`);
-
-        return null;
-      }
-      const outputMetadata = await metadataFromBuffer(output);
-
-      if (!outputMetadata) {
-        return null;
-      }
-
-      const size = metadataSizeIsSetOrThrow(outputMetadata, 'processForFileServerUpload');
-      logIfOn(
-        `not lossy format but fits, returning buffer of size ${size} and WxH: ${outputMetadata.width}x${outputMetadata.height}`
-      );
-
-      return {
-        format: outputMetadata.format,
-        outputBuffer: output.buffer,
-        size,
-        width: outputMetadata.width,
-        height: outputMetadata.height,
-        isAnimated: isAnimated(outputMetadata),
-      };
     }
 
     // if we can't get a picture with a quality of more than 30, consider it a failure and return null
