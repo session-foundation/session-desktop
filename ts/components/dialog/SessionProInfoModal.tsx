@@ -59,9 +59,11 @@ const StyledCTAImage = styled.img`
 
 const StyledAnimationImage = styled.img`
   position: absolute;
-  width: 100%;
-  height: 100%;
+
   inset-inline-start: 0;
+  width: 13%;
+  top: 28.5%;
+  left: 45%;
 `;
 
 const StyledAnimatedCTAImageContainer = styled.div`
