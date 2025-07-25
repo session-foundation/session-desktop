@@ -8,12 +8,6 @@ import {
   encryptAttachmentBufferRenderer,
 } from './local_attachments_encrypter';
 
-// to me, this file is only used in the renderer
-// import { decryptAttachmentBuffer, encryptAttachmentBuffer } from './encrypt_attachment_buffer';
-
-//      createReader :: AttachmentsPath ->
-//                      RelativePath ->
-//                      IO (Promise ArrayBuffer)
 export const createReader = (root: string) => {
   if (!isString(root)) {
     throw new TypeError("'root' must be a path");
@@ -39,9 +33,6 @@ export const createReader = (root: string) => {
   };
 };
 
-//      createWriterForNew :: AttachmentsPath ->
-//                            ArrayBuffer ->
-//                            IO (Promise RelativePath)
 export const createWriterForNew = (root: string) => {
   if (!isString(root)) {
     throw new TypeError("'root' must be a path");
@@ -109,7 +100,10 @@ const createName = () => {
   return buffer.toString('hex');
 };
 
-//      getRelativePath :: String -> Path
+/**
+ * Returns a path with the first 2 chars of the name as a prefix.
+ * For instance, if the name is "1609846372890101", this function returns "16/1609846372890101"
+ */
 const getRelativePath = (name: string) => {
   if (!isString(name)) {
     throw new TypeError("'name' must be a string");

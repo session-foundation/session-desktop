@@ -65,8 +65,9 @@ window.sessionFeatureFlags = {
   debugInputCommands: !isEmpty(process.env.SESSION_DEBUG),
   alwaysShowRemainingChars: false,
   showPopoverAnchors: false,
-  proAvailable: false,
-  mockUserHasPro: false,
+  proAvailable: !isEmpty(process.env.SESSION_PRO),
+  mockUserHasPro: !isEmpty(process.env.SESSION_HAS_PRO),
+  fsTTL30s: !isEmpty(process.env.FILE_SERVER_TTL_30S),
   debug: {
     debugLogging: !isEmpty(process.env.SESSION_DEBUG),
     debugLibsessionDumps: !isEmpty(process.env.SESSION_DEBUG_LIBSESSION_DUMPS),

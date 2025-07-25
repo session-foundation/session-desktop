@@ -13,6 +13,7 @@ export type SessionFeatureFlags = {
   debugInputCommands: boolean;
   proAvailable: boolean;
   mockUserHasPro: boolean;
+  fsTTL30s: boolean;
 };
 
 export type SessionFeatureFlagKeys = RecursiveKeys<SessionFeatureFlags>;
@@ -26,8 +27,9 @@ export const isSessionFeatureFlag = (flag: unknown): flag is SessionFeatureFlagK
   return !strFlag.startsWith('debug') && Object.keys(window.sessionFeatureFlags).includes(strFlag);
 };
 
-export const getFeatureFlag = (flag: SessionFeatureFlagKeys) => window.sessionFeatureFlags[flag];
-export const useFeatureFlag = (flag: SessionFeatureFlagKeys) => getFeatureFlag(flag);
+export const getFeatureFlag = <T extends SessionFeatureFlagKeys>(flag: T) =>
+  window.sessionFeatureFlags[flag];
+export const useFeatureFlag = <T extends SessionFeatureFlagKeys>(flag: T) => getFeatureFlag(flag);
 
 export type SessionFlags = SessionFeatureFlags & {
   debug: {

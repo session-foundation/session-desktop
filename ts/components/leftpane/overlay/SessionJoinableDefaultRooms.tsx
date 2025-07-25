@@ -3,7 +3,10 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import styled from 'styled-components';
 import { parseOpenGroupV2 } from '../../../session/apis/open_group_api/opengroupV2/JoinOpenGroupV2';
-import { sogsV3FetchPreviewBase64 } from '../../../session/apis/open_group_api/sogsv3/sogsV3FetchFile';
+import {
+  fileDetailsToURL,
+  sogsV3FetchPreviewBase64,
+} from '../../../session/apis/open_group_api/sogsv3/sogsV3FetchFile';
 import { DefaultRoomsState, updateDefaultBase64RoomData } from '../../../state/ducks/defaultRooms';
 import { StateType } from '../../../state/reducer';
 import { Avatar, AvatarSize } from '../../avatar/Avatar';
@@ -40,8 +43,18 @@ const SessionJoinableRoomAvatar = (props: JoinableRoomProps) => {
         if (isCancelled) {
           return;
         }
+        if (!imageID) {
+          return;
+        }
         // eslint-disable-next-line more/no-then
-        sogsV3FetchPreviewBase64({ ...parsedInfos, imageID })
+        sogsV3FetchPreviewBase64({
+          ...parsedInfos,
+          imageFullUrl: fileDetailsToURL({
+            fileId: imageID,
+            roomId: props.roomId,
+            serverUrl: parsedInfos.serverUrl,
+          }),
+        })
           .then(base64 => {
             if (isCancelled) {
               return;

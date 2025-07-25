@@ -19,7 +19,7 @@ import {
   getAbsoluteAttachmentPath as msgGetAbsoluteAttachmentPath,
   getAttachmentPath,
 } from '../../types/MessageAttachment';
-import { decryptAttachmentBufferRenderer } from '../../util/local_attachments_encrypter';
+import { decryptAttachmentBufferRenderer } from '../../util/attachment/local_attachments_encrypter';
 
 const urlToDecryptedBlobMap = new Map<
   string,

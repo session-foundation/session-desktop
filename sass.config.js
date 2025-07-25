@@ -38,4 +38,13 @@ module.exports = {
       filename: 'manifest.css',
     })
   ),
+  optimization: {
+    minimize: process.env.NODE_ENV === 'production',
+  },
+  mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
+  watch: false, // false by default but can be overridden by the command line
+  watchOptions: {
+    aggregateTimeout: 200,
+    poll: 1000,
+  },
 };

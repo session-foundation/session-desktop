@@ -6,9 +6,8 @@ import {
   createAbsolutePathGetter,
   createReader,
   createWriterForNew,
-} from '../util/attachments_files';
+} from '../util/attachment/attachments_files';
 import {
-  autoOrientJPEGAttachment,
   captureDimensionsAndScreenshot,
   deleteData,
   deleteDataSuccessful,
@@ -148,6 +147,10 @@ export const loadQuoteData = async (quote: any) => {
   };
 };
 
+/**
+ * Any `data: ArrayBuffer` provided here must first have been oriented to the
+ * right orientation using one of the ImageProcessor functions.
+ */
 export const processNewAttachment = async (attachment: {
   fileName?: string;
   contentType: string;
@@ -157,19 +160,23 @@ export const processNewAttachment = async (attachment: {
   isRaw?: boolean;
 }) => {
   const fileName = attachment.fileName ? replaceUnicodeV2(attachment.fileName) : '';
-  // this operation might change the size (as we might print the content to a canvas and get the data back)
-  const rotatedData = await autoOrientJPEGAttachment(attachment);
 
-  const onDiskAttachmentPath = await migrateDataToFileSystem(rotatedData.data);
+  const onDiskAttachmentPath = await migrateDataToFileSystem(attachment.data);
   const attachmentWithoutData = omit({ ...attachment, fileName, path: onDiskAttachmentPath }, [
     'data',
   ]);
-  if (rotatedData.shouldDeleteDigest) {
-    delete attachmentWithoutData.digest;
-  }
-  const finalAttachment = await captureDimensionsAndScreenshot(attachmentWithoutData);
 
-  return { ...finalAttachment, fileName, size: rotatedData.data.byteLength };
+  const finalAttachment = await captureDimensionsAndScreenshot({
+    contentType: attachment.contentType,
+    data: attachment.data,
+  });
+
+  return {
+    ...attachmentWithoutData,
+    ...finalAttachment,
+    fileName,
+    size: attachment.data.byteLength,
+  };
 };
 
 export const readAttachmentData = async (relativePath: string): Promise<ArrayBufferLike> => {
@@ -200,14 +207,7 @@ export const writeNewAttachmentData = async (arrayBuffer: ArrayBuffer): Promise<
   return internalWriteNewAttachmentData(arrayBuffer);
 };
 
-// type Context :: {
-//   writeNewAttachmentData :: ArrayBuffer -> Promise (IO Path)
-// }
-//
-//      migrateDataToFileSystem :: Attachment ->
-//                                 Context ->
-//                                 Promise Attachment
-export const migrateDataToFileSystem = async (data?: ArrayBuffer) => {
+const migrateDataToFileSystem = async (data?: ArrayBuffer) => {
   const hasDataField = !isUndefined(data);
 
   if (!hasDataField) {
@@ -225,15 +225,26 @@ export const migrateDataToFileSystem = async (data?: ArrayBuffer) => {
 };
 
 export async function deleteExternalFilesOfConversation(
-  conversationAttributes: Readonly<Pick<ConversationAttributes, 'avatarInProfile'>>
+  conversationAttributes: Readonly<
+    Pick<ConversationAttributes, 'avatarInProfile' | 'fallbackAvatarInProfile'>
+  >
 ) {
   if (!conversationAttributes) {
     return;
   }
 
-  const { avatarInProfile } = conversationAttributes;
+  const { avatarInProfile, fallbackAvatarInProfile } = conversationAttributes;
+
+  const filesToDelete = [];
 
   if (isString(avatarInProfile) && avatarInProfile.length) {
-    await deleteOnDisk(avatarInProfile);
+    filesToDelete.push(avatarInProfile);
+  }
+  if (isString(fallbackAvatarInProfile) && fallbackAvatarInProfile.length) {
+    filesToDelete.push(fallbackAvatarInProfile);
+  }
+
+  if (filesToDelete.length) {
+    await Promise.all(filesToDelete.map(deleteOnDisk));
   }
 }

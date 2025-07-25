@@ -5,6 +5,7 @@ export type PersistedJobType =
   | 'UserSyncJobType'
   | 'GroupSyncJobType'
   | 'AvatarDownloadJobType'
+  | 'AvatarMigrateJobType'
   | 'GroupInviteJobType'
   | 'GroupPromoteJobType'
   | 'GroupPendingRemovalJobType'
@@ -35,6 +36,11 @@ export interface FakeSleepForMultiJobData extends PersistedJobData {
 
 export interface AvatarDownloadPersistedData extends PersistedJobData {
   jobType: 'AvatarDownloadJobType';
+  conversationId: string;
+}
+
+export interface AvatarMigratePersistedData extends PersistedJobData {
+  jobType: 'AvatarMigrateJobType';
   conversationId: string;
 }
 
@@ -77,6 +83,7 @@ export interface UpdateMsgExpirySwarmPersistedData extends PersitedDataWithMsgId
 export type TypeOfPersistedData =
   | UserSyncPersistedData
   | AvatarDownloadPersistedData
+  | AvatarMigratePersistedData
   | FetchMsgExpirySwarmPersistedData
   | UpdateMsgExpirySwarmPersistedData
   | FakeSleepJobData

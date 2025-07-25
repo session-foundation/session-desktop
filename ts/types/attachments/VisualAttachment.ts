@@ -1,18 +1,21 @@
 /* eslint-disable more/no-then */
 /* global document, URL, Blob */
 
-import { blobToArrayBuffer, dataURLToBlob } from 'blob-util';
+import { dataURLToBlob } from 'blob-util';
 import { toLogFormat } from './Errors';
 
 import { DecryptedAttachmentsManager } from '../../session/crypto/DecryptedAttachmentsManager';
 import { ToastUtils } from '../../session/utils';
 import { GoogleChrome } from '../../util';
-import { autoScaleForAvatar, autoScaleForThumbnail } from '../../util/attachmentsUtil';
 import { isAudio } from '../MIME';
 import { formatTimeDurationMs } from '../../util/i18n/formatting/generics';
 import { isTestIntegration } from '../../shared/env_vars';
+import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import { processAvatarData } from '../../util/avatar/processAvatarData';
+import type { ProcessedAvatarDataType } from '../../webworker/workers/node/image_processor/image_processor';
+import { ImageProcessor } from '../../webworker/workers/browser/image_processor_interface';
+import { maxThumbnailDetails } from '../../util/attachment/attachmentSizes';
 
-export const THUMBNAIL_SIDE = 200;
 export const THUMBNAIL_CONTENT_TYPE = 'image/png';
 
 export const urlToBlob = async (dataUrl: string) => {
@@ -23,29 +26,19 @@ export const getImageDimensions = async ({
   objectUrl,
 }: {
   objectUrl: string;
-}): Promise<{ height: number; width: number }> =>
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
-  new Promise((resolve, reject) => {
-    const image = document.createElement('img');
+}): Promise<{ height: number; width: number }> => {
+  const blob = await urlToBlob(objectUrl);
+  const metadata = await ImageProcessor.imageMetadata(await blob.arrayBuffer());
 
-    image.addEventListener('load', () => {
-      resolve({
-        height: image.naturalHeight,
-        width: image.naturalWidth,
-      });
-    });
-    image.addEventListener('error', error => {
-      window.log.error('getImageDimensions error', toLogFormat(error));
-      reject(error);
-    });
-    // image/jpg is hard coded here but does not look to cause any issues
-    void DecryptedAttachmentsManager.getDecryptedMediaUrl(objectUrl, 'image/jpg', false)
-      .then(decryptedUrl => {
-        image.src = decryptedUrl;
-      })
-      // eslint-disable-next-line no-console
-      .catch(console.error);
-  });
+  if (!metadata || !metadata.height || !metadata.width) {
+    throw new Error('getImageDimensions: metadata is empty');
+  }
+
+  return {
+    height: metadata.height,
+    width: metadata.width,
+  };
+};
 
 export const makeImageThumbnailBuffer = async ({
   objectUrl,
@@ -60,9 +53,20 @@ export const makeImageThumbnailBuffer = async ({
     );
   }
   const decryptedBlob = await DecryptedAttachmentsManager.getDecryptedBlob(objectUrl, contentType);
-  const scaled = await autoScaleForThumbnail({ contentType, blob: decryptedBlob });
 
-  return blobToArrayBuffer(scaled.blob);
+  // Calling processForInConversationThumbnail here means the generated thumbnail will be static, even if the original image is animated.
+  // Let's fix this separately in the future, but we'd want to use processForInConversationThumbnail
+  // so that we have a webp when the source was animated.
+  // Note: when we decide to change this, we will also need to update a bunch of things regarding `THUMBNAIL_CONTENT_TYPE` assumed type.
+  const processed = await ImageProcessor.processForInConversationThumbnail(
+    await decryptedBlob.arrayBuffer(),
+    maxThumbnailDetails.maxSide
+  );
+  if (!processed) {
+    throw new Error('makeImageThumbnailBuffer failed to processForInConversationThumbnail');
+  }
+
+  return processed.outputBuffer;
 };
 
 export const makeVideoScreenshot = async ({
@@ -182,57 +186,33 @@ export const revokeObjectUrl = (objectUrl: string) => {
   URL.revokeObjectURL(objectUrl);
 };
 
-export async function autoScaleAvatarBlob(file: File) {
+async function autoScaleAvatarBlob(file: File): Promise<ProcessedAvatarDataType | null> {
   try {
-    const scaled = await autoScaleForAvatar({ blob: file, contentType: file.type });
-
-    const url = window.URL.createObjectURL(scaled.blob);
-
-    return url;
+    const arrayBuffer = await file.arrayBuffer();
+    const processed = await processAvatarData(arrayBuffer);
+    return processed;
   } catch (e) {
     ToastUtils.pushToastError(
       'pickFileForAvatar',
-      `An error happened while picking/resizing the image: "${e.message || ''}"`
+      `An error happened while picking/resizing the image: "${e.message?.slice(200) || ''}"`
     );
     window.log.error(e);
     return null;
   }
 }
 
-/**
- * Shows the system file picker for images, scale the image down for avatar/opengroup measurements and return the blob objectURL on success
- */
-export async function pickFileForAvatar(): Promise<string | null> {
-  if (isTestIntegration()) {
-    window.log.warn(
-      'shorting pickFileForAvatar as it does not work in playwright/notsending the filechooser event'
-    );
-
-    const canvas = document.createElement('canvas');
-    canvas.width = 500;
-    canvas.height = 500;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      throw new Error('we need a context');
-    }
-    ctx.fillStyle = 'blue';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    return new Promise(resolve => {
-      canvas.toBlob(blob => {
-        const file = new File([blob as Blob], 'image.png', { type: 'image/png' });
-        void autoScaleAvatarBlob(file)
-          .then(url => resolve(url))
-          // eslint-disable-next-line no-console
-          .catch(console.error);
-      });
-    });
+async function pickFileForReal() {
+  const acceptedImages = ['.png', '.gif', '.jpeg', '.jpg'];
+  if (getFeatureFlag('proAvailable')) {
+    acceptedImages.push('.webp');
   }
+
   const [fileHandle] = await (window as any).showOpenFilePicker({
     types: [
       {
         description: 'Images',
         accept: {
-          'image/*': ['.png', '.gif', '.jpeg', '.jpg'],
+          'image/*': acceptedImages,
         },
       },
     ],
@@ -241,5 +221,26 @@ export async function pickFileForAvatar(): Promise<string | null> {
   });
 
   const file = (await fileHandle.getFile()) as File;
+  return file;
+}
+
+async function pickFileForTestIntegration() {
+  const blueAvatarDetails = await ImageProcessor.testIntegrationFakeAvatar(500, {
+    r: 0,
+    g: 0,
+    b: 255,
+  });
+  const file = new File([blueAvatarDetails.outputBuffer], 'testIntegrationFakeAvatar.jpeg', {
+    type: blueAvatarDetails.format,
+  });
+  return file;
+}
+
+/**
+ * Shows the system file picker for images, scale the image down for avatar/opengroup measurements and return the blob objectURL on success
+ */
+export async function pickFileForAvatar(): Promise<ProcessedAvatarDataType | null> {
+  const file = isTestIntegration() ? await pickFileForTestIntegration() : await pickFileForReal();
+
   return autoScaleAvatarBlob(file);
 }

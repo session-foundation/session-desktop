@@ -12,7 +12,7 @@ export class OpenGroupMessageV2 {
   public sentTimestamp: number;
   public base64EncodedData: string;
   public base64EncodedSignature?: string;
-  public filesToLink?: Array<number>;
+  public filesToLink?: Array<string>;
 
   constructor(messageData: {
     serverId?: number;
@@ -20,7 +20,7 @@ export class OpenGroupMessageV2 {
     sentTimestamp: number;
     base64EncodedData: string;
     base64EncodedSignature?: string;
-    filesToLink?: Array<number>;
+    filesToLink?: Array<string>;
   }) {
     const {
       base64EncodedData,

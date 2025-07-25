@@ -1,6 +1,5 @@
 import { useSelector } from 'react-redux';
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
-import { useHasPro } from '../../hooks/useHasPro';
 import { ConvoHub } from '../../session/conversations';
 import {
   useIsKickedFromGroup,
@@ -19,6 +18,7 @@ import {
   useIsMessageRequestOverlayShown,
   useIsMessageSection,
 } from '../../state/selectors/section';
+import { useCurrentUserHasPro } from '../../hooks/useHasPro';
 
 function useShowPinUnpin(conversationId: string) {
   const isMessagesSection = useIsMessageSection();
@@ -50,7 +50,7 @@ export function useTogglePinConversationHandler(id: string) {
 
   const pinnedConversationsCount = useSelector(getPinnedConversationsCount);
   const isProAvailable = useIsProAvailable();
-  const hasPro = useHasPro();
+  const hasPro = useCurrentUserHasPro();
 
   const handleShowProDialog = useShowSessionProInfoDialogCbWithVariant();
 

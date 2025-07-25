@@ -32,7 +32,7 @@ import { AttachmentUtil } from '../../../util';
 import {
   StagedAttachmentImportedType,
   StagedPreviewImportedType,
-} from '../../../util/attachmentsUtil';
+} from '../../../util/attachment/attachmentsUtil';
 import { LinkPreviews } from '../../../util/linkPreviews';
 import { CaptionEditor } from '../../CaptionEditor';
 import { Flex } from '../../basic/Flex';
@@ -63,6 +63,8 @@ import { formatNumber } from '../../../util/i18n/formatting/generics';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { SessionProInfoVariant, showSessionProInfoDialog } from '../../dialog/SessionProInfoModal';
 import { tStripped } from '../../../localization/localeTools';
+import type { ProcessedLinkPreviewThumbnailType } from '../../../webworker/workers/node/image_processor/image_processor';
+import { selectWeAreProUser } from '../../../hooks/useParamSelector';
 
 export interface ReplyingToMessageProps {
   convoId: string;
@@ -73,20 +75,12 @@ export interface ReplyingToMessageProps {
   attachments?: Array<any>;
 }
 
-export type StagedLinkPreviewImage = {
-  data: ArrayBuffer;
-  size: number;
-  width: number;
-  height: number;
-  contentType: string;
-};
-
 export interface StagedLinkPreviewData {
   isLoaded: boolean;
   title: string | null;
   url: string | null;
   domain: string | null;
-  image?: StagedLinkPreviewImage;
+  scaledDown: ProcessedLinkPreviewThumbnailType | null;
 }
 
 export interface StagedAttachmentType extends AttachmentType {
@@ -105,6 +99,7 @@ export type SendMessageType = {
 interface Props {
   sendMessage: (msg: SendMessageType) => void;
   selectedConversationKey?: string;
+  weAreProUser: boolean;
   selectedConversation: ReduxConversationType | undefined;
   typingEnabled: boolean;
   isBlocked: boolean;
@@ -492,14 +487,14 @@ class CompositionBoxInner extends Component<Props, State> {
       return null;
     }
 
-    const { isLoaded, title, domain, image } = this.state.stagedLinkPreview;
+    const { isLoaded, title, domain, scaledDown } = this.state.stagedLinkPreview;
 
     return (
       <SessionStagedLinkPreview
         isLoaded={isLoaded}
         title={title}
         domain={domain}
-        image={image}
+        scaledDown={scaledDown}
         url={firstLink}
         onClose={url => {
           this.setState({ ignoredLink: url });
@@ -515,8 +510,8 @@ class CompositionBoxInner extends Component<Props, State> {
         isLoaded: false,
         url: firstLink,
         domain: null,
-        image: undefined,
         title: null,
+        scaledDown: null,
       },
     });
     const abortController = new AbortController();
@@ -538,7 +533,7 @@ class CompositionBoxInner extends Component<Props, State> {
               title: ret?.title || null,
               url: ret?.url || null,
               domain: (ret?.url && LinkPreviews.getDomain(ret.url)) || '',
-              image: ret?.image,
+              scaledDown: ret?.scaledDown,
             },
           });
         } else if (this.linkPreviewAbortController) {
@@ -548,7 +543,7 @@ class CompositionBoxInner extends Component<Props, State> {
               title: null,
               url: null,
               domain: null,
-              image: undefined,
+              scaledDown: null,
             },
           });
           this.linkPreviewAbortController = undefined;
@@ -575,7 +570,7 @@ class CompositionBoxInner extends Component<Props, State> {
               title: null,
               url: firstLink,
               domain: null,
-              image: undefined,
+              scaledDown: null,
             },
           });
         }
@@ -720,10 +715,9 @@ class CompositionBoxInner extends Component<Props, State> {
     this.linkPreviewAbortController?.abort();
 
     const isProAvailable = getFeatureFlag('proAvailable');
-    const mockHasPro = getFeatureFlag('mockUserHasPro');
 
     // TODO: get pro status from store once available
-    const hasPro = mockHasPro;
+    const hasPro = this.props.weAreProUser;
     const charLimit = hasPro
       ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
       : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
@@ -792,11 +786,12 @@ class CompositionBoxInner extends Component<Props, State> {
     // we consider that a link preview without a title at least is not a preview
     const linkPreview =
       stagedLinkPreview?.isLoaded && stagedLinkPreview.title?.length
-        ? _.pick(stagedLinkPreview, 'url', 'image', 'title')
+        ? _.pick(stagedLinkPreview, 'url', 'scaledDown', 'title')
         : undefined;
 
     try {
       const { attachments, previews } = await this.getFiles(linkPreview);
+
       this.props.sendMessage({
         body: text.trim(),
         attachments: attachments || [],
@@ -828,9 +823,10 @@ class CompositionBoxInner extends Component<Props, State> {
     }
   }
 
-  // this function is called right before sending a message, to gather really the files behind attachments.
+  // This function is called right before sending a message, to gather really the
+  // files content behind the staged attachments.
   private async getFiles(
-    linkPreview?: Pick<StagedLinkPreviewData, 'url' | 'title' | 'image'>
+    linkPreview?: Pick<StagedLinkPreviewData, 'url' | 'title' | 'scaledDown'>
   ): Promise<{
     attachments: Array<StagedAttachmentImportedType>;
     previews: Array<StagedPreviewImportedType>;
@@ -852,21 +848,15 @@ class CompositionBoxInner extends Component<Props, State> {
       previews = [];
     } else {
       const sharedDetails = { url: linkPreview.url, title: linkPreview.title };
+      previews = [sharedDetails];
       // store the first image preview locally and get the path and details back to include them in the message
-      const firstLinkPreviewImage = linkPreview.image;
-      if (firstLinkPreviewImage && !isEmpty(firstLinkPreviewImage)) {
-        const storedLinkPreviewAttachment = await AttachmentUtil.getFileAndStoreLocallyImageBuffer(
-          firstLinkPreviewImage.data
+      if (linkPreview.scaledDown && !isEmpty(linkPreview.scaledDown)) {
+        const storedLinkPreviewAttachment = await AttachmentUtil.getFileAndStoreLocallyImageBlob(
+          linkPreview.scaledDown
         );
         if (storedLinkPreviewAttachment) {
           previews = [{ ...sharedDetails, image: storedLinkPreviewAttachment }];
-        } else {
-          // we couldn't save the image or whatever error happened, just return the url + title
-          previews = [sharedDetails];
         }
-      } else {
-        // we did not fetch an image from the server
-        previews = [sharedDetails];
       }
     }
 
@@ -940,6 +930,7 @@ const mapStateToProps = (state: StateType) => {
   return {
     quotedMessageProps: getQuotedMessage(state),
     selectedConversation: getSelectedConversation(state),
+    weAreProUser: selectWeAreProUser(state),
     selectedConversationKey: getSelectedConversationKey(state),
     typingEnabled: getSelectedCanWrite(state),
     isBlocked: getIsSelectedBlocked(state),

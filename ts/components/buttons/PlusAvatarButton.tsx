@@ -17,9 +17,10 @@ export const PlusAvatarButton = ({
       onClick={onClick}
       dataTestId={dataTestId}
       backgroundColor="var(--primary-color)"
+      padding={'var(--margins-xxs)'}
       style={{
         position: 'absolute',
-        bottom: '11%',
+        bottom: '0',
         insetInlineEnd: 0,
         boxShadow: '0px 0px 3px 2px var(--border-color)',
       }}

@@ -52,7 +52,6 @@ async function uploadV3(params: UploadParamsV2): Promise<AttachmentPointerWithUr
 
   return {
     ...pointer,
-    id: fileDetails.fileId,
     url: fileDetails.fileUrl,
   };
 }
@@ -89,7 +88,6 @@ export async function uploadLinkPreviewsV3(
     ...preview,
     image,
     url: preview.url || image.url,
-    id: image.id,
   };
 }
 

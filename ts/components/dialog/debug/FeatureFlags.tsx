@@ -4,6 +4,7 @@ import { Flex } from '../../basic/Flex';
 import { SessionToggle } from '../../basic/SessionToggle';
 import { HintText, SpacerSM, SpacerXS } from '../../basic/Text';
 import { DEBUG_FEATURE_FLAGS } from './constants';
+import { ConvoHub } from '../../../session/conversations';
 
 type FeatureFlagToggleType = {
   forceUpdate: () => void;
@@ -25,6 +26,14 @@ const handleFeatureFlagToggle = ({ flag, parentFlag, forceUpdate }: FeatureFlagT
   }
 
   forceUpdate();
+
+  if (flag === 'proAvailable' || flag === 'mockUserHasPro') {
+    ConvoHub.use()
+      .getConversations()
+      .forEach(convo => {
+        convo.triggerUIRefresh();
+      });
+  }
 };
 
 export const FlagToggle = ({

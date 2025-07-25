@@ -22,6 +22,9 @@ import { FeatureFlags } from './FeatureFlags';
 import { ReleaseChannel } from './ReleaseChannel';
 import { useHotkey } from '../../../hooks/useHotkey';
 import { PopoverPlaygroundPage } from './playgrounds/PopoverPlaygroundPage';
+import { ProPlaygroundPage } from './playgrounds/ProPlaygroundPage';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
+import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 
 const StyledContent = styled(Flex)`
   padding-inline: var(--margins-sm);
@@ -49,6 +52,7 @@ const StyledContent = styled(Flex)`
 export enum DEBUG_MENU_PAGE {
   MAIN = 0,
   POPOVER = 1,
+  Pro = 2,
 }
 
 export type DebugMenuPageProps = {
@@ -77,6 +81,8 @@ function getPage(page: DEBUG_MENU_PAGE, setPage: Dispatch<DEBUG_MENU_PAGE>) {
   switch (page) {
     case DEBUG_MENU_PAGE.POPOVER:
       return <PopoverPlaygroundPage />;
+    case DEBUG_MENU_PAGE.Pro:
+      return <ProPlaygroundPage />;
     case DEBUG_MENU_PAGE.MAIN:
     default:
       return <MainPage setPage={setPage} />;
@@ -115,7 +121,23 @@ export function DebugMenuModal() {
 
   return (
     <SessionWrapperModal
-      headerChildren={<ModalBasicHeader title="Debug Menu" showExitIcon={true} />}
+      headerChildren={
+        <ModalBasicHeader
+          title="Debug Menu"
+          showExitIcon={true}
+          leftButton={
+            page !== DEBUG_MENU_PAGE.MAIN ? (
+              <SessionLucideIconButton
+                unicode={LUCIDE_ICONS_UNICODE.CHEVRON_LEFT}
+                iconSize={'medium'}
+                onClick={() => setPage(DEBUG_MENU_PAGE.MAIN)}
+                padding={'0 var(--margins-xs) 0 var(--margins-xs)'}
+                margin={'0'}
+              />
+            ) : null
+          }
+        />
+      }
       onClose={onClose}
       $contentMaxWidth={WrapperModalWidth.debug}
       shouldOverflow={true}

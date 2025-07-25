@@ -486,11 +486,13 @@ async function sendBinaryViaOnionV4ToFileServer({
   bodyBinary,
   abortSignal,
   timeoutMs,
+  headers = {},
 }: WithTimeoutMs &
   WithAbortSignal & {
     endpoint: string;
     method: string;
     bodyBinary: Uint8Array;
+    headers?: Record<string, string | number>;
   }): Promise<OnionV4JSONSnodeResponse | null> {
   if (!endpoint.startsWith('/')) {
     throw new Error('endpoint needs a leading /');
@@ -502,7 +504,7 @@ async function sendBinaryViaOnionV4ToFileServer({
     builtUrl,
     {
       method,
-      headers: {},
+      headers,
       body: bodyBinary,
       useV4: true,
     },

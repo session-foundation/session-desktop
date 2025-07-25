@@ -1,9 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { THUMBNAIL_SIDE } from '../../../../types/attachments/VisualAttachment';
 import { GenericReadableMessage } from './GenericReadableMessage';
-
-// Same as MIN_WIDTH in ImageGrid.tsx
-export const MINIMUM_LINK_PREVIEW_IMAGE_WIDTH = THUMBNAIL_SIDE;
 
 type Props = {
   messageId: string;

@@ -282,6 +282,7 @@ async function scheduleAvatarDownloadJobIfNeeded(groupPk: GroupPubkeyType) {
           avatarPointer: undefined,
           profileKey: undefined,
           avatarInProfile: undefined, // we want to remove the avatar here
+          fallbackAvatarInProfile: undefined, // and the fallback too
         });
         await conversation.commit();
       }

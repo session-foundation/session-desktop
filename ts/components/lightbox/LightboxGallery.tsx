@@ -9,7 +9,7 @@ import { updateLightBoxOptions } from '../../state/ducks/modalDialog';
 import { useSelectedConversationKey } from '../../state/selectors/selectedConversation';
 import { MIME } from '../../types';
 import { AttachmentTypeWithPath } from '../../types/Attachment';
-import { saveAttachmentToDisk } from '../../util/attachmentsUtil';
+import { saveAttachmentToDisk } from '../../util/attachment/attachmentsUtil';
 import { saveURLAsFile } from '../../util/saveURLAsFile';
 
 export interface MediaItemType {

@@ -87,7 +87,7 @@ Once your development environment is set up, here are the steps to build the app
 
 ```sh
 yarn install --frozen-lockfile # install all dependencies of this project
-yarn build-everything # transpile and assemble files
+yarn build # transpile and assemble files
 yarn build-release
 ```
 

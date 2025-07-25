@@ -7,6 +7,7 @@ import { downloadAttachmentSogsV3 } from '../../receiver/attachments';
 import { uploadImageForRoomSogsV3 } from '../../session/apis/open_group_api/sogsv3/sogsV3RoomImage';
 import { MIME } from '../../types';
 import { processNewAttachment } from '../../types/MessageAttachment';
+import { updateEditProfilePictureModal } from './modalDialog';
 
 type RoomInfo = {
   canWrite: boolean;
@@ -98,8 +99,12 @@ const changeCommunityAvatar = createAsyncThunk(
     await convo.setSessionProfile({
       displayName: null, // null so we don't overwrite it
       avatarPath: upgraded.path,
-      avatarImageId,
+      avatarPointer: fileUrl,
+      fallbackAvatarPath: upgraded.path, // no need for a fallback for a community
     });
+
+    window.inboxStore?.dispatch(updateEditProfilePictureModal(null));
+
     return true;
   }
 );

@@ -226,7 +226,7 @@ describe('formatRowOfConversation', () => {
           profileKey: '',
           avatarPointer: 'avatarPointer',
           avatarInProfile: 'avatarInProfile',
-          avatarImageId: 1234,
+          fallbackAvatarInProfile: 'fallbackAvatarInProfile',
         } as ConversationAttributes),
         'test',
         0,
@@ -244,12 +244,48 @@ describe('formatRowOfConversation', () => {
           profileKey: '',
           avatarPointer: 'avatarPointer',
           avatarInProfile: 'avatarInProfile',
-          avatarImageId: 1234,
+          fallbackAvatarInProfile: 'fallbackAvatarInProfile',
         } as ConversationAttributes),
         'test',
         0,
         false
       )
     ).have.deep.property('displayNameInProfile', 'displayNameInProfile');
+
+    expect(
+      formatRowOfConversation(
+        fillConvoAttributesWithDefaults({
+          id: '1234565',
+          type: ConversationTypeEnum.GROUPV2,
+          nickname: 'nickname',
+          displayNameInProfile: 'displayNameInProfile',
+          profileKey: '',
+          avatarPointer: 'avatarPointer',
+          avatarInProfile: 'avatarInProfile',
+          fallbackAvatarInProfile: 'fallbackAvatarInProfile',
+        } as ConversationAttributes),
+        'test',
+        0,
+        false
+      )
+    ).have.deep.property('avatarInProfile', 'avatarInProfile');
+
+    expect(
+      formatRowOfConversation(
+        fillConvoAttributesWithDefaults({
+          id: '1234565',
+          type: ConversationTypeEnum.GROUPV2,
+          nickname: 'nickname',
+          displayNameInProfile: 'displayNameInProfile',
+          profileKey: '',
+          avatarPointer: 'avatarPointer',
+          avatarInProfile: 'avatarInProfile',
+          fallbackAvatarInProfile: 'fallbackAvatarInProfile',
+        } as ConversationAttributes),
+        'test',
+        0,
+        false
+      )
+    ).have.deep.property('fallbackAvatarInProfile', 'fallbackAvatarInProfile');
   });
 });

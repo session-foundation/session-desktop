@@ -1,4 +1,4 @@
-import { filter, isNumber, omit } from 'lodash';
+import { filter, isEmpty, isNumber, omit } from 'lodash';
 
 import { v4 as uuidV4 } from 'uuid';
 
@@ -25,7 +25,7 @@ const RETRY_BACKOFF = {
 let enabled = false;
 let timeout: any;
 let logger: any;
-const _activeAttachmentDownloadJobs: any = {};
+const _activeAttachmentDownloadJobs: Record<string, Promise<void>> = {};
 
 // TODOLATER type those `any` properties
 
@@ -177,11 +177,9 @@ async function _runJob(job: any) {
 
     try {
       // those two functions throw if they get a 404
-      if (isOpenGroupV2) {
-        downloaded = await downloadAttachmentSogsV3(attachment, openGroupV2Details);
-      } else {
-        downloaded = await downloadAttachment(attachment);
-      }
+      downloaded = isOpenGroupV2
+        ? await downloadAttachmentSogsV3(attachment, openGroupV2Details)
+        : await downloadAttachment(attachment);
     } catch (error) {
       // Attachments on the server expire after 60 days, then start returning 404
       if (error && error.code === 404) {
@@ -206,6 +204,10 @@ async function _runJob(job: any) {
     if (!attachment.contentType) {
       window.log.warn('incoming attachment has no contentType');
     }
+    /**
+     * processNewAttachment will generate the thumbnails and screenshot on save, but won't resize the downloaded image.
+     * This is on purpose as we want to allow the user to download the attachment that the sender uploaded, as is if required.
+     */
     const upgradedAttachment = await processNewAttachment({
       ...downloaded,
       fileName: attachment.fileName,
@@ -298,7 +300,7 @@ function _markAttachmentAsError(attachment: any) {
 function _addAttachmentToMessage(
   message: MessageModel | null | undefined,
   attachment: any,
-  { type, index }: any
+  { type, index }: { type: string; index: number }
 ) {
   if (!message) {
     return;
@@ -319,23 +321,32 @@ function _addAttachmentToMessage(
   }
 
   // for quote and previews, if the attachment cannot be downloaded we just erase it from the message itself, so just the title or body is rendered
-  if (type === 'preview' || type === 'quote') {
-    if (type === 'quote') {
-      const quote = message.get('quote');
-      if (!quote) {
-        throw new Error("_addAttachmentToMessage: quote didn't exist");
-      }
+  const wasDownloaded = !isEmpty(attachment.path);
 
-      message.deleteAttributes('quote_attachments');
-
-      return;
+  if (type === 'quote') {
+    const quote = message.get('quote');
+    if (!quote) {
+      throw new Error("_addAttachmentToMessage: quote didn't exist");
     }
+
+    // Note: we generate previews based on the quoted message now, so no need to keep this field
+    if (!wasDownloaded) {
+      message.deleteAttributes('quote_attachments');
+    }
+
+    return;
+  }
+
+  if (type === 'preview') {
     const preview = message.get('preview');
     if (!preview || preview.length <= index) {
       throw new Error(`_addAttachmentToMessage: preview didn't exist or ${index} was too large`);
     }
-
-    message.deleteAttributes('preview_image');
+    if (!wasDownloaded) {
+      message.deleteAttributes('preview_image');
+    } else {
+      _replacePreviewImage(preview[0], attachment, logPrefix);
+    }
 
     return;
   }
@@ -347,12 +358,25 @@ function _addAttachmentToMessage(
   );
 }
 
-function _replaceAttachment(object: any, key: any, newAttachment: any, logPrefix: any) {
+function _replacePreviewImage(preview: any, newAttachment: any, logPrefix: string) {
+  const oldPreviewImage = preview?.image;
+  if (oldPreviewImage && oldPreviewImage.path) {
+    logger.warn(
+      `_replacePreviewImage: ${logPrefix} - old attachment already had path, not replacing`
+    );
+    return;
+  }
+  // eslint-disable-next-line no-param-reassign
+  preview.image = newAttachment;
+}
+
+function _replaceAttachment(object: any, key: number, newAttachment: any, logPrefix: string) {
   const oldAttachment = object[key];
   if (oldAttachment && oldAttachment.path) {
     logger.warn(
       `_replaceAttachment: ${logPrefix} - old attachment already had path, not replacing`
     );
+    return;
   }
 
   // eslint-disable-next-line no-param-reassign

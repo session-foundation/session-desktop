@@ -35,18 +35,12 @@ const VALID_IMAGE_MIME_TYPES: Set<MIMEType> = new Set([
   IMAGE_WEBP,
 ]);
 
-// We want to discard unreasonable dates. Update this in ~950 years. (This may discard
-//   some reasonable dates, which is okay because it is only for link previews.)
-const MIN_DATE = 0;
-const MAX_DATE = new Date(3000, 0, 1).valueOf();
-
 const emptyContentType = { type: null, charset: null };
 
 type FetchFn = (href: string, init: RequestInit) => Promise<Response>;
 
 export interface LinkPreviewMetadata {
   title: string;
-  date: null | number;
   imageHref: null | string;
 }
 
@@ -320,24 +314,9 @@ const parseMetadata = (document: HTMLDocument, href: string): LinkPreviewMetadat
   const imageUrl = rawImageHref ? maybeParseUrl(rawImageHref, href) : null;
   const imageHref = imageUrl ? imageUrl.href : null;
 
-  let date: number | null = null;
-  const rawDate = getOpenGraphContent(document, [
-    'og:published_time',
-    'article:published_time',
-    'og:modified_time',
-    'article:modified_time',
-  ]);
-  if (rawDate) {
-    const parsed = Date.parse(rawDate);
-    if (parsed > MIN_DATE && parsed < MAX_DATE) {
-      date = parsed;
-    }
-  }
-
   return {
     title,
     imageHref,
-    date,
   };
 };
 
@@ -356,7 +335,7 @@ const parseMetadata = (document: HTMLDocument, href: string): LinkPreviewMetadat
  * 3. Streams up to `MAX_HTML_BYTES_TO_LOAD`, stopping when (1) it has loaded all of the
  *    HTML (2) loaded the maximum number of bytes (3) finished loading the `<head>`.
  * 4. Parses the resulting HTML with `DOMParser`.
- * 5. Grabs the title, image URL, and date.
+ * 5. Grabs the title, image URL.
  */
 export async function fetchLinkPreviewMetadata(
   fetchFn: FetchFn,

@@ -65,7 +65,7 @@ export class MessageQueueCl {
     message: OpenGroupVisibleMessage;
     roomInfos: OpenGroupRequestCommonType;
     blinded: boolean;
-    filesToLink: Array<number>;
+    filesToLink: Array<string>;
   }) {
     // Skipping the MessageQueue for Open Groups v2; the message is sent directly
 

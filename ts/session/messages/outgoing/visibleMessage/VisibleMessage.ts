@@ -1,10 +1,12 @@
 import ByteBuffer from 'bytebuffer';
 import { isEmpty } from 'lodash';
+import Long from 'long';
 import { SignalService } from '../../../../protobuf';
 import { Reaction } from '../../../../types/Reaction';
 import { DataMessage } from '../DataMessage';
 import { LokiProfile } from '../../../../types/message';
 import { ExpirableMessageParams } from '../ExpirableMessage';
+import { attachmentIdAsLongFromUrl } from '../../../utils';
 
 interface AttachmentPointerCommon {
   contentType?: string;
@@ -21,12 +23,10 @@ interface AttachmentPointerCommon {
 
 export interface AttachmentPointer extends AttachmentPointerCommon {
   url?: string;
-  id?: number;
 }
 
 export interface AttachmentPointerWithUrl extends AttachmentPointerCommon {
   url: string;
-  id: number;
 }
 
 export interface Preview {
@@ -37,7 +37,6 @@ export interface Preview {
 
 export interface PreviewWithAttachmentUrl {
   url: string;
-  id: number;
   title?: string;
   image?: AttachmentPointerWithUrl;
 }
@@ -75,12 +74,12 @@ export interface VisibleMessageParams extends ExpirableMessageParams {
 export class VisibleMessage extends DataMessage {
   public readonly reaction?: Reaction;
 
-  private readonly attachments?: Array<AttachmentPointerWithUrl>;
+  private readonly attachments?: Array<AttachmentPointerWithUrl & { id: Long }>;
   private readonly body?: string;
   private readonly quote?: Quote;
   private readonly profileKey?: Uint8Array;
   private readonly profile?: SignalService.DataMessage.ILokiProfile;
-  private readonly preview?: Array<PreviewWithAttachmentUrl>;
+  private readonly preview?: Array<PreviewWithAttachmentUrl & { id?: Long }>;
 
   /// In the case of a sync message, the public key of the person the message was targeted at.
   /// - Note: `null or undefined` if this isn't a sync message.
@@ -93,7 +92,10 @@ export class VisibleMessage extends DataMessage {
       expirationType: params.expirationType,
       expireTimer: params.expireTimer,
     });
-    this.attachments = params.attachments;
+    this.attachments = params.attachments?.map(attachment => ({
+      ...attachment,
+      id: attachmentIdAsLongFromUrl(attachment.url),
+    }));
     this.body = params.body;
     this.quote = params.quote;
 
@@ -102,7 +104,10 @@ export class VisibleMessage extends DataMessage {
     this.profile = profile.lokiProfile;
     this.profileKey = profile.profileKey;
 
-    this.preview = params.preview;
+    this.preview = params.preview?.map(attachment => ({
+      ...attachment,
+      id: attachment.image?.url ? attachmentIdAsLongFromUrl(attachment.image.url) : undefined,
+    }));
     this.reaction = params.reaction;
     this.syncTarget = params.syncTarget;
   }
@@ -122,9 +127,6 @@ export class VisibleMessage extends DataMessage {
 
     dataMessage.attachments = this.attachments || [];
 
-    if (this.preview) {
-      dataMessage.preview = this.preview;
-    }
     if (this.reaction) {
       dataMessage.reaction = this.reaction;
     }
@@ -173,7 +175,9 @@ export class VisibleMessage extends DataMessage {
         if (preview.url) {
           item.url = preview.url;
         }
-        item.image = preview.image || null;
+        item.image = preview.image
+          ? { ...preview.image, id: attachmentIdAsLongFromUrl(preview.image.url) }
+          : null;
 
         return item;
       });

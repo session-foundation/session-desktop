@@ -1,5 +1,5 @@
 import AbortController, { AbortSignal } from 'abort-controller';
-import { isFinite, isUndefined, toNumber } from 'lodash';
+import { isFinite, isNil, isNumber, isUndefined, toNumber } from 'lodash';
 import { OpenGroupData, OpenGroupV2RoomWithImageID } from '../../../../data/opengroups';
 import { MIME } from '../../../../types';
 import { processNewAttachment } from '../../../../types/MessageAttachment';
@@ -12,6 +12,33 @@ import { OpenGroupPollingUtils } from '../opengroupV2/OpenGroupPollingUtils';
 import { getOpenGroupV2ConversationId } from '../utils/OpenGroupUtils';
 import { OpenGroupV2Room } from '../../../../data/types';
 import { DURATION } from '../../../constants';
+
+function fileDetailsToEndpoint({ fileId, roomId }: { fileId: number | string; roomId: string }) {
+  return `/room/${roomId}/file/${fileId}`;
+}
+
+export function fileDetailsToURL({
+  fileId,
+  roomId,
+  serverUrl,
+}: {
+  fileId: number | string;
+  roomId: string;
+  serverUrl: string;
+}) {
+  const endpoint = fileDetailsToEndpoint({ fileId, roomId });
+  const builtUrl = new URL(`${serverUrl}${endpoint}`);
+
+  return builtUrl.toString();
+}
+
+function imageUrlToImageId(imageFullUrl?: string) {
+  const imageId = imageFullUrl?.split('/').pop();
+  if (isNil(imageId) || !isNumber(toNumber(imageId)) || !isFinite(toNumber(imageId))) {
+    return null;
+  }
+  return toNumber(imageId);
+}
 
 export async function fetchBinaryFromSogsWithOnionV4(sendOptions: {
   serverUrl: string;
@@ -36,11 +63,9 @@ export async function fetchBinaryFromSogsWithOnionV4(sendOptions: {
 
   const stringifiedBody = null;
   const method = 'GET';
-  const endpoint = `/room/${roomId}/file/${fileId}`;
-  if (!endpoint.startsWith('/')) {
-    throw new Error('endpoint needs a leading /');
-  }
-  const builtUrl = new URL(`${serverUrl}${endpoint}`);
+
+  const builtUrl = new URL(fileDetailsToURL({ fileId, roomId, serverUrl }));
+  const endpoint = fileDetailsToEndpoint({ fileId, roomId });
   let headersWithSogsHeadersIfNeeded = await OpenGroupPollingUtils.getOurOpenGroupHeaders(
     serverPubkey,
     endpoint,
@@ -78,21 +103,20 @@ export async function fetchBinaryFromSogsWithOnionV4(sendOptions: {
  * This function fetches the avatar on an opengroup room based on the imageID, save it to the attachment folder and update the conversation avatar with the new path.
  */
 export async function sogsV3FetchPreviewAndSaveIt(roomInfos: OpenGroupV2RoomWithImageID) {
-  const { roomId, serverUrl, imageID } = roomInfos;
+  const { roomId, serverUrl, imageFullUrl } = roomInfos;
 
-  if (!imageID || Number.isNaN(Number(imageID))) {
-    window.log.warn(`imageId of room ${roomId} is not valid ${imageID}`);
+  const imageIdNumber = imageUrlToImageId(imageFullUrl);
+  if (!imageIdNumber) {
     return;
   }
-  const imageIdNumber = toNumber(imageID);
 
   const convoId = getOpenGroupV2ConversationId(roomInfos.serverUrl, roomInfos.roomId);
   let convo = ConvoHub.use().get(convoId);
   if (!convo) {
     return;
   }
-  let existingImageId = convo.getAvatarImageId();
-  if (existingImageId === imageIdNumber) {
+  let existingImagePointer = convo.getAvatarPointer();
+  if (existingImagePointer === imageFullUrl) {
     // return early as the imageID about to be downloaded the one already set as avatar is the same.
     return;
   }
@@ -116,8 +140,8 @@ export async function sogsV3FetchPreviewAndSaveIt(roomInfos: OpenGroupV2RoomWith
   if (!convo) {
     return;
   }
-  existingImageId = convo.getAvatarImageId();
-  if (existingImageId !== imageIdNumber && isFinite(imageIdNumber)) {
+  existingImagePointer = convo.getAvatarPointer();
+  if (existingImagePointer !== imageFullUrl && isFinite(imageIdNumber)) {
     // we have to trigger an update
     // write the file to the disk (automatically encrypted),
 
@@ -127,12 +151,22 @@ export async function sogsV3FetchPreviewAndSaveIt(roomInfos: OpenGroupV2RoomWith
       contentType: MIME.IMAGE_UNKNOWN, // contentType is mostly used to generate previews and screenshot. We do not care for those in this case.          // url: `${serverUrl}/${res.roomId}`,
     });
 
-    // update the hash on the conversationModel
     // this does commit to DB and UI
-    await convo.setSessionProfile({
-      avatarPath: upgradedAttachment.path,
-      avatarImageId: imageIdNumber,
-    });
+    if (imageFullUrl) {
+      await convo.setSessionProfile({
+        displayName: null, // null so we don't overwrite it
+        avatarPath: upgradedAttachment.path,
+        avatarPointer: imageFullUrl,
+        fallbackAvatarPath: upgradedAttachment.path, // no need for a fallback for a community
+      });
+    } else {
+      await convo.setSessionProfile({
+        displayName: null, // null so we don't overwrite it
+        avatarPath: undefined,
+        avatarPointer: undefined,
+        fallbackAvatarPath: undefined,
+      });
+    }
   }
 }
 
@@ -160,7 +194,12 @@ const sogsV3FetchPreview = async (
   roomInfos: OpenGroupV2RoomWithImageID,
   blinded: boolean
 ): Promise<Uint8Array | null> => {
-  if (!roomInfos || !roomInfos.imageID) {
+  if (!roomInfos || !roomInfos.imageFullUrl) {
+    return null;
+  }
+
+  const imageId = imageUrlToImageId(roomInfos.imageFullUrl);
+  if (!imageId) {
     return null;
   }
 
@@ -172,7 +211,7 @@ const sogsV3FetchPreview = async (
     serverPubkey: roomInfos.serverPublicKey,
     serverUrl: roomInfos.serverUrl,
     roomId: roomInfos.roomId,
-    fileId: roomInfos.imageID,
+    fileId: `${imageId}`,
     throwError: false,
   });
   if (fetched && fetched.byteLength) {

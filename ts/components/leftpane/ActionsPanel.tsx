@@ -60,6 +60,7 @@ import { useDebugMode } from '../../state/selectors/debug';
 import { networkDataActions } from '../../state/ducks/networkData';
 import { searchActions } from '../../state/ducks/search';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { AvatarMigrate } from '../../session/utils/job_runners/jobs/AvatarMigrateJob';
 
 const StyledContainerAvatar = styled.div`
   padding: var(--margins-lg);
@@ -247,6 +248,11 @@ const doAppStartUp = async () => {
     // Note: this also starts periodic jobs, so we don't need to keep doing it
     void UserSync.queueNewJobIfNeeded();
   }, 20000);
+
+  global.setTimeout(() => {
+    // Schedule all avatarMigrateJobs in some time to let anything incoming from the network be handled first
+    void AvatarMigrate.scheduleAllAvatarMigrateJobs();
+  }, 1 * DURATION.MINUTES);
 };
 
 function useUpdateBadgeCount() {

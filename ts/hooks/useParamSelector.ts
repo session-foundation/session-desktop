@@ -33,9 +33,23 @@ export function useAvatarPath(convoId: string | undefined) {
   const convoProps = useConversationPropsById(convoId);
   return convoProps?.avatarPath || null;
 }
-
 export function useOurAvatarPath() {
   return useAvatarPath(UserUtils.getOurPubKeyStrFromCache());
+}
+
+export function useIsProUser(convoId: string | undefined) {
+  const convoProps = useConversationPropsById(convoId);
+  return convoProps?.isProUser || false;
+}
+
+export function selectWeAreProUser(state: StateType) {
+  return (
+    state.conversations.conversationLookup[UserUtils.getOurPubKeyStrFromCache()]?.isProUser || false
+  );
+}
+
+export function useWeAreProUser() {
+  return useIsProUser(UserUtils.getOurPubKeyStrFromCache());
 }
 
 /**

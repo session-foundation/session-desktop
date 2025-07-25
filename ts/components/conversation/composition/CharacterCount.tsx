@@ -9,9 +9,9 @@ import {
   useShowSessionProInfoDialogCb,
 } from '../../dialog/SessionProInfoModal';
 import { formatNumber } from '../../../util/i18n/formatting/generics';
-import { useHasPro } from '../../../hooks/useHasPro';
 import { useIsProAvailable } from '../../../hooks/useIsProAvailable';
 import { tr } from '../../../localization/localeTools';
+import { useCurrentUserHasPro } from '../../../hooks/useHasPro';
 
 export type CharacterCountProps = {
   count: number;
@@ -39,7 +39,7 @@ export function CharacterCount({ count }: CharacterCountProps) {
   const alwaysShowFlag = useFeatureFlag('alwaysShowRemainingChars');
   const isProAvailable = useIsProAvailable();
 
-  const hasPro = useHasPro();
+  const hasPro = useCurrentUserHasPro();
 
   const charLimit = hasPro
     ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO

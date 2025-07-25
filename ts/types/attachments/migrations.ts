@@ -1,100 +1,23 @@
 /* eslint-disable no-param-reassign */
-import { arrayBufferToBlob, blobToArrayBuffer } from 'blob-util';
+import { blobToArrayBuffer } from 'blob-util';
 
 import fse from 'fs-extra';
 import { isString } from 'lodash';
 import * as GoogleChrome from '../../util/GoogleChrome';
-import * as MIME from '../MIME';
 import { toLogFormat } from './Errors';
 
-import {
-  deleteOnDisk,
-  getAbsoluteAttachmentPath,
-  readAttachmentData,
-  writeNewAttachmentData,
-} from '../MessageAttachment';
+import { deleteOnDisk, readAttachmentData, writeNewAttachmentData } from '../MessageAttachment';
 import {
   THUMBNAIL_CONTENT_TYPE,
-  THUMBNAIL_SIDE,
   getImageDimensions,
   makeImageThumbnailBuffer,
   makeObjectUrl,
   makeVideoScreenshot,
   revokeObjectUrl,
 } from './VisualAttachment';
+import { maxThumbnailDetails } from '../../util/attachment/attachmentSizes';
 
-// Returns true if `rawAttachment` is a valid attachment based on our current schema.
-// Over time, we can expand this definition to become more narrow, e.g. require certain
-// fields, etc.
-export const isValid = (rawAttachment: any) => {
-  // NOTE: We cannot use `_.isPlainObject` because `rawAttachment` is
-  // deserialized by protobuf:
-  if (!rawAttachment) {
-    return false;
-  }
-
-  return true;
-};
-
-const UNICODE_LEFT_TO_RIGHT_OVERRIDE = '\u202D';
-const UNICODE_RIGHT_TO_LEFT_OVERRIDE = '\u202E';
 const UNICODE_REPLACEMENT_CHARACTER = '\uFFFD';
-const INVALID_CHARACTERS_PATTERN = new RegExp(
-  `[${UNICODE_LEFT_TO_RIGHT_OVERRIDE}${UNICODE_RIGHT_TO_LEFT_OVERRIDE}]`,
-  'g'
-);
-
-// Upgrade steps
-// NOTE: This step strips all EXIF metadata from JPEG images as
-// part of re-encoding the image:
-export const autoOrientJPEGAttachment = async (attachment: {
-  contentType: string;
-  data: ArrayBuffer;
-}): Promise<{ contentType: string; data: ArrayBuffer; shouldDeleteDigest: boolean }> => {
-  if (!attachment.contentType || !MIME.isJPEG(attachment.contentType)) {
-    return { ...attachment, shouldDeleteDigest: false };
-  }
-
-  // If we haven't downloaded the attachment yet, we won't have the data
-  if (!attachment.data) {
-    return { ...attachment, shouldDeleteDigest: false };
-  }
-
-  const dataBlob = arrayBufferToBlob(attachment.data, attachment.contentType);
-  const newDataArrayBuffer = await blobToArrayBuffer(dataBlob);
-
-  // IMPORTANT: We overwrite the existing `data` `ArrayBuffer` losing the original
-  // image data. Ideally, we’d preserve the original image data for users who want to
-  // retain it but due to reports of data loss, we don’t want to overburden IndexedDB
-  // by potentially doubling stored image data.
-  // See: https://github.com/signalapp/Signal-Desktop/issues/1589
-  // Also, `digest` is no longer valid for auto-oriented image data, so we discard it:
-
-  return {
-    contentType: attachment.contentType,
-    shouldDeleteDigest: true,
-    data: newDataArrayBuffer,
-  };
-};
-// NOTE: Expose synchronous version to do property-based testing using `testcheck`,
-// which currently doesn’t support async testing:
-// https://github.com/leebyron/testcheck-js/issues/45
-export const _replaceUnicodeOrderOverridesSync = (attachment: any) => {
-  if (!isString(attachment.fileName)) {
-    return attachment;
-  }
-
-  const normalizedFilename = attachment.fileName.replace(
-    INVALID_CHARACTERS_PATTERN,
-    UNICODE_REPLACEMENT_CHARACTER
-  );
-  const newAttachment = { ...attachment, fileName: normalizedFilename };
-
-  return newAttachment;
-};
-
-// const replaceUnicodeOrderOverrides = async (attachment: any) =>
-//   _replaceUnicodeOrderOverridesSync(attachment);
 
 // \u202A-\u202E is LRE, RLE, PDF, LRO, RLO
 // \u2066-\u2069 is LRI, RLI, FSI, PDI
@@ -111,29 +34,13 @@ export const replaceUnicodeV2 = (fileName: string) => {
   return fileName.replace(V2_UNWANTED_UNICODE, UNICODE_REPLACEMENT_CHARACTER);
 };
 
-// const removeSchemaVersion = ({ attachment }: any) => {
-//   if (!isValid(attachment)) {
-//     window.log.error('Attachment.removeSchemaVersion: Invalid input attachment:', attachment);
-//     return attachment;
-//   }
-
-//   const attachmentWithoutSchemaVersion = { ...attachment };
-//   delete attachmentWithoutSchemaVersion.schemaVersion;
-//   return attachmentWithoutSchemaVersion;
-// };
-
-//      hasData :: Attachment -> Boolean
-export const hasData = (attachment: any) =>
-  attachment.data instanceof ArrayBuffer || ArrayBuffer.isView(attachment.data);
-
 export const loadData = async (attachment: any) => {
-  if (!isValid(attachment)) {
+  if (!attachment) {
     throw new TypeError("'attachment' is not valid");
   }
 
-  const isAlreadyLoaded = hasData(attachment);
-
-  if (isAlreadyLoaded) {
+  // attachment is already loaded
+  if (attachment.data instanceof ArrayBuffer || ArrayBuffer.isView(attachment.data)) {
     return attachment;
   }
 
@@ -145,15 +52,12 @@ export const loadData = async (attachment: any) => {
   return { ...attachment, data };
 };
 
-//      deleteData :: (RelativePath -> IO Unit)
-//                    Attachment ->
-//                    IO Unit
 export const deleteData = async (attachment: {
   path: string | undefined;
   thumbnail: any;
   screenshot: any;
 }) => {
-  if (!isValid(attachment)) {
+  if (!attachment) {
     throw new TypeError('deleteData: attachment is not valid');
   }
 
@@ -196,66 +100,69 @@ export const deleteDataSuccessful = async (attachment: {
   });
 };
 
-type CaptureDimensionType = { contentType: string; path: string };
+export const captureDimensionsAndScreenshot = async (opts: {
+  data: ArrayBufferLike;
+  contentType: string;
+}): Promise<{
+  width?: number;
+  height?: number;
 
-export const captureDimensionsAndScreenshot = async (
-  attachment: CaptureDimensionType
-): Promise<
-  CaptureDimensionType & {
-    width?: number;
-    height?: number;
+  thumbnail: {
+    path: string;
+    contentType: string;
+    width: number;
+    height: number;
+  } | null;
+  screenshot: {
+    path: string;
+    contentType: string;
+    width: number;
+    height: number;
+  } | null;
+}> => {
+  const { contentType } = opts;
 
-    thumbnail: {
-      path: string;
-      contentType: string;
-      width: number;
-      height: number;
-    } | null;
-    screenshot: {
-      path: string;
-      contentType: string;
-      width: number;
-      height: number;
-    } | null;
-  }
-> => {
-  const { contentType } = attachment;
+  const fallbackResult = {
+    width: undefined,
+    height: undefined,
+    screenshot: null,
+    thumbnail: null,
+  };
 
   if (
     !contentType ||
     (!GoogleChrome.isImageTypeSupported(contentType) &&
       !GoogleChrome.isVideoTypeSupported(contentType))
   ) {
-    return { ...attachment, screenshot: null, thumbnail: null };
+    return fallbackResult;
   }
 
-  // If the attachment hasn't been downloaded yet, we won't have a path
-  if (!attachment.path) {
-    return { ...attachment, screenshot: null, thumbnail: null };
+  // If the attachment hasn't been downloaded yet, we won't have any data
+  if (!opts.data.byteLength) {
+    return fallbackResult;
   }
 
-  const absolutePath = getAbsoluteAttachmentPath(attachment.path);
+  const objectUrl = URL.createObjectURL(new Blob([opts.data]));
 
   if (GoogleChrome.isImageTypeSupported(contentType)) {
     try {
       const { width, height } = await getImageDimensions({
-        objectUrl: absolutePath,
+        objectUrl,
       });
       const thumbnailBuffer = await makeImageThumbnailBuffer({
-        objectUrl: absolutePath,
+        objectUrl,
         contentType,
       });
 
       const thumbnailPath = await writeNewAttachmentData(thumbnailBuffer);
       return {
-        ...attachment,
         width,
         height,
         thumbnail: {
           path: thumbnailPath,
           contentType: THUMBNAIL_CONTENT_TYPE,
-          width: THUMBNAIL_SIDE,
-          height: THUMBNAIL_SIDE,
+          width: maxThumbnailDetails.maxSide,
+          height: maxThumbnailDetails.maxSide,
         },
         screenshot: null,
       };
@@ -265,15 +172,20 @@ export const captureDimensionsAndScreenshot = async (
         'error processing image; skipping screenshot generation',
         toLogFormat(error)
       );
-      return { ...attachment, screenshot: null, thumbnail: null };
+      return fallbackResult;
     }
+  }
+
+  if (!GoogleChrome.isVideoTypeSupported(contentType)) {
+    window.log.error('captureDimensionsAndScreenshot: this should have returned earlier');
+    return fallbackResult;
   }
 
   let screenshotObjectUrl;
   try {
     const screenshotBuffer = await blobToArrayBuffer(
       await makeVideoScreenshot({
-        objectUrl: absolutePath,
+        objectUrl,
         contentType: THUMBNAIL_CONTENT_TYPE,
       })
     );
@@ -292,7 +204,6 @@ export const captureDimensionsAndScreenshot = async (
     const thumbnailPath = await writeNewAttachmentData(thumbnailBuffer);
 
     return {
-      ...attachment,
       screenshot: {
         contentType: THUMBNAIL_CONTENT_TYPE,
         path: screenshotPath,
@@ -302,8 +213,8 @@ export const captureDimensionsAndScreenshot = async (
       thumbnail: {
         path: thumbnailPath,
         contentType: THUMBNAIL_CONTENT_TYPE,
-        width: THUMBNAIL_SIDE,
-        height: THUMBNAIL_SIDE,
+        width: maxThumbnailDetails.maxSide,
+        height: maxThumbnailDetails.maxSide,
       },
       width,
       height,
@@ -313,7 +224,7 @@ export const captureDimensionsAndScreenshot = async (
       'captureDimensionsAndScreenshot: error processing video; skipping screenshot generation',
       toLogFormat(error)
     );
-    return { ...attachment, screenshot: null, thumbnail: null };
+    return fallbackResult;
   } finally {
     if (screenshotObjectUrl) {
       revokeObjectUrl(screenshotObjectUrl);

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { ToastUtils, UserUtils } from '../../session/utils';
@@ -13,6 +13,7 @@ import {
   useAvatarPath,
   useConversationUsername,
   useIsMe,
+  useIsProUser,
   useIsPublic,
 } from '../../hooks/useParamSelector';
 import { tr } from '../../localization/localeTools';
@@ -24,13 +25,19 @@ import { userActions } from '../../state/ducks/user';
 import { ReduxSogsRoomInfos } from '../../state/ducks/sogsRoomInfo';
 import { useOurAvatarIsUploading } from '../../state/selectors/user';
 import { useAvatarOfRoomIsUploading } from '../../state/selectors/sogsRoomInfo';
-import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { SessionIconButton, SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import {
-  ModalBasicHeader,
   ModalActionsContainer,
+  ModalBasicHeader,
   SessionWrapperModal,
 } from '../SessionWrapperModal';
+import { useIsProAvailable } from '../../hooks/useIsProAvailable';
+import { SpacerLG } from '../basic/Text';
+import {
+  SessionProInfoVariant,
+  useShowSessionProInfoDialogCbWithVariant,
+} from './SessionProInfoModal';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
@@ -40,19 +47,27 @@ const StyledUploadButton = styled.div`
   background-color: var(--chat-buttons-background-color);
   border-radius: 50%;
   overflow: hidden;
-  padding: 16px;
+  padding: var(--margins-lg);
   aspect-ratio: 1;
+`;
+
+const StyledCTADescription = styled.span<{ reverseDirection: boolean }>`
+  text-align: center;
+  font-size: var(--font-size-lg);
+  color: var(--text-secondary-color);
+  line-height: normal;
+  display: inline-flex;
+  flex-direction: ${props => (props.reverseDirection ? 'row-reverse' : 'row')};
+  align-items: center;
+  gap: var(--margins-xs);
+  padding: 3px;
 `;
 
 const UploadImageButton = () => {
   return (
     <div style={{ position: 'relative' }}>
       <StyledUploadButton>
-        <SessionLucideIconButton
-          unicode={LUCIDE_ICONS_UNICODE.IMAGE}
-          iconSize={'huge2'}
-          margin="0"
-        />
+        <SessionLucideIconButton unicode={LUCIDE_ICONS_UNICODE.IMAGE} iconSize={'max'} margin="0" />
       </StyledUploadButton>
       <PlusAvatarButton dataTestId="image-upload-section" />
     </div>
@@ -73,7 +88,9 @@ const triggerUploadProfileAvatar = async (
 
       if (conversationId === UserUtils.getOurPubKeyStrFromCache()) {
         const newAvatarDecrypted = await blobContent.arrayBuffer();
-        window.inboxStore?.dispatch(userActions.updateOurAvatar({ newAvatarDecrypted }) as any);
+        window.inboxStore?.dispatch(
+          userActions.updateOurAvatar({ mainAvatarDecrypted: newAvatarDecrypted }) as any
+        );
       } else if (OpenGroupUtils.isOpenGroupV2(conversationId)) {
         window.inboxStore?.dispatch(
           ReduxSogsRoomInfos.changeCommunityAvatar({
@@ -132,6 +149,8 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
 
   const isMe = useIsMe(conversationId);
   const isCommunity = useIsPublic(conversationId);
+  const hasPro = useIsProUser(conversationId);
+  const isProAvailable = useIsProAvailable();
 
   const avatarPath = useAvatarPath(conversationId) || '';
   const profileName = useConversationUsername(conversationId) || '';
@@ -141,61 +160,114 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
   const sogsAvatarIsUploading = useAvatarOfRoomIsUploading(conversationId);
 
   const [newAvatarObjectUrl, setNewAvatarObjectUrl] = useState<string | null>(avatarPath);
+  const [isNewAvatarAnimated, setIsNewAvatarAnimated] = useState<boolean>(false);
 
-  const closeDialog = () => {
+  const avatarChanged = newAvatarObjectUrl !== avatarPath;
+
+  const resetState = () => {
+    setNewAvatarObjectUrl(null);
+    setIsNewAvatarAnimated(false);
+  };
+
+  const handleShowProInfoModal = useShowSessionProInfoDialogCbWithVariant();
+
+  const closeDialog = useCallback(() => {
     dispatch(updateEditProfilePictureModal(null));
     if (isMe) {
       dispatch(editProfileModal({}));
     }
-  };
+  }, [dispatch, isMe]);
 
   const handleAvatarClick = async () => {
-    const updatedAvatarObjectUrl = await pickFileForAvatar();
-    if (updatedAvatarObjectUrl) {
-      setNewAvatarObjectUrl(updatedAvatarObjectUrl);
+    const res = await pickFileForAvatar();
+
+    if (!res) {
+      window.log.error('Failed to pick avatar');
+      resetState();
+
+      return;
+    }
+
+    if (res) {
+      setIsNewAvatarAnimated(res.mainAvatarDetails.isAnimated);
+      const blob = new Blob([res.mainAvatarDetails.outputBuffer], {
+        type: res.mainAvatarDetails.format,
+      });
+      const blobUrl = URL.createObjectURL(blob);
+      setNewAvatarObjectUrl(blobUrl);
     }
   };
 
   const handleUpload = async () => {
-    if (newAvatarObjectUrl === avatarPath) {
+    if (!avatarChanged) {
       window.log.debug('Avatar Object URL has not changed!');
+      return;
+    }
+
+    /**
+     * Can upload animated profile picture if:
+     * A. Pro user uploading their own profile picture
+     * B. Group admin uploading a group profile picture and at least 1 admin is Pro.
+     * C. Community admin uploading a community profile picture
+     * All of those are taken care of as part of the `isProUser` check in the conversation model
+     */
+    if (isProAvailable && !hasPro && isNewAvatarAnimated) {
+      handleShowProInfoModal(SessionProInfoVariant.PROFILE_PICTURE_ANIMATED);
+      window.log.debug('Attempted to upload an animated profile picture without pro!');
       return;
     }
 
     await triggerUploadProfileAvatar(newAvatarObjectUrl, conversationId);
   };
 
+  const loading = ourAvatarIsUploading || groupAvatarChangePending || sogsAvatarIsUploading;
+
+  const newAvatarLoaded = newAvatarObjectUrl !== avatarPath;
+
   const handleRemove = async () => {
     if (isCommunity) {
       throw new Error('community do not support removing avatars, only changing them');
     }
     await triggerRemovalProfileAvatar(conversationId);
-    setNewAvatarObjectUrl(null);
+    resetState();
+  };
+
+  const handleClear = async () => {
+    if (loading || !newAvatarLoaded) {
+      return;
+    }
+    resetState();
   };
 
   const handleClick = () => {
     void handleAvatarClick();
   };
 
-  const loading = ourAvatarIsUploading || groupAvatarChangePending || sogsAvatarIsUploading;
-
   return (
     <SessionWrapperModal
       onClose={closeDialog}
       headerChildren={
-        <ModalBasicHeader title={tr('profileDisplayPictureSet')} showExitIcon={true} />
+        <ModalBasicHeader title={tr('profileDisplayPictureSet')} showExitIcon={!loading} />
       }
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer extraBottomMargin={true}>
           <SessionButton
             text={tr('save')}
             buttonType={SessionButtonType.Simple}
             onClick={handleUpload}
-            disabled={newAvatarObjectUrl === avatarPath || loading}
+            disabled={!newAvatarObjectUrl || !avatarChanged || loading}
             dataTestId="save-button-profile-update"
           />
           {/* we cannot remove avatars from communities, only change them */}
-          {!isCommunity ? (
+          {newAvatarObjectUrl && newAvatarLoaded ? (
+            <SessionButton
+              text={tr('clear')}
+              buttonColor={SessionButtonColor.Danger}
+              buttonType={SessionButtonType.Simple}
+              onClick={handleClear}
+              disabled={!newAvatarObjectUrl || loading}
+            />
+          ) : !isCommunity ? (
             <SessionButton
               text={tr('remove')}
               buttonColor={SessionButtonColor.Danger}
@@ -207,12 +279,40 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
         </ModalActionsContainer>
       }
     >
+      {isMe && isProAvailable && !isCommunity ? (
+        <>
+          <StyledCTADescription reverseDirection={hasPro}>
+            {tr(
+              hasPro
+                ? 'proAnimatedDisplayPictureModalDescription'
+                : 'proAnimatedDisplayPicturesNonProModalDescription'
+            )}
+            <SessionIconButton
+              sizeIsWidth={false}
+              iconType={'sessionPro'}
+              iconSize={'medium'}
+              backgroundColor={'var(--primary-color)'}
+              borderRadius={'6px'}
+              iconColor={'var(--black-color)'}
+              disabled={loading}
+              onClick={() =>
+                handleShowProInfoModal(
+                  hasPro
+                    ? SessionProInfoVariant.ALREADY_PRO_PROFILE_PICTURE_ANIMATED
+                    : SessionProInfoVariant.PROFILE_PICTURE_ANIMATED
+                )
+              }
+            />
+          </StyledCTADescription>
+        </>
+      ) : null}
       <div
         className="avatar-center"
         role="button"
         onClick={handleClick}
         data-testid={'image-upload-click'}
       >
+        <SpacerLG />
         <StyledAvatarContainer className="avatar-center-inner">
           {newAvatarObjectUrl || avatarPath ? (
             <ProfileAvatar
@@ -226,6 +326,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
             <UploadImageButton />
           )}
         </StyledAvatarContainer>
+        <SpacerLG />
       </div>
       <SessionSpinner loading={loading} />
     </SessionWrapperModal>
