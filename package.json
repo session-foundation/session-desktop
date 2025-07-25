@@ -48,7 +48,7 @@
     "dedup": "npx --yes yarn-deduplicate yarn.lock",
     "prepare": "husky",
     "print-deps": "node -v  && python3 --version",
-    "watch": "yarn clean && yarn update-git-info && concurrently -n PBJS,SASS,LOCALES,UTIL,LIBSESSION,IMAGE,TS -c yellow,red,green,blue,cyan,magenta \"yarn protobuf\" \"yarn sass --watch\" \"yarn build:locales-soft\" \"yarn worker:utils --watch\" \"yarn worker:libsession --watch\" \"yarn worker:image_processor --watch\" \"yarn tsc --watch\""
+    "watch": "yarn clean && yarn update-git-info && concurrently -n PBJS,SASS,LOCALES,UTIL,LIBSESSION,IMAGE,TS -c yellow,green,red,blue,blue,blue,green \"yarn protobuf\" \"yarn sass --watch\" \"yarn build:locales-soft\" \"yarn worker:utils --watch\" \"yarn worker:libsession --watch\" \"yarn worker:image_processor --watch\" \"yarn tsc --watch\""
 
   },
   "dependencies": {

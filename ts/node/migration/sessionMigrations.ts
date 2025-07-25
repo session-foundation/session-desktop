@@ -1,10 +1,6 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-unused-expressions */
 import * as BetterSqlite3 from '@signalapp/better-sqlite3';
-import { isAbsolute, join } from 'path';
-import { existsSync, readFileSync, statSync } from 'fs-extra';
-import sharp from 'sharp';
-import { app } from 'electron';
 import {
   ContactsConfigWrapperNode,
   ConvoInfoVolatileWrapperNode,
@@ -14,7 +10,6 @@ import {
 import { compact, isArray, isEmpty, isNil, isString, map, pick } from 'lodash';
 
 import { ConversationAttributes } from '../../models/conversationAttributes';
-import { decryptAttachmentBufferNode } from '../encrypt_attachment_buffer';
 import { fromHexToArray } from '../../session/utils/String';
 import { CONFIG_DUMP_TABLE } from '../../types/sqlSharedTypes';
 import {
@@ -42,7 +37,6 @@ import {
   hasDebugEnvVariable,
 } from './utils';
 import { CONVERSATION_PRIORITIES } from '../../models/types';
-import { V47 } from './helpers/v47';
 
 // eslint:disable: quotemark one-variable-per-declaration no-unused-expression
 
@@ -125,7 +119,6 @@ const LOKI_SCHEMA_VERSIONS: Array<
   updateToSessionSchemaVersion44,
   updateToSessionSchemaVersion45,
   updateToSessionSchemaVersion46,
-  updateToSessionSchemaVersion47,
 ];
 
 function updateToSessionSchemaVersion1(currentVersion: number, db: BetterSqlite3.Database) {
@@ -2151,7 +2144,6 @@ async function updateToSessionSchemaVersion46(currentVersion: number, db: Better
   if (currentVersion >= targetVersion) {
     return;
   }
-  return;
   console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
 
   db.transaction(() => {
@@ -2159,96 +2151,8 @@ async function updateToSessionSchemaVersion46(currentVersion: number, db: Better
           ALTER TABLE ${CONVERSATIONS_TABLE} ADD COLUMN fallbackAvatarInProfile TEXT;
           ALTER TABLE ${CONVERSATIONS_TABLE} DROP COLUMN avatarImageId;
          `);
-  })();
-
-  db.transaction(() => {
     writeSessionSchemaVersion(targetVersion, db);
   })();
-
-  console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
-}
-
-const formatNum = (num: number): string => num.toLocaleString('en-US').replace(/,/g, '_');
-
-async function updateToSessionSchemaVersion47(currentVersion: number, db: BetterSqlite3.Database) {
-  const targetVersion = 47;
-  if (currentVersion >= targetVersion) {
-    return;
-  }
-  console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
-
-  let allPrivateConvosWithAvatars: Array<any> = [];
-
-  db.transaction(() => {
-    allPrivateConvosWithAvatars = db
-      .prepare(
-        `SELECT * FROM ${CONVERSATIONS_TABLE} WHERE type = 'private' and avatarInProfile IS NOT NULL AND avatarInProfile != '';`
-      )
-      .all();
-  })();
-
-  const attachmentsRoot = join(app.getPath('userData'), 'attachments.noindex');
-  let countAvatarsAnimated = 0;
-  const start = Date.now();
-
-  const key = sqlNode.getItemById('local_attachment_encrypted_key', db)?.value as string;
-  if (key) {
-    const encryptingKey = fromHexToArray(key);
-
-    for (let index = 0; index < allPrivateConvosWithAvatars.length; index++) {
-      const convo = allPrivateConvosWithAvatars[index];
-      const startItem = Date.now();
-      try {
-        const avatarPath = convo.avatarInProfile;
-        const absolutePath = isAbsolute(avatarPath)
-          ? avatarPath
-          : join(attachmentsRoot, avatarPath);
-        console.warn('checking animated avatar with path:', absolutePath);
-        if (existsSync(absolutePath) && statSync(absolutePath).isFile()) {
-          const fileContent = readFileSync(absolutePath);
-          if (fileContent.byteLength) {
-            // decrypt the file content given the attachment key
-            const decryptedFileContent = await decryptAttachmentBufferNode(
-              encryptingKey,
-              fileContent.buffer
-            );
-            if (decryptedFileContent.byteLength) {
-              const metadata = await sharp(decryptedFileContent, { animated: true }).metadata();
-              const isAnimated = (metadata.pages || 0) > 1; // more than 1 frame means that the image is animated
-              if (isAnimated) {
-                countAvatarsAnimated++;
-                const processed = await V47.processAvatarData(decryptedFileContent, 200);
-                if (!processed) {
-                  throw new Error('failed to process avatar');
-                }
-                console.warn(
-                  `processed avatar original took ${
-                    Date.now() - startItem
-                  }ms from \n\tsize: ${formatNum(decryptedFileContent.byteLength)} bytes\n\tformat: ${metadata.format}`
-                );
-                console.warn(
-                  `main: ${processed.mainAvatarDetails.contentType}, ${formatNum(processed.mainAvatarDetails.size)} bytes`
-                );
-                console.warn(
-                  `fallback: ${processed.avatarFallback?.contentType}, ${formatNum(processed.avatarFallback?.size || 0)} bytes`
-                );
-              }
-            }
-          }
-        }
-      } catch (e) {
-        console.warn('error while migrating avatars', e);
-        throw e;
-      }
-    }
-  }
-  console.warn(
-    `countAvatarsAnimated ${countAvatarsAnimated} \n\tTOTAL DURATION ${Date.now() - start}ms`
-  );
-
-  // db.transaction(() => {
-  //   writeSessionSchemaVersion(targetVersion, db);
-  // })();
 
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
