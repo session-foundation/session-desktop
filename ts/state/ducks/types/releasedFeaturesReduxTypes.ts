@@ -13,6 +13,7 @@ export type SessionFeatureFlags = {
   debugInputCommands: boolean;
   proAvailable: boolean;
   mockUserHasPro: boolean;
+  fsTTL30s: boolean;
 };
 
 export type SessionFeatureFlagKeys = RecursiveKeys<SessionFeatureFlags>;

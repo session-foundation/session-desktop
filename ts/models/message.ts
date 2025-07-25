@@ -775,7 +775,6 @@ export class MessageModel extends Model<MessageAttributes> {
       (this.get('attachments') || []).map(loadAttachmentData)
     );
     const body = this.get('body');
-
     const quoteWithData = await loadQuoteData(this.get('quote'));
     const previewWithData = await loadPreviewData(this.get('preview'));
 

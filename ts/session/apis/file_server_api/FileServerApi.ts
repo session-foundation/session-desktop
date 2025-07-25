@@ -38,6 +38,7 @@ export const uploadFileToFsWithOnionV4 = async (
     endpoint: POST_GET_FILE_ENDPOINT,
     method: 'POST',
     timeoutMs: 30 * DURATION.SECONDS, // longer time for file upload
+    headers: window.sessionFeatureFlags.fsTTL30s ? { 'X-FS-TTL': '30' } : {},
   });
 
   if (!batchGlobalIsSuccess(result)) {
