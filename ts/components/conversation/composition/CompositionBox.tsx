@@ -64,6 +64,7 @@ import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesRedux
 import { SessionProInfoVariant, showSessionProInfoDialog } from '../../dialog/SessionProInfoModal';
 import { tStripped } from '../../../localization/localeTools';
 import type { ProcessedLinkPreviewThumbnailType } from '../../../webworker/workers/node/image_processor/image_processor';
+import { selectWeAreProUser } from '../../../hooks/useParamSelector';
 
 export interface ReplyingToMessageProps {
   convoId: string;
@@ -98,6 +99,7 @@ export type SendMessageType = {
 interface Props {
   sendMessage: (msg: SendMessageType) => void;
   selectedConversationKey?: string;
+  weAreProUser: boolean;
   selectedConversation: ReduxConversationType | undefined;
   typingEnabled: boolean;
   isBlocked: boolean;
@@ -713,10 +715,9 @@ class CompositionBoxInner extends Component<Props, State> {
     this.linkPreviewAbortController?.abort();
 
     const isProAvailable = getFeatureFlag('proAvailable');
-    const mockHasPro = getFeatureFlag('mockUserHasPro');
 
     // TODO: get pro status from store once available
-    const hasPro = mockHasPro;
+    const hasPro = this.props.weAreProUser;
     const charLimit = hasPro
       ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
       : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
@@ -929,6 +930,7 @@ const mapStateToProps = (state: StateType) => {
   return {
     quotedMessageProps: getQuotedMessage(state),
     selectedConversation: getSelectedConversation(state),
+    weAreProUser: selectWeAreProUser(state),
     selectedConversationKey: getSelectedConversationKey(state),
     typingEnabled: getSelectedCanWrite(state),
     isBlocked: getIsSelectedBlocked(state),

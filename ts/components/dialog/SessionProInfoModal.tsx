@@ -22,8 +22,8 @@ import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { tr } from '../../localization/localeTools';
 import { FileIcon } from '../icon/FileIcon';
 import { SessionButtonShiny } from '../basic/SessionButtonShiny';
-import { useHasPro } from '../../hooks/useHasPro';
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
+import { useCurrentUserHasPro } from '../../hooks/useHasPro';
 
 export enum SessionProInfoVariant {
   MESSAGE_CHARACTER_LIMIT = 0,
@@ -220,7 +220,7 @@ const buttonProps = {
 
 export function SessionProInfoModal(props: SessionProInfoState) {
   const dispatch = useDispatch();
-  const hasPro = useHasPro();
+  const hasPro = useCurrentUserHasPro();
 
   function onClose() {
     dispatch(updateSessionProInfoModal(null));

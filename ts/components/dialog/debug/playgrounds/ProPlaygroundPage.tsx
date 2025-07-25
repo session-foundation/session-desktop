@@ -27,7 +27,7 @@ export function ProPlaygroundPage() {
         <FlagToggle
           forceUpdate={forceUpdate}
           flag="mockUserHasPro"
-          value={!!useFeatureFlag('mockUserHasPro')}
+          value={useFeatureFlag('mockUserHasPro')}
         />
       </Flex>
       <SpacerXS />

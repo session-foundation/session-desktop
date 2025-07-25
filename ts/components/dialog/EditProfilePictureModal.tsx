@@ -13,6 +13,7 @@ import {
   useAvatarPath,
   useConversationUsername,
   useIsMe,
+  useIsProUser,
   useIsPublic,
 } from '../../hooks/useParamSelector';
 import { tr } from '../../localization/localeTools';
@@ -31,7 +32,6 @@ import {
   ModalBasicHeader,
   SessionWrapperModal,
 } from '../SessionWrapperModal';
-import { useHasPro } from '../../hooks/useHasPro';
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
 import { SpacerLG } from '../basic/Text';
 import {
@@ -149,7 +149,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
 
   const isMe = useIsMe(conversationId);
   const isCommunity = useIsPublic(conversationId);
-  const hasPro = useHasPro();
+  const hasPro = useIsProUser(conversationId);
   const isProAvailable = useIsProAvailable();
 
   const avatarPath = useAvatarPath(conversationId) || '';
@@ -204,16 +204,14 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
       return;
     }
 
-    // TODO: Add way to check if group and if group is pro
-    console.warn('TODO: Add way to check if group and if group is pro');
-
     /**
      * Can upload animated profile picture if:
      * A. Pro user uploading their own profile picture
      * B. Group admin uploading a group profile picture and at least 1 admin is Pro.
      * C. Community admin uploading a community profile picture
+     * All of those are taken care of as part of the `isProUser` check in the conversation model
      */
-    if (isProAvailable && !hasPro && isNewAvatarAnimated && !isCommunity) {
+    if (isProAvailable && !hasPro && isNewAvatarAnimated) {
       handleShowProInfoModal(SessionProInfoVariant.PROFILE_PICTURE_ANIMATED);
       window.log.debug('Attempted to upload an animated profile picture without pro!');
       return;

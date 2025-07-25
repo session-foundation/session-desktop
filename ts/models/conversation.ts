@@ -411,6 +411,9 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (this.getExpireTimer()) {
       toRet.expireTimer = this.getExpireTimer();
     }
+    if (this.isProUser()) {
+      toRet.isProUser = true;
+    }
     // those are values coming only from both the DB or the wrapper. Currently we display the data from the DB
     if (this.isClosedGroup()) {
       toRet.members = this.getGroupMembers() || [];
@@ -784,7 +787,20 @@ export class ConversationModel extends Model<ConversationAttributes> {
       .catch(window?.log?.error);
   }
 
-  public isProUser() {
+  public isProUser(): boolean {
+    if (this.isPublic()) {
+      // Note: communities are considered pro users (they can have animated avatars)
+      return true;
+    }
+
+    if (this.isClosedGroupV2()) {
+      const admins = this.getGroupAdmins();
+      return admins.some(m => {
+        // the is05Pubkey is only here to make sure we never have a infinite recursion
+        return PubKey.is05Pubkey(m) && ConvoHub.use().get(m)?.isProUser();
+      });
+    }
+
     return getFeatureFlag('mockUserHasPro');
   }
 
