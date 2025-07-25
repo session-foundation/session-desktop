@@ -9,6 +9,7 @@ import { ClosedGroupV2VisibleMessage } from '../session/messages/outgoing/visibl
 import { PubKey } from '../session/types';
 import {
   UserUtils,
+  attachmentIdAsStrFromUrl,
   uploadAttachmentsToFileServer,
   uploadLinkPreviewToFileServer,
   uploadQuoteThumbnailsToFileServer,
@@ -788,7 +789,7 @@ export class MessageModel extends Model<MessageAttributes> {
     let attachmentPromise;
     let linkPreviewPromise;
     let quotePromise;
-    const fileIdsToLink: Array<number> = [];
+    const fileIdsToLink: Array<string> = [];
 
     // we can only send a single preview
     const firstPreviewWithData = previewWithData?.[0] || null;
@@ -811,9 +812,9 @@ export class MessageModel extends Model<MessageAttributes> {
       linkPreviewPromise,
       quotePromise,
     ]);
-    fileIdsToLink.push(...attachments.map(m => m.id));
-    if (preview) {
-      fileIdsToLink.push(preview.id);
+    fileIdsToLink.push(...attachments.map(m => attachmentIdAsStrFromUrl(m.url)));
+    if (preview && preview.image?.url) {
+      fileIdsToLink.push(attachmentIdAsStrFromUrl(preview.image.url));
     }
 
     if (quote && quote.attachments?.length) {

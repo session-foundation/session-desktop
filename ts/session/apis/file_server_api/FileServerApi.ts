@@ -23,11 +23,11 @@ const POST_GET_FILE_ENDPOINT = '/file';
 /**
  * Upload a file to the file server v2 using the onion v4 encoding
  * @param fileContent the data to send
- * @returns null or the fileID and complete URL to share this file
+ * @returns null or the complete URL to share this file
  */
 export const uploadFileToFsWithOnionV4 = async (
   fileContent: ArrayBuffer
-): Promise<{ fileId: number; fileUrl: string } | null> => {
+): Promise<{ fileUrl: string } | null> => {
   if (!fileContent || !fileContent.byteLength) {
     return null;
   }
@@ -51,14 +51,13 @@ export const uploadFileToFsWithOnionV4 = async (
   }
   const fileUrl = `${fileServerURL}${POST_GET_FILE_ENDPOINT}/${fileId}`;
   return {
-    fileId,
     fileUrl,
   };
 };
 
 /**
  * Download a file given the fileId from the fileserver
- * @param fileIdOrCompleteUrl the fileId to download or the completeUrl to the fileitself
+ * @param fileIdOrCompleteUrl the fileId to download or the completeUrl to the file itself
  * @returns the data as an Uint8Array or null
  */
 export const downloadFileFromFileServer = async (

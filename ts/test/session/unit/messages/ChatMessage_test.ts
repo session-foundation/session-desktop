@@ -121,7 +121,7 @@ describe('VisibleMessage', () => {
   });
 
   it('can create message with a preview', () => {
-    const preview: PreviewWithAttachmentUrl = { url: 'url', title: 'title', id: 1 };
+    const preview: PreviewWithAttachmentUrl = { url: 'url', title: 'title' };
     const previews = new Array<PreviewWithAttachmentUrl>();
     previews.push(preview);
 
@@ -143,7 +143,6 @@ describe('VisibleMessage', () => {
     const attachment: AttachmentPointerWithUrl = {
       url: 'url',
       contentType: 'contentType',
-      id: 1234,
     };
     const attachments = new Array<AttachmentPointerWithUrl>();
     attachments.push(attachment);
