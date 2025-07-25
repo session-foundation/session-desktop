@@ -162,6 +162,8 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
   const [newAvatarObjectUrl, setNewAvatarObjectUrl] = useState<string | null>(avatarPath);
   const [isNewAvatarAnimated, setIsNewAvatarAnimated] = useState<boolean>(false);
 
+  const avatarChanged = newAvatarObjectUrl !== avatarPath;
+
   const resetState = () => {
     setNewAvatarObjectUrl(null);
     setIsNewAvatarAnimated(false);
@@ -197,7 +199,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
   };
 
   const handleUpload = async () => {
-    if (newAvatarObjectUrl === avatarPath) {
+    if (!avatarChanged) {
       window.log.debug('Avatar Object URL has not changed!');
       return;
     }
@@ -255,7 +257,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
             text={tr('save')}
             buttonType={SessionButtonType.Simple}
             onClick={handleUpload}
-            disabled={!newAvatarObjectUrl || loading}
+            disabled={!newAvatarObjectUrl || !avatarChanged || loading}
             dataTestId="save-button-profile-update"
           />
           {/* we cannot remove avatars from communities, only change them */}

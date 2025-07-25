@@ -2,7 +2,7 @@
 /* eslint-disable no-unused-expressions */
 import * as BetterSqlite3 from '@signalapp/better-sqlite3';
 import { isAbsolute, join } from 'path';
-import { readFileSync, statSync } from 'fs-extra';
+import { existsSync, readFileSync, statSync } from 'fs-extra';
 import sharp from 'sharp';
 import { app } from 'electron';
 import {
@@ -2204,7 +2204,7 @@ async function updateToSessionSchemaVersion47(currentVersion: number, db: Better
           ? avatarPath
           : join(attachmentsRoot, avatarPath);
         console.warn('checking animated avatar with path:', absolutePath);
-        if (statSync(absolutePath).isFile()) {
+        if (existsSync(absolutePath) && statSync(absolutePath).isFile()) {
           const fileContent = readFileSync(absolutePath);
           if (fileContent.byteLength) {
             // decrypt the file content given the attachment key
