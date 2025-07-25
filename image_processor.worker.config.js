@@ -26,10 +26,16 @@ module.exports = {
     path: path.resolve(__dirname, 'ts', 'webworker', 'workers', 'node', 'image_processor'),
   },
   target: 'node',
-  optimization: {
-    minimize: true,
-  },
   externals: {
     sharp: 'commonjs sharp',
+  },
+  optimization: {
+    minimize: process.env.NODE_ENV === 'production',
+  },
+  mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
+  watch: false, // false by default but can be overridden by the command line
+  watchOptions: {
+    aggregateTimeout: 200,
+    poll: 1000,
   },
 };
