@@ -1836,7 +1836,10 @@ export class ConversationModel extends Model<ConversationAttributes> {
    * If the user is not a pro user, return the fallback avatar path (first or only frame extracted)
    */
   public getProOrNotAvatarPath() {
-    return this.isProUser() ? this.getAvatarInProfilePath() : this.getFallbackAvatarInProfilePath();
+    const proAvailable = getFeatureFlag('proAvailable');
+    return !proAvailable || this.isProUser()
+      ? this.getAvatarInProfilePath()
+      : this.getFallbackAvatarInProfilePath();
   }
 
   /**
