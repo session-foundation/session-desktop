@@ -67,7 +67,7 @@ window.sessionFeatureFlags = {
   showPopoverAnchors: false,
   proAvailable: !isEmpty(process.env.SESSION_PRO),
   mockUserHasPro: !isEmpty(process.env.SESSION_HAS_PRO),
-  fsTTL30s: !isEmpty(process.env.FILE_SERVER_TTL_30S),
+  fsTTL30s: !isEmpty(process.env.FILE_SERVER_TTL_30S), // Note: some stuff are init when the app start, so this flag should only be set from the env itself.
   debug: {
     debugLogging: !isEmpty(process.env.SESSION_DEBUG),
     debugLibsessionDumps: !isEmpty(process.env.SESSION_DEBUG_LIBSESSION_DUMPS),

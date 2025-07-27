@@ -56,7 +56,11 @@ export async function reuploadCurrentAvatarUs() {
 
   const decryptedAvatarData = await blob.arrayBuffer();
 
-  return uploadAndSetOurAvatarShared({ decryptedAvatarData, ourConvo, profileKey });
+  return uploadAndSetOurAvatarShared({
+    decryptedAvatarData,
+    ourConvo,
+    profileKey,
+  });
 }
 
 export async function uploadAndSetOurAvatarShared({
@@ -80,8 +84,10 @@ export async function uploadAndSetOurAvatarShared({
     window.log.warn('failed to upload avatar to file server');
     return null;
   }
-  const { fileUrl } = avatarPointer;
+  const { fileUrl, expiresMs } = avatarPointer;
 
+  // Note: processing the avatar here doesn't change the buffer (unless the first one was uploaded as an image too big for an avatar.)
+  // so, once we have deterministic encryption of avatars, the uploaded should always have the same hash
   const { avatarFallback, mainAvatarDetails } = await processAvatarData(decryptedAvatarData);
 
   // this encrypts and save the new avatar and returns a new attachment path
@@ -111,7 +117,7 @@ export async function uploadAndSetOurAvatarShared({
     displayName,
     avatarPointer: fileUrl,
   });
-  await Storage.put(SettingsKey.lastAvatarUploadTimestamp, Date.now());
+  await Storage.put(SettingsKey.ntsAvatarExpiryMs, expiresMs);
 
   return {
     avatarPointer: ourConvo.getAvatarPointer(),

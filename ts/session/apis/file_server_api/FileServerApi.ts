@@ -1,4 +1,6 @@
 import AbortController from 'abort-controller';
+import { isEmpty, isFinite, isNumber, isString } from 'lodash';
+
 import { BlindingActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { OnionSending } from '../../onions/onionSend';
 import {
@@ -20,6 +22,19 @@ const RELEASE_VERSION_ENDPOINT = '/session_version';
 
 const POST_GET_FILE_ENDPOINT = '/file';
 
+function fileUrlToFileId(fullURL?: string) {
+  const prefix = `${fileServerURL}${POST_GET_FILE_ENDPOINT}/`;
+  if (!fullURL || !fullURL.startsWith(prefix)) {
+    return null;
+  }
+  const fileId = fullURL.substring(prefix.length);
+
+  if (!fileId) {
+    return null;
+  }
+  return fileId;
+}
+
 /**
  * Upload a file to the file server v2 using the onion v4 encoding
  * @param fileContent the data to send
@@ -27,7 +42,7 @@ const POST_GET_FILE_ENDPOINT = '/file';
  */
 export const uploadFileToFsWithOnionV4 = async (
   fileContent: ArrayBuffer
-): Promise<{ fileUrl: string } | null> => {
+): Promise<{ fileUrl: string; expiresMs: number } | null> => {
   if (!fileContent || !fileContent.byteLength) {
     return null;
   }
@@ -46,12 +61,23 @@ export const uploadFileToFsWithOnionV4 = async (
   }
 
   const fileId = result?.body?.id as number | undefined;
-  if (!fileId) {
+  const expires = result?.body?.expires as number; // expires is returned as a floating point timestamp in seconds, i.e. 1754863793.186137.
+  if (
+    !fileId ||
+    !isString(fileId) ||
+    isEmpty(fileId) ||
+    !expires ||
+    !isNumber(expires) ||
+    !isFinite(expires)
+  ) {
     return null;
   }
   const fileUrl = `${fileServerURL}${POST_GET_FILE_ENDPOINT}/${fileId}`;
+  const expiresMs = Math.floor(expires * 1000);
+  console.warn('fileUrl', fileUrl);
   return {
     fileUrl,
+    expiresMs,
   };
 };
 
@@ -178,4 +204,37 @@ export const getLatestReleaseFromFileServer = async (
     return null;
   }
   return [latestVersionWithV, releaseType || releaseChannel];
+};
+
+/**
+ * Fetch the expiry in ms of the corresponding file.
+ */
+export const getFileInfoFromFileServer = async (
+  fileUrl: string
+): Promise<{ expiryMs: number } | null> => {
+  const fileId = fileUrlToFileId(fileUrl);
+
+  if (!fileId) {
+    throw new Error("getFileInfoFromFileServer: fileUrl doesn't start with the file server url");
+  }
+
+  const result = await OnionSending.sendJsonViaOnionV4ToFileServer({
+    abortSignal: new AbortController().signal,
+    stringifiedBody: null,
+    endpoint: `${POST_GET_FILE_ENDPOINT}/${fileId}/info`,
+    method: 'GET',
+    timeoutMs: 10 * DURATION.SECONDS, // longer time for file upload
+    headers: {},
+  });
+
+  const fileExpirySeconds = result?.body?.expires as number | undefined;
+
+  if (!batchGlobalIsSuccess(result)) {
+    return null;
+  }
+
+  if (!fileExpirySeconds || !isNumber(fileExpirySeconds) || !isFinite(fileExpirySeconds)) {
+    return null;
+  }
+  return { expiryMs: Math.floor(fileExpirySeconds * 1000) };
 };

@@ -1023,6 +1023,7 @@ async function handleAvatarChangeFromUI({
   // encrypt the avatar data with the profile key
   const encryptedData = await encryptProfile(processed.mainAvatarDetails.outputBuffer, profileKey);
 
+  // TODO: we should store the expiries of the attachment somewhere in libsession I assume, and reupload as needed
   const uploadedFileDetails = await uploadFileToFsWithOnionV4(encryptedData);
   if (!uploadedFileDetails || !uploadedFileDetails.fileUrl) {
     window?.log?.warn('File upload for groupv2 to file server failed');
