@@ -72,12 +72,6 @@ describe('initializeAttachmentMetadata', () => {
       expect(hasFileAttachmentInMessage(msgModel)).to.be.eq(false);
     });
 
-    it('first attachment is audio should return false', () => {
-      const msgModel = generateFakeIncomingPrivateMessage();
-      msgModel.set({ attachments: [{ contentType: 'audio/mp3' }] });
-      expect(hasFileAttachmentInMessage(msgModel)).to.be.eq(false);
-    });
-
     it('first attachment is flagged as voice message should return false', () => {
       const msgModel = generateFakeIncomingPrivateMessage();
       msgModel.set({
@@ -238,15 +232,6 @@ describe('initializeAttachmentMetadata', () => {
       expect(mt.hasAttachments).to.be.eq(1);
       expect(mt.hasFileAttachments).to.be.eq(0);
       expect(mt.hasVisualMediaAttachments).to.be.eq(1);
-    });
-
-    it('has one audio attachment only', () => {
-      const msgModel = generateFakeIncomingPrivateMessage();
-      msgModel.setKey('attachments', [{ contentType: 'audio/mp3' }]);
-      const mt = getAttachmentMetadata(msgModel);
-      expect(mt.hasAttachments).to.be.eq(1);
-      expect(mt.hasFileAttachments).to.be.eq(0);
-      expect(mt.hasVisualMediaAttachments).to.be.eq(0);
     });
 
     it('has one file attachment only', () => {

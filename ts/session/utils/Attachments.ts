@@ -158,9 +158,7 @@ export function attachmentIdAsStrFromUrl(url: string) {
 }
 
 export function attachmentIdAsLongFromUrl(url: string) {
-  const urlObj = new URL(url);
-
-  const lastSegment = urlObj.pathname.split('/').pop();
+  const lastSegment = url?.split('/')?.pop();
   if (!lastSegment) {
     throw new Error('attachmentIdAsLongFromUrl last is not valid');
   }

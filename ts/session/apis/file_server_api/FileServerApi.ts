@@ -74,7 +74,6 @@ export const uploadFileToFsWithOnionV4 = async (
   }
   const fileUrl = `${fileServerURL}${POST_GET_FILE_ENDPOINT}/${fileId}`;
   const expiresMs = Math.floor(expires * 1000);
-  console.warn('fileUrl', fileUrl);
   return {
     fileUrl,
     expiresMs,

@@ -141,7 +141,7 @@ describe('VisibleMessage', () => {
 
   it('can create message with an AttachmentPointer', () => {
     const attachment: AttachmentPointerWithUrl = {
-      url: 'url',
+      url: 'http://thisisaareal/url/1234',
       contentType: 'contentType',
     };
     const attachments = new Array<AttachmentPointerWithUrl>();
@@ -159,7 +159,7 @@ describe('VisibleMessage', () => {
     const decodedID = toNumber(firstAttachment?.id);
     expect(decodedID).to.be.equal(1234);
     expect(firstAttachment?.contentType).to.be.deep.equal('contentType');
-    expect(firstAttachment?.url).to.be.deep.equal('url');
+    expect(firstAttachment?.url).to.be.deep.equal('http://thisisaareal/url/1234');
   });
 
   it('correct ttl', () => {
