@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 import type { SessionDataTestId } from 'react';
 import { tr } from '../../localization/localeTools';
+import { PubKey } from '../../session/types';
 
 const StyledPillDividerLine = styled.div`
   border-bottom: 1px solid var(--border-color);
@@ -24,11 +25,19 @@ const StyledPillDivider = styled.div`
   margin: 0;
 `;
 
-export const YourSessionIDPill = () => {
+export const SessionIDPill = ({ accountType }: { accountType: 'ours' | 'theirs' | 'blinded' }) => {
   return (
     <StyledPillDivider>
       <StyledPillDividerLine />
-      <StyledPillSpan>{tr('accountIdYours')}</StyledPillSpan>
+      <StyledPillSpan>
+        {tr(
+          accountType === 'blinded'
+            ? 'blindedId'
+            : accountType === 'ours'
+              ? 'accountIdYours'
+              : 'accountId'
+        )}
+      </StyledPillSpan>
       <StyledPillDividerLine />
     </StyledPillDivider>
   );
@@ -52,9 +61,18 @@ export const SessionIDNonEditable = ({
   sessionId: string;
   dataTestId?: SessionDataTestId;
 }) => {
+  const isBlinded = PubKey.isBlinded(sessionId);
+
   if (sessionId.length !== 66) {
     throw new Error('Unsupported case for SessionIDNonEditable: sessionId.length !== 66');
   }
+
+  if (isBlinded) {
+    return (
+      <StyledSessionIDNonEditable data-testid={dataTestId}>{sessionId}</StyledSessionIDNonEditable>
+    );
+  }
+
   return (
     <StyledSessionIDNonEditable data-testid={dataTestId}>
       {sessionId.slice(0, 33)}

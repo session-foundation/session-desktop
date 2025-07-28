@@ -5,7 +5,7 @@ import styled from 'styled-components';
 
 import { Dispatch } from '@reduxjs/toolkit';
 import { UserUtils } from '../../../session/utils';
-import { SessionIDNonEditable, YourSessionIDPill } from '../../basic/YourSessionIDPill';
+import { SessionIDNonEditable, SessionIDPill } from '../../basic/SessionIDPill';
 
 import { useHotkey } from '../../../hooks/useHotkey';
 import { useOurAvatarPath, useOurConversationUsername } from '../../../hooks/useParamSelector';
@@ -28,6 +28,7 @@ import {
 import { ModalBackButton } from '../shared/ModalBackButton';
 import { SessionButtonColor, SessionButton } from '../../basic/SessionButton';
 import { CopyToClipboardButton } from '../../buttons';
+import { AvatarSize } from '../../avatar/Avatar';
 
 // #region Shortcuts
 const handleKeyQRMode = (
@@ -125,10 +126,6 @@ const handleKeyEscape = (
 // #endregion
 
 const StyledEditProfileDialog = styled.div`
-  .avatar-center-inner {
-    position: relative;
-  }
-
   input {
     border: none;
   }
@@ -308,13 +305,10 @@ export const EditProfileDialog = () => {
               avatarPath={avatarPath}
               profileName={profileName}
               conversationId={us}
-              onClick={handleProfileHeaderClick}
-              onQRClick={() => {
-                if (loading) {
-                  return;
-                }
-                setMode('qr');
-              }}
+              onAvatarClick={handleProfileHeaderClick}
+              onPlusAvatarClick={handleProfileHeaderClick}
+              avatarSize={AvatarSize.XL}
+              onQRClick={null} // no qr click here as a button is already doing that action (and the qr button looks bad when the small size as the +)
             />
           </>
         )}
@@ -364,7 +358,7 @@ export const EditProfileDialog = () => {
           $alignItems="center"
           width={'100%'}
         >
-          <YourSessionIDPill />
+          <SessionIDPill accountType="ours" />
           <SessionIDNonEditable dataTestId="your-account-id" sessionId={us} />
           <SessionSpinner loading={loading} height={'74px'} />
         </StyledSessionIdSection>

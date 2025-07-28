@@ -8,11 +8,8 @@ import { ConvoHub } from '../../../../session/conversations';
 import { getSodiumRenderer } from '../../../../session/crypto';
 import { KeyPrefixType, PubKey } from '../../../../session/types';
 import { openConversationWithMessages } from '../../../../state/ducks/conversations';
-import { updateUserDetailsModal } from '../../../../state/ducks/modalDialog';
+import { updateUserProfileModal } from '../../../../state/ducks/modalDialog';
 import {
-  useAuthorAvatarPath,
-  useAuthorName,
-  useAuthorProfileName,
   useLastMessageOfSeries,
   useMessageAuthor,
   useMessageSenderIsAdmin,
@@ -48,14 +45,9 @@ export const MessageAvatar = (props: Props) => {
 
   const isTypingEnabled = useSelector(getSelectedCanWrite);
   const isPublic = useSelectedIsPublic();
-  const authorName = useAuthorName(messageId);
-  const authorProfileName = useAuthorProfileName(messageId);
-  const authorAvatarPath = useAuthorAvatarPath(messageId);
   const sender = useMessageAuthor(messageId);
   const lastMessageOfSeries = useLastMessageOfSeries(messageId);
   const isSenderAdmin = useMessageSenderIsAdmin(messageId);
-
-  const userName = authorName || authorProfileName || sender;
 
   const onMessageAvatarClick = useCallback(async () => {
     if (!sender) {
@@ -114,15 +106,14 @@ export const MessageAvatar = (props: Props) => {
 
       return;
     }
-    // not public, i.e. closed group. Just open dialog for the user to do what he wants
+    //  open user details dialog for the user to do what he wants
+    // Note: if we have the sessionId from a blindedId, we should open that corresponding user details dialog
     dispatch(
-      updateUserDetailsModal({
+      updateUserProfileModal({
         conversationId: sender,
-        userName: userName || '',
-        authorAvatarPath,
       })
     );
-  }, [dispatch, isTypingEnabled, userName, sender, isPublic, authorAvatarPath, selectedConvoKey]);
+  }, [dispatch, isTypingEnabled, sender, isPublic, selectedConvoKey]);
 
   if (!sender) {
     return null;

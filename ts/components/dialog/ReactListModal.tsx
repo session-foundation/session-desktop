@@ -9,7 +9,7 @@ import { UserUtils } from '../../session/utils';
 import {
   updateReactClearAllModal,
   updateReactListModal,
-  updateUserDetailsModal,
+  updateUserProfileModal,
 } from '../../state/ducks/modalDialog';
 import {
   useSelectedConversationKey,
@@ -23,7 +23,6 @@ import { Flex } from '../basic/Flex';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { ContactName } from '../conversation/ContactName';
 import { MessageReactions } from '../conversation/message/message-content/MessageReactions';
-import { findAndFormatContact } from '../../models/message';
 import { Localizer } from '../basic/Localizer';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
@@ -114,12 +113,9 @@ const ReactionSenders = (props: ReactionSendersProps) => {
     const message = await Data.getMessageById(messageId);
     if (message) {
       handleClose();
-      const contact = findAndFormatContact(sender);
       dispatch(
-        updateUserDetailsModal({
+        updateUserProfileModal({
           conversationId: sender,
-          userName: contact.name || contact.profileName || sender,
-          authorAvatarPath: contact.avatarPath,
         })
       );
     }

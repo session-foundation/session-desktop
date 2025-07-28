@@ -39,10 +39,8 @@ export type SessionProInfoState = { variant: SessionProInfoVariant } | null;
 
 export type SessionPasswordModalState = { passwordAction: PasswordAction; onOk: () => void } | null;
 
-export type UserDetailsModalState = {
+export type UserProfileModalState = {
   conversationId: string;
-  authorAvatarPath: string | null;
-  userName: string;
 } | null;
 
 export type ReactModalsState = {
@@ -85,7 +83,7 @@ export type ModalState = {
   addModeratorsModal: AddModeratorsModalState;
   groupNameModal: UpdateGroupNameModalState;
   groupMembersModal: UpdateGroupMembersModalState;
-  userDetailsModal: UserDetailsModalState;
+  userProfileModal: UserProfileModalState;
   nickNameModal: ChangeNickNameModalState;
   editProfileModal: EditProfileModalState;
   onionPathModal: OnionPathModalState;
@@ -114,7 +112,7 @@ export const initialModalState: ModalState = {
   blockOrUnblockModal: null,
   groupNameModal: null,
   groupMembersModal: null,
-  userDetailsModal: null,
+  userProfileModal: null,
   nickNameModal: null,
   editProfileModal: null,
   onionPathModal: null,
@@ -162,8 +160,8 @@ const ModalSlice = createSlice({
     updateGroupMembersModal(state, action: PayloadAction<UpdateGroupMembersModalState | null>) {
       return { ...state, groupMembersModal: action.payload };
     },
-    updateUserDetailsModal(state, action: PayloadAction<UserDetailsModalState | null>) {
-      return { ...state, userDetailsModal: action.payload };
+    updateUserProfileModal(state, action: PayloadAction<UserProfileModalState | null>) {
+      return { ...state, userProfileModal: action.payload };
     },
     changeNickNameModal(state, action: PayloadAction<ChangeNickNameModalState | null>) {
       return { ...state, nickNameModal: action.payload };
@@ -241,7 +239,7 @@ export const {
   updateRemoveModeratorsModal,
   updateGroupNameModal,
   updateGroupMembersModal,
-  updateUserDetailsModal,
+  updateUserProfileModal,
   changeNickNameModal,
   editProfileModal,
   onionPathModal,

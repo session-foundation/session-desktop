@@ -13,7 +13,7 @@ const StyledQRView = styled(AnimatedFlex)<{
 }>`
   cursor: pointer;
   border-radius: 10px;
-  overflow: hidden;
+  overflow: visible; // we need this for overflow buttons to be visible (see UserProfileModal)
   ${props => props.size && `width: ${props.size}px; height: ${props.size}px;`}
 `;
 
@@ -33,6 +33,7 @@ export type SessionQRCodeProps = {
   ariaLabel?: string;
   dataTestId?: SessionDataTestId;
   style?: CSSProperties;
+  children?: React.ReactNode;
 };
 
 export function SessionQRCode(props: SessionQRCodeProps) {
@@ -50,6 +51,7 @@ export function SessionQRCode(props: SessionQRCodeProps) {
     ariaLabel,
     dataTestId,
     style,
+    children,
   } = props;
   const [logo, setLogo] = useState(logoImage);
   const [bgColor, setBgColor] = useState(backgroundColor);
@@ -144,6 +146,7 @@ export function SessionQRCode(props: SessionQRCodeProps) {
           height: size,
         }}
       />
+      {children}
     </StyledQRView>
   );
 }

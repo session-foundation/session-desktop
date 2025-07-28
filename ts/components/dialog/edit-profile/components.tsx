@@ -1,4 +1,6 @@
 import styled from 'styled-components';
+import { useDispatch } from 'react-redux';
+
 import { useIconToImageURL } from '../../../hooks/useIconToImageURL';
 import { updateLightBoxOptions } from '../../../state/ducks/modalDialog';
 import { prepareQRCodeForLightBox } from '../../../util/qrCodes';
@@ -18,10 +20,13 @@ const qrLogoProps: QRCodeLogoProps = {
 export const QRView = ({
   sessionID,
   setMode,
+  children,
 }: {
   sessionID: string;
-  setMode: (mode: ProfileDialogModes) => void;
+  setMode: (mode: Extract<ProfileDialogModes, 'qr' | 'lightbox'>) => void;
+  children?: React.ReactNode;
 }) => {
+  const dispatch = useDispatch();
   const { dataURL, iconSize, iconColor, backgroundColor, loading } = useIconToImageURL(qrLogoProps);
 
   return (
@@ -39,13 +44,16 @@ export const QRView = ({
         const lightBoxOptions = prepareQRCodeForLightBox(fileName, dataUrl, () => {
           setMode('qr');
         });
-        window.inboxStore?.dispatch(updateLightBoxOptions(lightBoxOptions));
+        dispatch(updateLightBoxOptions(lightBoxOptions));
         setMode('lightbox');
       }}
       ariaLabel={'Account ID QR code'}
       dataTestId={'your-qr-code'}
-      style={{ marginTop: '-1px' }}
-    />
+      // we need this for overflow buttons to be visible (see UserProfileModal)
+      style={{ marginTop: '15px', position: 'relative' }}
+    >
+      {children}
+    </SessionQRCode>
   );
 };
 
@@ -54,70 +62,86 @@ type ProfileAvatarProps = {
   newAvatarObjectUrl?: string | null;
   profileName: string | undefined;
   conversationId: string;
-  onPlusAvatarClick?: () => void;
+  onPlusAvatarClick: (() => void) | null; // if null, plus icon won't be shown
+  onAvatarClick: () => void; // on click on the avatar itself
+  avatarSize: AvatarSize;
 };
 
 export const ProfileAvatar = (props: ProfileAvatarProps) => {
-  const { newAvatarObjectUrl, avatarPath, profileName, conversationId, onPlusAvatarClick } = props;
+  const {
+    newAvatarObjectUrl,
+    avatarPath,
+    profileName,
+    conversationId,
+    onAvatarClick,
+    avatarSize,
+    onPlusAvatarClick,
+  } = props;
   return (
     <Avatar
       forcedAvatarPath={newAvatarObjectUrl || avatarPath}
       forcedName={profileName || conversationId}
-      size={AvatarSize.XL}
+      size={avatarSize}
       pubkey={conversationId}
-      onPlusAvatarClick={onPlusAvatarClick}
+      onAvatarClick={onAvatarClick}
+      onPlusAvatarClick={onPlusAvatarClick ?? undefined}
     />
   );
 };
 
 type ProfileHeaderProps = ProfileAvatarProps & {
-  onClick: () => void;
-  onQRClick: () => void;
+  onQRClick: (() => void) | null;
 };
 
-const QrViewButton = styled.div`
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: absolute;
-  top: 0;
-  right: 0;
-  height: 34px;
-  width: 34px;
-  border-radius: 50%;
-  background-color: var(--white-color);
-  transition: var(--default-duration);
-
-  &:hover {
-    filter: brightness(90%);
-  }
-
-  .session-icon-button {
-    opacity: 1;
-  }
+const StyledAvatarCenterInner = styled.div`
+  position: relative;
 `;
 
 export const ProfileHeader = (props: ProfileHeaderProps) => {
-  const { avatarPath, profileName, conversationId, onClick, onQRClick } = props;
+  const {
+    avatarPath,
+    profileName,
+    conversationId,
+    onPlusAvatarClick,
+    onAvatarClick,
+    onQRClick,
+    avatarSize,
+  } = props;
 
   return (
     <div className="avatar-center">
-      <div className="avatar-center-inner">
+      <StyledAvatarCenterInner>
         <ProfileAvatar
           avatarPath={avatarPath}
           profileName={profileName}
           conversationId={conversationId}
-          onPlusAvatarClick={onClick}
+          onAvatarClick={onAvatarClick}
+          onPlusAvatarClick={onPlusAvatarClick}
+          avatarSize={avatarSize}
         />
-        <QrViewButton onClick={onQRClick} role="button">
+        {onQRClick ? (
           <SessionLucideIconButton
             unicode={LUCIDE_ICONS_UNICODE.QR_CODE}
-            iconSize={'large'}
+            iconSize={avatarSize === AvatarSize.HUGE ? 'large' : 'medium'}
             iconColor="var(--black-color)"
+            onClick={onQRClick}
+            backgroundColor="var(--primary-color)"
+            style={{
+              position: 'absolute',
+              top: 0,
+              // this isn't ideal, but the button is not scaling with the avatar size so we need to hardcode its position
+              right: avatarSize === AvatarSize.HUGE ? '12%' : '4%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: avatarSize === AvatarSize.HUGE ? '40px' : '30px',
+              width: avatarSize === AvatarSize.HUGE ? '40px' : '30px',
+              borderRadius: '50%',
+              transition: 'var(--default-duration)',
+            }}
           />
-        </QrViewButton>
-      </div>
+        ) : null}
+      </StyledAvatarCenterInner>
     </div>
   );
 };

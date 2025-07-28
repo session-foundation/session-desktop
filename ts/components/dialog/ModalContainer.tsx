@@ -24,7 +24,7 @@ import {
   getSessionPasswordDialog,
   getUpdateGroupMembersModal,
   getUpdateGroupNameModal,
-  getUserDetailsModal,
+  getUserProfileModal,
   getLocalizedPopupDialogState,
 } from '../../state/selectors/modal';
 import { LightboxGallery } from '../lightbox/LightboxGallery';
@@ -43,7 +43,7 @@ import { SessionNicknameDialog } from './SessionNicknameDialog';
 import { SessionSetPasswordDialog } from './SessionSetPasswordDialog';
 import { UpdateGroupMembersDialog } from './UpdateGroupMembersDialog';
 import { UpdateGroupNameDialog } from './UpdateGroupNameDialog';
-import { UserDetailsDialog } from './UserDetailsDialog';
+import { UserProfileModal } from './UserProfileModal';
 import { EditProfileDialog } from './edit-profile/EditProfileDialog';
 import { OpenUrlModal } from './OpenUrlModal';
 import { BlockOrUnblockDialog } from './blockOrUnblock/BlockOrUnblockDialog';
@@ -61,7 +61,7 @@ export const ModalContainer = () => {
   const removeModeratorsModalState = useSelector(getRemoveModeratorsModal);
   const updateGroupMembersModalState = useSelector(getUpdateGroupMembersModal);
   const updateGroupNameModalState = useSelector(getUpdateGroupNameModal);
-  const userDetailsModalState = useSelector(getUserDetailsModal);
+  const userProfileModalState = useSelector(getUserProfileModal);
   const changeNicknameModal = useSelector(getChangeNickNameDialog);
   const editProfileModalState = useSelector(getEditProfileDialog);
   const onionPathModalState = useSelector(getOnionPathDialog);
@@ -105,7 +105,7 @@ export const ModalContainer = () => {
         <UpdateGroupMembersDialog {...updateGroupMembersModalState} />
       )}
       {updateGroupNameModalState && <UpdateGroupNameDialog {...updateGroupNameModalState} />}
-      {userDetailsModalState && <UserDetailsDialog {...userDetailsModalState} />}
+      {userProfileModalState && <UserProfileModal {...userProfileModalState} />}
       {changeNicknameModal && <SessionNicknameDialog {...changeNicknameModal} />}
       {enterPasswordModalState && <EnterPasswordModal {...enterPasswordModalState} />}
       {deleteAccountModalState && <DeleteAccountModal {...deleteAccountModalState} />}

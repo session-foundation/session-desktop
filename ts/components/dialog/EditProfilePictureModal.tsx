@@ -38,9 +38,11 @@ import {
   SessionProInfoVariant,
   useShowSessionProInfoDialogCbWithVariant,
 } from './SessionProInfoModal';
+import { AvatarSize } from '../avatar/Avatar';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
+  position: relative;
 `;
 
 const StyledUploadButton = styled.div`
@@ -313,7 +315,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
         data-testid={'image-upload-click'}
       >
         <SpacerLG />
-        <StyledAvatarContainer className="avatar-center-inner">
+        <StyledAvatarContainer>
           {newAvatarObjectUrl || avatarPath ? (
             <ProfileAvatar
               newAvatarObjectUrl={newAvatarObjectUrl}
@@ -321,6 +323,8 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
               profileName={profileName}
               conversationId={conversationId}
               onPlusAvatarClick={handleClick}
+              onAvatarClick={handleClick}
+              avatarSize={AvatarSize.XL}
             />
           ) : (
             <UploadImageButton />

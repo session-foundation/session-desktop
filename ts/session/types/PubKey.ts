@@ -212,7 +212,7 @@ export class PubKey {
 
   public static isBlinded(key: string) {
     return (
-      key && (key.startsWith(KeyPrefixType.blinded15) || key.startsWith(KeyPrefixType.blinded25))
+      !!key && (key.startsWith(KeyPrefixType.blinded15) || key.startsWith(KeyPrefixType.blinded25))
     );
   }
 

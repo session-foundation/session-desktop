@@ -37,7 +37,7 @@ export const getUpdateGroupNameModal = (state: StateType) => getModal(state).gro
 
 export const getUpdateGroupMembersModal = (state: StateType) => getModal(state).groupMembersModal;
 
-export const getUserDetailsModal = (state: StateType) => getModal(state).userDetailsModal;
+export const getUserProfileModal = (state: StateType) => getModal(state).userProfileModal;
 
 export const getChangeNickNameDialog = (state: StateType) => getModal(state).nickNameModal;
 

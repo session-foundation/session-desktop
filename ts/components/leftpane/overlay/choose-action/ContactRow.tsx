@@ -1,8 +1,7 @@
 import { useDispatch } from 'react-redux';
 import styled, { CSSProperties } from 'styled-components';
-import { useAvatarPath } from '../../../../hooks/useParamSelector';
 import { openConversationWithMessages } from '../../../../state/ducks/conversations';
-import { updateUserDetailsModal } from '../../../../state/ducks/modalDialog';
+import { updateUserProfileModal } from '../../../../state/ducks/modalDialog';
 import { Avatar, AvatarSize } from '../../../avatar/Avatar';
 
 type Props = { id: string; displayName?: string; style: CSSProperties };
@@ -11,17 +10,15 @@ const StyledAvatarItem = styled.div`
   padding-right: var(--margins-sm);
 `;
 
-const AvatarItem = (props: Pick<Props, 'displayName' | 'id'>) => {
-  const { id, displayName } = props;
+const AvatarItem = (props: Pick<Props, 'id'>) => {
+  const { id } = props;
 
-  const avatarPath = useAvatarPath(id);
   const dispatch = useDispatch();
+
   function onPrivateAvatarClick() {
     dispatch(
-      updateUserDetailsModal({
+      updateUserProfileModal({
         conversationId: id,
-        userName: displayName || '',
-        authorAvatarPath: avatarPath,
       })
     );
   }
@@ -81,7 +78,7 @@ export const ContactRow = (props: Props) => {
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       onClick={async () => openConversationWithMessages({ conversationKey: id, messageId: null })}
     >
-      <AvatarItem id={id} displayName={displayName} />
+      <AvatarItem id={id} />
       <StyledContactRowName data-testid="module-conversation__user__profile-name">
         {displayName || id}
       </StyledContactRowName>

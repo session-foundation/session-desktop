@@ -13,7 +13,7 @@ import { SessionButtonColor } from '../../basic/SessionButton';
 import { sectionActions } from '../../../state/ducks/section';
 import { LucideIcon } from '../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
-import { SessionIDNonEditable } from '../../basic/YourSessionIDPill';
+import { SessionIDNonEditable } from '../../basic/SessionIDPill';
 import { tr } from '../../../localization/localeTools';
 
 const StyledHeadingContainer = styled(Flex)`

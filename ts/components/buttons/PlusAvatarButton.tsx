@@ -20,7 +20,7 @@ export const PlusAvatarButton = ({
       padding={'var(--margins-xxs)'}
       style={{
         position: 'absolute',
-        bottom: '0',
+        bottom: '3%',
         insetInlineEnd: 0,
         boxShadow: '0px 0px 3px 2px var(--border-color)',
       }}
