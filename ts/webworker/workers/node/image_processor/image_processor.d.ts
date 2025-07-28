@@ -60,7 +60,7 @@ export type ImageProcessorWorkerActions = {
 
   /**
    * Process an image to get a thumbnail matching our required details for link previews
-   * A link preview thumbnail is always a png, and resized to "contain" the image.
+   * A link preview thumbnail is always a png, and resized to "cover".
    */
   processForLinkPreviewThumbnail: (
     input: ArrayBufferLike,
@@ -71,10 +71,10 @@ export type ImageProcessorWorkerActions = {
    * Process an image to get a thumbnail matching our required details for in conversation thumbnails
    * This is about the thumbnail in the conversation list (for attachments in messages). We generate a preview to avoid loading huge files until we show them in fullscreen.
    *
-   * Note: an animated image or not animated will always be returned as a png.
+   * Note: animated or not, an image will always be returned as a png.
    * Note: eventually we want to support animated images as previews too. When we do, we will need to
    * convert them to webp and resize their preview heavily for performance reasons.
-   * A 'in conversation thumbnail' is always resized to "fill" the image.
+   * A 'in conversation thumbnail' is always resized to "cover".
    */
   processForInConversationThumbnail: (
     input: ArrayBufferLike,
@@ -89,13 +89,22 @@ export type ImageProcessorWorkerActions = {
    *  - not an image, or
    *  - not one we can process (i.e enforced lossless),
    *  - or we cannot get an image small enough after dropping the quality
-   * null will be returned. The caller should check if the requirements are met before trying to upload.
-   *
-   * The caller should check that the requirements have been met before trying to upload.
+   * null will be returned.
+   * The caller should always check if the requirements are met before trying to upload.
    *
    * Note: the lossy formats are jpeg, webp and avif.
    * Anything else that is an image supported by sharp will only be scaled down to maxSidePx.
-   * Anything else not an image supported by sharp will return null
+   * Anything else not an image supported by sharp will return null.
+   *
+   * To make it clear,
+   * - if the image is **lossy** and already fits the requirements, we return it as is.
+   * - if the image is **lossless**:
+   *  - if it fits the requirements, we return it as is (not even scaled down, as we'd need a loader in the staged attachments list to display the loading state)
+   *  - if it does not fit the requirements, we return null
+   * - if the image is **lossy** and doesn't fit:
+   *  - we first scale it down the maxSize, and then iterate over the quality to get something that fits the maxSizeBytes.
+   *  - if we cannot get a file under maxSizeBytes, we return null
+   *
    *
    * @param input: the image data to process
    * @param maxSidePx: we cap an image to this size. If the image is larger, it will be scaled down to this before we start dropping the quality.

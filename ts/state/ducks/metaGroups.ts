@@ -1150,11 +1150,12 @@ async function handleClearAvatarFromUI({ groupPk }: WithGroupPubkey) {
   }
 
   await checkWeAreAdminOrThrow(groupPk, 'handleAvatarChangeFromUI');
-  convo.set({
+  convo.setKey('profileKey', undefined)
+  await convo.setSessionProfile({
     avatarPointer: undefined,
-    avatarInProfile: undefined,
-    fallbackAvatarInProfile: undefined,
-    profileKey: undefined,
+    avatarPath: undefined,
+    fallbackAvatarPath: undefined,
+    displayName: null,
   });
 
   const createAtNetworkTimestamp = NetworkTime.now();

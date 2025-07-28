@@ -1,13 +1,10 @@
 /* eslint-disable max-len */
-import imageType from 'image-type';
 
-import { arrayBufferToBlob } from 'blob-util';
 import { StagedAttachmentType } from '../../components/conversation/composition/CompositionBox';
 import { SignalService } from '../../protobuf';
 import { DecryptedAttachmentsManager } from '../../session/crypto/DecryptedAttachmentsManager';
 import { sendDataExtractionNotification } from '../../session/messages/outgoing/controlMessage/DataExtractionNotificationMessage';
 import { AttachmentType, save } from '../../types/Attachment';
-import { IMAGE_UNKNOWN, type MIMEType } from '../../types/MIME';
 import { getAbsoluteAttachmentPath, processNewAttachment } from '../../types/MessageAttachment';
 
 import { MAX_ATTACHMENT_FILESIZE_BYTES } from '../../session/constants';
@@ -33,42 +30,12 @@ import type { ProcessedLinkPreviewThumbnailType } from '../../webworker/workers/
  * 10. We use the grabbed data for upload of the attachments, get an url for each of them and send the url with the attachments details to the user/opengroup/closed group
  */
 
-export type BetterBlob = Blob & {
-  __brand: 'BetterBlob';
-  /** @deprecated -- `type` should not be used, it can be tampered with, use @see {@link contentType} */
-  type: Blob['type'];
-  contentType: MIMEType;
-  animated: boolean;
-  width?: number;
-  height?: number;
-};
-
-export async function createBetterBlobFromArrayBuffer(
-  arrayBuffer: ArrayBuffer,
-  contentType?: MIMEType,
-  isAnimated?: boolean
-): Promise<BetterBlob> {
-  const type = contentType ?? imageTypeFromArrayBuffer(arrayBuffer);
-  const blob = arrayBufferToBlob(arrayBuffer, type) satisfies Blob as unknown as BetterBlob;
-
-  blob.contentType = type;
-  blob.animated =
-    isAnimated ?? ((await ImageProcessor.imageMetadata(arrayBuffer))?.isAnimated || false);
-
-  return blob;
-}
-
 type MaxScaleSize = {
   maxSizeBytes?: number;
   maxHeightPx?: number;
   maxWidthPx?: number;
   maxSidePx?: number; // use this to make avatars cropped if too big and centered if too small.
 };
-
-function imageTypeFromArrayBuffer(arrayBuffer: ArrayBuffer) {
-  const data = new Uint8Array(arrayBuffer);
-  return imageType(data)?.mime ?? IMAGE_UNKNOWN;
-}
 
 export async function autoScaleFile(file: File, maxMeasurements?: MaxScaleSize) {
   // this call returns null if not an image, or not one we can process, or we cannot scale it down enough

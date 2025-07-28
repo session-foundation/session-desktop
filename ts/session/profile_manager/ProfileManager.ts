@@ -81,7 +81,13 @@ async function updateProfileOfContact(
     (!profileUrl || !profileKeyHex) &&
     (conversation.getAvatarInProfilePath() || conversation.getFallbackAvatarInProfilePath())
   ) {
-    conversation.set({ avatarInProfile: undefined, fallbackAvatarInProfile: undefined });
+    conversation.setKey('profileKey', undefined);
+    await conversation.setSessionProfile({
+      avatarPointer: undefined,
+      avatarPath: undefined,
+      fallbackAvatarPath: undefined,
+      displayName: null,
+    });
     changes = true;
   }
 

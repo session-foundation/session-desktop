@@ -74,9 +74,14 @@ const clearOurAvatar = createAsyncThunk('user/clearOurAvatar', async () => {
     return;
   }
 
-  convo.set({ avatarPointer: undefined, avatarInProfile: undefined, profileKey: undefined });
+  convo.setKey('profileKey', undefined);
+  await convo.setSessionProfile({
+    avatarPath: undefined,
+    fallbackAvatarPath: undefined,
+    avatarPointer: undefined,
+    displayName: null,
+  });
 
-  await convo.commit();
   await SyncUtils.forceSyncConfigurationNowIfNeeded(true);
 });
 

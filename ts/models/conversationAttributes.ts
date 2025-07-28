@@ -65,12 +65,16 @@ export interface ConversationAttributes {
    * - if the avatarPath points to a file that is not animated, staticAvatarPath is the same as avatarPath
    *
    * avatarInProfile is the avatar as the user set it, once downloaded and stored in the application attachments folder.
+   *
+   * Note: if the user is Pro, but didn't set an animated avatar, `avatarInProfile` and `fallbackAvatarInProfile` will point to the same file
    */
   avatarInProfile?: string;
   /**
    * This is the always static version of the avatar in profile.
    * If the user has pro, avatarInProfile will be used (and so his avatar will be animated if it was already).
    * If the user doesn't have pro, fallbackAvatarInProfile will be used, and the avatar will be displayed as a static image.
+   *
+   * Note: if the user is Pro, but didn't set an animated avatar, `avatarInProfile` and `fallbackAvatarInProfile` will point to the same file
    */
   fallbackAvatarInProfile?: string;
 

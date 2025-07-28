@@ -405,14 +405,13 @@ export class SessionConversation extends Component<Props, State> {
       // If we can, we use the scaled version, otherwise we use the original (and the filesize check will fail)
       //
       // Note: we do not save that scaled version here,
-      // we just check if will be fine when sending the attachment.
+      // we just check if it will be fine when sending the attachment.
       // Later, when the message is being sent, we will fetch the
       // file again and scale it down again for upload.
       //
-      // The reason is simply that we'd need to store that in memory for the lifetime
+      // The reason is simply that we'd need to store that scaled blob in memory for the lifetime
       // of the app if we were, as the user could switch conversations
       // before sending a message with attachments.
-
       const scaledOrNot = await AttachmentUtil.autoScaleFile(file);
 
       // `autoScaleFile` either

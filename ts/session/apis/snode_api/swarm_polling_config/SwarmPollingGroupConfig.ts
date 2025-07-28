@@ -278,13 +278,13 @@ async function scheduleAvatarDownloadJobIfNeeded(groupPk: GroupPubkeyType) {
     if (!profileUrl || !profileKeyHex) {
       // no avatar set for this group: make sure we also remove the one we might have locally.
       if (conversation.get('avatarPointer') || conversation.get('profileKey')) {
-        conversation.set({
+        conversation.setKey('profileKey', undefined);
+        await conversation.setSessionProfile({
           avatarPointer: undefined,
-          profileKey: undefined,
-          avatarInProfile: undefined, // we want to remove the avatar here
-          fallbackAvatarInProfile: undefined, // and the fallback too
+          avatarPath: undefined,
+          fallbackAvatarPath: undefined,
+          displayName: null,
         });
-        await conversation.commit();
       }
 
       return;
