@@ -25,7 +25,7 @@ import { userActions } from '../../state/ducks/user';
 import { ReduxSogsRoomInfos } from '../../state/ducks/sogsRoomInfo';
 import { useOurAvatarIsUploading } from '../../state/selectors/user';
 import { useAvatarOfRoomIsUploading } from '../../state/selectors/sogsRoomInfo';
-import { SessionIconButton, SessionLucideIconButton } from '../icon/SessionIconButton';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import {
   ModalActionsContainer,
@@ -39,6 +39,7 @@ import {
   useShowSessionProInfoDialogCbWithVariant,
 } from './SessionProInfoModal';
 import { AvatarSize } from '../avatar/Avatar';
+import { ProIconButton } from '../buttons/ProButton';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
@@ -289,13 +290,8 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
                 ? 'proAnimatedDisplayPictureModalDescription'
                 : 'proAnimatedDisplayPicturesNonProModalDescription'
             )}
-            <SessionIconButton
-              sizeIsWidth={false}
-              iconType={'sessionPro'}
+            <ProIconButton
               iconSize={'medium'}
-              backgroundColor={'var(--primary-color)'}
-              borderRadius={'6px'}
-              iconColor={'var(--black-color)'}
               disabled={loading}
               onClick={() =>
                 handleShowProInfoModal(

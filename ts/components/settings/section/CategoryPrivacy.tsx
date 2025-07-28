@@ -10,7 +10,7 @@ import { TypingBubble } from '../../conversation/TypingBubble';
 import { UserUtils } from '../../../session/utils';
 import { SessionUtilUserProfile } from '../../../session/utils/libsession/libsession_utils_user_profile';
 import {
-  useHasBlindedMsgRequestsEnabled,
+  useWeHaveBlindedMsgRequestsEnabled,
   useHasLinkPreviewEnabled,
 } from '../../../state/selectors/settings';
 import { Storage } from '../../../util/storage';
@@ -59,7 +59,7 @@ export const SettingsCategoryPrivacy = (props: {
 }) => {
   const forceUpdate = useUpdate();
   const isLinkPreviewsOn = useHasLinkPreviewEnabled();
-  const areBlindedRequestsEnabled = useHasBlindedMsgRequestsEnabled();
+  const weHaveBlindedRequestsEnabled = useWeHaveBlindedMsgRequestsEnabled();
 
   return (
     <>
@@ -95,7 +95,7 @@ export const SettingsCategoryPrivacy = (props: {
       />
       <SessionToggleWithDescription
         onClickToggle={async () => {
-          const toggledValue = !areBlindedRequestsEnabled;
+          const toggledValue = !weHaveBlindedRequestsEnabled;
           await window.setSettingValue(SettingsKey.hasBlindedMsgRequestsEnabled, toggledValue);
           await SessionUtilUserProfile.insertUserProfileIntoWrapper(
             UserUtils.getOurPubKeyStrFromCache()
@@ -104,7 +104,7 @@ export const SettingsCategoryPrivacy = (props: {
         }}
         title={tr('messageRequestsCommunities')}
         description={tr('messageRequestsCommunitiesDescription')}
-        active={areBlindedRequestsEnabled}
+        active={weHaveBlindedRequestsEnabled}
       />
 
       {!props.hasPassword ? (

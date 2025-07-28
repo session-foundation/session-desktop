@@ -14,6 +14,7 @@ import {
 } from '../../../../state/selectors/selectedConversation';
 import { Flex } from '../../../basic/Flex';
 import { ContactName } from '../../ContactName';
+import { useOnMessageAvatarClickCb } from '../../../menuAndSettingsHooks/useMessageAvatarClickCb';
 
 type Props = {
   messageId: string;
@@ -25,17 +26,18 @@ const StyledAuthorContainer = styled(Flex)<{ hideAvatar: boolean }>`
   margin-inline-start: ${props => (props.hideAvatar ? 0 : 'var(--width-avatar-group-msg-list)')};
 `;
 
-export const MessageAuthorText = (props: Props) => {
+export const MessageAuthorText = ({ messageId }: Props) => {
   const isPublic = useSelectedIsPublic();
   const isGroup = useSelectedIsGroupOrCommunity();
-  const authorProfileName = useAuthorProfileName(props.messageId);
-  const authorName = useAuthorName(props.messageId);
-  const sender = useMessageAuthor(props.messageId);
-  const direction = useMessageDirection(props.messageId);
-  const firstMessageOfSeries = useFirstMessageOfSeries(props.messageId);
-  const hideAvatar = useHideAvatarInMsgList(props.messageId);
+  const authorProfileName = useAuthorProfileName(messageId);
+  const authorName = useAuthorName(messageId);
+  const sender = useMessageAuthor(messageId);
+  const direction = useMessageDirection(messageId);
+  const firstMessageOfSeries = useFirstMessageOfSeries(messageId);
+  const hideAvatar = useHideAvatarInMsgList(messageId);
+  const onMessageAvatarClick = useOnMessageAvatarClickCb();
 
-  if (!props.messageId || !sender || !direction) {
+  if (!messageId || !sender || !direction) {
     return null;
   }
 
@@ -48,7 +50,14 @@ export const MessageAuthorText = (props: Props) => {
   const displayedPubkey = authorProfileName ? PubKey.shorten(sender) : sender;
 
   return (
-    <StyledAuthorContainer $container={true} hideAvatar={hideAvatar}>
+    <StyledAuthorContainer
+      $container={true}
+      hideAvatar={hideAvatar}
+      onClick={() => {
+        void onMessageAvatarClick({ messageId });
+      }}
+      style={{ cursor: 'pointer' }}
+    >
       <ContactName
         pubkey={displayedPubkey}
         name={authorName}

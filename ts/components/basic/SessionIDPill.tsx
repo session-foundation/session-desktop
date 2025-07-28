@@ -2,6 +2,10 @@ import styled from 'styled-components';
 import type { SessionDataTestId } from 'react';
 import { tr } from '../../localization/localeTools';
 import { PubKey } from '../../session/types';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { SessionTooltip } from '../SessionTooltip';
+import { Localizer } from './Localizer';
 
 const StyledPillDividerLine = styled.div`
   border-bottom: 1px solid var(--border-color);
@@ -43,15 +47,23 @@ export const SessionIDPill = ({ accountType }: { accountType: 'ours' | 'theirs' 
   );
 };
 
-const StyledSessionIDNonEditable = styled.p`
+const StyledSessionIDNonEditable = styled.div`
+  display: flex;
+  gap: var(--margins-sm);
   user-select: none;
   text-align: center;
   word-break: break-all;
-  font-weight: 300;
-  font-size: var(--font-size-sm);
+  padding-block: var(--margins-md);
+  font-weight: 400;
+  font-size: var(--font-size-md);
   color: var(--text-primary-color);
   flex-shrink: 0;
   font-family: var(--font-mono);
+
+  .session-id-tooltip {
+    font-family: var(--font-default);
+    font-size: var(--font-size-sm);
+  }
 `;
 
 export const SessionIDNonEditable = ({
@@ -67,9 +79,31 @@ export const SessionIDNonEditable = ({
     throw new Error('Unsupported case for SessionIDNonEditable: sessionId.length !== 66');
   }
 
+  const shortenedSessionId = PubKey.shorten(sessionId, {
+    keepCharacters: 12,
+    withParenthesis: false,
+  });
+
   if (isBlinded) {
     return (
-      <StyledSessionIDNonEditable data-testid={dataTestId}>{sessionId}</StyledSessionIDNonEditable>
+      <StyledSessionIDNonEditable
+        data-testid={dataTestId}
+        // Note: we want the text centered even if the tooltip is offsetting it
+        style={{ marginLeft: 'var(--margins-lg)' }}
+      >
+        {shortenedSessionId}
+        <SessionTooltip
+          content={<Localizer token="tooltipBlindedIdCommunities" className="session-id-tooltip" />}
+          dataTestId="tooltip-info"
+        >
+          <SessionLucideIconButton
+            unicode={LUCIDE_ICONS_UNICODE.CIRCLE_HELP}
+            iconColor="var(--text-primary-color)"
+            iconSize="small"
+            dataTestId="tooltip"
+          />
+        </SessionTooltip>
+      </StyledSessionIDNonEditable>
     );
   }
 

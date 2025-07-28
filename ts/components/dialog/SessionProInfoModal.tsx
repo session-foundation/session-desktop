@@ -16,7 +16,6 @@ import {
   SessionButtonType,
 } from '../basic/SessionButton';
 import { SpacerSM, SpacerXL } from '../basic/Text';
-import { SessionIcon } from '../icon';
 import { LucideIcon } from '../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { tr } from '../../localization/localeTools';
@@ -24,6 +23,7 @@ import { FileIcon } from '../icon/FileIcon';
 import { SessionButtonShiny } from '../basic/SessionButtonShiny';
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
 import { useCurrentUserHasPro } from '../../hooks/useHasPro';
+import { ProIcon } from '../buttons/ProButton';
 
 export enum SessionProInfoVariant {
   MESSAGE_CHARACTER_LIMIT = 0,
@@ -161,15 +161,7 @@ function getDescription(variant: SessionProInfoVariant): ReactNode {
       return (
         <>
           <span>
-            {tr('proAlreadyPurchased')}{' '}
-            <SessionIcon
-              sizeIsWidth={false}
-              iconType={'sessionPro'}
-              iconSize={'small'}
-              backgroundColor={'var(--primary-color)'}
-              borderRadius={'4px'}
-              iconColor={'var(--black-color)'}
-            />
+            {tr('proAlreadyPurchased')} <ProIcon iconSize={'small'} />
           </span>
           <br />
           {tr('proAnimatedDisplayPicture')}
@@ -281,14 +273,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
       <SpacerSM />
       <StyledCTATitle reverseDirection={hasPro}>
         {tr(hasPro ? 'proActivated' : 'upgradeTo')}
-        <SessionIcon
-          sizeIsWidth={false}
-          iconType={'sessionPro'}
-          iconSize={'huge'}
-          backgroundColor={'var(--primary-color)'}
-          borderRadius={'6px'}
-          iconColor={'var(--black-color)'}
-        />
+        <ProIcon iconSize={'huge'} />
       </StyledCTATitle>
       <SpacerXL />
       <StyledContentContainer>

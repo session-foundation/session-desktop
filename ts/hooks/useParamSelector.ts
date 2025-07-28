@@ -66,7 +66,10 @@ export function useConversationUsername(convoId?: string) {
     // So let's keep falling back to convoProps?.displayNameInProfile if groupName is not set yet (it comes later through the groupInfos namespace)
     return groupName;
   }
-  if (convoId && (PubKey.is03Pubkey(convoId) || PubKey.is05Pubkey(convoId))) {
+  if (
+    convoId &&
+    (PubKey.is03Pubkey(convoId) || PubKey.is05Pubkey(convoId) || PubKey.isBlinded(convoId))
+  ) {
     return convoProps?.nickname || convoProps?.displayNameInProfile || PubKey.shorten(convoId);
   }
   return convoProps?.nickname || convoProps?.displayNameInProfile || convoId;

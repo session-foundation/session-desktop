@@ -2,7 +2,6 @@ import styled from 'styled-components';
 import { Constants } from '../../../session';
 import { useFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { SessionTooltip } from '../../SessionTooltip';
-import { SessionIcon } from '../../icon';
 import { StyledCTA } from '../../basic/StyledCTA';
 import {
   SessionProInfoVariant,
@@ -12,6 +11,7 @@ import { formatNumber } from '../../../util/i18n/formatting/generics';
 import { useIsProAvailable } from '../../../hooks/useIsProAvailable';
 import { tr } from '../../../localization/localeTools';
 import { useCurrentUserHasPro } from '../../../hooks/useHasPro';
+import { ProIcon } from '../../buttons/ProButton';
 
 export type CharacterCountProps = {
   count: number;
@@ -54,15 +54,7 @@ export function CharacterCount({ count }: CharacterCountProps) {
     <StyledCharacterCountContainer>
       {isProAvailable && !hasPro ? (
         <StyledCTA onClick={handleClick}>
-          Send more with{' '}
-          <SessionIcon
-            sizeIsWidth={true}
-            iconType={'sessionPro'}
-            iconSize={'huge'}
-            backgroundColor={'var(--primary-color)'}
-            borderRadius={'3px'}
-            iconColor={'var(--black-color)'}
-          />
+          Send more with <ProIcon iconSize={'huge'} />
         </StyledCTA>
       ) : null}
       <SessionTooltip

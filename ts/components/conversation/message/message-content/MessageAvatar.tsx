@@ -1,25 +1,12 @@
-import { useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
-import { OpenGroupData } from '../../../../data/opengroups';
 import { MessageRenderingProps } from '../../../../models/messageType';
-import { findCachedBlindedMatchOrLookItUp } from '../../../../session/apis/open_group_api/sogsv3/knownBlindedkeys';
-import { ConvoHub } from '../../../../session/conversations';
-import { getSodiumRenderer } from '../../../../session/crypto';
-import { KeyPrefixType, PubKey } from '../../../../session/types';
-import { openConversationWithMessages } from '../../../../state/ducks/conversations';
-import { updateUserProfileModal } from '../../../../state/ducks/modalDialog';
 import {
   useLastMessageOfSeries,
   useMessageAuthor,
   useMessageSenderIsAdmin,
 } from '../../../../state/selectors';
-import {
-  getSelectedCanWrite,
-  useSelectedConversationKey,
-  useSelectedIsPublic,
-} from '../../../../state/selectors/selectedConversation';
 import { Avatar, AvatarSize, CrownIcon } from '../../../avatar/Avatar';
+import { useOnMessageAvatarClickCb } from '../../../menuAndSettingsHooks/useMessageAvatarClickCb';
 
 const StyledAvatar = styled.div`
   position: relative;
@@ -40,80 +27,11 @@ type Props = { messageId: string; isPrivate: boolean };
 export const MessageAvatar = (props: Props) => {
   const { messageId, isPrivate } = props;
 
-  const dispatch = useDispatch();
-  const selectedConvoKey = useSelectedConversationKey();
-
-  const isTypingEnabled = useSelector(getSelectedCanWrite);
-  const isPublic = useSelectedIsPublic();
   const sender = useMessageAuthor(messageId);
   const lastMessageOfSeries = useLastMessageOfSeries(messageId);
   const isSenderAdmin = useMessageSenderIsAdmin(messageId);
 
-  const onMessageAvatarClick = useCallback(async () => {
-    if (!sender) {
-      return;
-    }
-    if (isPublic && !PubKey.isBlinded(sender)) {
-      // public chat but account id not blinded. disable showing user details if we do not have an active convo with that user.
-      // an inactive convo with that user means that we never chatted with that id directly, but only through a sogs
-      const convoWithSender = ConvoHub.use().get(sender);
-      if (!convoWithSender || !convoWithSender.getActiveAt()) {
-        // for some time, we might still get some unblinded messages, as in message sent unblinded because
-        //    * older clients still send unblinded message and those are allowed by sogs if they doesn't enforce blinding
-        //    * new clients still send unblinded message and those are allowed by sogs if it doesn't enforce blinding
-        // we want to not allow users to open user details dialog when that's the case.
-        // to handle this case, we can drop the click on avatar if the conversation with that user is not active.
-        window.log.info(
-          'onMessageAvatarClick: public unblinded message and sender convo is not active. Dropping click event'
-        );
-        return;
-      }
-    }
-
-    if (isPublic && !isTypingEnabled) {
-      window.log.info('onMessageAvatarClick: typing is disabled...');
-      return;
-    }
-
-    if (isPublic && selectedConvoKey) {
-      if (sender.startsWith(KeyPrefixType.blinded25)) {
-        window.log.info('onMessageAvatarClick: blinded25 convo click are disabled currently...');
-
-        return;
-      }
-      const convoOpen = ConvoHub.use().get(selectedConvoKey);
-      const room = OpenGroupData.getV2OpenGroupRoom(convoOpen.id);
-      let privateConvoToOpen = sender;
-      if (room?.serverPublicKey) {
-        const foundRealSessionId = await findCachedBlindedMatchOrLookItUp(
-          sender,
-          room.serverPublicKey,
-          await getSodiumRenderer()
-        );
-
-        privateConvoToOpen = foundRealSessionId || privateConvoToOpen;
-      }
-
-      if (!privateConvoToOpen.startsWith(KeyPrefixType.standard)) {
-        await ConvoHub.use()
-          .get(privateConvoToOpen)
-          .setOriginConversationID(selectedConvoKey, true);
-      }
-
-      // public and blinded key for that message, we should open the convo as is and see if the user wants
-      // to send a sogs blinded message request.
-      await openConversationWithMessages({ conversationKey: privateConvoToOpen, messageId: null });
-
-      return;
-    }
-    //  open user details dialog for the user to do what he wants
-    // Note: if we have the sessionId from a blindedId, we should open that corresponding user details dialog
-    dispatch(
-      updateUserProfileModal({
-        conversationId: sender,
-      })
-    );
-  }, [dispatch, isTypingEnabled, sender, isPublic, selectedConvoKey]);
+  const onMessageAvatarClick = useOnMessageAvatarClickCb();
 
   if (!sender) {
     return null;
@@ -126,12 +44,17 @@ export const MessageAvatar = (props: Props) => {
   if (!lastMessageOfSeries) {
     return <div style={{ marginInlineEnd: 'var(--width-avatar-group-msg-list)' }} />;
   }
-  /* eslint-disable @typescript-eslint/no-misused-promises */
   // The styledAvatar, when rendered needs to have a width with margins included of var(--width-avatar-group-msg-list).
   // This is so that the other message is still aligned when the avatar is not rendered (we need to make up for the space used by the avatar, and we use a margin of width-avatar-group-msg-list)
   return (
     <StyledAvatar>
-      <Avatar size={AvatarSize.S} onAvatarClick={onMessageAvatarClick} pubkey={sender} />
+      <Avatar
+        size={AvatarSize.S}
+        onAvatarClick={() => {
+          void onMessageAvatarClick({ messageId });
+        }}
+        pubkey={sender}
+      />
       {isSenderAdmin ? <CrownIcon /> : null}
     </StyledAvatar>
   );
