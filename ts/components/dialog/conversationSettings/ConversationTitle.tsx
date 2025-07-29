@@ -54,7 +54,7 @@ export const ConversationTitle = ({
     if (weArePro) {
       return;
     }
-    showSessionProInfoDialog(SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT, dispatch);
+    showSessionProInfoDialog(SessionProInfoVariant.GENERIC, dispatch);
   }
 
   return (

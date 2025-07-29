@@ -1196,7 +1196,6 @@ export const Onions = {
   incrementBadSnodeCountOrDrop,
   decodeOnionResult,
   lokiOnionFetchNoRetries,
-  sendOnionRequestSnodeDestNoRetries,
   processOnionResponse,
   processOnionResponseV4,
   isFinalDestinationSnode,

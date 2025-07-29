@@ -2,6 +2,7 @@ import { isNil } from 'lodash';
 import { Dispatch, type ReactNode } from 'react';
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
+import type { CSSProperties } from 'styled-components';
 import { type SessionProInfoState, updateSessionProInfoModal } from '../../state/ducks/modalDialog';
 import {
   SessionWrapperModal,
@@ -24,6 +25,7 @@ import { SessionButtonShiny } from '../basic/SessionButtonShiny';
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
 import { useCurrentUserHasPro } from '../../hooks/useHasPro';
 import { ProIcon } from '../buttons/ProButton';
+import { assertUnreachable } from '../../types/sqlSharedTypes';
 
 export enum SessionProInfoVariant {
   MESSAGE_CHARACTER_LIMIT = 0,
@@ -31,6 +33,7 @@ export enum SessionProInfoVariant {
   PINNED_CONVERSATION_LIMIT_GRANDFATHERED = 2,
   PROFILE_PICTURE_ANIMATED = 3,
   ALREADY_PRO_PROFILE_PICTURE_ANIMATED = 4,
+  GENERIC = 5,
 }
 
 const StyledContentContainer = styled.div`
@@ -59,11 +62,6 @@ const StyledCTAImage = styled.img`
 
 const StyledAnimationImage = styled.img`
   position: absolute;
-
-  inset-inline-start: 0;
-  width: 13%;
-  top: 28.5%;
-  left: 45%;
 `;
 
 const StyledAnimatedCTAImageContainer = styled.div`
@@ -73,14 +71,16 @@ const StyledAnimatedCTAImageContainer = styled.div`
 function AnimatedCTAImage({
   ctaLayerSrc,
   animatedLayerSrc,
+  animationStyle,
 }: {
   ctaLayerSrc: string;
   animatedLayerSrc: string;
+  animationStyle: CSSProperties;
 }) {
   return (
     <StyledAnimatedCTAImageContainer>
       <StyledCTAImage src={ctaLayerSrc} />
-      <StyledAnimationImage src={animatedLayerSrc} />
+      <StyledAnimationImage src={animatedLayerSrc} style={animationStyle} />
     </StyledAnimatedCTAImageContainer>
   );
 }
@@ -144,8 +144,13 @@ function getFeatureList(variant: SessionProInfoVariant) {
     case SessionProInfoVariant.PINNED_CONVERSATION_LIMIT_GRANDFATHERED:
       return ['proFeatureListPinnedConversations', 'proFeatureListLargerGroups'] as const;
     case SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT:
-    default:
+    case SessionProInfoVariant.ALREADY_PRO_PROFILE_PICTURE_ANIMATED:
       return ['proFeatureListLongerMessages', 'proFeatureListLargerGroups'] as const;
+    case SessionProInfoVariant.GENERIC: // yes generic has the same as above, reversed...
+      return ['proFeatureListLargerGroups', 'proFeatureListLongerMessages'] as const;
+    default:
+      assertUnreachable(variant, 'getFeatureList unreachable case');
+      throw new Error('unreachable');
   }
 }
 
@@ -169,8 +174,13 @@ function getDescription(variant: SessionProInfoVariant): ReactNode {
       );
 
     case SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT:
-    default:
       return tr('proCallToActionLongerMessages');
+
+    case SessionProInfoVariant.GENERIC:
+      return tr('proUserProfileModalCallToAction');
+    default:
+      assertUnreachable(variant, 'getDescription unreachable case');
+      throw new Error('unreachable');
   }
 }
 
@@ -186,18 +196,33 @@ function getImage(variant: SessionProInfoVariant): ReactNode {
         <AnimatedCTAImage
           ctaLayerSrc="images/cta_hero_animated_profile_base_layer.webp"
           animatedLayerSrc="images/cta_hero_animated_profile_animation_layer.webp"
+          animationStyle={{ width: '13%', top: '28.5%', left: '45%' }}
         />
       );
 
     case SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT:
-    default:
       return <StyledCTAImage src="images/cta_hero_char_limit.webp" />;
+    case SessionProInfoVariant.GENERIC:
+      return (
+        <AnimatedCTAImage
+          ctaLayerSrc="images/cta_hero_generic_base_layer.webp"
+          animatedLayerSrc="images/cta_hero_animated_profile_animation_layer.webp"
+          animationStyle={{ width: '8%', top: '59.2%', left: '85.5%' }}
+        />
+      );
+
+    default:
+      assertUnreachable(variant, 'getImage');
+      throw new Error('unreachable');
   }
 }
 
 function isProVisibleCTA(variant: SessionProInfoVariant): boolean {
   // This is simple now but if we ever add multiple this needs to become a list
-  return variant === SessionProInfoVariant.ALREADY_PRO_PROFILE_PICTURE_ANIMATED;
+  return [
+    SessionProInfoVariant.ALREADY_PRO_PROFILE_PICTURE_ANIMATED,
+    SessionProInfoVariant.GENERIC,
+  ].includes(variant);
 }
 
 const buttonProps = {

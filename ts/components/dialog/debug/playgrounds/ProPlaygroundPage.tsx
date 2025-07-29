@@ -49,6 +49,9 @@ export function ProPlaygroundPage() {
       </Flex>
       <SpacerLG />
       <Flex $container={true} $flexDirection="column" $flexGap="var(--margins-sm)">
+        <SessionButton onClick={() => handleClick(SessionProInfoVariant.GENERIC)}>
+          Generic
+        </SessionButton>
         <SessionButton onClick={() => handleClick(SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT)}>
           Character Count
         </SessionButton>
