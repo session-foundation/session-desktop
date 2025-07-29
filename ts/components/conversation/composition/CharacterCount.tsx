@@ -54,7 +54,7 @@ export function CharacterCount({ count }: CharacterCountProps) {
     <StyledCharacterCountContainer>
       {isProAvailable && !hasPro ? (
         <StyledCTA onClick={handleClick}>
-          Send more with <ProIcon iconSize={'huge'} />
+          {tr('proSendMore')} <ProIcon iconSize={'small'} />
         </StyledCTA>
       ) : null}
       <SessionTooltip

@@ -66,7 +66,8 @@ window.sessionFeatureFlags = {
   alwaysShowRemainingChars: false,
   showPopoverAnchors: false,
   proAvailable: !isEmpty(process.env.SESSION_PRO),
-  mockUserHasPro: !isEmpty(process.env.SESSION_HAS_PRO),
+  mockCurrentUserHasPro: !isEmpty(process.env.SESSION_USER_HAS_PRO),
+  mockOthersHavePro: !isEmpty(process.env.SESSION_OTHERS_HAVE_PRO),
   // Note: some stuff are init when the app starts, so fsTTL30s should only be set from the env itself (before app starts)
   fsTTL30s: !isEmpty(process.env.FILE_SERVER_TTL_30S),
   debug: {

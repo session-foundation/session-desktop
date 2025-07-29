@@ -97,7 +97,7 @@ export class PubKey {
     const keepCharacters = opts?.keepCharacters ?? 4;
     const withParenthesis = opts?.withParenthesis ?? true;
 
-    if (pk.length < keepCharacters * 2) {
+    if (pk.length <= keepCharacters * 2) {
       return pk;
     }
 

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 
@@ -24,7 +25,7 @@ export const QRView = ({
 }: {
   sessionID: string;
   setMode: (mode: Extract<ProfileDialogModes, 'qr' | 'lightbox'>) => void;
-  children?: React.ReactNode;
+  children?: ReactNode;
 }) => {
   const dispatch = useDispatch();
   const { dataURL, iconSize, iconColor, backgroundColor, loading } = useIconToImageURL(qrLogoProps);
@@ -130,7 +131,7 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
               position: 'absolute',
               top: 0,
               // this isn't ideal, but the button is not scaling with the avatar size so we need to hardcode its position
-              right: avatarSize === AvatarSize.HUGE ? '12%' : '4%',
+              insetInlineEnd: avatarSize === AvatarSize.HUGE ? '12%' : '4%',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

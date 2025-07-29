@@ -148,7 +148,7 @@ export const UserProfileModal = ({
               style={{
                 position: 'absolute',
                 top: '-15px',
-                right: '-15px',
+                insetInlineEnd: '-15px',
                 display: 'flex',
                 alignItems: 'center',
                 borderRadius: '50%',

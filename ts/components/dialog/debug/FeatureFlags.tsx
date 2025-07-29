@@ -27,7 +27,7 @@ const handleFeatureFlagToggle = ({ flag, parentFlag, forceUpdate }: FeatureFlagT
 
   forceUpdate();
 
-  if (flag === 'proAvailable' || flag === 'mockUserHasPro') {
+  if (flag === 'proAvailable' || flag === 'mockCurrentUserHasPro' || flag === 'mockOthersHavePro') {
     ConvoHub.use()
       .getConversations()
       .forEach(convo => {

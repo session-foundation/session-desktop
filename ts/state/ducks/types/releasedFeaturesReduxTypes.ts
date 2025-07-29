@@ -12,7 +12,8 @@ export type SessionFeatureFlags = {
   showPopoverAnchors: boolean;
   debugInputCommands: boolean;
   proAvailable: boolean;
-  mockUserHasPro: boolean;
+  mockCurrentUserHasPro: boolean;
+  mockOthersHavePro: boolean;
   fsTTL30s: boolean;
 };
 

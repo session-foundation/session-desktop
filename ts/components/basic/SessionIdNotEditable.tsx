@@ -28,7 +28,7 @@ export const SessionIDNotEditable = ({
   style: providedStyle = {},
 }: {
   sessionId: string;
-  tooltipNode: ReactNode | null;
+  tooltipNode: ReactNode;
   displayType: 'blinded' | '2lines' | '3lines';
   dataTestId: SessionDataTestId;
   style: CSSProperties;

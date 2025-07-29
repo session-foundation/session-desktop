@@ -5,6 +5,7 @@ import {
   useIsPublic,
   useIsClosedGroup,
   useIsMe,
+  useIsProUser,
 } from '../../../hooks/useParamSelector';
 import { tr } from '../../../localization/localeTools';
 import type { WithConvoId } from '../../../session/types/with';
@@ -37,6 +38,8 @@ export const ConversationTitle = ({
   const isMe = useIsMe(conversationId);
   const weArePro = useCurrentUserHasPro();
 
+  const userHasPro = useIsProUser(conversationId);
+
   const onClickCb = useOnTitleClickCb(conversationId, editable);
 
   // the data-test-id depends on the type of conversation
@@ -65,13 +68,15 @@ export const ConversationTitle = ({
       onClick={onClickCb || undefined}
     >
       {isMe ? tr('noteToSelf') : nicknameOrDisplayName}
-      <ProIconButton
-        dataTestId="pro-badge-conversation-title"
-        iconSize={'medium'}
-        disabled={weArePro}
-        onClick={onProBadgeClick}
-        style={{ display: 'inline', marginInlineStart: 'var(--margins-xs)' }}
-      />
+      {userHasPro && (
+        <ProIconButton
+          dataTestId="pro-badge-conversation-title"
+          iconSize={'medium'}
+          disabled={weArePro}
+          onClick={onProBadgeClick}
+          style={{ display: 'inline', marginInlineStart: 'var(--margins-xs)' }}
+        />
+      )}
     </H5>
   );
 };

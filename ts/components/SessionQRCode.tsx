@@ -1,4 +1,11 @@
-import { MouseEvent, useEffect, useRef, useState, type SessionDataTestId } from 'react';
+import {
+  MouseEvent,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+  type SessionDataTestId,
+} from 'react';
 import { QRCode } from 'react-qrcode-logo';
 import styled, { CSSProperties } from 'styled-components';
 import { THEME_GLOBALS } from '../themes/globals';
@@ -33,7 +40,7 @@ export type SessionQRCodeProps = {
   ariaLabel?: string;
   dataTestId?: SessionDataTestId;
   style?: CSSProperties;
-  children?: React.ReactNode;
+  children?: ReactNode;
 };
 
 export function SessionQRCode(props: SessionQRCodeProps) {

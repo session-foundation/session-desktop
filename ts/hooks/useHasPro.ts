@@ -3,7 +3,7 @@ import { useWeAreProUser } from './useParamSelector';
 
 export function useCurrentUserHasPro() {
   const isProAvailable = useIsProAvailable();
-  const weArePro = useWeAreProUser(); // this will be true when `mockUserHasPro` is true
+  const weArePro = useWeAreProUser();
 
   return isProAvailable && weArePro;
 }

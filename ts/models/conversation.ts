@@ -801,7 +801,11 @@ export class ConversationModel extends Model<ConversationAttributes> {
       });
     }
 
-    return getFeatureFlag('mockUserHasPro');
+    if (this.isMe()) {
+      return getFeatureFlag('mockCurrentUserHasPro');
+    }
+
+    return getFeatureFlag('mockOthersHavePro');
   }
 
   public async sendMessage(msg: SendMessageType) {

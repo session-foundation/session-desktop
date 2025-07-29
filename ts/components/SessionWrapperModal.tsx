@@ -159,7 +159,7 @@ export const ModalActionsContainer = ({
 };
 
 export type SessionWrapperModalType = {
-  headerChildren: ReactNode | null;
+  headerChildren: ReactNode;
   children: ReactNode;
   /**
    * *Should* be some SessionButtons enclosed in a ModalActionsContainer
