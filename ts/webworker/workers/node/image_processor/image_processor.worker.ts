@@ -1,10 +1,10 @@
-import { isFinite, isNumber } from 'lodash';
+import { isEmpty, isFinite, isNumber } from 'lodash';
 import sharp from 'sharp';
 import type { ImageProcessorWorkerActions } from './image_processor';
 /* eslint-disable no-console */
 /* eslint-disable strict */
 
-const DEBUG_IMAGE_PROCESSOR_WORKER = true;
+const DEBUG_IMAGE_PROCESSOR_WORKER = !isEmpty(process.env.DEBUG_IMAGE_PROCESSOR_WORKER);
 
 function logIfOn(...args: Array<any>) {
   if (DEBUG_IMAGE_PROCESSOR_WORKER) {
