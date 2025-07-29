@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import { useRightOverlayMode } from '../../../hooks/useUI';
 import { Flex } from '../../basic/Flex';
-import { OverlayRightPanelSettings } from './overlay/OverlayRightPanelSettings';
+import { RightPanelMedia } from './overlay/RightPanelMedia';
 import { OverlayMessageInfo } from './overlay/message-info/OverlayMessageInfo';
 import { isRtlBody } from '../../../util/i18n/rtlSupport';
 
@@ -37,7 +37,7 @@ const ClosableOverlay = () => {
     case 'message_info':
       return <OverlayMessageInfo />;
     default:
-      return <OverlayRightPanelSettings />;
+      return <RightPanelMedia />;
   }
 };
 

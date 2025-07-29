@@ -5,14 +5,12 @@ import styled from 'styled-components';
 
 import { Dispatch } from '@reduxjs/toolkit';
 import { UserUtils } from '../../../session/utils';
-import { SessionIDNonEditable, SessionIDPill } from '../../basic/SessionIDPill';
+import { AccountIdPill } from '../../basic/AccountIdPill';
 
 import { useHotkey } from '../../../hooks/useHotkey';
 import { useOurAvatarPath, useOurConversationUsername } from '../../../hooks/useParamSelector';
 import { ProfileManager } from '../../../session/profile_manager/ProfileManager';
 import { editProfileModal } from '../../../state/ducks/modalDialog';
-import { Flex } from '../../basic/Flex';
-import { Spacer3XL, SpacerLG, SpacerSM, SpacerXL } from '../../basic/Text';
 import { SessionSpinner } from '../../loading';
 import { ProfileHeader, ProfileName, QRView } from './components';
 import { EmptyDisplayNameError, RetrieveDisplayNameError } from '../../../session/utils/errors';
@@ -29,6 +27,8 @@ import { ModalBackButton } from '../shared/ModalBackButton';
 import { SessionButtonColor, SessionButton } from '../../basic/SessionButton';
 import { CopyToClipboardButton } from '../../buttons';
 import { AvatarSize } from '../../avatar/Avatar';
+import { SessionIDNotEditable } from '../../basic/SessionIdNotEditable';
+import { Flex } from '../../basic/Flex';
 
 // #region Shortcuts
 const handleKeyQRMode = (
@@ -128,12 +128,6 @@ const handleKeyEscape = (
 const StyledEditProfileDialog = styled.div`
   input {
     border: none;
-  }
-`;
-
-const StyledSessionIdSection = styled(Flex)`
-  .session-button {
-    width: 160px;
   }
 `;
 
@@ -296,77 +290,74 @@ export const EditProfileDialog = () => {
           )
         }
       >
-        {mode === 'qr' ? (
-          <QRView sessionID={us} setMode={setMode} />
-        ) : (
-          <>
-            <SpacerXL />
-            <ProfileHeader
-              avatarPath={avatarPath}
-              profileName={profileName}
-              conversationId={us}
-              onAvatarClick={handleProfileHeaderClick}
-              onPlusAvatarClick={handleProfileHeaderClick}
-              avatarSize={AvatarSize.XL}
-              onQRClick={null} // no qr click here as a button is already doing that action (and the qr button looks bad when the small size as the +)
-            />
-          </>
-        )}
-
-        <SpacerLG />
-
-        {mode === 'default' && (
-          <ProfileName
-            profileName={updatedProfileName || profileName}
-            onClick={() => {
-              if (loading) {
-                return;
-              }
-              setMode('edit');
-            }}
-          />
-        )}
-
-        {mode === 'edit' && (
-          <SimpleSessionInput
-            autoFocus={true}
-            placeholder={tr('displayNameEnter')}
-            value={profileName}
-            onValueChanged={(name: string) => {
-              setProfileName(name);
-              setCannotContinue(false);
-            }}
-            onEnterPressed={() => void onClickOK()}
-            disabled={loading}
-            tabIndex={0}
-            required={true}
-            centerText={true}
-            providedError={profileNameError}
-            textSize={'xl'}
-            inputRef={inputRef}
-            inputDataTestId="profile-name-input"
-            errorDataTestId="error-message"
-          />
-        )}
-
-        {mode !== 'qr' ? <Spacer3XL /> : <SpacerSM />}
-
-        <StyledSessionIdSection
+        <Flex
           $container={true}
           $flexDirection="column"
-          $justifyContent="center"
           $alignItems="center"
-          width={'100%'}
+          paddingBlock="var(--margins-md)"
+          $flexGap="var(--margins-md)"
         >
-          <SessionIDPill accountType="ours" />
-          <SessionIDNonEditable
+          {mode === 'qr' ? (
+            <QRView sessionID={us} setMode={setMode} />
+          ) : (
+            <>
+              <ProfileHeader
+                avatarPath={avatarPath}
+                profileName={profileName}
+                conversationId={us}
+                onAvatarClick={handleProfileHeaderClick}
+                onPlusAvatarClick={handleProfileHeaderClick}
+                avatarSize={AvatarSize.XL}
+                onQRClick={null} // no qr click here as a button is already doing that action (and the qr button looks bad when the small size as the +)
+              />
+            </>
+          )}
+
+          {mode === 'default' && (
+            <ProfileName
+              profileName={updatedProfileName || profileName}
+              onClick={() => {
+                if (loading) {
+                  return;
+                }
+                setMode('edit');
+              }}
+            />
+          )}
+
+          {mode === 'edit' && (
+            <SimpleSessionInput
+              autoFocus={true}
+              placeholder={tr('displayNameEnter')}
+              value={profileName}
+              onValueChanged={(name: string) => {
+                setProfileName(name);
+                setCannotContinue(false);
+              }}
+              onEnterPressed={() => void onClickOK()}
+              disabled={loading}
+              tabIndex={0}
+              required={true}
+              centerText={true}
+              providedError={profileNameError}
+              textSize={'xl'}
+              inputRef={inputRef}
+              inputDataTestId="profile-name-input"
+              errorDataTestId="error-message"
+              padding="var(--margins-xs) var(--margins-lg)"
+            />
+          )}
+
+          <AccountIdPill accountType="ours" />
+          <SessionIDNotEditable
             dataTestId="your-account-id"
             sessionId={us}
             displayType="2lines"
             tooltipNode={null}
+            style={{ color: 'var(--text-primary-color)' }}
           />
           <SessionSpinner loading={loading} height={'74px'} />
-        </StyledSessionIdSection>
+        </Flex>
       </SessionWrapperModal>
     </StyledEditProfileDialog>
   );

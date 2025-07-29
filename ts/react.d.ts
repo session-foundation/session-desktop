@@ -354,6 +354,7 @@ declare module 'react' {
     | `${NotificationButtons}`
     | `${NotificationRadioButtons}`
     | 'last-updated-timestamp'
+    | 'account-id-pill'
     // Once the whole app have datatestId when required, this `invalid-data-testid` will be removed
     | 'invalid-data-testid';
 

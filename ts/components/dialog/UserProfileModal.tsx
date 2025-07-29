@@ -11,7 +11,7 @@ import { SessionButton, SessionButtonColor } from '../basic/SessionButton';
 import { CopyToClipboardButton } from '../buttons/CopyToClipboardButton';
 import { ConversationTypeEnum } from '../../models/types';
 import { Flex } from '../basic/Flex';
-import { SessionIDNonEditable, SessionIDPill } from '../basic/SessionIDPill';
+import { AccountIdPill } from '../basic/AccountIdPill';
 import {
   ModalBasicHeader,
   ModalActionsContainer,
@@ -26,12 +26,11 @@ import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { useHasDisabledBlindedMsgRequests } from '../../state/selectors/conversations';
 import { Localizer } from '../basic/Localizer';
-import { H5 } from '../basic/Heading';
-import { ProIconButton } from '../buttons/ProButton';
-import { useCurrentUserHasPro } from '../../hooks/useHasPro';
-import { SessionProInfoVariant, showSessionProInfoDialog } from './SessionProInfoModal';
 import { SessionTooltip } from '../SessionTooltip';
 import { shortenDisplayName } from '../../session/profile_manager/ShortenDisplayName';
+import { UsernameFallback } from './conversationSettings/UsernameFallback';
+import { ConversationTitle } from './conversationSettings/ConversationTitle';
+import { SessionIDNotEditable } from '../basic/SessionIdNotEditable';
 
 const StyledHasDisabledMsgRequests = styled.div`
   max-width: 42ch;
@@ -72,8 +71,6 @@ export const UserProfileModal = ({
   const hasDisabledMsgRequests = useHasDisabledBlindedMsgRequests(conversationId);
   const blindedAndDisabledMsgRequests = isBlindedAndNotResolved && hasDisabledMsgRequests;
 
-  const weArePro = useCurrentUserHasPro();
-
   const conversationIdDisplayed = isBlindedAndResolved ? realSessionId : conversationId;
 
   async function onClickStartConversation() {
@@ -90,13 +87,6 @@ export const UserProfileModal = ({
     await openConversationWithMessages({ conversationKey: conversation.id, messageId: null });
 
     closeDialog();
-  }
-
-  function onProBadgeClick() {
-    if (weArePro) {
-      return;
-    }
-    showSessionProInfoDialog(SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT, dispatch);
   }
 
   useKey(
@@ -124,10 +114,9 @@ export const UserProfileModal = ({
 
           {!isBlindedAndNotResolved && (
             <CopyToClipboardButton
-              text={tr('copy')}
               copyContent={conversationIdDisplayed}
               buttonColor={SessionButtonColor.PrimaryDark}
-              dataTestId="invalid-data-testid"
+              dataTestId="copy-button-account-id"
               style={{ minWidth: '125px' }}
               hotkey={true}
             />
@@ -141,7 +130,7 @@ export const UserProfileModal = ({
         $justifyContent="center"
         $alignItems="center"
         $flexDirection="column"
-        $flexGap="var(--margins-sm)"
+        $flexGap="var(--margins-md)"
         paddingBlock="0 var(--margins-lg)"
       >
         {mode === 'qr' ? (
@@ -184,30 +173,16 @@ export const UserProfileModal = ({
             }
           />
         )}
-
-        <H5
-          style={{
-            display: 'block',
-            textAlign: 'center',
-            marginBlock: 'var(--margins-sm)',
-          }}
-        >
-          {profileName}
-          <ProIconButton
-            iconSize={'medium'}
-            disabled={weArePro}
-            onClick={onProBadgeClick}
-            style={{ display: 'inline', marginInlineStart: 'var(--margins-xs)' }}
-          />
-        </H5>
-
-        <SessionIDPill accountType={isBlindedAndNotResolved ? 'blinded' : 'theirs'} />
-        <SessionIDNonEditable
+        <ConversationTitle conversationId={conversationIdDisplayed} editable={false} />
+        <UsernameFallback conversationId={conversationIdDisplayed} />
+        <AccountIdPill accountType={isBlindedAndNotResolved ? 'blinded' : 'theirs'} />
+        <SessionIDNotEditable
           dataTestId="invalid-data-testid"
           sessionId={conversationIdDisplayed}
           displayType={
             isBlindedAndNotResolved ? 'blinded' : isBlindedAndResolved ? '3lines' : '2lines'
           }
+          style={{ color: 'var(--text-primary-color)' }}
           tooltipNode={
             <SessionTooltip
               content={

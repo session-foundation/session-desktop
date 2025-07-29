@@ -51,9 +51,7 @@ type ThemeGlobals = {
   '--font-display-size-xl': string;
   '--font-display-size-lg': string;
   '--font-display-size-md': string; // base font size
-  '--font-display-size-sm': string;
-  '--font-display-size-xs': string;
-  '--font-display-size-xxs': string; // fine print
+  // anything smaller that this is too small for desktop to read
 
   /* Line Heights */
   '--font-line-height': string;
@@ -202,9 +200,7 @@ export const THEME_GLOBALS: ThemeGlobals = {
   '--font-display-size-xl': '18px',
   '--font-display-size-lg': '16px',
   '--font-display-size-md': '14px',
-  '--font-display-size-sm': '12px',
-  '--font-display-size-xs': '11px',
-  '--font-display-size-xxs': '9px',
+  // anything smaller that this is too small for desktop to read
 
   '--font-line-height': '1.2', // 120% but we want a unitless value so that line heights are calculated correctly for nested elements
 

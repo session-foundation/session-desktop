@@ -5,17 +5,8 @@ import { Avatar, AvatarSize } from '../../avatar/Avatar';
 import { Flex } from '../../basic/Flex';
 import { Header } from '../../conversation/right-panel/overlay/components';
 import type { WithConvoId } from '../../../session/types/with';
-import {
-  useConversationRealName,
-  useHasNickname,
-  useIsClosedGroup,
-  useIsMe,
-  useIsPrivate,
-  useIsPublic,
-  useNicknameOrProfileNameOrShortenedPubkey,
-} from '../../../hooks/useParamSelector';
+import { useIsMe, useIsPrivate } from '../../../hooks/useParamSelector';
 import { PubKey } from '../../../session/types';
-import { H7 } from '../../basic/Heading';
 import { tr } from '../../../localization/localeTools';
 import { useChangeNickname } from '../../menuAndSettingsHooks/useChangeNickname';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
@@ -25,21 +16,30 @@ import { useRoomDescription } from '../../../state/selectors/sogsRoomInfo';
 import { useLibGroupDescription } from '../../../state/selectors/groups';
 import { useShowUpdateGroupNameDescriptionCb } from '../../menuAndSettingsHooks/useShowUpdateGroupNameDescription';
 import { useHTMLDirection } from '../../../util/i18n/rtlSupport';
+import { UsernameFallback } from './UsernameFallback';
+import { ConversationTitle } from './ConversationTitle';
+import { SessionIDNotEditable } from '../../basic/SessionIdNotEditable';
 
 function AccountId({ conversationId }: WithConvoId) {
   const isPrivate = useIsPrivate(conversationId);
 
-  if (!isPrivate || PubKey.isBlinded(conversationId)) {
+  if (!isPrivate) {
     return null;
   }
-  const len = conversationId.length;
+
+  if (PubKey.isBlinded(conversationId)) {
+    // the settings menu should not be shown in the first place
+    throw new Error('AccountId: Blinded conversationId');
+  }
 
   return (
-    <StyledAccountId data-testid="account-id">
-      {conversationId.slice(0, len / 2)}
-      <br />
-      {conversationId.slice(len / 2)}
-    </StyledAccountId>
+    <SessionIDNotEditable
+      dataTestId="account-id"
+      sessionId={conversationId}
+      displayType="2lines"
+      tooltipNode={null}
+      style={{ color: 'var(--text-secondary-color)' }}
+    />
   );
 }
 
@@ -64,15 +64,6 @@ function EditGenericButton({
   );
 }
 
-/**
- * Return the callback to use for the title click event, if one is allowed
- */
-function useOnTitleClickCb(conversationId: string) {
-  const changeNicknameCb = useChangeNickname(conversationId);
-  const updateNameDescCb = useShowUpdateGroupNameDescriptionCb({ conversationId });
-  return changeNicknameCb || updateNameDescCb;
-}
-
 function ChangeNicknameButton({ conversationId }: WithConvoId) {
   const changeNicknameCb = useChangeNickname(conversationId);
 
@@ -85,16 +76,7 @@ function UpdateNameDescriptionButton({ conversationId }: WithConvoId) {
   return <EditGenericButton cb={updateNameDescCb} dataTestId="edit-group-name" />;
 }
 
-const StyledAccountId = styled.div`
-  color: var(--text-secondary-color);
-  text-align: center;
-  font-weight: 400;
-  line-height: 1.2;
-  font-size: var(--font-display-size-sm);
-  font-family: var(--font-mono);
-`;
-
-const StyledDescription = styled.p<{ expanded: boolean }>`
+const StyledDescription = styled.div<{ expanded: boolean }>`
   color: var(--text-secondary-color);
   font-size: var(--font-display-size-md);
   text-align: center;
@@ -163,41 +145,8 @@ function Description({ conversationId }: WithConvoId) {
   );
 }
 
-const ConversationTitle = ({ conversationId }: WithConvoId) => {
-  const nicknameOrDisplayName = useNicknameOrProfileNameOrShortenedPubkey(conversationId);
-  const isCommunity = useIsPublic(conversationId);
-  const isClosedGroup = useIsClosedGroup(conversationId);
-  const isMe = useIsMe(conversationId);
-
-  const onClickCb = useOnTitleClickCb(conversationId);
-
-  // the data-test-id depends on the type of conversation
-  const dataTestId = isCommunity
-    ? 'community-name'
-    : isClosedGroup
-      ? 'group-name'
-      : // for 1o1, this will hold the nickname if set, or the display name
-        'preferred-display-name';
-
-  return (
-    <H7
-      dataTestId={dataTestId}
-      style={{
-        wordBreak: 'break-all',
-        textAlign: 'center',
-        cursor: onClickCb ? 'pointer' : 'inherit',
-      }}
-      onClick={onClickCb || undefined}
-    >
-      {isMe ? tr('noteToSelf') : nicknameOrDisplayName}
-    </H7>
-  );
-};
-
 export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
   // if a nickname is set, we still want to display the real name of the user, as he defined it
-  const conversationRealName = useConversationRealName(conversationId);
-  const hasNickname = useHasNickname(conversationId);
   const isMe = useIsMe(conversationId);
 
   const editProfilePictureCb = useEditProfilePictureCallback({ conversationId });
@@ -215,7 +164,7 @@ export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
         $alignItems={'center'}
         width={'100%'}
         $flexDirection="column"
-        $flexGap="var(--margins-sm)"
+        $flexGap="var(--margins-lg)"
       >
         <Avatar
           size={AvatarSize.XL}
@@ -232,15 +181,11 @@ export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
           $flexGap="var(--margins-xs)"
           style={{ direction: htmlDirection }}
         >
-          <ConversationTitle conversationId={conversationId} />
+          <ConversationTitle conversationId={conversationId} editable={true} />
           <ChangeNicknameButton conversationId={conversationId} />
           <UpdateNameDescriptionButton conversationId={conversationId} />
         </Flex>
-        {hasNickname && conversationRealName ? (
-          <StyledAccountId data-testid="fallback-display-name">
-            ({conversationRealName})
-          </StyledAccountId>
-        ) : null}
+        <UsernameFallback conversationId={conversationId} />
         <Description conversationId={conversationId} />
         <AccountId conversationId={conversationId} />
       </Flex>

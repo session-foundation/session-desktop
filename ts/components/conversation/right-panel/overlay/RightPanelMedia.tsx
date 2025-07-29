@@ -92,7 +92,7 @@ async function getMediaGalleryProps(conversationId: string): Promise<{
   };
 }
 
-export const OverlayRightPanelSettings = () => {
+export const RightPanelMedia = () => {
   const [documents, setDocuments] = useState<Array<MediaItemType>>([]);
   const [media, setMedia] = useState<Array<MediaItemType>>([]);
   const dispatch = useDispatch();
@@ -126,7 +126,7 @@ export const OverlayRightPanelSettings = () => {
         }
       } catch (error) {
         if (!isCancelled) {
-          window.log.debug(`OverlayRightPanelSettings loadDocumentsOrMedia: ${error}`);
+          window.log.debug(`RightPanelMedia loadDocumentsOrMedia: ${error}`);
         }
       }
     };
