@@ -103,6 +103,8 @@ declare module 'react' {
     | 'ban-user'
     | 'unban-user';
 
+  type ProBadges = 'edit-profile-picture' | 'conversation-title';
+
   type Dialog = 'invite-contacts' | 'edit-profile';
 
   type SessionDataTestId =
@@ -353,6 +355,7 @@ declare module 'react' {
     | `${SetButton}-set-button`
     | `${NotificationButtons}`
     | `${NotificationRadioButtons}`
+    | `pro-badge-${ProBadges}`
     | 'last-updated-timestamp'
     | 'account-id-pill'
     // Once the whole app have datatestId when required, this `invalid-data-testid` will be removed

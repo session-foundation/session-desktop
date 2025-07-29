@@ -292,6 +292,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
             )}
             <ProIconButton
               iconSize={'medium'}
+              dataTestId="pro-badge-edit-profile-picture"
               disabled={loading}
               onClick={() =>
                 handleShowProInfoModal(

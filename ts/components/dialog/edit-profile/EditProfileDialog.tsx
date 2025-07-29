@@ -5,7 +5,6 @@ import styled from 'styled-components';
 
 import { Dispatch } from '@reduxjs/toolkit';
 import { UserUtils } from '../../../session/utils';
-import { AccountIdPill } from '../../basic/AccountIdPill';
 
 import { useHotkey } from '../../../hooks/useHotkey';
 import { useOurAvatarPath, useOurConversationUsername } from '../../../hooks/useParamSelector';
@@ -29,6 +28,7 @@ import { CopyToClipboardButton } from '../../buttons';
 import { AvatarSize } from '../../avatar/Avatar';
 import { SessionIDNotEditable } from '../../basic/SessionIdNotEditable';
 import { Flex } from '../../basic/Flex';
+import { AccountIdPill } from '../../basic/AccountIdPill';
 
 // #region Shortcuts
 const handleKeyQRMode = (

@@ -66,6 +66,7 @@ export const ConversationTitle = ({
     >
       {isMe ? tr('noteToSelf') : nicknameOrDisplayName}
       <ProIconButton
+        dataTestId='pro-badge-conversation-title'
         iconSize={'medium'}
         disabled={weArePro}
         onClick={onProBadgeClick}

@@ -32,7 +32,7 @@ export function ProIconButton({
   iconSize: SessionIconSize;
   disabled?: boolean;
   onClick?: () => void;
-  dataTestId?: SessionDataTestId;
+  dataTestId: SessionDataTestId;
   style?: CSSProperties;
 }) {
   return (
@@ -40,7 +40,7 @@ export function ProIconButton({
       {...sharedProps}
       iconSize={iconSize}
       borderRadius={sizeToBorderRadius(iconSize)}
-      dataTestId={dataTestId ?? 'invalid-data-testid'}
+      dataTestId={dataTestId}
       disabled={disabled}
       onClick={onClick}
       style={style}
@@ -60,7 +60,7 @@ export function ProIcon({
       {...sharedProps}
       iconSize={iconSize}
       borderRadius={sizeToBorderRadius(iconSize)}
-      dataTestId={dataTestId ?? 'invalid-data-testid'}
+      dataTestId={dataTestId}
     />
   );
 }

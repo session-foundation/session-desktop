@@ -107,7 +107,7 @@ export const UserProfileModal = ({
             text={tr('message')}
             onClick={onClickStartConversation}
             buttonColor={SessionButtonColor.PrimaryDark}
-            dataTestId="invalid-data-testid"
+            dataTestId="new-session-conversation"
             style={{ minWidth: '125px' }}
             disabled={isBlindedAndNotResolved && hasDisabledMsgRequests}
           />
@@ -177,7 +177,7 @@ export const UserProfileModal = ({
         <UsernameFallback conversationId={conversationIdDisplayed} />
         <AccountIdPill accountType={isBlindedAndNotResolved ? 'blinded' : 'theirs'} />
         <SessionIDNotEditable
-          dataTestId="invalid-data-testid"
+          dataTestId="account-id"
           sessionId={conversationIdDisplayed}
           displayType={
             isBlindedAndNotResolved ? 'blinded' : isBlindedAndResolved ? '3lines' : '2lines'
