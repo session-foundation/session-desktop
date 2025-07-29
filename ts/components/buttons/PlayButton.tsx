@@ -5,7 +5,7 @@ import { SessionLucideIconButton } from '../icon/SessionIconButton';
 
 const PlayButtonCentered = styled.div`
   position: absolute;
-  z-index: 1;
+  z-index: 0; // important to keep it at 0 so the close button in staged attachment is not covered by it
   top: 0;
   right: 0;
   bottom: 0;
