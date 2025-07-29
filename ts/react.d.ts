@@ -107,6 +107,57 @@ declare module 'react' {
 
   type Dialog = 'invite-contacts' | 'edit-profile';
 
+  type Buttons =
+    | 'chooser-new-conversation'
+    | 'new-conversation'
+    | 'add-user'
+    | 'send-message'
+    | 'scroll-to-bottom'
+    | 'modal-close'
+    | 'microphone'
+    | 'call'
+    | 'attachments'
+    | 'set-nickname-remove'
+    | 'emoji'
+    | 'remove-password-settings'
+    | 'change-password-settings'
+    | 'leave-group'
+    | 'delete-group'
+    | 'set-password'
+    | 'refresh'
+    | 'join-community'
+    | 'copy-url'
+    | 'continue-session'
+    | 'next-new-conversation'
+    | 'existing-account'
+    | 'create-account'
+    | 'resend-invite'
+    | 'view-qr-code'
+    | 'session-confirm-cancel'
+    | 'session-confirm-ok'
+    | 'hide-recovery-password'
+    | 'privacy-policy'
+    | 'terms-of-service'
+    | 'resend-promote'
+    | 'continue'
+    | 'back'
+    | 'create-group'
+    | `${ConfirmButtons}-confirm`
+    | `${CancelButtons}-cancel`
+    | `clear-${ClearButtons}`
+    | `${SetButton}-set`;
+
+  type InputLabels =
+    | 'device_and_network'
+    | 'device_only'
+    | 'deleteForEveryone'
+    | 'deleteJustForMe'
+    | 'enterForSend'
+    | 'enterForNewLine'
+    | 'message'
+    | 'name'
+    | 'count';
+
   type SessionDataTestId =
     | 'group-member-status-text'
     | 'loading-spinner'
@@ -115,8 +166,6 @@ declare module 'react' {
     | 'your-session-id'
     | 'chooser-new-community'
     | 'chooser-new-group'
-    | 'chooser-new-conversation-button'
-    | 'new-conversation-button'
     | 'message-request-banner'
     | 'leftpane-section-container'
     | 'open-url'
@@ -141,36 +190,25 @@ declare module 'react' {
     | 'decline-and-block-message-request'
     | 'session-dropdown'
     | 'path-light-container'
-    | 'add-user-button'
     | 'back-button-conversation-options'
-    | 'send-message-button'
-    | 'scroll-to-bottom-button'
-    | 'end-call'
-    | 'modal-close-button'
-    | 'end-voice-message'
     | 'back-button-message-details'
+    | 'end-call'
+    | 'end-voice-message'
     | 'edit-profile-icon'
-    | 'microphone-button'
-    | 'call-button'
-    | 'attachments-button'
     | 'invite-warning'
     | 'some-of-your-devices-outdated-conversation'
     | 'some-of-your-devices-outdated-inbox'
     | 'legacy-group-banner'
     | 'account-id'
-    | 'set-nickname-remove-button'
     | 'modal-actions-container'
-
-    // generic button types
-    | 'emoji-button'
     | 'reveal-blocked-user-settings'
     | `${Sections}-section`
 
+    // Buttons
+    | `${Buttons}-button`
+
     // settings menu item types
     | `${MenuItems}-menu-item`
-    | `${ConfirmButtons}-confirm-button`
-    | `${CancelButtons}-cancel-button`
-    | `clear-${ClearButtons}-button`
     | `${SettingsMenuItems}-settings-menu-item`
     | `${Inputs}-input`
 
@@ -205,9 +243,6 @@ declare module 'react' {
     | 'call-notification-answered-a-call'
 
     // settings toggle and buttons
-    | 'remove-password-settings-button'
-    | 'change-password-settings-button'
-    | 'set-password-button'
     | 'enable-read-receipts'
     | 'enable-calls'
     | 'enable-microphone'
@@ -216,33 +251,15 @@ declare module 'react' {
     | 'save-attachment-from-details'
     | 'resend-msg-from-details'
     | 'reply-to-msg-from-details'
-    | 'leave-group-button'
     | 'disappearing-messages'
     | 'group-members'
     | 'edit-group-name'
-    | 'delete-group-button'
 
     // SessionRadioGroup & SessionRadio
     | 'password-input-confirm'
     | 'msg-status'
-    | 'input-device_and_network'
-    | 'label-device_and_network'
-    | 'input-device_only'
-    | 'label-device_only'
-    | 'input-deleteForEveryone'
-    | 'label-deleteForEveryone'
-    | 'input-deleteJustForMe'
-    | 'label-deleteJustForMe'
-    | 'input-enterForSend'
-    | 'label-enterForSend'
-    | 'input-enterForNewLine'
-    | 'label-enterForNewLine'
-    | 'input-message'
-    | 'label-message'
-    | 'input-name'
-    | 'label-name'
-    | 'input-count'
-    | 'label-count'
+    | `input-${InputLabels}`
+    | `label-${InputLabels}`
     | 'clear-everyone-radio-option'
     | 'clear-device-radio-option'
     | 'clear-everyone-radio-option-label'
@@ -254,10 +271,7 @@ declare module 'react' {
     | 'session-faq-link'
 
     // link preview (staged)
-    | 'link-preview-loading'
-    | 'link-preview-image'
-    | 'link-preview-title'
-    | 'link-preview-close'
+    | `link-preview-${'loading' | 'image' | 'title' | 'close'}`
 
     // spacers
     | `spacer-${'xxs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl'}`
@@ -280,54 +294,36 @@ declare module 'react' {
     | 'learn-more-network-link'
     | 'your-swarm-amount'
     | 'nodes-securing-amount'
-    | 'refresh-button'
 
     // to sort
     | 'restore-using-recovery'
     | 'link-device'
     | 'join-community-conversation'
-    | 'join-community-button'
     | 'audio-player'
     | 'select-contact'
     | 'contact' // this is way too generic
     | 'contact-status'
     | 'version-warning'
-    | 'copy-url-button'
-    | 'continue-session-button'
-    | 'next-new-conversation-button'
     | 'reveal-recovery-phrase'
-    | 'existing-account-button'
-    | 'create-account-button'
-    | 'resend-invite-button'
-    | 'session-confirm-cancel-button'
-    | 'session-confirm-ok-button'
     | 'confirm-nickname'
     | 'context-menu-item'
-    | 'view-qr-code-button'
     | 'your-qr-code'
     | 'session-recovery-password'
-    | 'hide-recovery-password-button'
     | 'copy-button-account-id'
     | 'path-light-svg'
     | 'group-member-name'
-    | 'privacy-policy-button'
-    | 'terms-of-service-button'
     | 'chooser-invite-friend'
     | 'your-account-id'
     | 'hide-recovery-phrase-toggle'
     | 'reveal-recovery-phrase-toggle'
     | 'hide-password-input-toggle'
     | 'reveal-password-input-toggle'
-    | 'resend-promote-button'
-    | 'continue-button'
-    | 'back-button'
     | 'empty-conversation'
     | 'session-error-message'
     | 'hide-input-text-toggle'
     | 'show-input-text-toggle'
     | 'save-button-profile-update'
     | 'copy-button-profile-update'
-    | 'create-group-button'
     | 'delete-message-request'
     | 'accept-message-request'
     | 'mentions-popup-row'
@@ -352,7 +348,6 @@ declare module 'react' {
     | 'tooltip-character-count'
     | `${MenuOption}-menu-option`
     | `${MenuOptionDetails}-menu-option`
-    | `${SetButton}-set-button`
     | `${NotificationButtons}`
     | `${NotificationRadioButtons}`
     | `pro-badge-${ProBadges}`
