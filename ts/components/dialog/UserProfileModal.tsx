@@ -30,6 +30,8 @@ import { H5 } from '../basic/Heading';
 import { ProIconButton } from '../buttons/ProButton';
 import { useCurrentUserHasPro } from '../../hooks/useHasPro';
 import { SessionProInfoVariant, showSessionProInfoDialog } from './SessionProInfoModal';
+import { SessionTooltip } from '../SessionTooltip';
+import { shortenDisplayName } from '../../session/profile_manager/ShortenDisplayName';
 
 const StyledHasDisabledMsgRequests = styled.div`
   max-width: 42ch;
@@ -39,15 +41,19 @@ const StyledHasDisabledMsgRequests = styled.div`
 `;
 function HasDisabledMsgRequests({ conversationId }: { conversationId: string }) {
   const username = useConversationUsername(conversationId) ?? PubKey.shorten(conversationId);
+  const name = shortenDisplayName(username);
 
   return (
     <StyledHasDisabledMsgRequests>
-      <Localizer token="messageRequestsTurnedOff" args={{ name: username }} />
+      <Localizer token="messageRequestsTurnedOff" args={{ name }} />
     </StyledHasDisabledMsgRequests>
   );
 }
 
-export const UserProfileModal = ({ conversationId }: NonNullable<UserProfileModalState>) => {
+export const UserProfileModal = ({
+  conversationId,
+  realSessionId,
+}: NonNullable<UserProfileModalState>) => {
   const dispatch = useDispatch();
   const avatarPath = useAvatarPath(conversationId) || '';
   const profileName = useConversationUsername(conversationId) || '';
@@ -61,16 +67,20 @@ export const UserProfileModal = ({ conversationId }: NonNullable<UserProfileModa
   const [mode, setMode] = useState<Exclude<ProfileDialogModes, 'edit'>>('default');
 
   const isBlinded = PubKey.isBlinded(conversationId);
+  const isBlindedAndNotResolved = isBlinded && !realSessionId;
+  const isBlindedAndResolved = isBlinded && !!realSessionId;
   const hasDisabledMsgRequests = useHasDisabledBlindedMsgRequests(conversationId);
-  const blindedAndDisabledMsgRequests = isBlinded && hasDisabledMsgRequests;
+  const blindedAndDisabledMsgRequests = isBlindedAndNotResolved && hasDisabledMsgRequests;
 
   const weArePro = useCurrentUserHasPro();
 
+  const conversationIdDisplayed = isBlindedAndResolved ? realSessionId : conversationId;
+
   async function onClickStartConversation() {
-    if (hasDisabledMsgRequests) {
+    if (isBlindedAndNotResolved && hasDisabledMsgRequests) {
       return;
     }
-    const convo = ConvoHub.use().get(conversationId);
+    const convo = ConvoHub.use().get(conversationIdDisplayed);
 
     const conversation = await ConvoHub.use().getOrCreateAndWait(
       convo.id,
@@ -94,8 +104,7 @@ export const UserProfileModal = ({ conversationId }: NonNullable<UserProfileModa
     () => {
       void onClickStartConversation();
     },
-    undefined,
-    [conversationId]
+    undefined
   );
 
   return (
@@ -110,13 +119,13 @@ export const UserProfileModal = ({ conversationId }: NonNullable<UserProfileModa
             buttonColor={SessionButtonColor.PrimaryDark}
             dataTestId="invalid-data-testid"
             style={{ minWidth: '125px' }}
-            disabled={hasDisabledMsgRequests}
+            disabled={isBlindedAndNotResolved && hasDisabledMsgRequests}
           />
 
-          {!isBlinded && (
+          {!isBlindedAndNotResolved && (
             <CopyToClipboardButton
               text={tr('copy')}
-              copyContent={conversationId}
+              copyContent={conversationIdDisplayed}
               buttonColor={SessionButtonColor.PrimaryDark}
               dataTestId="invalid-data-testid"
               style={{ minWidth: '125px' }}
@@ -136,7 +145,7 @@ export const UserProfileModal = ({ conversationId }: NonNullable<UserProfileModa
         paddingBlock="0 var(--margins-lg)"
       >
         {mode === 'qr' ? (
-          <QRView sessionID={conversationId} setMode={setMode}>
+          <QRView sessionID={conversationIdDisplayed} setMode={setMode}>
             <SessionLucideIconButton
               unicode={LUCIDE_ICONS_UNICODE.USER_ROUND}
               iconSize={'large'}
@@ -161,7 +170,7 @@ export const UserProfileModal = ({ conversationId }: NonNullable<UserProfileModa
             avatarPath={avatarPath}
             profileName={profileName}
             avatarSize={avatarSize}
-            conversationId={conversationId}
+            conversationId={conversationIdDisplayed}
             onAvatarClick={() => {
               setIsEnlargedImageShown(!isEnlargedImageShown);
             }}
@@ -192,8 +201,37 @@ export const UserProfileModal = ({ conversationId }: NonNullable<UserProfileModa
           />
         </H5>
 
-        <SessionIDPill accountType={isBlinded ? 'blinded' : 'theirs'} />
-        <SessionIDNonEditable dataTestId="invalid-data-testid" sessionId={conversationId} />
+        <SessionIDPill accountType={isBlindedAndNotResolved ? 'blinded' : 'theirs'} />
+        <SessionIDNonEditable
+          dataTestId="invalid-data-testid"
+          sessionId={conversationIdDisplayed}
+          displayType={
+            isBlindedAndNotResolved ? 'blinded' : isBlindedAndResolved ? '3lines' : '2lines'
+          }
+          tooltipNode={
+            <SessionTooltip
+              content={
+                !isBlinded ? null : isBlindedAndResolved ? (
+                  <Localizer
+                    token="tooltipAccountIdVisible"
+                    args={{ name: shortenDisplayName(profileName) }}
+                    className="session-id-tooltip"
+                  />
+                ) : (
+                  <Localizer token="tooltipBlindedIdCommunities" className="session-id-tooltip" />
+                )
+              }
+              dataTestId="tooltip-info"
+            >
+              <SessionLucideIconButton
+                unicode={LUCIDE_ICONS_UNICODE.CIRCLE_HELP}
+                iconColor="var(--text-primary-color)"
+                iconSize="small"
+                dataTestId="tooltip"
+              />
+            </SessionTooltip>
+          }
+        />
         {blindedAndDisabledMsgRequests ? (
           <HasDisabledMsgRequests conversationId={conversationId} />
         ) : null}

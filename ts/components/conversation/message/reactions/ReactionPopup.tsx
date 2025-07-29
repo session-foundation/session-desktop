@@ -6,6 +6,7 @@ import { PubKey } from '../../../../session/types/PubKey';
 import { Localizer, type LocalizerProps } from '../../../basic/Localizer';
 import { nativeEmojiData } from '../../../../util/emoji';
 import { useSelectedIsPublic } from '../../../../state/selectors/selectedConversation';
+import { shortenDisplayName } from '../../../../session/profile_manager/ShortenDisplayName';
 
 export const StyledPopupContainer = styled.div`
   display: flex;
@@ -41,7 +42,7 @@ const generateContactsString = (
 
       // Shorten the name if it's too long, the box these names are listed in is pretty small
       if (resolvedName && resolvedName.length > 13) {
-        resolvedName = `${resolvedName.slice(0, 10)}…`;
+        resolvedName = shortenDisplayName(resolvedName);
       }
 
       const nameSuffix = isPublic && resolvedName ? shortPubkey : '';

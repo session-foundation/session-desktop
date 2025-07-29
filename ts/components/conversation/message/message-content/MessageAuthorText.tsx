@@ -14,7 +14,7 @@ import {
 } from '../../../../state/selectors/selectedConversation';
 import { Flex } from '../../../basic/Flex';
 import { ContactName } from '../../ContactName';
-import { useOnMessageAvatarClickCb } from '../../../menuAndSettingsHooks/useMessageAvatarClickCb';
+import { useShowUserDetailsCbFromMessage } from '../../../menuAndSettingsHooks/useShowUserDetailsCb';
 
 type Props = {
   messageId: string;
@@ -35,7 +35,7 @@ export const MessageAuthorText = ({ messageId }: Props) => {
   const direction = useMessageDirection(messageId);
   const firstMessageOfSeries = useFirstMessageOfSeries(messageId);
   const hideAvatar = useHideAvatarInMsgList(messageId);
-  const onMessageAvatarClick = useOnMessageAvatarClickCb();
+  const showUserDetailsCb = useShowUserDetailsCbFromMessage();
 
   if (!messageId || !sender || !direction) {
     return null;
@@ -54,7 +54,7 @@ export const MessageAuthorText = ({ messageId }: Props) => {
       $container={true}
       hideAvatar={hideAvatar}
       onClick={() => {
-        void onMessageAvatarClick({ messageId });
+        void showUserDetailsCb({ messageId });
       }}
       style={{ cursor: 'pointer' }}
     >

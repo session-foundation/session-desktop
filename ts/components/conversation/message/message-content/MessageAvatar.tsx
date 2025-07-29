@@ -6,7 +6,7 @@ import {
   useMessageSenderIsAdmin,
 } from '../../../../state/selectors';
 import { Avatar, AvatarSize, CrownIcon } from '../../../avatar/Avatar';
-import { useOnMessageAvatarClickCb } from '../../../menuAndSettingsHooks/useMessageAvatarClickCb';
+import { useShowUserDetailsCbFromMessage } from '../../../menuAndSettingsHooks/useShowUserDetailsCb';
 
 const StyledAvatar = styled.div`
   position: relative;
@@ -31,7 +31,7 @@ export const MessageAvatar = (props: Props) => {
   const lastMessageOfSeries = useLastMessageOfSeries(messageId);
   const isSenderAdmin = useMessageSenderIsAdmin(messageId);
 
-  const onMessageAvatarClick = useOnMessageAvatarClickCb();
+  const showUserDetailsCb = useShowUserDetailsCbFromMessage();
 
   if (!sender) {
     return null;
@@ -51,7 +51,7 @@ export const MessageAvatar = (props: Props) => {
       <Avatar
         size={AvatarSize.S}
         onAvatarClick={() => {
-          void onMessageAvatarClick({ messageId });
+          void showUserDetailsCb({ messageId });
         }}
         pubkey={sender}
       />

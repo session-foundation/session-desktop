@@ -40,7 +40,10 @@ export type SessionProInfoState = { variant: SessionProInfoVariant } | null;
 export type SessionPasswordModalState = { passwordAction: PasswordAction; onOk: () => void } | null;
 
 export type UserProfileModalState = {
+  /** this can be blinded or not */
   conversationId: string;
+  /** if conversationId is blinded, and we know the real corresponding sessionID, this is it. */
+  realSessionId: string | null;
 } | null;
 
 export type ReactModalsState = {

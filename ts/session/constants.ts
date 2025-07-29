@@ -85,6 +85,13 @@ export const CONVERSATION = {
   MAX_MESSAGE_CHAR_COUNT_PRO: 10_000,
   MAX_MESSAGE_MAX_LINES_BEFORE_READ_MORE: 25,
   MAX_PINNED_CONVERSATIONS_STANDARD: 5,
+
+  /**
+   * When we need to shorten a display name, we do it to this length and add an ellipsis.
+   * This is to avoid having a very long name in the UI, when the full name isn't needed.
+   * 10 characters
+   */
+  MAX_SHORTENED_NAME_LENGTH: 10,
 } as const;
 
 /**

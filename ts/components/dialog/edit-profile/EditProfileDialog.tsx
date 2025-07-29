@@ -359,7 +359,12 @@ export const EditProfileDialog = () => {
           width={'100%'}
         >
           <SessionIDPill accountType="ours" />
-          <SessionIDNonEditable dataTestId="your-account-id" sessionId={us} />
+          <SessionIDNonEditable
+            dataTestId="your-account-id"
+            sessionId={us}
+            displayType="2lines"
+            tooltipNode={null}
+          />
           <SessionSpinner loading={loading} height={'74px'} />
         </StyledSessionIdSection>
       </SessionWrapperModal>

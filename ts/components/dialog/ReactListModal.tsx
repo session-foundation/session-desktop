@@ -2,15 +2,10 @@ import { isEmpty, isEqual } from 'lodash';
 import { useEffect, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
-import { Data } from '../../data/data';
 import { useMessageReactsPropsById } from '../../hooks/useParamSelector';
 import { isUsAnySogsFromCache } from '../../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import { UserUtils } from '../../session/utils';
-import {
-  updateReactClearAllModal,
-  updateReactListModal,
-  updateUserProfileModal,
-} from '../../state/ducks/modalDialog';
+import { updateReactClearAllModal, updateReactListModal } from '../../state/ducks/modalDialog';
 import {
   useSelectedConversationKey,
   useSelectedIsPublic,
@@ -29,6 +24,7 @@ import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { SessionWrapperModal } from '../SessionWrapperModal';
 import { tr } from '../../localization/localeTools';
 import { useWeAreCommunityAdminOrModerator } from '../../state/selectors/conversations';
+import { useShowUserDetailsCbFromMessage } from '../menuAndSettingsHooks/useShowUserDetailsCb';
 
 const StyledReactListContainer = styled(Flex)`
   width: 100%;
@@ -109,17 +105,7 @@ const ReactionSenders = (props: ReactionSendersProps) => {
   const dispatch = useDispatch();
   const isPublic = useSelectedIsPublic();
 
-  const handleAvatarClick = async (sender: string) => {
-    const message = await Data.getMessageById(messageId);
-    if (message) {
-      handleClose();
-      dispatch(
-        updateUserProfileModal({
-          conversationId: sender,
-        })
-      );
-    }
-  };
+  const showUserDetailsCb = useShowUserDetailsCbFromMessage();
 
   const handleRemoveReaction = async () => {
     await Reactions.sendMessageReaction(messageId, currentReact);
@@ -143,7 +129,8 @@ const ReactionSenders = (props: ReactionSendersProps) => {
               size={AvatarSize.XS}
               pubkey={sender}
               onAvatarClick={() => {
-                void handleAvatarClick(sender);
+                handleClose();
+                void showUserDetailsCb({ messageId });
               }}
             />
             {sender === me ? (

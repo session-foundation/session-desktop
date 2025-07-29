@@ -1,11 +1,7 @@
 import styled from 'styled-components';
-import type { SessionDataTestId } from 'react';
+import type { ReactNode, SessionDataTestId } from 'react';
 import { tr } from '../../localization/localeTools';
 import { PubKey } from '../../session/types';
-import { SessionLucideIconButton } from '../icon/SessionIconButton';
-import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
-import { SessionTooltip } from '../SessionTooltip';
-import { Localizer } from './Localizer';
 
 const StyledPillDividerLine = styled.div`
   border-bottom: 1px solid var(--border-color);
@@ -69,40 +65,56 @@ const StyledSessionIDNonEditable = styled.div`
 export const SessionIDNonEditable = ({
   sessionId,
   dataTestId,
+  tooltipNode,
+  displayType,
 }: {
   sessionId: string;
+  tooltipNode: ReactNode | null;
+  displayType: 'blinded' | '2lines' | '3lines';
   dataTestId?: SessionDataTestId;
 }) => {
-  const isBlinded = PubKey.isBlinded(sessionId);
-
   if (sessionId.length !== 66) {
     throw new Error('Unsupported case for SessionIDNonEditable: sessionId.length !== 66');
   }
+  if (PubKey.isBlinded(sessionId) && displayType !== 'blinded') {
+    throw new Error('Unsupported case for SessionIDNonEditable: sessionId is blinded');
+  }
 
-  const shortenedSessionId = PubKey.shorten(sessionId, {
-    keepCharacters: 12,
-    withParenthesis: false,
-  });
+  const style = tooltipNode ? { marginLeft: 'var(--margins-lg)' } : undefined;
 
-  if (isBlinded) {
+  if (displayType === 'blinded') {
+    const shortenedSessionId = PubKey.shorten(sessionId, {
+      keepCharacters: 12,
+      withParenthesis: false,
+    });
+
     return (
       <StyledSessionIDNonEditable
         data-testid={dataTestId}
         // Note: we want the text centered even if the tooltip is offsetting it
-        style={{ marginLeft: 'var(--margins-lg)' }}
+        style={style}
       >
         {shortenedSessionId}
-        <SessionTooltip
-          content={<Localizer token="tooltipBlindedIdCommunities" className="session-id-tooltip" />}
-          dataTestId="tooltip-info"
-        >
-          <SessionLucideIconButton
-            unicode={LUCIDE_ICONS_UNICODE.CIRCLE_HELP}
-            iconColor="var(--text-primary-color)"
-            iconSize="small"
-            dataTestId="tooltip"
-          />
-        </SessionTooltip>
+        {tooltipNode}
+      </StyledSessionIDNonEditable>
+    );
+  }
+
+  if (displayType === '3lines') {
+    const firstLine = sessionId.slice(0, 27);
+    const secondLine = sessionId.slice(27, 54);
+    const thirdLine = sessionId.slice(54);
+    return (
+      <StyledSessionIDNonEditable
+        data-testid={dataTestId} // Note: we want the text centered even if the tooltip is offsetting it
+        style={style}
+      >
+        {firstLine}
+        <br />
+        {secondLine}
+        <br />
+        {thirdLine}
+        {tooltipNode}
       </StyledSessionIDNonEditable>
     );
   }

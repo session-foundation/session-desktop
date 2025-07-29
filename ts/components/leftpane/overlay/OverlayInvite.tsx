@@ -78,7 +78,12 @@ export const OverlayInvite = () => {
       {!idCopied ? (
         <>
           <Flex $container={true} width={'100%'} $justifyContent="center" $alignItems="center">
-            <SessionIDNonEditable dataTestId="your-account-id" sessionId={ourSessionID} />
+            <SessionIDNonEditable
+              dataTestId="your-account-id"
+              sessionId={ourSessionID}
+              displayType="2lines"
+              tooltipNode={null}
+            />
           </Flex>
           <SpacerMD />
           <StyledDescription>{tr('accountIdCopyDescription')}</StyledDescription>

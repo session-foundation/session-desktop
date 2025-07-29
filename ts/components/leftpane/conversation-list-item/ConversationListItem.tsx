@@ -4,29 +4,22 @@ import clsx from 'clsx';
 
 import { contextMenu } from 'react-contexify';
 import { createPortal } from 'react-dom';
-import { useDispatch } from 'react-redux';
 
 import { CSSProperties } from 'styled-components';
 import { Avatar, AvatarSize } from '../../avatar/Avatar';
-
-import { updateUserProfileModal } from '../../../state/ducks/modalDialog';
 
 import {
   ContextConversationProvider,
   useConvoIdFromContext,
 } from '../../../contexts/ConvoIdContext';
-import {
-  useHasUnread,
-  useIsBlocked,
-  useIsPrivate,
-  useMentionedUs,
-} from '../../../hooks/useParamSelector';
+import { useHasUnread, useIsBlocked, useMentionedUs } from '../../../hooks/useParamSelector';
 import { useIsSearchingForType } from '../../../state/selectors/search';
 import { useSelectedConversationKey } from '../../../state/selectors/selectedConversation';
 import { MemoConversationListItemContextMenu } from '../../menu/ConversationListItemContextMenu';
 import { ConversationListItemHeaderItem } from './HeaderItem';
 import { MessageItem } from './MessageItem';
 import { openConversationWithMessages } from '../../../state/ducks/conversations';
+import { useShowUserDetailsCbFromConversation } from '../../menuAndSettingsHooks/useShowUserDetailsCb';
 
 const Portal = ({ children }: { children: ReactNode }) => {
   return createPortal(children, document.querySelector('.inbox.index') as Element);
@@ -34,23 +27,15 @@ const Portal = ({ children }: { children: ReactNode }) => {
 
 const AvatarItem = () => {
   const conversationId = useConvoIdFromContext();
-  const isPrivate = useIsPrivate(conversationId);
-  const dispatch = useDispatch();
 
-  function onPrivateAvatarClick() {
-    dispatch(
-      updateUserProfileModal({
-        conversationId,
-      })
-    );
-  }
+  const showUserDetailsCb = useShowUserDetailsCbFromConversation(conversationId);
 
   return (
     <div>
       <Avatar
         size={AvatarSize.S}
         pubkey={conversationId}
-        onAvatarClick={isPrivate ? onPrivateAvatarClick : undefined}
+        onAvatarClick={showUserDetailsCb ?? undefined}
       />
     </div>
   );

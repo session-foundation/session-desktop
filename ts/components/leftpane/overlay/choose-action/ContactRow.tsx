@@ -1,8 +1,7 @@
-import { useDispatch } from 'react-redux';
 import styled, { CSSProperties } from 'styled-components';
 import { openConversationWithMessages } from '../../../../state/ducks/conversations';
-import { updateUserProfileModal } from '../../../../state/ducks/modalDialog';
 import { Avatar, AvatarSize } from '../../../avatar/Avatar';
+import { useShowUserDetailsCbFromConversation } from '../../../menuAndSettingsHooks/useShowUserDetailsCb';
 
 type Props = { id: string; displayName?: string; style: CSSProperties };
 
@@ -13,19 +12,11 @@ const StyledAvatarItem = styled.div`
 const AvatarItem = (props: Pick<Props, 'id'>) => {
   const { id } = props;
 
-  const dispatch = useDispatch();
-
-  function onPrivateAvatarClick() {
-    dispatch(
-      updateUserProfileModal({
-        conversationId: id,
-      })
-    );
-  }
+  const showUserDetailsFromConversationCb = useShowUserDetailsCbFromConversation(id) ?? undefined;
 
   return (
     <StyledAvatarItem>
-      <Avatar size={AvatarSize.S} pubkey={id} onAvatarClick={onPrivateAvatarClick} />
+      <Avatar size={AvatarSize.S} pubkey={id} onAvatarClick={showUserDetailsFromConversationCb} />
     </StyledAvatarItem>
   );
 };

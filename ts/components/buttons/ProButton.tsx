@@ -1,6 +1,6 @@
 import type { SessionDataTestId } from 'react';
-import { SessionIcon, SessionIconButton, type SessionIconSize } from '../icon';
 import type { CSSProperties } from 'styled-components';
+import { SessionIcon, SessionIconButton, type SessionIconSize } from '../icon';
 
 function sizeToBorderRadius(size: SessionIconSize) {
   switch (size) {

@@ -1,8 +1,6 @@
 import { Submenu } from 'react-contexify';
-import { useDispatch } from 'react-redux';
 import { useConvoIdFromContext } from '../../contexts/ConvoIdContext';
 import {
-  useIsBlinded,
   useIsGroupV2,
   useIsIncomingRequest,
   useIsKickedFromGroup,
@@ -19,7 +17,6 @@ import {
 } from '../../interactions/conversationInteractions';
 import { ConvoHub } from '../../session/conversations';
 import { PubKey } from '../../session/types';
-import { updateUserProfileModal } from '../../state/ducks/modalDialog';
 import { useConversationIdOrigin } from '../../state/selectors/conversations';
 import {
   useIsMessageRequestOverlayShown,
@@ -46,6 +43,7 @@ import { useSetNotificationsFor } from '../menuAndSettingsHooks/useSetNotificati
 import { Localizer } from '../basic/Localizer';
 import { useChangeNickname } from '../menuAndSettingsHooks/useChangeNickname';
 import { useShowNoteToSelfCb } from '../menuAndSettingsHooks/useShowNoteToSelf';
+import { useShowUserDetailsCbFromConversation } from '../menuAndSettingsHooks/useShowUserDetailsCb';
 
 /** Menu items standardized */
 
@@ -106,22 +104,13 @@ export const DeletePrivateContactMenuItem = () => {
 };
 
 export const ShowUserProfileMenuItem = () => {
-  const dispatch = useDispatch();
   const convoId = useConvoIdFromContext();
-  const isPrivate = useIsPrivate(convoId);
-  const isBlinded = useIsBlinded(convoId);
 
-  if (isPrivate && !isBlinded) {
+  const showUserDetailsCb = useShowUserDetailsCbFromConversation(convoId);
+
+  if (showUserDetailsCb) {
     return (
-      <ItemWithDataTestId
-        onClick={() => {
-          dispatch(
-            updateUserProfileModal({
-              conversationId: convoId,
-            })
-          );
-        }}
-      >
+      <ItemWithDataTestId onClick={showUserDetailsCb}>
         {tr('contactUserDetails')}
       </ItemWithDataTestId>
     );
