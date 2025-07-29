@@ -53,7 +53,6 @@ const allowedKeysFormatRowOfConversation = [
   'isApproved',
   'didApproveMe',
   'mentionedUs',
-  'isKickedFromGroup',
   'left',
   'lastMessage',
   'lastMessageStatus',
@@ -124,7 +123,6 @@ export function formatRowOfConversation(
   convo.isTrustedForAttachmentDownload = Boolean(convo.isTrustedForAttachmentDownload);
   convo.isApproved = Boolean(convo.isApproved);
   convo.didApproveMe = Boolean(convo.didApproveMe);
-  convo.isKickedFromGroup = Boolean(convo.isKickedFromGroup);
   convo.left = Boolean(convo.left);
   convo.markedAsUnread = Boolean(convo.markedAsUnread);
   convo.priority = convo.priority || CONVERSATION_PRIORITIES.default;
@@ -185,7 +183,6 @@ const allowedKeysOfConversationAttributes = [
   'isTrustedForAttachmentDownload',
   'isApproved',
   'didApproveMe',
-  'isKickedFromGroup',
   'left',
   'lastMessage',
   'lastMessageStatus',

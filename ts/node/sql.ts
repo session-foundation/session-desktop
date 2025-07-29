@@ -473,7 +473,6 @@ function saveConversation(data: ConversationAttributes): SaveConversationReturn 
     lastMessageInteractionStatus,
     lastJoinedTimestamp,
     groupAdmins,
-    isKickedFromGroup,
     avatarPointer,
     triggerNotificationsFor,
     isTrustedForAttachmentDownload,
@@ -526,7 +525,6 @@ function saveConversation(data: ConversationAttributes): SaveConversationReturn 
 
       lastJoinedTimestamp,
       groupAdmins: groupAdmins && groupAdmins.length ? arrayStrToJson(groupAdmins) : '[]',
-      isKickedFromGroup: toSqliteBoolean(isKickedFromGroup),
       avatarPointer,
       triggerNotificationsFor,
       isTrustedForAttachmentDownload: toSqliteBoolean(isTrustedForAttachmentDownload),

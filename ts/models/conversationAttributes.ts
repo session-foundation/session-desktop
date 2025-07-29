@@ -54,8 +54,7 @@ export interface ConversationAttributes {
   lastMessageInteractionType: ConversationInteractionType | null;
   lastMessageInteractionStatus: ConversationInteractionStatus | null;
 
-  left: boolean; // LEGACY GROUPS ONLY: if we left the group (communities are removed right away so it not relevant to communities) // TODOLATER to remove after legacy closed group are dropped
-  isKickedFromGroup: boolean; // LEGACY GROUPS ONLY: if we got kicked from the group (communities just stop polling and a message sent get rejected, so not relevant to communities) // TODOLATER to remove after legacy closed group are dropped
+  left: boolean; // legacy & groupv2, should eventually be removed to rely on libsession value directly
 
   /**
    * We now require all avatars stored on desktop to have in additions of their normal avatars
@@ -83,8 +82,7 @@ export interface ConversationAttributes {
   conversationIdOrigin?: string; // The conversation from which this conversation originated from: blinded message request or 03-group admin who invited us
 
   // TODOLATER those two items are only used for legacy closed groups and will be removed when we get rid of the legacy closed groups support
-  lastJoinedTimestamp: number; // ClosedGroup: last time we were added to this group // TODOLATER to remove after legacy closed group are dropped
-  zombies: Array<string>; // only used for closed groups. Zombies are users which left but not yet removed by the admin // TODOLATER to remove after legacy closed group are dropped
+  lastJoinedTimestamp: number; // GroupV2: last time we were added to this group, should eventually be removed to rely on libsession value directly
 
   // ===========================================================================
   // All of the items below are duplicated one way or the other with libsession.
@@ -157,7 +155,6 @@ export const fillConvoAttributesWithDefaults = (
     isTrustedForAttachmentDownload: false, // we don't trust a contact until we say so
     isApproved: false,
     didApproveMe: false,
-    isKickedFromGroup: false,
     left: false,
     priority: CONVERSATION_PRIORITIES.default,
     markedAsUnread: false,

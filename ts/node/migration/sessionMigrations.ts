@@ -2150,7 +2150,11 @@ async function updateToSessionSchemaVersion46(currentVersion: number, db: Better
     db.exec(`
           ALTER TABLE ${CONVERSATIONS_TABLE} ADD COLUMN fallbackAvatarInProfile TEXT;
           ALTER TABLE ${CONVERSATIONS_TABLE} DROP COLUMN avatarImageId;
+          ALTER TABLE ${CONVERSATIONS_TABLE} DROP COLUMN isKickedFromGroup;
+          UPDATE ${CONVERSATIONS_TABLE} SET json = json_remove(json, '$.avatarImageId', '$.isKickedFromGroup', '$.zombies');
          `);
+    // should we also remove legacy groups entirely DELETE FROM ${CONVERSATIONS_TABLE} WHERE type = 'group' AND id LIKE '05%';
+
     writeSessionSchemaVersion(targetVersion, db);
   })();
 

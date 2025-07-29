@@ -2034,12 +2034,10 @@ export class ConversationModel extends Model<ConversationAttributes> {
   }
 
   public isKickedFromGroup(): boolean {
-    if (this.isClosedGroup()) {
-      if (this.isClosedGroupV2()) {
-        return getLibGroupKickedOutsideRedux(this.id) || false;
-      }
-      return !!this.get('isKickedFromGroup');
+    if (this.isClosedGroupV2()) {
+      return getLibGroupKickedOutsideRedux(this.id) || false;
     }
+    // legacy group are deprecated
     return false;
   }
 

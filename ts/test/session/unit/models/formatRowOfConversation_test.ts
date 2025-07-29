@@ -75,27 +75,6 @@ describe('formatRowOfConversation', () => {
     });
   });
 
-  describe('isKickedFromGroup', () => {
-    it('initialize isKickedFromGroup if they are not given', () => {
-      expect(formatRowOfConversation({}, 'test', 0, false)).to.have.deep.property(
-        'isKickedFromGroup',
-        false
-      );
-    });
-
-    it('do not override isKickedFromGroup if they are set in the row as integer: true', () => {
-      expect(
-        formatRowOfConversation({ isKickedFromGroup: 1 }, 'test', 0, false)
-      ).to.have.deep.property('isKickedFromGroup', true);
-    });
-
-    it('do not override isKickedFromGroup if they are set in the row as integer: false', () => {
-      expect(
-        formatRowOfConversation({ isKickedFromGroup: 0 }, 'test', 0, false)
-      ).to.have.deep.property('isKickedFromGroup', false);
-    });
-  });
-
   describe('left', () => {
     it('initialize left if they are not given', () => {
       expect(formatRowOfConversation({}, 'test', 0, false)).to.have.deep.property('left', false);

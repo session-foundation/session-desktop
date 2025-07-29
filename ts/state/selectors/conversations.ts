@@ -978,8 +978,8 @@ export const getGenericReadableMessageSelectorProps = createSelector(
       'isExpired',
       'isUnread',
       'receivedAt',
-      'isKickedFromGroup',
       'isDeleted',
+      'isKickedFromGroup',
     ]);
 
     return msgProps;
