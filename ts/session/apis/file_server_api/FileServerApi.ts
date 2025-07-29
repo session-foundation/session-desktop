@@ -222,7 +222,7 @@ export const getFileInfoFromFileServer = async (
     stringifiedBody: null,
     endpoint: `${POST_GET_FILE_ENDPOINT}/${fileId}/info`,
     method: 'GET',
-    timeoutMs: 10 * DURATION.SECONDS, // longer time for file upload
+    timeoutMs: 10 * DURATION.SECONDS,
     headers: {},
   });
 
