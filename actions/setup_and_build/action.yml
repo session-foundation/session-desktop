@@ -46,4 +46,4 @@ runs:
 
     - name: Generate and concat files
       shell: bash
-      run: yarn build-everything
+      run: yarn build

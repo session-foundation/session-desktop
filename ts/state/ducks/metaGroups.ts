@@ -57,9 +57,9 @@ import { uploadFileToFsWithOnionV4 } from '../../session/apis/file_server_api/Fi
 import { urlToBlob } from '../../types/attachments/VisualAttachment';
 import { encryptProfile } from '../../util/crypto/profileEncrypter';
 import { processNewAttachment } from '../../types/MessageAttachment';
-import { MIME } from '../../types';
 import type { StoreGroupMessageSubRequest } from '../../session/apis/snode_api/SnodeRequestTypes';
 import { sectionActions } from './section';
+import { processAvatarData } from '../../util/avatar/processAvatarData';
 
 export type GroupState = {
   infos: Record<GroupPubkeyType, GroupInfoGet>;
@@ -1010,28 +1010,46 @@ async function handleAvatarChangeFromUI({
 
   const blobAvatarAlreadyScaled = await urlToBlob(objectUrl);
 
-  const dataResizedUnencrypted = await blobAvatarAlreadyScaled.arrayBuffer();
+  const dataUnencrypted = await blobAvatarAlreadyScaled.arrayBuffer();
+
+  const processed = await processAvatarData(dataUnencrypted);
+
+  if (!processed) {
+    throw new Error('Failed to process avatar');
+  }
+
   // generate a new profile key for this group
   const profileKey = (await getSodiumRenderer()).randombytes_buf(32);
   // encrypt the avatar data with the profile key
-  const encryptedData = await encryptProfile(dataResizedUnencrypted, profileKey);
+  const encryptedData = await encryptProfile(processed.mainAvatarDetails.outputBuffer, profileKey);
 
+  // TODO: we should store the expiries of the attachment somewhere in libsession I assume, and reupload as needed
   const uploadedFileDetails = await uploadFileToFsWithOnionV4(encryptedData);
   if (!uploadedFileDetails || !uploadedFileDetails.fileUrl) {
     window?.log?.warn('File upload for groupv2 to file server failed');
     throw new Error('File upload for groupv2 to file server failed');
   }
-  const { fileUrl, fileId } = uploadedFileDetails;
+  const { fileUrl } = uploadedFileDetails;
 
-  const upgraded = await processNewAttachment({
-    data: dataResizedUnencrypted,
+  const upgradedMainAvatar = await processNewAttachment({
+    data: processed.mainAvatarDetails.outputBuffer,
     isRaw: true,
-    contentType: MIME.IMAGE_UNKNOWN, // contentType is mostly used to generate previews and screenshot. We do not care for those in this case.
+    contentType: processed.mainAvatarDetails.contentType,
   });
+
+  const upgradedFallbackAvatar = processed.avatarFallback
+    ? await processNewAttachment({
+        data: processed.avatarFallback.outputBuffer,
+        isRaw: true,
+        contentType: processed.avatarFallback.contentType,
+      })
+    : undefined;
+
   await convo.setSessionProfile({
     displayName: null, // null so we don't overwrite it
-    avatarPath: upgraded.path,
-    avatarImageId: fileId,
+    avatarPath: upgradedMainAvatar.path,
+    fallbackAvatarPath: upgradedFallbackAvatar?.path || upgradedMainAvatar.path,
+    avatarPointer: fileUrl,
   });
   infos.profilePicture = { url: fileUrl, key: profileKey };
   await MetaGroupWrapperActions.infoSet(groupPk, infos);
@@ -1106,7 +1124,8 @@ async function handleClearAvatarFromUI({ groupPk }: WithGroupPubkey) {
   // return early if no change are needed at all
   if (
     isNil(convo.get('avatarPointer')) &&
-    isNil(convo.get('avatarInProfile')) &&
+    isNil(convo.getAvatarInProfilePath()) &&
+    isNil(convo.getFallbackAvatarInProfilePath()) &&
     isNil(convo.get('profileKey'))
   ) {
     return;
@@ -1131,9 +1150,13 @@ async function handleClearAvatarFromUI({ groupPk }: WithGroupPubkey) {
   }
 
   await checkWeAreAdminOrThrow(groupPk, 'handleAvatarChangeFromUI');
-  convo.setKey('avatarPointer', undefined);
-  convo.setKey('avatarInProfile', undefined);
-  convo.setKey('profileKey', undefined);
+  convo.setKey('profileKey', undefined)
+  await convo.setSessionProfile({
+    avatarPointer: undefined,
+    avatarPath: undefined,
+    fallbackAvatarPath: undefined,
+    displayName: null,
+  });
 
   const createAtNetworkTimestamp = NetworkTime.now();
   // we want to add an update message even if the change was done remotely

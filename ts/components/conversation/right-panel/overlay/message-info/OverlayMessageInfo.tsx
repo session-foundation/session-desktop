@@ -41,7 +41,7 @@ import {
   getVideoDuration,
 } from '../../../../../types/attachments/VisualAttachment';
 import { GoogleChrome } from '../../../../../util';
-import { saveAttachmentToDisk } from '../../../../../util/attachmentsUtil';
+import { saveAttachmentToDisk } from '../../../../../util/attachment/attachmentsUtil';
 import { SpacerLG, SpacerMD, SpacerXL } from '../../../../basic/Text';
 import { PanelButtonGroup, PanelIconButton } from '../../../../buttons';
 import { Message } from '../../../message/message-item/Message';

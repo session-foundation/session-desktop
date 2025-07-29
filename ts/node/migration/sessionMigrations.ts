@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 /* eslint-disable no-unused-expressions */
 import * as BetterSqlite3 from '@signalapp/better-sqlite3';
 import {
@@ -7,6 +8,7 @@ import {
   UserGroupsWrapperNode,
 } from 'libsession_util_nodejs';
 import { compact, isArray, isEmpty, isNil, isString, map, pick } from 'lodash';
+
 import { ConversationAttributes } from '../../models/conversationAttributes';
 import { fromHexToArray } from '../../session/utils/String';
 import { CONFIG_DUMP_TABLE } from '../../types/sqlSharedTypes';
@@ -68,7 +70,9 @@ function createSessionSchemaTable(db: BetterSqlite3.Database) {
   })();
 }
 
-const LOKI_SCHEMA_VERSIONS = [
+const LOKI_SCHEMA_VERSIONS: Array<
+  (currentVersion: number, db: BetterSqlite3.Database) => void | Promise<void>
+> = [
   updateToSessionSchemaVersion1,
   updateToSessionSchemaVersion2,
   updateToSessionSchemaVersion3,
@@ -114,6 +118,7 @@ const LOKI_SCHEMA_VERSIONS = [
   updateToSessionSchemaVersion43,
   updateToSessionSchemaVersion44,
   updateToSessionSchemaVersion45,
+  updateToSessionSchemaVersion46,
 ];
 
 function updateToSessionSchemaVersion1(currentVersion: number, db: BetterSqlite3.Database) {
@@ -2134,6 +2139,24 @@ function updateToSessionSchemaVersion45(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
+async function updateToSessionSchemaVersion46(currentVersion: number, db: BetterSqlite3.Database) {
+  const targetVersion = 46;
+  if (currentVersion >= targetVersion) {
+    return;
+  }
+  console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
+
+  db.transaction(() => {
+    db.exec(`
+          ALTER TABLE ${CONVERSATIONS_TABLE} ADD COLUMN fallbackAvatarInProfile TEXT;
+          ALTER TABLE ${CONVERSATIONS_TABLE} DROP COLUMN avatarImageId;
+         `);
+    writeSessionSchemaVersion(targetVersion, db);
+  })();
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
+}
+
 export function printTableColumns(table: string, db: BetterSqlite3.Database) {
   console.info(db.pragma(`table_info('${table}');`));
 }
@@ -2164,7 +2187,8 @@ export async function updateSessionSchema(db: BetterSqlite3.Database) {
   );
   for (let index = 0, max = LOKI_SCHEMA_VERSIONS.length; index < max; index += 1) {
     const runSchemaUpdate = LOKI_SCHEMA_VERSIONS[index];
-    runSchemaUpdate(lokiSchemaVersion, db);
+    await runSchemaUpdate(lokiSchemaVersion, db);
+
     if (index > lokiSchemaVersion && index - lokiSchemaVersion <= 3) {
       /** When running migrations, we block the node process.
        * This causes the app to be in a Not responding state when we have a lot of data.
@@ -2175,7 +2199,6 @@ export async function updateSessionSchema(db: BetterSqlite3.Database) {
        *
        * This means that this sleepFor will only sleep for at most 600ms, even if we need to run 30 migrations.
        */
-      // eslint-disable-next-line no-await-in-loop
       await sleepFor(200); // give some time for the UI to not freeze between 2 migrations
     }
   }

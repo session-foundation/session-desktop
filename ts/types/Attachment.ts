@@ -3,16 +3,18 @@ import { isUndefined, padStart } from 'lodash';
 import { format } from 'date-fns';
 import { SignalService } from '../protobuf';
 import { isImageTypeSupported, isVideoTypeSupported } from '../util/GoogleChrome';
-import { ATTACHMENT_DEFAULT_MAX_SIDE } from '../util/attachmentsUtil';
 import { saveURLAsFile } from '../util/saveURLAsFile';
 import * as MIME from './MIME';
-import { THUMBNAIL_SIDE } from './attachments/VisualAttachment';
 import { AriaLabels } from '../util/hardcodedAriaLabels';
+import {
+  ATTACHMENT_DEFAULT_MAX_SIDE,
+  maxThumbnailDetails,
+} from '../util/attachment/attachmentSizes';
 
-const MAX_WIDTH = THUMBNAIL_SIDE;
-const MAX_HEIGHT = THUMBNAIL_SIDE;
-const MIN_WIDTH = THUMBNAIL_SIDE;
-const MIN_HEIGHT = THUMBNAIL_SIDE;
+const MAX_WIDTH = maxThumbnailDetails.maxSide;
+const MAX_HEIGHT = maxThumbnailDetails.maxSide;
+const MIN_WIDTH = maxThumbnailDetails.maxSide;
+const MIN_HEIGHT = maxThumbnailDetails.maxSide;
 
 // Used for displaying attachments in the UI
 export type AttachmentScreenshot = {
@@ -112,19 +114,11 @@ export function canDisplayImagePreview(attachments?: Array<AttachmentType>) {
 }
 
 export function getThumbnailUrl(attachment: AttachmentType): string {
-  if (attachment.thumbnail && attachment.thumbnail.url) {
-    return attachment.thumbnail.url;
-  }
-
-  return getUrl(attachment);
+  return attachment?.thumbnail?.url || getUrl(attachment);
 }
 
 export function getUrl(attachment: AttachmentType): string {
-  if (attachment.screenshot && attachment.screenshot.url) {
-    return attachment.screenshot.url as string;
-  }
-
-  return attachment.url;
+  return attachment?.screenshot?.url || attachment.url;
 }
 
 export function isImage(attachments?: Array<AttachmentType>) {
@@ -269,24 +263,12 @@ export const isFile = (attachment: Attachment): boolean => {
   return true;
 };
 
-export const isVoiceMessage = (attachment: Attachment): boolean => {
+export const isVoiceMessage = (attachment: Pick<Attachment, 'flags'>): boolean => {
   const flag = SignalService.AttachmentPointer.Flags.VOICE_MESSAGE;
   const hasFlag =
     // eslint-disable-next-line no-bitwise
     !isUndefined(attachment.flags) && (attachment.flags & flag) === flag;
-  if (hasFlag) {
-    return true;
-  }
-
-  const isLegacyAndroidVoiceMessage =
-    !isUndefined(attachment.contentType) &&
-    MIME.isAudio(attachment.contentType) &&
-    !attachment.fileName;
-  if (isLegacyAndroidVoiceMessage) {
-    return true;
-  }
-
-  return false;
+  return hasFlag;
 };
 
 export const save = ({

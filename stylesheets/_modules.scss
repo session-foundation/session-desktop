@@ -108,9 +108,7 @@
   margin: var(--padding-link-preview);
 
   .module-image {
-    margin-top: -1px;
-    margin-left: -1px;
-    margin-bottom: 0;
+    margin: 0;
     border-radius: 0;
     border-top-left-radius: var(--border-radius-message-box);
   }
@@ -523,21 +521,6 @@
   text-align: center;
   background-color: rgba(0, 0, 0, 0.7);
 }
-
-// Module: Attachments
-
-.module-attachments {
-  border-top: 1px solid var(--border-color);
-}
-
-.module-attachments__header {
-  height: 24px;
-  position: relative;
-}
-
-
-
-
 
 // Module: Caption Editor
 .module-caption-editor {

@@ -1,38 +1,32 @@
 import { AbortSignal } from 'abort-controller';
+import { useEffect, useMemo } from 'react';
+import styled from 'styled-components';
 import insecureNodeFetch from 'node-fetch';
+
 import { StagedLinkPreviewData } from './composition/CompositionBox';
 
-import { arrayBufferFromFile } from '../../types/Attachment';
-import { getImageDimensions } from '../../types/attachments/VisualAttachment';
-import { AttachmentUtil, LinkPreviewUtil } from '../../util';
+import { Image } from './Image';
+
+import { isImage } from '../../types/MIME';
+import { Flex } from '../basic/Flex';
+import { SessionSpinner } from '../loading';
+import { AriaLabels } from '../../util/hardcodedAriaLabels';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { tr } from '../../localization/localeTools';
+
+import { LinkPreviewUtil } from '../../util';
 import { fetchLinkPreviewImage } from '../../util/linkPreviewFetch';
 import { LinkPreviews } from '../../util/linkPreviews';
-import { StagedLinkPreview } from './StagedLinkPreview';
+import { maxThumbnailDetails } from '../../util/attachment/attachmentSizes';
+import { ImageProcessor } from '../../webworker/workers/browser/image_processor_interface';
 
-export interface StagedLinkPreviewProps extends StagedLinkPreviewData {
+interface StagedLinkPreviewProps extends StagedLinkPreviewData {
   onClose: (url: string) => void;
 }
 export const LINK_PREVIEW_TIMEOUT = 20 * 1000;
 
-export interface GetLinkPreviewResultImage {
-  data: ArrayBuffer;
-  size: number;
-  contentType: string;
-  width: number;
-  height: number;
-}
-
-export interface GetLinkPreviewResult {
-  title: string;
-  url: string;
-  image?: GetLinkPreviewResultImage;
-  date: number | null;
-}
-
-export const getPreview = async (
-  url: string,
-  abortSignal: AbortSignal
-): Promise<null | GetLinkPreviewResult> => {
+export const getPreview = async (url: string, abortSignal: AbortSignal) => {
   // This is already checked elsewhere, but we want to be extra-careful.
   if (!LinkPreviews.isLinkSafeToPreview(url)) {
     throw new Error('Link not safe for preview');
@@ -48,11 +42,9 @@ export const getPreview = async (
   if (!linkPreviewMetadata) {
     throw new Error('Could not fetch link preview metadata');
   }
-  const { title, imageHref, date } = linkPreviewMetadata;
+  const { title, imageHref } = linkPreviewMetadata;
 
-  let image;
   if (imageHref && LinkPreviews.isLinkSafeToPreview(imageHref)) {
-    let objectUrl: undefined | string;
     try {
       window?.log?.info('insecureNodeFetch => plaintext for getPreview()');
 
@@ -62,42 +54,27 @@ export const getPreview = async (
       }
 
       // Ensure that this file is either small enough or is resized to meet our
-      //   requirements for attachments
-      const withBlob = await AttachmentUtil.autoScaleForThumbnail({
-        contentType: fullSizeImage.contentType,
-        blob: new Blob([fullSizeImage.data], {
-          type: fullSizeImage.contentType,
-        }),
-      });
+      //   requirements for link preview thumbnails
+      const processed = await ImageProcessor.processForLinkPreviewThumbnail(
+        fullSizeImage.data,
+        maxThumbnailDetails.maxSide
+      );
 
-      const data = await arrayBufferFromFile(withBlob.blob);
-      objectUrl = URL.createObjectURL(withBlob.blob);
-
-      const dimensions = await getImageDimensions({
-        objectUrl,
-      });
-
-      image = {
-        data,
-        size: data.byteLength,
-        ...dimensions,
-        contentType: withBlob.blob.type,
+      return {
+        title,
+        url,
+        scaledDown: processed,
       };
     } catch (error) {
       // We still want to show the preview if we failed to get an image
       window?.log?.error('getPreview failed to get image for link preview:', error.message);
-    } finally {
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-      }
     }
   }
 
   return {
     title,
     url,
-    image,
-    date,
+    scaledDown: null,
   };
 };
 
@@ -113,7 +90,114 @@ export const SessionStagedLinkPreview = (props: StagedLinkPreviewProps) => {
       title={props.title}
       domain={props.domain}
       url={props.url}
-      image={props.image}
+      scaledDown={props.scaledDown}
     />
+  );
+};
+
+// Note Similar to QuotedMessageComposition
+const StyledStagedLinkPreview = styled(Flex)`
+  position: relative;
+  /* Same height as a loaded Image Attachment */
+  min-height: 132px;
+  border-top: 1px solid var(--border-color);
+`;
+
+const StyledImage = styled.div`
+  div {
+    border-radius: 4px;
+    overflow: hidden;
+  }
+`;
+
+const StyledText = styled(Flex)`
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+  font-weight: bold;
+  margin: 0 0 0 var(--margins-sm);
+`;
+
+const StagedLinkPreview = ({
+  isLoaded,
+  onClose,
+  title,
+  domain,
+  url,
+  scaledDown,
+}: StagedLinkPreviewProps) => {
+  const isContentTypeImage = scaledDown && isImage(scaledDown.contentType);
+
+  const blobUrl = useMemo(() => {
+    if (!scaledDown) {
+      return undefined;
+    }
+    const blob = new Blob([scaledDown.outputBuffer], { type: scaledDown.contentType });
+    return URL.createObjectURL(blob);
+  }, [scaledDown]);
+
+  useEffect(() => {
+    return () => {
+      if (blobUrl) {
+        URL.revokeObjectURL(blobUrl);
+      }
+    };
+  }, [blobUrl]);
+
+  if (isLoaded && !(title && domain)) {
+    return null;
+  }
+
+  const isLoading = !isLoaded;
+
+  return (
+    <StyledStagedLinkPreview
+      $container={true}
+      $justifyContent={isLoading ? 'center' : 'space-between'}
+      $alignItems="center"
+      width={'100%'}
+      padding={'var(--margins-md)'}
+    >
+      <Flex
+        $container={true}
+        $justifyContent={isLoading ? 'center' : 'flex-start'}
+        $alignItems={'center'}
+      >
+        {isLoading ? (
+          <SessionSpinner loading={isLoading} data-testid="link-preview-loading" />
+        ) : null}
+        {isLoaded && isContentTypeImage ? (
+          <StyledImage data-testid="link-preview-image">
+            <Image
+              alt={AriaLabels.imageStagedLinkPreview}
+              attachment={{} as any} // we just provide the blobUrl in this case
+              height={100}
+              width={100}
+              url={blobUrl}
+              softCorners={true}
+            />
+          </StyledImage>
+        ) : null}
+        {isLoaded ? <StyledText data-testid="link-preview-title">{title}</StyledText> : null}
+      </Flex>
+      <SessionLucideIconButton
+        unicode={LUCIDE_ICONS_UNICODE.X}
+        iconColor="var(--chat-buttons-icon-color)"
+        iconSize="medium"
+        onClick={() => {
+          onClose(url || '');
+        }}
+        margin={'0 var(--margins-sm) 0 0'}
+        aria-label={tr('close')}
+        dataTestId="link-preview-close"
+        style={{
+          position: isLoading ? 'absolute' : undefined,
+          right: isLoading ? 'var(--margins-sm)' : undefined,
+        }}
+      />
+    </StyledStagedLinkPreview>
   );
 };

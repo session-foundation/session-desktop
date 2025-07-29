@@ -41,6 +41,15 @@ const StyledRail = styled.div`
   margin-bottom: 6px;
 `;
 
+const StyledAttachmentHeader = styled.div`
+  height: 24px;
+  position: relative;
+`;
+
+const StyledAttachmentsContainer = styled.div`
+  border-top: 1px solid var(--border-color);
+`;
+
 export const StagedAttachmentList = (props: Props) => {
   const { attachments, onAddAttachment, onClickAttachment } = props;
 
@@ -68,14 +77,15 @@ export const StagedAttachmentList = (props: Props) => {
   const allVisualAttachments = areAllAttachmentsVisual(attachments);
 
   return (
-    <div className="module-attachments">
+    <StyledAttachmentsContainer>
       {attachments.length > 1 ? (
-        <div className="module-attachments__header">
+        <StyledAttachmentHeader>
           <SessionLucideIconButton
             iconSize="huge"
             iconColor="var(--text-primary-color)"
             unicode={LUCIDE_ICONS_UNICODE.X}
             onClick={onRemoveAllStaged}
+            padding="var(--margins-xs) var(--margins-xs) 0 0"
             style={{
               position: 'absolute',
               top: 0,
@@ -83,7 +93,7 @@ export const StagedAttachmentList = (props: Props) => {
               zIndex: 1,
             }}
           />
-        </div>
+        </StyledAttachmentHeader>
       ) : null}
       <StyledRail>
         {(attachments || []).map((attachment, index) => {
@@ -122,6 +132,6 @@ export const StagedAttachmentList = (props: Props) => {
         })}
         {allVisualAttachments ? <StagedPlaceholderAttachment onClick={onAddAttachment} /> : null}
       </StyledRail>
-    </div>
+    </StyledAttachmentsContainer>
   );
 };

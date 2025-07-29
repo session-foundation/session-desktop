@@ -1,0 +1,186 @@
+/* eslint-disable max-len */
+
+import { StagedAttachmentType } from '../../components/conversation/composition/CompositionBox';
+import { SignalService } from '../../protobuf';
+import { DecryptedAttachmentsManager } from '../../session/crypto/DecryptedAttachmentsManager';
+import { sendDataExtractionNotification } from '../../session/messages/outgoing/controlMessage/DataExtractionNotificationMessage';
+import { AttachmentType, save } from '../../types/Attachment';
+import { getAbsoluteAttachmentPath, processNewAttachment } from '../../types/MessageAttachment';
+
+import { MAX_ATTACHMENT_FILESIZE_BYTES } from '../../session/constants';
+import { ImageProcessor } from '../../webworker/workers/browser/image_processor_interface';
+import type { ProcessedLinkPreviewThumbnailType } from '../../webworker/workers/node/image_processor/image_processor';
+
+/**
+ * The logic for sending attachments is as follow:
+ *
+ * 1. The User selects whatever attachments he wants to send with the system file handler.
+ * 2. We generate a preview if possible just to use it in the Composition Box Staged attachments list (preview of attachments scheduled for sending with the next message)
+ * 3. During that preview generation, we also autoscale images if possible and make sure the orientation is right.
+ * 4. If autoscale is not possible, we make sure the size of each attachments is fine with the service nodes limit. Otherwise, a toast is shown and the attachment is not added.
+ * 5. When autoscale is possible, we make sure that the scaled size is OK for the services nodes already
+ * 6. We do not keep those autoscaled attachments in memory for now, just the previews are kept in memory and the original filepath.
+ *
+ * 7. Once the user is ready to send a message and hit ENTER or SEND, we grab the real files again from the staged attachments, autoscale them again if possible, generate thumbnails and screenshot (video) if needed and write them to the attachments folder (encrypting them) with processNewAttachments.
+ *
+ * 8. This operation will give us back the path of the attachment in the attachments folder and the size written for this attachment (make sure to use that one as size for the outgoing attachment)
+ *
+ * 9. Once all attachments are written to the attachments folder, we grab the data from those files directly before sending them. This is done in uploadData() with loadAttachmentsData().
+ *
+ * 10. We use the grabbed data for upload of the attachments, get an url for each of them and send the url with the attachments details to the user/opengroup/closed group
+ */
+
+type MaxScaleSize = {
+  maxSizeBytes?: number;
+  maxHeightPx?: number;
+  maxWidthPx?: number;
+  maxSidePx?: number; // use this to make avatars cropped if too big and centered if too small.
+};
+
+export async function autoScaleFile(file: File, maxMeasurements?: MaxScaleSize) {
+  // this call returns null if not an image, or not one we can process, or we cannot scale it down enough
+  try {
+    const processed = await ImageProcessor.processForFileServerUpload(
+      await file.arrayBuffer(),
+      maxMeasurements?.maxSidePx ?? 2000,
+      maxMeasurements?.maxSizeBytes ?? MAX_ATTACHMENT_FILESIZE_BYTES
+    );
+
+    return processed;
+  } catch (e) {
+    window.log.warn('autoScaleFile failed with', e.message);
+    return null;
+  }
+}
+
+export type StagedAttachmentImportedType = Omit<
+  StagedAttachmentType,
+  'file' | 'url' | 'fileSize'
+> & { flags?: number };
+
+/**
+ * This is the type of the image of a link preview once it was saved in the attachment folder
+ */
+export type StagedImagePreviewImportedType = Pick<
+  StagedAttachmentType,
+  'contentType' | 'path' | 'size' | 'width' | 'height'
+>;
+
+/**
+ * This is the type of a complete preview imported in the app, hence with the image being a StagedImagePreviewImportedType.
+ * This is the one to be used in uploadData and which should be saved in the database message models
+ */
+export type StagedPreviewImportedType = {
+  url: string;
+  title: string;
+  image?: StagedImagePreviewImportedType;
+};
+
+export async function getFileAndStoreLocally(
+  attachment: StagedAttachmentType
+): Promise<StagedAttachmentImportedType | null> {
+  if (!attachment) {
+    return null;
+  }
+
+  const maxMeasurements: MaxScaleSize = {
+    maxSizeBytes: MAX_ATTACHMENT_FILESIZE_BYTES,
+  };
+
+  const attachmentFlags = attachment.isVoiceMessage
+    ? (SignalService.AttachmentPointer.Flags.VOICE_MESSAGE as number)
+    : null;
+
+  const scaledOrNot = await autoScaleFile(attachment.file, maxMeasurements);
+  // `autoScaleFile` either
+  // - returns null if it cannot process the file (i.e. not an image for instance)
+  // - returns a scaled down images if it could process and resize it down, or the size was fine to begin with
+  const failedToResizeAndOversized =
+    !scaledOrNot && attachment.file.size > MAX_ATTACHMENT_FILESIZE_BYTES;
+  const resizedAndOverSized = scaledOrNot && scaledOrNot.size > MAX_ATTACHMENT_FILESIZE_BYTES;
+
+  if (failedToResizeAndOversized || resizedAndOverSized) {
+    throw new Error(
+      'Attachment is too big, it should not have been possible to staged it in the first place.'
+    );
+  }
+
+  // this operation might change the file size, so be sure to rely on it on return here.
+  const attachmentSavedLocally = await processNewAttachment({
+    data: scaledOrNot?.outputBuffer || (await attachment.file.arrayBuffer()),
+    contentType: attachment.contentType,
+    fileName: attachment.fileName,
+  });
+
+  return {
+    caption: attachment.caption,
+    contentType: attachment.contentType,
+    fileName: attachmentSavedLocally.fileName,
+    path: attachmentSavedLocally.path,
+    width: attachmentSavedLocally.width,
+    height: attachmentSavedLocally.height,
+    screenshot: attachmentSavedLocally.screenshot,
+    thumbnail: attachmentSavedLocally.thumbnail,
+    size: attachmentSavedLocally.size,
+    flags: attachmentFlags || undefined,
+  };
+}
+
+export async function getFileAndStoreLocallyImageBlob(
+  processedLinkPreview: ProcessedLinkPreviewThumbnailType
+) {
+  const attachmentSavedLocally = await processNewAttachment({
+    data: processedLinkPreview.outputBuffer,
+    contentType: processedLinkPreview.contentType,
+  });
+
+  return {
+    contentType: processedLinkPreview.contentType,
+    path: attachmentSavedLocally.path,
+    width: processedLinkPreview.width,
+    height: processedLinkPreview.height,
+    size: attachmentSavedLocally.size,
+  };
+}
+
+export type AttachmentFileType = {
+  attachment: any;
+  data: ArrayBuffer;
+  size: number;
+};
+
+export async function readAvatarAttachment(attachment: {
+  file: Blob;
+}): Promise<AttachmentFileType> {
+  const dataReadFromBlob = await attachment.file.arrayBuffer();
+
+  return { attachment, data: dataReadFromBlob, size: dataReadFromBlob.byteLength };
+}
+
+export const saveAttachmentToDisk = async ({
+  attachment,
+  messageTimestamp,
+  messageSender,
+  conversationId,
+  index,
+}: {
+  attachment: AttachmentType;
+  messageTimestamp: number;
+  messageSender: string;
+  conversationId: string;
+  index: number;
+}) => {
+  const decryptedUrl = await DecryptedAttachmentsManager.getDecryptedMediaUrl(
+    attachment.url,
+    attachment.contentType,
+    false
+  );
+  save({
+    attachment: { ...attachment, url: decryptedUrl },
+    document,
+    getAbsolutePath: getAbsoluteAttachmentPath,
+    timestamp: messageTimestamp,
+    index,
+  });
+  await sendDataExtractionNotification(conversationId, messageSender, messageTimestamp);
+};

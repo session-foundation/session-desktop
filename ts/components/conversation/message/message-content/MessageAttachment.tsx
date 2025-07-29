@@ -16,7 +16,7 @@ import {
   isImage,
   isVideo,
 } from '../../../../types/Attachment';
-import { saveAttachmentToDisk } from '../../../../util/attachmentsUtil';
+import { saveAttachmentToDisk } from '../../../../util/attachment/attachmentsUtil';
 import { MediaItemType } from '../../../lightbox/LightboxGallery';
 import { AudioPlayerWithEncryptedFile } from '../../H5AudioPlayer';
 import { ImageGrid } from '../../ImageGrid';
