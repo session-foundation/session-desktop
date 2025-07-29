@@ -54,8 +54,14 @@ export const UserProfileModal = ({
   realSessionId,
 }: NonNullable<UserProfileModalState>) => {
   const dispatch = useDispatch();
-  const avatarPath = useAvatarPath(conversationId) || '';
-  const profileName = useConversationUsername(conversationId) || '';
+
+  const isBlinded = PubKey.isBlinded(conversationId);
+  const isBlindedAndNotResolved = isBlinded && !realSessionId;
+  const isBlindedAndResolved = isBlinded && !!realSessionId;
+  const conversationIdToDisplay = isBlindedAndResolved ? realSessionId : conversationId;
+
+  const avatarPath = useAvatarPath(conversationIdToDisplay) || '';
+  const profileName = useConversationUsername(conversationIdToDisplay) || '';
   const [isEnlargedImageShown, setIsEnlargedImageShown] = useState(false);
   const avatarSize = isEnlargedImageShown ? AvatarSize.HUGE : AvatarSize.XL;
 
@@ -65,19 +71,14 @@ export const UserProfileModal = ({
 
   const [mode, setMode] = useState<Exclude<ProfileDialogModes, 'edit'>>('default');
 
-  const isBlinded = PubKey.isBlinded(conversationId);
-  const isBlindedAndNotResolved = isBlinded && !realSessionId;
-  const isBlindedAndResolved = isBlinded && !!realSessionId;
   const hasDisabledMsgRequests = useHasDisabledBlindedMsgRequests(conversationId);
   const blindedAndDisabledMsgRequests = isBlindedAndNotResolved && hasDisabledMsgRequests;
-
-  const conversationIdDisplayed = isBlindedAndResolved ? realSessionId : conversationId;
 
   async function onClickStartConversation() {
     if (isBlindedAndNotResolved && hasDisabledMsgRequests) {
       return;
     }
-    const convo = ConvoHub.use().get(conversationIdDisplayed);
+    const convo = ConvoHub.use().get(conversationIdToDisplay);
 
     const conversation = await ConvoHub.use().getOrCreateAndWait(
       convo.id,
@@ -114,7 +115,7 @@ export const UserProfileModal = ({
 
           {!isBlindedAndNotResolved && (
             <CopyToClipboardButton
-              copyContent={conversationIdDisplayed}
+              copyContent={conversationIdToDisplay}
               buttonColor={SessionButtonColor.PrimaryDark}
               dataTestId="copy-button-account-id"
               style={{ minWidth: '125px' }}
@@ -134,7 +135,7 @@ export const UserProfileModal = ({
         paddingBlock="0 var(--margins-lg)"
       >
         {mode === 'qr' ? (
-          <QRView sessionID={conversationIdDisplayed} setMode={setMode}>
+          <QRView sessionID={conversationIdToDisplay} setMode={setMode}>
             <SessionLucideIconButton
               unicode={LUCIDE_ICONS_UNICODE.USER_ROUND}
               iconSize={'large'}
@@ -159,7 +160,7 @@ export const UserProfileModal = ({
             avatarPath={avatarPath}
             profileName={profileName}
             avatarSize={avatarSize}
-            conversationId={conversationIdDisplayed}
+            conversationId={conversationIdToDisplay}
             onAvatarClick={() => {
               setIsEnlargedImageShown(!isEnlargedImageShown);
             }}
@@ -173,12 +174,12 @@ export const UserProfileModal = ({
             }
           />
         )}
-        <ConversationTitle conversationId={conversationIdDisplayed} editable={false} />
-        <UsernameFallback conversationId={conversationIdDisplayed} />
+        <ConversationTitle conversationId={conversationIdToDisplay} editable={false} />
+        <UsernameFallback conversationId={conversationIdToDisplay} />
         <AccountIdPill accountType={isBlindedAndNotResolved ? 'blinded' : 'theirs'} />
         <SessionIDNotEditable
           dataTestId="account-id"
-          sessionId={conversationIdDisplayed}
+          sessionId={conversationIdToDisplay}
           displayType={
             isBlindedAndNotResolved ? 'blinded' : isBlindedAndResolved ? '3lines' : '2lines'
           }
