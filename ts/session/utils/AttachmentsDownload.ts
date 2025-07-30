@@ -184,9 +184,7 @@ async function _runJob(job: any) {
       // Attachments on the server expire after 60 days, then start returning 404
       if (error && error.code === 404) {
         logger.warn(
-          `_runJob: Got 404 from server, marking attachment ${
-            attachment.id
-          } from message ${found.idForLogging()} as permanent error`
+          `_runJob: Got 404 from server, marking attachment from message ${found.idForLogging()} as permanent error`
         );
 
         // Make sure to fetch the message from DB here right before writing it.
