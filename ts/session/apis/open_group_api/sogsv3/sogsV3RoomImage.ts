@@ -1,5 +1,5 @@
 import AbortController from 'abort-controller';
-import { isNumber } from 'lodash';
+import { isString, toNumber } from 'lodash';
 import { batchFirstSubIsSuccess, batchGlobalIsSuccess, sogsBatchSend } from './sogsV3BatchPoll';
 import { uploadFileToRoomSogs3 } from './sogsV3SendFile';
 import { OpenGroupRequestCommonType } from '../../../../data/types';
@@ -17,13 +17,13 @@ import { DURATION } from '../../../constants';
 export const uploadImageForRoomSogsV3 = async (
   fileContent: Uint8Array,
   roomInfos: OpenGroupRequestCommonType
-): Promise<{ fileUrl: string; fileId: number } | null> => {
+): Promise<{ fileUrl: string; fileId: string } | null> => {
   if (!fileContent || !fileContent.length) {
     return null;
   }
 
   const result = await uploadFileToRoomSogs3(fileContent, roomInfos);
-  if (!result || !isNumber(result.fileId)) {
+  if (!result || !isString(result.fileId)) {
     return null;
   }
   const { fileId, fileUrl } = result;
@@ -35,7 +35,7 @@ export const uploadImageForRoomSogsV3 = async (
     roomInfos.serverUrl,
     new Set([roomInfos.roomId]),
     new AbortController().signal,
-    [{ type: 'updateRoom', updateRoom: { roomId: roomInfos.roomId, imageId: fileId } }],
+    [{ type: 'updateRoom', updateRoom: { roomId: roomInfos.roomId, imageId: toNumber(fileId) } }],
     'batch',
     30 * DURATION.SECONDS // longer time for image upload
   );

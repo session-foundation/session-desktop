@@ -715,7 +715,6 @@ export class MessageModel extends Model<MessageAttributes> {
     }
 
     const {
-      id,
       path,
       contentType,
       width,
@@ -737,7 +736,6 @@ export class MessageModel extends Model<MessageAttributes> {
       false;
 
     return {
-      id,
       contentType,
       caption,
       size: size || 0,

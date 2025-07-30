@@ -92,7 +92,7 @@ export async function downloadAttachment(attachment: {
  */
 export async function downloadAttachmentSogsV3(
   attachment: {
-    id: number;
+    id: string;
     url: string;
     size: number | null;
   },
@@ -103,7 +103,7 @@ export async function downloadAttachmentSogsV3(
     throw new Error(`Didn't find such a room ${roomInfos.serverUrl}: ${roomInfos.roomId}`);
   }
 
-  const dataUint = await sogsV3FetchFileByFileID(roomDetails, `${attachment.id}`);
+  const dataUint = await sogsV3FetchFileByFileID(roomDetails, attachment.id);
 
   if (!dataUint?.length) {
     window?.log?.error('Failed to download attachment. Length is 0');

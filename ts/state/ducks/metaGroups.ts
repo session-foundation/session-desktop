@@ -1150,7 +1150,7 @@ async function handleClearAvatarFromUI({ groupPk }: WithGroupPubkey) {
   }
 
   await checkWeAreAdminOrThrow(groupPk, 'handleAvatarChangeFromUI');
-  convo.setKey('profileKey', undefined)
+  convo.setKey('profileKey', undefined);
   await convo.setSessionProfile({
     avatarPointer: undefined,
     avatarPath: undefined,
