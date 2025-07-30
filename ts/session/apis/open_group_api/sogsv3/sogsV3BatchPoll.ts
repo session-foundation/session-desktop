@@ -204,6 +204,7 @@ export type SubRequestUpdateRoomType = {
   type: 'updateRoom';
   updateRoom: {
     roomId: string;
+    // imageId has to be a number to be understood by the sogs
     imageId: number; // the fileId uploaded to this sogs and to be referenced as preview/room image
     // name and other options are unsupported for now
   };

@@ -74,12 +74,12 @@ export interface VisibleMessageParams extends ExpirableMessageParams {
 export class VisibleMessage extends DataMessage {
   public readonly reaction?: Reaction;
 
-  private readonly attachments?: Array<AttachmentPointerWithUrl & { id: Long }>;
+  private readonly attachments?: Array<AttachmentPointerWithUrl & { deprecatedId: Long }>;
   private readonly body?: string;
   private readonly quote?: Quote;
   private readonly profileKey?: Uint8Array;
   private readonly profile?: SignalService.DataMessage.ILokiProfile;
-  private readonly preview?: Array<PreviewWithAttachmentUrl & { id?: Long }>;
+  private readonly preview?: Array<PreviewWithAttachmentUrl & { deprecatedId?: Long }>;
 
   /// In the case of a sync message, the public key of the person the message was targeted at.
   /// - Note: `null or undefined` if this isn't a sync message.
@@ -94,7 +94,7 @@ export class VisibleMessage extends DataMessage {
     });
     this.attachments = params.attachments?.map(attachment => ({
       ...attachment,
-      id: attachmentIdAsLongFromUrl(attachment.url),
+      deprecatedId: attachmentIdAsLongFromUrl(attachment.url),
     }));
     this.body = params.body;
     this.quote = params.quote;
@@ -106,7 +106,9 @@ export class VisibleMessage extends DataMessage {
 
     this.preview = params.preview?.map(attachment => ({
       ...attachment,
-      id: attachment.image?.url ? attachmentIdAsLongFromUrl(attachment.image.url) : undefined,
+      deprecatedId: attachment.image?.url
+        ? attachmentIdAsLongFromUrl(attachment.image.url)
+        : undefined,
     }));
     this.reaction = params.reaction;
     this.syncTarget = params.syncTarget;
@@ -176,7 +178,7 @@ export class VisibleMessage extends DataMessage {
           item.url = preview.url;
         }
         item.image = preview.image
-          ? { ...preview.image, id: attachmentIdAsLongFromUrl(preview.image.url) }
+          ? { ...preview.image, deprecatedId: attachmentIdAsLongFromUrl(preview.image.url) }
           : null;
 
         return item;

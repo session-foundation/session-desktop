@@ -29,10 +29,10 @@ import { GroupV2Receiver } from './groupv2/handleGroupV2Message';
 import { ConversationTypeEnum } from '../models/types';
 import { ed25519Str } from '../session/utils/String';
 
-function cleanAttachment(attachment: any) {
+function cleanAttachment(attachment: SignalService.IAttachmentPointer) {
   return {
     ...omit(attachment, 'thumbnail'),
-    id: attachment.id.toString(),
+    id: 0,
     key: attachment.key ? StringUtils.decode(attachment.key, 'base64') : null,
     digest:
       attachment.digest && attachment.digest.length > 0

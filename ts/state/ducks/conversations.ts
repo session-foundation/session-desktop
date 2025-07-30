@@ -130,7 +130,6 @@ export type PropsForCommunityInvitation = {
 };
 
 export type PropsForAttachment = AttachmentType & {
-  id: number;
   isVoiceMessage: boolean;
   size: number;
   path: string;

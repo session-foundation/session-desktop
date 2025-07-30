@@ -1,3 +1,4 @@
+import { isNumber } from 'lodash';
 import AbortController from 'abort-controller';
 import { OpenGroupData } from '../../../../data/opengroups';
 import { roomHasBlindEnabled } from '../../../../types/sqlSharedTypes';
@@ -12,7 +13,7 @@ import { DURATION } from '../../../constants';
 export const uploadFileToRoomSogs3 = async (
   fileContent: Uint8Array,
   roomInfos: OpenGroupRequestCommonType
-): Promise<{ fileId: number; fileUrl: string } | null> => {
+): Promise<{ fileUrl: string; fileId: string } | null> => {
   if (!fileContent || !fileContent.length) {
     return null;
   }
@@ -40,13 +41,14 @@ export const uploadFileToRoomSogs3 = async (
   }
 
   const fileId = (result?.body as any | undefined)?.id as number | undefined;
-  if (!fileId) {
+
+  if (!fileId || !isNumber(fileId)) {
     return null;
   }
   const fileUrl = `${roomInfos.serverUrl}/room/${roomDetails.roomId}/file/${fileId}`;
 
   return {
-    fileId,
     fileUrl,
+    fileId: `${fileId}`,
   };
 };

@@ -54,7 +54,6 @@ export interface AttachmentType {
 
 export interface AttachmentTypeWithPath extends AttachmentType {
   path: string;
-  id: number;
   flags?: number;
   error?: any;
 }

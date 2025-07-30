@@ -2,7 +2,7 @@ import { omit, startsWith } from 'lodash';
 
 import { MessageModel } from '../models/message';
 import { Data } from '../data/data';
-import { AttachmentDownloads } from '../session/utils';
+import { AttachmentDownloads, attachmentIdAsStrFromUrl } from '../session/utils';
 import { ConversationModel } from '../models/conversation';
 import { getUnpaddedAttachment } from '../session/crypto/BufferPadding';
 import { decryptAttachment } from '../util/crypto/attachmentsEncrypter';
@@ -32,7 +32,7 @@ export async function downloadAttachment(attachment: {
   let res: ArrayBuffer | null = null;
   // try to get the fileId from the end of the URL
 
-  const attachmentId = attachment.id || attachment.url;
+  const attachmentId = attachmentIdAsStrFromUrl(attachment.url);
   if (!defaultFileServer) {
     window.log.warn(
       `downloadAttachment attachment is neither opengroup attachment nor fileserver... Dropping it ${asURL.href}`
@@ -92,7 +92,6 @@ export async function downloadAttachment(attachment: {
  */
 export async function downloadAttachmentSogsV3(
   attachment: {
-    id: number;
     url: string;
     size: number | null;
   },
@@ -103,7 +102,10 @@ export async function downloadAttachmentSogsV3(
     throw new Error(`Didn't find such a room ${roomInfos.serverUrl}: ${roomInfos.roomId}`);
   }
 
-  const dataUint = await sogsV3FetchFileByFileID(roomDetails, `${attachment.id}`);
+  const dataUint = await sogsV3FetchFileByFileID(
+    roomDetails,
+    attachmentIdAsStrFromUrl(attachment.url)
+  );
 
   if (!dataUint?.length) {
     window?.log?.error('Failed to download attachment. Length is 0');

@@ -60,7 +60,7 @@ export const uploadFileToFsWithOnionV4 = async (
     return null;
   }
 
-  const fileId = result?.body?.id as number | undefined;
+  const fileId = result?.body?.id as string | undefined;
   const expires = result?.body?.expires as number; // expires is returned as a floating point timestamp in seconds, i.e. 1754863793.186137.
   if (
     !fileId ||
