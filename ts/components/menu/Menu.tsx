@@ -1,10 +1,6 @@
 import { Submenu } from 'react-contexify';
-import { useDispatch } from 'react-redux';
 import { useConvoIdFromContext } from '../../contexts/ConvoIdContext';
 import {
-  useAvatarPath,
-  useConversationUsername,
-  useIsBlinded,
   useIsGroupV2,
   useIsIncomingRequest,
   useIsKickedFromGroup,
@@ -21,7 +17,6 @@ import {
 } from '../../interactions/conversationInteractions';
 import { ConvoHub } from '../../session/conversations';
 import { PubKey } from '../../session/types';
-import { updateUserDetailsModal } from '../../state/ducks/modalDialog';
 import { useConversationIdOrigin } from '../../state/selectors/conversations';
 import {
   useIsMessageRequestOverlayShown,
@@ -48,6 +43,7 @@ import { useSetNotificationsFor } from '../menuAndSettingsHooks/useSetNotificati
 import { Localizer } from '../basic/Localizer';
 import { useChangeNickname } from '../menuAndSettingsHooks/useChangeNickname';
 import { useShowNoteToSelfCb } from '../menuAndSettingsHooks/useShowNoteToSelf';
+import { useShowUserDetailsCbFromConversation } from '../menuAndSettingsHooks/useShowUserDetailsCb';
 
 /** Menu items standardized */
 
@@ -107,27 +103,14 @@ export const DeletePrivateContactMenuItem = () => {
   );
 };
 
-export const ShowUserDetailsMenuItem = () => {
-  const dispatch = useDispatch();
+export const ShowUserProfileMenuItem = () => {
   const convoId = useConvoIdFromContext();
-  const isPrivate = useIsPrivate(convoId);
-  const avatarPath = useAvatarPath(convoId);
-  const userName = useConversationUsername(convoId) || convoId;
-  const isBlinded = useIsBlinded(convoId);
 
-  if (isPrivate && !isBlinded) {
+  const showUserDetailsCb = useShowUserDetailsCbFromConversation(convoId);
+
+  if (showUserDetailsCb) {
     return (
-      <ItemWithDataTestId
-        onClick={() => {
-          dispatch(
-            updateUserDetailsModal({
-              conversationId: convoId,
-              userName,
-              authorAvatarPath: avatarPath,
-            })
-          );
-        }}
-      >
+      <ItemWithDataTestId onClick={showUserDetailsCb}>
         {tr('contactUserDetails')}
       </ItemWithDataTestId>
     );

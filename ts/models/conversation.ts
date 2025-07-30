@@ -801,7 +801,11 @@ export class ConversationModel extends Model<ConversationAttributes> {
       });
     }
 
-    return getFeatureFlag('mockUserHasPro');
+    if (this.isMe()) {
+      return getFeatureFlag('mockCurrentUserHasPro');
+    }
+
+    return getFeatureFlag('mockOthersHavePro');
   }
 
   public async sendMessage(msg: SendMessageType) {
@@ -2034,12 +2038,10 @@ export class ConversationModel extends Model<ConversationAttributes> {
   }
 
   public isKickedFromGroup(): boolean {
-    if (this.isClosedGroup()) {
-      if (this.isClosedGroupV2()) {
-        return getLibGroupKickedOutsideRedux(this.id) || false;
-      }
-      return !!this.get('isKickedFromGroup');
+    if (this.isClosedGroupV2()) {
+      return getLibGroupKickedOutsideRedux(this.id) || false;
     }
+    // legacy group are deprecated
     return false;
   }
 

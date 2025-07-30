@@ -1,4 +1,11 @@
-import { MouseEvent, useEffect, useRef, useState, type SessionDataTestId } from 'react';
+import {
+  MouseEvent,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+  type SessionDataTestId,
+} from 'react';
 import { QRCode } from 'react-qrcode-logo';
 import styled, { CSSProperties } from 'styled-components';
 import { THEME_GLOBALS } from '../themes/globals';
@@ -13,7 +20,7 @@ const StyledQRView = styled(AnimatedFlex)<{
 }>`
   cursor: pointer;
   border-radius: 10px;
-  overflow: hidden;
+  overflow: visible; // we need this for overflow buttons to be visible (see UserProfileModal)
   ${props => props.size && `width: ${props.size}px; height: ${props.size}px;`}
 `;
 
@@ -33,6 +40,7 @@ export type SessionQRCodeProps = {
   ariaLabel?: string;
   dataTestId?: SessionDataTestId;
   style?: CSSProperties;
+  children?: ReactNode;
 };
 
 export function SessionQRCode(props: SessionQRCodeProps) {
@@ -50,6 +58,7 @@ export function SessionQRCode(props: SessionQRCodeProps) {
     ariaLabel,
     dataTestId,
     style,
+    children,
   } = props;
   const [logo, setLogo] = useState(logoImage);
   const [bgColor, setBgColor] = useState(backgroundColor);
@@ -144,6 +153,7 @@ export function SessionQRCode(props: SessionQRCodeProps) {
           height: size,
         }}
       />
+      {children}
     </StyledQRView>
   );
 }

@@ -2,15 +2,10 @@ import { isEmpty, isEqual } from 'lodash';
 import { useEffect, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
-import { Data } from '../../data/data';
 import { useMessageReactsPropsById } from '../../hooks/useParamSelector';
 import { isUsAnySogsFromCache } from '../../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import { UserUtils } from '../../session/utils';
-import {
-  updateReactClearAllModal,
-  updateReactListModal,
-  updateUserDetailsModal,
-} from '../../state/ducks/modalDialog';
+import { updateReactClearAllModal, updateReactListModal } from '../../state/ducks/modalDialog';
 import {
   useSelectedConversationKey,
   useSelectedIsPublic,
@@ -23,13 +18,13 @@ import { Flex } from '../basic/Flex';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { ContactName } from '../conversation/ContactName';
 import { MessageReactions } from '../conversation/message/message-content/MessageReactions';
-import { findAndFormatContact } from '../../models/message';
 import { Localizer } from '../basic/Localizer';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { SessionWrapperModal } from '../SessionWrapperModal';
 import { tr } from '../../localization/localeTools';
 import { useWeAreCommunityAdminOrModerator } from '../../state/selectors/conversations';
+import { useShowUserDetailsCbFromMessage } from '../menuAndSettingsHooks/useShowUserDetailsCb';
 
 const StyledReactListContainer = styled(Flex)`
   width: 100%;
@@ -110,20 +105,7 @@ const ReactionSenders = (props: ReactionSendersProps) => {
   const dispatch = useDispatch();
   const isPublic = useSelectedIsPublic();
 
-  const handleAvatarClick = async (sender: string) => {
-    const message = await Data.getMessageById(messageId);
-    if (message) {
-      handleClose();
-      const contact = findAndFormatContact(sender);
-      dispatch(
-        updateUserDetailsModal({
-          conversationId: sender,
-          userName: contact.name || contact.profileName || sender,
-          authorAvatarPath: contact.avatarPath,
-        })
-      );
-    }
-  };
+  const showUserDetailsCb = useShowUserDetailsCbFromMessage();
 
   const handleRemoveReaction = async () => {
     await Reactions.sendMessageReaction(messageId, currentReact);
@@ -147,7 +129,8 @@ const ReactionSenders = (props: ReactionSendersProps) => {
               size={AvatarSize.XS}
               pubkey={sender}
               onAvatarClick={() => {
-                void handleAvatarClick(sender);
+                handleClose();
+                void showUserDetailsCb({ messageId });
               }}
             />
             {sender === me ? (

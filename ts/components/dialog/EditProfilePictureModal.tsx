@@ -25,7 +25,7 @@ import { userActions } from '../../state/ducks/user';
 import { ReduxSogsRoomInfos } from '../../state/ducks/sogsRoomInfo';
 import { useOurAvatarIsUploading } from '../../state/selectors/user';
 import { useAvatarOfRoomIsUploading } from '../../state/selectors/sogsRoomInfo';
-import { SessionIconButton, SessionLucideIconButton } from '../icon/SessionIconButton';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import {
   ModalActionsContainer,
@@ -38,9 +38,12 @@ import {
   SessionProInfoVariant,
   useShowSessionProInfoDialogCbWithVariant,
 } from './SessionProInfoModal';
+import { AvatarSize } from '../avatar/Avatar';
+import { ProIconButton } from '../buttons/ProButton';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
+  position: relative;
 `;
 
 const StyledUploadButton = styled.div`
@@ -287,13 +290,9 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
                 ? 'proAnimatedDisplayPictureModalDescription'
                 : 'proAnimatedDisplayPicturesNonProModalDescription'
             )}
-            <SessionIconButton
-              sizeIsWidth={false}
-              iconType={'sessionPro'}
+            <ProIconButton
               iconSize={'medium'}
-              backgroundColor={'var(--primary-color)'}
-              borderRadius={'6px'}
-              iconColor={'var(--black-color)'}
+              dataTestId="pro-badge-edit-profile-picture"
               disabled={loading}
               onClick={() =>
                 handleShowProInfoModal(
@@ -313,7 +312,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
         data-testid={'image-upload-click'}
       >
         <SpacerLG />
-        <StyledAvatarContainer className="avatar-center-inner">
+        <StyledAvatarContainer>
           {newAvatarObjectUrl || avatarPath ? (
             <ProfileAvatar
               newAvatarObjectUrl={newAvatarObjectUrl}
@@ -321,6 +320,8 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
               profileName={profileName}
               conversationId={conversationId}
               onPlusAvatarClick={handleClick}
+              onAvatarClick={handleClick}
+              avatarSize={AvatarSize.XL}
             />
           ) : (
             <UploadImageButton />

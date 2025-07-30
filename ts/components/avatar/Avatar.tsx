@@ -23,7 +23,7 @@ export enum AvatarSize {
   M = 48,
   L = 80,
   XL = 110,
-  HUGE = 300,
+  HUGE = 190,
 }
 
 type Props = {

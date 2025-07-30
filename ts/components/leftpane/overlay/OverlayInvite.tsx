@@ -13,8 +13,8 @@ import { SessionButtonColor } from '../../basic/SessionButton';
 import { sectionActions } from '../../../state/ducks/section';
 import { LucideIcon } from '../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
-import { SessionIDNonEditable } from '../../basic/YourSessionIDPill';
 import { tr } from '../../../localization/localeTools';
+import { SessionIDNotEditable } from '../../basic/SessionIdNotEditable';
 
 const StyledHeadingContainer = styled(Flex)`
   .session-icon-button {
@@ -78,7 +78,14 @@ export const OverlayInvite = () => {
       {!idCopied ? (
         <>
           <Flex $container={true} width={'100%'} $justifyContent="center" $alignItems="center">
-            <SessionIDNonEditable dataTestId="your-account-id" sessionId={ourSessionID} />
+            <SessionIDNotEditable
+              dataTestId="your-account-id"
+              sessionId={ourSessionID}
+              displayType="2lines"
+              tooltipNode={null}
+              // we need the font size to be smaller here (not enough space in the overlay)
+              style={{ color: 'var(--text-primary-color)', fontSize: 'var(--font-size-sm)' }}
+            />
           </Flex>
           <SpacerMD />
           <StyledDescription>{tr('accountIdCopyDescription')}</StyledDescription>

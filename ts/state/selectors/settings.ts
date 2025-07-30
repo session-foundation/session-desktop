@@ -25,7 +25,7 @@ export const useHasLinkPreviewEnabled = () => {
   return Boolean(value);
 };
 
-export const useHasBlindedMsgRequestsEnabled = () => {
+export const useWeHaveBlindedMsgRequestsEnabled = () => {
   const value = useSelector(getHasBlindedMsgRequestsEnabled);
   return Boolean(value);
 };

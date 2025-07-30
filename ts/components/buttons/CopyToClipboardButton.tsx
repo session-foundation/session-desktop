@@ -1,6 +1,8 @@
 import { isEmpty } from 'lodash';
 import { useState } from 'react';
 import { clipboard } from 'electron';
+import useTimeoutFn from 'react-use/lib/useTimeoutFn';
+
 import { useHotkey } from '../../hooks/useHotkey';
 import { ToastUtils } from '../../session/utils';
 import { SessionButton, SessionButtonProps } from '../basic/SessionButton';
@@ -8,6 +10,7 @@ import { SessionIconButtonProps, SessionLucideIconButton } from '../icon/Session
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import type { SessionIconSize } from '../icon';
 import { tr } from '../../localization/localeTools';
+import { DURATION } from '../../session/constants';
 
 type CopyProps = {
   copyContent?: string;
@@ -20,6 +23,14 @@ type CopyToClipboardButtonProps = Omit<SessionButtonProps, 'children' | 'onClick
 export const CopyToClipboardButton = (props: CopyToClipboardButtonProps) => {
   const { copyContent, onCopyComplete, hotkey = false, text } = props;
   const [copied, setCopied] = useState(false);
+
+  // reset the copied state after 5 seconds
+  useTimeoutFn(
+    () => {
+      setCopied(false);
+    },
+    copied ? 5 * DURATION.SECONDS : 0
+  );
 
   const onClick = () => {
     try {

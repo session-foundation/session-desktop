@@ -20,7 +20,7 @@ import {
   MarkConversationUnreadMenuItem,
   NotificationForConvoMenuItem,
   ShowNoteToSelfMenuItem,
-  ShowUserDetailsMenuItem,
+  ShowUserProfileMenuItem,
   UnbanMenuItem,
 } from './Menu';
 import { CopyCommunityUrlMenuItem } from './items/CopyCommunityUrl/CopyCommunityUrlMenuItem';
@@ -113,7 +113,7 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
         <LeaveCommunityMenuItem />
         <LeaveGroupMenuItem />
         <DeleteGroupMenuItem />
-        <ShowUserDetailsMenuItem />
+        <ShowUserProfileMenuItem />
       </Menu>
     </SessionContextMenuContainer>
   );

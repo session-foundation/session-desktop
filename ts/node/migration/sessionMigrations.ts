@@ -119,6 +119,7 @@ const LOKI_SCHEMA_VERSIONS: Array<
   updateToSessionSchemaVersion44,
   updateToSessionSchemaVersion45,
   updateToSessionSchemaVersion46,
+  updateToSessionSchemaVersion47,
 ];
 
 function updateToSessionSchemaVersion1(currentVersion: number, db: BetterSqlite3.Database) {
@@ -2151,6 +2152,25 @@ async function updateToSessionSchemaVersion46(currentVersion: number, db: Better
           ALTER TABLE ${CONVERSATIONS_TABLE} ADD COLUMN fallbackAvatarInProfile TEXT;
           ALTER TABLE ${CONVERSATIONS_TABLE} DROP COLUMN avatarImageId;
          `);
+    writeSessionSchemaVersion(targetVersion, db);
+  })();
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
+}
+
+async function updateToSessionSchemaVersion47(currentVersion: number, db: BetterSqlite3.Database) {
+  const targetVersion = 47;
+  if (currentVersion >= targetVersion) {
+    return;
+  }
+  console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
+
+  db.transaction(() => {
+    db.exec(`
+          ALTER TABLE ${CONVERSATIONS_TABLE} DROP COLUMN isKickedFromGroup;
+         `);
+    // should we also remove legacy groups entirely DELETE FROM ${CONVERSATIONS_TABLE} WHERE type = 'group' AND id LIKE '05%';
+
     writeSessionSchemaVersion(targetVersion, db);
   })();
 
