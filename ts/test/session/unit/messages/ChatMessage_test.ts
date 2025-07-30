@@ -156,7 +156,7 @@ describe('VisibleMessage', () => {
     const decoded = SignalService.Content.decode(plainText);
     expect(decoded.dataMessage?.attachments).to.have.lengthOf(1);
     const firstAttachment = decoded?.dataMessage?.attachments?.[0];
-    const decodedID = toNumber(firstAttachment?.id);
+    const decodedID = toNumber(firstAttachment?.deprecatedId);
     expect(decodedID).to.be.equal(1234);
     expect(firstAttachment?.contentType).to.be.deep.equal('contentType');
     expect(firstAttachment?.url).to.be.deep.equal('http://thisisaareal/url/1234');

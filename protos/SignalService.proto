@@ -261,7 +261,7 @@ message AttachmentPointer {
   }
 
   // @required
-  required fixed64 id          = 1;
+  required fixed64 deprecated_id = 1;
   optional string  contentType = 2;
   optional bytes   key         = 3;
   optional uint32  size        = 4;

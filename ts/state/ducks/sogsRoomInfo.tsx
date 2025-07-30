@@ -71,13 +71,10 @@ const changeCommunityAvatar = createAsyncThunk(
       window?.log?.warn('File upload for community failed');
       return false;
     }
-    const { fileId: avatarImageId, fileUrl } = uploadedFileDetails;
+    const { fileUrl } = uploadedFileDetails;
 
     // this is kind of a hack just made to avoid having a specific function downloading from sogs by URL rather than fileID
-    const downloaded = await downloadAttachmentSogsV3(
-      { id: avatarImageId, size: null, url: fileUrl },
-      roomInfos
-    );
+    const downloaded = await downloadAttachmentSogsV3({ size: null, url: fileUrl }, roomInfos);
 
     if (!downloaded || !(downloaded.data instanceof ArrayBuffer)) {
       const typeFound = typeof downloaded;

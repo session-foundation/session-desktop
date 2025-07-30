@@ -815,11 +815,12 @@ export class MessageModel extends Model<MessageAttributes> {
       fileIdsToLink.push(attachmentIdAsStrFromUrl(preview.image.url));
     }
 
-    if (quote && quote.attachments?.length) {
+    if (quote && quote.attachments?.length && quote.attachments[0].thumbnail) {
       // typing for all of this Attachment + quote + preview + send or unsend is pretty bad
-      const firstQuoteAttachmentId = (quote.attachments[0].thumbnail as any)?.id;
-      if (firstQuoteAttachmentId) {
-        fileIdsToLink.push(firstQuoteAttachmentId);
+      const firstQuoteAttachmentUrl =
+        'url' in quote.attachments[0].thumbnail ? quote.attachments[0].thumbnail.url : undefined;
+      if (firstQuoteAttachmentUrl && attachmentIdAsStrFromUrl(firstQuoteAttachmentUrl)) {
+        fileIdsToLink.push(attachmentIdAsStrFromUrl(firstQuoteAttachmentUrl));
       }
     }
 
@@ -1103,6 +1104,7 @@ export class MessageModel extends Model<MessageAttributes> {
     }
 
     const errorStr = `${providedError.name} - "${providedError.message || 'unknown error message'}"`;
+    window.log.info(`save message error to msg ${this.idForLogging()} with error:`, errorStr);
 
     this.set({ errors: errorStr });
     await this.commit();

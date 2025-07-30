@@ -78,11 +78,20 @@ function sharpFrom(inputBuffer: ArrayBufferLike | Buffer, options?: sharp.SharpO
   return sharp(new Uint8Array(inputBuffer), options).rotate();
 }
 
+function metadataToFrameHeight(metadata: sharp.Metadata) {
+  const frameCount = Math.max(metadata.pages || 0, 1);
+  const frameHeight =
+    metadata.height && frameCount ? metadata.height / frameCount : metadata.height;
+  return frameHeight;
+}
+
 /**
  * Wrapper around `sharp.metadata` as it throws if not a valid image, and we usually
  * want to just return null.
  *
  * Note: this will also orient a jpeg if needed. (i.e. calls rotate() through sharpFrom)
+ * Note: metadata height will be set to the frame height, not the full height
+ * of the canvas (as sharp.metadata does with animated webps)
  */
 async function metadataFromBuffer(
   inputBuffer: ArrayBufferLike | Buffer,
@@ -90,8 +99,9 @@ async function metadataFromBuffer(
 ) {
   try {
     const metadata = await sharpFrom(inputBuffer, options).metadata();
+    const frameHeight = metadataToFrameHeight(metadata);
     // we do need the await above so the try/catch does its job
-    return metadata;
+    return { ...metadata, height: frameHeight };
   } catch (e) {
     console.info('metadataFromBuffer failed with', e.message);
     return null;
@@ -131,7 +141,7 @@ const workerActions: ImageProcessorWorkerActions = {
     return {
       outputBuffer: outputBuffer.buffer,
       width: outputMetadata.width,
-      height: outputMetadata.height,
+      height: outputMetadata.height, // this one is only the frame height already, no need for `metadataToFrameHeight`
       size: outputMetadataSize,
       format: 'jpeg' as const,
       contentType: 'image/jpeg' as const,
@@ -231,7 +241,7 @@ const workerActions: ImageProcessorWorkerActions = {
 
       avatarFallback = {
         outputBuffer: firstFrameJpeg.outputBuffer,
-        height: firstFrameJpeg.height,
+        height: firstFrameJpeg.height, // this one is only the frame height already. No need for `metadataToFrameHeight`
         width: firstFrameJpeg.width,
         format: fallbackFormat,
         contentType: `image/${fallbackFormat}` as const,
@@ -272,7 +282,7 @@ const workerActions: ImageProcessorWorkerActions = {
     const format = 'jpeg' as const;
     return {
       outputBuffer: createdBuffer.buffer,
-      height: createdMetadata.height,
+      height: createdMetadata.height, // this one is only the frame height already, no need for `metadataToFrameHeight`
       width: createdMetadata.width,
       isAnimated: false,
       format,
@@ -390,7 +400,7 @@ const workerActions: ImageProcessorWorkerActions = {
         outputBuffer: inputBuffer,
         size,
         width: metadata.width,
-        height: metadata.height,
+        height: metadata.height, // this one is only the frame height already, no need for `metadataToFrameHeight`
         isAnimated: isAnimated(metadata),
       };
     }
@@ -414,7 +424,7 @@ const workerActions: ImageProcessorWorkerActions = {
         outputBuffer: inputBuffer,
         size,
         width: metadata.width,
-        height: metadata.height,
+        height: metadata.height, // this one is only the frame height already, no need for `metadataToFrameHeight`
         isAnimated: isAnimated(metadata),
       };
     }
@@ -481,7 +491,7 @@ const workerActions: ImageProcessorWorkerActions = {
           outputBuffer: buffer.buffer,
           size,
           width: outputMetadata.width,
-          height: outputMetadata.height,
+          height: outputMetadata.height, // this one is only the frame height already, no need for `metadataToFrameHeight`
           isAnimated: isAnimated(outputMetadata),
         };
       }
