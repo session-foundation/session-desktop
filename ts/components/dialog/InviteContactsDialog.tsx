@@ -62,6 +62,7 @@ async function submitForOpenGroup(convoId: string, pubkeys: Array<string>) {
 
       if (privateConvo) {
         void privateConvo.sendMessage({
+          conversationId: convoId,
           body: '',
           attachments: undefined,
           groupInvitation,

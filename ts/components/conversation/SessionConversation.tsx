@@ -202,8 +202,11 @@ export class SessionConversation extends Component<Props, State> {
   }
 
   public sendMessageFn(msg: SendMessageType) {
-    const { selectedConversationKey } = this.props;
-    const conversationModel = ConvoHub.use().get(selectedConversationKey);
+    if (!msg.conversationId) {
+      return;
+    }
+
+    const conversationModel = ConvoHub.use().get(msg.conversationId);
 
     if (!conversationModel) {
       return;
