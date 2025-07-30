@@ -17,9 +17,6 @@
   user-select: none;
 }
 
-.module-contact-name__profile-number.italic {
-  font-style: italic;
-}
 // Module: Message
 
 .module-message__img-attachment {
@@ -239,61 +236,6 @@
 .module-contact-list-item__text__additional-data {
   margin-top: 3px;
   font-size: 14px;
-}
-
-// Module: Conversation Header
-
-.module-conversation-header {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-}
-
-.module-conversation-header__title-container {
-  min-width: 0;
-  display: block;
-  text-align: center;
-  flex-grow: 1;
-}
-
-.module-conversation-header__title-flex {
-  display: inline-flex;
-  flex-direction: row;
-  align-items: center;
-  max-width: 100%;
-}
-
-.module-conversation-header__avatar {
-  min-width: 28px;
-  user-select: none;
-}
-
-.module-conversation-header__title {
-  margin: 0px 20px;
-
-  min-width: 0;
-  font-size: 16px;
-  line-height: 26px;
-  font-weight: 400;
-  color: var(--text-primary-color);
-
-  // width of avatar (28px) and our 6px left margin
-  max-width: calc(100% - 34px);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-
-  display: flex;
-  align-items: center;
-
-  user-select: text;
-  cursor: pointer;
-
-  .module-contact-name__profile-name {
-    width: 100%;
-    overflow: hidden !important;
-    text-overflow: ellipsis;
-  }
 }
 
 // Module: Document List Item

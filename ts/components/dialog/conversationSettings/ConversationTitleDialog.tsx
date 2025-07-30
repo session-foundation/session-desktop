@@ -1,11 +1,9 @@
-import { useDispatch } from 'react-redux';
-import { useCurrentUserHasPro } from '../../../hooks/useHasPro';
+import { useCurrentUserHasPro, useUserHasPro } from '../../../hooks/useHasPro';
 import {
   useNicknameOrProfileNameOrShortenedPubkey,
   useIsPublic,
   useIsClosedGroup,
   useIsMe,
-  useIsProUser,
 } from '../../../hooks/useParamSelector';
 import { tr } from '../../../localization/localeTools';
 import type { WithConvoId } from '../../../session/types/with';
@@ -13,7 +11,7 @@ import { H5 } from '../../basic/Heading';
 import { ProIconButton } from '../../buttons/ProButton';
 import { useChangeNickname } from '../../menuAndSettingsHooks/useChangeNickname';
 import { useShowUpdateGroupNameDescriptionCb } from '../../menuAndSettingsHooks/useShowUpdateGroupNameDescription';
-import { showSessionProInfoDialog, SessionProInfoVariant } from '../SessionProInfoModal';
+import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnClickCb';
 
 /**
  * Return the callback to use for the title click event, if one is allowed
@@ -27,18 +25,17 @@ function useOnTitleClickCb(conversationId: string, editable: boolean) {
   return changeNicknameCb || updateNameDescCb;
 }
 
-export const ConversationTitle = ({
+export const ConversationTitleDialog = ({
   conversationId,
   editable,
 }: WithConvoId & { editable: boolean }) => {
-  const dispatch = useDispatch();
   const nicknameOrDisplayName = useNicknameOrProfileNameOrShortenedPubkey(conversationId);
   const isCommunity = useIsPublic(conversationId);
   const isClosedGroup = useIsClosedGroup(conversationId);
   const isMe = useIsMe(conversationId);
   const weArePro = useCurrentUserHasPro();
 
-  const userHasPro = useIsProUser(conversationId);
+  const userHasPro = useUserHasPro(conversationId);
 
   const onClickCb = useOnTitleClickCb(conversationId, editable);
 
@@ -50,12 +47,10 @@ export const ConversationTitle = ({
       : // for 1o1, this will hold the nickname if set, or the display name
         'preferred-display-name';
 
-  function onProBadgeClick() {
-    if (weArePro) {
-      return;
-    }
-    showSessionProInfoDialog(SessionProInfoVariant.GENERIC, dispatch);
-  }
+  const onProClickCb = useProBadgeOnClickCb({
+    context: 'conversation-title-dialog',
+    args: { userHasPro, currentUserHasPro: weArePro },
+  });
 
   return (
     <H5
@@ -68,15 +63,15 @@ export const ConversationTitle = ({
       onClick={onClickCb || undefined}
     >
       {isMe ? tr('noteToSelf') : nicknameOrDisplayName}
-      {userHasPro && (
+      {onProClickCb ? (
         <ProIconButton
           dataTestId="pro-badge-conversation-title"
           iconSize={'medium'}
           disabled={weArePro}
-          onClick={onProBadgeClick}
+          onClick={onProClickCb}
           style={{ display: 'inline', marginInlineStart: 'var(--margins-xs)' }}
         />
-      )}
+      ) : null}
     </H5>
   );
 };

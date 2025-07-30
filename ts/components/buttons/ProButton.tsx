@@ -51,9 +51,11 @@ export function ProIconButton({
 export function ProIcon({
   iconSize,
   dataTestId,
+  style,
 }: {
   iconSize: SessionIconSize;
   dataTestId?: SessionDataTestId;
+  style?: CSSProperties;
 }) {
   return (
     <SessionIcon
@@ -61,6 +63,7 @@ export function ProIcon({
       iconSize={iconSize}
       borderRadius={sizeToBorderRadius(iconSize)}
       dataTestId={dataTestId}
+      style={style}
     />
   );
 }

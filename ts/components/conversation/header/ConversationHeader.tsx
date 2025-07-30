@@ -31,6 +31,16 @@ import { Constants } from '../../../session';
 import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useShowConversationSettingsFor';
 import { sectionActions } from '../../../state/ducks/section';
 
+const StyledConversationHeader = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: var(--main-view-header-height);
+  position: relative;
+  padding: 0px var(--margins-lg) 0px var(--margins-sm);
+  background: var(--background-primary-color);
+`;
+
 export const ConversationHeaderWithDetails = () => {
   const isSelectionMode = useIsMessageSelectionMode();
   const selectedConvoKey = useSelectedConversationKey();
@@ -45,7 +55,7 @@ export const ConversationHeaderWithDetails = () => {
   }
 
   return (
-    <div className="module-conversation-header">
+    <StyledConversationHeader>
       <Flex
         $container={true}
         $justifyContent={'flex-end'}
@@ -82,7 +92,7 @@ export const ConversationHeaderWithDetails = () => {
       </Flex>
 
       {isSelectionMode && <SelectionOverlay />}
-    </div>
+    </StyledConversationHeader>
   );
 };
 

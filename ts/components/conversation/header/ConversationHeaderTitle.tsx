@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
+import styled from 'styled-components';
 import { useDisappearingMessageSettingText } from '../../../hooks/useParamSelector';
 import { useIsRightPanelShowing } from '../../../hooks/useUI';
 import { closeRightPanel } from '../../../state/ducks/conversations';
@@ -21,6 +22,8 @@ import { ConversationHeaderSubtitle, type SubTitleArray } from './ConversationHe
 import { useLocalisedNotificationOf } from '../../menuAndSettingsHooks/useLocalisedNotificationFor';
 import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useShowConversationSettingsFor';
 import { tr } from '../../../localization/localeTools';
+import { ProIcon } from '../../buttons/ProButton';
+import { useUserHasPro } from '../../../hooks/useHasPro';
 
 export type SubtitleStrings = Record<string, string> & {
   notifications?: string;
@@ -86,6 +89,79 @@ function useSubtitleArray(convoId?: string) {
   return subtitleArray;
 }
 
+const StyledConversationTitleContainer = styled.div`
+  min-width: 0;
+  display: block;
+  text-align: center;
+  flex-grow: 1;
+`;
+
+const StyledConversationTitleFlex = styled.div`
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  max-width: 100%;
+  font-weight: bold;
+  width: 100%;
+  display: flex;
+  font-size: var(--font-size-md);
+`;
+
+const StyledConversationTitle = styled.div`
+  margin: 0px 20px;
+
+  min-width: 0;
+  font-size: 16px;
+  line-height: 26px;
+  font-weight: 400;
+  color: var(--text-primary-color);
+
+  // width of avatar (28px) and our 6px left margin
+  max-width: calc(100% - 34px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  display: flex;
+  align-items: center;
+
+  user-select: text;
+  cursor: pointer;
+
+  flex-direction: column;
+  font-weight: bold;
+  width: 100%;
+  display: flex;
+  font-size: var(--font-size-md);
+
+  .module-contact-name {
+    width: 100%;
+  }
+
+  .module-contact-name__profile-number {
+    text-align: center;
+  }
+
+  .module-contact-name__profile-name {
+    width: 100%;
+    overflow: hidden !important;
+    text-overflow: ellipsis;
+  }
+`;
+
+const StyledNameAndBadgeContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  max-width: 100%;
+  gap: var(--margins-xs);
+`;
+
+const StyledName = styled.span`
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
 export const ConversationHeaderTitle = ({ showSubtitle }: { showSubtitle: boolean }) => {
   const dispatch = useDispatch();
   const convoId = useSelectedConversationKey();
@@ -96,6 +172,7 @@ export const ConversationHeaderTitle = ({ showSubtitle }: { showSubtitle: boolea
   const isLegacyGroup = useSelectedIsLegacyGroup();
 
   const expirationMode = useSelectedConversationDisappearingMode();
+  const userHasPro = useUserHasPro(convoId);
 
   const [subtitleIndex, setSubtitleIndex] = useState(0);
 
@@ -143,7 +220,6 @@ export const ConversationHeaderTitle = ({ showSubtitle }: { showSubtitle: boolea
     }
   };
 
-  const className = isMe ? '' : 'module-contact-name__profile-name';
   const displayName = isMe ? tr('noteToSelf') : convoName;
 
   const clampedSubtitleIndex = useMemo(() => {
@@ -161,19 +237,25 @@ export const ConversationHeaderTitle = ({ showSubtitle }: { showSubtitle: boolea
   };
 
   return (
-    <div className="module-conversation-header__title-container">
-      <div className="module-conversation-header__title-flex">
-        <div className="module-conversation-header__title">
-          <span
-            className={className}
+    <StyledConversationTitleContainer>
+      <StyledConversationTitleFlex>
+        <StyledConversationTitle>
+          <StyledNameAndBadgeContainer
             onClick={() => {
               showConvoSettingsCb?.({ settingsModalPage: 'default' });
             }}
             role="button"
             data-testid="header-conversation-name"
           >
-            {displayName}
-          </span>
+            <StyledName>{displayName}</StyledName>
+            {userHasPro ? (
+              <ProIcon
+                dataTestId="pro-badge-conversation-header"
+                iconSize={'medium'}
+                style={{ flexShrink: 0 }}
+              />
+            ) : null}
+          </StyledNameAndBadgeContainer>
           {showSubtitle && subtitles?.[clampedSubtitleIndex] ? (
             <ConversationHeaderSubtitle
               subtitleIndex={clampedSubtitleIndex}
@@ -185,8 +267,8 @@ export const ConversationHeaderTitle = ({ showSubtitle }: { showSubtitle: boolea
               }
             />
           ) : null}
-        </div>
-      </div>
-    </div>
+        </StyledConversationTitle>
+      </StyledConversationTitleFlex>
+    </StyledConversationTitleContainer>
   );
 };

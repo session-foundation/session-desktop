@@ -29,7 +29,7 @@ import { Localizer } from '../basic/Localizer';
 import { SessionTooltip } from '../SessionTooltip';
 import { shortenDisplayName } from '../../session/profile_manager/ShortenDisplayName';
 import { UsernameFallback } from './conversationSettings/UsernameFallback';
-import { ConversationTitle } from './conversationSettings/ConversationTitle';
+import { ConversationTitleDialog } from './conversationSettings/ConversationTitleDialog';
 import { SessionIDNotEditable } from '../basic/SessionIdNotEditable';
 
 const StyledHasDisabledMsgRequests = styled.div`
@@ -174,7 +174,7 @@ export const UserProfileModal = ({
             }
           />
         )}
-        <ConversationTitle conversationId={conversationIdToDisplay} editable={false} />
+        <ConversationTitleDialog conversationId={conversationIdToDisplay} editable={false} />
         <UsernameFallback conversationId={conversationIdToDisplay} />
         <AccountIdPill accountType={isBlindedAndNotResolved ? 'blinded' : 'theirs'} />
         <SessionIDNotEditable

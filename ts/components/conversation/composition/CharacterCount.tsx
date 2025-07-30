@@ -3,15 +3,11 @@ import { Constants } from '../../../session';
 import { useFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { SessionTooltip } from '../../SessionTooltip';
 import { StyledCTA } from '../../basic/StyledCTA';
-import {
-  SessionProInfoVariant,
-  useShowSessionProInfoDialogCb,
-} from '../../dialog/SessionProInfoModal';
 import { formatNumber } from '../../../util/i18n/formatting/generics';
-import { useIsProAvailable } from '../../../hooks/useIsProAvailable';
 import { tr } from '../../../localization/localeTools';
 import { useCurrentUserHasPro } from '../../../hooks/useHasPro';
 import { ProIcon } from '../../buttons/ProButton';
+import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnClickCb';
 
 export type CharacterCountProps = {
   count: number;
@@ -35,28 +31,40 @@ const StyledRemainingNumber = styled.span<{ pastLimit: boolean }>`
   color: ${props => (props.pastLimit ? 'var(--danger-color)' : 'var(--text-primary-color)')};
 `;
 
+function ProCta() {
+  const currentUserHasPro = useCurrentUserHasPro();
+
+  const proBadgeCb = useProBadgeOnClickCb({
+    context: 'character-count',
+    args: { currentUserHasPro },
+  });
+
+  if (!proBadgeCb) {
+    return null;
+  }
+
+  return (
+    <StyledCTA onClick={proBadgeCb}>
+      {tr('proSendMore')} <ProIcon iconSize={'small'} />
+    </StyledCTA>
+  );
+}
+
 export function CharacterCount({ count }: CharacterCountProps) {
   const alwaysShowFlag = useFeatureFlag('alwaysShowRemainingChars');
-  const isProAvailable = useIsProAvailable();
 
-  const hasPro = useCurrentUserHasPro();
+  const currentUserHasPro = useCurrentUserHasPro();
 
-  const charLimit = hasPro
+  const charLimit = currentUserHasPro
     ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
     : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
 
   const remaining = charLimit - count;
   const pastLimit = remaining < 0;
 
-  const handleClick = useShowSessionProInfoDialogCb(SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT);
-
   return alwaysShowFlag || remaining <= CHARACTER_SHOW_REMAINING_BUFFER ? (
     <StyledCharacterCountContainer>
-      {isProAvailable && !hasPro ? (
-        <StyledCTA onClick={handleClick}>
-          {tr('proSendMore')} <ProIcon iconSize={'small'} />
-        </StyledCTA>
-      ) : null}
+      <ProCta />
       <SessionTooltip
         horizontalPosition="center"
         verticalPosition="bottom"

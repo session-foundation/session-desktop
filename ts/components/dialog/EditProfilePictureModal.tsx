@@ -13,7 +13,6 @@ import {
   useAvatarPath,
   useConversationUsername,
   useIsMe,
-  useIsProUser,
   useIsPublic,
 } from '../../hooks/useParamSelector';
 import { tr } from '../../localization/localeTools';
@@ -40,6 +39,8 @@ import {
 } from './SessionProInfoModal';
 import { AvatarSize } from '../avatar/Avatar';
 import { ProIconButton } from '../buttons/ProButton';
+import { useProBadgeOnClickCb } from '../menuAndSettingsHooks/useProBadgeOnClickCb';
+import { useUserHasPro } from '../../hooks/useHasPro';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
@@ -152,7 +153,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
 
   const isMe = useIsMe(conversationId);
   const isCommunity = useIsPublic(conversationId);
-  const hasPro = useIsProUser(conversationId);
+  const userHasPro = useUserHasPro(conversationId);
   const isProAvailable = useIsProAvailable();
 
   const avatarPath = useAvatarPath(conversationId) || '';
@@ -173,6 +174,11 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
   };
 
   const handleShowProInfoModal = useShowSessionProInfoDialogCbWithVariant();
+
+  const proBadgeCb = useProBadgeOnClickCb({
+    context: 'edit-profile-pic',
+    args: { userHasPro },
+  });
 
   const closeDialog = useCallback(() => {
     dispatch(updateEditProfilePictureModal(null));
@@ -214,7 +220,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
      * C. Community admin uploading a community profile picture
      * All of those are taken care of as part of the `isProUser` check in the conversation model
      */
-    if (isProAvailable && !hasPro && isNewAvatarAnimated) {
+    if (isProAvailable && !userHasPro && isNewAvatarAnimated) {
       handleShowProInfoModal(SessionProInfoVariant.PROFILE_PICTURE_ANIMATED);
       window.log.debug('Attempted to upload an animated profile picture without pro!');
       return;
@@ -282,28 +288,20 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
         </ModalActionsContainer>
       }
     >
-      {isMe && isProAvailable && !isCommunity ? (
-        <>
-          <StyledCTADescription reverseDirection={hasPro}>
-            {tr(
-              hasPro
-                ? 'proAnimatedDisplayPictureModalDescription'
-                : 'proAnimatedDisplayPicturesNonProModalDescription'
-            )}
-            <ProIconButton
-              iconSize={'medium'}
-              dataTestId="pro-badge-edit-profile-picture"
-              disabled={loading}
-              onClick={() =>
-                handleShowProInfoModal(
-                  hasPro
-                    ? SessionProInfoVariant.ALREADY_PRO_PROFILE_PICTURE_ANIMATED
-                    : SessionProInfoVariant.PROFILE_PICTURE_ANIMATED
-                )
-              }
-            />
-          </StyledCTADescription>
-        </>
+      {isMe && proBadgeCb ? (
+        <StyledCTADescription reverseDirection={userHasPro}>
+          {tr(
+            userHasPro
+              ? 'proAnimatedDisplayPictureModalDescription'
+              : 'proAnimatedDisplayPicturesNonProModalDescription'
+          )}
+          <ProIconButton
+            iconSize={'medium'}
+            dataTestId="pro-badge-edit-profile-picture"
+            disabled={loading}
+            onClick={proBadgeCb}
+          />
+        </StyledCTADescription>
       ) : null}
       <div
         className="avatar-center"

@@ -48,10 +48,6 @@ export function selectWeAreProUser(state: StateType) {
   );
 }
 
-export function useWeAreProUser() {
-  return useIsProUser(UserUtils.getOurPubKeyStrFromCache());
-}
-
 /**
  *
  * @returns convo.nickname || convo.displayNameInProfile || convo.id or undefined if the convo is not found
