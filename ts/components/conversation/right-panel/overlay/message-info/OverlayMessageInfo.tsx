@@ -17,7 +17,6 @@ import {
   replyToMessage,
   resendMessage,
 } from '../../../../../interactions/conversationInteractions';
-import { deleteMessagesById } from '../../../../../interactions/conversations/unsendingInteractions';
 import {
   useMessageAttachments,
   useMessageAuthor,
@@ -54,6 +53,7 @@ import { useShowCopyAccountIdCb } from '../../../../menuAndSettingsHooks/useCopy
 import { sectionActions } from '../../../../../state/ducks/section';
 import { useIsIncomingRequest } from '../../../../../hooks/useParamSelector';
 import { tr } from '../../../../../localization/localeTools';
+import { useDeleteMessagesCb } from '../../../../menuAndSettingsHooks/useDeleteMessagesCb';
 
 // NOTE we override the default max-widths when in the detail isDetailView
 const StyledMessageBody = styled.div`
@@ -289,6 +289,8 @@ export const OverlayMessageInfo = () => {
     }
   }, [sender, closePanel]);
 
+  const deleteMessagesCb = useDeleteMessagesCb(convoId);
+
   if (!rightOverlayMode || !messageInfo || !convoId || !messageId || !sender) {
     return null;
   }
@@ -404,14 +406,14 @@ export const OverlayMessageInfo = () => {
               />
             )}
             {/* Deleting messages sends a "delete message" message so it must be disabled for message requests. */}
-            {isDeletable && !isLegacyGroup && !isIncomingMessageRequest && (
+            {isDeletable && !isLegacyGroup && !isIncomingMessageRequest && deleteMessagesCb && (
               <PanelIconButton
                 text={tr('delete')}
                 iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.TRASH2} />}
                 color={'var(--danger-color)'}
                 dataTestId="delete-from-details"
                 onClick={() => {
-                  void deleteMessagesById([messageId], convoId);
+                  void deleteMessagesCb?.(messageId);
                 }}
               />
             )}
