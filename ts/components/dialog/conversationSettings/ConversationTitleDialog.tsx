@@ -1,9 +1,10 @@
+import { noop } from 'lodash';
 import { useCurrentUserHasPro, useUserHasPro } from '../../../hooks/useHasPro';
 import {
-  useNicknameOrProfileNameOrShortenedPubkey,
   useIsPublic,
   useIsClosedGroup,
   useIsMe,
+  useConversationUsernameWithFallback,
 } from '../../../hooks/useParamSelector';
 import { tr } from '../../../localization/localeTools';
 import type { WithConvoId } from '../../../session/types/with';
@@ -29,7 +30,7 @@ export const ConversationTitleDialog = ({
   conversationId,
   editable,
 }: WithConvoId & { editable: boolean }) => {
-  const nicknameOrDisplayName = useNicknameOrProfileNameOrShortenedPubkey(conversationId);
+  const nicknameOrDisplayName = useConversationUsernameWithFallback(true, conversationId);
   const isCommunity = useIsPublic(conversationId);
   const isClosedGroup = useIsClosedGroup(conversationId);
   const isMe = useIsMe(conversationId);
@@ -49,7 +50,7 @@ export const ConversationTitleDialog = ({
 
   const onProClickCb = useProBadgeOnClickCb({
     context: 'conversation-title-dialog',
-    args: { userHasPro, currentUserHasPro: weArePro },
+    args: { userHasPro, currentUserHasPro: weArePro, isMe },
   });
 
   return (
@@ -63,12 +64,13 @@ export const ConversationTitleDialog = ({
       onClick={onClickCb || undefined}
     >
       {isMe ? tr('noteToSelf') : nicknameOrDisplayName}
-      {onProClickCb ? (
+      {onProClickCb.show ? (
         <ProIconButton
           dataTestId="pro-badge-conversation-title"
           iconSize={'medium'}
           disabled={weArePro}
-          onClick={onProClickCb}
+          // this is a special case: we want to show the badge but it does nothing when we have pro too
+          onClick={onProClickCb.cb ?? noop}
           style={{ display: 'inline', marginInlineStart: 'var(--margins-xs)' }}
         />
       ) : null}

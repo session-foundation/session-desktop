@@ -21,7 +21,7 @@ import { tr } from '../../localization/localeTools';
 import { PubKey } from '../../session/types';
 import type { ProfileDialogModes } from './edit-profile/EditProfileDialog';
 import { ProfileHeader, QRView } from './edit-profile/components';
-import { useAvatarPath, useConversationUsername } from '../../hooks/useParamSelector';
+import { useAvatarPath, useConversationUsernameWithFallback } from '../../hooks/useParamSelector';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { useHasDisabledBlindedMsgRequests } from '../../state/selectors/conversations';
@@ -38,8 +38,10 @@ const StyledHasDisabledMsgRequests = styled.div`
   font-size: var(--font-size-sm);
   text-align: center;
 `;
+
 function HasDisabledMsgRequests({ conversationId }: { conversationId: string }) {
-  const username = useConversationUsername(conversationId) ?? PubKey.shorten(conversationId);
+  const username =
+    useConversationUsernameWithFallback(true, conversationId) ?? PubKey.shorten(conversationId);
   const name = shortenDisplayName(username);
 
   return (
@@ -61,7 +63,7 @@ export const UserProfileModal = ({
   const conversationIdToDisplay = isBlindedAndResolved ? realSessionId : conversationId;
 
   const avatarPath = useAvatarPath(conversationIdToDisplay) || '';
-  const profileName = useConversationUsername(conversationIdToDisplay) || '';
+  const profileName = useConversationUsernameWithFallback(false, conversationIdToDisplay) || '';
   const [isEnlargedImageShown, setIsEnlargedImageShown] = useState(false);
   const avatarSize = isEnlargedImageShown ? AvatarSize.HUGE : AvatarSize.XL;
 

@@ -22,8 +22,6 @@ import { useIsMessageSection } from '../../../state/selectors/section';
 import { Timestamp } from '../../conversation/Timestamp';
 import { SessionIcon } from '../../icon';
 import { UserItem } from './UserItem';
-import { ProIcon } from '../../buttons/ProButton';
-import { useUserHasPro } from '../../../hooks/useHasPro';
 import type { WithConvoId } from '../../../session/types/with';
 
 const NotificationSettingIcon = () => {
@@ -78,7 +76,6 @@ const PinIcon = () => {
 
 const ListItemIcons = ({ conversationId }: WithConvoId) => {
   const isSearching = useIsSearchingForType('global');
-  const userHasPro = useUserHasPro(conversationId);
 
   if (isSearching) {
     return null;
@@ -86,7 +83,6 @@ const ListItemIcons = ({ conversationId }: WithConvoId) => {
 
   return (
     <StyledConversationListItemIconWrapper>
-      {userHasPro ? <ProIcon iconSize="small" /> : null}
       <PinIcon />
       <NotificationSettingIcon />
       <UnreadCount conversationId={conversationId} />

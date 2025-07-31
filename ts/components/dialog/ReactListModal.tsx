@@ -16,7 +16,7 @@ import { Reactions } from '../../util/reactions';
 import { Avatar, AvatarSize } from '../avatar/Avatar';
 import { Flex } from '../basic/Flex';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
-import { ContactName } from '../conversation/ContactName';
+import { ContactName } from '../conversation/ContactName/ContactName';
 import { MessageReactions } from '../conversation/message/message-content/MessageReactions';
 import { Localizer } from '../basic/Localizer';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
@@ -98,12 +98,12 @@ type ReactionSendersProps = {
   senders: Array<string>;
   me: string;
   handleClose: () => void;
+  conversationId: string;
 };
 
 const ReactionSenders = (props: ReactionSendersProps) => {
-  const { messageId, currentReact, senders, me, handleClose } = props;
+  const { messageId, currentReact, senders, me, handleClose, conversationId } = props;
   const dispatch = useDispatch();
-  const isPublic = useSelectedIsPublic();
 
   const showUserDetailsCb = useShowUserDetailsCbFromMessage();
 
@@ -140,8 +140,8 @@ const ReactionSenders = (props: ReactionSendersProps) => {
                 <ContactName
                   pubkey={sender}
                   module="module-conversation__user"
-                  shouldShowPubkey={false}
-                  isPublic={isPublic}
+                  conversationId={conversationId}
+                  contactNameContext="react-list-modal"
                 />
               </StyledContactContainer>
             )}
@@ -288,7 +288,7 @@ export const ReactListModal = (props: Props) => {
     reactions,
   ]);
 
-  if (!msgProps) {
+  if (!msgProps || !selectedConvoKey) {
     return <></>;
   }
 
@@ -369,6 +369,7 @@ export const ReactListModal = (props: Props) => {
                 senders={senders}
                 me={me}
                 handleClose={handleClose}
+                conversationId={selectedConvoKey}
               />
             )}
             {isPublic && currentReact && count && count > Reactions.SOGSReactorsFetchCount && (

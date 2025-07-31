@@ -1,9 +1,9 @@
 import { useDispatch } from 'react-redux';
 import {
+  useConversationUsernameWithFallback,
   useIsIncomingRequest,
   useIsMe,
   useIsPrivate,
-  useNicknameOrProfileNameOrShortenedPubkey,
 } from '../../hooks/useParamSelector';
 import { tr } from '../../localization/localeTools';
 import { ConvoHub } from '../../session/conversations';
@@ -21,7 +21,7 @@ function useShowDeletePrivateContact({ conversationId }: { conversationId: strin
 export function useShowDeletePrivateContactCb({ conversationId }: { conversationId: string }) {
   const showDeletePrivateContact = useShowDeletePrivateContact({ conversationId });
   const dispatch = useDispatch();
-  const name = useNicknameOrProfileNameOrShortenedPubkey(conversationId);
+  const name = useConversationUsernameWithFallback(true, conversationId);
 
   if (!showDeletePrivateContact) {
     return null;

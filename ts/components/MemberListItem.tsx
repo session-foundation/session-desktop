@@ -3,10 +3,7 @@ import styled, { css } from 'styled-components';
 import { GroupPubkeyType, MemberStateGroupV2, PubkeyType } from 'libsession_util_nodejs';
 import { isEmpty } from 'lodash';
 import type { SessionDataTestId } from 'react';
-import {
-  useNicknameOrProfileNameOrShortenedPubkey,
-  useWeAreAdmin,
-} from '../hooks/useParamSelector';
+import { useConversationUsernameWithFallback, useWeAreAdmin } from '../hooks/useParamSelector';
 import { promoteUsersInGroup } from '../interactions/conversationInteractions';
 import { PubKey } from '../session/types';
 import { UserUtils } from '../session/utils';
@@ -340,7 +337,7 @@ export const MemberListItem = <T extends string>({
   maxNameWidth,
   hideRadioButton,
 }: MemberListItemProps<T>) => {
-  const memberName = useNicknameOrProfileNameOrShortenedPubkey(pubkey);
+  const memberName = useConversationUsernameWithFallback(true, pubkey);
   const isYou = isUsAnySogsFromCache(pubkey);
   const ourName = isYou ? tr('you') : null;
   const shortPubkey = PubKey.shorten(pubkey);

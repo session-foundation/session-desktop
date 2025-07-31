@@ -11,7 +11,7 @@ import { ProfileAvatar } from './edit-profile/components';
 import { PlusAvatarButton } from '../buttons/PlusAvatarButton';
 import {
   useAvatarPath,
-  useConversationUsername,
+  useConversationUsernameWithFallback,
   useIsMe,
   useIsPublic,
 } from '../../hooks/useParamSelector';
@@ -157,7 +157,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
   const isProAvailable = useIsProAvailable();
 
   const avatarPath = useAvatarPath(conversationId) || '';
-  const profileName = useConversationUsername(conversationId) || '';
+  const profileName = useConversationUsernameWithFallback(true, conversationId) || '';
 
   const groupAvatarChangePending = useGroupAvatarChangeFromUIPending();
   const ourAvatarIsUploading = useOurAvatarIsUploading();
@@ -220,7 +220,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
      * C. Community admin uploading a community profile picture
      * All of those are taken care of as part of the `isProUser` check in the conversation model
      */
-    if (isProAvailable && !userHasPro && isNewAvatarAnimated) {
+    if (isProAvailable && !userHasPro && isNewAvatarAnimated && !isCommunity) {
       handleShowProInfoModal(SessionProInfoVariant.PROFILE_PICTURE_ANIMATED);
       window.log.debug('Attempted to upload an animated profile picture without pro!');
       return;
@@ -288,7 +288,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
         </ModalActionsContainer>
       }
     >
-      {isMe && proBadgeCb ? (
+      {isMe && proBadgeCb.cb ? (
         <StyledCTADescription reverseDirection={userHasPro}>
           {tr(
             userHasPro
@@ -299,7 +299,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
             iconSize={'medium'}
             dataTestId="pro-badge-edit-profile-picture"
             disabled={loading}
-            onClick={proBadgeCb}
+            onClick={proBadgeCb.cb}
           />
         </StyledCTADescription>
       ) : null}

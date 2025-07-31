@@ -6,7 +6,7 @@ import styled from 'styled-components';
 
 import {
   use05GroupMembers,
-  useConversationUsername,
+  useConversationUsernameWithFallback,
   useIsIncomingRequest,
   useIsOutgoingRequest,
 } from '../../../hooks/useParamSelector';
@@ -138,7 +138,7 @@ function RecreateGroupButton() {
   const isLegacyGroup = useSelectedIsLegacyGroup();
   const selectedConvo = useSelectedConversationKey();
 
-  const name = useConversationUsername(selectedConvo);
+  const name = useConversationUsernameWithFallback(true, selectedConvo);
   const members = use05GroupMembers(selectedConvo);
 
   const weAreAdmin = useSelectedWeAreAdmin();

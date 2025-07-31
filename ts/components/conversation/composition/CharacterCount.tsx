@@ -39,12 +39,12 @@ function ProCta() {
     args: { currentUserHasPro },
   });
 
-  if (!proBadgeCb) {
+  if (!proBadgeCb.show || !proBadgeCb.cb) {
     return null;
   }
 
   return (
-    <StyledCTA onClick={proBadgeCb}>
+    <StyledCTA onClick={proBadgeCb.cb}>
       {tr('proSendMore')} <ProIcon iconSize={'small'} />
     </StyledCTA>
   );

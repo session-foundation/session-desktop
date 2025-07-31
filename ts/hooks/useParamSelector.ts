@@ -49,40 +49,36 @@ export function selectWeAreProUser(state: StateType) {
 }
 
 /**
- *
- * @returns convo.nickname || convo.displayNameInProfile || convo.id or undefined if the convo is not found
+ * Returns the nickname, the groupname or the displayNameInProfile of that conversation if set.
  */
-export function useConversationUsername(convoId?: string) {
+export function useConversationUsernameNoFallback(convoId?: string) {
   const convoProps = useConversationPropsById(convoId);
   const groupName = useLibGroupName(convoId);
 
-  if (convoId && PubKey.is03Pubkey(convoId) && groupName) {
+  if (!convoId || !convoProps) {
+    return undefined;
+  }
+
+  if (groupName) {
     // when getting a new 03 group from the user group wrapper,
     // we set the displayNameInProfile with the name from the wrapper.
     // So let's keep falling back to convoProps?.displayNameInProfile if groupName is not set yet (it comes later through the groupInfos namespace)
     return groupName;
   }
-  if (
-    convoId &&
-    (PubKey.is03Pubkey(convoId) || PubKey.is05Pubkey(convoId) || PubKey.isBlinded(convoId))
-  ) {
-    return convoProps?.nickname || convoProps?.displayNameInProfile || PubKey.shorten(convoId);
-  }
-  return convoProps?.nickname || convoProps?.displayNameInProfile || convoId;
+  return convoProps.nickname || convoProps.displayNameInProfile;
 }
 
-/**
- * Returns either the nickname, displayNameInProfile, or the shorten pubkey
- */
-export function useNicknameOrProfileNameOrShortenedPubkey(convoId?: string) {
-  const convoProps = useConversationPropsById(convoId);
+export function useConversationUsernameWithFallback(shortenPkFallback: boolean, convoId?: string) {
+  const noFallback = useConversationUsernameNoFallback(convoId);
 
-  return (
-    convoProps?.nickname ||
-    convoProps?.displayNameInProfile ||
-    (convoId && PubKey.shorten(convoId)) ||
-    tr('unknown')
-  );
+  if (!convoId) {
+    return tr('unknown');
+  }
+
+  if (!noFallback) {
+    return shortenPkFallback ? PubKey.shorten(convoId) : convoId;
+  }
+  return noFallback;
 }
 
 /**
@@ -153,7 +149,7 @@ export function useConversationsNicknameRealNameOrShortenPubkey(pubkeys: Array<s
 }
 
 export function useOurConversationUsername() {
-  return useConversationUsername(UserUtils.getOurPubKeyStrFromCache());
+  return useConversationUsernameWithFallback(true, UserUtils.getOurPubKeyStrFromCache());
 }
 
 export function useIsMe(pubkey?: string) {

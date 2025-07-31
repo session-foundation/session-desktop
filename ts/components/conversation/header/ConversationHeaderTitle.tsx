@@ -24,6 +24,7 @@ import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useSh
 import { tr } from '../../../localization/localeTools';
 import { ProIcon } from '../../buttons/ProButton';
 import { useUserHasPro } from '../../../hooks/useHasPro';
+import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnClickCb';
 
 export type SubtitleStrings = Record<string, string> & {
   notifications?: string;
@@ -172,8 +173,6 @@ export const ConversationHeaderTitle = ({ showSubtitle }: { showSubtitle: boolea
   const isLegacyGroup = useSelectedIsLegacyGroup();
 
   const expirationMode = useSelectedConversationDisappearingMode();
-  const userHasPro = useUserHasPro(convoId);
-
   const [subtitleIndex, setSubtitleIndex] = useState(0);
 
   // reset the subtitle selected index when the convoId changes (so the page is always 0 by default)
@@ -185,6 +184,13 @@ export const ConversationHeaderTitle = ({ showSubtitle }: { showSubtitle: boolea
 
   const subtitles = useSubtitleArray(convoId);
   const isBlocked = useSelectedIsBlocked();
+
+  const userHasPro = useUserHasPro(convoId);
+
+  const showPro = useProBadgeOnClickCb({
+    context: 'conversation-header-title',
+    args: { userHasPro, isMe },
+  });
 
   const onHeaderClick = () => {
     if (isLegacyGroup || !convoId) {
@@ -248,11 +254,10 @@ export const ConversationHeaderTitle = ({ showSubtitle }: { showSubtitle: boolea
             data-testid="header-conversation-name"
           >
             <StyledName>{displayName}</StyledName>
-            {userHasPro ? (
+            {showPro.show ? (
               <ProIcon
                 dataTestId="pro-badge-conversation-header"
                 iconSize={'medium'}
-                style={{ flexShrink: 0 }}
               />
             ) : null}
           </StyledNameAndBadgeContainer>

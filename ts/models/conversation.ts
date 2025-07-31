@@ -787,10 +787,11 @@ export class ConversationModel extends Model<ConversationAttributes> {
       .catch(window?.log?.error);
   }
 
-  public isProUser(): boolean {
+  private isProUser(): boolean {
     if (this.isPublic()) {
       // Note: communities are considered pro users (they can have animated avatars)
-      return true;
+      // but this function is too generic to return true
+      return false;
     }
 
     if (this.isClosedGroupV2()) {

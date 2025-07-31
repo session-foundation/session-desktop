@@ -27,7 +27,7 @@ export function ProIconButton({
   disabled,
   onClick,
   dataTestId,
-  style,
+  style = { flexShrink: 0 },
 }: {
   iconSize: SessionIconSize;
   disabled?: boolean;
