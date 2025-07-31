@@ -5,7 +5,7 @@ import { ContactName } from '../../conversation/ContactName/ContactName';
 export const UserItem = () => {
   const conversationId = useConvoIdFromContext();
   const isSearchResultsMode = useIsSearchingForType('global');
-  
+
   return (
     <ContactName
       pubkey={conversationId}

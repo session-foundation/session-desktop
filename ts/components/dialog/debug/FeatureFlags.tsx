@@ -5,6 +5,7 @@ import { SessionToggle } from '../../basic/SessionToggle';
 import { HintText, SpacerSM, SpacerXS } from '../../basic/Text';
 import { DEBUG_FEATURE_FLAGS } from './constants';
 import { ConvoHub } from '../../../session/conversations';
+import { isDebugMode } from '../../../shared/env_vars';
 
 type FeatureFlagToggleType = {
   forceUpdate: () => void;
@@ -97,7 +98,7 @@ export const FeatureFlags = ({
       {Object.entries(flags).map(([key, value]) => {
         const flag = key as SessionFlagsKeys;
         if (
-          (!process.env.SESSION_DEV && DEBUG_FEATURE_FLAGS.DEV.includes(flag)) ||
+          (!isDebugMode() && DEBUG_FEATURE_FLAGS.DEV.includes(flag)) ||
           DEBUG_FEATURE_FLAGS.UNSUPPORTED.includes(flag)
         ) {
           return null;
