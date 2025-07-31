@@ -22,12 +22,14 @@ const sharedProps = {
   iconColor: 'var(--black-color)',
 } as const;
 
+const defaultStyle = { flexShrink: 0 };
+
 export function ProIconButton({
   iconSize,
   disabled,
   onClick,
   dataTestId,
-  style = { flexShrink: 0 },
+  style = defaultStyle,
 }: {
   iconSize: SessionIconSize;
   disabled?: boolean;
@@ -51,7 +53,7 @@ export function ProIconButton({
 export function ProIcon({
   iconSize,
   dataTestId,
-  style,
+  style = defaultStyle,
 }: {
   iconSize: SessionIconSize;
   dataTestId?: SessionDataTestId;

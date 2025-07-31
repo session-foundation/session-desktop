@@ -71,7 +71,7 @@ export const ConversationTitleDialog = ({
           disabled={weArePro}
           // this is a special case: we want to show the badge but it does nothing when we have pro too
           onClick={onProClickCb.cb ?? noop}
-          style={{ display: 'inline', marginInlineStart: 'var(--margins-xs)' }}
+          style={{ display: 'inline', marginInlineStart: 'var(--margins-xs)', flexShrink: 0 }}
         />
       ) : null}
     </H5>

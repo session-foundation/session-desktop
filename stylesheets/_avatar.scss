@@ -15,7 +15,7 @@
 }
 
 .module-avatar-clickable {
-  transition: var(--default-duration);
+  transition: filter var(--default-duration);
   cursor: pointer;
   &:hover {
     filter: grayscale(0.7);
