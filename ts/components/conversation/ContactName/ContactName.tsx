@@ -16,6 +16,8 @@ import type { ContactNameContext } from './ContactNameContext';
 import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnClickCb';
 import { useUserHasPro } from '../../../hooks/useHasPro';
 import { ProIcon } from '../../buttons/ProButton';
+import { useMessageIdFromContext } from '../../../contexts/MessageIdContext';
+import { useMessageDirection } from '../../../state/selectors';
 
 const boldProfileNameCtx: Array<ContactNameContext> = [
   'conversation-list-item',
@@ -69,6 +71,10 @@ export const ContactName = ({
   const nickname = useNickname(pubkey);
   const isPrivate = useIsPrivate(pubkey);
 
+  const msgId = useMessageIdFromContext();
+
+  const msgDirection = useMessageDirection(msgId);
+
   const displayName = isMe
     ? // we want to show "You" instead of Note to Self in some places (like quotes)
       ntsIsYouCtx.includes(contactNameContext)
@@ -114,7 +120,15 @@ export const ContactName = ({
           <Emojify text={displayedName} sizeClass="small" isGroup={!isPrivate} />
         </div>
       ) : null}
-      {showProBadge.show ? <ProIcon iconSize={'small'} style={{ flexShrink: 0}} /> : null}
+      {showProBadge.show ? (
+        <ProIcon
+          iconSize={'small'}
+          style={{
+            backgroundColor:
+              msgDirection === 'outgoing' ? 'var(--white-color)' : 'var(--primary-color)',
+          }}
+        />
+      ) : null}
       {shouldShowPubkey ? <div className={`${prefix}__profile-number`}>{shortPubkey}</div> : null}
     </span>
   );

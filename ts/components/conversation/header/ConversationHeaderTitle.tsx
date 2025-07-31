@@ -255,10 +255,7 @@ export const ConversationHeaderTitle = ({ showSubtitle }: { showSubtitle: boolea
           >
             <StyledName>{displayName}</StyledName>
             {showPro.show ? (
-              <ProIcon
-                dataTestId="pro-badge-conversation-header"
-                iconSize={'medium'}
-              />
+              <ProIcon dataTestId="pro-badge-conversation-header" iconSize={'medium'} />
             ) : null}
           </StyledNameAndBadgeContainer>
           {showSubtitle && subtitles?.[clampedSubtitleIndex] ? (
