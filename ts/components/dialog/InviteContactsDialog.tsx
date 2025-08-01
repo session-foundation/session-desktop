@@ -98,7 +98,6 @@ function ContactsToInvite({
         onSelect={selectContact}
         onUnselect={unselectContact}
         disableBg={true}
-        maxNameWidth="100%"
       />
     ))
   ) : (

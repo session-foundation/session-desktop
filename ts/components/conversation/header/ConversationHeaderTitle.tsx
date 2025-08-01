@@ -22,9 +22,9 @@ import { ConversationHeaderSubtitle, type SubTitleArray } from './ConversationHe
 import { useLocalisedNotificationOf } from '../../menuAndSettingsHooks/useLocalisedNotificationFor';
 import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useShowConversationSettingsFor';
 import { tr } from '../../../localization/localeTools';
-import { ProIcon } from '../../buttons/ProButton';
 import { useUserHasPro } from '../../../hooks/useHasPro';
 import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnClickCb';
+import { ProIconButton } from '../../buttons/ProButton';
 
 export type SubtitleStrings = Record<string, string> & {
   notifications?: string;
@@ -255,7 +255,11 @@ export const ConversationHeaderTitle = ({ showSubtitle }: { showSubtitle: boolea
           >
             <StyledName>{displayName}</StyledName>
             {showPro.show ? (
-              <ProIcon dataTestId="pro-badge-conversation-header" iconSize={'medium'} />
+              <ProIconButton
+                dataTestId="pro-badge-conversation-header"
+                iconSize={'medium'}
+                onClick={showPro.cb}
+              />
             ) : null}
           </StyledNameAndBadgeContainer>
           {showSubtitle && subtitles?.[clampedSubtitleIndex] ? (

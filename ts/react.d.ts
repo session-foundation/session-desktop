@@ -103,7 +103,11 @@ declare module 'react' {
     | 'ban-user'
     | 'unban-user';
 
-  type ProBadges = 'edit-profile-picture' | 'conversation-title' | 'conversation-header';
+  type ProBadges =
+    | 'edit-profile-picture'
+    | 'conversation-title'
+    | 'conversation-header'
+    | 'profile-name';
 
   type Dialog = 'invite-contacts' | 'edit-profile';
 

@@ -14,8 +14,8 @@ import { tr } from '../../../localization/localeTools';
 import { isUsAnySogsFromCache } from '../../../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import type { ContactNameContext } from './ContactNameContext';
 import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnClickCb';
-import { useUserHasPro } from '../../../hooks/useHasPro';
-import { ProIcon } from '../../buttons/ProButton';
+import { useCurrentUserHasPro, useUserHasPro } from '../../../hooks/useHasPro';
+import { ProIconButton } from '../../buttons/ProButton';
 import { useMessageIdFromContext } from '../../../contexts/MessageIdContext';
 import { useMessageDirection } from '../../../state/selectors';
 
@@ -23,6 +23,8 @@ const boldProfileNameCtx: Array<ContactNameContext> = [
   'conversation-list-item',
   'quoted-message-composition',
   'message-author',
+  'message-info-author',
+  'member-list-item',
 ];
 
 const showPubkeyCtx: Array<ContactNameContext> = ['message-author'];
@@ -33,6 +35,7 @@ const ntsIsYouCtx: Array<ContactNameContext> = [
   'quoted-message-composition',
   'message-search-result',
   'react-list-modal',
+  'member-list-item',
 ];
 
 const commonStyles: CSSProperties = {
@@ -70,6 +73,7 @@ export const ContactName = ({
   const realName = useConversationRealName(pubkey);
   const nickname = useNickname(pubkey);
   const isPrivate = useIsPrivate(pubkey);
+  const currentUserHasPro = useCurrentUserHasPro();
 
   const msgId = useMessageIdFromContext();
 
@@ -97,7 +101,7 @@ export const ContactName = ({
 
   const showProBadge = useProBadgeOnClickCb({
     context: 'contact-name',
-    args: { userHasPro, isMe, contactNameContext },
+    args: { userHasPro, isMe, contactNameContext, currentUserHasPro },
   });
 
   return (
@@ -110,6 +114,7 @@ export const ContactName = ({
         display: 'flex',
         flexDirection: 'row',
         gap: 'var(--margins-xs)',
+        maxWidth: '100%',
       }}
     >
       {displayedName ? (
@@ -121,12 +126,14 @@ export const ContactName = ({
         </div>
       ) : null}
       {showProBadge.show ? (
-        <ProIcon
+        <ProIconButton
           iconSize={'small'}
           style={{
             backgroundColor:
               msgDirection === 'outgoing' ? 'var(--white-color)' : 'var(--primary-color)',
           }}
+          dataTestId="invalid-data-testid"
+          onClick={showProBadge.cb}
         />
       ) : null}
       {shouldShowPubkey ? <div className={`${prefix}__profile-number`}>{shortPubkey}</div> : null}

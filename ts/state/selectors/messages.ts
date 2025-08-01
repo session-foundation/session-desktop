@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { MessageModelType } from '../../models/messageType';
 import {
@@ -14,6 +15,7 @@ import { PubKey } from '../../session/types';
 import { useIsMe } from '../../hooks/useParamSelector';
 import { UserUtils } from '../../session/utils';
 import { tr } from '../../localization/localeTools';
+import { ProFeatures } from '../../components/menuAndSettingsHooks/useProBadgeOnClickCb';
 
 function useMessagePropsByMessageId(messageId: string | undefined) {
   return useSelector((state: StateType) => getMessagePropsByMessageId(state, messageId));
@@ -183,6 +185,21 @@ export function useHideAvatarInMsgList(messageId?: string, isDetailView?: boolea
 
 export function useMessageSelected(messageId?: string) {
   return useSelector((state: StateType) => getIsMessageSelected(state, messageId));
+}
+
+export function useMessageSentWithProFeat(messageId?: string) {
+  return useMemo(() => {
+    console.warn('ALWAYS TRUE useMessageSentWithProFeat of messageId:', messageId);
+
+    if (!messageId) {
+      return null;
+    }
+    return [
+      ProFeatures.PRO_BADGE,
+      ProFeatures.PRO_INCREASED_MESSAGE_LENGTH,
+      ProFeatures.PRO_ANIMATED_DISPLAY_PICTURE,
+    ];
+  }, [messageId]);
 }
 
 /**

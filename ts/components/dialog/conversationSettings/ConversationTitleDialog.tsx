@@ -9,7 +9,7 @@ import {
 import { tr } from '../../../localization/localeTools';
 import type { WithConvoId } from '../../../session/types/with';
 import { H5 } from '../../basic/Heading';
-import { ProIcon, ProIconButton } from '../../buttons/ProButton';
+import { ProIconButton } from '../../buttons/ProButton';
 import { useChangeNickname } from '../../menuAndSettingsHooks/useChangeNickname';
 import { useShowUpdateGroupNameDescriptionCb } from '../../menuAndSettingsHooks/useShowUpdateGroupNameDescription';
 import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnClickCb';
@@ -46,11 +46,7 @@ function ProBadge({ conversationId }: WithConvoId) {
     iconSize: 'medium',
     style: { display: 'inline', marginInlineStart: 'var(--margins-xs)', flexShrink: 0 },
   } as const;
-  return onProClickCb.cb ? (
-    <ProIconButton {...sharedProps} onClick={onProClickCb.cb} />
-  ) : (
-    <ProIcon {...sharedProps} />
-  );
+  return <ProIconButton {...sharedProps} onClick={onProClickCb.cb} />;
 }
 
 export const ConversationTitleDialog = ({

@@ -3,7 +3,7 @@ import styled, { css } from 'styled-components';
 import { GroupPubkeyType, MemberStateGroupV2, PubkeyType } from 'libsession_util_nodejs';
 import { isEmpty } from 'lodash';
 import type { SessionDataTestId } from 'react';
-import { useConversationUsernameWithFallback, useWeAreAdmin } from '../hooks/useParamSelector';
+import { useWeAreAdmin } from '../hooks/useParamSelector';
 import { promoteUsersInGroup } from '../interactions/conversationInteractions';
 import { PubKey } from '../session/types';
 import { UserUtils } from '../session/utils';
@@ -29,8 +29,8 @@ import {
   UserGroupsWrapperActions,
 } from '../webworker/workers/browser/libsession_worker_interface';
 import { assertUnreachable } from '../types/sqlSharedTypes';
-import { isUsAnySogsFromCache } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import { tr } from '../localization/localeTools';
+import { ContactName } from './conversation/ContactName/ContactName';
 
 const AvatarContainer = styled.div`
   position: relative;
@@ -90,14 +90,6 @@ const StyledInfo = styled.div`
   min-width: 0;
 `;
 
-const StyledName = styled.span<{ maxName?: string }>`
-  font-weight: bold;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  ${props => props.maxName && `max-width: ${props.maxName};`}
-`;
-
 const StyledCheckContainer = styled.div`
   display: flex;
   align-items: center;
@@ -107,10 +99,8 @@ type MemberListItemProps<T extends string> = {
   pubkey: T;
   isSelected: boolean;
   inMentions?: boolean; // set to true if we are rendering members but in the Mentions picker
-  isPublic?: boolean;
   disableBg?: boolean;
   withBorder?: boolean;
-  maxNameWidth?: string;
   isAdmin?: boolean; // if true,  we add a small crown on top of their avatar
   onSelect?: (pubkey: T) => void;
   onUnselect?: (pubkey: T) => void;
@@ -322,25 +312,15 @@ export const MemberListItem = <T extends string>({
   disableBg,
   displayGroupStatus,
   inMentions,
-  isPublic,
   isAdmin,
   onSelect,
   onUnselect,
   groupPk,
   disabled,
   withBorder,
-  maxNameWidth,
+  conversationId,
   hideRadioButton,
-}: MemberListItemProps<T>) => {
-  const memberName = useConversationUsernameWithFallback(true, pubkey);
-  const isYou = isUsAnySogsFromCache(pubkey);
-  const ourName = isYou ? tr('you') : null;
-  const shortPubkey = PubKey.shorten(pubkey);
-  const nameSuffix =
-    isPublic && inMentions && !isYou && memberName !== shortPubkey ? shortPubkey : '';
-
-  const displayedName = `${ourName || memberName} ${nameSuffix}`.trim();
-
+}: MemberListItemProps<T> & { conversationId?: string }) => {
   return (
     <StyledSessionMemberItem
       onClick={() => {
@@ -363,9 +343,11 @@ export const MemberListItem = <T extends string>({
           $alignItems="flex-start"
           minWidth="0"
         >
-          <StyledName data-testid={'contact'} maxName={maxNameWidth}>
-            {displayedName}
-          </StyledName>
+          <ContactName
+            contactNameContext="member-list-item"
+            pubkey={pubkey}
+            conversationId={conversationId}
+          />
           <GroupStatusContainer
             pubkey={pubkey}
             displayGroupStatus={displayGroupStatus}

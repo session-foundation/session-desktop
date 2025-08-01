@@ -6,7 +6,7 @@ import { StyledCTA } from '../../basic/StyledCTA';
 import { formatNumber } from '../../../util/i18n/formatting/generics';
 import { tr } from '../../../localization/localeTools';
 import { useCurrentUserHasPro } from '../../../hooks/useHasPro';
-import { ProIcon } from '../../buttons/ProButton';
+import { ProIconButton } from '../../buttons/ProButton';
 import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnClickCb';
 
 export type CharacterCountProps = {
@@ -45,7 +45,8 @@ function ProCta() {
 
   return (
     <StyledCTA onClick={proBadgeCb.cb}>
-      {tr('proSendMore')} <ProIcon iconSize={'small'} />
+      {tr('proSendMore')}{' '}
+      <ProIconButton iconSize={'small'} dataTestId="invalid-data-testid" onClick={proBadgeCb.cb} />
     </StyledCTA>
   );
 }

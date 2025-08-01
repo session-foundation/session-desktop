@@ -29,43 +29,35 @@ export function ProIconButton({
   disabled,
   onClick,
   dataTestId,
-  style = defaultStyle,
+  style,
 }: {
   iconSize: SessionIconSize;
   disabled?: boolean;
-  onClick?: () => void;
+  onClick?: (() => void) | null;
   dataTestId: SessionDataTestId;
   style?: CSSProperties;
 }) {
-  return (
-    <SessionIconButton
-      {...sharedProps}
-      iconSize={iconSize}
-      borderRadius={sizeToBorderRadius(iconSize)}
-      dataTestId={dataTestId}
-      disabled={disabled}
-      onClick={onClick}
-      style={style}
-    />
-  );
-}
+  if (onClick) {
+    return (
+      <SessionIconButton
+        {...sharedProps}
+        iconSize={iconSize}
+        borderRadius={sizeToBorderRadius(iconSize)}
+        dataTestId={dataTestId}
+        disabled={disabled}
+        onClick={onClick}
+        style={{ ...style, ...defaultStyle }}
+      />
+    );
+  }
 
-export function ProIcon({
-  iconSize,
-  dataTestId,
-  style = defaultStyle,
-}: {
-  iconSize: SessionIconSize;
-  dataTestId?: SessionDataTestId;
-  style?: CSSProperties;
-}) {
   return (
     <SessionIcon
       {...sharedProps}
       iconSize={iconSize}
       borderRadius={sizeToBorderRadius(iconSize)}
       dataTestId={dataTestId}
-      style={style}
+      style={{ ...style, ...defaultStyle }}
     />
   );
 }

@@ -107,7 +107,7 @@ const MemberList = (props: {
             disableBg={true}
             displayGroupStatus={isV2Group}
             groupPk={convoId}
-            maxNameWidth="100%"
+            conversationId={convoId}
           />
         );
       })}

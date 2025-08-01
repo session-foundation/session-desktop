@@ -6,6 +6,10 @@ import { Avatar, AvatarSize, CrownIcon } from '../../../../../avatar/Avatar';
 import { Flex } from '../../../../../basic/Flex';
 import { CopyToClipboardIcon } from '../../../../../buttons';
 import { tr } from '../../../../../../localization/localeTools';
+import { ContactName } from '../../../../ContactName/ContactName';
+import { useSelectedConversationKey } from '../../../../../../state/selectors/selectedConversation';
+import { useShowUserDetailsCbFromConversation } from '../../../../../menuAndSettingsHooks/useShowUserDetailsCb';
+import { PubKey } from '../../../../../../session/types';
 
 const StyledFromContainer = styled.div`
   display: flex;
@@ -19,14 +23,13 @@ const StyledAuthorNamesContainer = styled.div`
   flex-direction: column;
 `;
 
-const Name = styled.span`
-  font-weight: bold;
-`;
-
-const Pubkey = styled.span`
+const StyledPubkey = styled.span<{ $isBlinded: boolean }>`
   font-family: var(--font-mono);
   font-size: var(--font-size-md);
-  user-select: text;
+  user-select: none; // if the account id can be copied, there will be a "copy account id" menu item
+  color: ${props =>
+    props.$isBlinded ? 'var(--text-secondary-color)' : 'var(--text-primary-color)'};
+  cursor: pointer;
 `;
 
 const StyledMessageInfoAuthor = styled.div`
@@ -40,14 +43,17 @@ const StyledAvatar = styled.div`
 export const MessageFrom = (props: { sender: string; isSenderAdmin: boolean }) => {
   const { sender, isSenderAdmin } = props;
   const profileName = useConversationUsernameWithFallback(true, sender);
-  const from = tr('from');
 
   const isDev = isDevProd();
+
+  const selectedConvoId = useSelectedConversationKey();
+
+  const showUserProfileModalCb = useShowUserDetailsCbFromConversation(sender) ?? undefined;
 
   return (
     <StyledMessageInfoAuthor>
       <Flex $container={true} $justifyContent="flex-start" $alignItems="flex-start">
-        <MessageInfoLabel>{from}</MessageInfoLabel>
+        <MessageInfoLabel>{tr('from')}</MessageInfoLabel>
         {isDev ? (
           <CopyToClipboardIcon
             iconSize={'small'}
@@ -58,12 +64,18 @@ export const MessageFrom = (props: { sender: string; isSenderAdmin: boolean }) =
       </Flex>
       <StyledFromContainer>
         <StyledAvatar>
-          <Avatar size={AvatarSize.M} pubkey={sender} onAvatarClick={undefined} />
+          <Avatar size={AvatarSize.M} pubkey={sender} onAvatarClick={showUserProfileModalCb} />
           {isSenderAdmin ? <CrownIcon /> : null}
         </StyledAvatar>
         <StyledAuthorNamesContainer>
-          {!!profileName && <Name>{profileName}</Name>}
-          <Pubkey>{sender}</Pubkey>
+          <ContactName
+            pubkey={sender}
+            conversationId={selectedConvoId}
+            contactNameContext="message-info-author"
+          />
+          <StyledPubkey onClick={showUserProfileModalCb} $isBlinded={PubKey.isBlinded(sender)}>
+            {sender}
+          </StyledPubkey>
         </StyledAuthorNamesContainer>
       </StyledFromContainer>
     </StyledMessageInfoAuthor>

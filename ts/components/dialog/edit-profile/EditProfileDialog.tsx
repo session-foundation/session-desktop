@@ -138,7 +138,6 @@ export const EditProfileDialog = () => {
 
   const _profileName = useOurConversationUsername() || '';
   const [profileName, setProfileName] = useState(_profileName);
-  const [updatedProfileName, setUpdateProfileName] = useState(profileName);
   const [profileNameError, setProfileNameError] = useState<string | undefined>(undefined);
   const [cannotContinue, setCannotContinue] = useState(true);
 
@@ -172,7 +171,6 @@ export const EditProfileDialog = () => {
       // Note: this will not throw, but just truncate the display name if it is too long.
       // I guess it is expected as there is no UI to show anything else than a generic error?
       const validName = await ProfileManager.updateOurProfileDisplayName(sanitizedName);
-      setUpdateProfileName(validName);
       setProfileName(validName);
       setMode('default');
     } catch (err) {
@@ -206,7 +204,7 @@ export const EditProfileDialog = () => {
         mode,
         setMode,
         inputRef,
-        updatedProfileName,
+        profileName,
         setProfileName,
         setProfileNameError,
         loading
@@ -219,7 +217,7 @@ export const EditProfileDialog = () => {
       handleKeyEscape(
         mode,
         setMode,
-        updatedProfileName,
+        profileName,
         setProfileName,
         setProfileNameError,
         loading,
@@ -315,7 +313,7 @@ export const EditProfileDialog = () => {
 
           {mode === 'default' && (
             <ProfileName
-              profileName={updatedProfileName || profileName}
+              profileName={profileName}
               onClick={() => {
                 if (loading) {
                   return;

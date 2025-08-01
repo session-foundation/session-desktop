@@ -5,4 +5,6 @@ export type ContactNameContext =
   | 'message-author' // the author of the message as shown in the message list
   | 'quote-author' // the author of the quoted message, shown in the message list
   | 'react-list-modal'
-  | 'message-search-result';
+  | 'message-info-author' // the author of the message as shown in the message info (right panel)
+  | 'message-search-result'
+  | 'member-list-item';

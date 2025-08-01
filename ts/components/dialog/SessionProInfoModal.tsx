@@ -24,7 +24,7 @@ import { FileIcon } from '../icon/FileIcon';
 import { SessionButtonShiny } from '../basic/SessionButtonShiny';
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
 import { useCurrentUserHasPro } from '../../hooks/useHasPro';
-import { ProIcon } from '../buttons/ProButton';
+import { ProIconButton } from '../buttons/ProButton';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 
 export enum SessionProInfoVariant {
@@ -169,7 +169,12 @@ function getDescription(variant: SessionProInfoVariant): ReactNode {
       return (
         <>
           <span>
-            {tr('proAlreadyPurchased')} <ProIcon iconSize={'small'} />
+            {tr('proAlreadyPurchased')}{' '}
+            <ProIconButton
+              iconSize={'small'}
+              dataTestId="invalid-data-testid"
+              onClick={undefined}
+            />
           </span>
           <br />
           {tr('proAnimatedDisplayPicture')}
@@ -184,7 +189,8 @@ function getDescription(variant: SessionProInfoVariant): ReactNode {
     case SessionProInfoVariant.GROUP_ACTIVATED:
       return (
         <span>
-          {tr('proGroupActivatedDescription')} <ProIcon iconSize={'small'} />
+          {tr('proGroupActivatedDescription')}{' '}
+          <ProIconButton iconSize={'small'} dataTestId="invalid-data-testid" onClick={undefined} />
         </span>
       );
     default:
@@ -310,7 +316,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
       <SpacerSM />
       <StyledCTATitle reverseDirection={hasPro}>
         {tr(hasPro ? 'proActivated' : 'upgradeTo')}
-        <ProIcon iconSize={'huge'} />
+        <ProIconButton iconSize={'huge'} dataTestId="invalid-data-testid" onClick={undefined} />
       </StyledCTATitle>
       <SpacerXL />
       <StyledContentContainer>

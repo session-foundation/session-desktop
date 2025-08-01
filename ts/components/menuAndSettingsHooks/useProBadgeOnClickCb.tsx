@@ -7,6 +7,7 @@ import {
 } from '../dialog/SessionProInfoModal';
 
 type WithUserHasPro = { userHasPro: boolean };
+type WithMessageSentWithProFeat = { messageSentWithProFeat: Array<ProFeatures> | null };
 type WithCurrentUserHasPro = { currentUserHasPro: boolean };
 
 type WithIsMe = { isMe: boolean };
@@ -15,13 +16,21 @@ type WithIsGroupV2 = { isGroupV2: boolean };
 
 export type ProBadgeContext =
   | { context: 'edit-profile-pic'; args: WithUserHasPro }
+  | { context: 'show-our-profile-dialog'; args: WithCurrentUserHasPro }
   | {
       context: 'conversation-title-dialog'; // the title in the conversation settings ConversationSettingsHeader/UserProfileDialog
       args: WithUserHasPro & WithCurrentUserHasPro & WithIsMe & WithIsGroupV2;
     }
   | { context: 'character-count'; args: WithCurrentUserHasPro }
   | { context: 'conversation-header-title'; args: WithUserHasPro & WithIsMe } // the title in the conversation header (i.e. title of the main screen of the app)
-  | { context: 'contact-name'; args: WithUserHasPro & WithIsMe & WithContactNameContext };
+  | {
+      context: 'message-info-sent-with-pro';
+      args: WithCurrentUserHasPro & WithMessageSentWithProFeat;
+    }
+  | {
+      context: 'contact-name';
+      args: WithUserHasPro & WithIsMe & WithCurrentUserHasPro & WithContactNameContext;
+    };
 
 type ShowTagWithCb = {
   show: true;
@@ -46,6 +55,25 @@ const contactNameContextNoShow: Array<ContactNameContext> = [
   'message-search-result',
 ];
 
+export enum ProFeatures {
+  PRO_BADGE = 'pro-badge',
+  PRO_INCREASED_MESSAGE_LENGTH = 'pro-increased-message-length',
+  PRO_ANIMATED_DISPLAY_PICTURE = 'pro-animated-display-picture',
+}
+
+function proFeatureToVariant(proFeature: ProFeatures): SessionProInfoVariant {
+  switch (proFeature) {
+    case ProFeatures.PRO_INCREASED_MESSAGE_LENGTH:
+      return SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT;
+    case ProFeatures.PRO_BADGE:
+    case ProFeatures.PRO_ANIMATED_DISPLAY_PICTURE:
+      return SessionProInfoVariant.GENERIC;
+    default:
+      assertUnreachable(proFeature, 'ProFeatureToVariant: unknown case');
+      throw new Error('unreachable');
+  }
+}
+
 export function useProBadgeOnClickCb(
   opts: ProBadgeContext
 ): ShowTagWithCb | ShowTagNoCb | DoNotShowTag {
@@ -68,6 +96,34 @@ export function useProBadgeOnClickCb(
             : SessionProInfoVariant.PROFILE_PICTURE_ANIMATED
         ),
     };
+  }
+  if (context === 'show-our-profile-dialog') {
+    return args.currentUserHasPro ? showNoCb : doNotShow;
+  }
+
+  if (context === 'message-info-sent-with-pro') {
+    // if no pro features were used for this message, we do not show the pro badge here,
+    // even if the user that sent it has pro
+    if (!args.messageSentWithProFeat || !args.messageSentWithProFeat?.length) {
+      return doNotShow;
+    }
+    const { messageSentWithProFeat } = args;
+    const multiProFeatUsed = messageSentWithProFeat.length > 1;
+
+    // if a pro feature was used for this message, we show the badge but it only opens a CTA
+    // when we do not have pro ourself
+    return args.currentUserHasPro
+      ? showNoCb
+      : {
+          show: true,
+          cb: () => {
+            handleShowProInfoModal(
+              multiProFeatUsed
+                ? SessionProInfoVariant.GENERIC
+                : proFeatureToVariant(messageSentWithProFeat[0])
+            );
+          },
+        };
   }
 
   if (context === 'conversation-header-title') {
@@ -124,6 +180,13 @@ export function useProBadgeOnClickCb(
     }
     if (contactNameContextNoShow.includes(args.contactNameContext)) {
       return doNotShow;
+    }
+
+    if (args.contactNameContext === 'message-info-author') {
+      if (args.currentUserHasPro) {
+        return showNoCb;
+      }
+      return { show: true, cb: () => handleShowProInfoModal(SessionProInfoVariant.GENERIC) };
     }
     return showNoCb;
   }

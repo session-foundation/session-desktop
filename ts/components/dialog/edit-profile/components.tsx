@@ -8,10 +8,12 @@ import { prepareQRCodeForLightBox } from '../../../util/qrCodes';
 import { QRCodeLogoProps, SessionQRCode } from '../../SessionQRCode';
 import { Avatar, AvatarSize } from '../../avatar/Avatar';
 import { Flex } from '../../basic/Flex';
-import { SpacerSM } from '../../basic/Text';
 import { ProfileDialogModes } from './EditProfileDialog';
 import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
+import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnClickCb';
+import { useCurrentUserHasPro } from '../../../hooks/useHasPro';
+import { ProIconButton } from '../../buttons/ProButton';
 
 const qrLogoProps: QRCodeLogoProps = {
   iconType: 'brandThin',
@@ -151,6 +153,7 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
 const StyledProfileName = styled(Flex)`
   padding: 8px;
   border: 1px solid var(--transparent-color);
+  gap: var(--margins-xs);
 
   .session-icon-button {
     padding: 0px;
@@ -167,6 +170,13 @@ const StyledName = styled.p`
 export const ProfileName = (props: { profileName: string; onClick: () => void }) => {
   const { profileName, onClick } = props;
 
+  const currentUserHasPro = useCurrentUserHasPro();
+
+  const showPro = useProBadgeOnClickCb({
+    context: 'show-our-profile-dialog',
+    args: { currentUserHasPro },
+  });
+
   return (
     <StyledProfileName $container={true} $justifyContent="center" $alignItems="center">
       <SessionLucideIconButton
@@ -175,8 +185,14 @@ export const ProfileName = (props: { profileName: string; onClick: () => void })
         onClick={onClick}
         dataTestId="edit-profile-icon"
       />
-      <SpacerSM />
       <StyledName data-testid="your-profile-name">{profileName}</StyledName>
+      {showPro.show ? (
+        <ProIconButton
+          iconSize={'medium'}
+          dataTestId="pro-badge-profile-name"
+          onClick={showPro.cb}
+        />
+      ) : null}
     </StyledProfileName>
   );
 };
