@@ -17,7 +17,7 @@ import { useLibGroupDescription } from '../../../state/selectors/groups';
 import { useShowUpdateGroupNameDescriptionCb } from '../../menuAndSettingsHooks/useShowUpdateGroupNameDescription';
 import { useHTMLDirection } from '../../../util/i18n/rtlSupport';
 import { UsernameFallback } from './UsernameFallback';
-import { ConversationTitle } from './ConversationTitle';
+import { ConversationTitleDialog } from './ConversationTitleDialog';
 import { SessionIDNotEditable } from '../../basic/SessionIdNotEditable';
 
 function AccountId({ conversationId }: WithConvoId) {
@@ -181,7 +181,7 @@ export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
           $flexGap="var(--margins-xs)"
           style={{ direction: htmlDirection }}
         >
-          <ConversationTitle conversationId={conversationId} editable={true} />
+          <ConversationTitleDialog conversationId={conversationId} editable={true} />
           <ChangeNicknameButton conversationId={conversationId} />
           <UpdateNameDescriptionButton conversationId={conversationId} />
         </Flex>

@@ -347,7 +347,7 @@ export const ExperimentalActions = ({ forceUpdate }: { forceUpdate: () => void }
   // const timeLeftMs = sesh101NotificationAt - Date.now();
 
   // TODO [SES-2606] uncomment before release but after QA
-  // if (!process.env.SESSION_DEV) {
+  // if (!isDebugMode()) {
   //   return null;
   // }
 

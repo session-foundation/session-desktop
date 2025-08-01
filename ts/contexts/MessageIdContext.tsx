@@ -9,6 +9,5 @@ const ContextMessageId = createContext<string | undefined>(undefined);
 export const ContextMessageProvider = ContextMessageId.Provider;
 
 export function useMessageIdFromContext() {
-  const messageId = useContext(ContextMessageId);
-  return messageId;
+  return useContext(ContextMessageId);
 }

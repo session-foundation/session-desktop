@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import { MessageInfoLabel } from '.';
-import { useConversationUsername } from '../../../../../../hooks/useParamSelector';
+import { useConversationUsernameWithFallback } from '../../../../../../hooks/useParamSelector';
 import { isDevProd } from '../../../../../../shared/env_vars';
 import { Avatar, AvatarSize, CrownIcon } from '../../../../../avatar/Avatar';
 import { Flex } from '../../../../../basic/Flex';
@@ -39,7 +39,7 @@ const StyledAvatar = styled.div`
 
 export const MessageFrom = (props: { sender: string; isSenderAdmin: boolean }) => {
   const { sender, isSenderAdmin } = props;
-  const profileName = useConversationUsername(sender);
+  const profileName = useConversationUsernameWithFallback(true, sender);
   const from = tr('from');
 
   const isDev = isDevProd();

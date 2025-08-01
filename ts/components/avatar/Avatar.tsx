@@ -6,7 +6,7 @@ import { useDisableDrag } from '../../hooks/useDisableDrag';
 import { useEncryptedFileFetch } from '../../hooks/useEncryptedFileFetch';
 import {
   useAvatarPath,
-  useConversationUsername,
+  useConversationUsernameWithFallback,
   useIsClosedGroup,
   useIsPublic,
 } from '../../hooks/useParamSelector';
@@ -21,8 +21,7 @@ export enum AvatarSize {
   XS = 28,
   S = 36,
   M = 48,
-  L = 80,
-  XL = 110,
+  XL = 90,
   HUGE = 190,
 }
 
@@ -44,7 +43,7 @@ type Props = {
 
 const Identicon = (props: Pick<Props, 'forcedName' | 'pubkey' | 'size'>) => {
   const { size, forcedName, pubkey } = props;
-  const displayName = useConversationUsername(pubkey);
+  const displayName = useConversationUsernameWithFallback(false, pubkey);
   const userName = forcedName || displayName || '0';
 
   return <AvatarPlaceHolder diameter={size} name={userName} pubkey={pubkey} />;
@@ -138,7 +137,7 @@ const AvatarInner = (props: Props) => {
 
   const isClosedGroup = useIsClosedGroup(pubkey);
   const avatarPath = useAvatarPath(pubkey);
-  const name = useConversationUsername(pubkey);
+  const name = useConversationUsernameWithFallback(false, pubkey);
   const isCommunity = useIsPublic(pubkey);
   // contentType is not important
   const { urlToLoad } = useEncryptedFileFetch(forcedAvatarPath || avatarPath || '', '', true);

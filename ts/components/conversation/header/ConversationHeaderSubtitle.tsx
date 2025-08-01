@@ -105,6 +105,13 @@ function CycleButton({
   );
 }
 
+const StyledConversationHeaderSubtitleText = styled.span`
+  color: var(--text-primary-color);
+  font-weight: 400;
+  font-size: var(--font-size-sm);
+  line-height: var(--font-size-sm);
+`;
+
 export const ConversationHeaderSubtitle = (props: ConversationHeaderSubtitleProps) => {
   const { subtitlesArray, subtitleIndex, onClickFunction, showDisappearingMessageIcon, onCycle } =
     props;
@@ -135,9 +142,8 @@ export const ConversationHeaderSubtitle = (props: ConversationHeaderSubtitleProp
             margin={'0 var(--margins-xs) 0 0'}
           />
         )}
-        <span
+        <StyledConversationHeaderSubtitleText
           role="button"
-          className="module-conversation-header__title-text"
           onClick={onClickFunction}
           onKeyPress={(e: any) => {
             if (e.key === 'Enter') {
@@ -149,7 +155,7 @@ export const ConversationHeaderSubtitle = (props: ConversationHeaderSubtitleProp
           data-testid={loadDataTestId(currentSubtitle.type)}
         >
           {currentSubtitle.label}
-        </span>
+        </StyledConversationHeaderSubtitleText>
         <CycleButton onCycle={onCycle} direction={1} cannotCycle={cannotCycle} />
       </Flex>
     </StyledSubtitleContainer>

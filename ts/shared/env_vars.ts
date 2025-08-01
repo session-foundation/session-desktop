@@ -28,3 +28,7 @@ export function hasClosedGroupV2QAButtons() {
 export function isUnitTest() {
   return !!process.env.IS_UNIT_TEST;
 }
+
+export function isDebugMode() {
+  return !!process.env.SESSION_DEV;
+}

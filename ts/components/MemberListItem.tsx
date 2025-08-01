@@ -3,10 +3,7 @@ import styled, { css } from 'styled-components';
 import { GroupPubkeyType, MemberStateGroupV2, PubkeyType } from 'libsession_util_nodejs';
 import { isEmpty } from 'lodash';
 import type { SessionDataTestId } from 'react';
-import {
-  useNicknameOrProfileNameOrShortenedPubkey,
-  useWeAreAdmin,
-} from '../hooks/useParamSelector';
+import { useConversationUsernameWithFallback, useWeAreAdmin } from '../hooks/useParamSelector';
 import { promoteUsersInGroup } from '../interactions/conversationInteractions';
 import { PubKey } from '../session/types';
 import { UserUtils } from '../session/utils';
@@ -51,7 +48,6 @@ const AvatarItem = (props: { memberPubkey: string; isAdmin: boolean }) => {
 
 const StyledSessionMemberItem = styled.button<{
   inMentions?: boolean;
-  zombie?: boolean;
   selected?: boolean;
   disableBg?: boolean;
   withBorder?: boolean;
@@ -66,7 +62,6 @@ const StyledSessionMemberItem = styled.button<{
   height: ${props => (props.inMentions ? '40px' : '50px')};
   width: 100%;
   transition: var(--default-duration);
-  opacity: ${props => (props.zombie ? 0.5 : 1)};
   background-color: ${props =>
     !props.disableBg && props.selected
       ? 'var(--conversation-tab-background-selected-color) !important'
@@ -111,8 +106,6 @@ const StyledCheckContainer = styled.div`
 type MemberListItemProps<T extends string> = {
   pubkey: T;
   isSelected: boolean;
-  // this bool is used to make a zombie appear with less opacity than a normal member
-  isZombie?: boolean;
   inMentions?: boolean; // set to true if we are rendering members but in the Mentions picker
   isPublic?: boolean;
   disableBg?: boolean;
@@ -331,7 +324,6 @@ export const MemberListItem = <T extends string>({
   inMentions,
   isPublic,
   isAdmin,
-  isZombie,
   onSelect,
   onUnselect,
   groupPk,
@@ -340,7 +332,7 @@ export const MemberListItem = <T extends string>({
   maxNameWidth,
   hideRadioButton,
 }: MemberListItemProps<T>) => {
-  const memberName = useNicknameOrProfileNameOrShortenedPubkey(pubkey);
+  const memberName = useConversationUsernameWithFallback(true, pubkey);
   const isYou = isUsAnySogsFromCache(pubkey);
   const ourName = isYou ? tr('you') : null;
   const shortPubkey = PubKey.shorten(pubkey);
@@ -356,7 +348,6 @@ export const MemberListItem = <T extends string>({
         isSelected ? onUnselect?.(pubkey) : onSelect?.(pubkey);
       }}
       data-testid={dataTestId}
-      zombie={isZombie}
       inMentions={inMentions}
       selected={isSelected}
       disableBg={disableBg}
