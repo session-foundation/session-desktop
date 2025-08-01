@@ -34,6 +34,7 @@ export enum SessionProInfoVariant {
   PROFILE_PICTURE_ANIMATED = 3,
   ALREADY_PRO_PROFILE_PICTURE_ANIMATED = 4,
   GENERIC = 5,
+  GROUP_ACTIVATED = 6,
 }
 
 const StyledContentContainer = styled.div`
@@ -148,6 +149,8 @@ function getFeatureList(variant: SessionProInfoVariant) {
       return ['proFeatureListLongerMessages', 'proFeatureListLargerGroups'] as const;
     case SessionProInfoVariant.GENERIC: // yes generic has the same as above, reversed...
       return ['proFeatureListLargerGroups', 'proFeatureListLongerMessages'] as const;
+    case SessionProInfoVariant.GROUP_ACTIVATED:
+      return [];
     default:
       assertUnreachable(variant, 'getFeatureList unreachable case');
       throw new Error('unreachable');
@@ -178,6 +181,12 @@ function getDescription(variant: SessionProInfoVariant): ReactNode {
 
     case SessionProInfoVariant.GENERIC:
       return tr('proUserProfileModalCallToAction');
+    case SessionProInfoVariant.GROUP_ACTIVATED:
+      return (
+        <span>
+          {tr('proGroupActivatedDescription')} <ProIcon iconSize={'small'} />
+        </span>
+      );
     default:
       assertUnreachable(variant, 'getDescription unreachable case');
       throw new Error('unreachable');
@@ -202,6 +211,8 @@ function getImage(variant: SessionProInfoVariant): ReactNode {
 
     case SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT:
       return <StyledCTAImage src="images/cta_hero_char_limit.webp" />;
+    case SessionProInfoVariant.GROUP_ACTIVATED:
+      return <StyledCTAImage src="images/cta_hero_group_activated_admin.webp" />;
     case SessionProInfoVariant.GENERIC:
       return (
         <AnimatedCTAImage
@@ -222,6 +233,7 @@ function isProVisibleCTA(variant: SessionProInfoVariant): boolean {
   return [
     SessionProInfoVariant.ALREADY_PRO_PROFILE_PICTURE_ANIMATED,
     SessionProInfoVariant.GENERIC,
+    SessionProInfoVariant.GROUP_ACTIVATED,
   ].includes(variant);
 }
 

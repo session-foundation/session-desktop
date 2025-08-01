@@ -11,12 +11,13 @@ type WithCurrentUserHasPro = { currentUserHasPro: boolean };
 
 type WithIsMe = { isMe: boolean };
 type WithContactNameContext = { contactNameContext: ContactNameContext };
+type WithIsGroupV2 = { isGroupV2: boolean };
 
 export type ProBadgeContext =
   | { context: 'edit-profile-pic'; args: WithUserHasPro }
   | {
-      context: 'conversation-title-dialog'; // the title in the conversation settings
-      args: WithUserHasPro & WithCurrentUserHasPro & WithIsMe;
+      context: 'conversation-title-dialog'; // the title in the conversation settings ConversationSettingsHeader/UserProfileDialog
+      args: WithUserHasPro & WithCurrentUserHasPro & WithIsMe & WithIsGroupV2;
     }
   | { context: 'character-count'; args: WithCurrentUserHasPro }
   | { context: 'conversation-header-title'; args: WithUserHasPro & WithIsMe } // the title in the conversation header (i.e. title of the main screen of the app)
@@ -88,9 +89,18 @@ export function useProBadgeOnClickCb(
       return doNotShow;
     }
 
-    // the user shown has pro.
+    // starting here, the user shown has pro.
+    if (args.isGroupV2) {
+      // if this is a groupv2, the badge should open the "groupv2 activated" modal onclick
+      return {
+        show: true,
+        cb: () => handleShowProInfoModal(SessionProInfoVariant.GROUP_ACTIVATED),
+      };
+    }
+
+    // here, the user shown has pro.
     if (args.currentUserHasPro) {
-      // if we also have pro, clicking on the badge doesn't do anything
+      // if we also have pro and this is a private conversation, clicking on the badge doesn't do anything
       return showNoCb;
     }
     // FOMO: user shown has pro but we don't: show CTA on click

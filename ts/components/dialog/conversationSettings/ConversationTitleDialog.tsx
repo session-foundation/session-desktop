@@ -1,15 +1,15 @@
-import { noop } from 'lodash';
 import { useCurrentUserHasPro, useUserHasPro } from '../../../hooks/useHasPro';
 import {
   useIsPublic,
   useIsClosedGroup,
   useIsMe,
   useConversationUsernameWithFallback,
+  useIsGroupV2,
 } from '../../../hooks/useParamSelector';
 import { tr } from '../../../localization/localeTools';
 import type { WithConvoId } from '../../../session/types/with';
 import { H5 } from '../../basic/Heading';
-import { ProIconButton } from '../../buttons/ProButton';
+import { ProIcon, ProIconButton } from '../../buttons/ProButton';
 import { useChangeNickname } from '../../menuAndSettingsHooks/useChangeNickname';
 import { useShowUpdateGroupNameDescriptionCb } from '../../menuAndSettingsHooks/useShowUpdateGroupNameDescription';
 import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnClickCb';
@@ -26,17 +26,43 @@ function useOnTitleClickCb(conversationId: string, editable: boolean) {
   return changeNicknameCb || updateNameDescCb;
 }
 
+function ProBadge({ conversationId }: WithConvoId) {
+  const weArePro = useCurrentUserHasPro();
+
+  const userHasPro = useUserHasPro(conversationId);
+  const isMe = useIsMe(conversationId);
+  const isGroupV2 = useIsGroupV2(conversationId);
+
+  const onProClickCb = useProBadgeOnClickCb({
+    context: 'conversation-title-dialog',
+    args: { userHasPro, currentUserHasPro: weArePro, isMe, isGroupV2 },
+  });
+
+  if (!onProClickCb.show) {
+    return null;
+  }
+  const sharedProps = {
+    dataTestId: 'pro-badge-conversation-title',
+    iconSize: 'medium',
+    style: { display: 'inline', marginInlineStart: 'var(--margins-xs)', flexShrink: 0 },
+  } as const;
+  return onProClickCb.cb ? (
+    <ProIconButton {...sharedProps} onClick={onProClickCb.cb} />
+  ) : (
+    <ProIcon {...sharedProps} />
+  );
+}
+
 export const ConversationTitleDialog = ({
   conversationId,
   editable,
-}: WithConvoId & { editable: boolean }) => {
+}: WithConvoId & {
+  editable: boolean;
+}) => {
   const nicknameOrDisplayName = useConversationUsernameWithFallback(true, conversationId);
   const isCommunity = useIsPublic(conversationId);
   const isClosedGroup = useIsClosedGroup(conversationId);
   const isMe = useIsMe(conversationId);
-  const weArePro = useCurrentUserHasPro();
-
-  const userHasPro = useUserHasPro(conversationId);
 
   const onClickCb = useOnTitleClickCb(conversationId, editable);
 
@@ -47,11 +73,6 @@ export const ConversationTitleDialog = ({
       ? 'group-name'
       : // for 1o1, this will hold the nickname if set, or the display name
         'preferred-display-name';
-
-  const onProClickCb = useProBadgeOnClickCb({
-    context: 'conversation-title-dialog',
-    args: { userHasPro, currentUserHasPro: weArePro, isMe },
-  });
 
   return (
     <H5
@@ -64,16 +85,7 @@ export const ConversationTitleDialog = ({
       onClick={onClickCb || undefined}
     >
       {isMe ? tr('noteToSelf') : nicknameOrDisplayName}
-      {onProClickCb.show ? (
-        <ProIconButton
-          dataTestId="pro-badge-conversation-title"
-          iconSize={'medium'}
-          disabled={weArePro}
-          // this is a special case: we want to show the badge but it does nothing when we have pro too
-          onClick={onProClickCb.cb ?? noop}
-          style={{ display: 'inline', marginInlineStart: 'var(--margins-xs)', flexShrink: 0 }}
-        />
-      ) : null}
+      <ProBadge conversationId={conversationId} />
     </H5>
   );
 };
