@@ -25,6 +25,7 @@ import { LUCIDE_ICONS_UNICODE, type WithLucideUnicode } from '../icon/lucide';
 import { LucideIcon } from '../icon/LucideIcon';
 import { ProIconButton } from '../buttons/ProButton';
 import { SessionProInfoVariant } from '../dialog/SessionProInfoModal';
+import { useIsProAvailable } from '../../hooks/useIsProAvailable';
 
 const StyledSettingsSectionTitle = styled.span<{
   color?: string;
@@ -175,6 +176,12 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
   );
 
   const iconSize = 'medium';
+
+  const isProAvailable = useIsProAvailable();
+
+  if (id === 'session-pro' && !isProAvailable) {
+    return null;
+  }
 
   return (
     <StyledSettingsListItem

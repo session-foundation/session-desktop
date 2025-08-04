@@ -14,11 +14,11 @@ type WithIsMe = { isMe: boolean };
 type WithContactNameContext = { contactNameContext: ContactNameContext };
 type WithIsGroupV2 = { isGroupV2: boolean };
 type WithIsBlinded = { isBlinded: boolean };
-type WithShowConversationSettingsCb = { showConversationSettingsCb: (() => void) | null };
+type WithProvidedCb = { providedCb: (() => void) | null };
 
 export type ProBadgeContext =
   | { context: 'edit-profile-pic'; args: WithUserHasPro }
-  | { context: 'show-our-profile-dialog'; args: WithCurrentUserHasPro }
+  | { context: 'show-our-profile-dialog'; args: WithCurrentUserHasPro & WithProvidedCb }
   | {
       context: 'conversation-title-dialog'; // the title in the conversation settings ConversationSettingsHeader/UserProfileDialog
       args: WithUserHasPro & WithCurrentUserHasPro & WithIsMe & WithIsGroupV2;
@@ -36,7 +36,7 @@ export type ProBadgeContext =
         WithCurrentUserHasPro &
         WithContactNameContext &
         WithIsBlinded &
-        WithShowConversationSettingsCb;
+        WithProvidedCb;
     };
 
 type ShowTagWithCb = {
@@ -105,7 +105,11 @@ export function useProBadgeOnClickCb(
     };
   }
   if (context === 'show-our-profile-dialog') {
-    return args.currentUserHasPro ? showNoCb : doNotShow;
+    if (args.currentUserHasPro) {
+      // we want to show the edit display name action here, not the pro dialog
+      return { show: true, cb: args.providedCb };
+    }
+    return doNotShow;
   }
 
   if (context === 'message-info-sent-with-pro') {
@@ -195,7 +199,7 @@ export function useProBadgeOnClickCb(
       }
       if (args.isBlinded) {
         // we want to show the conversation modal here, not the pro dialog
-        return { show: true, cb: args.showConversationSettingsCb };
+        return { show: true, cb: args.providedCb };
       }
       return { show: true, cb: () => handleShowProInfoModal(SessionProInfoVariant.GENERIC) };
     }

@@ -7,4 +7,5 @@ export type ContactNameContext =
   | 'react-list-modal'
   | 'message-info-author' // the author of the message as shown in the message info (right panel)
   | 'message-search-result'
+  | 'contact-list-row' // the name in the list of contacts (after clicking the + from the left pane)
   | 'member-list-item';

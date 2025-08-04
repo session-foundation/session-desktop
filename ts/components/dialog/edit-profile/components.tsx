@@ -174,7 +174,7 @@ export const ProfileName = (props: { profileName: string; onClick: () => void })
 
   const showPro = useProBadgeOnClickCb({
     context: 'show-our-profile-dialog',
-    args: { currentUserHasPro },
+    args: { currentUserHasPro, providedCb: onClick },
   });
 
   return (

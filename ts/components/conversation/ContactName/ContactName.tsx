@@ -26,6 +26,7 @@ const boldProfileNameCtx: Array<ContactNameContext> = [
   'message-author',
   'message-info-author',
   'member-list-item',
+  'contact-list-row',
 ];
 
 const showPubkeyCtx: Array<ContactNameContext> = ['message-author'];
@@ -39,9 +40,13 @@ const ntsIsYouCtx: Array<ContactNameContext> = [
   'member-list-item',
 ];
 
-const forceSingleLineCtx: Array<ContactNameContext> = ['message-info-author', 'member-list-item'];
+const forceSingleLineCtx: Array<ContactNameContext> = [
+  'message-info-author',
+  'member-list-item',
+  'contact-list-row',
+];
 
-const commonStyles: CSSProperties = {
+const commonNameStyles: CSSProperties = {
   minWidth: 0,
   textOverflow: 'ellipsis',
   overflow: 'hidden',
@@ -63,6 +68,7 @@ export const ContactName = ({
   contactNameContext,
   conversationId,
   style,
+  extraNameStyle,
 }: {
   pubkey: string;
   module?:
@@ -72,6 +78,7 @@ export const ContactName = ({
   contactNameContext: ContactNameContext;
   conversationId?: string;
   style?: CSSProperties;
+  extraNameStyle?: CSSProperties;
 }) => {
   const prefix = module || 'module-contact-name';
   const isPublic = useIsPublic(conversationId);
@@ -120,23 +127,27 @@ export const ContactName = ({
       contactNameContext,
       currentUserHasPro,
       isBlinded: PubKey.isBlinded(pubkey),
-      showConversationSettingsCb,
+      providedCb: showConversationSettingsCb,
     },
   });
 
-  let mergedStyle: CSSProperties = commonStyles;
+  let mergedNameStyle: CSSProperties = commonNameStyles;
   if (forceSingleLine) {
-    mergedStyle = {
-      ...mergedStyle,
+    mergedNameStyle = {
+      ...mergedNameStyle,
       ...forceSingleLineStyle,
     };
   }
   if (boldProfileName) {
-    mergedStyle = {
-      ...mergedStyle,
+    mergedNameStyle = {
+      ...mergedNameStyle,
       ...boldStyles,
     };
   }
+  mergedNameStyle = {
+    ...mergedNameStyle,
+    ...extraNameStyle,
+  };
 
   return (
     <span
@@ -153,7 +164,7 @@ export const ContactName = ({
       }}
     >
       {displayedName ? (
-        <div style={mergedStyle} className={`${prefix}__profile-name`}>
+        <div style={mergedNameStyle} className={`${prefix}__profile-name`}>
           <Emojify text={displayedName} sizeClass="small" isGroup={!isPrivate} />
         </div>
       ) : null}

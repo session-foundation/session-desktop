@@ -64,12 +64,12 @@ function MainPage({ setPage }: DebugMenuPageProps) {
   const forceUpdate = useUpdate();
   return (
     <>
+      <FeatureFlags flags={window.sessionFeatureFlags} forceUpdate={forceUpdate} />
       <DebugActions />
       <LoggingActions />
       <Playgrounds setPage={setPage} />
       <ExperimentalActions forceUpdate={forceUpdate} />
       <DataGenerationActions />
-      <FeatureFlags flags={window.sessionFeatureFlags} forceUpdate={forceUpdate} />
       <ReleaseChannel />
       <AboutInfo />
       <OtherInfo />
