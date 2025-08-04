@@ -702,7 +702,6 @@
   "passwordEnterCurrent": "Wprowadź aktualne hasło",
   "passwordEnterNew": "Wprowadź nowe hasło",
   "passwordError": "Hasło może zawierać jedynie litery, cyfry i symbole",
-  "passwordErrorLength": "Hasło musi zawierać od 6 do 64 znaków",
   "passwordErrorMatch": "Podane hasła różnią się",
   "passwordFailed": "Nie udało się ustawić hasła",
   "passwordIncorrect": "Nieprawidłowe hasło",

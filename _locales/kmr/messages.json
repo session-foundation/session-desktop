@@ -627,7 +627,6 @@
   "passwordEnterCurrent": "Ji kerema xwe şîfreya xwe ya berdest têkeve",
   "passwordEnterNew": "Ji kerema xwe şîfreya xwe ya nû têkeve",
   "passwordError": "Şîfre divê tenê herf, nimre û sembolan bihewîne",
-  "passwordErrorLength": "Divê şîfre di navbera dirêjiya 6 û 64 karakteran de be",
   "passwordErrorMatch": "Şîfre li hev nayên",
   "passwordFailed": "Bi ser neket ku şîfre deyne",
   "passwordIncorrect": "Şîfreya nerast",

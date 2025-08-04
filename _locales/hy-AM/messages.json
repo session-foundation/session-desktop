@@ -617,7 +617,6 @@
   "passwordEnterCurrent": "Մուտքագրեք Ձեր ներկա գաղտնաբառը.",
   "passwordEnterNew": "Խնդրում ենք մուտքագրել ձեր նոր գաղտնաբառը",
   "passwordError": "Գաղտնաբառը պետք է պարունակի միայն տառեր, թվեր և նշաններ",
-  "passwordErrorLength": "Գաղտնաբառը պետք է լինի 6-ից 64 նիշ",
   "passwordErrorMatch": "Գաղտնաբառերը չեն համընկնում",
   "passwordFailed": "Չհաջողվեց սահմանել գաղտնաբառը",
   "passwordIncorrect": "Սխալ գաղտնաբառ",

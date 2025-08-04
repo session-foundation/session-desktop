@@ -617,7 +617,6 @@
   "passwordEnterCurrent": "Ju lutemi vendosni fjalëkalimin tuaj të tanishëm",
   "passwordEnterNew": "Ju lutemi shkruani fjalëkalimin tuaj të ri.",
   "passwordError": "Fjalëkalimi duhet të përmbajë vetëm shkronja, numra dhe simbole",
-  "passwordErrorLength": "Fjalëkalimi duhet të jetë midis 6 dhe 64 karaktere të gjata",
   "passwordErrorMatch": "Fjalëkalimet nuk përputhen",
   "passwordFailed": "Dështoi vendosja e fjalëkalimit",
   "passwordIncorrect": "Fjalëkalim i pasaktë",

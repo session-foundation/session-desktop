@@ -706,7 +706,6 @@
   "passwordEnterCurrent": "Add meg a jelenlegi jelszavad",
   "passwordEnterNew": "Add meg az új jelszavad",
   "passwordError": "A jelszó csak betűket, számokat, és szimbólumokat tartalmazhat",
-  "passwordErrorLength": "A jelszónak minimum 6 és maximum 64 karakter hosszúságúnak kell lennie",
   "passwordErrorMatch": "A megadott jelszavak nem egyeznek",
   "passwordFailed": "Jelszó frissítése sikertelen",
   "passwordIncorrect": "Hibás jelszó",

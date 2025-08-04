@@ -618,7 +618,6 @@
   "passwordEnterCurrent": "Nceda ngenisa ipassword yakho yangoku",
   "passwordEnterNew": "Nceda ngenisa ipassword yakho entsha",
   "passwordError": "Iphasiwedi kufuneka iqulathe oonobumba, amanani kunye neesimboli kuphela",
-  "passwordErrorLength": "Iphasiwedi mayibe phakathi kwe-6 ne-64 iimpawu ngokubude",
   "passwordErrorMatch": "Iipasiwedi azifanani",
   "passwordFailed": "Koyekile ukumisela i-password",
   "passwordIncorrect": "Iphasiwedi echanekileyo",

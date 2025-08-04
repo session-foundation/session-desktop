@@ -702,7 +702,6 @@
   "passwordEnterCurrent": "Veuillez entrer votre mot de passe actuel",
   "passwordEnterNew": "Veuillez entrer votre nouveau mot de passe",
   "passwordError": "Le mot de passe ne peux contenir que des lettres, des chiffres et des symboles",
-  "passwordErrorLength": "Le mot de passe doit avoir une longueur comprise entre 6 et 64 caractères",
   "passwordErrorMatch": "Les mots de passe ne correspondent pas.",
   "passwordFailed": "Échec de la définition du mot de passe",
   "passwordIncorrect": "Mot de passe incorrect",

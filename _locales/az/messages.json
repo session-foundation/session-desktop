@@ -691,7 +691,6 @@
   "passwordEnterCurrent": "Lütfən hazırkı parolunuzu daxil edin",
   "passwordEnterNew": "Lütfən yeni parolunuzu daxil edin",
   "passwordError": "Parolda yalnız hərf, rəqəm və simvollar olmalıdır",
-  "passwordErrorLength": "Parol 6-64 simvol uzunluğunda olmalıdır",
   "passwordErrorMatch": "Parollar uyuşmur",
   "passwordFailed": "Parol təyin etmə uğursuz oldu",
   "passwordIncorrect": "Yanlış parol",

@@ -618,7 +618,6 @@
   "passwordEnterCurrent": "Pakilagay ang iyong kasalukuyang password",
   "passwordEnterNew": "Pakilagay ang iyong bagong password",
   "passwordError": "Ang password ay dapat lamang maglaman ng mga letra, numero at mga simbolo",
-  "passwordErrorLength": "Ang password ay dapat nasa pagitan ng 6 at 64 na karakter ang haba",
   "passwordErrorMatch": "Hindi tugma ang mga password",
   "passwordFailed": "Nabigong mag-set ng password",
   "passwordIncorrect": "Maling password",

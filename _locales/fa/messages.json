@@ -616,7 +616,6 @@
   "passwordEnterCurrent": "لطفا پسورد فعلی خود را وارد کنید",
   "passwordEnterNew": "لطفا گذرواژه‌ی جدید خودت رو وارد کن",
   "passwordError": "رمز عبور باید فقط شامل حروف، اعداد و نشان‌ها باشد",
-  "passwordErrorLength": "طول رمز عبور باید بین ۶ تا ۶۴ کاراکتر باشد",
   "passwordErrorMatch": "رمزهای عبور مطابقت ندارند",
   "passwordFailed": "تنظیم رمز عبور شکست خورد",
   "passwordIncorrect": "رمز عبور نادرست است",

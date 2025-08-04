@@ -628,7 +628,6 @@
   "passwordEnterCurrent": "Syötä nykyinen salasanasi",
   "passwordEnterNew": "Syötä uusi salasana",
   "passwordError": "Salasana voi sisältää vain kirjaimia, numeroita tai symboleja",
-  "passwordErrorLength": "Salasanan tulee olla 6-64 merkkiä pitkä",
   "passwordErrorMatch": "Salasanat eivät täsmää",
   "passwordFailed": "Salasanan asetus epäonnistui",
   "passwordIncorrect": "Virheellinen salasana",

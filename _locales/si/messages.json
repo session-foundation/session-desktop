@@ -617,7 +617,6 @@
   "passwordEnterCurrent": "කරුණාකර ඔබේ වත්මන් මුරපදය ඇතුළු කරන්න",
   "passwordEnterNew": "ඔබගේ මුරපදය ඇතුල් කරන්න",
   "passwordError": "මුරපදයේ අඩංගු විය යුත්තේ අකුරු, අංක සහ සංකේත පමණි",
-  "passwordErrorLength": "මුරපදය අක්ෂර 6 සහ 64 අතර දිග විය යුතුය",
   "passwordErrorMatch": "මුරපද නොගැලපේ",
   "passwordFailed": "මුරපදය සැකසීමට අසමත් විය",
   "passwordIncorrect": "සාවද්‍ය මුරපදයකි",

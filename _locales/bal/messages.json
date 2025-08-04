@@ -617,7 +617,6 @@
   "passwordEnterCurrent": "براہء مہربانی اپنے موجودہ پاسورڈ ڈالیں",
   "passwordEnterNew": "براہء مہربانی اپنا نیا پاسورڈ ڈالیں",
   "passwordError": "پاسورڈ فقط حروف، اعداد و علامات بوت",
-  "passwordErrorLength": "پاسورڈ 6 تا 64 حرفء درمیان بوت",
   "passwordErrorMatch": "پاسورڈاں مطابق نئیں",
   "passwordFailed": "پاسورڈ مقرر کرنے میں ناکامی",
   "passwordIncorrect": "غلط پاس ورڈ",

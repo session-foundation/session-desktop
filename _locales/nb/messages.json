@@ -618,7 +618,6 @@
   "passwordEnterCurrent": "Vennligst tast inn ditt nåværende passord",
   "passwordEnterNew": "Vennligst tast inn ditt nye passord",
   "passwordError": "Passordet kan kun inneholde bokstaver, tall og symboler",
-  "passwordErrorLength": "Passordet må være mellom 6 og 64 tegn langt",
   "passwordErrorMatch": "Passordene stemmer ikke overens",
   "passwordFailed": "Kunne ikke stille passordet",
   "passwordIncorrect": "Galt passord",

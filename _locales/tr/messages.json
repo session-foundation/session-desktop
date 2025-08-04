@@ -653,7 +653,6 @@
   "passwordEnterCurrent": "Lütfen mevcut parolanızı girin",
   "passwordEnterNew": "Lütfen yeni parolanızı girin",
   "passwordError": "Parolanız sadece harf, sayı ve sembol içermelidir",
-  "passwordErrorLength": "Parolanız 6 ila 64 karakter uzunluğu aralığında olmalıdır",
   "passwordErrorMatch": "Şifreler uyuşmuyor",
   "passwordFailed": "Parolayı ayarlama başarısız oldu",
   "passwordIncorrect": "Yanlış şifre",

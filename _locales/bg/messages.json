@@ -617,7 +617,6 @@
   "passwordEnterCurrent": "Моля, въведете текущата си парола",
   "passwordEnterNew": "Моля, въведете новата си парола",
   "passwordError": "Паролата трябва да съдържа само букви, цифри и символи",
-  "passwordErrorLength": "Паролата трябва да е между 6 и 64 символа",
   "passwordErrorMatch": "Паролите не съвпадат",
   "passwordFailed": "Неуспешно задаване на паролата",
   "passwordIncorrect": "Грешна парола",

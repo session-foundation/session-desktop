@@ -617,7 +617,6 @@
   "passwordEnterCurrent": "Prosimo, vnesite trenutno geslo",
   "passwordEnterNew": "Prosimo, vnesite novo geslo",
   "passwordError": "Geslo lahko vsebuje samo črke, številke in simbole",
-  "passwordErrorLength": "Geslo mora biti dolgo med 6 in 64 znakov",
   "passwordErrorMatch": "Gesli se ne ujemata",
   "passwordFailed": "Ni uspelo nastaviti gesla",
   "passwordIncorrect": "Napačno geslo",

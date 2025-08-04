@@ -710,7 +710,6 @@
   "passwordEnterCurrent": "Prosím, zadejte své aktuální heslo",
   "passwordEnterNew": "Prosím, zadejte své nové heslo",
   "passwordError": "Heslo musí obsahovat jen písmena, čísla a symboly",
-  "passwordErrorLength": "Heslo musí mít od 6 do 64 znaků",
   "passwordErrorMatch": "Hesla se neshodují",
   "passwordFailed": "Nepodařilo se nastavit heslo",
   "passwordIncorrect": "Nesprávné heslo",

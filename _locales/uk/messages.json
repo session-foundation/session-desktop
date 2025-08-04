@@ -709,7 +709,6 @@
   "passwordEnterCurrent": "Будь ласка, введіть поточний пароль",
   "passwordEnterNew": "Будь ласка, введіть новий пароль",
   "passwordError": "Пароль має містити лише літери, цифри та символи",
-  "passwordErrorLength": "Пароль має бути довжиною від 6 до 64 символів",
   "passwordErrorMatch": "Паролі не збігаються",
   "passwordFailed": "Не вдалося встановити пароль",
   "passwordIncorrect": "Неправильний пароль",

@@ -617,7 +617,6 @@
   "passwordEnterCurrent": "Voer jou huidige wagwoord in",
   "passwordEnterNew": "Voer jou nuwe wagwoord in",
   "passwordError": "Wagwoord moet slegs letters, syfers en simbole bevat",
-  "passwordErrorLength": "Wagwoord moet tussen 6 en 64 karakters lank wees",
   "passwordErrorMatch": "Wagwoorde stem nie ooreen nie",
   "passwordFailed": "Kon nie wagwoord stel nie",
   "passwordIncorrect": "Verkeerde wagwoord",
