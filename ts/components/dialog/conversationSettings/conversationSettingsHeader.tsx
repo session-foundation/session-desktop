@@ -19,6 +19,7 @@ import { useHTMLDirection } from '../../../util/i18n/rtlSupport';
 import { UsernameFallback } from './UsernameFallback';
 import { ConversationTitleDialog } from './ConversationTitleDialog';
 import { SessionIDNotEditable } from '../../basic/SessionIdNotEditable';
+import { AccountIdPill } from '../../basic/AccountIdPill';
 
 function AccountId({ conversationId }: WithConvoId) {
   const isPrivate = useIsPrivate(conversationId);
@@ -152,6 +153,8 @@ export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
   const editProfilePictureCb = useEditProfilePictureCallback({ conversationId });
   const htmlDirection = useHTMLDirection();
 
+  const isPrivateUnblinded = useIsPrivate(conversationId) && !PubKey.isBlinded(conversationId);
+
   if (!conversationId) {
     return null;
   }
@@ -187,6 +190,7 @@ export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
         </Flex>
         <UsernameFallback conversationId={conversationId} />
         <Description conversationId={conversationId} />
+        {isPrivateUnblinded ? <AccountIdPill accountType={isMe ? 'ours' : 'theirs'} /> : null}
         <AccountId conversationId={conversationId} />
       </Flex>
     </Header>

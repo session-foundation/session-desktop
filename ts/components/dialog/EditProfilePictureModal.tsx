@@ -73,7 +73,7 @@ const UploadImageButton = () => {
       <StyledUploadButton>
         <SessionLucideIconButton unicode={LUCIDE_ICONS_UNICODE.IMAGE} iconSize={'max'} margin="0" />
       </StyledUploadButton>
-      <PlusAvatarButton dataTestId="image-upload-section" />
+      <PlusAvatarButton dataTestId="image-upload-section" isEdit={false} />
     </div>
   );
 };

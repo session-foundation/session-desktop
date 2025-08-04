@@ -29,6 +29,7 @@ import { AvatarSize } from '../../avatar/Avatar';
 import { SessionIDNotEditable } from '../../basic/SessionIdNotEditable';
 import { Flex } from '../../basic/Flex';
 import { AccountIdPill } from '../../basic/AccountIdPill';
+import { ModalPencilIcon } from '../shared/ModalPencilButton';
 
 // #region Shortcuts
 const handleKeyQRMode = (
@@ -245,6 +246,7 @@ export const EditProfileDialog = () => {
                 />
               ) : undefined
             }
+            extraRightButton={<ModalPencilIcon onClick={() => setMode('edit')} />}
           />
         }
         onClose={closeDialog}

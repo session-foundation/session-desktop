@@ -82,10 +82,6 @@ const StyledReactionSender = styled(Flex)`
   width: 100%;
   margin-bottom: 12px;
 
-  .module-avatar {
-    margin-right: 12px;
-  }
-
   .module-conversation__user__profile-name {
     color: var(--text-primary-color);
     font-weight: normal;
@@ -124,7 +120,7 @@ const ReactionSenders = (props: ReactionSendersProps) => {
           $justifyContent={'space-between'}
           $alignItems={'center'}
         >
-          <Flex $container={true} $alignItems={'center'} style={{ overflow: 'hidden' }}>
+          <Flex $container={true} $alignItems={'center'} style={{ overflow: 'hidden' }} $flexGap='var(--margins-sm)'>
             <Avatar
               size={AvatarSize.XS}
               pubkey={sender}

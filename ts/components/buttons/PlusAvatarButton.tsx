@@ -5,19 +5,24 @@ import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 export const PlusAvatarButton = ({
   onClick,
   dataTestId,
+  isEdit,
 }: {
   onClick?: () => void;
+  /**
+   * if true, the button will be a pencil icon, otherwise a plus icon
+   */
+  isEdit: boolean;
   dataTestId?: SessionDataTestId;
 }) => {
   return (
     <SessionLucideIconButton
-      unicode={LUCIDE_ICONS_UNICODE.PLUS}
-      iconSize={'medium'}
+      unicode={isEdit ? LUCIDE_ICONS_UNICODE.PENCIL : LUCIDE_ICONS_UNICODE.PLUS}
+      iconSize={isEdit ? 'small' : 'medium'}
       iconColor="var(--modal-background-content-color)"
       onClick={onClick}
       dataTestId={dataTestId}
       backgroundColor="var(--primary-color)"
-      padding={'var(--margins-xxs)'}
+      padding={isEdit ? 'var(--margins-xs)' : 'var(--margins-xxs)'}
       style={{
         position: 'absolute',
         bottom: '3%',

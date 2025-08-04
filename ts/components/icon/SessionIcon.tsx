@@ -37,6 +37,7 @@ export const IconSizeToPx = {
 };
 
 export const IconSizeToPxStr = {
+  tiny: `${IconSizeToPx.tiny}px`,
   small: `${IconSizeToPx.small}px`,
   medium: `${IconSizeToPx.medium}px`,
   large: `${IconSizeToPx.large}px`,
@@ -50,6 +51,8 @@ const getIconDimensionFromIconSize = (iconSize: SessionIconSize | number) => {
     return iconSize;
   }
   switch (iconSize) {
+    case 'tiny':
+      return IconSizeToPx.tiny;
     case 'small':
       return IconSizeToPx.small;
     case 'medium':

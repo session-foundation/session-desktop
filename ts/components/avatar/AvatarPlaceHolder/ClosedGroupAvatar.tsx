@@ -52,7 +52,7 @@ const StyledAvatarClosedContainer = styled.div<{ containerSize: number }>`
   height: ${({ containerSize }) => containerSize}px;
   mask-image: url(images/avatar-svg-mask.svg);
 
-  .module-avatar:last-child {
+  ${StyledAvatar}:last-child {
     position: absolute;
     right: 0px;
     bottom: 0px;
@@ -89,6 +89,8 @@ export const ClosedGroupAvatar = ({
     );
   }
 
+  const isClickable = !!onAvatarClick;
+
   return (
     <StyledAvatarClosedContainer containerSize={containerSize}>
       <Avatar
@@ -96,7 +98,7 @@ export const ClosedGroupAvatar = ({
         pubkey={UserUtils.getOurPubKeyStrFromCache()}
         onAvatarClick={onAvatarClick}
       />
-      <StyledAvatar $diameter={avatarSize} className={`module-avatar`}>
+      <StyledAvatar $diameter={avatarSize}  $isClickable={isClickable}>
         <MemberAvatarPlaceHolder bgColor={bgColor} />
       </StyledAvatar>
     </StyledAvatarClosedContainer>

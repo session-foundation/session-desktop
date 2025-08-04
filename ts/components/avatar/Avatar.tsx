@@ -1,6 +1,5 @@
 import { memo, SessionDataTestId, useState } from 'react';
 import styled from 'styled-components';
-import clsx from 'clsx';
 
 import { useDisableDrag } from '../../hooks/useDisableDrag';
 import { useEncryptedFileFetch } from '../../hooks/useEncryptedFileFetch';
@@ -10,12 +9,12 @@ import {
   useIsClosedGroup,
   useIsPublic,
 } from '../../hooks/useParamSelector';
-import { SessionIcon } from '../icon';
 import { AvatarPlaceHolder } from './AvatarPlaceHolder/AvatarPlaceHolder';
 import { ClosedGroupAvatar } from './AvatarPlaceHolder/ClosedGroupAvatar';
 import { useIsMessageSelectionMode } from '../../state/selectors/selectedConversation';
 import { PlusAvatarButton } from '../buttons/PlusAvatarButton';
 import { StyledAvatar } from './AvatarPlaceHolder/StyledAvatar';
+import { SessionIconButton } from '../icon/SessionIconButton';
 
 export enum AvatarSize {
   XS = 28,
@@ -58,19 +57,19 @@ const CrownWrapper = styled.div`
   right: 11%;
   height: 18px;
   width: 18px;
-  transform: translate(20%, 20%); // getting over 23% creates a glitch
-  background: var(--background-primary-color);
+  transform: translate(22%, 22%); // getting over 23% creates a glitch
+  background: var(--black-color);
   border-radius: 50%;
 `;
 
 export const CrownIcon = () => {
   return (
     <CrownWrapper>
-      <SessionIcon
-        iconColor="#f7c347"
+      <SessionIconButton
+        iconColor="var(--yellow-color)"
         iconSize={'small'}
         iconType="crown"
-        iconPadding="1px 0 0 0 "
+        iconPadding="1px"
       />
     </CrownWrapper>
   );
@@ -157,14 +156,16 @@ const AvatarInner = (props: Props) => {
    * I suspect that it comes from the virtualisation of the list, but I am not 100% sure.
    * I didn't find the root cause but to avoid it we enforce that urlToLoad is used only when one of the avatar path is set.
    */
-  const hasImage = (base64Data || ((forcedAvatarPath || avatarPath) && urlToLoad)) && !imageBroken;
+  const hasImage = Boolean(
+    (base64Data || ((forcedAvatarPath || avatarPath) && urlToLoad)) && !imageBroken
+  );
 
-  const isClickable = !!onAvatarClick || (isCommunity && onPlusAvatarClick);
+  const isClickable = !!(onAvatarClick || (isCommunity && onPlusAvatarClick));
 
   return (
     <StyledAvatar
       $diameter={size}
-      className={clsx('module-avatar', isClickable && 'module-avatar-clickable')}
+      $isClickable={isClickable || false}
       onClick={e => {
         if (isSelectingMessages) {
           // we could toggle the selection of this message,
@@ -203,7 +204,11 @@ const AvatarInner = (props: Props) => {
         />
       )}
       {onPlusAvatarClick ? (
-        <PlusAvatarButton onClick={onPlusAvatarClick} dataTestId="image-upload-section" />
+        <PlusAvatarButton
+          onClick={onPlusAvatarClick}
+          dataTestId="image-upload-section"
+          isEdit={hasImage}
+        />
       ) : null}
     </StyledAvatar>
   );

@@ -6,7 +6,7 @@ import type { CSSProperties } from 'styled-components';
 import { ReactNode, useState, useRef, type SessionDataTestId } from 'react';
 import useKey from 'react-use/lib/useKey';
 import { Flex } from './basic/Flex';
-import { SpacerLG, SpacerXL } from './basic/Text';
+import { SpacerLG } from './basic/Text';
 import { SessionLucideIconButton } from './icon/SessionIconButton';
 import { SessionFocusTrap } from './SessionFocusTrap';
 import { useHTMLDirection } from '../util/i18n/rtlSupport';
@@ -176,18 +176,61 @@ export type SessionWrapperModalType = {
   style?: Omit<CSSProperties, 'maxWidth' | 'minWidth' | 'padding' | 'border'>;
 };
 
+function ExtraSpacerLeft({
+  extraRightButton,
+  leftButton,
+  showExitIcon,
+}: {
+  showExitIcon?: boolean;
+  leftButton?: ReactNode;
+  extraRightButton?: ReactNode;
+}) {
+  // if we have two button on the right, and one on the left, we need to add one spacer
+  if (extraRightButton && showExitIcon && leftButton) {
+    return <SpacerLG />;
+  }
+  if (extraRightButton && showExitIcon) {
+    // if we have two button on the right, and none on the left, we need to add two spacers
+    return (
+      <>
+        <SpacerLG />
+        <SpacerLG />
+      </>
+    );
+  }
+  // starting here, showExitIcon is false.
+
+  if (extraRightButton && leftButton) {
+    // if we have one button on each sides, no need for a spacer,
+    return null;
+  }
+  // otherwise we need one spacer
+  return <SpacerLG />;
+}
+
 /**
  * A basic modal header with a title, an optional left button and/or exit icon.
  * To be used as `headerChildren` prop as part of SessionWrapperModal.
  */
-export const ModalBasicHeader = (props: {
+export const ModalBasicHeader = ({
+  showExitIcon,
+  leftButton,
+  title,
+  bigHeader,
+  modalHeaderDataTestId,
+  extraRightButton,
+}: {
   title?: ReactNode;
   showExitIcon?: boolean;
   leftButton?: ReactNode;
+  /**
+   * A button to be displayed on the right side of the header.
+   * If all you want is a close button, use showExitIcon instead.
+   */
+  extraRightButton?: ReactNode;
   bigHeader?: boolean;
   modalHeaderDataTestId?: SessionDataTestId;
 }) => {
-  const { showExitIcon, leftButton, title, bigHeader, modalHeaderDataTestId } = props;
   const htmlDirection = useHTMLDirection();
 
   const onClose = useOnModalClose();
@@ -213,7 +256,11 @@ export const ModalBasicHeader = (props: {
         margin={'0'}
       >
         {/* Note: add a spacer if no left button is set but we have an exit icon */}
-        {leftButton ? leftButton : showExitIcon ? <SpacerXL /> : null}
+        <ExtraSpacerLeft
+          showExitIcon={showExitIcon}
+          leftButton={leftButton}
+          extraRightButton={extraRightButton}
+        />
       </Flex>
       <StyledTitle
         bigHeader={bigHeader}
@@ -229,14 +276,18 @@ export const ModalBasicHeader = (props: {
         padding={'0'}
         margin={'0'}
       >
+        {extraRightButton}
         {showExitIcon ? (
           <SessionLucideIconButton
             unicode={LUCIDE_ICONS_UNICODE.X}
-            iconSize={'medium'}
+            // don't ask me why, but the X icon on lucide has more padding than the others.
+            // So we need to use one size bigger than the other icons we use on the header.
+            iconSize={'huge'}
             onClick={onClose ?? undefined}
             padding={'0 var(--margins-xs) 0 var(--margins-xs)'}
             margin={'0'}
             dataTestId="modal-close-button"
+            iconColor="var(--text-primary-color)"
           />
         ) : null}
       </Flex>

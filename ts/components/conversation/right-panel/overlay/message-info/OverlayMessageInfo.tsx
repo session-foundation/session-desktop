@@ -20,7 +20,6 @@ import {
 import { deleteMessagesById } from '../../../../../interactions/conversations/unsendingInteractions';
 import {
   useMessageAttachments,
-  useMessageAuthor,
   useMessageBody,
   useMessageDirection,
   useMessageIsDeletable,
@@ -50,7 +49,6 @@ import { AttachmentCarousel } from './components/AttachmentCarousel';
 import { ToastUtils } from '../../../../../session/utils';
 import { LUCIDE_ICONS_UNICODE } from '../../../../icon/lucide';
 import { PanelIconLucideIcon } from '../../../../buttons/PanelIconButton';
-import { useShowCopyAccountIdCb } from '../../../../menuAndSettingsHooks/useCopyAccountId';
 import { sectionActions } from '../../../../../state/ducks/section';
 import { useIsIncomingRequest } from '../../../../../hooks/useParamSelector';
 import { tr } from '../../../../../localization/localeTools';
@@ -237,24 +235,6 @@ function ReplyToMessageButton({ messageId }: WithMessageIdOpt) {
   );
 }
 
-function CopySenderSessionId({ messageId }: WithMessageIdOpt) {
-  const senderId = useMessageAuthor(messageId);
-  const copySenderIdCb = useShowCopyAccountIdCb(senderId);
-
-  if (!copySenderIdCb || !senderId) {
-    return null;
-  }
-
-  return (
-    <PanelIconButton
-      text={tr('accountIDCopy')}
-      iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.COPY} />}
-      onClick={copySenderIdCb}
-      dataTestId="copy-sender-from-details"
-    />
-  );
-}
-
 export const OverlayMessageInfo = () => {
   const dispatch = useDispatch();
 
@@ -367,13 +347,11 @@ export const OverlayMessageInfo = () => {
           <SpacerLG />
           <PanelButtonGroup style={{ margin: '0' }}>
             {/* CopyMessageBodyButton is always shown so the PanelButtonGroup always has at least one item */}
-            <CopyMessageBodyButton messageId={messageId} />
             {!isLegacyGroup && <ReplyToMessageButton messageId={messageId} />}
-            <CopySenderSessionId messageId={messageId} />
             {hasErrors && !isLegacyGroup && direction === 'outgoing' && (
               <PanelIconButton
                 text={tr('resend')}
-                iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.REFRESH_CW} />}
+                iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.REPEAT_2} />}
                 onClick={() => {
                   void resendMessage(messageId);
                   dispatch(closeRightPanel());
@@ -382,6 +360,7 @@ export const OverlayMessageInfo = () => {
                 dataTestId="resend-msg-from-details"
               />
             )}
+            <CopyMessageBodyButton messageId={messageId} />
             {/* Saving attachments sends a data extraction message so it must be disabled for message requests. */}
             {hasAttachments && !isIncomingMessageRequest && (
               <PanelIconButton
