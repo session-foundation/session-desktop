@@ -680,7 +680,6 @@
   "passwordEnterCurrent": "Bonvolu enigi vian nuntempan pasvorton",
   "passwordEnterNew": "Bonvolu enigi vian novan pasvorton",
   "passwordError": "Necesas, ke pasvorto enhavu nur literojn, ciferojn kaj simbolojn",
-  "passwordErrorLength": "Necesas, ke pasvorto estu inter 6 kaj 64 longe",
   "passwordErrorMatch": "Pasvortoj ne kongruas",
   "passwordFailed": "Malsukcesis agordi pasvorton",
   "passwordIncorrect": "Malĝusta pasvorto",

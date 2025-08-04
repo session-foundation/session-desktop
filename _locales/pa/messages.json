@@ -617,7 +617,6 @@
   "passwordEnterCurrent": "ਕ੍ਰਿਪਾ ਕਰਕੇ ਆਪਣਾ ਮੌਜੂਦਾ ਪਾਸਵਰਡ ਡਾਲੋ।",
   "passwordEnterNew": "ਕ੍ਰਿਪਾ ਕਰਕੇ ਆਪਣਾ ਨਵਾਂ ਪਾਸਵਰਡ ਡਾਲੋ",
   "passwordError": "ਪਾਸਵਰਡ ਵਿੱਚ ਸਿਰਫ਼ ਅੱਖਰ, ਅੰਕ ਅਤੇ ਨਿਸ਼ਾਨ ਹੋਣੇ ਚਾਹੀਦੇ ਹਨ",
-  "passwordErrorLength": "ਪਾਸਵਰਡ 6 ਤੋਂ 64 ਅੱਖਰ ਲੰਮਾ ਹੋਣਾ ਚਾਹੀਦਾ ਹੈ",
   "passwordErrorMatch": "ਪਾਸਵਰਡ ਮਿਲਦੇ ਨਹੀਂ ਹਨ",
   "passwordFailed": "ਪਾਸਵਰਡ ਸੈੱਟ ਕਰਨ ਵਿੱਚ ਅਸਫਲ ਹੋਇਆ",
   "passwordIncorrect": "ਗਲਤ ਪਾਸਵਰਡ",

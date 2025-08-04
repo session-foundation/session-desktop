@@ -554,7 +554,6 @@
   "passwordEnter": "Introduza o contrasinal",
   "passwordEnterNew": "Por favor, introduce o teu novo contrasinal",
   "passwordError": "O contrasinal só debe conter letras, números e símbolos",
-  "passwordErrorLength": "O contrasinal debe ter entre 6 e 64 caracteres",
   "passwordErrorMatch": "Os contrasinais non coinciden",
   "passwordFailed": "Non se puido establecer o contrasinal",
   "passwordIncorrect": "Contrasinal incorrecto",

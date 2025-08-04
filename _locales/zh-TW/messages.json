@@ -627,7 +627,6 @@
   "passwordEnterCurrent": "請輸入您目前的密碼",
   "passwordEnterNew": "請輸入您的新密碼",
   "passwordError": "密碼只能包含字母、數字和符號",
-  "passwordErrorLength": "密碼必須介於6到64個字元之間。",
   "passwordErrorMatch": "密碼不一致",
   "passwordFailed": "設定密碼失敗",
   "passwordIncorrect": "密碼錯誤",

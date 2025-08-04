@@ -691,7 +691,6 @@
   "passwordEnterCurrent": "Venligst indtast din nuværende adgangskode",
   "passwordEnterNew": "Indtast din nye adgangskode",
   "passwordError": "Adgangskoden må kun indeholde bogstaver, numre og symboler",
-  "passwordErrorLength": "Adgangskoden skal være mellem 6 til 64 tegn",
   "passwordErrorMatch": "Adgangskoder matcher ikke",
   "passwordFailed": "Opdatering af adgangskode mislykkedes",
   "passwordIncorrect": "Forkert adgangskode",

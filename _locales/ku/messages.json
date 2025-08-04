@@ -617,7 +617,6 @@
   "passwordEnterCurrent": "تکایە لەبەشی حالەتی تێپەڕەوشەوە بنووسە",
   "passwordEnterNew": "تکایە تێپەڕەوشەی نوێت بنووسە",
   "passwordError": "پەیامەکان تەنها دەبێ سەرنج amin FischerAzadhace.",
-  "passwordErrorLength": "تێپەڕبووی تێپەڕاندەکانی تێپەڕەبە دووبارە بکەوە دەگل ناچێ.",
   "passwordErrorMatch": "تێپەڕبووان وەک یەک نین",
   "passwordFailed": "شکستی دانانی وشەی نهێنی",
   "passwordIncorrect": "وشەی نهێنیکردنەوەی نەگونجاو",

@@ -668,7 +668,6 @@
   "passwordEnterCurrent": "Ange ditt nuvarande lösenord",
   "passwordEnterNew": "Ange ditt nya lösenord",
   "passwordError": "Lösenord får endast innehålla bokstäver, siffror och symboler",
-  "passwordErrorLength": "Lösenordet måste vara mellan 6 och 64 tecken långt",
   "passwordErrorMatch": "Lösenorden matchar ej",
   "passwordFailed": "Misslyckades att uppdatera lösenordet",
   "passwordIncorrect": "Felaktigt lösenord",

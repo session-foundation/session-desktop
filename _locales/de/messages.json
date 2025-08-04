@@ -669,7 +669,6 @@
   "passwordEnterCurrent": "Bitte gib dein aktuelles Passwort ein",
   "passwordEnterNew": "Bitte neues Passwort eingeben",
   "passwordError": "Das Passwort darf nur Buchstaben, Zahlen und Symbole enthalten",
-  "passwordErrorLength": "Das Passwort muss zwischen 6 und 64 Zeichen lang sein",
   "passwordErrorMatch": "Die Passwörter stimmen nicht überein",
   "passwordFailed": "Passwort konnte nicht gesetzt werden",
   "passwordIncorrect": "Falsches Passwort",

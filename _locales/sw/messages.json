@@ -618,7 +618,6 @@
   "passwordEnterCurrent": "Tafadhali weka nyila yako ya sasa",
   "passwordEnterNew": "Tafadhali weka nyila yako mpya",
   "passwordError": "Nywila lazima ziwe na herufi, nambari na alama pekee",
-  "passwordErrorLength": "Nywila lazima iwe kati ya herufi 6 na 64",
   "passwordErrorMatch": "Nywila hazilingani",
   "passwordFailed": "Imeshindikana kuweka nenosiri",
   "passwordIncorrect": "Nywila sio sahihi",

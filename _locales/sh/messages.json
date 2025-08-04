@@ -617,7 +617,6 @@
   "passwordEnterCurrent": "Molimo unesite trenutnu lozinku",
   "passwordEnterNew": "Molimo unesite novu lozinku",
   "passwordError": "Lozinka mora sadržavati samo slova, brojeve i simbole",
-  "passwordErrorLength": "Lozinka mora imati između 6 i 64 znakova",
   "passwordErrorMatch": "Lozinke se ne podudaraju",
   "passwordFailed": "Nije uspjelo postavljanje lozinke",
   "passwordIncorrect": "Netočna lozinka",

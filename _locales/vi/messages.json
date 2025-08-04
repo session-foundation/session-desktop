@@ -672,7 +672,6 @@
   "passwordEnterCurrent": "Vui lòng nhập mật khẩu hiện tại của bạn",
   "passwordEnterNew": "Vui lòng nhập mật khẩu mới",
   "passwordError": "Mật khẩu chỉ có thể chứa chữ cái, số và các ký hiệu đơn giản",
-  "passwordErrorLength": "Mật khẩu phải dài từ 6 đến 64 ký tự",
   "passwordErrorMatch": "Mật khẩu không khớp",
   "passwordFailed": "Đặt mật khẩu thất bại",
   "passwordIncorrect": "Mật khẩu không chính xác",

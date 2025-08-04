@@ -636,7 +636,6 @@
   "passwordEnterCurrent": "Vă rugăm să introduceţi parola actuală",
   "passwordEnterNew": "Vă rugăm să introduceţi parola nouă",
   "passwordError": "Parola poate conține doar litere, numere și simboluri simple",
-  "passwordErrorLength": "Parola trebuie să aibă între 6 și 64 de caractere lungime",
   "passwordErrorMatch": "Parolele nu se potrivesc",
   "passwordFailed": "Eroare la setarea parolei",
   "passwordIncorrect": "Parolă incorectă",

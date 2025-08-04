@@ -644,7 +644,6 @@
   "passwordEnterCurrent": "現在のパスワードを入力してください",
   "passwordEnterNew": "新しいパスワードを入力してください",
   "passwordError": "パスワードには英数字と記号の文字しか使えません",
-  "passwordErrorLength": "パスワードの長さを6文字から64文字にしてください",
   "passwordErrorMatch": "パスワードが一致しません",
   "passwordFailed": "パスワードの設定に失敗しました",
   "passwordIncorrect": "パスワードが正しくありません",

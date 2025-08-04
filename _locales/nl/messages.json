@@ -701,7 +701,6 @@
   "passwordEnterCurrent": "Voer uw huidige wachtwoord in",
   "passwordEnterNew": "Voer je nieuwe wachtwoord in",
   "passwordError": "Wachtwoord mag alleen letters, cijfers en symbolen bevatten",
-  "passwordErrorLength": "Wachtwoord moet tussen de 6 en 64 tekens lang zijn",
   "passwordErrorMatch": "Wachtwoorden komen niet overeen",
   "passwordFailed": "Instellen van wachtwoord mislukt",
   "passwordIncorrect": "Onjuist wachtwoord",

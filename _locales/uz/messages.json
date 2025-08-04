@@ -618,7 +618,6 @@
   "passwordEnterCurrent": "Iltimos, hozirgi parolni kiriting",
   "passwordEnterNew": "Iltimos, yangi parolingizni kiriting",
   "passwordError": "Parolda faqat simvollar raqamlar va harflar bo'lishi lozim",
-  "passwordErrorLength": "Sizning parolingiz uzunligi 6 va 64 belgidan iborat bo'lishi mumkin",
   "passwordErrorMatch": "Parollar mos kelmadi",
   "passwordFailed": "Parolni o'rnatishda muammo chiqdi",
   "passwordIncorrect": "Xato parol",

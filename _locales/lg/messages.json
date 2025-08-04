@@ -617,7 +617,6 @@
   "passwordEnterCurrent": "Geba akasumulizo akaliwo leero",
   "passwordEnterNew": "Geba akasumulizo akaggya ko.",
   "passwordError": "Akasumulizo kalina kubaamu nnyukuta zokka, ennyingiza ne bika.",
-  "passwordErrorLength": "Akasumulizo kalina kubeera wakati wa ennyukuta 6 ne 64.",
   "passwordErrorMatch": "Obusumuluzo tebyawumulwa",
   "passwordFailed": "Ensobi okuzaako okwongeza ekigambo",
   "passwordIncorrect": "Recovery Password y'ekiino si kituufu",

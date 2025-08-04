@@ -617,7 +617,6 @@
   "passwordEnterCurrent": "Унесите тренутну лозинку",
   "passwordEnterNew": "Унесите нову лозинку",
   "passwordError": "Лозинка мора садржати само слова, бројеве и симболе",
-  "passwordErrorLength": "Лозинка мора имати између 6 и 64 карактера",
   "passwordErrorMatch": "Лозинке се не поклапају",
   "passwordFailed": "Неуспех у постављању лозинке",
   "passwordIncorrect": "Нетачна лозинка",

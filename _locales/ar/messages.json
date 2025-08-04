@@ -666,7 +666,6 @@
   "passwordEnterCurrent": "الرجاء إدخال كلمة السر الحالية",
   "passwordEnterNew": "الرجاء إدخال كلمة السر الجديدة",
   "passwordError": "كلمة المرور يجب ان تحتوي فقط على الاحرف, الارقام و الرموز",
-  "passwordErrorLength": "كلمة المرور يجب ان تكون بين 6 و 64 عنصر",
   "passwordErrorMatch": "كلمتا المرور لا تتطابقان",
   "passwordFailed": "فشل تعيين كلمة المرور",
   "passwordIncorrect": "كلمة المرور خاطئة",

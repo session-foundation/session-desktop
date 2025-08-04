@@ -617,7 +617,6 @@
   "passwordEnterCurrent": "אנא הזן את הסיסמא הנוכחית שלך",
   "passwordEnterNew": "אנא הזן את הסיסמא החדשה שלך",
   "passwordError": "הסיסמא חייבת להכיל רק אותיות, מספרים וסימנים",
-  "passwordErrorLength": "הסיסמא חייבת להיות באורך של בין 6 ל-64 תווים",
   "passwordErrorMatch": "משפטי־סיסמה אינם תואמים",
   "passwordFailed": "נכשל לקבוע סיסמה",
   "passwordIncorrect": "סיסמה שגויה",

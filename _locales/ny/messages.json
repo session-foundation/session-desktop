@@ -617,7 +617,6 @@
   "passwordEnterCurrent": "Chonde lowetsani chinsinsi chanu choyambilira",
   "passwordEnterNew": "Chonde lowetsani chinsinsi chanu chatsopano",
   "passwordError": "Chinsinsi chiyenera kukhala ndi zilembo, manambala ndi zizindikiro zokha",
-  "passwordErrorLength": "Chinsinsi chiyenera kutalika pakati pa zilembo 6 ndi 64",
   "passwordErrorMatch": "Machinsinsi sapitirizana",
   "passwordFailed": "Zalephera kukhazikitsa mawu achinsinsi",
   "passwordIncorrect": "Mawekerede wosalakwika",

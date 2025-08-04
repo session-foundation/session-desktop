@@ -617,7 +617,6 @@
   "passwordEnterCurrent": "Palun sisestage oma praegune parool",
   "passwordEnterNew": "Palun sisestage oma uus parool",
   "passwordError": "Parool võib sisaldada ainult tähti, numbreid ja sümboleid",
-  "passwordErrorLength": "Parool peab olema 6 kuni 64 tähemärki pikk",
   "passwordErrorMatch": "Paroolid ei ühti",
   "passwordFailed": "Salasõna määramine ebaõnnestus",
   "passwordIncorrect": "Vale parool",

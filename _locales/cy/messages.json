@@ -627,7 +627,6 @@
   "passwordEnterCurrent": "Nodwch eich cyfrinair cyfredol",
   "passwordEnterNew": "Nodwch eich cyfrinair newydd",
   "passwordError": "Dim ond llythrennau, rhifau a symbolau y mae'n rhaid i gyfrinair ei gynnwys",
-  "passwordErrorLength": "Rhaid i gyfrinair fod rhwng 6 a 64 nod o hyd",
   "passwordErrorMatch": "Nid yw cyfrineiriau'n cydweddu",
   "passwordFailed": "Methwyd gosod cyfrinair",
   "passwordIncorrect": "Cyfrinair anghywir",

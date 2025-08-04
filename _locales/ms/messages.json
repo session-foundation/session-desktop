@@ -627,7 +627,6 @@
   "passwordEnterCurrent": "Sila masukkan kata laluan semasa anda",
   "passwordEnterNew": "Sila masukkan kata laluan baru anda",
   "passwordError": "Kata laluan hanya boleh mengandungi huruf, nombor dan simbol",
-  "passwordErrorLength": "Kata laluan mestilah antara 6 hingga 64 aksara panjang",
   "passwordErrorMatch": "Kata laluan tidak sepadan",
   "passwordFailed": "Gagal menetapkan kata laluan",
   "passwordIncorrect": "Kata laluan tidak betul",

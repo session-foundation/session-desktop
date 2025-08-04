@@ -669,7 +669,6 @@
   "passwordEnterCurrent": "Пожалуйста, введите ваш текущий пароль",
   "passwordEnterNew": "Введите новый пароль",
   "passwordError": "Пароль должен содержать только буквы, цифры и символы",
-  "passwordErrorLength": "Пароль должен содержать от 6 до 64 символов",
   "passwordErrorMatch": "Пароли не совпадают",
   "passwordFailed": "Не удалось установить пароль",
   "passwordIncorrect": "Неверный пароль",
