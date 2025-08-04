@@ -13,6 +13,8 @@ type WithCurrentUserHasPro = { currentUserHasPro: boolean };
 type WithIsMe = { isMe: boolean };
 type WithContactNameContext = { contactNameContext: ContactNameContext };
 type WithIsGroupV2 = { isGroupV2: boolean };
+type WithIsBlinded = { isBlinded: boolean };
+type WithShowConversationSettingsCb = { showConversationSettingsCb: (() => void) | null };
 
 export type ProBadgeContext =
   | { context: 'edit-profile-pic'; args: WithUserHasPro }
@@ -29,7 +31,12 @@ export type ProBadgeContext =
     }
   | {
       context: 'contact-name';
-      args: WithUserHasPro & WithIsMe & WithCurrentUserHasPro & WithContactNameContext;
+      args: WithUserHasPro &
+        WithIsMe &
+        WithCurrentUserHasPro &
+        WithContactNameContext &
+        WithIsBlinded &
+        WithShowConversationSettingsCb;
     };
 
 type ShowTagWithCb = {
@@ -185,6 +192,10 @@ export function useProBadgeOnClickCb(
     if (args.contactNameContext === 'message-info-author') {
       if (args.currentUserHasPro) {
         return showNoCb;
+      }
+      if (args.isBlinded) {
+        // we want to show the conversation modal here, not the pro dialog
+        return { show: true, cb: args.showConversationSettingsCb };
       }
       return { show: true, cb: () => handleShowProInfoModal(SessionProInfoVariant.GENERIC) };
     }

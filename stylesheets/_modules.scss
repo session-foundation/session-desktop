@@ -199,11 +199,6 @@
   text-overflow: ellipsis;
 }
 
-.module-conversation__user__profile-name,
-.module-message__author__profile-name {
-  font-style: italic;
-}
-
 // Module: Contact List Item
 
 .module-contact-list-item {
@@ -227,10 +222,6 @@
 .module-contact-list-item__text__name {
   font-weight: 300;
   font-size: 14px;
-}
-
-.module-contact-list-item__text__profile-name {
-  font-style: italic;
 }
 
 .module-contact-list-item__text__additional-data {
@@ -303,10 +294,6 @@
   &:hover {
     background-color: var(--conversation-tab-background-hover-color);
   }
-
-  &--is-blocked {
-    border-left: 4px solid var(--danger-color) !important;
-  }
 }
 
 .module-conversation-list-item__unread-count {
@@ -371,10 +358,6 @@
   flex-shrink: 0;
 }
 
-.module-conversation-list-item__header__name--with-unread {
-  font-weight: 300;
-}
-
 .module-conversation-list-item__header__date--has-unread {
   font-weight: 300;
   color: var(--conversation-tab-text-unread-color);
@@ -384,26 +367,6 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-}
-
-.module-conversation-list-item__message__text {
-  flex-grow: 1;
-  flex-shrink: 1;
-
-  font-size: var(--font-size-sm);
-  color: var(--conversation-tab-text-color);
-
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  .text-selectable {
-    user-select: none;
-  }
-}
-
-.module-conversation-list-item__message__text--has-unread {
-  font-weight: 400;
-  color: var(--conversation-tab-text-unread-color);
 }
 
 // Module: Image
@@ -518,17 +481,6 @@
 }
 
 // Module: Left Pane
-
-.module-left-pane {
-  display: inline-flex;
-  flex-direction: column;
-  width: var(--left-panel-width);
-  height: 100%;
-}
-
-.module-left-pane__virtual-list {
-  outline: none;
-}
 
 // Module H5AudioPlayer
 $rhap_background-color: var(--transparent-color) !default;

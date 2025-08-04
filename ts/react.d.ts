@@ -86,6 +86,7 @@ declare module 'react' {
     | 'permissions'
     | 'clear-data'
     | 'session-network'
+    | 'session-pro'
     | 'donate';
 
   type MenuItems = 'block' | 'delete' | 'accept';

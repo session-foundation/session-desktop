@@ -21,6 +21,7 @@ const StyledFromContainer = styled.div`
 const StyledAuthorNamesContainer = styled.div`
   display: flex;
   flex-direction: column;
+  min-width: 0;
 `;
 
 const StyledPubkey = styled.span<{ $isBlinded: boolean }>`

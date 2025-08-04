@@ -184,12 +184,7 @@ export const ConversationListItemHeaderItem = () => {
 
   return (
     <div className="module-conversation-list-item__header">
-      <div
-        className={clsx(
-          'module-conversation-list-item__header__name',
-          hasUnread ? 'module-conversation-list-item__header__name--with-unread' : null
-        )}
-      >
+      <div className={clsx('module-conversation-list-item__header__name')}>
         <UserItem />
       </div>
       <ListItemIcons conversationId={conversationId} />

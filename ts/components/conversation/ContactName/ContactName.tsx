@@ -18,6 +18,7 @@ import { useCurrentUserHasPro, useUserHasPro } from '../../../hooks/useHasPro';
 import { ProIconButton } from '../../buttons/ProButton';
 import { useMessageIdFromContext } from '../../../contexts/MessageIdContext';
 import { useMessageDirection } from '../../../state/selectors';
+import { useShowUserDetailsCbFromConversation } from '../../menuAndSettingsHooks/useShowUserDetailsCb';
 
 const boldProfileNameCtx: Array<ContactNameContext> = [
   'conversation-list-item',
@@ -38,15 +39,22 @@ const ntsIsYouCtx: Array<ContactNameContext> = [
   'member-list-item',
 ];
 
+const forceSingleLineCtx: Array<ContactNameContext> = ['message-info-author', 'member-list-item'];
+
 const commonStyles: CSSProperties = {
   minWidth: 0,
   textOverflow: 'ellipsis',
   overflow: 'hidden',
+  fontWeight: 'bold',
+  fontSize: 'var(--font-size-md)',
+};
+
+const forceSingleLineStyle: CSSProperties = {
+  whiteSpace: 'nowrap',
 };
 
 const boldStyles: CSSProperties = {
   fontWeight: 'bold',
-  ...commonStyles,
 };
 
 export const ContactName = ({
@@ -54,6 +62,7 @@ export const ContactName = ({
   module,
   contactNameContext,
   conversationId,
+  style,
 }: {
   pubkey: string;
   module?:
@@ -62,6 +71,7 @@ export const ContactName = ({
     | 'module-message__author';
   contactNameContext: ContactNameContext;
   conversationId?: string;
+  style?: CSSProperties;
 }) => {
   const prefix = module || 'module-contact-name';
   const isPublic = useIsPublic(conversationId);
@@ -94,15 +104,39 @@ export const ContactName = ({
   const shouldShowPubkey =
     !shouldShowShortenPkAsName && isPublic && showPubkeyCtx.includes(contactNameContext);
   const boldProfileName = boldProfileNameCtx.includes(contactNameContext);
+  const forceSingleLine = forceSingleLineCtx.includes(contactNameContext);
 
   const displayedName = shouldShowShortenPkAsName ? shortPubkey : displayName;
 
   const userHasPro = useUserHasPro(pubkey);
 
+  const showConversationSettingsCb = useShowUserDetailsCbFromConversation(pubkey);
+
   const showProBadge = useProBadgeOnClickCb({
     context: 'contact-name',
-    args: { userHasPro, isMe, contactNameContext, currentUserHasPro },
+    args: {
+      userHasPro,
+      isMe,
+      contactNameContext,
+      currentUserHasPro,
+      isBlinded: PubKey.isBlinded(pubkey),
+      showConversationSettingsCb,
+    },
   });
+
+  let mergedStyle: CSSProperties = commonStyles;
+  if (forceSingleLine) {
+    mergedStyle = {
+      ...mergedStyle,
+      ...forceSingleLineStyle,
+    };
+  }
+  if (boldProfileName) {
+    mergedStyle = {
+      ...mergedStyle,
+      ...boldStyles,
+    };
+  }
 
   return (
     <span
@@ -115,13 +149,11 @@ export const ContactName = ({
         flexDirection: 'row',
         gap: 'var(--margins-xs)',
         maxWidth: '100%',
+        ...style,
       }}
     >
       {displayedName ? (
-        <div
-          style={boldProfileName ? boldStyles : commonStyles}
-          className={`${prefix}__profile-name`}
-        >
+        <div style={mergedStyle} className={`${prefix}__profile-name`}>
           <Emojify text={displayedName} sizeClass="small" isGroup={!isPrivate} />
         </div>
       ) : null}
