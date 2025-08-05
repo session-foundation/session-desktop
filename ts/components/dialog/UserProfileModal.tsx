@@ -6,7 +6,6 @@ import styled from 'styled-components';
 import { ConvoHub } from '../../session/conversations';
 import { openConversationWithMessages } from '../../state/ducks/conversations';
 import { updateUserProfileModal, UserProfileModalState } from '../../state/ducks/modalDialog';
-import { AvatarSize } from '../avatar/Avatar';
 import { SessionButton, SessionButtonColor } from '../basic/SessionButton';
 import { CopyToClipboardButton } from '../buttons/CopyToClipboardButton';
 import { ConversationTypeEnum } from '../../models/types';
@@ -56,6 +55,7 @@ export const UserProfileModal = ({
   realSessionId,
 }: NonNullable<UserProfileModalState>) => {
   const dispatch = useDispatch();
+  const [enlargedImage, setEnlargedImage] = useState(false);
 
   const isBlinded = PubKey.isBlinded(conversationId);
   const isBlindedAndNotResolved = isBlinded && !realSessionId;
@@ -64,8 +64,6 @@ export const UserProfileModal = ({
 
   const avatarPath = useAvatarPath(conversationIdToDisplay) || '';
   const profileName = useConversationUsernameWithFallback(false, conversationIdToDisplay) || '';
-  const [isEnlargedImageShown, setIsEnlargedImageShown] = useState(false);
-  const avatarSize = isEnlargedImageShown ? AvatarSize.HUGE : AvatarSize.XL;
 
   function closeDialog() {
     dispatch(updateUserProfileModal(null));
@@ -135,38 +133,17 @@ export const UserProfileModal = ({
         $flexDirection="column"
         $flexGap="var(--margins-md)"
         paddingBlock="0 var(--margins-lg)"
+        style={{ position: 'relative' }}
       >
         {mode === 'qr' ? (
-          <QRView sessionID={conversationIdToDisplay} setMode={setMode}>
-            <SessionLucideIconButton
-              unicode={LUCIDE_ICONS_UNICODE.USER_ROUND}
-              iconSize={'large'}
-              backgroundColor="var(--primary-color)"
-              iconColor="var(--black-color)"
-              padding="var(--margins-xs )"
-              onClick={() => {
-                setMode('default');
-              }}
-              style={{
-                position: 'absolute',
-                top: '-15px',
-                insetInlineEnd: '-15px',
-                display: 'flex',
-                alignItems: 'center',
-                borderRadius: '50%',
-              }}
-            />
-          </QRView>
+          <QRView sessionID={conversationIdToDisplay} onExit={() => setMode('default')} />
         ) : (
           <ProfileHeader
             avatarPath={avatarPath}
             profileName={profileName}
-            avatarSize={avatarSize}
             conversationId={conversationIdToDisplay}
-            onAvatarClick={() => {
-              setIsEnlargedImageShown(!isEnlargedImageShown);
-            }}
             onPlusAvatarClick={null} // no + icon in this modal
+            dataTestId="avatar-user-profile-dialog"
             onQRClick={
               blindedAndDisabledMsgRequests
                 ? null
@@ -174,8 +151,11 @@ export const UserProfileModal = ({
                     setMode('qr');
                   }
             }
+            enlargedImage={enlargedImage}
+            toggleEnlargedImage={() => setEnlargedImage(!enlargedImage)}
           />
         )}
+
         <ConversationTitleDialog conversationId={conversationIdToDisplay} editable={false} />
         <UsernameFallback conversationId={conversationIdToDisplay} />
         <AccountIdPill accountType={isBlindedAndNotResolved ? 'blinded' : 'theirs'} />

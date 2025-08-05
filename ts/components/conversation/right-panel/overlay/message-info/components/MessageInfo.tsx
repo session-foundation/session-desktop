@@ -195,7 +195,11 @@ function ProMessageFeaturesDetails({ messageId }: { messageId: string }) {
       $flexGap="var(--margins-xs)"
     >
       <StyledProMessageTitle>
-        <ProIconButton iconSize={'medium'} dataTestId="invalid-data-testid" onClick={showPro.cb} />
+        <ProIconButton
+          iconSize={'medium'}
+          dataTestId="pro-badge-message-info"
+          onClick={showPro.cb}
+        />
         <Localizer token="message" />
       </StyledProMessageTitle>
       <StyledProDescription>

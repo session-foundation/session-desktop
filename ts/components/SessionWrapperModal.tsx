@@ -54,10 +54,13 @@ const StyledModal = styled.div<{
   $contentMaxWidth?: WrapperModalWidth;
   $contentMinWidth?: WrapperModalWidth;
   padding?: string;
+  topAnchor?: string;
 }>`
+  position: absolute;
+  top: ${props => (props.topAnchor ? props.topAnchor : '15vh')};
+  max-height: 80vh;
   animation: fadein var(--default-duration);
   z-index: 150;
-  max-height: 90vh;
   max-width: ${props =>
     props.$contentMaxWidth ? props.$contentMaxWidth : WrapperModalWidth.normal};
   min-width: ${props =>
@@ -158,6 +161,13 @@ export const ModalActionsContainer = ({
   );
 };
 
+export enum ModalTopAnchor {
+  Normal = '15vh',
+  Level1 = '25vh',
+  Level2 = '35vh',
+  Level3 = '45vh',
+}
+
 export type SessionWrapperModalType = {
   headerChildren: ReactNode;
   children: ReactNode;
@@ -173,6 +183,10 @@ export type SessionWrapperModalType = {
   allowOutsideClick?: boolean;
   removeScrollbarGutter?: boolean;
   modalDataTestId?: SessionDataTestId;
+  /**
+   * Instead of centering the modal (and having layout shifts on height change), we can use this to anchor the modal to a % from the top of the screen.
+   */
+  topAnchor?: ModalTopAnchor;
   style?: Omit<CSSProperties, 'maxWidth' | 'minWidth' | 'padding' | 'border'>;
 };
 
@@ -310,6 +324,7 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
     style,
     removeScrollbarGutter,
     onClose,
+    topAnchor,
   } = props;
 
   const [scrolled, setScrolled] = useState(false);
@@ -363,6 +378,7 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
                 $contentMinWidth={$contentMinWidth}
                 padding={padding}
                 style={style}
+                topAnchor={topAnchor}
               >
                 {props.headerChildren ? props.headerChildren : null}
 

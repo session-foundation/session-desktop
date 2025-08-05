@@ -98,7 +98,7 @@ export const ClosedGroupAvatar = ({
         pubkey={UserUtils.getOurPubKeyStrFromCache()}
         onAvatarClick={onAvatarClick}
       />
-      <StyledAvatar $diameter={avatarSize}  $isClickable={isClickable}>
+      <StyledAvatar $diameter={avatarSize} $isClickable={isClickable}>
         <MemberAvatarPlaceHolder bgColor={bgColor} />
       </StyledAvatar>
     </StyledAvatarClosedContainer>

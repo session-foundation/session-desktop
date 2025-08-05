@@ -25,7 +25,6 @@ import {
 import { ModalBackButton } from '../shared/ModalBackButton';
 import { SessionButtonColor, SessionButton } from '../../basic/SessionButton';
 import { CopyToClipboardButton } from '../../buttons';
-import { AvatarSize } from '../../avatar/Avatar';
 import { SessionIDNotEditable } from '../../basic/SessionIdNotEditable';
 import { Flex } from '../../basic/Flex';
 import { AccountIdPill } from '../../basic/AccountIdPill';
@@ -111,7 +110,7 @@ const handleKeyEscape = (
   loading: boolean,
   dispatch: Dispatch
 ) => {
-  if (loading || mode === 'lightbox') {
+  if (loading) {
     return;
   }
 
@@ -132,7 +131,7 @@ const StyledEditProfileDialog = styled.div`
   }
 `;
 
-export type ProfileDialogModes = 'default' | 'edit' | 'qr' | 'lightbox';
+export type ProfileDialogModes = 'default' | 'edit' | 'qr';
 
 export const EditProfileDialog = () => {
   const dispatch = useDispatch();
@@ -141,6 +140,7 @@ export const EditProfileDialog = () => {
   const [profileName, setProfileName] = useState(_profileName);
   const [profileNameError, setProfileNameError] = useState<string | undefined>(undefined);
   const [cannotContinue, setCannotContinue] = useState(true);
+  const [enlargedImage, setEnlargedImage] = useState(false);
 
   const copyButtonRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -251,7 +251,7 @@ export const EditProfileDialog = () => {
         }
         onClose={closeDialog}
         buttonChildren={
-          mode === 'default' || mode === 'qr' || mode === 'lightbox' ? (
+          mode === 'default' || mode === 'qr' ? (
             // some bottom margin as the buttons have a border and appear to close to the edge
             <ModalActionsContainer extraBottomMargin={true}>
               <CopyToClipboardButton
@@ -298,21 +298,21 @@ export const EditProfileDialog = () => {
           $flexGap="var(--margins-md)"
         >
           {mode === 'qr' ? (
-            <QRView sessionID={us} setMode={setMode} />
+            <QRView sessionID={us} onExit={() => setMode('default')} />
           ) : (
-            <>
-              <ProfileHeader
-                avatarPath={avatarPath}
-                profileName={profileName}
-                conversationId={us}
-                onAvatarClick={handleProfileHeaderClick}
-                onPlusAvatarClick={handleProfileHeaderClick}
-                avatarSize={AvatarSize.XL}
-                onQRClick={null} // no qr click here as a button is already doing that action (and the qr button looks bad when the small size as the +)
-              />
-            </>
+            <ProfileHeader
+              avatarPath={avatarPath}
+              profileName={profileName}
+              conversationId={us}
+              onPlusAvatarClick={handleProfileHeaderClick}
+              dataTestId="avatar-edit-profile-dialog"
+              // no qr click here as a button is already doing that action (and the qr button looks bad when the small size as the +)
+              // Note: this changes with the new Settings design
+              onQRClick={null}
+              enlargedImage={enlargedImage}
+              toggleEnlargedImage={() => setEnlargedImage(!enlargedImage)}
+            />
           )}
-
           {mode === 'default' && (
             <ProfileName
               profileName={profileName}
@@ -324,7 +324,6 @@ export const EditProfileDialog = () => {
               }}
             />
           )}
-
           {mode === 'edit' && (
             <SimpleSessionInput
               autoFocus={true}
@@ -347,7 +346,6 @@ export const EditProfileDialog = () => {
               padding="var(--margins-xs) var(--margins-lg)"
             />
           )}
-
           <AccountIdPill accountType="ours" />
           <SessionIDNotEditable
             dataTestId="your-account-id"

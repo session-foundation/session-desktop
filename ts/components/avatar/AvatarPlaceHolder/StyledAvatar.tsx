@@ -17,8 +17,5 @@ export const StyledAvatar = styled.div<{ $diameter: number; $isClickable: boolea
     width: 100%;
   }
 
-  ${({ $isClickable }) =>
-    $isClickable &&
-    'cursor: pointer; transition: filter var(--default-duration); :hover {filter: grayscale(0.7); }'}
-  transition: filter var(--default-duration);
+  ${({ $isClickable }) => $isClickable && 'cursor: pointer; }'}
 `;

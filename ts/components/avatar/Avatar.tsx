@@ -7,14 +7,13 @@ import {
   useAvatarPath,
   useConversationUsernameWithFallback,
   useIsClosedGroup,
-  useIsPublic,
 } from '../../hooks/useParamSelector';
 import { AvatarPlaceHolder } from './AvatarPlaceHolder/AvatarPlaceHolder';
 import { ClosedGroupAvatar } from './AvatarPlaceHolder/ClosedGroupAvatar';
 import { useIsMessageSelectionMode } from '../../state/selectors/selectedConversation';
 import { PlusAvatarButton } from '../buttons/PlusAvatarButton';
 import { StyledAvatar } from './AvatarPlaceHolder/StyledAvatar';
-import { SessionIconButton } from '../icon/SessionIconButton';
+import { SessionIcon } from '../icon';
 
 export enum AvatarSize {
   XS = 28,
@@ -65,7 +64,7 @@ const CrownWrapper = styled.div`
 export const CrownIcon = () => {
   return (
     <CrownWrapper>
-      <SessionIconButton
+      <SessionIcon
         iconColor="var(--yellow-color)"
         iconSize={'small'}
         iconType="crown"
@@ -137,7 +136,6 @@ const AvatarInner = (props: Props) => {
   const isClosedGroup = useIsClosedGroup(pubkey);
   const avatarPath = useAvatarPath(pubkey);
   const name = useConversationUsernameWithFallback(false, pubkey);
-  const isCommunity = useIsPublic(pubkey);
   // contentType is not important
   const { urlToLoad } = useEncryptedFileFetch(forcedAvatarPath || avatarPath || '', '', true);
 
@@ -160,23 +158,17 @@ const AvatarInner = (props: Props) => {
     (base64Data || ((forcedAvatarPath || avatarPath) && urlToLoad)) && !imageBroken
   );
 
-  const isClickable = !!(onAvatarClick || (isCommunity && onPlusAvatarClick));
-
   return (
     <StyledAvatar
       $diameter={size}
-      $isClickable={isClickable || false}
+      $isClickable={!!onAvatarClick}
       onClick={e => {
         if (isSelectingMessages) {
           // we could toggle the selection of this message,
           // but this just disable opening the new Conversation dialog with that user while selecting messages
           return;
         }
-        if (isCommunity && onPlusAvatarClick) {
-          e.stopPropagation();
-          e.preventDefault();
-          onPlusAvatarClick();
-        } else if (onAvatarClick) {
+        if (onAvatarClick) {
           e.stopPropagation();
           e.preventDefault();
           onAvatarClick();
@@ -207,7 +199,9 @@ const AvatarInner = (props: Props) => {
         <PlusAvatarButton
           onClick={onPlusAvatarClick}
           dataTestId="image-upload-section"
-          isEdit={hasImage}
+          hasImage={hasImage}
+          avatarSize={size}
+          isClosedGroup={isClosedGroup}
         />
       ) : null}
     </StyledAvatar>

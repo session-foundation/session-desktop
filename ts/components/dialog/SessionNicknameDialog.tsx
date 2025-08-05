@@ -13,6 +13,7 @@ import { ClearInputButton } from '../inputs/ClearInputButton';
 import {
   ModalBasicHeader,
   ModalActionsContainer,
+  ModalTopAnchor,
   SessionWrapperModal,
 } from '../SessionWrapperModal';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
@@ -85,6 +86,7 @@ export const SessionNicknameDialog = (props: Props) => {
     <SessionWrapperModal
       headerChildren={<ModalBasicHeader title={tr('nicknameSet')} showExitIcon={true} />}
       onClose={onClickClose}
+      topAnchor={ModalTopAnchor.Level1}
       buttonChildren={
         <ModalActionsContainer>
           <SessionButton

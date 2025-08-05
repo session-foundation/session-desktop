@@ -51,6 +51,8 @@ declare module 'react' {
     | 'disappearing-messages' // one of those two might be incorrect. FIXME
     | 'disappearing-messages-timer';
 
+  type Avatars = 'edit-profile-dialog' | 'user-profile-dialog' | 'edit-profile-picture-dialog';
+
   type MenuOptionDetails = `${MenuOption}-details`;
   type NotificationsOptions = 'mute' | 'all-messages' | 'mentions-only';
   type NotificationButtons = `notifications-${NotificationsOptions}-button`;
@@ -108,7 +110,10 @@ declare module 'react' {
     | 'edit-profile-picture'
     | 'conversation-title'
     | 'conversation-header'
-    | 'profile-name';
+    | 'profile-name'
+    | 'contact-name'
+    | 'message-info'
+    | 'send-more';
 
   type Dialog = 'invite-contacts' | 'edit-profile';
 
@@ -355,6 +360,7 @@ declare module 'react' {
     | `${MenuOptionDetails}-menu-option`
     | `${NotificationButtons}`
     | `${NotificationRadioButtons}`
+    | `avatar-${Avatars}`
     | `pro-badge-${ProBadges}`
     | 'last-updated-timestamp'
     | 'account-id-pill'

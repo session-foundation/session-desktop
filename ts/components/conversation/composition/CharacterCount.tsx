@@ -46,7 +46,7 @@ function ProCta() {
   return (
     <StyledCTA onClick={proBadgeCb.cb}>
       {tr('proSendMore')}{' '}
-      <ProIconButton iconSize={'small'} dataTestId="invalid-data-testid" onClick={proBadgeCb.cb} />
+      <ProIconButton iconSize={'small'} dataTestId="pro-badge-send-more" onClick={proBadgeCb.cb} />
     </StyledCTA>
   );
 }

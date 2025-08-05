@@ -175,7 +175,7 @@ export const ContactName = ({
             backgroundColor:
               msgDirection === 'outgoing' ? 'var(--white-color)' : 'var(--primary-color)',
           }}
-          dataTestId="invalid-data-testid"
+          dataTestId="pro-badge-contact-name"
           onClick={showProBadge.cb}
         />
       ) : null}

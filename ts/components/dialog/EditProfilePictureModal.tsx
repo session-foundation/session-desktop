@@ -73,7 +73,12 @@ const UploadImageButton = () => {
       <StyledUploadButton>
         <SessionLucideIconButton unicode={LUCIDE_ICONS_UNICODE.IMAGE} iconSize={'max'} margin="0" />
       </StyledUploadButton>
-      <PlusAvatarButton dataTestId="image-upload-section" isEdit={false} />
+      <PlusAvatarButton
+        dataTestId="image-upload-section"
+        hasImage={false}
+        avatarSize={AvatarSize.XL}
+        isClosedGroup={false}
+      />
     </div>
   );
 };
@@ -303,12 +308,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
           />
         </StyledCTADescription>
       ) : null}
-      <div
-        className="avatar-center"
-        role="button"
-        onClick={handleClick}
-        data-testid={'image-upload-click'}
-      >
+      <div role="button" onClick={handleClick} data-testid={'image-upload-click'}>
         <SpacerLG />
         <StyledAvatarContainer>
           {newAvatarObjectUrl || avatarPath ? (
@@ -320,6 +320,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
               onPlusAvatarClick={handleClick}
               onAvatarClick={handleClick}
               avatarSize={AvatarSize.XL}
+              dataTestId={'avatar-edit-profile-picture-dialog'}
             />
           ) : (
             <UploadImageButton />

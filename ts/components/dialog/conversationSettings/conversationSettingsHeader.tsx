@@ -1,25 +1,22 @@
 import styled from 'styled-components';
-import { useEffect, useRef, useState, type SessionDataTestId } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-import { Avatar, AvatarSize } from '../../avatar/Avatar';
 import { Flex } from '../../basic/Flex';
 import { Header } from '../../conversation/right-panel/overlay/components';
 import type { WithConvoId } from '../../../session/types/with';
 import { useIsMe, useIsPrivate } from '../../../hooks/useParamSelector';
 import { PubKey } from '../../../session/types';
 import { tr } from '../../../localization/localeTools';
-import { useChangeNickname } from '../../menuAndSettingsHooks/useChangeNickname';
-import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
-import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import { useEditProfilePictureCallback } from '../../menuAndSettingsHooks/useEditProfilePictureCallback';
 import { useRoomDescription } from '../../../state/selectors/sogsRoomInfo';
 import { useLibGroupDescription } from '../../../state/selectors/groups';
-import { useShowUpdateGroupNameDescriptionCb } from '../../menuAndSettingsHooks/useShowUpdateGroupNameDescription';
 import { useHTMLDirection } from '../../../util/i18n/rtlSupport';
 import { UsernameFallback } from './UsernameFallback';
 import { ConversationTitleDialog } from './ConversationTitleDialog';
 import { SessionIDNotEditable } from '../../basic/SessionIdNotEditable';
 import { AccountIdPill } from '../../basic/AccountIdPill';
+import { ProfileHeader, QRView } from '../edit-profile/components';
+import type { ProfileDialogModes } from '../edit-profile/EditProfileDialog';
 
 function AccountId({ conversationId }: WithConvoId) {
   const isPrivate = useIsPrivate(conversationId);
@@ -39,42 +36,9 @@ function AccountId({ conversationId }: WithConvoId) {
       sessionId={conversationId}
       displayType="2lines"
       tooltipNode={null}
-      style={{ color: 'var(--text-secondary-color)' }}
+      style={{ color: 'var(--text-primary-color)' }}
     />
   );
-}
-
-function EditGenericButton({
-  cb,
-  dataTestId,
-}: {
-  cb: (() => void) | null;
-  dataTestId: SessionDataTestId;
-}) {
-  if (!cb) {
-    return null;
-  }
-
-  return (
-    <SessionLucideIconButton
-      unicode={LUCIDE_ICONS_UNICODE.PENCIL}
-      iconSize="medium"
-      onClick={cb}
-      dataTestId={dataTestId}
-    />
-  );
-}
-
-function ChangeNicknameButton({ conversationId }: WithConvoId) {
-  const changeNicknameCb = useChangeNickname(conversationId);
-
-  return <EditGenericButton cb={changeNicknameCb} dataTestId="set-nickname-confirm-button" />;
-}
-
-function UpdateNameDescriptionButton({ conversationId }: WithConvoId) {
-  const updateNameDescCb = useShowUpdateGroupNameDescriptionCb({ conversationId });
-
-  return <EditGenericButton cb={updateNameDescCb} dataTestId="edit-group-name" />;
 }
 
 const StyledDescription = styled.div<{ expanded: boolean }>`
@@ -154,6 +118,9 @@ export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
   const htmlDirection = useHTMLDirection();
 
   const isPrivateUnblinded = useIsPrivate(conversationId) && !PubKey.isBlinded(conversationId);
+  const [mode, setMode] = useState<ProfileDialogModes>('default');
+
+  const [enlargedImage, setEnlargedImage] = useState(false);
 
   if (!conversationId) {
     return null;
@@ -169,14 +136,21 @@ export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
         $flexDirection="column"
         $flexGap="var(--margins-lg)"
       >
-        <Avatar
-          size={AvatarSize.XL}
-          pubkey={conversationId}
-          dataTestId="profile-picture"
-          // we don't want to show the plus button for the current user
-          // as he needs to change his avatar through the EditProfileDialog
-          onPlusAvatarClick={!isMe ? editProfilePictureCb : undefined}
-        />
+        {mode === 'qr' ? (
+          <QRView sessionID={conversationId} onExit={() => setMode('default')} />
+        ) : (
+          <ProfileHeader
+            conversationId={conversationId}
+            dataTestId="profile-picture"
+            // we don't want to show the plus button for the current user
+            // as he needs to change his avatar through the EditProfileDialog
+            onPlusAvatarClick={!isMe ? (editProfilePictureCb ?? null) : null}
+            avatarPath={null}
+            onQRClick={isPrivateUnblinded && !isMe ? () => setMode('qr') : null}
+            enlargedImage={enlargedImage}
+            toggleEnlargedImage={() => setEnlargedImage(!enlargedImage)}
+          />
+        )}
         <Flex
           $container={true}
           $alignItems={'center'}
@@ -185,8 +159,6 @@ export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
           style={{ direction: htmlDirection }}
         >
           <ConversationTitleDialog conversationId={conversationId} editable={true} />
-          <ChangeNicknameButton conversationId={conversationId} />
-          <UpdateNameDescriptionButton conversationId={conversationId} />
         </Flex>
         <UsernameFallback conversationId={conversationId} />
         <Description conversationId={conversationId} />

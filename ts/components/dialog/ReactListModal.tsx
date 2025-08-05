@@ -120,7 +120,12 @@ const ReactionSenders = (props: ReactionSendersProps) => {
           $justifyContent={'space-between'}
           $alignItems={'center'}
         >
-          <Flex $container={true} $alignItems={'center'} style={{ overflow: 'hidden' }} $flexGap='var(--margins-sm)'>
+          <Flex
+            $container={true}
+            $alignItems={'center'}
+            style={{ overflow: 'hidden' }}
+            $flexGap="var(--margins-sm)"
+          >
             <Avatar
               size={AvatarSize.XS}
               pubkey={sender}

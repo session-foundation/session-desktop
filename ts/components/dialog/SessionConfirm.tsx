@@ -9,6 +9,7 @@ import {
   ModalBasicHeader,
   ModalActionsContainer,
   SessionWrapperModal,
+  ModalTopAnchor,
 } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionRadioGroup, SessionRadioItems } from '../basic/SessionRadioGroup';
@@ -125,6 +126,7 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
   return (
     <SessionWrapperModal
       headerChildren={title ? <ModalBasicHeader title={title} showExitIcon={showExitIcon} /> : null}
+      topAnchor={ModalTopAnchor.Level2}
       onClose={onClickClose}
       buttonChildren={
         <ModalActionsContainer>
