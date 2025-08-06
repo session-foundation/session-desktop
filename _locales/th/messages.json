@@ -618,7 +618,6 @@
   "passwordEnterCurrent": "โปรดป้อนรหัสผ่านปัจจุบันของคุณ",
   "passwordEnterNew": "โปรดป้อนรหัสผ่านใหม่ของคุณ",
   "passwordError": "รหัสผ่านต้องประกอบด้วยตัวอักษร ตัวเลข และสัญลักษณ์เท่านั้น",
-  "passwordErrorLength": "รหัสผ่านต้องมีความยาวตั้งแต่ 6 ถึง 64 ตัวอักษร",
   "passwordErrorMatch": "รหัสผ่านไม่ตรงกัน",
   "passwordFailed": "การตั้งรหัสผ่านล้มเหลว",
   "passwordIncorrect": "รหัสผ่านไม่ถูกต้อง",

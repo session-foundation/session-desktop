@@ -89,6 +89,12 @@ export function MessageBubble({ children }: { children: ReactNode }) {
     setExpanded(true);
   };
 
+  /**
+   * Used to re-trigger the "Read More" layout effect when the message content changes scroll height.
+   * This is required to handle window resizing, zooming, and font size changes.
+   */
+  const scrollHeight = msgBubbleRef.current?.firstElementChild?.scrollHeight;
+
   useLayoutEffect(
     () => {
       const el = msgBubbleRef?.current?.firstElementChild;
@@ -118,9 +124,12 @@ export function MessageBubble({ children }: { children: ReactNode }) {
 
       setShowReadMore(overflowsLines);
     },
-    // Note: no need to provide a dependency here (and if we provide children, this hook reruns every second for every messages).
-    // The only dependency is msgBubbleRef, but as it's a ref it's unneeded
-    []
+    /**
+     * Note: Don't provide children as a dependency, if you do this hook reruns every second for every
+     * message. The only dependencies are the scrollHeight (to handle window resizing) and msgBubbleRef,
+     * but it's a ref so is not needed.
+     */
+    [scrollHeight]
   );
 
   return (

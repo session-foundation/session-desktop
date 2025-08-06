@@ -124,7 +124,7 @@ export const PASSWORD_LENGTH = {
    */
   MIN_PASSWORD_LEN: 6,
   /**
-   * 64 chars
+   * 256 chars
    */
-  MAX_PASSWORD_LEN: 64,
+  MAX_PASSWORD_LEN: 256,
 };

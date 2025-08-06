@@ -620,7 +620,6 @@
   "passwordEnterCurrent": "Įveskite dabartinį slaptažodį",
   "passwordEnterNew": "Įveskite naują slaptažodį",
   "passwordError": "Password must only contain letters, numbers and symbols",
-  "passwordErrorLength": "Password must be between 6 and 64 characters long",
   "passwordErrorMatch": "Slaptažodžiai nesutampa",
   "passwordFailed": "Nepavyko nustatyti slaptažodžio",
   "passwordIncorrect": "Neteisingas slaptažodis",

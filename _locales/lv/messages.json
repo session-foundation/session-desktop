@@ -575,7 +575,6 @@
   "passwordEnterCurrent": "Lūdzu, ievadi pašreizējo paroli",
   "passwordEnterNew": "Lūdzu, ievadiet savu jauno paroli",
   "passwordError": "Parolei drīkst būt tikai burti, cipari un simboli",
-  "passwordErrorLength": "Parolei jābūt no 6 līdz 64 rakstzīmēm garai",
   "passwordErrorMatch": "Paroles nesakrīt",
   "passwordFailed": "Neizdevās iestatīt paroli",
   "passwordIncorrect": "Nepareiza parole",

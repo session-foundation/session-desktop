@@ -618,7 +618,6 @@
   "passwordEnterCurrent": "Zadajte prosím svoje aktuálne heslo",
   "passwordEnterNew": "Zadajte prosím svoje nové heslo",
   "passwordError": "Heslo môže obsahovať iba písmená, čísla a symboly",
-  "passwordErrorLength": "Heslo musí mať dĺžku 6 až 64 znakov",
   "passwordErrorMatch": "Heslá sa nezhodujú",
   "passwordFailed": "Nepodarilo sa nastaviť heslo",
   "passwordIncorrect": "Nesprávne heslo",

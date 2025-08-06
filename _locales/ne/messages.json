@@ -615,7 +615,6 @@
   "passwordEnterCurrent": "कृपया आफ्नो हालको पासवर्ड प्रविष्ट गर्नुहोस्",
   "passwordEnterNew": "कृपया आफ्नो नयाँ पासवर्ड प्रविष्ट गर्नुहोस्",
   "passwordError": "पासवर्डमा केवल अक्षर, अंक र प्रतीकहरू मात्र समावेश हुनुपर्छ",
-  "passwordErrorLength": "पासवर्ड ६ देखि ६४ वर्णको बीचमा हुनुपर्छ",
   "passwordErrorMatch": "पासवर्ड मेल खाँदैन",
   "passwordFailed": "पासवर्ड सेट गर्न असफल",
   "passwordIncorrect": "गलत पासवर्ड",

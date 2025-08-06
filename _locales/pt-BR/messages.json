@@ -628,7 +628,6 @@
   "passwordEnterCurrent": "Por favor, insira sua senha atual",
   "passwordEnterNew": "Por favor, digite a sua nova senha",
   "passwordError": "A senha deve conter apenas letras, números e símbolos",
-  "passwordErrorLength": "A senha deve ter entre 6 e 64 caracteres",
   "passwordErrorMatch": "As senhas não coincidem",
   "passwordFailed": "Falha ao definir a senha",
   "passwordIncorrect": "Senha incorreta",

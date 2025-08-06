@@ -627,7 +627,6 @@
   "passwordEnterCurrent": "Одоогийн нууц үгээ оруулна уу",
   "passwordEnterNew": "Шинэ нууц үгээ оруулна уу",
   "passwordError": "Нууц үг нь зөвхөн үсэг, тоо болон тэмдэгтүүдийг агуулна",
-  "passwordErrorLength": "Нууц үг 6-аас 64 тэмдэгттэй байх ёстой",
   "passwordErrorMatch": "Нууц үг тохирсонгүй",
   "passwordFailed": "Нууц үгийг тогтоохдоо алдаа гарлаа",
   "passwordIncorrect": "Зөв нууц үг биш",

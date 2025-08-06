@@ -628,7 +628,6 @@
   "passwordEnterCurrent": "გთხოვთ შეიყვანოთ მიმდინარე პაროლი",
   "passwordEnterNew": "გთხოვთ შეიყვანოთ ახალი პაროლი",
   "passwordError": "პაროლი უნდა შეიცავდეს მხოლოდ ასოებს, რიცხვებს და სიმბოლოებს",
-  "passwordErrorLength": "პაროლი უნდა იყოს 6-64 სიმბოლოს სიგრძის",
   "passwordErrorMatch": "პაროლები არ ემთხვევა ერთმანეთს",
   "passwordFailed": "ვერ შევძელიში პაროლის დაწესება",
   "passwordIncorrect": "არასწორი პაროლი",

@@ -711,7 +711,6 @@
   "passwordEnterCurrent": "Si us plau, introdueix la teva contrasenya actual",
   "passwordEnterNew": "Si us plau, introdueix la teva nova contrasenya.",
   "passwordError": "La contrasenya només pot contenir lletres, números i símbols",
-  "passwordErrorLength": "La contrasenya ha de ser d'entre 6 i 64 caràcters",
   "passwordErrorMatch": "Les contrassenyes no coincideixen",
   "passwordFailed": "No s'ha pogut canviar la contrasenya",
   "passwordIncorrect": "Contrasenya incorrecta",

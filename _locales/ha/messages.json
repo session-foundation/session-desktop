@@ -617,7 +617,6 @@
   "passwordEnterCurrent": "Shigar da kalmar sirri mai koyawa",
   "passwordEnterNew": "Shigar da sabuwar kalmar sirri",
   "passwordError": "Kalmar sirri dole ta ƙunshi haruffa, lambobi da alamomin musamman",
-  "passwordErrorLength": "Kalmar sirri dole ta kasance tsakanin haruffa 6 zuwa 64",
   "passwordErrorMatch": "Kalmar sirri ba ta dace da juna ba",
   "passwordFailed": "An kasa saita kalmar sirri",
   "passwordIncorrect": "Kalmar wucewa da aka shigar ba daidai ba ce",

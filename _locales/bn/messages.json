@@ -617,7 +617,6 @@
   "passwordEnterCurrent": "আপনার বর্তমান পাসওয়ার্ড লিখুন",
   "passwordEnterNew": "আপনার নতুন পাসওয়ার্ড লিখুন",
   "passwordError": "পাসওয়ার্ড শুধু অক্ষর, সংখ্যা এবং চিহ্ন থাকতে পারে",
-  "passwordErrorLength": "পাসওয়ার্ড ৬ থেকে ৬৪ অক্ষরের মধ্যে হতে হবে",
   "passwordErrorMatch": "পাসওয়ার্ড মেলেনি",
   "passwordFailed": "পাসওয়ার্ড সেট করতে ব্যর্থ হয়েছে",
   "passwordIncorrect": "পাসওয়ার্ড ভুল হয়েছে",

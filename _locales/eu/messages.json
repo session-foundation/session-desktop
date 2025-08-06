@@ -617,7 +617,6 @@
   "passwordEnterCurrent": "Mesedez, sartu zure uneko pasahitza",
   "passwordEnterNew": "Mesedez, sartu zure pasahitz berria",
   "passwordError": "Pasahitzak hizkiak, zenbakiak eta sinboloak bakarrik eduki behar ditu",
-  "passwordErrorLength": "Pasahitzak 6 eta 64 karaktere bitartekoa izan behar du",
   "passwordErrorMatch": "Pasahitzak ez datoz bat",
   "passwordFailed": "Pasahitza ezartzea huts egin da",
   "passwordIncorrect": "Pasahitz okerra",
