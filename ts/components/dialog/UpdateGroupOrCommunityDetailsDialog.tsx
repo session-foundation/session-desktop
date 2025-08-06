@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
+import useMount from 'react-use/lib/useMount';
 
 import { useAvatarPath, useIsClosedGroup, useIsPublic } from '../../hooks/useParamSelector';
 import { ConvoHub } from '../../session/conversations';
@@ -45,8 +46,14 @@ export function UpdateGroupOrCommunityDetailsDialog(props: { conversationId: str
   const convo = ConvoHub.use().get(conversationId);
   const isGroupChangePending = useGroupNameChangeFromUIPending();
   const isCommunityChangePending = useChangeDetailsOfRoomPending(conversationId);
-
   const isNameChangePending = isPublic ? isCommunityChangePending : isGroupChangePending;
+
+  const [avatarPointerOnMount, setAvatarPointerOnMount] = useState<string>('');
+  const refreshedAvatarPointer = convo.getAvatarPointer() || '';
+
+  useMount(() => {
+    setAvatarPointerOnMount(convo?.getAvatarPointer() || '');
+  });
 
   if (!convo) {
     throw new Error('UpdateGroupOrCommunityDetailsDialog corresponding convo not found');
@@ -59,6 +66,7 @@ export function UpdateGroupOrCommunityDetailsDialog(props: { conversationId: str
   const originalCommunityDescription = useRoomDescription(conversationId);
 
   const nameOnOpen = convo.getRealSessionUsername();
+
   const descriptionOnOpen = isPublic ? originalCommunityDescription : originalGroupDescription;
 
   const [newName, setNewName] = useState(nameOnOpen);
@@ -73,6 +81,13 @@ export function UpdateGroupOrCommunityDetailsDialog(props: { conversationId: str
 
   function onClickOK() {
     if (isNameChangePending) {
+      return;
+    }
+
+    // if we click save, but the only change was an avatar change, we can close the dialog right
+    // away (as the avatar was updated as part of of the EditProfilePictureModal)
+    if (noChanges && avatarWasUpdated) {
+      closeDialog();
       return;
     }
     // When the user wants to apply the changes, we truncate
@@ -137,6 +152,7 @@ export function UpdateGroupOrCommunityDetailsDialog(props: { conversationId: str
   }
 
   const noChanges = newName === nameOnOpen && newDescription === descriptionOnOpen;
+  const avatarWasUpdated = avatarPointerOnMount !== refreshedAvatarPointer;
 
   return (
     <SessionWrapperModal
@@ -153,14 +169,16 @@ export function UpdateGroupOrCommunityDetailsDialog(props: { conversationId: str
             text={tr('save')}
             onClick={onClickOK}
             buttonType={SessionButtonType.Simple}
-            disabled={isNameChangePending || !newName || !newName.trim() || noChanges}
+            disabled={isNameChangePending || !newName?.trim() || (noChanges && !avatarWasUpdated)}
           />
-          <SessionButton
-            text={tr('cancel')}
-            buttonColor={SessionButtonColor.Danger}
-            buttonType={SessionButtonType.Simple}
-            onClick={closeDialog}
-          />
+          {!avatarWasUpdated ? (
+            <SessionButton
+              text={tr('cancel')}
+              buttonColor={SessionButtonColor.Danger}
+              buttonType={SessionButtonType.Simple}
+              onClick={closeDialog}
+            />
+          ) : null}
         </ModalActionsContainer>
       }
     >

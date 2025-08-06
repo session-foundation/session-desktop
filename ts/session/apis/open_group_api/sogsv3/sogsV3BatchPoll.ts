@@ -348,7 +348,6 @@ const makeBatchRequestPayload = (
         name: options.updateRoom.roomName,
         description: options.updateRoom.roomDescription,
       };
-      console.warn('json', json);
 
       return {
         method: 'PUT',
