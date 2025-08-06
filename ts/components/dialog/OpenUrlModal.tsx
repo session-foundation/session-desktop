@@ -9,7 +9,6 @@ import {
   ModalBasicHeader,
   ModalActionsContainer,
   SessionWrapperModal,
-  ModalTopAnchor,
 } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SpacerXS } from '../basic/Text';
@@ -47,7 +46,7 @@ export function OpenUrlModal(props: OpenUrlModalState) {
   return (
     <SessionWrapperModal
       headerChildren={<ModalBasicHeader title={tr('urlOpen')} showExitIcon={true} />}
-      topAnchor={ModalTopAnchor.Level3}
+      topAnchor="35vh"
       onClose={onClose}
       buttonChildren={
         <ModalActionsContainer>

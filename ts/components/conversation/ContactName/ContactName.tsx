@@ -62,6 +62,8 @@ const boldStyles: CSSProperties = {
   fontWeight: 'bold',
 };
 
+const contactNameContextShowUPM: Array<ContactNameContext> = ['message-info-author'];
+
 export const ContactName = ({
   pubkey,
   module,
@@ -127,7 +129,6 @@ export const ContactName = ({
       contactNameContext,
       currentUserHasPro,
       isBlinded: PubKey.isBlinded(pubkey),
-      providedCb: showConversationSettingsCb,
     },
   });
 
@@ -162,6 +163,10 @@ export const ContactName = ({
         maxWidth: '100%',
         ...style,
       }}
+      onClick={
+        (contactNameContextShowUPM.includes(contactNameContext) && showConversationSettingsCb) ||
+        undefined
+      }
     >
       {displayedName ? (
         <div style={mergedNameStyle} className={`${prefix}__profile-name`}>

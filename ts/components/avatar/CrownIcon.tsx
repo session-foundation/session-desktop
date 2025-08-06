@@ -11,18 +11,17 @@ const CrownWrapper = styled.div`
   right: 0;
   height: 50%; // anything less than 50% is quite hard to see on the AvatarSize.M and smaller sizes
   width: 50%; // anything less than 50% is quite hard to see on the AvatarSize.M and smaller sizes
-  background: var(--text-primary-color);
   border-radius: 50%;
 `;
 
 export const CrownIcon = () => {
-  // bg color for the two dark themes; the dynamic accent color for the light themes
   const isDarkTheme = useIsDarkTheme();
 
-  const iconColor = isDarkTheme ? 'var(--background-primary-color)' : 'var(--primary-color)';
+  const iconColor = isDarkTheme ? 'var(--black-color)' : 'var(--yellow-color)';
+  const bgColor = isDarkTheme ? 'var(--yellow-color)' : 'var(--black-color)';
 
   return (
-    <CrownWrapper>
+    <CrownWrapper style={{ backgroundColor: bgColor }}>
       <SessionIcon
         iconColor={iconColor}
         iconSize={'small'}

@@ -25,7 +25,6 @@ import { SimpleSessionInput, SimpleSessionTextarea } from '../inputs/SessionInpu
 import {
   ModalBasicHeader,
   ModalActionsContainer,
-  ModalTopAnchor,
   SessionWrapperModal,
 } from '../SessionWrapperModal';
 import { ClearInputButton } from '../inputs/ClearInputButton';
@@ -162,7 +161,6 @@ export function UpdateGroupOrCommunityDetailsDialog(props: { conversationId: str
         />
       }
       onClose={closeDialog}
-      topAnchor={ModalTopAnchor.Normal}
       buttonChildren={
         <ModalActionsContainer>
           <SessionButton

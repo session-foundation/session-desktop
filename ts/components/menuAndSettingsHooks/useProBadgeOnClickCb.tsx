@@ -35,8 +35,7 @@ export type ProBadgeContext =
         WithIsMe &
         WithCurrentUserHasPro &
         WithContactNameContext &
-        WithIsBlinded &
-        WithProvidedCb;
+        WithIsBlinded;
     };
 
 type ShowTagWithCb = {
@@ -197,10 +196,7 @@ export function useProBadgeOnClickCb(
       if (args.currentUserHasPro) {
         return showNoCb;
       }
-      if (args.isBlinded) {
-        // we want to show the conversation modal here, not the pro dialog
-        return { show: true, cb: args.providedCb };
-      }
+
       return { show: true, cb: () => handleShowProInfoModal(SessionProInfoVariant.GENERIC) };
     }
     return showNoCb;

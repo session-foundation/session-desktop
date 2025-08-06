@@ -141,6 +141,7 @@ const StyledName = styled.p`
   line-height: 1.4;
   margin: 0;
   padding: 0px;
+  cursor: pointer;
 `;
 
 export const ProfileName = (props: { profileName: string; onClick: () => void }) => {

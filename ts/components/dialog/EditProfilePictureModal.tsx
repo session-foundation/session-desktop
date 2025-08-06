@@ -166,6 +166,8 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
     }
   }, [dispatch, isMe]);
 
+  const isPublic = useIsPublic(conversationId);
+
   const handleAvatarClick = async () => {
     const res = await pickFileForAvatar();
 
@@ -225,6 +227,9 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
       return;
     }
     resetState();
+    if (isPublic) {
+      closeDialog();
+    }
   };
 
   const handleClick = () => {

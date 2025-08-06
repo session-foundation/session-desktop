@@ -22,7 +22,6 @@ import {
   ModalActionsContainer,
   SessionWrapperModal,
 } from '../../SessionWrapperModal';
-import { ModalBackButton } from '../shared/ModalBackButton';
 import { SessionButtonColor, SessionButton } from '../../basic/SessionButton';
 import { CopyToClipboardButton } from '../../buttons';
 import { SessionIDNotEditable } from '../../basic/SessionIdNotEditable';
@@ -234,18 +233,6 @@ export const EditProfileDialog = () => {
           <ModalBasicHeader
             title={tr('profile')}
             showExitIcon={true}
-            leftButton={
-              mode === 'edit' || mode === 'qr' ? (
-                <ModalBackButton
-                  onClick={() => {
-                    if (loading) {
-                      return;
-                    }
-                    setMode('default');
-                  }}
-                />
-              ) : undefined
-            }
             extraRightButton={<ModalPencilIcon onClick={() => setMode('edit')} />}
           />
         }
@@ -283,6 +270,19 @@ export const EditProfileDialog = () => {
                   disabled={cannotContinue}
                   buttonColor={SessionButtonColor.PrimaryDark}
                   dataTestId="save-button-profile-update"
+                  style={{ minWidth: '125px' }}
+                />
+                <SessionButton
+                  text={tr('cancel')}
+                  onClick={() => {
+                    if (loading) {
+                      return;
+                    }
+                    setMode('default');
+                    setProfileName(_profileName);
+                  }}
+                  buttonColor={SessionButtonColor.PrimaryDark}
+                  dataTestId="invalid-data-testid"
                   style={{ minWidth: '125px' }}
                 />
               </ModalActionsContainer>

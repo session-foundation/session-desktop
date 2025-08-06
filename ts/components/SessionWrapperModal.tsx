@@ -161,12 +161,7 @@ export const ModalActionsContainer = ({
   );
 };
 
-export enum ModalTopAnchor {
-  Normal = '15vh',
-  Level1 = '25vh',
-  Level2 = '35vh',
-  Level3 = '45vh',
-}
+export type ModalTopAnchor = '15vh' | '25vh' | '35vh' | '45vh';
 
 export type SessionWrapperModalType = {
   headerChildren: ReactNode;
