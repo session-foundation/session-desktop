@@ -88,12 +88,6 @@ export interface MessageAttributes {
    * This field is not set for a message not on an opengroup server.
    */
   serverTimestamp?: number;
-  /**
-   * This field is set to true if the message is for a public server.
-   * This is useful to make the Badge `Public` Appear on a sent message to a server, even if we did not get
-   * the response from the server yet that this message was successfully added.
-   */
-  isPublic: boolean;
 
   /**
    * sentSync set to true means we just triggered the sync message for this Private Chat message.

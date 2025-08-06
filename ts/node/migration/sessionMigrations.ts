@@ -2172,7 +2172,7 @@ async function updateToSessionSchemaVersion47(currentVersion: number, db: Better
 
     db.exec(`
         UPDATE ${MESSAGES_TABLE} SET
-        json = json_remove(json, '$.group')
+        json = json_remove(json, '$.group', '$.isPublic')
       `);
 
     writeSessionSchemaVersion(targetVersion, db);
