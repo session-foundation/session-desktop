@@ -19,22 +19,35 @@ import type { SignalService } from '../protobuf';
 export type MessageModelType = 'incoming' | 'outgoing';
 
 export interface MessageAttributes {
-  // the id of the message
-  // this can have several uses:
+  /**
+   * the local if of this message (i.e. an id only used locally)
+   */
   id: string;
+  /**
+   * The sender/author of that message
+   */
   source: string;
+  /**
+   * the quoted details
+   */
   quote?: any;
   received_at?: number;
   sent_at?: number;
+  /**
+   * the link preview details
+   */
   preview?: any;
   reaction?: Reaction;
   reacts?: ReactionList;
   reactsIndex?: number;
+  /**
+   * the text associated with this message (can be undefined for control messages, or for attachments only messages. etc)
+   */
   body?: string;
   expirationType?: DisappearingMessageType;
   /** in seconds, 0 means no expiration */
   expireTimer: number;
-  /** in milliseconds */
+  /** when the expireTimer above started to count, in milliseconds */
   expirationStartTimestamp: number;
   expires_at?: number;
   expirationTimerUpdate?: ExpirationTimerUpdate;
@@ -45,7 +58,6 @@ export interface MessageAttributes {
   attachments?: any;
   conversationId: string;
   errors?: string;
-  flags?: number;
   hasAttachments: 1 | 0;
   hasFileAttachments: 1 | 0;
   hasVisualMediaAttachments: 1 | 0;

@@ -176,6 +176,5 @@ export function generateFakeExpirationTimerUpdate({
       expirationType,
       expireTimer,
     },
-    flags: 2,
   });
 }

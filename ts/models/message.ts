@@ -173,11 +173,7 @@ export class MessageModel extends Model<MessageAttributes> {
   }
 
   public isExpirationTimerUpdate() {
-    const expirationTimerFlag = SignalService.DataMessage.Flags.EXPIRATION_TIMER_UPDATE;
-    const flags = this.get('flags') || 0;
-
-    // eslint-disable-next-line no-bitwise
-    return Boolean(flags & expirationTimerFlag) && !isEmpty(this.getExpirationTimerUpdate());
+    return !isEmpty(this.getExpirationTimerUpdate());
   }
 
   public isControlMessage() {
@@ -861,7 +857,6 @@ export class MessageModel extends Model<MessageAttributes> {
       preview: undefined,
       reacts: undefined,
       reactsIndex: undefined,
-      flags: undefined,
       callNotificationType: undefined,
       interactionNotification: undefined,
       reaction: undefined,
