@@ -167,7 +167,7 @@ export const SessionQuotedMessageComposition = () => {
         iconColor="var(--chat-buttons-icon-color)"
         iconSize="medium"
         onClick={removeQuotedMessage}
-        margin={'0 var(--margins-sm) 0 0'}
+        margin={'0 var(--margins-md) 0 0'} // We want this aligned with the send button
         aria-label={tr('close')}
         dataTestId="link-preview-close"
       />

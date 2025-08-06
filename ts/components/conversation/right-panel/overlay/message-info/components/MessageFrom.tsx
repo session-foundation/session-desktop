@@ -2,7 +2,7 @@ import styled from 'styled-components';
 import { MessageInfoLabel } from '.';
 import { useConversationUsernameWithFallback } from '../../../../../../hooks/useParamSelector';
 import { isDevProd } from '../../../../../../shared/env_vars';
-import { Avatar, AvatarSize, CrownIcon } from '../../../../../avatar/Avatar';
+import { Avatar, AvatarSize } from '../../../../../avatar/Avatar';
 import { Flex } from '../../../../../basic/Flex';
 import { CopyToClipboardIcon } from '../../../../../buttons';
 import { tr } from '../../../../../../localization/localeTools';
@@ -65,8 +65,12 @@ export const MessageFrom = (props: { sender: string; isSenderAdmin: boolean }) =
       </Flex>
       <StyledFromContainer>
         <StyledAvatar>
-          <Avatar size={AvatarSize.M} pubkey={sender} onAvatarClick={showUserProfileModalCb} />
-          {isSenderAdmin ? <CrownIcon /> : null}
+          <Avatar
+            size={AvatarSize.M}
+            pubkey={sender}
+            onAvatarClick={showUserProfileModalCb}
+            showCrown={isSenderAdmin}
+          />
         </StyledAvatar>
         <StyledAuthorNamesContainer>
           <ContactName

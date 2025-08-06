@@ -1366,6 +1366,20 @@ export class ConversationModel extends Model<ConversationAttributes> {
         this.set({ avatarPointer: newProfile.avatarPointer });
         changes = true;
       }
+    } else {
+      if (
+        this.getAvatarInProfilePath() ||
+        this.getFallbackAvatarInProfilePath() ||
+        this.getAvatarPointer()
+      ) {
+        changes = true;
+      }
+      this.set({
+        avatarInProfile: undefined,
+        avatarPointer: undefined,
+        profileKey: undefined,
+        fallbackAvatarInProfile: undefined,
+      });
     }
 
     if (changes) {

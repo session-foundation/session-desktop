@@ -15,7 +15,7 @@ import {
   useMemberPendingRemoval,
   useMemberStatus,
 } from '../state/selectors/groups';
-import { Avatar, AvatarSize, CrownIcon } from './avatar/Avatar';
+import { Avatar, AvatarSize } from './avatar/Avatar';
 import { Flex } from './basic/Flex';
 import {
   SessionButton,
@@ -40,8 +40,7 @@ const AvatarItem = (props: { memberPubkey: string; isAdmin: boolean }) => {
   const { memberPubkey, isAdmin } = props;
   return (
     <AvatarContainer>
-      <Avatar size={AvatarSize.XS} pubkey={memberPubkey} />
-      {isAdmin && <CrownIcon />}
+      <Avatar size={AvatarSize.XS} pubkey={memberPubkey} showCrown={isAdmin} />
     </AvatarContainer>
   );
 };

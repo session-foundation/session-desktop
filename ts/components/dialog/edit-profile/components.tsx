@@ -8,8 +8,6 @@ import { prepareQRCodeForLightBox } from '../../../util/qrCodes';
 import { QRCodeLogoProps, SessionQRCode } from '../../SessionQRCode';
 import { Avatar, AvatarSize } from '../../avatar/Avatar';
 import { Flex } from '../../basic/Flex';
-import { SessionLucideIconButton } from '../../icon/SessionIconButton';
-import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnClickCb';
 import { useCurrentUserHasPro } from '../../../hooks/useHasPro';
 import { ProIconButton } from '../../buttons/ProButton';
@@ -157,13 +155,9 @@ export const ProfileName = (props: { profileName: string; onClick: () => void })
 
   return (
     <StyledProfileName $container={true} $justifyContent="center" $alignItems="center">
-      <SessionLucideIconButton
-        unicode={LUCIDE_ICONS_UNICODE.PENCIL}
-        iconSize="medium"
-        onClick={onClick}
-        dataTestId="edit-profile-icon"
-      />
-      <StyledName data-testid="your-profile-name">{profileName}</StyledName>
+      <StyledName data-testid="your-profile-name" onClick={onClick}>
+        {profileName}
+      </StyledName>
       {showPro.show ? (
         <ProIconButton
           iconSize={'medium'}

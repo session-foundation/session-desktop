@@ -1,5 +1,4 @@
 import { memo, SessionDataTestId, useState } from 'react';
-import styled from 'styled-components';
 
 import { useDisableDrag } from '../../hooks/useDisableDrag';
 import { useEncryptedFileFetch } from '../../hooks/useEncryptedFileFetch';
@@ -13,7 +12,7 @@ import { ClosedGroupAvatar } from './AvatarPlaceHolder/ClosedGroupAvatar';
 import { useIsMessageSelectionMode } from '../../state/selectors/selectedConversation';
 import { PlusAvatarButton } from '../buttons/PlusAvatarButton';
 import { StyledAvatar } from './AvatarPlaceHolder/StyledAvatar';
-import { SessionIcon } from '../icon';
+import { CrownIcon } from './CrownIcon';
 
 export enum AvatarSize {
   XS = 28,
@@ -27,6 +26,7 @@ type Props = {
   forcedAvatarPath?: string | null;
   forcedName?: string;
   pubkey: string;
+  showCrown?: boolean;
   size: AvatarSize;
   base64Data?: string; // if this is not empty, it will be used to render the avatar with base64 encoded data
   onAvatarClick?: () => void;
@@ -45,33 +45,6 @@ const Identicon = (props: Pick<Props, 'forcedName' | 'pubkey' | 'size'>) => {
   const userName = forcedName || displayName || '0';
 
   return <AvatarPlaceHolder diameter={size} name={userName} pubkey={pubkey} />;
-};
-
-const CrownWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: absolute;
-  bottom: 11%;
-  right: 11%;
-  height: 18px;
-  width: 18px;
-  transform: translate(22%, 22%); // getting over 23% creates a glitch
-  background: var(--black-color);
-  border-radius: 50%;
-`;
-
-export const CrownIcon = () => {
-  return (
-    <CrownWrapper>
-      <SessionIcon
-        iconColor="var(--yellow-color)"
-        iconSize={'small'}
-        iconType="crown"
-        iconPadding="1px"
-      />
-    </CrownWrapper>
-  );
 };
 
 const NoImage = memo(
@@ -128,6 +101,7 @@ const AvatarInner = (props: Props) => {
     imageDataTestId,
     onAvatarClick,
     onPlusAvatarClick,
+    showCrown,
   } = props;
   const [imageBroken, setImageBroken] = useState(false);
 
@@ -204,6 +178,7 @@ const AvatarInner = (props: Props) => {
           isClosedGroup={isClosedGroup}
         />
       ) : null}
+      {showCrown ? <CrownIcon /> : null}
     </StyledAvatar>
   );
 };
