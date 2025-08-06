@@ -139,6 +139,7 @@
   "banUser": "منع المستخدم",
   "banUserBanned": "تم منع المستخدم",
   "block": "حظر",
+  "blockBlockedDescription": "إلغاء حظر جهة الإتصال لإرسال رسالة",
   "blockBlockedNone": "لا توجد جهات اتصال محظورة",
   "blockBlockedUser": "تم حظر {name}",
   "blockDescription": "هل أنت متأكد من حظر <b>{name}؟</b> المستخدمين المحظورين لا يمكنهم إرسال طلبات الرسائل، دعوات المجموعات أو الاتصال بك.",

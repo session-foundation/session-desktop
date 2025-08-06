@@ -122,6 +122,7 @@
   "banUser": "Bikarhênerê Asteng bike",
   "banUserBanned": "Bikarhênker astengî bû",
   "block": "Blok bike",
+  "blockBlockedDescription": "ئەم پەیوەندە لابردن بۆ بریتیە لە ناردنی پەیامێک.",
   "blockBlockedNone": "Kontaktên astengkirî nehatin dîtin",
   "blockBlockedUser": "{name} asteng kir",
   "blockDescription": "Tu piştrast î ku tu dixwazî <b>{name}</b> blok bikî? Bikarhênerên blokkirî nikarin daxwazên peyamê bişînin, dawetên li grûban bişînin an telefona te bikin.",
