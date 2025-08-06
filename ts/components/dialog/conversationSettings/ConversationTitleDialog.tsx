@@ -11,19 +11,19 @@ import type { WithConvoId } from '../../../session/types/with';
 import { H5 } from '../../basic/Heading';
 import { ProIconButton } from '../../buttons/ProButton';
 import { useChangeNickname } from '../../menuAndSettingsHooks/useChangeNickname';
-import { useShowUpdateGroupNameDescriptionCb } from '../../menuAndSettingsHooks/useShowUpdateGroupNameDescription';
 import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnClickCb';
+import { useShowUpdateGroupOrCommunityDetailsCb } from '../../menuAndSettingsHooks/useShowUpdateGroupNameDescription';
 
 /**
  * Return the callback to use for the title click event, if one is allowed
  */
 function useOnTitleClickCb(conversationId: string, editable: boolean) {
   const changeNicknameCb = useChangeNickname(conversationId);
-  const updateNameDescCb = useShowUpdateGroupNameDescriptionCb({ conversationId });
+  const updateGroupOrCommunityCb = useShowUpdateGroupOrCommunityDetailsCb({ conversationId });
   if (!editable) {
     return null;
   }
-  return changeNicknameCb || updateNameDescCb;
+  return changeNicknameCb || updateGroupOrCommunityCb;
 }
 
 function ProBadge({ conversationId }: WithConvoId) {

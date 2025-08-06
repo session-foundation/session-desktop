@@ -17,11 +17,11 @@ import { SpacerXS } from '../../basic/Text';
 import { SessionSpinner } from '../../loading';
 import { useHTMLDirection } from '../../../util/i18n/rtlSupport';
 import { Localizer } from '../../basic/Localizer';
+import type { WithRoomId } from '../../../session/apis/open_group_api/sogsv3/sogsWith';
 
-export type JoinableRoomProps = {
+export type JoinableRoomProps = WithRoomId & {
   completeUrl: string;
   name: string;
-  roomId: string;
   imageId?: string;
   onClick?: (completeUrl: string) => void;
   base64Data?: string;

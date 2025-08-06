@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useDispatch } from 'react-redux';
+import type { AnyAction, Dispatch } from 'redux';
 import styled from 'styled-components';
 import { ToastUtils, UserUtils } from '../../session/utils';
 import { editProfileModal, updateEditProfilePictureModal } from '../../state/ducks/modalDialog';
@@ -8,7 +9,6 @@ import { pickFileForAvatar } from '../../types/attachments/VisualAttachment';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionSpinner } from '../loading';
 import { ProfileAvatar } from './edit-profile/components';
-import { PlusAvatarButton } from '../buttons/PlusAvatarButton';
 import {
   useAvatarPath,
   useConversationUsernameWithFallback,
@@ -24,8 +24,6 @@ import { userActions } from '../../state/ducks/user';
 import { ReduxSogsRoomInfos } from '../../state/ducks/sogsRoomInfo';
 import { useOurAvatarIsUploading } from '../../state/selectors/user';
 import { useAvatarOfRoomIsUploading } from '../../state/selectors/sogsRoomInfo';
-import { SessionLucideIconButton } from '../icon/SessionIconButton';
-import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import {
   ModalActionsContainer,
   ModalBasicHeader,
@@ -41,18 +39,11 @@ import { AvatarSize } from '../avatar/Avatar';
 import { ProIconButton } from '../buttons/ProButton';
 import { useProBadgeOnClickCb } from '../menuAndSettingsHooks/useProBadgeOnClickCb';
 import { useUserHasPro } from '../../hooks/useHasPro';
+import { UploadFirstImageButton } from './edit-profile/UploadFirstImage';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
   position: relative;
-`;
-
-const StyledUploadButton = styled.div`
-  background-color: var(--chat-buttons-background-color);
-  border-radius: 50%;
-  overflow: hidden;
-  padding: var(--margins-lg);
-  aspect-ratio: 1;
 `;
 
 const StyledCTADescription = styled.span<{ reverseDirection: boolean }>`
@@ -67,25 +58,10 @@ const StyledCTADescription = styled.span<{ reverseDirection: boolean }>`
   padding: 3px;
 `;
 
-const UploadImageButton = () => {
-  return (
-    <div style={{ position: 'relative' }}>
-      <StyledUploadButton>
-        <SessionLucideIconButton unicode={LUCIDE_ICONS_UNICODE.IMAGE} iconSize={'max'} margin="0" />
-      </StyledUploadButton>
-      <PlusAvatarButton
-        dataTestId="image-upload-section"
-        hasImage={false}
-        avatarSize={AvatarSize.XL}
-        isClosedGroup={false}
-      />
-    </div>
-  );
-};
-
 const triggerUploadProfileAvatar = async (
   scaledAvatarUrl: string | null,
-  conversationId: string
+  conversationId: string,
+  dispatch: Dispatch<AnyAction>
 ) => {
   if (scaledAvatarUrl?.length) {
     try {
@@ -97,18 +73,16 @@ const triggerUploadProfileAvatar = async (
 
       if (conversationId === UserUtils.getOurPubKeyStrFromCache()) {
         const newAvatarDecrypted = await blobContent.arrayBuffer();
-        window.inboxStore?.dispatch(
-          userActions.updateOurAvatar({ mainAvatarDecrypted: newAvatarDecrypted }) as any
-        );
+        dispatch(userActions.updateOurAvatar({ mainAvatarDecrypted: newAvatarDecrypted }) as any);
       } else if (OpenGroupUtils.isOpenGroupV2(conversationId)) {
-        window.inboxStore?.dispatch(
-          ReduxSogsRoomInfos.changeCommunityAvatar({
+        dispatch(
+          ReduxSogsRoomInfos.roomAvatarChange({
             conversationId,
             avatarObjectUrl: scaledAvatarUrl,
           }) as any
         );
       } else if (PubKey.is03Pubkey(conversationId)) {
-        window.inboxStore?.dispatch(
+        dispatch(
           groupInfoActions.currentDeviceGroupAvatarChange({
             objectUrl: scaledAvatarUrl,
             groupPk: conversationId,
@@ -231,7 +205,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
       return;
     }
 
-    await triggerUploadProfileAvatar(newAvatarObjectUrl, conversationId);
+    await triggerUploadProfileAvatar(newAvatarObjectUrl, conversationId, dispatch);
   };
 
   const loading = ourAvatarIsUploading || groupAvatarChangePending || sogsAvatarIsUploading;
@@ -261,7 +235,10 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
     <SessionWrapperModal
       onClose={closeDialog}
       headerChildren={
-        <ModalBasicHeader title={tr('profileDisplayPictureSet')} showExitIcon={!loading} />
+        <ModalBasicHeader
+          title={tr(isCommunity ? 'setCommunityDisplayPicture' : 'profileDisplayPictureSet')}
+          showExitIcon={!loading}
+        />
       }
       buttonChildren={
         <ModalActionsContainer extraBottomMargin={true}>
@@ -308,7 +285,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
           />
         </StyledCTADescription>
       ) : null}
-      <div role="button" onClick={handleClick} data-testid={'image-upload-click'}>
+      <div role="button" data-testid={'image-upload-click'}>
         <SpacerLG />
         <StyledAvatarContainer>
           {newAvatarObjectUrl || avatarPath ? (
@@ -323,7 +300,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
               dataTestId={'avatar-edit-profile-picture-dialog'}
             />
           ) : (
-            <UploadImageButton />
+            <UploadFirstImageButton onClick={handleClick} />
           )}
         </StyledAvatarContainer>
         <SpacerLG />

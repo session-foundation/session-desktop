@@ -72,7 +72,11 @@ declare module 'react' {
 
   type CancelButtons = 'update-group-info' | 'add-admins' | 'unban-user' | 'modal-session-pro';
 
-  type ClearButtons = 'group-info-description' | 'group-info-name' | 'nickname' | 'add-admins';
+  type ClearButtons =
+    | `${'group' | 'community'}-info-description`
+    | `${'group' | 'community'}-info-name`
+    | 'nickname'
+    | 'add-admins';
 
   // left pane section types
   type Sections = 'theme' | 'settings' | 'message' | 'privacy' | 'debug-menu';
@@ -98,8 +102,8 @@ declare module 'react' {
     | 'nickname'
     | 'profile-name'
     | 'message'
-    | 'update-group-info-name'
-    | 'update-group-info-description'
+    | `update-${'group' | 'community'}-info-name`
+    | `update-${'group' | 'community'}-info-description`
     | 'recovery-phrase'
     | 'display-name'
     | 'add-admins'
@@ -205,6 +209,7 @@ declare module 'react' {
     | 'end-call'
     | 'end-voice-message'
     | 'edit-profile-icon'
+    | 'edit-community-details'
     | 'invite-warning'
     | 'some-of-your-devices-outdated-conversation'
     | 'some-of-your-devices-outdated-inbox'

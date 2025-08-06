@@ -44,7 +44,7 @@ import type { ConversationSettingsModalState } from '../../../../../state/ducks/
 import { LUCIDE_ICONS_UNICODE } from '../../../../icon/lucide';
 import { SessionLucideIconButton } from '../../../../icon/SessionIconButton';
 import { useChangeNickname } from '../../../../menuAndSettingsHooks/useChangeNickname';
-import { useShowUpdateGroupNameDescriptionCb } from '../../../../menuAndSettingsHooks/useShowUpdateGroupNameDescription';
+import { useShowUpdateGroupOrCommunityDetailsCb } from '../../../../menuAndSettingsHooks/useShowUpdateGroupNameDescription';
 
 function AdminSettingsTitle() {
   return (
@@ -258,10 +258,16 @@ function ChangeNicknameButton({ conversationId }: WithConvoId) {
   return <EditGenericButton cb={changeNicknameCb} dataTestId="set-nickname-confirm-button" />;
 }
 
-function UpdateNameDescriptionButton({ conversationId }: WithConvoId) {
-  const updateNameDescCb = useShowUpdateGroupNameDescriptionCb({ conversationId });
+function UpdateGroupOrCommunityButton({ conversationId }: WithConvoId) {
+  const updateNameDescCb = useShowUpdateGroupOrCommunityDetailsCb({ conversationId });
+  const isPublic = useIsPublic(conversationId);
 
-  return <EditGenericButton cb={updateNameDescCb} dataTestId="edit-group-name" />;
+  return (
+    <EditGenericButton
+      cb={updateNameDescCb}
+      dataTestId={isPublic ? 'edit-community-details' : 'edit-group-name'}
+    />
+  );
 }
 
 export function DefaultConversationSettingsModal(props: ConversationSettingsModalState) {
@@ -282,7 +288,7 @@ export function DefaultConversationSettingsModal(props: ConversationSettingsModa
           extraRightButton={
             <>
               <ChangeNicknameButton conversationId={props.conversationId} />
-              <UpdateNameDescriptionButton conversationId={props.conversationId} />
+              <UpdateGroupOrCommunityButton conversationId={props.conversationId} />
             </>
           }
         />

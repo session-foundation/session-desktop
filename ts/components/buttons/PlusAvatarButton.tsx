@@ -26,7 +26,7 @@ export function useAvatarActionPosition(
   const offsetTop =
     avatarSize === AvatarSize.XL
       ? { top: '3%', insetInlineEnd: 0 }
-      : { top: '7%', insetInlineEnd: '9%' };
+      : { top: '4%', insetInlineEnd: '9%' };
 
   return {
     position: 'absolute',

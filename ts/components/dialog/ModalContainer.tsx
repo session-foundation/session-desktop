@@ -23,9 +23,9 @@ import {
   getSessionNetworkModalState,
   getSessionPasswordDialog,
   getUpdateGroupMembersModal,
-  getUpdateGroupNameModal,
   getUserProfileModal,
   getLocalizedPopupDialogState,
+  getUpdateGroupOrCommunityDetailsModal,
 } from '../../state/selectors/modal';
 import { LightboxGallery } from '../lightbox/LightboxGallery';
 import { BanOrUnBanUserDialog } from './BanOrUnbanUserDialog';
@@ -42,7 +42,7 @@ import { ReactListModal } from './ReactListModal';
 import { SessionNicknameDialog } from './SessionNicknameDialog';
 import { SessionSetPasswordDialog } from './SessionSetPasswordDialog';
 import { UpdateGroupMembersDialog } from './UpdateGroupMembersDialog';
-import { UpdateGroupNameDialog } from './UpdateGroupNameDialog';
+import { UpdateGroupOrCommunityDetailsDialog } from './UpdateGroupOrCommunityDetailsDialog';
 import { UserProfileModal } from './UserProfileModal';
 import { EditProfileDialog } from './edit-profile/EditProfileDialog';
 import { OpenUrlModal } from './OpenUrlModal';
@@ -60,7 +60,7 @@ export const ModalContainer = () => {
   const addModeratorsModalState = useSelector(getAddModeratorsModal);
   const removeModeratorsModalState = useSelector(getRemoveModeratorsModal);
   const updateGroupMembersModalState = useSelector(getUpdateGroupMembersModal);
-  const updateGroupNameModalState = useSelector(getUpdateGroupNameModal);
+  const updateGroupOrCommunityDetailsState = useSelector(getUpdateGroupOrCommunityDetailsModal);
   const userProfileModalState = useSelector(getUserProfileModal);
   const changeNicknameModal = useSelector(getChangeNickNameDialog);
   const editProfileModalState = useSelector(getEditProfileDialog);
@@ -104,7 +104,9 @@ export const ModalContainer = () => {
       {updateGroupMembersModalState && (
         <UpdateGroupMembersDialog {...updateGroupMembersModalState} />
       )}
-      {updateGroupNameModalState && <UpdateGroupNameDialog {...updateGroupNameModalState} />}
+      {updateGroupOrCommunityDetailsState && (
+        <UpdateGroupOrCommunityDetailsDialog {...updateGroupOrCommunityDetailsState} />
+      )}
       {userProfileModalState && <UserProfileModal {...userProfileModalState} />}
       {changeNicknameModal && <SessionNicknameDialog {...changeNicknameModal} />}
       {enterPasswordModalState && <EnterPasswordModal {...enterPasswordModalState} />}

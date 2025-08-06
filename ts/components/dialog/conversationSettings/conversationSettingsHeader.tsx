@@ -1,10 +1,11 @@
 import styled from 'styled-components';
 import { useEffect, useRef, useState } from 'react';
+import useAsync from 'react-use/lib/useAsync';
 
 import { Flex } from '../../basic/Flex';
 import { Header } from '../../conversation/right-panel/overlay/components';
 import type { WithConvoId } from '../../../session/types/with';
-import { useIsMe, useIsPrivate } from '../../../hooks/useParamSelector';
+import { useIsMe, useIsPrivate, useIsPublic } from '../../../hooks/useParamSelector';
 import { PubKey } from '../../../session/types';
 import { tr } from '../../../localization/localeTools';
 import { useEditProfilePictureCallback } from '../../menuAndSettingsHooks/useEditProfilePictureCallback';
@@ -17,6 +18,7 @@ import { SessionIDNotEditable } from '../../basic/SessionIdNotEditable';
 import { AccountIdPill } from '../../basic/AccountIdPill';
 import { ProfileHeader, QRView } from '../edit-profile/components';
 import type { ProfileDialogModes } from '../edit-profile/EditProfileDialog';
+import { SessionUtilUserGroups } from '../../../session/utils/libsession/libsession_utils_user_groups';
 
 function AccountId({ conversationId }: WithConvoId) {
   const isPrivate = useIsPrivate(conversationId);
@@ -119,6 +121,19 @@ export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
 
   const isPrivateUnblinded = useIsPrivate(conversationId) && !PubKey.isBlinded(conversationId);
   const [mode, setMode] = useState<ProfileDialogModes>('default');
+  const isPublic = useIsPublic(conversationId);
+  const [fullUrlWithPubkey, setFullUrlWithPubkey] = useState<string | null>(null);
+
+  useAsync(async () => {
+    if (!conversationId || !isPublic) {
+      return;
+    }
+    const roomDetails = await SessionUtilUserGroups.getCommunityByConvoIdNotCached(conversationId);
+    if (!roomDetails) {
+      throw new Error(`getCommunityByFullUrl returned no result for ${conversationId}`);
+    }
+    setFullUrlWithPubkey(roomDetails.fullUrlWithPubkey);
+  }, [conversationId]);
 
   const [enlargedImage, setEnlargedImage] = useState(false);
 
@@ -137,16 +152,21 @@ export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
         $flexGap="var(--margins-lg)"
       >
         {mode === 'qr' ? (
-          <QRView sessionID={conversationId} onExit={() => setMode('default')} />
+          <QRView
+            sessionID={(isPublic && fullUrlWithPubkey && fullUrlWithPubkey) || conversationId}
+            onExit={() => setMode('default')}
+          />
         ) : (
           <ProfileHeader
             conversationId={conversationId}
             dataTestId="profile-picture"
-            // we don't want to show the plus button for the current user
+            // 1. We don't want to show the plus button for the current user
             // as he needs to change his avatar through the EditProfileDialog
-            onPlusAvatarClick={!isMe ? (editProfilePictureCb ?? null) : null}
+            // 2. We don't want to show the plus button for communities as they already have a qr button.
+            // Editing the avatar is done through the pencil icon in the ModalHeader
+            onPlusAvatarClick={!isMe && !isPublic ? (editProfilePictureCb ?? null) : null}
             avatarPath={null}
-            onQRClick={isPrivateUnblinded && !isMe ? () => setMode('qr') : null}
+            onQRClick={(isPrivateUnblinded && !isMe) || isPublic ? () => setMode('qr') : null}
             enlargedImage={enlargedImage}
             toggleEnlargedImage={() => setEnlargedImage(!enlargedImage)}
           />

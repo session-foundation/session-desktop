@@ -50,7 +50,7 @@ import {
   WithFromMemberLeftMessage,
   WithRemoveMembers,
 } from '../../session/types/with';
-import { updateEditProfilePictureModal, updateGroupNameModal } from './modalDialog';
+import { updateEditProfilePictureModal, updateGroupOrCommunityDetailsModal } from './modalDialog';
 import { tr } from '../../localization/localeTools';
 import { type GroupMemberGetRedux, makeGroupMemberGetRedux } from './types/groupReduxTypes';
 import { uploadFileToFsWithOnionV4 } from '../../session/apis/file_server_api/FileServerApi';
@@ -1443,7 +1443,7 @@ const currentDeviceGroupNameChange = createAsyncThunk(
     await checkWeAreAdminOrThrow(groupPk, 'currentDeviceGroupNameChange');
 
     await handleNameChangeFromUI({ groupPk, ...args });
-    window.inboxStore?.dispatch(updateGroupNameModal(null));
+    window.inboxStore?.dispatch(updateGroupOrCommunityDetailsModal(null));
 
     return {
       groupPk,

@@ -33,7 +33,8 @@ export const getBanOrUnbanUserModalState = (state: StateType) =>
 export const getBlockOrUnblockUserModalState = (state: StateType) =>
   getModal(state).blockOrUnblockModal;
 
-export const getUpdateGroupNameModal = (state: StateType) => getModal(state).groupNameModal;
+export const getUpdateGroupOrCommunityDetailsModal = (state: StateType) =>
+  getModal(state).groupOrCommunityDetailsModal;
 
 export const getUpdateGroupMembersModal = (state: StateType) => getModal(state).groupMembersModal;
 
