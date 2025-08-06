@@ -2169,7 +2169,11 @@ async function updateToSessionSchemaVersion47(currentVersion: number, db: Better
     db.exec(`
           ALTER TABLE ${CONVERSATIONS_TABLE} DROP COLUMN isKickedFromGroup;
          `);
-    // should we also remove legacy groups entirely DELETE FROM ${CONVERSATIONS_TABLE} WHERE type = 'group' AND id LIKE '05%';
+
+    db.exec(`
+        UPDATE ${MESSAGES_TABLE} SET
+        json = json_remove(json, '$.group')
+      `);
 
     writeSessionSchemaVersion(targetVersion, db);
   })();

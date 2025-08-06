@@ -66,7 +66,6 @@ export interface MessageAttributes {
    * You can use the values from READ_MESSAGE_STATE.unread and READ_MESSAGE_STATE.read
    */
   unread: number;
-  group?: any;
   /**
    * timestamp is the sent_at timestamp, which is the envelope.timestamp
    */
