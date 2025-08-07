@@ -96,6 +96,7 @@ import { Model } from './models';
 import { ReduxOnionSelectors } from '../state/selectors/onions';
 import { tStrippedWithObj, tr, tStripped } from '../localization/localeTools';
 import type { QuotedAttachmentType } from '../components/conversation/message/message-content/quote/Quote';
+import { isProMessageFeature, ProMessageFeature } from './proMessageFeature';
 
 // tslint:disable: cyclomatic-complexity
 
@@ -600,6 +601,7 @@ export class MessageModel extends Model<MessageAttributes> {
 
     const attachments = this.get('attachments') || [];
     const isTrustedForAttachmentDownload = this.isTrustedForAttachmentDownload();
+    const proFeatures = this.getProFeatures();
     const body = this.get('body');
     const props: PropsForMessageWithoutConvoProps = {
       id: this.id,
@@ -638,6 +640,9 @@ export class MessageModel extends Model<MessageAttributes> {
     }
     if (isTrustedForAttachmentDownload) {
       props.isTrustedForAttachmentDownload = isTrustedForAttachmentDownload;
+    }
+    if (proFeatures.length) {
+      props.proFeatures = proFeatures;
     }
     const isUnread = this.isUnread();
     if (isUnread) {
@@ -1247,6 +1252,16 @@ export class MessageModel extends Model<MessageAttributes> {
       window.log.warn('isTrustedForAttachmentDownload: error; ', e.message);
       return false;
     }
+  }
+
+  private getProFeatures(): Array<ProMessageFeature> {
+    const proFeatures = this.get('proFeatures');
+
+    if (!proFeatures?.length) {
+      return [];
+    }
+
+    return proFeatures.filter(isProMessageFeature);
   }
 
   private dispatchMessageUpdate() {

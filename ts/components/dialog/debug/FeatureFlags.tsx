@@ -1,4 +1,4 @@
-import { isBoolean } from 'lodash';
+import { isArray, isBoolean } from 'lodash';
 import type { SessionFlagsKeys } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { Flex } from '../../basic/Flex';
 import { SessionToggle } from '../../basic/SessionToggle';
@@ -6,6 +6,7 @@ import { HintText, SpacerSM, SpacerXS } from '../../basic/Text';
 import { DEBUG_FEATURE_FLAGS } from './constants';
 import { ConvoHub } from '../../../session/conversations';
 import { isDebugMode } from '../../../shared/env_vars';
+import { ProMessageFeature } from '../../../models/proMessageFeature';
 
 type FeatureFlagToggleType = {
   forceUpdate: () => void;
@@ -104,25 +105,48 @@ export const FeatureFlags = ({
           return null;
         }
 
-        if (!isBoolean(value)) {
+        if (isBoolean(value)) {
+          return <FlagToggle forceUpdate={forceUpdate} flag={flag} value={value} />;
+        }
+        if (isArray(value) && flag === 'mockMessageProFeatures') {
+          const rotateMsgProFeat = () => {
+            if (value.length === 0) {
+              window.sessionFeatureFlags.mockMessageProFeatures = [ProMessageFeature.PRO_BADGE];
+            } else if (value.length === 1) {
+              if (value[0] === ProMessageFeature.PRO_BADGE) {
+                window.sessionFeatureFlags.mockMessageProFeatures = [
+                  ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE,
+                ];
+              } else if (value[0] === ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE) {
+                window.sessionFeatureFlags.mockMessageProFeatures = [
+                  ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH,
+                ];
+              } else if (value[0] === ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH) {
+                window.sessionFeatureFlags.mockMessageProFeatures = [
+                  ProMessageFeature.PRO_BADGE,
+                  ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE,
+                  ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH,
+                ];
+              }
+            } else if (value.length === 3) {
+              window.sessionFeatureFlags.mockMessageProFeatures = [];
+            }
+            forceUpdate();
+          };
           return (
-            <>
-              <h3>{flag}</h3>
-              {Object.entries(value).map(([k, v]: [string, FlagValues]) => {
-                const nestedFlag = k as SessionFlagsKeys;
-                return (
-                  <FlagToggle
-                    flag={nestedFlag}
-                    value={v}
-                    parentFlag={flag}
-                    forceUpdate={forceUpdate}
-                  />
-                );
-              })}
-            </>
+            <Flex
+              $container={true}
+              $alignItems="center"
+              $flexDirection="row"
+              style={{ cursor: 'pointer', gap: 'var(--margins-xs)' }}
+              onClick={rotateMsgProFeat}
+            >
+              <div>{flag}</div>
+              <pre style={{ overflow: 'hidden' }}>{JSON.stringify(value)}</pre>
+            </Flex>
           );
         }
-        return <FlagToggle forceUpdate={forceUpdate} flag={flag} value={value} />;
+        throw new Error('Feature flag is not a boolean or array');
       })}
       <SpacerSM />
     </Flex>

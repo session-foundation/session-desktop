@@ -137,7 +137,7 @@ async function pushChangesToUserSwarmIfNeeded() {
     })
   );
 
-  if (window.sessionFeatureFlags.debug.debugLibsessionDumps) {
+  if (window.sessionFeatureFlags.debugLibsessionDumps) {
     for (let index = 0; index < LibSessionUtil.requiredUserVariants.length; index++) {
       const variant = LibSessionUtil.requiredUserVariants[index];
 

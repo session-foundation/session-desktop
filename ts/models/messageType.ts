@@ -15,6 +15,7 @@ import {
   InteractionNotificationType,
 } from '../state/ducks/types';
 import type { SignalService } from '../protobuf';
+import type { ProMessageFeature } from './proMessageFeature';
 
 export type MessageModelType = 'incoming' | 'outgoing';
 
@@ -102,12 +103,17 @@ type SharedMessageAttributes = {
   interactionNotification?: InteractionNotificationType;
 };
 
+/**
+ * Attributes that can be optional or not depending on if the message was already constructed or not.
+ */
 type NotSharedMessageAttributes = {
   /**
-   * The local if of this message (i.e. an id only used locally).
+   * The local id of this message (i.e. an id only used locally).
    * Added on commit() if unset before that
    */
   id: string;
+  direction: MessageModelType;
+
   /** in seconds, 0 means no expiration */
   expireTimer: number;
   /** when the expireTimer above started to count, in milliseconds */
@@ -138,7 +144,8 @@ type NotSharedMessageAttributes = {
    */
   synced: boolean;
   sync: boolean;
-  direction: MessageModelType;
+
+  proFeatures?: Array<ProMessageFeature>;
 };
 
 export type MessageAttributes = SharedMessageAttributes & NotSharedMessageAttributes;

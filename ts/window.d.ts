@@ -8,10 +8,6 @@ import { PrimaryColorStateType, ThemeStateType } from './themes/constants/colors
 import type { EventEmitter } from './shared/event_emitter';
 import type { SessionFlags } from './state/ducks/types/releasedFeaturesReduxTypes';
 
-export interface LibTextsecure {
-  messaging: boolean;
-}
-
 /*
 We declare window stuff here instead of global.d.ts because we are importing other declarations.
 If you import anything in global.d.ts, the type system won't work correctly.
@@ -45,8 +41,7 @@ declare global {
     primaryColor: PrimaryColorStateType;
     theme: ThemeStateType;
     setTheme: (newTheme: string) => Promise<void>;
-    userConfig: any;
-    versionInfo: any;
+    versionInfo: { environment: string; version: string; commitHash: string; appInstance: string };
     readyForUpdates: () => void;
     drawAttention: () => void;
 

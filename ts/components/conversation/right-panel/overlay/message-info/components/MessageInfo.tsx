@@ -10,7 +10,7 @@ import {
   useMessageReceivedAt,
   useMessageSender,
   useMessageSenderIsAdmin,
-  useMessageSentWithProFeat,
+  useMessageSentWithProFeatures,
   useMessageServerId,
   useMessageServerTimestamp,
   useMessageTimestamp,
@@ -34,13 +34,11 @@ import { tr } from '../../../../../../localization/localeTools';
 import { Localizer } from '../../../../../basic/Localizer';
 import { LucideIcon } from '../../../../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../../../../icon/lucide';
-import {
-  ProFeatures,
-  useProBadgeOnClickCb,
-} from '../../../../../menuAndSettingsHooks/useProBadgeOnClickCb';
+import { useProBadgeOnClickCb } from '../../../../../menuAndSettingsHooks/useProBadgeOnClickCb';
 import { useCurrentUserHasPro } from '../../../../../../hooks/useHasPro';
 import { ProIconButton } from '../../../../../buttons/ProButton';
 import { assertUnreachable } from '../../../../../../types/sqlSharedTypes';
+import { ProMessageFeature } from '../../../../../../models/proMessageFeature';
 
 export const MessageInfoLabel = styled.label<{ color?: string }>`
   font-size: var(--font-size-lg);
@@ -159,13 +157,13 @@ const StyledProFeaturesContainer = styled.div`
   gap: var(--margins-xs);
 `;
 
-function proFeatureToTrKey(proFeature: ProFeatures) {
+function proFeatureToTrKey(proFeature: ProMessageFeature) {
   switch (proFeature) {
-    case ProFeatures.PRO_BADGE:
+    case ProMessageFeature.PRO_BADGE:
       return 'proBadge' as const;
-    case ProFeatures.PRO_INCREASED_MESSAGE_LENGTH:
+    case ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH:
       return 'proIncreasedMessageLengthFeature' as const;
-    case ProFeatures.PRO_ANIMATED_DISPLAY_PICTURE:
+    case ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE:
       return 'proAnimatedDisplayPictureFeature' as const;
     default:
       assertUnreachable(proFeature, 'ProFeatureToTrKey: unknown case');
@@ -176,7 +174,7 @@ function proFeatureToTrKey(proFeature: ProFeatures) {
 function ProMessageFeaturesDetails({ messageId }: { messageId: string }) {
   const currentUserHasPro = useCurrentUserHasPro();
 
-  const messageSentWithProFeat = useMessageSentWithProFeat(messageId);
+  const messageSentWithProFeat = useMessageSentWithProFeatures(messageId);
 
   const showPro = useProBadgeOnClickCb({
     context: 'message-info-sent-with-pro',

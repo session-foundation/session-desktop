@@ -1,4 +1,5 @@
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
+import { ProMessageFeature } from '../../models/proMessageFeature';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import type { ContactNameContext } from '../conversation/ContactName/ContactNameContext';
 import {
@@ -7,7 +8,7 @@ import {
 } from '../dialog/SessionProInfoModal';
 
 type WithUserHasPro = { userHasPro: boolean };
-type WithMessageSentWithProFeat = { messageSentWithProFeat: Array<ProFeatures> | null };
+type WithMessageSentWithProFeat = { messageSentWithProFeat: Array<ProMessageFeature> | null };
 type WithCurrentUserHasPro = { currentUserHasPro: boolean };
 
 type WithIsMe = { isMe: boolean };
@@ -61,18 +62,12 @@ const contactNameContextNoShow: Array<ContactNameContext> = [
   'message-search-result',
 ];
 
-export enum ProFeatures {
-  PRO_BADGE = 'pro-badge',
-  PRO_INCREASED_MESSAGE_LENGTH = 'pro-increased-message-length',
-  PRO_ANIMATED_DISPLAY_PICTURE = 'pro-animated-display-picture',
-}
-
-function proFeatureToVariant(proFeature: ProFeatures): SessionProInfoVariant {
+function proFeatureToVariant(proFeature: ProMessageFeature): SessionProInfoVariant {
   switch (proFeature) {
-    case ProFeatures.PRO_INCREASED_MESSAGE_LENGTH:
+    case ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH:
       return SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT;
-    case ProFeatures.PRO_BADGE:
-    case ProFeatures.PRO_ANIMATED_DISPLAY_PICTURE:
+    case ProMessageFeature.PRO_BADGE:
+    case ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE:
       return SessionProInfoVariant.GENERIC;
     default:
       assertUnreachable(proFeature, 'ProFeatureToVariant: unknown case');
