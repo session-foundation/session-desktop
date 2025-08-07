@@ -18,7 +18,7 @@ import {
 } from '../SessionWrapperModal';
 import { tr } from '../../localization/localeTools';
 import { PubKey } from '../../session/types';
-import type { ProfileDialogModes } from './edit-profile/EditProfileDialog';
+import type { ProfileDialogModes } from './edit-profile/ProfileDialogModes';
 import { ProfileHeader, QRView } from './edit-profile/components';
 import { useAvatarPath, useConversationUsernameWithFallback } from '../../hooks/useParamSelector';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
@@ -39,8 +39,7 @@ const StyledHasDisabledMsgRequests = styled.div`
 `;
 
 function HasDisabledMsgRequests({ conversationId }: { conversationId: string }) {
-  const username =
-    useConversationUsernameWithFallback(true, conversationId) ?? PubKey.shorten(conversationId);
+  const username = useConversationUsernameWithFallback(true, conversationId);
   const name = shortenDisplayName(username);
 
   return (

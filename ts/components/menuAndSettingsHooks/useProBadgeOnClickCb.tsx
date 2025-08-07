@@ -17,7 +17,7 @@ type WithIsGroupV2 = { isGroupV2: boolean };
 type WithIsBlinded = { isBlinded: boolean };
 type WithProvidedCb = { providedCb: (() => void) | null };
 
-export type ProBadgeContext =
+type ProBadgeContext =
   | { context: 'edit-profile-pic'; args: WithUserHasPro }
   | { context: 'show-our-profile-dialog'; args: WithCurrentUserHasPro & WithProvidedCb }
   | {
@@ -39,28 +39,60 @@ export type ProBadgeContext =
         WithIsBlinded;
     };
 
+/**
+ * The type returned if the badge should be shown and linked to the provided callback.
+ */
 type ShowTagWithCb = {
   show: true;
   cb: () => void;
 };
 
+/**
+ * The type returned if the badge should be shown it should not be clickable.
+ */
 type ShowTagNoCb = {
   show: true;
   cb: null;
 };
 
+/**
+ * The type returned if the badge should not be shown.
+ */
 type DoNotShowTag = {
   show: false;
   cb?: undefined;
 };
 
+/**
+ * The object returned if the badge should not be shown.
+ */
 const doNotShow: DoNotShowTag = { show: false };
+
+/** The object returned if the badge should not be shown at all. */
 const showNoCb: ShowTagNoCb = { show: true, cb: null };
 
-const contactNameContextNoShow: Array<ContactNameContext> = [
-  'react-list-modal',
-  'message-search-result',
-];
+/**
+ * Returns true if the contact name context is one of the ones we do not want to show the badge for.
+ */
+function isContactNameNoShowContext(context: ContactNameContext) {
+  switch (context) {
+    case 'react-list-modal':
+    case 'message-search-result':
+      return true;
+    case 'contact-list-row':
+    case 'message-info-author':
+    case 'member-list-item':
+    case 'quote-author':
+    case 'quoted-message-composition':
+    case 'message-author':
+    case 'conversation-list-item':
+    case 'conversation-list-item-search':
+      return false;
+    default:
+      assertUnreachable(context, 'isContactNameNoShowContext: context not handled');
+      throw new Error('isContactNameNoShowContext: context not handled');
+  }
+}
 
 function proFeatureToVariant(proFeature: ProMessageFeature): SessionProInfoVariant {
   switch (proFeature) {
@@ -75,6 +107,13 @@ function proFeatureToVariant(proFeature: ProMessageFeature): SessionProInfoVaria
   }
 }
 
+/**
+ * This function is used to know if, depending on the context, we should show the pro badge or not.
+ * If yes, it can optionally return a callback that should be linked to the Pro badge `onClick()`.
+ *
+ * Depending on the context provided, different arguments are needed.
+ *
+ */
 export function useProBadgeOnClickCb(
   opts: ProBadgeContext
 ): ShowTagWithCb | ShowTagNoCb | DoNotShowTag {
@@ -84,10 +123,12 @@ export function useProBadgeOnClickCb(
   const { context, args } = opts;
 
   if (!isProAvailable) {
+    // if pro is globally disabled, we never show the badge.
     return doNotShow;
   }
 
   if (context === 'edit-profile-pic') {
+    // in the edit profile dialog, we always show the badge but the CTA shown is different depending on the user's pro status.
     return {
       show: true,
       cb: () =>
@@ -100,7 +141,8 @@ export function useProBadgeOnClickCb(
   }
   if (context === 'show-our-profile-dialog') {
     if (args.currentUserHasPro) {
-      // we want to show the edit display name action here, not the pro dialog
+      // if the current user already has pro, we want to show the badge, but use a custom callback
+      // i.e. it won't open the CTA but allow to edit our name
       return { show: true, cb: args.providedCb };
     }
     return doNotShow;
@@ -115,8 +157,11 @@ export function useProBadgeOnClickCb(
     const { messageSentWithProFeat } = args;
     const multiProFeatUsed = messageSentWithProFeat.length > 1;
 
-    // if a pro feature was used for this message, we show the badge but it only opens a CTA
-    // when we do not have pro ourself
+    // If a pro feature was used for this message, we show the badge but the callback is quite custom:
+    // - if we do have pro too, it is not clickable.
+    // - else:
+    //   - if a single pro feature was used with this message: open the CTA corresponding to that one
+    //   - if multiple pro features were used with this message: open the GENERIC CTA
     return args.currentUserHasPro
       ? showNoCb
       : {
@@ -150,7 +195,7 @@ export function useProBadgeOnClickCb(
       return doNotShow;
     }
 
-    // starting here, the user shown has pro.
+    // from here, the user shown has pro.
     if (args.isGroupV2) {
       // if this is a groupv2, the badge should open the "groupv2 activated" modal onclick
       return {
@@ -159,7 +204,6 @@ export function useProBadgeOnClickCb(
       };
     }
 
-    // here, the user shown has pro.
     if (args.currentUserHasPro) {
       // if we also have pro and this is a private conversation, clicking on the badge doesn't do anything
       return showNoCb;
@@ -169,6 +213,7 @@ export function useProBadgeOnClickCb(
   }
 
   if (context === 'character-count') {
+    // if we already have pro, there is no point showing the `Upgrade to do more with Pro`
     if (args.currentUserHasPro) {
       return doNotShow;
     }
@@ -179,15 +224,21 @@ export function useProBadgeOnClickCb(
     };
   }
 
+  // ContactName is a component used across the app to render a contact name based on the context.
+  // The pro badge is also shown or not depending on that same context, and this is what we do here
   if (context === 'contact-name') {
     if (!args.userHasPro || args.isMe) {
       return doNotShow;
     }
-    if (contactNameContextNoShow.includes(args.contactNameContext)) {
+    if (isContactNameNoShowContext(args.contactNameContext)) {
+      // in some context, we do not want to show the pro badge even if the user has pro.
       return doNotShow;
     }
 
     if (args.contactNameContext === 'message-info-author') {
+      // in the message info screen, the badge should be shown if the corresponding user has pro and
+      // - not be clickable if we also have pro
+      // - be clickable if we do not have pro and open the generic CTA
       if (args.currentUserHasPro) {
         return showNoCb;
       }

@@ -17,7 +17,7 @@ import { ConversationTitleDialog } from './ConversationTitleDialog';
 import { SessionIDNotEditable } from '../../basic/SessionIdNotEditable';
 import { AccountIdPill } from '../../basic/AccountIdPill';
 import { ProfileHeader, QRView } from '../edit-profile/components';
-import type { ProfileDialogModes } from '../edit-profile/EditProfileDialog';
+import type { ProfileDialogModes } from '../edit-profile/ProfileDialogModes';
 import { SessionUtilUserGroups } from '../../../session/utils/libsession/libsession_utils_user_groups';
 
 function AccountId({ conversationId }: WithConvoId) {

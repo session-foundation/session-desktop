@@ -15,6 +15,23 @@ import { LUCIDE_ICONS_UNICODE } from './icon/lucide';
 import { IsModalScrolledContext, useIsModalScrolled } from '../contexts/IsModalScrolledContext';
 import { OnModalCloseContext, useOnModalClose } from '../contexts/OnModalCloseContext';
 
+type WithExtraLeftButton = {
+  /**
+   * A button to be displayed on the left side of the header title.
+   * If all you want is a close button, use showExitIcon instead.
+   * Check other usages to use the correct icon size and styling.
+   */
+  extraLeftButton?: ReactNode;
+};
+type WithExtraRightButton = {
+  /**
+   * A button to be displayed on the right side of the header title.
+   * Check other usages to use the correct icon size and styling.
+   */
+  extraRightButton?: ReactNode;
+};
+type WithShowExitIcon = { showExitIcon?: boolean };
+
 const StyledModalHeader = styled(Flex)<{ bigHeader?: boolean; scrolled: boolean }>`
   position: relative;
   font-family: var(--font-default);
@@ -53,12 +70,13 @@ export enum WrapperModalWidth {
 const StyledModal = styled.div<{
   $contentMaxWidth?: WrapperModalWidth;
   $contentMinWidth?: WrapperModalWidth;
-  padding?: string;
-  topAnchor?: string;
+  $padding?: string;
+  $topAnchor: ModalTopAnchor;
 }>`
   position: absolute;
-  top: ${props => (props.topAnchor ? props.topAnchor : '15vh')};
-  max-height: 80vh;
+  top: ${props => props.$topAnchor};
+  max-height: ${props => `calc(100vh - ${props.$topAnchor} - 5vh)`};
+
   animation: fadein var(--default-duration);
   z-index: 150;
   max-width: ${props =>
@@ -75,8 +93,8 @@ const StyledModal = styled.div<{
 
   margin: auto auto;
   padding: ${props =>
-    props.padding
-      ? props.padding
+    props.$padding
+      ? props.$padding
       : // Note: no padding by default as it depends on what is rendered, see the ModalMap before you change something here
         '0'};
 
@@ -187,15 +205,11 @@ export type SessionWrapperModalType = {
 
 function ExtraSpacerLeft({
   extraRightButton,
-  leftButton,
+  extraLeftButton,
   showExitIcon,
-}: {
-  showExitIcon?: boolean;
-  leftButton?: ReactNode;
-  extraRightButton?: ReactNode;
-}) {
+}: WithShowExitIcon & WithExtraRightButton & WithExtraLeftButton) {
   // if we have two button on the right, and one on the left, we need to add one spacer
-  if (extraRightButton && showExitIcon && leftButton) {
+  if (extraRightButton && showExitIcon && extraLeftButton) {
     return <SpacerLG />;
   }
   if (extraRightButton && showExitIcon) {
@@ -209,7 +223,7 @@ function ExtraSpacerLeft({
   }
   // starting here, showExitIcon is false.
 
-  if (extraRightButton && leftButton) {
+  if (extraRightButton && extraLeftButton) {
     // if we have one button on each sides, no need for a spacer,
     return null;
   }
@@ -223,23 +237,18 @@ function ExtraSpacerLeft({
  */
 export const ModalBasicHeader = ({
   showExitIcon,
-  leftButton,
+  extraLeftButton,
   title,
   bigHeader,
   modalHeaderDataTestId,
   extraRightButton,
-}: {
-  title?: ReactNode;
-  showExitIcon?: boolean;
-  leftButton?: ReactNode;
-  /**
-   * A button to be displayed on the right side of the header.
-   * If all you want is a close button, use showExitIcon instead.
-   */
-  extraRightButton?: ReactNode;
-  bigHeader?: boolean;
-  modalHeaderDataTestId?: SessionDataTestId;
-}) => {
+}: WithShowExitIcon &
+  WithExtraRightButton &
+  WithExtraLeftButton & {
+    title?: ReactNode;
+    bigHeader?: boolean;
+    modalHeaderDataTestId?: SessionDataTestId;
+  }) => {
   const htmlDirection = useHTMLDirection();
 
   const onClose = useOnModalClose();
@@ -267,13 +276,14 @@ export const ModalBasicHeader = ({
         {/* Note: add a spacer if no left button is set but we have an exit icon */}
         <ExtraSpacerLeft
           showExitIcon={showExitIcon}
-          leftButton={leftButton}
+          extraLeftButton={extraLeftButton}
           extraRightButton={extraRightButton}
         />
+        {extraLeftButton}
       </Flex>
       <StyledTitle
         bigHeader={bigHeader}
-        tabIndex={!showExitIcon && !leftButton ? 0 : undefined}
+        tabIndex={!showExitIcon && !extraLeftButton ? 0 : undefined}
         data-testid="modal-heading"
       >
         {title}
@@ -371,9 +381,9 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
                 ref={modalRef}
                 $contentMaxWidth={$contentMaxWidth}
                 $contentMinWidth={$contentMinWidth}
-                padding={padding}
+                $padding={padding}
                 style={style}
-                topAnchor={topAnchor}
+                $topAnchor={topAnchor ?? '15vh'}
               >
                 {props.headerChildren ? props.headerChildren : null}
 

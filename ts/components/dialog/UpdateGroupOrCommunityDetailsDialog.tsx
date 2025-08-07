@@ -61,17 +61,14 @@ export function UpdateGroupOrCommunityDetailsDialog(props: { conversationId: str
   if (!isClosedGroup && !isPublic) {
     throw new Error('groupNameUpdate dialog only works closed groups');
   }
-  const originalGroupDescription = useLibGroupDescription(conversationId);
-  const originalCommunityDescription = useRoomDescription(conversationId);
-
   const nameOnOpen = convo.getRealSessionUsername();
 
+  const originalGroupDescription = useLibGroupDescription(conversationId);
+  const originalCommunityDescription = useRoomDescription(conversationId);
   const descriptionOnOpen = isPublic ? originalCommunityDescription : originalGroupDescription;
 
   const [newName, setNewName] = useState(nameOnOpen);
-
   const [newDescription, setNewDescription] = useState(descriptionOnOpen);
-
   const avatarPath = useAvatarPath(conversationId) || '';
 
   function closeDialog() {

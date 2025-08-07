@@ -72,6 +72,30 @@ export const FlagToggle = ({
 
 type FlagValues = boolean | object | string;
 
+const allProFeatures = Object.values(ProMessageFeature);
+
+// Generate the rotation steps: [], [feat1], [feat2], ..., [featN], [f1, f2, ..., fn]
+const proFeatureCycle: Array<Array<ProMessageFeature>> = [
+  [],
+  ...allProFeatures.map(f => [f]),
+  allProFeatures,
+];
+
+function rotateMsgProFeat(currentValue: Array<ProMessageFeature>, forceUpdate: () => void) {
+  // Find current step in the cycle
+  const index = proFeatureCycle.findIndex(
+    features =>
+      features.length === currentValue.length && features.every(f => currentValue.includes(f))
+  );
+
+  // Next index wraps around
+  const nextIndex = (index + 1) % proFeatureCycle.length;
+
+  window.sessionFeatureFlags.mockMessageProFeatures = proFeatureCycle[nextIndex];
+
+  forceUpdate();
+}
+
 export const FeatureFlags = ({
   flags,
   forceUpdate,
@@ -109,39 +133,15 @@ export const FeatureFlags = ({
           return <FlagToggle forceUpdate={forceUpdate} flag={flag} value={value} />;
         }
         if (isArray(value) && flag === 'mockMessageProFeatures') {
-          const rotateMsgProFeat = () => {
-            if (value.length === 0) {
-              window.sessionFeatureFlags.mockMessageProFeatures = [ProMessageFeature.PRO_BADGE];
-            } else if (value.length === 1) {
-              if (value[0] === ProMessageFeature.PRO_BADGE) {
-                window.sessionFeatureFlags.mockMessageProFeatures = [
-                  ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE,
-                ];
-              } else if (value[0] === ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE) {
-                window.sessionFeatureFlags.mockMessageProFeatures = [
-                  ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH,
-                ];
-              } else if (value[0] === ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH) {
-                window.sessionFeatureFlags.mockMessageProFeatures = [
-                  ProMessageFeature.PRO_BADGE,
-                  ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE,
-                  ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH,
-                ];
-              }
-            } else if (value.length === 3) {
-              window.sessionFeatureFlags.mockMessageProFeatures = [];
-            }
-            forceUpdate();
-          };
           return (
             <Flex
               $container={true}
               $alignItems="center"
               $flexDirection="row"
               style={{ cursor: 'pointer', gap: 'var(--margins-xs)' }}
-              onClick={rotateMsgProFeat}
+              onClick={() => rotateMsgProFeat(value, forceUpdate)}
             >
-              <div>{flag}</div>
+              <div style={{ flexShrink: 0 }}>{flag}</div>
               <pre style={{ overflow: 'hidden' }}>{JSON.stringify(value)}</pre>
             </Flex>
           );

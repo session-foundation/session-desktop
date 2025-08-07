@@ -96,7 +96,7 @@ import { Model } from './models';
 import { ReduxOnionSelectors } from '../state/selectors/onions';
 import { tStrippedWithObj, tr, tStripped } from '../localization/localeTools';
 import type { QuotedAttachmentType } from '../components/conversation/message/message-content/quote/Quote';
-import { isProMessageFeature, ProMessageFeature } from './proMessageFeature';
+import { ProFeatures, ProMessageFeature } from './proMessageFeature';
 
 // tslint:disable: cyclomatic-complexity
 
@@ -1257,11 +1257,11 @@ export class MessageModel extends Model<MessageAttributes> {
   private getProFeatures(): Array<ProMessageFeature> {
     const proFeatures = this.get('proFeatures');
 
-    if (!proFeatures?.length) {
+    if (!proFeatures) {
       return [];
     }
 
-    return proFeatures.filter(isProMessageFeature);
+    return ProFeatures.numberToProFeatures(proFeatures);
   }
 
   private dispatchMessageUpdate() {

@@ -2,8 +2,9 @@ import { isEmpty } from 'lodash';
 import { RefObject, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
-
+import useClickAway from 'react-use/lib/useClickAway';
 import { Dispatch } from '@reduxjs/toolkit';
+
 import { UserUtils } from '../../../session/utils';
 
 import { useHotkey } from '../../../hooks/useHotkey';
@@ -28,6 +29,7 @@ import { SessionIDNotEditable } from '../../basic/SessionIdNotEditable';
 import { Flex } from '../../basic/Flex';
 import { AccountIdPill } from '../../basic/AccountIdPill';
 import { ModalPencilIcon } from '../shared/ModalPencilButton';
+import type { ProfileDialogModes } from './ProfileDialogModes';
 
 // #region Shortcuts
 const handleKeyQRMode = (
@@ -102,10 +104,7 @@ const handleKeyCancel = (
 
 const handleKeyEscape = (
   mode: ProfileDialogModes,
-  setMode: (mode: ProfileDialogModes) => void,
-  updatedProfileName: string,
-  setProfileName: (name: string) => void,
-  setProfileNameError: (error: string | undefined) => void,
+  cancelEdit: () => void,
   loading: boolean,
   dispatch: Dispatch
 ) => {
@@ -114,9 +113,7 @@ const handleKeyEscape = (
   }
 
   if (mode === 'edit') {
-    setMode('default');
-    setProfileNameError(undefined);
-    setProfileName(updatedProfileName);
+    cancelEdit();
   } else {
     dispatch(editProfileModal(null));
   }
@@ -129,8 +126,6 @@ const StyledEditProfileDialog = styled.div`
     border: none;
   }
 `;
-
-export type ProfileDialogModes = 'default' | 'edit' | 'qr';
 
 export const EditProfileDialog = () => {
   const dispatch = useDispatch();
@@ -211,20 +206,22 @@ export const EditProfileDialog = () => {
       ),
     loading
   );
-  useHotkey(
-    'Escape',
-    () =>
-      handleKeyEscape(
-        mode,
-        setMode,
-        profileName,
-        setProfileName,
-        setProfileNameError,
-        loading,
-        dispatch
-      ),
-    loading
-  );
+  useHotkey('Escape', () => handleKeyEscape(mode, cancelEdit, loading, dispatch), loading);
+
+  function cancelEdit() {
+    if (loading) {
+      return;
+    }
+    setMode('default');
+    setProfileNameError(undefined);
+    setProfileName(_profileName);
+  }
+
+  useClickAway(inputRef, () => {
+    if (mode === 'edit') {
+      cancelEdit();
+    }
+  });
 
   return (
     <StyledEditProfileDialog className="edit-profile-dialog" data-testid="edit-profile-dialog">
@@ -237,6 +234,7 @@ export const EditProfileDialog = () => {
           />
         }
         onClose={closeDialog}
+        shouldOverflow={true}
         buttonChildren={
           mode === 'default' || mode === 'qr' ? (
             // some bottom margin as the buttons have a border and appear to close to the edge
@@ -274,13 +272,7 @@ export const EditProfileDialog = () => {
                 />
                 <SessionButton
                   text={tr('cancel')}
-                  onClick={() => {
-                    if (loading) {
-                      return;
-                    }
-                    setMode('default');
-                    setProfileName(_profileName);
-                  }}
+                  onClick={cancelEdit}
                   buttonColor={SessionButtonColor.PrimaryDark}
                   dataTestId="invalid-data-testid"
                   style={{ minWidth: '125px' }}

@@ -26,7 +26,13 @@ export const CrownIcon = () => {
         iconColor={iconColor}
         iconSize={'small'}
         iconType="crown"
-        iconPadding="1px 0px 1px 1px"
+        iconPadding="2px"
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+        }}
       />
     </CrownWrapper>
   );

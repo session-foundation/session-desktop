@@ -23,8 +23,7 @@ import { ReleaseChannel } from './ReleaseChannel';
 import { useHotkey } from '../../../hooks/useHotkey';
 import { PopoverPlaygroundPage } from './playgrounds/PopoverPlaygroundPage';
 import { ProPlaygroundPage } from './playgrounds/ProPlaygroundPage';
-import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
-import { SessionLucideIconButton } from '../../icon/SessionIconButton';
+import { ModalBackButton } from '../shared/ModalBackButton';
 
 const StyledContent = styled(Flex)`
   padding-inline: var(--margins-sm);
@@ -125,15 +124,9 @@ export function DebugMenuModal() {
         <ModalBasicHeader
           title="Debug Menu"
           showExitIcon={true}
-          leftButton={
+          extraLeftButton={
             page !== DEBUG_MENU_PAGE.MAIN ? (
-              <SessionLucideIconButton
-                unicode={LUCIDE_ICONS_UNICODE.CHEVRON_LEFT}
-                iconSize={'medium'}
-                onClick={() => setPage(DEBUG_MENU_PAGE.MAIN)}
-                padding={'0 var(--margins-xs) 0 var(--margins-xs)'}
-                margin={'0'}
-              />
+              <ModalBackButton onClick={() => setPage(DEBUG_MENU_PAGE.MAIN)} />
             ) : null
           }
         />

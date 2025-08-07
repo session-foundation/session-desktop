@@ -15,7 +15,6 @@ import {
   InteractionNotificationType,
 } from '../state/ducks/types';
 import type { SignalService } from '../protobuf';
-import type { ProMessageFeature } from './proMessageFeature';
 
 export type MessageModelType = 'incoming' | 'outgoing';
 
@@ -145,7 +144,14 @@ type NotSharedMessageAttributes = {
   synced: boolean;
   sync: boolean;
 
-  proFeatures?: Array<ProMessageFeature>;
+  /**
+   * This is a bitmask of the features that are enabled for this message.
+   * We save those as a bitmask to make sure we can save feature when processing a message,
+   * even if we do not understand them yet.
+   * That way, if an incoming message is using `featX`, but our libsession version
+   * does not understand it yet, we will still be able to understand it when we upgrade.
+   */
+  proFeatures?: number;
 };
 
 export type MessageAttributes = SharedMessageAttributes & NotSharedMessageAttributes;

@@ -19,32 +19,132 @@ import { ProIconButton } from '../../buttons/ProButton';
 import { useMessageIdFromContext } from '../../../contexts/MessageIdContext';
 import { useMessageDirection } from '../../../state/selectors';
 import { useShowUserDetailsCbFromConversation } from '../../menuAndSettingsHooks/useShowUserDetailsCb';
+import { assertUnreachable } from '../../../types/sqlSharedTypes';
 
-const boldProfileNameCtx: Array<ContactNameContext> = [
-  'conversation-list-item',
-  'quoted-message-composition',
-  'message-author',
-  'message-info-author',
-  'member-list-item',
-  'contact-list-row',
-];
+/**
+ * In some contexts, we want to bold the name of the contact.
+ */
+function isBoldProfileNameCtx(ctx: ContactNameContext) {
+  // We are doing this as a switch instead of an array so we have to be explicit anytime we add a new context,
+  // thanks to the assertUnreachable below
+  switch (ctx) {
+    case 'conversation-list-item':
+    case 'quoted-message-composition':
+    case 'message-author':
+    case 'message-info-author':
+    case 'member-list-item':
+    case 'contact-list-row':
+      return true;
+    case 'quote-author':
+    case 'conversation-list-item-search':
+    case 'react-list-modal':
+    case 'message-search-result':
+      return false;
+    default:
+      assertUnreachable(ctx, 'isBoldProfileNameCtx');
+      throw new Error('isBoldProfileNameCtx: unreachable');
+  }
+}
 
-const showPubkeyCtx: Array<ContactNameContext> = ['message-author'];
+/**
+ * In some contexts, we want to show the pubkey of the contact.
+ */
+function isShowPubkeyCtx(ctx: ContactNameContext) {
+  // We are doing this as a switch instead of an array so we have to be explicit anytime we add a new context,
+  // thanks to the assertUnreachable below
+  switch (ctx) {
+    case 'message-author':
+    case 'message-info-author':
+      return true;
+    case 'member-list-item':
+    case 'contact-list-row':
+    case 'quote-author':
+    case 'conversation-list-item':
+    case 'quoted-message-composition':
+    case 'conversation-list-item-search':
+    case 'react-list-modal':
+    case 'message-search-result':
+      return false;
+    default:
+      assertUnreachable(ctx, 'isShowPubkeyCtx');
+      throw new Error('isShowPubkeyCtx: unreachable');
+  }
+}
 
-const ntsIsYouCtx: Array<ContactNameContext> = [
-  'message-author',
-  'quote-author',
-  'quoted-message-composition',
-  'message-search-result',
-  'react-list-modal',
-  'member-list-item',
-];
+/**
+ * In some contexts, we want to rename "Note To Self" to "You".
+ */
+function isShowNtsIsYouCtx(ctx: ContactNameContext) {
+  // We are doing this as a switch instead of an array so we have to be explicit anytime we add a new context,
+  // thanks to the assertUnreachable below
+  switch (ctx) {
+    case 'message-author':
+    case 'quote-author':
+    case 'quoted-message-composition':
+    case 'react-list-modal':
+    case 'message-search-result':
+    case 'member-list-item':
+      return true;
+    case 'message-info-author':
+    case 'contact-list-row':
+    case 'conversation-list-item':
+    case 'conversation-list-item-search':
+      return false;
+    default:
+      assertUnreachable(ctx, 'isShowNtsIsYouCtx');
+      throw new Error('isShowNtsIsYouCtx: unreachable');
+  }
+}
 
-const forceSingleLineCtx: Array<ContactNameContext> = [
-  'message-info-author',
-  'member-list-item',
-  'contact-list-row',
-];
+/**
+ * Usually, we'd allow the name to be multiline. but in some contexts we want to force it to be single line.
+ */
+function isForceSingleLineCtx(ctx: ContactNameContext) {
+  // We are doing this as a switch instead of an array so we have to be explicit anytime we add a new context,
+  // thanks to the assertUnreachable below
+  switch (ctx) {
+    case 'message-info-author':
+    case 'member-list-item':
+    case 'contact-list-row':
+      return true;
+    case 'message-author':
+    case 'quote-author':
+    case 'quoted-message-composition':
+    case 'react-list-modal':
+    case 'message-search-result':
+    case 'conversation-list-item':
+    case 'conversation-list-item-search':
+      return false;
+    default:
+      assertUnreachable(ctx, 'isForceSingleLineCtx');
+      throw new Error('isForceSingleLineCtx: unreachable');
+  }
+}
+
+/**
+ * Usually, we'd allow the name to be multiline. but in some contexts we want to force it to be single line.
+ */
+function isShowUPMOnClickCtx(ctx: ContactNameContext) {
+  // We are doing this as a switch instead of an array so we have to be explicit anytime we add a new context,
+  // thanks to the assertUnreachable below
+  switch (ctx) {
+    case 'message-info-author':
+      return true;
+    case 'member-list-item':
+    case 'contact-list-row':
+    case 'message-author':
+    case 'quote-author':
+    case 'quoted-message-composition':
+    case 'react-list-modal':
+    case 'message-search-result':
+    case 'conversation-list-item':
+    case 'conversation-list-item-search':
+      return false;
+    default:
+      assertUnreachable(ctx, 'isForceSingleLineCtx');
+      throw new Error('isForceSingleLineCtx: unreachable');
+  }
+}
 
 const commonNameStyles: CSSProperties = {
   minWidth: 0,
@@ -61,8 +161,6 @@ const forceSingleLineStyle: CSSProperties = {
 const boldStyles: CSSProperties = {
   fontWeight: 'bold',
 };
-
-const contactNameContextShowUPM: Array<ContactNameContext> = ['message-info-author'];
 
 export const ContactName = ({
   pubkey,
@@ -99,11 +197,9 @@ export const ContactName = ({
   const msgDirection = useMessageDirection(msgId);
 
   const displayName = isMe
-    ? // we want to show "You" instead of Note to Self in some places (like quotes)
-      ntsIsYouCtx.includes(contactNameContext)
-      ? tr('you')
-      : tr('noteToSelf')
-    : // we want to show the nickname in brackets if a nickname is set for search results
+    ? // we want to show "You" instead of "Note to Self" in some places (like quotes)
+      tr(isShowNtsIsYouCtx(contactNameContext) ? 'you' : 'noteToSelf')
+    : // we want to show the realName in brackets if a nickname is set for search results
       contactNameContext === 'conversation-list-item-search' && nickname && realName
       ? `${nickname} (${realName})`
       : noFallback;
@@ -111,9 +207,9 @@ export const ContactName = ({
   const shouldShowShortenPkAsName = !displayName;
 
   const shouldShowPubkey =
-    !shouldShowShortenPkAsName && isPublic && showPubkeyCtx.includes(contactNameContext);
-  const boldProfileName = boldProfileNameCtx.includes(contactNameContext);
-  const forceSingleLine = forceSingleLineCtx.includes(contactNameContext);
+    !shouldShowShortenPkAsName && isPublic && isShowPubkeyCtx(contactNameContext);
+  const boldProfileName = isBoldProfileNameCtx(contactNameContext);
+  const forceSingleLine = isForceSingleLineCtx(contactNameContext);
 
   const displayedName = shouldShowShortenPkAsName ? shortPubkey : displayName;
 
@@ -163,10 +259,7 @@ export const ContactName = ({
         maxWidth: '100%',
         ...style,
       }}
-      onClick={
-        (contactNameContextShowUPM.includes(contactNameContext) && showConversationSettingsCb) ||
-        undefined
-      }
+      onClick={(isShowUPMOnClickCtx(contactNameContext) && showConversationSettingsCb) || undefined}
     >
       {displayedName ? (
         <div style={mergedNameStyle} className={`${prefix}__profile-name`}>
