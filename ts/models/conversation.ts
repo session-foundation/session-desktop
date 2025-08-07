@@ -2453,15 +2453,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
   }
 
   private async addSingleMessage(messageAttributes: MessageAttributesOptionals) {
-    const voiceMessageFlags = messageAttributes.attachments?.[0]?.isVoiceMessage
-      ? SignalService.AttachmentPointer.Flags.VOICE_MESSAGE
-      : undefined;
     // eslint-disable-next-line no-bitwise
-    const flags = (messageAttributes?.flags || 0) | (voiceMessageFlags || 0);
-    const model = new MessageModel({
-      ...messageAttributes,
-      flags,
-    });
+    const model = new MessageModel(messageAttributes);
 
     const messageId = await model.commit(true);
     model.set({ id: messageId });
