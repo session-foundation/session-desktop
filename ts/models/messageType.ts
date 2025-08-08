@@ -18,51 +18,45 @@ import type { SignalService } from '../protobuf';
 
 export type MessageModelType = 'incoming' | 'outgoing';
 
-export interface MessageAttributes {
-  // the id of the message
-  // this can have several uses:
-  id: string;
+/**
+ * The shared attributes that are for both (MessageAttributes & MessageAttributesOptionals) optionals.
+ */
+type SharedMessageAttributes = {
+  /**
+   * The sender/author of that message
+   */
   source: string;
+  /**
+   * the quoted details
+   */
   quote?: any;
   received_at?: number;
   sent_at?: number;
+  /**
+   * the link preview details
+   */
   preview?: any;
   reaction?: Reaction;
   reacts?: ReactionList;
   reactsIndex?: number;
+  /**
+   * the text associated with this message (can be undefined for control messages, or for attachments only messages. etc)
+   */
   body?: string;
   expirationType?: DisappearingMessageType;
-  /** in seconds, 0 means no expiration */
-  expireTimer: number;
-  /** in milliseconds */
-  expirationStartTimestamp: number;
   expires_at?: number;
   expirationTimerUpdate?: ExpirationTimerUpdate;
-  read_by: Array<string>; // we actually only care about the length of this. values are not used for anything
   type: MessageModelType;
   group_update?: MessageGroupUpdate;
   groupInvitation?: { url: string | undefined; name: string } | undefined;
   attachments?: any;
   conversationId: string;
   errors?: string;
-  flags?: number;
-  hasAttachments: 1 | 0;
-  hasFileAttachments: 1 | 0;
-  hasVisualMediaAttachments: 1 | 0;
-  /**
-   * 1 means unread, 0 or anything else is read.
-   * You can use the values from READ_MESSAGE_STATE.unread and READ_MESSAGE_STATE.read
-   */
-  unread: number;
-  group?: any;
   /**
    * timestamp is the sent_at timestamp, which is the envelope.timestamp
    */
   timestamp?: number;
   status?: LastMessageStatusType;
-  sent_to: Array<string>;
-  sent: boolean;
-
   /**
    * The serverId is the id on the open group server itself.
    * Each message sent to an open group gets a serverId.
@@ -78,28 +72,6 @@ export interface MessageAttributes {
    */
   serverTimestamp?: number;
   /**
-   * This field is set to true if the message is for a public server.
-   * This is useful to make the Badge `Public` Appear on a sent message to a server, even if we did not get
-   * the response from the server yet that this message was successfully added.
-   */
-  isPublic: boolean;
-
-  /**
-   * sentSync set to true means we just triggered the sync message for this Private Chat message.
-   * We did not yet get the message sent confirmation, it was just added to the Outgoing MessageQueue
-   */
-  sentSync: boolean;
-
-  /**
-   * synced set to true means that this message was successfully sent by our current device to our other devices.
-   * It is set to true when the MessageQueue did effectively sent our sync message without errors.
-   */
-  synced: boolean;
-  sync: boolean;
-
-  direction: MessageModelType;
-
-  /**
    * This is used for when a user screenshots or saves an attachment you sent.
    * We display a small message just below the message referenced
    */
@@ -108,8 +80,10 @@ export interface MessageAttributes {
   /**
    * For displaying a message to notifying when a request has been accepted.
    */
-  messageRequestResponse?: MessageRequestResponseMsg;
-
+  messageRequestResponse?: {
+    // keeping it as a object in case we ever add a field here.
+    // Note: we had isApproved field, but it was unused so I got rid of it
+  };
   /**
    * This field is used for unsending messages and used in sending update expiry, get expiries and unsend message requests.
    */
@@ -126,7 +100,68 @@ export interface MessageAttributes {
    * This is used when a user has performed an interaction (hiding, leaving, etc.) on a conversation. At the moment, this is only used for showing interaction errors.
    */
   interactionNotification?: InteractionNotificationType;
-}
+};
+
+/**
+ * Attributes that can be optional or not depending on if the message was already constructed or not.
+ */
+type NotSharedMessageAttributes = {
+  /**
+   * The local id of this message (i.e. an id only used locally).
+   * Added on commit() if unset before that
+   */
+  id: string;
+  direction: MessageModelType;
+
+  /** in seconds, 0 means no expiration */
+  expireTimer: number;
+  /** when the expireTimer above started to count, in milliseconds */
+  expirationStartTimestamp: number;
+  read_by: Array<string>; // we actually only care about the length of this. values are not used for anything
+
+  hasAttachments: 1 | 0;
+  hasFileAttachments: 1 | 0;
+  hasVisualMediaAttachments: 1 | 0;
+  /**
+   * 1 means unread, 0 or anything else is read.
+   * You can use the values from READ_MESSAGE_STATE.unread and READ_MESSAGE_STATE.read
+   */
+  unread: number;
+
+  sent_to: Array<string>;
+  sent: boolean;
+
+  /**
+   * `sentSync` is set to true means we just triggered the sync message for this Private Chat message.
+   * We did not yet get the message sent confirmation, it was just added to the Outgoing MessageQueue
+   */
+  sentSync: boolean;
+
+  /**
+   * `synced` is set to true means that this message was successfully sent by our current device to our other devices.
+   * It is set to true when the MessageQueue did effectively sent our sync message without errors.
+   */
+  synced: boolean;
+  sync: boolean;
+
+  /**
+   * This is a bitmask of the features that are enabled for this message.
+   * We save those as a bitmask to make sure we can save feature when processing a message,
+   * even if we do not understand them yet.
+   * That way, if an incoming message is using `featX`, but our libsession version
+   * does not understand it yet, we will still be able to understand it when we upgrade.
+   */
+  proFeatures?: number;
+};
+
+export type MessageAttributes = SharedMessageAttributes & NotSharedMessageAttributes;
+
+/**
+ * The attributes of a message as they can be used to construct a message before the first commit().
+ * Most of those are optionals, but a few are required.
+ */
+export type MessageAttributesOptionals = SharedMessageAttributes &
+  Partial<NotSharedMessageAttributes>;
 
 export interface MessageRequestResponseMsg {
   source: string;
@@ -154,57 +189,6 @@ export type MessageGroupUpdate = {
   name?: string;
   avatarChange?: boolean;
 };
-
-export interface MessageAttributesOptionals {
-  id?: string;
-  source: string;
-  quote?: any;
-  received_at?: number;
-  sent_at?: number;
-  preview?: any;
-  reaction?: Reaction;
-  reacts?: ReactionList;
-  reactsIndex?: number;
-  body?: string;
-  expirationType?: DisappearingMessageType;
-  expireTimer?: number;
-  expirationStartTimestamp?: number;
-  expires_at?: number;
-  expirationTimerUpdate?: ExpirationTimerUpdate;
-  read_by?: Array<string>; // we actually only care about the length of this. values are not used for anything
-  type: MessageModelType;
-  group_update?: MessageGroupUpdate;
-  groupInvitation?: { url: string | undefined; name: string } | undefined;
-  attachments?: any;
-  conversationId: string;
-  errors?: any;
-  flags?: number;
-  hasAttachments?: 1 | 0;
-  hasFileAttachments?: 1 | 0;
-  hasVisualMediaAttachments?: 1 | 0;
-  dataExtractionNotification?: DataExtractionNotificationMsg;
-  messageRequestResponse?: {
-    // keeping it as a object in case we ever add a field here.
-    // Note: we had isApproved field, but it was unused so I got rid of it
-  };
-  unread?: number;
-  group?: any;
-  timestamp?: number;
-  status?: LastMessageStatusType;
-  sent_to?: Array<string>;
-  sent?: boolean;
-  serverId?: number;
-  serverTimestamp?: number;
-  isPublic?: boolean;
-  sentSync?: boolean;
-  synced?: boolean;
-  sync?: boolean;
-  direction?: MessageModelType;
-  messageHash?: string;
-  isDeleted?: boolean;
-  callNotificationType?: CallNotificationType;
-  interactionNotification?: InteractionNotificationType;
-}
 
 /**
  * This function mutates optAttributes

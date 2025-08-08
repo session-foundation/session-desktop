@@ -193,7 +193,6 @@ export const OverlayClosedGroupV2 = () => {
                 onUnselect={removeMemberFromSelection}
                 withBorder={false}
                 disabled={isCreatingGroup}
-                maxNameWidth="100%"
               />
             );
           })

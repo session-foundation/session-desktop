@@ -1,5 +1,5 @@
 import { isEmpty } from 'lodash';
-import clsx from 'clsx';
+import type { CSSProperties } from 'styled-components';
 
 import { useConvoIdFromContext } from '../../../contexts/ConvoIdContext';
 import {
@@ -18,6 +18,32 @@ import { MessageBody } from '../../conversation/message/message-content/MessageB
 import { InteractionItem } from './InteractionItem';
 import { LucideIcon } from '../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
+import { useSelectedConversationKey } from '../../../state/selectors/selectedConversation';
+
+export function getStyleForMessageItemText(
+  hasUnread: boolean,
+  isSelectedConvo: boolean
+): CSSProperties {
+  return {
+    flexGrow: 1,
+    flexShrink: 1,
+
+    fontSize: 'var(--font-size-sm)',
+
+    overflow: 'hidden',
+    whiteSpace: 'nowrap',
+    textOverflow: 'ellipsis',
+    color: 'var(--conversation-tab-text-color)',
+    userSelect: 'none',
+    ...(hasUnread && {
+      fontWeight: '400',
+      color: 'var(--conversation-tab-text-unread-color)',
+    }),
+    ...(isSelectedConvo && {
+      color: 'var(--conversation-tab-text-selected-color)',
+    }),
+  };
+}
 
 export const MessageItem = () => {
   const conversationId = useConvoIdFromContext();
@@ -30,6 +56,8 @@ export const MessageItem = () => {
   const isMessageRequest = useIsMessageRequestOverlayShown();
 
   const isSearching = useIsSearchingForType('global');
+
+  const isSelectedConvo = useSelectedConversationKey() === conversationId;
 
   if (lastMessage?.interactionType && lastMessage?.interactionStatus) {
     return <InteractionItem conversationId={conversationId} lastMessage={lastMessage} />;
@@ -47,12 +75,7 @@ export const MessageItem = () => {
 
   return (
     <div className="module-conversation-list-item__message">
-      <div
-        className={clsx(
-          'module-conversation-list-item__message__text',
-          hasUnread ? 'module-conversation-list-item__message__text--has-unread' : null
-        )}
-      >
+      <div style={getStyleForMessageItemText(hasUnread, isSelectedConvo)}>
         {isConvoTyping ? (
           <TypingAnimation />
         ) : (

@@ -16,6 +16,27 @@ const StyledLabelContainer = styled(Flex)`
   }
 `;
 
+function formatAttachmentUrl(attachment: PropsForAttachment) {
+  // Note: desktop overwrites the url with the local path once the file is downloaded,
+  // and I think this is how we know the file was downloaded.
+
+  if (!attachment?.url) {
+    return tr('attachmentsNa');
+  }
+
+  if (!attachment.url.startsWith('http')) {
+    return tr('attachmentsNa');
+  }
+
+  const fileId = attachment.url.split('/').pop() || '';
+
+  if (!fileId) {
+    return tr('attachmentsNa');
+  }
+
+  return fileId;
+}
+
 export const AttachmentInfo = (props: Props) => {
   const { attachment } = props;
 
@@ -23,11 +44,8 @@ export const AttachmentInfo = (props: Props) => {
   const hasError = attachment.error || attachment.url === '';
 
   return (
-    <Flex $container={true} $flexDirection="column">
-      <LabelWithInfo
-        label={tr('attachmentsFileId')}
-        info={attachment?.url ? String(attachment.url) : tr('attachmentsNa')}
-      />
+    <Flex $container={true} $flexDirection="column" $flexGap="var(--margins-xs)">
+      <LabelWithInfo label={tr('attachmentsFileId')} info={formatAttachmentUrl(attachment)} />
       <StyledLabelContainer $container={true} $flexDirection="row" $flexWrap="wrap">
         <LabelWithInfo
           label={tr('attachmentsFileType')}

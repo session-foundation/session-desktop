@@ -17,7 +17,7 @@ import { MediaItemType } from '../../../lightbox/LightboxGallery';
 import { MediaGallery } from '../../media-gallery/MediaGallery';
 import { Header, HeaderTitle, StyledScrollContainer } from './components';
 import { closeRightPanel } from '../../../../state/ducks/conversations';
-import { useConversationUsername } from '../../../../hooks/useParamSelector';
+import { useConversationUsernameWithFallback } from '../../../../hooks/useParamSelector';
 import { PubKey } from '../../../../session/types';
 import { sectionActions } from '../../../../state/ducks/section';
 
@@ -99,7 +99,7 @@ export const RightPanelMedia = () => {
 
   const selectedConvoKey = useSelectedConversationKey();
   const isShowing = useIsRightPanelShowing();
-  const displayName = useConversationUsername(selectedConvoKey);
+  const displayName = useConversationUsernameWithFallback(false, selectedConvoKey);
 
   const closePanel = () => {
     dispatch(closeRightPanel());

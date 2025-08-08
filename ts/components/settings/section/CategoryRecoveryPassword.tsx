@@ -125,7 +125,7 @@ export const SettingsCategoryRecoveryPassword = () => {
             loading={loading}
             onClick={(fileName, dataUrl) => {
               const lightBoxOptions = prepareQRCodeForLightBox(fileName, dataUrl);
-              window.inboxStore?.dispatch(updateLightBoxOptions(lightBoxOptions));
+              dispatch(updateLightBoxOptions(lightBoxOptions));
             }}
             ariaLabel={'Recovery Password QR Code'}
             dataTestId={'session-recovery-password'}

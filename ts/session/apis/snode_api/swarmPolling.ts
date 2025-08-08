@@ -142,7 +142,7 @@ function mergeMultipleRetrieveResults(
 }
 
 function swarmLog(msg: string) {
-  if (window.sessionFeatureFlags.debug.debugSwarmPolling) {
+  if (window.sessionFeatureFlags.debugSwarmPolling) {
     window.log.info(msg);
   }
 }

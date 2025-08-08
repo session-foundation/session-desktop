@@ -25,7 +25,7 @@ import { DURATION } from '../../session/constants';
 
 import { reuploadCurrentAvatarUs } from '../../interactions/avatar-interactions/nts-avatar-interactions';
 import {
-  editProfileModal,
+  userSettingsModal,
   onionPathModal,
   updateDebugMenuModal,
 } from '../../state/ducks/modalDialog';
@@ -64,10 +64,29 @@ import { AvatarMigrate } from '../../session/utils/job_runners/jobs/AvatarMigrat
 import { NetworkTime } from '../../util/NetworkTime';
 import { Storage } from '../../util/storage';
 import { getFileInfoFromFileServer } from '../../session/apis/file_server_api/FileServerApi';
+import { themesArray } from '../../themes/constants/colors';
+import { isDebugMode } from '../../shared/env_vars';
 
 const StyledContainerAvatar = styled.div`
   padding: var(--margins-lg);
 `;
+
+function handleThemeSwitch() {
+  const currentTheme = window.Events.getThemeSetting();
+  let newTheme = getOppositeTheme(currentTheme);
+  if (isDebugMode()) {
+    // rotate over the 4 themes
+    const newThemeIndex = (themesArray.indexOf(currentTheme) + 1) % themesArray.length;
+    newTheme = themesArray[newThemeIndex];
+  }
+  // We want to persist the primary color when using the color mode button
+  void switchThemeTo({
+    theme: newTheme,
+    mainWindow: true,
+    usePrimaryColor: true,
+    dispatch: window.inboxStore?.dispatch,
+  });
+}
 
 const Section = (props: { type: SectionType }) => {
   const ourNumber = useSelector(getOurNumber);
@@ -82,17 +101,9 @@ const Section = (props: { type: SectionType }) => {
 
   const handleClick = () => {
     if (type === SectionType.Profile) {
-      dispatch(editProfileModal({}));
+      dispatch(userSettingsModal({}));
     } else if (type === SectionType.ColorMode) {
-      const currentTheme = window.Events.getThemeSetting();
-      const newTheme = getOppositeTheme(currentTheme);
-      // We want to persist the primary color when using the color mode button
-      void switchThemeTo({
-        theme: newTheme,
-        mainWindow: true,
-        usePrimaryColor: true,
-        dispatch,
-      });
+      void handleThemeSwitch();
     } else if (type === SectionType.PathIndicator) {
       // Show Path Indicator Modal
       dispatch(onionPathModal({}));

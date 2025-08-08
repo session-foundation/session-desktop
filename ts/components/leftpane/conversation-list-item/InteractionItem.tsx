@@ -2,7 +2,7 @@ import { isEmpty } from 'lodash';
 import { useEffect, useState } from 'react';
 
 import styled from 'styled-components';
-import { useIsPrivate, useIsPublic } from '../../../hooks/useParamSelector';
+import { useHasUnread, useIsPrivate, useIsPublic } from '../../../hooks/useParamSelector';
 
 import { ConvoHub } from '../../../session/conversations';
 import { assertUnreachable } from '../../../types/sqlSharedTypes';
@@ -13,6 +13,8 @@ import {
 } from '../../../interactions/types';
 import { LastMessageType } from '../../../state/ducks/types';
 import { tr } from '../../../localization/localeTools';
+import { getStyleForMessageItemText } from './MessageItem';
+import { useSelectedConversationKey } from '../../../state/selectors/selectedConversation';
 
 const StyledInteractionItemText = styled.div<{ isError: boolean }>`
   ${props => props.isError && 'color: var(--danger-color) !important;'}
@@ -27,6 +29,9 @@ export const InteractionItem = (props: InteractionItemProps) => {
   const { conversationId, lastMessage } = props;
   const isGroup = !useIsPrivate(conversationId);
   const isCommunity = useIsPublic(conversationId);
+
+  const hasUnread = useHasUnread(conversationId);
+  const isSelectedConvo = useSelectedConversationKey() === conversationId;
 
   const [storedLastMessageText, setStoredLastMessageText] = useState(lastMessage?.text);
   const [storedLastMessageInteractionStatus, setStoredLastMessageInteractionStatus] = useState(
@@ -97,8 +102,8 @@ export const InteractionItem = (props: InteractionItemProps) => {
   return (
     <div className="module-conversation-list-item__message">
       <StyledInteractionItemText
-        className="module-conversation-list-item__message__text"
         isError={Boolean(interactionStatus === ConversationInteractionStatus.Error)}
+        style={getStyleForMessageItemText(hasUnread, isSelectedConvo)}
       >
         <MessageBody
           text={text}

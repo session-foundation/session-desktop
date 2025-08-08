@@ -33,7 +33,8 @@ export const getBanOrUnbanUserModalState = (state: StateType) =>
 export const getBlockOrUnblockUserModalState = (state: StateType) =>
   getModal(state).blockOrUnblockModal;
 
-export const getUpdateGroupNameModal = (state: StateType) => getModal(state).groupNameModal;
+export const getUpdateConversationDetailsModal = (state: StateType) =>
+  getModal(state).updateConversationDetailsModal;
 
 export const getUpdateGroupMembersModal = (state: StateType) => getModal(state).groupMembersModal;
 
@@ -41,7 +42,7 @@ export const getUserProfileModal = (state: StateType) => getModal(state).userPro
 
 export const getChangeNickNameDialog = (state: StateType) => getModal(state).nickNameModal;
 
-export const getEditProfileDialog = (state: StateType) => getModal(state).editProfileModal;
+export const getUserSettingsModal = (state: StateType) => getModal(state).userSettingsModal;
 
 export const getOnionPathDialog = (state: StateType) => getModal(state).onionPathModal;
 

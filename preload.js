@@ -68,17 +68,16 @@ window.sessionFeatureFlags = {
   proAvailable: !isEmpty(process.env.SESSION_PRO),
   mockCurrentUserHasPro: !isEmpty(process.env.SESSION_USER_HAS_PRO),
   mockOthersHavePro: !isEmpty(process.env.SESSION_OTHERS_HAVE_PRO),
+  mockMessageProFeatures: [],
   // Note: some stuff are init when the app starts, so fsTTL30s should only be set from the env itself (before app starts)
   fsTTL30s: !isEmpty(process.env.FILE_SERVER_TTL_30S),
-  debug: {
-    debugLogging: !isEmpty(process.env.SESSION_DEBUG),
-    debugLibsessionDumps: !isEmpty(process.env.SESSION_DEBUG_LIBSESSION_DUMPS),
-    debugBuiltSnodeRequests: !isEmpty(process.env.SESSION_DEBUG_BUILT_SNODE_REQUEST),
-    debugSwarmPolling: !isEmpty(process.env.SESSION_DEBUG_SWARM_POLLING),
-    debugServerRequests: false,
-    debugNonSnodeRequests: false,
-    debugOnionRequests: false,
-  },
+  debugLogging: !isEmpty(process.env.SESSION_DEBUG),
+  debugLibsessionDumps: !isEmpty(process.env.SESSION_DEBUG_LIBSESSION_DUMPS),
+  debugBuiltSnodeRequests: !isEmpty(process.env.SESSION_DEBUG_BUILT_SNODE_REQUEST),
+  debugSwarmPolling: !isEmpty(process.env.SESSION_DEBUG_SWARM_POLLING),
+  debugServerRequests: false,
+  debugNonSnodeRequests: false,
+  debugOnionRequests: false,
 };
 
 window.versionInfo = {

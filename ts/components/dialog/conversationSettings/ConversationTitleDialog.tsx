@@ -1,44 +1,64 @@
-import { useDispatch } from 'react-redux';
-import { useCurrentUserHasPro } from '../../../hooks/useHasPro';
+import { useCurrentUserHasPro, useUserHasPro } from '../../../hooks/useHasPro';
 import {
-  useNicknameOrProfileNameOrShortenedPubkey,
   useIsPublic,
   useIsClosedGroup,
   useIsMe,
-  useIsProUser,
+  useConversationUsernameWithFallback,
+  useIsGroupV2,
 } from '../../../hooks/useParamSelector';
 import { tr } from '../../../localization/localeTools';
 import type { WithConvoId } from '../../../session/types/with';
 import { H5 } from '../../basic/Heading';
 import { ProIconButton } from '../../buttons/ProButton';
 import { useChangeNickname } from '../../menuAndSettingsHooks/useChangeNickname';
-import { useShowUpdateGroupNameDescriptionCb } from '../../menuAndSettingsHooks/useShowUpdateGroupNameDescription';
-import { showSessionProInfoDialog, SessionProInfoVariant } from '../SessionProInfoModal';
+import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnClickCb';
+import { useShowUpdateGroupOrCommunityDetailsCb } from '../../menuAndSettingsHooks/useShowUpdateGroupNameDescription';
 
 /**
  * Return the callback to use for the title click event, if one is allowed
  */
 function useOnTitleClickCb(conversationId: string, editable: boolean) {
   const changeNicknameCb = useChangeNickname(conversationId);
-  const updateNameDescCb = useShowUpdateGroupNameDescriptionCb({ conversationId });
+  const updateGroupOrCommunityCb = useShowUpdateGroupOrCommunityDetailsCb({ conversationId });
   if (!editable) {
     return null;
   }
-  return changeNicknameCb || updateNameDescCb;
+  return changeNicknameCb || updateGroupOrCommunityCb;
 }
 
-export const ConversationTitle = ({
+function ProBadge({ conversationId }: WithConvoId) {
+  const weArePro = useCurrentUserHasPro();
+
+  const userHasPro = useUserHasPro(conversationId);
+  const isMe = useIsMe(conversationId);
+  const isGroupV2 = useIsGroupV2(conversationId);
+
+  const onProClickCb = useProBadgeOnClickCb({
+    context: 'conversation-title-dialog',
+    args: { userHasPro, currentUserHasPro: weArePro, isMe, isGroupV2 },
+  });
+
+  if (!onProClickCb.show) {
+    return null;
+  }
+  const sharedProps = {
+    dataTestId: 'pro-badge-conversation-title',
+    iconSize: 'medium',
+    style: { display: 'inline', marginInlineStart: 'var(--margins-xs)', flexShrink: 0 },
+  } as const;
+  return <ProIconButton {...sharedProps} onClick={onProClickCb.cb} />;
+}
+
+export const ConversationTitleDialog = ({
   conversationId,
   editable,
-}: WithConvoId & { editable: boolean }) => {
-  const dispatch = useDispatch();
-  const nicknameOrDisplayName = useNicknameOrProfileNameOrShortenedPubkey(conversationId);
+}: WithConvoId & {
+  editable: boolean;
+}) => {
+  const nicknameOrDisplayName = useConversationUsernameWithFallback(true, conversationId);
   const isCommunity = useIsPublic(conversationId);
   const isClosedGroup = useIsClosedGroup(conversationId);
   const isMe = useIsMe(conversationId);
-  const weArePro = useCurrentUserHasPro();
-
-  const userHasPro = useIsProUser(conversationId);
 
   const onClickCb = useOnTitleClickCb(conversationId, editable);
 
@@ -49,13 +69,6 @@ export const ConversationTitle = ({
       ? 'group-name'
       : // for 1o1, this will hold the nickname if set, or the display name
         'preferred-display-name';
-
-  function onProBadgeClick() {
-    if (weArePro) {
-      return;
-    }
-    showSessionProInfoDialog(SessionProInfoVariant.GENERIC, dispatch);
-  }
 
   return (
     <H5
@@ -68,15 +81,7 @@ export const ConversationTitle = ({
       onClick={onClickCb || undefined}
     >
       {isMe ? tr('noteToSelf') : nicknameOrDisplayName}
-      {userHasPro && (
-        <ProIconButton
-          dataTestId="pro-badge-conversation-title"
-          iconSize={'medium'}
-          disabled={weArePro}
-          onClick={onProBadgeClick}
-          style={{ display: 'inline', marginInlineStart: 'var(--margins-xs)' }}
-        />
-      )}
+      <ProBadge conversationId={conversationId} />
     </H5>
   );
 };

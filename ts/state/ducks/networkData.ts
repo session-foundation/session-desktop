@@ -38,7 +38,7 @@ const fetchInfoFromSeshServer = createAsyncThunk(
   'networkData/fetchInfoFromSeshServer',
   async (_, payloadCreator): Promise<InfoResponse> => {
     try {
-      if (window.sessionFeatureFlags?.debug.debugServerRequests) {
+      if (window.sessionFeatureFlags?.debugServerRequests) {
         window.log.info(
           `[networkData/fetchInfoFromSeshServer] starting ${new Date().toISOString()}`
         );
@@ -82,7 +82,7 @@ const fetchInfoFromSeshServer = createAsyncThunk(
 const refreshInfoFromSeshServer = createAsyncThunk(
   'networkData/refreshInfoFromSeshServer',
   async (_opts, payloadCreator) => {
-    if (window.sessionFeatureFlags?.debug.debugServerRequests) {
+    if (window.sessionFeatureFlags?.debugServerRequests) {
       window.log.info(
         `[networkData/refreshInfoFromSeshServer] starting ${new Date().toISOString()}`
       );
@@ -99,7 +99,7 @@ const refreshInfoFromSeshServer = createAsyncThunk(
     }
 
     if (infoTimestamp && stalePriceTimestamp && Date.now() / 1000 <= stalePriceTimestamp) {
-      if (window.sessionFeatureFlags?.debug.debugServerRequests) {
+      if (window.sessionFeatureFlags?.debugServerRequests) {
         window.log.info(
           `[networkData/refreshInfoFromSeshServer] using cache. Data will be stale at ${new Date(stalePriceTimestamp * 1000).toISOString()}`
         );
@@ -113,7 +113,7 @@ const refreshInfoFromSeshServer = createAsyncThunk(
     }
 
     if (!infoTimestamp && !stalePriceTimestamp) {
-      if (window.sessionFeatureFlags?.debug.debugServerRequests) {
+      if (window.sessionFeatureFlags?.debugServerRequests) {
         window.log.info(
           `[networkData/refreshInfoFromSeshServer] no data to refresh ${new Date().toISOString()}`
         );
@@ -130,7 +130,7 @@ const refreshInfoFromSeshServer = createAsyncThunk(
       throw new Error('Stuck loading');
     }
 
-    if (window.sessionFeatureFlags?.debug.debugServerRequests) {
+    if (window.sessionFeatureFlags?.debugServerRequests) {
       window.log.info(
         `[networkData/refreshInfoFromSeshServer] triggered refresh${infoTimestamp ? ` at ${new Date(infoTimestamp * 1000).toISOString()}` : ''}`
       );
@@ -152,7 +152,7 @@ export const networkDataSlice = createSlice({
   },
   extraReducers: builder => {
     builder.addCase(fetchInfoFromSeshServer.fulfilled, (state, action) => {
-      if (window.sessionFeatureFlags?.debug.debugServerRequests) {
+      if (window.sessionFeatureFlags?.debugServerRequests) {
         window.log.info(
           `[networkData/fetchInfoFromSeshServer] fulfilled ${new Date().toISOString()}`,
           JSON.stringify(action.payload)
@@ -177,7 +177,7 @@ export const networkDataSlice = createSlice({
       );
     });
     builder.addCase(refreshInfoFromSeshServer.fulfilled, (_state, _action) => {
-      if (window.sessionFeatureFlags?.debug.debugServerRequests) {
+      if (window.sessionFeatureFlags?.debugServerRequests) {
         window.log.info(
           `[networkData/refreshInfoFromSeshServer] fulfilled ${new Date().toISOString()}`
         );

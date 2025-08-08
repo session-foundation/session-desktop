@@ -1,5 +1,9 @@
 import clsx from 'clsx';
-import { useConversationUsername, useIsMe, useIsPrivate } from '../../hooks/useParamSelector';
+import {
+  useConversationUsernameWithFallback,
+  useIsMe,
+  useIsPrivate,
+} from '../../hooks/useParamSelector';
 import { Avatar, AvatarSize } from '../avatar/Avatar';
 import { Emojify } from '../conversation/Emojify';
 import { tr } from '../../localization/localeTools';
@@ -18,7 +22,7 @@ const AvatarItem = (props: { pubkey: string }) => {
 export const ContactListItem = (props: Props) => {
   const { onClick, pubkey } = props;
 
-  const name = useConversationUsername(pubkey);
+  const name = useConversationUsernameWithFallback(true, pubkey);
   const isMe = useIsMe(pubkey);
   const isGroup = !useIsPrivate(pubkey);
 

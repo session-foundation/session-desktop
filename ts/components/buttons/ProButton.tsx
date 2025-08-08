@@ -22,6 +22,8 @@ const sharedProps = {
   iconColor: 'var(--black-color)',
 } as const;
 
+const defaultStyle = { flexShrink: 0 };
+
 export function ProIconButton({
   iconSize,
   disabled,
@@ -31,36 +33,31 @@ export function ProIconButton({
 }: {
   iconSize: SessionIconSize;
   disabled?: boolean;
-  onClick?: () => void;
+  onClick?: (() => void) | null;
   dataTestId: SessionDataTestId;
   style?: CSSProperties;
 }) {
-  return (
-    <SessionIconButton
-      {...sharedProps}
-      iconSize={iconSize}
-      borderRadius={sizeToBorderRadius(iconSize)}
-      dataTestId={dataTestId}
-      disabled={disabled}
-      onClick={onClick}
-      style={style}
-    />
-  );
-}
+  if (onClick) {
+    return (
+      <SessionIconButton
+        {...sharedProps}
+        iconSize={iconSize}
+        borderRadius={sizeToBorderRadius(iconSize)}
+        dataTestId={dataTestId}
+        disabled={disabled}
+        onClick={onClick}
+        style={{ ...style, ...defaultStyle }}
+      />
+    );
+  }
 
-export function ProIcon({
-  iconSize,
-  dataTestId,
-}: {
-  iconSize: SessionIconSize;
-  dataTestId?: SessionDataTestId;
-}) {
   return (
     <SessionIcon
       {...sharedProps}
       iconSize={iconSize}
       borderRadius={sizeToBorderRadius(iconSize)}
       dataTestId={dataTestId}
+      style={{ ...style, ...defaultStyle }}
     />
   );
 }

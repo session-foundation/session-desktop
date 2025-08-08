@@ -18,13 +18,11 @@ import { ModalDescription } from './shared/ModalDescriptionContainer';
 import { tr } from '../../localization/localeTools';
 import { ModalFlexContainer } from './shared/ModalFlexContainer';
 
-export interface SessionConfirmDialogProps {
+export type SessionConfirmDialogProps = {
   i18nMessage?: LocalizerProps;
   title?: string;
   radioOptions?: SessionRadioItems;
-  onOk?: any;
   onClose?: any;
-  closeAfterInput?: boolean;
 
   /**
    * function to run on ok click. Closes modal after execution by default
@@ -49,7 +47,7 @@ export interface SessionConfirmDialogProps {
   closeTheme?: SessionButtonColor;
   showExitIcon?: boolean | undefined;
   conversationId?: string;
-}
+};
 
 export const SessionConfirm = (props: SessionConfirmDialogProps) => {
   const {
@@ -125,6 +123,7 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
   return (
     <SessionWrapperModal
       headerChildren={title ? <ModalBasicHeader title={title} showExitIcon={showExitIcon} /> : null}
+      topAnchor="35vh"
       onClose={onClickClose}
       buttonChildren={
         <ModalActionsContainer>

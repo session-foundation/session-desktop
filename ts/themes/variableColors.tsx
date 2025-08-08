@@ -81,7 +81,7 @@ export type ThemeColorVariables = {
   '--button-icon-stroke-selected-color': string;
 
   /* Conversation Tab */
-  /* This is also user for Overlay Tabs, Contact Rows, Convesation List Items,
+  /* This is also user for Overlay Tabs, Contact Rows, Conversation List Items,
    Message Search Results, Message Requests Banner, Member List Item,
    Contact List Items, Message Right Click Highlighting etc. */
   '--conversation-tab-background-color': string;

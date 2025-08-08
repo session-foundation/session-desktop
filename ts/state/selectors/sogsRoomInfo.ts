@@ -74,6 +74,12 @@ export function useAvatarOfRoomIsUploading(convoId?: string) {
   );
 }
 
+export function useChangeDetailsOfRoomPending(convoId?: string) {
+  return useSelector((state: StateType) =>
+    convoId ? getSogsRoomInfoState(state).rooms[convoId]?.detailsChangePending : false
+  );
+}
+
 export function useRoomDescription(convoId?: string) {
   return useSelector((state: StateType) => getRoomDescription(state, convoId));
 }

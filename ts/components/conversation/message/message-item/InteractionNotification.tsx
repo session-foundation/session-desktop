@@ -1,6 +1,5 @@
 import { isEmpty } from 'lodash';
 import styled from 'styled-components';
-import { useNicknameOrProfileNameOrShortenedPubkey } from '../../../../hooks/useParamSelector';
 import { assertUnreachable } from '../../../../types/sqlSharedTypes';
 import { Flex } from '../../../basic/Flex';
 import { ReadableMessage } from './ReadableMessage';
@@ -16,6 +15,7 @@ import {
 import { useMessageInteractionNotification, useMessageIsUnread } from '../../../../state/selectors';
 import type { WithMessageId } from '../../../../session/types/with';
 import { tr } from '../../../../localization/localeTools';
+import { useConversationUsernameWithFallback } from '../../../../hooks/useParamSelector';
 
 const StyledFailText = styled.div`
   color: var(--danger-color);
@@ -25,7 +25,7 @@ export const InteractionNotification = (props: WithMessageId) => {
   const { messageId } = props;
 
   const convoId = useSelectedConversationKey();
-  const displayName = useNicknameOrProfileNameOrShortenedPubkey(convoId);
+  const displayName = useConversationUsernameWithFallback(true, convoId);
   const isGroup = !useSelectedIsPrivate();
   const isCommunity = useSelectedIsPublic();
   const isUnread = useMessageIsUnread(messageId) || false;

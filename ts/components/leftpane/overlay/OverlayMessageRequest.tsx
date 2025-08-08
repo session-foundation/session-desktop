@@ -39,6 +39,16 @@ const MessageRequestList = () => {
   );
 };
 
+const StyledLeftPaneOverlay = styled.div`
+  background: var(--background-primary-color);
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  align-items: center;
+  overflow-y: auto;
+  overflow-x: hidden;
+`;
+
 export const OverlayMessageRequest = () => {
   useKey('Escape', closeOverlay);
   const dispatch = useDispatch();
@@ -96,7 +106,7 @@ export const OverlayMessageRequest = () => {
   }
 
   return (
-    <div className="module-left-pane-overlay">
+    <StyledLeftPaneOverlay>
       {hasRequests ? (
         <>
           <MessageRequestList />
@@ -115,6 +125,6 @@ export const OverlayMessageRequest = () => {
           </MessageRequestListPlaceholder>
         </>
       )}
-    </div>
+    </StyledLeftPaneOverlay>
   );
 };

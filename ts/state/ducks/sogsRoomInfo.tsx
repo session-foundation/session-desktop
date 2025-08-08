@@ -7,13 +7,15 @@ import { downloadAttachmentSogsV3 } from '../../receiver/attachments';
 import { uploadImageForRoomSogsV3 } from '../../session/apis/open_group_api/sogsv3/sogsV3RoomImage';
 import { MIME } from '../../types';
 import { processNewAttachment } from '../../types/MessageAttachment';
-import { updateEditProfilePictureModal } from './modalDialog';
+import { updateConversationDetailsModal, updateEditProfilePictureModal } from './modalDialog';
+import { changeRoomDetailsSogsV3 } from '../../session/apis/open_group_api/sogsv3/sogsV3RoomInfosChange';
 
 type RoomInfo = {
   canWrite: boolean;
   subscriberCount: number;
   moderators: Array<string>;
   uploadingNewAvatar: boolean;
+  detailsChangePending: boolean;
   roomDescription: string;
 };
 
@@ -32,20 +34,43 @@ function addEmptyEntryIfNeeded(state: any, convoId: string) {
       subscriberCount: 0,
       moderators: [],
       uploadingNewAvatar: false,
+      nameChangePending: false,
       roomDescription: '',
     };
   }
 }
-/**
- * This function is only called when the local user makes a change to a community.
- * It can be used to upload and assign the avatar to a room.
- * Note: pysogs do not removing the avatar from the room, only overwriting it with something else
- */
-const changeCommunityAvatar = createAsyncThunk(
-  'sogs/changeCommunityAvatar',
+
+const roomDetailsChange = createAsyncThunk(
+  'sogs/roomDetailsChange',
   async ({
-    avatarObjectUrl,
     conversationId,
+    newName,
+    newDescription,
+  }: {
+    conversationId: string;
+    newName: string;
+    newDescription: string;
+  }) => {
+    const roomInfos = ConvoHub.use().get(conversationId)?.toOpenGroupV2();
+    if (!roomInfos) {
+      throw new Error(`roomInfos not found for convo: ${conversationId}`);
+    }
+
+    await changeRoomDetailsSogsV3(roomInfos, {
+      roomName: newName,
+      roomDescription: newDescription,
+    });
+    window.inboxStore?.dispatch(updateConversationDetailsModal(null));
+
+    return true;
+  }
+);
+
+const roomAvatarChange = createAsyncThunk(
+  'sogs/roomAvatarChange',
+  async ({
+    conversationId,
+    avatarObjectUrl,
   }: {
     conversationId: string;
     avatarObjectUrl: string;
@@ -154,29 +179,54 @@ const sogsRoomInfosSlice = createSlice({
     },
   },
   extraReducers: builder => {
-    builder.addCase(changeCommunityAvatar.fulfilled, (state, action) => {
+    builder.addCase(roomAvatarChange.fulfilled, (state, action) => {
       const convoId = action.meta.arg.conversationId;
       addEmptyEntryIfNeeded(state, convoId);
 
-      window.log.error('a changeCommunityAvatar was fulfilled with:', action.payload);
+      window.log.debug('a roomAvatarChange was fulfilled with:', action.payload);
       state.rooms[convoId].uploadingNewAvatar = false;
 
       return state;
     });
-    builder.addCase(changeCommunityAvatar.pending, (state, action) => {
+    builder.addCase(roomAvatarChange.pending, (state, action) => {
       const convoId = action.meta.arg.conversationId;
       addEmptyEntryIfNeeded(state, convoId);
 
-      window.log.error('a changeCommunityAvatar is pending');
+      window.log.debug('a roomAvatarChange is pending');
       state.rooms[convoId].uploadingNewAvatar = true;
       return state;
     });
-    builder.addCase(changeCommunityAvatar.rejected, (state, action) => {
+    builder.addCase(roomAvatarChange.rejected, (state, action) => {
       const convoId = action.meta.arg.conversationId;
       addEmptyEntryIfNeeded(state, convoId);
 
-      window.log.error('a changeCommunityAvatar was rejected with:', action.error);
-      state.rooms[convoId].uploadingNewAvatar = true;
+      window.log.warn('a roomAvatarChange was rejected with:', action.error);
+      state.rooms[convoId].uploadingNewAvatar = false;
+      return state;
+    });
+    builder.addCase(roomDetailsChange.fulfilled, (state, action) => {
+      const convoId = action.meta.arg.conversationId;
+      addEmptyEntryIfNeeded(state, convoId);
+
+      window.log.debug('a roomDetailsChange was fulfilled with:', action.payload);
+      state.rooms[convoId].detailsChangePending = false;
+
+      return state;
+    });
+    builder.addCase(roomDetailsChange.pending, (state, action) => {
+      const convoId = action.meta.arg.conversationId;
+      addEmptyEntryIfNeeded(state, convoId);
+
+      window.log.debug('a roomDetailsChange is pending');
+      state.rooms[convoId].detailsChangePending = true;
+      return state;
+    });
+    builder.addCase(roomDetailsChange.rejected, (state, action) => {
+      const convoId = action.meta.arg.conversationId;
+      addEmptyEntryIfNeeded(state, convoId);
+
+      window.log.warn('a roomDetailsChange was rejected with:', action.error);
+      state.rooms[convoId].detailsChangePending = false;
       return state;
     });
   },
@@ -191,7 +241,8 @@ export const ReduxSogsRoomInfos = {
   setModeratorsOutsideRedux,
   setRoomDescriptionOutsideRedux,
   sogsRoomInfoReducer: reducer,
-  changeCommunityAvatar,
+  roomAvatarChange,
+  roomDetailsChange,
 };
 
 function setSubscriberCountOutsideRedux(convoId: string, subscriberCount: number) {
