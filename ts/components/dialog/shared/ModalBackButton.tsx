@@ -6,7 +6,8 @@ export const ModalBackButton = ({ onClick }: { onClick: () => void }) => {
     <SessionLucideIconButton
       unicode={LUCIDE_ICONS_UNICODE.CHEVRON_LEFT}
       onClick={onClick}
-      iconSize="medium"
+      iconSize="large"
+      iconColor="var(--text-primary-color)"
     />
   );
 };

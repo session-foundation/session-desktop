@@ -123,7 +123,7 @@ export function SessionQRCode(props: SessionQRCodeProps) {
       $alignItems="center"
       size={size}
       id={id}
-      title={tr('download')}
+      title={tr('fullScreenToggle')}
       aria-label={ariaLabel || 'QR code'}
       onClick={(event: MouseEvent<HTMLDivElement>) => {
         event.preventDefault();

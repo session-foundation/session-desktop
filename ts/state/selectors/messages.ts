@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { MessageModelType } from '../../models/messageType';
 import {
@@ -14,9 +15,11 @@ import { PubKey } from '../../session/types';
 import { useIsMe } from '../../hooks/useParamSelector';
 import { UserUtils } from '../../session/utils';
 import { tr } from '../../localization/localeTools';
+import { useFeatureFlag } from '../ducks/types/releasedFeaturesReduxTypes';
 
 function useMessagePropsByMessageId(messageId: string | undefined) {
-  return useSelector((state: StateType) => getMessagePropsByMessageId(state, messageId));
+  const props = useSelector((state: StateType) => getMessagePropsByMessageId(state, messageId));
+  return useMemo(() => props, [props]);
 }
 
 const useSenderConvoProps = (
@@ -96,13 +99,15 @@ export const useMessageDirection = (
 };
 
 export const useMessageLinkPreview = (messageId: string | undefined): Array<any> | undefined => {
-  return useMessagePropsByMessageId(messageId)?.propsForMessage.previews;
+  const previews = useMessagePropsByMessageId(messageId)?.propsForMessage.previews;
+  return useMemo(() => previews, [previews]);
 };
 
 export const useMessageAttachments = (
   messageId: string | undefined
 ): Array<PropsForAttachment> | undefined => {
-  return useMessagePropsByMessageId(messageId)?.propsForMessage.attachments;
+  const attachments = useMessagePropsByMessageId(messageId)?.propsForMessage.attachments;
+  return useMemo(() => attachments, [attachments]);
 };
 
 export const useMessageSenderIsAdmin = (messageId: string | undefined): boolean => {
@@ -183,6 +188,21 @@ export function useHideAvatarInMsgList(messageId?: string, isDetailView?: boolea
 
 export function useMessageSelected(messageId?: string) {
   return useSelector((state: StateType) => getIsMessageSelected(state, messageId));
+}
+
+export function useMessageSentWithProFeatures(messageId?: string) {
+  const msgProps = useMessagePropsByMessageId(messageId);
+  const mockedFeatureFlags = useFeatureFlag('mockMessageProFeatures');
+  const proFeatures = mockedFeatureFlags.length
+    ? mockedFeatureFlags
+    : msgProps?.propsForMessage.proFeatures;
+
+  return useMemo(() => {
+    if (!proFeatures) {
+      return null;
+    }
+    return proFeatures;
+  }, [proFeatures]);
 }
 
 /**

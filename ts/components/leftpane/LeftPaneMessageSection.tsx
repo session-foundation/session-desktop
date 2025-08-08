@@ -102,7 +102,6 @@ const ConversationList = () => {
       <AutoSizer>
         {({ height, width }) => (
           <List
-            className="module-left-pane__virtual-list"
             height={height}
             rowCount={conversationIds.length}
             rowHeight={64}
@@ -110,6 +109,7 @@ const ConversationList = () => {
             width={width}
             autoHeight={false}
             conversationIds={conversationIds}
+            style={{ outline: 'none' }}
           />
         )}
       </AutoSizer>

@@ -18,6 +18,7 @@ import { StagedPlaceholderAttachment } from './StagedPlaceholderAttachment';
 import { AriaLabels } from '../../util/hardcodedAriaLabels';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { THEME_GLOBALS } from '../../themes/globals';
 
 type Props = {
   attachments: Array<AttachmentType>;
@@ -89,7 +90,7 @@ export const StagedAttachmentList = (props: Props) => {
             style={{
               position: 'absolute',
               top: 0,
-              right: 0,
+              right: THEME_GLOBALS['--margin-close-button-composition-box'],
               zIndex: 1,
             }}
           />

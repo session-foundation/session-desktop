@@ -23,7 +23,7 @@ const StyledQuote = styled.div<{
   display: flex;
   flex-direction: row;
   align-items: stretch;
-  margin: ${props => (props.hasAttachment ? 'var(--margins-md)' : 'var(--margins-xs)')} 0;
+  margin: var(--margins-xs);
   ${props => !props.hasAttachment && 'border-left: 4px solid;'}
   border-color: ${props =>
     props.isIncoming

@@ -24,7 +24,6 @@ export type SessionIconProps = {
 };
 
 export const IconSizeToPx = {
-  tiny: 12,
   small: 15,
   /**
    * medium is default

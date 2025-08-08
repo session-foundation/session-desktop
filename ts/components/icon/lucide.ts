@@ -50,6 +50,7 @@ export enum LUCIDE_ICONS_UNICODE {
   QR_CODE = '',
   RECTANGLE_ELLIPSES = '',
   REFRESH_CW = '',
+  REPEAT_2 = '',
   REPLY = '',
   SEARCH = '',
   SETTINGS = '',

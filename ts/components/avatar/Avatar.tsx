@@ -1,28 +1,24 @@
 import { memo, SessionDataTestId, useState } from 'react';
-import styled from 'styled-components';
-import clsx from 'clsx';
 
 import { useDisableDrag } from '../../hooks/useDisableDrag';
 import { useEncryptedFileFetch } from '../../hooks/useEncryptedFileFetch';
 import {
   useAvatarPath,
-  useConversationUsername,
+  useConversationUsernameWithFallback,
   useIsClosedGroup,
-  useIsPublic,
 } from '../../hooks/useParamSelector';
-import { SessionIcon } from '../icon';
 import { AvatarPlaceHolder } from './AvatarPlaceHolder/AvatarPlaceHolder';
 import { ClosedGroupAvatar } from './AvatarPlaceHolder/ClosedGroupAvatar';
 import { useIsMessageSelectionMode } from '../../state/selectors/selectedConversation';
 import { PlusAvatarButton } from '../buttons/PlusAvatarButton';
 import { StyledAvatar } from './AvatarPlaceHolder/StyledAvatar';
+import { CrownIcon } from './CrownIcon';
 
 export enum AvatarSize {
   XS = 28,
   S = 36,
   M = 48,
-  L = 80,
-  XL = 110,
+  XL = 90,
   HUGE = 190,
 }
 
@@ -30,6 +26,7 @@ type Props = {
   forcedAvatarPath?: string | null;
   forcedName?: string;
   pubkey: string;
+  showCrown?: boolean;
   size: AvatarSize;
   base64Data?: string; // if this is not empty, it will be used to render the avatar with base64 encoded data
   onAvatarClick?: () => void;
@@ -44,37 +41,10 @@ type Props = {
 
 const Identicon = (props: Pick<Props, 'forcedName' | 'pubkey' | 'size'>) => {
   const { size, forcedName, pubkey } = props;
-  const displayName = useConversationUsername(pubkey);
+  const displayName = useConversationUsernameWithFallback(false, pubkey);
   const userName = forcedName || displayName || '0';
 
   return <AvatarPlaceHolder diameter={size} name={userName} pubkey={pubkey} />;
-};
-
-const CrownWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: absolute;
-  bottom: 11%;
-  right: 11%;
-  height: 18px;
-  width: 18px;
-  transform: translate(20%, 20%); // getting over 23% creates a glitch
-  background: var(--background-primary-color);
-  border-radius: 50%;
-`;
-
-export const CrownIcon = () => {
-  return (
-    <CrownWrapper>
-      <SessionIcon
-        iconColor="#f7c347"
-        iconSize={'small'}
-        iconType="crown"
-        iconPadding="1px 0 0 0 "
-      />
-    </CrownWrapper>
-  );
 };
 
 const NoImage = memo(
@@ -131,6 +101,7 @@ const AvatarInner = (props: Props) => {
     imageDataTestId,
     onAvatarClick,
     onPlusAvatarClick,
+    showCrown,
   } = props;
   const [imageBroken, setImageBroken] = useState(false);
 
@@ -138,8 +109,7 @@ const AvatarInner = (props: Props) => {
 
   const isClosedGroup = useIsClosedGroup(pubkey);
   const avatarPath = useAvatarPath(pubkey);
-  const name = useConversationUsername(pubkey);
-  const isCommunity = useIsPublic(pubkey);
+  const name = useConversationUsernameWithFallback(false, pubkey);
   // contentType is not important
   const { urlToLoad } = useEncryptedFileFetch(forcedAvatarPath || avatarPath || '', '', true);
 
@@ -158,25 +128,21 @@ const AvatarInner = (props: Props) => {
    * I suspect that it comes from the virtualisation of the list, but I am not 100% sure.
    * I didn't find the root cause but to avoid it we enforce that urlToLoad is used only when one of the avatar path is set.
    */
-  const hasImage = (base64Data || ((forcedAvatarPath || avatarPath) && urlToLoad)) && !imageBroken;
-
-  const isClickable = !!onAvatarClick || (isCommunity && onPlusAvatarClick);
+  const hasImage = Boolean(
+    (base64Data || ((forcedAvatarPath || avatarPath) && urlToLoad)) && !imageBroken
+  );
 
   return (
     <StyledAvatar
       $diameter={size}
-      className={clsx('module-avatar', isClickable && 'module-avatar-clickable')}
+      $isClickable={!!onAvatarClick}
       onClick={e => {
         if (isSelectingMessages) {
           // we could toggle the selection of this message,
           // but this just disable opening the new Conversation dialog with that user while selecting messages
           return;
         }
-        if (isCommunity && onPlusAvatarClick) {
-          e.stopPropagation();
-          e.preventDefault();
-          onPlusAvatarClick();
-        } else if (onAvatarClick) {
+        if (onAvatarClick) {
           e.stopPropagation();
           e.preventDefault();
           onAvatarClick();
@@ -204,8 +170,15 @@ const AvatarInner = (props: Props) => {
         />
       )}
       {onPlusAvatarClick ? (
-        <PlusAvatarButton onClick={onPlusAvatarClick} dataTestId="image-upload-section" />
+        <PlusAvatarButton
+          onClick={onPlusAvatarClick}
+          dataTestId="image-upload-section"
+          hasImage={hasImage}
+          avatarSize={size}
+          isClosedGroup={isClosedGroup}
+        />
       ) : null}
+      {showCrown ? <CrownIcon /> : null}
     </StyledAvatar>
   );
 };

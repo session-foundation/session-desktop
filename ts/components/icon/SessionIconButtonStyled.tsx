@@ -6,11 +6,17 @@ export const StyledSessionIconButton = styled.button<{
   $isDarkTheme: boolean;
 }>`
   background-color: var(--button-icon-background-color);
-  transition: var(--default-duration);
+  transition:
+    color var(--default-duration),
+    background-color var(--default-duration),
+    filter var(--default-duration);
   // Note: this styled component is used for both the Lucide (font) and the Legacy Icons (svg)
 
   svg path {
-    transition: var(--default-duration);
+    transition:
+      color var(--default-duration),
+      background-color var(--default-duration),
+      filter var(--default-duration);
     ${props =>
       !props.color &&
       `fill:

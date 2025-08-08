@@ -1,25 +1,24 @@
-import { useIsGroupV2, useWeAreAdmin } from '../../hooks/useParamSelector';
-import { showUpdateGroupNameByConvoId } from '../../interactions/conversationInteractions';
+import { useIsGroupV2, useIsPublic, useWeAreAdmin } from '../../hooks/useParamSelector';
+import { showUpdateGroupOrCommunityDetailsByConvoId } from '../../interactions/conversationInteractions';
 import { useGroupCommonNoShow } from './useGroupCommonNoShow';
 
-export function useShowUpdateGroupNameDescriptionCb({
+export function useShowUpdateGroupOrCommunityDetailsCb({
   conversationId,
 }: {
   conversationId: string;
 }) {
   const isGroupV2 = useIsGroupV2(conversationId);
   const weAreAdmin = useWeAreAdmin(conversationId);
+  const isPublic = useIsPublic(conversationId);
 
   const commonNoShow = useGroupCommonNoShow(conversationId);
-  const showUpdateGroupNameButton = isGroupV2 && weAreAdmin && !commonNoShow;
+  const showIt = (isGroupV2 && weAreAdmin && !commonNoShow) || (isPublic && weAreAdmin);
 
-  if (!showUpdateGroupNameButton) {
+  if (!showIt) {
     return null;
   }
 
-  const cb = () => {
-    void showUpdateGroupNameByConvoId(conversationId);
+  return () => {
+    void showUpdateGroupOrCommunityDetailsByConvoId(conversationId);
   };
-
-  return cb;
 }

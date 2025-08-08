@@ -141,7 +141,7 @@ async function encryptMessageAndWrap(
     networkTimestamp,
     cipherText
   );
-  const data = MessageWrapper.wrapEnvelopeInWebSocketMessage(envelope);
+  const data = wrapEnvelopeInWebSocketMessage(envelope);
 
   return {
     encryptedAndWrappedData: data,
@@ -161,7 +161,6 @@ async function encryptMessagesAndWrap(
 }
 
 export const MessageWrapper = {
-  wrapEnvelopeInWebSocketMessage,
   wrapContentIntoEnvelope,
   encryptMessagesAndWrap,
 };

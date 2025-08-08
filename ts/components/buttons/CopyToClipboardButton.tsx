@@ -5,12 +5,13 @@ import useTimeoutFn from 'react-use/lib/useTimeoutFn';
 
 import { useHotkey } from '../../hooks/useHotkey';
 import { ToastUtils } from '../../session/utils';
-import { SessionButton, SessionButtonProps } from '../basic/SessionButton';
+import { SessionButtonProps } from '../basic/SessionButton';
 import { SessionIconButtonProps, SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import type { SessionIconSize } from '../icon';
 import { tr } from '../../localization/localeTools';
 import { DURATION } from '../../session/constants';
+import { ModalBottomButtonWithBorder } from '../SessionWrapperModal';
 
 type CopyProps = {
   copyContent?: string;
@@ -54,11 +55,13 @@ export const CopyToClipboardButton = (props: CopyToClipboardButtonProps) => {
   useHotkey('c', onClick, !hotkey);
 
   return (
-    <SessionButton
+    <ModalBottomButtonWithBorder
       aria-label={'copy to clipboard button'}
-      {...props}
-      text={!isEmpty(text) ? text : copied ? tr('copied') : tr('copy')}
+      text={text && !isEmpty(text) ? text : copied ? tr('copied') : tr('copy')}
       onClick={onClick}
+      buttonColor={props.buttonColor}
+      dataTestId={props.dataTestId}
+      disabled={props.disabled}
     />
   );
 };

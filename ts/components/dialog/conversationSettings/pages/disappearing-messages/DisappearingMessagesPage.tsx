@@ -169,7 +169,7 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
         <ModalBasicHeader
           title={title}
           bigHeader={true}
-          leftButton={backAction ? <ModalBackButton onClick={backAction} /> : undefined}
+          extraLeftButton={backAction ? <ModalBackButton onClick={backAction} /> : undefined}
         />
       }
       onClose={onClose}

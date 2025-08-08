@@ -5,7 +5,7 @@ import { UserUtils } from '../session/utils';
 import { sleepFor } from '../session/utils/Promise';
 import { LightBoxOptions } from '../state/ducks/modalDialog';
 
-export function prepareQRCodeForLightBox(fileName: string, url: string, onClose?: () => void) {
+export function prepareQRCodeForLightBox(fileName: string, url: string): LightBoxOptions {
   const attachment = {
     fileName,
     url,
@@ -16,7 +16,7 @@ export function prepareQRCodeForLightBox(fileName: string, url: string, onClose?
     screenshot: null,
     thumbnail: null,
   };
-  const lightBoxOptions: LightBoxOptions = {
+  return {
     media: [
       {
         index: 0,
@@ -29,10 +29,7 @@ export function prepareQRCodeForLightBox(fileName: string, url: string, onClose?
       },
     ],
     attachment,
-    onClose,
   };
-
-  return lightBoxOptions;
 }
 
 export async function renderQRCode(props: SessionQRCodeProps, filename: string): Promise<string> {

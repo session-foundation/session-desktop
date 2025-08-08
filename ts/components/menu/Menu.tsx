@@ -3,17 +3,14 @@ import { useConvoIdFromContext } from '../../contexts/ConvoIdContext';
 import {
   useIsGroupV2,
   useIsIncomingRequest,
-  useIsKickedFromGroup,
   useIsPrivate,
   useIsPrivateAndFriend,
   useNotificationSetting,
-  useWeAreAdmin,
 } from '../../hooks/useParamSelector';
 import {
   declineConversationWithConfirm,
   handleAcceptConversationRequest,
   markAllReadByConvoId,
-  showUpdateGroupNameByConvoId,
 } from '../../interactions/conversationInteractions';
 import { ConvoHub } from '../../session/conversations';
 import { PubKey } from '../../session/types';
@@ -24,7 +21,6 @@ import {
 } from '../../state/selectors/section';
 import { useSelectedConversationKey } from '../../state/selectors/selectedConversation';
 import { ItemWithDataTestId } from './items/MenuItemWithDataTestId';
-import { useLibGroupDestroyed } from '../../state/selectors/userGroups';
 import { NetworkTime } from '../../util/NetworkTime';
 import { useShowNotificationFor } from '../menuAndSettingsHooks/useShowNotificationFor';
 import { useLocalisedNotificationOptions } from '../menuAndSettingsHooks/useLocalisedNotificationFor';
@@ -116,26 +112,6 @@ export const ShowUserProfileMenuItem = () => {
     );
   }
 
-  return null;
-};
-
-export const UpdateGroupNameMenuItem = () => {
-  const convoId = useConvoIdFromContext();
-  const isKickedFromGroup = useIsKickedFromGroup(convoId);
-  const isDestroyed = useLibGroupDestroyed(convoId);
-  const weAreAdmin = useWeAreAdmin(convoId);
-
-  if (!isKickedFromGroup && weAreAdmin && !isDestroyed) {
-    return (
-      <ItemWithDataTestId
-        onClick={() => {
-          void showUpdateGroupNameByConvoId(convoId);
-        }}
-      >
-        {tr('groupEdit')}
-      </ItemWithDataTestId>
-    );
-  }
   return null;
 };
 

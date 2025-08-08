@@ -58,7 +58,7 @@ export function SessionNetworkModal() {
           title={LOCALE_DEFAULTS.network_name}
           bigHeader={true}
           showExitIcon={true}
-          leftButton={<ReloadButton loading={loading} />}
+          extraLeftButton={<ReloadButton loading={loading} />}
         />
       }
       onClose={onClose}

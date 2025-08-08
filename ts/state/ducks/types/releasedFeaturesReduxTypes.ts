@@ -1,5 +1,5 @@
+import type { ProMessageFeature } from '../../../models/proMessageFeature';
 import { DURATION } from '../../../session/constants';
-import type { RecursiveKeys } from '../../../types/Util';
 
 export type SessionFeatureFlags = {
   replaceLocalizedStringsWithKeys: boolean;
@@ -14,10 +14,11 @@ export type SessionFeatureFlags = {
   proAvailable: boolean;
   mockCurrentUserHasPro: boolean;
   mockOthersHavePro: boolean;
+  mockMessageProFeatures: Array<ProMessageFeature>;
   fsTTL30s: boolean;
 };
 
-export type SessionFeatureFlagKeys = RecursiveKeys<SessionFeatureFlags>;
+export type SessionFeatureFlagKeys = keyof SessionFeatureFlags;
 
 /**
  * Check if the given flag is a Feature flag.
@@ -33,18 +34,16 @@ export const getFeatureFlag = <T extends SessionFeatureFlagKeys>(flag: T) =>
 export const useFeatureFlag = <T extends SessionFeatureFlagKeys>(flag: T) => getFeatureFlag(flag);
 
 export type SessionFlags = SessionFeatureFlags & {
-  debug: {
-    debugLogging: boolean;
-    debugLibsessionDumps: boolean;
-    debugBuiltSnodeRequests: boolean;
-    debugSwarmPolling: boolean;
-    debugServerRequests: boolean;
-    debugNonSnodeRequests: boolean;
-    debugOnionRequests: boolean;
-  };
+  debugLogging: boolean;
+  debugLibsessionDumps: boolean;
+  debugBuiltSnodeRequests: boolean;
+  debugSwarmPolling: boolean;
+  debugServerRequests: boolean;
+  debugNonSnodeRequests: boolean;
+  debugOnionRequests: boolean;
 };
 
-export type SessionFlagsKeys = RecursiveKeys<SessionFlags>;
+export type SessionFlagsKeys = keyof SessionFlags;
 
 /**
  * 1 second in milliseconds

@@ -2,9 +2,9 @@ import { SessionDataTestId } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 import {
+  useConversationUsernameWithFallback,
   useIsIncomingRequest,
   useIsOutgoingRequest,
-  useNicknameOrProfileNameOrShortenedPubkey,
 } from '../../hooks/useParamSelector';
 import { PubKey } from '../../session/types';
 import { SessionUtilContact } from '../../session/utils/libsession/libsession_utils_contacts';
@@ -167,8 +167,7 @@ const InvitedToGroupControlMessage = () => {
 
   const groupName = useLibGroupInviteGroupName(selectedConversation) || tr('unknown');
   const conversationOrigin = useSelectedConversationIdOrigin();
-  const adminNameInvitedUs =
-    useNicknameOrProfileNameOrShortenedPubkey(conversationOrigin) || tr('unknown');
+  const adminNameInvitedUs = useConversationUsernameWithFallback(true, conversationOrigin);
   const isGroupPendingInvite = useLibGroupInvitePending(selectedConversation);
   const weHaveSecretKey = useLibGroupWeHaveSecretKey(selectedConversation);
 

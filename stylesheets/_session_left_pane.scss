@@ -1,119 +1,29 @@
-$session-compose-margin: 20px;
-
-.module-conversation {
-  // default conversation list item text color
-  &__user__profile {
-    &-number,
-    &-name {
-      font-weight: bold;
-      font-size: var(--font-size-md);
-    }
-  }
-
-  &-list-item {
-    background: var(--conversation-tab-background-color);
-
-    &:hover {
-      background: var(--conversation-tab-background-hover-color);
-    }
-
-    &--is-selected {
-      background: var(--conversation-tab-background-selected-color);
-
-      .module-conversation__user__profile-number,
-      .module-conversation__user__profile-name,
-      .module-conversation-list-item__message__text {
-        color: var(--conversation-tab-text-selected-color);
-      }
-    }
-
-    &--has-unread {
-      background: var(--conversation-tab-background-unread-color);
-      border-left: 4px solid var(--conversation-tab-color-strip-color);
-    }
-
-    &__unread-count {
-      background: var(--unread-messages-alert-background-color);
-      color: var(--unread-messages-alert-text-color);
-
-      position: static !important;
-      font-weight: 700 !important;
-      box-shadow: none !important;
-      margin: 0 !important;
-      flex-shrink: 0;
-    }
-
-    &__header__date,
-    &__header__date--has-unread {
-      flex-grow: 1 !important;
-      text-align: end !important;
-      padding-inline-start: var(--margins-xs);
-    }
-
-    &__message__text {
-      color: var(--conversation-tab-text-color);
-      &--has-unread {
-        color: var(--conversation-tab-text-unread-color);
-      }
-    }
-
-    &__header__name {
-      flex-grow: 0;
-      padding-inline-end: 5px;
-    }
-
-    &__header__name--with-unread .module-conversation__user__profile-number,
-    &__header__name--with-unread .module-conversation__user__profile-name {
-      color: var(--conversation-tab-text-unread-color);
-    }
-  }
+.module-conversation-list-item {
+  background: var(--conversation-tab-background-color);
+}
+.module-conversation-list-item:hover {
+  background: var(--conversation-tab-background-hover-color);
 }
 
-.module-left-pane {
-  position: relative;
-  height: 100%;
+.module-conversation-list-item__unread-count {
+  background: var(--unread-messages-alert-background-color);
+  color: var(--unread-messages-alert-text-color);
+
+  position: static !important;
+  font-weight: 700 !important;
+  box-shadow: none !important;
+  margin: 0 !important;
   flex-shrink: 0;
-  border-left: 1px solid var(--border-color);
-  border-right: 1px solid var(--border-color);
+}
 
-  &-session {
-    display: flex;
-    height: 100%;
-  }
+.module-conversation-list-item__header__date,
+.module-conversation-list-item__header__date--has-unread {
+  flex-grow: 1 !important;
+  text-align: end !important;
+  padding-inline-start: var(--margins-xs);
+}
 
-  &__title {
-    padding-inline-end: var(--margins-sm);
-    padding-inline-start: var(--margins-sm);
-    transition: var(--default-duration);
-    flex-grow: 1;
-  }
-
-  &-overlay {
-    background: var(--background-primary-color);
-
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-    align-items: center;
-    overflow-y: auto;
-    overflow-x: hidden;
-
-    .session-icon .exit {
-      padding: 13px;
-    }
-
-    .exit {
-      margin-top: 10px;
-      margin-inline-start: 13px;
-      align-self: flex-start;
-    }
-
-    .session-button {
-      min-width: 160px;
-      width: fit-content;
-      margin-top: 1rem;
-      margin-bottom: 3rem;
-      flex-shrink: 0;
-    }
-  }
+.module-conversation-list-item__header__name {
+  flex-grow: 0;
+  padding-inline-end: 5px;
 }
