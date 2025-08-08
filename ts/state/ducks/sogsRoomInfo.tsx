@@ -7,7 +7,7 @@ import { downloadAttachmentSogsV3 } from '../../receiver/attachments';
 import { uploadImageForRoomSogsV3 } from '../../session/apis/open_group_api/sogsv3/sogsV3RoomImage';
 import { MIME } from '../../types';
 import { processNewAttachment } from '../../types/MessageAttachment';
-import { updateEditProfilePictureModal, updateGroupOrCommunityDetailsModal } from './modalDialog';
+import { updateConversationDetailsModal, updateEditProfilePictureModal } from './modalDialog';
 import { changeRoomDetailsSogsV3 } from '../../session/apis/open_group_api/sogsv3/sogsV3RoomInfosChange';
 
 type RoomInfo = {
@@ -60,7 +60,7 @@ const roomDetailsChange = createAsyncThunk(
       roomName: newName,
       roomDescription: newDescription,
     });
-    window.inboxStore?.dispatch(updateGroupOrCommunityDetailsModal(null));
+    window.inboxStore?.dispatch(updateConversationDetailsModal(null));
 
     return true;
   }

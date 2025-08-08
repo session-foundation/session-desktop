@@ -3,12 +3,12 @@ import { useDispatch } from 'react-redux';
 import type { AnyAction, Dispatch } from 'redux';
 import styled from 'styled-components';
 import { ToastUtils, UserUtils } from '../../session/utils';
-import { editProfileModal, updateEditProfilePictureModal } from '../../state/ducks/modalDialog';
+import { userSettingsModal, updateEditProfilePictureModal } from '../../state/ducks/modalDialog';
 import type { EditProfilePictureModalProps } from '../../types/ReduxTypes';
 import { pickFileForAvatar } from '../../types/attachments/VisualAttachment';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionSpinner } from '../loading';
-import { ProfileAvatar } from './edit-profile/components';
+import { ProfileAvatar } from './user-settings/components';
 import {
   useAvatarPath,
   useConversationUsernameWithFallback,
@@ -39,7 +39,7 @@ import { AvatarSize } from '../avatar/Avatar';
 import { ProIconButton } from '../buttons/ProButton';
 import { useProBadgeOnClickCb } from '../menuAndSettingsHooks/useProBadgeOnClickCb';
 import { useUserHasPro } from '../../hooks/useHasPro';
-import { UploadFirstImageButton } from './edit-profile/UploadFirstImage';
+import { UploadFirstImageButton } from './user-settings/UploadFirstImage';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
@@ -96,7 +96,7 @@ const triggerUploadProfileAvatar = async (
         ToastUtils.pushToastError('edit-profile', error.message);
       }
       window.log.error(
-        'showEditProfileDialog Error ensuring that image is properly sized:',
+        'triggerUploadProfileAvatar Error ensuring that image is properly sized:',
         error && error.stack ? error.stack : error
       );
     }
@@ -162,7 +162,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
   const closeDialog = useCallback(() => {
     dispatch(updateEditProfilePictureModal(null));
     if (isMe) {
-      dispatch(editProfileModal({}));
+      dispatch(userSettingsModal({}));
     }
   }, [dispatch, isMe]);
 

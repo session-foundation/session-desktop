@@ -18,8 +18,8 @@ import {
 } from '../SessionWrapperModal';
 import { tr } from '../../localization/localeTools';
 import { PubKey } from '../../session/types';
-import type { ProfileDialogModes } from './edit-profile/ProfileDialogModes';
-import { ProfileHeader, QRView } from './edit-profile/components';
+import type { ProfileDialogModes } from './user-settings/ProfileDialogModes';
+import { ProfileHeader, QRView } from './user-settings/components';
 import { useAvatarPath, useConversationUsernameWithFallback } from '../../hooks/useParamSelector';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';

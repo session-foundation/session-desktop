@@ -8,7 +8,7 @@ import {
   getConversationSettingsModalState,
   getDebugMenuModalState,
   getDeleteAccountModalState,
-  getEditProfileDialog,
+  getUserSettingsModal,
   getEditProfilePictureModalState,
   getEnterPasswordModalState,
   getHideRecoveryPasswordModalState,
@@ -25,7 +25,7 @@ import {
   getUpdateGroupMembersModal,
   getUserProfileModal,
   getLocalizedPopupDialogState,
-  getUpdateGroupOrCommunityDetailsModal,
+  getUpdateConversationDetailsModal,
 } from '../../state/selectors/modal';
 import { LightboxGallery } from '../lightbox/LightboxGallery';
 import { BanOrUnBanUserDialog } from './BanOrUnbanUserDialog';
@@ -42,9 +42,8 @@ import { ReactListModal } from './ReactListModal';
 import { SessionNicknameDialog } from './SessionNicknameDialog';
 import { SessionSetPasswordDialog } from './SessionSetPasswordDialog';
 import { UpdateGroupMembersDialog } from './UpdateGroupMembersDialog';
-import { UpdateGroupOrCommunityDetailsDialog } from './UpdateGroupOrCommunityDetailsDialog';
+import { UpdateConversationDetailsDialog } from './UpdateConversationDetailsDialog';
 import { UserProfileModal } from './UserProfileModal';
-import { EditProfileDialog } from './edit-profile/EditProfileDialog';
 import { OpenUrlModal } from './OpenUrlModal';
 import { BlockOrUnblockDialog } from './blockOrUnblock/BlockOrUnblockDialog';
 import { DebugMenuModal } from './debug/DebugMenuModal';
@@ -53,6 +52,7 @@ import { SessionNetworkModal } from './network/SessionNetworkModal';
 import { SessionConfirm } from './SessionConfirm';
 import { SessionProInfoModal } from './SessionProInfoModal';
 import { LocalizedPopupDialog } from './LocalizedPopupDialog';
+import { UserSettingsDialog } from './user-settings/UserSettingsDialog';
 
 export const ModalContainer = () => {
   const confirmModalState = useSelector(getConfirmModal);
@@ -60,10 +60,10 @@ export const ModalContainer = () => {
   const addModeratorsModalState = useSelector(getAddModeratorsModal);
   const removeModeratorsModalState = useSelector(getRemoveModeratorsModal);
   const updateGroupMembersModalState = useSelector(getUpdateGroupMembersModal);
-  const updateGroupOrCommunityDetailsState = useSelector(getUpdateGroupOrCommunityDetailsModal);
+  const updateConversationDetailsModalState = useSelector(getUpdateConversationDetailsModal);
   const userProfileModalState = useSelector(getUserProfileModal);
   const changeNicknameModal = useSelector(getChangeNickNameDialog);
-  const editProfileModalState = useSelector(getEditProfileDialog);
+  const userSettingsModalState = useSelector(getUserSettingsModal);
   const onionPathModalState = useSelector(getOnionPathDialog);
   const enterPasswordModalState = useSelector(getEnterPasswordModalState);
   const sessionPasswordModalState = useSelector(getSessionPasswordDialog);
@@ -91,7 +91,7 @@ export const ModalContainer = () => {
       )}
       {sessionPasswordModalState && <SessionSetPasswordDialog {...sessionPasswordModalState} />}
       {sessionNetworkModalState && <SessionNetworkModal {...sessionNetworkModalState} />}
-      {editProfileModalState && <EditProfileDialog {...editProfileModalState} />}
+      {userSettingsModalState && <UserSettingsDialog {...userSettingsModalState} />}
       {onionPathModalState && <OnionPathModal {...onionPathModalState} />}
       {reactListModalState && <ReactListModal {...reactListModalState} />}
       {debugMenuModalState && <DebugMenuModal {...debugMenuModalState} />}
@@ -104,8 +104,8 @@ export const ModalContainer = () => {
       {updateGroupMembersModalState && (
         <UpdateGroupMembersDialog {...updateGroupMembersModalState} />
       )}
-      {updateGroupOrCommunityDetailsState && (
-        <UpdateGroupOrCommunityDetailsDialog {...updateGroupOrCommunityDetailsState} />
+      {updateConversationDetailsModalState && (
+        <UpdateConversationDetailsDialog {...updateConversationDetailsModalState} />
       )}
       {userProfileModalState && <UserProfileModal {...userProfileModalState} />}
       {changeNicknameModal && <SessionNicknameDialog {...changeNicknameModal} />}

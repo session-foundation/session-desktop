@@ -10,13 +10,15 @@ import { UserUtils } from '../../../session/utils';
 import { useHotkey } from '../../../hooks/useHotkey';
 import { useOurAvatarPath, useOurConversationUsername } from '../../../hooks/useParamSelector';
 import { ProfileManager } from '../../../session/profile_manager/ProfileManager';
-import { editProfileModal } from '../../../state/ducks/modalDialog';
+import {
+  updateConversationDetailsModal,
+  userSettingsModal,
+} from '../../../state/ducks/modalDialog';
 import { SessionSpinner } from '../../loading';
 import { ProfileHeader, ProfileName, QRView } from './components';
 import { EmptyDisplayNameError, RetrieveDisplayNameError } from '../../../session/utils/errors';
 import { tr } from '../../../localization/localeTools';
 import { sanitizeDisplayNameOrToast } from '../../registration/utils';
-import { useEditProfilePictureCallback } from '../../menuAndSettingsHooks/useEditProfilePictureCallback';
 import { SimpleSessionInput } from '../../inputs/SessionInput';
 import {
   ModalBasicHeader,
@@ -115,19 +117,19 @@ const handleKeyEscape = (
   if (mode === 'edit') {
     cancelEdit();
   } else {
-    dispatch(editProfileModal(null));
+    dispatch(userSettingsModal(null));
   }
 };
 
 // #endregion
 
-const StyledEditProfileDialog = styled.div`
+const StyledUserSettingsDialog = styled.div`
   input {
     border: none;
   }
 `;
 
-export const EditProfileDialog = () => {
+export const UserSettingsDialog = () => {
   const dispatch = useDispatch();
 
   const _profileName = useOurConversationUsername() || '';
@@ -142,7 +144,6 @@ export const EditProfileDialog = () => {
   const avatarPath = useOurAvatarPath() || '';
   const us = UserUtils.getOurPubKeyStrFromCache();
 
-  const editProfilePictureCb = useEditProfilePictureCallback({ conversationId: us });
   const [mode, setMode] = useState<ProfileDialogModes>('default');
   const [loading, setLoading] = useState(false);
 
@@ -150,7 +151,7 @@ export const EditProfileDialog = () => {
     if (event?.key || loading) {
       return;
     }
-    dispatch(editProfileModal(null));
+    dispatch(userSettingsModal(null));
   };
 
   const onClickOK = async () => {
@@ -182,12 +183,11 @@ export const EditProfileDialog = () => {
     }
   };
 
-  const handleProfileHeaderClick = () => {
+  const showUpdateProfileInformation = () => {
     if (loading) {
       return;
     }
-    closeDialog();
-    editProfilePictureCb?.();
+    dispatch(updateConversationDetailsModal({ conversationId: us }));
   };
 
   useHotkey('v', () => handleKeyQRMode(mode, setMode, loading), loading);
@@ -224,13 +224,13 @@ export const EditProfileDialog = () => {
   });
 
   return (
-    <StyledEditProfileDialog className="edit-profile-dialog" data-testid="edit-profile-dialog">
+    <StyledUserSettingsDialog data-testid="user-settings-dialog">
       <SessionWrapperModal
         headerChildren={
           <ModalBasicHeader
             title={tr('profile')}
             showExitIcon={true}
-            extraRightButton={<ModalPencilIcon onClick={() => setMode('edit')} />}
+            extraRightButton={<ModalPencilIcon onClick={showUpdateProfileInformation} />}
           />
         }
         onClose={closeDialog}
@@ -296,11 +296,11 @@ export const EditProfileDialog = () => {
               avatarPath={avatarPath}
               profileName={profileName}
               conversationId={us}
-              onPlusAvatarClick={handleProfileHeaderClick}
+              onPlusAvatarClick={null}
               dataTestId="avatar-edit-profile-dialog"
               // no qr click here as a button is already doing that action (and the qr button looks bad when the small size as the +)
               // Note: this changes with the new Settings design
-              onQRClick={null}
+              onQRClick={() => setMode('qr')}
               enlargedImage={enlargedImage}
               toggleEnlargedImage={() => setEnlargedImage(!enlargedImage)}
             />
@@ -349,6 +349,6 @@ export const EditProfileDialog = () => {
           <SessionSpinner loading={loading} height={'74px'} />
         </Flex>
       </SessionWrapperModal>
-    </StyledEditProfileDialog>
+    </StyledUserSettingsDialog>
   );
 };

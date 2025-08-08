@@ -25,7 +25,7 @@ import { DURATION } from '../../session/constants';
 
 import { reuploadCurrentAvatarUs } from '../../interactions/avatar-interactions/nts-avatar-interactions';
 import {
-  editProfileModal,
+  userSettingsModal,
   onionPathModal,
   updateDebugMenuModal,
 } from '../../state/ducks/modalDialog';
@@ -101,7 +101,7 @@ const Section = (props: { type: SectionType }) => {
 
   const handleClick = () => {
     if (type === SectionType.Profile) {
-      dispatch(editProfileModal({}));
+      dispatch(userSettingsModal({}));
     } else if (type === SectionType.ColorMode) {
       void handleThemeSwitch();
     } else if (type === SectionType.PathIndicator) {

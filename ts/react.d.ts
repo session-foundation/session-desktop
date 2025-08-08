@@ -119,7 +119,7 @@ declare module 'react' {
     | 'message-info'
     | 'send-more';
 
-  type Dialog = 'invite-contacts' | 'edit-profile';
+  type Dialog = 'invite-contacts' | 'user-settings';
 
   type Buttons =
     | 'chooser-new-conversation'
