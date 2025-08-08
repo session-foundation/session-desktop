@@ -37,6 +37,7 @@ export function ProIconButton({
   dataTestId: SessionDataTestId;
   style?: CSSProperties;
 }) {
+  const mergedStyle = { ...defaultStyle, ...style };
   if (onClick) {
     return (
       <SessionIconButton
@@ -46,7 +47,7 @@ export function ProIconButton({
         dataTestId={dataTestId}
         disabled={disabled}
         onClick={onClick}
-        style={{ ...style, ...defaultStyle }}
+        style={mergedStyle}
       />
     );
   }
@@ -57,7 +58,7 @@ export function ProIconButton({
       iconSize={iconSize}
       borderRadius={sizeToBorderRadius(iconSize)}
       dataTestId={dataTestId}
-      style={{ ...style, ...defaultStyle }}
+      style={mergedStyle}
     />
   );
 }

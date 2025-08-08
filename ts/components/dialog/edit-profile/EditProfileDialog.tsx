@@ -22,8 +22,9 @@ import {
   ModalBasicHeader,
   ModalActionsContainer,
   SessionWrapperModal,
+  ModalBottomButtonWithBorder,
 } from '../../SessionWrapperModal';
-import { SessionButtonColor, SessionButton } from '../../basic/SessionButton';
+import { SessionButtonColor } from '../../basic/SessionButton';
 import { CopyToClipboardButton } from '../../buttons';
 import { SessionIDNotEditable } from '../../basic/SessionIdNotEditable';
 import { Flex } from '../../basic/Flex';
@@ -245,37 +246,31 @@ export const EditProfileDialog = () => {
                 hotkey={true}
                 reference={copyButtonRef}
                 dataTestId="copy-button-profile-update"
-                style={{ minWidth: '125px' }}
               />
               {mode === 'default' ? (
-                <SessionButton
+                <ModalBottomButtonWithBorder
                   text={tr('qrView')}
                   onClick={() => {
                     setMode('qr');
                   }}
                   buttonColor={SessionButtonColor.PrimaryDark}
                   dataTestId="view-qr-code-button"
-                  style={{ minWidth: '125px' }}
                 />
               ) : null}
             </ModalActionsContainer>
           ) : (
             !loading && (
               <ModalActionsContainer extraBottomMargin={true}>
-                <SessionButton
+                <ModalBottomButtonWithBorder
                   text={tr('save')}
                   onClick={onClickOK}
                   disabled={cannotContinue}
-                  buttonColor={SessionButtonColor.PrimaryDark}
                   dataTestId="save-button-profile-update"
-                  style={{ minWidth: '125px' }}
                 />
-                <SessionButton
+                <ModalBottomButtonWithBorder
                   text={tr('cancel')}
                   onClick={cancelEdit}
-                  buttonColor={SessionButtonColor.PrimaryDark}
                   dataTestId="invalid-data-testid"
-                  style={{ minWidth: '125px' }}
                 />
               </ModalActionsContainer>
             )

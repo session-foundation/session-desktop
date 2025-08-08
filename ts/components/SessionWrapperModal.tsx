@@ -14,6 +14,7 @@ import { StyledRootDialog } from './dialog/StyledRootDialog';
 import { LUCIDE_ICONS_UNICODE } from './icon/lucide';
 import { IsModalScrolledContext, useIsModalScrolled } from '../contexts/IsModalScrolledContext';
 import { OnModalCloseContext, useOnModalClose } from '../contexts/OnModalCloseContext';
+import { SessionButton, SessionButtonColor } from './basic/SessionButton';
 
 type WithExtraLeftButton = {
   /**
@@ -178,6 +179,35 @@ export const ModalActionsContainer = ({
     </Flex>
   );
 };
+
+/**
+ * In the modal, the bottom actions sometimes have a border.
+ * When they do, they all share the same styling (minWidth 125px) so this component is here to reuse that logic.
+ */
+export function ModalBottomButtonWithBorder({
+  text,
+  onClick,
+  buttonColor,
+  dataTestId,
+  disabled,
+}: {
+  text: string;
+  onClick: () => void | Promise<void>;
+  disabled?: boolean;
+  buttonColor?: SessionButtonColor;
+  dataTestId?: SessionDataTestId;
+}) {
+  return (
+    <SessionButton
+      text={text}
+      onClick={onClick}
+      disabled={disabled}
+      buttonColor={buttonColor ?? SessionButtonColor.PrimaryDark}
+      dataTestId={dataTestId}
+      style={{ minWidth: '125px' }}
+    />
+  );
+}
 
 export type ModalTopAnchor = '15vh' | '25vh' | '35vh' | '45vh';
 

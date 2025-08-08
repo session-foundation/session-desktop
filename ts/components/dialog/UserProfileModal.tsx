@@ -6,7 +6,7 @@ import styled from 'styled-components';
 import { ConvoHub } from '../../session/conversations';
 import { openConversationWithMessages } from '../../state/ducks/conversations';
 import { updateUserProfileModal, UserProfileModalState } from '../../state/ducks/modalDialog';
-import { SessionButton, SessionButtonColor } from '../basic/SessionButton';
+import { SessionButtonColor } from '../basic/SessionButton';
 import { CopyToClipboardButton } from '../buttons/CopyToClipboardButton';
 import { ConversationTypeEnum } from '../../models/types';
 import { Flex } from '../basic/Flex';
@@ -15,6 +15,7 @@ import {
   ModalBasicHeader,
   ModalActionsContainer,
   SessionWrapperModal,
+  ModalBottomButtonWithBorder,
 } from '../SessionWrapperModal';
 import { tr } from '../../localization/localeTools';
 import { PubKey } from '../../session/types';
@@ -103,12 +104,10 @@ export const UserProfileModal = ({
       onClose={closeDialog}
       buttonChildren={
         <ModalActionsContainer extraBottomMargin={true}>
-          <SessionButton
+          <ModalBottomButtonWithBorder
             text={tr('message')}
             onClick={onClickStartConversation}
-            buttonColor={SessionButtonColor.PrimaryDark}
             dataTestId="new-session-conversation"
-            style={{ minWidth: '125px' }}
             disabled={isBlindedAndNotResolved && hasDisabledMsgRequests}
           />
 
@@ -117,7 +116,6 @@ export const UserProfileModal = ({
               copyContent={conversationIdToDisplay}
               buttonColor={SessionButtonColor.PrimaryDark}
               dataTestId="copy-button-account-id"
-              style={{ minWidth: '125px' }}
               hotkey={true}
             />
           )}
