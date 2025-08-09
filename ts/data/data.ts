@@ -395,7 +395,7 @@ async function getMessagesByConversation(
     skipTimerInit = false,
     returnQuotes = false,
     messageId = null,
-  }: { skipTimerInit?: false; returnQuotes?: boolean; messageId: string | null }
+  }: { skipTimerInit?: boolean; returnQuotes?: boolean; messageId: string | null }
 ): Promise<{ messages: Array<MessageModel>; quotes: Array<Quote> }> {
   const { messages, quotes } = await channels.getMessagesByConversation(conversationId, {
     messageId,
