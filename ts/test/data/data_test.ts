@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe } from 'mocha';
 import Sinon from 'sinon';
 import { expect } from 'chai';
+import { PubkeyType } from 'libsession_util_nodejs';
 import { Data } from '../../data/data';
 import { channels } from '../../data/channels';
 import * as dataInit from '../../data/dataInit';
@@ -11,12 +12,13 @@ import { DisappearingMessages } from '../../session/disappearing_messages';
 import { ConversationAttributes } from '../../models/conversationAttributes';
 import { ConversationModel } from '../../models/conversation';
 import { MessageModel } from '../../models/message';
-import { MessageAttributes } from '../../models/messageType';
+import { MessageAttributes, MessageAttributesOptionals } from '../../models/messageType';
 import {
   SaveConversationReturn,
   SaveSeenMessageHash,
   UpdateLastHashType,
 } from '../../types/sqlSharedTypes';
+import { UserUtils } from '../../session/utils';
 
 describe('data', () => {
   beforeEach(() => {
@@ -696,19 +698,18 @@ describe('data', () => {
   describe('removeMessage', () => {
     it('removes message when it exists', async () => {
       const expectedMessageId = 'msg_123';
-      const mockMessage = new MessageModel({
+      const message: MessageAttributesOptionals = {
         id: expectedMessageId,
         body: 'Test message',
         source: 'source',
         type: 'incoming',
         conversationId: '321',
-      });
+      };
+
+      const mockMessage = new MessageModel(message);
       mockMessage.cleanup = Sinon.stub();
 
-      const getMessageByIdStub = Sinon.stub(channels, 'getMessageById').resolves({
-        id: expectedMessageId,
-        body: 'Test message',
-      });
+      const getMessageByIdStub = Sinon.stub(channels, 'getMessageById').resolves(message);
       const removeMessageStub = Sinon.stub(channels, 'removeMessage');
 
       const result = await Data.removeMessage(expectedMessageId);
@@ -775,18 +776,22 @@ describe('data', () => {
         deleteAttachBeforeSeconds: 1640995200,
         conversationId: 'convo_456' as any,
       };
-      const mockMessageAttrs = [
+      const mockMessageAttrs: Array<MessageAttributesOptionals> = [
         {
           id: 'msg_with_attach_1',
           body: 'Message with attachment',
           conversationId: 'convo_456',
           attachments: [{ fileName: 'test.jpg' }],
+          source: 'foo',
+          type: 'incoming',
         },
         {
           id: 'msg_with_attach_2',
           body: 'Another message with attachment',
           conversationId: 'convo_456',
           attachments: [{ fileName: 'document.pdf' }],
+          source: 'bar',
+          type: 'outgoing',
         },
       ];
 
@@ -794,6 +799,9 @@ describe('data', () => {
         channels,
         'getAllMessagesWithAttachmentsInConversationSentBefore'
       ).resolves(mockMessageAttrs);
+
+      const pubkey: PubkeyType = '05foo';
+      Sinon.stub(UserUtils, 'getOurPubKeyStrFromCache').returns(pubkey);
 
       const result = await Data.getAllMessagesWithAttachmentsInConversationSentBefore(expectedArgs);
 
