@@ -14,6 +14,7 @@ import { ConversationModel } from '../../models/conversation';
 import { MessageModel } from '../../models/message';
 import { MessageAttributes, MessageAttributesOptionals } from '../../models/messageType';
 import {
+  MsgDuplicateSearchOpenGroup,
   SaveConversationReturn,
   SaveSeenMessageHash,
   UpdateLastHashType,
@@ -23,6 +24,9 @@ import { UserUtils } from '../../session/utils';
 describe('data', () => {
   beforeEach(() => {
     mockChannels();
+
+    const pubkey: PubkeyType = '05foo';
+    Sinon.stub(UserUtils, 'getOurPubKeyStrFromCache').returns(pubkey);
   });
 
   afterEach(() => {
@@ -768,9 +772,6 @@ describe('data', () => {
         'getAllMessagesWithAttachmentsInConversationSentBefore'
       ).resolves(mockMessageAttrs);
 
-      const pubkey: PubkeyType = '05foo';
-      Sinon.stub(UserUtils, 'getOurPubKeyStrFromCache').returns(pubkey);
-
       const result = await Data.getAllMessagesWithAttachmentsInConversationSentBefore(expectedArgs);
 
       expect(getAllMessagesWithAttachmentsInConversationSentBeforeStub.calledOnce).to.be.true;
@@ -821,6 +822,373 @@ describe('data', () => {
       expect(result).to.deep.equal([]);
     });
   });
+
+  describe('getMessageIdsFromServerIds', () => {
+    it('returns message IDs from server IDs', async () => {
+      const expectedServerIds = ['server_1', 'server_2', 'server_3'];
+      const expectedConversationId = 'convo_123';
+      const expectedMessageIds = ['msg_1', 'msg_2', 'msg_3'];
+
+      const getMessageIdsFromServerIdsStub = Sinon.stub(
+        channels,
+        'getMessageIdsFromServerIds'
+      ).resolves(expectedMessageIds);
+      const result = await Data.getMessageIdsFromServerIds(
+        expectedServerIds,
+        expectedConversationId
+      );
+
+      expect(getMessageIdsFromServerIdsStub.calledOnce).to.be.true;
+      expect(getMessageIdsFromServerIdsStub.calledWith(expectedServerIds, expectedConversationId))
+        .to.be.true;
+      expect(result).to.deep.equal(expectedMessageIds);
+    });
+
+    it('returns undefined when no messages found', async () => {
+      const expectedServerIds = [123, 456];
+      const expectedConversationId = 'empty_convo';
+
+      const getMessageIdsFromServerIdsStub = Sinon.stub(
+        channels,
+        'getMessageIdsFromServerIds'
+      ).resolves(undefined);
+      const result = await Data.getMessageIdsFromServerIds(
+        expectedServerIds,
+        expectedConversationId
+      );
+
+      expect(getMessageIdsFromServerIdsStub.calledOnce).to.be.true;
+      expect(getMessageIdsFromServerIdsStub.calledWith(expectedServerIds, expectedConversationId))
+        .to.be.true;
+      expect(result).to.be.undefined;
+    });
+  });
+
+  describe('getMessageById', () => {
+    it('returns message model when message exists', async () => {
+      const expectedMessageId = 'msg_123';
+      const messageData: MessageAttributesOptionals = {
+        id: expectedMessageId,
+        body: 'Test message body',
+        conversationId: 'convo_123',
+        source: 'source_123',
+        type: 'incoming',
+      };
+
+      const getMessageByIdStub = Sinon.stub(channels, 'getMessageById').resolves(messageData);
+      const result = await Data.getMessageById(expectedMessageId);
+
+      expect(getMessageByIdStub.calledOnce).to.be.true;
+      expect(getMessageByIdStub.calledWith(expectedMessageId)).to.be.true;
+      expect(result).to.be.instanceOf(MessageModel);
+      expect(result?.get('id')).to.equal(expectedMessageId);
+    });
+
+    it('returns null when message does not exist', async () => {
+      const expectedMessageId = 'non_existent_msg';
+
+      const getMessageByIdStub = Sinon.stub(channels, 'getMessageById').resolves(null);
+      const result = await Data.getMessageById(expectedMessageId);
+
+      expect(getMessageByIdStub.calledOnce).to.be.true;
+      expect(getMessageByIdStub.calledWith(expectedMessageId)).to.be.true;
+      expect(result).to.be.null;
+    });
+
+    it('sets skipTimerInit when parameter is true', async () => {
+      const expectedMessageId = 'msg_123';
+      const messageData: MessageAttributesOptionals = {
+        id: expectedMessageId,
+        body: 'Test message body',
+        conversationId: 'convo_123',
+        source: 'source_123',
+        type: 'incoming',
+      };
+
+      const getMessageByIdStub = Sinon.stub(channels, 'getMessageById').resolves(messageData);
+      const result = await Data.getMessageById(expectedMessageId, true);
+
+      expect(getMessageByIdStub.calledOnce).to.be.true;
+      expect(getMessageByIdStub.calledWith(expectedMessageId)).to.be.true;
+      expect(result).to.be.instanceOf(MessageModel);
+      expect(result?.get('id')).to.equal(expectedMessageId);
+    });
+  });
+
+  describe('getMessagesById', () => {
+    it('returns array of message models', async () => {
+      const expectedMessageIds = ['msg_1', 'msg_2', 'msg_3'];
+      const messagesData: Array<MessageAttributesOptionals> = [
+        {
+          id: 'msg_1',
+          body: 'First message',
+          conversationId: 'convo_123',
+          source: 'source_1',
+          type: 'incoming',
+        },
+        {
+          id: 'msg_2',
+          body: 'Second message',
+          conversationId: 'convo_123',
+          source: 'source_2',
+          type: 'outgoing',
+        },
+        {
+          id: 'msg_3',
+          body: 'Third message',
+          conversationId: 'convo_456',
+          source: 'source_3',
+          type: 'incoming',
+        },
+      ];
+
+      const getMessagesByIdStub = Sinon.stub(channels, 'getMessagesById').resolves(messagesData);
+      const result = await Data.getMessagesById(expectedMessageIds);
+
+      expect(getMessagesByIdStub.calledOnce).to.be.true;
+      expect(getMessagesByIdStub.calledWith(expectedMessageIds)).to.be.true;
+      expect(result).to.have.length(3);
+      expect(result[0]).to.be.instanceOf(MessageModel);
+      expect(result[1]).to.be.instanceOf(MessageModel);
+      expect(result[2]).to.be.instanceOf(MessageModel);
+      expect(result[0].get('id')).to.equal('msg_1');
+      expect(result[1].get('id')).to.equal('msg_2');
+      expect(result[2].get('id')).to.equal('msg_3');
+    });
+
+    it('returns empty array when no messages found', async () => {
+      const expectedMessageIds = ['non_existent_1', 'non_existent_2'];
+
+      const getMessagesByIdStub = Sinon.stub(channels, 'getMessagesById').resolves(null);
+      const result = await Data.getMessagesById(expectedMessageIds);
+
+      expect(getMessagesByIdStub.calledOnce).to.be.true;
+      expect(getMessagesByIdStub.calledWith(expectedMessageIds)).to.be.true;
+      expect(result).to.deep.equal([]);
+    });
+
+    it('returns empty array when empty array is returned', async () => {
+      const expectedMessageIds = ['msg_1', 'msg_2'];
+
+      const getMessagesByIdStub = Sinon.stub(channels, 'getMessagesById').resolves([]);
+      const result = await Data.getMessagesById(expectedMessageIds);
+
+      expect(getMessagesByIdStub.calledOnce).to.be.true;
+      expect(getMessagesByIdStub.calledWith(expectedMessageIds)).to.be.true;
+      expect(result).to.deep.equal([]);
+    });
+  });
+
+  describe('getMessageByServerId', () => {
+    it('returns message model when message exists', async () => {
+      const expectedConversationId = 'convo_123';
+      const expectedServerId = 456;
+      const messageData: MessageAttributesOptionals = {
+        id: 'msg_123',
+        body: 'Message by server ID',
+        conversationId: expectedConversationId,
+        serverId: expectedServerId,
+        source: 'source_123',
+        type: 'incoming',
+      };
+
+      const getMessageByServerIdStub = Sinon.stub(channels, 'getMessageByServerId').resolves(
+        messageData
+      );
+      const result = await Data.getMessageByServerId(expectedConversationId, expectedServerId);
+
+      expect(getMessageByServerIdStub.calledOnce).to.be.true;
+      expect(getMessageByServerIdStub.calledWith(expectedConversationId, expectedServerId)).to.be
+        .true;
+      expect(result).to.be.instanceOf(MessageModel);
+      expect(result?.get('id')).to.equal('msg_123');
+      expect(result?.get('serverId')).to.equal(expectedServerId);
+    });
+
+    it('returns null when message does not exist', async () => {
+      const expectedConversationId = 'empty_convo';
+      const expectedServerId = 999;
+
+      const getMessageByServerIdStub = Sinon.stub(channels, 'getMessageByServerId').resolves(null);
+      const result = await Data.getMessageByServerId(expectedConversationId, expectedServerId);
+
+      expect(getMessageByServerIdStub.calledOnce).to.be.true;
+      expect(getMessageByServerIdStub.calledWith(expectedConversationId, expectedServerId)).to.be
+        .true;
+      expect(result).to.be.null;
+    });
+
+    it('sets skipTimerInit when parameter is true', async () => {
+      const expectedConversationId = 'convo_123';
+      const expectedServerId = 789;
+      const messageData: MessageAttributesOptionals = {
+        id: 'msg_456',
+        body: 'Message with skip timer',
+        conversationId: expectedConversationId,
+        serverId: expectedServerId,
+        source: 'source_456',
+        type: 'outgoing',
+      };
+
+      const getMessageByServerIdStub = Sinon.stub(channels, 'getMessageByServerId').resolves(
+        messageData
+      );
+      const result = await Data.getMessageByServerId(
+        expectedConversationId,
+        expectedServerId,
+        true
+      );
+
+      expect(getMessageByServerIdStub.calledOnce).to.be.true;
+      expect(getMessageByServerIdStub.calledWith(expectedConversationId, expectedServerId)).to.be
+        .true;
+      expect(result).to.be.instanceOf(MessageModel);
+      expect(result?.get('id')).to.equal('msg_456');
+    });
+  });
+
+  describe('filterAlreadyFetchedOpengroupMessage', () => {
+    it('filters already fetched opengroup messages', async () => {
+      const inputMsgDetails: MsgDuplicateSearchOpenGroup = [
+        {
+          sender: 'sender_1',
+          serverTimestamp: 1234567800,
+        },
+        {
+          sender: 'sender_2',
+          serverTimestamp: 1234567800,
+        },
+      ];
+
+      const filteredMsgDetails: MsgDuplicateSearchOpenGroup = [
+        {
+          sender: 'sender_2',
+          serverTimestamp: 1234567800,
+        },
+      ];
+
+      const filterAlreadyFetchedOpengroupMessageStub = Sinon.stub(
+        channels,
+        'filterAlreadyFetchedOpengroupMessage'
+      ).resolves(filteredMsgDetails);
+
+      const result = await Data.filterAlreadyFetchedOpengroupMessage(inputMsgDetails);
+
+      expect(filterAlreadyFetchedOpengroupMessageStub.calledOnce).to.be.true;
+      expect(filterAlreadyFetchedOpengroupMessageStub.calledWith(inputMsgDetails)).to.be.true;
+      expect(result).to.deep.equal(filteredMsgDetails);
+      expect(result).to.have.length(1);
+    });
+
+    it('returns empty array when all messages are already fetched', async () => {
+      const inputMsgDetails: MsgDuplicateSearchOpenGroup = [
+        {
+          sender: 'sender_old',
+          serverTimestamp: 1234567800,
+        },
+      ];
+
+      const filterAlreadyFetchedOpengroupMessageStub = Sinon.stub(
+        channels,
+        'filterAlreadyFetchedOpengroupMessage'
+      ).resolves(null);
+
+      const result = await Data.filterAlreadyFetchedOpengroupMessage(inputMsgDetails);
+
+      expect(filterAlreadyFetchedOpengroupMessageStub.calledOnce).to.be.true;
+      expect(filterAlreadyFetchedOpengroupMessageStub.calledWith(inputMsgDetails)).to.be.true;
+      expect(result).to.deep.equal([]);
+    });
+  });
+
+  describe('getMessagesBySenderAndSentAt', () => {
+    it('returns message models for sender and timestamp matches', async () => {
+      const propsList = [
+        {
+          source: 'sender_1',
+          timestamp: 1234567890,
+        },
+        {
+          source: 'sender_2',
+          timestamp: 1234567891,
+        },
+      ];
+
+      const messagesData: Array<MessageAttributesOptionals> = [
+        {
+          id: 'msg_1',
+          body: 'Message from sender 1',
+          conversationId: 'convo_123',
+          source: 'sender_1',
+          sent_at: 1234567890,
+          type: 'incoming',
+        },
+        {
+          id: 'msg_2',
+          body: 'Message from sender 2',
+          conversationId: 'convo_456',
+          source: 'sender_2',
+          sent_at: 1234567891,
+          type: 'incoming',
+        },
+      ];
+
+      const getMessagesBySenderAndSentAtStub = Sinon.stub(
+        channels,
+        'getMessagesBySenderAndSentAt'
+      ).resolves(messagesData);
+
+      const result = await Data.getMessagesBySenderAndSentAt(propsList);
+
+      expect(getMessagesBySenderAndSentAtStub.calledOnce).to.be.true;
+      expect(getMessagesBySenderAndSentAtStub.calledWith(propsList)).to.be.true;
+      expect(result).to.have.length(2);
+      expect(result?.[0]).to.be.instanceOf(MessageModel);
+      expect(result?.[1]).to.be.instanceOf(MessageModel);
+      expect(result?.[0].get('id')).to.equal('msg_1');
+      expect(result?.[1].get('id')).to.equal('msg_2');
+    });
+
+    it('returns null when no messages match', async () => {
+      const propsList = [
+        {
+          source: 'unknown_sender',
+          timestamp: 9999999999,
+        },
+      ];
+
+      const getMessagesBySenderAndSentAtStub = Sinon.stub(
+        channels,
+        'getMessagesBySenderAndSentAt'
+      ).resolves([]);
+
+      const result = await Data.getMessagesBySenderAndSentAt(propsList);
+
+      expect(getMessagesBySenderAndSentAtStub.calledOnce).to.be.true;
+      expect(getMessagesBySenderAndSentAtStub.calledWith(propsList)).to.be.true;
+      expect(result).to.be.null;
+    });
+
+    it('returns null when result is not an array', async () => {
+      const propsList = [
+        {
+          source: 'sender_test',
+          timestamp: 1111111111,
+        },
+      ];
+
+      const getMessagesBySenderAndSentAtStub = Sinon.stub(
+        channels,
+        'getMessagesBySenderAndSentAt'
+      ).resolves(null);
+
+      const result = await Data.getMessagesBySenderAndSentAt(propsList);
+
+      expect(getMessagesBySenderAndSentAtStub.calledOnce).to.be.true;
+      expect(getMessagesBySenderAndSentAtStub.calledWith(propsList)).to.be.true;
+      expect(result).to.be.null;
+    });
+  });
 });
 
 function mockChannels(): void {
@@ -857,4 +1225,9 @@ function mockChannels(): void {
   channels.removeAllMessagesInConversationSentBefore = () => {};
   channels.getAllMessagesWithAttachmentsInConversationSentBefore = () => {};
   channels.getMessageById = () => {};
+  channels.getMessageIdsFromServerIds = () => {};
+  channels.getMessagesById = () => {};
+  channels.getMessageByServerId = () => {};
+  channels.filterAlreadyFetchedOpengroupMessage = () => {};
+  channels.getMessagesBySenderAndSentAt = () => {};
 }
