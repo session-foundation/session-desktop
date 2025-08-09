@@ -17,6 +17,7 @@ describe('data', () => {
     channels.updateGuardNodes = () => {};
     channels.getItemById = () => {};
     channels.createOrUpdateItem = () => {};
+    channels.getSwarmNodesForPubkey = () => {};
   });
 
   afterEach(() => {
@@ -88,12 +89,29 @@ describe('data', () => {
   describe('updateGuardNodes', () => {
     it('updates guard nodes', async () => {
       const updateGuardNodesStub = Sinon.stub(channels, 'updateGuardNodes');
-      const expectedGuardNode = 'foo';
+      const expectedGuardNodes = ['foo'];
 
-      await Data.updateGuardNodes([expectedGuardNode]);
+      const actualGuardNodes = await Data.updateGuardNodes(expectedGuardNodes);
 
       expect(updateGuardNodesStub.calledOnce).to.be.true;
-      expect(updateGuardNodesStub.calledWith([expectedGuardNode])).to.be.true;
+      expect(updateGuardNodesStub.calledWith(expectedGuardNodes)).to.be.true;
+      expect(expectedGuardNodes).to.deep.equal(actualGuardNodes);
+    });
+  });
+
+  describe('getSwarmNodesForPubkey', () => {
+    it('returns swarm nodes for pubkey', async () => {
+      const expectedPubkey = 'test_pubkey_123';
+      const expectedSwarmNodes = ['node1', 'node2', 'node3'];
+
+      const getSwarmNodesForPubkeyStub = Sinon.stub(channels, 'getSwarmNodesForPubkey').resolves(
+        expectedSwarmNodes
+      );
+      const actualSwarmNodes = await Data.getSwarmNodesForPubkey(expectedPubkey);
+
+      expect(getSwarmNodesForPubkeyStub.calledOnce).to.be.true;
+      expect(getSwarmNodesForPubkeyStub.calledWith(expectedPubkey)).to.be.true;
+      expect(expectedSwarmNodes).to.deep.equal(actualSwarmNodes);
     });
   });
 
@@ -116,12 +134,14 @@ describe('data', () => {
       const getItemByIdStub = Sinon.stub(channels, 'getItemById').resolves(undefined);
       const createOrUpdateItemStub = Sinon.stub(channels, 'createOrUpdateItem');
       const storagePutStub = Sinon.stub(Storage, 'put');
-
       const mockSodium = {
         to_hex: Sinon.stub().returns('generated_hex_key'),
         randombytes_buf: Sinon.stub().returns(new Uint8Array(32)),
       } as any;
-      const getSodiumRendererStub = Sinon.stub(cryptoUtils, 'getSodiumRenderer').resolves(mockSodium);
+
+      const getSodiumRendererStub = Sinon.stub(cryptoUtils, 'getSodiumRenderer').resolves(
+        mockSodium
+      );
 
       await Data.generateAttachmentKeyIfEmpty();
 
@@ -131,12 +151,15 @@ describe('data', () => {
       expect(mockSodium.randombytes_buf.calledWith(32)).to.be.true;
       expect(mockSodium.to_hex.calledOnce).to.be.true;
       expect(createOrUpdateItemStub.calledOnce).to.be.true;
-      expect(createOrUpdateItemStub.calledWith({
-        id: 'local_attachment_encrypted_key',
-        value: 'generated_hex_key',
-      })).to.be.true;
+      expect(
+        createOrUpdateItemStub.calledWith({
+          id: 'local_attachment_encrypted_key',
+          value: 'generated_hex_key',
+        })
+      ).to.be.true;
       expect(storagePutStub.calledOnce).to.be.true;
-      expect(storagePutStub.calledWith('local_attachment_encrypted_key', 'generated_hex_key')).to.be.true;
+      expect(storagePutStub.calledWith('local_attachment_encrypted_key', 'generated_hex_key')).to.be
+        .true;
     });
   });
 });
