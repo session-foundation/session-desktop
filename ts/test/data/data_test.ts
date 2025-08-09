@@ -8,6 +8,7 @@ import { GuardNode } from '../../data/types';
 import { Storage } from '../../util/storage';
 import * as cryptoUtils from '../../session/crypto';
 import { ConversationAttributes } from '../../models/conversationAttributes';
+import { ConversationModel } from '../../models/conversation';
 import { SaveConversationReturn } from '../../types/sqlSharedTypes';
 
 describe('data', () => {
@@ -23,6 +24,10 @@ describe('data', () => {
     channels.updateSwarmNodesForPubkey = () => {};
     channels.clearOutAllSnodesNotInPool = () => {};
     channels.saveConversation = () => {};
+    channels.fetchConvoMemoryDetails = () => {};
+    channels.getConversationById = () => {};
+    channels.removeConversation = () => {};
+    channels.getAllConversations = () => {};
   });
 
   afterEach(() => {
@@ -251,6 +256,117 @@ describe('data', () => {
       expect(storagePutStub.calledOnce).to.be.true;
       expect(storagePutStub.calledWith('local_attachment_encrypted_key', 'generated_hex_key')).to.be
         .true;
+    });
+  });
+
+  describe('fetchConvoMemoryDetails', () => {
+    it('fetches conversation memory details', async () => {
+      const expectedConvoId = 'test_convo_123';
+      const expectedReturn: SaveConversationReturn = {
+        unreadCount: 5,
+        mentionedUs: true,
+        lastReadTimestampMessage: 1234567890,
+      };
+
+      const fetchConvoMemoryDetailsStub = Sinon.stub(channels, 'fetchConvoMemoryDetails').resolves(expectedReturn);
+      const result = await Data.fetchConvoMemoryDetails(expectedConvoId);
+
+      expect(fetchConvoMemoryDetailsStub.calledOnce).to.be.true;
+      expect(fetchConvoMemoryDetailsStub.calledWith(expectedConvoId)).to.be.true;
+      expect(result).to.deep.equal(expectedReturn);
+    });
+  });
+
+  describe('getConversationById', () => {
+    it('returns conversation model when conversation exists', async () => {
+      const expectedId = 'test_convo_123';
+      const conversationData: ConversationAttributes = {
+        id: expectedId,
+        type: 'private',
+        active_at: 1234567890,
+      } as ConversationAttributes;
+
+      const getConversationByIdStub = Sinon.stub(channels, 'getConversationById').resolves(conversationData);
+      const result = await Data.getConversationById(expectedId);
+
+      expect(getConversationByIdStub.calledOnce).to.be.true;
+      expect(getConversationByIdStub.calledWith(expectedId)).to.be.true;
+      expect(result).to.be.instanceOf(ConversationModel);
+      expect(result?.get('id')).to.equal(expectedId);
+    });
+
+    it('returns undefined when conversation does not exist', async () => {
+      const expectedId = 'non_existent_convo';
+
+      const getConversationByIdStub = Sinon.stub(channels, 'getConversationById').resolves(undefined);
+      const result = await Data.getConversationById(expectedId);
+
+      expect(getConversationByIdStub.calledOnce).to.be.true;
+      expect(getConversationByIdStub.calledWith(expectedId)).to.be.true;
+      expect(result).to.be.undefined;
+    });
+  });
+
+  describe('removeConversation', () => {
+    it('removes conversation when it exists', async () => {
+      const expectedId = 'test_convo_123';
+      const conversationData: ConversationAttributes = {
+        id: expectedId,
+        type: 'private',
+        active_at: 1234567890,
+      } as ConversationAttributes;
+
+      const getConversationByIdStub = Sinon.stub(channels, 'getConversationById').resolves(conversationData);
+      const removeConversationStub = Sinon.stub(channels, 'removeConversation');
+
+      const result = await Data.removeConversation(expectedId);
+
+      expect(getConversationByIdStub.calledOnce).to.be.true;
+      expect(getConversationByIdStub.calledWith(expectedId)).to.be.true;
+      expect(removeConversationStub.calledOnce).to.be.true;
+      expect(removeConversationStub.calledWith(expectedId)).to.be.true;
+      expect(result).to.be.undefined;
+    });
+
+    it('does nothing when conversation does not exist', async () => {
+      const expectedId = 'non_existent_convo';
+
+      const getConversationByIdStub = Sinon.stub(channels, 'getConversationById').resolves(undefined);
+      const removeConversationStub = Sinon.stub(channels, 'removeConversation');
+
+      const result = await Data.removeConversation(expectedId);
+
+      expect(getConversationByIdStub.calledOnce).to.be.true;
+      expect(getConversationByIdStub.calledWith(expectedId)).to.be.true;
+      expect(removeConversationStub.called).to.be.false;
+      expect(result).to.be.undefined;
+    });
+  });
+
+  describe('getAllConversations', () => {
+    it('returns array of conversation models', async () => {
+      const conversationsData: Array<ConversationAttributes> = [
+        {
+          id: 'convo_1',
+          type: 'private',
+          active_at: 1234567890,
+        } as ConversationAttributes,
+        {
+          id: 'convo_2',
+          type: 'group',
+          active_at: 1234567891,
+        } as ConversationAttributes,
+      ];
+
+      const getAllConversationsStub = Sinon.stub(channels, 'getAllConversations').resolves(conversationsData);
+      const result = await Data.getAllConversations();
+
+      expect(getAllConversationsStub.calledOnce).to.be.true;
+      expect(result).to.have.length(2);
+      expect(result[0]).to.be.instanceOf(ConversationModel);
+      expect(result[1]).to.be.instanceOf(ConversationModel);
+      expect(result[0].get('id')).to.equal('convo_1');
+      expect(result[1].get('id')).to.equal('convo_2');
     });
   });
 });
