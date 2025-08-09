@@ -7,8 +7,11 @@ import * as dataInit from '../../data/dataInit';
 import { GuardNode } from '../../data/types';
 import { Storage } from '../../util/storage';
 import * as cryptoUtils from '../../session/crypto';
+import { DisappearingMessages } from '../../session/disappearing_messages';
 import { ConversationAttributes } from '../../models/conversationAttributes';
 import { ConversationModel } from '../../models/conversation';
+import { MessageModel } from '../../models/message';
+import { MessageAttributes } from '../../models/messageType';
 import {
   SaveConversationReturn,
   SaveSeenMessageHash,
@@ -42,6 +45,14 @@ describe('data', () => {
     channels.clearLastHashesForConvoId = () => {};
     channels.emptySeenMessageHashesForConversation = () => {};
     channels.updateLastHash = () => {};
+    channels.saveMessage = () => {};
+    channels.saveMessages = () => {};
+    channels.cleanUpExpirationTimerUpdateHistory = () => {};
+    channels.removeMessage = () => {};
+    channels.removeMessagesByIds = () => {};
+    channels.removeAllMessagesInConversationSentBefore = () => {};
+    channels.getAllMessagesWithAttachmentsInConversationSentBefore = () => {};
+    channels.getMessageById = () => {};
   });
 
   afterEach(() => {
@@ -576,6 +587,262 @@ describe('data', () => {
       expect(updateLastHashStub.calledOnce).to.be.true;
       expect(updateLastHashStub.calledWith(expectedData)).to.be.true;
       expect(result).to.be.undefined;
+    });
+  });
+
+  describe('saveMessage', () => {
+    it('saves message and updates expiring messages check', async () => {
+      const expectedMessageId = 'msg_123';
+      const messageData: MessageAttributes = {
+        id: expectedMessageId,
+        body: 'Test message body',
+        conversationId: 'convo_123',
+        sent_at: 1234567890,
+      } as MessageAttributes;
+
+      const saveMessageStub = Sinon.stub(channels, 'saveMessage').resolves(expectedMessageId);
+      const updateExpiringMessagesCheckStub = Sinon.stub(
+        DisappearingMessages,
+        'updateExpiringMessagesCheck'
+      );
+
+      const result = await Data.saveMessage(messageData);
+
+      expect(saveMessageStub.calledOnce).to.be.true;
+      expect(saveMessageStub.calledWith(messageData)).to.be.true;
+      expect(updateExpiringMessagesCheckStub.calledOnce).to.be.true;
+      expect(result).to.equal(expectedMessageId);
+    });
+  });
+
+  describe('saveMessages', () => {
+    it('saves array of messages', async () => {
+      const messagesData: Array<MessageAttributes> = [
+        {
+          id: 'msg_1',
+          body: 'First test message',
+          conversationId: 'convo_123',
+          sent_at: 1234567890,
+        } as MessageAttributes,
+        {
+          id: 'msg_2',
+          body: 'Second test message',
+          conversationId: 'convo_456',
+          sent_at: 1234567891,
+        } as MessageAttributes,
+      ];
+
+      const saveMessagesStub = Sinon.stub(channels, 'saveMessages');
+      const result = await Data.saveMessages(messagesData);
+
+      expect(saveMessagesStub.calledOnce).to.be.true;
+      expect(saveMessagesStub.calledWith(messagesData)).to.be.true;
+      expect(result).to.be.undefined;
+    });
+  });
+
+  describe('cleanUpExpirationTimerUpdateHistory', () => {
+    it('cleans up expiration timer update history for private conversation', async () => {
+      const expectedConversationId = 'private_convo_123';
+      const expectedIsPrivate = true;
+      const expectedRemovedIds = ['timer_msg_1', 'timer_msg_2'];
+
+      const cleanUpExpirationTimerUpdateHistoryStub = Sinon.stub(
+        channels,
+        'cleanUpExpirationTimerUpdateHistory'
+      ).resolves(expectedRemovedIds);
+
+      const result = await Data.cleanUpExpirationTimerUpdateHistory(
+        expectedConversationId,
+        expectedIsPrivate
+      );
+
+      expect(cleanUpExpirationTimerUpdateHistoryStub.calledOnce).to.be.true;
+      expect(
+        cleanUpExpirationTimerUpdateHistoryStub.calledWith(
+          expectedConversationId,
+          expectedIsPrivate
+        )
+      ).to.be.true;
+      expect(result).to.deep.equal(expectedRemovedIds);
+    });
+
+    it('cleans up expiration timer update history for group conversation', async () => {
+      const expectedConversationId = 'group_convo_456';
+      const expectedIsPrivate = false;
+      const expectedRemovedIds = ['timer_msg_3'];
+
+      const cleanUpExpirationTimerUpdateHistoryStub = Sinon.stub(
+        channels,
+        'cleanUpExpirationTimerUpdateHistory'
+      ).resolves(expectedRemovedIds);
+
+      const result = await Data.cleanUpExpirationTimerUpdateHistory(
+        expectedConversationId,
+        expectedIsPrivate
+      );
+
+      expect(cleanUpExpirationTimerUpdateHistoryStub.calledOnce).to.be.true;
+      expect(
+        cleanUpExpirationTimerUpdateHistoryStub.calledWith(
+          expectedConversationId,
+          expectedIsPrivate
+        )
+      ).to.be.true;
+      expect(result).to.deep.equal(expectedRemovedIds);
+    });
+  });
+
+  describe('removeMessage', () => {
+    it('removes message when it exists', async () => {
+      const expectedMessageId = 'msg_123';
+      const mockMessage = new MessageModel({
+        id: expectedMessageId,
+        body: 'Test message',
+        source: 'source',
+        type: 'incoming',
+        conversationId: '321',
+      });
+      mockMessage.cleanup = Sinon.stub();
+
+      const getMessageByIdStub = Sinon.stub(channels, 'getMessageById').resolves({
+        id: expectedMessageId,
+        body: 'Test message',
+      });
+      const removeMessageStub = Sinon.stub(channels, 'removeMessage');
+
+      const result = await Data.removeMessage(expectedMessageId);
+
+      expect(getMessageByIdStub.calledOnce).to.be.true;
+      expect(getMessageByIdStub.calledWith(expectedMessageId)).to.be.true;
+      expect(removeMessageStub.calledOnce).to.be.true;
+      expect(removeMessageStub.calledWith(expectedMessageId)).to.be.true;
+      expect(result).to.be.undefined;
+    });
+
+    it('does nothing when message does not exist', async () => {
+      const expectedMessageId = 'non_existent_msg';
+
+      const getMessageByIdStub = Sinon.stub(channels, 'getMessageById').resolves(null);
+      const removeMessageStub = Sinon.stub(channels, 'removeMessage');
+
+      const result = await Data.removeMessage(expectedMessageId);
+
+      expect(getMessageByIdStub.calledOnce).to.be.true;
+      expect(getMessageByIdStub.calledWith(expectedMessageId)).to.be.true;
+      expect(removeMessageStub.called).to.be.false;
+      expect(result).to.be.undefined;
+    });
+  });
+
+  describe('removeMessagesByIds', () => {
+    it('removes multiple messages by IDs without cleanup', async () => {
+      const expectedMessageIds = ['msg_1', 'msg_2', 'msg_3'];
+
+      const removeMessagesByIdsStub = Sinon.stub(channels, 'removeMessagesByIds');
+      const result = await Data.removeMessagesByIds(expectedMessageIds);
+
+      expect(removeMessagesByIdsStub.calledOnce).to.be.true;
+      expect(removeMessagesByIdsStub.calledWith(expectedMessageIds)).to.be.true;
+      expect(result).to.be.undefined;
+    });
+  });
+
+  describe('removeAllMessagesInConversationSentBefore', () => {
+    it('removes messages sent before specified timestamp', async () => {
+      const expectedArgs = {
+        deleteBeforeSeconds: 1640995200,
+        conversationId: 'convo_123' as any,
+      };
+      const expectedRemovedIds = ['msg_1', 'msg_2', 'msg_3'];
+
+      const removeAllMessagesInConversationSentBeforeStub = Sinon.stub(
+        channels,
+        'removeAllMessagesInConversationSentBefore'
+      ).resolves(expectedRemovedIds);
+
+      const result = await Data.removeAllMessagesInConversationSentBefore(expectedArgs);
+
+      expect(removeAllMessagesInConversationSentBeforeStub.calledOnce).to.be.true;
+      expect(removeAllMessagesInConversationSentBeforeStub.calledWith(expectedArgs)).to.be.true;
+      expect(result).to.deep.equal(expectedRemovedIds);
+    });
+  });
+
+  describe('getAllMessagesWithAttachmentsInConversationSentBefore', () => {
+    it('returns message models with attachments sent before timestamp', async () => {
+      const expectedArgs = {
+        deleteAttachBeforeSeconds: 1640995200,
+        conversationId: 'convo_456' as any,
+      };
+      const mockMessageAttrs = [
+        {
+          id: 'msg_with_attach_1',
+          body: 'Message with attachment',
+          conversationId: 'convo_456',
+          attachments: [{ fileName: 'test.jpg' }],
+        },
+        {
+          id: 'msg_with_attach_2',
+          body: 'Another message with attachment',
+          conversationId: 'convo_456',
+          attachments: [{ fileName: 'document.pdf' }],
+        },
+      ];
+
+      const getAllMessagesWithAttachmentsInConversationSentBeforeStub = Sinon.stub(
+        channels,
+        'getAllMessagesWithAttachmentsInConversationSentBefore'
+      ).resolves(mockMessageAttrs);
+
+      const result = await Data.getAllMessagesWithAttachmentsInConversationSentBefore(expectedArgs);
+
+      expect(getAllMessagesWithAttachmentsInConversationSentBeforeStub.calledOnce).to.be.true;
+      expect(getAllMessagesWithAttachmentsInConversationSentBeforeStub.calledWith(expectedArgs)).to
+        .be.true;
+      expect(result).to.have.length(2);
+      expect(result[0]).to.be.instanceOf(MessageModel);
+      expect(result[1]).to.be.instanceOf(MessageModel);
+      expect(result[0].get('id')).to.equal('msg_with_attach_1');
+      expect(result[1].get('id')).to.equal('msg_with_attach_2');
+    });
+
+    it('returns empty array when no messages found', async () => {
+      const expectedArgs = {
+        deleteAttachBeforeSeconds: 1640995200,
+        conversationId: 'empty_convo' as any,
+      };
+
+      const getAllMessagesWithAttachmentsInConversationSentBeforeStub = Sinon.stub(
+        channels,
+        'getAllMessagesWithAttachmentsInConversationSentBefore'
+      ).resolves(null);
+
+      const result = await Data.getAllMessagesWithAttachmentsInConversationSentBefore(expectedArgs);
+
+      expect(getAllMessagesWithAttachmentsInConversationSentBeforeStub.calledOnce).to.be.true;
+      expect(getAllMessagesWithAttachmentsInConversationSentBeforeStub.calledWith(expectedArgs)).to
+        .be.true;
+      expect(result).to.deep.equal([]);
+    });
+
+    it('returns empty array when empty array is returned', async () => {
+      const expectedArgs = {
+        deleteAttachBeforeSeconds: 1640995200,
+        conversationId: 'empty_convo' as any,
+      };
+
+      const getAllMessagesWithAttachmentsInConversationSentBeforeStub = Sinon.stub(
+        channels,
+        'getAllMessagesWithAttachmentsInConversationSentBefore'
+      ).resolves([]);
+
+      const result = await Data.getAllMessagesWithAttachmentsInConversationSentBefore(expectedArgs);
+
+      expect(getAllMessagesWithAttachmentsInConversationSentBeforeStub.calledOnce).to.be.true;
+      expect(getAllMessagesWithAttachmentsInConversationSentBeforeStub.calledWith(expectedArgs)).to
+        .be.true;
+      expect(result).to.deep.equal([]);
     });
   });
 });
