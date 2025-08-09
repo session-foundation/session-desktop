@@ -13,6 +13,7 @@ import { ConversationAttributes } from '../../models/conversationAttributes';
 import { ConversationModel } from '../../models/conversation';
 import { MessageModel } from '../../models/message';
 import { MessageAttributes, MessageAttributesOptionals } from '../../models/messageType';
+import { Quote } from '../../receiver/types';
 import {
   MsgDuplicateSearchOpenGroup,
   SaveConversationReturn,
@@ -1189,6 +1190,326 @@ describe('data', () => {
       expect(result).to.be.null;
     });
   });
+
+  describe('getUnreadByConversation', () => {
+    it('returns unread messages for conversation', async () => {
+      const expectedConversationId = 'convo_123';
+      const expectedSentBeforeTimestamp = 1234567890;
+      const mockMessageAttrs: Array<MessageAttributesOptionals> = [
+        {
+          id: 'unread_msg_1',
+          body: 'First unread message',
+          conversationId: expectedConversationId,
+          source: 'sender_1',
+          type: 'incoming',
+          read_by: undefined,
+        },
+        {
+          id: 'unread_msg_2',
+          body: 'Second unread message',
+          conversationId: expectedConversationId,
+          source: 'sender_2',
+          type: 'incoming',
+          read_by: ['bobloblaw'],
+        },
+      ];
+
+      const getUnreadByConversationStub = Sinon.stub(channels, 'getUnreadByConversation').resolves(
+        mockMessageAttrs
+      );
+      const result = await Data.getUnreadByConversation(
+        expectedConversationId,
+        expectedSentBeforeTimestamp
+      );
+
+      expect(getUnreadByConversationStub.calledOnce).to.be.true;
+      expect(
+        getUnreadByConversationStub.calledWith(expectedConversationId, expectedSentBeforeTimestamp)
+      ).to.be.true;
+      expect(result).to.have.length(2);
+      expect(result[0]).to.be.instanceOf(MessageModel);
+      expect(result[1]).to.be.instanceOf(MessageModel);
+      expect(result[0].get('id')).to.equal('unread_msg_1');
+      expect(result[1].get('id')).to.equal('unread_msg_2');
+    });
+
+    it('returns empty array when no unread messages found', async () => {
+      const expectedConversationId = 'empty_convo';
+      const expectedSentBeforeTimestamp = 1234567890;
+
+      const getUnreadByConversationStub = Sinon.stub(channels, 'getUnreadByConversation').resolves(
+        []
+      );
+      const result = await Data.getUnreadByConversation(
+        expectedConversationId,
+        expectedSentBeforeTimestamp
+      );
+
+      expect(getUnreadByConversationStub.calledOnce).to.be.true;
+      expect(
+        getUnreadByConversationStub.calledWith(expectedConversationId, expectedSentBeforeTimestamp)
+      ).to.be.true;
+      expect(result).to.deep.equal([]);
+    });
+  });
+
+  describe('getUnreadDisappearingByConversation', () => {
+    it('returns unread disappearing messages for conversation', async () => {
+      const expectedConversationId = 'convo_456';
+      const expectedSentBeforeTimestamp = 1234567891;
+      const mockMessageAttrs: Array<MessageAttributesOptionals> = [
+        {
+          id: 'disappearing_msg_1',
+          body: 'First disappearing message',
+          conversationId: expectedConversationId,
+          source: 'sender_1',
+          type: 'incoming',
+          expireTimer: 300,
+        },
+        {
+          id: 'disappearing_msg_2',
+          body: 'Second disappearing message',
+          conversationId: expectedConversationId,
+          source: 'sender_2',
+          type: 'incoming',
+          expireTimer: 600,
+        },
+      ];
+
+      const getUnreadDisappearingByConversationStub = Sinon.stub(
+        channels,
+        'getUnreadDisappearingByConversation'
+      ).resolves(mockMessageAttrs);
+      const result = await Data.getUnreadDisappearingByConversation(
+        expectedConversationId,
+        expectedSentBeforeTimestamp
+      );
+
+      expect(getUnreadDisappearingByConversationStub.calledOnce).to.be.true;
+      expect(
+        getUnreadDisappearingByConversationStub.calledWith(
+          expectedConversationId,
+          expectedSentBeforeTimestamp
+        )
+      ).to.be.true;
+      expect(result).to.have.length(2);
+      expect(result[0]).to.be.instanceOf(MessageModel);
+      expect(result[1]).to.be.instanceOf(MessageModel);
+      expect(result[0].get('id')).to.equal('disappearing_msg_1');
+      expect(result[1].get('id')).to.equal('disappearing_msg_2');
+    });
+  });
+
+  describe('markAllAsReadByConversationNoExpiration', () => {
+    it('marks all messages as read and returns message IDs', async () => {
+      const expectedConversationId = 'convo_789';
+      const expectedReturnMessagesUpdated = true;
+      const expectedMessageIds = [123, 456, 789];
+
+      const markAllAsReadByConversationNoExpirationStub = Sinon.stub(
+        channels,
+        'markAllAsReadByConversationNoExpiration'
+      ).resolves(expectedMessageIds);
+      const result = await Data.markAllAsReadByConversationNoExpiration(
+        expectedConversationId,
+        expectedReturnMessagesUpdated
+      );
+
+      expect(markAllAsReadByConversationNoExpirationStub.calledOnce).to.be.true;
+      expect(
+        markAllAsReadByConversationNoExpirationStub.calledWith(
+          expectedConversationId,
+          expectedReturnMessagesUpdated
+        )
+      ).to.be.true;
+      expect(result).to.deep.equal(expectedMessageIds);
+    });
+
+    it('marks all messages as read without returning updated messages', async () => {
+      const expectedConversationId = 'convo_999';
+      const expectedReturnMessagesUpdated = false;
+      const expectedMessageIds: Array<number> = [];
+
+      const markAllAsReadByConversationNoExpirationStub = Sinon.stub(
+        channels,
+        'markAllAsReadByConversationNoExpiration'
+      ).resolves(expectedMessageIds);
+      const result = await Data.markAllAsReadByConversationNoExpiration(
+        expectedConversationId,
+        expectedReturnMessagesUpdated
+      );
+
+      expect(markAllAsReadByConversationNoExpirationStub.calledOnce).to.be.true;
+      expect(
+        markAllAsReadByConversationNoExpirationStub.calledWith(
+          expectedConversationId,
+          expectedReturnMessagesUpdated
+        )
+      ).to.be.true;
+      expect(result).to.deep.equal(expectedMessageIds);
+    });
+  });
+
+  describe('getUnreadCountByConversation', () => {
+    it('returns unread message count for conversation', async () => {
+      const expectedConversationId = 'convo_count_123';
+      const expectedUnreadCount = 5;
+
+      const getUnreadCountByConversationStub = Sinon.stub(
+        channels,
+        'getUnreadCountByConversation'
+      ).resolves(expectedUnreadCount);
+      const result = await Data.getUnreadCountByConversation(expectedConversationId);
+
+      expect(getUnreadCountByConversationStub.calledOnce).to.be.true;
+      expect(getUnreadCountByConversationStub.calledWith(expectedConversationId)).to.be.true;
+      expect(result).to.equal(expectedUnreadCount);
+    });
+
+    it('returns zero when no unread messages', async () => {
+      const expectedConversationId = 'read_convo_123';
+      const expectedUnreadCount = 0;
+
+      const getUnreadCountByConversationStub = Sinon.stub(
+        channels,
+        'getUnreadCountByConversation'
+      ).resolves(expectedUnreadCount);
+      const result = await Data.getUnreadCountByConversation(expectedConversationId);
+
+      expect(getUnreadCountByConversationStub.calledOnce).to.be.true;
+      expect(getUnreadCountByConversationStub.calledWith(expectedConversationId)).to.be.true;
+      expect(result).to.equal(expectedUnreadCount);
+    });
+  });
+
+  describe('getMessageCountByType', () => {
+    it('returns message count for specific type', async () => {
+      const expectedConversationId = 'type_convo_123';
+      const expectedType = 'incoming' as any;
+      const expectedCount = 10;
+
+      const getMessageCountByTypeStub = Sinon.stub(channels, 'getMessageCountByType').resolves(
+        expectedCount
+      );
+      const result = await Data.getMessageCountByType(expectedConversationId, expectedType);
+
+      expect(getMessageCountByTypeStub.calledOnce).to.be.true;
+      expect(getMessageCountByTypeStub.calledWith(expectedConversationId, expectedType)).to.be.true;
+      expect(result).to.equal(expectedCount);
+    });
+
+    it('returns total message count when no type specified', async () => {
+      const expectedConversationId = 'all_convo_456';
+      const expectedCount = 25;
+
+      const getMessageCountByTypeStub = Sinon.stub(channels, 'getMessageCountByType').resolves(
+        expectedCount
+      );
+      const result = await Data.getMessageCountByType(expectedConversationId);
+
+      expect(getMessageCountByTypeStub.calledOnce).to.be.true;
+      expect(getMessageCountByTypeStub.calledWith(expectedConversationId, undefined)).to.be.true;
+      expect(result).to.equal(expectedCount);
+    });
+  });
+
+  describe('getMessagesByConversation', () => {
+    it('returns messages and quotes for conversation with all options', async () => {
+      const expectedConversationId = 'full_convo_123';
+      const expectedOptions = {
+        skipTimerInit: false,
+        returnQuotes: true,
+        messageId: 'anchor_msg_123',
+      };
+      const mockMessages: Array<MessageAttributesOptionals> = [
+        {
+          id: 'msg_1',
+          body: 'First message',
+          conversationId: expectedConversationId,
+          source: 'sender_1',
+          type: 'incoming',
+        },
+        {
+          id: 'msg_2',
+          body: 'Second message',
+          conversationId: expectedConversationId,
+          source: 'sender_2',
+          type: 'outgoing',
+        },
+      ];
+      const mockQuotes: Array<Quote> = [
+        {
+          id: 1234567890,
+          author: 'quote_author_1',
+          text: 'Quoted message text',
+        } as Quote,
+      ];
+
+      const getMessagesByConversationStub = Sinon.stub(
+        channels,
+        'getMessagesByConversation'
+      ).resolves({
+        messages: mockMessages,
+        quotes: mockQuotes,
+      });
+
+      const result = await Data.getMessagesByConversation(expectedConversationId, expectedOptions);
+
+      expect(getMessagesByConversationStub.calledOnce).to.be.true;
+      expect(
+        getMessagesByConversationStub.calledWith(expectedConversationId, {
+          messageId: expectedOptions.messageId,
+          returnQuotes: expectedOptions.returnQuotes,
+        })
+      ).to.be.true;
+      expect(result.messages).to.have.length(2);
+      expect(result.messages[0]).to.be.instanceOf(MessageModel);
+      expect(result.messages[1]).to.be.instanceOf(MessageModel);
+      expect(result.messages[0].get('id')).to.equal('msg_1');
+      expect(result.messages[1].get('id')).to.equal('msg_2');
+      expect(result.quotes).to.deep.equal(mockQuotes);
+    });
+
+    it('returns messages with skipTimerInit when specified', async () => {
+      const expectedConversationId = 'skip_timer_convo';
+      const expectedOptions = {
+        skipTimerInit: true,
+        returnQuotes: false,
+        messageId: null,
+      };
+      const mockMessages: Array<MessageAttributesOptionals> = [
+        {
+          id: 'timer_msg_1',
+          body: 'Message with skip timer',
+          conversationId: expectedConversationId,
+          source: 'sender_1',
+          type: 'incoming',
+        },
+      ];
+
+      const getMessagesByConversationStub = Sinon.stub(
+        channels,
+        'getMessagesByConversation'
+      ).resolves({
+        messages: mockMessages,
+        quotes: [],
+      });
+
+      const result = await Data.getMessagesByConversation(expectedConversationId, expectedOptions);
+
+      expect(getMessagesByConversationStub.calledOnce).to.be.true;
+      expect(
+        getMessagesByConversationStub.calledWith(expectedConversationId, {
+          messageId: null,
+          returnQuotes: false,
+        })
+      ).to.be.true;
+      expect(result.messages).to.have.length(1);
+      expect(result.messages[0]).to.be.instanceOf(MessageModel);
+      expect(result.messages[0].get('id')).to.equal('timer_msg_1');
+      expect(result.quotes).to.deep.equal([]);
+    });
+  });
 });
 
 function mockChannels(): void {
@@ -1230,4 +1551,10 @@ function mockChannels(): void {
   channels.getMessageByServerId = () => {};
   channels.filterAlreadyFetchedOpengroupMessage = () => {};
   channels.getMessagesBySenderAndSentAt = () => {};
+  channels.getUnreadByConversation = () => {};
+  channels.getUnreadDisappearingByConversation = () => {};
+  channels.markAllAsReadByConversationNoExpiration = () => {};
+  channels.getUnreadCountByConversation = () => {};
+  channels.getMessageCountByType = () => {};
+  channels.getMessagesByConversation = () => {};
 }
