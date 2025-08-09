@@ -28,6 +28,9 @@ describe('data', () => {
     channels.getConversationById = () => {};
     channels.removeConversation = () => {};
     channels.getAllConversations = () => {};
+    channels.getPubkeysInPublicConversation = () => {};
+    channels.searchConversations = () => {};
+    channels.searchMessages = () => {};
   });
 
   afterEach(() => {
@@ -367,6 +370,63 @@ describe('data', () => {
       expect(result[1]).to.be.instanceOf(ConversationModel);
       expect(result[0].get('id')).to.equal('convo_1');
       expect(result[1].get('id')).to.equal('convo_2');
+    });
+  });
+
+  describe('getPubkeysInPublicConversation', () => {
+    it('returns pubkeys for public conversation', async () => {
+      const expectedId = 'public_convo_123';
+      const expectedPubkeys = ['pubkey1', 'pubkey2', 'pubkey3'];
+
+      const getPubkeysInPublicConversationStub = Sinon.stub(channels, 'getPubkeysInPublicConversation').resolves(expectedPubkeys);
+      const result = await Data.getPubkeysInPublicConversation(expectedId);
+
+      expect(getPubkeysInPublicConversationStub.calledOnce).to.be.true;
+      expect(getPubkeysInPublicConversationStub.calledWith(expectedId)).to.be.true;
+      expect(result).to.deep.equal(expectedPubkeys);
+    });
+  });
+
+  describe('searchConversations', () => {
+    it('returns search results for conversations', async () => {
+      const expectedQuery = 'test search';
+      const expectedResults = [
+        { id: 'convo_1', name: 'Test Conversation 1' },
+        { id: 'convo_2', name: 'Test Search Result' },
+      ];
+
+      const searchConversationsStub = Sinon.stub(channels, 'searchConversations').resolves(expectedResults);
+      const result = await Data.searchConversations(expectedQuery);
+
+      expect(searchConversationsStub.calledOnce).to.be.true;
+      expect(searchConversationsStub.calledWith(expectedQuery)).to.be.true;
+      expect(result).to.deep.equal(expectedResults);
+    });
+  });
+
+  describe('searchMessages', () => {
+    it('returns unique search results for messages', async () => {
+      const expectedQuery = 'test search';
+      const expectedLimit = 10;
+      const messagesWithDuplicates = [
+        { id: 'msg_1', content: 'Test message 1' },
+        { id: 'msg_2', content: 'Test search result' },
+        { id: 'msg_1', content: 'Test message 1' }, // duplicate
+        { id: 'msg_3', content: 'Another test message' },
+      ];
+      const expectedUniqueResults = [
+        { id: 'msg_1', content: 'Test message 1' },
+        { id: 'msg_2', content: 'Test search result' },
+        { id: 'msg_3', content: 'Another test message' },
+      ];
+
+      const searchMessagesStub = Sinon.stub(channels, 'searchMessages').resolves(messagesWithDuplicates);
+      const result = await Data.searchMessages(expectedQuery, expectedLimit);
+
+      expect(searchMessagesStub.calledOnce).to.be.true;
+      expect(searchMessagesStub.calledWith(expectedQuery, expectedLimit)).to.be.true;
+      expect(result).to.deep.equal(expectedUniqueResults);
+      expect(result).to.have.length(3); // Verify duplicates were removed
     });
   });
 });
