@@ -22,39 +22,7 @@ import { UserUtils } from '../../session/utils';
 
 describe('data', () => {
   beforeEach(() => {
-    channels.close = () => {};
-    channels.removeDB = () => {};
-    channels.getPasswordHash = () => {};
-    channels.getGuardNodes = () => {};
-    channels.updateGuardNodes = () => {};
-    channels.getItemById = () => {};
-    channels.createOrUpdateItem = () => {};
-    channels.getSwarmNodesForPubkey = () => {};
-    channels.updateSwarmNodesForPubkey = () => {};
-    channels.clearOutAllSnodesNotInPool = () => {};
-    channels.saveConversation = () => {};
-    channels.fetchConvoMemoryDetails = () => {};
-    channels.getConversationById = () => {};
-    channels.removeConversation = () => {};
-    channels.getAllConversations = () => {};
-    channels.getPubkeysInPublicConversation = () => {};
-    channels.searchConversations = () => {};
-    channels.searchMessages = () => {};
-    channels.searchMessagesInConversation = () => {};
-    channels.cleanSeenMessages = () => {};
-    channels.cleanLastHashes = () => {};
-    channels.saveSeenMessageHashes = () => {};
-    channels.clearLastHashesForConvoId = () => {};
-    channels.emptySeenMessageHashesForConversation = () => {};
-    channels.updateLastHash = () => {};
-    channels.saveMessage = () => {};
-    channels.saveMessages = () => {};
-    channels.cleanUpExpirationTimerUpdateHistory = () => {};
-    channels.removeMessage = () => {};
-    channels.removeMessagesByIds = () => {};
-    channels.removeAllMessagesInConversationSentBefore = () => {};
-    channels.getAllMessagesWithAttachmentsInConversationSentBefore = () => {};
-    channels.getMessageById = () => {};
+    mockChannels();
   });
 
   afterEach(() => {
@@ -854,3 +822,39 @@ describe('data', () => {
     });
   });
 });
+
+function mockChannels(): void {
+  channels.close = () => {};
+  channels.removeDB = () => {};
+  channels.getPasswordHash = () => {};
+  channels.getGuardNodes = () => {};
+  channels.updateGuardNodes = () => {};
+  channels.getItemById = () => {};
+  channels.createOrUpdateItem = () => {};
+  channels.getSwarmNodesForPubkey = () => {};
+  channels.updateSwarmNodesForPubkey = () => {};
+  channels.clearOutAllSnodesNotInPool = () => {};
+  channels.saveConversation = () => {};
+  channels.fetchConvoMemoryDetails = () => {};
+  channels.getConversationById = () => {};
+  channels.removeConversation = () => {};
+  channels.getAllConversations = () => {};
+  channels.getPubkeysInPublicConversation = () => {};
+  channels.searchConversations = () => {};
+  channels.searchMessages = () => {};
+  channels.searchMessagesInConversation = () => {};
+  channels.cleanSeenMessages = () => {};
+  channels.cleanLastHashes = () => {};
+  channels.saveSeenMessageHashes = () => {};
+  channels.clearLastHashesForConvoId = () => {};
+  channels.emptySeenMessageHashesForConversation = () => {};
+  channels.updateLastHash = () => {};
+  channels.saveMessage = () => {};
+  channels.saveMessages = () => {};
+  channels.cleanUpExpirationTimerUpdateHistory = () => {};
+  channels.removeMessage = () => {};
+  channels.removeMessagesByIds = () => {};
+  channels.removeAllMessagesInConversationSentBefore = () => {};
+  channels.getAllMessagesWithAttachmentsInConversationSentBefore = () => {};
+  channels.getMessageById = () => {};
+}
