@@ -31,6 +31,9 @@ describe('data', () => {
     channels.getPubkeysInPublicConversation = () => {};
     channels.searchConversations = () => {};
     channels.searchMessages = () => {};
+    channels.searchMessagesInConversation = () => {};
+    channels.cleanSeenMessages = () => {};
+    channels.cleanLastHashes = () => {};
   });
 
   afterEach(() => {
@@ -427,6 +430,47 @@ describe('data', () => {
       expect(searchMessagesStub.calledWith(expectedQuery, expectedLimit)).to.be.true;
       expect(result).to.deep.equal(expectedUniqueResults);
       expect(result).to.have.length(3); // Verify duplicates were removed
+    });
+  });
+
+  describe('searchMessagesInConversation', () => {
+    it('returns search results for messages in conversation', async () => {
+      const expectedQuery = 'test search';
+      const expectedConversationId = 'convo_123';
+      const expectedLimit = 5;
+      const expectedMessages = [
+        { id: 'msg_1', content: 'Test message in conversation', conversationId: 'convo_123' },
+        { id: 'msg_2', content: 'Another test search result', conversationId: 'convo_123' },
+      ];
+
+      const searchMessagesInConversationStub = Sinon.stub(channels, 'searchMessagesInConversation').resolves(expectedMessages);
+      const result = await Data.searchMessagesInConversation(expectedQuery, expectedConversationId, expectedLimit);
+
+      expect(searchMessagesInConversationStub.calledOnce).to.be.true;
+      expect(searchMessagesInConversationStub.calledWith(expectedQuery, expectedConversationId, expectedLimit)).to.be.true;
+      expect(result).to.deep.equal(expectedMessages);
+    });
+  });
+
+  describe('cleanSeenMessages', () => {
+    it('cleans seen messages', async () => {
+      const cleanSeenMessagesStub = Sinon.stub(channels, 'cleanSeenMessages');
+
+      const result = await Data.cleanSeenMessages();
+
+      expect(cleanSeenMessagesStub.calledOnce).to.be.true;
+      expect(result).to.be.undefined;
+    });
+  });
+
+  describe('cleanLastHashes', () => {
+    it('cleans last hashes', async () => {
+      const cleanLastHashesStub = Sinon.stub(channels, 'cleanLastHashes');
+
+      const result = await Data.cleanLastHashes();
+
+      expect(cleanLastHashesStub.calledOnce).to.be.true;
+      expect(result).to.be.undefined;
     });
   });
 });
