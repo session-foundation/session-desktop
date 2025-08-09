@@ -138,7 +138,9 @@ def generate_type_object(locales):
               js_plural_object += "\n    },"
 
               all_locales_plurals.append(js_plural_object)
-            js_plural_object_container += f'  {wrapValue(key)}: {{\n{"\n".join(all_locales_plurals)}\n    args: {args_to_type(as_record_type_en)}\n  }},\n'
+            joined_plurals = "\n".join(all_locales_plurals)
+            js_plural_object_container += f'  {wrapValue(key)}: {{\n{joined_plurals}\n    args: {args_to_type(as_record_type_en)}\n  }},\n'
+
 
         else:
           extracted_vars_en = extract_vars(value_en)
@@ -153,7 +155,9 @@ def generate_type_object(locales):
               all_locales_strings.append(f'{wrapValue(locale.replace("_","-"))}: "{escape_str(value_en)}"')
 
           # print('key',key, " other_locales_replaced_values:", other_locales_replaced_values)
-          js_object += f'  {wrapValue(key)}: {{\n      {",\n      ".join(all_locales_strings)},\n      args: {args_to_type(as_record_type_en)}\n  }},\n'
+          joined_strings = ",\n      ".join(all_locales_strings)
+          js_object += f'  {wrapValue(key)}: {{\n      {joined_strings},\n      args: {args_to_type(as_record_type_en)}\n  }},\n'
+
 
     js_object += "}"
     js_plural_object_container += "}"
