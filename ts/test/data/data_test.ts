@@ -91,11 +91,11 @@ describe('data', () => {
       const updateGuardNodesStub = Sinon.stub(channels, 'updateGuardNodes');
       const expectedGuardNodes = ['foo'];
 
-      const actualGuardNodes = await Data.updateGuardNodes(expectedGuardNodes);
+      const result = await Data.updateGuardNodes(expectedGuardNodes);
 
       expect(updateGuardNodesStub.calledOnce).to.be.true;
       expect(updateGuardNodesStub.calledWith(expectedGuardNodes)).to.be.true;
-      expect(expectedGuardNodes).to.deep.equal(actualGuardNodes);
+      expect(result).to.be.undefined;
     });
   });
 
