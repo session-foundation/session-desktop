@@ -9,7 +9,11 @@ import { Storage } from '../../util/storage';
 import * as cryptoUtils from '../../session/crypto';
 import { ConversationAttributes } from '../../models/conversationAttributes';
 import { ConversationModel } from '../../models/conversation';
-import { SaveConversationReturn } from '../../types/sqlSharedTypes';
+import {
+  SaveConversationReturn,
+  SaveSeenMessageHash,
+  UpdateLastHashType,
+} from '../../types/sqlSharedTypes';
 
 describe('data', () => {
   beforeEach(() => {
@@ -34,6 +38,10 @@ describe('data', () => {
     channels.searchMessagesInConversation = () => {};
     channels.cleanSeenMessages = () => {};
     channels.cleanLastHashes = () => {};
+    channels.saveSeenMessageHashes = () => {};
+    channels.clearLastHashesForConvoId = () => {};
+    channels.emptySeenMessageHashesForConversation = () => {};
+    channels.updateLastHash = () => {};
   });
 
   afterEach(() => {
@@ -274,7 +282,9 @@ describe('data', () => {
         lastReadTimestampMessage: 1234567890,
       };
 
-      const fetchConvoMemoryDetailsStub = Sinon.stub(channels, 'fetchConvoMemoryDetails').resolves(expectedReturn);
+      const fetchConvoMemoryDetailsStub = Sinon.stub(channels, 'fetchConvoMemoryDetails').resolves(
+        expectedReturn
+      );
       const result = await Data.fetchConvoMemoryDetails(expectedConvoId);
 
       expect(fetchConvoMemoryDetailsStub.calledOnce).to.be.true;
@@ -292,7 +302,9 @@ describe('data', () => {
         active_at: 1234567890,
       } as ConversationAttributes;
 
-      const getConversationByIdStub = Sinon.stub(channels, 'getConversationById').resolves(conversationData);
+      const getConversationByIdStub = Sinon.stub(channels, 'getConversationById').resolves(
+        conversationData
+      );
       const result = await Data.getConversationById(expectedId);
 
       expect(getConversationByIdStub.calledOnce).to.be.true;
@@ -304,7 +316,9 @@ describe('data', () => {
     it('returns undefined when conversation does not exist', async () => {
       const expectedId = 'non_existent_convo';
 
-      const getConversationByIdStub = Sinon.stub(channels, 'getConversationById').resolves(undefined);
+      const getConversationByIdStub = Sinon.stub(channels, 'getConversationById').resolves(
+        undefined
+      );
       const result = await Data.getConversationById(expectedId);
 
       expect(getConversationByIdStub.calledOnce).to.be.true;
@@ -322,7 +336,9 @@ describe('data', () => {
         active_at: 1234567890,
       } as ConversationAttributes;
 
-      const getConversationByIdStub = Sinon.stub(channels, 'getConversationById').resolves(conversationData);
+      const getConversationByIdStub = Sinon.stub(channels, 'getConversationById').resolves(
+        conversationData
+      );
       const removeConversationStub = Sinon.stub(channels, 'removeConversation');
 
       const result = await Data.removeConversation(expectedId);
@@ -337,7 +353,9 @@ describe('data', () => {
     it('does nothing when conversation does not exist', async () => {
       const expectedId = 'non_existent_convo';
 
-      const getConversationByIdStub = Sinon.stub(channels, 'getConversationById').resolves(undefined);
+      const getConversationByIdStub = Sinon.stub(channels, 'getConversationById').resolves(
+        undefined
+      );
       const removeConversationStub = Sinon.stub(channels, 'removeConversation');
 
       const result = await Data.removeConversation(expectedId);
@@ -364,7 +382,9 @@ describe('data', () => {
         } as ConversationAttributes,
       ];
 
-      const getAllConversationsStub = Sinon.stub(channels, 'getAllConversations').resolves(conversationsData);
+      const getAllConversationsStub = Sinon.stub(channels, 'getAllConversations').resolves(
+        conversationsData
+      );
       const result = await Data.getAllConversations();
 
       expect(getAllConversationsStub.calledOnce).to.be.true;
@@ -381,7 +401,10 @@ describe('data', () => {
       const expectedId = 'public_convo_123';
       const expectedPubkeys = ['pubkey1', 'pubkey2', 'pubkey3'];
 
-      const getPubkeysInPublicConversationStub = Sinon.stub(channels, 'getPubkeysInPublicConversation').resolves(expectedPubkeys);
+      const getPubkeysInPublicConversationStub = Sinon.stub(
+        channels,
+        'getPubkeysInPublicConversation'
+      ).resolves(expectedPubkeys);
       const result = await Data.getPubkeysInPublicConversation(expectedId);
 
       expect(getPubkeysInPublicConversationStub.calledOnce).to.be.true;
@@ -398,7 +421,9 @@ describe('data', () => {
         { id: 'convo_2', name: 'Test Search Result' },
       ];
 
-      const searchConversationsStub = Sinon.stub(channels, 'searchConversations').resolves(expectedResults);
+      const searchConversationsStub = Sinon.stub(channels, 'searchConversations').resolves(
+        expectedResults
+      );
       const result = await Data.searchConversations(expectedQuery);
 
       expect(searchConversationsStub.calledOnce).to.be.true;
@@ -423,7 +448,9 @@ describe('data', () => {
         { id: 'msg_3', content: 'Another test message' },
       ];
 
-      const searchMessagesStub = Sinon.stub(channels, 'searchMessages').resolves(messagesWithDuplicates);
+      const searchMessagesStub = Sinon.stub(channels, 'searchMessages').resolves(
+        messagesWithDuplicates
+      );
       const result = await Data.searchMessages(expectedQuery, expectedLimit);
 
       expect(searchMessagesStub.calledOnce).to.be.true;
@@ -443,11 +470,24 @@ describe('data', () => {
         { id: 'msg_2', content: 'Another test search result', conversationId: 'convo_123' },
       ];
 
-      const searchMessagesInConversationStub = Sinon.stub(channels, 'searchMessagesInConversation').resolves(expectedMessages);
-      const result = await Data.searchMessagesInConversation(expectedQuery, expectedConversationId, expectedLimit);
+      const searchMessagesInConversationStub = Sinon.stub(
+        channels,
+        'searchMessagesInConversation'
+      ).resolves(expectedMessages);
+      const result = await Data.searchMessagesInConversation(
+        expectedQuery,
+        expectedConversationId,
+        expectedLimit
+      );
 
       expect(searchMessagesInConversationStub.calledOnce).to.be.true;
-      expect(searchMessagesInConversationStub.calledWith(expectedQuery, expectedConversationId, expectedLimit)).to.be.true;
+      expect(
+        searchMessagesInConversationStub.calledWith(
+          expectedQuery,
+          expectedConversationId,
+          expectedLimit
+        )
+      ).to.be.true;
       expect(result).to.deep.equal(expectedMessages);
     });
   });
@@ -470,6 +510,71 @@ describe('data', () => {
       const result = await Data.cleanLastHashes();
 
       expect(cleanLastHashesStub.calledOnce).to.be.true;
+      expect(result).to.be.undefined;
+    });
+  });
+
+  describe('saveSeenMessageHashes', () => {
+    it('saves seen message hashes', async () => {
+      const expectedData: Array<SaveSeenMessageHash> = [
+        { hash: 'hash1', conversationId: 'convo1', expiresAt: 123 },
+        { hash: 'hash2', conversationId: 'convo2', expiresAt: 123 },
+      ];
+
+      const saveSeenMessageHashesStub = Sinon.stub(channels, 'saveSeenMessageHashes');
+      const result = await Data.saveSeenMessageHashes(expectedData);
+
+      expect(saveSeenMessageHashesStub.calledOnce).to.be.true;
+      expect(saveSeenMessageHashesStub.calledWith(expectedData)).to.be.true;
+      expect(result).to.be.undefined;
+    });
+  });
+
+  describe('clearLastHashesForConvoId', () => {
+    it('clears last hashes for conversation id', async () => {
+      const expectedConversationId = 'test_convo_123';
+
+      const clearLastHashesForConvoIdStub = Sinon.stub(channels, 'clearLastHashesForConvoId');
+      const result = await Data.clearLastHashesForConvoId(expectedConversationId);
+
+      expect(clearLastHashesForConvoIdStub.calledOnce).to.be.true;
+      expect(clearLastHashesForConvoIdStub.calledWith(expectedConversationId)).to.be.true;
+      expect(result).to.be.undefined;
+    });
+  });
+
+  describe('emptySeenMessageHashesForConversation', () => {
+    it('empties seen message hashes for conversation', async () => {
+      const expectedConversationId = 'test_convo_123';
+
+      const emptySeenMessageHashesForConversationStub = Sinon.stub(
+        channels,
+        'emptySeenMessageHashesForConversation'
+      );
+      const result = await Data.emptySeenMessageHashesForConversation(expectedConversationId);
+
+      expect(emptySeenMessageHashesForConversationStub.calledOnce).to.be.true;
+      expect(emptySeenMessageHashesForConversationStub.calledWith(expectedConversationId)).to.be
+        .true;
+      expect(result).to.be.undefined;
+    });
+  });
+
+  describe('updateLastHash', () => {
+    it('updates last hash', async () => {
+      const expectedData: UpdateLastHashType = {
+        convoId: 'test_convo_123',
+        snode: 'test_snode_ed25519',
+        hash: 'test_hash_value',
+        expiresAt: 1234567890,
+        namespace: 321,
+      };
+
+      const updateLastHashStub = Sinon.stub(channels, 'updateLastHash');
+      const result = await Data.updateLastHash(expectedData);
+
+      expect(updateLastHashStub.calledOnce).to.be.true;
+      expect(updateLastHashStub.calledWith(expectedData)).to.be.true;
       expect(result).to.be.undefined;
     });
   });
