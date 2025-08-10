@@ -364,6 +364,19 @@ describe('data', () => {
   });
 
   describe('getAllConversations', () => {
+    it('returns empty array when channels.getAllConversations yields invalid conversations', async () => {
+      const getAllConversationsStub = Sinon.stub(channels, 'getAllConversations').resolves([
+        {} as any,
+        { id: 123 } as any,
+      ]);
+
+      const conversations = await Data.getAllConversations();
+
+      expect(conversations).to.be.an('array');
+      expect(conversations).to.deep.equal([]);
+      expect(getAllConversationsStub.calledOnce).to.eq(true);
+    });
+
     it('returns array of conversation models', async () => {
       const conversationsData: Array<ConversationAttributes> = [
         {
