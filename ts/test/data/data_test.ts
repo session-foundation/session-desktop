@@ -1585,6 +1585,137 @@ describe('data', () => {
       expect(result[0].get('id')).to.equal('last_timer_msg_1');
     });
   });
+
+  describe('getLastMessageIdInConversation', () => {
+    it('returns the last message id when a message exists', async () => {
+      const expectedConversationId = 'last_msg_id_convo';
+      const mockMessages: Array<MessageAttributesOptionals> = [
+        {
+          id: 'last_msg_id_1',
+          body: 'Only message',
+          conversationId: expectedConversationId,
+          source: 'sender_1',
+          type: 'incoming',
+        },
+      ];
+
+      const getLastMessagesByConversationStub = Sinon.stub(
+        channels,
+        'getLastMessagesByConversation'
+      ).resolves(mockMessages);
+
+      const result = await Data.getLastMessageIdInConversation(expectedConversationId);
+
+      expect(getLastMessagesByConversationStub.calledOnce).to.be.true;
+      expect(
+        getLastMessagesByConversationStub.calledWith(expectedConversationId, 1)
+      ).to.be.true;
+      expect(result).to.equal('last_msg_id_1');
+    });
+
+    it('returns null when no messages exist', async () => {
+      const expectedConversationId = 'last_msg_id_none';
+
+      const getLastMessagesByConversationStub = Sinon.stub(
+        channels,
+        'getLastMessagesByConversation'
+      ).resolves([]);
+
+      const result = await Data.getLastMessageIdInConversation(expectedConversationId);
+
+      expect(getLastMessagesByConversationStub.calledOnce).to.be.true;
+      expect(
+        getLastMessagesByConversationStub.calledWith(expectedConversationId, 1)
+      ).to.be.true;
+      expect(result).to.equal(null);
+    });
+  });
+
+  describe('getLastMessageInConversation', () => {
+    it('returns the last message model when a message exists', async () => {
+      const expectedConversationId = 'last_msg_convo';
+      const mockMessages: Array<MessageAttributesOptionals> = [
+        {
+          id: 'last_msg_model_1',
+          body: 'Only message',
+          conversationId: expectedConversationId,
+          source: 'sender_1',
+          type: 'incoming',
+        },
+      ];
+
+      const getLastMessagesByConversationStub = Sinon.stub(
+        channels,
+        'getLastMessagesByConversation'
+      ).resolves(mockMessages);
+
+      const result = await Data.getLastMessageInConversation(expectedConversationId);
+
+      expect(getLastMessagesByConversationStub.calledOnce).to.be.true;
+      expect(
+        getLastMessagesByConversationStub.calledWith(expectedConversationId, 1)
+      ).to.be.true;
+      expect(result).to.be.instanceOf(MessageModel);
+      expect((result as MessageModel).get('id')).to.equal('last_msg_model_1');
+    });
+
+    it('returns null when no messages exist', async () => {
+      const expectedConversationId = 'last_msg_convo_none';
+
+      const getLastMessagesByConversationStub = Sinon.stub(
+        channels,
+        'getLastMessagesByConversation'
+      ).resolves([]);
+
+      const result = await Data.getLastMessageInConversation(expectedConversationId);
+
+      expect(getLastMessagesByConversationStub.calledOnce).to.be.true;
+      expect(
+        getLastMessagesByConversationStub.calledWith(expectedConversationId, 1)
+      ).to.be.true;
+      expect(result).to.equal(null);
+    });
+  });
+
+  describe('getOldestMessageInConversation', () => {
+    it('returns the oldest message model when a message exists', async () => {
+      const expectedConversationId = 'oldest_msg_convo';
+      const mockMessages: Array<MessageAttributesOptionals> = [
+        {
+          id: 'oldest_msg_1',
+          body: 'Oldest message',
+          conversationId: expectedConversationId,
+          source: 'sender_1',
+          type: 'incoming',
+        },
+      ];
+
+      const getOldestMessageInConversationStub = Sinon.stub(
+        channels,
+        'getOldestMessageInConversation'
+      ).resolves(mockMessages);
+
+      const result = await Data.getOldestMessageInConversation(expectedConversationId);
+
+      expect(getOldestMessageInConversationStub.calledOnce).to.be.true;
+      expect(result).to.be.instanceOf(MessageModel);
+      expect((result as MessageModel).get('id')).to.equal('oldest_msg_1');
+    });
+
+    it('returns null when no messages exist', async () => {
+      const expectedConversationId = 'oldest_msg_convo_none';
+
+      const getOldestMessageInConversationStub = Sinon.stub(
+        channels,
+        'getOldestMessageInConversation'
+      ).resolves([]);
+
+      const result = await Data.getOldestMessageInConversation(expectedConversationId);
+
+      expect(getOldestMessageInConversationStub.calledOnce).to.be.true;
+      expect(result).to.equal(null);
+    });
+  });
 });
 
 function mockChannels(): void {
@@ -1633,4 +1764,5 @@ function mockChannels(): void {
   channels.getMessageCountByType = () => {};
   channels.getMessagesByConversation = () => {};
   channels.getLastMessagesByConversation = () => {};
+  channels.getOldestMessageInConversation = () => {};
 }
