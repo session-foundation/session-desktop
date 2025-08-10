@@ -1591,6 +1591,207 @@ describe('data', () => {
       expect(result[0].get('id')).to.equal('only_last_msg');
     });
   });
+
+  describe('getLastMessageIdInConversation', () => {
+    it('returns last message id or null when no messages', async () => {
+      const convo = 'convo_last_id';
+      const firstBatch = [
+        { id: 'last-id-1', conversationId: convo, type: 'incoming', source: 'a' },
+      ];
+      const stub = Sinon.stub(channels, 'getLastMessagesByConversation')
+        .onFirstCall()
+        .resolves(firstBatch)
+        .onSecondCall()
+        .resolves([]);
+
+      const id = await Data.getLastMessageIdInConversation(convo);
+      expect(stub.calledOnce).to.be.true;
+      expect(id).to.equal('last-id-1');
+
+      const idNone = await Data.getLastMessageIdInConversation('empty');
+      expect(idNone === null).to.be.true;
+    });
+  });
+
+  describe('getLastMessageInConversation', () => {
+    it('returns wrapped last MessageModel or null', async () => {
+      const convo = 'convo_last_model';
+      const msg = { id: 'm-last', conversationId: convo, type: 'incoming', source: 'a' };
+      const stub = Sinon.stub(channels, 'getLastMessagesByConversation')
+        .onFirstCall()
+        .resolves([msg])
+        .onSecondCall()
+        .resolves([]);
+
+      const model = await Data.getLastMessageInConversation(convo);
+      expect(stub.calledOnce).to.be.true;
+      expect(model).to.be.instanceOf(MessageModel);
+      expect(model?.get('id')).to.equal('m-last');
+
+      const modelNone = await Data.getLastMessageInConversation('empty');
+      expect(modelNone === null).to.be.true;
+    });
+  });
+
+  describe('getOldestMessageInConversation', () => {
+    it('returns wrapped oldest MessageModel or null', async () => {
+      const convo = 'convo_oldest_model';
+      const msg = { id: 'm-old', conversationId: convo, type: 'incoming', source: 'a' };
+      const stub = Sinon.stub(channels, 'getOldestMessageInConversation')
+        .onFirstCall()
+        .resolves([msg])
+        .onSecondCall()
+        .resolves([]);
+
+      const model = await Data.getOldestMessageInConversation(convo);
+      expect(stub.calledOnce).to.be.true;
+      expect(model).to.be.instanceOf(MessageModel);
+      expect(model?.get('id')).to.equal('m-old');
+
+      const modelNone = await Data.getOldestMessageInConversation('empty');
+      expect(modelNone === null).to.be.true;
+    });
+  });
+
+  describe('getMessageCount', () => {
+    it('returns total message count', async () => {
+      const count = 123;
+      const stub = Sinon.stub(channels, 'getMessageCount').resolves(count);
+      const result = await Data.getMessageCount();
+      expect(stub.calledOnce).to.be.true;
+      expect(result).to.equal(count);
+    });
+  });
+
+  describe('getFirstUnreadMessageIdInConversation', () => {
+    it('returns first unread message id or undefined', async () => {
+      const convo = 'c-unread';
+      const stub = Sinon.stub(channels, 'getFirstUnreadMessageIdInConversation')
+        .onFirstCall()
+        .resolves('first-unread')
+        .onSecondCall()
+        .resolves(undefined);
+
+      const id = await Data.getFirstUnreadMessageIdInConversation(convo);
+      expect(id).to.equal('first-unread');
+      const none = await Data.getFirstUnreadMessageIdInConversation('empty');
+      expect(none).to.equal(undefined);
+      expect(stub.calledTwice).to.be.true;
+      expect(stub.firstCall.calledWith(convo)).to.be.true;
+      expect(stub.secondCall.calledWith('empty')).to.be.true;
+    });
+  });
+
+  describe('getFirstUnreadMessageWithMention', () => {
+    it('returns first unread mention id or undefined', async () => {
+      const stub = Sinon.stub(channels, 'getFirstUnreadMessageWithMention')
+        .onFirstCall()
+        .resolves('mention-1')
+        .onSecondCall()
+        .resolves(undefined);
+
+      const id = await Data.getFirstUnreadMessageWithMention('c');
+      expect(id).to.equal('mention-1');
+      const none = await Data.getFirstUnreadMessageWithMention('c2');
+      expect(none).to.equal(undefined);
+      expect(stub.calledTwice).to.be.true;
+      expect(stub.firstCall.calledWith('c')).to.be.true;
+      expect(stub.secondCall.calledWith('c2')).to.be.true;
+    });
+  });
+
+  describe('hasConversationOutgoingMessage', () => {
+    it('returns whether conversation has outgoing message', async () => {
+      const stub = Sinon.stub(channels, 'hasConversationOutgoingMessage')
+        .onFirstCall()
+        .resolves(true)
+        .onSecondCall()
+        .resolves(false);
+
+      const yes = await Data.hasConversationOutgoingMessage('c');
+      expect(yes).to.equal(true);
+      const no = await Data.hasConversationOutgoingMessage('c2');
+      expect(no).to.equal(false);
+      expect(stub.calledTwice).to.be.true;
+      expect(stub.firstCall.calledWith('c')).to.be.true;
+      expect(stub.secondCall.calledWith('c2')).to.be.true;
+    });
+  });
+
+  describe('getLastHashBySnode', () => {
+    it('returns last hash by snode', async () => {
+      const convo = 'convo_hash';
+      const snode = 'snode-1';
+      const ns = 3;
+      const expected = 'hash123';
+      const stub = Sinon.stub(channels, 'getLastHashBySnode').resolves(expected);
+      const res = await Data.getLastHashBySnode(convo, snode, ns);
+      expect(stub.calledOnce).to.be.true;
+      expect(stub.calledWith(convo, snode, ns)).to.be.true;
+      expect(res).to.equal(expected);
+    });
+  });
+
+  describe('getSeenMessagesByHashList', () => {
+    it('returns seen messages by hash list', async () => {
+      const hashes = ['h1', 'h2'];
+      const expected = [{ hash: 'h1' }, { hash: 'h2' }];
+      const stub = Sinon.stub(channels, 'getSeenMessagesByHashList').resolves(expected);
+      const res = await Data.getSeenMessagesByHashList(hashes);
+      expect(stub.calledOnce).to.be.true;
+      expect(stub.calledWith(hashes)).to.be.true;
+      expect(res).to.equal(expected);
+    });
+  });
+
+  describe('removeAllMessagesInConversation', () => {
+    it('removes messages in batches and calls cleanup on each', async () => {
+      const convo = 'convo_del';
+      const batch1 = [
+        { id: 'm1', conversationId: convo, type: 'incoming', source: 'a' },
+        { id: 'm2', conversationId: convo, type: 'outgoing', source: 'b' },
+      ];
+      const batch2 = [{ id: 'm3', conversationId: convo, type: 'incoming', source: 'c' }];
+
+      const getLastStub = Sinon.stub(channels, 'getLastMessagesByConversation')
+        .onFirstCall()
+        .resolves(batch1)
+        .onSecondCall()
+        .resolves(batch2)
+        .onThirdCall()
+        .resolves([]);
+
+      const removeIdsStub = Sinon.stub(channels, 'removeMessagesByIds').resolves();
+      const finalRemoveStub = Sinon.stub(channels, 'removeAllMessagesInConversation').resolves();
+
+      const cleanupStub = Sinon.stub(MessageModel.prototype, 'cleanup').resolves();
+
+      await Data.removeAllMessagesInConversation(convo);
+
+      // getLast called three times (two batches + final empty)
+      expect(getLastStub.callCount).to.equal(3);
+      // cleanup called once per message
+      expect(cleanupStub.callCount).to.equal(3);
+      // remove by ids called once per non-empty batch with correct ids
+      expect(removeIdsStub.callCount).to.equal(2);
+      expect(removeIdsStub.firstCall.args[0]).to.deep.equal(['m1', 'm2']);
+      expect(removeIdsStub.secondCall.args[0]).to.deep.equal(['m3']);
+      // Due to current early return on empty batch, the final remove is not called
+      expect(finalRemoveStub.called).to.equal(false);
+    });
+
+    it('returns early when no messages to delete', async () => {
+      const getLastStub = Sinon.stub(channels, 'getLastMessagesByConversation').resolves([]);
+      const removeIdsStub = Sinon.stub(channels, 'removeMessagesByIds').resolves();
+      const finalRemoveStub = Sinon.stub(channels, 'removeAllMessagesInConversation').resolves();
+
+      await Data.removeAllMessagesInConversation('convo_empty');
+
+      expect(getLastStub.calledOnce).to.be.true;
+      expect(removeIdsStub.called).to.equal(false);
+      expect(finalRemoveStub.called).to.equal(false);
+    });
+  });
 });
 
 function mockChannels(): void {
@@ -1639,4 +1840,12 @@ function mockChannels(): void {
   channels.getMessageCountByType = () => {};
   channels.getMessagesByConversation = () => {};
   channels.getLastMessagesByConversation = () => {};
+  channels.getOldestMessageInConversation = () => {};
+  channels.getMessageCount = () => {};
+  channels.getFirstUnreadMessageIdInConversation = () => {};
+  channels.getFirstUnreadMessageWithMention = () => {};
+  channels.hasConversationOutgoingMessage = () => {};
+  channels.getLastHashBySnode = () => {};
+  channels.getSeenMessagesByHashList = () => {};
+  channels.removeAllMessagesInConversation = () => {};
 }
