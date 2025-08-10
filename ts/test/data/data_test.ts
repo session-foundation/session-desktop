@@ -22,6 +22,7 @@ import {
   MsgDuplicateSearchOpenGroup,
   SaveConversationReturn,
   SaveSeenMessageHash,
+  UnprocessedParameter,
   UpdateLastHashType,
 } from '../../types/sqlSharedTypes';
 import { UserUtils } from '../../session/utils';
@@ -1833,6 +1834,137 @@ describe('data', () => {
       expect(result).to.deep.equal([]);
     });
   });
+
+  describe('getUnprocessedCount', () => {
+    it('returns unprocessed message count', async () => {
+      const expectedCount = 42;
+      const stub = Sinon.stub(channels, 'getUnprocessedCount').resolves(expectedCount);
+      const result = await Data.getUnprocessedCount();
+
+      expect(stub.calledOnce).to.be.true;
+      expect(result).to.equal(expectedCount);
+    });
+  });
+
+  describe('getAllUnprocessed', () => {
+    it('returns all unprocessed messages', async () => {
+      const expectedData = [
+        { id: 'unprocessed_1', data: 'message_data_1' },
+        { id: 'unprocessed_2', data: 'message_data_2' },
+      ];
+      const stub = Sinon.stub(channels, 'getAllUnprocessed').resolves(expectedData);
+      const result = await Data.getAllUnprocessed();
+
+      expect(stub.calledOnce).to.be.true;
+      expect(result).to.deep.equal(expectedData);
+    });
+
+    it('returns empty array when no unprocessed messages', async () => {
+      const stub = Sinon.stub(channels, 'getAllUnprocessed').resolves([]);
+      const result = await Data.getAllUnprocessed();
+
+      expect(stub.calledOnce).to.be.true;
+      expect(result).to.deep.equal([]);
+    });
+  });
+
+  describe('getUnprocessedById', () => {
+    it('returns unprocessed message by id', async () => {
+      const id = 'unprocessed_123';
+      const expectedData = { id, data: 'message_content' };
+      const stub = Sinon.stub(channels, 'getUnprocessedById').resolves(expectedData);
+      const result = await Data.getUnprocessedById(id);
+
+      expect(stub.calledOnce).to.be.true;
+      expect(stub.calledWith(id)).to.be.true;
+      expect(result).to.deep.equal(expectedData);
+    });
+
+    it('returns undefined when id not found', async () => {
+      const id = 'nonexistent_id';
+      const stub = Sinon.stub(channels, 'getUnprocessedById').resolves(undefined);
+      const result = await Data.getUnprocessedById(id);
+
+      expect(stub.calledOnce).to.be.true;
+      expect(stub.calledWith(id)).to.be.true;
+      expect(result).to.be.undefined;
+    });
+  });
+
+  describe('saveUnprocessed', () => {
+    it('saves unprocessed message data', async () => {
+      const data: UnprocessedParameter = {
+        id: 'new_unprocessed',
+        version: 100,
+        envelope: '1',
+        timestamp: 123456789,
+        messageHash: 'foo',
+        attempts: 1,
+      };
+      const stub = Sinon.stub(channels, 'saveUnprocessed').resolves();
+      const result = await Data.saveUnprocessed(data);
+
+      expect(stub.calledOnce).to.be.true;
+      expect(stub.calledWith(data)).to.be.true;
+      expect(result).to.be.undefined;
+    });
+  });
+
+  describe('updateUnprocessedAttempts', () => {
+    it('updates attempts count for unprocessed message', async () => {
+      const id = 'unprocessed_retry';
+      const attempts = 3;
+      const stub = Sinon.stub(channels, 'updateUnprocessedAttempts').resolves();
+      const result = await Data.updateUnprocessedAttempts(id, attempts);
+
+      expect(stub.calledOnce).to.be.true;
+      expect(stub.calledWith(id, attempts)).to.be.true;
+      expect(result).to.be.undefined;
+    });
+  });
+
+  describe('updateUnprocessedWithData', () => {
+    it('updates unprocessed message with new data', async () => {
+      const id = 'unprocessed_update';
+      const data: UnprocessedParameter = {
+        id,
+        version: 100,
+        envelope: '1',
+        timestamp: 123456789,
+        messageHash: 'foo',
+        attempts: 1,
+      };
+
+      const stub = Sinon.stub(channels, 'updateUnprocessedWithData').resolves();
+      const result = await Data.updateUnprocessedWithData(id, data);
+
+      expect(stub.calledOnce).to.be.true;
+      expect(stub.calledWith(id, data)).to.be.true;
+      expect(result).to.be.undefined;
+    });
+  });
+
+  describe('removeUnprocessed', () => {
+    it('removes unprocessed message by id', async () => {
+      const id = 'unprocessed_remove';
+      const stub = Sinon.stub(channels, 'removeUnprocessed').resolves();
+      const result = await Data.removeUnprocessed(id);
+
+      expect(stub.calledOnce).to.be.true;
+      expect(stub.calledWith(id)).to.be.true;
+      expect(result).to.be.undefined;
+    });
+  });
+
+  describe('removeAllUnprocessed', () => {
+    it('removes all unprocessed messages', async () => {
+      const stub = Sinon.stub(channels, 'removeAllUnprocessed').resolves();
+      const result = await Data.removeAllUnprocessed();
+
+      expect(stub.calledOnce).to.be.true;
+      expect(result).to.be.undefined;
+    });
+  });
 });
 
 function mockChannels(): void {
@@ -1888,4 +2020,12 @@ function mockChannels(): void {
   channels.getExpiredMessages = () => {};
   channels.getOutgoingWithoutExpiresAt = () => {};
   channels.getNextExpiringMessage = () => {};
+  channels.getUnprocessedCount = () => {};
+  channels.getAllUnprocessed = () => {};
+  channels.getUnprocessedById = () => {};
+  channels.saveUnprocessed = () => {};
+  channels.updateUnprocessedAttempts = () => {};
+  channels.updateUnprocessedWithData = () => {};
+  channels.removeUnprocessed = () => {};
+  channels.removeAllUnprocessed = () => {};
 }
