@@ -25,6 +25,11 @@ import {
   UpdateLastHashType,
 } from '../../types/sqlSharedTypes';
 import { UserUtils } from '../../session/utils';
+import {
+  FindAllMessageFromSendersInConversationTypeArgs,
+  FindAllMessageHashesInConversationMatchingAuthorTypeArgs,
+  FindAllMessageHashesInConversationTypeArgs,
+} from '../../data/sharedDataTypes';
 
 describe('data', () => {
   beforeEach(() => {
@@ -1519,277 +1524,313 @@ describe('data', () => {
     });
   });
 
-  describe('getLastMessagesByConversation', () => {
-    it('returns last messages for conversation and sets skipTimerInit when true', async () => {
-      const expectedConversationId = 'last_convo_123';
-      const expectedLimit = 2;
-
+  describe('findAllMessageFromSendersInConversation', () => {
+    it('returns wrapped MessageModel array from channel results', async () => {
+      const args: FindAllMessageFromSendersInConversationTypeArgs = {
+        toRemove: ['05foo'],
+        groupPk: '03foo',
+        signatureTimestamp: 1234567890,
+      };
       const mockMessages = [
         {
-          id: 'last_msg_1',
-          body: 'Recent one',
-          conversationId: expectedConversationId,
-          source: 'sender_a',
+          id: 'msg_sender_1',
+          conversationId: 'convo_senders',
+          source: 'sender1',
           type: 'incoming',
         },
         {
-          id: 'last_msg_2',
-          body: 'Recent two',
-          conversationId: expectedConversationId,
-          source: 'sender_b',
-          type: 'outgoing',
+          id: 'msg_sender_2',
+          conversationId: 'convo_senders',
+          source: 'sender2',
+          type: 'incoming',
         },
       ];
 
-      const getLastMessagesStub = Sinon.stub(channels, 'getLastMessagesByConversation').resolves(
+      const stub = Sinon.stub(channels, 'findAllMessageFromSendersInConversation').resolves(
         mockMessages
       );
+      const result = await Data.findAllMessageFromSendersInConversation(args);
 
-      const result = await Data.getLastMessagesByConversation(
-        expectedConversationId,
-        expectedLimit,
-        true
-      );
-
-      expect(getLastMessagesStub.calledOnce).to.be.true;
-      expect(getLastMessagesStub.calledWith(expectedConversationId, expectedLimit)).to.be.true;
+      expect(stub.calledOnce).to.be.true;
+      expect(stub.calledWith(args)).to.be.true;
       expect(result).to.have.length(2);
       expect(result[0]).to.be.instanceOf(MessageModel);
       expect(result[1]).to.be.instanceOf(MessageModel);
-      expect(result[0].get('id')).to.equal('last_msg_1');
-      expect(result[1].get('id')).to.equal('last_msg_2');
+      expect(result[0].get('id')).to.equal('msg_sender_1');
+      expect(result[1].get('id')).to.equal('msg_sender_2');
     });
 
-    it('returns last messages for conversation when skipTimerInit is false', async () => {
-      const expectedConversationId = 'last_convo_456';
-      const expectedLimit = 1;
+    it('returns empty array when no results', async () => {
+      const args: FindAllMessageFromSendersInConversationTypeArgs = {
+        toRemove: ['05foo'],
+        groupPk: '03foo',
+        signatureTimestamp: 1234567890,
+      };
+      const stub = Sinon.stub(channels, 'findAllMessageFromSendersInConversation').resolves([]);
+      const result = await Data.findAllMessageFromSendersInConversation(args);
 
+      expect(stub.calledOnce).to.be.true;
+      expect(stub.calledWith(args)).to.be.true;
+      expect(result).to.deep.equal([]);
+    });
+  });
+
+  describe('findAllMessageHashesInConversation', () => {
+    it('returns wrapped MessageModel array from channel results', async () => {
+      const args: FindAllMessageHashesInConversationTypeArgs = {
+        messageHashes: ['hash_1', 'hash_2'],
+        groupPk: '03foo',
+        signatureTimestamp: 1234567890,
+      };
+      const mockMessages = [
+        { id: 'msg_hash_1', conversationId: 'convo_hashes', hash: 'hash1', type: 'incoming' },
+        { id: 'msg_hash_2', conversationId: 'convo_hashes', hash: 'hash2', type: 'outgoing' },
+      ];
+
+      const stub = Sinon.stub(channels, 'findAllMessageHashesInConversation').resolves(
+        mockMessages
+      );
+      const result = await Data.findAllMessageHashesInConversation(args);
+
+      expect(stub.calledOnce).to.be.true;
+      expect(stub.calledWith(args)).to.be.true;
+      expect(result).to.have.length(2);
+      expect(result[0]).to.be.instanceOf(MessageModel);
+      expect(result[1]).to.be.instanceOf(MessageModel);
+      expect(result[0].get('id')).to.equal('msg_hash_1');
+      expect(result[1].get('id')).to.equal('msg_hash_2');
+    });
+
+    it('returns empty array when invalid results', async () => {
+      const args: FindAllMessageHashesInConversationTypeArgs = {
+        messageHashes: ['hash_1', 'hash_2'],
+        groupPk: '03foo',
+        signatureTimestamp: 1234567890,
+      };
+      const stub = Sinon.stub(channels, 'findAllMessageHashesInConversation').resolves(null);
+      const result = await Data.findAllMessageHashesInConversation(args);
+
+      expect(stub.calledOnce).to.be.true;
+      expect(stub.calledWith(args)).to.be.true;
+      expect(result).to.deep.equal([]);
+    });
+  });
+
+  describe('findAllMessageHashesInConversationMatchingAuthor', () => {
+    it('returns wrapped MessageModel array from channel results', async () => {
+      const args: FindAllMessageHashesInConversationMatchingAuthorTypeArgs = {
+        messageHashes: ['hash_1', 'hash_2'],
+        author: '05foo',
+        signatureTimestamp: 123456789,
+        groupPk: '03foo',
+      };
       const mockMessages = [
         {
-          id: 'only_last_msg',
-          body: 'Most recent',
-          conversationId: expectedConversationId,
-          source: 'sender_c',
+          id: 'msg_author_1',
+          conversationId: 'convo_author',
+          source: 'author1',
+          hash: 'h1',
           type: 'incoming',
         },
       ];
 
-      const getLastMessagesStub = Sinon.stub(channels, 'getLastMessagesByConversation').resolves(
-        mockMessages
-      );
+      const stub = Sinon.stub(
+        channels,
+        'findAllMessageHashesInConversationMatchingAuthor'
+      ).resolves(mockMessages);
+      const result = await Data.findAllMessageHashesInConversationMatchingAuthor(args);
 
-      const result = await Data.getLastMessagesByConversation(
-        expectedConversationId,
-        expectedLimit,
-        false
-      );
-
-      expect(getLastMessagesStub.calledOnce).to.be.true;
-      expect(getLastMessagesStub.calledWith(expectedConversationId, expectedLimit)).to.be.true;
+      expect(stub.calledOnce).to.be.true;
+      expect(stub.calledWith(args)).to.be.true;
       expect(result).to.have.length(1);
       expect(result[0]).to.be.instanceOf(MessageModel);
-      expect(result[0].get('id')).to.equal('only_last_msg');
+      expect(result[0].get('id')).to.equal('msg_author_1');
+    });
+
+    it('returns empty array when no matching results', async () => {
+      const args: FindAllMessageHashesInConversationMatchingAuthorTypeArgs = {
+        messageHashes: ['hash_1', 'hash_2'],
+        author: '05foo',
+        groupPk: '03foo',
+        signatureTimestamp: 1234567890,
+      };
+      const stub = Sinon.stub(
+        channels,
+        'findAllMessageHashesInConversationMatchingAuthor'
+      ).resolves(undefined);
+      const result = await Data.findAllMessageHashesInConversationMatchingAuthor(args);
+
+      expect(stub.calledOnce).to.be.true;
+      expect(stub.calledWith(args)).to.be.true;
+      expect(result).to.deep.equal([]);
     });
   });
 
-  describe('getLastMessageIdInConversation', () => {
-    it('returns last message id or null when no messages', async () => {
-      const convo = 'convo_last_id';
-      const firstBatch = [
-        { id: 'last-id-1', conversationId: convo, type: 'incoming', source: 'a' },
+  describe('fetchAllGroupUpdateFailedMessage', () => {
+    it('returns wrapped MessageModel array from channel results', async () => {
+      const groupPk = 'group_pk_123' as GroupPubkeyType;
+      const mockMessages = [
+        {
+          id: 'failed_update_1',
+          conversationId: groupPk,
+          type: 'group-update-failed',
+          source: 'system',
+        },
+        {
+          id: 'failed_update_2',
+          conversationId: groupPk,
+          type: 'group-update-failed',
+          source: 'system',
+        },
       ];
-      const stub = Sinon.stub(channels, 'getLastMessagesByConversation')
-        .onFirstCall()
-        .resolves(firstBatch)
-        .onSecondCall()
-        .resolves([]);
 
-      const id = await Data.getLastMessageIdInConversation(convo);
+      const stub = Sinon.stub(channels, 'fetchAllGroupUpdateFailedMessage').resolves(mockMessages);
+      const result = await Data.fetchAllGroupUpdateFailedMessage(groupPk);
+
       expect(stub.calledOnce).to.be.true;
-      expect(id).to.equal('last-id-1');
-
-      const idNone = await Data.getLastMessageIdInConversation('empty');
-      expect(idNone === null).to.be.true;
+      expect(stub.calledWith(groupPk)).to.be.true;
+      expect(result).to.have.length(2);
+      expect(result[0]).to.be.instanceOf(MessageModel);
+      expect(result[1]).to.be.instanceOf(MessageModel);
+      expect(result[0].get('id')).to.equal('failed_update_1');
+      expect(result[1].get('id')).to.equal('failed_update_2');
     });
-  });
 
-  describe('getLastMessageInConversation', () => {
-    it('returns wrapped last MessageModel or null', async () => {
-      const convo = 'convo_last_model';
-      const msg = { id: 'm-last', conversationId: convo, type: 'incoming', source: 'a' };
-      const stub = Sinon.stub(channels, 'getLastMessagesByConversation')
-        .onFirstCall()
-        .resolves([msg])
-        .onSecondCall()
-        .resolves([]);
+    it('returns empty array when no failed updates', async () => {
+      const groupPk = 'empty_group' as GroupPubkeyType;
+      const stub = Sinon.stub(channels, 'fetchAllGroupUpdateFailedMessage').resolves([]);
+      const result = await Data.fetchAllGroupUpdateFailedMessage(groupPk);
 
-      const model = await Data.getLastMessageInConversation(convo);
       expect(stub.calledOnce).to.be.true;
-      expect(model).to.be.instanceOf(MessageModel);
-      expect(model?.get('id')).to.equal('m-last');
-
-      const modelNone = await Data.getLastMessageInConversation('empty');
-      expect(modelNone === null).to.be.true;
+      expect(stub.calledWith(groupPk)).to.be.true;
+      expect(result).to.deep.equal([]);
     });
   });
 
-  describe('getOldestMessageInConversation', () => {
-    it('returns wrapped oldest MessageModel or null', async () => {
-      const convo = 'convo_oldest_model';
-      const msg = { id: 'm-old', conversationId: convo, type: 'incoming', source: 'a' };
-      const stub = Sinon.stub(channels, 'getOldestMessageInConversation')
-        .onFirstCall()
-        .resolves([msg])
-        .onSecondCall()
-        .resolves([]);
-
-      const model = await Data.getOldestMessageInConversation(convo);
-      expect(stub.calledOnce).to.be.true;
-      expect(model).to.be.instanceOf(MessageModel);
-      expect(model?.get('id')).to.equal('m-old');
-
-      const modelNone = await Data.getOldestMessageInConversation('empty');
-      expect(modelNone === null).to.be.true;
-    });
-  });
-
-  describe('getMessageCount', () => {
-    it('returns total message count', async () => {
-      const count = 123;
-      const stub = Sinon.stub(channels, 'getMessageCount').resolves(count);
-      const result = await Data.getMessageCount();
-      expect(stub.calledOnce).to.be.true;
-      expect(result).to.equal(count);
-    });
-  });
-
-  describe('getFirstUnreadMessageIdInConversation', () => {
-    it('returns first unread message id or undefined', async () => {
-      const convo = 'c-unread';
-      const stub = Sinon.stub(channels, 'getFirstUnreadMessageIdInConversation')
-        .onFirstCall()
-        .resolves('first-unread')
-        .onSecondCall()
-        .resolves(undefined);
-
-      const id = await Data.getFirstUnreadMessageIdInConversation(convo);
-      expect(id).to.equal('first-unread');
-      const none = await Data.getFirstUnreadMessageIdInConversation('empty');
-      expect(none).to.equal(undefined);
-      expect(stub.calledTwice).to.be.true;
-      expect(stub.firstCall.calledWith(convo)).to.be.true;
-      expect(stub.secondCall.calledWith('empty')).to.be.true;
-    });
-  });
-
-  describe('getFirstUnreadMessageWithMention', () => {
-    it('returns first unread mention id or undefined', async () => {
-      const stub = Sinon.stub(channels, 'getFirstUnreadMessageWithMention')
-        .onFirstCall()
-        .resolves('mention-1')
-        .onSecondCall()
-        .resolves(undefined);
-
-      const id = await Data.getFirstUnreadMessageWithMention('c');
-      expect(id).to.equal('mention-1');
-      const none = await Data.getFirstUnreadMessageWithMention('c2');
-      expect(none).to.equal(undefined);
-      expect(stub.calledTwice).to.be.true;
-      expect(stub.firstCall.calledWith('c')).to.be.true;
-      expect(stub.secondCall.calledWith('c2')).to.be.true;
-    });
-  });
-
-  describe('hasConversationOutgoingMessage', () => {
-    it('returns whether conversation has outgoing message', async () => {
-      const stub = Sinon.stub(channels, 'hasConversationOutgoingMessage')
-        .onFirstCall()
-        .resolves(true)
-        .onSecondCall()
-        .resolves(false);
-
-      const yes = await Data.hasConversationOutgoingMessage('c');
-      expect(yes).to.equal(true);
-      const no = await Data.hasConversationOutgoingMessage('c2');
-      expect(no).to.equal(false);
-      expect(stub.calledTwice).to.be.true;
-      expect(stub.firstCall.calledWith('c')).to.be.true;
-      expect(stub.secondCall.calledWith('c2')).to.be.true;
-    });
-  });
-
-  describe('getLastHashBySnode', () => {
-    it('returns last hash by snode', async () => {
-      const convo = 'convo_hash';
-      const snode = 'snode-1';
-      const ns = 3;
-      const expected = 'hash123';
-      const stub = Sinon.stub(channels, 'getLastHashBySnode').resolves(expected);
-      const res = await Data.getLastHashBySnode(convo, snode, ns);
-      expect(stub.calledOnce).to.be.true;
-      expect(stub.calledWith(convo, snode, ns)).to.be.true;
-      expect(res).to.equal(expected);
-    });
-  });
-
-  describe('getSeenMessagesByHashList', () => {
-    it('returns seen messages by hash list', async () => {
-      const hashes = ['h1', 'h2'];
-      const expected = [{ hash: 'h1' }, { hash: 'h2' }];
-      const stub = Sinon.stub(channels, 'getSeenMessagesByHashList').resolves(expected);
-      const res = await Data.getSeenMessagesByHashList(hashes);
-      expect(stub.calledOnce).to.be.true;
-      expect(stub.calledWith(hashes)).to.be.true;
-      expect(res).to.equal(expected);
-    });
-  });
-
-  describe('removeAllMessagesInConversation', () => {
-    it('removes messages in batches and calls cleanup on each', async () => {
-      const convo = 'convo_del';
-      const batch1 = [
-        { id: 'm1', conversationId: convo, type: 'incoming', source: 'a' },
-        { id: 'm2', conversationId: convo, type: 'outgoing', source: 'b' },
+  describe('getMessagesBySentAt', () => {
+    it('returns wrapped MessageModel array from channel results', async () => {
+      const sentAt = 1234567890;
+      const mockMessages = [
+        { id: 'msg_sent_1', sentAt, conversationId: 'convo1', type: 'incoming', source: 'sender1' },
+        { id: 'msg_sent_2', sentAt, conversationId: 'convo2', type: 'outgoing', source: 'us' },
       ];
-      const batch2 = [{ id: 'm3', conversationId: convo, type: 'incoming', source: 'c' }];
 
-      const getLastStub = Sinon.stub(channels, 'getLastMessagesByConversation')
-        .onFirstCall()
-        .resolves(batch1)
-        .onSecondCall()
-        .resolves(batch2)
-        .onThirdCall()
-        .resolves([]);
+      const stub = Sinon.stub(channels, 'getMessagesBySentAt').resolves(mockMessages);
+      const result = await Data.getMessagesBySentAt(sentAt);
 
-      const removeIdsStub = Sinon.stub(channels, 'removeMessagesByIds').resolves();
-      const finalRemoveStub = Sinon.stub(channels, 'removeAllMessagesInConversation').resolves();
-
-      const cleanupStub = Sinon.stub(MessageModel.prototype, 'cleanup').resolves();
-
-      await Data.removeAllMessagesInConversation(convo);
-
-      // getLast called three times (two batches + final empty)
-      expect(getLastStub.callCount).to.equal(3);
-      // cleanup called once per message
-      expect(cleanupStub.callCount).to.equal(3);
-      // remove by ids called once per non-empty batch with correct ids
-      expect(removeIdsStub.callCount).to.equal(2);
-      expect(removeIdsStub.firstCall.args[0]).to.deep.equal(['m1', 'm2']);
-      expect(removeIdsStub.secondCall.args[0]).to.deep.equal(['m3']);
-      // Due to current early return on empty batch, the final remove is not called
-      expect(finalRemoveStub.called).to.equal(false);
+      expect(stub.calledOnce).to.be.true;
+      expect(stub.calledWith(sentAt)).to.be.true;
+      expect(result).to.have.length(2);
+      expect(result[0]).to.be.instanceOf(MessageModel);
+      expect(result[1]).to.be.instanceOf(MessageModel);
+      expect(result[0].get('id')).to.equal('msg_sent_1');
+      expect(result[1].get('id')).to.equal('msg_sent_2');
     });
 
-    it('returns early when no messages to delete', async () => {
-      const getLastStub = Sinon.stub(channels, 'getLastMessagesByConversation').resolves([]);
-      const removeIdsStub = Sinon.stub(channels, 'removeMessagesByIds').resolves();
-      const finalRemoveStub = Sinon.stub(channels, 'removeAllMessagesInConversation').resolves();
+    it('returns empty array when no messages at that time', async () => {
+      const sentAt = 9999999999;
+      const stub = Sinon.stub(channels, 'getMessagesBySentAt').resolves([]);
+      const result = await Data.getMessagesBySentAt(sentAt);
 
-      await Data.removeAllMessagesInConversation('convo_empty');
+      expect(stub.calledOnce).to.be.true;
+      expect(stub.calledWith(sentAt)).to.be.true;
+      expect(result).to.deep.equal([]);
+    });
+  });
 
-      expect(getLastStub.calledOnce).to.be.true;
-      expect(removeIdsStub.called).to.equal(false);
-      expect(finalRemoveStub.called).to.equal(false);
+  describe('getExpiredMessages', () => {
+    it('returns wrapped MessageModel array from channel results', async () => {
+      const mockMessages = [
+        {
+          id: 'expired_1',
+          expiresAt: 1000,
+          conversationId: 'convo1',
+          type: 'incoming',
+          source: 'sender',
+        },
+        {
+          id: 'expired_2',
+          expiresAt: 2000,
+          conversationId: 'convo2',
+          type: 'outgoing',
+          source: 'us',
+        },
+      ];
+
+      const stub = Sinon.stub(channels, 'getExpiredMessages').resolves(mockMessages);
+      const result = await Data.getExpiredMessages();
+
+      expect(stub.calledOnce).to.be.true;
+      expect(result).to.have.length(2);
+      expect(result[0]).to.be.instanceOf(MessageModel);
+      expect(result[1]).to.be.instanceOf(MessageModel);
+      expect(result[0].get('id')).to.equal('expired_1');
+      expect(result[1].get('id')).to.equal('expired_2');
+    });
+
+    it('returns empty array when no expired messages', async () => {
+      const stub = Sinon.stub(channels, 'getExpiredMessages').resolves([]);
+      const result = await Data.getExpiredMessages();
+
+      expect(stub.calledOnce).to.be.true;
+      expect(result).to.deep.equal([]);
+    });
+  });
+
+  describe('getOutgoingWithoutExpiresAt', () => {
+    it('returns wrapped MessageModel array from channel results', async () => {
+      const mockMessages = [
+        { id: 'outgoing_1', type: 'outgoing', conversationId: 'convo1', source: 'us' },
+        { id: 'outgoing_2', type: 'outgoing', conversationId: 'convo2', source: 'us' },
+      ];
+
+      const stub = Sinon.stub(channels, 'getOutgoingWithoutExpiresAt').resolves(mockMessages);
+      const result = await Data.getOutgoingWithoutExpiresAt();
+
+      expect(stub.calledOnce).to.be.true;
+      expect(result).to.have.length(2);
+      expect(result[0]).to.be.instanceOf(MessageModel);
+      expect(result[1]).to.be.instanceOf(MessageModel);
+      expect(result[0].get('id')).to.equal('outgoing_1');
+      expect(result[1].get('id')).to.equal('outgoing_2');
+    });
+
+    it('handles null/undefined results', async () => {
+      const stub = Sinon.stub(channels, 'getOutgoingWithoutExpiresAt').resolves(null);
+      const result = await Data.getOutgoingWithoutExpiresAt();
+
+      expect(stub.calledOnce).to.be.true;
+      expect(result).to.deep.equal([]);
+    });
+  });
+
+  describe('getNextExpiringMessage', () => {
+    it('returns wrapped MessageModel array from channel results', async () => {
+      const mockMessages = [
+        {
+          id: 'next_expiring_1',
+          expiresAt: 3000,
+          conversationId: 'convo1',
+          type: 'incoming',
+          source: 'sender',
+        },
+      ];
+
+      const stub = Sinon.stub(channels, 'getNextExpiringMessage').resolves(mockMessages);
+      const result = await Data.getNextExpiringMessage();
+
+      expect(stub.calledOnce).to.be.true;
+      expect(result).to.have.length(1);
+      expect(result[0]).to.be.instanceOf(MessageModel);
+      expect(result[0].get('id')).to.equal('next_expiring_1');
+    });
+
+    it('returns empty array when no expiring messages', async () => {
+      const stub = Sinon.stub(channels, 'getNextExpiringMessage').resolves([]);
+      const result = await Data.getNextExpiringMessage();
+
+      expect(stub.calledOnce).to.be.true;
+      expect(result).to.deep.equal([]);
     });
   });
 });
@@ -1839,13 +1880,12 @@ function mockChannels(): void {
   channels.getUnreadCountByConversation = () => {};
   channels.getMessageCountByType = () => {};
   channels.getMessagesByConversation = () => {};
-  channels.getLastMessagesByConversation = () => {};
-  channels.getOldestMessageInConversation = () => {};
-  channels.getMessageCount = () => {};
-  channels.getFirstUnreadMessageIdInConversation = () => {};
-  channels.getFirstUnreadMessageWithMention = () => {};
-  channels.hasConversationOutgoingMessage = () => {};
-  channels.getLastHashBySnode = () => {};
-  channels.getSeenMessagesByHashList = () => {};
-  channels.removeAllMessagesInConversation = () => {};
+  channels.findAllMessageFromSendersInConversation = () => {};
+  channels.findAllMessageHashesInConversation = () => {};
+  channels.findAllMessageHashesInConversationMatchingAuthor = () => {};
+  channels.fetchAllGroupUpdateFailedMessage = () => {};
+  channels.getMessagesBySentAt = () => {};
+  channels.getExpiredMessages = () => {};
+  channels.getOutgoingWithoutExpiresAt = () => {};
+  channels.getNextExpiringMessage = () => {};
 }
