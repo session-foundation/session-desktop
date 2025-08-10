@@ -1510,6 +1510,81 @@ describe('data', () => {
       expect(result.quotes).to.deep.equal([]);
     });
   });
+
+  describe('getLastMessagesByConversation', () => {
+    it('returns last messages for conversation with limit', async () => {
+      const expectedConversationId = 'last_convo_123';
+      const expectedLimit = 2;
+      const mockMessages: Array<MessageAttributesOptionals> = [
+        {
+          id: 'last_msg_1',
+          body: 'Last message one',
+          conversationId: expectedConversationId,
+          source: 'sender_1',
+          type: 'incoming',
+        },
+        {
+          id: 'last_msg_2',
+          body: 'Last message two',
+          conversationId: expectedConversationId,
+          source: 'sender_2',
+          type: 'outgoing',
+        },
+      ];
+
+      const getLastMessagesByConversationStub = Sinon.stub(
+        channels,
+        'getLastMessagesByConversation'
+      ).resolves(mockMessages);
+
+      const result = await Data.getLastMessagesByConversation(
+        expectedConversationId,
+        expectedLimit,
+        false
+      );
+
+      expect(getLastMessagesByConversationStub.calledOnce).to.be.true;
+      expect(getLastMessagesByConversationStub.calledWith(expectedConversationId, expectedLimit)).to
+        .be.true;
+      expect(result).to.have.length(2);
+      expect(result[0]).to.be.instanceOf(MessageModel);
+      expect(result[1]).to.be.instanceOf(MessageModel);
+      expect(result[0].get('id')).to.equal('last_msg_1');
+      expect(result[1].get('id')).to.equal('last_msg_2');
+    });
+
+    it('returns last messages with skipTimerInit when specified', async () => {
+      const expectedConversationId = 'last_convo_skip_timer';
+      const expectedLimit = 1;
+      const mockMessages: Array<MessageAttributesOptionals> = [
+        {
+          id: 'last_timer_msg_1',
+          body: 'Last message with skip timer',
+          conversationId: expectedConversationId,
+          source: 'sender_1',
+          type: 'incoming',
+        },
+      ];
+
+      const getLastMessagesByConversationStub = Sinon.stub(
+        channels,
+        'getLastMessagesByConversation'
+      ).resolves(mockMessages);
+
+      const result = await Data.getLastMessagesByConversation(
+        expectedConversationId,
+        expectedLimit,
+        true
+      );
+
+      expect(getLastMessagesByConversationStub.calledOnce).to.be.true;
+      expect(getLastMessagesByConversationStub.calledWith(expectedConversationId, expectedLimit)).to
+        .be.true;
+      expect(result).to.have.length(1);
+      expect(result[0]).to.be.instanceOf(MessageModel);
+      expect(result[0].get('id')).to.equal('last_timer_msg_1');
+    });
+  });
 });
 
 function mockChannels(): void {
@@ -1557,4 +1632,5 @@ function mockChannels(): void {
   channels.getUnreadCountByConversation = () => {};
   channels.getMessageCountByType = () => {};
   channels.getMessagesByConversation = () => {};
+  channels.getLastMessagesByConversation = () => {};
 }
