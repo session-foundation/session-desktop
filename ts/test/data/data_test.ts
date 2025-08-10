@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe } from 'mocha';
 import Sinon from 'sinon';
 import { expect } from 'chai';
-import { PubkeyType } from 'libsession_util_nodejs';
+import { GroupPubkeyType, PubkeyType } from 'libsession_util_nodejs';
 import { Data } from '../../data/data';
 import { channels } from '../../data/channels';
 import * as dataInit from '../../data/dataInit';
@@ -12,7 +12,11 @@ import { DisappearingMessages } from '../../session/disappearing_messages';
 import { ConversationAttributes } from '../../models/conversationAttributes';
 import { ConversationModel } from '../../models/conversation';
 import { MessageModel } from '../../models/message';
-import { MessageAttributes, MessageAttributesOptionals } from '../../models/messageType';
+import {
+  MessageAttributes,
+  MessageAttributesOptionals,
+  MessageDirection,
+} from '../../models/messageType';
 import { Quote } from '../../receiver/types';
 import {
   MsgDuplicateSearchOpenGroup,
@@ -724,9 +728,10 @@ describe('data', () => {
 
   describe('removeAllMessagesInConversationSentBefore', () => {
     it('removes messages sent before specified timestamp', async () => {
+      const conversationId: GroupPubkeyType = '03foo';
       const expectedArgs = {
         deleteBeforeSeconds: 1640995200,
-        conversationId: 'convo_123' as any,
+        conversationId,
       };
       const expectedRemovedIds = ['msg_1', 'msg_2', 'msg_3'];
 
@@ -745,9 +750,10 @@ describe('data', () => {
 
   describe('getAllMessagesWithAttachmentsInConversationSentBefore', () => {
     it('returns message models with attachments sent before timestamp', async () => {
+      const conversationId: GroupPubkeyType = '03convo_456';
       const expectedArgs = {
         deleteAttachBeforeSeconds: 1640995200,
-        conversationId: 'convo_456' as any,
+        conversationId,
       };
       const mockMessageAttrs: Array<MessageAttributesOptionals> = [
         {
@@ -786,9 +792,10 @@ describe('data', () => {
     });
 
     it('returns empty array when no messages found', async () => {
+      const conversationId: GroupPubkeyType = '03convo_456';
       const expectedArgs = {
         deleteAttachBeforeSeconds: 1640995200,
-        conversationId: 'empty_convo' as any,
+        conversationId,
       };
 
       const getAllMessagesWithAttachmentsInConversationSentBeforeStub = Sinon.stub(
@@ -805,9 +812,10 @@ describe('data', () => {
     });
 
     it('returns empty array when empty array is returned', async () => {
+      const conversationId: GroupPubkeyType = '03convo_456';
       const expectedArgs = {
         deleteAttachBeforeSeconds: 1640995200,
-        conversationId: 'empty_convo' as any,
+        conversationId,
       };
 
       const getAllMessagesWithAttachmentsInConversationSentBeforeStub = Sinon.stub(
@@ -1385,7 +1393,7 @@ describe('data', () => {
   describe('getMessageCountByType', () => {
     it('returns message count for specific type', async () => {
       const expectedConversationId = 'type_convo_123';
-      const expectedType = 'incoming' as any;
+      const expectedType = MessageDirection.incoming;
       const expectedCount = 10;
 
       const getMessageCountByTypeStub = Sinon.stub(channels, 'getMessageCountByType').resolves(
@@ -1510,212 +1518,6 @@ describe('data', () => {
       expect(result.quotes).to.deep.equal([]);
     });
   });
-
-  describe('getLastMessagesByConversation', () => {
-    it('returns last messages for conversation with limit', async () => {
-      const expectedConversationId = 'last_convo_123';
-      const expectedLimit = 2;
-      const mockMessages: Array<MessageAttributesOptionals> = [
-        {
-          id: 'last_msg_1',
-          body: 'Last message one',
-          conversationId: expectedConversationId,
-          source: 'sender_1',
-          type: 'incoming',
-        },
-        {
-          id: 'last_msg_2',
-          body: 'Last message two',
-          conversationId: expectedConversationId,
-          source: 'sender_2',
-          type: 'outgoing',
-        },
-      ];
-
-      const getLastMessagesByConversationStub = Sinon.stub(
-        channels,
-        'getLastMessagesByConversation'
-      ).resolves(mockMessages);
-
-      const result = await Data.getLastMessagesByConversation(
-        expectedConversationId,
-        expectedLimit,
-        false
-      );
-
-      expect(getLastMessagesByConversationStub.calledOnce).to.be.true;
-      expect(getLastMessagesByConversationStub.calledWith(expectedConversationId, expectedLimit)).to
-        .be.true;
-      expect(result).to.have.length(2);
-      expect(result[0]).to.be.instanceOf(MessageModel);
-      expect(result[1]).to.be.instanceOf(MessageModel);
-      expect(result[0].get('id')).to.equal('last_msg_1');
-      expect(result[1].get('id')).to.equal('last_msg_2');
-    });
-
-    it('returns last messages with skipTimerInit when specified', async () => {
-      const expectedConversationId = 'last_convo_skip_timer';
-      const expectedLimit = 1;
-      const mockMessages: Array<MessageAttributesOptionals> = [
-        {
-          id: 'last_timer_msg_1',
-          body: 'Last message with skip timer',
-          conversationId: expectedConversationId,
-          source: 'sender_1',
-          type: 'incoming',
-        },
-      ];
-
-      const getLastMessagesByConversationStub = Sinon.stub(
-        channels,
-        'getLastMessagesByConversation'
-      ).resolves(mockMessages);
-
-      const result = await Data.getLastMessagesByConversation(
-        expectedConversationId,
-        expectedLimit,
-        true
-      );
-
-      expect(getLastMessagesByConversationStub.calledOnce).to.be.true;
-      expect(getLastMessagesByConversationStub.calledWith(expectedConversationId, expectedLimit)).to
-        .be.true;
-      expect(result).to.have.length(1);
-      expect(result[0]).to.be.instanceOf(MessageModel);
-      expect(result[0].get('id')).to.equal('last_timer_msg_1');
-    });
-  });
-
-  describe('getLastMessageIdInConversation', () => {
-    it('returns the last message id when a message exists', async () => {
-      const expectedConversationId = 'last_msg_id_convo';
-      const mockMessages: Array<MessageAttributesOptionals> = [
-        {
-          id: 'last_msg_id_1',
-          body: 'Only message',
-          conversationId: expectedConversationId,
-          source: 'sender_1',
-          type: 'incoming',
-        },
-      ];
-
-      const getLastMessagesByConversationStub = Sinon.stub(
-        channels,
-        'getLastMessagesByConversation'
-      ).resolves(mockMessages);
-
-      const result = await Data.getLastMessageIdInConversation(expectedConversationId);
-
-      expect(getLastMessagesByConversationStub.calledOnce).to.be.true;
-      expect(
-        getLastMessagesByConversationStub.calledWith(expectedConversationId, 1)
-      ).to.be.true;
-      expect(result).to.equal('last_msg_id_1');
-    });
-
-    it('returns null when no messages exist', async () => {
-      const expectedConversationId = 'last_msg_id_none';
-
-      const getLastMessagesByConversationStub = Sinon.stub(
-        channels,
-        'getLastMessagesByConversation'
-      ).resolves([]);
-
-      const result = await Data.getLastMessageIdInConversation(expectedConversationId);
-
-      expect(getLastMessagesByConversationStub.calledOnce).to.be.true;
-      expect(
-        getLastMessagesByConversationStub.calledWith(expectedConversationId, 1)
-      ).to.be.true;
-      expect(result).to.equal(null);
-    });
-  });
-
-  describe('getLastMessageInConversation', () => {
-    it('returns the last message model when a message exists', async () => {
-      const expectedConversationId = 'last_msg_convo';
-      const mockMessages: Array<MessageAttributesOptionals> = [
-        {
-          id: 'last_msg_model_1',
-          body: 'Only message',
-          conversationId: expectedConversationId,
-          source: 'sender_1',
-          type: 'incoming',
-        },
-      ];
-
-      const getLastMessagesByConversationStub = Sinon.stub(
-        channels,
-        'getLastMessagesByConversation'
-      ).resolves(mockMessages);
-
-      const result = await Data.getLastMessageInConversation(expectedConversationId);
-
-      expect(getLastMessagesByConversationStub.calledOnce).to.be.true;
-      expect(
-        getLastMessagesByConversationStub.calledWith(expectedConversationId, 1)
-      ).to.be.true;
-      expect(result).to.be.instanceOf(MessageModel);
-      expect((result as MessageModel).get('id')).to.equal('last_msg_model_1');
-    });
-
-    it('returns null when no messages exist', async () => {
-      const expectedConversationId = 'last_msg_convo_none';
-
-      const getLastMessagesByConversationStub = Sinon.stub(
-        channels,
-        'getLastMessagesByConversation'
-      ).resolves([]);
-
-      const result = await Data.getLastMessageInConversation(expectedConversationId);
-
-      expect(getLastMessagesByConversationStub.calledOnce).to.be.true;
-      expect(
-        getLastMessagesByConversationStub.calledWith(expectedConversationId, 1)
-      ).to.be.true;
-      expect(result).to.equal(null);
-    });
-  });
-
-  describe('getOldestMessageInConversation', () => {
-    it('returns the oldest message model when a message exists', async () => {
-      const expectedConversationId = 'oldest_msg_convo';
-      const mockMessages: Array<MessageAttributesOptionals> = [
-        {
-          id: 'oldest_msg_1',
-          body: 'Oldest message',
-          conversationId: expectedConversationId,
-          source: 'sender_1',
-          type: 'incoming',
-        },
-      ];
-
-      const getOldestMessageInConversationStub = Sinon.stub(
-        channels,
-        'getOldestMessageInConversation'
-      ).resolves(mockMessages);
-
-      const result = await Data.getOldestMessageInConversation(expectedConversationId);
-
-      expect(getOldestMessageInConversationStub.calledOnce).to.be.true;
-      expect(result).to.be.instanceOf(MessageModel);
-      expect((result as MessageModel).get('id')).to.equal('oldest_msg_1');
-    });
-
-    it('returns null when no messages exist', async () => {
-      const expectedConversationId = 'oldest_msg_convo_none';
-
-      const getOldestMessageInConversationStub = Sinon.stub(
-        channels,
-        'getOldestMessageInConversation'
-      ).resolves([]);
-
-      const result = await Data.getOldestMessageInConversation(expectedConversationId);
-
-      expect(getOldestMessageInConversationStub.calledOnce).to.be.true;
-      expect(result).to.equal(null);
-    });
-  });
 });
 
 function mockChannels(): void {
@@ -1763,6 +1565,4 @@ function mockChannels(): void {
   channels.getUnreadCountByConversation = () => {};
   channels.getMessageCountByType = () => {};
   channels.getMessagesByConversation = () => {};
-  channels.getLastMessagesByConversation = () => {};
-  channels.getOldestMessageInConversation = () => {};
 }
