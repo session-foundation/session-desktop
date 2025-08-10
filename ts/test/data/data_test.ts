@@ -1541,10 +1541,9 @@ describe('data', () => {
         },
       ];
 
-      const getLastMessagesStub = Sinon.stub(
-        channels,
-        'getLastMessagesByConversation'
-      ).resolves(mockMessages);
+      const getLastMessagesStub = Sinon.stub(channels, 'getLastMessagesByConversation').resolves(
+        mockMessages
+      );
 
       const result = await Data.getLastMessagesByConversation(
         expectedConversationId,
@@ -1575,10 +1574,9 @@ describe('data', () => {
         },
       ];
 
-      const getLastMessagesStub = Sinon.stub(
-        channels,
-        'getLastMessagesByConversation'
-      ).resolves(mockMessages);
+      const getLastMessagesStub = Sinon.stub(channels, 'getLastMessagesByConversation').resolves(
+        mockMessages
+      );
 
       const result = await Data.getLastMessagesByConversation(
         expectedConversationId,
