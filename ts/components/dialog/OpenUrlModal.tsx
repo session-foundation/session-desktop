@@ -69,7 +69,7 @@ export function OpenUrlModal(props: OpenUrlModalState) {
       <StyledScrollDescriptionContainer>
         <ModalDescription
           dataTestId="modal-description"
-          localizerProps={{ token: 'urlOpenDescription', asTag: 'span', args: { url } }}
+          localizerProps={{ token: 'urlOpenDescription', asTag: 'span', url }}
         />
       </StyledScrollDescriptionContainer>
 

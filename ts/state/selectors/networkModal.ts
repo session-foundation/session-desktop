@@ -1,7 +1,7 @@
 import { useSelector } from 'react-redux';
 import type { StateType } from '../reducer';
 import type { NetworkModalState } from '../ducks/networkModal';
-import type { LocalizerProps } from '../../components/basic/Localizer';
+import type { TrArgs } from '../../localization/localeTools';
 
 const getNetworkModal = (state: StateType): NetworkModalState => {
   return state.networkModal;
@@ -20,7 +20,7 @@ export const useLastRefreshedTimestamp = (): number => {
   return useSelector((state: StateType) => getNetworkModal(state).lastRefreshedTimestamp);
 };
 
-export const useErrorMessage = (): LocalizerProps | null => {
+export const useErrorMessage = (): TrArgs | null => {
   return useSelector((state: StateType) => getNetworkModal(state).errorMessage);
 };
 

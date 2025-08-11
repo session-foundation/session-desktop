@@ -12,14 +12,13 @@ import {
 } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionRadioGroup, SessionRadioItems } from '../basic/SessionRadioGroup';
-import type { LocalizerProps } from '../basic/Localizer';
 import { SessionSpinner } from '../loading';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
-import { tr } from '../../localization/localeTools';
+import { tr, type TrArgs } from '../../localization/localeTools';
 import { ModalFlexContainer } from './shared/ModalFlexContainer';
 
 export type SessionConfirmDialogProps = {
-  i18nMessage?: LocalizerProps;
+  i18nMessage?: TrArgs;
   title?: string;
   radioOptions?: SessionRadioItems;
   onClose?: any;

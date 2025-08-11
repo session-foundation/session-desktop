@@ -8,7 +8,7 @@ import { AttachmentTypeWithPath } from '../../types/Attachment';
 import type { EditProfilePictureModalProps, PasswordAction } from '../../types/ReduxTypes';
 import { WithConvoId } from '../../session/types/with';
 import type { SessionProInfoVariant } from '../../components/dialog/SessionProInfoModal';
-import type { LocalizerProps } from '../../components/basic/Localizer';
+import type { TrArgs } from '../../localization/localeTools';
 
 export type BanType = 'ban' | 'unban';
 
@@ -32,8 +32,8 @@ export type EnterPasswordModalState = EnterPasswordModalProps | null;
 export type DeleteAccountModalState = EditProfileModalState;
 export type OpenUrlModalState = { urlToOpen: string } | null;
 export type LocalizedPopupDialogState = {
-  title: LocalizerProps;
-  description: LocalizerProps;
+  title: TrArgs;
+  description: TrArgs;
 } | null;
 export type SessionProInfoState = { variant: SessionProInfoVariant } | null;
 

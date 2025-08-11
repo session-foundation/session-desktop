@@ -50,6 +50,11 @@ export class TimedLog {
     this.start = Date.now();
   }
 
+  private static formatMillisecondsToSeconds(milliseconds: number): string {
+    const seconds = milliseconds / 1000;
+    return seconds.toFixed(3).replace(/\.?0+$/, '');
+  }
+
   /**
    * Format the time elapsed since the start of the timer.
    * @param time The time to format.
@@ -66,12 +71,7 @@ export class TimedLog {
       return `${s}${TimedLog.secondSuffix}`;
     }
 
-    function formatMillisecondsToSeconds(milliseconds: number): string {
-      const seconds = milliseconds / 1000;
-      return seconds.toFixed(3).replace(/\.?0+$/, '');
-    }
-
-    return `${formatMillisecondsToSeconds(ms)}${TimedLog.secondSuffix}`;
+    return `${this.formatMillisecondsToSeconds(ms)}${TimedLog.secondSuffix}`;
   }
 
   /**

@@ -41,8 +41,7 @@ import { MessageSender } from '../session/sending';
 import { StoreGroupRequestFactory } from '../session/apis/snode_api/factories/StoreGroupRequestFactory';
 import { DURATION } from '../session/constants';
 import { GroupInvite } from '../session/utils/job_runners/jobs/GroupInviteJob';
-import type { LocalizerProps } from '../components/basic/Localizer';
-import { tr } from '../localization/localeTools';
+import { tr, type TrArgs } from '../localization/localeTools';
 
 export async function copyPublicKeyByConvoId(convoId: string) {
   if (OpenGroupUtils.isOpenGroupV2(convoId)) {
@@ -234,12 +233,12 @@ export const declineConversationWithConfirm = ({
 
   const convoName = ConvoHub.use().get(conversationId)?.getNicknameOrRealUsernameOrPlaceholder();
 
-  const i18nMessage: LocalizerProps = isGroupV2
+  const i18nMessage: TrArgs = isGroupV2
     ? alsoBlock && originNameToBlock
-      ? { token: 'blockDescription', args: { name: originNameToBlock } } // groupv2, and blocking by sender name
+      ? { token: 'blockDescription', name: originNameToBlock } // groupv2, and blocking by sender name
       : { token: 'groupInviteDelete' } // groupv2, and no info about the sender, falling back to delete only
     : alsoBlock
-      ? { token: 'blockDescription', args: { name: convoName } }
+      ? { token: 'blockDescription', name: convoName }
       : { token: 'messageRequestsDelete' };
 
   window?.inboxStore?.dispatch(
@@ -382,7 +381,7 @@ export async function showLeaveGroupByConvoId(conversationId: string, name: stri
         title: tr('groupLeave'),
         i18nMessage: {
           token: 'groupDeleteDescription',
-          args: { group_name: name || tr('unknown') },
+          group_name: name || tr('unknown'),
         },
         onClickOk,
         okText: tr('leave'),
@@ -396,7 +395,7 @@ export async function showLeaveGroupByConvoId(conversationId: string, name: stri
   window?.inboxStore?.dispatch(
     updateConfirmModal({
       title: tr('groupLeave'),
-      i18nMessage: { token: 'groupLeaveDescription', args: { group_name: name ?? tr('unknown') } },
+      i18nMessage: { token: 'groupLeaveDescription', group_name: name ?? tr('unknown') },
       onClickOk,
       okText: tr('leave'),
       okTheme: SessionButtonColor.Danger,
@@ -441,7 +440,7 @@ export async function showDeleteGroupByConvoId(conversationId: string, name: str
       title: tr('groupDelete'),
       i18nMessage: {
         token: weAreAdmin ? 'groupDeleteDescription' : 'groupDeleteDescriptionMember',
-        args: { group_name: name ?? tr('unknown') },
+        group_name: name ?? tr('unknown'),
       },
       onClickOk,
       okText: tr('delete'),

@@ -128,14 +128,14 @@ const CurrentPriceBlock = () => {
     () => (
       <Localizer
         token="sessionNetworkDataPrice"
-        args={{
-          date_time: priceTimestamp
+        date_time={
+          priceTimestamp
             ? formatDateWithLocale({
                 date: new Date(priceTimestamp * 1000),
                 formatStr: 'd MMM yyyy hh:mm a',
               })
-            : '-',
-        }}
+            : '-'
+        }
       />
     ),
     [priceTimestamp]
@@ -264,9 +264,7 @@ export function NetworkSection() {
       >
         <Localizer
           token={'sessionNetworkDescription'}
-          args={{
-            icon: 'EXTERNAL_LINK_ICON',
-          }}
+          icon={LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}
         />
       </SessionNetworkParagraph>
       <SpacerMD />

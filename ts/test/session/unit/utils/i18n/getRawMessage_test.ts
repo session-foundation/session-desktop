@@ -10,14 +10,15 @@ describe('getRawMessage', () => {
     initI18n();
   });
   it('returns the raw message for a token', () => {
-    const rawMessage = getRawMessage('en', 'adminPromoteDescription', { name: 'Alice' });
+    const rawMessage = getRawMessage('en', { token: 'adminPromoteDescription', name: 'Alice' });
     expect(rawMessage).to.equal(
       'Are you sure you want to promote <b>{name}</b> to admin? Admins cannot be removed.'
     );
   });
 
   it('returns the raw message for a plural token', () => {
-    const rawMessage = getRawMessage('en', 'searchMatches', {
+    const rawMessage = getRawMessage('en', {
+      token: 'searchMatches',
       count: 1,
       found_count: 2,
     });
@@ -25,12 +26,13 @@ describe('getRawMessage', () => {
   });
 
   it('returns the raw message for a token with no args', () => {
-    const rawMessage = getRawMessage('en', 'adminCannotBeRemoved');
+    const rawMessage = getRawMessage('en', { token: 'adminCannotBeRemoved' });
     expect(rawMessage).to.equal('Admins cannot be removed.');
   });
 
   it('returns the raw message for a token with args', () => {
-    const rawMessage = getRawMessage('en', 'adminPromotionFailedDescription', {
+    const rawMessage = getRawMessage('en', {
+      token: 'adminPromotionFailedDescription',
       name: 'Alice',
       group_name: 'Group',
     });
@@ -38,12 +40,13 @@ describe('getRawMessage', () => {
   });
 
   it('returns the raw message for a token with a tag', () => {
-    const message = getRawMessage('en', 'screenshotTaken', { name: 'Alice' });
+    const message = getRawMessage('en', { token: 'screenshotTaken', name: 'Alice' });
     expect(message).to.equal('<b>{name}</b> took a screenshot.');
   });
 
   it('returns the raw message for a token with a tag and args', () => {
-    const message = getRawMessage('en', 'adminPromoteTwoDescription', {
+    const message = getRawMessage('en', {
+      token: 'adminPromoteTwoDescription',
       name: 'Alice',
       other_name: 'Bob',
     });

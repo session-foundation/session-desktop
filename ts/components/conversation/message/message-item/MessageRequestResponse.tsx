@@ -37,12 +37,7 @@ export const MessageRequestResponse = ({ messageId }: WithMessageId) => {
         <SpacerSM />
         <TextWithChildren subtle={true} ellipsisOverflow={false} textAlign="center">
           {isUs ? (
-            <Localizer
-              token="messageRequestYouHaveAccepted"
-              args={{
-                name,
-              }}
-            />
+            <Localizer token="messageRequestYouHaveAccepted" name={name} />
           ) : (
             <Localizer token="messageRequestsAccepted" />
           )}

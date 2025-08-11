@@ -37,7 +37,7 @@ export function useShowDeletePrivateContactCb({ conversationId }: { conversation
     dispatch(
       updateConfirmModal({
         title: menuItemText,
-        i18nMessage: { token: 'deleteContactDescription', args: { name } },
+        i18nMessage: { token: 'deleteContactDescription', name },
         onClickClose,
         okTheme: SessionButtonColor.Danger,
         onClickOk: async () => {
