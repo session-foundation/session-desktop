@@ -157,7 +157,7 @@
   "blockUnblockNameMultiple": "Are you sure you want to unblock <b>{name}</b> and <b>{count} others</b>?",
   "blockUnblockNameTwo": "Are you sure you want to unblock <b>{name}</b> and 1 other?",
   "blockUnblockedUser": "Unblocked {name}",
-  "blockedContactsmanageDescription": "View and manage blocked contacts.",
+  "blockedContactsManageDescription": "View and manage blocked contacts.",
   "call": "Call",
   "callsCalledYou": "{name} called you",
   "callsCannotStart": "You cannot start a new call. Finish your current call first.",

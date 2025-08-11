@@ -47,9 +47,7 @@ export const ClickToTrustSender = (props: { messageId: string }) => {
         title: tr('attachmentsAutoDownloadModalTitle'),
         i18nMessage: {
           token: 'attachmentsAutoDownloadModalDescription',
-          args: {
-            conversation_name: convo.getNicknameOrRealUsernameOrPlaceholder(),
-          },
+          conversation_name: convo.getNicknameOrRealUsernameOrPlaceholder(),
         },
         closeTheme: SessionButtonColor.Danger,
         onClickOk: async () => {
@@ -137,11 +135,9 @@ export const ClickToTrustSender = (props: { messageId: string }) => {
       <ClickToDownload>
         <Localizer
           token="attachmentsClickToDownload"
-          args={{
-            // Note: we don't want to change the case of a localized string, but as an exception this one is approved.
-            // The reason is that the attachments logic is scheduled to be changed soon :tm:
-            file_type: fileType.toLocaleLowerCase(),
-          }}
+          // Note: we don't want to change the case of a localized string, but as an exception this one is approved.
+          // The reason is that the attachments logic is scheduled to be changed soon :tm:
+          file_type={fileType.toLocaleLowerCase()}
         />
       </ClickToDownload>
     </StyledTrustSenderUI>

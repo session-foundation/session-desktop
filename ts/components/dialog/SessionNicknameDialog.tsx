@@ -111,7 +111,7 @@ export const SessionNicknameDialog = (props: Props) => {
           dataTestId="modal-description"
           localizerProps={{
             token: 'nicknameDescription',
-            args: { name: displayName || PubKey.shorten(conversationId) },
+            name: displayName || PubKey.shorten(conversationId),
           }}
         />
         <NicknameInput

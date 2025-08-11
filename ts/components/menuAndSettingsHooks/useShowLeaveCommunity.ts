@@ -41,7 +41,7 @@ export function useShowLeaveCommunityCb(conversationId?: string) {
     dispatch(
       updateConfirmModal({
         title: tr('communityLeave'),
-        i18nMessage: { token: 'groupLeaveDescription', args: { group_name: username ?? '' } },
+        i18nMessage: { token: 'groupLeaveDescription', group_name: username ?? '' },
         onClickOk,
         okText: tr('leave'),
         okTheme: SessionButtonColor.Danger,

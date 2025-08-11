@@ -32,7 +32,7 @@ export const DataExtractionNotification = (props: WithMessageId) => {
               ? 'attachmentsMediaSaved'
               : 'screenshotTaken'
           }
-          args={{ name: authorName }}
+          name={authorName}
         />
       </NotificationBubble>
     </ExpirableReadableMessage>

@@ -45,7 +45,7 @@ function HasDisabledMsgRequests({ conversationId }: { conversationId: string }) 
 
   return (
     <StyledHasDisabledMsgRequests>
-      <Localizer token="messageRequestsTurnedOff" args={{ name }} />
+      <Localizer token="messageRequestsTurnedOff" name={name} />
     </StyledHasDisabledMsgRequests>
   );
 }
@@ -169,7 +169,7 @@ export const UserProfileModal = ({
                 !isBlinded ? null : isBlindedAndResolved ? (
                   <Localizer
                     token="tooltipAccountIdVisible"
-                    args={{ name: shortenDisplayName(profileName) }}
+                    name={shortenDisplayName(profileName)}
                     className="session-id-tooltip"
                   />
                 ) : (

@@ -751,9 +751,7 @@ class CompositionBoxInner extends Component<Props, State> {
               },
               description: {
                 token: 'modalMessageTooLongDescription',
-                args: {
-                  limit: formatNumber(charLimit),
-                },
+                limit: formatNumber(charLimit),
               },
             },
             dispatch

@@ -178,10 +178,8 @@ const CountText = ({ count, emoji }: { count: number; emoji: string }) => {
     <StyledCountText>
       <Localizer
         token="emojiReactsCountOthers"
-        args={{
-          count: count - Reactions.SOGSReactorsFetchCount,
-          emoji,
-        }}
+        count={count - Reactions.SOGSReactorsFetchCount}
+        emoji={emoji}
       />
     </StyledCountText>
   );
