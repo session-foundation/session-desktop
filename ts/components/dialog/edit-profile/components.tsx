@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { type SessionDataTestId } from 'react';
 import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 
@@ -8,25 +8,18 @@ import { prepareQRCodeForLightBox } from '../../../util/qrCodes';
 import { QRCodeLogoProps, SessionQRCode } from '../../SessionQRCode';
 import { Avatar, AvatarSize } from '../../avatar/Avatar';
 import { Flex } from '../../basic/Flex';
-import { SpacerSM } from '../../basic/Text';
-import { ProfileDialogModes } from './EditProfileDialog';
-import { SessionLucideIconButton } from '../../icon/SessionIconButton';
-import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
+import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnClickCb';
+import { useCurrentUserHasPro } from '../../../hooks/useHasPro';
+import { ProIconButton } from '../../buttons/ProButton';
+import { AvatarQrCodeButton } from '../../buttons/AvatarQrCodeButton';
+import { AvatarExitQrCodeButton } from '../../buttons/AvatarExitQrCodeButton';
 
 const qrLogoProps: QRCodeLogoProps = {
   iconType: 'brandThin',
   iconSize: 42,
 };
 
-export const QRView = ({
-  sessionID,
-  setMode,
-  children,
-}: {
-  sessionID: string;
-  setMode: (mode: Extract<ProfileDialogModes, 'qr' | 'lightbox'>) => void;
-  children?: ReactNode;
-}) => {
+export const QRView = ({ sessionID, onExit }: { sessionID: string; onExit: () => void }) => {
   const dispatch = useDispatch();
   const { dataURL, iconSize, iconColor, backgroundColor, loading } = useIconToImageURL(qrLogoProps);
 
@@ -42,18 +35,15 @@ export const QRView = ({
       logoSize={iconSize}
       loading={loading}
       onClick={(fileName, dataUrl) => {
-        const lightBoxOptions = prepareQRCodeForLightBox(fileName, dataUrl, () => {
-          setMode('qr');
-        });
+        const lightBoxOptions = prepareQRCodeForLightBox(fileName, dataUrl);
         dispatch(updateLightBoxOptions(lightBoxOptions));
-        setMode('lightbox');
       }}
       ariaLabel={'Account ID QR code'}
       dataTestId={'your-qr-code'}
       // we need this for overflow buttons to be visible (see UserProfileModal)
       style={{ marginTop: '15px', position: 'relative' }}
     >
-      {children}
+      <AvatarExitQrCodeButton onExitQrCodeView={onExit} />
     </SessionQRCode>
   );
 };
@@ -61,11 +51,12 @@ export const QRView = ({
 type ProfileAvatarProps = {
   avatarPath: string | null;
   newAvatarObjectUrl?: string | null;
-  profileName: string | undefined;
+  profileName?: string;
   conversationId: string;
-  onPlusAvatarClick: (() => void) | null; // if null, plus icon won't be shown
   onAvatarClick: () => void; // on click on the avatar itself
+  onPlusAvatarClick: (() => void) | null; // if null, plus icon won't be shown
   avatarSize: AvatarSize;
+  dataTestId: SessionDataTestId;
 };
 
 export const ProfileAvatar = (props: ProfileAvatarProps) => {
@@ -74,9 +65,10 @@ export const ProfileAvatar = (props: ProfileAvatarProps) => {
     avatarPath,
     profileName,
     conversationId,
-    onAvatarClick,
     avatarSize,
+    onAvatarClick,
     onPlusAvatarClick,
+    dataTestId,
   } = props;
   return (
     <Avatar
@@ -86,12 +78,15 @@ export const ProfileAvatar = (props: ProfileAvatarProps) => {
       pubkey={conversationId}
       onAvatarClick={onAvatarClick}
       onPlusAvatarClick={onPlusAvatarClick ?? undefined}
+      dataTestId={dataTestId}
     />
   );
 };
 
-type ProfileHeaderProps = ProfileAvatarProps & {
+type ProfileHeaderProps = Omit<ProfileAvatarProps, 'onAvatarClick' | 'avatarSize'> & {
   onQRClick: (() => void) | null;
+  enlargedImage: boolean;
+  toggleEnlargedImage: () => void;
 };
 
 const StyledAvatarCenterInner = styled.div`
@@ -104,44 +99,27 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
     profileName,
     conversationId,
     onPlusAvatarClick,
-    onAvatarClick,
     onQRClick,
-    avatarSize,
+    dataTestId,
+    enlargedImage,
+    toggleEnlargedImage,
   } = props;
 
+  const avatarSize = enlargedImage ? AvatarSize.HUGE : AvatarSize.XL;
+
   return (
-    <div className="avatar-center">
+    <div>
       <StyledAvatarCenterInner>
         <ProfileAvatar
           avatarPath={avatarPath}
           profileName={profileName}
           conversationId={conversationId}
-          onAvatarClick={onAvatarClick}
+          onAvatarClick={toggleEnlargedImage}
           onPlusAvatarClick={onPlusAvatarClick}
           avatarSize={avatarSize}
+          dataTestId={dataTestId}
         />
-        {onQRClick ? (
-          <SessionLucideIconButton
-            unicode={LUCIDE_ICONS_UNICODE.QR_CODE}
-            iconSize={avatarSize === AvatarSize.HUGE ? 'large' : 'medium'}
-            iconColor="var(--black-color)"
-            onClick={onQRClick}
-            backgroundColor="var(--primary-color)"
-            style={{
-              position: 'absolute',
-              top: 0,
-              // this isn't ideal, but the button is not scaling with the avatar size so we need to hardcode its position
-              insetInlineEnd: avatarSize === AvatarSize.HUGE ? '12%' : '4%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: avatarSize === AvatarSize.HUGE ? '40px' : '30px',
-              width: avatarSize === AvatarSize.HUGE ? '40px' : '30px',
-              borderRadius: '50%',
-              transition: 'var(--default-duration)',
-            }}
-          />
-        ) : null}
+        <AvatarQrCodeButton avatarSize={avatarSize} onQRClick={onQRClick} />
       </StyledAvatarCenterInner>
     </div>
   );
@@ -151,6 +129,7 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
 const StyledProfileName = styled(Flex)`
   padding: 8px;
   border: 1px solid var(--transparent-color);
+  gap: var(--margins-xs);
 
   .session-icon-button {
     padding: 0px;
@@ -162,21 +141,31 @@ const StyledName = styled.p`
   line-height: 1.4;
   margin: 0;
   padding: 0px;
+  cursor: pointer;
 `;
 
 export const ProfileName = (props: { profileName: string; onClick: () => void }) => {
   const { profileName, onClick } = props;
 
+  const currentUserHasPro = useCurrentUserHasPro();
+
+  const showPro = useProBadgeOnClickCb({
+    context: 'show-our-profile-dialog',
+    args: { currentUserHasPro, providedCb: onClick },
+  });
+
   return (
     <StyledProfileName $container={true} $justifyContent="center" $alignItems="center">
-      <SessionLucideIconButton
-        unicode={LUCIDE_ICONS_UNICODE.PENCIL}
-        iconSize="medium"
-        onClick={onClick}
-        dataTestId="edit-profile-icon"
-      />
-      <SpacerSM />
-      <StyledName data-testid="your-profile-name">{profileName}</StyledName>
+      <StyledName data-testid="your-profile-name" onClick={onClick}>
+        {profileName}
+      </StyledName>
+      {showPro.show ? (
+        <ProIconButton
+          iconSize={'medium'}
+          dataTestId="pro-badge-profile-name"
+          onClick={showPro.cb}
+        />
+      ) : null}
     </StyledProfileName>
   );
 };

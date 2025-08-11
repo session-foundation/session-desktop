@@ -27,7 +27,7 @@ import {
   updateConfirmModal,
   updateConversationSettingsModal,
   updateGroupMembersModal,
-  updateGroupNameModal,
+  updateGroupOrCommunityDetailsModal,
 } from '../state/ducks/modalDialog';
 import { Storage } from '../util/storage';
 import { UserGroupsWrapperActions } from '../webworker/workers/browser/libsession_worker_interface';
@@ -267,7 +267,7 @@ export const declineConversationWithConfirm = ({
   );
 };
 
-export async function showUpdateGroupNameByConvoId(conversationId: string) {
+export async function showUpdateGroupOrCommunityDetailsByConvoId(conversationId: string) {
   const conversation = ConvoHub.use().get(conversationId);
   if (conversation.isClosedGroup()) {
     // make sure all the members' convo exists so we can add or remove them
@@ -277,7 +277,7 @@ export async function showUpdateGroupNameByConvoId(conversationId: string) {
         .map(m => ConvoHub.use().getOrCreateAndWait(m, ConversationTypeEnum.PRIVATE))
     );
   }
-  window.inboxStore?.dispatch(updateGroupNameModal({ conversationId }));
+  window.inboxStore?.dispatch(updateGroupOrCommunityDetailsModal({ conversationId }));
 }
 
 export async function showUpdateGroupMembersByConvoId(conversationId: string) {

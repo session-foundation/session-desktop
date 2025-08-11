@@ -787,10 +787,11 @@ export class ConversationModel extends Model<ConversationAttributes> {
       .catch(window?.log?.error);
   }
 
-  public isProUser(): boolean {
+  private isProUser(): boolean {
     if (this.isPublic()) {
       // Note: communities are considered pro users (they can have animated avatars)
-      return true;
+      // but this function is too generic to return true
+      return false;
     }
 
     if (this.isClosedGroupV2()) {
@@ -1365,6 +1366,20 @@ export class ConversationModel extends Model<ConversationAttributes> {
         this.set({ avatarPointer: newProfile.avatarPointer });
         changes = true;
       }
+    } else {
+      if (
+        this.getAvatarInProfilePath() ||
+        this.getFallbackAvatarInProfilePath() ||
+        this.getAvatarPointer()
+      ) {
+        changes = true;
+      }
+      this.set({
+        avatarInProfile: undefined,
+        avatarPointer: undefined,
+        profileKey: undefined,
+        fallbackAvatarInProfile: undefined,
+      });
     }
 
     if (changes) {
@@ -2438,15 +2453,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
   }
 
   private async addSingleMessage(messageAttributes: MessageAttributesOptionals) {
-    const voiceMessageFlags = messageAttributes.attachments?.[0]?.isVoiceMessage
-      ? SignalService.AttachmentPointer.Flags.VOICE_MESSAGE
-      : undefined;
     // eslint-disable-next-line no-bitwise
-    const flags = (messageAttributes?.flags || 0) | (voiceMessageFlags || 0);
-    const model = new MessageModel({
-      ...messageAttributes,
-      flags,
-    });
+    const model = new MessageModel(messageAttributes);
 
     const messageId = await model.commit(true);
     model.set({ id: messageId });

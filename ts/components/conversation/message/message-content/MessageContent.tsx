@@ -28,6 +28,7 @@ import { MessageLinkPreview } from './MessageLinkPreview';
 import { MessageQuote } from './MessageQuote';
 import { MessageText } from './MessageText';
 import { useFormatFullDate } from '../../../../hooks/useFormatFullDate';
+import { ContextMessageProvider } from '../../../../contexts/MessageIdContext';
 
 export type MessageContentSelectorProps = Pick<
   MessageRenderingProps,
@@ -164,32 +165,34 @@ export const MessageContent = (props: Props) => {
         }}
       >
         <IsMessageVisibleContext.Provider value={isMessageVisible}>
-          {hasContentBeforeAttachment && (
-            <StyledMessageOpaqueContent
-              isIncoming={direction === 'incoming'}
-              highlight={highlight}
-              selected={selected}
-            >
-              {!isDeleted && (
-                <>
-                  <MessageQuote messageId={props.messageId} />
-                  <MessageLinkPreview
-                    messageId={props.messageId}
-                    handleImageError={handleImageError}
-                  />
-                </>
-              )}
-              <MessageText messageId={props.messageId} />
-            </StyledMessageOpaqueContent>
-          )}
-          {!isDeleted ? (
-            <MessageAttachment
-              messageId={props.messageId}
-              imageBroken={imageBroken}
-              handleImageError={handleImageError}
-              highlight={highlight}
-            />
-          ) : null}
+          <ContextMessageProvider value={props.messageId}>
+            {hasContentBeforeAttachment && (
+              <StyledMessageOpaqueContent
+                isIncoming={direction === 'incoming'}
+                highlight={highlight}
+                selected={selected}
+              >
+                {!isDeleted && (
+                  <>
+                    <MessageQuote messageId={props.messageId} />
+                    <MessageLinkPreview
+                      messageId={props.messageId}
+                      handleImageError={handleImageError}
+                    />
+                  </>
+                )}
+                <MessageText messageId={props.messageId} />
+              </StyledMessageOpaqueContent>
+            )}
+            {!isDeleted ? (
+              <MessageAttachment
+                messageId={props.messageId}
+                imageBroken={imageBroken}
+                handleImageError={handleImageError}
+                highlight={highlight}
+              />
+            ) : null}
+          </ContextMessageProvider>
         </IsMessageVisibleContext.Provider>
       </InView>
     </StyledMessageContent>

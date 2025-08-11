@@ -51,6 +51,8 @@ declare module 'react' {
     | 'disappearing-messages' // one of those two might be incorrect. FIXME
     | 'disappearing-messages-timer';
 
+  type Avatars = 'edit-profile-dialog' | 'user-profile-dialog' | 'edit-profile-picture-dialog';
+
   type MenuOptionDetails = `${MenuOption}-details`;
   type NotificationsOptions = 'mute' | 'all-messages' | 'mentions-only';
   type NotificationButtons = `notifications-${NotificationsOptions}-button`;
@@ -70,7 +72,11 @@ declare module 'react' {
 
   type CancelButtons = 'update-group-info' | 'add-admins' | 'unban-user' | 'modal-session-pro';
 
-  type ClearButtons = 'group-info-description' | 'group-info-name' | 'nickname' | 'add-admins';
+  type ClearButtons =
+    | `${'group' | 'community'}-info-description`
+    | `${'group' | 'community'}-info-name`
+    | 'nickname'
+    | 'add-admins';
 
   // left pane section types
   type Sections = 'theme' | 'settings' | 'message' | 'privacy' | 'debug-menu';
@@ -86,6 +92,7 @@ declare module 'react' {
     | 'permissions'
     | 'clear-data'
     | 'session-network'
+    | 'session-pro'
     | 'donate';
 
   type MenuItems = 'block' | 'delete' | 'accept';
@@ -95,15 +102,22 @@ declare module 'react' {
     | 'nickname'
     | 'profile-name'
     | 'message'
-    | 'update-group-info-name'
-    | 'update-group-info-description'
+    | `update-${'group' | 'community'}-info-name`
+    | `update-${'group' | 'community'}-info-description`
     | 'recovery-phrase'
     | 'display-name'
     | 'add-admins'
     | 'ban-user'
     | 'unban-user';
 
-  type ProBadges = 'edit-profile-picture' | 'conversation-title';
+  type ProBadges =
+    | 'edit-profile-picture'
+    | 'conversation-title'
+    | 'conversation-header'
+    | 'profile-name'
+    | 'contact-name'
+    | 'message-info'
+    | 'send-more';
 
   type Dialog = 'invite-contacts' | 'edit-profile';
 
@@ -195,6 +209,7 @@ declare module 'react' {
     | 'end-call'
     | 'end-voice-message'
     | 'edit-profile-icon'
+    | 'edit-community-details'
     | 'invite-warning'
     | 'some-of-your-devices-outdated-conversation'
     | 'some-of-your-devices-outdated-inbox'
@@ -350,6 +365,7 @@ declare module 'react' {
     | `${MenuOptionDetails}-menu-option`
     | `${NotificationButtons}`
     | `${NotificationRadioButtons}`
+    | `avatar-${Avatars}`
     | `pro-badge-${ProBadges}`
     | 'last-updated-timestamp'
     | 'account-id-pill'

@@ -67,6 +67,7 @@ type ThemeGlobals = {
   '--margins-xxs': string;
 
   /* Padding */
+  '--margin-close-button-composition-box': string;
   '--padding-message-content': string;
   '--padding-link-preview': string;
   '--width-avatar-group-msg-list': string;
@@ -213,6 +214,7 @@ export const THEME_GLOBALS: ThemeGlobals = {
   '--margins-xs': '5px',
   '--margins-xxs': '2.5px',
 
+  '--margin-close-button-composition-box': '18px', // to align the staged attachment & link preview close buttons with the send button
   '--padding-message-content': '7px 13px',
   '--padding-link-preview': '-7px -13px 7px -13px', // bottom has positive value because a link preview has always a body below
   '--width-avatar-group-msg-list': '46px', // the width used by the avatar (and its margins when rendered as part of a group.)

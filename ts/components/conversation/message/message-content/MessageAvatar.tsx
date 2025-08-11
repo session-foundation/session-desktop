@@ -5,7 +5,7 @@ import {
   useMessageAuthor,
   useMessageSenderIsAdmin,
 } from '../../../../state/selectors';
-import { Avatar, AvatarSize, CrownIcon } from '../../../avatar/Avatar';
+import { Avatar, AvatarSize } from '../../../avatar/Avatar';
 import { useShowUserDetailsCbFromMessage } from '../../../menuAndSettingsHooks/useShowUserDetailsCb';
 
 const StyledAvatar = styled.div`
@@ -54,8 +54,8 @@ export const MessageAvatar = (props: Props) => {
           void showUserDetailsCb({ messageId });
         }}
         pubkey={sender}
+        showCrown={isSenderAdmin}
       />
-      {isSenderAdmin ? <CrownIcon /> : null}
     </StyledAvatar>
   );
 };

@@ -34,7 +34,7 @@ const lastAppliedRemoveAttachmentSentBeforeSeconds = new Map<GroupPubkeyType, nu
 
 async function handleMetaMergeResults(groupPk: GroupPubkeyType) {
   const infos = await MetaGroupWrapperActions.infoGet(groupPk);
-  if (window.sessionFeatureFlags.debug.debugLibsessionDumps) {
+  if (window.sessionFeatureFlags.debugLibsessionDumps) {
     const dumps = await MetaGroupWrapperActions.metaMakeDump(groupPk);
     window.log.info(
       `pushChangesToGroupSwarmIfNeeded: current meta dump: ${ed25519Str(groupPk)}:`,

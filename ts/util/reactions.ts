@@ -7,6 +7,7 @@ import { ToastUtils, UserUtils } from '../session/utils';
 
 import { Action, OpenGroupReactionList, ReactionList, RecentReactions } from '../types/Reaction';
 import { getRecentReactions, saveRecentReactions } from './storage';
+import { ConvoHub } from '../session/conversations';
 
 const SOGSReactorsFetchCount = 5;
 const rateCountLimit = 20;
@@ -89,7 +90,7 @@ const sendMessageReaction = async (messageId: string, emoji: string) => {
     let me: string = UserUtils.getOurPubKeyStrFromCache();
     let id = Number(found.get('sent_at'));
 
-    if (found.get('isPublic')) {
+    if (conversationModel.isPublic()) {
       if (found.get('serverId')) {
         id = found.get('serverId') || id;
         me = conversationModel.getUsInThatConversation();
@@ -127,7 +128,7 @@ const sendMessageReaction = async (messageId: string, emoji: string) => {
       emoji,
       'reaction for message',
       id,
-      found.get('isPublic') ? `on ${conversationModel.id}` : ''
+      conversationModel.isPublic() ? `on ${conversationModel.id}` : ''
     );
     return reaction;
   }
@@ -262,6 +263,13 @@ const handleOpenGroupMessageReactions = async (
   serverId: number,
   reactions: OpenGroupReactionList
 ) => {
+  const convo = ConvoHub.use().get(conversationId);
+  if (!convo) {
+    window?.log?.warn(
+      `handleOpenGroupMessageReactions: convo ${conversationId} not found in redux store`
+    );
+    return undefined;
+  }
   const originalMessage = await Data.getMessageByServerId(conversationId, serverId);
   if (!originalMessage) {
     window?.log?.debug(
@@ -270,7 +278,7 @@ const handleOpenGroupMessageReactions = async (
     return undefined;
   }
 
-  if (!originalMessage.get('isPublic')) {
+  if (!convo.isPublic()) {
     window.log.warn('handleOpenGroupMessageReactions() should only be used in opengroups');
     return undefined;
   }

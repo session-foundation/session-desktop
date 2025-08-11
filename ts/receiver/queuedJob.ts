@@ -317,7 +317,6 @@ async function handleRegularMessage(
       : rawDataMessage.body;
 
   message.set({
-    flags: rawDataMessage.flags,
     // quote: rawDataMessage.quote, // do not do this copy here, it must be done only in copyFromQuotedMessage()
     attachments: rawDataMessage.attachments,
     body,
@@ -436,8 +435,6 @@ export async function handleMessageJob(
   );
 
   try {
-    messageModel.set({ flags: regularDataMessage.flags });
-
     // NOTE we handle incoming disappear after send messages and sync messages here
     if (
       conversation &&
@@ -465,10 +462,7 @@ export async function handleMessageJob(
     if (messageModel.isExpirationTimerUpdate()) {
       // NOTE if we turn off disappearing messages from a legacy client expirationTimerUpdate can be undefined but the flags value is correctly set
       const expirationTimerUpdate = messageModel.getExpirationTimerUpdate();
-      if (
-        messageModel.get('flags') !== SignalService.DataMessage.Flags.EXPIRATION_TIMER_UPDATE &&
-        (!expirationTimerUpdate || isEmpty(expirationTimerUpdate))
-      ) {
+      if (!expirationTimerUpdate || isEmpty(expirationTimerUpdate)) {
         window.log.debug(
           `[handleMessageJob] The ExpirationTimerUpdate is not defined correctly message: ${messageModel.get(
             'id'

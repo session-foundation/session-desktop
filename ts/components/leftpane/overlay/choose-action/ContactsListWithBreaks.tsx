@@ -99,7 +99,6 @@ const ContactListItemSection = () => {
         {({ height }) => {
           return (
             <List
-              className="module-left-pane__virtual-list"
               height={height}
               rowCount={length}
               rowHeight={params => calcContactRowHeight(contactsByNameWithBreaks, params)}
@@ -107,6 +106,7 @@ const ContactListItemSection = () => {
               rowRenderer={renderRow}
               width={leftPaneListWidth}
               autoHeight={false}
+              style={{ outline: 'none' }}
             />
           );
         }}

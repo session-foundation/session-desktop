@@ -1,3 +1,9 @@
+import type {
+  WithRoomId,
+  WithServerPubkey,
+  WithServerUrl,
+} from '../session/apis/open_group_api/sogsv3/sogsWith';
+
 export type IdentityKey = {
   id: string;
   publicKey: ArrayBuffer;
@@ -22,37 +28,30 @@ export type SwarmNode = Snode & {
   address: string;
 };
 
-export type OpenGroupV2Room = {
-  serverUrl: string;
+export type OpenGroupV2Room = WithRoomId &
+  WithServerPubkey &
+  WithServerUrl & {
+    /** a user displayed name */
+    roomName?: string;
 
-  /** this is actually shared for all this server's room */
-  serverPublicKey: string;
-  roomId: string;
+    /** the fileId of the group room's image */
+    imageID?: string;
 
-  /** a user displayed name */
-  roomName?: string;
+    /** the linked ConversationModel.id */
+    conversationId?: string;
+    maxMessageFetchedSeqNo?: number;
+    lastInboxIdFetched?: number;
+    lastOutboxIdFetched?: number;
 
-  /** the fileId of the group room's image */
-  imageID?: string;
+    /**
+     * This value is set with the current timestamp whenever we get new messages.
+     */
+    lastFetchTimestamp?: number;
 
-  /** the linked ConversationModel.id */
-  conversationId?: string;
-  maxMessageFetchedSeqNo?: number;
-  lastInboxIdFetched?: number;
-  lastOutboxIdFetched?: number;
+    /**
+     * This is shared across all rooms in a server.
+     */
+    capabilities?: Array<string>;
+  };
 
-  /**
-   * This value is set with the current timestamp whenever we get new messages.
-   */
-  lastFetchTimestamp?: number;
-
-  /**
-   * This is shared across all rooms in a server.
-   */
-  capabilities?: Array<string>;
-};
-
-export type OpenGroupRequestCommonType = {
-  serverUrl: string;
-  roomId: string;
-};
+export type OpenGroupRequestCommonType = WithRoomId & WithServerUrl;

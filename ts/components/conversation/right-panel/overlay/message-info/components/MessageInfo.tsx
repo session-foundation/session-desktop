@@ -10,6 +10,7 @@ import {
   useMessageReceivedAt,
   useMessageSender,
   useMessageSenderIsAdmin,
+  useMessageSentWithProFeatures,
   useMessageServerId,
   useMessageServerTimestamp,
   useMessageTimestamp,
@@ -30,6 +31,15 @@ import {
 import { saveLogToDesktop } from '../../../../../../util/logger/renderer_process_logging';
 import { tr } from '../../../../../../localization/localeTools';
 
+import { Localizer } from '../../../../../basic/Localizer';
+import { LucideIcon } from '../../../../../icon/LucideIcon';
+import { LUCIDE_ICONS_UNICODE } from '../../../../../icon/lucide';
+import { useProBadgeOnClickCb } from '../../../../../menuAndSettingsHooks/useProBadgeOnClickCb';
+import { useCurrentUserHasPro } from '../../../../../../hooks/useHasPro';
+import { ProIconButton } from '../../../../../buttons/ProButton';
+import { assertUnreachable } from '../../../../../../types/sqlSharedTypes';
+import { ProMessageFeature } from '../../../../../../models/proMessageFeature';
+
 export const MessageInfoLabel = styled.label<{ color?: string }>`
   font-size: var(--font-size-lg);
   font-weight: bold;
@@ -43,7 +53,6 @@ const MessageInfoData = styled.div<{ color?: string }>`
 `;
 
 const LabelWithInfoContainer = styled.div`
-  margin-bottom: var(--margins-md);
   ${props => props.onClick && 'cursor: pointer;'}
 `;
 
@@ -122,6 +131,94 @@ const DebugMessageInfo = ({ messageId }: { messageId: string }) => {
   );
 };
 
+const StyledProMessageTitle = styled.div`
+  display: flex;
+  gap: var(--margins-xs);
+  align-items: center;
+  font-size: var(--font-size-xl);
+  font-weight: bold;
+`;
+
+const StyledProDescription = styled.div`
+  color: var(--text-primary-color);
+  font-size: var(--font-size-lg);
+`;
+
+const StyledProFeatureRow = styled.div`
+  color: var(--text-primary-color);
+  display: flex;
+  gap: var(--margins-xs);
+  font-size: var(--font-size-lg);
+`;
+
+const StyledProFeaturesContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: var(--margins-xs);
+`;
+
+function proFeatureToTrKey(proFeature: ProMessageFeature) {
+  switch (proFeature) {
+    case ProMessageFeature.PRO_BADGE:
+      return 'proBadge' as const;
+    case ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH:
+      return 'proIncreasedMessageLengthFeature' as const;
+    case ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE:
+      return 'proAnimatedDisplayPictureFeature' as const;
+    default:
+      assertUnreachable(proFeature, 'ProFeatureToTrKey: unknown case');
+      throw new Error('unreachable');
+  }
+}
+
+function ProMessageFeaturesDetails({ messageId }: { messageId: string }) {
+  const currentUserHasPro = useCurrentUserHasPro();
+
+  const messageSentWithProFeat = useMessageSentWithProFeatures(messageId);
+
+  const showPro = useProBadgeOnClickCb({
+    context: 'message-info-sent-with-pro',
+    args: { messageSentWithProFeat, currentUserHasPro },
+  });
+
+  if (!showPro.show || !messageSentWithProFeat?.length) {
+    return null;
+  }
+
+  return (
+    <Flex
+      $container={true}
+      $flexDirection="column"
+      marginBlock="0 var(--margins-md)"
+      $flexGap="var(--margins-xs)"
+    >
+      <StyledProMessageTitle>
+        <ProIconButton
+          iconSize={'medium'}
+          dataTestId="pro-badge-message-info"
+          onClick={showPro.cb}
+        />
+        <Localizer token="message" />
+      </StyledProMessageTitle>
+      <StyledProDescription>
+        <Localizer token="proMessageInfoFeatures" />
+      </StyledProDescription>
+      <StyledProFeaturesContainer>
+        {messageSentWithProFeat.map(feature => (
+          <StyledProFeatureRow key={feature}>
+            <LucideIcon
+              unicode={LUCIDE_ICONS_UNICODE.CIRCLE_CHECK}
+              iconSize="medium"
+              iconColor="var(--primary-color)"
+            />
+            <Localizer token={proFeatureToTrKey(feature)} />
+          </StyledProFeatureRow>
+        ))}
+      </StyledProFeaturesContainer>
+    </Flex>
+  );
+}
+
 export const MessageInfo = ({ messageId, errors }: { messageId: string; errors?: string }) => {
   const sender = useMessageSender(messageId);
   const direction = useMessageDirection(messageId);
@@ -144,7 +241,8 @@ export const MessageInfo = ({ messageId, errors }: { messageId: string; errors?:
   });
 
   return (
-    <Flex $container={true} $flexDirection="column">
+    <Flex $container={true} $flexDirection="column" $flexGap="var(--margins-sm)">
+      <ProMessageFeaturesDetails messageId={messageId} />
       <LabelWithInfo label={tr('sent')} info={sentAtStr} />
       <DebugMessageInfo messageId={messageId} />
 

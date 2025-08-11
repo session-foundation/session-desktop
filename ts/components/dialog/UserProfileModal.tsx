@@ -6,8 +6,7 @@ import styled from 'styled-components';
 import { ConvoHub } from '../../session/conversations';
 import { openConversationWithMessages } from '../../state/ducks/conversations';
 import { updateUserProfileModal, UserProfileModalState } from '../../state/ducks/modalDialog';
-import { AvatarSize } from '../avatar/Avatar';
-import { SessionButton, SessionButtonColor } from '../basic/SessionButton';
+import { SessionButtonColor } from '../basic/SessionButton';
 import { CopyToClipboardButton } from '../buttons/CopyToClipboardButton';
 import { ConversationTypeEnum } from '../../models/types';
 import { Flex } from '../basic/Flex';
@@ -16,12 +15,13 @@ import {
   ModalBasicHeader,
   ModalActionsContainer,
   SessionWrapperModal,
+  ModalBottomButtonWithBorder,
 } from '../SessionWrapperModal';
 import { tr } from '../../localization/localeTools';
 import { PubKey } from '../../session/types';
-import type { ProfileDialogModes } from './edit-profile/EditProfileDialog';
+import type { ProfileDialogModes } from './edit-profile/ProfileDialogModes';
 import { ProfileHeader, QRView } from './edit-profile/components';
-import { useAvatarPath, useConversationUsername } from '../../hooks/useParamSelector';
+import { useAvatarPath, useConversationUsernameWithFallback } from '../../hooks/useParamSelector';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { useHasDisabledBlindedMsgRequests } from '../../state/selectors/conversations';
@@ -29,7 +29,7 @@ import { Localizer } from '../basic/Localizer';
 import { SessionTooltip } from '../SessionTooltip';
 import { shortenDisplayName } from '../../session/profile_manager/ShortenDisplayName';
 import { UsernameFallback } from './conversationSettings/UsernameFallback';
-import { ConversationTitle } from './conversationSettings/ConversationTitle';
+import { ConversationTitleDialog } from './conversationSettings/ConversationTitleDialog';
 import { SessionIDNotEditable } from '../basic/SessionIdNotEditable';
 
 const StyledHasDisabledMsgRequests = styled.div`
@@ -38,8 +38,9 @@ const StyledHasDisabledMsgRequests = styled.div`
   font-size: var(--font-size-sm);
   text-align: center;
 `;
+
 function HasDisabledMsgRequests({ conversationId }: { conversationId: string }) {
-  const username = useConversationUsername(conversationId) ?? PubKey.shorten(conversationId);
+  const username = useConversationUsernameWithFallback(true, conversationId);
   const name = shortenDisplayName(username);
 
   return (
@@ -54,6 +55,7 @@ export const UserProfileModal = ({
   realSessionId,
 }: NonNullable<UserProfileModalState>) => {
   const dispatch = useDispatch();
+  const [enlargedImage, setEnlargedImage] = useState(false);
 
   const isBlinded = PubKey.isBlinded(conversationId);
   const isBlindedAndNotResolved = isBlinded && !realSessionId;
@@ -61,9 +63,7 @@ export const UserProfileModal = ({
   const conversationIdToDisplay = isBlindedAndResolved ? realSessionId : conversationId;
 
   const avatarPath = useAvatarPath(conversationIdToDisplay) || '';
-  const profileName = useConversationUsername(conversationIdToDisplay) || '';
-  const [isEnlargedImageShown, setIsEnlargedImageShown] = useState(false);
-  const avatarSize = isEnlargedImageShown ? AvatarSize.HUGE : AvatarSize.XL;
+  const profileName = useConversationUsernameWithFallback(false, conversationIdToDisplay) || '';
 
   function closeDialog() {
     dispatch(updateUserProfileModal(null));
@@ -104,12 +104,10 @@ export const UserProfileModal = ({
       onClose={closeDialog}
       buttonChildren={
         <ModalActionsContainer extraBottomMargin={true}>
-          <SessionButton
+          <ModalBottomButtonWithBorder
             text={tr('message')}
             onClick={onClickStartConversation}
-            buttonColor={SessionButtonColor.PrimaryDark}
             dataTestId="new-session-conversation"
-            style={{ minWidth: '125px' }}
             disabled={isBlindedAndNotResolved && hasDisabledMsgRequests}
           />
 
@@ -118,7 +116,6 @@ export const UserProfileModal = ({
               copyContent={conversationIdToDisplay}
               buttonColor={SessionButtonColor.PrimaryDark}
               dataTestId="copy-button-account-id"
-              style={{ minWidth: '125px' }}
               hotkey={true}
             />
           )}
@@ -133,38 +130,17 @@ export const UserProfileModal = ({
         $flexDirection="column"
         $flexGap="var(--margins-md)"
         paddingBlock="0 var(--margins-lg)"
+        style={{ position: 'relative' }}
       >
         {mode === 'qr' ? (
-          <QRView sessionID={conversationIdToDisplay} setMode={setMode}>
-            <SessionLucideIconButton
-              unicode={LUCIDE_ICONS_UNICODE.USER_ROUND}
-              iconSize={'large'}
-              backgroundColor="var(--primary-color)"
-              iconColor="var(--black-color)"
-              padding="var(--margins-xs )"
-              onClick={() => {
-                setMode('default');
-              }}
-              style={{
-                position: 'absolute',
-                top: '-15px',
-                insetInlineEnd: '-15px',
-                display: 'flex',
-                alignItems: 'center',
-                borderRadius: '50%',
-              }}
-            />
-          </QRView>
+          <QRView sessionID={conversationIdToDisplay} onExit={() => setMode('default')} />
         ) : (
           <ProfileHeader
             avatarPath={avatarPath}
             profileName={profileName}
-            avatarSize={avatarSize}
             conversationId={conversationIdToDisplay}
-            onAvatarClick={() => {
-              setIsEnlargedImageShown(!isEnlargedImageShown);
-            }}
             onPlusAvatarClick={null} // no + icon in this modal
+            dataTestId="avatar-user-profile-dialog"
             onQRClick={
               blindedAndDisabledMsgRequests
                 ? null
@@ -172,9 +148,12 @@ export const UserProfileModal = ({
                     setMode('qr');
                   }
             }
+            enlargedImage={enlargedImage}
+            toggleEnlargedImage={() => setEnlargedImage(!enlargedImage)}
           />
         )}
-        <ConversationTitle conversationId={conversationIdToDisplay} editable={false} />
+
+        <ConversationTitleDialog conversationId={conversationIdToDisplay} editable={false} />
         <UsernameFallback conversationId={conversationIdToDisplay} />
         <AccountIdPill accountType={isBlindedAndNotResolved ? 'blinded' : 'theirs'} />
         <SessionIDNotEditable

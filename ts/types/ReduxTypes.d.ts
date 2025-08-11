@@ -8,6 +8,7 @@
 export type SessionSettingCategory =
   | 'privacy'
   | 'donate'
+  | 'session-pro'
   | 'notifications'
   | 'conversations'
   | 'message-requests'

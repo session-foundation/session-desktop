@@ -1,4 +1,4 @@
-import { useNicknameOrProfileNameOrShortenedPubkey } from '../../../../hooks/useParamSelector';
+import { useConversationUsernameWithFallback } from '../../../../hooks/useParamSelector';
 import type { WithMessageId } from '../../../../session/types/with';
 import { useMessageAuthorIsUs, useMessageIsUnread } from '../../../../state/selectors';
 import { useSelectedConversationKey } from '../../../../state/selectors/selectedConversation';
@@ -13,7 +13,7 @@ export const MessageRequestResponse = ({ messageId }: WithMessageId) => {
   const isUnread = useMessageIsUnread(messageId) || false;
   const isUs = useMessageAuthorIsUs(messageId);
 
-  const name = useNicknameOrProfileNameOrShortenedPubkey(conversationId);
+  const name = useConversationUsernameWithFallback(true, conversationId);
 
   if (!conversationId || !messageId) {
     return null;

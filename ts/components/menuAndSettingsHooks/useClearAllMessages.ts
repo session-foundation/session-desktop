@@ -4,7 +4,7 @@ import { updateConfirmModal } from '../../state/ducks/modalDialog';
 import { SessionButtonColor } from '../basic/SessionButton';
 import { tr } from '../../localization/localeTools';
 import {
-  useConversationUsername,
+  useConversationUsernameWithFallback,
   useIsGroupV2,
   useIsKickedFromGroup,
   useIsLegacyGroup,
@@ -27,7 +27,7 @@ export function useClearAllMessagesCb({ conversationId }: { conversationId: stri
   const isGroupV2 = useIsGroupV2(conversationId);
   const weAreAdmin = useWeAreAdmin(conversationId);
   const isLegacyGroup = useIsLegacyGroup(conversationId);
-  const conversationTitle = useConversationUsername(conversationId) || tr('unknown');
+  const conversationTitle = useConversationUsernameWithFallback(false, conversationId);
   const isPrivate = useIsPrivate(conversationId);
 
   if (isKickedFromGroup) {
