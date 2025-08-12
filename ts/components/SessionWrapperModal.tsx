@@ -230,6 +230,7 @@ export type SessionWrapperModalType = {
    * Instead of centering the modal (and having layout shifts on height change), we can use this to anchor the modal to a % from the top of the screen.
    */
   topAnchor?: ModalTopAnchor;
+  $flexGap?: string;
   style?: Omit<CSSProperties, 'maxWidth' | 'minWidth' | 'padding' | 'border'>;
 };
 
@@ -360,6 +361,7 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
     removeScrollbarGutter,
     onClose,
     topAnchor,
+    $flexGap,
   } = props;
 
   const [scrolled, setScrolled] = useState(false);
@@ -427,6 +429,7 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
                     $alignItems="center"
                     $flexDirection="column"
                     paddingInline="var(--margins-lg)" // add the padding here so that the rest of the modal isn't affected (including buttonChildren/ModalHeader)
+                    $flexGap={$flexGap}
                   >
                     {props.children}
                   </Flex>

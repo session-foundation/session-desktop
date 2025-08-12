@@ -5,7 +5,7 @@ import { SyncUtils, UserUtils } from '../../session/utils';
 import { getSodiumRenderer } from '../../session/crypto';
 import { uploadAndSetOurAvatarShared } from '../../interactions/avatar-interactions/nts-avatar-interactions';
 import { ed25519Str } from '../../session/utils/String';
-import { editProfileModal, updateEditProfilePictureModal } from './modalDialog';
+import { userSettingsModal, updateEditProfilePictureModal } from './modalDialog';
 
 export type UserStateType = {
   ourDisplayNameInProfile: string;
@@ -44,7 +44,7 @@ const updateOurAvatar = createAsyncThunk(
     });
 
     window.inboxStore?.dispatch(updateEditProfilePictureModal(null));
-    window.inboxStore?.dispatch(editProfileModal({}));
+    window.inboxStore?.dispatch(userSettingsModal({}));
 
     return res;
   }
@@ -108,7 +108,7 @@ const userSlice = createSlice({
   },
   extraReducers: builder => {
     builder.addCase(updateOurAvatar.fulfilled, (state, action) => {
-      window.log.error('a updateOurAvatar was fulfilled with:', action.payload);
+      window.log.info('a updateOurAvatar was fulfilled with:', action.payload);
 
       state.uploadingNewAvatarCurrentUser = false;
       return state;

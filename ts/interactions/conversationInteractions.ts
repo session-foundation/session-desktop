@@ -27,7 +27,7 @@ import {
   updateConfirmModal,
   updateConversationSettingsModal,
   updateGroupMembersModal,
-  updateGroupOrCommunityDetailsModal,
+  updateConversationDetailsModal,
 } from '../state/ducks/modalDialog';
 import { Storage } from '../util/storage';
 import { UserGroupsWrapperActions } from '../webworker/workers/browser/libsession_worker_interface';
@@ -276,7 +276,7 @@ export async function showUpdateGroupOrCommunityDetailsByConvoId(conversationId:
         .map(m => ConvoHub.use().getOrCreateAndWait(m, ConversationTypeEnum.PRIVATE))
     );
   }
-  window.inboxStore?.dispatch(updateGroupOrCommunityDetailsModal({ conversationId }));
+  window.inboxStore?.dispatch(updateConversationDetailsModal({ conversationId }));
 }
 
 export async function showUpdateGroupMembersByConvoId(conversationId: string) {

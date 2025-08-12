@@ -97,26 +97,7 @@ const categories: Array<Categories> = (
       titleColor: 'var(--renderer-span-primary-color)',
       icon: { type: 'custom', content: 'sessionPro', color: 'var(--renderer-span-primary-color)' },
     },
-    {
-      id: 'privacy',
-      title: tr('sessionPrivacy'),
-      icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.LOCK_KEYHOLE },
-    },
-    {
-      id: 'session-network',
-      title: LOCALE_DEFAULTS.network_name,
-      icon: { type: 'sessionToken' },
-    },
-    {
-      id: 'donate',
-      title: tr('donate'),
-      titleColor: 'var(--renderer-span-primary-color)',
-      icon: {
-        type: 'lucide',
-        unicode: LUCIDE_ICONS_UNICODE.HEART,
-        color: 'var(--renderer-span-primary-color)',
-      },
-    },
+
     {
       id: 'notifications',
       title: tr('sessionNotifications'),
@@ -141,22 +122,6 @@ const categories: Array<Categories> = (
       id: 'permissions',
       title: tr('sessionPermissions'),
       icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.CIRCLE_CHECK },
-    },
-    {
-      id: 'recovery-password',
-      title: tr('sessionRecoveryPassword'),
-      icon: { type: 'recoveryPasswordFill' },
-    },
-    {
-      id: 'help',
-      title: tr('sessionHelp'),
-      icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.CIRCLE_HELP },
-    },
-    {
-      id: 'clear-data',
-      title: tr('sessionClearData'),
-      titleColor: 'var(--danger-color)',
-      icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.TRASH2, color: 'var(--danger-color)' },
     },
   ] as const satisfies Array<Omit<Categories, 'dataTestId'>>
 ).map(m => ({

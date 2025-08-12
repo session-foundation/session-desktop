@@ -73,8 +73,8 @@ declare module 'react' {
   type CancelButtons = 'update-group-info' | 'add-admins' | 'unban-user' | 'modal-session-pro';
 
   type ClearButtons =
-    | `${'group' | 'community'}-info-description`
-    | `${'group' | 'community'}-info-name`
+    | `${'group' | 'community' | 'profile'}-info-description`
+    | `${'group' | 'community' | 'profile'}-info-name`
     | 'nickname'
     | 'add-admins';
 
@@ -93,6 +93,7 @@ declare module 'react' {
     | 'clear-data'
     | 'session-network'
     | 'session-pro'
+    | 'preferences'
     | 'donate';
 
   type MenuItems = 'block' | 'delete' | 'accept';
@@ -102,8 +103,8 @@ declare module 'react' {
     | 'nickname'
     | 'profile-name'
     | 'message'
-    | `update-${'group' | 'community'}-info-name`
-    | `update-${'group' | 'community'}-info-description`
+    | `update-${'group' | 'community' | 'profile'}-info-name`
+    | `update-${'group' | 'community' | 'profile'}-info-description`
     | 'recovery-phrase'
     | 'display-name'
     | 'add-admins'
@@ -119,7 +120,7 @@ declare module 'react' {
     | 'message-info'
     | 'send-more';
 
-  type Dialog = 'invite-contacts' | 'edit-profile';
+  type Dialog = 'invite-contacts' | 'user-settings';
 
   type Buttons =
     | 'chooser-new-conversation'

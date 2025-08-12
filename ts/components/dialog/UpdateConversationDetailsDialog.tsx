@@ -4,14 +4,19 @@ import { useDispatch } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
 import useMount from 'react-use/lib/useMount';
 
-import { useAvatarPath, useIsClosedGroup, useIsPublic } from '../../hooks/useParamSelector';
+import {
+  useAvatarPath,
+  useIsClosedGroup,
+  useIsMe,
+  useIsPublic,
+} from '../../hooks/useParamSelector';
 import { ConvoHub } from '../../session/conversations';
 import { PubKey } from '../../session/types';
 import LIBSESSION_CONSTANTS from '../../session/utils/libsession/libsession_constants';
 import { groupInfoActions } from '../../state/ducks/metaGroups';
 import {
+  updateConversationDetailsModal,
   updateEditProfilePictureModal,
-  updateGroupOrCommunityDetailsModal,
 } from '../../state/ducks/modalDialog';
 import {
   useGroupNameChangeFromUIPending,
@@ -28,16 +33,73 @@ import {
   SessionWrapperModal,
 } from '../SessionWrapperModal';
 import { ClearInputButton } from '../inputs/ClearInputButton';
-import { UploadFirstImageButton } from './edit-profile/UploadFirstImage';
-import { ProfileAvatar } from './edit-profile/components';
+import { UploadFirstImageButton } from './user-settings/UploadFirstImage';
+import { ProfileAvatar } from './user-settings/components';
 import { AvatarSize } from '../avatar/Avatar';
 import {
   useChangeDetailsOfRoomPending,
   useRoomDescription,
 } from '../../state/selectors/sogsRoomInfo';
 import { ReduxSogsRoomInfos } from '../../state/ducks/sogsRoomInfo';
+import type { WithConvoId } from '../../session/types/with';
 
-export function UpdateGroupOrCommunityDetailsDialog(props: { conversationId: string }) {
+function useNameErrorString({
+  isMe,
+  isPublic,
+  newName,
+}: {
+  newName: string | undefined;
+  isPublic: boolean;
+  isMe: boolean;
+}) {
+  if (isMe) {
+    return !newName
+      ? tr('displayNameErrorDescription')
+      : newName.length > LIBSESSION_CONSTANTS.CONTACT_MAX_NAME_LENGTH
+        ? tr('displayNameErrorDescriptionShorter')
+        : '';
+  }
+  if (isPublic) {
+    return !newName
+      ? tr('communityNameEnterPlease')
+      : newName.length > LIBSESSION_CONSTANTS.BASE_GROUP_MAX_NAME_LENGTH
+        ? tr('updateCommunityInformationEnterShorterName')
+        : '';
+  }
+  return !newName
+    ? tr('groupNameEnterPlease')
+    : newName.length > LIBSESSION_CONSTANTS.BASE_GROUP_MAX_NAME_LENGTH
+      ? tr('groupNameEnterShorter')
+      : '';
+}
+
+function useDescriptionErrorString({
+  isMe,
+  isPublic,
+  newDescription,
+}: {
+  newDescription: string | undefined;
+  isPublic: boolean;
+  isMe: boolean;
+}) {
+  if (isMe) {
+    // no error possible for description on isMe
+    return '';
+  }
+
+  if (!newDescription) {
+    // description is always optional
+    return '';
+  }
+  if (newDescription.length <= LIBSESSION_CONSTANTS.GROUP_INFO_DESCRIPTION_MAX_LENGTH) {
+    return '';
+  }
+  return isPublic
+    ? tr('updateCommunityInformationEnterShorterDescription')
+    : tr('updateGroupInformationEnterShorterDescription');
+}
+
+export function UpdateConversationDetailsDialog(props: WithConvoId) {
   const dispatch = useDispatch();
   const { conversationId } = props;
   const isClosedGroup = useIsClosedGroup(conversationId);
@@ -46,6 +108,7 @@ export function UpdateGroupOrCommunityDetailsDialog(props: { conversationId: str
   const isGroupChangePending = useGroupNameChangeFromUIPending();
   const isCommunityChangePending = useChangeDetailsOfRoomPending(conversationId);
   const isNameChangePending = isPublic ? isCommunityChangePending : isGroupChangePending;
+  const isMe = useIsMe(conversationId);
 
   const [avatarPointerOnMount, setAvatarPointerOnMount] = useState<string>('');
   const refreshedAvatarPointer = convo.getAvatarPointer() || '';
@@ -58,11 +121,12 @@ export function UpdateGroupOrCommunityDetailsDialog(props: { conversationId: str
     throw new Error('UpdateGroupOrCommunityDetailsDialog corresponding convo not found');
   }
 
-  if (!isClosedGroup && !isPublic) {
-    throw new Error('groupNameUpdate dialog only works closed groups');
+  if (!isClosedGroup && !isPublic && !isMe) {
+    throw new Error(
+      'UpdateGroupOrCommunityDetailsDialog dialog only works groups/communities or ourselves'
+    );
   }
   const nameOnOpen = convo.getRealSessionUsername();
-
   const originalGroupDescription = useLibGroupDescription(conversationId);
   const originalCommunityDescription = useRoomDescription(conversationId);
   const descriptionOnOpen = isPublic ? originalCommunityDescription : originalGroupDescription;
@@ -72,7 +136,7 @@ export function UpdateGroupOrCommunityDetailsDialog(props: { conversationId: str
   const avatarPath = useAvatarPath(conversationId) || '';
 
   function closeDialog() {
-    dispatch(updateGroupOrCommunityDetailsModal(null));
+    dispatch(updateConversationDetailsModal(null));
   }
 
   function onClickOK() {
@@ -126,37 +190,32 @@ export function UpdateGroupOrCommunityDetailsDialog(props: { conversationId: str
   useKey('Escape', closeDialog);
   useKey('Esc', closeDialog);
 
-  const errorStringName = !newName
-    ? tr(isPublic ? 'communityNameEnterPlease' : 'groupNameEnterPlease')
-    : newName.length > LIBSESSION_CONSTANTS.BASE_GROUP_MAX_NAME_LENGTH
-      ? tr(isPublic ? 'updateCommunityInformationEnterShorterName' : 'groupNameEnterShorter')
-      : '';
-  const errorStringDescription =
-    newDescription && newDescription.length > LIBSESSION_CONSTANTS.GROUP_INFO_DESCRIPTION_MAX_LENGTH
-      ? tr(
-          isPublic
-            ? 'updateCommunityInformationEnterShorterDescription'
-            : 'updateGroupInformationEnterShorterDescription'
-        )
-      : '';
+  const errorStringName = useNameErrorString({ newName, isPublic, isMe });
+  const errorStringDescription = useDescriptionErrorString({ isMe, isPublic, newDescription });
 
   function handleEditProfilePicture() {
-    if (!isPublic) {
-      throw new Error('handleEditProfilePicture is only for communities');
+    if (
+      isPublic ||
+      isMe ||
+      (PubKey.is03Pubkey(conversationId) && window.sessionFeatureFlags.useClosedGroupV2QAButtons)
+    ) {
+      dispatch(updateEditProfilePictureModal({ conversationId }));
+      return;
     }
-    dispatch(updateEditProfilePictureModal({ conversationId }));
+    throw new Error('handleEditProfilePicture is only for communities or ourselves for now');
   }
 
   const noChanges = newName === nameOnOpen && newDescription === descriptionOnOpen;
   const avatarWasUpdated = avatarPointerOnMount !== refreshedAvatarPointer;
 
+  const partDetail = isMe ? 'profile' : isPublic ? 'community' : 'group';
+  const partDetailCap = (partDetail.charAt(0).toUpperCase() + partDetail.slice(1)) as Capitalize<
+    typeof partDetail
+  >;
+
   return (
     <SessionWrapperModal
-      headerChildren={
-        <ModalBasicHeader
-          title={tr(isPublic ? 'updateCommunityInformation' : 'updateGroupInformation')}
-        />
-      }
+      headerChildren={<ModalBasicHeader title={tr(`update${partDetailCap}Information`)} />}
       onClose={closeDialog}
       buttonChildren={
         <ModalActionsContainer>
@@ -177,7 +236,7 @@ export function UpdateGroupOrCommunityDetailsDialog(props: { conversationId: str
         </ModalActionsContainer>
       }
     >
-      {isPublic ? (
+      {isPublic || isMe ? (
         avatarPath ? (
           <ProfileAvatar
             avatarPath={avatarPath}
@@ -191,18 +250,15 @@ export function UpdateGroupOrCommunityDetailsDialog(props: { conversationId: str
           <UploadFirstImageButton onClick={handleEditProfilePicture} />
         )
       ) : null}
-      {/* right now we only support changing the name of a community */}
       <SpacerMD />
       <SimpleSessionInput
-        ariaLabel="name input"
+        ariaLabel={`name input for ${partDetail}`}
         value={newName}
         textSize="md"
         padding="var(--margins-md) var(--margins-sm)"
-        inputDataTestId={
-          isPublic ? 'update-community-info-name-input' : 'update-group-info-name-input'
-        }
+        inputDataTestId={`update-${partDetail}-info-name-input`}
         onValueChanged={setNewName}
-        placeholder={tr(isPublic ? 'communityNameEnter' : 'groupNameEnter')}
+        placeholder={tr(`${partDetail === 'profile' ? 'display' : partDetail}NameEnter`)}
         onEnterPressed={onClickOK}
         errorDataTestId="error-message"
         providedError={errorStringName}
@@ -211,9 +267,7 @@ export function UpdateGroupOrCommunityDetailsDialog(props: { conversationId: str
         tabIndex={0}
         buttonEnd={
           <ClearInputButton
-            dataTestId={
-              isPublic ? 'clear-community-info-name-button' : 'clear-group-info-name-button'
-            }
+            dataTestId={`clear-${partDetail}-info-name-button`}
             onClearInputClicked={() => {
               setNewName('');
             }}
@@ -222,38 +276,32 @@ export function UpdateGroupOrCommunityDetailsDialog(props: { conversationId: str
         }
       />
       <SpacerSM />
-      <SimpleSessionTextarea
-        ariaLabel="description input"
-        value={newDescription}
-        textSize="md"
-        padding="var(--margins-md) var(--margins-sm)"
-        inputDataTestId={
-          isPublic
-            ? 'update-community-info-description-input'
-            : 'update-group-info-description-input'
-        }
-        onValueChanged={setNewDescription}
-        placeholder={tr(isPublic ? 'communityDescriptionEnter' : 'groupDescriptionEnter')}
-        errorDataTestId="error-message"
-        providedError={errorStringDescription}
-        autoFocus={false}
-        tabIndex={1}
-        required={false}
-        singleLine={false}
-        buttonEnd={
-          <ClearInputButton
-            dataTestId={
-              isPublic
-                ? 'clear-community-info-description-button'
-                : 'clear-group-info-description-button'
-            }
-            onClearInputClicked={() => {
-              setNewDescription('');
-            }}
-            show={!!newDescription}
-          />
-        }
-      />
+      {!isMe && partDetail !== 'profile' && (
+        <SimpleSessionTextarea
+          ariaLabel={`description input for ${partDetail}`}
+          value={newDescription}
+          textSize="md"
+          padding="var(--margins-md) var(--margins-sm)"
+          inputDataTestId={`update-${partDetail}-info-description-input`}
+          onValueChanged={setNewDescription}
+          placeholder={tr(`${partDetail}DescriptionEnter`)}
+          errorDataTestId="error-message"
+          providedError={errorStringDescription}
+          autoFocus={false}
+          tabIndex={1}
+          required={false}
+          singleLine={false}
+          buttonEnd={
+            <ClearInputButton
+              dataTestId={`clear-${partDetail}-info-description-button`}
+              onClearInputClicked={() => {
+                setNewDescription('');
+              }}
+              show={!!newDescription}
+            />
+          }
+        />
+      )}
       <SessionSpinner loading={isNameChangePending} />
       <SpacerSM />
     </SessionWrapperModal>

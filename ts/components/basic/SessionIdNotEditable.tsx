@@ -26,12 +26,14 @@ export const SessionIDNotEditable = ({
   tooltipNode,
   displayType,
   style: providedStyle = {},
+  onClick,
 }: {
   sessionId: string;
   tooltipNode: ReactNode;
   displayType: 'blinded' | '2lines' | '3lines';
   dataTestId: SessionDataTestId;
   style: CSSProperties;
+  onClick?: () => void;
 }) => {
   if (sessionId.length !== 66) {
     throw new Error('Unsupported case for SessionIDNotEditable: sessionId.length !== 66');
@@ -40,7 +42,11 @@ export const SessionIDNotEditable = ({
     throw new Error('Unsupported case for SessionIDNotEditable: sessionId is blinded');
   }
 
-  const style = tooltipNode ? { ...providedStyle, marginLeft: 'var(--margins-lg)' } : providedStyle;
+  const pointerStyle = onClick ? { cursor: 'pointer' } : {};
+
+  const style = tooltipNode
+    ? { ...providedStyle, ...pointerStyle, marginLeft: 'var(--margins-lg)' }
+    : { ...providedStyle, ...pointerStyle };
 
   if (displayType === 'blinded') {
     const shortenedSessionId = PubKey.shorten(sessionId, {
@@ -53,6 +59,7 @@ export const SessionIDNotEditable = ({
         data-testid={dataTestId}
         // Note: we want the text centered even if the tooltip is offsetting it
         style={style}
+        onClick={onClick}
       >
         {shortenedSessionId}
         {tooltipNode}
@@ -68,6 +75,7 @@ export const SessionIDNotEditable = ({
       <StyledSessionIDNotEditable
         data-testid={dataTestId} // Note: we want the text centered even if the tooltip is offsetting it
         style={style}
+        onClick={onClick}
       >
         {firstLine}
         <br />
@@ -80,7 +88,7 @@ export const SessionIDNotEditable = ({
   }
 
   return (
-    <StyledSessionIDNotEditable data-testid={dataTestId} style={style}>
+    <StyledSessionIDNotEditable data-testid={dataTestId} style={style} onClick={onClick}>
       {sessionId.slice(0, 33)}
       <br />
       {sessionId.slice(33)}

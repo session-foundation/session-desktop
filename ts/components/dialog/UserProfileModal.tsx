@@ -19,8 +19,8 @@ import {
 } from '../SessionWrapperModal';
 import { tr } from '../../localization/localeTools';
 import { PubKey } from '../../session/types';
-import type { ProfileDialogModes } from './edit-profile/ProfileDialogModes';
-import { ProfileHeader, QRView } from './edit-profile/components';
+import type { ProfileDialogModes } from './user-settings/ProfileDialogModes';
+import { ProfileHeader, QRView } from './user-settings/components';
 import { useAvatarPath, useConversationUsernameWithFallback } from '../../hooks/useParamSelector';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
@@ -69,7 +69,7 @@ export const UserProfileModal = ({
     dispatch(updateUserProfileModal(null));
   }
 
-  const [mode, setMode] = useState<Exclude<ProfileDialogModes, 'edit'>>('default');
+  const [mode, setMode] = useState<ProfileDialogModes>('default');
 
   const hasDisabledMsgRequests = useHasDisabledBlindedMsgRequests(conversationId);
   const blindedAndDisabledMsgRequests = isBlindedAndNotResolved && hasDisabledMsgRequests;

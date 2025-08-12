@@ -16,8 +16,8 @@ import { UsernameFallback } from './UsernameFallback';
 import { ConversationTitleDialog } from './ConversationTitleDialog';
 import { SessionIDNotEditable } from '../../basic/SessionIdNotEditable';
 import { AccountIdPill } from '../../basic/AccountIdPill';
-import { ProfileHeader, QRView } from '../edit-profile/components';
-import type { ProfileDialogModes } from '../edit-profile/ProfileDialogModes';
+import { ProfileHeader, QRView } from '../user-settings/components';
+import type { ProfileDialogModes } from '../user-settings/ProfileDialogModes';
 import { SessionUtilUserGroups } from '../../../session/utils/libsession/libsession_utils_user_groups';
 
 function AccountId({ conversationId }: WithConvoId) {
@@ -161,7 +161,7 @@ export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
             conversationId={conversationId}
             dataTestId="profile-picture"
             // 1. We don't want to show the plus button for the current user
-            // as he needs to change his avatar through the EditProfileDialog
+            // as he needs to change his avatar through the UserSettingsModal
             // 2. We don't want to show the plus button for communities as they already have a qr button.
             // Editing the avatar is done through the pencil icon in the ModalHeader
             onPlusAvatarClick={!isMe && !isPublic ? (editProfilePictureCb ?? null) : null}
