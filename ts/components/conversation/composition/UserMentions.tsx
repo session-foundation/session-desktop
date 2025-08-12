@@ -1,15 +1,14 @@
 import { MemberListItem } from '../../MemberListItem';
 
-export const renderUserMentionRow = (id: string, isPublic: boolean) => {
+export const renderUserMentionRow = (id: string, conversationId?: string) => {
   return (
     <MemberListItem
       key={`suggestion-list-${id}`}
       isSelected={false}
       pubkey={id}
       inMentions={true}
-      isPublic={isPublic}
       dataTestId="mentions-popup-row"
-      maxNameWidth="100%"
+      conversationId={conversationId}
     />
   );
 };

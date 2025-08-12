@@ -12,7 +12,7 @@ const StyledNoResults = styled.div`
 export function NoResultsForSearch({ searchTerm }: { searchTerm: string }) {
   return (
     <StyledNoResults>
-      <Localizer token="searchMatchesNoneSpecific" args={{ query: searchTerm }} />
+      <Localizer token="searchMatchesNoneSpecific" query={searchTerm} />
     </StyledNoResults>
   );
 }

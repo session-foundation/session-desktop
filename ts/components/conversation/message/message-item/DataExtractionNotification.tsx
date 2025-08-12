@@ -2,7 +2,7 @@ import { ExpirableReadableMessage } from './ExpirableReadableMessage';
 import { NotificationBubble } from './notification-bubble/NotificationBubble';
 import { Localizer } from '../../../basic/Localizer';
 import { useMessageAuthor, useMessageDataExtractionType } from '../../../../state/selectors';
-import { useNicknameOrProfileNameOrShortenedPubkey } from '../../../../hooks/useParamSelector';
+import { useConversationUsernameWithFallback } from '../../../../hooks/useParamSelector';
 import type { WithMessageId } from '../../../../session/types/with';
 import { SignalService } from '../../../../protobuf';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
@@ -10,7 +10,7 @@ import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 export const DataExtractionNotification = (props: WithMessageId) => {
   const { messageId } = props;
   const author = useMessageAuthor(messageId);
-  const authorName = useNicknameOrProfileNameOrShortenedPubkey(author);
+  const authorName = useConversationUsernameWithFallback(true, author);
 
   const dataExtractionType = useMessageDataExtractionType(messageId);
 
@@ -32,7 +32,7 @@ export const DataExtractionNotification = (props: WithMessageId) => {
               ? 'attachmentsMediaSaved'
               : 'screenshotTaken'
           }
-          args={{ name: authorName }}
+          name={authorName}
         />
       </NotificationBubble>
     </ExpirableReadableMessage>

@@ -1,8 +1,6 @@
 import styled from 'styled-components';
-import { useQuoteAuthorName } from '../../../../../hooks/useParamSelector';
-import { PubKey } from '../../../../../session/types';
-import { useSelectedIsPublic } from '../../../../../state/selectors/selectedConversation';
-import { ContactName } from '../../../ContactName';
+import { useSelectedConversationKey } from '../../../../../state/selectors/selectedConversation';
+import { ContactName } from '../../../ContactName/ContactName';
 import { QuoteProps } from './Quote';
 
 const StyledQuoteAuthor = styled.div<{ isIncoming: boolean }>`
@@ -28,19 +26,18 @@ type QuoteAuthorProps = Pick<QuoteProps, 'author' | 'isIncoming'>;
 export const QuoteAuthor = (props: QuoteAuthorProps) => {
   const { author, isIncoming } = props;
 
-  const isPublic = useSelectedIsPublic();
-  const { authorName, isMe } = useQuoteAuthorName(author);
+  const selectedConversationKey = useSelectedConversationKey();
 
-  if (!author || !authorName) {
+  if (!author || !selectedConversationKey) {
     return null;
   }
 
   return (
     <StyledQuoteAuthor isIncoming={isIncoming}>
       <ContactName
-        pubkey={PubKey.shorten(author)}
-        name={authorName}
-        shouldShowPubkey={Boolean(authorName && !isMe && isPublic)}
+        pubkey={author}
+        contactNameContext="quote-author"
+        conversationId={selectedConversationKey}
       />
     </StyledQuoteAuthor>
   );

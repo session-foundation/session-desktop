@@ -115,6 +115,12 @@ export const getPrimaryColors = (): Array<PrimaryColorType> => [
 
 // Themes
 export type ThemeStateType = 'classic-light' | 'classic-dark' | 'ocean-light' | 'ocean-dark'; // used for redux state
+export const themesArray = [
+  'classic-light',
+  'classic-dark',
+  'ocean-light',
+  'ocean-dark',
+] satisfies Array<ThemeStateType>;
 
 type ThemeNames = 'CLASSIC_LIGHT' | 'CLASSIC_DARK' | 'OCEAN_LIGHT' | 'OCEAN_DARK';
 

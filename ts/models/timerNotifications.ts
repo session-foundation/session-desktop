@@ -4,8 +4,7 @@ import { PropsForExpirationTimer } from '../state/ducks/conversations';
 import { PubKey } from '../session/types';
 import { UserUtils } from '../session/utils';
 import { TimerOptions } from '../session/disappearing_messages/timerOptions';
-import type { LocalizerProps } from '../components/basic/Localizer';
-import { tr } from '../localization/localeTools';
+import { tr, type TrArgs } from '../localization/localeTools';
 
 export function getTimerNotificationStr({
   expirationMode,
@@ -17,7 +16,7 @@ export function getTimerNotificationStr({
   author: PubkeyType;
   convoId: string;
   isGroup: boolean;
-}): LocalizerProps {
+}): TrArgs {
   const is03group = PubKey.is03Pubkey(convoId);
   const authorIsUs = author === UserUtils.getOurPubKeyStrFromCache();
   const isLegacyGroup = isGroup && !is03group;
@@ -39,19 +38,20 @@ export function getTimerNotificationStr({
           }
         : {
             token: 'disappearingMessagesTurnedOffGroup',
-            args: {
-              name: authorName,
-            },
+            name: authorName,
           };
     }
     return authorIsUs
       ? {
           token: 'disappearingMessagesSetYou',
-          args: { time: timespanText, disappearing_messages_type },
+          time: timespanText,
+          disappearing_messages_type,
         }
       : {
           token: 'disappearingMessagesSet',
-          args: { name: authorName, time: timespanText, disappearing_messages_type },
+          name: authorName,
+          time: timespanText,
+          disappearing_messages_type,
         };
   }
 
@@ -64,26 +64,20 @@ export function getTimerNotificationStr({
         }
       : {
           token: 'disappearingMessagesTurnedOff',
-          args: {
-            name: authorName,
-          },
+          name: authorName,
         };
   }
 
   return authorIsUs
     ? {
         token: 'disappearingMessagesSetYou',
-        args: {
-          time: timespanText,
-          disappearing_messages_type,
-        },
+        time: timespanText,
+        disappearing_messages_type,
       }
     : {
         token: 'disappearingMessagesSet',
-        args: {
-          time: timespanText,
-          disappearing_messages_type,
-          name: authorName,
-        },
+        time: timespanText,
+        disappearing_messages_type,
+        name: authorName,
       };
 }

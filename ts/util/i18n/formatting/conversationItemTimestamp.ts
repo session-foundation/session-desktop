@@ -9,14 +9,14 @@ function getStartOfToday() {
 export const getConversationItemString = (date: Date) => {
   const now = new Date();
 
-  // if this is in the future, or older than 7 days ago we display date+time
+  // if this is in the future, or older than 7 days ago we display date only
   if (isAfter(date, now) || isBefore(date, subDays(now, 7))) {
     const formatter = new Intl.DateTimeFormat(getBrowserLocale(), {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric',
+      hour: undefined,
+      minute: undefined,
       hour12: undefined, // am/pm depending on the locale
     });
     return formatter.format(date);

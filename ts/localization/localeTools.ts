@@ -1,18 +1,60 @@
 import { CrowdinLocale } from './constants';
-import { pluralsDictionary, simpleDictionary } from './locales';
+import {
+  pluralsDictionaryWithArgs,
+  simpleDictionaryNoArgs,
+  simpleDictionaryWithArgs,
+  type TokenPluralWithArgs,
+  type TokenSimpleNoArgs,
+  type TokenSimpleWithArgs,
+  type TokensPluralAndArgs,
+  type TokensSimpleAndArgs,
+} from './locales';
 
-type SimpleDictionary = typeof simpleDictionary;
-type PluralDictionary = typeof pluralsDictionary;
+// Note: those two functions are actually duplicates of Errors.toString.
+// We should maybe make that a module that we reuse?
+function withClause(error: unknown) {
+  if (error && typeof error === 'object' && 'cause' in error) {
+    return `\nCaused by: ${String(error.cause)}`;
+  }
+  return '';
+}
 
-type SimpleLocalizerTokens = keyof SimpleDictionary;
-type PluralLocalizerTokens = keyof PluralDictionary;
+function stringifyError(error: unknown): string {
+  if (error instanceof Error && error.stack) {
+    return error.stack + withClause(error);
+  }
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String(error.message) + withClause(error);
+  }
+  return String(error) + withClause(error);
+}
 
-export type MergedLocalizerTokens = SimpleLocalizerTokens | PluralLocalizerTokens;
+/**
+ * Duplicated from lodash, as we want the files under ts/localization to be self contained.
+ */
+function omit<T extends object, K extends keyof T>(obj: T, keys: Array<K>): Omit<T, K> {
+  const entries = Object.entries(obj) as Array<[K, T[K]]>;
+  const filteredEntries = entries.filter(([key]) => !keys.includes(key));
+  return Object.fromEntries(filteredEntries) as unknown as Omit<T, K>;
+}
+// eslint-disable-next-line no-console
+const SubLogger = { info: console.log };
+
+export function setLogger(logger: (msg: string) => void) {
+  SubLogger.info = logger;
+}
+
+/**
+ * The tokens that always have an arg
+ */
+type MergedTokenWithArgs = TokenPluralWithArgs | TokenSimpleWithArgs;
+
+/**
+ * Those are all of the tokens we can use in the localizer, with or without args, plurals or not.
+ */
+export type MergedLocalizerTokens = MergedTokenWithArgs | TokenSimpleNoArgs;
 
 let localeInUse: CrowdinLocale = 'en';
-
-type Logger = (message: string) => void;
-let logger: Logger | undefined;
 
 /**
  * Simpler than lodash. Duplicated to avoid having to import lodash in the file.
@@ -31,99 +73,75 @@ function isEmptyObject(obj: unknown) {
 // Note: not using isUnitTest as we will eventually move the whole folder to its own
 // package
 function isRunningInMocha(): boolean {
-  return typeof global.it === 'function';
-}
-
-export function setLogger(cb: Logger) {
-  if (logger && !isRunningInMocha()) {
-    // eslint-disable-next-line no-console
-    console.debug('logger already initialized. overriding it');
-  }
-  logger = cb;
+  return typeof (global as any).it === 'function';
 }
 
 export function setLocaleInUse(crowdinLocale: CrowdinLocale) {
   localeInUse = crowdinLocale;
 }
 
-function log(message: Parameters<Logger>[0]) {
-  if (!logger) {
-    // eslint-disable-next-line no-console
-    console.log('logger is not set');
+function log(message: string) {
+  if (isRunningInMocha()) {
     return;
   }
-  logger(message);
+  SubLogger.info(message);
 }
 
-function isSimpleToken(token: string): token is SimpleLocalizerTokens {
-  return token in simpleDictionary;
+export function isSimpleTokenNoArgs(token: string): token is TokenSimpleNoArgs {
+  return token in simpleDictionaryNoArgs;
 }
 
-function isPluralToken(token: string): token is PluralLocalizerTokens {
-  return token in pluralsDictionary;
+export function isSimpleTokenWithArgs(token: string): token is TokenSimpleWithArgs {
+  return token in simpleDictionaryWithArgs;
 }
 
-/**
- * This type extracts from a dictionary, the keys that have a property 'args' set (i.e. not undefined or never).
- */
-type TokenWithArgs<Dict> = {
-  [Key in keyof Dict]: Dict[Key] extends { args: undefined } | { args: never } ? never : Key;
-}[keyof Dict];
+export function isPluralToken(token: string): token is TokenPluralWithArgs {
+  return token in pluralsDictionaryWithArgs;
+}
 
-type MergedTokenWithArgs = TokenWithArgs<SimpleDictionary> | TokenWithArgs<PluralDictionary>;
+export function isTokenWithArgs(token: string): token is MergedTokenWithArgs {
+  return isSimpleTokenWithArgs(token) || isPluralToken(token);
+}
 
-type DynamicArgStr = 'string' | 'number';
-
-type ArgsTypeStrToTypes<T extends DynamicArgStr> = T extends 'string'
-  ? string
-  : T extends 'number'
-    ? number
-    : never;
+type PluralDictionaryWithArgs = typeof pluralsDictionaryWithArgs;
 
 // those are still a string of the type "string" | "number" and not the typescript types themselves
-type ArgsFromTokenStr<T extends MergedLocalizerTokens> = T extends SimpleLocalizerTokens
-  ? SimpleDictionary[T] extends { args: infer A }
-    ? A extends Record<string, any>
-      ? A
-      : never
-    : never
-  : T extends PluralLocalizerTokens
-    ? PluralDictionary[T] extends { args: infer A }
-      ? A extends Record<string, any>
-        ? A
-        : never
-      : never
+type ArgsFromTokenStr<T extends MergedTokenWithArgs> = T extends keyof TokensSimpleAndArgs
+  ? TokensSimpleAndArgs[T]
+  : T extends keyof TokensPluralAndArgs
+    ? TokensPluralAndArgs[T]
     : never;
 
-export type ArgsFromToken<T extends MergedLocalizerTokens> = MappedToTsTypes<ArgsFromTokenStr<T>>;
+export type ArgsFromToken<T extends MergedLocalizerTokens> = T extends MergedTokenWithArgs
+  ? ArgsFromTokenStr<T>
+  : undefined;
 
-type ArgsFromTokenWithIcon<T extends MergedLocalizerTokens, I> = MappedToTsTypes<
-  ArgsFromTokenStr<T>
-> & { icon: I };
+type ArgsFromTokenWithIcon<T extends MergedLocalizerTokens> = ArgsFromToken<T> & {
+  icon: string;
+};
 
-export function isArgsFromTokenWithIcon<T extends MergedLocalizerTokens, I extends string>(
+export function isArgsFromTokenWithIcon<T extends MergedLocalizerTokens>(
   args: ArgsFromToken<T> | undefined
-): args is ArgsFromTokenWithIcon<T, I> {
-  return !!args && !isEmptyObject(args) && 'icon' in args && typeof args.icon === 'string';
+): args is ArgsFromTokenWithIcon<T> {
+  return !!args && !isEmptyObject(args) && 'icon' in args;
 }
+
+type WithToken<T extends MergedLocalizerTokens> = { token: T };
 
 /** The arguments for retrieving a localized message */
 export type GetMessageArgs<T extends MergedLocalizerTokens> = T extends MergedLocalizerTokens
   ? T extends MergedTokenWithArgs
-    ? [T, ArgsFromToken<T>]
-    : [T]
+    ? WithToken<T> & ArgsFromToken<T>
+    : WithToken<T>
   : never;
 
-type MappedToTsTypes<T extends Record<string, DynamicArgStr>> = {
-  [K in keyof T]: ArgsTypeStrToTypes<T[K]>;
-};
+export type TrArgs = GetMessageArgs<MergedLocalizerTokens>;
 
-export function tStrippedWithObj<T extends MergedLocalizerTokens>(
-  opts: LocalizerComponentProps<T, string>
-): string {
-  const builder = new LocalizedStringBuilder<T>(opts.token as unknown as T, localeInUse).strip();
-  if (opts.args) {
-    builder.withArgs(opts.args as unknown as ArgsFromToken<T>);
+export function tStrippedWithObj<T extends MergedLocalizerTokens>(opts: GetMessageArgs<T>): string {
+  const builder = new LocalizedStringBuilder<T>(opts.token as T, localeInUse).stripIt();
+  const args = messageArgsToArgsOnly(opts);
+  if (args) {
+    builder.withArgs(args);
   }
   return builder.toString();
 }
@@ -135,9 +153,9 @@ export function tStrippedWithObj<T extends MergedLocalizerTokens>(
  * @returns The sanitized args
  */
 export function sanitizeArgs(
-  args: Record<string, string | number>,
+  args: Record<string, number | string>,
   identifier?: string
-): Record<string, string | number> {
+): Record<string, number | string> {
   return Object.fromEntries(
     Object.entries(args).map(([key, value]) => [
       key,
@@ -160,11 +178,12 @@ export function sanitizeArgs(
 export function formatMessageWithArgs<T extends MergedLocalizerTokens>(
   rawMessage: string,
   args?: ArgsFromToken<T>
-): string | T {
+): T | string {
   /** Find and replace the dynamic variables in a localized string and substitute the variables with the provided values */
   return rawMessage.replace(/\{(\w+)\}/g, (match: any, arg: string) => {
-    const matchedArg = args ? args[arg as keyof typeof args] : undefined;
+    const matchedArg = args ? (args as Record<string, any>)[arg] : undefined;
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return matchedArg?.toString() ?? match;
   });
 }
@@ -180,23 +199,21 @@ export function formatMessageWithArgs<T extends MergedLocalizerTokens>(
  */
 export function getRawMessage<T extends MergedLocalizerTokens>(
   crowdinLocale: CrowdinLocale,
-  ...[token, args]: GetMessageArgs<T>
-): string | T {
+  details: GetMessageArgs<T>
+): T | string {
+  const { token } = details;
+  const args = messageArgsToArgsOnly(details);
   try {
-    if (
-      typeof window !== 'undefined' &&
-      window?.sessionFeatureFlags?.replaceLocalizedStringsWithKeys
-    ) {
-      return token;
+    if (isSimpleTokenNoArgs(token)) {
+      return simpleDictionaryNoArgs[token][crowdinLocale];
     }
-
-    if (isSimpleToken(token)) {
-      return simpleDictionary[token][crowdinLocale];
+    if (isSimpleTokenWithArgs(token)) {
+      return simpleDictionaryWithArgs[token][crowdinLocale];
     }
     if (!isPluralToken(token)) {
       throw new Error('invalid token, neither simple nor plural');
     }
-    const pluralsObjects = pluralsDictionary[token];
+    const pluralsObjects = pluralsDictionaryWithArgs[token];
     const localePluralsObject = pluralsObjects[crowdinLocale];
 
     if (!localePluralsObject || isEmptyObject(localePluralsObject)) {
@@ -209,7 +226,7 @@ export function getRawMessage<T extends MergedLocalizerTokens>(
     const cardinalRule = new Intl.PluralRules(crowdinLocale).select(num);
 
     const pluralString = getStringForRule({
-      dictionary: pluralsDictionary,
+      dictionary: pluralsDictionaryWithArgs,
       crowdinLocale,
       cardinalRule,
       token,
@@ -222,7 +239,7 @@ export function getRawMessage<T extends MergedLocalizerTokens>(
 
     return pluralString.replaceAll('#', `${num}`);
   } catch (error) {
-    log(error.message);
+    log(stringifyError(error));
     return token;
   }
 }
@@ -233,8 +250,8 @@ function getStringForRule({
   crowdinLocale,
   cardinalRule,
 }: {
-  dictionary: PluralDictionary;
-  token: PluralLocalizerTokens;
+  dictionary: PluralDictionaryWithArgs;
+  token: TokenPluralWithArgs;
   crowdinLocale: CrowdinLocale;
   cardinalRule: Intl.LDMLPluralRule;
 }) {
@@ -278,7 +295,7 @@ function deSanitizeHtmlTags(str: string, identifier: string): string {
 
 const pluralKey = 'count' as const;
 
-class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends String {
+export class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends String {
   private readonly token: T;
   private args?: ArgsFromToken<T>;
   private isStripped = false;
@@ -309,7 +326,7 @@ class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends String {
 
       return str;
     } catch (error) {
-      log(error);
+      log(stringifyError(error));
       return this.token;
     }
   }
@@ -324,7 +341,7 @@ class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends String {
     return this;
   }
 
-  strip(): Omit<this, 'strip'> {
+  stripIt(): Omit<this, 'stripIt'> {
     const sanitizedArgs = this.args ? sanitizeArgs(this.args, '\u200B') : undefined;
     if (sanitizedArgs) {
       this.args = sanitizedArgs as ArgsFromToken<T>;
@@ -349,8 +366,11 @@ class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends String {
         return this.token;
       }
 
-      if (isSimpleToken(this.token)) {
-        return simpleDictionary[this.token][this.localeToTarget()];
+      if (isSimpleTokenNoArgs(this.token)) {
+        return simpleDictionaryNoArgs[this.token][this.localeToTarget()];
+      }
+      if (isSimpleTokenWithArgs(this.token)) {
+        return simpleDictionaryWithArgs[this.token][this.localeToTarget()];
       }
 
       if (!isPluralToken(this.token)) {
@@ -359,13 +379,16 @@ class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends String {
 
       return this.resolvePluralString();
     } catch (error) {
-      log(error.message);
+      log(stringifyError(error));
       return this.token;
     }
   }
 
   private resolvePluralString(): string {
-    let num: number | string | undefined = this.args?.[pluralKey as keyof ArgsFromToken<T>];
+    let num: number | string | undefined;
+    if (this.args && pluralKey in this.args) {
+      num = this.args[pluralKey];
+    }
 
     if (num === undefined) {
       log(
@@ -397,7 +420,7 @@ class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends String {
     let pluralString = getStringForRule({
       cardinalRule,
       crowdinLocale: localeToTarget,
-      dictionary: pluralsDictionary,
+      dictionary: pluralsDictionaryWithArgs,
       token: this.token,
     });
 
@@ -409,7 +432,7 @@ class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends String {
       pluralString = getStringForRule({
         cardinalRule: 'other',
         crowdinLocale: localeToTarget,
-        dictionary: pluralsDictionary,
+        dictionary: pluralsDictionaryWithArgs,
         token: this.token,
       });
 
@@ -426,7 +449,10 @@ class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends String {
   private formatStringWithArgs(str: string): string {
     /** Find and replace the dynamic variables in a localized string and substitute the variables with the provided values */
     return str.replace(/\{(\w+)\}/g, (match, arg: string) => {
-      const matchedArg = this.args ? this.args[arg as keyof ArgsFromToken<T>] : undefined;
+      const matchedArg =
+        this.args && arg in this.args
+          ? (this.args as Record<string, unknown>)[arg]?.toString()
+          : undefined;
 
       if (arg === pluralKey && typeof matchedArg === 'number' && Number.isFinite(matchedArg)) {
         return new Intl.NumberFormat(this.crowdinLocale).format(matchedArg);
@@ -439,7 +465,7 @@ class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends String {
 
 export function tr<T extends MergedLocalizerTokens>(
   token: T,
-  ...args: ArgsFromToken<T> extends never ? [] : [args: ArgsFromToken<T>]
+  ...args: ArgsFromToken<T> extends undefined ? [] : [args: ArgsFromToken<T>]
 ): string {
   const builder = new LocalizedStringBuilder<T>(token, localeInUse);
   if (args.length) {
@@ -450,7 +476,7 @@ export function tr<T extends MergedLocalizerTokens>(
 
 export function tEnglish<T extends MergedLocalizerTokens>(
   token: T,
-  ...args: ArgsFromToken<T> extends never ? [] : [args: ArgsFromToken<T>]
+  ...args: ArgsFromToken<T> extends undefined ? [] : [args: ArgsFromToken<T>]
 ): string {
   const builder = new LocalizedStringBuilder<T>(token, localeInUse).forceEnglish();
   if (args.length) {
@@ -461,35 +487,20 @@ export function tEnglish<T extends MergedLocalizerTokens>(
 
 export function tStripped<T extends MergedLocalizerTokens>(
   token: T,
-  ...args: ArgsFromToken<T> extends never ? [] : [args: ArgsFromToken<T>]
+  ...args: ArgsFromToken<T> extends undefined ? [] : [args: ArgsFromToken<T>]
 ): string {
-  const builder = new LocalizedStringBuilder<T>(token, localeInUse).strip();
+  const builder = new LocalizedStringBuilder<T>(token, localeInUse).stripIt();
   if (args.length) {
     builder.withArgs(args[0]);
   }
   return builder.toString();
 }
 
-export type LocalizerHtmlTag = 'span' | 'div';
-/** Basic props for all calls of the Localizer component */
-type LocalizerComponentBaseProps<T extends MergedLocalizerTokens> = {
-  token: T;
-  asTag?: LocalizerHtmlTag;
-  className?: string;
-};
+export type LocalizerHtmlTag = 'div' | 'span';
 
-/** The props for the localization component */
-export type LocalizerComponentProps<
-  T extends MergedLocalizerTokens,
-  I,
-> = T extends MergedLocalizerTokens
-  ? ArgsFromToken<T> extends never
-    ? LocalizerComponentBaseProps<T> & { args?: undefined }
-    : ArgsFromToken<T> extends Record<string, never>
-      ? LocalizerComponentBaseProps<T> & { args?: undefined }
-      : ArgsFromToken<T> extends { icon: string }
-        ? LocalizerComponentBaseProps<T> & { args: ArgsFromTokenWithIcon<T, I> }
-        : LocalizerComponentBaseProps<T> & {
-            args: ArgsFromToken<T>;
-          }
-  : never;
+export function messageArgsToArgsOnly<T extends MergedLocalizerTokens>(
+  details: GetMessageArgs<T>
+): ArgsFromToken<T> {
+  const pl = omit(details, ['token']) as unknown as ArgsFromToken<T>;
+  return pl;
+}

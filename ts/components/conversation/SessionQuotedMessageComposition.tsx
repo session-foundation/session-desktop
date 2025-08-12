@@ -16,9 +16,9 @@ import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { LucideIcon } from '../icon/LucideIcon';
 import { tr } from '../../localization/localeTools';
-import { ContactName } from './ContactName';
-import { useSelectedIsPublic } from '../../state/selectors/selectedConversation';
+import { ContactName } from './ContactName/ContactName';
 import { QuoteText } from './message/message-content/quote/QuoteText';
+import { useSelectedConversationKey } from '../../state/selectors/selectedConversation';
 
 const QuotedMessageComposition = styled(Flex)`
   border-top: 1px solid var(--border-color);
@@ -69,10 +69,9 @@ function checkHasAttachments(attachments: Array<any> | undefined) {
 export const SessionQuotedMessageComposition = () => {
   const dispatch = useDispatch();
   const quotedMessageProps = useSelector(getQuotedMessage);
+  const conversationId = useSelectedConversationKey();
 
   const { author, attachments, text: quoteText } = quotedMessageProps || {};
-
-  const isPublic = useSelectedIsPublic();
 
   const removeQuotedMessage = () => {
     dispatch(quoteMessage(undefined));
@@ -156,9 +155,8 @@ export const SessionQuotedMessageComposition = () => {
         >
           <ContactName
             pubkey={contact.pubkey}
-            shouldShowPubkey={false}
-            isPublic={isPublic}
-            boldProfileName={true}
+            conversationId={conversationId}
+            contactNameContext="quoted-message-composition"
           />
           {subtitleText && <Subtle>{subtitleText}</Subtle>}
         </StyledText>
@@ -169,7 +167,7 @@ export const SessionQuotedMessageComposition = () => {
         iconColor="var(--chat-buttons-icon-color)"
         iconSize="medium"
         onClick={removeQuotedMessage}
-        margin={'0 var(--margins-sm) 0 0'}
+        margin={'0 var(--margins-md) 0 0'} // We want this aligned with the send button
         aria-label={tr('close')}
         dataTestId="link-preview-close"
       />

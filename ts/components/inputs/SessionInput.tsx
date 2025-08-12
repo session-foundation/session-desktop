@@ -17,8 +17,9 @@ import styled from 'styled-components';
 import { THEME_GLOBALS } from '../../themes/globals';
 import { AnimatedFlex, Flex } from '../basic/Flex';
 import { SpacerMD } from '../basic/Text';
-import { Localizer, type LocalizerProps } from '../basic/Localizer';
+import { Localizer } from '../basic/Localizer';
 import { ShowHideButton, type ShowHideButtonProps } from './ShowHidePasswordButton';
+import type { TrArgs } from '../../localization/localeTools';
 
 type TextSizes = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
@@ -183,7 +184,7 @@ const SimpleErrorItem = ({
   providedError,
   dataTestId,
 }: {
-  providedError: LocalizerProps | string | undefined;
+  providedError: TrArgs | string | undefined;
   dataTestId: SessionDataTestId;
 }) => {
   if (!providedError) {
@@ -205,7 +206,7 @@ const SimpleErrorItem = ({
 };
 
 type Props = {
-  error?: LocalizerProps | string;
+  error?: TrArgs | string;
   type?: 'text' | 'password';
   value?: string;
   placeholder?: string;
@@ -283,7 +284,7 @@ type SimpleSessionInputProps = Pick<
   Required<Pick<Props, 'errorDataTestId'>> & {
     onValueChanged: (str: string) => void;
     onEnterPressed: () => void;
-    providedError: string | LocalizerProps | undefined;
+    providedError: string | TrArgs | undefined;
     disabled?: boolean;
     buttonEnd?: ReactNode;
   };
@@ -419,7 +420,7 @@ export const SimpleSessionTextarea = (
     WithTextAreaRef &
     Required<Pick<Props, 'errorDataTestId'>> & {
       onValueChanged: (str: string) => void;
-      providedError: string | LocalizerProps | undefined;
+      providedError: string | TrArgs | undefined;
       disabled?: boolean;
       buttonEnd?: ReactNode;
     } & ({ singleLine: false } | { singleLine: true; onEnterPressed: () => void })

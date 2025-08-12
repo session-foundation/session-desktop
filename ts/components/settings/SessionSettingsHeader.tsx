@@ -49,6 +49,7 @@ export const SettingsHeader = (props: Props) => {
       break;
     // these are modals or other screens
     case 'session-network':
+    case 'session-pro':
     case 'donate':
     case 'clear-data':
     case 'message-requests':

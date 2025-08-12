@@ -190,7 +190,7 @@ const StagedLinkPreview = ({
         onClick={() => {
           onClose(url || '');
         }}
-        margin={'0 var(--margins-sm) 0 0'}
+        margin={'0 var(--margin-close-button-composition-box) 0 0'} // we want this aligned with the send button
         aria-label={tr('close')}
         dataTestId="link-preview-close"
         style={{

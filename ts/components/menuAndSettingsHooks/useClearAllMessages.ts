@@ -2,9 +2,9 @@ import { useDispatch } from 'react-redux';
 import { deleteAllMessagesByConvoIdNoConfirmation } from '../../interactions/conversationInteractions';
 import { updateConfirmModal } from '../../state/ducks/modalDialog';
 import { SessionButtonColor } from '../basic/SessionButton';
-import { tr } from '../../localization/localeTools';
+import { tr, type TrArgs } from '../../localization/localeTools';
 import {
-  useConversationUsername,
+  useConversationUsernameWithFallback,
   useIsGroupV2,
   useIsKickedFromGroup,
   useIsLegacyGroup,
@@ -14,7 +14,6 @@ import {
   useWeAreAdmin,
 } from '../../hooks/useParamSelector';
 import { ToastUtils } from '../../session/utils';
-import type { LocalizerProps } from '../basic/Localizer';
 import { groupInfoActions } from '../../state/ducks/metaGroups';
 
 export function useClearAllMessagesCb({ conversationId }: { conversationId: string }) {
@@ -27,7 +26,7 @@ export function useClearAllMessagesCb({ conversationId }: { conversationId: stri
   const isGroupV2 = useIsGroupV2(conversationId);
   const weAreAdmin = useWeAreAdmin(conversationId);
   const isLegacyGroup = useIsLegacyGroup(conversationId);
-  const conversationTitle = useConversationUsername(conversationId) || tr('unknown');
+  const conversationTitle = useConversationUsernameWithFallback(false, conversationId);
   const isPrivate = useIsPrivate(conversationId);
 
   if (isKickedFromGroup) {
@@ -71,21 +70,21 @@ export function useClearAllMessagesCb({ conversationId }: { conversationId: stri
 
   const isGroupV2AndAdmin = isGroupV2 && weAreAdmin;
 
-  const i18nMessage: LocalizerProps | null = isMe
+  const i18nMessage: TrArgs | null = isMe
     ? { token: 'clearMessagesNoteToSelfDescriptionUpdated' }
     : isPublic
-      ? { token: 'clearMessagesCommunityUpdated', args: { community_name: conversationTitle } }
+      ? { token: 'clearMessagesCommunityUpdated', community_name: conversationTitle }
       : isPrivate
-        ? { token: 'clearMessagesChatDescriptionUpdated', args: { name: conversationTitle } }
+        ? { token: 'clearMessagesChatDescriptionUpdated', name: conversationTitle }
         : isLegacyGroup || (isGroupV2 && !weAreAdmin)
           ? {
               token: 'clearMessagesGroupDescriptionUpdated',
-              args: { group_name: conversationTitle },
+              group_name: conversationTitle,
             }
           : isGroupV2AndAdmin
             ? {
                 token: 'clearMessagesChatDescriptionUpdated',
-                args: { name: conversationTitle },
+                name: conversationTitle,
               }
             : null;
 

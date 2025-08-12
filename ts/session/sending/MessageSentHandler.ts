@@ -26,7 +26,6 @@ async function handlePublicMessageSentSuccess(
     foundMessage.set({
       serverTimestamp,
       serverId,
-      isPublic: true,
       sent: true,
       sent_at: serverTimestamp, // we quote by sent_at, so we MUST sent_at: serverTimestamp
       sync: true,

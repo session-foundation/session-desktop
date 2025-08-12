@@ -1,12 +1,12 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import { isEmpty } from 'lodash';
+import { isDebugMode } from '../../shared/env_vars';
 
 export interface DebugState {
   debugMode: boolean;
 }
 
 export const initialDebugState = {
-  debugMode: !isEmpty(process.env.SESSION_DEV),
+  debugMode: isDebugMode(),
 };
 
 const debugSlice = createSlice({

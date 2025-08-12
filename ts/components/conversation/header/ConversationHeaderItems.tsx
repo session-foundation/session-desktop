@@ -1,3 +1,4 @@
+import styled from 'styled-components';
 import { useSelector } from 'react-redux';
 import { callRecipient } from '../../../interactions/conversationInteractions';
 import { getHasIncomingCall, getHasOngoingCall } from '../../../state/selectors/call';
@@ -17,6 +18,11 @@ import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { useIsGroupV2, useIsLegacyGroup } from '../../../hooks/useParamSelector';
 import { useLibGroupInvitePending } from '../../../state/selectors/userGroups';
+
+const StyledConversationHeaderAvatar = styled.span`
+  min-width: 28px;
+  user-select: none;
+`;
 
 export const AvatarHeader = (props: { pubkey: string; onAvatarClick?: () => void }) => {
   const { pubkey, onAvatarClick } = props;
@@ -40,14 +46,14 @@ export const AvatarHeader = (props: { pubkey: string; onAvatarClick?: () => void
       : undefined;
 
   return (
-    <span className="module-conversation-header__avatar">
+    <StyledConversationHeaderAvatar>
       <Avatar
         size={AvatarSize.S}
         onAvatarClick={optOnAvatarClick}
         pubkey={pubkey}
         dataTestId="conversation-options-avatar"
       />
-    </span>
+    </StyledConversationHeaderAvatar>
   );
 };
 

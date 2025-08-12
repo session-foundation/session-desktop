@@ -75,7 +75,7 @@ export const ReactClearAllModal = (props: Props) => {
       <ModalFlexContainer>
         <ModalDescription
           dataTestId="modal-description"
-          localizerProps={{ token: 'emojiReactsClearAll', args: { emoji: reaction } }}
+          localizerProps={{ token: 'emojiReactsClearAll', emoji: reaction }}
         />
 
         <SessionSpinner loading={clearingInProgress} />

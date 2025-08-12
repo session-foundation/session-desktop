@@ -31,7 +31,7 @@ const StyledRadioOuter = styled.div<{
     background: ${props =>
       props.$disabled
         ? 'var(--disabled-color)'
-        : 'radial-gradient(circle, var(--primary-color) 0%, var(--primary-color) 60%, transparent 60%, transparent 100%)'};
+        : 'radial-gradient(circle, var(--primary-color) 0%, var(--primary-color) 53%, transparent 60%, transparent 100%)'};
     opacity: ${props => (props.$selected ? 1 : 0)};
     transition: opacity 0.3s ease;
     pointer-events: none;

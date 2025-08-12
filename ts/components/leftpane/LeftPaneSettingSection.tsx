@@ -3,7 +3,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 
 import { resetConversationExternal } from '../../state/ducks/conversations';
-import { updateDeleteAccountModal, updateSessionNetworkModal } from '../../state/ducks/modalDialog';
+import {
+  updateDeleteAccountModal,
+  updateSessionNetworkModal,
+  updateSessionProInfoModal,
+} from '../../state/ducks/modalDialog';
 import { sectionActions, SectionType } from '../../state/ducks/section';
 import { getFocusedSettingsSection } from '../../state/selectors/section';
 import { useHideRecoveryPasswordEnabled } from '../../state/selectors/settings';
@@ -19,6 +23,9 @@ import { networkDataActions } from '../../state/ducks/networkData';
 import { showLinkVisitWarningDialog } from '../dialog/OpenUrlModal';
 import { LUCIDE_ICONS_UNICODE, type WithLucideUnicode } from '../icon/lucide';
 import { LucideIcon } from '../icon/LucideIcon';
+import { ProIconButton } from '../buttons/ProButton';
+import { SessionProInfoVariant } from '../dialog/SessionProInfoModal';
+import { useIsProAvailable } from '../../hooks/useIsProAvailable';
 
 const StyledSettingsSectionTitle = styled.span<{
   color?: string;
@@ -47,7 +54,9 @@ const StyledSettingsListItem = styled(Flex)<{ active: boolean }>`
 `;
 
 const StyledIconContainer = styled.div`
-  width: 38px;
+  width: 58px;
+  place-items: center;
+  text-align: center;
 `;
 
 const StyledNewItem = styled.span`
@@ -64,6 +73,10 @@ type CategoryIcon = { color?: string } & (
   | (WithLucideUnicode & {
       type: 'lucide';
     })
+  | {
+      type: 'custom';
+      content: 'sessionPro';
+    }
 );
 
 type Categories = {
@@ -79,9 +92,20 @@ type Categories = {
 const categories: Array<Categories> = (
   [
     {
+      id: 'session-pro',
+      title: LOCALE_DEFAULTS.app_pro,
+      titleColor: 'var(--renderer-span-primary-color)',
+      icon: { type: 'custom', content: 'sessionPro', color: 'var(--renderer-span-primary-color)' },
+    },
+    {
       id: 'privacy',
       title: tr('sessionPrivacy'),
       icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.LOCK_KEYHOLE },
+    },
+    {
+      id: 'session-network',
+      title: LOCALE_DEFAULTS.network_name,
+      icon: { type: 'sessionToken' },
     },
     {
       id: 'donate',
@@ -92,12 +116,6 @@ const categories: Array<Categories> = (
         unicode: LUCIDE_ICONS_UNICODE.HEART,
         color: 'var(--renderer-span-primary-color)',
       },
-    },
-    {
-      id: 'session-network',
-      title: LOCALE_DEFAULTS.network_name,
-      icon: { type: 'sessionToken' },
-      isNew: true,
     },
     {
       id: 'notifications',
@@ -159,6 +177,12 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
 
   const iconSize = 'medium';
 
+  const isProAvailable = useIsProAvailable();
+
+  if (id === 'session-pro' && !isProAvailable) {
+    return null;
+  }
+
   return (
     <StyledSettingsListItem
       key={id}
@@ -169,7 +193,7 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
       $justifyContent={'flex-start'}
       $alignItems={'center'}
       $flexShrink={0}
-      padding={'0 var(--margins-md)'}
+      padding={'0 var(--margins-xs)'}
       onClick={() => {
         switch (id) {
           case 'message-requests':
@@ -187,6 +211,9 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
             }
             dispatch(updateSessionNetworkModal({}));
             break;
+          case 'session-pro':
+            dispatch(updateSessionProInfoModal({ variant: SessionProInfoVariant.GENERIC }));
+            break;
           case 'clear-data':
             dispatch(updateDeleteAccountModal({}));
             break;
@@ -199,6 +226,8 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
       <StyledIconContainer>
         {icon.type === 'lucide' ? (
           <LucideIcon unicode={icon.unicode} iconSize={iconSize} iconColor={icon.color} />
+        ) : icon.type === 'custom' ? (
+          <ProIconButton onClick={undefined} iconSize="small" dataTestId="invalid-data-testid" />
         ) : (
           <SessionIcon
             iconType={icon.type}

@@ -96,6 +96,7 @@ import { Model } from './models';
 import { ReduxOnionSelectors } from '../state/selectors/onions';
 import { tStrippedWithObj, tr, tStripped } from '../localization/localeTools';
 import type { QuotedAttachmentType } from '../components/conversation/message/message-content/quote/Quote';
+import { ProFeatures, ProMessageFeature } from './proMessageFeature';
 
 // tslint:disable: cyclomatic-complexity
 
@@ -173,11 +174,7 @@ export class MessageModel extends Model<MessageAttributes> {
   }
 
   public isExpirationTimerUpdate() {
-    const expirationTimerFlag = SignalService.DataMessage.Flags.EXPIRATION_TIMER_UPDATE;
-    const flags = this.get('flags') || 0;
-
-    // eslint-disable-next-line no-bitwise
-    return Boolean(flags & expirationTimerFlag) && !isEmpty(this.getExpirationTimerUpdate());
+    return !isEmpty(this.getExpirationTimerUpdate());
   }
 
   public isControlMessage() {
@@ -604,6 +601,7 @@ export class MessageModel extends Model<MessageAttributes> {
 
     const attachments = this.get('attachments') || [];
     const isTrustedForAttachmentDownload = this.isTrustedForAttachmentDownload();
+    const proFeatures = this.getProFeatures();
     const body = this.get('body');
     const props: PropsForMessageWithoutConvoProps = {
       id: this.id,
@@ -642,6 +640,9 @@ export class MessageModel extends Model<MessageAttributes> {
     }
     if (isTrustedForAttachmentDownload) {
       props.isTrustedForAttachmentDownload = isTrustedForAttachmentDownload;
+    }
+    if (proFeatures.length) {
+      props.proFeatures = proFeatures;
     }
     const isUnread = this.isUnread();
     if (isUnread) {
@@ -861,7 +862,6 @@ export class MessageModel extends Model<MessageAttributes> {
       preview: undefined,
       reacts: undefined,
       reactsIndex: undefined,
-      flags: undefined,
       callNotificationType: undefined,
       interactionNotification: undefined,
       reaction: undefined,
@@ -1252,6 +1252,16 @@ export class MessageModel extends Model<MessageAttributes> {
       window.log.warn('isTrustedForAttachmentDownload: error; ', e.message);
       return false;
     }
+  }
+
+  private getProFeatures(): Array<ProMessageFeature> {
+    const proFeatures = this.get('proFeatures');
+
+    if (!proFeatures) {
+      return [];
+    }
+
+    return ProFeatures.numberToProFeatures(proFeatures);
   }
 
   private dispatchMessageUpdate() {

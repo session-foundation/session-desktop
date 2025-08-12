@@ -116,7 +116,7 @@ export function NotificationForConversationModal(props: Required<ConversationSet
         <ModalBasicHeader
           title={title}
           bigHeader={true}
-          leftButton={backAction ? <ModalBackButton onClick={backAction} /> : undefined}
+          extraLeftButton={backAction ? <ModalBackButton onClick={backAction} /> : undefined}
         />
       }
       onClose={onClose}

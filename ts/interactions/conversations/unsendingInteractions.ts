@@ -21,9 +21,8 @@ import { UserGroupsWrapperActions } from '../../webworker/workers/browser/libses
 import { NetworkTime } from '../../util/NetworkTime';
 import { MessageQueue } from '../../session/sending';
 import { WithLocalMessageDeletionType } from '../../session/types/with';
-import { tr } from '../../localization/localeTools';
+import { tr, type TrArgs } from '../../localization/localeTools';
 import { sectionActions } from '../../state/ducks/section';
-import type { LocalizerProps } from '../../components/basic/Localizer';
 
 async function unsendMessagesForEveryone1o1AndLegacy(
   conversation: ConversationModel,
@@ -504,7 +503,7 @@ export async function deleteMessagesByIdForEveryone(
   window.inboxStore?.dispatch(
     updateConfirmModal({
       title: isMe ? tr('deleteMessageDevicesAll') : tr('clearMessagesForEveryone'),
-      i18nMessage: { token: 'deleteMessageConfirm', args: { count: selectedMessages.length } },
+      i18nMessage: { token: 'deleteMessageConfirm', count: selectedMessages.length },
       okText: isMe ? tr('deleteMessageDevicesAll') : tr('clearMessagesForEveryone'),
       okTheme: SessionButtonColor.Danger,
       onClickOk: async () => {
@@ -532,8 +531,8 @@ export async function deleteMessagesById(messageIds: Array<string>, conversation
   const clearMessagesForEveryone = 'clearMessagesForEveryone';
 
   // Note: the isMe case has no radio buttons, so we just show the description below
-  const i18nMessage: LocalizerProps | undefined = isMe
-    ? { token: 'deleteMessageDescriptionDevice', args: { count } }
+  const i18nMessage: TrArgs | undefined = isMe
+    ? { token: 'deleteMessageDescriptionDevice', count }
     : undefined;
 
   window.inboxStore?.dispatch(

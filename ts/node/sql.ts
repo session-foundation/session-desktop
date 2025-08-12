@@ -839,9 +839,9 @@ function saveMessage(data: MessageAttributes) {
     expirationType,
     expireTimer,
     expirationStartTimestamp,
-    flags,
     messageHash,
     errors,
+    expirationTimerUpdate,
   } = data;
 
   if (!id) {
@@ -851,6 +851,10 @@ function saveMessage(data: MessageAttributes) {
   if (!conversationId) {
     throw new Error('conversationId is required');
   }
+
+  const flags = !isEmpty(expirationTimerUpdate)
+    ? SignalService.DataMessage.Flags.EXPIRATION_TIMER_UPDATE
+    : 0;
 
   const payload = {
     id,
@@ -873,7 +877,7 @@ function saveMessage(data: MessageAttributes) {
     source,
     type: type || '',
     unread,
-    flags: flags ?? 0,
+    flags, // Note: we need to keep storing this as there are some indexed queries that rely on it (cleanUpExpirationTimerUpdateHistory)
     messageHash,
     errors,
   };

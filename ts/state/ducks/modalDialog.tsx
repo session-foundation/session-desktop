@@ -8,7 +8,7 @@ import { AttachmentTypeWithPath } from '../../types/Attachment';
 import type { EditProfilePictureModalProps, PasswordAction } from '../../types/ReduxTypes';
 import { WithConvoId } from '../../session/types/with';
 import type { SessionProInfoVariant } from '../../components/dialog/SessionProInfoModal';
-import type { LocalizerProps } from '../../components/basic/Localizer';
+import type { TrArgs } from '../../localization/localeTools';
 
 export type BanType = 'ban' | 'unban';
 
@@ -24,7 +24,7 @@ export type BanOrUnbanUserModalState =
 export type AddModeratorsModalState = InviteContactModalState;
 export type RemoveModeratorsModalState = InviteContactModalState;
 export type UpdateGroupMembersModalState = InviteContactModalState;
-export type UpdateGroupNameModalState = WithConvoId | null;
+export type UpdateGroupOrCommunityDetailsModalState = WithConvoId | null;
 export type ChangeNickNameModalState = InviteContactModalState;
 export type EditProfileModalState = object | null;
 export type OnionPathModalState = EditProfileModalState;
@@ -32,8 +32,8 @@ export type EnterPasswordModalState = EnterPasswordModalProps | null;
 export type DeleteAccountModalState = EditProfileModalState;
 export type OpenUrlModalState = { urlToOpen: string } | null;
 export type LocalizedPopupDialogState = {
-  title: LocalizerProps;
-  description: LocalizerProps;
+  title: TrArgs;
+  description: TrArgs;
 } | null;
 export type SessionProInfoState = { variant: SessionProInfoVariant } | null;
 
@@ -84,7 +84,7 @@ export type ModalState = {
   blockOrUnblockModal: BlockOrUnblockModalState;
   removeModeratorsModal: RemoveModeratorsModalState;
   addModeratorsModal: AddModeratorsModalState;
-  groupNameModal: UpdateGroupNameModalState;
+  groupOrCommunityDetailsModal: UpdateGroupOrCommunityDetailsModalState;
   groupMembersModal: UpdateGroupMembersModalState;
   userProfileModal: UserProfileModalState;
   nickNameModal: ChangeNickNameModalState;
@@ -113,7 +113,7 @@ export const initialModalState: ModalState = {
   removeModeratorsModal: null,
   banOrUnbanUserModal: null,
   blockOrUnblockModal: null,
-  groupNameModal: null,
+  groupOrCommunityDetailsModal: null,
   groupMembersModal: null,
   userProfileModal: null,
   nickNameModal: null,
@@ -157,8 +157,11 @@ const ModalSlice = createSlice({
     updateRemoveModeratorsModal(state, action: PayloadAction<RemoveModeratorsModalState | null>) {
       return { ...state, removeModeratorsModal: action.payload };
     },
-    updateGroupNameModal(state, action: PayloadAction<UpdateGroupNameModalState | null>) {
-      return { ...state, groupNameModal: action.payload };
+    updateGroupOrCommunityDetailsModal(
+      state,
+      action: PayloadAction<UpdateGroupOrCommunityDetailsModalState | null>
+    ) {
+      return { ...state, groupOrCommunityDetailsModal: action.payload };
     },
     updateGroupMembersModal(state, action: PayloadAction<UpdateGroupMembersModalState | null>) {
       return { ...state, groupMembersModal: action.payload };
@@ -240,7 +243,7 @@ export const {
   updateInviteContactModal,
   updateAddModeratorsModal,
   updateRemoveModeratorsModal,
-  updateGroupNameModal,
+  updateGroupOrCommunityDetailsModal,
   updateGroupMembersModal,
   updateUserProfileModal,
   changeNickNameModal,
