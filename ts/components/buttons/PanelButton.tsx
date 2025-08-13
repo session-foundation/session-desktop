@@ -4,22 +4,33 @@ import { Flex } from '../basic/Flex';
 import { H8 } from '../basic/Heading';
 import { SpacerXS } from '../basic/Text';
 import { useIsDarkTheme } from '../../state/theme/selectors/theme';
+import { Localizer } from '../basic/Localizer';
+import type { WithTrArgs } from '../../localization/localeTools';
 
 // NOTE Used for descendant components
 export const StyledContent = styled.div<{ disabled: boolean }>`
   display: flex;
+  justify-content: space-between;
   align-items: center;
   width: 100%;
   color: ${props => (props.disabled ? 'var(--disabled-color)' : 'inherit')};
 `;
 
-export const PanelLabel = styled.p`
+const StyledPanelLabel = styled.p`
   color: var(--text-secondary-color);
   width: 100%;
   margin: 0;
   padding-left: var(--margins-lg);
   padding-block: var(--margins-sm);
 `;
+
+export function PanelLabel({ tr }: WithTrArgs) {
+  return (
+    <StyledPanelLabel>
+      <Localizer {...tr} />
+    </StyledPanelLabel>
+  );
+}
 
 const StyledRoundedPanelButtonGroup = styled.div`
   display: flex;
@@ -113,6 +124,7 @@ export const PanelButton = (props: PanelButtonProps) => {
 };
 
 const StyledSubtitle = styled.p<{ color?: string }>`
+  display: flex;
   font-size: var(--font-size-sm);
   line-height: 1.1;
   margin-top: 0;
@@ -173,7 +185,7 @@ function TextOnly(props: PanelButtonTextBaseProps) {
 }
 
 export const PanelButtonTextWithSubText = (
-  props: PanelButtonTextBaseProps & PanelButtonSubtextProps
+  props: PanelButtonTextBaseProps & PanelButtonSubtextProps & { extraSubTextNode?: ReactNode }
 ) => {
   return (
     <PanelButtonTextInternal>
@@ -181,6 +193,7 @@ export const PanelButtonTextWithSubText = (
       <SpacerXS />
       <StyledSubtitle color={props.color} data-testid={props.subTextDataTestId}>
         {props.subText}
+        {props.extraSubTextNode}
       </StyledSubtitle>
     </PanelButtonTextInternal>
   );

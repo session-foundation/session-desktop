@@ -78,7 +78,7 @@ export const PlusAvatarButton = ({
   isClosedGroup: boolean;
 }) => {
   if (!isAvatarActionSupportedAvatarSize(avatarSize)) {
-    throw new Error('onPlusAvatarClick is not supported for this avatar size');
+    throw new Error('PlusAvatarButton is not supported for this avatar size');
   }
   const hardcodedPosition = useAvatarActionPosition(avatarSize, 'bottom');
 

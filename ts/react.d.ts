@@ -81,6 +81,16 @@ declare module 'react' {
   // left pane section types
   type Sections = 'theme' | 'settings' | 'message' | 'privacy' | 'debug-menu';
 
+  export type SettingsToggles =
+    | 'enable-calls'
+    | 'enable-microphone'
+    | 'enable-communities-message-requests'
+    | 'enable-read-receipts'
+    | 'enable-typing-indicators'
+    | 'enable-link-previews';
+
+  type SettingsInlineButtons = 'set-password' | 'change-password' | 'remove-password';
+
   type SettingsMenuItems =
     | 'message-requests'
     | 'recovery-password'
@@ -219,6 +229,7 @@ declare module 'react' {
     | 'modal-actions-container'
     | 'reveal-blocked-user-settings'
     | `${Sections}-section`
+    | `${SettingsToggles | SettingsInlineButtons}-settings-${'text' | 'sub-text' | 'toggle' | 'button' | 'row'}`
 
     // Buttons
     | `${Buttons}-button`
@@ -259,9 +270,6 @@ declare module 'react' {
     | 'call-notification-answered-a-call'
 
     // settings toggle and buttons
-    | 'enable-read-receipts'
-    | 'enable-calls'
-    | 'enable-microphone'
     | 'enable-follow-system-theme'
     | 'unblock-button-settings-screen'
     | 'save-attachment-from-details'

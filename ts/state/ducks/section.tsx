@@ -7,8 +7,7 @@ export enum SectionType {
   Profile,
   Message,
   Settings,
-  ColorMode,
-  PathIndicator,
+  ThemeSwitch,
   DebugMenu,
 }
 
@@ -49,11 +48,11 @@ const sectionSlice = createSlice({
   reducers: {
     showLeftPaneSection(state, action: PayloadAction<SectionType>) {
       if (action.payload === SectionType.Settings) {
-        // on click on the gear icon: show the 'privacy' tab by default
+        // on click on the gear icon: show the 'appearance' tab by default
         return {
           ...state,
           focusedSection: action.payload,
-          focusedSettingsSection: 'privacy',
+          focusedSettingsSection: 'appearance',
         };
       }
       return {

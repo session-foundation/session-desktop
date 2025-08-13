@@ -39,8 +39,8 @@ import { AvatarSize } from '../avatar/Avatar';
 import { ProIconButton } from '../buttons/ProButton';
 import { useProBadgeOnClickCb } from '../menuAndSettingsHooks/useProBadgeOnClickCb';
 import { useUserHasPro } from '../../hooks/useHasPro';
-import { UploadFirstImageButton } from './user-settings/UploadFirstImage';
 import { Localizer } from '../basic/Localizer';
+import { UploadFirstImageButton } from '../buttons/UploadFirstImageButton';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
@@ -163,7 +163,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
   const closeDialog = useCallback(() => {
     dispatch(updateEditProfilePictureModal(null));
     if (isMe) {
-      dispatch(userSettingsModal({}));
+      dispatch(userSettingsModal({ userSettingsPage: 'default' }));
     }
   }, [dispatch, isMe]);
 

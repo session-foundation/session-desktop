@@ -77,10 +77,7 @@ const StyledLeftPaneBanner = styled.div`
   border-bottom: 1px solid var(--border-color);
 `;
 
-function getLeftPaneHeaderLabel(
-  leftOverlayMode: LeftOverlayMode | undefined,
-  focusedSection: SectionType
-): string {
+function getLeftPaneHeaderLabel(leftOverlayMode: LeftOverlayMode | undefined): string {
   let label = '';
 
   switch (leftOverlayMode) {
@@ -102,14 +99,6 @@ function getLeftPaneHeaderLabel(
     case 'choose-action':
     default:
       label = tr('messages');
-  }
-
-  switch (focusedSection) {
-    case SectionType.Settings:
-      label = tr('sessionSettings');
-      break;
-    case SectionType.Message:
-    default:
   }
 
   return label;
@@ -182,7 +171,7 @@ export const LeftPaneSectionHeader = () => {
     dispatch(sectionActions.setLeftOverlayMode('choose-action'));
   };
 
-  const label = getLeftPaneHeaderLabel(leftOverlayMode, focusedSection);
+  const label = getLeftPaneHeaderLabel(leftOverlayMode);
   const isMessageSection = focusedSection === SectionType.Message;
 
   return (

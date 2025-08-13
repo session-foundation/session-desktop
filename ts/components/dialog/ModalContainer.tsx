@@ -86,12 +86,12 @@ export const ModalContainer = () => {
   return (
     <>
       {/* Screens */}
+      {userSettingsModalState && <UserSettingsDialog {...userSettingsModalState} />}
       {conversationSettingsModalState && (
         <ConversationSettingsDialog {...conversationSettingsModalState} />
       )}
       {sessionPasswordModalState && <SessionSetPasswordDialog {...sessionPasswordModalState} />}
       {sessionNetworkModalState && <SessionNetworkModal {...sessionNetworkModalState} />}
-      {userSettingsModalState && <UserSettingsDialog {...userSettingsModalState} />}
       {onionPathModalState && <OnionPathModal {...onionPathModalState} />}
       {reactListModalState && <ReactListModal {...reactListModalState} />}
       {debugMenuModalState && <DebugMenuModal {...debugMenuModalState} />}

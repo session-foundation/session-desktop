@@ -33,7 +33,6 @@ import {
   SessionWrapperModal,
 } from '../SessionWrapperModal';
 import { ClearInputButton } from '../inputs/ClearInputButton';
-import { UploadFirstImageButton } from './user-settings/UploadFirstImage';
 import { ProfileAvatar } from './user-settings/components';
 import { AvatarSize } from '../avatar/Avatar';
 import {
@@ -42,6 +41,7 @@ import {
 } from '../../state/selectors/sogsRoomInfo';
 import { ReduxSogsRoomInfos } from '../../state/ducks/sogsRoomInfo';
 import type { WithConvoId } from '../../session/types/with';
+import { UploadFirstImageButton } from '../buttons/UploadFirstImageButton';
 
 function useNameErrorString({
   isMe,

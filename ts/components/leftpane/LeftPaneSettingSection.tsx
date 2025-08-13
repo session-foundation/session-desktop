@@ -2,13 +2,8 @@ import { type ReactNode, SessionDataTestId, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 
-import { resetConversationExternal } from '../../state/ducks/conversations';
-import {
-  updateDeleteAccountModal,
-  updateSessionNetworkModal,
-  updateSessionProInfoModal,
-} from '../../state/ducks/modalDialog';
-import { sectionActions, SectionType } from '../../state/ducks/section';
+import { updateDeleteAccountModal } from '../../state/ducks/modalDialog';
+import { sectionActions } from '../../state/ducks/section';
 import { getFocusedSettingsSection } from '../../state/selectors/section';
 import { useHideRecoveryPasswordEnabled } from '../../state/selectors/settings';
 import type { SessionSettingCategory } from '../../types/ReduxTypes';
@@ -19,12 +14,9 @@ import { getSessionNetworkModalState } from '../../state/selectors/modal';
 import { LOCALE_DEFAULTS } from '../../localization/constants';
 import { Localizer } from '../basic/Localizer';
 import { tr } from '../../localization/localeTools';
-import { networkDataActions } from '../../state/ducks/networkData';
-import { showLinkVisitWarningDialog } from '../dialog/OpenUrlModal';
 import { LUCIDE_ICONS_UNICODE, type WithLucideUnicode } from '../icon/lucide';
 import { LucideIcon } from '../icon/LucideIcon';
 import { ProIconButton } from '../buttons/ProButton';
-import { SessionProInfoVariant } from '../dialog/SessionProInfoModal';
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
 
 const StyledSettingsSectionTitle = styled.span<{
@@ -162,22 +154,10 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
       onClick={() => {
         switch (id) {
           case 'message-requests':
-            dispatch(sectionActions.showLeftPaneSection(SectionType.Message));
-            dispatch(sectionActions.setLeftOverlayMode('message-requests'));
-            dispatch(resetConversationExternal());
-            break;
-          case 'donate':
-            showLinkVisitWarningDialog('https://session.foundation/donate#app', dispatch);
             break;
           case 'session-network':
             // if the network modal is not open yet do an info request
-            if (focusedSettingsSection !== 'session-network') {
-              dispatch(networkDataActions.refreshInfoFromSeshServer() as any);
-            }
-            dispatch(updateSessionNetworkModal({}));
-            break;
-          case 'session-pro':
-            dispatch(updateSessionProInfoModal({ variant: SessionProInfoVariant.GENERIC }));
+
             break;
           case 'clear-data':
             dispatch(updateDeleteAccountModal({}));

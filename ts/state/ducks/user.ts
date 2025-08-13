@@ -44,7 +44,7 @@ const updateOurAvatar = createAsyncThunk(
     });
 
     window.inboxStore?.dispatch(updateEditProfilePictureModal(null));
-    window.inboxStore?.dispatch(userSettingsModal({}));
+    window.inboxStore?.dispatch(userSettingsModal({ userSettingsPage: 'default' }));
 
     return res;
   }

@@ -19,6 +19,7 @@ import {
 } from '../SessionWrapperModal';
 import { SimpleSessionInput } from '../inputs/SessionInput';
 import { ModalFlexContainer } from './shared/ModalFlexContainer';
+import { SpacerSM } from '../basic/Text';
 
 interface Props {
   passwordAction: PasswordAction;
@@ -94,6 +95,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
       <SessionWrapperModal
         headerChildren={<ModalBasicHeader title={titleString()} />}
         onClose={this.closeDialog}
+        topAnchor="35vh"
         $contentMinWidth={WrapperModalWidth.narrow}
         $contentMaxWidth={WrapperModalWidth.narrow}
         buttonChildren={
@@ -146,6 +148,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
             />
           )}
         </ModalFlexContainer>
+        <SpacerSM />
       </SessionWrapperModal>
     );
   }
@@ -211,7 +214,10 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
       }
       await Storage.put('passHash', updatedHash);
 
-      ToastUtils.pushToastSuccess('setPasswordSuccessToast', tStripped('passwordSetDescription'));
+      ToastUtils.pushToastSuccess(
+        'setPasswordSuccessToast',
+        tStripped('passwordSetDescriptionToast')
+      );
 
       this.props.onOk();
       this.closeDialog();
@@ -262,7 +268,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
 
       ToastUtils.pushToastSuccess(
         'setPasswordSuccessToast',
-        tStripped('passwordChangedDescription')
+        tStripped('passwordChangedDescriptionToast')
       );
 
       this.props.onOk();
@@ -301,7 +307,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
 
       ToastUtils.pushToastWarning(
         'setPasswordSuccessToast',
-        tStripped('passwordRemovedDescription')
+        tStripped('passwordRemovedDescriptionToast')
       );
 
       this.props.onOk();

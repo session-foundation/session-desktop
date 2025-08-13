@@ -16,9 +16,10 @@ import { UsernameFallback } from './UsernameFallback';
 import { ConversationTitleDialog } from './ConversationTitleDialog';
 import { SessionIDNotEditable } from '../../basic/SessionIdNotEditable';
 import { AccountIdPill } from '../../basic/AccountIdPill';
-import { ProfileHeader, QRView } from '../user-settings/components';
+import { ProfileHeader } from '../user-settings/components';
 import type { ProfileDialogModes } from '../user-settings/ProfileDialogModes';
 import { SessionUtilUserGroups } from '../../../session/utils/libsession/libsession_utils_user_groups';
+import { QRView } from '../../qrview/QrView';
 
 function AccountId({ conversationId }: WithConvoId) {
   const isPrivate = useIsPrivate(conversationId);

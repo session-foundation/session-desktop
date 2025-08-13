@@ -41,9 +41,6 @@ export const SettingsHeader = (props: Props) => {
     case 'permissions':
       categoryTitleKey = 'sessionPermissions';
       break;
-    case 'privacy':
-      categoryTitleKey = 'sessionPrivacy';
-      break;
     case 'recovery-password':
       categoryTitleKey = 'sessionRecoveryPassword';
       break;

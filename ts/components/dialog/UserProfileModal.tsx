@@ -20,7 +20,7 @@ import {
 import { tr } from '../../localization/localeTools';
 import { PubKey } from '../../session/types';
 import type { ProfileDialogModes } from './user-settings/ProfileDialogModes';
-import { ProfileHeader, QRView } from './user-settings/components';
+import { ProfileHeader } from './user-settings/components';
 import { useAvatarPath, useConversationUsernameWithFallback } from '../../hooks/useParamSelector';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
@@ -31,6 +31,7 @@ import { shortenDisplayName } from '../../session/profile_manager/ShortenDisplay
 import { UsernameFallback } from './conversationSettings/UsernameFallback';
 import { ConversationTitleDialog } from './conversationSettings/ConversationTitleDialog';
 import { SessionIDNotEditable } from '../basic/SessionIdNotEditable';
+import { QRView } from '../qrview/QrView';
 
 const StyledHasDisabledMsgRequests = styled.div`
   max-width: 42ch;

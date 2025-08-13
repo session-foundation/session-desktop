@@ -12,6 +12,20 @@ import type { TrArgs } from '../../localization/localeTools';
 
 export type BanType = 'ban' | 'unban';
 
+export type UserSettingsPage =
+  | 'default'
+  | 'privacy'
+  | 'notifications'
+  | 'conversations'
+  | 'message-requests'
+  | 'appearance'
+  | 'recovery-password'
+  | 'help'
+  | 'clear-data'
+  | 'preferences';
+
+export type WithUserSettingsPage = { userSettingsPage: UserSettingsPage };
+
 export type ConfirmModalState = SessionConfirmDialogProps | null;
 
 export type InviteContactModalState = WithConvoId | null;
@@ -26,7 +40,7 @@ export type RemoveModeratorsModalState = InviteContactModalState;
 export type UpdateGroupMembersModalState = InviteContactModalState;
 type UpdateConversationDetailsModalState = WithConvoId | null;
 export type ChangeNickNameModalState = InviteContactModalState;
-export type UserSettingsModalState = object | null;
+export type UserSettingsModalState = WithUserSettingsPage | null;
 export type OnionPathModalState = object | null;
 export type EnterPasswordModalState = EnterPasswordModalProps | null;
 export type DeleteAccountModalState = object | null;
@@ -117,7 +131,7 @@ export const initialModalState: ModalState = {
   groupMembersModal: null,
   userProfileModal: null,
   nickNameModal: null,
-  userSettingsModal: null,
+  userSettingsModal: { userSettingsPage: 'privacy' },
   onionPathModal: null,
   enterPasswordModal: null,
   sessionPasswordModal: null,

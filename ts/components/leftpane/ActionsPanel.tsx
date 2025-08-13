@@ -24,18 +24,13 @@ import { DecryptedAttachmentsManager } from '../../session/crypto/DecryptedAttac
 import { DURATION } from '../../session/constants';
 
 import { reuploadCurrentAvatarUs } from '../../interactions/avatar-interactions/nts-avatar-interactions';
-import {
-  userSettingsModal,
-  onionPathModal,
-  updateDebugMenuModal,
-} from '../../state/ducks/modalDialog';
+import { updateDebugMenuModal, userSettingsModal } from '../../state/ducks/modalDialog';
 
 import { loadDefaultRooms } from '../../session/apis/open_group_api/opengroupV2/ApiUtil';
 import { getOpenGroupManager } from '../../session/apis/open_group_api/opengroupV2/OpenGroupManagerV2';
 import { getSwarmPollingInstance } from '../../session/apis/snode_api';
 import { UserUtils } from '../../session/utils';
 import { Avatar, AvatarSize } from '../avatar/Avatar';
-import { ActionPanelOnionStatusLight } from '../dialog/OnionStatusPathDialog';
 import {
   SessionLucideIconButton,
   type SessionLucideIconButtonProps,
@@ -66,9 +61,11 @@ import { Storage } from '../../util/storage';
 import { getFileInfoFromFileServer } from '../../session/apis/file_server_api/FileServerApi';
 import { themesArray } from '../../themes/constants/colors';
 import { isDebugMode } from '../../shared/env_vars';
+import { GearAvatarButton } from '../buttons/GearAvatarButton';
 
 const StyledContainerAvatar = styled.div`
   padding: var(--margins-lg);
+  position: relative;
 `;
 
 function handleThemeSwitch() {
@@ -100,22 +97,23 @@ const Section = (props: { type: SectionType }) => {
   const isSelected = focusedSection === type;
 
   const handleClick = () => {
-    if (type === SectionType.Profile) {
-      dispatch(userSettingsModal({}));
-    } else if (type === SectionType.ColorMode) {
-      void handleThemeSwitch();
-    } else if (type === SectionType.PathIndicator) {
-      // Show Path Indicator Modal
-      dispatch(onionPathModal({}));
-    } else if (type === SectionType.DebugMenu) {
-      // Show Debug Menu
+    if (type === SectionType.DebugMenu) {
       dispatch(updateDebugMenuModal({}));
-    } else {
-      // message section
-      dispatch(searchActions.clearSearch());
-      dispatch(sectionActions.showLeftPaneSection(type));
-      dispatch(sectionActions.resetLeftOverlayMode());
+      return;
     }
+    if (type === SectionType.ThemeSwitch) {
+      void handleThemeSwitch();
+      return;
+    }
+
+    if (type === SectionType.Profile) {
+      dispatch(userSettingsModal({ userSettingsPage: 'default' }));
+      return;
+    }
+    // message section
+    dispatch(searchActions.clearSearch());
+    dispatch(sectionActions.showLeftPaneSection(type));
+    dispatch(sectionActions.resetLeftOverlayMode());
   };
 
   const settingsIconRef = useRef<HTMLButtonElement>(null);
@@ -133,12 +131,13 @@ const Section = (props: { type: SectionType }) => {
     return (
       <StyledContainerAvatar>
         <Avatar
-          size={AvatarSize.XS}
+          size={AvatarSize.S}
           onAvatarClick={handleClick}
           pubkey={ourNumber}
           dataTestId="leftpane-primary-avatar"
           imageDataTestId={`img-leftpane-primary-avatar`}
         />
+        <GearAvatarButton />
       </StyledContainerAvatar>
     );
   }
@@ -183,11 +182,7 @@ const Section = (props: { type: SectionType }) => {
           dataTestId="debug-menu-section"
         />
       );
-    case SectionType.PathIndicator:
-      return (
-        <ActionPanelOnionStatusLight handleClick={handleClick} id={'onion-path-indicator-led-id'} />
-      );
-    case SectionType.ColorMode:
+    case SectionType.ThemeSwitch:
     default:
       return (
         <SessionLucideIconButton
@@ -379,8 +374,7 @@ export const ActionsPanel = () => {
         <Section type={SectionType.Message} />
         <Section type={SectionType.Settings} />
         {showDebugMenu && <Section type={SectionType.DebugMenu} />}
-        <Section type={SectionType.PathIndicator} />
-        <Section type={SectionType.ColorMode} />
+        <Section type={SectionType.ThemeSwitch} />
       </LeftPaneSectionContainer>
     </>
   );
