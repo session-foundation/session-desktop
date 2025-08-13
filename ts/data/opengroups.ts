@@ -10,8 +10,8 @@ export type OpenGroupV2RoomWithImageID = {
   serverPublicKey: string;
   roomId: string;
 
-  /** the fileId to the group room's image */
-  imageID?: string;
+  /** the full url to the group room's image */
+  imageFullUrl?: string;
 };
 
 export const OpenGroupData = {

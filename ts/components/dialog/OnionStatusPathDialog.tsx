@@ -72,6 +72,7 @@ const StyledGrowingIcon = styled.div`
 
 function useOnionPathWithUsAndNetwork() {
   const onionPath = useFirstOnionPath();
+  const localDevnet = window.sessionFeatureFlags.useLocalDevNet;
 
   if (onionPath.length === 0) {
     return [];
@@ -81,7 +82,13 @@ function useOnionPathWithUsAndNetwork() {
     {
       label: tr('you'),
     },
-    ...onionPath,
+    ...onionPath.map((node, index) => {
+      return {
+        ...node,
+
+        label: localDevnet ? `SeshNet ${index + 1}` : undefined,
+      };
+    }),
     {
       label: tr('onionRoutingPathDestination'),
     },

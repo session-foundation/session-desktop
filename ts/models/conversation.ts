@@ -61,7 +61,10 @@ import {
   isUsAnySogsFromCache,
 } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import { SogsBlinding } from '../session/apis/open_group_api/sogsv3/sogsBlinding';
-import { sogsV3FetchPreviewAndSaveIt } from '../session/apis/open_group_api/sogsv3/sogsV3FetchFile';
+import {
+  fileDetailsToURL,
+  sogsV3FetchPreviewAndSaveIt,
+} from '../session/apis/open_group_api/sogsv3/sogsV3FetchFile';
 import { SnodeNamespaces } from '../session/apis/snode_api/namespaces';
 import { getSodiumRenderer } from '../session/crypto';
 import { addMessagePadding } from '../session/crypto/BufferPadding';
@@ -138,6 +141,7 @@ import { Model } from './models';
 import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
 import { ReduxOnionSelectors } from '../state/selectors/onions';
 import { tr, tStripped } from '../localization/localeTools';
+import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
 
 type InMemoryConvoInfos = {
   mentionedUs: boolean;
@@ -317,7 +321,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
   }
 
   public getConversationModelProps(): ReduxConversationType {
-    const avatarPath = this.getAvatarPath();
     const isPrivate = this.isPrivate();
     const weAreAdmin = this.weAreAdminUnblinded();
 
@@ -369,8 +372,10 @@ export class ConversationModel extends Model<ConversationAttributes> {
       toRet.isPublic = true;
     }
 
-    if (avatarPath) {
-      toRet.avatarPath = avatarPath;
+    const proOrNotAvatarPath = this.getProOrNotAvatarPath();
+
+    if (proOrNotAvatarPath) {
+      toRet.avatarPath = proOrNotAvatarPath;
     }
 
     if (this.getExpirationMode()) {
@@ -405,6 +410,9 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
     if (this.getExpireTimer()) {
       toRet.expireTimer = this.getExpireTimer();
+    }
+    if (this.isProUser()) {
+      toRet.isProUser = true;
     }
     // those are values coming only from both the DB or the wrapper. Currently we display the data from the DB
     if (this.isClosedGroup()) {
@@ -777,6 +785,23 @@ export class ConversationModel extends Model<ConversationAttributes> {
     await MessageQueue.use()
       .sendToPubKey(pubkeyForSending, messageRequestResponse, SnodeNamespaces.Default)
       .catch(window?.log?.error);
+  }
+
+  public isProUser(): boolean {
+    if (this.isPublic()) {
+      // Note: communities are considered pro users (they can have animated avatars)
+      return true;
+    }
+
+    if (this.isClosedGroupV2()) {
+      const admins = this.getGroupAdmins();
+      return admins.some(m => {
+        // the is05Pubkey is only here to make sure we never have a infinite recursion
+        return PubKey.is05Pubkey(m) && ConvoHub.use().get(m)?.isProUser();
+      });
+    }
+
+    return getFeatureFlag('mockUserHasPro');
   }
 
   public async sendMessage(msg: SendMessageType) {
@@ -1287,11 +1312,27 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
   }
 
-  public async setSessionProfile(newProfile: {
-    displayName?: string | null;
-    avatarPath?: string | null;
-    avatarImageId?: number;
-  }) {
+  /**
+   * Updates this conversation with the provided displayName, avatarPath, staticAvatarPath and avatarPointer.
+   * - displayName can be set to null to not update the display name.
+   * - if any of the avatar fields is set, they all need to be set.
+   *
+   * This function does commit to the DB if any changes are detected.
+   */
+  public async setSessionProfile(
+    newProfile: { displayName?: string | null } & (
+      | {
+          avatarPath: undefined;
+          fallbackAvatarPath: undefined;
+          avatarPointer: undefined;
+        }
+      | {
+          avatarPath: string;
+          fallbackAvatarPath: string;
+          avatarPointer: string;
+        }
+    )
+  ) {
     let changes = false;
 
     const existingSessionName = this.getRealSessionUsername();
@@ -1302,20 +1343,38 @@ export class ConversationModel extends Model<ConversationAttributes> {
       changes = true;
     }
 
-    // a user cannot remove an avatar. Only change it
-    // if you change this behavior, double check all setSessionProfile calls (especially the one in EditProfileDialog)
-    if (newProfile.avatarPath) {
-      const originalAvatar = this.get('avatarInProfile');
+    if (newProfile.avatarPath && newProfile.fallbackAvatarPath) {
+      const originalAvatar = this.getAvatarInProfilePath();
+      const originalFallbackAvatar = this.getFallbackAvatarInProfilePath();
+
       if (!isEqual(originalAvatar, newProfile.avatarPath)) {
         this.set({ avatarInProfile: newProfile.avatarPath });
         changes = true;
       }
-      const existingImageId = this.getAvatarImageId();
-
-      if (existingImageId !== newProfile.avatarImageId) {
-        this.set({ avatarImageId: newProfile.avatarImageId });
+      if (!isEqual(originalFallbackAvatar, newProfile.fallbackAvatarPath)) {
+        this.set({ fallbackAvatarInProfile: newProfile.fallbackAvatarPath });
         changes = true;
       }
+      const existingAvatarPointer = this.getAvatarPointer();
+
+      if (existingAvatarPointer !== newProfile.avatarPointer) {
+        this.set({ avatarPointer: newProfile.avatarPointer });
+        changes = true;
+      }
+    } else {
+      if (
+        this.getAvatarInProfilePath() ||
+        this.getFallbackAvatarInProfilePath() ||
+        this.getAvatarPointer()
+      ) {
+        changes = true;
+      }
+      this.set({
+        avatarInProfile: undefined,
+        avatarPointer: undefined,
+        profileKey: undefined,
+        fallbackAvatarInProfile: undefined,
+      });
     }
 
     if (changes) {
@@ -1342,10 +1401,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
    */
   public getNickname(): string | undefined {
     return this.isPrivate() ? this.get('nickname') || undefined : undefined;
-  }
-
-  public getAvatarImageId(): number | undefined {
-    return this.isPublic() ? this.get('avatarImageId') || undefined : undefined;
   }
 
   public getProfileKey(): string | undefined {
@@ -1668,7 +1723,14 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (this.isPublic() && details.image_id && isNumber(details.image_id)) {
       const roomInfos = OpenGroupData.getV2OpenGroupRoom(this.id);
       if (roomInfos) {
-        void sogsV3FetchPreviewAndSaveIt({ ...roomInfos, imageID: `${details.image_id}` });
+        void sogsV3FetchPreviewAndSaveIt({
+          ...roomInfos,
+          imageFullUrl: fileDetailsToURL({
+            fileId: details.image_id,
+            roomId: roomInfos.roomId,
+            serverUrl: roomInfos.serverUrl,
+          }),
+        });
       }
     }
 
@@ -1777,31 +1839,51 @@ export class ConversationModel extends Model<ConversationAttributes> {
     return profileName || PubKey.shorten(pubkey);
   }
 
-  public getAvatarPath(): string | null {
-    const avatar = this.get('avatarInProfile');
-    if (isString(avatar)) {
-      return avatar;
+  /**
+   * Returns the path to the downloaded avatar of that user, or undefined.
+   */
+  public getAvatarInProfilePath() {
+    const localAvatarPath = this.get('avatarInProfile');
+    if (!isString(localAvatarPath) && !isNil(localAvatarPath)) {
+      throw new Error('avatarInProfile must be a string or nil');
     }
+    return localAvatarPath || undefined;
+  }
 
-    if (avatar) {
-      throw new Error('avatarInProfile must be a string as we do not allow the {path: xxx} syntax');
+  /**
+   * Returns the path to the forced static downloaded avatar of that user, or undefined.
+   */
+  public getFallbackAvatarInProfilePath() {
+    const fallbackAvatarPath = this.get('fallbackAvatarInProfile');
+    if (!isString(fallbackAvatarPath) && !isNil(fallbackAvatarPath)) {
+      throw new Error('fallbackAvatarPath must be a string or nil');
     }
+    return fallbackAvatarPath || undefined;
+  }
 
-    return null;
+  /**
+   * If the user is a pro user, return his real avatar path (i.e. animated if it was set animated by the user).
+   * If the user is not a pro user, return the fallback avatar path (first or only frame extracted)
+   */
+  public getProOrNotAvatarPath() {
+    const proAvailable = getFeatureFlag('proAvailable');
+    return !proAvailable || this.isProUser()
+      ? this.getAvatarInProfilePath()
+      : this.getFallbackAvatarInProfilePath();
   }
 
   /**
    * @note we will use a default image when making the notification if the avatar cannot be found depending on the platform
    */
   public async getNotificationIcon(): Promise<string | undefined> {
-    const avatarUrl = this.getAvatarPath();
+    const proOrNotAvatarPath = this.getProOrNotAvatarPath();
 
-    if (!avatarUrl) {
+    if (!proOrNotAvatarPath) {
       return undefined;
     }
 
     const decryptedAvatarUrl = await DecryptedAttachmentsManager.getDecryptedMediaUrl(
-      avatarUrl,
+      proOrNotAvatarPath,
       IMAGE_JPEG,
       true
     );

@@ -1,12 +1,9 @@
-import { useFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
 import { useIsProAvailable } from './useIsProAvailable';
+import { useWeAreProUser } from './useParamSelector';
 
-export function useHasPro() {
+export function useCurrentUserHasPro() {
   const isProAvailable = useIsProAvailable();
-  const mockHasPro = useFeatureFlag('mockUserHasPro');
+  const weArePro = useWeAreProUser(); // this will be true when `mockUserHasPro` is true
 
-  // TODO: get pro status from store once available
-  const hasPro = mockHasPro;
-
-  return isProAvailable && hasPro;
+  return isProAvailable && weArePro;
 }

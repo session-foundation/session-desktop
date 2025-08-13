@@ -7,6 +7,7 @@ import { downloadAttachmentSogsV3 } from '../../receiver/attachments';
 import { uploadImageForRoomSogsV3 } from '../../session/apis/open_group_api/sogsv3/sogsV3RoomImage';
 import { MIME } from '../../types';
 import { processNewAttachment } from '../../types/MessageAttachment';
+import { updateEditProfilePictureModal } from './modalDialog';
 
 type RoomInfo = {
   canWrite: boolean;
@@ -70,13 +71,10 @@ const changeCommunityAvatar = createAsyncThunk(
       window?.log?.warn('File upload for community failed');
       return false;
     }
-    const { fileId: avatarImageId, fileUrl } = uploadedFileDetails;
+    const { fileUrl } = uploadedFileDetails;
 
     // this is kind of a hack just made to avoid having a specific function downloading from sogs by URL rather than fileID
-    const downloaded = await downloadAttachmentSogsV3(
-      { id: avatarImageId, size: null, url: fileUrl },
-      roomInfos
-    );
+    const downloaded = await downloadAttachmentSogsV3({ size: null, url: fileUrl }, roomInfos);
 
     if (!downloaded || !(downloaded.data instanceof ArrayBuffer)) {
       const typeFound = typeof downloaded;
@@ -98,8 +96,12 @@ const changeCommunityAvatar = createAsyncThunk(
     await convo.setSessionProfile({
       displayName: null, // null so we don't overwrite it
       avatarPath: upgraded.path,
-      avatarImageId,
+      avatarPointer: fileUrl,
+      fallbackAvatarPath: upgraded.path, // no need for a fallback for a community
     });
+
+    window.inboxStore?.dispatch(updateEditProfilePictureModal(null));
+
     return true;
   }
 );

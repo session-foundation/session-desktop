@@ -267,6 +267,7 @@ export const Playgrounds = ({ setPage }: DebugMenuPageProps) => {
   return (
     <>
       <h2>Playgrounds</h2>
+      <SessionButton onClick={() => setPage(DEBUG_MENU_PAGE.Pro)}>Pro Playground</SessionButton>
       <SessionButton onClick={() => setPage(DEBUG_MENU_PAGE.POPOVER)}>
         Popover Playground
       </SessionButton>

@@ -257,7 +257,7 @@ git clone https://github.com/session-foundation/session-desktop.git
 cd session-desktop
 npm install --global yarn      # (only if you don’t already have `yarn`)
 yarn install --frozen-lockfile # Install and build dependencies (this will take a while)
-yarn build-everything
+yarn build
 yarn test                      # A good idea to make sure tests run first
 yarn start-prod                # Start Session!
 ```
@@ -312,12 +312,12 @@ You can keep the developer tools open (`View > Toggle Developer Tools`) and pres
 # `yarn build:workers` to fix the "exports undefined" error on start.
 
 # Terminal A
-yarn build-everything:watch # this process will keep running until you stop it
+yarn watch # this process will keep running until you stop it
 
 # Terminal B
 yarn build:workers
 
-# If you change any SASS files while running "yarn build-everything:watch" it won't be detected.
+# If you change any SASS files while running "yarn watch" it won't be detected.
 # You will need to run the sass build command.
 
 # Terminal B
@@ -429,7 +429,7 @@ see how they did things.
 You can build a production binary by running the following:
 
 ```sh
-yarn build-everything
+yarn build
 yarn build-release
 ```
 

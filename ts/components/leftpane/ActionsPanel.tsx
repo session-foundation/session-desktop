@@ -60,6 +60,10 @@ import { useDebugMode } from '../../state/selectors/debug';
 import { networkDataActions } from '../../state/ducks/networkData';
 import { searchActions } from '../../state/ducks/search';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { AvatarMigrate } from '../../session/utils/job_runners/jobs/AvatarMigrateJob';
+import { NetworkTime } from '../../util/NetworkTime';
+import { Storage } from '../../util/storage';
+import { getFileInfoFromFileServer } from '../../session/apis/file_server_api/FileServerApi';
 
 const StyledContainerAvatar = styled.div`
   padding: var(--margins-lg);
@@ -199,10 +203,10 @@ const triggerSyncIfNeeded = async () => {
 };
 
 const triggerAvatarReUploadIfNeeded = async () => {
-  const lastTimeStampAvatarUpload =
-    (await Data.getItemById(SettingsKey.lastAvatarUploadTimestamp))?.value || 0;
+  const lastAvatarUploadExpiryMs =
+    (await Data.getItemById(SettingsKey.ntsAvatarExpiryMs))?.value || 0;
 
-  if (Date.now() - lastTimeStampAvatarUpload > DURATION.DAYS * 14) {
+  if (NetworkTime.now() > lastAvatarUploadExpiryMs) {
     window.log.info('Reuploading avatar...');
     // reupload the avatar
     await reuploadCurrentAvatarUs();
@@ -242,11 +246,28 @@ const doAppStartUp = async () => {
     void MessageQueue.use().processAllPending();
   }, 3000);
 
-  global.setTimeout(() => {
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  global.setTimeout(async () => {
     // Schedule a confSyncJob in some time to let anything incoming from the network be applied and see if there is a push needed
     // Note: this also starts periodic jobs, so we don't need to keep doing it
-    void UserSync.queueNewJobIfNeeded();
+    await UserSync.queueNewJobIfNeeded();
+
+    // on app startup, check that the avatar expiry on the file server
+    const avatarPointer = ConvoHub.use()
+      .get(UserUtils.getOurPubKeyStrFromCache())
+      .getAvatarPointer();
+    if (avatarPointer) {
+      const details = await getFileInfoFromFileServer(avatarPointer);
+      if (details?.expiryMs) {
+        await Storage.put(SettingsKey.ntsAvatarExpiryMs, details.expiryMs);
+      }
+    }
   }, 20000);
+
+  global.setTimeout(() => {
+    // Schedule all avatarMigrateJobs in some time to let anything incoming from the network be handled first
+    void AvatarMigrate.scheduleAllAvatarMigrateJobs();
+  }, 1 * DURATION.MINUTES);
 };
 
 function useUpdateBadgeCount() {
@@ -322,13 +343,16 @@ export const ActionsPanel = () => {
     void SnodePool.forceRefreshRandomSnodePool();
   }, DURATION.MINUTES * 5);
 
-  useInterval(() => {
-    if (!ourPrimaryConversation) {
-      return;
-    }
-    // this won't be run every days, but if the app stays open for more than 10 days
-    void triggerAvatarReUploadIfNeeded();
-  }, DURATION.DAYS * 1);
+  useInterval(
+    () => {
+      if (!ourPrimaryConversation) {
+        return;
+      }
+      // this won't be run every days, but if the app stays open for more than 10 days
+      void triggerAvatarReUploadIfNeeded();
+    },
+    window.sessionFeatureFlags.fsTTL30s ? DURATION.SECONDS * 1 : DURATION.DAYS * 1
+  );
 
   useCheckReleasedFeatures();
 

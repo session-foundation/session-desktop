@@ -584,7 +584,7 @@ async function sendToOpenGroupV2(
   rawMessage: OpenGroupVisibleMessage,
   roomInfos: OpenGroupRequestCommonType,
   blinded: boolean,
-  filesToLink: Array<number>
+  filesToLink: Array<string>
 ): Promise<OpenGroupMessageV2 | boolean> {
   // we agreed to pad messages for opengroup v2
   const paddedBody = addMessagePadding(rawMessage.plainTextBuffer());

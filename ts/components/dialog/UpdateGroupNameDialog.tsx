@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 import { useDispatch } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
-import { useIsClosedGroup, useIsPublic } from '../../hooks/useParamSelector';
+import { useIsClosedGroup } from '../../hooks/useParamSelector';
 import { ConvoHub } from '../../session/conversations';
 import { PubKey } from '../../session/types';
 import LIBSESSION_CONSTANTS from '../../session/utils/libsession/libsession_constants';
@@ -13,8 +13,6 @@ import {
   useGroupNameChangeFromUIPending,
   useLibGroupDescription,
 } from '../../state/selectors/groups';
-import { pickFileForAvatar } from '../../types/attachments/VisualAttachment';
-import { Avatar, AvatarSize } from '../avatar/Avatar';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SpacerMD, SpacerSM } from '../basic/Text';
 import { SessionSpinner } from '../loading';
@@ -27,42 +25,9 @@ import {
 } from '../SessionWrapperModal';
 import { ClearInputButton } from '../inputs/ClearInputButton';
 
-function GroupAvatar({
-  isPublic,
-  conversationId,
-  fireInputEvent,
-  newAvatarObjectUrl,
-  oldAvatarPath,
-}: {
-  isPublic: boolean;
-  conversationId: string;
-  newAvatarObjectUrl: string | null;
-  oldAvatarPath: string | null;
-  fireInputEvent: () => Promise<void>;
-}) {
-  if (!isPublic) {
-    return null;
-  }
-
-  return (
-    <div className="avatar-center">
-      <div className="avatar-center-inner">
-        <Avatar
-          forcedAvatarPath={newAvatarObjectUrl || oldAvatarPath}
-          size={AvatarSize.XL}
-          pubkey={conversationId}
-        />
-        <div className="image-upload-section" role="button" onClick={fireInputEvent} />
-      </div>
-    </div>
-  );
-}
-
 export function UpdateGroupNameDialog(props: { conversationId: string }) {
   const dispatch = useDispatch();
   const { conversationId } = props;
-  const [newAvatarObjectUrl, setNewAvatarObjectUrl] = useState<string | null>(null);
-  const isCommunity = useIsPublic(conversationId);
   const isClosedGroup = useIsClosedGroup(conversationId);
   const convo = ConvoHub.use().get(conversationId);
   const isNameChangePending = useGroupNameChangeFromUIPending();
@@ -75,21 +40,13 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
     throw new Error('groupNameUpdate dialog only works closed groups');
   }
 
-  const oldAvatarPath = convo?.getAvatarPath() || null;
-  const originalGroupName = convo?.getRealSessionUsername();
+  const originalGroupName = convo.getRealSessionUsername();
   const originalGroupDescription = useLibGroupDescription(conversationId);
   const [newGroupName, setNewGroupName] = useState(originalGroupName);
   const [newGroupDescription, setNewGroupDescription] = useState(originalGroupDescription);
 
   function closeDialog() {
     dispatch(updateGroupNameModal(null));
-  }
-
-  async function fireInputEvent() {
-    const scaledObjectUrl = await pickFileForAvatar();
-    if (scaledObjectUrl) {
-      setNewAvatarObjectUrl(scaledObjectUrl);
-    }
   }
 
   function onClickOK() {
@@ -111,8 +68,7 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
 
     if (
       trimmedGroupName !== originalGroupName ||
-      trimmedGroupDescription !== originalGroupDescription ||
-      newAvatarObjectUrl !== oldAvatarPath
+      trimmedGroupDescription !== originalGroupDescription
     ) {
       if (!PubKey.is03Pubkey(conversationId)) {
         throw new Error('Only 03-group are supported here');
@@ -162,13 +118,6 @@ export function UpdateGroupNameDialog(props: { conversationId: string }) {
         </ModalActionsContainer>
       }
     >
-      <GroupAvatar
-        conversationId={conversationId}
-        fireInputEvent={fireInputEvent}
-        isPublic={isCommunity}
-        newAvatarObjectUrl={newAvatarObjectUrl}
-        oldAvatarPath={oldAvatarPath}
-      />
       <SpacerMD />
 
       <SimpleSessionInput
