@@ -5,10 +5,7 @@ import { updateDeleteAccountModal } from '../../state/ducks/modalDialog';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionSpinner } from '../loading';
 
-import {
-  deleteEverythingAndNetworkData,
-  sendConfigMessageAndDeleteEverything,
-} from '../../util/accountManager';
+import { deleteEverythingAndNetworkData, deleteAccountLocally } from '../../util/accountManager';
 import { SessionRadioGroup } from '../basic/SessionRadioGroup';
 import { tr } from '../../localization/localeTools';
 import {
@@ -92,7 +89,7 @@ export const DeleteAccountModal = () => {
       try {
         window.log.warn('Deleting everything on device but keeping network data');
 
-        await sendConfigMessageAndDeleteEverything();
+        await deleteAccountLocally();
       } catch (e) {
         window.log.warn(e);
       } finally {

@@ -16,14 +16,12 @@ import { getSwarmPollingInstance } from '../session/apis/snode_api';
 import { mnDecode, mnEncode } from '../session/crypto/mnemonic';
 import { getOurPubKeyStrFromCache } from '../session/utils/User';
 import { LibSessionUtil } from '../session/utils/libsession/libsession_utils';
-import { forceSyncConfigurationNowIfNeeded } from '../session/utils/sync/syncUtils';
 import { updateConfirmModal, updateDeleteAccountModal } from '../state/ducks/modalDialog';
 import { userActions } from '../state/ducks/user';
 import { Registration } from './registration';
 import { Storage, saveRecoveryPhrase, setLocalPubKey, setSignInByLinking } from './storage';
 import { PromiseUtils } from '../session/utils';
 import { SnodeAPI } from '../session/apis/snode_api/SNodeAPI';
-import { ReduxOnionSelectors } from '../state/selectors/onions';
 import { tr } from '../localization/localeTools';
 
 /**
@@ -269,18 +267,10 @@ export const deleteDbLocally = async () => {
   window.localStorage.setItem('restart-reason', 'delete-account');
 };
 
-export async function sendConfigMessageAndDeleteEverything() {
+export async function deleteAccountLocally() {
   try {
-    // DELETE LOCAL DATA ONLY, NOTHING ON NETWORK
-    window?.log?.info('DeleteAccount => Sending a last SyncConfiguration');
-    if (ReduxOnionSelectors.isOnlineOutsideRedux()) {
-      // be sure to wait for the message being effectively sent. Otherwise we won't be able to encrypt it for our devices !
-      await forceSyncConfigurationNowIfNeeded(true);
-      window?.log?.info('Last configuration message sent!');
-    } else {
-      window?.log?.warn('sendConfigMessageAndDeleteEverything: we are offline, just deleting');
-    }
-
+    // Note: no point uploading a last config message as
+    // the user configs are being pushed after every changes made to them.
     await deleteDbLocally();
   } catch (error) {
     // if an error happened, it's not related to the delete everything on network logic as this is handled above.

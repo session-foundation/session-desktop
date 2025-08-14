@@ -31,6 +31,7 @@ export async function reuploadCurrentAvatarUs() {
   const profileKey = ourConvoProfileKey ? fromHexToArray(ourConvoProfileKey) : null;
   if (!profileKey || isEmpty(profileKey)) {
     window.log.info('reuploadCurrentAvatarUs: our profileKey empty');
+
     return null;
   }
   // Note: we do want to grab the current non-static avatar path here
