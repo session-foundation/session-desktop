@@ -3,7 +3,6 @@ import clsx from 'clsx';
 
 import autoBind from 'auto-bind';
 import { blobToArrayBuffer } from 'blob-util';
-import loadImage from 'blueimp-load-image';
 import { Component, RefObject, createRef } from 'react';
 import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
@@ -12,8 +11,6 @@ import {
   SendMessageType,
   StagedAttachmentType,
 } from './composition/CompositionBox';
-
-import { perfEnd, perfStart } from '../../session/utils/Performance';
 
 import { SessionMessagesListContainer } from './SessionMessagesListContainer';
 
@@ -70,8 +67,6 @@ import {
   useSelectedWeAreAdmin,
 } from '../../state/selectors/selectedConversation';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
-
-const DEFAULT_JPEG_QUALITY = 0.85;
 
 interface State {
   isDraggingFile: boolean;
@@ -405,15 +400,27 @@ export class SessionConversation extends Component<Props, State> {
       return;
     }
 
-    let blob = null;
-
     try {
-      blob = await AttachmentUtil.autoScale({
-        contentType,
-        blob: file,
-      });
+      // Here, we just try to scale the attachment to something that is not too big for the file server.
+      // If we can, we use the scaled version, otherwise we use the original (and the filesize check will fail)
+      //
+      // Note: we do not save that scaled version here,
+      // we just check if it will be fine when sending the attachment.
+      // Later, when the message is being sent, we will fetch the
+      // file again and scale it down again for upload.
+      //
+      // The reason is simply that we'd need to store that scaled blob in memory for the lifetime
+      // of the app if we were, as the user could switch conversations
+      // before sending a message with attachments.
+      const scaledOrNot = await AttachmentUtil.autoScaleFile(file);
 
-      if (blob.blob.size > MAX_ATTACHMENT_FILESIZE_BYTES) {
+      // `autoScaleFile` either
+      // - returns null if it cannot process the file (i.e. not an image for instance)
+      // - returns a scaled down images if it could process and resize it down, or the size was fine to begin with
+      const failedToResizeAndOversized = !scaledOrNot && file.size > MAX_ATTACHMENT_FILESIZE_BYTES;
+      const resizedAndOverSized = scaledOrNot && scaledOrNot.size > MAX_ATTACHMENT_FILESIZE_BYTES;
+
+      if (failedToResizeAndOversized || resizedAndOverSized) {
         ToastUtils.pushFileSizeErrorAsByte();
         return;
       }
@@ -593,18 +600,6 @@ const renderVideoPreview = async (contentType: string, file: File, fileName: str
   }
 };
 
-const autoOrientJpegImage = async (fileOrBlobOrURL: File): Promise<string> => {
-  perfStart('autoOrientJpegImage');
-  const loadedImage = await loadImage(fileOrBlobOrURL, { orientation: true, canvas: true });
-  perfEnd('autoOrientJpegImage', 'autoOrientJpegImage');
-  const dataURL = (loadedImage.image as HTMLCanvasElement).toDataURL(
-    MIME.IMAGE_JPEG,
-    DEFAULT_JPEG_QUALITY
-  );
-
-  return dataURL;
-};
-
 const renderImagePreview = async (contentType: string, file: File, fileName: string) => {
   if (!MIME.isJPEG(contentType)) {
     const urlImage = URL.createObjectURL(file);
@@ -623,12 +618,11 @@ const renderImagePreview = async (contentType: string, file: File, fileName: str
       thumbnail: null,
     };
   }
+  const urlImage = URL.createObjectURL(file);
 
-  // orient the image correctly based on the EXIF data, if needed
-  const orientedImageUrl = await autoOrientJpegImage(file);
-
+  // orientating the image based on EXIF data is done as part of the sharp call in makeImageThumbnailBuffer
   const thumbnailBuffer = await makeImageThumbnailBuffer({
-    objectUrl: orientedImageUrl,
+    objectUrl: urlImage,
     contentType,
   });
   const url = arrayBufferToObjectURL({

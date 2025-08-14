@@ -15,29 +15,28 @@ import {
   SessionButtonShape,
   SessionButtonType,
 } from '../basic/SessionButton';
-import { SpacerLG, SpacerSM } from '../basic/Text';
+import { SpacerSM, SpacerXL } from '../basic/Text';
 import { SessionIcon } from '../icon';
 import { LucideIcon } from '../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
-import { Localizer } from '../basic/Localizer';
 import { tr } from '../../localization/localeTools';
 import { FileIcon } from '../icon/FileIcon';
 import { SessionButtonShiny } from '../basic/SessionButtonShiny';
-import { useHasPro } from '../../hooks/useHasPro';
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
+import { useCurrentUserHasPro } from '../../hooks/useHasPro';
 
 export enum SessionProInfoVariant {
   MESSAGE_CHARACTER_LIMIT = 0,
   PINNED_CONVERSATION_LIMIT = 1,
   PINNED_CONVERSATION_LIMIT_GRANDFATHERED = 2,
   PROFILE_PICTURE_ANIMATED = 3,
+  ALREADY_PRO_PROFILE_PICTURE_ANIMATED = 4,
 }
 
 const StyledContentContainer = styled.div`
   display: flex;
   flex-direction: column;
-  margin-bottom: var(--margins-md);
-  gap: var(--margins-sm);
+  gap: var(--margins-xl);
 `;
 
 const StyledScrollDescriptionContainer = styled.div`
@@ -58,39 +57,40 @@ const StyledCTAImage = styled.img`
   mask-size: 100% 100%;
 `;
 
-// TODO: implement with animated profile pictures
-// const StyledAnimationImage = styled.img`
-//   position: absolute;
-//   width: 100%;
-//   height: 100%;
-//   inset-inline-start: 0;
-// `;
-//
-// const StyledAnimatedCTAImageContainer = styled.div`
-//   position: relative;
-// `;
-//
-// function AnimatedCTAImage({
-//   ctaLayerSrc,
-//   animatedLayerSrc,
-// }: {
-//   ctaLayerSrc: string;
-//   animatedLayerSrc: string;
-// }) {
-//   return (
-//     <StyledAnimatedCTAImageContainer>
-//       <StyledCTAImage src={ctaLayerSrc} />
-//       <StyledAnimationImage src={animatedLayerSrc} />
-//     </StyledAnimatedCTAImageContainer>
-//   );
-// }
+const StyledAnimationImage = styled.img`
+  position: absolute;
 
-const StyledCTATitle = styled.span`
+  inset-inline-start: 0;
+  width: 13%;
+  top: 28.5%;
+  left: 45%;
+`;
+
+const StyledAnimatedCTAImageContainer = styled.div`
+  position: relative;
+`;
+
+function AnimatedCTAImage({
+  ctaLayerSrc,
+  animatedLayerSrc,
+}: {
+  ctaLayerSrc: string;
+  animatedLayerSrc: string;
+}) {
+  return (
+    <StyledAnimatedCTAImageContainer>
+      <StyledCTAImage src={ctaLayerSrc} />
+      <StyledAnimationImage src={animatedLayerSrc} />
+    </StyledAnimatedCTAImageContainer>
+  );
+}
+
+const StyledCTATitle = styled.span<{ reverseDirection: boolean }>`
   font-size: var(--font-size-h4);
   font-weight: bold;
   line-height: normal;
   display: inline-flex;
-  flex-direction: row;
+  flex-direction: ${props => (props.reverseDirection ? 'row-reverse' : 'row')};
   align-items: center;
   gap: var(--margins-xs);
   padding: 3px;
@@ -103,6 +103,7 @@ const StyledFeatureList = styled.ul`
   display: grid;
   font-size: var(--font-size-lg);
   grid-row-gap: var(--margins-md);
+  margin-block: 0;
 `;
 
 const StyledListItem = styled.li`
@@ -137,6 +138,8 @@ function FeatureListItem({
 
 function getFeatureList(variant: SessionProInfoVariant) {
   switch (variant) {
+    case SessionProInfoVariant.PROFILE_PICTURE_ANIMATED:
+      return ['proFeatureListAnimatedDisplayPicture', 'proFeatureListLargerGroups'] as const;
     case SessionProInfoVariant.PINNED_CONVERSATION_LIMIT:
     case SessionProInfoVariant.PINNED_CONVERSATION_LIMIT_GRANDFATHERED:
       return ['proFeatureListPinnedConversations', 'proFeatureListLargerGroups'] as const;
@@ -148,37 +151,61 @@ function getFeatureList(variant: SessionProInfoVariant) {
 
 function getDescription(variant: SessionProInfoVariant): ReactNode {
   switch (variant) {
-    case SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT:
-      return <Localizer token="proCallToActionLongerMessages" />;
     case SessionProInfoVariant.PINNED_CONVERSATION_LIMIT:
-      return <Localizer token="proCallToActionPinnedConversationsMoreThan" />;
+      return tr('proCallToActionPinnedConversationsMoreThan');
     case SessionProInfoVariant.PINNED_CONVERSATION_LIMIT_GRANDFATHERED:
-      return <Localizer token="proCallToActionPinnedConversations" />;
+      return tr('proCallToActionPinnedConversations');
+    case SessionProInfoVariant.PROFILE_PICTURE_ANIMATED:
+      return tr('proAnimatedDisplayPictureCallToActionDescription');
+    case SessionProInfoVariant.ALREADY_PRO_PROFILE_PICTURE_ANIMATED:
+      return (
+        <>
+          <span>
+            {tr('proAlreadyPurchased')}{' '}
+            <SessionIcon
+              sizeIsWidth={false}
+              iconType={'sessionPro'}
+              iconSize={'small'}
+              backgroundColor={'var(--primary-color)'}
+              borderRadius={'4px'}
+              iconColor={'var(--black-color)'}
+            />
+          </span>
+          <br />
+          {tr('proAnimatedDisplayPicture')}
+        </>
+      );
+
+    case SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT:
     default:
-      throw new Error('Invalid Variant');
+      return tr('proCallToActionLongerMessages');
   }
 }
 
 function getImage(variant: SessionProInfoVariant): ReactNode {
   switch (variant) {
-    case SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT:
-      return <StyledCTAImage src="images/cta_hero_char_limit.webp" />;
     case SessionProInfoVariant.PINNED_CONVERSATION_LIMIT:
     case SessionProInfoVariant.PINNED_CONVERSATION_LIMIT_GRANDFATHERED:
       return <StyledCTAImage src="images/cta_hero_pin_convo_limit.webp" />;
 
-    // TODO: implement with animated profile pictures
-    // case SessionProInfoVariant.PROFILE_PICTURE_ANIMATED:
-    //   return (
-    //     <AnimatedCTAImage
-    //       ctaLayerSrc="images/cta_hero_generic.webp"
-    //       animatedLayerSrc="images/cta_hero_dog_animated.webp"
-    //     />
-    //   );
+    case SessionProInfoVariant.PROFILE_PICTURE_ANIMATED:
+    case SessionProInfoVariant.ALREADY_PRO_PROFILE_PICTURE_ANIMATED:
+      return (
+        <AnimatedCTAImage
+          ctaLayerSrc="images/cta_hero_animated_profile_base_layer.webp"
+          animatedLayerSrc="images/cta_hero_animated_profile_animation_layer.webp"
+        />
+      );
 
+    case SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT:
     default:
-      throw new Error('Invalid Variant');
+      return <StyledCTAImage src="images/cta_hero_char_limit.webp" />;
   }
+}
+
+function isProVisibleCTA(variant: SessionProInfoVariant): boolean {
+  // This is simple now but if we ever add multiple this needs to become a list
+  return variant === SessionProInfoVariant.ALREADY_PRO_PROFILE_PICTURE_ANIMATED;
 }
 
 const buttonProps = {
@@ -193,12 +220,13 @@ const buttonProps = {
 
 export function SessionProInfoModal(props: SessionProInfoState) {
   const dispatch = useDispatch();
+  const hasPro = useCurrentUserHasPro();
 
   function onClose() {
     dispatch(updateSessionProInfoModal(null));
   }
 
-  if (isNil(props?.variant)) {
+  if (isNil(props?.variant) || (hasPro && !isProVisibleCTA(props.variant))) {
     return null;
   }
 
@@ -218,38 +246,41 @@ export function SessionProInfoModal(props: SessionProInfoState) {
             display: 'grid',
             alignItems: 'center',
             justifyItems: 'center',
-            gridTemplateColumns: '1fr 1fr',
+            gridTemplateColumns: hasPro ? '1fr' : '1fr 1fr',
             columnGap: 'var(--margins-sm)',
             paddingInline: 'var(--margins-md)',
+            marginBottom: 'var(--margins-md)',
             height: 'unset',
           }}
-          extraBottomMargin={true}
         >
-          <SessionButtonShiny
-            {...buttonProps}
-            shinyContainerStyle={{
-              width: '100%',
-            }}
-            buttonColor={SessionButtonColor.Primary}
-            onClick={onClose}
-            dataTestId="modal-session-pro-confirm-button"
-          >
-            {tr('theContinue')}
-          </SessionButtonShiny>
+          {!hasPro ? (
+            <SessionButtonShiny
+              {...buttonProps}
+              shinyContainerStyle={{
+                width: '100%',
+              }}
+              buttonColor={SessionButtonColor.Primary}
+              onClick={onClose}
+              dataTestId="modal-session-pro-confirm-button"
+            >
+              {tr('theContinue')}
+            </SessionButtonShiny>
+          ) : null}
           <SessionButton
             {...buttonProps}
             buttonColor={SessionButtonColor.Tertiary}
             onClick={onClose}
             dataTestId="modal-session-pro-cancel-button"
+            style={hasPro ? { ...buttonProps.style, width: '50%' } : buttonProps.style}
           >
-            {tr('cancel')}
+            {tr(hasPro ? 'close' : 'cancel')}
           </SessionButton>
         </ModalActionsContainer>
       }
     >
       <SpacerSM />
-      <StyledCTATitle>
-        {tr('upgradeTo')}
+      <StyledCTATitle reverseDirection={hasPro}>
+        {tr(hasPro ? 'proActivated' : 'upgradeTo')}
         <SessionIcon
           sizeIsWidth={false}
           iconType={'sessionPro'}
@@ -259,20 +290,23 @@ export function SessionProInfoModal(props: SessionProInfoState) {
           iconColor={'var(--black-color)'}
         />
       </StyledCTATitle>
-      <SpacerLG />
+      <SpacerXL />
       <StyledContentContainer>
         <StyledScrollDescriptionContainer>
           {getDescription(props.variant)}
         </StyledScrollDescriptionContainer>
-        <StyledFeatureList>
-          {getFeatureList(props.variant).map(token => (
-            <FeatureListItem>{tr(token)}</FeatureListItem>
-          ))}
-          <FeatureListItem customIconSrc={'images/sparkle-animated.svg'}>
-            {tr('proFeatureListLoadsMore')}
-          </FeatureListItem>
-        </StyledFeatureList>
+        {!hasPro ? (
+          <StyledFeatureList>
+            {getFeatureList(props.variant).map(token => (
+              <FeatureListItem>{tr(token)}</FeatureListItem>
+            ))}
+            <FeatureListItem customIconSrc={'images/sparkle-animated.svg'}>
+              {tr('proFeatureListLoadsMore')}
+            </FeatureListItem>
+          </StyledFeatureList>
+        ) : null}
       </StyledContentContainer>
+      <SpacerXL />
     </SessionWrapperModal>
   );
 }
@@ -290,11 +324,10 @@ export const showSessionProInfoDialog = (
 
 export const useShowSessionProInfoDialogCb = (variant: SessionProInfoVariant) => {
   const dispatch = useDispatch();
-  const hasPro = useHasPro();
 
   // TODO: remove once pro is released
   const isProAvailable = useIsProAvailable();
-  if (!isProAvailable || hasPro) {
+  if (!isProAvailable) {
     return () => null;
   }
 
@@ -303,11 +336,10 @@ export const useShowSessionProInfoDialogCb = (variant: SessionProInfoVariant) =>
 
 export const useShowSessionProInfoDialogCbWithVariant = () => {
   const dispatch = useDispatch();
-  const hasPro = useHasPro();
 
   // TODO: remove once pro is released
   const isProAvailable = useIsProAvailable();
-  if (!isProAvailable || hasPro) {
+  if (!isProAvailable) {
     return (_: SessionProInfoVariant) => null;
   }
 

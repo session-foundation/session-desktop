@@ -26,7 +26,7 @@ export const AttachmentInfo = (props: Props) => {
     <Flex $container={true} $flexDirection="column">
       <LabelWithInfo
         label={tr('attachmentsFileId')}
-        info={attachment?.id ? String(attachment.id) : tr('attachmentsNa')}
+        info={attachment?.url ? String(attachment.url) : tr('attachmentsNa')}
       />
       <StyledLabelContainer $container={true} $flexDirection="row" $flexWrap="wrap">
         <LabelWithInfo

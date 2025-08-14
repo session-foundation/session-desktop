@@ -121,7 +121,7 @@ describe('VisibleMessage', () => {
   });
 
   it('can create message with a preview', () => {
-    const preview: PreviewWithAttachmentUrl = { url: 'url', title: 'title', id: 1 };
+    const preview: PreviewWithAttachmentUrl = { url: 'url', title: 'title' };
     const previews = new Array<PreviewWithAttachmentUrl>();
     previews.push(preview);
 
@@ -141,9 +141,8 @@ describe('VisibleMessage', () => {
 
   it('can create message with an AttachmentPointer', () => {
     const attachment: AttachmentPointerWithUrl = {
-      url: 'url',
+      url: 'http://thisisaareal/url/1234',
       contentType: 'contentType',
-      id: 1234,
     };
     const attachments = new Array<AttachmentPointerWithUrl>();
     attachments.push(attachment);
@@ -157,10 +156,10 @@ describe('VisibleMessage', () => {
     const decoded = SignalService.Content.decode(plainText);
     expect(decoded.dataMessage?.attachments).to.have.lengthOf(1);
     const firstAttachment = decoded?.dataMessage?.attachments?.[0];
-    const decodedID = toNumber(firstAttachment?.id);
+    const decodedID = toNumber(firstAttachment?.deprecatedId);
     expect(decodedID).to.be.equal(1234);
     expect(firstAttachment?.contentType).to.be.deep.equal('contentType');
-    expect(firstAttachment?.url).to.be.deep.equal('url');
+    expect(firstAttachment?.url).to.be.deep.equal('http://thisisaareal/url/1234');
   });
 
   it('correct ttl', () => {

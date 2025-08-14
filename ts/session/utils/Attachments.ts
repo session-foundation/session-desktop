@@ -1,5 +1,6 @@
 import * as crypto from 'crypto';
-import _ from 'lodash';
+import _, { isEmpty, isString } from 'lodash';
+import Long from 'long';
 
 import { Attachment } from '../../types/Attachment';
 
@@ -80,7 +81,6 @@ async function uploadToFileServer(params: UploadParams): Promise<AttachmentPoint
   if (uploadToV2Result) {
     const pointerWithUrl: AttachmentPointerWithUrl = {
       ...pointer,
-      id: uploadToV2Result.fileId,
       url: uploadToV2Result.fileUrl,
     };
     return pointerWithUrl;
@@ -118,7 +118,6 @@ export async function uploadLinkPreviewToFileServer(
   return {
     ...preview,
     image,
-    id: image.id,
   };
 }
 
@@ -143,7 +142,6 @@ export async function uploadQuoteThumbnailsToFileServer(
       ...attachment,
       thumbnail,
       url: thumbnail.url,
-      id: thumbnail.id,
     } as QuotedAttachmentWithUrl;
   });
 
@@ -153,4 +151,29 @@ export async function uploadQuoteThumbnailsToFileServer(
     ...quote,
     attachments,
   };
+}
+
+export function attachmentIdAsStrFromUrl(url: string) {
+  const lastSegment = url?.split('/')?.pop();
+  if (!lastSegment) {
+    throw new Error('attachmentIdAsStrFromUrl last is not valid');
+  }
+  return lastSegment;
+}
+
+export function attachmentIdAsLongFromUrl(url: string) {
+  const lastSegment = url?.split('/')?.pop();
+  if (!lastSegment) {
+    throw new Error('attachmentIdAsLongFromUrl last is not valid');
+  }
+  try {
+    // this throws if not a valid long
+    return Long.fromString(lastSegment);
+  } catch (e) {
+    window.log.warn(`attachmentIdAsLongFromUrl failed with ${e.message}.. Returning 0.`);
+    if (isString(lastSegment) && !isEmpty(lastSegment)) {
+      return Long.fromNumber(0);
+    }
+    throw e;
+  }
 }

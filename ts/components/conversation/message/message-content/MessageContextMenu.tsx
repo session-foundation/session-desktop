@@ -34,7 +34,7 @@ import {
   useSelectedIsBlocked,
   useSelectedIsLegacyGroup,
 } from '../../../../state/selectors/selectedConversation';
-import { saveAttachmentToDisk } from '../../../../util/attachmentsUtil';
+import { saveAttachmentToDisk } from '../../../../util/attachment/attachmentsUtil';
 import { Reactions } from '../../../../util/reactions';
 import { SessionContextMenuContainer } from '../../../SessionContextMenuContainer';
 import { SessionEmojiPanel, StyledEmojiPanel } from '../../SessionEmojiPanel';

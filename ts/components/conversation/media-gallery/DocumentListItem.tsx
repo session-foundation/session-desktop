@@ -3,7 +3,7 @@ import clsx from 'clsx';
 
 import { filesize } from 'filesize';
 import { useSelectedConversationKey } from '../../../state/selectors/selectedConversation';
-import { saveAttachmentToDisk } from '../../../util/attachmentsUtil';
+import { saveAttachmentToDisk } from '../../../util/attachment/attachmentsUtil';
 import { MediaItemType } from '../../lightbox/LightboxGallery';
 import { formatDateWithLocale } from '../../../util/i18n/formatting/generics';
 import { LucideIcon } from '../../icon/LucideIcon';

@@ -10,8 +10,8 @@ import {
 } from '../../types/Attachment';
 
 import { useIsMessageVisible } from '../../contexts/isMessageVisibleContext';
-import { THUMBNAIL_SIDE } from '../../types/attachments/VisualAttachment';
 import { Image } from './Image';
+import { maxThumbnailDetails } from '../../util/attachment/attachmentSizes';
 
 type Props = {
   attachments: Array<AttachmentTypeWithPath>;
@@ -59,7 +59,7 @@ const Row = (
             attachment={attachment}
             playIconOverlay={isVideoAttachment(attachment)}
             height={renderedSize}
-            key={attachment.id}
+            key={attachment.path}
             width={renderedSize}
             url={isMessageVisible ? getThumbnailUrl(attachment) : undefined}
             attachmentIndex={startIndex + index}
@@ -93,7 +93,7 @@ export const ImageGrid = (props: Props) => {
           highlight={highlight}
           onError={onError}
           onClickAttachment={onClickAttachment}
-          renderedSize={THUMBNAIL_SIDE}
+          renderedSize={maxThumbnailDetails.maxSide}
           startIndex={0}
           totalAttachmentsCount={attachments.length}
         />
@@ -102,7 +102,7 @@ export const ImageGrid = (props: Props) => {
   }
 
   if (attachments.length === 2) {
-    // when we got 2 attachments we render them side by side with the full size of THUMBNAIL_SIDE
+    // when we got 2 attachments we render them side by side with the full size of maxThumbnailDetails.maxSide
     return (
       <StyledImageGrid $flexDirection={'row'}>
         <Row
@@ -111,7 +111,7 @@ export const ImageGrid = (props: Props) => {
           highlight={highlight}
           onError={onError}
           onClickAttachment={onClickAttachment}
-          renderedSize={THUMBNAIL_SIDE}
+          renderedSize={maxThumbnailDetails.maxSide}
           startIndex={0}
           totalAttachmentsCount={attachments.length}
         />
@@ -119,7 +119,7 @@ export const ImageGrid = (props: Props) => {
     );
   }
 
-  const columnImageSide = THUMBNAIL_SIDE / 2 - 5;
+  const columnImageSide = maxThumbnailDetails.maxSide / 2 - 5;
 
   // we know only support having 3 attachments displayed at most, the rest are on the overlay
   return (
@@ -130,7 +130,7 @@ export const ImageGrid = (props: Props) => {
         highlight={highlight}
         onError={onError}
         onClickAttachment={onClickAttachment}
-        renderedSize={THUMBNAIL_SIDE}
+        renderedSize={maxThumbnailDetails.maxSide}
         startIndex={0}
         totalAttachmentsCount={attachments.length}
       />

@@ -54,12 +54,29 @@ export interface ConversationAttributes {
   lastMessageInteractionType: ConversationInteractionType | null;
   lastMessageInteractionStatus: ConversationInteractionStatus | null;
 
-  avatarImageId?: number; // avatar imageID is currently used only for sogs. It's the fileID of the image uploaded and set as the sogs avatar (not only sogs I think, but our profile too?)
-
   left: boolean; // LEGACY GROUPS ONLY: if we left the group (communities are removed right away so it not relevant to communities) // TODOLATER to remove after legacy closed group are dropped
   isKickedFromGroup: boolean; // LEGACY GROUPS ONLY: if we got kicked from the group (communities just stop polling and a message sent get rejected, so not relevant to communities) // TODOLATER to remove after legacy closed group are dropped
 
-  avatarInProfile?: string; // this is the avatar path locally once downloaded and stored in the application attachments folder
+  /**
+   * We now require all avatars stored on desktop to have in additions of their normal avatars
+   * a static version of it. Static as in not-animated.
+   * So:
+   * - if the avatarPath points to a file that is animated, staticAvatarPath must point to file containing its first frame,
+   * - if the avatarPath points to a file that is not animated, staticAvatarPath is the same as avatarPath
+   *
+   * avatarInProfile is the avatar as the user set it, once downloaded and stored in the application attachments folder.
+   *
+   * Note: if the user is Pro, but didn't set an animated avatar, `avatarInProfile` and `fallbackAvatarInProfile` will point to the same file
+   */
+  avatarInProfile?: string;
+  /**
+   * This is the always static version of the avatar in profile.
+   * If the user has pro, avatarInProfile will be used (and so his avatar will be animated if it was already).
+   * If the user doesn't have pro, fallbackAvatarInProfile will be used, and the avatar will be displayed as a static image.
+   *
+   * Note: if the user is Pro, but didn't set an animated avatar, `avatarInProfile` and `fallbackAvatarInProfile` will point to the same file
+   */
+  fallbackAvatarInProfile?: string;
 
   isTrustedForAttachmentDownload: boolean; // not synced across devices, this field is used if we should auto download attachments from this conversation or not
 
@@ -79,7 +96,12 @@ export interface ConversationAttributes {
   nickname?: string; // this is the name WE gave to that user (only applicable to private chats, not closed group neither opengroups)
   profileKey?: string; // Consider this being a hex string if it is set
   triggerNotificationsFor: ConversationNotificationSettingType;
-  avatarPointer?: string; // this is the url of the avatar on the file server v2. we use this to detect if we need to re-download the avatar from someone (not used for opengroups)
+
+  /**
+   * This is the url of the avatar on the file server v2 or sogs server.
+   * We use this to detect if we need to re-download the avatar from someone/ a community.
+   */
+  avatarPointer?: string;
   /** in seconds, 0 means no expiration */
   expireTimer: number;
 

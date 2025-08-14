@@ -9,6 +9,7 @@ import { ClosedGroupV2VisibleMessage } from '../session/messages/outgoing/visibl
 import { PubKey } from '../session/types';
 import {
   UserUtils,
+  attachmentIdAsStrFromUrl,
   uploadAttachmentsToFileServer,
   uploadLinkPreviewToFileServer,
   uploadQuoteThumbnailsToFileServer,
@@ -94,6 +95,7 @@ import { ExpirationTimerUpdate } from '../session/disappearing_messages/types';
 import { Model } from './models';
 import { ReduxOnionSelectors } from '../state/selectors/onions';
 import { tStrippedWithObj, tr, tStripped } from '../localization/localeTools';
+import type { QuotedAttachmentType } from '../components/conversation/message/message-content/quote/Quote';
 
 // tslint:disable: cyclomatic-complexity
 
@@ -713,7 +715,6 @@ export class MessageModel extends Model<MessageAttributes> {
     }
 
     const {
-      id,
       path,
       contentType,
       width,
@@ -735,7 +736,6 @@ export class MessageModel extends Model<MessageAttributes> {
       false;
 
     return {
-      id,
       contentType,
       caption,
       size: size || 0,
@@ -774,7 +774,6 @@ export class MessageModel extends Model<MessageAttributes> {
       (this.get('attachments') || []).map(loadAttachmentData)
     );
     const body = this.get('body');
-
     const quoteWithData = await loadQuoteData(this.get('quote'));
     const previewWithData = await loadPreviewData(this.get('preview'));
 
@@ -788,7 +787,7 @@ export class MessageModel extends Model<MessageAttributes> {
     let attachmentPromise;
     let linkPreviewPromise;
     let quotePromise;
-    const fileIdsToLink: Array<number> = [];
+    const fileIdsToLink: Array<string> = [];
 
     // we can only send a single preview
     const firstPreviewWithData = previewWithData?.[0] || null;
@@ -811,16 +810,17 @@ export class MessageModel extends Model<MessageAttributes> {
       linkPreviewPromise,
       quotePromise,
     ]);
-    fileIdsToLink.push(...attachments.map(m => m.id));
-    if (preview) {
-      fileIdsToLink.push(preview.id);
+    fileIdsToLink.push(...attachments.map(m => attachmentIdAsStrFromUrl(m.url)));
+    if (preview && preview.image?.url) {
+      fileIdsToLink.push(attachmentIdAsStrFromUrl(preview.image.url));
     }
 
-    if (quote && quote.attachments?.length) {
+    if (quote && quote.attachments?.length && quote.attachments[0].thumbnail) {
       // typing for all of this Attachment + quote + preview + send or unsend is pretty bad
-      const firstQuoteAttachmentId = (quote.attachments[0].thumbnail as any)?.id;
-      if (firstQuoteAttachmentId) {
-        fileIdsToLink.push(firstQuoteAttachmentId);
+      const firstQuoteAttachmentUrl =
+        'url' in quote.attachments[0].thumbnail ? quote.attachments[0].thumbnail.url : undefined;
+      if (firstQuoteAttachmentUrl && attachmentIdAsStrFromUrl(firstQuoteAttachmentUrl)) {
+        fileIdsToLink.push(attachmentIdAsStrFromUrl(firstQuoteAttachmentUrl));
       }
     }
 
@@ -1104,6 +1104,7 @@ export class MessageModel extends Model<MessageAttributes> {
     }
 
     const errorStr = `${providedError.name} - "${providedError.message || 'unknown error message'}"`;
+    window.log.info(`save message error to msg ${this.idForLogging()} with error:`, errorStr);
 
     this.set({ errors: errorStr });
     await this.commit();
@@ -1390,20 +1391,22 @@ export function findAndFormatContact(pubkey: string): FindAndFormatContactType {
 
   return {
     pubkey,
-    avatarPath: contactModel ? contactModel.getAvatarPath() : null,
+    avatarPath: contactModel?.getProOrNotAvatarPath() || null,
     name: contactModel?.getRealSessionUsername() || null,
     profileName,
     isMe,
   };
 }
 
-export function processQuoteAttachment(attachment: any) {
+export function processQuoteAttachment(attachment: any): QuotedAttachmentType {
   const { thumbnail } = attachment;
   const path = thumbnail && thumbnail.path && getAbsoluteAttachmentPath(thumbnail.path);
   const objectUrl = thumbnail && thumbnail.objectUrl;
 
   const thumbnailWithObjectUrl =
-    !path && !objectUrl ? null : { ...(attachment.thumbnail || {}), objectUrl: path || objectUrl };
+    !path && !objectUrl
+      ? undefined
+      : { ...(attachment.thumbnail || {}), objectUrl: path || objectUrl };
 
   return {
     ...attachment,

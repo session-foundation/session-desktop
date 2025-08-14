@@ -11,7 +11,7 @@ const settingsOpengroupPruning = 'prune-setting';
 const settingsNotification = 'notification-setting';
 const settingsAudioNotification = 'audio-notification-setting';
 const hasSyncedInitialConfigurationItem = 'hasSyncedInitialConfigurationItem';
-const lastAvatarUploadTimestamp = 'lastAvatarUploadTimestamp';
+const ntsAvatarExpiryMs = 'ntsAvatarExpiryMs';
 const hasLinkPreviewPopupBeenDisplayed = 'hasLinkPreviewPopupBeenDisplayed';
 const hasFollowSystemThemeEnabled = 'hasFollowSystemThemeEnabled';
 const hideRecoveryPassword = 'hideRecoveryPassword';
@@ -36,7 +36,7 @@ export const SettingsKey = {
   settingsNotification,
   settingsAudioNotification,
   hasSyncedInitialConfigurationItem,
-  lastAvatarUploadTimestamp,
+  ntsAvatarExpiryMs,
   hasLinkPreviewPopupBeenDisplayed,
   latestUserProfileEnvelopeTimestamp,
   latestUserGroupEnvelopeTimestamp,

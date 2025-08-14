@@ -286,14 +286,6 @@ describe('Attachment', () => {
       expect(Attachment.isVoiceMessage(attachment)).to.be.eq(true);
     });
 
-    it('should return true for legacy Android voice message attachment', () => {
-      const attachment: Attachment.Attachment = {
-        data: stringToArrayBuffer('voice message'),
-        contentType: MIME.AUDIO_MP3,
-      };
-      expect(Attachment.isVoiceMessage(attachment)).to.be.eq(true);
-    });
-
     it('should return false for other attachments', () => {
       const attachment: Attachment.Attachment = {
         fileName: 'foo.gif',
