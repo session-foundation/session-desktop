@@ -172,6 +172,7 @@ export function NotificationsSettingsPage(modalState: UserSettingsModalState) {
         <ModalBasicHeader
           title={title}
           bigHeader={true}
+          showExitIcon={true}
           extraLeftButton={backAction ? <ModalBackButton onClick={backAction} /> : undefined}
         />
       }
