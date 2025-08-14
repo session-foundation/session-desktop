@@ -210,7 +210,7 @@ const triggerSyncIfNeeded = async () => {
 
 const triggerAvatarReUploadIfNeeded = async () => {
   const lastAvatarUploadExpiryMs =
-    (await Data.getItemById(SettingsKey.ntsAvatarExpiryMs))?.value || 0;
+    (await Data.getItemById(SettingsKey.ntsAvatarExpiryMs))?.value || Number.MAX_SAFE_INTEGER;
 
   if (NetworkTime.now() > lastAvatarUploadExpiryMs) {
     window.log.info('Reuploading avatar...');

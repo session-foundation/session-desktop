@@ -49,6 +49,7 @@ const StyledAvatarContainer = styled.div`
 
 const StyledCTADescription = styled.span<{ reverseDirection: boolean }>`
   text-align: center;
+  cursor: pointer;
   font-size: var(--font-size-lg);
   color: var(--text-secondary-color);
   line-height: normal;
@@ -278,7 +279,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
       $flexGap="var(--margins-sm)"
     >
       {isMe && proBadgeCb.cb ? (
-        <StyledCTADescription reverseDirection={userHasPro}>
+        <StyledCTADescription reverseDirection={userHasPro} onClick={proBadgeCb.cb}>
           {tr(
             userHasPro
               ? 'proAnimatedDisplayPictureModalDescription'
