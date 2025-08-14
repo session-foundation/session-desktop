@@ -17,8 +17,8 @@ export const StyledSessionSpinner = styled.div<StyledSessionSpinnerProps>`
   div {
     position: absolute;
     top: calc(50% - 6.5px);
-    width: 16.25%;
-    height: 16.25%;
+    width: 13px;
+    height: 13px;
     border-radius: 50%;
     background: ${props => props.color || 'var(--primary-color)'};
     animation-timing-function: cubic-bezier(0, 1, 1, 0);

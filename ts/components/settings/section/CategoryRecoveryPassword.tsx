@@ -8,6 +8,7 @@ import { mnDecode } from '../../../session/crypto/mnemonic';
 import {
   updateHideRecoveryPasswordModal,
   updateLightBoxOptions,
+  userSettingsModal,
 } from '../../../state/ducks/modalDialog';
 import { getIsModalVisible } from '../../../state/selectors/modal';
 import { useHideRecoveryPasswordEnabled } from '../../../state/selectors/settings';
@@ -25,7 +26,6 @@ import {
   SessionSettingsItemWrapper,
   StyledSettingItem,
 } from '../SessionSettingListItem';
-import { sectionActions } from '../../../state/ducks/section';
 import { tr } from '../../../localization/localeTools';
 
 const StyledSettingsItemContainer = styled.div`
@@ -81,7 +81,7 @@ export const SettingsCategoryRecoveryPassword = () => {
 
   const { hasPassword, passwordValid } = usePasswordModal({
     onClose: () => {
-      dispatch(sectionActions.showSettingsSection('privacy'));
+      dispatch(userSettingsModal({ userSettingsPage: 'privacy' }));
     },
   });
 

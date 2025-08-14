@@ -1,6 +1,5 @@
 import { tr } from '../../../../../localization/localeTools';
 import { DisappearingMessageConversationModeType } from '../../../../../session/disappearing_messages/types';
-import { Localizer } from '../../../../basic/Localizer';
 import {
   PanelButtonGroup,
   PanelButtonText,
@@ -37,9 +36,7 @@ export const DisappearingModes = (props: DisappearingModesProps) => {
 
   return (
     <>
-      <PanelLabel>
-        <Localizer token="disappearingMessagesDeleteType" />
-      </PanelLabel>
+      <PanelLabel tr={{ token: 'disappearingMessagesDeleteType' }} />
       <PanelButtonGroup>
         {Object.keys(options).map(_mode => {
           const mode = _mode as DisappearingMessageConversationModeType;

@@ -3,12 +3,12 @@ import { useDispatch } from 'react-redux';
 import type { AnyAction, Dispatch } from 'redux';
 import styled from 'styled-components';
 import { ToastUtils, UserUtils } from '../../session/utils';
-import { editProfileModal, updateEditProfilePictureModal } from '../../state/ducks/modalDialog';
+import { userSettingsModal, updateEditProfilePictureModal } from '../../state/ducks/modalDialog';
 import type { EditProfilePictureModalProps } from '../../types/ReduxTypes';
 import { pickFileForAvatar } from '../../types/attachments/VisualAttachment';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionSpinner } from '../loading';
-import { ProfileAvatar } from './edit-profile/components';
+import { ProfileAvatar } from './user-settings/components';
 import {
   useAvatarPath,
   useConversationUsernameWithFallback,
@@ -30,7 +30,7 @@ import {
   SessionWrapperModal,
 } from '../SessionWrapperModal';
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
-import { SpacerLG } from '../basic/Text';
+import { SpacerLG, SpacerSM } from '../basic/Text';
 import {
   SessionProInfoVariant,
   useShowSessionProInfoDialogCbWithVariant,
@@ -39,7 +39,8 @@ import { AvatarSize } from '../avatar/Avatar';
 import { ProIconButton } from '../buttons/ProButton';
 import { useProBadgeOnClickCb } from '../menuAndSettingsHooks/useProBadgeOnClickCb';
 import { useUserHasPro } from '../../hooks/useHasPro';
-import { UploadFirstImageButton } from './edit-profile/UploadFirstImage';
+import { Localizer } from '../basic/Localizer';
+import { UploadFirstImageButton } from '../buttons/UploadFirstImageButton';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
@@ -97,7 +98,7 @@ const triggerUploadProfileAvatar = async (
         ToastUtils.pushToastError('edit-profile', error.message);
       }
       window.log.error(
-        'showEditProfileDialog Error ensuring that image is properly sized:',
+        'triggerUploadProfileAvatar Error ensuring that image is properly sized:',
         error && error.stack ? error.stack : error
       );
     }
@@ -163,7 +164,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
   const closeDialog = useCallback(() => {
     dispatch(updateEditProfilePictureModal(null));
     if (isMe) {
-      dispatch(editProfileModal({}));
+      dispatch(userSettingsModal({ userSettingsPage: 'default' }));
     }
   }, [dispatch, isMe]);
 
@@ -275,6 +276,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
           ) : null}
         </ModalActionsContainer>
       }
+      $flexGap="var(--margins-sm)"
     >
       {isMe && proBadgeCb.cb ? (
         <StyledCTADescription reverseDirection={userHasPro} onClick={proBadgeCb.cb}>
@@ -309,9 +311,17 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
             <UploadFirstImageButton onClick={handleClick} />
           )}
         </StyledAvatarContainer>
-        <SpacerLG />
       </div>
-      <SessionSpinner loading={loading} />
+      {}
+      {loading ? (
+        <>
+          <SpacerSM />
+          {isMe ? <Localizer token="updating" /> : null}
+          <SessionSpinner loading={loading} height="30px" />
+        </>
+      ) : (
+        <SpacerLG />
+      )}
     </SessionWrapperModal>
   );
 };

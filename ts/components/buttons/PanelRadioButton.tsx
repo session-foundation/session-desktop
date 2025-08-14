@@ -1,26 +1,17 @@
-import styled from 'styled-components';
-import { SessionDataTestId, type ReactNode } from 'react';
+import { SessionDataTestId } from 'react';
 import { SessionRadio } from '../basic/SessionRadio';
-import { PanelButtonProps, StyledContent, StyledPanelButton } from './PanelButton';
-import { useIsDarkTheme } from '../../state/theme/selectors/theme';
-import { StyledPanelButtonSeparator } from './StyledPanelButtonGroupSeparator';
+import {
+  GenericPanelButtonWithAction,
+  type GenericPanelButtonProps,
+} from './GenericPanelButtonWithAction';
 
-const StyledCheckContainer = styled.div`
-  display: flex;
-  align-items: center;
-`;
-
-type PanelRadioButtonProps = Omit<PanelButtonProps, 'children' | 'onClick' | 'dataTestId'> & {
+type PanelRadioButtonProps = Pick<GenericPanelButtonProps, 'rowDataTestId' | 'textElement'> & {
   value: any;
-  textElement: ReactNode;
   isSelected: boolean;
   onSelect?: (...args: Array<any>) => void;
   onUnselect?: (...args: Array<any>) => void;
-  // the row dataTestId is used to identify the whole row, not the radio button
-  rowDataTestId: SessionDataTestId;
-  // the radio input dataTestId is used to identify the radio button only.
-  // the textElement will have its own dataTestId
   radioInputDataTestId: SessionDataTestId;
+  disabled?: boolean;
 };
 
 export const PanelRadioButton = (props: PanelRadioButtonProps) => {
@@ -34,33 +25,28 @@ export const PanelRadioButton = (props: PanelRadioButtonProps) => {
     radioInputDataTestId,
     textElement,
   } = props;
-  const isDarkTheme = useIsDarkTheme();
 
   return (
-    <>
-      <StyledPanelButton
-        disabled={disabled}
-        onClick={() => {
-          return isSelected ? onUnselect?.('bye') : onSelect?.('hi');
-        }}
-        data-testid={rowDataTestId}
-        isDarkTheme={isDarkTheme}
-      >
-        <StyledContent disabled={disabled}>
-          {textElement}
-          <StyledCheckContainer>
-            <SessionRadio
-              active={isSelected}
-              value={value}
-              inputName={value}
-              disabled={disabled}
-              inputDataTestId={radioInputDataTestId}
-              style={{ paddingInlineEnd: 'var(--margins-xs)' }}
-            />
-          </StyledCheckContainer>
-        </StyledContent>
-      </StyledPanelButton>
-      <StyledPanelButtonSeparator />
-    </>
+    <GenericPanelButtonWithAction
+      onClick={
+        disabled
+          ? undefined
+          : () => {
+              return isSelected ? onUnselect?.('bye') : onSelect?.('hi');
+            }
+      }
+      rowDataTestId={rowDataTestId}
+      textElement={textElement}
+      actionElement={
+        <SessionRadio
+          active={isSelected}
+          value={value}
+          inputName={value}
+          disabled={disabled}
+          inputDataTestId={radioInputDataTestId}
+          style={{ paddingInlineEnd: 'var(--margins-xs)' }}
+        />
+      }
+    />
   );
 };

@@ -1,8 +1,7 @@
 import { isEmpty } from 'lodash';
 import { useDispatch } from 'react-redux';
 import { SettingsKey } from '../../data/settings-key';
-import { updateHideRecoveryPasswordModal } from '../../state/ducks/modalDialog';
-import { sectionActions } from '../../state/ducks/section';
+import { updateHideRecoveryPasswordModal, userSettingsModal } from '../../state/ducks/modalDialog';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SpacerMD } from '../basic/Text';
 import {
@@ -30,7 +29,7 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
   const onConfirmation = async () => {
     await window.setSettingValue(SettingsKey.hideRecoveryPassword, true);
     onClose();
-    dispatch(sectionActions.showSettingsSection('privacy'));
+    dispatch(userSettingsModal({ userSettingsPage: 'privacy' }));
   };
 
   if (isEmpty(state)) {
