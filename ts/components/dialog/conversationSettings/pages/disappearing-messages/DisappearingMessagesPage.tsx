@@ -15,10 +15,7 @@ import {
 } from '../../../../../state/selectors/selectedConversation';
 import { Flex } from '../../../../basic/Flex';
 import { SpacerLG, SpacerMD } from '../../../../basic/Text';
-import {
-  HeaderSubtitle,
-  StyledScrollContainer,
-} from '../../../../conversation/right-panel/overlay/components';
+import { StyledScrollContainer } from '../../../../conversation/right-panel/overlay/components';
 import { DisappearingModes } from './DisappearingModes';
 import { TimeOptions } from './TimeOptions';
 import { useConversationSettingsModalIsStandalone } from '../../../../../state/selectors/modal';
@@ -201,18 +198,12 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
     >
       <StyledScrollContainer style={{ position: 'relative' }}>
         <Flex $container={true} $flexDirection={'column'} $alignItems={'center'}>
-          <HeaderSubtitle>
-            {singleMode === 'deleteAfterRead'
-              ? tr('disappearingMessagesDisappearAfterReadDescription')
-              : singleMode === 'deleteAfterSend'
-                ? tr('disappearingMessagesDisappearAfterSendDescription')
-                : tr('disappearingMessagesDescription1')}
-          </HeaderSubtitle>
           <DisappearingModes
             options={disappearingModeOptions}
             selected={modeSelected}
             setSelected={setModeSelected}
             hasOnlyOneMode={hasOnlyOneMode}
+            singleMode={singleMode}
           />
           {(hasOnlyOneMode || modeSelected !== 'off') && (
             <>

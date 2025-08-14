@@ -11,13 +11,11 @@ import { Flex } from '../basic/Flex';
 import { SessionIcon, SessionIconType } from '../icon';
 import { LeftPaneSectionHeader } from './LeftPaneSectionHeader';
 import { getSessionNetworkModalState } from '../../state/selectors/modal';
-import { LOCALE_DEFAULTS } from '../../localization/constants';
 import { Localizer } from '../basic/Localizer';
 import { tr } from '../../localization/localeTools';
 import { LUCIDE_ICONS_UNICODE, type WithLucideUnicode } from '../icon/lucide';
 import { LucideIcon } from '../icon/LucideIcon';
 import { ProIconButton } from '../buttons/ProButton';
-import { useIsProAvailable } from '../../hooks/useIsProAvailable';
 
 const StyledSettingsSectionTitle = styled.span<{
   color?: string;
@@ -84,18 +82,6 @@ type Categories = {
 const categories: Array<Categories> = (
   [
     {
-      id: 'session-pro',
-      title: LOCALE_DEFAULTS.app_pro,
-      titleColor: 'var(--renderer-span-primary-color)',
-      icon: { type: 'custom', content: 'sessionPro', color: 'var(--renderer-span-primary-color)' },
-    },
-
-    {
-      id: 'notifications',
-      title: tr('sessionNotifications'),
-      icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.VOLUME_2 },
-    },
-    {
       id: 'conversations',
       title: tr('sessionConversations'),
       icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE },
@@ -133,12 +119,6 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
   );
 
   const iconSize = 'medium';
-
-  const isProAvailable = useIsProAvailable();
-
-  if (id === 'session-pro' && !isProAvailable) {
-    return null;
-  }
 
   return (
     <StyledSettingsListItem

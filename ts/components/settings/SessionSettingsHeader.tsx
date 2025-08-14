@@ -32,9 +32,6 @@ export const SettingsHeader = (props: Props) => {
     case 'conversations':
       categoryTitleKey = 'sessionConversations';
       break;
-    case 'notifications':
-      categoryTitleKey = 'sessionNotifications';
-      break;
     case 'help':
       categoryTitleKey = 'sessionHelp';
       break;
@@ -46,8 +43,6 @@ export const SettingsHeader = (props: Props) => {
       break;
     // these are modals or other screens
     case 'session-network':
-    case 'session-pro':
-    case 'donate':
     case 'clear-data':
     case 'message-requests':
       throw new Error(`no header for should be tried to be rendered for "${category}"`);

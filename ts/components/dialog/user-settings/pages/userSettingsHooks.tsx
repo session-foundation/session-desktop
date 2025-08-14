@@ -64,14 +64,17 @@ export function useUserSettingsCloseAction(props: UserSettingsModalState) {
 }
 
 export function useUserSettingsBackAction(modalState: UserSettingsModalState) {
+  const dispatch = useDispatch();
   if (!modalState?.userSettingsPage || modalState?.userSettingsPage === 'default') {
     // no back button if we are on the default page
     return undefined;
   }
 
   return () => {
-    userSettingsModal({
-      userSettingsPage: 'default',
-    });
+    dispatch(
+      userSettingsModal({
+        userSettingsPage: 'default',
+      })
+    );
   };
 }

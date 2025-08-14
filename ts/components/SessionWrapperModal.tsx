@@ -234,17 +234,31 @@ export type SessionWrapperModalType = {
   style?: Omit<CSSProperties, 'maxWidth' | 'minWidth' | 'padding' | 'border'>;
 };
 
-function ExtraSpacerLeft({
-  extraRightButton,
+const useNeedsSpacerOnSide = ({
   extraLeftButton,
+  extraRightButton,
   showExitIcon,
-}: WithShowExitIcon & WithExtraRightButton & WithExtraLeftButton) {
-  // if we have two button on the right, and one on the left, we need to add one spacer
-  if (extraRightButton && showExitIcon && extraLeftButton) {
+}: WithShowExitIcon & WithExtraRightButton & WithExtraLeftButton) => {
+  const buttonsLeft = extraLeftButton ? 1 : 0;
+  const buttonsRight = (extraRightButton ? 1 : 0) + (showExitIcon ? 1 : 0);
+  const extraButtonsOnRightSide = buttonsRight - buttonsLeft;
+
+  return {
+    count: Math.abs(extraButtonsOnRightSide),
+    side: extraButtonsOnRightSide === 0 ? 'none' : extraButtonsOnRightSide > 0 ? 'left' : 'right',
+  };
+};
+
+function ExtraSpacerLeft(props: WithShowExitIcon & WithExtraRightButton & WithExtraLeftButton) {
+  const extraOn = useNeedsSpacerOnSide(props);
+
+  if (extraOn.side !== 'left' || extraOn.count === 0) {
+    return null;
+  }
+  if (extraOn.count === 1) {
     return <SpacerLG />;
   }
-  if (extraRightButton && showExitIcon) {
-    // if we have two button on the right, and none on the left, we need to add two spacers
+  if (extraOn.count === 2) {
     return (
       <>
         <SpacerLG />
@@ -252,16 +266,28 @@ function ExtraSpacerLeft({
       </>
     );
   }
-  // starting here, showExitIcon is false.
-
-  if (extraRightButton && extraLeftButton) {
-    // if we have one button on each sides, no need for a spacer,
-    return null;
-  }
-  // otherwise we need one spacer
-  return <SpacerLG />;
+  throw new Error('ExtraSpacerLeft: not handled case for extraOn.count');
 }
 
+function ExtraSpacerRight(props: WithShowExitIcon & WithExtraRightButton & WithExtraLeftButton) {
+  const extraOn = useNeedsSpacerOnSide(props);
+
+  if (extraOn.side !== 'right' || extraOn.count === 0) {
+    return null;
+  }
+  if (extraOn.count === 1) {
+    return <SpacerLG />;
+  }
+  if (extraOn.count === 2) {
+    return (
+      <>
+        <SpacerLG />
+        <SpacerLG />
+      </>
+    );
+  }
+  throw new Error('ExtraSpacerRight: not handled case for extraOn.count');
+}
 /**
  * A basic modal header with a title, an optional left button and/or exit icon.
  * To be used as `headerChildren` prop as part of SessionWrapperModal.
@@ -304,7 +330,7 @@ export const ModalBasicHeader = ({
         padding={'0'}
         margin={'0'}
       >
-        {/* Note: add a spacer if no left button is set but we have an exit icon */}
+        {/* Note: this is just here to keep the title centered, no matter the buttons we have */}
         <ExtraSpacerLeft
           showExitIcon={showExitIcon}
           extraLeftButton={extraLeftButton}
@@ -326,6 +352,12 @@ export const ModalBasicHeader = ({
         padding={'0'}
         margin={'0'}
       >
+        {/* Note: this is just here to keep the title centered, no matter the buttons we have */}
+        <ExtraSpacerRight
+          showExitIcon={showExitIcon}
+          extraLeftButton={extraLeftButton}
+          extraRightButton={extraRightButton}
+        />
         {extraRightButton}
         {showExitIcon ? (
           <SessionLucideIconButton

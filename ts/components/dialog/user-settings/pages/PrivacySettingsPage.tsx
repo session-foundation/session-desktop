@@ -1,4 +1,4 @@
-import { useState, type SettingsToggles } from 'react';
+import { useState } from 'react';
 import useMount from 'react-use/lib/useMount';
 import useUpdate from 'react-use/lib/useUpdate';
 import { tr } from '../../../../localization/localeTools';
@@ -9,7 +9,7 @@ import {
 import {
   PanelButtonGroup,
   PanelButtonTextWithSubText,
-  PanelLabel,
+  PanelLabelWithDescription,
 } from '../../../buttons/PanelButton';
 import { PanelToggleButton } from '../../../buttons/PanelToggleButton';
 import {
@@ -31,11 +31,11 @@ import {
 } from '../../../../state/selectors/settings';
 import { SettingsKey } from '../../../../data/settings-key';
 import { SessionUtilUserProfile } from '../../../../session/utils/libsession/libsession_utils_user_profile';
-import type { TokenSimpleNoArgs } from '../../../../localization/locales';
 import { getPasswordHash, Storage } from '../../../../util/storage';
 import { SpacerXS } from '../../../basic/Text';
 import { PanelWithButtonInline } from '../../../buttons/PanelWithButtonInline';
 import { displayPasswordModal } from '../../../settings/SessionSettings';
+import { SettingsToggleBasic } from '../components/SettingsToggleBasic';
 
 type WithPasswordUpdatedCb = { onPasswordUpdated: (action: string) => void };
 
@@ -92,37 +92,6 @@ async function toggleLinkPreviews(isToggleOn: boolean, forceUpdate: () => void) 
     await Storage.put(SettingsKey.hasLinkPreviewPopupBeenDisplayed, false);
     forceUpdate();
   }
-}
-
-function SettingsToggleBasic({
-  active,
-  baseDataTestId,
-  onClick,
-  textToken,
-  subTextToken,
-}: {
-  textToken: TokenSimpleNoArgs;
-  subTextToken: TokenSimpleNoArgs;
-  baseDataTestId: SettingsToggles;
-  active: boolean;
-  onClick: () => Promise<void>;
-}) {
-  return (
-    <PanelToggleButton
-      textElement={
-        <PanelButtonTextWithSubText
-          text={tr(textToken)}
-          subText={tr(subTextToken)}
-          textDataTestId={`${baseDataTestId}-settings-text`}
-          subTextDataTestId={`${baseDataTestId}-settings-sub-text`}
-        />
-      }
-      active={active}
-      onClick={onClick}
-      toggleDataTestId={`${baseDataTestId}-settings-toggle`}
-      rowDataTestId={`${baseDataTestId}-settings-row`}
-    />
-  );
 }
 
 /**
@@ -249,7 +218,7 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
       allowOutsideClick={false}
       $contentMinWidth={WrapperModalWidth.normal}
     >
-      <PanelLabel tr={{ token: 'callsSettings' }} />
+      <PanelLabelWithDescription title={{ token: 'callsSettings' }} />
       <PanelButtonGroup>
         <SettingsToggleBasic
           baseDataTestId="enable-calls"
@@ -272,7 +241,7 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
           subTextToken="permissionsMicrophoneDescription"
         />
       </PanelButtonGroup>
-      <PanelLabel tr={{ token: 'sessionMessageRequests' }} />
+      <PanelLabelWithDescription title={{ token: 'sessionMessageRequests' }} />
       <PanelButtonGroup>
         <SettingsToggleBasic
           baseDataTestId="enable-communities-message-requests"
@@ -289,7 +258,7 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
           subTextToken="messageRequestsCommunitiesDescription"
         />
       </PanelButtonGroup>
-      <PanelLabel tr={{ token: 'readReceipts' }} />
+      <PanelLabelWithDescription title={{ token: 'readReceipts' }} />
       <PanelButtonGroup>
         <SettingsToggleBasic
           baseDataTestId="enable-read-receipts"
@@ -303,7 +272,7 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
           subTextToken="readReceiptsDescription"
         />
       </PanelButtonGroup>
-      <PanelLabel tr={{ token: 'typingIndicators' }} />
+      <PanelLabelWithDescription title={{ token: 'typingIndicators' }} />
       <PanelButtonGroup>
         <PanelToggleButton
           textElement={
@@ -330,7 +299,7 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
           rowDataTestId={'enable-typing-indicators-settings-row'}
         />{' '}
       </PanelButtonGroup>
-      <PanelLabel tr={{ token: 'linkPreviews' }} />
+      <PanelLabelWithDescription title={{ token: 'linkPreviews' }} />
       <PanelButtonGroup>
         <SettingsToggleBasic
           baseDataTestId="enable-link-previews"
@@ -342,7 +311,7 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
           subTextToken="linkPreviewsDescription"
         />
       </PanelButtonGroup>
-      <PanelLabel tr={{ token: 'passwords' }} />
+      <PanelLabelWithDescription title={{ token: 'passwords' }} />
       <PasswordSubSection />
     </SessionWrapperModal>
   );

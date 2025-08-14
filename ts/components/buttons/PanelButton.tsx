@@ -5,7 +5,7 @@ import { H8 } from '../basic/Heading';
 import { SpacerXS } from '../basic/Text';
 import { useIsDarkTheme } from '../../state/theme/selectors/theme';
 import { Localizer } from '../basic/Localizer';
-import type { WithTrArgs } from '../../localization/localeTools';
+import type { TrArgs } from '../../localization/localeTools';
 
 // NOTE Used for descendant components
 export const StyledContent = styled.div<{ disabled: boolean }>`
@@ -18,17 +18,42 @@ export const StyledContent = styled.div<{ disabled: boolean }>`
 
 const StyledPanelLabel = styled.p`
   color: var(--text-secondary-color);
-  width: 100%;
   margin: 0;
-  padding-left: var(--margins-lg);
+  align-self: flex-start;
+  padding-inline: var(--margins-lg);
+`;
+
+const StyledPanelDescription = styled(StyledPanelLabel)`
+  color: var(--text-primary-color);
+`;
+
+const StyledPanelLabelWithDescription = styled.div`
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: var(--margins-xs);
   padding-block: var(--margins-sm);
 `;
 
-export function PanelLabel({ tr }: WithTrArgs) {
+export function PanelLabelWithDescription({
+  title,
+  description,
+}: {
+  title: TrArgs;
+  description?: TrArgs;
+}) {
   return (
-    <StyledPanelLabel>
-      <Localizer {...tr} />
-    </StyledPanelLabel>
+    <StyledPanelLabelWithDescription>
+      {/* less space between the label and the description */}
+      <StyledPanelLabel>
+        <Localizer {...title} />
+      </StyledPanelLabel>
+      {description ? (
+        <StyledPanelDescription>
+          <Localizer {...description} />
+        </StyledPanelDescription>
+      ) : null}
+    </StyledPanelLabelWithDescription>
   );
 }
 
@@ -172,7 +197,9 @@ function TextOnly(props: PanelButtonTextBaseProps) {
       data-testid={props.textDataTestId}
       fontWeight={500}
       style={{
-        whiteSpace: 'nowrap',
+        // We need this to wrap so we don't cut long titles in the
+        // user settings page, even if it means having multiple lines
+        whiteSpace: 'wrap',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         width: '100%',

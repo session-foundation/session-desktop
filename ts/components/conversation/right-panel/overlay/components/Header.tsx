@@ -16,17 +16,6 @@ export const HeaderTitle = styled.h2`
   word-break: break-word;
 `;
 
-export const HeaderSubtitle = styled.h3`
-  font-family: var(--font-default);
-  font-size: var(--font-size-sm);
-  font-weight: 400;
-  text-align: center;
-  padding-top: 0px;
-  margin-top: 0;
-  // limit the width of the subtitle to have a nicer look (and not one long line)
-  max-width: 50ch;
-`;
-
 type HeaderProps = (
   | {
       hideCloseButton: false;

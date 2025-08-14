@@ -5,7 +5,11 @@ import {
   TimerOptionsArray,
   TimerSeconds,
 } from '../../../../../session/disappearing_messages/timerOptions';
-import { PanelButtonGroup, PanelButtonText, PanelLabel } from '../../../../buttons/PanelButton';
+import {
+  PanelButtonGroup,
+  PanelButtonText,
+  PanelLabelWithDescription,
+} from '../../../../buttons/PanelButton';
 import { PanelRadioButton } from '../../../../buttons/PanelRadioButton';
 import { assertUnreachable } from '../../../../../types/sqlSharedTypes';
 
@@ -76,7 +80,9 @@ export const TimeOptions = (props: TimerOptionsProps) => {
 
   return (
     <>
-      {!hasOnlyOneMode && <PanelLabel tr={{ token: 'disappearingMessagesTimer' }} />}
+      {!hasOnlyOneMode && (
+        <PanelLabelWithDescription title={{ token: 'disappearingMessagesTimer' }} />
+      )}
       <PanelButtonGroup>
         {options.map(option => {
           // we want  "time-option-1-hours", etc as accessibility id

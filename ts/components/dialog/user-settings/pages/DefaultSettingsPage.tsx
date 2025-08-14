@@ -14,7 +14,7 @@ import {
   userSettingsModal,
 } from '../../../../state/ducks/modalDialog';
 import { networkDataActions } from '../../../../state/ducks/networkData';
-import { sectionActions, SectionType } from '../../../../state/ducks/section';
+import { sectionActions } from '../../../../state/ducks/section';
 import { AccountIdPill } from '../../../basic/AccountIdPill';
 import { Flex } from '../../../basic/Flex';
 import { SessionIDNotEditable } from '../../../basic/SessionIdNotEditable';
@@ -32,6 +32,7 @@ import { ModalPencilIcon } from '../../shared/ModalPencilButton';
 import { ProfileHeader, ProfileName } from '../components';
 import type { ProfileDialogModes } from '../ProfileDialogModes';
 import { tr } from '../../../../localization/localeTools';
+import { useIsProAvailable } from '../../../../hooks/useIsProAvailable';
 
 const handleKeyQRMode = (mode: ProfileDialogModes, setMode: (mode: ProfileDialogModes) => void) => {
   switch (mode) {
@@ -87,6 +88,12 @@ const StyledUserSettingsDialog = styled.div``;
 
 function SessionProSection() {
   const dispatch = useDispatch();
+
+  const isProAvailable = useIsProAvailable();
+
+  if (!isProAvailable) {
+    return null;
+  }
   return (
     <PanelButtonGroup>
       <PanelIconButton
@@ -162,7 +169,7 @@ function SettingsSection() {
         iconElement={<LucideIconForSettings unicode={LUCIDE_ICONS_UNICODE.VOLUME_2} />}
         text={tr('sessionNotifications')}
         onClick={() => {
-          throw new Error('Not implemented');
+          dispatch(userSettingsModal({ userSettingsPage: 'notifications' }));
         }}
         dataTestId="notifications-settings-menu-item"
       />
@@ -188,8 +195,8 @@ function SettingsSection() {
         }
         text={tr('sessionMessageRequests')}
         onClick={() => {
-          dispatch(sectionActions.showLeftPaneSection(SectionType.Message));
           dispatch(sectionActions.setLeftOverlayMode('message-requests'));
+          dispatch(userSettingsModal(null));
           dispatch(resetConversationExternal());
         }}
         dataTestId="message-requests-settings-menu-item"

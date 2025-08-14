@@ -6,9 +6,6 @@
  */
 
 export type SessionSettingCategory =
-  | 'donate'
-  | 'session-pro'
-  | 'notifications'
   | 'conversations'
   | 'message-requests'
   | 'appearance'

@@ -10,7 +10,7 @@ import { Flex } from '../../../../basic/Flex';
 import { useWeAreCommunityAdminOrModerator } from '../../../../../state/selectors/conversations';
 import { SpacerSM } from '../../../../basic/Text';
 import { PanelButtonGroup } from '../../../../buttons';
-import { PanelLabel } from '../../../../buttons/PanelButton';
+import { PanelLabelWithDescription } from '../../../../buttons/PanelButton';
 import { useShowAttachments } from '../../../../menuAndSettingsHooks/useShowAttachments';
 import { ModalBasicHeader, SessionWrapperModal } from '../../../../SessionWrapperModal';
 import { ConversationSettingsHeader } from '../../conversationSettingsHeader';
@@ -46,7 +46,7 @@ import { useChangeNickname } from '../../../../menuAndSettingsHooks/useChangeNic
 import { useShowUpdateGroupOrCommunityDetailsCb } from '../../../../menuAndSettingsHooks/useShowUpdateGroupNameDescription';
 
 function AdminSettingsTitle() {
-  return <PanelLabel tr={{ token: 'adminSettings' }} />;
+  return <PanelLabelWithDescription title={{ token: 'adminSettings' }} />;
 }
 
 function GroupV2AdminActions({ conversationId }: WithConvoId) {

@@ -6,8 +6,6 @@ import { SettingsHeader } from './SessionSettingsHeader';
 
 import { SessionIconButton } from '../icon';
 
-import { SessionNotificationGroupSettings } from './SessionNotificationGroupSettings';
-
 import { sessionPassword } from '../../state/ducks/modalDialog';
 import type { PasswordAction, SessionSettingCategory } from '../../types/ReduxTypes';
 import { SettingsCategoryAppearance } from './section/CategoryAppearance';
@@ -115,8 +113,6 @@ const SettingInCategory = (props: { category: SessionSettingCategory }) => {
       return <CategoryConversations />;
     case 'appearance':
       return <SettingsCategoryAppearance />;
-    case 'notifications':
-      return <SessionNotificationGroupSettings />;
 
     case 'help':
       return <SettingsCategoryHelp />;

@@ -4,7 +4,7 @@ import {
   PanelButtonGroup,
   PanelButtonText,
   PanelButtonTextWithSubText,
-  PanelLabel,
+  PanelLabelWithDescription,
 } from '../../../../buttons/PanelButton';
 import { PanelRadioButton } from '../../../../buttons/PanelRadioButton';
 
@@ -25,10 +25,11 @@ type DisappearingModesProps = {
   selected?: DisappearingMessageConversationModeType;
   setSelected: (value: DisappearingMessageConversationModeType) => void;
   hasOnlyOneMode?: boolean;
+  singleMode?: DisappearingMessageConversationModeType;
 };
 
 export const DisappearingModes = (props: DisappearingModesProps) => {
-  const { options, selected, setSelected, hasOnlyOneMode } = props;
+  const { options, selected, setSelected, hasOnlyOneMode, singleMode } = props;
 
   if (hasOnlyOneMode) {
     return null;
@@ -36,7 +37,17 @@ export const DisappearingModes = (props: DisappearingModesProps) => {
 
   return (
     <>
-      <PanelLabel tr={{ token: 'disappearingMessagesDeleteType' }} />
+      <PanelLabelWithDescription
+        title={{ token: 'disappearingMessagesDeleteType' }}
+        description={{
+          token:
+            singleMode === 'deleteAfterRead'
+              ? 'disappearingMessagesDisappearAfterReadDescription'
+              : singleMode === 'deleteAfterSend'
+                ? 'disappearingMessagesDisappearAfterSendDescription'
+                : 'disappearingMessagesDescription1',
+        }}
+      />
       <PanelButtonGroup>
         {Object.keys(options).map(_mode => {
           const mode = _mode as DisappearingMessageConversationModeType;

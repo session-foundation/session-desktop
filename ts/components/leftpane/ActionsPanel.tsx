@@ -66,6 +66,7 @@ import { GearAvatarButton } from '../buttons/GearAvatarButton';
 const StyledContainerAvatar = styled.div`
   padding: var(--margins-lg);
   position: relative;
+  cursor: pointer;
 `;
 
 function handleThemeSwitch() {
@@ -129,10 +130,9 @@ const Section = (props: { type: SectionType }) => {
 
   if (type === SectionType.Profile) {
     return (
-      <StyledContainerAvatar>
+      <StyledContainerAvatar onClick={handleClick}>
         <Avatar
           size={AvatarSize.S}
-          onAvatarClick={handleClick}
           pubkey={ourNumber}
           dataTestId="leftpane-primary-avatar"
           imageDataTestId={`img-leftpane-primary-avatar`}

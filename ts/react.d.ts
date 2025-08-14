@@ -87,7 +87,11 @@ declare module 'react' {
     | 'enable-communities-message-requests'
     | 'enable-read-receipts'
     | 'enable-typing-indicators'
-    | 'enable-link-previews';
+    | 'enable-link-previews'
+    | 'notifications'
+    | 'audio-notifications';
+
+  type SettingsRadio = `set-notifications-${'message' | 'name' | 'count'}`;
 
   type SettingsInlineButtons = 'set-password' | 'change-password' | 'remove-password';
 
@@ -229,7 +233,7 @@ declare module 'react' {
     | 'modal-actions-container'
     | 'reveal-blocked-user-settings'
     | `${Sections}-section`
-    | `${SettingsToggles | SettingsInlineButtons}-settings-${'text' | 'sub-text' | 'toggle' | 'button' | 'row'}`
+    | `${SettingsToggles | SettingsInlineButtons | SettingsRadio}-settings-${'text' | 'sub-text' | 'toggle' | 'radio' | 'button' | 'row'}`
 
     // Buttons
     | `${Buttons}-button`
