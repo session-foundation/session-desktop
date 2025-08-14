@@ -142,7 +142,9 @@ async function getAllConversations(): Promise<Array<ConversationModel>> {
   const conversationsAttrs =
     (await channels.getAllConversations()) as Array<ConversationAttributes>;
 
-  return conversationsAttrs.map(attr => new ConversationModel(attr));
+  return conversationsAttrs
+    .filter(attr => typeof (attr as any)?.id === 'string')
+    .map(attr => new ConversationModel(attr));
 }
 
 /**
