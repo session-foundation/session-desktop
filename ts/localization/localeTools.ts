@@ -352,6 +352,12 @@ export class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends Str
   }
 
   private postProcessStrippedString(str: string): string {
+    if (typeof process.env.TEST_WORKER_INDEX === 'string' && process.env.TEST_WORKER_INDEX.length) {
+      // Special case for when running in playwright (those files are reused for session-appium & session-playwright as is).
+      // When that's the case, we need to replace `<br/>` and `<br/><br/>` with a single space.
+      // " <br/><br/>" and "<br/>" both become a single space
+      return str.replace(/\s*(<br\s*\/?>[\s]*)+/gi, ' ').replace(/<[^>]*>/g, '');
+    }
     const strippedString = str.replaceAll(/<[^>]*>/g, '');
     return deSanitizeHtmlTags(strippedString, '\u200B');
   }
