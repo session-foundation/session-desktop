@@ -177,7 +177,7 @@ function SettingsSection() {
         iconElement={<LucideIconForSettings unicode={LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE} />}
         text={tr('sessionConversations')}
         onClick={() => {
-          throw new Error('Not implemented');
+          dispatch(userSettingsModal({ userSettingsPage: 'conversations' }));
         }}
         dataTestId="conversations-settings-menu-item"
       />

@@ -11,7 +11,10 @@ import { showUpdateGroupMembersByConvoId } from '../../../interactions/conversat
 import { tr } from '../../../localization/localeTools';
 import type { ConversationNotificationSettingType } from '../../../models/conversationAttributes';
 import { PanelIconButton } from '../../buttons';
-import { PanelIconLucideIcon, PanelIconSessionLegacyIcon } from '../../buttons/PanelIconButton';
+import {
+  PanelIconLucideIcon,
+  PanelIconSessionLegacyIcon,
+} from '../../buttons/panel/PanelIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { useShowNotificationFor } from '../../menuAndSettingsHooks/useShowNotificationFor';
 import type { WithConvoId } from '../../../session/types/with';

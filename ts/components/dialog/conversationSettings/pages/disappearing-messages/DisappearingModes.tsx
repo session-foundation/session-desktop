@@ -5,8 +5,8 @@ import {
   PanelButtonText,
   PanelButtonTextWithSubText,
   PanelLabelWithDescription,
-} from '../../../../buttons/PanelButton';
-import { PanelRadioButton } from '../../../../buttons/PanelRadioButton';
+} from '../../../../buttons/panel/PanelButton';
+import { PanelRadioButton } from '../../../../buttons/panel/PanelRadioButton';
 
 function toDataTestId(mode: DisappearingMessageConversationModeType) {
   switch (mode) {

@@ -1,11 +1,10 @@
-import type { SettingsToggles } from 'react';
+import type { SettingsChevron } from 'react';
 import type { TokenSimpleNoArgs } from '../../../../localization/locales';
 import { PanelButtonTextWithSubText } from '../../../buttons/panel/PanelButton';
-import { PanelToggleButton } from '../../../buttons/panel/PanelToggleButton';
 import { tr } from '../../../../localization/localeTools';
+import { PanelChevronButton } from '../../../buttons/panel/PanelChevronButton';
 
-export function SettingsToggleBasic({
-  active,
+export function SettingsChevronBasic({
   baseDataTestId,
   onClick,
   textToken,
@@ -13,12 +12,11 @@ export function SettingsToggleBasic({
 }: {
   textToken: TokenSimpleNoArgs;
   subTextToken: TokenSimpleNoArgs;
-  baseDataTestId: SettingsToggles;
-  active: boolean;
+  baseDataTestId: SettingsChevron;
   onClick: () => Promise<void>;
 }) {
   return (
-    <PanelToggleButton
+    <PanelChevronButton
       textElement={
         <PanelButtonTextWithSubText
           text={tr(textToken)}
@@ -27,10 +25,9 @@ export function SettingsToggleBasic({
           subTextDataTestId={`${baseDataTestId}-settings-sub-text`}
         />
       }
-      active={active}
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       onClick={onClick}
-      toggleDataTestId={`${baseDataTestId}-settings-toggle`}
-      rowDataTestId={`${baseDataTestId}-settings-row`}
+      baseDataTestId={baseDataTestId}
     />
   );
 }

@@ -8,7 +8,7 @@ import {
   PanelButtonGroup,
   PanelButtonTextWithSubText,
   PanelLabelWithDescription,
-} from '../../../buttons/PanelButton';
+} from '../../../buttons/panel/PanelButton';
 import {
   ModalBasicHeader,
   SessionWrapperModal,
@@ -26,7 +26,7 @@ import { Notifications } from '../../../../util/notifications';
 import { isAudioNotificationSupported } from '../../../../types/Settings';
 import { SpacerLG } from '../../../basic/Text';
 import { SessionButton, SessionButtonColor } from '../../../basic/SessionButton';
-import { PanelRadioButton } from '../../../buttons/PanelRadioButton';
+import { PanelRadioButton } from '../../../buttons/panel/PanelRadioButton';
 
 const NotificationType = { message: 'message', name: 'name', count: 'count', off: 'off' } as const;
 

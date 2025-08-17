@@ -2,7 +2,7 @@ import { useDispatch } from 'react-redux';
 import { useIconToImageURL } from '../../hooks/useIconToImageURL';
 import { updateLightBoxOptions } from '../../state/ducks/modalDialog';
 import { prepareQRCodeForLightBox } from '../../util/qrCodes';
-import { AvatarExitQrCodeButton } from '../buttons/AvatarExitQrCodeButton';
+import { AvatarExitQrCodeButton } from '../buttons/avatar/AvatarExitQrCodeButton';
 import { QRCodeLogoProps, SessionQRCode } from '../SessionQRCode';
 
 const qrLogoProps: QRCodeLogoProps = {

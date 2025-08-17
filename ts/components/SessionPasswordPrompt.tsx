@@ -193,6 +193,7 @@ const SessionPasswordPromptInner = () => {
         <ModalBasicHeader title={tr(clearDataView ? 'clearDevice' : 'passwordEnter')} />
       }
       $contentMinWidth={WrapperModalWidth.narrow}
+      topAnchor="center"
       buttonChildren={
         clearDataView ? (
           <ClearDataViewButtons

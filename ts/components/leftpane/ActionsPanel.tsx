@@ -61,7 +61,7 @@ import { Storage } from '../../util/storage';
 import { getFileInfoFromFileServer } from '../../session/apis/file_server_api/FileServerApi';
 import { themesArray } from '../../themes/constants/colors';
 import { isDebugMode } from '../../shared/env_vars';
-import { GearAvatarButton } from '../buttons/GearAvatarButton';
+import { GearAvatarButton } from '../buttons/avatar/GearAvatarButton';
 
 const StyledContainerAvatar = styled.div`
   padding: var(--margins-lg);

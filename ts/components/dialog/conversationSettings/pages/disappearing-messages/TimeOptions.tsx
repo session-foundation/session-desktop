@@ -9,8 +9,8 @@ import {
   PanelButtonGroup,
   PanelButtonText,
   PanelLabelWithDescription,
-} from '../../../../buttons/PanelButton';
-import { PanelRadioButton } from '../../../../buttons/PanelRadioButton';
+} from '../../../../buttons/panel/PanelButton';
+import { PanelRadioButton } from '../../../../buttons/panel/PanelRadioButton';
 import { assertUnreachable } from '../../../../../types/sqlSharedTypes';
 
 type TimerOptionsProps = {

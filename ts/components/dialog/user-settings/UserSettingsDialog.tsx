@@ -1,4 +1,5 @@
 import { type UserSettingsModalState } from '../../../state/ducks/modalDialog';
+import { ConversationSettingsPage } from './pages/ConversationSettingsPage';
 import { DefaultSettingPage } from './pages/DefaultSettingsPage';
 import { NotificationsSettingsPage } from './pages/NotificationsSettingsPage';
 import { PrivacySettingsPage } from './pages/PrivacySettingsPage';
@@ -15,6 +16,8 @@ export const UserSettingsDialog = (modalState: UserSettingsModalState) => {
       return <PrivacySettingsPage {...modalState} />;
     case 'notifications':
       return <NotificationsSettingsPage {...modalState} />;
+    case 'conversations':
+      return <ConversationSettingsPage {...modalState} />;
     default:
       return <DefaultSettingPage />;
   }

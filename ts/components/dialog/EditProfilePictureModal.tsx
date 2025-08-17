@@ -40,7 +40,7 @@ import { ProIconButton } from '../buttons/ProButton';
 import { useProBadgeOnClickCb } from '../menuAndSettingsHooks/useProBadgeOnClickCb';
 import { useUserHasPro } from '../../hooks/useHasPro';
 import { Localizer } from '../basic/Localizer';
-import { UploadFirstImageButton } from '../buttons/UploadFirstImageButton';
+import { UploadFirstImageButton } from '../buttons/avatar/UploadFirstImageButton';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;

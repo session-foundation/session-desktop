@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { SessionDataTestId } from 'react';
-import { SessionButton, type SessionButtonProps } from '../basic/SessionButton';
+import { SessionButton, type SessionButtonProps } from '../../basic/SessionButton';
 
 import {
   GenericPanelButtonWithAction,

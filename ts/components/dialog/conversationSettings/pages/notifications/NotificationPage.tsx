@@ -7,13 +7,13 @@ import { SessionButton } from '../../../../basic/SessionButton';
 import { StyledScrollContainer } from '../../../../conversation/right-panel/overlay/components';
 import { type ConversationNotificationSettingType } from '../../../../../models/conversationAttributes';
 import { PanelButtonGroup } from '../../../../buttons';
-import { PanelRadioButton } from '../../../../buttons/PanelRadioButton';
+import { PanelRadioButton } from '../../../../buttons/panel/PanelRadioButton';
 import {
   updateConversationSettingsModal,
   type ConversationSettingsModalState,
 } from '../../../../../state/ducks/modalDialog';
 import { useConversationSettingsModalIsStandalone } from '../../../../../state/selectors/modal';
-import { PanelButtonText } from '../../../../buttons/PanelButton';
+import { PanelButtonText } from '../../../../buttons/panel/PanelButton';
 import { useLocalisedNotificationOptions } from '../../../../menuAndSettingsHooks/useLocalisedNotificationFor';
 import { useSetNotificationsFor } from '../../../../menuAndSettingsHooks/useSetNotificationsFor';
 import { useShowConversationSettingsFor } from '../../../../menuAndSettingsHooks/useShowConversationSettingsFor';

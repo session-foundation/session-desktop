@@ -9,10 +9,10 @@ import {
   StyledContent,
   type PanelButtonSubtextProps,
 } from './PanelButton';
-import { LucideIcon } from '../icon/LucideIcon';
-import { SessionIcon } from '../icon/SessionIcon';
-import type { SessionIconType } from '../icon';
-import type { WithLucideUnicode } from '../icon/lucide';
+import { LucideIcon } from '../../icon/LucideIcon';
+import { SessionIcon } from '../../icon/SessionIcon';
+import type { SessionIconType } from '../../icon';
+import type { WithLucideUnicode } from '../../icon/lucide';
 import { StyledPanelButtonSeparator } from './StyledPanelButtonGroupSeparator';
 
 type PanelIconButtonProps = Omit<PanelButtonProps, 'children' | 'subText' | 'subTextDataTestId'> & {

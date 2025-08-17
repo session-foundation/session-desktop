@@ -1,6 +1,6 @@
 import type { ReactNode, SessionDataTestId } from 'react';
 import styled from 'styled-components';
-import { useIsDarkTheme } from '../../state/theme/selectors/theme';
+import { useIsDarkTheme } from '../../../state/theme/selectors/theme';
 import { StyledPanelButton, StyledContent } from './PanelButton';
 import { StyledPanelButtonSeparator } from './StyledPanelButtonGroupSeparator';
 

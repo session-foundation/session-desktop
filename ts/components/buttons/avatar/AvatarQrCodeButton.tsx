@@ -1,6 +1,6 @@
-import { AvatarSize } from '../avatar/Avatar';
-import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
-import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { AvatarSize } from '../../avatar/Avatar';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
+import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import { useAvatarActionPosition } from './PlusAvatarButton';
 
 export function AvatarQrCodeButton({

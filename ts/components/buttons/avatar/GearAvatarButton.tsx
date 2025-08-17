@@ -1,5 +1,5 @@
-import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
-import { LucideIcon } from '../icon/LucideIcon';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
+import { LucideIcon } from '../../icon/LucideIcon';
 
 /**
  * Used only for our own avatar display at the top-left of the app (ActionPanel).

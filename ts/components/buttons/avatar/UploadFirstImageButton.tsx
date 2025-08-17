@@ -1,7 +1,7 @@
 import styled from 'styled-components';
-import { AvatarSize } from '../avatar/Avatar';
-import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
-import { LucideIcon } from '../icon/LucideIcon';
+import { AvatarSize } from '../../avatar/Avatar';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
+import { LucideIcon } from '../../icon/LucideIcon';
 import { PlusAvatarButton } from './PlusAvatarButton';
 
 const StyledUploadButton = styled.div`

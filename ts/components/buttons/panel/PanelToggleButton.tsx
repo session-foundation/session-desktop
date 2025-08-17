@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { SessionDataTestId } from 'react';
-import { SessionToggle } from '../basic/SessionToggle';
+import { SessionToggle } from '../../basic/SessionToggle';
 import {
   GenericPanelButtonWithAction,
   type GenericPanelButtonProps,

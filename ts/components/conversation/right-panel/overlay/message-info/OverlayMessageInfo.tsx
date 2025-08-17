@@ -48,7 +48,7 @@ import { AttachmentInfo, MessageInfo } from './components';
 import { AttachmentCarousel } from './components/AttachmentCarousel';
 import { ToastUtils } from '../../../../../session/utils';
 import { LUCIDE_ICONS_UNICODE } from '../../../../icon/lucide';
-import { PanelIconLucideIcon } from '../../../../buttons/PanelIconButton';
+import { PanelIconLucideIcon } from '../../../../buttons/panel/PanelIconButton';
 import { sectionActions } from '../../../../../state/ducks/section';
 import { useIsIncomingRequest } from '../../../../../hooks/useParamSelector';
 import { tr } from '../../../../../localization/localeTools';

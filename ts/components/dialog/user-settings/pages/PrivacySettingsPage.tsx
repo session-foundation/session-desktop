@@ -10,8 +10,8 @@ import {
   PanelButtonGroup,
   PanelButtonTextWithSubText,
   PanelLabelWithDescription,
-} from '../../../buttons/PanelButton';
-import { PanelToggleButton } from '../../../buttons/PanelToggleButton';
+} from '../../../buttons/panel/PanelButton';
+import { PanelToggleButton } from '../../../buttons/panel/PanelToggleButton';
 import {
   ModalBasicHeader,
   SessionWrapperModal,
@@ -33,7 +33,7 @@ import { SettingsKey } from '../../../../data/settings-key';
 import { SessionUtilUserProfile } from '../../../../session/utils/libsession/libsession_utils_user_profile';
 import { getPasswordHash, Storage } from '../../../../util/storage';
 import { SpacerXS } from '../../../basic/Text';
-import { PanelWithButtonInline } from '../../../buttons/PanelWithButtonInline';
+import { PanelWithButtonInline } from '../../../buttons/panel/PanelWithButtonInline';
 import { displayPasswordModal } from '../../../settings/SessionSettings';
 import { SettingsToggleBasic } from '../components/SettingsToggleBasic';
 

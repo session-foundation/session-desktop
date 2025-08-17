@@ -1,8 +1,8 @@
 import type { CSSProperties } from 'styled-components';
 import type { SessionDataTestId } from 'react';
-import { SessionLucideIconButton } from '../icon/SessionIconButton';
-import { AvatarSize } from '../avatar/Avatar';
-import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { SessionLucideIconButton } from '../../icon/SessionIconButton';
+import { AvatarSize } from '../../avatar/Avatar';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 
 export function isAvatarActionSupportedAvatarSize(
   avatarSize: AvatarSize

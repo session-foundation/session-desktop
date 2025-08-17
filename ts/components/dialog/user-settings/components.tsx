@@ -6,7 +6,7 @@ import { Flex } from '../../basic/Flex';
 import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnClickCb';
 import { useCurrentUserHasPro } from '../../../hooks/useHasPro';
 import { ProIconButton } from '../../buttons/ProButton';
-import { AvatarQrCodeButton } from '../../buttons/AvatarQrCodeButton';
+import { AvatarQrCodeButton } from '../../buttons/avatar/AvatarQrCodeButton';
 
 type ProfileAvatarProps = {
   avatarPath: string | null;

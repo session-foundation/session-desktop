@@ -1,5 +1,5 @@
-import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
-import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
+import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 
 export function AvatarExitQrCodeButton({ onExitQrCodeView }: { onExitQrCodeView: () => void }) {
   return (

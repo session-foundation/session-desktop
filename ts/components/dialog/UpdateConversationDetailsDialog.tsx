@@ -41,7 +41,7 @@ import {
 } from '../../state/selectors/sogsRoomInfo';
 import { ReduxSogsRoomInfos } from '../../state/ducks/sogsRoomInfo';
 import type { WithConvoId } from '../../session/types/with';
-import { UploadFirstImageButton } from '../buttons/UploadFirstImageButton';
+import { UploadFirstImageButton } from '../buttons/avatar/UploadFirstImageButton';
 
 function useNameErrorString({
   isMe,

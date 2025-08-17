@@ -1,5 +1,5 @@
 import { SessionDataTestId } from 'react';
-import { SessionRadio } from '../basic/SessionRadio';
+import { SessionRadio } from '../../basic/SessionRadio';
 import {
   GenericPanelButtonWithAction,
   type GenericPanelButtonProps,

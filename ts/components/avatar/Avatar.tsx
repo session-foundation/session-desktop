@@ -10,7 +10,7 @@ import {
 import { AvatarPlaceHolder } from './AvatarPlaceHolder/AvatarPlaceHolder';
 import { ClosedGroupAvatar } from './AvatarPlaceHolder/ClosedGroupAvatar';
 import { useIsMessageSelectionMode } from '../../state/selectors/selectedConversation';
-import { PlusAvatarButton } from '../buttons/PlusAvatarButton';
+import { PlusAvatarButton } from '../buttons/avatar/PlusAvatarButton';
 import { StyledAvatar } from './AvatarPlaceHolder/StyledAvatar';
 import { CrownIcon } from './CrownIcon';
 

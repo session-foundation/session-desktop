@@ -89,9 +89,13 @@ declare module 'react' {
     | 'enable-typing-indicators'
     | 'enable-link-previews'
     | 'notifications'
-    | 'audio-notifications';
+    | 'audio-notifications'
+    | 'audio-message-autoplay'
+    | 'spell-check'
+    | 'conversation-trimming';
 
   type SettingsRadio = `set-notifications-${'message' | 'name' | 'count'}`;
+  type SettingsChevron = `blocked-contacts`;
 
   type SettingsInlineButtons = 'set-password' | 'change-password' | 'remove-password';
 
@@ -233,7 +237,7 @@ declare module 'react' {
     | 'modal-actions-container'
     | 'reveal-blocked-user-settings'
     | `${Sections}-section`
-    | `${SettingsToggles | SettingsInlineButtons | SettingsRadio}-settings-${'text' | 'sub-text' | 'toggle' | 'radio' | 'button' | 'row'}`
+    | `${SettingsToggles | SettingsInlineButtons | SettingsRadio | SettingsChevron}-settings-${'text' | 'sub-text' | 'toggle' | 'radio' | 'button' | 'chevron' | 'row'}`
 
     // Buttons
     | `${Buttons}-button`

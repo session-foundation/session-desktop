@@ -75,8 +75,9 @@ const StyledModal = styled.div<{
   $topAnchor: ModalTopAnchor;
 }>`
   position: absolute;
-  top: ${props => props.$topAnchor};
-  max-height: ${props => `calc(100vh - ${props.$topAnchor} - 5vh)`};
+  top: ${props => (props.$topAnchor === 'center' ? 'auto' : props.$topAnchor)};
+  max-height: ${props =>
+    `calc(100vh - ${props.$topAnchor === 'center' ? '' : props.$topAnchor} - 5vh)`};
 
   animation: fadein var(--default-duration);
   z-index: 150;
@@ -209,7 +210,7 @@ export function ModalBottomButtonWithBorder({
   );
 }
 
-export type ModalTopAnchor = '15vh' | '25vh' | '35vh' | '45vh';
+export type ModalTopAnchor = '15vh' | '25vh' | '35vh' | '45vh' | 'center';
 
 export type SessionWrapperModalType = {
   headerChildren: ReactNode;

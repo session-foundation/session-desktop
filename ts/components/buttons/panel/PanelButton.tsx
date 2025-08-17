@@ -1,11 +1,12 @@
 import { ReactNode, SessionDataTestId, type PropsWithChildren } from 'react';
 import styled, { CSSProperties } from 'styled-components';
-import { Flex } from '../basic/Flex';
-import { H8 } from '../basic/Heading';
-import { SpacerXS } from '../basic/Text';
-import { useIsDarkTheme } from '../../state/theme/selectors/theme';
-import { Localizer } from '../basic/Localizer';
-import type { TrArgs } from '../../localization/localeTools';
+
+import { Flex } from '../../basic/Flex';
+import { H8 } from '../../basic/Heading';
+import { SpacerXS } from '../../basic/Text';
+import { Localizer } from '../../basic/Localizer';
+import type { TrArgs } from '../../../localization/localeTools';
+import { useIsDarkTheme } from '../../../state/theme/selectors/theme';
 
 // NOTE Used for descendant components
 export const StyledContent = styled.div<{ disabled: boolean }>`
