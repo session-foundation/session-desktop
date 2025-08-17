@@ -85,11 +85,6 @@ const categories: Array<Categories> = (
       icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE },
     },
     {
-      id: 'message-requests',
-      title: tr('sessionMessageRequests'),
-      icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE_WARNING },
-    },
-    {
       id: 'appearance',
       title: tr('sessionAppearance'),
       icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.PAINTBRUSH_VERTICAL },
@@ -127,8 +122,6 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
       padding={'0 var(--margins-xs)'}
       onClick={() => {
         switch (id) {
-          case 'message-requests':
-            break;
           default:
             dispatch(sectionActions.showSettingsSection(id));
         }

@@ -230,7 +230,7 @@ function AdminSection() {
         iconElement={<LucideIconForSettings unicode={LUCIDE_ICONS_UNICODE.CIRCLE_HELP} />}
         text={tr('sessionHelp')}
         onClick={() => {
-          throw new Error('Not implemented');
+          dispatch(userSettingsModal({ userSettingsPage: 'help' }));
         }}
         dataTestId="help-settings-menu-item"
       />

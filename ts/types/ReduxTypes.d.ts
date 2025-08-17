@@ -7,11 +7,9 @@
 
 export type SessionSettingCategory =
   | 'conversations'
-  | 'message-requests'
   | 'appearance'
   | 'permissions'
-  | 'recovery-password'
-  | 'help';
+  | 'recovery-password';
 
 export type PasswordAction = 'set' | 'change' | 'remove' | 'enter';
 

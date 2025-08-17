@@ -10,7 +10,6 @@ import { sessionPassword } from '../../state/ducks/modalDialog';
 import type { PasswordAction, SessionSettingCategory } from '../../types/ReduxTypes';
 import { SettingsCategoryAppearance } from './section/CategoryAppearance';
 import { CategoryConversations } from './section/CategoryConversations';
-import { SettingsCategoryHelp } from './section/CategoryHelp';
 import { SettingsCategoryPermissions } from './section/CategoryPermissions';
 import { SettingsCategoryRecoveryPassword } from './section/CategoryRecoveryPassword';
 import { setDebugMode } from '../../state/ducks/debug';
@@ -113,16 +112,10 @@ const SettingInCategory = (props: { category: SessionSettingCategory }) => {
       return <CategoryConversations />;
     case 'appearance':
       return <SettingsCategoryAppearance />;
-
-    case 'help':
-      return <SettingsCategoryHelp />;
     case 'permissions':
       return <SettingsCategoryPermissions />;
     case 'recovery-password':
       return <SettingsCategoryRecoveryPassword />;
-
-    // these are just buttons or modals and don't have screens
-    case 'message-requests':
     default:
       return null;
   }

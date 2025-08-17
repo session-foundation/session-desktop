@@ -33,9 +33,9 @@ import { SettingsKey } from '../../../../data/settings-key';
 import { SessionUtilUserProfile } from '../../../../session/utils/libsession/libsession_utils_user_profile';
 import { getPasswordHash, Storage } from '../../../../util/storage';
 import { SpacerXS } from '../../../basic/Text';
-import { PanelWithButtonInline } from '../../../buttons/panel/PanelWithButtonInline';
 import { displayPasswordModal } from '../../../settings/SessionSettings';
 import { SettingsToggleBasic } from '../components/SettingsToggleBasic';
+import { SettingsPanelButtonInlineBasic } from '../components/SettingsPanelButtonInlineBasic';
 
 type WithPasswordUpdatedCb = { onPasswordUpdated: (action: string) => void };
 
@@ -113,34 +113,18 @@ function StaticTypingBubble({ width }: { width: string }) {
 function HasPasswordSubSection(props: WithPasswordUpdatedCb) {
   return (
     <PanelButtonGroup>
-      <PanelWithButtonInline
-        textElement={
-          <PanelButtonTextWithSubText
-            text={tr('passwordChange')}
-            subText={tr('passwordChangeShortDescription')}
-            textDataTestId={'change-password-settings-text'}
-            subTextDataTestId={'change-password-settings-sub-text'}
-          />
-        }
-        rowDataTestId={'change-password-settings-row'}
-        buttonDataTestId={'change-password-settings-button'}
-        onClick={async () => {
-          displayPasswordModal('change', props.onPasswordUpdated);
-        }}
+      <SettingsPanelButtonInlineBasic
+        baseDataTestId="change-password"
+        textToken="passwordChange"
+        subTextToken="passwordChangeShortDescription"
+        onClick={async () => displayPasswordModal('change', props.onPasswordUpdated)}
         buttonColor={SessionButtonColor.Primary}
         buttonText={tr('change')}
       />
-      <PanelWithButtonInline
-        textElement={
-          <PanelButtonTextWithSubText
-            text={tr('passwordRemove')}
-            subText={tr('passwordRemoveShortDescription')}
-            textDataTestId={'remove-password-settings-text'}
-            subTextDataTestId={'remove-password-settings-sub-text'}
-          />
-        }
-        rowDataTestId={'remove-password-settings-row'}
-        buttonDataTestId={'remove-password-settings-button'}
+      <SettingsPanelButtonInlineBasic
+        baseDataTestId="remove-password"
+        textToken="passwordRemove"
+        subTextToken="passwordRemoveShortDescription"
         onClick={async () => {
           displayPasswordModal('remove', props.onPasswordUpdated);
         }}
@@ -153,17 +137,10 @@ function HasPasswordSubSection(props: WithPasswordUpdatedCb) {
 function NoPasswordSubSection(props: WithPasswordUpdatedCb) {
   return (
     <PanelButtonGroup>
-      <PanelWithButtonInline
-        textElement={
-          <PanelButtonTextWithSubText
-            text={tr('passwordSet')}
-            subText={tr('passwordSetShortDescription')}
-            textDataTestId={'set-password-settings-text'}
-            subTextDataTestId={'set-password-settings-sub-text'}
-          />
-        }
-        rowDataTestId={'set-password-settings-row'}
-        buttonDataTestId={'set-password-settings-button'}
+      <SettingsPanelButtonInlineBasic
+        baseDataTestId="set-password"
+        textToken="passwordSet"
+        subTextToken="passwordSetShortDescription"
         onClick={async () => {
           displayPasswordModal('set', props.onPasswordUpdated);
         }}

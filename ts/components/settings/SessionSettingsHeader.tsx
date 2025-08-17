@@ -32,19 +32,12 @@ export const SettingsHeader = (props: Props) => {
     case 'conversations':
       categoryTitleKey = 'sessionConversations';
       break;
-    case 'help':
-      categoryTitleKey = 'sessionHelp';
-      break;
     case 'permissions':
       categoryTitleKey = 'sessionPermissions';
       break;
     case 'recovery-password':
       categoryTitleKey = 'sessionRecoveryPassword';
       break;
-    // these are modals or other screens
-    case 'message-requests':
-      throw new Error(`no header for should be tried to be rendered for "${category}"`);
-
     default:
       assertUnreachable(category, `SettingsHeader "${category}"`);
   }

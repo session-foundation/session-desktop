@@ -7,7 +7,10 @@ import {
   type GenericPanelButtonProps,
 } from './GenericPanelButtonWithAction';
 
-type PanelButtonOnRightProps = Pick<GenericPanelButtonProps, 'rowDataTestId' | 'textElement'> &
+export type PanelWithButtonInlineProps = Pick<
+  GenericPanelButtonProps,
+  'rowDataTestId' | 'textElement'
+> &
   Required<Pick<SessionButtonProps, 'buttonColor'>> & {
     onClick: () => Promise<void>;
     buttonDataTestId: SessionDataTestId;
@@ -15,7 +18,7 @@ type PanelButtonOnRightProps = Pick<GenericPanelButtonProps, 'rowDataTestId' | '
     buttonText: string;
   };
 
-export const PanelWithButtonInline = (props: PanelButtonOnRightProps) => {
+export const PanelWithButtonInline = (props: PanelWithButtonInlineProps) => {
   const {
     onClick,
     buttonDataTestId,

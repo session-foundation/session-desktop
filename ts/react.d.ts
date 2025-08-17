@@ -97,7 +97,12 @@ declare module 'react' {
   type SettingsRadio = `set-notifications-${'message' | 'name' | 'count'}`;
   type SettingsChevron = `blocked-contacts`;
 
-  type SettingsInlineButtons = 'set-password' | 'change-password' | 'remove-password';
+  type SettingsInlineButtons =
+    | 'set-password'
+    | 'change-password'
+    | 'remove-password'
+    | 'export-logs';
+  type SettingsExternalLinkButtons = 'faq' | 'translate' | 'support' | 'feedback';
 
   type SettingsMenuItems =
     | 'message-requests'
@@ -237,7 +242,7 @@ declare module 'react' {
     | 'modal-actions-container'
     | 'reveal-blocked-user-settings'
     | `${Sections}-section`
-    | `${SettingsToggles | SettingsInlineButtons | SettingsRadio | SettingsChevron}-settings-${'text' | 'sub-text' | 'toggle' | 'radio' | 'button' | 'chevron' | 'row'}`
+    | `${SettingsToggles | SettingsInlineButtons | SettingsRadio | SettingsChevron | SettingsExternalLinkButtons}-settings-${'text' | 'sub-text' | 'toggle' | 'radio' | 'button' | 'chevron' | 'row'}`
 
     // Buttons
     | `${Buttons}-button`
