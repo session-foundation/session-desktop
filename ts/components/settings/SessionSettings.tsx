@@ -123,8 +123,6 @@ const SettingInCategory = (props: { category: SessionSettingCategory }) => {
 
     // these are just buttons or modals and don't have screens
     case 'message-requests':
-    case 'session-network':
-    case 'clear-data':
     default:
       return null;
   }

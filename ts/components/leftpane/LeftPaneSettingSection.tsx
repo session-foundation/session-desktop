@@ -2,7 +2,6 @@ import { type ReactNode, SessionDataTestId, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 
-import { updateDeleteAccountModal } from '../../state/ducks/modalDialog';
 import { sectionActions } from '../../state/ducks/section';
 import { getFocusedSettingsSection } from '../../state/selectors/section';
 import { useHideRecoveryPasswordEnabled } from '../../state/selectors/settings';
@@ -10,7 +9,6 @@ import type { SessionSettingCategory } from '../../types/ReduxTypes';
 import { Flex } from '../basic/Flex';
 import { SessionIcon, SessionIconType } from '../icon';
 import { LeftPaneSectionHeader } from './LeftPaneSectionHeader';
-import { getSessionNetworkModalState } from '../../state/selectors/modal';
 import { Localizer } from '../basic/Localizer';
 import { tr } from '../../localization/localeTools';
 import { LUCIDE_ICONS_UNICODE, type WithLucideUnicode } from '../icon/lucide';
@@ -111,12 +109,8 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
   const { id, title, titleColor, icon, dataTestId, isNew } = item;
   const dispatch = useDispatch();
   const focusedSettingsSection = useSelector(getFocusedSettingsSection);
-  const sessionNetworkModalState = useSelector(getSessionNetworkModalState);
 
-  const isSelected = useMemo(
-    () => (sessionNetworkModalState ? id === 'session-network' : focusedSettingsSection === id),
-    [focusedSettingsSection, id, sessionNetworkModalState]
-  );
+  const isSelected = useMemo(() => focusedSettingsSection === id, [focusedSettingsSection, id]);
 
   const iconSize = 'medium';
 
@@ -134,13 +128,6 @@ const LeftPaneSettingsCategoryRow = ({ item }: { item: Categories }) => {
       onClick={() => {
         switch (id) {
           case 'message-requests':
-            break;
-          case 'session-network':
-            // if the network modal is not open yet do an info request
-
-            break;
-          case 'clear-data':
-            dispatch(updateDeleteAccountModal({}));
             break;
           default:
             dispatch(sectionActions.showSettingsSection(id));

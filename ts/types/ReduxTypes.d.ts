@@ -10,10 +10,8 @@ export type SessionSettingCategory =
   | 'message-requests'
   | 'appearance'
   | 'permissions'
-  | 'session-network'
   | 'recovery-password'
-  | 'help'
-  | 'clear-data';
+  | 'help';
 
 export type PasswordAction = 'set' | 'change' | 'remove' | 'enter';
 

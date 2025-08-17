@@ -12,6 +12,7 @@ import {
   updateSessionNetworkModal,
   updateConversationDetailsModal,
   userSettingsModal,
+  updateDeleteAccountModal,
 } from '../../../../state/ducks/modalDialog';
 import { networkDataActions } from '../../../../state/ducks/networkData';
 import { sectionActions } from '../../../../state/ducks/section';
@@ -214,6 +215,7 @@ function SettingsSection() {
 }
 
 function AdminSection() {
+  const dispatch = useDispatch();
   return (
     <PanelButtonGroup>
       <PanelIconButton
@@ -241,7 +243,7 @@ function AdminSection() {
         }
         text={tr('sessionClearData')}
         onClick={() => {
-          throw new Error('Not implemented');
+          dispatch(updateDeleteAccountModal({}));
         }}
         dataTestId="clear-data-settings-menu-item"
         color="var(--danger-color)"
