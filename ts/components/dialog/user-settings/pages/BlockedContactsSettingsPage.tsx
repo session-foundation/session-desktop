@@ -9,6 +9,7 @@ import {
 } from '../../../../state/ducks/modalDialog';
 import { PanelButtonGroup } from '../../../buttons/panel/PanelButton';
 import {
+  ModalActionsContainer,
   ModalBasicHeader,
   SessionWrapperModal,
   WrapperModalWidth,
@@ -19,19 +20,11 @@ import {
   useUserSettingsCloseAction,
   useUserSettingsTitle,
 } from './userSettingsHooks';
-import { SpacerLG } from '../../../basic/Text';
-import { SessionButton, SessionButtonColor } from '../../../basic/SessionButton';
+import { SessionButton, SessionButtonColor, SessionButtonType } from '../../../basic/SessionButton';
 import { tr } from '../../../../localization/localeTools';
 import { MemberListItem } from '../../../MemberListItem';
 import { Localizer } from '../../../basic/Localizer';
 import { BlockedNumberController } from '../../../../util';
-
-const StyledButtonContainer = styled.div`
-  display: flex;
-  width: min-content;
-  flex-direction: column;
-  padding-inline-start: var(--margins-lg);
-`;
 
 const StyledNoBlockedContactsContainer = styled.div`
   justify-self: center;
@@ -90,6 +83,20 @@ export function BlockedContactsSettingsPage(modalState: UserSettingsModalState) 
       shouldOverflow={true}
       allowOutsideClick={false}
       $contentMinWidth={WrapperModalWidth.normal}
+      buttonChildren={
+        hasBlocked ? (
+          <ModalActionsContainer buttonType={SessionButtonType.Outline}>
+            <SessionButton
+              text={tr('blockUnblock')}
+              onClick={unBlockThoseUsers}
+              buttonColor={SessionButtonColor.Danger}
+              dataTestId="unblock-button-settings-screen"
+              disabled={!canUnblock}
+              buttonType={SessionButtonType.Outline}
+            />
+          </ModalActionsContainer>
+        ) : null
+      }
     >
       <PanelButtonGroup>
         {!blocked.length ? (
@@ -113,18 +120,6 @@ export function BlockedContactsSettingsPage(modalState: UserSettingsModalState) 
           })
         )}
       </PanelButtonGroup>
-      {hasBlocked ? (
-        <StyledButtonContainer>
-          <SpacerLG />
-          <SessionButton
-            text={tr('blockUnblock')}
-            onClick={unBlockThoseUsers}
-            buttonColor={SessionButtonColor.Danger}
-            dataTestId="unblock-button-settings-screen"
-            disabled={!canUnblock}
-          />
-        </StyledButtonContainer>
-      ) : null}
     </SessionWrapperModal>
   );
 }

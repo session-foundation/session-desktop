@@ -196,7 +196,7 @@ export const UpdateGroupMembersDialog = (props: Props) => {
       $contentMinWidth={WrapperModalWidth.wide}
       $contentMaxWidth={WrapperModalWidth.wide}
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           {weAreAdmin && (
             <SessionButton
               text={tr('remove')}

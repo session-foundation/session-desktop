@@ -248,7 +248,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
         />
       }
       buttonChildren={
-        <ModalActionsContainer extraBottomMargin={true}>
+        <ModalActionsContainer buttonType={SessionButtonType.Outline}>
           <SessionButton
             text={tr('save')}
             buttonType={SessionButtonType.Simple}

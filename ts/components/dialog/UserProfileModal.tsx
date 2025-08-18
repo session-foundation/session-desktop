@@ -6,7 +6,7 @@ import styled from 'styled-components';
 import { ConvoHub } from '../../session/conversations';
 import { openConversationWithMessages } from '../../state/ducks/conversations';
 import { updateUserProfileModal, UserProfileModalState } from '../../state/ducks/modalDialog';
-import { SessionButtonColor } from '../basic/SessionButton';
+import { SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { CopyToClipboardButton } from '../buttons/CopyToClipboardButton';
 import { ConversationTypeEnum } from '../../models/types';
 import { Flex } from '../basic/Flex';
@@ -104,7 +104,7 @@ export const UserProfileModal = ({
       headerChildren={<ModalBasicHeader title={''} showExitIcon={true} />}
       onClose={closeDialog}
       buttonChildren={
-        <ModalActionsContainer extraBottomMargin={true}>
+        <ModalActionsContainer buttonType={SessionButtonType.Outline}>
           <ModalBottomButtonWithBorder
             text={tr('message')}
             onClick={onClickStartConversation}
@@ -117,6 +117,7 @@ export const UserProfileModal = ({
               copyContent={conversationIdToDisplay}
               buttonColor={SessionButtonColor.PrimaryDark}
               dataTestId="copy-button-account-id"
+              buttonType={SessionButtonType.Outline}
               hotkey={true}
             />
           )}

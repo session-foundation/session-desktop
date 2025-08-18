@@ -250,7 +250,7 @@ export const OnionPathModal = () => {
       topAnchor="25vh"
       headerChildren={<ModalBasicHeader title={tr('onionRoutingPath')} showExitIcon={true} />}
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
             text={tr('learnMore')}
             buttonType={SessionButtonType.Simple}

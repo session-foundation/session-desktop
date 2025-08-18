@@ -276,6 +276,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
       $contentMaxWidth={WrapperModalWidth.normal}
       buttonChildren={
         <ModalActionsContainer
+          buttonType={SessionButtonType.Simple}
           maxWidth="unset"
           style={{
             display: 'grid',

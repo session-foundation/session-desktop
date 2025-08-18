@@ -126,7 +126,7 @@ export const BanOrUnBanUserDialog = (props: {
       headerChildren={<ModalBasicHeader title={title} />}
       onClose={onClose}
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
             buttonType={SessionButtonType.Simple}
             onClick={banOrUnBanUser}

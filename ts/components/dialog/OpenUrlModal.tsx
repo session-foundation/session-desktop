@@ -49,7 +49,7 @@ export function OpenUrlModal(props: OpenUrlModalState) {
       topAnchor="35vh"
       onClose={onClose}
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
             text={tr('open')}
             buttonColor={SessionButtonColor.Danger}

@@ -55,7 +55,7 @@ export const ReactClearAllModal = (props: Props) => {
       onClose={handleClose}
       headerChildren={<ModalBasicHeader title={tr('clearAll')} />}
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
             text={tr('clear')}
             buttonColor={SessionButtonColor.Danger}

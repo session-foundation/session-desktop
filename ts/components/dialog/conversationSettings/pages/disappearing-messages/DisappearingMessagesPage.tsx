@@ -26,7 +26,11 @@ import {
 import { useShowConversationSettingsFor } from '../../../../menuAndSettingsHooks/useShowConversationSettingsFor';
 import { tr } from '../../../../../localization/localeTools';
 import { SessionSpinner } from '../../../../loading';
-import { SessionButton, SessionButtonColor } from '../../../../basic/SessionButton';
+import {
+  SessionButton,
+  SessionButtonColor,
+  SessionButtonType,
+} from '../../../../basic/SessionButton';
 import {
   useBackActionForPage,
   useCloseActionFromPage,
@@ -174,13 +178,14 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
       allowOutsideClick={false}
       $contentMinWidth={WrapperModalWidth.narrow}
       buttonChildren={
-        <ModalActionsContainer extraBottomMargin={true}>
+        <ModalActionsContainer buttonType={SessionButtonType.Outline}>
           {loading ? (
             <SessionSpinner loading={true} />
           ) : (
             <SessionButton
               buttonColor={SessionButtonColor.PrimaryDark}
               onClick={handleSetMode}
+              buttonType={SessionButtonType.Outline}
               disabled={
                 singleMode
                   ? disappearingModeOptions[singleMode]

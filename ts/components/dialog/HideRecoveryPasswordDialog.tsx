@@ -73,7 +73,7 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
       headerChildren={<ModalBasicHeader title={tr('recoveryPasswordHidePermanently')} />}
       onClose={onClose}
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton {...leftButtonProps} buttonType={SessionButtonType.Simple} />
           <SessionButton {...rightButtonProps} buttonType={SessionButtonType.Simple} />
         </ModalActionsContainer>

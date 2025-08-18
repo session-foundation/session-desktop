@@ -86,7 +86,7 @@ export const IncomingCallDialog = () => {
           <ModalBasicHeader title={tr('callsIncoming', { name: from ?? tr('unknown') })} />
         }
         buttonChildren={
-          <ModalActionsContainer>
+          <ModalActionsContainer buttonType={SessionButtonType.Simple}>
             <SessionButton
               text={tr('accept')}
               buttonType={SessionButtonType.Simple}

@@ -14,7 +14,7 @@ import { StyledRootDialog } from './dialog/StyledRootDialog';
 import { LUCIDE_ICONS_UNICODE } from './icon/lucide';
 import { IsModalScrolledContext, useIsModalScrolled } from '../contexts/IsModalScrolledContext';
 import { OnModalCloseContext, useOnModalClose } from '../contexts/OnModalCloseContext';
-import { SessionButton, SessionButtonColor } from './basic/SessionButton';
+import { SessionButton, SessionButtonColor, SessionButtonType } from './basic/SessionButton';
 
 type WithExtraLeftButton = {
   /**
@@ -150,15 +150,15 @@ export const ModalActionsContainer = ({
   children,
   maxWidth,
   style = {},
-  extraBottomMargin,
+  buttonType,
 }: {
   children: ReactNode;
   style?: CSSProperties;
   maxWidth?: string;
   /**
-   * some buttons have border/background and need some extra margin to not appear to close to the edge
+   * Depending on the button type, the margin block is different.
    */
-  extraBottomMargin?: boolean;
+  buttonType: SessionButtonType;
 }) => {
   return (
     <Flex
@@ -171,7 +171,8 @@ export const ModalActionsContainer = ({
       height="unset"
       style={{
         justifySelf: 'center',
-        marginBottom: extraBottomMargin ? 'var(--margins-lg)' : 'var(--margins-md)',
+        marginBlock:
+          buttonType === SessionButtonType.Simple ? 'var(--margins-sm)' : 'var(--margins-lg)',
         ...style,
       }}
       data-testid="modal-actions-container"

@@ -99,7 +99,7 @@ export class SessionSetPasswordDialog extends Component<Props, State> {
         $contentMinWidth={WrapperModalWidth.narrow}
         $contentMaxWidth={WrapperModalWidth.narrow}
         buttonChildren={
-          <ModalActionsContainer>
+          <ModalActionsContainer buttonType={SessionButtonType.Simple}>
             <SessionButton
               text={confirmButtonText}
               buttonColor={passwordAction === 'remove' ? SessionButtonColor.Danger : undefined}

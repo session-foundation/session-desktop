@@ -87,7 +87,7 @@ export const SessionNicknameDialog = (props: Props) => {
       onClose={onClickClose}
       topAnchor="25vh"
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
             text={tr('save')}
             disabled={!nickname}

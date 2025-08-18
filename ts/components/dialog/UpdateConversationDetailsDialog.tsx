@@ -218,7 +218,7 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
       headerChildren={<ModalBasicHeader title={tr(`update${partDetailCap}Information`)} />}
       onClose={closeDialog}
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
             text={tr('save')}
             onClick={onClickOK}

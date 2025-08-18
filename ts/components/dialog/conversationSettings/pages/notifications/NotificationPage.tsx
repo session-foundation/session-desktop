@@ -3,7 +3,7 @@ import { useDispatch } from 'react-redux';
 import { useIsLegacyGroup, useNotificationSetting } from '../../../../../hooks/useParamSelector';
 import { useSelectedConversationKey } from '../../../../../state/selectors/selectedConversation';
 import { Flex } from '../../../../basic/Flex';
-import { SessionButton } from '../../../../basic/SessionButton';
+import { SessionButton, SessionButtonType } from '../../../../basic/SessionButton';
 import { StyledScrollContainer } from '../../../../conversation/right-panel/overlay/components';
 import { type ConversationNotificationSettingType } from '../../../../../models/conversationAttributes';
 import { PanelButtonGroup } from '../../../../buttons';
@@ -124,7 +124,7 @@ export function NotificationForConversationModal(props: Required<ConversationSet
       allowOutsideClick={false}
       $contentMinWidth={WrapperModalWidth.narrow} // the content is radio buttons and it looks weird on a large modal
       buttonChildren={
-        <ModalActionsContainer extraBottomMargin={true}>
+        <ModalActionsContainer buttonType={SessionButtonType.Outline}>
           <SessionButton
             onClick={handleSetNotifications}
             dataTestId={'notifications-set-button'}

@@ -125,7 +125,7 @@ export const DeleteAccountModal = () => {
       onClose={onClickCancelHandler}
       topAnchor="center"
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
             text={tr('clear')}
             buttonColor={SessionButtonColor.Danger}
