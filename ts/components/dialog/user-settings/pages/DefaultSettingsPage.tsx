@@ -206,7 +206,7 @@ function SettingsSection() {
         iconElement={<LucideIconForSettings unicode={LUCIDE_ICONS_UNICODE.SETTINGS} />}
         text={tr('preferences')}
         onClick={() => {
-          throw new Error('Not implemented');
+          dispatch(userSettingsModal({ userSettingsPage: 'preferences' }));
         }}
         dataTestId="preferences-settings-menu-item"
       />

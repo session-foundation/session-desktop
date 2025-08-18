@@ -9,8 +9,6 @@ import { SessionIconButton } from '../icon';
 import { sessionPassword } from '../../state/ducks/modalDialog';
 import type { PasswordAction, SessionSettingCategory } from '../../types/ReduxTypes';
 import { SettingsCategoryAppearance } from './section/CategoryAppearance';
-import { CategoryConversations } from './section/CategoryConversations';
-import { SettingsCategoryPermissions } from './section/CategoryPermissions';
 import { SettingsCategoryRecoveryPassword } from './section/CategoryRecoveryPassword';
 import { setDebugMode } from '../../state/ducks/debug';
 import { showLinkVisitWarningDialog } from '../dialog/OpenUrlModal';
@@ -107,13 +105,8 @@ const SettingInCategory = (props: { category: SessionSettingCategory }) => {
   const { category } = props;
 
   switch (category) {
-    // special case for blocked user
-    case 'conversations':
-      return <CategoryConversations />;
     case 'appearance':
       return <SettingsCategoryAppearance />;
-    case 'permissions':
-      return <SettingsCategoryPermissions />;
     case 'recovery-password':
       return <SettingsCategoryRecoveryPassword />;
     default:

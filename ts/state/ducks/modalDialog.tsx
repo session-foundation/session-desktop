@@ -21,6 +21,7 @@ export type UserSettingsPage =
   | 'appearance'
   | 'recovery-password'
   | 'help'
+  | 'blocked-contacts'
   | 'clear-data'
   | 'preferences';
 

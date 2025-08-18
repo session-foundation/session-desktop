@@ -13,7 +13,7 @@ export function SettingsChevronBasic({
   textToken: TokenSimpleNoArgs;
   subTextToken: TokenSimpleNoArgs;
   baseDataTestId: SettingsChevron;
-  onClick: () => Promise<void>;
+  onClick: (() => Promise<void>) | (() => void);
 }) {
   return (
     <PanelChevronButton

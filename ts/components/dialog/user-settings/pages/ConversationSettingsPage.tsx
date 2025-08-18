@@ -1,7 +1,10 @@
 import useUpdate from 'react-use/lib/useUpdate';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { type UserSettingsModalState } from '../../../../state/ducks/modalDialog';
+import {
+  userSettingsModal,
+  type UserSettingsModalState,
+} from '../../../../state/ducks/modalDialog';
 import { PanelButtonGroup, PanelLabelWithDescription } from '../../../buttons/panel/PanelButton';
 import {
   ModalBasicHeader,
@@ -111,7 +114,7 @@ export function ConversationSettingsPage(modalState: UserSettingsModalState) {
         <SettingsChevronBasic
           baseDataTestId="blocked-contacts"
           onClick={() => {
-            throw new Error('Not implemented');
+            dispatch(userSettingsModal({ userSettingsPage: 'blocked-contacts' }));
           }}
           textToken={'conversationsBlockedContacts'}
           subTextToken={'blockedContactsManageDescription'}

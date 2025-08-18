@@ -92,9 +92,12 @@ declare module 'react' {
     | 'audio-notifications'
     | 'audio-message-autoplay'
     | 'spell-check'
-    | 'conversation-trimming';
+    | 'conversation-trimming'
+    | 'auto-update';
 
-  type SettingsRadio = `set-notifications-${'message' | 'name' | 'count'}`;
+  type SettingsRadio =
+    | `set-notifications-${'message' | 'name' | 'count'}`
+    | `send-with-${'enterForSend' | 'enterForNewLine'}`;
   type SettingsChevron = `blocked-contacts`;
 
   type SettingsInlineButtons =

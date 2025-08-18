@@ -80,19 +80,9 @@ type Categories = {
 const categories: Array<Categories> = (
   [
     {
-      id: 'conversations',
-      title: tr('sessionConversations'),
-      icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE },
-    },
-    {
       id: 'appearance',
       title: tr('sessionAppearance'),
       icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.PAINTBRUSH_VERTICAL },
-    },
-    {
-      id: 'permissions',
-      title: tr('sessionPermissions'),
-      icon: { type: 'lucide', unicode: LUCIDE_ICONS_UNICODE.CIRCLE_CHECK },
     },
   ] as const satisfies Array<Omit<Categories, 'dataTestId'>>
 ).map(m => ({

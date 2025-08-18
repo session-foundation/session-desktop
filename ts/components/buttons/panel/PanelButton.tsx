@@ -72,8 +72,9 @@ const StyledRoundedPanelButtonGroup = styled.div`
 `;
 
 const PanelButtonContainer = styled.div`
+  --panel-button-container-min-height: 50px;
   overflow: auto;
-  min-height: 50px;
+  min-height: var(--panel-button-container-min-height);
   max-height: 100%;
 `;
 

@@ -126,8 +126,8 @@ function NotificationsContent({
                 <PanelButtonTextWithSubText
                   text={text}
                   subText={subText}
-                  textDataTestId="disappearing-messages-menu-option"
-                  subTextDataTestId="disappearing-messages-timer-menu-option"
+                  textDataTestId={`set-notifications-${value}-settings-text`}
+                  subTextDataTestId={`set-notifications-${value}-settings-sub-text`}
                 />
               }
               value={value}

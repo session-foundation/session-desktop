@@ -17,6 +17,8 @@ export function useUserSettingsTitle(page: UserSettingsModalState | undefined) {
       return tr('sessionNotifications');
     case 'clear-data':
       return tr('sessionClearData');
+    case 'blocked-contacts':
+      return tr('conversationsBlockedContacts');
     case 'conversations':
       return tr('sessionConversations');
     case 'message-requests':
@@ -55,6 +57,7 @@ export function useUserSettingsCloseAction(props: UserSettingsModalState) {
     case 'help':
     case 'clear-data':
     case 'preferences':
+    case 'blocked-contacts':
       return () => dispatch(userSettingsModal(null));
 
     default:
