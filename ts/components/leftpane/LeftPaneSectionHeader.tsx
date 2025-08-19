@@ -18,6 +18,7 @@ import { searchActions } from '../../state/ducks/search';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { tr } from '../../localization/localeTools';
+import { userSettingsModal } from '../../state/ducks/modalDialog';
 
 const StyledLeftPaneSectionHeader = styled(Flex)`
   height: var(--main-view-header-height);
@@ -114,8 +115,7 @@ export const LeftPaneBanner = () => {
 
   const showRecoveryPhraseModal = () => {
     dispatch(disableRecoveryPhrasePrompt());
-    dispatch(sectionActions.showLeftPaneSection(SectionType.Settings));
-    dispatch(sectionActions.showSettingsSection('recovery-password'));
+    dispatch(userSettingsModal({ userSettingsPage: 'recovery-password' }));
   };
 
   if (section !== SectionType.Message || isSignInWithRecoveryPhrase || hideRecoveryPassword) {

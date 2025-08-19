@@ -1,12 +1,10 @@
 // TODO move into redux slice
 
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { SessionSettingCategory } from '../../types/ReduxTypes';
 
 export enum SectionType {
   Profile,
   Message,
-  Settings,
   ThemeSwitch,
   DebugMenu,
 }
@@ -28,7 +26,6 @@ export type RightOverlayMode = RightPanelDefaultState | RightPanelMessageInfoSta
 
 export const initialSectionState: SectionStateType = {
   focusedSection: SectionType.Message,
-  focusedSettingsSection: undefined,
   isAppFocused: false,
   leftOverlayMode: undefined,
   rightOverlayMode: { type: 'default', params: null },
@@ -36,7 +33,6 @@ export const initialSectionState: SectionStateType = {
 
 export type SectionStateType = {
   focusedSection: SectionType;
-  focusedSettingsSection?: SessionSettingCategory;
   isAppFocused: boolean;
   leftOverlayMode: LeftOverlayMode | undefined;
   rightOverlayMode: RightOverlayMode | undefined;
@@ -50,7 +46,6 @@ const sectionSlice = createSlice({
       return {
         ...state,
         focusedSection: action.payload,
-        focusedSettingsSection: undefined,
       };
     },
     setLeftOverlayMode(state, action: PayloadAction<LeftOverlayMode>) {
@@ -75,13 +70,6 @@ const sectionSlice = createSlice({
       return {
         ...state,
         rightOverlayMode: undefined,
-      };
-    },
-    showSettingsSection(state, action: PayloadAction<SessionSettingCategory>) {
-      return {
-        ...state,
-        focusedSettingsSection: action.payload,
-        focusedSection: SectionType.Settings,
       };
     },
     setIsAppFocused(state, action: PayloadAction<boolean>) {

@@ -5,8 +5,6 @@
  * e.g. import type { YourTypeHere } from 'path/to/ReduxTypes';
  */
 
-export type SessionSettingCategory = 'recovery-password';
-
 export type PasswordAction = 'set' | 'change' | 'remove' | 'enter';
 
 export type EditProfilePictureModalProps = {

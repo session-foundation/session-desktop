@@ -3,7 +3,6 @@ import { createSelector } from '@reduxjs/toolkit';
 import { useSelector } from 'react-redux';
 import { LeftOverlayMode, SectionStateType, SectionType } from '../ducks/section';
 import { StateType } from '../reducer';
-import type { SessionSettingCategory } from '../../types/ReduxTypes';
 
 export const getSection = (state: StateType): SectionStateType => state.section;
 
@@ -19,11 +18,6 @@ export const getIsMessageSection = (state: StateType) => {
 export function useIsMessageSection() {
   return useSelector(getIsMessageSection);
 }
-
-export const getFocusedSettingsSection = createSelector(
-  getSection,
-  (state: SectionStateType): SessionSettingCategory | undefined => state.focusedSettingsSection
-);
 
 export const getIsAppFocused = createSelector(
   getSection,

@@ -24,7 +24,7 @@ import { ProIconButton } from '../../../buttons/ProButton';
 import { type SessionIconProps, SessionIcon } from '../../../icon';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { type LucideIconProps, LucideIcon } from '../../../icon/LucideIcon';
-import { SessionLucideIconButton } from '../../../icon/SessionIconButton';
+import { SessionIconButton, SessionLucideIconButton } from '../../../icon/SessionIconButton';
 import { QRView } from '../../../qrview/QrView';
 import { ModalBasicHeader, SessionWrapperModal } from '../../../SessionWrapperModal';
 import { showLinkVisitWarningDialog } from '../../OpenUrlModal';
@@ -34,6 +34,7 @@ import { ProfileHeader, ProfileName } from '../components';
 import type { ProfileDialogModes } from '../ProfileDialogModes';
 import { tr } from '../../../../localization/localeTools';
 import { useIsProAvailable } from '../../../../hooks/useIsProAvailable';
+import { setDebugMode } from '../../../../state/ducks/debug';
 
 const handleKeyQRMode = (mode: ProfileDialogModes, setMode: (mode: ProfileDialogModes) => void) => {
   switch (mode) {
@@ -252,6 +253,74 @@ function AdminSection() {
   );
 }
 
+const StyledVersionInfo = styled.div`
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: var(--margins-xs);
+  background: none;
+  font-size: var(--font-size-sm);
+`;
+
+const StyledSpanSessionInfo = styled.span<{ opacity?: number }>`
+  opacity: ${props => props.opacity ?? 0.5};
+  transition: var(--default-duration);
+  user-select: text;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 1;
+  }
+`;
+
+const SessionInfo = () => {
+  const [clickCount, setClickCount] = useState(0);
+
+  const dispatch = useDispatch();
+
+  return (
+    <StyledVersionInfo>
+      <SessionIconButton
+        iconSize="medium"
+        iconType="sessionTokenLogoWithText"
+        onClick={() => {
+          showLinkVisitWarningDialog('https://token.getsession.org/', dispatch);
+        }}
+        // disable transition here as the transition does the opposite that usual (hovering makes it more opaque/bright)
+        style={{ transition: 'none' }}
+      />
+      <Flex
+        $container={true}
+        $flexDirection="row"
+        $alignItems="center"
+        $flexGap="var(--margins-sm)"
+      >
+        <StyledSpanSessionInfo
+          onClick={() => {
+            showLinkVisitWarningDialog(
+              `https://github.com/session-foundation/session-desktop/releases/tag/v${window.versionInfo.version}`,
+              dispatch
+            );
+          }}
+        >
+          v{window.versionInfo.version}
+        </StyledSpanSessionInfo>
+        <StyledSpanSessionInfo
+          onClick={() => {
+            setClickCount(clickCount + 1);
+            if (clickCount === 10) {
+              dispatch(setDebugMode(true));
+              setClickCount(0);
+            }
+          }}
+        >
+          {window.versionInfo.commitHash?.slice(0, 8)}
+        </StyledSpanSessionInfo>
+      </Flex>
+    </StyledVersionInfo>
+  );
+};
+
 export const DefaultSettingPage = () => {
   const dispatch = useDispatch();
 
@@ -344,6 +413,7 @@ export const DefaultSettingPage = () => {
           <MiscSection />
           <SettingsSection />
           <AdminSection />
+          <SessionInfo />
         </Flex>
       </SessionWrapperModal>
     </StyledUserSettingsDialog>

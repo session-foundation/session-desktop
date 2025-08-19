@@ -9,7 +9,6 @@ import { IncomingCallDialog } from '../calling/IncomingCallDialog';
 import { ModalContainer } from '../dialog/ModalContainer';
 import { ActionsPanel } from './ActionsPanel';
 import { LeftPaneMessageSection } from './LeftPaneMessageSection';
-import { LeftPaneSettingSection } from './LeftPaneSettingSection';
 import { useIsRtl } from '../../util/i18n/rtlSupport';
 
 export const leftPaneListWidth = 300; // var(--left-panel-width) without the 80px of the action gutter
@@ -33,9 +32,6 @@ const LeftPaneSection = () => {
     return <LeftPaneMessageSection />;
   }
 
-  if (focusedSection === SectionType.Settings) {
-    return <LeftPaneSettingSection />;
-  }
   return null;
 };
 
