@@ -1,5 +1,5 @@
 import { ipcRenderer } from 'electron';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 import useInterval from 'react-use/lib/useInterval';
@@ -62,6 +62,7 @@ import { getFileInfoFromFileServer } from '../../session/apis/file_server_api/Fi
 import { themesArray } from '../../themes/constants/colors';
 import { isDebugMode } from '../../shared/env_vars';
 import { GearAvatarButton } from '../buttons/avatar/GearAvatarButton';
+import { useZoomShortcuts } from '../../hooks/useZoomingShortcut';
 
 const StyledContainerAvatar = styled.div`
   padding: var(--margins-lg);
@@ -117,11 +118,8 @@ const Section = (props: { type: SectionType }) => {
     dispatch(sectionActions.resetLeftOverlayMode());
   };
 
-  const settingsIconRef = useRef<HTMLButtonElement>(null);
-
   useHotkey('Escape', () => {
-    if (type === SectionType.Settings && !isModalVisible) {
-      settingsIconRef.current?.blur();
+    if (!isModalVisible) {
       dispatch(searchActions.clearSearch());
       dispatch(sectionActions.showLeftPaneSection(SectionType.Message));
       dispatch(sectionActions.resetLeftOverlayMode());
@@ -164,15 +162,6 @@ const Section = (props: { type: SectionType }) => {
         >
           {Boolean(unreadToShow) && <SessionNotificationCount count={unreadToShow} />}
         </SessionLucideIconButton>
-      );
-    case SectionType.Settings:
-      return (
-        <SessionLucideIconButton
-          {...buttonProps}
-          dataTestId="settings-section"
-          unicode={LUCIDE_ICONS_UNICODE.SETTINGS}
-          ref={settingsIconRef}
-        />
       );
     case SectionType.DebugMenu:
       return (
@@ -316,6 +305,8 @@ export const ActionsPanel = () => {
   });
 
   useUpdateBadgeCount();
+  // setup our own shortcuts so that it changes show in the appearance tab too
+  useZoomShortcuts();
 
   useInterval(
     DecryptedAttachmentsManager.cleanUpOldDecryptedMedias,
@@ -372,7 +363,6 @@ export const ActionsPanel = () => {
       <LeftPaneSectionContainer data-testid="leftpane-section-container">
         <Section type={SectionType.Profile} />
         <Section type={SectionType.Message} />
-        <Section type={SectionType.Settings} />
         {showDebugMenu && <Section type={SectionType.DebugMenu} />}
         <Section type={SectionType.ThemeSwitch} />
       </LeftPaneSectionContainer>

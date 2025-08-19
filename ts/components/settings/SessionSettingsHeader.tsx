@@ -26,9 +26,6 @@ export const SettingsHeader = (props: Props) => {
 
   let categoryTitleKey: MergedLocalizerTokens | null = null;
   switch (category) {
-    case 'appearance':
-      categoryTitleKey = 'sessionAppearance';
-      break;
     case 'recovery-password':
       categoryTitleKey = 'sessionRecoveryPassword';
       break;

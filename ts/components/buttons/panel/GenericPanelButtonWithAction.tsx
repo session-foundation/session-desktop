@@ -1,4 +1,4 @@
-import type { ReactNode, SessionDataTestId } from 'react';
+import type { MouseEvent, ReactNode, SessionDataTestId } from 'react';
 import styled from 'styled-components';
 import { useIsDarkTheme } from '../../../state/theme/selectors/theme';
 import { StyledPanelButton, StyledContent } from './PanelButton';
@@ -7,13 +7,14 @@ import { StyledPanelButtonSeparator } from './StyledPanelButtonGroupSeparator';
 const StyledActionContainer = styled.div`
   display: flex;
   align-items: center;
+  flex-shrink: 0;
   pointer-events: none; // let the container handle the event (otherwise we get 2 onClick events, cancelling each others)
 `;
 
 export type GenericPanelButtonProps = {
   textElement: ReactNode;
   actionElement: ReactNode;
-  onClick: undefined | (() => void | Promise<void>);
+  onClick: undefined | ((e: MouseEvent<any>) => void | Promise<void>);
   rowDataTestId: SessionDataTestId;
 };
 

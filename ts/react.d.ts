@@ -93,7 +93,9 @@ declare module 'react' {
     | 'audio-message-autoplay'
     | 'spell-check'
     | 'conversation-trimming'
-    | 'auto-update';
+    | 'auto-update'
+    | 'auto-dark-mode'
+    | 'hide-menu-bar';
 
   type SettingsRadio =
     | `set-notifications-${'message' | 'name' | 'count'}`
@@ -245,7 +247,7 @@ declare module 'react' {
     | 'modal-actions-container'
     | 'reveal-blocked-user-settings'
     | `${Sections}-section`
-    | `${SettingsToggles | SettingsInlineButtons | SettingsRadio | SettingsChevron | SettingsExternalLinkButtons}-settings-${'text' | 'sub-text' | 'toggle' | 'radio' | 'button' | 'chevron' | 'row'}`
+    | `${SettingsToggles | SettingsInlineButtons | SettingsRadio | SettingsChevron | SettingsExternalLinkButtons | 'zoom-factor'}-settings-${'text' | 'sub-text' | 'toggle' | 'radio' | 'button' | 'chevron' | 'row'}`
 
     // Buttons
     | `${Buttons}-button`

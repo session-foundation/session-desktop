@@ -186,7 +186,7 @@ function SettingsSection() {
         iconElement={<LucideIconForSettings unicode={LUCIDE_ICONS_UNICODE.PAINTBRUSH_VERTICAL} />}
         text={tr('sessionAppearance')}
         onClick={() => {
-          throw new Error('Not implemented');
+          dispatch(userSettingsModal({ userSettingsPage: 'appearance' }));
         }}
         dataTestId="appearance-settings-menu-item"
       />

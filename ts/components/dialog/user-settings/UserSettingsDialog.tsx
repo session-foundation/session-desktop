@@ -1,4 +1,5 @@
 import { type UserSettingsModalState } from '../../../state/ducks/modalDialog';
+import { AppearanceSettingsPage } from './pages/AppearanceSettingsPage';
 import { BlockedContactsSettingsPage } from './pages/BlockedContactsSettingsPage';
 import { ConversationSettingsPage } from './pages/ConversationSettingsPage';
 import { DefaultSettingPage } from './pages/DefaultSettingsPage';
@@ -27,6 +28,8 @@ export const UserSettingsDialog = (modalState: UserSettingsModalState) => {
       return <PreferencesSettingsPage {...modalState} />;
     case 'blocked-contacts':
       return <BlockedContactsSettingsPage {...modalState} />;
+    case 'appearance':
+      return <AppearanceSettingsPage {...modalState} />;
     default:
       return <DefaultSettingPage />;
   }

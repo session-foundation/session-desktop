@@ -47,14 +47,6 @@ const sectionSlice = createSlice({
   initialState: initialSectionState,
   reducers: {
     showLeftPaneSection(state, action: PayloadAction<SectionType>) {
-      if (action.payload === SectionType.Settings) {
-        // on click on the gear icon: show the 'appearance' tab by default
-        return {
-          ...state,
-          focusedSection: action.payload,
-          focusedSettingsSection: 'appearance',
-        };
-      }
       return {
         ...state,
         focusedSection: action.payload,

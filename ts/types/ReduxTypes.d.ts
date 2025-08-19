@@ -5,7 +5,7 @@
  * e.g. import type { YourTypeHere } from 'path/to/ReduxTypes';
  */
 
-export type SessionSettingCategory = 'appearance' | 'recovery-password';
+export type SessionSettingCategory = 'recovery-password';
 
 export type PasswordAction = 'set' | 'change' | 'remove' | 'enter';
 

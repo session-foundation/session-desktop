@@ -8,7 +8,6 @@ import { SessionIconButton } from '../icon';
 
 import { sessionPassword } from '../../state/ducks/modalDialog';
 import type { PasswordAction, SessionSettingCategory } from '../../types/ReduxTypes';
-import { SettingsCategoryAppearance } from './section/CategoryAppearance';
 import { SettingsCategoryRecoveryPassword } from './section/CategoryRecoveryPassword';
 import { setDebugMode } from '../../state/ducks/debug';
 import { showLinkVisitWarningDialog } from '../dialog/OpenUrlModal';
@@ -105,8 +104,6 @@ const SettingInCategory = (props: { category: SessionSettingCategory }) => {
   const { category } = props;
 
   switch (category) {
-    case 'appearance':
-      return <SettingsCategoryAppearance />;
     case 'recovery-password':
       return <SettingsCategoryRecoveryPassword />;
     default:
