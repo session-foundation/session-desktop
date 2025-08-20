@@ -196,6 +196,7 @@ async function initializeSql({
 
     console.info('total message count before cleaning: ', getMessageCount());
     console.info('total conversation count before cleaning: ', getConversationCount());
+    cleanUpInvalidConversationIds();
     cleanUpOldOpengroupsOnStart();
     cleanUpUnusedNodeForKeyEntriesOnStart();
     cleanUpUnreadExpiredDaRMessages();
@@ -1849,6 +1850,19 @@ function cleanUpUnreadExpiredDaRMessages() {
       deleted.changes
     } message(s) which were DaR and sent before ${t14daysEarlier} in ${Date.now() - start}ms`
   );
+}
+
+/**
+ * Clean up invalid conversation ids.
+ * Even though the `ID` in the `CONVERSATIONS_TABLE` is defined in the sqlite3 schema as being a string primary key,
+ * this does not enforce NOT NULL in sqlite3. TODO: consider a database migration to fix this long-term
+ */
+function cleanUpInvalidConversationIds() {
+  const deleteResult = assertGlobalInstance()
+    .prepare(`DELETE FROM ${CONVERSATIONS_TABLE} WHERE id = '' OR id IS NULL OR typeof(id) != 'text';`)
+    .run();
+
+  console.info(`cleanUpInvalidConversationIds pre-select delete removed ${deleteResult.changes} rows`);
 }
 
 function getOutgoingWithoutExpiresAt() {
