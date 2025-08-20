@@ -1862,7 +1862,7 @@ function cleanUpInvalidConversationIds() {
     .prepare(`DELETE FROM ${CONVERSATIONS_TABLE} WHERE id = '' OR id IS NULL OR typeof(id) != 'text';`)
     .run();
 
-  console.info(`cleanUpInvalidConversationIds pre-select delete removed ${deleteResult.changes} rows`);
+  console.info(`cleanUpInvalidConversationIds removed ${deleteResult.changes} rows`);
 }
 
 function getOutgoingWithoutExpiresAt() {
