@@ -132,7 +132,7 @@ export const initialModalState: ModalState = {
   groupMembersModal: null,
   userProfileModal: null,
   nickNameModal: null,
-  userSettingsModal: { userSettingsPage: 'appearance' },
+  userSettingsModal: null,
   onionPathModal: null,
   enterPasswordModal: null,
   sessionPasswordModal: null,

@@ -1,17 +1,16 @@
 import type { SettingsChevron } from 'react';
-import type { TokenSimpleNoArgs } from '../../../../localization/locales';
 import { PanelButtonTextWithSubText } from '../../../buttons/panel/PanelButton';
-import { tr } from '../../../../localization/localeTools';
 import { PanelChevronButton } from '../../../buttons/panel/PanelChevronButton';
+import type { TrArgs } from '../../../../localization/localeTools';
 
 export function SettingsChevronBasic({
   baseDataTestId,
   onClick,
-  textToken,
-  subTextToken,
+  text,
+  subText,
 }: {
-  textToken: TokenSimpleNoArgs;
-  subTextToken: TokenSimpleNoArgs;
+  text: TrArgs;
+  subText: TrArgs;
   baseDataTestId: SettingsChevron;
   onClick: (() => Promise<void>) | (() => void);
 }) {
@@ -19,8 +18,8 @@ export function SettingsChevronBasic({
     <PanelChevronButton
       textElement={
         <PanelButtonTextWithSubText
-          text={tr(textToken)}
-          subText={tr(subTextToken)}
+          text={text}
+          subText={subText}
           textDataTestId={`${baseDataTestId}-settings-text`}
           subTextDataTestId={`${baseDataTestId}-settings-sub-text`}
         />

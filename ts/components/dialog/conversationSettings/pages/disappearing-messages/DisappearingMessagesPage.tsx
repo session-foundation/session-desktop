@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
-import { useTimerOptionsByMode } from '../../../../../hooks/useParamSelector';
 import { setDisappearingMessagesByConvoId } from '../../../../../interactions/conversationInteractions';
 import { TimerOptions } from '../../../../../session/disappearing_messages/timerOptions';
 import { DisappearingMessageConversationModeType } from '../../../../../session/disappearing_messages/types';
@@ -102,7 +101,6 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
   );
 
   const [timeSelected, setTimeSelected] = useState(expireTimer || 0);
-  const timerOptions = useTimerOptionsByMode(modeSelected, hasOnlyOneMode);
   const isStandalone = useConversationSettingsModalIsStandalone();
 
   const [loading, setLoading] = useState(false);
@@ -213,7 +211,7 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
           {(hasOnlyOneMode || modeSelected !== 'off') && (
             <>
               <TimeOptions
-                options={timerOptions}
+                modeSelected={modeSelected}
                 selected={timeSelected}
                 setSelected={setTimeSelected}
                 hasOnlyOneMode={hasOnlyOneMode}

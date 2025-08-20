@@ -1,13 +1,12 @@
 import type { SettingsExternalLinkButtons } from 'react';
-import type { TokenSimpleNoArgs } from '../../../../localization/locales';
 import { PanelButtonTextWithSubText } from '../../../buttons/panel/PanelButton';
-import { tr } from '../../../../localization/localeTools';
 import {
   GenericPanelButtonWithAction,
   type GenericPanelButtonProps,
 } from '../../../buttons/panel/GenericPanelButtonWithAction';
 import { SessionLucideIconButton } from '../../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
+import type { TrArgs } from '../../../../localization/localeTools';
 
 const PanelExternalLinkButton = (
   props: Pick<GenericPanelButtonProps, 'textElement'> & {
@@ -38,11 +37,11 @@ const PanelExternalLinkButton = (
 export function SettingsExternalLinkBasic({
   baseDataTestId,
   onClick,
-  textToken,
-  subTextToken,
+  text,
+  subText,
 }: {
-  textToken: TokenSimpleNoArgs;
-  subTextToken: TokenSimpleNoArgs;
+  text: TrArgs;
+  subText: TrArgs;
   baseDataTestId: SettingsExternalLinkButtons;
   onClick: () => Promise<void>;
 }) {
@@ -50,8 +49,8 @@ export function SettingsExternalLinkBasic({
     <PanelExternalLinkButton
       textElement={
         <PanelButtonTextWithSubText
-          text={tr(textToken)}
-          subText={tr(subTextToken)}
+          text={text}
+          subText={subText}
           textDataTestId={`${baseDataTestId}-settings-text`}
           subTextDataTestId={`${baseDataTestId}-settings-sub-text`}
         />

@@ -184,7 +184,7 @@ export const ModalActionsContainer = ({
 
 /**
  * In the modal, the bottom actions sometimes have a border.
- * When they do, they all share the same styling (minWidth 125px) so this component is here to reuse that logic.
+ * When they do, they all share the same styling (minWidth --modal-actions-outline-min-width) so this component is here to reuse that logic.
  */
 export function ModalBottomButtonWithBorder({
   text,
@@ -204,9 +204,9 @@ export function ModalBottomButtonWithBorder({
       text={text}
       onClick={onClick}
       disabled={disabled}
-      buttonColor={buttonColor ?? SessionButtonColor.PrimaryDark}
+      buttonColor={buttonColor}
       dataTestId={dataTestId}
-      style={{ minWidth: '125px' }}
+      style={{ minWidth: 'var(--modal-actions-outline-min-width)' }}
     />
   );
 }

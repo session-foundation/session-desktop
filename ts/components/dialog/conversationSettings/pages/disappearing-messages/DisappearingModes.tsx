@@ -1,4 +1,3 @@
-import { tr } from '../../../../../localization/localeTools';
 import { DisappearingMessageConversationModeType } from '../../../../../session/disappearing_messages/types';
 import {
   PanelButtonGroup,
@@ -53,16 +52,16 @@ export const DisappearingModes = (props: DisappearingModesProps) => {
           const mode = _mode as DisappearingMessageConversationModeType;
           const optionI18n =
             mode === 'deleteAfterRead'
-              ? tr('disappearingMessagesDisappearAfterRead')
+              ? 'disappearingMessagesDisappearAfterRead'
               : mode === 'deleteAfterSend'
-                ? tr('disappearingMessagesDisappearAfterSend')
-                : tr('off');
+                ? 'disappearingMessagesDisappearAfterSend'
+                : 'off';
 
           const subtitleI18n =
             mode === 'deleteAfterRead'
-              ? tr('disappearingMessagesDisappearAfterReadDescription')
+              ? 'disappearingMessagesDisappearAfterReadDescription'
               : mode === 'deleteAfterSend'
-                ? tr('disappearingMessagesDisappearAfterSendDescription')
+                ? 'disappearingMessagesDisappearAfterSendDescription'
                 : undefined;
           const parentDataTestId = toDataTestId(mode);
 
@@ -72,14 +71,14 @@ export const DisappearingModes = (props: DisappearingModesProps) => {
               textElement={
                 subtitleI18n ? (
                   <PanelButtonTextWithSubText
-                    text={optionI18n}
-                    subText={subtitleI18n}
+                    text={{ token: optionI18n }}
+                    subText={{ token: subtitleI18n }}
                     textDataTestId="disappearing-messages-menu-option"
                     subTextDataTestId="disappearing-messages-timer-menu-option"
                   />
                 ) : (
                   <PanelButtonText
-                    text={optionI18n}
+                    text={{ token: optionI18n }}
                     textDataTestId="disappearing-messages-menu-option"
                   />
                 )

@@ -135,6 +135,8 @@ type ThemeGlobals = {
   /* Used for Quote References Not Found */
   '--message-link-preview-background-color': string;
 
+  '--modal-actions-outline-min-width': string;
+
   /* Right Panel */
   '--right-panel-width': string;
   '--right-panel-height': string;
@@ -268,6 +270,8 @@ export const THEME_GLOBALS: ThemeGlobals = {
   '--lightbox-icon-stroke-color': 'var(--white-color)',
 
   '--message-link-preview-background-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.06)`,
+
+  '--modal-actions-outline-min-width': '125px',
 
   '--right-panel-width': '420px',
   '--right-panel-height': '100%',

@@ -1,4 +1,5 @@
 import { type UserSettingsModalState } from '../../../state/ducks/modalDialog';
+import { assertUnreachable } from '../../../types/sqlSharedTypes';
 import { AppearanceSettingsPage } from './pages/AppearanceSettingsPage';
 import { BlockedContactsSettingsPage } from './pages/BlockedContactsSettingsPage';
 import { ConversationSettingsPage } from './pages/ConversationSettingsPage';
@@ -7,6 +8,7 @@ import { HelpSettingsPage } from './pages/HelpSettingsPage';
 import { NotificationsSettingsPage } from './pages/NotificationsSettingsPage';
 import { PreferencesSettingsPage } from './pages/PreferencesSettingsPage';
 import { PrivacySettingsPage } from './pages/PrivacySettingsPage';
+import { RecoveryPasswordSettingsPage } from './pages/RecoveryPasswordSettingsPage';
 
 export const UserSettingsDialog = (modalState: UserSettingsModalState) => {
   if (!modalState?.userSettingsPage) {
@@ -30,7 +32,15 @@ export const UserSettingsDialog = (modalState: UserSettingsModalState) => {
       return <BlockedContactsSettingsPage {...modalState} />;
     case 'appearance':
       return <AppearanceSettingsPage {...modalState} />;
+    case 'recovery-password':
+      return <RecoveryPasswordSettingsPage {...modalState} />;
+    case 'message-requests':
+      // the `message-request` is not a page of the user settings page, but a page in the left pane header currently.
+      return null;
     default:
-      return <DefaultSettingPage />;
+      return assertUnreachable(
+        modalState.userSettingsPage,
+        `Unknown user settings page: ${modalState.userSettingsPage}`
+      );
   }
 };

@@ -402,7 +402,7 @@ export const NotificationForConvoMenuItem = (): JSX.Element | null => {
             }}
             disabled={disabled}
           >
-            {item.name}
+            {tr(item.token)}
           </ItemWithDataTestId>
         );
       })}

@@ -20,7 +20,6 @@ import {
 import { SettingsToggleBasic } from '../components/SettingsToggleBasic';
 import { SettingsKey } from '../../../../data/settings-key';
 import { ToastUtils } from '../../../../session/utils';
-import { tr } from '../../../../localization/localeTools';
 import { PanelRadioButton } from '../../../buttons/panel/PanelRadioButton';
 import { useHasEnterSendEnabled } from '../../../../state/selectors/settings';
 
@@ -49,13 +48,13 @@ function SendWithShiftEnter() {
 
   const items = [
     {
-      text: tr('conversationsSendWithEnterKey'),
-      subText: tr('conversationsSendWithEnterKeyDescription'),
+      text: 'conversationsSendWithEnterKey',
+      subText: 'conversationsSendWithEnterKeyDescription',
       value: selectedWithSettingFalse,
     },
     {
-      text: tr('conversationsSendWithShiftEnter'),
-      subText: tr('conversationsEnterNewLine'),
+      text: 'conversationsSendWithShiftEnter',
+      subText: 'conversationsEnterNewLine',
       value: selectedWithSettingTrue,
     },
   ] as const;
@@ -70,8 +69,8 @@ function SendWithShiftEnter() {
               key={value}
               textElement={
                 <PanelButtonTextWithSubText
-                  text={text}
-                  subText={subText}
+                  text={{ token: text }}
+                  subText={{ token: subText }}
                   textDataTestId={`send-with-${value}-settings-text`}
                   subTextDataTestId={`send-with-${value}-settings-sub-text`}
                 />
@@ -122,8 +121,8 @@ export function PreferencesSettingsPage(modalState: UserSettingsModalState) {
       <PanelButtonGroup>
         <SettingsToggleBasic
           baseDataTestId="auto-update"
-          textToken="permissionsAutoUpdate"
-          subTextToken="permissionsAutoUpdateDescription"
+          text={{ token: 'permissionsAutoUpdate' }}
+          subText={{ token: 'permissionsAutoUpdateDescription' }}
           onClick={async () => {
             const old = Boolean(window.getSettingValue(SettingsKey.settingsAutoUpdate));
             await window.setSettingValue(SettingsKey.settingsAutoUpdate, !old);
@@ -136,8 +135,8 @@ export function PreferencesSettingsPage(modalState: UserSettingsModalState) {
       <PanelButtonGroup>
         <SettingsToggleBasic
           baseDataTestId="auto-update"
-          textToken="permissionsKeepInSystemTray"
-          subTextToken="permissionsKeepInSystemTrayDescription"
+          text={{ token: 'permissionsKeepInSystemTray' }}
+          subText={{ token: 'permissionsKeepInSystemTrayDescription' }}
           onClick={async () => {
             await toggleStartInTray();
             forceUpdate();

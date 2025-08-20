@@ -115,16 +115,16 @@ function HasPasswordSubSection(props: WithPasswordUpdatedCb) {
     <PanelButtonGroup>
       <SettingsPanelButtonInlineBasic
         baseDataTestId="change-password"
-        textToken="passwordChange"
-        subTextToken="passwordChangeShortDescription"
+        text={{ token: 'passwordChange' }}
+        subText={{ token: 'passwordChangeShortDescription' }}
         onClick={async () => displayPasswordModal('change', props.onPasswordUpdated)}
         buttonColor={SessionButtonColor.Primary}
         buttonText={tr('change')}
       />
       <SettingsPanelButtonInlineBasic
         baseDataTestId="remove-password"
-        textToken="passwordRemove"
-        subTextToken="passwordRemoveShortDescription"
+        text={{ token: 'passwordRemove' }}
+        subText={{ token: 'passwordRemoveShortDescription' }}
         onClick={async () => {
           displayPasswordModal('remove', props.onPasswordUpdated);
         }}
@@ -139,8 +139,8 @@ function NoPasswordSubSection(props: WithPasswordUpdatedCb) {
     <PanelButtonGroup>
       <SettingsPanelButtonInlineBasic
         baseDataTestId="set-password"
-        textToken="passwordSet"
-        subTextToken="passwordSetShortDescription"
+        text={{ token: 'passwordSet' }}
+        subText={{ token: 'passwordSetShortDescription' }}
         onClick={async () => {
           displayPasswordModal('set', props.onPasswordUpdated);
         }}
@@ -205,8 +205,8 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
             await toggleCallMediaPermissions(forceUpdate);
             forceUpdate();
           }}
-          textToken="callsVoiceAndVideoBeta"
-          subTextToken="callsVoiceAndVideoToggleDescription"
+          text={{ token: 'callsVoiceAndVideoBeta' }}
+          subText={{ token: 'callsVoiceAndVideoToggleDescription' }}
         />
         <SettingsToggleBasic
           baseDataTestId="enable-microphone"
@@ -215,8 +215,8 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
             await window.toggleMediaPermissions();
             forceUpdate();
           }}
-          textToken="permissionsMicrophone"
-          subTextToken="permissionsMicrophoneDescription"
+          text={{ token: 'permissionsMicrophone' }}
+          subText={{ token: 'permissionsMicrophoneDescription' }}
         />
       </PanelButtonGroup>
       <PanelLabelWithDescription title={{ token: 'sessionMessageRequests' }} />
@@ -232,8 +232,8 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
             );
             forceUpdate();
           }}
-          textToken="messageRequestsCommunities"
-          subTextToken="messageRequestsCommunitiesDescription"
+          text={{ token: 'messageRequestsCommunities' }}
+          subText={{ token: 'messageRequestsCommunitiesDescription' }}
         />
       </PanelButtonGroup>
       <PanelLabelWithDescription title={{ token: 'readReceipts' }} />
@@ -246,8 +246,8 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
             await window.setSettingValue(SettingsKey.settingsReadReceipt, !old);
             forceUpdate();
           }}
-          textToken="readReceipts"
-          subTextToken="readReceiptsDescription"
+          text={{ token: 'readReceipts' }}
+          subText={{ token: 'readReceiptsDescription' }}
         />
       </PanelButtonGroup>
       <PanelLabelWithDescription title={{ token: 'typingIndicators' }} />
@@ -255,8 +255,8 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
         <PanelToggleButton
           textElement={
             <PanelButtonTextWithSubText
-              text={tr('typingIndicators')}
-              subText={tr('typingIndicatorsDescription')}
+              text={{ token: 'typingIndicators' }}
+              subText={{ token: 'typingIndicatorsDescription' }}
               textDataTestId={'enable-typing-indicators-settings-text'}
               subTextDataTestId={'enable-typing-indicators-settings-sub-text'}
               extraSubTextNode={
@@ -285,8 +285,8 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
           onClick={async () => {
             void toggleLinkPreviews(isLinkPreviewsOn, forceUpdate);
           }}
-          textToken="linkPreviewsSend"
-          subTextToken="linkPreviewsDescription"
+          text={{ token: 'linkPreviewsSend' }}
+          subText={{ token: 'linkPreviewsDescription' }}
         />
       </PanelButtonGroup>
       <PanelLabelWithDescription title={{ token: 'passwords' }} />

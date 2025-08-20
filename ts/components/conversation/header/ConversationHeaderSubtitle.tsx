@@ -4,6 +4,8 @@ import { SessionIconButton } from '../../icon';
 import { SubtitleStringsType } from './ConversationHeaderTitle';
 import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
+import type { TrArgs } from '../../../localization/localeTools';
+import { Localizer } from '../../basic/Localizer';
 
 function loadDataTestId(currentSubtitle: SubtitleStringsType) {
   if (currentSubtitle === 'disappearingMessages') {
@@ -66,7 +68,7 @@ export const SubtitleDotMenu = ({
   </StyledSubtitleDotMenu>
 );
 
-export type SubTitleArray = Array<{ type: SubtitleStringsType; label: string | null }>;
+export type SubTitleArray = Array<{ type: SubtitleStringsType } & TrArgs>;
 
 type CycleDirection = 1 | -1;
 
@@ -154,7 +156,7 @@ export const ConversationHeaderSubtitle = (props: ConversationHeaderSubtitleProp
           tabIndex={0}
           data-testid={loadDataTestId(currentSubtitle.type)}
         >
-          {currentSubtitle.label}
+          <Localizer {...currentSubtitle} />
         </StyledConversationHeaderSubtitleText>
         <CycleButton onCycle={onCycle} direction={1} cannotCycle={cannotCycle} />
       </Flex>

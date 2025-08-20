@@ -46,8 +46,8 @@ export function HelpSettingsPage(modalState: UserSettingsModalState) {
       <PanelButtonGroup>
         <SettingsPanelButtonInlineBasic
           baseDataTestId="export-logs"
-          textToken="helpReportABug"
-          subTextToken="helpReportABugExportLogsSaveToDesktopDescription"
+          text={{ token: 'helpReportABug' }}
+          subText={{ token: 'helpReportABugExportLogsSaveToDesktopDescription' }}
           onClick={async () => saveLogToDesktop()}
           buttonColor={SessionButtonColor.Primary}
           buttonText={tr('helpReportABugExportLogs')}
@@ -57,16 +57,16 @@ export function HelpSettingsPage(modalState: UserSettingsModalState) {
       <PanelButtonGroup>
         <SettingsExternalLinkBasic
           baseDataTestId="faq"
-          textToken="helpFAQ"
-          subTextToken="helpFAQDescription"
+          text={{ token: 'helpFAQ' }}
+          subText={{ token: 'helpFAQDescription' }}
           onClick={async () => {
             showLinkVisitWarningDialog('https://getsession.org/faq', dispatch);
           }}
         />
         <SettingsExternalLinkBasic
           baseDataTestId="translate"
-          textToken="translate"
-          subTextToken="helpTranslateSessionDescription"
+          text={{ token: 'translate' }}
+          subText={{ token: 'helpTranslateSessionDescription' }}
           onClick={async () => {
             showLinkVisitWarningDialog('https://getsession.org/translate', dispatch);
           }}
@@ -74,16 +74,16 @@ export function HelpSettingsPage(modalState: UserSettingsModalState) {
 
         <SettingsExternalLinkBasic
           baseDataTestId="feedback"
-          textToken="feedback"
-          subTextToken="feedbackDescription"
+          text={{ token: 'feedback' }}
+          subText={{ token: 'feedbackDescription' }}
           onClick={async () => {
             showLinkVisitWarningDialog('https://getsession.org/survey', dispatch);
           }}
         />
         <SettingsExternalLinkBasic
           baseDataTestId="support"
-          textToken="helpSupport"
-          subTextToken="supportDescription"
+          text={{ token: 'helpSupport' }}
+          subText={{ token: 'supportDescription' }}
           onClick={async () => {
             showLinkVisitWarningDialog('https://sessionapp.zendesk.com/hc/en-us', dispatch);
           }}

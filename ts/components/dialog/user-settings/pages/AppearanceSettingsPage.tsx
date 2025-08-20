@@ -42,7 +42,6 @@ import { useTheme } from '../../../../state/theme/selectors/theme';
 import { switchThemeTo } from '../../../../themes/switchTheme';
 import { StyledPanelButtonSeparator } from '../../../buttons/panel/StyledPanelButtonGroupSeparator';
 import { GenericPanelButtonWithAction } from '../../../buttons/panel/GenericPanelButtonWithAction';
-import { tr } from '../../../../localization/localeTools';
 import { Flex } from '../../../basic/Flex';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { LucideIcon } from '../../../icon/LucideIcon';
@@ -336,14 +335,14 @@ function ZoomFactorPicker({ forceUpdate }: { forceUpdate: () => void }) {
           event: e,
           position: {
             x: boundingRect.left + boundingRect.width / 2,
-            y: boundingRect.top + boundingRect.height / 2,
+            y: boundingRect.top + boundingRect.height / 2 - 75,
           },
         });
       }}
       textElement={
         <PanelButtonTextWithSubText
-          text={tr('zoomFactor')}
-          subText={tr('zoomFactorDescription')}
+          text={{ token: 'zoomFactor' }}
+          subText={{ token: 'zoomFactorDescription' }}
           textDataTestId={`${baseDataTestId}-settings-text`}
           subTextDataTestId={`${baseDataTestId}-settings-sub-text`}
         />
@@ -425,8 +424,8 @@ export function AppearanceSettingsPage(modalState: UserSettingsModalState) {
       <PanelButtonGroup>
         <SettingsToggleBasic
           baseDataTestId="auto-dark-mode"
-          textToken="appearanceAutoDarkMode"
-          subTextToken="followSystemSettings"
+          text={{ token: 'appearanceAutoDarkMode' }}
+          subText={{ token: 'followSystemSettings' }}
           onClick={async () => {
             const toggledValue = !isFollowSystemThemeEnabled;
             await window.setSettingValue(SettingsKey.hasFollowSystemThemeEnabled, toggledValue);
@@ -448,8 +447,8 @@ export function AppearanceSettingsPage(modalState: UserSettingsModalState) {
           <PanelButtonGroup>
             <SettingsToggleBasic
               baseDataTestId="hide-menu-bar"
-              textToken="appearanceHideMenuBar"
-              subTextToken="hideMenuBarDescription"
+              text={{ token: 'appearanceHideMenuBar' }}
+              subText={{ token: 'hideMenuBarDescription' }}
               onClick={async () => {
                 window.toggleMenuBar();
                 forceUpdate();

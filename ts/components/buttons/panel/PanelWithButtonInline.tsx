@@ -39,6 +39,8 @@ export const PanelWithButtonInline = (props: PanelWithButtonInlineProps) => {
           dataTestId={buttonDataTestId}
           text={buttonText}
           buttonColor={buttonColor}
+          // we need this so that the hover effect work (even if the button does not do the onClick itself)
+          style={{ pointerEvents: 'all' }}
         />
       }
     />

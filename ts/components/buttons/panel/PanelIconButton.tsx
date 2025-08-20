@@ -14,11 +14,12 @@ import { SessionIcon } from '../../icon/SessionIcon';
 import type { SessionIconType } from '../../icon';
 import type { WithLucideUnicode } from '../../icon/lucide';
 import { StyledPanelButtonSeparator } from './StyledPanelButtonGroupSeparator';
+import type { TrArgs } from '../../../localization/localeTools';
 
 type PanelIconButtonProps = Omit<PanelButtonProps, 'children' | 'subText' | 'subTextDataTestId'> & {
-  text: string;
   iconElement: ReactNode;
   color?: string;
+  text: TrArgs;
 };
 
 const IconContainer = styled.div`

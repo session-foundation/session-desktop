@@ -1,7 +1,6 @@
 import type { SettingsInlineButtons } from 'react';
-import type { TokenSimpleNoArgs } from '../../../../localization/locales';
 import { PanelButtonTextWithSubText } from '../../../buttons/panel/PanelButton';
-import { tr } from '../../../../localization/localeTools';
+import { type TrArgs } from '../../../../localization/localeTools';
 import {
   PanelWithButtonInline,
   type PanelWithButtonInlineProps,
@@ -10,22 +9,22 @@ import {
 export function SettingsPanelButtonInlineBasic({
   baseDataTestId,
   onClick,
-  textToken,
-  subTextToken,
+  text,
+  subText,
   buttonColor,
   buttonText,
   disabled,
 }: {
-  textToken: TokenSimpleNoArgs;
-  subTextToken: TokenSimpleNoArgs;
+  text: TrArgs;
+  subText: TrArgs;
   baseDataTestId: SettingsInlineButtons;
 } & Pick<PanelWithButtonInlineProps, 'buttonColor' | 'buttonText' | 'onClick' | 'disabled'>) {
   return (
     <PanelWithButtonInline
       textElement={
         <PanelButtonTextWithSubText
-          text={tr(textToken)}
-          subText={tr(subTextToken)}
+          text={text}
+          subText={subText}
           textDataTestId={`${baseDataTestId}-settings-text`}
           subTextDataTestId={`${baseDataTestId}-settings-sub-text`}
         />

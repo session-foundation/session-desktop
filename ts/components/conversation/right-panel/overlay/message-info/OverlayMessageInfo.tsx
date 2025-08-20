@@ -201,7 +201,7 @@ function CopyMessageBodyButton({ messageId }: WithMessageIdOpt) {
   }
   return (
     <PanelIconButton
-      text={tr('copy')}
+      text={{ token: 'copy' }}
       iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.COPY} />}
       onClick={() => {
         clipboard.writeText(messageBody || '');
@@ -219,7 +219,7 @@ function ReplyToMessageButton({ messageId }: WithMessageIdOpt) {
   }
   return (
     <PanelIconButton
-      text={tr('reply')}
+      text={{ token: 'reply' }}
       iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.REPLY} />}
       onClick={() => {
         // eslint-disable-next-line more/no-then
@@ -350,7 +350,7 @@ export const OverlayMessageInfo = () => {
             {!isLegacyGroup && <ReplyToMessageButton messageId={messageId} />}
             {hasErrors && !isLegacyGroup && direction === 'outgoing' && (
               <PanelIconButton
-                text={tr('resend')}
+                text={{ token: 'resend' }}
                 iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.REPEAT_2} />}
                 onClick={() => {
                   void resendMessage(messageId);
@@ -364,7 +364,7 @@ export const OverlayMessageInfo = () => {
             {/* Saving attachments sends a data extraction message so it must be disabled for message requests. */}
             {hasAttachments && !isIncomingMessageRequest && (
               <PanelIconButton
-                text={tr('save')}
+                text={{ token: 'save' }}
                 iconElement={
                   <PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.CIRCLE_ARROW_DOWN} />
                 }
@@ -385,7 +385,7 @@ export const OverlayMessageInfo = () => {
             {/* Deleting messages sends a "delete message" message so it must be disabled for message requests. */}
             {isDeletable && !isLegacyGroup && !isIncomingMessageRequest && (
               <PanelIconButton
-                text={tr('delete')}
+                text={{ token: 'delete' }}
                 iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.TRASH2} />}
                 color={'var(--danger-color)'}
                 dataTestId="delete-from-details"

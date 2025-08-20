@@ -1,18 +1,17 @@
 import type { SettingsToggles } from 'react';
-import type { TokenSimpleNoArgs } from '../../../../localization/locales';
 import { PanelButtonTextWithSubText } from '../../../buttons/panel/PanelButton';
 import { PanelToggleButton } from '../../../buttons/panel/PanelToggleButton';
-import { tr } from '../../../../localization/localeTools';
+import { type TrArgs } from '../../../../localization/localeTools';
 
 export function SettingsToggleBasic({
   active,
   baseDataTestId,
   onClick,
-  textToken,
-  subTextToken,
+  text,
+  subText,
 }: {
-  textToken: TokenSimpleNoArgs;
-  subTextToken: TokenSimpleNoArgs;
+  text: TrArgs;
+  subText: TrArgs;
   baseDataTestId: SettingsToggles;
   active: boolean;
   onClick: () => Promise<void>;
@@ -21,8 +20,8 @@ export function SettingsToggleBasic({
     <PanelToggleButton
       textElement={
         <PanelButtonTextWithSubText
-          text={tr(textToken)}
-          subText={tr(subTextToken)}
+          text={text}
+          subText={subText}
           textDataTestId={`${baseDataTestId}-settings-text`}
           subTextDataTestId={`${baseDataTestId}-settings-sub-text`}
         />

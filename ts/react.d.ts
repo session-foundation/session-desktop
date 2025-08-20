@@ -106,7 +106,8 @@ declare module 'react' {
     | 'set-password'
     | 'change-password'
     | 'remove-password'
-    | 'export-logs';
+    | 'export-logs'
+    | 'hide-recovery-password';
   type SettingsExternalLinkButtons = 'faq' | 'translate' | 'support' | 'feedback';
 
   type SettingsMenuItems =

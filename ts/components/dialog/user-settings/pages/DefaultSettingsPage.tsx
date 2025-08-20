@@ -3,7 +3,6 @@ import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { useHotkey } from '../../../../hooks/useHotkey';
 import { useOurConversationUsername, useOurAvatarPath } from '../../../../hooks/useParamSelector';
-import { LOCALE_DEFAULTS } from '../../../../localization/constants';
 import { UserUtils, ToastUtils } from '../../../../session/utils';
 import { resetConversationExternal } from '../../../../state/ducks/conversations';
 import {
@@ -35,6 +34,7 @@ import type { ProfileDialogModes } from '../ProfileDialogModes';
 import { tr } from '../../../../localization/localeTools';
 import { useIsProAvailable } from '../../../../hooks/useIsProAvailable';
 import { setDebugMode } from '../../../../state/ducks/debug';
+import { useHideRecoveryPasswordEnabled } from '../../../../state/selectors/settings';
 
 const handleKeyQRMode = (mode: ProfileDialogModes, setMode: (mode: ProfileDialogModes) => void) => {
   switch (mode) {
@@ -104,7 +104,7 @@ function SessionProSection() {
             <ProIconButton onClick={undefined} iconSize="small" dataTestId="invalid-data-testid" />
           </div>
         }
-        text={LOCALE_DEFAULTS.app_pro}
+        text={{ token: 'appPro' }}
         onClick={() => {
           dispatch(updateSessionProInfoModal({ variant: SessionProInfoVariant.GENERIC }));
         }}
@@ -126,7 +126,7 @@ function MiscSection() {
             unicode={LUCIDE_ICONS_UNICODE.HEART}
           />
         }
-        text={tr('donate')}
+        text={{ token: 'donate' }}
         onClick={() => {
           showLinkVisitWarningDialog('https://session.foundation/donate#app', dispatch);
         }}
@@ -134,7 +134,7 @@ function MiscSection() {
       />
       <PanelIconButton
         iconElement={<LucideIconForSettings unicode={LUCIDE_ICONS_UNICODE.SEARCH} />}
-        text={tr('onionRoutingPath')}
+        text={{ token: 'onionRoutingPath' }}
         onClick={() => {
           dispatch(onionPathModal({}));
         }}
@@ -142,7 +142,7 @@ function MiscSection() {
       />
       <PanelIconButton
         iconElement={<SessionIconForSettings iconType="sessionToken" />}
-        text={LOCALE_DEFAULTS.network_name}
+        text={{ token: 'networkName' }}
         onClick={() => {
           // do a refresh request on open
           dispatch(networkDataActions.refreshInfoFromSeshServer() as any);
@@ -161,7 +161,7 @@ function SettingsSection() {
     <PanelButtonGroup>
       <PanelIconButton
         iconElement={<LucideIconForSettings unicode={LUCIDE_ICONS_UNICODE.LOCK_KEYHOLE} />}
-        text={tr('sessionPrivacy')}
+        text={{ token: 'sessionPrivacy' }}
         onClick={() => {
           dispatch(userSettingsModal({ userSettingsPage: 'privacy' }));
         }}
@@ -169,7 +169,7 @@ function SettingsSection() {
       />
       <PanelIconButton
         iconElement={<LucideIconForSettings unicode={LUCIDE_ICONS_UNICODE.VOLUME_2} />}
-        text={tr('sessionNotifications')}
+        text={{ token: 'sessionNotifications' }}
         onClick={() => {
           dispatch(userSettingsModal({ userSettingsPage: 'notifications' }));
         }}
@@ -177,7 +177,7 @@ function SettingsSection() {
       />
       <PanelIconButton
         iconElement={<LucideIconForSettings unicode={LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE} />}
-        text={tr('sessionConversations')}
+        text={{ token: 'sessionConversations' }}
         onClick={() => {
           dispatch(userSettingsModal({ userSettingsPage: 'conversations' }));
         }}
@@ -185,7 +185,7 @@ function SettingsSection() {
       />
       <PanelIconButton
         iconElement={<LucideIconForSettings unicode={LUCIDE_ICONS_UNICODE.PAINTBRUSH_VERTICAL} />}
-        text={tr('sessionAppearance')}
+        text={{ token: 'sessionAppearance' }}
         onClick={() => {
           dispatch(userSettingsModal({ userSettingsPage: 'appearance' }));
         }}
@@ -195,7 +195,7 @@ function SettingsSection() {
         iconElement={
           <LucideIconForSettings unicode={LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE_WARNING} />
         }
-        text={tr('sessionMessageRequests')}
+        text={{ token: 'sessionMessageRequests' }}
         onClick={() => {
           dispatch(sectionActions.setLeftOverlayMode('message-requests'));
           dispatch(userSettingsModal(null));
@@ -205,7 +205,7 @@ function SettingsSection() {
       />
       <PanelIconButton
         iconElement={<LucideIconForSettings unicode={LUCIDE_ICONS_UNICODE.SETTINGS} />}
-        text={tr('preferences')}
+        text={{ token: 'preferences' }}
         onClick={() => {
           dispatch(userSettingsModal({ userSettingsPage: 'preferences' }));
         }}
@@ -217,19 +217,23 @@ function SettingsSection() {
 
 function AdminSection() {
   const dispatch = useDispatch();
+  const recoveryPasswordHidden = useHideRecoveryPasswordEnabled();
+
   return (
     <PanelButtonGroup>
-      <PanelIconButton
-        iconElement={<SessionIconForSettings iconType="recoveryPasswordFill" />}
-        text={tr('sessionRecoveryPassword')}
-        onClick={() => {
-          throw new Error('Not implemented');
-        }}
-        dataTestId="recovery-password-settings-menu-item"
-      />
+      {!recoveryPasswordHidden ? (
+        <PanelIconButton
+          iconElement={<SessionIconForSettings iconType="recoveryPasswordFill" />}
+          text={{ token: 'sessionRecoveryPassword' }}
+          onClick={() => {
+            dispatch(userSettingsModal({ userSettingsPage: 'recovery-password' }));
+          }}
+          dataTestId="recovery-password-settings-menu-item"
+        />
+      ) : null}
       <PanelIconButton
         iconElement={<LucideIconForSettings unicode={LUCIDE_ICONS_UNICODE.CIRCLE_HELP} />}
-        text={tr('sessionHelp')}
+        text={{ token: 'sessionHelp' }}
         onClick={() => {
           dispatch(userSettingsModal({ userSettingsPage: 'help' }));
         }}
@@ -242,7 +246,7 @@ function AdminSection() {
             iconColor="var(--danger-color)"
           />
         }
-        text={tr('sessionClearData')}
+        text={{ token: 'sessionClearData' }}
         onClick={() => {
           dispatch(updateDeleteAccountModal({}));
         }}

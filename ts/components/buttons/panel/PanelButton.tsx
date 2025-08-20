@@ -76,6 +76,9 @@ const PanelButtonContainer = styled.div`
   overflow: auto;
   min-height: var(--panel-button-container-min-height);
   max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 `;
 
 type PanelButtonGroupProps = {
@@ -83,11 +86,13 @@ type PanelButtonGroupProps = {
   style?: CSSProperties;
 };
 
-export const PanelButtonGroup = (props: PanelButtonGroupProps) => {
-  const { children, style } = props;
+export const PanelButtonGroup = (
+  props: PanelButtonGroupProps & { containerStyle?: CSSProperties }
+) => {
+  const { children, style, containerStyle } = props;
   return (
     <StyledRoundedPanelButtonGroup style={style}>
-      <PanelButtonContainer>{children}</PanelButtonContainer>
+      <PanelButtonContainer style={containerStyle}>{children}</PanelButtonContainer>
     </StyledRoundedPanelButtonGroup>
   );
 };
@@ -167,13 +172,12 @@ const StyledSubtitle = styled.p<{ color?: string }>`
  * If a subtitle is provided, it's dataTestId is required too.
  */
 type PanelButtonTextBaseProps = {
-  text: string;
   textDataTestId: SessionDataTestId;
   color?: string;
-};
+} & ({ text: TrArgs } | { label: string });
 
 export type PanelButtonSubtextProps = {
-  subText: string;
+  subText: TrArgs;
   subTextDataTestId: SessionDataTestId;
 };
 
@@ -197,7 +201,7 @@ function TextOnly(props: PanelButtonTextBaseProps) {
     <H8
       color={props.color}
       data-testid={props.textDataTestId}
-      fontWeight={500}
+      fontWeight={700}
       style={{
         // We need this to wrap so we don't cut long titles in the
         // user settings page, even if it means having multiple lines
@@ -208,7 +212,7 @@ function TextOnly(props: PanelButtonTextBaseProps) {
         textAlign: 'start',
       }}
     >
-      {props.text}
+      {'text' in props ? <Localizer {...props.text} /> : props.label}
     </H8>
   );
 }
@@ -218,10 +222,10 @@ export const PanelButtonTextWithSubText = (
 ) => {
   return (
     <PanelButtonTextInternal>
-      <TextOnly color={props.color} textDataTestId={props.textDataTestId} text={props.text} />
+      <TextOnly color={props.color} {...props} />
       <SpacerXS />
       <StyledSubtitle color={props.color} data-testid={props.subTextDataTestId}>
-        {props.subText}
+        <Localizer {...props.subText} />
         {props.extraSubTextNode}
       </StyledSubtitle>
     </PanelButtonTextInternal>
@@ -231,7 +235,7 @@ export const PanelButtonTextWithSubText = (
 export const PanelButtonText = (props: PanelButtonTextBaseProps) => {
   return (
     <PanelButtonTextInternal>
-      <TextOnly color={props.color} textDataTestId={props.textDataTestId} text={props.text} />
+      <TextOnly color={props.color} {...props} />
     </PanelButtonTextInternal>
   );
 };

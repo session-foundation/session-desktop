@@ -27,9 +27,10 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
   };
 
   const onConfirmation = async () => {
+    dispatch(userSettingsModal({ userSettingsPage: 'default' }));
+
     await window.setSettingValue(SettingsKey.hideRecoveryPassword, true);
     onClose();
-    dispatch(userSettingsModal({ userSettingsPage: 'privacy' }));
   };
 
   if (isEmpty(state)) {

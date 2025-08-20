@@ -78,8 +78,8 @@ export function ConversationSettingsPage(modalState: UserSettingsModalState) {
             await toggleCommunitiesPruning();
             forceUpdate();
           }}
-          textToken={'conversationsMessageTrimmingTrimCommunities'}
-          subTextToken={'conversationsMessageTrimmingTrimCommunitiesDescription'}
+          text={{ token: 'conversationsMessageTrimmingTrimCommunities' }}
+          subText={{ token: 'conversationsMessageTrimmingTrimCommunitiesDescription' }}
         />
       </PanelButtonGroup>
       <PanelLabelWithDescription title={{ token: 'spellChecker' }} />
@@ -91,8 +91,8 @@ export function ConversationSettingsPage(modalState: UserSettingsModalState) {
             window.toggleSpellCheck();
             forceUpdate();
           }}
-          textToken={'conversationsSpellCheck'}
-          subTextToken={'conversationsSpellCheckDescription'}
+          text={{ token: 'conversationsSpellCheck' }}
+          subText={{ token: 'conversationsSpellCheckDescription' }}
         />
       </PanelButtonGroup>
       <PanelLabelWithDescription title={{ token: 'conversationsAudioMessages' }} />
@@ -104,8 +104,8 @@ export function ConversationSettingsPage(modalState: UserSettingsModalState) {
             dispatch(toggleAudioAutoplay());
             forceUpdate();
           }}
-          textToken={'conversationsAutoplayAudioMessage'}
-          subTextToken={'conversationsAutoplayAudioMessageDescription'}
+          text={{ token: 'conversationsAutoplayAudioMessage' }}
+          subText={{ token: 'conversationsAutoplayAudioMessageDescription' }}
         />
       </PanelButtonGroup>
 
@@ -116,8 +116,8 @@ export function ConversationSettingsPage(modalState: UserSettingsModalState) {
           onClick={() => {
             dispatch(userSettingsModal({ userSettingsPage: 'blocked-contacts' }));
           }}
-          textToken={'conversationsBlockedContacts'}
-          subTextToken={'blockedContactsManageDescription'}
+          text={{ token: 'conversationsBlockedContacts' }}
+          subText={{ token: 'blockedContactsManageDescription' }}
         />
       </PanelButtonGroup>
     </SessionWrapperModal>

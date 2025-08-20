@@ -147,7 +147,10 @@ export function NotificationForConversationModal(props: Required<ConversationSet
                   key={option.value}
                   // when we have a radio button, we need to have a text element, but we don't have a text element for notifications
                   textElement={
-                    <PanelButtonText text={option.name} textDataTestId="invalid-data-testid" />
+                    <PanelButtonText
+                      text={{ token: option.token }}
+                      textDataTestId="invalid-data-testid"
+                    />
                   }
                   value={option}
                   isSelected={notificationSelected === option.value}

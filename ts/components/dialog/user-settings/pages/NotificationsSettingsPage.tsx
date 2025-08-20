@@ -51,35 +51,32 @@ function NotificationsContent({
 
   const options = [
     {
-      text: tr('notificationsContentShowNameAndContent'),
-      subText: tr('notificationSenderNameAndPreview'),
+      text: { token: 'notificationsContentShowNameAndContent' },
+      subText: { token: 'notificationSenderNameAndPreview' },
       value: NotificationType.message,
     },
     {
-      text: tr('notificationsContentShowNameOnly'),
-      subText: tr('notificationSenderNameOnly'),
+      text: { token: 'notificationsContentShowNameOnly' },
+      subText: { token: 'notificationSenderNameOnly' },
       value: NotificationType.name,
     },
     {
-      text: tr('notificationsContentShowNoNameOrContent'),
-      subText: tr('notificationsGenericOnly'),
+      text: { token: 'notificationsContentShowNoNameOrContent' },
+      subText: { token: 'notificationsGenericOnly' },
       value: NotificationType.count,
     },
   ] as const;
-
-  const items = options.map(m => ({
-    text: m.text,
-    subText: m.subText,
-    value: m.value,
-  }));
 
   const onClickPreview = () => {
     if (!notificationsAreEnabled) {
       return;
     }
+    const foundEntry = options.find(m => m.value === initialNotificationEnabled)?.text;
+    const message = foundEntry ? tr(foundEntry.token) : 'Message body';
+
     Notifications.addPreviewNotification({
       conversationId: `preview-notification-${Date.now()}`,
-      message: items.find(m => m.value === initialNotificationEnabled)?.text || 'Message body',
+      message,
       title: tr('preview'),
       isExpiringMessage: false,
     });
@@ -106,8 +103,8 @@ function NotificationsContent({
                 );
                 forceUpdate();
               }}
-              textToken="notificationsSoundDesktop"
-              subTextToken="notificationsMakeSound"
+              text={{ token: 'notificationsSoundDesktop' }}
+              subText={{ token: 'notificationsMakeSound' }}
             />
           </PanelButtonGroup>
         </>
@@ -118,7 +115,7 @@ function NotificationsContent({
         description={{ token: 'contentNotificationDescription' }}
       />
       <PanelButtonGroup>
-        {items.map(({ value, text, subText }) => {
+        {options.map(({ value, text, subText }) => {
           return (
             <PanelRadioButton
               key={value}
@@ -193,8 +190,8 @@ export function NotificationsSettingsPage(modalState: UserSettingsModalState) {
             );
             forceUpdate();
           }}
-          textToken="enableNotifications"
-          subTextToken="notificationsMakeSound"
+          text={{ token: 'sessionNotifications' }}
+          subText={{ token: 'enableNotifications' }}
         />
       </PanelButtonGroup>
       <NotificationsContent
