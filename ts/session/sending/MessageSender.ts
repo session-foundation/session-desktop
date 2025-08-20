@@ -704,7 +704,7 @@ async function handleBatchResultWithSubRequests({
                   ? subRequest.plainTextBuffer
                   : null,
             },
-            subRequest.createdAtNetworkTimestamp,
+            storedAt,
             storedHash
           );
         }
