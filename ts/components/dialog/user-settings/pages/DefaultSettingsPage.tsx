@@ -407,7 +407,11 @@ export const DefaultSettingPage = () => {
                 onClick={copyAccountIdToClipboard}
               />
             }
-            style={{ color: 'var(--text-primary-color)' }}
+            style={{
+              color: 'var(--text-primary-color)',
+              fontSize: 'var(--font-size-h8)',
+              lineHeight: 1.1,
+            }}
             onClick={copyAccountIdToClipboard}
           />
 

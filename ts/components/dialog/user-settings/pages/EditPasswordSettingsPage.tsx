@@ -38,7 +38,7 @@ function StrengthCriteria(opts: { isMet: boolean } & WithTrArgs) {
   const criteriaMetColor = theme.includes('classic') ? 'var(--green-color)' : 'var(--blue-color)';
   return (
     <Flex $container={true} $alignItems="flex-start" $flexGap="var(--margins-xs)">
-      <Localizer {...opts.tr} />
+      <Localizer {...opts.trArgs} />
       <LucideIcon
         iconColor={opts.isMet ? criteriaMetColor : 'var(--danger-color)'}
         unicode={opts.isMet ? LUCIDE_ICONS_UNICODE.CIRCLE_CHECK : LUCIDE_ICONS_UNICODE.CIRCLE_X}
@@ -365,20 +365,23 @@ export function EditPasswordSettingsPage(modalState: {
             >
               <StrengthCriteria
                 isMet={hasLengthStrength}
-                tr={{ token: 'passwordStrengthCharLength' }}
+                trArgs={{ token: 'passwordStrengthCharLength' }}
               />
-              <StrengthCriteria isMet={hasNumber} tr={{ token: 'passwordStrengthIncludeNumber' }} />
+              <StrengthCriteria
+                isMet={hasNumber}
+                trArgs={{ token: 'passwordStrengthIncludeNumber' }}
+              />
               <StrengthCriteria
                 isMet={hasLetter}
-                tr={{ token: 'passwordStrengthIncludesLetter' }}
+                trArgs={{ token: 'passwordStrengthIncludesLetter' }}
               />
               <StrengthCriteria
                 isMet={hasUppercase}
-                tr={{ token: 'passwordStrengthIncludesUppercase' }}
+                trArgs={{ token: 'passwordStrengthIncludesUppercase' }}
               />
               <StrengthCriteria
                 isMet={hasLowercase}
-                tr={{ token: 'passwordStrengthIncludesLowercase' }}
+                trArgs={{ token: 'passwordStrengthIncludesLowercase' }}
               />
             </Flex>
           </PanelButtonGroup>

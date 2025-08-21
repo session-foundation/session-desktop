@@ -61,6 +61,7 @@ import { themesArray } from '../../themes/constants/colors';
 import { isDebugMode } from '../../shared/env_vars';
 import { GearAvatarButton } from '../buttons/avatar/GearAvatarButton';
 import { useZoomShortcuts } from '../../hooks/useZoomingShortcut';
+import { assertUnreachable } from '../../types/sqlSharedTypes';
 
 const StyledContainerAvatar = styled.div`
   padding: var(--margins-lg);
@@ -107,9 +108,7 @@ const Section = (props: { type: SectionType }) => {
       dispatch(userSettingsModal({ userSettingsPage: 'default' }));
       return;
     }
-    // message section
-    dispatch(searchActions.clearSearch());
-    dispatch(sectionActions.resetLeftOverlayMode());
+    assertUnreachable(type, `handleClick: unhandled case "${type}"`);
   };
 
   useHotkey('Escape', () => {

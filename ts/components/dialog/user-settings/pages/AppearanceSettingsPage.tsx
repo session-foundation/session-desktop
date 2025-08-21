@@ -252,7 +252,11 @@ async function setZoomFactor(value: number, forceUpdate: () => void) {
 
 const zoomFactorMenuId = 'zoom-factor-menu';
 
-const zoomFactorValues = range(ZOOM_FACTOR.MIN, ZOOM_FACTOR.MAX, ZOOM_FACTOR.STEP);
+const zoomFactorValues = range(
+  ZOOM_FACTOR.MIN,
+  ZOOM_FACTOR.MAX + ZOOM_FACTOR.STEP, // just so the upper end is an option
+  ZOOM_FACTOR.STEP
+);
 
 const ZoomFactorMenuPicker = ({
   forceUpdate,
@@ -314,7 +318,7 @@ const ZoomFactorMenuPicker = ({
 function ZoomFactorPicker({ forceUpdate }: { forceUpdate: () => void }) {
   const baseDataTestId = 'zoom-factor';
   useInterval(() => {
-    // the shortcut can change this value. So let's make this refresh every second when displayed
+    // the keyboard shortcuts can change this value. So let's make this refresh often when visible
     forceUpdate();
   }, 500);
 

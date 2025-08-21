@@ -137,7 +137,7 @@ export type GetMessageArgs<T extends MergedLocalizerTokens> = T extends MergedLo
 
 export type TrArgs = GetMessageArgs<MergedLocalizerTokens>;
 
-export type WithTrArgs = { tr: TrArgs };
+export type WithTrArgs = { trArgs: TrArgs };
 
 export function tStrippedWithObj<T extends MergedLocalizerTokens>(opts: GetMessageArgs<T>): string {
   const builder = new LocalizedStringBuilder<T>(opts.token as T, localeInUse).stripIt();

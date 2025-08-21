@@ -52,7 +52,7 @@ export const SessionToggle = ({
 }: {
   active: boolean;
   /**
-   * in undefined, the toggle won't be clickable and disabled
+   * if `onClick` is undefined, the toggle won't be clickable and disabled
    */
   onClick?: () => void;
   dataTestId?: SessionDataTestId;

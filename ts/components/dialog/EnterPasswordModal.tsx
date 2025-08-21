@@ -73,7 +73,7 @@ export const EnterPasswordModal = (props: EnterPasswordModalProps) => {
       buttonChildren={
         <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
-            text={tr('done')}
+            text={tr('enter')}
             buttonType={SessionButtonType.Simple}
             onClick={verifyPassword}
             dataTestId="session-confirm-ok-button"
