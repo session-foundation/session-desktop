@@ -161,6 +161,11 @@ The following instructions will install the following:
 
 Setup instructions for Windows using Chocolatey:
 
+> [!WARNING]
+> These setup instructions assume a clean system with none of these applications installed.
+> If your machine is already partially set up you may be better off manually installing
+> what you're missing.
+
 - Open PowerShell as Administrator
 
 - Install [Chocolatey](https://docs.chocolatey.org/en-us/choco/setup#installing-chocolatey-cli)
@@ -179,6 +184,9 @@ Setup instructions for Windows using Chocolatey:
   ```sh
   choco install git
   ```
+
+> [!WARNING]
+> You may need to restart PowerShell for git to be recognized.
 
   After installing Git, you may need to disable `core.autocrlf` to prevent line ending issues.
 
@@ -202,7 +210,7 @@ Setup instructions for Windows using Chocolatey:
 
 > [!WARNING]
 > This next step will likely take a long time.
-> Make sure to restart your computer once it is finished.
+> You may need to restart PowerShell for c++ build tools to be recognized.
 
 - Install [Visual C++ build tools workload for Visual Studio 2022](https://community.chocolatey.org/packages/visualstudio2022-workload-vctools)
 
@@ -229,6 +237,9 @@ Setup instructions for Windows using Chocolatey:
   ```sh
   choco install python --version <version>
   ```
+
+> [!WARNING]
+> You may need to restart PowerShell for python to be recognized.
 
 - Install [setuptools](https://pypi.org/project/setuptools/)
 
