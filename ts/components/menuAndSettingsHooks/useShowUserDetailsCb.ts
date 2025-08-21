@@ -1,12 +1,17 @@
 import { useDispatch } from 'react-redux';
-import { getCachedNakedKeyFromBlindedNoServerPubkey } from '../../session/apis/open_group_api/sogsv3/knownBlindedkeys';
+import {
+  findCachedBlindedMatchOrLookItUp,
+  getCachedNakedKeyFromBlindedNoServerPubkey,
+} from '../../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import { ConvoHub } from '../../session/conversations';
 import { KeyPrefixType, PubKey } from '../../session/types';
 import { updateUserProfileModal } from '../../state/ducks/modalDialog';
 import { Data } from '../../data/data';
 import type { WithMessageId } from '../../session/types/with';
-import { useIsMe, useIsPrivate } from '../../hooks/useParamSelector';
+import { useIsMe, useIsPrivate, useIsPublic } from '../../hooks/useParamSelector';
 import { useSelectedConversationKey } from '../../state/selectors/selectedConversation';
+import { getSodiumRenderer } from '../../session/crypto';
+import { OpenGroupData } from '../../data/opengroups';
 
 /**
  * Show the user details modal for a given message in the currently selected conversation.
@@ -15,6 +20,7 @@ export function useShowUserDetailsCbFromMessage() {
   const dispatch = useDispatch();
 
   const selectedConvoKey = useSelectedConversationKey();
+  const isPublic = useIsPublic(selectedConvoKey);
 
   if (!selectedConvoKey) {
     throw new Error('useShowUserDetailsCbFromMessage: no selected convo key');
@@ -37,8 +43,22 @@ export function useShowUserDetailsCbFromMessage() {
       );
     }
 
-    const resolvedNakedId = getCachedNakedKeyFromBlindedNoServerPubkey(sender);
-    const foundRealSessionId = resolvedNakedId !== sender ? resolvedNakedId : undefined;
+    let foundRealSessionId: string | undefined;
+    if (PubKey.isBlinded(sender) && isPublic) {
+      const openGroup = OpenGroupData.getV2OpenGroupRoom(selectedConvoKey);
+
+      if (!openGroup) {
+        throw new Error('useShowUserDetailsCbFromMessage: no open group found');
+      }
+      // Note: this is an expensive call
+      const resolvedNakedId = await findCachedBlindedMatchOrLookItUp(
+        sender,
+        openGroup.serverPublicKey,
+        await getSodiumRenderer()
+      );
+      foundRealSessionId =
+        resolvedNakedId && resolvedNakedId !== sender ? resolvedNakedId : undefined;
+    }
 
     if (foundRealSessionId && foundRealSessionId.startsWith(KeyPrefixType.standard)) {
       await ConvoHub.use().get(sender).setOriginConversationID(selectedConvoKey, true);
