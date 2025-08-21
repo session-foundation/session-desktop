@@ -11,12 +11,14 @@ export type UserStateType = {
   ourDisplayNameInProfile: string;
   ourNumber: string;
   uploadingNewAvatarCurrentUser: boolean;
+  uploadingNewAvatarCurrentUserFailed: boolean;
 };
 
 export const initialUserState: UserStateType = {
   ourDisplayNameInProfile: '',
   ourNumber: 'missing',
   uploadingNewAvatarCurrentUser: false,
+  uploadingNewAvatarCurrentUserFailed: false,
 };
 
 /**
@@ -43,9 +45,10 @@ const updateOurAvatar = createAsyncThunk(
       profileKey,
     });
 
-    window.inboxStore?.dispatch(updateEditProfilePictureModal(null));
-    window.inboxStore?.dispatch(userSettingsModal({ userSettingsPage: 'default' }));
-
+    if (res) {
+      window.inboxStore?.dispatch(updateEditProfilePictureModal(null));
+      window.inboxStore?.dispatch(userSettingsModal({ userSettingsPage: 'default' }));
+    }
     return res;
   }
 );
@@ -111,16 +114,18 @@ const userSlice = createSlice({
       window.log.info('a updateOurAvatar was fulfilled with:', action.payload);
 
       state.uploadingNewAvatarCurrentUser = false;
+      state.uploadingNewAvatarCurrentUserFailed = !action.payload;
       return state;
     });
     builder.addCase(updateOurAvatar.rejected, (state, action) => {
       window.log.error('a updateOurAvatar was rejected', action.error);
       state.uploadingNewAvatarCurrentUser = false;
+      state.uploadingNewAvatarCurrentUserFailed = true;
       return state;
     });
     builder.addCase(updateOurAvatar.pending, (state, _action) => {
       state.uploadingNewAvatarCurrentUser = true;
-
+      state.uploadingNewAvatarCurrentUserFailed = false;
       window.log.debug('a updateOurAvatar is pending');
       return state;
     });

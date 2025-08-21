@@ -161,7 +161,7 @@ async function updateOurProfileDisplayName(newName: string) {
 
   // might be good to not trigger a sync if the name did not change
   await conversation.commit();
-  await SyncUtils.forceSyncConfigurationNowIfNeeded(true);
+  void SyncUtils.forceSyncConfigurationNowIfNeeded(true);
 
   return truncatedName;
 }

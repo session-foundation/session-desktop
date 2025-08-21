@@ -22,7 +22,7 @@ import { groupInfoActions } from '../../state/ducks/metaGroups';
 import { useGroupAvatarChangeFromUIPending } from '../../state/selectors/groups';
 import { userActions } from '../../state/ducks/user';
 import { ReduxSogsRoomInfos } from '../../state/ducks/sogsRoomInfo';
-import { useOurAvatarIsUploading } from '../../state/selectors/user';
+import { useOurAvatarIsUploading, useOurAvatarUploadFailed } from '../../state/selectors/user';
 import { useAvatarOfRoomIsUploading } from '../../state/selectors/sogsRoomInfo';
 import {
   ModalActionsContainer,
@@ -41,6 +41,9 @@ import { useProBadgeOnClickCb } from '../menuAndSettingsHooks/useProBadgeOnClick
 import { useUserHasPro } from '../../hooks/useHasPro';
 import { Localizer } from '../basic/Localizer';
 import { UploadFirstImageButton } from '../buttons/avatar/UploadFirstImageButton';
+import { Flex } from '../basic/Flex';
+import { LucideIcon } from '../icon/LucideIcon';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
@@ -142,6 +145,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
 
   const groupAvatarChangePending = useGroupAvatarChangeFromUIPending();
   const ourAvatarIsUploading = useOurAvatarIsUploading();
+  const ourAvatarUploadFailed = useOurAvatarUploadFailed();
   const sogsAvatarIsUploading = useAvatarOfRoomIsUploading(conversationId);
 
   const [newAvatarObjectUrl, setNewAvatarObjectUrl] = useState<string | null>(avatarPath);
@@ -312,7 +316,21 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
           )}
         </StyledAvatarContainer>
       </div>
-      {}
+      {ourAvatarUploadFailed && isMe ? (
+        <Flex
+          $container={true}
+          $justifyContent="center"
+          $alignItems="center"
+          $flexGap="var(--margins-xs)"
+          style={{
+            marginTop: 'var(--margins-lg)',
+            color: 'var(--danger-color)',
+          }}
+        >
+          <LucideIcon unicode={LUCIDE_ICONS_UNICODE.TRIANGLE_ALERT} iconSize="small" />
+          <Localizer token="profileErrorUpdate" />
+        </Flex>
+      ) : null}
       {loading ? (
         <>
           <SpacerSM />

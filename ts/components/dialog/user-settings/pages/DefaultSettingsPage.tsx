@@ -385,8 +385,6 @@ export const DefaultSettingPage = () => {
               conversationId={us}
               onPlusAvatarClick={null}
               dataTestId="avatar-edit-profile-dialog"
-              // no qr click here as a button is already doing that action (and the qr button looks bad when the small size as the +)
-              // Note: this changes with the new Settings design
               onQRClick={() => setMode('qr')}
               enlargedImage={enlargedImage}
               toggleEnlargedImage={() => setEnlargedImage(!enlargedImage)}

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
 import useMount from 'react-use/lib/useMount';
+import { isEmpty } from 'lodash';
 
 import {
   useAvatarPath,
@@ -42,6 +43,8 @@ import {
 import { ReduxSogsRoomInfos } from '../../state/ducks/sogsRoomInfo';
 import type { WithConvoId } from '../../session/types/with';
 import { UploadFirstImageButton } from '../buttons/avatar/UploadFirstImageButton';
+import { sanitizeDisplayNameOrToast } from '../registration/utils';
+import { ProfileManager } from '../../session/profile_manager/ProfileManager';
 
 function useNameErrorString({
   isMe,
@@ -164,6 +167,21 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
     }
 
     if (trimmedGroupName !== nameOnOpen || trimmedGroupDescription !== descriptionOnOpen) {
+      if (isMe) {
+        const sanitizedName = sanitizeDisplayNameOrToast(trimmedGroupName);
+
+        // this should never happen, but just in case
+        if (isEmpty(sanitizedName)) {
+          return;
+        }
+
+        // this truncates if the display name is too long
+        // Note: this not doing any network calls. No need for a loader in this case
+        void ProfileManager.updateOurProfileDisplayName(sanitizedName);
+        closeDialog();
+
+        return;
+      }
       if (isPublic) {
         const updateDetailsAction = ReduxSogsRoomInfos.roomDetailsChange({
           conversationId,
