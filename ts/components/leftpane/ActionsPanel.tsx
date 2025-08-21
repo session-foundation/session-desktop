@@ -16,7 +16,6 @@ import {
   getOurPrimaryConversation,
   useGlobalUnreadMessageCount,
 } from '../../state/selectors/conversations';
-import { getFocusedSection } from '../../state/selectors/section';
 import { getOurNumber } from '../../state/selectors/user';
 
 import { DecryptedAttachmentsManager } from '../../session/crypto/DecryptedAttachmentsManager';
@@ -46,7 +45,6 @@ import { useHotkey } from '../../hooks/useHotkey';
 import { useIsDarkTheme } from '../../state/theme/selectors/theme';
 import { switchThemeTo } from '../../themes/switchTheme';
 import { getOppositeTheme } from '../../util/theme';
-import { SessionNotificationCount } from '../icon/SessionNotificationCount';
 import { getIsModalVisible } from '../../state/selectors/modal';
 
 import { MessageQueue } from '../../session/sending';
@@ -89,14 +87,11 @@ function handleThemeSwitch() {
 
 const Section = (props: { type: SectionType }) => {
   const ourNumber = useSelector(getOurNumber);
-  const globalUnreadMessageCount = useGlobalUnreadMessageCount();
   const dispatch = useDispatch();
   const { type } = props;
 
   const isModalVisible = useSelector(getIsModalVisible);
   const isDarkTheme = useIsDarkTheme();
-  const focusedSection = useSelector(getFocusedSection);
-  const isSelected = focusedSection === type;
 
   const handleClick = () => {
     if (type === SectionType.DebugMenu) {
@@ -114,14 +109,12 @@ const Section = (props: { type: SectionType }) => {
     }
     // message section
     dispatch(searchActions.clearSearch());
-    dispatch(sectionActions.showLeftPaneSection(type));
     dispatch(sectionActions.resetLeftOverlayMode());
   };
 
   useHotkey('Escape', () => {
     if (!isModalVisible) {
       dispatch(searchActions.clearSearch());
-      dispatch(sectionActions.showLeftPaneSection(SectionType.Message));
       dispatch(sectionActions.resetLeftOverlayMode());
     }
   });
@@ -140,29 +133,14 @@ const Section = (props: { type: SectionType }) => {
     );
   }
 
-  const unreadToShow = type === SectionType.Message ? globalUnreadMessageCount : undefined;
-
   const buttonProps = {
     iconSize: 'medium',
     padding: 'var(--margins-lg)',
     onClick: handleClick,
-    isSelected,
+    isSelected: false,
   } satisfies Omit<SessionLucideIconButtonProps, 'unicode' | 'dataTestId'>;
 
   switch (type) {
-    case SectionType.Message:
-      return (
-        <SessionLucideIconButton
-          {...buttonProps}
-          dataTestId="message-section"
-          unicode={LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE}
-          style={{
-            position: 'relative',
-          }}
-        >
-          {Boolean(unreadToShow) && <SessionNotificationCount count={unreadToShow} />}
-        </SessionLucideIconButton>
-      );
     case SectionType.DebugMenu:
       return (
         <SessionLucideIconButton
@@ -176,6 +154,7 @@ const Section = (props: { type: SectionType }) => {
       return (
         <SessionLucideIconButton
           {...buttonProps}
+          margin="auto 0 0 0"
           unicode={isDarkTheme ? LUCIDE_ICONS_UNICODE.MOON : LUCIDE_ICONS_UNICODE.SUN_MEDIUM}
           dataTestId="theme-section"
         />
@@ -362,7 +341,6 @@ export const ActionsPanel = () => {
     <>
       <LeftPaneSectionContainer data-testid="leftpane-section-container">
         <Section type={SectionType.Profile} />
-        <Section type={SectionType.Message} />
         {showDebugMenu && <Section type={SectionType.DebugMenu} />}
         <Section type={SectionType.ThemeSwitch} />
       </LeftPaneSectionContainer>

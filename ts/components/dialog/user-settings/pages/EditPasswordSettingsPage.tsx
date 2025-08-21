@@ -41,7 +41,7 @@ function StrengthCriteria(opts: { isMet: boolean } & WithTrArgs) {
       <Localizer {...opts.tr} />
       <LucideIcon
         iconColor={opts.isMet ? criteriaMetColor : 'var(--danger-color)'}
-        unicode={LUCIDE_ICONS_UNICODE.CIRCLE_CHECK}
+        unicode={opts.isMet ? LUCIDE_ICONS_UNICODE.CIRCLE_CHECK : LUCIDE_ICONS_UNICODE.CIRCLE_X}
         iconSize="small"
       />
     </Flex>
@@ -268,7 +268,14 @@ export function EditPasswordSettingsPage(modalState: {
             buttonType={SessionButtonType.Outline}
             onClick={doChange}
             buttonColor={isRemove ? SessionButtonColor.Danger : SessionButtonColor.Primary}
-            disabled={!firstPassword}
+            disabled={
+              // to set a password, we need both passwords (new & confirm)
+              (isSet && (!firstPassword || !secondPassword)) ||
+              // to change a password, we need all 3 passwords (current, new & confirm )
+              (isChange && (!firstPassword || !secondPassword || !thirdPassword)) ||
+              // to remove a password, we need the current password
+              (isRemove && !firstPassword)
+            }
           />
         </ModalActionsContainer>
       }

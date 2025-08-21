@@ -4,9 +4,8 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 export enum SectionType {
   Profile,
-  Message,
-  ThemeSwitch,
   DebugMenu,
+  ThemeSwitch,
 }
 
 export type LeftOverlayMode =
@@ -25,14 +24,12 @@ type RightPanelMessageInfoState = {
 export type RightOverlayMode = RightPanelDefaultState | RightPanelMessageInfoState;
 
 export const initialSectionState: SectionStateType = {
-  focusedSection: SectionType.Message,
   isAppFocused: false,
   leftOverlayMode: undefined,
   rightOverlayMode: { type: 'default', params: null },
 };
 
 export type SectionStateType = {
-  focusedSection: SectionType;
   isAppFocused: boolean;
   leftOverlayMode: LeftOverlayMode | undefined;
   rightOverlayMode: RightOverlayMode | undefined;
@@ -42,12 +39,6 @@ const sectionSlice = createSlice({
   name: 'sectionSlice',
   initialState: initialSectionState,
   reducers: {
-    showLeftPaneSection(state, action: PayloadAction<SectionType>) {
-      return {
-        ...state,
-        focusedSection: action.payload,
-      };
-    },
     setLeftOverlayMode(state, action: PayloadAction<LeftOverlayMode>) {
       return {
         ...state,

@@ -10,7 +10,7 @@ export const GearAvatarButton = () => {
     <LucideIcon
       unicode={LUCIDE_ICONS_UNICODE.SETTINGS}
       iconSize={'small'}
-      iconColor="var(--modal-background-content-color)"
+      iconColor="var(--black-color)"
       dataTestId="invalid-data-testid"
       style={{
         position: 'absolute',

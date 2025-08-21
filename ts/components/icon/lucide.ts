@@ -14,6 +14,7 @@ export enum LUCIDE_ICONS_UNICODE {
   CIRCLE_ELLIPSES = '',
   CIRCLE_HELP = '',
   CIRCLE_PLUS = '',
+  CIRCLE_X = '',
   CLAPERBOARD = '',
   COPY = '',
   DOWNLOAD = '',

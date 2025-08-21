@@ -1,8 +1,8 @@
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
-import { LeftOverlayMode, sectionActions, SectionType } from '../../state/ducks/section';
+import { LeftOverlayMode, sectionActions } from '../../state/ducks/section';
 import { disableRecoveryPhrasePrompt } from '../../state/ducks/userConfig';
-import { getFocusedSection, useLeftOverlayMode } from '../../state/selectors/section';
+import { useLeftOverlayMode } from '../../state/selectors/section';
 import { useHideRecoveryPasswordEnabled } from '../../state/selectors/settings';
 import { useIsDarkTheme } from '../../state/theme/selectors/theme';
 import { getShowRecoveryPhrasePrompt } from '../../state/selectors/userConfig';
@@ -107,7 +107,6 @@ function getLeftPaneHeaderLabel(leftOverlayMode: LeftOverlayMode | undefined): s
 
 export const LeftPaneBanner = () => {
   const isDarkTheme = useIsDarkTheme();
-  const section = useSelector(getFocusedSection);
   const isSignInWithRecoveryPhrase = isSignWithRecoveryPhrase();
   const hideRecoveryPassword = useHideRecoveryPasswordEnabled();
 
@@ -118,7 +117,7 @@ export const LeftPaneBanner = () => {
     dispatch(userSettingsModal({ userSettingsPage: 'recovery-password' }));
   };
 
-  if (section !== SectionType.Message || isSignInWithRecoveryPhrase || hideRecoveryPassword) {
+  if (isSignInWithRecoveryPhrase || hideRecoveryPassword) {
     return null;
   }
 
@@ -160,19 +159,28 @@ export const LeftPaneBanner = () => {
 
 export const LeftPaneSectionHeader = () => {
   const showRecoveryPhrasePrompt = useSelector(getShowRecoveryPhrasePrompt);
-  const focusedSection = useSelector(getFocusedSection);
   const leftOverlayMode = useLeftOverlayMode();
 
   const dispatch = useDispatch();
-  const returnToActionChooser = () => {
+  const goBack = () => {
+    if (!leftOverlayMode) {
+      return;
+    }
+    if (leftOverlayMode === 'choose-action') {
+      dispatch(sectionActions.resetLeftOverlayMode());
+
+      return;
+    }
     if (leftOverlayMode === 'closed-group') {
       dispatch(searchActions.clearSearch());
+      dispatch(sectionActions.setLeftOverlayMode('choose-action'));
+
+      return;
     }
     dispatch(sectionActions.setLeftOverlayMode('choose-action'));
   };
 
   const label = getLeftPaneHeaderLabel(leftOverlayMode);
-  const isMessageSection = focusedSection === SectionType.Message;
 
   return (
     <Flex $flexDirection="column">
@@ -182,21 +190,22 @@ export const LeftPaneSectionHeader = () => {
         $justifyContent="space-between"
         $alignItems="center"
       >
-        {leftOverlayMode &&
-        leftOverlayMode !== 'choose-action' &&
-        leftOverlayMode !== 'message-requests' ? (
+        {leftOverlayMode ? (
           <SessionLucideIconButton
             ariaLabel="Back button"
             iconSize="large"
             unicode={LUCIDE_ICONS_UNICODE.CHEVRON_LEFT}
-            onClick={returnToActionChooser}
+            onClick={goBack}
             dataTestId="back-button"
+            padding="var(--margins-sm)"
           />
         ) : (
           <SpacerSM />
         )}
-        <SectionTitle color={'var(--text-primary-color)'}>{label}</SectionTitle>
-        {isMessageSection && <MenuButton />}
+        <SectionTitle color={'var(--text-primary-color)'} onClick={goBack}>
+          {label}
+        </SectionTitle>
+        {!leftOverlayMode && <MenuButton />}
       </StyledLeftPaneSectionHeader>
       {showRecoveryPhrasePrompt && <LeftPaneBanner />}
     </Flex>

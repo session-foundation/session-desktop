@@ -1,7 +1,4 @@
-import { useSelector } from 'react-redux';
 import styled from 'styled-components';
-import { SectionType } from '../../state/ducks/section';
-import { getFocusedSection } from '../../state/selectors/section';
 import { SessionToastContainer } from '../SessionToastContainer';
 import { CallInFullScreenContainer } from '../calling/CallInFullScreenContainer';
 import { DraggableCallContainer } from '../calling/DraggableCallContainer';
@@ -26,13 +23,7 @@ const StyledLeftPane = styled.div<{ isRtl: boolean }>`
 `;
 
 const LeftPaneSection = () => {
-  const focusedSection = useSelector(getFocusedSection);
-
-  if (focusedSection === SectionType.Message) {
-    return <LeftPaneMessageSection />;
-  }
-
-  return null;
+  return <LeftPaneMessageSection />;
 };
 
 const CallContainer = () => {
