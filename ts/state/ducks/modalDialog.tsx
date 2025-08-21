@@ -23,9 +23,15 @@ export type UserSettingsPage =
   | 'help'
   | 'blocked-contacts'
   | 'clear-data'
+  | 'password'
   | 'preferences';
 
-export type WithUserSettingsPage = { userSettingsPage: UserSettingsPage };
+export type WithUserSettingsPage =
+  | { userSettingsPage: Exclude<UserSettingsPage, 'password'> }
+  | {
+      userSettingsPage: 'password';
+      passwordAction: PasswordAction;
+    };
 
 export type ConfirmModalState = SessionConfirmDialogProps | null;
 
@@ -51,8 +57,6 @@ export type LocalizedPopupDialogState = {
   description: TrArgs;
 } | null;
 export type SessionProInfoState = { variant: SessionProInfoVariant } | null;
-
-export type SessionPasswordModalState = { passwordAction: PasswordAction; onOk: () => void } | null;
 
 export type UserProfileModalState = {
   /** this can be blinded or not */
@@ -106,7 +110,6 @@ export type ModalState = {
   userSettingsModal: UserSettingsModalState;
   onionPathModal: OnionPathModalState;
   enterPasswordModal: EnterPasswordModalState;
-  sessionPasswordModal: SessionPasswordModalState;
   deleteAccountModal: DeleteAccountModalState;
   reactListModalState: ReactModalsState;
   reactClearAllModalState: ReactModalsState;
@@ -132,10 +135,9 @@ export const initialModalState: ModalState = {
   groupMembersModal: null,
   userProfileModal: null,
   nickNameModal: null,
-  userSettingsModal: null,
+  userSettingsModal: { userSettingsPage: 'privacy' },
   onionPathModal: null,
   enterPasswordModal: null,
-  sessionPasswordModal: null,
   deleteAccountModal: null,
   reactListModalState: null,
   reactClearAllModalState: null,
@@ -195,9 +197,6 @@ const ModalSlice = createSlice({
     },
     updateEnterPasswordModal(state, action: PayloadAction<EnterPasswordModalState | null>) {
       return { ...state, enterPasswordModal: action.payload };
-    },
-    sessionPassword(state, action: PayloadAction<SessionPasswordModalState>) {
-      return { ...state, sessionPasswordModal: action.payload };
     },
     updateDeleteAccountModal(state, action: PayloadAction<DeleteAccountModalState>) {
       return { ...state, deleteAccountModal: action.payload };
@@ -265,7 +264,6 @@ export const {
   userSettingsModal,
   onionPathModal,
   updateEnterPasswordModal,
-  sessionPassword,
   updateDeleteAccountModal,
   updateBanOrUnbanUserModal,
   updateBlockOrUnblockModal,

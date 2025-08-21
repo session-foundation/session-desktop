@@ -48,8 +48,6 @@ export const getOnionPathDialog = (state: StateType) => getModal(state).onionPat
 
 export const getEnterPasswordModalState = (state: StateType) => getModal(state).enterPasswordModal;
 
-export const getSessionPasswordDialog = (state: StateType) => getModal(state).sessionPasswordModal;
-
 export const getDeleteAccountModalState = (state: StateType) => getModal(state).deleteAccountModal;
 
 export const getReactListDialog = (state: StateType) => getModal(state).reactListModalState;

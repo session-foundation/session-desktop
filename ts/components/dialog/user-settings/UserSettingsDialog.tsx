@@ -4,6 +4,7 @@ import { AppearanceSettingsPage } from './pages/AppearanceSettingsPage';
 import { BlockedContactsSettingsPage } from './pages/BlockedContactsSettingsPage';
 import { ConversationSettingsPage } from './pages/ConversationSettingsPage';
 import { DefaultSettingPage } from './pages/DefaultSettingsPage';
+import { EditPasswordSettingsPage } from './pages/EditPasswordSettingsPage';
 import { HelpSettingsPage } from './pages/HelpSettingsPage';
 import { NotificationsSettingsPage } from './pages/NotificationsSettingsPage';
 import { PreferencesSettingsPage } from './pages/PreferencesSettingsPage';
@@ -15,7 +16,9 @@ export const UserSettingsDialog = (modalState: UserSettingsModalState) => {
     return null;
   }
 
-  switch (modalState.userSettingsPage) {
+  const { userSettingsPage } = modalState;
+
+  switch (userSettingsPage) {
     case 'default':
       return <DefaultSettingPage />;
     case 'privacy':
@@ -34,13 +37,15 @@ export const UserSettingsDialog = (modalState: UserSettingsModalState) => {
       return <AppearanceSettingsPage {...modalState} />;
     case 'recovery-password':
       return <RecoveryPasswordSettingsPage {...modalState} />;
+    case 'password':
+      return <EditPasswordSettingsPage {...modalState} />;
     case 'message-requests':
       // the `message-request` is not a page of the user settings page, but a page in the left pane header currently.
       return null;
+    case 'clear-data':
+      // the `clear-data` is not a page of the user settings page, but a separate dialog.
+      return null;
     default:
-      return assertUnreachable(
-        modalState.userSettingsPage,
-        `Unknown user settings page: ${modalState.userSettingsPage}`
-      );
+      return assertUnreachable(userSettingsPage, `Unknown user settings page: ${userSettingsPage}`);
   }
 };

@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import useMount from 'react-use/lib/useMount';
 import useUpdate from 'react-use/lib/useUpdate';
+import { useDispatch } from 'react-redux';
+
 import { tr } from '../../../../localization/localeTools';
 import {
   updateConfirmModal,
+  userSettingsModal,
   type UserSettingsModalState,
 } from '../../../../state/ducks/modalDialog';
 import {
@@ -33,11 +34,8 @@ import { SettingsKey } from '../../../../data/settings-key';
 import { SessionUtilUserProfile } from '../../../../session/utils/libsession/libsession_utils_user_profile';
 import { getPasswordHash, Storage } from '../../../../util/storage';
 import { SpacerXS } from '../../../basic/Text';
-import { displayPasswordModal } from '../../../settings/SessionSettings';
 import { SettingsToggleBasic } from '../components/SettingsToggleBasic';
 import { SettingsPanelButtonInlineBasic } from '../components/SettingsPanelButtonInlineBasic';
-
-type WithPasswordUpdatedCb = { onPasswordUpdated: (action: string) => void };
 
 const toggleCallMediaPermissions = async (triggerUIUpdate: () => void) => {
   const currentValue = window.getCallMediaPermissions();
@@ -110,14 +108,17 @@ function StaticTypingBubble({ width }: { width: string }) {
   );
 }
 
-function HasPasswordSubSection(props: WithPasswordUpdatedCb) {
+function HasPasswordSubSection() {
+  const dispatch = useDispatch();
   return (
     <PanelButtonGroup>
       <SettingsPanelButtonInlineBasic
         baseDataTestId="change-password"
         text={{ token: 'passwordChange' }}
         subText={{ token: 'passwordChangeShortDescription' }}
-        onClick={async () => displayPasswordModal('change', props.onPasswordUpdated)}
+        onClick={async () => {
+          dispatch(userSettingsModal({ userSettingsPage: 'password', passwordAction: 'change' }));
+        }}
         buttonColor={SessionButtonColor.Primary}
         buttonText={tr('change')}
       />
@@ -126,7 +127,7 @@ function HasPasswordSubSection(props: WithPasswordUpdatedCb) {
         text={{ token: 'passwordRemove' }}
         subText={{ token: 'passwordRemoveShortDescription' }}
         onClick={async () => {
-          displayPasswordModal('remove', props.onPasswordUpdated);
+          dispatch(userSettingsModal({ userSettingsPage: 'password', passwordAction: 'remove' }));
         }}
         buttonColor={SessionButtonColor.Danger}
         buttonText={tr('remove')}
@@ -134,7 +135,9 @@ function HasPasswordSubSection(props: WithPasswordUpdatedCb) {
     </PanelButtonGroup>
   );
 }
-function NoPasswordSubSection(props: WithPasswordUpdatedCb) {
+function NoPasswordSubSection() {
+  const dispatch = useDispatch();
+
   return (
     <PanelButtonGroup>
       <SettingsPanelButtonInlineBasic
@@ -142,7 +145,7 @@ function NoPasswordSubSection(props: WithPasswordUpdatedCb) {
         text={{ token: 'passwordSet' }}
         subText={{ token: 'passwordSetShortDescription' }}
         onClick={async () => {
-          displayPasswordModal('set', props.onPasswordUpdated);
+          dispatch(userSettingsModal({ userSettingsPage: 'password', passwordAction: 'set' }));
         }}
         buttonColor={SessionButtonColor.Primary}
         buttonText={tr('set')}
@@ -152,24 +155,10 @@ function NoPasswordSubSection(props: WithPasswordUpdatedCb) {
 }
 
 function PasswordSubSection() {
-  const [hasPassword, setHasPassword] = useState(true);
-  useMount(() => {
-    const hash = getPasswordHash();
-    setHasPassword(!!hash);
-  });
-
-  function onPasswordUpdated(action: string) {
-    if (action === 'set' || action === 'change') {
-      setHasPassword(true);
-    } else if (action === 'remove') {
-      setHasPassword(false);
-    }
+  if (getPasswordHash()) {
+    return <HasPasswordSubSection />;
   }
-
-  if (hasPassword) {
-    return <HasPasswordSubSection onPasswordUpdated={onPasswordUpdated} />;
-  }
-  return <NoPasswordSubSection onPasswordUpdated={onPasswordUpdated} />;
+  return <NoPasswordSubSection />;
 }
 
 export function PrivacySettingsPage(modalState: UserSettingsModalState) {

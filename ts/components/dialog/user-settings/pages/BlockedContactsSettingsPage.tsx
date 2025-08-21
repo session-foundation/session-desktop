@@ -31,6 +31,7 @@ const StyledNoBlockedContactsContainer = styled.div`
   // not pretty, but the only other way I found is to change the style of PanelButtonContainer itself, which I'd like to avoid
   height: var(--panel-button-container-min-height);
   align-content: center;
+  align-self: center;
 `;
 
 const NoBlockedContacts = () => {

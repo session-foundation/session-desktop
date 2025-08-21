@@ -80,7 +80,7 @@ export function RecoveryPasswordSettingsPage(modalState: UserSettingsModalState)
 
   const { hasPassword, passwordValid } = usePasswordModal({
     onClose: () => {
-      dispatch(userSettingsModal({ userSettingsPage: 'privacy' }));
+      dispatch(userSettingsModal({ userSettingsPage: 'default' }));
     },
   });
 

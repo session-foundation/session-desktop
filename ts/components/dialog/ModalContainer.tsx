@@ -21,7 +21,6 @@ import {
   getReactListDialog,
   getRemoveModeratorsModal,
   getSessionNetworkModalState,
-  getSessionPasswordDialog,
   getUpdateGroupMembersModal,
   getUserProfileModal,
   getLocalizedPopupDialogState,
@@ -40,7 +39,6 @@ import { OnionPathModal } from './OnionStatusPathDialog';
 import { ReactClearAllModal } from './ReactClearAllModal';
 import { ReactListModal } from './ReactListModal';
 import { SessionNicknameDialog } from './SessionNicknameDialog';
-import { SessionSetPasswordDialog } from './SessionSetPasswordDialog';
 import { UpdateGroupMembersDialog } from './UpdateGroupMembersDialog';
 import { UpdateConversationDetailsDialog } from './UpdateConversationDetailsDialog';
 import { UserProfileModal } from './UserProfileModal';
@@ -66,7 +64,6 @@ export const ModalContainer = () => {
   const userSettingsModalState = useSelector(getUserSettingsModal);
   const onionPathModalState = useSelector(getOnionPathDialog);
   const enterPasswordModalState = useSelector(getEnterPasswordModalState);
-  const sessionPasswordModalState = useSelector(getSessionPasswordDialog);
   const deleteAccountModalState = useSelector(getDeleteAccountModalState);
   const banOrUnbanUserModalState = useSelector(getBanOrUnbanUserModalState);
   const blockOrUnblockModalState = useSelector(getBlockOrUnblockUserModalState);
@@ -90,7 +87,6 @@ export const ModalContainer = () => {
       {conversationSettingsModalState && (
         <ConversationSettingsDialog {...conversationSettingsModalState} />
       )}
-      {sessionPasswordModalState && <SessionSetPasswordDialog {...sessionPasswordModalState} />}
       {sessionNetworkModalState && <SessionNetworkModal {...sessionNetworkModalState} />}
       {onionPathModalState && <OnionPathModal {...onionPathModalState} />}
       {reactListModalState && <ReactListModal {...reactListModalState} />}

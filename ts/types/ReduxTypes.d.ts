@@ -5,7 +5,7 @@
  * e.g. import type { YourTypeHere } from 'path/to/ReduxTypes';
  */
 
-export type PasswordAction = 'set' | 'change' | 'remove' | 'enter';
+export type PasswordAction = 'set' | 'change' | 'remove';
 
 export type EditProfilePictureModalProps = {
   conversationId: string;
