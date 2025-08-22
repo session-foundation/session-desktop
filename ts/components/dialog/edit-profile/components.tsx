@@ -51,7 +51,6 @@ export const QRView = ({ sessionID, onExit }: { sessionID: string; onExit: () =>
 type ProfileAvatarProps = {
   avatarPath: string | null;
   newAvatarObjectUrl?: string | null;
-  profileName?: string;
   conversationId: string;
   onAvatarClick: () => void; // on click on the avatar itself
   onPlusAvatarClick: (() => void) | null; // if null, plus icon won't be shown
@@ -63,7 +62,6 @@ export const ProfileAvatar = (props: ProfileAvatarProps) => {
   const {
     newAvatarObjectUrl,
     avatarPath,
-    profileName,
     conversationId,
     avatarSize,
     onAvatarClick,
@@ -73,7 +71,6 @@ export const ProfileAvatar = (props: ProfileAvatarProps) => {
   return (
     <Avatar
       forcedAvatarPath={newAvatarObjectUrl || avatarPath}
-      forcedName={profileName || conversationId}
       size={avatarSize}
       pubkey={conversationId}
       onAvatarClick={onAvatarClick}
@@ -96,7 +93,6 @@ const StyledAvatarCenterInner = styled.div`
 export const ProfileHeader = (props: ProfileHeaderProps) => {
   const {
     avatarPath,
-    profileName,
     conversationId,
     onPlusAvatarClick,
     onQRClick,
@@ -112,7 +108,6 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
       <StyledAvatarCenterInner>
         <ProfileAvatar
           avatarPath={avatarPath}
-          profileName={profileName}
           conversationId={conversationId}
           onAvatarClick={toggleEnlargedImage}
           onPlusAvatarClick={onPlusAvatarClick}

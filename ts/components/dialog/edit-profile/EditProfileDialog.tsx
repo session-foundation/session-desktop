@@ -289,7 +289,6 @@ export const EditProfileDialog = () => {
           ) : (
             <ProfileHeader
               avatarPath={avatarPath}
-              profileName={profileName}
               conversationId={us}
               onPlusAvatarClick={handleProfileHeaderClick}
               dataTestId="avatar-edit-profile-dialog"
