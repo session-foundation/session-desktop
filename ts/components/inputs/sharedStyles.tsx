@@ -5,6 +5,7 @@ export function alignButtonEndAbsoluteButtonStyle(): CSSProperties {
     position: 'absolute',
     top: '50%',
     transform: 'translateY(-50%)',
-    insetInlineEnd: 'var(--margins-sm)',
+    // this needs to be >= 15px to avoid overlapping with the scrollbar when it is visible
+    insetInlineEnd: 'var(--margins-md)',
   };
 }
