@@ -228,7 +228,17 @@ export function useProBadgeOnClickCb(
   // ContactName is a component used across the app to render a contact name based on the context.
   // The pro badge is also shown or not depending on that same context, and this is what we do here
   if (context === 'contact-name') {
-    if (!args.userHasPro || args.isMe) {
+    if (!args.userHasPro) {
+      return doNotShow;
+    }
+    if (args.isMe) {
+      if (
+        args.contactNameContext === 'quoted-message-composition' ||
+        args.contactNameContext === 'quote-author'
+      ) {
+        // in the quote composition screen and when quoting ourselves, the badge should be shown when we have pro
+        return showNoCb;
+      }
       return doNotShow;
     }
     if (isContactNameNoShowContext(args.contactNameContext)) {
