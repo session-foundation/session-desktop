@@ -33,6 +33,7 @@ function isBoldProfileNameCtx(ctx: ContactNameContext) {
     case 'message-author':
     case 'message-info-author':
     case 'member-list-item':
+    case 'member-list-item-mention-row':
     case 'contact-list-row':
       return true;
     case 'quote-author':
@@ -57,6 +58,7 @@ function isShowPubkeyCtx(ctx: ContactNameContext) {
     case 'message-info-author':
       return true;
     case 'member-list-item':
+    case 'member-list-item-mention-row':
     case 'contact-list-row':
     case 'quote-author':
     case 'conversation-list-item':
@@ -84,6 +86,7 @@ function isShowNtsIsYouCtx(ctx: ContactNameContext) {
     case 'react-list-modal':
     case 'message-search-result':
     case 'member-list-item':
+    case 'member-list-item-mention-row':
       return true;
     case 'message-info-author':
     case 'contact-list-row':
@@ -105,6 +108,7 @@ function isForceSingleLineCtx(ctx: ContactNameContext) {
   switch (ctx) {
     case 'message-info-author':
     case 'member-list-item':
+    case 'member-list-item-mention-row':
     case 'contact-list-row':
       return true;
     case 'message-author':
@@ -131,6 +135,7 @@ function isShowUPMOnClickCtx(ctx: ContactNameContext) {
     case 'message-info-author':
       return true;
     case 'member-list-item':
+    case 'member-list-item-mention-row':
     case 'contact-list-row':
     case 'message-author':
     case 'quote-author':

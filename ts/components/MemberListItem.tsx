@@ -31,6 +31,7 @@ import {
 import { assertUnreachable } from '../types/sqlSharedTypes';
 import { tr } from '../localization/localeTools';
 import { ContactName } from './conversation/ContactName/ContactName';
+import type { ContactNameSuffixInMemberList } from './conversation/ContactName/ContactNameContext';
 
 const AvatarContainer = styled.div`
   position: relative;
@@ -319,7 +320,11 @@ export const MemberListItem = <T extends string>({
   withBorder,
   conversationId,
   hideRadioButton,
-}: MemberListItemProps<T> & { conversationId?: string }) => {
+  contactNameSuffix,
+}: MemberListItemProps<T> & {
+  conversationId?: string;
+  contactNameSuffix?: ContactNameSuffixInMemberList;
+}) => {
   return (
     <StyledSessionMemberItem
       onClick={() => {
@@ -343,7 +348,7 @@ export const MemberListItem = <T extends string>({
           minWidth="0"
         >
           <ContactName
-            contactNameContext="member-list-item"
+            contactNameContext={`member-list-item${contactNameSuffix ?? ''}`}
             pubkey={pubkey}
             conversationId={conversationId}
           />

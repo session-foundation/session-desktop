@@ -78,12 +78,13 @@ function isContactNameNoShowContext(context: ContactNameContext) {
   switch (context) {
     case 'react-list-modal':
     case 'message-search-result':
+    case 'member-list-item-mention-row': // we don't want the pro badge when mentioning someone (from the composition box)
       return true;
     case 'contact-list-row':
+    case 'quoted-message-composition':
     case 'message-info-author':
     case 'member-list-item':
     case 'quote-author':
-    case 'quoted-message-composition':
     case 'message-author':
     case 'conversation-list-item':
     case 'conversation-list-item-search':
