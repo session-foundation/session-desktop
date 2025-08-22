@@ -366,7 +366,7 @@ export const OverlayMessageInfo = () => {
               <PanelIconButton
                 text={tr('save')}
                 iconElement={
-                  <PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.CIRCLE_ARROW_DOWN} />
+                  <PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.ARROW_DOWN_TO_LINE} />
                 }
                 dataTestId="save-attachment-from-details"
                 onClick={() => {

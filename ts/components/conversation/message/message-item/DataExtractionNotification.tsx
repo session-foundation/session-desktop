@@ -25,7 +25,7 @@ export const DataExtractionNotification = (props: WithMessageId) => {
       key={`readable-message-${messageId}`}
       isControlMessage={true}
     >
-      <NotificationBubble unicode={LUCIDE_ICONS_UNICODE.DOWNLOAD}>
+      <NotificationBubble unicode={LUCIDE_ICONS_UNICODE.ARROW_DOWN_TO_LINE}>
         <Localizer
           token={
             dataExtractionType === SignalService.DataExtractionNotification.Type.MEDIA_SAVED
