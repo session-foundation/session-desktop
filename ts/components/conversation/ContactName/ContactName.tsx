@@ -50,12 +50,17 @@ function isBoldProfileNameCtx(ctx: ContactNameContext) {
 /**
  * In some contexts, we want to show the pubkey of the contact.
  */
-function isShowPubkeyCtx(ctx: ContactNameContext) {
+function isShowPubkeyCtx(ctx: ContactNameContext, isBlinded: boolean) {
   // We are doing this as a switch instead of an array so we have to be explicit anytime we add a new context,
   // thanks to the assertUnreachable below
   switch (ctx) {
     case 'message-author':
+      return true;
     case 'message-info-author':
+      if (isBlinded) {
+        // we specifically don't want to show the pubkey for blinded senders in message info.
+        return false;
+      }
       return true;
     case 'member-list-item':
     case 'member-list-item-mention-row':
@@ -188,6 +193,7 @@ export const ContactName = ({
   const prefix = module || 'module-contact-name';
   const isPublic = useIsPublic(conversationId);
   const shortPubkey = PubKey.shorten(pubkey);
+  const isBlinded = PubKey.isBlinded(pubkey);
 
   const isMe = isUsAnySogsFromCache(pubkey);
 
@@ -212,7 +218,7 @@ export const ContactName = ({
   const shouldShowShortenPkAsName = !displayName;
 
   const shouldShowPubkey =
-    !shouldShowShortenPkAsName && isPublic && isShowPubkeyCtx(contactNameContext);
+    !shouldShowShortenPkAsName && isPublic && isShowPubkeyCtx(contactNameContext, isBlinded);
   const boldProfileName = isBoldProfileNameCtx(contactNameContext);
   const forceSingleLine = isForceSingleLineCtx(contactNameContext);
 
