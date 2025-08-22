@@ -87,8 +87,8 @@ function isShowNtsIsYouCtx(ctx: ContactNameContext) {
     case 'message-search-result':
     case 'member-list-item':
     case 'member-list-item-mention-row':
-      return true;
     case 'message-info-author':
+      return true;
     case 'contact-list-row':
     case 'conversation-list-item':
     case 'conversation-list-item-search':
