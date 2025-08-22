@@ -76,7 +76,8 @@ const StyledModal = styled.div<{
 }>`
   position: absolute;
   top: ${props => props.$topAnchor};
-  max-height: ${props => `calc(100vh - ${props.$topAnchor} - 5vh)`};
+  max-height: ${props =>
+    `calc(100vh - 2 * ${props.$topAnchor})`}; // 2* to have the modal centered vertically, if it overflows
 
   animation: fadein var(--default-duration);
   z-index: 150;
