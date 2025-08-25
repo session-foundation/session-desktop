@@ -1,13 +1,11 @@
-import { tr } from '../../../../../localization/localeTools';
 import { DisappearingMessageConversationModeType } from '../../../../../session/disappearing_messages/types';
-import { Localizer } from '../../../../basic/Localizer';
 import {
   PanelButtonGroup,
   PanelButtonText,
   PanelButtonTextWithSubText,
-  PanelLabel,
-} from '../../../../buttons/PanelButton';
-import { PanelRadioButton } from '../../../../buttons/PanelRadioButton';
+  PanelLabelWithDescription,
+} from '../../../../buttons/panel/PanelButton';
+import { PanelRadioButton } from '../../../../buttons/panel/PanelRadioButton';
 
 function toDataTestId(mode: DisappearingMessageConversationModeType) {
   switch (mode) {
@@ -26,10 +24,11 @@ type DisappearingModesProps = {
   selected?: DisappearingMessageConversationModeType;
   setSelected: (value: DisappearingMessageConversationModeType) => void;
   hasOnlyOneMode?: boolean;
+  singleMode?: DisappearingMessageConversationModeType;
 };
 
 export const DisappearingModes = (props: DisappearingModesProps) => {
-  const { options, selected, setSelected, hasOnlyOneMode } = props;
+  const { options, selected, setSelected, hasOnlyOneMode, singleMode } = props;
 
   if (hasOnlyOneMode) {
     return null;
@@ -37,24 +36,32 @@ export const DisappearingModes = (props: DisappearingModesProps) => {
 
   return (
     <>
-      <PanelLabel>
-        <Localizer token="disappearingMessagesDeleteType" />
-      </PanelLabel>
+      <PanelLabelWithDescription
+        title={{ token: 'disappearingMessagesDeleteType' }}
+        description={{
+          token:
+            singleMode === 'deleteAfterRead'
+              ? 'disappearingMessagesDisappearAfterReadDescription'
+              : singleMode === 'deleteAfterSend'
+                ? 'disappearingMessagesDisappearAfterSendDescription'
+                : 'disappearingMessagesDescription1',
+        }}
+      />
       <PanelButtonGroup>
         {Object.keys(options).map(_mode => {
           const mode = _mode as DisappearingMessageConversationModeType;
           const optionI18n =
             mode === 'deleteAfterRead'
-              ? tr('disappearingMessagesDisappearAfterRead')
+              ? 'disappearingMessagesDisappearAfterRead'
               : mode === 'deleteAfterSend'
-                ? tr('disappearingMessagesDisappearAfterSend')
-                : tr('off');
+                ? 'disappearingMessagesDisappearAfterSend'
+                : 'off';
 
           const subtitleI18n =
             mode === 'deleteAfterRead'
-              ? tr('disappearingMessagesDisappearAfterReadDescription')
+              ? 'disappearingMessagesDisappearAfterReadDescription'
               : mode === 'deleteAfterSend'
-                ? tr('disappearingMessagesDisappearAfterSendDescription')
+                ? 'disappearingMessagesDisappearAfterSendDescription'
                 : undefined;
           const parentDataTestId = toDataTestId(mode);
 
@@ -64,14 +71,14 @@ export const DisappearingModes = (props: DisappearingModesProps) => {
               textElement={
                 subtitleI18n ? (
                   <PanelButtonTextWithSubText
-                    text={optionI18n}
-                    subText={subtitleI18n}
+                    text={{ token: optionI18n }}
+                    subText={{ token: subtitleI18n }}
                     textDataTestId="disappearing-messages-menu-option"
                     subTextDataTestId="disappearing-messages-timer-menu-option"
                   />
                 ) : (
                   <PanelButtonText
-                    text={optionI18n}
+                    text={{ token: optionI18n }}
                     textDataTestId="disappearing-messages-menu-option"
                   />
                 )

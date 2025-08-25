@@ -125,7 +125,7 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
       topAnchor="35vh"
       onClose={onClickClose}
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
             text={okText}
             buttonColor={okTheme}

@@ -4,6 +4,8 @@ export const SessionContextMenuContainer = styled.div.attrs({
   // custom props
 })`
   .contexify {
+    --contexify-activeItem-bgColor: var(--context-menu-background-hover-color);
+    --contexify-activeItem-color: var(--context-menu-text-hover-color);
     // be sure it is more than the one set for the More Information screen of messages
     z-index: 30;
     min-width: 200px;
@@ -33,6 +35,20 @@ export const SessionContextMenuContainer = styled.div.attrs({
 
     .contexify_submenu-arrow {
       line-height: 16px; // center the arrow for submenu
+    }
+  }
+`;
+
+export const SessionContextMenuContainerItemsCentered = styled(SessionContextMenuContainer)`
+  .contexify {
+    .contexify_item {
+      width: 100%;
+      place-items: center;
+    }
+
+    .contexify_itemContent {
+      width: 100%;
+      justify-content: center;
     }
   }
 `;

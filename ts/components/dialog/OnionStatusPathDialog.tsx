@@ -10,12 +10,7 @@ import { isEmpty, isTypedArray } from 'lodash';
 import { CityResponse, Reader } from 'maxmind';
 import useMount from 'react-use/lib/useMount';
 import { onionPathModal } from '../../state/ducks/modalDialog';
-import {
-  useFirstOnionPath,
-  useFirstOnionPathLength,
-  useIsOnline,
-  useOnionPathsCount,
-} from '../../state/selectors/onions';
+import { useFirstOnionPath, useIsOnline } from '../../state/selectors/onions';
 import { Flex } from '../basic/Flex';
 
 import { Snode } from '../../data/types';
@@ -216,16 +211,6 @@ const ModalStatusLight = (props: StatusLightType) => {
   );
 };
 
-// Set icon color based on result
-const errorColor = 'var(--button-path-error-color)';
-const defaultColor = 'var(--button-path-default-color)';
-const connectingColor = 'var(--button-path-connecting-color)';
-
-const OnionPathContainer = styled.button`
-  display: flex;
-  padding: var(--margins-lg);
-`;
-
 function OnionPathDot({
   dataTestId,
   iconColor,
@@ -257,39 +242,15 @@ function OnionPathDot({
   );
 }
 
-/**
- * A status light specifically for the action panel. Color is based on aggregate node states instead of individual onion node state
- */
-export const ActionPanelOnionStatusLight = (props: { handleClick: () => void; id: string }) => {
-  const { handleClick, id } = props;
-
-  const onionPathsCount = useOnionPathsCount();
-  const firstPathLength = useFirstOnionPathLength();
-  const isOnline = useIsOnline();
-
-  // start with red
-  let iconColor = errorColor;
-  // if we are not online or the first path is not valid, we keep red as color
-  if (isOnline && firstPathLength > 1) {
-    iconColor =
-      onionPathsCount >= 2 ? defaultColor : onionPathsCount >= 1 ? connectingColor : errorColor;
-  }
-
-  return (
-    <OnionPathContainer id={id} data-testid="path-light-container" onClick={handleClick}>
-      <OnionPathDot dataTestId="path-light-svg" iconColor={iconColor} />
-    </OnionPathContainer>
-  );
-};
-
 export const OnionPathModal = () => {
   const dispatch = useDispatch();
   return (
     <SessionWrapperModal
       onClose={() => dispatch(onionPathModal(null))}
+      topAnchor="25vh"
       headerChildren={<ModalBasicHeader title={tr('onionRoutingPath')} showExitIcon={true} />}
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
             text={tr('learnMore')}
             buttonType={SessionButtonType.Simple}

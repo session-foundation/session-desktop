@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { tr } from '../../localization/localeTools';
 import {
   ConversationNotificationSetting,
   type ConversationNotificationSettingType,
@@ -45,7 +44,7 @@ export const useLocalisedNotificationOptions = (context: Context) => {
     return ConversationNotificationSetting.map((n: ConversationNotificationSettingType) => {
       const token = tokenForContextAndNotification(context, n);
 
-      return { value: n, name: tr(token) };
+      return { value: n, token };
     });
   }, [context]);
 };
@@ -55,9 +54,9 @@ export const useLocalisedNotificationOf = (
   context: Context
 ) => {
   const localisedNotificationOptions = useLocalisedNotificationOptions(context);
-  const name = localisedNotificationOptions.find(m => m.value === notification)?.name;
-  if (!name) {
+  const token = localisedNotificationOptions.find(m => m.value === notification)?.token;
+  if (!token) {
     throw new Error('useLocalisedNotificationOf() called with an invalid notification type');
   }
-  return name;
+  return token;
 };

@@ -73,13 +73,42 @@ declare module 'react' {
   type CancelButtons = 'update-group-info' | 'add-admins' | 'unban-user' | 'modal-session-pro';
 
   type ClearButtons =
-    | `${'group' | 'community'}-info-description`
-    | `${'group' | 'community'}-info-name`
+    | `${'group' | 'community' | 'profile'}-info-description`
+    | `${'group' | 'community' | 'profile'}-info-name`
     | 'nickname'
     | 'add-admins';
 
   // left pane section types
   type Sections = 'theme' | 'settings' | 'message' | 'privacy' | 'debug-menu';
+
+  export type SettingsToggles =
+    | 'enable-calls'
+    | 'enable-microphone'
+    | 'enable-communities-message-requests'
+    | 'enable-read-receipts'
+    | 'enable-typing-indicators'
+    | 'enable-link-previews'
+    | 'notifications'
+    | 'audio-notifications'
+    | 'audio-message-autoplay'
+    | 'spell-check'
+    | 'conversation-trimming'
+    | 'auto-update'
+    | 'auto-dark-mode'
+    | 'hide-menu-bar';
+
+  type SettingsRadio =
+    | `set-notifications-${'message' | 'name' | 'count'}`
+    | `send-with-${'enterForSend' | 'enterForNewLine'}`;
+  type SettingsChevron = `blocked-contacts`;
+
+  type SettingsInlineButtons =
+    | 'set-password'
+    | 'change-password'
+    | 'remove-password'
+    | 'export-logs'
+    | 'hide-recovery-password';
+  type SettingsExternalLinkButtons = 'faq' | 'translate' | 'support' | 'feedback';
 
   type SettingsMenuItems =
     | 'message-requests'
@@ -93,6 +122,7 @@ declare module 'react' {
     | 'clear-data'
     | 'session-network'
     | 'session-pro'
+    | 'preferences'
     | 'donate';
 
   type MenuItems = 'block' | 'delete' | 'accept';
@@ -102,8 +132,8 @@ declare module 'react' {
     | 'nickname'
     | 'profile-name'
     | 'message'
-    | `update-${'group' | 'community'}-info-name`
-    | `update-${'group' | 'community'}-info-description`
+    | `update-${'group' | 'community' | 'profile'}-info-name`
+    | `update-${'group' | 'community' | 'profile'}-info-description`
     | 'recovery-phrase'
     | 'display-name'
     | 'add-admins'
@@ -119,7 +149,7 @@ declare module 'react' {
     | 'message-info'
     | 'send-more';
 
-  type Dialog = 'invite-contacts' | 'edit-profile';
+  type Dialog = 'invite-contacts' | 'user-settings';
 
   type Buttons =
     | 'chooser-new-conversation'
@@ -218,6 +248,7 @@ declare module 'react' {
     | 'modal-actions-container'
     | 'reveal-blocked-user-settings'
     | `${Sections}-section`
+    | `${SettingsToggles | SettingsInlineButtons | SettingsRadio | SettingsChevron | SettingsExternalLinkButtons | 'zoom-factor'}-settings-${'text' | 'sub-text' | 'toggle' | 'radio' | 'button' | 'chevron' | 'row'}`
 
     // Buttons
     | `${Buttons}-button`
@@ -258,9 +289,6 @@ declare module 'react' {
     | 'call-notification-answered-a-call'
 
     // settings toggle and buttons
-    | 'enable-read-receipts'
-    | 'enable-calls'
-    | 'enable-microphone'
     | 'enable-follow-system-theme'
     | 'unblock-button-settings-screen'
     | 'save-attachment-from-details'

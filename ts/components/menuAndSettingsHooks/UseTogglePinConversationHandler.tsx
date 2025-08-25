@@ -14,14 +14,10 @@ import {
 } from '../dialog/SessionProInfoModal';
 import { Constants } from '../../session';
 import { getPinnedConversationsCount } from '../../state/selectors/conversations';
-import {
-  useIsMessageRequestOverlayShown,
-  useIsMessageSection,
-} from '../../state/selectors/section';
+import { useIsMessageRequestOverlayShown } from '../../state/selectors/section';
 import { useCurrentUserHasPro } from '../../hooks/useHasPro';
 
 function useShowPinUnpin(conversationId: string) {
-  const isMessagesSection = useIsMessageSection();
   const isPrivateAndFriend = useIsPrivateAndFriend(conversationId);
   const isPrivate = useIsPrivate(conversationId);
   const isMessageRequest = useIsMessageRequestOverlayShown();
@@ -39,9 +35,7 @@ function useShowPinUnpin(conversationId: string) {
     return false;
   }
 
-  return (
-    isMessagesSection && !isMessageRequest && (!isPrivate || (isPrivate && isPrivateAndFriend))
-  );
+  return !isMessageRequest && (!isPrivate || (isPrivate && isPrivateAndFriend));
 }
 
 export function useTogglePinConversationHandler(id: string) {

@@ -18,20 +18,14 @@ import {
   openConversationWithMessages,
 } from '../../../state/ducks/conversations';
 import { useIsSearchingForType } from '../../../state/selectors/search';
-import { useIsMessageSection } from '../../../state/selectors/section';
 import { Timestamp } from '../../conversation/Timestamp';
 import { SessionIcon } from '../../icon';
 import { UserItem } from './UserItem';
 import type { WithConvoId } from '../../../session/types/with';
 
 const NotificationSettingIcon = () => {
-  const isMessagesSection = useIsMessageSection();
   const convoId = useConvoIdFromContext();
   const convoSetting = useNotificationSetting(convoId);
-
-  if (!isMessagesSection) {
-    return null;
-  }
 
   switch (convoSetting) {
     case 'all':
@@ -66,10 +60,9 @@ const StyledConversationListItemIconWrapper = styled.div`
 const PinIcon = () => {
   const conversationId = useConvoIdFromContext();
 
-  const isMessagesSection = useIsMessageSection();
   const isPinned = useIsPinned(conversationId);
 
-  return isMessagesSection && isPinned ? (
+  return isPinned ? (
     <SessionIcon iconType="pin" iconColor={'var(--conversation-tab-text-color)'} iconSize="small" />
   ) : null;
 };

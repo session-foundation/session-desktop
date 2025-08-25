@@ -63,7 +63,7 @@ function useSubtitleArray(convoId?: string) {
     }
 
     if (isGroup && count > 0 && !isKickedFromGroup) {
-      return tr(isPublic ? 'membersActive' : 'members', { count });
+      return { token: isPublic ? 'membersActive' : 'members', count } as const;
     }
 
     return null;
@@ -74,16 +74,16 @@ function useSubtitleArray(convoId?: string) {
     if (disappearingMessageSubtitle.id !== 'off') {
       innerSubtitleArray.push({
         type: 'disappearingMessages',
-        label: disappearingMessageSubtitle.label,
+        ...disappearingMessageSubtitle,
       });
     }
 
     if (notificationSubtitle) {
-      innerSubtitleArray.push({ type: 'notifications', label: notificationSubtitle });
+      innerSubtitleArray.push({ type: 'notifications', token: notificationSubtitle });
     }
 
     if (memberCountSubtitle) {
-      innerSubtitleArray.push({ type: 'members', label: memberCountSubtitle });
+      innerSubtitleArray.push({ type: 'members', ...memberCountSubtitle });
     }
     return innerSubtitleArray;
   }, [disappearingMessageSubtitle, notificationSubtitle, memberCountSubtitle]);

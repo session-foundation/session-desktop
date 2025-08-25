@@ -3,17 +3,17 @@ import { useDispatch } from 'react-redux';
 import { useIsLegacyGroup, useNotificationSetting } from '../../../../../hooks/useParamSelector';
 import { useSelectedConversationKey } from '../../../../../state/selectors/selectedConversation';
 import { Flex } from '../../../../basic/Flex';
-import { SessionButton } from '../../../../basic/SessionButton';
+import { SessionButton, SessionButtonType } from '../../../../basic/SessionButton';
 import { StyledScrollContainer } from '../../../../conversation/right-panel/overlay/components';
 import { type ConversationNotificationSettingType } from '../../../../../models/conversationAttributes';
 import { PanelButtonGroup } from '../../../../buttons';
-import { PanelRadioButton } from '../../../../buttons/PanelRadioButton';
+import { PanelRadioButton } from '../../../../buttons/panel/PanelRadioButton';
 import {
   updateConversationSettingsModal,
   type ConversationSettingsModalState,
 } from '../../../../../state/ducks/modalDialog';
 import { useConversationSettingsModalIsStandalone } from '../../../../../state/selectors/modal';
-import { PanelButtonText } from '../../../../buttons/PanelButton';
+import { PanelButtonText } from '../../../../buttons/panel/PanelButton';
 import { useLocalisedNotificationOptions } from '../../../../menuAndSettingsHooks/useLocalisedNotificationFor';
 import { useSetNotificationsFor } from '../../../../menuAndSettingsHooks/useSetNotificationsFor';
 import { useShowConversationSettingsFor } from '../../../../menuAndSettingsHooks/useShowConversationSettingsFor';
@@ -124,7 +124,7 @@ export function NotificationForConversationModal(props: Required<ConversationSet
       allowOutsideClick={false}
       $contentMinWidth={WrapperModalWidth.narrow} // the content is radio buttons and it looks weird on a large modal
       buttonChildren={
-        <ModalActionsContainer extraBottomMargin={true}>
+        <ModalActionsContainer buttonType={SessionButtonType.Outline}>
           <SessionButton
             onClick={handleSetNotifications}
             dataTestId={'notifications-set-button'}
@@ -147,7 +147,10 @@ export function NotificationForConversationModal(props: Required<ConversationSet
                   key={option.value}
                   // when we have a radio button, we need to have a text element, but we don't have a text element for notifications
                   textElement={
-                    <PanelButtonText text={option.name} textDataTestId="invalid-data-testid" />
+                    <PanelButtonText
+                      text={{ token: option.token }}
+                      textDataTestId="invalid-data-testid"
+                    />
                   }
                   value={option}
                   isSelected={notificationSelected === option.value}

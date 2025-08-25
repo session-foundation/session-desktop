@@ -95,7 +95,7 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
       headerChildren={<ModalBasicHeader title={localizedAction} />}
       onClose={closeModal}
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
             buttonType={SessionButtonType.Simple}
             buttonColor={SessionButtonColor.Danger}

@@ -3,12 +3,12 @@ import { useDispatch } from 'react-redux';
 import type { AnyAction, Dispatch } from 'redux';
 import styled from 'styled-components';
 import { ToastUtils, UserUtils } from '../../session/utils';
-import { editProfileModal, updateEditProfilePictureModal } from '../../state/ducks/modalDialog';
+import { userSettingsModal, updateEditProfilePictureModal } from '../../state/ducks/modalDialog';
 import type { EditProfilePictureModalProps } from '../../types/ReduxTypes';
 import { pickFileForAvatar } from '../../types/attachments/VisualAttachment';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionSpinner } from '../loading';
-import { ProfileAvatar } from './edit-profile/components';
+import { ProfileAvatar } from './user-settings/components';
 import {
   useAvatarPath,
   useConversationUsernameWithFallback,
@@ -22,7 +22,7 @@ import { groupInfoActions } from '../../state/ducks/metaGroups';
 import { useGroupAvatarChangeFromUIPending } from '../../state/selectors/groups';
 import { userActions } from '../../state/ducks/user';
 import { ReduxSogsRoomInfos } from '../../state/ducks/sogsRoomInfo';
-import { useOurAvatarIsUploading } from '../../state/selectors/user';
+import { useOurAvatarIsUploading, useOurAvatarUploadFailed } from '../../state/selectors/user';
 import { useAvatarOfRoomIsUploading } from '../../state/selectors/sogsRoomInfo';
 import {
   ModalActionsContainer,
@@ -30,7 +30,7 @@ import {
   SessionWrapperModal,
 } from '../SessionWrapperModal';
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
-import { SpacerLG } from '../basic/Text';
+import { SpacerLG, SpacerSM } from '../basic/Text';
 import {
   SessionProInfoVariant,
   useShowSessionProInfoDialogCbWithVariant,
@@ -39,7 +39,11 @@ import { AvatarSize } from '../avatar/Avatar';
 import { ProIconButton } from '../buttons/ProButton';
 import { useProBadgeOnClickCb } from '../menuAndSettingsHooks/useProBadgeOnClickCb';
 import { useUserHasPro } from '../../hooks/useHasPro';
-import { UploadFirstImageButton } from './edit-profile/UploadFirstImage';
+import { Localizer } from '../basic/Localizer';
+import { UploadFirstImageButton } from '../buttons/avatar/UploadFirstImageButton';
+import { Flex } from '../basic/Flex';
+import { LucideIcon } from '../icon/LucideIcon';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
@@ -97,7 +101,7 @@ const triggerUploadProfileAvatar = async (
         ToastUtils.pushToastError('edit-profile', error.message);
       }
       window.log.error(
-        'showEditProfileDialog Error ensuring that image is properly sized:',
+        'triggerUploadProfileAvatar Error ensuring that image is properly sized:',
         error && error.stack ? error.stack : error
       );
     }
@@ -141,6 +145,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
 
   const groupAvatarChangePending = useGroupAvatarChangeFromUIPending();
   const ourAvatarIsUploading = useOurAvatarIsUploading();
+  const ourAvatarUploadFailed = useOurAvatarUploadFailed();
   const sogsAvatarIsUploading = useAvatarOfRoomIsUploading(conversationId);
 
   const [newAvatarObjectUrl, setNewAvatarObjectUrl] = useState<string | null>(avatarPath);
@@ -163,7 +168,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
   const closeDialog = useCallback(() => {
     dispatch(updateEditProfilePictureModal(null));
     if (isMe) {
-      dispatch(editProfileModal({}));
+      dispatch(userSettingsModal({ userSettingsPage: 'default' }));
     }
   }, [dispatch, isMe]);
 
@@ -247,7 +252,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
         />
       }
       buttonChildren={
-        <ModalActionsContainer extraBottomMargin={true}>
+        <ModalActionsContainer buttonType={SessionButtonType.Outline}>
           <SessionButton
             text={tr('save')}
             buttonType={SessionButtonType.Simple}
@@ -275,6 +280,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
           ) : null}
         </ModalActionsContainer>
       }
+      $flexGap="var(--margins-sm)"
     >
       {isMe && proBadgeCb.cb ? (
         <StyledCTADescription reverseDirection={userHasPro} onClick={proBadgeCb.cb}>
@@ -309,9 +315,31 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
             <UploadFirstImageButton onClick={handleClick} />
           )}
         </StyledAvatarContainer>
-        <SpacerLG />
       </div>
-      <SessionSpinner loading={loading} />
+      {ourAvatarUploadFailed && isMe ? (
+        <Flex
+          $container={true}
+          $justifyContent="center"
+          $alignItems="center"
+          $flexGap="var(--margins-xs)"
+          style={{
+            marginTop: 'var(--margins-lg)',
+            color: 'var(--danger-color)',
+          }}
+        >
+          <LucideIcon unicode={LUCIDE_ICONS_UNICODE.TRIANGLE_ALERT} iconSize="small" />
+          <Localizer token="profileErrorUpdate" />
+        </Flex>
+      ) : null}
+      {loading ? (
+        <>
+          <SpacerSM />
+          {isMe ? <Localizer token="updating" /> : null}
+          <SessionSpinner loading={loading} height="30px" />
+        </>
+      ) : (
+        <SpacerLG />
+      )}
     </SessionWrapperModal>
   );
 };

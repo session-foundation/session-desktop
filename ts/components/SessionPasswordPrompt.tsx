@@ -56,7 +56,7 @@ function pushToastError(id: string, description: string) {
 
 function ClearDataViewButtons({ onCancel }: { onCancel: () => void }) {
   return (
-    <ModalActionsContainer>
+    <ModalActionsContainer buttonType={SessionButtonType.Simple}>
       <SessionButton
         text={tr('clearDevice')}
         buttonColor={SessionButtonColor.Danger}
@@ -86,7 +86,7 @@ function PasswordViewButtons({
   }
 
   return (
-    <ModalActionsContainer>
+    <ModalActionsContainer buttonType={SessionButtonType.Simple}>
       {showResetElements && (
         <SessionButton
           text={tr('clearDevice')}
@@ -193,6 +193,7 @@ const SessionPasswordPromptInner = () => {
         <ModalBasicHeader title={tr(clearDataView ? 'clearDevice' : 'passwordEnter')} />
       }
       $contentMinWidth={WrapperModalWidth.narrow}
+      topAnchor="center"
       buttonChildren={
         clearDataView ? (
           <ClearDataViewButtons

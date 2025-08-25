@@ -8,10 +8,9 @@ import {
 import type { WithConvoId } from '../../../../../session/types/with';
 import { Flex } from '../../../../basic/Flex';
 import { useWeAreCommunityAdminOrModerator } from '../../../../../state/selectors/conversations';
-import { Localizer } from '../../../../basic/Localizer';
 import { SpacerSM } from '../../../../basic/Text';
 import { PanelButtonGroup } from '../../../../buttons';
-import { PanelLabel } from '../../../../buttons/PanelButton';
+import { PanelLabelWithDescription } from '../../../../buttons/panel/PanelButton';
 import { useShowAttachments } from '../../../../menuAndSettingsHooks/useShowAttachments';
 import { ModalBasicHeader, SessionWrapperModal } from '../../../../SessionWrapperModal';
 import { ConversationSettingsHeader } from '../../conversationSettingsHeader';
@@ -47,11 +46,7 @@ import { useChangeNickname } from '../../../../menuAndSettingsHooks/useChangeNic
 import { useShowUpdateGroupOrCommunityDetailsCb } from '../../../../menuAndSettingsHooks/useShowUpdateGroupNameDescription';
 
 function AdminSettingsTitle() {
-  return (
-    <PanelLabel>
-      <Localizer token="adminSettings" />
-    </PanelLabel>
-  );
+  return <PanelLabelWithDescription title={{ token: 'adminSettings' }} />;
 }
 
 function GroupV2AdminActions({ conversationId }: WithConvoId) {
