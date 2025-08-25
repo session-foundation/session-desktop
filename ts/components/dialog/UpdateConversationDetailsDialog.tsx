@@ -143,7 +143,7 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
   }
 
   function onClickOK() {
-    if (isNameChangePending) {
+    if (!!errorStringName || !!errorStringDescription || isNameChangePending) {
       return;
     }
 
@@ -241,7 +241,13 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
             text={tr('save')}
             onClick={onClickOK}
             buttonType={SessionButtonType.Simple}
-            disabled={isNameChangePending || !newName?.trim() || (noChanges && !avatarWasUpdated)}
+            disabled={
+              !!errorStringName ||
+              !!errorStringDescription ||
+              isNameChangePending ||
+              !newName?.trim() ||
+              (noChanges && !avatarWasUpdated)
+            }
           />
           {!avatarWasUpdated ? (
             <SessionButton
