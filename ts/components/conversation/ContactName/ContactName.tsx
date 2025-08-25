@@ -39,7 +39,8 @@ function isBoldProfileNameCtx(ctx: ContactNameContext) {
     case 'quote-author':
     case 'conversation-list-item-search':
     case 'react-list-modal':
-    case 'message-search-result':
+    case 'message-search-result-conversation':
+    case 'message-search-result-from':
       return false;
     default:
       assertUnreachable(ctx, 'isBoldProfileNameCtx');
@@ -70,7 +71,8 @@ function isShowPubkeyCtx(ctx: ContactNameContext, isBlinded: boolean) {
     case 'quoted-message-composition':
     case 'conversation-list-item-search':
     case 'react-list-modal':
-    case 'message-search-result':
+    case 'message-search-result-conversation':
+    case 'message-search-result-from':
       return false;
     default:
       assertUnreachable(ctx, 'isShowPubkeyCtx');
@@ -89,12 +91,13 @@ function isShowNtsIsYouCtx(ctx: ContactNameContext) {
     case 'quote-author':
     case 'quoted-message-composition':
     case 'react-list-modal':
-    case 'message-search-result':
     case 'member-list-item':
     case 'member-list-item-mention-row':
     case 'message-info-author':
+    case 'message-search-result-from':
       return true;
     case 'contact-list-row':
+    case 'message-search-result-conversation':
     case 'conversation-list-item':
     case 'conversation-list-item-search':
       return false;
@@ -120,7 +123,8 @@ function isForceSingleLineCtx(ctx: ContactNameContext) {
     case 'quote-author':
     case 'quoted-message-composition':
     case 'react-list-modal':
-    case 'message-search-result':
+    case 'message-search-result-conversation':
+    case 'message-search-result-from':
     case 'conversation-list-item':
     case 'conversation-list-item-search':
       return false;
@@ -146,7 +150,8 @@ function isShowUPMOnClickCtx(ctx: ContactNameContext) {
     case 'quote-author':
     case 'quoted-message-composition':
     case 'react-list-modal':
-    case 'message-search-result':
+    case 'message-search-result-conversation':
+    case 'message-search-result-from':
     case 'conversation-list-item':
     case 'conversation-list-item-search':
       return false;

@@ -77,10 +77,11 @@ const showNoCb: ShowTagNoCb = { show: true, cb: null };
 function isContactNameNoShowContext(context: ContactNameContext) {
   switch (context) {
     case 'react-list-modal':
-    case 'message-search-result':
+    case 'message-search-result-from': // no pro badge when showing the sender of a message in the search results
     case 'member-list-item-mention-row': // we don't want the pro badge when mentioning someone (from the composition box)
       return true;
     case 'contact-list-row':
+    case 'message-search-result-conversation': // show the pro badge when showing the conversation name in the search results
     case 'quoted-message-composition':
     case 'message-info-author':
     case 'member-list-item':
