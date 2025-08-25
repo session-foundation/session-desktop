@@ -14,7 +14,7 @@ import { StyledRootDialog } from './dialog/StyledRootDialog';
 import { LUCIDE_ICONS_UNICODE } from './icon/lucide';
 import { IsModalScrolledContext, useIsModalScrolled } from '../contexts/IsModalScrolledContext';
 import { OnModalCloseContext, useOnModalClose } from '../contexts/OnModalCloseContext';
-import { SessionButton, SessionButtonColor } from './basic/SessionButton';
+import { SessionButton, SessionButtonColor, SessionButtonType } from './basic/SessionButton';
 
 type WithExtraLeftButton = {
   /**
@@ -75,10 +75,9 @@ const StyledModal = styled.div<{
   $topAnchor: ModalTopAnchor;
 }>`
   position: absolute;
-  top: ${props => props.$topAnchor};
+  top: ${props => (props.$topAnchor === 'center' ? 'auto' : props.$topAnchor)};
   max-height: ${props =>
-    `calc(100vh - 2 * ${props.$topAnchor})`}; // 2* to have the modal centered vertically, if it overflows
-
+    `calc(100vh - ${props.$topAnchor === 'center' ? '' : `2 * ${props.$topAnchor}`} - 5vh)`}; // 2* to have the modal centered vertically, if it overflows
   animation: fadein var(--default-duration);
   z-index: 150;
   max-width: ${props =>
@@ -150,15 +149,15 @@ export const ModalActionsContainer = ({
   children,
   maxWidth,
   style = {},
-  extraBottomMargin,
+  buttonType,
 }: {
   children: ReactNode;
   style?: CSSProperties;
   maxWidth?: string;
   /**
-   * some buttons have border/background and need some extra margin to not appear to close to the edge
+   * Depending on the button type, the margin block is different.
    */
-  extraBottomMargin?: boolean;
+  buttonType: SessionButtonType;
 }) => {
   return (
     <Flex
@@ -171,7 +170,8 @@ export const ModalActionsContainer = ({
       height="unset"
       style={{
         justifySelf: 'center',
-        marginBottom: extraBottomMargin ? 'var(--margins-lg)' : 'var(--margins-md)',
+        marginBlock:
+          buttonType === SessionButtonType.Simple ? 'var(--margins-sm)' : 'var(--margins-lg)',
         ...style,
       }}
       data-testid="modal-actions-container"
@@ -183,7 +183,7 @@ export const ModalActionsContainer = ({
 
 /**
  * In the modal, the bottom actions sometimes have a border.
- * When they do, they all share the same styling (minWidth 125px) so this component is here to reuse that logic.
+ * When they do, they all share the same styling (minWidth --modal-actions-outline-min-width) so this component is here to reuse that logic.
  */
 export function ModalBottomButtonWithBorder({
   text,
@@ -203,14 +203,14 @@ export function ModalBottomButtonWithBorder({
       text={text}
       onClick={onClick}
       disabled={disabled}
-      buttonColor={buttonColor ?? SessionButtonColor.PrimaryDark}
+      buttonColor={buttonColor}
       dataTestId={dataTestId}
-      style={{ minWidth: '125px' }}
+      style={{ minWidth: 'var(--modal-actions-outline-min-width)' }}
     />
   );
 }
 
-export type ModalTopAnchor = '15vh' | '25vh' | '35vh' | '45vh';
+export type ModalTopAnchor = '15vh' | '25vh' | '35vh' | '45vh' | 'center';
 
 export type SessionWrapperModalType = {
   headerChildren: ReactNode;
@@ -231,20 +231,35 @@ export type SessionWrapperModalType = {
    * Instead of centering the modal (and having layout shifts on height change), we can use this to anchor the modal to a % from the top of the screen.
    */
   topAnchor?: ModalTopAnchor;
+  $flexGap?: string;
   style?: Omit<CSSProperties, 'maxWidth' | 'minWidth' | 'padding' | 'border'>;
 };
 
-function ExtraSpacerLeft({
-  extraRightButton,
+const useNeedsSpacerOnSide = ({
   extraLeftButton,
+  extraRightButton,
   showExitIcon,
-}: WithShowExitIcon & WithExtraRightButton & WithExtraLeftButton) {
-  // if we have two button on the right, and one on the left, we need to add one spacer
-  if (extraRightButton && showExitIcon && extraLeftButton) {
+}: WithShowExitIcon & WithExtraRightButton & WithExtraLeftButton) => {
+  const buttonsLeft = extraLeftButton ? 1 : 0;
+  const buttonsRight = (extraRightButton ? 1 : 0) + (showExitIcon ? 1 : 0);
+  const extraButtonsOnRightSide = buttonsRight - buttonsLeft;
+
+  return {
+    count: Math.abs(extraButtonsOnRightSide),
+    side: extraButtonsOnRightSide === 0 ? 'none' : extraButtonsOnRightSide > 0 ? 'left' : 'right',
+  };
+};
+
+function ExtraSpacerLeft(props: WithShowExitIcon & WithExtraRightButton & WithExtraLeftButton) {
+  const extraOn = useNeedsSpacerOnSide(props);
+
+  if (extraOn.side !== 'left' || extraOn.count === 0) {
+    return null;
+  }
+  if (extraOn.count === 1) {
     return <SpacerLG />;
   }
-  if (extraRightButton && showExitIcon) {
-    // if we have two button on the right, and none on the left, we need to add two spacers
+  if (extraOn.count === 2) {
     return (
       <>
         <SpacerLG />
@@ -252,16 +267,28 @@ function ExtraSpacerLeft({
       </>
     );
   }
-  // starting here, showExitIcon is false.
-
-  if (extraRightButton && extraLeftButton) {
-    // if we have one button on each sides, no need for a spacer,
-    return null;
-  }
-  // otherwise we need one spacer
-  return <SpacerLG />;
+  throw new Error('ExtraSpacerLeft: not handled case for extraOn.count');
 }
 
+function ExtraSpacerRight(props: WithShowExitIcon & WithExtraRightButton & WithExtraLeftButton) {
+  const extraOn = useNeedsSpacerOnSide(props);
+
+  if (extraOn.side !== 'right' || extraOn.count === 0) {
+    return null;
+  }
+  if (extraOn.count === 1) {
+    return <SpacerLG />;
+  }
+  if (extraOn.count === 2) {
+    return (
+      <>
+        <SpacerLG />
+        <SpacerLG />
+      </>
+    );
+  }
+  throw new Error('ExtraSpacerRight: not handled case for extraOn.count');
+}
 /**
  * A basic modal header with a title, an optional left button and/or exit icon.
  * To be used as `headerChildren` prop as part of SessionWrapperModal.
@@ -304,7 +331,7 @@ export const ModalBasicHeader = ({
         padding={'0'}
         margin={'0'}
       >
-        {/* Note: add a spacer if no left button is set but we have an exit icon */}
+        {/* Note: this is just here to keep the title centered, no matter the buttons we have */}
         <ExtraSpacerLeft
           showExitIcon={showExitIcon}
           extraLeftButton={extraLeftButton}
@@ -326,6 +353,12 @@ export const ModalBasicHeader = ({
         padding={'0'}
         margin={'0'}
       >
+        {/* Note: this is just here to keep the title centered, no matter the buttons we have */}
+        <ExtraSpacerRight
+          showExitIcon={showExitIcon}
+          extraLeftButton={extraLeftButton}
+          extraRightButton={extraRightButton}
+        />
         {extraRightButton}
         {showExitIcon ? (
           <SessionLucideIconButton
@@ -361,6 +394,7 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
     removeScrollbarGutter,
     onClose,
     topAnchor,
+    $flexGap,
   } = props;
 
   const [scrolled, setScrolled] = useState(false);
@@ -428,6 +462,7 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
                     $alignItems="center"
                     $flexDirection="column"
                     paddingInline="var(--margins-lg)" // add the padding here so that the rest of the modal isn't affected (including buttonChildren/ModalHeader)
+                    $flexGap={$flexGap}
                   >
                     {props.children}
                   </Flex>

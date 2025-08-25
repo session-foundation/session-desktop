@@ -179,7 +179,7 @@ const InviteContactsDialogInner = (props: Props) => {
       headerChildren={<ModalBasicHeader title={tr('membersInvite')} showExitIcon={true} />}
       modalDataTestId="invite-contacts-dialog"
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
             text={tr('membersInviteTitle')}
             buttonType={SessionButtonType.Simple}

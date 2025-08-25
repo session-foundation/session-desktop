@@ -20,9 +20,6 @@ export type TimerSeconds =
   | 604800
   | 1209600;
 
-type TimerOptionsEntry = { name: string; value: TimerSeconds };
-export type TimerOptionsArray = Array<TimerOptionsEntry>;
-
 // prettier-ignore
 const VALUES: Array<TimerSeconds> = [
   /** off */

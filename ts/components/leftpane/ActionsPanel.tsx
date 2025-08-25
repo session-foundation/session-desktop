@@ -1,5 +1,5 @@
 import { ipcRenderer } from 'electron';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 import useInterval from 'react-use/lib/useInterval';
@@ -16,7 +16,6 @@ import {
   getOurPrimaryConversation,
   useGlobalUnreadMessageCount,
 } from '../../state/selectors/conversations';
-import { getFocusedSection } from '../../state/selectors/section';
 import { getOurNumber } from '../../state/selectors/user';
 
 import { DecryptedAttachmentsManager } from '../../session/crypto/DecryptedAttachmentsManager';
@@ -24,18 +23,13 @@ import { DecryptedAttachmentsManager } from '../../session/crypto/DecryptedAttac
 import { DURATION } from '../../session/constants';
 
 import { reuploadCurrentAvatarUs } from '../../interactions/avatar-interactions/nts-avatar-interactions';
-import {
-  editProfileModal,
-  onionPathModal,
-  updateDebugMenuModal,
-} from '../../state/ducks/modalDialog';
+import { updateDebugMenuModal, userSettingsModal } from '../../state/ducks/modalDialog';
 
 import { loadDefaultRooms } from '../../session/apis/open_group_api/opengroupV2/ApiUtil';
 import { getOpenGroupManager } from '../../session/apis/open_group_api/opengroupV2/OpenGroupManagerV2';
 import { getSwarmPollingInstance } from '../../session/apis/snode_api';
 import { UserUtils } from '../../session/utils';
 import { Avatar, AvatarSize } from '../avatar/Avatar';
-import { ActionPanelOnionStatusLight } from '../dialog/OnionStatusPathDialog';
 import {
   SessionLucideIconButton,
   type SessionLucideIconButtonProps,
@@ -51,7 +45,6 @@ import { useHotkey } from '../../hooks/useHotkey';
 import { useIsDarkTheme } from '../../state/theme/selectors/theme';
 import { switchThemeTo } from '../../themes/switchTheme';
 import { getOppositeTheme } from '../../util/theme';
-import { SessionNotificationCount } from '../icon/SessionNotificationCount';
 import { getIsModalVisible } from '../../state/selectors/modal';
 
 import { MessageQueue } from '../../session/sending';
@@ -66,9 +59,14 @@ import { Storage } from '../../util/storage';
 import { getFileInfoFromFileServer } from '../../session/apis/file_server_api/FileServerApi';
 import { themesArray } from '../../themes/constants/colors';
 import { isDebugMode } from '../../shared/env_vars';
+import { GearAvatarButton } from '../buttons/avatar/GearAvatarButton';
+import { useZoomShortcuts } from '../../hooks/useZoomingShortcut';
+import { assertUnreachable } from '../../types/sqlSharedTypes';
 
 const StyledContainerAvatar = styled.div`
   padding: var(--margins-lg);
+  position: relative;
+  cursor: pointer;
 `;
 
 function handleThemeSwitch() {
@@ -90,91 +88,58 @@ function handleThemeSwitch() {
 
 const Section = (props: { type: SectionType }) => {
   const ourNumber = useSelector(getOurNumber);
-  const globalUnreadMessageCount = useGlobalUnreadMessageCount();
   const dispatch = useDispatch();
   const { type } = props;
 
   const isModalVisible = useSelector(getIsModalVisible);
   const isDarkTheme = useIsDarkTheme();
-  const focusedSection = useSelector(getFocusedSection);
-  const isSelected = focusedSection === type;
 
   const handleClick = () => {
-    if (type === SectionType.Profile) {
-      dispatch(editProfileModal({}));
-    } else if (type === SectionType.ColorMode) {
-      void handleThemeSwitch();
-    } else if (type === SectionType.PathIndicator) {
-      // Show Path Indicator Modal
-      dispatch(onionPathModal({}));
-    } else if (type === SectionType.DebugMenu) {
-      // Show Debug Menu
+    if (type === SectionType.DebugMenu) {
       dispatch(updateDebugMenuModal({}));
-    } else {
-      // message section
-      dispatch(searchActions.clearSearch());
-      dispatch(sectionActions.showLeftPaneSection(type));
-      dispatch(sectionActions.resetLeftOverlayMode());
+      return;
     }
+    if (type === SectionType.ThemeSwitch) {
+      void handleThemeSwitch();
+      return;
+    }
+
+    if (type === SectionType.Profile) {
+      dispatch(userSettingsModal({ userSettingsPage: 'default' }));
+      return;
+    }
+    assertUnreachable(type, `handleClick: unhandled case "${type}"`);
   };
 
-  const settingsIconRef = useRef<HTMLButtonElement>(null);
-
   useHotkey('Escape', () => {
-    if (type === SectionType.Settings && !isModalVisible) {
-      settingsIconRef.current?.blur();
+    if (!isModalVisible) {
       dispatch(searchActions.clearSearch());
-      dispatch(sectionActions.showLeftPaneSection(SectionType.Message));
       dispatch(sectionActions.resetLeftOverlayMode());
     }
   });
 
   if (type === SectionType.Profile) {
     return (
-      <StyledContainerAvatar>
+      <StyledContainerAvatar onClick={handleClick}>
         <Avatar
-          size={AvatarSize.XS}
-          onAvatarClick={handleClick}
+          size={AvatarSize.S}
           pubkey={ourNumber}
           dataTestId="leftpane-primary-avatar"
           imageDataTestId={`img-leftpane-primary-avatar`}
         />
+        <GearAvatarButton />
       </StyledContainerAvatar>
     );
   }
-
-  const unreadToShow = type === SectionType.Message ? globalUnreadMessageCount : undefined;
 
   const buttonProps = {
     iconSize: 'medium',
     padding: 'var(--margins-lg)',
     onClick: handleClick,
-    isSelected,
+    isSelected: false,
   } satisfies Omit<SessionLucideIconButtonProps, 'unicode' | 'dataTestId'>;
 
   switch (type) {
-    case SectionType.Message:
-      return (
-        <SessionLucideIconButton
-          {...buttonProps}
-          dataTestId="message-section"
-          unicode={LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE}
-          style={{
-            position: 'relative',
-          }}
-        >
-          {Boolean(unreadToShow) && <SessionNotificationCount count={unreadToShow} />}
-        </SessionLucideIconButton>
-      );
-    case SectionType.Settings:
-      return (
-        <SessionLucideIconButton
-          {...buttonProps}
-          dataTestId="settings-section"
-          unicode={LUCIDE_ICONS_UNICODE.SETTINGS}
-          ref={settingsIconRef}
-        />
-      );
     case SectionType.DebugMenu:
       return (
         <SessionLucideIconButton
@@ -183,15 +148,12 @@ const Section = (props: { type: SectionType }) => {
           dataTestId="debug-menu-section"
         />
       );
-    case SectionType.PathIndicator:
-      return (
-        <ActionPanelOnionStatusLight handleClick={handleClick} id={'onion-path-indicator-led-id'} />
-      );
-    case SectionType.ColorMode:
+    case SectionType.ThemeSwitch:
     default:
       return (
         <SessionLucideIconButton
           {...buttonProps}
+          margin="auto 0 0 0"
           unicode={isDarkTheme ? LUCIDE_ICONS_UNICODE.MOON : LUCIDE_ICONS_UNICODE.SUN_MEDIUM}
           dataTestId="theme-section"
         />
@@ -321,6 +283,8 @@ export const ActionsPanel = () => {
   });
 
   useUpdateBadgeCount();
+  // setup our own shortcuts so that it changes show in the appearance tab too
+  useZoomShortcuts();
 
   useInterval(
     DecryptedAttachmentsManager.cleanUpOldDecryptedMedias,
@@ -376,11 +340,8 @@ export const ActionsPanel = () => {
     <>
       <LeftPaneSectionContainer data-testid="leftpane-section-container">
         <Section type={SectionType.Profile} />
-        <Section type={SectionType.Message} />
-        <Section type={SectionType.Settings} />
         {showDebugMenu && <Section type={SectionType.DebugMenu} />}
-        <Section type={SectionType.PathIndicator} />
-        <Section type={SectionType.ColorMode} />
+        <Section type={SectionType.ThemeSwitch} />
       </LeftPaneSectionContainer>
     </>
   );

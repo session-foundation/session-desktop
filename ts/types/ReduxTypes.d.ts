@@ -5,21 +5,7 @@
  * e.g. import type { YourTypeHere } from 'path/to/ReduxTypes';
  */
 
-export type SessionSettingCategory =
-  | 'privacy'
-  | 'donate'
-  | 'session-pro'
-  | 'notifications'
-  | 'conversations'
-  | 'message-requests'
-  | 'appearance'
-  | 'permissions'
-  | 'session-network'
-  | 'recovery-password'
-  | 'help'
-  | 'clear-data';
-
-export type PasswordAction = 'set' | 'change' | 'remove' | 'enter';
+export type PasswordAction = 'set' | 'change' | 'remove';
 
 export type EditProfilePictureModalProps = {
   conversationId: string;

@@ -71,9 +71,9 @@ export const EnterPasswordModal = (props: EnterPasswordModalProps) => {
       headerChildren={<ModalBasicHeader title={title} showExitIcon={true} />}
       $contentMinWidth={WrapperModalWidth.narrow}
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
-            text={tr('done')}
+            text={tr('enter')}
             buttonType={SessionButtonType.Simple}
             onClick={verifyPassword}
             dataTestId="session-confirm-ok-button"

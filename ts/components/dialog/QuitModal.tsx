@@ -58,7 +58,7 @@ export const QuitModal = (props: QuitModalProps) => {
       headerChildren={<ModalBasicHeader title={title} />}
       onClose={onClickClose}
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
             text={tr('quitButton')}
             buttonColor={SessionButtonColor.Danger}

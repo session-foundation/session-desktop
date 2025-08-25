@@ -1,8 +1,7 @@
 import { isEmpty } from 'lodash';
 import { useDispatch } from 'react-redux';
 import { SettingsKey } from '../../data/settings-key';
-import { updateHideRecoveryPasswordModal } from '../../state/ducks/modalDialog';
-import { sectionActions } from '../../state/ducks/section';
+import { updateHideRecoveryPasswordModal, userSettingsModal } from '../../state/ducks/modalDialog';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SpacerMD } from '../basic/Text';
 import {
@@ -28,9 +27,10 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
   };
 
   const onConfirmation = async () => {
+    dispatch(userSettingsModal({ userSettingsPage: 'default' }));
+
     await window.setSettingValue(SettingsKey.hideRecoveryPassword, true);
     onClose();
-    dispatch(sectionActions.showSettingsSection('privacy'));
   };
 
   if (isEmpty(state)) {
@@ -74,7 +74,7 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
       headerChildren={<ModalBasicHeader title={tr('recoveryPasswordHidePermanently')} />}
       onClose={onClose}
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton {...leftButtonProps} buttonType={SessionButtonType.Simple} />
           <SessionButton {...rightButtonProps} buttonType={SessionButtonType.Simple} />
         </ModalActionsContainer>

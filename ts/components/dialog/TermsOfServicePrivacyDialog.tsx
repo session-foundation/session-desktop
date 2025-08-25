@@ -33,7 +33,7 @@ export function TermsOfServicePrivacyDialog(props: TermsOfServicePrivacyDialogPr
       headerChildren={<ModalBasicHeader title={tr('urlOpen')} showExitIcon={true} />}
       onClose={onClose}
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
             ariaLabel={'Terms of service button'}
             text={tr('onboardingTos')}

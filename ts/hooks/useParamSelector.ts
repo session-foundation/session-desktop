@@ -1,7 +1,6 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { PubkeyType, type GroupPubkeyType } from 'libsession_util_nodejs';
 import { compact, isEmpty, isFinite, isNumber, pick } from 'lodash';
-import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import {
   hasValidIncomingRequestValues,
@@ -9,7 +8,7 @@ import {
 } from '../models/conversation';
 import { ConversationTypeEnum } from '../models/types';
 import { isUsAnySogsFromCache } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
-import { TimerOptions, TimerOptionsArray } from '../session/disappearing_messages/timerOptions';
+import { TimerOptions } from '../session/disappearing_messages/timerOptions';
 import { PubKey } from '../session/types';
 import { UserUtils } from '../session/utils';
 import { PropsForExpiringMessage } from '../state/ducks/conversations';
@@ -437,39 +436,6 @@ export function useMessageExpirationPropsById(messageId?: string) {
   });
 }
 
-export function useTimerOptionsByMode(disappearingMessageMode?: string, hasOnlyOneMode?: boolean) {
-  return useMemo(() => {
-    const options: TimerOptionsArray = [];
-    if (hasOnlyOneMode) {
-      options.push({
-        name: TimerOptions.getName(TimerOptions.VALUES[0]),
-        value: TimerOptions.VALUES[0],
-      });
-    }
-    switch (disappearingMessageMode) {
-      case 'deleteAfterRead':
-        options.push(
-          ...TimerOptions.DELETE_AFTER_READ.map(option => ({
-            name: TimerOptions.getName(option),
-            value: option,
-          }))
-        );
-        break;
-      case 'deleteAfterSend':
-        options.push(
-          ...TimerOptions.DELETE_AFTER_SEND.map(option => ({
-            name: TimerOptions.getName(option),
-            value: option,
-          }))
-        );
-        break;
-      default:
-        return [];
-    }
-    return options;
-  }, [disappearingMessageMode, hasOnlyOneMode]);
-}
-
 export function useQuoteAuthorName(authorId?: string): {
   authorName: string | undefined;
   isMe: boolean;
@@ -522,7 +488,7 @@ export function useSortedGroupMembers(convoId: string | undefined): Array<Pubkey
 export function useDisappearingMessageSettingText({ convoId }: { convoId?: string }) {
   const convoProps = useConversationPropsById(convoId);
 
-  const offReturn = { id: 'off', label: tr('off') };
+  const offReturn = { id: 'off', token: 'off' as const } as const;
   if (!convoProps) {
     return offReturn;
   }
@@ -536,15 +502,17 @@ export function useDisappearingMessageSettingText({ convoId }: { convoId?: strin
   }
 
   return expirationMode === 'deleteAfterRead'
-    ? {
+    ? ({
         id: expirationMode,
-        label: tr('disappearingMessagesDisappearAfterReadState', { time: expireTimerText }),
-      }
+        token: 'disappearingMessagesDisappearAfterReadState',
+        time: expireTimerText,
+      } as const)
     : expirationMode === 'deleteAfterSend'
-      ? {
+      ? ({
           id: expirationMode,
-          label: tr('disappearingMessagesDisappearAfterSendState', { time: expireTimerText }),
-        }
+          token: 'disappearingMessagesDisappearAfterSendState',
+          time: expireTimerText,
+        } as const)
       : offReturn;
 }
 

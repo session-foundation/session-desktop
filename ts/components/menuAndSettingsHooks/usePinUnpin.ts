@@ -5,13 +5,9 @@ import {
   useIsPrivate,
   useIsPrivateAndFriend,
 } from '../../hooks/useParamSelector';
-import {
-  useIsMessageRequestOverlayShown,
-  useIsMessageSection,
-} from '../../state/selectors/section';
+import { useIsMessageRequestOverlayShown } from '../../state/selectors/section';
 
 export function useShowPinUnpin(conversationId: string) {
-  const isMessagesSection = useIsMessageSection();
   const isPrivateAndFriend = useIsPrivateAndFriend(conversationId);
   const isPrivate = useIsPrivate(conversationId);
   const isMessageRequest = useIsMessageRequestOverlayShown();
@@ -29,7 +25,5 @@ export function useShowPinUnpin(conversationId: string) {
     return false;
   }
 
-  return (
-    isMessagesSection && !isMessageRequest && (!isPrivate || (isPrivate && isPrivateAndFriend))
-  );
+  return !isMessageRequest && (!isPrivate || (isPrivate && isPrivateAndFriend));
 }

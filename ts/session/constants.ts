@@ -64,6 +64,13 @@ export const PROTOCOLS = {
   HTTPS: 'https:',
 };
 
+export const ZOOM_FACTOR = {
+  STEP: 10,
+  MIN: 50,
+  MAX: 200,
+  DEFAULT: 100,
+};
+
 // User Interface
 export const CONVERSATION = {
   DEFAULT_MEDIA_FETCH_COUNT: 50,
