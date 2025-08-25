@@ -4,7 +4,6 @@ import { useState } from 'react';
 
 import {
   updateHideRecoveryPasswordModal,
-  updateLightBoxOptions,
   userSettingsModal,
   type UserSettingsModalState,
 } from '../../../../state/ducks/modalDialog';
@@ -34,7 +33,6 @@ import { usePasswordModal } from '../../../../hooks/usePasswordModal';
 import { mnDecode } from '../../../../session/crypto/mnemonic';
 import { getIsModalVisible } from '../../../../state/selectors/modal';
 import { THEME_GLOBALS } from '../../../../themes/globals';
-import { prepareQRCodeForLightBox } from '../../../../util/qrCodes';
 import { getCurrentRecoveryPhrase } from '../../../../util/storage';
 import { SessionQRCode, type QRCodeLogoProps } from '../../../SessionQRCode';
 
@@ -64,6 +62,7 @@ export function RecoveryPasswordSettingsPage(modalState: UserSettingsModalState)
   const closeAction = useUserSettingsCloseAction(modalState);
   const title = useUserSettingsTitle(modalState);
   const recoveryPasswordHidden = useHideRecoveryPasswordEnabled();
+  const [fullScreen, setFullScreen] = useState(false);
 
   const recoveryPhrase = getCurrentRecoveryPhrase();
   if (!recoveryPhrase) {
@@ -142,10 +141,8 @@ export function RecoveryPasswordSettingsPage(modalState: UserSettingsModalState)
             logoImage={dataURL}
             logoSize={iconSize}
             loading={loading}
-            onClick={(fileName, dataUrl) => {
-              const lightBoxOptions = prepareQRCodeForLightBox(fileName, dataUrl);
-              dispatch(updateLightBoxOptions(lightBoxOptions));
-            }}
+            onToggleFullScreen={() => setFullScreen(!fullScreen)}
+            fullScreen={fullScreen}
             ariaLabel={'Recovery Password QR Code'}
             dataTestId={'session-recovery-password'}
             style={{ alignSelf: 'center' }}

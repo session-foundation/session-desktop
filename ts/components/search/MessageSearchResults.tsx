@@ -92,7 +92,7 @@ const FromName = (props: { source: string; conversationId: string }) => {
     <ContactName
       pubkey={conversationId}
       module="module-message-search-result__header__name"
-      contactNameContext="message-search-result"
+      contactNameContext="message-search-result-from"
       conversationId={conversationId}
     />
   );
@@ -109,7 +109,7 @@ const ConversationHeader = (props: { source: string; conversationId: string }) =
         <StyledMessageResultsHeaderName>
           <ContactName
             pubkey={conversationId}
-            contactNameContext="message-search-result"
+            contactNameContext="message-search-result-conversation"
             conversationId={conversationId}
           />
         </StyledMessageResultsHeaderName>

@@ -24,7 +24,6 @@ import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { SessionWrapperModal } from '../SessionWrapperModal';
 import { tr } from '../../localization/localeTools';
 import { useWeAreCommunityAdminOrModerator } from '../../state/selectors/conversations';
-import { useShowUserDetailsCbFromMessage } from '../menuAndSettingsHooks/useShowUserDetailsCb';
 
 const StyledReactListContainer = styled(Flex)`
   width: 100%;
@@ -101,8 +100,6 @@ const ReactionSenders = (props: ReactionSendersProps) => {
   const { messageId, currentReact, senders, me, handleClose, conversationId } = props;
   const dispatch = useDispatch();
 
-  const showUserDetailsCb = useShowUserDetailsCbFromMessage();
-
   const handleRemoveReaction = async () => {
     await Reactions.sendMessageReaction(messageId, currentReact);
 
@@ -131,7 +128,6 @@ const ReactionSenders = (props: ReactionSendersProps) => {
               pubkey={sender}
               onAvatarClick={() => {
                 handleClose();
-                void showUserDetailsCb({ messageId });
               }}
             />
             {sender === me ? (

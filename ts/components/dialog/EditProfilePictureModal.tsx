@@ -9,12 +9,7 @@ import { pickFileForAvatar } from '../../types/attachments/VisualAttachment';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionSpinner } from '../loading';
 import { ProfileAvatar } from './user-settings/components';
-import {
-  useAvatarPath,
-  useConversationUsernameWithFallback,
-  useIsMe,
-  useIsPublic,
-} from '../../hooks/useParamSelector';
+import { useAvatarPath, useIsMe, useIsPublic } from '../../hooks/useParamSelector';
 import { tr } from '../../localization/localeTools';
 import { OpenGroupUtils } from '../../session/apis/open_group_api/utils';
 import { PubKey } from '../../session/types';
@@ -141,7 +136,6 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
   const isProAvailable = useIsProAvailable();
 
   const avatarPath = useAvatarPath(conversationId) || '';
-  const profileName = useConversationUsernameWithFallback(true, conversationId) || '';
 
   const groupAvatarChangePending = useGroupAvatarChangeFromUIPending();
   const ourAvatarIsUploading = useOurAvatarIsUploading();
@@ -304,7 +298,6 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
             <ProfileAvatar
               newAvatarObjectUrl={newAvatarObjectUrl}
               avatarPath={avatarPath}
-              profileName={profileName}
               conversationId={conversationId}
               onPlusAvatarClick={handleClick}
               onAvatarClick={handleClick}

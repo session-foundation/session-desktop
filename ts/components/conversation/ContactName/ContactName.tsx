@@ -33,12 +33,14 @@ function isBoldProfileNameCtx(ctx: ContactNameContext) {
     case 'message-author':
     case 'message-info-author':
     case 'member-list-item':
+    case 'member-list-item-mention-row':
     case 'contact-list-row':
       return true;
     case 'quote-author':
     case 'conversation-list-item-search':
     case 'react-list-modal':
-    case 'message-search-result':
+    case 'message-search-result-conversation':
+    case 'message-search-result-from':
       return false;
     default:
       assertUnreachable(ctx, 'isBoldProfileNameCtx');
@@ -49,21 +51,28 @@ function isBoldProfileNameCtx(ctx: ContactNameContext) {
 /**
  * In some contexts, we want to show the pubkey of the contact.
  */
-function isShowPubkeyCtx(ctx: ContactNameContext) {
+function isShowPubkeyCtx(ctx: ContactNameContext, isBlinded: boolean) {
   // We are doing this as a switch instead of an array so we have to be explicit anytime we add a new context,
   // thanks to the assertUnreachable below
   switch (ctx) {
     case 'message-author':
+      return true;
     case 'message-info-author':
+      if (isBlinded) {
+        // we specifically don't want to show the pubkey for blinded senders in message info.
+        return false;
+      }
       return true;
     case 'member-list-item':
+    case 'member-list-item-mention-row':
     case 'contact-list-row':
     case 'quote-author':
     case 'conversation-list-item':
     case 'quoted-message-composition':
     case 'conversation-list-item-search':
     case 'react-list-modal':
-    case 'message-search-result':
+    case 'message-search-result-conversation':
+    case 'message-search-result-from':
       return false;
     default:
       assertUnreachable(ctx, 'isShowPubkeyCtx');
@@ -82,11 +91,13 @@ function isShowNtsIsYouCtx(ctx: ContactNameContext) {
     case 'quote-author':
     case 'quoted-message-composition':
     case 'react-list-modal':
-    case 'message-search-result':
     case 'member-list-item':
-      return true;
+    case 'member-list-item-mention-row':
     case 'message-info-author':
+    case 'message-search-result-from':
+      return true;
     case 'contact-list-row':
+    case 'message-search-result-conversation':
     case 'conversation-list-item':
     case 'conversation-list-item-search':
       return false;
@@ -105,13 +116,15 @@ function isForceSingleLineCtx(ctx: ContactNameContext) {
   switch (ctx) {
     case 'message-info-author':
     case 'member-list-item':
+    case 'member-list-item-mention-row':
     case 'contact-list-row':
       return true;
     case 'message-author':
     case 'quote-author':
     case 'quoted-message-composition':
     case 'react-list-modal':
-    case 'message-search-result':
+    case 'message-search-result-conversation':
+    case 'message-search-result-from':
     case 'conversation-list-item':
     case 'conversation-list-item-search':
       return false;
@@ -131,12 +144,14 @@ function isShowUPMOnClickCtx(ctx: ContactNameContext) {
     case 'message-info-author':
       return true;
     case 'member-list-item':
+    case 'member-list-item-mention-row':
     case 'contact-list-row':
     case 'message-author':
     case 'quote-author':
     case 'quoted-message-composition':
     case 'react-list-modal':
-    case 'message-search-result':
+    case 'message-search-result-conversation':
+    case 'message-search-result-from':
     case 'conversation-list-item':
     case 'conversation-list-item-search':
       return false;
@@ -183,6 +198,7 @@ export const ContactName = ({
   const prefix = module || 'module-contact-name';
   const isPublic = useIsPublic(conversationId);
   const shortPubkey = PubKey.shorten(pubkey);
+  const isBlinded = PubKey.isBlinded(pubkey);
 
   const isMe = isUsAnySogsFromCache(pubkey);
 
@@ -207,7 +223,7 @@ export const ContactName = ({
   const shouldShowShortenPkAsName = !displayName;
 
   const shouldShowPubkey =
-    !shouldShowShortenPkAsName && isPublic && isShowPubkeyCtx(contactNameContext);
+    !shouldShowShortenPkAsName && isPublic && isShowPubkeyCtx(contactNameContext, isBlinded);
   const boldProfileName = isBoldProfileNameCtx(contactNameContext);
   const forceSingleLine = isForceSingleLineCtx(contactNameContext);
 

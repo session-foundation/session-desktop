@@ -381,7 +381,6 @@ export const DefaultSettingPage = () => {
           ) : (
             <ProfileHeader
               avatarPath={avatarPath}
-              profileName={profileName}
               conversationId={us}
               onPlusAvatarClick={null}
               dataTestId="avatar-edit-profile-dialog"

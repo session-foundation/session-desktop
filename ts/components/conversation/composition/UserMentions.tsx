@@ -9,6 +9,7 @@ export const renderUserMentionRow = (id: string, conversationId?: string) => {
       inMentions={true}
       dataTestId="mentions-popup-row"
       conversationId={conversationId}
+      contactNameSuffix="-mention-row"
     />
   );
 };

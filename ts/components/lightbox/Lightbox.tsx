@@ -135,7 +135,7 @@ interface IconButtonProps {
     | LUCIDE_ICONS_UNICODE.CHEVRON_RIGHT
     | LUCIDE_ICONS_UNICODE.CHEVRON_LEFT
     | LUCIDE_ICONS_UNICODE.X
-    | LUCIDE_ICONS_UNICODE.DOWNLOAD;
+    | LUCIDE_ICONS_UNICODE.ARROW_DOWN_TO_LINE;
 }
 
 const IconButton = ({ onClick, unicode }: IconButtonProps) => {
@@ -149,7 +149,7 @@ const IconButton = ({ onClick, unicode }: IconButtonProps) => {
   // default to huge, only download is bigger
   let iconSize: SessionIconSize = 'huge';
   switch (unicode) {
-    case LUCIDE_ICONS_UNICODE.DOWNLOAD:
+    case LUCIDE_ICONS_UNICODE.ARROW_DOWN_TO_LINE:
       iconSize = 'huge2';
       break;
     default:
@@ -309,7 +309,7 @@ export const Lightbox = (props: Props) => {
 
           {onSave ? (
             <IconButton
-              unicode={LUCIDE_ICONS_UNICODE.DOWNLOAD}
+              unicode={LUCIDE_ICONS_UNICODE.ARROW_DOWN_TO_LINE}
               onClick={onSave}
               style={styles.saveButton}
             />
