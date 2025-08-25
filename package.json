@@ -214,6 +214,7 @@
       "gatekeeperAssess": false,
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",
+      "minimumSystemVersion": "13.0.0",
       "extendInfo": {
         "NSCameraUsageDescription": "Session requires camera access to record video.",
         "NSMicrophoneUsageDescription": "Session requires microphone access to record audio."
@@ -240,7 +241,9 @@
     "nsis": {
       "deleteAppDataOnUninstall": true,
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "include": "build/installer.nsh",
+      "installerSidebar": "build/installer-sidebar.bmp"
     },
     "linux": {
       "category": "Network;InstantMessaging;Chat",
