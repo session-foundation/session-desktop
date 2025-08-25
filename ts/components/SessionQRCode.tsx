@@ -1,11 +1,11 @@
 import { MouseEvent, useEffect, useState, type ReactNode, type SessionDataTestId } from 'react';
-import { QRCodeCanvas } from 'qrcode.react';
+import useWindowSize from 'react-use/lib/useWindowSize';
+
+import { QRCodeSVG } from 'qrcode.react';
 import styled, { CSSProperties } from 'styled-components';
 import { THEME_GLOBALS } from '../themes/globals';
-import { renderQRCode } from '../util/qrCodes';
 import { AnimatedFlex } from './basic/Flex';
 import { SessionIconType } from './icon';
-import { tr } from '../localization/localeTools';
 
 // AnimatedFlex because we fade in the QR code a flicker on first render
 const StyledQRView = styled(AnimatedFlex)<{
@@ -15,6 +15,16 @@ const StyledQRView = styled(AnimatedFlex)<{
   border-radius: 10px;
   overflow: visible; // we need this for overflow buttons to be visible (see UserProfileModal)
   ${props => props.size && `width: ${props.size}px; height: ${props.size}px;`}
+`;
+
+const StyledFullScreenQrView = styled(AnimatedFlex)`
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 3;
+  background-color: #000000dd;
+  position: fixed;
 `;
 
 export type QRCodeLogoProps = { iconType: SessionIconType; iconSize: number };
@@ -29,7 +39,8 @@ export type SessionQRCodeProps = {
   logoImage?: string;
   logoSize?: number;
   loading?: boolean;
-  onClick?: (fileName: string, dataUrl: string) => void;
+  onToggleFullScreen?: () => void;
+  fullScreen?: boolean;
   ariaLabel?: string;
   dataTestId?: SessionDataTestId;
   style?: CSSProperties;
@@ -45,9 +56,9 @@ export function SessionQRCode(props: SessionQRCodeProps) {
     foregroundColor,
     hasLogo,
     logoImage,
-    logoSize,
     loading,
-    onClick,
+    onToggleFullScreen,
+    fullScreen,
     ariaLabel,
     dataTestId,
     style,
@@ -59,33 +70,11 @@ export function SessionQRCode(props: SessionQRCodeProps) {
 
   const qrCanvasSize = 1000;
 
-  const loadQRCodeDataUrl = async () => {
-    const fileName = `${id}-${new Date().toISOString()}.jpg`;
-    let url = '';
-
-    try {
-      url = await renderQRCode(
-        {
-          id: `${id}-save`,
-          value,
-          size,
-          hasLogo,
-          logoImage,
-          logoSize,
-        },
-        fileName
-      );
-    } catch (err) {
-      window.log.error(`QR code save failed! ${fileName}\n${err}`);
-    }
-    return { fileName, url };
-  };
+  const { height, width } = useWindowSize();
+  const smallestDimension = Math.min(height, width);
 
   const handleOnClick = async () => {
-    const { fileName, url } = await loadQRCodeDataUrl();
-    if (onClick) {
-      onClick(fileName, url);
-    }
+    onToggleFullScreen?.();
   };
 
   useEffect(() => {
@@ -107,14 +96,17 @@ export function SessionQRCode(props: SessionQRCodeProps) {
     }
   }, [backgroundColor, bgColor, fgColor, foregroundColor, hasLogo, loading, logo, logoImage]);
 
+  const Comp = fullScreen ? StyledFullScreenQrView : StyledQRView;
+
+  const overriddenSize = fullScreen ? smallestDimension * 0.75 : size;
+
   return (
-    <StyledQRView
+    <Comp
       $container={true}
       $justifyContent="center"
       $alignItems="center"
-      size={size}
+      size={overriddenSize}
       id={id}
-      title={tr('fullScreenToggle')}
       aria-label={ariaLabel || 'QR code'}
       onClick={(event: MouseEvent<HTMLDivElement>) => {
         event.preventDefault();
@@ -126,17 +118,16 @@ export function SessionQRCode(props: SessionQRCodeProps) {
       transition={{ duration: THEME_GLOBALS['--default-duration-seconds'] }}
       style={style}
     >
-      <QRCodeCanvas
-        id={`${id}-canvas`}
+      <QRCodeSVG
         value={value}
         level={'Q'}
         size={qrCanvasSize}
-        bgColor={bgColor}
-        fgColor={fgColor}
+        bgColor={fullScreen ? 'black' : bgColor}
+        fgColor={fullScreen ? 'white' : fgColor}
         marginSize={2}
-        style={{ width: size, height: size }}
+        style={{ width: overriddenSize, height: overriddenSize }}
         imageSettings={
-          logoImage
+          logoImage && !fullScreen
             ? {
                 src: logoImage,
                 x: undefined,
@@ -149,7 +140,7 @@ export function SessionQRCode(props: SessionQRCodeProps) {
             : undefined
         }
       />
-      {children}
-    </StyledQRView>
+      {!fullScreen ? children : null}
+    </Comp>
   );
 }
