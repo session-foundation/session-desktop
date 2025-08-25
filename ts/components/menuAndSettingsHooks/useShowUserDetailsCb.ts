@@ -79,14 +79,17 @@ export function useShowUserDetailsCbFromMessage() {
  * Show the user details modal for a given conversation.
  * Note: this is only a valid action for private chats (blinded or not, friends or not)
  */
-export function useShowUserDetailsCbFromConversation(conversationId?: string) {
+export function useShowUserDetailsCbFromConversation(
+  conversationId?: string,
+  allowForNts?: boolean
+) {
   const dispatch = useDispatch();
 
   const isPrivate = useIsPrivate(conversationId);
 
   const isMe = useIsMe(conversationId);
 
-  if (!conversationId || isMe) {
+  if (!conversationId || (isMe && !allowForNts)) {
     return null;
   }
 

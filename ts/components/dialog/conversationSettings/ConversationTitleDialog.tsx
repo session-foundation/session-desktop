@@ -80,7 +80,7 @@ export const ConversationTitleDialog = ({
       }}
       onClick={onClickCb || undefined}
     >
-      {isMe ? tr('noteToSelf') : nicknameOrDisplayName}
+      {isMe ? tr('you') : nicknameOrDisplayName}
       <ProBadge conversationId={conversationId} />
     </H5>
   );

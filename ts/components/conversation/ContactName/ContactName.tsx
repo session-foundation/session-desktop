@@ -177,6 +177,29 @@ const boldStyles: CSSProperties = {
   fontWeight: 'bold',
 };
 
+function allowShowUPMForNtsCtx(ctx: ContactNameContext) {
+  // We are doing this as a switch instead of an array so we have to be explicit anytime we add a new context,
+  // thanks to the assertUnreachable below
+  switch (ctx) {
+    case 'message-info-author':
+    case 'member-list-item':
+    case 'member-list-item-mention-row':
+    case 'contact-list-row':
+    case 'message-author':
+    case 'quote-author':
+    case 'quoted-message-composition':
+    case 'react-list-modal':
+    case 'message-search-result-conversation':
+    case 'message-search-result-from':
+    case 'conversation-list-item':
+    case 'conversation-list-item-search':
+      return false;
+    default:
+      assertUnreachable(ctx, 'isForceSingleLineCtx');
+      throw new Error('isForceSingleLineCtx: unreachable');
+  }
+}
+
 export const ContactName = ({
   pubkey,
   module,
@@ -231,7 +254,10 @@ export const ContactName = ({
 
   const userHasPro = useUserHasPro(pubkey);
 
-  const showConversationSettingsCb = useShowUserDetailsCbFromConversation(pubkey);
+  const showConversationSettingsCb = useShowUserDetailsCbFromConversation(
+    pubkey,
+    allowShowUPMForNtsCtx(contactNameContext)
+  );
 
   const showProBadge = useProBadgeOnClickCb({
     context: 'contact-name',

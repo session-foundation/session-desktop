@@ -49,7 +49,7 @@ export const MessageFrom = (props: { sender: string; isSenderAdmin: boolean }) =
 
   const selectedConvoId = useSelectedConversationKey();
 
-  const showUserProfileModalCb = useShowUserDetailsCbFromConversation(sender) ?? undefined;
+  const showUserProfileModalCb = useShowUserDetailsCbFromConversation(sender, true) ?? undefined;
 
   return (
     <StyledMessageInfoAuthor>

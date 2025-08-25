@@ -28,7 +28,7 @@ const Portal = ({ children }: { children: ReactNode }) => {
 const AvatarItem = () => {
   const conversationId = useConvoIdFromContext();
 
-  const showUserDetailsCb = useShowUserDetailsCbFromConversation(conversationId);
+  const showUserDetailsCb = useShowUserDetailsCbFromConversation(conversationId, true);
 
   return (
     <div>

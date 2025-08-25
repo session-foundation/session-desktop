@@ -94,7 +94,7 @@ export const DeletePrivateContactMenuItem = () => {
 export const ShowUserProfileMenuItem = () => {
   const convoId = useConvoIdFromContext();
 
-  const showUserDetailsCb = useShowUserDetailsCbFromConversation(convoId);
+  const showUserDetailsCb = useShowUserDetailsCbFromConversation(convoId, true);
 
   if (showUserDetailsCb) {
     return (
