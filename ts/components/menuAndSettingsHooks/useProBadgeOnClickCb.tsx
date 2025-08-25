@@ -100,8 +100,9 @@ function proFeatureToVariant(proFeature: ProMessageFeature): SessionProInfoVaria
   switch (proFeature) {
     case ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH:
       return SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT;
-    case ProMessageFeature.PRO_BADGE:
     case ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE:
+      return SessionProInfoVariant.PROFILE_PICTURE_ANIMATED;
+    case ProMessageFeature.PRO_BADGE:
       return SessionProInfoVariant.GENERIC;
     default:
       assertUnreachable(proFeature, 'ProFeatureToVariant: unknown case');
