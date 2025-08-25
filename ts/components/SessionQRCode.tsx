@@ -1,12 +1,5 @@
-import {
-  MouseEvent,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-  type SessionDataTestId,
-} from 'react';
-import { QRCode } from 'react-qrcode-logo';
+import { MouseEvent, useEffect, useState, type ReactNode, type SessionDataTestId } from 'react';
+import { QRCodeCanvas } from 'qrcode.react';
 import styled, { CSSProperties } from 'styled-components';
 import { THEME_GLOBALS } from '../themes/globals';
 import { renderQRCode } from '../util/qrCodes';
@@ -64,9 +57,7 @@ export function SessionQRCode(props: SessionQRCodeProps) {
   const [bgColor, setBgColor] = useState(backgroundColor);
   const [fgColor, setFgColor] = useState(foregroundColor);
 
-  const qrRef = useRef<QRCode>(null);
   const qrCanvasSize = 1000;
-  const canvasLogoSize = logoSize ? (qrCanvasSize * 0.25 * logoSize) / logoSize : 250;
 
   const loadQRCodeDataUrl = async () => {
     const fileName = `${id}-${new Date().toISOString()}.jpg`;
@@ -135,23 +126,28 @@ export function SessionQRCode(props: SessionQRCodeProps) {
       transition={{ duration: THEME_GLOBALS['--default-duration-seconds'] }}
       style={style}
     >
-      <QRCode
-        ref={qrRef}
+      <QRCodeCanvas
         id={`${id}-canvas`}
         value={value}
-        ecLevel={'Q'}
+        level={'Q'}
         size={qrCanvasSize}
         bgColor={bgColor}
         fgColor={fgColor}
-        quietZone={40}
-        logoImage={logo}
-        logoWidth={canvasLogoSize}
-        logoHeight={canvasLogoSize}
-        removeQrCodeBehindLogo={true}
-        style={{
-          width: size,
-          height: size,
-        }}
+        marginSize={2}
+        style={{ width: size, height: size }}
+        imageSettings={
+          logoImage
+            ? {
+                src: logoImage,
+                x: undefined,
+                y: undefined,
+                height: qrCanvasSize * 0.25,
+                width: qrCanvasSize * 0.25,
+                opacity: 1,
+                excavate: true,
+              }
+            : undefined
+        }
       />
       {children}
     </StyledQRView>
