@@ -264,6 +264,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
   if (isNil(props?.variant) || (hasPro && !isProVisibleCTA(props.variant))) {
     return null;
   }
+  const isGroupCta = props.variant === SessionProInfoVariant.GROUP_ACTIVATED;
 
   return (
     <SessionWrapperModal
@@ -316,7 +317,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
     >
       <SpacerSM />
       <StyledCTATitle reverseDirection={hasPro}>
-        {tr(hasPro ? 'proActivated' : 'upgradeTo')}
+        {tr(hasPro ? (isGroupCta ? 'proGroupActivated' : 'proActivated') : 'upgradeTo')}
         <ProIconButton iconSize={'huge'} dataTestId="invalid-data-testid" onClick={undefined} />
       </StyledCTATitle>
       <SpacerXL />
