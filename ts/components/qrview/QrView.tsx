@@ -1,7 +1,5 @@
-import { useDispatch } from 'react-redux';
+import { useState } from 'react';
 import { useIconToImageURL } from '../../hooks/useIconToImageURL';
-import { updateLightBoxOptions } from '../../state/ducks/modalDialog';
-import { prepareQRCodeForLightBox } from '../../util/qrCodes';
 import { AvatarExitQrCodeButton } from '../buttons/avatar/AvatarExitQrCodeButton';
 import { QRCodeLogoProps, SessionQRCode } from '../SessionQRCode';
 
@@ -11,8 +9,8 @@ const qrLogoProps: QRCodeLogoProps = {
 };
 
 export const QRView = ({ sessionID, onExit }: { sessionID: string; onExit: () => void }) => {
-  const dispatch = useDispatch();
   const { dataURL, iconSize, iconColor, backgroundColor, loading } = useIconToImageURL(qrLogoProps);
+  const [fullScreen, setFullScreen] = useState(false);
 
   return (
     <SessionQRCode
@@ -25,14 +23,12 @@ export const QRView = ({ sessionID, onExit }: { sessionID: string; onExit: () =>
       logoImage={dataURL}
       logoSize={iconSize}
       loading={loading}
-      onClick={(fileName, dataUrl) => {
-        const lightBoxOptions = prepareQRCodeForLightBox(fileName, dataUrl);
-        dispatch(updateLightBoxOptions(lightBoxOptions));
-      }}
+      onToggleFullScreen={() => setFullScreen(!fullScreen)}
+      fullScreen={fullScreen}
       ariaLabel={'Account ID QR code'}
       dataTestId={'your-qr-code'}
       // we need this for overflow buttons to be visible (see UserProfileModal)
-      style={{ marginTop: '15px', position: 'relative' }}
+      style={fullScreen ? { position: 'fixed' } : { marginTop: '15px', position: 'relative' }}
     >
       <AvatarExitQrCodeButton onExitQrCodeView={onExit} />
     </SessionQRCode>

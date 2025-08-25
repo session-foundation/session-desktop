@@ -77,13 +77,15 @@ const showNoCb: ShowTagNoCb = { show: true, cb: null };
 function isContactNameNoShowContext(context: ContactNameContext) {
   switch (context) {
     case 'react-list-modal':
-    case 'message-search-result':
+    case 'message-search-result-from': // no pro badge when showing the sender of a message in the search results
+    case 'member-list-item-mention-row': // we don't want the pro badge when mentioning someone (from the composition box)
       return true;
     case 'contact-list-row':
+    case 'message-search-result-conversation': // show the pro badge when showing the conversation name in the search results
+    case 'quoted-message-composition':
     case 'message-info-author':
     case 'member-list-item':
     case 'quote-author':
-    case 'quoted-message-composition':
     case 'message-author':
     case 'conversation-list-item':
     case 'conversation-list-item-search':
@@ -98,8 +100,9 @@ function proFeatureToVariant(proFeature: ProMessageFeature): SessionProInfoVaria
   switch (proFeature) {
     case ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH:
       return SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT;
-    case ProMessageFeature.PRO_BADGE:
     case ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE:
+      return SessionProInfoVariant.PROFILE_PICTURE_ANIMATED;
+    case ProMessageFeature.PRO_BADGE:
       return SessionProInfoVariant.GENERIC;
     default:
       assertUnreachable(proFeature, 'ProFeatureToVariant: unknown case');
@@ -227,7 +230,17 @@ export function useProBadgeOnClickCb(
   // ContactName is a component used across the app to render a contact name based on the context.
   // The pro badge is also shown or not depending on that same context, and this is what we do here
   if (context === 'contact-name') {
-    if (!args.userHasPro || args.isMe) {
+    if (!args.userHasPro) {
+      return doNotShow;
+    }
+    if (args.isMe) {
+      if (
+        args.contactNameContext === 'quoted-message-composition' ||
+        args.contactNameContext === 'quote-author'
+      ) {
+        // in the quote composition screen and when quoting ourselves, the badge should be shown when we have pro
+        return showNoCb;
+      }
       return doNotShow;
     }
     if (isContactNameNoShowContext(args.contactNameContext)) {

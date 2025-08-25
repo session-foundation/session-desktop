@@ -55,23 +55,24 @@ function useNameErrorString({
   isPublic: boolean;
   isMe: boolean;
 }) {
+  const byteLength = new TextEncoder().encode(newName).length;
   if (isMe) {
     return !newName
       ? tr('displayNameErrorDescription')
-      : newName.length > LIBSESSION_CONSTANTS.CONTACT_MAX_NAME_LENGTH
+      : byteLength > LIBSESSION_CONSTANTS.CONTACT_MAX_NAME_LENGTH
         ? tr('displayNameErrorDescriptionShorter')
         : '';
   }
   if (isPublic) {
     return !newName
       ? tr('communityNameEnterPlease')
-      : newName.length > LIBSESSION_CONSTANTS.BASE_GROUP_MAX_NAME_LENGTH
+      : byteLength > LIBSESSION_CONSTANTS.BASE_GROUP_MAX_NAME_LENGTH
         ? tr('updateCommunityInformationEnterShorterName')
         : '';
   }
   return !newName
     ? tr('groupNameEnterPlease')
-    : newName.length > LIBSESSION_CONSTANTS.BASE_GROUP_MAX_NAME_LENGTH
+    : byteLength > LIBSESSION_CONSTANTS.BASE_GROUP_MAX_NAME_LENGTH
       ? tr('groupNameEnterShorter')
       : '';
 }
@@ -94,7 +95,9 @@ function useDescriptionErrorString({
     // description is always optional
     return '';
   }
-  if (newDescription.length <= LIBSESSION_CONSTANTS.GROUP_INFO_DESCRIPTION_MAX_LENGTH) {
+  const byteLength = new TextEncoder().encode(newDescription).length;
+
+  if (byteLength <= LIBSESSION_CONSTANTS.GROUP_INFO_DESCRIPTION_MAX_LENGTH) {
     return '';
   }
   return isPublic
@@ -143,7 +146,7 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
   }
 
   function onClickOK() {
-    if (isNameChangePending) {
+    if (!!errorStringName || !!errorStringDescription || isNameChangePending) {
       return;
     }
 
@@ -241,7 +244,13 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
             text={tr('save')}
             onClick={onClickOK}
             buttonType={SessionButtonType.Simple}
-            disabled={isNameChangePending || !newName?.trim() || (noChanges && !avatarWasUpdated)}
+            disabled={
+              !!errorStringName ||
+              !!errorStringDescription ||
+              isNameChangePending ||
+              !newName?.trim() ||
+              (noChanges && !avatarWasUpdated)
+            }
           />
           {!avatarWasUpdated ? (
             <SessionButton

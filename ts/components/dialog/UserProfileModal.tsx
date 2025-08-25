@@ -139,7 +139,6 @@ export const UserProfileModal = ({
         ) : (
           <ProfileHeader
             avatarPath={avatarPath}
-            profileName={profileName}
             conversationId={conversationIdToDisplay}
             onPlusAvatarClick={null} // no + icon in this modal
             dataTestId="avatar-user-profile-dialog"
