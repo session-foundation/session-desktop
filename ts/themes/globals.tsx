@@ -80,6 +80,9 @@ type ThemeGlobals = {
   '--main-view-header-height': string;
   '--composition-container-height': string;
   '--search-input-height': string;
+  // The min height of the panel button container.
+  // Used to make sure all the types of panel items have the same height, even if only text is displayed
+  '--panel-button-container-min-height': string;
 
   /* Durations */
   '--default-duration': string;
@@ -227,6 +230,7 @@ export const THEME_GLOBALS: ThemeGlobals = {
   '--main-view-header-height': '68px',
   '--composition-container-height': '60px',
   '--search-input-height': '34px',
+  '--panel-button-container-min-height': '50px',
 
   '--default-duration': setDuration('0.25s'),
   '--default-duration-seconds': setDuration(0.25), // framer-motion requires a number

@@ -72,7 +72,6 @@ const StyledRoundedPanelButtonGroup = styled.div`
 `;
 
 const PanelButtonContainer = styled.div`
-  --panel-button-container-min-height: 50px;
   overflow: auto;
   min-height: var(--panel-button-container-min-height);
   max-height: 100%;
@@ -116,11 +115,15 @@ export const StyledPanelButton = styled.button<{
   padding-block: var(--margins-sm);
 
   &:hover {
-    background-color: ${props =>
-      !props.disabled &&
-      (props.isDarkTheme
-        ? 'var(--background-primary-color)'
-        : 'var(--background-secondary-color)')};
+    background-color: ${props => {
+      if (props.disabled) {
+        return 'transparent'; // let the PanelButtonGroup background be visible
+      }
+      if (props.isDarkTheme) {
+        return 'color-mix(in srgb, var(--background-tertiary-color) 95%, white)';
+      }
+      return 'color-mix(in srgb, var(--background-tertiary-color) 95%, black)';
+    }};
   }
 `;
 

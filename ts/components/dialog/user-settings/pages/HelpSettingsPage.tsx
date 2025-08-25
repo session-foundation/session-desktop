@@ -85,7 +85,7 @@ export function HelpSettingsPage(modalState: UserSettingsModalState) {
           text={{ token: 'helpSupport' }}
           subText={{ token: 'supportDescription' }}
           onClick={async () => {
-            showLinkVisitWarningDialog('https://sessionapp.zendesk.com/hc/en-us', dispatch);
+            showLinkVisitWarningDialog('https://getsession.org/support', dispatch);
           }}
         />
       </PanelButtonGroup>
