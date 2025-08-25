@@ -9,6 +9,8 @@ export enum LOCALE_DEFAULTS {
   token_name_short = 'SESH',
   usd_name_short = 'USD',
   app_pro = 'Session Pro',
+  session_foundation = 'Session Foundation',
+  pro = 'Pro',
 }
 
 export const rtlLocales = ['ar', 'fa', 'he', 'ps', 'ur'];
