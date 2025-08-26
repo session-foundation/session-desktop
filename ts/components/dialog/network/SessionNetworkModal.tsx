@@ -2,7 +2,6 @@ import { useDispatch } from 'react-redux';
 import { updateSessionNetworkModal } from '../../../state/ducks/modalDialog';
 import { ModalBasicHeader, SessionWrapperModal } from '../../SessionWrapperModal';
 import { LOCALE_DEFAULTS } from '../../../localization/constants';
-import { sectionActions } from '../../../state/ducks/section';
 import { StakeSection } from './sections/StakeSection';
 import { ExtraSmallText, LastRefreshedText } from './components';
 import { SpacerMD, SpacerXL, SpacerXS } from '../../basic/Text';
@@ -45,7 +44,6 @@ export function SessionNetworkModal() {
 
   const dispatch = useDispatch();
   const onClose = () => {
-    dispatch(sectionActions.showSettingsSection('privacy'));
     dispatch(updateSessionNetworkModal(null));
   };
 
@@ -58,7 +56,7 @@ export function SessionNetworkModal() {
           title={LOCALE_DEFAULTS.network_name}
           bigHeader={true}
           showExitIcon={true}
-          leftButton={<ReloadButton loading={loading} />}
+          extraLeftButton={<ReloadButton loading={loading} />}
         />
       }
       onClose={onClose}

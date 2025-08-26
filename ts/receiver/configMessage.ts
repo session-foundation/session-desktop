@@ -123,7 +123,7 @@ async function mergeUserConfigsWithIncomingUpdates(
 
       const variant = LibSessionUtil.userNamespaceToVariant(namespace);
 
-      if (window.sessionFeatureFlags.debug.debugLibsessionDumps) {
+      if (window.sessionFeatureFlags.debugLibsessionDumps) {
         await printDumpForDebug(
           `printDumpsForDebugging: before merge of ${toMerge.length}, ${variant}:`,
           variant
@@ -142,7 +142,7 @@ async function mergeUserConfigsWithIncomingUpdates(
         `${variant}: needsPush:${needsPush} needsDump:${needsDump}; mergedCount:${hashesMerged.length} `
       );
 
-      if (window.sessionFeatureFlags.debug.debugLibsessionDumps) {
+      if (window.sessionFeatureFlags.debugLibsessionDumps) {
         await printDumpForDebug(`printDumpsForDebugging: after merge of ${variant}:`, variant);
       }
       const incomingConfResult: IncomingUserResult = {

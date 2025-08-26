@@ -67,6 +67,7 @@ type ThemeGlobals = {
   '--margins-xxs': string;
 
   /* Padding */
+  '--margin-close-button-composition-box': string;
   '--padding-message-content': string;
   '--padding-link-preview': string;
   '--width-avatar-group-msg-list': string;
@@ -79,6 +80,9 @@ type ThemeGlobals = {
   '--main-view-header-height': string;
   '--composition-container-height': string;
   '--search-input-height': string;
+  // The min height of the panel button container.
+  // Used to make sure all the types of panel items have the same height, even if only text is displayed
+  '--panel-button-container-min-height': string;
 
   /* Durations */
   '--default-duration': string;
@@ -133,6 +137,8 @@ type ThemeGlobals = {
   /* Also used for FileDropZone */
   /* Used for Quote References Not Found */
   '--message-link-preview-background-color': string;
+
+  '--modal-actions-outline-min-width': string;
 
   /* Right Panel */
   '--right-panel-width': string;
@@ -213,6 +219,7 @@ export const THEME_GLOBALS: ThemeGlobals = {
   '--margins-xs': '5px',
   '--margins-xxs': '2.5px',
 
+  '--margin-close-button-composition-box': '18px', // to align the staged attachment & link preview close buttons with the send button
   '--padding-message-content': '7px 13px',
   '--padding-link-preview': '-7px -13px 7px -13px', // bottom has positive value because a link preview has always a body below
   '--width-avatar-group-msg-list': '46px', // the width used by the avatar (and its margins when rendered as part of a group.)
@@ -223,6 +230,7 @@ export const THEME_GLOBALS: ThemeGlobals = {
   '--main-view-header-height': '68px',
   '--composition-container-height': '60px',
   '--search-input-height': '34px',
+  '--panel-button-container-min-height': '50px',
 
   '--default-duration': setDuration('0.25s'),
   '--default-duration-seconds': setDuration(0.25), // framer-motion requires a number
@@ -266,6 +274,8 @@ export const THEME_GLOBALS: ThemeGlobals = {
   '--lightbox-icon-stroke-color': 'var(--white-color)',
 
   '--message-link-preview-background-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.06)`,
+
+  '--modal-actions-outline-min-width': '125px',
 
   '--right-panel-width': '420px',
   '--right-panel-height': '100%',

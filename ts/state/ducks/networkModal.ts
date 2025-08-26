@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { LocalizerProps } from '../../components/basic/Localizer';
+import type { TrArgs } from '../../localization/localeTools';
 
 export type NetworkModalState = {
   infoLoading: boolean;
@@ -8,7 +8,7 @@ export type NetworkModalState = {
    */
   infoFakeRefreshing: boolean;
   lastRefreshedTimestamp: number;
-  errorMessage: LocalizerProps | null;
+  errorMessage: TrArgs | null;
 };
 
 export const initialNetworkModalState: NetworkModalState = {
@@ -34,7 +34,7 @@ export const networkModalSlice = createSlice({
       state.lastRefreshedTimestamp = action.payload;
       return state;
     },
-    setErrorMessage(state, action: PayloadAction<LocalizerProps | null>) {
+    setErrorMessage(state, action: PayloadAction<TrArgs | null>) {
       state.errorMessage = action.payload;
       return state;
     },

@@ -3,28 +3,21 @@ import { useConvoIdFromContext } from '../../contexts/ConvoIdContext';
 import {
   useIsGroupV2,
   useIsIncomingRequest,
-  useIsKickedFromGroup,
   useIsPrivate,
   useIsPrivateAndFriend,
   useNotificationSetting,
-  useWeAreAdmin,
 } from '../../hooks/useParamSelector';
 import {
   declineConversationWithConfirm,
   handleAcceptConversationRequest,
   markAllReadByConvoId,
-  showUpdateGroupNameByConvoId,
 } from '../../interactions/conversationInteractions';
 import { ConvoHub } from '../../session/conversations';
 import { PubKey } from '../../session/types';
 import { useConversationIdOrigin } from '../../state/selectors/conversations';
-import {
-  useIsMessageRequestOverlayShown,
-  useIsMessageSection,
-} from '../../state/selectors/section';
+import { useIsMessageRequestOverlayShown } from '../../state/selectors/section';
 import { useSelectedConversationKey } from '../../state/selectors/selectedConversation';
 import { ItemWithDataTestId } from './items/MenuItemWithDataTestId';
-import { useLibGroupDestroyed } from '../../state/selectors/userGroups';
 import { NetworkTime } from '../../util/NetworkTime';
 import { useShowNotificationFor } from '../menuAndSettingsHooks/useShowNotificationFor';
 import { useLocalisedNotificationOptions } from '../menuAndSettingsHooks/useLocalisedNotificationFor';
@@ -61,16 +54,11 @@ export const InviteContactMenuItem = (): JSX.Element | null => {
 
 export const MarkConversationUnreadMenuItem = (): JSX.Element | null => {
   const conversationId = useConvoIdFromContext();
-  const isMessagesSection = useIsMessageSection();
   const isPrivate = useIsPrivate(conversationId);
   const isPrivateAndFriend = useIsPrivateAndFriend(conversationId);
   const isMessageRequestShown = useIsMessageRequestOverlayShown();
 
-  if (
-    isMessagesSection &&
-    !isMessageRequestShown &&
-    (!isPrivate || (isPrivate && isPrivateAndFriend))
-  ) {
+  if (!isMessageRequestShown && (!isPrivate || (isPrivate && isPrivateAndFriend))) {
     const conversation = ConvoHub.use().get(conversationId);
 
     const markUnread = () => {
@@ -106,7 +94,7 @@ export const DeletePrivateContactMenuItem = () => {
 export const ShowUserProfileMenuItem = () => {
   const convoId = useConvoIdFromContext();
 
-  const showUserDetailsCb = useShowUserDetailsCbFromConversation(convoId);
+  const showUserDetailsCb = useShowUserDetailsCbFromConversation(convoId, true);
 
   if (showUserDetailsCb) {
     return (
@@ -116,26 +104,6 @@ export const ShowUserProfileMenuItem = () => {
     );
   }
 
-  return null;
-};
-
-export const UpdateGroupNameMenuItem = () => {
-  const convoId = useConvoIdFromContext();
-  const isKickedFromGroup = useIsKickedFromGroup(convoId);
-  const isDestroyed = useLibGroupDestroyed(convoId);
-  const weAreAdmin = useWeAreAdmin(convoId);
-
-  if (!isKickedFromGroup && weAreAdmin && !isDestroyed) {
-    return (
-      <ItemWithDataTestId
-        onClick={() => {
-          void showUpdateGroupNameByConvoId(convoId);
-        }}
-      >
-        {tr('groupEdit')}
-      </ItemWithDataTestId>
-    );
-  }
   return null;
 };
 
@@ -426,7 +394,7 @@ export const NotificationForConvoMenuItem = (): JSX.Element | null => {
             }}
             disabled={disabled}
           >
-            {item.name}
+            {tr(item.token)}
           </ItemWithDataTestId>
         );
       })}

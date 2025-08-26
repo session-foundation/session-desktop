@@ -94,7 +94,7 @@ grep .dmg signature.asc
 <details>
 <summary>Windows</summary>
 
-**Powershell**
+**PowerShell**
 
 ```PowerShell
 Get-FileHash -Algorithm SHA256 session-desktop-win-x64-$SESSION_VERSION.exe  # checksum is uppercase but should otherwise match

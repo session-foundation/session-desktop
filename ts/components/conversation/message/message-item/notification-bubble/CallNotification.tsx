@@ -56,7 +56,7 @@ export const CallNotification = (props: WithMessageId) => {
         {notificationTextKey === 'callsInProgress' ? (
           <Localizer token={notificationTextKey} />
         ) : (
-          <Localizer token={notificationTextKey} args={{ name }} />
+          <Localizer token={notificationTextKey} name={name} />
         )}
       </NotificationBubble>
     </ExpirableReadableMessage>

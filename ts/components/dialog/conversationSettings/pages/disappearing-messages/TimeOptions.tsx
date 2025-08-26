@@ -1,22 +1,65 @@
+import type { DisappearingMessageConversationModeType } from 'libsession_util_nodejs';
 import { isEmpty } from 'lodash';
 
 import { DisappearTimeOptionDataTestId } from 'react';
 import {
-  TimerOptionsArray,
+  TimerOptions,
   TimerSeconds,
 } from '../../../../../session/disappearing_messages/timerOptions';
-import { PanelButtonGroup, PanelButtonText, PanelLabel } from '../../../../buttons/PanelButton';
-import { PanelRadioButton } from '../../../../buttons/PanelRadioButton';
-import { Localizer } from '../../../../basic/Localizer';
+import {
+  PanelButtonGroup,
+  PanelButtonText,
+  PanelLabelWithDescription,
+} from '../../../../buttons/panel/PanelButton';
+import { PanelRadioButton } from '../../../../buttons/panel/PanelRadioButton';
 import { assertUnreachable } from '../../../../../types/sqlSharedTypes';
+import { tr } from '../../../../../localization/localeTools';
+
+// Note: label cannot be a trArgs as it is dynamic based on the timer set (using date-fns)
+type TimerOptionsEntry = { value: TimerSeconds; label: string };
+type TimerOptionsArray = Array<TimerOptionsEntry>;
 
 type TimerOptionsProps = {
-  options: TimerOptionsArray | null;
+  modeSelected: DisappearingMessageConversationModeType;
   selected: number;
   setSelected: (value: number) => void;
   hasOnlyOneMode?: boolean;
   disabled?: boolean;
 };
+
+function useTimerOptionsByMode(
+  disappearingMessageMode: DisappearingMessageConversationModeType,
+  hasOnlyOneMode: boolean
+) {
+  const options: TimerOptionsArray = [];
+  if (hasOnlyOneMode) {
+    options.push({
+      label: tr('off'),
+      value: TimerOptions.VALUES[0],
+    });
+  }
+  switch (disappearingMessageMode) {
+    case 'deleteAfterRead':
+      options.push(
+        ...TimerOptions.DELETE_AFTER_READ.map(option => ({
+          label: TimerOptions.getName(option),
+          value: option,
+        }))
+      );
+      break;
+    case 'deleteAfterSend':
+      options.push(
+        ...TimerOptions.DELETE_AFTER_SEND.map(option => ({
+          label: TimerOptions.getName(option),
+          value: option,
+        }))
+      );
+      break;
+    default:
+      return [];
+  }
+  return options;
+}
 
 function toMinutes(seconds: Extract<TimerSeconds, 300 | 1800>) {
   const ret = Math.floor(seconds / 60);
@@ -69,7 +112,9 @@ function getDataTestIdFromTimerSeconds(seconds: TimerSeconds): DisappearTimeOpti
 }
 
 export const TimeOptions = (props: TimerOptionsProps) => {
-  const { options, selected, setSelected, hasOnlyOneMode, disabled } = props;
+  const { modeSelected, selected, setSelected, hasOnlyOneMode, disabled } = props;
+
+  const options = useTimerOptionsByMode(modeSelected, hasOnlyOneMode ?? false);
 
   if (!options || isEmpty(options)) {
     return null;
@@ -78,9 +123,7 @@ export const TimeOptions = (props: TimerOptionsProps) => {
   return (
     <>
       {!hasOnlyOneMode && (
-        <PanelLabel>
-          <Localizer token="disappearingMessagesTimer" />
-        </PanelLabel>
+        <PanelLabelWithDescription title={{ token: 'disappearingMessagesTimer' }} />
       )}
       <PanelButtonGroup>
         {options.map(option => {
@@ -89,14 +132,14 @@ export const TimeOptions = (props: TimerOptionsProps) => {
 
           return (
             <PanelRadioButton
-              key={option.name}
+              key={option.value}
               textElement={
                 <PanelButtonText
-                  text={option.name}
+                  label={option.label}
                   textDataTestId="disappearing-messages-menu-option"
                 />
               }
-              value={option.name}
+              value={option.value}
               isSelected={selected === option.value}
               onSelect={() => {
                 setSelected(option.value);

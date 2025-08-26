@@ -16,7 +16,7 @@ import { Reactions } from '../../util/reactions';
 import { Avatar, AvatarSize } from '../avatar/Avatar';
 import { Flex } from '../basic/Flex';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
-import { ContactName } from '../conversation/ContactName';
+import { ContactName } from '../conversation/ContactName/ContactName';
 import { MessageReactions } from '../conversation/message/message-content/MessageReactions';
 import { Localizer } from '../basic/Localizer';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
@@ -24,7 +24,6 @@ import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { SessionWrapperModal } from '../SessionWrapperModal';
 import { tr } from '../../localization/localeTools';
 import { useWeAreCommunityAdminOrModerator } from '../../state/selectors/conversations';
-import { useShowUserDetailsCbFromMessage } from '../menuAndSettingsHooks/useShowUserDetailsCb';
 
 const StyledReactListContainer = styled(Flex)`
   width: 100%;
@@ -82,10 +81,6 @@ const StyledReactionSender = styled(Flex)`
   width: 100%;
   margin-bottom: 12px;
 
-  .module-avatar {
-    margin-right: 12px;
-  }
-
   .module-conversation__user__profile-name {
     color: var(--text-primary-color);
     font-weight: normal;
@@ -98,14 +93,12 @@ type ReactionSendersProps = {
   senders: Array<string>;
   me: string;
   handleClose: () => void;
+  conversationId: string;
 };
 
 const ReactionSenders = (props: ReactionSendersProps) => {
-  const { messageId, currentReact, senders, me, handleClose } = props;
+  const { messageId, currentReact, senders, me, handleClose, conversationId } = props;
   const dispatch = useDispatch();
-  const isPublic = useSelectedIsPublic();
-
-  const showUserDetailsCb = useShowUserDetailsCbFromMessage();
 
   const handleRemoveReaction = async () => {
     await Reactions.sendMessageReaction(messageId, currentReact);
@@ -124,13 +117,17 @@ const ReactionSenders = (props: ReactionSendersProps) => {
           $justifyContent={'space-between'}
           $alignItems={'center'}
         >
-          <Flex $container={true} $alignItems={'center'} style={{ overflow: 'hidden' }}>
+          <Flex
+            $container={true}
+            $alignItems={'center'}
+            style={{ overflow: 'hidden' }}
+            $flexGap="var(--margins-sm)"
+          >
             <Avatar
               size={AvatarSize.XS}
               pubkey={sender}
               onAvatarClick={() => {
                 handleClose();
-                void showUserDetailsCb({ messageId });
               }}
             />
             {sender === me ? (
@@ -140,8 +137,8 @@ const ReactionSenders = (props: ReactionSendersProps) => {
                 <ContactName
                   pubkey={sender}
                   module="module-conversation__user"
-                  shouldShowPubkey={false}
-                  isPublic={isPublic}
+                  conversationId={conversationId}
+                  contactNameContext="react-list-modal"
                 />
               </StyledContactContainer>
             )}
@@ -177,10 +174,8 @@ const CountText = ({ count, emoji }: { count: number; emoji: string }) => {
     <StyledCountText>
       <Localizer
         token="emojiReactsCountOthers"
-        args={{
-          count: count - Reactions.SOGSReactorsFetchCount,
-          emoji,
-        }}
+        count={count - Reactions.SOGSReactorsFetchCount}
+        emoji={emoji}
       />
     </StyledCountText>
   );
@@ -288,7 +283,7 @@ export const ReactListModal = (props: Props) => {
     reactions,
   ]);
 
-  if (!msgProps) {
+  if (!msgProps || !selectedConvoKey) {
     return <></>;
   }
 
@@ -369,6 +364,7 @@ export const ReactListModal = (props: Props) => {
                 senders={senders}
                 me={me}
                 handleClose={handleClose}
+                conversationId={selectedConvoKey}
               />
             )}
             {isPublic && currentReact && count && count > Reactions.SOGSReactorsFetchCount && (

@@ -681,6 +681,10 @@ class CompositionBoxInner extends Component<Props, State> {
       event.preventDefault();
       event.stopPropagation();
     }
+
+    if (this.state.draft.length && (event.key === 'Home' || event.key === 'End')) {
+      event.stopPropagation();
+    }
   }
 
   private getSendableText(): string {
@@ -751,9 +755,7 @@ class CompositionBoxInner extends Component<Props, State> {
               },
               description: {
                 token: 'modalMessageTooLongDescription',
-                args: {
-                  limit: formatNumber(charLimit),
-                },
+                limit: formatNumber(charLimit),
               },
             },
             dispatch

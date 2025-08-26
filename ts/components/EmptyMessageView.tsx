@@ -90,7 +90,7 @@ export const EmptyMessageView = () => {
           <Spacer2XL />
           <StyledHeading>{tr('onboardingAccountCreated')}</StyledHeading>
           <StyledSessionWelcome color={'var(--renderer-span-primary-color)'}>
-            <Localizer token="onboardingBubbleWelcomeToSession" args={{ emoji: '👋' }} />
+            <Localizer token="onboardingBubbleWelcomeToSession" emoji={'👋'} />
           </StyledSessionWelcome>
         </>
       ) : (

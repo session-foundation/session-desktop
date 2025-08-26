@@ -3,6 +3,7 @@ import Sinon from 'sinon';
 import { expect } from 'chai';
 import { GroupPubkeyType, PubkeyType } from 'libsession_util_nodejs';
 import { Data } from '../../data/data';
+import { ConversationModel } from '../../models/conversation';
 import { channels } from '../../data/channels';
 import * as dataInit from '../../data/dataInit';
 import { GuardNode } from '../../data/types';
@@ -10,7 +11,6 @@ import { Storage } from '../../util/storage';
 import * as cryptoUtils from '../../session/crypto';
 import { DisappearingMessages } from '../../session/disappearing_messages';
 import { ConversationAttributes } from '../../models/conversationAttributes';
-import { ConversationModel } from '../../models/conversation';
 import { MessageModel } from '../../models/message';
 import {
   MessageAttributes,

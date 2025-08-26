@@ -17,6 +17,8 @@ import { tr } from '../../../localization/localeTools';
 import { SessionIDNotEditable } from '../../basic/SessionIdNotEditable';
 
 const StyledHeadingContainer = styled(Flex)`
+  gap: var(--margins-xs);
+
   .session-icon-button {
     border: 1px solid var(--text-primary-color);
     border-radius: 9999px;
@@ -47,7 +49,7 @@ const StyledDescription = styled.div`
   padding: 0 var(--margins-sm);
 `;
 
-const StyledButtonerContainer = styled.div`
+const StyledButtonContainer = styled.div`
   .session-button {
     width: 160px;
     height: 41px;
@@ -90,7 +92,7 @@ export const OverlayInvite = () => {
           <SpacerMD />
           <StyledDescription>{tr('accountIdCopyDescription')}</StyledDescription>
           <SpacerLG />
-          <StyledButtonerContainer>
+          <StyledButtonContainer>
             <CopyToClipboardButton
               buttonColor={SessionButtonColor.PrimaryDark}
               copyContent={ourSessionID}
@@ -98,7 +100,7 @@ export const OverlayInvite = () => {
               hotkey={true}
               dataTestId="copy-button-account-id"
             />
-          </StyledButtonerContainer>
+          </StyledButtonContainer>
         </>
       ) : (
         <>

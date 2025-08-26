@@ -24,7 +24,7 @@ import { FileIcon } from '../icon/FileIcon';
 import { SessionButtonShiny } from '../basic/SessionButtonShiny';
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
 import { useCurrentUserHasPro } from '../../hooks/useHasPro';
-import { ProIcon } from '../buttons/ProButton';
+import { ProIconButton } from '../buttons/ProButton';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 
 export enum SessionProInfoVariant {
@@ -34,6 +34,7 @@ export enum SessionProInfoVariant {
   PROFILE_PICTURE_ANIMATED = 3,
   ALREADY_PRO_PROFILE_PICTURE_ANIMATED = 4,
   GENERIC = 5,
+  GROUP_ACTIVATED = 6,
 }
 
 const StyledContentContainer = styled.div`
@@ -148,6 +149,8 @@ function getFeatureList(variant: SessionProInfoVariant) {
       return ['proFeatureListLongerMessages', 'proFeatureListLargerGroups'] as const;
     case SessionProInfoVariant.GENERIC: // yes generic has the same as above, reversed...
       return ['proFeatureListLargerGroups', 'proFeatureListLongerMessages'] as const;
+    case SessionProInfoVariant.GROUP_ACTIVATED:
+      return [];
     default:
       assertUnreachable(variant, 'getFeatureList unreachable case');
       throw new Error('unreachable');
@@ -166,7 +169,12 @@ function getDescription(variant: SessionProInfoVariant): ReactNode {
       return (
         <>
           <span>
-            {tr('proAlreadyPurchased')} <ProIcon iconSize={'small'} />
+            {tr('proAlreadyPurchased')}{' '}
+            <ProIconButton
+              iconSize={'small'}
+              dataTestId="invalid-data-testid"
+              onClick={undefined}
+            />
           </span>
           <br />
           {tr('proAnimatedDisplayPicture')}
@@ -178,6 +186,13 @@ function getDescription(variant: SessionProInfoVariant): ReactNode {
 
     case SessionProInfoVariant.GENERIC:
       return tr('proUserProfileModalCallToAction');
+    case SessionProInfoVariant.GROUP_ACTIVATED:
+      return (
+        <span>
+          {tr('proGroupActivatedDescription')}{' '}
+          <ProIconButton iconSize={'small'} dataTestId="invalid-data-testid" onClick={undefined} />
+        </span>
+      );
     default:
       assertUnreachable(variant, 'getDescription unreachable case');
       throw new Error('unreachable');
@@ -202,6 +217,8 @@ function getImage(variant: SessionProInfoVariant): ReactNode {
 
     case SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT:
       return <StyledCTAImage src="images/cta_hero_char_limit.webp" />;
+    case SessionProInfoVariant.GROUP_ACTIVATED:
+      return <StyledCTAImage src="images/cta_hero_group_activated_admin.webp" />;
     case SessionProInfoVariant.GENERIC:
       return (
         <AnimatedCTAImage
@@ -222,6 +239,7 @@ function isProVisibleCTA(variant: SessionProInfoVariant): boolean {
   return [
     SessionProInfoVariant.ALREADY_PRO_PROFILE_PICTURE_ANIMATED,
     SessionProInfoVariant.GENERIC,
+    SessionProInfoVariant.GROUP_ACTIVATED,
   ].includes(variant);
 }
 
@@ -246,6 +264,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
   if (isNil(props?.variant) || (hasPro && !isProVisibleCTA(props.variant))) {
     return null;
   }
+  const isGroupCta = props.variant === SessionProInfoVariant.GROUP_ACTIVATED;
 
   return (
     <SessionWrapperModal
@@ -258,6 +277,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
       $contentMaxWidth={WrapperModalWidth.normal}
       buttonChildren={
         <ModalActionsContainer
+          buttonType={SessionButtonType.Simple}
           maxWidth="unset"
           style={{
             display: 'grid',
@@ -297,8 +317,8 @@ export function SessionProInfoModal(props: SessionProInfoState) {
     >
       <SpacerSM />
       <StyledCTATitle reverseDirection={hasPro}>
-        {tr(hasPro ? 'proActivated' : 'upgradeTo')}
-        <ProIcon iconSize={'huge'} />
+        {tr(hasPro ? (isGroupCta ? 'proGroupActivated' : 'proActivated') : 'upgradeTo')}
+        <ProIconButton iconSize={'huge'} dataTestId="invalid-data-testid" onClick={undefined} />
       </StyledCTATitle>
       <SpacerXL />
       <StyledContentContainer>

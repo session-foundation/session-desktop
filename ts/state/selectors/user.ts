@@ -25,3 +25,7 @@ export function useOurPkStr() {
 export function useOurAvatarIsUploading() {
   return useSelector((state: StateType) => getUser(state).uploadingNewAvatarCurrentUser);
 }
+
+export function useOurAvatarUploadFailed() {
+  return useSelector((state: StateType) => getUser(state).uploadingNewAvatarCurrentUserFailed);
+}

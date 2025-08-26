@@ -6,19 +6,9 @@ export const LeftPaneSectionContainer = styled.div`
   flex-direction: column;
   align-items: center;
   overflow-y: auto;
+  flex-shrink: 0;
 
   .session-icon-button {
     padding: 30px 20px;
-  }
-
-  .module-avatar {
-    display: flex;
-    align-items: center;
-  }
-
-  // this is not ideal but it seems that nth-0last-child does not work
-  #onion-path-indicator-led-id {
-    margin: auto auto 0px auto;
-    opacity: 1;
   }
 `;

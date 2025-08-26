@@ -3,10 +3,7 @@ import styled, { css } from 'styled-components';
 import { GroupPubkeyType, MemberStateGroupV2, PubkeyType } from 'libsession_util_nodejs';
 import { isEmpty } from 'lodash';
 import type { SessionDataTestId } from 'react';
-import {
-  useNicknameOrProfileNameOrShortenedPubkey,
-  useWeAreAdmin,
-} from '../hooks/useParamSelector';
+import { useWeAreAdmin } from '../hooks/useParamSelector';
 import { promoteUsersInGroup } from '../interactions/conversationInteractions';
 import { PubKey } from '../session/types';
 import { UserUtils } from '../session/utils';
@@ -18,7 +15,7 @@ import {
   useMemberPendingRemoval,
   useMemberStatus,
 } from '../state/selectors/groups';
-import { Avatar, AvatarSize, CrownIcon } from './avatar/Avatar';
+import { Avatar, AvatarSize } from './avatar/Avatar';
 import { Flex } from './basic/Flex';
 import {
   SessionButton,
@@ -32,8 +29,9 @@ import {
   UserGroupsWrapperActions,
 } from '../webworker/workers/browser/libsession_worker_interface';
 import { assertUnreachable } from '../types/sqlSharedTypes';
-import { isUsAnySogsFromCache } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import { tr } from '../localization/localeTools';
+import { ContactName } from './conversation/ContactName/ContactName';
+import type { ContactNameSuffixInMemberList } from './conversation/ContactName/ContactNameContext';
 
 const AvatarContainer = styled.div`
   position: relative;
@@ -43,15 +41,13 @@ const AvatarItem = (props: { memberPubkey: string; isAdmin: boolean }) => {
   const { memberPubkey, isAdmin } = props;
   return (
     <AvatarContainer>
-      <Avatar size={AvatarSize.XS} pubkey={memberPubkey} />
-      {isAdmin && <CrownIcon />}
+      <Avatar size={AvatarSize.XS} pubkey={memberPubkey} showCrown={isAdmin} />
     </AvatarContainer>
   );
 };
 
 const StyledSessionMemberItem = styled.button<{
   inMentions?: boolean;
-  zombie?: boolean;
   selected?: boolean;
   disableBg?: boolean;
   withBorder?: boolean;
@@ -66,7 +62,6 @@ const StyledSessionMemberItem = styled.button<{
   height: ${props => (props.inMentions ? '40px' : '50px')};
   width: 100%;
   transition: var(--default-duration);
-  opacity: ${props => (props.zombie ? 0.5 : 1)};
   background-color: ${props =>
     !props.disableBg && props.selected
       ? 'var(--conversation-tab-background-selected-color) !important'
@@ -95,14 +90,6 @@ const StyledInfo = styled.div`
   min-width: 0;
 `;
 
-const StyledName = styled.span<{ maxName?: string }>`
-  font-weight: bold;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  ${props => props.maxName && `max-width: ${props.maxName};`}
-`;
-
 const StyledCheckContainer = styled.div`
   display: flex;
   align-items: center;
@@ -111,13 +98,9 @@ const StyledCheckContainer = styled.div`
 type MemberListItemProps<T extends string> = {
   pubkey: T;
   isSelected: boolean;
-  // this bool is used to make a zombie appear with less opacity than a normal member
-  isZombie?: boolean;
   inMentions?: boolean; // set to true if we are rendering members but in the Mentions picker
-  isPublic?: boolean;
   disableBg?: boolean;
   withBorder?: boolean;
-  maxNameWidth?: string;
   isAdmin?: boolean; // if true,  we add a small crown on top of their avatar
   onSelect?: (pubkey: T) => void;
   onUnselect?: (pubkey: T) => void;
@@ -329,26 +312,19 @@ export const MemberListItem = <T extends string>({
   disableBg,
   displayGroupStatus,
   inMentions,
-  isPublic,
   isAdmin,
-  isZombie,
   onSelect,
   onUnselect,
   groupPk,
   disabled,
   withBorder,
-  maxNameWidth,
+  conversationId,
   hideRadioButton,
-}: MemberListItemProps<T>) => {
-  const memberName = useNicknameOrProfileNameOrShortenedPubkey(pubkey);
-  const isYou = isUsAnySogsFromCache(pubkey);
-  const ourName = isYou ? tr('you') : null;
-  const shortPubkey = PubKey.shorten(pubkey);
-  const nameSuffix =
-    isPublic && inMentions && !isYou && memberName !== shortPubkey ? shortPubkey : '';
-
-  const displayedName = `${ourName || memberName} ${nameSuffix}`.trim();
-
+  contactNameSuffix,
+}: MemberListItemProps<T> & {
+  conversationId?: string;
+  contactNameSuffix?: ContactNameSuffixInMemberList;
+}) => {
   return (
     <StyledSessionMemberItem
       onClick={() => {
@@ -356,7 +332,6 @@ export const MemberListItem = <T extends string>({
         isSelected ? onUnselect?.(pubkey) : onSelect?.(pubkey);
       }}
       data-testid={dataTestId}
-      zombie={isZombie}
       inMentions={inMentions}
       selected={isSelected}
       disableBg={disableBg}
@@ -372,9 +347,11 @@ export const MemberListItem = <T extends string>({
           $alignItems="flex-start"
           minWidth="0"
         >
-          <StyledName data-testid={'contact'} maxName={maxNameWidth}>
-            {displayedName}
-          </StyledName>
+          <ContactName
+            contactNameContext={`member-list-item${contactNameSuffix ?? ''}`}
+            pubkey={pubkey}
+            conversationId={conversationId}
+          />
           <GroupStatusContainer
             pubkey={pubkey}
             displayGroupStatus={displayGroupStatus}

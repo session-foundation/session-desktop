@@ -27,8 +27,44 @@ env:
   SHOULD_PUBLISH_ALPHA: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/heads/release') && contains(github.ref, '-alpha.') }}
 
 jobs:
+  create_draft_release:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    outputs:
+      version_tag: ${{ steps.get_version.outputs.VERSION_TAG }}
+    steps:
+      - name: Checkout git repo
+        # only run this on "push" to "master" or alpha releases
+        uses: actions/checkout@v4
+        # We only need a few files in this run, no point cloning everything
+        with:
+          sparse-checkout: |
+            package.json
+            build/release-notes.md
+            build/release-notes-alpha.md
+          sparse-checkout-cone-mode: false
+
+      - name: Get version tag from package.json
+        id: get_version
+        run: |
+          version=$(node -p "require('./package.json').version")
+          echo "VERSION_TAG=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Create draft release
+        # only run this on "push" to "master" or alpha releases
+        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
+        uses: ncipollo/release-action@v1
+        with:
+          tag: v${{ steps.get_version.outputs.VERSION_TAG }}
+          name: 'Session ${{ steps.get_version.outputs.VERSION_TAG }}'
+          draft: true
+          bodyFile: ${{ env.SHOULD_PUBLISH_ALPHA == 'true' && 'build/release-notes-alpha.md' || 'build/release-notes.md' }}
+          allowUpdates: true
+
   build_linux:
     runs-on: ubuntu-22.04
+    needs: [create_draft_release]
     strategy:
       fail-fast: false
       matrix:
@@ -111,17 +147,7 @@ jobs:
           sparse-checkout: |
             package.json
             build/setup-release-combine.sh
-            build/release-notes.md
-            build/release-notes-alpha.md
           sparse-checkout-cone-mode: false
-
-      - name: Get version tag from package.json
-        id: get_version
-        # only run this on "push" to "master" or alpha releases
-        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
-        run: |
-          version=$(node -p "require('./package.json').version")
-          echo "VERSION_TAG=$version" >> "$GITHUB_OUTPUT"
 
       - name: Download release metadata
         # only run this on "push" to "master" or alpha releases
@@ -143,10 +169,7 @@ jobs:
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         uses: ncipollo/release-action@v1
         with:
-          tag: v${{ steps.get_version.outputs.VERSION_TAG }}
-          name: 'Session ${{ steps.get_version.outputs.VERSION_TAG }}'
-          draft: true
-          bodyFile: ${{ env.SHOULD_PUBLISH_ALPHA == 'true' && 'build/release-notes-alpha.md' || 'build/release-notes.md' }}
+          tag: v${{ needs.create_draft_release.outputs.version_tag }}
           artifacts: 'dist/latest-linux.yml'
           allowUpdates: true
           omitNameDuringUpdate: true
@@ -156,6 +179,7 @@ jobs:
 
   build_windows:
     runs-on: windows-2022
+    needs: [create_draft_release]
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -193,6 +217,7 @@ jobs:
   # We want both arm64 and intel mac builds, and according to this https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources macos-14 and above is always arm64 and macos-13 is the last intel runner
   # NOTE x64 builds made on an arm64 host will not bundle the native modules correctly https://github.com/electron-userland/electron-builder/issues/8646
   build_mac_arm64:
+    needs: [create_draft_release]
     runs-on: macos-14
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -224,6 +249,7 @@ jobs:
 
   build_mac_x64:
     runs-on: macos-13
+    needs: [create_draft_release]
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       MAC_CERTIFICATE: ${{ secrets.MAC_CERTIFICATE }}
@@ -255,24 +281,19 @@ jobs:
   post_build_mac:
     needs: [build_mac_arm64, build_mac_x64]
     runs-on: ubuntu-22.04
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout git repo
         # only run this on "push" to "master" or alpha releases
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         uses: actions/checkout@v4
-        # We only need the package.json file in this run (to extract the version being built)
+        # We only need a few files in this run, no point cloning everything
         with:
           sparse-checkout: |
             package.json
             build/setup-release-combine.sh
-
-      - name: Get version tag from package.json
-        id: get_version
-        # only run this on "push" to "master" or alpha releases
-        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
-        run: |
-          version=$(node -p "require('./package.json').version")
-          echo "VERSION_TAG=$version" >> "$GITHUB_OUTPUT"
+          sparse-checkout-cone-mode: false
 
       - name: Download release metadata
         # only run this on "push" to "master" or alpha releases
@@ -294,13 +315,10 @@ jobs:
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         uses: ncipollo/release-action@v1
         with:
-          tag: v${{ steps.get_version.outputs.VERSION_TAG }}
-          name: 'Session ${{ steps.get_version.outputs.VERSION_TAG }}'
-          draft: true
-          bodyFile: ${{ env.SHOULD_PUBLISH_ALPHA == 'true' && 'build/release-notes-alpha.md' || 'build/release-notes.md' }}
+          tag: v${{ needs.create_draft_release.outputs.version_tag }}
           artifacts: 'dist/latest-mac.yml'
           allowUpdates: true
-          omitBodyDuringUpdate: true
           omitNameDuringUpdate: true
+          omitBodyDuringUpdate: true
           replacesArtifacts: true
           updateOnlyUnreleased: true

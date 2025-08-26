@@ -108,7 +108,7 @@ export const downloadFileFromFileServer = async (
   }
 
   const urlToGet = `${POST_GET_FILE_ENDPOINT}/${fileId}`;
-  if (window.sessionFeatureFlags?.debug.debugServerRequests) {
+  if (window.sessionFeatureFlags?.debugServerRequests) {
     window.log.info(`about to try to download fsv2: "${urlToGet}"`);
   }
 
@@ -120,7 +120,7 @@ export const downloadFileFromFileServer = async (
     throwError: true,
     timeoutMs: 30 * DURATION.SECONDS, // longer time for file download
   });
-  if (window.sessionFeatureFlags?.debug.debugServerRequests) {
+  if (window.sessionFeatureFlags?.debugServerRequests) {
     window.log.info(`download fsv2: "${urlToGet} got result:`, JSON.stringify(result));
   }
   if (!result) {

@@ -93,7 +93,7 @@ export const RemoveModeratorsDialog = (props: Props) => {
       headerChildren={<ModalBasicHeader title={tr('adminRemove')} />}
       onClose={closeDialog}
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
             buttonType={SessionButtonType.Simple}
             onClick={removeModsCall}
@@ -126,7 +126,7 @@ export const RemoveModeratorsDialog = (props: Props) => {
                 setModsToRemove(updatedList);
               }}
               disableBg={true}
-              maxNameWidth="100%"
+              conversationId={conversationId}
             />
           ))}
         </StyledContactListInModal>

@@ -4,6 +4,8 @@ import { SessionIconButton } from '../../icon';
 import { SubtitleStringsType } from './ConversationHeaderTitle';
 import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
+import type { TrArgs } from '../../../localization/localeTools';
+import { Localizer } from '../../basic/Localizer';
 
 function loadDataTestId(currentSubtitle: SubtitleStringsType) {
   if (currentSubtitle === 'disappearingMessages') {
@@ -66,7 +68,7 @@ export const SubtitleDotMenu = ({
   </StyledSubtitleDotMenu>
 );
 
-export type SubTitleArray = Array<{ type: SubtitleStringsType; label: string | null }>;
+export type SubTitleArray = Array<{ type: SubtitleStringsType } & TrArgs>;
 
 type CycleDirection = 1 | -1;
 
@@ -105,6 +107,13 @@ function CycleButton({
   );
 }
 
+const StyledConversationHeaderSubtitleText = styled.span`
+  color: var(--text-primary-color);
+  font-weight: 400;
+  font-size: var(--font-size-sm);
+  line-height: var(--font-size-sm);
+`;
+
 export const ConversationHeaderSubtitle = (props: ConversationHeaderSubtitleProps) => {
   const { subtitlesArray, subtitleIndex, onClickFunction, showDisappearingMessageIcon, onCycle } =
     props;
@@ -135,9 +144,8 @@ export const ConversationHeaderSubtitle = (props: ConversationHeaderSubtitleProp
             margin={'0 var(--margins-xs) 0 0'}
           />
         )}
-        <span
+        <StyledConversationHeaderSubtitleText
           role="button"
-          className="module-conversation-header__title-text"
           onClick={onClickFunction}
           onKeyPress={(e: any) => {
             if (e.key === 'Enter') {
@@ -148,8 +156,8 @@ export const ConversationHeaderSubtitle = (props: ConversationHeaderSubtitleProp
           tabIndex={0}
           data-testid={loadDataTestId(currentSubtitle.type)}
         >
-          {currentSubtitle.label}
-        </span>
+          <Localizer {...currentSubtitle} />
+        </StyledConversationHeaderSubtitleText>
         <CycleButton onCycle={onCycle} direction={1} cannotCycle={cannotCycle} />
       </Flex>
     </StyledSubtitleContainer>

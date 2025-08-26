@@ -568,7 +568,6 @@ describe('DisappearingMessage', () => {
           expireTimer: 300,
         });
 
-        expect(expirationTimerUpdateMessage.get('flags'), 'flags should be 2').to.equal(2);
         expect(
           expirationTimerUpdateMessage.getExpirationTimerUpdate(),
           'expirationTimerUpdate should not be empty'

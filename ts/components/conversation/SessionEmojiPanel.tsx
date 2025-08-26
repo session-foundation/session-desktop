@@ -1,10 +1,9 @@
 import Picker from '@emoji-mart/react';
 import { forwardRef } from 'react';
-import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 import clsx from 'clsx';
 
-import { getPrimaryColor } from '../../state/selectors/primaryColor';
+import { usePrimaryColor } from '../../state/selectors/primaryColor';
 import { useIsDarkTheme, useTheme } from '../../state/theme/selectors/theme';
 import { COLORS, THEMES, ThemeStateType, type ColorsType } from '../../themes/constants/colors';
 import { FixedBaseEmoji } from '../../types/Reaction';
@@ -93,7 +92,7 @@ const pickerProps = {
 // eslint-disable-next-line react/display-name
 export const SessionEmojiPanel = forwardRef<HTMLDivElement, Props>((props: Props, ref) => {
   const { onEmojiClicked, show, isModal = false, onKeyDown } = props;
-  const _primaryColor = useSelector(getPrimaryColor);
+  const _primaryColor = usePrimaryColor();
   const theme = useTheme();
   const isDarkTheme = useIsDarkTheme();
 

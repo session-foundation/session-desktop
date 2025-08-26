@@ -371,7 +371,7 @@ async function getSignatureParamsFromNamespace(
 }
 
 function logBuildSubRequests(subRequests: Array<BuiltSnodeSubRequests>) {
-  if (!window.sessionFeatureFlags.debug.debugBuiltSnodeRequests) {
+  if (!window.sessionFeatureFlags.debugBuiltSnodeRequests) {
     return;
   }
   window.log.debug(
@@ -704,7 +704,7 @@ async function handleBatchResultWithSubRequests({
                   ? subRequest.plainTextBuffer
                   : null,
             },
-            subRequest.createdAtNetworkTimestamp,
+            storedAt,
             storedHash
           );
         }

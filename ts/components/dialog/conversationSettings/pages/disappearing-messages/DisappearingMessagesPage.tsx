@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
-import { useTimerOptionsByMode } from '../../../../../hooks/useParamSelector';
 import { setDisappearingMessagesByConvoId } from '../../../../../interactions/conversationInteractions';
 import { TimerOptions } from '../../../../../session/disappearing_messages/timerOptions';
 import { DisappearingMessageConversationModeType } from '../../../../../session/disappearing_messages/types';
@@ -15,10 +14,7 @@ import {
 } from '../../../../../state/selectors/selectedConversation';
 import { Flex } from '../../../../basic/Flex';
 import { SpacerLG, SpacerMD } from '../../../../basic/Text';
-import {
-  HeaderSubtitle,
-  StyledScrollContainer,
-} from '../../../../conversation/right-panel/overlay/components';
+import { StyledScrollContainer } from '../../../../conversation/right-panel/overlay/components';
 import { DisappearingModes } from './DisappearingModes';
 import { TimeOptions } from './TimeOptions';
 import { useConversationSettingsModalIsStandalone } from '../../../../../state/selectors/modal';
@@ -29,7 +25,11 @@ import {
 import { useShowConversationSettingsFor } from '../../../../menuAndSettingsHooks/useShowConversationSettingsFor';
 import { tr } from '../../../../../localization/localeTools';
 import { SessionSpinner } from '../../../../loading';
-import { SessionButton, SessionButtonColor } from '../../../../basic/SessionButton';
+import {
+  SessionButton,
+  SessionButtonColor,
+  SessionButtonType,
+} from '../../../../basic/SessionButton';
 import {
   useBackActionForPage,
   useCloseActionFromPage,
@@ -101,7 +101,6 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
   );
 
   const [timeSelected, setTimeSelected] = useState(expireTimer || 0);
-  const timerOptions = useTimerOptionsByMode(modeSelected, hasOnlyOneMode);
   const isStandalone = useConversationSettingsModalIsStandalone();
 
   const [loading, setLoading] = useState(false);
@@ -169,7 +168,7 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
         <ModalBasicHeader
           title={title}
           bigHeader={true}
-          leftButton={backAction ? <ModalBackButton onClick={backAction} /> : undefined}
+          extraLeftButton={backAction ? <ModalBackButton onClick={backAction} /> : undefined}
         />
       }
       onClose={onClose}
@@ -177,13 +176,14 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
       allowOutsideClick={false}
       $contentMinWidth={WrapperModalWidth.narrow}
       buttonChildren={
-        <ModalActionsContainer extraBottomMargin={true}>
+        <ModalActionsContainer buttonType={SessionButtonType.Outline}>
           {loading ? (
             <SessionSpinner loading={true} />
           ) : (
             <SessionButton
               buttonColor={SessionButtonColor.PrimaryDark}
               onClick={handleSetMode}
+              buttonType={SessionButtonType.Outline}
               disabled={
                 singleMode
                   ? disappearingModeOptions[singleMode]
@@ -201,23 +201,17 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
     >
       <StyledScrollContainer style={{ position: 'relative' }}>
         <Flex $container={true} $flexDirection={'column'} $alignItems={'center'}>
-          <HeaderSubtitle>
-            {singleMode === 'deleteAfterRead'
-              ? tr('disappearingMessagesDisappearAfterReadDescription')
-              : singleMode === 'deleteAfterSend'
-                ? tr('disappearingMessagesDisappearAfterSendDescription')
-                : tr('disappearingMessagesDescription1')}
-          </HeaderSubtitle>
           <DisappearingModes
             options={disappearingModeOptions}
             selected={modeSelected}
             setSelected={setModeSelected}
             hasOnlyOneMode={hasOnlyOneMode}
+            singleMode={singleMode}
           />
           {(hasOnlyOneMode || modeSelected !== 'off') && (
             <>
               <TimeOptions
-                options={timerOptions}
+                modeSelected={modeSelected}
                 selected={timeSelected}
                 setSelected={setTimeSelected}
                 hasOnlyOneMode={hasOnlyOneMode}

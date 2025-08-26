@@ -28,7 +28,7 @@ const Portal = ({ children }: { children: ReactNode }) => {
 const AvatarItem = () => {
   const conversationId = useConvoIdFromContext();
 
-  const showUserDetailsCb = useShowUserDetailsCbFromConversation(conversationId);
+  const showUserDetailsCb = useShowUserDetailsCbFromConversation(conversationId, true);
 
   return (
     <div>
@@ -40,6 +40,7 @@ const AvatarItem = () => {
     </div>
   );
 };
+
 type Props = { conversationId: string; style?: CSSProperties };
 
 export const ConversationListItem = (props: Props) => {
@@ -73,6 +74,23 @@ export const ConversationListItem = (props: Props) => {
     [conversationId]
   );
 
+  const extraStyle: CSSProperties = {};
+  if (hasUnread) {
+    extraStyle.background = 'var(--conversation-tab-background-unread-color)';
+    extraStyle.borderLeft = '4px solid var(--conversation-tab-color-strip-color)';
+  }
+
+  if (hasUnreadMentionedUs) {
+    extraStyle.borderLeft = '4px solid var(--conversation-tab-color-strip-color) !important';
+  }
+
+  if (isBlocked) {
+    extraStyle.borderLeft = '4px solid var(--danger-color) !important;';
+  }
+  if (isSelectedConvo) {
+    extraStyle.background = 'var(--conversation-tab-background-selected-color)';
+  }
+
   return (
     <ContextConversationProvider value={conversationId}>
       <div key={key}>
@@ -89,14 +107,11 @@ export const ConversationListItem = (props: Props) => {
               event: e,
             });
           }}
-          style={style}
-          className={clsx(
-            'module-conversation-list-item',
-            hasUnread ? 'module-conversation-list-item--has-unread' : null,
-            hasUnreadMentionedUs ? 'module-conversation-list-item--mentioned-us' : null,
-            isSelectedConvo ? 'module-conversation-list-item--is-selected' : null,
-            isBlocked ? 'module-conversation-list-item--is-blocked' : null
-          )}
+          style={{
+            ...style,
+            ...extraStyle,
+          }}
+          className={clsx('module-conversation-list-item')}
         >
           <AvatarItem />
           <div className="module-conversation-list-item__content">

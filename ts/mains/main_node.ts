@@ -168,7 +168,7 @@ import { classicDark } from '../themes';
 
 import { isSessionLocaleSet, getCrowdinLocale } from '../util/i18n/shared';
 import { loadLocalizedDictionary } from '../node/locale';
-import { simpleDictionary } from '../localization/locales';
+import { simpleDictionaryNoArgs } from '../localization/locales';
 import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
 import { isReleaseChannel } from '../updater/types';
 import { canAutoUpdate, checkForUpdates } from '../updater/updater';
@@ -989,7 +989,7 @@ ipc.on('password-recovery-phrase', async (event, passPhrase) => {
     // no issues. send back undefined, meaning OK
     sendResponse(undefined);
   } catch (e) {
-    const localisedError = simpleDictionary.passwordIncorrect[getCrowdinLocale()];
+    const localisedError = simpleDictionaryNoArgs.passwordIncorrect[getCrowdinLocale()];
     // send back the error
     sendResponse(localisedError);
   }

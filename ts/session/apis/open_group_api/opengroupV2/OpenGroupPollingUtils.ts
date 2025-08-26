@@ -8,6 +8,7 @@ import { SogsBlinding } from '../sogsv3/sogsBlinding';
 import { OpenGroupMessageV2 } from './OpenGroupMessageV2';
 import { OpenGroupV2Room } from '../../../../data/types';
 import { NetworkTime } from '../../../../util/NetworkTime';
+import type { WithRoomId } from '../sogsv3/sogsWith';
 
 export type OpenGroupRequestHeaders = {
   'X-SOGS-Pubkey': string;
@@ -113,20 +114,18 @@ type StatusCodeType = {
   statusCode: number;
 };
 
-export type ParsedRoomCompactPollResults = StatusCodeType & {
-  roomId: string;
-  deletions: ParsedDeletions;
-  messages: Array<OpenGroupMessageV2>;
-  moderators: Array<string>;
-};
+export type ParsedRoomCompactPollResults = StatusCodeType &
+  WithRoomId & {
+    deletions: ParsedDeletions;
+    messages: Array<OpenGroupMessageV2>;
+    moderators: Array<string>;
+  };
 
-export type ParsedBase64Avatar = {
-  roomId: string;
+export type ParsedBase64Avatar = WithRoomId & {
   base64: string;
 };
 
-export type ParsedMemberCount = {
-  roomId: string;
+export type ParsedMemberCount = WithRoomId & {
   memberCount: number;
 };
 

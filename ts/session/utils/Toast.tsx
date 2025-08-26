@@ -1,8 +1,8 @@
 import { toast } from 'react-toastify';
 import { SessionToast, SessionToastType } from '../../components/basic/SessionToast';
-import { sectionActions, SectionType } from '../../state/ducks/section';
 import { getPromotedGroupUpdateChangeStr } from '../../models/groupUpdate';
 import { tStripped, tStrippedWithObj } from '../../localization/localeTools';
+import { userSettingsModal } from '../../state/ducks/modalDialog';
 
 // if you push a toast manually with toast...() be sure to set the type attribute of the SessionToast component
 export function pushToastError(id: string, description: string) {
@@ -113,9 +113,8 @@ export function pushedMissedCall(userName: string) {
   pushToastInfo('missedCall', tStripped('callsMissedCallFrom', { name: userName }));
 }
 
-const openPermissionsSettings = () => {
-  window.inboxStore?.dispatch(sectionActions.showLeftPaneSection(SectionType.Settings));
-  window.inboxStore?.dispatch(sectionActions.showSettingsSection('permissions'));
+const openPrivacySettings = () => {
+  window.inboxStore?.dispatch(userSettingsModal({ userSettingsPage: 'privacy' }));
 };
 
 export function pushedMissedCallCauseOfPermission(conversationName: string) {
@@ -126,7 +125,7 @@ export function pushedMissedCallCauseOfPermission(conversationName: string) {
         name: conversationName,
       })}
       type={SessionToastType.Info}
-      onToastClick={openPermissionsSettings}
+      onToastClick={openPrivacySettings}
     />,
     { toastId: id, updateId: id, autoClose: 10000 }
   );
@@ -136,7 +135,7 @@ export function pushVideoCallPermissionNeeded() {
   pushToastInfo(
     'videoCallPermissionNeeded',
     tStripped('callsPermissionsRequiredDescription'),
-    openPermissionsSettings
+    openPrivacySettings
   );
 }
 
@@ -144,7 +143,7 @@ export function pushAudioPermissionNeeded() {
   pushToastInfo(
     'audioPermissionNeeded',
     tStripped('permissionsMicrophoneAccessRequiredDesktop'),
-    openPermissionsSettings
+    openPrivacySettings
   );
 }
 

@@ -117,7 +117,7 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
 
   const payloadObj = buildSendViaOnionPayload(url, fetchOptions);
 
-  if (window.sessionFeatureFlags?.debug.debugNonSnodeRequests) {
+  if (window.sessionFeatureFlags?.debugNonSnodeRequests) {
     window.log.info(
       '[debugNonSnodeRequests] sendViaOnionV4ToNonSnodeWithRetries: buildSendViaOnionPayload returned ',
       JSON.stringify(payloadObj)
@@ -142,7 +142,7 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
     result = await pRetry(
       async () => {
         const pathNodes = await OnionSending.getOnionPathForSending();
-        if (window.sessionFeatureFlags?.debug.debugNonSnodeRequests) {
+        if (window.sessionFeatureFlags?.debugNonSnodeRequests) {
           window.log.info(
             '[debugNonSnodeRequests] sendViaOnionV4ToNonSnodeWithRetries: getOnionPathForSending returned',
             JSON.stringify(pathNodes)
@@ -169,7 +169,7 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
           timeoutMs,
         });
 
-        if (window.sessionFeatureFlags?.debug.debugNonSnodeRequests) {
+        if (window.sessionFeatureFlags?.debugNonSnodeRequests) {
           window.log.info(
             '[debugNonSnodeRequests] sendViaOnionV4ToNonSnodeWithRetries: sendOnionRequestHandlingSnodeEjectNoRetries returned: ',
             JSON.stringify(onionV4Response)
@@ -195,7 +195,7 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
         // We decode it here, because if the result status code is not valid, we want to trigger a retry (by throwing an error)
         const decodedV4 = OnionV4.decodeV4Response(onionV4Response);
 
-        if (window.sessionFeatureFlags?.debug.debugNonSnodeRequests) {
+        if (window.sessionFeatureFlags?.debugNonSnodeRequests) {
           window.log.info(
             `[debugNonSnodeRequests] sendViaOnionV4ToNonSnodeWithRetries: payload: ${JSON.stringify(payloadObj)}\ndecoded response:`,
             JSON.stringify(decodedV4)
@@ -211,7 +211,7 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
             const plainText = (decodedV4?.body as any).plainText;
 
             if (plainText === invalidAuthRequiresBlinding) {
-              if (window.sessionFeatureFlags?.debug.debugNonSnodeRequests) {
+              if (window.sessionFeatureFlags?.debugNonSnodeRequests) {
                 window.log.info(
                   `[debugNonSnodeRequests] sendViaOnionV4ToNonSnodeWithRetries: payload: ${JSON.stringify(payloadObj)}\n${foundStatusCode} error with message:\nplainText: ${plainText}`
                 );
@@ -537,7 +537,7 @@ async function getBinaryViaOnionV4FromFileServer({
   }
   const builtUrl = new URL(`${fileServerURL}${endpoint}`);
 
-  if (window.sessionFeatureFlags?.debug.debugServerRequests) {
+  if (window.sessionFeatureFlags?.debugServerRequests) {
     window.log.info(`getBinaryViaOnionV4FromFileServer fsv2: "${builtUrl} `);
   }
 
@@ -557,7 +557,7 @@ async function getBinaryViaOnionV4FromFileServer({
     timeoutMs
   );
 
-  if (window.sessionFeatureFlags?.debug.debugServerRequests) {
+  if (window.sessionFeatureFlags?.debugServerRequests) {
     window.log.info(
       `getBinaryViaOnionV4FromFileServer fsv2: "${builtUrl}; got:`,
       JSON.stringify(res)

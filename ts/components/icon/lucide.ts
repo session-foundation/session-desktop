@@ -1,4 +1,5 @@
 export enum LUCIDE_ICONS_UNICODE {
+  ARROW_DOWN_TO_LINE = '',
   ARROW_UP = '',
   AT_SIGN = '',
   BAN = '',
@@ -9,14 +10,13 @@ export enum LUCIDE_ICONS_UNICODE {
   CHEVRON_LEFT = '',
   CHEVRON_RIGHT = '',
   CHEVRON_UP = '',
-  CIRCLE_ARROW_DOWN = '',
   CIRCLE_CHECK = '',
   CIRCLE_ELLIPSES = '',
   CIRCLE_HELP = '',
   CIRCLE_PLUS = '',
+  CIRCLE_X = '',
   CLAPERBOARD = '',
   COPY = '',
-  DOWNLOAD = '',
   EXTERNAL_LINK_ICON = '',
   EYE = '',
   EYE_OFF = '',
@@ -50,6 +50,7 @@ export enum LUCIDE_ICONS_UNICODE {
   QR_CODE = '',
   RECTANGLE_ELLIPSES = '',
   REFRESH_CW = '',
+  REPEAT_2 = '',
   REPLY = '',
   SEARCH = '',
   SETTINGS = '',
@@ -73,15 +74,3 @@ export enum LUCIDE_ICONS_UNICODE {
 
 export type WithLucideUnicode = { unicode: LUCIDE_ICONS_UNICODE };
 export type WithOptLucideUnicode = Partial<WithLucideUnicode>;
-
-/**
- * Used for rendering icons inside of the Localizer component
- * @note Current: Lucide v0.488.0
- * @note The Lucide Icon font must be installed locally to see these icons.
- * @note Download from https://github.com/lucide-icons/lucide/releases
- */
-export const LUCIDE_INLINE_ICONS = {
-  EXTERNAL_LINK_ICON: `<span role='img' aria-label='external link icon'>${LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}</span>`,
-};
-
-export type LucideInlineIconKeys = keyof typeof LUCIDE_INLINE_ICONS;

@@ -1,21 +1,15 @@
 import { useCallback, useState } from 'react';
 import { useDispatch } from 'react-redux';
+import type { AnyAction, Dispatch } from 'redux';
 import styled from 'styled-components';
 import { ToastUtils, UserUtils } from '../../session/utils';
-import { editProfileModal, updateEditProfilePictureModal } from '../../state/ducks/modalDialog';
+import { userSettingsModal, updateEditProfilePictureModal } from '../../state/ducks/modalDialog';
 import type { EditProfilePictureModalProps } from '../../types/ReduxTypes';
 import { pickFileForAvatar } from '../../types/attachments/VisualAttachment';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionSpinner } from '../loading';
-import { ProfileAvatar } from './edit-profile/components';
-import { PlusAvatarButton } from '../buttons/PlusAvatarButton';
-import {
-  useAvatarPath,
-  useConversationUsername,
-  useIsMe,
-  useIsProUser,
-  useIsPublic,
-} from '../../hooks/useParamSelector';
+import { ProfileAvatar } from './user-settings/components';
+import { useAvatarPath, useIsMe, useIsPublic } from '../../hooks/useParamSelector';
 import { tr } from '../../localization/localeTools';
 import { OpenGroupUtils } from '../../session/apis/open_group_api/utils';
 import { PubKey } from '../../session/types';
@@ -23,39 +17,37 @@ import { groupInfoActions } from '../../state/ducks/metaGroups';
 import { useGroupAvatarChangeFromUIPending } from '../../state/selectors/groups';
 import { userActions } from '../../state/ducks/user';
 import { ReduxSogsRoomInfos } from '../../state/ducks/sogsRoomInfo';
-import { useOurAvatarIsUploading } from '../../state/selectors/user';
+import { useOurAvatarIsUploading, useOurAvatarUploadFailed } from '../../state/selectors/user';
 import { useAvatarOfRoomIsUploading } from '../../state/selectors/sogsRoomInfo';
-import { SessionLucideIconButton } from '../icon/SessionIconButton';
-import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import {
   ModalActionsContainer,
   ModalBasicHeader,
   SessionWrapperModal,
 } from '../SessionWrapperModal';
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
-import { SpacerLG } from '../basic/Text';
+import { SpacerLG, SpacerSM } from '../basic/Text';
 import {
   SessionProInfoVariant,
   useShowSessionProInfoDialogCbWithVariant,
 } from './SessionProInfoModal';
 import { AvatarSize } from '../avatar/Avatar';
 import { ProIconButton } from '../buttons/ProButton';
+import { useProBadgeOnClickCb } from '../menuAndSettingsHooks/useProBadgeOnClickCb';
+import { useUserHasPro } from '../../hooks/useHasPro';
+import { Localizer } from '../basic/Localizer';
+import { UploadFirstImageButton } from '../buttons/avatar/UploadFirstImageButton';
+import { Flex } from '../basic/Flex';
+import { LucideIcon } from '../icon/LucideIcon';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
   position: relative;
 `;
 
-const StyledUploadButton = styled.div`
-  background-color: var(--chat-buttons-background-color);
-  border-radius: 50%;
-  overflow: hidden;
-  padding: var(--margins-lg);
-  aspect-ratio: 1;
-`;
-
 const StyledCTADescription = styled.span<{ reverseDirection: boolean }>`
   text-align: center;
+  cursor: pointer;
   font-size: var(--font-size-lg);
   color: var(--text-secondary-color);
   line-height: normal;
@@ -66,20 +58,10 @@ const StyledCTADescription = styled.span<{ reverseDirection: boolean }>`
   padding: 3px;
 `;
 
-const UploadImageButton = () => {
-  return (
-    <div style={{ position: 'relative' }}>
-      <StyledUploadButton>
-        <SessionLucideIconButton unicode={LUCIDE_ICONS_UNICODE.IMAGE} iconSize={'max'} margin="0" />
-      </StyledUploadButton>
-      <PlusAvatarButton dataTestId="image-upload-section" />
-    </div>
-  );
-};
-
 const triggerUploadProfileAvatar = async (
   scaledAvatarUrl: string | null,
-  conversationId: string
+  conversationId: string,
+  dispatch: Dispatch<AnyAction>
 ) => {
   if (scaledAvatarUrl?.length) {
     try {
@@ -91,18 +73,16 @@ const triggerUploadProfileAvatar = async (
 
       if (conversationId === UserUtils.getOurPubKeyStrFromCache()) {
         const newAvatarDecrypted = await blobContent.arrayBuffer();
-        window.inboxStore?.dispatch(
-          userActions.updateOurAvatar({ mainAvatarDecrypted: newAvatarDecrypted }) as any
-        );
+        dispatch(userActions.updateOurAvatar({ mainAvatarDecrypted: newAvatarDecrypted }) as any);
       } else if (OpenGroupUtils.isOpenGroupV2(conversationId)) {
-        window.inboxStore?.dispatch(
-          ReduxSogsRoomInfos.changeCommunityAvatar({
+        dispatch(
+          ReduxSogsRoomInfos.roomAvatarChange({
             conversationId,
             avatarObjectUrl: scaledAvatarUrl,
           }) as any
         );
       } else if (PubKey.is03Pubkey(conversationId)) {
-        window.inboxStore?.dispatch(
+        dispatch(
           groupInfoActions.currentDeviceGroupAvatarChange({
             objectUrl: scaledAvatarUrl,
             groupPk: conversationId,
@@ -116,7 +96,7 @@ const triggerUploadProfileAvatar = async (
         ToastUtils.pushToastError('edit-profile', error.message);
       }
       window.log.error(
-        'showEditProfileDialog Error ensuring that image is properly sized:',
+        'triggerUploadProfileAvatar Error ensuring that image is properly sized:',
         error && error.stack ? error.stack : error
       );
     }
@@ -152,14 +132,14 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
 
   const isMe = useIsMe(conversationId);
   const isCommunity = useIsPublic(conversationId);
-  const hasPro = useIsProUser(conversationId);
+  const userHasPro = useUserHasPro(conversationId);
   const isProAvailable = useIsProAvailable();
 
   const avatarPath = useAvatarPath(conversationId) || '';
-  const profileName = useConversationUsername(conversationId) || '';
 
   const groupAvatarChangePending = useGroupAvatarChangeFromUIPending();
   const ourAvatarIsUploading = useOurAvatarIsUploading();
+  const ourAvatarUploadFailed = useOurAvatarUploadFailed();
   const sogsAvatarIsUploading = useAvatarOfRoomIsUploading(conversationId);
 
   const [newAvatarObjectUrl, setNewAvatarObjectUrl] = useState<string | null>(avatarPath);
@@ -174,12 +154,19 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
 
   const handleShowProInfoModal = useShowSessionProInfoDialogCbWithVariant();
 
+  const proBadgeCb = useProBadgeOnClickCb({
+    context: 'edit-profile-pic',
+    args: { userHasPro },
+  });
+
   const closeDialog = useCallback(() => {
     dispatch(updateEditProfilePictureModal(null));
     if (isMe) {
-      dispatch(editProfileModal({}));
+      dispatch(userSettingsModal({ userSettingsPage: 'default' }));
     }
   }, [dispatch, isMe]);
+
+  const isPublic = useIsPublic(conversationId);
 
   const handleAvatarClick = async () => {
     const res = await pickFileForAvatar();
@@ -214,13 +201,13 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
      * C. Community admin uploading a community profile picture
      * All of those are taken care of as part of the `isProUser` check in the conversation model
      */
-    if (isProAvailable && !hasPro && isNewAvatarAnimated) {
+    if (isProAvailable && !userHasPro && isNewAvatarAnimated && !isCommunity) {
       handleShowProInfoModal(SessionProInfoVariant.PROFILE_PICTURE_ANIMATED);
       window.log.debug('Attempted to upload an animated profile picture without pro!');
       return;
     }
 
-    await triggerUploadProfileAvatar(newAvatarObjectUrl, conversationId);
+    await triggerUploadProfileAvatar(newAvatarObjectUrl, conversationId, dispatch);
   };
 
   const loading = ourAvatarIsUploading || groupAvatarChangePending || sogsAvatarIsUploading;
@@ -240,6 +227,9 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
       return;
     }
     resetState();
+    if (isPublic) {
+      closeDialog();
+    }
   };
 
   const handleClick = () => {
@@ -250,10 +240,13 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
     <SessionWrapperModal
       onClose={closeDialog}
       headerChildren={
-        <ModalBasicHeader title={tr('profileDisplayPictureSet')} showExitIcon={!loading} />
+        <ModalBasicHeader
+          title={tr(isCommunity ? 'setCommunityDisplayPicture' : 'profileDisplayPictureSet')}
+          showExitIcon={!loading}
+        />
       }
       buttonChildren={
-        <ModalActionsContainer extraBottomMargin={true}>
+        <ModalActionsContainer buttonType={SessionButtonType.Outline}>
           <SessionButton
             text={tr('save')}
             buttonType={SessionButtonType.Simple}
@@ -281,55 +274,65 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
           ) : null}
         </ModalActionsContainer>
       }
+      $flexGap="var(--margins-sm)"
     >
-      {isMe && isProAvailable && !isCommunity ? (
-        <>
-          <StyledCTADescription reverseDirection={hasPro}>
-            {tr(
-              hasPro
-                ? 'proAnimatedDisplayPictureModalDescription'
-                : 'proAnimatedDisplayPicturesNonProModalDescription'
-            )}
-            <ProIconButton
-              iconSize={'medium'}
-              dataTestId="pro-badge-edit-profile-picture"
-              disabled={loading}
-              onClick={() =>
-                handleShowProInfoModal(
-                  hasPro
-                    ? SessionProInfoVariant.ALREADY_PRO_PROFILE_PICTURE_ANIMATED
-                    : SessionProInfoVariant.PROFILE_PICTURE_ANIMATED
-                )
-              }
-            />
-          </StyledCTADescription>
-        </>
+      {isMe && proBadgeCb.cb ? (
+        <StyledCTADescription reverseDirection={userHasPro} onClick={proBadgeCb.cb}>
+          {tr(
+            userHasPro
+              ? 'proAnimatedDisplayPictureModalDescription'
+              : 'proAnimatedDisplayPicturesNonProModalDescription'
+          )}
+          <ProIconButton
+            iconSize={'medium'}
+            dataTestId="pro-badge-edit-profile-picture"
+            disabled={loading}
+            onClick={proBadgeCb.cb}
+          />
+        </StyledCTADescription>
       ) : null}
-      <div
-        className="avatar-center"
-        role="button"
-        onClick={handleClick}
-        data-testid={'image-upload-click'}
-      >
+      <div role="button" data-testid={'image-upload-click'}>
         <SpacerLG />
         <StyledAvatarContainer>
           {newAvatarObjectUrl || avatarPath ? (
             <ProfileAvatar
               newAvatarObjectUrl={newAvatarObjectUrl}
               avatarPath={avatarPath}
-              profileName={profileName}
               conversationId={conversationId}
               onPlusAvatarClick={handleClick}
               onAvatarClick={handleClick}
               avatarSize={AvatarSize.XL}
+              dataTestId={'avatar-edit-profile-picture-dialog'}
             />
           ) : (
-            <UploadImageButton />
+            <UploadFirstImageButton onClick={handleClick} />
           )}
         </StyledAvatarContainer>
-        <SpacerLG />
       </div>
-      <SessionSpinner loading={loading} />
+      {ourAvatarUploadFailed && isMe ? (
+        <Flex
+          $container={true}
+          $justifyContent="center"
+          $alignItems="center"
+          $flexGap="var(--margins-xs)"
+          style={{
+            marginTop: 'var(--margins-lg)',
+            color: 'var(--danger-color)',
+          }}
+        >
+          <LucideIcon unicode={LUCIDE_ICONS_UNICODE.TRIANGLE_ALERT} iconSize="small" />
+          <Localizer token="profileErrorUpdate" />
+        </Flex>
+      ) : null}
+      {loading ? (
+        <>
+          <SpacerSM />
+          {isMe ? <Localizer token="updating" /> : null}
+          <SessionSpinner loading={loading} height="30px" />
+        </>
+      ) : (
+        <SpacerLG />
+      )}
     </SessionWrapperModal>
   );
 };

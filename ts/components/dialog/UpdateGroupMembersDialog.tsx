@@ -107,7 +107,7 @@ const MemberList = (props: {
             disableBg={true}
             displayGroupStatus={isV2Group}
             groupPk={convoId}
-            maxNameWidth="100%"
+            conversationId={convoId}
           />
         );
       })}
@@ -196,7 +196,7 @@ export const UpdateGroupMembersDialog = (props: Props) => {
       $contentMinWidth={WrapperModalWidth.wide}
       $contentMaxWidth={WrapperModalWidth.wide}
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           {weAreAdmin && (
             <SessionButton
               text={tr('remove')}

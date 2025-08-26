@@ -5,9 +5,7 @@ import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { useVideoCallEventsListener } from '../../hooks/useVideoEventListener';
 import { openConversationWithMessages } from '../../state/ducks/conversations';
-import { SectionType } from '../../state/ducks/section';
 import { getHasOngoingCall, getHasOngoingCallWith } from '../../state/selectors/call';
-import { getSection } from '../../state/selectors/section';
 import { useSelectedConversationKey } from '../../state/selectors/selectedConversation';
 import { Avatar, AvatarSize } from '../avatar/Avatar';
 import { VideoLoadingSpinner } from './InConversationCallContainer';
@@ -60,7 +58,6 @@ export const DraggableCallContainer = () => {
   const ongoingCallProps = useSelector(getHasOngoingCallWith);
   const selectedConversationKey = useSelectedConversationKey();
   const hasOngoingCall = useSelector(getHasOngoingCall);
-  const selectedSection = useSelector(getSection);
 
   // the draggable container has a width of 12vw, so we just set it's X to a bit more than this
   const [positionX, setPositionX] = useState(window.innerWidth - (window.innerWidth * 1) / 6);
@@ -102,12 +99,7 @@ export const DraggableCallContainer = () => {
     }
   };
 
-  if (
-    !hasOngoingCall ||
-    !ongoingCallProps ||
-    (ongoingCallPubkey === selectedConversationKey &&
-      selectedSection.focusedSection !== SectionType.Settings)
-  ) {
+  if (!hasOngoingCall || !ongoingCallProps || ongoingCallPubkey === selectedConversationKey) {
     return null;
   }
 

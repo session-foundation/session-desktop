@@ -8,9 +8,30 @@ import { AttachmentTypeWithPath } from '../../types/Attachment';
 import type { EditProfilePictureModalProps, PasswordAction } from '../../types/ReduxTypes';
 import { WithConvoId } from '../../session/types/with';
 import type { SessionProInfoVariant } from '../../components/dialog/SessionProInfoModal';
-import type { LocalizerProps } from '../../components/basic/Localizer';
+import type { TrArgs } from '../../localization/localeTools';
 
 export type BanType = 'ban' | 'unban';
+
+export type UserSettingsPage =
+  | 'default'
+  | 'privacy'
+  | 'notifications'
+  | 'conversations'
+  | 'message-requests'
+  | 'appearance'
+  | 'recovery-password'
+  | 'help'
+  | 'blocked-contacts'
+  | 'clear-data'
+  | 'password'
+  | 'preferences';
+
+export type WithUserSettingsPage =
+  | { userSettingsPage: Exclude<UserSettingsPage, 'password'> }
+  | {
+      userSettingsPage: 'password';
+      passwordAction: PasswordAction;
+    };
 
 export type ConfirmModalState = SessionConfirmDialogProps | null;
 
@@ -24,20 +45,18 @@ export type BanOrUnbanUserModalState =
 export type AddModeratorsModalState = InviteContactModalState;
 export type RemoveModeratorsModalState = InviteContactModalState;
 export type UpdateGroupMembersModalState = InviteContactModalState;
-export type UpdateGroupNameModalState = WithConvoId | null;
+type UpdateConversationDetailsModalState = WithConvoId | null;
 export type ChangeNickNameModalState = InviteContactModalState;
-export type EditProfileModalState = object | null;
-export type OnionPathModalState = EditProfileModalState;
+export type UserSettingsModalState = WithUserSettingsPage | null;
+export type OnionPathModalState = object | null;
 export type EnterPasswordModalState = EnterPasswordModalProps | null;
-export type DeleteAccountModalState = EditProfileModalState;
+export type DeleteAccountModalState = object | null;
 export type OpenUrlModalState = { urlToOpen: string } | null;
 export type LocalizedPopupDialogState = {
-  title: LocalizerProps;
-  description: LocalizerProps;
+  title: TrArgs;
+  description: TrArgs;
 } | null;
 export type SessionProInfoState = { variant: SessionProInfoVariant } | null;
-
-export type SessionPasswordModalState = { passwordAction: PasswordAction; onOk: () => void } | null;
 
 export type UserProfileModalState = {
   /** this can be blinded or not */
@@ -84,14 +103,13 @@ export type ModalState = {
   blockOrUnblockModal: BlockOrUnblockModalState;
   removeModeratorsModal: RemoveModeratorsModalState;
   addModeratorsModal: AddModeratorsModalState;
-  groupNameModal: UpdateGroupNameModalState;
+  updateConversationDetailsModal: UpdateConversationDetailsModalState;
   groupMembersModal: UpdateGroupMembersModalState;
   userProfileModal: UserProfileModalState;
   nickNameModal: ChangeNickNameModalState;
-  editProfileModal: EditProfileModalState;
+  userSettingsModal: UserSettingsModalState;
   onionPathModal: OnionPathModalState;
   enterPasswordModal: EnterPasswordModalState;
-  sessionPasswordModal: SessionPasswordModalState;
   deleteAccountModal: DeleteAccountModalState;
   reactListModalState: ReactModalsState;
   reactClearAllModalState: ReactModalsState;
@@ -113,14 +131,13 @@ export const initialModalState: ModalState = {
   removeModeratorsModal: null,
   banOrUnbanUserModal: null,
   blockOrUnblockModal: null,
-  groupNameModal: null,
+  updateConversationDetailsModal: null,
   groupMembersModal: null,
   userProfileModal: null,
   nickNameModal: null,
-  editProfileModal: null,
+  userSettingsModal: null,
   onionPathModal: null,
   enterPasswordModal: null,
-  sessionPasswordModal: null,
   deleteAccountModal: null,
   reactListModalState: null,
   reactClearAllModalState: null,
@@ -157,8 +174,11 @@ const ModalSlice = createSlice({
     updateRemoveModeratorsModal(state, action: PayloadAction<RemoveModeratorsModalState | null>) {
       return { ...state, removeModeratorsModal: action.payload };
     },
-    updateGroupNameModal(state, action: PayloadAction<UpdateGroupNameModalState | null>) {
-      return { ...state, groupNameModal: action.payload };
+    updateConversationDetailsModal(
+      state,
+      action: PayloadAction<UpdateConversationDetailsModalState | null>
+    ) {
+      return { ...state, updateConversationDetailsModal: action.payload };
     },
     updateGroupMembersModal(state, action: PayloadAction<UpdateGroupMembersModalState | null>) {
       return { ...state, groupMembersModal: action.payload };
@@ -169,17 +189,14 @@ const ModalSlice = createSlice({
     changeNickNameModal(state, action: PayloadAction<ChangeNickNameModalState | null>) {
       return { ...state, nickNameModal: action.payload };
     },
-    editProfileModal(state, action: PayloadAction<EditProfileModalState | null>) {
-      return { ...state, editProfileModal: action.payload };
+    userSettingsModal(state, action: PayloadAction<UserSettingsModalState | null>) {
+      return { ...state, userSettingsModal: action.payload };
     },
     onionPathModal(state, action: PayloadAction<OnionPathModalState | null>) {
       return { ...state, onionPathModal: action.payload };
     },
     updateEnterPasswordModal(state, action: PayloadAction<EnterPasswordModalState | null>) {
       return { ...state, enterPasswordModal: action.payload };
-    },
-    sessionPassword(state, action: PayloadAction<SessionPasswordModalState>) {
-      return { ...state, sessionPasswordModal: action.payload };
     },
     updateDeleteAccountModal(state, action: PayloadAction<DeleteAccountModalState>) {
       return { ...state, deleteAccountModal: action.payload };
@@ -240,14 +257,13 @@ export const {
   updateInviteContactModal,
   updateAddModeratorsModal,
   updateRemoveModeratorsModal,
-  updateGroupNameModal,
+  updateConversationDetailsModal,
   updateGroupMembersModal,
   updateUserProfileModal,
   changeNickNameModal,
-  editProfileModal,
+  userSettingsModal,
   onionPathModal,
   updateEnterPasswordModal,
-  sessionPassword,
   updateDeleteAccountModal,
   updateBanOrUnbanUserModal,
   updateBlockOrUnblockModal,

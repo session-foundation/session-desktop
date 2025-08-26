@@ -2,6 +2,7 @@ import styled, { CSSProperties } from 'styled-components';
 import { openConversationWithMessages } from '../../../../state/ducks/conversations';
 import { Avatar, AvatarSize } from '../../../avatar/Avatar';
 import { useShowUserDetailsCbFromConversation } from '../../../menuAndSettingsHooks/useShowUserDetailsCb';
+import { ContactName } from '../../../conversation/ContactName/ContactName';
 
 type Props = { id: string; displayName?: string; style: CSSProperties };
 
@@ -12,7 +13,7 @@ const StyledAvatarItem = styled.div`
 const AvatarItem = (props: Pick<Props, 'id'>) => {
   const { id } = props;
 
-  const showUserDetailsFromConversationCb = useShowUserDetailsCbFromConversation(id) ?? undefined;
+  const showUserDetailsFromConversationCb = useShowUserDetailsCbFromConversation(id, true) ?? undefined;
 
   return (
     <StyledAvatarItem>
@@ -20,14 +21,6 @@ const AvatarItem = (props: Pick<Props, 'id'>) => {
     </StyledAvatarItem>
   );
 };
-
-const StyledContactRowName = styled.div`
-  color: var(--text-primary-color);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: var(--font-size-lg);
-`;
 
 const StyledRowContainer = styled.button`
   display: flex;
@@ -61,7 +54,7 @@ export const ContactRowBreak = (props: { char: string; key: string; style: CSSPr
 };
 
 export const ContactRow = (props: Props) => {
-  const { id, style, displayName } = props;
+  const { id, style } = props;
 
   return (
     <StyledRowContainer
@@ -70,9 +63,15 @@ export const ContactRow = (props: Props) => {
       onClick={async () => openConversationWithMessages({ conversationKey: id, messageId: null })}
     >
       <AvatarItem id={id} />
-      <StyledContactRowName data-testid="module-conversation__user__profile-name">
-        {displayName || id}
-      </StyledContactRowName>
+      <ContactName
+        data-testid="module-conversation__user__profile-name"
+        pubkey={id}
+        contactNameContext="contact-list-row"
+        extraNameStyle={{
+          color: 'var(--text-primary-color)',
+          fontSize: 'var(--font-size-lg)',
+        }}
+      />
     </StyledRowContainer>
   );
 };
