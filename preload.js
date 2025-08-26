@@ -146,6 +146,28 @@ window.getStartInTray = async () => {
   });
 };
 
+window.setAutoStartEnabled = async autoStart =>
+  new Promise((resolve, reject) => {
+    ipc.once('set-auto-start-enabled-response', (_event, error) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve();
+      return;
+    });
+    ipc.send('set-auto-start-enabled', autoStart);
+  });
+
+window.getAutoStartEnabled = async () => {
+  return new Promise(resolve => {
+    ipc.once('get-auto-start-enabled-response', (_event, value) => {
+      resolve(value);
+    });
+    ipc.send('get-auto-start-enabled');
+  });
+};
+
 window.getOpengroupPruning = async () => {
   return new Promise(resolve => {
     ipc.once('get-opengroup-pruning-response', (_event, value) => {
