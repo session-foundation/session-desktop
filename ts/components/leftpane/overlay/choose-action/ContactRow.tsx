@@ -13,7 +13,8 @@ const StyledAvatarItem = styled.div`
 const AvatarItem = (props: Pick<Props, 'id'>) => {
   const { id } = props;
 
-  const showUserDetailsFromConversationCb = useShowUserDetailsCbFromConversation(id, true) ?? undefined;
+  const showUserDetailsFromConversationCb =
+    useShowUserDetailsCbFromConversation(id, true) ?? undefined;
 
   return (
     <StyledAvatarItem>
