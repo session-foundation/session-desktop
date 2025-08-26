@@ -377,6 +377,23 @@ describe('data', () => {
       expect(getAllConversationsStub.calledOnce).to.eq(true);
     });
 
+    it('filters out invalid and keeps valid when input mixed', async () => {
+      const getAllConversationsStub = Sinon.stub(channels, 'getAllConversations').resolves([
+        { id: 'ok' } as any,
+        {} as any,
+        { id: null } as any,
+        { id: 'ok2' } as any,
+      ]);
+
+      const conversations = await Data.getAllConversations();
+
+      expect(conversations).to.be.an('array');
+      expect(conversations).to.have.length(2);
+      expect(conversations[0]).to.be.instanceOf(ConversationModel);
+      expect(conversations[1]).to.be.instanceOf(ConversationModel);
+      expect(getAllConversationsStub.calledOnce).to.eq(true);
+    });
+
     it('returns array of conversation models', async () => {
       const conversationsData: Array<ConversationAttributes> = [
         {
@@ -394,14 +411,15 @@ describe('data', () => {
       const getAllConversationsStub = Sinon.stub(channels, 'getAllConversations').resolves(
         conversationsData
       );
-      const result = await Data.getAllConversations();
+      const conversations = await Data.getAllConversations();
 
       expect(getAllConversationsStub.calledOnce).to.be.true;
-      expect(result).to.have.length(2);
-      expect(result[0]).to.be.instanceOf(ConversationModel);
-      expect(result[1]).to.be.instanceOf(ConversationModel);
-      expect(result[0].get('id')).to.equal('convo_1');
-      expect(result[1].get('id')).to.equal('convo_2');
+      expect(conversations).to.be.an('array');
+      expect(conversations).to.have.length(2);
+      expect(conversations[0]).to.be.instanceOf(ConversationModel);
+      expect(conversations[1]).to.be.instanceOf(ConversationModel);
+      expect(conversations[0].get('id')).to.equal('convo_1');
+      expect(conversations[1].get('id')).to.equal('convo_2');
     });
   });
 
