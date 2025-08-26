@@ -49,7 +49,7 @@ function SendWithShiftEnter() {
   const items = [
     {
       text: 'conversationsSendWithEnterKey',
-      subText: 'conversationsSendWithEnterKeyDescription',
+      subText: 'conversationsEnterSends',
       value: selectedWithSettingFalse,
     },
     {

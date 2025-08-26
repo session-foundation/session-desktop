@@ -205,7 +205,7 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
             forceUpdate();
           }}
           text={{ token: 'permissionsMicrophone' }}
-          subText={{ token: 'permissionsMicrophoneDescription' }}
+          subText={{ token: 'permissionsMicrophoneDescriptionIos' }}
         />
       </PanelButtonGroup>
       <PanelLabelWithDescription title={{ token: 'sessionMessageRequests' }} />

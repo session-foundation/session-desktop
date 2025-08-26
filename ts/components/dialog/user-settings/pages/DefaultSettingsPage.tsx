@@ -364,7 +364,7 @@ export const DefaultSettingPage = () => {
       <SessionWrapperModal
         headerChildren={
           <ModalBasicHeader
-            title={tr('profile')}
+            title={tr('sessionSettings')}
             showExitIcon={true}
             extraRightButton={<ModalPencilIcon onClick={showUpdateProfileInformation} />}
           />
