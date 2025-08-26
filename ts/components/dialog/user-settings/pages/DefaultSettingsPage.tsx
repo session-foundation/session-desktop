@@ -35,6 +35,7 @@ import { tr } from '../../../../localization/localeTools';
 import { useIsProAvailable } from '../../../../hooks/useIsProAvailable';
 import { setDebugMode } from '../../../../state/ducks/debug';
 import { useHideRecoveryPasswordEnabled } from '../../../../state/selectors/settings';
+import { OnionStatusLight } from '../../OnionStatusPathDialog';
 
 const handleKeyQRMode = (mode: ProfileDialogModes, setMode: (mode: ProfileDialogModes) => void) => {
   switch (mode) {
@@ -69,7 +70,7 @@ function SessionIconForSettings(props: Omit<SessionIconProps, 'iconSize' | 'styl
   return (
     <SessionIcon
       iconColor="var(--text-primary-color)"
-      style={{ width: '58px' }}
+      style={{ width: 'var(--user-settings-icon-min-width)' }}
       {...props}
       iconSize="small"
     />
@@ -80,7 +81,7 @@ function LucideIconForSettings(props: Omit<LucideIconProps, 'iconSize' | 'style'
   return (
     <LucideIcon
       iconColor="var(--text-primary-color)"
-      style={{ width: '58px' }}
+      style={{ width: 'var(--user-settings-icon-min-width)' }}
       {...props}
       iconSize="medium"
     />
@@ -100,7 +101,7 @@ function SessionProSection() {
     <PanelButtonGroup>
       <PanelIconButton
         iconElement={
-          <div style={{ width: '58px' }}>
+          <div style={{ width: 'var(--user-settings-icon-min-width)' }}>
             <ProIconButton onClick={undefined} iconSize="small" dataTestId="invalid-data-testid" />
           </div>
         }
@@ -133,7 +134,11 @@ function MiscSection() {
         dataTestId="donate-settings-menu-item"
       />
       <PanelIconButton
-        iconElement={<LucideIconForSettings unicode={LUCIDE_ICONS_UNICODE.SEARCH} />}
+        iconElement={
+          <div style={{ width: 'var(--user-settings-icon-min-width)' }}>
+            <OnionStatusLight inActionPanel={false} handleClick={undefined} />
+          </div>
+        }
         text={{ token: 'onionRoutingPath' }}
         onClick={() => {
           dispatch(onionPathModal({}));

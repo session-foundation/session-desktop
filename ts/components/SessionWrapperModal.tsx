@@ -1,5 +1,4 @@
 /* eslint-disable no-unneeded-ternary */
-import { AnimatePresence } from 'framer-motion';
 import styled from 'styled-components';
 import clsx from 'clsx';
 import type { CSSProperties } from 'styled-components';
@@ -77,7 +76,7 @@ const StyledModal = styled.div<{
   position: absolute;
   top: ${props => (props.$topAnchor === 'center' ? 'auto' : props.$topAnchor)};
   max-height: ${props =>
-    `calc(100vh - ${props.$topAnchor === 'center' ? '' : `2 * ${props.$topAnchor}`} - 5vh)`}; // 2* to have the modal centered vertically, if it overflows
+    `calc(100vh - ${props.$topAnchor === 'center' ? '' : `2 * ${props.$topAnchor}`})`}; // 2* to have the modal centered vertically, if it overflows
   animation: fadein var(--default-duration);
   z-index: 150;
   max-width: ${props =>
@@ -210,7 +209,7 @@ export function ModalBottomButtonWithBorder({
   );
 }
 
-export type ModalTopAnchor = '15vh' | '25vh' | '35vh' | '45vh' | 'center';
+export type ModalTopAnchor = '5vh' | '15vh' | '25vh' | '35vh' | '45vh' | 'center';
 
 export type SessionWrapperModalType = {
   headerChildren: ReactNode;
@@ -431,48 +430,46 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
   };
 
   return (
-    <AnimatePresence>
-      <SessionFocusTrap allowOutsideClick={allowOutsideClick}>
-        <IsModalScrolledContext.Provider value={scrolled}>
-          <OnModalCloseContext.Provider value={onClose ?? null}>
-            <StyledRootDialog
-              shouldOverflow={shouldOverflow}
-              className={clsx('modal', classes)}
-              onMouseDown={handleClick}
-              role="dialog"
-              data-testid={modalDataTestId}
+    <SessionFocusTrap allowOutsideClick={allowOutsideClick}>
+      <IsModalScrolledContext.Provider value={scrolled}>
+        <OnModalCloseContext.Provider value={onClose ?? null}>
+          <StyledRootDialog
+            shouldOverflow={shouldOverflow}
+            className={clsx('modal', classes)}
+            onMouseDown={handleClick}
+            role="dialog"
+            data-testid={modalDataTestId}
+          >
+            <StyledModal
+              ref={modalRef}
+              $contentMaxWidth={$contentMaxWidth}
+              $contentMinWidth={$contentMinWidth}
+              $padding={padding}
+              style={style}
+              $topAnchor={topAnchor ?? '5vh'}
             >
-              <StyledModal
-                ref={modalRef}
-                $contentMaxWidth={$contentMaxWidth}
-                $contentMinWidth={$contentMinWidth}
-                $padding={padding}
-                style={style}
-                $topAnchor={topAnchor ?? '15vh'}
-              >
-                {props.headerChildren ? props.headerChildren : null}
+              {props.headerChildren ? props.headerChildren : null}
 
-                <StyledModalBody
-                  onScroll={handleScroll}
-                  shouldOverflow={shouldOverflow}
-                  removeScrollbarGutter={removeScrollbarGutter}
+              <StyledModalBody
+                onScroll={handleScroll}
+                shouldOverflow={shouldOverflow}
+                removeScrollbarGutter={removeScrollbarGutter}
+              >
+                <Flex
+                  $container={true}
+                  $alignItems="center"
+                  $flexDirection="column"
+                  paddingInline="var(--margins-lg)" // add the padding here so that the rest of the modal isn't affected (including buttonChildren/ModalHeader)
+                  $flexGap={$flexGap}
                 >
-                  <Flex
-                    $container={true}
-                    $alignItems="center"
-                    $flexDirection="column"
-                    paddingInline="var(--margins-lg)" // add the padding here so that the rest of the modal isn't affected (including buttonChildren/ModalHeader)
-                    $flexGap={$flexGap}
-                  >
-                    {props.children}
-                  </Flex>
-                  {props.buttonChildren ? props.buttonChildren : <SpacerLG />}
-                </StyledModalBody>
-              </StyledModal>
-            </StyledRootDialog>
-          </OnModalCloseContext.Provider>
-        </IsModalScrolledContext.Provider>
-      </SessionFocusTrap>
-    </AnimatePresence>
+                  {props.children}
+                </Flex>
+                {props.buttonChildren ? props.buttonChildren : <SpacerLG />}
+              </StyledModalBody>
+            </StyledModal>
+          </StyledRootDialog>
+        </OnModalCloseContext.Provider>
+      </IsModalScrolledContext.Provider>
+    </SessionFocusTrap>
   );
 };

@@ -215,7 +215,7 @@ export function EditPasswordSettingsPage(modalState: {
   const hasNumber = !!firstPassword.match(/[0-9]/);
   const hasUppercase = !!firstPassword.match(/[A-Z]/);
   const hasLowercase = !!firstPassword.match(/[a-z]/);
-  const hasLetter = hasUppercase || hasLowercase;
+  const hasSymbol = !!firstPassword.match(/[!@#$%^&*(),.?":{}|<>_\-\\[\]`~;'/+=]/);
 
   const sharedInputProps = {
     type: 'password',
@@ -372,8 +372,8 @@ export function EditPasswordSettingsPage(modalState: {
                 trArgs={{ token: 'passwordStrengthIncludeNumber' }}
               />
               <StrengthCriteria
-                isMet={hasLetter}
-                trArgs={{ token: 'passwordStrengthIncludesLetter' }}
+                isMet={hasSymbol}
+                trArgs={{ token: 'passwordStrengthIncludesSymbol' }}
               />
               <StrengthCriteria
                 isMet={hasUppercase}

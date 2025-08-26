@@ -234,7 +234,7 @@ function ChatBubblePreview() {
         y="130px"
         style={{ letterSpacing: '0.43' }}
       >
-        Oh cool, ill see you there!
+        Oh cool, I'll see you there!
       </text>
     </svg>
   );
