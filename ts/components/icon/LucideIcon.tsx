@@ -2,19 +2,19 @@ import type { CSSProperties, SessionDataTestId } from 'react';
 import styled from 'styled-components';
 import type { SessionIconSize } from './Icons';
 import { IconSizeToPxStr } from './SessionIcon';
-import type { WithLucideUnicode } from './lucide';
+import { isIconToMirrorRtl, type WithLucideUnicode } from './lucide';
 import { useIsRtl } from '../../util/i18n/rtlSupport';
 
 const LucideIconWrapper = styled.div<{
   $iconColor?: string;
   $iconSize: SessionIconSize;
-  $isRtl: boolean;
+  $mirrorIt: boolean;
 }>`
   font-family: var(--font-icon);
   font-size: ${props => IconSizeToPxStr[props.$iconSize]};
   color: ${props => props.$iconColor};
   align-content: center;
-  ${props => props.$isRtl && 'display: inline-block;  transform: scaleX(-1);'}
+  ${props => props.$mirrorIt && 'display: inline-block;  transform: scaleX(-1);'}
 `;
 
 export type LucideIconProps = WithLucideUnicode & {
@@ -45,7 +45,7 @@ export const LucideIcon = ({
       data-testid={dataTestId}
       style={{ ...style, lineHeight: 1 }}
       aria-label={ariaLabel}
-      $isRtl={isRtl}
+      $mirrorIt={isRtl && isIconToMirrorRtl(unicode)}
     >
       {unicode}
     </LucideIconWrapper>

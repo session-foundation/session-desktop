@@ -36,16 +36,17 @@ const CallContainer = () => {
   );
 };
 
-const StyledLeftPaneSession = styled.div`
+const StyledLeftPaneSession = styled.div<{ $isRtl: boolean }>`
   display: flex;
   height: 100%;
+  ${props => props.$isRtl && 'flex-direction: row-reverse;'}
 `;
 
 export const LeftPane = () => {
   const isRtl = useIsRtl();
 
   return (
-    <StyledLeftPaneSession>
+    <StyledLeftPaneSession $isRtl={isRtl}>
       <ModalContainer />
       <CallContainer />
       <SessionToastContainer />
