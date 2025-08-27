@@ -1859,7 +1859,9 @@ function cleanUpUnreadExpiredDaRMessages() {
  */
 function cleanUpInvalidConversationIds() {
   const deleteResult = assertGlobalInstance()
-    .prepare(`DELETE FROM ${CONVERSATIONS_TABLE} WHERE id = '' OR id IS NULL OR typeof(id) != 'text';`)
+    .prepare(
+      `DELETE FROM ${CONVERSATIONS_TABLE} WHERE id = '' OR id IS NULL OR typeof(id) != 'text';`
+    )
     .run();
 
   console.info(`cleanUpInvalidConversationIds removed ${deleteResult.changes} rows`);

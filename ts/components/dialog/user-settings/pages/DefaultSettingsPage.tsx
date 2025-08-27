@@ -402,7 +402,7 @@ export const DefaultSettingPage = () => {
               <SessionLucideIconButton
                 iconSize="small"
                 unicode={LUCIDE_ICONS_UNICODE.COPY}
-                iconColor="var(--primary-color)"
+                iconColor="var(--renderer-span-primary)"
                 onClick={copyAccountIdToClipboard}
               />
             }
