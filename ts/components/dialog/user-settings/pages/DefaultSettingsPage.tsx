@@ -73,7 +73,7 @@ function SessionIconForSettings(props: Omit<SessionIconProps, 'iconSize' | 'styl
       iconColor="var(--text-primary-color)"
       style={{ width: 'var(--user-settings-icon-min-width)' }}
       {...props}
-      iconSize="medium"
+      iconSize="large"
     />
   );
 }
@@ -84,7 +84,7 @@ function LucideIconForSettings(props: Omit<LucideIconProps, 'iconSize' | 'style'
       iconColor="var(--text-primary-color)"
       style={{ width: 'var(--user-settings-icon-min-width)' }}
       {...props}
-      iconSize="medium"
+      iconSize="large"
     />
   );
 }

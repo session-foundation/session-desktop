@@ -116,7 +116,7 @@ function HasPasswordSubSection() {
         onClick={async () => {
           dispatch(userSettingsModal({ userSettingsPage: 'password', passwordAction: 'change' }));
         }}
-        buttonColor={SessionButtonColor.Primary}
+        buttonColor={SessionButtonColor.PrimaryDark}
         buttonText={tr('change')}
       />
       <SettingsPanelButtonInlineBasic
@@ -144,7 +144,7 @@ function NoPasswordSubSection() {
         onClick={async () => {
           dispatch(userSettingsModal({ userSettingsPage: 'password', passwordAction: 'set' }));
         }}
-        buttonColor={SessionButtonColor.Primary}
+        buttonColor={SessionButtonColor.PrimaryDark}
         buttonText={tr('set')}
       />
     </PanelButtonGroup>

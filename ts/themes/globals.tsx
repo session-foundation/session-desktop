@@ -233,7 +233,7 @@ export const THEME_GLOBALS: ThemeGlobals = {
   '--composition-container-height': '60px',
   '--search-input-height': '34px',
   '--panel-button-container-min-height': '70px',
-  '--user-settings-icon-min-width': '58px',
+  '--user-settings-icon-min-width': '50px',
 
   '--default-duration': setDuration('0.25s'),
   '--default-duration-seconds': setDuration(0.25), // framer-motion requires a number

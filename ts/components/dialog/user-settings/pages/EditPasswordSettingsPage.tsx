@@ -260,7 +260,7 @@ export function EditPasswordSettingsPage(modalState: {
             text={tr(isSet ? 'passwordSet' : isRemove ? 'passwordRemove' : 'passwordChange')}
             buttonType={SessionButtonType.Outline}
             onClick={doChange}
-            buttonColor={isRemove ? SessionButtonColor.Danger : SessionButtonColor.Primary}
+            buttonColor={isRemove ? SessionButtonColor.Danger : SessionButtonColor.PrimaryDark}
             disabled={
               // to set a password, we need both passwords (new & confirm)
               (isSet && (!firstPassword || !secondPassword)) ||

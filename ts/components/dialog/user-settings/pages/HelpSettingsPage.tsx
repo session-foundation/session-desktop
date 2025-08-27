@@ -43,7 +43,7 @@ export function HelpSettingsPage(modalState: UserSettingsModalState) {
           text={{ token: 'helpReportABug' }}
           subText={{ token: 'helpReportABugExportLogsSaveToDesktopDescription' }}
           onClick={async () => saveLogToDesktop()}
-          buttonColor={SessionButtonColor.Primary}
+          buttonColor={SessionButtonColor.PrimaryDark}
           buttonText={tr('helpReportABugExportLogs')}
         />
       </PanelButtonGroup>

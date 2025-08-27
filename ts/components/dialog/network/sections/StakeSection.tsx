@@ -128,7 +128,7 @@ export function StakeSection() {
       </Flex>
       <SpacerXS />
       <SessionNetworkButton
-        buttonColor={isDarkTheme ? SessionButtonColor.Primary : undefined}
+        buttonColor={isDarkTheme ? SessionButtonColor.PrimaryDark : undefined}
         buttonShape={SessionButtonShape.Square}
         onClick={() => {
           showLinkVisitWarningDialog(
