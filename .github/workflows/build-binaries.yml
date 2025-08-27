@@ -23,7 +23,7 @@ concurrency:
 
 env:
   # we only want to publish on "push to master" or alpha releases. When we don't want to publish, we want to upload artefacts
-  SHOULD_PUBLISH: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+  SHOULD_PUBLISH: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/plop') }}
   SHOULD_PUBLISH_ALPHA: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/heads/release') && contains(github.ref, '-alpha.') }}
 
 jobs:
