@@ -821,7 +821,6 @@
   "recoveryPasswordHideRecoveryPassword": "Dölj Recovery Password",
   "recoveryPasswordHideRecoveryPasswordDescription": "Dölj återställningslösenordet permanent på denna enhet.",
   "recoveryPasswordRestoreDescription": "Ange ditt recovery password för att ladda ditt konto. Om du inte har sparat det kan du hitta det i dina appinställningar.",
-  "recoveryPasswordView": "Visa lösenord",
   "recoveryPasswordWarningSendDescription": "Detta är ditt återställningslösenord. Om du skickar det till någon kommer de att ha full tillgång till ditt konto.",
   "recreateGroup": "Skapa gruppen igen",
   "redo": "Gör om",

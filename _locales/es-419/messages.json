@@ -822,7 +822,6 @@
   "recoveryPasswordHideRecoveryPassword": "Ocultar Clave de Recuperación",
   "recoveryPasswordHideRecoveryPasswordDescription": "Ocultar permanentemente tu clave de recuperación en este dispositivo.",
   "recoveryPasswordRestoreDescription": "Ingrese su clave de recuperación para cargar su cuenta. Si no la ha guardado, puede encontrarla en la configuración de su aplicación.",
-  "recoveryPasswordView": "Ver contraseña",
   "recoveryPasswordWarningSendDescription": "Esta es tu recovery password. Si la envías a alguien, tendrá acceso completo a tu cuenta.",
   "recreateGroup": "Volver a crear grupo",
   "redo": "Rehacer",

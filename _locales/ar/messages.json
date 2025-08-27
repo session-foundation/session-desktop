@@ -734,7 +734,6 @@
   "recoveryPasswordHideRecoveryPassword": "إخفاء كلمة مرور الاسترداد",
   "recoveryPasswordHideRecoveryPasswordDescription": "قم بإخفاء كلمة مرور الاسترداد بشكل دائم على هذا الجهاز.",
   "recoveryPasswordRestoreDescription": "أدخل كلمة مرور الاسترجاع لتحميل حسابك. إذا لم تقم بحفظها، يمكنك العثور عليها في إعدادات التطبيق.",
-  "recoveryPasswordView": "عرض كلمة المرور",
   "recoveryPasswordWarningSendDescription": "هذه هي عبارة الاسترداد الخاصة بك. إذا قمت بإرساله إلى شخص ما ، فسيكون لديه حق الوصول الكامل إلى حسابك.",
   "recreateGroup": "إعادة إنشاء المجموعة",
   "redo": "إعادة",

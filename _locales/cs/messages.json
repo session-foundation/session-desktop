@@ -822,7 +822,6 @@
   "recoveryPasswordHideRecoveryPassword": "Skrýt heslo pro obnovení",
   "recoveryPasswordHideRecoveryPasswordDescription": "Trvale skrýt moje heslo pro obnovení v tomto zařízení.",
   "recoveryPasswordRestoreDescription": "Zadejte heslo pro obnovení k načtení účtu. Pokud ho nemáte uložené, naleznete ho v nastavení aplikace.",
-  "recoveryPasswordView": "Zobrazit heslo",
   "recoveryPasswordWarningSendDescription": "Toto je vaše heslo pro obnovení. Pokud ho někomu pošlete, bude mít plný přístup k vašemu účtu.",
   "recreateGroup": "Znovu vytvořit skupinu",
   "redo": "Znovu",

@@ -822,7 +822,6 @@
   "recoveryPasswordHideRecoveryPassword": "Ukryj hasło odzyskiwania",
   "recoveryPasswordHideRecoveryPasswordDescription": "Na stałe ukryj na tym urządzeniu hasło odzyskiwania konta.",
   "recoveryPasswordRestoreDescription": "Aby wczytać konto, wprowadź hasło odzyskiwania. Jeśli nie zostało ono zapisane, można je znaleźć w ustawieniach aplikacji.",
-  "recoveryPasswordView": "Zobacz hasło",
   "recoveryPasswordWarningSendDescription": "To jest Twoje hasło odzyskiwania. Jeśli je komuś wyślesz, osoba ta będzie miała pełny dostęp do Twojego konta.",
   "recreateGroup": "Odtwórz Grupę",
   "redo": "Ponów",

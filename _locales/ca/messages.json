@@ -818,7 +818,6 @@
   "recoveryPasswordHideRecoveryPassword": "Amaga la contrasenya de recuperació",
   "recoveryPasswordHideRecoveryPasswordDescription": "Oculta permanentment la teva contrasenya de recuperació en aquest dispositiu.",
   "recoveryPasswordRestoreDescription": "Introdueix la teva contrasenya de recuperació per carregar el teu compte. Si no l'has guardat, la pots trobar a la configuració de l'aplicació.",
-  "recoveryPasswordView": "Mostra la contrasenya",
   "recoveryPasswordWarningSendDescription": "Aquesta és la vostra contrasenya de recuperació. Si l'envieu a algú, tindrà accés complet al vostre compte.",
   "recreateGroup": "Recrea grup",
   "redo": "Refés",

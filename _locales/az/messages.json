@@ -822,7 +822,6 @@
   "recoveryPasswordHideRecoveryPassword": "Geri qaytarma parolunu gizlət",
   "recoveryPasswordHideRecoveryPasswordDescription": "Geri qaytarma parolunuzu bu cihazda həmişəlik gizlədin.",
   "recoveryPasswordRestoreDescription": "Hesabınızı yükləmək üçün geri qaytarma parolunuzu daxil edin. Saxlamamısınızsa, onu tətbiq ayarlarınızda tapa bilərsiniz.",
-  "recoveryPasswordView": "Parolu göstər",
   "recoveryPasswordWarningSendDescription": "Bu, sizin geri qaytarma parolunuzdur. Kiməsə göndərsəniz, hesabınıza tam erişə bilər.",
   "recreateGroup": "Qrupu yenidən yarat",
   "redo": "Təkrar et",

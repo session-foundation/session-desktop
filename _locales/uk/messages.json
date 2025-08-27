@@ -818,7 +818,6 @@
   "recoveryPasswordHideRecoveryPassword": "Приховати пароль відновлення",
   "recoveryPasswordHideRecoveryPasswordDescription": "Назавжди прибрати пароль відновлення на цьому пристрої.",
   "recoveryPasswordRestoreDescription": "Введіть свій пароль відновлення, щоб завантажити свій обліковий запис. Якщо ви його не зберегли, ви можете знайти його в налаштуваннях додатку.",
-  "recoveryPasswordView": "Показати пароль",
   "recoveryPasswordWarningSendDescription": "Це ваш Recovery password. Якщо ви надішлете його комусь, він матиме повний доступ до вашого облікового запису.",
   "recreateGroup": "Оновити групу",
   "redo": "Вперед",

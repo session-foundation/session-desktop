@@ -822,7 +822,6 @@
   "recoveryPasswordHideRecoveryPassword": "Ocultar Chave de Recuperação",
   "recoveryPasswordHideRecoveryPasswordDescription": "Esconder permanentemente a sua palavra-passe de recuperação neste dispositivo.",
   "recoveryPasswordRestoreDescription": "Insira a sua chave de recuperação para carregar a sua conta. Se não a salvou, pode encontrá-la nas configurações da aplicação.",
-  "recoveryPasswordView": "Ver Palavra-passe",
   "recoveryPasswordWarningSendDescription": "Esta é a sua chave de recuperação. Se você enviá-la para alguém, essa pessoa terá acesso total à sua conta.",
   "recreateGroup": "Recriar grupo",
   "redo": "Refazer",

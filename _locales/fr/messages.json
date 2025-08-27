@@ -822,7 +822,6 @@
   "recoveryPasswordHideRecoveryPassword": "Cacher le mot de passe de récupération",
   "recoveryPasswordHideRecoveryPasswordDescription": "Masquer définitivement votre mot de passe de récupération sur cet appareil.",
   "recoveryPasswordRestoreDescription": "Entrez votre mot de passe de récupération pour charger votre compte. Si vous ne l'avez pas enregistré, vous pouvez le trouver dans les paramètres de l'application.",
-  "recoveryPasswordView": "Afficher le mot de passe",
   "recoveryPasswordWarningSendDescription": "Voici votre mot de passe de récupération. Si vous l'envoyez à quelqu'un, il aura un accès complet à votre compte.",
   "recreateGroup": "Recréer le groupe",
   "redo": "Rétablir",

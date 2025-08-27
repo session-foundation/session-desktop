@@ -822,7 +822,6 @@
   "recoveryPasswordHideRecoveryPassword": "リカバリパスワードを隠す",
   "recoveryPasswordHideRecoveryPasswordDescription": "このデバイスでリカバリーパスワードを永久に非表示にします",
   "recoveryPasswordRestoreDescription": "アカウントを読み込むためにリカバリーフレーズを入力してください。 保存していない場合は、アプリの設定で確認できます。",
-  "recoveryPasswordView": "パスワードを見る",
   "recoveryPasswordWarningSendDescription": "これはあなたのリカバリーパスワードです。誰かに送信すると、その人はあなたのアカウントにフルアクセスできます。",
   "recreateGroup": "グループを再作成",
   "redo": "やり直す",

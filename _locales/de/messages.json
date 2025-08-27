@@ -822,7 +822,6 @@
   "recoveryPasswordHideRecoveryPassword": "Wiederherstellungspasswort ausblenden",
   "recoveryPasswordHideRecoveryPasswordDescription": "Blende dein Wiederherstellungspasswort auf diesem Gerät dauerhaft aus.",
   "recoveryPasswordRestoreDescription": "Gib dein Wiederherstellungspasswort ein, um deinen Account zu laden. Wenn du es nicht gespeichert hast, findest du es in deinen App-Einstellungen.",
-  "recoveryPasswordView": "Passwort anzeigen",
   "recoveryPasswordWarningSendDescription": "Dies ist dein Wiederherstellungspasswort. Wenn du es jemandem sendest, wird diese Person vollen Zugriff auf deinen Account haben.",
   "recreateGroup": "Gruppe neu erstellen",
   "redo": "Wiederholen",

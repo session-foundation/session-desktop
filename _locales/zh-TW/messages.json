@@ -822,7 +822,6 @@
   "recoveryPasswordHideRecoveryPassword": "隱藏恢復密碼",
   "recoveryPasswordHideRecoveryPasswordDescription": "在此設備上永久隱藏您的恢復密碼。",
   "recoveryPasswordRestoreDescription": "輸入您的恢復密碼以載入您的帳戶。如果您尚未保存它，可以在應用設置中找到。",
-  "recoveryPasswordView": "檢視密碼",
   "recoveryPasswordWarningSendDescription": "這是你的恢復密碼。獲得這段復密碼的任何人都可以全權存取你的帳戶。",
   "recreateGroup": "重新建立群組",
   "redo": "重做",
