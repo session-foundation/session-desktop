@@ -73,7 +73,7 @@ function SessionIconForSettings(props: Omit<SessionIconProps, 'iconSize' | 'styl
       iconColor="var(--text-primary-color)"
       style={{ width: 'var(--user-settings-icon-min-width)' }}
       {...props}
-      iconSize="small"
+      iconSize="medium"
     />
   );
 }
@@ -237,7 +237,7 @@ function AdminSection() {
         />
       ) : null}
       <PanelIconButton
-        iconElement={<LucideIconForSettings unicode={LUCIDE_ICONS_UNICODE.CIRCLE_HELP} />}
+        iconElement={<SessionIconForSettings iconType="questionNoCircle" />}
         text={{ token: 'sessionHelp' }}
         onClick={() => {
           dispatch(userSettingsModal({ userSettingsPage: 'help' }));
