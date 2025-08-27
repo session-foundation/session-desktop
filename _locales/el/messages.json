@@ -683,7 +683,6 @@
   "recoveryPasswordHideRecoveryPassword": "Απόκρυψη Κωδικού Ανάκτησης",
   "recoveryPasswordHideRecoveryPasswordDescription": "Μόνιμη απόκρυψη του κωδικού ανάκτησης σε αυτή τη συσκευή.",
   "recoveryPasswordRestoreDescription": "Εισαγάγετε τον κωδικό σας ανάκτησης για να φορτώσετε τον λογαριασμό σας. Αν δεν τον έχετε αποθηκεύσει, μπορείτε να τον βρείτε στις ρυθμίσεις της εφαρμογής.",
-  "recoveryPasswordView": "Προβολή Κωδικού",
   "recoveryPasswordWarningSendDescription": "Αυτός είναι ο κωδικός ανάκτησής σας. Αν τον στείλετε σε κάποιον, θα έχει πλήρη πρόσβαση στον λογαριασμό σας.",
   "redo": "Επανάληψη",
   "remove": "Αφαίρεση",

@@ -764,7 +764,6 @@
   "recoveryPasswordHideRecoveryPassword": "Skjul Recovery Password",
   "recoveryPasswordHideRecoveryPasswordDescription": "Permanent skjul din gendannelsessætning på denne enhed.",
   "recoveryPasswordRestoreDescription": "Indtast din gendannelsesadgangskode for at indlæse din konto. Hvis du ikke har gemt den, kan du finde den i dine app-indstillinger.",
-  "recoveryPasswordView": "Vis adgangskode",
   "recoveryPasswordWarningSendDescription": "Det her er din gendannelsessætning. Hvis du sender den til nogen vil de have fuld adgang til din konto.",
   "recreateGroup": "Genskab gruppe",
   "redo": "Gentag",

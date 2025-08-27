@@ -685,7 +685,6 @@
   "recoveryPasswordHideRecoveryPassword": "Recovery Password-ის დამალვა",
   "recoveryPasswordHideRecoveryPasswordDescription": "მუდმივად დამალეთ აღდგენის პაროლი ამ მოწყობილობაზე.",
   "recoveryPasswordRestoreDescription": "შეიყვანეთ თქვენი ქსელის პაროლი თქვენი ანგარიშის ჩამოსატვირთად. თუ ის არ აქვს შენახული, შეგიძლიათ იპოვოთ მისი აპლიკაციის პარამეტრებში.",
-  "recoveryPasswordView": "პაროლის პარამეტრების ჩვენება",
   "recoveryPasswordWarningSendDescription": "ეს არის თქვენი აღდგენის პაროლი. თუ ვინმეს ამას გაგზავნით, მისი ექნება სრული წვდომა თქვენს ანგარიშზე.",
   "redo": "აღდგენა",
   "remove": "წაშლა",

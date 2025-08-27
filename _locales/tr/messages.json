@@ -801,7 +801,6 @@
   "recoveryPasswordHideRecoveryPassword": "Kurtarma Şifresini Gizle",
   "recoveryPasswordHideRecoveryPasswordDescription": "Kurtarma parolanızı bu cihazda kalıcı olarak gizleyin.",
   "recoveryPasswordRestoreDescription": "Hesabınızı yüklemek için kurtarma parolanızı girin. Kaydetmediyseniz, uygulama ayarlarınızda bulabilirsiniz.",
-  "recoveryPasswordView": "Şifreyi Görüntüle",
   "recoveryPasswordWarningSendDescription": "Bu sizin kurtarma ifadenizdir. Birine gönderirseniz, hesabınızda tam erişime sahip olurlar.",
   "recreateGroup": "Grubu Yeniden Oluştur",
   "redo": "Yinele",

@@ -672,7 +672,6 @@
   "recoveryPasswordHideRecoveryPassword": "Skrij Recovery Password",
   "recoveryPasswordHideRecoveryPasswordDescription": "Trajno skrij geslo za obnovitev na tej napravi.",
   "recoveryPasswordRestoreDescription": "Vnesite vaše obnovitveno geslo, da naložite vaš račun. Če ga niste shranili, ga lahko najdete v nastavitvah aplikacije.",
-  "recoveryPasswordView": "Ogled gesla",
   "recoveryPasswordWarningSendDescription": "To je vaše geslo za obnovitev. Če ga pošljete nekomu, bo imel popoln dostop do vašega računa.",
   "redo": "Ponovno uveljavi",
   "remove": "Odstrani",

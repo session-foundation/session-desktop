@@ -684,7 +684,6 @@
   "recoveryPasswordHideRecoveryPassword": "Ocultar Senha de Recuperação",
   "recoveryPasswordHideRecoveryPasswordDescription": "Permanentemente esconda sua senha de recuperação neste dispositivo.",
   "recoveryPasswordRestoreDescription": "Digite sua senha de recuperação para carregar sua conta. Se você não a salvou, você pode encontrá-la nas configurações do aplicativo.",
-  "recoveryPasswordView": "Ver Senha",
   "recoveryPasswordWarningSendDescription": "Essa é sua senha de recuperação. Se você mandá-la para alguem, essa pessoa terá acesso completo a sua conta.",
   "redo": "Refazer",
   "remove": "Remover",
