@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import useInterval from 'react-use/lib/useInterval';
 import useTimeoutFn from 'react-use/lib/useTimeoutFn';
+import useKey from 'react-use/lib/useKey';
 
 import useMount from 'react-use/lib/useMount';
 import useThrottleFn from 'react-use/lib/useThrottleFn';
@@ -58,7 +59,7 @@ import { NetworkTime } from '../../util/NetworkTime';
 import { Storage } from '../../util/storage';
 import { getFileInfoFromFileServer } from '../../session/apis/file_server_api/FileServerApi';
 import { themesArray } from '../../themes/constants/colors';
-import { isDebugMode } from '../../shared/env_vars';
+import { isDebugMode, isDevProd } from '../../shared/env_vars';
 import { GearAvatarButton } from '../buttons/avatar/GearAvatarButton';
 import { useZoomShortcuts } from '../../hooks/useZoomingShortcut';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
@@ -93,6 +94,18 @@ const Section = (props: { type: SectionType }) => {
 
   const isModalVisible = useSelector(getIsModalVisible);
   const isDarkTheme = useIsDarkTheme();
+
+  // for devs/QA, it's convenient to be able to switch themes with ctrl+t
+  useKey(
+    (event: KeyboardEvent) => {
+      return event.ctrlKey && event.key === 't';
+    },
+    () => {
+      if (isDevProd()) {
+        void handleThemeSwitch();
+      }
+    }
+  );
 
   const handleClick = () => {
     if (type === SectionType.DebugMenu) {
