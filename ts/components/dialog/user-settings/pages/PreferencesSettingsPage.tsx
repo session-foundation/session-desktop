@@ -28,8 +28,6 @@ async function toggleStartInTray() {
   try {
     const newValue = !(await window.getStartInTray());
 
-    // make sure to write it here too, as this is the value used on the UI to mark the toggle as true/false
-    await window.setSettingValue(SettingsKey.settingsStartInTray, newValue);
     await window.setStartInTray(newValue);
     if (!newValue) {
       ToastUtils.pushRestartNeeded();
@@ -41,11 +39,8 @@ async function toggleStartInTray() {
 
 async function toggleAutoStart() {
   try {
-    const currentSettings = await window.getAutoStartEnabled();
-    const newValue = !currentSettings;
+    const newValue = !(await window.getAutoStartEnabled());
 
-    // make sure to write it here too, as this is the value used on the UI to mark the toggle as true/false
-    await window.setSettingValue(SettingsKey.settingsAutoStart, newValue);
     await window.setAutoStartEnabled(newValue);
   } catch (e) {
     window.log.warn('auto start change error:', e);

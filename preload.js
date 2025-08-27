@@ -12,6 +12,7 @@ const { isEmpty } = require('lodash');
 const { setupI18n } = require('./ts/util/i18n/i18n');
 const { UserUtils } = require('./ts/session/utils');
 const { BlindingActions } = require('./ts/webworker/workers/browser/libsession_worker_interface');
+const { SettingsKey } = require('./ts/data/settings-key');
 
 const { crowdinLocale } = ipc.sendSync('locale-data');
 
@@ -135,6 +136,7 @@ window.setStartInTray = async startInTray =>
       return;
     });
     ipc.send('start-in-tray-on-start', startInTray);
+    void window.setSettingValue(SettingsKey.settingsStartInTray, startInTray);
   });
 
 window.getStartInTray = async () => {
@@ -157,6 +159,7 @@ window.setAutoStartEnabled = async autoStart =>
       return;
     });
     ipc.send('set-auto-start-enabled', autoStart);
+    void window.setSettingValue(SettingsKey.settingsAutoStart, autoStart);
   });
 
 window.getAutoStartEnabled = async () => {
