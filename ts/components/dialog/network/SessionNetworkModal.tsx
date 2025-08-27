@@ -60,6 +60,7 @@ export function SessionNetworkModal() {
         />
       }
       onClose={onClose}
+      topAnchor="5vh"
       shouldOverflow={true}
     >
       <NetworkSection />

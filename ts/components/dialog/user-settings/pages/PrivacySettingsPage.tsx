@@ -13,11 +13,7 @@ import {
   PanelLabelWithDescription,
 } from '../../../buttons/panel/PanelButton';
 import { PanelToggleButton } from '../../../buttons/panel/PanelToggleButton';
-import {
-  ModalBasicHeader,
-  SessionWrapperModal,
-  WrapperModalWidth,
-} from '../../../SessionWrapperModal';
+import { ModalBasicHeader } from '../../../SessionWrapperModal';
 import { ModalBackButton } from '../../shared/ModalBackButton';
 import {
   useUserSettingsBackAction,
@@ -36,6 +32,7 @@ import { getPasswordHash, Storage } from '../../../../util/storage';
 import { SpacerXS } from '../../../basic/Text';
 import { SettingsToggleBasic } from '../components/SettingsToggleBasic';
 import { SettingsPanelButtonInlineBasic } from '../components/SettingsPanelButtonInlineBasic';
+import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
 
 const toggleCallMediaPermissions = async (triggerUIUpdate: () => void) => {
   const currentValue = window.getCallMediaPermissions();
@@ -171,7 +168,7 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
   const forceUpdate = useUpdate();
 
   return (
-    <SessionWrapperModal
+    <UserSettingsModalContainer
       headerChildren={
         <ModalBasicHeader
           title={title}
@@ -181,9 +178,6 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
         />
       }
       onClose={closeAction || undefined}
-      shouldOverflow={true}
-      allowOutsideClick={false}
-      $contentMinWidth={WrapperModalWidth.normal}
     >
       <PanelLabelWithDescription title={{ token: 'callsSettings' }} />
       <PanelButtonGroup>
@@ -280,6 +274,6 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
       </PanelButtonGroup>
       <PanelLabelWithDescription title={{ token: 'passwords' }} />
       <PasswordSubSection />
-    </SessionWrapperModal>
+    </UserSettingsModalContainer>
   );
 }

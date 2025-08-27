@@ -252,7 +252,6 @@ export const OnionPathModal = () => {
   return (
     <SessionWrapperModal
       onClose={() => dispatch(onionPathModal(null))}
-      topAnchor="25vh"
       headerChildren={<ModalBasicHeader title={tr('onionRoutingPath')} showExitIcon={true} />}
       buttonChildren={
         <ModalActionsContainer buttonType={SessionButtonType.Simple}>

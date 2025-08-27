@@ -148,6 +148,23 @@ const AtSymbol = ({ conversationId }: WithConvoId) => {
   ) : null;
 };
 
+const StyledUnreadCount = styled.p`
+  background-color: var(--unread-messages-alert-background-color);
+  text-align: center;
+  padding-top: 1px;
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.25px;
+  height: 16px;
+  min-width: 16px;
+  line-height: 16px;
+  border-radius: 8px;
+  color: var(--unread-messages-alert-text-color);
+  font-weight: 700;
+  margin: 0px;
+  padding-inline: 3px;
+  flex-shrink: 0;
+`;
+
 const UnreadCount = ({ conversationId }: WithConvoId) => {
   const unreadMsgCount = useUnreadCount(conversationId);
   const forcedUnread = useIsForcedUnreadWithoutUnreadMsg(conversationId);
@@ -159,7 +176,7 @@ const UnreadCount = ({ conversationId }: WithConvoId) => {
 
   // TODO would be good to merge the style of this with SessionNotificationCount or SessionUnreadCount at some point.
   return unreadMsgCount > 0 || forcedUnread ? (
-    <p className="module-conversation-list-item__unread-count">{unreadWithOverflow}</p>
+    <StyledUnreadCount>{unreadWithOverflow}</StyledUnreadCount>
   ) : null;
 };
 

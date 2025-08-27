@@ -6,12 +6,7 @@ import {
   PanelButtonTextWithSubText,
   PanelLabelWithDescription,
 } from '../../../buttons/panel/PanelButton';
-import {
-  ModalActionsContainer,
-  ModalBasicHeader,
-  SessionWrapperModal,
-  WrapperModalWidth,
-} from '../../../SessionWrapperModal';
+import { ModalActionsContainer, ModalBasicHeader } from '../../../SessionWrapperModal';
 import { ModalBackButton } from '../../shared/ModalBackButton';
 import {
   useUserSettingsBackAction,
@@ -32,6 +27,7 @@ import { ToastUtils } from '../../../../session/utils';
 import { assertUnreachable } from '../../../../types/sqlSharedTypes';
 import { getPasswordHash, Storage } from '../../../../util/storage';
 import { matchesHash, validatePassword } from '../../../../util/passwordUtils';
+import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
 
 function StrengthCriteria(opts: { isMet: boolean } & WithTrArgs) {
   const theme = useTheme();
@@ -248,7 +244,7 @@ export function EditPasswordSettingsPage(modalState: {
   }
 
   return (
-    <SessionWrapperModal
+    <UserSettingsModalContainer
       headerChildren={
         <ModalBasicHeader
           title={title}
@@ -258,9 +254,6 @@ export function EditPasswordSettingsPage(modalState: {
         />
       }
       onClose={closeAction || undefined}
-      shouldOverflow={true}
-      allowOutsideClick={false}
-      $contentMinWidth={WrapperModalWidth.normal}
       buttonChildren={
         <ModalActionsContainer buttonType={SessionButtonType.Outline}>
           <SessionButton
@@ -387,6 +380,6 @@ export function EditPasswordSettingsPage(modalState: {
           </PanelButtonGroup>
         </>
       )}
-    </SessionWrapperModal>
+    </UserSettingsModalContainer>
   );
 }

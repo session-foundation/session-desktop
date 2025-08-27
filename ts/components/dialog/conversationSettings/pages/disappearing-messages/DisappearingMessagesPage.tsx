@@ -174,6 +174,7 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
       onClose={onClose}
       shouldOverflow={true}
       allowOutsideClick={false}
+      topAnchor="5vh"
       $contentMinWidth={WrapperModalWidth.narrow}
       buttonChildren={
         <ModalActionsContainer buttonType={SessionButtonType.Outline}>

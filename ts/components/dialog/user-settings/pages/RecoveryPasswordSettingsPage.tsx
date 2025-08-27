@@ -12,11 +12,7 @@ import {
   PanelButtonTextWithSubText,
   PanelLabelWithDescription,
 } from '../../../buttons/panel/PanelButton';
-import {
-  ModalBasicHeader,
-  SessionWrapperModal,
-  WrapperModalWidth,
-} from '../../../SessionWrapperModal';
+import { ModalBasicHeader } from '../../../SessionWrapperModal';
 import { ModalBackButton } from '../../shared/ModalBackButton';
 import {
   useUserSettingsBackAction,
@@ -38,6 +34,7 @@ import { SessionQRCode, type QRCodeLogoProps } from '../../../SessionQRCode';
 
 import { AnimatedFlex, Flex } from '../../../basic/Flex';
 import { CopyToClipboardButton } from '../../../buttons';
+import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
 
 const StyledRecoveryPassword = styled(AnimatedFlex)<{ color: string }>`
   font-family: var(--font-mono);
@@ -102,7 +99,7 @@ export function RecoveryPasswordSettingsPage(modalState: UserSettingsModalState)
   }
 
   return (
-    <SessionWrapperModal
+    <UserSettingsModalContainer
       headerChildren={
         <ModalBasicHeader
           title={title}
@@ -112,9 +109,6 @@ export function RecoveryPasswordSettingsPage(modalState: UserSettingsModalState)
         />
       }
       onClose={closeAction || undefined}
-      shouldOverflow={true}
-      allowOutsideClick={false}
-      $contentMinWidth={WrapperModalWidth.normal}
     >
       <PanelLabelWithDescription title={{ token: 'sessionRecoveryPassword' }} />
       <PanelButtonGroup
@@ -203,6 +197,6 @@ export function RecoveryPasswordSettingsPage(modalState: UserSettingsModalState)
           </PanelButtonGroup>
         </>
       ) : null}
-    </SessionWrapperModal>
+    </UserSettingsModalContainer>
   );
 }

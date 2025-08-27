@@ -297,29 +297,6 @@
   }
 }
 
-.module-conversation-list-item__unread-count {
-  background-color: var(--unread-messages-alert-background-color);
-  color: var(--unread-messages-alert-text-color);
-  text-align: center;
-
-  padding-top: 1px;
-  padding-inline-start: 3px;
-  padding-inline-end: 3px;
-
-  position: absolute;
-  right: -6px;
-  top: -6px;
-
-  font-weight: 300;
-  font-size: var(--font-size-xs);
-  letter-spacing: 0.25px;
-
-  height: 16px;
-  min-width: 16px;
-  line-height: 16px;
-  border-radius: 8px;
-}
-
 .module-conversation-list-item__content {
   flex-grow: 1;
   margin-inline-start: 12px;

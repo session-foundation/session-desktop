@@ -209,9 +209,9 @@ export function ModalBottomButtonWithBorder({
   );
 }
 
-export type ModalTopAnchor = '5vh' | '15vh' | '25vh' | '35vh' | '45vh' | 'center';
+export type ModalTopAnchor = '5vh' | 'center';
 
-export type SessionWrapperModalType = {
+type SessionWrapperModalType = {
   headerChildren: ReactNode;
   children: ReactNode;
   /**
@@ -228,6 +228,7 @@ export type SessionWrapperModalType = {
   modalDataTestId?: SessionDataTestId;
   /**
    * Instead of centering the modal (and having layout shifts on height change), we can use this to anchor the modal to a % from the top of the screen.
+   * Defaults to 'center' to keep the modal centered (should only be used for modals that doesn't have height changes)
    */
   topAnchor?: ModalTopAnchor;
   $flexGap?: string;
@@ -446,7 +447,7 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
               $contentMinWidth={$contentMinWidth}
               $padding={padding}
               style={style}
-              $topAnchor={topAnchor ?? '5vh'}
+              $topAnchor={topAnchor ?? 'center'}
             >
               {props.headerChildren ? props.headerChildren : null}
 

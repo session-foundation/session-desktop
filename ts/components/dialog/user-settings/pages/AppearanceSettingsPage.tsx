@@ -14,11 +14,7 @@ import {
   PanelButtonTextWithSubText,
   PanelLabelWithDescription,
 } from '../../../buttons/panel/PanelButton';
-import {
-  ModalBasicHeader,
-  SessionWrapperModal,
-  WrapperModalWidth,
-} from '../../../SessionWrapperModal';
+import { ModalBasicHeader } from '../../../SessionWrapperModal';
 import { ModalBackButton } from '../../shared/ModalBackButton';
 import {
   useUserSettingsBackAction,
@@ -50,6 +46,7 @@ import { getMenuAnimation } from '../../../menu/MenuAnimation';
 import { ItemWithDataTestId } from '../../../menu/items/MenuItemWithDataTestId';
 import { ZOOM_FACTOR } from '../../../../session/constants';
 import { SessionContextMenuContainerItemsCentered } from '../../../SessionContextMenuContainer';
+import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
 
 const StyledPrimaryColorSwitcherContainer = styled.div`
   display: flex;
@@ -399,7 +396,7 @@ export function AppearanceSettingsPage(modalState: UserSettingsModalState) {
   }
 
   return (
-    <SessionWrapperModal
+    <UserSettingsModalContainer
       headerChildren={
         <ModalBasicHeader
           title={title}
@@ -409,9 +406,6 @@ export function AppearanceSettingsPage(modalState: UserSettingsModalState) {
         />
       }
       onClose={closeAction || undefined}
-      shouldOverflow={true}
-      allowOutsideClick={false}
-      $contentMinWidth={WrapperModalWidth.normal}
     >
       <PanelLabelWithDescription title={{ token: 'appearanceThemes' }} />
       <PanelButtonGroup>
@@ -462,6 +456,6 @@ export function AppearanceSettingsPage(modalState: UserSettingsModalState) {
           </PanelButtonGroup>
         </>
       ) : null}
-    </SessionWrapperModal>
+    </UserSettingsModalContainer>
   );
 }

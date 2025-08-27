@@ -25,7 +25,7 @@ import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { type LucideIconProps, LucideIcon } from '../../../icon/LucideIcon';
 import { SessionIconButton, SessionLucideIconButton } from '../../../icon/SessionIconButton';
 import { QRView } from '../../../qrview/QrView';
-import { ModalBasicHeader, SessionWrapperModal } from '../../../SessionWrapperModal';
+import { ModalBasicHeader } from '../../../SessionWrapperModal';
 import { showLinkVisitWarningDialog } from '../../OpenUrlModal';
 import { SessionProInfoVariant } from '../../SessionProInfoModal';
 import { ModalPencilIcon } from '../../shared/ModalPencilButton';
@@ -36,6 +36,7 @@ import { useIsProAvailable } from '../../../../hooks/useIsProAvailable';
 import { setDebugMode } from '../../../../state/ducks/debug';
 import { useHideRecoveryPasswordEnabled } from '../../../../state/selectors/settings';
 import { OnionStatusLight } from '../../OnionStatusPathDialog';
+import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
 
 const handleKeyQRMode = (mode: ProfileDialogModes, setMode: (mode: ProfileDialogModes) => void) => {
   switch (mode) {
@@ -87,7 +88,6 @@ function LucideIconForSettings(props: Omit<LucideIconProps, 'iconSize' | 'style'
     />
   );
 }
-const StyledUserSettingsDialog = styled.div``;
 
 function SessionProSection() {
   const dispatch = useDispatch();
@@ -360,72 +360,68 @@ export const DefaultSettingPage = () => {
   }
 
   return (
-    <StyledUserSettingsDialog data-testid="user-settings-dialog">
-      <SessionWrapperModal
-        headerChildren={
-          <ModalBasicHeader
-            title={tr('sessionSettings')}
-            showExitIcon={true}
-            extraRightButton={<ModalPencilIcon onClick={showUpdateProfileInformation} />}
-          />
-        }
-        onClose={closeDialog}
-        shouldOverflow={true}
-        buttonChildren={null}
+    <UserSettingsModalContainer
+      headerChildren={
+        <ModalBasicHeader
+          title={tr('sessionSettings')}
+          showExitIcon={true}
+          extraRightButton={<ModalPencilIcon onClick={showUpdateProfileInformation} />}
+        />
+      }
+      onClose={closeDialog}
+    >
+      <Flex
+        $container={true}
+        $flexDirection="column"
+        $alignItems="center"
+        paddingBlock="var(--margins-md)"
+        $flexGap="var(--margins-md)"
+        width="100%"
       >
-        <Flex
-          $container={true}
-          $flexDirection="column"
-          $alignItems="center"
-          paddingBlock="var(--margins-md)"
-          $flexGap="var(--margins-md)"
-          width="100%"
-        >
-          {mode === 'qr' ? (
-            <QRView sessionID={us} onExit={() => setMode('default')} />
-          ) : (
-            <ProfileHeader
-              avatarPath={avatarPath}
-              conversationId={us}
-              onPlusAvatarClick={null}
-              dataTestId="avatar-edit-profile-dialog"
-              onQRClick={() => setMode('qr')}
-              enlargedImage={enlargedImage}
-              toggleEnlargedImage={() => setEnlargedImage(!enlargedImage)}
-            />
-          )}
-          {mode === 'default' && (
-            <ProfileName profileName={profileName} onClick={showUpdateProfileInformation} />
-          )}
-
-          <AccountIdPill accountType="ours" />
-          <SessionIDNotEditable
-            dataTestId="your-account-id"
-            sessionId={us}
-            displayType="3lines"
-            tooltipNode={
-              <SessionLucideIconButton
-                iconSize="small"
-                unicode={LUCIDE_ICONS_UNICODE.COPY}
-                iconColor="var(--primary-color)"
-                onClick={copyAccountIdToClipboard}
-              />
-            }
-            style={{
-              color: 'var(--text-primary-color)',
-              fontSize: 'var(--font-size-h8)',
-              lineHeight: 1.1,
-            }}
-            onClick={copyAccountIdToClipboard}
+        {mode === 'qr' ? (
+          <QRView sessionID={us} onExit={() => setMode('default')} />
+        ) : (
+          <ProfileHeader
+            avatarPath={avatarPath}
+            conversationId={us}
+            onPlusAvatarClick={null}
+            dataTestId="avatar-edit-profile-dialog"
+            onQRClick={() => setMode('qr')}
+            enlargedImage={enlargedImage}
+            toggleEnlargedImage={() => setEnlargedImage(!enlargedImage)}
           />
+        )}
+        {mode === 'default' && (
+          <ProfileName profileName={profileName} onClick={showUpdateProfileInformation} />
+        )}
 
-          <SessionProSection />
-          <MiscSection />
-          <SettingsSection />
-          <AdminSection />
-          <SessionInfo />
-        </Flex>
-      </SessionWrapperModal>
-    </StyledUserSettingsDialog>
+        <AccountIdPill accountType="ours" />
+        <SessionIDNotEditable
+          dataTestId="your-account-id"
+          sessionId={us}
+          displayType="3lines"
+          tooltipNode={
+            <SessionLucideIconButton
+              iconSize="small"
+              unicode={LUCIDE_ICONS_UNICODE.COPY}
+              iconColor="var(--primary-color)"
+              onClick={copyAccountIdToClipboard}
+            />
+          }
+          style={{
+            color: 'var(--text-primary-color)',
+            fontSize: 'var(--font-size-h8)',
+            lineHeight: 1.1,
+          }}
+          onClick={copyAccountIdToClipboard}
+        />
+
+        <SessionProSection />
+        <MiscSection />
+        <SettingsSection />
+        <AdminSection />
+        <SessionInfo />
+      </Flex>
+    </UserSettingsModalContainer>
   );
 };

@@ -3,11 +3,7 @@ import { useDispatch } from 'react-redux';
 import { tr } from '../../../../localization/localeTools';
 import { type UserSettingsModalState } from '../../../../state/ducks/modalDialog';
 import { PanelButtonGroup, PanelLabelWithDescription } from '../../../buttons/panel/PanelButton';
-import {
-  ModalBasicHeader,
-  SessionWrapperModal,
-  WrapperModalWidth,
-} from '../../../SessionWrapperModal';
+import { ModalBasicHeader } from '../../../SessionWrapperModal';
 import { ModalBackButton } from '../../shared/ModalBackButton';
 import {
   useUserSettingsBackAction,
@@ -19,6 +15,7 @@ import { saveLogToDesktop } from '../../../../util/logger/renderer_process_loggi
 import { SettingsPanelButtonInlineBasic } from '../components/SettingsPanelButtonInlineBasic';
 import { SettingsExternalLinkBasic } from '../components/SettingsExternalLinkBasic';
 import { showLinkVisitWarningDialog } from '../../OpenUrlModal';
+import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
 
 export function HelpSettingsPage(modalState: UserSettingsModalState) {
   const backAction = useUserSettingsBackAction(modalState);
@@ -28,7 +25,7 @@ export function HelpSettingsPage(modalState: UserSettingsModalState) {
   const dispatch = useDispatch();
 
   return (
-    <SessionWrapperModal
+    <UserSettingsModalContainer
       headerChildren={
         <ModalBasicHeader
           title={title}
@@ -38,9 +35,6 @@ export function HelpSettingsPage(modalState: UserSettingsModalState) {
         />
       }
       onClose={closeAction || undefined}
-      shouldOverflow={true}
-      allowOutsideClick={false}
-      $contentMinWidth={WrapperModalWidth.normal}
     >
       <PanelLabelWithDescription title={{ token: 'logs' }} />
       <PanelButtonGroup>
@@ -89,6 +83,6 @@ export function HelpSettingsPage(modalState: UserSettingsModalState) {
           }}
         />
       </PanelButtonGroup>
-    </SessionWrapperModal>
+    </UserSettingsModalContainer>
   );
 }
