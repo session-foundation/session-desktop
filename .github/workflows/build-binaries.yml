@@ -10,12 +10,19 @@ on:
       - master
       - dev
       - 'release/**'
+      - 'plop/**'
       - 'ci/**'
   pull_request:
     branches:
       - dev
       - 'release/**'
       - 'ci/**'
+  workflow_dispatch:
+    inputs:
+      target-branch:
+        description: 'Branch to make a release of'
+        required: true
+        default: 'dev'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -23,8 +30,8 @@ concurrency:
 
 env:
   # we only want to publish on "push to master" or alpha releases. When we don't want to publish, we want to upload artefacts
-  SHOULD_PUBLISH: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/plop') }}
-  SHOULD_PUBLISH_ALPHA: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/heads/release') && contains(github.ref, '-alpha.') }}
+  SHOULD_PUBLISH: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master'}}
+  SHOULD_PUBLISH_ALPHA: ${{((github.event_name == 'push' && startsWith(github.ref, 'refs/heads/release') && contains(github.ref, '-alpha.'))) || (github.event_name == 'workflow_dispatch') }}
 
 jobs:
   create_draft_release:
@@ -35,7 +42,6 @@ jobs:
       version_tag: ${{ steps.get_version.outputs.VERSION_TAG }}
     steps:
       - name: Checkout git repo
-        # only run this on "push" to "master" or alpha releases
         uses: actions/checkout@v4
         # We only need a few files in this run, no point cloning everything
         with:
@@ -44,6 +50,7 @@ jobs:
             build/release-notes.md
             build/release-notes-alpha.md
           sparse-checkout-cone-mode: false
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
 
       - name: Get version tag from package.json
         id: get_version
@@ -78,6 +85,8 @@ jobs:
 
       - name: Checkout git repo
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
 
       - name: Setup & Build
         uses: ./actions/setup_and_build
@@ -148,6 +157,7 @@ jobs:
             package.json
             build/setup-release-combine.sh
           sparse-checkout-cone-mode: false
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
 
       - name: Download release metadata
         # only run this on "push" to "master" or alpha releases
@@ -187,6 +197,8 @@ jobs:
 
       - name: Checkout git repo
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
 
       - name: Setup & Build
         uses: ./actions/setup_and_build
@@ -231,6 +243,8 @@ jobs:
 
       - name: Checkout git repo
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
 
       - name: Setup & Build
         uses: ./actions/setup_and_build
@@ -262,6 +276,8 @@ jobs:
 
       - name: Checkout git repo
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
 
       - name: Setup & Build
         uses: ./actions/setup_and_build
@@ -294,6 +310,7 @@ jobs:
             package.json
             build/setup-release-combine.sh
           sparse-checkout-cone-mode: false
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
 
       - name: Download release metadata
         # only run this on "push" to "master" or alpha releases
