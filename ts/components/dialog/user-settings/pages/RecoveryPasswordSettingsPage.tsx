@@ -171,6 +171,7 @@ export function RecoveryPasswordSettingsPage(modalState: UserSettingsModalState)
             <CopyToClipboardButton
               copyContent={recoveryPhrase}
               buttonType={SessionButtonType.Outline}
+              buttonColor={SessionButtonColor.TextPrimary}
             />
           )}
           <SessionButton

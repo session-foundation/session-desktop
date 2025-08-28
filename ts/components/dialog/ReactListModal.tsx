@@ -92,12 +92,11 @@ type ReactionSendersProps = {
   currentReact: string;
   senders: Array<string>;
   me: string;
-  handleClose: () => void;
   conversationId: string;
 };
 
 const ReactionSenders = (props: ReactionSendersProps) => {
-  const { messageId, currentReact, senders, me, handleClose, conversationId } = props;
+  const { messageId, currentReact, senders, me, conversationId } = props;
   const dispatch = useDispatch();
 
   const handleRemoveReaction = async () => {
@@ -123,13 +122,7 @@ const ReactionSenders = (props: ReactionSendersProps) => {
             style={{ overflow: 'hidden' }}
             $flexGap="var(--margins-sm)"
           >
-            <Avatar
-              size={AvatarSize.XS}
-              pubkey={sender}
-              onAvatarClick={() => {
-                handleClose();
-              }}
-            />
+            <Avatar size={AvatarSize.XS} pubkey={sender} onAvatarClick={undefined} />
             {sender === me ? (
               tr('you')
             ) : (
@@ -363,7 +356,6 @@ export const ReactListModal = (props: Props) => {
                 currentReact={currentReact}
                 senders={senders}
                 me={me}
-                handleClose={handleClose}
                 conversationId={selectedConvoKey}
               />
             )}

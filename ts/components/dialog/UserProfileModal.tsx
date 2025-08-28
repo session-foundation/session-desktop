@@ -115,7 +115,7 @@ export const UserProfileModal = ({
           {!isBlindedAndNotResolved && (
             <CopyToClipboardButton
               copyContent={conversationIdToDisplay}
-              buttonColor={SessionButtonColor.PrimaryDark}
+              buttonColor={SessionButtonColor.TextPrimary}
               dataTestId="copy-button-account-id"
               buttonType={SessionButtonType.Outline}
               hotkey={true}

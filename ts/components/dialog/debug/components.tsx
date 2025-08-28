@@ -527,7 +527,11 @@ export const AboutInfo = () => {
       <SpacerXS />
       <Flex $container={true} width="100%" $alignItems="center" $flexGap="var(--margins-xs)">
         <h2>About</h2>
-        <CopyToClipboardIcon iconSize={'small'} copyContent={aboutInfo.join('\n')} />
+        <CopyToClipboardIcon
+          iconSize={'small'}
+          copyContent={aboutInfo.join('\n')}
+          buttonColor={SessionButtonColor.None}
+        />
       </Flex>
       <Flex
         $container={true}
@@ -550,7 +554,11 @@ export const AboutInfo = () => {
               $flexGap="var(--margins-xs)"
             >
               <p style={{ userSelect: 'text', lineHeight: 1.5 }}>{info}</p>
-              <CopyToClipboardIcon iconSize={'small'} copyContent={info} />
+              <CopyToClipboardIcon
+                iconSize={'small'}
+                copyContent={info}
+                buttonColor={SessionButtonColor.None}
+              />
             </Flex>
           );
         })}
@@ -579,7 +587,11 @@ export const OtherInfo = () => {
       <Flex $container={true} width="100%" $alignItems="center" $flexGap="var(--margins-xs)">
         <h2>Other Info</h2>
         {otherInfo.value ? (
-          <CopyToClipboardIcon iconSize={'small'} copyContent={otherInfo.value.join('\n')} />
+          <CopyToClipboardIcon
+            iconSize={'small'}
+            copyContent={otherInfo.value.join('\n')}
+            buttonColor={SessionButtonColor.None}
+          />
         ) : null}
       </Flex>
       <Flex
@@ -607,7 +619,11 @@ export const OtherInfo = () => {
                 $flexGap="var(--margins-xs)"
               >
                 <p style={{ userSelect: 'text', lineHeight: 1.5 }}>{info}</p>
-                <CopyToClipboardIcon iconSize={'small'} copyContent={info} />
+                <CopyToClipboardIcon
+                  iconSize={'small'}
+                  copyContent={info}
+                  buttonColor={SessionButtonColor.None}
+                />
               </Flex>
             ))
           : null}

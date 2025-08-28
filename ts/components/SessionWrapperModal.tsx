@@ -190,6 +190,7 @@ export function ModalBottomButtonWithBorder({
   onClick,
   buttonColor,
   dataTestId,
+  buttonType,
   disabled,
 }: {
   text: string;
@@ -197,6 +198,7 @@ export function ModalBottomButtonWithBorder({
   disabled?: boolean;
   buttonColor?: SessionButtonColor;
   dataTestId?: SessionDataTestId;
+  buttonType?: SessionButtonType;
 }) {
   return (
     <SessionButton
@@ -204,6 +206,7 @@ export function ModalBottomButtonWithBorder({
       onClick={onClick}
       disabled={disabled}
       buttonColor={buttonColor}
+      buttonType={buttonType}
       dataTestId={dataTestId}
       style={{ minWidth: 'var(--modal-actions-outline-min-width)' }}
     />

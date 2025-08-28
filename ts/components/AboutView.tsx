@@ -7,7 +7,7 @@ import { switchThemeTo } from '../themes/switchTheme';
 import { SessionToastContainer } from './SessionToastContainer';
 import { Flex } from './basic/Flex';
 import { themeStore } from '../state/theme/store';
-import { SessionButton, SessionButtonType } from './basic/SessionButton';
+import { SessionButton, SessionButtonColor, SessionButtonType } from './basic/SessionButton';
 import { Localizer } from './basic/Localizer';
 import { CopyToClipboardButton } from './buttons';
 import { tr } from '../localization/localeTools';
@@ -102,6 +102,7 @@ export const AboutView = () => {
             className="version"
             text={versionInfo}
             buttonType={SessionButtonType.Simple}
+            buttonColor={SessionButtonColor.TextPrimary}
           />
           <SessionButton
             buttonType={SessionButtonType.Simple}
@@ -119,17 +120,20 @@ export const AboutView = () => {
             className="os"
             text={systemInfo}
             buttonType={SessionButtonType.Simple}
+            buttonColor={SessionButtonColor.TextPrimary}
           />
           <CopyToClipboardButton
             className="commitHash"
             text={commitInfo}
             buttonType={SessionButtonType.Simple}
+            buttonColor={SessionButtonColor.TextPrimary}
           />
           {environmentStates.length ? (
             <CopyToClipboardButton
               className="environment"
               text={environmentStates.join(' - ')}
               buttonType={SessionButtonType.Simple}
+              buttonColor={SessionButtonColor.TextPrimary}
             />
           ) : null}
           <a href="https://getsession.org" style={{ margin: '0 0 var(--margins-lg) 0' }}>
