@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import useInterval from 'react-use/lib/useInterval';
 import useTimeoutFn from 'react-use/lib/useTimeoutFn';
+import useKey from 'react-use/lib/useKey';
 
 import useMount from 'react-use/lib/useMount';
 import useThrottleFn from 'react-use/lib/useThrottleFn';
@@ -55,7 +56,7 @@ import { NetworkTime } from '../../util/NetworkTime';
 import { Storage } from '../../util/storage';
 import { getFileInfoFromFileServer } from '../../session/apis/file_server_api/FileServerApi';
 import { themesArray } from '../../themes/constants/colors';
-import { isDebugMode } from '../../shared/env_vars';
+import { isDebugMode, isDevProd } from '../../shared/env_vars';
 import { GearAvatarButton } from '../buttons/avatar/GearAvatarButton';
 import { useZoomShortcuts } from '../../hooks/useZoomingShortcut';
 import { OnionStatusLight } from '../dialog/OnionStatusPathDialog';
@@ -181,6 +182,19 @@ function useUpdateBadgeCount() {
   );
 }
 
+function useDebugThemeSwitch() {
+  useKey(
+    (event: KeyboardEvent) => {
+      return event.ctrlKey && event.key === 't';
+    },
+    () => {
+      if (isDevProd()) {
+        void handleThemeSwitch();
+      }
+    }
+  );
+}
+
 /**
  * ActionsPanel is the far left banner (not the left pane).
  * The panel with buttons to switch between the message/contact/settings/theme views
@@ -192,6 +206,7 @@ export const ActionsPanel = () => {
   const showDebugMenu = useDebugMode();
   const ourNumber = useSelector(getOurNumber);
   const isDarkTheme = useIsDarkTheme();
+  useDebugThemeSwitch();
 
   // this useMount is called only once: when the component is mounted.
   // For the action panel, it means this is called only one per app start/with a user logged in

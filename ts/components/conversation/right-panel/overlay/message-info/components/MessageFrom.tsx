@@ -10,6 +10,7 @@ import { ContactName } from '../../../../ContactName/ContactName';
 import { useSelectedConversationKey } from '../../../../../../state/selectors/selectedConversation';
 import { useShowUserDetailsCbFromConversation } from '../../../../../menuAndSettingsHooks/useShowUserDetailsCb';
 import { PubKey } from '../../../../../../session/types';
+import { SessionButtonColor } from '../../../../../basic/SessionButton';
 
 const StyledFromContainer = styled.div`
   display: flex;
@@ -60,6 +61,7 @@ export const MessageFrom = (props: { sender: string; isSenderAdmin: boolean }) =
             iconSize={'small'}
             copyContent={`${profileName} ${sender}`}
             margin={'0 0 0 var(--margins-xs)'}
+            buttonColor={SessionButtonColor.TextPrimary}
           />
         ) : null}
       </Flex>

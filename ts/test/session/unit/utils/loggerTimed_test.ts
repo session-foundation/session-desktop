@@ -1,4 +1,6 @@
 import { assert } from 'chai';
+import Sinon from 'sinon';
+
 import { TimedLog } from '../../../../util/loggerTimed';
 
 const second = 's';
@@ -20,6 +22,16 @@ function testPairFuzzy({ offset, output }: TimePair) {
 }
 
 describe('TimedLog', () => {
+  const mockNow = 1000000; // arbitrary timestamp
+
+  beforeEach(() => {
+    Sinon.stub(Date, 'now').returns(mockNow);
+  });
+
+  afterEach(() => {
+    Sinon.restore();
+  });
+
   describe('formatDistanceToNow', () => {
     it('should return exact milliseconds when the time difference is less than 1 second', () => {
       (
@@ -82,11 +94,11 @@ describe('TimedLog', () => {
       // Millisecond values should be whole numbers but we should still handle non-regular values as its theoretically possible for the time to be a float
       (
         [
-          { offset: 1.11112123213, output: `2${ms}` },
+          { offset: 1.11112123213, output: `1${ms}` },
           { offset: 1.567, output: `2${ms}` },
           { offset: 1.867, output: `2${ms}` },
           { offset: 1001.567, output: `1.002${second}` },
-          { offset: 2002.1, output: `2.003${second}` },
+          { offset: 2002.1, output: `2.002${second}` },
           { offset: 10000.0000001, output: `10${second}` },
         ] satisfies TimePairs
       ).forEach(testPair);

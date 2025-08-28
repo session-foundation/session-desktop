@@ -9,7 +9,7 @@ import { SpacerLG, SpacerMD, SpacerSM } from '../../basic/Text';
 import { HelpDeskButton } from '../../buttons';
 import { CopyToClipboardButton } from '../../buttons/CopyToClipboardButton';
 import { StyledLeftPaneOverlay } from './OverlayMessage';
-import { SessionButtonColor } from '../../basic/SessionButton';
+import { SessionButtonColor, SessionButtonType } from '../../basic/SessionButton';
 import { sectionActions } from '../../../state/ducks/section';
 import { LucideIcon } from '../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
@@ -94,6 +94,7 @@ export const OverlayInvite = () => {
           <SpacerLG />
           <StyledButtonContainer>
             <CopyToClipboardButton
+              buttonType={SessionButtonType.Outline}
               buttonColor={SessionButtonColor.PrimaryDark}
               copyContent={ourSessionID}
               onCopyComplete={() => setIdCopied(true)}
