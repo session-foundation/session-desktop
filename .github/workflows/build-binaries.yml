@@ -21,7 +21,7 @@ on:
       target_branch:
         description: 'Branch to make a release of'
         required: true
-        default: 'dev'
+        default: 'master'
 
 # Dynamic name for the run
 run-name: >
