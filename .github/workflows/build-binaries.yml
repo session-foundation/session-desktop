@@ -10,12 +10,19 @@ on:
       - master
       - dev
       - 'release/**'
+      - 'plop/**'
       - 'ci/**'
   pull_request:
     branches:
       - dev
       - 'release/**'
       - 'ci/**'
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: 'Branch to make a release of'
+        required: true
+        default: 'dev'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -23,10 +30,45 @@ concurrency:
 
 env:
   # we only want to publish on "push to master" or alpha releases. When we don't want to publish, we want to upload artefacts
-  SHOULD_PUBLISH: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-  SHOULD_PUBLISH_ALPHA: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/heads/release') && contains(github.ref, '-alpha.') }}
+  SHOULD_PUBLISH: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master'}}
+  SHOULD_PUBLISH_ALPHA: ${{((github.event_name == 'push' && startsWith(github.ref, 'refs/heads/release') && contains(github.ref, '-alpha.'))) || (github.event_name == 'workflow_dispatch') }}
 
 jobs:
+  create_draft_release_in_needed:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    outputs:
+      version_tag: ${{ steps.get_version.outputs.VERSION_TAG }}
+    steps:
+      - name: Checkout git repo
+        uses: actions/checkout@v4
+        # We only need a few files in this run, no point cloning everything
+        with:
+          sparse-checkout: |
+            package.json
+            build/release-notes.md
+            build/release-notes-alpha.md
+          sparse-checkout-cone-mode: false
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
+
+      - name: Get version tag from package.json
+        id: get_version
+        run: |
+          version=$(node -p "require('./package.json').version")
+          echo "VERSION_TAG=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Create draft release
+        # only run this on "push" to "master" or alpha releases
+        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
+        uses: ncipollo/release-action@v1
+        with:
+          tag: v${{ steps.get_version.outputs.VERSION_TAG }}
+          name: 'Session ${{ steps.get_version.outputs.VERSION_TAG }}'
+          draft: true
+          bodyFile: ${{ env.SHOULD_PUBLISH_ALPHA == 'true' && 'build/release-notes-alpha.md' || 'build/release-notes.md' }}
+          allowUpdates: true
+
   build_linux:
     runs-on: ubuntu-22.04
     strategy:
@@ -42,6 +84,8 @@ jobs:
 
       - name: Checkout git repo
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
 
       - name: Setup & Build
         uses: ./actions/setup_and_build
@@ -114,6 +158,7 @@ jobs:
             build/release-notes.md
             build/release-notes-alpha.md
           sparse-checkout-cone-mode: false
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
 
       - name: Get version tag from package.json
         id: get_version
@@ -163,6 +208,8 @@ jobs:
 
       - name: Checkout git repo
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
 
       - name: Setup & Build
         uses: ./actions/setup_and_build
@@ -206,6 +253,8 @@ jobs:
 
       - name: Checkout git repo
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
 
       - name: Setup & Build
         uses: ./actions/setup_and_build
@@ -236,6 +285,8 @@ jobs:
 
       - name: Checkout git repo
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
 
       - name: Setup & Build
         uses: ./actions/setup_and_build
@@ -265,14 +316,8 @@ jobs:
           sparse-checkout: |
             package.json
             build/setup-release-combine.sh
-
-      - name: Get version tag from package.json
-        id: get_version
-        # only run this on "push" to "master" or alpha releases
-        if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
-        run: |
-          version=$(node -p "require('./package.json').version")
-          echo "VERSION_TAG=$version" >> "$GITHUB_OUTPUT"
+          sparse-checkout-cone-mode: false
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
 
       - name: Download release metadata
         # only run this on "push" to "master" or alpha releases
