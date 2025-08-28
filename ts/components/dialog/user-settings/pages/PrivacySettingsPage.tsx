@@ -29,7 +29,6 @@ import {
 import { SettingsKey } from '../../../../data/settings-key';
 import { SessionUtilUserProfile } from '../../../../session/utils/libsession/libsession_utils_user_profile';
 import { getPasswordHash, Storage } from '../../../../util/storage';
-import { SpacerXS } from '../../../basic/Text';
 import { SettingsToggleBasic } from '../components/SettingsToggleBasic';
 import { SettingsPanelButtonInlineBasic } from '../components/SettingsPanelButtonInlineBasic';
 import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
@@ -87,22 +86,6 @@ async function toggleLinkPreviews(isToggleOn: boolean, forceUpdate: () => void) 
     await Storage.put(SettingsKey.hasLinkPreviewPopupBeenDisplayed, false);
     forceUpdate();
   }
-}
-
-/**
- * This is a static version of the TypingBubble component, but is only used here, hence why it's not a SessionIcon.
- */
-function StaticTypingBubble({ width }: { width: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 30 13" width={width}>
-      <rect width="29.07" height="12.87" x=".26" fill="#1B1B1B" rx="6.43" />
-      <circle cx="7.88" cy="6.67" r="1.91" fill="#A1A2A1" />
-      <circle cx="7.88" cy="6.67" r="1.91" fill="#000" fill-opacity=".5" />
-      <circle cx="15.51" cy="6.67" r="1.91" fill="#A1A2A1" />
-      <circle cx="15.51" cy="6.67" r="1.91" fill="#000" fill-opacity=".25" />
-      <circle cx="23.13" cy="6.67" r="1.91" fill="#A1A2A1" />
-    </svg>
-  );
 }
 
 function HasPasswordSubSection() {
@@ -242,12 +225,6 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
               subText={{ token: 'typingIndicatorsDescription' }}
               textDataTestId={'enable-typing-indicators-settings-text'}
               subTextDataTestId={'enable-typing-indicators-settings-sub-text'}
-              extraSubTextNode={
-                <>
-                  <SpacerXS />
-                  <StaticTypingBubble width="30px" />
-                </>
-              }
             />
           }
           active={Boolean(window.getSettingValue(SettingsKey.settingsTypingIndicator))}

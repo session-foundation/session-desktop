@@ -154,7 +154,13 @@ export const SessionInboxView = () => {
         <PersistGate loading={null} persistor={persistor}>
           <SessionTheme>
             <AnimatePresence>
-              <Flex $container={true} height="0" $flexShrink={100} $flexGrow={1} $flexDirection={isRtl ? 'row-reverse' : 'row'}>
+              <Flex
+                $container={true}
+                height="0"
+                $flexShrink={100}
+                $flexGrow={1}
+                $flexDirection={isRtl ? 'row-reverse' : 'row'}
+              >
                 <StyledGutter>
                   <LeftPane />
                 </StyledGutter>

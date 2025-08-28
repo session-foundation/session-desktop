@@ -154,5 +154,6 @@ export function isIconToMirrorRtl(unicode: LUCIDE_ICONS_UNICODE) {
       return false;
     default:
       assertUnreachable(unicode, 'isIconToMirrorRtl: unknown case');
+      throw new Error('isIconToMirrorRtl: unknown case'); // just to make the compiler happy
   }
 }
