@@ -118,7 +118,7 @@ jobs:
 
       - name: Make release build but do not publish ${{ matrix.pkg_to_build }}
         # we do want this part to run only when version_tag is unset (i.e. we are not making a release)
-        if: ${{ needs.create_draft_release_if_needed.outputs.version_tag != ''  }}
+        if: ${{ needs.create_draft_release_if_needed.outputs.version_tag == ''  }}
         run: |
           sed -i 's/"target": "deb"/"target": "${{ matrix.pkg_to_build }}"/g' package.json && yarn build-release
 
@@ -218,7 +218,7 @@ jobs:
 
       - name: Make release build but do not publish
         # always run this, except on "push" to "master" or alpha releases
-        if: ${{ needs.create_draft_release_if_needed.outputs.version_tag != ''  }}
+        if: ${{ needs.create_draft_release_if_needed.outputs.version_tag == ''  }}
         run: yarn build-release
 
       - name: Upload artefacts
