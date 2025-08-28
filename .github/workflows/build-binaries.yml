@@ -68,7 +68,7 @@ jobs:
         with:
           tag: v${{ steps.get_version.outputs.VERSION_TAG }}
           name: 'Session ${{ steps.get_version.outputs.VERSION_TAG }}'
-          draft: true
+          draft: true # important to keep this, so we **NEVER** make a live release through the CI
           bodyFile: ${{ env.SHOULD_PUBLISH_ALPHA == 'true' && 'build/release-notes-alpha.md' || 'build/release-notes.md' }}
           allowUpdates: true
           skipIfReleaseExists: true
@@ -189,6 +189,7 @@ jobs:
         with:
           tag: v${{ needs.create_draft_release_if_needed.outputs.version_tag }}
           artifacts: 'dist/latest-linux.yml'
+          draft: true # important to keep this, so we **NEVER** make a live release through the CI
           allowUpdates: true
           omitNameDuringUpdate: true
           omitBodyDuringUpdate: true
@@ -342,6 +343,7 @@ jobs:
         with:
           tag: v${{ needs.create_draft_release_if_needed.outputs.version_tag }}
           artifacts: 'dist/latest-mac.yml'
+          draft: true # important to keep this, so we **NEVER** make a live release through the CI
           allowUpdates: true
           omitBodyDuringUpdate: true
           omitNameDuringUpdate: true
