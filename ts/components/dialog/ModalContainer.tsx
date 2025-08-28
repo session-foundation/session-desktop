@@ -20,7 +20,6 @@ import {
   getReactClearAllDialog,
   getReactListDialog,
   getRemoveModeratorsModal,
-  getSessionNetworkModalState,
   getUpdateGroupMembersModal,
   getUserProfileModal,
   getLocalizedPopupDialogState,
@@ -46,7 +45,6 @@ import { OpenUrlModal } from './OpenUrlModal';
 import { BlockOrUnblockDialog } from './blockOrUnblock/BlockOrUnblockDialog';
 import { DebugMenuModal } from './debug/DebugMenuModal';
 import { ConversationSettingsDialog } from './conversationSettings/conversationSettingsDialog';
-import { SessionNetworkModal } from './network/SessionNetworkModal';
 import { SessionConfirm } from './SessionConfirm';
 import { SessionProInfoModal } from './SessionProInfoModal';
 import { LocalizedPopupDialog } from './LocalizedPopupDialog';
@@ -77,7 +75,6 @@ export const ModalContainer = () => {
   const lightBoxOptions = useSelector(getLightBoxOptions);
   const debugMenuModalState = useSelector(getDebugMenuModalState);
   const conversationSettingsModalState = useSelector(getConversationSettingsModalState);
-  const sessionNetworkModalState = useSelector(getSessionNetworkModalState);
 
   // NOTE the order of the modals is important for the z-index
   return (
@@ -87,7 +84,6 @@ export const ModalContainer = () => {
       {conversationSettingsModalState && (
         <ConversationSettingsDialog {...conversationSettingsModalState} />
       )}
-      {sessionNetworkModalState && <SessionNetworkModal {...sessionNetworkModalState} />}
       {onionPathModalState && <OnionPathModal {...onionPathModalState} />}
       {reactListModalState && <ReactListModal {...reactListModalState} />}
       {debugMenuModalState && <DebugMenuModal {...debugMenuModalState} />}

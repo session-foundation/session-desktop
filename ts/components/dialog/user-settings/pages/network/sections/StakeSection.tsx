@@ -2,22 +2,25 @@ import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 import type { SessionDataTestId } from 'react';
 import { SessionNetworkParagraph, SectionHeading, SessionNetworkButton } from '../components';
-import { LOCALE_DEFAULTS } from '../../../../localization/constants';
-import { Localizer } from '../../../basic/Localizer';
-import { Flex } from '../../../basic/Flex';
-import { SessionButtonColor, SessionButtonShape } from '../../../basic/SessionButton';
-import { SpacerXS } from '../../../basic/Text';
-import { showLinkVisitWarningDialog } from '../../OpenUrlModal';
-import { formatNumber } from '../../../../util/i18n/formatting/generics';
-import { useIsDarkTheme } from '../../../../state/theme/selectors/theme';
-import { useHTMLDirection } from '../../../../util/i18n/rtlSupport';
+import { LOCALE_DEFAULTS } from '../../../../../../localization/constants';
+import { Localizer } from '../../../../../basic/Localizer';
+import { Flex } from '../../../../../basic/Flex';
+import { SessionButtonColor, SessionButtonShape } from '../../../../../basic/SessionButton';
+import { SpacerXS } from '../../../../../basic/Text';
+import { showLinkVisitWarningDialog } from '../../../../OpenUrlModal';
+import { formatNumber } from '../../../../../../util/i18n/formatting/generics';
+import { useIsDarkTheme } from '../../../../../../state/theme/selectors/theme';
+import { useHTMLDirection } from '../../../../../../util/i18n/rtlSupport';
 import {
   useDataIsStale,
   useStakingRewardPool,
   useUSDMarketCap,
-} from '../../../../state/selectors/networkData';
-import { useInfoFakeRefreshing, useInfoLoading } from '../../../../state/selectors/networkModal';
-import { tr } from '../../../../localization/localeTools';
+} from '../../../../../../state/selectors/networkData';
+import {
+  useInfoFakeRefreshing,
+  useInfoLoading,
+} from '../../../../../../state/selectors/networkModal';
+import { tr } from '../../../../../../localization/localeTools';
 
 const StyledTokenSection = styled(Flex)<{ loading: boolean }>`
   font-size: var(--font-display-size-lg);

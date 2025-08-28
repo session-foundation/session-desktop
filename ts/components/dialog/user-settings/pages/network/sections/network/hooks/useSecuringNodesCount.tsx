@@ -1,13 +1,16 @@
 import { useSelector } from 'react-redux';
 import { isNil } from 'lodash';
-import { onionPaths } from '../../../../../../session/onions/onionPath';
+import { onionPaths } from '../../../../../../../../session/onions/onionPath';
 import {
   getLeftPaneConversationIdsCount,
   getGroupConversationsCount,
-} from '../../../../../../state/selectors/conversations';
-import { useDataIsStale, useNetworkSize } from '../../../../../../state/selectors/networkData';
-import { UserUtils } from '../../../../../../session/utils';
-import { SnodePool } from '../../../../../../session/apis/snode_api/snodePool';
+} from '../../../../../../../../state/selectors/conversations';
+import {
+  useDataIsStale,
+  useNetworkSize,
+} from '../../../../../../../../state/selectors/networkData';
+import { UserUtils } from '../../../../../../../../session/utils';
+import { SnodePool } from '../../../../../../../../session/apis/snode_api/snodePool';
 
 export function useSecuringNodesCount() {
   const privateConversationsCount = useSelector(getLeftPaneConversationIdsCount);

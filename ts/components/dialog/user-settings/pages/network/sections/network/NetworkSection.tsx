@@ -3,9 +3,9 @@ import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 import type { CSSProperties } from 'styled-components';
 import { useMemo } from 'react';
-import { tr } from '../../../../../localization/localeTools';
-import { Flex } from '../../../../basic/Flex';
-import { SpacerMD, SpacerXS } from '../../../../basic/Text';
+import { tr } from '../../../../../../../localization/localeTools';
+import { Flex } from '../../../../../../basic/Flex';
+import { SpacerMD, SpacerXS } from '../../../../../../basic/Text';
 import {
   SectionHeading,
   SessionNetworkParagraph,
@@ -15,28 +15,34 @@ import {
   BlockText,
   SessionNetworkHeading,
 } from '../../components';
-import { useIsDarkTheme } from '../../../../../state/theme/selectors/theme';
-import { Localizer } from '../../../../basic/Localizer';
-import { LOCALE_DEFAULTS } from '../../../../../localization/constants';
+import { useIsDarkTheme } from '../../../../../../../state/theme/selectors/theme';
+import { Localizer } from '../../../../../../basic/Localizer';
+import { LOCALE_DEFAULTS } from '../../../../../../../localization/constants';
 import { NodeImage } from '../../NodeImage';
-import { showLinkVisitWarningDialog } from '../../../OpenUrlModal';
+import { showLinkVisitWarningDialog } from '../../../../../OpenUrlModal';
 import { useSecuringNodesCount } from './hooks/useSecuringNodesCount';
-import { formatNumber, formatDateWithLocale } from '../../../../../util/i18n/formatting/generics';
-import { abbreviateNumber } from '../../../../../util/numbers';
-import { SessionSpinner } from '../../../../loading';
-import { useHTMLDirection } from '../../../../../util/i18n/rtlSupport';
+import {
+  formatNumber,
+  formatDateWithLocale,
+} from '../../../../../../../util/i18n/formatting/generics';
+import { abbreviateNumber } from '../../../../../../../util/numbers';
+import { SessionSpinner } from '../../../../../../loading';
+import { useHTMLDirection } from '../../../../../../../util/i18n/rtlSupport';
 import {
   usePriceTimestamp,
   useDataIsStale,
   useNetworkStakedUSD,
   useNetworkStakedTokens,
   useUSDPrice,
-} from '../../../../../state/selectors/networkData';
-import { Grid } from '../../../../basic/Grid';
-import { useInfoFakeRefreshing, useInfoLoading } from '../../../../../state/selectors/networkModal';
-import { SessionLucideIconButton } from '../../../../icon/SessionIconButton';
-import { LUCIDE_ICONS_UNICODE } from '../../../../icon/lucide';
-import { SessionTooltip } from '../../../../SessionTooltip';
+} from '../../../../../../../state/selectors/networkData';
+import { Grid } from '../../../../../../basic/Grid';
+import {
+  useInfoFakeRefreshing,
+  useInfoLoading,
+} from '../../../../../../../state/selectors/networkModal';
+import { SessionLucideIconButton } from '../../../../../../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../../../../../../icon/lucide';
+import { SessionTooltip } from '../../../../../../SessionTooltip';
 
 const StyledStatsNumber = styled.strong`
   font-size: var(--font-size-h3-new);

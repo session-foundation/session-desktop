@@ -8,7 +8,6 @@ import { resetConversationExternal } from '../../../../state/ducks/conversations
 import {
   updateSessionProInfoModal,
   onionPathModal,
-  updateSessionNetworkModal,
   updateConversationDetailsModal,
   userSettingsModal,
   updateDeleteAccountModal,
@@ -151,7 +150,7 @@ function MiscSection() {
         onClick={() => {
           // do a refresh request on open
           dispatch(networkDataActions.refreshInfoFromSeshServer() as any);
-          dispatch(updateSessionNetworkModal({}));
+          dispatch(userSettingsModal({ userSettingsPage: 'network' }));
         }}
         dataTestId="session-network-settings-menu-item"
       />

@@ -33,6 +33,8 @@ export function useUserSettingsTitle(page: UserSettingsModalState | undefined) {
       return tr('sessionHelp');
     case 'preferences':
       return tr('preferences');
+    case 'network':
+      return tr('networkName');
     case 'password':
       return page.passwordAction === 'remove'
         ? tr('passwordRemove')
@@ -69,6 +71,7 @@ export function useUserSettingsCloseAction(props: UserSettingsModalState) {
     case 'preferences':
     case 'blocked-contacts':
     case 'password':
+    case 'network':
       return () => dispatch(userSettingsModal(null));
 
     default:
@@ -105,6 +108,7 @@ export function useUserSettingsBackAction(modalState: UserSettingsModalState) {
     case 'notifications':
     case 'privacy':
     case 'preferences':
+    case 'network':
       settingsPageToDisplayOnBack = 'default';
       break;
     default:

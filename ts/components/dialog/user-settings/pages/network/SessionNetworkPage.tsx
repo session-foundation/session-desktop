@@ -1,20 +1,26 @@
 import { useDispatch } from 'react-redux';
-import { updateSessionNetworkModal } from '../../../state/ducks/modalDialog';
-import { ModalBasicHeader, SessionWrapperModal } from '../../SessionWrapperModal';
-import { LOCALE_DEFAULTS } from '../../../localization/constants';
+import { ModalBasicHeader } from '../../../../SessionWrapperModal';
 import { StakeSection } from './sections/StakeSection';
 import { ExtraSmallText, LastRefreshedText } from './components';
-import { SpacerMD, SpacerXL, SpacerXS } from '../../basic/Text';
+import { SpacerMD, SpacerXL, SpacerXS } from '../../../../basic/Text';
 import {
   useInfoFakeRefreshing,
   useInfoLoading,
   useLastRefreshedTimestamp,
-} from '../../../state/selectors/networkModal';
+} from '../../../../../state/selectors/networkModal';
 import { NetworkSection } from './sections/network/NetworkSection';
-import { useDataIsStale } from '../../../state/selectors/networkData';
-import { SessionLucideIconButton } from '../../icon/SessionIconButton';
-import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
-import { networkDataActions } from '../../../state/ducks/networkData';
+import { useDataIsStale } from '../../../../../state/selectors/networkData';
+import { SessionLucideIconButton } from '../../../../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../../../../icon/lucide';
+import { networkDataActions } from '../../../../../state/ducks/networkData';
+import {
+  useUserSettingsBackAction,
+  useUserSettingsCloseAction,
+  useUserSettingsTitle,
+} from '../userSettingsHooks';
+import type { UserSettingsModalState } from '../../../../../state/ducks/modalDialog';
+import { ModalBackButton } from '../../../shared/ModalBackButton';
+import { UserSettingsModalContainer } from '../../components/UserSettingsModalContainer';
 
 function ReloadButton({ loading }: { loading: boolean }) {
   const dispatch = useDispatch();
@@ -24,6 +30,7 @@ function ReloadButton({ loading }: { loading: boolean }) {
       iconSize="medium"
       unicode={LUCIDE_ICONS_UNICODE.REFRESH_CW}
       dataTestId="refresh-button"
+      iconColor="var(--text-primary-color)"
       disabled={loading}
       onClick={() => {
         if (loading) {
@@ -35,33 +42,31 @@ function ReloadButton({ loading }: { loading: boolean }) {
   );
 }
 
-export function SessionNetworkModal() {
+export function SessionNetworkPage(modalState: UserSettingsModalState) {
   const infoLoading = useInfoLoading();
   const isFakeRefreshing = useInfoFakeRefreshing();
   const dataIsStale = useDataIsStale();
 
   const lastRefreshedTimestamp = useLastRefreshedTimestamp();
 
-  const dispatch = useDispatch();
-  const onClose = () => {
-    dispatch(updateSessionNetworkModal(null));
-  };
+  const backAction = useUserSettingsBackAction(modalState);
+  const closeAction = useUserSettingsCloseAction(modalState);
+  const title = useUserSettingsTitle(modalState);
 
   const loading = infoLoading || isFakeRefreshing;
 
   return (
-    <SessionWrapperModal
+    <UserSettingsModalContainer
       headerChildren={
         <ModalBasicHeader
-          title={LOCALE_DEFAULTS.network_name}
+          title={title}
           bigHeader={true}
           showExitIcon={true}
-          extraLeftButton={<ReloadButton loading={loading} />}
+          extraLeftButton={backAction ? <ModalBackButton onClick={backAction} /> : undefined}
+          extraRightButton={<ReloadButton loading={loading} />}
         />
       }
-      onClose={onClose}
-      topAnchor="5vh"
-      shouldOverflow={true}
+      onClose={closeAction || undefined}
     >
       <NetworkSection />
       <StakeSection />
@@ -76,6 +81,6 @@ export function SessionNetworkModal() {
       ) : (
         <SpacerMD />
       )}
-    </SessionWrapperModal>
+    </UserSettingsModalContainer>
   );
 }
