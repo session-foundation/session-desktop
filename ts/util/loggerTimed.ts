@@ -50,28 +50,29 @@ export class TimedLog {
     this.start = Date.now();
   }
 
+  private static formatMsToSeconds(milliseconds: number): string {
+    const seconds = milliseconds / 1000;
+    return seconds.toFixed(3).replace(/\.?0+$/, '');
+  }
+
   /**
    * Format the time elapsed since the start of the timer.
    * @param time The time to format.
    * @returns The formatted time.
    */
   public static formatDistanceToNow(time: number) {
-    const ms = Date.now() - Math.floor(time);
+    const ms = Math.round(Date.now() - time);
     const s = Math.floor(ms / 1000);
-    if (s === 0) {
+
+    if (ms < 1000) {
       return `${ms}${TimedLog.millisecondSuffix}`;
     }
 
-    if (ms === 0) {
+    if (ms % 1000 === 0) {
       return `${s}${TimedLog.secondSuffix}`;
     }
 
-    function formatMillisecondsToSeconds(milliseconds: number): string {
-      const seconds = milliseconds / 1000;
-      return seconds.toFixed(3).replace(/\.?0+$/, '');
-    }
-
-    return `${formatMillisecondsToSeconds(ms)}${TimedLog.secondSuffix}`;
+    return `${TimedLog.formatMsToSeconds(ms)}${TimedLog.secondSuffix}`;
   }
 
   /**
