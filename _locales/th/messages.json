@@ -673,7 +673,6 @@
   "recoveryPasswordHideRecoveryPassword": "ซ่อน Recovery Password",
   "recoveryPasswordHideRecoveryPasswordDescription": "ซ่อนรหัสการกู้คืนของคุณบนอุปกรณ์นี้อย่างถาวร",
   "recoveryPasswordRestoreDescription": "ป้อนรหัสผ่านสำหรับการกู้คืนของคุณเพื่อโหลดบัญชีของคุณ หากคุณยังไม่บันทึก คุณสามารถค้นหาในการตั้งค่าแอปของคุณ",
-  "recoveryPasswordView": "ดูรหัสผ่าน.",
   "recoveryPasswordWarningSendDescription": "นี่คือรหัสผ่านกู้คืนของคุณ หากคุณส่งให้คนอื่น พวกเขาจะเข้าถึงบัญชีของคุณได้เต็มที่",
   "redo": "ทำซ้ำ",
   "remove": "เอาออก",

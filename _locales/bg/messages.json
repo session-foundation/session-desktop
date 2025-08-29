@@ -672,7 +672,6 @@
   "recoveryPasswordHideRecoveryPassword": "Скрыть Пароль за Восстановление",
   "recoveryPasswordHideRecoveryPasswordDescription": "Перманентно скриване на възстановителната парола на това устройство.",
   "recoveryPasswordRestoreDescription": "Въведете паролата за възстановяване, за да заредите своя профил. Ако не сте я запазили, може да я намерите в настройките на приложението.",
-  "recoveryPasswordView": "Преглед на паролата",
   "recoveryPasswordWarningSendDescription": "Това е вашата възстановителна парола. Ако я изпратите на някого, той ще има пълен достъп до вашия акаунт.",
   "redo": "Вернуть",
   "remove": "Премахни",

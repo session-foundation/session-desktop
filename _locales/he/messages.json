@@ -672,7 +672,6 @@
   "recoveryPasswordHideRecoveryPassword": "הסתר את Recovery Password",
   "recoveryPasswordHideRecoveryPasswordDescription": "להסתיר את סיסמת השחזור במכשיר זה לצמיתות.",
   "recoveryPasswordRestoreDescription": "Enter your recovery password to load your account. If you haven't saved it, you can find it in your app settings.",
-  "recoveryPasswordView": "הצג סיסמא",
   "recoveryPasswordWarningSendDescription": "זו סיסמת ההחלמה שלך. אם תשלח אותה למישהו, תהיה לו גישה מלאה לחשבון שלך.",
   "redo": "עשה מחדש",
   "remove": "הסר",

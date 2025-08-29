@@ -672,7 +672,6 @@
   "recoveryPasswordHideRecoveryPassword": "Sakrij Recovery Password",
   "recoveryPasswordHideRecoveryPasswordDescription": "Trajno sakrijte lozinku za oporavak na ovom uređaju.",
   "recoveryPasswordRestoreDescription": "Unesi svoju recovery password za učitavanje računa. Ako je niste sačuvali, možete je pronaći u postavkama aplikacije.",
-  "recoveryPasswordView": "Prikaži lozinku",
   "recoveryPasswordWarningSendDescription": "Ovo je tvoja lozinka za oporavak. Ako je pošalješ nekome, imat će potpuni pristup tvom računu.",
   "redo": "Ponovi",
   "remove": "Ukloni",

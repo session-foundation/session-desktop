@@ -672,7 +672,6 @@
   "recoveryPasswordHideRecoveryPassword": "بیرته راګرځېدونکي رمز پټ کړئ",
   "recoveryPasswordHideRecoveryPasswordDescription": "پخپله وسیله کې د خپل بیا رغونې پاسورډ تل لپاره پټ کړئ.",
   "recoveryPasswordRestoreDescription": "ستاسو recovery password ولیکئ څو خپل حساب پورته کړئ. که تاسو دا نه دی ساتلی، تاسو کولی شئ دا په خپل ایپ تنظیماتو کې ومومئ.",
-  "recoveryPasswordView": "پاسورډ وګورئ",
   "recoveryPasswordWarningSendDescription": "دا ستاسو د بیا رغونې پاسورډ دی. که تاسو دا چاته واستوئ دوی به ستاسو حساب ته بشپړ لاسرسی ولري.",
   "redo": "بیا کول",
   "remove": "لرې کول",

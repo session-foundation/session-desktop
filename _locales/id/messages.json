@@ -742,7 +742,6 @@
   "recoveryPasswordHideRecoveryPassword": "Sembunyikan Kata Sandi Pemulihan",
   "recoveryPasswordHideRecoveryPasswordDescription": "Sembunyikan kata sandi Pemulihan Anda secara permanen di perangkat ini.",
   "recoveryPasswordRestoreDescription": "Masukkan kata sandi pemulihan Anda untuk memuat akun Anda. Jika Anda belum menyimpannya, Anda dapat menemukannya di pengaturan aplikasi Anda.",
-  "recoveryPasswordView": "Lihat Kata Sandi",
   "recoveryPasswordWarningSendDescription": "Ini adalah kata sandi pemulihan Anda. Jika Anda mengirimkannya ke seseorang, mereka akan memiliki akses penuh ke akun Anda.",
   "recreateGroup": "Buat Ulang Grup",
   "redo": "mengulang",
