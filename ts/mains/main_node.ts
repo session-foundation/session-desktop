@@ -177,6 +177,7 @@ import { initializeMainProcessLogger } from '../util/logger/main_process_logging
 import * as log from '../util/logger/log';
 import { DURATION } from '../session/constants';
 import { tr } from '../localization/localeTools';
+import { isMacOS, isWindows } from '../OS';
 
 function prepareURL(pathSegments: Array<string>, moreKeys?: { theme: any }) {
   const urlObject: url.UrlObject = {
@@ -1020,6 +1021,46 @@ ipc.on('get-start-in-tray', event => {
     event.sender.send('get-start-in-tray-response', val);
   } catch (e) {
     event.sender.send('get-start-in-tray-response', false);
+  }
+});
+
+ipc.on('set-auto-start-enabled', (event, newValue) => {
+  try {
+    // Set the login item settings based on the platform
+    if (isMacOS()) {
+      // macOS
+      app.setLoginItemSettings({
+        openAtLogin: newValue,
+        openAsHidden: false,
+      });
+    } else if (isWindows()) {
+      // Windows - For Squirrel-based apps, we need to handle the stub launcher - https://www.electronjs.org/docs/latest/api/app/#appsetloginitemsettingssettings-macos-windows
+      const appFolder = path.dirname(process.execPath);
+      const ourExeName = path.basename(process.execPath);
+      const stubLauncher = path.resolve(appFolder, '..', ourExeName);
+
+      app.setLoginItemSettings({
+        openAtLogin: newValue,
+        path: stubLauncher,
+        args: [],
+      });
+    } else {
+      throw new Error(`Unsupported platform for auto start: ${process.platform}`);
+    }
+
+    event.sender.send('set-auto-start-enabled-response', null);
+  } catch (e) {
+    event.sender.send('set-auto-start-enabled-response', e);
+  }
+});
+
+ipc.on('get-auto-start-enabled', event => {
+  try {
+    const loginSettings = app.getLoginItemSettings();
+    const isEnabled = loginSettings.openAtLogin;
+    event.sender.send('get-auto-start-enabled-response', isEnabled);
+  } catch (e) {
+    event.sender.send('get-auto-start-enabled-response', false);
   }
 });
 

@@ -55,6 +55,7 @@ export type OpenUrlModalState = { urlToOpen: string } | null;
 export type LocalizedPopupDialogState = {
   title: TrArgs;
   description: TrArgs;
+  hideOkayButton?: boolean;
 } | null;
 export type SessionProInfoState = { variant: SessionProInfoVariant } | null;
 

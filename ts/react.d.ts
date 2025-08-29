@@ -95,6 +95,7 @@ declare module 'react' {
     | 'conversation-trimming'
     | 'auto-update'
     | 'auto-dark-mode'
+    | 'auto-start'
     | 'hide-menu-bar';
 
   type SettingsRadio =

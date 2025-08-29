@@ -74,6 +74,8 @@ declare global {
     }) => Promise<void>;
     setStartInTray: (val: boolean) => Promise<void>;
     getStartInTray: () => Promise<boolean>;
+    setAutoStartEnabled: (val: boolean) => Promise<void>;
+    getAutoStartEnabled: () => Promise<boolean>;
     getOpengroupPruning: () => Promise<boolean>;
     setOpengroupPruning: (val: boolean) => Promise<void>;
     closeAbout: () => void;
