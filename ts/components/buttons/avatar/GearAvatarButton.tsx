@@ -11,7 +11,7 @@ export const GearAvatarButton = () => {
       unicode={LUCIDE_ICONS_UNICODE.SETTINGS}
       iconSize={'small'}
       iconColor="var(--black-color)"
-      dataTestId="invalid-data-testid"
+      dataTestId="settings-section"
       style={{
         position: 'absolute',
         top: '54%',
