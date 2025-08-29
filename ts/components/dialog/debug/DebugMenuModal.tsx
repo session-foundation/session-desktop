@@ -131,6 +131,7 @@ export function DebugMenuModal() {
           }
         />
       }
+      topAnchor="5vh"
       onClose={onClose}
       $contentMaxWidth={WrapperModalWidth.debug}
       shouldOverflow={true}

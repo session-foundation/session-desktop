@@ -676,7 +676,6 @@
   "recoveryPasswordHideRecoveryPassword": "Skjul Recovery Password",
   "recoveryPasswordHideRecoveryPasswordDescription": "Skjul gjenopprettingspassord permanent på denne enheten.",
   "recoveryPasswordRestoreDescription": "Skriv inn ditt gjenopprettingspassord for å laste kontoen din. Hvis du ikke har lagret det, kan du finne det i app-innstillingene dine.",
-  "recoveryPasswordView": "Vis Password",
   "recoveryPasswordWarningSendDescription": "Dette er din gjenopprettingsfrase. Hvis du sender den til noen vil de ha full tilgang til din konto.",
   "redo": "Gjenta",
   "remove": "Fjern",

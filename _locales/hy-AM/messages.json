@@ -672,7 +672,6 @@
   "recoveryPasswordHideRecoveryPassword": "Թաքցնել Recovery գաղտնաբառը",
   "recoveryPasswordHideRecoveryPasswordDescription": "Ընդմիշտ թաքցնել վերականգնման գաղտնաբառը այս սարքում:",
   "recoveryPasswordRestoreDescription": "Մուտքագրեք ձեր վերականգնման գաղտնաբառը Ձեր հաշիվը բեռնելու համար։ Եթե չեք պահել այն, կարող եք գտնել ձեր հավելվածի պարամետրերում։",
-  "recoveryPasswordView": "Դիտել Գաղտնաբառը",
   "recoveryPasswordWarningSendDescription": "Սա ձեր վերականգնման գաղտնաբառն է։ Եթե այն ուղարկեք ինչ-որ մեկին, նա կունենա ձեր հաշիվը լիարժեք մուտք գործելու հնարավորություն։",
   "redo": "Կրկնել",
   "remove": "Հեռացնել",

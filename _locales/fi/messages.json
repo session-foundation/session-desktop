@@ -684,7 +684,6 @@
   "recoveryPasswordHideRecoveryPassword": "Piilota Recovery Password",
   "recoveryPasswordHideRecoveryPasswordDescription": "Piilota palautuslause pysyvästi tällä laitteella.",
   "recoveryPasswordRestoreDescription": "Syötä palautussalasanasi ladataksesi tilisi. Jos et ole tallentanut sitä, löydät sen sovelluksen asetuksista.",
-  "recoveryPasswordView": "Näytä salasana",
   "recoveryPasswordWarningSendDescription": "Tämä on palautussalasanasi. Jos lähetät sen jollekulle, he saavat täyden pääsyn tilillesi.",
   "redo": "Tee uudelleen",
   "remove": "Poista",

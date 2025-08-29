@@ -1,8 +1,8 @@
 import { type SVGProps, type JSX } from 'react';
 import styled from 'styled-components';
 import { Block } from './components';
-import { SessionSpinner } from '../../loading';
-import { StyledSessionSpinner } from '../../loading/spinner/StyledSessionSpinner';
+import { SessionSpinner } from '../../../../loading';
+import { StyledSessionSpinner } from '../../../../loading/spinner/StyledSessionSpinner';
 import { NodeGraph1 } from './nodes/NodeGraph1';
 import { NodeGraph10 } from './nodes/NodeGraph10';
 import { NodeGraph2 } from './nodes/NodeGraph2';

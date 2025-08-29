@@ -6,11 +6,7 @@ import {
   type UserSettingsModalState,
 } from '../../../../state/ducks/modalDialog';
 import { PanelButtonGroup, PanelLabelWithDescription } from '../../../buttons/panel/PanelButton';
-import {
-  ModalBasicHeader,
-  SessionWrapperModal,
-  WrapperModalWidth,
-} from '../../../SessionWrapperModal';
+import { ModalBasicHeader } from '../../../SessionWrapperModal';
 import { ModalBackButton } from '../../shared/ModalBackButton';
 import {
   useUserSettingsBackAction,
@@ -24,6 +20,7 @@ import { toggleAudioAutoplay } from '../../../../state/ducks/userConfig';
 
 import { getAudioAutoplay } from '../../../../state/selectors/userConfig';
 import { SettingsChevronBasic } from '../components/SettingsChevronBasic';
+import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
 
 async function toggleCommunitiesPruning() {
   try {
@@ -55,7 +52,7 @@ export function ConversationSettingsPage(modalState: UserSettingsModalState) {
   const audioAutoPlay = useSelector(getAudioAutoplay);
 
   return (
-    <SessionWrapperModal
+    <UserSettingsModalContainer
       headerChildren={
         <ModalBasicHeader
           title={title}
@@ -65,9 +62,6 @@ export function ConversationSettingsPage(modalState: UserSettingsModalState) {
         />
       }
       onClose={closeAction || undefined}
-      shouldOverflow={true}
-      allowOutsideClick={false}
-      $contentMinWidth={WrapperModalWidth.normal}
     >
       <PanelLabelWithDescription title={{ token: 'conversationsMessageTrimming' }} />
       <PanelButtonGroup>
@@ -120,6 +114,6 @@ export function ConversationSettingsPage(modalState: UserSettingsModalState) {
           subText={{ token: 'blockedContactsManageDescription' }}
         />
       </PanelButtonGroup>
-    </SessionWrapperModal>
+    </UserSettingsModalContainer>
   );
 }

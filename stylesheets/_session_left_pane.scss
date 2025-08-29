@@ -2,18 +2,7 @@
   background: var(--conversation-tab-background-color);
 }
 .module-conversation-list-item:hover {
-  background: var(--conversation-tab-background-hover-color);
-}
-
-.module-conversation-list-item__unread-count {
-  background: var(--unread-messages-alert-background-color);
-  color: var(--unread-messages-alert-text-color);
-
-  position: static !important;
-  font-weight: 700 !important;
-  box-shadow: none !important;
-  margin: 0 !important;
-  flex-shrink: 0;
+  background: var(--conversation-tab-background-hover-color) !important;
 }
 
 .module-conversation-list-item__header__date,

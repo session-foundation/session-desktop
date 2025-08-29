@@ -19,6 +19,7 @@ export const GearAvatarButton = () => {
         backgroundColor: 'var(--primary-color)',
         padding: 'var(--margins-xxs)',
         borderRadius: '50%',
+        boxShadow: '0px 0px 3px 2px var(--border-color)',
       }}
     />
   );

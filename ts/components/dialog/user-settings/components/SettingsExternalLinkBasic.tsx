@@ -26,7 +26,7 @@ const PanelExternalLinkButton = (
           dataTestId={`${baseDataTestId}-settings-chevron`}
           unicode={LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}
           iconSize="medium"
-          iconColor="var(--primary-color)"
+          iconColor="var(--renderer-span-primary-color)"
           style={{ paddingInlineEnd: 'var(--margins-xs)' }}
         />
       }

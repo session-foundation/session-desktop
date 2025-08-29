@@ -86,6 +86,7 @@ const clearOurAvatar = createAsyncThunk('user/clearOurAvatar', async () => {
   });
 
   await SyncUtils.forceSyncConfigurationNowIfNeeded(true);
+  window.inboxStore?.dispatch(updateEditProfilePictureModal(null));
 });
 
 /**

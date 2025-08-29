@@ -94,7 +94,10 @@ const StyledProfileName = styled(Flex)`
 const StyledName = styled.p`
   font-size: var(--font-size-xl);
   line-height: 1.4;
+  font-weight: 700;
+  font-size: var(--font-size-h4);
   margin: 0;
+  text-align: center;
   padding: 0px;
   cursor: pointer;
 `;

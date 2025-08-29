@@ -67,13 +67,11 @@ const StyledRoundedPanelButtonGroup = styled.div`
   border-radius: 16px;
   // Note: we need no padding here so we can change the bg color on hover
   padding: 0;
-  margin-inline: var(--margins-sm);
   width: -webkit-fill-available;
 `;
 
 const PanelButtonContainer = styled.div`
   overflow: auto;
-  min-height: var(--panel-button-container-min-height);
   max-height: 100%;
   display: flex;
   flex-direction: column;
@@ -113,6 +111,7 @@ export const StyledPanelButton = styled.button<{
   color: ${props => (props.disabled ? 'var(--disabled-color)' : props.color)};
   padding-inline: var(--margins-lg);
   padding-block: var(--margins-sm);
+  min-height: var(--panel-button-container-min-height);
 
   &:hover {
     background-color: ${props => {

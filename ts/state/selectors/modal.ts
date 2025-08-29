@@ -90,5 +90,3 @@ const getConversationSettingsModalIsStandalone = (state: StateType) => {
 export const useConversationSettingsModalIsStandalone = () => {
   return useSelector(getConversationSettingsModalIsStandalone);
 };
-export const getSessionNetworkModalState = (state: StateType) =>
-  getModal(state).sessionNetworkModal;

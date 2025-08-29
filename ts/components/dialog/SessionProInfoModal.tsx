@@ -303,7 +303,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
               shinyContainerStyle={{
                 width: '100%',
               }}
-              buttonColor={SessionButtonColor.Primary}
+              buttonColor={SessionButtonColor.PrimaryDark}
               onClick={onClose}
               dataTestId="modal-session-pro-confirm-button"
             >

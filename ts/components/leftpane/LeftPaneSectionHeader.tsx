@@ -171,6 +171,11 @@ export const LeftPaneSectionHeader = () => {
 
       return;
     }
+    if (leftOverlayMode === 'message-requests') {
+      dispatch(sectionActions.resetLeftOverlayMode());
+
+      return;
+    }
     if (leftOverlayMode === 'closed-group') {
       dispatch(searchActions.clearSearch());
       dispatch(sectionActions.setLeftOverlayMode('choose-action'));

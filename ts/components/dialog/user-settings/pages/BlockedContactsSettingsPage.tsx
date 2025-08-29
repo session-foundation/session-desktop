@@ -8,12 +8,7 @@ import {
   type UserSettingsModalState,
 } from '../../../../state/ducks/modalDialog';
 import { PanelButtonGroup } from '../../../buttons/panel/PanelButton';
-import {
-  ModalActionsContainer,
-  ModalBasicHeader,
-  SessionWrapperModal,
-  WrapperModalWidth,
-} from '../../../SessionWrapperModal';
+import { ModalActionsContainer, ModalBasicHeader } from '../../../SessionWrapperModal';
 import { ModalBackButton } from '../../shared/ModalBackButton';
 import {
   useUserSettingsBackAction,
@@ -25,6 +20,7 @@ import { tr } from '../../../../localization/localeTools';
 import { MemberListItem } from '../../../MemberListItem';
 import { Localizer } from '../../../basic/Localizer';
 import { BlockedNumberController } from '../../../../util';
+import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
 
 const StyledNoBlockedContactsContainer = styled.div`
   justify-self: center;
@@ -71,7 +67,7 @@ export function BlockedContactsSettingsPage(modalState: UserSettingsModalState) 
   const canUnblock = selectedIds.length > 0;
 
   return (
-    <SessionWrapperModal
+    <UserSettingsModalContainer
       headerChildren={
         <ModalBasicHeader
           title={title}
@@ -81,9 +77,6 @@ export function BlockedContactsSettingsPage(modalState: UserSettingsModalState) 
         />
       }
       onClose={closeAction || undefined}
-      shouldOverflow={true}
-      allowOutsideClick={false}
-      $contentMinWidth={WrapperModalWidth.normal}
       buttonChildren={
         hasBlocked ? (
           <ModalActionsContainer buttonType={SessionButtonType.Outline}>
@@ -121,6 +114,6 @@ export function BlockedContactsSettingsPage(modalState: UserSettingsModalState) 
           })
         )}
       </PanelButtonGroup>
-    </SessionWrapperModal>
+    </UserSettingsModalContainer>
   );
 }

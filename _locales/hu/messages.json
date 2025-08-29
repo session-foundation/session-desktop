@@ -790,7 +790,6 @@
   "recoveryPasswordHideRecoveryPassword": "Visszaállítási jelszó elrejtése",
   "recoveryPasswordHideRecoveryPasswordDescription": "A visszaállítási jelszó végleges elrejtése ezen az eszközön.",
   "recoveryPasswordRestoreDescription": "Írd be a visszaállítási jelszavad a fiókod betöltéséhez. Ha nem mentetted el, az alkalmazás beállításai között találhatod meg.",
-  "recoveryPasswordView": "Jelszó megtekintése",
   "recoveryPasswordWarningSendDescription": "Ez a visszaállítási jelszavad. Ha elküldöd valakinek, teljes hozzáférést kap a fiókodhoz.",
   "recreateGroup": "Csoport újra-létrehozása",
   "redo": "Újra",

@@ -85,7 +85,6 @@ export const SessionNicknameDialog = (props: Props) => {
     <SessionWrapperModal
       headerChildren={<ModalBasicHeader title={tr('nicknameSet')} showExitIcon={true} />}
       onClose={onClickClose}
-      topAnchor="25vh"
       buttonChildren={
         <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton

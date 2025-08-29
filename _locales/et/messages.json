@@ -672,7 +672,6 @@
   "recoveryPasswordHideRecoveryPassword": "Peida Recovery Password",
   "recoveryPasswordHideRecoveryPasswordDescription": "Päriselt peida taastamisparool sellel seadmel.",
   "recoveryPasswordRestoreDescription": "Sisestage oma taastamise parool, et laadida oma konto. Kui te ei ole seda salvestanud, leiate selle oma rakenduse seadetest.",
-  "recoveryPasswordView": "Näita parooli",
   "recoveryPasswordWarningSendDescription": "See on teie taastamislause. Kui saadate selle kellelegi, on tal täielik juurdepääs teie kontole.",
   "redo": "Tee uuesti",
   "remove": "Eemalda",

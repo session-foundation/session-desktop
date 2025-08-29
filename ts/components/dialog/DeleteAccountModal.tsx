@@ -123,7 +123,6 @@ export const DeleteAccountModal = () => {
     <SessionWrapperModal
       headerChildren={<ModalBasicHeader title={tr('clearDataAll')} />}
       onClose={onClickCancelHandler}
-      topAnchor="center"
       buttonChildren={
         <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
