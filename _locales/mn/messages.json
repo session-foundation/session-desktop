@@ -683,7 +683,6 @@
   "recoveryPasswordHideRecoveryPassword": "Нууц үгийг нуух",
   "recoveryPasswordHideRecoveryPasswordDescription": "Танай сэргээх нууц үгийг энэ төхөөрөмж дээр бүрмөсөн нуух.",
   "recoveryPasswordRestoreDescription": "Аккаунтаа сэргээхэд сэргээх нууц үгээ оруулах. Хэрвээ хадгалаагүй бол, аппынхаа тохиргооноос олж болно.",
-  "recoveryPasswordView": "Нууц үгийг харах",
   "recoveryPasswordWarningSendDescription": "Энэ таны нууц үг юм. Хэрэв та үүнийг хүнд илгээвэл таны аккаунтанд бүрэн нэвтрэх боломжтой болно.",
   "redo": "Дахин хийх",
   "remove": "Устгах",

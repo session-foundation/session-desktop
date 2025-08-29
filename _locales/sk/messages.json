@@ -673,7 +673,6 @@
   "recoveryPasswordHideRecoveryPassword": "Skryť frázu pre obnovenie",
   "recoveryPasswordHideRecoveryPasswordDescription": "Natrvalo skryť frázu na obnovenie na tomto zariadení.",
   "recoveryPasswordRestoreDescription": "Zadajte frázu pre obnovenie na načítanie účtu. Ak ste ju neuložili, nájdete ju v nastaveniach aplikácie.",
-  "recoveryPasswordView": "Zobraziť heslo",
   "recoveryPasswordWarningSendDescription": "Toto je vaše heslo na obnovenie. Ak ho niekomu pošlete, získa plný prístup do vášho účtu.",
   "redo": "Znova",
   "remove": "Odstrániť",

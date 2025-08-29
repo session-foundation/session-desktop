@@ -675,7 +675,6 @@
   "recoveryPasswordHideRecoveryPassword": "Slėpti Recovery Password",
   "recoveryPasswordHideRecoveryPasswordDescription": "Visam laikui paslėpti atkūrimo slaptažodį šiame įrenginyje.",
   "recoveryPasswordRestoreDescription": "Įveskite savo atkūrimo slaptažodį, norėdami įkelti savo paskyrą. Jei jo neišsaugojote, galite jį rasti savo programėlės nustatymuose.",
-  "recoveryPasswordView": "Rodyti slaptažodį",
   "recoveryPasswordWarningSendDescription": "Tai yra jūsų atkūrimo slaptažodis. Jei jį išsiųsite kam nors, jie turės pilną prieigą prie jūsų paskyros.",
   "redo": "Grąžinti",
   "remove": "Šalinti",
