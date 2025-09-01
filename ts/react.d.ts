@@ -168,6 +168,8 @@ declare module 'react' {
     | 'leave-group'
     | 'delete-group'
     | 'set-password'
+    | 'remove-password'
+    | 'change-password'
     | 'refresh'
     | 'join-community'
     | 'copy-url'

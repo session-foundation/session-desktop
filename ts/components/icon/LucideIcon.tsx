@@ -23,6 +23,11 @@ export type LucideIconProps = WithLucideUnicode & {
   dataTestId?: SessionDataTestId;
   style?: CSSProperties;
   ariaLabel?: string;
+  /**
+   * set to true to make this icon mirrored when the app is in RTL mode.
+   * Note: some icons are enforced not mirrored (e.g. the "check" icon)
+   */
+  respectRtl?: boolean;
 };
 
 /**
@@ -35,6 +40,7 @@ export const LucideIcon = ({
   dataTestId,
   style,
   ariaLabel,
+  respectRtl = true,
 }: LucideIconProps) => {
   const isRtl = useIsRtl();
 
@@ -45,7 +51,7 @@ export const LucideIcon = ({
       data-testid={dataTestId}
       style={{ ...style, lineHeight: 1 }}
       aria-label={ariaLabel}
-      $mirrorIt={isRtl && isIconToMirrorRtl(unicode)}
+      $mirrorIt={isRtl && respectRtl && isIconToMirrorRtl(unicode)}
     >
       {unicode}
     </LucideIconWrapper>

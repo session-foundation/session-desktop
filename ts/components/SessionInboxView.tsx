@@ -44,7 +44,6 @@ import type { UserGroupState } from '../state/ducks/userGroups';
 import { initialThemeState } from '../state/theme/ducks/theme';
 import { initialNetworkModalState } from '../state/ducks/networkModal';
 import { initialNetworkDataState } from '../state/ducks/networkData';
-import { useIsRtl } from '../util/i18n/rtlSupport';
 
 function makeLookup<T>(items: Array<T>, key: string): { [key: string]: T } {
   // Yep, we can't index into item without knowing what it is. True. But we want to.
@@ -135,7 +134,7 @@ async function setupLeftPane(forceUpdateInboxComponent: () => void) {
 
 export const SessionInboxView = () => {
   const update = useUpdate();
-  const isRtl = useIsRtl();
+
   // run only on mount
   useMount(() => {
     void setupLeftPane(update);
@@ -154,13 +153,7 @@ export const SessionInboxView = () => {
         <PersistGate loading={null} persistor={persistor}>
           <SessionTheme>
             <AnimatePresence>
-              <Flex
-                $container={true}
-                height="0"
-                $flexShrink={100}
-                $flexGrow={1}
-                $flexDirection={isRtl ? 'row-reverse' : 'row'}
-              >
+              <Flex $container={true} height="0" $flexShrink={100} $flexGrow={1}>
                 <StyledGutter>
                   <LeftPane />
                 </StyledGutter>

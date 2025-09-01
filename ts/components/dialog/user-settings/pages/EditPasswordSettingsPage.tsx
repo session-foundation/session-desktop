@@ -258,6 +258,13 @@ export function EditPasswordSettingsPage(modalState: {
         <ModalActionsContainer buttonType={SessionButtonType.Outline}>
           <SessionButton
             text={tr(isSet ? 'passwordSet' : isRemove ? 'passwordRemove' : 'passwordChange')}
+            dataTestId={
+              isSet
+                ? 'set-password-button'
+                : isRemove
+                  ? 'remove-password-button'
+                  : 'change-password-button'
+            }
             buttonType={SessionButtonType.Outline}
             onClick={doChange}
             buttonColor={isRemove ? SessionButtonColor.Danger : SessionButtonColor.PrimaryDark}
