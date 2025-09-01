@@ -112,6 +112,7 @@ export function NotificationForConversationModal(props: Required<ConversationSet
 
   return (
     <SessionWrapperModal
+      modalId="conversationSettingsModal"
       headerChildren={
         <ModalBasicHeader
           title={title}

@@ -347,7 +347,6 @@ export const DefaultSettingPage = () => {
 
   useHotkey('v', () => handleKeyQRMode(mode, setMode));
   useHotkey('Backspace', () => handleKeyCancel(mode, setMode, inputRef));
-  useHotkey('Escape', () => closeDialog());
 
   function copyAccountIdToClipboard() {
     window.clipboard.writeText(us);

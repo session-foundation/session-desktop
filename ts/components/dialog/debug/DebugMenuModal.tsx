@@ -120,6 +120,7 @@ export function DebugMenuModal() {
 
   return (
     <SessionWrapperModal
+      modalId="debugMenuModal"
       headerChildren={
         <ModalBasicHeader
           title="Debug Menu"

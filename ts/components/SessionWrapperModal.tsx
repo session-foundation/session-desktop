@@ -1,9 +1,9 @@
 /* eslint-disable no-unneeded-ternary */
 import styled from 'styled-components';
+import useKey from 'react-use/lib/useKey';
 import clsx from 'clsx';
 import type { CSSProperties } from 'styled-components';
 import { ReactNode, useState, useRef, type SessionDataTestId } from 'react';
-import useKey from 'react-use/lib/useKey';
 import { Flex } from './basic/Flex';
 import { SpacerLG } from './basic/Text';
 import { SessionLucideIconButton } from './icon/SessionIconButton';
@@ -14,6 +14,8 @@ import { LUCIDE_ICONS_UNICODE } from './icon/lucide';
 import { IsModalScrolledContext, useIsModalScrolled } from '../contexts/IsModalScrolledContext';
 import { OnModalCloseContext, useOnModalClose } from '../contexts/OnModalCloseContext';
 import { SessionButton, SessionButtonColor, SessionButtonType } from './basic/SessionButton';
+import type { ModalId } from '../state/ducks/modalDialog';
+import { useIsTopModal } from '../state/selectors/modal';
 
 type WithExtraLeftButton = {
   /**
@@ -236,6 +238,7 @@ type SessionWrapperModalType = {
   topAnchor?: ModalTopAnchor;
   $flexGap?: string;
   style?: Omit<CSSProperties, 'maxWidth' | 'minWidth' | 'padding' | 'border'>;
+  modalId: ModalId;
 };
 
 const useNeedsSpacerOnSide = ({
@@ -334,13 +337,13 @@ export const ModalBasicHeader = ({
         padding={'0'}
         margin={'0'}
       >
+        {extraLeftButton}
         {/* Note: this is just here to keep the title centered, no matter the buttons we have */}
         <ExtraSpacerLeft
           showExitIcon={showExitIcon}
           extraLeftButton={extraLeftButton}
           extraRightButton={extraRightButton}
         />
-        {extraLeftButton}
       </Flex>
       <StyledTitle
         bigHeader={bigHeader}
@@ -370,8 +373,8 @@ export const ModalBasicHeader = ({
             // So we need to use one size bigger than the other icons we use on the header.
             iconSize={'huge'}
             onClick={onClose ?? undefined}
-            padding={'0 var(--margins-xs) 0 var(--margins-xs)'}
-            margin={'0'}
+            padding={'0'}
+            margin={'0 var(--margins-xs) 0 var(--margins-xs)'}
             dataTestId="modal-close-button"
             iconColor="var(--text-primary-color)"
           />
@@ -398,29 +401,20 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
     onClose,
     topAnchor,
     $flexGap,
+    modalId,
   } = props;
 
   const [scrolled, setScrolled] = useState(false);
-
-  useKey(
-    'Esc',
-    _event => {
-      onClose?.();
-    },
-    undefined,
-    [onClose]
-  );
-
-  useKey(
-    'Escape',
-    _event => {
-      onClose?.();
-    },
-    undefined,
-    [onClose]
-  );
-
   const modalRef = useRef<HTMLDivElement>(null);
+
+  const isTopModal = useIsTopModal(modalId);
+
+  useKey((event: KeyboardEvent) => {
+    if (!isTopModal) {
+      return false;
+    }
+    return event.key === 'Esc' || event.key === 'Escape';
+  }, onClose);
 
   const handleClick = (e: any) => {
     if (!modalRef.current?.contains(e.target)) {
@@ -434,7 +428,7 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
   };
 
   return (
-    <SessionFocusTrap allowOutsideClick={allowOutsideClick}>
+    <SessionFocusTrap allowOutsideClick={allowOutsideClick} initialFocus={() => modalRef.current}>
       <IsModalScrolledContext.Provider value={scrolled}>
         <OnModalCloseContext.Provider value={onClose ?? null}>
           <StyledRootDialog
@@ -445,15 +439,15 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
             data-testid={modalDataTestId}
           >
             <StyledModal
-              ref={modalRef}
               $contentMaxWidth={$contentMaxWidth}
               $contentMinWidth={$contentMinWidth}
               $padding={padding}
               style={style}
               $topAnchor={topAnchor ?? 'center'}
+              ref={modalRef}
+              data-modal-id={modalId}
             >
               {props.headerChildren ? props.headerChildren : null}
-
               <StyledModalBody
                 onScroll={handleScroll}
                 shouldOverflow={shouldOverflow}

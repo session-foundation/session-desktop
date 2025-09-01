@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import useKey from 'react-use/lib/useKey';
 import useMount from 'react-use/lib/useMount';
 import { isEmpty } from 'lodash';
 
@@ -208,9 +207,6 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
     }
   }
 
-  useKey('Escape', closeDialog);
-  useKey('Esc', closeDialog);
-
   const errorStringName = useNameErrorString({ newName, isPublic, isMe });
   const errorStringDescription = useDescriptionErrorString({ isMe, isPublic, newDescription });
 
@@ -236,6 +232,7 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
 
   return (
     <SessionWrapperModal
+      modalId="updateConversationDetailsModal"
       headerChildren={<ModalBasicHeader title={tr(`update${partDetailCap}Information`)} />}
       onClose={closeDialog}
       buttonChildren={

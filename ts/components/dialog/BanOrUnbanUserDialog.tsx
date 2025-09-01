@@ -123,6 +123,7 @@ export const BanOrUnBanUserDialog = (props: {
 
   return (
     <SessionWrapperModal
+      modalId="banOrUnbanUserModal"
       headerChildren={<ModalBasicHeader title={title} />}
       onClose={onClose}
       buttonChildren={

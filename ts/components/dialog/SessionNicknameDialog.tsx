@@ -83,6 +83,7 @@ export const SessionNicknameDialog = (props: Props) => {
 
   return (
     <SessionWrapperModal
+      modalId="nickNameModal"
       headerChildren={<ModalBasicHeader title={tr('nicknameSet')} showExitIcon={true} />}
       onClose={onClickClose}
       buttonChildren={

@@ -121,6 +121,7 @@ export const DeleteAccountModal = () => {
 
   return (
     <SessionWrapperModal
+      modalId="deleteAccountModal"
       headerChildren={<ModalBasicHeader title={tr('clearDataAll')} />}
       onClose={onClickCancelHandler}
       buttonChildren={

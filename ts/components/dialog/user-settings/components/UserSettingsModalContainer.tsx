@@ -13,6 +13,7 @@ export function UserSettingsModalContainer({
 }) {
   return (
     <SessionWrapperModal
+      modalId="userSettingsModal"
       headerChildren={headerChildren}
       onClose={onClose || undefined}
       shouldOverflow={true}

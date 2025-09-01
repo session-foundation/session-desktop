@@ -1,4 +1,4 @@
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { useState } from 'react';
 
@@ -27,7 +27,7 @@ import { useHotkey } from '../../../../hooks/useHotkey';
 import { useIconToImageURL } from '../../../../hooks/useIconToImageURL';
 import { usePasswordModal } from '../../../../hooks/usePasswordModal';
 import { mnDecode } from '../../../../session/crypto/mnemonic';
-import { getIsModalVisible } from '../../../../state/selectors/modal';
+import { useIsTopModal } from '../../../../state/selectors/modal';
 import { THEME_GLOBALS } from '../../../../themes/globals';
 import { getCurrentRecoveryPhrase } from '../../../../util/storage';
 import { SessionQRCode, type QRCodeLogoProps } from '../../../SessionQRCode';
@@ -68,7 +68,7 @@ export function RecoveryPasswordSettingsPage(modalState: UserSettingsModalState)
   const hexEncodedSeed = mnDecode(recoveryPhrase, 'english');
   const [isQRVisible, setIsQRVisible] = useState(false);
 
-  const isModalVisible = useSelector(getIsModalVisible);
+  const isModalVisible = useIsTopModal('userSettingsModal');
 
   const { dataURL, iconSize, iconColor, backgroundColor, loading } = useIconToImageURL(qrLogoProps);
 

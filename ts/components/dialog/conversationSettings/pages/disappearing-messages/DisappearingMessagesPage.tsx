@@ -164,6 +164,7 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
 
   return (
     <SessionWrapperModal
+      modalId="conversationSettingsModal"
       headerChildren={
         <ModalBasicHeader
           title={title}

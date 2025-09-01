@@ -1,4 +1,4 @@
-import { ipcRenderer, shell } from 'electron';
+import { ipcRenderer } from 'electron';
 import { useState, SessionDataTestId } from 'react';
 
 import { useDispatch } from 'react-redux';
@@ -9,7 +9,7 @@ import useInterval from 'react-use/lib/useInterval';
 import { isEmpty, isTypedArray } from 'lodash';
 import { CityResponse, Reader } from 'maxmind';
 import useMount from 'react-use/lib/useMount';
-import { onionPathModal } from '../../state/ducks/modalDialog';
+import { onionPathModal, updateOpenUrlModal } from '../../state/ducks/modalDialog';
 import {
   useFirstOnionPath,
   useFirstOnionPathLength,
@@ -251,6 +251,7 @@ export const OnionPathModal = () => {
   const dispatch = useDispatch();
   return (
     <SessionWrapperModal
+      modalId="onionPathModal"
       onClose={() => dispatch(onionPathModal(null))}
       headerChildren={<ModalBasicHeader title={tr('onionRoutingPath')} showExitIcon={true} />}
       buttonChildren={
@@ -259,7 +260,11 @@ export const OnionPathModal = () => {
             text={tr('learnMore')}
             buttonType={SessionButtonType.Simple}
             onClick={() => {
-              void shell.openExternal('https://getsession.org/faq/#onion-routing');
+              dispatch(
+                updateOpenUrlModal({
+                  urlToOpen: 'https://getsession.org/faq/#onion-routing',
+                })
+              );
             }}
           />
         </ModalActionsContainer>

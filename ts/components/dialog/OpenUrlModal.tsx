@@ -45,6 +45,7 @@ export function OpenUrlModal(props: OpenUrlModalState) {
 
   return (
     <SessionWrapperModal
+      modalId="openUrlModal"
       headerChildren={<ModalBasicHeader title={tr('urlOpen')} showExitIcon={true} />}
       onClose={onClose}
       buttonChildren={

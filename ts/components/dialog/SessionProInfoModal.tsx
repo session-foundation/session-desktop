@@ -275,6 +275,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
 
   return (
     <SessionWrapperModal
+      modalId="sessionProInfoModal"
       onClose={onClose}
       headerChildren={getImage(props.variant)}
       padding="0"
