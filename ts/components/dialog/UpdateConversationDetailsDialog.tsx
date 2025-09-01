@@ -45,6 +45,13 @@ import { UploadFirstImageButton } from '../buttons/avatar/UploadFirstImageButton
 import { sanitizeDisplayNameOrToast } from '../registration/utils';
 import { ProfileManager } from '../../session/profile_manager/ProfileManager';
 
+/**
+ * We want the description to be at most 200 visible characters, in addition
+ * to being at most GROUP_INFO_DESCRIPTION_MAX_LENGTH bytes long.
+ *
+ */
+const maxCharLength = 200;
+
 function useNameErrorString({
   isMe,
   isPublic,
@@ -94,9 +101,13 @@ function useDescriptionErrorString({
     // description is always optional
     return '';
   }
+  const charLength = newDescription?.length || 0;
   const byteLength = new TextEncoder().encode(newDescription).length;
 
-  if (byteLength <= LIBSESSION_CONSTANTS.GROUP_INFO_DESCRIPTION_MAX_LENGTH) {
+  if (
+    byteLength <= LIBSESSION_CONSTANTS.GROUP_INFO_DESCRIPTION_MAX_LENGTH &&
+    charLength <= maxCharLength
+  ) {
     return '';
   }
   return isPublic
