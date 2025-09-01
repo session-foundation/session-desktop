@@ -111,12 +111,13 @@ export const UserProfileModal = ({
             onClick={onClickStartConversation}
             dataTestId="new-session-conversation"
             disabled={isBlindedAndNotResolved && hasDisabledMsgRequests}
+            buttonColor={SessionButtonColor.PrimaryDark}
           />
 
           {!isBlindedAndNotResolved && (
             <CopyToClipboardButton
               copyContent={conversationIdToDisplay}
-              buttonColor={SessionButtonColor.TextPrimary}
+              buttonColor={SessionButtonColor.PrimaryDark}
               dataTestId="copy-button-account-id"
               buttonType={SessionButtonType.Outline}
               hotkey={true}
