@@ -232,7 +232,6 @@
   "conversationsDeleted": "Η συνομιλία διαγράφηκε",
   "conversationsEmpty": "Δεν υπάρχουν μηνύματα σε {conversation_name}.",
   "conversationsEnter": "Εισαγάγετε Key",
-  "conversationsEnterDescription": "Λειτουργία του πλήκτρου εισαγωγής κατά την πληκτρολόγηση σε συνομιλία.",
   "conversationsGroups": "Ομάδες",
   "conversationsMessageTrimming": "Περικοπή μηνυμάτων",
   "conversationsMessageTrimmingTrimCommunities": "Περικοπή Κοινοτήτων",

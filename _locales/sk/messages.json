@@ -231,7 +231,6 @@
   "conversationsDeleted": "Konverzácia úspešne zmazaná",
   "conversationsEmpty": "V {conversation_name} nie sú žiadne správy.",
   "conversationsEnter": "Zadajte Kľúč",
-  "conversationsEnterDescription": "Funkcia klávesy Enter pri písaní v konverzácii.",
   "conversationsGroups": "Skupiny",
   "conversationsMessageTrimming": "Prečistenie správ",
   "conversationsMessageTrimmingTrimCommunities": "Prečistiť komunity",

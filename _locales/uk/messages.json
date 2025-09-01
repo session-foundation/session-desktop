@@ -269,7 +269,6 @@
   "conversationsDeleted": "Розмову видалено",
   "conversationsEmpty": "Немає повідомлень в {conversation_name}.",
   "conversationsEnter": "Введіть Key",
-  "conversationsEnterDescription": "Функція клавіші Enter під час набору повідомлення.",
   "conversationsGroups": "Групи",
   "conversationsMessageTrimming": "Автовидалення повідомлень",
   "conversationsMessageTrimmingTrimCommunities": "Автовидалення повідомлень спільнот",

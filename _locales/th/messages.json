@@ -231,7 +231,6 @@
   "conversationsDeleted": "Conversation deleted",
   "conversationsEmpty": "ไม่มีข้อความใน {conversation_name}",
   "conversationsEnter": "ป้อน Key",
-  "conversationsEnterDescription": "ฟังก์ชันของปุ่ม Enter เมื่อพิมพ์ในบทสนทนา",
   "conversationsGroups": "กลุ่ม",
   "conversationsMessageTrimming": "ตัดข้อความให้สั้นลง",
   "conversationsMessageTrimmingTrimCommunities": "Trim Communities",

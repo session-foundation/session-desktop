@@ -272,7 +272,6 @@
   "conversationsDeleted": "Rozmowa usunięta",
   "conversationsEmpty": "W {conversation_name} nie ma żadnych wiadomości.",
   "conversationsEnter": "Klawisz Enter",
-  "conversationsEnterDescription": "Funkcja klawisza Enter podczas pisania wiadomości w konwersacji.",
   "conversationsGroups": "Grupy",
   "conversationsMessageTrimming": "Przycinanie wiadomości",
   "conversationsMessageTrimmingTrimCommunities": "Przytnij społeczności",

@@ -230,7 +230,6 @@
   "conversationsDeleted": "Razgovor uklonjen",
   "conversationsEmpty": "Nema poruka u {conversation_name}.",
   "conversationsEnter": "Unesite ključ",
-  "conversationsEnterDescription": "Funkcija tipke enter pri pisanju u razgovoru.",
   "conversationsGroups": "Grupe",
   "conversationsMessageTrimming": "Skraćivanje poruka",
   "conversationsMessageTrimmingTrimCommunities": "Sažimanje zajednica",

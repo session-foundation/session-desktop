@@ -232,7 +232,6 @@
   "conversationsDeleted": "Conversa excluída",
   "conversationsEmpty": "Não há mensagens em {conversation_name}.",
   "conversationsEnter": "Insira a tecla Enter",
-  "conversationsEnterDescription": "Função da tecla Enter ao digitar em uma conversa.",
   "conversationsGroups": "Grupos",
   "conversationsMessageTrimming": "Corte de Mensagens",
   "conversationsMessageTrimmingTrimCommunities": "Cortar Comunidades",

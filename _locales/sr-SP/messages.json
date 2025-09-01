@@ -230,7 +230,6 @@
   "conversationsDeleted": "Преписка је избрисана",
   "conversationsEmpty": "Нема порука у {conversation_name}.",
   "conversationsEnter": "Унесите кључ",
-  "conversationsEnterDescription": "Функција тастера ентер при куцању у разговору.",
   "conversationsGroups": "Групе",
   "conversationsMessageTrimming": "Скраћивање порука",
   "conversationsMessageTrimmingTrimCommunities": "Скрати Заједницу",

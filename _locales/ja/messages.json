@@ -272,7 +272,6 @@
   "conversationsDeleted": "会話を削除しました",
   "conversationsEmpty": "{conversation_name} にはメッセージがありません。",
   "conversationsEnter": "キーを入力",
-  "conversationsEnterDescription": "会話中のEnterキーの機能",
   "conversationsGroups": "グループ",
   "conversationsMessageTrimming": "メッセージの削減",
   "conversationsMessageTrimmingTrimCommunities": "コミュニティをトリムする",

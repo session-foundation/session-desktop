@@ -272,7 +272,6 @@
   "conversationsDeleted": "Die Unterhaltung wurde gelöscht.",
   "conversationsEmpty": "Es sind keine Nachrichten in {conversation_name}.",
   "conversationsEnter": "Eingabetaste",
-  "conversationsEnterDescription": "Funktion der Eingabetaste beim Tippen in einer Unterhaltung.",
   "conversationsGroups": "Gruppen",
   "conversationsMessageTrimming": "Nachrichtenkürzung",
   "conversationsMessageTrimmingTrimCommunities": "Communities kürzen",

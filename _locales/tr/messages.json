@@ -269,7 +269,6 @@
   "conversationsDeleted": "Konuşma silindi",
   "conversationsEmpty": "{conversation_name}'de ileti yok.",
   "conversationsEnter": "Giriş Tuşu",
-  "conversationsEnterDescription": "Sohbette yazarken enter tuşunun fonksiyonu.",
   "conversationsGroups": "Gruplar",
   "conversationsMessageTrimming": "İleti kırpma",
   "conversationsMessageTrimmingTrimCommunities": "Toplulukları Kırp",

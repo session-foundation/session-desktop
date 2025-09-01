@@ -272,7 +272,6 @@
   "conversationsDeleted": "S'ha suprimit la conversa",
   "conversationsEmpty": "No hi ha missatges a {conversation_name}.",
   "conversationsEnter": "Introdueix clau",
-  "conversationsEnterDescription": "Funció de la tecla d'introducció durant l'escriptura en una conversa.",
   "conversationsGroups": "Grups",
   "conversationsMessageTrimming": "Escapçament de missatges",
   "conversationsMessageTrimmingTrimCommunities": "Limiteu comunitats",

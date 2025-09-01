@@ -230,7 +230,6 @@
   "conversationsDeleted": "Разговорот е избришан",
   "conversationsEmpty": "Нема пораки во {conversation_name}.",
   "conversationsEnter": "Внесете клуч",
-  "conversationsEnterDescription": "Функција на Enter копчето при пишување во разговор.",
   "conversationsGroups": "Групи",
   "conversationsMessageTrimming": "Сечење на пораки",
   "conversationsMessageTrimmingTrimCommunities": "Тримување на заедници",

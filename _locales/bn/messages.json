@@ -230,7 +230,6 @@
   "conversationsDeleted": "কথোপকথন মুছে ফেলা হয়েছে",
   "conversationsEmpty": "{conversation_name} এ কোনো মেসেজ নেই।",
   "conversationsEnter": "কী লিখুন",
-  "conversationsEnterDescription": "কথোপকথনে টাইপ করার সময় এন্টার কী এর ফাংশন।",
   "conversationsGroups": "গ্রুপস",
   "conversationsMessageTrimming": "বার্তা সংক্ষিপ্তকরণ",
   "conversationsMessageTrimmingTrimCommunities": "কমিউনিটিস ট্রিম করুন",

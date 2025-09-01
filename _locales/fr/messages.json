@@ -272,7 +272,6 @@
   "conversationsDeleted": "Conversation supprimée",
   "conversationsEmpty": "Il n'y a aucun message dans {conversation_name}.",
   "conversationsEnter": "Entrer une clé",
-  "conversationsEnterDescription": "Fonction de la touche Entrée lors de la saisie dans une conversation.",
   "conversationsGroups": "Groupes",
   "conversationsMessageTrimming": "Élagage des messages",
   "conversationsMessageTrimmingTrimCommunities": "Purger les groupes",

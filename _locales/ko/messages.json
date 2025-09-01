@@ -268,7 +268,6 @@
   "conversationsDeleted": "대화를 삭제함",
   "conversationsEmpty": "{conversation_name}에는 메시지가 없습니다.",
   "conversationsEnter": "키 입력",
-  "conversationsEnterDescription": "대화에서 Enter 키 기능.",
   "conversationsGroups": "그룹",
   "conversationsMessageTrimming": "대화 줄이기",
   "conversationsMessageTrimmingTrimCommunities": "커뮤니티 정돈",

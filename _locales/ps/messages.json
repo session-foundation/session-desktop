@@ -230,7 +230,6 @@
   "conversationsDeleted": "خبرتیا",
   "conversationsEmpty": "په {conversation_name} کې هیڅ پیغام نشته.",
   "conversationsEnter": "کیلي ولیکئ",
-  "conversationsEnterDescription": "د خبرو اترو په دوران کې د انټر کیلي دنده.",
   "conversationsGroups": "ډلې",
   "conversationsMessageTrimming": "پیغام تراشې",
   "conversationsMessageTrimmingTrimCommunities": "ټرم ټولنه",

@@ -272,7 +272,6 @@
   "conversationsDeleted": "Conversație ștearsă",
   "conversationsEmpty": "Nu există mesaje în {conversation_name}.",
   "conversationsEnter": "Introduceți tasta",
-  "conversationsEnterDescription": "Funcția tastei Enter când scrii într-o conversație.",
   "conversationsGroups": "Grupuri",
   "conversationsMessageTrimming": "Scurtarea mesajelor",
   "conversationsMessageTrimmingTrimCommunities": "Ajustare comunități",

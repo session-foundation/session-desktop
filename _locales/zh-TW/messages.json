@@ -272,7 +272,6 @@
   "conversationsDeleted": "對話已刪除",
   "conversationsEmpty": "{conversation_name} 中沒有訊息。",
   "conversationsEnter": "回車鍵",
-  "conversationsEnterDescription": "在對話中鍵入時回車鍵的功能。",
   "conversationsGroups": "群組",
   "conversationsMessageTrimming": "訊息清理",
   "conversationsMessageTrimmingTrimCommunities": "刪裁社群舊訊息",

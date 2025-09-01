@@ -269,7 +269,6 @@
   "conversationsDeleted": "Беседа удалена",
   "conversationsEmpty": "Нет сообщений в {conversation_name}.",
   "conversationsEnter": "Введите ключ",
-  "conversationsEnterDescription": "Функция клавиши Enter при вводе текста в беседе.",
   "conversationsGroups": "Группы",
   "conversationsMessageTrimming": "Обрезка сообщений",
   "conversationsMessageTrimmingTrimCommunities": "Обрезать сообщения в сообществах",

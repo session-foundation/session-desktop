@@ -254,7 +254,6 @@
   "conversationsDeleted": "Percakapan dihapus",
   "conversationsEmpty": "Tak ada pesan di {conversation_name}.",
   "conversationsEnter": "Masukkan Kunci",
-  "conversationsEnterDescription": "Fungsi tombol enter saat mengetik dalam percakapan.",
   "conversationsGroups": "Grup",
   "conversationsMessageTrimming": "Pemangkasan Pesan",
   "conversationsMessageTrimmingTrimCommunities": "Pangkas Komunitas",

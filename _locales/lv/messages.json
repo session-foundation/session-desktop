@@ -221,7 +221,6 @@
   "conversationsDeleted": "Saruna izdzēsta",
   "conversationsEmpty": "Nav ziņojumu {conversation_name}.",
   "conversationsEnter": "Ievadiet atslēgu",
-  "conversationsEnterDescription": "Enter taustiņa funkcija, rakstot sarunā.",
   "conversationsGroups": "Grupas",
   "conversationsMessageTrimming": "Ziņu apgriešana",
   "conversationsMessageTrimmingTrimCommunities": "Apgriezt kopienas",

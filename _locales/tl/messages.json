@@ -231,7 +231,6 @@
   "conversationsDeleted": "Na-delete na ang usapan",
   "conversationsEmpty": "Walang mensahe sa {conversation_name}.",
   "conversationsEnter": "Ilagay ang Key",
-  "conversationsEnterDescription": "Gamit ang Enter Key kapag nagta-type sa isang usapan.",
   "conversationsGroups": "Mga grupo",
   "conversationsMessageTrimming": "Pag-trim ng Mensahe",
   "conversationsMessageTrimmingTrimCommunities": "Burahin ang Mga Mensaheng Nagtagal ng Higit sa 6 (na) Buwan",

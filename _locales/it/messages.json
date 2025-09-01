@@ -272,7 +272,6 @@
   "conversationsDeleted": "Conversazione eliminata",
   "conversationsEmpty": "Non ci sono messaggi in {conversation_name}.",
   "conversationsEnter": "Inserisci chiave",
-  "conversationsEnterDescription": "Funzione del tasto invio quando si digita in una chat.",
   "conversationsGroups": "Gruppi",
   "conversationsMessageTrimming": "Sfoltitura dei messaggi",
   "conversationsMessageTrimmingTrimCommunities": "Sfoltisci Comunità",

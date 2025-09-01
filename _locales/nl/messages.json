@@ -272,7 +272,6 @@
   "conversationsDeleted": "Gesprek verwijderd",
   "conversationsEmpty": "Er zijn geen berichten in {conversation_name}.",
   "conversationsEnter": "Voer toets in",
-  "conversationsEnterDescription": "Functie van de entertoets bij het typen in een gesprek.",
   "conversationsGroups": "Groepen",
   "conversationsMessageTrimming": "Beperk bewaartermijn",
   "conversationsMessageTrimmingTrimCommunities": "Communities opschonen",

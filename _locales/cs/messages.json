@@ -272,7 +272,6 @@
   "conversationsDeleted": "Konverzace byla smazána",
   "conversationsEmpty": "V {conversation_name} nejsou žádné zprávy.",
   "conversationsEnter": "Zadejte klíč",
-  "conversationsEnterDescription": "Funkce klávesy Enter při psaní v konverzaci.",
   "conversationsGroups": "Skupiny",
   "conversationsMessageTrimming": "Pročištění zpráv",
   "conversationsMessageTrimmingTrimCommunities": "Pročistit komunity",

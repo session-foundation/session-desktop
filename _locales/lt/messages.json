@@ -230,7 +230,6 @@
   "conversationsDeleted": "Pokalbis ištrintas",
   "conversationsEmpty": "Nėra žinučių {conversation_name}.",
   "conversationsEnter": "Enter Key",
-  "conversationsEnterDescription": "Įveskite pokalbio metu naudojamo enter klavišo funkciją.",
   "conversationsGroups": "Grupės",
   "conversationsMessageTrimming": "Žinučių išvalymas",
   "conversationsMessageTrimmingTrimCommunities": "Apkarpyti Communities",

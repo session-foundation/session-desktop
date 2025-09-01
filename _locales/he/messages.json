@@ -230,7 +230,6 @@
   "conversationsDeleted": "השיחה נמחקה",
   "conversationsEmpty": "אין הודעות ב-{conversation_name}.",
   "conversationsEnter": "הזן מקש",
-  "conversationsEnterDescription": "פונקציה של מקש ה-Enter בעת הקלדה בשיחה.",
   "conversationsGroups": "קבוצות",
   "conversationsMessageTrimming": "קיצוץ הודעה",
   "conversationsMessageTrimmingTrimCommunities": "חתוך Communities",

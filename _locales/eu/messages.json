@@ -230,7 +230,6 @@
   "conversationsDeleted": "Elkarrizketa ezabatuta",
   "conversationsEmpty": "Ez dago mezurik {conversation_name} barruan.",
   "conversationsEnter": "Sartu Tekla",
-  "conversationsEnterDescription": "Sartu tekla funtzioa elkarrizketan idazten ari zarenean.",
   "conversationsGroups": "Taldeak",
   "conversationsMessageTrimming": "Mezuen ebaketa",
   "conversationsMessageTrimmingTrimCommunities": "Komunitateen Ebaketak",

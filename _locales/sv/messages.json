@@ -272,7 +272,6 @@
   "conversationsDeleted": "Konversationen har raderats",
   "conversationsEmpty": "Det finns inga meddelanden i {conversation_name}.",
   "conversationsEnter": "Ange Key",
-  "conversationsEnterDescription": "Funktionen av Enter-tangenten när du skriver i en konversation.",
   "conversationsGroups": "Grupper",
   "conversationsMessageTrimming": "Trimma meddelanden",
   "conversationsMessageTrimmingTrimCommunities": "Beskär gemenskaper",

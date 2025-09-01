@@ -252,7 +252,6 @@
   "conversationsDeleted": "تم حذف المحادثة",
   "conversationsEmpty": "لا توجد رسائل في {conversation_name}.",
   "conversationsEnter": "أدخل المفتاح",
-  "conversationsEnterDescription": "وظيفة مفتاح الإدخال عند الكتابة في محادثة.",
   "conversationsGroups": "مجموعات",
   "conversationsMessageTrimming": "تقليم الرسالة",
   "conversationsMessageTrimmingTrimCommunities": "تقليم المجتمعات",

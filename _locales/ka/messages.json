@@ -232,7 +232,6 @@
   "conversationsDeleted": "საუბარი წაშლილია",
   "conversationsEmpty": "{conversation_name}-ში არ არის შეტყობინებები.",
   "conversationsEnter": "შეიყვანეთ გასაღები",
-  "conversationsEnterDescription": "ფუნქცია, როცა კლავიატურაზე იყენებთ Enter ღილაკს საუბრის დროს.",
   "conversationsGroups": "ჯგუფები",
   "conversationsMessageTrimming": "deleteAfterGroupPR1MessageSound",
   "conversationsMessageTrimmingTrimCommunities": "თემების შემცირება",

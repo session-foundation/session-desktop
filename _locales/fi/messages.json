@@ -232,7 +232,6 @@
   "conversationsDeleted": "Keskustelu poistettu",
   "conversationsEmpty": "Keskustelussa {conversation_name} ei ole viestejä.",
   "conversationsEnter": "Syötä avain",
-  "conversationsEnterDescription": "Enter-näppäimen toiminto keskustelussa kirjoittaessa.",
   "conversationsGroups": "Ryhmät",
   "conversationsMessageTrimming": "Keskustelujen tiivistys",
   "conversationsMessageTrimmingTrimCommunities": "Tiivistä yhteisöt",

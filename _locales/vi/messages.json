@@ -249,7 +249,6 @@
   "conversationsDeleted": "Cuộc hội thoại đã được xoá",
   "conversationsEmpty": "Không có tin nhắn nào trong {conversation_name}.",
   "conversationsEnter": "Nhập Key",
-  "conversationsEnterDescription": "Chức năng của phím enter khi nhập nội dung trong cuộc trò chuyện.",
   "conversationsGroups": "Nhóm",
   "conversationsMessageTrimming": "Thu gọn tin nhắn",
   "conversationsMessageTrimmingTrimCommunities": "Cắt bớt Communities",

@@ -58,7 +58,10 @@ function SendWithShiftEnter() {
 
   return (
     <>
-      <PanelLabelWithDescription title={{ token: 'conversationsEnter' }} />
+      <PanelLabelWithDescription
+        title={{ token: 'conversationsEnter' }}
+        description={{ token: 'conversationsEnterDescription' }}
+      />
       <PanelButtonGroup>
         {items.map(({ value, text, subText }) => {
           return (

@@ -231,7 +231,6 @@
   "conversationsDeleted": "Konversasjonen sletta",
   "conversationsEmpty": "Det er ingen meldinger i {conversation_name}.",
   "conversationsEnter": "Skriv inn Tast",
-  "conversationsEnterDescription": "Funksjon for enter-tasten ved skriving i samtale.",
   "conversationsGroups": "Grupper",
   "conversationsMessageTrimming": "Meldingsbeskjæring",
   "conversationsMessageTrimmingTrimCommunities": "Trim Samfunn",

@@ -272,7 +272,6 @@
   "conversationsDeleted": "Conversación eliminada",
   "conversationsEmpty": "No hay mensajes en {conversation_name}.",
   "conversationsEnter": "Introduce tecla",
-  "conversationsEnterDescription": "Función de la tecla enter al escribir en una conversación.",
   "conversationsGroups": "Grupos",
   "conversationsMessageTrimming": "Recorte de mensajes en chats",
   "conversationsMessageTrimmingTrimCommunities": "Recortar Comunidades",

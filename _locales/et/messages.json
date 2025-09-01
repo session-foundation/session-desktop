@@ -230,7 +230,6 @@
   "conversationsDeleted": "Vestlus kustutatud",
   "conversationsEmpty": "{conversation_name} ei ole sõnumeid.",
   "conversationsEnter": "Sisesta Key",
-  "conversationsEnterDescription": "Enter-klahvi funktsioon vestluse ajal tippimisel.",
   "conversationsGroups": "Grupid",
   "conversationsMessageTrimming": "Sõnumi piiramine",
   "conversationsMessageTrimmingTrimCommunities": "Lähenda kogukonnad",

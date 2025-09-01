@@ -228,7 +228,6 @@
   "conversationsDeleted": "مکالمه حذف شد",
   "conversationsEmpty": "هیچ پیامی در {conversation_name} وجود ندارد.",
   "conversationsEnter": "کلید را وارد کنید",
-  "conversationsEnterDescription": "ویژگی کلید Enter در هنگام تایپ در یک مکالمه.",
   "conversationsGroups": "گروه‌ها",
   "conversationsMessageTrimming": "پیرایش پیام",
   "conversationsMessageTrimmingTrimCommunities": "کوتاه‌سازی انجمن‌ها",

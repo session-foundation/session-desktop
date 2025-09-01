@@ -268,7 +268,6 @@
   "conversationsDeleted": "Beszélgetés törölve",
   "conversationsEmpty": "A {conversation_name} beszélgetésben nincsenek további üzenetek.",
   "conversationsEnter": "Enter billentyű",
-  "conversationsEnterDescription": "Az Enter billentyű funkciója beszélgetés közben.",
   "conversationsGroups": "Csoportok",
   "conversationsMessageTrimming": "Üzenetek rövidítése",
   "conversationsMessageTrimmingTrimCommunities": "Közösségek rövidítése",
