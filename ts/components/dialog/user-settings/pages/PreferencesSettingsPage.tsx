@@ -22,19 +22,28 @@ import { SettingsKey } from '../../../../data/settings-key';
 import { ToastUtils } from '../../../../session/utils';
 import { PanelRadioButton } from '../../../buttons/panel/PanelRadioButton';
 import { useHasEnterSendEnabled } from '../../../../state/selectors/settings';
+import { isLinux } from '../../../../OS';
 
 async function toggleStartInTray() {
   try {
     const newValue = !(await window.getStartInTray());
 
-    // make sure to write it here too, as this is the value used on the UI to mark the toggle as true/false
-    await window.setSettingValue(SettingsKey.settingsStartInTray, newValue);
     await window.setStartInTray(newValue);
     if (!newValue) {
       ToastUtils.pushRestartNeeded();
     }
   } catch (e) {
     window.log.warn('start in tray change error:', e);
+  }
+}
+
+async function toggleAutoStart() {
+  try {
+    const newValue = !(await window.getAutoStartEnabled());
+
+    await window.setAutoStartEnabled(newValue);
+  } catch (e) {
+    window.log.warn('auto start change error:', e);
   }
 }
 
@@ -100,6 +109,11 @@ export function PreferencesSettingsPage(modalState: UserSettingsModalState) {
   const closeAction = useUserSettingsCloseAction(modalState);
   const title = useUserSettingsTitle(modalState);
   const isStartInTrayActive = Boolean(window.getSettingValue(SettingsKey.settingsStartInTray));
+
+  const platformIsLinux = isLinux();
+  const isAutoStartActive = platformIsLinux
+    ? false
+    : Boolean(window.getSettingValue(SettingsKey.settingsAutoStart));
   const forceUpdate = useUpdate();
 
   return (
@@ -142,6 +156,24 @@ export function PreferencesSettingsPage(modalState: UserSettingsModalState) {
             forceUpdate();
           }}
           active={isStartInTrayActive}
+        />
+      </PanelButtonGroup>
+      <PanelLabelWithDescription title={{ token: 'settingsStartCategoryDesktop' }} />
+      <PanelButtonGroup>
+        <SettingsToggleBasic
+          baseDataTestId="auto-start"
+          text={{ token: 'launchOnStartDesktop' }}
+          subText={{ token: 'launchOnStartDescriptionDesktop' }}
+          onClick={async () => {
+            await toggleAutoStart();
+            forceUpdate();
+          }}
+          active={isAutoStartActive}
+          unavailableProps={{
+            unavailable: platformIsLinux,
+            modalReasonTitle: { token: 'settingsCannotChangeDesktop' },
+            modalReasonDescription: { token: 'launchOnStartupDisabledDesktop' },
+          }}
         />
       </PanelButtonGroup>
       <SendWithShiftEnter />

@@ -50,15 +50,17 @@ export function LocalizedPopupDialog(props: LocalizedPopupDialogState) {
       </StyledScrollDescriptionContainer>
       <SpacerSM />
 
-      <ModalFlexContainer>
-        <SessionButton
-          buttonType={SessionButtonType.Simple}
-          onClick={onClose}
-          dataTestId="session-confirm-ok-button"
-        >
-          {tr('okay')}
-        </SessionButton>
-      </ModalFlexContainer>
+      {!props.hideOkayButton ? (
+        <ModalFlexContainer>
+          <SessionButton
+            buttonType={SessionButtonType.Simple}
+            onClick={onClose}
+            dataTestId="session-confirm-ok-button"
+          >
+            {tr('okay')}
+          </SessionButton>
+        </ModalFlexContainer>
+      ) : null}
       <SpacerXS />
     </SessionWrapperModal>
   );

@@ -7,6 +7,7 @@ const settingsSpellCheck = 'spell-check';
 const settingsLinkPreview = 'link-preview-setting';
 const hasBlindedMsgRequestsEnabled = 'hasBlindedMsgRequestsEnabled';
 const settingsStartInTray = 'start-in-tray-setting';
+const settingsAutoStart = 'auto-start-setting';
 const settingsOpengroupPruning = 'prune-setting';
 const settingsNotification = 'notification-setting';
 const settingsAudioNotification = 'audio-notification-setting';
@@ -31,6 +32,7 @@ export const SettingsKey = {
   settingsSpellCheck,
   settingsLinkPreview,
   settingsStartInTray,
+  settingsAutoStart,
   settingsOpengroupPruning,
   hasBlindedMsgRequestsEnabled,
   settingsNotification,
