@@ -82,6 +82,7 @@ export const IncomingCallDialog = () => {
   if (hasIncomingCall) {
     return (
       <SessionWrapperModal
+        modalId="confirmModal"
         headerChildren={
           <ModalBasicHeader title={tr('callsIncoming', { name: from ?? tr('unknown') })} />
         }

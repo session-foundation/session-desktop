@@ -120,7 +120,7 @@ export type SessionLucideIconButtonProps = Pick<
   // backgroundColor is a dedicated prop (forbidden from the `style` prop)
   | 'backgroundColor'
 > &
-  Pick<LucideIconProps, 'unicode' | 'iconSize' | 'iconColor'> & {
+  Pick<LucideIconProps, 'unicode' | 'iconSize' | 'iconColor' | 'respectRtl'> & {
     // margin and backgroundColor have a dedicated prop
     style?: Omit<CSSProperties, 'backgroundColor' | 'margin' | 'padding'>;
   };
@@ -147,6 +147,7 @@ export const SessionLucideIconButton = forwardRef<
     onClick,
     children,
     backgroundColor,
+    respectRtl,
   } = props;
 
   const clickHandler = (e: MouseEvent<HTMLButtonElement>) => {
@@ -192,6 +193,7 @@ export const SessionLucideIconButton = forwardRef<
         iconColor={iconColor}
         dataTestId={dataTestIdIcon}
         style={iconStyle}
+        respectRtl={respectRtl}
       />
       {children}
     </StyledSessionIconButton>

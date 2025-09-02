@@ -1,4 +1,4 @@
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { useState } from 'react';
 
@@ -12,11 +12,7 @@ import {
   PanelButtonTextWithSubText,
   PanelLabelWithDescription,
 } from '../../../buttons/panel/PanelButton';
-import {
-  ModalBasicHeader,
-  SessionWrapperModal,
-  WrapperModalWidth,
-} from '../../../SessionWrapperModal';
+import { ModalBasicHeader } from '../../../SessionWrapperModal';
 import { ModalBackButton } from '../../shared/ModalBackButton';
 import {
   useUserSettingsBackAction,
@@ -31,13 +27,14 @@ import { useHotkey } from '../../../../hooks/useHotkey';
 import { useIconToImageURL } from '../../../../hooks/useIconToImageURL';
 import { usePasswordModal } from '../../../../hooks/usePasswordModal';
 import { mnDecode } from '../../../../session/crypto/mnemonic';
-import { getIsModalVisible } from '../../../../state/selectors/modal';
+import { useIsTopModal } from '../../../../state/selectors/modal';
 import { THEME_GLOBALS } from '../../../../themes/globals';
 import { getCurrentRecoveryPhrase } from '../../../../util/storage';
 import { SessionQRCode, type QRCodeLogoProps } from '../../../SessionQRCode';
 
 import { AnimatedFlex, Flex } from '../../../basic/Flex';
 import { CopyToClipboardButton } from '../../../buttons';
+import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
 
 const StyledRecoveryPassword = styled(AnimatedFlex)<{ color: string }>`
   font-family: var(--font-mono);
@@ -71,7 +68,7 @@ export function RecoveryPasswordSettingsPage(modalState: UserSettingsModalState)
   const hexEncodedSeed = mnDecode(recoveryPhrase, 'english');
   const [isQRVisible, setIsQRVisible] = useState(false);
 
-  const isModalVisible = useSelector(getIsModalVisible);
+  const isModalVisible = useIsTopModal('userSettingsModal');
 
   const { dataURL, iconSize, iconColor, backgroundColor, loading } = useIconToImageURL(qrLogoProps);
 
@@ -102,7 +99,7 @@ export function RecoveryPasswordSettingsPage(modalState: UserSettingsModalState)
   }
 
   return (
-    <SessionWrapperModal
+    <UserSettingsModalContainer
       headerChildren={
         <ModalBasicHeader
           title={title}
@@ -112,9 +109,6 @@ export function RecoveryPasswordSettingsPage(modalState: UserSettingsModalState)
         />
       }
       onClose={closeAction || undefined}
-      shouldOverflow={true}
-      allowOutsideClick={false}
-      $contentMinWidth={WrapperModalWidth.normal}
     >
       <PanelLabelWithDescription title={{ token: 'sessionRecoveryPassword' }} />
       <PanelButtonGroup
@@ -204,6 +198,6 @@ export function RecoveryPasswordSettingsPage(modalState: UserSettingsModalState)
           </PanelButtonGroup>
         </>
       ) : null}
-    </SessionWrapperModal>
+    </UserSettingsModalContainer>
   );
 }

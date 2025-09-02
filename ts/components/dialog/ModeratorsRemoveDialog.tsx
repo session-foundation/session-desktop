@@ -90,6 +90,7 @@ export const RemoveModeratorsDialog = (props: Props) => {
 
   return (
     <SessionWrapperModal
+      modalId="removeModeratorsModal"
       headerChildren={<ModalBasicHeader title={tr('adminRemove')} />}
       onClose={closeDialog}
       buttonChildren={

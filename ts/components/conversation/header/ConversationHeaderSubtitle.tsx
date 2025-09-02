@@ -103,6 +103,8 @@ function CycleButton({
       padding="0 var(--margins-xs)"
       onClick={() => onCycle(direction)}
       tabIndex={0}
+      // we do not want to mirror those chevrons when the app is in RTL mode
+      respectRtl={false}
     />
   );
 }

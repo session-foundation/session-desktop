@@ -12,7 +12,6 @@ import styled from 'styled-components';
 import { Data } from '../../data/data';
 import { ConvoHub } from '../../session/conversations';
 
-import { sectionActions, SectionType } from '../../state/ducks/section';
 import {
   getOurPrimaryConversation,
   useGlobalUnreadMessageCount,
@@ -24,17 +23,18 @@ import { DecryptedAttachmentsManager } from '../../session/crypto/DecryptedAttac
 import { DURATION } from '../../session/constants';
 
 import { reuploadCurrentAvatarUs } from '../../interactions/avatar-interactions/nts-avatar-interactions';
-import { updateDebugMenuModal, userSettingsModal } from '../../state/ducks/modalDialog';
+import {
+  onionPathModal,
+  updateDebugMenuModal,
+  userSettingsModal,
+} from '../../state/ducks/modalDialog';
 
 import { loadDefaultRooms } from '../../session/apis/open_group_api/opengroupV2/ApiUtil';
 import { getOpenGroupManager } from '../../session/apis/open_group_api/opengroupV2/OpenGroupManagerV2';
 import { getSwarmPollingInstance } from '../../session/apis/snode_api';
 import { UserUtils } from '../../session/utils';
 import { Avatar, AvatarSize } from '../avatar/Avatar';
-import {
-  SessionLucideIconButton,
-  type SessionLucideIconButtonProps,
-} from '../icon/SessionIconButton';
+import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LeftPaneSectionContainer } from './LeftPaneSectionContainer';
 
 import { SettingsKey } from '../../data/settings-key';
@@ -42,17 +42,14 @@ import { SnodePool } from '../../session/apis/snode_api/snodePool';
 import { UserSync } from '../../session/utils/job_runners/jobs/UserSyncJob';
 import { forceSyncConfigurationNowIfNeeded } from '../../session/utils/sync/syncUtils';
 import { useFetchLatestReleaseFromFileServer } from '../../hooks/useFetchLatestReleaseFromFileServer';
-import { useHotkey } from '../../hooks/useHotkey';
 import { useIsDarkTheme } from '../../state/theme/selectors/theme';
 import { switchThemeTo } from '../../themes/switchTheme';
 import { getOppositeTheme } from '../../util/theme';
-import { getIsModalVisible } from '../../state/selectors/modal';
 
 import { MessageQueue } from '../../session/sending';
 import { useCheckReleasedFeatures } from '../../hooks/useCheckReleasedFeatures';
 import { useDebugMode } from '../../state/selectors/debug';
 import { networkDataActions } from '../../state/ducks/networkData';
-import { searchActions } from '../../state/ducks/search';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { AvatarMigrate } from '../../session/utils/job_runners/jobs/AvatarMigrateJob';
 import { NetworkTime } from '../../util/NetworkTime';
@@ -62,7 +59,7 @@ import { themesArray } from '../../themes/constants/colors';
 import { isDebugMode, isDevProd } from '../../shared/env_vars';
 import { GearAvatarButton } from '../buttons/avatar/GearAvatarButton';
 import { useZoomShortcuts } from '../../hooks/useZoomingShortcut';
-import { assertUnreachable } from '../../types/sqlSharedTypes';
+import { OnionStatusLight } from '../dialog/OnionStatusPathDialog';
 
 const StyledContainerAvatar = styled.div`
   padding: var(--margins-lg);
@@ -86,93 +83,6 @@ function handleThemeSwitch() {
     dispatch: window.inboxStore?.dispatch,
   });
 }
-
-const Section = (props: { type: SectionType }) => {
-  const ourNumber = useSelector(getOurNumber);
-  const dispatch = useDispatch();
-  const { type } = props;
-
-  const isModalVisible = useSelector(getIsModalVisible);
-  const isDarkTheme = useIsDarkTheme();
-
-  // for devs/QA, it's convenient to be able to switch themes with ctrl+t
-  useKey(
-    (event: KeyboardEvent) => {
-      return event.ctrlKey && event.key === 't';
-    },
-    () => {
-      if (isDevProd()) {
-        void handleThemeSwitch();
-      }
-    }
-  );
-
-  const handleClick = () => {
-    if (type === SectionType.DebugMenu) {
-      dispatch(updateDebugMenuModal({}));
-      return;
-    }
-    if (type === SectionType.ThemeSwitch) {
-      void handleThemeSwitch();
-      return;
-    }
-
-    if (type === SectionType.Profile) {
-      dispatch(userSettingsModal({ userSettingsPage: 'default' }));
-      return;
-    }
-    assertUnreachable(type, `handleClick: unhandled case "${type}"`);
-  };
-
-  useHotkey('Escape', () => {
-    if (!isModalVisible) {
-      dispatch(searchActions.clearSearch());
-      dispatch(sectionActions.resetLeftOverlayMode());
-    }
-  });
-
-  if (type === SectionType.Profile) {
-    return (
-      <StyledContainerAvatar onClick={handleClick}>
-        <Avatar
-          size={AvatarSize.S}
-          pubkey={ourNumber}
-          dataTestId="leftpane-primary-avatar"
-          imageDataTestId={`img-leftpane-primary-avatar`}
-        />
-        <GearAvatarButton />
-      </StyledContainerAvatar>
-    );
-  }
-
-  const buttonProps = {
-    iconSize: 'medium',
-    padding: 'var(--margins-lg)',
-    onClick: handleClick,
-    isSelected: false,
-  } satisfies Omit<SessionLucideIconButtonProps, 'unicode' | 'dataTestId'>;
-
-  switch (type) {
-    case SectionType.DebugMenu:
-      return (
-        <SessionLucideIconButton
-          {...buttonProps}
-          unicode={LUCIDE_ICONS_UNICODE.SQUARE_CODE}
-          dataTestId="debug-menu-section"
-        />
-      );
-    case SectionType.ThemeSwitch:
-    default:
-      return (
-        <SessionLucideIconButton
-          {...buttonProps}
-          margin="auto 0 0 0"
-          unicode={isDarkTheme ? LUCIDE_ICONS_UNICODE.MOON : LUCIDE_ICONS_UNICODE.SUN_MEDIUM}
-          dataTestId="theme-section"
-        />
-      );
-  }
-};
 
 const cleanUpMediasInterval = DURATION.MINUTES * 60;
 
@@ -272,14 +182,31 @@ function useUpdateBadgeCount() {
   );
 }
 
+function useDebugThemeSwitch() {
+  useKey(
+    (event: KeyboardEvent) => {
+      return event.ctrlKey && event.key === 't';
+    },
+    () => {
+      if (isDevProd()) {
+        void handleThemeSwitch();
+      }
+    }
+  );
+}
+
 /**
  * ActionsPanel is the far left banner (not the left pane).
  * The panel with buttons to switch between the message/contact/settings/theme views
  */
 export const ActionsPanel = () => {
+  const dispatch = useDispatch();
   const [startCleanUpMedia, setStartCleanUpMedia] = useState(false);
   const ourPrimaryConversation = useSelector(getOurPrimaryConversation);
   const showDebugMenu = useDebugMode();
+  const ourNumber = useSelector(getOurNumber);
+  const isDarkTheme = useIsDarkTheme();
+  useDebugThemeSwitch();
 
   // this useMount is called only once: when the component is mounted.
   // For the action panel, it means this is called only one per app start/with a user logged in
@@ -352,9 +279,46 @@ export const ActionsPanel = () => {
   return (
     <>
       <LeftPaneSectionContainer data-testid="leftpane-section-container">
-        <Section type={SectionType.Profile} />
-        {showDebugMenu && <Section type={SectionType.DebugMenu} />}
-        <Section type={SectionType.ThemeSwitch} />
+        <StyledContainerAvatar
+          onClick={() => {
+            dispatch(userSettingsModal({ userSettingsPage: 'default' }));
+          }}
+        >
+          <Avatar
+            size={AvatarSize.S}
+            pubkey={ourNumber}
+            dataTestId="leftpane-primary-avatar"
+            imageDataTestId={`img-leftpane-primary-avatar`}
+          />
+          <GearAvatarButton />
+        </StyledContainerAvatar>
+        {showDebugMenu && (
+          <SessionLucideIconButton
+            iconSize="medium"
+            padding="var(--margins-lg)"
+            unicode={LUCIDE_ICONS_UNICODE.SQUARE_CODE}
+            dataTestId="debug-menu-section"
+            onClick={() => {
+              dispatch(updateDebugMenuModal({}));
+            }}
+          />
+        )}
+        <OnionStatusLight
+          handleClick={() => {
+            dispatch(onionPathModal({}));
+          }}
+          inActionPanel={true}
+        />
+        <SessionLucideIconButton
+          margin="0 0 0 0"
+          iconSize="medium"
+          padding="var(--margins-lg)"
+          unicode={isDarkTheme ? LUCIDE_ICONS_UNICODE.MOON : LUCIDE_ICONS_UNICODE.SUN_MEDIUM}
+          dataTestId="theme-section"
+          onClick={() => {
+            void handleThemeSwitch();
+          }}
+        />
       </LeftPaneSectionContainer>
     </>
   );

@@ -275,6 +275,7 @@ export function DefaultConversationSettingsModal(props: ConversationSettingsModa
 
   return (
     <SessionWrapperModal
+      modalId="conversationSettingsModal"
       headerChildren={
         <ModalBasicHeader
           title={title}
@@ -290,6 +291,7 @@ export function DefaultConversationSettingsModal(props: ConversationSettingsModa
       }
       onClose={onClose}
       shouldOverflow={true}
+      topAnchor="5vh"
       // Note: we do not set a min/max width here as we want the modal to be fixed
       // (no matter the nickname/display name of the shown conversation).
       // We do this to have some consistency with the width of the modals that open on top of this one

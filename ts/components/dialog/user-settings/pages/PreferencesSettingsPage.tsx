@@ -6,11 +6,7 @@ import {
   PanelButtonTextWithSubText,
   PanelLabelWithDescription,
 } from '../../../buttons/panel/PanelButton';
-import {
-  ModalBasicHeader,
-  SessionWrapperModal,
-  WrapperModalWidth,
-} from '../../../SessionWrapperModal';
+import { ModalBasicHeader } from '../../../SessionWrapperModal';
 import { ModalBackButton } from '../../shared/ModalBackButton';
 import {
   useUserSettingsBackAction,
@@ -22,6 +18,7 @@ import { SettingsKey } from '../../../../data/settings-key';
 import { ToastUtils } from '../../../../session/utils';
 import { PanelRadioButton } from '../../../buttons/panel/PanelRadioButton';
 import { useHasEnterSendEnabled } from '../../../../state/selectors/settings';
+import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
 
 async function toggleStartInTray() {
   try {
@@ -49,7 +46,7 @@ function SendWithShiftEnter() {
   const items = [
     {
       text: 'conversationsSendWithEnterKey',
-      subText: 'conversationsSendWithEnterKeyDescription',
+      subText: 'conversationsEnterSends',
       value: selectedWithSettingFalse,
     },
     {
@@ -61,7 +58,10 @@ function SendWithShiftEnter() {
 
   return (
     <>
-      <PanelLabelWithDescription title={{ token: 'conversationsEnter' }} />
+      <PanelLabelWithDescription
+        title={{ token: 'conversationsEnter' }}
+        description={{ token: 'conversationsEnterDescription' }}
+      />
       <PanelButtonGroup>
         {items.map(({ value, text, subText }) => {
           return (
@@ -103,7 +103,7 @@ export function PreferencesSettingsPage(modalState: UserSettingsModalState) {
   const forceUpdate = useUpdate();
 
   return (
-    <SessionWrapperModal
+    <UserSettingsModalContainer
       headerChildren={
         <ModalBasicHeader
           title={title}
@@ -113,9 +113,6 @@ export function PreferencesSettingsPage(modalState: UserSettingsModalState) {
         />
       }
       onClose={closeAction || undefined}
-      shouldOverflow={true}
-      allowOutsideClick={false}
-      $contentMinWidth={WrapperModalWidth.normal}
     >
       <PanelLabelWithDescription title={{ token: 'updates' }} />
       <PanelButtonGroup>
@@ -145,6 +142,6 @@ export function PreferencesSettingsPage(modalState: UserSettingsModalState) {
         />
       </PanelButtonGroup>
       <SendWithShiftEnter />
-    </SessionWrapperModal>
+    </UserSettingsModalContainer>
   );
 }

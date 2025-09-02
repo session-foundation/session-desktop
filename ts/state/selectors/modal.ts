@@ -1,94 +1,126 @@
-import { createSelector } from '@reduxjs/toolkit';
 import { useSelector } from 'react-redux';
 
-import { ModalState, type LightBoxOptions } from '../ducks/modalDialog';
+import { ModalState, type ModalId } from '../ducks/modalDialog';
 import { StateType } from '../reducer';
 
-export const getModal = (state: StateType): ModalState => {
+const getModal = (state: StateType): ModalState => {
   return state.modals;
 };
 
-export const getIsModalVisible = createSelector(getModal, (state: ModalState): boolean => {
-  const modalValues = Object.values(state);
-  for (let i = 0; i < modalValues.length; i++) {
-    if (modalValues[i] !== null) {
-      return true;
-    }
-  }
+export function useAnyModalVisible() {
+  return useSelector((state: StateType) => state.modals.modalStack.length > 0);
+}
 
-  return false;
-});
+export function useConfirmModal() {
+  return useSelector((state: StateType) => getModal(state).confirmModal);
+}
 
-export const getConfirmModal = (state: StateType) => getModal(state).confirmModal;
+export function useInviteContactModal() {
+  return useSelector((state: StateType) => getModal(state).inviteContactModal);
+}
 
-export const getInviteContactModal = (state: StateType) => getModal(state).inviteContactModal;
+export function useAddModeratorsModal() {
+  return useSelector((state: StateType) => getModal(state).addModeratorsModal);
+}
 
-export const getAddModeratorsModal = (state: StateType) => getModal(state).addModeratorsModal;
+export function useRemoveModeratorsModal() {
+  return useSelector((state: StateType) => getModal(state).removeModeratorsModal);
+}
 
-export const getRemoveModeratorsModal = (state: StateType) => getModal(state).removeModeratorsModal;
+export function useBlockOrUnblockUserModal() {
+  return useSelector((state: StateType) => getModal(state).blockOrUnblockModal);
+}
 
-export const getBanOrUnbanUserModalState = (state: StateType) =>
-  getModal(state).banOrUnbanUserModal;
+export function useUpdateConversationDetailsModal() {
+  return useSelector((state: StateType) => getModal(state).updateConversationDetailsModal);
+}
 
-export const getBlockOrUnblockUserModalState = (state: StateType) =>
-  getModal(state).blockOrUnblockModal;
+export function useUpdateGroupMembersModal() {
+  return useSelector((state: StateType) => getModal(state).groupMembersModal);
+}
 
-export const getUpdateConversationDetailsModal = (state: StateType) =>
-  getModal(state).updateConversationDetailsModal;
+export function useUserProfileModal() {
+  return useSelector((state: StateType) => getModal(state).userProfileModal);
+}
 
-export const getUpdateGroupMembersModal = (state: StateType) => getModal(state).groupMembersModal;
+export function useChangeNickNameDialog() {
+  return useSelector((state: StateType) => getModal(state).nickNameModal);
+}
 
-export const getUserProfileModal = (state: StateType) => getModal(state).userProfileModal;
+export function useUserSettingsModal() {
+  return useSelector((state: StateType) => getModal(state).userSettingsModal);
+}
 
-export const getChangeNickNameDialog = (state: StateType) => getModal(state).nickNameModal;
+export function useOnionPathDialog() {
+  return useSelector((state: StateType) => getModal(state).onionPathModal);
+}
 
-export const getUserSettingsModal = (state: StateType) => getModal(state).userSettingsModal;
+export function useEnterPasswordModal() {
+  return useSelector((state: StateType) => getModal(state).enterPasswordModal);
+}
 
-export const getOnionPathDialog = (state: StateType) => getModal(state).onionPathModal;
+export function useDeleteAccountModal() {
+  return useSelector((state: StateType) => getModal(state).deleteAccountModal);
+}
 
-export const getEnterPasswordModalState = (state: StateType) => getModal(state).enterPasswordModal;
+export function useReactListDialog() {
+  return useSelector((state: StateType) => getModal(state).reactListModal);
+}
 
-export const getDeleteAccountModalState = (state: StateType) => getModal(state).deleteAccountModal;
+export function useReactClearAllDialog() {
+  return useSelector((state: StateType) => getModal(state).reactClearAllModal);
+}
 
-export const getReactListDialog = (state: StateType) => getModal(state).reactListModalState;
+export function useEditProfilePictureModal() {
+  return useSelector((state: StateType) => getModal(state).editProfilePictureModal);
+}
 
-export const getReactClearAllDialog = (state: StateType) => getModal(state).reactClearAllModalState;
+export function useHideRecoveryPasswordModal() {
+  return useSelector((state: StateType) => getModal(state).hideRecoveryPasswordModal);
+}
 
-export const getEditProfilePictureModalState = (state: StateType) =>
-  getModal(state).editProfilePictureModalState;
+export function useOpenUrlModal() {
+  return useSelector((state: StateType) => getModal(state).openUrlModal);
+}
 
-export const getHideRecoveryPasswordModalState = (state: StateType) =>
-  getModal(state).hideRecoveryPasswordModalState;
+export function useLocalizedPopupDialog() {
+  return useSelector((state: StateType) => getModal(state).localizedPopupDialog);
+}
 
-export const getOpenUrlModalState = (state: StateType) => getModal(state).openUrlModal;
+export function useSessionProInfoModal() {
+  return useSelector((state: StateType) => getModal(state).sessionProInfoModal);
+}
 
-export const getLocalizedPopupDialogState = (state: StateType) =>
-  getModal(state).localizedPopupDialog;
+export function useLightBoxOptions() {
+  return useSelector((state: StateType) => getModal(state).lightBoxOptions);
+}
 
-export const getSessionProInfoModalState = (state: StateType) =>
-  getModal(state).sessionProInfoModal;
+export function useBanOrUnbanUserModal() {
+  return useSelector((state: StateType) => getModal(state).banOrUnbanUserModal);
+}
 
-export const getLightBoxOptions = createSelector(
-  getModal,
-  (state: ModalState): LightBoxOptions => state.lightBoxOptions
-);
+export function useDebugMenuModal() {
+  return useSelector((state: StateType) => getModal(state).debugMenuModal);
+}
 
-export const getDebugMenuModalState = (state: StateType) => getModal(state).debugMenuModal;
+export function useConversationSettingsModal() {
+  return useSelector((state: StateType) => getModal(state).conversationSettingsModal);
+}
 
-export const getConversationSettingsModalState = (state: StateType) =>
-  getModal(state).conversationSettingsModal;
-
-const getConversationSettingsModalIsStandalone = (state: StateType) => {
-  const convoSettingsModal = getConversationSettingsModalState(state);
+export function useConversationSettingsModalIsStandalone() {
+  const convoSettingsModal = useConversationSettingsModal();
 
   return (
     (convoSettingsModal?.settingsModalPage !== 'default' && convoSettingsModal?.standalonePage) ||
     false
   );
-};
+}
 
-export const useConversationSettingsModalIsStandalone = () => {
-  return useSelector(getConversationSettingsModalIsStandalone);
-};
-export const getSessionNetworkModalState = (state: StateType) =>
-  getModal(state).sessionNetworkModal;
+export function useModalStack() {
+  return useSelector((state: StateType) => state.modals.modalStack);
+}
+
+export function useIsTopModal(modalId: ModalId) {
+  const modalStack = useModalStack();
+  return modalStack.length === 0 || modalStack[modalStack.length - 1] === modalId;
+}

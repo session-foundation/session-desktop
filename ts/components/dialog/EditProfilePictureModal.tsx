@@ -238,6 +238,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
 
   return (
     <SessionWrapperModal
+      modalId="editProfilePictureModal"
       onClose={closeDialog}
       headerChildren={
         <ModalBasicHeader

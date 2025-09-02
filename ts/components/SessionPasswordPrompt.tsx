@@ -189,11 +189,12 @@ const SessionPasswordPromptInner = () => {
 
   return (
     <SessionWrapperModal
+      // we do not care for this one of the id (only that one can be displayed in the stack)
+      modalId="confirmModal"
       headerChildren={
         <ModalBasicHeader title={tr(clearDataView ? 'clearDevice' : 'passwordEnter')} />
       }
       $contentMinWidth={WrapperModalWidth.narrow}
-      topAnchor="center"
       buttonChildren={
         clearDataView ? (
           <ClearDataViewButtons

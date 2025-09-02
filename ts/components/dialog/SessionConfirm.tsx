@@ -94,10 +94,6 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
     void onClickOkHandler();
   });
 
-  useKey('Escape', () => {
-    onClickCancelHandler();
-  });
-
   useEffect(() => {
     if (isLoading) {
       if (conversationId && lastMessage?.interactionType) {
@@ -121,8 +117,8 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
 
   return (
     <SessionWrapperModal
+      modalId="confirmModal"
       headerChildren={title ? <ModalBasicHeader title={title} showExitIcon={showExitIcon} /> : null}
-      topAnchor="35vh"
       onClose={onClickClose}
       buttonChildren={
         <ModalActionsContainer buttonType={SessionButtonType.Simple}>

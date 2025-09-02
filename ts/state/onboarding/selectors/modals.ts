@@ -1,4 +1,4 @@
-import { createSelector } from '@reduxjs/toolkit';
+import { useSelector } from 'react-redux';
 import { ModalsState } from '../ducks/modals';
 import { OnboardingStoreState } from '../store';
 
@@ -6,12 +6,12 @@ const getModals = (state: OnboardingStoreState): ModalsState => {
   return state.modals;
 };
 
-export const getQuitModalState = createSelector(
-  getModals,
-  (state: ModalsState) => state.quitModalState
-);
+export function useQuitModalState() {
+  return useSelector((state: OnboardingStoreState) => getModals(state).quitModalState);
+}
 
-export const getTermsOfServicePrivacyModalState = createSelector(
-  getModals,
-  (state: ModalsState) => state.termsOfServicePrivacyModalState
-);
+export function useTermsOfServicePrivacyModalState() {
+  return useSelector(
+    (state: OnboardingStoreState) => getModals(state).termsOfServicePrivacyModalState
+  );
+}

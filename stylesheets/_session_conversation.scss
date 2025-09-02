@@ -18,36 +18,6 @@
   }
 }
 
-.conversation-header {
-  .message-selection-overlay {
-    position: absolute;
-    display: flex;
-    left: 0px;
-    right: 0px;
-    padding: 0px var(--margins-md);
-    align-items: center;
-    justify-content: space-between;
-    height: var(--main-view-header-height);
-    background: var(--background-primary-color);
-
-    .close-button {
-      float: left;
-    }
-
-    .session-button.danger {
-      display: flex;
-    }
-  }
-
-  .message-selection-overlay div[role='button'] {
-    display: inline-block;
-  }
-
-  .message-selection-overlay .button-group {
-    display: flex;
-  }
-}
-
 .session-conversation {
   position: relative;
   flex-grow: 1;

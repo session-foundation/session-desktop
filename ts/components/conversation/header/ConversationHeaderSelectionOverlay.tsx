@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
 
@@ -24,6 +25,7 @@ export const SelectionOverlay = () => {
   const selectedConversationKey = useSelectedConversationKey();
   const isPublic = useSelectedIsPublic();
   const dispatch = useDispatch();
+  const ref = useRef(null);
 
   function onCloseOverlay() {
     dispatch(resetSelectedMessageIds());
@@ -67,39 +69,45 @@ export const SelectionOverlay = () => {
   // for each ones which is in an error state.
   const enforceDeleteServerSide = isPublic;
 
-  const classNameAndId = 'message-selection-overlay';
-
   return (
-    <SessionFocusTrap>
-      <div className={classNameAndId} id={classNameAndId}>
-        <div className="close-button">
-          <SessionLucideIconButton
-            unicode={LUCIDE_ICONS_UNICODE.X}
-            iconColor="var(--chat-buttons-icon-color)"
-            iconSize="large"
-            onClick={onCloseOverlay}
-            aria-label={tr('close')}
-          />
-        </div>
+    <SessionFocusTrap
+      initialFocus={() => ref.current}
+      containerDivStyle={{
+        position: 'absolute',
+        display: 'flex',
+        left: '0px',
+        right: '0px',
+        padding: '0px var(--margins-md)',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        height: 'var(--main-view-header-height)',
+        background: 'var(--background-primary-color)',
+      }}
+    >
+      <SessionLucideIconButton
+        unicode={LUCIDE_ICONS_UNICODE.X}
+        iconColor="var(--chat-buttons-icon-color)"
+        iconSize="large"
+        onClick={onCloseOverlay}
+        aria-label={tr('close')}
+        ref={ref}
+      />
 
-        <div className="button-group">
-          <SessionButton
-            buttonColor={SessionButtonColor.Danger}
-            buttonShape={SessionButtonShape.Square}
-            buttonType={SessionButtonType.Solid}
-            text={tr('delete')}
-            onClick={async () => {
-              if (selectedConversationKey) {
-                await deleteMessagesForX(
-                  selectedMessageIds,
-                  selectedConversationKey,
-                  enforceDeleteServerSide
-                );
-              }
-            }}
-          />
-        </div>
-      </div>
+      <SessionButton
+        buttonColor={SessionButtonColor.Danger}
+        buttonShape={SessionButtonShape.Square}
+        buttonType={SessionButtonType.Solid}
+        text={tr('delete')}
+        onClick={async () => {
+          if (selectedConversationKey) {
+            await deleteMessagesForX(
+              selectedMessageIds,
+              selectedConversationKey,
+              enforceDeleteServerSide
+            );
+          }
+        }}
+      />
     </SessionFocusTrap>
   );
 };

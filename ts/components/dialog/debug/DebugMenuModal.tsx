@@ -120,6 +120,7 @@ export function DebugMenuModal() {
 
   return (
     <SessionWrapperModal
+      modalId="debugMenuModal"
       headerChildren={
         <ModalBasicHeader
           title="Debug Menu"
@@ -131,6 +132,7 @@ export function DebugMenuModal() {
           }
         />
       }
+      topAnchor="5vh"
       onClose={onClose}
       $contentMaxWidth={WrapperModalWidth.debug}
       shouldOverflow={true}

@@ -29,7 +29,6 @@ import {
   ModalActionsContainer,
   SessionWrapperModal,
 } from '../SessionWrapperModal';
-import { useHotkey } from '../../hooks/useHotkey';
 import { searchActions } from '../../state/ducks/search';
 import { ToastUtils } from '../../session/utils';
 import { StyledContactListInModal } from '../list/StyledContactList';
@@ -165,7 +164,6 @@ const InviteContactsDialogInner = (props: Props) => {
     closeDialog();
     dispatch(updateGroupMembersModal({ conversationId }));
   };
-  useHotkey('Escape', closeDialog);
 
   useKey((event: KeyboardEvent) => {
     return event.key === 'Enter';
@@ -175,6 +173,7 @@ const InviteContactsDialogInner = (props: Props) => {
 
   return (
     <SessionWrapperModal
+      modalId="inviteContactModal"
       onClose={closeDialog}
       headerChildren={<ModalBasicHeader title={tr('membersInvite')} showExitIcon={true} />}
       modalDataTestId="invite-contacts-dialog"

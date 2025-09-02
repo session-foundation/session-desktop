@@ -303,7 +303,7 @@ export const ReactListModal = (props: Props) => {
   };
 
   return (
-    <SessionWrapperModal onClose={handleClose} headerChildren={null}>
+    <SessionWrapperModal onClose={handleClose} headerChildren={null} modalId="reactListModal">
       <StyledReactListContainer
         $container={true}
         $flexDirection={'column'}

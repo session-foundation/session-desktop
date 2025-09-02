@@ -3,7 +3,6 @@ import { useDispatch } from 'react-redux';
 import { isEmpty } from 'lodash';
 import { useCallback } from 'react';
 import useAsyncFn from 'react-use/lib/useAsyncFn';
-import { useHotkey } from '../../../hooks/useHotkey';
 import { useConversationsNicknameRealNameOrShortenPubkey } from '../../../hooks/useParamSelector';
 import { updateBlockOrUnblockModal } from '../../../state/ducks/modalDialog';
 import { BlockedNumberController } from '../../../util';
@@ -65,7 +64,6 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
   const closeModal = useCallback(() => {
     dispatch(updateBlockOrUnblockModal(null));
   }, [dispatch]);
-  useHotkey('Escape', closeModal);
 
   const [, onConfirm] = useAsyncFn(async () => {
     if (action === 'block') {
@@ -92,6 +90,7 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
 
   return (
     <SessionWrapperModal
+      modalId="blockOrUnblockModal"
       headerChildren={<ModalBasicHeader title={localizedAction} />}
       onClose={closeModal}
       buttonChildren={

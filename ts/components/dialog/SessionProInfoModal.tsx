@@ -275,6 +275,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
 
   return (
     <SessionWrapperModal
+      modalId="sessionProInfoModal"
       onClose={onClose}
       headerChildren={getImage(props.variant)}
       padding="0"
@@ -303,7 +304,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
               shinyContainerStyle={{
                 width: '100%',
               }}
-              buttonColor={SessionButtonColor.Primary}
+              buttonColor={SessionButtonColor.PrimaryDark}
               onClick={onClose}
               dataTestId="modal-session-pro-confirm-button"
             >

@@ -112,6 +112,7 @@ export function NotificationForConversationModal(props: Required<ConversationSet
 
   return (
     <SessionWrapperModal
+      modalId="conversationSettingsModal"
       headerChildren={
         <ModalBasicHeader
           title={title}
@@ -120,6 +121,7 @@ export function NotificationForConversationModal(props: Required<ConversationSet
         />
       }
       onClose={onClose}
+      topAnchor="5vh"
       shouldOverflow={true}
       allowOutsideClick={false}
       $contentMinWidth={WrapperModalWidth.narrow} // the content is radio buttons and it looks weird on a large modal

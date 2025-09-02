@@ -4,10 +4,10 @@ import styled from 'styled-components';
 
 const StyledKnob = styled.div<{ active: boolean }>`
   position: absolute;
-  top: ${props => (props.active ? '1px' : '0.5px')};
-  left: ${props => (props.active ? '2px' : '0.5px')};
-  height: 21px;
-  width: 21px;
+  top: 0;
+  left: 0;
+  height: 24px;
+  width: 24px;
   border-radius: 28px;
   background-color: var(--toggle-switch-ball-color);
   box-shadow: ${props =>

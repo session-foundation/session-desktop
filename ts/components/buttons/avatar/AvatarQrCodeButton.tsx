@@ -28,6 +28,8 @@ export function AvatarQrCodeButton({
         justifyContent: 'center',
         borderRadius: '50%',
         transition: 'filter var(--default-duration)',
+        boxShadow: '0px 0px 3px 2px var(--border-color)',
+
         ...hardcodedPosition,
       }}
     />

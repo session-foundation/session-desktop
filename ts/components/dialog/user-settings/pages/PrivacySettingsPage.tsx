@@ -13,11 +13,7 @@ import {
   PanelLabelWithDescription,
 } from '../../../buttons/panel/PanelButton';
 import { PanelToggleButton } from '../../../buttons/panel/PanelToggleButton';
-import {
-  ModalBasicHeader,
-  SessionWrapperModal,
-  WrapperModalWidth,
-} from '../../../SessionWrapperModal';
+import { ModalBasicHeader } from '../../../SessionWrapperModal';
 import { ModalBackButton } from '../../shared/ModalBackButton';
 import {
   useUserSettingsBackAction,
@@ -33,9 +29,9 @@ import {
 import { SettingsKey } from '../../../../data/settings-key';
 import { SessionUtilUserProfile } from '../../../../session/utils/libsession/libsession_utils_user_profile';
 import { getPasswordHash, Storage } from '../../../../util/storage';
-import { SpacerXS } from '../../../basic/Text';
 import { SettingsToggleBasic } from '../components/SettingsToggleBasic';
 import { SettingsPanelButtonInlineBasic } from '../components/SettingsPanelButtonInlineBasic';
+import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
 
 const toggleCallMediaPermissions = async (triggerUIUpdate: () => void) => {
   const currentValue = window.getCallMediaPermissions();
@@ -92,22 +88,6 @@ async function toggleLinkPreviews(isToggleOn: boolean, forceUpdate: () => void) 
   }
 }
 
-/**
- * This is a static version of the TypingBubble component, but is only used here, hence why it's not a SessionIcon.
- */
-function StaticTypingBubble({ width }: { width: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 30 13" width={width}>
-      <rect width="29.07" height="12.87" x=".26" fill="#1B1B1B" rx="6.43" />
-      <circle cx="7.88" cy="6.67" r="1.91" fill="#A1A2A1" />
-      <circle cx="7.88" cy="6.67" r="1.91" fill="#000" fill-opacity=".5" />
-      <circle cx="15.51" cy="6.67" r="1.91" fill="#A1A2A1" />
-      <circle cx="15.51" cy="6.67" r="1.91" fill="#000" fill-opacity=".25" />
-      <circle cx="23.13" cy="6.67" r="1.91" fill="#A1A2A1" />
-    </svg>
-  );
-}
-
 function HasPasswordSubSection() {
   const dispatch = useDispatch();
   return (
@@ -119,7 +99,7 @@ function HasPasswordSubSection() {
         onClick={async () => {
           dispatch(userSettingsModal({ userSettingsPage: 'password', passwordAction: 'change' }));
         }}
-        buttonColor={SessionButtonColor.Primary}
+        buttonColor={SessionButtonColor.PrimaryDark}
         buttonText={tr('change')}
       />
       <SettingsPanelButtonInlineBasic
@@ -147,7 +127,7 @@ function NoPasswordSubSection() {
         onClick={async () => {
           dispatch(userSettingsModal({ userSettingsPage: 'password', passwordAction: 'set' }));
         }}
-        buttonColor={SessionButtonColor.Primary}
+        buttonColor={SessionButtonColor.PrimaryDark}
         buttonText={tr('set')}
       />
     </PanelButtonGroup>
@@ -171,7 +151,7 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
   const forceUpdate = useUpdate();
 
   return (
-    <SessionWrapperModal
+    <UserSettingsModalContainer
       headerChildren={
         <ModalBasicHeader
           title={title}
@@ -181,9 +161,6 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
         />
       }
       onClose={closeAction || undefined}
-      shouldOverflow={true}
-      allowOutsideClick={false}
-      $contentMinWidth={WrapperModalWidth.normal}
     >
       <PanelLabelWithDescription title={{ token: 'callsSettings' }} />
       <PanelButtonGroup>
@@ -205,7 +182,7 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
             forceUpdate();
           }}
           text={{ token: 'permissionsMicrophone' }}
-          subText={{ token: 'permissionsMicrophoneDescription' }}
+          subText={{ token: 'permissionsMicrophoneDescriptionIos' }}
         />
       </PanelButtonGroup>
       <PanelLabelWithDescription title={{ token: 'sessionMessageRequests' }} />
@@ -248,12 +225,6 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
               subText={{ token: 'typingIndicatorsDescription' }}
               textDataTestId={'enable-typing-indicators-settings-text'}
               subTextDataTestId={'enable-typing-indicators-settings-sub-text'}
-              extraSubTextNode={
-                <>
-                  <SpacerXS />
-                  <StaticTypingBubble width="30px" />
-                </>
-              }
             />
           }
           active={Boolean(window.getSettingValue(SettingsKey.settingsTypingIndicator))}
@@ -280,6 +251,6 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
       </PanelButtonGroup>
       <PanelLabelWithDescription title={{ token: 'passwords' }} />
       <PasswordSubSection />
-    </SessionWrapperModal>
+    </UserSettingsModalContainer>
   );
 }

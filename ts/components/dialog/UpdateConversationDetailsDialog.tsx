@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import useKey from 'react-use/lib/useKey';
 import useMount from 'react-use/lib/useMount';
 import { isEmpty } from 'lodash';
 
@@ -45,6 +44,13 @@ import type { WithConvoId } from '../../session/types/with';
 import { UploadFirstImageButton } from '../buttons/avatar/UploadFirstImageButton';
 import { sanitizeDisplayNameOrToast } from '../registration/utils';
 import { ProfileManager } from '../../session/profile_manager/ProfileManager';
+
+/**
+ * We want the description to be at most 200 visible characters, in addition
+ * to being at most GROUP_INFO_DESCRIPTION_MAX_LENGTH bytes long.
+ *
+ */
+const maxCharLength = 200;
 
 function useNameErrorString({
   isMe,
@@ -95,9 +101,13 @@ function useDescriptionErrorString({
     // description is always optional
     return '';
   }
+  const charLength = newDescription?.length || 0;
   const byteLength = new TextEncoder().encode(newDescription).length;
 
-  if (byteLength <= LIBSESSION_CONSTANTS.GROUP_INFO_DESCRIPTION_MAX_LENGTH) {
+  if (
+    byteLength <= LIBSESSION_CONSTANTS.GROUP_INFO_DESCRIPTION_MAX_LENGTH &&
+    charLength <= maxCharLength
+  ) {
     return '';
   }
   return isPublic
@@ -208,9 +218,6 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
     }
   }
 
-  useKey('Escape', closeDialog);
-  useKey('Esc', closeDialog);
-
   const errorStringName = useNameErrorString({ newName, isPublic, isMe });
   const errorStringDescription = useDescriptionErrorString({ isMe, isPublic, newDescription });
 
@@ -236,6 +243,7 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
 
   return (
     <SessionWrapperModal
+      modalId="updateConversationDetailsModal"
       headerChildren={<ModalBasicHeader title={tr(`update${partDetailCap}Information`)} />}
       onClose={closeDialog}
       buttonChildren={
