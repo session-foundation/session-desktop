@@ -404,6 +404,14 @@ export class MessageModel extends Model<MessageAttributes> {
           );
         }
       });
+      if (this.getConversation()?.isOpenGroupV2() || this.getConversation()?.isClosedGroupV2()) {
+        const source = this.get('source');
+
+        const author = isUsAnySogsFromCache(source)
+          ? tr('you')
+          : ConvoHub.use().getNicknameOrRealUsernameOrPlaceholder(source);
+        return tr('messageSnippetGroup', { author, message_snippet: bodyMentionsMappedToNames });
+      }
       return bodyMentionsMappedToNames;
     }
 
