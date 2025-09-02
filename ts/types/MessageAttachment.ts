@@ -161,15 +161,27 @@ export const processNewAttachment = async (attachment: {
 }) => {
   const fileName = attachment.fileName ? replaceUnicodeV2(attachment.fileName) : '';
 
+  window.log.info('processNewAttachment: starting...', {
+    len: attachment.data.byteLength,
+    fileName,
+  });
   const onDiskAttachmentPath = await migrateDataToFileSystem(attachment.data);
+  window.log.info('processNewAttachment: after migrateDataToFileSystem');
+
   const attachmentWithoutData = omit({ ...attachment, fileName, path: onDiskAttachmentPath }, [
     'data',
   ]);
+
+  window.log.info('processNewAttachment: before captureDimensionsAndScreenshot', {
+    len: attachment.data.byteLength,
+    contentType: attachment.contentType,
+  });
 
   const finalAttachment = await captureDimensionsAndScreenshot({
     contentType: attachment.contentType,
     data: attachment.data,
   });
+  window.log.info('processNewAttachment: after captureDimensionsAndScreenshot');
 
   return {
     ...attachmentWithoutData,

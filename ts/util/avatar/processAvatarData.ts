@@ -13,6 +13,7 @@ import { MAX_ATTACHMENT_FILESIZE_BYTES } from '../../session/constants';
  *
  */
 export async function processAvatarData(arrayBuffer: ArrayBuffer) {
+  window.log.info('processAvatarData: starting...', arrayBuffer.byteLength);
   if (!arrayBuffer || arrayBuffer.byteLength === 0 || !isArrayBuffer(arrayBuffer)) {
     throw new Error('processAvatarData: arrayBuffer is empty');
   }
@@ -23,7 +24,15 @@ export async function processAvatarData(arrayBuffer: ArrayBuffer) {
    * 2. a fallback avatar in case the user looses its pro (static image, even if the main avatar is animated)
    */
   // this is step 1, we generate a scaled down avatar, but keep its nature (animated or not)
+  window.log.info(
+    'processAvatarData: before ImageProcessor.processAvatarData ',
+    maxAvatarDetails.maxSide
+  );
   const processed = await ImageProcessor.processAvatarData(arrayBuffer, maxAvatarDetails.maxSide);
+  window.log.info('processAvatarData: after ImageProcessor.processAvatarData ', {
+    main: processed?.mainAvatarDetails,
+    fallback: processed?.avatarFallback,
+  });
 
   if (!processed) {
     throw new Error('processLocalAvatarChange: failed to process avatar');

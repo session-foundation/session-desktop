@@ -1,10 +1,10 @@
-import { isEmpty, isFinite, isNumber } from 'lodash';
+import { isFinite, isNumber } from 'lodash';
 import sharp from 'sharp';
 import type { ImageProcessorWorkerActions } from './image_processor';
 /* eslint-disable no-console */
 /* eslint-disable strict */
 
-const DEBUG_IMAGE_PROCESSOR_WORKER = !isEmpty(process.env.DEBUG_IMAGE_PROCESSOR_WORKER);
+const DEBUG_IMAGE_PROCESSOR_WORKER = true;
 
 function logIfOn(...args: Array<any>) {
   if (DEBUG_IMAGE_PROCESSOR_WORKER) {
@@ -171,26 +171,35 @@ const workerActions: ImageProcessorWorkerActions = {
   },
 
   processAvatarData: async (inputBuffer: ArrayBufferLike, maxSidePx: number) => {
+    console.warn(
+      `ImageProcessor, processAvatarData of ${inputBuffer.byteLength} bytes, maxSidePx: ${maxSidePx}`
+    );
     if (!inputBuffer?.byteLength) {
       throw new Error('processAvatarData: inputBuffer is required');
     }
     const start = Date.now();
 
+    console.info(`ImageProcessor, before metadataFromBuffer`);
+
     const metadata = await metadataFromBuffer(inputBuffer, { animated: true });
+    console.info(`ImageProcessor, after metadataFromBuffer`);
     if (!metadata) {
       return null;
     }
 
+    console.info(`ImageProcessor, before isAnimated`);
     const avatarIsAnimated = isAnimated(metadata);
+    console.info(`ImageProcessor, after isAnimated`, avatarIsAnimated, metadata.format);
 
     if (avatarIsAnimated && metadata.format !== 'webp' && metadata.format !== 'gif') {
       throw new Error('processAvatarData: we only support animated images in webp or gif');
     }
 
     // generate a square image of the avatar, scaled down or up to `maxSide`
+    console.info(`ImageProcessor, before centerCoverOpts`);
 
     const resized = sharpFrom(inputBuffer, { animated: true }).resize(centerCoverOpts(maxSidePx));
-
+    console.info(`ImageProcessor, after centerCoverOpts`);
     // we know the avatar is animated and gif or webp, force it to webp for performance reasons
     if (avatarIsAnimated) {
       resized.webp();
@@ -198,17 +207,21 @@ const workerActions: ImageProcessorWorkerActions = {
       resized.jpeg();
     }
 
+    console.info(`ImageProcessor, before toBuffer`);
     const resizedBuffer = await resized.toBuffer();
-
+    console.info(`ImageProcessor, after toBuffer`);
     // Note: we need to use the resized buffer here, not the original one,
     // as metadata is always linked to the source buffer (even if a resize() is done before the metadata call)
     const resizedMetadata = await metadataFromBuffer(resizedBuffer);
+
+    console.info(`ImageProcessor, after metadataFromBuffer`);
 
     if (!resizedMetadata) {
       return null;
     }
 
     const resizedMetadataSize = metadataSizeIsSetOrThrow(resizedMetadata, 'processAvatarData');
+    console.info(`ImageProcessor, after metadataSizeIsSetOrThrow`);
 
     logIfOn(
       `[imageProcessorWorker] processAvatarData mainAvatar resize took ${Date.now() - start}ms for ${inputBuffer.byteLength} bytes`
