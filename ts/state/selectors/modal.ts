@@ -117,7 +117,7 @@ export function useConversationSettingsModalIsStandalone() {
 }
 
 export function useModalStack() {
-  return useSelector((state: StateType) => state.modals.modalStack);
+  return useSelector((state: StateType) => state.modals?.modalStack ?? []); // that [] is needed for the password window
 }
 
 export function useIsTopModal(modalId: ModalId) {
