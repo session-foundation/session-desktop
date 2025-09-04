@@ -420,7 +420,7 @@ async function handleContactsUpdate(result: IncomingUserResult) {
 
       // we want to set the active_at to the created_at timestamp if active_at is unset, so that it shows up in our list.
       if (!contactConvo.getActiveAt() && wrapperConvo.createdAtSeconds) {
-        contactConvo.set({ active_at: wrapperConvo.createdAtSeconds * 1000 });
+        contactConvo.setActiveAt(wrapperConvo.createdAtSeconds * 1000);
         changes = true;
       }
 
@@ -633,15 +633,16 @@ async function handleSingleGroupUpdate({
       groupInWrapper.disappearingTimerSeconds && groupInWrapper.disappearingTimerSeconds > 0
         ? groupInWrapper.disappearingTimerSeconds
         : undefined;
-    created.set({
-      active_at: joinedAt,
-      displayNameInProfile: groupInWrapper.name || undefined,
-      priority: groupInWrapper.priority,
-      lastJoinedTimestamp: joinedAt,
+    created.setActiveAt(joinedAt);
+    created.setSessionDisplayNameNoCommit(groupInWrapper.name || undefined);
+    await created.setPriorityFromWrapper(groupInWrapper.priority);
+    created.setLastJoinedTimestamp(joinedAt);
+    created.setExpirationArgs({
+      mode: expireTimer ? 'deleteAfterSend' : 'off',
       expireTimer,
-      expirationMode: expireTimer ? 'deleteAfterSend' : 'off',
-      didApproveMe: groupInWrapper.invitePending,
     });
+    await created.setDidApproveMe(groupInWrapper.invitePending);
+
     await created.commit();
     getSwarmPollingInstance().addGroupId(PubKey.cast(groupPk));
   } else {

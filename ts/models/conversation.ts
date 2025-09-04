@@ -100,6 +100,7 @@ import {
   isDirectConversation,
   isOpenOrClosedGroup,
   READ_MESSAGE_STATE,
+  type ConversationNotificationSettingType,
 } from './conversationAttributes';
 
 import { ReadReceiptMessage } from '../session/messages/outgoing/controlMessage/receipt/ReadReceiptMessage';
@@ -128,6 +129,7 @@ import { UpdateMsgExpirySwarm } from '../session/utils/job_runners/jobs/UpdateMs
 import { getLibGroupKickedOutsideRedux } from '../state/selectors/userGroups';
 import {
   MetaGroupWrapperActions,
+  UserConfigWrapperActions,
   UserGroupsWrapperActions,
 } from '../webworker/workers/browser/libsession_worker_interface';
 import { markAttributesAsReadIfNeeded } from './messageFactory';
@@ -142,6 +144,11 @@ import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constan
 import { ReduxOnionSelectors } from '../state/selectors/onions';
 import { tr, tStripped } from '../localization/localeTools';
 import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
+import type {
+  ConversationInteractionStatus,
+  ConversationInteractionType,
+} from '../interactions/types';
+import type { LastMessageStatusType } from '../state/ducks/types';
 
 type InMemoryConvoInfos = {
   mentionedUs: boolean;
@@ -247,6 +254,34 @@ export class ConversationModel extends Model<ConversationAttributes> {
     );
   }
 
+  private getConvoType() {
+    if (this.isMe()) {
+      return 'nts';
+    }
+    if (this.isPrivateAndBlinded()) {
+      return 'blinded';
+    }
+    if (this.isPrivate() && !this.isApproved() && !this.didApproveMe()) {
+      // i.e. a user we have not directly talk to, but through a group/community only
+      return 'privateAcquaintance';
+    }
+    if (this.isPrivate()) {
+      return 'contact';
+    }
+    if (this.isPublic()) {
+      return 'community';
+    }
+    if (this.isClosedGroup() && !this.isClosedGroupV2()) {
+      return 'legacyGroup';
+    }
+    if (this.isClosedGroupV2()) {
+      return 'group';
+    }
+    throw new Error(
+      `getConvoType: can't determine the type of the conversation for ${ed25519Str(this.id)}`
+    );
+  }
+
   public isClosedGroupV2() {
     return Boolean(this.get('type') === ConversationTypeEnum.GROUPV2 && PubKey.is03Pubkey(this.id));
   }
@@ -318,6 +353,41 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
   public getNotificationsFor() {
     return this.get('triggerNotificationsFor');
+  }
+
+  public setNotificationsFor(notificationsFor: ConversationNotificationSettingType) {
+    this.setKey('triggerNotificationsFor', notificationsFor);
+  }
+
+  public setLastJoinedTimestamp(timestamp: number) {
+    if (timestamp === this.getLastJoinedTimestamp()) {
+      return;
+    }
+    this.setKey('lastJoinedTimestamp', timestamp);
+  }
+
+  public setExpirationArgs({
+    mode,
+    expireTimer,
+  }: {
+    mode: DisappearingMessageConversationModeType;
+    expireTimer: number | undefined;
+  }) {
+    if (mode === this.getExpirationMode() && expireTimer === this.getExpireTimer()) {
+      return;
+    }
+    this.setKey('expirationMode', mode);
+    this.setKey('expireTimer', expireTimer);
+  }
+
+  public setIsExpired03Group(isExpired: boolean) {
+    if (!PubKey.is03Pubkey(this.id)) {
+      throw new Error('setIsExpired03Group is only for 03 groups');
+    }
+    if (isExpired === this.getIsExpired03Group()) {
+      return;
+    }
+    this.setKey('isExpired03Group', isExpired);
   }
 
   public getConversationModelProps(): ReduxConversationType {
@@ -857,18 +927,16 @@ export class ConversationModel extends Model<ConversationAttributes> {
       return;
     }
 
-    this.set({
-      lastMessage: messageModel.getNotificationText(),
-      lastMessageStatus: 'sending',
-      active_at: networkTimestamp,
-    });
+    this.setLastMessage(messageModel.getNotificationText());
+    this.setLastMessageStatus('sending');
+    this.setActiveAt(networkTimestamp);
 
     const interactionNotification = messageModel.getInteractionNotification();
 
     if (interactionNotification) {
-      this.set({
-        lastMessageInteractionType: interactionNotification?.interactionType,
-        lastMessageInteractionStatus: interactionNotification?.interactionStatus,
+      this.setLastMessageInteraction({
+        type: interactionNotification?.interactionType,
+        status: interactionNotification?.interactionStatus,
       });
     }
 
@@ -953,16 +1021,29 @@ export class ConversationModel extends Model<ConversationAttributes> {
     const createAtNetworkTimestamp = (sentAt || NetworkTime.now()) - 1;
 
     if (!this.isPrivate()) {
-      this.set({
-        expirationMode,
-        expireTimer,
-      });
+      this.setExpirationArgs({ expireTimer, mode: expirationMode });
     } else if (fromSync || fromCurrentDevice) {
       // this is a private chat and a change we made, set the setting to what was given, otherwise discard it
-      this.set({
-        expirationMode,
-        expireTimer,
-      });
+      this.setExpirationArgs({ expireTimer, mode: expirationMode });
+    }
+
+    const convoType = this.getConvoType();
+    switch (convoType) {
+      case 'blinded':
+      case 'privateAcquaintance':
+      case 'community':
+      case 'legacyGroup':
+        // all of the above do not support expiration timer
+        break;
+      case 'nts':
+        await UserConfigWrapperActions.setNoteToSelfExpiry(expireTimer);
+        break;
+      case 'contact':
+      case 'group':
+        // TODO add cases here for groups/contacts to handle the other cases
+        break;
+      default:
+        assertUnreachable(convoType, `convoType ${convoType} is not supported`);
     }
 
     if (!shouldAddExpireUpdateMessage) {
@@ -1014,17 +1095,18 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
     // Note: we agreed that a **legacy closed** group ControlMessage message does not expire.
     // Group v2 on the other hand, have expiring disappearing control message
-    message.set({
-      expirationType: this.isClosedGroup() && !this.isClosedGroupV2() ? 'unknown' : expirationType,
-      expireTimer: this.isClosedGroup() && !this.isClosedGroupV2() ? 0 : expireTimer,
-    });
+
+    message.setExpirationType(
+      this.isClosedGroup() && !this.isClosedGroupV2() ? 'unknown' : expirationType
+    );
+    message.setExpireTimer(this.isClosedGroup() && !this.isClosedGroupV2() ? 0 : expireTimer);
 
     if (!message.id) {
-      message.set({ id: v4() });
+      message.setId(v4());
     }
 
     if (this.isActive()) {
-      this.setKey('active_at', createAtNetworkTimestamp);
+      this.setActiveAt(createAtNetworkTimestamp);
     }
 
     if (shouldCommitConvo) {
@@ -1046,14 +1128,14 @@ export class ConversationModel extends Model<ConversationAttributes> {
         const canBeDeleteAfterSend =
           this.isMe() || !(this.isGroup() && !this.isClosedGroupV2() && message.isControlMessage());
         if (canBeDeleteAfterSend || expirationMode === 'deleteAfterSend') {
-          message.set({
-            expirationStartTimestamp: DisappearingMessages.setExpirationStartTimestamp(
+          message.setMessageExpirationStartTimestamp(
+            DisappearingMessages.setExpirationStartTimestamp(
               expirationMode,
               message.get('sent_at'),
               'updateExpireTimer() remote change',
               message.id
-            ),
-          });
+            )
+          );
         }
       }
       await message.commit();
@@ -1387,6 +1469,63 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
   }
 
+  public getIsTrustedForAttachmentDownload() {
+    return this.get('isTrustedForAttachmentDownload');
+  }
+
+  public setIsTrustedForAttachmentDownload(isTrusted: boolean) {
+    if (isTrusted === this.getIsTrustedForAttachmentDownload()) {
+      return;
+    }
+    this.setKey('isTrustedForAttachmentDownload', isTrusted);
+  }
+
+  public setLastMessage(lastMessage: string | null) {
+    if (lastMessage === this.getLastMessage()) {
+      return;
+    }
+    this.set({ lastMessage });
+  }
+
+  public setLastMessageStatus(lastMessageStatus: LastMessageStatusType | undefined) {
+    if (lastMessageStatus === this.getLastMessageStatus()) {
+      return;
+    }
+    this.set({ lastMessageStatus });
+  }
+
+  public getLastMessageStatus() {
+    return this.get('lastMessageStatus');
+  }
+
+  public getLastMessage() {
+    return this.get('lastMessage');
+  }
+
+  public getLastMessageInteraction() {
+    return {
+      type: this.get('lastMessageInteractionType'),
+      status: this.get('lastMessageInteractionStatus'),
+    };
+  }
+
+  public setLastMessageInteraction(
+    opts: { type: ConversationInteractionType; status: ConversationInteractionStatus } | null
+  ) {
+    const current = this.getLastMessageInteraction();
+    if (opts) {
+      if (opts.type === current.type && opts.status === current.status) {
+        return;
+      }
+      this.set({ lastMessageInteractionType: opts.type });
+      this.set({ lastMessageInteractionStatus: opts.status });
+    }
+    if (current === null) {
+      return;
+    }
+    this.set({ lastMessageInteractionType: null, lastMessageInteractionStatus: null });
+  }
+
   public setSessionDisplayNameNoCommit(newDisplayName?: string | null) {
     const existingSessionName = this.getRealSessionUsername();
     if (newDisplayName !== existingSessionName && newDisplayName) {
@@ -1414,6 +1553,13 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
   public getAvatarPointer(): string | undefined {
     return this.get('avatarPointer');
+  }
+
+  public setAvatarPointer(avatarPointer: string | undefined) {
+    if (avatarPointer === this.getAvatarPointer()) {
+      return;
+    }
+    this.set({ avatarPointer });
   }
 
   /**
@@ -1512,6 +1658,25 @@ export class ConversationModel extends Model<ConversationAttributes> {
    * Force the priority to be -1 (PRIORITY_DEFAULT_HIDDEN) so this conversation is hidden in the list. Currently only works for private chats.
    */
   public async setHidden(shouldCommit: boolean = true) {
+    const convoType = this.getConvoType();
+    switch (convoType) {
+      case 'blinded':
+      case 'privateAcquaintance':
+      case 'community':
+      case 'legacyGroup':
+      case 'group':
+        // all of the above do not support being hidden (only removed)
+        break;
+      case 'nts':
+        await UserConfigWrapperActions.setPriority(CONVERSATION_PRIORITIES.hidden);
+        break;
+      case 'contact':
+        // TODO add cases here for contacts to handle the other cases
+        break;
+      default:
+        assertUnreachable(convoType, `convoType ${convoType} is not supported`);
+    }
+
     if (!this.isPrivate()) {
       return;
     }
@@ -1524,6 +1689,17 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
   }
 
+  public getLeft() {
+    return this.get('left');
+  }
+
+  public setLeft(left: boolean) {
+    if (left === this.getLeft()) {
+      return;
+    }
+    this.set({ left });
+  }
+
   /**
    * Reset the priority of this conversation to 0 if it was < 0, but keep anything > 0 as is.
    * So if the conversation was pinned, we keep it pinned with its current priority.
@@ -1532,10 +1708,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
   public async unhideIfNeeded(shouldCommit: boolean = true) {
     const priority = this.getPriority();
     if (isFinite(priority) && priority < CONVERSATION_PRIORITIES.default) {
-      this.set({ priority: CONVERSATION_PRIORITIES.default });
-      if (shouldCommit) {
-        await this.commit();
-      }
+      await this.setPriorityFromWrapper(CONVERSATION_PRIORITIES.default, shouldCommit);
     }
   }
 
@@ -1581,6 +1754,10 @@ export class ConversationModel extends Model<ConversationAttributes> {
       return 0; // this thing only applies to sogs blinded conversations
     }
     return this.get('blocksSogsMsgReqsTimestamp') || 0;
+  }
+
+  public setActiveAt(activeAt: number | undefined) {
+    this.set({ active_at: activeAt });
   }
 
   /**
@@ -1746,15 +1923,11 @@ export class ConversationModel extends Model<ConversationAttributes> {
   }
 
   /**
-   * profileKey MUST be a hex string
-   * @param profileKey MUST be a hex string
+   * profileKey MUST be a if set, a Uint8array that can be converted to a hex string
+   * as we store profileKeys as hex in the DB
    */
   public async setProfileKey(profileKey?: Uint8Array, shouldCommit = true) {
-    if (!profileKey) {
-      return;
-    }
-
-    const profileKeyHex = toHex(profileKey);
+    const profileKeyHex = toHex(profileKey ?? new Uint8Array());
 
     // profileKey is a string so we can compare it directly
     if (this.getProfileKey() !== profileKeyHex) {
@@ -2052,6 +2225,17 @@ export class ConversationModel extends Model<ConversationAttributes> {
     return groupAdmins && groupAdmins.length > 0 ? groupAdmins : [];
   }
 
+  public getMembers() {
+    return this.get('members');
+  }
+
+  public setMembers(members: Array<string>) {
+    if (isEqual(members, this.getMembers())) {
+      return;
+    }
+    this.set({ members });
+  }
+
   public isKickedFromGroup(): boolean {
     if (this.isClosedGroupV2()) {
       return getLibGroupKickedOutsideRedux(this.id) || false;
@@ -2272,7 +2456,9 @@ export class ConversationModel extends Model<ConversationAttributes> {
       throw new Error('encryptBlindedMessage messageParams needs an identifier');
     }
 
-    this.set({ active_at: Date.now(), isApproved: true });
+    this.setActiveAt(Date.now());
+    await this.setIsApproved(true, true);
+
     // TODO we need to add support for sending blinded25 message request in addition to the legacy blinded15
     await MessageQueue.use().sendToOpenGroupV2BlindedRequest({
       encryptedContent: encryptedMsg,
@@ -2292,10 +2478,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
     const existingLastMessageStatus = this.get('lastMessageStatus');
     if (!messages || !messages.length) {
       if (existingLastMessageAttribute || existingLastMessageStatus) {
-        this.set({
-          lastMessageStatus: undefined,
-          lastMessage: undefined,
-        });
+        this.setLastMessage(null);
+        this.setLastMessageStatus(undefined);
         await this.commit();
       }
       return;

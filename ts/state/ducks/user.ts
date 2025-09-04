@@ -77,7 +77,8 @@ const clearOurAvatar = createAsyncThunk('user/clearOurAvatar', async () => {
     return;
   }
 
-  convo.setKey('profileKey', undefined);
+  await convo.setProfileKey(undefined, false);
+
   await convo.setSessionProfile({
     avatarPath: undefined,
     fallbackAvatarPath: undefined,

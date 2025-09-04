@@ -466,11 +466,8 @@ export async function deleteAllMessagesByConvoIdNoConfirmation(conversationId: s
 
   // destroy message keeps the active timestamp set so the
   // conversation still appears on the conversation list but is empty
-  conversation.set({
-    lastMessage: null,
-    lastMessageInteractionType: null,
-    lastMessageInteractionStatus: null,
-  });
+  conversation.setLastMessage(null);
+  conversation.setLastMessageInteraction(null);
 
   await conversation.commit();
   window.inboxStore?.dispatch(conversationReset(conversationId));
@@ -619,8 +616,7 @@ export async function updateConversationInteractionState({
     (type !== convo.get('lastMessageInteractionType') ||
       status !== convo.get('lastMessageInteractionStatus'))
   ) {
-    convo.setKey('lastMessageInteractionType', type);
-    convo.setKey('lastMessageInteractionStatus', status);
+    convo.setLastMessageInteraction({ type, status });
 
     await convo.commit();
     window.log.debug(
@@ -643,8 +639,7 @@ export async function clearConversationInteractionState({
     convo &&
     (convo.get('lastMessageInteractionType') || convo.get('lastMessageInteractionStatus'))
   ) {
-    convo.setKey('lastMessageInteractionType', null);
-    convo.setKey('lastMessageInteractionStatus', null);
+    convo.setLastMessageInteraction(null);
 
     await convo.commit();
     window.log.debug(`clearConversationInteractionState for ${conversationId}`);

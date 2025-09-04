@@ -209,14 +209,13 @@ export class OpenGroupManagerV2 {
 
       // mark active so it's not in the contacts list but in the conversation list
       // mark isApproved as this is a public chat
-      conversation.set({
-        active_at: Date.now(),
-        displayNameInProfile: updatedRoom.roomName,
-        isApproved: true,
-        didApproveMe: true,
-        priority: CONVERSATION_PRIORITIES.default,
-        isTrustedForAttachmentDownload: true, // we always trust attachments when sent to an opengroup
-      });
+      conversation.setActiveAt(Date.now());
+      conversation.setSessionDisplayNameNoCommit(updatedRoom.roomName);
+      await conversation.setIsApproved(true, false);
+      await conversation.setDidApproveMe(true, false);
+      await conversation.setPriorityFromWrapper(CONVERSATION_PRIORITIES.default, false);
+      conversation.setIsTrustedForAttachmentDownload(true); // we always trust attachments when sent to an opengroup
+
       await conversation.commit();
 
       // start polling this room

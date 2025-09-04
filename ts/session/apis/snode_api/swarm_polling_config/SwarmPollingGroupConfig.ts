@@ -8,7 +8,7 @@ import {
   MetaGroupWrapperActions,
   UserGroupsWrapperActions,
 } from '../../../../webworker/workers/browser/libsession_worker_interface';
-import { ed25519Str, fromBase64ToArray, toHex } from '../../../utils/String';
+import { ed25519Str, fromBase64ToArray, fromHexToArray, toHex } from '../../../utils/String';
 import { GroupPendingRemovals } from '../../../utils/job_runners/jobs/GroupPendingRemovalsJob';
 import { LibSessionUtil } from '../../../utils/libsession/libsession_utils';
 import { SnodeNamespaces } from '../namespaces';
@@ -144,7 +144,7 @@ async function handleMetaMergeResults(groupPk: GroupPubkeyType) {
   if (convo) {
     let changes = false;
     if (refreshedInfos.name !== convo.get('displayNameInProfile')) {
-      convo.set({ displayNameInProfile: refreshedInfos.name || undefined });
+      convo.setSessionDisplayNameNoCommit(refreshedInfos.name || undefined);
       changes = true;
     }
     const expirationMode = refreshedInfos.expirySeconds ? 'deleteAfterSend' : 'off';
@@ -152,10 +152,11 @@ async function handleMetaMergeResults(groupPk: GroupPubkeyType) {
       refreshedInfos.expirySeconds !== convo.get('expireTimer') ||
       expirationMode !== convo.get('expirationMode')
     ) {
-      convo.set({
+      convo.setExpirationArgs({
+        mode: expirationMode,
         expireTimer: refreshedInfos.expirySeconds || undefined,
-        expirationMode,
       });
+
       changes = true;
     }
     if (changes) {
@@ -277,8 +278,8 @@ async function scheduleAvatarDownloadJobIfNeeded(groupPk: GroupPubkeyType) {
 
     if (!profileUrl || !profileKeyHex) {
       // no avatar set for this group: make sure we also remove the one we might have locally.
-      if (conversation.get('avatarPointer') || conversation.get('profileKey')) {
-        conversation.setKey('profileKey', undefined);
+      if (conversation.getAvatarPointer() || conversation.getProfileKey()) {
+        await conversation.setProfileKey(undefined, false);
         await conversation.setSessionProfile({
           avatarPointer: undefined,
           avatarPath: undefined,
@@ -296,10 +297,8 @@ async function scheduleAvatarDownloadJobIfNeeded(groupPk: GroupPubkeyType) {
 
     if (prevPointer !== profileUrl || prevProfileKey !== profileKeyHex) {
       // set the avatar for this group, it will be downloaded by the job scheduled below
-      conversation.set({
-        avatarPointer: profileUrl || undefined,
-        profileKey: profileKeyHex || undefined,
-      });
+      await conversation.setProfileKey(fromHexToArray(profileKeyHex), false);
+      conversation.setAvatarPointer(profileUrl || undefined);
       await conversation.commit();
 
       // if the avatar data we had before is not the same of what we received, we need to schedule a new avatar download job.

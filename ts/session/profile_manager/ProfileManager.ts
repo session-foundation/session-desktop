@@ -2,9 +2,9 @@ import { isEmpty, isNil } from 'lodash';
 import { ConvoHub } from '../conversations';
 import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { SyncUtils, UserUtils } from '../utils';
-import { fromHexToArray, toHex, trimWhitespace } from '../utils/String';
+import { toHex, trimWhitespace } from '../utils/String';
 import { AvatarDownload } from '../utils/job_runners/jobs/AvatarDownloadJob';
-import { CONVERSATION_PRIORITIES, ConversationTypeEnum } from '../../models/types';
+import { ConversationTypeEnum } from '../../models/types';
 import { RetrieveDisplayNameError } from '../utils/errors';
 
 export type Profile = {
@@ -51,7 +51,7 @@ async function updateProfileOfContact(
 
   // avoid setting the display name to an invalid value
   if (existingDisplayName !== displayName && !isEmpty(displayName)) {
-    conversation.setKey('displayNameInProfile', displayName || undefined);
+    conversation.setSessionDisplayNameNoCommit(displayName || undefined);
     changes = true;
   }
 
@@ -66,10 +66,8 @@ async function updateProfileOfContact(
   // database and wrapper (and we do not want to override anything in the wrapper's content
   // with what we have locally, so we need the commit to have already the right values in pointer and profileKey)
   if (prevPointer !== profileUrl || prevProfileKey !== profileKeyHex) {
-    conversation.set({
-      avatarPointer: profileUrl || undefined,
-      profileKey: profileKeyHex || undefined,
-    });
+    conversation.setAvatarPointer(profileUrl || undefined);
+    await conversation.setProfileKey(profileKey || undefined);
 
     // if the avatar data we had before is not the same of what we received, we need to schedule a new avatar download job.
     avatarChanged = true; // allow changes from strings to null/undefined to trigger a AvatarDownloadJob. If that happens, we want to remove the local attachment file.
@@ -81,7 +79,8 @@ async function updateProfileOfContact(
     (!profileUrl || !profileKeyHex) &&
     (conversation.getAvatarInProfilePath() || conversation.getFallbackAvatarInProfilePath())
   ) {
-    conversation.setKey('profileKey', undefined);
+    await conversation.setProfileKey(undefined, false);
+
     await conversation.setSessionProfile({
       avatarPointer: undefined,
       avatarPath: undefined,

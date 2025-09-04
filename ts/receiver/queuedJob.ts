@@ -92,7 +92,7 @@ async function copyFromQuotedMessage(
   if (!quotedMessage) {
     window?.log?.warn(`We did not found quoted message ${id} with author ${author}.`);
     quoteLocal.referencedMessageNotFound = true;
-    msg.set({ quote: quoteLocal });
+    msg.setQuote(quoteLocal);
     return;
   }
 
@@ -116,7 +116,7 @@ async function copyFromQuotedMessage(
     !firstAttachment.contentType ||
     !contentTypeSupported(firstAttachment.contentType)
   ) {
-    msg.set({ quote: quoteLocal });
+    msg.setQuote(quoteLocal);
     return;
   }
 
@@ -156,7 +156,7 @@ async function copyFromQuotedMessage(
   }
   quoteLocal.attachments = [firstAttachment];
 
-  msg.set({ quote: quoteLocal });
+  msg.setQuote(quoteLocal);
 }
 
 /**
@@ -176,7 +176,7 @@ function handleLinkPreviews(messageBody: string, messagePreview: any, message: M
     );
   }
 
-  message.set({ preview });
+  message.setPreview(preview);
 }
 
 async function processProfileKeyNoCommit(
@@ -347,12 +347,17 @@ async function handleRegularMessage(
     (message.get('sent_at') || 0) > conversationActiveAt
   ) {
     const interactionNotification = message.getInteractionNotification();
-    conversation.set({
-      active_at: message.get('sent_at'),
-      lastMessage: message.getNotificationText(),
-      lastMessageInteractionType: interactionNotification?.interactionType,
-      lastMessageInteractionStatus: interactionNotification?.interactionStatus,
-    });
+    conversation.setActiveAt(message.get('sent_at'));
+    conversation.setLastMessage(message.getNotificationText());
+    conversation.setLastMessageInteraction(
+      interactionNotification
+        ? {
+            type: interactionNotification.interactionType,
+            status: interactionNotification.interactionStatus,
+          }
+        : null
+    );
+
     // a new message was received for that conversation. If it was not it should not be hidden anymore
     await conversation.unhideIfNeeded(false);
   }
@@ -396,14 +401,14 @@ async function markConvoAsReadIfOutgoingMessage(
         );
 
         if (expirationMode !== 'off') {
-          message.set({
-            expirationStartTimestamp: DisappearingMessages.setExpirationStartTimestamp(
+          message.setMessageExpirationStartTimestamp(
+            DisappearingMessages.setExpirationStartTimestamp(
               expirationMode,
               message.get('sent_at'),
               'markConvoAsReadIfOutgoingMessage',
               message.id
-            ),
-          });
+            )
+          );
           await message.commit();
         }
       }
@@ -448,14 +453,14 @@ export async function handleMessageJob(
       );
 
       if (expirationMode === 'deleteAfterSend') {
-        messageModel.set({
-          expirationStartTimestamp: DisappearingMessages.setExpirationStartTimestamp(
+        messageModel.setMessageExpirationStartTimestamp(
+          DisappearingMessages.setExpirationStartTimestamp(
             expirationMode,
             messageModel.get('sent_at'),
             'handleMessageJob',
             messageModel.id
-          ),
-        });
+          )
+        );
       }
     }
 
@@ -506,15 +511,15 @@ export async function handleMessageJob(
 
     // save the message model to the db and then save the messageId generated to our in-memory copy
     const id = await messageModel.commit();
-    messageModel.set({ id });
+    messageModel.setId(id);
 
     // Note that this can save the message again, if jobs were queued. We need to
     //   call it after we have an id for this message, because the jobs refer back
     //   to their source message.
 
-    conversation.set({
-      active_at: Math.max(conversation.getActiveAt() || 0, messageModel.get('sent_at') || 0),
-    });
+    conversation.setActiveAt(
+      Math.max(conversation.getActiveAt() || 0, messageModel.get('sent_at') || 0)
+    );
     // this is a throttled call and will only run once every 1 sec at most
     conversation.updateLastMessage();
     await conversation.commit();

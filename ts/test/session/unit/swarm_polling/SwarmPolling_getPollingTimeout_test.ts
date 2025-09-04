@@ -41,7 +41,7 @@ describe('SwarmPolling:getPollingTimeout', () => {
         TestUtils.generateFakePubKeyStr(),
         ConversationTypeEnum.GROUP
       );
-      convo.setKey('active_at', Date.now() - 2 * 23 * 3600 * 1000); // 23 * 2 = 46 hours old
+      convo.setActiveAt(Date.now() - 2 * 23 * 3600 * 1000); // 23 * 2 = 46 hours old
       expect(swarmPolling.getPollingTimeout(PubKey.cast(convo.id))).to.eq(
         SWARM_POLLING_TIMEOUT.ACTIVE
       );
@@ -52,7 +52,7 @@ describe('SwarmPolling:getPollingTimeout', () => {
         TestUtils.generateFakePubKeyStr(),
         ConversationTypeEnum.GROUP
       );
-      convo.setKey('active_at', undefined);
+      convo.setActiveAt(undefined);
       expect(swarmPolling.getPollingTimeout(PubKey.cast(convo.id))).to.eq(
         SWARM_POLLING_TIMEOUT.INACTIVE
       );
@@ -63,12 +63,12 @@ describe('SwarmPolling:getPollingTimeout', () => {
         TestUtils.generateFakePubKeyStr(),
         ConversationTypeEnum.GROUP
       );
-      convo.setKey('active_at', Date.now() - 1000 * 3600 * 25 * 2); // 25 hours x 2 = 50 hours old
+      convo.setActiveAt(Date.now() - 1000 * 3600 * 25 * 2); // 25 hours x 2 = 50 hours old
       expect(swarmPolling.getPollingTimeout(PubKey.cast(convo.id))).to.eq(
         SWARM_POLLING_TIMEOUT.MEDIUM_ACTIVE
       );
 
-      convo.setKey('active_at', Date.now() - 1000 * 3600 * 24 * 7 + 3600); // a week minus an hour old
+      convo.setActiveAt(Date.now() - 1000 * 3600 * 24 * 7 + 3600); // a week minus an hour old
       expect(swarmPolling.getPollingTimeout(PubKey.cast(convo.id))).to.eq(
         SWARM_POLLING_TIMEOUT.MEDIUM_ACTIVE
       );
@@ -79,7 +79,7 @@ describe('SwarmPolling:getPollingTimeout', () => {
         TestUtils.generateFakePubKeyStr(),
         ConversationTypeEnum.GROUP
       );
-      convo.setKey('active_at', Date.now() - 1000 * 3600 * 24 * 8); // 8 days
+      convo.setActiveAt(Date.now() - 1000 * 3600 * 24 * 8); // 8 days
       expect(swarmPolling.getPollingTimeout(PubKey.cast(convo.id))).to.eq(
         SWARM_POLLING_TIMEOUT.INACTIVE
       );
@@ -92,7 +92,7 @@ describe('SwarmPolling:getPollingTimeout', () => {
         TestUtils.generateFakeClosedGroupV2PkStr(),
         ConversationTypeEnum.GROUPV2
       );
-      convo.setKey('active_at', Date.now() - 2 * 23 * 3600 * 1000); // 23 * 2 = 46 hours old
+      convo.setActiveAt(Date.now() - 2 * 23 * 3600 * 1000); // 23 * 2 = 46 hours old
       expect(swarmPolling.getPollingTimeout(PubKey.cast(convo.id))).to.eq(
         SWARM_POLLING_TIMEOUT.ACTIVE
       );
@@ -103,7 +103,7 @@ describe('SwarmPolling:getPollingTimeout', () => {
         TestUtils.generateFakeClosedGroupV2PkStr(),
         ConversationTypeEnum.GROUPV2
       );
-      convo.setKey('active_at', undefined);
+      convo.setActiveAt(undefined);
       expect(swarmPolling.getPollingTimeout(PubKey.cast(convo.id))).to.eq(
         SWARM_POLLING_TIMEOUT.INACTIVE
       );
@@ -114,12 +114,12 @@ describe('SwarmPolling:getPollingTimeout', () => {
         TestUtils.generateFakeClosedGroupV2PkStr(),
         ConversationTypeEnum.GROUPV2
       );
-      convo.setKey('active_at', Date.now() - 1000 * 3600 * 25 * 2); // 25 hours x 2 = 50 hours old
+      convo.setActiveAt(Date.now() - 1000 * 3600 * 25 * 2); // 25 hours x 2 = 50 hours old
       expect(swarmPolling.getPollingTimeout(PubKey.cast(convo.id))).to.eq(
         SWARM_POLLING_TIMEOUT.MEDIUM_ACTIVE
       );
 
-      convo.setKey('active_at', Date.now() - 1000 * 3600 * 24 * 7 + 3600); // a week minus an hour old
+      convo.setActiveAt(Date.now() - 1000 * 3600 * 24 * 7 + 3600); // a week minus an hour old
       expect(swarmPolling.getPollingTimeout(PubKey.cast(convo.id))).to.eq(
         SWARM_POLLING_TIMEOUT.MEDIUM_ACTIVE
       );
@@ -130,7 +130,7 @@ describe('SwarmPolling:getPollingTimeout', () => {
         TestUtils.generateFakeClosedGroupV2PkStr(),
         ConversationTypeEnum.GROUPV2
       );
-      convo.setKey('active_at', Date.now() - 1000 * 3600 * 24 * 8); // 8 days
+      convo.setActiveAt(Date.now() - 1000 * 3600 * 24 * 8); // 8 days
       expect(swarmPolling.getPollingTimeout(PubKey.cast(convo.id))).to.eq(
         SWARM_POLLING_TIMEOUT.INACTIVE
       );

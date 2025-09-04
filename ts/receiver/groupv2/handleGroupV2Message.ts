@@ -140,16 +140,12 @@ async function handleGroupUpdateInviteMessage({
   window.log.debug(`received invite to group ${ed25519Str(groupPk)} by user:${ed25519Str(author)}`);
 
   const convo = await ConvoHub.use().getOrCreateAndWait(groupPk, ConversationTypeEnum.GROUPV2);
-  convo.set({
-    active_at: signatureTimestamp,
-    didApproveMe: true,
-    conversationIdOrigin: author,
-  });
+  convo.setActiveAt(signatureTimestamp);
+  await convo.setDidApproveMe(true, false);
+  await convo.setOriginConversationID(author, false);
 
   if (inviteMessage.name && isEmpty(convo.getRealSessionUsername())) {
-    convo.set({
-      displayNameInProfile: inviteMessage.name,
-    });
+    convo.setSessionDisplayNameNoCommit(inviteMessage.name);
   }
   const userEd25519Secretkey = (await UserUtils.getUserED25519KeyPairBytes()).privKeyBytes;
 
@@ -291,9 +287,7 @@ async function handleGroupInfoChangeMessage({
       return;
   }
 
-  convo.set({
-    active_at: signatureTimestamp,
-  });
+  convo.setActiveAt(signatureTimestamp);
   await convo.commit();
 }
 
@@ -363,9 +357,7 @@ async function handleGroupMemberChangeMessage({
       return;
   }
 
-  convo.set({
-    active_at: signatureTimestamp,
-  });
+  convo.setActiveAt(signatureTimestamp);
 }
 
 async function handleGroupMemberLeftMessage({
@@ -412,9 +404,7 @@ async function handleGroupUpdateMemberLeftNotificationMessage({
     messageHash,
   });
 
-  convo.set({
-    active_at: signatureTimestamp,
-  });
+  convo.setActiveAt(signatureTimestamp);
 }
 
 async function handleGroupUpdateDeleteMemberContentMessage({
@@ -573,16 +563,12 @@ async function handleGroupUpdatePromoteMessage({
   );
 
   const convo = await ConvoHub.use().getOrCreateAndWait(groupPk, ConversationTypeEnum.GROUPV2);
-  convo.set({
-    active_at: signatureTimestamp,
-    didApproveMe: true,
-    conversationIdOrigin: author,
-  });
+  convo.setActiveAt(signatureTimestamp);
+  await convo.setDidApproveMe(true, false);
+  await convo.setOriginConversationID(author, false);
 
   if (change.name && isEmpty(convo.getRealSessionUsername())) {
-    convo.set({
-      displayNameInProfile: change.name,
-    });
+    convo.setSessionDisplayNameNoCommit(change.name);
   }
   const userEd25519Secretkey = (await UserUtils.getUserED25519KeyPairBytes()).privKeyBytes;
 

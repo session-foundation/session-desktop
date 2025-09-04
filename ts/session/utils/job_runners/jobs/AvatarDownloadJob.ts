@@ -59,7 +59,7 @@ async function addAvatarDownloadJob({ conversationId }: { conversationId: string
  * This job can be used to add the downloading of the avatar of a conversation to the list of jobs to be run.
  * The conversationId is used as identifier so we can only have a single job per conversation.
  * When the jobRunners starts this job, the job first checks if a download is required or not (avatarPointer changed and wasn't already downloaded).
- * If yes, it downloads the new avatar, decrypt it and store it before updating the conversation with the new url,profilekey and local file storage.
+ * If yes, it downloads the new avatar, decrypt it and store it before updating the conversation with the new url, profile key and local file storage.
  */
 class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
   constructor({
@@ -196,9 +196,11 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
       conversation.getFallbackAvatarInProfilePath()
     ) {
       // there is no valid avatar to download, make sure the local file of the avatar of that user is removed
-      conversation.set({
-        avatarInProfile: undefined,
-        fallbackAvatarInProfile: undefined,
+      await conversation.setSessionProfile({
+        displayName: null, // null to not update the display name
+        avatarPointer: undefined,
+        avatarPath: undefined,
+        fallbackAvatarPath: undefined,
       });
       changes = true;
     }
@@ -210,9 +212,7 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
         !conversation.isApproved() ||
         !conversation.didApproveMe()
       ) {
-        conversation.set({
-          isTrustedForAttachmentDownload: true,
-        });
+        conversation.setIsTrustedForAttachmentDownload(true);
         await conversation.setDidApproveMe(true, false);
         await conversation.setIsApproved(true, false);
         changes = true;

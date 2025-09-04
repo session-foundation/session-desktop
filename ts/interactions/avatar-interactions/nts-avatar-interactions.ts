@@ -4,7 +4,7 @@ import { uploadFileToFsWithOnionV4 } from '../../session/apis/file_server_api/Fi
 import { ConvoHub } from '../../session/conversations';
 import { DecryptedAttachmentsManager } from '../../session/crypto/DecryptedAttachmentsManager';
 import { UserUtils } from '../../session/utils';
-import { fromHexToArray, toHex } from '../../session/utils/String';
+import { fromHexToArray } from '../../session/utils/String';
 import { urlToBlob } from '../../types/attachments/VisualAttachment';
 import { processNewAttachment } from '../../types/MessageAttachment';
 import { IMAGE_JPEG } from '../../types/MIME';
@@ -109,7 +109,7 @@ export async function uploadAndSetOurAvatarShared({
   const displayName = ourConvo.getRealSessionUsername();
 
   // write the profileKey even if it did not change
-  ourConvo.set({ profileKey: toHex(profileKey) });
+  await ourConvo.setProfileKey(profileKey);
   // Replace our temporary image with the attachment pointer from the server.
   // Note: this commits already to the DB.
   await ourConvo.setSessionProfile({

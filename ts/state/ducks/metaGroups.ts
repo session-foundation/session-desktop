@@ -251,7 +251,7 @@ const initNewGroupInWrapper = createAsyncThunk(
       getSwarmPollingInstance().addGroupId(new PubKey(groupPk));
 
       await convo.unhideIfNeeded();
-      convo.set({ active_at: Date.now() });
+      convo.setActiveAt(Date.now());
       await convo.commit();
       convo.updateLastMessage();
       dispatch(sectionActions.resetLeftOverlayMode());
@@ -344,14 +344,10 @@ const handleUserGroupUpdate = createAsyncThunk(
     await convo.setPriorityFromWrapper(userGroup.priority, false);
 
     if (!convo.isActive()) {
-      convo.set({
-        active_at: Date.now(),
-      });
+      convo.setActiveAt(Date.now());
     }
 
-    convo.set({
-      displayNameInProfile: userGroup.name || undefined,
-    });
+    convo.setSessionDisplayNameNoCommit(userGroup.name || undefined);
 
     await convo.commit();
 
@@ -762,9 +758,7 @@ async function handleMemberAddedFromUI({
   await scheduleGroupInviteJobs(groupPk, withHistory, withoutHistory, false);
   await LibSessionUtil.saveDumpsToDb(groupPk);
 
-  convo.set({
-    active_at: createAtNetworkTimestamp,
-  });
+  convo.setActiveAt(createAtNetworkTimestamp);
 
   await convo.commit();
   return true;
@@ -882,9 +876,7 @@ async function handleMemberRemovedFromUI({
 
   await LibSessionUtil.saveDumpsToDb(groupPk);
 
-  convo.set({
-    active_at: createAtNetworkTimestamp,
-  });
+  convo.setActiveAt(createAtNetworkTimestamp);
   await convo.commit();
 }
 
@@ -980,9 +972,7 @@ async function handleNameChangeFromUI({
     );
   }
 
-  convo.set({
-    active_at: createAtNetworkTimestamp,
-  });
+  convo.setActiveAt(createAtNetworkTimestamp);
   await convo.commit();
 }
 
@@ -1106,9 +1096,7 @@ async function handleAvatarChangeFromUI({
     );
   }
 
-  convo.set({
-    active_at: createAtNetworkTimestamp,
-  });
+  convo.setActiveAt(createAtNetworkTimestamp);
   await convo.commit();
 }
 
@@ -1150,7 +1138,7 @@ async function handleClearAvatarFromUI({ groupPk }: WithGroupPubkey) {
   }
 
   await checkWeAreAdminOrThrow(groupPk, 'handleAvatarChangeFromUI');
-  convo.setKey('profileKey', undefined);
+  await convo.setProfileKey(undefined, false);
   await convo.setSessionProfile({
     avatarPointer: undefined,
     avatarPath: undefined,
@@ -1210,9 +1198,7 @@ async function handleClearAvatarFromUI({ groupPk }: WithGroupPubkey) {
     );
   }
 
-  convo.set({
-    active_at: createAtNetworkTimestamp,
-  });
+  convo.setActiveAt(createAtNetworkTimestamp);
   await convo.commit();
 }
 
