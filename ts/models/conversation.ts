@@ -128,6 +128,7 @@ import { UpdateMsgExpirySwarm } from '../session/utils/job_runners/jobs/UpdateMs
 import { getLibGroupKickedOutsideRedux } from '../state/selectors/userGroups';
 import {
   MetaGroupWrapperActions,
+  UserConfigWrapperActions,
   UserGroupsWrapperActions,
 } from '../webworker/workers/browser/libsession_worker_interface';
 import { markAttributesAsReadIfNeeded } from './messageFactory';
@@ -244,6 +245,34 @@ export class ConversationModel extends Model<ConversationAttributes> {
     return Boolean(
       (this.get('type') === ConversationTypeEnum.GROUP && PubKey.is05Pubkey(this.id)) ||
         this.isClosedGroupV2()
+    );
+  }
+
+  private getConvoType() {
+    if (this.isMe()) {
+      return 'nts';
+    }
+    if (this.isPrivateAndBlinded()) {
+      return 'blinded';
+    }
+    if (this.isPrivate() && !this.isApproved() && !this.didApproveMe()) {
+      // i.e. a user we have not directly talk to, but through a group/community only
+      return 'privateAcquaintance';
+    }
+    if (this.isPrivate()) {
+      return 'contact';
+    }
+    if (this.isPublic()) {
+      return 'community';
+    }
+    if (this.isClosedGroup() && !this.isClosedGroupV2()) {
+      return 'legacyGroup';
+    }
+    if (this.isClosedGroupV2()) {
+      return 'group';
+    }
+    throw new Error(
+      `getConvoType: can't determine the type of the conversation for ${ed25519Str(this.id)}`
     );
   }
 
@@ -965,6 +994,25 @@ export class ConversationModel extends Model<ConversationAttributes> {
       });
     }
 
+    const convoType = this.getConvoType();
+    switch (convoType) {
+      case 'blinded':
+      case 'privateAcquaintance':
+      case 'community':
+      case 'legacyGroup':
+        // all of the above do not support expiration timer
+        break;
+      case 'nts':
+        await UserConfigWrapperActions.setNoteToSelfExpiry(expireTimer);
+        break;
+      case 'contact':
+      case 'group':
+        // TODO add cases here for groups/contacts to handle the other cases
+        break;
+      default:
+        assertUnreachable(convoType, `convoType ${convoType} is not supported`);
+    }
+
     if (!shouldAddExpireUpdateMessage) {
       await Conversation.cleanUpExpireHistoryFromConvo(this.id, this.isPrivate());
 
@@ -1512,6 +1560,25 @@ export class ConversationModel extends Model<ConversationAttributes> {
    * Force the priority to be -1 (PRIORITY_DEFAULT_HIDDEN) so this conversation is hidden in the list. Currently only works for private chats.
    */
   public async setHidden(shouldCommit: boolean = true) {
+    const convoType = this.getConvoType();
+    switch (convoType) {
+      case 'blinded':
+      case 'privateAcquaintance':
+      case 'community':
+      case 'legacyGroup':
+      case 'group':
+        // all of the above do not support being hidden (only removed)
+        break;
+      case 'nts':
+        await UserConfigWrapperActions.setPriority(expireTimer);
+        break;
+      case 'contact':
+        // TODO add cases here for contacts to handle the other cases
+        break;
+      default:
+        assertUnreachable(convoType, `convoType ${convoType} is not supported`);
+    }
+
     if (!this.isPrivate()) {
       return;
     }

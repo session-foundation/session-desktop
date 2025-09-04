@@ -2,9 +2,9 @@ import { isEmpty, isNil } from 'lodash';
 import { ConvoHub } from '../conversations';
 import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { SyncUtils, UserUtils } from '../utils';
-import { fromHexToArray, toHex, trimWhitespace } from '../utils/String';
+import { toHex, trimWhitespace } from '../utils/String';
 import { AvatarDownload } from '../utils/job_runners/jobs/AvatarDownloadJob';
-import { CONVERSATION_PRIORITIES, ConversationTypeEnum } from '../../models/types';
+import { ConversationTypeEnum } from '../../models/types';
 import { RetrieveDisplayNameError } from '../utils/errors';
 
 export type Profile = {
@@ -138,23 +138,11 @@ async function updateOurProfileDisplayName(newName: string) {
     ConversationTypeEnum.PRIVATE
   );
 
-  const dbProfileUrl = conversation.get('avatarPointer');
-  const dbProfileKey = conversation.get('profileKey')
-    ? fromHexToArray(conversation.get('profileKey')!)
-    : null;
-  const dbPriority = conversation.get('priority') || CONVERSATION_PRIORITIES.default;
-
   // we don't want to throw if somehow our display name in the DB is too long here, so we use the truncated version.
   await UserConfigWrapperActions.setNameTruncated(trimWhitespace(newName));
   const truncatedName = await UserConfigWrapperActions.getName();
   if (isNil(truncatedName)) {
     throw new RetrieveDisplayNameError();
-  }
-  await UserConfigWrapperActions.setPriority(dbPriority);
-  if (dbProfileUrl && !isEmpty(dbProfileKey)) {
-    await UserConfigWrapperActions.setProfilePic({ key: dbProfileKey, url: dbProfileUrl });
-  } else {
-    await UserConfigWrapperActions.setProfilePic({ key: null, url: null });
   }
 
   conversation.setSessionDisplayNameNoCommit(truncatedName);
