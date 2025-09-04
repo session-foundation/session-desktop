@@ -287,4 +287,5 @@ class GroupPendingRemovalsJob extends PersistedJob<GroupPendingRemovalsPersisted
 export const GroupPendingRemovals = {
   addJob,
   getPendingRevokeParams,
+  GroupPendingRemovalsJob,
 };

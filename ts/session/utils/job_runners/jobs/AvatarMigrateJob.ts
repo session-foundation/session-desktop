@@ -222,4 +222,5 @@ async function scheduleAllAvatarMigrateJobs() {
 
 export const AvatarMigrate = {
   scheduleAllAvatarMigrateJobs,
+  AvatarMigrateJob,
 };
