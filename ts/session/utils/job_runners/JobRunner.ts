@@ -8,7 +8,6 @@ import {
   FetchMsgExpirySwarmPersistedData,
   GroupInvitePersistedData,
   GroupPendingRemovalsPersistedData,
-  GroupPromotePersistedData,
   GroupSyncPersistedData,
   PersistedJob,
   RunJobResult,
@@ -390,11 +389,6 @@ const avatarMigrateRunner = new PersistedJobRunner<AvatarMigratePersistedData>('
 
 const groupInviteJobRunner = new PersistedJobRunner<GroupInvitePersistedData>('GroupInviteJob', 4);
 
-const groupPromoteJobRunner = new PersistedJobRunner<GroupPromotePersistedData>(
-  'GroupPromoteJob',
-  4
-);
-
 const groupPendingRemovalJobRunner = new PersistedJobRunner<GroupPendingRemovalsPersistedData>(
   'GroupPendingRemovalJob',
   4
@@ -416,6 +410,5 @@ export const runners = {
   avatarDownloadRunner,
   avatarMigrateRunner,
   groupInviteJobRunner,
-  groupPromoteJobRunner,
   groupPendingRemovalJobRunner,
 };
