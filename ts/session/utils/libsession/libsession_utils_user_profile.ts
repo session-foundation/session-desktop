@@ -42,7 +42,6 @@ async function insertUserProfileIntoWrapper(convoId: string) {
     await UserConfigWrapperActions.setProfilePic({ key: null, url: null });
   }
 
-  await UserConfigWrapperActions.setEnableBlindedMsgRequest(areBlindedMsgRequestEnabled);
   await UserConfigWrapperActions.setNoteToSelfExpiry(expirySeconds);
 
   // returned for testing purposes only

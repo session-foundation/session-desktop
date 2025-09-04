@@ -20,18 +20,18 @@ import {
   useUserSettingsCloseAction,
   useUserSettingsTitle,
 } from './userSettingsHooks';
-import { CallManager, UserUtils } from '../../../../session/utils';
+import { CallManager } from '../../../../session/utils';
 import { SessionButtonColor } from '../../../basic/SessionButton';
 import {
   useHasLinkPreviewEnabled,
   useWeHaveBlindedMsgRequestsEnabled,
 } from '../../../../state/selectors/settings';
 import { SettingsKey } from '../../../../data/settings-key';
-import { SessionUtilUserProfile } from '../../../../session/utils/libsession/libsession_utils_user_profile';
 import { getPasswordHash, Storage } from '../../../../util/storage';
 import { SettingsToggleBasic } from '../components/SettingsToggleBasic';
 import { SettingsPanelButtonInlineBasic } from '../components/SettingsPanelButtonInlineBasic';
 import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
+import { UserConfigWrapperActions } from '../../../../webworker/workers/browser/libsession_worker_interface';
 
 const toggleCallMediaPermissions = async (triggerUIUpdate: () => void) => {
   const currentValue = window.getCallMediaPermissions();
@@ -193,9 +193,8 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
           onClick={async () => {
             const toggledValue = !weHaveBlindedRequestsEnabled;
             await window.setSettingValue(SettingsKey.hasBlindedMsgRequestsEnabled, toggledValue);
-            await SessionUtilUserProfile.insertUserProfileIntoWrapper(
-              UserUtils.getOurPubKeyStrFromCache()
-            );
+            await UserConfigWrapperActions.setEnableBlindedMsgRequest(toggledValue);
+
             forceUpdate();
           }}
           text={{ token: 'messageRequestsCommunities' }}
