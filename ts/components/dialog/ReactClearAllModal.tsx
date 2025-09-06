@@ -52,6 +52,7 @@ export const ReactClearAllModal = (props: Props) => {
 
   return (
     <SessionWrapperModal
+      modalId="reactClearAllModal"
       onClose={handleClose}
       headerChildren={<ModalBasicHeader title={tr('clearAll')} />}
       buttonChildren={

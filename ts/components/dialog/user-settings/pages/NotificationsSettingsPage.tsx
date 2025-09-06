@@ -9,11 +9,7 @@ import {
   PanelButtonTextWithSubText,
   PanelLabelWithDescription,
 } from '../../../buttons/panel/PanelButton';
-import {
-  ModalBasicHeader,
-  SessionWrapperModal,
-  WrapperModalWidth,
-} from '../../../SessionWrapperModal';
+import { ModalBasicHeader } from '../../../SessionWrapperModal';
 import { ModalBackButton } from '../../shared/ModalBackButton';
 import {
   useUserSettingsBackAction,
@@ -27,6 +23,7 @@ import { isAudioNotificationSupported } from '../../../../types/Settings';
 import { SpacerLG } from '../../../basic/Text';
 import { SessionButton, SessionButtonColor } from '../../../basic/SessionButton';
 import { PanelRadioButton } from '../../../buttons/panel/PanelRadioButton';
+import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
 
 const NotificationType = { message: 'message', name: 'name', count: 'count', off: 'off' } as const;
 
@@ -164,7 +161,7 @@ export function NotificationsSettingsPage(modalState: UserSettingsModalState) {
   const forceUpdate = useUpdate();
 
   return (
-    <SessionWrapperModal
+    <UserSettingsModalContainer
       headerChildren={
         <ModalBasicHeader
           title={title}
@@ -174,9 +171,6 @@ export function NotificationsSettingsPage(modalState: UserSettingsModalState) {
         />
       }
       onClose={closeAction || undefined}
-      shouldOverflow={true}
-      allowOutsideClick={false}
-      $contentMinWidth={WrapperModalWidth.normal}
     >
       <PanelLabelWithDescription title={{ token: 'sessionNotifications' }} />
       <PanelButtonGroup>
@@ -198,6 +192,6 @@ export function NotificationsSettingsPage(modalState: UserSettingsModalState) {
         notificationsAreEnabled={notificationsAreEnabled}
         initialNotificationEnabled={initialNotificationEnabled}
       />
-    </SessionWrapperModal>
+    </UserSettingsModalContainer>
   );
 }

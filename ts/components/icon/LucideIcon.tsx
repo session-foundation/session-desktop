@@ -2,13 +2,19 @@ import type { CSSProperties, SessionDataTestId } from 'react';
 import styled from 'styled-components';
 import type { SessionIconSize } from './Icons';
 import { IconSizeToPxStr } from './SessionIcon';
-import type { WithLucideUnicode } from './lucide';
+import { isIconToMirrorRtl, type WithLucideUnicode } from './lucide';
+import { useIsRtl } from '../../util/i18n/rtlSupport';
 
-const LucideIconWrapper = styled.div<{ $iconColor?: string; $iconSize: SessionIconSize }>`
+const LucideIconWrapper = styled.div<{
+  $iconColor?: string;
+  $iconSize: SessionIconSize;
+  $mirrorIt: boolean;
+}>`
   font-family: var(--font-icon);
   font-size: ${props => IconSizeToPxStr[props.$iconSize]};
   color: ${props => props.$iconColor};
   align-content: center;
+  ${props => props.$mirrorIt && 'display: inline-block;  transform: scaleX(-1);'}
 `;
 
 export type LucideIconProps = WithLucideUnicode & {
@@ -17,6 +23,11 @@ export type LucideIconProps = WithLucideUnicode & {
   dataTestId?: SessionDataTestId;
   style?: CSSProperties;
   ariaLabel?: string;
+  /**
+   * set to true to make this icon mirrored when the app is in RTL mode.
+   * Note: some icons are enforced not mirrored (e.g. the "check" icon)
+   */
+  respectRtl?: boolean;
 };
 
 /**
@@ -29,7 +40,10 @@ export const LucideIcon = ({
   dataTestId,
   style,
   ariaLabel,
+  respectRtl = true,
 }: LucideIconProps) => {
+  const isRtl = useIsRtl();
+
   return (
     <LucideIconWrapper
       $iconColor={iconColor}
@@ -37,6 +51,7 @@ export const LucideIcon = ({
       data-testid={dataTestId}
       style={{ ...style, lineHeight: 1 }}
       aria-label={ariaLabel}
+      $mirrorIt={isRtl && respectRtl && isIconToMirrorRtl(unicode)}
     >
       {unicode}
     </LucideIconWrapper>

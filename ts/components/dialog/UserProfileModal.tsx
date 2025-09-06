@@ -101,6 +101,7 @@ export const UserProfileModal = ({
 
   return (
     <SessionWrapperModal
+      modalId="userProfileModal"
       headerChildren={<ModalBasicHeader title={''} showExitIcon={true} />}
       onClose={closeDialog}
       buttonChildren={
@@ -110,6 +111,7 @@ export const UserProfileModal = ({
             onClick={onClickStartConversation}
             dataTestId="new-session-conversation"
             disabled={isBlindedAndNotResolved && hasDisabledMsgRequests}
+            buttonColor={SessionButtonColor.PrimaryDark}
           />
 
           {!isBlindedAndNotResolved && (

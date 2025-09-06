@@ -201,7 +201,7 @@ function CopyMessageBodyButton({ messageId }: WithMessageIdOpt) {
   }
   return (
     <PanelIconButton
-      text={{ token: 'copy' }}
+      text={{ token: 'messageCopy' }}
       iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.COPY} />}
       onClick={() => {
         clipboard.writeText(messageBody || '');

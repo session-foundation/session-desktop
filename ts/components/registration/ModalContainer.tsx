@@ -1,17 +1,16 @@
-import { useSelector } from 'react-redux';
-import {
-  getQuitModalState,
-  getTermsOfServicePrivacyModalState,
-} from '../../state/onboarding/selectors/modals';
 import { QuitModal } from '../dialog/QuitModal';
 import { TermsOfServicePrivacyDialog } from '../dialog/TermsOfServicePrivacyDialog';
-import { getOpenUrlModalState } from '../../state/selectors/modal';
 import { OpenUrlModal } from '../dialog/OpenUrlModal';
+import {
+  useQuitModalState,
+  useTermsOfServicePrivacyModalState,
+} from '../../state/onboarding/selectors/modals';
+import { useOpenUrlModal } from '../../state/selectors/modal';
 
 export const ModalContainer = () => {
-  const quitModalState = useSelector(getQuitModalState);
-  const termsOfServicePrivacyModalState = useSelector(getTermsOfServicePrivacyModalState);
-  const openUrlModalState = useSelector(getOpenUrlModalState);
+  const quitModalState = useQuitModalState();
+  const termsOfServicePrivacyModalState = useTermsOfServicePrivacyModalState();
+  const openUrlModalState = useOpenUrlModal();
 
   // NOTE the order of the modals is important for the z-index
   return (
