@@ -680,6 +680,10 @@ class CompositionBoxInner extends Component<Props, State> {
       event.preventDefault();
       event.stopPropagation();
     }
+
+    if (this.state.draft.length && (event.key === 'Home' || event.key === 'End')) {
+      event.stopPropagation();
+    }
   }
 
   private getSendableText(): string {
