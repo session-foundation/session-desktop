@@ -41,15 +41,15 @@ export const OverlayChooseAction = () => {
 
   useEffect(() => {
     function handlePaste(event: ClipboardEvent) {
-      event.preventDefault();
-
       const pasted = event.clipboardData?.getData('text');
 
       if (pasted && isString(pasted) && !isEmpty(pasted)) {
         if (pasted.startsWith('http') || pasted.startsWith('https')) {
           openJoinCommunity();
+          event.preventDefault();
         } else if (pasted.startsWith('05')) {
           openNewMessage();
+          event.preventDefault();
         }
       }
     }
