@@ -69,20 +69,16 @@ const clearOurAvatar = createAsyncThunk('user/clearOurAvatar', async () => {
 
   // return early if no change are needed at all
   if (
-    isNil(convo.get('avatarPointer')) &&
+    isNil(convo.getAvatarPointer()) &&
     isNil(convo.getAvatarInProfilePath()) &&
     isNil(convo.getFallbackAvatarInProfilePath()) &&
-    isNil(convo.get('profileKey'))
+    isNil(convo.getProfileKey())
   ) {
     return;
   }
 
-  await convo.setProfileKey(undefined, false);
-
   await convo.setSessionProfile({
-    avatarPath: undefined,
-    fallbackAvatarPath: undefined,
-    avatarPointer: undefined,
+    type: 'resetAvatar',
     displayName: null,
   });
 

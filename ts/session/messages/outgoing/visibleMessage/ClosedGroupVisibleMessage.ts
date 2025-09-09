@@ -7,9 +7,9 @@ import { DataMessage } from '../DataMessage';
 import { VisibleMessage } from './VisibleMessage';
 import type { ExpirableMessageParams } from '../ExpirableMessage';
 
-interface ClosedGroupMessageParams extends ExpirableMessageParams {
+type ClosedGroupMessageParams = ExpirableMessageParams & {
   groupId: string | PubKey;
-}
+};
 
 interface ClosedGroupVisibleMessageParams
   extends Omit<

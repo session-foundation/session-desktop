@@ -942,6 +942,7 @@ async function handleNameChangeFromUI({
       identifier: msg.id,
       createAtNetworkTimestamp,
       secretKey: group.secretKey,
+      userProfile: null,
       sodium: await getSodiumRenderer(),
       ...DisappearingMessages.getExpireDetailsForOutgoingMessage(convo, createAtNetworkTimestamp),
     });
@@ -1037,6 +1038,8 @@ async function handleAvatarChangeFromUI({
 
   await convo.setSessionProfile({
     displayName: null, // null so we don't overwrite it
+    type: 'setAvatarDownloaded',
+    profileKey,
     avatarPath: upgradedMainAvatar.path,
     fallbackAvatarPath: upgradedFallbackAvatar?.path || upgradedMainAvatar.path,
     avatarPointer: fileUrl,
@@ -1066,6 +1069,7 @@ async function handleAvatarChangeFromUI({
     identifier: msg.id,
     createAtNetworkTimestamp,
     secretKey: group.secretKey,
+    userProfile: null,
     sodium: await getSodiumRenderer(),
     ...DisappearingMessages.getExpireDetailsForOutgoingMessage(convo, createAtNetworkTimestamp),
   });
@@ -1111,10 +1115,10 @@ async function handleClearAvatarFromUI({ groupPk }: WithGroupPubkey) {
 
   // return early if no change are needed at all
   if (
-    isNil(convo.get('avatarPointer')) &&
+    isNil(convo.getAvatarPointer()) &&
     isNil(convo.getAvatarInProfilePath()) &&
     isNil(convo.getFallbackAvatarInProfilePath()) &&
-    isNil(convo.get('profileKey'))
+    isNil(convo.getProfileKey())
   ) {
     return;
   }
@@ -1138,11 +1142,8 @@ async function handleClearAvatarFromUI({ groupPk }: WithGroupPubkey) {
   }
 
   await checkWeAreAdminOrThrow(groupPk, 'handleAvatarChangeFromUI');
-  await convo.setProfileKey(undefined, false);
   await convo.setSessionProfile({
-    avatarPointer: undefined,
-    avatarPath: undefined,
-    fallbackAvatarPath: undefined,
+    type: 'resetAvatar',
     displayName: null,
   });
 
@@ -1168,6 +1169,7 @@ async function handleClearAvatarFromUI({ groupPk }: WithGroupPubkey) {
     identifier: msg.id,
     createAtNetworkTimestamp,
     secretKey: group.secretKey,
+    userProfile: null,
     sodium: await getSodiumRenderer(),
     ...DisappearingMessages.getExpireDetailsForOutgoingMessage(convo, createAtNetworkTimestamp),
   });
@@ -1377,17 +1379,15 @@ const inviteResponseReceived = createAsyncThunk(
         const memberConvo = ConvoHub.use().get(member);
         if (memberConvo) {
           const memberName = memberConvo.getRealSessionUsername();
-          if (memberName) {
-            await MetaGroupWrapperActions.memberSetNameTruncated(groupPk, member, memberName);
-          }
           const profilePicUrl = memberConvo.getAvatarPointer();
           const profilePicKey = memberConvo.getProfileKey();
-          if (profilePicUrl && profilePicKey) {
-            await MetaGroupWrapperActions.memberSetProfilePicture(groupPk, member, {
-              key: from_hex(profilePicKey),
-              url: profilePicUrl,
-            });
-          }
+          await MetaGroupWrapperActions.memberSetProfileDetails(groupPk, member, {
+            name: memberName ?? '',
+            profilePicture:
+              profilePicUrl && profilePicKey
+                ? { url: profilePicUrl, key: from_hex(profilePicKey) }
+                : { url: '', key: new Uint8Array() },
+          });
         }
       } catch (eMemberUpdate) {
         window.log.warn(

@@ -173,9 +173,25 @@ export const UserConfigWrapperActions: UserConfigWrapperActionsCalls = {
     callLibSessionWorker(['UserConfig', 'setNameTruncated', name]) as Promise<
       ReturnType<UserConfigWrapperActionsCalls['setNameTruncated']>
     >,
-  setProfilePic: async (profilePic: ProfilePicture) =>
-    callLibSessionWorker(['UserConfig', 'setProfilePic', profilePic]) as Promise<
-      ReturnType<UserConfigWrapperActionsCalls['setProfilePic']>
+  setNewProfilePic: async (profilePic: ProfilePicture) =>
+    callLibSessionWorker(['UserConfig', 'setNewProfilePic', profilePic]) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['setNewProfilePic']>
+    >,
+  setUserConfig: async (details: Parameters<UserConfigWrapperActionsCalls['setUserConfig']>[0]) =>
+    callLibSessionWorker(['UserConfig', 'setUserConfig', details]) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['setUserConfig']>
+    >,
+  setReuploadProfilePic: async (profilePic: ProfilePicture) =>
+    callLibSessionWorker(['UserConfig', 'setReuploadProfilePic', profilePic]) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['setReuploadProfilePic']>
+    >,
+  getProfileUpdatedSeconds: async () =>
+    callLibSessionWorker(['UserConfig', 'getProfileUpdatedSeconds']) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['getProfileUpdatedSeconds']>
+    >,
+  getProfilePicWithKeyHex: async () =>
+    callLibSessionWorker(['UserConfig', 'getProfilePicWithKeyHex']) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['getProfilePicWithKeyHex']>
     >,
   getEnableBlindedMsgRequest: async () =>
     callLibSessionWorker(['UserConfig', 'getEnableBlindedMsgRequest']) as Promise<
@@ -682,30 +698,24 @@ export const MetaGroupWrapperActions: MetaGroupWrapperActionsCalls = {
       'memberSetInviteFailed',
       pubkeyHex,
     ]) as Promise<ReturnType<MetaGroupWrapperActionsCalls['memberSetInviteFailed']>>,
-  memberSetNameTruncated: async (groupPk: GroupPubkeyType, pubkeyHex: PubkeyType, name: string) =>
+  memberSetProfileDetails: async (
+    groupPk: GroupPubkeyType,
+    pubkeyHex: PubkeyType,
+    details: { profilePicture: ProfilePicture; name: string; profileUpdatedSeconds: number }
+  ) =>
     callLibSessionWorker([
       `MetaGroupConfig-${groupPk}`,
-      'memberSetNameTruncated',
+      'memberSetProfileDetails',
       pubkeyHex,
-      name,
-    ]) as Promise<ReturnType<MetaGroupWrapperActionsCalls['memberSetNameTruncated']>>,
+      details,
+    ]) as Promise<ReturnType<MetaGroupWrapperActionsCalls['memberSetProfileDetails']>>,
   memberSetSupplement: async (groupPk: GroupPubkeyType, pubkeyHex: PubkeyType) =>
     callLibSessionWorker([
       `MetaGroupConfig-${groupPk}`,
       'memberSetSupplement',
       pubkeyHex,
     ]) as Promise<ReturnType<MetaGroupWrapperActionsCalls['memberSetSupplement']>>,
-  memberSetProfilePicture: async (
-    groupPk: GroupPubkeyType,
-    pubkeyHex: PubkeyType,
-    profilePicture: ProfilePicture
-  ) =>
-    callLibSessionWorker([
-      `MetaGroupConfig-${groupPk}`,
-      'memberSetProfilePicture',
-      pubkeyHex,
-      profilePicture,
-    ]) as Promise<ReturnType<MetaGroupWrapperActionsCalls['memberSetProfilePicture']>>,
+
   memberResetAllSendingState: async (groupPk: GroupPubkeyType) =>
     callLibSessionWorker([`MetaGroupConfig-${groupPk}`, 'memberResetAllSendingState']) as Promise<
       ReturnType<MetaGroupWrapperActionsCalls['memberResetAllSendingState']>

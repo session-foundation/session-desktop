@@ -65,7 +65,7 @@ async function initializeLibSessionUtilWrappers() {
       continue;
     }
     window.log.debug(
-      `initializeLibSessionUtilWrappers initing from dump "${variant}", length: ${dump.data.length}: ${to_hex(dump.data)}`
+      `initializeLibSessionUtilWrappers init from dump "${variant}", length: ${dump.data.length}: ${to_hex(dump.data)}`
     );
     try {
       await UserGenericWrapperActions.init(
@@ -614,24 +614,24 @@ async function createMemberAndSetDetails({
   groupPk,
   avatarUrl,
   profileKeyHex,
+  profileUpdatedSeconds,
 }: {
   memberPubkey: PubkeyType;
   displayName: string | null;
   groupPk: GroupPubkeyType;
   profileKeyHex: string | null;
   avatarUrl: string | null;
+  profileUpdatedSeconds: number;
 }) {
   await MetaGroupWrapperActions.memberConstructAndSet(groupPk, memberPubkey);
-
-  if (displayName) {
-    await MetaGroupWrapperActions.memberSetNameTruncated(groupPk, memberPubkey, displayName);
-  }
-  if (profileKeyHex && avatarUrl) {
-    await MetaGroupWrapperActions.memberSetProfilePicture(groupPk, memberPubkey, {
-      url: avatarUrl,
-      key: from_hex(profileKeyHex),
-    });
-  }
+  await MetaGroupWrapperActions.memberSetProfileDetails(groupPk, memberPubkey, {
+    name: displayName ?? '',
+    profilePicture:
+      profileKeyHex && avatarUrl
+        ? { url: avatarUrl, key: from_hex(profileKeyHex) }
+        : { url: '', key: new Uint8Array() },
+    profileUpdatedSeconds,
+  });
 }
 
 export const LibSessionUtil = {

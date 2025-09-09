@@ -739,27 +739,23 @@ async function handleMessageRequestResponse(
     // merge fields we care by hand
     const srcConvo = convosToMerge[0];
     const profileKey = srcConvo.getProfileKey();
-    if (profileKey) {
-      await conversationToApprove.setProfileKey(fromHexToArray(profileKey));
-    }
+
     const srcAvatarPath = srcConvo.getAvatarInProfilePath();
     const srcFallbackAvatarPath = srcConvo.getFallbackAvatarInProfilePath();
     const srcAvatarPointer = srcConvo.getAvatarPointer();
-    const avatarPartToMerge =
-      srcAvatarPath && srcFallbackAvatarPath && srcAvatarPointer
+    const avatarChanges =
+      srcAvatarPath && srcFallbackAvatarPath && srcAvatarPointer && profileKey
         ? {
+            type: 'setAvatarDownloaded' as const,
             avatarPath: srcAvatarPath,
             fallbackAvatarPath: srcFallbackAvatarPath,
             avatarPointer: srcAvatarPointer,
+            profileKey,
           }
-        : {
-            avatarPath: undefined,
-            fallbackAvatarPath: undefined,
-            avatarPointer: undefined,
-          };
+        : { type: 'resetAvatar' as const };
     await conversationToApprove.setSessionProfile({
       displayName: srcConvo.getRealSessionUsername(),
-      ...avatarPartToMerge,
+      ...avatarChanges,
     });
     await conversationToApprove.setIsApproved(convosToMerge[0].isApproved(), false);
     // nickname might be set already in conversationToApprove, so don't overwrite it

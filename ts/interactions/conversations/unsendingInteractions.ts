@@ -85,6 +85,7 @@ export async function unsendMessagesForEveryoneGroupV2({
       messageHashes: messageHashesToUnsend,
       sodium: await getSodiumRenderer(),
       secretKey: group?.secretKey || undefined,
+      userProfile: null,
     }),
   });
 }

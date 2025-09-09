@@ -2,9 +2,9 @@ import { isEmpty, isNil } from 'lodash';
 import { ConvoHub } from '../conversations';
 import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { SyncUtils, UserUtils } from '../utils';
-import { toHex, trimWhitespace } from '../utils/String';
+import { fromHexToArray, toHex, trimWhitespace } from '../utils/String';
 import { AvatarDownload } from '../utils/job_runners/jobs/AvatarDownloadJob';
-import { ConversationTypeEnum } from '../../models/types';
+import { CONVERSATION_PRIORITIES, ConversationTypeEnum } from '../../models/types';
 import { RetrieveDisplayNameError } from '../utils/errors';
 
 export type Profile = {
@@ -58,7 +58,7 @@ async function updateProfileOfContact(
   const profileKeyHex = !profileKey || isEmpty(profileKey) ? null : toHex(profileKey);
 
   let avatarChanged = false;
-  // trust whatever we get as an update. It either comes from a shared config wrapper or one of that user's message. But in any case we should trust it, even if it gets resetted.
+  // trust whatever we get as an update. It either comes from a shared config wrapper or one of that user's message. But in any case we should trust it, even if it gets reset.
   const prevPointer = conversation.getAvatarPointer();
   const prevProfileKey = conversation.getProfileKey();
 
@@ -66,11 +66,20 @@ async function updateProfileOfContact(
   // database and wrapper (and we do not want to override anything in the wrapper's content
   // with what we have locally, so we need the commit to have already the right values in pointer and profileKey)
   if (prevPointer !== profileUrl || prevProfileKey !== profileKeyHex) {
-    conversation.setAvatarPointer(profileUrl || undefined);
-    await conversation.setProfileKey(profileKey || undefined);
+    if (profileUrl && profileKeyHex) {
+      avatarChanged = await conversation.setSessionProfile({
+        type: 'setAvatarBeforeDownload',
+        profileKey: profileKeyHex,
+        avatarPointer: profileUrl,
+      });
+    } else {
+      avatarChanged = await conversation.setSessionProfile({
+        type: 'resetAvatar',
+      });
+    }
 
     // if the avatar data we had before is not the same of what we received, we need to schedule a new avatar download job.
-    avatarChanged = true; // allow changes from strings to null/undefined to trigger a AvatarDownloadJob. If that happens, we want to remove the local attachment file.
+    // allow changes from strings to null/undefined to trigger a AvatarDownloadJob. If that happens, we want to remove the local attachment file.
   }
 
   // if we have a local path to a downloaded avatar, but no corresponding url/key for it, it means that
@@ -79,12 +88,8 @@ async function updateProfileOfContact(
     (!profileUrl || !profileKeyHex) &&
     (conversation.getAvatarInProfilePath() || conversation.getFallbackAvatarInProfilePath())
   ) {
-    await conversation.setProfileKey(undefined, false);
-
     await conversation.setSessionProfile({
-      avatarPointer: undefined,
-      avatarPath: undefined,
-      fallbackAvatarPath: undefined,
+      type: 'resetAvatar',
       displayName: null,
     });
     changes = true;
@@ -137,11 +142,11 @@ async function updateOurProfileDisplayName(newName: string) {
     ConversationTypeEnum.PRIVATE
   );
 
-  const dbProfileUrl = conversation.get('avatarPointer');
-  const dbProfileKey = conversation.get('profileKey')
-    ? fromHexToArray(conversation.get('profileKey')!)
+  const dbProfileUrl = conversation.getAvatarPointer();
+  const dbProfileKey = conversation.getProfileKey()
+    ? fromHexToArray(conversation.getProfileKey()!)
     : null;
-  const dbPriority = conversation.get('priority') || CONVERSATION_PRIORITIES.default;
+  const dbPriority = conversation.getPriority() || CONVERSATION_PRIORITIES.default;
 
   // we don't want to throw if somehow our display name in the DB is too long here, so we use the truncated version.
   await UserConfigWrapperActions.setNameTruncated(trimWhitespace(newName));
@@ -151,9 +156,9 @@ async function updateOurProfileDisplayName(newName: string) {
   }
   await UserConfigWrapperActions.setPriority(dbPriority);
   if (dbProfileUrl && !isEmpty(dbProfileKey)) {
-    await UserConfigWrapperActions.setProfilePic({ key: dbProfileKey, url: dbProfileUrl });
+    await UserConfigWrapperActions.setNewProfilePic({ key: dbProfileKey, url: dbProfileUrl });
   } else {
-    await UserConfigWrapperActions.setProfilePic({ key: null, url: null });
+    await UserConfigWrapperActions.setNewProfilePic({ key: null, url: null });
   }
 
   conversation.setSessionDisplayNameNoCommit(truncatedName);

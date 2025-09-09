@@ -1,5 +1,5 @@
 /* eslint-disable no-await-in-loop */
-import { ContactInfo, GroupPubkeyType, UserGroupsGet } from 'libsession_util_nodejs';
+import { ContactInfoGet, GroupPubkeyType, UserGroupsGet } from 'libsession_util_nodejs';
 import { compact, difference, isEmpty, isNil, isNumber } from 'lodash';
 import { ConfigDumpData } from '../data/configDump/configDump';
 import { SettingsKey } from '../data/settings-key';
@@ -289,7 +289,7 @@ async function handleUserProfileUpdate(result: IncomingUserResult): Promise<void
   }
 }
 
-function getContactsToRemoveFromDB(contactsInWrapper: Array<ContactInfo>) {
+function getContactsToRemoveFromDB(contactsInWrapper: Array<ContactInfoGet>) {
   const allContactsInDBWhichShouldBeInWrapperIds = ConvoHub.use()
     .getConversations()
     .filter(SessionUtilContact.isContactToStoreInWrapper)

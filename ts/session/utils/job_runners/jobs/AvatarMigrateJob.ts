@@ -108,6 +108,11 @@ class AvatarMigrateJob extends PersistedJob<AvatarMigratePersistedData> {
       window.log.warn('AvatarMigrateJob: no avatar pointer found for conversation');
       return RunJobResult.Success;
     }
+    const existingProfileKeyHex = conversation.getProfileKey();
+    if (!existingProfileKeyHex) {
+      window.log.warn('AvatarMigrateJob: no profileKey found for conversation');
+      return RunJobResult.Success;
+    }
     const avatarPath = conversation.getAvatarInProfilePath();
     if (!avatarPath) {
       window.log.warn('AvatarMigrateJob: no avatar path found for conversation');
@@ -125,9 +130,7 @@ class AvatarMigrateJob extends PersistedJob<AvatarMigratePersistedData> {
       if (!decryptedData) {
         await conversation.setSessionProfile({
           displayName: null, // null to not update the display name.
-          avatarPath: undefined,
-          fallbackAvatarPath: undefined,
-          avatarPointer: undefined,
+          type: 'resetAvatar',
         });
         return RunJobResult.Success;
       }
@@ -154,6 +157,8 @@ class AvatarMigrateJob extends PersistedJob<AvatarMigratePersistedData> {
         avatarPath: mainAvatarPath,
         fallbackAvatarPath,
         avatarPointer: existingAvatarPointer,
+        type: 'setAvatarDownloaded',
+        profileKey: existingProfileKeyHex,
       });
 
       return RunJobResult.Success;
@@ -170,9 +175,7 @@ class AvatarMigrateJob extends PersistedJob<AvatarMigratePersistedData> {
         // there is no valid avatar to download, make sure the local file of the avatar of that user is removed
         await conversation.setSessionProfile({
           displayName: null, // null to not update the display name.
-          avatarPath: undefined,
-          fallbackAvatarPath: undefined,
-          avatarPointer: undefined,
+          type: 'resetAvatar',
         });
       }
       return RunJobResult.RetryJobIfPossible;

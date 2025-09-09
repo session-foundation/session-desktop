@@ -704,11 +704,13 @@ async function leaveClosedGroup(groupPk: GroupPubkeyType, fromSyncMessage: boole
     groupPk,
     expirationType: 'unknown', // we keep that one **not** expiring
     expireTimer: 0,
+    userProfile: null,
   });
 
   const ourLeavingNotificationMessage = new GroupUpdateMemberLeftNotificationMessage({
     createAtNetworkTimestamp,
     groupPk,
+    userProfile: null,
     ...DisappearingMessages.getExpireDetailsForOutgoingMessage(convo, createAtNetworkTimestamp), // this one should be expiring with the convo expiring details
   });
 

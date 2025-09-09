@@ -8,7 +8,7 @@ import {
   MetaGroupWrapperActions,
   UserGroupsWrapperActions,
 } from '../../../../webworker/workers/browser/libsession_worker_interface';
-import { ed25519Str, fromBase64ToArray, fromHexToArray, toHex } from '../../../utils/String';
+import { ed25519Str, fromBase64ToArray, toHex } from '../../../utils/String';
 import { GroupPendingRemovals } from '../../../utils/job_runners/jobs/GroupPendingRemovalsJob';
 import { LibSessionUtil } from '../../../utils/libsession/libsession_utils';
 import { SnodeNamespaces } from '../namespaces';
@@ -279,11 +279,8 @@ async function scheduleAvatarDownloadJobIfNeeded(groupPk: GroupPubkeyType) {
     if (!profileUrl || !profileKeyHex) {
       // no avatar set for this group: make sure we also remove the one we might have locally.
       if (conversation.getAvatarPointer() || conversation.getProfileKey()) {
-        await conversation.setProfileKey(undefined, false);
         await conversation.setSessionProfile({
-          avatarPointer: undefined,
-          avatarPath: undefined,
-          fallbackAvatarPath: undefined,
+          type: 'resetAvatar',
           displayName: null,
         });
       }
@@ -297,8 +294,11 @@ async function scheduleAvatarDownloadJobIfNeeded(groupPk: GroupPubkeyType) {
 
     if (prevPointer !== profileUrl || prevProfileKey !== profileKeyHex) {
       // set the avatar for this group, it will be downloaded by the job scheduled below
-      await conversation.setProfileKey(fromHexToArray(profileKeyHex), false);
-      conversation.setAvatarPointer(profileUrl || undefined);
+      await conversation.setSessionProfile({
+        type: 'setAvatarBeforeDownload',
+        profileKey: profileKeyHex,
+        avatarPointer: profileUrl,
+      });
       await conversation.commit();
 
       // if the avatar data we had before is not the same of what we received, we need to schedule a new avatar download job.

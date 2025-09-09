@@ -179,18 +179,6 @@ function handleLinkPreviews(messageBody: string, messagePreview: any, message: M
   message.setPreview(preview);
 }
 
-async function processProfileKeyNoCommit(
-  conversation: ConversationModel,
-  sendingDeviceConversation: ConversationModel,
-  profileKeyBuffer?: Uint8Array
-) {
-  if (conversation.isPrivate()) {
-    await conversation.setProfileKey(profileKeyBuffer, false);
-  } else {
-    await sendingDeviceConversation.setProfileKey(profileKeyBuffer, false);
-  }
-}
-
 export type RegularMessageType = Pick<
   SignalService.DataMessage,
   | 'attachments'
@@ -360,14 +348,6 @@ async function handleRegularMessage(
 
     // a new message was received for that conversation. If it was not it should not be hidden anymore
     await conversation.unhideIfNeeded(false);
-  }
-
-  if (rawDataMessage.profileKey) {
-    await processProfileKeyNoCommit(
-      conversation,
-      sendingDeviceConversation,
-      rawDataMessage.profileKey
-    );
   }
 
   // we just received a message from that user so we reset the typing indicator for this convo

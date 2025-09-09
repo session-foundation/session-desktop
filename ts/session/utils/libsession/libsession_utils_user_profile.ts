@@ -57,8 +57,7 @@ async function insertUserProfileIntoWrapper(convoId: string) {
 
 function isUserProfileToStoreInWrapper(convoId: string) {
   try {
-    const us = UserUtils.getOurPubKeyStrFromCache();
-    return convoId === us;
+    return convoId === UserUtils.getOurPubKeyStrFromCache();
   } catch (e) {
     return false;
   }

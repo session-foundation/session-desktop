@@ -1,5 +1,5 @@
 import autoBind from 'auto-bind';
-import { from_hex } from 'libsodium-wrappers-sumo';
+import { from_hex, to_hex } from 'libsodium-wrappers-sumo';
 import {
   debounce,
   includes,
@@ -39,7 +39,7 @@ import {
   VisibleMessageParams,
 } from '../session/messages/outgoing/visibleMessage/VisibleMessage';
 import { perfEnd, perfStart } from '../session/utils/Performance';
-import { ed25519Str, toHex } from '../session/utils/String';
+import { ed25519Str } from '../session/utils/String';
 import { createTaskWithTimeout } from '../session/utils/TaskWithTimeout';
 import {
   actions as conversationActions,
@@ -76,7 +76,6 @@ import {
 import { SessionUtilContact } from '../session/utils/libsession/libsession_utils_contacts';
 import { SessionUtilConvoInfoVolatile } from '../session/utils/libsession/libsession_utils_convo_info_volatile';
 import { SessionUtilUserGroups } from '../session/utils/libsession/libsession_utils_user_groups';
-import { getOurProfile } from '../session/utils/User';
 import {
   deleteExternalFilesOfConversation,
   getAbsoluteAttachmentPath,
@@ -96,6 +95,7 @@ import { Storage } from '../util/storage';
 import {
   ConversationAttributes,
   ConversationNotificationSetting,
+  ConvoTypeNarrow,
   fillConvoAttributesWithDefaults,
   isDirectConversation,
   isOpenOrClosedGroup,
@@ -254,28 +254,32 @@ export class ConversationModel extends Model<ConversationAttributes> {
     );
   }
 
-  private getConvoType() {
+  private getConvoType(): ConvoTypeNarrow {
     if (this.isMe()) {
-      return 'nts';
+      return ConvoTypeNarrow.nts;
+    }
+    // a blinded contact we are not chatting to directly, but they are blinded
+    if (this.isPrivateAndBlinded() && !this.isApproved() && !this.didApproveMe()) {
+      return ConvoTypeNarrow.blindedAcquaintance;
     }
     if (this.isPrivateAndBlinded()) {
-      return 'blinded';
+      return ConvoTypeNarrow.blindedContact;
     }
     if (this.isPrivate() && !this.isApproved() && !this.didApproveMe()) {
       // i.e. a user we have not directly talk to, but through a group/community only
-      return 'privateAcquaintance';
+      return ConvoTypeNarrow.privateAcquaintance;
     }
     if (this.isPrivate()) {
-      return 'contact';
+      return ConvoTypeNarrow.contact;
     }
     if (this.isPublic()) {
-      return 'community';
+      return ConvoTypeNarrow.community;
     }
     if (this.isClosedGroup() && !this.isClosedGroupV2()) {
-      return 'legacyGroup';
+      return ConvoTypeNarrow.legacyGroup;
     }
     if (this.isClosedGroupV2()) {
-      return 'group';
+      return ConvoTypeNarrow.group;
     }
     throw new Error(
       `getConvoType: can't determine the type of the conversation for ${ed25519Str(this.id)}`
@@ -680,7 +684,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
         // we need to use a new timestamp here, otherwise android&iOS will consider this message as a duplicate and drop the synced reaction
         createAtNetworkTimestamp: NetworkTime.now(),
         reaction,
-        lokiProfile: UserUtils.getOurProfile(),
+        userProfile: await UserUtils.getOurProfile(),
         expirationType,
         expireTimer,
       };
@@ -846,7 +850,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
     const messageRequestResponseParams: MessageRequestResponseParams = {
       createAtNetworkTimestamp: NetworkTime.now(),
-      lokiProfile: UserUtils.getOurProfile(),
+      userProfile: await UserUtils.getOurProfile(),
     };
 
     const messageRequestResponse = new MessageRequestResponse(messageRequestResponseParams);
@@ -1029,17 +1033,18 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
     const convoType = this.getConvoType();
     switch (convoType) {
-      case 'blinded':
-      case 'privateAcquaintance':
-      case 'community':
-      case 'legacyGroup':
+      case ConvoTypeNarrow.blindedAcquaintance:
+      case ConvoTypeNarrow.blindedContact:
+      case ConvoTypeNarrow.privateAcquaintance:
+      case ConvoTypeNarrow.community:
+      case ConvoTypeNarrow.legacyGroup:
         // all of the above do not support expiration timer
         break;
-      case 'nts':
+      case ConvoTypeNarrow.nts:
         await UserConfigWrapperActions.setNoteToSelfExpiry(expireTimer);
         break;
-      case 'contact':
-      case 'group':
+      case ConvoTypeNarrow.contact:
+      case ConvoTypeNarrow.group:
         // TODO add cases here for groups/contacts to handle the other cases
         break;
       default:
@@ -1204,6 +1209,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
             sodium: await getSodiumRenderer(),
             secretKey: group.secretKey,
             updatedExpirationSeconds: expireUpdate.expireTimer,
+            userProfile: null,
           });
 
           const extraStoreRequests = await StoreGroupRequestFactory.makeGroupMessageSubRequest(
@@ -1409,64 +1415,107 @@ export class ConversationModel extends Model<ConversationAttributes> {
   public async setSessionProfile(
     newProfile: { displayName?: string | null } & (
       | {
-          avatarPath: undefined;
-          fallbackAvatarPath: undefined;
-          avatarPointer: undefined;
+          type: 'resetAvatar';
         }
       | {
+          type: 'setAvatarBeforeDownload';
+          avatarPointer: string;
+          profileKey: Uint8Array | string;
+        }
+      | {
+          type: 'setAvatarDownloaded';
           avatarPath: string;
           fallbackAvatarPath: string;
           avatarPointer: string;
+          profileKey: Uint8Array | string;
         }
     )
   ) {
-    let changes = false;
+    let changed = false;
 
     const existingSessionName = this.getRealSessionUsername();
     if (newProfile.displayName !== existingSessionName && newProfile.displayName) {
       this.set({
         displayNameInProfile: newProfile.displayName,
       });
-      changes = true;
+      changed = true;
     }
 
-    if (newProfile.avatarPath && newProfile.fallbackAvatarPath) {
-      const originalAvatar = this.getAvatarInProfilePath();
-      const originalFallbackAvatar = this.getFallbackAvatarInProfilePath();
-
-      if (!isEqual(originalAvatar, newProfile.avatarPath)) {
-        this.set({ avatarInProfile: newProfile.avatarPath });
-        changes = true;
-      }
-      if (!isEqual(originalFallbackAvatar, newProfile.fallbackAvatarPath)) {
-        this.set({ fallbackAvatarInProfile: newProfile.fallbackAvatarPath });
-        changes = true;
-      }
-      const existingAvatarPointer = this.getAvatarPointer();
-
-      if (existingAvatarPointer !== newProfile.avatarPointer) {
-        this.set({ avatarPointer: newProfile.avatarPointer });
-        changes = true;
-      }
-    } else {
+    if (newProfile.type === 'resetAvatar') {
       if (
         this.getAvatarInProfilePath() ||
         this.getFallbackAvatarInProfilePath() ||
-        this.getAvatarPointer()
+        this.getAvatarPointer() ||
+        this.getProfileKey()
       ) {
-        changes = true;
+        this.set({
+          avatarInProfile: undefined,
+          avatarPointer: undefined,
+          profileKey: undefined,
+          fallbackAvatarInProfile: undefined,
+        });
+        changed = true;
       }
-      this.set({
-        avatarInProfile: undefined,
-        avatarPointer: undefined,
-        profileKey: undefined,
-        fallbackAvatarInProfile: undefined,
-      });
+      if (changed) {
+        await this.commit();
+      }
+      return changed;
     }
 
-    if (changes) {
+    const newProfileKeyHex = isString(newProfile.profileKey)
+      ? newProfile.profileKey
+      : to_hex(newProfile.profileKey);
+
+    const existingAvatarPointer = this.getAvatarPointer();
+    const existingProfileKeyHex = this.getProfileKey();
+
+    if (newProfile.type === 'setAvatarBeforeDownload') {
+      // if no changes are needed, return early
+      if (
+        isEqual(existingAvatarPointer, newProfile.avatarPointer) &&
+        isEqual(existingProfileKeyHex, newProfileKeyHex)
+      ) {
+        if (changed) {
+          await this.commit();
+        }
+        return changed;
+      }
+      this.set({ avatarPointer: newProfile.avatarPointer, profileKey: newProfileKeyHex });
+
       await this.commit();
+
+      return true;
     }
+
+    if (newProfile.type !== 'setAvatarDownloaded') {
+      throw new Error('setSessionProfile: invalid type for avatar action');
+    }
+
+    const originalAvatar = this.getAvatarInProfilePath();
+    const originalFallbackAvatar = this.getFallbackAvatarInProfilePath();
+
+    // if no changes are needed, return early
+    if (
+      isEqual(originalAvatar, newProfile.avatarPath) &&
+      isEqual(originalFallbackAvatar, newProfile.fallbackAvatarPath) &&
+      isEqual(existingAvatarPointer, newProfile.avatarPointer) &&
+      isEqual(existingProfileKeyHex, newProfileKeyHex)
+    ) {
+      if (changed) {
+        await this.commit();
+      }
+      return changed;
+    }
+
+    this.set({
+      avatarPointer: newProfile.avatarPointer,
+      avatarInProfile: newProfile.avatarPath,
+      fallbackAvatarInProfile: newProfile.fallbackAvatarPath,
+      profileKey: newProfileKeyHex,
+    });
+
+    await this.commit();
+    return true;
   }
 
   public getIsTrustedForAttachmentDownload() {
@@ -1660,17 +1709,18 @@ export class ConversationModel extends Model<ConversationAttributes> {
   public async setHidden(shouldCommit: boolean = true) {
     const convoType = this.getConvoType();
     switch (convoType) {
-      case 'blinded':
-      case 'privateAcquaintance':
-      case 'community':
-      case 'legacyGroup':
-      case 'group':
+      case ConvoTypeNarrow.blindedAcquaintance:
+      case ConvoTypeNarrow.blindedContact:
+      case ConvoTypeNarrow.privateAcquaintance:
+      case ConvoTypeNarrow.community:
+      case ConvoTypeNarrow.legacyGroup:
+      case ConvoTypeNarrow.group:
         // all of the above do not support being hidden (only removed)
         break;
-      case 'nts':
+      case ConvoTypeNarrow.nts:
         await UserConfigWrapperActions.setPriority(CONVERSATION_PRIORITIES.hidden);
         break;
-      case 'contact':
+      case ConvoTypeNarrow.contact:
         // TODO add cases here for contacts to handle the other cases
         break;
       default:
@@ -1919,25 +1969,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
     // only trigger a write to the db if a change is detected
     if (hasChange) {
       await this.commit();
-    }
-  }
-
-  /**
-   * profileKey MUST be a if set, a Uint8array that can be converted to a hex string
-   * as we store profileKeys as hex in the DB
-   */
-  public async setProfileKey(profileKey?: Uint8Array, shouldCommit = true) {
-    const profileKeyHex = toHex(profileKey ?? new Uint8Array());
-
-    // profileKey is a string so we can compare it directly
-    if (this.getProfileKey() !== profileKeyHex) {
-      this.set({
-        profileKey: profileKeyHex,
-      });
-
-      if (shouldCommit) {
-        await this.commit();
-      }
     }
   }
 
@@ -2292,7 +2323,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
         expireTimer: message.getExpireTimerSeconds(),
         preview: preview ? [preview] : [],
         quote,
-        lokiProfile: UserUtils.getOurProfile(),
+        userProfile: await UserUtils.getOurProfile(),
       };
 
       if (PubKey.isBlinded(this.id)) {
@@ -2420,7 +2451,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
     // include our profile (displayName + avatar url + key for the recipient)
     // eslint-disable-next-line no-param-reassign
-    messageParams.lokiProfile = getOurProfile();
+    messageParams.userProfile = await UserUtils.getOurProfile();
 
     if (!ourSignKeyBytes || !groupUrl) {
       window?.log?.error(

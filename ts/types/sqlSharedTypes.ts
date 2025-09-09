@@ -16,7 +16,7 @@ import { ConfigWrapperObjectTypesMeta } from '../webworker/workers/browser/libse
 import { OpenGroupRequestCommonType, OpenGroupV2Room } from '../data/types';
 
 /**
- * This wrapper can be used to make a function type not async, asynced.
+ * This wrapper can be used to make a function type not async, async.
  * We use it in the typing of the database communication, because the data calls (renderer side) have essentially the same signature of the sql calls (node side), with an added `await`
  */
 export type AsyncWrapper<T extends (...args: any) => any> = (
@@ -56,7 +56,7 @@ export type ConfigDumpRowWithoutData = Pick<ConfigDumpRow, 'publicKey' | 'varian
 
 export const CONFIG_DUMP_TABLE = 'configDump';
 
-// ========== configdump
+// ========== config dump
 
 export type ConfigDumpDataNode = {
   getByVariantAndPubkey: (

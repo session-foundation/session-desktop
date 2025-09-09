@@ -171,10 +171,12 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
         }
 
         await conversation.setSessionProfile({
+          type: 'setAvatarDownloaded',
           displayName: null, // null to not update the display name.
           avatarPath: mainAvatarPath,
           fallbackAvatarPath,
           avatarPointer: toDownloadPointer,
+          profileKey: toDownloadProfileKey,
         });
 
         changes = true;
@@ -198,9 +200,7 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
       // there is no valid avatar to download, make sure the local file of the avatar of that user is removed
       await conversation.setSessionProfile({
         displayName: null, // null to not update the display name
-        avatarPointer: undefined,
-        avatarPath: undefined,
-        fallbackAvatarPath: undefined,
+        type: 'resetAvatar',
       });
       changes = true;
     }

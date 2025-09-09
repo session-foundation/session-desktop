@@ -108,8 +108,6 @@ export async function uploadAndSetOurAvatarShared({
 
   const displayName = ourConvo.getRealSessionUsername();
 
-  // write the profileKey even if it did not change
-  await ourConvo.setProfileKey(profileKey);
   // Replace our temporary image with the attachment pointer from the server.
   // Note: this commits already to the DB.
   await ourConvo.setSessionProfile({
@@ -117,6 +115,8 @@ export async function uploadAndSetOurAvatarShared({
     fallbackAvatarPath: processedFallbackAvatar?.path || savedMainAvatar.path,
     displayName,
     avatarPointer: fileUrl,
+    type: 'setAvatarDownloaded',
+    profileKey,
   });
   await Storage.put(SettingsKey.ntsAvatarExpiryMs, expiresMs);
 

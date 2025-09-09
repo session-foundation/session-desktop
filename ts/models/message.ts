@@ -903,7 +903,7 @@ export class MessageModel extends Model<MessageAttributes> {
         const openGroupParams: OpenGroupVisibleMessageParams = {
           identifier: this.id,
           createAtNetworkTimestamp: NetworkTime.now(),
-          lokiProfile: UserUtils.getOurProfile(),
+          userProfile: await UserUtils.getOurProfile(),
           body,
           attachments,
           preview: preview ? [preview] : [],
@@ -934,15 +934,12 @@ export class MessageModel extends Model<MessageAttributes> {
         attachments,
         preview: preview ? [preview] : [],
         quote,
-        lokiProfile: UserUtils.getOurProfile(),
+        userProfile: await UserUtils.getOurProfile(),
         // Note: we should have the fields set on that object when we've added it to the DB.
         // We don't want to reuse the conversation setting, as it might change since this message was sent.
         expirationType: this.getExpirationType() || 'unknown',
         expireTimer: this.getExpireTimerSeconds(),
       };
-      if (!chatParams.lokiProfile) {
-        delete chatParams.lokiProfile;
-      }
 
       const chatMessage = new VisibleMessage(chatParams);
 

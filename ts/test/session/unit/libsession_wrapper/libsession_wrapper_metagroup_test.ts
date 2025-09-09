@@ -27,6 +27,7 @@ function emptyMember(pubkeyHex: PubkeyType): GroupMemberGet {
     nominatedAdmin: false,
     pubkeyHex,
     supplement: false,
+    profileUpdatedSeconds: 0,
   };
 }
 
@@ -284,7 +285,12 @@ describe('libsession_metagroup', () => {
 
     it('can add via name set', () => {
       metaGroupWrapper.memberConstructAndSet(member);
-      metaGroupWrapper.memberSetNameTruncated(member, 'member name');
+
+      metaGroupWrapper.memberSetProfileDetails(member, {
+        profilePicture: { key: new Uint8Array(), url: '' },
+        name: 'member name',
+        profileUpdatedSeconds: 1,
+      });
       expect(metaGroupWrapper.memberGetAll().length).to.be.deep.eq(1);
       expect(metaGroupWrapper.memberGetAll()[0]).to.be.deep.eq({
         ...emptyMember(member),
@@ -296,7 +302,11 @@ describe('libsession_metagroup', () => {
     it('can add via profile picture set', () => {
       const pic = profilePicture();
       metaGroupWrapper.memberConstructAndSet(member);
-      metaGroupWrapper.memberSetProfilePicture(member, pic);
+      metaGroupWrapper.memberSetProfileDetails(member, {
+        profilePicture: pic,
+        name: '',
+        profileUpdatedSeconds: 1,
+      });
       expect(metaGroupWrapper.memberGetAll().length).to.be.deep.eq(1);
       const expected = {
         ...emptyMember(member),

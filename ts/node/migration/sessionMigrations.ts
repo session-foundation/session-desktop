@@ -1347,9 +1347,9 @@ function updateToSessionSchemaVersion31(currentVersion: number, db: BetterSqlite
       userProfileWrapper.setNameTruncated(ourDbName);
       userProfileWrapper.setPriority(ourConvoPriority);
       if (ourDbProfileUrl && !isEmpty(ourDbProfileKey)) {
-        userProfileWrapper.setProfilePic({ key: ourDbProfileKey, url: ourDbProfileUrl });
+        userProfileWrapper.setNewProfilePic({ key: ourDbProfileKey, url: ourDbProfileUrl });
       } else {
-        userProfileWrapper.setProfilePic({ key: null, url: null });
+        userProfileWrapper.setNewProfilePic({ key: null, url: null });
       }
 
       MIGRATION_HELPERS.V31.insertContactIntoContactWrapper(

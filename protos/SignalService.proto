@@ -200,6 +200,12 @@ message DataMessage {
   message LokiProfile {
     optional string displayName = 1;
     optional string profilePicture = 2;
+    /**
+     * The timestamp of the last profile update.
+     * This is used to prioritize the correct profile info based on multiple and outdated incoming messages.
+     Note: this is in milliseconds.
+     */
+    optional uint64 lastProfileUpdateMs = 3;
   }
 
   message OpenGroupInvitation {

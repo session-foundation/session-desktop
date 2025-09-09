@@ -166,3 +166,48 @@ export const READ_MESSAGE_STATE = {
   unread: 1,
   read: 0,
 } as const;
+
+export enum ConvoTypeNarrow {
+  /**
+   * Our own conversation.
+   * Those details needs to be stored in libsession's nts config (UserProfile).
+   */
+  nts = 'nts',
+  /**
+   * A blinded acquaintance is a user we are **not** chatting to directly (i.e. not approved nor didApproveMe),
+   * but they are blinded.
+   * This could be any user of a blinded community to which we have not sent a message request, and they did not either.
+   * Those are not saved in libsession currently.
+   */
+  blindedAcquaintance = 'blindedAcquaintance',
+  /**
+   * A blinded contact is a user we have sent a message request through a blinded community.
+   * Those are not saved in libsession currently, but libsession could store them for us.
+   */
+  blindedContact = 'blindedContact',
+  /**
+   * A non-blinded user we have not directly talk to, but through a group/(unblinded) community only.
+   * They could just be members of a group we are part of.
+   * Those are not saved in libsession's contact, but as group members in MetaGroup if we know them through a group.
+   * If we know them through a community, they are not saved in libsession at all currently..
+   */
+  privateAcquaintance = 'privateAcquaintance',
+  /**
+   * This is a contact that we have approved, or they sent us a message request.
+   * We could be friends with them, if both flags are true.
+   * This contact must be stored in the contacts config.
+   */
+  contact = 'contact',
+  /**
+   * This conversation is a community. It must be stored in the libsession's community config.
+   */
+  community = 'community',
+  /**
+   * Those are legacy groups. i.e. private groups that start with 05.
+   */
+  legacyGroup = 'legacyGroup',
+  /**
+   * Those are 03-groups. i.e. private groups that start with 03.
+   */
+  group = 'group',
+}
