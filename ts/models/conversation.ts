@@ -149,6 +149,7 @@ import type {
   ConversationInteractionType,
 } from '../interactions/types';
 import type { LastMessageStatusType } from '../state/ducks/types';
+import { OutgoingUserProfile } from '../types/message';
 
 type InMemoryConvoInfos = {
   mentionedUs: boolean;
@@ -1596,12 +1597,57 @@ export class ConversationModel extends Model<ConversationAttributes> {
     return this.isPrivate() ? this.get('nickname') || undefined : undefined;
   }
 
+  /**
+   * Returns the profile key attributes of this instance.
+   * If the attribute is unset, empty, or not a string, returns `undefined`.
+   */
   public getProfileKey(): string | undefined {
-    return this.get('profileKey');
+    const profileKey = this.get('profileKey');
+    if (!profileKey || !isString(profileKey)) {
+      return undefined;
+    }
+    return profileKey;
   }
 
   public getAvatarPointer(): string | undefined {
     return this.get('avatarPointer');
+  }
+
+  public getProfileUpdatedSeconds() {
+    if (!this.isPrivate()) {
+      throw new Error('Cannot call profileUpdatedSeconds for a non private conversation');
+    }
+    const profileUpdatedSeconds = this.get('profileUpdatedSeconds');
+    if (
+      !isNumber(profileUpdatedSeconds) ||
+      !isFinite(profileUpdatedSeconds) ||
+      profileUpdatedSeconds < 0
+    ) {
+      return 0;
+    }
+
+    return profileUpdatedSeconds;
+  }
+
+  /**
+   * A private profile can have name and profileUpdatedSeconds unset,
+   * but it must have both profilePicture and profileKey set for it to be returned
+   */
+  public getPrivateProfileDetails(): OutgoingUserProfile {
+    if (!this.isPrivate()) {
+      throw new Error('getPrivateProfileDetails can only be called on private conversations');
+    }
+    const avatarPointer = this.getAvatarPointer() ?? null;
+    const displayName = this.getRealSessionUsername() ?? '';
+    const profileKey = this.getProfileKey() ?? null;
+    const updatedAtSeconds = this.getProfileUpdatedSeconds();
+
+    return new OutgoingUserProfile({
+      avatarPointer,
+      displayName,
+      profileKey,
+      updatedAtSeconds,
+    });
   }
 
   public setAvatarPointer(avatarPointer: string | undefined) {

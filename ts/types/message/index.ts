@@ -15,9 +15,12 @@ function extractPicDetailsFromUrl(src: string | null): ProfilePicture {
   }
   const url = urlParts[0];
   const key = urlParts[1];
+
+  // throwing here, as if src is not empty we expect a key to be set
   if (!isEmpty(key) && !isString(key)) {
     throw new Error('extractPicDetailsFromUrl: profileKey is set but not a string');
   }
+  // throwing here, as if src is not empty we expect an url to be set
   if (!isEmpty(url) && !isString(url)) {
     throw new Error('extractPicDetailsFromUrl: avatarPointer is set but not a string');
   }
@@ -46,7 +49,7 @@ class OutgoingUserProfile {
     updatedAtSeconds: number;
   } & (
     | { picUrlWithProfileKey: string | null }
-    | { profileKey: Uint8Array | null; avatarPointer: string | null }
+    | { profileKey: Uint8Array | string | null; avatarPointer: string | null }
   )) {
     if (!isString(displayName)) {
       throw new Error('displayName is not a string');
@@ -80,16 +83,21 @@ class OutgoingUserProfile {
   }
 
   private initFromPicDetails({
-    profileKey,
+    profileKey: profileKeyIn,
     avatarPointer,
   }: {
-    profileKey: Uint8Array | null;
+    profileKey: Uint8Array | string | null;
     avatarPointer: string | null;
   }) {
-    if (!profileKey && !avatarPointer) {
+    if (!profileKeyIn && !avatarPointer) {
       this.picUrlWithProfileKey = null;
       return;
     }
+    if (profileKeyIn && !isString(profileKeyIn) && !isTypedArray(profileKeyIn)) {
+      throw new Error('profileKey must be a string or a Uint8Array if set');
+    }
+    // check if the profileKey is a string, and if so, convert it to a Uint8Array
+    const profileKey = isString(profileKeyIn) ? from_hex(profileKeyIn) : profileKeyIn;
     if (
       !profileKey ||
       isEmpty(profileKey) ||

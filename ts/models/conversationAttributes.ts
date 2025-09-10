@@ -92,21 +92,37 @@ export interface ConversationAttributes {
 
   displayNameInProfile?: string; // no matter the type of conversation, this is the real name as set by the user/name of the open or closed group
   nickname?: string; // this is the name WE gave to that user (only applicable to private chats, not closed group neither opengroups)
-  profileKey?: string; // Consider this being a hex string if it is set
-  triggerNotificationsFor: ConversationNotificationSettingType;
+  profileKey?: string; // If set, this is a hex string.
 
   /**
    * This is the url of the avatar on the file server v2 or sogs server.
    * We use this to detect if we need to re-download the avatar from someone/ a community.
    */
   avatarPointer?: string;
+  /**
+   * This is the timestamp of the last time the profile of that user was updated.
+   * Only used for private chats (or blinded), but not for groups avatars nor communities.
+   * An incoming avatarPointer & profileKey will only be applied if the provided
+   * profileUpdatedSeconds is more recent than the currently stored one.
+   */
+  profileUpdatedSeconds?: number;
+  triggerNotificationsFor: ConversationNotificationSettingType;
   /** in seconds, 0 means no expiration */
   expireTimer: number;
 
-  members: Array<string>; // groups only members are all members for this group (not used for communities)
-  groupAdmins: Array<string>; // for sogs and closed group: the unique admins of that group
+  /**
+   * Members of 03-groups and legacy groups until we remove them entirely (not used for communities)
+   */
+  members: Array<string>;
+  /**
+   * For sogs and closed group: the unique admins of that group
+   */
+  groupAdmins: Array<string>;
 
-  priority: number; // -1 = hidden (contact and NTS only), 0 = normal, 1 = pinned
+  /**
+   * -1 = hidden (contact and NTS only), 0 = normal, 1 = pinned
+   */
+  priority: number;
 
   isApproved: boolean; // if we sent a message request or sent a message to this contact, we approve them. If isApproved & didApproveMe, a message request becomes a contact
   didApproveMe: boolean; // if our message request was approved already (or they've sent us a message request/message themselves). If isApproved & didApproveMe, a message request becomes a contact

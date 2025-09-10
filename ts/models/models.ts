@@ -1,6 +1,4 @@
 import { assign, cloneDeep } from 'lodash';
-import { MessageModel } from './message';
-import type { MessageAttributes } from './messageType';
 
 export type ModelAttributes = Record<string, any> & { id: string };
 
@@ -44,8 +42,4 @@ export abstract class Model<T extends ModelAttributes> {
   public cloneAttributes() {
     return cloneDeep(this._attributes);
   }
-}
-
-export function makeMessageModels(modelsOrAttrs: Array<MessageAttributes>) {
-  return modelsOrAttrs.map(a => new MessageModel(a));
 }
