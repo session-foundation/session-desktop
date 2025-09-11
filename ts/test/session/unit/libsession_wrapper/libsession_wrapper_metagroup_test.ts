@@ -13,7 +13,7 @@ import { TestUtils } from '../../../test-utils';
 import { TestUserKeyPairs } from '../../../test-utils/utils';
 
 function profilePicture() {
-  return { key: new Uint8Array(range(0, 32)), url: `${Math.random()}` };
+  return { url: `${Math.random() * 10000}`, key: new Uint8Array(range(0, 32)) };
 }
 
 function emptyMember(pubkeyHex: PubkeyType): GroupMemberGet {
@@ -185,6 +185,7 @@ describe('libsession_metagroup', () => {
           'memberStatus',
           'nominatedAdmin',
           'supplement',
+          'profileUpdatedSeconds',
         ].sort(), // if you change this value, also make sure you add a test, testing that new field, below
         'this test is designed to fail if you need to add tests to test a new field of libsession'
       );
@@ -296,22 +297,39 @@ describe('libsession_metagroup', () => {
         ...emptyMember(member),
         name: 'member name',
         memberStatus: 'INVITE_SENDING',
+        profileUpdatedSeconds: 1,
+      });
+
+      // second change with same timestamp does not get applied
+      metaGroupWrapper.memberSetProfileDetails(member, {
+        profilePicture: { key: new Uint8Array(), url: '' },
+        name: 'new member name',
+        profileUpdatedSeconds: 1,
+      });
+      expect(metaGroupWrapper.memberGetAll().length).to.be.deep.eq(1);
+      expect(metaGroupWrapper.memberGetAll()[0]).to.be.deep.eq({
+        ...emptyMember(member),
+        name: 'member name',
+        memberStatus: 'INVITE_SENDING',
+        profileUpdatedSeconds: 1,
       });
     });
 
     it('can add via profile picture set', () => {
       const pic = profilePicture();
       metaGroupWrapper.memberConstructAndSet(member);
+      metaGroupWrapper.memberSetInviteAccepted(member);
       metaGroupWrapper.memberSetProfileDetails(member, {
         profilePicture: pic,
         name: '',
-        profileUpdatedSeconds: 1,
+        profileUpdatedSeconds: 1234,
       });
       expect(metaGroupWrapper.memberGetAll().length).to.be.deep.eq(1);
       const expected = {
         ...emptyMember(member),
-        profilePicture: pic,
-        memberStatus: 'INVITE_SENDING',
+        profilePicture: { url: pic.url, key: Buffer.from(pic.key) },
+        memberStatus: 'INVITE_ACCEPTED',
+        profileUpdatedSeconds: 1234,
       };
 
       expect(metaGroupWrapper.memberGetAll()[0]).to.be.deep.eq(expected);
@@ -371,6 +389,24 @@ describe('libsession_metagroup', () => {
       const expected: GroupMemberGet = {
         ...emptyMember(member),
         memberStatus: 'REMOVED_MEMBER',
+      };
+      expect(metaGroupWrapper.memberGetAll()).to.be.deep.eq([expected]);
+    });
+
+    it('can set profileUpdatedSeconds', () => {
+      metaGroupWrapper.memberConstructAndSet(member);
+      metaGroupWrapper.memberSetProfileDetails(member, {
+        name: 'member name',
+        profileUpdatedSeconds: 1234567,
+        profilePicture: { url: '', key: new Uint8Array() },
+      });
+      expect(metaGroupWrapper.memberGetAll().length).to.be.deep.eq(1);
+      const expected: GroupMemberGet = {
+        ...emptyMember(member),
+        memberStatus: 'INVITE_SENDING',
+        name: 'member name',
+        profileUpdatedSeconds: 1234567,
+        profilePicture: { url: null, key: null },
       };
       expect(metaGroupWrapper.memberGetAll()).to.be.deep.eq([expected]);
     });

@@ -130,11 +130,10 @@ describe('fillConvoAttributesWithDefaults', () => {
   });
 
   describe('profileUpdatedSeconds', () => {
-    it('initialize profileUpdatedSeconds if not given', () => {
-      expect(fillConvoAttributesWithDefaults({} as ConversationAttributes)).to.have.deep.property(
-        'profileUpdatedSeconds',
-        0
-      );
+    it('does not initialize profileUpdatedSeconds if not given', () => {
+      expect(
+        fillConvoAttributesWithDefaults({} as ConversationAttributes)
+      ).to.not.have.deep.property('profileUpdatedSeconds', 0);
     });
 
     it('do not override profileUpdatedSeconds if given', () => {
