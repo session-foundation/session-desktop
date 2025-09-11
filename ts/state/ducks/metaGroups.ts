@@ -172,6 +172,7 @@ const initNewGroupInWrapper = createAsyncThunk(
         const member = uniqMembers[index];
         const memberProfileDetails = ConvoHub.use().get(member).getPrivateProfileDetails() || null;
         const profilePic = memberProfileDetails?.toHexProfilePicture() || null;
+        debugger;
 
         // we just create the members in the state. Their invite state defaults to NOT_SENT,
         // which will make our logic kick in to send them an invite in the `GroupInviteJob`
