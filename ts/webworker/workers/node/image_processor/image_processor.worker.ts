@@ -63,12 +63,12 @@ function centerCoverOpts(maxSidePx: number) {
 }
 
 function formattedMetadata(metadata: {
-  width: number;
-  height: number;
-  format: keyof sharp.FormatEnum;
+  width: number | undefined;
+  height: number | undefined;
+  // format: keyof sharp.FormatEnum;
   size: number;
 }) {
-  return `(${metadata.width}x${metadata.height} ${metadata.format} of ${metadata.size} bytes)`;
+  return `(${metadata.width}x${metadata.height}  of ${metadata.size} bytes)`;
 }
 
 function sharpFrom(inputBuffer: ArrayBufferLike | Buffer, options?: sharp.SharpOptions) {
@@ -371,7 +371,13 @@ const workerActions: ImageProcessorWorkerActions = {
     const start = Date.now();
     const metadata = await metadataFromBuffer(inputBuffer);
 
-    if (!metadata || !metadata.format || !sharp.format[metadata.format]?.output) {
+    if (
+      !metadata ||
+      !metadata.format ||
+      !sharp.format[metadata.format]?.output ||
+      !metadata.width ||
+      !metadata.height
+    ) {
       logIfOn(`Unsupported format: ${metadata?.format}`);
       return null;
     }
@@ -480,10 +486,10 @@ const workerActions: ImageProcessorWorkerActions = {
           }ms for}`
         );
         logIfOn(
-          `\t src${formattedMetadata({ width: metadata.width, format: metadata.format, height: metadata.height, size: inputBuffer.byteLength })} `
+          `\t src${formattedMetadata({ width: metadata.width, height: metadata.height, size: inputBuffer.byteLength })} `
         );
         logIfOn(
-          `\t dest${formattedMetadata({ width: outputMetadata.width, format: outputMetadata.format, height: outputMetadata.height, size: buffer.buffer.byteLength })} `
+          `\t dest${formattedMetadata({ width: outputMetadata.width, height: outputMetadata.height, size: buffer.buffer.byteLength })} `
         );
 
         return {
@@ -501,7 +507,7 @@ const workerActions: ImageProcessorWorkerActions = {
         }ms with quality ${quality}`
       );
       logIfOn(
-        `\t src${formattedMetadata({ width: metadata.width, format: metadata.format, height: metadata.height, size: inputBuffer.byteLength })} `
+        `\t src${formattedMetadata({ width: metadata.width, height: metadata.height, size: inputBuffer.byteLength })} `
       );
     }
     qualityRangeIndex++;
@@ -513,7 +519,7 @@ const workerActions: ImageProcessorWorkerActions = {
       `[imageProcessorWorker] processForFileServerUpload: failed after ${Date.now() - start}ms`
     );
     logIfOn(
-      `\t src${formattedMetadata({ width: metadata.width, format: metadata.format, height: metadata.height, size: inputBuffer.byteLength })} `
+      `\t src${formattedMetadata({ width: metadata.width, height: metadata.height, size: inputBuffer.byteLength })} `
     );
 
     return null;
