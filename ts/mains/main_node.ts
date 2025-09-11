@@ -7,6 +7,7 @@
 import {
   app,
   BrowserWindow,
+  crashReporter,
   protocol as electronProtocol,
   ipcMain as ipc,
   ipcMain,
@@ -20,7 +21,7 @@ import {
 } from 'electron';
 
 import crypto from 'crypto';
-import fs from 'fs';
+import fs, { appendFileSync } from 'fs';
 import os from 'os';
 import path, { join } from 'path';
 import { platform as osPlatform } from 'process';
@@ -151,6 +152,12 @@ if (!process.mas) {
     });
   }
 }
+
+crashReporter.start({
+  submitURL: '', // leave empty if you don’t want to upload
+  uploadToServer: false,
+  compress: true,
+});
 
 const windowFromUserConfig = userConfig.get('window');
 const windowFromEphemeral = ephemeralConfig.get('window');
@@ -360,6 +367,17 @@ async function createWindow() {
   mainWindow.on('focus', setWindowFocus);
   mainWindow.on('blur', setWindowFocus);
   mainWindow.once('ready-to-show', setWindowFocus);
+  function logCrash(type: string, details: any) {
+    const crashLogPath = path.join(app.getPath('userData'), 'crash-log.txt');
+    const logLine = `[${new Date().toISOString()}] ${type} crash: ${JSON.stringify(details)}\n`;
+    appendFileSync(crashLogPath, logLine, 'utf8');
+  }
+
+  mainWindow.webContents.on('render-process-gone', (_event, details) => {
+    // details.reason can be: 'crashed', 'killed', 'oom', etc.
+    logCrash('renderer', details);
+  });
+
   // This is a fallback in case we drop an event for some reason.
   global.setInterval(setWindowFocus, 5000);
 

@@ -1,3 +1,5 @@
+import path from 'node:path';
+import { appendFileSync } from 'node:fs';
 import { app, dialog, clipboard } from 'electron';
 import os from 'node:os';
 import { reallyJsonStringify } from '../util/reallyJsonStringify';
@@ -7,6 +9,12 @@ import { redactAll } from '../util/privacy';
 // TODO: use localised strings
 const quitText = 'Quit';
 const copyErrorAndQuitText = 'Copy error and quit';
+
+function logCrash(type: string, details: any) {
+  const crashLogPath = path.join(app.getPath('userData'), 'crash-log.txt');
+  const logLine = `[${new Date().toISOString()}] ${type} crash: ${JSON.stringify(details)}\n`;
+  appendFileSync(crashLogPath, logLine, 'utf8');
+}
 
 function handleError(prefix: string, error: Error): void {
   const formattedError = Errors.toString(error);
@@ -53,10 +61,14 @@ export const addHandler = (): void => {
   // Note: we could maybe add a handler for when the renderer process died here?
   // (but also ignore the valid death like on restart/quit)
   process.on('uncaughtException', (reason: unknown) => {
+    logCrash('main', { reason: 'uncaughtException', error: reason });
+
     handleError('Unhandled Error', _getError(reason));
   });
 
   process.on('unhandledRejection', (reason: unknown) => {
+    logCrash('main', { reason: 'unhandledRejection', error: reason });
+
     handleError('Unhandled Promise Rejection', _getError(reason));
   });
 };
