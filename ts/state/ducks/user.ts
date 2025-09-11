@@ -6,6 +6,7 @@ import { getSodiumRenderer } from '../../session/crypto';
 import { uploadAndSetOurAvatarShared } from '../../interactions/avatar-interactions/nts-avatar-interactions';
 import { ed25519Str } from '../../session/utils/String';
 import { userSettingsModal, updateEditProfilePictureModal } from './modalDialog';
+import { NetworkTime } from '../../util/NetworkTime';
 
 export type UserStateType = {
   ourDisplayNameInProfile: string;
@@ -78,8 +79,9 @@ const clearOurAvatar = createAsyncThunk('user/clearOurAvatar', async () => {
   }
 
   await convo.setSessionProfile({
-    type: 'resetAvatar',
+    type: 'resetAvatarPrivate',
     displayName: null,
+    profileUpdatedAtSeconds: NetworkTime.nowSeconds(),
   });
 
   await SyncUtils.forceSyncConfigurationNowIfNeeded(true);

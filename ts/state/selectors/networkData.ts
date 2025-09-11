@@ -48,7 +48,7 @@ const getNetworkStakedUSD = (state: StateType) => getNetworkData(state).network?
 export const useDataIsStale = (): boolean => {
   const staleTimestamp = useStalePriceTimestamp() || 0;
 
-  return NetworkTime.getNowWithNetworkOffsetSeconds() > staleTimestamp;
+  return NetworkTime.nowSeconds() > staleTimestamp;
 };
 
 export const useInfoTimestamp = (): number => {

@@ -101,6 +101,11 @@ import {
   isOpenOrClosedGroup,
   READ_MESSAGE_STATE,
   type ConversationNotificationSettingType,
+  type WithAvatarPathAndFallback,
+  type WithAvatarPointer,
+  type WithAvatarPointerProfileKey,
+  type WithProfileKey,
+  type WithProfileUpdatedAtSeconds,
 } from './conversationAttributes';
 
 import { ReadReceiptMessage } from '../session/messages/outgoing/controlMessage/receipt/ReadReceiptMessage';
@@ -150,11 +155,65 @@ import type {
 } from '../interactions/types';
 import type { LastMessageStatusType } from '../state/ducks/types';
 import { OutgoingUserProfile } from '../types/message';
+import { Timestamp } from '../types/timestamp/timestamp';
 
 type InMemoryConvoInfos = {
   mentionedUs: boolean;
   unreadCount: number;
 };
+
+type WithSetSessionProfileType<
+  T extends
+    | 'displayNameChangeOnlyPrivate'
+    | 'resetAvatarPrivate'
+    | 'resetAvatarGroup'
+    | 'resetAvatarCommunity'
+    | 'setAvatarBeforeDownloadPrivate'
+    | 'setAvatarBeforeDownloadGroup'
+    | 'setAvatarDownloadedPrivate'
+    | 'setAvatarDownloadedCommunity'
+    | 'setAvatarDownloadedGroup',
+> = {
+  type: T;
+};
+
+type WithDisplayNameChange = { displayName?: string | null };
+
+type SetSessionProfileDetails = WithDisplayNameChange &
+  (
+    | (WithSetSessionProfileType<'displayNameChangeOnlyPrivate'> & WithProfileUpdatedAtSeconds)
+    | (WithSetSessionProfileType<'resetAvatarPrivate'> & WithProfileUpdatedAtSeconds)
+    // no need for profileUpdatedAtSeconds for groups/communities
+    | WithSetSessionProfileType<'resetAvatarGroup' | 'resetAvatarCommunity'>
+    // Note: for communities, we set & download the avatar as a single step
+    | (WithSetSessionProfileType<'setAvatarBeforeDownloadPrivate'> &
+        WithProfileUpdatedAtSeconds &
+        WithAvatarPointerProfileKey)
+    // no need for profileUpdatedAtSeconds for groups
+    | (WithSetSessionProfileType<'setAvatarBeforeDownloadGroup'> &
+        WithProfileKey &
+        WithAvatarPointer) // no need for profileUpdatedAtSeconds for groups
+    // Note: for communities, we set & download the avatar as a single step
+    | (WithSetSessionProfileType<'setAvatarDownloadedPrivate'> &
+        WithAvatarPointerProfileKey &
+        WithAvatarPathAndFallback)
+
+    // no need for profileUpdatedAtSeconds for groups/communities
+    | (WithSetSessionProfileType<'setAvatarDownloadedCommunity' | 'setAvatarDownloadedGroup'> &
+        WithAvatarPointerProfileKey &
+        WithAvatarPathAndFallback)
+  );
+
+/**
+ *
+ * Type guard for the set profile action that is private.
+ * We need to do some extra processing for private actions, as they have a updatedAtSeconds field.
+ */
+function isSetProfileWithUpdatedAtSeconds<T extends SetSessionProfileDetails>(
+  action: T
+): action is Extract<T, { profileUpdatedAtSeconds: number }> {
+  return 'profileUpdatedAtSeconds' in action;
+}
 
 /**
  * Some fields are not stored in the database, but are kept in memory.
@@ -1406,6 +1465,15 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
   }
 
+  private shouldApplyPrivateProfileUpdate(newProfile: SetSessionProfileDetails) {
+    if (isSetProfileWithUpdatedAtSeconds(newProfile)) {
+      const ts = new Timestamp({ value: newProfile.profileUpdatedAtSeconds });
+      return this.getProfileUpdatedSeconds() < ts.seconds();
+    }
+    // for non private setProfile calls, we do not need to check the updatedAtSeconds
+    return true;
+  }
+
   /**
    * Updates this conversation with the provided displayName, avatarPath, staticAvatarPath and avatarPointer.
    * - displayName can be set to null to not update the display name.
@@ -1413,110 +1481,124 @@ export class ConversationModel extends Model<ConversationAttributes> {
    *
    * This function does commit to the DB if any changes are detected.
    */
-  public async setSessionProfile(
-    newProfile: { displayName?: string | null } & (
-      | {
-          type: 'resetAvatar';
-        }
-      | {
-          type: 'setAvatarBeforeDownload';
-          avatarPointer: string;
-          profileKey: Uint8Array | string;
-        }
-      | {
-          type: 'setAvatarDownloaded';
-          avatarPath: string;
-          fallbackAvatarPath: string;
-          avatarPointer: string;
-          profileKey: Uint8Array | string;
-        }
-    )
-  ) {
-    let changed = false;
+  public async setSessionProfile(newProfile: SetSessionProfileDetails): Promise<{
+    nameChanged: boolean;
+    avatarChanged: boolean;
+    avatarNeedsDownload: boolean;
+  }> {
+    let nameChanged = false;
 
     const existingSessionName = this.getRealSessionUsername();
     if (newProfile.displayName !== existingSessionName && newProfile.displayName) {
       this.set({
         displayNameInProfile: newProfile.displayName,
       });
-      changed = true;
+      nameChanged = true;
     }
+    const type = newProfile.type;
 
-    if (newProfile.type === 'resetAvatar') {
-      if (
-        this.getAvatarInProfilePath() ||
-        this.getFallbackAvatarInProfilePath() ||
-        this.getAvatarPointer() ||
-        this.getProfileKey()
-      ) {
-        this.set({
-          avatarInProfile: undefined,
-          avatarPointer: undefined,
-          profileKey: undefined,
-          fallbackAvatarInProfile: undefined,
-        });
-        changed = true;
-      }
-      if (changed) {
-        await this.commit();
-      }
-      return changed;
-    }
-
-    const newProfileKeyHex = isString(newProfile.profileKey)
-      ? newProfile.profileKey
-      : to_hex(newProfile.profileKey);
-
-    const existingAvatarPointer = this.getAvatarPointer();
-    const existingProfileKeyHex = this.getProfileKey();
-
-    if (newProfile.type === 'setAvatarBeforeDownload') {
-      // if no changes are needed, return early
-      if (
-        isEqual(existingAvatarPointer, newProfile.avatarPointer) &&
-        isEqual(existingProfileKeyHex, newProfileKeyHex)
-      ) {
-        if (changed) {
+    switch (type) {
+      case 'displayNameChangeOnlyPrivate': {
+        if (nameChanged) {
           await this.commit();
         }
-        return changed;
+        return { nameChanged, avatarNeedsDownload: false, avatarChanged: false };
       }
-      this.set({ avatarPointer: newProfile.avatarPointer, profileKey: newProfileKeyHex });
+      case 'resetAvatarPrivate':
+      case 'resetAvatarGroup':
+      case 'resetAvatarCommunity': {
+        let avatarChanged = false;
+        if (
+          // When the avatar update is about a private one, we need to check
+          // if the profile has been updated more recently that what we have already
+          this.shouldApplyPrivateProfileUpdate(newProfile)
+        ) {
+          if (
+            this.getAvatarInProfilePath() ||
+            this.getFallbackAvatarInProfilePath() ||
+            this.getAvatarPointer() ||
+            this.getProfileKey()
+          ) {
+            this.set({
+              avatarInProfile: undefined,
+              avatarPointer: undefined,
+              profileKey: undefined,
+              fallbackAvatarInProfile: undefined,
+            });
+            avatarChanged = true;
+          }
+        }
+        if (avatarChanged) {
+          await this.commit();
+        }
+        return { nameChanged, avatarNeedsDownload: false, avatarChanged };
+      }
 
-      await this.commit();
+      case 'setAvatarBeforeDownloadPrivate':
+      case 'setAvatarBeforeDownloadGroup': {
+        const newProfileKeyHex = isString(newProfile.profileKey)
+          ? newProfile.profileKey
+          : to_hex(newProfile.profileKey);
 
-      return true;
-    }
+        const existingAvatarPointer = this.getAvatarPointer();
+        const existingProfileKeyHex = this.getProfileKey();
+        const hasAvatarInNewProfile = !!newProfile.avatarPointer || !!newProfileKeyHex;
+        // if no changes are needed, return early
+        if (
+          isEqual(existingAvatarPointer, newProfile.avatarPointer) &&
+          isEqual(existingProfileKeyHex, newProfileKeyHex)
+        ) {
+          if (nameChanged) {
+            await this.commit();
+          }
+          return { nameChanged, avatarNeedsDownload: false, avatarChanged: false };
+        }
+        this.set({ avatarPointer: newProfile.avatarPointer, profileKey: newProfileKeyHex });
 
-    if (newProfile.type !== 'setAvatarDownloaded') {
-      throw new Error('setSessionProfile: invalid type for avatar action');
-    }
-
-    const originalAvatar = this.getAvatarInProfilePath();
-    const originalFallbackAvatar = this.getFallbackAvatarInProfilePath();
-
-    // if no changes are needed, return early
-    if (
-      isEqual(originalAvatar, newProfile.avatarPath) &&
-      isEqual(originalFallbackAvatar, newProfile.fallbackAvatarPath) &&
-      isEqual(existingAvatarPointer, newProfile.avatarPointer) &&
-      isEqual(existingProfileKeyHex, newProfileKeyHex)
-    ) {
-      if (changed) {
         await this.commit();
+
+        return { nameChanged, avatarNeedsDownload: hasAvatarInNewProfile, avatarChanged: true };
       }
-      return changed;
+      case 'setAvatarDownloadedPrivate':
+      case 'setAvatarDownloadedGroup':
+      case 'setAvatarDownloadedCommunity': {
+        const newProfileKeyHex = isString(newProfile.profileKey)
+          ? newProfile.profileKey
+          : to_hex(newProfile.profileKey);
+
+        const existingAvatarPointer = this.getAvatarPointer();
+        const existingProfileKeyHex = this.getProfileKey();
+        const originalAvatar = this.getAvatarInProfilePath();
+        const originalFallbackAvatar = this.getFallbackAvatarInProfilePath();
+
+        // if no changes are needed, return early
+        if (
+          isEqual(originalAvatar, newProfile.avatarPath) &&
+          isEqual(originalFallbackAvatar, newProfile.fallbackAvatarPath) &&
+          isEqual(existingAvatarPointer, newProfile.avatarPointer) &&
+          isEqual(existingProfileKeyHex, newProfileKeyHex)
+        ) {
+          if (nameChanged) {
+            await this.commit();
+          }
+          return { nameChanged, avatarChanged: false, avatarNeedsDownload: false };
+        }
+
+        this.set({
+          avatarPointer: newProfile.avatarPointer,
+          avatarInProfile: newProfile.avatarPath,
+          fallbackAvatarInProfile: newProfile.fallbackAvatarPath,
+          profileKey: newProfileKeyHex,
+        });
+
+        await this.commit();
+        return { nameChanged, avatarNeedsDownload: false, avatarChanged: true };
+      }
+      default:
+        assertUnreachable(type, `handlePrivateProfileUpdate: unhandled case "${type}"`);
     }
 
-    this.set({
-      avatarPointer: newProfile.avatarPointer,
-      avatarInProfile: newProfile.avatarPath,
-      fallbackAvatarInProfile: newProfile.fallbackAvatarPath,
-      profileKey: newProfileKeyHex,
-    });
-
-    await this.commit();
-    return true;
+    throw new Error('Should have returned earlier');
   }
 
   public getIsTrustedForAttachmentDownload() {
@@ -1576,7 +1658,18 @@ export class ConversationModel extends Model<ConversationAttributes> {
     this.set({ lastMessageInteractionType: null, lastMessageInteractionStatus: null });
   }
 
+  /**
+   * Update the display name of this conversation with the provided one.
+   * Note: cannot be called with private chats.
+   * Instead use `setSessionProfile`.
+   * The reason is that we might have a more recent name set for this user already, and we need to discard the change
+   * if what we are about to apply is older than what we have.
+   */
   public setSessionDisplayNameNoCommit(newDisplayName?: string | null) {
+    if (this.isPrivate()) {
+      // the name change is only allowed through setSessionProfile for private chats now, see above.
+      throw new Error('setSessionDisplayNameNoCommit should not be called with private chats');
+    }
     const existingSessionName = this.getRealSessionUsername();
     if (newDisplayName !== existingSessionName && newDisplayName) {
       this.set({ displayNameInProfile: newDisplayName });

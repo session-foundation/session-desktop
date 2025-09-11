@@ -227,3 +227,27 @@ export enum ConvoTypeNarrow {
    */
   group = 'group',
 }
+
+export type WithAvatarPointer = {
+  avatarPointer: string;
+};
+
+export type WithProfileUpdatedAtSeconds = {
+  profileUpdatedAtSeconds: number;
+};
+
+export type WithProfileKey = {
+  profileKey: Uint8Array | string;
+};
+
+export type WithAvatarPointerProfileKey = WithAvatarPointer & WithProfileKey;
+
+export type WithAvatarPath = {
+  avatarPath: string;
+};
+
+export type WithFallbackAvatarPath = {
+  fallbackAvatarPath: string;
+};
+
+export type WithAvatarPathAndFallback = WithAvatarPath & WithFallbackAvatarPath;

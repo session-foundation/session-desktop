@@ -115,7 +115,7 @@ export async function uploadAndSetOurAvatarShared({
     fallbackAvatarPath: processedFallbackAvatar?.path || savedMainAvatar.path,
     displayName,
     avatarPointer: fileUrl,
-    type: 'setAvatarDownloaded',
+    type: 'setAvatarDownloadedPrivate',
     profileKey,
   });
   await Storage.put(SettingsKey.ntsAvatarExpiryMs, expiresMs);

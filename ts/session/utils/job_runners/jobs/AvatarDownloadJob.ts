@@ -171,7 +171,9 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
         }
 
         await conversation.setSessionProfile({
-          type: 'setAvatarDownloaded',
+          type: conversation.isPrivate()
+            ? 'setAvatarDownloadedPrivate'
+            : 'setAvatarDownloadedGroup',
           displayName: null, // null to not update the display name.
           avatarPath: mainAvatarPath,
           fallbackAvatarPath,
@@ -193,16 +195,6 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
         );
         return RunJobResult.RetryJobIfPossible;
       }
-    } else if (
-      conversation.getAvatarInProfilePath() ||
-      conversation.getFallbackAvatarInProfilePath()
-    ) {
-      // there is no valid avatar to download, make sure the local file of the avatar of that user is removed
-      await conversation.setSessionProfile({
-        displayName: null, // null to not update the display name
-        type: 'resetAvatar',
-      });
-      changes = true;
     }
 
     if (conversation.id === UserUtils.getOurPubKeyStrFromCache()) {

@@ -26,6 +26,7 @@ import { GoogleChrome } from '../util';
 import { LinkPreviews } from '../util/linkPreviews';
 import { GroupV2Receiver } from './groupv2/handleGroupV2Message';
 import { Constants } from '../session';
+import { Timestamp } from '../types/timestamp/timestamp';
 
 function contentTypeSupported(type: string): boolean {
   const Chrome = GoogleChrome;
@@ -513,12 +514,15 @@ export async function handleMessageJob(
     // the only profile we don't update with what is coming here is ours,
     // as our profile is shared across our devices with libsession
     if (messageModel.isIncoming() && regularDataMessage.profile) {
-      await ProfileManager.updateProfileOfContact(
-        sendingDeviceConversation.id,
-        regularDataMessage.profile.displayName,
-        regularDataMessage.profile.profilePicture,
-        regularDataMessage.profileKey
-      );
+      await ProfileManager.updateProfileOfContact({
+        pubkey: sendingDeviceConversation.id,
+        displayName: regularDataMessage.profile.displayName,
+        profileUrl: regularDataMessage.profile.profilePicture,
+        profileKey: regularDataMessage.profileKey,
+        profileUpdatedAtSeconds: new Timestamp({
+          value: regularDataMessage.profile.lastProfileUpdateMs ?? 0,
+        }).seconds(),
+      });
     }
 
     await markConvoAsReadIfOutgoingMessage(conversation, messageModel);

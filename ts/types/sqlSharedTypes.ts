@@ -132,6 +132,7 @@ export function getContactInfoFromDBValues({
   dbCreatedAtSeconds,
   expirationMode,
   expireTimer,
+  dbProfileUpdatedAtSeconds,
 }: {
   id: string;
   dbApproved: boolean;
@@ -145,6 +146,7 @@ export function getContactInfoFromDBValues({
   dbCreatedAtSeconds: number;
   expirationMode: DisappearingMessageConversationModeType | undefined;
   expireTimer: number | undefined;
+  dbProfileUpdatedAtSeconds: number;
 }): ContactInfoSet {
   const wrapperContact: ContactInfoSet = {
     id,
@@ -157,6 +159,7 @@ export function getContactInfoFromDBValues({
     createdAtSeconds: dbCreatedAtSeconds,
     expirationMode,
     expirationTimerSeconds: !!expireTimer && expireTimer > 0 ? expireTimer : 0,
+    profileUpdatedSeconds: dbProfileUpdatedAtSeconds,
   };
 
   if (

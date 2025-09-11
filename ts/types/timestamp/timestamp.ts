@@ -1,3 +1,5 @@
+import { longOrNumberToNumber } from '../message';
+
 // in about 71 years
 const MAX_TIMESTAMP_SECONDS = 4000000000;
 // in 71 years, but in ms
@@ -11,7 +13,7 @@ function isValidTimestampMs(timestamp: number): boolean {
   return timestamp < MAX_TIMESTAMP_MS;
 }
 
-class Timestamp {
+export class Timestamp {
   private value: number;
   private type: 'ms' | 'seconds';
 
@@ -21,14 +23,15 @@ class Timestamp {
    *
    */
   constructor({
-    value,
+    value: valueIn,
     allowZero = true,
     ...args
   }: {
-    value: number;
+    value: number | Long;
     allowZero?: boolean;
     expectedUnit?: 'seconds' | 'ms';
   }) {
+    const value = longOrNumberToNumber(valueIn);
     if (!allowZero && value === 0) {
       throw new Error('Invalid timestamp (zero and was explicitly forbidden)');
     }
@@ -75,7 +78,3 @@ class Timestamp {
     return Math.floor(this.value / 1000);
   }
 }
-
-export const TimestampUtils = {
-  Timestamp,
-};

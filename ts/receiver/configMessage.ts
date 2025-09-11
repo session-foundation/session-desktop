@@ -219,6 +219,7 @@ async function handleUserProfileUpdate(result: IncomingUserResult): Promise<void
   const profilePic = await UserConfigWrapperActions.getProfilePic();
   const displayName = await UserConfigWrapperActions.getName();
   const priority = await UserConfigWrapperActions.getPriority();
+  const profileUpdatedAtSeconds = await UserConfigWrapperActions.getProfileUpdatedSeconds();
   if (!profilePic || isEmpty(profilePic)) {
     return;
   }
@@ -236,11 +237,12 @@ async function handleUserProfileUpdate(result: IncomingUserResult): Promise<void
     profilePic.key.length === 32;
 
   // NOTE: if you do any changes to the user's settings which are synced, it should be done above the `updateOurProfileViaLibSession` call
-  await updateOurProfileViaLibSession({
+  await updateOurProfileFromLibSession({
     displayName: displayName || '',
     profileUrl: picUpdate ? profilePic.url : null,
     profileKey: picUpdate ? profilePic.key : null,
     priority,
+    profileUpdatedAtSeconds,
   });
 
   // NOTE: If we want to update the conversation in memory with changes from the updated user profile we need to wait until the profile has been updated to prevent multiple merge conflicts
@@ -433,12 +435,13 @@ async function handleContactsUpdate(result: IncomingUserResult) {
       }
 
       // we still need to handle the `name` (synchronous) and the `profilePicture` (asynchronous)
-      await ProfileManager.updateProfileOfContact(
-        contactConvo.id,
-        wrapperConvo.name,
-        wrapperConvo.profilePicture?.url || null,
-        wrapperConvo.profilePicture?.key || null
-      );
+      await ProfileManager.updateProfileOfContact({
+        pubkey: contactConvo.id,
+        displayName: wrapperConvo.name,
+        profileUrl: wrapperConvo.profilePicture?.url || null,
+        profileKey: wrapperConvo.profilePicture?.key || null,
+        profileUpdatedAtSeconds: wrapperConvo.profileUpdatedSeconds,
+      });
     }
   }
 }
@@ -965,20 +968,28 @@ async function handleUserConfigMessagesViaLibSession(
   await processUserMergingResults(incomingMergeResult);
 }
 
-async function updateOurProfileViaLibSession(
+async function updateOurProfileFromLibSession(
   {
     displayName,
     priority,
     profileKey,
     profileUrl,
+    profileUpdatedAtSeconds,
   }: {
     displayName: string;
     profileUrl: string | null;
     profileKey: Uint8Array | null;
     priority: number | null;
+    profileUpdatedAtSeconds: number;
   } // passing null means to not update the priority at all (used for legacy config message for now)
 ) {
-  await ProfileManager.updateOurProfileSync({ displayName, profileUrl, profileKey, priority });
+  await ProfileManager.updateOurProfileSync({
+    displayName,
+    profileUrl,
+    profileKey,
+    priority,
+    profileUpdatedAtSeconds,
+  });
 
   // do not trigger a sign in by linking if the display name is empty
   if (!isEmpty(displayName)) {

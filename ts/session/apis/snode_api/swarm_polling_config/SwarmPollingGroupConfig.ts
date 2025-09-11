@@ -182,12 +182,13 @@ async function handleMetaMergeResults(groupPk: GroupPubkeyType) {
     }
     if (member.name && member.name !== memberConvoInDB.getRealSessionUsername()) {
       // eslint-disable-next-line no-await-in-loop
-      await ProfileManager.updateProfileOfContact(
-        member.pubkeyHex,
-        member.name,
-        member.profilePicture?.url || null,
-        member.profilePicture?.key || null
-      );
+      await ProfileManager.updateProfileOfContact({
+        pubkey: member.pubkeyHex,
+        displayName: member.name,
+        profileUrl: member.profilePicture?.url || null,
+        profileKey: member.profilePicture?.key || null,
+        profileUpdatedAtSeconds: member.profileUpdatedSeconds,
+      });
     }
   }
 }
@@ -280,7 +281,7 @@ async function scheduleAvatarDownloadJobIfNeeded(groupPk: GroupPubkeyType) {
       // no avatar set for this group: make sure we also remove the one we might have locally.
       if (conversation.getAvatarPointer() || conversation.getProfileKey()) {
         await conversation.setSessionProfile({
-          type: 'resetAvatar',
+          type: 'resetAvatarGroup',
           displayName: null,
         });
       }
@@ -295,7 +296,7 @@ async function scheduleAvatarDownloadJobIfNeeded(groupPk: GroupPubkeyType) {
     if (prevPointer !== profileUrl || prevProfileKey !== profileKeyHex) {
       // set the avatar for this group, it will be downloaded by the job scheduled below
       await conversation.setSessionProfile({
-        type: 'setAvatarBeforeDownload',
+        type: 'setAvatarBeforeDownloadGroup',
         profileKey: profileKeyHex,
         avatarPointer: profileUrl,
       });

@@ -69,6 +69,7 @@ async function insertContactFromDBIntoWrapperAndRefresh(
   const priority = foundConvo.get('priority') || CONVERSATION_PRIORITIES.default;
   const expirationMode = foundConvo.get('expirationMode') || undefined;
   const expireTimer = foundConvo.get('expireTimer') || 0;
+  const dbProfileUpdatedAtSeconds = foundConvo.getProfileUpdatedSeconds() || 0;
 
   const wrapperContact = getContactInfoFromDBValues({
     id,
@@ -83,6 +84,7 @@ async function insertContactFromDBIntoWrapperAndRefresh(
     dbCreatedAtSeconds: 0, // just give 0, now() will be used internally by the wrapper if the contact does not exist yet.
     expirationMode,
     expireTimer,
+    dbProfileUpdatedAtSeconds,
   });
   try {
     await ContactsWrapperActions.set(wrapperContact);

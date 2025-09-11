@@ -37,6 +37,8 @@ import { sentAtMoreRecentThanWrapper } from './sentAtMoreRecent';
 import { ECKeyPair } from './keypairs';
 import { CONVERSATION_PRIORITIES, ConversationTypeEnum } from '../models/types';
 import { shouldProcessContentMessage } from './common';
+import { Timestamp } from '../types/timestamp/timestamp';
+import { longOrNumberToNumber } from '../types/message';
 
 export async function handleSwarmContentMessage(
   envelope: EnvelopePlus,
@@ -738,21 +740,26 @@ async function handleMessageRequestResponse(
   if (convosToMerge.length) {
     // merge fields we care by hand
     const srcConvo = convosToMerge[0];
-    const profileKey = srcConvo.getProfileKey();
 
+    const srcProfileDetails = srcConvo.getPrivateProfileDetails();
     const srcAvatarPath = srcConvo.getAvatarInProfilePath();
     const srcFallbackAvatarPath = srcConvo.getFallbackAvatarInProfilePath();
-    const srcAvatarPointer = srcConvo.getAvatarPointer();
+    const srcProfilePic = srcProfileDetails.toProfilePicture();
+
     const avatarChanges =
-      srcAvatarPath && srcFallbackAvatarPath && srcAvatarPointer && profileKey
+      srcAvatarPath && srcFallbackAvatarPath && srcProfilePic.url && srcProfilePic.key
         ? {
-            type: 'setAvatarDownloaded' as const,
+            type: 'setAvatarDownloadedPrivate' as const,
             avatarPath: srcAvatarPath,
             fallbackAvatarPath: srcFallbackAvatarPath,
-            avatarPointer: srcAvatarPointer,
-            profileKey,
+            avatarPointer: srcProfilePic.url,
+            profileKey: srcProfilePic.key,
+            profileUpdatedAtSeconds: srcProfileDetails.getUpdatedAtSeconds(),
           }
-        : { type: 'resetAvatar' as const };
+        : {
+            type: 'resetAvatarPrivate' as const,
+            profileUpdatedAtSeconds: srcProfileDetails.getUpdatedAtSeconds(),
+          };
     await conversationToApprove.setSessionProfile({
       displayName: srcConvo.getRealSessionUsername(),
       ...avatarChanges,
@@ -796,12 +803,15 @@ async function handleMessageRequestResponse(
   }
 
   if (messageRequestResponse.profile && !isEmpty(messageRequestResponse.profile)) {
-    await ProfileManager.updateProfileOfContact(
-      conversationToApprove.id,
-      messageRequestResponse.profile.displayName,
-      messageRequestResponse.profile.profilePicture,
-      messageRequestResponse.profileKey
-    );
+    await ProfileManager.updateProfileOfContact({
+      pubkey: conversationToApprove.id,
+      displayName: messageRequestResponse.profile.displayName,
+      profileUrl: messageRequestResponse.profile.profilePicture,
+      profileKey: messageRequestResponse.profileKey,
+      profileUpdatedAtSeconds: new Timestamp({
+        value: longOrNumberToNumber(messageRequestResponse.profile.lastProfileUpdateMs ?? 0),
+      }).seconds(),
+    });
   }
 
   if (previousApprovedMe) {

@@ -1,9 +1,10 @@
+import Long from 'long';
 import type { ProfilePicture } from 'libsession_util_nodejs';
 import { from_hex, to_hex } from 'libsodium-wrappers-sumo';
-import { isEmpty, isNil, isString, isTypedArray } from 'lodash';
+import { isEmpty, isString, isTypedArray } from 'lodash';
 import { MessageAttributes } from '../../models/messageType';
 import { SignalService } from '../../protobuf';
-import { TimestampUtils } from '../timestamp/timestamp';
+import { Timestamp } from '../timestamp/timestamp';
 
 function extractPicDetailsFromUrl(src: string | null): ProfilePicture {
   if (!src) {
@@ -38,7 +39,7 @@ class OutgoingUserProfile {
    * Note: if one is missing, this will be null.
    */
   private picUrlWithProfileKey: string | null = null;
-  public readonly lastProfileUpdateMs: number | null;
+  private readonly lastProfileUpdateTs: Timestamp;
 
   constructor({
     displayName,
@@ -56,13 +57,10 @@ class OutgoingUserProfile {
     }
     this.displayName = displayName;
 
-    const ts = new TimestampUtils.Timestamp({
+    this.lastProfileUpdateTs = new Timestamp({
       value: updatedAtSeconds,
       expectedUnit: 'seconds',
     });
-    // Note: we get the timestamp of last update in seconds, but need to send it in ms
-    // hence the `ms()` call.
-    this.lastProfileUpdateMs = ts.ms();
     if ('picUrlWithProfileKey' in args) {
       this.initFromPicWithUrl(args.picUrlWithProfileKey);
     } else {
@@ -120,13 +118,26 @@ class OutgoingUserProfile {
     return extractPicDetailsFromUrl(this.picUrlWithProfileKey);
   }
 
+  public toHexProfilePicture() {
+    const details = extractPicDetailsFromUrl(this.picUrlWithProfileKey);
+    return { url: details.url, key: details.key ? to_hex(details.key) : null };
+  }
+
   public isEmpty(): boolean {
-    return !this.displayName && !isNil(this.lastProfileUpdateMs) && !this.picUrlWithProfileKey;
+    return !this.displayName && !this.picUrlWithProfileKey;
   }
 
   private emptyProtobufDetails() {
     // Note: profileKey: undefined is not allowed by protobuf
     return { profile: undefined };
+  }
+
+  public getUpdatedAtSeconds(): number {
+    return this.lastProfileUpdateTs.seconds();
+  }
+
+  public getUpdatedAtMs(): number {
+    return this.lastProfileUpdateTs.ms();
   }
 
   public toProtobufDetails(): Partial<Pick<SignalService.DataMessage, 'profile' | 'profileKey'>> {
@@ -139,9 +150,8 @@ class OutgoingUserProfile {
     if (this.displayName) {
       profile.displayName = this.displayName;
     }
-    if (!isNil(this.lastProfileUpdateMs)) {
-      profile.lastProfileUpdateMs = this.lastProfileUpdateMs;
-    }
+    profile.lastProfileUpdateMs = this.lastProfileUpdateTs.ms();
+
     const picDetails = this.toProfilePicture();
     if (picDetails.url && picDetails.key) {
       profile.profilePicture = picDetails.url;
@@ -150,6 +160,14 @@ class OutgoingUserProfile {
     // no profileKey provided here
     return { profile };
   }
+}
+
+export function longOrNumberToNumber(value: number | Long): number {
+  const asLong = Long.fromValue(value);
+  if (asLong.greaterThan(Number.MAX_SAFE_INTEGER)) {
+    throw new Error('longOrNumberToNumber: value is too big');
+  }
+  return asLong.toNumber();
 }
 
 type MessageResultProps = MessageAttributes & { snippet: string };

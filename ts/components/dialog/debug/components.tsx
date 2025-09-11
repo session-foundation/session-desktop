@@ -35,6 +35,7 @@ import { releasedFeaturesActions } from '../../../state/ducks/releasedFeatures';
 import { networkDataActions } from '../../../state/ducks/networkData';
 import { DEBUG_MENU_PAGE, type DebugMenuPageProps } from './DebugMenuModal';
 import { SimpleSessionInput } from '../../inputs/SessionInput';
+import { NetworkTime } from '../../../util/NetworkTime';
 
 const hexRef = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
 
@@ -59,7 +60,11 @@ async function generateOneRandomContact() {
   // for it to be inserted in the config
   created.setActiveAt(Date.now());
   await created.setIsApproved(true, false);
-  created.setSessionDisplayNameNoCommit(id.slice(2, 8));
+  await created.setSessionProfile({
+    type: 'displayNameChangeOnlyPrivate',
+    displayName: id.slice(2, 8),
+    profileUpdatedAtSeconds: NetworkTime.nowSeconds(),
+  });
 
   await created.commit();
   return created;
