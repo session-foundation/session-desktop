@@ -7,6 +7,7 @@ import { uploadAndSetOurAvatarShared } from '../../interactions/avatar-interacti
 import { ed25519Str } from '../../session/utils/String';
 import { userSettingsModal, updateEditProfilePictureModal } from './modalDialog';
 import { NetworkTime } from '../../util/NetworkTime';
+import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 
 export type UserStateType = {
   ourDisplayNameInProfile: string;
@@ -44,6 +45,7 @@ const updateOurAvatar = createAsyncThunk(
       decryptedAvatarData: mainAvatarDecrypted,
       ourConvo,
       profileKey,
+      context: 'uploadNewAvatar',
     });
 
     if (res) {
@@ -82,6 +84,10 @@ const clearOurAvatar = createAsyncThunk('user/clearOurAvatar', async () => {
     type: 'resetAvatarPrivate',
     displayName: null,
     profileUpdatedAtSeconds: NetworkTime.nowSeconds(),
+  });
+  await UserConfigWrapperActions.setNewProfilePic({
+    url: null,
+    key: null,
   });
 
   await SyncUtils.forceSyncConfigurationNowIfNeeded(true);

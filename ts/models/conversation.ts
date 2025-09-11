@@ -111,7 +111,6 @@ import {
 import { ReadReceiptMessage } from '../session/messages/outgoing/controlMessage/receipt/ReadReceiptMessage';
 import { PreConditionFailed } from '../session/utils/errors';
 import { LibSessionUtil } from '../session/utils/libsession/libsession_utils';
-import { SessionUtilUserProfile } from '../session/utils/libsession/libsession_utils_user_profile';
 import { ReduxSogsRoomInfos } from '../state/ducks/sogsRoomInfo';
 import {
   selectLibGroupAdminsOutsideRedux,
@@ -1835,9 +1834,34 @@ export class ConversationModel extends Model<ConversationAttributes> {
    * Note: Currently, we do not have an order in the list of pinned conversation, but the libsession util wrapper can handle the order.
    */
   public async togglePinned(shouldCommit: boolean = true) {
-    this.set({ priority: this.isPinned() ? 0 : 1 });
+    const pinnedBefore = this.isPinned();
+    const newPriority = pinnedBefore
+      ? CONVERSATION_PRIORITIES.default
+      : CONVERSATION_PRIORITIES.pinned;
+    this.set({
+      priority: newPriority,
+    });
     if (shouldCommit) {
       await this.commit();
+    }
+    const convoType = this.getConvoType();
+    switch (convoType) {
+      case ConvoTypeNarrow.blindedAcquaintance:
+      case ConvoTypeNarrow.blindedContact:
+      case ConvoTypeNarrow.privateAcquaintance:
+      case ConvoTypeNarrow.community:
+      case ConvoTypeNarrow.legacyGroup:
+      case ConvoTypeNarrow.group:
+        // all of the above do not support being hidden (only removed)
+        break;
+      case ConvoTypeNarrow.nts:
+        await UserConfigWrapperActions.setPriority(newPriority);
+        break;
+      case ConvoTypeNarrow.contact:
+        // TODO add cases here for contacts to handle the other cases
+        break;
+      default:
+        assertUnreachable(convoType, `convoType ${convoType} is not supported`);
     }
     return true;
   }
@@ -3093,10 +3117,8 @@ async function commitConversationAndRefreshWrapper(id: string) {
 
     switch (variant) {
       case 'UserConfig':
-        if (SessionUtilUserProfile.isUserProfileToStoreInWrapper(convo.id)) {
-          // eslint-disable-next-line no-await-in-loop
-          await SessionUtilUserProfile.insertUserProfileIntoWrapper(convo.id);
-        }
+        // Note: nothing to do here, the NTS changes in libsession are now done
+        //  when done through the UI
         break;
       case 'ContactsConfig':
         if (SessionUtilContact.isContactToStoreInWrapper(convo)) {

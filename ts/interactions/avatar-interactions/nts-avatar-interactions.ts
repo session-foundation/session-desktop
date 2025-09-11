@@ -12,6 +12,7 @@ import { encryptProfile } from '../../util/crypto/profileEncrypter';
 import { Storage } from '../../util/storage';
 import type { ConversationModel } from '../../models/conversation';
 import { processAvatarData } from '../../util/avatar/processAvatarData';
+import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 
 /**
  * This function can be used for reupload our avatar to the file server.
@@ -61,6 +62,7 @@ export async function reuploadCurrentAvatarUs() {
     decryptedAvatarData,
     ourConvo,
     profileKey,
+    context: 'reuploadAvatar',
   });
 }
 
@@ -68,10 +70,12 @@ export async function uploadAndSetOurAvatarShared({
   decryptedAvatarData,
   ourConvo,
   profileKey,
+  context,
 }: {
   ourConvo: ConversationModel;
   decryptedAvatarData: ArrayBuffer;
   profileKey: Uint8Array;
+  context: 'uploadNewAvatar' | 'reuploadAvatar';
 }) {
   if (!decryptedAvatarData?.byteLength) {
     window.log.warn('uploadAndSetOurAvatarShared: avatar content is empty');
@@ -106,19 +110,28 @@ export async function uploadAndSetOurAvatarShared({
       })
     : null;
 
-  const displayName = ourConvo.getRealSessionUsername();
-
   // Replace our temporary image with the attachment pointer from the server.
   // Note: this commits already to the DB.
   await ourConvo.setSessionProfile({
     avatarPath: savedMainAvatar.path,
     fallbackAvatarPath: processedFallbackAvatar?.path || savedMainAvatar.path,
-    displayName,
+    displayName: null,
     avatarPointer: fileUrl,
     type: 'setAvatarDownloadedPrivate',
     profileKey,
   });
   await Storage.put(SettingsKey.ntsAvatarExpiryMs, expiresMs);
+  if (context === 'uploadNewAvatar') {
+    await UserConfigWrapperActions.setNewProfilePic({
+      key: profileKey,
+      url: fileUrl,
+    });
+  } else if (context === 'reuploadAvatar') {
+    await UserConfigWrapperActions.setReuploadProfilePic({
+      key: profileKey,
+      url: fileUrl,
+    });
+  }
 
   return {
     avatarPointer: ourConvo.getAvatarPointer(),
