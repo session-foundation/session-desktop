@@ -144,7 +144,7 @@ async function handleMetaMergeResults(groupPk: GroupPubkeyType) {
   if (convo) {
     let changes = false;
     if (refreshedInfos.name !== convo.get('displayNameInProfile')) {
-      convo.setSessionDisplayNameNoCommit(refreshedInfos.name || undefined);
+      convo.setNonPrivateNameNoCommit(refreshedInfos.name || undefined);
       changes = true;
     }
     const expirationMode = refreshedInfos.expirySeconds ? 'deleteAfterSend' : 'off';

@@ -345,7 +345,7 @@ const handleUserGroupUpdate = createAsyncThunk(
       convo.setActiveAt(Date.now());
     }
 
-    convo.setSessionDisplayNameNoCommit(userGroup.name || undefined);
+    convo.setNonPrivateNameNoCommit(userGroup.name || undefined);
 
     await convo.commit();
 

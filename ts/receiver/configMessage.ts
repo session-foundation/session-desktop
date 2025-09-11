@@ -637,7 +637,7 @@ async function handleSingleGroupUpdate({
         ? groupInWrapper.disappearingTimerSeconds
         : undefined;
     created.setActiveAt(joinedAt);
-    created.setSessionDisplayNameNoCommit(groupInWrapper.name || undefined);
+    created.setNonPrivateNameNoCommit(groupInWrapper.name || undefined);
     await created.setPriorityFromWrapper(groupInWrapper.priority);
     created.setLastJoinedTimestamp(joinedAt);
     created.setExpirationArgs({

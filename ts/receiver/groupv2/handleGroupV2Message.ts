@@ -139,13 +139,13 @@ async function handleGroupUpdateInviteMessage({
 
   window.log.debug(`received invite to group ${ed25519Str(groupPk)} by user:${ed25519Str(author)}`);
 
-  const convo = await ConvoHub.use().getOrCreateAndWait(groupPk, ConversationTypeEnum.GROUPV2);
-  convo.setActiveAt(signatureTimestamp);
-  await convo.setDidApproveMe(true, false);
-  await convo.setOriginConversationID(author, false);
+  const groupConvo = await ConvoHub.use().getOrCreateAndWait(groupPk, ConversationTypeEnum.GROUPV2);
+  groupConvo.setActiveAt(signatureTimestamp);
+  await groupConvo.setDidApproveMe(true, false);
+  await groupConvo.setOriginConversationID(author, false);
 
-  if (inviteMessage.name && isEmpty(convo.getRealSessionUsername())) {
-    convo.setSessionDisplayNameNoCommit(inviteMessage.name);
+  if (inviteMessage.name && isEmpty(groupConvo.getRealSessionUsername())) {
+    groupConvo.setNonPrivateNameNoCommit(inviteMessage.name);
   }
   const userEd25519Secretkey = (await UserUtils.getUserED25519KeyPairBytes()).privKeyBytes;
 
@@ -162,10 +162,10 @@ async function handleGroupUpdateInviteMessage({
   await UserGroupsWrapperActions.setGroup(found);
   await UserGroupsWrapperActions.markGroupInvited(groupPk);
   // force markedAsUnread to be true so it shows the unread banner (we only show the banner if there are unread messages on at least one msg/group request)
-  await convo.markAsUnread(true, false);
-  await convo.commit();
+  await groupConvo.markAsUnread(true, false);
+  await groupConvo.commit();
 
-  await SessionUtilConvoInfoVolatile.insertConvoFromDBIntoWrapperAndRefresh(convo.id);
+  await SessionUtilConvoInfoVolatile.insertConvoFromDBIntoWrapperAndRefresh(groupConvo.id);
 
   if (wasKicked && !found.kicked) {
     // we have been reinvited to a group which we had been kicked from.
@@ -568,7 +568,7 @@ async function handleGroupUpdatePromoteMessage({
   await convo.setOriginConversationID(author, false);
 
   if (change.name && isEmpty(convo.getRealSessionUsername())) {
-    convo.setSessionDisplayNameNoCommit(change.name);
+    convo.setNonPrivateNameNoCommit(change.name);
   }
   const userEd25519Secretkey = (await UserUtils.getUserED25519KeyPairBytes()).privKeyBytes;
 

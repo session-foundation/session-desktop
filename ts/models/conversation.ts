@@ -203,6 +203,12 @@ type SetSessionProfileDetails = WithDisplayNameChange &
         WithAvatarPathAndFallback)
   );
 
+type SetSessionProfileReturn = {
+  nameChanged: boolean;
+  avatarChanged: boolean;
+  avatarNeedsDownload: boolean;
+};
+
 /**
  *
  * Type guard for the set profile action that is private.
@@ -1480,15 +1486,17 @@ export class ConversationModel extends Model<ConversationAttributes> {
    *
    * This function does commit to the DB if any changes are detected.
    */
-  public async setSessionProfile(newProfile: SetSessionProfileDetails): Promise<{
-    nameChanged: boolean;
-    avatarChanged: boolean;
-    avatarNeedsDownload: boolean;
-  }> {
+  public async setSessionProfile(
+    newProfile: SetSessionProfileDetails
+  ): Promise<SetSessionProfileReturn> {
     let nameChanged = false;
 
     const existingSessionName = this.getRealSessionUsername();
-    if (newProfile.displayName !== existingSessionName && newProfile.displayName) {
+    if (
+      this.shouldApplyPrivateProfileUpdate(newProfile) &&
+      newProfile.displayName !== existingSessionName &&
+      newProfile.displayName
+    ) {
       this.set({
         displayNameInProfile: newProfile.displayName,
       });
@@ -1659,15 +1667,12 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
   /**
    * Update the display name of this conversation with the provided one.
-   * Note: cannot be called with private chats.
-   * Instead use `setSessionProfile`.
-   * The reason is that we might have a more recent name set for this user already, and we need to discard the change
-   * if what we are about to apply is older than what we have.
+   * Note: cannot be called with private chats: instead use `setSessionProfile`.
    */
-  public setSessionDisplayNameNoCommit(newDisplayName?: string | null) {
+  public setNonPrivateNameNoCommit(newDisplayName?: string | null) {
     if (this.isPrivate()) {
       // the name change is only allowed through setSessionProfile for private chats now, see above.
-      throw new Error('setSessionDisplayNameNoCommit should not be called with private chats');
+      throw new Error('setNonPrivateNameNoCommit should not be called with private chats');
     }
     const existingSessionName = this.getRealSessionUsername();
     if (newDisplayName !== existingSessionName && newDisplayName) {
@@ -2108,7 +2113,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
     if (details.name && details.name !== this.getRealSessionUsername()) {
       hasChange = hasChange || true;
-      this.setSessionDisplayNameNoCommit(details.name);
+      this.setNonPrivateNameNoCommit(details.name);
     }
 
     if (this.handleRoomDescriptionChange({ description: details.description || '' })) {

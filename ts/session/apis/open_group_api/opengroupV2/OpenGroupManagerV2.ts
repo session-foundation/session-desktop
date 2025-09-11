@@ -210,7 +210,7 @@ export class OpenGroupManagerV2 {
       // mark active so it's not in the contacts list but in the conversation list
       // mark isApproved as this is a public chat
       conversation.setActiveAt(Date.now());
-      conversation.setSessionDisplayNameNoCommit(updatedRoom.roomName);
+      conversation.setNonPrivateNameNoCommit(updatedRoom.roomName);
       await conversation.setIsApproved(true, false);
       await conversation.setDidApproveMe(true, false);
       await conversation.setPriorityFromWrapper(CONVERSATION_PRIORITIES.default, false);
