@@ -624,14 +624,16 @@ async function createMemberAndSetDetails({
   profileUpdatedSeconds: number;
 }) {
   await MetaGroupWrapperActions.memberConstructAndSet(groupPk, memberPubkey);
-  await MetaGroupWrapperActions.memberSetProfileDetails(groupPk, memberPubkey, {
+  const details = {
     name: displayName ?? '',
     profilePicture:
       profileKeyHex && avatarUrl
         ? { url: avatarUrl, key: from_hex(profileKeyHex) }
         : { url: '', key: new Uint8Array() },
     profileUpdatedSeconds,
-  });
+  };
+
+  await MetaGroupWrapperActions.memberSetProfileDetails(groupPk, memberPubkey, details);
 }
 
 export const LibSessionUtil = {

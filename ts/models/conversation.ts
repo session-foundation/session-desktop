@@ -1470,7 +1470,9 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
   }
 
-  private shouldApplyPrivateProfileUpdate(newProfile: SetSessionProfileDetails) {
+  private shouldApplyPrivateProfileUpdate<T extends SetSessionProfileDetails>(
+    newProfile: SetSessionProfileDetails
+  ): newProfile is Extract<T, { profileUpdatedAtSeconds: number }> {
     if (isSetProfileWithUpdatedAtSeconds(newProfile)) {
       const ts = new Timestamp({ value: newProfile.profileUpdatedAtSeconds });
       return this.getProfileUpdatedSeconds() < ts.seconds();
@@ -1500,6 +1502,10 @@ export class ConversationModel extends Model<ConversationAttributes> {
       this.set({
         displayNameInProfile: newProfile.displayName,
       });
+      // name has changed, also apply the new profileUpdatedAtSeconds timestamp
+      if (isSetProfileWithUpdatedAtSeconds(newProfile)) {
+        this.set({ profileUpdatedSeconds: newProfile.profileUpdatedAtSeconds });
+      }
       nameChanged = true;
     }
     const type = newProfile.type;
@@ -1533,9 +1539,13 @@ export class ConversationModel extends Model<ConversationAttributes> {
               fallbackAvatarInProfile: undefined,
             });
             avatarChanged = true;
+            // avatar has changed, also apply the new profileUpdatedAtSeconds timestamp
+            if (isSetProfileWithUpdatedAtSeconds(newProfile)) {
+              this.set({ profileUpdatedSeconds: newProfile.profileUpdatedAtSeconds });
+            }
           }
         }
-        if (avatarChanged) {
+        if (avatarChanged || nameChanged) {
           await this.commit();
         }
         return { nameChanged, avatarNeedsDownload: false, avatarChanged };
@@ -1562,6 +1572,10 @@ export class ConversationModel extends Model<ConversationAttributes> {
         }
         this.set({ avatarPointer: newProfile.avatarPointer, profileKey: newProfileKeyHex });
 
+        // avatar has changed, also apply the new profileUpdatedAtSeconds timestamp
+        if (isSetProfileWithUpdatedAtSeconds(newProfile)) {
+          this.set({ profileUpdatedSeconds: newProfile.profileUpdatedAtSeconds });
+        }
         await this.commit();
 
         return { nameChanged, avatarNeedsDownload: hasAvatarInNewProfile, avatarChanged: true };
@@ -1590,6 +1604,9 @@ export class ConversationModel extends Model<ConversationAttributes> {
           }
           return { nameChanged, avatarChanged: false, avatarNeedsDownload: false };
         }
+
+        // avatar has changed, but we are only dealing with the downloaded part of it here
+        // so this actually is not a profile update change. Nothing to do, as the newProfile type suggests
 
         this.set({
           avatarPointer: newProfile.avatarPointer,
