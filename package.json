@@ -2,7 +2,7 @@
   "name": "session-desktop",
   "productName": "Session",
   "description": "Private messaging from your desktop",
-  "version": "1.16.8",
+  "version": "1.16.9",
   "license": "GPL-3.0",
   "author": {
     "name": "Session Foundation",
@@ -39,7 +39,7 @@
     "build-release-base": "cross-env NODE_ENV=production electron-builder --config.extraMetadata.environment=production",
     "build-release": "yarn build-release-base --publish=never --config.directories.output=release",
     "build-release-publish": "yarn build-release-base --publish=always",
-    "ready": "yarn dedup --fail && yarn build-everything && yarn lint && yarn test",
+    "ready": "yarn dedup --fail && yarn build && yarn lint && yarn test",
     "postinstall": "yarn patch-package && yarn electron-builder install-app-deps",
     "update-git-info": "node ./build/updateLocalConfig.js",
     "worker:utils": "webpack  --config=./utils.worker.config.js",
@@ -49,7 +49,6 @@
     "prepare": "husky",
     "print-deps": "node -v  && python3 --version",
     "watch": "yarn clean && yarn update-git-info && concurrently -n PBJS,SASS,LOCALES,UTIL,LIBSESSION,IMAGE,TS -c yellow,green,red,blue,blue,blue,green \"yarn protobuf\" \"yarn sass --watch\" \"yarn build:locales-soft\" \"yarn worker:utils --watch\" \"yarn worker:libsession --watch\" \"yarn worker:image_processor --watch\" \"yarn tsc --watch\""
-
   },
   "dependencies": {
     "@emoji-mart/data": "^1.2.1",
@@ -112,7 +111,7 @@
     "rimraf": "6.0.1",
     "sanitize.css": "^12.0.1",
     "semver": "^7.7.1",
-    "sharp": "^0.34.3",
+    "sharp": "0.33.3",
     "styled-components": "^6.1.15",
     "uuid": "11.1.0",
     "viem": "^2.26.0",
