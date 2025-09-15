@@ -177,10 +177,6 @@ export const UserConfigWrapperActions: UserConfigWrapperActionsCalls = {
     callLibSessionWorker(['UserConfig', 'setNewProfilePic', profilePic]) as Promise<
       ReturnType<UserConfigWrapperActionsCalls['setNewProfilePic']>
     >,
-  setUserConfig: async (details: Parameters<UserConfigWrapperActionsCalls['setUserConfig']>[0]) =>
-    callLibSessionWorker(['UserConfig', 'setUserConfig', details]) as Promise<
-      ReturnType<UserConfigWrapperActionsCalls['setUserConfig']>
-    >,
   setReuploadProfilePic: async (profilePic: ProfilePicture) =>
     callLibSessionWorker(['UserConfig', 'setReuploadProfilePic', profilePic]) as Promise<
       ReturnType<UserConfigWrapperActionsCalls['setReuploadProfilePic']>
