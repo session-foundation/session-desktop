@@ -1,20 +1,13 @@
-import path from 'node:path';
-import { appendFileSync } from 'node:fs';
 import { app, dialog, clipboard } from 'electron';
 import os from 'node:os';
 import { reallyJsonStringify } from '../util/reallyJsonStringify';
 import { Errors } from '../types/Errors';
 import { redactAll } from '../util/privacy';
+import { logCrash } from './crash/log_crash';
 
 // TODO: use localised strings
 const quitText = 'Quit';
 const copyErrorAndQuitText = 'Copy error and quit';
-
-function logCrash(type: string, details: any) {
-  const crashLogPath = path.join(app.getPath('userData'), 'crash-log.txt');
-  const logLine = `[${new Date().toISOString()}] ${type} crash: ${JSON.stringify(details)}\n`;
-  appendFileSync(crashLogPath, logLine, 'utf8');
-}
 
 function handleError(prefix: string, error: Error): void {
   const formattedError = Errors.toString(error);

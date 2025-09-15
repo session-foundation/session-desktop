@@ -21,7 +21,7 @@ import {
 } from 'electron';
 
 import crypto from 'crypto';
-import fs, { appendFileSync } from 'fs';
+import fs from 'fs';
 import os from 'os';
 import path, { join } from 'path';
 import { platform as osPlatform } from 'process';
@@ -153,8 +153,23 @@ if (!process.mas) {
   }
 }
 
+/**
+ * Starts the crash reporter, which saves crashes to disk.
+ * The dumps will be saved in the `userData/CrashPad/pending` directory.
+ *
+ *  The minidumps can be read using the `minidump_stackwalk` tool.
+ * If you do not have cargo installed, you can do those steps:
+ * ```bash
+ * git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+ * cd depot_tools
+ * mkdir breakpad && cd breakpad
+ * ../fetch breakpad && cd src
+ * ./configure && make
+ * file src/processor/minidump_stackwalk
+ * ./src/processor/minidump_stackwalk <path_to.dmp> <any_symbols_you_have_optional>
+ */
 crashReporter.start({
-  submitURL: '', // leave empty if you don’t want to upload
+  submitURL: '', // leave empty as we don't want to upload them, but only save them locally
   uploadToServer: false,
   compress: true,
 });
@@ -184,6 +199,8 @@ import { initializeMainProcessLogger } from '../util/logger/main_process_logging
 import * as log from '../util/logger/log';
 import { DURATION } from '../session/constants';
 import { tr } from '../localization/localeTools';
+
+import { logCrash } from '../node/crash/log_crash';
 
 function prepareURL(pathSegments: Array<string>, moreKeys?: { theme: any }) {
   const urlObject: url.UrlObject = {
@@ -367,11 +384,6 @@ async function createWindow() {
   mainWindow.on('focus', setWindowFocus);
   mainWindow.on('blur', setWindowFocus);
   mainWindow.once('ready-to-show', setWindowFocus);
-  function logCrash(type: string, details: any) {
-    const crashLogPath = path.join(app.getPath('userData'), 'crash-log.txt');
-    const logLine = `[${new Date().toISOString()}] ${type} crash: ${JSON.stringify(details)}\n`;
-    appendFileSync(crashLogPath, logLine, 'utf8');
-  }
 
   mainWindow.webContents.on('render-process-gone', (_event, details) => {
     // details.reason can be: 'crashed', 'killed', 'oom', etc.
