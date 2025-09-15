@@ -65,10 +65,10 @@ function centerCoverOpts(maxSidePx: number) {
 function formattedMetadata(metadata: {
   width: number | undefined;
   height: number | undefined;
-  // format: keyof sharp.FormatEnum;
+  format: keyof sharp.FormatEnum;
   size: number;
 }) {
-  return `(${metadata.width}x${metadata.height}  of ${metadata.size} bytes)`;
+  return `(${metadata.width}x${metadata.height}, format:${String(metadata.format)}  of ${metadata.size} bytes)`;
 }
 
 function sharpFrom(inputBuffer: ArrayBufferLike | Buffer, options?: sharp.SharpOptions) {
@@ -486,10 +486,10 @@ const workerActions: ImageProcessorWorkerActions = {
           }ms for}`
         );
         logIfOn(
-          `\t src${formattedMetadata({ width: metadata.width, height: metadata.height, size: inputBuffer.byteLength })} `
+          `\t src${formattedMetadata({ width: metadata.width, height: metadata.height, format: metadata.format, size: inputBuffer.byteLength })} `
         );
         logIfOn(
-          `\t dest${formattedMetadata({ width: outputMetadata.width, height: outputMetadata.height, size: buffer.buffer.byteLength })} `
+          `\t dest${formattedMetadata({ width: outputMetadata.width, height: outputMetadata.height, format: metadata.format, size: buffer.buffer.byteLength })} `
         );
 
         return {
@@ -507,7 +507,7 @@ const workerActions: ImageProcessorWorkerActions = {
         }ms with quality ${quality}`
       );
       logIfOn(
-        `\t src${formattedMetadata({ width: metadata.width, height: metadata.height, size: inputBuffer.byteLength })} `
+        `\t src${formattedMetadata({ width: metadata.width, height: metadata.height, format: metadata.format, size: inputBuffer.byteLength })} `
       );
     }
     qualityRangeIndex++;
@@ -519,7 +519,7 @@ const workerActions: ImageProcessorWorkerActions = {
       `[imageProcessorWorker] processForFileServerUpload: failed after ${Date.now() - start}ms`
     );
     logIfOn(
-      `\t src${formattedMetadata({ width: metadata.width, height: metadata.height, size: inputBuffer.byteLength })} `
+      `\t src${formattedMetadata({ width: metadata.width, height: metadata.height, format: metadata.format, size: inputBuffer.byteLength })} `
     );
 
     return null;
