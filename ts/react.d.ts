@@ -157,7 +157,7 @@ declare module 'react' {
     | 'add-user'
     | 'send-message'
     | 'scroll-to-bottom'
-    | 'modal-close'
+    | `modal-${'close' | 'pencil'}`
     | 'microphone'
     | 'call'
     | 'attachments'
