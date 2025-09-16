@@ -233,6 +233,10 @@ export type WithAvatarPointer = {
 };
 
 export type WithProfileUpdatedAtSeconds = {
+  /**
+   * 0 is allowed for the transition period (until enough users have migrated to sending their profileUpdatedAtSeconds).
+   * Allowed as in an incoming message with a lokiProfile updated at 0, will be applied locally, if needed
+   */
   profileUpdatedAtSeconds: number;
 };
 

@@ -1474,7 +1474,19 @@ export class ConversationModel extends Model<ConversationAttributes> {
     newProfile: SetSessionProfileDetails
   ): newProfile is Extract<T, { profileUpdatedAtSeconds: number }> {
     if (isSetProfileWithUpdatedAtSeconds(newProfile)) {
+      // For the transition period, we need to allow an incoming profile to be applied when
+      // the timestamp is not set (defaults to 0).
+      if (newProfile.profileUpdatedAtSeconds === 0 && this.getProfileUpdatedSeconds() === 0) {
+        window.log.debug(
+          `shouldApplyPrivateProfileUpdate for ${ed25519Str(this.id)} incomingSeconds:0 currentSeconds:0. Allowing overwrite`
+        );
+        return true;
+      }
       const ts = new Timestamp({ value: newProfile.profileUpdatedAtSeconds });
+      window.log.debug(
+        `shouldApplyPrivateProfileUpdate for ${ed25519Str(this.id)} incomingSeconds:${ts.seconds()} currentSeconds:${this.getProfileUpdatedSeconds()} -> ${this.getProfileUpdatedSeconds() < ts.seconds()}`
+      );
+
       return this.getProfileUpdatedSeconds() < ts.seconds();
     }
     // for non private setProfile calls, we do not need to check the updatedAtSeconds
