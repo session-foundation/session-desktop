@@ -321,7 +321,7 @@
 
 .module-conversation-list-item__header__name {
   flex-grow: 1;
-  flex-shrink: 1;
+  flex-shrink: 1000; // we need this to take all the shrinking instead of the ListItemIcons
   font-size: 14px;
   line-height: 18px;
 
