@@ -164,6 +164,8 @@ const doAppStartUp = async () => {
     // Schedule all avatarMigrateJobs in some time to let anything incoming from the network be handled first
     void AvatarMigrate.scheduleAllAvatarMigrateJobs();
   }, 1 * DURATION.MINUTES);
+
+  void regenerateLastMessagesGroupsCommunities();
 };
 
 function useUpdateBadgeCount() {
@@ -193,6 +195,24 @@ function useDebugThemeSwitch() {
       }
     }
   );
+}
+
+/**
+ * We only need to regenerate the last message of groups/communities once,
+ * and we can remove it in a few months safely
+ */
+async function regenerateLastMessagesGroupsCommunities() {
+  if (Storage.getBoolOr(SettingsKey.lastMessageGroupsRegenerated, false)) {
+    return; // already regenerated once
+  }
+
+  ConvoHub.use()
+    .getConversations()
+    .filter(m => m.isClosedGroupV2() || m.isPublic())
+    .forEach(m => {
+      m.updateLastMessage();
+    });
+  await Storage.put(SettingsKey.lastMessageGroupsRegenerated, true);
 }
 
 /**
