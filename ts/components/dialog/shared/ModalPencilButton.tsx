@@ -7,6 +7,7 @@ export function ModalPencilIcon(props: { onClick: () => void }) {
       unicode={LUCIDE_ICONS_UNICODE.PENCIL}
       onClick={props.onClick}
       iconSize="large"
+      dataTestId="modal-pencil-button"
       iconColor="var(--text-primary-color)"
     />
   );
