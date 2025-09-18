@@ -1,7 +1,7 @@
 import autoBind from 'auto-bind';
 import { filesize } from 'filesize';
 import { GroupPubkeyType, PubkeyType } from 'libsession_util_nodejs';
-import { debounce, isEmpty, size as lodashSize, uniq } from 'lodash';
+import { debounce, isEmpty, isEqual, size as lodashSize, uniq } from 'lodash';
 import { SignalService } from '../protobuf';
 import { ConvoHub } from '../session/conversations';
 import { ContentMessage } from '../session/messages/outgoing';
@@ -91,7 +91,10 @@ import {
 import { NetworkTime } from '../util/NetworkTime';
 import { MessageQueue } from '../session/sending';
 import { getTimerNotificationStr } from './timerNotifications';
-import { ExpirationTimerUpdate } from '../session/disappearing_messages/types';
+import {
+  ExpirationTimerUpdate,
+  type DisappearingMessageType,
+} from '../session/disappearing_messages/types';
 import { Model } from './models';
 import { ReduxOnionSelectors } from '../state/selectors/onions';
 import { tStrippedWithObj, tr, tStripped } from '../localization/localeTools';
@@ -900,7 +903,7 @@ export class MessageModel extends Model<MessageAttributes> {
         const openGroupParams: OpenGroupVisibleMessageParams = {
           identifier: this.id,
           createAtNetworkTimestamp: NetworkTime.now(),
-          lokiProfile: UserUtils.getOurProfile(),
+          userProfile: await UserUtils.getOurProfile(),
           body,
           attachments,
           preview: preview ? [preview] : [],
@@ -931,15 +934,12 @@ export class MessageModel extends Model<MessageAttributes> {
         attachments,
         preview: preview ? [preview] : [],
         quote,
-        lokiProfile: UserUtils.getOurProfile(),
+        userProfile: await UserUtils.getOurProfile(),
         // Note: we should have the fields set on that object when we've added it to the DB.
         // We don't want to reuse the conversation setting, as it might change since this message was sent.
         expirationType: this.getExpirationType() || 'unknown',
         expireTimer: this.getExpireTimerSeconds(),
       };
-      if (!chatParams.lokiProfile) {
-        delete chatParams.lokiProfile;
-      }
 
       const chatMessage = new VisibleMessage(chatParams);
 
@@ -990,7 +990,11 @@ export class MessageModel extends Model<MessageAttributes> {
     // This needs to be an unsafe call, because this method is called during
     //   initial module setup. We may be in the middle of the initial fetch to
     //   the database.
-    return ConvoHub.use().getUnsafe(this.get('conversationId'));
+    return ConvoHub.use().getUnsafe(this.getConversationId() as string);
+  }
+
+  public getConversationId(): string | undefined {
+    return this.get('conversationId');
   }
 
   public getQuoteContact() {
@@ -1012,6 +1016,20 @@ export class MessageModel extends Model<MessageAttributes> {
     }
 
     return UserUtils.getOurPubKeyStrFromCache();
+  }
+
+  public setSource(source: string) {
+    if (source === this.getSource()) {
+      return;
+    }
+    this.setKey('source', source);
+  }
+
+  public setConversationId(convoId: string) {
+    if (convoId === this.getConversationId()) {
+      return;
+    }
+    this.setKey('conversationId', convoId);
   }
 
   public isOutgoing() {
@@ -1231,6 +1249,110 @@ export class MessageModel extends Model<MessageAttributes> {
       default:
         break;
     }
+  }
+
+  public setAttachments(attachments: Array<AttachmentTypeWithPath>) {
+    if (isEqual(attachments, this.getAttachments())) {
+      return;
+    }
+    this.set({ attachments });
+  }
+
+  public getAttachments() {
+    return this.get('attachments');
+  }
+
+  public setPreview(preview: any) {
+    if (isEqual(preview, this.getPreview())) {
+      return;
+    }
+    this.set({ preview });
+  }
+
+  public getReacts() {
+    return this.get('reacts');
+  }
+
+  public setReacts(reacts: ReactionList | undefined) {
+    if (isEqual(reacts, this.getReacts())) {
+      return;
+    }
+    this.set({ reacts });
+  }
+
+  public getReactsIndex() {
+    return this.get('reactsIndex');
+  }
+
+  public setReactIndex(index: number) {
+    if (this.getReactsIndex() === index) {
+      return;
+    }
+    this.set({ reactsIndex: index });
+  }
+
+  public getQuote() {
+    return this.get('quote');
+  }
+
+  public setQuote(quote: any) {
+    if (isEqual(quote, this.getQuote())) {
+      return;
+    }
+    this.set({ quote });
+  }
+
+  public getSentAt() {
+    return this.get('sent_at');
+  }
+
+  public setSentAt(sentAt: number) {
+    if (sentAt === this.getSentAt()) {
+      return;
+    }
+    this.set({ sent_at: sentAt });
+  }
+
+  public setExpireTimer(expireTimerSeconds: number | undefined) {
+    if (expireTimerSeconds === this.getExpireTimerSeconds()) {
+      return;
+    }
+    this.set({ expireTimer: expireTimerSeconds });
+  }
+
+  public set(attrs: Partial<MessageAttributes>) {
+    super.set(attrs);
+    return this;
+  }
+
+  public setKey<K extends keyof MessageAttributes>(
+    key: K,
+    value: MessageAttributes[K] | undefined
+  ) {
+    super.setKey(key, value);
+    return this;
+  }
+
+  public setExpirationType(expirationType: DisappearingMessageType | undefined) {
+    if (expirationType === this.getExpirationType()) {
+      return;
+    }
+    this.set({ expirationType });
+  }
+
+  public getMessageExpirationStartTimestamp() {
+    return this.get('expirationStartTimestamp');
+  }
+
+  public setMessageExpirationStartTimestamp(expirationStartTimestamp: number | undefined) {
+    if (expirationStartTimestamp === this.getMessageExpirationStartTimestamp()) {
+      return;
+    }
+    this.set({ expirationStartTimestamp });
+  }
+
+  public getPreview() {
+    return this.get('preview');
   }
 
   public isTrustedForAttachmentDownload() {

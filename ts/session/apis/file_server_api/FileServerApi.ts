@@ -152,7 +152,7 @@ export const getLatestReleaseFromFileServer = async (
   userEd25519SecretKey: Uint8Array,
   releaseType?: ReleaseChannels
 ): Promise<[string, ReleaseChannels] | null> => {
-  const sigTimestampSeconds = NetworkTime.getNowWithNetworkOffsetSeconds();
+  const sigTimestampSeconds = NetworkTime.nowSeconds();
   const blindedPkHex = await BlindingActions.blindVersionPubkey({
     ed25519SecretKey: userEd25519SecretKey,
   });

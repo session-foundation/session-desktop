@@ -79,6 +79,7 @@ const buildSyncVisibleMessage = (
     body,
     quote,
     preview,
+    userProfile: null, // this is a synced message, so we do not need to include the userProfile
     syncTarget,
     expireTimer: expireUpdate.expirationTimer,
     expirationType: expireUpdate.expirationType,

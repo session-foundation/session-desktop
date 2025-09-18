@@ -35,6 +35,7 @@ import { releasedFeaturesActions } from '../../../state/ducks/releasedFeatures';
 import { networkDataActions } from '../../../state/ducks/networkData';
 import { DEBUG_MENU_PAGE, type DebugMenuPageProps } from './DebugMenuModal';
 import { SimpleSessionInput } from '../../inputs/SessionInput';
+import { NetworkTime } from '../../../util/NetworkTime';
 
 const hexRef = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
 
@@ -57,9 +58,13 @@ async function generateOneRandomContact() {
   // createdAt is set to now in libsession-util itself,
   // but we still need to mark that conversation as active
   // for it to be inserted in the config
-  created.setKey('active_at', Date.now());
-  created.setKey('isApproved', true);
-  created.setSessionDisplayNameNoCommit(id.slice(2, 8));
+  created.setActiveAt(Date.now());
+  await created.setIsApproved(true, false);
+  await created.setSessionProfile({
+    type: 'displayNameChangeOnlyPrivate',
+    displayName: id.slice(2, 8),
+    profileUpdatedAtSeconds: NetworkTime.nowSeconds(),
+  });
 
   await created.commit();
   return created;

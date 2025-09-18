@@ -75,7 +75,7 @@ async function createSessionInboxStore() {
       conversationLookup: makeLookup(conversations, 'id'),
     },
     user: {
-      ourDisplayNameInProfile: UserUtils.getOurProfile()?.displayName || '',
+      ourDisplayNameInProfile: (await UserUtils.getOurProfile()).displayName || '',
       ourNumber: UserUtils.getOurPubKeyStrFromCache(),
       uploadingNewAvatarCurrentUser: false,
       uploadingNewAvatarCurrentUserFailed: false,

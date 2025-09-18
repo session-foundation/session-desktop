@@ -1,5 +1,4 @@
 import { SignalService } from '../../../../../../protobuf';
-import { UserUtils } from '../../../../../utils';
 import { Preconditions } from '../../../preconditions';
 import { GroupUpdateMessage, GroupUpdateMessageParams } from '../GroupUpdateMessage';
 
@@ -41,7 +40,6 @@ export class GroupUpdateInviteMessage extends GroupUpdateMessage {
   }
 
   public dataProto(): SignalService.DataMessage {
-    const ourProfile = UserUtils.getOurProfile();
     const inviteMessage = new SignalService.GroupUpdateInviteMessage({
       groupSessionId: this.destination,
       name: this.groupName,
@@ -49,11 +47,10 @@ export class GroupUpdateInviteMessage extends GroupUpdateMessage {
       memberAuthData: this.memberAuthData,
     });
 
+    const ourProfile = this.userProfile?.toProtobufDetails() ?? {};
+
     return new SignalService.DataMessage({
-      profile: ourProfile
-        ? { displayName: ourProfile.displayName, profilePicture: ourProfile.avatarPointer }
-        : undefined,
-      profileKey: ourProfile?.profileKey,
+      ...ourProfile,
       groupUpdateMessage: { inviteMessage },
     });
   }

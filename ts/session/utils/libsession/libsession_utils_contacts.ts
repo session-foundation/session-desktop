@@ -1,4 +1,4 @@
-import { ContactInfo, ContactInfoSet } from 'libsession_util_nodejs';
+import { ContactInfoGet, ContactInfoSet } from 'libsession_util_nodejs';
 import { ConversationModel } from '../../../models/conversation';
 import { getContactInfoFromDBValues } from '../../../types/sqlSharedTypes';
 import { ContactsWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
@@ -22,7 +22,7 @@ import { CONVERSATION_PRIORITIES } from '../../../models/types';
  *    - `UserSyncJob` (sending data to the network) and the
  *
  */
-const mappedContactWrapperValues = new Map<string, ContactInfo>();
+const mappedContactWrapperValues = new Map<string, ContactInfoGet>();
 
 /**
  * Returns true if that conversation is not us, is private, is not blinded.
@@ -61,14 +61,15 @@ async function insertContactFromDBIntoWrapperAndRefresh(
   // But, if we use isApproved() instead of .get('isApproved'), we get the value from libsession which is not up to date with a change made in the convo yet!
   const dbName = foundConvo.getRealSessionUsername() || undefined;
   const dbNickname = foundConvo.get('nickname');
-  const dbProfileUrl = foundConvo.get('avatarPointer') || undefined;
-  const dbProfileKey = foundConvo.get('profileKey') || undefined;
+  const dbProfileUrl = foundConvo.getAvatarPointer() || undefined;
+  const dbProfileKey = foundConvo.getProfileKey() || undefined;
   const dbApproved = !!foundConvo.get('isApproved');
   const dbApprovedMe = !!foundConvo.get('didApproveMe');
   const dbBlocked = foundConvo.isBlocked();
   const priority = foundConvo.get('priority') || CONVERSATION_PRIORITIES.default;
   const expirationMode = foundConvo.get('expirationMode') || undefined;
   const expireTimer = foundConvo.get('expireTimer') || 0;
+  const dbProfileUpdatedAtSeconds = foundConvo.getProfileUpdatedSeconds() || 0;
 
   const wrapperContact = getContactInfoFromDBValues({
     id,
@@ -83,6 +84,7 @@ async function insertContactFromDBIntoWrapperAndRefresh(
     dbCreatedAtSeconds: 0, // just give 0, now() will be used internally by the wrapper if the contact does not exist yet.
     expirationMode,
     expireTimer,
+    dbProfileUpdatedAtSeconds,
   });
   try {
     await ContactsWrapperActions.set(wrapperContact);
@@ -115,7 +117,7 @@ async function refreshMappedValue(id: string, duringAppStart = false) {
   }
 }
 
-function setMappedValue(info: ContactInfo) {
+function setMappedValue(info: ContactInfoGet) {
   mappedContactWrapperValues.set(info.id, info);
 }
 

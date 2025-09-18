@@ -56,6 +56,7 @@ function getContactInfoFromDBValues({
     nickname: dbNickname,
     name: dbName,
     createdAtSeconds: dbCreatedAtSeconds,
+    profileUpdatedSeconds: 0,
   };
 
   if (
@@ -151,7 +152,7 @@ function insertContactIntoContactWrapper(
     const maxRead = rows?.max_sent_at;
     const lastRead = isNumber(maxRead) && isFinite(maxRead) ? maxRead : 0;
     hasDebugEnvVariable &&
-      console.info(`Inserting contact into volatile wrapper maxread: ${contact.id} :${lastRead}`);
+      console.info(`Inserting contact into volatile wrapper max read: ${contact.id} :${lastRead}`);
     volatileConfigWrapper.set1o1(contact.id, lastRead, false);
   } catch (e) {
     console.error(
@@ -342,7 +343,7 @@ function insertLegacyGroupIntoWrapper(
     const maxRead = rows?.max_sent_at;
     const lastRead = isNumber(maxRead) && isFinite(maxRead) ? maxRead : 0;
     hasDebugEnvVariable &&
-      console.info(`Inserting legacy group into volatile wrapper maxread: ${id} :${lastRead}`);
+      console.info(`Inserting legacy group into volatile wrapper max read: ${id} :${lastRead}`);
     volatileInfoConfigWrapper.setLegacyGroup(id, lastRead, false);
   } catch (e) {
     console.error(

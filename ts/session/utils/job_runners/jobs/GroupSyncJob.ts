@@ -281,6 +281,7 @@ async function allFailedToSentGroupControlMessagesToRetry(groupPk: GroupPubkeyTy
           identifier,
           createAtNetworkTimestamp,
           secretKey,
+          userProfile: null,
           sodium,
           ...DisappearingMessages.getExpireDetailsForOutgoingMessage(
             convo,

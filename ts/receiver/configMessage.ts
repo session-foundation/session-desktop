@@ -1,5 +1,5 @@
 /* eslint-disable no-await-in-loop */
-import { ContactInfo, GroupPubkeyType, UserGroupsGet } from 'libsession_util_nodejs';
+import { ContactInfoGet, GroupPubkeyType, UserGroupsGet } from 'libsession_util_nodejs';
 import { compact, difference, isEmpty, isNil, isNumber } from 'lodash';
 import { ConfigDumpData } from '../data/configDump/configDump';
 import { SettingsKey } from '../data/settings-key';
@@ -219,6 +219,7 @@ async function handleUserProfileUpdate(result: IncomingUserResult): Promise<void
   const profilePic = await UserConfigWrapperActions.getProfilePic();
   const displayName = await UserConfigWrapperActions.getName();
   const priority = await UserConfigWrapperActions.getPriority();
+  const profileUpdatedAtSeconds = await UserConfigWrapperActions.getProfileUpdatedSeconds();
   if (!profilePic || isEmpty(profilePic)) {
     return;
   }
@@ -236,11 +237,12 @@ async function handleUserProfileUpdate(result: IncomingUserResult): Promise<void
     profilePic.key.length === 32;
 
   // NOTE: if you do any changes to the user's settings which are synced, it should be done above the `updateOurProfileViaLibSession` call
-  await updateOurProfileViaLibSession({
+  await updateOurProfileFromLibSession({
     displayName: displayName || '',
     profileUrl: picUpdate ? profilePic.url : null,
     profileKey: picUpdate ? profilePic.key : null,
     priority,
+    profileUpdatedAtSeconds,
   });
 
   // NOTE: If we want to update the conversation in memory with changes from the updated user profile we need to wait until the profile has been updated to prevent multiple merge conflicts
@@ -289,7 +291,7 @@ async function handleUserProfileUpdate(result: IncomingUserResult): Promise<void
   }
 }
 
-function getContactsToRemoveFromDB(contactsInWrapper: Array<ContactInfo>) {
+function getContactsToRemoveFromDB(contactsInWrapper: Array<ContactInfoGet>) {
   const allContactsInDBWhichShouldBeInWrapperIds = ConvoHub.use()
     .getConversations()
     .filter(SessionUtilContact.isContactToStoreInWrapper)
@@ -420,7 +422,7 @@ async function handleContactsUpdate(result: IncomingUserResult) {
 
       // we want to set the active_at to the created_at timestamp if active_at is unset, so that it shows up in our list.
       if (!contactConvo.getActiveAt() && wrapperConvo.createdAtSeconds) {
-        contactConvo.set({ active_at: wrapperConvo.createdAtSeconds * 1000 });
+        contactConvo.setActiveAt(wrapperConvo.createdAtSeconds * 1000);
         changes = true;
       }
 
@@ -433,12 +435,13 @@ async function handleContactsUpdate(result: IncomingUserResult) {
       }
 
       // we still need to handle the `name` (synchronous) and the `profilePicture` (asynchronous)
-      await ProfileManager.updateProfileOfContact(
-        contactConvo.id,
-        wrapperConvo.name,
-        wrapperConvo.profilePicture?.url || null,
-        wrapperConvo.profilePicture?.key || null
-      );
+      await ProfileManager.updateProfileOfContact({
+        pubkey: contactConvo.id,
+        displayName: wrapperConvo.name,
+        profileUrl: wrapperConvo.profilePicture?.url || null,
+        profileKey: wrapperConvo.profilePicture?.key || null,
+        profileUpdatedAtSeconds: wrapperConvo.profileUpdatedSeconds,
+      });
     }
   }
 }
@@ -633,15 +636,16 @@ async function handleSingleGroupUpdate({
       groupInWrapper.disappearingTimerSeconds && groupInWrapper.disappearingTimerSeconds > 0
         ? groupInWrapper.disappearingTimerSeconds
         : undefined;
-    created.set({
-      active_at: joinedAt,
-      displayNameInProfile: groupInWrapper.name || undefined,
-      priority: groupInWrapper.priority,
-      lastJoinedTimestamp: joinedAt,
+    created.setActiveAt(joinedAt);
+    created.setNonPrivateNameNoCommit(groupInWrapper.name || undefined);
+    await created.setPriorityFromWrapper(groupInWrapper.priority);
+    created.setLastJoinedTimestamp(joinedAt);
+    created.setExpirationArgs({
+      mode: expireTimer ? 'deleteAfterSend' : 'off',
       expireTimer,
-      expirationMode: expireTimer ? 'deleteAfterSend' : 'off',
-      didApproveMe: groupInWrapper.invitePending,
     });
+    await created.setDidApproveMe(groupInWrapper.invitePending);
+
     await created.commit();
     getSwarmPollingInstance().addGroupId(PubKey.cast(groupPk));
   } else {
@@ -964,20 +968,28 @@ async function handleUserConfigMessagesViaLibSession(
   await processUserMergingResults(incomingMergeResult);
 }
 
-async function updateOurProfileViaLibSession(
+async function updateOurProfileFromLibSession(
   {
     displayName,
     priority,
     profileKey,
     profileUrl,
+    profileUpdatedAtSeconds,
   }: {
     displayName: string;
     profileUrl: string | null;
     profileKey: Uint8Array | null;
     priority: number | null;
+    profileUpdatedAtSeconds: number;
   } // passing null means to not update the priority at all (used for legacy config message for now)
 ) {
-  await ProfileManager.updateOurProfileSync({ displayName, profileUrl, profileKey, priority });
+  await ProfileManager.updateOurProfileSync({
+    displayName,
+    profileUrl,
+    profileKey,
+    priority,
+    profileUpdatedAtSeconds,
+  });
 
   // do not trigger a sign in by linking if the display name is empty
   if (!isEmpty(displayName)) {

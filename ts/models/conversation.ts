@@ -1,5 +1,5 @@
 import autoBind from 'auto-bind';
-import { from_hex } from 'libsodium-wrappers-sumo';
+import { from_hex, to_hex } from 'libsodium-wrappers-sumo';
 import {
   debounce,
   includes,
@@ -39,7 +39,7 @@ import {
   VisibleMessageParams,
 } from '../session/messages/outgoing/visibleMessage/VisibleMessage';
 import { perfEnd, perfStart } from '../session/utils/Performance';
-import { ed25519Str, toHex } from '../session/utils/String';
+import { ed25519Str } from '../session/utils/String';
 import { createTaskWithTimeout } from '../session/utils/TaskWithTimeout';
 import {
   actions as conversationActions,
@@ -76,7 +76,6 @@ import {
 import { SessionUtilContact } from '../session/utils/libsession/libsession_utils_contacts';
 import { SessionUtilConvoInfoVolatile } from '../session/utils/libsession/libsession_utils_convo_info_volatile';
 import { SessionUtilUserGroups } from '../session/utils/libsession/libsession_utils_user_groups';
-import { getOurProfile } from '../session/utils/User';
 import {
   deleteExternalFilesOfConversation,
   getAbsoluteAttachmentPath,
@@ -96,16 +95,22 @@ import { Storage } from '../util/storage';
 import {
   ConversationAttributes,
   ConversationNotificationSetting,
+  ConvoTypeNarrow,
   fillConvoAttributesWithDefaults,
   isDirectConversation,
   isOpenOrClosedGroup,
   READ_MESSAGE_STATE,
+  type ConversationNotificationSettingType,
+  type WithAvatarPathAndFallback,
+  type WithAvatarPointer,
+  type WithAvatarPointerProfileKey,
+  type WithProfileKey,
+  type WithProfileUpdatedAtSeconds,
 } from './conversationAttributes';
 
 import { ReadReceiptMessage } from '../session/messages/outgoing/controlMessage/receipt/ReadReceiptMessage';
 import { PreConditionFailed } from '../session/utils/errors';
 import { LibSessionUtil } from '../session/utils/libsession/libsession_utils';
-import { SessionUtilUserProfile } from '../session/utils/libsession/libsession_utils_user_profile';
 import { ReduxSogsRoomInfos } from '../state/ducks/sogsRoomInfo';
 import {
   selectLibGroupAdminsOutsideRedux,
@@ -128,6 +133,7 @@ import { UpdateMsgExpirySwarm } from '../session/utils/job_runners/jobs/UpdateMs
 import { getLibGroupKickedOutsideRedux } from '../state/selectors/userGroups';
 import {
   MetaGroupWrapperActions,
+  UserConfigWrapperActions,
   UserGroupsWrapperActions,
 } from '../webworker/workers/browser/libsession_worker_interface';
 import { markAttributesAsReadIfNeeded } from './messageFactory';
@@ -142,11 +148,77 @@ import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constan
 import { ReduxOnionSelectors } from '../state/selectors/onions';
 import { tr, tStripped } from '../localization/localeTools';
 import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
+import type {
+  ConversationInteractionStatus,
+  ConversationInteractionType,
+} from '../interactions/types';
+import type { LastMessageStatusType } from '../state/ducks/types';
+import { OutgoingUserProfile } from '../types/message';
+import { Timestamp } from '../types/timestamp/timestamp';
 
 type InMemoryConvoInfos = {
   mentionedUs: boolean;
   unreadCount: number;
 };
+
+type WithSetSessionProfileType<
+  T extends
+    | 'displayNameChangeOnlyPrivate'
+    | 'resetAvatarPrivate'
+    | 'resetAvatarGroup'
+    | 'resetAvatarCommunity'
+    | 'setAvatarBeforeDownloadPrivate'
+    | 'setAvatarBeforeDownloadGroup'
+    | 'setAvatarDownloadedPrivate'
+    | 'setAvatarDownloadedCommunity'
+    | 'setAvatarDownloadedGroup',
+> = {
+  type: T;
+};
+
+type WithDisplayNameChange = { displayName?: string | null };
+
+type SetSessionProfileDetails = WithDisplayNameChange &
+  (
+    | (WithSetSessionProfileType<'displayNameChangeOnlyPrivate'> & WithProfileUpdatedAtSeconds)
+    | (WithSetSessionProfileType<'resetAvatarPrivate'> & WithProfileUpdatedAtSeconds)
+    // no need for profileUpdatedAtSeconds for groups/communities
+    | WithSetSessionProfileType<'resetAvatarGroup' | 'resetAvatarCommunity'>
+    // Note: for communities, we set & download the avatar as a single step
+    | (WithSetSessionProfileType<'setAvatarBeforeDownloadPrivate'> &
+        WithProfileUpdatedAtSeconds &
+        WithAvatarPointerProfileKey)
+    // no need for profileUpdatedAtSeconds for groups
+    | (WithSetSessionProfileType<'setAvatarBeforeDownloadGroup'> &
+        WithProfileKey &
+        WithAvatarPointer) // no need for profileUpdatedAtSeconds for groups
+    // Note: for communities, we set & download the avatar as a single step
+    | (WithSetSessionProfileType<'setAvatarDownloadedPrivate'> &
+        WithAvatarPointerProfileKey &
+        WithAvatarPathAndFallback)
+
+    // no need for profileUpdatedAtSeconds for groups/communities
+    | (WithSetSessionProfileType<'setAvatarDownloadedCommunity' | 'setAvatarDownloadedGroup'> &
+        WithAvatarPointerProfileKey &
+        WithAvatarPathAndFallback)
+  );
+
+type SetSessionProfileReturn = {
+  nameChanged: boolean;
+  avatarChanged: boolean;
+  avatarNeedsDownload: boolean;
+};
+
+/**
+ *
+ * Type guard for the set profile action that is private.
+ * We need to do some extra processing for private actions, as they have a updatedAtSeconds field.
+ */
+function isSetProfileWithUpdatedAtSeconds<T extends SetSessionProfileDetails>(
+  action: T
+): action is Extract<T, { profileUpdatedAtSeconds: number }> {
+  return 'profileUpdatedAtSeconds' in action;
+}
 
 /**
  * Some fields are not stored in the database, but are kept in memory.
@@ -247,6 +319,38 @@ export class ConversationModel extends Model<ConversationAttributes> {
     );
   }
 
+  private getConvoType(): ConvoTypeNarrow {
+    if (this.isMe()) {
+      return ConvoTypeNarrow.nts;
+    }
+    // a blinded contact we are not chatting to directly, but they are blinded
+    if (this.isPrivateAndBlinded() && !this.isApproved() && !this.didApproveMe()) {
+      return ConvoTypeNarrow.blindedAcquaintance;
+    }
+    if (this.isPrivateAndBlinded()) {
+      return ConvoTypeNarrow.blindedContact;
+    }
+    if (this.isPrivate() && !this.isApproved() && !this.didApproveMe()) {
+      // i.e. a user we have not directly talk to, but through a group/community only
+      return ConvoTypeNarrow.privateAcquaintance;
+    }
+    if (this.isPrivate()) {
+      return ConvoTypeNarrow.contact;
+    }
+    if (this.isPublic()) {
+      return ConvoTypeNarrow.community;
+    }
+    if (this.isClosedGroup() && !this.isClosedGroupV2()) {
+      return ConvoTypeNarrow.legacyGroup;
+    }
+    if (this.isClosedGroupV2()) {
+      return ConvoTypeNarrow.group;
+    }
+    throw new Error(
+      `getConvoType: can't determine the type of the conversation for ${ed25519Str(this.id)}`
+    );
+  }
+
   public isClosedGroupV2() {
     return Boolean(this.get('type') === ConversationTypeEnum.GROUPV2 && PubKey.is03Pubkey(this.id));
   }
@@ -318,6 +422,41 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
   public getNotificationsFor() {
     return this.get('triggerNotificationsFor');
+  }
+
+  public setNotificationsFor(notificationsFor: ConversationNotificationSettingType) {
+    this.setKey('triggerNotificationsFor', notificationsFor);
+  }
+
+  public setLastJoinedTimestamp(timestamp: number) {
+    if (timestamp === this.getLastJoinedTimestamp()) {
+      return;
+    }
+    this.setKey('lastJoinedTimestamp', timestamp);
+  }
+
+  public setExpirationArgs({
+    mode,
+    expireTimer,
+  }: {
+    mode: DisappearingMessageConversationModeType;
+    expireTimer: number | undefined;
+  }) {
+    if (mode === this.getExpirationMode() && expireTimer === this.getExpireTimer()) {
+      return;
+    }
+    this.setKey('expirationMode', mode);
+    this.setKey('expireTimer', expireTimer);
+  }
+
+  public setIsExpired03Group(isExpired: boolean) {
+    if (!PubKey.is03Pubkey(this.id)) {
+      throw new Error('setIsExpired03Group is only for 03 groups');
+    }
+    if (isExpired === this.getIsExpired03Group()) {
+      return;
+    }
+    this.setKey('isExpired03Group', isExpired);
   }
 
   public getConversationModelProps(): ReduxConversationType {
@@ -610,7 +749,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
         // we need to use a new timestamp here, otherwise android&iOS will consider this message as a duplicate and drop the synced reaction
         createAtNetworkTimestamp: NetworkTime.now(),
         reaction,
-        lokiProfile: UserUtils.getOurProfile(),
+        userProfile: await UserUtils.getOurProfile(),
         expirationType,
         expireTimer,
       };
@@ -776,7 +915,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
     const messageRequestResponseParams: MessageRequestResponseParams = {
       createAtNetworkTimestamp: NetworkTime.now(),
-      lokiProfile: UserUtils.getOurProfile(),
+      userProfile: await UserUtils.getOurProfile(),
     };
 
     const messageRequestResponse = new MessageRequestResponse(messageRequestResponseParams);
@@ -857,18 +996,16 @@ export class ConversationModel extends Model<ConversationAttributes> {
       return;
     }
 
-    this.set({
-      lastMessage: messageModel.getNotificationText(),
-      lastMessageStatus: 'sending',
-      active_at: networkTimestamp,
-    });
+    this.setLastMessage(messageModel.getNotificationText());
+    this.setLastMessageStatus('sending');
+    this.setActiveAt(networkTimestamp);
 
     const interactionNotification = messageModel.getInteractionNotification();
 
     if (interactionNotification) {
-      this.set({
-        lastMessageInteractionType: interactionNotification?.interactionType,
-        lastMessageInteractionStatus: interactionNotification?.interactionStatus,
+      this.setLastMessageInteraction({
+        type: interactionNotification?.interactionType,
+        status: interactionNotification?.interactionStatus,
       });
     }
 
@@ -953,16 +1090,30 @@ export class ConversationModel extends Model<ConversationAttributes> {
     const createAtNetworkTimestamp = (sentAt || NetworkTime.now()) - 1;
 
     if (!this.isPrivate()) {
-      this.set({
-        expirationMode,
-        expireTimer,
-      });
+      this.setExpirationArgs({ expireTimer, mode: expirationMode });
     } else if (fromSync || fromCurrentDevice) {
       // this is a private chat and a change we made, set the setting to what was given, otherwise discard it
-      this.set({
-        expirationMode,
-        expireTimer,
-      });
+      this.setExpirationArgs({ expireTimer, mode: expirationMode });
+    }
+
+    const convoType = this.getConvoType();
+    switch (convoType) {
+      case ConvoTypeNarrow.blindedAcquaintance:
+      case ConvoTypeNarrow.blindedContact:
+      case ConvoTypeNarrow.privateAcquaintance:
+      case ConvoTypeNarrow.community:
+      case ConvoTypeNarrow.legacyGroup:
+        // all of the above do not support expiration timer
+        break;
+      case ConvoTypeNarrow.nts:
+        await UserConfigWrapperActions.setNoteToSelfExpiry(expireTimer);
+        break;
+      case ConvoTypeNarrow.contact:
+      case ConvoTypeNarrow.group:
+        // TODO add cases here for groups/contacts to handle the other cases
+        break;
+      default:
+        assertUnreachable(convoType, `convoType ${convoType} is not supported`);
     }
 
     if (!shouldAddExpireUpdateMessage) {
@@ -1014,17 +1165,18 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
     // Note: we agreed that a **legacy closed** group ControlMessage message does not expire.
     // Group v2 on the other hand, have expiring disappearing control message
-    message.set({
-      expirationType: this.isClosedGroup() && !this.isClosedGroupV2() ? 'unknown' : expirationType,
-      expireTimer: this.isClosedGroup() && !this.isClosedGroupV2() ? 0 : expireTimer,
-    });
+
+    message.setExpirationType(
+      this.isClosedGroup() && !this.isClosedGroupV2() ? 'unknown' : expirationType
+    );
+    message.setExpireTimer(this.isClosedGroup() && !this.isClosedGroupV2() ? 0 : expireTimer);
 
     if (!message.id) {
-      message.set({ id: v4() });
+      message.setId(v4());
     }
 
     if (this.isActive()) {
-      this.setKey('active_at', createAtNetworkTimestamp);
+      this.setActiveAt(createAtNetworkTimestamp);
     }
 
     if (shouldCommitConvo) {
@@ -1046,14 +1198,14 @@ export class ConversationModel extends Model<ConversationAttributes> {
         const canBeDeleteAfterSend =
           this.isMe() || !(this.isGroup() && !this.isClosedGroupV2() && message.isControlMessage());
         if (canBeDeleteAfterSend || expirationMode === 'deleteAfterSend') {
-          message.set({
-            expirationStartTimestamp: DisappearingMessages.setExpirationStartTimestamp(
+          message.setMessageExpirationStartTimestamp(
+            DisappearingMessages.setExpirationStartTimestamp(
               expirationMode,
               message.get('sent_at'),
               'updateExpireTimer() remote change',
               message.id
-            ),
-          });
+            )
+          );
         }
       }
       await message.commit();
@@ -1122,6 +1274,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
             sodium: await getSodiumRenderer(),
             secretKey: group.secretKey,
             updatedExpirationSeconds: expireUpdate.expireTimer,
+            userProfile: null,
           });
 
           const extraStoreRequests = await StoreGroupRequestFactory.makeGroupMessageSubRequest(
@@ -1317,6 +1470,29 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
   }
 
+  private shouldApplyPrivateProfileUpdate<T extends SetSessionProfileDetails>(
+    newProfile: SetSessionProfileDetails
+  ): newProfile is Extract<T, { profileUpdatedAtSeconds: number }> {
+    if (isSetProfileWithUpdatedAtSeconds(newProfile)) {
+      // For the transition period, we need to allow an incoming profile to be applied when
+      // the timestamp is not set (defaults to 0).
+      if (newProfile.profileUpdatedAtSeconds === 0 && this.getProfileUpdatedSeconds() === 0) {
+        window.log.debug(
+          `shouldApplyPrivateProfileUpdate for ${ed25519Str(this.id)} incomingSeconds:0 currentSeconds:0. Allowing overwrite`
+        );
+        return true;
+      }
+      const ts = new Timestamp({ value: newProfile.profileUpdatedAtSeconds });
+      window.log.debug(
+        `shouldApplyPrivateProfileUpdate for ${ed25519Str(this.id)} incomingSeconds:${ts.seconds()} currentSeconds:${this.getProfileUpdatedSeconds()} -> ${this.getProfileUpdatedSeconds() < ts.seconds()}`
+      );
+
+      return this.getProfileUpdatedSeconds() < ts.seconds();
+    }
+    // for non private setProfile calls, we do not need to check the updatedAtSeconds
+    return true;
+  }
+
   /**
    * Updates this conversation with the provided displayName, avatarPath, staticAvatarPath and avatarPointer.
    * - displayName can be set to null to not update the display name.
@@ -1325,69 +1501,208 @@ export class ConversationModel extends Model<ConversationAttributes> {
    * This function does commit to the DB if any changes are detected.
    */
   public async setSessionProfile(
-    newProfile: { displayName?: string | null } & (
-      | {
-          avatarPath: undefined;
-          fallbackAvatarPath: undefined;
-          avatarPointer: undefined;
-        }
-      | {
-          avatarPath: string;
-          fallbackAvatarPath: string;
-          avatarPointer: string;
-        }
-    )
-  ) {
-    let changes = false;
+    newProfile: SetSessionProfileDetails
+  ): Promise<SetSessionProfileReturn> {
+    let nameChanged = false;
 
     const existingSessionName = this.getRealSessionUsername();
-    if (newProfile.displayName !== existingSessionName && newProfile.displayName) {
+    if (
+      this.shouldApplyPrivateProfileUpdate(newProfile) &&
+      newProfile.displayName !== existingSessionName &&
+      newProfile.displayName
+    ) {
       this.set({
         displayNameInProfile: newProfile.displayName,
       });
-      changes = true;
+      // name has changed, also apply the new profileUpdatedAtSeconds timestamp
+      if (isSetProfileWithUpdatedAtSeconds(newProfile)) {
+        this.set({ profileUpdatedSeconds: newProfile.profileUpdatedAtSeconds });
+      }
+      nameChanged = true;
+    }
+    const type = newProfile.type;
+
+    switch (type) {
+      case 'displayNameChangeOnlyPrivate': {
+        if (nameChanged) {
+          await this.commit();
+        }
+        return { nameChanged, avatarNeedsDownload: false, avatarChanged: false };
+      }
+      case 'resetAvatarPrivate':
+      case 'resetAvatarGroup':
+      case 'resetAvatarCommunity': {
+        let avatarChanged = false;
+        if (
+          // When the avatar update is about a private one, we need to check
+          // if the profile has been updated more recently that what we have already
+          this.shouldApplyPrivateProfileUpdate(newProfile)
+        ) {
+          if (
+            this.getAvatarInProfilePath() ||
+            this.getFallbackAvatarInProfilePath() ||
+            this.getAvatarPointer() ||
+            this.getProfileKey()
+          ) {
+            this.set({
+              avatarInProfile: undefined,
+              avatarPointer: undefined,
+              profileKey: undefined,
+              fallbackAvatarInProfile: undefined,
+            });
+            avatarChanged = true;
+            // avatar has changed, also apply the new profileUpdatedAtSeconds timestamp
+            if (isSetProfileWithUpdatedAtSeconds(newProfile)) {
+              this.set({ profileUpdatedSeconds: newProfile.profileUpdatedAtSeconds });
+            }
+          }
+        }
+        if (avatarChanged || nameChanged) {
+          await this.commit();
+        }
+        return { nameChanged, avatarNeedsDownload: false, avatarChanged };
+      }
+
+      case 'setAvatarBeforeDownloadPrivate':
+      case 'setAvatarBeforeDownloadGroup': {
+        const newProfileKeyHex = isString(newProfile.profileKey)
+          ? newProfile.profileKey
+          : to_hex(newProfile.profileKey);
+
+        const existingAvatarPointer = this.getAvatarPointer();
+        const existingProfileKeyHex = this.getProfileKey();
+        const hasAvatarInNewProfile = !!newProfile.avatarPointer || !!newProfileKeyHex;
+        // if no changes are needed, return early
+        if (
+          isEqual(existingAvatarPointer, newProfile.avatarPointer) &&
+          isEqual(existingProfileKeyHex, newProfileKeyHex)
+        ) {
+          if (nameChanged) {
+            await this.commit();
+          }
+          return { nameChanged, avatarNeedsDownload: false, avatarChanged: false };
+        }
+        this.set({ avatarPointer: newProfile.avatarPointer, profileKey: newProfileKeyHex });
+
+        // avatar has changed, also apply the new profileUpdatedAtSeconds timestamp
+        if (isSetProfileWithUpdatedAtSeconds(newProfile)) {
+          this.set({ profileUpdatedSeconds: newProfile.profileUpdatedAtSeconds });
+        }
+        await this.commit();
+
+        return { nameChanged, avatarNeedsDownload: hasAvatarInNewProfile, avatarChanged: true };
+      }
+      case 'setAvatarDownloadedPrivate':
+      case 'setAvatarDownloadedGroup':
+      case 'setAvatarDownloadedCommunity': {
+        const newProfileKeyHex = isString(newProfile.profileKey)
+          ? newProfile.profileKey
+          : to_hex(newProfile.profileKey);
+
+        const existingAvatarPointer = this.getAvatarPointer();
+        const existingProfileKeyHex = this.getProfileKey();
+        const originalAvatar = this.getAvatarInProfilePath();
+        const originalFallbackAvatar = this.getFallbackAvatarInProfilePath();
+
+        // if no changes are needed, return early
+        if (
+          isEqual(originalAvatar, newProfile.avatarPath) &&
+          isEqual(originalFallbackAvatar, newProfile.fallbackAvatarPath) &&
+          isEqual(existingAvatarPointer, newProfile.avatarPointer) &&
+          isEqual(existingProfileKeyHex, newProfileKeyHex)
+        ) {
+          if (nameChanged) {
+            await this.commit();
+          }
+          return { nameChanged, avatarChanged: false, avatarNeedsDownload: false };
+        }
+
+        // avatar has changed, but we are only dealing with the downloaded part of it here
+        // so this actually is not a profile update change. Nothing to do, as the newProfile type suggests
+
+        this.set({
+          avatarPointer: newProfile.avatarPointer,
+          avatarInProfile: newProfile.avatarPath,
+          fallbackAvatarInProfile: newProfile.fallbackAvatarPath,
+          profileKey: newProfileKeyHex,
+        });
+
+        await this.commit();
+        return { nameChanged, avatarNeedsDownload: false, avatarChanged: true };
+      }
+      default:
+        assertUnreachable(type, `handlePrivateProfileUpdate: unhandled case "${type}"`);
     }
 
-    if (newProfile.avatarPath && newProfile.fallbackAvatarPath) {
-      const originalAvatar = this.getAvatarInProfilePath();
-      const originalFallbackAvatar = this.getFallbackAvatarInProfilePath();
-
-      if (!isEqual(originalAvatar, newProfile.avatarPath)) {
-        this.set({ avatarInProfile: newProfile.avatarPath });
-        changes = true;
-      }
-      if (!isEqual(originalFallbackAvatar, newProfile.fallbackAvatarPath)) {
-        this.set({ fallbackAvatarInProfile: newProfile.fallbackAvatarPath });
-        changes = true;
-      }
-      const existingAvatarPointer = this.getAvatarPointer();
-
-      if (existingAvatarPointer !== newProfile.avatarPointer) {
-        this.set({ avatarPointer: newProfile.avatarPointer });
-        changes = true;
-      }
-    } else {
-      if (
-        this.getAvatarInProfilePath() ||
-        this.getFallbackAvatarInProfilePath() ||
-        this.getAvatarPointer()
-      ) {
-        changes = true;
-      }
-      this.set({
-        avatarInProfile: undefined,
-        avatarPointer: undefined,
-        profileKey: undefined,
-        fallbackAvatarInProfile: undefined,
-      });
-    }
-
-    if (changes) {
-      await this.commit();
-    }
+    throw new Error('Should have returned earlier');
   }
 
-  public setSessionDisplayNameNoCommit(newDisplayName?: string | null) {
+  public getIsTrustedForAttachmentDownload() {
+    return this.get('isTrustedForAttachmentDownload');
+  }
+
+  public setIsTrustedForAttachmentDownload(isTrusted: boolean) {
+    if (isTrusted === this.getIsTrustedForAttachmentDownload()) {
+      return;
+    }
+    this.setKey('isTrustedForAttachmentDownload', isTrusted);
+  }
+
+  public setLastMessage(lastMessage: string | null) {
+    if (lastMessage === this.getLastMessage()) {
+      return;
+    }
+    this.set({ lastMessage });
+  }
+
+  public setLastMessageStatus(lastMessageStatus: LastMessageStatusType | undefined) {
+    if (lastMessageStatus === this.getLastMessageStatus()) {
+      return;
+    }
+    this.set({ lastMessageStatus });
+  }
+
+  public getLastMessageStatus() {
+    return this.get('lastMessageStatus');
+  }
+
+  public getLastMessage() {
+    return this.get('lastMessage');
+  }
+
+  public getLastMessageInteraction() {
+    return {
+      type: this.get('lastMessageInteractionType'),
+      status: this.get('lastMessageInteractionStatus'),
+    };
+  }
+
+  public setLastMessageInteraction(
+    opts: { type: ConversationInteractionType; status: ConversationInteractionStatus } | null
+  ) {
+    const current = this.getLastMessageInteraction();
+    if (opts) {
+      if (opts.type === current.type && opts.status === current.status) {
+        return;
+      }
+      this.set({ lastMessageInteractionType: opts.type });
+      this.set({ lastMessageInteractionStatus: opts.status });
+    }
+    if (current === null) {
+      return;
+    }
+    this.set({ lastMessageInteractionType: null, lastMessageInteractionStatus: null });
+  }
+
+  /**
+   * Update the display name of this conversation with the provided one.
+   * Note: cannot be called with private chats: instead use `setSessionProfile`.
+   */
+  public setNonPrivateNameNoCommit(newDisplayName?: string | null) {
+    if (this.isPrivate()) {
+      // the name change is only allowed through setSessionProfile for private chats now, see above.
+      throw new Error('setNonPrivateNameNoCommit should not be called with private chats');
+    }
     const existingSessionName = this.getRealSessionUsername();
     if (newDisplayName !== existingSessionName && newDisplayName) {
       this.set({ displayNameInProfile: newDisplayName });
@@ -1408,12 +1723,64 @@ export class ConversationModel extends Model<ConversationAttributes> {
     return this.isPrivate() ? this.get('nickname') || undefined : undefined;
   }
 
+  /**
+   * Returns the profile key attributes of this instance.
+   * If the attribute is unset, empty, or not a string, returns `undefined`.
+   */
   public getProfileKey(): string | undefined {
-    return this.get('profileKey');
+    const profileKey = this.get('profileKey');
+    if (!profileKey || !isString(profileKey)) {
+      return undefined;
+    }
+    return profileKey;
   }
 
   public getAvatarPointer(): string | undefined {
     return this.get('avatarPointer');
+  }
+
+  public getProfileUpdatedSeconds() {
+    if (!this.isPrivate()) {
+      throw new Error('Cannot call profileUpdatedSeconds for a non private conversation');
+    }
+    const profileUpdatedSeconds = this.get('profileUpdatedSeconds');
+    if (
+      !isNumber(profileUpdatedSeconds) ||
+      !isFinite(profileUpdatedSeconds) ||
+      profileUpdatedSeconds < 0
+    ) {
+      return 0;
+    }
+
+    return profileUpdatedSeconds;
+  }
+
+  /**
+   * A private profile can have name and profileUpdatedSeconds unset,
+   * but it must have both profilePicture and profileKey set for it to be returned
+   */
+  public getPrivateProfileDetails(): OutgoingUserProfile {
+    if (!this.isPrivate()) {
+      throw new Error('getPrivateProfileDetails can only be called on private conversations');
+    }
+    const avatarPointer = this.getAvatarPointer() ?? null;
+    const displayName = this.getRealSessionUsername() ?? '';
+    const profileKey = this.getProfileKey() ?? null;
+    const updatedAtSeconds = this.getProfileUpdatedSeconds();
+
+    return new OutgoingUserProfile({
+      avatarPointer,
+      displayName,
+      profileKey,
+      updatedAtSeconds,
+    });
+  }
+
+  public setAvatarPointer(avatarPointer: string | undefined) {
+    if (avatarPointer === this.getAvatarPointer()) {
+      return;
+    }
+    this.set({ avatarPointer });
   }
 
   /**
@@ -1501,9 +1868,34 @@ export class ConversationModel extends Model<ConversationAttributes> {
    * Note: Currently, we do not have an order in the list of pinned conversation, but the libsession util wrapper can handle the order.
    */
   public async togglePinned(shouldCommit: boolean = true) {
-    this.set({ priority: this.isPinned() ? 0 : 1 });
+    const pinnedBefore = this.isPinned();
+    const newPriority = pinnedBefore
+      ? CONVERSATION_PRIORITIES.default
+      : CONVERSATION_PRIORITIES.pinned;
+    this.set({
+      priority: newPriority,
+    });
     if (shouldCommit) {
       await this.commit();
+    }
+    const convoType = this.getConvoType();
+    switch (convoType) {
+      case ConvoTypeNarrow.blindedAcquaintance:
+      case ConvoTypeNarrow.blindedContact:
+      case ConvoTypeNarrow.privateAcquaintance:
+      case ConvoTypeNarrow.community:
+      case ConvoTypeNarrow.legacyGroup:
+      case ConvoTypeNarrow.group:
+        // all of the above do not support being hidden (only removed)
+        break;
+      case ConvoTypeNarrow.nts:
+        await UserConfigWrapperActions.setPriority(newPriority);
+        break;
+      case ConvoTypeNarrow.contact:
+        // TODO add cases here for contacts to handle the other cases
+        break;
+      default:
+        assertUnreachable(convoType, `convoType ${convoType} is not supported`);
     }
     return true;
   }
@@ -1512,6 +1904,26 @@ export class ConversationModel extends Model<ConversationAttributes> {
    * Force the priority to be -1 (PRIORITY_DEFAULT_HIDDEN) so this conversation is hidden in the list. Currently only works for private chats.
    */
   public async setHidden(shouldCommit: boolean = true) {
+    const convoType = this.getConvoType();
+    switch (convoType) {
+      case ConvoTypeNarrow.blindedAcquaintance:
+      case ConvoTypeNarrow.blindedContact:
+      case ConvoTypeNarrow.privateAcquaintance:
+      case ConvoTypeNarrow.community:
+      case ConvoTypeNarrow.legacyGroup:
+      case ConvoTypeNarrow.group:
+        // all of the above do not support being hidden (only removed)
+        break;
+      case ConvoTypeNarrow.nts:
+        await UserConfigWrapperActions.setPriority(CONVERSATION_PRIORITIES.hidden);
+        break;
+      case ConvoTypeNarrow.contact:
+        // TODO add cases here for contacts to handle the other cases
+        break;
+      default:
+        assertUnreachable(convoType, `convoType ${convoType} is not supported`);
+    }
+
     if (!this.isPrivate()) {
       return;
     }
@@ -1524,6 +1936,17 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
   }
 
+  public getLeft() {
+    return this.get('left');
+  }
+
+  public setLeft(left: boolean) {
+    if (left === this.getLeft()) {
+      return;
+    }
+    this.set({ left });
+  }
+
   /**
    * Reset the priority of this conversation to 0 if it was < 0, but keep anything > 0 as is.
    * So if the conversation was pinned, we keep it pinned with its current priority.
@@ -1532,10 +1955,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
   public async unhideIfNeeded(shouldCommit: boolean = true) {
     const priority = this.getPriority();
     if (isFinite(priority) && priority < CONVERSATION_PRIORITIES.default) {
-      this.set({ priority: CONVERSATION_PRIORITIES.default });
-      if (shouldCommit) {
-        await this.commit();
-      }
+      await this.setPriorityFromWrapper(CONVERSATION_PRIORITIES.default, shouldCommit);
     }
   }
 
@@ -1581,6 +2001,10 @@ export class ConversationModel extends Model<ConversationAttributes> {
       return 0; // this thing only applies to sogs blinded conversations
     }
     return this.get('blocksSogsMsgReqsTimestamp') || 0;
+  }
+
+  public setActiveAt(activeAt: number | undefined) {
+    this.set({ active_at: activeAt });
   }
 
   /**
@@ -1718,7 +2142,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
     if (details.name && details.name !== this.getRealSessionUsername()) {
       hasChange = hasChange || true;
-      this.setSessionDisplayNameNoCommit(details.name);
+      this.setNonPrivateNameNoCommit(details.name);
     }
 
     if (this.handleRoomDescriptionChange({ description: details.description || '' })) {
@@ -1742,29 +2166,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
     // only trigger a write to the db if a change is detected
     if (hasChange) {
       await this.commit();
-    }
-  }
-
-  /**
-   * profileKey MUST be a hex string
-   * @param profileKey MUST be a hex string
-   */
-  public async setProfileKey(profileKey?: Uint8Array, shouldCommit = true) {
-    if (!profileKey) {
-      return;
-    }
-
-    const profileKeyHex = toHex(profileKey);
-
-    // profileKey is a string so we can compare it directly
-    if (this.getProfileKey() !== profileKeyHex) {
-      this.set({
-        profileKey: profileKeyHex,
-      });
-
-      if (shouldCommit) {
-        await this.commit();
-      }
     }
   }
 
@@ -2052,6 +2453,17 @@ export class ConversationModel extends Model<ConversationAttributes> {
     return groupAdmins && groupAdmins.length > 0 ? groupAdmins : [];
   }
 
+  public getMembers() {
+    return this.get('members');
+  }
+
+  public setMembers(members: Array<string>) {
+    if (isEqual(members, this.getMembers())) {
+      return;
+    }
+    this.set({ members });
+  }
+
   public isKickedFromGroup(): boolean {
     if (this.isClosedGroupV2()) {
       return getLibGroupKickedOutsideRedux(this.id) || false;
@@ -2108,7 +2520,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
         expireTimer: message.getExpireTimerSeconds(),
         preview: preview ? [preview] : [],
         quote,
-        lokiProfile: UserUtils.getOurProfile(),
+        userProfile: await UserUtils.getOurProfile(),
       };
 
       if (PubKey.isBlinded(this.id)) {
@@ -2236,7 +2648,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
     // include our profile (displayName + avatar url + key for the recipient)
     // eslint-disable-next-line no-param-reassign
-    messageParams.lokiProfile = getOurProfile();
+    messageParams.userProfile = await UserUtils.getOurProfile();
 
     if (!ourSignKeyBytes || !groupUrl) {
       window?.log?.error(
@@ -2272,7 +2684,9 @@ export class ConversationModel extends Model<ConversationAttributes> {
       throw new Error('encryptBlindedMessage messageParams needs an identifier');
     }
 
-    this.set({ active_at: Date.now(), isApproved: true });
+    this.setActiveAt(Date.now());
+    await this.setIsApproved(true, true);
+
     // TODO we need to add support for sending blinded25 message request in addition to the legacy blinded15
     await MessageQueue.use().sendToOpenGroupV2BlindedRequest({
       encryptedContent: encryptedMsg,
@@ -2292,10 +2706,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
     const existingLastMessageStatus = this.get('lastMessageStatus');
     if (!messages || !messages.length) {
       if (existingLastMessageAttribute || existingLastMessageStatus) {
-        this.set({
-          lastMessageStatus: undefined,
-          lastMessage: undefined,
-        });
+        this.setLastMessage(null);
+        this.setLastMessageStatus(undefined);
         await this.commit();
       }
       return;
@@ -2739,10 +3151,8 @@ async function commitConversationAndRefreshWrapper(id: string) {
 
     switch (variant) {
       case 'UserConfig':
-        if (SessionUtilUserProfile.isUserProfileToStoreInWrapper(convo.id)) {
-          // eslint-disable-next-line no-await-in-loop
-          await SessionUtilUserProfile.insertUserProfileIntoWrapper(convo.id);
-        }
+        // Note: nothing to do here, the NTS changes in libsession are now done
+        //  when done through the UI
         break;
       case 'ContactsConfig':
         if (SessionUtilContact.isContactToStoreInWrapper(convo)) {

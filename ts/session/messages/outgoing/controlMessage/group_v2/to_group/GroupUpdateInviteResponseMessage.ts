@@ -1,6 +1,5 @@
 import { SignalService } from '../../../../../../protobuf';
 import { SnodeNamespaces } from '../../../../../apis/snode_api/namespaces';
-import { getOurProfile } from '../../../../../utils/User';
 import { GroupUpdateMessage, GroupUpdateMessageParams } from '../GroupUpdateMessage';
 
 type Params = GroupUpdateMessageParams & {
@@ -22,20 +21,13 @@ export class GroupUpdateInviteResponseMessage extends GroupUpdateMessage {
   }
 
   public dataProto(): SignalService.DataMessage {
-    const ourProfile = getOurProfile();
-
     const inviteResponse = new SignalService.GroupUpdateInviteResponseMessage({
       isApproved: true,
     });
 
+    const ourProfile = this.userProfile?.toProtobufDetails() ?? {};
     return new SignalService.DataMessage({
-      profileKey: ourProfile?.profileKey,
-      profile: ourProfile
-        ? {
-            displayName: ourProfile.displayName,
-            profilePicture: ourProfile.avatarPointer,
-          }
-        : undefined,
+      ...ourProfile,
       groupUpdateMessage: { inviteResponse },
     });
   }

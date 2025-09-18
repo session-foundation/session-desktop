@@ -9,7 +9,7 @@ async function setNotificationForConvoId(
 
   const existingSettings = conversation.getNotificationsFor();
   if (existingSettings !== selected) {
-    conversation.set({ triggerNotificationsFor: selected });
+    conversation.setNotificationsFor(selected);
     await conversation.commit();
   }
 }

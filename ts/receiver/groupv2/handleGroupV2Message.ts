@@ -139,17 +139,13 @@ async function handleGroupUpdateInviteMessage({
 
   window.log.debug(`received invite to group ${ed25519Str(groupPk)} by user:${ed25519Str(author)}`);
 
-  const convo = await ConvoHub.use().getOrCreateAndWait(groupPk, ConversationTypeEnum.GROUPV2);
-  convo.set({
-    active_at: signatureTimestamp,
-    didApproveMe: true,
-    conversationIdOrigin: author,
-  });
+  const groupConvo = await ConvoHub.use().getOrCreateAndWait(groupPk, ConversationTypeEnum.GROUPV2);
+  groupConvo.setActiveAt(signatureTimestamp);
+  await groupConvo.setDidApproveMe(true, false);
+  await groupConvo.setOriginConversationID(author, false);
 
-  if (inviteMessage.name && isEmpty(convo.getRealSessionUsername())) {
-    convo.set({
-      displayNameInProfile: inviteMessage.name,
-    });
+  if (inviteMessage.name && isEmpty(groupConvo.getRealSessionUsername())) {
+    groupConvo.setNonPrivateNameNoCommit(inviteMessage.name);
   }
   const userEd25519Secretkey = (await UserUtils.getUserED25519KeyPairBytes()).privKeyBytes;
 
@@ -166,10 +162,10 @@ async function handleGroupUpdateInviteMessage({
   await UserGroupsWrapperActions.setGroup(found);
   await UserGroupsWrapperActions.markGroupInvited(groupPk);
   // force markedAsUnread to be true so it shows the unread banner (we only show the banner if there are unread messages on at least one msg/group request)
-  await convo.markAsUnread(true, false);
-  await convo.commit();
+  await groupConvo.markAsUnread(true, false);
+  await groupConvo.commit();
 
-  await SessionUtilConvoInfoVolatile.insertConvoFromDBIntoWrapperAndRefresh(convo.id);
+  await SessionUtilConvoInfoVolatile.insertConvoFromDBIntoWrapperAndRefresh(groupConvo.id);
 
   if (wasKicked && !found.kicked) {
     // we have been reinvited to a group which we had been kicked from.
@@ -291,9 +287,7 @@ async function handleGroupInfoChangeMessage({
       return;
   }
 
-  convo.set({
-    active_at: signatureTimestamp,
-  });
+  convo.setActiveAt(signatureTimestamp);
   await convo.commit();
 }
 
@@ -363,9 +357,7 @@ async function handleGroupMemberChangeMessage({
       return;
   }
 
-  convo.set({
-    active_at: signatureTimestamp,
-  });
+  convo.setActiveAt(signatureTimestamp);
 }
 
 async function handleGroupMemberLeftMessage({
@@ -412,9 +404,7 @@ async function handleGroupUpdateMemberLeftNotificationMessage({
     messageHash,
   });
 
-  convo.set({
-    active_at: signatureTimestamp,
-  });
+  convo.setActiveAt(signatureTimestamp);
 }
 
 async function handleGroupUpdateDeleteMemberContentMessage({
@@ -573,16 +563,12 @@ async function handleGroupUpdatePromoteMessage({
   );
 
   const convo = await ConvoHub.use().getOrCreateAndWait(groupPk, ConversationTypeEnum.GROUPV2);
-  convo.set({
-    active_at: signatureTimestamp,
-    didApproveMe: true,
-    conversationIdOrigin: author,
-  });
+  convo.setActiveAt(signatureTimestamp);
+  await convo.setDidApproveMe(true, false);
+  await convo.setOriginConversationID(author, false);
 
   if (change.name && isEmpty(convo.getRealSessionUsername())) {
-    convo.set({
-      displayNameInProfile: change.name,
-    });
+    convo.setNonPrivateNameNoCommit(change.name);
   }
   const userEd25519Secretkey = (await UserUtils.getUserED25519KeyPairBytes()).privKeyBytes;
 
