@@ -164,9 +164,7 @@ function RecreateGroupButton() {
                 ConversationTypeEnum.PRIVATE
               );
               if (!memberConvo.get('active_at')) {
-                memberConvo.set({
-                  active_at: Constants.CONVERSATION.LAST_JOINED_FALLBACK_TIMESTAMP,
-                });
+                memberConvo.setActiveAt(Constants.CONVERSATION.LAST_JOINED_FALLBACK_TIMESTAMP);
                 await memberConvo.commit();
               }
               /* eslint-enable no-await-in-loop */

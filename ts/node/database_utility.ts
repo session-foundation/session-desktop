@@ -1,5 +1,5 @@
 import * as BetterSqlite3 from '@signalapp/better-sqlite3';
-import { difference, isNumber, omit, pick } from 'lodash';
+import { difference, isFinite, isNumber, omit, pick } from 'lodash';
 import {
   ConversationAttributes,
   ConversationAttributesWithNotSavedOnes,
@@ -59,6 +59,7 @@ const allowedKeysFormatRowOfConversation = [
   'lastMessageInteractionType',
   'lastMessageInteractionStatus',
   'triggerNotificationsFor',
+  'profileUpdatedSeconds',
   'unreadCount',
   'lastJoinedTimestamp',
   'expireTimer',
@@ -139,8 +140,12 @@ export function formatRowOfConversation(
     convo.lastMessageStatus = undefined;
   }
 
-  if (!isNumber(convo.blocksSogsMsgReqsTimestamp)) {
+  if (!isNumber(convo.blocksSogsMsgReqsTimestamp) || !isFinite(convo.blocksSogsMsgReqsTimestamp)) {
     convo.blocksSogsMsgReqsTimestamp = 0;
+  }
+
+  if (!isNumber(convo.profileUpdatedSeconds) || !isFinite(convo.profileUpdatedSeconds)) {
+    convo.profileUpdatedSeconds = 0;
   }
 
   if (!convo.lastMessageInteractionType) {
@@ -189,6 +194,7 @@ const allowedKeysOfConversationAttributes = [
   'lastMessageInteractionType',
   'lastMessageInteractionStatus',
   'triggerNotificationsFor',
+  'profileUpdatedSeconds',
   'lastJoinedTimestamp',
   'expireTimer',
   'active_at',

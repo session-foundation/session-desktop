@@ -122,5 +122,5 @@ export function useModalStack() {
 
 export function useIsTopModal(modalId: ModalId) {
   const modalStack = useModalStack();
-  return modalStack.length === 0 || modalStack[modalStack.length - 1] === modalId;
+  return !modalStack?.length || modalStack[modalStack.length - 1] === modalId;
 }

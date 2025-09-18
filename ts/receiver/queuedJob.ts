@@ -26,6 +26,7 @@ import { GoogleChrome } from '../util';
 import { LinkPreviews } from '../util/linkPreviews';
 import { GroupV2Receiver } from './groupv2/handleGroupV2Message';
 import { Constants } from '../session';
+import { Timestamp } from '../types/timestamp/timestamp';
 
 function contentTypeSupported(type: string): boolean {
   const Chrome = GoogleChrome;
@@ -92,7 +93,7 @@ async function copyFromQuotedMessage(
   if (!quotedMessage) {
     window?.log?.warn(`We did not found quoted message ${id} with author ${author}.`);
     quoteLocal.referencedMessageNotFound = true;
-    msg.set({ quote: quoteLocal });
+    msg.setQuote(quoteLocal);
     return;
   }
 
@@ -116,7 +117,7 @@ async function copyFromQuotedMessage(
     !firstAttachment.contentType ||
     !contentTypeSupported(firstAttachment.contentType)
   ) {
-    msg.set({ quote: quoteLocal });
+    msg.setQuote(quoteLocal);
     return;
   }
 
@@ -156,7 +157,7 @@ async function copyFromQuotedMessage(
   }
   quoteLocal.attachments = [firstAttachment];
 
-  msg.set({ quote: quoteLocal });
+  msg.setQuote(quoteLocal);
 }
 
 /**
@@ -176,19 +177,7 @@ function handleLinkPreviews(messageBody: string, messagePreview: any, message: M
     );
   }
 
-  message.set({ preview });
-}
-
-async function processProfileKeyNoCommit(
-  conversation: ConversationModel,
-  sendingDeviceConversation: ConversationModel,
-  profileKeyBuffer?: Uint8Array
-) {
-  if (conversation.isPrivate()) {
-    await conversation.setProfileKey(profileKeyBuffer, false);
-  } else {
-    await sendingDeviceConversation.setProfileKey(profileKeyBuffer, false);
-  }
+  message.setPreview(preview);
 }
 
 export type RegularMessageType = Pick<
@@ -347,22 +336,19 @@ async function handleRegularMessage(
     (message.get('sent_at') || 0) > conversationActiveAt
   ) {
     const interactionNotification = message.getInteractionNotification();
-    conversation.set({
-      active_at: message.get('sent_at'),
-      lastMessage: message.getNotificationText(),
-      lastMessageInteractionType: interactionNotification?.interactionType,
-      lastMessageInteractionStatus: interactionNotification?.interactionStatus,
-    });
+    conversation.setActiveAt(message.get('sent_at'));
+    conversation.setLastMessage(message.getNotificationText());
+    conversation.setLastMessageInteraction(
+      interactionNotification
+        ? {
+            type: interactionNotification.interactionType,
+            status: interactionNotification.interactionStatus,
+          }
+        : null
+    );
+
     // a new message was received for that conversation. If it was not it should not be hidden anymore
     await conversation.unhideIfNeeded(false);
-  }
-
-  if (rawDataMessage.profileKey) {
-    await processProfileKeyNoCommit(
-      conversation,
-      sendingDeviceConversation,
-      rawDataMessage.profileKey
-    );
   }
 
   // we just received a message from that user so we reset the typing indicator for this convo
@@ -396,14 +382,14 @@ async function markConvoAsReadIfOutgoingMessage(
         );
 
         if (expirationMode !== 'off') {
-          message.set({
-            expirationStartTimestamp: DisappearingMessages.setExpirationStartTimestamp(
+          message.setMessageExpirationStartTimestamp(
+            DisappearingMessages.setExpirationStartTimestamp(
               expirationMode,
               message.get('sent_at'),
               'markConvoAsReadIfOutgoingMessage',
               message.id
-            ),
-          });
+            )
+          );
           await message.commit();
         }
       }
@@ -456,10 +442,8 @@ export async function handleMessageJob(
           messageModel.id
         );
         if (expirationStartTimestamp) {
-          messageModel.set({
-            expirationStartTimestamp,
-            expires_at: expirationStartTimestamp + expireTimer * 1000,
-          });
+          messageModel.setMessageExpirationStartTimestamp(expirationStartTimestamp);
+          messageModel.setExpiresAt(expirationStartTimestamp + expireTimer * 1000);
         }
       }
     }
@@ -511,15 +495,15 @@ export async function handleMessageJob(
 
     // save the message model to the db and then save the messageId generated to our in-memory copy
     const id = await messageModel.commit();
-    messageModel.set({ id });
+    messageModel.setId(id);
 
     // Note that this can save the message again, if jobs were queued. We need to
     //   call it after we have an id for this message, because the jobs refer back
     //   to their source message.
 
-    conversation.set({
-      active_at: Math.max(conversation.getActiveAt() || 0, messageModel.get('sent_at') || 0),
-    });
+    conversation.setActiveAt(
+      Math.max(conversation.getActiveAt() || 0, messageModel.get('sent_at') || 0)
+    );
     // this is a throttled call and will only run once every 1 sec at most
     conversation.updateLastMessage();
     await conversation.commit();
@@ -533,12 +517,15 @@ export async function handleMessageJob(
     // the only profile we don't update with what is coming here is ours,
     // as our profile is shared across our devices with libsession
     if (messageModel.isIncoming() && regularDataMessage.profile) {
-      await ProfileManager.updateProfileOfContact(
-        sendingDeviceConversation.id,
-        regularDataMessage.profile.displayName,
-        regularDataMessage.profile.profilePicture,
-        regularDataMessage.profileKey
-      );
+      await ProfileManager.updateProfileOfContact({
+        pubkey: sendingDeviceConversation.id,
+        displayName: regularDataMessage.profile.displayName,
+        profileUrl: regularDataMessage.profile.profilePicture,
+        profileKey: regularDataMessage.profileKey,
+        profileUpdatedAtSeconds: new Timestamp({
+          value: regularDataMessage.profile.lastProfileUpdateMs ?? 0,
+        }).seconds(),
+      });
     }
 
     await markConvoAsReadIfOutgoingMessage(conversation, messageModel);

@@ -23,6 +23,8 @@ import { Storage, saveRecoveryPhrase, setLocalPubKey, setSignInByLinking } from 
 import { PromiseUtils } from '../session/utils';
 import { SnodeAPI } from '../session/apis/snode_api/SNodeAPI';
 import { tr } from '../localization/localeTools';
+import { NetworkTime } from './NetworkTime';
+import { UserConfigWrapperActions } from '../webworker/workers/browser/libsession_worker_interface';
 
 /**
  * Might throw
@@ -226,7 +228,13 @@ export async function registrationDone(ourPubkey: string, displayName: string) {
     ourPubkey,
     ConversationTypeEnum.PRIVATE
   );
-  conversation.setSessionDisplayNameNoCommit(displayName);
+  await UserConfigWrapperActions.setNameTruncated(displayName ?? 'Anonymous');
+
+  await conversation.setSessionProfile({
+    type: 'displayNameChangeOnlyPrivate',
+    displayName,
+    profileUpdatedAtSeconds: NetworkTime.nowSeconds(),
+  });
 
   await conversation.setIsApproved(true, false);
   await conversation.setDidApproveMe(true, false);

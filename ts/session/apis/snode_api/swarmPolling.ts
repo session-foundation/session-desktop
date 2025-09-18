@@ -758,7 +758,7 @@ export class SwarmPolling {
               `no configs before and after fetch of group: ${ed25519Str(pubkey)} from snode ${ed25519Str(snodeEdkey)}, and no other snode have one either. Group is expired.`
             );
             if (!convo.getIsExpired03Group()) {
-              convo.set({ isExpired03Group: true });
+              convo.setIsExpired03Group(true);
               await convo.commit();
             }
           }
@@ -769,7 +769,7 @@ export class SwarmPolling {
 
           // Group was marked as "expired", but apparently it is not (we have hashes saved/just fetched).
           // Maybe an admin came back online?, anyway mark the group as not expired.
-          convo.set({ isExpired03Group: false });
+          convo.setIsExpired03Group(false);
           await convo.commit();
         }
       }

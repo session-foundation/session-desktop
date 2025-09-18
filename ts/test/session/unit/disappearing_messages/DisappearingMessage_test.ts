@@ -396,11 +396,9 @@ describe('DisappearingMessage', () => {
         id: ourNumber,
       });
       const message = generateFakeOutgoingPrivateMessage(conversation.id);
-      message.set({
-        expirationType: 'deleteAfterRead',
-        expireTimer: 300,
-        sent_at: NetworkTime.now(),
-      });
+      message.setSentAt(NetworkTime.now());
+      message.setExpireTimer(300);
+      message.setExpirationType('deleteAfterRead');
       const storedAt = NetworkTime.now();
 
       Sinon.stub(message, 'getConversation').returns(conversation);
@@ -425,10 +423,9 @@ describe('DisappearingMessage', () => {
         id: ourNumber,
       });
       const message = generateFakeOutgoingPrivateMessage(conversation.id);
-      message.set({
-        expirationType: 'deleteAfterRead',
-        sent_at: NetworkTime.now(),
-      });
+
+      message.setSentAt(NetworkTime.now());
+      message.setExpirationType('deleteAfterRead');
       Sinon.stub(message, 'getConversation').returns(conversation);
       const storedAt = NetworkTime.now();
 
@@ -446,11 +443,10 @@ describe('DisappearingMessage', () => {
         id: ourNumber,
       });
       const message = generateFakeOutgoingPrivateMessage(conversation.id);
-      message.set({
-        expireTimer: 300,
-        sent_at: NetworkTime.now(),
-      });
       const storedAt = NetworkTime.now();
+
+      message.setSentAt(NetworkTime.now());
+      message.setExpireTimer(300);
       Sinon.stub(message, 'getConversation').returns(conversation);
 
       DisappearingMessages.checkForExpiringOutgoingMessage({
@@ -468,12 +464,12 @@ describe('DisappearingMessage', () => {
         id: ourNumber,
       });
       const message = generateFakeOutgoingPrivateMessage(conversation.id);
-      message.set({
-        expirationType: 'deleteAfterRead',
-        expireTimer: 300,
-        sent_at: now,
-        expirationStartTimestamp: now + 10000,
-      });
+
+      message.setSentAt(now);
+      message.setExpirationType('deleteAfterRead');
+      message.setExpireTimer(300);
+      message.setMessageExpirationStartTimestamp(now + 10000);
+
       Sinon.stub(message, 'getConversation').returns(conversation);
       const storedAt = NetworkTime.now();
 
@@ -528,8 +524,9 @@ describe('DisappearingMessage', () => {
         const conversation = new ConversationModel({
           ...conversationArgs,
         });
-        conversation.set({
-          expirationMode: 'deleteAfterRead',
+
+        conversation.setExpirationArgs({
+          mode: 'deleteAfterRead',
           expireTimer: 60,
         });
         Sinon.stub(conversation, 'commit').resolves();

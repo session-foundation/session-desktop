@@ -55,6 +55,7 @@ async function getGroupInviteMessage({
     createAtNetworkTimestamp,
     adminSignature,
     memberAuthData,
+    userProfile: await UserUtils.getOurProfile(),
     expirationType: 'unknown', // an invite is not expiring
     expireTimer: 0,
   });
@@ -88,6 +89,7 @@ async function getGroupPromoteMessage({
     expirationType: 'unknown', // a promote message is not expiring
     expireTimer: 0,
     groupName,
+    userProfile: await UserUtils.getOurProfile(),
   });
   return msg;
 }

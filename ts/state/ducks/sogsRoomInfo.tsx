@@ -119,6 +119,8 @@ const roomAvatarChange = createAsyncThunk(
       contentType: MIME.IMAGE_UNKNOWN, // contentType is mostly used to generate previews and screenshot. We do not care for those in this case.
     });
     await convo.setSessionProfile({
+      type: 'setAvatarDownloadedCommunity',
+      profileKey: new Uint8Array(), // communities avatar don't have a profile key
       displayName: null, // null so we don't overwrite it
       avatarPath: upgraded.path,
       avatarPointer: fileUrl,
@@ -162,8 +164,8 @@ const sogsRoomInfosSlice = createSlice({
       const newMods = sortBy(uniq(action.payload.moderators));
 
       // check if there is any changes (order excluded) between those two arrays
-      const xord = xor(existing, newMods);
-      if (!xord.length) {
+      const diff = xor(existing, newMods);
+      if (!diff.length) {
         return state;
       }
 

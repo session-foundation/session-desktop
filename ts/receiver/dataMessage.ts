@@ -28,6 +28,7 @@ import { Reactions } from '../util/reactions';
 import { GroupV2Receiver } from './groupv2/handleGroupV2Message';
 import { ConversationTypeEnum } from '../models/types';
 import { ed25519Str } from '../session/utils/String';
+import { Timestamp } from '../types/timestamp/timestamp';
 
 function cleanAttachment(attachment: SignalService.IAttachmentPointer) {
   return {
@@ -228,12 +229,15 @@ export async function handleSwarmDataMessage({
     cleanDataMessage.profile &&
     cleanDataMessage.profileKey?.length
   ) {
-    await ProfileManager.updateProfileOfContact(
-      senderConversationModel.id,
-      cleanDataMessage.profile.displayName,
-      cleanDataMessage.profile.profilePicture,
-      cleanDataMessage.profileKey
-    );
+    await ProfileManager.updateProfileOfContact({
+      pubkey: senderConversationModel.id,
+      displayName: cleanDataMessage.profile.displayName,
+      profileUrl: cleanDataMessage.profile.profilePicture,
+      profileKey: cleanDataMessage.profileKey,
+      profileUpdatedAtSeconds: new Timestamp({
+        value: cleanDataMessage.profile.lastProfileUpdateMs ?? 0,
+      }).seconds(),
+    });
   }
 
   if (!messageHasVisibleContent(cleanDataMessage)) {

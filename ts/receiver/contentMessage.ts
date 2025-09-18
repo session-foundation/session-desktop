@@ -37,6 +37,8 @@ import { sentAtMoreRecentThanWrapper } from './sentAtMoreRecent';
 import { ECKeyPair } from './keypairs';
 import { CONVERSATION_PRIORITIES, ConversationTypeEnum } from '../models/types';
 import { shouldProcessContentMessage } from './common';
+import { Timestamp } from '../types/timestamp/timestamp';
+import { longOrNumberToNumber } from '../types/message';
 
 export async function handleSwarmContentMessage(
   envelope: EnvelopePlus,
@@ -70,7 +72,7 @@ export async function handleSwarmContentMessage(
  * This function can be called to decrypt a keypair wrapper for a closed group update
  * or a message sent to a closed group.
  *
- * We do not unpad the result here, as in the case of the keypair wrapper, there is not padding.
+ * We do not un pad the result here, as in the case of the keypair wrapper, there is not padding.
  * Instead, it is the caller who needs to removeMessagePadding() the content.
  */
 export async function decryptWithSessionProtocol(
@@ -146,7 +148,7 @@ export async function decryptWithSessionProtocol(
 /**
  * This function is used to decrypt any messages send to our own pubkey.
  * Either messages deposited into our swarm by other people, or messages we sent to ourselves, or config messages stored on the user namespaces.
- * @param envelope the envelope contaning an encrypted .content field to decrypt
+ * @param envelope the envelope containing an encrypted .content field to decrypt
  * @returns the decrypted content, or null
  */
 export async function decryptEnvelopeWithOurKey(
@@ -242,16 +244,16 @@ async function shouldDropIncomingPrivateMessage(
       // handle the `us` case first, as we will never find ourselves in the contacts wrapper. The NTS details are in the UserProfile wrapper.
       if (isUs) {
         const us = ConvoHub.use().get(envelope.source);
-        const ourPriority = us?.get('priority') || CONVERSATION_PRIORITIES.default;
+        const ourPriority = us?.getPriority() || CONVERSATION_PRIORITIES.default;
         if (us && ourPriority <= CONVERSATION_PRIORITIES.hidden) {
           // if the wrapper data is more recent than this message and the NTS conversation is hidden, just drop this incoming message to avoid showing the NTS conversation again.
           window.log.info(
-            `shouldDropIncomingPrivateMessage: received message in NTS which appears to be hidden in our most recent libsession userconfig, sentAt: ${sentAtTimestamp}. Dropping it`
+            `shouldDropIncomingPrivateMessage: received message in NTS which appears to be hidden in our most recent libsession user config, sentAt: ${sentAtTimestamp}. Dropping it`
           );
           return true;
         }
         window.log.info(
-          `shouldDropIncomingPrivateMessage: received message on conversation ${syncTargetOrSource} which appears to NOT be hidden/removed in our most recent libsession userconfig, sentAt: ${sentAtTimestamp}. `
+          `shouldDropIncomingPrivateMessage: received message on conversation ${syncTargetOrSource} which appears to NOT be hidden/removed in our most recent libsession user config, sentAt: ${sentAtTimestamp}. `
         );
         return false;
       }
@@ -268,13 +270,13 @@ async function shouldDropIncomingPrivateMessage(
         ) {
           // the wrapper is more recent that this message and there is no such private conversation. Just drop this incoming message.
           window.log.info(
-            `shouldDropIncomingPrivateMessage: received message on conversation ${syncTargetOrSource} which appears to be hidden/removed in our most recent libsession contactconfig, sentAt: ${sentAtTimestamp}. Dropping it`
+            `shouldDropIncomingPrivateMessage: received message on conversation ${syncTargetOrSource} which appears to be hidden/removed in our most recent libsession contact config, sentAt: ${sentAtTimestamp}. Dropping it`
           );
           return true;
         }
 
         window.log.info(
-          `shouldDropIncomingPrivateMessage: received message on conversation ${syncTargetOrSource} which appears to NOT be hidden/removed in our most recent libsession contactconfig, sentAt: ${sentAtTimestamp}. `
+          `shouldDropIncomingPrivateMessage: received message on conversation ${syncTargetOrSource} which appears to NOT be hidden/removed in our most recent libsession contact config, sentAt: ${sentAtTimestamp}. `
         );
       } else {
         window.log.info(
@@ -731,23 +733,39 @@ async function handleMessageRequestResponse(
   const previousApprovedMe = conversationToApprove.didApproveMe();
   await conversationToApprove.setDidApproveMe(true, false);
 
-  conversationToApprove.set({
-    active_at: mostRecentActiveAt,
-  });
+  conversationToApprove.setActiveAt(mostRecentActiveAt);
   await conversationToApprove.unhideIfNeeded(false);
   await conversationToApprove.commit();
 
   if (convosToMerge.length) {
     // merge fields we care by hand
-    conversationToApprove.set({
-      profileKey: convosToMerge[0].getProfileKey(),
-      displayNameInProfile: convosToMerge[0].getRealSessionUsername(),
-      avatarInProfile: convosToMerge[0].getAvatarInProfilePath(),
-      fallbackAvatarInProfile: convosToMerge[0].getFallbackAvatarInProfilePath(),
-      avatarPointer: convosToMerge[0].getAvatarPointer(), // don't set the avatar pointer
-      isApproved: convosToMerge[0].isApproved(),
-      // nickname might be set already in conversationToApprove, so don't overwrite it
+    const srcConvo = convosToMerge[0];
+
+    const srcProfileDetails = srcConvo.getPrivateProfileDetails();
+    const srcAvatarPath = srcConvo.getAvatarInProfilePath();
+    const srcFallbackAvatarPath = srcConvo.getFallbackAvatarInProfilePath();
+    const srcProfilePic = srcProfileDetails.toProfilePicture();
+
+    const avatarChanges =
+      srcAvatarPath && srcFallbackAvatarPath && srcProfilePic.url && srcProfilePic.key
+        ? {
+            type: 'setAvatarDownloadedPrivate' as const,
+            avatarPath: srcAvatarPath,
+            fallbackAvatarPath: srcFallbackAvatarPath,
+            avatarPointer: srcProfilePic.url,
+            profileKey: srcProfilePic.key,
+            profileUpdatedAtSeconds: srcProfileDetails.getUpdatedAtSeconds(),
+          }
+        : {
+            type: 'resetAvatarPrivate' as const,
+            profileUpdatedAtSeconds: srcProfileDetails.getUpdatedAtSeconds(),
+          };
+    await conversationToApprove.setSessionProfile({
+      displayName: srcConvo.getRealSessionUsername(),
+      ...avatarChanges,
     });
+    await conversationToApprove.setIsApproved(convosToMerge[0].isApproved(), false);
+    // nickname might be set already in conversationToApprove, so don't overwrite it
 
     // we have to merge all of those to a single conversation under the unblinded. including the messages
     window.log.info(
@@ -768,10 +786,10 @@ async function handleMessageRequestResponse(
 
     const allMessageModels = flatten(allMessagesCollections.map(m => m.messages));
     allMessageModels.forEach(messageModel => {
-      messageModel.set({ conversationId: unblindedConvoId });
+      messageModel.setConversationId(unblindedConvoId);
 
       if (messageModel.get('source') !== UserUtils.getOurPubKeyStrFromCache()) {
-        messageModel.set({ source: unblindedConvoId });
+        messageModel.setSource(unblindedConvoId);
       }
     });
     // this is based on the messageId as  primary key. So this should overwrite existing messages with new merged data
@@ -785,12 +803,15 @@ async function handleMessageRequestResponse(
   }
 
   if (messageRequestResponse.profile && !isEmpty(messageRequestResponse.profile)) {
-    await ProfileManager.updateProfileOfContact(
-      conversationToApprove.id,
-      messageRequestResponse.profile.displayName,
-      messageRequestResponse.profile.profilePicture,
-      messageRequestResponse.profileKey
-    );
+    await ProfileManager.updateProfileOfContact({
+      pubkey: conversationToApprove.id,
+      displayName: messageRequestResponse.profile.displayName,
+      profileUrl: messageRequestResponse.profile.profilePicture,
+      profileKey: messageRequestResponse.profileKey,
+      profileUpdatedAtSeconds: new Timestamp({
+        value: longOrNumberToNumber(messageRequestResponse.profile.lastProfileUpdateMs ?? 0),
+      }).seconds(),
+    });
   }
 
   if (previousApprovedMe) {

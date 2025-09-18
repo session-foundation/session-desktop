@@ -6,6 +6,8 @@ import { getSodiumRenderer } from '../../session/crypto';
 import { uploadAndSetOurAvatarShared } from '../../interactions/avatar-interactions/nts-avatar-interactions';
 import { ed25519Str } from '../../session/utils/String';
 import { userSettingsModal, updateEditProfilePictureModal } from './modalDialog';
+import { NetworkTime } from '../../util/NetworkTime';
+import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 
 export type UserStateType = {
   ourDisplayNameInProfile: string;
@@ -43,6 +45,7 @@ const updateOurAvatar = createAsyncThunk(
       decryptedAvatarData: mainAvatarDecrypted,
       ourConvo,
       profileKey,
+      context: 'uploadNewAvatar',
     });
 
     if (res) {
@@ -69,20 +72,22 @@ const clearOurAvatar = createAsyncThunk('user/clearOurAvatar', async () => {
 
   // return early if no change are needed at all
   if (
-    isNil(convo.get('avatarPointer')) &&
+    isNil(convo.getAvatarPointer()) &&
     isNil(convo.getAvatarInProfilePath()) &&
     isNil(convo.getFallbackAvatarInProfilePath()) &&
-    isNil(convo.get('profileKey'))
+    isNil(convo.getProfileKey())
   ) {
     return;
   }
 
-  convo.setKey('profileKey', undefined);
   await convo.setSessionProfile({
-    avatarPath: undefined,
-    fallbackAvatarPath: undefined,
-    avatarPointer: undefined,
+    type: 'resetAvatarPrivate',
     displayName: null,
+    profileUpdatedAtSeconds: NetworkTime.nowSeconds(),
+  });
+  await UserConfigWrapperActions.setNewProfilePic({
+    url: null,
+    key: null,
   });
 
   await SyncUtils.forceSyncConfigurationNowIfNeeded(true);
