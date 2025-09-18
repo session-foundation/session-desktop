@@ -927,6 +927,7 @@
   "unavailable": "Unavailable",
   "undo": "Undo",
   "unknown": "Unknown",
+  "unsupportedCpu": "Unsupported CPU",
   "updateApp": "App updates",
   "updateDownloaded": "Update installed, click to restart",
   "updateDownloading": "Downloading update: {percent_loader}%",
@@ -959,6 +960,7 @@
   "window": "Window",
   "yes": "Yes",
   "you": "You",
+  "yourCpuIsUnsupportedSSE42": "Your CPU does not support SSE 4.2, which is required for Session to run on Linux x64. Please upgrade your CPU or use a different operating system.",
   "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 
