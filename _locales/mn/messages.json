@@ -731,6 +731,7 @@
   "sessionSettings": "Тохиргоо",
   "set": "Тохируулах",
   "settingsRestartDescription": "Шинэ тохиргоог хэрэгжүүлэхийн тулд Session-ийг дахин эхлүүлнэ үү.",
+  "settingsScreenSecurityDesktop": "Дэлгэцийн аюулгүй байдал",
   "share": "Хуваалцах",
   "shareAccountIdDescription": "Найзаа урьж, Session дээр чатлах боломжтой. Account ID-г найздаа хуваалцана уу.",
   "shareAccountIdDescriptionCopied": "Найзуудтайгаа хаана ч байгаа яриагаа энд шилжүүлээрэй.",
