@@ -21,10 +21,6 @@ function overrideSSE42IsSupported() {
  * Checks from /proc/cpuinfo if the CPU supports SSE 4.2 instructions.
  */
 function sse42FromCPUInfo() {
-  const sse42Override = overrideSSE42IsSupported();
-  if (sse42Override !== null) {
-    return sse42Override;
-  }
   try {
     const cpuinfo = readFileSync('/proc/cpuinfo', 'utf8');
     const flagsMatch = cpuinfo.match(/flags\s*:\s*(.+)/m);
@@ -53,6 +49,10 @@ function isLinuxX64() {
  * This function checks if we are on linux x64 and if yes, checks `/proc/cpuinfo` for the SSE 4.2 flag.
  */
 export function isSharpSupported() {
+  const sse42Override = overrideSSE42IsSupported();
+  if (sse42Override !== null) {
+    return sse42Override;
+  }
   if (isLinuxX64()) {
     return sse42FromCPUInfo();
   }
