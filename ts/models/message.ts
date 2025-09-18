@@ -8,6 +8,7 @@ import { ContentMessage } from '../session/messages/outgoing';
 import { ClosedGroupV2VisibleMessage } from '../session/messages/outgoing/visibleMessage/ClosedGroupVisibleMessage';
 import { PubKey } from '../session/types';
 import {
+  MessageUtils,
   UserUtils,
   attachmentIdAsStrFromUrl,
   uploadAttachmentsToFileServer,
@@ -89,7 +90,7 @@ import {
   getPromotedGroupUpdateChangeStr,
 } from './groupUpdate';
 import { NetworkTime } from '../util/NetworkTime';
-import { MessageQueue } from '../session/sending';
+import { MessageQueue, MessageSender } from '../session/sending';
 import { getTimerNotificationStr } from './timerNotifications';
 import { ExpirationTimerUpdate } from '../session/disappearing_messages/types';
 import { Model } from './models';
@@ -170,7 +171,7 @@ export class MessageModel extends Model<MessageAttributes> {
   }
 
   public idForLogging() {
-    return `${this.get('source')} ${this.get('sent_at')}`;
+    return `msg(${this.id}, ${this.getConversation()?.idForLogging()}, ${this.get('sent_at')})`;
   }
 
   public isExpirationTimerUpdate() {
@@ -1087,9 +1088,14 @@ export class MessageModel extends Model<MessageAttributes> {
       );
 
       if (syncMessage) {
-        await MessageQueue.use().sendSyncMessage({
-          namespace: SnodeNamespaces.Default,
-          message: syncMessage,
+        await MessageSender.sendSingleMessage({
+          isSyncMessage: true,
+          message: await MessageUtils.toRawMessage(
+            PubKey.cast(UserUtils.getOurPubKeyStrFromCache()),
+            syncMessage,
+            SnodeNamespaces.Default
+          ),
+          abortSignal: null,
         });
       }
     }

@@ -83,6 +83,7 @@ function getSharedAttributesForPublicMessage({
     messageHash: '', // we do not care of a messageHash for an opengroup message. we have serverId for that
     // NOTE Community messages do not support disappearing messages
     expirationStartTimestamp: undefined,
+    expires_at: undefined,
   };
 }
 

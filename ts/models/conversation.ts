@@ -203,14 +203,14 @@ export class ConversationModel extends Model<ConversationAttributes> {
     const type = this.get('type');
     switch (type) {
       case ConversationTypeEnum.PRIVATE:
-        return this.id;
+        return `priv:${ed25519Str(this.id)}`;
       case ConversationTypeEnum.GROUPV2:
-        return `group(${ed25519Str(this.id)})`;
+        return `group:${ed25519Str(this.id)}`;
       case ConversationTypeEnum.GROUP: {
         if (this.isPublic()) {
-          return this.id;
+          return `comm:${this.id}`;
         }
-        return `group(${ed25519Str(this.id)})`;
+        return `group_legacy:${ed25519Str(this.id)}`;
       }
       default:
         assertUnreachable(type, `idForLogging case not handled for type:"${type}"`);
@@ -815,10 +815,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     const networkTimestamp = NetworkTime.now();
 
     window?.log?.info(
-      'Sending message to conversation',
-      this.idForLogging(),
-      'with networkTimestamp: ',
-      networkTimestamp
+      `Sending message to conversation ${this.idForLogging()} with networkTimestamp: ${networkTimestamp}`
     );
 
     const attachmentsWithVoiceMessage = attachments
@@ -1012,11 +1009,12 @@ export class ConversationModel extends Model<ConversationAttributes> {
       }
     }
 
-    // Note: we agreed that a **legacy closed** group ControlMessage message does not expire.
-    // Group v2 on the other hand, have expiring disappearing control message
+    // Private chats and group v2 are the two types of conversation
+    // where this function can be called, and both have expiring
+    // disappearing control messages.
     message.set({
-      expirationType: this.isClosedGroup() && !this.isClosedGroupV2() ? 'unknown' : expirationType,
-      expireTimer: this.isClosedGroup() && !this.isClosedGroupV2() ? 0 : expireTimer,
+      expirationType,
+      expireTimer,
     });
 
     if (!message.id) {

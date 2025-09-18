@@ -390,7 +390,7 @@ describe('DisappearingMessage', () => {
   });
 
   describe('checkForExpiringInOutgoingMessage', () => {
-    it('if the message is supposed to disappear then the expirationStartTimestamp should be set to the sent_at value', async () => {
+    it('if the message is supposed to disappear then the expirationStartTimestamp should be set to the stored_At value', async () => {
       const conversation = new ConversationModel({
         ...conversationArgs,
         id: ourNumber,
@@ -401,17 +401,22 @@ describe('DisappearingMessage', () => {
         expireTimer: 300,
         sent_at: NetworkTime.now(),
       });
+      const storedAt = NetworkTime.now();
 
       Sinon.stub(message, 'getConversation').returns(conversation);
-      DisappearingMessages.checkForExpiringOutgoingMessage(message, 'unit tests');
+      DisappearingMessages.checkForExpiringOutgoingMessage({
+        message,
+        location: 'unit tests',
+        effectivelyStoredAtMs: storedAt,
+      });
 
       expect(message.getExpirationStartTimestamp(), 'it should be defined').to.not.be.undefined;
       expect(
         isValidUnixTimestamp(message.getExpirationStartTimestamp()),
         'it should be a valid unix timestamp'
       ).to.be.true;
-      expect(message.getExpirationStartTimestamp(), 'it should equal the sent_at value').to.equal(
-        message.get('sent_at')
+      expect(message.getExpirationStartTimestamp(), 'it should equal the stored_at value').to.equal(
+        storedAt
       );
     });
     it('if there is no expireTimer then the expirationStartTimestamp should be undefined', async () => {
@@ -425,8 +430,13 @@ describe('DisappearingMessage', () => {
         sent_at: NetworkTime.now(),
       });
       Sinon.stub(message, 'getConversation').returns(conversation);
+      const storedAt = NetworkTime.now();
 
-      DisappearingMessages.checkForExpiringOutgoingMessage(message, 'unit tests');
+      DisappearingMessages.checkForExpiringOutgoingMessage({
+        message,
+        location: 'unit tests',
+        effectivelyStoredAtMs: storedAt,
+      });
 
       expect(message.getExpirationStartTimestamp(), 'it should be undefined').to.be.undefined;
     });
@@ -440,9 +450,14 @@ describe('DisappearingMessage', () => {
         expireTimer: 300,
         sent_at: NetworkTime.now(),
       });
+      const storedAt = NetworkTime.now();
       Sinon.stub(message, 'getConversation').returns(conversation);
 
-      DisappearingMessages.checkForExpiringOutgoingMessage(message, 'unit tests');
+      DisappearingMessages.checkForExpiringOutgoingMessage({
+        message,
+        location: 'unit tests',
+        effectivelyStoredAtMs: storedAt,
+      });
 
       expect(message.getExpirationStartTimestamp(), 'it should be undefined').to.be.undefined;
     });
@@ -460,8 +475,13 @@ describe('DisappearingMessage', () => {
         expirationStartTimestamp: now + 10000,
       });
       Sinon.stub(message, 'getConversation').returns(conversation);
+      const storedAt = NetworkTime.now();
 
-      DisappearingMessages.checkForExpiringOutgoingMessage(message, 'unit tests');
+      DisappearingMessages.checkForExpiringOutgoingMessage({
+        message,
+        location: 'unit tests',
+        effectivelyStoredAtMs: storedAt,
+      });
 
       expect(message.getExpirationStartTimestamp(), 'it should be defined').to.not.be.undefined;
 

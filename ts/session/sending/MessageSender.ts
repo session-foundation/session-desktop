@@ -673,7 +673,7 @@ async function handleBatchResultWithSubRequests({
     // there are some things we need to do when storing messages
     // for groups/legacy groups or user (but not for config messages)
     if (isStoreUserInitiatedSubRequest(subRequest)) {
-      const storedAt = batchResult?.[index]?.body?.t;
+      const storedAtMs = batchResult?.[index]?.body?.t;
       const storedHash = batchResult?.[index]?.body?.hash;
       const subRequestStatusCode = batchResult?.[index]?.code;
       // TODO: the expiration is due to be returned by the storage server on "store" soon, we will then be able to use it instead of doing the storedAt + ttl logic below
@@ -682,7 +682,7 @@ async function handleBatchResultWithSubRequests({
         subRequestStatusCode === 200 &&
         !isEmpty(storedHash) &&
         isString(storedHash) &&
-        isNumber(storedAt)
+        isNumber(storedAtMs)
       ) {
         seenHashes.push({
           expiresAt: NetworkTime.now() + TTL_DEFAULT.CONTENT_MESSAGE, // non config msg expire at CONTENT_MESSAGE at most
@@ -694,19 +694,18 @@ async function handleBatchResultWithSubRequests({
         // For groups, we can just store that hash directly as the group's swarm is hosting all of the group messages
         if (subRequest.dbMessageIdentifier) {
           // eslint-disable-next-line no-await-in-loop
-          await MessageSentHandler.handleSwarmMessageSentSuccess(
-            {
-              device: subRequest.destination,
-              isDestinationClosedGroup: MessageSender.destinationIsClosedGroup(destination),
-              identifier: subRequest.dbMessageIdentifier,
-              plainTextBuffer:
-                subRequest instanceof StoreUserMessageSubRequest
-                  ? subRequest.plainTextBuffer
-                  : null,
-            },
-            storedAt,
-            storedHash
-          );
+          await MessageSentHandler.handleSwarmMessageSentSuccess({
+            device: subRequest.destination,
+            isDestinationClosedGroup: MessageSender.destinationIsClosedGroup(destination),
+            identifier: subRequest.dbMessageIdentifier,
+            plainTextBuffer:
+              subRequest instanceof StoreUserMessageSubRequest ? subRequest.plainTextBuffer : null,
+            // Note: we cannot override this effective timestamp, as this is the one used as an id for
+            // quotes and read receipts.
+            sentAtMs: subRequest.createdAtNetworkTimestamp,
+            storedAtServerMs: storedAtMs,
+            storedHash,
+          });
         }
       }
     }
