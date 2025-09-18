@@ -721,6 +721,7 @@
   "sessionSettings": "การตั้งค่า",
   "set": "ตั้งค่า",
   "settingsRestartDescription": "คุณต้องรีสตาร์ท Session เพื่อใช้งานการตั้งค่าใหม่ของคุณ",
+  "settingsScreenSecurityDesktop": "ความปลอดภัยหน้าจอ",
   "share": "แบ่งปัน",
   "shareAccountIdDescription": "เชิญเพื่อนของคุณมาแชทกับคุณใน Session ด้วยการแชร์ Account ID ของคุณกับพวกเขา",
   "shareAccountIdDescriptionCopied": "แบ่งปันกับเพื่อน ๆ ของคุณไม่ว่าพวกเขาจะอยู่ที่ไหนแล้วจึงย้ายการสนทนามาที่นี่",

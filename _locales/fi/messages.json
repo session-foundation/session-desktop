@@ -732,6 +732,7 @@
   "sessionSettings": "Asetukset",
   "set": "Aseta",
   "settingsRestartDescription": "Sinun on käynnistettävä Session uudelleen, jotta uudet asetuksesi tulevat voimaan.",
+  "settingsScreenSecurityDesktop": "Näytön suojaus",
   "share": "Jaa",
   "shareAccountIdDescription": "Kutsu ystäväsi keskustelemaan kanssasi Session-sovelluksessa jakamalla heille tilisi ID:n.",
   "shareAccountIdDescriptionCopied": "Jaa ystävien kanssa missä yleensä puhut heidän kanssaan - siirrä sitten keskustelu tänne.",
