@@ -960,7 +960,7 @@
   "window": "Window",
   "yes": "Yes",
   "you": "You",
-  "yourCpuIsUnsupportedSSE42": "Your CPU does not support SSE 4.2, which is required for Session to run on Linux x64. Please upgrade your CPU or use a different operating system.",
+  "yourCpuIsUnsupportedSSE42": "Your CPU does not support SSE 4.2 instructions, which are required by Session on Linux x64 operating systems to process images. Please upgrade to a compatible CPU or use a different operating system.",
   "sessionNetworkDataPrice": "Price data powered by CoinGecko<br/>Accurate at {date_time}"
 }
 
