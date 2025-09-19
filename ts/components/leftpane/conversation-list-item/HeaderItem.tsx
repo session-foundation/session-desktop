@@ -36,6 +36,7 @@ const NotificationSettingIcon = () => {
           iconType="mute"
           iconColor={'var(--conversation-tab-text-color)'}
           iconSize="small"
+          style={{ flexShrink: 0 }}
         />
       );
     case 'mentions_only':
@@ -44,6 +45,7 @@ const NotificationSettingIcon = () => {
           iconType="bell"
           iconColor={'var(--conversation-tab-text-color)'}
           iconSize="small"
+          style={{ flexShrink: 0 }}
         />
       );
     default:
@@ -63,7 +65,12 @@ const PinIcon = () => {
   const isPinned = useIsPinned(conversationId);
 
   return isPinned ? (
-    <SessionIcon iconType="pin" iconColor={'var(--conversation-tab-text-color)'} iconSize="small" />
+    <SessionIcon
+      iconType="pin"
+      iconColor={'var(--conversation-tab-text-color)'}
+      iconSize="small"
+      style={{ flexShrink: 0 }}
+    />
   ) : null;
 };
 
@@ -100,6 +107,7 @@ const MentionAtSymbol = styled.span`
   min-width: 16px;
   border-radius: 8px;
   cursor: pointer;
+  flex-shrink: 0;
 
   &:hover {
     filter: grayscale(0.7);

@@ -170,7 +170,7 @@ function setExpirationStartTimestamp(
   // these are for debugging purposes
   callLocation?: string,
   messageId?: string
-): number | undefined {
+) {
   let expirationStartTimestamp: number | undefined = NetworkTime.now();
 
   if (callLocation) {
@@ -184,7 +184,7 @@ function setExpirationStartTimestamp(
   if (timestamp) {
     if (!isValidUnixTimestamp(timestamp)) {
       window.log.debug(
-        `[setExpirationStartTimestamp] We compared 2 timestamps for a disappearing message (${mode}) and the argument timestamp is not a invalid unix timestamp.${
+        `[setExpirationStartTimestamp] We compared 2 timestamps for a disappearing message (${mode}) and the argument timestamp is an invalid unix timestamp.${
           messageId ? `messageId: ${messageId} ` : ''
         }`
       );
@@ -361,7 +361,15 @@ async function checkForExpireUpdateInContentMessage(
 /**
  * Checks if an outgoing message is meant to disappear and if so trigger the timer
  */
-function checkForExpiringOutgoingMessage(message: MessageModel, location?: string) {
+function checkForExpiringOutgoingMessage({
+  effectivelyStoredAtMs,
+  location,
+  message,
+}: {
+  message: MessageModel;
+  location: string;
+  effectivelyStoredAtMs: number;
+}) {
   const convo = message.getConversation();
   const expireTimer = message.getExpireTimerSeconds();
   const expirationType = message.getExpirationType();
@@ -379,13 +387,17 @@ function checkForExpiringOutgoingMessage(message: MessageModel, location?: strin
     const expirationMode = changeToDisappearingConversationMode(convo, expirationType, expireTimer);
 
     if (expirationMode !== 'off') {
-      message.set({
-        expirationStartTimestamp: setExpirationStartTimestamp(
-          expirationMode,
-          message.get('sent_at'),
-          location
-        ),
-      });
+      const expirationStartTimestamp = setExpirationStartTimestamp(
+        expirationMode,
+        effectivelyStoredAtMs,
+        location
+      );
+      if (expirationStartTimestamp) {
+        message.set({
+          expirationStartTimestamp,
+          expires_at: expirationStartTimestamp + expireTimer * 1000,
+        });
+      }
     }
   }
 }
@@ -499,14 +511,17 @@ function getMessageReadyToDisappear(
     messageExpirationFromRetrieve > 0
   ) {
     // Note: closed groups control message do not disappear
-    if (!conversationModel.isClosedGroup() && !messageModel.isControlMessage()) {
-      const expirationStartTimestamp = messageExpirationFromRetrieve - expireTimer * 1000;
-      const expires_at = messageExpirationFromRetrieve;
-      messageModel.set({
-        expirationStartTimestamp,
-        expires_at,
-      });
-    }
+
+    const expirationStartTimestamp = messageExpirationFromRetrieve - expireTimer * 1000;
+    const expires_at = messageExpirationFromRetrieve;
+
+    window.log.debug(
+      `incoming DaS message,\n\tforcing expirationStartTimestamp to ${expirationStartTimestamp} which is ${(Date.now() - expirationStartTimestamp) / 1000}s ago,\n\tand expires_at to ${expires_at} so with ${(messageExpirationFromRetrieve - Date.now()) / 1000}s left`
+    );
+    messageModel.set({
+      expirationStartTimestamp,
+      expires_at,
+    });
   }
 
   return messageModel;

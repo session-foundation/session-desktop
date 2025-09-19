@@ -101,7 +101,12 @@ function useDescriptionErrorString({
     // description is always optional
     return '';
   }
-  const charLength = newDescription?.length || 0;
+
+  // "👨🏻‍❤️‍💋‍👨🏻" is supposed to be 1char, but 35 bytes, and this is the only way
+  // I found to have this to have the correct count
+  const segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
+  const charLength = [...segmenter.segment(newDescription)].length;
+
   const byteLength = new TextEncoder().encode(newDescription).length;
 
   if (

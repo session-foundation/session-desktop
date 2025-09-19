@@ -19,7 +19,6 @@ async function getTargetMessage(reader: string, messages: Array<MessageModel>) {
 async function onReadReceipt(receipt: { source: string; timestamp: number; readAt: number }) {
   try {
     const messages = await Data.getMessagesBySentAt(receipt.timestamp);
-
     const message = await getTargetMessage(receipt.source, messages);
 
     if (!message) {

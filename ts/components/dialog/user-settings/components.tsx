@@ -91,7 +91,7 @@ const StyledProfileName = styled(Flex)`
   }
 `;
 
-const StyledName = styled.p`
+const StyledName = styled.div`
   font-size: var(--font-size-xl);
   line-height: 1.4;
   font-weight: 700;
@@ -116,14 +116,15 @@ export const ProfileName = (props: { profileName: string; onClick: () => void })
     <StyledProfileName $container={true} $justifyContent="center" $alignItems="center">
       <StyledName data-testid="your-profile-name" onClick={onClick}>
         {profileName}
+        {showPro.show ? (
+          <ProIconButton
+            iconSize={'medium'}
+            dataTestId="pro-badge-profile-name"
+            onClick={showPro.cb}
+            style={{ display: 'inline-flex', marginInlineStart: 'var(--margins-sm)' }}
+          />
+        ) : null}
       </StyledName>
-      {showPro.show ? (
-        <ProIconButton
-          iconSize={'medium'}
-          dataTestId="pro-badge-profile-name"
-          onClick={showPro.cb}
-        />
-      ) : null}
     </StyledProfileName>
   );
 };

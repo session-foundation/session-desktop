@@ -59,26 +59,39 @@ async function handlePublicMessageSentFailure(sentMessage: OpenGroupVisibleMessa
   await fetchedMessage.getConversation()?.updateLastMessage();
 }
 
-async function handleSwarmMessageSentSuccess(
-  {
-    device: destination,
-    identifier,
-    isDestinationClosedGroup,
-    plainTextBuffer,
-  }: Pick<OutgoingRawMessage, 'device' | 'identifier'> & {
-    /**
-     * plainTextBuffer is only required when sending a message to a 1o1,
-     * as we need it to encrypt it again for our linked devices (synced messages)
-     */
-    plainTextBuffer: Uint8Array | null;
-    /**
-     * We must not sync a message when it was sent to a closed group
-     */
-    isDestinationClosedGroup: boolean;
-  },
-  effectiveTimestamp: number,
-  storedHash: string | null
-) {
+async function handleSwarmMessageSentSuccess({
+  device: destination,
+  identifier,
+  isDestinationClosedGroup,
+  plainTextBuffer,
+  sentAtMs,
+  storedAtServerMs,
+  storedHash,
+}: Pick<OutgoingRawMessage, 'device' | 'identifier'> & {
+  /**
+   * plainTextBuffer is only required when sending a message to a 1o1,
+   * as we need it to encrypt it again for our linked devices (synced messages)
+   */
+  plainTextBuffer: Uint8Array | null;
+  /**
+   * We must not sync a message when it was sent to a closed group
+   */
+  isDestinationClosedGroup: boolean;
+  /**
+   * The timestamp when the message was reported as stored at by the server.
+   * This is the one we should use to start the disappearing message timer.
+   */
+  storedAtServerMs: number;
+  /**
+   * The timestamp when the message was built locally, i.e. how it will be ordered.
+   * This timestamp is also used for read receipts identification and quotes.
+   */
+  sentAtMs: number;
+  /**
+   * The hash of the message as reported by the server.
+   */
+  storedHash: string | null;
+}) {
   // The wrappedEnvelope will be set only if the message is not one of OpenGroupV2Message type.
   let fetchedMessage = await fetchHandleMessageSentData(identifier);
   if (!fetchedMessage) {
@@ -102,8 +115,8 @@ async function handleSwarmMessageSentSuccess(
 
   // A message is synced if we triggered a sync message (sentSync)
   // and the current message was sent to our device (so a sync message)
-  const shouldMarkMessageAsSynced =
-    (isOurDevice && fetchedMessage.get('sentSync')) || isClosedGroupMessage;
+  const isPrivateSyncMessage = isOurDevice && fetchedMessage.get('sentSync');
+  const shouldMarkMessageAsSynced = isPrivateSyncMessage || isClosedGroupMessage;
 
   // Handle the sync logic here
   if (shouldTriggerSyncMessage && plainTextBuffer) {
@@ -111,7 +124,7 @@ async function handleSwarmMessageSentSuccess(
       const contentDecoded = SignalService.Content.decode(plainTextBuffer);
       if (contentDecoded && contentDecoded.dataMessage) {
         try {
-          await fetchedMessage.sendSyncMessage(contentDecoded, effectiveTimestamp);
+          await fetchedMessage.sendSyncMessage(contentDecoded, sentAtMs);
           const tempFetchMessage = await fetchHandleMessageSentData(identifier);
           if (!tempFetchMessage) {
             window?.log?.warn(
@@ -141,11 +154,17 @@ async function handleSwarmMessageSentSuccess(
   fetchedMessage.set({
     sent_to: sentTo,
     sent: true,
-    sent_at: effectiveTimestamp,
+    sent_at: sentAtMs,
     errors: undefined,
   });
 
-  DisappearingMessages.checkForExpiringOutgoingMessage(fetchedMessage, 'handleMessageSentSuccess');
+  if (!isPrivateSyncMessage) {
+    DisappearingMessages.checkForExpiringOutgoingMessage({
+      message: fetchedMessage,
+      location: 'handleSwarmMessageSentSuccess',
+      effectivelyStoredAtMs: storedAtServerMs,
+    });
+  }
 
   await fetchedMessage.commit();
   fetchedMessage.getConversation()?.updateLastMessage();
@@ -182,6 +201,7 @@ async function handleSwarmMessageSentFailure(
   if (fetchedMessage.getExpirationType() && fetchedMessage.getExpireTimerSeconds() > 0) {
     fetchedMessage.set({
       expirationStartTimestamp: undefined,
+      expires_at: undefined,
     });
     window.log.warn(
       `[handleSwarmMessageSentFailure] Stopping a message from disappearing until we retry the send operation. messageId: ${fetchedMessage.get(

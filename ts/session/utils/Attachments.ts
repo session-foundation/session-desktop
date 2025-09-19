@@ -108,7 +108,7 @@ export async function uploadLinkPreviewToFileServer(
   // some links do not have an image associated, and it makes the whole message fail to send
   if (!preview?.image) {
     if (!preview) {
-      window.log.warn('tried to upload file to FileServer without image.. skipping');
+      window.log.debug('tried to upload file to FileServer without image.. skipping');
     }
     return preview as any;
   }

@@ -365,7 +365,7 @@ async function markConvoAsReadIfOutgoingMessage(
   const isOutgoingMessage =
     message.get('type') === 'outgoing' || message.get('direction') === 'outgoing';
   if (isOutgoingMessage) {
-    const sentAt = message.get('sent_at') || message.get('serverTimestamp');
+    const sentAt = message.get('serverTimestamp') || message.get('sent_at');
     if (sentAt) {
       const expirationType = message.getExpirationType();
       const expireTimer = message.getExpireTimerSeconds();
@@ -432,16 +432,19 @@ export async function handleMessageJob(
         messageModel.getExpirationType(),
         messageModel.getExpireTimerSeconds()
       );
+      const expireTimer = messageModel.getExpireTimerSeconds();
 
-      if (expirationMode === 'deleteAfterSend') {
-        messageModel.setMessageExpirationStartTimestamp(
-          DisappearingMessages.setExpirationStartTimestamp(
-            expirationMode,
-            messageModel.get('sent_at'),
-            'handleMessageJob',
-            messageModel.id
-          )
+      if (expirationMode === 'deleteAfterSend' && expireTimer > 0) {
+        const expirationStartTimestamp = DisappearingMessages.setExpirationStartTimestamp(
+          expirationMode,
+          messageModel.get('sent_at'),
+          'handleMessageJob',
+          messageModel.id
         );
+        if (expirationStartTimestamp) {
+          messageModel.setMessageExpirationStartTimestamp(expirationStartTimestamp);
+          messageModel.setExpiresAt(expirationStartTimestamp + expireTimer * 1000);
+        }
       }
     }
 
