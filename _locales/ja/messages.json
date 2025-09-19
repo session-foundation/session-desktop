@@ -889,6 +889,7 @@
   "set": "セット",
   "setCommunityDisplayPicture": "コミュニティのプロフィール写真を設定",
   "settingsRestartDescription": "新しい設定を適用するために Session を再起動する必要があります.",
+  "settingsScreenSecurityDesktop": "スクリーンセキュリティ",
   "share": "共有",
   "shareAccountIdDescription": "友達をSession に招待して、チャットを始めましょう。アカウントIDを共有して招待できます。",
   "shareAccountIdDescriptionCopied": "いつでもどこでも友達と共有 — ここで会話を始めましょう",
