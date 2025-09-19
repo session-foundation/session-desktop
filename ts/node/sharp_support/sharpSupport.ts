@@ -30,7 +30,7 @@ function sse42FromCPUInfo() {
 
       const sseFlagFound = flags.includes('sse4_2');
       console.info('SSE 4.2 flag found:', sseFlagFound);
-      return sseFlagFound && false;
+      return sseFlagFound;
     }
     return false;
   } catch (error) {
