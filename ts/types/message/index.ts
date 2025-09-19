@@ -150,7 +150,7 @@ class OutgoingUserProfile {
     if (this.displayName) {
       profile.displayName = this.displayName;
     }
-    profile.lastProfileUpdateMs = this.lastProfileUpdateTs.ms();
+    profile.lastProfileUpdateSeconds = this.lastProfileUpdateTs.seconds();
 
     const picDetails = this.toProfilePicture();
     if (picDetails.url && picDetails.key) {
