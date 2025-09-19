@@ -520,7 +520,7 @@ export async function handleMessageJob(
         profileUrl: regularDataMessage.profile.profilePicture,
         profileKey: regularDataMessage.profileKey,
         profileUpdatedAtSeconds: new Timestamp({
-          value: regularDataMessage.profile.lastProfileUpdateMs ?? 0,
+          value: regularDataMessage.profile.lastProfileUpdateSeconds ?? 0,
         }).seconds(),
       });
     }

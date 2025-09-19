@@ -809,7 +809,7 @@ async function handleMessageRequestResponse(
       profileUrl: messageRequestResponse.profile.profilePicture,
       profileKey: messageRequestResponse.profileKey,
       profileUpdatedAtSeconds: new Timestamp({
-        value: longOrNumberToNumber(messageRequestResponse.profile.lastProfileUpdateMs ?? 0),
+        value: longOrNumberToNumber(messageRequestResponse.profile.lastProfileUpdateSeconds ?? 0),
       }).seconds(),
     });
   }

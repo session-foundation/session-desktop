@@ -235,7 +235,7 @@ export async function handleSwarmDataMessage({
       profileUrl: cleanDataMessage.profile.profilePicture,
       profileKey: cleanDataMessage.profileKey,
       profileUpdatedAtSeconds: new Timestamp({
-        value: cleanDataMessage.profile.lastProfileUpdateMs ?? 0,
+        value: cleanDataMessage.profile.lastProfileUpdateSeconds ?? 0,
       }).seconds(),
     });
   }

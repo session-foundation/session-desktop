@@ -203,9 +203,9 @@ message DataMessage {
     /**
      * The timestamp of the last profile update.
      * This is used to prioritize the correct profile info based on multiple and outdated incoming messages.
-     Note: this is in milliseconds.
+     * Note: this is in seconds.
      */
-    optional uint64 lastProfileUpdateMs = 3;
+    optional uint64 lastProfileUpdateSeconds = 3;
   }
 
   message OpenGroupInvitation {
