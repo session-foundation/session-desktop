@@ -7,6 +7,8 @@
 import {
   app,
   BrowserWindow,
+  crashReporter,
+  dialog,
   protocol as electronProtocol,
   ipcMain as ipc,
   ipcMain,
@@ -152,6 +154,27 @@ if (!process.mas) {
   }
 }
 
+/**
+ * Starts the crash reporter, which saves crashes to disk.
+ * The dumps will be saved in the `userData/CrashPad/pending` directory.
+ *
+ *  The minidumps can be read using the `minidump_stackwalk` tool.
+ * If you do not have cargo installed, you can do those steps:
+ * ```bash
+ * git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+ * cd depot_tools
+ * mkdir breakpad && cd breakpad
+ * ../fetch breakpad && cd src
+ * ./configure && make
+ * file src/processor/minidump_stackwalk
+ * ./src/processor/minidump_stackwalk <path_to.dmp> <any_symbols_you_have_optional>
+ */
+crashReporter.start({
+  submitURL: '', // leave empty as we don't want to upload them, but only save them locally
+  uploadToServer: false,
+  compress: true,
+});
+
 const windowFromUserConfig = userConfig.get('window');
 const windowFromEphemeral = ephemeralConfig.get('window');
 let windowConfig = windowFromEphemeral || windowFromUserConfig;
@@ -177,6 +200,9 @@ import { initializeMainProcessLogger } from '../util/logger/main_process_logging
 import * as log from '../util/logger/log';
 import { DURATION } from '../session/constants';
 import { tr } from '../localization/localeTools';
+import { isSharpSupported } from '../node/sharp_support/sharpSupport';
+
+import { logCrash } from '../node/crash/log_crash';
 
 function prepareURL(pathSegments: Array<string>, moreKeys?: { theme: any }) {
   const urlObject: url.UrlObject = {
@@ -198,6 +224,11 @@ function prepareURL(pathSegments: Array<string>, moreKeys?: { theme: any }) {
     },
   };
   return url.format(urlObject);
+}
+
+async function showUnsupportedCpuDialog() {
+  dialog.showErrorBox(tr('unsupportedCpu'), tr('yourCpuIsUnsupportedSSE42'));
+  app.quit();
 }
 
 function handleUrl(event: any, target: string) {
@@ -360,6 +391,12 @@ async function createWindow() {
   mainWindow.on('focus', setWindowFocus);
   mainWindow.on('blur', setWindowFocus);
   mainWindow.once('ready-to-show', setWindowFocus);
+
+  mainWindow.webContents.on('render-process-gone', (_event, details) => {
+    // details.reason can be: 'crashed', 'killed', 'oom', etc.
+    logCrash('renderer', details);
+  });
+
   // This is a fallback in case we drop an event for some reason.
   global.setInterval(setWindowFocus, 5000);
 
@@ -741,6 +778,11 @@ app.on('ready', async () => {
     const loadedLocale = loadLocalizedDictionary({ appLocale });
     console.log(`appLocale is ${appLocale}`);
     console.log(`crowdin locale is ${loadedLocale.crowdinLocale}`);
+  }
+
+  if (!isSharpSupported()) {
+    await showUnsupportedCpuDialog();
+    return;
   }
 
   const key = getDefaultSQLKey();

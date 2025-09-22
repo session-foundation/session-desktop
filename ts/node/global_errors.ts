@@ -3,6 +3,7 @@ import os from 'node:os';
 import { reallyJsonStringify } from '../util/reallyJsonStringify';
 import { Errors } from '../types/Errors';
 import { redactAll } from '../util/privacy';
+import { logCrash } from './crash/log_crash';
 
 // TODO: use localised strings
 const quitText = 'Quit';
@@ -53,10 +54,14 @@ export const addHandler = (): void => {
   // Note: we could maybe add a handler for when the renderer process died here?
   // (but also ignore the valid death like on restart/quit)
   process.on('uncaughtException', (reason: unknown) => {
+    logCrash('main', { reason: 'uncaughtException', error: reason });
+
     handleError('Unhandled Error', _getError(reason));
   });
 
   process.on('unhandledRejection', (reason: unknown) => {
+    logCrash('main', { reason: 'unhandledRejection', error: reason });
+
     handleError('Unhandled Promise Rejection', _getError(reason));
   });
 };
