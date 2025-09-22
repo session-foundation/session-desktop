@@ -1076,6 +1076,7 @@
   "unavailable": "Unavailable",
   "undo": "Undo",
   "unknown": "Unknown",
+  "unsupportedCpu": "Unsupported CPU",
   "updateApp": "App updates",
   "updateCommunityInformation": "Update Community Information",
   "updateCommunityInformationDescription": "Community name and description are visible to all community members",
@@ -1124,6 +1125,7 @@
   "you": "You",
   "yourRecoveryPassword": "Your Recovery Password",
   "zoomFactor": "Zoom Factor",
-  "zoomFactorDescription": "Adjust the size of text and visual elements."
+  "zoomFactorDescription": "Adjust the size of text and visual elements.",
+  "yourCpuIsUnsupportedSSE42": "Your CPU does not support SSE 4.2 instructions, which are required by Session on Linux x64 operating systems to process images. Please upgrade to a compatible CPU or use a different operating system."
 }
 
