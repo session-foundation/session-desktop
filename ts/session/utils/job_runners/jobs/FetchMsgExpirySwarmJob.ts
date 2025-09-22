@@ -81,15 +81,15 @@ class FetchMsgExpirySwarmJob extends PersistedJob<FetchMsgExpirySwarmPersistedDa
             window.log.debug(
               `FetchMsgExpirySwarmJob: setting for msg hash ${message.getMessageHash()}:`,
               {
-                expires_at: expiry.fetchedExpiry,
                 unread: READ_MESSAGE_STATE.read,
                 expirationStartTimestamp: realReadAt,
+                expires_at: expiry.fetchedExpiry,
               }
             );
             message.set({
-              expires_at: expiry.fetchedExpiry,
               unread: READ_MESSAGE_STATE.read,
               expirationStartTimestamp: realReadAt,
+              expires_at: expiry.fetchedExpiry,
             });
             updatedMsgModels.push(message);
           }
