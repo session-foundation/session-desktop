@@ -18,6 +18,8 @@ export const StyledContent = styled.div<{ disabled: boolean }>`
 `;
 
 const StyledPanelLabel = styled.p`
+  display: flex;
+  gap: var(--margins-xs);
   color: var(--text-secondary-color);
   margin: 0;
   align-self: flex-start;
@@ -38,9 +40,11 @@ const StyledPanelLabelWithDescription = styled.div`
 
 export function PanelLabelWithDescription({
   title,
+  extraInlineNode,
   description,
 }: {
   title: TrArgs;
+  extraInlineNode?: ReactNode;
   description?: TrArgs;
 }) {
   return (
@@ -48,6 +52,7 @@ export function PanelLabelWithDescription({
       {/* less space between the label and the description */}
       <StyledPanelLabel>
         <Localizer {...title} />
+        {extraInlineNode}
       </StyledPanelLabel>
       {description ? (
         <StyledPanelDescription>

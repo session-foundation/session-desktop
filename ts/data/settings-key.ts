@@ -16,6 +16,12 @@ const hasLinkPreviewPopupBeenDisplayed = 'hasLinkPreviewPopupBeenDisplayed';
 const hasFollowSystemThemeEnabled = 'hasFollowSystemThemeEnabled';
 const hideRecoveryPassword = 'hideRecoveryPassword';
 
+// Pro stats counters
+const proLongerMessagesSent = 'proLongerMessagesSent';
+const proPinnedConversations = 'proPinnedConversations';
+const proBadgesSent = 'proBadgesSent';
+const proGroupsUpgraded = 'proGroupsUpgraded';
+
 // user config tracking timestamps (to discard incoming messages which would make a change we reverted in the last config message we merged)
 const latestUserProfileEnvelopeTimestamp = 'latestUserProfileEnvelopeTimestamp';
 const latestUserGroupEnvelopeTimestamp = 'latestUserGroupEnvelopeTimestamp';
@@ -53,6 +59,10 @@ export const SettingsKey = {
   hideRecoveryPassword,
   showOnboardingAccountJustCreated,
   lastMessageGroupsRegenerated,
+  proLongerMessagesSent,
+  proPinnedConversations,
+  proBadgesSent,
+  proGroupsUpgraded,
 } as const;
 
 export const KNOWN_BLINDED_KEYS_ITEM = 'KNOWN_BLINDED_KEYS_ITEM';

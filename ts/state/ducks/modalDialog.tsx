@@ -25,7 +25,8 @@ export type UserSettingsPage =
   | 'clear-data'
   | 'password'
   | 'preferences'
-  | 'network';
+  | 'network'
+  | 'pro';
 
 export type WithUserSettingsPage =
   | { userSettingsPage: Exclude<UserSettingsPage, 'password'> }
@@ -162,7 +163,7 @@ export const initialModalState: ModalState = {
   groupMembersModal: null,
   userProfileModal: null,
   nickNameModal: null,
-  userSettingsModal: null,
+  userSettingsModal: { userSettingsPage: 'pro' },
   onionPathModal: null,
   enterPasswordModal: null,
   deleteAccountModal: null,

@@ -12,6 +12,7 @@ export enum LUCIDE_ICONS_UNICODE {
   CHEVRON_LEFT = '',
   CHEVRON_RIGHT = '',
   CHEVRON_UP = '',
+  CIRCLE_ALERT = '',
   CIRCLE_CHECK = '',
   CIRCLE_ELLIPSES = '',
   CIRCLE_HELP = '',
@@ -151,6 +152,7 @@ export function isIconToMirrorRtl(unicode: LUCIDE_ICONS_UNICODE) {
     case LUCIDE_ICONS_UNICODE.USER_ROUND_X:
     case LUCIDE_ICONS_UNICODE.USERS_ROUND:
     case LUCIDE_ICONS_UNICODE.X:
+    case LUCIDE_ICONS_UNICODE.CIRCLE_ALERT:
       return false;
     default:
       assertUnreachable(unicode, 'isIconToMirrorRtl: unknown case');

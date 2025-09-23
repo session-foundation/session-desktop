@@ -11,6 +11,7 @@ import { NotificationsSettingsPage } from './pages/NotificationsSettingsPage';
 import { PreferencesSettingsPage } from './pages/PreferencesSettingsPage';
 import { PrivacySettingsPage } from './pages/PrivacySettingsPage';
 import { RecoveryPasswordSettingsPage } from './pages/RecoveryPasswordSettingsPage';
+import { ProSettingsPage } from './pages/user-pro/ProSettingsPage';
 
 export const UserSettingsDialog = (modalState: UserSettingsModalState) => {
   if (!modalState?.userSettingsPage) {
@@ -42,6 +43,8 @@ export const UserSettingsDialog = (modalState: UserSettingsModalState) => {
       return <EditPasswordSettingsPage {...modalState} />;
     case 'network':
       return <SessionNetworkPage {...modalState} />;
+    case 'pro':
+      return <ProSettingsPage {...modalState} />;
     case 'message-requests':
       // the `message-request` is not a page of the user settings page, but a page in the left pane header currently.
       return null;

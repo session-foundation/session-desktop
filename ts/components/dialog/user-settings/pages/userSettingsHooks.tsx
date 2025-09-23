@@ -41,6 +41,8 @@ export function useUserSettingsTitle(page: UserSettingsModalState | undefined) {
         : page.passwordAction === 'change'
           ? tr('passwordChange')
           : tr('passwordSet');
+    case 'pro':
+      return '';
     case 'default':
     case undefined:
       return tr('sessionSettings');
@@ -72,6 +74,7 @@ export function useUserSettingsCloseAction(props: UserSettingsModalState) {
     case 'blocked-contacts':
     case 'password':
     case 'network':
+    case 'pro':
       return () => dispatch(userSettingsModal(null));
 
     default:
@@ -109,6 +112,7 @@ export function useUserSettingsBackAction(modalState: UserSettingsModalState) {
     case 'privacy':
     case 'preferences':
     case 'network':
+    case 'pro':
       settingsPageToDisplayOnBack = 'default';
       break;
     default:

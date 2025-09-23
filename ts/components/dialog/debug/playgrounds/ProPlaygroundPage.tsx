@@ -31,6 +31,11 @@ export function ProPlaygroundPage() {
         />
         <FlagToggle
           forceUpdate={forceUpdate}
+          flag="mockCurrentUserHasProExpired"
+          value={useFeatureFlag('mockCurrentUserHasProExpired')}
+        />
+        <FlagToggle
+          forceUpdate={forceUpdate}
           flag="mockOthersHavePro"
           value={useFeatureFlag('mockOthersHavePro')}
         />
