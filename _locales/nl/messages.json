@@ -874,7 +874,6 @@
   "proPlanPlatformRefundLong": "Omdat je je oorspronkelijk hebt aangemeld voor Session Pro via de <b><span>{platform_store} winkel</span></b>, wordt je restitutieverzoek afgehandeld door Session Support.<br/><br/>Vraag een restitutie aan door op de knop hieronder te drukken en het restitutieformulier in te vullen.<br/><br/>Hoewel Session Support ernaar streeft om restitutieverzoeken binnen 24-72 uur te verwerken, kan het tijdens drukte langer duren",
   "proPlanRecover": "Pro abonnement herstellen",
   "proPlanRenew": "Pro abonnement verlengen",
-  "proPlanRenewDesktop": "Momenteel kunnen Pro abonnementen alleen worden gekocht en verlengd via de {platform_store}- of {platform_store} winkels. Omdat je Session Desktop gebruikt, kun je je abonnement hier niet verlengen.<br/><br/>De ontwikkelaars van Session Pro werken hard aan alternatieve betaalmogelijkheden, zodat gebruikers Pro abonnementen buiten de {platform_store}- en {platform_store} winkels kunnen aanschaffen. <b>Pro Routekaart</b>",
   "proPlanRenewDesktopLinked": "Verleng je abonnement in de Session Pro instellingen op een gekoppeld apparaat met Session geïnstalleerd via de {platform_store} of {platform_store} winkel.",
   "proPlanRenewDesktopStore": "Verleng je abonnement op de {platform_store} website met het {platform_account} waarmee je je voor Pro hebt aangemeld.",
   "proPlanRenewSupport": "Je Session Pro abonnement is verlengd! Bedankt voor je steun aan de Session Network.",

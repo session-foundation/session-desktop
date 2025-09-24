@@ -882,7 +882,6 @@
   "proPlanPlatformRefundLong": "Protože jste si původně zakoupili Session Pro přes <b><span>obchod {platform_store}</span></b>, váš požadavek na vrácení peněz bude zpracován podporou Session.<br/><br/>Požádejte o vrácení peněz kliknutím na tlačítko níže a vyplněním formuláře žádosti o vrácení peněz.<br/><br/>Ačkoliv se podpora Session snaží zpracovat žádosti o vrácení peněz během 24–72 hodin, může zpracování trvat i déle, pokud dochází k vysokému počtu žádostí.",
   "proPlanRecover": "Znovu nabýt tarif Pro",
   "proPlanRenew": "Obnovit tarif Pro",
-  "proPlanRenewDesktop": "V současnosti lze tarify Pro zakoupit a obnovit pouze prostřednictvím obchodů {platform_store} nebo {platform_store}. Protože používáte Session Desktop, nemůžete zde svůj plán obnovit.<br/><br/>Vývojáři Session Pro intenzivně pracují na alternativních platebních možnostech, které by uživatelům umožnily zakoupit tarify Pro mimo obchody {platform_store} a {platform_store}. <b>Plán vývoje Pro</b>",
   "proPlanRenewDesktopLinked": "Obnovte svůj tarif v nastavení Session Pro na propojeném zařízení s nainstalovanou aplikací Session prostřednictvím obchodu {platform_store} nebo {platform_store}.",
   "proPlanRenewDesktopStore": "Obnovte svůj tarif na webu {platform_store} pomocí účtu {platform_account}, se kterým jste si pořídili Pro.",
   "proPlanRenewSupport": "Váš tarif Session Pro byl obnoven! Děkujeme, že podporujete síť Session Network.",

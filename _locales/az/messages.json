@@ -880,7 +880,6 @@
   "proPlanPlatformRefundLong": "Başda <b><span>{platform_store} Mağazası</span></b> üzərindən Session Pro üçün qeydiyyatdan keçdiyinizə görə, geri qaytarma tələbiniz Session Dəstək komandası tərəfindən icra olunacaq.<br/><br/>Aşağıdakı düyməyə basaraq və geri ödəniş formunu dolduraraq geri ödəmə tələbinizi göndərin.<br/><br/>Session Dəstək komandası, geri ödəmə tələblərini adətən 24-72 saat ərzində emal edir, yüksək tələb həcminə görə bu proses daha uzun çəkə bilər.",
   "proPlanRecover": "Pro planını geri qaytar",
   "proPlanRenew": "Pro planını yenilə",
-  "proPlanRenewDesktop": "Hazırda, Pro planları, yalnızca {platform_store} və {platform_store} Mağazaları vasitəsilə satın alına və yenilənə bilər. Session Masaüstü istifadə etdiyinizə görə planınızı burada yeniləyə bilməzsiniz.<br/><br/>Session Pro gəlişdiriciləri, istifadəçilərin Pro planlarını {platform_store} və {platform_store} Mağazalarından kənarda almağına imkan verəcək alternativ ödəniş variantları üzərində ciddi şəkildə çalışırlar. <b>Pro Yol Xəritəsi</b>",
   "proPlanRenewDesktopLinked": "{platform_store} və ya {platform_store} Mağazaları vasitəsilə planınızı Session quraşdırılmış və əlaqələndirilmiş cihazda Session Pro ayarlarında yeniləyin.",
   "proPlanRenewDesktopStore": "Pro üçün qeydiyyatdan keçdiyiniz {platform_account} hesabınızla {platform_store} veb saytında planınızı yeniləyin.",
   "proPlanRenewSupport": "Session Pro planınız yeniləndi! Session Network dəstək verdiyiniz üçün təşəkkürlər.",
