@@ -307,7 +307,7 @@ async function handleRegularMessage(
 
   message.set({
     // quote: rawDataMessage.quote, // do not do this copy here, it must be done only in copyFromQuotedMessage()
-    attachments: rawDataMessage.attachments,
+    attachments: rawDataMessage.attachments?.map(m => ({ ...m, pending: true })),
     body,
     conversationId: conversation.id,
     messageHash,
