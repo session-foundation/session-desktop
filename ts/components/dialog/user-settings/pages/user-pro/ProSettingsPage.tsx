@@ -1,5 +1,5 @@
 import { isNumber } from 'lodash';
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 import { ModalBasicHeader } from '../../../../SessionWrapperModal';
@@ -8,21 +8,30 @@ import type { UserSettingsModalState } from '../../../../../state/ducks/modalDia
 import { ModalBackButton } from '../../../shared/ModalBackButton';
 import { UserSettingsModalContainer } from '../../components/UserSettingsModalContainer';
 import { ModalFlexContainer } from '../../../shared/ModalFlexContainer';
-import { PanelButtonGroup, PanelLabelWithDescription } from '../../../../buttons/panel/PanelButton';
+import {
+  PanelButtonGroup,
+  PanelLabelWithDescription,
+  StyledContent,
+  StyledPanelButton,
+} from '../../../../buttons/panel/PanelButton';
 import { SettingsExternalLinkBasic } from '../../components/SettingsExternalLinkBasic';
 import { showLinkVisitWarningDialog } from '../../../OpenUrlModal';
 import { PanelIconButton, PanelIconLucideIcon } from '../../../../buttons/panel/PanelIconButton';
-import { LUCIDE_ICONS_UNICODE } from '../../../../icon/lucide';
+import { LUCIDE_ICONS_UNICODE, type WithLucideUnicode } from '../../../../icon/lucide';
 import { SettingsChevronBasic } from '../../components/SettingsChevronBasic';
 import { SettingsToggleBasic } from '../../components/SettingsToggleBasic';
 import { SessionTooltip } from '../../../../SessionTooltip';
-import { tr } from '../../../../../localization/localeTools';
+import { tr, type TrArgs } from '../../../../../localization/localeTools';
 import { LucideIcon } from '../../../../icon/LucideIcon';
 import { Storage } from '../../../../../util/storage';
 import { SettingsKey } from '../../../../../data/settings-key';
 import { getBrowserLocale } from '../../../../../util/i18n/shared';
 import { SessionIcon } from '../../../../icon';
 import { ProIconButton } from '../../../../buttons/ProButton';
+import { StyledPanelButtonSeparator } from '../../../../buttons/panel/StyledPanelButtonGroupSeparator';
+import { useIsDarkTheme } from '../../../../../state/theme/selectors/theme';
+import { Flex } from '../../../../basic/Flex';
+import { Localizer } from '../../../../basic/Localizer';
 
 const SectionFlexContainer = styled.div`
   display: flex;
@@ -32,29 +41,31 @@ const SectionFlexContainer = styled.div`
 `;
 
 const HeroImageBgContainer = styled.div`
-  height: 170px;
+  height: 230px;
 `;
 
 const HeroImageBg = styled.div`
   position: absolute;
   left: 0;
   right: 0;
+  top: 17%;
+
   justify-items: center;
 
   &::before {
     content: '';
     position: absolute;
-    top: -40%;
+    top: 20%;
     left: -40%;
     width: 180%;
-    height: 180%;
+    height: 80%;
     background: radial-gradient(
       circle,
       color-mix(in srgb, var(--primary-color) 15%, transparent) 0%,
       transparent 70%
     );
+    filter: blur(45px);
 
-    filter: blur(60px);
     z-index: -1; /* behind the logo */
   }
 `;
@@ -69,7 +80,7 @@ const HeroImageLabelContainer = styled.div`
 
 function ProHeroImage() {
   return (
-    <SectionFlexContainer>
+    <SectionFlexContainer style={{ position: 'relative' }}>
       <HeroImageBgContainer>
         <HeroImageBg>
           <SessionIcon iconType="brand" iconColor="var(--primary-color)" iconSize={110} />
@@ -234,11 +245,183 @@ function ProSettings() {
   );
 }
 
+function ProFeatureItem({
+  textElement,
+  iconElement,
+  onClick,
+}: {
+  iconElement: ReactNode;
+  textElement: ReactNode;
+  onClick?: () => Promise<void>;
+}) {
+  const isDarkTheme = useIsDarkTheme();
+  return (
+    <>
+      <StyledPanelButton
+        disabled={!onClick}
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        onClick={onClick}
+        data-testid={'invalid-data-testid'}
+        isDarkTheme={isDarkTheme}
+      >
+        <StyledContent disabled={!onClick} style={{ gap: 'var(--margins-md)' }}>
+          {iconElement}
+          {textElement}
+        </StyledContent>
+      </StyledPanelButton>
+      <StyledPanelButtonSeparator />
+    </>
+  );
+}
+
+const ProFeatureTextContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: var(--margins-xs);
+  align-items: flex-start;
+  text-align: start;
+`;
+
+const ProFeatureTitle = styled.div`
+  color: var(--text-primary-color);
+  font-size: var(--font-size-md);
+  font-weight: 700;
+`;
+
+const ProFeatureDescription = styled.div`
+  font-size: 12px; // just because 13px does not look good
+  color: var(--text-secondary-color);
+`;
+
+const StyledFeatureIcon = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: var(--margins-xs);
+  color: var(--black-color);
+`;
+
+type WithProFeaturePosition = { position: number };
+
+function ProFeatureIconElement({ unicode, position }: WithLucideUnicode & WithProFeaturePosition) {
+  const bgStyle =
+    position === 0
+      ? 'linear-gradient(135deg, #57C9FA 0%, #C993FF 100%)'
+      : position === 1
+        ? 'linear-gradient(135deg, #C993FF 0%, #FF95EF 100%)'
+        : position === 2
+          ? 'linear-gradient(135deg, #FF95EF 0%, #FF9C8E 100%)'
+          : position === 3
+            ? 'linear-gradient(135deg, #FF9C8E 0%, #FCB159 100%)'
+            : position === 4
+              ? 'linear-gradient(135deg, #FCB159 0%, #FAD657 100%)'
+              : 'none';
+
+  return (
+    <Flex
+      $container={true}
+      $alignItems={'center'}
+      $justifyContent={'center'}
+      $flexGap="var(--margins-sm)"
+    >
+      <StyledFeatureIcon style={{ background: bgStyle }}>
+        <LucideIcon unicode={unicode} iconSize={'huge'} />
+      </StyledFeatureIcon>
+    </Flex>
+  );
+}
+
+const proFeatures: Array<
+  {
+    id:
+      | 'proLongerMessages'
+      | 'proUnlimitedPins'
+      | 'proAnimatedDisplayPictures'
+      | 'proBadges'
+      | 'plusLoadsMore';
+    title: TrArgs;
+    description: TrArgs;
+  } & WithLucideUnicode
+> = [
+  {
+    id: 'proLongerMessages',
+    title: { token: 'proLongerMessages' as const },
+    description: { token: 'proLongerMessagesDescription' as const },
+    unicode: LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE,
+  },
+  {
+    id: 'proUnlimitedPins',
+    title: { token: 'proUnlimitedPins' as const },
+    description: { token: 'proUnlimitedPinsDescription' as const },
+    unicode: LUCIDE_ICONS_UNICODE.PIN,
+  },
+  {
+    id: 'proAnimatedDisplayPictures',
+    title: { token: 'proAnimatedDisplayPictures' as const },
+    description: { token: 'proAnimatedDisplayPicturesDescription' as const },
+    unicode: LUCIDE_ICONS_UNICODE.SQUARE_PLAY,
+  },
+  {
+    id: 'proBadges',
+    title: { token: 'proBadges' as const },
+    description: { token: 'proBadgesDescription' as const },
+    unicode: LUCIDE_ICONS_UNICODE.RECTANGLE_ELLIPSES,
+  },
+  {
+    id: 'plusLoadsMore',
+    title: { token: 'plusLoadsMore' as const },
+    description: {
+      token: 'plusLoadsMoreDescription' as const,
+      icon: LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON,
+    },
+    unicode: LUCIDE_ICONS_UNICODE.CIRCLE_PLUS,
+  },
+];
+
 function ProFeatures() {
+  const dispatch = useDispatch();
+  
   return (
     <SectionFlexContainer>
-      <PanelLabelWithDescription title={{ token: 'proFeatures' }} />
-      <PanelButtonGroup>PLOP</PanelButtonGroup>
+      <PanelLabelWithDescription title={{ token: 'proBetaFeatures' }} />
+      <PanelButtonGroup>
+        {proFeatures.map((m, i) => {
+          return (
+            <ProFeatureItem
+              onClick={
+                m.id === 'plusLoadsMore'
+                  ? async () => {
+                      showLinkVisitWarningDialog('https://getsession.org/pro-roadmap', dispatch);
+                    }
+                  : undefined
+              }
+              iconElement={<ProFeatureIconElement position={i} unicode={m.unicode} />}
+              textElement={
+                <ProFeatureTextContainer>
+                  <ProFeatureTitle>
+                    {m.id === 'proBadges' && (
+                      <ProIconButton
+                        dataTestId="invalid-data-testid"
+                        onClick={undefined}
+                        iconSize="small"
+                        style={{ marginInlineEnd: 'var(--margins-xs)' }}
+                      />
+                    )}
+                    <Localizer {...m.title} />
+                  </ProFeatureTitle>
+                  <ProFeatureDescription>
+                    <Localizer {...m.description} />
+                  </ProFeatureDescription>
+                </ProFeatureTextContainer>
+              }
+            />
+          );
+        })}
+      </PanelButtonGroup>
     </SectionFlexContainer>
   );
 }
@@ -278,7 +461,7 @@ function ProHelp() {
           text={{ token: 'proFaq' }}
           subText={{ token: 'proFaqDescription' }}
           onClick={async () =>
-            showLinkVisitWarningDialog('https://getsession.org/pro-roadmap', dispatch)
+            showLinkVisitWarningDialog('https://getsession.org/faq#pro', dispatch)
           }
         />
         <SettingsExternalLinkBasic
@@ -286,7 +469,7 @@ function ProHelp() {
           text={{ token: 'helpSupport' }}
           subText={{ token: 'proSupportDescription' }}
           onClick={async () =>
-            showLinkVisitWarningDialog('https://getsession.org/pro-roadmap', dispatch)
+            showLinkVisitWarningDialog('https://getsession.org/pro-form', dispatch)
           }
         />
       </PanelButtonGroup>

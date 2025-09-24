@@ -115,7 +115,7 @@ function SessionProSection() {
           token: userHasPro
             ? 'sessionProBeta'
             : currentUserHasExpiredPro
-              ? 'proPlanRenew'
+              ? 'proRenewBeta'
               : 'upgradeSession',
         }}
         onClick={() => {
