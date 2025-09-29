@@ -13,7 +13,10 @@ import {
   Quote,
   QuotedAttachmentWithUrl,
 } from '../messages/outgoing/visibleMessage/VisibleMessage';
-import { uploadFileToFsWithOnionV4 } from '../apis/file_server_api/FileServerApi';
+import {
+  fileServerQueryPubkey,
+  uploadFileToFsWithOnionV4,
+} from '../apis/file_server_api/FileServerApi';
 
 interface UploadParams {
   attachment: Attachment;
@@ -81,7 +84,7 @@ async function uploadToFileServer(params: UploadParams): Promise<AttachmentPoint
   if (uploadToV2Result) {
     const pointerWithUrl: AttachmentPointerWithUrl = {
       ...pointer,
-      url: uploadToV2Result.fileUrl,
+      url: `${uploadToV2Result.fileUrl}${fileServerQueryPubkey(uploadToV2Result.serverPubkey)}`,
     };
     return pointerWithUrl;
   }

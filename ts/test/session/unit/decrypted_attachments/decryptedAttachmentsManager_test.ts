@@ -61,7 +61,7 @@ describe('DecryptedAttachmentsManager', () => {
           'decryptAttachmentBufferNode',
           new Uint8Array(5)
         );
-        TestUtils.stubCreateObjectUrl();
+        TestUtils.stubURL();
       });
 
       it('url starts with attachment path but is not already decrypted', async () => {

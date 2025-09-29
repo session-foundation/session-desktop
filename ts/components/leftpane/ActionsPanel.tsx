@@ -54,7 +54,6 @@ import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { AvatarMigrate } from '../../session/utils/job_runners/jobs/AvatarMigrateJob';
 import { NetworkTime } from '../../util/NetworkTime';
 import { Storage } from '../../util/storage';
-import { getFileInfoFromFileServer } from '../../session/apis/file_server_api/FileServerApi';
 import { themesArray } from '../../themes/constants/colors';
 import { isDebugMode, isDevProd } from '../../shared/env_vars';
 import { GearAvatarButton } from '../buttons/avatar/GearAvatarButton';
@@ -147,17 +146,6 @@ const doAppStartUp = async () => {
     // Schedule a confSyncJob in some time to let anything incoming from the network be applied and see if there is a push needed
     // Note: this also starts periodic jobs, so we don't need to keep doing it
     await UserSync.queueNewJobIfNeeded();
-
-    // on app startup, check that the avatar expiry on the file server
-    const avatarPointer = ConvoHub.use()
-      .get(UserUtils.getOurPubKeyStrFromCache())
-      .getAvatarPointer();
-    if (avatarPointer) {
-      const details = await getFileInfoFromFileServer(avatarPointer);
-      if (details?.expiryMs) {
-        await Storage.put(SettingsKey.ntsAvatarExpiryMs, details.expiryMs);
-      }
-    }
   }, 20000);
 
   global.setTimeout(() => {

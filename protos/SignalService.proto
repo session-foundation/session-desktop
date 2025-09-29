@@ -268,16 +268,17 @@ message AttachmentPointer {
 
   // @required
   required fixed64 deprecated_id = 1;
-  optional string  contentType = 2;
-  optional bytes   key         = 3;
-  optional uint32  size        = 4;
-  optional bytes   digest      = 6;
-  optional string  fileName    = 7;
-  optional uint32  flags       = 8;
-  optional uint32  width       = 9;
-  optional uint32  height      = 10;
-  optional string  caption     = 11;
-  optional string  url         = 101;
+  optional string  contentType   = 2;
+  optional bytes   key           = 3;
+  optional uint32  size          = 4;
+  optional bytes   digest        = 6;
+  optional string  fileName      = 7;
+  optional uint32  flags         = 8;
+  optional uint32  width         = 9;
+  optional uint32  height        = 10;
+  optional string  caption       = 11;
+  optional string  url           = 101;
+  optional string  serverPubkey  = 102;
 }
 
 

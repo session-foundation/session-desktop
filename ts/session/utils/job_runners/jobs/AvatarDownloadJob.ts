@@ -1,7 +1,6 @@
 import { isEmpty, isNumber, isString } from 'lodash';
 import { v4 } from 'uuid';
 import { UserUtils } from '../..';
-import { downloadAttachment } from '../../../../receiver/attachments';
 import { processNewAttachment } from '../../../../types/MessageAttachment';
 import { decryptProfile } from '../../../../util/crypto/profileEncrypter';
 import { ConvoHub } from '../../../conversations';
@@ -14,6 +13,7 @@ import {
   RunJobResult,
 } from '../PersistedJob';
 import { processAvatarData } from '../../../../util/avatar/processAvatarData';
+import { downloadAttachmentFs } from '../../../../receiver/attachments';
 
 const defaultMsBetweenRetries = 10000;
 const defaultMaxAttempts = 3;
@@ -117,7 +117,7 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
         window.log.debug(`[profileupdate] starting downloading task for  ${conversation.id}`);
         // This is an avatar download, we are free to resize/compress/convert what is downloaded as we wish.
         // Desktop will generate a normal avatar and a forced static one. Both resized and converted if required.
-        const downloaded = await downloadAttachment({
+        const downloaded = await downloadAttachmentFs({
           url: toDownloadPointer,
           isRaw: true,
         });

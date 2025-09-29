@@ -1,4 +1,4 @@
-import { omit, startsWith } from 'lodash';
+import { omit } from 'lodash';
 
 import { MessageModel } from '../models/message';
 import { Data } from '../data/data';
@@ -10,12 +10,13 @@ import { callUtilsWorker } from '../webworker/workers/browser/util_worker_interf
 import { sogsV3FetchFileByFileID } from '../session/apis/open_group_api/sogsv3/sogsV3FetchFile';
 import { OpenGroupData } from '../data/opengroups';
 import { OpenGroupRequestCommonType } from '../data/types';
-import {
-  downloadFileFromFileServer,
-  fileServerURL,
-} from '../session/apis/file_server_api/FileServerApi';
+import { downloadFileFromFileServer } from '../session/apis/file_server_api/FileServerApi';
+import { FileFromFileServerDetails } from '../session/apis/file_server_api/types';
 
-export async function downloadAttachment(attachment: {
+/**
+ * Note: the url must have the serverPubkey as a query parameter
+ */
+export async function downloadAttachmentFs(attachment: {
   url: string;
   id?: string;
   isRaw?: boolean;
@@ -23,24 +24,16 @@ export async function downloadAttachment(attachment: {
   digest?: string;
   size?: number;
 }) {
-  const asURL = new URL(attachment.url);
-  const serverUrl = asURL.origin;
-
-  // is it an attachment hosted on the file server
-  const defaultFileServer = startsWith(serverUrl, fileServerURL);
+  const toDownload = new FileFromFileServerDetails(attachment.url);
 
   let res: ArrayBuffer | null = null;
-  // try to get the fileId from the end of the URL
 
-  const attachmentId = attachmentIdAsStrFromUrl(attachment.url);
-  if (!defaultFileServer) {
-    window.log.warn(
-      `downloadAttachment attachment is neither opengroup attachment nor fileserver... Dropping it ${asURL.href}`
-    );
-    throw new Error('Attachment url is not opengroupv2 nor fileserver. Unsupported');
-  }
-  window?.log?.info('Download v2 file server attachment', attachmentId);
-  res = await downloadFileFromFileServer(attachmentId);
+  window?.log?.info(
+    'Download v2 file server attachment',
+    toDownload.fullUrl,
+    toDownload.serverPubkey
+  );
+  res = await downloadFileFromFileServer(toDownload);
 
   if (!res?.byteLength) {
     window?.log?.error('Failed to download attachment. Length is 0');

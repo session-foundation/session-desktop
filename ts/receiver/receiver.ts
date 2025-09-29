@@ -20,8 +20,6 @@ import { createTaskWithTimeout } from '../session/utils/TaskWithTimeout';
 import { UnprocessedParameter } from '../types/sqlSharedTypes';
 import { getEnvelopeId } from './common';
 
-export { downloadAttachment } from './attachments';
-
 const incomingMessagePromises: Array<Promise<any>> = [];
 
 export async function handleSwarmContentDecryptedWithTimeout({

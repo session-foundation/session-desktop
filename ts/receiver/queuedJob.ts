@@ -27,6 +27,7 @@ import { LinkPreviews } from '../util/linkPreviews';
 import { GroupV2Receiver } from './groupv2/handleGroupV2Message';
 import { Constants } from '../session';
 import { Timestamp } from '../types/timestamp/timestamp';
+import { fileServerQueryPubkey } from '../session/apis/file_server_api/FileServerApi';
 
 function contentTypeSupported(type: string): boolean {
   const Chrome = GoogleChrome;
@@ -166,9 +167,13 @@ async function copyFromQuotedMessage(
 function handleLinkPreviews(messageBody: string, messagePreview: any, message: MessageModel) {
   const urls = LinkPreviews.findLinks(messageBody);
   const incomingPreview = messagePreview || [];
-  const preview = incomingPreview.filter(
-    (item: any) => (item.image || item.title) && urls.includes(item.url)
-  );
+  const preview = incomingPreview
+    .filter((item: any) => (item.image || item.title) && urls.includes(item.url))
+    .map((p: any) => ({
+      ...p,
+      pending: true,
+      url: p.url && p.serverPubkey ? `${p.url}${fileServerQueryPubkey(p.serverPubkey)}` : p.url,
+    }));
   if (preview.length < incomingPreview.length) {
     window?.log?.info(
       `${message.idForLogging()}: Eliminated ${
@@ -307,7 +312,12 @@ async function handleRegularMessage(
 
   message.set({
     // quote: rawDataMessage.quote, // do not do this copy here, it must be done only in copyFromQuotedMessage()
-    attachments: rawDataMessage.attachments?.map(m => ({ ...m, pending: true })),
+    attachments: rawDataMessage.attachments?.map(m => ({
+      ...m,
+      pending: true,
+      // it is a lot easier to keep track of the serverPubkey as part of the url, so we do that here
+      url: m.url && m.serverPubkey ? `${m.url}${fileServerQueryPubkey(m.serverPubkey)}` : m.url,
+    })),
     body,
     conversationId: conversation.id,
     messageHash,

@@ -13,6 +13,7 @@ import {
 } from '../../../../session/messages/outgoing/visibleMessage/VisibleMessage';
 import { DisappearingMessageMode } from '../../../../session/disappearing_messages/types';
 import { OutgoingUserProfile } from '../../../../types/message';
+import { TestUtils } from '../../../test-utils';
 
 const sharedNoExpire = {
   expirationType: DisappearingMessageMode[0],
@@ -154,6 +155,12 @@ describe('VisibleMessage', () => {
     };
     const attachments = new Array<AttachmentPointerWithUrl>();
     attachments.push(attachment);
+
+    TestUtils.stubURL({
+      searchParams: { get: () => '' },
+      origin: 'http://thisisaareal',
+      pathname: '/url/1234',
+    });
 
     const message = new VisibleMessage({
       createAtNetworkTimestamp: Date.now(),

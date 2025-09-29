@@ -62,11 +62,14 @@ export function stubUserGroupWrapper<T extends keyof UserGroupsWrapperActionsCal
   Sinon.stub(libsessionWorker.UserGroupsWrapperActions, fn).resolves(value);
 }
 
-export function stubCreateObjectUrl() {
-  (global as any).URL = function () {};
+export function stubURL(constructorReturnValue?: any) {
+  (global as any).URL = function () {
+    return constructorReturnValue;
+  };
   (global as any).URL.createObjectURL = () => {
     return `${Date.now()}:${Math.floor(Math.random() * 1000)}`;
   };
+  (global as any).URL.canParse = () => true;
 }
 
 type WindowValue<K extends keyof Window> = Partial<Window[K]> | undefined;
