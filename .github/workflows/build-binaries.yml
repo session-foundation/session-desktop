@@ -93,22 +93,27 @@ jobs:
             electron_target: deb
             cache_suffix: linux-deb
             is_qa: false
+            generate_release_metadata: true
           - identifier: rpm
             electron_target: rpm
             cache_suffix: linux-rpm
             is_qa: false
-          - identifier: freebsd
-            electron_target: freebsd
-            cache_suffix: linux-freebsd
-            is_qa: false
+            generate_release_metadata: true
           - identifier: AppImage
             electron_target: AppImage
             cache_suffix: linux-AppImage
             is_qa: false
+            generate_release_metadata: true
+          - identifier: freebsd
+            electron_target: freebsd
+            cache_suffix: linux-freebsd
+            is_qa: false
+            generate_release_metadata: false
           - identifier: deb-qa
             electron_target: deb
             cache_suffix: linux-deb
             is_qa: true
+            generate_release_metadata: false
     name: '${{ matrix.identifier }}'
 
     env:
@@ -164,15 +169,15 @@ jobs:
         # only run this on "push" to "master" or alpha releases
         # Note: The jobs are overwriting each other's latest-linux.yml.
         # So, we upload all of them as artifacts, and then merge them (see `post_build_linux`)
-        # note: freebsd does not generate a latest-linux.yml file so we exclude it
-        if: ${{ needs.create_draft_release_if_needed.outputs.version_tag != '' && matrix.identifier != 'freebsd' }}
+        # note: freebsd does not generate a latest-linux.yml file so we exclude it, same for the deb-qa build
+        if: ${{ needs.create_draft_release_if_needed.outputs.version_tag != '' && matrix.generate_release_metadata == true }}
         shell: bash
         run: |
           mv dist/latest-linux.yml dist/latest-linux-${{ matrix.electron_target }}-${{ github.sha }}.yml
 
       - name: Upload release metadata
         # only run this on "push" to "master" or alpha releases
-        if: ${{ needs.create_draft_release_if_needed.outputs.version_tag != '' && matrix.identifier != 'freebsd' }}
+        if: ${{ needs.create_draft_release_if_needed.outputs.version_tag != '' && matrix.generate_release_metadata == true }}
         uses: actions/upload-artifact@v4
         with:
           name: latest-linux-${{ matrix.electron_target }}-${{ github.sha }}.yml
