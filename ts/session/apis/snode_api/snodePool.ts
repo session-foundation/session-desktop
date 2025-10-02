@@ -220,8 +220,10 @@ async function tryToGetConsensusWithSnodesWithRetries() {
   return pRetry(
     async () => {
       const commonNodes = await ServiceNodesList.getSnodePoolFromSnodes();
-
-      if (!commonNodes || commonNodes.length < SnodePoolConstants.requiredSnodesForAgreement) {
+      const requiredSnodesForAgreement = window.sessionFeatureFlags.useLocalDevNet
+        ? 12
+        : SnodePoolConstants.requiredSnodesForAgreement;
+      if (!commonNodes || commonNodes.length < requiredSnodesForAgreement) {
         // throwing makes trigger a retry if we have some left.
         window?.log?.info(
           `tryToGetConsensusWithSnodesWithRetries: Not enough common nodes ${commonNodes?.length}`

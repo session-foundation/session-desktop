@@ -222,7 +222,7 @@ async function _runJob(job: any) {
       found.set({ hasAttachments, hasVisualMediaAttachments, hasFileAttachments });
     }
 
-    _addAttachmentToMessage(found, upgradedAttachment, { type, index });
+    _addAttachmentToMessage(found, { ...upgradedAttachment, pending: false }, { type, index });
 
     await _finishJob(found, id);
   } catch (error) {

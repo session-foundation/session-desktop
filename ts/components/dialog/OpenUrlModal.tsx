@@ -45,10 +45,11 @@ export function OpenUrlModal(props: OpenUrlModalState) {
 
   return (
     <SessionWrapperModal
+      modalId="openUrlModal"
       headerChildren={<ModalBasicHeader title={tr('urlOpen')} showExitIcon={true} />}
       onClose={onClose}
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
             text={tr('open')}
             buttonColor={SessionButtonColor.Danger}
@@ -68,7 +69,7 @@ export function OpenUrlModal(props: OpenUrlModalState) {
       <StyledScrollDescriptionContainer>
         <ModalDescription
           dataTestId="modal-description"
-          localizerProps={{ token: 'urlOpenDescription', asTag: 'span', args: { url } }}
+          localizerProps={{ token: 'urlOpenDescription', asTag: 'span', url }}
         />
       </StyledScrollDescriptionContainer>
 

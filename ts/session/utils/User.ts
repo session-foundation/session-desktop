@@ -3,11 +3,11 @@ import _ from 'lodash';
 import { UserUtils } from '.';
 import { Data } from '../../data/data';
 import { SessionKeyPair } from '../../receiver/keypairs';
-import { ConvoHub } from '../conversations';
 import { getOurPubKeyStrFromStorage } from '../../util/storage';
 import { PubKey } from '../types';
-import { fromHexToArray, toHex } from './String';
-import { LokiProfile } from '../../types/message';
+import { toHex } from './String';
+import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
+import { OutgoingUserProfile } from '../../types/message';
 
 export type HexKeyPair = {
   pubKey: string;
@@ -99,22 +99,14 @@ export const getUserED25519KeyPairBytes = async (): Promise<ByteKeyPair> => {
   throw new Error('getUserED25519KeyPairBytes: user has no keypair');
 };
 
-export function getOurProfile(): LokiProfile | undefined {
-  try {
-    const ourNumber = UserUtils.getOurPubKeyStrFromCache();
-    const ourConversation = ConvoHub.use().get(ourNumber);
-    const ourProfileKeyHex = ourConversation.getProfileKey();
-    const profileKeyAsBytes = ourProfileKeyHex ? fromHexToArray(ourProfileKeyHex) : null;
+export async function getOurProfile() {
+  const displayName = (await UserConfigWrapperActions.getName()) || 'Anonymous';
+  const updatedAtSeconds = await UserConfigWrapperActions.getProfileUpdatedSeconds();
+  const profilePicWithKey = await UserConfigWrapperActions.getProfilePicWithKeyHex();
 
-    const avatarPointer = ourConversation.getAvatarPointer();
-    const displayName = ourConversation.getRealSessionUsername() || 'Anonymous';
-    return {
-      displayName,
-      avatarPointer,
-      profileKey: profileKeyAsBytes?.length ? profileKeyAsBytes : null,
-    };
-  } catch (e) {
-    window?.log?.error(`Failed to get our profile: ${e}`);
-    return undefined;
-  }
+  return new OutgoingUserProfile({
+    displayName,
+    updatedAtSeconds,
+    picUrlWithProfileKey: profilePicWithKey ?? null,
+  });
 }

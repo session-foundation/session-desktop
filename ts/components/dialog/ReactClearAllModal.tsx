@@ -52,10 +52,11 @@ export const ReactClearAllModal = (props: Props) => {
 
   return (
     <SessionWrapperModal
+      modalId="reactClearAllModal"
       onClose={handleClose}
       headerChildren={<ModalBasicHeader title={tr('clearAll')} />}
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
             text={tr('clear')}
             buttonColor={SessionButtonColor.Danger}
@@ -75,7 +76,7 @@ export const ReactClearAllModal = (props: Props) => {
       <ModalFlexContainer>
         <ModalDescription
           dataTestId="modal-description"
-          localizerProps={{ token: 'emojiReactsClearAll', args: { emoji: reaction } }}
+          localizerProps={{ token: 'emojiReactsClearAll', emoji: reaction }}
         />
 
         <SessionSpinner loading={clearingInProgress} />

@@ -3,7 +3,7 @@ import {
   useIsPrivate,
   useIsIncomingRequest,
   useIsMe,
-  useNicknameOrProfileNameOrShortenedPubkey,
+  useConversationUsernameWithFallback,
 } from '../../hooks/useParamSelector';
 import { tr } from '../../localization/localeTools';
 import { ConvoHub } from '../../session/conversations';
@@ -21,7 +21,7 @@ function useShowDeletePrivateConversation({ conversationId }: { conversationId: 
 export function useShowDeletePrivateConversationCb({ conversationId }: { conversationId: string }) {
   const showDeletePrivateConversation = useShowDeletePrivateConversation({ conversationId });
   const dispatch = useDispatch();
-  const name = useNicknameOrProfileNameOrShortenedPubkey(conversationId);
+  const name = useConversationUsernameWithFallback(true, conversationId);
 
   if (!showDeletePrivateConversation) {
     return null;
@@ -37,7 +37,7 @@ export function useShowDeletePrivateConversationCb({ conversationId }: { convers
     dispatch(
       updateConfirmModal({
         title: menuItemText,
-        i18nMessage: { token: 'deleteConversationDescription', args: { name } },
+        i18nMessage: { token: 'deleteConversationDescription', name },
         onClickClose,
         okTheme: SessionButtonColor.Danger,
         onClickOk: async () => {

@@ -1,7 +1,8 @@
 import type { SessionDataTestId } from 'react';
 import styled from 'styled-components';
 import type { CSSProperties } from 'styled-components';
-import { Localizer, type LocalizerProps } from '../../basic/Localizer';
+import { Localizer, type WithAsTag, type WithClassName } from '../../basic/Localizer';
+import type { TrArgs } from '../../../localization/localeTools';
 
 const StyledModalDescriptionContainer = styled.div`
   padding: 0 var(--margins-md); // no margins top&bottom here, as it depends on if actions are displayed or not
@@ -12,7 +13,7 @@ const StyledModalDescriptionContainer = styled.div`
 `;
 
 export function ModalDescription(props: {
-  localizerProps: LocalizerProps;
+  localizerProps: TrArgs & WithAsTag & WithClassName;
   dataTestId: SessionDataTestId;
   style?: CSSProperties;
 }) {

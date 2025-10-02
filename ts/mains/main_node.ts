@@ -191,7 +191,7 @@ import { classicDark } from '../themes';
 
 import { isSessionLocaleSet, getCrowdinLocale } from '../util/i18n/shared';
 import { loadLocalizedDictionary } from '../node/locale';
-import { simpleDictionary } from '../localization/locales';
+import { simpleDictionaryNoArgs } from '../localization/locales';
 import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
 import { isReleaseChannel } from '../updater/types';
 import { canAutoUpdate, checkForUpdates } from '../updater/updater';
@@ -746,6 +746,10 @@ app.on('ready', async () => {
   const userDataPath = getRealPath(app.getPath('userData'));
   const installPath = getRealPath(join(app.getAppPath(), '..', '..'));
 
+  // Register signal handlers
+  process.on('SIGINT', () => gracefulShutdown('SIGINT')); // Ctrl+C
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM')); // Termination request
+
   installFileHandler({
     protocol: electronProtocol,
     userDataPath,
@@ -901,7 +905,7 @@ async function requestShutdown() {
     setTimeout(() => {
       console.log('requestShutdown: Response never received; forcing shutdown.');
       resolve(undefined);
-    }, 2 * DURATION.MINUTES);
+    }, 1 * DURATION.MINUTES);
   });
 
   try {
@@ -909,6 +913,13 @@ async function requestShutdown() {
   } catch (error) {
     console.log('requestShutdown error:', error && error.stack ? error.stack : error);
   }
+}
+
+async function gracefulShutdown(signal: string) {
+  console.warn(`Received ${signal}, shutting down...`);
+  await requestShutdown();
+  app.quit();
+  console.warn(`Received ${signal}, shutting down: done`);
 }
 
 app.on('before-quit', () => {
@@ -1031,7 +1042,7 @@ ipc.on('password-recovery-phrase', async (event, passPhrase) => {
     // no issues. send back undefined, meaning OK
     sendResponse(undefined);
   } catch (e) {
-    const localisedError = simpleDictionary.passwordIncorrect[getCrowdinLocale()];
+    const localisedError = simpleDictionaryNoArgs.passwordIncorrect[getCrowdinLocale()];
     // send back the error
     sendResponse(localisedError);
   }

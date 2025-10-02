@@ -532,7 +532,7 @@ export async function USER_callRecipient(recipient: string) {
 
   window.log.info('Sending preOffer message to ', ed25519Str(recipient));
   const calledConvo = ConvoHub.use().get(recipient);
-  calledConvo.setKey('active_at', Date.now()); // addSingleOutgoingMessage does the commit for us on the convo
+  calledConvo.setActiveAt(Date.now()); // addSingleOutgoingMessage does the commit for us on the convo
   await calledConvo.unhideIfNeeded(false);
   weAreCallerOnCurrentCall = true;
   // Not ideal, but also temporary (see you in 2 years).
@@ -923,7 +923,7 @@ export async function USER_acceptIncomingCallRequest(fromSender: string) {
   }
   const networkTimestamp = NetworkTime.now();
   const callerConvo = ConvoHub.use().get(fromSender);
-  callerConvo.setKey('active_at', networkTimestamp);
+  callerConvo.setActiveAt(networkTimestamp);
   await callerConvo.unhideIfNeeded(false);
 
   const expireUpdate = DisappearingMessages.forcedDeleteAfterSendMsgSetting(callerConvo);
@@ -1328,7 +1328,7 @@ async function addMissedCallMessage(
   const incomingCallConversation = ConvoHub.use().get(callerPubkey);
 
   if (incomingCallConversation.isActive() || incomingCallConversation.isHidden()) {
-    incomingCallConversation.setKey('active_at', NetworkTime.now());
+    incomingCallConversation.setActiveAt(NetworkTime.now());
     await incomingCallConversation.unhideIfNeeded(false);
   }
 

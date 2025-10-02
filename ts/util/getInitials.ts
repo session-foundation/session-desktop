@@ -12,9 +12,9 @@ export function getInitials(name?: string) {
     // there is one word, so just return the first 2 alphanumeric chars of the name
 
     if (name.length > 1) {
-      const alphanum = name.match(/[\p{L}\p{N}]+/u);
-      if (alphanum) {
-        return upperAndShorten(alphanum[0].slice(0, 2));
+      const alphaNum = name.match(/[\p{L}\p{N}]+/u);
+      if (alphaNum) {
+        return upperAndShorten(alphaNum[0].slice(0, 2));
       }
     }
     return upperAndShorten(name[0]);

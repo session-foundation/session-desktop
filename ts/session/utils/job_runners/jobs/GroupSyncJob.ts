@@ -164,7 +164,7 @@ async function pushChangesToGroupSwarmIfNeeded({
     return RunJobResult.Success;
   }
 
-  if (window.sessionFeatureFlags.debug.debugLibsessionDumps) {
+  if (window.sessionFeatureFlags.debugLibsessionDumps) {
     const dumps = await MetaGroupWrapperActions.metaMakeDump(groupPk);
     window.log.info(
       `pushChangesToGroupSwarmIfNeeded: current meta dump: ${ed25519Str(groupPk)}:`,
@@ -281,6 +281,7 @@ async function allFailedToSentGroupControlMessagesToRetry(groupPk: GroupPubkeyTy
           identifier,
           createAtNetworkTimestamp,
           secretKey,
+          userProfile: null,
           sodium,
           ...DisappearingMessages.getExpireDetailsForOutgoingMessage(
             convo,

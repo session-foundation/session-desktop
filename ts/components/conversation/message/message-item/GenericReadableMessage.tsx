@@ -24,9 +24,9 @@ export type GenericReadableMessageSelectorProps = Pick<
   | 'conversationType'
   | 'receivedAt'
   | 'isUnread'
-  | 'isKickedFromGroup'
   | 'convoId'
   | 'isDeleted'
+  | 'isKickedFromGroup'
 >;
 
 type Props = {

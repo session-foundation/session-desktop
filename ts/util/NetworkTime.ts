@@ -23,19 +23,17 @@ function setLatestTimestampOffset(newOffset: number) {
 }
 
 function now() {
-  // make sure to call exports here, as we stub the exported one for testing.
+  // make sure to call NetworkTime here, as we stub the exported one for testing.
   return Date.now() - NetworkTime.getLatestTimestampOffset();
 }
 
-function getNowWithNetworkOffsetSeconds() {
-  // make sure to call exports here, as we stub the exported one for testing.
-
+function nowSeconds() {
   return Math.floor(NetworkTime.now() / 1000);
 }
 
 export const NetworkTime = {
-  getNowWithNetworkOffsetSeconds,
   getLatestTimestampOffset,
   now,
+  nowSeconds,
   setLatestTimestampOffset,
 };

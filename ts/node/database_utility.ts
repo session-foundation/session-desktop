@@ -1,5 +1,5 @@
 import * as BetterSqlite3 from '@signalapp/better-sqlite3';
-import { difference, isNumber, omit, pick } from 'lodash';
+import { difference, isFinite, isNumber, omit, pick } from 'lodash';
 import {
   ConversationAttributes,
   ConversationAttributesWithNotSavedOnes,
@@ -53,13 +53,13 @@ const allowedKeysFormatRowOfConversation = [
   'isApproved',
   'didApproveMe',
   'mentionedUs',
-  'isKickedFromGroup',
   'left',
   'lastMessage',
   'lastMessageStatus',
   'lastMessageInteractionType',
   'lastMessageInteractionStatus',
   'triggerNotificationsFor',
+  'profileUpdatedSeconds',
   'unreadCount',
   'lastJoinedTimestamp',
   'expireTimer',
@@ -124,7 +124,6 @@ export function formatRowOfConversation(
   convo.isTrustedForAttachmentDownload = Boolean(convo.isTrustedForAttachmentDownload);
   convo.isApproved = Boolean(convo.isApproved);
   convo.didApproveMe = Boolean(convo.didApproveMe);
-  convo.isKickedFromGroup = Boolean(convo.isKickedFromGroup);
   convo.left = Boolean(convo.left);
   convo.markedAsUnread = Boolean(convo.markedAsUnread);
   convo.priority = convo.priority || CONVERSATION_PRIORITIES.default;
@@ -141,8 +140,12 @@ export function formatRowOfConversation(
     convo.lastMessageStatus = undefined;
   }
 
-  if (!isNumber(convo.blocksSogsMsgReqsTimestamp)) {
+  if (!isNumber(convo.blocksSogsMsgReqsTimestamp) || !isFinite(convo.blocksSogsMsgReqsTimestamp)) {
     convo.blocksSogsMsgReqsTimestamp = 0;
+  }
+
+  if (!isNumber(convo.profileUpdatedSeconds) || !isFinite(convo.profileUpdatedSeconds)) {
+    convo.profileUpdatedSeconds = 0;
   }
 
   if (!convo.lastMessageInteractionType) {
@@ -185,13 +188,13 @@ const allowedKeysOfConversationAttributes = [
   'isTrustedForAttachmentDownload',
   'isApproved',
   'didApproveMe',
-  'isKickedFromGroup',
   'left',
   'lastMessage',
   'lastMessageStatus',
   'lastMessageInteractionType',
   'lastMessageInteractionStatus',
   'triggerNotificationsFor',
+  'profileUpdatedSeconds',
   'lastJoinedTimestamp',
   'expireTimer',
   'active_at',

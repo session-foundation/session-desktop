@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 
 import { useFocusMount } from '../../hooks/useFocusMount';
-import { useConversationUsername } from '../../hooks/useParamSelector';
+import { useConversationUsernameWithFallback } from '../../hooks/useParamSelector';
 import { ConversationModel } from '../../models/conversation';
 import {
   sogsV3BanUser,
@@ -78,7 +78,7 @@ export const BanOrUnBanUserDialog = (props: {
   const [inputBoxValue, setInputBoxValue] = useState('');
   const [inProgress, setInProgress] = useState(false);
 
-  const displayName = useConversationUsername(pubkey);
+  const displayName = useConversationUsernameWithFallback(true, pubkey);
 
   const hasPubkeyOnLoad = pubkey?.length;
 
@@ -123,10 +123,11 @@ export const BanOrUnBanUserDialog = (props: {
 
   return (
     <SessionWrapperModal
+      modalId="banOrUnbanUserModal"
       headerChildren={<ModalBasicHeader title={title} />}
       onClose={onClose}
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
             buttonType={SessionButtonType.Simple}
             onClick={banOrUnBanUser}

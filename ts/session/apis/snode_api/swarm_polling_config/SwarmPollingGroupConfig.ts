@@ -34,7 +34,7 @@ const lastAppliedRemoveAttachmentSentBeforeSeconds = new Map<GroupPubkeyType, nu
 
 async function handleMetaMergeResults(groupPk: GroupPubkeyType) {
   const infos = await MetaGroupWrapperActions.infoGet(groupPk);
-  if (window.sessionFeatureFlags.debug.debugLibsessionDumps) {
+  if (window.sessionFeatureFlags.debugLibsessionDumps) {
     const dumps = await MetaGroupWrapperActions.metaMakeDump(groupPk);
     window.log.info(
       `pushChangesToGroupSwarmIfNeeded: current meta dump: ${ed25519Str(groupPk)}:`,
@@ -144,7 +144,7 @@ async function handleMetaMergeResults(groupPk: GroupPubkeyType) {
   if (convo) {
     let changes = false;
     if (refreshedInfos.name !== convo.get('displayNameInProfile')) {
-      convo.set({ displayNameInProfile: refreshedInfos.name || undefined });
+      convo.setNonPrivateNameNoCommit(refreshedInfos.name || undefined);
       changes = true;
     }
     const expirationMode = refreshedInfos.expirySeconds ? 'deleteAfterSend' : 'off';
@@ -152,10 +152,11 @@ async function handleMetaMergeResults(groupPk: GroupPubkeyType) {
       refreshedInfos.expirySeconds !== convo.get('expireTimer') ||
       expirationMode !== convo.get('expirationMode')
     ) {
-      convo.set({
+      convo.setExpirationArgs({
+        mode: expirationMode,
         expireTimer: refreshedInfos.expirySeconds || undefined,
-        expirationMode,
       });
+
       changes = true;
     }
     if (changes) {
@@ -181,12 +182,13 @@ async function handleMetaMergeResults(groupPk: GroupPubkeyType) {
     }
     if (member.name && member.name !== memberConvoInDB.getRealSessionUsername()) {
       // eslint-disable-next-line no-await-in-loop
-      await ProfileManager.updateProfileOfContact(
-        member.pubkeyHex,
-        member.name,
-        member.profilePicture?.url || null,
-        member.profilePicture?.key || null
-      );
+      await ProfileManager.updateProfileOfContact({
+        pubkey: member.pubkeyHex,
+        displayName: member.name,
+        profileUrl: member.profilePicture?.url || null,
+        profileKey: member.profilePicture?.key || null,
+        profileUpdatedAtSeconds: member.profileUpdatedSeconds,
+      });
     }
   }
 }
@@ -277,12 +279,9 @@ async function scheduleAvatarDownloadJobIfNeeded(groupPk: GroupPubkeyType) {
 
     if (!profileUrl || !profileKeyHex) {
       // no avatar set for this group: make sure we also remove the one we might have locally.
-      if (conversation.get('avatarPointer') || conversation.get('profileKey')) {
-        conversation.setKey('profileKey', undefined);
+      if (conversation.getAvatarPointer() || conversation.getProfileKey()) {
         await conversation.setSessionProfile({
-          avatarPointer: undefined,
-          avatarPath: undefined,
-          fallbackAvatarPath: undefined,
+          type: 'resetAvatarGroup',
           displayName: null,
         });
       }
@@ -296,9 +295,10 @@ async function scheduleAvatarDownloadJobIfNeeded(groupPk: GroupPubkeyType) {
 
     if (prevPointer !== profileUrl || prevProfileKey !== profileKeyHex) {
       // set the avatar for this group, it will be downloaded by the job scheduled below
-      conversation.set({
-        avatarPointer: profileUrl || undefined,
-        profileKey: profileKeyHex || undefined,
+      await conversation.setSessionProfile({
+        type: 'setAvatarBeforeDownloadGroup',
+        profileKey: profileKeyHex,
+        avatarPointer: profileUrl,
       });
       await conversation.commit();
 

@@ -1,5 +1,5 @@
 import { useDispatch } from 'react-redux';
-import { useConversationUsername, useIsPublic } from '../../hooks/useParamSelector';
+import { useConversationUsernameWithFallback, useIsPublic } from '../../hooks/useParamSelector';
 import { tr } from '../../localization/localeTools';
 import { ConvoHub } from '../../session/conversations';
 import { updateConfirmModal, updateConversationSettingsModal } from '../../state/ducks/modalDialog';
@@ -8,7 +8,7 @@ import { leaveGroupOrCommunityByConvoId } from '../../interactions/conversationI
 
 export function useShowLeaveCommunityCb(conversationId?: string) {
   const isPublic = useIsPublic(conversationId);
-  const username = useConversationUsername(conversationId) || conversationId;
+  const username = useConversationUsernameWithFallback(true, conversationId) || conversationId;
   const dispatch = useDispatch();
 
   if (!isPublic || !conversationId) {
@@ -41,7 +41,7 @@ export function useShowLeaveCommunityCb(conversationId?: string) {
     dispatch(
       updateConfirmModal({
         title: tr('communityLeave'),
-        i18nMessage: { token: 'groupLeaveDescription', args: { group_name: username ?? '' } },
+        i18nMessage: { token: 'groupLeaveDescription', group_name: username ?? '' },
         onClickOk,
         okText: tr('leave'),
         okTheme: SessionButtonColor.Danger,

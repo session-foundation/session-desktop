@@ -13,8 +13,6 @@
 
 // Components
 @import 'lightbox';
-@import 'mentions';
-@import 'avatar';
 
 // Build the main view
 @import 'index';
@@ -30,5 +28,4 @@
 @import 'session_theme';
 @import 'session_left_pane';
 
-@import 'session_slider';
 @import 'session_conversation';

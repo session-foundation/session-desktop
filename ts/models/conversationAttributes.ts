@@ -54,8 +54,7 @@ export interface ConversationAttributes {
   lastMessageInteractionType: ConversationInteractionType | null;
   lastMessageInteractionStatus: ConversationInteractionStatus | null;
 
-  left: boolean; // LEGACY GROUPS ONLY: if we left the group (communities are removed right away so it not relevant to communities) // TODOLATER to remove after legacy closed group are dropped
-  isKickedFromGroup: boolean; // LEGACY GROUPS ONLY: if we got kicked from the group (communities just stop polling and a message sent get rejected, so not relevant to communities) // TODOLATER to remove after legacy closed group are dropped
+  left: boolean; // legacy & groupv2, should eventually be removed to rely on libsession value directly
 
   /**
    * We now require all avatars stored on desktop to have in additions of their normal avatars
@@ -83,8 +82,7 @@ export interface ConversationAttributes {
   conversationIdOrigin?: string; // The conversation from which this conversation originated from: blinded message request or 03-group admin who invited us
 
   // TODOLATER those two items are only used for legacy closed groups and will be removed when we get rid of the legacy closed groups support
-  lastJoinedTimestamp: number; // ClosedGroup: last time we were added to this group // TODOLATER to remove after legacy closed group are dropped
-  zombies: Array<string>; // only used for closed groups. Zombies are users which left but not yet removed by the admin // TODOLATER to remove after legacy closed group are dropped
+  lastJoinedTimestamp: number; // GroupV2: last time we were added to this group, should eventually be removed to rely on libsession value directly
 
   // ===========================================================================
   // All of the items below are duplicated one way or the other with libsession.
@@ -94,21 +92,37 @@ export interface ConversationAttributes {
 
   displayNameInProfile?: string; // no matter the type of conversation, this is the real name as set by the user/name of the open or closed group
   nickname?: string; // this is the name WE gave to that user (only applicable to private chats, not closed group neither opengroups)
-  profileKey?: string; // Consider this being a hex string if it is set
-  triggerNotificationsFor: ConversationNotificationSettingType;
+  profileKey?: string; // If set, this is a hex string.
 
   /**
    * This is the url of the avatar on the file server v2 or sogs server.
    * We use this to detect if we need to re-download the avatar from someone/ a community.
    */
   avatarPointer?: string;
+  /**
+   * This is the timestamp of the last time the profile of that user was updated.
+   * Only used for private chats (or blinded), but not for groups avatars nor communities.
+   * An incoming avatarPointer & profileKey will only be applied if the provided
+   * profileUpdatedSeconds is more recent than the currently stored one.
+   */
+  profileUpdatedSeconds?: number;
+  triggerNotificationsFor: ConversationNotificationSettingType;
   /** in seconds, 0 means no expiration */
   expireTimer: number;
 
-  members: Array<string>; // groups only members are all members for this group (not used for communities)
-  groupAdmins: Array<string>; // for sogs and closed group: the unique admins of that group
+  /**
+   * Members of 03-groups and legacy groups until we remove them entirely (not used for communities)
+   */
+  members: Array<string>;
+  /**
+   * For sogs and closed group: the unique admins of that group
+   */
+  groupAdmins: Array<string>;
 
-  priority: number; // -1 = hidden (contact and NTS only), 0 = normal, 1 = pinned
+  /**
+   * -1 = hidden (contact and NTS only), 0 = normal, 1 = pinned
+   */
+  priority: number;
 
   isApproved: boolean; // if we sent a message request or sent a message to this contact, we approve them. If isApproved & didApproveMe, a message request becomes a contact
   didApproveMe: boolean; // if our message request was approved already (or they've sent us a message request/message themselves). If isApproved & didApproveMe, a message request becomes a contact
@@ -157,7 +171,6 @@ export const fillConvoAttributesWithDefaults = (
     isTrustedForAttachmentDownload: false, // we don't trust a contact until we say so
     isApproved: false,
     didApproveMe: false,
-    isKickedFromGroup: false,
     left: false,
     priority: CONVERSATION_PRIORITIES.default,
     markedAsUnread: false,
@@ -169,3 +182,76 @@ export const READ_MESSAGE_STATE = {
   unread: 1,
   read: 0,
 } as const;
+
+export enum ConvoTypeNarrow {
+  /**
+   * Our own conversation.
+   * Those details needs to be stored in libsession's nts config (UserProfile).
+   */
+  nts = 'nts',
+  /**
+   * A blinded acquaintance is a user we are **not** chatting to directly (i.e. not approved nor didApproveMe),
+   * but they are blinded.
+   * This could be any user of a blinded community to which we have not sent a message request, and they did not either.
+   * Those are not saved in libsession currently.
+   */
+  blindedAcquaintance = 'blindedAcquaintance',
+  /**
+   * A blinded contact is a user we have sent a message request through a blinded community.
+   * Those are not saved in libsession currently, but libsession could store them for us.
+   */
+  blindedContact = 'blindedContact',
+  /**
+   * A non-blinded user we have not directly talk to, but through a group/(unblinded) community only.
+   * They could just be members of a group we are part of.
+   * Those are not saved in libsession's contact, but as group members in MetaGroup if we know them through a group.
+   * If we know them through a community, they are not saved in libsession at all currently..
+   */
+  privateAcquaintance = 'privateAcquaintance',
+  /**
+   * This is a contact that we have approved, or they sent us a message request.
+   * We could be friends with them, if both flags are true.
+   * This contact must be stored in the contacts config.
+   */
+  contact = 'contact',
+  /**
+   * This conversation is a community. It must be stored in the libsession's community config.
+   */
+  community = 'community',
+  /**
+   * Those are legacy groups. i.e. private groups that start with 05.
+   */
+  legacyGroup = 'legacyGroup',
+  /**
+   * Those are 03-groups. i.e. private groups that start with 03.
+   */
+  group = 'group',
+}
+
+export type WithAvatarPointer = {
+  avatarPointer: string;
+};
+
+export type WithProfileUpdatedAtSeconds = {
+  /**
+   * 0 is allowed for the transition period (until enough users have migrated to sending their profileUpdatedAtSeconds).
+   * Allowed as in an incoming message with a lokiProfile updated at 0, will be applied locally, if needed
+   */
+  profileUpdatedAtSeconds: number;
+};
+
+export type WithProfileKey = {
+  profileKey: Uint8Array | string;
+};
+
+export type WithAvatarPointerProfileKey = WithAvatarPointer & WithProfileKey;
+
+export type WithAvatarPath = {
+  avatarPath: string;
+};
+
+export type WithFallbackAvatarPath = {
+  fallbackAvatarPath: string;
+};
+
+export type WithAvatarPathAndFallback = WithAvatarPath & WithFallbackAvatarPath;

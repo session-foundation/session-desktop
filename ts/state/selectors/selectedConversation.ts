@@ -105,6 +105,10 @@ function getSelectedBlindedDisabledMsgRequests(state: StateType) {
   return isBlindedAndDisabledMsgRequests;
 }
 
+export function useSelectedHasDisabledBlindedMsgRequests() {
+  return useSelector(getSelectedBlindedDisabledMsgRequests);
+}
+
 /**
  * Defaults to 'all' if undefined/unset
  */
@@ -267,10 +271,6 @@ export function useSelectedIsApproved() {
 
 export function useSelectedApprovedMe() {
   return useSelector(getSelectedApprovedMe);
-}
-
-export function useSelectedHasDisabledBlindedMsgRequests() {
-  return useSelector(getSelectedBlindedDisabledMsgRequests);
 }
 
 export function useSelectedNotificationSetting() {

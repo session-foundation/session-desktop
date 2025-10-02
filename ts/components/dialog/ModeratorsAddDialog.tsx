@@ -86,10 +86,11 @@ export const AddModeratorsDialog = (props: Props) => {
 
   return (
     <SessionWrapperModal
+      modalId="addModeratorsModal"
       headerChildren={<ModalBasicHeader title={tr('addAdmins')} />}
       onClose={onClose}
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
             buttonType={SessionButtonType.Simple}
             onClick={addAsModerator}

@@ -26,8 +26,13 @@ export function ProPlaygroundPage() {
         />
         <FlagToggle
           forceUpdate={forceUpdate}
-          flag="mockUserHasPro"
-          value={useFeatureFlag('mockUserHasPro')}
+          flag="mockCurrentUserHasPro"
+          value={useFeatureFlag('mockCurrentUserHasPro')}
+        />
+        <FlagToggle
+          forceUpdate={forceUpdate}
+          flag="mockOthersHavePro"
+          value={useFeatureFlag('mockOthersHavePro')}
         />
       </Flex>
       <SpacerXS />
@@ -44,6 +49,9 @@ export function ProPlaygroundPage() {
       </Flex>
       <SpacerLG />
       <Flex $container={true} $flexDirection="column" $flexGap="var(--margins-sm)">
+        <SessionButton onClick={() => handleClick(SessionProInfoVariant.GENERIC)}>
+          Generic
+        </SessionButton>
         <SessionButton onClick={() => handleClick(SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT)}>
           Character Count
         </SessionButton>

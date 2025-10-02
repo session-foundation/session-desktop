@@ -163,7 +163,7 @@ async function processNormalAttachments(
       })
     );
 
-    message.set({ attachments });
+    message.setAttachments(attachments);
 
     return attachments.length;
   }
@@ -197,7 +197,7 @@ async function processPreviews(message: MessageModel, convo: ConversationModel):
     })
   );
 
-  message.set({ preview });
+  message.setPreview(preview);
 
   return addedCount;
 }
@@ -239,7 +239,7 @@ async function processQuoteAttachments(
     quote.attachments[index] = { ...attachment, thumbnail };
   }
 
-  message.set({ quote });
+  message.setQuote(quote);
 
   return addedCount;
 }

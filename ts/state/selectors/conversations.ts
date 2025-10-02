@@ -978,8 +978,8 @@ export const getGenericReadableMessageSelectorProps = createSelector(
       'isExpired',
       'isUnread',
       'receivedAt',
-      'isKickedFromGroup',
       'isDeleted',
+      'isKickedFromGroup',
     ]);
 
     return msgProps;
@@ -1017,4 +1017,25 @@ export function useWeAreCommunityAdminOrModerator(convoId?: string) {
 
   const weAreAdminOrModerator = weAreAdmin || mods.includes(us);
   return isPublic && isString(convoId) && weAreAdminOrModerator;
+}
+
+function getHasDisabledBlindedMsgRequests(state: StateType, convoId?: string) {
+  if (!convoId) {
+    return false;
+  }
+  const convo = state.conversations.conversationLookup[convoId];
+  if (!convo) {
+    return false;
+  }
+  const { blocksSogsMsgReqsTimestamp, isPrivate } = convo;
+
+  const isBlindedAndDisabledMsgRequests = Boolean(
+    isPrivate && PubKey.isBlinded(convoId) && blocksSogsMsgReqsTimestamp
+  );
+
+  return isBlindedAndDisabledMsgRequests;
+}
+
+export function useHasDisabledBlindedMsgRequests(convoId?: string) {
+  return useSelector((state: StateType) => getHasDisabledBlindedMsgRequests(state, convoId));
 }

@@ -3,6 +3,7 @@ import { GroupUpdateInviteResponseMessage } from '../../messages/outgoing/contro
 import { ed25519Str } from '../../utils/String';
 import { NetworkTime } from '../../../util/NetworkTime';
 import { MessageQueue } from '../MessageQueue';
+import { UserUtils } from '../../utils';
 
 /**
  * Send the invite response to the group's swarm. An admin will handle it and update our invite pending state to not pending.
@@ -19,6 +20,7 @@ export async function sendInviteResponseToGroup({ groupPk }: { groupPk: GroupPub
       createAtNetworkTimestamp: NetworkTime.now(),
       expirationType: 'unknown', // an invite response should not expire
       expireTimer: 0,
+      userProfile: await UserUtils.getOurProfile(),
     }),
   });
 }

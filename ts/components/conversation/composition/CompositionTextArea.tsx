@@ -257,7 +257,7 @@ function usePopoverContent({
   results: Array<SearchableSuggestion>;
   selectedMentionRef: MutableRefObject<HTMLLIElement | null>;
 }) {
-  const isPublic = useSelectedIsPublic();
+  const selectedConvoKey = useSelectedConversationKey();
   return useMemo(() => {
     if (!mention || !results.length) {
       return null;
@@ -280,14 +280,14 @@ function usePopoverContent({
               ref={selected ? selectedMentionRef : undefined}
             >
               {mention.prefix === PREFIX.USER
-                ? renderUserMentionRow(id, isPublic)
+                ? renderUserMentionRow(id, selectedConvoKey)
                 : renderEmojiQuickResultRow(id, display)}
             </li>
           );
         })}
       </ul>
     );
-  }, [mention, focusedItem, handleSelect, isPublic, results, selectedMentionRef]);
+  }, [mention, focusedItem, handleSelect, selectedConvoKey, results, selectedMentionRef]);
 }
 
 function useMessagePlaceholder() {

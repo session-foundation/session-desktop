@@ -12,6 +12,7 @@ import {
 import { processAvatarData } from '../../../../util/avatar/processAvatarData';
 import { DecryptedAttachmentsManager } from '../../../crypto/DecryptedAttachmentsManager';
 import { IMAGE_JPEG } from '../../../../types/MIME';
+import { NetworkTime } from '../../../../util/NetworkTime';
 
 const defaultMsBetweenRetries = 10000;
 const defaultMaxAttempts = 3;
@@ -108,6 +109,11 @@ class AvatarMigrateJob extends PersistedJob<AvatarMigratePersistedData> {
       window.log.warn('AvatarMigrateJob: no avatar pointer found for conversation');
       return RunJobResult.Success;
     }
+    const existingProfileKeyHex = conversation.getProfileKey();
+    if (!existingProfileKeyHex) {
+      window.log.warn('AvatarMigrateJob: no profileKey found for conversation');
+      return RunJobResult.Success;
+    }
     const avatarPath = conversation.getAvatarInProfilePath();
     if (!avatarPath) {
       window.log.warn('AvatarMigrateJob: no avatar path found for conversation');
@@ -125,9 +131,11 @@ class AvatarMigrateJob extends PersistedJob<AvatarMigratePersistedData> {
       if (!decryptedData) {
         await conversation.setSessionProfile({
           displayName: null, // null to not update the display name.
-          avatarPath: undefined,
-          fallbackAvatarPath: undefined,
-          avatarPointer: undefined,
+          type: 'resetAvatarPrivate',
+          // this is the AvatarMigrateJob.
+          // We want to override the avatars that was stored for that user
+          // as we can't decrypt it.
+          profileUpdatedAtSeconds: NetworkTime.nowSeconds(),
         });
         return RunJobResult.Success;
       }
@@ -154,6 +162,8 @@ class AvatarMigrateJob extends PersistedJob<AvatarMigratePersistedData> {
         avatarPath: mainAvatarPath,
         fallbackAvatarPath,
         avatarPointer: existingAvatarPointer,
+        type: 'setAvatarDownloadedPrivate',
+        profileKey: existingProfileKeyHex,
       });
 
       return RunJobResult.Success;
@@ -170,9 +180,11 @@ class AvatarMigrateJob extends PersistedJob<AvatarMigratePersistedData> {
         // there is no valid avatar to download, make sure the local file of the avatar of that user is removed
         await conversation.setSessionProfile({
           displayName: null, // null to not update the display name.
-          avatarPath: undefined,
-          fallbackAvatarPath: undefined,
-          avatarPointer: undefined,
+          type: 'resetAvatarPrivate',
+          // this is the AvatarMigrateJob.
+          // We want to override the avatars that was stored for that user
+          // as we can't decrypt it.
+          profileUpdatedAtSeconds: NetworkTime.nowSeconds(),
         });
       }
       return RunJobResult.RetryJobIfPossible;

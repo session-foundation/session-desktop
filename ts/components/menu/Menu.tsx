@@ -1,35 +1,23 @@
 import { Submenu } from 'react-contexify';
-import { useDispatch } from 'react-redux';
 import { useConvoIdFromContext } from '../../contexts/ConvoIdContext';
 import {
-  useAvatarPath,
-  useConversationUsername,
-  useIsBlinded,
   useIsGroupV2,
   useIsIncomingRequest,
-  useIsKickedFromGroup,
   useIsPrivate,
   useIsPrivateAndFriend,
   useNotificationSetting,
-  useWeAreAdmin,
 } from '../../hooks/useParamSelector';
 import {
   declineConversationWithConfirm,
   handleAcceptConversationRequest,
   markAllReadByConvoId,
-  showUpdateGroupNameByConvoId,
 } from '../../interactions/conversationInteractions';
 import { ConvoHub } from '../../session/conversations';
 import { PubKey } from '../../session/types';
-import { updateUserDetailsModal } from '../../state/ducks/modalDialog';
 import { useConversationIdOrigin } from '../../state/selectors/conversations';
-import {
-  useIsMessageRequestOverlayShown,
-  useIsMessageSection,
-} from '../../state/selectors/section';
+import { useIsMessageRequestOverlayShown } from '../../state/selectors/section';
 import { useSelectedConversationKey } from '../../state/selectors/selectedConversation';
 import { ItemWithDataTestId } from './items/MenuItemWithDataTestId';
-import { useLibGroupDestroyed } from '../../state/selectors/userGroups';
 import { NetworkTime } from '../../util/NetworkTime';
 import { useShowNotificationFor } from '../menuAndSettingsHooks/useShowNotificationFor';
 import { useLocalisedNotificationOptions } from '../menuAndSettingsHooks/useLocalisedNotificationFor';
@@ -48,6 +36,7 @@ import { useSetNotificationsFor } from '../menuAndSettingsHooks/useSetNotificati
 import { Localizer } from '../basic/Localizer';
 import { useChangeNickname } from '../menuAndSettingsHooks/useChangeNickname';
 import { useShowNoteToSelfCb } from '../menuAndSettingsHooks/useShowNoteToSelf';
+import { useShowUserDetailsCbFromConversation } from '../menuAndSettingsHooks/useShowUserDetailsCb';
 
 /** Menu items standardized */
 
@@ -65,16 +54,11 @@ export const InviteContactMenuItem = (): JSX.Element | null => {
 
 export const MarkConversationUnreadMenuItem = (): JSX.Element | null => {
   const conversationId = useConvoIdFromContext();
-  const isMessagesSection = useIsMessageSection();
   const isPrivate = useIsPrivate(conversationId);
   const isPrivateAndFriend = useIsPrivateAndFriend(conversationId);
   const isMessageRequestShown = useIsMessageRequestOverlayShown();
 
-  if (
-    isMessagesSection &&
-    !isMessageRequestShown &&
-    (!isPrivate || (isPrivate && isPrivateAndFriend))
-  ) {
+  if (!isMessageRequestShown && (!isPrivate || (isPrivate && isPrivateAndFriend))) {
     const conversation = ConvoHub.use().get(conversationId);
 
     const markUnread = () => {
@@ -107,52 +91,19 @@ export const DeletePrivateContactMenuItem = () => {
   );
 };
 
-export const ShowUserDetailsMenuItem = () => {
-  const dispatch = useDispatch();
+export const ShowUserProfileMenuItem = () => {
   const convoId = useConvoIdFromContext();
-  const isPrivate = useIsPrivate(convoId);
-  const avatarPath = useAvatarPath(convoId);
-  const userName = useConversationUsername(convoId) || convoId;
-  const isBlinded = useIsBlinded(convoId);
 
-  if (isPrivate && !isBlinded) {
+  const showUserDetailsCb = useShowUserDetailsCbFromConversation(convoId, true);
+
+  if (showUserDetailsCb) {
     return (
-      <ItemWithDataTestId
-        onClick={() => {
-          dispatch(
-            updateUserDetailsModal({
-              conversationId: convoId,
-              userName,
-              authorAvatarPath: avatarPath,
-            })
-          );
-        }}
-      >
+      <ItemWithDataTestId onClick={showUserDetailsCb}>
         {tr('contactUserDetails')}
       </ItemWithDataTestId>
     );
   }
 
-  return null;
-};
-
-export const UpdateGroupNameMenuItem = () => {
-  const convoId = useConvoIdFromContext();
-  const isKickedFromGroup = useIsKickedFromGroup(convoId);
-  const isDestroyed = useLibGroupDestroyed(convoId);
-  const weAreAdmin = useWeAreAdmin(convoId);
-
-  if (!isKickedFromGroup && weAreAdmin && !isDestroyed) {
-    return (
-      <ItemWithDataTestId
-        onClick={() => {
-          void showUpdateGroupNameByConvoId(convoId);
-        }}
-      >
-        {tr('groupEdit')}
-      </ItemWithDataTestId>
-    );
-  }
   return null;
 };
 
@@ -443,7 +394,7 @@ export const NotificationForConvoMenuItem = (): JSX.Element | null => {
             }}
             disabled={disabled}
           >
-            {item.name}
+            {tr(item.token)}
           </ItemWithDataTestId>
         );
       })}

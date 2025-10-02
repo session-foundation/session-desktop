@@ -86,7 +86,7 @@ export const OverlayMessage = () => {
     if (!convo.isActive() || convo.isHidden()) {
       // bump the timestamp only if we were not active before
       if (!convo.isActive()) {
-        convo.set({ active_at: Date.now() });
+        convo.setActiveAt(Date.now());
       }
       await convo.unhideIfNeeded(false);
 
@@ -191,7 +191,7 @@ export const OverlayMessage = () => {
             </SessionIDDescription>
             <HelpDeskButton
               iconSize="small"
-              style={{ display: 'inline-flex' }}
+              style={{ display: 'inline-flex', paddingInline: 'var(--margins-xs)' }}
               iconColor="var(--text-secondary-color)"
             />
           </StyledDescriptionContainer>

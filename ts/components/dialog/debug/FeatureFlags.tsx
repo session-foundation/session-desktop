@@ -1,10 +1,12 @@
-import { isBoolean } from 'lodash';
+import { isArray, isBoolean } from 'lodash';
 import type { SessionFlagsKeys } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { Flex } from '../../basic/Flex';
 import { SessionToggle } from '../../basic/SessionToggle';
 import { HintText, SpacerSM, SpacerXS } from '../../basic/Text';
 import { DEBUG_FEATURE_FLAGS } from './constants';
 import { ConvoHub } from '../../../session/conversations';
+import { isDebugMode } from '../../../shared/env_vars';
+import { ProMessageFeature } from '../../../models/proMessageFeature';
 
 type FeatureFlagToggleType = {
   forceUpdate: () => void;
@@ -27,7 +29,7 @@ const handleFeatureFlagToggle = ({ flag, parentFlag, forceUpdate }: FeatureFlagT
 
   forceUpdate();
 
-  if (flag === 'proAvailable' || flag === 'mockUserHasPro') {
+  if (flag === 'proAvailable' || flag === 'mockCurrentUserHasPro' || flag === 'mockOthersHavePro') {
     ConvoHub.use()
       .getConversations()
       .forEach(convo => {
@@ -70,6 +72,30 @@ export const FlagToggle = ({
 
 type FlagValues = boolean | object | string;
 
+const allProFeatures = Object.values(ProMessageFeature);
+
+// Generate the rotation steps: [], [feat1], [feat2], ..., [featN], [f1, f2, ..., fn]
+const proFeatureCycle: Array<Array<ProMessageFeature>> = [
+  [],
+  ...allProFeatures.map(f => [f]),
+  allProFeatures,
+];
+
+function rotateMsgProFeat(currentValue: Array<ProMessageFeature>, forceUpdate: () => void) {
+  // Find current step in the cycle
+  const index = proFeatureCycle.findIndex(
+    features =>
+      features.length === currentValue.length && features.every(f => currentValue.includes(f))
+  );
+
+  // Next index wraps around
+  const nextIndex = (index + 1) % proFeatureCycle.length;
+
+  window.sessionFeatureFlags.mockMessageProFeatures = proFeatureCycle[nextIndex];
+
+  forceUpdate();
+}
+
 export const FeatureFlags = ({
   flags,
   forceUpdate,
@@ -97,31 +123,30 @@ export const FeatureFlags = ({
       {Object.entries(flags).map(([key, value]) => {
         const flag = key as SessionFlagsKeys;
         if (
-          (!process.env.SESSION_DEV && DEBUG_FEATURE_FLAGS.DEV.includes(flag)) ||
+          (!isDebugMode() && DEBUG_FEATURE_FLAGS.DEV.includes(flag)) ||
           DEBUG_FEATURE_FLAGS.UNSUPPORTED.includes(flag)
         ) {
           return null;
         }
 
-        if (!isBoolean(value)) {
+        if (isBoolean(value)) {
+          return <FlagToggle forceUpdate={forceUpdate} flag={flag} value={value} />;
+        }
+        if (isArray(value) && flag === 'mockMessageProFeatures') {
           return (
-            <>
-              <h3>{flag}</h3>
-              {Object.entries(value).map(([k, v]: [string, FlagValues]) => {
-                const nestedFlag = k as SessionFlagsKeys;
-                return (
-                  <FlagToggle
-                    flag={nestedFlag}
-                    value={v}
-                    parentFlag={flag}
-                    forceUpdate={forceUpdate}
-                  />
-                );
-              })}
-            </>
+            <Flex
+              $container={true}
+              $alignItems="center"
+              $flexDirection="row"
+              style={{ cursor: 'pointer', gap: 'var(--margins-xs)' }}
+              onClick={() => rotateMsgProFeat(value, forceUpdate)}
+            >
+              <div style={{ flexShrink: 0 }}>{flag}</div>
+              <pre style={{ overflow: 'hidden' }}>{JSON.stringify(value)}</pre>
+            </Flex>
           );
         }
-        return <FlagToggle forceUpdate={forceUpdate} flag={flag} value={value} />;
+        throw new Error('Feature flag is not a boolean or array');
       })}
       <SpacerSM />
     </Flex>

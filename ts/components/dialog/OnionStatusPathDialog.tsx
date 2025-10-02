@@ -1,4 +1,4 @@
-import { ipcRenderer, shell } from 'electron';
+import { ipcRenderer } from 'electron';
 import { useState, SessionDataTestId } from 'react';
 
 import { useDispatch } from 'react-redux';
@@ -9,7 +9,7 @@ import useInterval from 'react-use/lib/useInterval';
 import { isEmpty, isTypedArray } from 'lodash';
 import { CityResponse, Reader } from 'maxmind';
 import useMount from 'react-use/lib/useMount';
-import { onionPathModal } from '../../state/ducks/modalDialog';
+import { onionPathModal, updateOpenUrlModal } from '../../state/ducks/modalDialog';
 import {
   useFirstOnionPath,
   useFirstOnionPathLength,
@@ -216,16 +216,6 @@ const ModalStatusLight = (props: StatusLightType) => {
   );
 };
 
-// Set icon color based on result
-const errorColor = 'var(--button-path-error-color)';
-const defaultColor = 'var(--button-path-default-color)';
-const connectingColor = 'var(--button-path-connecting-color)';
-
-const OnionPathContainer = styled.button`
-  display: flex;
-  padding: var(--margins-lg);
-`;
-
 function OnionPathDot({
   dataTestId,
   iconColor,
@@ -257,11 +247,57 @@ function OnionPathDot({
   );
 }
 
+export const OnionPathModal = () => {
+  const dispatch = useDispatch();
+  return (
+    <SessionWrapperModal
+      modalId="onionPathModal"
+      onClose={() => dispatch(onionPathModal(null))}
+      headerChildren={<ModalBasicHeader title={tr('onionRoutingPath')} showExitIcon={true} />}
+      buttonChildren={
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
+          <SessionButton
+            text={tr('learnMore')}
+            buttonType={SessionButtonType.Simple}
+            onClick={() => {
+              dispatch(
+                updateOpenUrlModal({
+                  urlToOpen: 'https://getsession.org/faq/#onion-routing',
+                })
+              );
+            }}
+          />
+        </ModalActionsContainer>
+      }
+    >
+      <OnionPathModalInner />
+    </SessionWrapperModal>
+  );
+};
+
+// Set icon color based on result
+const errorColor = 'var(--button-path-error-color)';
+const defaultColor = 'var(--button-path-default-color)';
+const connectingColor = 'var(--button-path-connecting-color)';
+
+const StyledStatusLightContainer = styled.div<{ $inActionPanel: boolean }>`
+  margin-top: ${props => (props.$inActionPanel ? 'auto' : '0')};
+  cursor: ${props => (props.$inActionPanel ? 'pointer' : 'inherit')};
+  padding: ${props => (props.$inActionPanel ? 'var(--margins-md)' : '0')};
+`;
+
 /**
  * A status light specifically for the action panel. Color is based on aggregate node states instead of individual onion node state
  */
-export const ActionPanelOnionStatusLight = (props: { handleClick: () => void; id: string }) => {
-  const { handleClick, id } = props;
+export const OnionStatusLight = (
+  props:
+    | { inActionPanel: true; handleClick: () => void }
+    | {
+        inActionPanel: false;
+        handleClick: undefined;
+      }
+) => {
+  const { handleClick, inActionPanel } = props;
 
   const onionPathsCount = useOnionPathsCount();
   const firstPathLength = useFirstOnionPathLength();
@@ -276,31 +312,12 @@ export const ActionPanelOnionStatusLight = (props: { handleClick: () => void; id
   }
 
   return (
-    <OnionPathContainer id={id} data-testid="path-light-container" onClick={handleClick}>
-      <OnionPathDot dataTestId="path-light-svg" iconColor={iconColor} />
-    </OnionPathContainer>
-  );
-};
-
-export const OnionPathModal = () => {
-  const dispatch = useDispatch();
-  return (
-    <SessionWrapperModal
-      onClose={() => dispatch(onionPathModal(null))}
-      headerChildren={<ModalBasicHeader title={tr('onionRoutingPath')} showExitIcon={true} />}
-      buttonChildren={
-        <ModalActionsContainer>
-          <SessionButton
-            text={tr('learnMore')}
-            buttonType={SessionButtonType.Simple}
-            onClick={() => {
-              void shell.openExternal('https://getsession.org/faq/#onion-routing');
-            }}
-          />
-        </ModalActionsContainer>
-      }
+    <StyledStatusLightContainer
+      data-testid="path-light-container"
+      onClick={handleClick}
+      $inActionPanel={inActionPanel}
     >
-      <OnionPathModalInner />
-    </SessionWrapperModal>
+      <OnionPathDot dataTestId="path-light-svg" iconColor={iconColor} />
+    </StyledStatusLightContainer>
   );
 };

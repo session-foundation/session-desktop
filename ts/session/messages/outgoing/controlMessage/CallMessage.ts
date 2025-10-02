@@ -3,13 +3,13 @@ import { signalservice } from '../../../../protobuf/compiled';
 import { TTL_DEFAULT } from '../../../constants';
 import { ExpirableMessage, ExpirableMessageParams } from '../ExpirableMessage';
 
-interface CallMessageParams extends ExpirableMessageParams {
+type CallMessageParams = ExpirableMessageParams & {
   type: SignalService.CallMessage.Type;
   sdpMLineIndexes?: Array<number>;
   sdpMids?: Array<string>;
   sdps?: Array<string>;
   uuid: string;
-}
+};
 
 export class CallMessage extends ExpirableMessage {
   public readonly type: signalservice.CallMessage.Type;

@@ -5,18 +5,22 @@ import { SyncUtils, UserUtils } from '../../session/utils';
 import { getSodiumRenderer } from '../../session/crypto';
 import { uploadAndSetOurAvatarShared } from '../../interactions/avatar-interactions/nts-avatar-interactions';
 import { ed25519Str } from '../../session/utils/String';
-import { editProfileModal, updateEditProfilePictureModal } from './modalDialog';
+import { userSettingsModal, updateEditProfilePictureModal } from './modalDialog';
+import { NetworkTime } from '../../util/NetworkTime';
+import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 
 export type UserStateType = {
   ourDisplayNameInProfile: string;
   ourNumber: string;
   uploadingNewAvatarCurrentUser: boolean;
+  uploadingNewAvatarCurrentUserFailed: boolean;
 };
 
 export const initialUserState: UserStateType = {
   ourDisplayNameInProfile: '',
   ourNumber: 'missing',
   uploadingNewAvatarCurrentUser: false,
+  uploadingNewAvatarCurrentUserFailed: false,
 };
 
 /**
@@ -41,11 +45,13 @@ const updateOurAvatar = createAsyncThunk(
       decryptedAvatarData: mainAvatarDecrypted,
       ourConvo,
       profileKey,
+      context: 'uploadNewAvatar',
     });
 
-    window.inboxStore?.dispatch(updateEditProfilePictureModal(null));
-    window.inboxStore?.dispatch(editProfileModal({}));
-
+    if (res) {
+      window.inboxStore?.dispatch(updateEditProfilePictureModal(null));
+      window.inboxStore?.dispatch(userSettingsModal({ userSettingsPage: 'default' }));
+    }
     return res;
   }
 );
@@ -66,23 +72,26 @@ const clearOurAvatar = createAsyncThunk('user/clearOurAvatar', async () => {
 
   // return early if no change are needed at all
   if (
-    isNil(convo.get('avatarPointer')) &&
+    isNil(convo.getAvatarPointer()) &&
     isNil(convo.getAvatarInProfilePath()) &&
     isNil(convo.getFallbackAvatarInProfilePath()) &&
-    isNil(convo.get('profileKey'))
+    isNil(convo.getProfileKey())
   ) {
     return;
   }
 
-  convo.setKey('profileKey', undefined);
   await convo.setSessionProfile({
-    avatarPath: undefined,
-    fallbackAvatarPath: undefined,
-    avatarPointer: undefined,
+    type: 'resetAvatarPrivate',
     displayName: null,
+    profileUpdatedAtSeconds: NetworkTime.nowSeconds(),
+  });
+  await UserConfigWrapperActions.setNewProfilePic({
+    url: null,
+    key: null,
   });
 
   await SyncUtils.forceSyncConfigurationNowIfNeeded(true);
+  window.inboxStore?.dispatch(updateEditProfilePictureModal(null));
 });
 
 /**
@@ -108,19 +117,21 @@ const userSlice = createSlice({
   },
   extraReducers: builder => {
     builder.addCase(updateOurAvatar.fulfilled, (state, action) => {
-      window.log.error('a updateOurAvatar was fulfilled with:', action.payload);
+      window.log.info('a updateOurAvatar was fulfilled with:', action.payload);
 
       state.uploadingNewAvatarCurrentUser = false;
+      state.uploadingNewAvatarCurrentUserFailed = !action.payload;
       return state;
     });
     builder.addCase(updateOurAvatar.rejected, (state, action) => {
       window.log.error('a updateOurAvatar was rejected', action.error);
       state.uploadingNewAvatarCurrentUser = false;
+      state.uploadingNewAvatarCurrentUserFailed = true;
       return state;
     });
     builder.addCase(updateOurAvatar.pending, (state, _action) => {
       state.uploadingNewAvatarCurrentUser = true;
-
+      state.uploadingNewAvatarCurrentUserFailed = false;
       window.log.debug('a updateOurAvatar is pending');
       return state;
     });

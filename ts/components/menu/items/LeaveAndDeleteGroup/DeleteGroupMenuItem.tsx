@@ -1,5 +1,8 @@
 import { useConvoIdFromContext } from '../../../../contexts/ConvoIdContext';
-import { useConversationUsername, useIsLegacyGroup } from '../../../../hooks/useParamSelector';
+import {
+  useConversationUsernameWithFallback,
+  useIsLegacyGroup,
+} from '../../../../hooks/useParamSelector';
 import { showDeleteGroupByConvoId } from '../../../../interactions/conversationInteractions';
 import { ItemWithDataTestId } from '../MenuItemWithDataTestId';
 import { Localizer } from '../../../basic/Localizer';
@@ -23,7 +26,7 @@ export const DeleteGroupMenuItem = () => {
 
 export const DeleteDeprecatedLegacyGroupMenuItem = () => {
   const convoId = useConvoIdFromContext();
-  const username = useConversationUsername(convoId) || convoId;
+  const username = useConversationUsernameWithFallback(true, convoId);
 
   const isLegacyGroup = useIsLegacyGroup(convoId);
 

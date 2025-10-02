@@ -35,7 +35,6 @@ import {
   FindAllMessageHashesInConversationTypeArgs,
 } from './sharedDataTypes';
 import { GuardNode, Snode } from './types';
-import { makeMessageModels } from '../models/models';
 
 const ERASE_SQL_KEY = 'erase-sql-key';
 const ERASE_ATTACHMENTS_KEY = 'erase-attachments';
@@ -142,7 +141,9 @@ async function getAllConversations(): Promise<Array<ConversationModel>> {
   const conversationsAttrs =
     (await channels.getAllConversations()) as Array<ConversationAttributes>;
 
-  return conversationsAttrs.map(attr => new ConversationModel(attr));
+  return conversationsAttrs
+    .filter(attr => typeof attr?.id === 'string' && attr.id.length)
+    .map(attr => new ConversationModel(attr));
 }
 
 /**
@@ -320,6 +321,10 @@ async function filterAlreadyFetchedOpengroupMessage(
 ): Promise<MsgDuplicateSearchOpenGroup> {
   const msgDetailsNotAlreadyThere = await channels.filterAlreadyFetchedOpengroupMessage(msgDetails);
   return msgDetailsNotAlreadyThere || [];
+}
+
+function makeMessageModels(modelsOrAttrs: Array<MessageAttributes>) {
+  return modelsOrAttrs.map(a => new MessageModel(a));
 }
 
 /**

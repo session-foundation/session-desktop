@@ -83,10 +83,11 @@ export const SessionNicknameDialog = (props: Props) => {
 
   return (
     <SessionWrapperModal
+      modalId="nickNameModal"
       headerChildren={<ModalBasicHeader title={tr('nicknameSet')} showExitIcon={true} />}
       onClose={onClickClose}
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
             text={tr('save')}
             disabled={!nickname}
@@ -110,7 +111,7 @@ export const SessionNicknameDialog = (props: Props) => {
           dataTestId="modal-description"
           localizerProps={{
             token: 'nicknameDescription',
-            args: { name: displayName || PubKey.shorten(conversationId) },
+            name: displayName || PubKey.shorten(conversationId),
           }}
         />
         <NicknameInput

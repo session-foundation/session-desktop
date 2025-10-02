@@ -847,7 +847,7 @@ async function sendOnionRequestHandlingSnodeEjectNoRetries({
       timeoutMs,
     });
 
-    if (window.sessionFeatureFlags?.debug.debugOnionRequests) {
+    if (window.sessionFeatureFlags?.debugOnionRequests) {
       window.log.info(
         `sendOnionRequestHandlingSnodeEjectNoRetries: sendOnionRequestNoRetries: useV4:${useV4} destSnodeX25519:${destSnodeX25519}; \nfinalDestOptions:${JSON.stringify(
           finalDestOptions
@@ -1196,7 +1196,6 @@ export const Onions = {
   incrementBadSnodeCountOrDrop,
   decodeOnionResult,
   lokiOnionFetchNoRetries,
-  sendOnionRequestSnodeDestNoRetries,
   processOnionResponse,
   processOnionResponseV4,
   isFinalDestinationSnode,

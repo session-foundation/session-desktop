@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 
 import styled from 'styled-components';
-import { useConversationUsername } from '../../hooks/useParamSelector';
+import { useConversationUsernameWithFallback } from '../../hooks/useParamSelector';
 import { CallManager } from '../../session/utils';
 import { ed25519Str } from '../../session/utils/String';
 import { callTimeoutMs } from '../../session/utils/calling/CallManager';
@@ -73,7 +73,7 @@ export const IncomingCallDialog = () => {
       await CallManager.USER_rejectIncomingCallRequest(incomingCallFromPubkey);
     }
   };
-  const from = useConversationUsername(incomingCallFromPubkey);
+  const from = useConversationUsernameWithFallback(true, incomingCallFromPubkey);
   if (!hasIncomingCall || !incomingCallFromPubkey) {
     return null;
   }
@@ -82,11 +82,12 @@ export const IncomingCallDialog = () => {
   if (hasIncomingCall) {
     return (
       <SessionWrapperModal
+        modalId="confirmModal"
         headerChildren={
           <ModalBasicHeader title={tr('callsIncoming', { name: from ?? tr('unknown') })} />
         }
         buttonChildren={
-          <ModalActionsContainer>
+          <ModalActionsContainer buttonType={SessionButtonType.Simple}>
             <SessionButton
               text={tr('accept')}
               buttonType={SessionButtonType.Simple}

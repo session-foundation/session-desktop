@@ -87,11 +87,33 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # this needs to be a valid target of https://www.electron.build/linux#target
-        pkg_to_build: ['deb', 'rpm', 'freebsd', 'AppImage']
+        # `electron_target` needs to be a valid target of https://www.electron.build/linux#target
+        include:
+          - identifier: deb
+            electron_target: deb
+            cache_suffix: linux-deb
+            is_qa: false
+          - identifier: rpm
+            electron_target: rpm
+            cache_suffix: linux-rpm
+            is_qa: false
+          - identifier: freebsd
+            electron_target: freebsd
+            cache_suffix: linux-freebsd
+            is_qa: false
+          - identifier: AppImage
+            electron_target: AppImage
+            cache_suffix: linux-AppImage
+            is_qa: false
+          - identifier: deb-qa
+            electron_target: deb
+            cache_suffix: linux-deb
+            is_qa: true
+    name: '${{ matrix.identifier }}'
 
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     steps:
       - run: git config --global core.autocrlf false
 
@@ -100,10 +122,14 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
 
+      - name: Custom build for QA if needed
+        if: ${{ matrix.is_qa == true }}
+        uses: ./actions/sed_for_qa
+
       - name: Setup & Build
         uses: ./actions/setup_and_build
         with:
-          cache_suffix: ${{ matrix.pkg_to_build }}
+          cache_suffix: ${{ matrix.cache_suffix }}
 
       - name: Lint Files
         # no need to lint files on all platforms
@@ -116,41 +142,41 @@ jobs:
       - name: Unit Test
         run: yarn test
 
-      - name: Make release build but do not publish ${{ matrix.pkg_to_build }}
+      - name: Make release build but do not publish ${{ matrix.identifier }}
         # we do want this part to run only when version_tag is unset (i.e. we are not making a release)
         if: ${{ needs.create_draft_release_if_needed.outputs.version_tag == ''  }}
         run: |
-          sed -i 's/"target": "deb"/"target": "${{ matrix.pkg_to_build }}"/g' package.json && yarn build-release
+          sed -i 's/"target": "deb"/"target": "${{ matrix.electron_target }}"/g' package.json && yarn build-release
 
-      - name: Upload artefacts ${{ matrix.pkg_to_build }}
+      - name: Upload artefacts ${{ matrix.identifier }}
         # we do want this part to run only when version_tag is unset (i.e. we are not making a release)
         if: ${{ needs.create_draft_release_if_needed.outputs.version_tag == ''  }}
         uses: ./actions/upload_prod_artefacts
         with:
-          upload_prefix: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.pkg_to_build }}
+          upload_prefix: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.identifier }}
 
-      - name: Make release build & publish ${{ matrix.pkg_to_build }}
+      - name: Make release build & publish ${{ matrix.identifier }}
         if: ${{ needs.create_draft_release_if_needed.outputs.version_tag != '' }}
         run: |
-          sed -i 's/"target": "deb"/"target": "${{ matrix.pkg_to_build }}"/g' package.json && yarn build-release-publish
+          sed -i 's/"target": "deb"/"target": "${{ matrix.electron_target }}"/g' package.json && yarn build-release-publish
 
       - name: Backup release metadata
         # only run this on "push" to "master" or alpha releases
         # Note: The jobs are overwriting each other's latest-linux.yml.
         # So, we upload all of them as artifacts, and then merge them (see `post_build_linux`)
         # note: freebsd does not generate a latest-linux.yml file so we exclude it
-        if: ${{ needs.create_draft_release_if_needed.outputs.version_tag != '' && matrix.pkg_to_build != 'freebsd' }}
+        if: ${{ needs.create_draft_release_if_needed.outputs.version_tag != '' && matrix.identifier != 'freebsd' }}
         shell: bash
         run: |
-          mv dist/latest-linux.yml dist/latest-linux-${{ matrix.pkg_to_build }}-${{ github.sha }}.yml
+          mv dist/latest-linux.yml dist/latest-linux-${{ matrix.electron_target }}-${{ github.sha }}.yml
 
       - name: Upload release metadata
         # only run this on "push" to "master" or alpha releases
-        if: ${{ needs.create_draft_release_if_needed.outputs.version_tag != '' && matrix.pkg_to_build != 'freebsd' }}
+        if: ${{ needs.create_draft_release_if_needed.outputs.version_tag != '' && matrix.identifier != 'freebsd' }}
         uses: actions/upload-artifact@v4
         with:
-          name: latest-linux-${{ matrix.pkg_to_build }}-${{ github.sha }}.yml
-          path: dist/latest-linux-${{ matrix.pkg_to_build }}-${{ github.sha }}.yml
+          name: latest-linux-${{ matrix.electron_target }}-${{ github.sha }}.yml
+          path: dist/latest-linux-${{ matrix.electron_target }}-${{ github.sha }}.yml
 
   post_build_linux:
     needs: [create_draft_release_if_needed, build_linux]
@@ -199,6 +225,7 @@ jobs:
     needs: [create_draft_release_if_needed]
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    name: 'windows x64'
     steps:
       - run: git config --global core.autocrlf false
 
@@ -234,41 +261,20 @@ jobs:
 
   # We want both arm64 and intel mac builds, and according to this https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources macos-14 and above is always arm64 and macos-13 is the last intel runner
   # NOTE x64 builds made on an arm64 host will not bundle the native modules correctly https://github.com/electron-userland/electron-builder/issues/8646
-  build_mac_arm64:
-    needs: [create_draft_release_if_needed]
-    runs-on: macos-14
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      MAC_CERTIFICATE: ${{ secrets.MAC_CERTIFICATE }}
-      MAC_CERTIFICATE_PASSWORD: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
-      SIGNING_APPLE_ID: ${{ secrets.SIGNING_APPLE_ID }}
-      SIGNING_APP_PASSWORD: ${{ secrets.SIGNING_APP_PASSWORD }}
-      SIGNING_TEAM_ID: ${{ secrets.SIGNING_TEAM_ID }}
-    steps:
-      - run: git config --global core.autocrlf false
+  build_mac:
+    strategy:
+      matrix:
+        include:
+          - architecture: arm64
+            cache_suffix: mac-arm64
+            runner: macos-14
 
-      - name: Checkout git repo
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
+          - architecture: x64
+            cache_suffix: mac-x64
+            runner: macos-13
+    runs-on: ${{ matrix.runner }}
+    name: '${{ matrix.architecture }}'
 
-      - name: Setup & Build
-        uses: ./actions/setup_and_build
-        with:
-          cache_suffix: mac-arm64
-
-        # we want to test on all platforms since some are testing the rendered menus (and are dependent on the platform)
-      - name: Unit Test
-        run: yarn test
-
-      - name: Make release build arm64
-        uses: ./actions/make_release_build
-        with:
-          architecture: arm64
-          should_publish: ${{ needs.create_draft_release_if_needed.outputs.version_tag != ''}}
-
-  build_mac_x64:
-    runs-on: macos-13
     needs: [create_draft_release_if_needed]
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -288,20 +294,20 @@ jobs:
       - name: Setup & Build
         uses: ./actions/setup_and_build
         with:
-          cache_suffix: mac-x64
+          cache_suffix: ${{ matrix.cache_suffix }}
 
         # we want to test on all platforms since some are testing the rendered menus (and are dependent on the platform)
       - name: Unit Test
         run: yarn test
 
-      - name: Make release build x64
+      - name: Make release build ${{ matrix.architecture }}
         uses: ./actions/make_release_build
         with:
-          architecture: x64
+          architecture: ${{ matrix.architecture }}
           should_publish: ${{ needs.create_draft_release_if_needed.outputs.version_tag != '' }}
 
   post_build_mac:
-    needs: [create_draft_release_if_needed, build_mac_arm64, build_mac_x64]
+    needs: [create_draft_release_if_needed, build_mac]
     runs-on: ubuntu-22.04
     if: ${{ needs.create_draft_release_if_needed.outputs.version_tag != '' }}
     env:
@@ -336,8 +342,8 @@ jobs:
           artifacts: 'dist/latest-mac.yml'
           draft: true # important to keep this, so we **NEVER** make a live release through the CI
           allowUpdates: true
-          omitBodyDuringUpdate: true
           omitNameDuringUpdate: true
+          omitBodyDuringUpdate: true
           replacesArtifacts: true
           updateOnlyUnreleased: true
           makeLatest: false

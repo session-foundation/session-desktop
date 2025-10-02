@@ -32,6 +32,7 @@ import { SettingsKey } from '../../data/settings-key';
 import { sectionActions } from './section';
 import { ed25519Str } from '../../session/utils/String';
 import { UserUtils } from '../../session/utils';
+import type { ProMessageFeature } from '../../models/proMessageFeature';
 
 export type MessageModelPropsWithoutConvoProps = {
   propsForMessage: PropsForMessageWithoutConvoProps;
@@ -176,6 +177,8 @@ export type PropsForMessageWithoutConvoProps = {
    * rather than a per-convo setting (especially for groups)
    */
   isTrustedForAttachmentDownload?: boolean;
+
+  proFeatures?: Array<ProMessageFeature>;
 };
 
 export type PropsForMessageWithConvoProps = PropsForMessageWithoutConvoProps & {

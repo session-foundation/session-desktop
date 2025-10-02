@@ -331,7 +331,6 @@ async function start() {
 
   window.toggleMediaPermissions = async () => {
     const value = window.getMediaPermissions();
-
     if (value === true) {
       const valueCallPermissions = window.getCallMediaPermissions();
       if (valueCallPermissions) {

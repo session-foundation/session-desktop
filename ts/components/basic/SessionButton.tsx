@@ -17,17 +17,7 @@ export enum SessionButtonShape {
 
 // NOTE References ts/themes/colors.tsx
 export enum SessionButtonColor {
-  Green = 'green',
-  Blue = 'blue',
-  Yellow = 'yellow',
-  Pink = 'pink',
-  Purple = 'purple',
-  Orange = 'orange',
-  Red = 'red',
-  White = 'white',
-  Black = 'black',
-  Grey = 'gray',
-  Primary = 'primary',
+  TextPrimary = 'text-primary',
   Tertiary = 'background-tertiary',
   PrimaryDark = 'renderer-span-primary', // use primary in dark modes only since it has poor contrast in light mode
   Danger = 'danger',

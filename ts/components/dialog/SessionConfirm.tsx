@@ -12,19 +12,16 @@ import {
 } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionRadioGroup, SessionRadioItems } from '../basic/SessionRadioGroup';
-import type { LocalizerProps } from '../basic/Localizer';
 import { SessionSpinner } from '../loading';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
-import { tr } from '../../localization/localeTools';
+import { tr, type TrArgs } from '../../localization/localeTools';
 import { ModalFlexContainer } from './shared/ModalFlexContainer';
 
-export interface SessionConfirmDialogProps {
-  i18nMessage?: LocalizerProps;
+export type SessionConfirmDialogProps = {
+  i18nMessage?: TrArgs;
   title?: string;
   radioOptions?: SessionRadioItems;
-  onOk?: any;
   onClose?: any;
-  closeAfterInput?: boolean;
 
   /**
    * function to run on ok click. Closes modal after execution by default
@@ -49,7 +46,7 @@ export interface SessionConfirmDialogProps {
   closeTheme?: SessionButtonColor;
   showExitIcon?: boolean | undefined;
   conversationId?: string;
-}
+};
 
 export const SessionConfirm = (props: SessionConfirmDialogProps) => {
   const {
@@ -97,10 +94,6 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
     void onClickOkHandler();
   });
 
-  useKey('Escape', () => {
-    onClickCancelHandler();
-  });
-
   useEffect(() => {
     if (isLoading) {
       if (conversationId && lastMessage?.interactionType) {
@@ -124,10 +117,11 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
 
   return (
     <SessionWrapperModal
+      modalId="confirmModal"
       headerChildren={title ? <ModalBasicHeader title={title} showExitIcon={showExitIcon} /> : null}
       onClose={onClickClose}
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
             text={okText}
             buttonColor={okTheme}

@@ -520,7 +520,8 @@ describe('knownBlindedKeys', () => {
           ConversationTypeEnum.PRIVATE
         );
         ConvoHub.use().getOrCreate(realSessionId2, ConversationTypeEnum.PRIVATE);
-        convo.set({ isApproved: true });
+        await convo.setIsApproved(true, false);
+
         const real = await findCachedBlindedMatchOrLookItUp(
           knownBlindingMatch.blindedId,
           knownBlindingMatch.serverPublicKey,
@@ -544,7 +545,7 @@ describe('knownBlindedKeys', () => {
           knownBlindingMatch.realSessionId,
           ConversationTypeEnum.PRIVATE
         );
-        convo.set({ isApproved: false });
+        await convo.setIsApproved(false, false);
         const real = await findCachedBlindedMatchOrLookItUp(
           knownBlindingMatch.blindedId,
           knownBlindingMatch.serverPublicKey,
@@ -562,7 +563,8 @@ describe('knownBlindedKeys', () => {
           knownBlindingMatch.realSessionId,
           ConversationTypeEnum.GROUP
         );
-        convo.set({ isApproved: false });
+        await convo.setIsApproved(false, false);
+
         const real = await findCachedBlindedMatchOrLookItUp(
           knownBlindingMatch.blindedId,
           knownBlindingMatch.serverPublicKey,

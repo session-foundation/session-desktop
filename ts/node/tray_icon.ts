@@ -40,18 +40,6 @@ export function createTrayIcon(getMainWindow: () => BrowserWindow | null) {
     trayAny.updateContextMenu();
   };
 
-  trayAny.showWindow = () => {
-    const mainWindow = getMainWindow();
-    if (mainWindow) {
-      if (!mainWindow.isVisible()) {
-        mainWindow.show();
-      }
-
-      trayAny.forceOnTop(mainWindow);
-    }
-    trayAny.updateContextMenu();
-  };
-
   trayAny.updateContextMenu = () => {
     const mainWindow = getMainWindow();
 
@@ -75,7 +63,7 @@ export function createTrayIcon(getMainWindow: () => BrowserWindow | null) {
     trayAny.setContextMenu(trayContextMenu);
   };
 
-  tray.on('click', trayAny.showWindow);
+  tray.on('click', trayAny.toggleWindowVisibility);
 
   tray.setToolTip(LOCALE_DEFAULTS.app_name);
   trayAny.updateContextMenu();

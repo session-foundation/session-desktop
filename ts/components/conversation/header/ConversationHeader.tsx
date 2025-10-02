@@ -6,7 +6,7 @@ import styled from 'styled-components';
 
 import {
   use05GroupMembers,
-  useConversationUsername,
+  useConversationUsernameWithFallback,
   useIsIncomingRequest,
   useIsOutgoingRequest,
 } from '../../../hooks/useParamSelector';
@@ -31,6 +31,16 @@ import { Constants } from '../../../session';
 import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useShowConversationSettingsFor';
 import { sectionActions } from '../../../state/ducks/section';
 
+const StyledConversationHeader = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: var(--main-view-header-height);
+  position: relative;
+  padding: 0px var(--margins-lg) 0px var(--margins-sm);
+  background: var(--background-primary-color);
+`;
+
 export const ConversationHeaderWithDetails = () => {
   const isSelectionMode = useIsMessageSelectionMode();
   const selectedConvoKey = useSelectedConversationKey();
@@ -45,7 +55,7 @@ export const ConversationHeaderWithDetails = () => {
   }
 
   return (
-    <div className="module-conversation-header">
+    <StyledConversationHeader>
       <Flex
         $container={true}
         $justifyContent={'flex-end'}
@@ -82,7 +92,7 @@ export const ConversationHeaderWithDetails = () => {
       </Flex>
 
       {isSelectionMode && <SelectionOverlay />}
-    </div>
+    </StyledConversationHeader>
   );
 };
 
@@ -128,7 +138,7 @@ function RecreateGroupButton() {
   const isLegacyGroup = useSelectedIsLegacyGroup();
   const selectedConvo = useSelectedConversationKey();
 
-  const name = useConversationUsername(selectedConvo);
+  const name = useConversationUsernameWithFallback(true, selectedConvo);
   const members = use05GroupMembers(selectedConvo);
 
   const weAreAdmin = useSelectedWeAreAdmin();
@@ -154,9 +164,7 @@ function RecreateGroupButton() {
                 ConversationTypeEnum.PRIVATE
               );
               if (!memberConvo.get('active_at')) {
-                memberConvo.set({
-                  active_at: Constants.CONVERSATION.LAST_JOINED_FALLBACK_TIMESTAMP,
-                });
+                memberConvo.setActiveAt(Constants.CONVERSATION.LAST_JOINED_FALLBACK_TIMESTAMP);
                 await memberConvo.commit();
               }
               /* eslint-enable no-await-in-loop */
