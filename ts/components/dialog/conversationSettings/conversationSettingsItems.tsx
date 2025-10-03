@@ -287,7 +287,7 @@ export function ChangeCommunityPermissionsButton({ conversationId }: WithConvoId
       iconElement={
         <PanelIconSessionLegacyIcon iconType={'padlock'} iconColor="var(--text-primary-color" />
       }
-      text={tr('groupChangePermissions').toString()}
+      text={{ token: 'groupChangePermissions' }}
       onClick={cb}
       dataTestId="edit-group-name"
     />

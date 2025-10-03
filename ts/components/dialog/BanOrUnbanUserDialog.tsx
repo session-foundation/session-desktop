@@ -227,7 +227,7 @@ export const ServerBanOrUnBanUserDialog = (props: {
   const [inputBoxValue, setInputBoxValue] = useState('');
   const [inProgress, setInProgress] = useState(false);
 
-  const displayName = useConversationUsername(pubkey);
+  const displayName = useConversationUsernameWithFallback(true, pubkey);
 
   const inputTextToDisplay =
     !!pubkey && displayName ? `${displayName} ${PubKey.shorten(pubkey)}` : undefined;
@@ -272,10 +272,11 @@ export const ServerBanOrUnBanUserDialog = (props: {
   };
   return (
     <SessionWrapperModal
+      modalId='serverBanOrUnbanUserModal'
       headerChildren={<ModalBasicHeader title={title} />}
       onClose={onClose}
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
             buttonType={SessionButtonType.Simple}
             onClick={banOrUnBanUser}

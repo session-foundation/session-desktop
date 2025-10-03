@@ -10,7 +10,6 @@ import { THEME_GLOBALS } from '../../themes/globals';
 import { ModalBasicHeader, SessionWrapperModal } from '../SessionWrapperModal';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SpacerMD } from '../basic/Text';
-import { SessionToggleWithDescription } from '../settings/SessionSettingListItem';
 import { OpenGroupData } from '../../data/opengroups';
 import {
   OpenGroupRoomPermissionType,
@@ -18,6 +17,8 @@ import {
 } from '../../session/apis/open_group_api/sogsv3/sogsV3RoomPermissions';
 import { ConvoHub } from '../../session/conversations';
 import { tr } from '../../localization/localeTools';
+import { PanelToggleButton } from '../buttons/panel/PanelToggleButton';
+import { PanelButtonTextWithSubText } from '../buttons/panel/PanelButton';
 
 const StyledErrorMessage = styled(motion.p)`
   text-align: center;
@@ -93,6 +94,7 @@ export class UpdateGroupPermissionsDialog extends Component<Props, State> {
 
     return (
       <SessionWrapperModal
+        modalId='groupPermissionsModal'
         headerChildren={<ModalBasicHeader title={tr('groupChangePermissions')} />}
         onClose={() => this.closeDialog()}
       >
@@ -122,29 +124,61 @@ export class UpdateGroupPermissionsDialog extends Component<Props, State> {
           you can set new values below regardless.
         </p>
 
-        <SessionToggleWithDescription
-          title="Enable room visibility"
-          description="Anyone can see the room (+a)"
+        <PanelToggleButton
+          textElement={
+            <PanelButtonTextWithSubText
+              text={'Enable room visibility'}
+              subText={'Anyone can see the room (+a)'}
+              textDataTestId='test-ignore'
+              subTextDataTestId='test-ignore'
+            />
+          }
           active={this.state.default_accessible}
-          onClickToggle={() => this.onPermissionChanged('default_accessible')}
+          onClick={async () => this.onPermissionChanged('default_accessible')}
+          rowDataTestId='test-ignore'
+          toggleDataTestId='test-ignore'
         />
-        <SessionToggleWithDescription
-          title="Enable reading"
-          description="Anyone can read messages (+r)"
+        <PanelToggleButton
+          textElement={
+            <PanelButtonTextWithSubText
+              text={'Enable reading'}
+              subText={'Anyone can read messages (+r)'}
+              textDataTestId='test-ignore'
+              subTextDataTestId='test-ignore'
+            />
+          }
           active={this.state.default_read}
-          onClickToggle={() => this.onPermissionChanged('default_read')}
+          onClick={async () => this.onPermissionChanged('default_read')}
+          rowDataTestId='test-ignore'
+          toggleDataTestId='test-ignore'
         />
-        <SessionToggleWithDescription
-          title="Enable writing"
-          description="Anyone can send messages (+w)"
+        <PanelToggleButton
+          textElement={
+            <PanelButtonTextWithSubText
+              text={'Enable writing'}
+              subText={'Anyone can send messages (+w)'}
+              textDataTestId='test-ignore'
+              subTextDataTestId='test-ignore'
+            />
+          }
           active={this.state.default_write}
-          onClickToggle={() => this.onPermissionChanged('default_write')}
+          onClick={async () => this.onPermissionChanged('default_write')}
+          rowDataTestId='test-ignore'
+          toggleDataTestId='test-ignore'
         />
-        <SessionToggleWithDescription
-          title="Enable uploads"
-          description="Anyone can upload files (+u)"
+        <PanelToggleButton
+          textElement={
+            <PanelButtonTextWithSubText
+              text={'Enable uploads'}
+              subText={'Anyone can upload files (+u)'}
+              textDataTestId='test-ignore'
+              subTextDataTestId='test-ignore'
+            />
+          }
           active={this.state.default_upload}
-          onClickToggle={() => this.onPermissionChanged('default_upload')}
+          onClick={async () => this.onPermissionChanged('default_upload')}
+          rowDataTestId='test-ignore'
+          toggleDataTestId='test-ignore'
         />
 
         <div className="session-modal__button-group">

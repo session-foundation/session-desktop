@@ -108,6 +108,7 @@ export type ModalId =
   | 'confirmModal'
   | 'inviteContactModal'
   | 'banOrUnbanUserModal'
+  | 'serverBanOrUnbanUserModal'
   | 'blockOrUnblockModal'
   | 'removeModeratorsModal'
   | 'addModeratorsModal'

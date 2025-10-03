@@ -401,6 +401,7 @@ declare module 'react' {
     | 'empty-msg-view-welcome'
     | 'last-updated-timestamp'
     | 'account-id-pill'
+    | 'test-ignore'
     // Once the whole app have datatestId when required, this `invalid-data-testid` will be removed
     | 'invalid-data-testid';
 
