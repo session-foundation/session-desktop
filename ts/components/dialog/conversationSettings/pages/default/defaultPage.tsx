@@ -1,3 +1,4 @@
+import type { SessionDataTestId } from 'react';
 import {
   useIsGroupV2,
   useIsPrivate,
@@ -7,10 +8,9 @@ import {
 import type { WithConvoId } from '../../../../../session/types/with';
 import { Flex } from '../../../../basic/Flex';
 import { useWeAreCommunityAdminOrModerator } from '../../../../../state/selectors/conversations';
-import { Localizer } from '../../../../basic/Localizer';
 import { SpacerSM } from '../../../../basic/Text';
 import { PanelButtonGroup } from '../../../../buttons';
-import { PanelLabel } from '../../../../buttons/PanelButton';
+import { PanelLabelWithDescription } from '../../../../buttons/panel/PanelButton';
 import { useShowAttachments } from '../../../../menuAndSettingsHooks/useShowAttachments';
 import { ModalBasicHeader, SessionWrapperModal } from '../../../../SessionWrapperModal';
 import { ConversationSettingsHeader } from '../../conversationSettingsHeader';
@@ -41,13 +41,13 @@ import {
 } from '../../conversationSettingsItems';
 import { useCloseActionFromPage, useTitleFromPage } from '../conversationSettingsHooks';
 import type { ConversationSettingsModalState } from '../../../../../state/ducks/modalDialog';
+import { LUCIDE_ICONS_UNICODE } from '../../../../icon/lucide';
+import { SessionLucideIconButton } from '../../../../icon/SessionIconButton';
+import { useChangeNickname } from '../../../../menuAndSettingsHooks/useChangeNickname';
+import { useShowUpdateGroupOrCommunityDetailsCb } from '../../../../menuAndSettingsHooks/useShowUpdateGroupNameDescription';
 
 function AdminSettingsTitle() {
-  return (
-    <PanelLabel>
-      <Localizer token="adminSettings" />
-    </PanelLabel>
-  );
+  return <PanelLabelWithDescription title={{ token: 'adminSettings' }} />;
 }
 
 function GroupV2AdminActions({ conversationId }: WithConvoId) {
@@ -227,6 +227,46 @@ function DefaultConversationSettingsPage(props: WithConvoId) {
   return <DefaultPageForGroupV2 conversationId={props.conversationId} />;
 }
 
+function EditGenericButton({
+  cb,
+  dataTestId,
+}: {
+  cb: (() => void) | null;
+  dataTestId: SessionDataTestId;
+}) {
+  if (!cb) {
+    return null;
+  }
+
+  return (
+    <SessionLucideIconButton
+      unicode={LUCIDE_ICONS_UNICODE.PENCIL}
+      iconSize="medium"
+      onClick={cb}
+      dataTestId={dataTestId}
+      iconColor="var(--text-primary-color)"
+    />
+  );
+}
+
+function ChangeNicknameButton({ conversationId }: WithConvoId) {
+  const changeNicknameCb = useChangeNickname(conversationId);
+
+  return <EditGenericButton cb={changeNicknameCb} dataTestId="set-nickname-confirm-button" />;
+}
+
+function UpdateGroupOrCommunityButton({ conversationId }: WithConvoId) {
+  const updateNameDescCb = useShowUpdateGroupOrCommunityDetailsCb({ conversationId });
+  const isPublic = useIsPublic(conversationId);
+
+  return (
+    <EditGenericButton
+      cb={updateNameDescCb}
+      dataTestId={isPublic ? 'edit-community-details' : 'edit-group-name'}
+    />
+  );
+}
+
 export function DefaultConversationSettingsModal(props: ConversationSettingsModalState) {
   const onClose = useCloseActionFromPage(props);
   const title = useTitleFromPage(props?.settingsModalPage);
@@ -237,9 +277,23 @@ export function DefaultConversationSettingsModal(props: ConversationSettingsModa
 
   return (
     <SessionWrapperModal
-      headerChildren={<ModalBasicHeader title={title} showExitIcon={true} bigHeader={true} />}
+      modalId="conversationSettingsModal"
+      headerChildren={
+        <ModalBasicHeader
+          title={title}
+          showExitIcon={true}
+          bigHeader={true}
+          extraRightButton={
+            <>
+              <ChangeNicknameButton conversationId={props.conversationId} />
+              <UpdateGroupOrCommunityButton conversationId={props.conversationId} />
+            </>
+          }
+        />
+      }
       onClose={onClose}
       shouldOverflow={true}
+      topAnchor="5vh"
       // Note: we do not set a min/max width here as we want the modal to be fixed
       // (no matter the nickname/display name of the shown conversation).
       // We do this to have some consistency with the width of the modals that open on top of this one

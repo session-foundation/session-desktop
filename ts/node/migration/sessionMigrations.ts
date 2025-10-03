@@ -119,6 +119,8 @@ const LOKI_SCHEMA_VERSIONS: Array<
   updateToSessionSchemaVersion44,
   updateToSessionSchemaVersion45,
   updateToSessionSchemaVersion46,
+  updateToSessionSchemaVersion47,
+  updateToSessionSchemaVersion48,
 ];
 
 function updateToSessionSchemaVersion1(currentVersion: number, db: BetterSqlite3.Database) {
@@ -1346,9 +1348,9 @@ function updateToSessionSchemaVersion31(currentVersion: number, db: BetterSqlite
       userProfileWrapper.setNameTruncated(ourDbName);
       userProfileWrapper.setPriority(ourConvoPriority);
       if (ourDbProfileUrl && !isEmpty(ourDbProfileKey)) {
-        userProfileWrapper.setProfilePic({ key: ourDbProfileKey, url: ourDbProfileUrl });
+        userProfileWrapper.setNewProfilePic({ key: ourDbProfileKey, url: ourDbProfileUrl });
       } else {
-        userProfileWrapper.setProfilePic({ key: null, url: null });
+        userProfileWrapper.setNewProfilePic({ key: null, url: null });
       }
 
       MIGRATION_HELPERS.V31.insertContactIntoContactWrapper(
@@ -2151,6 +2153,47 @@ async function updateToSessionSchemaVersion46(currentVersion: number, db: Better
           ALTER TABLE ${CONVERSATIONS_TABLE} ADD COLUMN fallbackAvatarInProfile TEXT;
           ALTER TABLE ${CONVERSATIONS_TABLE} DROP COLUMN avatarImageId;
          `);
+    writeSessionSchemaVersion(targetVersion, db);
+  })();
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
+}
+
+async function updateToSessionSchemaVersion47(currentVersion: number, db: BetterSqlite3.Database) {
+  const targetVersion = 47;
+  if (currentVersion >= targetVersion) {
+    return;
+  }
+  console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
+
+  db.transaction(() => {
+    db.exec(`
+          ALTER TABLE ${CONVERSATIONS_TABLE} DROP COLUMN isKickedFromGroup;
+         `);
+
+    db.exec(`
+        UPDATE ${MESSAGES_TABLE} SET
+        json = json_remove(json, '$.group', '$.isPublic')
+      `);
+
+    writeSessionSchemaVersion(targetVersion, db);
+  })();
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
+}
+
+async function updateToSessionSchemaVersion48(currentVersion: number, db: BetterSqlite3.Database) {
+  const targetVersion = 48;
+  if (currentVersion >= targetVersion) {
+    return;
+  }
+  console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
+
+  db.transaction(() => {
+    db.exec(`
+          ALTER TABLE ${CONVERSATIONS_TABLE} ADD COLUMN profileUpdatedSeconds INTEGER;
+         `);
+
     writeSessionSchemaVersion(targetVersion, db);
   })();
 

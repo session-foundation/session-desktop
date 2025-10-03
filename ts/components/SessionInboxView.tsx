@@ -75,9 +75,10 @@ async function createSessionInboxStore() {
       conversationLookup: makeLookup(conversations, 'id'),
     },
     user: {
-      ourDisplayNameInProfile: UserUtils.getOurProfile()?.displayName || '',
+      ourDisplayNameInProfile: (await UserUtils.getOurProfile()).displayName || '',
       ourNumber: UserUtils.getOurPubKeyStrFromCache(),
       uploadingNewAvatarCurrentUser: false,
+      uploadingNewAvatarCurrentUserFailed: false,
     },
     section: initialSectionState,
     defaultRooms: initialDefaultRoomState,
@@ -133,6 +134,7 @@ async function setupLeftPane(forceUpdateInboxComponent: () => void) {
 
 export const SessionInboxView = () => {
   const update = useUpdate();
+
   // run only on mount
   useMount(() => {
     void setupLeftPane(update);

@@ -9,14 +9,16 @@ import { SpacerLG, SpacerMD, SpacerSM } from '../../basic/Text';
 import { HelpDeskButton } from '../../buttons';
 import { CopyToClipboardButton } from '../../buttons/CopyToClipboardButton';
 import { StyledLeftPaneOverlay } from './OverlayMessage';
-import { SessionButtonColor } from '../../basic/SessionButton';
+import { SessionButtonColor, SessionButtonType } from '../../basic/SessionButton';
 import { sectionActions } from '../../../state/ducks/section';
 import { LucideIcon } from '../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
-import { SessionIDNonEditable } from '../../basic/YourSessionIDPill';
 import { tr } from '../../../localization/localeTools';
+import { SessionIDNotEditable } from '../../basic/SessionIdNotEditable';
 
 const StyledHeadingContainer = styled(Flex)`
+  gap: var(--margins-xs);
+
   .session-icon-button {
     border: 1px solid var(--text-primary-color);
     border-radius: 9999px;
@@ -47,7 +49,7 @@ const StyledDescription = styled.div`
   padding: 0 var(--margins-sm);
 `;
 
-const StyledButtonerContainer = styled.div`
+const StyledButtonContainer = styled.div`
   .session-button {
     width: 160px;
     height: 41px;
@@ -78,20 +80,28 @@ export const OverlayInvite = () => {
       {!idCopied ? (
         <>
           <Flex $container={true} width={'100%'} $justifyContent="center" $alignItems="center">
-            <SessionIDNonEditable dataTestId="your-account-id" sessionId={ourSessionID} />
+            <SessionIDNotEditable
+              dataTestId="your-account-id"
+              sessionId={ourSessionID}
+              displayType="2lines"
+              tooltipNode={null}
+              // we need the font size to be smaller here (not enough space in the overlay)
+              style={{ color: 'var(--text-primary-color)', fontSize: 'var(--font-size-sm)' }}
+            />
           </Flex>
           <SpacerMD />
           <StyledDescription>{tr('accountIdCopyDescription')}</StyledDescription>
           <SpacerLG />
-          <StyledButtonerContainer>
+          <StyledButtonContainer>
             <CopyToClipboardButton
+              buttonType={SessionButtonType.Outline}
               buttonColor={SessionButtonColor.PrimaryDark}
               copyContent={ourSessionID}
               onCopyComplete={() => setIdCopied(true)}
               hotkey={true}
               dataTestId="copy-button-account-id"
             />
-          </StyledButtonerContainer>
+          </StyledButtonContainer>
         </>
       ) : (
         <>

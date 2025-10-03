@@ -179,6 +179,7 @@ class GroupPendingRemovalsJob extends PersistedJob<GroupPendingRemovalsPersisted
           messageHashes: [],
           sodium: await getSodiumRenderer(),
           secretKey: group.secretKey,
+          userProfile: null,
         });
         storeRequests = await StoreGroupRequestFactory.makeGroupMessageSubRequest(
           [deleteContentMsg],

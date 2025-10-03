@@ -28,6 +28,7 @@ import { Reactions } from '../util/reactions';
 import { GroupV2Receiver } from './groupv2/handleGroupV2Message';
 import { ConversationTypeEnum } from '../models/types';
 import { ed25519Str } from '../session/utils/String';
+import { Timestamp } from '../types/timestamp/timestamp';
 
 function cleanAttachment(attachment: SignalService.IAttachmentPointer) {
   return {
@@ -228,12 +229,15 @@ export async function handleSwarmDataMessage({
     cleanDataMessage.profile &&
     cleanDataMessage.profileKey?.length
   ) {
-    await ProfileManager.updateProfileOfContact(
-      senderConversationModel.id,
-      cleanDataMessage.profile.displayName,
-      cleanDataMessage.profile.profilePicture,
-      cleanDataMessage.profileKey
-    );
+    await ProfileManager.updateProfileOfContact({
+      pubkey: senderConversationModel.id,
+      displayName: cleanDataMessage.profile.displayName,
+      profileUrl: cleanDataMessage.profile.profilePicture,
+      profileKey: cleanDataMessage.profileKey,
+      profileUpdatedAtSeconds: new Timestamp({
+        value: cleanDataMessage.profile.lastProfileUpdateSeconds ?? 0,
+      }).seconds(),
+    });
   }
 
   if (!messageHasVisibleContent(cleanDataMessage)) {
@@ -342,7 +346,7 @@ async function handleSwarmMessage(
   void convoToAddMessageTo.queueJob(async () => {
     // this call has to be made inside the queueJob!
     // We handle reaction DataMessages separately
-    if (!msgModel.get('isPublic') && rawDataMessage.reaction) {
+    if (!convoToAddMessageTo.isPublic() && rawDataMessage.reaction) {
       await Reactions.handleMessageReaction({
         reaction: rawDataMessage.reaction,
         sender: msgModel.get('source'),

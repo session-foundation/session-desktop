@@ -2,9 +2,10 @@ import { ContentMessage } from '../..';
 import { SignalService } from '../../../../../protobuf';
 import { MessageParams } from '../../Message';
 
-interface ReadReceiptMessageParams extends MessageParams {
+type ReadReceiptMessageParams = MessageParams & {
   timestamps: Array<number>;
-}
+};
+
 export class ReadReceiptMessage extends ContentMessage {
   public readonly timestamps: Array<number>;
 

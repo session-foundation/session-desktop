@@ -14,6 +14,7 @@ import { SessionIconSize } from '../icon';
 import { AriaLabels } from '../../util/hardcodedAriaLabels';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { useHotkey } from '../../hooks/useHotkey';
 
 type Props = {
   contentType: MIME.MIMEType | undefined;
@@ -134,7 +135,7 @@ interface IconButtonProps {
     | LUCIDE_ICONS_UNICODE.CHEVRON_RIGHT
     | LUCIDE_ICONS_UNICODE.CHEVRON_LEFT
     | LUCIDE_ICONS_UNICODE.X
-    | LUCIDE_ICONS_UNICODE.DOWNLOAD;
+    | LUCIDE_ICONS_UNICODE.ARROW_DOWN_TO_LINE;
 }
 
 const IconButton = ({ onClick, unicode }: IconButtonProps) => {
@@ -148,7 +149,7 @@ const IconButton = ({ onClick, unicode }: IconButtonProps) => {
   // default to huge, only download is bigger
   let iconSize: SessionIconSize = 'huge';
   switch (unicode) {
-    case LUCIDE_ICONS_UNICODE.DOWNLOAD:
+    case LUCIDE_ICONS_UNICODE.ARROW_DOWN_TO_LINE:
       iconSize = 'huge2';
       break;
     default:
@@ -170,7 +171,7 @@ const IconButton = ({ onClick, unicode }: IconButtonProps) => {
 
 const IconButtonPlaceholder = () => <div style={styles.iconButtonPlaceholder} />;
 
-export const LightboxObject = ({
+const LightboxObject = ({
   objectURL,
   contentType,
   renderedRef,
@@ -264,6 +265,12 @@ export const Lightbox = (props: Props) => {
     dispatch(updateLightBoxOptions(null));
   };
 
+  useHotkey('Escape', e => {
+    e.stopPropagation();
+    e.preventDefault();
+    dispatch(updateLightBoxOptions(null));
+  });
+
   const handleClose = () => {
     if (onClose) {
       onClose();
@@ -279,11 +286,11 @@ export const Lightbox = (props: Props) => {
   };
 
   return (
-    <div style={styles.container as any} role="dialog" onClick={onContainerClick}>
-      <div style={styles.mainContainer as any}>
+    <div style={styles.container} role="dialog" onClick={onContainerClick}>
+      <div style={styles.mainContainer}>
         <div style={styles.controlsOffsetPlaceholder} />
         <div style={styles.objectParentContainer} role="button">
-          <div style={styles.objectContainer as any}>
+          <div style={styles.objectContainer}>
             {!isUndefined(contentType) ? (
               <LightboxObject
                 objectURL={objectURL}
@@ -292,17 +299,17 @@ export const Lightbox = (props: Props) => {
                 onObjectClick={onObjectClick}
               />
             ) : null}
-            {caption ? <div style={styles.caption as any}>{caption}</div> : null}
+            {caption ? <div style={styles.caption}>{caption}</div> : null}
           </div>
         </div>
-        <div style={styles.controls as any}>
+        <div style={styles.controls}>
           <Flex $container={true}>
             <IconButton unicode={LUCIDE_ICONS_UNICODE.X} onClick={handleClose} />
           </Flex>
 
           {onSave ? (
             <IconButton
-              unicode={LUCIDE_ICONS_UNICODE.DOWNLOAD}
+              unicode={LUCIDE_ICONS_UNICODE.ARROW_DOWN_TO_LINE}
               onClick={onSave}
               style={styles.saveButton}
             />

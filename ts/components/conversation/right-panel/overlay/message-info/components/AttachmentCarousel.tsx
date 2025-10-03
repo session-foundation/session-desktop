@@ -137,6 +137,7 @@ export const AttachmentCarousel = (props: Props) => {
           style={{
             backgroundColor: 'var(--modal-background-color)',
             borderRadius: '50px',
+            padding: '6px',
           }}
         />
       </ImageContainer>

@@ -29,7 +29,6 @@ import {
   ModalActionsContainer,
   SessionWrapperModal,
 } from '../SessionWrapperModal';
-import { useHotkey } from '../../hooks/useHotkey';
 import { searchActions } from '../../state/ducks/search';
 import { ToastUtils } from '../../session/utils';
 import { StyledContactListInModal } from '../list/StyledContactList';
@@ -62,6 +61,7 @@ async function submitForOpenGroup(convoId: string, pubkeys: Array<string>) {
 
       if (privateConvo) {
         void privateConvo.sendMessage({
+          conversationId: convoId,
           body: '',
           attachments: undefined,
           groupInvitation,
@@ -97,7 +97,6 @@ function ContactsToInvite({
         onSelect={selectContact}
         onUnselect={unselectContact}
         disableBg={true}
-        maxNameWidth="100%"
       />
     ))
   ) : (
@@ -165,7 +164,6 @@ const InviteContactsDialogInner = (props: Props) => {
     closeDialog();
     dispatch(updateGroupMembersModal({ conversationId }));
   };
-  useHotkey('Escape', closeDialog);
 
   useKey((event: KeyboardEvent) => {
     return event.key === 'Enter';
@@ -175,11 +173,12 @@ const InviteContactsDialogInner = (props: Props) => {
 
   return (
     <SessionWrapperModal
+      modalId="inviteContactModal"
       onClose={closeDialog}
       headerChildren={<ModalBasicHeader title={tr('membersInvite')} showExitIcon={true} />}
       modalDataTestId="invite-contacts-dialog"
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
             text={tr('membersInviteTitle')}
             buttonType={SessionButtonType.Simple}

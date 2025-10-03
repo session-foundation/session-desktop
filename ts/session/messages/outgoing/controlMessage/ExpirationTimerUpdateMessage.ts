@@ -3,9 +3,9 @@ import { PubKey } from '../../../types';
 import { DataMessage } from '../DataMessage';
 import { ExpirableMessageParams } from '../ExpirableMessage';
 
-interface ExpirationTimerUpdateMessageParams extends ExpirableMessageParams {
+type ExpirationTimerUpdateMessageParams = ExpirableMessageParams & {
   syncTarget?: string | PubKey;
-}
+};
 
 // NOTE legacy messages used a data message for the expireTimer.
 // The new ones use properties on the Content Message

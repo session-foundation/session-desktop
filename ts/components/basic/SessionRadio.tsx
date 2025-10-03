@@ -1,4 +1,4 @@
-import { ChangeEvent, SessionDataTestId, type MouseEventHandler } from 'react';
+import { SessionDataTestId, type MouseEventHandler } from 'react';
 
 import styled, { CSSProperties } from 'styled-components';
 import { Flex } from './Flex';
@@ -31,14 +31,18 @@ const StyledRadioOuter = styled.div<{
     background: ${props =>
       props.$disabled
         ? 'var(--disabled-color)'
-        : 'radial-gradient(circle, var(--primary-color) 0%, var(--primary-color) 60%, transparent 60%, transparent 100%)'};
+        : 'radial-gradient(circle, var(--primary-color) 0%, var(--primary-color) 53%, transparent 60%, transparent 100%)'};
     opacity: ${props => (props.$selected ? 1 : 0)};
     transition: opacity 0.3s ease;
     pointer-events: none;
   }
 `;
 
-function RadioButton({
+/**
+ * The dot part of the radio button. Unless for the Theme switcher, it shouldn't be used directly.
+ * Instead, use `SessionRadio`.
+ */
+export function RadioDot({
   disabled,
   onClick,
   selected,
@@ -143,7 +147,7 @@ export const SessionRadio = (props: SessionRadioProps) => {
           </StyledLabel>
         ) : null}
 
-        <RadioButton
+        <RadioDot
           selected={active}
           onClick={clickHandler}
           disabled={disabled}
@@ -152,49 +156,5 @@ export const SessionRadio = (props: SessionRadioProps) => {
         />
       </Flex>
     </StyledContainer>
-  );
-};
-
-/**
- * This is slightly different that the classic SessionRadio as this one has
- *  - no padding between the selected background and the border,
- *  - they all have a background color (even when not selected), but the border is present on the selected one
- *
- * Keeping it here so we don't have to export
- */
-export const SessionRadioPrimaryColors = (props: {
-  value: string;
-  active: boolean;
-  onClick: (value: string) => void;
-  ariaLabel: string;
-  color: string; // by default, we use the theme accent color but for the settings screen we need to be able to force it
-}) => {
-  const { value, active, onClick, color, ariaLabel } = props;
-
-  function clickHandler(e: ChangeEvent<any>) {
-    e.stopPropagation();
-    onClick(value);
-  }
-
-  // this component has no padding between the selected background and the border
-  const diameterRadioBorder = 26;
-
-  const overriddenColorsVars = {
-    '--primary-color': color,
-    '--text-primary-color': active ? undefined : 'transparent',
-  } as React.CSSProperties;
-
-  return (
-    <Flex $container={true} padding="0 0 5px 0">
-      <RadioButton
-        selected={true}
-        onClick={clickHandler}
-        disabled={false}
-        dataTestId={undefined}
-        diameterRadioBorder={diameterRadioBorder}
-        style={overriddenColorsVars}
-        ariaLabel={ariaLabel}
-      />
-    </Flex>
   );
 };

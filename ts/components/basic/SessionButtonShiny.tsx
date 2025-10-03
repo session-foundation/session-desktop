@@ -1,9 +1,15 @@
 import styled, { keyframes, type CSSProperties } from 'styled-components';
 import { SessionButton, type SessionButtonProps, StyledBaseButton } from './SessionButton';
 
+/**
+ * Note: we want 0.6s shine + 3s pause
+ */
 const shine = keyframes`
-  0% {
+ 0% {
     transform: translateX(-100%);
+  }
+  16.6% {
+    transform: translateX(100%);
   }
   100% {
     transform: translateX(100%);
@@ -19,7 +25,6 @@ const ShinyButtonContainer = styled.div`
     width: 100%;
     height: 100%;
     background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-    transform: translateX(-100%);
     animation: ${shine} 0.6s ease-in-out infinite;
     animation-delay: 0s;
     animation-iteration-count: infinite;

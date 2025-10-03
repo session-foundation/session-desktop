@@ -20,7 +20,7 @@ import { ExpirableReadableMessage } from './message/message-item/ExpirableReadab
 import { ConversationInteraction } from '../../interactions';
 import { ConvoHub } from '../../session/conversations';
 import { updateConfirmModal } from '../../state/ducks/modalDialog';
-import { Localizer, type LocalizerProps } from '../basic/Localizer';
+import { Localizer } from '../basic/Localizer';
 import { SessionButtonColor } from '../basic/SessionButton';
 import { SessionIcon } from '../icon';
 import { getTimerNotificationStr } from '../../models/timerNotifications';
@@ -33,7 +33,7 @@ import {
   useMessageExpirationUpdateTimespanSeconds,
   useMessageExpirationUpdateTimespanText,
 } from '../../state/selectors';
-import { tr } from '../../localization/localeTools';
+import { tr, type TrArgs } from '../../localization/localeTools';
 
 const FollowSettingButton = styled.button`
   color: var(--primary-color);
@@ -55,16 +55,14 @@ function useFollowSettingsButtonClick({ messageId }: WithMessageId) {
         ? tr('disappearingMessagesTypeRead')
         : tr('disappearingMessagesTypeSent');
 
-    const i18nMessage: LocalizerProps = disabled
+    const i18nMessage: TrArgs = disabled
       ? {
           token: 'disappearingMessagesFollowSettingOff',
         }
       : {
           token: 'disappearingMessagesFollowSettingOn',
-          args: {
-            time: timespanText,
-            disappearing_messages_type: localizedMode,
-          },
+          time: timespanText,
+          disappearing_messages_type: localizedMode,
         };
 
     const okText = tr('confirm');

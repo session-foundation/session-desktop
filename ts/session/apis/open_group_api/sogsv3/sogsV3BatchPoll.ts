@@ -13,6 +13,14 @@ import {
 import { addJsonContentTypeToHeaders } from './sogsV3SendMessage';
 import { OpenGroupPermissionType } from './sogsV3UserPermissions';
 import { hasDuplicates } from '../../../../shared/array_utils';
+import type {
+  WithImageId,
+  WithMessageId,
+  WithRoomDescription,
+  WithRoomId,
+  WithRoomName,
+  WithSessionIds,
+} from './sogsWith';
 
 type BatchFetchRequestOptions = {
   method: 'POST' | 'PUT' | 'GET' | 'DELETE';
@@ -127,10 +135,9 @@ export function batchFirstSubIsSuccess(response?: BatchSogsResponse | null): boo
 export type SubRequestCapabilitiesType = { type: 'capabilities' };
 
 export type SubRequestMessagesObjectType =
-  | {
-      roomId: string;
+  | (WithRoomId & {
       sinceSeqNo?: number;
-    }
+    })
   | undefined;
 
 export type SubRequestMessagesType = {
@@ -140,8 +147,7 @@ export type SubRequestMessagesType = {
 
 export type SubRequestPollInfoType = {
   type: 'pollInfo';
-  pollInfo: {
-    roomId: string;
+  pollInfo: WithRoomId & {
     infoUpdated?: number;
   };
 };
@@ -170,19 +176,16 @@ export type SubRequestOutboxType = {
 
 export type SubRequestDeleteMessageType = {
   type: 'deleteMessage';
-  deleteMessage: {
-    messageId: number;
-    roomId: string;
-  };
+  deleteMessage: WithRoomId & WithMessageId;
 };
 
 export type SubRequestAddRemoveModeratorType = {
   type: 'addRemoveModerators';
-  addRemoveModerators: {
-    type: 'add_mods' | 'remove_mods';
-    sessionIds: Array<string>; // can be blinded id or not
-    roomId: string; // for now we support only granting/removing mods to single rooms from session
-  };
+  addRemoveModerators: WithSessionIds & // can be blinded id or not
+    WithRoomId & {
+      // for now we support only granting/removing mods to single rooms from session
+      type: 'add_mods' | 'remove_mods';
+    };
 };
 
 export type SubRequestBanUnbanUserType = {
@@ -212,12 +215,13 @@ export type SubRequestDeleteAllUserServerPostsType = {
 
 export type SubRequestUpdateRoomType = {
   type: 'updateRoom';
-  updateRoom: {
-    roomId: string;
-    // imageId has to be a number to be understood by the sogs
-    imageId: number; // the fileId uploaded to this sogs and to be referenced as preview/room image
-    // name and other options are unsupported for now
-  };
+  updateRoom: WithRoomId &
+    Partial<
+      WithImageId &
+        // the fileId uploaded to this sogs and to be referenced as preview/room
+        WithRoomName &
+        WithRoomDescription
+    >;
 };
 
 export type SubRequestUpdateRoomPermsType = {
@@ -421,10 +425,24 @@ const makeBatchRequestPayload = (
         path: `/rooms/all/${options.deleteAllUserPosts.sessionId}`,
       };
     case 'updateRoom':
+      if (
+        !options.updateRoom.imageId &&
+        !options.updateRoom.roomName &&
+        !options.updateRoom.roomDescription
+      ) {
+        throw new Error('updateRoom requires at least one of imageId, roomName or roomDescription');
+      }
+
+      const json = {
+        image: options.updateRoom.imageId,
+        name: options.updateRoom.roomName,
+        description: options.updateRoom.roomDescription,
+      };
+
       return {
         method: 'PUT',
         path: `/room/${options.updateRoom.roomId}`,
-        json: { image: options.updateRoom.imageId },
+        json,
       };
     case 'updateRoomPerms':
       return {

@@ -10,9 +10,9 @@ import { ExpirableMessage, ExpirableMessageParams } from '../ExpirableMessage';
 import { NetworkTime } from '../../../../util/NetworkTime';
 import { MessageQueue } from '../../../sending';
 
-interface DataExtractionNotificationMessageParams extends ExpirableMessageParams {
+type DataExtractionNotificationMessageParams = ExpirableMessageParams & {
   referencedAttachmentTimestamp: number;
-}
+};
 
 export class DataExtractionNotificationMessage extends ExpirableMessage {
   public readonly referencedAttachmentTimestamp: number;

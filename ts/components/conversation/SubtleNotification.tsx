@@ -2,9 +2,9 @@ import { SessionDataTestId } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 import {
+  useConversationUsernameWithFallback,
   useIsIncomingRequest,
   useIsOutgoingRequest,
-  useNicknameOrProfileNameOrShortenedPubkey,
 } from '../../hooks/useParamSelector';
 import { PubKey } from '../../session/types';
 import { SessionUtilContact } from '../../session/utils/libsession/libsession_utils_contacts';
@@ -33,8 +33,8 @@ import {
   useLibGroupKicked,
   useLibGroupWeHaveSecretKey,
 } from '../../state/selectors/userGroups';
-import { Localizer, type LocalizerProps } from '../basic/Localizer';
-import { tr } from '../../localization/localeTools';
+import { Localizer } from '../basic/Localizer';
+import { tr, type TrArgs } from '../../localization/localeTools';
 
 const Container = styled.div<{ noExtraPadding: boolean }>`
   display: flex;
@@ -59,7 +59,7 @@ function TextNotification({
   dataTestId,
   noExtraPadding,
 }: {
-  details: LocalizerProps;
+  details: TrArgs;
   dataTestId: SessionDataTestId;
   noExtraPadding: boolean;
 }) {
@@ -167,8 +167,7 @@ const InvitedToGroupControlMessage = () => {
 
   const groupName = useLibGroupInviteGroupName(selectedConversation) || tr('unknown');
   const conversationOrigin = useSelectedConversationIdOrigin();
-  const adminNameInvitedUs =
-    useNicknameOrProfileNameOrShortenedPubkey(conversationOrigin) || tr('unknown');
+  const adminNameInvitedUs = useConversationUsernameWithFallback(true, conversationOrigin);
   const isGroupPendingInvite = useLibGroupInvitePending(selectedConversation);
   const weHaveSecretKey = useLibGroupWeHaveSecretKey(selectedConversation);
 
@@ -183,28 +182,22 @@ const InvitedToGroupControlMessage = () => {
     return null;
   }
   // when restoring from seed we might not have the pubkey of who invited us, in that case, we just use a fallback
-  const details: LocalizerProps = conversationOrigin
+  const details: TrArgs = conversationOrigin
     ? weHaveSecretKey
       ? {
           token: 'groupInviteReinvite',
-          args: {
-            group_name: groupName,
-            name: adminNameInvitedUs,
-          },
+          group_name: groupName,
+          name: adminNameInvitedUs,
         }
       : {
           token: 'messageRequestGroupInvite',
-          args: {
-            group_name: groupName,
-            name: adminNameInvitedUs,
-          },
+          group_name: groupName,
+          name: adminNameInvitedUs,
         }
     : weHaveSecretKey
       ? {
           token: 'groupInviteReinviteYou',
-          args: {
-            group_name: groupName,
-          },
+          group_name: groupName,
         }
       : {
           token: 'groupInviteYou',
@@ -227,7 +220,7 @@ export const InvitedToGroup = () => {
   );
 };
 
-function useGetMessageDetailsForNoMessages(): LocalizerProps {
+function useGetMessageDetailsForNoMessages(): TrArgs {
   const selectedConversation = useSelectedConversationKey();
   const isGroupOrCommunity = useSelectedIsGroupOrCommunity();
 
@@ -241,44 +234,40 @@ function useGetMessageDetailsForNoMessages(): LocalizerProps {
   const name = useSelectedNicknameOrProfileNameOrShortenedPubkey();
   const isPublic = useSelectedIsPublic();
 
-  const argsName = { name };
-  const argsGroupName = { group_name: name };
-  const argsConversationName = { conversation_name: name };
-
   // First, handle the "noteToSelf and various "private" cases
   if (isMe) {
     return { token: 'noteToSelfEmpty' };
   }
   if (privateBlindedAndBlockingMsgReqs) {
-    return { token: 'messageRequestsTurnedOff', args: argsName };
+    return { token: 'messageRequestsTurnedOff', name };
   }
   if (isPrivate) {
     // "You have no messages from X. Send a message to start the conversation!"
-    return { token: 'groupNoMessages', args: argsGroupName };
+    return { token: 'groupNoMessages', group_name: name };
   }
 
   if (isPublic) {
-    return { token: 'conversationsEmpty', args: argsConversationName };
+    return { token: 'conversationsEmpty', conversation_name: name };
   }
 
   // a "group but not public" is a legacy or a groupv2 (isPublic is handled just above)
   if (isGroupOrCommunity) {
     if (isGroupDestroyed) {
-      return { token: 'groupDeletedMemberDescription', args: argsGroupName };
+      return { token: 'groupDeletedMemberDescription', group_name: name };
     }
 
     if (isKickedFromGroup) {
-      return { token: 'groupRemovedYou', args: argsGroupName };
+      return { token: 'groupRemovedYou', group_name: name };
     }
     if (canWrite) {
       // "You have no messages from X. Send a message to start the conversation!"
-      return { token: 'groupNoMessages', args: argsGroupName };
+      return { token: 'groupNoMessages', group_name: name };
     }
     // if we cannot write for some reason, don't show the "send a message" part
-    return { token: 'conversationsEmpty', args: argsConversationName };
+    return { token: 'conversationsEmpty', conversation_name: name };
   }
 
-  return { token: 'conversationsEmpty', args: argsConversationName };
+  return { token: 'conversationsEmpty', conversation_name: name };
 }
 
 export const NoMessageInConversation = () => {

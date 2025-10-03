@@ -2,17 +2,18 @@ import { cloneDeep, isNumber, uniq } from 'lodash';
 import { channels } from './channels';
 import { OpenGroupRequestCommonType, OpenGroupV2Room } from './types';
 import { isOpenGroupV2 } from '../session/apis/open_group_api/utils/OpenGroupUtils';
+import type {
+  WithRoomId,
+  WithServerPubkey,
+  WithServerUrl,
+} from '../session/apis/open_group_api/sogsv3/sogsWith';
 
-export type OpenGroupV2RoomWithImageID = {
-  serverUrl: string;
-
-  /** this is actually shared for all this server's room */
-  serverPublicKey: string;
-  roomId: string;
-
-  /** the full url to the group room's image */
-  imageFullUrl?: string;
-};
+export type OpenGroupV2RoomWithImageID = WithRoomId &
+  WithServerPubkey &
+  WithServerUrl & {
+    /** the full url to the group room's image */
+    imageFullUrl?: string;
+  };
 
 export const OpenGroupData = {
   getAllV2OpenGroupRoomsMap,

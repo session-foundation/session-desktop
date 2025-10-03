@@ -26,6 +26,7 @@ import { GoogleChrome } from '../util';
 import { LinkPreviews } from '../util/linkPreviews';
 import { GroupV2Receiver } from './groupv2/handleGroupV2Message';
 import { Constants } from '../session';
+import { Timestamp } from '../types/timestamp/timestamp';
 
 function contentTypeSupported(type: string): boolean {
   const Chrome = GoogleChrome;
@@ -92,7 +93,7 @@ async function copyFromQuotedMessage(
   if (!quotedMessage) {
     window?.log?.warn(`We did not found quoted message ${id} with author ${author}.`);
     quoteLocal.referencedMessageNotFound = true;
-    msg.set({ quote: quoteLocal });
+    msg.setQuote(quoteLocal);
     return;
   }
 
@@ -116,7 +117,7 @@ async function copyFromQuotedMessage(
     !firstAttachment.contentType ||
     !contentTypeSupported(firstAttachment.contentType)
   ) {
-    msg.set({ quote: quoteLocal });
+    msg.setQuote(quoteLocal);
     return;
   }
 
@@ -156,7 +157,7 @@ async function copyFromQuotedMessage(
   }
   quoteLocal.attachments = [firstAttachment];
 
-  msg.set({ quote: quoteLocal });
+  msg.setQuote(quoteLocal);
 }
 
 /**
@@ -176,19 +177,7 @@ function handleLinkPreviews(messageBody: string, messagePreview: any, message: M
     );
   }
 
-  message.set({ preview });
-}
-
-async function processProfileKeyNoCommit(
-  conversation: ConversationModel,
-  sendingDeviceConversation: ConversationModel,
-  profileKeyBuffer?: Uint8Array
-) {
-  if (conversation.isPrivate()) {
-    await conversation.setProfileKey(profileKeyBuffer, false);
-  } else {
-    await sendingDeviceConversation.setProfileKey(profileKeyBuffer, false);
-  }
+  message.setPreview(preview);
 }
 
 export type RegularMessageType = Pick<
@@ -317,9 +306,8 @@ async function handleRegularMessage(
       : rawDataMessage.body;
 
   message.set({
-    flags: rawDataMessage.flags,
     // quote: rawDataMessage.quote, // do not do this copy here, it must be done only in copyFromQuotedMessage()
-    attachments: rawDataMessage.attachments,
+    attachments: rawDataMessage.attachments?.map(m => ({ ...m, pending: true })),
     body,
     conversationId: conversation.id,
     messageHash,
@@ -348,22 +336,19 @@ async function handleRegularMessage(
     (message.get('sent_at') || 0) > conversationActiveAt
   ) {
     const interactionNotification = message.getInteractionNotification();
-    conversation.set({
-      active_at: message.get('sent_at'),
-      lastMessage: message.getNotificationText(),
-      lastMessageInteractionType: interactionNotification?.interactionType,
-      lastMessageInteractionStatus: interactionNotification?.interactionStatus,
-    });
+    conversation.setActiveAt(message.get('sent_at'));
+    conversation.setLastMessage(message.getNotificationText());
+    conversation.setLastMessageInteraction(
+      interactionNotification
+        ? {
+            type: interactionNotification.interactionType,
+            status: interactionNotification.interactionStatus,
+          }
+        : null
+    );
+
     // a new message was received for that conversation. If it was not it should not be hidden anymore
     await conversation.unhideIfNeeded(false);
-  }
-
-  if (rawDataMessage.profileKey) {
-    await processProfileKeyNoCommit(
-      conversation,
-      sendingDeviceConversation,
-      rawDataMessage.profileKey
-    );
   }
 
   // we just received a message from that user so we reset the typing indicator for this convo
@@ -380,7 +365,7 @@ async function markConvoAsReadIfOutgoingMessage(
   const isOutgoingMessage =
     message.get('type') === 'outgoing' || message.get('direction') === 'outgoing';
   if (isOutgoingMessage) {
-    const sentAt = message.get('sent_at') || message.get('serverTimestamp');
+    const sentAt = message.get('serverTimestamp') || message.get('sent_at');
     if (sentAt) {
       const expirationType = message.getExpirationType();
       const expireTimer = message.getExpireTimerSeconds();
@@ -397,14 +382,14 @@ async function markConvoAsReadIfOutgoingMessage(
         );
 
         if (expirationMode !== 'off') {
-          message.set({
-            expirationStartTimestamp: DisappearingMessages.setExpirationStartTimestamp(
+          message.setMessageExpirationStartTimestamp(
+            DisappearingMessages.setExpirationStartTimestamp(
               expirationMode,
               message.get('sent_at'),
               'markConvoAsReadIfOutgoingMessage',
               message.id
-            ),
-          });
+            )
+          );
           await message.commit();
         }
       }
@@ -436,8 +421,6 @@ export async function handleMessageJob(
   );
 
   try {
-    messageModel.set({ flags: regularDataMessage.flags });
-
     // NOTE we handle incoming disappear after send messages and sync messages here
     if (
       conversation &&
@@ -449,26 +432,26 @@ export async function handleMessageJob(
         messageModel.getExpirationType(),
         messageModel.getExpireTimerSeconds()
       );
+      const expireTimer = messageModel.getExpireTimerSeconds();
 
-      if (expirationMode === 'deleteAfterSend') {
-        messageModel.set({
-          expirationStartTimestamp: DisappearingMessages.setExpirationStartTimestamp(
-            expirationMode,
-            messageModel.get('sent_at'),
-            'handleMessageJob',
-            messageModel.id
-          ),
-        });
+      if (expirationMode === 'deleteAfterSend' && expireTimer > 0) {
+        const expirationStartTimestamp = DisappearingMessages.setExpirationStartTimestamp(
+          expirationMode,
+          messageModel.get('sent_at'),
+          'handleMessageJob',
+          messageModel.id
+        );
+        if (expirationStartTimestamp) {
+          messageModel.setMessageExpirationStartTimestamp(expirationStartTimestamp);
+          messageModel.setExpiresAt(expirationStartTimestamp + expireTimer * 1000);
+        }
       }
     }
 
     if (messageModel.isExpirationTimerUpdate()) {
       // NOTE if we turn off disappearing messages from a legacy client expirationTimerUpdate can be undefined but the flags value is correctly set
       const expirationTimerUpdate = messageModel.getExpirationTimerUpdate();
-      if (
-        messageModel.get('flags') !== SignalService.DataMessage.Flags.EXPIRATION_TIMER_UPDATE &&
-        (!expirationTimerUpdate || isEmpty(expirationTimerUpdate))
-      ) {
+      if (!expirationTimerUpdate || isEmpty(expirationTimerUpdate)) {
         window.log.debug(
           `[handleMessageJob] The ExpirationTimerUpdate is not defined correctly message: ${messageModel.get(
             'id'
@@ -512,15 +495,15 @@ export async function handleMessageJob(
 
     // save the message model to the db and then save the messageId generated to our in-memory copy
     const id = await messageModel.commit();
-    messageModel.set({ id });
+    messageModel.setId(id);
 
     // Note that this can save the message again, if jobs were queued. We need to
     //   call it after we have an id for this message, because the jobs refer back
     //   to their source message.
 
-    conversation.set({
-      active_at: Math.max(conversation.getActiveAt() || 0, messageModel.get('sent_at') || 0),
-    });
+    conversation.setActiveAt(
+      Math.max(conversation.getActiveAt() || 0, messageModel.get('sent_at') || 0)
+    );
     // this is a throttled call and will only run once every 1 sec at most
     conversation.updateLastMessage();
     await conversation.commit();
@@ -534,12 +517,15 @@ export async function handleMessageJob(
     // the only profile we don't update with what is coming here is ours,
     // as our profile is shared across our devices with libsession
     if (messageModel.isIncoming() && regularDataMessage.profile) {
-      await ProfileManager.updateProfileOfContact(
-        sendingDeviceConversation.id,
-        regularDataMessage.profile.displayName,
-        regularDataMessage.profile.profilePicture,
-        regularDataMessage.profileKey
-      );
+      await ProfileManager.updateProfileOfContact({
+        pubkey: sendingDeviceConversation.id,
+        displayName: regularDataMessage.profile.displayName,
+        profileUrl: regularDataMessage.profile.profilePicture,
+        profileKey: regularDataMessage.profileKey,
+        profileUpdatedAtSeconds: new Timestamp({
+          value: regularDataMessage.profile.lastProfileUpdateSeconds ?? 0,
+        }).seconds(),
+      });
     }
 
     await markConvoAsReadIfOutgoingMessage(conversation, messageModel);

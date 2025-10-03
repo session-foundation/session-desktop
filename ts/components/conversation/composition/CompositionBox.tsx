@@ -89,6 +89,7 @@ export interface StagedAttachmentType extends AttachmentType {
 }
 
 export type SendMessageType = {
+  conversationId: string;
   body: string;
   attachments: Array<StagedAttachmentImportedType> | undefined;
   quote: any | undefined;
@@ -713,15 +714,28 @@ class CompositionBoxInner extends Component<Props, State> {
   }
 
   private async onSendMessage() {
-    if (!this.props.selectedConversationKey) {
+    const {
+      selectedConversationKey,
+      selectedConversation,
+      stagedAttachments,
+      quotedMessageProps,
+      weAreProUser: hasPro,
+    } = this.props;
+
+    const { stagedLinkPreview } = this.state;
+
+    if (!selectedConversationKey) {
       throw new Error('selectedConversationKey is needed');
     }
+
+    if (!selectedConversation) {
+      return;
+    }
+
     this.linkPreviewAbortController?.abort();
 
     const isProAvailable = getFeatureFlag('proAvailable');
 
-    // TODO: get pro status from store once available
-    const hasPro = this.props.weAreProUser;
     const charLimit = hasPro
       ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
       : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
@@ -741,9 +755,7 @@ class CompositionBoxInner extends Component<Props, State> {
               },
               description: {
                 token: 'modalMessageTooLongDescription',
-                args: {
-                  limit: formatNumber(charLimit),
-                },
+                limit: formatNumber(charLimit),
               },
             },
             dispatch
@@ -753,19 +765,13 @@ class CompositionBoxInner extends Component<Props, State> {
       return;
     }
 
-    const { selectedConversation } = this.props;
-
-    if (!selectedConversation) {
-      return;
-    }
-
     if (selectedConversation.isBlocked) {
       ToastUtils.pushUnblockToSend();
       return;
     }
     // Verify message length
     const msgLen = text?.length || 0;
-    if (msgLen === 0 && this.props.stagedAttachments?.length === 0) {
+    if (msgLen === 0 && stagedAttachments?.length === 0) {
       return;
     }
 
@@ -773,10 +779,6 @@ class CompositionBoxInner extends Component<Props, State> {
       ToastUtils.pushYouLeftTheGroup();
       return;
     }
-
-    const { quotedMessageProps } = this.props;
-
-    const { stagedLinkPreview } = this.state;
 
     // Send message
     const extractedQuotedMessageProps = _.pick(
@@ -794,9 +796,10 @@ class CompositionBoxInner extends Component<Props, State> {
         : undefined;
 
     try {
-      const { attachments, previews } = await this.getFiles(linkPreview);
+      const { attachments, previews } = await this.getFiles(linkPreview, stagedAttachments);
 
       this.props.sendMessage({
+        conversationId: selectedConversationKey,
         body: text.trim(),
         attachments: attachments || [],
         quote: extractedQuotedMessageProps,
@@ -806,7 +809,7 @@ class CompositionBoxInner extends Component<Props, State> {
 
       window.inboxStore?.dispatch(
         removeAllStagedAttachmentsInConversation({
-          conversationId: this.props.selectedConversationKey,
+          conversationId: selectedConversationKey,
         })
       );
       // Empty composition box and stagedAttachments
@@ -818,7 +821,7 @@ class CompositionBoxInner extends Component<Props, State> {
         characterCount: 0,
       });
       updateDraftForConversation({
-        conversationKey: this.props.selectedConversationKey,
+        conversationKey: selectedConversationKey,
         draft: '',
       });
     } catch (e) {
@@ -830,13 +833,12 @@ class CompositionBoxInner extends Component<Props, State> {
   // This function is called right before sending a message, to gather really the
   // files content behind the staged attachments.
   private async getFiles(
-    linkPreview?: Pick<StagedLinkPreviewData, 'url' | 'title' | 'scaledDown'>
+    linkPreview?: Pick<StagedLinkPreviewData, 'url' | 'title' | 'scaledDown'>,
+    stagedAttachments: Array<StagedAttachmentType> = []
   ): Promise<{
     attachments: Array<StagedAttachmentImportedType>;
     previews: Array<StagedPreviewImportedType>;
   }> {
-    const { stagedAttachments } = this.props;
-
     let attachments: Array<StagedAttachmentImportedType> = [];
     let previews: Array<StagedPreviewImportedType> = [];
 
@@ -868,7 +870,8 @@ class CompositionBoxInner extends Component<Props, State> {
   }
 
   private async sendVoiceMessage(audioBlob: Blob) {
-    if (!this.state.showRecordingView) {
+    const { selectedConversationKey } = this.props;
+    if (!this.state.showRecordingView || !selectedConversationKey) {
       return;
     }
 
@@ -892,6 +895,7 @@ class CompositionBoxInner extends Component<Props, State> {
     };
 
     this.props.sendMessage({
+      conversationId: selectedConversationKey,
       body: '',
       attachments: [audioAttachment],
       preview: undefined,

@@ -13,20 +13,25 @@ export const generateHash = (phrase: string) => phrase && sha512(phrase);
 export const matchesHash = (phrase: string | null, hash: string) =>
   phrase && sha512(phrase) === hash;
 
+const passwordArgs = {
+  min: PASSWORD_LENGTH.MIN_PASSWORD_LEN.toString(),
+  max: PASSWORD_LENGTH.MAX_PASSWORD_LEN.toString(),
+};
+
 export const validatePassword = (phrase: string) => {
   if (!isString(phrase)) {
     return tr('passwordError');
   }
 
   if (phrase.length === 0) {
-    return tr('passwordErrorLength');
+    return tr('passwordErrorLength', passwordArgs);
   }
 
   if (
     phrase.length < PASSWORD_LENGTH.MIN_PASSWORD_LEN ||
     phrase.length > PASSWORD_LENGTH.MAX_PASSWORD_LEN
   ) {
-    return tr('passwordErrorLength');
+    return tr('passwordErrorLength', passwordArgs);
   }
 
   // Restrict characters to letters, numbers and symbols

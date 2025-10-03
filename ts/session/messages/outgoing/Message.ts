@@ -1,9 +1,12 @@
 import { v4 as uuid } from 'uuid';
+import type { OutgoingUserProfile } from '../../../types/message';
 
-export interface MessageParams {
+export type MessageParams = {
   createAtNetworkTimestamp: number;
   identifier?: string;
-}
+};
+
+export type WithOutgoingUserProfile = { userProfile: OutgoingUserProfile | null };
 
 export abstract class Message {
   /**

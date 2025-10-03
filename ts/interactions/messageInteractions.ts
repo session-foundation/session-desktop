@@ -230,9 +230,7 @@ const acceptOpenGroupInvitationV2 = (completeUrl: string, roomName?: string) => 
       title: tr('communityJoin'),
       i18nMessage: {
         token: 'communityJoinDescription',
-        args: {
-          community_name: roomName || tr('unknown'),
-        },
+        community_name: roomName || tr('unknown'),
       },
       onClickOk: async () => {
         await joinOpenGroupV2WithUIEvents(completeUrl, true);

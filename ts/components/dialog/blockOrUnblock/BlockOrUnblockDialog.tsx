@@ -3,15 +3,13 @@ import { useDispatch } from 'react-redux';
 import { isEmpty } from 'lodash';
 import { useCallback } from 'react';
 import useAsyncFn from 'react-use/lib/useAsyncFn';
-import { useHotkey } from '../../../hooks/useHotkey';
 import { useConversationsNicknameRealNameOrShortenPubkey } from '../../../hooks/useParamSelector';
 import { updateBlockOrUnblockModal } from '../../../state/ducks/modalDialog';
 import { BlockedNumberController } from '../../../util';
-import { type LocalizerProps } from '../../basic/Localizer';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../../basic/SessionButton';
 import { ModalDescription } from '../shared/ModalDescriptionContainer';
 import { BlockOrUnblockModalState } from './BlockOrUnblockModalState';
-import { tr } from '../../../localization/localeTools';
+import { tr, type TrArgs } from '../../../localization/localeTools';
 import {
   ModalBasicHeader,
   ModalActionsContainer,
@@ -21,18 +19,19 @@ import { ModalFlexContainer } from '../shared/ModalFlexContainer';
 
 type ModalState = NonNullable<BlockOrUnblockModalState>;
 
-function getUnblockTokenAndArgs(names: Array<string>): LocalizerProps {
+function getUnblockTokenAndArgs(names: Array<string>): TrArgs {
   // multiple unblock is supported
   switch (names.length) {
     case 1:
-      return { token: 'blockUnblockName', args: { name: names[0] } } as const;
+      return { token: 'blockUnblockName', name: names[0] } as const;
     case 2:
-      return { token: 'blockUnblockNameTwo', args: { name: names[0] } } as const;
+      return { token: 'blockUnblockNameTwo', name: names[0] } as const;
 
     default:
       return {
         token: 'blockUnblockNameMultiple',
-        args: { name: names[0], count: names.length - 1 },
+        name: names[0],
+        count: names.length - 1,
       } as const;
   }
 }
@@ -40,7 +39,7 @@ function getUnblockTokenAndArgs(names: Array<string>): LocalizerProps {
 function useBlockUnblockI18nDescriptionArgs({
   action,
   pubkeys,
-}: Pick<ModalState, 'action' | 'pubkeys'>): LocalizerProps {
+}: Pick<ModalState, 'action' | 'pubkeys'>): TrArgs {
   const names = useConversationsNicknameRealNameOrShortenPubkey(pubkeys);
   if (!pubkeys.length) {
     throw new Error('useI18nDescriptionArgsForAction called with empty list of pubkeys');
@@ -49,7 +48,7 @@ function useBlockUnblockI18nDescriptionArgs({
     if (pubkeys.length !== 1 || names.length !== 1) {
       throw new Error('we can only block a single user at a time');
     }
-    return { token: 'blockDescription', args: { name: names[0] } } as const;
+    return { token: 'blockDescription', name: names[0] } as const;
   }
 
   return getUnblockTokenAndArgs(names);
@@ -65,7 +64,6 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
   const closeModal = useCallback(() => {
     dispatch(updateBlockOrUnblockModal(null));
   }, [dispatch]);
-  useHotkey('Escape', closeModal);
 
   const [, onConfirm] = useAsyncFn(async () => {
     if (action === 'block') {
@@ -92,10 +90,11 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
 
   return (
     <SessionWrapperModal
+      modalId="blockOrUnblockModal"
       headerChildren={<ModalBasicHeader title={localizedAction} />}
       onClose={closeModal}
       buttonChildren={
-        <ModalActionsContainer>
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
             buttonType={SessionButtonType.Simple}
             buttonColor={SessionButtonColor.Danger}

@@ -37,21 +37,6 @@ describe('fillConvoAttributesWithDefaults', () => {
     });
   });
 
-  // describe('unreadCount', () => {
-  //   it('initialize unreadCount if not given', () => {
-  //     expect(fillConvoAttributesWithDefaults({} as ConversationAttributes)).to.have.deep.property(
-  //       'unreadCount',
-  //       0
-  //     );
-  //   });
-
-  //   it('do not override unreadCount if given', () => {
-  //     expect(
-  //       fillConvoAttributesWithDefaults({ unreadCount: 123 } as ConversationAttributes)
-  //     ).to.have.deep.property('unreadCount', 123);
-  //   });
-  // });
-
   describe('lastJoinedTimestamp', () => {
     it('initialize lastJoinedTimestamp if not given', () => {
       expect(fillConvoAttributesWithDefaults({} as ConversationAttributes)).to.have.deep.property(
@@ -144,6 +129,22 @@ describe('fillConvoAttributesWithDefaults', () => {
     });
   });
 
+  describe('profileUpdatedSeconds', () => {
+    it('does not initialize profileUpdatedSeconds if not given', () => {
+      expect(
+        fillConvoAttributesWithDefaults({} as ConversationAttributes)
+      ).to.not.have.deep.property('profileUpdatedSeconds', 0);
+    });
+
+    it('do not override profileUpdatedSeconds if given', () => {
+      expect(
+        fillConvoAttributesWithDefaults({
+          profileUpdatedSeconds: 1234,
+        } as ConversationAttributes)
+      ).to.have.deep.property('profileUpdatedSeconds', 1234);
+    });
+  });
+
   describe('isTrustedForAttachmentDownload', () => {
     it('initialize isTrustedForAttachmentDownload if not given', () => {
       expect(fillConvoAttributesWithDefaults({} as ConversationAttributes)).to.have.deep.property(
@@ -211,24 +212,6 @@ describe('fillConvoAttributesWithDefaults', () => {
       ).to.have.deep.property('didApproveMe', true);
     });
   });
-
-  describe('isKickedFromGroup', () => {
-    it('initialize isKickedFromGroup if not given', () => {
-      expect(fillConvoAttributesWithDefaults({} as ConversationAttributes)).to.have.deep.property(
-        'isKickedFromGroup',
-        false
-      );
-    });
-
-    it('do not override isKickedFromGroup if given', () => {
-      expect(
-        fillConvoAttributesWithDefaults({
-          isKickedFromGroup: true,
-        } as ConversationAttributes)
-      ).to.have.deep.property('isKickedFromGroup', true);
-    });
-  });
-
   describe('left', () => {
     it('initialize left if not given', () => {
       expect(fillConvoAttributesWithDefaults({} as ConversationAttributes)).to.have.deep.property(

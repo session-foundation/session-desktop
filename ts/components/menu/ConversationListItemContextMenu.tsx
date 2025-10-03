@@ -20,7 +20,7 @@ import {
   MarkConversationUnreadMenuItem,
   NotificationForConvoMenuItem,
   ShowNoteToSelfMenuItem,
-  ShowUserDetailsMenuItem,
+  ShowUserProfileMenuItem,
   UnbanMenuItem,
   ServerBanMenuItem,
   ServerUnbanMenuItem,
@@ -117,7 +117,7 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
         <LeaveCommunityMenuItem />
         <LeaveGroupMenuItem />
         <DeleteGroupMenuItem />
-        <ShowUserDetailsMenuItem />
+        <ShowUserProfileMenuItem />
       </Menu>
     </SessionContextMenuContainer>
   );

@@ -2,10 +2,10 @@ import { SignalService } from '../../../../protobuf';
 import { DataMessage } from '../DataMessage';
 import { ExpirableMessageParams } from '../ExpirableMessage';
 
-interface CommunityInvitationMessageParams extends ExpirableMessageParams {
+type CommunityInvitationMessageParams = ExpirableMessageParams & {
   url: string;
   name: string;
-}
+};
 
 export class CommunityInvitationMessage extends DataMessage {
   private readonly url: string;

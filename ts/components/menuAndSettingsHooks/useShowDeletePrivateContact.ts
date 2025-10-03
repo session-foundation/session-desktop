@@ -1,9 +1,9 @@
 import { useDispatch } from 'react-redux';
 import {
+  useConversationUsernameWithFallback,
   useIsIncomingRequest,
   useIsMe,
   useIsPrivate,
-  useNicknameOrProfileNameOrShortenedPubkey,
 } from '../../hooks/useParamSelector';
 import { tr } from '../../localization/localeTools';
 import { ConvoHub } from '../../session/conversations';
@@ -21,7 +21,7 @@ function useShowDeletePrivateContact({ conversationId }: { conversationId: strin
 export function useShowDeletePrivateContactCb({ conversationId }: { conversationId: string }) {
   const showDeletePrivateContact = useShowDeletePrivateContact({ conversationId });
   const dispatch = useDispatch();
-  const name = useNicknameOrProfileNameOrShortenedPubkey(conversationId);
+  const name = useConversationUsernameWithFallback(true, conversationId);
 
   if (!showDeletePrivateContact) {
     return null;
@@ -37,7 +37,7 @@ export function useShowDeletePrivateContactCb({ conversationId }: { conversation
     dispatch(
       updateConfirmModal({
         title: menuItemText,
-        i18nMessage: { token: 'deleteContactDescription', args: { name } },
+        i18nMessage: { token: 'deleteContactDescription', name },
         onClickClose,
         okTheme: SessionButtonColor.Danger,
         onClickOk: async () => {

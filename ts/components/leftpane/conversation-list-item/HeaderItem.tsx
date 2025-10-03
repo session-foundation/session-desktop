@@ -18,19 +18,14 @@ import {
   openConversationWithMessages,
 } from '../../../state/ducks/conversations';
 import { useIsSearchingForType } from '../../../state/selectors/search';
-import { useIsMessageSection } from '../../../state/selectors/section';
 import { Timestamp } from '../../conversation/Timestamp';
 import { SessionIcon } from '../../icon';
 import { UserItem } from './UserItem';
+import type { WithConvoId } from '../../../session/types/with';
 
 const NotificationSettingIcon = () => {
-  const isMessagesSection = useIsMessageSection();
   const convoId = useConvoIdFromContext();
   const convoSetting = useNotificationSetting(convoId);
-
-  if (!isMessagesSection) {
-    return null;
-  }
 
   switch (convoSetting) {
     case 'all':
@@ -41,6 +36,7 @@ const NotificationSettingIcon = () => {
           iconType="mute"
           iconColor={'var(--conversation-tab-text-color)'}
           iconSize="small"
+          style={{ flexShrink: 0 }}
         />
       );
     case 'mentions_only':
@@ -49,6 +45,7 @@ const NotificationSettingIcon = () => {
           iconType="bell"
           iconColor={'var(--conversation-tab-text-color)'}
           iconSize="small"
+          style={{ flexShrink: 0 }}
         />
       );
     default:
@@ -57,26 +54,27 @@ const NotificationSettingIcon = () => {
 };
 
 const StyledConversationListItemIconWrapper = styled.div`
-  svg {
-    margin: 0px 2px;
-  }
-
   display: flex;
   flex-direction: row;
+  gap: var(--margins-xs);
 `;
 
 const PinIcon = () => {
   const conversationId = useConvoIdFromContext();
 
-  const isMessagesSection = useIsMessageSection();
   const isPinned = useIsPinned(conversationId);
 
-  return isMessagesSection && isPinned ? (
-    <SessionIcon iconType="pin" iconColor={'var(--conversation-tab-text-color)'} iconSize="small" />
+  return isPinned ? (
+    <SessionIcon
+      iconType="pin"
+      iconColor={'var(--conversation-tab-text-color)'}
+      iconSize="small"
+      style={{ flexShrink: 0 }}
+    />
   ) : null;
 };
 
-const ListItemIcons = () => {
+const ListItemIcons = ({ conversationId }: WithConvoId) => {
   const isSearching = useIsSearchingForType('global');
 
   if (isSearching) {
@@ -87,6 +85,8 @@ const ListItemIcons = () => {
     <StyledConversationListItemIconWrapper>
       <PinIcon />
       <NotificationSettingIcon />
+      <UnreadCount conversationId={conversationId} />
+      <AtSymbol conversationId={conversationId} />
     </StyledConversationListItemIconWrapper>
   );
 };
@@ -97,11 +97,7 @@ const MentionAtSymbol = styled.span`
   text-align: center;
   margin-top: 0px;
   margin-bottom: 0px;
-  padding-inline-start: 3px;
-  padding-inline-end: 3px;
-
   position: static;
-  margin-inline-start: 5px;
 
   font-weight: 700;
   font-size: var(--font-size-xs);
@@ -111,6 +107,7 @@ const MentionAtSymbol = styled.span`
   min-width: 16px;
   border-radius: 8px;
   cursor: pointer;
+  flex-shrink: 0;
 
   &:hover {
     filter: grayscale(0.7);
@@ -144,24 +141,41 @@ async function openConvoToLastMention(e: MouseEvent<HTMLSpanElement>, conversati
   }
 }
 
-const AtSymbol = ({ convoId }: { convoId: string }) => {
-  const hasMentionedUs = useMentionedUs(convoId);
-  const hasUnread = useHasUnread(convoId);
+const AtSymbol = ({ conversationId }: WithConvoId) => {
+  const hasMentionedUs = useMentionedUs(conversationId);
+  const hasUnread = useHasUnread(conversationId);
 
   return hasMentionedUs && hasUnread ? (
     <MentionAtSymbol
       title="Open to latest mention"
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      onMouseDown={async e => openConvoToLastMention(e, convoId)}
+      onMouseDown={async e => openConvoToLastMention(e, conversationId)}
     >
       @
     </MentionAtSymbol>
   ) : null;
 };
 
-const UnreadCount = ({ convoId }: { convoId: string }) => {
-  const unreadMsgCount = useUnreadCount(convoId);
-  const forcedUnread = useIsForcedUnreadWithoutUnreadMsg(convoId);
+const StyledUnreadCount = styled.p`
+  background-color: var(--unread-messages-alert-background-color);
+  text-align: center;
+  padding-top: 1px;
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.25px;
+  height: 16px;
+  min-width: 16px;
+  line-height: 16px;
+  border-radius: 8px;
+  color: var(--unread-messages-alert-text-color);
+  font-weight: 700;
+  margin: 0px;
+  padding-inline: 3px;
+  flex-shrink: 0;
+`;
+
+const UnreadCount = ({ conversationId }: WithConvoId) => {
+  const unreadMsgCount = useUnreadCount(conversationId);
+  const forcedUnread = useIsForcedUnreadWithoutUnreadMsg(conversationId);
 
   const unreadWithOverflow =
     unreadMsgCount > Constants.CONVERSATION.MAX_CONVO_UNREAD_COUNT
@@ -170,7 +184,7 @@ const UnreadCount = ({ convoId }: { convoId: string }) => {
 
   // TODO would be good to merge the style of this with SessionNotificationCount or SessionUnreadCount at some point.
   return unreadMsgCount > 0 || forcedUnread ? (
-    <p className="module-conversation-list-item__unread-count">{unreadWithOverflow}</p>
+    <StyledUnreadCount>{unreadWithOverflow}</StyledUnreadCount>
   ) : null;
 };
 
@@ -184,18 +198,10 @@ export const ConversationListItemHeaderItem = () => {
 
   return (
     <div className="module-conversation-list-item__header">
-      <div
-        className={clsx(
-          'module-conversation-list-item__header__name',
-          hasUnread ? 'module-conversation-list-item__header__name--with-unread' : null
-        )}
-      >
+      <div className={clsx('module-conversation-list-item__header__name')}>
         <UserItem />
       </div>
-      <ListItemIcons />
-
-      <UnreadCount convoId={conversationId} />
-      <AtSymbol convoId={conversationId} />
+      <ListItemIcons conversationId={conversationId} />
 
       {!isSearching && (
         <div

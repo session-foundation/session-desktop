@@ -1,100 +1,50 @@
 import styled from 'styled-components';
-import { useEffect, useRef, useState, type SessionDataTestId } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import useAsync from 'react-use/lib/useAsync';
 
-import { Avatar, AvatarSize } from '../../avatar/Avatar';
 import { Flex } from '../../basic/Flex';
 import { Header } from '../../conversation/right-panel/overlay/components';
 import type { WithConvoId } from '../../../session/types/with';
-import {
-  useConversationRealName,
-  useHasNickname,
-  useIsClosedGroup,
-  useIsMe,
-  useIsPrivate,
-  useIsPublic,
-  useNicknameOrProfileNameOrShortenedPubkey,
-} from '../../../hooks/useParamSelector';
+import { useIsMe, useIsPrivate, useIsPublic } from '../../../hooks/useParamSelector';
 import { PubKey } from '../../../session/types';
-import { H7 } from '../../basic/Heading';
 import { tr } from '../../../localization/localeTools';
-import { useChangeNickname } from '../../menuAndSettingsHooks/useChangeNickname';
-import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
-import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import { useEditProfilePictureCallback } from '../../menuAndSettingsHooks/useEditProfilePictureCallback';
 import { useRoomDescription } from '../../../state/selectors/sogsRoomInfo';
 import { useLibGroupDescription } from '../../../state/selectors/groups';
-import { useShowUpdateGroupNameDescriptionCb } from '../../menuAndSettingsHooks/useShowUpdateGroupNameDescription';
 import { useHTMLDirection } from '../../../util/i18n/rtlSupport';
+import { UsernameFallback } from './UsernameFallback';
+import { ConversationTitleDialog } from './ConversationTitleDialog';
+import { SessionIDNotEditable } from '../../basic/SessionIdNotEditable';
+import { AccountIdPill } from '../../basic/AccountIdPill';
+import { ProfileHeader } from '../user-settings/components';
+import type { ProfileDialogModes } from '../user-settings/ProfileDialogModes';
+import { SessionUtilUserGroups } from '../../../session/utils/libsession/libsession_utils_user_groups';
+import { QRView } from '../../qrview/QrView';
 
 function AccountId({ conversationId }: WithConvoId) {
   const isPrivate = useIsPrivate(conversationId);
 
-  if (!isPrivate || PubKey.isBlinded(conversationId)) {
-    return null;
-  }
-  const len = conversationId.length;
-
-  return (
-    <StyledAccountId data-testid="account-id">
-      {conversationId.slice(0, len / 2)}
-      <br />
-      {conversationId.slice(len / 2)}
-    </StyledAccountId>
-  );
-}
-
-function EditGenericButton({
-  cb,
-  dataTestId,
-}: {
-  cb: (() => void) | null;
-  dataTestId: SessionDataTestId;
-}) {
-  if (!cb) {
+  if (!isPrivate) {
     return null;
   }
 
+  if (PubKey.isBlinded(conversationId)) {
+    // the settings menu should not be shown in the first place
+    throw new Error('AccountId: Blinded conversationId');
+  }
+
   return (
-    <SessionLucideIconButton
-      unicode={LUCIDE_ICONS_UNICODE.PENCIL}
-      iconSize="medium"
-      onClick={cb}
-      dataTestId={dataTestId}
+    <SessionIDNotEditable
+      dataTestId="account-id"
+      sessionId={conversationId}
+      displayType="2lines"
+      tooltipNode={null}
+      style={{ color: 'var(--text-primary-color)' }}
     />
   );
 }
 
-/**
- * Return the callback to use for the title click event, if one is allowed
- */
-function useOnTitleClickCb(conversationId: string) {
-  const changeNicknameCb = useChangeNickname(conversationId);
-  const updateNameDescCb = useShowUpdateGroupNameDescriptionCb({ conversationId });
-  return changeNicknameCb || updateNameDescCb;
-}
-
-function ChangeNicknameButton({ conversationId }: WithConvoId) {
-  const changeNicknameCb = useChangeNickname(conversationId);
-
-  return <EditGenericButton cb={changeNicknameCb} dataTestId="set-nickname-confirm-button" />;
-}
-
-function UpdateNameDescriptionButton({ conversationId }: WithConvoId) {
-  const updateNameDescCb = useShowUpdateGroupNameDescriptionCb({ conversationId });
-
-  return <EditGenericButton cb={updateNameDescCb} dataTestId="edit-group-name" />;
-}
-
-const StyledAccountId = styled.div`
-  color: var(--text-secondary-color);
-  text-align: center;
-  font-weight: 400;
-  line-height: 1.2;
-  font-size: var(--font-display-size-sm);
-  font-family: var(--font-mono);
-`;
-
-const StyledDescription = styled.p<{ expanded: boolean }>`
+const StyledDescription = styled.div<{ expanded: boolean }>`
   color: var(--text-secondary-color);
   font-size: var(--font-display-size-md);
   text-align: center;
@@ -163,45 +113,30 @@ function Description({ conversationId }: WithConvoId) {
   );
 }
 
-const ConversationTitle = ({ conversationId }: WithConvoId) => {
-  const nicknameOrDisplayName = useNicknameOrProfileNameOrShortenedPubkey(conversationId);
-  const isCommunity = useIsPublic(conversationId);
-  const isClosedGroup = useIsClosedGroup(conversationId);
-  const isMe = useIsMe(conversationId);
-
-  const onClickCb = useOnTitleClickCb(conversationId);
-
-  // the data-test-id depends on the type of conversation
-  const dataTestId = isCommunity
-    ? 'community-name'
-    : isClosedGroup
-      ? 'group-name'
-      : // for 1o1, this will hold the nickname if set, or the display name
-        'preferred-display-name';
-
-  return (
-    <H7
-      dataTestId={dataTestId}
-      style={{
-        wordBreak: 'break-all',
-        textAlign: 'center',
-        cursor: onClickCb ? 'pointer' : 'inherit',
-      }}
-      onClick={onClickCb || undefined}
-    >
-      {isMe ? tr('noteToSelf') : nicknameOrDisplayName}
-    </H7>
-  );
-};
-
 export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
   // if a nickname is set, we still want to display the real name of the user, as he defined it
-  const conversationRealName = useConversationRealName(conversationId);
-  const hasNickname = useHasNickname(conversationId);
   const isMe = useIsMe(conversationId);
 
   const editProfilePictureCb = useEditProfilePictureCallback({ conversationId });
   const htmlDirection = useHTMLDirection();
+
+  const isPrivateUnblinded = useIsPrivate(conversationId) && !PubKey.isBlinded(conversationId);
+  const [mode, setMode] = useState<ProfileDialogModes>('default');
+  const isPublic = useIsPublic(conversationId);
+  const [fullUrlWithPubkey, setFullUrlWithPubkey] = useState<string | null>(null);
+
+  useAsync(async () => {
+    if (!conversationId || !isPublic) {
+      return;
+    }
+    const roomDetails = await SessionUtilUserGroups.getCommunityByConvoIdNotCached(conversationId);
+    if (!roomDetails) {
+      throw new Error(`getCommunityByFullUrl returned no result for ${conversationId}`);
+    }
+    setFullUrlWithPubkey(roomDetails.fullUrlWithPubkey);
+  }, [conversationId]);
+
+  const [enlargedImage, setEnlargedImage] = useState(false);
 
   if (!conversationId) {
     return null;
@@ -215,16 +150,28 @@ export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
         $alignItems={'center'}
         width={'100%'}
         $flexDirection="column"
-        $flexGap="var(--margins-sm)"
+        $flexGap="var(--margins-lg)"
       >
-        <Avatar
-          size={AvatarSize.XL}
-          pubkey={conversationId}
-          dataTestId="profile-picture"
-          // we don't want to show the plus button for the current user
-          // as he needs to change his avatar through the EditProfileDialog
-          onPlusAvatarClick={!isMe ? editProfilePictureCb : undefined}
-        />
+        {mode === 'qr' ? (
+          <QRView
+            sessionID={(isPublic && fullUrlWithPubkey && fullUrlWithPubkey) || conversationId}
+            onExit={() => setMode('default')}
+          />
+        ) : (
+          <ProfileHeader
+            conversationId={conversationId}
+            dataTestId="profile-picture"
+            // 1. We don't want to show the plus button for the current user
+            // as he needs to change his avatar through the UserSettingsModal
+            // 2. We don't want to show the plus button for communities as they already have a qr button.
+            // Editing the avatar is done through the pencil icon in the ModalHeader
+            onPlusAvatarClick={!isMe && !isPublic ? (editProfilePictureCb ?? null) : null}
+            avatarPath={null}
+            onQRClick={(isPrivateUnblinded && !isMe) || isPublic ? () => setMode('qr') : null}
+            enlargedImage={enlargedImage}
+            toggleEnlargedImage={() => setEnlargedImage(!enlargedImage)}
+          />
+        )}
         <Flex
           $container={true}
           $alignItems={'center'}
@@ -232,16 +179,11 @@ export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
           $flexGap="var(--margins-xs)"
           style={{ direction: htmlDirection }}
         >
-          <ConversationTitle conversationId={conversationId} />
-          <ChangeNicknameButton conversationId={conversationId} />
-          <UpdateNameDescriptionButton conversationId={conversationId} />
+          <ConversationTitleDialog conversationId={conversationId} editable={true} />
         </Flex>
-        {hasNickname && conversationRealName ? (
-          <StyledAccountId data-testid="fallback-display-name">
-            ({conversationRealName})
-          </StyledAccountId>
-        ) : null}
+        <UsernameFallback conversationId={conversationId} />
         <Description conversationId={conversationId} />
+        {isPrivateUnblinded ? <AccountIdPill accountType={isMe ? 'ours' : 'theirs'} /> : null}
         <AccountId conversationId={conversationId} />
       </Flex>
     </Header>

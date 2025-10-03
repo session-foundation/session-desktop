@@ -35,6 +35,7 @@ import { releasedFeaturesActions } from '../../../state/ducks/releasedFeatures';
 import { networkDataActions } from '../../../state/ducks/networkData';
 import { DEBUG_MENU_PAGE, type DebugMenuPageProps } from './DebugMenuModal';
 import { SimpleSessionInput } from '../../inputs/SessionInput';
+import { NetworkTime } from '../../../util/NetworkTime';
 
 const hexRef = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
 
@@ -57,9 +58,13 @@ async function generateOneRandomContact() {
   // createdAt is set to now in libsession-util itself,
   // but we still need to mark that conversation as active
   // for it to be inserted in the config
-  created.setKey('active_at', Date.now());
-  created.setKey('isApproved', true);
-  created.setSessionDisplayNameNoCommit(id.slice(2, 8));
+  created.setActiveAt(Date.now());
+  await created.setIsApproved(true, false);
+  await created.setSessionProfile({
+    type: 'displayNameChangeOnlyPrivate',
+    displayName: id.slice(2, 8),
+    profileUpdatedAtSeconds: NetworkTime.nowSeconds(),
+  });
 
   await created.commit();
   return created;
@@ -347,7 +352,7 @@ export const ExperimentalActions = ({ forceUpdate }: { forceUpdate: () => void }
   // const timeLeftMs = sesh101NotificationAt - Date.now();
 
   // TODO [SES-2606] uncomment before release but after QA
-  // if (!process.env.SESSION_DEV) {
+  // if (!isDebugMode()) {
   //   return null;
   // }
 
@@ -527,7 +532,11 @@ export const AboutInfo = () => {
       <SpacerXS />
       <Flex $container={true} width="100%" $alignItems="center" $flexGap="var(--margins-xs)">
         <h2>About</h2>
-        <CopyToClipboardIcon iconSize={'small'} copyContent={aboutInfo.join('\n')} />
+        <CopyToClipboardIcon
+          iconSize={'small'}
+          copyContent={aboutInfo.join('\n')}
+          buttonColor={SessionButtonColor.None}
+        />
       </Flex>
       <Flex
         $container={true}
@@ -550,7 +559,11 @@ export const AboutInfo = () => {
               $flexGap="var(--margins-xs)"
             >
               <p style={{ userSelect: 'text', lineHeight: 1.5 }}>{info}</p>
-              <CopyToClipboardIcon iconSize={'small'} copyContent={info} />
+              <CopyToClipboardIcon
+                iconSize={'small'}
+                copyContent={info}
+                buttonColor={SessionButtonColor.None}
+              />
             </Flex>
           );
         })}
@@ -579,7 +592,11 @@ export const OtherInfo = () => {
       <Flex $container={true} width="100%" $alignItems="center" $flexGap="var(--margins-xs)">
         <h2>Other Info</h2>
         {otherInfo.value ? (
-          <CopyToClipboardIcon iconSize={'small'} copyContent={otherInfo.value.join('\n')} />
+          <CopyToClipboardIcon
+            iconSize={'small'}
+            copyContent={otherInfo.value.join('\n')}
+            buttonColor={SessionButtonColor.None}
+          />
         ) : null}
       </Flex>
       <Flex
@@ -607,7 +624,11 @@ export const OtherInfo = () => {
                 $flexGap="var(--margins-xs)"
               >
                 <p style={{ userSelect: 'text', lineHeight: 1.5 }}>{info}</p>
-                <CopyToClipboardIcon iconSize={'small'} copyContent={info} />
+                <CopyToClipboardIcon
+                  iconSize={'small'}
+                  copyContent={info}
+                  buttonColor={SessionButtonColor.None}
+                />
               </Flex>
             ))
           : null}

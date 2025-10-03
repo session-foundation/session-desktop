@@ -1,13 +1,14 @@
 import autoBind from 'auto-bind';
 import { filesize } from 'filesize';
 import { GroupPubkeyType, PubkeyType } from 'libsession_util_nodejs';
-import { debounce, isEmpty, size as lodashSize, uniq } from 'lodash';
+import { debounce, isEmpty, isEqual, size as lodashSize, uniq } from 'lodash';
 import { SignalService } from '../protobuf';
 import { ConvoHub } from '../session/conversations';
 import { ContentMessage } from '../session/messages/outgoing';
 import { ClosedGroupV2VisibleMessage } from '../session/messages/outgoing/visibleMessage/ClosedGroupVisibleMessage';
 import { PubKey } from '../session/types';
 import {
+  MessageUtils,
   UserUtils,
   attachmentIdAsStrFromUrl,
   uploadAttachmentsToFileServer,
@@ -89,13 +90,17 @@ import {
   getPromotedGroupUpdateChangeStr,
 } from './groupUpdate';
 import { NetworkTime } from '../util/NetworkTime';
-import { MessageQueue } from '../session/sending';
+import { MessageQueue, MessageSender } from '../session/sending';
 import { getTimerNotificationStr } from './timerNotifications';
-import { ExpirationTimerUpdate } from '../session/disappearing_messages/types';
+import {
+  ExpirationTimerUpdate,
+  type DisappearingMessageType,
+} from '../session/disappearing_messages/types';
 import { Model } from './models';
 import { ReduxOnionSelectors } from '../state/selectors/onions';
 import { tStrippedWithObj, tr, tStripped } from '../localization/localeTools';
 import type { QuotedAttachmentType } from '../components/conversation/message/message-content/quote/Quote';
+import { ProFeatures, ProMessageFeature } from './proMessageFeature';
 
 // tslint:disable: cyclomatic-complexity
 
@@ -169,15 +174,11 @@ export class MessageModel extends Model<MessageAttributes> {
   }
 
   public idForLogging() {
-    return `${this.get('source')} ${this.get('sent_at')}`;
+    return `msg(${this.id}, ${this.getConversation()?.idForLogging()}, ${this.get('sent_at')})`;
   }
 
   public isExpirationTimerUpdate() {
-    const expirationTimerFlag = SignalService.DataMessage.Flags.EXPIRATION_TIMER_UPDATE;
-    const flags = this.get('flags') || 0;
-
-    // eslint-disable-next-line no-bitwise
-    return Boolean(flags & expirationTimerFlag) && !isEmpty(this.getExpirationTimerUpdate());
+    return !isEmpty(this.getExpirationTimerUpdate());
   }
 
   public isControlMessage() {
@@ -407,6 +408,14 @@ export class MessageModel extends Model<MessageAttributes> {
           );
         }
       });
+      if (this.getConversation()?.isOpenGroupV2() || this.getConversation()?.isClosedGroupV2()) {
+        const source = this.get('source');
+
+        const author = isUsAnySogsFromCache(source)
+          ? tr('you')
+          : ConvoHub.use().getNicknameOrRealUsernameOrPlaceholder(source);
+        return tr('messageSnippetGroup', { author, message_snippet: bodyMentionsMappedToNames });
+      }
       return bodyMentionsMappedToNames;
     }
 
@@ -604,6 +613,7 @@ export class MessageModel extends Model<MessageAttributes> {
 
     const attachments = this.get('attachments') || [];
     const isTrustedForAttachmentDownload = this.isTrustedForAttachmentDownload();
+    const proFeatures = this.getProFeatures();
     const body = this.get('body');
     const props: PropsForMessageWithoutConvoProps = {
       id: this.id,
@@ -642,6 +652,9 @@ export class MessageModel extends Model<MessageAttributes> {
     }
     if (isTrustedForAttachmentDownload) {
       props.isTrustedForAttachmentDownload = isTrustedForAttachmentDownload;
+    }
+    if (proFeatures.length) {
+      props.proFeatures = proFeatures;
     }
     const isUnread = this.isUnread();
     if (isUnread) {
@@ -861,7 +874,6 @@ export class MessageModel extends Model<MessageAttributes> {
       preview: undefined,
       reacts: undefined,
       reactsIndex: undefined,
-      flags: undefined,
       callNotificationType: undefined,
       interactionNotification: undefined,
       reaction: undefined,
@@ -900,7 +912,7 @@ export class MessageModel extends Model<MessageAttributes> {
         const openGroupParams: OpenGroupVisibleMessageParams = {
           identifier: this.id,
           createAtNetworkTimestamp: NetworkTime.now(),
-          lokiProfile: UserUtils.getOurProfile(),
+          userProfile: await UserUtils.getOurProfile(),
           body,
           attachments,
           preview: preview ? [preview] : [],
@@ -931,15 +943,12 @@ export class MessageModel extends Model<MessageAttributes> {
         attachments,
         preview: preview ? [preview] : [],
         quote,
-        lokiProfile: UserUtils.getOurProfile(),
+        userProfile: await UserUtils.getOurProfile(),
         // Note: we should have the fields set on that object when we've added it to the DB.
         // We don't want to reuse the conversation setting, as it might change since this message was sent.
         expirationType: this.getExpirationType() || 'unknown',
         expireTimer: this.getExpireTimerSeconds(),
       };
-      if (!chatParams.lokiProfile) {
-        delete chatParams.lokiProfile;
-      }
 
       const chatMessage = new VisibleMessage(chatParams);
 
@@ -990,7 +999,11 @@ export class MessageModel extends Model<MessageAttributes> {
     // This needs to be an unsafe call, because this method is called during
     //   initial module setup. We may be in the middle of the initial fetch to
     //   the database.
-    return ConvoHub.use().getUnsafe(this.get('conversationId'));
+    return ConvoHub.use().getUnsafe(this.getConversationId() as string);
+  }
+
+  public getConversationId(): string | undefined {
+    return this.get('conversationId');
   }
 
   public getQuoteContact() {
@@ -1012,6 +1025,20 @@ export class MessageModel extends Model<MessageAttributes> {
     }
 
     return UserUtils.getOurPubKeyStrFromCache();
+  }
+
+  public setSource(source: string) {
+    if (source === this.getSource()) {
+      return;
+    }
+    this.setKey('source', source);
+  }
+
+  public setConversationId(convoId: string) {
+    if (convoId === this.getConversationId()) {
+      return;
+    }
+    this.setKey('conversationId', convoId);
   }
 
   public isOutgoing() {
@@ -1087,9 +1114,14 @@ export class MessageModel extends Model<MessageAttributes> {
       );
 
       if (syncMessage) {
-        await MessageQueue.use().sendSyncMessage({
-          namespace: SnodeNamespaces.Default,
-          message: syncMessage,
+        await MessageSender.sendSingleMessage({
+          isSyncMessage: true,
+          message: await MessageUtils.toRawMessage(
+            PubKey.cast(UserUtils.getOurPubKeyStrFromCache()),
+            syncMessage,
+            SnodeNamespaces.Default
+          ),
+          abortSignal: null,
         });
       }
     }
@@ -1233,6 +1265,117 @@ export class MessageModel extends Model<MessageAttributes> {
     }
   }
 
+  public setAttachments(attachments: Array<AttachmentTypeWithPath>) {
+    if (isEqual(attachments, this.getAttachments())) {
+      return;
+    }
+    this.set({ attachments });
+  }
+
+  public getAttachments() {
+    return this.get('attachments');
+  }
+
+  public setPreview(preview: any) {
+    if (isEqual(preview, this.getPreview())) {
+      return;
+    }
+    this.set({ preview });
+  }
+
+  public getReacts() {
+    return this.get('reacts');
+  }
+
+  public setReacts(reacts: ReactionList | undefined) {
+    if (isEqual(reacts, this.getReacts())) {
+      return;
+    }
+    this.set({ reacts });
+  }
+
+  public getReactsIndex() {
+    return this.get('reactsIndex');
+  }
+
+  public setReactIndex(index: number) {
+    if (this.getReactsIndex() === index) {
+      return;
+    }
+    this.set({ reactsIndex: index });
+  }
+
+  public getQuote() {
+    return this.get('quote');
+  }
+
+  public setQuote(quote: any) {
+    if (isEqual(quote, this.getQuote())) {
+      return;
+    }
+    this.set({ quote });
+  }
+
+  public getSentAt() {
+    return this.get('sent_at');
+  }
+
+  public setSentAt(sentAt: number) {
+    if (sentAt === this.getSentAt()) {
+      return;
+    }
+    this.set({ sent_at: sentAt });
+  }
+
+  public setExpireTimer(expireTimerSeconds: number | undefined) {
+    if (expireTimerSeconds === this.getExpireTimerSeconds()) {
+      return;
+    }
+    this.set({ expireTimer: expireTimerSeconds });
+  }
+
+  public set(attrs: Partial<MessageAttributes>) {
+    super.set(attrs);
+    return this;
+  }
+
+  public setKey<K extends keyof MessageAttributes>(
+    key: K,
+    value: MessageAttributes[K] | undefined
+  ) {
+    super.setKey(key, value);
+    return this;
+  }
+
+  public setExpirationType(expirationType: DisappearingMessageType | undefined) {
+    if (expirationType === this.getExpirationType()) {
+      return;
+    }
+    this.set({ expirationType });
+  }
+
+  public getMessageExpirationStartTimestamp() {
+    return this.get('expirationStartTimestamp');
+  }
+
+  public setMessageExpirationStartTimestamp(expirationStartTimestamp: number | undefined) {
+    if (expirationStartTimestamp === this.getMessageExpirationStartTimestamp()) {
+      return;
+    }
+    this.set({ expirationStartTimestamp });
+  }
+
+  public setExpiresAt(expiresAt: number | undefined) {
+    if (expiresAt === this.getExpiresAt()) {
+      return;
+    }
+    this.set({ expires_at: expiresAt });
+  }
+
+  public getPreview() {
+    return this.get('preview');
+  }
+
   public isTrustedForAttachmentDownload() {
     try {
       const senderConvoId = this.getSource();
@@ -1252,6 +1395,16 @@ export class MessageModel extends Model<MessageAttributes> {
       window.log.warn('isTrustedForAttachmentDownload: error; ', e.message);
       return false;
     }
+  }
+
+  private getProFeatures(): Array<ProMessageFeature> {
+    const proFeatures = this.get('proFeatures');
+
+    if (!proFeatures) {
+      return [];
+    }
+
+    return ProFeatures.numberToProFeatures(proFeatures);
   }
 
   private dispatchMessageUpdate() {

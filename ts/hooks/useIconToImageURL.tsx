@@ -10,27 +10,24 @@ const chooseIconColors = (
   defaultColor: ThemeKeys,
   darkColor?: ThemeKeys,
   lightColor?: ThemeKeys,
-  isThemed?: boolean,
   isDarkTheme?: boolean
 ) => {
   return getThemeValue(
-    isThemed && darkColor && lightColor ? (isDarkTheme ? darkColor : lightColor) : defaultColor
+    darkColor && lightColor ? (isDarkTheme ? darkColor : lightColor) : defaultColor
   );
 };
 
 export const convertIconToImageURL = async (
   props: Pick<SessionIconProps, 'iconType' | 'iconSize'> & {
-    isThemed?: boolean;
     isDarkTheme?: boolean;
   }
 ): Promise<{ dataUrl: string; bgColor: string; fgColor: string }> => {
-  const { iconType, iconSize, isThemed, isDarkTheme } = props;
+  const { iconType, iconSize, isDarkTheme } = props;
 
   const fgColor = chooseIconColors(
     '--black-color',
     '--background-primary-color',
     '--text-primary-color',
-    isThemed,
     isDarkTheme
   );
 
@@ -38,7 +35,6 @@ export const convertIconToImageURL = async (
     '--white-color',
     '--text-primary-color',
     '--background-primary-color',
-    isThemed,
     isDarkTheme
   );
 
@@ -76,11 +72,9 @@ export const convertIconToImageURL = async (
 export const useIconToImageURL = ({
   iconType,
   iconSize,
-  isThemed = true,
 }: {
   iconType: SessionIconType;
   iconSize: number;
-  isThemed?: boolean;
 }) => {
   const isDarkTheme = useIsDarkTheme();
   const [dataURL, setDataURL] = useState('');
@@ -102,7 +96,6 @@ export const useIconToImageURL = ({
       } = await convertIconToImageURL({
         iconType,
         iconSize,
-        isThemed,
         isDarkTheme,
       });
 
@@ -122,17 +115,17 @@ export const useIconToImageURL = ({
     } catch (error) {
       window.log.error('[useIconToImageURL] Error fetching icon data url', error);
     }
-  }, [iconSize, iconType, isDarkTheme, isThemed, mounted]);
+  }, [iconSize, iconType, isDarkTheme, mounted]);
 
   useMount(() => {
     void loadURL();
   });
 
   useEffect(() => {
-    if (!loading && mounted && isThemed && isDarkTheme !== inDarkTheme) {
+    if (!loading && mounted && isDarkTheme !== inDarkTheme) {
       void loadURL();
     }
-  }, [inDarkTheme, isDarkTheme, isThemed, loadURL, loading, mounted]);
+  }, [inDarkTheme, isDarkTheme, loadURL, loading, mounted]);
 
   return { dataURL, iconSize, iconColor, backgroundColor, loading };
 };

@@ -1,33 +1,30 @@
-import { useSelector } from 'react-redux';
 import {
-  getAddModeratorsModal,
-  getBanOrUnbanUserModalState,
-  getBlockOrUnblockUserModalState,
-  getChangeNickNameDialog,
-  getConfirmModal,
-  getConversationSettingsModalState,
-  getDebugMenuModalState,
-  getDeleteAccountModalState,
-  getEditProfileDialog,
-  getEditProfilePictureModalState,
-  getEnterPasswordModalState,
-  getHideRecoveryPasswordModalState,
-  getInviteContactModal,
-  getLightBoxOptions,
-  getSessionProInfoModalState,
-  getOnionPathDialog,
-  getOpenUrlModalState,
-  getReactClearAllDialog,
-  getReactListDialog,
-  getRemoveModeratorsModal,
-  getServerBanOrUnbanUserModalState,
-  getSessionNetworkModalState,
-  getSessionPasswordDialog,
-  getUpdateGroupMembersModal,
-  getUpdateGroupNameModal,
-  getUpdateGroupPermissionsModal,
-  getUserDetailsModal,
-  getLocalizedPopupDialogState,
+  useServerBanOrUnbanUserModalState,
+  useUpdateGroupPermissionsModalState,
+  useConfirmModal,
+  useInviteContactModal,
+  useAddModeratorsModal,
+  useRemoveModeratorsModal,
+  useUpdateGroupMembersModal,
+  useUpdateConversationDetailsModal,
+  useUserProfileModal,
+  useChangeNickNameDialog,
+  useUserSettingsModal,
+  useOnionPathDialog,
+  useEnterPasswordModal,
+  useDeleteAccountModal,
+  useBanOrUnbanUserModal,
+  useBlockOrUnblockUserModal,
+  useReactListDialog,
+  useReactClearAllDialog,
+  useEditProfilePictureModal,
+  useHideRecoveryPasswordModal,
+  useOpenUrlModal,
+  useLocalizedPopupDialog,
+  useSessionProInfoModal,
+  useLightBoxOptions,
+  useDebugMenuModal,
+  useConversationSettingsModal,
 } from '../../state/selectors/modal';
 import { LightboxGallery } from '../lightbox/LightboxGallery';
 import { BanOrUnBanUserDialog, ServerBanOrUnBanUserDialog } from './BanOrUnbanUserDialog';
@@ -42,61 +39,55 @@ import { OnionPathModal } from './OnionStatusPathDialog';
 import { ReactClearAllModal } from './ReactClearAllModal';
 import { ReactListModal } from './ReactListModal';
 import { SessionNicknameDialog } from './SessionNicknameDialog';
-import { SessionSetPasswordDialog } from './SessionSetPasswordDialog';
 import { UpdateGroupMembersDialog } from './UpdateGroupMembersDialog';
-import { UpdateGroupNameDialog } from './UpdateGroupNameDialog';
-import { UserDetailsDialog } from './UserDetailsDialog';
-import { EditProfileDialog } from './edit-profile/EditProfileDialog';
+import { UpdateConversationDetailsDialog } from './UpdateConversationDetailsDialog';
+import { UserProfileModal } from './UserProfileModal';
 import { OpenUrlModal } from './OpenUrlModal';
 import { BlockOrUnblockDialog } from './blockOrUnblock/BlockOrUnblockDialog';
 import { UpdateGroupPermissionsDialog } from './UpdateGroupPermissionsDialog';
 import { DebugMenuModal } from './debug/DebugMenuModal';
 import { ConversationSettingsDialog } from './conversationSettings/conversationSettingsDialog';
-import { SessionNetworkModal } from './network/SessionNetworkModal';
 import { SessionConfirm } from './SessionConfirm';
 import { SessionProInfoModal } from './SessionProInfoModal';
 import { LocalizedPopupDialog } from './LocalizedPopupDialog';
+import { UserSettingsDialog } from './user-settings/UserSettingsDialog';
 
 export const ModalContainer = () => {
-  const confirmModalState = useSelector(getConfirmModal);
-  const inviteModalState = useSelector(getInviteContactModal);
-  const addModeratorsModalState = useSelector(getAddModeratorsModal);
-  const removeModeratorsModalState = useSelector(getRemoveModeratorsModal);
-  const updateGroupMembersModalState = useSelector(getUpdateGroupMembersModal);
-  const updateGroupPermissionsModalState = useSelector(getUpdateGroupPermissionsModal);
-  const updateGroupNameModalState = useSelector(getUpdateGroupNameModal);
-  const userDetailsModalState = useSelector(getUserDetailsModal);
-  const changeNicknameModal = useSelector(getChangeNickNameDialog);
-  const editProfileModalState = useSelector(getEditProfileDialog);
-  const onionPathModalState = useSelector(getOnionPathDialog);
-  const enterPasswordModalState = useSelector(getEnterPasswordModalState);
-  const sessionPasswordModalState = useSelector(getSessionPasswordDialog);
-  const deleteAccountModalState = useSelector(getDeleteAccountModalState);
-  const banOrUnbanUserModalState = useSelector(getBanOrUnbanUserModalState);
-  const serverBanOrUnbanUserModalState = useSelector(getServerBanOrUnbanUserModalState);
-  const blockOrUnblockModalState = useSelector(getBlockOrUnblockUserModalState);
-  const reactListModalState = useSelector(getReactListDialog);
-  const reactClearAllModalState = useSelector(getReactClearAllDialog);
-  const editProfilePictureModalState = useSelector(getEditProfilePictureModalState);
-  const hideRecoveryPasswordModalState = useSelector(getHideRecoveryPasswordModalState);
-  const openUrlModalState = useSelector(getOpenUrlModalState);
-  const localizedPopupDialogState = useSelector(getLocalizedPopupDialogState);
-  const sessionProInfoState = useSelector(getSessionProInfoModalState);
-  const lightBoxOptions = useSelector(getLightBoxOptions);
-  const debugMenuModalState = useSelector(getDebugMenuModalState);
-  const conversationSettingsModalState = useSelector(getConversationSettingsModalState);
-  const sessionNetworkModalState = useSelector(getSessionNetworkModalState);
+  const confirmModalState = useConfirmModal();
+  const inviteModalState = useInviteContactModal();
+  const addModeratorsModalState = useAddModeratorsModal();
+  const removeModeratorsModalState = useRemoveModeratorsModal();
+  const updateGroupMembersModalState = useUpdateGroupMembersModal();
+  const updateGroupPermissionsModalState = useUpdateGroupPermissionsModalState();
+  const updateConversationDetailsModalState = useUpdateConversationDetailsModal();
+  const userProfileModalState = useUserProfileModal();
+  const changeNicknameModal = useChangeNickNameDialog();
+  const userSettingsModalState = useUserSettingsModal();
+  const onionPathModalState = useOnionPathDialog();
+  const enterPasswordModalState = useEnterPasswordModal();
+  const deleteAccountModalState = useDeleteAccountModal();
+  const banOrUnbanUserModalState = useBanOrUnbanUserModal();
+  const serverBanOrUnbanUserModalState = useServerBanOrUnbanUserModalState();
+  const blockOrUnblockModalState = useBlockOrUnblockUserModal();
+  const reactListModalState = useReactListDialog();
+  const reactClearAllModalState = useReactClearAllDialog();
+  const editProfilePictureModalState = useEditProfilePictureModal();
+  const hideRecoveryPasswordModalState = useHideRecoveryPasswordModal();
+  const openUrlModalState = useOpenUrlModal();
+  const localizedPopupDialogState = useLocalizedPopupDialog();
+  const sessionProInfoState = useSessionProInfoModal();
+  const lightBoxOptions = useLightBoxOptions();
+  const debugMenuModalState = useDebugMenuModal();
+  const conversationSettingsModalState = useConversationSettingsModal();
 
   // NOTE the order of the modals is important for the z-index
   return (
     <>
       {/* Screens */}
+      {userSettingsModalState && <UserSettingsDialog {...userSettingsModalState} />}
       {conversationSettingsModalState && (
         <ConversationSettingsDialog {...conversationSettingsModalState} />
       )}
-      {sessionPasswordModalState && <SessionSetPasswordDialog {...sessionPasswordModalState} />}
-      {sessionNetworkModalState && <SessionNetworkModal {...sessionNetworkModalState} />}
-      {editProfileModalState && <EditProfileDialog {...editProfileModalState} />}
       {onionPathModalState && <OnionPathModal {...onionPathModalState} />}
       {reactListModalState && <ReactListModal {...reactListModalState} />}
       {debugMenuModalState && <DebugMenuModal {...debugMenuModalState} />}
@@ -115,8 +106,10 @@ export const ModalContainer = () => {
       {updateGroupPermissionsModalState && (
         <UpdateGroupPermissionsDialog {...updateGroupPermissionsModalState} />
       )}
-      {updateGroupNameModalState && <UpdateGroupNameDialog {...updateGroupNameModalState} />}
-      {userDetailsModalState && <UserDetailsDialog {...userDetailsModalState} />}
+      {updateConversationDetailsModalState && (
+        <UpdateConversationDetailsDialog {...updateConversationDetailsModalState} />
+      )}
+      {userProfileModalState && <UserProfileModal {...userProfileModalState} />}
       {changeNicknameModal && <SessionNicknameDialog {...changeNicknameModal} />}
       {enterPasswordModalState && <EnterPasswordModal {...enterPasswordModalState} />}
       {deleteAccountModalState && <DeleteAccountModal {...deleteAccountModalState} />}

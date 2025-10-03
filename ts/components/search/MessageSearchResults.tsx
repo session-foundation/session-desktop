@@ -1,9 +1,9 @@
 import styled, { CSSProperties } from 'styled-components';
 
 import {
+  useConversationUsernameWithFallback,
   useIsPrivate,
   useIsPublic,
-  useNicknameOrProfileNameOrShortenedPubkey,
 } from '../../hooks/useParamSelector';
 import { isUsAnySogsFromCache } from '../../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import { PubKey } from '../../session/types';
@@ -13,7 +13,7 @@ import { openConversationToSpecificMessage } from '../../state/ducks/conversatio
 import { MessageResultProps } from '../../types/message';
 import { Avatar, AvatarSize } from '../avatar/Avatar';
 import { MessageBodyHighlight } from '../basic/MessageBodyHighlight';
-import { ContactName } from '../conversation/ContactName';
+import { ContactName } from '../conversation/ContactName/ContactName';
 import { Timestamp } from '../conversation/Timestamp';
 import { leftPaneListWidth } from '../leftpane/LeftPane';
 import { tr } from '../../localization/localeTools';
@@ -92,7 +92,8 @@ const FromName = (props: { source: string; conversationId: string }) => {
     <ContactName
       pubkey={conversationId}
       module="module-message-search-result__header__name"
-      shouldShowPubkey={false}
+      contactNameContext="message-search-result-from"
+      conversationId={conversationId}
     />
   );
 };
@@ -106,7 +107,11 @@ const ConversationHeader = (props: { source: string; conversationId: string }) =
     return (
       <StyledConversationTitleResults>
         <StyledMessageResultsHeaderName>
-          <ContactName pubkey={conversationId} shouldShowPubkey={false} boldProfileName={false} />
+          <ContactName
+            pubkey={conversationId}
+            contactNameContext="message-search-result-conversation"
+            conversationId={conversationId}
+          />
         </StyledMessageResultsHeaderName>
       </StyledConversationTitleResults>
     );
@@ -125,7 +130,7 @@ const FromUserInGroup = (props: { authorPubkey: string; conversationId: string }
   const ourKey = getOurPubKeyStrFromCache();
   const isPublic = useIsPublic(conversationId);
   const convoIsPrivate = useIsPrivate(conversationId);
-  const authorConvoName = useNicknameOrProfileNameOrShortenedPubkey(authorPubkey);
+  const authorConvoName = useConversationUsernameWithFallback(true, authorPubkey);
 
   if (convoIsPrivate) {
     return null;

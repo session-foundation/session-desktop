@@ -4,7 +4,7 @@
 .module-contact-name {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   overflow-x: hidden;
   font-weight: 400;
 }
@@ -17,9 +17,6 @@
   user-select: none;
 }
 
-.module-contact-name__profile-number.italic {
-  font-style: italic;
-}
 // Module: Message
 
 .module-message__img-attachment {
@@ -200,11 +197,7 @@
   overflow-y: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-}
-
-.module-conversation__user__profile-name,
-.module-message__author__profile-name {
-  font-style: italic;
+  align-items: center;
 }
 
 // Module: Contact List Item
@@ -232,68 +225,9 @@
   font-size: 14px;
 }
 
-.module-contact-list-item__text__profile-name {
-  font-style: italic;
-}
-
 .module-contact-list-item__text__additional-data {
   margin-top: 3px;
   font-size: 14px;
-}
-
-// Module: Conversation Header
-
-.module-conversation-header {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-}
-
-.module-conversation-header__title-container {
-  min-width: 0;
-  display: block;
-  text-align: center;
-  flex-grow: 1;
-}
-
-.module-conversation-header__title-flex {
-  display: inline-flex;
-  flex-direction: row;
-  align-items: center;
-  max-width: 100%;
-}
-
-.module-conversation-header__avatar {
-  min-width: 28px;
-  user-select: none;
-}
-
-.module-conversation-header__title {
-  margin: 0px 20px;
-
-  min-width: 0;
-  font-size: 16px;
-  line-height: 26px;
-  font-weight: 400;
-  color: var(--text-primary-color);
-
-  // width of avatar (28px) and our 6px left margin
-  max-width: calc(100% - 34px);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-
-  display: flex;
-  align-items: center;
-
-  user-select: text;
-  cursor: pointer;
-
-  .module-contact-name__profile-name {
-    width: 100%;
-    overflow: hidden !important;
-    text-overflow: ellipsis;
-  }
 }
 
 // Module: Document List Item
@@ -361,33 +295,6 @@
   &:hover {
     background-color: var(--conversation-tab-background-hover-color);
   }
-
-  &--is-blocked {
-    border-left: 4px solid var(--danger-color) !important;
-  }
-}
-
-.module-conversation-list-item__unread-count {
-  background-color: var(--unread-messages-alert-background-color);
-  color: var(--unread-messages-alert-text-color);
-  text-align: center;
-
-  padding-top: 1px;
-  padding-inline-start: 3px;
-  padding-inline-end: 3px;
-
-  position: absolute;
-  right: -6px;
-  top: -6px;
-
-  font-weight: 300;
-  font-size: var(--font-size-xs);
-  letter-spacing: 0.25px;
-
-  height: 16px;
-  min-width: 16px;
-  line-height: 16px;
-  border-radius: 8px;
 }
 
 .module-conversation-list-item__content {
@@ -414,7 +321,7 @@
 
 .module-conversation-list-item__header__name {
   flex-grow: 1;
-  flex-shrink: 1;
+  flex-shrink: 1000; // we need this to take all the shrinking instead of the ListItemIcons
   font-size: 14px;
   line-height: 18px;
 
@@ -429,10 +336,6 @@
   flex-shrink: 0;
 }
 
-.module-conversation-list-item__header__name--with-unread {
-  font-weight: 300;
-}
-
 .module-conversation-list-item__header__date--has-unread {
   font-weight: 300;
   color: var(--conversation-tab-text-unread-color);
@@ -442,26 +345,6 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-}
-
-.module-conversation-list-item__message__text {
-  flex-grow: 1;
-  flex-shrink: 1;
-
-  font-size: var(--font-size-sm);
-  color: var(--conversation-tab-text-color);
-
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  .text-selectable {
-    user-select: none;
-  }
-}
-
-.module-conversation-list-item__message__text--has-unread {
-  font-weight: 400;
-  color: var(--conversation-tab-text-unread-color);
 }
 
 // Module: Image
@@ -576,17 +459,6 @@
 }
 
 // Module: Left Pane
-
-.module-left-pane {
-  display: inline-flex;
-  flex-direction: column;
-  width: var(--left-panel-width);
-  height: 100%;
-}
-
-.module-left-pane__virtual-list {
-  outline: none;
-}
 
 // Module H5AudioPlayer
 $rhap_background-color: var(--transparent-color) !default;

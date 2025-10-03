@@ -57,20 +57,6 @@ describe('libsession_groups', () => {
         ).to.be.eq(true);
       });
 
-      it('exclude legacy group left', () => {
-        // we cannot have a left group anymore. It's removed entirely when we leave it
-      });
-      it('exclude legacy group kicked', () => {
-        expect(
-          SessionUtilUserGroups.isUserGroupToStoreInWrapper(
-            new ConversationModel({
-              ...validLegacyGroupArgs,
-              isKickedFromGroup: true,
-            })
-          )
-        ).to.be.eq(false);
-      });
-
       it('exclude legacy group not active', () => {
         expect(
           SessionUtilUserGroups.isUserGroupToStoreInWrapper(

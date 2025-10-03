@@ -30,7 +30,7 @@ export function useShowNoteToSelfCb({ conversationId }: { conversationId: string
         title: tr('showNoteToSelf'),
         i18nMessage: { token: 'showNoteToSelfDescription' },
         onClickClose,
-        closeTheme: SessionButtonColor.White,
+        closeTheme: SessionButtonColor.TextPrimary,
         onClickOk: async () => {
           const convo = ConvoHub.use().get(conversationId);
           await convo.unhideIfNeeded(true);

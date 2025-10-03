@@ -83,6 +83,7 @@ export const EmptyMessageView = () => {
       $flexDirection="column"
       $justifyContent="center"
       $alignItems="center"
+      data-testid={newAccountCreated ? 'empty-msg-view-account-created' : 'empty-msg-view-welcome'}
     >
       {newAccountCreated ? (
         <>
@@ -90,7 +91,7 @@ export const EmptyMessageView = () => {
           <Spacer2XL />
           <StyledHeading>{tr('onboardingAccountCreated')}</StyledHeading>
           <StyledSessionWelcome color={'var(--renderer-span-primary-color)'}>
-            <Localizer token="onboardingBubbleWelcomeToSession" args={{ emoji: '👋' }} />
+            <Localizer token="onboardingBubbleWelcomeToSession" emoji={'👋'} />
           </StyledSessionWelcome>
         </>
       ) : (

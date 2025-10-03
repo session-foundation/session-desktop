@@ -24,7 +24,7 @@ const targetVersion = 34;
 function fetchConfigDumps(
   db: BetterSqlite3.Database,
   version: number,
-  userPubkeyhex: string,
+  userPubkeyHex: string,
   variant: 'UserConfig' | 'ContactsConfig' | 'UserGroupsConfig' | 'ConvoInfoVolatileConfig'
 ): ConfigDumpRow | null {
   checkTargetMigration(version, targetVersion);
@@ -33,7 +33,7 @@ function fetchConfigDumps(
     .prepare(
       `SELECT * FROM ${CONFIG_DUMP_TABLE} WHERE variant = $variant AND publicKey = $publicKey;`
     )
-    .all({ variant, publicKey: userPubkeyhex }) as Array<ConfigDumpRow>;
+    .all({ variant, publicKey: userPubkeyHex }) as Array<ConfigDumpRow>;
 
   if (!configWrapperDumps || !configWrapperDumps.length) {
     return null;
@@ -46,7 +46,7 @@ function fetchConfigDumps(
 function writeConfigDumps(
   db: BetterSqlite3.Database,
   version: number,
-  userPubkeyhex: string,
+  userPubkeyHex: string,
   variant: 'UserConfig' | 'ContactsConfig' | 'UserGroupsConfig' | 'ConvoInfoVolatileConfig',
   dump: Uint8Array
 ) {
@@ -63,7 +63,7 @@ function writeConfigDumps(
           $data
         );`
   ).run({
-    publicKey: userPubkeyhex,
+    publicKey: userPubkeyHex,
     variant,
     data: dump,
   });
@@ -111,6 +111,7 @@ function getContactInfoFromDBValues({
     createdAtSeconds: dbCreatedAtSeconds,
     expirationMode,
     expirationTimerSeconds: !!expireTimer && expireTimer > 0 ? expireTimer : 0,
+    profileUpdatedSeconds: 0,
   };
 
   if (

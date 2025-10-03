@@ -3,9 +3,9 @@ import { Constants } from '../../..';
 import { SignalService } from '../../../../protobuf';
 import { MessageParams } from '../Message';
 
-interface TypingMessageParams extends MessageParams {
+type TypingMessageParams = MessageParams & {
   isTyping: boolean;
-}
+};
 
 export class TypingMessage extends ContentMessage {
   public readonly isTyping: boolean;

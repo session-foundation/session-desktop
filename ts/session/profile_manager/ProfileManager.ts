@@ -1,23 +1,30 @@
-import { isEmpty, isNil } from 'lodash';
+import { isNil } from 'lodash';
 import { ConvoHub } from '../conversations';
 import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { SyncUtils, UserUtils } from '../utils';
-import { fromHexToArray, toHex, trimWhitespace } from '../utils/String';
+import { trimWhitespace } from '../utils/String';
 import { AvatarDownload } from '../utils/job_runners/jobs/AvatarDownloadJob';
-import { CONVERSATION_PRIORITIES, ConversationTypeEnum } from '../../models/types';
+import { ConversationTypeEnum } from '../../models/types';
 import { RetrieveDisplayNameError } from '../utils/errors';
-
-export type Profile = {
-  displayName: string | undefined;
-  profileUrl: string | null;
-  profileKey: Uint8Array | null;
-  priority: number | null; // passing null means to not update the priority at all (used for legacy config message for now)
-};
+import { NetworkTime } from '../../util/NetworkTime';
+import type { WithProfileUpdatedAtSeconds } from '../../models/conversationAttributes';
 
 /**
  * This can be used to update our conversation display name with the given name right away, and plan an AvatarDownloadJob to retrieve the new avatar if needed to download it
  */
-async function updateOurProfileSync({ displayName, profileUrl, profileKey, priority }: Profile) {
+async function updateOurProfileSync({
+  displayName,
+  profileUrl,
+  profileKey,
+  priority,
+  profileUpdatedAtSeconds,
+}: {
+  displayName: string | undefined;
+  profileUrl: string | null;
+  profileKey: Uint8Array | null;
+  priority: number | null; // passing null means to not update the priority at all (used for legacy config message for now)
+  profileUpdatedAtSeconds: number;
+}) {
   const us = UserUtils.getOurPubKeyStrFromCache();
   const ourConvo = ConvoHub.use().get(us);
   if (!ourConvo?.id) {
@@ -25,7 +32,13 @@ async function updateOurProfileSync({ displayName, profileUrl, profileKey, prior
     return;
   }
 
-  await updateProfileOfContact(us, displayName, profileUrl, profileKey);
+  await updateProfileOfContact({
+    pubkey: us,
+    displayName,
+    profileUrl,
+    profileKey,
+    profileUpdatedAtSeconds,
+  });
   if (priority !== null) {
     await ourConvo.setPriorityFromWrapper(priority, true);
   }
@@ -34,68 +47,51 @@ async function updateOurProfileSync({ displayName, profileUrl, profileKey, prior
 /**
  * This can be used to update the display name of the given pubkey right away, and plan an AvatarDownloadJob to retrieve the new avatar if needed to download it.
  */
-async function updateProfileOfContact(
-  pubkey: string,
-  displayName: string | null | undefined,
-  profileUrl: string | null | undefined,
-  profileKey: Uint8Array | null | undefined
-) {
+async function updateProfileOfContact({
+  pubkey,
+  displayName,
+  profileKey,
+  profileUrl,
+  profileUpdatedAtSeconds,
+}: {
+  pubkey: string;
+  displayName: string | null | undefined;
+  profileUrl: string | null | undefined;
+  profileKey: Uint8Array | null | undefined;
+} & WithProfileUpdatedAtSeconds) {
   const conversation = ConvoHub.use().get(pubkey);
 
   if (!conversation || !conversation.isPrivate()) {
     window.log.warn('updateProfileOfContact can only be used for existing and private convos');
     return;
   }
-  let changes = false;
-  const existingDisplayName = conversation.getRealSessionUsername();
-
-  // avoid setting the display name to an invalid value
-  if (existingDisplayName !== displayName && !isEmpty(displayName)) {
-    conversation.setKey('displayNameInProfile', displayName || undefined);
-    changes = true;
-  }
-
-  const profileKeyHex = !profileKey || isEmpty(profileKey) ? null : toHex(profileKey);
-
-  let avatarChanged = false;
-  // trust whatever we get as an update. It either comes from a shared config wrapper or one of that user's message. But in any case we should trust it, even if it gets resetted.
-  const prevPointer = conversation.getAvatarPointer();
-  const prevProfileKey = conversation.getProfileKey();
+  let changes;
 
   // we have to set it right away and not in the async download job, as the next .commit will save it to the
   // database and wrapper (and we do not want to override anything in the wrapper's content
   // with what we have locally, so we need the commit to have already the right values in pointer and profileKey)
-  if (prevPointer !== profileUrl || prevProfileKey !== profileKeyHex) {
-    conversation.set({
-      avatarPointer: profileUrl || undefined,
-      profileKey: profileKeyHex || undefined,
-    });
 
-    // if the avatar data we had before is not the same of what we received, we need to schedule a new avatar download job.
-    avatarChanged = true; // allow changes from strings to null/undefined to trigger a AvatarDownloadJob. If that happens, we want to remove the local attachment file.
+  if (profileUrl && profileKey) {
+    changes = await conversation.setSessionProfile({
+      type: 'setAvatarBeforeDownloadPrivate',
+      profileKey,
+      avatarPointer: profileUrl,
+      displayName,
+      profileUpdatedAtSeconds,
+    });
+  } else {
+    changes = await conversation.setSessionProfile({
+      type: 'resetAvatarPrivate',
+      profileUpdatedAtSeconds,
+      displayName,
+    });
   }
 
-  // if we have a local path to a downloaded avatar, but no corresponding url/key for it, it means that
-  // the avatar was most likely removed so let's remove our link to that file.
-  if (
-    (!profileUrl || !profileKeyHex) &&
-    (conversation.getAvatarInProfilePath() || conversation.getFallbackAvatarInProfilePath())
-  ) {
-    conversation.setKey('profileKey', undefined);
-    await conversation.setSessionProfile({
-      avatarPointer: undefined,
-      avatarPath: undefined,
-      fallbackAvatarPath: undefined,
-      displayName: null,
-    });
-    changes = true;
-  }
-
-  if (changes) {
+  if (changes.nameChanged || changes.avatarChanged) {
     await conversation.commit();
   }
 
-  if (avatarChanged) {
+  if (changes.avatarNeedsDownload) {
     // this call will download the new avatar or reset the local filepath if needed
     await AvatarDownload.addAvatarDownloadJob({
       conversationId: pubkey,
@@ -132,17 +128,8 @@ async function updateOurProfileDisplayNameOnboarding(newName: string) {
 }
 
 async function updateOurProfileDisplayName(newName: string) {
-  const ourNumber = UserUtils.getOurPubKeyStrFromCache();
-  const conversation = await ConvoHub.use().getOrCreateAndWait(
-    ourNumber,
-    ConversationTypeEnum.PRIVATE
-  );
-
-  const dbProfileUrl = conversation.get('avatarPointer');
-  const dbProfileKey = conversation.get('profileKey')
-    ? fromHexToArray(conversation.get('profileKey')!)
-    : null;
-  const dbPriority = conversation.get('priority') || CONVERSATION_PRIORITIES.default;
+  const us = UserUtils.getOurPubKeyStrFromCache();
+  const conversation = await ConvoHub.use().getOrCreateAndWait(us, ConversationTypeEnum.PRIVATE);
 
   // we don't want to throw if somehow our display name in the DB is too long here, so we use the truncated version.
   await UserConfigWrapperActions.setNameTruncated(trimWhitespace(newName));
@@ -150,18 +137,16 @@ async function updateOurProfileDisplayName(newName: string) {
   if (isNil(truncatedName)) {
     throw new RetrieveDisplayNameError();
   }
-  await UserConfigWrapperActions.setPriority(dbPriority);
-  if (dbProfileUrl && !isEmpty(dbProfileKey)) {
-    await UserConfigWrapperActions.setProfilePic({ key: dbProfileKey, url: dbProfileUrl });
-  } else {
-    await UserConfigWrapperActions.setProfilePic({ key: null, url: null });
-  }
 
-  conversation.setSessionDisplayNameNoCommit(truncatedName);
+  await conversation.setSessionProfile({
+    type: 'displayNameChangeOnlyPrivate',
+    displayName: newName,
+    profileUpdatedAtSeconds: NetworkTime.nowSeconds(),
+  });
 
   // might be good to not trigger a sync if the name did not change
   await conversation.commit();
-  await SyncUtils.forceSyncConfigurationNowIfNeeded(true);
+  void SyncUtils.forceSyncConfigurationNowIfNeeded(true);
 
   return truncatedName;
 }

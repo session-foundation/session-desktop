@@ -34,7 +34,7 @@ export function generateVisibleMessage({
     quote: undefined,
     expirationType: 'unknown',
     expireTimer: 0,
-    lokiProfile: undefined,
+    userProfile: null,
     preview: undefined,
   });
 }
@@ -78,6 +78,7 @@ export function generateOpenGroupMessageV2WithServerId(
 export function generateOpenGroupVisibleMessage(): OpenGroupVisibleMessage {
   return new OpenGroupVisibleMessage({
     createAtNetworkTimestamp: Date.now(),
+    userProfile: null,
   });
 }
 
@@ -153,7 +154,7 @@ export function generateDisappearingVisibleMessage({
     quote: undefined,
     expirationType: expirationType ?? 'unknown',
     expireTimer: expireTimer ?? 0,
-    lokiProfile: undefined,
+    userProfile: null,
     preview: undefined,
   });
 }
@@ -176,6 +177,5 @@ export function generateFakeExpirationTimerUpdate({
       expirationType,
       expireTimer,
     },
-    flags: 2,
   });
 }

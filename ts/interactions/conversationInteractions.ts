@@ -29,11 +29,11 @@ import {
   updateConfirmModal,
   updateConversationSettingsModal,
   updateGroupMembersModal,
-  updateGroupNameModal,
   updateGroupPermissionsModal,
   updateInviteContactModal,
   updateRemoveModeratorsModal,
   updateServerBanOrUnbanUserModal,
+  updateConversationDetailsModal,
 } from '../state/ducks/modalDialog';
 import { Storage } from '../util/storage';
 import { UserGroupsWrapperActions } from '../webworker/workers/browser/libsession_worker_interface';
@@ -47,8 +47,7 @@ import { MessageSender } from '../session/sending';
 import { StoreGroupRequestFactory } from '../session/apis/snode_api/factories/StoreGroupRequestFactory';
 import { DURATION } from '../session/constants';
 import { GroupInvite } from '../session/utils/job_runners/jobs/GroupInviteJob';
-import type { LocalizerProps } from '../components/basic/Localizer';
-import { tr } from '../localization/localeTools';
+import { tr, type TrArgs } from '../localization/localeTools';
 
 export async function copyPublicKeyByConvoId(convoId: string) {
   if (OpenGroupUtils.isOpenGroupV2(convoId)) {
@@ -240,12 +239,12 @@ export const declineConversationWithConfirm = ({
 
   const convoName = ConvoHub.use().get(conversationId)?.getNicknameOrRealUsernameOrPlaceholder();
 
-  const i18nMessage: LocalizerProps = isGroupV2
+  const i18nMessage: TrArgs = isGroupV2
     ? alsoBlock && originNameToBlock
-      ? { token: 'blockDescription', args: { name: originNameToBlock } } // groupv2, and blocking by sender name
+      ? { token: 'blockDescription', name: originNameToBlock } // groupv2, and blocking by sender name
       : { token: 'groupInviteDelete' } // groupv2, and no info about the sender, falling back to delete only
     : alsoBlock
-      ? { token: 'blockDescription', args: { name: convoName } }
+      ? { token: 'blockDescription', name: convoName }
       : { token: 'messageRequestsDelete' };
 
   window?.inboxStore?.dispatch(
@@ -273,7 +272,7 @@ export const declineConversationWithConfirm = ({
   );
 };
 
-export async function showUpdateGroupNameByConvoId(conversationId: string) {
+export async function showUpdateGroupOrCommunityDetailsByConvoId(conversationId: string) {
   const conversation = ConvoHub.use().get(conversationId);
   if (conversation.isClosedGroup()) {
     // make sure all the members' convo exists so we can add or remove them
@@ -283,7 +282,7 @@ export async function showUpdateGroupNameByConvoId(conversationId: string) {
         .map(m => ConvoHub.use().getOrCreateAndWait(m, ConversationTypeEnum.PRIVATE))
     );
   }
-  window.inboxStore?.dispatch(updateGroupNameModal({ conversationId }));
+  window.inboxStore?.dispatch(updateConversationDetailsModal({ conversationId }));
 }
 
 export async function showUpdateGroupPermissionsByConvoId(conversationId: string) {
@@ -395,7 +394,7 @@ export async function showLeaveGroupByConvoId(conversationId: string, name: stri
         title: tr('groupLeave'),
         i18nMessage: {
           token: 'groupDeleteDescription',
-          args: { group_name: name || tr('unknown') },
+          group_name: name || tr('unknown'),
         },
         onClickOk,
         okText: tr('leave'),
@@ -409,7 +408,7 @@ export async function showLeaveGroupByConvoId(conversationId: string, name: stri
   window?.inboxStore?.dispatch(
     updateConfirmModal({
       title: tr('groupLeave'),
-      i18nMessage: { token: 'groupLeaveDescription', args: { group_name: name ?? tr('unknown') } },
+      i18nMessage: { token: 'groupLeaveDescription', group_name: name ?? tr('unknown') },
       onClickOk,
       okText: tr('leave'),
       okTheme: SessionButtonColor.Danger,
@@ -454,7 +453,7 @@ export async function showDeleteGroupByConvoId(conversationId: string, name: str
       title: tr('groupDelete'),
       i18nMessage: {
         token: weAreAdmin ? 'groupDeleteDescription' : 'groupDeleteDescriptionMember',
-        args: { group_name: name ?? tr('unknown') },
+        group_name: name ?? tr('unknown'),
       },
       onClickOk,
       okText: tr('delete'),
@@ -516,11 +515,8 @@ export async function deleteAllMessagesByConvoIdNoConfirmation(conversationId: s
 
   // destroy message keeps the active timestamp set so the
   // conversation still appears on the conversation list but is empty
-  conversation.set({
-    lastMessage: null,
-    lastMessageInteractionType: null,
-    lastMessageInteractionStatus: null,
-  });
+  conversation.setLastMessage(null);
+  conversation.setLastMessageInteraction(null);
 
   await conversation.commit();
   window.inboxStore?.dispatch(conversationReset(conversationId));
@@ -669,8 +665,7 @@ export async function updateConversationInteractionState({
     (type !== convo.get('lastMessageInteractionType') ||
       status !== convo.get('lastMessageInteractionStatus'))
   ) {
-    convo.setKey('lastMessageInteractionType', type);
-    convo.setKey('lastMessageInteractionStatus', status);
+    convo.setLastMessageInteraction({ type, status });
 
     await convo.commit();
     window.log.debug(
@@ -693,8 +688,7 @@ export async function clearConversationInteractionState({
     convo &&
     (convo.get('lastMessageInteractionType') || convo.get('lastMessageInteractionStatus'))
   ) {
-    convo.setKey('lastMessageInteractionType', null);
-    convo.setKey('lastMessageInteractionStatus', null);
+    convo.setLastMessageInteraction(null);
 
     await convo.commit();
     window.log.debug(`clearConversationInteractionState for ${conversationId}`);

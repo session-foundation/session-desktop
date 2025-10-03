@@ -3,9 +3,11 @@ import styled from 'styled-components';
 import { findAndFormatContact } from '../../../../models/message';
 import { PubKey } from '../../../../session/types/PubKey';
 
-import { Localizer, type LocalizerProps } from '../../../basic/Localizer';
+import { Localizer } from '../../../basic/Localizer';
 import { nativeEmojiData } from '../../../../util/emoji';
 import { useSelectedIsPublic } from '../../../../state/selectors/selectedConversation';
+import { shortenDisplayName } from '../../../../session/profile_manager/ShortenDisplayName';
+import type { TrArgs } from '../../../../localization/localeTools';
 
 export const StyledPopupContainer = styled.div`
   display: flex;
@@ -41,7 +43,7 @@ const generateContactsString = (
 
       // Shorten the name if it's too long, the box these names are listed in is pretty small
       if (resolvedName && resolvedName.length > 13) {
-        resolvedName = `${resolvedName.slice(0, 10)}…`;
+        resolvedName = shortenDisplayName(resolvedName);
       }
 
       const nameSuffix = isPublic && resolvedName ? shortPubkey : '';
@@ -57,7 +59,7 @@ const getI18nComponentProps = (
   numberOfReactors: number,
   emoji: string,
   emojiName?: string
-): LocalizerProps => {
+): TrArgs => {
   const name = contacts[0];
   const other_name = contacts[1];
   const emoji_name = emojiName ? `:${emojiName}:` : emoji;
@@ -66,16 +68,16 @@ const getI18nComponentProps = (
   switch (numberOfReactors) {
     case 1:
       return isYou
-        ? { token: 'emojiReactsHoverYouNameDesktop', args: { emoji_name } }
-        : { token: 'emojiReactsHoverNameDesktop', args: { name, emoji_name } };
+        ? { token: 'emojiReactsHoverYouNameDesktop', emoji_name }
+        : { token: 'emojiReactsHoverNameDesktop', name, emoji_name };
     case 2:
       return isYou
-        ? { token: 'emojiReactsHoverYouNameTwoDesktop', args: { name, emoji_name } }
-        : { token: 'emojiReactsHoverNameTwoDesktop', args: { name, other_name, emoji_name } };
+        ? { token: 'emojiReactsHoverYouNameTwoDesktop', name, emoji_name }
+        : { token: 'emojiReactsHoverNameTwoDesktop', name, other_name, emoji_name };
     default:
       return isYou
-        ? { token: 'emojiReactsHoverYouNameMultipleDesktop', args: { count, emoji_name } }
-        : { token: 'emojiReactsHoverTwoNameMultipleDesktop', args: { name, count, emoji_name } };
+        ? { token: 'emojiReactsHoverYouNameMultipleDesktop', count, emoji_name }
+        : { token: 'emojiReactsHoverTwoNameMultipleDesktop', name, count, emoji_name };
   }
 };
 

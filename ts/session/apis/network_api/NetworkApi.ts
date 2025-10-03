@@ -41,7 +41,7 @@ export default class NetworkApi {
       return {};
     }
 
-    const timestamp = NetworkTime.getNowWithNetworkOffsetSeconds();
+    const timestamp = NetworkTime.nowSeconds();
     const blindedPkHex = await BlindingActions.blindVersionPubkey({
       ed25519SecretKey: userEd25519SecretKey,
     });
@@ -103,7 +103,7 @@ export default class NetworkApi {
   }
 
   private async makeRequest(request: Awaited<ReturnType<typeof this.getRequestParams>>) {
-    if (window.sessionFeatureFlags?.debug.debugServerRequests) {
+    if (window.sessionFeatureFlags?.debugServerRequests) {
       window.log.info(`[network api] ${request.endpoint}\nrequest:`, JSON.stringify(request));
     }
     const controller = new AbortController();
@@ -115,7 +115,7 @@ export default class NetworkApi {
 
     const response = this.handleOnionResponse(result, request.endpoint);
 
-    if (window.sessionFeatureFlags?.debug.debugServerRequests) {
+    if (window.sessionFeatureFlags?.debugServerRequests) {
       window.log.info(`[network api] ${request.endpoint}\nresponse:`, JSON.stringify(response));
     }
 
@@ -134,7 +134,7 @@ export default class NetworkApi {
     };
 
     if (!batchGlobalIsSuccess(result) || !result?.body) {
-      if (window.sessionFeatureFlags?.debug.debugServerRequests) {
+      if (window.sessionFeatureFlags?.debugServerRequests) {
         window.log.error(
           `[network api] ${endpoint}: failed with status ${parseBatchGlobalStatusCode(result)} ${JSON.stringify(result)} `
         );
@@ -154,7 +154,7 @@ export default class NetworkApi {
   // #region API calls
 
   async getValidateHeaders(): Promise<ValidateHeaderResponse> {
-    if (window.sessionFeatureFlags?.debug.debugServerRequests) {
+    if (window.sessionFeatureFlags?.debugServerRequests) {
       window.log.info('[network api] /validate/headers: about to try to validate headers');
     }
 
@@ -168,7 +168,7 @@ export default class NetworkApi {
   }
 
   async getInfo(): Promise<InfoResponse | null> {
-    if (window.sessionFeatureFlags?.debug.debugServerRequests) {
+    if (window.sessionFeatureFlags?.debugServerRequests) {
       window.log.info(`[network api] /info: about to try to get info`);
     }
 

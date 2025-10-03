@@ -12,6 +12,7 @@ import {
   VisibleMessage,
 } from '../../../../session/messages/outgoing/visibleMessage/VisibleMessage';
 import { DisappearingMessageMode } from '../../../../session/disappearing_messages/types';
+import { OutgoingUserProfile } from '../../../../types/message';
 
 const sharedNoExpire = {
   expirationType: DisappearingMessageMode[0],
@@ -23,6 +24,7 @@ describe('VisibleMessage', () => {
     const message = new VisibleMessage({
       createAtNetworkTimestamp: Date.now(),
       ...sharedNoExpire,
+      userProfile: null,
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -35,6 +37,7 @@ describe('VisibleMessage', () => {
       createAtNetworkTimestamp: Date.now(),
       body: 'body',
       ...sharedNoExpire,
+      userProfile: null,
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -47,6 +50,7 @@ describe('VisibleMessage', () => {
       ...sharedNoExpire,
       expirationType: 'deleteAfterRead',
       expireTimer: 300,
+      userProfile: null,
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -66,6 +70,7 @@ describe('VisibleMessage', () => {
       ...sharedNoExpire,
       expirationType: 'deleteAfterSend',
       expireTimer: 60,
+      userProfile: null,
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -86,10 +91,11 @@ describe('VisibleMessage', () => {
       displayName: 'displayName',
       avatarPointer: 'avatarPointer',
       profileKey,
+      updatedAtSeconds: 1,
     };
     const message = new VisibleMessage({
       createAtNetworkTimestamp: Date.now(),
-      lokiProfile,
+      userProfile: new OutgoingUserProfile(lokiProfile),
       ...sharedNoExpire,
     });
     const plainText = message.plainTextBuffer();
@@ -111,6 +117,7 @@ describe('VisibleMessage', () => {
       createAtNetworkTimestamp: Date.now(),
       quote,
       ...sharedNoExpire,
+      userProfile: null,
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -128,6 +135,7 @@ describe('VisibleMessage', () => {
     const message = new VisibleMessage({
       createAtNetworkTimestamp: Date.now(),
       preview: previews,
+      userProfile: null,
       ...sharedNoExpire,
     });
     const plainText = message.plainTextBuffer();
@@ -150,6 +158,7 @@ describe('VisibleMessage', () => {
     const message = new VisibleMessage({
       createAtNetworkTimestamp: Date.now(),
       attachments,
+      userProfile: null,
       ...sharedNoExpire,
     });
     const plainText = message.plainTextBuffer();
@@ -166,6 +175,7 @@ describe('VisibleMessage', () => {
     const message = new VisibleMessage({
       createAtNetworkTimestamp: Date.now(),
       ...sharedNoExpire,
+      userProfile: null,
     });
     expect(message.ttl()).to.equal(Constants.TTL_DEFAULT.CONTENT_MESSAGE);
   });
@@ -174,6 +184,7 @@ describe('VisibleMessage', () => {
     const message = new VisibleMessage({
       createAtNetworkTimestamp: Date.now(),
       ...sharedNoExpire,
+      userProfile: null,
     });
     expect(message.identifier).to.not.equal(null, 'identifier cannot be null');
     expect(message.identifier).to.not.equal(undefined, 'identifier cannot be undefined');

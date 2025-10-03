@@ -3,14 +3,14 @@ import { SessionHtmlRenderer } from './SessionHTMLRenderer';
 import {
   formatMessageWithArgs,
   GetMessageArgs,
-  isArgsFromTokenWithIcon,
   MergedLocalizerTokens,
   sanitizeArgs,
   getRawMessage,
-  type LocalizerComponentProps,
+  messageArgsToArgsOnly,
+  type ArgsFromToken,
+  type LocalizerHtmlTag,
 } from '../../localization/localeTools';
 import { getCrowdinLocale } from '../../util/i18n/shared';
-import { LUCIDE_INLINE_ICONS, type LucideInlineIconKeys } from '../icon/lucide';
 
 /** An array of supported html tags to render if found in a string */
 export const supportedFormattingTags = ['b', 'i', 'u', 's', 'br', 'span'];
@@ -35,7 +35,8 @@ const StyledHtmlRenderer = styled.span`
   }
 `;
 
-export type LocalizerProps = LocalizerComponentProps<MergedLocalizerTokens, LucideInlineIconKeys>;
+export type WithAsTag = { asTag?: LocalizerHtmlTag };
+export type WithClassName = { className?: string };
 
 /**
  * Retrieve a localized message string, substituting dynamic parts where necessary and formatting it as HTML if necessary.
@@ -47,19 +48,11 @@ export type LocalizerProps = LocalizerComponentProps<MergedLocalizerTokens, Luci
  * @returns The localized message string with substitutions and formatting applied.
  */
 export const Localizer = <T extends MergedLocalizerTokens>(
-  props: LocalizerComponentProps<T, LucideInlineIconKeys>
+  props: GetMessageArgs<T> & WithAsTag & WithClassName
 ) => {
-  const args = 'args' in props ? props.args : undefined;
+  const args = messageArgsToArgsOnly(props);
 
-  let rawString: string = getRawMessage<T>(
-    getCrowdinLocale(),
-    ...([props.token, args] as GetMessageArgs<T>)
-  );
-
-  // NOTE If the string contains an icon we want to replace it with the relevant html from LUCIDE_ICONS before we sanitize the args
-  if (isArgsFromTokenWithIcon<MergedLocalizerTokens, LucideInlineIconKeys>(props.args)) {
-    rawString = rawString.replaceAll(/\{icon}/g, LUCIDE_INLINE_ICONS[props.args.icon]);
-  }
+  let rawString: string = getRawMessage<T>(getCrowdinLocale(), props);
 
   const containsFormattingTags = createSupportedFormattingTagsRegex().test(rawString);
   const cleanArgs = args && containsFormattingTags ? sanitizeArgs(args) : args;
@@ -69,7 +62,7 @@ export const Localizer = <T extends MergedLocalizerTokens>(
     rawString = rawString.replaceAll(/\{icon}/g, `<span role='img'>{icon}</span>`);
   }
 
-  const i18nString = formatMessageWithArgs(rawString, cleanArgs as GetMessageArgs<T>[1]);
+  const i18nString = formatMessageWithArgs(rawString, cleanArgs as ArgsFromToken<T>);
 
   return containsFormattingTags || containsIcons ? (
     /** If the string contains a relevant formatting tag, render it as HTML */

@@ -390,28 +390,31 @@ describe('DisappearingMessage', () => {
   });
 
   describe('checkForExpiringInOutgoingMessage', () => {
-    it('if the message is supposed to disappear then the expirationStartTimestamp should be set to the sent_at value', async () => {
+    it('if the message is supposed to disappear then the expirationStartTimestamp should be set to the stored_At value', async () => {
       const conversation = new ConversationModel({
         ...conversationArgs,
         id: ourNumber,
       });
       const message = generateFakeOutgoingPrivateMessage(conversation.id);
-      message.set({
-        expirationType: 'deleteAfterRead',
-        expireTimer: 300,
-        sent_at: NetworkTime.now(),
-      });
+      message.setSentAt(NetworkTime.now());
+      message.setExpireTimer(300);
+      message.setExpirationType('deleteAfterRead');
+      const storedAt = NetworkTime.now();
 
       Sinon.stub(message, 'getConversation').returns(conversation);
-      DisappearingMessages.checkForExpiringOutgoingMessage(message, 'unit tests');
+      DisappearingMessages.checkForExpiringOutgoingMessage({
+        message,
+        location: 'unit tests',
+        effectivelyStoredAtMs: storedAt,
+      });
 
       expect(message.getExpirationStartTimestamp(), 'it should be defined').to.not.be.undefined;
       expect(
         isValidUnixTimestamp(message.getExpirationStartTimestamp()),
         'it should be a valid unix timestamp'
       ).to.be.true;
-      expect(message.getExpirationStartTimestamp(), 'it should equal the sent_at value').to.equal(
-        message.get('sent_at')
+      expect(message.getExpirationStartTimestamp(), 'it should equal the stored_at value').to.equal(
+        storedAt
       );
     });
     it('if there is no expireTimer then the expirationStartTimestamp should be undefined', async () => {
@@ -420,13 +423,17 @@ describe('DisappearingMessage', () => {
         id: ourNumber,
       });
       const message = generateFakeOutgoingPrivateMessage(conversation.id);
-      message.set({
-        expirationType: 'deleteAfterRead',
-        sent_at: NetworkTime.now(),
-      });
-      Sinon.stub(message, 'getConversation').returns(conversation);
 
-      DisappearingMessages.checkForExpiringOutgoingMessage(message, 'unit tests');
+      message.setSentAt(NetworkTime.now());
+      message.setExpirationType('deleteAfterRead');
+      Sinon.stub(message, 'getConversation').returns(conversation);
+      const storedAt = NetworkTime.now();
+
+      DisappearingMessages.checkForExpiringOutgoingMessage({
+        message,
+        location: 'unit tests',
+        effectivelyStoredAtMs: storedAt,
+      });
 
       expect(message.getExpirationStartTimestamp(), 'it should be undefined').to.be.undefined;
     });
@@ -436,13 +443,17 @@ describe('DisappearingMessage', () => {
         id: ourNumber,
       });
       const message = generateFakeOutgoingPrivateMessage(conversation.id);
-      message.set({
-        expireTimer: 300,
-        sent_at: NetworkTime.now(),
-      });
+      const storedAt = NetworkTime.now();
+
+      message.setSentAt(NetworkTime.now());
+      message.setExpireTimer(300);
       Sinon.stub(message, 'getConversation').returns(conversation);
 
-      DisappearingMessages.checkForExpiringOutgoingMessage(message, 'unit tests');
+      DisappearingMessages.checkForExpiringOutgoingMessage({
+        message,
+        location: 'unit tests',
+        effectivelyStoredAtMs: storedAt,
+      });
 
       expect(message.getExpirationStartTimestamp(), 'it should be undefined').to.be.undefined;
     });
@@ -453,15 +464,20 @@ describe('DisappearingMessage', () => {
         id: ourNumber,
       });
       const message = generateFakeOutgoingPrivateMessage(conversation.id);
-      message.set({
-        expirationType: 'deleteAfterRead',
-        expireTimer: 300,
-        sent_at: now,
-        expirationStartTimestamp: now + 10000,
-      });
-      Sinon.stub(message, 'getConversation').returns(conversation);
 
-      DisappearingMessages.checkForExpiringOutgoingMessage(message, 'unit tests');
+      message.setSentAt(now);
+      message.setExpirationType('deleteAfterRead');
+      message.setExpireTimer(300);
+      message.setMessageExpirationStartTimestamp(now + 10000);
+
+      Sinon.stub(message, 'getConversation').returns(conversation);
+      const storedAt = NetworkTime.now();
+
+      DisappearingMessages.checkForExpiringOutgoingMessage({
+        message,
+        location: 'unit tests',
+        effectivelyStoredAtMs: storedAt,
+      });
 
       expect(message.getExpirationStartTimestamp(), 'it should be defined').to.not.be.undefined;
 
@@ -508,8 +524,9 @@ describe('DisappearingMessage', () => {
         const conversation = new ConversationModel({
           ...conversationArgs,
         });
-        conversation.set({
-          expirationMode: 'deleteAfterRead',
+
+        conversation.setExpirationArgs({
+          mode: 'deleteAfterRead',
           expireTimer: 60,
         });
         Sinon.stub(conversation, 'commit').resolves();
@@ -568,7 +585,6 @@ describe('DisappearingMessage', () => {
           expireTimer: 300,
         });
 
-        expect(expirationTimerUpdateMessage.get('flags'), 'flags should be 2').to.equal(2);
         expect(
           expirationTimerUpdateMessage.getExpirationTimerUpdate(),
           'expirationTimerUpdate should not be empty'
