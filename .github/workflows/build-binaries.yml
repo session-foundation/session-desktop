@@ -109,11 +109,13 @@ jobs:
             cache_suffix: linux-freebsd
             is_qa: false
             generate_release_metadata: false
-          - identifier: deb-qa
-            electron_target: deb
-            cache_suffix: linux-deb
-            is_qa: true
-            generate_release_metadata: false
+          # Note: this deb-qa is currently broken. The deb and deb-qa are currently overwriting each others
+          # during build-release-publish and maybe the upload-artefact too.
+          # - identifier: deb-qa
+          #   electron_target: deb
+          #   cache_suffix: linux-deb
+          #   is_qa: true
+          #   generate_release_metadata: false
     name: '${{ matrix.identifier }}'
 
     env:
