@@ -187,7 +187,9 @@ const migrateDataToFileSystem = async (data?: ArrayBuffer) => {
 
   const isValidData = isArrayBuffer(data);
   if (!isValidData) {
-    throw new TypeError(`Expected ${data} to be an array buffer got: ${typeof data}`);
+    throw new TypeError(
+      `migrateDataToFileSystem: Expected 'data' to be an array buffer got: ${typeof data}`
+    );
   }
 
   const path = await writeNewAttachmentData(data);

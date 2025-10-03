@@ -12,6 +12,7 @@ import { OpenGroupData } from '../data/opengroups';
 import { OpenGroupRequestCommonType } from '../data/types';
 import { downloadFileFromFileServer } from '../session/apis/file_server_api/FileServerApi';
 import { FileFromFileServerDetails } from '../session/apis/file_server_api/types';
+import { MultiEncryptWrapperActions } from '../webworker/workers/browser/libsession_worker_interface';
 
 /**
  * Note: the url must have the serverPubkey as a query parameter
@@ -45,18 +46,36 @@ export async function downloadAttachmentFs(attachment: {
   if (!attachment.isRaw) {
     const { key, digest, size } = attachment;
 
-    if (!key || !digest) {
+    // Note: if key is set but digest is not, it means we have a libsession deterministic encryption
+    if (!key) {
       throw new Error('Attachment is not raw but we do not have a key to decode it');
     }
+
     if (!size) {
       throw new Error('Attachment expected size is 0');
     }
 
-    const keyBuffer = (await callUtilsWorker('fromBase64ToArrayBuffer', key)) as ArrayBuffer;
-    const digestBuffer = (await callUtilsWorker('fromBase64ToArrayBuffer', digest)) as ArrayBuffer;
+    if (digest) {
+      const keyBuffer = (await callUtilsWorker('fromBase64ToArrayBuffer', key)) as ArrayBuffer;
+      const digestBuffer = (await callUtilsWorker(
+        'fromBase64ToArrayBuffer',
+        digest
+      )) as ArrayBuffer;
 
-    data = await decryptAttachment(data, keyBuffer, digestBuffer);
+      data = await decryptAttachment(data, keyBuffer, digestBuffer);
+    } else {
+      window.log.debug(
+        `${attachment.url} attachment has no digest, assuming it is deterministic encryption`
+      );
 
+      const keyBuffer = (await callUtilsWorker('fromBase64ToArrayBuffer', key)) as ArrayBuffer;
+
+      const decrypted = await MultiEncryptWrapperActions.attachmentDecrypt({
+        encryptedData: new Uint8Array(data),
+        decryptionKey: new Uint8Array(keyBuffer),
+      });
+      data = decrypted.decryptedData.buffer;
+    }
     if (size !== data.byteLength) {
       // we might have padding, check that all the remaining bytes are padding bytes
       // otherwise we have an error.
