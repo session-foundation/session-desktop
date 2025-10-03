@@ -178,17 +178,11 @@ message DataMessage {
   }
 
   message Quote {
-
-    message QuotedAttachment {
-      optional string            contentType = 1;
-      optional string            fileName    = 2;
-      optional AttachmentPointer thumbnail   = 3;
-    }
+    reserved 3, 4;
+    reserved "text", "attachments";
 
     required uint64           id          = 1;
     required string           author      = 2;
-    optional string           text        = 3;
-    repeated QuotedAttachment attachments = 4;
   }
 
   message Preview {
@@ -279,6 +273,11 @@ message AttachmentPointer {
   optional string  caption       = 11;
   optional string  url           = 101;
   optional string  serverPubkey  = 102;
+  /**
+   * Whether the attachment is encrypted using the deterministic encryption provided by libsession.
+   * If the attachment is encrypted using the legacy encryption, this field can be unset or set to false.
+   */
+  optional bool deterministicEncryption = 103;
 }
 
 

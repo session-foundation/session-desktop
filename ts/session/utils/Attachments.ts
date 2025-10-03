@@ -1,5 +1,5 @@
 import * as crypto from 'crypto';
-import _, { isEmpty, isString } from 'lodash';
+import { isEmpty, isString } from 'lodash';
 import Long from 'long';
 
 import { Attachment } from '../../types/Attachment';
@@ -10,20 +10,26 @@ import {
   AttachmentPointer,
   AttachmentPointerWithUrl,
   PreviewWithAttachmentUrl,
-  Quote,
-  QuotedAttachmentWithUrl,
 } from '../messages/outgoing/visibleMessage/VisibleMessage';
 import {
   fileServerQueryPubkey,
   uploadFileToFsWithOnionV4,
 } from '../apis/file_server_api/FileServerApi';
+import { MultiEncryptWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 
-interface UploadParams {
+type UploadParams = {
   attachment: Attachment;
-  isAvatar?: boolean;
-  isRaw?: boolean;
+
+  /**
+   * Explicit padding is only needed for the legacy encryption, as libsession deterministic encryption already pads the data.
+   */
   shouldPad?: boolean;
-}
+  /**
+   * Use the libsession deterministic encryption.
+   * Only used when the feature flag is enabled.
+   */
+  seed?: Uint8Array;
+};
 
 export interface RawPreview {
   url: string;
@@ -45,7 +51,7 @@ export interface RawQuote {
 }
 
 async function uploadToFileServer(params: UploadParams): Promise<AttachmentPointerWithUrl> {
-  const { attachment, isRaw = false, shouldPad = false } = params;
+  const { attachment, shouldPad = false } = params;
   if (typeof attachment !== 'object' || attachment == null) {
     throw new Error('Invalid attachment passed.');
   }
@@ -67,9 +73,28 @@ async function uploadToFileServer(params: UploadParams): Promise<AttachmentPoint
 
   let attachmentData: ArrayBuffer;
 
-  if (isRaw) {
-    attachmentData = attachment.data;
+  if (
+    window?.sessionFeatureFlags?.useDeterministicEncryption &&
+    (!params.seed || isEmpty(params.seed))
+  ) {
+    throw new Error(
+      'uploadAttachmentsToFileServer: useDeterministicEncryption is true but no seed was provided'
+    );
+  }
+
+  if (window.sessionFeatureFlags.useDeterministicEncryption && params.seed) {
+    // this throws if the encryption fails
+    window?.log?.debug('Using deterministic for attachment upload: ', attachment.fileName);
+    const encryptedContent = await MultiEncryptWrapperActions.attachmentEncrypt({
+      allowLarge: false,
+      seed: params.seed,
+      data: new Uint8Array(attachment.data),
+      domain: 'attachment',
+    });
+    pointer.key = encryptedContent.encryptionKey;
+    attachmentData = encryptedContent.encryptedData;
   } else {
+    // this is the legacy attachment encryption
     pointer.key = new Uint8Array(crypto.randomBytes(64));
     const iv = new Uint8Array(crypto.randomBytes(16));
 
@@ -99,6 +124,7 @@ export async function uploadAttachmentsToFileServer(
     uploadToFileServer({
       attachment,
       shouldPad: true,
+      seed: crypto.randomBytes(32),
     })
   );
 
@@ -121,38 +147,6 @@ export async function uploadLinkPreviewToFileServer(
   return {
     ...preview,
     image,
-  };
-}
-
-export async function uploadQuoteThumbnailsToFileServer(
-  quote?: RawQuote
-): Promise<Quote | undefined> {
-  if (!quote) {
-    return undefined;
-  }
-
-  const promises = (quote.attachments ?? []).map(async attachment => {
-    let thumbnail: AttachmentPointer | undefined;
-    if (attachment.thumbnail) {
-      thumbnail = await uploadToFileServer({
-        attachment: attachment.thumbnail,
-      });
-    }
-    if (!thumbnail) {
-      return attachment;
-    }
-    return {
-      ...attachment,
-      thumbnail,
-      url: thumbnail.url,
-    } as QuotedAttachmentWithUrl;
-  });
-
-  const attachments = _.compact(await Promise.all(promises));
-
-  return {
-    ...quote,
-    attachments,
   };
 }
 

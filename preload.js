@@ -57,6 +57,7 @@ window.sessionFeatureFlags = {
   replaceLocalizedStringsWithKeys: false,
   // Hooks
   useClosedGroupV2QAButtons: false, // TODO DO NOT MERGE
+  useDeterministicEncryption: !isEmpty(process.env.SESSION_ATTACH_DETERMINISTIC_ENCRYPTION),
   useOnionRequests: true,
   useTestNet: isTestNet() || isTestIntegration(),
   useLocalDevNet: !isEmpty(process.env.LOCAL_DEVNET_SEED_URL)

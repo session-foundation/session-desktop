@@ -51,17 +51,15 @@ async function copyFromQuotedMessage(
   if (!quote) {
     return;
   }
-  const { attachments, id: quoteId, author } = quote;
+  const { id: quoteId, author } = quote;
 
   const quoteLocal: Quote = {
-    attachments: attachments || null,
+    attachments: null,
     author,
     id: _.toNumber(quoteId),
     text: null,
     referencedMessageNotFound: false,
   };
-
-  const firstAttachment = attachments?.[0] || undefined;
 
   const id = _.toNumber(quoteId);
 
@@ -100,11 +98,6 @@ async function copyFromQuotedMessage(
 
   window?.log?.info(`Found quoted message id: ${id}`);
   quoteLocal.referencedMessageNotFound = false;
-  // NOTE we send the entire body to be consistent with the other platforms
-  quoteLocal.text =
-    (isMessageModel(quotedMessage)
-      ? quotedMessage.get('body')
-      : quotedMessage.propsForMessage.text) || '';
 
   if (isMessageModel(quotedMessage)) {
     window.inboxStore?.dispatch(pushQuotedMessageDetails(quotedMessage.getMessageModelProps()));
@@ -112,17 +105,21 @@ async function copyFromQuotedMessage(
     window.inboxStore?.dispatch(pushQuotedMessageDetails(quotedMessage));
   }
 
-  // no attachments, just save the quote with the body
+  const firstQuotedMessageAttachment = isMessageModel(quotedMessage)
+    ? quotedMessage.get('attachments')?.[0]
+    : quotedMessage.propsForMessage.attachments?.[0];
+
+  // no attachments, just save the quote
   if (
-    !firstAttachment ||
-    !firstAttachment.contentType ||
-    !contentTypeSupported(firstAttachment.contentType)
+    !firstQuotedMessageAttachment ||
+    !firstQuotedMessageAttachment.contentType ||
+    !contentTypeSupported(firstQuotedMessageAttachment.contentType)
   ) {
     msg.setQuote(quoteLocal);
     return;
   }
 
-  firstAttachment.thumbnail = null;
+  firstQuotedMessageAttachment.thumbnail = null;
 
   const queryAttachments =
     (isMessageModel(quotedMessage)
@@ -134,7 +131,7 @@ async function copyFromQuotedMessage(
     const { thumbnail } = queryFirst;
 
     if (thumbnail && thumbnail.path) {
-      firstAttachment.thumbnail = {
+      firstQuotedMessageAttachment.thumbnail = {
         ...thumbnail,
         copied: true,
       };
@@ -150,13 +147,13 @@ async function copyFromQuotedMessage(
     const { image } = queryFirst;
 
     if (image && image.path) {
-      firstAttachment.thumbnail = {
+      firstQuotedMessageAttachment.thumbnail = {
         ...image,
         copied: true,
       };
     }
   }
-  quoteLocal.attachments = [firstAttachment];
+  quoteLocal.attachments = [firstQuotedMessageAttachment];
 
   msg.setQuote(quoteLocal);
 }

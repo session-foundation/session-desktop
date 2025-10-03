@@ -7,10 +7,8 @@ import {
   AttachmentPointer,
   AttachmentPointerWithUrl,
   PreviewWithAttachmentUrl,
-  Quote,
-  QuotedAttachment,
 } from '../messages/outgoing/visibleMessage/VisibleMessage';
-import { RawPreview, RawQuote } from './Attachments';
+import { RawPreview } from './Attachments';
 import { OpenGroupRequestCommonType } from '../../data/types';
 
 interface UploadParamsV2 {
@@ -88,35 +86,5 @@ export async function uploadLinkPreviewsV3(
     ...preview,
     image,
     url: preview.url || image.url,
-  };
-}
-
-export async function uploadQuoteThumbnailsV3(
-  openGroup: OpenGroupRequestCommonType,
-  quote?: RawQuote
-): Promise<Quote | undefined> {
-  if (!quote) {
-    return undefined;
-  }
-
-  const promises = (quote.attachments ?? []).map(async attachment => {
-    let thumbnail: QuotedAttachment | undefined;
-    if (attachment.thumbnail) {
-      thumbnail = (await uploadV3({
-        attachment: attachment.thumbnail,
-        openGroup,
-      })) as any;
-    }
-    return {
-      ...attachment,
-      thumbnail,
-    };
-  });
-
-  const attachments = await Promise.all(promises);
-
-  return {
-    ...quote,
-    attachments,
   };
 }

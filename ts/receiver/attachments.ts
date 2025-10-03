@@ -195,48 +195,6 @@ async function processPreviews(message: MessageModel, convo: ConversationModel):
   return addedCount;
 }
 
-async function processQuoteAttachments(
-  message: MessageModel,
-  convo: ConversationModel
-): Promise<number> {
-  let addedCount = 0;
-
-  const quote = message.get('quote');
-
-  if (!quote || !quote.attachments || !quote.attachments.length) {
-    return 0;
-  }
-  const isOpenGroupV2 = convo.isOpenGroupV2();
-  const openGroupV2Details = (isOpenGroupV2 && convo.toOpenGroupV2()) || undefined;
-
-  for (let index = 0; index < quote.attachments.length; index++) {
-    // If we already have a path, then we copied this image from the quoted
-    // message and we don't need to download the attachment.
-    const attachment = quote.attachments[index];
-
-    if (!attachment.thumbnail || attachment.thumbnail.path) {
-      continue;
-    }
-
-    addedCount += 1;
-
-    // eslint-disable-next-line no-await-in-loop
-    const thumbnail = await AttachmentDownloads.addJob(attachment.thumbnail, {
-      messageId: message.id,
-      type: 'quote',
-      index,
-      isOpenGroupV2,
-      openGroupV2Details,
-    });
-
-    quote.attachments[index] = { ...attachment, thumbnail };
-  }
-
-  message.setQuote(quote);
-
-  return addedCount;
-}
-
 export async function queueAttachmentDownloads(
   message: MessageModel,
   conversation: ConversationModel
@@ -244,10 +202,7 @@ export async function queueAttachmentDownloads(
   let count = 0;
 
   count += await processNormalAttachments(message, message.get('attachments') || [], conversation);
-
   count += await processPreviews(message, conversation);
-
-  count += await processQuoteAttachments(message, conversation);
 
   if (count > 0) {
     await Data.saveMessage(message.cloneAttributes());

@@ -113,7 +113,7 @@ describe('VisibleMessage', () => {
   });
 
   it('can create message with a quote without attachments', () => {
-    const quote: Quote = { id: 1234, author: 'author', text: 'text' };
+    const quote: Quote = { id: 1234, author: 'author' };
     const message = new VisibleMessage({
       createAtNetworkTimestamp: Date.now(),
       quote,
@@ -125,7 +125,6 @@ describe('VisibleMessage', () => {
     const decodedID = toNumber(decoded.dataMessage?.quote?.id);
     expect(decodedID).to.be.equal(1234);
     expect(decoded.dataMessage?.quote).to.have.deep.property('author', 'author');
-    expect(decoded.dataMessage?.quote).to.have.deep.property('text', 'text');
   });
 
   it('can create message with a preview', () => {
@@ -149,6 +148,7 @@ describe('VisibleMessage', () => {
   });
 
   it('can create message with an AttachmentPointer', () => {
+    TestUtils.stubWindowFeatureFlags();
     const attachment: AttachmentPointerWithUrl = {
       url: 'http://thisisaareal/url/1234',
       contentType: 'contentType',

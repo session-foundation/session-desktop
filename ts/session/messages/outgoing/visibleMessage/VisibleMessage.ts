@@ -57,8 +57,6 @@ export interface QuotedAttachmentWithUrl extends QuotedAttachmentCommon {
 export interface Quote {
   id: number;
   author: string;
-  text?: string;
-  attachments?: Array<QuotedAttachmentWithUrl>;
 }
 
 export type VisibleMessageParams = ExpirableMessageParams &
@@ -126,6 +124,7 @@ export class VisibleMessage extends DataMessage {
 
     dataMessage.attachments = (this.attachments || []).map(m => {
       const url = URL.canParse(m.url) && new URL(m.url);
+      const deterministicEncryption = window.sessionFeatureFlags.useDeterministicEncryption;
 
       if (!url) {
         return m;
@@ -135,6 +134,7 @@ export class VisibleMessage extends DataMessage {
         ...m,
         url: `${url.origin}${url.pathname}`,
         serverPubkey: url.searchParams.get(queryParamServerPubkey) ?? undefined,
+        deterministicEncryption,
       };
     });
 
@@ -156,23 +156,6 @@ export class VisibleMessage extends DataMessage {
 
       dataMessage.quote.id = this.quote.id;
       dataMessage.quote.author = this.quote.author;
-      dataMessage.quote.text = this.quote.text;
-      if (this.quote.attachments) {
-        dataMessage.quote.attachments = this.quote.attachments.map(attachment => {
-          const quotedAttachment = new SignalService.DataMessage.Quote.QuotedAttachment();
-          if (attachment.contentType) {
-            quotedAttachment.contentType = attachment.contentType;
-          }
-          if (attachment.fileName) {
-            quotedAttachment.fileName = attachment.fileName;
-          }
-          if (attachment.thumbnail && (attachment.thumbnail as any).id) {
-            quotedAttachment.thumbnail = attachment.thumbnail as any; // be sure to keep the typescript guard on id above
-          }
-
-          return quotedAttachment;
-        });
-      }
     }
 
     if (Array.isArray(this.preview)) {
