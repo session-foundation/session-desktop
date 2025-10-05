@@ -127,8 +127,8 @@ export class UpdateGroupPermissionsDialog extends Component<Props, State> {
         <PanelToggleButton
           textElement={
             <PanelButtonTextWithSubText
-              text={'Enable room visibility'}
-              subText={'Anyone can see the room (+a)'}
+              text={{ token: 'groupPermissionAccessEnable' }}
+              subText={{ token: 'groupPermissionAccessDescription' }}
               textDataTestId='test-ignore'
               subTextDataTestId='test-ignore'
             />
@@ -141,8 +141,8 @@ export class UpdateGroupPermissionsDialog extends Component<Props, State> {
         <PanelToggleButton
           textElement={
             <PanelButtonTextWithSubText
-              text={'Enable reading'}
-              subText={'Anyone can read messages (+r)'}
+              text={{ token: 'groupPermissionReadEnable' }}
+              subText={{ token: 'groupPermissionReadDescription' }}
               textDataTestId='test-ignore'
               subTextDataTestId='test-ignore'
             />
@@ -155,8 +155,8 @@ export class UpdateGroupPermissionsDialog extends Component<Props, State> {
         <PanelToggleButton
           textElement={
             <PanelButtonTextWithSubText
-              text={'Enable writing'}
-              subText={'Anyone can send messages (+w)'}
+              text={{ token: 'groupPermissionWriteEnable' }}
+              subText={{ token: 'groupPermissionWriteDescription' }}
               textDataTestId='test-ignore'
               subTextDataTestId='test-ignore'
             />
@@ -169,8 +169,8 @@ export class UpdateGroupPermissionsDialog extends Component<Props, State> {
         <PanelToggleButton
           textElement={
             <PanelButtonTextWithSubText
-              text={'Enable uploads'}
-              subText={'Anyone can upload files (+u)'}
+              text={{ token: 'groupPermissionUploadEnable' }}
+              subText={{ token: 'groupPermissionUploadDescription' }}
               textDataTestId='test-ignore'
               subTextDataTestId='test-ignore'
             />
