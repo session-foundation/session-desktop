@@ -37,7 +37,7 @@ export async function uploadAndSetOurAvatarShared({
       allowLarge: false,
       seed: await UserUtils.getUserEd25519Seed(),
       data: new Uint8Array(mainAvatarDetails.outputBuffer),
-      domain: 'attachment',
+      domain: 'profilePic',
     });
     encryptedData = encryptedContent.encryptedData;
     encryptionKey = encryptedContent.encryptionKey;
