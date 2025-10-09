@@ -11,7 +11,6 @@ import {
   addBinaryContentTypeToHeaders,
   addJsonContentTypeToHeaders,
 } from '../apis/open_group_api/sogsv3/sogsV3SendMessage';
-import { pnServerPubkeyHex, pnServerUrl } from '../apis/push_notification_api/PnServer';
 import {
   FinalDestNonSnodeOptions,
   FinalRelayOptions,
@@ -376,42 +375,6 @@ async function sendJsonViaOnionV4ToSogs(
   return res as OnionV4JSONSnodeResponse | null;
 }
 
-/**
- * Send some json to the PushNotification server.
- * Desktop only send `/notify` requests.
- *
- * You should probably not use this function directly but instead rely on the PnServer.notifyPnServer() function
- */
-async function sendJsonViaOnionV4ToPnServer(
-  sendOptions: WithTimeoutMs & {
-    endpoint: string;
-    method: string;
-    stringifiedBody: string | null;
-    abortSignal: AbortSignal;
-  }
-): Promise<OnionV4JSONSnodeResponse | null> {
-  const { endpoint, method, stringifiedBody, abortSignal, timeoutMs } = sendOptions;
-  if (!endpoint.startsWith('/')) {
-    throw new Error('endpoint needs a leading /');
-  }
-  const builtUrl = new URL(`${pnServerUrl}${endpoint}`);
-
-  const res = await OnionSending.sendViaOnionV4ToNonSnodeWithRetries(
-    pnServerPubkeyHex,
-    builtUrl,
-    {
-      method,
-      headers: {},
-      body: stringifiedBody,
-      useV4: true,
-    },
-    false,
-    abortSignal,
-    timeoutMs
-  );
-  return res as OnionV4JSONSnodeResponse;
-}
-
 async function sendBinaryViaOnionV4ToSogs(
   sendOptions: WithTimeoutMs & {
     serverUrl: string;
@@ -670,7 +633,6 @@ export const OnionSending = {
   sendViaOnionV4ToNonSnodeWithRetries,
   getOnionPathForSending,
   sendJsonViaOnionV4ToSogs,
-  sendJsonViaOnionV4ToPnServer,
   sendBinaryViaOnionV4ToFileServer,
   sendBinaryViaOnionV4ToSogs,
   getBinaryViaOnionV4FromFileServer,
