@@ -61,10 +61,10 @@ describe('DecryptedAttachmentsManager', () => {
           'decryptAttachmentBufferNode',
           new Uint8Array(5)
         );
-        TestUtils.stubURL();
       });
 
       it('url starts with attachment path but is not already decrypted', async () => {
+        TestUtils.stubUrlCreateObjectURL();
         expect(
           DecryptedAttachmentsManager.getAlreadyDecryptedMediaUrl('/local/attachment/attachment1')
         ).to.be.eq(null);
@@ -89,6 +89,7 @@ describe('DecryptedAttachmentsManager', () => {
       });
 
       it('url starts with attachment path and is already decrypted', async () => {
+        TestUtils.stubUrlCreateObjectURL();
         expect(
           DecryptedAttachmentsManager.getAlreadyDecryptedMediaUrl('/local/attachment/attachment1')
         ).to.be.eq(null);

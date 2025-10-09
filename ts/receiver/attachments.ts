@@ -31,8 +31,8 @@ export async function downloadAttachmentFs(attachment: {
 
   window?.log?.info(
     'Download v2 file server attachment',
-    toDownload.fullUrl,
-    toDownload.serverPubkey
+    toDownload.fullUrl.toString(),
+    toDownload.serverEd25519Pk
   );
   res = await downloadFileFromFileServer(toDownload);
 
@@ -160,7 +160,6 @@ async function processNormalAttachments(
   convo: ConversationModel
 ): Promise<number> {
   const isOpenGroupV2 = convo.isOpenGroupV2();
-
   if (message.isTrustedForAttachmentDownload()) {
     const openGroupV2Details = (isOpenGroupV2 && convo.toOpenGroupV2()) || undefined;
     const attachments = await Promise.all(

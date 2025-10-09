@@ -5,18 +5,15 @@ import { isEmpty, isString, isTypedArray } from 'lodash';
 import { MessageAttributes } from '../../models/messageType';
 import { SignalService } from '../../protobuf';
 import { Timestamp } from '../timestamp/timestamp';
+import { addProfileKeyToUrl, extractDetailsFromUrlFragment } from '../../session/url';
 
 function extractPicDetailsFromUrl(src: string | null): ProfilePicture {
-  if (!src) {
+  if (!src || !URL.canParse(src)) {
     return { url: null, key: null };
   }
-  const urlParts = src.split('#');
-  if (urlParts.length !== 2) {
-    throw new Error('extractPicDetailsFromUrl url does not contain a profileKey');
-  }
-  const url = urlParts[0];
-  const key = urlParts[1];
-
+  const { profileKey: key, urlWithoutProfileKey: url } = extractDetailsFromUrlFragment(
+    new URL(src)
+  );
   // throwing here, as if src is not empty we expect a key to be set
   if (!isEmpty(key) && !isString(key)) {
     throw new Error('extractPicDetailsFromUrl: profileKey is set but not a string');
@@ -48,10 +45,8 @@ class OutgoingUserProfile {
   }: {
     displayName: string;
     updatedAtSeconds: number;
-  } & (
-    | { picUrlWithProfileKey: string | null }
-    | { profileKey: Uint8Array | string | null; avatarPointer: string | null }
-  )) {
+    profilePic: ProfilePicture | null;
+  }) {
     if (!isString(displayName)) {
       throw new Error('displayName is not a string');
     }
@@ -61,33 +56,16 @@ class OutgoingUserProfile {
       value: updatedAtSeconds,
       expectedUnit: 'seconds',
     });
-    if ('picUrlWithProfileKey' in args) {
-      this.initFromPicWithUrl(args.picUrlWithProfileKey);
-    } else {
-      this.initFromPicDetails(args);
-    }
+    this.initFromPicDetails(args.profilePic);
   }
 
-  private initFromPicWithUrl(picUrlWithProfileKey: string | null) {
-    if (!picUrlWithProfileKey) {
+  private initFromPicDetails(args: ProfilePicture | null) {
+    if (!args) {
       this.picUrlWithProfileKey = null;
       return;
     }
-    // this throws if the url is not valid
-    // or if the fields cannot be extracted
-    extractPicDetailsFromUrl(picUrlWithProfileKey);
-
-    this.picUrlWithProfileKey = picUrlWithProfileKey;
-  }
-
-  private initFromPicDetails({
-    profileKey: profileKeyIn,
-    avatarPointer,
-  }: {
-    profileKey: Uint8Array | string | null;
-    avatarPointer: string | null;
-  }) {
-    if (!profileKeyIn && !avatarPointer) {
+    const { key: profileKeyIn, url: avatarPointer } = args;
+    if (!profileKeyIn || !avatarPointer) {
       this.picUrlWithProfileKey = null;
       return;
     }
@@ -107,8 +85,10 @@ class OutgoingUserProfile {
       this.picUrlWithProfileKey = null;
       return;
     }
+
     if (profileKey) {
-      this.picUrlWithProfileKey = `${avatarPointer}#${to_hex(profileKey)}`;
+      const withProfileKey = addProfileKeyToUrl(new URL(avatarPointer), to_hex(profileKey));
+      this.picUrlWithProfileKey = withProfileKey.toString();
     } else {
       this.picUrlWithProfileKey = avatarPointer;
     }

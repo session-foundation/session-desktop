@@ -1,5 +1,5 @@
 import AbortController from 'abort-controller';
-import { isEmpty, isFinite, isNumber, isString } from 'lodash';
+import { isEmpty, isFinite, isNumber, isString, toNumber } from 'lodash';
 
 import { BlindingActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { OnionSending } from '../../onions/onionSend';
@@ -13,24 +13,9 @@ import { DURATION } from '../../constants';
 import { isReleaseChannel, type ReleaseChannels } from '../../../updater/types';
 import { Storage } from '../../../util/storage';
 import { OnionV4 } from '../../onions/onionv4';
-import { SERVER_HOSTS } from '..';
-import { FileFromFileServerDetails, queryParamServerPubkey } from './types';
-
-const defaultFileServerURL = `http://${SERVER_HOSTS.DEFAULT_FILE_SERVER}`;
-const defaultFileServerPubKey = 'da21e1d886c6fbaea313f75298bd64aab03a97ce985b46bb2dad9f2089c8ee59';
-
-export const FILE_SERVERS = {
-  DEFAULT: { url: defaultFileServerURL, pubkey: defaultFileServerPubKey },
-  POTATO: {
-    url: 'http://potatofiles.getsession.org',
-    // potato has the same pubkey as the default file server
-    pubkey: defaultFileServerPubKey,
-  },
-};
-
-export function fileServerQueryPubkey(serverPkHex: string) {
-  return `?${queryParamServerPubkey}=${serverPkHex}`;
-}
+import { FileFromFileServerDetails, type UrlWithFragment } from './types';
+import { queryParamDeterministicEncryption, queryParamServerEd25519Pubkey } from '../../url';
+import { FS, type FILE_SERVER_TARGET_TYPE } from './FileServerTarget';
 
 const RELEASE_VERSION_ENDPOINT = '/session_version';
 const FILE_ENDPOINT = '/file';
@@ -38,11 +23,13 @@ const FILE_ENDPOINT = '/file';
 /**
  * Upload a file to the file server v2 using the onion v4 encoding
  * @param fileContent the data to send
+ * @param deterministicEncryption whether the file is deterministically encrypted or not
  * @returns null or the complete URL to share this file
  */
 export const uploadFileToFsWithOnionV4 = async (
-  fileContent: ArrayBuffer
-): Promise<{ fileUrl: string; expiresMs: number; serverPubkey: string } | null> => {
+  fileContent: ArrayBuffer,
+  deterministicEncryption: boolean
+): Promise<{ fileUrl: UrlWithFragment; expiresMs: number } | null> => {
   if (!fileContent || !fileContent.byteLength) {
     return null;
   }
@@ -76,12 +63,19 @@ export const uploadFileToFsWithOnionV4 = async (
   ) {
     return null;
   }
-  const fileUrl = `${FILE_SERVERS[target].url}${FILE_ENDPOINT}/${fileId}`;
+
+  // we now have the `fileUrl` provide the `serverPubkey` and the deterministic flag as an url fragment.
+  const urlParams = new URLSearchParams();
+  urlParams.set(queryParamServerEd25519Pubkey, FS.FILE_SERVERS[target].edPk);
+  if (deterministicEncryption) {
+    urlParams.set(queryParamDeterministicEncryption, '');
+  }
+  const fileUrl =
+    `${FS.FILE_SERVERS[target].url}${FILE_ENDPOINT}/${fileId}#${urlParams.toString()}` as UrlWithFragment;
   const expiresMs = Math.floor(expires * 1000);
   return {
     fileUrl,
     expiresMs,
-    serverPubkey: FILE_SERVERS[target].pubkey,
   };
 };
 
@@ -188,4 +182,52 @@ export const getLatestReleaseFromFileServer = async (
     return null;
   }
   return [latestVersionWithV, releaseType || releaseChannel];
+};
+
+/**
+ * Extend a file expiry from the file server.
+ * This only works with files that have an alphanumeric id.
+ *
+ */
+export const extendFileExpiry = async (fileId: string, fsTarget: FILE_SERVER_TARGET_TYPE) => {
+  // TODO: remove this once QA is done
+
+  if (!FS.supportsFsExtend(fsTarget)) {
+    throw new Error('extendFileExpiry: only works with potato for now');
+  }
+  if (window.sessionFeatureFlags?.debugServerRequests) {
+    window.log.info(`about to renew expiry of file: "${fileId}"`);
+  }
+
+  const method = 'POST';
+  const endpoint = `/file/${fileId}/extend`;
+  const params = {
+    abortSignal: new AbortController().signal,
+    endpoint,
+    method,
+    stringifiedBody: null,
+    headers: {},
+    timeoutMs: 10 * DURATION.SECONDS,
+    target: fsTarget,
+  };
+
+  const result = await OnionSending.sendJsonViaOnionV4ToFileServer(params);
+
+  if (!batchGlobalIsSuccess(result) || OnionV4.parseStatusCodeFromV4Request(result) !== 200) {
+    return null;
+  }
+
+  const {
+    expires: fileNewExpirySeconds,
+    uploaded: fileUploadedSeconds,
+    size,
+  } = result?.body as any;
+  if (!fileNewExpirySeconds) {
+    return null;
+  }
+  return {
+    fileNewExpiryMs: Math.floor(fileNewExpirySeconds * 1000), // the expires/uploaded have the ms in the decimals (i.e `1761002358.02229`)
+    fileUploadedMs: Math.floor(fileUploadedSeconds * 1000),
+    size: toNumber(size),
+  };
 };

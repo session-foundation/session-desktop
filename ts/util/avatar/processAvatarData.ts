@@ -11,8 +11,13 @@ import { MAX_ATTACHMENT_FILESIZE_BYTES } from '../../session/constants';
  * - mainAvatarDetails will be animated (webp enforced) if the source was animated, or a jpeg of the original image
  * - avatarFallback will be an image (jpeg enforced) of the first frame of `mainAvatarDetails` if it was animated, or null
  *
+ * There is a specific case for the avatars that we need to be able to reupload,
+ * as we do want to keep a resolution of 600 x 600 instead of the usual 200 x 200.
+ *
+ * This is because we need to be able to reupload our full avatar to the file server, and mobile pixel density can be 3x.
+ * We still want to reduce incoming avatars to 200 x 200 for performance reasons.
  */
-export async function processAvatarData(arrayBuffer: ArrayBuffer) {
+export async function processAvatarData(arrayBuffer: ArrayBuffer, planForReupload: boolean) {
   if (!arrayBuffer || arrayBuffer.byteLength === 0 || !isArrayBuffer(arrayBuffer)) {
     throw new Error('processAvatarData: arrayBuffer is empty');
   }
@@ -23,7 +28,12 @@ export async function processAvatarData(arrayBuffer: ArrayBuffer) {
    * 2. a fallback avatar in case the user looses its pro (static image, even if the main avatar is animated)
    */
   // this is step 1, we generate a scaled down avatar, but keep its nature (animated or not)
-  const processed = await ImageProcessor.processAvatarData(arrayBuffer, maxAvatarDetails.maxSide);
+  const processed = await ImageProcessor.processAvatarData(
+    arrayBuffer,
+    planForReupload
+      ? maxAvatarDetails.maxSidePlanReupload
+      : maxAvatarDetails.maxSideNoReuploadRequired
+  );
 
   if (!processed) {
     throw new Error('processLocalAvatarChange: failed to process avatar');
@@ -32,17 +42,12 @@ export async function processAvatarData(arrayBuffer: ArrayBuffer) {
   const { mainAvatarDetails, avatarFallback } = processed;
 
   // sanity check the returned data
-  if (mainAvatarDetails.isAnimated && mainAvatarDetails.format !== 'webp') {
+  if (mainAvatarDetails.format !== 'webp') {
     throw new Error(
       'processLocalAvatarChange: we only support animated mainAvatarDetails in webp after conversion'
     );
   }
-  // sanity check the returned data
-  if (!mainAvatarDetails.isAnimated && mainAvatarDetails.format !== 'jpeg') {
-    throw new Error(
-      'processLocalAvatarChange: we only support non animated mainAvatarDetails in jpeg after conversion'
-    );
-  }
+
   if (mainAvatarDetails.isAnimated && !avatarFallback) {
     throw new Error(
       'processLocalAvatarChange: we only support animated mainAvatarDetails with fallback after conversion'
@@ -50,7 +55,7 @@ export async function processAvatarData(arrayBuffer: ArrayBuffer) {
   }
 
   // sanity check the returned data
-  if (avatarFallback && avatarFallback.format !== 'jpeg') {
+  if (avatarFallback && avatarFallback.format !== 'webp') {
     throw new Error(
       'processLocalAvatarChange: we only support avatarFallback in jpeg after conversion'
     );

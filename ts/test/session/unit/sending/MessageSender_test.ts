@@ -21,7 +21,6 @@ import { TestUtils } from '../../../test-utils';
 import {
   TypedStub,
   expectAsyncToThrow,
-  stubURL,
   stubData,
   stubUtilWorker,
   stubValidSnodeSwarm,
@@ -319,7 +318,6 @@ describe('MessageSender', () => {
         'X-SOGS-Signature':
           'gYqpWZX6fnF4Gb2xQM3xaXs0WIYEI49+B8q4mUUEg8Rw0ObaHUWfoWjMHMArAtP9QlORfiydsKWz1o6zdPVeCQ==',
       });
-      stubURL();
 
       Sinon.stub(OpenGroupMessageV2, 'fromJson').resolves();
     });

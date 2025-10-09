@@ -1,6 +1,6 @@
 import { expect } from 'chai';
+import Sinon from 'sinon';
 // eslint-disable-next-line import/order
-import { TextEncoder } from 'util';
 
 import { toNumber } from 'lodash';
 import { SignalService } from '../../../../protobuf';
@@ -12,7 +12,6 @@ import {
   VisibleMessage,
 } from '../../../../session/messages/outgoing/visibleMessage/VisibleMessage';
 import { DisappearingMessageMode } from '../../../../session/disappearing_messages/types';
-import { OutgoingUserProfile } from '../../../../types/message';
 import { TestUtils } from '../../../test-utils';
 
 const sharedNoExpire = {
@@ -21,6 +20,9 @@ const sharedNoExpire = {
 };
 
 describe('VisibleMessage', () => {
+  afterEach(() => {
+    Sinon.restore();
+  });
   it('can create empty message with just a timestamp', () => {
     const message = new VisibleMessage({
       createAtNetworkTimestamp: Date.now(),
@@ -85,33 +87,6 @@ describe('VisibleMessage', () => {
     );
   });
 
-  it('can create message with a full loki profile', () => {
-    const profileKey = new TextEncoder().encode('profileKey');
-
-    const lokiProfile = {
-      displayName: 'displayName',
-      avatarPointer: 'avatarPointer',
-      profileKey,
-      updatedAtSeconds: 1,
-    };
-    const message = new VisibleMessage({
-      createAtNetworkTimestamp: Date.now(),
-      userProfile: new OutgoingUserProfile(lokiProfile),
-      ...sharedNoExpire,
-    });
-    const plainText = message.plainTextBuffer();
-    const decoded = SignalService.Content.decode(plainText);
-    expect(decoded.dataMessage).to.have.deep.property('profile');
-
-    expect(decoded.dataMessage)
-      .to.have.property('profile')
-      .to.have.deep.property('displayName', 'displayName');
-    expect(decoded.dataMessage)
-      .to.have.property('profile')
-      .to.have.deep.property('profilePicture', 'avatarPointer');
-    expect(decoded.dataMessage).to.have.deep.property('profileKey', profileKey);
-  });
-
   it('can create message with a quote without attachments', () => {
     const quote: Quote = { id: 1234, author: 'author' };
     const message = new VisibleMessage({
@@ -149,18 +124,14 @@ describe('VisibleMessage', () => {
 
   it('can create message with an AttachmentPointer', () => {
     TestUtils.stubWindowFeatureFlags();
+    TestUtils.stubURLCanParse();
+
     const attachment: AttachmentPointerWithUrl = {
       url: 'http://thisisaareal/url/1234',
       contentType: 'contentType',
     };
     const attachments = new Array<AttachmentPointerWithUrl>();
     attachments.push(attachment);
-
-    TestUtils.stubURL({
-      searchParams: { get: () => '' },
-      origin: 'http://thisisaareal',
-      pathname: '/url/1234',
-    });
 
     const message = new VisibleMessage({
       createAtNetworkTimestamp: Date.now(),

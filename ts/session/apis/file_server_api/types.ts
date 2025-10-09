@@ -1,65 +1,16 @@
-import { FILE_SERVERS } from './FileServerApi';
-
-/**
- * Returns the parsed url from the provided string only if that matches one of our file server urls.
- */
-function parseFileServerUrl(fullURL?: string) {
-  if (!fullURL) {
-    return null;
-  }
-
-  const parsedUrl = URL.canParse(fullURL) && new URL(fullURL);
-  if (!parsedUrl) {
-    return null;
-  }
-
-  if (!parsedUrl.host.includes('getsession.org')) {
-    return null;
-  }
-
-  if (parsedUrl.host.includes('open.getsession.org')) {
-    // we need to filter out communities we host on getsession.org as they do not have the same api.
-    return null;
-  }
-  return parsedUrl;
-}
-
-export const queryParamServerPubkey = 'serverPubkey';
-
-/**
- * Returns the serverPk from the provided url.
- * Note:
- * - for the default file server, the serverPk is hardcoded.
- * - if no serverPk is provided, the defaultFileServerPubKey is returned.
- *
- */
-function extractServerPk(url: URL) {
-  if (url.origin === FILE_SERVERS.DEFAULT.url) {
-    return FILE_SERVERS.DEFAULT.pubkey;
-  }
-  const serverPk = url.searchParams.get(queryParamServerPubkey);
-  if (serverPk) {
-    return serverPk;
-  }
-  throw new Error(
-    'FileFromFileServer: serverPubkey is required as a query parameter for non-default file server'
-  );
-}
-
-function extractFileID(url: URL) {
-  const lastSegment = url.pathname.split('/').filter(Boolean).pop();
-  if (!lastSegment) {
-    return null;
-  }
-  return lastSegment;
-}
+import {
+  extractDetailsFromUrlFragment,
+  extractLastPathSegment,
+  parseFileServerUrl,
+} from '../../url';
+import type { FILE_SERVER_TARGET_TYPE } from './FileServerTarget';
 
 export function fileServerUrlToFileId(fullURL?: string) {
   const parsedUrl = parseFileServerUrl(fullURL);
   if (!parsedUrl) {
     return { fileId: '', fullUrl: null };
   }
-  const fileId = extractFileID(parsedUrl);
+  const fileId = extractLastPathSegment(parsedUrl);
 
   if (!fileId) {
     return { fileId: '', fullUrl: null };
@@ -67,15 +18,15 @@ export function fileServerUrlToFileId(fullURL?: string) {
   return { fileId, fullUrl: parsedUrl };
 }
 
-function getDownloadFileDetails(urlWithFileIdAndServerPk: string) {
-  const { fileId, fullUrl } = fileServerUrlToFileId(urlWithFileIdAndServerPk);
+function getDownloadFileDetails(urlWithFragment: string) {
+  const { fileId, fullUrl } = fileServerUrlToFileId(urlWithFragment);
   if (!fileId || !fullUrl) {
     throw new Error('DownloadFromFileServer: fileId is empty or not a file server url');
   }
 
-  const serverPk = extractServerPk(fullUrl);
+  const { serverEd25519Pk, deterministicEncryption } = extractDetailsFromUrlFragment(fullUrl);
 
-  return { fileId, fullUrl, serverPk };
+  return { fileId, fullUrl, serverEd25519Pk, deterministicEncryption };
 }
 
 function getUploadFileDetails(urlWithServerPk: string) {
@@ -84,9 +35,9 @@ function getUploadFileDetails(urlWithServerPk: string) {
     throw new Error('DownloadFromFileServer: fullUrl cannot be parsed');
   }
 
-  const serverPk = extractServerPk(fullUrl);
+  const { serverEd25519Pk, deterministicEncryption } = extractDetailsFromUrlFragment(fullUrl);
 
-  return { fullUrl, serverPk };
+  return { fullUrl, serverEd25519Pk, deterministicEncryption };
 }
 
 /**
@@ -97,18 +48,48 @@ function getUploadFileDetails(urlWithServerPk: string) {
 export class FileFromFileServerDetails {
   public readonly fileId: string;
   public readonly fullUrl: URL;
-  public readonly serverPubkey: string;
+  public readonly serverEd25519Pk: string;
+  public readonly deterministicEncryption: boolean;
 
   /**
    * Construct a FileFromFileServer object.
    * @param url the url to download from. It must have the serverPubkey as a query parameter (serverPubkey)
    */
   constructor(url: string) {
-    const { fileId, fullUrl, serverPk } = getDownloadFileDetails(url);
+    const { fileId, fullUrl, serverEd25519Pk, deterministicEncryption } =
+      getDownloadFileDetails(url);
 
     this.fileId = fileId;
     this.fullUrl = fullUrl;
-    this.serverPubkey = serverPk;
+    this.serverEd25519Pk = serverEd25519Pk;
+    this.deterministicEncryption = deterministicEncryption;
+  }
+}
+
+/**
+ * A utility class to store a file that needs to be uploaded to a file server.
+ */
+export class UploadToFileServerDetails {
+  public readonly data: ArrayBuffer;
+  public readonly deterministicEncryption: boolean;
+  public readonly target: FILE_SERVER_TARGET_TYPE;
+
+  /**
+   * Construct a UploadToFileServerDetails object
+   */
+  constructor({
+    data,
+    target,
+    deterministicEncryption,
+  }: {
+    data: ArrayBuffer;
+    target: FILE_SERVER_TARGET_TYPE;
+    deterministicEncryption: boolean;
+  }) {
+    this.target = target;
+    this.data = data;
+    this.deterministicEncryption = deterministicEncryption;
+    // Note the ed/x pk is deduced from the target itself
   }
 }
 
@@ -119,16 +100,20 @@ export class FileFromFileServerDetails {
  */
 export class FileToFileServerDetails {
   public readonly fullUrl: URL;
-  public readonly serverPubkey: string;
+  public readonly serverEd25519Pk: string;
 
   /**
    * Construct a FileFromFileServer object.
    * @param url the url to download from. It must have the serverPubkey as a query parameter (serverPubkey)
    */
   constructor(url: string) {
-    const { fullUrl, serverPk } = getUploadFileDetails(url);
+    const { fullUrl, serverEd25519Pk } = getUploadFileDetails(url);
 
     this.fullUrl = fullUrl;
-    this.serverPubkey = serverPk;
+    this.serverEd25519Pk = serverEd25519Pk;
   }
 }
+
+export type UrlWithFragment = string & {
+  __brand: 'UrlWithFragment';
+};

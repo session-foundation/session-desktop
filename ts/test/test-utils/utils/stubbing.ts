@@ -62,14 +62,30 @@ export function stubUserGroupWrapper<T extends keyof UserGroupsWrapperActionsCal
   Sinon.stub(libsessionWorker.UserGroupsWrapperActions, fn).resolves(value);
 }
 
-export function stubURL(constructorReturnValue?: any) {
-  (global as any).URL = function () {
-    return constructorReturnValue;
-  };
-  (global as any).URL.createObjectURL = () => {
+export function stubURLCanParse() {
+  if (!URL.canParse) {
+    URL.canParse = () => true;
+  }
+  Sinon.stub(URL, 'canParse').callsFake((url, base) => {
+    try {
+      // eslint-disable-next-line no-new
+      new URL(url, base);
+      return true;
+    } catch {
+      return false;
+    }
+  });
+}
+
+export function stubUrlCreateObjectURL() {
+  if (!URL.createObjectURL) {
+    URL.createObjectURL = () => {
+      return `${Date.now()}:${Math.floor(Math.random() * 1000)}`;
+    };
+  }
+  Sinon.stub(URL, 'createObjectURL').callsFake(() => {
     return `${Date.now()}:${Math.floor(Math.random() * 1000)}`;
-  };
-  (global as any).URL.canParse = () => true;
+  });
 }
 
 type WindowValue<K extends keyof Window> = Partial<Window[K]> | undefined;

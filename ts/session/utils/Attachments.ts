@@ -11,11 +11,10 @@ import {
   AttachmentPointerWithUrl,
   PreviewWithAttachmentUrl,
 } from '../messages/outgoing/visibleMessage/VisibleMessage';
-import {
-  fileServerQueryPubkey,
-  uploadFileToFsWithOnionV4,
-} from '../apis/file_server_api/FileServerApi';
+import { uploadFileToFsWithOnionV4 } from '../apis/file_server_api/FileServerApi';
 import { MultiEncryptWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
+import { UserUtils } from '.';
+import { extractLastPathSegment } from '../url';
 
 type UploadParams = {
   attachment: Attachment;
@@ -25,10 +24,10 @@ type UploadParams = {
    */
   shouldPad?: boolean;
   /**
-   * Use the libsession deterministic encryption.
-   * Only used when the feature flag is enabled.
+   * When using the deterministic encryption, this is the seed used to generate the encryption key (libsession encrypt)
+   * When not using the deterministic encryption, this is used as the encryption key (legacy encrypt)
    */
-  seed?: Uint8Array;
+  encryptionKey: Uint8Array;
 };
 
 export interface RawPreview {
@@ -73,21 +72,14 @@ async function uploadToFileServer(params: UploadParams): Promise<AttachmentPoint
 
   let attachmentData: ArrayBuffer;
 
-  if (
-    window?.sessionFeatureFlags?.useDeterministicEncryption &&
-    (!params.seed || isEmpty(params.seed))
-  ) {
-    throw new Error(
-      'uploadAttachmentsToFileServer: useDeterministicEncryption is true but no seed was provided'
-    );
-  }
+  const deterministicEncryption = window.sessionFeatureFlags?.useDeterministicEncryption;
 
-  if (window.sessionFeatureFlags.useDeterministicEncryption && params.seed) {
+  if (deterministicEncryption) {
     // this throws if the encryption fails
     window?.log?.debug('Using deterministic for attachment upload: ', attachment.fileName);
     const encryptedContent = await MultiEncryptWrapperActions.attachmentEncrypt({
       allowLarge: false,
-      seed: params.seed,
+      seed: params.encryptionKey,
       data: new Uint8Array(attachment.data),
       domain: 'attachment',
     });
@@ -95,7 +87,7 @@ async function uploadToFileServer(params: UploadParams): Promise<AttachmentPoint
     attachmentData = encryptedContent.encryptedData;
   } else {
     // this is the legacy attachment encryption
-    pointer.key = new Uint8Array(crypto.randomBytes(64));
+    pointer.key = new Uint8Array(params.encryptionKey);
     const iv = new Uint8Array(crypto.randomBytes(16));
 
     const dataToEncrypt = !shouldPad ? attachment.data : addAttachmentPadding(attachment.data);
@@ -105,11 +97,11 @@ async function uploadToFileServer(params: UploadParams): Promise<AttachmentPoint
   }
 
   // use file server v2
-  const uploadToV2Result = await uploadFileToFsWithOnionV4(attachmentData);
+  const uploadToV2Result = await uploadFileToFsWithOnionV4(attachmentData, deterministicEncryption);
   if (uploadToV2Result) {
     const pointerWithUrl: AttachmentPointerWithUrl = {
       ...pointer,
-      url: `${uploadToV2Result.fileUrl}${fileServerQueryPubkey(uploadToV2Result.serverPubkey)}`,
+      url: uploadToV2Result.fileUrl,
     };
     return pointerWithUrl;
   }
@@ -120,11 +112,15 @@ async function uploadToFileServer(params: UploadParams): Promise<AttachmentPoint
 export async function uploadAttachmentsToFileServer(
   attachments: Array<Attachment>
 ): Promise<Array<AttachmentPointerWithUrl>> {
+  const encryptionKey = window.sessionFeatureFlags.useDeterministicEncryption
+    ? await UserUtils.getUserEd25519Seed()
+    : crypto.randomBytes(32);
+
   const promises = (attachments || []).map(async attachment =>
     uploadToFileServer({
       attachment,
       shouldPad: true,
-      seed: crypto.randomBytes(32),
+      encryptionKey,
     })
   );
 
@@ -141,8 +137,13 @@ export async function uploadLinkPreviewToFileServer(
     }
     return preview as any;
   }
+  const encryptionKey = window.sessionFeatureFlags.useDeterministicEncryption
+    ? await UserUtils.getUserEd25519Seed()
+    : crypto.randomBytes(32);
+
   const image = await uploadToFileServer({
     attachment: preview.image,
+    encryptionKey,
   });
   return {
     ...preview,
@@ -150,16 +151,19 @@ export async function uploadLinkPreviewToFileServer(
   };
 }
 
-export function attachmentIdAsStrFromUrl(url: string) {
-  const lastSegment = url?.split('/')?.pop();
+export function attachmentIdAsStrFromUrl(fullUrl: string) {
+  const url = new URL(fullUrl);
+  const lastSegment = extractLastPathSegment(url);
   if (!lastSegment) {
-    throw new Error('attachmentIdAsStrFromUrl last is not valid');
+    throw new Error('attachmentIdAsStrFromUrl last segment is not valid');
   }
   return lastSegment;
 }
 
 export function attachmentIdAsLongFromUrl(url: string) {
-  const lastSegment = url?.split('/')?.pop();
+  const parsedUrl = URL.canParse(url) && new URL(url);
+
+  const lastSegment = parsedUrl && parsedUrl.pathname.split('/').filter(Boolean).pop();
   if (!lastSegment) {
     throw new Error('attachmentIdAsLongFromUrl last is not valid');
   }

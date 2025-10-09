@@ -6,7 +6,6 @@ import { type OutgoingUserProfile } from '../../../../types/message';
 import { ExpirableMessageParams } from '../ExpirableMessage';
 import { attachmentIdAsLongFromUrl } from '../../../utils';
 import type { WithOutgoingUserProfile } from '../Message';
-import { queryParamServerPubkey } from '../../../apis/file_server_api/types';
 
 interface AttachmentPointerCommon {
   contentType?: string;
@@ -122,21 +121,7 @@ export class VisibleMessage extends DataMessage {
       dataMessage.body = this.body;
     }
 
-    dataMessage.attachments = (this.attachments || []).map(m => {
-      const url = URL.canParse(m.url) && new URL(m.url);
-      const deterministicEncryption = window.sessionFeatureFlags.useDeterministicEncryption;
-
-      if (!url) {
-        return m;
-      }
-
-      return {
-        ...m,
-        url: `${url.origin}${url.pathname}`,
-        serverPubkey: url.searchParams.get(queryParamServerPubkey) ?? undefined,
-        deterministicEncryption,
-      };
-    });
+    dataMessage.attachments = this.attachments ?? [];
 
     if (this.reaction) {
       dataMessage.reaction = this.reaction;

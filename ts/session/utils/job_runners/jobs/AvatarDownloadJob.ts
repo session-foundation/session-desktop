@@ -4,7 +4,7 @@ import { UserUtils } from '../..';
 import { processNewAttachment } from '../../../../types/MessageAttachment';
 import { decryptProfile } from '../../../../util/crypto/profileEncrypter';
 import { ConvoHub } from '../../../conversations';
-import { fromHexToArray } from '../../String';
+import { ed25519Str, fromHexToArray } from '../../String';
 import { runners } from '../JobRunner';
 import {
   AddJobCheckReturn,
@@ -14,6 +14,8 @@ import {
 } from '../PersistedJob';
 import { processAvatarData } from '../../../../util/avatar/processAvatarData';
 import { downloadAttachmentFs } from '../../../../receiver/attachments';
+import { extractDetailsFromUrlFragment } from '../../../url';
+import { MultiEncryptWrapperActions } from '../../../../webworker/workers/browser/libsession_worker_interface';
 
 const defaultMsBetweenRetries = 10000;
 const defaultMaxAttempts = 3;
@@ -121,6 +123,9 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
           url: toDownloadPointer,
           isRaw: true,
         });
+        const { deterministicEncryption } = extractDetailsFromUrlFragment(
+          new URL(toDownloadPointer)
+        );
         conversation = ConvoHub.use().getOrThrow(convoId);
 
         if (!downloaded.data.byteLength) {
@@ -136,10 +141,19 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
           const profileKeyArrayBuffer = fromHexToArray(toDownloadProfileKey);
           let decryptedData: ArrayBuffer;
           try {
-            decryptedData = await decryptProfile(downloaded.data, profileKeyArrayBuffer);
+            if (deterministicEncryption) {
+              const { decryptedData: decryptedData2 } =
+                await MultiEncryptWrapperActions.attachmentDecrypt({
+                  encryptedData: new Uint8Array(downloaded.data),
+                  decryptionKey: profileKeyArrayBuffer,
+                });
+              decryptedData = decryptedData2.buffer;
+            } else {
+              decryptedData = await decryptProfile(downloaded.data, profileKeyArrayBuffer);
+            }
           } catch (decryptError) {
             window.log.info(
-              `[profileupdate] failed to decrypt downloaded data ${conversation.id} with provided profileKey`
+              `[profileupdate] failed to decrypt downloaded data for ${ed25519Str(conversation.id)} with provided profileKey`
             );
             // if we got content, but cannot decrypt it with the provided profileKey, there is no need to keep retrying.
             return RunJobResult.PermanentFailure;
@@ -150,7 +164,7 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
           );
 
           // we autoscale incoming avatars because our app keeps decrypted avatars in memory and some platforms allows large avatars to be uploaded.
-          const processed = await processAvatarData(decryptedData);
+          const processed = await processAvatarData(decryptedData, conversation.isMe());
 
           const upgradedMainAvatar = await processNewAttachment({
             data: processed.mainAvatarDetails.outputBuffer,

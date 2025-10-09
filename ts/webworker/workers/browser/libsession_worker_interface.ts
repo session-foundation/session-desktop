@@ -185,10 +185,6 @@ export const UserConfigWrapperActions: UserConfigWrapperActionsCalls = {
     callLibSessionWorker(['UserConfig', 'getProfileUpdatedSeconds']) as Promise<
       ReturnType<UserConfigWrapperActionsCalls['getProfileUpdatedSeconds']>
     >,
-  getProfilePicWithKeyHex: async () =>
-    callLibSessionWorker(['UserConfig', 'getProfilePicWithKeyHex']) as Promise<
-      ReturnType<UserConfigWrapperActionsCalls['getProfilePicWithKeyHex']>
-    >,
   getEnableBlindedMsgRequest: async () =>
     callLibSessionWorker(['UserConfig', 'getEnableBlindedMsgRequest']) as Promise<
       ReturnType<UserConfigWrapperActionsCalls['getEnableBlindedMsgRequest']>

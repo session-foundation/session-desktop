@@ -265,19 +265,25 @@ message AttachmentPointer {
   optional string  contentType   = 2;
   optional bytes   key           = 3;
   optional uint32  size          = 4;
+  /**
+   * When this field is empty/unset it means the attachment is encrypted
+   * using the deterministic encryption provided by libsession.
+   * If the attachment is encrypted using the legacy encryption,
+   * this field has to be set to the digest of the encrypted attachment.
+   */
   optional bytes   digest        = 6;
   optional string  fileName      = 7;
   optional uint32  flags         = 8;
   optional uint32  width         = 9;
   optional uint32  height        = 10;
   optional string  caption       = 11;
-  optional string  url           = 101;
-  optional string  serverPubkey  = 102;
   /**
-   * Whether the attachment is encrypted using the deterministic encryption provided by libsession.
-   * If the attachment is encrypted using the legacy encryption, this field can be unset or set to false.
+   * This field can be just an url to the file, or have a fragment appended to it that can contain:
+   * - `p=<server_pubkey_hex>` // hex encoded pubkey of the file server
+   * - `d` // if the file is deterministically encrypted, this field is present, otherwise it is not
+   * If needed, those fields are a &, and can be parsed/built with the usual URLSearchParams logic
    */
-  optional bool deterministicEncryption = 103;
+  optional string  url  = 101;
 }
 
 

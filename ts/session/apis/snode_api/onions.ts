@@ -389,7 +389,6 @@ async function processAnyOtherErrorOnPath(
     }
 
     processOxenServerError(status, ciphertext);
-
     throw new Error(`Bad Path handled. Retry this request. Status: ${status}`);
   }
 }
@@ -428,7 +427,6 @@ async function processAnyOtherErrorAtDestination(
       snodeEd25519: destinationEd25519,
       associatedWith,
     });
-
     throw new Error(`Bad Path handled. Retry this request. Status: ${status}`);
   }
 }

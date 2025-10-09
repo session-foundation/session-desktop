@@ -16,7 +16,7 @@ import type { ProcessedAvatarDataType } from '../../webworker/workers/node/image
 import { ImageProcessor } from '../../webworker/workers/browser/image_processor_interface';
 import { maxThumbnailDetails } from '../../util/attachment/attachmentSizes';
 
-export const THUMBNAIL_CONTENT_TYPE = 'image/png';
+export const THUMBNAIL_CONTENT_TYPE = 'image/webp';
 
 export const urlToBlob = async (dataUrl: string) => {
   return (await fetch(dataUrl)).blob();
@@ -189,7 +189,8 @@ export const revokeObjectUrl = (objectUrl: string) => {
 async function autoScaleAvatarBlob(file: File): Promise<ProcessedAvatarDataType | null> {
   try {
     const arrayBuffer = await file.arrayBuffer();
-    const processed = await processAvatarData(arrayBuffer);
+    // autoScaleAvatarBlob is only used for avatars we want to be able to reupload (ourselves or 03-groups)
+    const processed = await processAvatarData(arrayBuffer, true);
     return processed;
   } catch (e) {
     ToastUtils.pushToastError(
@@ -225,7 +226,7 @@ async function pickFileForReal() {
 }
 
 async function pickFileForTestIntegration() {
-  const blueAvatarDetails = await ImageProcessor.testIntegrationFakeAvatar(500, {
+  const blueAvatarDetails = await ImageProcessor.testIntegrationFakeAvatar(600, {
     r: 0,
     g: 0,
     b: 255,
