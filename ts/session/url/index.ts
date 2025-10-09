@@ -23,6 +23,8 @@ function parseSearchParamsFromFragment(url: URL) {
  * - if no serverPk is provided, the defaultFileServerPubKey is returned.
  * - if no profileKey is provided, the profileKey is null
  * - if no deterministicEncryption is provided, the deterministicEncryption is false (presence is used, the value is not checked)
+ *
+ * Also, the fs serverPk is removed from the url if it is the default one.
  */
 export function extractDetailsFromUrlFragment(url: URL) {
   const searchParams = parseSearchParamsFromFragment(url);
@@ -41,7 +43,7 @@ export function extractDetailsFromUrlFragment(url: URL) {
     serverEd25519Pk,
     deterministicEncryption,
     profileKey,
-    urlWithoutProfileKey: removeProfileKeyFromUrl(url).toString(),
+    urlWithoutProfileKey: removeDefaultServerPk(removeProfileKey(url)).toString(),
   };
 }
 
@@ -59,13 +61,28 @@ export function addProfileKeyToUrl(url: URL, profileKeyHex: string) {
   return urlCopy;
 }
 
-function removeProfileKeyFromUrl(url: URL) {
+function removeProfileKey(url: URL) {
   const searchParams = parseSearchParamsFromFragment(url);
   const profileKey = searchParams.get(queryParamEncryptionKey);
   if (!profileKey) {
     // a profile key field is not present
     return url;
   }
+  const urlCopy = new URL(url.toString());
+  searchParams.delete(queryParamEncryptionKey);
+  urlCopy.hash = searchParams.toString() ?? '';
+
+  return urlCopy;
+}
+
+function removeDefaultServerPk(url: URL) {
+  const searchParams = parseSearchParamsFromFragment(url);
+  const serverPk = searchParams.get(queryParamServerEd25519Pubkey);
+  if (!serverPk || !FS.isDefaultFileServer(serverPk)) {
+    // a serverPk is not present, or it is not the default file server
+    return url;
+  }
+
   const urlCopy = new URL(url.toString());
   searchParams.delete(queryParamEncryptionKey);
   urlCopy.hash = searchParams.toString() ?? '';

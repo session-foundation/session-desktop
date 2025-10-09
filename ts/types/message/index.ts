@@ -7,26 +7,27 @@ import { SignalService } from '../../protobuf';
 import { Timestamp } from '../timestamp/timestamp';
 import { addProfileKeyToUrl, extractDetailsFromUrlFragment } from '../../session/url';
 
+// Note: this removes the profile key from the url on purpose,
+// as we do not want to share this design with the other platforms
+// (and we do not want to send it as part of the URL).
 function extractPicDetailsFromUrl(src: string | null): ProfilePicture {
   if (!src || !URL.canParse(src)) {
     return { url: null, key: null };
   }
-  const { profileKey: key, urlWithoutProfileKey: url } = extractDetailsFromUrlFragment(
-    new URL(src)
-  );
+  const { profileKey: key, urlWithoutProfileKey } = extractDetailsFromUrlFragment(new URL(src));
   // throwing here, as if src is not empty we expect a key to be set
   if (!isEmpty(key) && !isString(key)) {
     throw new Error('extractPicDetailsFromUrl: profileKey is set but not a string');
   }
   // throwing here, as if src is not empty we expect an url to be set
-  if (!isEmpty(url) && !isString(url)) {
+  if (!isEmpty(urlWithoutProfileKey) && !isString(urlWithoutProfileKey)) {
     throw new Error('extractPicDetailsFromUrl: avatarPointer is set but not a string');
   }
-  if (!url || !key) {
+  if (!urlWithoutProfileKey || !key) {
     // this shouldn't happen, but we check it anyway
     return { url: null, key: null };
   }
-  return { url, key: from_hex(key) };
+  return { url: urlWithoutProfileKey, key: from_hex(key) };
 }
 
 class OutgoingUserProfile {
@@ -94,32 +95,30 @@ class OutgoingUserProfile {
     }
   }
 
+  /**
+   * @returns the profile picture with the key in a Uint8Array format.
+   * Note: this removes the profile key from the url on purpose,
+   * as we do not want to share this design with the other platforms.
+   */
   public toProfilePicture(): ProfilePicture {
     return extractPicDetailsFromUrl(this.picUrlWithProfileKey);
   }
 
+  /**
+   * This function is used to get the profile picture with the key in hex format.
+   * Note: this removes the profile key from the url on purpose,
+   * as we do not want to share this design with the other platforms.
+   */
   public toHexProfilePicture() {
-    const details = extractPicDetailsFromUrl(this.picUrlWithProfileKey);
+    const details = this.toProfilePicture();
     return { url: details.url, key: details.key ? to_hex(details.key) : null };
   }
 
-  public isEmpty(): boolean {
-    return !this.displayName && !this.picUrlWithProfileKey;
-  }
-
-  private emptyProtobufDetails() {
-    // Note: profileKey: undefined is not allowed by protobuf
-    return { profile: undefined };
-  }
-
-  public getUpdatedAtSeconds(): number {
-    return this.lastProfileUpdateTs.seconds();
-  }
-
-  public getUpdatedAtMs(): number {
-    return this.lastProfileUpdateTs.ms();
-  }
-
+  /**
+   * This function is used to get the protobuf details that needs to be added to an outgoing message.
+   * The URL of the profile picture will be stripped of the profile key if it was set on purpose, see `toProfilePicture()`.
+   * The URL of the profile picture will also be stripped of the serverPk, if the fileServer used is the default one.
+   */
   public toProtobufDetails(): Partial<Pick<SignalService.DataMessage, 'profile' | 'profileKey'>> {
     if (this.isEmpty()) {
       return this.emptyProtobufDetails();
@@ -139,6 +138,23 @@ class OutgoingUserProfile {
     }
     // no profileKey provided here
     return { profile };
+  }
+
+  public isEmpty(): boolean {
+    return !this.displayName && !this.picUrlWithProfileKey;
+  }
+
+  private emptyProtobufDetails() {
+    // Note: profileKey: undefined is not allowed by protobuf
+    return { profile: undefined };
+  }
+
+  public getUpdatedAtSeconds(): number {
+    return this.lastProfileUpdateTs.seconds();
+  }
+
+  public getUpdatedAtMs(): number {
+    return this.lastProfileUpdateTs.ms();
   }
 }
 

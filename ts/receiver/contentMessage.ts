@@ -744,7 +744,7 @@ async function handleMessageRequestResponse(
     const srcProfileDetails = srcConvo.getPrivateProfileDetails();
     const srcAvatarPath = srcConvo.getAvatarInProfilePath();
     const srcFallbackAvatarPath = srcConvo.getFallbackAvatarInProfilePath();
-    const srcProfilePic = srcProfileDetails.toProfilePicture();
+    const srcProfilePic = srcProfileDetails.toHexProfilePicture();
 
     const avatarChanges =
       srcAvatarPath && srcFallbackAvatarPath && srcProfilePic.url && srcProfilePic.key
