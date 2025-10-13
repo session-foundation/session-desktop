@@ -215,9 +215,16 @@ type SetSessionProfileReturn = {
  * We need to do some extra processing for private actions, as they have a updatedAtSeconds field.
  */
 function isSetProfileWithUpdatedAtSeconds<T extends SetSessionProfileDetails>(
-  action: T
-): action is Extract<T, { profileUpdatedAtSeconds: number }> {
-  return 'profileUpdatedAtSeconds' in action;
+  _action: T
+): _action is Extract<T, { profileUpdatedAtSeconds: number }> {
+  /**
+   * We temporarily want to not write the profileUpdatedAtSeconds as we want this behavior to
+   * be used only once a user has updated their profile picture (and resized it).
+   */
+  window.log.debug('isSetProfileWithUpdatedAtSeconds forced to return false for now');
+  return false;
+
+  // return 'profileUpdatedAtSeconds' in action;
 }
 
 /**
