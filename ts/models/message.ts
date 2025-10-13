@@ -823,7 +823,7 @@ export class MessageModel extends Model<MessageAttributes> {
     window.log.info(
       `Upload of message data for message ${this.idForLogging()} is finished in ${
         Date.now() - start
-      }ms.`
+      }ms. Attachments: ${attachments.map(m => m.url)}`
     );
 
     return {

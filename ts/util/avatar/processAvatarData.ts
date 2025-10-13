@@ -1,6 +1,5 @@
 import { isArrayBuffer } from 'lodash';
 import { ImageProcessor } from '../../webworker/workers/browser/image_processor_interface';
-import { maxAvatarDetails } from '../attachment/attachmentSizes';
 import { MAX_ATTACHMENT_FILESIZE_BYTES } from '../../session/constants';
 
 /**
@@ -28,12 +27,7 @@ export async function processAvatarData(arrayBuffer: ArrayBuffer, planForReuploa
    * 2. a fallback avatar in case the user looses its pro (static image, even if the main avatar is animated)
    */
   // this is step 1, we generate a scaled down avatar, but keep its nature (animated or not)
-  const processed = await ImageProcessor.processAvatarData(
-    arrayBuffer,
-    planForReupload
-      ? maxAvatarDetails.maxSidePlanReupload
-      : maxAvatarDetails.maxSideNoReuploadRequired
-  );
+  const processed = await ImageProcessor.processAvatarData(arrayBuffer, planForReupload);
 
   if (!processed) {
     throw new Error('processLocalAvatarChange: failed to process avatar');
@@ -42,7 +36,7 @@ export async function processAvatarData(arrayBuffer: ArrayBuffer, planForReuploa
   const { mainAvatarDetails, avatarFallback } = processed;
 
   // sanity check the returned data
-  if (mainAvatarDetails.format !== 'webp') {
+  if (mainAvatarDetails.format !== 'webp' && mainAvatarDetails.format !== 'gif') {
     throw new Error(
       'processLocalAvatarChange: we only support animated mainAvatarDetails in webp after conversion'
     );

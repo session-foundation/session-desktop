@@ -75,7 +75,7 @@ export async function uploadAndSetOurAvatarShared({
     ? await processNewAttachment({
         isRaw: true,
         data: avatarFallback.outputBuffer,
-        contentType: avatarFallback.contentType, // contentType is mostly used to generate previews and screenshot. We do not care for those in this case.
+        contentType: avatarFallback.contentType,
       })
     : null;
 
@@ -95,18 +95,11 @@ export async function uploadAndSetOurAvatarShared({
       url: fileUrl,
     });
   } else if (context === 'reuploadAvatar') {
-    window.log.debug(
-      `uploadAndSetOurAvatarShared: context === 'reuploadAvatar' but for now we always setNewProfilePic`
-    );
-    // await UserConfigWrapperActions.setReuploadProfilePic({
-    //   key: encryptionKey,
-    //   url: fileUrl,
-    // });
+    await UserConfigWrapperActions.setReuploadProfilePic({
+      key: encryptionKey,
+      url: fileUrl,
+    });
   }
-  await UserConfigWrapperActions.setNewProfilePic({
-    key: encryptionKey,
-    url: fileUrl,
-  });
 
   return {
     avatarPointer: ourConvo.getAvatarPointer(),

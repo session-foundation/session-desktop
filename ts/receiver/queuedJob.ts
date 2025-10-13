@@ -22,16 +22,10 @@ import {
 import { showMessageRequestBannerOutsideRedux } from '../state/ducks/userConfig';
 import { selectMemberInviteSentOutsideRedux } from '../state/selectors/groups';
 import { getHideMessageRequestBannerOutsideRedux } from '../state/selectors/userConfig';
-import { GoogleChrome } from '../util';
 import { LinkPreviews } from '../util/linkPreviews';
 import { GroupV2Receiver } from './groupv2/handleGroupV2Message';
 import { Constants } from '../session';
 import { Timestamp } from '../types/timestamp/timestamp';
-
-function contentTypeSupported(type: string): boolean {
-  const Chrome = GoogleChrome;
-  return Chrome.isImageTypeSupported(type) || Chrome.isVideoTypeSupported(type);
-}
 
 function isMessageModel(
   msg: MessageModel | MessageModelPropsWithoutConvoProps
@@ -103,56 +97,6 @@ async function copyFromQuotedMessage(
   } else {
     window.inboxStore?.dispatch(pushQuotedMessageDetails(quotedMessage));
   }
-
-  const firstQuotedMessageAttachment = isMessageModel(quotedMessage)
-    ? quotedMessage.get('attachments')?.[0]
-    : quotedMessage.propsForMessage.attachments?.[0];
-
-  // no attachments, just save the quote
-  if (
-    !firstQuotedMessageAttachment ||
-    !firstQuotedMessageAttachment.contentType ||
-    !contentTypeSupported(firstQuotedMessageAttachment.contentType)
-  ) {
-    msg.setQuote(quoteLocal);
-    return;
-  }
-
-  firstQuotedMessageAttachment.thumbnail = null;
-
-  const queryAttachments =
-    (isMessageModel(quotedMessage)
-      ? quotedMessage.get('attachments')
-      : quotedMessage.propsForMessage.attachments) || [];
-
-  if (queryAttachments.length > 0) {
-    const queryFirst = queryAttachments[0];
-    const { thumbnail } = queryFirst;
-
-    if (thumbnail && thumbnail.path) {
-      firstQuotedMessageAttachment.thumbnail = {
-        ...thumbnail,
-        copied: true,
-      };
-    }
-  }
-
-  const queryPreview =
-    (isMessageModel(quotedMessage)
-      ? quotedMessage.get('preview')
-      : quotedMessage.propsForMessage.previews) || [];
-  if (queryPreview.length > 0) {
-    const queryFirst = queryPreview[0];
-    const { image } = queryFirst;
-
-    if (image && image.path) {
-      firstQuotedMessageAttachment.thumbnail = {
-        ...image,
-        copied: true,
-      };
-    }
-  }
-  quoteLocal.attachments = [firstQuotedMessageAttachment];
 
   msg.setQuote(quoteLocal);
 }

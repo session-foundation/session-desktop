@@ -16,6 +16,22 @@ function logIfOn(...args: Array<any>) {
   }
 }
 
+const defaultTimeoutProcessingSeconds = 5;
+
+/**
+ * Duplicated to be used in the worker environment
+ */
+const maxAvatarDetails = {
+  /**
+   * 600 px
+   */
+  maxSidePlanReupload: 600,
+  /**
+   * 200 px
+   */
+  maxSideNoReuploadRequired: 200,
+};
+
 onmessage = async (e: any) => {
   const [jobId, fnName, ...args] = e.data;
 
@@ -183,7 +199,7 @@ const workerActions: ImageProcessorWorkerActions = {
     };
   },
 
-  processAvatarData: async (inputBuffer: ArrayBufferLike, maxSidePx: number) => {
+  processAvatarData: async (inputBuffer: ArrayBufferLike, planForReupload: boolean) => {
     if (!inputBuffer?.byteLength) {
       throw new Error('processAvatarData: inputBuffer is required');
     }
@@ -203,14 +219,33 @@ const workerActions: ImageProcessorWorkerActions = {
     // generate a square image of the avatar, scaled down or up to `maxSide`
 
     const resized = sharpFrom(inputBuffer, { animated: true }).resize(
-      centerCoverOpts({ maxSidePx, withoutEnlargement: true })
+      centerCoverOpts({
+        maxSidePx: planForReupload
+          ? maxAvatarDetails.maxSidePlanReupload
+          : maxAvatarDetails.maxSideNoReuploadRequired,
+        withoutEnlargement: true,
+      })
     );
 
+    const isSourceGif = metadata.format === 'gif';
     // if the avatar was animated, we want an animated webp.
     // if it was static, we want a static webp.
-    resized.webp();
+    if (planForReupload) {
+      // see the comment in image_processor.d.ts:
+      // we don't want to convert gif to webp when planning for reupload
+      if (isSourceGif) {
+        resized.gif();
+      } else {
+        resized.webp();
+      }
+    } else {
+      // when not planning for reupload, we always want a webp
+      resized.webp();
+    }
 
-    const resizedBuffer = await resized.toBuffer();
+    const resizedBuffer = await resized
+      .timeout({ seconds: defaultTimeoutProcessingSeconds })
+      .toBuffer();
 
     // Note: we need to use the resized buffer here, not the original one,
     // as metadata is always linked to the source buffer (even if a resize() is done before the metadata call)
@@ -227,17 +262,6 @@ const workerActions: ImageProcessorWorkerActions = {
     );
 
     const resizedIsAnimated = isAnimated(resizedMetadata);
-
-    const formatDetails = { format: 'webp' as const, contentType: 'image/webp' as const };
-
-    const mainAvatarDetails = {
-      outputBuffer: resizedBuffer.buffer,
-      height: resizedMetadata.height,
-      width: resizedMetadata.width,
-      isAnimated: resizedIsAnimated,
-      ...formatDetails,
-      size: resizedMetadataSize,
-    };
 
     let avatarFallback = null;
 
@@ -260,10 +284,21 @@ const workerActions: ImageProcessorWorkerActions = {
     }
 
     logIfOn(
-      `[imageProcessorWorker] processAvatarData sizes: main: ${mainAvatarDetails.size} bytes, fallback: ${avatarFallback ? avatarFallback.size : 0} bytes`
+      `[imageProcessorWorker] processAvatarData sizes: main: ${resizedMetadataSize} bytes, fallback: ${avatarFallback ? avatarFallback.size : 0} bytes`
     );
 
-    return { mainAvatarDetails, avatarFallback };
+    return {
+      mainAvatarDetails: {
+        outputBuffer: resizedBuffer.buffer,
+        height: resizedMetadata.height,
+        width: resizedMetadata.width,
+        isAnimated: resizedIsAnimated,
+        format: planForReupload && isSourceGif ? 'gif' : 'webp',
+        contentType: planForReupload && isSourceGif ? 'image/gif' : 'image/webp',
+        size: resizedMetadataSize,
+      },
+      avatarFallback,
+    };
   },
 
   testIntegrationFakeAvatar: async (
@@ -339,7 +374,7 @@ const workerActions: ImageProcessorWorkerActions = {
     };
   },
 
-  processForInConversationThumbnail: async (inputBuffer, maxSidePx) => {
+  processForInConversationThumbnail: async (inputBuffer: ArrayBufferLike, maxSidePx: number) => {
     if (!inputBuffer?.byteLength) {
       throw new Error('processForInConversationThumbnail: inputBuffer is required');
     }
@@ -355,7 +390,10 @@ const workerActions: ImageProcessorWorkerActions = {
     }
 
     const animated = isAnimated(metadata);
-    const resizedBuffer = await parsed.webp().toBuffer();
+    const resizedBuffer = await parsed
+      .webp()
+      .timeout({ seconds: defaultTimeoutProcessingSeconds })
+      .toBuffer();
     const resizedMetadata = await metadataFromBuffer(resizedBuffer);
 
     if (!resizedMetadata) {
@@ -376,7 +414,11 @@ const workerActions: ImageProcessorWorkerActions = {
     };
   },
 
-  processForFileServerUpload: async (inputBuffer, maxSidePx, maxSizeBytes) => {
+  processForFileServerUpload: async (
+    inputBuffer: ArrayBufferLike,
+    maxSidePx: number,
+    maxSizeBytes: number
+  ) => {
     if (!inputBuffer?.byteLength) {
       throw new Error('processForFileServerUpload: inputBuffer is required');
     }
@@ -482,7 +524,7 @@ const workerActions: ImageProcessorWorkerActions = {
       }
 
       // eslint-disable-next-line no-await-in-loop
-      const buffer = await pipeline.toBuffer();
+      const buffer = await pipeline.toBuffer(); // no timeout here for now
 
       if (buffer.length < maxSizeBytes) {
         // eslint-disable-next-line no-await-in-loop

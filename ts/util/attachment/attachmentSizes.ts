@@ -12,6 +12,8 @@ export const maxAvatarDetails = {
 };
 
 export const maxThumbnailDetails = {
+  /**
+   * 200 px
+   */
   maxSide: 200,
-  maxSize: 200 * 1000, // 200 ko
 };

@@ -20,7 +20,7 @@ import { UserConfigWrapperActions } from '../../../../webworker/workers/browser/
 import { extendFileExpiry } from '../../../apis/file_server_api/FileServerApi';
 import { fileServerUrlToFileId } from '../../../apis/file_server_api/types';
 import { NetworkTime } from '../../../../util/NetworkTime';
-import { DURATION_SECONDS } from '../../../constants';
+import { DURATION, DURATION_SECONDS } from '../../../constants';
 import { uploadAndSetOurAvatarShared } from '../../../../interactions/avatar-interactions/nts-avatar-interactions';
 import { FS } from '../../../apis/file_server_api/FileServerTarget';
 
@@ -29,7 +29,8 @@ const defaultMaxAttempts = 3;
 
 async function addAvatarReuploadJob() {
   const avatarReuploadJob = new AvatarReuploadJob({
-    nextAttemptTimestamp: Date.now(),
+    // postpone this job for 30 seconds, so we don't reupload right on start (we need an onion path to be valid)
+    nextAttemptTimestamp: Date.now() + DURATION.SECONDS * 30,
     conversationId: UserUtils.getOurPubKeyStrFromCache(),
   });
   window.log.debug(`addAvatarReuploadJob: adding job reupload `);
@@ -127,6 +128,7 @@ class AvatarReuploadJob extends PersistedJob<AvatarReuploadPersistedData> {
       window.log.debug(`[avatarReupload] starting for ${ed25519Str(conversation.id)}`);
 
       if (
+        ourProfileLastUpdatedSeconds !== 0 &&
         metadata.width <= maxAvatarDetails.maxSidePlanReupload &&
         metadata.height <= maxAvatarDetails.maxSidePlanReupload &&
         metadata.format === 'webp'

@@ -12,11 +12,12 @@ type WithOutputBuffer = { outputBuffer: ArrayBufferLike };
 
 type WithCustomSharpFormat<T extends keyof sharp.format> = { format: T };
 
-type WithImageFormat<T extends 'jpeg' | 'png' | 'webp'> = WithCustomSharpFormat<T> & {
+type WithImageFormat<T extends 'jpeg' | 'png' | 'webp' | 'gif'> = WithCustomSharpFormat<T> & {
   contentType: `image/${T}`;
 };
 
 type WithWebpFormat = WithImageFormat<'webp'>;
+type WithGifFormat = WithImageFormat<'gif'>;
 
 /**
  * The output of a always static output image.
@@ -42,19 +43,26 @@ export type ProcessedLinkPreviewThumbnailType = NonNullable<
 
 export type ImageProcessorWorkerActions = {
   /**
-   * Process an avatar change.
+   * Process an avatar. Depending on if we want this to be reuploaded or not, we allow gif as a return format or not.
+   * The reason is that when we plan for reupload, we don't convert gif to webp, as we want to keep the original gif.
+   * When the change is not planned for reupload, we convert everything to a webp.
    * This function will generate a mainAvatar, and a fallbackAvatar if needed.
    *
    * The mainAvatar can be animated or not.
-   *  - If animated it is an animated webp,
+   *  - If animated it is an animated webp (always),
    *  - If not, it is a static webp.
-   * The fallbackAvatar, if set, is always a webp.
+   * The fallbackAvatar, if set, is always a static webp.
+   *
+   * planForReupload must be true when
+   *  - for our own avatar (changed by the current user, locally or not)
+   *  - for our own avatar (automatic reupload)
+   *  - (later: for a groupv2 avatar: locally or not and on reupload, even if we are not an admin (as we might become one)
    */
   processAvatarData: (
     input: ArrayBufferLike,
-    maxSidePx: number
+    planForReupload: boolean
   ) => Promise<{
-    mainAvatarDetails: MaybeAnimatedOutputType & WithWebpFormat;
+    mainAvatarDetails: Omit<MaybeAnimatedOutputType, 'format'> & WithImageFormat<'gif' | 'webp'>;
     avatarFallback: (StaticOutputType & WithWebpFormat) | null;
   } | null>;
 
@@ -77,7 +85,7 @@ export type ImageProcessorWorkerActions = {
   processForInConversationThumbnail: (
     input: ArrayBufferLike,
     maxSidePx: number
-  ) => Promise<(MaybeAnimatedOutputType & WithWebpFormat) | null>;
+  ) => Promise<(Omit<MaybeAnimatedOutputType, 'format'> & WithWebpFormat) | null>;
 
   /**
    * Process an image to get something that we can upload to the file server.
@@ -112,7 +120,7 @@ export type ImageProcessorWorkerActions = {
     input: ArrayBufferLike,
     maxSidePx: number,
     maxSizeBytes: number
-  ) => Promise<null | (MaybeAnimatedOutputType & WithSharpFormat)>;
+  ) => Promise<null | MaybeAnimatedOutputType>;
 
   /**
    * Utility function to generate a fake avatar for testing purposes.
@@ -121,7 +129,7 @@ export type ImageProcessorWorkerActions = {
   testIntegrationFakeAvatar: (
     maxSidePx: number,
     background: { r: number; g: number; b: number } // { r: 0, g: 0, b: 255 } for fully blue
-  ) => Promise<MaybeAnimatedOutputType & WithWebpFormat>;
+  ) => Promise<Omit<MaybeAnimatedOutputType, 'format'> & WithWebpFormat>;
 
   /**
    * Extract the metadata retrieved from the image.
