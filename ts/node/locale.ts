@@ -1,8 +1,9 @@
 import { setupI18n } from '../util/i18n/i18n';
 import { CrowdinLocale, isCrowdinLocale } from '../localization/constants';
+import { keepFullLocalePart } from '../util/i18n/shared';
 
 export function normalizeLocaleName(locale: string) {
-  const dashedLocale = locale.replaceAll('_', '-');
+  const dashedLocale = keepFullLocalePart(locale).replaceAll('_', '-');
 
   // Note: this is a pain, but we somehow needs to keep in sync this logic and the LOCALE_PATH_MAPPING from
   // https://github.com/session-foundation/session-shared-scripts/blob/main/crowdin/generate_desktop_strings.py
