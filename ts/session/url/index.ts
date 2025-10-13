@@ -111,10 +111,6 @@ export function parseFileServerUrl(fullURL?: string) {
     return null;
   }
 
-  if (!parsedUrl.host.includes('getsession.org')) {
-    return null;
-  }
-
   if (parsedUrl.host.includes('open.getsession.org')) {
     // we need to filter out communities we host on getsession.org as they do not have the same api.
     return null;

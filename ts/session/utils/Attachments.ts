@@ -76,7 +76,10 @@ async function uploadToFileServer(params: UploadParams): Promise<AttachmentPoint
 
   if (deterministicEncryption) {
     // this throws if the encryption fails
-    window?.log?.debug('Using deterministic for attachment upload: ', attachment.fileName);
+    window?.log?.debug(
+      'Using deterministic encryption for attachment upload: ',
+      attachment.fileName
+    );
     const encryptedContent = await MultiEncryptWrapperActions.attachmentEncrypt({
       allowLarge: false,
       seed: params.encryptionKey,

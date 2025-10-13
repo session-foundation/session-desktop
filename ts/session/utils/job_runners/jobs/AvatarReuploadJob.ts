@@ -147,7 +147,7 @@ class AvatarReuploadJob extends PersistedJob<AvatarReuploadPersistedData> {
         }
 
         if (ourProfileLastUpdatedSeconds > NetworkTime.nowSeconds() - 12 * DURATION_SECONDS.DAYS) {
-          // `renew` failed but our last reupload was less than 12 days ago, so we we don't want to retry
+          // `renew` failed but our last reupload was less than 12 days ago, so we don't want to retry
           window.log.debug(
             `[avatarReupload] expiry renew for ${ed25519Str(conversation.id)} of file ${fileId} failed but our last reupload was less than 12 days ago, so we don't want to retry`
           );
@@ -160,14 +160,16 @@ class AvatarReuploadJob extends PersistedJob<AvatarReuploadPersistedData> {
 
       // here,
       // - either the format or the size is wrong
+      // - or we do not have a ourProfileLastUpdatedSeconds yet
       // - or the expiry renew failed and our last reupload was more than 12 days ago
-      // in those case, we want to reprocess our current avatar, and reupload it
+      // In all those cases, we want to reprocess our current avatar, and reupload it.
 
       window.log.info(`[profileupdate] about to auto scale avatar for convo ${conversation.id}`);
 
       conversation = ConvoHub.use().getOrThrow(convoId);
 
-      // reprocess the avatar content, and reupload it
+      // Reprocess the avatar content, and reupload it
+      // This will pick the correct file server depending on the env variables set.
       await uploadAndSetOurAvatarShared({
         decryptedAvatarData,
         ourConvo: conversation,

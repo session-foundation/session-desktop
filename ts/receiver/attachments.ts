@@ -55,7 +55,7 @@ export async function downloadAttachmentFs(attachment: {
       throw new Error('Attachment expected size is 0');
     }
 
-    if (digest) {
+    if (!toDownload.deterministicEncryption) {
       const keyBuffer = (await callUtilsWorker('fromBase64ToArrayBuffer', key)) as ArrayBuffer;
       const digestBuffer = (await callUtilsWorker(
         'fromBase64ToArrayBuffer',
@@ -65,7 +65,7 @@ export async function downloadAttachmentFs(attachment: {
       data = await decryptAttachment(data, keyBuffer, digestBuffer);
     } else {
       window.log.debug(
-        `${attachment.url} attachment has no digest, assuming it is deterministic encryption`
+        `${attachment.url} attachment has deterministicEncryption flag set, assuming it is deterministic encryption`
       );
 
       const keyBuffer = (await callUtilsWorker('fromBase64ToArrayBuffer', key)) as ArrayBuffer;

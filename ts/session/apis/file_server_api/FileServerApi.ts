@@ -13,7 +13,7 @@ import { DURATION } from '../../constants';
 import { isReleaseChannel, type ReleaseChannels } from '../../../updater/types';
 import { Storage } from '../../../util/storage';
 import { OnionV4 } from '../../onions/onionv4';
-import { FileFromFileServerDetails, type UrlWithFragment } from './types';
+import { FileFromFileServerDetails } from './types';
 import { queryParamDeterministicEncryption, queryParamServerEd25519Pubkey } from '../../url';
 import { FS, type FILE_SERVER_TARGET_TYPE } from './FileServerTarget';
 
@@ -29,7 +29,7 @@ const FILE_ENDPOINT = '/file';
 export const uploadFileToFsWithOnionV4 = async (
   fileContent: ArrayBuffer,
   deterministicEncryption: boolean
-): Promise<{ fileUrl: UrlWithFragment; expiresMs: number } | null> => {
+): Promise<{ fileUrl: string; expiresMs: number } | null> => {
   if (!fileContent || !fileContent.byteLength) {
     return null;
   }
@@ -70,8 +70,7 @@ export const uploadFileToFsWithOnionV4 = async (
   if (deterministicEncryption) {
     urlParams.set(queryParamDeterministicEncryption, '');
   }
-  const fileUrl =
-    `${FS.FILE_SERVERS[target].url}${FILE_ENDPOINT}/${fileId}#${urlParams.toString()}` as UrlWithFragment;
+  const fileUrl = `${FS.FILE_SERVERS[target].url}${FILE_ENDPOINT}/${fileId}#${urlParams.toString()}`;
   const expiresMs = Math.floor(expires * 1000);
   return {
     fileUrl,

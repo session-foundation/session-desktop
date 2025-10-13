@@ -49,13 +49,13 @@ export type ImageProcessorWorkerActions = {
    * This function will generate a mainAvatar, and a fallbackAvatar if needed.
    *
    * The mainAvatar can be animated or not.
-   *  - If animated it is an animated webp (always),
-   *  - If not, it is a static webp.
+   *  - If animated it is an animated gif or webp,
+   *  - If not, it is a static webp (always).
    * The fallbackAvatar, if set, is always a static webp.
    *
-   * planForReupload must be true when
-   *  - for our own avatar (changed by the current user, locally or not)
-   *  - for our own avatar (automatic reupload)
+   * planForReupload must be true for
+   *  - our own avatar (changed by the current user, locally or not)
+   *  - our own avatar (automatic reupload)
    *  - (later: for a groupv2 avatar: locally or not and on reupload, even if we are not an admin (as we might become one)
    */
   processAvatarData: (
@@ -79,7 +79,7 @@ export type ImageProcessorWorkerActions = {
    * Process an image to get a thumbnail matching our required details for in conversation thumbnails
    * This is about the thumbnail in the conversation list (for attachments in messages). We generate a preview to avoid loading huge files until we show them in fullscreen.
    *
-   * Note: animated or not, an image will always be returned as a webp.
+   * Note: animated or not, an thumbnail will always be returned as a static webp currently.
    * A 'in conversation thumbnail' is always resized to "cover" and enlarged if it was smaller than maxSidePx.
    */
   processForInConversationThumbnail: (
