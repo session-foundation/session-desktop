@@ -106,23 +106,7 @@ jobs:
       - name: Install git and basic tools
         run: |
           apt update
-          apt-get install -y git cmake curl ca-certificates pkg-config build-essential libglib2.0-dev libexpat1-dev \
-            libx11-dev \
-            libxext-dev \
-            libexif-dev \
-            libxfixes-dev \
-            libxi-dev \
-            libxrender-dev \
-            libxrandr-dev \
-            libxinerama-dev \
-            libxcursor-dev \
-            libxtst-dev \
-            libjpeg-dev \
-            libnss3 \
-            libasound2t64 \
-            libatk-bridge2.0-0 \
-            libgtk-3-0 \
-            libgbm1
+          apt install -q -y git cmake curl ca-certificates pkg-config build-essential libglib2.0-dev libexpat1-dev   libx11-dev   libxext-dev   libexif-dev   libxfixes-dev   libxi-dev   libxrender-dev   libxrandr-dev   libxinerama-dev   libxcursor-dev   libxtst-dev   libturbojpeg0   libnss3   libasound2t64   libatk-bridge2.0-0   libgtk-3-0   libgbm1 meson curl libheif-dev libwebp-dev libcgif-dev libcgif0 libpng-dev  libspng-dev libtiff-dev liblcms2-dev zlib1g-dev # libimagequant-dev cmake libfftw3-dev     libopenexr-dev  libgsf-1-dev  libglib2.0-dev  liborc-dev  libopenslide-dev  libmatio-dev  libwebp-dev  libjpeg-turbo8-dev  libexpat1-dev  libexif-dev  libtiff5-dev  libcfitsio-dev  libpoppler-glib-dev  librsvg2-dev  libpango1.0-dev  libopenjp2-7-dev  liblcms2-dev  libimagequant-dev
 
       - run: |
           git config --global core.autocrlf false
@@ -132,14 +116,22 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
 
+      - name: Build & install highway
+        run: |
+          cd /tmp
+          mkdir hwy
+          curl https://codeload.github.com/google/highway/tar.gz/refs/tags/1.3.0 | tar xzC /tmp/hwy --strip-components=1
+          cd /tmp/hwy
+          CFLAGS="${CFLAGS} -O3" CXXFLAGS="${CXXFLAGS} -O3" cmake -G"Unix Makefiles"    -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_BUILD_TYPE=Release   -DBUILD_SHARED_LIBS=FALSE -DBUILD_TESTING=0 -DHWY_ENABLE_CONTRIB=0 -DHWY_ENABLE_EXAMPLES=0 -DHWY_ENABLE_TESTS=0
+          make install/strip
+
       - name: Install libvips and rebuild 8.17.2
         run: |
-          apt install -y meson curl libheif-dev libwebp-dev libcgif-dev libcgif0 libpng-dev libtiff-dev
           cd /tmp
           curl -O -L https://github.com/libvips/libvips/releases/download/v8.17.2/vips-8.17.2.tar.xz
           tar xvf vips-8.17.2.tar.xz
           cd vips-8.17.2
-          meson setup build --prefix /usr --default-library static -Dwebp=enabled -Dcgif=enabled -Dexif=enabled -Djpeg=enabled -Dheif=enabled -Dpng=enabled -Dtiff=enabled
+          meson setup build --prefix /usr  --buildtype=release --strip -Ddeprecated=false  -Dradiance=false -Dexamples=false -Dintrospection=disabled -Dmodules=disabled -Dcfitsio=disabled -Dfftw=disabled -Djpeg-xl=disabled  --default-library static -Dwebp=enabled -Dcgif=enabled -Dexif=enabled -Djpeg=enabled -Dheif=enabled -Dpng=enabled -Dspng=enabled -Dtiff=enabled -Dzlib=enabled -Dlcms=enabled -Dimagequant=disabled -Dhighway=enabled -Dorc=disabled -Dmagick=disabled -Dmatio=disabled -Dnifti=disabled -Dopenexr=disabled -Dopenjpeg=disabled -Dopenslide=disabled -Dpdfium=disabled -Dpoppler=disabled -Dquantizr=disabled -Dppm=false -Danalyze=false -Dradiance=false -Dpangocairo=disabled -Dfontconfig=disabled -Drsvg=disabled
           cd build
           meson compile
           meson test
