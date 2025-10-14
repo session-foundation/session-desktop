@@ -17,6 +17,10 @@ runs:
       with:
         python-version: '3.12'
 
+    - name: Install yarn
+      run: npm install -g yarn
+      shell: bash
+
     - name: Install setuptools for python 3.12
       shell: bash
       run: python -m pip install --upgrade pip setuptools
