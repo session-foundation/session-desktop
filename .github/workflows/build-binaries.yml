@@ -97,26 +97,26 @@ jobs:
             cache_suffix: linux-AppImage-recent
             is_qa: false
             generate_release_metadata: false
-          - identifier: deb
-            electron_target: deb
-            cache_suffix: linux-deb
-            is_qa: false
-            generate_release_metadata: true
-          - identifier: rpm
-            electron_target: rpm
-            cache_suffix: linux-rpm
-            is_qa: false
-            generate_release_metadata: true
-          - identifier: AppImage
-            electron_target: AppImage
-            cache_suffix: linux-AppImage
-            is_qa: false
-            generate_release_metadata: true
-          - identifier: freebsd
-            electron_target: freebsd
-            cache_suffix: linux-freebsd
-            is_qa: false
-            generate_release_metadata: false
+          # - identifier: deb
+          #   electron_target: deb
+          #   cache_suffix: linux-deb
+          #   is_qa: false
+          #   generate_release_metadata: true
+          # - identifier: rpm
+          #   electron_target: rpm
+          #   cache_suffix: linux-rpm
+          #   is_qa: false
+          #   generate_release_metadata: true
+          # - identifier: AppImage
+          #   electron_target: AppImage
+          #   cache_suffix: linux-AppImage
+          #   is_qa: false
+          #   generate_release_metadata: true
+          # - identifier: freebsd
+          #   electron_target: freebsd
+          #   cache_suffix: linux-freebsd
+          #   is_qa: false
+          #   generate_release_metadata: false
           # Note: this deb-qa is currently broken. The deb and deb-qa are currently overwriting each others
           # during build-release-publish and maybe the upload-artefact too.
           # - identifier: deb-qa
