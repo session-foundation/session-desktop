@@ -802,9 +802,6 @@ export const MetaGroupWrapperActions: MetaGroupWrapperActionsCalls = {
 };
 
 export const MultiEncryptWrapperActions: MultiEncryptActionsCalls = {
-  /* Reuse the UserConfigWrapperActions with the UserConfig argument */
-  ...createBaseActionsFor('UserConfig'),
-
   /** UserConfig wrapper specific actions */
   multiEncrypt: async args =>
     callLibSessionWorker(['MultiEncrypt', 'multiEncrypt', args]) as Promise<
@@ -823,6 +820,26 @@ export const MultiEncryptWrapperActions: MultiEncryptActionsCalls = {
   attachmentEncrypt: async args =>
     callLibSessionWorker(['MultiEncrypt', 'attachmentEncrypt', args]) as Promise<
       ReturnType<MultiEncryptActionsCalls['attachmentEncrypt']>
+    >,
+
+  encryptFor1o1: async args =>
+    callLibSessionWorker(['MultiEncrypt', 'encryptFor1o1', args]) as Promise<
+      ReturnType<MultiEncryptActionsCalls['encryptFor1o1']>
+    >,
+
+  encryptForCommunityInbox: async args =>
+    callLibSessionWorker(['MultiEncrypt', 'encryptForCommunityInbox', args]) as Promise<
+      ReturnType<MultiEncryptActionsCalls['encryptForCommunityInbox']>
+    >,
+
+  encryptForCommunity: async args =>
+    callLibSessionWorker(['MultiEncrypt', 'encryptForCommunity', args]) as Promise<
+      ReturnType<MultiEncryptActionsCalls['encryptForCommunity']>
+    >,
+
+  encryptForGroup: async args =>
+    callLibSessionWorker(['MultiEncrypt', 'encryptForGroup', args]) as Promise<
+      ReturnType<MultiEncryptActionsCalls['encryptForGroup']>
     >,
 };
 
