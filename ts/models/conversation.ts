@@ -1772,9 +1772,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
     const updatedAtSeconds = this.getProfileUpdatedSeconds();
 
     return new OutgoingUserProfile({
-      avatarPointer,
+      profilePic: { url: avatarPointer, key: profileKey ? from_hex(profileKey) : null },
       displayName,
-      profileKey,
       updatedAtSeconds,
     });
   }

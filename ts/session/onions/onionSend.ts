@@ -1,6 +1,7 @@
 import { AbortSignal } from 'abort-controller';
 import { toNumber } from 'lodash';
 import pRetry from 'p-retry';
+import { crypto_sign_ed25519_pk_to_curve25519, from_hex, to_hex } from 'libsodium-wrappers-sumo';
 
 import { OnionPaths } from '.';
 import { Snode } from '../../data/types';
@@ -10,7 +11,6 @@ import {
   addBinaryContentTypeToHeaders,
   addJsonContentTypeToHeaders,
 } from '../apis/open_group_api/sogsv3/sogsV3SendMessage';
-import { pnServerPubkeyHex, pnServerUrl } from '../apis/push_notification_api/PnServer';
 import {
   FinalDestNonSnodeOptions,
   FinalRelayOptions,
@@ -23,8 +23,9 @@ import { OnionV4 } from './onionv4';
 import { MergedAbortSignal, WithAbortSignal, WithTimeoutMs } from '../apis/snode_api/requestWith';
 import { OnionPathEmptyError } from '../utils/errors';
 import { SnodePool } from '../apis/snode_api/snodePool';
-import { fileServerURL, fileServerPubKey } from '../apis/file_server_api/FileServerApi';
 import { SERVER_HOSTS } from '../apis';
+import type { FileFromFileServerDetails } from '../apis/file_server_api/types';
+import { FS, type FILE_SERVER_TARGET_TYPE } from '../apis/file_server_api/FileServerTarget';
 
 export type OnionFetchOptions = {
   method: string;
@@ -374,42 +375,6 @@ async function sendJsonViaOnionV4ToSogs(
   return res as OnionV4JSONSnodeResponse | null;
 }
 
-/**
- * Send some json to the PushNotification server.
- * Desktop only send `/notify` requests.
- *
- * You should probably not use this function directly but instead rely on the PnServer.notifyPnServer() function
- */
-async function sendJsonViaOnionV4ToPnServer(
-  sendOptions: WithTimeoutMs & {
-    endpoint: string;
-    method: string;
-    stringifiedBody: string | null;
-    abortSignal: AbortSignal;
-  }
-): Promise<OnionV4JSONSnodeResponse | null> {
-  const { endpoint, method, stringifiedBody, abortSignal, timeoutMs } = sendOptions;
-  if (!endpoint.startsWith('/')) {
-    throw new Error('endpoint needs a leading /');
-  }
-  const builtUrl = new URL(`${pnServerUrl}${endpoint}`);
-
-  const res = await OnionSending.sendViaOnionV4ToNonSnodeWithRetries(
-    pnServerPubkeyHex,
-    builtUrl,
-    {
-      method,
-      headers: {},
-      body: stringifiedBody,
-      useV4: true,
-    },
-    false,
-    abortSignal,
-    timeoutMs
-  );
-  return res as OnionV4JSONSnodeResponse;
-}
-
 async function sendBinaryViaOnionV4ToSogs(
   sendOptions: WithTimeoutMs & {
     serverUrl: string;
@@ -481,6 +446,7 @@ async function sendBinaryViaOnionV4ToSogs(
  * You should probably not use this function directly, but instead rely on the FileServerAPI.uploadFileToFsWithOnionV4()
  */
 async function sendBinaryViaOnionV4ToFileServer({
+  target,
   endpoint,
   method,
   bodyBinary,
@@ -489,19 +455,15 @@ async function sendBinaryViaOnionV4ToFileServer({
   headers = {},
 }: WithTimeoutMs &
   WithAbortSignal & {
+    target: FILE_SERVER_TARGET_TYPE;
     endpoint: string;
     method: string;
     bodyBinary: Uint8Array;
     headers?: Record<string, string | number>;
   }): Promise<OnionV4JSONSnodeResponse | null> {
-  if (!endpoint.startsWith('/')) {
-    throw new Error('endpoint needs a leading /');
-  }
-  const builtUrl = new URL(`${fileServerURL}${endpoint}`);
-
   const res = await OnionSending.sendViaOnionV4ToNonSnodeWithRetries(
-    fileServerPubKey,
-    builtUrl,
+    FS.FILE_SERVERS[target].xPk,
+    new URL(`${FS.FILE_SERVERS[target].url}${endpoint}`),
     {
       method,
       headers,
@@ -521,33 +483,34 @@ async function sendBinaryViaOnionV4ToFileServer({
  * You should probably not use this function directly, but instead rely on the FileServerAPI.downloadFileFromFileServer()
  */
 async function getBinaryViaOnionV4FromFileServer({
-  endpoint,
-  method,
+  fileToGet,
   abortSignal,
   throwError,
   timeoutMs,
 }: WithTimeoutMs &
   WithAbortSignal & {
-    endpoint: string;
-    method: string;
+    fileToGet: FileFromFileServerDetails;
     throwError: boolean;
   }): Promise<OnionV4BinarySnodeResponse | null> {
-  if (!endpoint.startsWith('/')) {
-    throw new Error('endpoint needs a leading /');
-  }
-  const builtUrl = new URL(`${fileServerURL}${endpoint}`);
-
   if (window.sessionFeatureFlags?.debugServerRequests) {
-    window.log.info(`getBinaryViaOnionV4FromFileServer fsv2: "${builtUrl} `);
+    window.log.info(`getBinaryViaOnionV4FromFileServer fsv2: "${fileToGet.fullUrl} `);
   }
+
+  if (!fileToGet.fullUrl) {
+    throw new Error('getBinaryViaOnionV4FromFileServer: fullUrl is required');
+  }
+
+  const serverX25519Pk = to_hex(
+    crypto_sign_ed25519_pk_to_curve25519(from_hex(fileToGet.serverEd25519Pk))
+  );
 
   // this throws for a bunch of reasons.
   // One of them, is if we get a 404 (i.e. the file server was reached but reported no such attachments exists)
   const res = await OnionSending.sendViaOnionV4ToNonSnodeWithRetries(
-    fileServerPubKey,
-    builtUrl,
+    serverX25519Pk,
+    fileToGet.fullUrl,
     {
-      method,
+      method: 'GET',
       headers: {},
       body: null,
       useV4: true,
@@ -558,8 +521,8 @@ async function getBinaryViaOnionV4FromFileServer({
   );
 
   if (window.sessionFeatureFlags?.debugServerRequests) {
-    window.log.info(
-      `getBinaryViaOnionV4FromFileServer fsv2: "${builtUrl}; got:`,
+    window.log.debug(
+      `getBinaryViaOnionV4FromFileServer fsv2: "${fileToGet.fullUrl}; got:`,
       JSON.stringify(res)
     );
   }
@@ -572,6 +535,7 @@ async function getBinaryViaOnionV4FromFileServer({
  */
 async function sendJsonViaOnionV4ToFileServer({
   endpoint,
+  target,
   method,
   stringifiedBody,
   abortSignal,
@@ -579,6 +543,7 @@ async function sendJsonViaOnionV4ToFileServer({
   timeoutMs,
 }: WithAbortSignal &
   WithTimeoutMs & {
+    target: FILE_SERVER_TARGET_TYPE;
     endpoint: string;
     method: string;
     stringifiedBody: string | null;
@@ -587,10 +552,10 @@ async function sendJsonViaOnionV4ToFileServer({
   if (!endpoint.startsWith('/')) {
     throw new Error('endpoint needs a leading /');
   }
-  const builtUrl = new URL(`${fileServerURL}${endpoint}`);
+  const builtUrl = new URL(`${FS.FILE_SERVERS[target].url}${endpoint}`);
 
   const res = await OnionSending.sendViaOnionV4ToNonSnodeWithRetries(
-    fileServerPubKey,
+    FS.FILE_SERVERS[target].xPk,
     builtUrl,
     {
       method,
@@ -668,7 +633,6 @@ export const OnionSending = {
   sendViaOnionV4ToNonSnodeWithRetries,
   getOnionPathForSending,
   sendJsonViaOnionV4ToSogs,
-  sendJsonViaOnionV4ToPnServer,
   sendBinaryViaOnionV4ToFileServer,
   sendBinaryViaOnionV4ToSogs,
   getBinaryViaOnionV4FromFileServer,

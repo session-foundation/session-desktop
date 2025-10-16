@@ -35,10 +35,6 @@ async function callImageProcessorWorker<T extends WorkerAllowedFunctionName>(
 }
 
 export const ImageProcessor: ImageProcessorWorkerActions = {
-  extractFirstFrameJpeg: (
-    ...args: Parameters<ImageProcessorWorkerActions['extractFirstFrameJpeg']>
-  ) => callImageProcessorWorker('extractFirstFrameJpeg', ...args),
-
   imageMetadata: (...args: Parameters<ImageProcessorWorkerActions['imageMetadata']>) =>
     callImageProcessorWorker('imageMetadata', ...args),
 
