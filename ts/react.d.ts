@@ -405,6 +405,9 @@ declare module 'react' {
     | `${NotificationRadioButtons}`
     | `avatar-${Avatars}`
     | `pro-badge-${ProBadges}`
+    // empty msg view ids
+    | 'empty-msg-view-account-created'
+    | 'empty-msg-view-welcome'
     | 'last-updated-timestamp'
     | 'account-id-pill'
     // Once the whole app have datatestId when required, this `invalid-data-testid` will be removed

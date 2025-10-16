@@ -15,6 +15,7 @@ import {
   UpdateMsgExpirySwarmPersistedData,
   UserSyncPersistedData,
   type AvatarMigratePersistedData,
+  type AvatarReuploadPersistedData,
 } from './PersistedJob';
 import { JobRunnerType } from './jobs/JobRunnerType';
 import { DURATION } from '../../constants';
@@ -385,6 +386,9 @@ const groupSyncRunner = new PersistedJobRunner<GroupSyncPersistedData>('GroupSyn
 const avatarDownloadRunner = new PersistedJobRunner<AvatarDownloadPersistedData>(
   'AvatarDownloadJob'
 );
+const avatarReuploadRunner = new PersistedJobRunner<AvatarReuploadPersistedData>(
+  'AvatarReuploadJob'
+);
 const avatarMigrateRunner = new PersistedJobRunner<AvatarMigratePersistedData>('AvatarMigrateJob');
 
 const groupInviteJobRunner = new PersistedJobRunner<GroupInvitePersistedData>('GroupInviteJob', 4);
@@ -408,6 +412,7 @@ export const runners = {
   updateMsgExpiryRunner,
   fetchSwarmMsgExpiryRunner,
   avatarDownloadRunner,
+  avatarReuploadRunner,
   avatarMigrateRunner,
   groupInviteJobRunner,
   groupPendingRemovalJobRunner,

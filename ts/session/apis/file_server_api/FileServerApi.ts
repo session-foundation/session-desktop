@@ -1,5 +1,5 @@
 import AbortController from 'abort-controller';
-import { isEmpty, isFinite, isNumber, isString } from 'lodash';
+import { isEmpty, isFinite, isNumber, isString, toNumber } from 'lodash';
 
 import { BlindingActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { OnionSending } from '../../onions/onionSend';
@@ -13,44 +13,35 @@ import { DURATION } from '../../constants';
 import { isReleaseChannel, type ReleaseChannels } from '../../../updater/types';
 import { Storage } from '../../../util/storage';
 import { OnionV4 } from '../../onions/onionv4';
-import { SERVER_HOSTS } from '..';
+import { FileFromFileServerDetails } from './types';
+import { queryParamDeterministicEncryption, queryParamServerEd25519Pubkey } from '../../url';
+import { FS, type FILE_SERVER_TARGET_TYPE } from './FileServerTarget';
 
-export const fileServerURL = `http://${SERVER_HOSTS.FILE_SERVER}`;
-
-export const fileServerPubKey = 'da21e1d886c6fbaea313f75298bd64aab03a97ce985b46bb2dad9f2089c8ee59';
 const RELEASE_VERSION_ENDPOINT = '/session_version';
-
-const POST_GET_FILE_ENDPOINT = '/file';
-
-function fileUrlToFileId(fullURL?: string) {
-  const prefix = `${fileServerURL}${POST_GET_FILE_ENDPOINT}/`;
-  if (!fullURL || !fullURL.startsWith(prefix)) {
-    return null;
-  }
-  const fileId = fullURL.substring(prefix.length);
-
-  if (!fileId) {
-    return null;
-  }
-  return fileId;
-}
+const FILE_ENDPOINT = '/file';
 
 /**
  * Upload a file to the file server v2 using the onion v4 encoding
  * @param fileContent the data to send
+ * @param deterministicEncryption whether the file is deterministically encrypted or not
  * @returns null or the complete URL to share this file
  */
 export const uploadFileToFsWithOnionV4 = async (
-  fileContent: ArrayBuffer
+  fileContent: ArrayBuffer,
+  deterministicEncryption: boolean
 ): Promise<{ fileUrl: string; expiresMs: number } | null> => {
   if (!fileContent || !fileContent.byteLength) {
     return null;
   }
 
+  // TODO: remove this once QA is done
+  const target = process.env.POTATO_FS ? 'POTATO' : 'DEFAULT';
+
   const result = await OnionSending.sendBinaryViaOnionV4ToFileServer({
     abortSignal: new AbortController().signal,
     bodyBinary: new Uint8Array(fileContent),
-    endpoint: POST_GET_FILE_ENDPOINT,
+    target,
+    endpoint: FILE_ENDPOINT,
     method: 'POST',
     timeoutMs: 30 * DURATION.SECONDS, // longer time for file upload
     headers: window.sessionFeatureFlags.fsTTL30s ? { 'X-FS-TTL': '30' } : {},
@@ -72,7 +63,14 @@ export const uploadFileToFsWithOnionV4 = async (
   ) {
     return null;
   }
-  const fileUrl = `${fileServerURL}${POST_GET_FILE_ENDPOINT}/${fileId}`;
+
+  // we now have the `fileUrl` provide the `serverPubkey` and the deterministic flag as an url fragment.
+  const urlParams = new URLSearchParams();
+  urlParams.set(queryParamServerEd25519Pubkey, FS.FILE_SERVERS[target].edPk);
+  if (deterministicEncryption) {
+    urlParams.set(queryParamDeterministicEncryption, '');
+  }
+  const fileUrl = `${FS.FILE_SERVERS[target].url}${FILE_ENDPOINT}/${fileId}#${urlParams.toString()}`;
   const expiresMs = Math.floor(expires * 1000);
   return {
     fileUrl,
@@ -86,42 +84,21 @@ export const uploadFileToFsWithOnionV4 = async (
  * @returns the data as an Uint8Array or null
  */
 export const downloadFileFromFileServer = async (
-  fileIdOrCompleteUrl: string
+  toDownload: FileFromFileServerDetails
 ): Promise<ArrayBuffer | null> => {
-  let fileId = fileIdOrCompleteUrl;
-  if (!fileIdOrCompleteUrl) {
-    window?.log?.warn('Empty url to download for fileserver');
-    return null;
-  }
-
-  if (fileIdOrCompleteUrl.lastIndexOf('/') >= 0) {
-    fileId = fileId.substring(fileIdOrCompleteUrl.lastIndexOf('/') + 1);
-  }
-
-  if (fileId.startsWith('/')) {
-    fileId = fileId.substring(1);
-  }
-
-  if (!fileId) {
-    window.log.info('downloadFileFromFileServer given empty fileId');
-    return null;
-  }
-
-  const urlToGet = `${POST_GET_FILE_ENDPOINT}/${fileId}`;
   if (window.sessionFeatureFlags?.debugServerRequests) {
-    window.log.info(`about to try to download fsv2: "${urlToGet}"`);
+    window.log.info(`about to try to download fsv2: "${toDownload.fullUrl}"`);
   }
 
   // this throws if we get a 404 from the file server
   const result = await OnionSending.getBinaryViaOnionV4FromFileServer({
     abortSignal: new AbortController().signal,
-    endpoint: urlToGet,
-    method: 'GET',
+    fileToGet: toDownload,
     throwError: true,
     timeoutMs: 30 * DURATION.SECONDS, // longer time for file download
   });
   if (window.sessionFeatureFlags?.debugServerRequests) {
-    window.log.info(`download fsv2: "${urlToGet} got result:`, JSON.stringify(result));
+    window.log.info(`download fsv2: "${toDownload.fullUrl} got result:`, JSON.stringify(result));
   }
   if (!result) {
     return null;
@@ -190,6 +167,7 @@ export const getLatestReleaseFromFileServer = async (
     stringifiedBody: null,
     headers,
     timeoutMs: 10 * DURATION.SECONDS,
+    target: 'DEFAULT' as const,
   };
   const result = await OnionSending.sendJsonViaOnionV4ToFileServer(params);
 
@@ -206,34 +184,49 @@ export const getLatestReleaseFromFileServer = async (
 };
 
 /**
- * Fetch the expiry in ms of the corresponding file.
+ * Extend a file expiry from the file server.
+ * This only works with files that have an alphanumeric id.
+ *
  */
-export const getFileInfoFromFileServer = async (
-  fileUrl: string
-): Promise<{ expiryMs: number } | null> => {
-  const fileId = fileUrlToFileId(fileUrl);
+export const extendFileExpiry = async (fileId: string, fsTarget: FILE_SERVER_TARGET_TYPE) => {
+  // TODO: remove this once QA is done
 
-  if (!fileId) {
-    throw new Error("getFileInfoFromFileServer: fileUrl doesn't start with the file server url");
+  if (!FS.supportsFsExtend(fsTarget)) {
+    throw new Error('extendFileExpiry: only works with potato for now');
+  }
+  if (window.sessionFeatureFlags?.debugServerRequests) {
+    window.log.info(`about to renew expiry of file: "${fileId}"`);
   }
 
-  const result = await OnionSending.sendJsonViaOnionV4ToFileServer({
+  const method = 'POST';
+  const endpoint = `/file/${fileId}/extend`;
+  const params = {
     abortSignal: new AbortController().signal,
+    endpoint,
+    method,
     stringifiedBody: null,
-    endpoint: `${POST_GET_FILE_ENDPOINT}/${fileId}/info`,
-    method: 'GET',
-    timeoutMs: 10 * DURATION.SECONDS,
     headers: {},
-  });
+    timeoutMs: 10 * DURATION.SECONDS,
+    target: fsTarget,
+  };
 
-  const fileExpirySeconds = result?.body?.expires as number | undefined;
+  const result = await OnionSending.sendJsonViaOnionV4ToFileServer(params);
 
-  if (!batchGlobalIsSuccess(result)) {
+  if (!batchGlobalIsSuccess(result) || OnionV4.parseStatusCodeFromV4Request(result) !== 200) {
     return null;
   }
 
-  if (!fileExpirySeconds || !isNumber(fileExpirySeconds) || !isFinite(fileExpirySeconds)) {
+  const {
+    expires: fileNewExpirySeconds,
+    uploaded: fileUploadedSeconds,
+    size,
+  } = result?.body as any;
+  if (!fileNewExpirySeconds) {
     return null;
   }
-  return { expiryMs: Math.floor(fileExpirySeconds * 1000) };
+  return {
+    fileNewExpiryMs: Math.floor(fileNewExpirySeconds * 1000), // the expires/uploaded have the ms in the decimals (i.e `1761002358.02229`)
+    fileUploadedMs: Math.floor(fileUploadedSeconds * 1000),
+    size: toNumber(size),
+  };
 };

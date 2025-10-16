@@ -69,19 +69,6 @@ function cleanAttachments(decryptedDataMessage: SignalService.DataMessage) {
     if (quote.id) {
       quote.id = toNumber(quote.id);
     }
-
-    quote.attachments = (quote.attachments || []).map((item: any) => {
-      const { thumbnail } = item;
-
-      if (!thumbnail || thumbnail.length === 0) {
-        return item;
-      }
-
-      return {
-        ...item,
-        thumbnail: cleanAttachment(item.thumbnail),
-      };
-    });
   }
 }
 

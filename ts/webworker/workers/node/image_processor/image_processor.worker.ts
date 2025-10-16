@@ -1,6 +1,10 @@
 import { isEmpty, isFinite, isNumber } from 'lodash';
 import sharp from 'sharp';
-import type { ImageProcessorWorkerActions } from './image_processor';
+import type {
+  ImageProcessorWorkerActions,
+  StaticOutputType,
+  WithWebpFormat,
+} from './image_processor';
 /* eslint-disable no-console */
 /* eslint-disable strict */
 
@@ -11,6 +15,22 @@ function logIfOn(...args: Array<any>) {
     console.log(...args);
   }
 }
+
+const defaultTimeoutProcessingSeconds = 5;
+
+/**
+ * Duplicated to be used in the worker environment
+ */
+const maxAvatarDetails = {
+  /**
+   * 600 px
+   */
+  maxSidePlanReupload: 600,
+  /**
+   * 200 px
+   */
+  maxSideNoReuploadRequired: 200,
+};
 
 onmessage = async (e: any) => {
   const [jobId, fnName, ...args] = e.data;
@@ -54,11 +74,18 @@ function isAnimated(metadata: sharp.Metadata) {
   return (metadata.pages || 0) > 1; // more than 1 frame means that the image is animated
 }
 
-function centerCoverOpts(maxSidePx: number) {
+function centerCoverOpts({
+  maxSidePx,
+  withoutEnlargement,
+}: {
+  maxSidePx: number;
+  withoutEnlargement: boolean;
+}) {
   return {
     height: maxSidePx,
     width: maxSidePx,
     fit: 'cover' as const, // a thumbnail we generate should contain the source image
+    withoutEnlargement,
   };
 }
 
@@ -108,46 +135,48 @@ async function metadataFromBuffer(
   }
 }
 
+async function extractFirstFrameWebp(
+  inputBuffer: ArrayBufferLike
+): Promise<(StaticOutputType & WithWebpFormat) | null> {
+  if (!inputBuffer?.byteLength) {
+    throw new Error('inputBuffer is required');
+  }
+  const inputMetadata = await metadataFromBuffer(inputBuffer);
+  if (!inputMetadata) {
+    return null;
+  }
+
+  metadataSizeIsSetOrThrow(inputMetadata, 'extractFirstFrameWebp');
+
+  if (!isAnimated(inputMetadata)) {
+    throw new Error('extractFirstFrameWebp: input is not animated');
+  }
+
+  const parsed = sharpFrom(inputBuffer, { pages: 1 });
+  const webp = parsed.webp();
+  const outputBuffer = await webp.toBuffer();
+  const outputMetadata = await metadataFromBuffer(outputBuffer);
+  if (!outputMetadata) {
+    return null;
+  }
+
+  const outputMetadataSize = metadataSizeIsSetOrThrow(outputMetadata, 'extractFirstFrameWebp');
+
+  if (isAnimated(outputMetadata)) {
+    throw new Error('extractFirstFrameWebp: outputMetadata cannot be animated');
+  }
+
+  return {
+    outputBuffer: outputBuffer.buffer,
+    width: outputMetadata.width,
+    height: outputMetadata.height, // this one is only the frame height already, no need for `metadataToFrameHeight`
+    size: outputMetadataSize,
+    format: 'webp' as const,
+    contentType: 'image/webp' as const,
+  };
+}
+
 const workerActions: ImageProcessorWorkerActions = {
-  extractFirstFrameJpeg: async inputBuffer => {
-    if (!inputBuffer?.byteLength) {
-      throw new Error('inputBuffer is required');
-    }
-    const inputMetadata = await metadataFromBuffer(inputBuffer);
-    if (!inputMetadata) {
-      return null;
-    }
-
-    metadataSizeIsSetOrThrow(inputMetadata, 'extractFirstFrameJpeg');
-
-    if (!isAnimated(inputMetadata)) {
-      throw new Error('extractFirstFrameJpeg: input is not animated');
-    }
-
-    const parsed = sharpFrom(inputBuffer, { pages: 1 });
-    const jpeg = parsed.jpeg();
-    const outputBuffer = await jpeg.toBuffer();
-    const outputMetadata = await metadataFromBuffer(outputBuffer);
-    if (!outputMetadata) {
-      return null;
-    }
-
-    const outputMetadataSize = metadataSizeIsSetOrThrow(outputMetadata, 'extractFirstFrameJpeg');
-
-    if (isAnimated(outputMetadata)) {
-      throw new Error('extractFirstFrameJpeg: outputMetadata cannot be animated');
-    }
-
-    return {
-      outputBuffer: outputBuffer.buffer,
-      width: outputMetadata.width,
-      height: outputMetadata.height, // this one is only the frame height already, no need for `metadataToFrameHeight`
-      size: outputMetadataSize,
-      format: 'jpeg' as const,
-      contentType: 'image/jpeg' as const,
-    };
-  },
-
   imageMetadata: async inputBuffer => {
     if (!inputBuffer?.byteLength) {
       throw new Error('imageMetadata: inputBuffer is required');
@@ -170,7 +199,7 @@ const workerActions: ImageProcessorWorkerActions = {
     };
   },
 
-  processAvatarData: async (inputBuffer: ArrayBufferLike, maxSidePx: number) => {
+  processAvatarData: async (inputBuffer: ArrayBufferLike, planForReupload: boolean) => {
     if (!inputBuffer?.byteLength) {
       throw new Error('processAvatarData: inputBuffer is required');
     }
@@ -189,16 +218,34 @@ const workerActions: ImageProcessorWorkerActions = {
 
     // generate a square image of the avatar, scaled down or up to `maxSide`
 
-    const resized = sharpFrom(inputBuffer, { animated: true }).resize(centerCoverOpts(maxSidePx));
+    const resized = sharpFrom(inputBuffer, { animated: true }).resize(
+      centerCoverOpts({
+        maxSidePx: planForReupload
+          ? maxAvatarDetails.maxSidePlanReupload
+          : maxAvatarDetails.maxSideNoReuploadRequired,
+        withoutEnlargement: true,
+      })
+    );
 
-    // we know the avatar is animated and gif or webp, force it to webp for performance reasons
-    if (avatarIsAnimated) {
-      resized.webp();
+    const isSourceGif = metadata.format === 'gif';
+    // if the avatar was animated, we want an animated webp.
+    // if it was static, we want a static webp.
+    if (planForReupload) {
+      // see the comment in image_processor.d.ts:
+      // we don't want to convert gif to webp when planning for reupload
+      if (isSourceGif) {
+        resized.gif();
+      } else {
+        resized.webp();
+      }
     } else {
-      resized.jpeg();
+      // when not planning for reupload, we always want a webp
+      resized.webp();
     }
 
-    const resizedBuffer = await resized.toBuffer();
+    const resizedBuffer = await resized
+      .timeout({ seconds: defaultTimeoutProcessingSeconds })
+      .toBuffer();
 
     // Note: we need to use the resized buffer here, not the original one,
     // as metadata is always linked to the source buffer (even if a resize() is done before the metadata call)
@@ -216,44 +263,42 @@ const workerActions: ImageProcessorWorkerActions = {
 
     const resizedIsAnimated = isAnimated(resizedMetadata);
 
-    const formatDetails = avatarIsAnimated
-      ? { format: 'webp' as const, contentType: 'image/webp' as const }
-      : { format: 'jpeg' as const, contentType: 'image/jpeg' as const };
-
-    const mainAvatarDetails = {
-      outputBuffer: resizedBuffer.buffer,
-      height: resizedMetadata.height,
-      width: resizedMetadata.width,
-      isAnimated: resizedIsAnimated,
-      ...formatDetails,
-      size: resizedMetadataSize,
-    };
-
     let avatarFallback = null;
 
     if (resizedIsAnimated) {
       // also extract the first frame of the resized (animated) avatar
-      const firstFrameJpeg = await workerActions.extractFirstFrameJpeg(resizedBuffer.buffer);
-      if (!firstFrameJpeg) {
-        throw new Error('processAvatarData: failed to extract first frame as jpeg');
+      const firstFrameWebp = await extractFirstFrameWebp(resizedBuffer.buffer);
+      if (!firstFrameWebp) {
+        throw new Error('processAvatarData: failed to extract first frame as webp');
       }
-      const fallbackFormat = 'jpeg' as const;
+      const fallbackFormat = 'webp' as const;
 
       avatarFallback = {
-        outputBuffer: firstFrameJpeg.outputBuffer,
-        height: firstFrameJpeg.height, // this one is only the frame height already. No need for `metadataToFrameHeight`
-        width: firstFrameJpeg.width,
+        outputBuffer: firstFrameWebp.outputBuffer,
+        height: firstFrameWebp.height, // this one is only the frame height already. No need for `metadataToFrameHeight`
+        width: firstFrameWebp.width,
         format: fallbackFormat,
         contentType: `image/${fallbackFormat}` as const,
-        size: firstFrameJpeg.size,
+        size: firstFrameWebp.size,
       };
     }
 
     logIfOn(
-      `[imageProcessorWorker] processAvatarData sizes: main: ${mainAvatarDetails.size} bytes, fallback: ${avatarFallback ? avatarFallback.size : 0} bytes`
+      `[imageProcessorWorker] processAvatarData sizes: main: ${resizedMetadataSize} bytes, fallback: ${avatarFallback ? avatarFallback.size : 0} bytes`
     );
 
-    return { mainAvatarDetails, avatarFallback };
+    return {
+      mainAvatarDetails: {
+        outputBuffer: resizedBuffer.buffer,
+        height: resizedMetadata.height,
+        width: resizedMetadata.width,
+        isAnimated: resizedIsAnimated,
+        format: planForReupload && isSourceGif ? 'gif' : 'webp',
+        contentType: planForReupload && isSourceGif ? 'image/gif' : 'image/webp',
+        size: resizedMetadataSize,
+      },
+      avatarFallback,
+    };
   },
 
   testIntegrationFakeAvatar: async (
@@ -267,7 +312,7 @@ const workerActions: ImageProcessorWorkerActions = {
         channels: 3, // RGB
         background,
       },
-    }).jpeg({ quality: 90 });
+    }).webp({ quality: 90 });
 
     const createdBuffer = await created.toBuffer();
     const createdMetadata = await metadataFromBuffer(createdBuffer);
@@ -279,7 +324,7 @@ const workerActions: ImageProcessorWorkerActions = {
 
     const size = metadataSizeIsSetOrThrow(createdMetadata, 'testIntegrationFakeAvatar');
 
-    const format = 'jpeg' as const;
+    const format = 'webp' as const;
     return {
       outputBuffer: createdBuffer.buffer,
       height: createdMetadata.height, // this one is only the frame height already, no need for `metadataToFrameHeight`
@@ -305,9 +350,10 @@ const workerActions: ImageProcessorWorkerActions = {
 
     metadataSizeIsSetOrThrow(metadata, 'processForLinkPreviewThumbnail');
 
-    const resized = parsed.resize(centerCoverOpts(maxSidePx));
+    // for thumbnail, we actually want to enlarge the image if required
+    const resized = parsed.resize(centerCoverOpts({ maxSidePx, withoutEnlargement: false }));
 
-    const resizedBuffer = await resized.png().toBuffer();
+    const resizedBuffer = await resized.webp().toBuffer();
     const resizedMetadata = await metadataFromBuffer(resizedBuffer);
 
     if (!resizedMetadata) {
@@ -316,7 +362,7 @@ const workerActions: ImageProcessorWorkerActions = {
 
     const resizedSize = metadataSizeIsSetOrThrow(resizedMetadata, 'processForLinkPreviewThumbnail');
 
-    const format = 'png' as const;
+    const format = 'webp' as const;
 
     return {
       outputBuffer: resizedBuffer.buffer,
@@ -328,13 +374,15 @@ const workerActions: ImageProcessorWorkerActions = {
     };
   },
 
-  processForInConversationThumbnail: async (inputBuffer, maxSidePx) => {
+  processForInConversationThumbnail: async (inputBuffer: ArrayBufferLike, maxSidePx: number) => {
     if (!inputBuffer?.byteLength) {
       throw new Error('processForInConversationThumbnail: inputBuffer is required');
     }
 
-    // Note: this is false here because we want to force a static image (so no need to extract all the frames)
-    const parsed = sharpFrom(inputBuffer, { animated: false }).resize(centerCoverOpts(maxSidePx));
+    // Note: this `animated` is false here because we want to force a static image (so no need to extract all the frames)
+    const parsed = sharpFrom(inputBuffer, { animated: false }).resize(
+      centerCoverOpts({ maxSidePx, withoutEnlargement: false }) // We actually want to enlarge the image if required for a thumbnail in conversation
+    );
     const metadata = await metadataFromBuffer(inputBuffer, { animated: false });
 
     if (!metadata) {
@@ -342,7 +390,10 @@ const workerActions: ImageProcessorWorkerActions = {
     }
 
     const animated = isAnimated(metadata);
-    const resizedBuffer = await parsed.png().toBuffer(); // animated ? await parsed.webp().toBuffer() : ;
+    const resizedBuffer = await parsed
+      .webp()
+      .timeout({ seconds: defaultTimeoutProcessingSeconds })
+      .toBuffer();
     const resizedMetadata = await metadataFromBuffer(resizedBuffer);
 
     if (!resizedMetadata) {
@@ -351,7 +402,7 @@ const workerActions: ImageProcessorWorkerActions = {
 
     const size = metadataSizeIsSetOrThrow(resizedMetadata, 'processForInConversationThumbnail');
 
-    const formatDetails = { format: 'png' as const, contentType: 'image/png' as const };
+    const formatDetails = { format: 'webp' as const, contentType: 'image/webp' as const };
 
     return {
       outputBuffer: resizedBuffer.buffer,
@@ -363,7 +414,11 @@ const workerActions: ImageProcessorWorkerActions = {
     };
   },
 
-  processForFileServerUpload: async (inputBuffer, maxSidePx, maxSizeBytes) => {
+  processForFileServerUpload: async (
+    inputBuffer: ArrayBufferLike,
+    maxSidePx: number,
+    maxSizeBytes: number
+  ) => {
     if (!inputBuffer?.byteLength) {
       throw new Error('processForFileServerUpload: inputBuffer is required');
     }
@@ -469,7 +524,7 @@ const workerActions: ImageProcessorWorkerActions = {
       }
 
       // eslint-disable-next-line no-await-in-loop
-      const buffer = await pipeline.toBuffer();
+      const buffer = await pipeline.toBuffer(); // no timeout here for now
 
       if (buffer.length < maxSizeBytes) {
         // eslint-disable-next-line no-await-in-loop

@@ -22,16 +22,10 @@ import {
 import { showMessageRequestBannerOutsideRedux } from '../state/ducks/userConfig';
 import { selectMemberInviteSentOutsideRedux } from '../state/selectors/groups';
 import { getHideMessageRequestBannerOutsideRedux } from '../state/selectors/userConfig';
-import { GoogleChrome } from '../util';
 import { LinkPreviews } from '../util/linkPreviews';
 import { GroupV2Receiver } from './groupv2/handleGroupV2Message';
 import { Constants } from '../session';
 import { Timestamp } from '../types/timestamp/timestamp';
-
-function contentTypeSupported(type: string): boolean {
-  const Chrome = GoogleChrome;
-  return Chrome.isImageTypeSupported(type) || Chrome.isVideoTypeSupported(type);
-}
 
 function isMessageModel(
   msg: MessageModel | MessageModelPropsWithoutConvoProps
@@ -50,17 +44,15 @@ async function copyFromQuotedMessage(
   if (!quote) {
     return;
   }
-  const { attachments, id: quoteId, author } = quote;
+  const { id: quoteId, author } = quote;
 
   const quoteLocal: Quote = {
-    attachments: attachments || null,
+    attachments: null,
     author,
     id: _.toNumber(quoteId),
     text: null,
     referencedMessageNotFound: false,
   };
-
-  const firstAttachment = attachments?.[0] || undefined;
 
   const id = _.toNumber(quoteId);
 
@@ -99,63 +91,12 @@ async function copyFromQuotedMessage(
 
   window?.log?.info(`Found quoted message id: ${id}`);
   quoteLocal.referencedMessageNotFound = false;
-  // NOTE we send the entire body to be consistent with the other platforms
-  quoteLocal.text =
-    (isMessageModel(quotedMessage)
-      ? quotedMessage.get('body')
-      : quotedMessage.propsForMessage.text) || '';
 
   if (isMessageModel(quotedMessage)) {
     window.inboxStore?.dispatch(pushQuotedMessageDetails(quotedMessage.getMessageModelProps()));
   } else {
     window.inboxStore?.dispatch(pushQuotedMessageDetails(quotedMessage));
   }
-
-  // no attachments, just save the quote with the body
-  if (
-    !firstAttachment ||
-    !firstAttachment.contentType ||
-    !contentTypeSupported(firstAttachment.contentType)
-  ) {
-    msg.setQuote(quoteLocal);
-    return;
-  }
-
-  firstAttachment.thumbnail = null;
-
-  const queryAttachments =
-    (isMessageModel(quotedMessage)
-      ? quotedMessage.get('attachments')
-      : quotedMessage.propsForMessage.attachments) || [];
-
-  if (queryAttachments.length > 0) {
-    const queryFirst = queryAttachments[0];
-    const { thumbnail } = queryFirst;
-
-    if (thumbnail && thumbnail.path) {
-      firstAttachment.thumbnail = {
-        ...thumbnail,
-        copied: true,
-      };
-    }
-  }
-
-  const queryPreview =
-    (isMessageModel(quotedMessage)
-      ? quotedMessage.get('preview')
-      : quotedMessage.propsForMessage.previews) || [];
-  if (queryPreview.length > 0) {
-    const queryFirst = queryPreview[0];
-    const { image } = queryFirst;
-
-    if (image && image.path) {
-      firstAttachment.thumbnail = {
-        ...image,
-        copied: true,
-      };
-    }
-  }
-  quoteLocal.attachments = [firstAttachment];
 
   msg.setQuote(quoteLocal);
 }
@@ -166,9 +107,12 @@ async function copyFromQuotedMessage(
 function handleLinkPreviews(messageBody: string, messagePreview: any, message: MessageModel) {
   const urls = LinkPreviews.findLinks(messageBody);
   const incomingPreview = messagePreview || [];
-  const preview = incomingPreview.filter(
-    (item: any) => (item.image || item.title) && urls.includes(item.url)
-  );
+  const preview = incomingPreview
+    .filter((item: any) => (item.image || item.title) && urls.includes(item.url))
+    .map((p: any) => ({
+      ...p,
+      pending: true,
+    }));
   if (preview.length < incomingPreview.length) {
     window?.log?.info(
       `${message.idForLogging()}: Eliminated ${
@@ -307,7 +251,10 @@ async function handleRegularMessage(
 
   message.set({
     // quote: rawDataMessage.quote, // do not do this copy here, it must be done only in copyFromQuotedMessage()
-    attachments: rawDataMessage.attachments,
+    attachments: rawDataMessage.attachments?.map(m => ({
+      ...m,
+      pending: true,
+    })),
     body,
     conversationId: conversation.id,
     messageHash,

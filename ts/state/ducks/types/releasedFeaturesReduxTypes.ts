@@ -5,6 +5,7 @@ export type SessionFeatureFlags = {
   replaceLocalizedStringsWithKeys: boolean;
   // Hooks
   useOnionRequests: boolean;
+  useDeterministicEncryption: boolean;
   useTestNet: boolean;
   useLocalDevNet: string;
   useClosedGroupV2QAButtons: boolean;

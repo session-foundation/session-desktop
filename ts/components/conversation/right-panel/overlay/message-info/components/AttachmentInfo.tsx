@@ -28,7 +28,8 @@ function formatAttachmentUrl(attachment: PropsForAttachment) {
     return tr('attachmentsNa');
   }
 
-  const fileId = attachment.url.split('/').pop() || '';
+  const fileUrl = URL.canParse(attachment.url) && new URL(attachment.url);
+  const fileId = fileUrl ? fileUrl?.pathname.split('/').pop() || '' : '';
 
   if (!fileId) {
     return tr('attachmentsNa');

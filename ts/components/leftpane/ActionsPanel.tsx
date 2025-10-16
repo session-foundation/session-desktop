@@ -22,7 +22,6 @@ import { DecryptedAttachmentsManager } from '../../session/crypto/DecryptedAttac
 
 import { DURATION } from '../../session/constants';
 
-import { reuploadCurrentAvatarUs } from '../../interactions/avatar-interactions/nts-avatar-interactions';
 import {
   onionPathModal,
   updateDebugMenuModal,
@@ -52,14 +51,13 @@ import { useDebugMode } from '../../state/selectors/debug';
 import { networkDataActions } from '../../state/ducks/networkData';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { AvatarMigrate } from '../../session/utils/job_runners/jobs/AvatarMigrateJob';
-import { NetworkTime } from '../../util/NetworkTime';
 import { Storage } from '../../util/storage';
-import { getFileInfoFromFileServer } from '../../session/apis/file_server_api/FileServerApi';
 import { themesArray } from '../../themes/constants/colors';
 import { isDebugMode, isDevProd } from '../../shared/env_vars';
 import { GearAvatarButton } from '../buttons/avatar/GearAvatarButton';
 import { useZoomShortcuts } from '../../hooks/useZoomingShortcut';
 import { OnionStatusLight } from '../dialog/OnionStatusPathDialog';
+import { AvatarReupload } from '../../session/utils/job_runners/jobs/AvatarReuploadJob';
 
 const StyledContainerAvatar = styled.div`
   padding: var(--margins-lg);
@@ -98,17 +96,6 @@ const triggerSyncIfNeeded = async () => {
   }
 };
 
-const triggerAvatarReUploadIfNeeded = async () => {
-  const lastAvatarUploadExpiryMs =
-    (await Data.getItemById(SettingsKey.ntsAvatarExpiryMs))?.value || Number.MAX_SAFE_INTEGER;
-
-  if (NetworkTime.now() > lastAvatarUploadExpiryMs) {
-    window.log.info('Reuploading avatar...');
-    // reupload the avatar
-    await reuploadCurrentAvatarUs();
-  }
-};
-
 /**
  * This function is called only once: on app startup with a logged in user
  */
@@ -127,9 +114,8 @@ const doAppStartUp = async () => {
   }); // refresh our swarm on start to speed up the first message fetching event
   void Data.cleanupOrphanedAttachments();
 
-  // TODOLATER make this a job of the JobRunner
   // Note: do not make this a debounce call (as for some reason it doesn't work with promises)
-  void triggerAvatarReUploadIfNeeded();
+  await AvatarReupload.addAvatarReuploadJob();
 
   /* Postpone a little bit of the polling of sogs messages to let the swarm messages come in first. */
   global.setTimeout(() => {
@@ -147,17 +133,6 @@ const doAppStartUp = async () => {
     // Schedule a confSyncJob in some time to let anything incoming from the network be applied and see if there is a push needed
     // Note: this also starts periodic jobs, so we don't need to keep doing it
     await UserSync.queueNewJobIfNeeded();
-
-    // on app startup, check that the avatar expiry on the file server
-    const avatarPointer = ConvoHub.use()
-      .get(UserUtils.getOurPubKeyStrFromCache())
-      .getAvatarPointer();
-    if (avatarPointer) {
-      const details = await getFileInfoFromFileServer(avatarPointer);
-      if (details?.expiryMs) {
-        await Storage.put(SettingsKey.ntsAvatarExpiryMs, details.expiryMs);
-      }
-    }
   }, 20000);
 
   global.setTimeout(() => {
@@ -283,8 +258,7 @@ export const ActionsPanel = () => {
       if (!ourPrimaryConversation) {
         return;
       }
-      // this won't be run every days, but if the app stays open for more than 10 days
-      void triggerAvatarReUploadIfNeeded();
+      void AvatarReupload.addAvatarReuploadJob();
     },
     window.sessionFeatureFlags.fsTTL30s ? DURATION.SECONDS * 1 : DURATION.DAYS * 1
   );
