@@ -4,7 +4,10 @@ import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 import { ModalBasicHeader } from '../../../../SessionWrapperModal';
 import { useUserSettingsBackAction, useUserSettingsCloseAction } from '../userSettingsHooks';
-import type { UserSettingsModalState } from '../../../../../state/ducks/modalDialog';
+import {
+  userSettingsModal,
+  type UserSettingsModalState,
+} from '../../../../../state/ducks/modalDialog';
 import { ModalBackButton } from '../../../shared/ModalBackButton';
 import { UserSettingsModalContainer } from '../../components/UserSettingsModalContainer';
 import { ModalFlexContainer } from '../../../shared/ModalFlexContainer';
@@ -28,10 +31,16 @@ import { SettingsKey } from '../../../../../data/settings-key';
 import { getBrowserLocale } from '../../../../../util/i18n/shared';
 import { SessionIcon } from '../../../../icon';
 import { ProIconButton } from '../../../../buttons/ProButton';
-import { StyledPanelButtonSeparator } from '../../../../buttons/panel/StyledPanelButtonGroupSeparator';
 import { useIsDarkTheme } from '../../../../../state/theme/selectors/theme';
 import { Flex } from '../../../../basic/Flex';
 import { Localizer } from '../../../../basic/Localizer';
+import {
+  useCurrentUserHasPro,
+  useCurrentUserHasExpiredPro,
+  useCurrentNeverHadPro,
+} from '../../../../../hooks/useHasPro';
+import { SessionButton, SessionButtonColor } from '../../../../basic/SessionButton';
+import { proButtonProps } from '../../../SessionProInfoModal';
 
 const SectionFlexContainer = styled.div`
   display: flex;
@@ -41,14 +50,14 @@ const SectionFlexContainer = styled.div`
 `;
 
 const HeroImageBgContainer = styled.div`
-  height: 230px;
+  height: 220px;
 `;
 
-const HeroImageBg = styled.div`
+const HeroImageBg = styled.div<{ noColors?: boolean }>`
   position: absolute;
   left: 0;
   right: 0;
-  top: 17%;
+  top: 15%;
 
   justify-items: center;
 
@@ -61,7 +70,16 @@ const HeroImageBg = styled.div`
     height: 80%;
     background: radial-gradient(
       circle,
-      color-mix(in srgb, var(--primary-color) 15%, transparent) 0%,
+      color-mix(
+          in srgb,
+          ${props =>
+              props.noColors
+                ? 'var(--chat-buttons-background-hover-color)'
+                : 'var(--primary-color)'}
+            20%,
+          transparent
+        )
+        0%,
       transparent 70%
     );
     filter: blur(45px);
@@ -78,19 +96,64 @@ const HeroImageLabelContainer = styled.div`
   padding: var(--margins-md);
 `;
 
-function ProHeroImage() {
+export const StyledProStatusText = styled.p`
+  text-align: center;
+  line-height: var(--font-size-md);
+  font-size: var(--font-size-md);
+`;
+
+export function ProHeroImage({ noColors, heroText }: { noColors?: boolean; heroText?: ReactNode }) {
   return (
-    <SectionFlexContainer style={{ position: 'relative' }}>
-      <HeroImageBgContainer>
-        <HeroImageBg>
-          <SessionIcon iconType="brand" iconColor="var(--primary-color)" iconSize={110} />
-          <HeroImageLabelContainer>
-            <img src="images/session/session-text.svg" alt="full-brand-text" height={17} />
-            <ProIconButton iconSize="large" dataTestId="invalid-data-testid" />
-          </HeroImageLabelContainer>
-        </HeroImageBg>
-      </HeroImageBgContainer>
-    </SectionFlexContainer>
+    <>
+      <SectionFlexContainer style={{ position: 'relative' }}>
+        <HeroImageBgContainer>
+          <HeroImageBg noColors={noColors}>
+            <SessionIcon
+              iconType="brand"
+              iconColor={
+                noColors ? 'var(--chat-buttons-background-hover-color)' : 'var(--primary-color)'
+              }
+              iconSize={132}
+            />
+            <HeroImageLabelContainer>
+              <img src="images/session/session-text.svg" alt="full-brand-text" height={22} />
+              <ProIconButton
+                iconSize="large"
+                dataTestId="invalid-data-testid"
+                noColors={noColors}
+              />
+            </HeroImageLabelContainer>
+          </HeroImageBg>
+        </HeroImageBgContainer>
+      </SectionFlexContainer>
+      {heroText ? <StyledProStatusText>{heroText}</StyledProStatusText> : null}
+    </>
+  );
+}
+
+function ProNonProContinueButton() {
+  const dispatch = useDispatch();
+  const neverHadPro = useCurrentNeverHadPro();
+  if (!neverHadPro) {
+    return null;
+  }
+
+  return (
+    <SessionButton
+      {...proButtonProps}
+      buttonColor={SessionButtonColor.PrimaryDark}
+      onClick={() => {
+        dispatch(
+          userSettingsModal({
+            userSettingsPage: 'proNonOriginating',
+            nonOriginatingVariant: 'upgrade',
+          })
+        );
+      }}
+      dataTestId="pro-open-platform-website-button"
+    >
+      <Localizer token="theContinue" />
+    </SessionButton>
   );
 }
 
@@ -131,6 +194,11 @@ function ProStats() {
       }),
     []
   );
+
+  const userHasPro = useCurrentUserHasPro();
+  if (!userHasPro) {
+    return null;
+  }
 
   if (
     !isNumber(proBadgesSent) ||
@@ -207,7 +275,11 @@ function ProStats() {
                   total: formatter.format(proGroupsUpgraded).toLocaleLowerCase(),
                 })}
               </StatsLabel>
-              <SessionTooltip content="">
+              <SessionTooltip
+                content={tr('proLargerGroupsTooltip')}
+                horizontalPosition="left"
+                maxContentWidth={'300px'}
+              >
                 <LucideIcon iconSize="small" unicode={LUCIDE_ICONS_UNICODE.CIRCLE_HELP} />
               </SessionTooltip>
             </StatsItemContainer>
@@ -219,16 +291,27 @@ function ProStats() {
 }
 
 function ProSettings() {
+  const dispatch = useDispatch();
+  const userHasPro = useCurrentUserHasPro();
+  if (!userHasPro) {
+    return <ProNonProContinueButton />;
+  }
+
   return (
     <SectionFlexContainer>
       <PanelLabelWithDescription title={{ token: 'proSettings' }} />
       <PanelButtonGroup>
         <SettingsChevronBasic
-          baseDataTestId="update-plan"
-          text={{ token: 'updatePlan' }}
+          baseDataTestId="update-access"
+          text={{ token: 'updateAccess' }}
           subText={{ token: 'proAutoRenewTime', time: '{time}' }}
           onClick={async () => {
-            throw new Error('Not implemented (and {time} is not implemented)');
+            dispatch(
+              userSettingsModal({
+                userSettingsPage: 'proNonOriginating',
+                nonOriginatingVariant: 'update',
+              })
+            );
           }}
         />
         <SettingsToggleBasic
@@ -263,13 +346,13 @@ function ProFeatureItem({
         onClick={onClick}
         data-testid={'invalid-data-testid'}
         isDarkTheme={isDarkTheme}
+        defaultCursorWhenDisabled
       >
-        <StyledContent disabled={!onClick} style={{ gap: 'var(--margins-md)' }}>
+        <StyledContent style={{ gap: 'var(--margins-md)' }}>
           {iconElement}
           {textElement}
         </StyledContent>
       </StyledPanelButton>
-      <StyledPanelButtonSeparator />
     </>
   );
 }
@@ -307,7 +390,11 @@ const StyledFeatureIcon = styled.div`
 
 type WithProFeaturePosition = { position: number };
 
-function ProFeatureIconElement({ unicode, position }: WithLucideUnicode & WithProFeaturePosition) {
+function ProFeatureIconElement({
+  unicode,
+  position,
+  noColor,
+}: WithLucideUnicode & WithProFeaturePosition & { noColor?: boolean }) {
   const bgStyle =
     position === 0
       ? 'linear-gradient(135deg, #57C9FA 0%, #C993FF 100%)'
@@ -328,14 +415,16 @@ function ProFeatureIconElement({ unicode, position }: WithLucideUnicode & WithPr
       $justifyContent={'center'}
       $flexGap="var(--margins-sm)"
     >
-      <StyledFeatureIcon style={{ background: bgStyle }}>
+      <StyledFeatureIcon
+        style={{ background: noColor ? 'var(--chat-buttons-background-hover-color)' : bgStyle }}
+      >
         <LucideIcon unicode={unicode} iconSize={'huge'} />
       </StyledFeatureIcon>
     </Flex>
   );
 }
 
-const proFeatures: Array<
+function getProFeatures(_userHasPro: boolean): Array<
   {
     id:
       | 'proLongerMessages'
@@ -346,49 +435,54 @@ const proFeatures: Array<
     title: TrArgs;
     description: TrArgs;
   } & WithLucideUnicode
-> = [
-  {
-    id: 'proLongerMessages',
-    title: { token: 'proLongerMessages' as const },
-    description: { token: 'proLongerMessagesDescription' as const },
-    unicode: LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE,
-  },
-  {
-    id: 'proUnlimitedPins',
-    title: { token: 'proUnlimitedPins' as const },
-    description: { token: 'proUnlimitedPinsDescription' as const },
-    unicode: LUCIDE_ICONS_UNICODE.PIN,
-  },
-  {
-    id: 'proAnimatedDisplayPictures',
-    title: { token: 'proAnimatedDisplayPictures' as const },
-    description: { token: 'proAnimatedDisplayPicturesDescription' as const },
-    unicode: LUCIDE_ICONS_UNICODE.SQUARE_PLAY,
-  },
-  {
-    id: 'proBadges',
-    title: { token: 'proBadges' as const },
-    description: { token: 'proBadgesDescription' as const },
-    unicode: LUCIDE_ICONS_UNICODE.RECTANGLE_ELLIPSES,
-  },
-  {
-    id: 'plusLoadsMore',
-    title: { token: 'plusLoadsMore' as const },
-    description: {
-      token: 'plusLoadsMoreDescription' as const,
-      icon: LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON,
+> {
+  return [
+    {
+      id: 'proLongerMessages',
+      title: { token: 'proLongerMessages' as const },
+      description: { token: 'proLongerMessagesDescription' as const },
+      unicode: LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE,
     },
-    unicode: LUCIDE_ICONS_UNICODE.CIRCLE_PLUS,
-  },
-];
+    {
+      id: 'proUnlimitedPins',
+      title: { token: 'proUnlimitedPins' as const },
+      description: { token: 'proUnlimitedPinsDescription' as const },
+      unicode: LUCIDE_ICONS_UNICODE.PIN,
+    },
+    {
+      id: 'proAnimatedDisplayPictures',
+      title: { token: 'proAnimatedDisplayPictures' as const },
+      description: { token: 'proAnimatedDisplayPicturesDescription' as const },
+      unicode: LUCIDE_ICONS_UNICODE.SQUARE_PLAY,
+    },
+    {
+      id: 'proBadges',
+      title: { token: 'proBadges' as const },
+      description: { token: 'proBadgesDescription' as const },
+      unicode: LUCIDE_ICONS_UNICODE.RECTANGLE_ELLIPSES,
+    },
+    {
+      id: 'plusLoadsMore',
+      title: { token: 'plusLoadsMore' as const },
+      description: {
+        token: 'plusLoadsMoreDescription' as const,
+        icon: LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON,
+      },
+      unicode: LUCIDE_ICONS_UNICODE.CIRCLE_PLUS,
+    },
+  ];
+}
 
 function ProFeatures() {
   const dispatch = useDispatch();
-  
+  const userHasPro = useCurrentUserHasPro();
+  const expiredPro = useCurrentUserHasExpiredPro();
+  const proFeatures = useMemo(() => getProFeatures(userHasPro), [userHasPro]);
+
   return (
     <SectionFlexContainer>
       <PanelLabelWithDescription title={{ token: 'proBetaFeatures' }} />
-      <PanelButtonGroup>
+      <PanelButtonGroup containerStyle={{ marginBlock: 'var(--margins-xs)' }}>
         {proFeatures.map((m, i) => {
           return (
             <ProFeatureItem
@@ -399,7 +493,9 @@ function ProFeatures() {
                     }
                   : undefined
               }
-              iconElement={<ProFeatureIconElement position={i} unicode={m.unicode} />}
+              iconElement={
+                <ProFeatureIconElement position={i} unicode={m.unicode} noColor={expiredPro} />
+              }
               textElement={
                 <ProFeatureTextContainer>
                   <ProFeatureTitle>
@@ -409,6 +505,7 @@ function ProFeatures() {
                         onClick={undefined}
                         iconSize="small"
                         style={{ marginInlineEnd: 'var(--margins-xs)' }}
+                        noColors={expiredPro}
                       />
                     )}
                     <Localizer {...m.title} />
@@ -426,24 +523,86 @@ function ProFeatures() {
   );
 }
 
-function ManagePro() {
+function ManageProCurrentAccess() {
+  const dispatch = useDispatch();
+  const userHasPro = useCurrentUserHasPro();
+  if (!userHasPro) {
+    return null;
+  }
+
   return (
     <SectionFlexContainer>
       <PanelLabelWithDescription title={{ token: 'managePro' }} />
       <PanelButtonGroup>
         <PanelIconButton
-          text={{ token: 'cancelPlan' }}
+          text={{ token: 'cancelAccess' }}
           dataTestId="cancel-pro-button"
-          onClick={() => {}}
+          onClick={() => {
+            dispatch(
+              userSettingsModal({
+                userSettingsPage: 'proNonOriginating',
+                nonOriginatingVariant: 'cancel',
+              })
+            );
+          }}
           color={'var(--danger-color)'}
           iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.CIRCLE_X} />}
+          rowReverse
         />
         <PanelIconButton
           text={{ token: 'requestRefund' }}
           dataTestId="request-refund-button"
-          onClick={() => {}}
+          onClick={() => {
+            dispatch(
+              userSettingsModal({
+                userSettingsPage: 'proNonOriginating',
+                nonOriginatingVariant: 'refund',
+              })
+            );
+          }}
           color={'var(--danger-color)'}
           iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.CIRCLE_ALERT} />}
+          rowReverse
+        />
+      </PanelButtonGroup>
+    </SectionFlexContainer>
+  );
+}
+
+function ManageProPreviousAccess() {
+  const dispatch = useDispatch();
+  const userHasExpiredPro = useCurrentUserHasExpiredPro();
+  if (!userHasExpiredPro) {
+    return null;
+  }
+
+  return (
+    <SectionFlexContainer>
+      <PanelLabelWithDescription title={{ token: 'managePro' }} />
+      <PanelButtonGroup>
+        <PanelIconButton
+          text={{ token: 'proAccessRenew' }}
+          dataTestId="cancel-pro-button"
+          onClick={() => {
+            dispatch(
+              userSettingsModal({
+                userSettingsPage: 'proNonOriginating',
+                nonOriginatingVariant: 'renew',
+              })
+            );
+          }}
+          color={'var(--primary-color)'}
+          iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.CIRCLE_PLUS} />}
+          rowReverse
+        />
+        <PanelIconButton
+          text={{ token: 'proAccessRecover' }}
+          dataTestId="recover-pro-button"
+          onClick={() => {
+            // TODO: implement
+          }}
+          iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.REFRESH_CW} />}
+          rowReverse
         />
       </PanelButtonGroup>
     </SectionFlexContainer>
@@ -480,6 +639,8 @@ function ProHelp() {
 export function ProSettingsPage(modalState: UserSettingsModalState) {
   const backAction = useUserSettingsBackAction(modalState);
   const closeAction = useUserSettingsCloseAction(modalState);
+  const neverHadPro = useCurrentNeverHadPro();
+  const proExpired = useCurrentUserHasExpiredPro();
 
   return (
     <UserSettingsModalContainer
@@ -494,11 +655,20 @@ export function ProSettingsPage(modalState: UserSettingsModalState) {
       onClose={closeAction || undefined}
     >
       <ModalFlexContainer>
-        <ProHeroImage />
+        <ProHeroImage
+          heroText={
+            neverHadPro
+              ? // TODO: this doesnt match figma, check on it
+                tr('proUserProfileModalCallToAction')
+              : null
+          }
+          noColors={proExpired}
+        />
         <ProStats />
+        <ManageProPreviousAccess />
         <ProSettings />
         <ProFeatures />
-        <ManagePro />
+        <ManageProCurrentAccess />
         <ProHelp />
       </ModalFlexContainer>
     </UserSettingsModalContainer>

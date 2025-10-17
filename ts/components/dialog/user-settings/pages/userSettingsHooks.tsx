@@ -42,6 +42,7 @@ export function useUserSettingsTitle(page: UserSettingsModalState | undefined) {
           ? tr('passwordChange')
           : tr('passwordSet');
     case 'pro':
+    case 'proNonOriginating':
       return '';
     case 'default':
     case undefined:
@@ -75,6 +76,7 @@ export function useUserSettingsCloseAction(props: UserSettingsModalState) {
     case 'password':
     case 'network':
     case 'pro':
+    case 'proNonOriginating':
       return () => dispatch(userSettingsModal(null));
 
     default:
@@ -114,6 +116,9 @@ export function useUserSettingsBackAction(modalState: UserSettingsModalState) {
     case 'network':
     case 'pro':
       settingsPageToDisplayOnBack = 'default';
+      break;
+    case 'proNonOriginating':
+      settingsPageToDisplayOnBack = 'pro';
       break;
     default:
       assertUnreachable(userSettingsPage, 'useBackActionFromPage: invalid userSettingsPage');

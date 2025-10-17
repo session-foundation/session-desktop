@@ -34,11 +34,7 @@ import { setDebugMode } from '../../../../state/ducks/debug';
 import { useHideRecoveryPasswordEnabled } from '../../../../state/selectors/settings';
 import { OnionStatusLight } from '../../OnionStatusPathDialog';
 import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
-import {
-  useCurrentNeverHadPro,
-  useCurrentUserHasExpiredPro,
-  useCurrentUserHasPro,
-} from '../../../../hooks/useHasPro';
+import { useCurrentUserHasExpiredPro, useCurrentUserHasPro } from '../../../../hooks/useHasPro';
 
 const handleKeyQRMode = (mode: ProfileDialogModes, setMode: (mode: ProfileDialogModes) => void) => {
   switch (mode) {
@@ -97,7 +93,6 @@ function SessionProSection() {
   const isProAvailable = useIsProAvailable();
   const userHasPro = useCurrentUserHasPro();
   const currentUserHasExpiredPro = useCurrentUserHasExpiredPro();
-  const currentNeverHadPro = useCurrentNeverHadPro();
 
   if (!isProAvailable) {
     return null;
@@ -119,10 +114,6 @@ function SessionProSection() {
               : 'upgradeSession',
         }}
         onClick={() => {
-          if (currentNeverHadPro) {
-            // FIXME: will be defined later
-            return;
-          }
           dispatch(userSettingsModal({ userSettingsPage: 'pro' }));
         }}
         dataTestId="session-pro-settings-menu-item"

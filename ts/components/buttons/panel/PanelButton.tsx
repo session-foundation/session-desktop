@@ -9,8 +9,9 @@ import type { TrArgs } from '../../../localization/localeTools';
 import { useIsDarkTheme } from '../../../state/theme/selectors/theme';
 
 // NOTE Used for descendant components
-export const StyledContent = styled.div<{ disabled: boolean }>`
+export const StyledContent = styled.div<{ disabled?: boolean; rowReverse?: boolean }>`
   display: flex;
+  flex-direction: ${props => (props.rowReverse ? 'row-reverse' : 'row')};
   justify-content: space-between;
   align-items: center;
   width: 100%;
@@ -103,8 +104,10 @@ export const StyledPanelButton = styled.button<{
   disabled: boolean;
   color?: string;
   isDarkTheme: boolean;
+  defaultCursorWhenDisabled?: boolean;
 }>`
-  cursor: ${props => (props.disabled ? 'not-allowed' : 'pointer')};
+  cursor: ${props =>
+    props.disabled ? (props.defaultCursorWhenDisabled ? 'default' : 'not-allowed') : 'pointer'};
   display: flex;
   align-items: center;
   justify-content: space-between;

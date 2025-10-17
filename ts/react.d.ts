@@ -101,7 +101,7 @@ declare module 'react' {
   type SettingsRadio =
     | `set-notifications-${'message' | 'name' | 'count'}`
     | `send-with-${'enterForSend' | 'enterForNewLine'}`;
-  type SettingsChevron = 'blocked-contacts' | 'update-plan';
+  type SettingsChevron = 'blocked-contacts' | 'update-access';
 
   type SettingsInlineButtons =
     | 'set-password'
@@ -197,7 +197,10 @@ declare module 'react' {
     | 'modal-back'
     | 'create-group'
     | 'cancel-pro'
+    | 'renew-pro'
+    | 'recover-pro'
     | 'request-refund'
+    | 'pro-open-platform-website'
     | `${ConfirmButtons}-confirm`
     | `${CancelButtons}-cancel`
     | `clear-${ClearButtons}`
