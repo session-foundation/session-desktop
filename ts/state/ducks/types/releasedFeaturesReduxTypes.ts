@@ -14,6 +14,7 @@ export type SessionFeatureFlags = {
   debugInputCommands: boolean;
   proAvailable: boolean;
   mockCurrentUserHasPro: boolean;
+  mockCurrentUserHasProExpired: boolean;
   mockOthersHavePro: boolean;
   mockMessageProFeatures: Array<ProMessageFeature>;
   fsTTL30s: boolean;

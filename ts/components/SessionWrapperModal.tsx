@@ -34,7 +34,11 @@ type WithExtraRightButton = {
 };
 type WithShowExitIcon = { showExitIcon?: boolean };
 
-const StyledModalHeader = styled(Flex)<{ bigHeader?: boolean; scrolled: boolean }>`
+const StyledModalHeader = styled(Flex)<{
+  bigHeader?: boolean;
+  scrolled: boolean;
+  flowContentIntoHeader?: boolean;
+}>`
   position: relative;
   font-family: var(--font-default);
   font-size: ${props => (props.bigHeader ? 'var(--font-size-h4)' : 'var(--font-size-xl)')};

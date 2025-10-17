@@ -243,7 +243,8 @@ function isProVisibleCTA(variant: SessionProInfoVariant): boolean {
   ].includes(variant);
 }
 
-const buttonProps = {
+// TODO: we might want to make this a specific button preset. As its used for all pro/sesh stuff
+export const proButtonProps = {
   buttonShape: SessionButtonShape.Square,
   buttonType: SessionButtonType.Solid,
   fontWeight: 400,
@@ -300,7 +301,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
         >
           {hasNoProAndNotGroupCta ? (
             <SessionButtonShiny
-              {...buttonProps}
+              {...proButtonProps}
               shinyContainerStyle={{
                 width: '100%',
               }}
@@ -312,12 +313,14 @@ export function SessionProInfoModal(props: SessionProInfoState) {
             </SessionButtonShiny>
           ) : null}
           <SessionButton
-            {...buttonProps}
+            {...proButtonProps}
             buttonColor={SessionButtonColor.Tertiary}
             onClick={onClose}
             dataTestId="modal-session-pro-cancel-button"
             style={
-              !hasNoProAndNotGroupCta ? { ...buttonProps.style, width: '50%' } : buttonProps.style
+              !hasNoProAndNotGroupCta
+                ? { ...proButtonProps.style, width: '50%' }
+                : proButtonProps.style
             }
           >
             {tr(!hasNoProAndNotGroupCta ? 'close' : 'cancel')}

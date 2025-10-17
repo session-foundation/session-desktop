@@ -9,8 +9,9 @@ import type { TrArgs } from '../../../localization/localeTools';
 import { useIsDarkTheme } from '../../../state/theme/selectors/theme';
 
 // NOTE Used for descendant components
-export const StyledContent = styled.div<{ disabled: boolean }>`
+export const StyledContent = styled.div<{ disabled?: boolean; rowReverse?: boolean }>`
   display: flex;
+  flex-direction: ${props => (props.rowReverse ? 'row-reverse' : 'row')};
   justify-content: space-between;
   align-items: center;
   width: 100%;
@@ -18,6 +19,8 @@ export const StyledContent = styled.div<{ disabled: boolean }>`
 `;
 
 const StyledPanelLabel = styled.p`
+  display: flex;
+  gap: var(--margins-xs);
   color: var(--text-secondary-color);
   margin: 0;
   align-self: flex-start;
@@ -38,9 +41,11 @@ const StyledPanelLabelWithDescription = styled.div`
 
 export function PanelLabelWithDescription({
   title,
+  extraInlineNode,
   description,
 }: {
   title: TrArgs;
+  extraInlineNode?: ReactNode;
   description?: TrArgs;
 }) {
   return (
@@ -48,6 +53,7 @@ export function PanelLabelWithDescription({
       {/* less space between the label and the description */}
       <StyledPanelLabel>
         <Localizer {...title} />
+        {extraInlineNode}
       </StyledPanelLabel>
       {description ? (
         <StyledPanelDescription>
@@ -98,8 +104,10 @@ export const StyledPanelButton = styled.button<{
   disabled: boolean;
   color?: string;
   isDarkTheme: boolean;
+  defaultCursorWhenDisabled?: boolean;
 }>`
-  cursor: ${props => (props.disabled ? 'not-allowed' : 'pointer')};
+  cursor: ${props =>
+    props.disabled ? (props.defaultCursorWhenDisabled ? 'default' : 'not-allowed') : 'pointer'};
   display: flex;
   align-items: center;
   justify-content: space-between;

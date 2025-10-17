@@ -12,6 +12,7 @@ export enum LUCIDE_ICONS_UNICODE {
   CHEVRON_LEFT = '',
   CHEVRON_RIGHT = '',
   CHEVRON_UP = '',
+  CIRCLE_ALERT = '',
   CIRCLE_CHECK = '',
   CIRCLE_ELLIPSES = '',
   CIRCLE_HELP = '',
@@ -56,9 +57,11 @@ export enum LUCIDE_ICONS_UNICODE {
   REPLY = '',
   SEARCH = '',
   SETTINGS = '',
+  SMARTPHONE = '',
   SMILE_PLUS = '',
   SQUARE = '',
   SQUARE_CODE = '',
+  SQUARE_PLAY = '',
   SUN_MEDIUM = '',
   TIMER = '',
   TRASH2 = '',
@@ -137,9 +140,11 @@ export function isIconToMirrorRtl(unicode: LUCIDE_ICONS_UNICODE) {
     case LUCIDE_ICONS_UNICODE.REPEAT_2:
     case LUCIDE_ICONS_UNICODE.SEARCH:
     case LUCIDE_ICONS_UNICODE.SETTINGS:
+    case LUCIDE_ICONS_UNICODE.SMARTPHONE:
     case LUCIDE_ICONS_UNICODE.SMILE_PLUS:
     case LUCIDE_ICONS_UNICODE.SQUARE:
     case LUCIDE_ICONS_UNICODE.SQUARE_CODE:
+    case LUCIDE_ICONS_UNICODE.SQUARE_PLAY:
     case LUCIDE_ICONS_UNICODE.SUN_MEDIUM:
     case LUCIDE_ICONS_UNICODE.TIMER:
     case LUCIDE_ICONS_UNICODE.TRASH2:
@@ -151,6 +156,7 @@ export function isIconToMirrorRtl(unicode: LUCIDE_ICONS_UNICODE) {
     case LUCIDE_ICONS_UNICODE.USER_ROUND_X:
     case LUCIDE_ICONS_UNICODE.USERS_ROUND:
     case LUCIDE_ICONS_UNICODE.X:
+    case LUCIDE_ICONS_UNICODE.CIRCLE_ALERT:
       return false;
     default:
       assertUnreachable(unicode, 'isIconToMirrorRtl: unknown case');

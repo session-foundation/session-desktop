@@ -6,7 +6,6 @@ import { useOurConversationUsername, useOurAvatarPath } from '../../../../hooks/
 import { UserUtils, ToastUtils } from '../../../../session/utils';
 import { resetConversationExternal } from '../../../../state/ducks/conversations';
 import {
-  updateSessionProInfoModal,
   onionPathModal,
   updateConversationDetailsModal,
   userSettingsModal,
@@ -26,7 +25,6 @@ import { SessionIconButton, SessionLucideIconButton } from '../../../icon/Sessio
 import { QRView } from '../../../qrview/QrView';
 import { ModalBasicHeader } from '../../../SessionWrapperModal';
 import { showLinkVisitWarningDialog } from '../../OpenUrlModal';
-import { SessionProInfoVariant } from '../../SessionProInfoModal';
 import { ModalPencilIcon } from '../../shared/ModalPencilButton';
 import { ProfileHeader, ProfileName } from '../components';
 import type { ProfileDialogModes } from '../ProfileDialogModes';
@@ -36,6 +34,7 @@ import { setDebugMode } from '../../../../state/ducks/debug';
 import { useHideRecoveryPasswordEnabled } from '../../../../state/selectors/settings';
 import { OnionStatusLight } from '../../OnionStatusPathDialog';
 import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
+import { useCurrentUserHasExpiredPro, useCurrentUserHasPro } from '../../../../hooks/useHasPro';
 
 const handleKeyQRMode = (mode: ProfileDialogModes, setMode: (mode: ProfileDialogModes) => void) => {
   switch (mode) {
@@ -92,10 +91,13 @@ function SessionProSection() {
   const dispatch = useDispatch();
 
   const isProAvailable = useIsProAvailable();
+  const userHasPro = useCurrentUserHasPro();
+  const currentUserHasExpiredPro = useCurrentUserHasExpiredPro();
 
   if (!isProAvailable) {
     return null;
   }
+
   return (
     <PanelButtonGroup>
       <PanelIconButton
@@ -104,9 +106,15 @@ function SessionProSection() {
             <ProIconButton onClick={undefined} iconSize="small" dataTestId="invalid-data-testid" />
           </div>
         }
-        text={{ token: 'appPro' }}
+        text={{
+          token: userHasPro
+            ? 'sessionProBeta'
+            : currentUserHasExpiredPro
+              ? 'proRenewBeta'
+              : 'upgradeSession',
+        }}
         onClick={() => {
-          dispatch(updateSessionProInfoModal({ variant: SessionProInfoVariant.GENERIC }));
+          dispatch(userSettingsModal({ userSettingsPage: 'pro' }));
         }}
         dataTestId="session-pro-settings-menu-item"
         color="var(--renderer-span-primary-color)"

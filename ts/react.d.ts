@@ -95,12 +95,13 @@ declare module 'react' {
     | 'conversation-trimming'
     | 'auto-update'
     | 'auto-dark-mode'
-    | 'hide-menu-bar';
+    | 'hide-menu-bar'
+    | 'pro-badge-visible';
 
   type SettingsRadio =
     | `set-notifications-${'message' | 'name' | 'count'}`
     | `send-with-${'enterForSend' | 'enterForNewLine'}`;
-  type SettingsChevron = `blocked-contacts`;
+  type SettingsChevron = 'blocked-contacts' | 'update-access';
 
   type SettingsInlineButtons =
     | 'set-password'
@@ -108,7 +109,13 @@ declare module 'react' {
     | 'remove-password'
     | 'export-logs'
     | 'hide-recovery-password';
-  type SettingsExternalLinkButtons = 'faq' | 'translate' | 'support' | 'feedback';
+  type SettingsExternalLinkButtons =
+    | 'faq'
+    | 'translate'
+    | 'support'
+    | 'feedback'
+    | 'pro-faq'
+    | 'pro-support';
 
   type SettingsMenuItems =
     | 'message-requests'
@@ -189,6 +196,11 @@ declare module 'react' {
     | 'back'
     | 'modal-back'
     | 'create-group'
+    | 'cancel-pro'
+    | 'renew-pro'
+    | 'recover-pro'
+    | 'request-refund'
+    | 'pro-open-platform-website'
     | `${ConfirmButtons}-confirm`
     | `${CancelButtons}-cancel`
     | `clear-${ClearButtons}`

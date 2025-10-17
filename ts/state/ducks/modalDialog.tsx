@@ -5,7 +5,11 @@ import { HideRecoveryPasswordDialogProps } from '../../components/dialog/HideRec
 import { SessionConfirmDialogProps } from '../../components/dialog/SessionConfirm';
 import { MediaItemType } from '../../components/lightbox/LightboxGallery';
 import { AttachmentTypeWithPath } from '../../types/Attachment';
-import type { EditProfilePictureModalProps, PasswordAction } from '../../types/ReduxTypes';
+import type {
+  EditProfilePictureModalProps,
+  PasswordAction,
+  ProNonOriginatingPageVariant,
+} from '../../types/ReduxTypes';
 import { WithConvoId } from '../../session/types/with';
 import type { SessionProInfoVariant } from '../../components/dialog/SessionProInfoModal';
 import type { TrArgs } from '../../localization/localeTools';
@@ -25,13 +29,19 @@ export type UserSettingsPage =
   | 'clear-data'
   | 'password'
   | 'preferences'
-  | 'network';
+  | 'network'
+  | 'pro'
+  | 'proNonOriginating';
 
 export type WithUserSettingsPage =
-  | { userSettingsPage: Exclude<UserSettingsPage, 'password'> }
+  | { userSettingsPage: Exclude<UserSettingsPage, 'password' | 'proNonOriginating'> }
   | {
       userSettingsPage: 'password';
       passwordAction: PasswordAction;
+    }
+  | {
+      userSettingsPage: 'proNonOriginating';
+      nonOriginatingVariant: ProNonOriginatingPageVariant;
     };
 
 export type ConfirmModalState = SessionConfirmDialogProps | null;
@@ -162,7 +172,7 @@ export const initialModalState: ModalState = {
   groupMembersModal: null,
   userProfileModal: null,
   nickNameModal: null,
-  userSettingsModal: null,
+  userSettingsModal: { userSettingsPage: 'pro' },
   onionPathModal: null,
   enterPasswordModal: null,
   deleteAccountModal: null,

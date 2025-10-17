@@ -30,14 +30,20 @@ export function ProIconButton({
   onClick,
   dataTestId,
   style,
+  noColors,
 }: {
   iconSize: SessionIconSize;
   disabled?: boolean;
   onClick?: (() => void) | null;
   dataTestId: SessionDataTestId;
   style?: CSSProperties;
+  noColors?: boolean;
 }) {
-  const mergedStyle = { ...defaultStyle, ...style };
+  const mergedStyle = {
+    ...defaultStyle,
+    ...(noColors ? { backgroundColor: 'var(--chat-buttons-background-hover-color)' } : {}),
+    ...style,
+  };
   if (onClick) {
     return (
       <SessionIconButton
