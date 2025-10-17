@@ -23,11 +23,6 @@ type UploadParams = {
    * Explicit padding is only needed for the legacy encryption, as libsession deterministic encryption already pads the data.
    */
   shouldPad?: boolean;
-  /**
-   * When using the deterministic encryption, this is the seed used to generate the encryption key (libsession encrypt)
-   * When not using the deterministic encryption, this is used as the encryption key (legacy encrypt)
-   */
-  encryptionKey: Uint8Array;
 };
 
 export interface RawPreview {
@@ -80,9 +75,10 @@ async function uploadToFileServer(params: UploadParams): Promise<AttachmentPoint
       'Using deterministic encryption for attachment upload: ',
       attachment.fileName
     );
+    const seed = await UserUtils.getUserEd25519Seed();
     const encryptedContent = await MultiEncryptWrapperActions.attachmentEncrypt({
       allowLarge: false,
-      seed: params.encryptionKey,
+      seed,
       data: new Uint8Array(attachment.data),
       domain: 'attachment',
     });
@@ -90,7 +86,7 @@ async function uploadToFileServer(params: UploadParams): Promise<AttachmentPoint
     attachmentData = encryptedContent.encryptedData;
   } else {
     // this is the legacy attachment encryption
-    pointer.key = new Uint8Array(params.encryptionKey);
+    pointer.key = new Uint8Array(crypto.randomBytes(64));
     const iv = new Uint8Array(crypto.randomBytes(16));
 
     const dataToEncrypt = !shouldPad ? attachment.data : addAttachmentPadding(attachment.data);
@@ -115,15 +111,10 @@ async function uploadToFileServer(params: UploadParams): Promise<AttachmentPoint
 export async function uploadAttachmentsToFileServer(
   attachments: Array<Attachment>
 ): Promise<Array<AttachmentPointerWithUrl>> {
-  const encryptionKey = window.sessionFeatureFlags.useDeterministicEncryption
-    ? await UserUtils.getUserEd25519Seed()
-    : crypto.randomBytes(32);
-
   const promises = (attachments || []).map(async attachment =>
     uploadToFileServer({
       attachment,
       shouldPad: true,
-      encryptionKey,
     })
   );
 
@@ -140,13 +131,9 @@ export async function uploadLinkPreviewToFileServer(
     }
     return preview as any;
   }
-  const encryptionKey = window.sessionFeatureFlags.useDeterministicEncryption
-    ? await UserUtils.getUserEd25519Seed()
-    : crypto.randomBytes(32);
 
   const image = await uploadToFileServer({
     attachment: preview.image,
-    encryptionKey,
   });
   return {
     ...preview,
