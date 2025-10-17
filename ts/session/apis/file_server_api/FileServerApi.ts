@@ -35,7 +35,11 @@ export const uploadFileToFsWithOnionV4 = async (
   }
 
   // TODO: remove this once QA is done
-  const target = process.env.POTATO_FS ? 'POTATO' : 'DEFAULT';
+  const target = process.env.POTATO_FS
+    ? 'POTATO'
+    : process.env.SUPER_DUPER_FS
+      ? 'SUPER_DUPER'
+      : 'DEFAULT';
 
   const result = await OnionSending.sendBinaryViaOnionV4ToFileServer({
     abortSignal: new AbortController().signal,
