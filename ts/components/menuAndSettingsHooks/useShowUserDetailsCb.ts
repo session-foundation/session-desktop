@@ -60,7 +60,7 @@ export function useShowUserDetailsCbFromMessage() {
         resolvedNakedId && resolvedNakedId !== sender ? resolvedNakedId : undefined;
     }
 
-    if (foundRealSessionId && foundRealSessionId.startsWith(KeyPrefixType.standard)) {
+    if (!foundRealSessionId || foundRealSessionId.startsWith(KeyPrefixType.blinded15)) {
       await ConvoHub.use().get(sender).setOriginConversationID(selectedConvoKey, true);
     }
 
