@@ -30,31 +30,6 @@ export function removeMessagePadding(paddedData: ArrayBuffer): ArrayBuffer {
   throw new Error('Invalid padding');
 }
 
-/**
- * Add padding to a message buffer
- * @param messageBuffer The buffer to add padding to.
- */
-export function addMessagePadding(messageBuffer: Uint8Array): Uint8Array {
-  // window?.log?.info('Adding message padding...');
-
-  const plaintext = new Uint8Array(getPaddedMessageLength(messageBuffer.byteLength + 1) - 1);
-  plaintext.set(new Uint8Array(messageBuffer));
-  plaintext[messageBuffer.byteLength] = 0x80;
-
-  return plaintext;
-}
-
-function getPaddedMessageLength(originalLength: number): number {
-  const messageLengthWithTerminator = originalLength + 1;
-  let messagePartCount = Math.floor(messageLengthWithTerminator / 160);
-
-  if (messageLengthWithTerminator % 160 !== 0) {
-    messagePartCount += 1;
-  }
-
-  return messagePartCount * 160;
-}
-
 /*
  * If the attachment has padding, remove the padding and return the unpad attachment
  */

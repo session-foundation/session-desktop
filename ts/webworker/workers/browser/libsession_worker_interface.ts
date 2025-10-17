@@ -726,6 +726,10 @@ export const MetaGroupWrapperActions: MetaGroupWrapperActionsCalls = {
     callLibSessionWorker([`MetaGroupConfig-${groupPk}`, 'keyGetAll']) as Promise<
       ReturnType<MetaGroupWrapperActionsCalls['keyGetAll']>
     >,
+  keyGetEncryptionKeyHex: async (groupPk: GroupPubkeyType) =>
+    callLibSessionWorker([`MetaGroupConfig-${groupPk}`, 'keyGetEncryptionKeyHex']) as Promise<
+      ReturnType<MetaGroupWrapperActionsCalls['keyGetEncryptionKeyHex']>
+    >,
   activeHashes: async (groupPk: GroupPubkeyType) =>
     callLibSessionWorker([`MetaGroupConfig-${groupPk}`, 'activeHashes']) as Promise<
       ReturnType<MetaGroupWrapperActionsCalls['activeHashes']>

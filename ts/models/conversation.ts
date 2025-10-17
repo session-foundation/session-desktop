@@ -60,14 +60,12 @@ import {
   getUsBlindedInThatServer,
   isUsAnySogsFromCache,
 } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
-import { SogsBlinding } from '../session/apis/open_group_api/sogsv3/sogsBlinding';
 import {
   fileDetailsToURL,
   sogsV3FetchPreviewAndSaveIt,
 } from '../session/apis/open_group_api/sogsv3/sogsV3FetchFile';
 import { SnodeNamespaces } from '../session/apis/snode_api/namespaces';
 import { getSodiumRenderer } from '../session/crypto';
-import { addMessagePadding } from '../session/crypto/BufferPadding';
 import { DecryptedAttachmentsManager } from '../session/crypto/DecryptedAttachmentsManager';
 import {
   MessageRequestResponse,
@@ -133,6 +131,7 @@ import { UpdateMsgExpirySwarm } from '../session/utils/job_runners/jobs/UpdateMs
 import { getLibGroupKickedOutsideRedux } from '../state/selectors/userGroups';
 import {
   MetaGroupWrapperActions,
+  MultiEncryptWrapperActions,
   UserConfigWrapperActions,
   UserGroupsWrapperActions,
 } from '../webworker/workers/browser/libsession_worker_interface';
@@ -2668,22 +2667,25 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
 
     const sogsVisibleMessage = new OpenGroupVisibleMessage(messageParams);
-    const paddedBody = addMessagePadding(sogsVisibleMessage.plainTextBuffer());
 
-    const serverPubKey = roomInfo.serverPublicKey;
+    const { encryptedData } = await MultiEncryptWrapperActions.encryptForCommunityInbox([
+      {
+        communityPubkey: roomInfo.serverPublicKey,
+        plaintext: sogsVisibleMessage.plainTextBuffer(),
+        senderEd25519Seed: await UserUtils.getUserEd25519Seed(),
+        recipientPubkey: this.id.slice(2),
+        sentTimestampMs: messageParams.createAtNetworkTimestamp,
+        proRotatingEd25519PrivKey: null,
+      },
+    ]);
 
-    const encryptedMsg = await SogsBlinding.encryptBlindedMessage({
-      rawData: paddedBody,
-      senderSigningKey: ourSignKeyBytes,
-      serverPubKey: from_hex(serverPubKey),
-      recipientBlindedPublicKey: from_hex(this.id.slice(2)),
-    });
-
-    if (!encryptedMsg) {
-      throw new Error('encryptBlindedMessage failed');
+    if (!encryptedData[0]) {
+      throw new Error('MultiEncryptWrapperActions.encryptForCommunityInbox failed');
     }
     if (!messageParams.identifier) {
-      throw new Error('encryptBlindedMessage messageParams needs an identifier');
+      throw new Error(
+        'MultiEncryptWrapperActions.encryptForCommunityInbox messageParams needs an identifier'
+      );
     }
 
     this.setActiveAt(Date.now());
@@ -2691,7 +2693,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
     // TODO we need to add support for sending blinded25 message request in addition to the legacy blinded15
     await MessageQueue.use().sendToOpenGroupV2BlindedRequest({
-      encryptedContent: encryptedMsg,
+      encryptedContent: encryptedData[0],
       roomInfos: roomInfo,
       message: sogsVisibleMessage,
       recipientBlindedId: this.id,
