@@ -159,7 +159,7 @@ if (!process.mas) {
  * The dumps will be saved in the `userData/CrashPad/pending` directory.
  *
  *  The minidumps can be read using the `minidump_stackwalk` tool.
- * If you do not have cargo installed, you can do those steps:
+ * To get it, you can do those steps:
  * ```bash
  * git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
  * cd depot_tools
@@ -167,7 +167,10 @@ if (!process.mas) {
  * ../fetch breakpad && cd src
  * ./configure && make
  * file src/processor/minidump_stackwalk
- * ./src/processor/minidump_stackwalk <path_to.dmp> <any_symbols_you_have_optional>
+ * ./src/processor/minidump_stackwalk <path_to.dmp> <folder_any_symbols_you_have_optional>
+ * ```
+ * Electron publishes the symbols for electron itself (find your exact release on their github repository release page).
+ * That's about it in terms of symbols.
  */
 crashReporter.start({
   submitURL: '', // leave empty as we don't want to upload them, but only save them locally

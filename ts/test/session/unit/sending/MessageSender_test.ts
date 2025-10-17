@@ -1,6 +1,5 @@
 import { expect } from 'chai';
 // eslint-disable-next-line import/order
-import * as crypto from 'crypto';
 import _ from 'lodash';
 import Sinon, * as sinon from 'sinon';
 import { SignalService } from '../../../../protobuf';
@@ -14,19 +13,16 @@ import { ConvoHub } from '../../../../session/conversations/ConversationControll
 import { OnionSending } from '../../../../session/onions/onionSend';
 import { OnionV4 } from '../../../../session/onions/onionv4';
 import { MessageSender } from '../../../../session/sending';
-import { OutgoingRawMessage, PubKey } from '../../../../session/types';
+import { OutgoingRawMessage } from '../../../../session/types';
 import { MessageUtils, UserUtils } from '../../../../session/utils';
 import { fromBase64ToArrayBuffer } from '../../../../session/utils/String';
 import { TestUtils } from '../../../test-utils';
 import {
   TypedStub,
-  expectAsyncToThrow,
   stubData,
   stubUtilWorker,
   stubValidSnodeSwarm,
 } from '../../../test-utils/utils';
-import { TEST_identityKeyPair } from '../crypto/MessageEncrypter_test';
-import { MessageEncrypter } from '../../../../session/crypto/MessageEncrypter';
 import { NetworkTime } from '../../../../util/NetworkTime';
 
 describe('MessageSender', () => {
@@ -47,22 +43,14 @@ describe('MessageSender', () => {
 
   describe('send', () => {
     const ourNumber = TestUtils.generateFakePubKeyStr();
-    let sessionMessageAPISendStub: TypedStub<typeof MessageSender, 'sendMessagesDataToSnode'>;
     let doSnodeBatchRequestStub: TypedStub<typeof BatchRequests, 'doSnodeBatchRequestNoRetries'>;
-    let encryptStub: sinon.SinonStub<[PubKey, Uint8Array, SignalService.Envelope.Type]>;
 
     beforeEach(() => {
-      sessionMessageAPISendStub = Sinon.stub(MessageSender, 'sendMessagesDataToSnode').resolves();
       doSnodeBatchRequestStub = Sinon.stub(
         BatchRequests,
         'doSnodeBatchRequestNoRetries'
       ).resolves();
       stubData('getMessageById').resolves();
-
-      encryptStub = Sinon.stub(MessageEncrypter, 'encrypt').resolves({
-        envelopeType: SignalService.Envelope.Type.SESSION_MESSAGE,
-        cipherText: crypto.randomBytes(10),
-      });
 
       Sinon.stub(UserUtils, 'getOurPubKeyStrFromCache').returns(ourNumber);
     });
@@ -76,21 +64,6 @@ describe('MessageSender', () => {
           TestUtils.generateVisibleMessage(),
           SnodeNamespaces.Default
         );
-      });
-
-      it('should not retry if an error occurred during encryption', async () => {
-        encryptStub.throws(new Error('Failed to encrypt'));
-
-        const promise = () =>
-          MessageSender.sendSingleMessage({
-            message: rawMessage,
-            attempts: 3,
-            retryMinTimeout: 10,
-            isSyncMessage: false,
-            abortSignal: null,
-          });
-        await expectAsyncToThrow(promise, 'Failed to encrypt');
-        expect(sessionMessageAPISendStub.callCount).to.equal(0);
       });
 
       it('should only call lokiMessageAPI once if no errors occured', async () => {
@@ -136,15 +109,6 @@ describe('MessageSender', () => {
     });
 
     describe('logic', () => {
-      let messageEncryptReturnEnvelopeType = SignalService.Envelope.Type.SESSION_MESSAGE;
-
-      beforeEach(() => {
-        encryptStub.callsFake(async (_device, plainTextBuffer, _type) => ({
-          envelopeType: messageEncryptReturnEnvelopeType,
-          cipherText: plainTextBuffer,
-        }));
-      });
-
       it('should pass the correct values to lokiMessageAPI', async () => {
         TestUtils.setupTestWithSending();
 
@@ -189,7 +153,6 @@ describe('MessageSender', () => {
 
       it('should correctly build the envelope and override the request timestamp but not the msg one', async () => {
         TestUtils.setupTestWithSending();
-        messageEncryptReturnEnvelopeType = SignalService.Envelope.Type.SESSION_MESSAGE;
 
         // This test assumes the encryption stub returns the plainText passed into it.
         const device = TestUtils.generateFakePubKey();
@@ -244,7 +207,6 @@ describe('MessageSender', () => {
       describe('SESSION_MESSAGE', () => {
         it('should set the envelope source to be empty', async () => {
           TestUtils.setupTestWithSending();
-          messageEncryptReturnEnvelopeType = SignalService.Envelope.Type.SESSION_MESSAGE;
           Sinon.stub(ConvoHub.use(), 'get').returns(undefined as any);
 
           // This test assumes the encryption stub returns the plainText passed into it.
@@ -298,7 +260,6 @@ describe('MessageSender', () => {
       Sinon.stub(UserUtils, 'getOurPubKeyStrFromCache').resolves(
         TestUtils.generateFakePubKey().key
       );
-      Sinon.stub(UserUtils, 'getIdentityKeyPair').resolves(TEST_identityKeyPair);
 
       Sinon.stub(SogsBlinding, 'getSogsSignature').resolves(new Uint8Array());
 
