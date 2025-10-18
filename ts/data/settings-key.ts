@@ -11,7 +11,6 @@ const settingsOpengroupPruning = 'prune-setting';
 const settingsNotification = 'notification-setting';
 const settingsAudioNotification = 'audio-notification-setting';
 const hasSyncedInitialConfigurationItem = 'hasSyncedInitialConfigurationItem';
-const ntsAvatarExpiryMs = 'ntsAvatarExpiryMs';
 const hasLinkPreviewPopupBeenDisplayed = 'hasLinkPreviewPopupBeenDisplayed';
 const hasFollowSystemThemeEnabled = 'hasFollowSystemThemeEnabled';
 const hideRecoveryPassword = 'hideRecoveryPassword';
@@ -21,6 +20,14 @@ const latestUserProfileEnvelopeTimestamp = 'latestUserProfileEnvelopeTimestamp';
 const latestUserGroupEnvelopeTimestamp = 'latestUserGroupEnvelopeTimestamp';
 const latestUserContactsEnvelopeTimestamp = 'latestUserContactsEnvelopeTimestamp';
 const showOnboardingAccountJustCreated = 'showOnboardingAccountJustCreated';
+
+/**
+ * When we added the author of a message in groups in the last message,
+ * we also had to regenerate the existing last messages.
+ * We only need to do this once, and we can remove it in a few months safely :tm:
+ *
+ */
+const lastMessageGroupsRegenerated = 'lastMessageGroupsRegenerated';
 
 export const SettingsKey = {
   settingsReadReceipt,
@@ -36,7 +43,6 @@ export const SettingsKey = {
   settingsNotification,
   settingsAudioNotification,
   hasSyncedInitialConfigurationItem,
-  ntsAvatarExpiryMs,
   hasLinkPreviewPopupBeenDisplayed,
   latestUserProfileEnvelopeTimestamp,
   latestUserGroupEnvelopeTimestamp,
@@ -44,6 +50,7 @@ export const SettingsKey = {
   hasFollowSystemThemeEnabled,
   hideRecoveryPassword,
   showOnboardingAccountJustCreated,
+  lastMessageGroupsRegenerated,
 } as const;
 
 export const KNOWN_BLINDED_KEYS_ITEM = 'KNOWN_BLINDED_KEYS_ITEM';

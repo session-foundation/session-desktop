@@ -47,6 +47,7 @@ async function getRemovedControlMessage({
     createAtNetworkTimestamp,
     secretKey: adminSecretKey,
     sodium,
+    userProfile: null,
     ...DisappearingMessages.getExpireDetailsForOutgoingMessage(convo, createAtNetworkTimestamp),
   });
 }
@@ -79,6 +80,7 @@ async function getWithoutHistoryControlMessage({
     createAtNetworkTimestamp,
     secretKey: adminSecretKey,
     sodium,
+    userProfile: null,
     ...DisappearingMessages.getExpireDetailsForOutgoingMessage(convo, createAtNetworkTimestamp),
   });
 }
@@ -111,6 +113,7 @@ async function getWithHistoryControlMessage({
     createAtNetworkTimestamp,
     secretKey: adminSecretKey,
     sodium,
+    userProfile: null,
     ...DisappearingMessages.getExpireDetailsForOutgoingMessage(convo, createAtNetworkTimestamp),
   });
 }
@@ -143,6 +146,7 @@ async function getPromotedControlMessage({
     createAtNetworkTimestamp,
     secretKey: adminSecretKey,
     sodium,
+    userProfile: null,
     ...DisappearingMessages.getExpireDetailsForOutgoingMessage(convo, createAtNetworkTimestamp),
   });
 }

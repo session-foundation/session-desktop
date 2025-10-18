@@ -51,7 +51,7 @@ export const ClickToTrustSender = (props: { messageId: string }) => {
         },
         closeTheme: SessionButtonColor.Danger,
         onClickOk: async () => {
-          convo.set({ isTrustedForAttachmentDownload: true });
+          convo.setIsTrustedForAttachmentDownload(true);
           await convo.commit();
           const messagesInConvo = await Data.getLastMessagesByConversation(convo.id, 100, false);
 
@@ -104,9 +104,9 @@ export const ClickToTrustSender = (props: { messageId: string }) => {
                 })
               );
 
-              message.set({ preview });
+              message.setPreview(preview);
 
-              message.set({ attachments: downloadedAttachments });
+              message.setAttachments(downloadedAttachments);
               await message.commit();
             })
           );

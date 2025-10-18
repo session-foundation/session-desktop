@@ -118,35 +118,6 @@ export const loadPreviewData = async (preview: any): Promise<Array<any>> => {
   ];
 };
 
-export const loadQuoteData = async (quote: any) => {
-  if (!quote) {
-    return null;
-  }
-  if (!quote.attachments?.length || isEmpty(quote.attachments[0])) {
-    return quote;
-  }
-
-  const quotedFirstAttachment = await quote.attachments[0];
-
-  const { thumbnail } = quotedFirstAttachment;
-
-  if (!thumbnail || !thumbnail.path) {
-    return {
-      ...quote,
-      attachments: [quotedFirstAttachment],
-    };
-  }
-  const quotedAttachmentWithThumbnail = {
-    ...quotedFirstAttachment,
-    thumbnail: await loadAttachmentData(thumbnail),
-  };
-
-  return {
-    ...quote,
-    attachments: [quotedAttachmentWithThumbnail],
-  };
-};
-
 /**
  * Any `data: ArrayBuffer` provided here must first have been oriented to the
  * right orientation using one of the ImageProcessor functions.
@@ -216,7 +187,9 @@ const migrateDataToFileSystem = async (data?: ArrayBuffer) => {
 
   const isValidData = isArrayBuffer(data);
   if (!isValidData) {
-    throw new TypeError(`Expected ${data} to be an array buffer got: ${typeof data}`);
+    throw new TypeError(
+      `migrateDataToFileSystem: Expected 'data' to be an array buffer got: ${typeof data}`
+    );
   }
 
   const path = await writeNewAttachmentData(data);

@@ -178,17 +178,11 @@ message DataMessage {
   }
 
   message Quote {
-
-    message QuotedAttachment {
-      optional string            contentType = 1;
-      optional string            fileName    = 2;
-      optional AttachmentPointer thumbnail   = 3;
-    }
+    reserved 3, 4;
+    reserved "text", "attachments";
 
     required uint64           id          = 1;
     required string           author      = 2;
-    optional string           text        = 3;
-    repeated QuotedAttachment attachments = 4;
   }
 
   message Preview {
@@ -200,6 +194,12 @@ message DataMessage {
   message LokiProfile {
     optional string displayName = 1;
     optional string profilePicture = 2;
+    /**
+     * The timestamp of the last profile update.
+     * This is used to prioritize the correct profile info based on multiple and outdated incoming messages.
+     * Note: this is in seconds.
+     */
+    optional uint64 lastProfileUpdateSeconds = 3;
   }
 
   message OpenGroupInvitation {
@@ -262,16 +262,22 @@ message AttachmentPointer {
 
   // @required
   required fixed64 deprecated_id = 1;
-  optional string  contentType = 2;
-  optional bytes   key         = 3;
-  optional uint32  size        = 4;
-  optional bytes   digest      = 6;
-  optional string  fileName    = 7;
-  optional uint32  flags       = 8;
-  optional uint32  width       = 9;
-  optional uint32  height      = 10;
-  optional string  caption     = 11;
-  optional string  url         = 101;
+  optional string  contentType   = 2;
+  optional bytes   key           = 3;
+  optional uint32  size          = 4;
+  optional bytes   digest        = 6;
+  optional string  fileName      = 7;
+  optional uint32  flags         = 8;
+  optional uint32  width         = 9;
+  optional uint32  height        = 10;
+  optional string  caption       = 11;
+  /**
+   * This field can be just an url to the file, or have a fragment appended to it that can contain:
+   * - `p=<server_pubkey_hex>` // hex encoded pubkey of the file server
+   * - `d=` // if the file is deterministically encrypted, this field is present, otherwise it is not
+   * If needed, those fields are a &, and can be parsed/built with the usual URLSearchParams logic
+   */
+  optional string  url  = 101;
 }
 
 

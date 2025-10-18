@@ -8,7 +8,6 @@ import {
   FetchMsgExpirySwarmPersistedData,
   GroupInvitePersistedData,
   GroupPendingRemovalsPersistedData,
-  GroupPromotePersistedData,
   GroupSyncPersistedData,
   PersistedJob,
   RunJobResult,
@@ -16,6 +15,7 @@ import {
   UpdateMsgExpirySwarmPersistedData,
   UserSyncPersistedData,
   type AvatarMigratePersistedData,
+  type AvatarReuploadPersistedData,
 } from './PersistedJob';
 import { JobRunnerType } from './jobs/JobRunnerType';
 import { DURATION } from '../../constants';
@@ -386,14 +386,12 @@ const groupSyncRunner = new PersistedJobRunner<GroupSyncPersistedData>('GroupSyn
 const avatarDownloadRunner = new PersistedJobRunner<AvatarDownloadPersistedData>(
   'AvatarDownloadJob'
 );
+const avatarReuploadRunner = new PersistedJobRunner<AvatarReuploadPersistedData>(
+  'AvatarReuploadJob'
+);
 const avatarMigrateRunner = new PersistedJobRunner<AvatarMigratePersistedData>('AvatarMigrateJob');
 
 const groupInviteJobRunner = new PersistedJobRunner<GroupInvitePersistedData>('GroupInviteJob', 4);
-
-const groupPromoteJobRunner = new PersistedJobRunner<GroupPromotePersistedData>(
-  'GroupPromoteJob',
-  4
-);
 
 const groupPendingRemovalJobRunner = new PersistedJobRunner<GroupPendingRemovalsPersistedData>(
   'GroupPendingRemovalJob',
@@ -414,8 +412,8 @@ export const runners = {
   updateMsgExpiryRunner,
   fetchSwarmMsgExpiryRunner,
   avatarDownloadRunner,
+  avatarReuploadRunner,
   avatarMigrateRunner,
   groupInviteJobRunner,
-  groupPromoteJobRunner,
   groupPendingRemovalJobRunner,
 };

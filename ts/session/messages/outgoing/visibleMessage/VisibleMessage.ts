@@ -1,12 +1,11 @@
-import ByteBuffer from 'bytebuffer';
-import { isEmpty } from 'lodash';
 import Long from 'long';
 import { SignalService } from '../../../../protobuf';
 import { Reaction } from '../../../../types/Reaction';
 import { DataMessage } from '../DataMessage';
-import { LokiProfile } from '../../../../types/message';
+import { type OutgoingUserProfile } from '../../../../types/message';
 import { ExpirableMessageParams } from '../ExpirableMessage';
 import { attachmentIdAsLongFromUrl } from '../../../utils';
+import type { WithOutgoingUserProfile } from '../Message';
 
 interface AttachmentPointerCommon {
   contentType?: string;
@@ -57,19 +56,17 @@ export interface QuotedAttachmentWithUrl extends QuotedAttachmentCommon {
 export interface Quote {
   id: number;
   author: string;
-  text?: string;
-  attachments?: Array<QuotedAttachmentWithUrl>;
 }
 
-export interface VisibleMessageParams extends ExpirableMessageParams {
-  attachments?: Array<AttachmentPointerWithUrl>;
-  body?: string;
-  quote?: Quote;
-  lokiProfile?: LokiProfile;
-  preview?: Array<PreviewWithAttachmentUrl>;
-  reaction?: Reaction;
-  syncTarget?: string; // undefined means it is not a synced message
-}
+export type VisibleMessageParams = ExpirableMessageParams &
+  WithOutgoingUserProfile & {
+    attachments?: Array<AttachmentPointerWithUrl>;
+    body?: string;
+    quote?: Quote;
+    preview?: Array<PreviewWithAttachmentUrl>;
+    reaction?: Reaction;
+    syncTarget?: string; // undefined means it is not a synced message
+  };
 
 export class VisibleMessage extends DataMessage {
   public readonly reaction?: Reaction;
@@ -77,8 +74,8 @@ export class VisibleMessage extends DataMessage {
   private readonly attachments?: Array<AttachmentPointerWithUrl & { deprecatedId: Long }>;
   private readonly body?: string;
   private readonly quote?: Quote;
-  private readonly profileKey?: Uint8Array;
-  private readonly profile?: SignalService.DataMessage.ILokiProfile;
+  private readonly userProfile: OutgoingUserProfile | null;
+
   private readonly preview?: Array<PreviewWithAttachmentUrl & { deprecatedId?: Long }>;
 
   /// In the case of a sync message, the public key of the person the message was targeted at.
@@ -99,10 +96,7 @@ export class VisibleMessage extends DataMessage {
     this.body = params.body;
     this.quote = params.quote;
 
-    const profile = buildProfileForOutgoingMessage(params);
-
-    this.profile = profile.lokiProfile;
-    this.profileKey = profile.profileKey;
+    this.userProfile = params.userProfile;
 
     this.preview = params.preview?.map(attachment => ({
       ...attachment,
@@ -127,7 +121,7 @@ export class VisibleMessage extends DataMessage {
       dataMessage.body = this.body;
     }
 
-    dataMessage.attachments = this.attachments || [];
+    dataMessage.attachments = this.attachments ?? [];
 
     if (this.reaction) {
       dataMessage.reaction = this.reaction;
@@ -136,12 +130,10 @@ export class VisibleMessage extends DataMessage {
       dataMessage.syncTarget = this.syncTarget;
     }
 
-    if (this.profile) {
-      dataMessage.profile = this.profile;
-    }
-
-    if (this.profileKey && this.profileKey.length) {
-      dataMessage.profileKey = this.profileKey;
+    const protobufDetails = this.userProfile?.toProtobufDetails() ?? {};
+    dataMessage.profile = protobufDetails.profile;
+    if (protobufDetails.profileKey) {
+      dataMessage.profileKey = protobufDetails.profileKey;
     }
 
     if (this.quote) {
@@ -149,23 +141,6 @@ export class VisibleMessage extends DataMessage {
 
       dataMessage.quote.id = this.quote.id;
       dataMessage.quote.author = this.quote.author;
-      dataMessage.quote.text = this.quote.text;
-      if (this.quote.attachments) {
-        dataMessage.quote.attachments = this.quote.attachments.map(attachment => {
-          const quotedAttachment = new SignalService.DataMessage.Quote.QuotedAttachment();
-          if (attachment.contentType) {
-            quotedAttachment.contentType = attachment.contentType;
-          }
-          if (attachment.fileName) {
-            quotedAttachment.fileName = attachment.fileName;
-          }
-          if (attachment.thumbnail && (attachment.thumbnail as any).id) {
-            quotedAttachment.thumbnail = attachment.thumbnail as any; // be sure to keep the typescript guard on id above
-          }
-
-          return quotedAttachment;
-        });
-      }
     }
 
     if (Array.isArray(this.preview)) {
@@ -194,48 +169,4 @@ export class VisibleMessage extends DataMessage {
       this.createAtNetworkTimestamp === comparator.createAtNetworkTimestamp
     );
   }
-}
-
-export function buildProfileForOutgoingMessage(params: { lokiProfile?: LokiProfile }) {
-  let profileKey: Uint8Array | undefined;
-  if (params.lokiProfile && params.lokiProfile.profileKey) {
-    if (
-      params.lokiProfile.profileKey instanceof Uint8Array ||
-      (params.lokiProfile.profileKey as any) instanceof ByteBuffer
-    ) {
-      profileKey = new Uint8Array(params.lokiProfile.profileKey);
-    } else {
-      profileKey = new Uint8Array(ByteBuffer.wrap(params.lokiProfile.profileKey).toArrayBuffer());
-    }
-  }
-
-  const displayName = params.lokiProfile?.displayName;
-
-  // no need to include the avatarPointer if there is no profileKey associated with it.
-  const avatarPointer =
-    params.lokiProfile?.avatarPointer &&
-    !isEmpty(profileKey) &&
-    params.lokiProfile.avatarPointer &&
-    !isEmpty(params.lokiProfile.avatarPointer)
-      ? params.lokiProfile.avatarPointer
-      : undefined;
-
-  let lokiProfile: SignalService.DataMessage.ILokiProfile | undefined;
-  if (avatarPointer || displayName) {
-    lokiProfile = new SignalService.DataMessage.LokiProfile();
-
-    // we always need a profileKey tom decode an avatar pointer
-    if (avatarPointer && avatarPointer.length && profileKey) {
-      lokiProfile.profilePicture = avatarPointer;
-    }
-
-    if (displayName) {
-      lokiProfile.displayName = displayName;
-    }
-  }
-
-  return {
-    lokiProfile,
-    profileKey: lokiProfile?.profilePicture ? profileKey : undefined,
-  };
 }

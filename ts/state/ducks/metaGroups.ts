@@ -8,7 +8,6 @@ import {
   WithGroupPubkey,
 } from 'libsession_util_nodejs';
 import { concat, intersection, isEmpty, isNil, uniq } from 'lodash';
-import { from_hex } from 'libsodium-wrappers-sumo';
 import { ConfigDumpData } from '../../data/configDump/configDump';
 import { HexString } from '../../node/hexStrings';
 import { SignalService } from '../../protobuf';
@@ -171,19 +170,18 @@ const initNewGroupInWrapper = createAsyncThunk(
 
       for (let index = 0; index < uniqMembers.length; index++) {
         const member = uniqMembers[index];
-        const convoMember = ConvoHub.use().get(member);
-        const displayName = convoMember?.getRealSessionUsername() || null;
-        const profileKeyHex = convoMember?.getProfileKey() || null;
-        const avatarUrl = convoMember?.getAvatarPointer() || null;
+        const memberProfileDetails = ConvoHub.use().get(member).getPrivateProfileDetails() || null;
+        const profilePic = memberProfileDetails?.toHexProfilePicture() || null;
 
         // we just create the members in the state. Their invite state defaults to NOT_SENT,
         // which will make our logic kick in to send them an invite in the `GroupInviteJob`
         await LibSessionUtil.createMemberAndSetDetails({
-          avatarUrl,
-          displayName,
           groupPk,
           memberPubkey: member,
-          profileKeyHex,
+          displayName: memberProfileDetails.displayName,
+          avatarUrl: profilePic?.url,
+          profileKeyHex: profilePic.key,
+          profileUpdatedSeconds: memberProfileDetails.getUpdatedAtSeconds(),
         });
 
         if (member === us) {
@@ -251,7 +249,7 @@ const initNewGroupInWrapper = createAsyncThunk(
       getSwarmPollingInstance().addGroupId(new PubKey(groupPk));
 
       await convo.unhideIfNeeded();
-      convo.set({ active_at: Date.now() });
+      convo.setActiveAt(Date.now());
       await convo.commit();
       convo.updateLastMessage();
       dispatch(sectionActions.resetLeftOverlayMode());
@@ -344,14 +342,10 @@ const handleUserGroupUpdate = createAsyncThunk(
     await convo.setPriorityFromWrapper(userGroup.priority, false);
 
     if (!convo.isActive()) {
-      convo.set({
-        active_at: Date.now(),
-      });
+      convo.setActiveAt(Date.now());
     }
 
-    convo.set({
-      displayNameInProfile: userGroup.name || undefined,
-    });
+    convo.setNonPrivateNameNoCommit(userGroup.name || undefined);
 
     await convo.commit();
 
@@ -555,17 +549,16 @@ async function handleWithHistoryMembers({
   for (let index = 0; index < withHistory.length; index++) {
     const member = withHistory[index];
 
-    const convoMember = ConvoHub.use().get(member);
-    const displayName = convoMember?.getRealSessionUsername() || null;
-    const profileKeyHex = convoMember?.getProfileKey() || null;
-    const avatarUrl = convoMember?.getAvatarPointer() || null;
+    const memberProfileDetails = ConvoHub.use().get(member).getPrivateProfileDetails() || null;
+    const profilePic = memberProfileDetails?.toHexProfilePicture() || null;
 
     await LibSessionUtil.createMemberAndSetDetails({
-      avatarUrl,
-      displayName,
       groupPk,
       memberPubkey: member,
-      profileKeyHex,
+      displayName: memberProfileDetails.displayName,
+      profileKeyHex: profilePic.key,
+      avatarUrl: profilePic.url,
+      profileUpdatedSeconds: memberProfileDetails.getUpdatedAtSeconds(),
     });
     // a group invite job will be added to the queue
     await MetaGroupWrapperActions.memberSetInviteNotSent(groupPk, member);
@@ -590,17 +583,17 @@ async function handleWithoutHistoryMembers({
 }: WithGroupPubkey & WithAddWithoutHistoryMembers) {
   for (let index = 0; index < withoutHistory.length; index++) {
     const member = withoutHistory[index];
-    const convoMember = ConvoHub.use().get(member);
-    const displayName = convoMember?.getRealSessionUsername() || null;
-    const profileKeyHex = convoMember?.getProfileKey() || null;
-    const avatarUrl = convoMember?.getAvatarPointer() || null;
+
+    const memberProfileDetails = ConvoHub.use().get(member).getPrivateProfileDetails() || null;
+    const profilePic = memberProfileDetails?.toHexProfilePicture() || null;
 
     await LibSessionUtil.createMemberAndSetDetails({
       groupPk,
       memberPubkey: member,
-      avatarUrl,
-      displayName,
-      profileKeyHex,
+      displayName: memberProfileDetails.displayName,
+      avatarUrl: profilePic.url,
+      profileKeyHex: profilePic.key,
+      profileUpdatedSeconds: memberProfileDetails.getUpdatedAtSeconds(),
     });
     // a group invite job will be added to the queue
     await MetaGroupWrapperActions.memberSetInviteNotSent(groupPk, member);
@@ -762,9 +755,7 @@ async function handleMemberAddedFromUI({
   await scheduleGroupInviteJobs(groupPk, withHistory, withoutHistory, false);
   await LibSessionUtil.saveDumpsToDb(groupPk);
 
-  convo.set({
-    active_at: createAtNetworkTimestamp,
-  });
+  convo.setActiveAt(createAtNetworkTimestamp);
 
   await convo.commit();
   return true;
@@ -882,9 +873,7 @@ async function handleMemberRemovedFromUI({
 
   await LibSessionUtil.saveDumpsToDb(groupPk);
 
-  convo.set({
-    active_at: createAtNetworkTimestamp,
-  });
+  convo.setActiveAt(createAtNetworkTimestamp);
   await convo.commit();
 }
 
@@ -950,6 +939,7 @@ async function handleNameChangeFromUI({
       identifier: msg.id,
       createAtNetworkTimestamp,
       secretKey: group.secretKey,
+      userProfile: null,
       sodium: await getSodiumRenderer(),
       ...DisappearingMessages.getExpireDetailsForOutgoingMessage(convo, createAtNetworkTimestamp),
     });
@@ -980,9 +970,7 @@ async function handleNameChangeFromUI({
     );
   }
 
-  convo.set({
-    active_at: createAtNetworkTimestamp,
-  });
+  convo.setActiveAt(createAtNetworkTimestamp);
   await convo.commit();
 }
 
@@ -1012,7 +1000,7 @@ async function handleAvatarChangeFromUI({
 
   const dataUnencrypted = await blobAvatarAlreadyScaled.arrayBuffer();
 
-  const processed = await processAvatarData(dataUnencrypted);
+  const processed = await processAvatarData(dataUnencrypted, true);
 
   if (!processed) {
     throw new Error('Failed to process avatar');
@@ -1023,8 +1011,13 @@ async function handleAvatarChangeFromUI({
   // encrypt the avatar data with the profile key
   const encryptedData = await encryptProfile(processed.mainAvatarDetails.outputBuffer, profileKey);
 
-  // TODO: we should store the expiries of the attachment somewhere in libsession I assume, and reupload as needed
-  const uploadedFileDetails = await uploadFileToFsWithOnionV4(encryptedData);
+  // Note: currently deterministic encryption is not supported for group's avatars
+  const deterministicEncryption = false;
+
+  const uploadedFileDetails = await uploadFileToFsWithOnionV4(
+    encryptedData,
+    deterministicEncryption
+  );
   if (!uploadedFileDetails || !uploadedFileDetails.fileUrl) {
     window?.log?.warn('File upload for groupv2 to file server failed');
     throw new Error('File upload for groupv2 to file server failed');
@@ -1047,6 +1040,8 @@ async function handleAvatarChangeFromUI({
 
   await convo.setSessionProfile({
     displayName: null, // null so we don't overwrite it
+    type: 'setAvatarDownloadedGroup',
+    profileKey,
     avatarPath: upgradedMainAvatar.path,
     fallbackAvatarPath: upgradedFallbackAvatar?.path || upgradedMainAvatar.path,
     avatarPointer: fileUrl,
@@ -1076,6 +1071,7 @@ async function handleAvatarChangeFromUI({
     identifier: msg.id,
     createAtNetworkTimestamp,
     secretKey: group.secretKey,
+    userProfile: null,
     sodium: await getSodiumRenderer(),
     ...DisappearingMessages.getExpireDetailsForOutgoingMessage(convo, createAtNetworkTimestamp),
   });
@@ -1106,9 +1102,7 @@ async function handleAvatarChangeFromUI({
     );
   }
 
-  convo.set({
-    active_at: createAtNetworkTimestamp,
-  });
+  convo.setActiveAt(createAtNetworkTimestamp);
   await convo.commit();
 }
 
@@ -1123,10 +1117,10 @@ async function handleClearAvatarFromUI({ groupPk }: WithGroupPubkey) {
 
   // return early if no change are needed at all
   if (
-    isNil(convo.get('avatarPointer')) &&
+    isNil(convo.getAvatarPointer()) &&
     isNil(convo.getAvatarInProfilePath()) &&
     isNil(convo.getFallbackAvatarInProfilePath()) &&
-    isNil(convo.get('profileKey'))
+    isNil(convo.getProfileKey())
   ) {
     return;
   }
@@ -1150,11 +1144,8 @@ async function handleClearAvatarFromUI({ groupPk }: WithGroupPubkey) {
   }
 
   await checkWeAreAdminOrThrow(groupPk, 'handleAvatarChangeFromUI');
-  convo.setKey('profileKey', undefined);
   await convo.setSessionProfile({
-    avatarPointer: undefined,
-    avatarPath: undefined,
-    fallbackAvatarPath: undefined,
+    type: 'resetAvatarGroup',
     displayName: null,
   });
 
@@ -1180,6 +1171,7 @@ async function handleClearAvatarFromUI({ groupPk }: WithGroupPubkey) {
     identifier: msg.id,
     createAtNetworkTimestamp,
     secretKey: group.secretKey,
+    userProfile: null,
     sodium: await getSodiumRenderer(),
     ...DisappearingMessages.getExpireDetailsForOutgoingMessage(convo, createAtNetworkTimestamp),
   });
@@ -1210,9 +1202,7 @@ async function handleClearAvatarFromUI({ groupPk }: WithGroupPubkey) {
     );
   }
 
-  convo.set({
-    active_at: createAtNetworkTimestamp,
-  });
+  convo.setActiveAt(createAtNetworkTimestamp);
   await convo.commit();
 }
 
@@ -1292,7 +1282,7 @@ const triggerDeleteMsgBeforeNow = createAsyncThunk(
       );
     }
 
-    const nowSeconds = NetworkTime.getNowWithNetworkOffsetSeconds();
+    const nowSeconds = NetworkTime.nowSeconds();
     const infoGet = await MetaGroupWrapperActions.infoGet(groupPk);
     if (messagesWithAttachmentsOnly) {
       infoGet.deleteAttachBeforeSeconds = nowSeconds;
@@ -1390,18 +1380,15 @@ const inviteResponseReceived = createAsyncThunk(
       try {
         const memberConvo = ConvoHub.use().get(member);
         if (memberConvo) {
-          const memberName = memberConvo.getRealSessionUsername();
-          if (memberName) {
-            await MetaGroupWrapperActions.memberSetNameTruncated(groupPk, member, memberName);
-          }
-          const profilePicUrl = memberConvo.getAvatarPointer();
-          const profilePicKey = memberConvo.getProfileKey();
-          if (profilePicUrl && profilePicKey) {
-            await MetaGroupWrapperActions.memberSetProfilePicture(groupPk, member, {
-              key: from_hex(profilePicKey),
-              url: profilePicUrl,
-            });
-          }
+          const memberProfileDetails =
+            ConvoHub.use().get(member).getPrivateProfileDetails() || null;
+          const profilePic = memberProfileDetails?.toProfilePicture() || null;
+
+          await MetaGroupWrapperActions.memberSetProfileDetails(groupPk, member, {
+            name: memberProfileDetails.displayName ?? '',
+            profilePicture: { url: profilePic.url, key: profilePic.key },
+            profileUpdatedSeconds: memberProfileDetails.getUpdatedAtSeconds(),
+          });
         }
       } catch (eMemberUpdate) {
         window.log.warn(

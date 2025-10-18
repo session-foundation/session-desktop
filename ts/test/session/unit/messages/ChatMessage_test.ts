@@ -1,6 +1,6 @@
 import { expect } from 'chai';
+import Sinon from 'sinon';
 // eslint-disable-next-line import/order
-import { TextEncoder } from 'util';
 
 import { toNumber } from 'lodash';
 import { SignalService } from '../../../../protobuf';
@@ -12,6 +12,7 @@ import {
   VisibleMessage,
 } from '../../../../session/messages/outgoing/visibleMessage/VisibleMessage';
 import { DisappearingMessageMode } from '../../../../session/disappearing_messages/types';
+import { TestUtils } from '../../../test-utils';
 
 const sharedNoExpire = {
   expirationType: DisappearingMessageMode[0],
@@ -19,10 +20,14 @@ const sharedNoExpire = {
 };
 
 describe('VisibleMessage', () => {
+  afterEach(() => {
+    Sinon.restore();
+  });
   it('can create empty message with just a timestamp', () => {
     const message = new VisibleMessage({
       createAtNetworkTimestamp: Date.now(),
       ...sharedNoExpire,
+      userProfile: null,
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -35,6 +40,7 @@ describe('VisibleMessage', () => {
       createAtNetworkTimestamp: Date.now(),
       body: 'body',
       ...sharedNoExpire,
+      userProfile: null,
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -47,6 +53,7 @@ describe('VisibleMessage', () => {
       ...sharedNoExpire,
       expirationType: 'deleteAfterRead',
       expireTimer: 300,
+      userProfile: null,
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -66,6 +73,7 @@ describe('VisibleMessage', () => {
       ...sharedNoExpire,
       expirationType: 'deleteAfterSend',
       expireTimer: 60,
+      userProfile: null,
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -79,45 +87,19 @@ describe('VisibleMessage', () => {
     );
   });
 
-  it('can create message with a full loki profile', () => {
-    const profileKey = new TextEncoder().encode('profileKey');
-
-    const lokiProfile = {
-      displayName: 'displayName',
-      avatarPointer: 'avatarPointer',
-      profileKey,
-    };
-    const message = new VisibleMessage({
-      createAtNetworkTimestamp: Date.now(),
-      lokiProfile,
-      ...sharedNoExpire,
-    });
-    const plainText = message.plainTextBuffer();
-    const decoded = SignalService.Content.decode(plainText);
-    expect(decoded.dataMessage).to.have.deep.property('profile');
-
-    expect(decoded.dataMessage)
-      .to.have.property('profile')
-      .to.have.deep.property('displayName', 'displayName');
-    expect(decoded.dataMessage)
-      .to.have.property('profile')
-      .to.have.deep.property('profilePicture', 'avatarPointer');
-    expect(decoded.dataMessage).to.have.deep.property('profileKey', profileKey);
-  });
-
   it('can create message with a quote without attachments', () => {
-    const quote: Quote = { id: 1234, author: 'author', text: 'text' };
+    const quote: Quote = { id: 1234, author: 'author' };
     const message = new VisibleMessage({
       createAtNetworkTimestamp: Date.now(),
       quote,
       ...sharedNoExpire,
+      userProfile: null,
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
     const decodedID = toNumber(decoded.dataMessage?.quote?.id);
     expect(decodedID).to.be.equal(1234);
     expect(decoded.dataMessage?.quote).to.have.deep.property('author', 'author');
-    expect(decoded.dataMessage?.quote).to.have.deep.property('text', 'text');
   });
 
   it('can create message with a preview', () => {
@@ -128,6 +110,7 @@ describe('VisibleMessage', () => {
     const message = new VisibleMessage({
       createAtNetworkTimestamp: Date.now(),
       preview: previews,
+      userProfile: null,
       ...sharedNoExpire,
     });
     const plainText = message.plainTextBuffer();
@@ -140,6 +123,9 @@ describe('VisibleMessage', () => {
   });
 
   it('can create message with an AttachmentPointer', () => {
+    TestUtils.stubWindowFeatureFlags();
+    TestUtils.stubURLCanParse();
+
     const attachment: AttachmentPointerWithUrl = {
       url: 'http://thisisaareal/url/1234',
       contentType: 'contentType',
@@ -150,6 +136,7 @@ describe('VisibleMessage', () => {
     const message = new VisibleMessage({
       createAtNetworkTimestamp: Date.now(),
       attachments,
+      userProfile: null,
       ...sharedNoExpire,
     });
     const plainText = message.plainTextBuffer();
@@ -166,6 +153,7 @@ describe('VisibleMessage', () => {
     const message = new VisibleMessage({
       createAtNetworkTimestamp: Date.now(),
       ...sharedNoExpire,
+      userProfile: null,
     });
     expect(message.ttl()).to.equal(Constants.TTL_DEFAULT.CONTENT_MESSAGE);
   });
@@ -174,6 +162,7 @@ describe('VisibleMessage', () => {
     const message = new VisibleMessage({
       createAtNetworkTimestamp: Date.now(),
       ...sharedNoExpire,
+      userProfile: null,
     });
     expect(message.identifier).to.not.equal(null, 'identifier cannot be null');
     expect(message.identifier).to.not.equal(undefined, 'identifier cannot be undefined');

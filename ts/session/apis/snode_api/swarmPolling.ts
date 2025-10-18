@@ -12,7 +12,6 @@ import {
   isEmpty,
   last,
   omit,
-  sample,
   sampleSize,
   toNumber,
   uniqBy,
@@ -758,7 +757,7 @@ export class SwarmPolling {
               `no configs before and after fetch of group: ${ed25519Str(pubkey)} from snode ${ed25519Str(snodeEdkey)}, and no other snode have one either. Group is expired.`
             );
             if (!convo.getIsExpired03Group()) {
-              convo.set({ isExpired03Group: true });
+              convo.setIsExpired03Group(true);
               await convo.commit();
             }
           }
@@ -769,7 +768,7 @@ export class SwarmPolling {
 
           // Group was marked as "expired", but apparently it is not (we have hashes saved/just fetched).
           // Maybe an admin came back online?, anyway mark the group as not expired.
-          convo.set({ isExpired03Group: false });
+          convo.setIsExpired03Group(false);
           await convo.commit();
         }
       }
@@ -990,9 +989,8 @@ export class SwarmPolling {
     const pubkey = UserUtils.getOurPubKeyFromCache();
 
     const swarmSnodes = await SnodePool.getSwarmFor(pubkey.key);
-    const toPollFrom = sample(swarmSnodes);
 
-    if (!toPollFrom) {
+    if (!swarmSnodes.length) {
       throw new Error(
         `[pollOnceForOurDisplayName] no snode in swarm for ${ed25519Str(pubkey.key)}`
       );
@@ -1004,23 +1002,35 @@ export class SwarmPolling {
       );
     }
 
-    // Note: always print something so we know if the polling is hanging
-    window.log.info(
-      `[onboarding] about to pollOnceForOurDisplayName of ${ed25519Str(pubkey.key)} from snode: ${ed25519Str(toPollFrom.pubkey_ed25519)} namespaces: ${[SnodeNamespaces.UserProfile]} `
+    const allResultsFromUserProfile = await Promise.allSettled(
+      swarmSnodes.map(async toPollFrom => {
+        // Note: always print something so we know if the polling is hanging
+        window.log.info(
+          `[onboarding] about to pollOnceForOurDisplayName of ${ed25519Str(pubkey.key)} from snode: ${ed25519Str(toPollFrom.pubkey_ed25519)} namespaces: ${[SnodeNamespaces.UserProfile]} `
+        );
+        const retrieved = await SnodeAPIRetrieve.retrieveNextMessagesNoRetries(
+          toPollFrom,
+          pubkey.key,
+          [{ lastHash: '', namespace: SnodeNamespaces.UserProfile }],
+          pubkey.key,
+          null,
+          false
+        );
+
+        // Note: always print something so we know if the polling is hanging
+        window.log.info(
+          `[onboarding] pollOnceForOurDisplayName of ${ed25519Str(pubkey.key)} from snode: ${ed25519Str(toPollFrom.pubkey_ed25519)} namespaces: ${[SnodeNamespaces.UserProfile]} returned: ${retrieved?.length}`
+        );
+        return retrieved;
+      })
     );
 
-    const resultsFromUserProfile = await SnodeAPIRetrieve.retrieveNextMessagesNoRetries(
-      toPollFrom,
-      pubkey.key,
-      [{ lastHash: '', namespace: SnodeNamespaces.UserProfile }],
-      pubkey.key,
-      null,
-      false
-    );
-
-    // Note: always print something so we know if the polling is hanging
-    window.log.info(
-      `[onboarding] pollOnceForOurDisplayName of ${ed25519Str(pubkey.key)} from snode: ${ed25519Str(toPollFrom.pubkey_ed25519)} namespaces: ${[SnodeNamespaces.UserProfile]} returned: ${resultsFromUserProfile?.length}`
+    const resultsFromUserProfile = flatten(
+      compact(
+        allResultsFromUserProfile
+          .filter(promise => promise.status === 'fulfilled')
+          .map(promise => promise.value)
+      )
     );
 
     // check if we just fetched the details from the config namespaces.

@@ -33,7 +33,11 @@ export function fileDetailsToURL({
 }
 
 function imageUrlToImageId(imageFullUrl?: string) {
-  const imageId = imageFullUrl?.split('/').pop();
+  if (!imageFullUrl) {
+    return null;
+  }
+  const parsedUrl = URL.canParse(imageFullUrl) && new URL(imageFullUrl);
+  const imageId = parsedUrl && parsedUrl?.pathname.split('/').pop();
   if (isNil(imageId) || !isNumber(toNumber(imageId)) || !isFinite(toNumber(imageId))) {
     return null;
   }
@@ -155,16 +159,16 @@ export async function sogsV3FetchPreviewAndSaveIt(roomInfos: OpenGroupV2RoomWith
     if (imageFullUrl) {
       await convo.setSessionProfile({
         displayName: null, // null so we don't overwrite it
+        type: 'setAvatarDownloadedCommunity',
         avatarPath: upgradedAttachment.path,
         avatarPointer: imageFullUrl,
         fallbackAvatarPath: upgradedAttachment.path, // no need for a fallback for a community
+        profileKey: new Uint8Array(), // unneeded for a community
       });
     } else {
       await convo.setSessionProfile({
         displayName: null, // null so we don't overwrite it
-        avatarPath: undefined,
-        avatarPointer: undefined,
-        fallbackAvatarPath: undefined,
+        type: 'resetAvatarCommunity',
       });
     }
   }

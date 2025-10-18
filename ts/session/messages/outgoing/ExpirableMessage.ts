@@ -4,10 +4,10 @@ import { DisappearingMessageType } from '../../disappearing_messages/types';
 import { ContentMessage } from './ContentMessage';
 import { MessageParams } from './Message';
 
-export interface ExpirableMessageParams extends MessageParams {
+export type ExpirableMessageParams = MessageParams & {
   expirationType: DisappearingMessageType;
   expireTimer: number;
-}
+};
 
 export class ExpirableMessage extends ContentMessage {
   public readonly expirationType: DisappearingMessageType;

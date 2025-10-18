@@ -1,11 +1,10 @@
 import { isEmpty, isNumber, isString } from 'lodash';
 import { v4 } from 'uuid';
 import { UserUtils } from '../..';
-import { downloadAttachment } from '../../../../receiver/attachments';
 import { processNewAttachment } from '../../../../types/MessageAttachment';
 import { decryptProfile } from '../../../../util/crypto/profileEncrypter';
 import { ConvoHub } from '../../../conversations';
-import { fromHexToArray } from '../../String';
+import { ed25519Str, fromHexToArray } from '../../String';
 import { runners } from '../JobRunner';
 import {
   AddJobCheckReturn,
@@ -14,6 +13,9 @@ import {
   RunJobResult,
 } from '../PersistedJob';
 import { processAvatarData } from '../../../../util/avatar/processAvatarData';
+import { downloadAttachmentFs } from '../../../../receiver/attachments';
+import { extractDetailsFromUrlFragment } from '../../../url';
+import { MultiEncryptWrapperActions } from '../../../../webworker/workers/browser/libsession_worker_interface';
 
 const defaultMsBetweenRetries = 10000;
 const defaultMaxAttempts = 3;
@@ -59,7 +61,7 @@ async function addAvatarDownloadJob({ conversationId }: { conversationId: string
  * This job can be used to add the downloading of the avatar of a conversation to the list of jobs to be run.
  * The conversationId is used as identifier so we can only have a single job per conversation.
  * When the jobRunners starts this job, the job first checks if a download is required or not (avatarPointer changed and wasn't already downloaded).
- * If yes, it downloads the new avatar, decrypt it and store it before updating the conversation with the new url,profilekey and local file storage.
+ * If yes, it downloads the new avatar, decrypt it and store it before updating the conversation with the new url, profile key and local file storage.
  */
 class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
   constructor({
@@ -117,10 +119,13 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
         window.log.debug(`[profileupdate] starting downloading task for  ${conversation.id}`);
         // This is an avatar download, we are free to resize/compress/convert what is downloaded as we wish.
         // Desktop will generate a normal avatar and a forced static one. Both resized and converted if required.
-        const downloaded = await downloadAttachment({
+        const downloaded = await downloadAttachmentFs({
           url: toDownloadPointer,
           isRaw: true,
         });
+        const { deterministicEncryption } = extractDetailsFromUrlFragment(
+          new URL(toDownloadPointer)
+        );
         conversation = ConvoHub.use().getOrThrow(convoId);
 
         if (!downloaded.data.byteLength) {
@@ -136,10 +141,19 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
           const profileKeyArrayBuffer = fromHexToArray(toDownloadProfileKey);
           let decryptedData: ArrayBuffer;
           try {
-            decryptedData = await decryptProfile(downloaded.data, profileKeyArrayBuffer);
+            if (deterministicEncryption) {
+              const { decryptedData: decryptedData2 } =
+                await MultiEncryptWrapperActions.attachmentDecrypt({
+                  encryptedData: new Uint8Array(downloaded.data),
+                  decryptionKey: profileKeyArrayBuffer,
+                });
+              decryptedData = decryptedData2.buffer;
+            } else {
+              decryptedData = await decryptProfile(downloaded.data, profileKeyArrayBuffer);
+            }
           } catch (decryptError) {
             window.log.info(
-              `[profileupdate] failed to decrypt downloaded data ${conversation.id} with provided profileKey`
+              `[profileupdate] failed to decrypt downloaded data for ${ed25519Str(conversation.id)} with provided profileKey`
             );
             // if we got content, but cannot decrypt it with the provided profileKey, there is no need to keep retrying.
             return RunJobResult.PermanentFailure;
@@ -150,7 +164,7 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
           );
 
           // we autoscale incoming avatars because our app keeps decrypted avatars in memory and some platforms allows large avatars to be uploaded.
-          const processed = await processAvatarData(decryptedData);
+          const processed = await processAvatarData(decryptedData, conversation.isMe());
 
           const upgradedMainAvatar = await processNewAttachment({
             data: processed.mainAvatarDetails.outputBuffer,
@@ -171,10 +185,14 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
         }
 
         await conversation.setSessionProfile({
+          type: conversation.isPrivate()
+            ? 'setAvatarDownloadedPrivate'
+            : 'setAvatarDownloadedGroup',
           displayName: null, // null to not update the display name.
           avatarPath: mainAvatarPath,
           fallbackAvatarPath,
           avatarPointer: toDownloadPointer,
+          profileKey: toDownloadProfileKey,
         });
 
         changes = true;
@@ -191,16 +209,6 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
         );
         return RunJobResult.RetryJobIfPossible;
       }
-    } else if (
-      conversation.getAvatarInProfilePath() ||
-      conversation.getFallbackAvatarInProfilePath()
-    ) {
-      // there is no valid avatar to download, make sure the local file of the avatar of that user is removed
-      conversation.set({
-        avatarInProfile: undefined,
-        fallbackAvatarInProfile: undefined,
-      });
-      changes = true;
     }
 
     if (conversation.id === UserUtils.getOurPubKeyStrFromCache()) {
@@ -210,9 +218,7 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
         !conversation.isApproved() ||
         !conversation.didApproveMe()
       ) {
-        conversation.set({
-          isTrustedForAttachmentDownload: true,
-        });
+        conversation.setIsTrustedForAttachmentDownload(true);
         await conversation.setDidApproveMe(true, false);
         await conversation.setIsApproved(true, false);
         changes = true;

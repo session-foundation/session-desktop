@@ -17,7 +17,6 @@ import { Snode } from '../../../data/types';
 import { callUtilsWorker } from '../../../webworker/workers/browser/util_worker_interface';
 import { encodeV4Request } from '../../onions/onionv4';
 import { SnodeResponseError } from '../../utils/errors';
-import { hrefPnServerProd } from '../push_notification_api/PnServer';
 import { ERROR_CODE_NO_CONNECT } from './SNodeAPI';
 import { MergedAbortSignal, WithAbortSignal, WithTimeoutMs } from './requestWith';
 import {
@@ -185,8 +184,7 @@ async function buildOnionCtxs(
     const relayingToFinalDestination = i === firstPos; // if last position
 
     if (relayingToFinalDestination && finalRelayOptions) {
-      const isCallToPn = finalRelayOptions?.host === hrefPnServerProd;
-      const target = !isCallToPn && !useV4 ? '/loki/v3/lsrpc' : '/oxen/v4/lsrpc';
+      const target = useV4 ? '/oxen/v4/lsrpc' : '/loki/v3/lsrpc';
 
       dest = {
         host: finalRelayOptions.host,
@@ -389,7 +387,6 @@ async function processAnyOtherErrorOnPath(
     }
 
     processOxenServerError(status, ciphertext);
-
     throw new Error(`Bad Path handled. Retry this request. Status: ${status}`);
   }
 }
@@ -428,7 +425,6 @@ async function processAnyOtherErrorAtDestination(
       snodeEd25519: destinationEd25519,
       associatedWith,
     });
-
     throw new Error(`Bad Path handled. Retry this request. Status: ${status}`);
   }
 }

@@ -203,16 +203,14 @@ const handleMessageReaction = async ({
     reacts[reaction.emoji].you = details.you;
 
     if (details && details.index === undefined) {
-      reacts[reaction.emoji].index = originalMessage.get('reactsIndex') ?? 0;
-      originalMessage.setKey('reactsIndex', (originalMessage.get('reactsIndex') ?? 0) + 1);
+      reacts[reaction.emoji].index = originalMessage.getReactsIndex() ?? 0;
+      originalMessage.setReactIndex(originalMessage.getReactsIndex() ?? 0 + 1);
     }
   } else {
     delete reacts[reaction.emoji];
   }
 
-  originalMessage.set({
-    reacts: !isEmpty(reacts) ? reacts : undefined,
-  });
+  originalMessage.setReacts(!isEmpty(reacts) ? reacts : undefined);
 
   await originalMessage.commit();
 
@@ -244,9 +242,7 @@ const handleClearReaction = async (conversationId: string, serverId: number, emo
     delete reacts[emoji];
   }
 
-  originalMessage.set({
-    reacts: !isEmpty(reacts) ? reacts : undefined,
-  });
+  originalMessage.setReacts(!isEmpty(reacts) ? reacts : undefined);
 
   await originalMessage.commit();
 
@@ -285,9 +281,7 @@ const handleOpenGroupMessageReactions = async (
 
   if (isEmpty(reactions)) {
     if (originalMessage.get('reacts')) {
-      originalMessage.set({
-        reacts: undefined,
-      });
+      originalMessage.setReacts(undefined);
     }
   } else {
     const reacts: ReactionList = {};
@@ -333,9 +327,7 @@ const handleOpenGroupMessageReactions = async (
       }
     });
 
-    originalMessage.set({
-      reacts,
-    });
+    originalMessage.setReacts(reacts);
   }
 
   await originalMessage.commit();

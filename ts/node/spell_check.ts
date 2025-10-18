@@ -1,6 +1,7 @@
 import { type BrowserWindow, Menu } from 'electron';
 import { sync as osLocaleSync } from 'os-locale';
 import { tr } from '../localization/localeTools';
+import { keepFullLocalePart } from '../util/i18n/shared';
 
 export const setup = (browserWindow: BrowserWindow) => {
   const { session } = browserWindow.webContents;
@@ -8,9 +9,7 @@ export const setup = (browserWindow: BrowserWindow) => {
   // to support a broader list of spell checks than what the app is localised for.
   // For instance: en_AU is not a supported language on crowdin, but we still want the user to
   // - if they have the dictionary installed for it - we should be able to spell check "esky", "arvo" or "bogan"
-  const userLocale = process.env.LANGUAGE
-    ? process.env.LANGUAGE
-    : osLocaleSync().replace(/_/g, '-');
+  const userLocale = keepFullLocalePart(process.env.LANGUAGE || osLocaleSync().replace(/_/g, '-'));
   const userLocales = [userLocale, userLocale.split('-')[0], userLocale.split('_')[0]];
 
   const available = session.availableSpellCheckerLanguages;

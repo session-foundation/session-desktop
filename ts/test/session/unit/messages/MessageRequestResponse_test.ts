@@ -1,15 +1,23 @@
 import { expect } from 'chai';
+import { from_hex } from 'libsodium-wrappers-sumo';
 import { v4 } from 'uuid';
+import Sinon from 'sinon';
 
 import { SignalService } from '../../../../protobuf';
 import { Constants } from '../../../../session';
 import { MessageRequestResponse } from '../../../../session/messages/outgoing/controlMessage/MessageRequestResponse';
+import { OutgoingUserProfile } from '../../../../types/message';
+import { TestUtils } from '../../../test-utils';
 
 describe('MessageRequestResponse', () => {
   let message: MessageRequestResponse | undefined;
+  afterEach(() => {
+    Sinon.restore();
+  });
   it('correct ttl', () => {
     message = new MessageRequestResponse({
       createAtNetworkTimestamp: Date.now(),
+      userProfile: null,
     });
 
     expect(message.ttl()).to.equal(Constants.TTL_DEFAULT.CONTENT_MESSAGE);
@@ -18,6 +26,7 @@ describe('MessageRequestResponse', () => {
   it('has an identifier', () => {
     message = new MessageRequestResponse({
       createAtNetworkTimestamp: Date.now(),
+      userProfile: null,
     });
 
     expect(message.identifier).to.not.equal(null, 'identifier cannot be null');
@@ -29,6 +38,7 @@ describe('MessageRequestResponse', () => {
     message = new MessageRequestResponse({
       createAtNetworkTimestamp: Date.now(),
       identifier,
+      userProfile: null,
     });
 
     expect(message.identifier).to.not.equal(identifier, 'identifier should match');
@@ -37,6 +47,7 @@ describe('MessageRequestResponse', () => {
   it('isApproved is always true', () => {
     message = new MessageRequestResponse({
       createAtNetworkTimestamp: Date.now(),
+      userProfile: null,
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -48,6 +59,7 @@ describe('MessageRequestResponse', () => {
   it('can create response without lokiProfile', () => {
     message = new MessageRequestResponse({
       createAtNetworkTimestamp: Date.now(),
+      userProfile: null,
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -59,7 +71,11 @@ describe('MessageRequestResponse', () => {
   it('can create response with display name only', () => {
     message = new MessageRequestResponse({
       createAtNetworkTimestamp: Date.now(),
-      lokiProfile: { displayName: 'Jane', profileKey: null },
+      userProfile: new OutgoingUserProfile({
+        displayName: 'Jane',
+        profilePic: { url: null, key: null },
+        updatedAtSeconds: 1,
+      }),
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -72,7 +88,11 @@ describe('MessageRequestResponse', () => {
   it('empty profileKey does not get included', () => {
     message = new MessageRequestResponse({
       createAtNetworkTimestamp: Date.now(),
-      lokiProfile: { displayName: 'Jane', profileKey: new Uint8Array(0) },
+      userProfile: new OutgoingUserProfile({
+        displayName: 'Jane',
+        profilePic: null,
+        updatedAtSeconds: 1,
+      }),
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -84,41 +104,42 @@ describe('MessageRequestResponse', () => {
   });
 
   it('can create response with display name and profileKey and profileImage', () => {
+    TestUtils.stubURLCanParse();
+
+    const userProfile = new OutgoingUserProfile({
+      displayName: 'Jane',
+      profilePic: {
+        url: 'http://filev2.getsession.org/file/abcdefghijklmnop',
+        key: from_hex('0102030405060102030405060102030401020304050601020304050601020304'),
+      },
+      updatedAtSeconds: 1,
+    });
     message = new MessageRequestResponse({
       createAtNetworkTimestamp: Date.now(),
-      lokiProfile: {
-        displayName: 'Jane',
-        profileKey: new Uint8Array([1, 2, 3, 4, 5, 6]),
-        avatarPointer: 'https://somevalidurl.com',
-      },
+      userProfile,
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
 
     expect(decoded.messageRequestResponse?.profile?.displayName).to.be.deep.eq('Jane');
 
-    expect(decoded.messageRequestResponse?.profileKey).to.be.not.empty;
-
-    if (!decoded.messageRequestResponse?.profileKey?.buffer) {
-      throw new Error('decoded.messageRequestResponse?.profileKey?.buffer should be set');
-    }
     expect(decoded.messageRequestResponse?.profile?.profilePicture).to.be.eq(
-      'https://somevalidurl.com'
+      'http://filev2.getsession.org/file/abcdefghijklmnop'
     );
     // don't ask me why deep.eq ([1,2,3, ...]) gives nothing interesting but a 8192 buffer not matching
-    expect(decoded.messageRequestResponse?.profileKey.length).to.be.eq(6);
-    expect(decoded.messageRequestResponse?.profileKey[0]).to.be.eq(1);
-    expect(decoded.messageRequestResponse?.profileKey[1]).to.be.eq(2);
-    expect(decoded.messageRequestResponse?.profileKey[2]).to.be.eq(3);
-    expect(decoded.messageRequestResponse?.profileKey[3]).to.be.eq(4);
-    expect(decoded.messageRequestResponse?.profileKey[4]).to.be.eq(5);
-    expect(decoded.messageRequestResponse?.profileKey[5]).to.be.eq(6);
+    expect(decoded.messageRequestResponse?.profileKey).to.be.deep.eq(
+      from_hex('0102030405060102030405060102030401020304050601020304050601020304')
+    );
   });
 
   it('profileKey not included if profileUrl not set', () => {
     message = new MessageRequestResponse({
       createAtNetworkTimestamp: Date.now(),
-      lokiProfile: { displayName: 'Jane', profileKey: new Uint8Array([1, 2, 3, 4, 5, 6]) },
+      userProfile: new OutgoingUserProfile({
+        displayName: 'Jane',
+        profilePic: { url: null, key: new Uint8Array([1, 2, 3, 4, 5, 6]) },
+        updatedAtSeconds: 1,
+      }),
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -136,11 +157,11 @@ describe('MessageRequestResponse', () => {
   it('url not included if profileKey not set', () => {
     message = new MessageRequestResponse({
       createAtNetworkTimestamp: Date.now(),
-      lokiProfile: {
+      userProfile: new OutgoingUserProfile({
         displayName: 'Jane',
-        profileKey: null,
-        avatarPointer: 'https://somevalidurl.com',
-      },
+        profilePic: { url: 'https://somevalidurl.com', key: null },
+        updatedAtSeconds: 1,
+      }),
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);

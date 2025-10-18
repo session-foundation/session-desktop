@@ -83,6 +83,7 @@ export const EmptyMessageView = () => {
       $flexDirection="column"
       $justifyContent="center"
       $alignItems="center"
+      data-testid={newAccountCreated ? 'empty-msg-view-account-created' : 'empty-msg-view-welcome'}
     >
       {newAccountCreated ? (
         <>

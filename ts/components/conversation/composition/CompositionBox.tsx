@@ -83,10 +83,10 @@ export interface StagedLinkPreviewData {
   scaledDown: ProcessedLinkPreviewThumbnailType | null;
 }
 
-export interface StagedAttachmentType extends AttachmentType {
+export type StagedAttachmentType = AttachmentType & {
   file: File;
   path?: string; // a bit hacky, but this is the only way to make our sending audio message be playable, this must be used only for those message
-}
+};
 
 export type SendMessageType = {
   conversationId: string;

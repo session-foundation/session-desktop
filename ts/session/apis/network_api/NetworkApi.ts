@@ -41,7 +41,7 @@ export default class NetworkApi {
       return {};
     }
 
-    const timestamp = NetworkTime.getNowWithNetworkOffsetSeconds();
+    const timestamp = NetworkTime.nowSeconds();
     const blindedPkHex = await BlindingActions.blindVersionPubkey({
       ed25519SecretKey: userEd25519SecretKey,
     });

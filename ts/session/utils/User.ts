@@ -3,11 +3,11 @@ import _ from 'lodash';
 import { UserUtils } from '.';
 import { Data } from '../../data/data';
 import { SessionKeyPair } from '../../receiver/keypairs';
-import { ConvoHub } from '../conversations';
 import { getOurPubKeyStrFromStorage } from '../../util/storage';
 import { PubKey } from '../types';
-import { fromHexToArray, toHex } from './String';
-import { LokiProfile } from '../../types/message';
+import { toHex } from './String';
+import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
+import { OutgoingUserProfile } from '../../types/message';
 
 export type HexKeyPair = {
   pubKey: string;
@@ -99,22 +99,25 @@ export const getUserED25519KeyPairBytes = async (): Promise<ByteKeyPair> => {
   throw new Error('getUserED25519KeyPairBytes: user has no keypair');
 };
 
-export function getOurProfile(): LokiProfile | undefined {
-  try {
-    const ourNumber = UserUtils.getOurPubKeyStrFromCache();
-    const ourConversation = ConvoHub.use().get(ourNumber);
-    const ourProfileKeyHex = ourConversation.getProfileKey();
-    const profileKeyAsBytes = ourProfileKeyHex ? fromHexToArray(ourProfileKeyHex) : null;
+/**
+ * Return the ed25519 seed of the current user.
+ * This is used to generate deterministic encryption keys for attachments/profile pictures.
+ *
+ * This is cached so will only be slow on the first fetch.
+ */
+export async function getUserEd25519Seed() {
+  const ed25519KeyPairBytes = await getUserED25519KeyPairBytes();
+  return ed25519KeyPairBytes.privKeyBytes.slice(0, 32);
+}
 
-    const avatarPointer = ourConversation.getAvatarPointer();
-    const displayName = ourConversation.getRealSessionUsername() || 'Anonymous';
-    return {
-      displayName,
-      avatarPointer,
-      profileKey: profileKeyAsBytes?.length ? profileKeyAsBytes : null,
-    };
-  } catch (e) {
-    window?.log?.error(`Failed to get our profile: ${e}`);
-    return undefined;
-  }
+export async function getOurProfile() {
+  const displayName = (await UserConfigWrapperActions.getName()) || 'Anonymous';
+  const updatedAtSeconds = await UserConfigWrapperActions.getProfileUpdatedSeconds();
+  const profilePic = await UserConfigWrapperActions.getProfilePic();
+
+  return new OutgoingUserProfile({
+    displayName,
+    updatedAtSeconds,
+    profilePic: profilePic ?? null,
+  });
 }

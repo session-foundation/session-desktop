@@ -41,7 +41,7 @@ import { SessionUtilConvoInfoVolatile } from '../utils/libsession/libsession_uti
 import { SessionUtilUserGroups } from '../utils/libsession/libsession_utils_user_groups';
 import { DisappearingMessages } from '../disappearing_messages';
 import { StoreGroupRequestFactory } from '../apis/snode_api/factories/StoreGroupRequestFactory';
-import { CONVERSATION_PRIORITIES, ConversationTypeEnum } from '../../models/types';
+import { ConversationTypeEnum } from '../../models/types';
 import { NetworkTime } from '../../util/NetworkTime';
 import { timeoutWithAbort } from '../utils/Promise';
 import { DURATION } from '../constants';
@@ -458,9 +458,8 @@ class ConvoController {
       // so the conversation still exists (needed for that user's profile in groups) but is not shown on the list of conversation.
       // We also keep the messages for now, as turning a contact as hidden might just be a temporary thing
       window.log.info(`deleteContact isPrivate, marking as hidden: ${id}`);
-      conversation.set({
-        priority: CONVERSATION_PRIORITIES.hidden,
-      });
+
+      await conversation.setHidden(false);
       // We don't remove entries from the contacts wrapper, so better keep corresponding convo volatile info for now (it will be pruned if needed)
       await conversation.commit(); // this updates the wrappers content to reflect the hidden state
     } else {
@@ -471,7 +470,7 @@ class ConvoController {
       await conversation.setDidApproveMe(false, false);
       await conversation.setNickname(null, false);
 
-      conversation.setKey('active_at', 0);
+      conversation.setActiveAt(0);
       await BlockedNumberController.unblockAll([conversation.id]);
       await conversation.commit(); // first commit to DB so the DB knows about the changes
       if (SessionUtilContact.isContactToStoreInWrapper(conversation)) {
@@ -668,16 +667,17 @@ async function leaveClosedGroup(groupPk: GroupPubkeyType, fromSyncMessage: boole
   // if we are the admin, the group must be destroyed for every members
   if (isCurrentUserAdmin) {
     window?.log?.info('Admin left a closed group. We need to destroy it');
-    convo.set({ left: true });
+    convo.setLeft(true);
     members = [];
     admins = [];
   } else {
     // otherwise, just the exclude ourself from the members and trigger an update with this
-    convo.set({ left: true });
+    convo.setLeft(true);
+
     members = (convo.getGroupMembers() || []).filter((m: string) => m !== ourNumber);
     admins = convo.getGroupAdmins();
   }
-  convo.set({ members });
+  convo.setMembers(members);
   await convo.updateGroupAdmins(admins, false);
   await convo.commit();
 
@@ -704,11 +704,13 @@ async function leaveClosedGroup(groupPk: GroupPubkeyType, fromSyncMessage: boole
     groupPk,
     expirationType: 'unknown', // we keep that one **not** expiring
     expireTimer: 0,
+    userProfile: null,
   });
 
   const ourLeavingNotificationMessage = new GroupUpdateMemberLeftNotificationMessage({
     createAtNetworkTimestamp,
     groupPk,
+    userProfile: null,
     ...DisappearingMessages.getExpireDetailsForOutgoingMessage(convo, createAtNetworkTimestamp), // this one should be expiring with the convo expiring details
   });
 

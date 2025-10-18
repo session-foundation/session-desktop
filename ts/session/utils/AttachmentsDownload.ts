@@ -4,7 +4,7 @@ import { v4 as uuidV4 } from 'uuid';
 
 import { Data } from '../../data/data';
 import { MessageModel } from '../../models/message';
-import { downloadAttachment, downloadAttachmentSogsV3 } from '../../receiver/attachments';
+import { downloadAttachmentFs, downloadAttachmentSogsV3 } from '../../receiver/attachments';
 import { initializeAttachmentLogic, processNewAttachment } from '../../types/MessageAttachment';
 import { getAttachmentMetadata } from '../../types/message/initializeAttachmentMetadata';
 import { AttachmentDownloadMessageDetails } from '../../types/sqlSharedTypes';
@@ -179,7 +179,7 @@ async function _runJob(job: any) {
       // those two functions throw if they get a 404
       downloaded = isOpenGroupV2
         ? await downloadAttachmentSogsV3(attachment, openGroupV2Details)
-        : await downloadAttachment(attachment);
+        : await downloadAttachmentFs(attachment);
     } catch (error) {
       // Attachments on the server expire after 60 days, then start returning 404
       if (error && error.code === 404) {
@@ -222,7 +222,7 @@ async function _runJob(job: any) {
       found.set({ hasAttachments, hasVisualMediaAttachments, hasFileAttachments });
     }
 
-    _addAttachmentToMessage(found, upgradedAttachment, { type, index });
+    _addAttachmentToMessage(found, { ...upgradedAttachment, pending: false }, { type, index });
 
     await _finishJob(found, id);
   } catch (error) {

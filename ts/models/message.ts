@@ -1,18 +1,18 @@
 import autoBind from 'auto-bind';
 import { filesize } from 'filesize';
 import { GroupPubkeyType, PubkeyType } from 'libsession_util_nodejs';
-import { debounce, isEmpty, size as lodashSize, uniq } from 'lodash';
+import { debounce, isEmpty, isEqual, size as lodashSize, uniq } from 'lodash';
 import { SignalService } from '../protobuf';
 import { ConvoHub } from '../session/conversations';
 import { ContentMessage } from '../session/messages/outgoing';
 import { ClosedGroupV2VisibleMessage } from '../session/messages/outgoing/visibleMessage/ClosedGroupVisibleMessage';
 import { PubKey } from '../session/types';
 import {
+  MessageUtils,
   UserUtils,
   attachmentIdAsStrFromUrl,
   uploadAttachmentsToFileServer,
   uploadLinkPreviewToFileServer,
-  uploadQuoteThumbnailsToFileServer,
 } from '../session/utils';
 import {
   MessageAttributes,
@@ -38,11 +38,7 @@ import {
   VisibleMessage,
   VisibleMessageParams,
 } from '../session/messages/outgoing/visibleMessage/VisibleMessage';
-import {
-  uploadAttachmentsV3,
-  uploadLinkPreviewsV3,
-  uploadQuoteThumbnailsV3,
-} from '../session/utils/AttachmentsV2';
+import { uploadAttachmentsV3, uploadLinkPreviewsV3 } from '../session/utils/AttachmentsV2';
 import { isUsFromCache } from '../session/utils/User';
 import { buildSyncMessage } from '../session/utils/sync/syncUtils';
 import {
@@ -68,7 +64,6 @@ import {
   getAbsoluteAttachmentPath,
   loadAttachmentData,
   loadPreviewData,
-  loadQuoteData,
 } from '../types/MessageAttachment';
 import { ReactionList } from '../types/Reaction';
 import { getAttachmentMetadata } from '../types/message/initializeAttachmentMetadata';
@@ -89,9 +84,12 @@ import {
   getPromotedGroupUpdateChangeStr,
 } from './groupUpdate';
 import { NetworkTime } from '../util/NetworkTime';
-import { MessageQueue } from '../session/sending';
+import { MessageQueue, MessageSender } from '../session/sending';
 import { getTimerNotificationStr } from './timerNotifications';
-import { ExpirationTimerUpdate } from '../session/disappearing_messages/types';
+import {
+  ExpirationTimerUpdate,
+  type DisappearingMessageType,
+} from '../session/disappearing_messages/types';
 import { Model } from './models';
 import { ReduxOnionSelectors } from '../state/selectors/onions';
 import { tStrippedWithObj, tr, tStripped } from '../localization/localeTools';
@@ -170,7 +168,7 @@ export class MessageModel extends Model<MessageAttributes> {
   }
 
   public idForLogging() {
-    return `${this.get('source')} ${this.get('sent_at')}`;
+    return `msg(${this.id}, ${this.getConversation()?.idForLogging()}, ${this.get('sent_at')})`;
   }
 
   public isExpirationTimerUpdate() {
@@ -404,6 +402,14 @@ export class MessageModel extends Model<MessageAttributes> {
           );
         }
       });
+      if (this.getConversation()?.isOpenGroupV2() || this.getConversation()?.isClosedGroupV2()) {
+        const source = this.get('source');
+
+        const author = isUsAnySogsFromCache(source)
+          ? tr('you')
+          : ConvoHub.use().getNicknameOrRealUsernameOrPlaceholder(source);
+        return tr('messageSnippetGroup', { author, message_snippet: bodyMentionsMappedToNames });
+      }
       return bodyMentionsMappedToNames;
     }
 
@@ -775,7 +781,7 @@ export class MessageModel extends Model<MessageAttributes> {
       (this.get('attachments') || []).map(loadAttachmentData)
     );
     const body = this.get('body');
-    const quoteWithData = await loadQuoteData(this.get('quote'));
+
     const previewWithData = await loadPreviewData(this.get('preview'));
 
     const { hasAttachments, hasVisualMediaAttachments, hasFileAttachments } =
@@ -787,7 +793,6 @@ export class MessageModel extends Model<MessageAttributes> {
 
     let attachmentPromise;
     let linkPreviewPromise;
-    let quotePromise;
     const fileIdsToLink: Array<string> = [];
 
     // we can only send a single preview
@@ -798,31 +803,16 @@ export class MessageModel extends Model<MessageAttributes> {
       const openGroupV2 = conversation.toOpenGroupV2();
       attachmentPromise = uploadAttachmentsV3(finalAttachments, openGroupV2);
       linkPreviewPromise = uploadLinkPreviewsV3(firstPreviewWithData, openGroupV2);
-      quotePromise = uploadQuoteThumbnailsV3(openGroupV2, quoteWithData);
     } else {
       // if that's not an sogs, the file is uploaded to the file server instead
       attachmentPromise = uploadAttachmentsToFileServer(finalAttachments);
       linkPreviewPromise = uploadLinkPreviewToFileServer(firstPreviewWithData);
-      quotePromise = uploadQuoteThumbnailsToFileServer(quoteWithData);
     }
 
-    const [attachments, preview, quote] = await Promise.all([
-      attachmentPromise,
-      linkPreviewPromise,
-      quotePromise,
-    ]);
+    const [attachments, preview] = await Promise.all([attachmentPromise, linkPreviewPromise]);
     fileIdsToLink.push(...attachments.map(m => attachmentIdAsStrFromUrl(m.url)));
     if (preview && preview.image?.url) {
       fileIdsToLink.push(attachmentIdAsStrFromUrl(preview.image.url));
-    }
-
-    if (quote && quote.attachments?.length && quote.attachments[0].thumbnail) {
-      // typing for all of this Attachment + quote + preview + send or unsend is pretty bad
-      const firstQuoteAttachmentUrl =
-        'url' in quote.attachments[0].thumbnail ? quote.attachments[0].thumbnail.url : undefined;
-      if (firstQuoteAttachmentUrl && attachmentIdAsStrFromUrl(firstQuoteAttachmentUrl)) {
-        fileIdsToLink.push(attachmentIdAsStrFromUrl(firstQuoteAttachmentUrl));
-      }
     }
 
     const isFirstAttachmentVoiceMessage = finalAttachments?.[0]?.isVoiceMessage;
@@ -833,13 +823,14 @@ export class MessageModel extends Model<MessageAttributes> {
     window.log.info(
       `Upload of message data for message ${this.idForLogging()} is finished in ${
         Date.now() - start
-      }ms.`
+      }ms. Attachments: ${attachments.map(m => m.url)}`
     );
+
     return {
       body,
       attachments,
       preview,
-      quote,
+      quote: this.get('quote'),
       fileIdsToLink: uniq(fileIdsToLink),
     };
   }
@@ -900,7 +891,7 @@ export class MessageModel extends Model<MessageAttributes> {
         const openGroupParams: OpenGroupVisibleMessageParams = {
           identifier: this.id,
           createAtNetworkTimestamp: NetworkTime.now(),
-          lokiProfile: UserUtils.getOurProfile(),
+          userProfile: await UserUtils.getOurProfile(),
           body,
           attachments,
           preview: preview ? [preview] : [],
@@ -931,15 +922,12 @@ export class MessageModel extends Model<MessageAttributes> {
         attachments,
         preview: preview ? [preview] : [],
         quote,
-        lokiProfile: UserUtils.getOurProfile(),
+        userProfile: await UserUtils.getOurProfile(),
         // Note: we should have the fields set on that object when we've added it to the DB.
         // We don't want to reuse the conversation setting, as it might change since this message was sent.
         expirationType: this.getExpirationType() || 'unknown',
         expireTimer: this.getExpireTimerSeconds(),
       };
-      if (!chatParams.lokiProfile) {
-        delete chatParams.lokiProfile;
-      }
 
       const chatMessage = new VisibleMessage(chatParams);
 
@@ -990,7 +978,11 @@ export class MessageModel extends Model<MessageAttributes> {
     // This needs to be an unsafe call, because this method is called during
     //   initial module setup. We may be in the middle of the initial fetch to
     //   the database.
-    return ConvoHub.use().getUnsafe(this.get('conversationId'));
+    return ConvoHub.use().getUnsafe(this.getConversationId() as string);
+  }
+
+  public getConversationId(): string | undefined {
+    return this.get('conversationId');
   }
 
   public getQuoteContact() {
@@ -1012,6 +1004,20 @@ export class MessageModel extends Model<MessageAttributes> {
     }
 
     return UserUtils.getOurPubKeyStrFromCache();
+  }
+
+  public setSource(source: string) {
+    if (source === this.getSource()) {
+      return;
+    }
+    this.setKey('source', source);
+  }
+
+  public setConversationId(convoId: string) {
+    if (convoId === this.getConversationId()) {
+      return;
+    }
+    this.setKey('conversationId', convoId);
   }
 
   public isOutgoing() {
@@ -1087,9 +1093,14 @@ export class MessageModel extends Model<MessageAttributes> {
       );
 
       if (syncMessage) {
-        await MessageQueue.use().sendSyncMessage({
-          namespace: SnodeNamespaces.Default,
-          message: syncMessage,
+        await MessageSender.sendSingleMessage({
+          isSyncMessage: true,
+          message: await MessageUtils.toRawMessage(
+            PubKey.cast(UserUtils.getOurPubKeyStrFromCache()),
+            syncMessage,
+            SnodeNamespaces.Default
+          ),
+          abortSignal: null,
         });
       }
     }
@@ -1231,6 +1242,117 @@ export class MessageModel extends Model<MessageAttributes> {
       default:
         break;
     }
+  }
+
+  public setAttachments(attachments: Array<AttachmentTypeWithPath>) {
+    if (isEqual(attachments, this.getAttachments())) {
+      return;
+    }
+    this.set({ attachments });
+  }
+
+  public getAttachments() {
+    return this.get('attachments');
+  }
+
+  public setPreview(preview: any) {
+    if (isEqual(preview, this.getPreview())) {
+      return;
+    }
+    this.set({ preview });
+  }
+
+  public getReacts() {
+    return this.get('reacts');
+  }
+
+  public setReacts(reacts: ReactionList | undefined) {
+    if (isEqual(reacts, this.getReacts())) {
+      return;
+    }
+    this.set({ reacts });
+  }
+
+  public getReactsIndex() {
+    return this.get('reactsIndex');
+  }
+
+  public setReactIndex(index: number) {
+    if (this.getReactsIndex() === index) {
+      return;
+    }
+    this.set({ reactsIndex: index });
+  }
+
+  public getQuote() {
+    return this.get('quote');
+  }
+
+  public setQuote(quote: any) {
+    if (isEqual(quote, this.getQuote())) {
+      return;
+    }
+    this.set({ quote });
+  }
+
+  public getSentAt() {
+    return this.get('sent_at');
+  }
+
+  public setSentAt(sentAt: number) {
+    if (sentAt === this.getSentAt()) {
+      return;
+    }
+    this.set({ sent_at: sentAt });
+  }
+
+  public setExpireTimer(expireTimerSeconds: number | undefined) {
+    if (expireTimerSeconds === this.getExpireTimerSeconds()) {
+      return;
+    }
+    this.set({ expireTimer: expireTimerSeconds });
+  }
+
+  public set(attrs: Partial<MessageAttributes>) {
+    super.set(attrs);
+    return this;
+  }
+
+  public setKey<K extends keyof MessageAttributes>(
+    key: K,
+    value: MessageAttributes[K] | undefined
+  ) {
+    super.setKey(key, value);
+    return this;
+  }
+
+  public setExpirationType(expirationType: DisappearingMessageType | undefined) {
+    if (expirationType === this.getExpirationType()) {
+      return;
+    }
+    this.set({ expirationType });
+  }
+
+  public getMessageExpirationStartTimestamp() {
+    return this.get('expirationStartTimestamp');
+  }
+
+  public setMessageExpirationStartTimestamp(expirationStartTimestamp: number | undefined) {
+    if (expirationStartTimestamp === this.getMessageExpirationStartTimestamp()) {
+      return;
+    }
+    this.set({ expirationStartTimestamp });
+  }
+
+  public setExpiresAt(expiresAt: number | undefined) {
+    if (expiresAt === this.getExpiresAt()) {
+      return;
+    }
+    this.set({ expires_at: expiresAt });
+  }
+
+  public getPreview() {
+    return this.get('preview');
   }
 
   public isTrustedForAttachmentDownload() {

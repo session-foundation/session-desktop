@@ -6,6 +6,7 @@ export type JobRunnerType =
   | 'FakeSleepForJob'
   | 'FakeSleepForMultiJob'
   | 'AvatarDownloadJob'
+  | 'AvatarReuploadJob'
   | 'AvatarMigrateJob'
   | 'GroupInviteJob'
   | 'GroupPromoteJob'
