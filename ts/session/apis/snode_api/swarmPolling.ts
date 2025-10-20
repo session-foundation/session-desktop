@@ -566,6 +566,9 @@ export class SwarmPolling {
 
       return;
     }
+    if (type !== ConversationTypeEnum.PRIVATE) {
+      throw new Error('handleSeenMessages: only private convos are supported here');
+    }
 
     // private and legacy groups are cached, so we can mark them as seen right away, they are still in the cache until processed correctly.
     // at some point we should get rid of the cache completely, and do the same logic as for groupv2 above
@@ -578,12 +581,7 @@ export class SwarmPolling {
         return;
       }
 
-      Receiver.handleRequest(
-        extracted.body,
-        type === ConversationTypeEnum.GROUP ? pubkey : null,
-        extracted.messageHash,
-        m.expiration
-      );
+      Receiver.handleRequest(extracted.body, null, extracted.messageHash, m.expiration);
     });
   }
 
