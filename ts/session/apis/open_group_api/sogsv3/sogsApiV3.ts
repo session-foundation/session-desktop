@@ -6,7 +6,6 @@ import { v4 } from 'uuid';
 
 import { OpenGroupData } from '../../../../data/opengroups';
 import { ConversationModel } from '../../../../models/conversation';
-import { handleOpenGroupV4Message } from '../../../../receiver/opengroup';
 import { callUtilsWorker } from '../../../../webworker/workers/browser/util_worker_interface';
 import { ConvoHub } from '../../../conversations';
 import { PubKey } from '../../../types';
@@ -33,7 +32,7 @@ import { SignalService } from '../../../../protobuf';
 import { innerHandleSwarmContentMessage } from '../../../../receiver/contentMessage';
 import { handleOutboxMessageModel } from '../../../../receiver/dataMessage';
 import { EnvelopePlus } from '../../../../receiver/types';
-import { assertUnreachable } from '../../../../types/sqlSharedTypes';
+import { assertUnreachable, type AwaitedReturn } from '../../../../types/sqlSharedTypes';
 import { getSodiumRenderer } from '../../../crypto';
 import { removeMessagePadding } from '../../../crypto/BufferPadding';
 import { DisappearingMessages } from '../../../disappearing_messages';
@@ -43,6 +42,11 @@ import { processMessagesUsingCache } from './sogsV3MutationCache';
 import { OpenGroupRequestCommonType } from '../../../../data/types';
 import { ConversationTypeEnum } from '../../../../models/types';
 import { shouldProcessContentMessage } from '../../../../receiver/common';
+import { fromBase64ToArray } from '../../../utils/String';
+import { NetworkTime } from '../../../../util/NetworkTime';
+import { MultiEncryptWrapperActions } from '../../../../webworker/workers/browser/libsession_worker_interface';
+import ProBackendAPI from '../../pro_backend_api/ProBackendAPI';
+import { handleOpenGroupMessage } from '../../../../receiver/opengroup';
 
 /**
  * Get the convo matching those criteria and make sure it is an opengroup convo, or return null.
@@ -294,12 +298,51 @@ const handleMessagesResponseV4 = async (
     const incomingMessageSeqNo = compact(messages.map(n => n.seqno));
     const maxNewMessageSeqNo = Math.max(...incomingMessageSeqNo);
 
+    let decryptedItems: AwaitedReturn<(typeof MultiEncryptWrapperActions)['decryptForCommunity']>;
+    try {
+      const toProcess = messagesWithResolvedBlindedIdsIfFound
+        .filter(m => m.data)
+        .map(m => ({
+          contentOrEnvelope: fromBase64ToArray(m.data!),
+          // we need to forward the id so we can map what was succesffuly decrypted
+          // with the fields we have on the request itself.
+          serverId: m.id,
+        }));
+
+      decryptedItems = await MultiEncryptWrapperActions.decryptForCommunity(toProcess, {
+        nowMs: NetworkTime.now(),
+        proBackendPubkeyHex: ProBackendAPI.getEd25519Pubkey(),
+      });
+    } catch (e) {
+      window.log.warn('skipping handling community as it failed to decrypt with:', e.message);
+      return;
+    }
+
     for (let index = 0; index < messagesWithResolvedBlindedIdsIfFound.length; index++) {
       const msgToHandle = messagesWithResolvedBlindedIdsIfFound[index];
+      const decrypted = decryptedItems.find(m => m.serverId === msgToHandle.id);
+      if (!decrypted) {
+        // it seems that we failed to decrypt that message
+        continue;
+      }
+
       try {
-        await handleOpenGroupV4Message(msgToHandle, roomDetails);
+        if (!msgToHandle.posted || !msgToHandle.session_id || !decrypted.serverId) {
+          continue;
+        }
+
+        const decodedContent = SignalService.Content.decode(decrypted.contentPlaintextUnpadded);
+
+        await handleOpenGroupMessage({
+          roomInfos: roomDetails,
+          decodedContent,
+          sentTimestamp: msgToHandle.posted,
+          // important to keep the msgToHandle here as it has blindedIds replaced for us and people we know
+          sender: msgToHandle.session_id,
+          serverId: decrypted.serverId,
+        });
       } catch (e) {
-        window?.log?.warn('handleOpenGroupV4Message', e);
+        window?.log?.warn('handleOpenGroupMessage failed with', e.message);
       }
     }
 
