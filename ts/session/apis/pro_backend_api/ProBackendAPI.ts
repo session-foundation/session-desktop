@@ -7,8 +7,8 @@ export default class ProBackendAPI {
     return PRO_API.PRO_BACKENDS[ProBackendAPI.target].url;
   }
 
-  static getEd25519Pubkey() {
-    return PRO_API.PRO_BACKENDS[ProBackendAPI.target].edPk;
+  static getEd25519PubkeyHex() {
+    return PRO_API.PRO_BACKENDS[ProBackendAPI.target].edPkHex;
   }
 
   // private async getHeaders(request: { method: string; path: string; body?: string }): Promise<

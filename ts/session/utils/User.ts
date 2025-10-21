@@ -71,16 +71,16 @@ export async function getIdentityKeyPair(): Promise<SessionKeyPair | undefined> 
   return cachedIdentityKeyPair;
 }
 
-export async function getUserED25519KeyPair(): Promise<HexKeyPair | undefined> {
+export async function getUserED25519KeyPair(): Promise<HexKeyPair> {
   const ed25519KeyPairBytes = await getUserED25519KeyPairBytes();
-  if (ed25519KeyPairBytes) {
-    const { pubKeyBytes, privKeyBytes } = ed25519KeyPairBytes;
-    return {
-      pubKey: toHex(pubKeyBytes),
-      privKey: toHex(privKeyBytes),
-    };
+  if (!ed25519KeyPairBytes) {
+    throw new Error('getUserED25519KeyPair: user has no keypair');
   }
-  return undefined;
+  const { pubKeyBytes, privKeyBytes } = ed25519KeyPairBytes;
+  return {
+    pubKey: toHex(pubKeyBytes),
+    privKey: toHex(privKeyBytes),
+  };
 }
 
 export const getUserED25519KeyPairBytes = async (): Promise<ByteKeyPair> => {

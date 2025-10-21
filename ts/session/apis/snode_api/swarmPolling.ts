@@ -1,7 +1,11 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable more/no-then */
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { GroupPubkeyType } from 'libsession_util_nodejs';
+import {
+  GroupPubkeyType,
+  type WithDecodedEnvelope,
+  type WithMessageHash,
+} from 'libsession_util_nodejs';
 import { z } from 'zod';
 
 import {
@@ -33,6 +37,7 @@ import {
   MetaGroupWrapperActions,
   UserConfigWrapperActions,
   UserGroupsWrapperActions,
+  MultiEncryptWrapperActions,
 } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { DURATION, SWARM_POLLING_TIMEOUT } from '../../constants';
 import { ConvoHub } from '../../conversations';
@@ -58,6 +63,8 @@ import {
 import { ConversationTypeEnum } from '../../../models/types';
 import { Snode } from '../../../data/types';
 import { ReduxOnionSelectors } from '../../../state/selectors/onions';
+import ProBackendAPI from '../pro_backend_api/ProBackendAPI';
+import { NetworkTime } from '../../../util/NetworkTime';
 
 const minMsgCountShouldRetry = 95;
 /**
@@ -68,31 +75,6 @@ const minMsgCountShouldRetry = 95;
  */
 const RETRIEVE_SNODES_COUNT = 2;
 
-function extractWebSocketContent(
-  message: string,
-  messageHash: string
-): null | {
-  body: Uint8Array;
-  messageHash: string;
-} {
-  try {
-    const dataPlaintext = new Uint8Array(StringUtils.encode(message, 'base64'));
-    const messageBuf = SignalService.WebSocketMessage.decode(dataPlaintext);
-    if (
-      messageBuf.type === SignalService.WebSocketMessage.Type.REQUEST &&
-      messageBuf.request?.body?.length
-    ) {
-      return {
-        body: messageBuf.request.body,
-        messageHash,
-      };
-    }
-    return null;
-  } catch (error) {
-    window?.log?.warn('extractWebSocketContent from message failed with:', error.message);
-    return null;
-  }
-}
 let instance: SwarmPolling | undefined;
 const timeouts: Array<NodeJS.Timeout> = [];
 
@@ -567,22 +549,27 @@ export class SwarmPolling {
       return;
     }
     if (type !== ConversationTypeEnum.PRIVATE) {
+      // - groups v2 messages are handled above,
+      // - legacy groups are disabled
+      // - and communities messages are handled somewhere else
+      // So here, we should only have 1o1 messages
       throw new Error('handleSeenMessages: only private convos are supported here');
     }
+    const ed25519PrivateKeyHex = (await UserUtils.getUserED25519KeyPair()).privKey.slice(0, 64);
 
-    // private and legacy groups are cached, so we can mark them as seen right away, they are still in the cache until processed correctly.
-    // at some point we should get rid of the cache completely, and do the same logic as for groupv2 above
-    await this.updateSeenMessages(newMessages, pubkey);
-    // trigger the handling of all the other messages, not shared config related and not groupv2 encrypted
-    newMessages.forEach(m => {
-      const extracted = extractWebSocketContent(m.data, m.hash);
-
-      if (!extracted || isEmpty(extracted)) {
-        return;
+    const decryptedMessages = await MultiEncryptWrapperActions.decryptFor1o1(
+      newMessages.map(m => ({
+        envelopePayload: fromBase64ToArray(m.data),
+        messageHash: m.hash,
+      })),
+      {
+        nowMs: NetworkTime.now(),
+        proBackendPubkeyHex: ProBackendAPI.getEd25519PubkeyHex(),
+        ed25519PrivateKeyHex,
       }
+    );
 
-      Receiver.handleRequest(extracted.body, null, extracted.messageHash, m.expiration);
-    });
+    await handleDecryptedMessagesFor1o1(newMessages, decryptedMessages);
   }
 
   private async shouldLeaveNotPolledGroup({
@@ -870,21 +857,6 @@ export class SwarmPolling {
     );
 
     return newMessages;
-  }
-
-  private async updateSeenMessages(
-    processedMessages: Array<RetrieveMessageItem>,
-    conversationId: string
-  ) {
-    if (processedMessages.length) {
-      const newHashes = processedMessages.map((m: RetrieveMessageItem) => ({
-        // NOTE setting expiresAt will trigger the global function destroyExpiredMessages() on it's next interval
-        expiresAt: m.expiration,
-        hash: m.hash,
-        conversationId,
-      }));
-      await Data.saveSeenMessageHashes(newHashes);
-    }
   }
 
   // eslint-disable-next-line consistent-return
@@ -1266,3 +1238,64 @@ async function handleMessagesForGroupV2(
     }
   }
 }
+
+
+async function handleDecryptedMessagesFor1o1(
+  newMessages: Array<Pick<RetrieveMessageItem, 'hash' | 'expiration'>>,
+  decryptedMessages: Array<WithDecodedEnvelope & WithMessageHash>
+) {
+  const us = UserUtils.getOurPubKeyStrFromCache();
+  for (let index = 0; index < newMessages.length; index++) {
+    const msg = newMessages[index];
+
+    const foundDecrypted = decryptedMessages.find(m => m.messageHash === msg.hash);
+    if (!foundDecrypted || !foundDecrypted.decodedEnvelope?.contentPlaintextUnpadded?.length) {
+      // we failed to decrypt that message
+      continue;
+    }
+    try {
+      const envelopePlus: EnvelopePlus = {
+        id: v4(),
+        senderIdentity: '', // none for 1o1 messages
+        receivedAt: Date.now(),
+        content: foundDecrypted.decodedEnvelope.contentPlaintextUnpadded,
+        source: foundDecrypted.decodedEnvelope.sessionId,
+        type: SignalService.Envelope.Type.SESSION_MESSAGE,
+        timestamp: foundDecrypted.decodedEnvelope.envelope.timestampMs,
+      };
+      if (!envelopePlus) {
+        throw new Error('decryptForGroupV2 returned empty envelope');
+      }
+      // this is the processing of the message itself, which can be long.
+      // We allow 1 minute per message at most, which should be plenty
+      await Receiver.handleSwarmContentDecryptedWithTimeout({
+        envelope: envelopePlus,
+        contentDecrypted: envelopePlus.content,
+        messageHash: msg.hash,
+        sentAtTimestamp: toNumber(envelopePlus.timestamp),
+        messageExpirationFromRetrieve: msg.expiration,
+      });
+    } catch (e) {
+      window.log.warn(
+        'SwarmPolling: failed to handle groupv2 otherMessage because of: ',
+        e.message
+      );
+    } finally {
+      // that message was processed (even if we failed to process it) so we
+      // can add it to the seen messages list so we don't reprocess it later.
+      try {
+        await Data.saveSeenMessageHashes([
+          {
+            hash: msg.hash,
+            expiresAt: msg.expiration,
+            conversationId: us, // 1o1 messages received are always received from our swarm
+          },
+        ]);
+      } catch (e) {
+        window.log.warn('SwarmPolling: failed saveSeenMessageHashes: ', e.message);
+      }
+    }
+  }
+}
+
+

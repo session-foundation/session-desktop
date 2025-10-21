@@ -311,7 +311,7 @@ const handleMessagesResponseV4 = async (
 
       decryptedItems = await MultiEncryptWrapperActions.decryptForCommunity(toProcess, {
         nowMs: NetworkTime.now(),
-        proBackendPubkeyHex: ProBackendAPI.getEd25519Pubkey(),
+        proBackendPubkeyHex: ProBackendAPI.getEd25519PubkeyHex(),
       });
     } catch (e) {
       window.log.warn('skipping handling community as it failed to decrypt with:', e.message);

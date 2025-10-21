@@ -3,7 +3,7 @@ import { assertUnreachable } from '../../../types/sqlSharedTypes';
 
 type ProBackendServerConfigType = {
   url: string;
-  edPk: string;
+  edPkHex: string;
 };
 
 // not exported/included in the SERVER_HOSTS as this is for testing only
@@ -13,16 +13,16 @@ const PRO_BACKENDS: Record<'DEFAULT' | 'DEV', ProBackendServerConfigType> = {
   DEFAULT: {
     url: `http://${SERVER_HOSTS.PRO_SERVER}`,
     // FIXME: to be replaced by the real pubkey
-    edPk: 'not_set_yet',
+    edPkHex: 'not_set_yet',
   },
   DEV: {
     url: `https://${PRO_BACKEND_DEV}`,
-    edPk: 'fc947730f49eb01427a66e050733294d9e520e545c7a27125a780634e0860a27',
+    edPkHex: 'fc947730f49eb01427a66e050733294d9e520e545c7a27125a780634e0860a27',
   },
 };
 
-function isDefaultProBackend(edPk: string) {
-  return edPk === PRO_BACKENDS.DEFAULT.edPk;
+function isDefaultProBackend(edPkHex: string) {
+  return edPkHex === PRO_BACKENDS.DEFAULT.edPkHex;
 }
 
 function urlToProTarget(url: string): PRO_BACKEND_TARGET_TYPE {
