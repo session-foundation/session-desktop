@@ -45,7 +45,7 @@ import { getSodiumRenderer } from '../../crypto';
 import { StringUtils, UserUtils } from '../../utils';
 import { sleepFor } from '../../utils/Promise';
 import { ed25519Str, fromBase64ToArray, fromHexToArray } from '../../utils/String';
-import { NotFoundError, PreConditionFailed } from '../../utils/errors';
+import { NotFoundError } from '../../utils/errors';
 import { LibSessionUtil } from '../../utils/libsession/libsession_utils';
 import { MultiEncryptUtils } from '../../utils/libsession/libsession_utils_multi_encrypt';
 import { SnodeNamespace, SnodeNamespaces, SnodeNamespacesUserConfig } from './namespaces';
@@ -536,9 +536,25 @@ export class SwarmPolling {
       if (!PubKey.is03Pubkey(pubkey)) {
         throw new Error('groupv2 expects a 03 key');
       }
-      // groupv2 messages are not stored in the cache, so for each that we process, we also add it as seen message.
-      // this is to take care of a crash half way through processing messages. We'd get the same 100 messages back, and we'd skip up to the first not seen message
-      await handleMessagesForGroupV2(newMessages, pubkey);
+      const groupEncKeys = await MetaGroupWrapperActions.keyGetAll(pubkey);
+      if (!groupEncKeys.length) {
+        swarmLog(`No groupEncKeys for group: ${ed25519Str(pubkey)} yet. Skipping`);
+      } else {
+        const decryptedMessages = await MultiEncryptWrapperActions.decryptForGroup(
+          newMessages.map(m => ({
+            envelopePayload: fromBase64ToArray(m.data),
+            messageHash: m.hash,
+          })),
+          {
+            nowMs: NetworkTime.now(),
+            proBackendPubkeyHex: ProBackendAPI.getEd25519PubkeyHex(),
+            ed25519GroupPubkeyHex: pubkey,
+            groupEncKeys,
+          }
+        );
+
+        await handleDecryptedMessagesForGroup(newMessages, decryptedMessages, pubkey);
+      }
       // if a callback was registered for the first poll of that group pk, call it
       const groupEntry = this.groupPolling.find(m => m.pubkey.key === pubkey);
       if (groupEntry && groupEntry.callbackFirstPoll) {
@@ -1158,88 +1174,6 @@ function filterMessagesPerTypeOfConvo<T extends ConversationTypeEnum>(
   }
 }
 
-async function decryptForGroupV2(retrieveResult: {
-  groupPk: string;
-  content: Uint8Array;
-}): Promise<EnvelopePlus | null> {
-  window?.log?.debug('SwarmPolling: received closed group message v2');
-  try {
-    const groupPk = retrieveResult.groupPk;
-    if (!PubKey.is03Pubkey(groupPk)) {
-      throw new PreConditionFailed('decryptForGroupV2: not a 03 prefixed group');
-    }
-
-    const decrypted = await MetaGroupWrapperActions.decryptMessage(groupPk, retrieveResult.content);
-    // just try to parse what we have, it should be a protobuf content decrypted already
-    const parsedEnvelope = SignalService.Envelope.decode(new Uint8Array(decrypted.plaintext));
-
-    // not doing anything, just enforcing that the content is indeed a protobuf object of type Content, or throws
-    SignalService.Content.decode(parsedEnvelope.content);
-
-    // the receiving pipeline relies on the envelope.senderIdentity field to know who is the author of a message
-    return {
-      id: v4(),
-      senderIdentity: decrypted.pubkeyHex,
-      receivedAt: Date.now(),
-      content: parsedEnvelope.content,
-      source: groupPk,
-      type: SignalService.Envelope.Type.CLOSED_GROUP_MESSAGE,
-      timestamp: parsedEnvelope.timestamp,
-    };
-  } catch (e) {
-    window.log.warn('SwarmPolling: failed to decrypt message with error: ', e.message);
-    return null;
-  }
-}
-
-async function handleMessagesForGroupV2(
-  newMessages: Array<RetrieveMessageItem>,
-  groupPk: GroupPubkeyType
-) {
-  for (let index = 0; index < newMessages.length; index++) {
-    const msg = newMessages[index];
-    const retrieveResult = new Uint8Array(StringUtils.encode(msg.data, 'base64'));
-    try {
-      const envelopePlus = await decryptForGroupV2({
-        content: retrieveResult,
-        groupPk,
-      });
-      if (!envelopePlus) {
-        throw new Error('decryptForGroupV2 returned empty envelope');
-      }
-
-      // this is the processing of the message itself, which can be long.
-      // We allow 1 minute per message at most, which should be plenty
-      await Receiver.handleSwarmContentDecryptedWithTimeout({
-        envelope: envelopePlus,
-        contentDecrypted: envelopePlus.content,
-        messageHash: msg.hash,
-        sentAtTimestamp: toNumber(envelopePlus.timestamp),
-        messageExpirationFromRetrieve: msg.expiration,
-      });
-    } catch (e) {
-      window.log.warn(
-        'SwarmPolling: failed to handle groupv2 otherMessage because of: ',
-        e.message
-      );
-    } finally {
-      // that message was processed, add it to the seen messages list
-      try {
-        await Data.saveSeenMessageHashes([
-          {
-            hash: msg.hash,
-            expiresAt: msg.expiration,
-            conversationId: groupPk,
-          },
-        ]);
-      } catch (e) {
-        window.log.warn('SwarmPolling: failed saveSeenMessageHashes: ', e.message);
-      }
-    }
-  }
-}
-
-
 async function handleDecryptedMessagesFor1o1(
   newMessages: Array<Pick<RetrieveMessageItem, 'hash' | 'expiration'>>,
   decryptedMessages: Array<WithDecodedEnvelope & WithMessageHash>
@@ -1263,9 +1197,61 @@ async function handleDecryptedMessagesFor1o1(
         type: SignalService.Envelope.Type.SESSION_MESSAGE,
         timestamp: foundDecrypted.decodedEnvelope.envelope.timestampMs,
       };
-      if (!envelopePlus) {
-        throw new Error('decryptForGroupV2 returned empty envelope');
+
+      // this is the processing of the message itself, which can be long.
+      // We allow 1 minute per message at most, which should be plenty
+      await Receiver.handleSwarmContentDecryptedWithTimeout({
+        envelope: envelopePlus,
+        contentDecrypted: envelopePlus.content,
+        messageHash: msg.hash,
+        sentAtTimestamp: toNumber(envelopePlus.timestamp),
+        messageExpirationFromRetrieve: msg.expiration,
+      });
+    } catch (e) {
+      window.log.warn('SwarmPolling: failed to handle 1o1 otherMessage because of: ', e.message);
+    } finally {
+      // that message was processed (even if we failed to process it) so we
+      // can add it to the seen messages list so we don't reprocess it later.
+      try {
+        await Data.saveSeenMessageHashes([
+          {
+            hash: msg.hash,
+            expiresAt: msg.expiration,
+            conversationId: us, // 1o1 messages received are always received from our swarm
+          },
+        ]);
+      } catch (e) {
+        window.log.warn('SwarmPolling: failed saveSeenMessageHashes: ', e.message);
       }
+    }
+  }
+}
+
+async function handleDecryptedMessagesForGroup(
+  newMessages: Array<Pick<RetrieveMessageItem, 'hash' | 'expiration'>>,
+  decryptedMessages: Array<WithDecodedEnvelope & WithMessageHash>,
+  groupPk: GroupPubkeyType
+) {
+  for (let index = 0; index < newMessages.length; index++) {
+    const msg = newMessages[index];
+
+    const foundDecrypted = decryptedMessages.find(m => m.messageHash === msg.hash);
+    try {
+      if (!foundDecrypted || !foundDecrypted.decodedEnvelope?.contentPlaintextUnpadded?.length) {
+        // we failed to decrypt that message, mark it as seen and move on
+        continue;
+      }
+
+      const envelopePlus: EnvelopePlus = {
+        id: v4(),
+        senderIdentity: foundDecrypted.decodedEnvelope.sessionId,
+        receivedAt: Date.now(),
+        content: foundDecrypted.decodedEnvelope.contentPlaintextUnpadded,
+        source: groupPk,
+        type: SignalService.Envelope.Type.SESSION_MESSAGE,
+        timestamp: foundDecrypted.decodedEnvelope.envelope.timestampMs,
+      };
+
       // this is the processing of the message itself, which can be long.
       // We allow 1 minute per message at most, which should be plenty
       await Receiver.handleSwarmContentDecryptedWithTimeout({
@@ -1288,7 +1274,7 @@ async function handleDecryptedMessagesFor1o1(
           {
             hash: msg.hash,
             expiresAt: msg.expiration,
-            conversationId: us, // 1o1 messages received are always received from our swarm
+            conversationId: groupPk,
           },
         ]);
       } catch (e) {
@@ -1297,5 +1283,3 @@ async function handleDecryptedMessagesFor1o1(
     }
   }
 }
-
-
