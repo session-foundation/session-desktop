@@ -1,4 +1,3 @@
-import { noop } from 'lodash';
 import {
   createPublicMessageSentFromNotUs,
   createPublicMessageSentFromUs,
@@ -94,7 +93,6 @@ export const handleOpenGroupMessage = async ({
       toRegularMessage(
         cleanIncomingDataMessage(decodedContent?.dataMessage as SignalService.DataMessage)
       ),
-      noop,
       sender,
       ''
     );
