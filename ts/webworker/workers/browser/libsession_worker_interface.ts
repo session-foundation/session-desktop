@@ -850,6 +850,10 @@ export const MultiEncryptWrapperActions: MultiEncryptActionsCalls = {
     callLibSessionWorker(['MultiEncrypt', 'decryptForCommunity', first, second]) as Promise<
       ReturnType<MultiEncryptActionsCalls['decryptForCommunity']>
     >,
+  decryptFor1o1: async (first, second) =>
+    callLibSessionWorker(['MultiEncrypt', 'decryptFor1o1', first, second]) as Promise<
+      ReturnType<MultiEncryptActionsCalls['decryptFor1o1']>
+    >,
 };
 
 export const allKnownEncryptionDomains: Array<EncryptionDomain> = ['SessionGroupKickedMessage'];
