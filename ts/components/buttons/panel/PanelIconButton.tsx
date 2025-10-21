@@ -39,7 +39,11 @@ export const PanelIconButton = (
 
   const subTextProps =
     'subText' in props
-      ? { subText: props.subText, subTextDataTestId: props.subTextDataTestId }
+      ? {
+          subText: props.subText,
+          subTextDataTestId: props.subTextDataTestId,
+          subTextColorOverride: props.subTextColorOverride,
+        }
       : undefined;
 
   return (
@@ -53,13 +57,14 @@ export const PanelIconButton = (
       >
         <StyledContent disabled={disabled} rowReverse={rowReverse}>
           <IconContainer rowReverse={rowReverse}>{props.iconElement}</IconContainer>
-
           {subTextProps ? (
             <PanelButtonTextWithSubText
               text={text}
               textDataTestId={props.dataTestId}
               subText={subTextProps.subText}
               subTextDataTestId={subTextProps.subTextDataTestId}
+              color={color}
+              subTextColorOverride={subTextProps.subTextColorOverride}
             />
           ) : (
             <PanelButtonText text={text} textDataTestId={props.dataTestId} />

@@ -58,6 +58,7 @@ import { GearAvatarButton } from '../buttons/avatar/GearAvatarButton';
 import { useZoomShortcuts } from '../../hooks/useZoomingShortcut';
 import { OnionStatusLight } from '../dialog/OnionStatusPathDialog';
 import { AvatarReupload } from '../../session/utils/job_runners/jobs/AvatarReuploadJob';
+import { useDebugMenuModal } from '../../state/selectors/modal';
 
 const StyledContainerAvatar = styled.div`
   padding: var(--margins-lg);
@@ -190,6 +191,34 @@ async function regenerateLastMessagesGroupsCommunities() {
   await Storage.put(SettingsKey.lastMessageGroupsRegenerated, true);
 }
 
+function DebugMenuModalButton() {
+  const dispatch = useDispatch();
+  const debugMenuModalState = useDebugMenuModal();
+
+  useKey(
+    (event: KeyboardEvent) => {
+      return event.ctrlKey && event.key === 'd';
+    },
+    () => {
+      if (isDevProd()) {
+        dispatch(updateDebugMenuModal(debugMenuModalState ? null : {}));
+      }
+    }
+  );
+
+  return (
+    <SessionLucideIconButton
+      iconSize="medium"
+      padding="var(--margins-lg)"
+      unicode={LUCIDE_ICONS_UNICODE.SQUARE_CODE}
+      dataTestId="debug-menu-section"
+      onClick={() => {
+        dispatch(updateDebugMenuModal({}));
+      }}
+    />
+  );
+}
+
 /**
  * ActionsPanel is the far left banner (not the left pane).
  * The panel with buttons to switch between the message/contact/settings/theme views
@@ -286,17 +315,7 @@ export const ActionsPanel = () => {
           />
           <GearAvatarButton />
         </StyledContainerAvatar>
-        {showDebugMenu && (
-          <SessionLucideIconButton
-            iconSize="medium"
-            padding="var(--margins-lg)"
-            unicode={LUCIDE_ICONS_UNICODE.SQUARE_CODE}
-            dataTestId="debug-menu-section"
-            onClick={() => {
-              dispatch(updateDebugMenuModal({}));
-            }}
-          />
-        )}
+        {showDebugMenu ? <DebugMenuModalButton /> : null}
         <OnionStatusLight
           handleClick={() => {
             dispatch(onionPathModal({}));

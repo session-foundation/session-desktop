@@ -156,8 +156,10 @@ const CurrentPriceBlock = () => {
       $alignItems="flex-start"
       paddingInline={'12px 0'}
       paddingBlock={'var(--margins-md)'}
-      backgroundColor={isDarkTheme ? undefined : 'var(--background-secondary-color)'}
-      borderColor={isDarkTheme ? undefined : 'var(--transparent-color)'}
+      backgroundColor={
+        isDarkTheme ? 'var(--background-primary-color)' : 'var(--background-secondary-color)'
+      }
+      borderColor={'var(--transparent-color)'}
     >
       <Flex $container={true} $flexDirection="column" $alignItems="flex-start">
         <BlockText>
@@ -227,8 +229,10 @@ const SecuredByBlock = () => {
       width={'100%'}
       paddingInline={'12px 0'}
       paddingBlock={'var(--margins-md)'}
-      backgroundColor={isDarkTheme ? undefined : 'var(--background-secondary-color)'}
-      borderColor={isDarkTheme ? undefined : 'var(--transparent-color)'}
+      backgroundColor={
+        isDarkTheme ? 'var(--background-primary-color)' : 'var(--background-secondary-color)'
+      }
+      borderColor={'var(--transparent-color)'}
     >
       <BlockText>{tr('sessionNetworkSecuredBy')}</BlockText>
       <SpacerXS />

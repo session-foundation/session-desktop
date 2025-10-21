@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { ReactNode, useMemo } from 'react';
+import { type ReactNode } from 'react';
 import { useDispatch } from 'react-redux';
 import { tr } from '../../../../../localization/localeTools';
 import { Localizer } from '../../../../basic/Localizer';
@@ -18,35 +18,30 @@ import { SessionButton, SessionButtonColor } from '../../../../basic/SessionButt
 import { showLinkVisitWarningDialog } from '../../../OpenUrlModal';
 import { proButtonProps } from '../../../SessionProInfoModal';
 import { Flex } from '../../../../basic/Flex';
-
-type ProNonOriginatingPageVariant = 'upgrade' | 'update' | 'cancel' | 'refund' | 'renew';
+import type { ProNonOriginatingPageVariant } from '../../../../../types/ReduxTypes';
+import { ProOriginatingPlatform, useProAccessDetails } from '../../../../../hooks/useHasPro';
 
 type VariantPageProps = {
   variant: ProNonOriginatingPageVariant;
 };
 
 function ProStatusTextUpdate() {
-  // TODO: get pro details from settings
-  const isAutoRenewing = true;
-  const currentPlan = '3 Months';
-  const expiryTimeString = 'May 21, 2025';
-
-  return isAutoRenewing ? (
+  const { data } = useProAccessDetails();
+  return data.autoRenew ? (
     <Localizer
       token="proAccessActivatedAutoShort"
-      current_plan={currentPlan}
-      date={expiryTimeString}
+      current_plan_length={data.variantString}
+      date={data.expiryTimeDateString}
     />
   ) : (
-    <Localizer token="proAccessActivatedNotAuto" date={expiryTimeString} />
+    <Localizer token="proAccessExpireDate" date={data.expiryTimeDateString} />
   );
 }
 
 function ProPageHero({ variant }: VariantPageProps) {
   switch (variant) {
     case 'upgrade':
-      // TODO: this is not the right string in figma, check this
-      return <ProHeroImage heroText={tr('proUserProfileModalCallToAction')} />;
+      return <ProHeroImage heroText={tr('proUpgradeAccess')} />;
     case 'update':
       return <ProHeroImage heroText={<ProStatusTextUpdate />} />;
     case 'renew':
@@ -88,7 +83,7 @@ function ProInfoBlockItem({
     <PanelButtonGroup
       containerStyle={{
         padding: 'var(--margins-md)',
-        background: 'var(--chat-buttons-background-hover-color)',
+        background: 'var(--background-tertiary-color)',
       }}
     >
       <StyledContent style={{ gap: 'var(--margins-md)', alignItems: 'flex-start' }}>
@@ -136,15 +131,13 @@ const ProInfoBlockText = styled.div`
 `;
 
 function ProInfoBlockDevice({ textElement }: { textElement: ReactNode }) {
-  // TODO: get these from settings
-  const deviceType = 'Android';
-
+  const { data } = useProAccessDetails();
   return (
     <ProInfoBlockItem
       iconElement={<ProInfoBlockIconElement unicode={LUCIDE_ICONS_UNICODE.SMARTPHONE} />}
       textElement={
         <ProInfoBlockText>
-          <strong>{tr('onDevice', { device_type: deviceType })}</strong>
+          <strong>{tr('onDevice', { device_type: data.platformStrings.device_type })}</strong>
           {textElement}
         </ProInfoBlockText>
       }
@@ -153,10 +146,7 @@ function ProInfoBlockDevice({ textElement }: { textElement: ReactNode }) {
 }
 
 function ProInfoBlockDeviceLinked() {
-  // TODO: get these from settings
-  const platformStore = 'Google Play Store';
-  const platformStoreOther = 'Apple App Store';
-
+  const { data } = useProAccessDetails();
   return (
     <ProInfoBlockItem
       iconElement={<ProInfoBlockIconElement unicode={LUCIDE_ICONS_UNICODE.LINK} />}
@@ -165,8 +155,8 @@ function ProInfoBlockDeviceLinked() {
           <strong>{tr('onLinkedDevice')}</strong>
           <Localizer
             token="proRenewDesktopLinked"
-            platform_store={platformStore}
-            platform_store_other={platformStoreOther}
+            platform_store={data.platformStrings.platform_store}
+            platform_store_other={data.platformStrings.platform_store_other}
           />
         </ProInfoBlockText>
       }
@@ -175,15 +165,13 @@ function ProInfoBlockDeviceLinked() {
 }
 
 function ProInfoBlockWebsite({ textElement }: { textElement: ReactNode }) {
-  // TODO: get these from settings
-  const platform = 'Google';
-
+  const { data } = useProAccessDetails();
   return (
     <ProInfoBlockItem
       iconElement={<ProInfoBlockIconElement unicode={LUCIDE_ICONS_UNICODE.GLOBE} />}
       textElement={
         <ProInfoBlockText>
-          <strong>{tr('viaStoreWebsite', { platform })}</strong>
+          <strong>{tr('viaStoreWebsite', { platform: data.platformStrings.platform })}</strong>
           {textElement}
         </ProInfoBlockText>
       }
@@ -194,11 +182,13 @@ function ProInfoBlockWebsite({ textElement }: { textElement: ReactNode }) {
 function ProInfoBlockLayout({
   titleElement,
   descriptionElement,
+  descriptionOnClick,
   subtitleElement,
   blockItems,
 }: {
   titleElement: ReactNode;
   descriptionElement: ReactNode;
+  descriptionOnClick?: () => void;
   subtitleElement: ReactNode;
   blockItems: ReactNode;
 }) {
@@ -211,7 +201,12 @@ function ProInfoBlockLayout({
       }}
     >
       <ProInfoBlockTitle>{titleElement}</ProInfoBlockTitle>
-      <ProInfoBlockDescription>{descriptionElement}</ProInfoBlockDescription>
+      <ProInfoBlockDescription
+        onClick={descriptionOnClick}
+        style={{ cursor: descriptionOnClick ? 'pointer' : 'default' }}
+      >
+        {descriptionElement}
+      </ProInfoBlockDescription>
       <ProInfoBlockSectionSubtitle>{subtitleElement}</ProInfoBlockSectionSubtitle>
       <PanelButtonGroup
         containerStyle={{ marginBlock: 'var(--margins-xs)', gap: 'var(--margins-sm)' }}
@@ -223,24 +218,24 @@ function ProInfoBlockLayout({
 }
 
 function ProInfoBlockUpgrade() {
-  // TODO: get these from settings
-  const platformStore = 'Google Play Store';
-  const platformStoreOther = 'Apple App Store';
-
-  // TODO: put real strings here
+  const dispatch = useDispatch();
+  const { data } = useProAccessDetails();
   return (
     <ProInfoBlockLayout
-      titleElement={tr('renewingPro')}
+      titleElement={tr('proUpgradingTo')}
       descriptionElement={
         <Localizer
-          token="proPlanRenewDesktop"
-          platform_store={platformStore}
-          platform_store_other={platformStoreOther}
+          token="proAccessUpgradeDesktop"
+          platform_store={data.platformStrings.platform_store}
+          platform_store_other={data.platformStrings.platform_store_other}
           icon={LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}
         />
       }
+      descriptionOnClick={() =>
+        showLinkVisitWarningDialog('https://getsession.org/pro-roadmap', dispatch)
+      }
       subtitleElement={
-        <ProInfoBlockSectionSubtitle>{tr('proOptionsRenewalSubtitle')}</ProInfoBlockSectionSubtitle>
+        <ProInfoBlockSectionSubtitle>{tr('proUpgradeOption')}</ProInfoBlockSectionSubtitle>
       }
       blockItems={<ProInfoBlockDeviceLinked />}
     />
@@ -248,20 +243,15 @@ function ProInfoBlockUpgrade() {
 }
 
 function ProInfoBlockUpdate() {
-  // TODO: get these from settings
-  const platform = 'Google';
-  const platformStore = 'Google Play Store';
-  const platformAccount = 'Google Account';
-  const deviceType = 'Android';
-
+  const { data } = useProAccessDetails();
   return (
     <ProInfoBlockLayout
       titleElement={tr('updateAccess')}
       descriptionElement={
         <Localizer
           token="proAccessSignUp"
-          platform_account={platformAccount}
-          platform_store={platformStore}
+          platform_account={data.platformStrings.platform_account}
+          platform_store={data.platformStrings.platform_store}
         />
       }
       subtitleElement={
@@ -273,8 +263,8 @@ function ProInfoBlockUpdate() {
             textElement={
               <Localizer
                 token="onDeviceDescription"
-                device_type={deviceType}
-                platform_account={platformAccount}
+                device_type={data.platformStrings.device_type}
+                platform_account={data.platformStrings.platform_account}
               />
             }
           />
@@ -282,8 +272,8 @@ function ProInfoBlockUpdate() {
             textElement={
               <Localizer
                 token="viaStoreWebsiteDescription"
-                platform_store={platform}
-                platform_account={platformAccount}
+                platform_store={data.platformStrings.platform}
+                platform_account={data.platformStrings.platform_account}
               />
             }
           />
@@ -294,26 +284,22 @@ function ProInfoBlockUpdate() {
 }
 
 function ProInfoBlockRenew() {
-  // TODO: get these from settings
-  const platform = 'Google';
-  const platformAccount = 'Google Account';
-
-  const platformStore = 'Google Play Store';
-  const platformStoreOther = 'Apple App Store';
-
+  const { data } = useProAccessDetails();
   return (
     <ProInfoBlockLayout
       titleElement={tr('renewingPro')}
       descriptionElement={
         <Localizer
-          token="proPlanRenewDesktop"
-          platform_store={platformStore}
-          platform_store_other={platformStoreOther}
+          token="proAccessRenewDesktop"
+          platform_store={data.platformStrings.platform_store}
+          platform_store_other={data.platformStrings.platform_store_other}
           icon={LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}
         />
       }
       subtitleElement={
-        <ProInfoBlockSectionSubtitle>{tr('proOptionsRenewalSubtitle')}</ProInfoBlockSectionSubtitle>
+        <ProInfoBlockSectionSubtitle>
+          {tr('proOptionsTwoRenewalSubtitle')}
+        </ProInfoBlockSectionSubtitle>
       }
       blockItems={
         <>
@@ -322,8 +308,8 @@ function ProInfoBlockRenew() {
             textElement={
               <Localizer
                 token="proAccessRenewPlatformStoreWebsite"
-                platform_store={platform}
-                platform_account={platformAccount}
+                platform_store={data.platformStrings.platform}
+                platform_account={data.platformStrings.platform_account}
               />
             }
           />
@@ -334,15 +320,15 @@ function ProInfoBlockRenew() {
 }
 
 function ProInfoBlockCancel() {
-  // TODO: get these from settings
-  const platform = 'Google';
-  const platformAccount = 'Google Account';
-  const deviceType = 'Android';
+  const { data } = useProAccessDetails();
   return (
     <ProInfoBlockLayout
       titleElement={tr('cancelAccess')}
       descriptionElement={
-        <Localizer token="proCancellationDescription" platform_account={platformAccount} />
+        <Localizer
+          token="proCancellationDescription"
+          platform_account={data.platformStrings.platform_account}
+        />
       }
       subtitleElement={
         <ProInfoBlockSectionSubtitle>{tr('proCancellationOptions')}</ProInfoBlockSectionSubtitle>
@@ -353,8 +339,8 @@ function ProInfoBlockCancel() {
             textElement={
               <Localizer
                 token="onDeviceCancelDescription"
-                device_type={deviceType}
-                platform_account={platformAccount}
+                device_type={data.platformStrings.device_type}
+                platform_account={data.platformStrings.platform_account}
               />
             }
           />
@@ -362,8 +348,8 @@ function ProInfoBlockCancel() {
             textElement={
               <Localizer
                 token="cancelProPlatformStore"
-                platform_store={platform}
-                platform_account={platformAccount}
+                platform_store={data.platformStrings.platform}
+                platform_account={data.platformStrings.platform_account}
               />
             }
           />
@@ -380,11 +366,7 @@ const ProInfoBlockRefundTitle = styled.div`
   padding-top: var(--margins-xs);
 `;
 
-function ProInfoBlockRefundAndroid() {
-  // TODO: get these from settings
-  const platform = 'Android';
-  const platformRefundExpiryUnixTsMs = 0;
-  const now = useMemo(() => Date.now(), []);
+function ProInfoBlockRefundSessionSupport() {
   return (
     <PanelButtonGroup
       containerStyle={{
@@ -396,11 +378,29 @@ function ProInfoBlockRefundAndroid() {
       <ProInfoBlockRefundTitle>
         <Localizer token="proRefunding" />{' '}
       </ProInfoBlockRefundTitle>
-      {platformRefundExpiryUnixTsMs > now ? (
-        <Localizer token="proRefundRequestStorePolicies" platform={platform} />
-      ) : (
-        <Localizer token="proRefundRequestSessionSupport" />
-      )}
+      <Localizer token="proRefundRequestSessionSupport" />
+      <ProInfoBlockRefundTitle>
+        <Localizer token="important" />
+      </ProInfoBlockRefundTitle>
+      <Localizer token="proImportantDescription" />
+    </PanelButtonGroup>
+  );
+}
+
+function ProInfoBlockRefundGooglePlay() {
+  const { data } = useProAccessDetails();
+  return (
+    <PanelButtonGroup
+      containerStyle={{
+        paddingBlock: 'var(--margins-md)',
+        paddingInline: 'var(--margins-lg)',
+        gap: 'var(--margins-sm)',
+      }}
+    >
+      <ProInfoBlockRefundTitle>
+        <Localizer token="proRefunding" />{' '}
+      </ProInfoBlockRefundTitle>
+      <Localizer token="proRefundRequestStorePolicies" platform={data.platformStrings.platform} />
       <ProInfoBlockRefundTitle>
         <Localizer token="important" />
       </ProInfoBlockRefundTitle>
@@ -410,19 +410,15 @@ function ProInfoBlockRefundAndroid() {
 }
 
 function ProInfoBlockRefundIOS() {
-  // TODO: get these from settings
-  const platform = 'Apple';
-  const platformAccount = 'Apple account';
-  const platformStore = 'Apple App Store';
-  const deviceType = 'iOS';
+  const { data } = useProAccessDetails();
   return (
     <ProInfoBlockLayout
       titleElement={tr('proRefunding')}
       descriptionElement={
         <Localizer
           token="proPlanPlatformRefund"
-          platform_store={platformStore}
-          platform_account={platformAccount}
+          platform_store={data.platformStrings.platform_store}
+          platform_account={data.platformStrings.platform_account}
         />
       }
       subtitleElement={
@@ -434,8 +430,8 @@ function ProInfoBlockRefundIOS() {
             textElement={
               <Localizer
                 token="proRefundAccountDevice"
-                device_type={deviceType}
-                platform_account={platformAccount}
+                device_type={data.platformStrings.device_type}
+                platform_account={data.platformStrings.platform_account}
               />
             }
           />
@@ -443,8 +439,8 @@ function ProInfoBlockRefundIOS() {
             textElement={
               <Localizer
                 token="requestRefundPlatformWebsite"
-                platform={platform}
-                platform_account={platformAccount}
+                platform={data.platformStrings.platform}
+                platform_account={data.platformStrings.platform_account}
               />
             }
           />
@@ -455,16 +451,21 @@ function ProInfoBlockRefundIOS() {
 }
 
 function ProInfoBlockRefund() {
-  // TODO: get these from settings
-  const platform = 'Apple' as 'Apple' | 'Android';
+  const { data } = useProAccessDetails();
 
-  switch (platform) {
-    case 'Apple':
+  if (!data.isPlatformRefundAvailable) {
+    return <ProInfoBlockRefundSessionSupport />;
+  }
+
+  switch (data.platform) {
+    case ProOriginatingPlatform.iOSAppStore:
       return <ProInfoBlockRefundIOS />;
-    case 'Android':
-      return <ProInfoBlockRefundAndroid />;
+    case ProOriginatingPlatform.GooglePlayStore:
+      return <ProInfoBlockRefundGooglePlay />;
+    case ProOriginatingPlatform.Nil:
+      return <ProInfoBlockRefundSessionSupport />;
     default:
-      return assertUnreachable(platform, `Unknown pro platform: ${platform}`);
+      return assertUnreachable(data.platform, `Unknown pro originating platform: ${data.platform}`);
   }
 }
 
@@ -486,67 +487,58 @@ function ProInfoBlock({ variant }: VariantPageProps) {
 }
 
 function ProPageButtonUpdate() {
-  // TODO: get these from settings
-  const platform = 'Google';
-  const platformLink = 'https://google.com/';
-
   const dispatch = useDispatch();
-
+  const { data } = useProAccessDetails();
   return (
     <SessionButton
       {...proButtonProps}
       buttonColor={SessionButtonColor.PrimaryDark}
       onClick={() => {
-        showLinkVisitWarningDialog(platformLink, dispatch);
+        showLinkVisitWarningDialog(data.platformStrings.platform_link_manage, dispatch);
       }}
       dataTestId="pro-open-platform-website-button"
     >
-      <Localizer token="openPlatformWebsite" platform={platform} />
+      <Localizer token="openPlatformWebsite" platform={data.platformStrings.platform} />
     </SessionButton>
   );
 }
 
 function ProPageButtonCancel() {
-  // TODO: get these from settings
-  const platform = 'Google';
-  const platformLink = 'https://google.com/';
-
   const dispatch = useDispatch();
-
+  const { data } = useProAccessDetails();
   return (
     <SessionButton
       {...proButtonProps}
       buttonColor={SessionButtonColor.Danger}
       onClick={() => {
-        showLinkVisitWarningDialog(platformLink, dispatch);
+        showLinkVisitWarningDialog(data.platformStrings.platform_link_cancel, dispatch);
       }}
       dataTestId="pro-open-platform-website-button"
     >
-      <Localizer token="openPlatformWebsite" platform={platform} />
+      <Localizer token="openPlatformWebsite" platform={data.platformStrings.platform} />
     </SessionButton>
   );
 }
 
 function ProPageButtonRefund() {
-  // TODO: get these from settings
-  const platform = 'Google';
-  const refundLink = 'https://google.com/';
-  const platformRefundExpiryUnixTsMs = 0;
-  const now = useMemo(() => Date.now(), []);
-
   const dispatch = useDispatch();
-
+  const { data } = useProAccessDetails();
   return (
     <SessionButton
       {...proButtonProps}
       buttonColor={SessionButtonColor.Danger}
       onClick={() => {
-        showLinkVisitWarningDialog(refundLink, dispatch);
+        showLinkVisitWarningDialog(
+          data.isPlatformRefundAvailable
+            ? data.platformStrings.platform_link_refund
+            : data.platformStrings.session_support_link_refund,
+          dispatch
+        );
       }}
       dataTestId="pro-open-platform-website-button"
     >
-      {platformRefundExpiryUnixTsMs > now ? (
-        <Localizer token="openPlatformWebsite" platform={platform} />
+      {data.isPlatformRefundAvailable ? (
+        <Localizer token="openPlatformWebsite" platform={data.platformStrings.platform} />
       ) : (
         <Localizer token="requestRefund" />
       )}
@@ -573,9 +565,13 @@ function ProPageButton({ variant }: VariantPageProps) {
 export function ProNonOriginatingPage(modalState: {
   userSettingsPage: 'proNonOriginating';
   nonOriginatingVariant: ProNonOriginatingPageVariant;
+  overrideBackAction?: () => void;
+  centerAlign?: boolean;
 }) {
   const backAction = useUserSettingsBackAction(modalState);
   const closeAction = useUserSettingsCloseAction(modalState);
+
+  const backOnClick = modalState.overrideBackAction || backAction;
 
   return (
     <UserSettingsModalContainer
@@ -584,14 +580,11 @@ export function ProNonOriginatingPage(modalState: {
           title={null}
           bigHeader={true}
           showExitIcon={true}
-          extraLeftButton={backAction ? <ModalBackButton onClick={backAction} /> : undefined}
+          extraLeftButton={backOnClick ? <ModalBackButton onClick={backOnClick} /> : undefined}
         />
       }
-      onClose={
-        modalState.nonOriginatingVariant === 'upgrade'
-          ? backAction || undefined
-          : closeAction || undefined
-      }
+      onClose={closeAction || undefined}
+      centerAlign={modalState.centerAlign}
     >
       <ModalFlexContainer>
         <ProPageHero variant={modalState.nonOriginatingVariant} />

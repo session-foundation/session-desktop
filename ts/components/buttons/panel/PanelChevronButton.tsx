@@ -5,15 +5,17 @@ import {
   GenericPanelButtonWithAction,
   type GenericPanelButtonProps,
 } from './GenericPanelButtonWithAction';
+import { SessionSpinner } from '../../loading';
 
 type PanelChevronButtonProps = Pick<GenericPanelButtonProps, 'textElement'> & {
   onClick?: (...args: Array<any>) => void;
   disabled?: boolean;
   baseDataTestId: SettingsChevron;
+  showAnimatedSpinnerIcon?: boolean;
 };
 
 export const PanelChevronButton = (props: PanelChevronButtonProps) => {
-  const { onClick, disabled = false, baseDataTestId, textElement } = props;
+  const { onClick, disabled = false, baseDataTestId, textElement, showAnimatedSpinnerIcon } = props;
 
   return (
     <GenericPanelButtonWithAction
@@ -21,14 +23,18 @@ export const PanelChevronButton = (props: PanelChevronButtonProps) => {
       rowDataTestId={`${baseDataTestId}-settings-row`}
       textElement={textElement}
       actionElement={
-        <SessionLucideIconButton
-          disabled={disabled}
-          dataTestId={`${baseDataTestId}-settings-chevron`}
-          unicode={LUCIDE_ICONS_UNICODE.CHEVRON_RIGHT}
-          iconSize="medium"
-          iconColor="var(--text-primary-color)"
-          style={{ paddingInlineEnd: 'var(--margins-xs)' }}
-        />
+        showAnimatedSpinnerIcon ? (
+          <SessionSpinner loading height="18px" />
+        ) : (
+          <SessionLucideIconButton
+            disabled={disabled}
+            dataTestId={`${baseDataTestId}-settings-chevron`}
+            unicode={LUCIDE_ICONS_UNICODE.CHEVRON_RIGHT}
+            iconSize="medium"
+            iconColor="var(--text-primary-color)"
+            style={{ paddingInlineEnd: 'var(--margins-xs)' }}
+          />
+        )
       }
     />
   );

@@ -6,13 +6,15 @@ import {
   type LocalizedPopupDialogState,
   updateLocalizedPopupDialog,
 } from '../../state/ducks/modalDialog';
-import { ModalBasicHeader, SessionWrapperModal } from '../SessionWrapperModal';
+import {
+  ModalActionsContainer,
+  ModalBasicHeader,
+  SessionWrapperModal,
+} from '../SessionWrapperModal';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
-import { SpacerSM, SpacerXS } from '../basic/Text';
 import { tr } from '../../localization/localeTools';
 import { Localizer } from '../basic/Localizer';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
-import { ModalFlexContainer } from './shared/ModalFlexContainer';
 
 const StyledScrollDescriptionContainer = styled.div`
   max-height: 150px;
@@ -33,7 +35,8 @@ export function LocalizedPopupDialog(props: LocalizedPopupDialogState) {
     !props.title ||
     !props.description ||
     !props.title.token ||
-    !props.description.token
+    !props.description.token ||
+    (props.overrideButtons && !props.overrideButtons.length)
   ) {
     return null;
   }
@@ -44,23 +47,41 @@ export function LocalizedPopupDialog(props: LocalizedPopupDialogState) {
       headerChildren={
         <ModalBasicHeader title={<Localizer {...props.title} />} showExitIcon={true} />
       }
+      buttonChildren={
+        <ModalActionsContainer buttonType={SessionButtonType.Simple}>
+          {props.overrideButtons ? (
+            props.overrideButtons.map(
+              ({ label, buttonType, onClick, closeAfterClick, dataTestId }) => (
+                <SessionButton
+                  buttonType={buttonType || SessionButtonType.Simple}
+                  onClick={() => {
+                    onClick?.();
+                    if (closeAfterClick) {
+                      onClose();
+                    }
+                  }}
+                  dataTestId={dataTestId}
+                >
+                  <Localizer {...label} />
+                </SessionButton>
+              )
+            )
+          ) : (
+            <SessionButton
+              buttonType={SessionButtonType.Simple}
+              onClick={onClose}
+              dataTestId="session-confirm-ok-button"
+            >
+              {tr('okay')}
+            </SessionButton>
+          )}
+        </ModalActionsContainer>
+      }
       onClose={onClose}
     >
       <StyledScrollDescriptionContainer>
         <ModalDescription localizerProps={props.description} dataTestId="modal-description" />
       </StyledScrollDescriptionContainer>
-      <SpacerSM />
-
-      <ModalFlexContainer>
-        <SessionButton
-          buttonType={SessionButtonType.Simple}
-          onClick={onClose}
-          dataTestId="session-confirm-ok-button"
-        >
-          {tr('okay')}
-        </SessionButton>
-      </ModalFlexContainer>
-      <SpacerXS />
     </SessionWrapperModal>
   );
 }

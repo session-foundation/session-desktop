@@ -112,7 +112,7 @@ export const classicDark: ThemeColorVariables = {
   '--emoji-reaction-bar-icon-color': 'var(--text-primary-color)',
 
   '--modal-background-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.5)`,
-  '--modal-background-content-color': 'var(--background-primary-color)',
+  '--modal-background-content-color': COLORS.NEARBLACK,
   '--modal-text-color': 'var(--text-primary-color)',
   '--modal-text-danger-color': 'var(--danger-color)',
   '--modal-shadow-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 1.0)`,

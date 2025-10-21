@@ -41,7 +41,7 @@ export function ProIconButton({
 }) {
   const mergedStyle = {
     ...defaultStyle,
-    ...(noColors ? { backgroundColor: 'var(--chat-buttons-background-hover-color)' } : {}),
+    ...(noColors ? { backgroundColor: 'var(--disabled-color)' } : {}),
     ...style,
   };
   if (onClick) {

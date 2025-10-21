@@ -201,6 +201,8 @@ declare module 'react' {
     | 'recover-pro'
     | 'request-refund'
     | 'pro-open-platform-website'
+    | 'pro-backend-error-retry'
+    | 'pro-backend-error-support'
     | `${ConfirmButtons}-confirm`
     | `${CancelButtons}-cancel`
     | `clear-${ClearButtons}`

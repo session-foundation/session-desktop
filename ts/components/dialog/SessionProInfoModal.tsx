@@ -3,7 +3,11 @@ import { Dispatch, type ReactNode } from 'react';
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import type { CSSProperties } from 'styled-components';
-import { type SessionProInfoState, updateSessionProInfoModal } from '../../state/ducks/modalDialog';
+import {
+  type SessionProInfoState,
+  updateSessionProInfoModal,
+  userSettingsModal,
+} from '../../state/ducks/modalDialog';
 import {
   SessionWrapperModal,
   WrapperModalWidth,
@@ -306,7 +310,17 @@ export function SessionProInfoModal(props: SessionProInfoState) {
                 width: '100%',
               }}
               buttonColor={SessionButtonColor.PrimaryDark}
-              onClick={onClose}
+              onClick={() => {
+                onClose();
+                dispatch(
+                  userSettingsModal({
+                    userSettingsPage: 'pro',
+                    hideBackButton: true,
+                    hideHelp: true,
+                    centerAlign: true,
+                  })
+                );
+              }}
               dataTestId="modal-session-pro-confirm-button"
             >
               {tr('theContinue')}

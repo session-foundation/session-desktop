@@ -162,7 +162,7 @@ export const RightPanelMedia = () => {
         >
           <HeaderTitle>{displayName || PubKey.shorten(selectedConvoKey)}</HeaderTitle>
         </Header>
-        <PanelButtonGroup style={{ margin: '0 var(--margins-lg)' }}>
+        <PanelButtonGroup style={{ margin: '0 var(--margins-lg)' }} isSidePanel>
           <MediaGallery documents={documents} media={media} />
         </PanelButtonGroup>
         <SpacerLG />

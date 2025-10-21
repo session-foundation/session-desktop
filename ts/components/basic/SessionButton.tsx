@@ -21,6 +21,7 @@ export enum SessionButtonColor {
   Tertiary = 'background-tertiary',
   PrimaryDark = 'renderer-span-primary', // use primary in dark modes only since it has poor contrast in light mode
   Danger = 'danger',
+  Disabled = 'button-simple-disabled',
   None = 'transparent',
 }
 
