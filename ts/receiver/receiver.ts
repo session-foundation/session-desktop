@@ -1,5 +1,5 @@
 /* eslint-disable more/no-then */
-import { isEmpty, last, toNumber } from 'lodash';
+import { isEmpty, toNumber } from 'lodash';
 import { v4 as uuidv4 } from 'uuid';
 
 import { EnvelopePlus } from './types';
@@ -187,31 +187,6 @@ async function handleRequestDetail(
       error && error.stack ? error.stack : error
     );
   }
-}
-
-/**
- *
- * @param inConversation if the request is related to a group, this will be set to the group pubkey. Otherwise, it is set to null
- */
-export function handleRequest(
-  plaintext: EnvelopePlus | Uint8Array,
-  inConversation: string | null,
-  messageHash: string,
-  messageExpiration: number
-): void {
-  const lastPromise = last(incomingMessagePromises) || Promise.resolve();
-
-  const promise = handleRequestDetail(
-    plaintext,
-    inConversation,
-    lastPromise,
-    messageHash,
-    messageExpiration
-  ).catch(e => {
-    window?.log?.error('Error handling incoming message:', e && e.stack ? e.stack : e);
-  });
-
-  incomingMessagePromises.push(promise);
 }
 
 /**
