@@ -17,11 +17,9 @@ import { DisappearingMessages } from '../session/disappearing_messages';
 import { fromArrayBufferToBase64, fromBase64ToArrayBuffer } from '../session/utils/String';
 import { MessageResultProps } from '../types/message';
 import {
-  AsyncWrapper,
   MsgDuplicateSearchOpenGroup,
   SaveConversationReturn,
   SaveSeenMessageHash,
-  UnprocessedDataNode,
   UpdateLastHashType,
 } from '../types/sqlSharedTypes';
 import { Storage } from '../util/storage';
@@ -622,45 +620,6 @@ async function getNextExpiringMessage(): Promise<Array<MessageModel>> {
   return makeMessageModels(messages);
 }
 
-// Unprocessed
-
-const getUnprocessedCount: AsyncWrapper<UnprocessedDataNode['getUnprocessedCount']> = () => {
-  return channels.getUnprocessedCount();
-};
-
-const getAllUnprocessed: AsyncWrapper<UnprocessedDataNode['getAllUnprocessed']> = () => {
-  return channels.getAllUnprocessed();
-};
-
-const getUnprocessedById: AsyncWrapper<UnprocessedDataNode['getUnprocessedById']> = id => {
-  return channels.getUnprocessedById(id);
-};
-
-const saveUnprocessed: AsyncWrapper<UnprocessedDataNode['saveUnprocessed']> = data => {
-  return channels.saveUnprocessed(cleanData(data));
-};
-
-const updateUnprocessedAttempts: AsyncWrapper<UnprocessedDataNode['updateUnprocessedAttempts']> = (
-  id,
-  attempts
-) => {
-  return channels.updateUnprocessedAttempts(id, attempts);
-};
-const updateUnprocessedWithData: AsyncWrapper<UnprocessedDataNode['updateUnprocessedWithData']> = (
-  id,
-  data
-) => {
-  return channels.updateUnprocessedWithData(id, cleanData(data));
-};
-
-const removeUnprocessed: AsyncWrapper<UnprocessedDataNode['removeUnprocessed']> = id => {
-  return channels.removeUnprocessed(id);
-};
-
-const removeAllUnprocessed: AsyncWrapper<UnprocessedDataNode['removeAllUnprocessed']> = () => {
-  return channels.removeAllUnprocessed();
-};
-
 // Attachment downloads
 
 async function getNextAttachmentDownloadJobs(limit: number): Promise<any> {
@@ -889,16 +848,6 @@ export const Data = {
   getExpiredMessages,
   getOutgoingWithoutExpiresAt,
   getNextExpiringMessage,
-
-  // Unprocessed messages data
-  getUnprocessedCount,
-  getAllUnprocessed,
-  getUnprocessedById,
-  saveUnprocessed,
-  updateUnprocessedAttempts,
-  updateUnprocessedWithData,
-  removeUnprocessed,
-  removeAllUnprocessed,
 
   // attachments download jobs
   getNextAttachmentDownloadJobs,

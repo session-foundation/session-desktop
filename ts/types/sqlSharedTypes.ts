@@ -71,32 +71,6 @@ export type ConfigDumpDataNode = {
   deleteDumpFor: (pk: GroupPubkeyType) => void;
 };
 
-// ========== unprocessed
-
-export type UnprocessedParameter = {
-  id: string;
-  version: number;
-  envelope: string;
-  timestamp: number;
-  // serverTimestamp: number;
-  attempts: number;
-  messageHash: string;
-  senderIdentity?: string;
-  decrypted?: string; // added once the envelopes's content is decrypted with updateCacheWithDecryptedContent
-  source?: string; // added once the envelopes's content is decrypted with updateCacheWithDecryptedContent
-};
-
-export type UnprocessedDataNode = {
-  saveUnprocessed: (data: UnprocessedParameter) => void;
-  updateUnprocessedAttempts: (id: string, attempts: number) => void;
-  updateUnprocessedWithData: (id: string, data: UnprocessedParameter) => void;
-  getUnprocessedById: (id: string) => UnprocessedParameter | undefined;
-  getUnprocessedCount: () => number;
-  getAllUnprocessed: () => Array<UnprocessedParameter>;
-  removeUnprocessed: (id: string) => void;
-  removeAllUnprocessed: () => void;
-};
-
 // ======== attachment downloads
 
 export type AttachmentDownloadMessageDetails = {

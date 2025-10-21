@@ -121,6 +121,7 @@ const LOKI_SCHEMA_VERSIONS: Array<
   updateToSessionSchemaVersion46,
   updateToSessionSchemaVersion47,
   updateToSessionSchemaVersion48,
+  updateToSessionSchemaVersion49,
 ];
 
 function updateToSessionSchemaVersion1(currentVersion: number, db: BetterSqlite3.Database) {
@@ -2192,6 +2193,24 @@ async function updateToSessionSchemaVersion48(currentVersion: number, db: Better
   db.transaction(() => {
     db.exec(`
           ALTER TABLE ${CONVERSATIONS_TABLE} ADD COLUMN profileUpdatedSeconds INTEGER;
+         `);
+
+    writeSessionSchemaVersion(targetVersion, db);
+  })();
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
+}
+
+async function updateToSessionSchemaVersion49(currentVersion: number, db: BetterSqlite3.Database) {
+  const targetVersion = 49;
+  if (currentVersion >= targetVersion) {
+    return;
+  }
+  console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
+
+  db.transaction(() => {
+    db.exec(`
+          DROP TABLE unprocessed;
          `);
 
     writeSessionSchemaVersion(targetVersion, db);

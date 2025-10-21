@@ -5,7 +5,6 @@ import { EnvelopePlus } from './types';
 
 import { SignalService } from '../protobuf';
 import { KeyPrefixType, PubKey } from '../session/types';
-import { IncomingMessageCache } from './cache';
 
 import { Data } from '../data/data';
 import { SettingsKey } from '../data/settings-key';
@@ -24,7 +23,6 @@ import { UserUtils } from '../session/utils';
 import { perfEnd, perfStart } from '../session/utils/Performance';
 import { ed25519Str, fromHexToArray, toHex } from '../session/utils/String';
 import { isUsFromCache } from '../session/utils/User';
-import { assertUnreachable } from '../types/sqlSharedTypes';
 import { BlockedNumberController } from '../util';
 import { ReadReceipts } from '../util/readReceipts';
 import { Storage } from '../util/storage';
@@ -39,34 +37,6 @@ import { CONVERSATION_PRIORITIES, ConversationTypeEnum } from '../models/types';
 import { shouldProcessContentMessage } from './common';
 import { Timestamp } from '../types/timestamp/timestamp';
 import { longOrNumberToNumber } from '../types/message';
-
-export async function handleSwarmContentMessage(
-  envelope: EnvelopePlus,
-  messageHash: string,
-  messageExpirationFromRetrieve: number | null
-) {
-  try {
-    const decryptedForAll = await decrypt(envelope);
-
-    if (!decryptedForAll || !decryptedForAll.decryptedContent || isEmpty(decryptedForAll)) {
-      return;
-    }
-
-    const sentAtTimestamp = toNumber(envelope.timestamp);
-
-    // swarm messages already comes with a timestamp in milliseconds, so this sentAtTimestamp is correct.
-    // the sogs messages do not come as milliseconds but just seconds, so we override it
-    await innerHandleSwarmContentMessage({
-      envelope,
-      sentAtTimestamp,
-      contentDecrypted: decryptedForAll.decryptedContent,
-      messageHash,
-      messageExpirationFromRetrieve,
-    });
-  } catch (e) {
-    window?.log?.warn(e.message);
-  }
-}
 
 /**
  * This function can be called to decrypt a keypair wrapper for a closed group update
@@ -179,44 +149,6 @@ export async function decryptEnvelopeWithOurKey(
     window?.log?.warn('decryptWithSessionProtocol for unidentified message throw:', e);
     return null;
   }
-}
-
-async function decrypt(envelope: EnvelopePlus): Promise<{ decryptedContent: ArrayBuffer } | null> {
-  if (envelope.content.byteLength === 0) {
-    throw new Error('Received an empty envelope.');
-  }
-
-  let decryptedContent: ArrayBuffer | null = null;
-  switch (envelope.type) {
-    // Only SESSION_MESSAGE and CLOSED_GROUP_MESSAGE are supported
-    case SignalService.Envelope.Type.SESSION_MESSAGE:
-      decryptedContent = await decryptEnvelopeWithOurKey(envelope);
-      break;
-    case SignalService.Envelope.Type.CLOSED_GROUP_MESSAGE:
-      return null;
-    default:
-      assertUnreachable(envelope.type, `Unknown message type:${envelope.type}`);
-  }
-
-  if (!decryptedContent) {
-    // content could not be decrypted.
-    await IncomingMessageCache.removeFromCache(envelope);
-    return null;
-  }
-
-  perfStart(`updateCacheWithDecryptedContent-${envelope.id}`);
-
-  await IncomingMessageCache.updateCacheWithDecryptedContent({ envelope, decryptedContent }).catch(
-    error => {
-      window?.log?.error(
-        'decrypt failed to save decrypted message contents to cache:',
-        error && error.stack ? error.stack : error
-      );
-    }
-  );
-  perfEnd(`updateCacheWithDecryptedContent-${envelope.id}`, 'updateCacheWithDecryptedContent');
-
-  return { decryptedContent };
 }
 
 async function shouldDropIncomingPrivateMessage(
@@ -358,7 +290,6 @@ async function dropIncomingGroupMessage(envelope: EnvelopePlus, sentAtTimestamp:
         window?.log?.info(
           `Incoming message sent before the group ${ed25519Str(envelope.source)} deleteBeforeSeconds or deleteAttachBeforeSeconds. Dropping it.`
         );
-        await IncomingMessageCache.removeFromCache(envelope);
         return true;
       }
     }
@@ -396,7 +327,6 @@ export async function innerHandleSwarmContentMessage({
       window.log.info(
         `innerHandleSwarmContentMessage: dropping invalid content message ${envelope.timestamp}`
       );
-      await IncomingMessageCache.removeFromCache(envelope);
       return;
     }
 
@@ -435,7 +365,6 @@ export async function innerHandleSwarmContentMessage({
 
     if (isPrivateConversationMessage) {
       if (await shouldDropIncomingPrivateMessage(sentAtTimestamp, envelope, content)) {
-        await IncomingMessageCache.removeFromCache(envelope);
         return;
       }
     }
@@ -547,7 +476,7 @@ export async function innerHandleSwarmContentMessage({
 
     // If we get here, we don't know how to handle that envelope. probably a very old type of message, or something we don't support.
     // There is not much we can do expect drop it
-    await IncomingMessageCache.removeFromCache(envelope);
+    window?.log?.warn('Incoming message not supported. Dropping it.');
   } catch (e) {
     window?.log?.warn(e.message);
   }
@@ -585,8 +514,6 @@ async function handleReceiptMessage(
     }
   }
   await Promise.all(results);
-
-  await IncomingMessageCache.removeFromCache(envelope);
 }
 
 async function handleTypingMessage(
@@ -595,8 +522,6 @@ async function handleTypingMessage(
 ): Promise<void> {
   const { timestamp, action } = typingMessage;
   const { source } = envelope;
-
-  await IncomingMessageCache.removeFromCache(envelope);
 
   // We don't do anything with incoming typing messages if the setting is disabled
   if (!Storage.get(SettingsKey.settingsTypingIndicator)) {
@@ -641,19 +566,16 @@ async function handleUnsendMessage(envelope: EnvelopePlus, unsendMessage: Signal
     window?.log?.error(
       'handleUnsendMessage: Dropping request as the author and the sender differs.'
     );
-    await IncomingMessageCache.removeFromCache(envelope);
 
     return;
   }
   if (!unsendMessage) {
     window?.log?.error('handleUnsendMessage: Invalid parameters -- dropping message.');
-    await IncomingMessageCache.removeFromCache(envelope);
 
     return;
   }
   if (!timestamp) {
     window?.log?.error('handleUnsendMessage: Invalid timestamp -- dropping message');
-    await IncomingMessageCache.removeFromCache(envelope);
 
     return;
   }
@@ -673,8 +595,6 @@ async function handleUnsendMessage(envelope: EnvelopePlus, unsendMessage: Signal
     window.log.info('handleUnsendMessage: got a request to delete ', messageHash);
     const conversation = ConvoHub.use().get(messageToDelete.get('conversationId'));
     if (!conversation) {
-      await IncomingMessageCache.removeFromCache(envelope);
-
       return;
     }
     if (messageToDelete.getSource() === UserUtils.getOurPubKeyStrFromCache()) {
@@ -691,7 +611,6 @@ async function handleUnsendMessage(envelope: EnvelopePlus, unsendMessage: Signal
       messageToDelete?.id
     );
   }
-  await IncomingMessageCache.removeFromCache(envelope);
 }
 
 /**
@@ -704,7 +623,6 @@ async function handleMessageRequestResponse(
   // no one cares about the is `messageRequestResponse.isApproved` field currently.
   if (!messageRequestResponse || !messageRequestResponse.isApproved) {
     window?.log?.error('handleMessageRequestResponse: Invalid parameters -- dropping message.');
-    await IncomingMessageCache.removeFromCache(envelope);
     return;
   }
 
@@ -717,7 +635,6 @@ async function handleMessageRequestResponse(
     window?.log?.warn(
       'handleMessageRequestResponse: Invalid unblindedConvoId -- dropping message.'
     );
-    await IncomingMessageCache.removeFromCache(envelope);
     return;
   }
 
@@ -820,7 +737,6 @@ async function handleMessageRequestResponse(
     window.log.info(
       `convo ${ed25519Str(conversationToApprove.id)} previousApprovedMe is already true. Nothing to do `
     );
-    await IncomingMessageCache.removeFromCache(envelope);
     return;
   }
 
@@ -829,7 +745,6 @@ async function handleMessageRequestResponse(
     toNumber(envelope.timestamp),
     unblindedConvoId
   );
-  await IncomingMessageCache.removeFromCache(envelope);
 }
 
 /**
@@ -852,7 +767,6 @@ export async function handleDataExtractionNotification({
   // Note: we currently don't care about the timestamp included in the field itself, just the timestamp of the envelope
 
   const { source, timestamp } = envelope;
-  await IncomingMessageCache.removeFromCache(envelope);
 
   const convo = ConvoHub.use().get(source);
   if (!convo || !convo.isPrivate()) {

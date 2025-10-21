@@ -12,7 +12,6 @@ import { Data } from '../data/data';
 import { OpenGroupData } from '../data/opengroups';
 import { SettingsKey } from '../data/settings-key';
 import { MessageModel } from '../models/message';
-import { queueAllCached } from '../receiver/receiver';
 import { loadKnownBlindedKeys } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import { ConvoHub } from '../session/conversations';
 import { DisappearingMessages } from '../session/disappearing_messages';
@@ -460,9 +459,6 @@ async function connect() {
     Notifications.enable();
   }, 10 * 1000); // 10 sec
 
-  setTimeout(() => {
-    void queueAllCached();
-  }, 10 * 1000); // 10 sec
   await AttachmentDownloads.start({
     logger: window.log,
   });
