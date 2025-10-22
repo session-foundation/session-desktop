@@ -18,7 +18,7 @@ import {
   SessionWrapperModal,
   WrapperModalWidth,
 } from '../../SessionWrapperModal';
-import { FeatureFlags } from './FeatureFlags';
+import { FeatureFlags, ProDebugSection } from './FeatureFlags';
 import { ReleaseChannel } from './ReleaseChannel';
 import { useHotkey } from '../../../hooks/useHotkey';
 import { PopoverPlaygroundPage } from './playgrounds/PopoverPlaygroundPage';
@@ -64,6 +64,7 @@ function MainPage({ setPage }: DebugMenuPageProps) {
   return (
     <>
       <FeatureFlags flags={window.sessionFeatureFlags} forceUpdate={forceUpdate} />
+      <ProDebugSection forceUpdate={forceUpdate} />
       <DebugActions />
       <LoggingActions />
       <Playgrounds setPage={setPage} />

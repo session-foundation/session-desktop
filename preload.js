@@ -67,9 +67,20 @@ window.sessionFeatureFlags = {
   alwaysShowRemainingChars: false,
   showPopoverAnchors: false,
   proAvailable: !isEmpty(process.env.SESSION_PRO),
+  proGroupsAvailable: !isEmpty(process.env.SESSION_PRO_GROUPS),
   mockCurrentUserHasPro: !isEmpty(process.env.SESSION_USER_HAS_PRO),
+  mockCurrentUserHasProExpired: !isEmpty(process.env.SESSION_USER_HAS_PRO_EXPIRED),
+  mockCurrentUserHasProPlatformRefundExpired: !isEmpty(
+    process.env.SESSION_USER_HAS_PRO_PLATFORM_REFUND_EXPIRED
+  ),
+  mockCurrentUserHasProCancelled: !isEmpty(process.env.SESSION_USER_HAS_PRO_CANCELLED),
+  mockCurrentUserHasProInGracePeriod: !isEmpty(process.env.SESSION_USER_HAS_PRO_IN_GRACE),
+  mockProRecoverButtonAlwaysSucceed: !isEmpty(process.env.SESSION_PRO_RECOVER_ALWAYS_SUCCEED),
+  mockProRecoverButtonAlwaysFail: !isEmpty(process.env.SESSION_PRO_RECOVER_ALWAYS_FAIL),
   mockOthersHavePro: !isEmpty(process.env.SESSION_OTHERS_HAVE_PRO),
   mockMessageProFeatures: [],
+  mockProBackendLoading: !isEmpty(process.env.SESSION_PRO_BACKEND_LOADING),
+  mockProBackendError: !isEmpty(process.env.SESSION_PRO_BACKEND_ERROR),
   // Note: some stuff are init when the app starts, so fsTTL30s should only be set from the env itself (before app starts)
   fsTTL30s: !isEmpty(process.env.FILE_SERVER_TTL_30S),
   debugLogging: !isEmpty(process.env.SESSION_DEBUG),
@@ -79,6 +90,12 @@ window.sessionFeatureFlags = {
   debugServerRequests: false,
   debugNonSnodeRequests: false,
   debugOnionRequests: false,
+};
+
+window.sessionFeatureFlagsWithData = {
+  mockProOriginatingPlatform: null,
+  mockProAccessVariant: null,
+  mockProAccessExpiry: null,
 };
 
 window.versionInfo = {

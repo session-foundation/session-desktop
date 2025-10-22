@@ -1,5 +1,13 @@
 import { isArray, isBoolean } from 'lodash';
-import type { SessionFlagsKeys } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { ReactNode, useEffect, useState } from 'react';
+import {
+  getFeatureFlag,
+  MockProAccessExpiryOptions,
+  SessionFeatureFlagKeys,
+  useDataFeatureFlag,
+  type SessionFeatureFlagWithDataKeys,
+  type SessionFlagsKeys,
+} from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { Flex } from '../../basic/Flex';
 import { SessionToggle } from '../../basic/SessionToggle';
 import { HintText, SpacerSM, SpacerXS } from '../../basic/Text';
@@ -7,6 +15,8 @@ import { DEBUG_FEATURE_FLAGS } from './constants';
 import { ConvoHub } from '../../../session/conversations';
 import { isDebugMode } from '../../../shared/env_vars';
 import { ProMessageFeature } from '../../../models/proMessageFeature';
+import { ProAccessVariant, ProOriginatingPlatform } from '../../../hooks/useHasPro';
+import { PanelButtonGroup } from '../../buttons';
 
 type FeatureFlagToggleType = {
   forceUpdate: () => void;
@@ -14,22 +24,28 @@ type FeatureFlagToggleType = {
   parentFlag?: SessionFlagsKeys;
 };
 
-const handleFeatureFlagToggle = ({ flag, parentFlag, forceUpdate }: FeatureFlagToggleType) => {
-  const currentValue = parentFlag
-    ? (window as any).sessionFeatureFlags[parentFlag][flag]
-    : (window as any).sessionFeatureFlags[flag];
-
+const handleSetFeatureFlag = ({
+  flag,
+  parentFlag,
+  forceUpdate,
+  value,
+}: FeatureFlagToggleType & { value: boolean }) => {
   if (parentFlag) {
-    (window as any).sessionFeatureFlags[parentFlag][flag] = !currentValue;
-    window.log.debug(`[debugMenu] toggled ${parentFlag}.${flag} to ${!currentValue}`);
+    (window as any).sessionFeatureFlags[parentFlag][flag] = value;
+    window.log.debug(`[debugMenu] toggled ${parentFlag}.${flag} to ${value}`);
   } else {
-    (window as any).sessionFeatureFlags[flag] = !currentValue;
-    window.log.debug(`[debugMenu] toggled ${flag} to ${!currentValue}`);
+    (window as any).sessionFeatureFlags[flag] = value;
+    window.log.debug(`[debugMenu] toggled ${flag} to ${value}`);
   }
 
   forceUpdate();
 
-  if (flag === 'proAvailable' || flag === 'mockCurrentUserHasPro' || flag === 'mockOthersHavePro') {
+  if (
+    flag === 'proAvailable' ||
+    flag === 'mockCurrentUserHasPro' ||
+    flag === 'mockOthersHavePro' ||
+    flag === 'mockCurrentUserHasProExpired'
+  ) {
     ConvoHub.use()
       .getConversations()
       .forEach(convo => {
@@ -38,16 +54,44 @@ const handleFeatureFlagToggle = ({ flag, parentFlag, forceUpdate }: FeatureFlagT
   }
 };
 
+const handleFeatureFlagToggle = ({ flag, parentFlag, forceUpdate }: FeatureFlagToggleType) => {
+  const currentValue = parentFlag
+    ? (window as any).sessionFeatureFlags[parentFlag][flag]
+    : (window as any).sessionFeatureFlags[flag];
+  handleSetFeatureFlag({ flag, parentFlag, forceUpdate, value: !currentValue });
+};
+
 export const FlagToggle = ({
   flag,
   value,
   forceUpdate,
   parentFlag,
+  label,
+  visibleOnlyWithBooleanFlag,
+  hiddenAndDisabledWhenKeyEnabled,
 }: FeatureFlagToggleType & {
   value: any;
+  label?: string;
+  visibleOnlyWithBooleanFlag?: SessionFeatureFlagKeys;
+  hiddenAndDisabledWhenKeyEnabled?: SessionFeatureFlagKeys;
 }) => {
   const key = `feature-flag-toggle-${flag}`;
-  return (
+  const visibleFlag = visibleOnlyWithBooleanFlag
+    ? getFeatureFlag(visibleOnlyWithBooleanFlag)
+    : true;
+
+  const hideAndDisable = hiddenAndDisabledWhenKeyEnabled
+    ? getFeatureFlag(hiddenAndDisabledWhenKeyEnabled)
+    : false;
+
+  useEffect(() => {
+    if (hideAndDisable) {
+      handleSetFeatureFlag({ flag, forceUpdate, value: false });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hideAndDisable]);
+
+  return visibleFlag ? (
     <Flex
       key={key}
       id={key}
@@ -56,18 +100,118 @@ export const FlagToggle = ({
       $alignItems="center"
       $justifyContent="flex-start"
       $flexGap="var(--margins-sm)"
+      style={{ display: visibleFlag ? undefined : 'hidden' }}
     >
       <SessionToggle
         active={value}
         onClick={() => void handleFeatureFlagToggle({ flag, parentFlag, forceUpdate })}
       />
       <span>
-        {flag}
+        {label || flag}
         {DEBUG_FEATURE_FLAGS.DEV.includes(flag) ? <HintText>Experimental</HintText> : null}
         {DEBUG_FEATURE_FLAGS.UNTESTED.includes(flag) ? <HintText>Untested</HintText> : null}
       </span>
     </Flex>
-  );
+  ) : null;
+};
+
+const handleFeatureFlagWithDataChange = ({
+  flag,
+  value,
+  forceUpdate,
+}: {
+  flag: SessionFeatureFlagWithDataKeys;
+  value: any;
+  forceUpdate: () => void;
+}) => {
+  window.sessionFeatureFlagsWithData[flag] = value;
+  forceUpdate();
+
+  ConvoHub.use()
+    .getConversations()
+    .forEach(convo => {
+      convo.triggerUIRefresh();
+    });
+};
+
+type FlagDropdownInputProps = {
+  forceUpdate: () => void;
+  flag: SessionFeatureFlagWithDataKeys;
+  options: Array<{ label: string; value: number | null }>;
+  unsetOption: { label: string; value: number | null };
+  visibleOnlyWithBooleanFlag?: SessionFeatureFlagKeys;
+  label: string;
+};
+
+export const FlagEnumDropdownInput = ({
+  flag,
+  options,
+  forceUpdate,
+  unsetOption,
+  visibleOnlyWithBooleanFlag,
+  label,
+}: FlagDropdownInputProps) => {
+  const key = `feature-flag-toggle-${flag}`;
+  const [selected, setSelected] = useState<number | null>(() => {
+    const initValue = window.sessionFeatureFlagsWithData[flag];
+    return Number.isFinite(initValue) ? initValue : unsetOption.value;
+  });
+  const handleSelect = (newValue: number | null) => {
+    setSelected(newValue);
+    handleFeatureFlagWithDataChange({
+      flag,
+      value: Number.isNaN(newValue) ? null : newValue,
+      forceUpdate,
+    });
+  };
+
+  const visibleFlag = visibleOnlyWithBooleanFlag
+    ? getFeatureFlag(visibleOnlyWithBooleanFlag)
+    : true;
+
+  return visibleFlag ? (
+    <Flex
+      key={key}
+      id={key}
+      $container={true}
+      width="100%"
+      $justifyContent="flex-start"
+      $flexGap="var(--margins-sm)"
+      $flexDirection="column"
+    >
+      <label
+        style={{
+          display: 'block',
+          marginBottom: 'var(--margins-xxs)',
+          color: 'var(--text-primary-color)',
+        }}
+      >
+        {label}{' '}
+      </label>
+      <select
+        value={selected ?? undefined}
+        onChange={e => handleSelect(Number.parseInt(e.target.value, 10))}
+        style={{
+          width: '100%',
+          padding: 'var(--margins-sm) var(--margins-md)',
+          backgroundColor: 'var(--background-primary-color)',
+          color: 'var(--text-primary-color)',
+          border: '1px solid var(--border-color)',
+          borderRadius: 'var(--border-radius)',
+          cursor: 'pointer',
+        }}
+      >
+        <option key={unsetOption.value} value={unsetOption.value ?? undefined}>
+          {unsetOption.label}
+        </option>
+        {options.map(option => (
+          <option key={option.value} value={option.value ?? undefined}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </Flex>
+  ) : null;
 };
 
 type FlagValues = boolean | object | string;
@@ -96,13 +240,86 @@ function rotateMsgProFeat(currentValue: Array<ProMessageFeature>, forceUpdate: (
   forceUpdate();
 }
 
+const proBooleanFlags: Array<{
+  label: string;
+  key: SessionFeatureFlagKeys;
+  visibleWithParentKey?: SessionFeatureFlagKeys;
+  hiddenAndDisabledWhenKeyEnabled?: SessionFeatureFlagKeys;
+}> = [
+  { label: 'Pro Available', key: 'proAvailable' },
+  {
+    label: 'Backend Loading',
+    key: 'mockProBackendLoading',
+    visibleWithParentKey: 'proAvailable',
+    hiddenAndDisabledWhenKeyEnabled: 'mockProBackendError',
+  },
+  {
+    label: 'Backend Error',
+    key: 'mockProBackendError',
+    visibleWithParentKey: 'proAvailable',
+    hiddenAndDisabledWhenKeyEnabled: 'mockProBackendLoading',
+  },
+  {
+    label: 'Recover always succeeds',
+    key: 'mockProRecoverButtonAlwaysSucceed',
+    visibleWithParentKey: 'proAvailable',
+    hiddenAndDisabledWhenKeyEnabled: 'mockProRecoverButtonAlwaysFail',
+  },
+  {
+    label: 'Recover always fails',
+    key: 'mockProRecoverButtonAlwaysFail',
+    visibleWithParentKey: 'proAvailable',
+    hiddenAndDisabledWhenKeyEnabled: 'mockProRecoverButtonAlwaysSucceed',
+  },
+  {
+    label: 'Pro Groups Available',
+    key: 'proGroupsAvailable',
+    visibleWithParentKey: 'proAvailable',
+  },
+  {
+    label: 'Has Access',
+    key: 'mockCurrentUserHasPro',
+    visibleWithParentKey: 'proAvailable',
+    hiddenAndDisabledWhenKeyEnabled: 'mockCurrentUserHasProExpired',
+  },
+  {
+    label: 'Access Expired',
+    key: 'mockCurrentUserHasProExpired',
+    visibleWithParentKey: 'proAvailable',
+    hiddenAndDisabledWhenKeyEnabled: 'mockCurrentUserHasPro',
+  },
+  {
+    label: 'Platform Refund Expired',
+    key: 'mockCurrentUserHasProPlatformRefundExpired',
+    visibleWithParentKey: 'mockCurrentUserHasPro',
+  },
+  {
+    label: 'Cancelled',
+    key: 'mockCurrentUserHasProCancelled',
+    visibleWithParentKey: 'mockCurrentUserHasPro',
+  },
+  {
+    label: 'In Grace Period',
+    key: 'mockCurrentUserHasProInGracePeriod',
+    visibleWithParentKey: 'mockCurrentUserHasPro',
+    hiddenAndDisabledWhenKeyEnabled: 'mockCurrentUserHasProCancelled',
+  },
+];
+
+const proBooleanFlagKeys = proBooleanFlags.map(({ key }) => key);
+
 export const FeatureFlags = ({
-  flags,
+  flags: _flags,
   forceUpdate,
 }: {
   flags: Record<string, FlagValues>;
   forceUpdate: () => void;
 }) => {
+  const flags = Object.fromEntries(
+    Object.entries(_flags).filter(
+      ([key]) => !proBooleanFlagKeys.includes(key as SessionFeatureFlagKeys)
+    )
+  );
   return (
     <Flex
       $container={true}
@@ -150,5 +367,92 @@ export const FeatureFlags = ({
       })}
       <SpacerSM />
     </Flex>
+  );
+};
+
+function DebugMenuSection({ children }: { children: ReactNode }) {
+  return (
+    <PanelButtonGroup
+      containerStyle={{
+        paddingBlock: 'var(--margins-md)',
+        paddingInline: 'var(--margins-lg)',
+        gap: 'var(--margins-sm)',
+      }}
+    >
+      {children}
+    </PanelButtonGroup>
+  );
+}
+
+export const ProDebugSection = ({ forceUpdate }: { forceUpdate: () => void }) => {
+  const mockExpiry = useDataFeatureFlag('mockProAccessExpiry');
+  return (
+    <DebugMenuSection>
+      <Flex $container={true} $alignItems="center">
+        <h2>Session Pro</h2>
+      </Flex>
+      {proBooleanFlags.map(
+        ({ label, key, visibleWithParentKey, hiddenAndDisabledWhenKeyEnabled }) => (
+          <FlagToggle
+            forceUpdate={forceUpdate}
+            flag={key}
+            value={window.sessionFeatureFlags[key]}
+            label={label}
+            visibleOnlyWithBooleanFlag={visibleWithParentKey}
+            hiddenAndDisabledWhenKeyEnabled={hiddenAndDisabledWhenKeyEnabled}
+          />
+        )
+      )}
+      <FlagEnumDropdownInput
+        label="Originating Platform"
+        flag="mockProOriginatingPlatform"
+        options={[
+          { label: 'Google Play', value: ProOriginatingPlatform.GooglePlayStore },
+          { label: 'iOS App Store', value: ProOriginatingPlatform.iOSAppStore },
+        ]}
+        forceUpdate={forceUpdate}
+        unsetOption={{ label: 'Select originating platform', value: null }}
+        visibleOnlyWithBooleanFlag="mockCurrentUserHasPro"
+      />
+      <FlagEnumDropdownInput
+        label="Access Variant"
+        flag="mockProAccessVariant"
+        options={[
+          { label: '1 Month', value: ProAccessVariant.OneMonth },
+          { label: '3 Months', value: ProAccessVariant.ThreeMonth },
+          { label: '12 Months', value: ProAccessVariant.TwelveMonth },
+        ]}
+        forceUpdate={forceUpdate}
+        unsetOption={{ label: 'Select access variant', value: null }}
+        visibleOnlyWithBooleanFlag="mockCurrentUserHasPro"
+      />
+      <FlagEnumDropdownInput
+        label="Expiry"
+        flag="mockProAccessExpiry"
+        options={[
+          { label: 'Soon', value: MockProAccessExpiryOptions.SOON },
+          { label: 'Today', value: MockProAccessExpiryOptions.TODAY },
+          { label: 'Tomorrow', value: MockProAccessExpiryOptions.TOMORROW },
+          { label: '1 Week', value: MockProAccessExpiryOptions.WEEK },
+          { label: '1 Month', value: MockProAccessExpiryOptions.MONTH },
+          { label: '3 Months', value: MockProAccessExpiryOptions.THREE_MONTH },
+          { label: '1 Year', value: MockProAccessExpiryOptions.YEAR },
+          { label: '24 Days 1 Minute', value: MockProAccessExpiryOptions.P24DT1M },
+          { label: '24 Hours 1 Minute', value: MockProAccessExpiryOptions.PT24H1M },
+          { label: '23 Hours 59 Minutes', value: MockProAccessExpiryOptions.PT23H59M },
+          { label: '33 Minutes', value: MockProAccessExpiryOptions.PT33M },
+          { label: '1 Minute', value: MockProAccessExpiryOptions.PT1M },
+          { label: '10 Seconds', value: MockProAccessExpiryOptions.PT10S },
+        ]}
+        forceUpdate={forceUpdate}
+        unsetOption={{ label: 'Select expiry', value: null }}
+        visibleOnlyWithBooleanFlag="mockCurrentUserHasPro"
+      />
+      {mockExpiry ? (
+        <i>Mocked expiry time does not tick, it will keep being set to now + mock_expiry.</i>
+      ) : null}
+
+      <SpacerSM />
+    </DebugMenuSection>
   );
 };

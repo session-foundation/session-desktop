@@ -5,11 +5,13 @@ export function UserSettingsModalContainer({
   headerChildren,
   buttonChildren,
   onClose,
+  centerAlign,
 }: {
   children: React.ReactNode;
   headerChildren: React.ReactNode;
   buttonChildren?: React.ReactNode;
   onClose?: () => void;
+  centerAlign?: boolean;
 }) {
   return (
     <SessionWrapperModal
@@ -19,7 +21,7 @@ export function UserSettingsModalContainer({
       shouldOverflow={true}
       allowOutsideClick={false}
       $contentMinWidth={WrapperModalWidth.normal}
-      topAnchor="5vh"
+      topAnchor={!centerAlign ? '5vh' : undefined}
       buttonChildren={buttonChildren}
     >
       {children}

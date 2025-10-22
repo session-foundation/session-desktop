@@ -3,7 +3,11 @@ import { Dispatch, type ReactNode } from 'react';
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import type { CSSProperties } from 'styled-components';
-import { type SessionProInfoState, updateSessionProInfoModal } from '../../state/ducks/modalDialog';
+import {
+  type SessionProInfoState,
+  updateSessionProInfoModal,
+  userSettingsModal,
+} from '../../state/ducks/modalDialog';
 import {
   SessionWrapperModal,
   WrapperModalWidth,
@@ -243,7 +247,8 @@ function isProVisibleCTA(variant: SessionProInfoVariant): boolean {
   ].includes(variant);
 }
 
-const buttonProps = {
+// TODO: we might want to make this a specific button preset. As its used for all pro/sesh stuff
+export const proButtonProps = {
   buttonShape: SessionButtonShape.Square,
   buttonType: SessionButtonType.Solid,
   fontWeight: 400,
@@ -300,24 +305,36 @@ export function SessionProInfoModal(props: SessionProInfoState) {
         >
           {hasNoProAndNotGroupCta ? (
             <SessionButtonShiny
-              {...buttonProps}
+              {...proButtonProps}
               shinyContainerStyle={{
                 width: '100%',
               }}
               buttonColor={SessionButtonColor.PrimaryDark}
-              onClick={onClose}
+              onClick={() => {
+                onClose();
+                dispatch(
+                  userSettingsModal({
+                    userSettingsPage: 'pro',
+                    hideBackButton: true,
+                    hideHelp: true,
+                    centerAlign: true,
+                  })
+                );
+              }}
               dataTestId="modal-session-pro-confirm-button"
             >
               {tr('theContinue')}
             </SessionButtonShiny>
           ) : null}
           <SessionButton
-            {...buttonProps}
+            {...proButtonProps}
             buttonColor={SessionButtonColor.Tertiary}
             onClick={onClose}
             dataTestId="modal-session-pro-cancel-button"
             style={
-              !hasNoProAndNotGroupCta ? { ...buttonProps.style, width: '50%' } : buttonProps.style
+              !hasNoProAndNotGroupCta
+                ? { ...proButtonProps.style, width: '50%' }
+                : proButtonProps.style
             }
           >
             {tr(!hasNoProAndNotGroupCta ? 'close' : 'cancel')}

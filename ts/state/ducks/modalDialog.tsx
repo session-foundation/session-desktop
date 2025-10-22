@@ -1,14 +1,20 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { SessionDataTestId } from 'react';
 import { BlockOrUnblockModalState } from '../../components/dialog/blockOrUnblock/BlockOrUnblockModalState';
 import { EnterPasswordModalProps } from '../../components/dialog/EnterPasswordModal';
 import { HideRecoveryPasswordDialogProps } from '../../components/dialog/HideRecoveryPasswordDialog';
 import { SessionConfirmDialogProps } from '../../components/dialog/SessionConfirm';
 import { MediaItemType } from '../../components/lightbox/LightboxGallery';
 import { AttachmentTypeWithPath } from '../../types/Attachment';
-import type { EditProfilePictureModalProps, PasswordAction } from '../../types/ReduxTypes';
+import type {
+  EditProfilePictureModalProps,
+  PasswordAction,
+  ProNonOriginatingPageVariant,
+} from '../../types/ReduxTypes';
 import { WithConvoId } from '../../session/types/with';
 import type { SessionProInfoVariant } from '../../components/dialog/SessionProInfoModal';
 import type { TrArgs } from '../../localization/localeTools';
+import { SessionButtonType } from '../../components/basic/SessionButton';
 
 export type BanType = 'ban' | 'unban';
 
@@ -25,13 +31,27 @@ export type UserSettingsPage =
   | 'clear-data'
   | 'password'
   | 'preferences'
-  | 'network';
+  | 'network'
+  | 'pro'
+  | 'proNonOriginating';
 
 export type WithUserSettingsPage =
-  | { userSettingsPage: Exclude<UserSettingsPage, 'password'> }
+  | { userSettingsPage: Exclude<UserSettingsPage, 'password' | 'pro' | 'proNonOriginating'> }
   | {
       userSettingsPage: 'password';
       passwordAction: PasswordAction;
+    }
+  | {
+      userSettingsPage: 'pro';
+      hideBackButton?: boolean;
+      hideHelp?: boolean;
+      centerAlign?: boolean;
+    }
+  | {
+      userSettingsPage: 'proNonOriginating';
+      nonOriginatingVariant: ProNonOriginatingPageVariant;
+      overrideBackAction?: () => void;
+      centerAlign?: boolean;
     };
 
 export type ConfirmModalState = SessionConfirmDialogProps | null;
@@ -53,10 +73,20 @@ export type OnionPathModalState = object | null;
 export type EnterPasswordModalState = EnterPasswordModalProps | null;
 export type DeleteAccountModalState = object | null;
 export type OpenUrlModalState = { urlToOpen: string } | null;
+
+export type LocalizedPopupDialogButtonOptions = {
+  label: TrArgs;
+  buttonType?: SessionButtonType;
+  dataTestId: SessionDataTestId;
+  onClick?: () => void;
+  closeAfterClick?: boolean;
+};
 export type LocalizedPopupDialogState = {
   title: TrArgs;
   description: TrArgs;
+  overrideButtons?: Array<LocalizedPopupDialogButtonOptions>;
 } | null;
+
 export type SessionProInfoState = { variant: SessionProInfoVariant } | null;
 
 export type UserProfileModalState = {

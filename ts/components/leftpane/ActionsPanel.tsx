@@ -58,6 +58,7 @@ import { GearAvatarButton } from '../buttons/avatar/GearAvatarButton';
 import { useZoomShortcuts } from '../../hooks/useZoomingShortcut';
 import { OnionStatusLight } from '../dialog/OnionStatusPathDialog';
 import { AvatarReupload } from '../../session/utils/job_runners/jobs/AvatarReuploadJob';
+import { useDebugMenuModal } from '../../state/selectors/modal';
 
 const StyledContainerAvatar = styled.div`
   padding: var(--margins-lg);
@@ -162,12 +163,10 @@ function useUpdateBadgeCount() {
 function useDebugThemeSwitch() {
   useKey(
     (event: KeyboardEvent) => {
-      return event.ctrlKey && event.key === 't';
+      return isDevProd() && event.ctrlKey && event.key === 't';
     },
     () => {
-      if (isDevProd()) {
-        void handleThemeSwitch();
-      }
+      void handleThemeSwitch();
     }
   );
 }
@@ -188,6 +187,32 @@ async function regenerateLastMessagesGroupsCommunities() {
       m.updateLastMessage();
     });
   await Storage.put(SettingsKey.lastMessageGroupsRegenerated, true);
+}
+
+function DebugMenuModalButton() {
+  const dispatch = useDispatch();
+  const debugMenuModalState = useDebugMenuModal();
+
+  useKey(
+    (event: KeyboardEvent) => {
+      return isDevProd() && event.ctrlKey && event.key === 'd';
+    },
+    () => {
+      dispatch(updateDebugMenuModal(debugMenuModalState ? null : {}));
+    }
+  );
+
+  return (
+    <SessionLucideIconButton
+      iconSize="medium"
+      padding="var(--margins-lg)"
+      unicode={LUCIDE_ICONS_UNICODE.SQUARE_CODE}
+      dataTestId="debug-menu-section"
+      onClick={() => {
+        dispatch(updateDebugMenuModal({}));
+      }}
+    />
+  );
 }
 
 /**
@@ -286,17 +311,7 @@ export const ActionsPanel = () => {
           />
           <GearAvatarButton />
         </StyledContainerAvatar>
-        {showDebugMenu && (
-          <SessionLucideIconButton
-            iconSize="medium"
-            padding="var(--margins-lg)"
-            unicode={LUCIDE_ICONS_UNICODE.SQUARE_CODE}
-            dataTestId="debug-menu-section"
-            onClick={() => {
-              dispatch(updateDebugMenuModal({}));
-            }}
-          />
-        )}
+        {showDebugMenu ? <DebugMenuModalButton /> : null}
         <OnionStatusLight
           handleClick={() => {
             dispatch(onionPathModal({}));
