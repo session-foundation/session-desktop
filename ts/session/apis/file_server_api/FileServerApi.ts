@@ -70,11 +70,15 @@ export const uploadFileToFsWithOnionV4 = async (
 
   // we now have the `fileUrl` provide the `serverPubkey` and the deterministic flag as an url fragment.
   const urlParams = new URLSearchParams();
-  urlParams.set(queryParamServerEd25519Pubkey, FS.FILE_SERVERS[target].edPk);
+  // Note: we don't want to set the pk for the default FS (it breaks prod builds on mobile)
+  if (target !== 'DEFAULT') {
+    urlParams.set(queryParamServerEd25519Pubkey, FS.FILE_SERVERS[target].edPk);
+  }
   if (deterministicEncryption) {
     urlParams.set(queryParamDeterministicEncryption, '');
   }
-  const fileUrl = `${FS.FILE_SERVERS[target].url}${FILE_ENDPOINT}/${fileId}#${urlParams.toString()}`;
+  const urlParamStr = urlParams.toString();
+  const fileUrl = `${FS.FILE_SERVERS[target].url}${FILE_ENDPOINT}/${fileId}${urlParamStr ? `#${urlParamStr}` : ''}`;
   const expiresMs = Math.floor(expires * 1000);
   return {
     fileUrl,
