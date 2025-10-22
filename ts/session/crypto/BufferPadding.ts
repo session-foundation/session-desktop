@@ -5,30 +5,6 @@ import { MAX_ATTACHMENT_FILESIZE_BYTES } from '../constants';
  */
 const PADDING_BYTE = 0x00;
 
-/**
- * Unpad the buffer from its padding.
- * An error is thrown if there is no padding.
- * A padded buffer is
- *  * whatever at start
- *  * ends with 0x80 and any number of 0x00 until the end
- */
-export function removeMessagePadding(paddedData: ArrayBuffer): ArrayBuffer {
-  const paddedPlaintext = new Uint8Array(paddedData);
-  // window?.log?.info('Removing message padding...');
-  for (let i = paddedPlaintext.length - 1; i >= 0; i -= 1) {
-    if (paddedPlaintext[i] === 0x80) {
-      const plaintext = new Uint8Array(i);
-      plaintext.set(paddedPlaintext.subarray(0, i));
-      return plaintext.buffer;
-    }
-    if (paddedPlaintext[i] !== PADDING_BYTE) {
-      // window?.log?.warn('got a message without padding... Letting it through for now');
-      return paddedPlaintext;
-    }
-  }
-
-  throw new Error('Invalid padding');
-}
 
 /*
  * If the attachment has padding, remove the padding and return the unpad attachment
