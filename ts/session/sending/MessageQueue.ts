@@ -39,13 +39,12 @@ export class MessageQueueCl {
     destinationPubKey: PubKey,
     message: ContentMessage,
     namespace: SnodeNamespaces,
-    sentCb?: (message: OutgoingRawMessage) => Promise<void>,
-    isGroup = false
+    sentCb?: (message: OutgoingRawMessage) => Promise<void>
   ): Promise<void> {
     if ((message as any).syncTarget) {
       throw new Error('SyncMessage needs to be sent with sendSyncMessage');
     }
-    await this.process(destinationPubKey, message, namespace, sentCb, isGroup);
+    await this.process(destinationPubKey, message, namespace, sentCb);
   }
 
   /**
@@ -166,13 +165,7 @@ export class MessageQueueCl {
       throw new Error('Invalid group message passed in sendToGroupV2.');
     }
 
-    return this.sendToPubKey(
-      PubKey.cast(message.destination),
-      message,
-      message.namespace,
-      sentCb,
-      true
-    );
+    return this.sendToPubKey(PubKey.cast(message.destination), message, message.namespace, sentCb);
   }
 
   public async sendToGroupV2NonDurably({
@@ -342,8 +335,7 @@ export class MessageQueueCl {
     destinationPk: PubKey,
     message: ContentMessage,
     namespace: SnodeNamespaces,
-    sentCb?: (message: OutgoingRawMessage) => Promise<void>,
-    isGroup = false
+    sentCb?: (message: OutgoingRawMessage) => Promise<void>
   ): Promise<void> {
     // Don't send to ourselves
     let isSyncMessage = false;
@@ -358,7 +350,7 @@ export class MessageQueueCl {
       }
     }
 
-    await this.pendingMessageCache.add(destinationPk, message, namespace, sentCb, isGroup);
+    await this.pendingMessageCache.add(destinationPk, message, namespace, sentCb);
     void this.processPending(destinationPk, isSyncMessage);
   }
 

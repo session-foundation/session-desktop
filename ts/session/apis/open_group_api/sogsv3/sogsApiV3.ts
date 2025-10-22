@@ -449,7 +449,6 @@ async function handleInboxOutboxMessages(
         receivedAt: Date.now(),
         timestamp: postedAtInMs,
         id: v4(),
-        type: SignalService.Envelope.Type.SESSION_MESSAGE, // this is not right, but we forward an already decrypted envelope so we don't care
       };
       const contentDecrypted = SignalService.Content.decode(content);
       if (!shouldProcessContentMessage(builtEnvelope, contentDecrypted, true)) {
