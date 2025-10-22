@@ -345,7 +345,7 @@ export const OverlayMessageInfo = () => {
           )}
           <MessageInfo messageId={messageId} errors={messageInfo.errors} />
           <SpacerLG />
-          <PanelButtonGroup style={{ margin: '0' }} isSidePanel>
+          <PanelButtonGroup style={{ margin: '0' }} isSidePanel={true}>
             {/* CopyMessageBodyButton is always shown so the PanelButtonGroup always has at least one item */}
             {!isLegacyGroup && <ReplyToMessageButton messageId={messageId} />}
             {hasErrors && !isLegacyGroup && direction === 'outgoing' && (

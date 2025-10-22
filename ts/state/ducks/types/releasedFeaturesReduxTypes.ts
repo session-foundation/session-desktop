@@ -70,7 +70,7 @@ export const getFeatureFlag = <T extends SessionFeatureFlagKeys>(flag: T) =>
 export const useFeatureFlag = <T extends SessionFeatureFlagKeys>(flag: T) => getFeatureFlag(flag);
 
 /**
- * Check if the given flag is a dFeature flag with data.
+ * Check if the given flag is a Feature flag with data.
  * @note debug flags are not included in this check
  * @node boolean flags are not included in this check
  */

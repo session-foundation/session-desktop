@@ -38,30 +38,30 @@ export type UserSettingsPage =
 export type WithUserSettingsPage =
   | { userSettingsPage: Exclude<UserSettingsPage, 'password' | 'pro' | 'proNonOriginating'> }
   | {
-    userSettingsPage: 'password';
-    passwordAction: PasswordAction;
-  }
+      userSettingsPage: 'password';
+      passwordAction: PasswordAction;
+    }
   | {
-    userSettingsPage: 'pro';
-    hideBackButton?: boolean;
-    hideHelp?: boolean;
-    centerAlign?: boolean;
-  }
+      userSettingsPage: 'pro';
+      hideBackButton?: boolean;
+      hideHelp?: boolean;
+      centerAlign?: boolean;
+    }
   | {
-    userSettingsPage: 'proNonOriginating';
-    nonOriginatingVariant: ProNonOriginatingPageVariant;
-    overrideBackAction?: () => void;
-    centerAlign?: boolean;
-  };
+      userSettingsPage: 'proNonOriginating';
+      nonOriginatingVariant: ProNonOriginatingPageVariant;
+      overrideBackAction?: () => void;
+      centerAlign?: boolean;
+    };
 
 export type ConfirmModalState = SessionConfirmDialogProps | null;
 
 export type InviteContactModalState = WithConvoId | null;
 export type BanOrUnbanUserModalState =
   | (WithConvoId & {
-    banType: BanType;
-    pubkey?: string;
-  })
+      banType: BanType;
+      pubkey?: string;
+    })
   | null;
 export type AddModeratorsModalState = InviteContactModalState;
 export type RemoveModeratorsModalState = InviteContactModalState;
@@ -121,9 +121,9 @@ type SettingsPageThatCanBeStandalone = Exclude<ConversationSettingsModalPage, 'd
 export type ConversationSettingsPage =
   | { settingsModalPage: SettingsPageThatCannotBeStandalone }
   | {
-    settingsModalPage: SettingsPageThatCanBeStandalone;
-    standalonePage: boolean;
-  };
+      settingsModalPage: SettingsPageThatCanBeStandalone;
+      standalonePage: boolean;
+    };
 export type ConversationSettingsModalState = (WithConvoId & ConversationSettingsPage) | null;
 
 export type ModalId =

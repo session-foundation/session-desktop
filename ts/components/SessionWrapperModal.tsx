@@ -37,7 +37,6 @@ type WithShowExitIcon = { showExitIcon?: boolean };
 const StyledModalHeader = styled(Flex)<{
   bigHeader?: boolean;
   scrolled: boolean;
-  flowContentIntoHeader?: boolean;
 }>`
   position: relative;
   font-family: var(--font-default);

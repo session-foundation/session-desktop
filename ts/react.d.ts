@@ -132,6 +132,13 @@ declare module 'react' {
     | 'preferences'
     | 'donate';
 
+  type ProFeatureItems =
+    | 'longer-messages'
+    | 'more-pins'
+    | 'animated-display-picture'
+    | 'badges'
+    | 'loads-more';
+
   type MenuItems = 'block' | 'delete' | 'accept';
 
   type Inputs =
@@ -272,6 +279,9 @@ declare module 'react' {
     | `${MenuItems}-menu-item`
     | `${SettingsMenuItems}-settings-menu-item`
     | `${Inputs}-input`
+
+    // Pro settings
+    | `${ProFeatureItems}-pro-settings-menu-item`
 
     // timer options
     | DisappearTimeOptionDataTestId

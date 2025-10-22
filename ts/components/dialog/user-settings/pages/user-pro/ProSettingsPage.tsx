@@ -1,5 +1,5 @@
 import { isNumber } from 'lodash';
-import { MouseEventHandler, useCallback, useMemo, type ReactNode } from 'react';
+import { MouseEventHandler, SessionDataTestId, useCallback, useMemo, type ReactNode } from 'react';
 import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 import { ModalBasicHeader } from '../../../../SessionWrapperModal';
@@ -46,6 +46,7 @@ import { proButtonProps } from '../../../SessionProInfoModal';
 import { useIsProGroupsAvailable } from '../../../../../hooks/useIsProAvailable';
 import { SessionSpinner } from '../../../../loading';
 import { SpacerMD } from '../../../../basic/Text';
+import { sleepFor } from '../../../../../session/utils/Promise';
 
 // TODO: There are only 2 props here and both are passed to the nonorigin modal dispatch, can probably be in their own object
 type SectionProps = {
@@ -201,31 +202,25 @@ function ProNonProContinueButton({ returnToThisModalAction, centerAlign }: Secti
   const backendErrorButtons = useBackendErrorDialogButtons();
 
   const handleClick = useCallback(() => {
-    if (isError) {
-      dispatch(
-        updateLocalizedPopupDialog({
-          title: { token: 'proStatusError' },
-          description: { token: 'proStatusNetworkErrorDescription' },
-          overrideButtons: backendErrorButtons,
-        })
-      );
-    } else if (isLoading) {
-      dispatch(
-        updateLocalizedPopupDialog({
-          title: { token: 'proStatusLoading' },
-          description: { token: 'proStatusLoadingDescription' },
-        })
-      );
-    } else {
-      dispatch(
-        userSettingsModal({
-          userSettingsPage: 'proNonOriginating',
-          nonOriginatingVariant: 'upgrade',
-          overrideBackAction: returnToThisModalAction,
-          centerAlign,
-        })
-      );
-    }
+    dispatch(
+      isError
+        ? updateLocalizedPopupDialog({
+            title: { token: 'proStatusError' },
+            description: { token: 'proStatusNetworkErrorDescription' },
+            overrideButtons: backendErrorButtons,
+          })
+        : isLoading
+          ? updateLocalizedPopupDialog({
+              title: { token: 'proStatusLoading' },
+              description: { token: 'proStatusLoadingDescription' },
+            })
+          : userSettingsModal({
+              userSettingsPage: 'proNonOriginating',
+              nonOriginatingVariant: 'upgrade',
+              overrideBackAction: returnToThisModalAction,
+              centerAlign,
+            })
+    );
   }, [dispatch, isLoading, isError, backendErrorButtons, centerAlign, returnToThisModalAction]);
 
   if (!neverHadPro) {
@@ -273,7 +268,7 @@ const StatsLabel = styled.div<{ disabled?: boolean }>`
 const proBoxShadow = '0 4px 4px 0 rgba(0, 0, 0, 0.25)';
 
 function ProStats() {
-  const proLongerMessagesSent = Storage.get(SettingsKey.proLongerMessagesSent) || 3000;
+  const proLongerMessagesSent = Storage.get(SettingsKey.proLongerMessagesSent) || 0;
   const proPinnedConversations = Storage.get(SettingsKey.proPinnedConversations) || 0;
   const proBadgesSent = Storage.get(SettingsKey.proBadgesSent) || 0;
   const proGroupsUpgraded = Storage.get(SettingsKey.proGroupsUpgraded) || 0;
@@ -475,10 +470,12 @@ function ProSettings({ returnToThisModalAction, centerAlign }: SectionProps) {
 function ProFeatureItem({
   textElement,
   iconElement,
+  dataTestId,
   onClick,
 }: {
   iconElement: ReactNode;
   textElement: ReactNode;
+  dataTestId: SessionDataTestId;
   onClick?: () => Promise<void>;
 }) {
   const isDarkTheme = useIsDarkTheme();
@@ -488,7 +485,7 @@ function ProFeatureItem({
         disabled={!onClick}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onClick={onClick}
-        data-testid={'invalid-data-testid'}
+        data-testid={dataTestId}
         isDarkTheme={isDarkTheme}
         defaultCursorWhenDisabled
       >
@@ -569,6 +566,7 @@ function ProFeatureIconElement({
 
 function getProFeatures(userHasPro: boolean): Array<
   {
+    dataTestId: SessionDataTestId;
     id:
       | 'proLongerMessages'
       | 'proUnlimitedPins'
@@ -581,6 +579,7 @@ function getProFeatures(userHasPro: boolean): Array<
 > {
   return [
     {
+      dataTestId: 'longer-messages-pro-settings-menu-item',
       id: 'proLongerMessages',
       title: { token: 'proLongerMessages' as const },
       description: {
@@ -591,6 +590,7 @@ function getProFeatures(userHasPro: boolean): Array<
       unicode: LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE,
     },
     {
+      dataTestId: 'more-pins-pro-settings-menu-item',
       id: 'proUnlimitedPins',
       title: { token: 'proUnlimitedPins' as const },
       description: {
@@ -601,18 +601,21 @@ function getProFeatures(userHasPro: boolean): Array<
       unicode: LUCIDE_ICONS_UNICODE.PIN,
     },
     {
+      dataTestId: 'animated-display-picture-pro-settings-menu-item',
       id: 'proAnimatedDisplayPictures',
       title: { token: 'proAnimatedDisplayPictures' as const },
       description: { token: 'proAnimatedDisplayPicturesDescription' as const },
       unicode: LUCIDE_ICONS_UNICODE.SQUARE_PLAY,
     },
     {
+      dataTestId: 'badges-pro-settings-menu-item',
       id: 'proBadges',
       title: { token: 'proBadges' as const },
       description: { token: 'proBadgesDescription' as const },
       unicode: LUCIDE_ICONS_UNICODE.RECTANGLE_ELLIPSES,
     },
     {
+      dataTestId: 'loads-more-pro-settings-menu-item',
       id: 'plusLoadsMore',
       title: { token: 'plusLoadsMore' as const },
       description: {
@@ -637,6 +640,7 @@ function ProFeatures() {
         {proFeatures.map((m, i) => {
           return (
             <ProFeatureItem
+              dataTestId={m.dataTestId}
               onClick={
                 m.id === 'plusLoadsMore'
                   ? async () => {
@@ -729,9 +733,7 @@ function ManageProCurrentAccess({ returnToThisModalAction, centerAlign }: Sectio
 // TODO: add logic to call libsession state
 function useRecoverProStatus() {
   const fetchAccess = useCallback(async () => {
-    await new Promise(resolve => {
-      setTimeout(resolve, 5000);
-    });
+    await sleepFor(5000);
     return { ok: false };
   }, []);
 
@@ -749,69 +751,62 @@ function ManageProPreviousAccess({ returnToThisModalAction, centerAlign }: Secti
   const backendErrorButtons = useBackendErrorDialogButtons();
 
   const handleClickRenew = useCallback(() => {
-    if (isError) {
-      dispatch(
-        updateLocalizedPopupDialog({
-          title: { token: 'proStatusError' },
-          description: { token: 'proStatusRenewError' },
-          overrideButtons: backendErrorButtons,
-        })
-      );
-    } else if (isLoading) {
-      dispatch(
-        updateLocalizedPopupDialog({
-          title: { token: 'proStatusLoading' },
-          description: { token: 'checkingProStatusRenew' },
-        })
-      );
-    } else {
-      dispatch(
-        userSettingsModal({
-          userSettingsPage: 'proNonOriginating',
-          nonOriginatingVariant: 'renew',
-          overrideBackAction: returnToThisModalAction,
-          centerAlign,
-        })
-      );
-    }
+    dispatch(
+      isError
+        ? updateLocalizedPopupDialog({
+            title: { token: 'proStatusError' },
+            description: { token: 'proStatusRenewError' },
+            overrideButtons: backendErrorButtons,
+          })
+        : isLoading
+          ? updateLocalizedPopupDialog({
+              title: { token: 'proStatusLoading' },
+              description: { token: 'checkingProStatusRenew' },
+            })
+          : userSettingsModal({
+              userSettingsPage: 'proNonOriginating',
+              nonOriginatingVariant: 'renew',
+              overrideBackAction: returnToThisModalAction,
+              centerAlign,
+            })
+    );
   }, [dispatch, isLoading, isError, backendErrorButtons, centerAlign, returnToThisModalAction]);
 
   const handleClickRecover = useCallback(async () => {
     const result = await fetchRecoverAccess();
 
     if (result.ok) {
-      dispatch(
+      return dispatch(
         updateLocalizedPopupDialog({
           title: { token: 'proAccessRestored' },
           description: { token: 'proAccessRestoredDescription' },
         })
       );
-    } else {
-      dispatch(
-        updateLocalizedPopupDialog({
-          title: { token: 'proAccessNotFound' },
-          description: { token: 'proAccessNotFoundDescription' },
-          overrideButtons: [
-            {
-              label: { token: 'helpSupport' },
-              dataTestId: 'pro-backend-error-support-button',
-              onClick: () => {
-                showLinkVisitWarningDialog(
-                  'https://sessionapp.zendesk.com/hc/sections/4416517450649-Support',
-                  dispatch
-                );
-              },
-              closeAfterClick: true,
-            },
-            {
-              label: { token: 'close' },
-              dataTestId: 'modal-close-button',
-              closeAfterClick: true,
-            },
-          ],
-        })
-      );
     }
+    return dispatch(
+      updateLocalizedPopupDialog({
+        title: { token: 'proAccessNotFound' },
+        description: { token: 'proAccessNotFoundDescription' },
+        overrideButtons: [
+          {
+            label: { token: 'helpSupport' },
+            dataTestId: 'pro-backend-error-support-button',
+            onClick: () => {
+              showLinkVisitWarningDialog(
+                'https://sessionapp.zendesk.com/hc/sections/4416517450649-Support',
+                dispatch
+              );
+            },
+            closeAfterClick: true,
+          },
+          {
+            label: { token: 'close' },
+            dataTestId: 'modal-close-button',
+            closeAfterClick: true,
+          },
+        ],
+      })
+    );
   }, [dispatch, fetchRecoverAccess]);
 
   if (!userHasExpiredPro) {
@@ -908,7 +903,10 @@ function PageHero() {
           overrideButtons: backendErrorButtons,
         })
       );
-    } else if (isLoading) {
+      return;
+    }
+
+    if (isLoading) {
       dispatch(
         updateLocalizedPopupDialog({
           title: { token: 'proStatusLoading' },
@@ -916,6 +914,7 @@ function PageHero() {
         })
       );
     }
+    // Do nothing if not error or loading
   }, [dispatch, isLoading, isError, backendErrorButtons]);
 
   const heroStatusText = useMemo(() => {

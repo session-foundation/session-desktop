@@ -47,9 +47,9 @@ function ProPageHero({ variant }: VariantPageProps) {
     case 'renew':
       return <ProHeroImage heroText={tr('proAccessRenewStart')} />;
     case 'cancel':
-      return <ProHeroImage noColors heroText={tr('proCancelSorry')} />;
+      return <ProHeroImage heroText={tr('proCancelSorry')} noColors={true} />;
     case 'refund':
-      return <ProHeroImage noColors heroText={tr('proRefundDescription')} />;
+      return <ProHeroImage heroText={tr('proRefundDescription')} noColors={true} />;
     default:
       return assertUnreachable(variant, `Unknown pro non originating page variant: ${variant}`);
   }
@@ -376,7 +376,7 @@ function ProInfoBlockRefundSessionSupport() {
       }}
     >
       <ProInfoBlockRefundTitle>
-        <Localizer token="proRefunding" />{' '}
+        <Localizer token="proRefunding" />
       </ProInfoBlockRefundTitle>
       <Localizer token="proRefundRequestSessionSupport" />
       <ProInfoBlockRefundTitle>
@@ -398,7 +398,7 @@ function ProInfoBlockRefundGooglePlay() {
       }}
     >
       <ProInfoBlockRefundTitle>
-        <Localizer token="proRefunding" />{' '}
+        <Localizer token="proRefunding" />
       </ProInfoBlockRefundTitle>
       <Localizer token="proRefundRequestStorePolicies" platform={data.platformStrings.platform} />
       <ProInfoBlockRefundTitle>

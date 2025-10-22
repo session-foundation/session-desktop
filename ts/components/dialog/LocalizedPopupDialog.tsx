@@ -53,6 +53,7 @@ export function LocalizedPopupDialog(props: LocalizedPopupDialogState) {
             props.overrideButtons.map(
               ({ label, buttonType, onClick, closeAfterClick, dataTestId }) => (
                 <SessionButton
+                  key={label.token}
                   buttonType={buttonType || SessionButtonType.Simple}
                   onClick={() => {
                     onClick?.();

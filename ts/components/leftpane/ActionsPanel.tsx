@@ -163,12 +163,10 @@ function useUpdateBadgeCount() {
 function useDebugThemeSwitch() {
   useKey(
     (event: KeyboardEvent) => {
-      return event.ctrlKey && event.key === 't';
+      return isDevProd() && event.ctrlKey && event.key === 't';
     },
     () => {
-      if (isDevProd()) {
-        void handleThemeSwitch();
-      }
+      void handleThemeSwitch();
     }
   );
 }
@@ -197,12 +195,10 @@ function DebugMenuModalButton() {
 
   useKey(
     (event: KeyboardEvent) => {
-      return event.ctrlKey && event.key === 'd';
+      return isDevProd() && event.ctrlKey && event.key === 'd';
     },
     () => {
-      if (isDevProd()) {
-        dispatch(updateDebugMenuModal(debugMenuModalState ? null : {}));
-      }
+      dispatch(updateDebugMenuModal(debugMenuModalState ? null : {}));
     }
   );
 
