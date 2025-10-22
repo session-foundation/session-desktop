@@ -1,30 +1,22 @@
 import { UserGroupsGet } from 'libsession_util_nodejs';
 import { compact, flatten, isEmpty, uniqBy } from 'lodash';
-import { SignalService } from '../../../../protobuf';
-import { MetaGroupWrapperActions } from '../../../../webworker/workers/browser/libsession_worker_interface';
-import { GroupUpdateInfoChangeMessage } from '../../../messages/outgoing/controlMessage/group_v2/to_group/GroupUpdateInfoChangeMessage';
-import { GroupUpdateMemberChangeMessage } from '../../../messages/outgoing/controlMessage/group_v2/to_group/GroupUpdateMemberChangeMessage';
-import { MessageWrapper } from '../../../sending/MessageWrapper';
+import {
+  MetaGroupWrapperActions,
+  MultiEncryptWrapperActions,
+} from '../../../../webworker/workers/browser/libsession_worker_interface';
 import { ed25519Str } from '../../../utils/String';
 import { PendingChangesForGroup } from '../../../utils/libsession/libsession_utils';
 import {
-  StoreGroupExtraData,
   StoreGroupInfoSubRequest,
   StoreGroupKeysSubRequest,
   StoreGroupMembersSubRequest,
   StoreGroupMessageSubRequest,
 } from '../SnodeRequestTypes';
 import { SnodeNamespaces } from '../namespaces';
-import { GroupUpdateDeleteMemberContentMessage } from '../../../messages/outgoing/controlMessage/group_v2/to_group/GroupUpdateDeleteMemberContentMessage';
-import { GroupUpdateMemberLeftNotificationMessage } from '../../../messages/outgoing/controlMessage/group_v2/to_group/GroupUpdateMemberLeftNotificationMessage';
 import { TTL_DEFAULT } from '../../../constants';
 import { NetworkTime } from '../../../../util/NetworkTime';
-
-export type StoreMessageToSubRequestType =
-  | GroupUpdateMemberChangeMessage
-  | GroupUpdateInfoChangeMessage
-  | GroupUpdateDeleteMemberContentMessage
-  | GroupUpdateMemberLeftNotificationMessage;
+import { UserUtils } from '../../../utils';
+import type { StoreMessageToSubRequestType } from './StoreGroupRequestMessageType';
 
 async function makeGroupMessageSubRequest(
   updateMessages: Array<StoreMessageToSubRequestType | null>,
@@ -39,57 +31,44 @@ async function makeGroupMessageSubRequest(
   if (!allForSameDestination) {
     throw new Error('makeGroupMessageSubRequest: not all messages are for the same destination');
   }
-
   const allTimestamps = uniqBy(compactedMessages, m => m.createAtNetworkTimestamp);
   if (allTimestamps.length !== compactedMessages.length) {
     throw new Error(
       'tried to send batch request with messages having the same timestamp, this is not supported on all platforms.'
     );
   }
+  const groupEncKeyHex = await MetaGroupWrapperActions.keyGetEncryptionKeyHex(groupPk);
+  const senderEd25519Seed = await UserUtils.getUserEd25519Seed();
 
-  const messagesToEncrypt: Array<StoreGroupExtraData> = compactedMessages.map(updateMessage => {
-    const wrapped = MessageWrapper.wrapContentIntoEnvelope(
-      SignalService.Envelope.Type.CLOSED_GROUP_MESSAGE,
-      undefined,
-      updateMessage.createAtNetworkTimestamp, // message is signed with this timestamp
-      updateMessage.plainTextBuffer()
-    );
+  // debugger;
+  const { encryptedData } = await MultiEncryptWrapperActions.encryptForGroup(
+    compactedMessages.map(m => {
+      return {
+        plaintext: m.plainTextBuffer(),
+        sentTimestampMs: m.createAtNetworkTimestamp,
+        groupEd25519Pubkey: m.destination,
+        groupEncKey: groupEncKeyHex,
+        senderEd25519Seed,
+        proRotatingEd25519PrivKey: null,
+      };
+    })
+  );
 
-    return {
-      namespace: SnodeNamespaces.ClosedGroupMessages,
-      pubkey: updateMessage.destination,
-      ttl: updateMessage.ttl(),
-      networkTimestamp: updateMessage.createAtNetworkTimestamp,
-      data: SignalService.Envelope.encode(wrapped).finish(),
-      dbMessageIdentifier: updateMessage.identifier,
-    };
-  });
-
-  const encryptedContent = messagesToEncrypt.length
-    ? await MetaGroupWrapperActions.encryptMessages(
-        groupPk,
-        messagesToEncrypt.map(m => m.data)
-      )
-    : [];
-  if (encryptedContent.length !== messagesToEncrypt.length) {
+  if (encryptedData.length !== compactedMessages.length) {
     throw new Error(
-      'makeGroupMessageSubRequest: MetaGroupWrapperActions.encryptMessages did not return the right count of items'
+      'makeGroupMessageSubRequest: MultiEncryptWrapperActions.encryptForGroup did not return the right count of items'
     );
   }
 
-  const updateMessagesEncrypted = messagesToEncrypt.map((requestDetails, index) => ({
-    ...requestDetails,
-    data: encryptedContent[index],
-  }));
-
-  const updateMessagesRequests = updateMessagesEncrypted.map(m => {
+  const updateMessagesRequests = compactedMessages.map((message, index) => {
     return new StoreGroupMessageSubRequest({
-      encryptedData: m.data,
+      encryptedData: encryptedData[index],
       groupPk,
-      ttlMs: m.ttl,
-      dbMessageIdentifier: m.dbMessageIdentifier,
+      ttlMs: message.ttl(),
+      dbMessageIdentifier: message.identifier,
+
       ...group,
-      createdAtNetworkTimestamp: m.networkTimestamp,
+      createdAtNetworkTimestamp: message.createAtNetworkTimestamp,
       getNow: NetworkTime.now,
     });
   });

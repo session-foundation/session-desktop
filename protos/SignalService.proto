@@ -3,6 +3,8 @@ syntax = "proto2";
 
 
 message Envelope {
+  reserved "serverTimestamp";
+  reserved 10;
 
   enum Type {
     SESSION_MESSAGE = 6;

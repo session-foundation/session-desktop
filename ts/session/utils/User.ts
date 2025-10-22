@@ -71,16 +71,16 @@ export async function getIdentityKeyPair(): Promise<SessionKeyPair | undefined> 
   return cachedIdentityKeyPair;
 }
 
-export async function getUserED25519KeyPair(): Promise<HexKeyPair | undefined> {
+export async function getUserED25519KeyPair(): Promise<HexKeyPair> {
   const ed25519KeyPairBytes = await getUserED25519KeyPairBytes();
-  if (ed25519KeyPairBytes) {
-    const { pubKeyBytes, privKeyBytes } = ed25519KeyPairBytes;
-    return {
-      pubKey: toHex(pubKeyBytes),
-      privKey: toHex(privKeyBytes),
-    };
+  if (!ed25519KeyPairBytes) {
+    throw new Error('getUserED25519KeyPair: user has no keypair');
   }
-  return undefined;
+  const { pubKeyBytes, privKeyBytes } = ed25519KeyPairBytes;
+  return {
+    pubKey: toHex(pubKeyBytes),
+    privKey: toHex(privKeyBytes),
+  };
 }
 
 export const getUserED25519KeyPairBytes = async (): Promise<ByteKeyPair> => {
@@ -100,14 +100,18 @@ export const getUserED25519KeyPairBytes = async (): Promise<ByteKeyPair> => {
 };
 
 /**
- * Return the ed25519 seed of the current user.
+ * Return the ed25519 seed of the current user. (32 bytes)
  * This is used to generate deterministic encryption keys for attachments/profile pictures.
  *
  * This is cached so will only be slow on the first fetch.
  */
 export async function getUserEd25519Seed() {
+  return (await getUserEd25519PrivKey()).slice(0, 32);
+}
+
+async function getUserEd25519PrivKey() {
   const ed25519KeyPairBytes = await getUserED25519KeyPairBytes();
-  return ed25519KeyPairBytes.privKeyBytes.slice(0, 32);
+  return ed25519KeyPairBytes.privKeyBytes;
 }
 
 export async function getOurProfile() {

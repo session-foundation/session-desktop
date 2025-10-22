@@ -726,6 +726,10 @@ export const MetaGroupWrapperActions: MetaGroupWrapperActionsCalls = {
     callLibSessionWorker([`MetaGroupConfig-${groupPk}`, 'keyGetAll']) as Promise<
       ReturnType<MetaGroupWrapperActionsCalls['keyGetAll']>
     >,
+  keyGetEncryptionKeyHex: async (groupPk: GroupPubkeyType) =>
+    callLibSessionWorker([`MetaGroupConfig-${groupPk}`, 'keyGetEncryptionKeyHex']) as Promise<
+      ReturnType<MetaGroupWrapperActionsCalls['keyGetEncryptionKeyHex']>
+    >,
   activeHashes: async (groupPk: GroupPubkeyType) =>
     callLibSessionWorker([`MetaGroupConfig-${groupPk}`, 'activeHashes']) as Promise<
       ReturnType<MetaGroupWrapperActionsCalls['activeHashes']>
@@ -802,9 +806,6 @@ export const MetaGroupWrapperActions: MetaGroupWrapperActionsCalls = {
 };
 
 export const MultiEncryptWrapperActions: MultiEncryptActionsCalls = {
-  /* Reuse the UserConfigWrapperActions with the UserConfig argument */
-  ...createBaseActionsFor('UserConfig'),
-
   /** UserConfig wrapper specific actions */
   multiEncrypt: async args =>
     callLibSessionWorker(['MultiEncrypt', 'multiEncrypt', args]) as Promise<
@@ -823,6 +824,39 @@ export const MultiEncryptWrapperActions: MultiEncryptActionsCalls = {
   attachmentEncrypt: async args =>
     callLibSessionWorker(['MultiEncrypt', 'attachmentEncrypt', args]) as Promise<
       ReturnType<MultiEncryptActionsCalls['attachmentEncrypt']>
+    >,
+
+  encryptFor1o1: async args =>
+    callLibSessionWorker(['MultiEncrypt', 'encryptFor1o1', args]) as Promise<
+      ReturnType<MultiEncryptActionsCalls['encryptFor1o1']>
+    >,
+
+  encryptForCommunityInbox: async args =>
+    callLibSessionWorker(['MultiEncrypt', 'encryptForCommunityInbox', args]) as Promise<
+      ReturnType<MultiEncryptActionsCalls['encryptForCommunityInbox']>
+    >,
+
+  encryptForCommunity: async args =>
+    callLibSessionWorker(['MultiEncrypt', 'encryptForCommunity', args]) as Promise<
+      ReturnType<MultiEncryptActionsCalls['encryptForCommunity']>
+    >,
+
+  encryptForGroup: async args =>
+    callLibSessionWorker(['MultiEncrypt', 'encryptForGroup', args]) as Promise<
+      ReturnType<MultiEncryptActionsCalls['encryptForGroup']>
+    >,
+
+  decryptForCommunity: async (first, second) =>
+    callLibSessionWorker(['MultiEncrypt', 'decryptForCommunity', first, second]) as Promise<
+      ReturnType<MultiEncryptActionsCalls['decryptForCommunity']>
+    >,
+  decryptFor1o1: async (first, second) =>
+    callLibSessionWorker(['MultiEncrypt', 'decryptFor1o1', first, second]) as Promise<
+      ReturnType<MultiEncryptActionsCalls['decryptFor1o1']>
+    >,
+  decryptForGroup: async (first, second) =>
+    callLibSessionWorker(['MultiEncrypt', 'decryptForGroup', first, second]) as Promise<
+      ReturnType<MultiEncryptActionsCalls['decryptForGroup']>
     >,
 };
 

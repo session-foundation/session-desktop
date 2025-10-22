@@ -1,8 +1,7 @@
 /* eslint-disable no-param-reassign */
-import { isEmpty, noop, omit, toNumber } from 'lodash';
+import { isEmpty, omit, toNumber } from 'lodash';
 
 import { SignalService } from '../protobuf';
-import { IncomingMessageCache } from './cache';
 import { getEnvelopeId } from './common';
 import { EnvelopePlus } from './types';
 
@@ -156,8 +155,6 @@ export async function handleSwarmDataMessage({
       messageHash,
     });
     // Groups update should always be able to be decrypted as we get the keys before trying to decrypt them.
-    // If decryption failed once, it will keep failing, so no need to keep it in the cache.
-    await IncomingMessageCache.removeFromCache({ id: envelope.id });
     return;
   }
 
@@ -178,7 +175,6 @@ export async function handleSwarmDataMessage({
 
   if (isSyncedMessage && !isMe) {
     window?.log?.warn('Got a sync message from someone else than me. Dropping it.');
-    await IncomingMessageCache.removeFromCache(envelope);
     return;
   }
   const convoIdToAddTheMessageTo = isSyncedMessage ? cleanDataMessage.syncTarget : envelope.source;
@@ -186,7 +182,6 @@ export async function handleSwarmDataMessage({
     window?.log?.warn(
       'got a message starting with textsecure prefix. can only be legacy group message. dropping.'
     );
-    await IncomingMessageCache.removeFromCache(envelope);
     return;
   }
 
@@ -229,13 +224,10 @@ export async function handleSwarmDataMessage({
 
   if (!messageHasVisibleContent(cleanDataMessage)) {
     window?.log?.warn(`Message ${getEnvelopeId(envelope)} ignored; it was empty`);
-    await IncomingMessageCache.removeFromCache(envelope);
-    return;
   }
 
   if (!convoIdToAddTheMessageTo) {
     window?.log?.error('We cannot handle a message without a conversationId');
-    await IncomingMessageCache.removeFromCache(envelope);
     return;
   }
 
@@ -269,9 +261,7 @@ export async function handleSwarmDataMessage({
     messageHash,
     sentAtTimestamp,
     cleanDataMessage,
-    convoToAddMessageTo,
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    () => IncomingMessageCache.removeFromCache(envelope)
+    convoToAddMessageTo
   );
 }
 
@@ -306,14 +296,7 @@ export async function handleOutboxMessageModel(
   rawDataMessage: SignalService.DataMessage,
   convoToAddMessageTo: ConversationModel
 ) {
-  return handleSwarmMessage(
-    msgModel,
-    messageHash,
-    sentAt,
-    rawDataMessage,
-    convoToAddMessageTo,
-    noop
-  );
+  return handleSwarmMessage(msgModel, messageHash, sentAt, rawDataMessage, convoToAddMessageTo);
 }
 
 async function handleSwarmMessage(
@@ -321,12 +304,10 @@ async function handleSwarmMessage(
   messageHash: string,
   sentAt: number,
   rawDataMessage: SignalService.DataMessage,
-  convoToAddMessageTo: ConversationModel,
-  confirm: () => void
+  convoToAddMessageTo: ConversationModel
 ): Promise<void> {
   if (!rawDataMessage || !msgModel) {
     window?.log?.warn('Invalid data passed to handleSwarmMessage.');
-    confirm();
     return;
   }
 
@@ -349,7 +330,6 @@ async function handleSwarmMessage(
         convoToAddMessageTo.throttledNotify(msgModel);
       }
 
-      confirm();
       return;
     }
 
@@ -360,7 +340,6 @@ async function handleSwarmMessage(
 
     if (isDuplicate) {
       window?.log?.info('Received duplicate message. Dropping it.');
-      confirm();
       return;
     }
 
@@ -368,7 +347,6 @@ async function handleSwarmMessage(
       msgModel,
       convoToAddMessageTo,
       toRegularMessage(rawDataMessage),
-      confirm,
       msgModel.get('source'),
       messageHash
     );

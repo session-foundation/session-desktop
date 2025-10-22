@@ -352,7 +352,6 @@ export async function handleMessageJob(
   messageModel: MessageModel,
   conversation: ConversationModel,
   regularDataMessage: RegularMessageType,
-  confirm: () => void,
   source: string,
   messageHash: string
 ) {
@@ -404,7 +403,6 @@ export async function handleMessageJob(
             'id'
           )}\nexpirationTimerUpdate: ${JSON.stringify(expirationTimerUpdate)}`
         );
-        confirm?.();
         return;
       }
 
@@ -479,7 +477,6 @@ export async function handleMessageJob(
     if (messageModel.get('unread')) {
       conversation.throttledNotify(messageModel);
     }
-    confirm?.();
   } catch (error) {
     const errorForLog = error && error.stack ? error.stack : error;
     window?.log?.error('handleMessageJob', messageModel.idForLogging(), 'error:', errorForLog);

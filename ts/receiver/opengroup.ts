@@ -1,57 +1,41 @@
-import { noop } from 'lodash';
 import {
   createPublicMessageSentFromNotUs,
   createPublicMessageSentFromUs,
 } from '../models/messageFactory';
 import { SignalService } from '../protobuf';
-import { OpenGroupMessageV4 } from '../session/apis/open_group_api/opengroupV2/OpenGroupServerPoller';
 import { isUsAnySogsFromCache } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import { getOpenGroupV2ConversationId } from '../session/apis/open_group_api/utils/OpenGroupUtils';
 import { ConvoHub } from '../session/conversations';
-import { removeMessagePadding } from '../session/crypto/BufferPadding';
-import { perfEnd, perfStart } from '../session/utils/Performance';
-import { fromBase64ToArray } from '../session/utils/String';
 import { cleanIncomingDataMessage, messageHasVisibleContent } from './dataMessage';
 import { handleMessageJob, toRegularMessage } from './queuedJob';
 import { OpenGroupRequestCommonType } from '../data/types';
 import { shouldProcessContentMessage } from './common';
 
-export const handleOpenGroupV4Message = async (
-  message: OpenGroupMessageV4,
-  roomInfos: OpenGroupRequestCommonType
-) => {
-  const { data, id, posted, session_id } = message;
-  if (data && posted && session_id) {
-    await handleOpenGroupMessage(roomInfos, data, posted, session_id, id);
-  } else {
-    throw Error('Missing data passed to handleOpenGroupV4Message.');
-  }
-};
-
 /**
  * Common checks and decoding that takes place for both v2 and v4 message types.
  */
-const handleOpenGroupMessage = async (
-  roomInfos: OpenGroupRequestCommonType,
-  base64EncodedData: string,
-  sentTimestamp: number,
-  sender: string,
-  serverId: number
-) => {
-  const { serverUrl, roomId } = roomInfos;
-  if (!base64EncodedData || !sentTimestamp || !sender || !serverId) {
-    window?.log?.warn('Invalid data passed to handleOpenGroupV2Message.');
+export const handleOpenGroupMessage = async ({
+  decodedContent,
+  roomInfos,
+  sender,
+  sentTimestamp,
+  serverId,
+}: {
+  roomInfos: OpenGroupRequestCommonType;
+  decodedContent: SignalService.Content;
+  sentTimestamp: number;
+  sender: string;
+  serverId: number;
+}) => {
+  if (!decodedContent || !sentTimestamp || !sender) {
     return;
   }
 
-  // Note: opengroup messages should not be padded
-  perfStart(`fromBase64ToArray-${base64EncodedData.length}`);
-  const arr = fromBase64ToArray(base64EncodedData);
-  perfEnd(`fromBase64ToArray-${base64EncodedData.length}`, 'fromBase64ToArray');
-
-  const dataUint = new Uint8Array(removeMessagePadding(arr));
-
-  const decodedContent = SignalService.Content.decode(dataUint);
+  const { serverUrl, roomId } = roomInfos;
+  if (!decodedContent || !sentTimestamp || !sender || !serverId) {
+    window?.log?.warn('Invalid data passed to handleOpenGroupV2Message.');
+    return;
+  }
 
   if (!shouldProcessContentMessage({ timestamp: sentTimestamp }, decodedContent, true)) {
     window?.log?.info(
@@ -109,7 +93,6 @@ const handleOpenGroupMessage = async (
       toRegularMessage(
         cleanIncomingDataMessage(decodedContent?.dataMessage as SignalService.DataMessage)
       ),
-      noop,
       sender,
       ''
     );

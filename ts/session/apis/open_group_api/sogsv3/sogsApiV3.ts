@@ -6,7 +6,6 @@ import { v4 } from 'uuid';
 
 import { OpenGroupData } from '../../../../data/opengroups';
 import { ConversationModel } from '../../../../models/conversation';
-import { handleOpenGroupV4Message } from '../../../../receiver/opengroup';
 import { callUtilsWorker } from '../../../../webworker/workers/browser/util_worker_interface';
 import { ConvoHub } from '../../../conversations';
 import { PubKey } from '../../../types';
@@ -33,9 +32,8 @@ import { SignalService } from '../../../../protobuf';
 import { innerHandleSwarmContentMessage } from '../../../../receiver/contentMessage';
 import { handleOutboxMessageModel } from '../../../../receiver/dataMessage';
 import { EnvelopePlus } from '../../../../receiver/types';
-import { assertUnreachable } from '../../../../types/sqlSharedTypes';
+import { assertUnreachable, type AwaitedReturn } from '../../../../types/sqlSharedTypes';
 import { getSodiumRenderer } from '../../../crypto';
-import { removeMessagePadding } from '../../../crypto/BufferPadding';
 import { DisappearingMessages } from '../../../disappearing_messages';
 import { UserUtils } from '../../../utils';
 import { sogsRollingDeletions } from './sogsRollingDeletions';
@@ -43,6 +41,11 @@ import { processMessagesUsingCache } from './sogsV3MutationCache';
 import { OpenGroupRequestCommonType } from '../../../../data/types';
 import { ConversationTypeEnum } from '../../../../models/types';
 import { shouldProcessContentMessage } from '../../../../receiver/common';
+import { fromBase64ToArray } from '../../../utils/String';
+import { NetworkTime } from '../../../../util/NetworkTime';
+import { MultiEncryptWrapperActions } from '../../../../webworker/workers/browser/libsession_worker_interface';
+import ProBackendAPI from '../../pro_backend_api/ProBackendAPI';
+import { handleOpenGroupMessage } from '../../../../receiver/opengroup';
 
 /**
  * Get the convo matching those criteria and make sure it is an opengroup convo, or return null.
@@ -294,12 +297,51 @@ const handleMessagesResponseV4 = async (
     const incomingMessageSeqNo = compact(messages.map(n => n.seqno));
     const maxNewMessageSeqNo = Math.max(...incomingMessageSeqNo);
 
+    let decryptedItems: AwaitedReturn<(typeof MultiEncryptWrapperActions)['decryptForCommunity']>;
+    try {
+      const toProcess = messagesWithResolvedBlindedIdsIfFound
+        .filter(m => m.data)
+        .map(m => ({
+          contentOrEnvelope: fromBase64ToArray(m.data!),
+          // we need to forward the id so we can map what was succesffuly decrypted
+          // with the fields we have on the request itself.
+          serverId: m.id,
+        }));
+
+      decryptedItems = await MultiEncryptWrapperActions.decryptForCommunity(toProcess, {
+        nowMs: NetworkTime.now(),
+        proBackendPubkeyHex: ProBackendAPI.getEd25519PubkeyHex(),
+      });
+    } catch (e) {
+      window.log.warn('skipping handling community as it failed to decrypt with:', e.message);
+      return;
+    }
+
     for (let index = 0; index < messagesWithResolvedBlindedIdsIfFound.length; index++) {
       const msgToHandle = messagesWithResolvedBlindedIdsIfFound[index];
+      const decrypted = decryptedItems.find(m => m.serverId === msgToHandle.id);
+      if (!decrypted) {
+        // it seems that we failed to decrypt that message
+        continue;
+      }
+
       try {
-        await handleOpenGroupV4Message(msgToHandle, roomDetails);
+        if (!msgToHandle.posted || !msgToHandle.session_id || !decrypted.serverId) {
+          continue;
+        }
+
+        const decodedContent = SignalService.Content.decode(decrypted.contentPlaintextUnpadded);
+
+        await handleOpenGroupMessage({
+          roomInfos: roomDetails,
+          decodedContent,
+          sentTimestamp: msgToHandle.posted,
+          // important to keep the msgToHandle here as it has blindedIds replaced for us and people we know
+          sender: msgToHandle.session_id,
+          serverId: decrypted.serverId,
+        });
       } catch (e) {
-        window?.log?.warn('handleOpenGroupV4Message', e);
+        window?.log?.warn('handleOpenGroupMessage failed with', e.message);
       }
     }
 
@@ -388,27 +430,35 @@ async function handleInboxOutboxMessages(
       const postedAtInMs = Math.floor(inboxOutboxItem.posted_at * 1000);
 
       const otherBlindedPubkey = isOutbox ? inboxOutboxItem.recipient : inboxOutboxItem.sender;
-      const decrypted = await SogsBlinding.decryptWithSessionBlindingProtocol(
-        data,
-        isOutgoing,
-        otherBlindedPubkey,
-        serverPubkey,
-        ourKeypairBytes
+      const { plainText: unblindedPlaintext, senderUnblinded } =
+        await SogsBlinding.decryptWithSessionBlindingProtocol(
+          data,
+          isOutgoing,
+          otherBlindedPubkey,
+          serverPubkey,
+          ourKeypairBytes
+        );
+
+      const decrypted = await MultiEncryptWrapperActions.decryptForCommunity(
+        [{ contentOrEnvelope: unblindedPlaintext, serverId: inboxOutboxItem.id }],
+        { nowMs: NetworkTime.now(), proBackendPubkeyHex: ProBackendAPI.getEd25519PubkeyHex() }
       );
 
-      // decrypt message from result
+      if (isEmpty(decrypted[0].contentPlaintextUnpadded)) {
+        continue;
+      }
 
-      const content = new Uint8Array(removeMessagePadding(decrypted.plainText));
+      // decrypt message from result
+      const contentPayload = decrypted[0].contentPlaintextUnpadded;
       const builtEnvelope: EnvelopePlus = {
-        content,
-        source: decrypted.senderUnblinded, // this is us for an outbox message, and the sender for an inbox message
-        senderIdentity: decrypted.senderUnblinded,
+        content: decrypted[0].contentPlaintextUnpadded,
+        source: senderUnblinded, // this is us for an outbox message, and the sender for an inbox message
+        senderIdentity: '',
         receivedAt: Date.now(),
         timestamp: postedAtInMs,
         id: v4(),
-        type: SignalService.Envelope.Type.SESSION_MESSAGE, // this is not right, but we forward an already decrypted envelope so we don't care
       };
-      const contentDecrypted = SignalService.Content.decode(content);
+      const contentDecrypted = SignalService.Content.decode(contentPayload);
       if (!shouldProcessContentMessage(builtEnvelope, contentDecrypted, true)) {
         window.log.warn(
           `received inbox/outbox message that did not pass the shouldProcessContentMessage test envelopeTs: ${builtEnvelope.timestamp}`
@@ -444,6 +494,8 @@ async function handleInboxOutboxMessages(
             messageHash: '',
             sentAt: postedAtInMs,
           });
+          // we need this so that the conversation appears on restore from seed
+          await outboxConversationModel.setIsApproved(true, true);
           await outboxConversationModel.setOriginConversationID(serverConversationId, true);
 
           await handleOutboxMessageModel(
@@ -459,21 +511,16 @@ async function handleInboxOutboxMessages(
         const sender = inboxOutboxItem.sender;
 
         try {
-          const match = tryMatchBlindWithStandardKey(
-            decrypted.senderUnblinded,
-            sender,
-            serverPubkey,
-            sodium
-          );
+          const match = tryMatchBlindWithStandardKey(senderUnblinded, sender, serverPubkey, sodium);
           if (!match) {
             throw new Error(
-              `tryMatchBlindWithStandardKey failed for blinded ${decrypted.senderUnblinded} and ${sender}`
+              `tryMatchBlindWithStandardKey failed for blinded ${senderUnblinded} and ${sender}`
             );
           }
           // that sender just sent us its unblindedId.
           await addCachedBlindedKey({
             blindedId: sender,
-            realSessionId: decrypted.senderUnblinded,
+            realSessionId: senderUnblinded,
             serverPublicKey: serverPubkey,
           });
           await findCachedBlindedMatchOrLookItUp(sender, serverPubkey, sodium);

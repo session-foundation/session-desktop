@@ -45,16 +45,10 @@ export class PendingMessageCache {
     destinationPubKey: PubKey,
     message: ContentMessage,
     namespace: SnodeNamespaces,
-    sentCb?: (message: any) => Promise<void>,
-    isGroup = false
+    sentCb?: (message: any) => Promise<void>
   ): Promise<OutgoingRawMessage> {
     await this.loadFromDBIfNeeded();
-    const rawMessage = await MessageUtils.toRawMessage(
-      destinationPubKey,
-      message,
-      namespace,
-      isGroup
-    );
+    const rawMessage = await MessageUtils.toRawMessage(destinationPubKey, message, namespace);
 
     // Does it exist in cache already?
     if (this.find(rawMessage)) {

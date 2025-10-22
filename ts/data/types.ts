@@ -4,14 +4,6 @@ import type {
   WithServerUrl,
 } from '../session/apis/open_group_api/sogsv3/sogsWith';
 
-export type IdentityKey = {
-  id: string;
-  publicKey: ArrayBuffer;
-  firstUse: boolean;
-  nonblockingApproval: boolean;
-  secretKey?: string; // found in medium groups
-};
-
 export type GuardNode = {
   ed25519PubKey: string;
 };
