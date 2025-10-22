@@ -1973,7 +1973,6 @@ function removeAll() {
   assertGlobalInstance().exec(`
     DELETE FROM ${IDENTITY_KEYS_TABLE};
     DELETE FROM ${ITEMS_TABLE};
-    DELETE FROM unprocessed;
     DELETE FROM ${LAST_HASHES_TABLE};
     DELETE FROM ${NODES_FOR_PUBKEY_TABLE};
     DELETE FROM ${SEEN_MESSAGE_TABLE};
@@ -2329,7 +2328,6 @@ function printDbStats() {
     'sqlite_sequence',
     'sqlite_stat1',
     'sqlite_stat4',
-    'unprocessed',
   ].forEach(i => {
     console.log(`${i} count`, getEntriesCountInTable(i));
   });

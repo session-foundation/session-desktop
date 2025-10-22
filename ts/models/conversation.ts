@@ -2673,7 +2673,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
         communityPubkey: roomInfo.serverPublicKey,
         plaintext: sogsVisibleMessage.plainTextBuffer(),
         senderEd25519Seed: await UserUtils.getUserEd25519Seed(),
-        recipientPubkey: this.id.slice(2),
+        recipientPubkey: this.id,
         sentTimestampMs: messageParams.createAtNetworkTimestamp,
         proRotatingEd25519PrivKey: null,
       },
