@@ -22,7 +22,6 @@ import {
 } from 'lodash';
 import { v4 } from 'uuid';
 import { Data } from '../../../data/data';
-import { SignalService } from '../../../protobuf';
 import * as Receiver from '../../../receiver/receiver';
 import { PubKey } from '../../types';
 import { ERROR_CODE_NO_CONNECT } from './SNodeAPI';
@@ -1198,7 +1197,6 @@ async function handleDecryptedMessagesForSwarm(
         receivedAt: Date.now(),
         content: foundDecrypted.decodedEnvelope.contentPlaintextUnpadded,
         source: groupPk ?? foundDecrypted.decodedEnvelope.sessionId,
-        type: SignalService.Envelope.Type.SESSION_MESSAGE,
         timestamp: foundDecrypted.decodedEnvelope.envelope.timestampMs,
       };
 

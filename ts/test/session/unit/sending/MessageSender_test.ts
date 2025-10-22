@@ -22,6 +22,7 @@ import {
   stubData,
   stubUtilWorker,
   stubValidSnodeSwarm,
+  stubWindowLog,
 } from '../../../test-utils/utils';
 import { NetworkTime } from '../../../../util/NetworkTime';
 
@@ -42,17 +43,24 @@ describe('MessageSender', () => {
   });
 
   describe('send', () => {
-    const ourNumber = TestUtils.generateFakePubKeyStr();
     let doSnodeBatchRequestStub: TypedStub<typeof BatchRequests, 'doSnodeBatchRequestNoRetries'>;
 
-    beforeEach(() => {
+    beforeEach(async () => {
       doSnodeBatchRequestStub = Sinon.stub(
         BatchRequests,
         'doSnodeBatchRequestNoRetries'
       ).resolves();
       stubData('getMessageById').resolves();
 
-      Sinon.stub(UserUtils, 'getOurPubKeyStrFromCache').returns(ourNumber);
+      const userKeys = await TestUtils.generateUserKeyPairs();
+      stubWindowLog();
+
+      Sinon.stub(UserUtils, 'getOurPubKeyStrFromCache').returns(userKeys.x25519KeyPair.pubkeyHex);
+      Sinon.stub(UserUtils, 'getIdentityKeyPair').resolves({
+        privKey: userKeys.x25519KeyPair.privKey,
+        pubKey: userKeys.x25519KeyPair.pubKey,
+        ed25519KeyPair: userKeys.ed25519KeyPair,
+      });
     });
 
     describe('retry', () => {
@@ -66,8 +74,9 @@ describe('MessageSender', () => {
         );
       });
 
-      it('should only call lokiMessageAPI once if no errors occured', async () => {
+      it('should only call lokiMessageAPI once if no errors occurred', async () => {
         stubValidSnodeSwarm();
+        TestUtils.stubMultiEncryptWrapper();
         await MessageSender.sendSingleMessage({
           message: rawMessage,
           attempts: 3,
@@ -80,7 +89,7 @@ describe('MessageSender', () => {
 
       it('should only retry the specified amount of times before throwing', async () => {
         stubValidSnodeSwarm();
-
+        TestUtils.stubMultiEncryptWrapper();
         doSnodeBatchRequestStub.throws(new Error('API error'));
         const attempts = 2;
         const promise = MessageSender.sendSingleMessage({
@@ -96,6 +105,7 @@ describe('MessageSender', () => {
 
       it('should not throw error if successful send occurs within the retry limit', async () => {
         stubValidSnodeSwarm();
+        TestUtils.stubMultiEncryptWrapper();
         doSnodeBatchRequestStub.onFirstCall().throws(new Error('API error'));
         await MessageSender.sendSingleMessage({
           message: rawMessage,
@@ -111,7 +121,7 @@ describe('MessageSender', () => {
     describe('logic', () => {
       it('should pass the correct values to lokiMessageAPI', async () => {
         TestUtils.setupTestWithSending();
-
+        TestUtils.stubMultiEncryptWrapper();
         const device = TestUtils.generateFakePubKey();
         const visibleMessage = TestUtils.generateVisibleMessage();
         Sinon.stub(ConvoHub.use(), 'get').returns(undefined as any);
@@ -153,7 +163,7 @@ describe('MessageSender', () => {
 
       it('should correctly build the envelope and override the request timestamp but not the msg one', async () => {
         TestUtils.setupTestWithSending();
-
+        TestUtils.stubMultiEncryptWrapper();
         // This test assumes the encryption stub returns the plainText passed into it.
         const device = TestUtils.generateFakePubKey();
         Sinon.stub(ConvoHub.use(), 'get').returns(undefined as any);
@@ -193,73 +203,26 @@ describe('MessageSender', () => {
         const envelope = SignalService.Envelope.decode(
           webSocketMessage.request?.body as Uint8Array
         );
-        expect(envelope.type).to.equal(SignalService.Envelope.Type.SESSION_MESSAGE);
         expect(envelope.source).to.equal('');
 
         // the timestamp in the message is not overridden on sending as it should be set with the network offset when created.
         // we need that timestamp to not be overridden as the signature of the message depends on it.
         const decodedTimestampFromSending = _.toNumber(envelope.timestamp);
         expect(decodedTimestampFromSending).to.be.eq(visibleMessage.createAtNetworkTimestamp);
-
-        // then, make sure that
-      });
-
-      describe('SESSION_MESSAGE', () => {
-        it('should set the envelope source to be empty', async () => {
-          TestUtils.setupTestWithSending();
-          Sinon.stub(ConvoHub.use(), 'get').returns(undefined as any);
-
-          // This test assumes the encryption stub returns the plainText passed into it.
-          const device = TestUtils.generateFakePubKey();
-          const visibleMessage = TestUtils.generateVisibleMessage();
-          const rawMessage = await MessageUtils.toRawMessage(
-            device,
-            visibleMessage,
-            SnodeNamespaces.Default
-          );
-          await MessageSender.sendSingleMessage({
-            message: rawMessage,
-            attempts: 3,
-            retryMinTimeout: 10,
-            isSyncMessage: false,
-            abortSignal: null,
-          });
-
-          const firstArg = doSnodeBatchRequestStub.getCall(0).args[0];
-          const firstSubRequest = firstArg.subRequests[0];
-
-          if (firstSubRequest.method !== 'store') {
-            throw new Error('expected a store request with data');
-          }
-          const data = fromBase64ToArrayBuffer(firstSubRequest.params.data);
-          const webSocketMessage = SignalService.WebSocketMessage.decode(new Uint8Array(data));
-          expect(webSocketMessage.request?.body).to.not.equal(
-            undefined,
-            'Request body should not be undefined'
-          );
-          expect(webSocketMessage.request?.body).to.not.equal(
-            null,
-            'Request body should not be null'
-          );
-
-          const envelope = SignalService.Envelope.decode(
-            webSocketMessage.request?.body as Uint8Array
-          );
-          expect(envelope.type).to.equal(SignalService.Envelope.Type.SESSION_MESSAGE);
-          expect(envelope.source).to.equal(
-            '',
-            'envelope source should be empty in SESSION_MESSAGE'
-          );
-        });
       });
     });
   });
 
   describe('sendToOpenGroupV2', () => {
-    beforeEach(() => {
-      Sinon.stub(UserUtils, 'getOurPubKeyStrFromCache').resolves(
-        TestUtils.generateFakePubKey().key
-      );
+    beforeEach(async () => {
+      const userKeys = await TestUtils.generateUserKeyPairs();
+      stubWindowLog();
+      Sinon.stub(UserUtils, 'getOurPubKeyStrFromCache').returns(userKeys.x25519KeyPair.pubkeyHex);
+      Sinon.stub(UserUtils, 'getIdentityKeyPair').resolves({
+        privKey: userKeys.x25519KeyPair.privKey,
+        pubKey: userKeys.x25519KeyPair.pubKey,
+        ed25519KeyPair: userKeys.ed25519KeyPair,
+      });
 
       Sinon.stub(SogsBlinding, 'getSogsSignature').resolves(new Uint8Array());
 
@@ -288,6 +251,7 @@ describe('MessageSender', () => {
     });
 
     it('should call sendOnionRequestHandlingSnodeEjectStub', async () => {
+      TestUtils.stubMultiEncryptWrapper();
       const sendOnionRequestHandlingSnodeEjectStub = Sinon.stub(
         Onions,
         'sendOnionRequestHandlingSnodeEjectNoRetries'
@@ -307,6 +271,8 @@ describe('MessageSender', () => {
     });
 
     it('should retry sendOnionRequestHandlingSnodeEjectStub ', async () => {
+      TestUtils.stubMultiEncryptWrapper();
+
       const message = TestUtils.generateOpenGroupVisibleMessage();
       const roomInfos = TestUtils.generateOpenGroupV2RoomInfos();
       Sinon.stub(Onions, 'sendOnionRequestHandlingSnodeEjectNoRetries').resolves({} as any);

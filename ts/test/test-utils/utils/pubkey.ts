@@ -1,5 +1,11 @@
+import Sinon from 'sinon';
 import * as crypto from 'crypto';
-import { GroupPubkeyType, PubkeyType, UserGroupsWrapperNode } from 'libsession_util_nodejs';
+import {
+  GroupPubkeyType,
+  MultiEncryptWrapperNode,
+  PubkeyType,
+  UserGroupsWrapperNode,
+} from 'libsession_util_nodejs';
 import { KeyPair, to_hex } from 'libsodium-wrappers-sumo';
 import _ from 'lodash';
 import { Snode } from '../../../data/types';
@@ -8,6 +14,7 @@ import { SnodePool } from '../../../session/apis/snode_api/snodePool';
 import { PubKey } from '../../../session/types';
 import { ByteKeyPair } from '../../../session/utils/User';
 import { stubData } from './stubbing';
+import { MultiEncryptWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 
 export function generateFakePubKey(): PubKey {
   // Generates a mock pubkey for testing
@@ -131,4 +138,13 @@ export function setupTestWithSending() {
 
   stubData('getSwarmNodesForPubkey').resolves(swarm.map(m => m.pubkey_ed25519));
   return { snodes, swarm };
+}
+
+export function stubMultiEncryptWrapper() {
+  Sinon.stub(MultiEncryptWrapperActions, 'encryptFor1o1').callsFake(async (...args) =>
+    MultiEncryptWrapperNode.encryptFor1o1(...args)
+  );
+  Sinon.stub(MultiEncryptWrapperActions, 'encryptForCommunity').callsFake(async (...args) =>
+    MultiEncryptWrapperNode.encryptForCommunity(...args)
+  );
 }

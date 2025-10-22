@@ -1,5 +1,4 @@
 import { v4 as uuidv4 } from 'uuid';
-import { SignalService } from '../../../protobuf';
 import { EnvelopePlus } from '../../../receiver/types';
 
 export function generateEnvelopePlusClosedGroup(groupId: string, sender: string): EnvelopePlus {
@@ -8,7 +7,6 @@ export function generateEnvelopePlusClosedGroup(groupId: string, sender: string)
     receivedAt: Date.now(),
     timestamp: Date.now() - 2000,
     id: uuidv4(),
-    type: SignalService.Envelope.Type.CLOSED_GROUP_MESSAGE,
     source: groupId,
     content: new Uint8Array(),
   };
@@ -21,7 +19,6 @@ export function generateEnvelopePlus(sender: string): EnvelopePlus {
     receivedAt: Date.now(),
     timestamp: Date.now() - 2000,
     id: uuidv4(),
-    type: SignalService.Envelope.Type.SESSION_MESSAGE,
     source: sender,
     senderIdentity: sender,
     content: new Uint8Array(),
