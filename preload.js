@@ -92,25 +92,10 @@ window.sessionFeatureFlags = {
   debugOnionRequests: false,
 };
 
-function parseProOriginatingPlatform(v) {
-  return v === 1 || v === 2 ? v : null;
-}
-
-function parseProAccessVariant(v) {
-  return v === 1 || v === 2 || v === 3 ? v : null;
-}
-
-function parseProAccessExpiry(v) {
-  const num = Number.parseInt(v);
-  return Number.isFinite(num) ? num : null;
-}
-
 window.sessionFeatureFlagsWithData = {
-  mockProOriginatingPlatform: parseProOriginatingPlatform(
-    process.env.SESSION_PRO_MOCK_ORIGINATING_PLATFORM
-  ),
-  mockProAccessVariant: parseProAccessVariant(process.env.SESSION_PRO_MOCK_ACCESS_VARIANT),
-  mockProAccessExpiry: parseProAccessExpiry(process.env.SESSION_PRO_MOCK_ACCESS_EXPIRY),
+  mockProOriginatingPlatform: null,
+  mockProAccessVariant: null,
+  mockProAccessExpiry: null,
 };
 
 window.versionInfo = {
