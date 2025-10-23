@@ -197,30 +197,28 @@ export const getLatestReleaseFromFileServer = async (
  *
  */
 export const extendFileExpiry = async (fileId: string, fsTarget: FILE_SERVER_TARGET_TYPE) => {
-  // TODO: remove this once QA is done
-
-  if (!FS.supportsFsExtend(fsTarget)) {
-    throw new Error('extendFileExpiry: only works with potato for now');
-  }
   if (window.sessionFeatureFlags?.debugServerRequests) {
     window.log.info(`about to renew expiry of file: "${fileId}"`);
   }
 
   const method = 'POST';
   const endpoint = `/file/${fileId}/extend`;
+  const headers: Record<string, string> = window.sessionFeatureFlags.fsTTL30s
+    ? { 'X-FS-TTL': '30' }
+    : {};
   const params = {
     abortSignal: new AbortController().signal,
     endpoint,
     method,
     stringifiedBody: null,
-    headers: {},
+    headers,
     timeoutMs: 10 * DURATION.SECONDS,
     target: fsTarget,
   };
 
   const result = await OnionSending.sendJsonViaOnionV4ToFileServer(params);
 
-  if (!batchGlobalIsSuccess(result) || OnionV4.parseStatusCodeFromV4Request(result) !== 200) {
+  if (!batchGlobalIsSuccess(result)) {
     return null;
   }
 

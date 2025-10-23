@@ -1,3 +1,4 @@
+import { from_hex } from 'libsodium-wrappers-sumo';
 import { isNumber } from 'lodash';
 import { v4 } from 'uuid';
 import { UserUtils } from '../..';
@@ -19,7 +20,6 @@ import { maxAvatarDetails } from '../../../../util/attachment/attachmentSizes';
 import { UserConfigWrapperActions } from '../../../../webworker/workers/browser/libsession_worker_interface';
 import { extendFileExpiry } from '../../../apis/file_server_api/FileServerApi';
 import { fileServerUrlToFileId } from '../../../apis/file_server_api/types';
-import { NetworkTime } from '../../../../util/NetworkTime';
 import { DURATION, DURATION_SECONDS } from '../../../constants';
 import { uploadAndSetOurAvatarShared } from '../../../../interactions/avatar-interactions/nts-avatar-interactions';
 import { FS } from '../../../apis/file_server_api/FileServerTarget';
@@ -63,6 +63,39 @@ async function fetchLocalAvatarDetails(currentMainPath: string) {
   }
 }
 
+/**
+ * Returns the current timestamp in seconds.
+ * Note: this is not the network time, but our local time with an offset, potentially.
+ * We want to use that one here, as the UserProfile actions are not based on the network timestamp either.k
+ */
+function nowSeconds() {
+  return Math.floor(Date.now() / 1000);
+}
+
+function shouldSkipRenew({
+  ourProfileLastUpdatedSeconds,
+}: {
+  ourProfileLastUpdatedSeconds: number;
+}) {
+  if (window.sessionFeatureFlags.fsTTL30s) {
+    // this is in dev
+    return Date.now() / 1000 - ourProfileLastUpdatedSeconds <= 10 * DURATION_SECONDS.SECONDS;
+  }
+  // this is in prod
+  return nowSeconds() - ourProfileLastUpdatedSeconds <= 2 * DURATION_SECONDS.HOURS;
+}
+
+function shouldSkipReupload({
+  ourProfileLastUpdatedSeconds,
+}: {
+  ourProfileLastUpdatedSeconds: number;
+}) {
+  if (window.sessionFeatureFlags.fsTTL30s) {
+    return nowSeconds() - ourProfileLastUpdatedSeconds <= 10 * DURATION_SECONDS.SECONDS;
+  }
+  return nowSeconds() - ourProfileLastUpdatedSeconds <= 12 * DURATION_SECONDS.DAYS;
+}
+
 class AvatarReuploadJob extends PersistedJob<AvatarReuploadPersistedData> {
   constructor({
     conversationId,
@@ -91,7 +124,7 @@ class AvatarReuploadJob extends PersistedJob<AvatarReuploadPersistedData> {
   public async run(): Promise<RunJobResult> {
     const convoId = this.persistedData.conversationId;
     window.log.debug(
-      `running job ${this.persistedData.jobType} id:"${this.persistedData.identifier}" `
+      `[avatarReupload] running job ${this.persistedData.jobType} id:"${this.persistedData.identifier}" `
     );
 
     if (!this.persistedData.identifier) {
@@ -104,14 +137,14 @@ class AvatarReuploadJob extends PersistedJob<AvatarReuploadPersistedData> {
     let conversation = ConvoHub.use().get(convoId);
     if (!conversation || !conversation.isMe()) {
       // Note: if we add the groupv2 case here, we'd need to add a profile_updated timestamp to the metagroup wrapper
-      window.log.warn('AvatarReuploadJob did not find corresponding conversation, or not us');
+      window.log.warn('[avatarReupload] did not find corresponding conversation, or not us');
 
       return RunJobResult.PermanentFailure;
     }
     const ourProfileLastUpdatedSeconds = await UserConfigWrapperActions.getProfileUpdatedSeconds();
     const currentMainPath = conversation.getAvatarInProfilePath();
     const avatarPointer = conversation.getAvatarPointer();
-    const profileKey = conversation.getProfileKey();
+    const profileKey = conversation.getProfileKeyHex();
     const { fileId, fullUrl } = fileServerUrlToFileId(avatarPointer);
     if (!currentMainPath || !avatarPointer || !profileKey || !fullUrl) {
       // we do not have an avatar to reupload, nothing to do.
@@ -130,58 +163,84 @@ class AvatarReuploadJob extends PersistedJob<AvatarReuploadPersistedData> {
       if (
         ourProfileLastUpdatedSeconds !== 0 &&
         metadata.width <= maxAvatarDetails.maxSidePlanReupload &&
-        metadata.height <= maxAvatarDetails.maxSidePlanReupload &&
-        metadata.format === 'webp'
+        metadata.height <= maxAvatarDetails.maxSidePlanReupload
       ) {
         const target = FS.fileUrlToFileTarget(fullUrl?.toString());
         window.log.debug(
-          `[avatarReupload] main avatar is already the right size and format for ${ed25519Str(conversation.id)}, just renewing it on fs: ${target}`
+          `[avatarReupload] main avatar is already the right size for ${ed25519Str(conversation.id)} target:${target}`
+        );
+        if (shouldSkipRenew({ ourProfileLastUpdatedSeconds })) {
+          // we don't want to call `renew` too often. Only once every 2hours (or more when the fsTTL30s feature is enabled)
+          window.log.debug(
+            `[avatarReupload] not trying to renew avatar for ${ed25519Str(conversation.id)} of file ${fileId} as we did one recently`
+          );
+          // considering this to be a success
+          return RunJobResult.Success;
+        }
+        window.log.debug(
+          `[avatarReupload] renewing avatar on fs: ${target} for ${ed25519Str(conversation.id)} and file:${fileId}`
         );
         const expiryRenewResult = await extendFileExpiry(fileId, target);
 
         if (expiryRenewResult) {
           window.log.debug(
-            `[avatarReupload] expiry renew for ${ed25519Str(conversation.id)} of file ${fileId} was successful`
+            `[avatarReupload] expiry renew for ${ed25519Str(conversation.id)} of file:${fileId} on fs: ${target} was successful`
           );
+
+          await UserConfigWrapperActions.getProfilePic();
+
+          await UserConfigWrapperActions.setReuploadProfilePic({
+            key: from_hex(profileKey),
+            url: avatarPointer,
+          });
+
           return RunJobResult.Success;
         }
+        window.log.debug(
+          `[avatarReupload] expiry renew for ${ed25519Str(conversation.id)} of file:${fileId} on fs: ${target} failed`
+        );
 
-        if (ourProfileLastUpdatedSeconds > NetworkTime.nowSeconds() - 12 * DURATION_SECONDS.DAYS) {
-          // `renew` failed but our last reupload was less than 12 days ago, so we don't want to retry
+        // AUDRIC: expiry renew for (...efb27b5b) of file:Ff1CvAQIo1BXCeoV3DwTjYEzSoBPZW56FeExk8qij79h on fs: POTATO failed
+        // keep failing even whe it shouldnt
+
+        if (shouldSkipReupload({ ourProfileLastUpdatedSeconds })) {
           window.log.debug(
-            `[avatarReupload] expiry renew for ${ed25519Str(conversation.id)} of file ${fileId} failed but our last reupload was less than 12 days ago, so we don't want to retry`
+            `[avatarReupload] ${ed25519Str(conversation.id)} last reupload was recent enough, so we don't want to reupload it`
           );
           // considering this to be a success
           return RunJobResult.Success;
         }
-        // renew failed, but our last reupload was more than 12 days ago, so we want to reprocess and
-        // reupload our current avatar, see below
+        // renew failed, and our last reupload was not too recent, so we want to reprocess and
+        // reupload our current avatar, see below...
       }
 
       // here,
       // - either the format or the size is wrong
       // - or we do not have a ourProfileLastUpdatedSeconds yet
-      // - or the expiry renew failed and our last reupload was more than 12 days ago
+      // - or the expiry renew failed and our last reupload not recent
       // In all those cases, we want to reprocess our current avatar, and reupload it.
 
-      window.log.info(`[profileupdate] about to auto scale avatar for convo ${conversation.id}`);
+      window.log.info(
+        `[avatarReupload] about to auto scale avatar for convo ${ed25519Str(conversation.id)}`
+      );
 
       conversation = ConvoHub.use().getOrThrow(convoId);
 
       // Reprocess the avatar content, and reupload it
       // This will pick the correct file server depending on the env variables set.
-      await uploadAndSetOurAvatarShared({
+      const details = await uploadAndSetOurAvatarShared({
         decryptedAvatarData,
         ourConvo: conversation,
         context: 'reuploadAvatar',
       });
+      window.log.info(
+        `[avatarReupload] reupload done for ${ed25519Str(conversation.id)}: ${details?.avatarPointer}`
+      );
+      return RunJobResult.Success;
     } catch (e) {
-      window.log.warn(`[profileReupload] failed with ${e.message}`);
+      window.log.warn(`[avatarReupload] failed with ${e.message}`);
       return RunJobResult.RetryJobIfPossible;
     }
-
-    // return true so this job is marked as a success
-    return RunJobResult.Success;
   }
 
   public serializeJob(): AvatarReuploadPersistedData {

@@ -62,7 +62,7 @@ async function insertContactFromDBIntoWrapperAndRefresh(
   const dbName = foundConvo.getRealSessionUsername() || undefined;
   const dbNickname = foundConvo.get('nickname');
   const dbProfileUrl = foundConvo.getAvatarPointer() || undefined;
-  const dbProfileKey = foundConvo.getProfileKey() || undefined;
+  const dbProfileKey = foundConvo.getProfileKeyHex() || undefined;
   const dbApproved = !!foundConvo.get('isApproved');
   const dbApprovedMe = !!foundConvo.get('didApproveMe');
   const dbBlocked = foundConvo.isBlocked();
