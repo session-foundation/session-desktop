@@ -215,16 +215,9 @@ type SetSessionProfileReturn = {
  * We need to do some extra processing for private actions, as they have a updatedAtSeconds field.
  */
 function isSetProfileWithUpdatedAtSeconds<T extends SetSessionProfileDetails>(
-  _action: T
-): _action is Extract<T, { profileUpdatedAtSeconds: number }> {
-  /**
-   * We temporarily want to not write the profileUpdatedAtSeconds as we want this behavior to
-   * be used only once a user has updated their profile picture (and resized it).
-   */
-  window.log.debug('isSetProfileWithUpdatedAtSeconds forced to return false for now');
-  return false;
-
-  // return 'profileUpdatedAtSeconds' in action;
+  action: T
+): action is Extract<T, { profileUpdatedAtSeconds: number }> {
+  return 'profileUpdatedAtSeconds' in action;
 }
 
 /**
@@ -1545,7 +1538,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
             this.getAvatarInProfilePath() ||
             this.getFallbackAvatarInProfilePath() ||
             this.getAvatarPointer() ||
-            this.getProfileKey()
+            this.getProfileKeyHex()
           ) {
             this.set({
               avatarInProfile: undefined,
@@ -1573,7 +1566,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
           : to_hex(newProfile.profileKey);
 
         const existingAvatarPointer = this.getAvatarPointer();
-        const existingProfileKeyHex = this.getProfileKey();
+        const existingProfileKeyHex = this.getProfileKeyHex();
         const hasAvatarInNewProfile = !!newProfile.avatarPointer || !!newProfileKeyHex;
         // if no changes are needed, return early
         if (
@@ -1603,7 +1596,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
           : to_hex(newProfile.profileKey);
 
         const existingAvatarPointer = this.getAvatarPointer();
-        const existingProfileKeyHex = this.getProfileKey();
+        const existingProfileKeyHex = this.getProfileKeyHex();
         const originalAvatar = this.getAvatarInProfilePath();
         const originalFallbackAvatar = this.getFallbackAvatarInProfilePath();
 
@@ -1730,7 +1723,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
    * Returns the profile key attributes of this instance.
    * If the attribute is unset, empty, or not a string, returns `undefined`.
    */
-  public getProfileKey(): string | undefined {
+  public getProfileKeyHex(): string | undefined {
     const profileKey = this.get('profileKey');
     if (!profileKey || !isString(profileKey)) {
       return undefined;
@@ -1768,11 +1761,11 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
     const avatarPointer = this.getAvatarPointer() ?? null;
     const displayName = this.getRealSessionUsername() ?? '';
-    const profileKey = this.getProfileKey() ?? null;
+    const profileKeyHex = this.getProfileKeyHex() ?? null;
     const updatedAtSeconds = this.getProfileUpdatedSeconds();
 
     return new OutgoingUserProfile({
-      profilePic: { url: avatarPointer, key: profileKey ? from_hex(profileKey) : null },
+      profilePic: { url: avatarPointer, key: profileKeyHex ? from_hex(profileKeyHex) : null },
       displayName,
       updatedAtSeconds,
     });

@@ -20,6 +20,13 @@ import { FS, type FILE_SERVER_TARGET_TYPE } from './FileServerTarget';
 const RELEASE_VERSION_ENDPOINT = '/session_version';
 const FILE_ENDPOINT = '/file';
 
+function getShortTTLHeadersIfNeeded(): Record<string, string> {
+  if (window.sessionFeatureFlags?.fsTTL30s) {
+    return { 'X-FS-TTL': '30' };
+  }
+  return {};
+}
+
 /**
  * Upload a file to the file server v2 using the onion v4 encoding
  * @param fileContent the data to send
@@ -48,7 +55,7 @@ export const uploadFileToFsWithOnionV4 = async (
     endpoint: FILE_ENDPOINT,
     method: 'POST',
     timeoutMs: 30 * DURATION.SECONDS, // longer time for file upload
-    headers: window.sessionFeatureFlags.fsTTL30s ? { 'X-FS-TTL': '30' } : {},
+    headers: getShortTTLHeadersIfNeeded(),
   });
 
   if (!batchGlobalIsSuccess(result)) {
@@ -70,11 +77,15 @@ export const uploadFileToFsWithOnionV4 = async (
 
   // we now have the `fileUrl` provide the `serverPubkey` and the deterministic flag as an url fragment.
   const urlParams = new URLSearchParams();
-  urlParams.set(queryParamServerEd25519Pubkey, FS.FILE_SERVERS[target].edPk);
+  // Note: we don't want to set the pk for the default FS (it breaks prod builds on mobile)
+  if (target !== 'DEFAULT') {
+    urlParams.set(queryParamServerEd25519Pubkey, FS.FILE_SERVERS[target].edPk);
+  }
   if (deterministicEncryption) {
     urlParams.set(queryParamDeterministicEncryption, '');
   }
-  const fileUrl = `${FS.FILE_SERVERS[target].url}${FILE_ENDPOINT}/${fileId}#${urlParams.toString()}`;
+  const urlParamStr = urlParams.toString();
+  const fileUrl = `${FS.FILE_SERVERS[target].url}${FILE_ENDPOINT}/${fileId}${urlParamStr ? `#${urlParamStr}` : ''}`;
   const expiresMs = Math.floor(expires * 1000);
   return {
     fileUrl,
@@ -193,30 +204,24 @@ export const getLatestReleaseFromFileServer = async (
  *
  */
 export const extendFileExpiry = async (fileId: string, fsTarget: FILE_SERVER_TARGET_TYPE) => {
-  // TODO: remove this once QA is done
-
-  if (!FS.supportsFsExtend(fsTarget)) {
-    throw new Error('extendFileExpiry: only works with potato for now');
-  }
   if (window.sessionFeatureFlags?.debugServerRequests) {
     window.log.info(`about to renew expiry of file: "${fileId}"`);
   }
 
   const method = 'POST';
   const endpoint = `/file/${fileId}/extend`;
-  const params = {
+
+  const result = await OnionSending.sendJsonViaOnionV4ToFileServer({
     abortSignal: new AbortController().signal,
     endpoint,
     method,
     stringifiedBody: null,
-    headers: {},
+    headers: getShortTTLHeadersIfNeeded(),
     timeoutMs: 10 * DURATION.SECONDS,
     target: fsTarget,
-  };
+  });
 
-  const result = await OnionSending.sendJsonViaOnionV4ToFileServer(params);
-
-  if (!batchGlobalIsSuccess(result) || OnionV4.parseStatusCodeFromV4Request(result) !== 200) {
+  if (!batchGlobalIsSuccess(result)) {
     return null;
   }
 

@@ -69,7 +69,7 @@ const clearOurAvatar = createAsyncThunk('user/clearOurAvatar', async () => {
     isNil(convo.getAvatarPointer()) &&
     isNil(convo.getAvatarInProfilePath()) &&
     isNil(convo.getFallbackAvatarInProfilePath()) &&
-    isNil(convo.getProfileKey())
+    isNil(convo.getProfileKeyHex())
   ) {
     return;
   }

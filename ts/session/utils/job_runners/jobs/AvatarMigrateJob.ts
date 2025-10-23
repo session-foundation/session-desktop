@@ -109,7 +109,7 @@ class AvatarMigrateJob extends PersistedJob<AvatarMigratePersistedData> {
       window.log.warn('AvatarMigrateJob: no avatar pointer found for conversation');
       return RunJobResult.Success;
     }
-    const existingProfileKeyHex = conversation.getProfileKey();
+    const existingProfileKeyHex = conversation.getProfileKeyHex();
     if (!existingProfileKeyHex) {
       window.log.warn('AvatarMigrateJob: no profileKey found for conversation');
       return RunJobResult.Success;

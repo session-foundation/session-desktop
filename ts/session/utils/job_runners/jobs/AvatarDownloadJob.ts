@@ -36,7 +36,7 @@ export function shouldAddAvatarDownloadJob({ conversationId }: { conversationId:
     return false;
   }
   const prevPointer = conversation.getAvatarPointer();
-  const profileKey = conversation.getProfileKey();
+  const profileKey = conversation.getProfileKeyHex();
   const hasNoAvatar = isEmpty(prevPointer) || isEmpty(profileKey);
 
   if (hasNoAvatar) {
@@ -111,7 +111,7 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
     }
     let changes = false;
     const toDownloadPointer = conversation.getAvatarPointer();
-    const toDownloadProfileKey = conversation.getProfileKey();
+    const toDownloadProfileKey = conversation.getProfileKeyHex();
 
     // if there is an avatar and profileKey for that user/group ('', null and undefined excluded), download, decrypt and save the avatar locally.
     if (toDownloadPointer && toDownloadProfileKey) {
