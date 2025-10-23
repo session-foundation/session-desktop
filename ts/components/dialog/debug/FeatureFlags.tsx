@@ -1,5 +1,6 @@
 import { isArray, isBoolean } from 'lodash';
 import { ReactNode, useEffect, useState } from 'react';
+import { clipboard } from 'electron';
 import {
   getFeatureFlag,
   MockProAccessExpiryOptions,
@@ -19,6 +20,7 @@ import { ProAccessVariant, ProOriginatingPlatform } from '../../../hooks/useHasP
 import { PanelButtonGroup } from '../../buttons';
 import { SessionButtonShiny } from '../../basic/SessionButtonShiny';
 import { SessionButtonColor, SessionButtonShape } from '../../basic/SessionButton';
+import { ToastUtils } from '../../../session/utils';
 
 type FeatureFlagToggleType = {
   forceUpdate: () => void;
@@ -356,65 +358,65 @@ const proBooleanFlags: Array<{
   visibleWithParentKey?: SessionFeatureFlagKeys;
   hiddenAndDisabledWhenKeyEnabled?: SessionFeatureFlagKeys;
 }> = [
-  { label: 'Pro Available', key: 'proAvailable' },
-  {
-    label: 'Backend Loading',
-    key: 'mockProBackendLoading',
-    visibleWithParentKey: 'proAvailable',
-    hiddenAndDisabledWhenKeyEnabled: 'mockProBackendError',
-  },
-  {
-    label: 'Backend Error',
-    key: 'mockProBackendError',
-    visibleWithParentKey: 'proAvailable',
-    hiddenAndDisabledWhenKeyEnabled: 'mockProBackendLoading',
-  },
-  {
-    label: 'Recover always succeeds',
-    key: 'mockProRecoverButtonAlwaysSucceed',
-    visibleWithParentKey: 'proAvailable',
-    hiddenAndDisabledWhenKeyEnabled: 'mockProRecoverButtonAlwaysFail',
-  },
-  {
-    label: 'Recover always fails',
-    key: 'mockProRecoverButtonAlwaysFail',
-    visibleWithParentKey: 'proAvailable',
-    hiddenAndDisabledWhenKeyEnabled: 'mockProRecoverButtonAlwaysSucceed',
-  },
-  {
-    label: 'Pro Groups Available',
-    key: 'proGroupsAvailable',
-    visibleWithParentKey: 'proAvailable',
-  },
-  {
-    label: 'Has Access',
-    key: 'mockCurrentUserHasPro',
-    visibleWithParentKey: 'proAvailable',
-    hiddenAndDisabledWhenKeyEnabled: 'mockCurrentUserHasProExpired',
-  },
-  {
-    label: 'Access Expired',
-    key: 'mockCurrentUserHasProExpired',
-    visibleWithParentKey: 'proAvailable',
-    hiddenAndDisabledWhenKeyEnabled: 'mockCurrentUserHasPro',
-  },
-  {
-    label: 'Platform Refund Expired',
-    key: 'mockCurrentUserHasProPlatformRefundExpired',
-    visibleWithParentKey: 'mockCurrentUserHasPro',
-  },
-  {
-    label: 'Cancelled',
-    key: 'mockCurrentUserHasProCancelled',
-    visibleWithParentKey: 'mockCurrentUserHasPro',
-  },
-  {
-    label: 'In Grace Period',
-    key: 'mockCurrentUserHasProInGracePeriod',
-    visibleWithParentKey: 'mockCurrentUserHasPro',
-    hiddenAndDisabledWhenKeyEnabled: 'mockCurrentUserHasProCancelled',
-  },
-];
+    { label: 'Pro Available', key: 'proAvailable' },
+    {
+      label: 'Backend Loading',
+      key: 'mockProBackendLoading',
+      visibleWithParentKey: 'proAvailable',
+      hiddenAndDisabledWhenKeyEnabled: 'mockProBackendError',
+    },
+    {
+      label: 'Backend Error',
+      key: 'mockProBackendError',
+      visibleWithParentKey: 'proAvailable',
+      hiddenAndDisabledWhenKeyEnabled: 'mockProBackendLoading',
+    },
+    {
+      label: 'Recover always succeeds',
+      key: 'mockProRecoverButtonAlwaysSucceed',
+      visibleWithParentKey: 'proAvailable',
+      hiddenAndDisabledWhenKeyEnabled: 'mockProRecoverButtonAlwaysFail',
+    },
+    {
+      label: 'Recover always fails',
+      key: 'mockProRecoverButtonAlwaysFail',
+      visibleWithParentKey: 'proAvailable',
+      hiddenAndDisabledWhenKeyEnabled: 'mockProRecoverButtonAlwaysSucceed',
+    },
+    {
+      label: 'Pro Groups Available',
+      key: 'proGroupsAvailable',
+      visibleWithParentKey: 'proAvailable',
+    },
+    {
+      label: 'Has Access',
+      key: 'mockCurrentUserHasPro',
+      visibleWithParentKey: 'proAvailable',
+      hiddenAndDisabledWhenKeyEnabled: 'mockCurrentUserHasProExpired',
+    },
+    {
+      label: 'Access Expired',
+      key: 'mockCurrentUserHasProExpired',
+      visibleWithParentKey: 'proAvailable',
+      hiddenAndDisabledWhenKeyEnabled: 'mockCurrentUserHasPro',
+    },
+    {
+      label: 'Platform Refund Expired',
+      key: 'mockCurrentUserHasProPlatformRefundExpired',
+      visibleWithParentKey: 'mockCurrentUserHasPro',
+    },
+    {
+      label: 'Cancelled',
+      key: 'mockCurrentUserHasProCancelled',
+      visibleWithParentKey: 'mockCurrentUserHasPro',
+    },
+    {
+      label: 'In Grace Period',
+      key: 'mockCurrentUserHasProInGracePeriod',
+      visibleWithParentKey: 'mockCurrentUserHasPro',
+      hiddenAndDisabledWhenKeyEnabled: 'mockCurrentUserHasProCancelled',
+    },
+  ];
 
 const proBooleanFlagKeys = proBooleanFlags.map(({ key }) => key);
 
@@ -447,6 +449,7 @@ export const FeatureFlags = ({
         Changes are temporary. You can clear them by reloading the window or restarting the app.
       </i>
       <SpacerXS />
+      <SpacerXS />
       {Object.entries(flags).map(([key, value]) => {
         const flag = key as SessionFlagsKeys;
         if (
@@ -476,9 +479,99 @@ export const FeatureFlags = ({
         throw new Error('Feature flag is not a boolean or array');
       })}
       <SpacerSM />
+      <FeatureFlagDumper />
+      <SpacerSM />
     </Flex>
   );
 };
+
+function FeatureFlagDumper() {
+  const [value, setValue] = useState<string>('');
+
+  const handleCopyOnClick = () => {
+    const json = JSON.stringify({
+      sessionFeatureFlags: window.sessionFeatureFlags,
+      sessionFeatureFlagsWithData: window.sessionFeatureFlagsWithData,
+    });
+    clipboard.writeText(json);
+  };
+
+  const handleSetOnClick = () => {
+    try {
+      const json = JSON.parse(value);
+      const keys = Object.keys(json);
+
+      if (
+        keys.length !== 2 &&
+        keys[0] !== 'sessionFeatureFlags' &&
+        keys[1] !== 'sessionFeatureFlagsWithData'
+      ) {
+        throw new Error(`Invalid keys in object: ${keys}`);
+      }
+
+      if (typeof json.sessionFeatureFlags !== 'object') {
+        throw new Error('sessionFeatureFlags is not an object!');
+      }
+
+      if (typeof json.sessionFeatureFlagsWithData !== 'object') {
+        throw new Error('sessionFeatureFlagsWithData is not an object!');
+      }
+
+      window.sessionFeatureFlags = json.sessionFeatureFlags;
+      window.sessionFeatureFlagsWithData = json.sessionFeatureFlagsWithData;
+    } catch (e) {
+      ToastUtils.pushToastError('flag-dumper-toast', e.message);
+    }
+  };
+  return (
+    <DebugMenuSection>
+      <Flex $container={true} $alignItems="center">
+        <h2>Feature Flag Dumper</h2>
+      </Flex>
+      <div style={{ display: 'flex', gap: 'var(--margins-sm)' }}>
+        <textarea
+          style={{
+            width: '100%',
+            minWidth: '100px',
+            padding: 'var(--margins-xs) var(--margins-sm)',
+            backgroundColor: 'var(--background-primary-color)',
+            color: 'var(--text-primary-color)',
+            border: '1px solid var(--border-color)',
+            borderRadius: 'var(--border-radius)',
+          }}
+          onChange={e => setValue(e.target.value)}
+        />
+
+        <SessionButtonShiny
+          onClick={handleCopyOnClick}
+          shinyContainerStyle={{
+            width: 'max-content',
+          }}
+          buttonColor={SessionButtonColor.PrimaryDark}
+          buttonShape={SessionButtonShape.Square}
+        >
+          Copy Feature Flags
+        </SessionButtonShiny>
+        <SessionButtonShiny
+          onClick={handleSetOnClick}
+          shinyContainerStyle={{
+            width: 'max-content',
+          }}
+          disabled={!value || !value.startsWith('{') || !value.endsWith('}')}
+          buttonColor={SessionButtonColor.PrimaryDark}
+          buttonShape={SessionButtonShape.Square}
+        >
+          Set Feature Flags
+        </SessionButtonShiny>
+      </div>
+
+      <i>
+        Setting feature flags will override all existing feature flags with exactly what is in the
+        input, any edits may cause unexpected behaviour
+      </i>
+    </DebugMenuSection>
+  );
+}
 
 function DebugMenuSection({ children }: { children: ReactNode }) {
   return (
@@ -569,7 +662,7 @@ export const ProDebugSection = ({ forceUpdate }: { forceUpdate: () => void }) =>
         visibleOnlyWithBooleanFlag="proAvailable"
       />
       <FlagIntegerInput
-        label="Longer Pinned Conversations"
+        label="Pinned Conversations"
         flag="mockProPinnedConversations"
         forceUpdate={forceUpdate}
         visibleOnlyWithBooleanFlag="proAvailable"

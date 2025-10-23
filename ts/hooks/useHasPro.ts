@@ -75,7 +75,7 @@ function proAccessVariantToString(variant: ProAccessVariant): string {
   }
 }
 
-// Mirrors backend enum
+// Mirrors backend enum -- matched with libsession-util-nodejs/types/pro/pro.d.ts
 export enum ProOriginatingPlatform {
   Nil = 'Nil',
   GooglePlayStore = 'Google',
