@@ -235,6 +235,7 @@ export const FlagIntegerInput = ({
   visibleOnlyWithBooleanFlag,
   label,
 }: FlagIntegerInputProps) => {
+  const currentValue = useDataFeatureFlag(flag);
   const key = `feature-flag-integer-input-${flag}`;
   const [value, setValue] = useState<number>(() => {
     const initValue = window.sessionFeatureFlagsWithData[flag];
@@ -245,6 +246,14 @@ export const FlagIntegerInput = ({
     handleFeatureFlagWithDataChange({
       flag,
       value,
+      forceUpdate,
+    });
+  };
+
+  const handleUnsetOnClick = () => {
+    handleFeatureFlagWithDataChange({
+      flag,
+      value: null,
       forceUpdate,
     });
   };
@@ -298,6 +307,18 @@ export const FlagIntegerInput = ({
         >
           Set
         </SessionButtonShiny>
+        {currentValue !== null ? (
+          <SessionButtonShiny
+            onClick={handleUnsetOnClick}
+            shinyContainerStyle={{
+              width: 'max-content',
+            }}
+            buttonColor={SessionButtonColor.Danger}
+            buttonShape={SessionButtonShape.Square}
+          >
+            Unset
+          </SessionButtonShiny>
+        ) : null}
       </div>
     </Flex>
   ) : null;
