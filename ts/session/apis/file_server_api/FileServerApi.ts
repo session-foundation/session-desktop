@@ -20,6 +20,13 @@ import { FS, type FILE_SERVER_TARGET_TYPE } from './FileServerTarget';
 const RELEASE_VERSION_ENDPOINT = '/session_version';
 const FILE_ENDPOINT = '/file';
 
+function getShortTTLHeadersIfNeeded(): Record<string, string> {
+  if (window.sessionFeatureFlags?.fsTTL30s) {
+    return { 'X-FS-TTL': '30' };
+  }
+  return {};
+}
+
 /**
  * Upload a file to the file server v2 using the onion v4 encoding
  * @param fileContent the data to send
@@ -48,7 +55,7 @@ export const uploadFileToFsWithOnionV4 = async (
     endpoint: FILE_ENDPOINT,
     method: 'POST',
     timeoutMs: 30 * DURATION.SECONDS, // longer time for file upload
-    headers: window.sessionFeatureFlags.fsTTL30s ? { 'X-FS-TTL': '30' } : {},
+    headers: getShortTTLHeadersIfNeeded(),
   });
 
   if (!batchGlobalIsSuccess(result)) {
@@ -203,20 +210,16 @@ export const extendFileExpiry = async (fileId: string, fsTarget: FILE_SERVER_TAR
 
   const method = 'POST';
   const endpoint = `/file/${fileId}/extend`;
-  const headers: Record<string, string> = window.sessionFeatureFlags.fsTTL30s
-    ? { 'X-FS-TTL': '30' }
-    : {};
-  const params = {
+
+  const result = await OnionSending.sendJsonViaOnionV4ToFileServer({
     abortSignal: new AbortController().signal,
     endpoint,
     method,
     stringifiedBody: null,
-    headers,
+    headers: getShortTTLHeadersIfNeeded(),
     timeoutMs: 10 * DURATION.SECONDS,
     target: fsTarget,
-  };
-
-  const result = await OnionSending.sendJsonViaOnionV4ToFileServer(params);
+  });
 
   if (!batchGlobalIsSuccess(result)) {
     return null;
