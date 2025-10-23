@@ -20,6 +20,7 @@ import { proButtonProps } from '../../../SessionProInfoModal';
 import { Flex } from '../../../../basic/Flex';
 import type { ProNonOriginatingPageVariant } from '../../../../../types/ReduxTypes';
 import { ProOriginatingPlatform, useProAccessDetails } from '../../../../../hooks/useHasPro';
+import LIBSESSION_CONSTANTS from '../../../../../session/utils/libsession/libsession_constants';
 
 type VariantPageProps = {
   variant: ProNonOriginatingPageVariant;
@@ -137,7 +138,7 @@ function ProInfoBlockDevice({ textElement }: { textElement: ReactNode }) {
       iconElement={<ProInfoBlockIconElement unicode={LUCIDE_ICONS_UNICODE.SMARTPHONE} />}
       textElement={
         <ProInfoBlockText>
-          <strong>{tr('onDevice', { device_type: data.platformStrings.device_type })}</strong>
+          <strong>{tr('onDevice', { device_type: data.providerConstants.device })}</strong>
           {textElement}
         </ProInfoBlockText>
       }
@@ -155,8 +156,8 @@ function ProInfoBlockDeviceLinked() {
           <strong>{tr('onLinkedDevice')}</strong>
           <Localizer
             token="proRenewDesktopLinked"
-            platform_store={data.platformStrings.platform_store}
-            platform_store_other={data.platformStrings.platform_store_other}
+            platform_store={data.providerConstants.store}
+            platform_store_other={data.providerConstants.store_other}
           />
         </ProInfoBlockText>
       }
@@ -171,7 +172,7 @@ function ProInfoBlockWebsite({ textElement }: { textElement: ReactNode }) {
       iconElement={<ProInfoBlockIconElement unicode={LUCIDE_ICONS_UNICODE.GLOBE} />}
       textElement={
         <ProInfoBlockText>
-          <strong>{tr('viaStoreWebsite', { platform: data.platformStrings.platform })}</strong>
+          <strong>{tr('viaStoreWebsite', { platform: data.providerConstants.platform })}</strong>
           {textElement}
         </ProInfoBlockText>
       }
@@ -226,13 +227,13 @@ function ProInfoBlockUpgrade() {
       descriptionElement={
         <Localizer
           token="proAccessUpgradeDesktop"
-          platform_store={data.platformStrings.platform_store}
-          platform_store_other={data.platformStrings.platform_store_other}
+          platform_store={data.providerConstants.store}
+          platform_store_other={data.providerConstants.store_other}
           icon={LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}
         />
       }
       descriptionOnClick={() =>
-        showLinkVisitWarningDialog('https://getsession.org/pro-roadmap', dispatch)
+        showLinkVisitWarningDialog(LIBSESSION_CONSTANTS.LIBSESSION_PRO_URLS.roadmap, dispatch)
       }
       subtitleElement={
         <ProInfoBlockSectionSubtitle>{tr('proUpgradeOption')}</ProInfoBlockSectionSubtitle>
@@ -250,8 +251,8 @@ function ProInfoBlockUpdate() {
       descriptionElement={
         <Localizer
           token="proAccessSignUp"
-          platform_account={data.platformStrings.platform_account}
-          platform_store={data.platformStrings.platform_store}
+          platform_account={data.providerConstants.platform_account}
+          platform_store={data.providerConstants.store}
         />
       }
       subtitleElement={
@@ -263,8 +264,8 @@ function ProInfoBlockUpdate() {
             textElement={
               <Localizer
                 token="onDeviceDescription"
-                device_type={data.platformStrings.device_type}
-                platform_account={data.platformStrings.platform_account}
+                device_type={data.providerConstants.device}
+                platform_account={data.providerConstants.platform_account}
               />
             }
           />
@@ -272,8 +273,8 @@ function ProInfoBlockUpdate() {
             textElement={
               <Localizer
                 token="viaStoreWebsiteDescription"
-                platform_store={data.platformStrings.platform}
-                platform_account={data.platformStrings.platform_account}
+                platform_store={data.providerConstants.platform}
+                platform_account={data.providerConstants.platform_account}
               />
             }
           />
@@ -291,8 +292,8 @@ function ProInfoBlockRenew() {
       descriptionElement={
         <Localizer
           token="proAccessRenewDesktop"
-          platform_store={data.platformStrings.platform_store}
-          platform_store_other={data.platformStrings.platform_store_other}
+          platform_store={data.providerConstants.store}
+          platform_store_other={data.providerConstants.store_other}
           icon={LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}
         />
       }
@@ -308,8 +309,8 @@ function ProInfoBlockRenew() {
             textElement={
               <Localizer
                 token="proAccessRenewPlatformStoreWebsite"
-                platform_store={data.platformStrings.platform}
-                platform_account={data.platformStrings.platform_account}
+                platform_store={data.providerConstants.platform}
+                platform_account={data.providerConstants.platform_account}
               />
             }
           />
@@ -327,7 +328,7 @@ function ProInfoBlockCancel() {
       descriptionElement={
         <Localizer
           token="proCancellationDescription"
-          platform_account={data.platformStrings.platform_account}
+          platform_account={data.providerConstants.platform_account}
         />
       }
       subtitleElement={
@@ -339,8 +340,8 @@ function ProInfoBlockCancel() {
             textElement={
               <Localizer
                 token="onDeviceCancelDescription"
-                device_type={data.platformStrings.device_type}
-                platform_account={data.platformStrings.platform_account}
+                device_type={data.providerConstants.device}
+                platform_account={data.providerConstants.platform_account}
               />
             }
           />
@@ -348,8 +349,8 @@ function ProInfoBlockCancel() {
             textElement={
               <Localizer
                 token="cancelProPlatformStore"
-                platform_store={data.platformStrings.platform}
-                platform_account={data.platformStrings.platform_account}
+                platform_store={data.providerConstants.platform}
+                platform_account={data.providerConstants.platform_account}
               />
             }
           />
@@ -400,7 +401,7 @@ function ProInfoBlockRefundGooglePlay() {
       <ProInfoBlockRefundTitle>
         <Localizer token="proRefunding" />
       </ProInfoBlockRefundTitle>
-      <Localizer token="proRefundRequestStorePolicies" platform={data.platformStrings.platform} />
+      <Localizer token="proRefundRequestStorePolicies" platform={data.providerConstants.platform} />
       <ProInfoBlockRefundTitle>
         <Localizer token="important" />
       </ProInfoBlockRefundTitle>
@@ -417,8 +418,8 @@ function ProInfoBlockRefundIOS() {
       descriptionElement={
         <Localizer
           token="proPlanPlatformRefund"
-          platform_store={data.platformStrings.platform_store}
-          platform_account={data.platformStrings.platform_account}
+          platform_store={data.providerConstants.store}
+          platform_account={data.providerConstants.platform_account}
         />
       }
       subtitleElement={
@@ -430,8 +431,8 @@ function ProInfoBlockRefundIOS() {
             textElement={
               <Localizer
                 token="proRefundAccountDevice"
-                device_type={data.platformStrings.device_type}
-                platform_account={data.platformStrings.platform_account}
+                device_type={data.providerConstants.device}
+                platform_account={data.providerConstants.platform_account}
               />
             }
           />
@@ -439,8 +440,8 @@ function ProInfoBlockRefundIOS() {
             textElement={
               <Localizer
                 token="requestRefundPlatformWebsite"
-                platform={data.platformStrings.platform}
-                platform_account={data.platformStrings.platform_account}
+                platform={data.providerConstants.platform}
+                platform_account={data.providerConstants.platform_account}
               />
             }
           />
@@ -457,7 +458,7 @@ function ProInfoBlockRefund() {
     return <ProInfoBlockRefundSessionSupport />;
   }
 
-  switch (data.platform) {
+  switch (data.provider) {
     case ProOriginatingPlatform.iOSAppStore:
       return <ProInfoBlockRefundIOS />;
     case ProOriginatingPlatform.GooglePlayStore:
@@ -465,7 +466,7 @@ function ProInfoBlockRefund() {
     case ProOriginatingPlatform.Nil:
       return <ProInfoBlockRefundSessionSupport />;
     default:
-      return assertUnreachable(data.platform, `Unknown pro originating platform: ${data.platform}`);
+      return assertUnreachable(data.provider, `Unknown pro originating platform: ${data.provider}`);
   }
 }
 
@@ -494,11 +495,11 @@ function ProPageButtonUpdate() {
       {...proButtonProps}
       buttonColor={SessionButtonColor.PrimaryDark}
       onClick={() => {
-        showLinkVisitWarningDialog(data.platformStrings.platform_link_manage, dispatch);
+        showLinkVisitWarningDialog(data.providerConstants.update_subscription_url, dispatch);
       }}
       dataTestId="pro-open-platform-website-button"
     >
-      <Localizer token="openPlatformWebsite" platform={data.platformStrings.platform} />
+      <Localizer token="openPlatformWebsite" platform={data.providerConstants.platform} />
     </SessionButton>
   );
 }
@@ -511,11 +512,11 @@ function ProPageButtonCancel() {
       {...proButtonProps}
       buttonColor={SessionButtonColor.Danger}
       onClick={() => {
-        showLinkVisitWarningDialog(data.platformStrings.platform_link_cancel, dispatch);
+        showLinkVisitWarningDialog(data.providerConstants.cancel_subscription_url, dispatch);
       }}
       dataTestId="pro-open-platform-website-button"
     >
-      <Localizer token="openPlatformWebsite" platform={data.platformStrings.platform} />
+      <Localizer token="openPlatformWebsite" platform={data.providerConstants.platform} />
     </SessionButton>
   );
 }
@@ -530,15 +531,15 @@ function ProPageButtonRefund() {
       onClick={() => {
         showLinkVisitWarningDialog(
           data.isPlatformRefundAvailable
-            ? data.platformStrings.platform_link_refund
-            : data.platformStrings.session_support_link_refund,
+            ? data.providerConstants.refund_url
+            : data.providerConstants.refund_after_platform_deadline_url,
           dispatch
         );
       }}
       dataTestId="pro-open-platform-website-button"
     >
       {data.isPlatformRefundAvailable ? (
-        <Localizer token="openPlatformWebsite" platform={data.platformStrings.platform} />
+        <Localizer token="openPlatformWebsite" platform={data.providerConstants.platform} />
       ) : (
         <Localizer token="requestRefund" />
       )}

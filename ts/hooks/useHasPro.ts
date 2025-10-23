@@ -12,6 +12,7 @@ import {
   formatDateWithLocale,
   formatRoundedUpTimeUntilTimestamp,
 } from '../util/i18n/formatting/generics';
+import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
 
 /**
  * Returns true if pro is available, and the current user has pro (active, not expired)
@@ -76,74 +77,9 @@ function proAccessVariantToString(variant: ProAccessVariant): string {
 
 // Mirrors backend enum
 export enum ProOriginatingPlatform {
-  Nil = 0,
-  GooglePlayStore = 1,
-  iOSAppStore = 2,
-}
-
-type OriginatingPlatformStrings = {
-  platform: string;
-  platform_store: string;
-  platform_account: string;
-  device_type: string;
-  platform_store_other: string;
-  platform_link_manage: string;
-  platform_link_cancel: string;
-  platform_link_refund: string;
-  session_support_link_refund: string;
-};
-
-// TODO: This should all be set by libsession
-const platformStoreGoogle = 'Google Play Store';
-const platformStoreApple = 'Apple App Store';
-const refundLinkSessionSupport = 'https://getsession.org/android-refund';
-
-function proAccessOriginatingPlatformToStrings(
-  platform: ProOriginatingPlatform
-): OriginatingPlatformStrings {
-  switch (platform) {
-    case ProOriginatingPlatform.GooglePlayStore:
-      return {
-        platform: 'Google',
-        platform_account: 'Google account',
-        platform_store: platformStoreGoogle,
-        platform_store_other: platformStoreApple,
-        device_type: 'Android',
-        platform_link_manage:
-          'https://play.google.com/store/account/subscriptions?package=network.loki.messenger',
-        // FIXME: set the sku dynamically if we dont use libsession
-        platform_link_cancel:
-          'https://play.google.com/store/account/subscriptions?package=network.loki.messenger&sku=SESSION_PRO_MONTHLY',
-        platform_link_refund: 'https://support.google.com/googleplay/workflow/9813244?',
-        session_support_link_refund: refundLinkSessionSupport,
-      };
-    case ProOriginatingPlatform.iOSAppStore:
-      return {
-        platform: 'Apple',
-        platform_account: 'Apple account',
-        platform_store: platformStoreApple,
-        platform_store_other: platformStoreGoogle,
-        device_type: 'iOS',
-        platform_link_manage: 'https://apps.apple.com/account/subscriptions',
-        platform_link_cancel: 'https://account.apple.com/account/manage/section/subscriptions',
-        platform_link_refund: 'https://support.apple.com/118223',
-        session_support_link_refund: refundLinkSessionSupport,
-      };
-    case ProOriginatingPlatform.Nil:
-      return {
-        platform: '',
-        platform_account: '',
-        platform_store: platformStoreGoogle,
-        platform_store_other: platformStoreApple,
-        device_type: '',
-        platform_link_manage: '',
-        platform_link_refund: '',
-        platform_link_cancel: '',
-        session_support_link_refund: refundLinkSessionSupport,
-      };
-    default:
-      return assertUnreachable(platform, `Unknown pro originating platform: ${platform}`);
-  }
+  Nil = 'Nil',
+  GooglePlayStore = 'Google',
+  iOSAppStore = 'iOS',
 }
 
 function useMockProAccessExpiry() {
@@ -205,7 +141,7 @@ export function useProAccessDetails() {
     // FIXME: implement non-mock data fetching and parsing here
     const variant = mockVariant;
     const expiryTimeMs = mockExpiry;
-    const platform = mockPlatform;
+    const provider = mockPlatform;
     return {
       autoRenew: !mockCancelled,
       inGracePeriod: mockInGracePeriod,
@@ -218,8 +154,8 @@ export function useProAccessDetails() {
       }),
       expiryTimeRelativeString: formatRoundedUpTimeUntilTimestamp(expiryTimeMs),
       isPlatformRefundAvailable: mockIsPlatformRefundAvailable,
-      platform,
-      platformStrings: proAccessOriginatingPlatformToStrings(platform),
+      provider,
+      providerConstants: LIBSESSION_CONSTANTS.LIBSESSION_PRO_PROVIDERS[provider],
     };
   }, [
     mockVariant,

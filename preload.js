@@ -96,6 +96,10 @@ window.sessionFeatureFlagsWithData = {
   mockProOriginatingPlatform: null,
   mockProAccessVariant: null,
   mockProAccessExpiry: null,
+  mockProLongerMessagesSent: null,
+  mockProPinnedConversations: null,
+  mockProBadgesSent: null,
+  mockProGroupsUpgraded: null,
 };
 
 window.versionInfo = {

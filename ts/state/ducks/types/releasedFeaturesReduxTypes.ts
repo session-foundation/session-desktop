@@ -50,6 +50,10 @@ export type SessionFeatureFlagsWithData = {
   mockProOriginatingPlatform: ProOriginatingPlatform | null;
   mockProAccessVariant: ProAccessVariant | null;
   mockProAccessExpiry: MockProAccessExpiryOptions | null;
+  mockProLongerMessagesSent: number | null;
+  mockProPinnedConversations: number | null;
+  mockProBadgesSent: number | null;
+  mockProGroupsUpgraded: number | null;
 };
 
 export type SessionFeatureFlagKeys = keyof SessionFeatureFlags;
