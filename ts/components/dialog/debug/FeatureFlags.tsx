@@ -543,18 +543,7 @@ function FeatureFlagDumper({ forceUpdate }: { forceUpdate: () => void }) {
         <h2>Feature Flag Dumper</h2>
       </Flex>
       <div style={{ display: 'flex', gap: 'var(--margins-sm)' }}>
-        <textarea
-          style={{
-            width: '100%',
-            minWidth: '100px',
-            padding: 'var(--margins-xs) var(--margins-sm)',
-            backgroundColor: 'var(--background-primary-color)',
-            color: 'var(--text-primary-color)',
-            border: '1px solid var(--border-color)',
-            borderRadius: 'var(--border-radius)',
-          }}
-          onChange={e => setValue(e.target.value)}
-        />
+        {' '}
         <SessionButtonShiny
           onClick={handleCopyOnClick}
           shinyContainerStyle={{
@@ -577,6 +566,19 @@ function FeatureFlagDumper({ forceUpdate }: { forceUpdate: () => void }) {
           Set Feature Flags
         </SessionButtonShiny>
       </div>
+      <textarea
+        style={{
+          width: '100%',
+          minWidth: '100px',
+          padding: 'var(--margins-xs) var(--margins-sm)',
+          backgroundColor: 'var(--background-primary-color)',
+          color: 'var(--text-primary-color)',
+          border: '1px solid var(--border-color)',
+          borderRadius: 'var(--border-radius)',
+        }}
+        onChange={e => setValue(e.target.value)}
+      />
+
       <i>
         Setting feature flags will override all existing feature flags with exactly what is in the
         input, any edits may cause unexpected behaviour
