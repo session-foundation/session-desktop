@@ -42,6 +42,20 @@ message MessageRequestResponse {
   optional DataMessage.LokiProfile   profile                   = 3;
 }
 
+message ProMessage {
+  optional ProProof proof    = 1;
+  optional uint64   features = 2;
+}
+
+message ProProof {
+  optional uint32 version           = 1;
+  optional bytes  genIndexHash      = 2;
+  optional bytes  rotatingPublicKey = 3;
+  optional uint64 expireAtMs        = 4; // Epoch timestamp in milliseconds
+  optional bytes  sig               = 5;
+}
+
+
 
 message Content {
   reserved 7, 11, 14;
@@ -63,6 +77,8 @@ message Content {
   optional ExpirationType             expirationType             = 12;
   optional uint32                     expirationTimer            = 13;
   optional uint64                     sigTimestamp               = 15;
+  optional ProMessage                 proMessage                 = 16;
+
 }
 
 

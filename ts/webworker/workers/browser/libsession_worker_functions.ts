@@ -6,6 +6,7 @@ import type {
   GroupPubkeyType,
   MetaGroupActionsType,
   MultiEncryptActionsType,
+  ProActionsType,
   UserConfigActionsType,
   UserGroupsConfigActionsType,
   UtilitiesActionsType,
@@ -19,12 +20,14 @@ export type ConvoInfoVolatileConfig = 'ConvoInfoVolatileConfig';
 
 export const MetaGroupConfigValue = 'MetaGroupConfig-';
 export const MultiEncryptConfigValue = 'MultiEncrypt';
+export const ProConfigValue = 'Pro';
 export const BlindedConfigValue = 'Blinding';
 export const UtilitiesValue = 'Utilities';
 
 type MetaGroupConfigType = typeof MetaGroupConfigValue;
 export type MetaGroupConfig = `${MetaGroupConfigType}${GroupPubkeyType}`;
 export type MultiEncryptConfig = typeof MultiEncryptConfigValue;
+export type ProWrapperConfig = typeof ProConfigValue;
 export type BlindingConfig = typeof BlindedConfigValue;
 export type UtilitiesConfig = typeof UtilitiesValue;
 
@@ -40,6 +43,7 @@ export type ConfigWrapperObjectTypesMeta =
   | ConfigWrapperUser
   | ConfigWrapperGroup
   | MultiEncryptConfig
+  | ProWrapperConfig
   | BlindingConfig
   | UtilitiesConfig;
 
@@ -66,6 +70,7 @@ type UtilitiesFunctions = ['Utilities', ...UtilitiesActionsType];
 type MetaGroupFunctions = [MetaGroupConfig, ...MetaGroupActionsType];
 
 type MultiEncryptFunctions = [MultiEncryptConfig, ...MultiEncryptActionsType];
+type ProFunctions = [ProWrapperConfig, ...ProActionsType];
 
 export type LibSessionWorkerFunctions =
   | UserConfigFunctions
@@ -75,6 +80,7 @@ export type LibSessionWorkerFunctions =
   | MetaGroupFunctions
   | BlindingFunctions
   | MultiEncryptFunctions
+  | ProFunctions
   | UtilitiesFunctions;
 
 export function isUserConfigWrapperType(
@@ -98,6 +104,10 @@ export function isMultiEncryptWrapperType(
   config: ConfigWrapperObjectTypesMeta
 ): config is MultiEncryptConfig {
   return config === 'MultiEncrypt';
+}
+
+export function isProWrapperType(config: ConfigWrapperObjectTypesMeta): config is ProWrapperConfig {
+  return config === 'Pro';
 }
 
 export function isBlindingWrapperType(
@@ -124,9 +134,10 @@ export function getGroupPubkeyFromWrapperType(type: ConfigWrapperGroup): GroupPu
  */
 export function isStaticSessionWrapper(
   config: ConfigWrapperObjectTypesMeta
-): config is 'Blinding' | 'MultiEncrypt' | 'Utilities' {
+): config is 'Blinding' | 'MultiEncrypt' | 'Utilities' | 'Pro' {
   return (
     isMultiEncryptWrapperType(config) ||
+    isProWrapperType(config) ||
     isBlindingWrapperType(config) ||
     isUtilitiesWrapperType(config)
   );

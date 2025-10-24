@@ -5,7 +5,6 @@ import { MAX_ATTACHMENT_FILESIZE_BYTES } from '../constants';
  */
 const PADDING_BYTE = 0x00;
 
-
 /*
  * If the attachment has padding, remove the padding and return the unpad attachment
  */
