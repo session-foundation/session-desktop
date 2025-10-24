@@ -25,6 +25,7 @@ import {
   type ConfirmPush,
   type UtilitiesWrapperActionsCalls,
   type ProConfig,
+  type ProActionsCalls,
 } from 'libsession_util_nodejs';
 // eslint-disable-next-line import/order
 import { join } from 'path';
@@ -873,6 +874,13 @@ export const MultiEncryptWrapperActions: MultiEncryptActionsCalls = {
   decryptForGroup: async (first, second) =>
     callLibSessionWorker(['MultiEncrypt', 'decryptForGroup', first, second]) as Promise<
       ReturnType<MultiEncryptActionsCalls['decryptForGroup']>
+    >,
+};
+
+export const ProWrapperActions: ProActionsCalls = {
+  proFeaturesForMessage: async first =>
+    callLibSessionWorker(['Pro', 'proFeaturesForMessage', first]) as Promise<
+      ReturnType<ProActionsCalls['proFeaturesForMessage']>
     >,
 };
 

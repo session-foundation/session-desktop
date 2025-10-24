@@ -8,9 +8,11 @@ import {
   GroupPubkeyType,
   MetaGroupWrapperNode,
   MultiEncryptWrapperNode,
+  ProWrapperNode,
   UserConfigWrapperNode,
   UserGroupsWrapperNode,
   UtilitiesWrapperNode,
+  ProWrapperConfig,
 } from 'libsession_util_nodejs';
 import { isEmpty, isNull, isObject } from 'lodash';
 
@@ -24,6 +26,7 @@ import {
   isBlindingWrapperType,
   isMetaGroupWrapperType,
   isMultiEncryptWrapperType,
+  isProWrapperType,
   isStaticSessionWrapper,
   isUserConfigWrapperType,
   isUtilitiesWrapperType,
@@ -126,6 +129,13 @@ function getMultiEncryptWrapper(wrapperType: MultiEncryptConfig): MultiEncryptWr
     return MultiEncryptWrapperNode;
   }
   assertUnreachable(wrapperType, `getMultiEncrypt missing global handling for "${wrapperType}"`);
+}
+
+function getProWrapper(wrapperType: ProWrapperConfig): ProWrapperNode {
+  if (isProWrapperType(wrapperType)) {
+    return ProWrapperNode;
+  }
+  assertUnreachable(wrapperType, `getProWrapper missing global handling for "${wrapperType}"`);
 }
 
 function getBlindingWrapper(wrapperType: BlindingConfig): BlindingWrapperNode {
@@ -353,11 +363,13 @@ onmessage = async (e: {
         ? getCorrespondingGroupWrapper(config)
         : isMultiEncryptWrapperType(config)
           ? getMultiEncryptWrapper(config)
-          : isBlindingWrapperType(config)
-            ? getBlindingWrapper(config)
-            : isUtilitiesWrapperType(config)
-              ? getUtilitiesWrapper(config)
-              : undefined;
+          : isProWrapperType(config)
+            ? getProWrapper(config)
+            : isBlindingWrapperType(config)
+              ? getBlindingWrapper(config)
+              : isUtilitiesWrapperType(config)
+                ? getUtilitiesWrapper(config)
+                : undefined;
     if (!wrapper) {
       throw new Error(`did not find an already built (or static) wrapper for config: "${config}"`);
     }
