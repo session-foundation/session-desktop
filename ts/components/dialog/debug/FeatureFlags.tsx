@@ -358,65 +358,65 @@ const proBooleanFlags: Array<{
   visibleWithParentKey?: SessionFeatureFlagKeys;
   hiddenAndDisabledWhenKeyEnabled?: SessionFeatureFlagKeys;
 }> = [
-    { label: 'Pro Available', key: 'proAvailable' },
-    {
-      label: 'Backend Loading',
-      key: 'mockProBackendLoading',
-      visibleWithParentKey: 'proAvailable',
-      hiddenAndDisabledWhenKeyEnabled: 'mockProBackendError',
-    },
-    {
-      label: 'Backend Error',
-      key: 'mockProBackendError',
-      visibleWithParentKey: 'proAvailable',
-      hiddenAndDisabledWhenKeyEnabled: 'mockProBackendLoading',
-    },
-    {
-      label: 'Recover always succeeds',
-      key: 'mockProRecoverButtonAlwaysSucceed',
-      visibleWithParentKey: 'proAvailable',
-      hiddenAndDisabledWhenKeyEnabled: 'mockProRecoverButtonAlwaysFail',
-    },
-    {
-      label: 'Recover always fails',
-      key: 'mockProRecoverButtonAlwaysFail',
-      visibleWithParentKey: 'proAvailable',
-      hiddenAndDisabledWhenKeyEnabled: 'mockProRecoverButtonAlwaysSucceed',
-    },
-    {
-      label: 'Pro Groups Available',
-      key: 'proGroupsAvailable',
-      visibleWithParentKey: 'proAvailable',
-    },
-    {
-      label: 'Has Access',
-      key: 'mockCurrentUserHasPro',
-      visibleWithParentKey: 'proAvailable',
-      hiddenAndDisabledWhenKeyEnabled: 'mockCurrentUserHasProExpired',
-    },
-    {
-      label: 'Access Expired',
-      key: 'mockCurrentUserHasProExpired',
-      visibleWithParentKey: 'proAvailable',
-      hiddenAndDisabledWhenKeyEnabled: 'mockCurrentUserHasPro',
-    },
-    {
-      label: 'Platform Refund Expired',
-      key: 'mockCurrentUserHasProPlatformRefundExpired',
-      visibleWithParentKey: 'mockCurrentUserHasPro',
-    },
-    {
-      label: 'Cancelled',
-      key: 'mockCurrentUserHasProCancelled',
-      visibleWithParentKey: 'mockCurrentUserHasPro',
-    },
-    {
-      label: 'In Grace Period',
-      key: 'mockCurrentUserHasProInGracePeriod',
-      visibleWithParentKey: 'mockCurrentUserHasPro',
-      hiddenAndDisabledWhenKeyEnabled: 'mockCurrentUserHasProCancelled',
-    },
-  ];
+  { label: 'Pro Available', key: 'proAvailable' },
+  {
+    label: 'Backend Loading',
+    key: 'mockProBackendLoading',
+    visibleWithParentKey: 'proAvailable',
+    hiddenAndDisabledWhenKeyEnabled: 'mockProBackendError',
+  },
+  {
+    label: 'Backend Error',
+    key: 'mockProBackendError',
+    visibleWithParentKey: 'proAvailable',
+    hiddenAndDisabledWhenKeyEnabled: 'mockProBackendLoading',
+  },
+  {
+    label: 'Recover always succeeds',
+    key: 'mockProRecoverButtonAlwaysSucceed',
+    visibleWithParentKey: 'proAvailable',
+    hiddenAndDisabledWhenKeyEnabled: 'mockProRecoverButtonAlwaysFail',
+  },
+  {
+    label: 'Recover always fails',
+    key: 'mockProRecoverButtonAlwaysFail',
+    visibleWithParentKey: 'proAvailable',
+    hiddenAndDisabledWhenKeyEnabled: 'mockProRecoverButtonAlwaysSucceed',
+  },
+  {
+    label: 'Pro Groups Available',
+    key: 'proGroupsAvailable',
+    visibleWithParentKey: 'proAvailable',
+  },
+  {
+    label: 'Has Access',
+    key: 'mockCurrentUserHasPro',
+    visibleWithParentKey: 'proAvailable',
+    hiddenAndDisabledWhenKeyEnabled: 'mockCurrentUserHasProExpired',
+  },
+  {
+    label: 'Access Expired',
+    key: 'mockCurrentUserHasProExpired',
+    visibleWithParentKey: 'proAvailable',
+    hiddenAndDisabledWhenKeyEnabled: 'mockCurrentUserHasPro',
+  },
+  {
+    label: 'Platform Refund Expired',
+    key: 'mockCurrentUserHasProPlatformRefundExpired',
+    visibleWithParentKey: 'mockCurrentUserHasPro',
+  },
+  {
+    label: 'Cancelled',
+    key: 'mockCurrentUserHasProCancelled',
+    visibleWithParentKey: 'mockCurrentUserHasPro',
+  },
+  {
+    label: 'In Grace Period',
+    key: 'mockCurrentUserHasProInGracePeriod',
+    visibleWithParentKey: 'mockCurrentUserHasPro',
+    hiddenAndDisabledWhenKeyEnabled: 'mockCurrentUserHasProCancelled',
+  },
+];
 
 const proBooleanFlagKeys = proBooleanFlags.map(({ key }) => key);
 
@@ -479,21 +479,26 @@ export const FeatureFlags = ({
         throw new Error('Feature flag is not a boolean or array');
       })}
       <SpacerSM />
-      <FeatureFlagDumper />
+      <FeatureFlagDumper forceUpdate={forceUpdate} />
       <SpacerSM />
     </Flex>
   );
 };
 
-function FeatureFlagDumper() {
+function FeatureFlagDumper({ forceUpdate }: { forceUpdate: () => void }) {
   const [value, setValue] = useState<string>('');
 
   const handleCopyOnClick = () => {
-    const json = JSON.stringify({
-      sessionFeatureFlags: window.sessionFeatureFlags,
-      sessionFeatureFlagsWithData: window.sessionFeatureFlagsWithData,
-    });
+    const json = JSON.stringify(
+      {
+        sessionFeatureFlags: window.sessionFeatureFlags,
+        sessionFeatureFlagsWithData: window.sessionFeatureFlagsWithData,
+      },
+      undefined,
+      2
+    );
     clipboard.writeText(json);
+    ToastUtils.pushToastSuccess('flag-dumper-toast-copy', 'Copied to clipboard');
   };
 
   const handleSetOnClick = () => {
@@ -519,10 +524,19 @@ function FeatureFlagDumper() {
 
       window.sessionFeatureFlags = json.sessionFeatureFlags;
       window.sessionFeatureFlagsWithData = json.sessionFeatureFlagsWithData;
+
+      forceUpdate();
+
+      ConvoHub.use()
+        .getConversations()
+        .forEach(convo => {
+          convo.triggerUIRefresh();
+        });
     } catch (e) {
-      ToastUtils.pushToastError('flag-dumper-toast', e.message);
+      ToastUtils.pushToastError('flag-dumper-toast-set', e.message);
     }
   };
+
   return (
     <DebugMenuSection>
       <Flex $container={true} $alignItems="center">
@@ -541,7 +555,6 @@ function FeatureFlagDumper() {
           }}
           onChange={e => setValue(e.target.value)}
         />
-
         <SessionButtonShiny
           onClick={handleCopyOnClick}
           shinyContainerStyle={{
@@ -564,7 +577,6 @@ function FeatureFlagDumper() {
           Set Feature Flags
         </SessionButtonShiny>
       </div>
-
       <i>
         Setting feature flags will override all existing feature flags with exactly what is in the
         input, any edits may cause unexpected behaviour
