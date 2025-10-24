@@ -1,5 +1,6 @@
 import { isArray, isBoolean } from 'lodash';
 import { ReactNode, useEffect, useState } from 'react';
+import { clipboard } from 'electron';
 import {
   getFeatureFlag,
   MockProAccessExpiryOptions,
@@ -17,6 +18,9 @@ import { isDebugMode } from '../../../shared/env_vars';
 import { ProMessageFeature } from '../../../models/proMessageFeature';
 import { ProAccessVariant, ProOriginatingPlatform } from '../../../hooks/useHasPro';
 import { PanelButtonGroup } from '../../buttons';
+import { SessionButtonShiny } from '../../basic/SessionButtonShiny';
+import { SessionButtonColor, SessionButtonShape } from '../../basic/SessionButton';
+import { ToastUtils } from '../../../session/utils';
 
 type FeatureFlagToggleType = {
   forceUpdate: () => void;
@@ -137,8 +141,8 @@ const handleFeatureFlagWithDataChange = ({
 type FlagDropdownInputProps = {
   forceUpdate: () => void;
   flag: SessionFeatureFlagWithDataKeys;
-  options: Array<{ label: string; value: number | null }>;
-  unsetOption: { label: string; value: number | null };
+  options: Array<{ label: string; value: number | string | null }>;
+  unsetOption: { label: string; value: number | string | null };
   visibleOnlyWithBooleanFlag?: SessionFeatureFlagKeys;
   label: string;
 };
@@ -151,16 +155,18 @@ export const FlagEnumDropdownInput = ({
   visibleOnlyWithBooleanFlag,
   label,
 }: FlagDropdownInputProps) => {
-  const key = `feature-flag-toggle-${flag}`;
-  const [selected, setSelected] = useState<number | null>(() => {
+  const key = `feature-flag-dropdown-${flag}`;
+  const [selected, setSelected] = useState<number | string | null>(() => {
     const initValue = window.sessionFeatureFlagsWithData[flag];
-    return Number.isFinite(initValue) ? initValue : unsetOption.value;
+    return typeof initValue === 'string' || Number.isFinite(initValue)
+      ? initValue
+      : unsetOption.value;
   });
-  const handleSelect = (newValue: number | null) => {
+  const handleSelect = (newValue: number | string | null) => {
     setSelected(newValue);
     handleFeatureFlagWithDataChange({
       flag,
-      value: Number.isNaN(newValue) ? null : newValue,
+      value: typeof newValue !== 'string' && Number.isNaN(newValue) ? null : newValue,
       forceUpdate,
     });
   };
@@ -186,11 +192,15 @@ export const FlagEnumDropdownInput = ({
           color: 'var(--text-primary-color)',
         }}
       >
-        {label}{' '}
+        {label}
       </label>
       <select
         value={selected ?? undefined}
-        onChange={e => handleSelect(Number.parseInt(e.target.value, 10))}
+        onChange={e => {
+          const valAsNum = Number.parseInt(e.target.value, 10);
+          const val = Number.isFinite(valAsNum) ? valAsNum : e.target.value;
+          handleSelect(val);
+        }}
         style={{
           width: '100%',
           padding: 'var(--margins-sm) var(--margins-md)',
@@ -210,6 +220,108 @@ export const FlagEnumDropdownInput = ({
           </option>
         ))}
       </select>
+    </Flex>
+  ) : null;
+};
+
+type FlagIntegerInputProps = {
+  forceUpdate: () => void;
+  flag: SessionFeatureFlagWithDataKeys;
+  visibleOnlyWithBooleanFlag?: SessionFeatureFlagKeys;
+  label: string;
+};
+
+export const FlagIntegerInput = ({
+  flag,
+  forceUpdate,
+  visibleOnlyWithBooleanFlag,
+  label,
+}: FlagIntegerInputProps) => {
+  const currentValue = useDataFeatureFlag(flag);
+  const key = `feature-flag-integer-input-${flag}`;
+  const [value, setValue] = useState<number>(() => {
+    const initValue = window.sessionFeatureFlagsWithData[flag];
+    return typeof initValue === 'number' && Number.isFinite(initValue) ? initValue : 0;
+  });
+
+  const handleOnClick = () => {
+    handleFeatureFlagWithDataChange({
+      flag,
+      value,
+      forceUpdate,
+    });
+  };
+
+  const handleUnsetOnClick = () => {
+    handleFeatureFlagWithDataChange({
+      flag,
+      value: null,
+      forceUpdate,
+    });
+  };
+
+  const visibleFlag = visibleOnlyWithBooleanFlag
+    ? getFeatureFlag(visibleOnlyWithBooleanFlag)
+    : true;
+
+  return visibleFlag ? (
+    <Flex
+      key={key}
+      id={key}
+      $container={true}
+      width="100%"
+      $justifyContent="flex-start"
+      $flexGap="var(--margins-sm)"
+      $flexDirection="column"
+    >
+      <label
+        style={{
+          display: 'block',
+          marginBottom: 'var(--margins-xxs)',
+          color: 'var(--text-primary-color)',
+        }}
+      >
+        {label}
+      </label>
+      <div style={{ display: 'flex', gap: 'var(--margins-sm)' }}>
+        <input
+          type="number"
+          value={value}
+          min={0}
+          onChange={e => setValue(e.target.valueAsNumber)}
+          style={{
+            width: '100px',
+            padding: 'var(--margins-xs) var(--margins-sm)',
+            backgroundColor: 'var(--background-primary-color)',
+            color: 'var(--text-primary-color)',
+            border: '1px solid var(--border-color)',
+            borderRadius: 'var(--border-radius)',
+            cursor: 'pointer',
+          }}
+        />
+        <SessionButtonShiny
+          onClick={handleOnClick}
+          shinyContainerStyle={{
+            width: 'max-content',
+          }}
+          buttonColor={SessionButtonColor.PrimaryDark}
+          buttonShape={SessionButtonShape.Square}
+        >
+          Set
+        </SessionButtonShiny>
+        {currentValue !== null ? (
+          <SessionButtonShiny
+            onClick={handleUnsetOnClick}
+            shinyContainerStyle={{
+              width: 'max-content',
+            }}
+            buttonColor={SessionButtonColor.Danger}
+            buttonShape={SessionButtonShape.Square}
+          >
+            Unset
+          </SessionButtonShiny>
+        ) : null}
+      </div>
     </Flex>
   ) : null;
 };
@@ -337,6 +449,7 @@ export const FeatureFlags = ({
         Changes are temporary. You can clear them by reloading the window or restarting the app.
       </i>
       <SpacerXS />
+      <SpacerXS />
       {Object.entries(flags).map(([key, value]) => {
         const flag = key as SessionFlagsKeys;
         if (
@@ -366,9 +479,113 @@ export const FeatureFlags = ({
         throw new Error('Feature flag is not a boolean or array');
       })}
       <SpacerSM />
+      <FeatureFlagDumper forceUpdate={forceUpdate} />
+      <SpacerSM />
     </Flex>
   );
 };
+
+function FeatureFlagDumper({ forceUpdate }: { forceUpdate: () => void }) {
+  const [value, setValue] = useState<string>('');
+
+  const handleCopyOnClick = () => {
+    const json = JSON.stringify(
+      {
+        sessionFeatureFlags: window.sessionFeatureFlags,
+        sessionFeatureFlagsWithData: window.sessionFeatureFlagsWithData,
+      },
+      undefined,
+      2
+    );
+    clipboard.writeText(json);
+    ToastUtils.pushToastSuccess('flag-dumper-toast-copy', 'Copied to clipboard');
+  };
+
+  const handleSetOnClick = () => {
+    try {
+      const json = JSON.parse(value);
+      const keys = Object.keys(json);
+
+      if (
+        keys.length !== 2 &&
+        keys[0] !== 'sessionFeatureFlags' &&
+        keys[1] !== 'sessionFeatureFlagsWithData'
+      ) {
+        throw new Error(`Invalid keys in object: ${keys}`);
+      }
+
+      if (typeof json.sessionFeatureFlags !== 'object') {
+        throw new Error('sessionFeatureFlags is not an object!');
+      }
+
+      if (typeof json.sessionFeatureFlagsWithData !== 'object') {
+        throw new Error('sessionFeatureFlagsWithData is not an object!');
+      }
+
+      window.sessionFeatureFlags = json.sessionFeatureFlags;
+      window.sessionFeatureFlagsWithData = json.sessionFeatureFlagsWithData;
+
+      forceUpdate();
+
+      ConvoHub.use()
+        .getConversations()
+        .forEach(convo => {
+          convo.triggerUIRefresh();
+        });
+    } catch (e) {
+      ToastUtils.pushToastError('flag-dumper-toast-set', e.message);
+    }
+  };
+
+  return (
+    <DebugMenuSection>
+      <Flex $container={true} $alignItems="center">
+        <h2>Feature Flag Dumper</h2>
+      </Flex>
+      <div style={{ display: 'flex', gap: 'var(--margins-sm)' }}>
+        {' '}
+        <SessionButtonShiny
+          onClick={handleCopyOnClick}
+          shinyContainerStyle={{
+            width: 'max-content',
+          }}
+          buttonColor={SessionButtonColor.PrimaryDark}
+          buttonShape={SessionButtonShape.Square}
+        >
+          Copy Feature Flags
+        </SessionButtonShiny>
+        <SessionButtonShiny
+          onClick={handleSetOnClick}
+          shinyContainerStyle={{
+            width: 'max-content',
+          }}
+          disabled={!value || !value.startsWith('{') || !value.endsWith('}')}
+          buttonColor={SessionButtonColor.PrimaryDark}
+          buttonShape={SessionButtonShape.Square}
+        >
+          Set Feature Flags
+        </SessionButtonShiny>
+      </div>
+      <textarea
+        style={{
+          width: '100%',
+          minWidth: '100px',
+          padding: 'var(--margins-xs) var(--margins-sm)',
+          backgroundColor: 'var(--background-primary-color)',
+          color: 'var(--text-primary-color)',
+          border: '1px solid var(--border-color)',
+          borderRadius: 'var(--border-radius)',
+        }}
+        onChange={e => setValue(e.target.value)}
+      />
+
+      <i>
+        Setting feature flags will override all existing feature flags with exactly what is in the
+        input, any edits may cause unexpected behaviour
+      </i>
+    </DebugMenuSection>
+  );
+}
 
 function DebugMenuSection({ children }: { children: ReactNode }) {
   return (
@@ -451,7 +668,31 @@ export const ProDebugSection = ({ forceUpdate }: { forceUpdate: () => void }) =>
       {mockExpiry ? (
         <i>Mocked expiry time does not tick, it will keep being set to now + mock_expiry.</i>
       ) : null}
-
+      <SpacerSM />
+      <FlagIntegerInput
+        label="Longer Messages Sent"
+        flag="mockProLongerMessagesSent"
+        forceUpdate={forceUpdate}
+        visibleOnlyWithBooleanFlag="proAvailable"
+      />
+      <FlagIntegerInput
+        label="Pinned Conversations"
+        flag="mockProPinnedConversations"
+        forceUpdate={forceUpdate}
+        visibleOnlyWithBooleanFlag="proAvailable"
+      />
+      <FlagIntegerInput
+        label="Pro Badges Sent"
+        flag="mockProBadgesSent"
+        forceUpdate={forceUpdate}
+        visibleOnlyWithBooleanFlag="proAvailable"
+      />
+      <FlagIntegerInput
+        label="Groups Upgraded"
+        flag="mockProGroupsUpgraded"
+        forceUpdate={forceUpdate}
+        visibleOnlyWithBooleanFlag="proAvailable"
+      />
       <SpacerSM />
     </DebugMenuSection>
   );

@@ -47,6 +47,8 @@ import { useIsProGroupsAvailable } from '../../../../../hooks/useIsProAvailable'
 import { SessionSpinner } from '../../../../loading';
 import { SpacerMD } from '../../../../basic/Text';
 import { sleepFor } from '../../../../../session/utils/Promise';
+import LIBSESSION_CONSTANTS from '../../../../../session/utils/libsession/libsession_constants';
+import { useDataFeatureFlag } from '../../../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 // TODO: There are only 2 props here and both are passed to the nonorigin modal dispatch, can probably be in their own object
 type SectionProps = {
@@ -184,7 +186,10 @@ function useBackendErrorDialogButtons() {
         label: { token: 'helpSupport' },
         dataTestId: 'pro-backend-error-support-button',
         onClick: () => {
-          showLinkVisitWarningDialog('https://getsession.org/pro-form', dispatch);
+          showLinkVisitWarningDialog(
+            LIBSESSION_CONSTANTS.LIBSESSION_PRO_URLS.support_url,
+            dispatch
+          );
         },
         closeAfterClick: true,
       },
@@ -268,10 +273,18 @@ const StatsLabel = styled.div<{ disabled?: boolean }>`
 const proBoxShadow = '0 4px 4px 0 rgba(0, 0, 0, 0.25)';
 
 function ProStats() {
-  const proLongerMessagesSent = Storage.get(SettingsKey.proLongerMessagesSent) || 0;
-  const proPinnedConversations = Storage.get(SettingsKey.proPinnedConversations) || 0;
-  const proBadgesSent = Storage.get(SettingsKey.proBadgesSent) || 0;
-  const proGroupsUpgraded = Storage.get(SettingsKey.proGroupsUpgraded) || 0;
+  const mockProLongerMessagesSent = useDataFeatureFlag('mockProLongerMessagesSent');
+  const mockProPinnedConversations = useDataFeatureFlag('mockProPinnedConversations');
+  const mockProBadgesSent = useDataFeatureFlag('mockProBadgesSent');
+  const mockProGroupsUpgraded = useDataFeatureFlag('mockProGroupsUpgraded');
+
+  const proLongerMessagesSent =
+    mockProLongerMessagesSent ?? (Storage.get(SettingsKey.proLongerMessagesSent) || 0);
+  const proPinnedConversations =
+    mockProPinnedConversations ?? (Storage.get(SettingsKey.proPinnedConversations) || 0);
+  const proBadgesSent = mockProBadgesSent ?? (Storage.get(SettingsKey.proBadgesSent) || 0);
+  const proGroupsUpgraded =
+    mockProGroupsUpgraded ?? (Storage.get(SettingsKey.proGroupsUpgraded) || 0);
 
   const isDarkTheme = useIsDarkTheme();
 
@@ -644,7 +657,10 @@ function ProFeatures() {
               onClick={
                 m.id === 'plusLoadsMore'
                   ? async () => {
-                      showLinkVisitWarningDialog('https://getsession.org/pro-roadmap', dispatch);
+                      showLinkVisitWarningDialog(
+                        LIBSESSION_CONSTANTS.LIBSESSION_PRO_URLS.roadmap,
+                        dispatch
+                      );
                     }
                   : undefined
               }
@@ -878,7 +894,10 @@ function ProHelp() {
           text={{ token: 'helpSupport' }}
           subText={{ token: 'proSupportDescription' }}
           onClick={async () =>
-            showLinkVisitWarningDialog('https://getsession.org/pro-form', dispatch)
+            showLinkVisitWarningDialog(
+              LIBSESSION_CONSTANTS.LIBSESSION_PRO_URLS.support_url,
+              dispatch
+            )
           }
         />
       </PanelButtonGroup>
