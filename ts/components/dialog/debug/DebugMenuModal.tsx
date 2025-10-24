@@ -86,7 +86,7 @@ export function DebugMenuSection({
           : {}),
       }}
     >
-      <h2 style={{ width: '100%' }}>{title}</h2>
+      {title ? <h2 style={{ width: '100%' }}>{title}</h2> : null}
       {children}
     </PanelButtonGroup>
   );
