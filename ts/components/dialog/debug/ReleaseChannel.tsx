@@ -5,6 +5,7 @@ import { HintText, SpacerSM } from '../../basic/Text';
 import { ALPHA_CHANNEL, isReleaseChannel, STABLE_CHANNEL } from '../../../updater/types';
 import { useReleaseChannel } from './hooks/useReleaseChannel';
 import { ToastUtils } from '../../../session/utils';
+import { DebugMenuSection } from './DebugMenuModal';
 
 const items = [
   {
@@ -25,14 +26,7 @@ export const ReleaseChannel = () => {
   const { releaseChannel, setReleaseChannel } = useReleaseChannel();
 
   return (
-    <Flex
-      $container={true}
-      width={'100%'}
-      $flexDirection="column"
-      $justifyContent="flex-start"
-      $alignItems="flex-start"
-      $flexGap="var(--margins-xs)"
-    >
+    <DebugMenuSection>
       <Flex $container={true} $alignItems="center">
         <h2>Release Channel</h2>
         <HintText>Experimental</HintText>
@@ -51,6 +45,6 @@ export const ReleaseChannel = () => {
         style={{ margin: 0 }}
       />
       <SpacerSM />
-    </Flex>
+    </DebugMenuSection>
   );
 };

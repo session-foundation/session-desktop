@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 import useUpdate from 'react-use/lib/useUpdate';
-import { type Dispatch, useState } from 'react';
+import { type Dispatch, useState, ReactNode } from 'react';
 import { Flex } from '../../basic/Flex';
 import { updateDebugMenuModal } from '../../../state/ducks/modalDialog';
 import {
@@ -18,12 +18,13 @@ import {
   SessionWrapperModal,
   WrapperModalWidth,
 } from '../../SessionWrapperModal';
-import { FeatureFlags, ProDebugSection } from './FeatureFlags';
+import { FeatureFlagDumper, FeatureFlags, ProDebugSection } from './FeatureFlags';
 import { ReleaseChannel } from './ReleaseChannel';
 import { useHotkey } from '../../../hooks/useHotkey';
 import { PopoverPlaygroundPage } from './playgrounds/PopoverPlaygroundPage';
 import { ProPlaygroundPage } from './playgrounds/ProPlaygroundPage';
 import { ModalBackButton } from '../shared/ModalBackButton';
+import { PanelButtonGroup } from '../../buttons';
 
 const StyledContent = styled(Flex)`
   padding-inline: var(--margins-sm);
@@ -58,22 +59,68 @@ export type DebugMenuPageProps = {
   setPage: Dispatch<DEBUG_MENU_PAGE>;
 };
 
+export function DebugMenuSection({
+  title,
+  children,
+  rowWrap,
+}: {
+  title?: string;
+  children: ReactNode;
+  rowWrap?: boolean;
+}) {
+  return (
+    <PanelButtonGroup
+      style={{
+        maxWidth: '550px',
+      }}
+      containerStyle={{
+        paddingBlock: 'var(--margins-md)',
+        paddingInline: 'var(--margins-lg)',
+        gap: 'var(--margins-sm)',
+        width: '100%',
+        ...(rowWrap
+          ? {
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+            }
+          : {}),
+      }}
+    >
+      <h2 style={{ width: '100%' }}>{title}</h2>
+      {children}
+    </PanelButtonGroup>
+  );
+}
+
 function MainPage({ setPage }: DebugMenuPageProps) {
   // NOTE we use forceUpdate here and pass it through so the entire modal refreshes when a flag is toggled
   const forceUpdate = useUpdate();
   return (
-    <>
+    <div
+      style={{
+        display: 'flex',
+        width: '100%',
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+        gap: 'var(--margins-lg)',
+      }}
+    >
       <FeatureFlags flags={window.sessionFeatureFlags} forceUpdate={forceUpdate} />
       <ProDebugSection forceUpdate={forceUpdate} />
+      <FeatureFlagDumper forceUpdate={forceUpdate} />
       <DebugActions />
+      <ExperimentalActions forceUpdate={forceUpdate} />
       <LoggingActions />
       <Playgrounds setPage={setPage} />
-      <ExperimentalActions forceUpdate={forceUpdate} />
       <DataGenerationActions />
       <ReleaseChannel />
-      <AboutInfo />
-      <OtherInfo />
-    </>
+      <div>
+        <AboutInfo />
+        <OtherInfo />
+      </div>
+    </div>
   );
 }
 
