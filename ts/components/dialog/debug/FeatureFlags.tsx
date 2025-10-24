@@ -1,5 +1,5 @@
 import { isArray, isBoolean } from 'lodash';
-import { ReactNode, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { clipboard } from 'electron';
 import {
   getFeatureFlag,
@@ -17,10 +17,10 @@ import { ConvoHub } from '../../../session/conversations';
 import { isDebugMode } from '../../../shared/env_vars';
 import { ProMessageFeature } from '../../../models/proMessageFeature';
 import { ProAccessVariant, ProOriginatingPlatform } from '../../../hooks/useHasPro';
-import { PanelButtonGroup } from '../../buttons';
 import { SessionButtonShiny } from '../../basic/SessionButtonShiny';
 import { SessionButtonColor, SessionButtonShape } from '../../basic/SessionButton';
 import { ToastUtils } from '../../../session/utils';
+import { DebugMenuSection } from './DebugMenuModal';
 
 type FeatureFlagToggleType = {
   forceUpdate: () => void;
@@ -188,7 +188,6 @@ export const FlagEnumDropdownInput = ({
       <label
         style={{
           display: 'block',
-          marginBottom: 'var(--margins-xxs)',
           color: 'var(--text-primary-color)',
         }}
       >
@@ -277,7 +276,6 @@ export const FlagIntegerInput = ({
       <label
         style={{
           display: 'block',
-          marginBottom: 'var(--margins-xxs)',
           color: 'var(--text-primary-color)',
         }}
       >
@@ -433,22 +431,10 @@ export const FeatureFlags = ({
     )
   );
   return (
-    <Flex
-      $container={true}
-      width={'100%'}
-      $flexDirection="column"
-      $justifyContent="flex-start"
-      $alignItems="flex-start"
-      $flexGap="var(--margins-xs)"
-    >
-      <Flex $container={true} $alignItems="center">
-        <h2>Feature Flags</h2>
-        <HintText>Experimental</HintText>
-      </Flex>
+    <DebugMenuSection title="Feature Flags">
       <i>
         Changes are temporary. You can clear them by reloading the window or restarting the app.
       </i>
-      <SpacerXS />
       <SpacerXS />
       {Object.entries(flags).map(([key, value]) => {
         const flag = key as SessionFlagsKeys;
@@ -478,14 +464,11 @@ export const FeatureFlags = ({
         }
         throw new Error('Feature flag is not a boolean or array');
       })}
-      <SpacerSM />
-      <FeatureFlagDumper forceUpdate={forceUpdate} />
-      <SpacerSM />
-    </Flex>
+    </DebugMenuSection>
   );
 };
 
-function FeatureFlagDumper({ forceUpdate }: { forceUpdate: () => void }) {
+export function FeatureFlagDumper({ forceUpdate }: { forceUpdate: () => void }) {
   const [value, setValue] = useState<string>('');
 
   const handleCopyOnClick = () => {
@@ -538,12 +521,8 @@ function FeatureFlagDumper({ forceUpdate }: { forceUpdate: () => void }) {
   };
 
   return (
-    <DebugMenuSection>
-      <Flex $container={true} $alignItems="center">
-        <h2>Feature Flag Dumper</h2>
-      </Flex>
+    <DebugMenuSection title="Feature Flag Dumper">
       <div style={{ display: 'flex', gap: 'var(--margins-sm)' }}>
-        {' '}
         <SessionButtonShiny
           onClick={handleCopyOnClick}
           shinyContainerStyle={{
@@ -587,27 +566,10 @@ function FeatureFlagDumper({ forceUpdate }: { forceUpdate: () => void }) {
   );
 }
 
-function DebugMenuSection({ children }: { children: ReactNode }) {
-  return (
-    <PanelButtonGroup
-      containerStyle={{
-        paddingBlock: 'var(--margins-md)',
-        paddingInline: 'var(--margins-lg)',
-        gap: 'var(--margins-sm)',
-      }}
-    >
-      {children}
-    </PanelButtonGroup>
-  );
-}
-
 export const ProDebugSection = ({ forceUpdate }: { forceUpdate: () => void }) => {
   const mockExpiry = useDataFeatureFlag('mockProAccessExpiry');
   return (
-    <DebugMenuSection>
-      <Flex $container={true} $alignItems="center">
-        <h2>Session Pro</h2>
-      </Flex>
+    <DebugMenuSection title="Session Pro">
       {proBooleanFlags.map(
         ({ label, key, visibleWithParentKey, hiddenAndDisabledWhenKeyEnabled }) => (
           <FlagToggle
