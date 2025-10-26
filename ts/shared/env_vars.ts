@@ -32,3 +32,11 @@ export function isUnitTest() {
 export function isDebugMode() {
   return !!process.env.SESSION_DEV;
 }
+
+/**
+ * Returns true when any kind of avatars/attachments should not be downloaded.
+ * This is for our users with an issue with sharp that makes the app crashes.
+ */
+export function skipAttachmentsDownloads() {
+  return !!process.env.SESSION_SKIP_ATTACHMENTS_DOWNLOADS;
+}

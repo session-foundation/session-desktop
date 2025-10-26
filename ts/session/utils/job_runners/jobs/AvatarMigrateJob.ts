@@ -13,6 +13,7 @@ import { processAvatarData } from '../../../../util/avatar/processAvatarData';
 import { DecryptedAttachmentsManager } from '../../../crypto/DecryptedAttachmentsManager';
 import { IMAGE_JPEG } from '../../../../types/MIME';
 import { NetworkTime } from '../../../../util/NetworkTime';
+import { skipAttachmentsDownloads } from '../../../../shared/env_vars';
 
 const defaultMsBetweenRetries = 10000;
 const defaultMaxAttempts = 3;
@@ -85,6 +86,9 @@ class AvatarMigrateJob extends PersistedJob<AvatarMigratePersistedData> {
   }
 
   public async run(): Promise<RunJobResult> {
+    if (skipAttachmentsDownloads()) {
+      return RunJobResult.Success;
+    }
     const convoId = this.persistedData.conversationId;
 
     window.log.debug(`running job ${this.persistedData.jobType} with conversationId:"${convoId}"`);

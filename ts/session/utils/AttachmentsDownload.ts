@@ -10,6 +10,7 @@ import { getAttachmentMetadata } from '../../types/message/initializeAttachmentM
 import { AttachmentDownloadMessageDetails } from '../../types/sqlSharedTypes';
 import { was404Error } from '../apis/snode_api/onions';
 import * as Constants from '../constants';
+import { skipAttachmentsDownloads } from '../../shared/env_vars';
 
 // this may cause issues if we increment that value to > 1, but only having one job will block the whole queue while one attachment is downloading
 const MAX_ATTACHMENT_JOB_PARALLELISM = 3;
@@ -140,6 +141,10 @@ async function _maybeStartJob() {
 async function _runJob(job: any) {
   const { id, messageId, attachment, type, index, attempts, isOpenGroupV2, openGroupV2Details } =
     job || {};
+  if (skipAttachmentsDownloads()) {
+    await _finishJob(null, id);
+    return;
+  }
   let found: MessageModel | undefined | null;
   try {
     if (!job || !attachment || !messageId) {

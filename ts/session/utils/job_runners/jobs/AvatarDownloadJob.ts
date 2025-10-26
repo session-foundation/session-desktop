@@ -16,6 +16,7 @@ import { processAvatarData } from '../../../../util/avatar/processAvatarData';
 import { downloadAttachmentFs } from '../../../../receiver/attachments';
 import { extractDetailsFromUrlFragment } from '../../../url';
 import { MultiEncryptWrapperActions } from '../../../../webworker/workers/browser/libsession_worker_interface';
+import { skipAttachmentsDownloads } from '../../../../shared/env_vars';
 
 const defaultMsBetweenRetries = 10000;
 const defaultMaxAttempts = 3;
@@ -89,6 +90,10 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
   }
 
   public async run(): Promise<RunJobResult> {
+    if (skipAttachmentsDownloads()) {
+      return RunJobResult.Success;
+    }
+
     const convoId = this.persistedData.conversationId;
 
     window.log.debug(
