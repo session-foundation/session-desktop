@@ -12,7 +12,6 @@ import {
   UserConfigWrapperNode,
   UserGroupsWrapperNode,
   UtilitiesWrapperNode,
-  ProWrapperConfig,
 } from 'libsession_util_nodejs';
 import { isEmpty, isNull, isObject } from 'lodash';
 
@@ -23,6 +22,7 @@ import {
   ConfigWrapperUser,
   MetaGroupConfig,
   MultiEncryptConfig,
+  ProWrapperConfig,
   isBlindingWrapperType,
   isMetaGroupWrapperType,
   isMultiEncryptWrapperType,
