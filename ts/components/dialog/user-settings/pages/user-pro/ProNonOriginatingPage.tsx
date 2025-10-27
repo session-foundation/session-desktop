@@ -323,7 +323,7 @@ function ProInfoBlockCancel() {
   const { data } = useProAccessDetails();
   return (
     <ProInfoBlockLayout
-      titleElement={tr('cancelAccess')}
+      titleElement={tr('proCancellation')}
       descriptionElement={
         <Localizer
           token="proCancellationDescription"
