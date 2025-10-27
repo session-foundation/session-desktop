@@ -29,15 +29,16 @@ export type SessionFeatureFlags = {
   fsTTL30s: boolean;
 };
 
+// ISO8601 duration format
 export enum MockProAccessExpiryOptions {
-  SOON = 0,
-  TODAY = 1,
-  TOMORROW = 2,
-  WEEK = 3,
-  MONTH = 4,
-  THREE_MONTH = 5,
-  YEAR = 6,
-  // The following are test cases from the PRD in ISO8601 duration format
+  P7D = 0,
+  P29D = 1,
+  P30D = 2,
+  P30DT1S = 3,
+  P90D = 4,
+  P300D = 5,
+  P365D = 6,
+  // The following are test cases from the PRD
   P24DT1M = 7,
   PT24H1M = 8,
   PT23H59M = 9,
