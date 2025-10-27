@@ -284,6 +284,7 @@ function ProInfoBlockUpdate() {
 }
 
 function ProInfoBlockRenew() {
+  const dispatch = useDispatch();
   const { data } = useProAccessDetails();
   return (
     <ProInfoBlockLayout
@@ -295,6 +296,9 @@ function ProInfoBlockRenew() {
           platform_store_other={data.platformStrings.platform_store_other}
           icon={LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}
         />
+      }
+      descriptionOnClick={() =>
+        showLinkVisitWarningDialog('https://getsession.org/pro-roadmap', dispatch)
       }
       subtitleElement={
         <ProInfoBlockSectionSubtitle>
@@ -323,7 +327,7 @@ function ProInfoBlockCancel() {
   const { data } = useProAccessDetails();
   return (
     <ProInfoBlockLayout
-      titleElement={tr('cancelAccess')}
+      titleElement={tr('proCancellation')}
       descriptionElement={
         <Localizer
           token="proCancellationDescription"

@@ -430,13 +430,13 @@ export const ProDebugSection = ({ forceUpdate }: { forceUpdate: () => void }) =>
         label="Expiry"
         flag="mockProAccessExpiry"
         options={[
-          { label: 'Soon', value: MockProAccessExpiryOptions.SOON },
-          { label: 'Today', value: MockProAccessExpiryOptions.TODAY },
-          { label: 'Tomorrow', value: MockProAccessExpiryOptions.TOMORROW },
-          { label: '1 Week', value: MockProAccessExpiryOptions.WEEK },
-          { label: '1 Month', value: MockProAccessExpiryOptions.MONTH },
-          { label: '3 Months', value: MockProAccessExpiryOptions.THREE_MONTH },
-          { label: '1 Year', value: MockProAccessExpiryOptions.YEAR },
+          { label: '7 Days', value: MockProAccessExpiryOptions.P7D },
+          { label: '29 Days', value: MockProAccessExpiryOptions.P29D },
+          { label: '30 Days', value: MockProAccessExpiryOptions.P30D },
+          { label: '30 Days 1 Second', value: MockProAccessExpiryOptions.P30DT1S },
+          { label: '90 Days', value: MockProAccessExpiryOptions.P90D },
+          { label: '300 Days', value: MockProAccessExpiryOptions.P300D },
+          { label: '365 Days', value: MockProAccessExpiryOptions.P365D },
           { label: '24 Days 1 Minute', value: MockProAccessExpiryOptions.P24DT1M },
           { label: '24 Hours 1 Minute', value: MockProAccessExpiryOptions.PT24H1M },
           { label: '23 Hours 59 Minutes', value: MockProAccessExpiryOptions.PT23H59M },
