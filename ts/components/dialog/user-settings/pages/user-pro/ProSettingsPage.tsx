@@ -264,6 +264,7 @@ const StatsLabel = styled.div<{ disabled?: boolean }>`
 `;
 
 const proBoxShadow = '0 4px 4px 0 rgba(0, 0, 0, 0.25)';
+const proBoxShadowSmall = '0 4px 4px 0 rgba(0, 0, 0, 0.15)';
 
 function ProStats() {
   const proLongerMessagesSent = Storage.get(SettingsKey.proLongerMessagesSent) || 0;
@@ -535,6 +536,7 @@ function ProFeatureIconElement({
   position,
   noColor,
 }: WithLucideUnicode & WithProFeaturePosition & { noColor?: boolean }) {
+  const isDarkTheme = useIsDarkTheme();
   const bgStyle =
     position === 0
       ? 'linear-gradient(135deg, #57C9FA 0%, #C993FF 100%)'
@@ -555,7 +557,12 @@ function ProFeatureIconElement({
       $justifyContent={'center'}
       $flexGap="var(--margins-sm)"
     >
-      <StyledFeatureIcon style={{ background: noColor ? 'var(--disabled-color)' : bgStyle }}>
+      <StyledFeatureIcon
+        style={{
+          background: noColor ? 'var(--disabled-color)' : bgStyle,
+          boxShadow: isDarkTheme ? undefined : proBoxShadowSmall,
+        }}
+      >
         <LucideIcon unicode={unicode} iconSize="large" />
       </StyledFeatureIcon>
     </Flex>
