@@ -83,25 +83,25 @@ export enum ProOriginatingPlatform {
 }
 
 function useMockProAccessExpiry() {
-  const variant = useDataFeatureFlag('mockProAccessExpiry') ?? MockProAccessExpiryOptions.MONTH;
+  const variant = useDataFeatureFlag('mockProAccessExpiry') ?? MockProAccessExpiryOptions.P30D;
 
-  // NOTE: for testing the expiry time should be pinned to x time after "now"
-  const now = variant ? Date.now() : 0;
+  // NOTE: for testing the expiry time should be pinned to x + 250ms after "now", the +250ms prevents render lag from changing the timestamp
+  const now = variant ? Date.now() + 250 : 0;
   switch (variant) {
-    case MockProAccessExpiryOptions.SOON:
-      return now + 600 * 1000;
-    case MockProAccessExpiryOptions.TODAY:
-      return now + 12 * 60 * 60 * 1000;
-    case MockProAccessExpiryOptions.TOMORROW:
-      return now + 26 * 60 * 60 * 1000;
-    case MockProAccessExpiryOptions.WEEK:
-      return now + 8 * 24 * 60 * 60 * 1000;
-    case MockProAccessExpiryOptions.MONTH:
+    case MockProAccessExpiryOptions.P7D:
+      return now + 7 * 24 * 60 * 60 * 1000;
+    case MockProAccessExpiryOptions.P29D:
+      return now + 29 * 24 * 60 * 60 * 1000;
+    case MockProAccessExpiryOptions.P30D:
       return now + 30 * 24 * 60 * 60 * 1000;
-    case MockProAccessExpiryOptions.THREE_MONTH:
+    case MockProAccessExpiryOptions.P30DT1S:
+      return now + 30 * 24 * 60 * 61 * 1000;
+    case MockProAccessExpiryOptions.P90D:
       return now + 90 * 24 * 60 * 60 * 1000;
-    case MockProAccessExpiryOptions.YEAR:
-      return now + 12 * 30 * 24 * 60 * 60 * 1000;
+    case MockProAccessExpiryOptions.P300D:
+      return now + 300 * 24 * 60 * 60 * 1000;
+    case MockProAccessExpiryOptions.P365D:
+      return now + 365 * 24 * 60 * 60 * 1000;
     case MockProAccessExpiryOptions.P24DT1M:
       return now + 24 * 24 * 60 * 60 * 1000 + 60 * 60 * 1000;
     case MockProAccessExpiryOptions.PT24H1M:

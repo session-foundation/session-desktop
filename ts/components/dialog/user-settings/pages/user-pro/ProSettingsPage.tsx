@@ -918,7 +918,7 @@ function PageHero() {
       dispatch(
         updateLocalizedPopupDialog({
           title: { token: 'proStatusError' },
-          description: { token: 'proStatusNetworkErrorDescription' },
+          description: { token: 'proStatusRefreshNetworkError' },
           overrideButtons: backendErrorButtons,
         })
       );
