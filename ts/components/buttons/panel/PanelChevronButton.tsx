@@ -5,7 +5,7 @@ import {
   GenericPanelButtonWithAction,
   type GenericPanelButtonProps,
 } from './GenericPanelButtonWithAction';
-import { SessionSpinner } from '../../loading';
+import { AnimatedSpinnerIcon } from '../../loading/spinner/AnimatedSpinnerIcon';
 
 type PanelChevronButtonProps = Pick<GenericPanelButtonProps, 'textElement'> & {
   onClick?: (...args: Array<any>) => void;
@@ -24,7 +24,7 @@ export const PanelChevronButton = (props: PanelChevronButtonProps) => {
       textElement={textElement}
       actionElement={
         showAnimatedSpinnerIcon ? (
-          <SessionSpinner loading height="18px" />
+          <AnimatedSpinnerIcon size="huge" />
         ) : (
           <SessionLucideIconButton
             disabled={disabled}

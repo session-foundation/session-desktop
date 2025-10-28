@@ -44,9 +44,9 @@ import {
 import { SessionButton, SessionButtonColor } from '../../../../basic/SessionButton';
 import { proButtonProps } from '../../../SessionProInfoModal';
 import { useIsProGroupsAvailable } from '../../../../../hooks/useIsProAvailable';
-import { SessionSpinner } from '../../../../loading';
 import { SpacerMD } from '../../../../basic/Text';
 import { sleepFor } from '../../../../../session/utils/Promise';
+import { AnimatedSpinnerIcon } from '../../../../loading/spinner/AnimatedSpinnerIcon';
 
 // TODO: There are only 2 props here and both are passed to the nonorigin modal dispatch, can probably be in their own object
 type SectionProps = {
@@ -832,7 +832,7 @@ function ManageProPreviousAccess({ returnToThisModalAction, centerAlign }: Secti
           color={isDarkTheme && !isError && !isLoading ? 'var(--primary-color)' : undefined}
           iconElement={
             isLoading ? (
-              <SessionSpinner loading height="18px" />
+              <AnimatedSpinnerIcon size="huge" />
             ) : (
               <PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.CIRCLE_PLUS} />
             )
@@ -933,10 +933,10 @@ function PageHero() {
     }
     if (isLoading) {
       return (
-        <>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--margins-xs)' }}>
           <Localizer token={neverHadPro ? 'checkingProStatus' : 'proStatusLoading'} />
-          <SessionSpinner loading height="6px" width="60px" />
-        </>
+          <AnimatedSpinnerIcon size="small" />
+        </div>
       );
     }
     return null;
