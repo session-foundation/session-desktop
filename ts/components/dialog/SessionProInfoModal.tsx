@@ -27,9 +27,10 @@ import { tr } from '../../localization/localeTools';
 import { FileIcon } from '../icon/FileIcon';
 import { SessionButtonShiny } from '../basic/SessionButtonShiny';
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
-import { useCurrentUserHasPro } from '../../hooks/useHasPro';
+import { useCurrentUserHasExpiredPro, useCurrentUserHasPro } from '../../hooks/useHasPro';
 import { ProIconButton } from '../buttons/ProButton';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
+import { Localizer } from '../basic/Localizer';
 
 export enum SessionProInfoVariant {
   MESSAGE_CHARACTER_LIMIT = 0,
@@ -161,14 +162,38 @@ function getFeatureList(variant: SessionProInfoVariant) {
   }
 }
 
-function getDescription(variant: SessionProInfoVariant): ReactNode {
+function getDescription(variant: SessionProInfoVariant, userHasProExpired: boolean): ReactNode {
   switch (variant) {
     case SessionProInfoVariant.PINNED_CONVERSATION_LIMIT:
-      return tr('proCallToActionPinnedConversationsMoreThan');
+      return (
+        <Localizer
+          token={
+            userHasProExpired
+              ? 'proRenewPinFiveConversations'
+              : 'proCallToActionPinnedConversationsMoreThan'
+          }
+        />
+      );
     case SessionProInfoVariant.PINNED_CONVERSATION_LIMIT_GRANDFATHERED:
-      return tr('proCallToActionPinnedConversations');
+      return (
+        <Localizer
+          token={
+            userHasProExpired
+              ? 'proRenewPinMoreConversations'
+              : 'proCallToActionPinnedConversations'
+          }
+        />
+      );
     case SessionProInfoVariant.PROFILE_PICTURE_ANIMATED:
-      return tr('proAnimatedDisplayPictureCallToActionDescription');
+      return (
+        <Localizer
+          token={
+            userHasProExpired
+              ? 'proRenewAnimatedDisplayPicture'
+              : 'proAnimatedDisplayPictureCallToActionDescription'
+          }
+        />
+      );
     case SessionProInfoVariant.ALREADY_PRO_PROFILE_PICTURE_ANIMATED:
       return (
         <>
@@ -186,10 +211,18 @@ function getDescription(variant: SessionProInfoVariant): ReactNode {
       );
 
     case SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT:
-      return tr('proCallToActionLongerMessages');
+      return (
+        <Localizer
+          token={userHasProExpired ? 'proRenewLongerMessages' : 'proCallToActionLongerMessages'}
+        />
+      );
 
     case SessionProInfoVariant.GENERIC:
-      return tr('proUserProfileModalCallToAction');
+      return (
+        <Localizer
+          token={userHasProExpired ? 'proRenewMaxPotential' : 'proUserProfileModalCallToAction'}
+        />
+      );
     case SessionProInfoVariant.GROUP_ACTIVATED:
       return (
         <span>
@@ -261,6 +294,7 @@ export const proButtonProps = {
 export function SessionProInfoModal(props: SessionProInfoState) {
   const dispatch = useDispatch();
   const hasPro = useCurrentUserHasPro();
+  const userHasExpiredPro = useCurrentUserHasExpiredPro();
 
   function onClose() {
     dispatch(updateSessionProInfoModal(null));
@@ -344,13 +378,21 @@ export function SessionProInfoModal(props: SessionProInfoState) {
     >
       <SpacerSM />
       <StyledCTATitle reverseDirection={!hasNoProAndNotGroupCta}>
-        {tr(isGroupCta ? 'proGroupActivated' : hasPro ? 'proActivated' : 'upgradeTo')}
+        {tr(
+          isGroupCta
+            ? 'proGroupActivated'
+            : hasPro
+              ? 'proActivated'
+              : userHasExpiredPro
+                ? 'renew'
+                : 'upgradeTo'
+        )}
         <ProIconButton iconSize={'huge'} dataTestId="invalid-data-testid" onClick={undefined} />
       </StyledCTATitle>
       <SpacerXL />
       <StyledContentContainer>
         <StyledScrollDescriptionContainer>
-          {getDescription(props.variant)}
+          {getDescription(props.variant, userHasExpiredPro)}
         </StyledScrollDescriptionContainer>
         {hasNoProAndNotGroupCta ? (
           <StyledFeatureList>
