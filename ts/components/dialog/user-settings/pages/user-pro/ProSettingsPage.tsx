@@ -230,9 +230,7 @@ function ProNonProContinueButton({ returnToThisModalAction, centerAlign }: Secti
   return (
     <SessionButton
       {...proButtonProps}
-      buttonColor={
-        isLoading || isError ? SessionButtonColor.Disabled : SessionButtonColor.PrimaryDark
-      }
+      buttonColor={isLoading || isError ? SessionButtonColor.Disabled : SessionButtonColor.Primary}
       onClick={handleClick}
       dataTestId="pro-open-platform-website-button"
     >
@@ -558,7 +556,7 @@ function ProFeatureIconElement({
       $flexGap="var(--margins-sm)"
     >
       <StyledFeatureIcon style={{ background: noColor ? 'var(--disabled-color)' : bgStyle }}>
-        <LucideIcon unicode={unicode} iconSize={'huge'} />
+        <LucideIcon unicode={unicode} iconSize="large" />
       </StyledFeatureIcon>
     </Flex>
   );
