@@ -496,7 +496,7 @@ function ProPageButtonUpdate() {
   return (
     <SessionButton
       {...proButtonProps}
-      buttonColor={SessionButtonColor.PrimaryDark}
+      buttonColor={SessionButtonColor.Primary}
       onClick={() => {
         showLinkVisitWarningDialog(data.platformStrings.platform_link_manage, dispatch);
       }}

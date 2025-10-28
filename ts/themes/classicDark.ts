@@ -51,9 +51,7 @@ export const classicDark: ThemeColorVariables = {
   '--button-outline-border-hover-color': 'var(--text-primary-color)',
   '--button-outline-disabled-color': 'var(--disabled-color)',
 
-  '--button-solid-background-color': 'var(--text-primary-color)',
   '--button-solid-background-hover-color': 'var(--transparent-color)',
-  '--button-solid-text-color': THEMES.CLASSIC_DARK.COLOR0,
   '--button-solid-text-hover-color': 'var(--text-primary-color)',
   '--button-solid-disabled-color': 'var(--disabled-color)',
 
