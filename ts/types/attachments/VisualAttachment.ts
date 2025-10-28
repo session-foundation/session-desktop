@@ -238,7 +238,9 @@ export async function pickFileForAvatar(): Promise<ProcessedAvatarDataType | nul
   } catch (e) {
     ToastUtils.pushToastError(
       'pickFileForAvatar',
-      `An error happened while picking/resizing the image: "${e.message?.slice(200) || ''}"`
+      `An error happened while picking/resizing the image: "${
+        e.message.slice(0, e.message.indexOf('\n')).slice(0, 200) || ''
+      }"`
     );
     window.log.error(e);
     return null;

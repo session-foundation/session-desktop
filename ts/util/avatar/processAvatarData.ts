@@ -38,7 +38,7 @@ export async function processAvatarData(arrayBuffer: ArrayBuffer, planForReuploa
   // sanity check the returned data
   if (mainAvatarDetails.format !== 'webp' && mainAvatarDetails.format !== 'gif') {
     throw new Error(
-      'processLocalAvatarChange: we only support animated mainAvatarDetails in webp after conversion'
+      'processLocalAvatarChange: we only support animated mainAvatarDetails in webp or gif after conversion'
     );
   }
 
@@ -56,9 +56,7 @@ export async function processAvatarData(arrayBuffer: ArrayBuffer, planForReuploa
   }
 
   if (mainAvatarDetails.size >= MAX_ATTACHMENT_FILESIZE_BYTES) {
-    throw new Error(
-      'processLocalAvatarChange: mainAvatarDetails size is too big after conversion (bigger than fs limit'
-    );
+    throw new Error('Provided image is too big after conversion. Please use another image.');
   }
 
   return { mainAvatarDetails, avatarFallback };
