@@ -584,6 +584,7 @@ export function ProNonOriginatingPage(modalState: {
           title={null}
           bigHeader={true}
           showExitIcon={true}
+          floatingHeader={true}
           extraLeftButton={backOnClick ? <ModalBackButton onClick={backOnClick} /> : undefined}
         />
       }

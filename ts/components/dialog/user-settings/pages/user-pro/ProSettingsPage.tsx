@@ -62,15 +62,12 @@ const SectionFlexContainer = styled.div`
 `;
 
 const HeroImageBgContainer = styled.div`
-  height: 220px;
+  height: 240px;
+  align-items: center;
 `;
 
 const HeroImageBg = styled.div<{ noColors?: boolean }>`
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 15%;
-
+  padding-top: 55px;
   justify-items: center;
 
   &::before {
@@ -979,6 +976,7 @@ export function ProSettingsPage(modalState: {
           title={null}
           bigHeader={true}
           showExitIcon={true}
+          floatingHeader={true}
           extraLeftButton={
             backAction && !modalState.hideBackButton ? (
               <ModalBackButton onClick={backAction} />
