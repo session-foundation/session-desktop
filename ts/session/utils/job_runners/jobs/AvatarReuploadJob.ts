@@ -233,6 +233,12 @@ class AvatarReuploadJob extends PersistedJob<AvatarReuploadPersistedData> {
         ourConvo: conversation,
         context: 'reuploadAvatar',
       });
+      if (!details?.avatarPointer) {
+        window.log.warn(
+          `[avatarReupload] failed to reupload avatar for ${ed25519Str(conversation.id)}`
+        );
+        throw new Error('details.avatarPointer is not valid after uploadAndSetOurAvatarShared');
+      }
       window.log.info(
         `[avatarReupload] reupload done for ${ed25519Str(conversation.id)}: ${details?.avatarPointer}`
       );
