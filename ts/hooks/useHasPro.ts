@@ -149,8 +149,9 @@ function proAccessOriginatingPlatformToStrings(
 function useMockProAccessExpiry() {
   const variant = useDataFeatureFlag('mockProAccessExpiry') ?? MockProAccessExpiryOptions.P30D;
 
-  // NOTE: for testing the expiry time should be pinned to x + 250ms after "now", the +250ms prevents render lag from changing the timestamp
-  const now = variant ? Date.now() + 250 : 0;
+  // NOTE: the mock expiry time should be pinned to x - 250ms after "now", the -250ms ensures the string
+  // representation rounds up to the expected mock value and prevents render lag from changing the timestamp
+  const now = variant !== null ? Date.now() - 250 : 0;
   switch (variant) {
     case MockProAccessExpiryOptions.P7D:
       return now + 7 * 24 * 60 * 60 * 1000;
