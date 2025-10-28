@@ -316,20 +316,17 @@ export const ModalBasicHeader = ({
     bigHeader?: boolean;
     modalHeaderDataTestId?: SessionDataTestId;
   }) => {
-  const htmlDirection = useHTMLDirection();
-
   const onClose = useOnModalClose();
   const scrolled = useIsModalScrolled();
 
   return (
     <StyledModalHeader
       data-testid={modalHeaderDataTestId}
-      dir={htmlDirection}
       $container={true}
       $flexDirection={'row'}
       $justifyContent={'space-between'}
       $alignItems={'center'}
-      padding={'var(--margins-lg) var(--margins-sm)  var(--margins-sm) var(--margins-lg)'}
+      padding={'var(--margins-lg) var(--margins-lg) var(--margins-sm) var(--margins-lg)'}
       bigHeader={bigHeader}
       scrolled={scrolled}
     >
@@ -410,6 +407,7 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
   const [scrolled, setScrolled] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
+  const htmlDirection = useHTMLDirection();
   const isTopModal = useIsTopModal(modalId);
 
   useKey((event: KeyboardEvent) => {
@@ -440,6 +438,7 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
             onMouseDown={handleClick}
             role="dialog"
             data-testid={modalDataTestId}
+            dir={htmlDirection}
           >
             <StyledModal
               $contentMaxWidth={$contentMaxWidth}
