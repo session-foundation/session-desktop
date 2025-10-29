@@ -146,7 +146,8 @@ export function ProHeroImage({
               iconColor={noColors ? 'var(--disabled-color)' : 'var(--primary-color)'}
               iconSize={132}
             />
-            <HeroImageLabelContainer>
+            {/** We force LTR here as we always want the title to read "Session PRO" */}
+            <HeroImageLabelContainer dir="ltr">
               <img src="images/session/session-text.svg" alt="full-brand-text" height={22} />
               <ProIconButton
                 iconSize="large"
