@@ -35,7 +35,10 @@ export type UserSettingsPage =
   | 'pro'
   | 'proNonOriginating';
 
-export type WithUserSettingsPage =
+export type WithUserSettingsPage = {
+  overrideBackAction?: () => void;
+  afterCloseAction?: () => void;
+} & (
   | { userSettingsPage: Exclude<UserSettingsPage, 'password' | 'pro' | 'proNonOriginating'> }
   | {
       userSettingsPage: 'password';
@@ -50,10 +53,10 @@ export type WithUserSettingsPage =
   | {
       userSettingsPage: 'proNonOriginating';
       nonOriginatingVariant: ProNonOriginatingPageVariant;
-      overrideBackAction?: () => void;
       hideBackButton?: boolean;
       centerAlign?: boolean;
-    };
+    }
+);
 
 export type ConfirmModalState = SessionConfirmDialogProps | null;
 
@@ -88,7 +91,15 @@ export type LocalizedPopupDialogState = {
   overrideButtons?: Array<LocalizedPopupDialogButtonOptions>;
 } | null;
 
-export type SessionProInfoState = { variant: ProCTAVariant } | null;
+export type SessionProInfoState = {
+  variant: ProCTAVariant;
+  afterActionButtonCallback?: () => void;
+  // If the action button opens another modal, this callback is called after that modal is closed.
+  // For example: if the "ProInfoModal" is opened from the "EditProfilePictureModal", and the
+  // "ProInfoModal"'s aciton button opens the "ProSettingsModal", we want to re-open the "EditProfilePictureModal"
+  // when the "ProSettingsModal" closes.
+  actionButtonNextModalAfterCloseCallback?: () => void;
+} | null;
 
 export type UserProfileModalState = {
   /** this can be blinded or not */
