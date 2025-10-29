@@ -48,7 +48,7 @@ import { SpacerMD } from '../../../../basic/Text';
 import { sleepFor } from '../../../../../session/utils/Promise';
 import { AnimatedSpinnerIcon } from '../../../../loading/spinner/AnimatedSpinnerIcon';
 
-// TODO: There are only 3 props here and both are passed to the nonorigin modal dispatch, can probably be in their own object
+// TODO: All these props are passed to the nonorigin modal dispatch, they can probably be in their own object
 type SectionProps = {
   returnToThisModalAction: () => void;
   afterCloseAction?: () => void;

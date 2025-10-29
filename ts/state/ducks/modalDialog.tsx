@@ -94,10 +94,10 @@ export type LocalizedPopupDialogState = {
 export type SessionProInfoState = {
   variant: ProCTAVariant;
   afterActionButtonCallback?: () => void;
-  // If the action button opens another modal, this callback is called after that modal is closed.
-  // For example: if the "ProInfoModal" is opened from the "EditProfilePictureModal", and the
-  // "ProInfoModal"'s aciton button opens the "ProSettingsModal", we want to re-open the "EditProfilePictureModal"
-  // when the "ProSettingsModal" closes.
+  // If the action button opens another modal, this callback is called after that next modal is closed.
+  // For example: If "ProInfoModal" is opened from the "EditProfilePictureModal", and "ProInfoModal"'s
+  // action button opens the "ProSettingsModal", we want to re-open "EditProfilePictureModal"
+  // when "ProSettingsModal" closes.
   actionButtonNextModalAfterCloseCallback?: () => void;
 } | null;
 
