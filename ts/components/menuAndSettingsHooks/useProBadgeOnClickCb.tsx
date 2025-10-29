@@ -1,11 +1,22 @@
+import { useDispatch } from 'react-redux';
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
 import { ProMessageFeature } from '../../models/proMessageFeature';
+import {
+  updateConversationDetailsModal,
+  updateEditProfilePictureModal,
+  updateSessionProInfoModal,
+  userSettingsModal,
+} from '../../state/ducks/modalDialog';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import type { ContactNameContext } from '../conversation/ContactName/ContactNameContext';
 import {
-  SessionProInfoVariant,
+  ProCTAVariant,
   useShowSessionProInfoDialogCbWithVariant,
 } from '../dialog/SessionProInfoModal';
+import {
+  useEditProfilePictureModal,
+  useUpdateConversationDetailsModal,
+} from '../../state/selectors/modal';
 
 type WithUserHasPro = { userHasPro: boolean };
 type WithMessageSentWithProFeat = { messageSentWithProFeat: Array<ProMessageFeature> | null };
@@ -96,14 +107,14 @@ function isContactNameNoShowContext(context: ContactNameContext) {
   }
 }
 
-function proFeatureToVariant(proFeature: ProMessageFeature): SessionProInfoVariant {
+function proFeatureToVariant(proFeature: ProMessageFeature): ProCTAVariant {
   switch (proFeature) {
     case ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH:
-      return SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT;
+      return ProCTAVariant.MESSAGE_CHARACTER_LIMIT;
     case ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE:
-      return SessionProInfoVariant.PROFILE_PICTURE_ANIMATED;
+      return ProCTAVariant.ANIMATED_DISPLAY_PICTURE;
     case ProMessageFeature.PRO_BADGE:
-      return SessionProInfoVariant.GENERIC;
+      return ProCTAVariant.GENERIC;
     default:
       assertUnreachable(proFeature, 'ProFeatureToVariant: unknown case');
       throw new Error('unreachable');
@@ -120,8 +131,12 @@ function proFeatureToVariant(proFeature: ProMessageFeature): SessionProInfoVaria
 export function useProBadgeOnClickCb(
   opts: ProBadgeContext
 ): ShowTagWithCb | ShowTagNoCb | DoNotShowTag {
+  const dispatch = useDispatch();
   const handleShowProInfoModal = useShowSessionProInfoDialogCbWithVariant();
   const isProAvailable = useIsProAvailable();
+
+  const editProfilePictureModal = useEditProfilePictureModal();
+  const conversationDetailsModal = useUpdateConversationDetailsModal();
 
   const { context, args } = opts;
 
@@ -135,10 +150,21 @@ export function useProBadgeOnClickCb(
     return {
       show: true,
       cb: () =>
-        handleShowProInfoModal(
-          args.userHasPro
-            ? SessionProInfoVariant.ALREADY_PRO_PROFILE_PICTURE_ANIMATED
-            : SessionProInfoVariant.PROFILE_PICTURE_ANIMATED
+        dispatch(
+          updateSessionProInfoModal({
+            variant: args.userHasPro
+              ? ProCTAVariant.ANIMATED_DISPLAY_PICTURE_ACTIVATED
+              : ProCTAVariant.ANIMATED_DISPLAY_PICTURE,
+            afterActionButtonCallback: () => {
+              dispatch(updateEditProfilePictureModal(null));
+              dispatch(updateConversationDetailsModal(null));
+            },
+            actionButtonNextModalAfterCloseCallback: () => {
+              dispatch(userSettingsModal({ userSettingsPage: 'default' }));
+              dispatch(updateConversationDetailsModal(conversationDetailsModal));
+              dispatch(updateEditProfilePictureModal(editProfilePictureModal));
+            },
+          })
         ),
     };
   }
@@ -172,7 +198,7 @@ export function useProBadgeOnClickCb(
           cb: () => {
             handleShowProInfoModal(
               multiProFeatUsed
-                ? SessionProInfoVariant.GENERIC
+                ? ProCTAVariant.GENERIC
                 : proFeatureToVariant(messageSentWithProFeat[0])
             );
           },
@@ -203,7 +229,7 @@ export function useProBadgeOnClickCb(
       // if this is a groupv2, the badge should open the "groupv2 activated" modal onclick
       return {
         show: true,
-        cb: () => handleShowProInfoModal(SessionProInfoVariant.GROUP_ACTIVATED),
+        cb: () => handleShowProInfoModal(ProCTAVariant.GROUP_ACTIVATED),
       };
     }
 
@@ -212,7 +238,7 @@ export function useProBadgeOnClickCb(
       return showNoCb;
     }
     // FOMO: user shown has pro but we don't: show CTA on click
-    return { show: true, cb: () => handleShowProInfoModal(SessionProInfoVariant.GENERIC) };
+    return { show: true, cb: () => handleShowProInfoModal(ProCTAVariant.GENERIC) };
   }
 
   if (context === 'character-count') {
@@ -223,7 +249,7 @@ export function useProBadgeOnClickCb(
     // FOMO
     return {
       show: true,
-      cb: () => handleShowProInfoModal(SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT),
+      cb: () => handleShowProInfoModal(ProCTAVariant.MESSAGE_CHARACTER_LIMIT),
     };
   }
 
@@ -256,7 +282,7 @@ export function useProBadgeOnClickCb(
         return showNoCb;
       }
 
-      return { show: true, cb: () => handleShowProInfoModal(SessionProInfoVariant.GENERIC) };
+      return { show: true, cb: () => handleShowProInfoModal(ProCTAVariant.GENERIC) };
     }
     return showNoCb;
   }
