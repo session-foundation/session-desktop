@@ -744,9 +744,7 @@ const workerActions: ImageProcessorWorkerActions = {
 
     // if we can't get a picture with a quality of more than 30, consider it a failure and return null
     const qualityRange = [95, 85, 75, 55, 30] as const;
-    let qualityRangeIndex = 0;
-    while (qualityRangeIndex < qualityRange.length) {
-      const quality = qualityRange[qualityRangeIndex];
+    for (const quality of qualityRange) {
       const pipeline = base.clone();
 
       switch (metadata.format) {
@@ -797,7 +795,7 @@ const workerActions: ImageProcessorWorkerActions = {
         };
       }
       logIfOn(
-        `[imageProcessorWorker] processForFileServerUpload: iteration[${qualityRangeIndex}] took so far ${
+        `[imageProcessorWorker] processForFileServerUpload: took so far ${
           Date.now() - start
         }ms with quality ${quality}`
       );
@@ -805,7 +803,6 @@ const workerActions: ImageProcessorWorkerActions = {
         `\t src${formattedMetadata({ width: metadata.width, height: metadata.height, format: metadata.format, size: inputBuffer.byteLength })} `
       );
     }
-    qualityRangeIndex++;
 
     logIfOn(
       `[imageProcessorWorker] processForFileServerUpload: failed to get a buffer of size ${maxSizeBytes} for ${inputBuffer.byteLength} bytes for image of ${metadata.width}x${metadata.height} with format ${metadata.format}`
