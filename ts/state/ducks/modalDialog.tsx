@@ -12,7 +12,7 @@ import type {
   ProNonOriginatingPageVariant,
 } from '../../types/ReduxTypes';
 import { WithConvoId } from '../../session/types/with';
-import type { SessionProInfoVariant } from '../../components/dialog/SessionProInfoModal';
+import type { ProCTAVariant } from '../../components/dialog/SessionProInfoModal';
 import type { TrArgs } from '../../localization/localeTools';
 import { SessionButtonType } from '../../components/basic/SessionButton';
 
@@ -88,7 +88,7 @@ export type LocalizedPopupDialogState = {
   overrideButtons?: Array<LocalizedPopupDialogButtonOptions>;
 } | null;
 
-export type SessionProInfoState = { variant: SessionProInfoVariant } | null;
+export type SessionProInfoState = { variant: ProCTAVariant } | null;
 
 export type UserProfileModalState = {
   /** this can be blinded or not */
