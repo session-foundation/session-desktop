@@ -76,6 +76,12 @@ export function ProPlaygroundPage() {
         >
           Animated Profile Picture (Has pro)
         </SessionButton>
+        <SessionButton onClick={() => handleClick(SessionProInfoVariant.ONE_TIME_EXPIRE_SOON)}>
+          Expiring Soon
+        </SessionButton>
+        <SessionButton onClick={() => handleClick(SessionProInfoVariant.ONE_TIME_EXPIRED)}>
+          Expired
+        </SessionButton>
       </Flex>
     </>
   );

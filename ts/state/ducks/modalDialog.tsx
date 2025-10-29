@@ -51,6 +51,7 @@ export type WithUserSettingsPage =
       userSettingsPage: 'proNonOriginating';
       nonOriginatingVariant: ProNonOriginatingPageVariant;
       overrideBackAction?: () => void;
+      hideBackButton?: boolean;
       centerAlign?: boolean;
     };
 

@@ -27,7 +27,11 @@ import { tr } from '../../localization/localeTools';
 import { FileIcon } from '../icon/FileIcon';
 import { SessionButtonShiny } from '../basic/SessionButtonShiny';
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
-import { useCurrentUserHasExpiredPro, useCurrentUserHasPro } from '../../hooks/useHasPro';
+import {
+  useCurrentUserHasExpiredPro,
+  useCurrentUserHasPro,
+  useProAccessDetails,
+} from '../../hooks/useHasPro';
 import { ProIconButton } from '../buttons/ProButton';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { Localizer } from '../basic/Localizer';
@@ -40,6 +44,8 @@ export enum SessionProInfoVariant {
   ALREADY_PRO_PROFILE_PICTURE_ANIMATED = 4,
   GENERIC = 5,
   GROUP_ACTIVATED = 6,
+  ONE_TIME_EXPIRE_SOON = 7,
+  ONE_TIME_EXPIRED = 8,
 }
 
 const StyledContentContainer = styled.div`
@@ -70,21 +76,24 @@ const StyledAnimationImage = styled.img`
   position: absolute;
 `;
 
-const StyledAnimatedCTAImageContainer = styled.div`
+const StyledAnimatedCTAImageContainer = styled.div<{ noColor?: boolean }>`
   position: relative;
+  ${props => (props.noColor ? 'filter: grayscale(100%);' : '')}
 `;
 
 function AnimatedCTAImage({
   ctaLayerSrc,
   animatedLayerSrc,
   animationStyle,
+  noColor,
 }: {
   ctaLayerSrc: string;
   animatedLayerSrc: string;
   animationStyle: CSSProperties;
+  noColor?: boolean;
 }) {
   return (
-    <StyledAnimatedCTAImageContainer>
+    <StyledAnimatedCTAImageContainer noColor={noColor}>
       <StyledCTAImage src={ctaLayerSrc} />
       <StyledAnimationImage src={animatedLayerSrc} style={animationStyle} />
     </StyledAnimatedCTAImageContainer>
@@ -154,12 +163,24 @@ function getFeatureList(variant: SessionProInfoVariant) {
       return ['proFeatureListLongerMessages', 'proFeatureListLargerGroups'] as const;
     case SessionProInfoVariant.GENERIC: // yes generic has the same as above, reversed...
       return ['proFeatureListLargerGroups', 'proFeatureListLongerMessages'] as const;
+    case SessionProInfoVariant.ONE_TIME_EXPIRE_SOON:
+    case SessionProInfoVariant.ONE_TIME_EXPIRED:
+      return [
+        'proFeatureListPinnedConversations',
+        'proFeatureListPinnedConversations',
+        'proFeatureListAnimatedDisplayPicture',
+      ] as const;
     case SessionProInfoVariant.GROUP_ACTIVATED:
       return [];
     default:
       assertUnreachable(variant, 'getFeatureList unreachable case');
       throw new Error('unreachable');
   }
+}
+
+function ProExpiringSoonDescription() {
+  const { data } = useProAccessDetails();
+  return <Localizer token="proExpiringSoonDescription" time={data.expiryTimeRelativeString} />;
 }
 
 function getDescription(variant: SessionProInfoVariant, userHasProExpired: boolean): ReactNode {
@@ -223,6 +244,10 @@ function getDescription(variant: SessionProInfoVariant, userHasProExpired: boole
           token={userHasProExpired ? 'proRenewMaxPotential' : 'proUserProfileModalCallToAction'}
         />
       );
+    case SessionProInfoVariant.ONE_TIME_EXPIRE_SOON:
+      return <ProExpiringSoonDescription />;
+    case SessionProInfoVariant.ONE_TIME_EXPIRED:
+      return <Localizer token="proExpiredDescription" />;
     case SessionProInfoVariant.GROUP_ACTIVATED:
       return (
         <span>
@@ -256,12 +281,16 @@ function getImage(variant: SessionProInfoVariant): ReactNode {
       return <StyledCTAImage src="images/cta_hero_char_limit.webp" />;
     case SessionProInfoVariant.GROUP_ACTIVATED:
       return <StyledCTAImage src="images/cta_hero_group_activated_admin.webp" />;
+
     case SessionProInfoVariant.GENERIC:
+    case SessionProInfoVariant.ONE_TIME_EXPIRE_SOON:
+    case SessionProInfoVariant.ONE_TIME_EXPIRED:
       return (
         <AnimatedCTAImage
           ctaLayerSrc="images/cta_hero_generic_base_layer.webp"
           animatedLayerSrc="images/cta_hero_animated_profile_animation_layer.webp"
           animationStyle={{ width: '8%', top: '59.2%', left: '85.5%' }}
+          noColor={variant === SessionProInfoVariant.ONE_TIME_EXPIRED}
         />
       );
 
@@ -272,11 +301,11 @@ function getImage(variant: SessionProInfoVariant): ReactNode {
 }
 
 function isProVisibleCTA(variant: SessionProInfoVariant): boolean {
-  // This is simple now but if we ever add multiple this needs to become a list
   return [
     SessionProInfoVariant.ALREADY_PRO_PROFILE_PICTURE_ANIMATED,
     SessionProInfoVariant.GENERIC,
     SessionProInfoVariant.GROUP_ACTIVATED,
+    SessionProInfoVariant.ONE_TIME_EXPIRE_SOON,
   ].includes(variant);
 }
 
@@ -304,6 +333,9 @@ export function SessionProInfoModal(props: SessionProInfoState) {
     return null;
   }
   const isGroupCta = props.variant === SessionProInfoVariant.GROUP_ACTIVATED;
+  const isOneTimeExpireModal =
+    props.variant === SessionProInfoVariant.ONE_TIME_EXPIRED ||
+    props.variant === SessionProInfoVariant.ONE_TIME_EXPIRE_SOON;
 
   /**
    * Note: the group activated cta is quite custom, but whatever the pro status of the current pro user,
@@ -330,14 +362,37 @@ export function SessionProInfoModal(props: SessionProInfoState) {
             display: 'grid',
             alignItems: 'center',
             justifyItems: 'center',
-            gridTemplateColumns: !hasNoProAndNotGroupCta ? '1fr' : '1fr 1fr',
+            gridTemplateColumns: hasNoProAndNotGroupCta || isOneTimeExpireModal ? '1fr 1fr' : '1fr',
             columnGap: 'var(--margins-sm)',
             paddingInline: 'var(--margins-md)',
             marginBottom: 'var(--margins-md)',
             height: 'unset',
           }}
         >
-          {hasNoProAndNotGroupCta ? (
+          {isOneTimeExpireModal ? (
+            <SessionButtonShiny
+              {...proButtonProps}
+              shinyContainerStyle={{
+                width: '100%',
+              }}
+              buttonColor={SessionButtonColor.PrimaryDark}
+              onClick={() => {
+                onClose();
+                dispatch(
+                  userSettingsModal({
+                    userSettingsPage: 'proNonOriginating',
+                    nonOriginatingVariant:
+                      props.variant === SessionProInfoVariant.ONE_TIME_EXPIRED ? 'renew' : 'update',
+                    hideBackButton: true,
+                    centerAlign: true,
+                  })
+                );
+              }}
+              dataTestId="modal-session-pro-confirm-button"
+            >
+              {tr(props.variant === SessionProInfoVariant.ONE_TIME_EXPIRED ? 'renew' : 'update')}
+            </SessionButtonShiny>
+          ) : hasNoProAndNotGroupCta ? (
             <SessionButtonShiny
               {...proButtonProps}
               shinyContainerStyle={{
@@ -366,7 +421,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
             onClick={onClose}
             dataTestId="modal-session-pro-cancel-button"
             style={
-              !hasNoProAndNotGroupCta
+              !hasNoProAndNotGroupCta && !isOneTimeExpireModal
                 ? { ...proButtonProps.style, width: '50%' }
                 : proButtonProps.style
             }
@@ -379,29 +434,40 @@ export function SessionProInfoModal(props: SessionProInfoState) {
       <SpacerSM />
       <StyledCTATitle reverseDirection={!hasNoProAndNotGroupCta}>
         {tr(
-          isGroupCta
-            ? 'proGroupActivated'
-            : hasPro
-              ? 'proActivated'
-              : userHasExpiredPro
-                ? 'renew'
-                : 'upgradeTo'
+          props.variant === SessionProInfoVariant.ONE_TIME_EXPIRED
+            ? 'proExpired'
+            : props.variant === SessionProInfoVariant.ONE_TIME_EXPIRE_SOON
+              ? 'proExpiringSoon'
+              : isGroupCta
+                ? 'proGroupActivated'
+                : hasPro
+                  ? 'proActivated'
+                  : userHasExpiredPro
+                    ? 'renew'
+                    : 'upgradeTo'
         )}
-        <ProIconButton iconSize={'huge'} dataTestId="invalid-data-testid" onClick={undefined} />
+        <ProIconButton
+          iconSize={'huge'}
+          dataTestId="invalid-data-testid"
+          onClick={undefined}
+          noColors={props.variant === SessionProInfoVariant.ONE_TIME_EXPIRED}
+        />
       </StyledCTATitle>
       <SpacerXL />
       <StyledContentContainer>
         <StyledScrollDescriptionContainer>
           {getDescription(props.variant, userHasExpiredPro)}
         </StyledScrollDescriptionContainer>
-        {hasNoProAndNotGroupCta ? (
+        {hasNoProAndNotGroupCta || isOneTimeExpireModal ? (
           <StyledFeatureList>
             {getFeatureList(props.variant).map(token => (
               <FeatureListItem>{tr(token)}</FeatureListItem>
             ))}
-            <FeatureListItem customIconSrc={'images/sparkle-animated.svg'}>
-              {tr('proFeatureListLoadsMore')}
-            </FeatureListItem>
+            {!isOneTimeExpireModal ? (
+              <FeatureListItem customIconSrc={'images/sparkle-animated.svg'}>
+                {tr('proFeatureListLoadsMore')}
+              </FeatureListItem>
+            ) : null}
           </StyledFeatureList>
         ) : null}
       </StyledContentContainer>
