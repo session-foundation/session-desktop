@@ -48,9 +48,10 @@ import { SpacerMD } from '../../../../basic/Text';
 import { sleepFor } from '../../../../../session/utils/Promise';
 import { AnimatedSpinnerIcon } from '../../../../loading/spinner/AnimatedSpinnerIcon';
 
-// TODO: There are only 2 props here and both are passed to the nonorigin modal dispatch, can probably be in their own object
+// TODO: All these props are passed to the nonorigin modal dispatch, they can probably be in their own object
 type SectionProps = {
   returnToThisModalAction: () => void;
+  afterCloseAction?: () => void;
   centerAlign?: boolean;
 };
 
@@ -191,7 +192,11 @@ function useBackendErrorDialogButtons() {
   return buttons;
 }
 
-function ProNonProContinueButton({ returnToThisModalAction, centerAlign }: SectionProps) {
+function ProNonProContinueButton({
+  returnToThisModalAction,
+  centerAlign,
+  afterCloseAction,
+}: SectionProps) {
   const dispatch = useDispatch();
   const neverHadPro = useCurrentNeverHadPro();
   const { isLoading, isError } = useProAccessDetails();
@@ -215,10 +220,19 @@ function ProNonProContinueButton({ returnToThisModalAction, centerAlign }: Secti
               userSettingsPage: 'proNonOriginating',
               nonOriginatingVariant: 'upgrade',
               overrideBackAction: returnToThisModalAction,
+              afterCloseAction,
               centerAlign,
             })
     );
-  }, [dispatch, isLoading, isError, backendErrorButtons, centerAlign, returnToThisModalAction]);
+  }, [
+    dispatch,
+    isLoading,
+    isError,
+    backendErrorButtons,
+    centerAlign,
+    returnToThisModalAction,
+    afterCloseAction,
+  ]);
 
   if (!neverHadPro) {
     return null;
@@ -389,7 +403,7 @@ function ProStats() {
   );
 }
 
-function ProSettings({ returnToThisModalAction, centerAlign }: SectionProps) {
+function ProSettings({ returnToThisModalAction, centerAlign, afterCloseAction }: SectionProps) {
   const dispatch = useDispatch();
   const userHasPro = useCurrentUserHasPro();
   const { data, isLoading, isError } = useProAccessDetails();
@@ -421,6 +435,7 @@ function ProSettings({ returnToThisModalAction, centerAlign }: SectionProps) {
     return (
       <ProNonProContinueButton
         returnToThisModalAction={returnToThisModalAction}
+        afterCloseAction={afterCloseAction}
         centerAlign={centerAlign}
       />
     );
@@ -960,6 +975,7 @@ export function ProSettingsPage(modalState: {
   hideBackButton?: boolean;
   hideHelp?: boolean;
   centerAlign?: boolean;
+  afterCloseAction?: () => void;
 }) {
   const dispatch = useDispatch();
   const backAction = useUserSettingsBackAction(modalState);
@@ -992,15 +1008,18 @@ export function ProSettingsPage(modalState: {
         <ProStats />
         <ManageProPreviousAccess
           returnToThisModalAction={returnToThisModalAction}
+          afterCloseAction={modalState.afterCloseAction}
           centerAlign={modalState.centerAlign}
         />
         <ProSettings
           returnToThisModalAction={returnToThisModalAction}
+          afterCloseAction={modalState.afterCloseAction}
           centerAlign={modalState.centerAlign}
         />
         <ProFeatures />
         <ManageProCurrentAccess
           returnToThisModalAction={returnToThisModalAction}
+          afterCloseAction={modalState.afterCloseAction}
           centerAlign={modalState.centerAlign}
         />
         {!modalState.hideHelp ? <ProHelp /> : null}

@@ -458,7 +458,17 @@ export const proButtonProps = {
   },
 } satisfies SessionButtonProps;
 
-function Buttons({ variant, onClose }: { variant: ProCTAVariant; onClose: () => void }) {
+function Buttons({
+  variant,
+  onClose,
+  afterActionButtonCallback,
+  actionButtonNextModalAfterCloseCallback,
+}: {
+  variant: ProCTAVariant;
+  onClose: () => void;
+  afterActionButtonCallback?: () => void;
+  actionButtonNextModalAfterCloseCallback?: () => void;
+}) {
   const dispatch = useDispatch();
 
   const actionButton = useMemo(() => {
@@ -471,6 +481,7 @@ function Buttons({ variant, onClose }: { variant: ProCTAVariant; onClose: () => 
       hideBackButton: true,
       hideHelp: true,
       centerAlign: true,
+      afterCloseAction: actionButtonNextModalAfterCloseCallback,
     };
 
     let buttonTextKey: MergedLocalizerTokens = 'theContinue';
@@ -481,6 +492,7 @@ function Buttons({ variant, onClose }: { variant: ProCTAVariant; onClose: () => 
         nonOriginatingVariant: variant === ProCTAVariant.EXPIRED ? 'renew' : 'update',
         hideBackButton: true,
         centerAlign: true,
+        afterCloseAction: actionButtonNextModalAfterCloseCallback,
       };
 
       buttonTextKey = variant === ProCTAVariant.EXPIRED ? 'renew' : 'update';
@@ -496,13 +508,20 @@ function Buttons({ variant, onClose }: { variant: ProCTAVariant; onClose: () => 
         onClick={() => {
           onClose();
           dispatch(userSettingsModal(settingsModalProps));
+          afterActionButtonCallback?.();
         }}
         dataTestId="modal-session-pro-confirm-button"
       >
         {tr(buttonTextKey)}
       </SessionButtonShiny>
     );
-  }, [variant, dispatch, onClose]);
+  }, [
+    variant,
+    dispatch,
+    onClose,
+    actionButtonNextModalAfterCloseCallback,
+    afterActionButtonCallback,
+  ]);
 
   return (
     <ModalActionsContainer
@@ -557,7 +576,14 @@ export function SessionProInfoModal(props: SessionProInfoState) {
       shouldOverflow={true}
       $contentMinWidth={WrapperModalWidth.normal}
       $contentMaxWidth={WrapperModalWidth.normal}
-      buttonChildren={<Buttons variant={props.variant} onClose={onClose} />}
+      buttonChildren={
+        <Buttons
+          variant={props.variant}
+          onClose={onClose}
+          afterActionButtonCallback={props?.afterActionButtonCallback}
+          actionButtonNextModalAfterCloseCallback={props?.actionButtonNextModalAfterCloseCallback}
+        />
+      }
     >
       <SpacerSM />
       <CtaTitle variant={props.variant} />

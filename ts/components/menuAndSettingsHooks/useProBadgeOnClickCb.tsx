@@ -1,11 +1,22 @@
+import { useDispatch } from 'react-redux';
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
 import { ProMessageFeature } from '../../models/proMessageFeature';
+import {
+  updateConversationDetailsModal,
+  updateEditProfilePictureModal,
+  updateSessionProInfoModal,
+  userSettingsModal,
+} from '../../state/ducks/modalDialog';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import type { ContactNameContext } from '../conversation/ContactName/ContactNameContext';
 import {
   ProCTAVariant,
   useShowSessionProInfoDialogCbWithVariant,
 } from '../dialog/SessionProInfoModal';
+import {
+  useEditProfilePictureModal,
+  useUpdateConversationDetailsModal,
+} from '../../state/selectors/modal';
 
 type WithUserHasPro = { userHasPro: boolean };
 type WithMessageSentWithProFeat = { messageSentWithProFeat: Array<ProMessageFeature> | null };
@@ -120,8 +131,12 @@ function proFeatureToVariant(proFeature: ProMessageFeature): ProCTAVariant {
 export function useProBadgeOnClickCb(
   opts: ProBadgeContext
 ): ShowTagWithCb | ShowTagNoCb | DoNotShowTag {
+  const dispatch = useDispatch();
   const handleShowProInfoModal = useShowSessionProInfoDialogCbWithVariant();
   const isProAvailable = useIsProAvailable();
+
+  const editProfilePictureModal = useEditProfilePictureModal();
+  const conversationDetailsModal = useUpdateConversationDetailsModal();
 
   const { context, args } = opts;
 
@@ -135,10 +150,21 @@ export function useProBadgeOnClickCb(
     return {
       show: true,
       cb: () =>
-        handleShowProInfoModal(
-          args.userHasPro
-            ? ProCTAVariant.ANIMATED_DISPLAY_PICTURE_ACTIVATED
-            : ProCTAVariant.ANIMATED_DISPLAY_PICTURE
+        dispatch(
+          updateSessionProInfoModal({
+            variant: args.userHasPro
+              ? ProCTAVariant.ANIMATED_DISPLAY_PICTURE_ACTIVATED
+              : ProCTAVariant.ANIMATED_DISPLAY_PICTURE,
+            afterActionButtonCallback: () => {
+              dispatch(updateEditProfilePictureModal(null));
+              dispatch(updateConversationDetailsModal(null));
+            },
+            actionButtonNextModalAfterCloseCallback: () => {
+              dispatch(userSettingsModal({ userSettingsPage: 'default' }));
+              dispatch(updateConversationDetailsModal(conversationDetailsModal));
+              dispatch(updateEditProfilePictureModal(editProfilePictureModal));
+            },
+          })
         ),
     };
   }

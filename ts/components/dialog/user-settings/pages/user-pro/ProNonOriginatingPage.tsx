@@ -569,14 +569,11 @@ function ProPageButton({ variant }: VariantPageProps) {
 export function ProNonOriginatingPage(modalState: {
   userSettingsPage: 'proNonOriginating';
   nonOriginatingVariant: ProNonOriginatingPageVariant;
-  overrideBackAction?: () => void;
   hideBackButton?: boolean;
   centerAlign?: boolean;
 }) {
   const backAction = useUserSettingsBackAction(modalState);
   const closeAction = useUserSettingsCloseAction(modalState);
-
-  const backOnClick = modalState.overrideBackAction || backAction;
 
   return (
     <UserSettingsModalContainer
@@ -587,8 +584,8 @@ export function ProNonOriginatingPage(modalState: {
           showExitIcon={true}
           floatingHeader={true}
           extraLeftButton={
-            backOnClick && !modalState.hideBackButton ? (
-              <ModalBackButton onClick={backOnClick} />
+            backAction && !modalState.hideBackButton ? (
+              <ModalBackButton onClick={backAction} />
             ) : undefined
           }
         />
