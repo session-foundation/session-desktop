@@ -227,10 +227,13 @@ async function pickFileForTestIntegration() {
 /**
  * Shows the system file picker for images, scale the image down for avatar/opengroup measurements and return the blob objectURL on success
  */
-export async function pickFileForAvatar(): Promise<ProcessedAvatarDataType | null> {
+export async function pickFileForAvatar(
+  processingCb: (isProcessing: boolean) => void
+): Promise<ProcessedAvatarDataType | null> {
   const file = isTestIntegration() ? await pickFileForTestIntegration() : await pickFileForReal();
 
   try {
+    processingCb(true);
     const arrayBuffer = await file.arrayBuffer();
     // pickFileForAvatar is only used for avatars we want to be able to reupload (ourselves or 03-groups)
     const processed = await processAvatarData(arrayBuffer, true);
@@ -244,5 +247,7 @@ export async function pickFileForAvatar(): Promise<ProcessedAvatarDataType | nul
     );
     window.log.error(e);
     return null;
+  } finally {
+    processingCb(false);
   }
 }

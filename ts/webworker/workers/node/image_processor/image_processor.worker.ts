@@ -127,19 +127,23 @@ function metadataToFrameHeight(metadata: sharp.Metadata) {
  *
  * Note: this will also orient a jpeg if needed. (i.e. calls rotate() through sharpFrom)
  * Note: metadata height will be set to the frame height, not the full height
- * of the canvas (as sharp.metadata does with animated webps)
+ * of the canvas (as sharp.metadata does with animated webp)
  */
 async function metadataFromBuffer(
   inputBuffer: ArrayBufferLike | Buffer,
+  rethrow = false,
   options?: sharp.SharpOptions
 ) {
+  // Note: this might throw and we want to allow the error to be forwarded to the user if that happens.
+  // A toast will display the error
   try {
     const metadata = await sharpFrom(inputBuffer, options).metadata();
     const frameHeight = metadataToFrameHeight(metadata);
-    // we do need the await above so the try/catch does its job
     return { ...metadata, height: frameHeight };
   } catch (e) {
-    console.info('metadataFromBuffer failed with', e.message);
+    if (rethrow) {
+      throw e;
+    }
     return null;
   }
 }
@@ -263,7 +267,7 @@ async function sleepFor(ms: number) {
 async function processPlanForReuploadAvatar({ inputBuffer }: { inputBuffer: ArrayBufferLike }) {
   const start = Date.now();
 
-  const metadata = await metadataFromBuffer(inputBuffer, { animated: true });
+  const metadata = await metadataFromBuffer(inputBuffer, true, { animated: true });
   if (!metadata) {
     return null;
   }
@@ -365,7 +369,10 @@ async function processPlanForReuploadAvatar({ inputBuffer }: { inputBuffer: Arra
     return null;
   }
 
-  const resizedMetadataSize = metadataSizeIsSetOrThrow(resizedMetadata, 'processPlanForReuploadAvatar');
+  const resizedMetadataSize = metadataSizeIsSetOrThrow(
+    resizedMetadata,
+    'processPlanForReuploadAvatar'
+  );
 
   logIfOn(
     `[imageProcessorWorker] processPlanForReuploadAvatar mainAvatar resize took ${Date.now() - start}ms for ${inputBuffer.byteLength} bytes`
@@ -398,7 +405,7 @@ async function processPlanForReuploadAvatar({ inputBuffer }: { inputBuffer: Arra
 async function processNoPlanForReuploadAvatar({ inputBuffer }: { inputBuffer: ArrayBufferLike }) {
   const start = Date.now();
   const sizeRequired = maxAvatarDetails.maxSideNoReuploadRequired;
-  const metadata = await metadataFromBuffer(inputBuffer, { animated: true });
+  const metadata = await metadataFromBuffer(inputBuffer, false, { animated: true });
 
   if (!metadata) {
     return null;
@@ -499,7 +506,7 @@ const workerActions: ImageProcessorWorkerActions = {
       throw new Error('imageMetadata: inputBuffer is required');
     }
 
-    const metadata = await metadataFromBuffer(inputBuffer, { animated: true });
+    const metadata = await metadataFromBuffer(inputBuffer, false, { animated: true });
 
     if (!metadata) {
       return null;
@@ -568,7 +575,7 @@ const workerActions: ImageProcessorWorkerActions = {
     }
 
     const parsed = sharpFrom(inputBuffer, { animated: false });
-    const metadata = await metadataFromBuffer(inputBuffer, { animated: false });
+    const metadata = await metadataFromBuffer(inputBuffer, false, { animated: false });
 
     if (!metadata) {
       return null;
@@ -609,7 +616,7 @@ const workerActions: ImageProcessorWorkerActions = {
     const parsed = sharpFrom(inputBuffer, { animated: false }).resize(
       centerCoverOpts({ maxSidePx, withoutEnlargement: false }) // We actually want to enlarge the image if required for a thumbnail in conversation
     );
-    const metadata = await metadataFromBuffer(inputBuffer, { animated: false });
+    const metadata = await metadataFromBuffer(inputBuffer, false, { animated: false });
 
     if (!metadata) {
       return null;
@@ -657,7 +664,7 @@ const workerActions: ImageProcessorWorkerActions = {
     }
     const lossyFormats = ['jpeg', 'webp', 'avif'];
     const start = Date.now();
-    const metadata = await metadataFromBuffer(inputBuffer);
+    const metadata = await metadataFromBuffer(inputBuffer, false);
 
     if (
       !metadata ||
@@ -761,7 +768,7 @@ const workerActions: ImageProcessorWorkerActions = {
 
       if (buffer.length < maxSizeBytes) {
         // eslint-disable-next-line no-await-in-loop
-        const outputMetadata = await metadataFromBuffer(buffer);
+        const outputMetadata = await metadataFromBuffer(buffer, false);
 
         if (!outputMetadata) {
           return null;
