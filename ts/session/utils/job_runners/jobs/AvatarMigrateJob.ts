@@ -141,7 +141,7 @@ class AvatarMigrateJob extends PersistedJob<AvatarMigratePersistedData> {
       }
 
       // we autoscale incoming avatars because our app keeps decrypted avatars in memory and some platforms allows large avatars to be uploaded.
-      const processed = await processAvatarData(decryptedData, conversation.isMe());
+      const processed = await processAvatarData(decryptedData, conversation.isMe(), true);
 
       const upgradedMainAvatar = await processNewAttachment({
         data: processed.mainAvatarDetails.outputBuffer,

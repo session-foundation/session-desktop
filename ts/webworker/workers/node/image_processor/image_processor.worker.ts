@@ -264,7 +264,13 @@ async function sleepFor(ms: number) {
   });
 }
 
-async function processPlanForReuploadAvatar({ inputBuffer }: { inputBuffer: ArrayBufferLike }) {
+async function processPlanForReuploadAvatar({
+  inputBuffer,
+  remoteChange,
+}: {
+  inputBuffer: ArrayBufferLike;
+  remoteChange: boolean;
+}) {
   const start = Date.now();
 
   const metadata = await metadataFromBuffer(inputBuffer, true, { animated: true });
@@ -272,7 +278,18 @@ async function processPlanForReuploadAvatar({ inputBuffer }: { inputBuffer: Arra
     return null;
   }
 
-  const sizeRequired = maxAvatarDetails.maxSidePlanReupload;
+  /**
+   * This is not pretty, but when we download our own avatar from the network and we didn't set it locally,
+   * we need to make sure a reupload will be planned if required.
+   * What this means is that, if we get an avatar of size 640 from the network we should plan for a reupload.
+   * But, if we resize it here to 600, the AvatarReuploadJob will be skipped as the avatar is already the correct size.
+   * As a hack, we add 1 pixel to the size required when this is a remote change, so that the AvatarReuploadJob will be triggered.
+   *
+   * Note: We do not upscale the file if it's already smaller than 600px, so a reupload won't be triggered if a device set an avatar to 600 already.
+   */
+  const sizeRequired = remoteChange
+    ? maxAvatarDetails.maxSidePlanReupload + 1
+    : maxAvatarDetails.maxSidePlanReupload;
   const avatarIsAnimated = isAnimated(metadata);
 
   if (avatarIsAnimated && metadata.format !== 'webp' && metadata.format !== 'gif') {
@@ -523,13 +540,17 @@ const workerActions: ImageProcessorWorkerActions = {
     };
   },
 
-  processAvatarData: async (inputBuffer: ArrayBufferLike, planForReupload: boolean) => {
+  processAvatarData: async (
+    inputBuffer: ArrayBufferLike,
+    planForReupload: boolean,
+    remoteChange: boolean
+  ) => {
     if (!inputBuffer?.byteLength) {
       throw new Error('processAvatarData: inputBuffer is required');
     }
 
     if (planForReupload) {
-      return await processPlanForReuploadAvatar({ inputBuffer });
+      return await processPlanForReuploadAvatar({ inputBuffer, remoteChange });
     }
     return await processNoPlanForReuploadAvatar({ inputBuffer });
   },
