@@ -61,7 +61,8 @@ export type ImageProcessorWorkerActions = {
    */
   processAvatarData: (
     input: ArrayBufferLike,
-    planForReupload: boolean
+    planForReupload: boolean,
+    remoteChange: boolean
   ) => Promise<{
     mainAvatarDetails: Omit<MaybeAnimatedOutputType, 'format'> & WithImageFormat<'gif' | 'webp'>;
     avatarFallback: (StaticOutputType & WithWebpFormat) | null;
