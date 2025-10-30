@@ -1849,6 +1849,10 @@ export class ConversationModel extends Model<ConversationAttributes> {
         priority,
       });
 
+      if (this.isMe()) {
+        await UserConfigWrapperActions.setPriority(priority);
+      }
+
       if (shouldCommit) {
         await this.commit();
       }
