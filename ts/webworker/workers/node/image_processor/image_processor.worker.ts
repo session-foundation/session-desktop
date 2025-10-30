@@ -326,7 +326,7 @@ async function processPlanForReuploadAvatar({ inputBuffer }: { inputBuffer: Arra
     // See the comment in image_processor.d.ts:
     // We want to try to convert a gif to webp, but if it takes too long or the resulting file size is too big, we will just use the original gif.
     awaited = await Promise.race([
-      sharpFrom(inputBuffer, { animated: true }).resize(resizeOpts).gif().toBuffer(),
+      sharpFrom(inputBuffer, { animated: true }).resize(resizeOpts).webp().toBuffer(),
       sleepFor(defaultTimeoutProcessingSeconds * 1000), // it seems that timeout is not working as expected in sharp --'
     ]);
     if (awaited && isBuffer(awaited)) {
