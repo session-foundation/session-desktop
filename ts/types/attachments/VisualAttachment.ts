@@ -14,9 +14,9 @@ import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTyp
 import { processAvatarData } from '../../util/avatar/processAvatarData';
 import type { ProcessedAvatarDataType } from '../../webworker/workers/node/image_processor/image_processor';
 import { ImageProcessor } from '../../webworker/workers/browser/image_processor_interface';
-import { maxThumbnailDetails } from '../../util/attachment/attachmentSizes';
+import { maxAvatarDetails, maxThumbnailDetails } from '../../util/attachment/attachmentSizes';
 
-export const THUMBNAIL_CONTENT_TYPE = 'image/png';
+export const THUMBNAIL_CONTENT_TYPE = 'image/webp';
 
 export const urlToBlob = async (dataUrl: string) => {
   return (await fetch(dataUrl)).blob();
@@ -186,21 +186,6 @@ export const revokeObjectUrl = (objectUrl: string) => {
   URL.revokeObjectURL(objectUrl);
 };
 
-async function autoScaleAvatarBlob(file: File): Promise<ProcessedAvatarDataType | null> {
-  try {
-    const arrayBuffer = await file.arrayBuffer();
-    const processed = await processAvatarData(arrayBuffer);
-    return processed;
-  } catch (e) {
-    ToastUtils.pushToastError(
-      'pickFileForAvatar',
-      `An error happened while picking/resizing the image: "${e.message?.slice(200) || ''}"`
-    );
-    window.log.error(e);
-    return null;
-  }
-}
-
 async function pickFileForReal() {
   const acceptedImages = ['.png', '.gif', '.jpeg', '.jpg'];
   if (getFeatureFlag('proAvailable')) {
@@ -225,11 +210,14 @@ async function pickFileForReal() {
 }
 
 async function pickFileForTestIntegration() {
-  const blueAvatarDetails = await ImageProcessor.testIntegrationFakeAvatar(500, {
-    r: 0,
-    g: 0,
-    b: 255,
-  });
+  const blueAvatarDetails = await ImageProcessor.testIntegrationFakeAvatar(
+    maxAvatarDetails.maxSidePlanReupload,
+    {
+      r: 0,
+      g: 0,
+      b: 255,
+    }
+  );
   const file = new File([blueAvatarDetails.outputBuffer], 'testIntegrationFakeAvatar.jpeg', {
     type: blueAvatarDetails.format,
   });
@@ -239,8 +227,27 @@ async function pickFileForTestIntegration() {
 /**
  * Shows the system file picker for images, scale the image down for avatar/opengroup measurements and return the blob objectURL on success
  */
-export async function pickFileForAvatar(): Promise<ProcessedAvatarDataType | null> {
+export async function pickFileForAvatar(
+  processingCb: (isProcessing: boolean) => void
+): Promise<ProcessedAvatarDataType | null> {
   const file = isTestIntegration() ? await pickFileForTestIntegration() : await pickFileForReal();
 
-  return autoScaleAvatarBlob(file);
+  try {
+    processingCb(true);
+    const arrayBuffer = await file.arrayBuffer();
+    // pickFileForAvatar is only used for avatars we want to be able to reupload (ourselves or 03-groups)
+    const processed = await processAvatarData(arrayBuffer, true);
+    return processed;
+  } catch (e) {
+    ToastUtils.pushToastError(
+      'pickFileForAvatar',
+      `An error happened while picking/resizing the image: "${
+        e.message.slice(0, e.message.indexOf('\n')).slice(0, 200) || ''
+      }"`
+    );
+    window.log.error(e);
+    return null;
+  } finally {
+    processingCb(false);
+  }
 }

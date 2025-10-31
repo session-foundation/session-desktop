@@ -2,7 +2,6 @@ import { isNil } from 'lodash';
 import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { ConvoHub } from '../../session/conversations';
 import { SyncUtils, UserUtils } from '../../session/utils';
-import { getSodiumRenderer } from '../../session/crypto';
 import { uploadAndSetOurAvatarShared } from '../../interactions/avatar-interactions/nts-avatar-interactions';
 import { ed25519Str } from '../../session/utils/String';
 import { userSettingsModal, updateEditProfilePictureModal } from './modalDialog';
@@ -37,14 +36,9 @@ const updateOurAvatar = createAsyncThunk(
       return null;
     }
 
-    const sodium = await getSodiumRenderer();
-    // Uploading a new avatar, we want to encrypt its data with a new key.
-    const profileKey = sodium.randombytes_buf(32);
-
     const res = await uploadAndSetOurAvatarShared({
       decryptedAvatarData: mainAvatarDecrypted,
       ourConvo,
-      profileKey,
       context: 'uploadNewAvatar',
     });
 
@@ -75,7 +69,7 @@ const clearOurAvatar = createAsyncThunk('user/clearOurAvatar', async () => {
     isNil(convo.getAvatarPointer()) &&
     isNil(convo.getAvatarInProfilePath()) &&
     isNil(convo.getFallbackAvatarInProfilePath()) &&
-    isNil(convo.getProfileKey())
+    isNil(convo.getProfileKeyHex())
   ) {
     return;
   }

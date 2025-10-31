@@ -103,10 +103,10 @@ export async function encryptAttachment(
   }
 
   if (keys.byteLength !== 64) {
-    throw new Error('Got invalid length attachment keys');
+    throw new Error(`Got invalid length attachment keys: ${keys.byteLength}`);
   }
   if (iv.byteLength !== 16) {
-    throw new Error('Got invalid length attachment iv');
+    throw new Error(`Got invalid length attachment iv: ${iv.byteLength}`);
   }
   const aesKey = keys.slice(0, 32);
   const macKey = keys.slice(32, 64);

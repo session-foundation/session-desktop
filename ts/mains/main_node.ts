@@ -194,7 +194,7 @@ import { setLatestRelease } from '../node/latest_desktop_release';
 import { isDevProd, isTestIntegration } from '../shared/env_vars';
 import { classicDark } from '../themes';
 
-import { isSessionLocaleSet, getCrowdinLocale } from '../util/i18n/shared';
+import { isSessionLocaleSet, getCrowdinLocale, keepFullLocalePart } from '../util/i18n/shared';
 import { loadLocalizedDictionary } from '../node/locale';
 import { simpleDictionaryNoArgs } from '../localization/locales';
 import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
@@ -779,7 +779,7 @@ app.on('ready', async () => {
   );
 
   if (!isSessionLocaleSet()) {
-    const appLocale = process.env.LANGUAGE || app.getLocale() || 'en';
+    const appLocale = keepFullLocalePart(process.env.LANGUAGE || app.getLocale() || 'en');
     const loadedLocale = loadLocalizedDictionary({ appLocale });
     console.log(`appLocale is ${appLocale}`);
     console.log(`crowdin locale is ${loadedLocale.crowdinLocale}`);

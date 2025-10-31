@@ -24,7 +24,6 @@ import { getCallMediaPermissionsSettings } from '../../../components/settings/Se
 import { Data } from '../../../data/data';
 import { handleAcceptConversationRequest } from '../../../interactions/conversationInteractions';
 import { READ_MESSAGE_STATE } from '../../../models/conversationAttributes';
-import { PnServer } from '../../apis/push_notification_api';
 import { SnodeNamespaces } from '../../apis/snode_api/namespaces';
 import { DURATION } from '../../constants';
 import { DisappearingMessages } from '../../disappearing_messages';
@@ -553,12 +552,11 @@ export async function USER_callRecipient(recipient: string) {
     preOfferMsg,
     SnodeNamespaces.Default
   );
-  const { wrappedEnvelope } = await MessageSender.sendSingleMessage({
+  await MessageSender.sendSingleMessage({
     message: rawPreOffer,
     isSyncMessage: false,
     abortSignal: null,
   });
-  void PnServer.notifyPnServer(wrappedEnvelope, recipient);
 
   await openMediaDevicesAndAddTracks();
   // Note CallMessages are very custom, as we moslty don't sync them to ourselves.

@@ -33,7 +33,11 @@ export function fileDetailsToURL({
 }
 
 function imageUrlToImageId(imageFullUrl?: string) {
-  const imageId = imageFullUrl?.split('/').pop();
+  if (!imageFullUrl) {
+    return null;
+  }
+  const parsedUrl = URL.canParse(imageFullUrl) && new URL(imageFullUrl);
+  const imageId = parsedUrl && parsedUrl?.pathname.split('/').pop();
   if (isNil(imageId) || !isNumber(toNumber(imageId)) || !isFinite(toNumber(imageId))) {
     return null;
   }
