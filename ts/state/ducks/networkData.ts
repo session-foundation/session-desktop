@@ -9,6 +9,7 @@ import type { StateType } from '../reducer';
 import { DURATION } from '../../session/constants';
 import { batchGlobalIsSuccess } from '../../session/apis/open_group_api/sogsv3/sogsV3BatchPoll';
 import { sleepFor } from '../../session/utils/Promise';
+import { NetworkTime } from '../../util/NetworkTime';
 
 export type NetworkDataState = DeepNullable<InfoResponse>;
 
@@ -53,8 +54,7 @@ const fetchInfoFromSeshServer = createAsyncThunk(
       }
 
       payloadCreator.dispatch(setInfoLoading(true));
-      const networkApi = new NetworkApi();
-      const result = await networkApi.getInfo();
+      const result = await NetworkApi.getInfo();
       if (!result) {
         throw new Error('Data fetch failed');
       }
@@ -62,7 +62,7 @@ const fetchInfoFromSeshServer = createAsyncThunk(
       if (
         !batchGlobalIsSuccess(result) &&
         stalePriceTimestamp &&
-        Date.now() / 1000 > stalePriceTimestamp
+        NetworkTime.nowSeconds() > stalePriceTimestamp
       ) {
         payloadCreator.dispatch(networkDataActions.clearCachedData());
         payloadCreator.dispatch(setLastRefreshedTimestamp(0));
@@ -71,7 +71,7 @@ const fetchInfoFromSeshServer = createAsyncThunk(
         );
       }
 
-      payloadCreator.dispatch(setLastRefreshedTimestamp(Date.now()));
+      payloadCreator.dispatch(setLastRefreshedTimestamp(NetworkTime.now()));
       return result;
     } finally {
       payloadCreator.dispatch(setInfoLoading(false));
@@ -98,7 +98,7 @@ const refreshInfoFromSeshServer = createAsyncThunk(
       return;
     }
 
-    if (infoTimestamp && stalePriceTimestamp && Date.now() / 1000 <= stalePriceTimestamp) {
+    if (infoTimestamp && stalePriceTimestamp && NetworkTime.nowSeconds() <= stalePriceTimestamp) {
       if (window.sessionFeatureFlags?.debugServerRequests) {
         window.log.info(
           `[networkData/refreshInfoFromSeshServer] using cache. Data will be stale at ${new Date(stalePriceTimestamp * 1000).toISOString()}`
@@ -107,7 +107,7 @@ const refreshInfoFromSeshServer = createAsyncThunk(
       payloadCreator.dispatch(setInfoFakeRefreshing(true));
       await sleepFor(0.5 * DURATION.SECONDS);
       payloadCreator.dispatch(setInfoFakeRefreshing(false));
-      payloadCreator.dispatch(setLastRefreshedTimestamp(Date.now()));
+      payloadCreator.dispatch(setLastRefreshedTimestamp(NetworkTime.now()));
 
       return;
     }

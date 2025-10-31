@@ -86,7 +86,7 @@ export type OnionV4SnodeResponse = {
 };
 
 export type OnionV4JSONSnodeResponse = {
-  body: Record<string, any> | null;
+  body: Record<string, unknown>;
   status_code: number;
 };
 
@@ -94,6 +94,17 @@ export type OnionV4BinarySnodeResponse = {
   bodyBinary: Uint8Array | null;
   status_code: number;
 };
+
+export function isOnionV4JSONSnodeResponse(
+  response: unknown
+): response is OnionV4JSONSnodeResponse {
+  return (
+    typeof response === 'object' &&
+    response !== null &&
+    'body' in response &&
+    typeof response.body === 'object'
+  );
+}
 
 /**
  * Build & send an onion v4 request to a non snode, and handle retries.
@@ -576,8 +587,7 @@ async function sendJsonViaOnionV4ToFileServer({
  * This function should probably not used directly as we only need it for the NetworkApi.makeRequest() function
  */
 async function sendJsonViaOnionV4ToSeshServer({
-  serverUrl,
-  endpoint,
+  url,
   method,
   headers,
   stringifiedBody,
@@ -586,26 +596,15 @@ async function sendJsonViaOnionV4ToSeshServer({
   timeoutMs,
 }: WithAbortSignal &
   WithTimeoutMs & {
-    serverUrl: string;
-    endpoint: string;
+    url: URL;
     method: string;
     headers: Record<string, string | number>;
     stringifiedBody: string | null;
     pubkey: string;
   }): Promise<OnionV4JSONSnodeResponse | null> {
-  if (!endpoint.startsWith('/')) {
-    throw new Error('endpoint needs a leading /');
-  }
-
-  if (serverUrl.endsWith('/')) {
-    throw new Error('url should not end with /');
-  }
-
-  const builtUrl = new URL(`${serverUrl}${endpoint}`);
-
   const res = await OnionSending.sendViaOnionV4ToNonSnodeWithRetries(
     pubkey,
-    builtUrl,
+    url,
     {
       method,
       headers,

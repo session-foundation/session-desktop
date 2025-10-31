@@ -1,23 +1,23 @@
 import { SERVER_HOSTS } from '..';
 import { assertUnreachable } from '../../../types/sqlSharedTypes';
-
-type ProBackendServerConfigType = {
-  url: string;
-  edPkHex: string;
-};
+import { SessionServerConfigType } from '../session_backend_server';
 
 // not exported/included in the SERVER_HOSTS as this is for testing only
-const PRO_BACKEND_DEV = 'session-pro-backend-dev.doylet.dev';
+const PRO_BACKEND_DEV = 'pro-backend-dev.getsession.org';
 
-const PRO_BACKENDS: Record<'DEFAULT' | 'DEV', ProBackendServerConfigType> = {
+const PRO_BACKENDS: Record<'DEFAULT' | 'DEV', Omit<SessionServerConfigType, 'timeoutMs'>> = {
   DEFAULT: {
+    name: 'ProBackend',
     url: `http://${SERVER_HOSTS.PRO_SERVER}`,
     // FIXME: to be replaced by the real pubkey
     edPkHex: 'not_set_yet',
+    xPkHex: 'not_set_yet',
   },
   DEV: {
+    name: 'ProBackendDev',
     url: `https://${PRO_BACKEND_DEV}`,
     edPkHex: 'fc947730f49eb01427a66e050733294d9e520e545c7a27125a780634e0860a27',
+    xPkHex: '920b81e9bf1a06e70814432668c61487d6fdbe13faaee3b09ebc56223061f140',
   },
 };
 

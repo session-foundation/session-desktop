@@ -546,7 +546,7 @@ export class SwarmPolling {
           })),
           {
             nowMs: NetworkTime.now(),
-            proBackendPubkeyHex: ProBackendAPI.getEd25519PubkeyHex(),
+            proBackendPubkeyHex: ProBackendAPI.server.server.edPkHex,
             ed25519GroupPubkeyHex: pubkey,
             groupEncKeys,
           }
@@ -579,7 +579,7 @@ export class SwarmPolling {
       })),
       {
         nowMs: NetworkTime.now(),
-        proBackendPubkeyHex: ProBackendAPI.getEd25519PubkeyHex(),
+        proBackendPubkeyHex: ProBackendAPI.server.server.edPkHex,
         ed25519PrivateKeyHex,
       }
     );
