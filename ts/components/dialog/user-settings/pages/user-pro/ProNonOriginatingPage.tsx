@@ -497,7 +497,7 @@ function ProPageButtonUpdate() {
   return (
     <SessionButton
       {...proButtonProps}
-      buttonColor={SessionButtonColor.PrimaryDark}
+      buttonColor={SessionButtonColor.Primary}
       onClick={() => {
         showLinkVisitWarningDialog(data.providerConstants.update_subscription_url, dispatch);
       }}
@@ -570,13 +570,11 @@ function ProPageButton({ variant }: VariantPageProps) {
 export function ProNonOriginatingPage(modalState: {
   userSettingsPage: 'proNonOriginating';
   nonOriginatingVariant: ProNonOriginatingPageVariant;
-  overrideBackAction?: () => void;
+  hideBackButton?: boolean;
   centerAlign?: boolean;
 }) {
   const backAction = useUserSettingsBackAction(modalState);
   const closeAction = useUserSettingsCloseAction(modalState);
-
-  const backOnClick = modalState.overrideBackAction || backAction;
 
   return (
     <UserSettingsModalContainer
@@ -585,7 +583,12 @@ export function ProNonOriginatingPage(modalState: {
           title={null}
           bigHeader={true}
           showExitIcon={true}
-          extraLeftButton={backOnClick ? <ModalBackButton onClick={backOnClick} /> : undefined}
+          floatingHeader={true}
+          extraLeftButton={
+            backAction && !modalState.hideBackButton ? (
+              <ModalBackButton onClick={backAction} />
+            ) : undefined
+          }
         />
       }
       onClose={closeAction || undefined}

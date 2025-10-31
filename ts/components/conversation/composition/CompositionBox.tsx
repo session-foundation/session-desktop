@@ -61,7 +61,7 @@ import { useShowBlockUnblock } from '../../menuAndSettingsHooks/useShowBlockUnbl
 import { showLocalizedPopupDialog } from '../../dialog/LocalizedPopupDialog';
 import { formatNumber } from '../../../util/i18n/formatting/generics';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
-import { SessionProInfoVariant, showSessionProInfoDialog } from '../../dialog/SessionProInfoModal';
+import { ProCTAVariant, showSessionProInfoDialog } from '../../dialog/SessionProInfoModal';
 import { tStripped } from '../../../localization/localeTools';
 import type { ProcessedLinkPreviewThumbnailType } from '../../../webworker/workers/node/image_processor/image_processor';
 import { selectWeAreProUser } from '../../../hooks/useParamSelector';
@@ -746,7 +746,7 @@ class CompositionBoxInner extends Component<Props, State> {
       const dispatch = window.inboxStore?.dispatch;
       if (dispatch) {
         if (isProAvailable && !hasPro) {
-          showSessionProInfoDialog(SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT, dispatch);
+          showSessionProInfoDialog(ProCTAVariant.MESSAGE_CHARACTER_LIMIT, dispatch);
         } else {
           showLocalizedPopupDialog(
             {

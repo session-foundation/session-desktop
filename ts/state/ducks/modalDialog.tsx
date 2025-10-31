@@ -12,7 +12,7 @@ import type {
   ProNonOriginatingPageVariant,
 } from '../../types/ReduxTypes';
 import { WithConvoId } from '../../session/types/with';
-import type { SessionProInfoVariant } from '../../components/dialog/SessionProInfoModal';
+import type { ProCTAVariant } from '../../components/dialog/SessionProInfoModal';
 import type { TrArgs } from '../../localization/localeTools';
 import { SessionButtonType } from '../../components/basic/SessionButton';
 
@@ -35,7 +35,10 @@ export type UserSettingsPage =
   | 'pro'
   | 'proNonOriginating';
 
-export type WithUserSettingsPage =
+export type WithUserSettingsPage = {
+  overrideBackAction?: () => void;
+  afterCloseAction?: () => void;
+} & (
   | { userSettingsPage: Exclude<UserSettingsPage, 'password' | 'pro' | 'proNonOriginating'> }
   | {
       userSettingsPage: 'password';
@@ -50,9 +53,10 @@ export type WithUserSettingsPage =
   | {
       userSettingsPage: 'proNonOriginating';
       nonOriginatingVariant: ProNonOriginatingPageVariant;
-      overrideBackAction?: () => void;
+      hideBackButton?: boolean;
       centerAlign?: boolean;
-    };
+    }
+);
 
 export type ConfirmModalState = SessionConfirmDialogProps | null;
 
@@ -87,7 +91,15 @@ export type LocalizedPopupDialogState = {
   overrideButtons?: Array<LocalizedPopupDialogButtonOptions>;
 } | null;
 
-export type SessionProInfoState = { variant: SessionProInfoVariant } | null;
+export type SessionProInfoState = {
+  variant: ProCTAVariant;
+  afterActionButtonCallback?: () => void;
+  // If the action button opens another modal, this callback is called after that next modal is closed.
+  // For example: If "ProInfoModal" is opened from the "EditProfilePictureModal", and "ProInfoModal"'s
+  // action button opens the "ProSettingsModal", we want to re-open "EditProfilePictureModal"
+  // when "ProSettingsModal" closes.
+  actionButtonNextModalAfterCloseCallback?: () => void;
+} | null;
 
 export type UserProfileModalState = {
   /** this can be blinded or not */

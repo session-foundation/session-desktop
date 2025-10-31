@@ -50,8 +50,8 @@ const warningLight = '#A64B00';
 const warningDark = '#FCB159';
 
 // Disabled
-const disabledLight = '#6D6D6D';
-const disabledDark = '#A1A2A1';
+const disabledDark = '#6D6D6D';
+const disabledLight = '#A1A2A1';
 
 // Path
 const pathDefault = primaryGreen;

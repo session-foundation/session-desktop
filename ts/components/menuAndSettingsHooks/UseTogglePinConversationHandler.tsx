@@ -9,7 +9,7 @@ import {
   useIsPrivateAndFriend,
 } from '../../hooks/useParamSelector';
 import {
-  SessionProInfoVariant,
+  ProCTAVariant,
   useShowSessionProInfoDialogCbWithVariant,
 } from '../dialog/SessionProInfoModal';
 import { Constants } from '../../session';
@@ -66,7 +66,7 @@ export function useTogglePinConversationHandler(id: string) {
   return () =>
     handleShowProDialog(
       pinnedConversationsCount > Constants.CONVERSATION.MAX_PINNED_CONVERSATIONS_STANDARD
-        ? SessionProInfoVariant.PINNED_CONVERSATION_LIMIT_GRANDFATHERED
-        : SessionProInfoVariant.PINNED_CONVERSATION_LIMIT
+        ? ProCTAVariant.PINNED_CONVERSATION_LIMIT_GRANDFATHERED
+        : ProCTAVariant.PINNED_CONVERSATION_LIMIT
     );
 }

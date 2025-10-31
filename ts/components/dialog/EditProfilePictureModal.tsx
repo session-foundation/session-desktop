@@ -26,10 +26,7 @@ import {
 } from '../SessionWrapperModal';
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
 import { SpacerLG, SpacerSM } from '../basic/Text';
-import {
-  SessionProInfoVariant,
-  useShowSessionProInfoDialogCbWithVariant,
-} from './SessionProInfoModal';
+import { ProCTAVariant, useShowSessionProInfoDialogCbWithVariant } from './SessionProInfoModal';
 import { AvatarSize } from '../avatar/Avatar';
 import { ProIconButton } from '../buttons/ProButton';
 import { useProBadgeOnClickCb } from '../menuAndSettingsHooks/useProBadgeOnClickCb';
@@ -202,7 +199,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
      * All of those are taken care of as part of the `isProUser` check in the conversation model
      */
     if (isProAvailable && !userHasPro && isNewAvatarAnimated && !isCommunity) {
-      handleShowProInfoModal(SessionProInfoVariant.PROFILE_PICTURE_ANIMATED);
+      handleShowProInfoModal(ProCTAVariant.ANIMATED_DISPLAY_PICTURE);
       window.log.debug('Attempted to upload an animated profile picture without pro!');
       return;
     }
