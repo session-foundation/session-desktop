@@ -339,7 +339,7 @@ export const DebugActions = () => {
         Open storage profile
       </DebugButton>
       <DebugButton
-        onClick={() => {
+        onClick={async () => {
           await ProBackendAPI.getProProof();
           // dispatch(proBackendDataActions.fetchProProofFromProBackend());
         }}
