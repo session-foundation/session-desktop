@@ -1,6 +1,10 @@
 import { expect } from 'chai';
 import { ProWrapperNode } from 'libsession_util_nodejs';
 import Sinon from 'sinon';
+import { getSodiumNode } from '../../../../node/sodiumNode';
+
+const masterPrivKey = '4d3ffd1e98982ee64b86990901a73d3627536b4103ce8d006cb836d45a525c51';
+const rotatingPrivKey = '3e6933de326f5647769f7b3e6db2ca6469c768141be9384276a3692ea04cbee7';
 
 describe('libsession_pro', () => {
   afterEach(() => {
@@ -72,6 +76,118 @@ describe('libsession_pro', () => {
         error: null,
         codepointCount: 11000,
       });
+    });
+  });
+
+  describe('proRevocationsRequestBody', () => {
+    it('throws if invalid input', async () => {
+      expect(() =>
+        ProWrapperNode.proRevocationsRequestBody({
+          requestVersion: 0,
+          ticket: 'randomstr' as any as number,
+        })
+      ).to.throw;
+
+      expect(() =>
+        ProWrapperNode.proRevocationsRequestBody({
+          requestVersion: 'randomstr' as any as number,
+          ticket: 0,
+        })
+      ).to.throw;
+    });
+
+    it('passes if valid input', async () => {
+      expect(
+        ProWrapperNode.proRevocationsRequestBody({
+          ticket: 0,
+          requestVersion: 0,
+        })
+      ).to.be.deep.eq('{"ticket":0,"version":0}');
+
+      expect(
+        ProWrapperNode.proRevocationsRequestBody({
+          ticket: 1234,
+          requestVersion: 255,
+        })
+      ).to.be.deep.eq('{"ticket":1234,"version":255}');
+
+      expect(
+        ProWrapperNode.proRevocationsRequestBody({
+          ticket: 1265893200,
+          requestVersion: 123,
+        })
+      ).to.be.deep.eq('{"ticket":1265893200,"version":123}');
+    });
+  });
+
+  describe('proProofRequestBody', () => {
+    it('generates a valid request body', async () => {
+      const validContent = {
+        version: 0,
+        master_pkey: '3ec4ff1928220d599cccbf8d76002e80191c286906bc18987f46fd9688418852',
+        rotating_pkey: '574b0063d782e6b56beac6c1b67766f0f81ecacf66ab7efefd2c9a65d6c8de88',
+        unix_ts_ms: 1761884113627,
+        master_sig:
+          '1bf719cc278d63e66ca89e4fabba8d8e0730995058ef3082ec90213449ab5c991eb3de6f757834a154accd308cf9fc4b086cc98586c9bd265d0b14aeeed0960b',
+        rotating_sig:
+          'c5e6a469d9210b0483cfc306b96b986147d95b59893a66ddc7ce5123c070246243660f76f34dc728dbdd75eb28707f4bb69a659e458c2587a55b9cfccc48030f',
+      };
+
+      await getSodiumNode();
+      expect(
+        JSON.parse(
+          ProWrapperNode.proProofRequestBody({
+            requestVersion: 0,
+            masterPrivKeyHex: masterPrivKey,
+            rotatingPrivKeyHex: rotatingPrivKey,
+            unixTsMs: 1761884113627,
+          })
+        )
+      ).to.deep.eq(validContent);
+    });
+  });
+
+  describe('proStatusRequestBody', () => {
+    it('generates a valid request body', async () => {
+      const validContent = {
+        version: 0,
+        history: false,
+        master_pkey: '3ec4ff1928220d599cccbf8d76002e80191c286906bc18987f46fd9688418852',
+        unix_ts_ms: 1761884113627,
+        master_sig:
+          '9ee3e6e24d3a62b6debe88b085a475b5b143b01ed21ba9ebfa1d51156057a233f6e6cf1aee3e79c05d36ef56db786260977b9b5c113af99e0d8a8fbf4eab990b',
+      };
+
+      await getSodiumNode();
+      expect(
+        JSON.parse(
+          ProWrapperNode.proStatusRequestBody({
+            requestVersion: 0,
+            masterPrivKeyHex: masterPrivKey,
+            unixTsMs: 1761884113627,
+            withPaymentHistory: false,
+          })
+        )
+      ).to.deep.eq(validContent);
+    });
+  });
+
+  describe('proRevocationsRequestBody', () => {
+    it('generates a valid request body', async () => {
+      const validContent = {
+        version: 0,
+        ticket: 0,
+      };
+
+      await getSodiumNode();
+      expect(
+        JSON.parse(
+          ProWrapperNode.proRevocationsRequestBody({
+            requestVersion: 0,
+            ticket: 0,
+          })
+        )
+      ).to.deep.eq(validContent);
     });
   });
 });
