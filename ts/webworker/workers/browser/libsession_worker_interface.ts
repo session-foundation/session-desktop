@@ -882,6 +882,20 @@ export const ProWrapperActions: ProActionsCalls = {
     callLibSessionWorker(['Pro', 'proFeaturesForMessage', first]) as Promise<
       ReturnType<ProActionsCalls['proFeaturesForMessage']>
     >,
+  proProofRequestBody: async first =>
+    callLibSessionWorker(['Pro', 'proProofRequestBody', first]) as Promise<
+      ReturnType<ProActionsCalls['proProofRequestBody']>
+    >,
+
+  proRevocationsRequestBody: async first =>
+    callLibSessionWorker(['Pro', 'proRevocationsRequestBody', first]) as Promise<
+      ReturnType<ProActionsCalls['proRevocationsRequestBody']>
+    >,
+
+  proStatusRequestBody: async first =>
+    callLibSessionWorker(['Pro', 'proStatusRequestBody', first]) as Promise<
+      ReturnType<ProActionsCalls['proStatusRequestBody']>
+    >,
 };
 
 export const allKnownEncryptionDomains: Array<EncryptionDomain> = ['SessionGroupKickedMessage'];
