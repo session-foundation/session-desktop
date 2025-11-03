@@ -109,7 +109,7 @@ class AvatarMigrateJob extends PersistedJob<AvatarMigratePersistedData> {
       window.log.warn('AvatarMigrateJob: no avatar pointer found for conversation');
       return RunJobResult.Success;
     }
-    const existingProfileKeyHex = conversation.getProfileKey();
+    const existingProfileKeyHex = conversation.getProfileKeyHex();
     if (!existingProfileKeyHex) {
       window.log.warn('AvatarMigrateJob: no profileKey found for conversation');
       return RunJobResult.Success;
@@ -141,7 +141,7 @@ class AvatarMigrateJob extends PersistedJob<AvatarMigratePersistedData> {
       }
 
       // we autoscale incoming avatars because our app keeps decrypted avatars in memory and some platforms allows large avatars to be uploaded.
-      const processed = await processAvatarData(decryptedData);
+      const processed = await processAvatarData(decryptedData, conversation.isMe(), true);
 
       const upgradedMainAvatar = await processNewAttachment({
         data: processed.mainAvatarDetails.outputBuffer,

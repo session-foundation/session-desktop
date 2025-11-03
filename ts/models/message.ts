@@ -13,7 +13,6 @@ import {
   attachmentIdAsStrFromUrl,
   uploadAttachmentsToFileServer,
   uploadLinkPreviewToFileServer,
-  uploadQuoteThumbnailsToFileServer,
 } from '../session/utils';
 import {
   MessageAttributes,
@@ -39,11 +38,7 @@ import {
   VisibleMessage,
   VisibleMessageParams,
 } from '../session/messages/outgoing/visibleMessage/VisibleMessage';
-import {
-  uploadAttachmentsV3,
-  uploadLinkPreviewsV3,
-  uploadQuoteThumbnailsV3,
-} from '../session/utils/AttachmentsV2';
+import { uploadAttachmentsV3, uploadLinkPreviewsV3 } from '../session/utils/AttachmentsV2';
 import { isUsFromCache } from '../session/utils/User';
 import { buildSyncMessage } from '../session/utils/sync/syncUtils';
 import {
@@ -69,7 +64,6 @@ import {
   getAbsoluteAttachmentPath,
   loadAttachmentData,
   loadPreviewData,
-  loadQuoteData,
 } from '../types/MessageAttachment';
 import { ReactionList } from '../types/Reaction';
 import { getAttachmentMetadata } from '../types/message/initializeAttachmentMetadata';
@@ -787,7 +781,7 @@ export class MessageModel extends Model<MessageAttributes> {
       (this.get('attachments') || []).map(loadAttachmentData)
     );
     const body = this.get('body');
-    const quoteWithData = await loadQuoteData(this.get('quote'));
+
     const previewWithData = await loadPreviewData(this.get('preview'));
 
     const { hasAttachments, hasVisualMediaAttachments, hasFileAttachments } =
@@ -799,7 +793,6 @@ export class MessageModel extends Model<MessageAttributes> {
 
     let attachmentPromise;
     let linkPreviewPromise;
-    let quotePromise;
     const fileIdsToLink: Array<string> = [];
 
     // we can only send a single preview
@@ -810,31 +803,16 @@ export class MessageModel extends Model<MessageAttributes> {
       const openGroupV2 = conversation.toOpenGroupV2();
       attachmentPromise = uploadAttachmentsV3(finalAttachments, openGroupV2);
       linkPreviewPromise = uploadLinkPreviewsV3(firstPreviewWithData, openGroupV2);
-      quotePromise = uploadQuoteThumbnailsV3(openGroupV2, quoteWithData);
     } else {
       // if that's not an sogs, the file is uploaded to the file server instead
       attachmentPromise = uploadAttachmentsToFileServer(finalAttachments);
       linkPreviewPromise = uploadLinkPreviewToFileServer(firstPreviewWithData);
-      quotePromise = uploadQuoteThumbnailsToFileServer(quoteWithData);
     }
 
-    const [attachments, preview, quote] = await Promise.all([
-      attachmentPromise,
-      linkPreviewPromise,
-      quotePromise,
-    ]);
+    const [attachments, preview] = await Promise.all([attachmentPromise, linkPreviewPromise]);
     fileIdsToLink.push(...attachments.map(m => attachmentIdAsStrFromUrl(m.url)));
     if (preview && preview.image?.url) {
       fileIdsToLink.push(attachmentIdAsStrFromUrl(preview.image.url));
-    }
-
-    if (quote && quote.attachments?.length && quote.attachments[0].thumbnail) {
-      // typing for all of this Attachment + quote + preview + send or unsend is pretty bad
-      const firstQuoteAttachmentUrl =
-        'url' in quote.attachments[0].thumbnail ? quote.attachments[0].thumbnail.url : undefined;
-      if (firstQuoteAttachmentUrl && attachmentIdAsStrFromUrl(firstQuoteAttachmentUrl)) {
-        fileIdsToLink.push(attachmentIdAsStrFromUrl(firstQuoteAttachmentUrl));
-      }
     }
 
     const isFirstAttachmentVoiceMessage = finalAttachments?.[0]?.isVoiceMessage;
@@ -845,13 +823,21 @@ export class MessageModel extends Model<MessageAttributes> {
     window.log.info(
       `Upload of message data for message ${this.idForLogging()} is finished in ${
         Date.now() - start
-      }ms.`
+      }ms. Attachments: ${attachments.map(m => m.url)}`
     );
+
+    this.setAttachments(
+      this.getAttachments()?.map((a: any, index: number) => ({ ...a, url: attachments[index].url }))
+    );
+    // Note: we don't care about the fileUrl/fileId of previews, only of attachments as they are displayed in the message info
+
+    await this.commit();
+
     return {
       body,
       attachments,
       preview,
-      quote,
+      quote: this.get('quote'),
       fileIdsToLink: uniq(fileIdsToLink),
     };
   }

@@ -254,7 +254,10 @@ export const MessageContextMenu = (props: Props) => {
   }, [isSelectedBlocked, messageId]);
 
   const copyText = useCallback(() => {
-    MessageInteraction.copyBodyToClipboard(text);
+    const selection = window.getSelection();
+    const selectedText = selection?.toString().trim();
+    // Note: we want to allow to copy through the "Copy" menu item the currently selected text, if any.
+    MessageInteraction.copyBodyToClipboard(selectedText || text);
   }, [text]);
 
   const onSelect = useCallback(() => {

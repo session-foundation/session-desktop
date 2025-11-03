@@ -99,14 +99,25 @@ export const getUserED25519KeyPairBytes = async (): Promise<ByteKeyPair> => {
   throw new Error('getUserED25519KeyPairBytes: user has no keypair');
 };
 
+/**
+ * Return the ed25519 seed of the current user.
+ * This is used to generate deterministic encryption keys for attachments/profile pictures.
+ *
+ * This is cached so will only be slow on the first fetch.
+ */
+export async function getUserEd25519Seed() {
+  const ed25519KeyPairBytes = await getUserED25519KeyPairBytes();
+  return ed25519KeyPairBytes.privKeyBytes.slice(0, 32);
+}
+
 export async function getOurProfile() {
   const displayName = (await UserConfigWrapperActions.getName()) || 'Anonymous';
   const updatedAtSeconds = await UserConfigWrapperActions.getProfileUpdatedSeconds();
-  const profilePicWithKey = await UserConfigWrapperActions.getProfilePicWithKeyHex();
+  const profilePic = await UserConfigWrapperActions.getProfilePic();
 
   return new OutgoingUserProfile({
     displayName,
     updatedAtSeconds,
-    picUrlWithProfileKey: profilePicWithKey ?? null,
+    profilePic: profilePic ?? null,
   });
 }

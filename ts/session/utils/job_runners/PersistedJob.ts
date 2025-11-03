@@ -5,6 +5,7 @@ export type PersistedJobType =
   | 'UserSyncJobType'
   | 'GroupSyncJobType'
   | 'AvatarDownloadJobType'
+  | 'AvatarReuploadJobType'
   | 'AvatarMigrateJobType'
   | 'GroupInviteJobType'
   | 'GroupPendingRemovalJobType'
@@ -38,6 +39,11 @@ export interface AvatarDownloadPersistedData extends PersistedJobData {
   conversationId: string;
 }
 
+export interface AvatarReuploadPersistedData extends PersistedJobData {
+  jobType: 'AvatarReuploadJobType';
+  conversationId: string;
+}
+
 export interface AvatarMigratePersistedData extends PersistedJobData {
   jobType: 'AvatarMigrateJobType';
   conversationId: string;
@@ -61,15 +67,15 @@ export interface UserSyncPersistedData extends PersistedJobData {
 export interface GroupSyncPersistedData extends PersistedJobData {
   jobType: 'GroupSyncJobType';
 }
-interface PersitedDataWithMsgIds extends PersistedJobData {
+interface PersistedDataWithMsgIds extends PersistedJobData {
   msgIds: Array<string>;
 }
 
-export interface FetchMsgExpirySwarmPersistedData extends PersitedDataWithMsgIds {
+export interface FetchMsgExpirySwarmPersistedData extends PersistedDataWithMsgIds {
   jobType: 'FetchMsgExpirySwarmJobType';
 }
 
-export interface UpdateMsgExpirySwarmPersistedData extends PersitedDataWithMsgIds {
+export interface UpdateMsgExpirySwarmPersistedData extends PersistedDataWithMsgIds {
   jobType: 'UpdateMsgExpirySwarmJobType';
 }
 
@@ -77,6 +83,7 @@ export type TypeOfPersistedData =
   | UserSyncPersistedData
   | AvatarDownloadPersistedData
   | AvatarMigratePersistedData
+  | AvatarReuploadPersistedData
   | FetchMsgExpirySwarmPersistedData
   | UpdateMsgExpirySwarmPersistedData
   | FakeSleepJobData
@@ -92,8 +99,8 @@ export enum RunJobResult {
   RetryJobIfPossible = 2,
   PermanentFailure = 3,
 }
-function isDataWithMsgIds(data: PersistedJobData): data is PersitedDataWithMsgIds {
-  return !isNil((data as PersitedDataWithMsgIds)?.msgIds);
+function isDataWithMsgIds(data: PersistedJobData): data is PersistedDataWithMsgIds {
+  return !isNil((data as PersistedDataWithMsgIds)?.msgIds);
 }
 
 /**

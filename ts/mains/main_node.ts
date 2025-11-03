@@ -45,7 +45,12 @@ const getRealPath = (p: string) => fs.realpathSync(p);
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
 app.commandLine.appendSwitch('disable-background-timer-throttling');
 app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
-powerSaveBlocker.start('prevent-app-suspension');
+if (!process.env.SESSION_ALLOW_APP_SUSPENSION) {
+  console.log('SESSION_ALLOW_APP_SUSPENSION is not set, so we prevent app suspension');
+  powerSaveBlocker.start('prevent-app-suspension');
+} else {
+  console.log('SESSION_ALLOW_APP_SUSPENSION is set, so we do not prevent app suspension');
+}
 
 // Hardcoding appId to prevent build failures on release.
 // const appUserModelId = packageJson.build.appId;
@@ -189,7 +194,7 @@ import { setLatestRelease } from '../node/latest_desktop_release';
 import { isDevProd, isTestIntegration } from '../shared/env_vars';
 import { classicDark } from '../themes';
 
-import { isSessionLocaleSet, getCrowdinLocale } from '../util/i18n/shared';
+import { isSessionLocaleSet, getCrowdinLocale, keepFullLocalePart } from '../util/i18n/shared';
 import { loadLocalizedDictionary } from '../node/locale';
 import { simpleDictionaryNoArgs } from '../localization/locales';
 import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
@@ -774,7 +779,7 @@ app.on('ready', async () => {
   );
 
   if (!isSessionLocaleSet()) {
-    const appLocale = process.env.LANGUAGE || app.getLocale() || 'en';
+    const appLocale = keepFullLocalePart(process.env.LANGUAGE || app.getLocale() || 'en');
     const loadedLocale = loadLocalizedDictionary({ appLocale });
     console.log(`appLocale is ${appLocale}`);
     console.log(`crowdin locale is ${loadedLocale.crowdinLocale}`);

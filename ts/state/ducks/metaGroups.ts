@@ -1000,7 +1000,7 @@ async function handleAvatarChangeFromUI({
 
   const dataUnencrypted = await blobAvatarAlreadyScaled.arrayBuffer();
 
-  const processed = await processAvatarData(dataUnencrypted);
+  const processed = await processAvatarData(dataUnencrypted, true);
 
   if (!processed) {
     throw new Error('Failed to process avatar');
@@ -1011,8 +1011,13 @@ async function handleAvatarChangeFromUI({
   // encrypt the avatar data with the profile key
   const encryptedData = await encryptProfile(processed.mainAvatarDetails.outputBuffer, profileKey);
 
-  // TODO: we should store the expiries of the attachment somewhere in libsession I assume, and reupload as needed
-  const uploadedFileDetails = await uploadFileToFsWithOnionV4(encryptedData);
+  // Note: currently deterministic encryption is not supported for group's avatars
+  const deterministicEncryption = false;
+
+  const uploadedFileDetails = await uploadFileToFsWithOnionV4(
+    encryptedData,
+    deterministicEncryption
+  );
   if (!uploadedFileDetails || !uploadedFileDetails.fileUrl) {
     window?.log?.warn('File upload for groupv2 to file server failed');
     throw new Error('File upload for groupv2 to file server failed');
@@ -1115,7 +1120,7 @@ async function handleClearAvatarFromUI({ groupPk }: WithGroupPubkey) {
     isNil(convo.getAvatarPointer()) &&
     isNil(convo.getAvatarInProfilePath()) &&
     isNil(convo.getFallbackAvatarInProfilePath()) &&
-    isNil(convo.getProfileKey())
+    isNil(convo.getProfileKeyHex())
   ) {
     return;
   }

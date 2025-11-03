@@ -5121,9 +5121,9 @@ levn@~0.3.0:
     prelude-ls "~1.1.2"
     type-check "~0.3.2"
 
-"libsession_util_nodejs@https://github.com/session-foundation/libsession-util-nodejs/releases/download/v0.5.8/libsession_util_nodejs-v0.5.8.tar.gz":
-  version "0.5.8"
-  resolved "https://github.com/session-foundation/libsession-util-nodejs/releases/download/v0.5.8/libsession_util_nodejs-v0.5.8.tar.gz#5bd0bd24782813bb5f67eee767f7840d42bce93b"
+"libsession_util_nodejs@https://github.com/session-foundation/libsession-util-nodejs/releases/download/v0.5.9/libsession_util_nodejs-v0.5.9.tar.gz":
+  version "0.5.9"
+  resolved "https://github.com/session-foundation/libsession-util-nodejs/releases/download/v0.5.9/libsession_util_nodejs-v0.5.9.tar.gz#33248ecab095c8b1223c3582890d9708731a3ab8"
   dependencies:
     cmake-js "7.3.1"
     node-addon-api "^8.3.1"
@@ -5720,9 +5720,9 @@ node-addon-api@^8.3.1:
   integrity sha512-/bRZty2mXUIFY/xU5HLvveNHlswNJej+RnxBjOMkidWfwZzgTbPG1E3K5TOxRLOR+5hX7bSofy8yf1hZevMS8A==
 
 node-api-headers@^1.1.0:
-  version "1.5.0"
-  resolved "https://registry.yarnpkg.com/node-api-headers/-/node-api-headers-1.5.0.tgz#73a0bab642c77e39b815b6d24ad4c6b56f695912"
-  integrity sha512-Yi/FgnN8IU/Cd6KeLxyHkylBUvDTsSScT0Tna2zTrz8klmc8qF2ppj6Q1LHsmOueJWhigQwR4cO2p0XBGW5IaQ==
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/node-api-headers/-/node-api-headers-1.6.0.tgz#88ad7fb817b44e33baba81f92ae1566bda462d0c"
+  integrity sha512-81T99+mWLZnxX0LlZPYuafyFlxVVaWKQ0BDAbSrOqLO+v+gzCzu0GTAVNeVK8lucqjqo9L/1UcK9cpkem8Py4Q==
 
 node-api-version@^0.2.0:
   version "0.2.0"

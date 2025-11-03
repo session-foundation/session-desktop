@@ -33,7 +33,7 @@ export type AttachmentThumbnail = {
   path?: string;
 };
 
-export interface AttachmentType {
+export type AttachmentType = {
   contentType: MIME.MIMEType;
   fileName: string;
   /** For messages not already on disk, this will be a data url */
@@ -50,13 +50,13 @@ export interface AttachmentType {
   videoUrl?: string;
   /** Not included in protobuf, needs to be pulled from flags */
   isVoiceMessage?: boolean;
-}
+};
 
-export interface AttachmentTypeWithPath extends AttachmentType {
+export type AttachmentTypeWithPath = AttachmentType & {
   path: string;
   flags?: number;
   error?: any;
-}
+};
 
 // UI-focused functions
 
@@ -116,7 +116,7 @@ export function getThumbnailUrl(attachment: AttachmentType): string {
   return attachment?.thumbnail?.url || getUrl(attachment);
 }
 
-export function getUrl(attachment: AttachmentType): string {
+export function getUrl(attachment: Pick<AttachmentType, 'screenshot' | 'url'>): string {
   return attachment?.screenshot?.url || attachment.url;
 }
 
@@ -129,7 +129,7 @@ export function isImage(attachments?: Array<AttachmentType>) {
   );
 }
 
-export function isImageAttachment(attachment: AttachmentType): boolean {
+export function isImageAttachment(attachment: Pick<AttachmentType, 'contentType'>): boolean {
   return Boolean(
     attachment && attachment.contentType && isImageTypeSupported(attachment.contentType)
   );
@@ -143,7 +143,7 @@ export function isVideo(attachments?: Array<AttachmentType>): boolean {
   return Boolean(attachments && isVideoAttachment(attachments[0]));
 }
 
-export function isVideoAttachment(attachment?: AttachmentType): boolean {
+export function isVideoAttachment(attachment?: Pick<AttachmentType, 'contentType'>): boolean {
   return Boolean(
     !!attachment && !!attachment.contentType && isVideoTypeSupported(attachment.contentType)
   );
@@ -190,7 +190,9 @@ export function getImageDimensionsInAttachment(attachment: AttachmentType): Dime
   };
 }
 
-export function areAllAttachmentsVisual(attachments?: Array<AttachmentType>): boolean {
+export function areAllAttachmentsVisual(
+  attachments?: Array<Pick<AttachmentType, 'contentType'>>
+): boolean {
   if (!attachments) {
     return false;
   }

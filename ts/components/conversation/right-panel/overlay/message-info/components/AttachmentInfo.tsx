@@ -4,6 +4,8 @@ import { PropsForAttachment } from '../../../../../../state/ducks/conversations'
 import { Flex } from '../../../../../basic/Flex';
 import { tr } from '../../../../../../localization/localeTools';
 import { saveLogToDesktop } from '../../../../../../util/logger/renderer_process_logging';
+import { extractDetailsFromUrlFragment } from '../../../../../../session/url';
+import { isDevProd } from '../../../../../../shared/env_vars';
 
 type Props = {
   attachment: PropsForAttachment;
@@ -16,7 +18,7 @@ const StyledLabelContainer = styled(Flex)`
   }
 `;
 
-function formatAttachmentUrl(attachment: PropsForAttachment) {
+function formatAttachmentUrl(attachment: Pick<PropsForAttachment, 'url'>) {
   // Note: desktop overwrites the url with the local path once the file is downloaded,
   // and I think this is how we know the file was downloaded.
 
@@ -28,7 +30,8 @@ function formatAttachmentUrl(attachment: PropsForAttachment) {
     return tr('attachmentsNa');
   }
 
-  const fileId = attachment.url.split('/').pop() || '';
+  const fileUrl = URL.canParse(attachment.url) && new URL(attachment.url);
+  const fileId = fileUrl ? fileUrl?.pathname.split('/').pop() || '' : '';
 
   if (!fileId) {
     return tr('attachmentsNa');
@@ -37,11 +40,22 @@ function formatAttachmentUrl(attachment: PropsForAttachment) {
   return fileId;
 }
 
+function extractAttachmentDetails(attachment: Pick<PropsForAttachment, 'url'>) {
+  const fileUrl = URL.canParse(attachment?.url) && new URL(attachment.url);
+  return {
+    deterministicEncryption:
+      (fileUrl && extractDetailsFromUrlFragment(fileUrl)?.deterministicEncryption) || false,
+    fsHost: fileUrl ? fileUrl.hostname : tr('attachmentsNa'),
+  };
+}
+
 export const AttachmentInfo = (props: Props) => {
   const { attachment } = props;
 
   // NOTE the attachment.url will be an empty string if the attachment is broken
   const hasError = attachment.error || attachment.url === '';
+
+  const { deterministicEncryption, fsHost } = extractAttachmentDetails(attachment);
 
   return (
     <Flex $container={true} $flexDirection="column" $flexGap="var(--margins-xs)">
@@ -77,6 +91,15 @@ export const AttachmentInfo = (props: Props) => {
               void saveLogToDesktop();
             }}
           />
+        ) : null}
+        {isDevProd() ? (
+          <>
+            <LabelWithInfo
+              label="Uses Deterministic Encryption"
+              info={deterministicEncryption ? 'Yes' : 'No'}
+            />
+            <LabelWithInfo label="Fs host" info={fsHost} />
+          </>
         ) : null}
       </StyledLabelContainer>
     </Flex>

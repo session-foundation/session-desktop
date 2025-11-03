@@ -1,4 +1,4 @@
-import { omit, startsWith } from 'lodash';
+import { omit } from 'lodash';
 
 import { MessageModel } from '../models/message';
 import { Data } from '../data/data';
@@ -10,12 +10,14 @@ import { callUtilsWorker } from '../webworker/workers/browser/util_worker_interf
 import { sogsV3FetchFileByFileID } from '../session/apis/open_group_api/sogsv3/sogsV3FetchFile';
 import { OpenGroupData } from '../data/opengroups';
 import { OpenGroupRequestCommonType } from '../data/types';
-import {
-  downloadFileFromFileServer,
-  fileServerURL,
-} from '../session/apis/file_server_api/FileServerApi';
+import { downloadFileFromFileServer } from '../session/apis/file_server_api/FileServerApi';
+import { FileFromFileServerDetails } from '../session/apis/file_server_api/types';
+import { MultiEncryptWrapperActions } from '../webworker/workers/browser/libsession_worker_interface';
 
-export async function downloadAttachment(attachment: {
+/**
+ * Note: the url must have the serverPubkey as a query parameter
+ */
+export async function downloadAttachmentFs(attachment: {
   url: string;
   id?: string;
   isRaw?: boolean;
@@ -23,24 +25,16 @@ export async function downloadAttachment(attachment: {
   digest?: string;
   size?: number;
 }) {
-  const asURL = new URL(attachment.url);
-  const serverUrl = asURL.origin;
-
-  // is it an attachment hosted on the file server
-  const defaultFileServer = startsWith(serverUrl, fileServerURL);
+  const toDownload = new FileFromFileServerDetails(attachment.url);
 
   let res: ArrayBuffer | null = null;
-  // try to get the fileId from the end of the URL
 
-  const attachmentId = attachmentIdAsStrFromUrl(attachment.url);
-  if (!defaultFileServer) {
-    window.log.warn(
-      `downloadAttachment attachment is neither opengroup attachment nor fileserver... Dropping it ${asURL.href}`
-    );
-    throw new Error('Attachment url is not opengroupv2 nor fileserver. Unsupported');
-  }
-  window?.log?.info('Download v2 file server attachment', attachmentId);
-  res = await downloadFileFromFileServer(attachmentId);
+  window?.log?.info(
+    'Download v2 file server attachment',
+    toDownload.fullUrl.toString(),
+    toDownload.serverEd25519Pk
+  );
+  res = await downloadFileFromFileServer(toDownload);
 
   if (!res?.byteLength) {
     window?.log?.error('Failed to download attachment. Length is 0');
@@ -52,18 +46,36 @@ export async function downloadAttachment(attachment: {
   if (!attachment.isRaw) {
     const { key, digest, size } = attachment;
 
-    if (!key || !digest) {
+    // Note: if key is set but digest is not, it means we have a libsession deterministic encryption
+    if (!key) {
       throw new Error('Attachment is not raw but we do not have a key to decode it');
     }
+
     if (!size) {
       throw new Error('Attachment expected size is 0');
     }
 
-    const keyBuffer = (await callUtilsWorker('fromBase64ToArrayBuffer', key)) as ArrayBuffer;
-    const digestBuffer = (await callUtilsWorker('fromBase64ToArrayBuffer', digest)) as ArrayBuffer;
+    if (!toDownload.deterministicEncryption) {
+      const keyBuffer = (await callUtilsWorker('fromBase64ToArrayBuffer', key)) as ArrayBuffer;
+      const digestBuffer = (await callUtilsWorker(
+        'fromBase64ToArrayBuffer',
+        digest
+      )) as ArrayBuffer;
 
-    data = await decryptAttachment(data, keyBuffer, digestBuffer);
+      data = await decryptAttachment(data, keyBuffer, digestBuffer);
+    } else {
+      window.log.debug(
+        `${attachment.url} attachment has deterministicEncryption flag set, assuming it is deterministic encryption`
+      );
 
+      const keyBuffer = (await callUtilsWorker('fromBase64ToArrayBuffer', key)) as ArrayBuffer;
+
+      const decrypted = await MultiEncryptWrapperActions.attachmentDecrypt({
+        encryptedData: new Uint8Array(data),
+        decryptionKey: new Uint8Array(keyBuffer),
+      });
+      data = decrypted.decryptedData.buffer;
+    }
     if (size !== data.byteLength) {
       // we might have padding, check that all the remaining bytes are padding bytes
       // otherwise we have an error.
@@ -148,7 +160,6 @@ async function processNormalAttachments(
   convo: ConversationModel
 ): Promise<number> {
   const isOpenGroupV2 = convo.isOpenGroupV2();
-
   if (message.isTrustedForAttachmentDownload()) {
     const openGroupV2Details = (isOpenGroupV2 && convo.toOpenGroupV2()) || undefined;
     const attachments = await Promise.all(
@@ -202,48 +213,6 @@ async function processPreviews(message: MessageModel, convo: ConversationModel):
   return addedCount;
 }
 
-async function processQuoteAttachments(
-  message: MessageModel,
-  convo: ConversationModel
-): Promise<number> {
-  let addedCount = 0;
-
-  const quote = message.get('quote');
-
-  if (!quote || !quote.attachments || !quote.attachments.length) {
-    return 0;
-  }
-  const isOpenGroupV2 = convo.isOpenGroupV2();
-  const openGroupV2Details = (isOpenGroupV2 && convo.toOpenGroupV2()) || undefined;
-
-  for (let index = 0; index < quote.attachments.length; index++) {
-    // If we already have a path, then we copied this image from the quoted
-    // message and we don't need to download the attachment.
-    const attachment = quote.attachments[index];
-
-    if (!attachment.thumbnail || attachment.thumbnail.path) {
-      continue;
-    }
-
-    addedCount += 1;
-
-    // eslint-disable-next-line no-await-in-loop
-    const thumbnail = await AttachmentDownloads.addJob(attachment.thumbnail, {
-      messageId: message.id,
-      type: 'quote',
-      index,
-      isOpenGroupV2,
-      openGroupV2Details,
-    });
-
-    quote.attachments[index] = { ...attachment, thumbnail };
-  }
-
-  message.setQuote(quote);
-
-  return addedCount;
-}
-
 export async function queueAttachmentDownloads(
   message: MessageModel,
   conversation: ConversationModel
@@ -251,10 +220,7 @@ export async function queueAttachmentDownloads(
   let count = 0;
 
   count += await processNormalAttachments(message, message.get('attachments') || [], conversation);
-
   count += await processPreviews(message, conversation);
-
-  count += await processQuoteAttachments(message, conversation);
 
   if (count > 0) {
     await Data.saveMessage(message.cloneAttributes());

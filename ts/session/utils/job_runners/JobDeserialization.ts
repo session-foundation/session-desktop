@@ -13,6 +13,7 @@ import { GroupInvite } from './jobs/GroupInviteJob';
 import { GroupPendingRemovals } from './jobs/GroupPendingRemovalsJob';
 import { GroupSync } from './jobs/GroupSyncJob';
 import { UpdateMsgExpirySwarm } from './jobs/UpdateMsgExpirySwarmJob';
+import { AvatarReupload } from './jobs/AvatarReuploadJob';
 
 export function persistedJobFromData<T extends TypeOfPersistedData>(
   data: T
@@ -27,6 +28,8 @@ export function persistedJobFromData<T extends TypeOfPersistedData>(
       return new UserSync.UserSyncJob(data) as unknown as PersistedJob<T>;
     case 'AvatarDownloadJobType':
       return new AvatarDownload.AvatarDownloadJob(data) as unknown as PersistedJob<T>;
+    case 'AvatarReuploadJobType':
+      return new AvatarReupload.AvatarReuploadJob(data) as unknown as PersistedJob<T>;
     case 'AvatarMigrateJobType':
       return new AvatarMigrate.AvatarMigrateJob(data) as unknown as PersistedJob<T>;
     case 'FetchMsgExpirySwarmJobType':
