@@ -246,7 +246,7 @@ async function clearOutAllSnodesNotInPool(snodePool: Array<Snode>) {
   swarmCache.clear();
 }
 
-export function subnetOfIp(ip: string) {
+function subnetOfIp(ip: string) {
   if (ip.lastIndexOf('.') === -1) {
     return ip;
   }
@@ -257,7 +257,7 @@ function snodeSameSubnetIp(snode1: Snode, snode2: Snode) {
   return subnetOfIp(snode1.ip) === subnetOfIp(snode2.ip);
 }
 
-export function hasSnodeSameSubnetIp(snodes: Array<Snode>, snode: Snode) {
+function hasSnodeSameSubnetIp(snodes: Array<Snode>, snode: Snode) {
   return snodes.some(m => snodeSameSubnetIp(m, snode));
 }
 

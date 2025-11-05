@@ -436,7 +436,7 @@ async function processAnyOtherErrorAtDestination(
     await Onions.incrementBadSnodeCountOrDrop({
       snodeEd25519: destinationEd25519,
       associatedWith,
-      reason: `processAnyOtherErrorAtDestination: ${status} for snodeDestinationEd25519: ${ed25519Str(destinationEd25519)}, associatedWith: ${associatedWith ? ed25519Str(associatedWith) : 'null'}, body: "${body}"`,
+      reason: `processAnyOtherErrorAtDestination: ${status} for snodeDestinationEd25519: ${ed25519Str(destinationEd25519)}, associatedWith: ${associatedWith ? ed25519Str(associatedWith) : 'null'}, bodySliced: "${body?.slice(0, 300)}"`,
     });
     throw new Error(`Bad Path handled. Retry this request. Status: ${status}`);
   }
