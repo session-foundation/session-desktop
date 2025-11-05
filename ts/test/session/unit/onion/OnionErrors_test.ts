@@ -20,7 +20,7 @@ import {
 import { SnodePool } from '../../../../session/apis/snode_api/snodePool';
 import { OnionPaths } from '../../../../session/onions';
 import { pathFailureCount } from '../../../../session/onions/onionPath';
-import { generateFakeSnodeWithEdKey, stubData } from '../../../test-utils/utils';
+import { generateFakeSnodeWithDetails, stubData } from '../../../test-utils/utils';
 
 chai.use(chaiAsPromised as any);
 chai.should();
@@ -73,10 +73,14 @@ describe('OnionPathsErrors', () => {
 
     SnodeAPI.Onions.resetSnodeFailureCount();
 
-    guardNodesArray = guardPubkeys.map(generateFakeSnodeWithEdKey);
+    guardNodesArray = guardPubkeys.map(m =>
+      generateFakeSnodeWithDetails({ ed25519Pubkey: m, ip: null })
+    );
     guardSnode1 = guardNodesArray[0];
 
-    otherNodesArray = otherNodesPubkeys.map(generateFakeSnodeWithEdKey);
+    otherNodesArray = otherNodesPubkeys.map(m =>
+      generateFakeSnodeWithDetails({ ed25519Pubkey: m, ip: null })
+    );
 
     fakeSnodePool = [...guardNodesArray, ...otherNodesArray];
 

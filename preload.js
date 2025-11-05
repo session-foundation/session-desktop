@@ -76,6 +76,8 @@ window.sessionFeatureFlags = {
   debugLibsessionDumps: !isEmpty(process.env.SESSION_DEBUG_LIBSESSION_DUMPS),
   debugBuiltSnodeRequests: !isEmpty(process.env.SESSION_DEBUG_BUILT_SNODE_REQUEST),
   debugSwarmPolling: !isEmpty(process.env.SESSION_DEBUG_SWARM_POLLING),
+  debugOnionPaths: !isEmpty(process.env.SESSION_DEBUG_ONION_PATHS),
+  debugSnodePool: !isEmpty(process.env.SESSION_DEBUG_SNODE_POOL),
   debugServerRequests: false,
   debugNonSnodeRequests: false,
   debugOnionRequests: false,

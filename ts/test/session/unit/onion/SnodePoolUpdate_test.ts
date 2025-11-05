@@ -13,7 +13,7 @@ import { Snode } from '../../../../data/types';
 import * as OnionPaths from '../../../../session/onions/onionPath';
 import {
   generateFakeSnodes,
-  generateFakeSnodeWithEdKey,
+  generateFakeSnodeWithDetails,
   stubData,
 } from '../../../test-utils/utils';
 
@@ -28,9 +28,9 @@ const guard3ed = 'e3ec6fcc79e64c2af6a48a9865d4bf4b739ec7708d75f35acc3d478f916153
 
 const fakeSnodePool: Array<Snode> = [
   ...generateFakeSnodes(12),
-  generateFakeSnodeWithEdKey(guard1ed),
-  generateFakeSnodeWithEdKey(guard2ed),
-  generateFakeSnodeWithEdKey(guard3ed),
+  generateFakeSnodeWithDetails({ ed25519Pubkey: guard1ed, ip: null }),
+  generateFakeSnodeWithDetails({ ed25519Pubkey: guard2ed, ip: null }),
+  generateFakeSnodeWithDetails({ ed25519Pubkey: guard3ed, ip: null }),
   ...generateFakeSnodes(3),
 ];
 

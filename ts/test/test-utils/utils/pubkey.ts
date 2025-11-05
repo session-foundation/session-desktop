@@ -1,7 +1,7 @@
 import * as crypto from 'crypto';
 import { GroupPubkeyType, PubkeyType, UserGroupsWrapperNode } from 'libsession_util_nodejs';
 import { KeyPair, to_hex } from 'libsodium-wrappers-sumo';
-import _ from 'lodash';
+import _, { range } from 'lodash';
 import { Snode } from '../../../data/types';
 import { getSodiumNode } from '../../../node/sodiumNode';
 import { SnodePool } from '../../../session/apis/snode_api/snodePool';
@@ -25,6 +25,10 @@ export function generateFakePubKeyStr(): PubkeyType {
   const pubkeyString: PubkeyType = `05${hexBuffer}`;
 
   return pubkeyString;
+}
+
+export function generateFakePubKeysStr(amount: number): Array<string> {
+  return range(0, amount).map(generateFakePubKeyStr);
 }
 
 export type TestUserKeyPairs = {
@@ -105,13 +109,21 @@ function ipv4Section() {
   return Math.floor(Math.random() * 255);
 }
 
-export function generateFakeSnodeWithEdKey(ed25519Pubkey: string): Snode {
+export function generateFakeSnodeWithDetails({
+  ed25519Pubkey,
+  ip,
+}: {
+  ed25519Pubkey: string | null;
+  ip: string | null;
+}): Snode {
   return {
     // NOTE: make sure this is random, but not a valid ip (otherwise we will try to hit that ip during testing!)
-    ip: `${ipv4Section()}.${ipv4Section()}.${ipv4Section()}.${ipv4Section()}.${ipv4Section()}.${ipv4Section()}`,
+    ip:
+      ip ??
+      `${ipv4Section()}.${ipv4Section()}.${ipv4Section()}.${ipv4Section()}.${ipv4Section()}.${ipv4Section()}`,
     port: 22116,
     pubkey_x25519: generateFakePubKeyStr(),
-    pubkey_ed25519: ed25519Pubkey,
+    pubkey_ed25519: ed25519Pubkey ?? generateFakePubKeyStr(),
     storage_server_version: [2, 8, 0],
   };
 }

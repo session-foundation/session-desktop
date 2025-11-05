@@ -1,6 +1,6 @@
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import _ from 'lodash';
+import _, { cloneDeep, range } from 'lodash';
 import { describe } from 'mocha';
 import Sinon from 'sinon';
 
@@ -10,7 +10,7 @@ import { TestUtils } from '../../../test-utils';
 import { GuardNode, Snode } from '../../../../data/types';
 import * as OnionPaths from '../../../../session/onions/onionPath';
 import {
-  generateFakeSnodeWithEdKey,
+  generateFakeSnodeWithDetails,
   generateFakeSnodes,
   stubData,
 } from '../../../test-utils/utils';
@@ -23,34 +23,38 @@ chai.should();
 
 const { expect } = chai;
 
-const guard1ed = 'e3ec6fcc79e64c2af6a48a9865d4bf4b739ec7708d75f35acc3d478f9161534e';
-const guard2ed = 'e3ec6fcc79e64c2af6a48a9865d4bf4b739ec7708d75f35acc3d478f91615349';
-const guard3ed = 'e3ec6fcc79e64c2af6a48a9865d4bf4b739ec7708d75f35acc3d478f9161534a';
-
-const fakeSnodePool: Array<Snode> = [
-  ...generateFakeSnodes(12),
-  generateFakeSnodeWithEdKey(guard1ed),
-  generateFakeSnodeWithEdKey(guard2ed),
-  generateFakeSnodeWithEdKey(guard3ed),
-  ...generateFakeSnodes(9),
-];
-
-const fakeGuardNodesEd25519 = [guard1ed, guard2ed, guard3ed];
-const fakeGuardNodes = fakeSnodePool.filter(m => fakeGuardNodesEd25519.includes(m.pubkey_ed25519));
-const fakeGuardNodesFromDB: Array<GuardNode> = fakeGuardNodesEd25519.map(ed25519PubKey => {
-  return {
-    ed25519PubKey,
-  };
-});
-
 describe('OnionPaths', () => {
   // Initialize new stubbed cache
   let oldOnionPaths: Array<Array<Snode>>;
+  const guard1ed = 'e3ec6fcc79e64c2af6a48a9865d4bf4b739ec7708d75f35acc3d478f9161534e';
+  const guard2ed = 'e3ec6fcc79e64c2af6a48a9865d4bf4b739ec7708d75f35acc3d478f91615349';
+  const guard3ed = 'e3ec6fcc79e64c2af6a48a9865d4bf4b739ec7708d75f35acc3d478f9161534a';
+
+  const fakeSnodePool: Array<Snode> = [
+    ...generateFakeSnodes(12),
+    generateFakeSnodeWithDetails({ ed25519Pubkey: guard1ed, ip: null }),
+    generateFakeSnodeWithDetails({ ed25519Pubkey: guard2ed, ip: null }),
+    generateFakeSnodeWithDetails({ ed25519Pubkey: guard3ed, ip: null }),
+    ...generateFakeSnodes(9),
+  ];
+
+  const fakeGuardNodesEd25519 = [guard1ed, guard2ed, guard3ed];
+  const fakeGuardNodes = fakeSnodePool.filter(m =>
+    fakeGuardNodesEd25519.includes(m.pubkey_ed25519)
+  );
+  const fakeGuardNodesFromDB: Array<GuardNode> = fakeGuardNodesEd25519.map(ed25519PubKey => {
+    return {
+      ed25519PubKey,
+    };
+  });
 
   describe('dropSnodeFromPath', () => {
     beforeEach(async () => {
       // Utils Stubs
       OnionPaths.clearTestOnionPath();
+      TestUtils.stubWindowLog();
+      SNodeAPI.Onions.resetSnodeFailureCount();
+      OnionPaths.resetPathFailureCount();
 
       Sinon.stub(OnionPaths, 'selectGuardNodes').resolves(fakeGuardNodes);
       Sinon.stub(ServiceNodesList, 'getSnodePoolFromSnode').resolves(fakeGuardNodes);
@@ -60,24 +64,18 @@ describe('OnionPaths', () => {
       TestUtils.stubData('createOrUpdateItem').resolves();
       TestUtils.stubWindow('getSeedNodeList', () => ['seednode1']);
 
-      TestUtils.stubWindowLog();
-
       Sinon.stub(SeedNodeAPI, 'fetchSnodePoolFromSeedNodeWithRetries').resolves(fakeSnodePool);
-      SNodeAPI.Onions.resetSnodeFailureCount();
-      OnionPaths.resetPathFailureCount();
+      await OnionPaths.getOnionPath({}); // this triggers a path rebuild
       // get a copy of what old ones look like
-      await OnionPaths.getOnionPath({});
 
       oldOnionPaths = OnionPaths.TEST_getTestOnionPath();
       if (oldOnionPaths.length !== 3) {
         throw new Error(`onion path length not enough ${oldOnionPaths.length}`);
       }
-      // this just triggers a build of the onionPaths
     });
 
-    afterEach(() => {
-      Sinon.restore();
-    });
+    afterEach(() => Sinon.restore());
+
     describe('with valid snode pool', () => {
       it('rebuilds after removing last snode on path', async () => {
         await OnionPaths.dropSnodeFromPath(oldOnionPaths[2][2].pubkey_ed25519);
@@ -93,21 +91,28 @@ describe('OnionPaths', () => {
       });
 
       it('rebuilds after removing middle snode on path', async () => {
-        await OnionPaths.dropSnodeFromPath(oldOnionPaths[2][1].pubkey_ed25519);
+        // stubWindowLog();
+        // stubWindow('sessionFeatureFlags', { debugOnionPaths: true, debugSnodePool: true });
+
+        const oldOnionPathsCopy = cloneDeep(oldOnionPaths);
+
+        await OnionPaths.dropSnodeFromPath(oldOnionPathsCopy[2][1].pubkey_ed25519);
         const newOnionPath = OnionPaths.TEST_getTestOnionPath();
 
-        const allEd25519Keys = _.flattenDeep(oldOnionPaths).map(m => m.pubkey_ed25519);
+        const oldOnionPath2 = oldOnionPathsCopy[2];
+        const allEd25519KeysOldOnionPath2 = _.flattenDeep(oldOnionPath2).map(m => m.pubkey_ed25519);
 
         // only the last snode should have been updated
-        expect(newOnionPath).to.be.not.deep.equal(oldOnionPaths);
-        expect(newOnionPath[0]).to.be.deep.equal(oldOnionPaths[0]);
-        expect(newOnionPath[1]).to.be.deep.equal(oldOnionPaths[1]);
-        expect(newOnionPath[2][0]).to.be.deep.equal(oldOnionPaths[2][0]);
+        expect(newOnionPath).to.be.not.deep.equal(oldOnionPathsCopy);
+        expect(newOnionPath[0]).to.be.deep.equal(oldOnionPathsCopy[0]);
+        expect(newOnionPath[1]).to.be.deep.equal(oldOnionPathsCopy[1]);
+        expect(newOnionPath[2][0]).to.be.deep.equal(oldOnionPath2[0]);
         // last item moved to the position one as we removed item 1 and happened one after it
-        expect(newOnionPath[2][1]).to.be.deep.equal(oldOnionPaths[2][2]);
-        // the last item we happened must not be any of the new path nodes.
+        expect(newOnionPath[2][1]).to.be.deep.equal(oldOnionPath2[2]);
+        // the last item we appended must not be any of the new path nodes.
         // actually, we remove the nodes causing issues from the snode pool so we shouldn't find this one neither
-        expect(allEd25519Keys).to.not.include(newOnionPath[2][2].pubkey_ed25519);
+
+        expect(allEd25519KeysOldOnionPath2).to.not.include(newOnionPath[2][2].pubkey_ed25519);
       });
     });
   });
@@ -174,6 +179,93 @@ describe('OnionPaths', () => {
       } catch (e) {
         expect(e.message).to.not.be.eq('fake error');
       }
+    });
+
+    it('throws if we cannot find a node without an ip on the same subnet /24 of one of our path node', async () => {
+      fetchSnodePoolFromSeedNodeWithRetries.reset();
+      // stubWindow('sessionFeatureFlags', { debugOnionPaths: true, debugSnodePool: true });
+
+      if (OnionPaths.TEST_getTestOnionPath().length) {
+        throw new Error('expected this to be empty');
+      }
+      fetchSnodePoolFromSeedNodeWithRetries.resolves(fakeSnodePool);
+      await OnionPaths.getOnionPath({});
+
+      if (OnionPaths.TEST_getTestOnionPath().length !== 3) {
+        throw new Error('should have 3 valid onion paths');
+      }
+      const paths = OnionPaths.TEST_getTestOnionPath();
+      const snodeToDrop = paths[2][1];
+      const otherSnodeInPathOfSnodeDropped = paths[2][2];
+      const subnet = otherSnodeInPathOfSnodeDropped.ip.slice(
+        0,
+        otherSnodeInPathOfSnodeDropped.ip.lastIndexOf('.')
+      );
+      // make the snode pool filled with snodes that have the same subnet /24 as the first snode of the path where we dropped a snode.
+      const badPool = generateFakeSnodes(20).map((m, i) => {
+        return { ...m, ip: `${subnet}.${50 + i}` };
+      });
+      fetchSnodePoolFromSeedNodeWithRetries.resolves(badPool);
+      SnodePool.TEST_resetState(badPool);
+      // drop a snode from the last path, only allowing snodes with an ip on the same subnet /24 of one of our first node
+      const func = async () => OnionPaths.dropSnodeFromPath(snodeToDrop.pubkey_ed25519);
+      await expect(func()).rejectedWith('Not enough snodes with snodes to exclude length');
+    });
+  });
+});
+
+describe('OnionPaths selection', () => {
+  const guardsEd = TestUtils.generateFakePubKeysStr(3);
+
+  const fakeSnodePool: Array<Snode> = [
+    generateFakeSnodeWithDetails({ ed25519Pubkey: guardsEd[0], ip: '127.0.0.54' }),
+    generateFakeSnodeWithDetails({ ed25519Pubkey: guardsEd[1], ip: '127.0.0.55' }),
+    generateFakeSnodeWithDetails({ ed25519Pubkey: guardsEd[2], ip: '127.0.0.56' }),
+    ...range(57, 77).map(lastDigit =>
+      generateFakeSnodeWithDetails({ ed25519Pubkey: null, ip: `127.0.0.${lastDigit}` })
+    ),
+  ];
+
+  const fakeGuardNodes = fakeSnodePool.filter(m => guardsEd.includes(m.pubkey_ed25519 as string));
+  const fakeGuardNodesFromDB: Array<GuardNode> = guardsEd.map(ed25519PubKey => {
+    return {
+      ed25519PubKey,
+    };
+  });
+
+  describe('filtering by subnet', () => {
+    beforeEach(async () => {
+      OnionPaths.clearTestOnionPath();
+      SNodeAPI.Onions.resetSnodeFailureCount();
+      OnionPaths.resetPathFailureCount();
+      TestUtils.stubWindowLog();
+      Sinon.stub(OnionPaths, 'getOnionPathMinTimeout').returns(1);
+
+      Sinon.stub(OnionPaths, 'selectGuardNodes').resolves(fakeGuardNodes);
+      Sinon.stub(ServiceNodesList, 'getSnodePoolFromSnode').resolves(fakeGuardNodes);
+      stubData('getSnodePoolFromDb').resolves(fakeSnodePool);
+
+      TestUtils.stubData('getGuardNodes').resolves(fakeGuardNodesFromDB);
+      TestUtils.stubData('createOrUpdateItem').resolves();
+      TestUtils.stubWindow('getSeedNodeList', () => ['seednode1']);
+
+      Sinon.stub(SeedNodeAPI, 'fetchSnodePoolFromSeedNodeWithRetries').resolves(fakeSnodePool);
+    });
+
+    afterEach(() => {
+      Sinon.restore();
+    });
+
+    it('throws if we cannot build a path filtering with /24 subnet', async () => {
+      TestUtils.stubWindowLog();
+      const onStartOnionPaths = OnionPaths.TEST_getTestOnionPath();
+      expect(onStartOnionPaths.length).to.eq(0);
+
+      // generate a new set of path, this should fail
+      const func = () => OnionPaths.getOnionPath({});
+      await expect(func()).to.be.rejectedWith(
+        'Failed to build enough onion paths, current count: 0'
+      );
     });
   });
 });

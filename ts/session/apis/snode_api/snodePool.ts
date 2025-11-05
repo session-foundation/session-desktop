@@ -1,4 +1,4 @@
-import _, { isEmpty, sample, shuffle } from 'lodash';
+import _, { fill, flatten, groupBy, isEmpty, map, pick, sample, shuffle } from 'lodash';
 import pRetry from 'p-retry';
 
 import { Data } from '../../../data/data';
@@ -11,6 +11,8 @@ import { requestSnodesForPubkeyFromNetwork } from './getSwarmFor';
 import { Onions } from '.';
 import { ed25519Str } from '../../utils/String';
 import { SnodePoolConstants } from './snodePoolConstants';
+import { stringify } from '../../../types/sqlSharedTypes';
+import { logDebugWithCat } from '../../../util/logger/debugLog';
 
 let randomSnodePool: Array<Snode> = [];
 
@@ -22,6 +24,8 @@ function TEST_resetState(snodePoolForTest: Array<Snode> = []) {
 // We only store nodes' identifiers here,
 const swarmCache: Map<string, Array<string>> = new Map();
 
+const logPrefix = '[snodePool]';
+
 /**
  * Drop a snode from the snode pool. This does not update the swarm containing this snode.
  * Use `dropSnodeFromSwarmIfNeeded` for that
@@ -32,7 +36,7 @@ async function dropSnodeFromSnodePool(snodeEd25519: string) {
   if (exists) {
     _.remove(randomSnodePool, x => x.pubkey_ed25519 === snodeEd25519);
     window?.log?.warn(
-      `Dropping ${ed25519Str(snodeEd25519)} from snode pool. ${
+      `${logPrefix} Dropping ${ed25519Str(snodeEd25519)} from snode pool. ${
         randomSnodePool.length
       } snodes remaining in randomPool`
     );
@@ -45,24 +49,29 @@ async function dropSnodeFromSnodePool(snodeEd25519: string) {
  * excludingEd25519Snode can be used to exclude some nodes from the random list.
  * Useful to rebuild a path excluding existing node already in a path
  */
-async function getRandomSnode(excludingEd25519Snode?: Array<string>): Promise<Snode> {
+async function getRandomSnode({
+  snodesToExclude,
+}: {
+  snodesToExclude: Array<Snode>;
+}): Promise<Snode> {
   // make sure we have a few snodes in the pool excluding the one passed as args
-  const requiredCount = SnodePoolConstants.minSnodePoolCount + (excludingEd25519Snode?.length || 0);
-  if (randomSnodePool.length < requiredCount) {
-    await SnodePool.getSnodePoolFromDBOrFetchFromSeed(excludingEd25519Snode?.length);
+  const extraCountToAdd = snodesToExclude.length;
+  const requestedCount = SnodePoolConstants.minSnodePoolCount + extraCountToAdd;
+  if (randomSnodePool.length < requestedCount) {
+    await SnodePool.getSnodePoolFromDBOrFetchFromSeed(extraCountToAdd);
 
-    if (randomSnodePool.length < requiredCount) {
+    if (randomSnodePool.length < requestedCount) {
       window?.log?.warn(
-        `getRandomSnode: failed to fetch snodes from seed. Current pool: ${randomSnodePool.length}`
+        `${logPrefix} getRandomSnode: failed to fetch snodes from seed. Current pool: ${randomSnodePool.length}, requested count: ${requestedCount}`
       );
 
       throw new Error(
-        `getRandomSnode: failed to fetch snodes from seed. Current pool: ${randomSnodePool.length}, required count: ${requiredCount}`
+        `getRandomSnode: failed to fetch snodes from seed. Current pool: ${randomSnodePool.length}, requested count: ${requestedCount}`
       );
     }
   }
   // We know the pool can't be empty at this point
-  if (!excludingEd25519Snode) {
+  if (!snodesToExclude.length) {
     const snodePicked = sample(randomSnodePool);
     if (!snodePicked) {
       throw new Error('getRandomSnode failed as sample returned none ');
@@ -70,18 +79,45 @@ async function getRandomSnode(excludingEd25519Snode?: Array<string>): Promise<Sn
     return snodePicked;
   }
 
-  // we have to double check even after removing the nodes to exclude we still have some nodes in the list
-  const snodePoolExcluding = randomSnodePool.filter(
-    e => !excludingEd25519Snode.includes(e.pubkey_ed25519)
+  // get an unmodified snode pool without the nodes to exclude either by pubkey or by subnet
+  const snodePoolWithoutExcluded = window.sessionFeatureFlags?.useLocalDevNet
+    ? randomSnodePool
+    : randomSnodePool.filter(
+        e =>
+          !snodesToExclude.some(m => m.pubkey_ed25519 === e.pubkey_ed25519) &&
+          !hasSnodeSameSubnetIp(snodesToExclude, e)
+      );
+
+  const weightedWithoutExcludedSnodes = getWeightedSingleSnodePerSubnet(snodePoolWithoutExcluded);
+  logDebugWithCat(
+    logPrefix,
+    `getRandomSnode: snodePoolNoFilter: ${stringify(randomSnodePool.map(m => pick(m, ['ip', 'pubkey_ed25519'])))}`,
+    window.sessionFeatureFlags.debugSnodePool
   );
-  if (!snodePoolExcluding || !snodePoolExcluding.length) {
+  logDebugWithCat(
+    logPrefix,
+    `getRandomSnode: snodePoolWithoutExcluded: ${stringify(snodePoolWithoutExcluded.map(m => pick(m, ['ip', 'pubkey_ed25519'])))}`,
+    window.sessionFeatureFlags.debugSnodePool
+  );
+  logDebugWithCat(
+    logPrefix,
+    `getRandomSnode: weightedWithoutExcludedSnodes: ${stringify(weightedWithoutExcludedSnodes.map(m => pick(m, ['ip', 'pubkey_ed25519'])))}`,
+    window.sessionFeatureFlags.debugSnodePool
+  );
+  if (!weightedWithoutExcludedSnodes?.length) {
     // used for tests
-    throw new Error(`Not enough snodes with excluding length ${excludingEd25519Snode.length}`);
+    throw new Error(`Not enough snodes with snodes to exclude length:${snodesToExclude.length}`);
   }
-  const snodePicked = sample(snodePoolExcluding);
+  const snodePicked = sample(weightedWithoutExcludedSnodes);
   if (!snodePicked) {
-    throw new Error('getRandomSnode failed as sample returned none ');
+    throw new Error('getRandomSnode failed as sample returned none');
   }
+
+  logDebugWithCat(
+    logPrefix,
+    `getRandomSnode: snodePicked: ${stringify(snodePicked)}`,
+    window.sessionFeatureFlags.debugSnodePool
+  );
   return snodePicked;
 }
 
@@ -94,7 +130,7 @@ async function forceRefreshRandomSnodePool(): Promise<Array<Snode>> {
     await SnodePool.getSnodePoolFromDBOrFetchFromSeed();
 
     window?.log?.info(
-      `forceRefreshRandomSnodePool: enough snodes to fetch from them, so we try using them ${randomSnodePool.length}`
+      `${logPrefix} forceRefreshRandomSnodePool: enough snodes to fetch from them, so we try using them ${randomSnodePool.length}`
     );
 
     // this function throws if it does not have enough snodes to do it
@@ -104,7 +140,7 @@ async function forceRefreshRandomSnodePool(): Promise<Array<Snode>> {
     }
   } catch (e) {
     window?.log?.warn(
-      'forceRefreshRandomSnodePool: Failed to fetch snode pool from snodes. Fetching from seed node instead:',
+      `${logPrefix} forceRefreshRandomSnodePool: Failed to fetch snode pool from snodes. Fetching from seed node instead:`,
       e.message
     );
 
@@ -113,7 +149,7 @@ async function forceRefreshRandomSnodePool(): Promise<Array<Snode>> {
       await SnodePool.TEST_fetchFromSeedWithRetriesAndWriteToDb();
     } catch (err2) {
       window?.log?.warn(
-        'forceRefreshRandomSnodePool: Failed to fetch snode pool from seed. Fetching from seed node instead:',
+        `${logPrefix} forceRefreshRandomSnodePool: Failed to fetch snode pool from seed. Fetching from seed node instead:`,
         err2.message
       );
     }
@@ -142,7 +178,7 @@ async function getSnodePoolFromDBOrFetchFromSeed(
     fetchedFromDb.length <= SnodePoolConstants.minSnodePoolCount + countToAddToRequirement
   ) {
     window?.log?.warn(
-      `getSnodePoolFromDBOrFetchFromSeed: not enough snodes in db (${fetchedFromDb?.length}), Fetching from seed node instead... `
+      `${logPrefix} getSnodePoolFromDBOrFetchFromSeed: not enough snodes in db (${fetchedFromDb?.length}), Fetching from seed node instead... `
     );
     // if that fails to get enough snodes, even after retries, well we just have to retry later.
     // this call does not throw
@@ -175,7 +211,7 @@ async function TEST_fetchFromSeedWithRetriesAndWriteToDb() {
 
   if (!seedNodes || !seedNodes.length) {
     window?.log?.error(
-      'SessionSnodeAPI:::fetchFromSeedWithRetriesAndWriteToDb - getSeedNodeList has not been loaded yet'
+      `${logPrefix} fetchFromSeedWithRetriesAndWriteToDb - getSeedNodeList has not been loaded yet`
     );
 
     return;
@@ -184,13 +220,15 @@ async function TEST_fetchFromSeedWithRetriesAndWriteToDb() {
   try {
     randomSnodePool = await SeedNodeAPI.fetchSnodePoolFromSeedNodeWithRetries(seedNodes);
     await Data.updateSnodePoolOnDb(JSON.stringify(randomSnodePool));
-    window.log.info(`fetchSnodePoolFromSeedNodeWithRetries took ${Date.now() - start}ms`);
+    window.log.info(
+      `${logPrefix} fetchSnodePoolFromSeedNodeWithRetries took ${Date.now() - start}ms`
+    );
 
     OnionPaths.resetPathFailureCount();
     Onions.resetSnodeFailureCount();
   } catch (e) {
     window?.log?.error(
-      'SessionSnodeAPI:::fetchFromSeedWithRetriesAndWriteToDb - Failed to fetch snode poll from seed node with retries. Error:',
+      `${logPrefix} fetchFromSeedWithRetriesAndWriteToDb - Failed to fetch snode poll from seed node with retries. Error:`,
       e
     );
   }
@@ -206,6 +244,42 @@ async function clearOutAllSnodesNotInPool(snodePool: Array<Snode>) {
 
   // just remove all the cached entries, we will refetch them as needed from the DB
   swarmCache.clear();
+}
+
+export function subnetOfIp(ip: string) {
+  if (ip.lastIndexOf('.') === -1) {
+    return ip;
+  }
+  return ip.slice(0, ip.lastIndexOf('.'));
+}
+
+function snodeSameSubnetIp(snode1: Snode, snode2: Snode) {
+  return subnetOfIp(snode1.ip) === subnetOfIp(snode2.ip);
+}
+
+export function hasSnodeSameSubnetIp(snodes: Array<Snode>, snode: Snode) {
+  return snodes.some(m => snodeSameSubnetIp(m, snode));
+}
+
+/**
+ * Given an array of nodes, this function returns an array of nodes where a random node of each subnet is picked
+ * and repeated as many times as the subnet was present.
+ *
+ * For instance: given the snode with ips: 10.0.0.{1,2,3}, 10.0.1.{1,2}, 10.0.2.{1,2,3,4} this function will return
+ * an array of where a
+ * - a random node of 10.0.0.{1,2,3} is picked and present 3 times
+ * - a random node of 10.0.1.{1,2} is picked and present 2 times
+ * - a random node of 10.0.2.{1,2,3,4} is picked and present 4 times
+ */
+function getWeightedSingleSnodePerSubnet(nodes: Array<Snode>) {
+  // make sure to not reuse multiple times the same subnet /24
+  const allNodesGroupedBySubnet24 = groupBy(nodes, n => subnetOfIp(n.ip));
+  const oneNodeForEachSubnet24KeepingRatio = flatten(
+    map(allNodesGroupedBySubnet24, group => {
+      return fill(Array(group.length), sample(group) as Snode);
+    })
+  );
+  return oneNodeForEachSubnet24KeepingRatio;
 }
 
 /**
@@ -226,12 +300,12 @@ async function tryToGetConsensusWithSnodesWithRetries() {
       if (!commonNodes || commonNodes.length < requiredSnodesForAgreement) {
         // throwing makes trigger a retry if we have some left.
         window?.log?.info(
-          `tryToGetConsensusWithSnodesWithRetries: Not enough common nodes ${commonNodes?.length}`
+          `${logPrefix} tryToGetConsensusWithSnodesWithRetries: Not enough common nodes ${commonNodes?.length}`
         );
         throw new Error('Not enough common nodes.');
       }
       window?.log?.info(
-        'Got consensus: updating snode list with snode pool length:',
+        `${logPrefix} Got consensus: updating snode list with snode pool length:`,
         commonNodes.length
       );
       randomSnodePool = commonNodes;
@@ -247,7 +321,7 @@ async function tryToGetConsensusWithSnodesWithRetries() {
       minTimeout: 1000,
       onFailedAttempt: e => {
         window?.log?.warn(
-          `tryToGetConsensusWithSnodesWithRetries attempt #${e.attemptNumber} failed. ${e.retriesLeft} retries left...`
+          `${logPrefix} tryToGetConsensusWithSnodesWithRetries attempt #${e.attemptNumber} failed. ${e.retriesLeft} retries left...`
         );
       },
     }
@@ -265,7 +339,7 @@ async function dropSnodeFromSwarmIfNeeded(
 ): Promise<void> {
   // this call either used the cache or fetch the swarm from the db
   window?.log?.warn(
-    `Dropping ${ed25519Str(snodeToDropEd25519)} from swarm of ${ed25519Str(pubkey)}`
+    `${logPrefix} Dropping ${ed25519Str(snodeToDropEd25519)} from swarm of ${ed25519Str(pubkey)}`
   );
 
   const existingSwarm = await SnodePool.getSwarmFromCacheOrDb(pubkey);
@@ -279,15 +353,15 @@ async function dropSnodeFromSwarmIfNeeded(
 }
 
 async function updateSwarmFor(pubkey: string, snodes: Array<Snode>): Promise<void> {
-  const edkeys = snodes.map((sn: Snode) => sn.pubkey_ed25519);
-  await internalUpdateSwarmFor(pubkey, edkeys);
+  const edKeys = snodes.map((sn: Snode) => sn.pubkey_ed25519);
+  await internalUpdateSwarmFor(pubkey, edKeys);
 }
 
-async function internalUpdateSwarmFor(pubkey: string, edkeys: Array<string>) {
+async function internalUpdateSwarmFor(pubkey: string, edKeys: Array<string>) {
   // update our in-memory cache
-  swarmCache.set(pubkey, edkeys);
+  swarmCache.set(pubkey, edKeys);
   // write this change to the db
-  await Data.updateSwarmNodesForPubkey(pubkey, edkeys);
+  await Data.updateSwarmNodesForPubkey(pubkey, edKeys);
 }
 
 async function getSwarmFromCacheOrDb(pubkey: string): Promise<Array<string>> {
@@ -345,7 +419,7 @@ async function getNodeFromSwarmOrThrow(pubkey: string): Promise<Snode> {
     }
   }
   window.log.warn(
-    `getNodeFromSwarmOrThrow: could not get one random node for pk ${ed25519Str(pubkey)}`
+    `${logPrefix} getNodeFromSwarmOrThrow: could not get one random node for pk ${ed25519Str(pubkey)}`
   );
   throw new Error(`getNodeFromSwarmOrThrow: could not get one random node`);
 }
@@ -365,8 +439,8 @@ async function getSwarmFromNetworkAndSave(pubkey: string) {
   const swarm = await requestSnodesForPubkeyFromNetwork(pubkey);
   const shuffledSwarm = shuffle(swarm);
 
-  const edkeys = shuffledSwarm.map((n: Snode) => n.pubkey_ed25519);
-  await internalUpdateSwarmFor(pubkey, edkeys);
+  const edKeys = shuffledSwarm.map((n: Snode) => n.pubkey_ed25519);
+  await internalUpdateSwarmFor(pubkey, edKeys);
 
   return shuffledSwarm;
 }
@@ -378,6 +452,7 @@ export const SnodePool = {
   getRandomSnode,
   getRandomSnodePool,
   getSnodePoolFromDBOrFetchFromSeed,
+  getWeightedSingleSnodePerSubnet,
 
   // swarm
   dropSnodeFromSwarmIfNeeded,
