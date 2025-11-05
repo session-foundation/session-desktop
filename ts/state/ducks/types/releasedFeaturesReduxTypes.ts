@@ -41,6 +41,8 @@ export type SessionFlags = SessionFeatureFlags & {
   debugSwarmPolling: boolean;
   debugServerRequests: boolean;
   debugNonSnodeRequests: boolean;
+  debugOnionPaths: boolean;
+  debugSnodePool: boolean;
   debugOnionRequests: boolean;
 };
 
