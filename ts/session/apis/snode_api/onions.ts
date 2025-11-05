@@ -25,6 +25,7 @@ import {
   WithDestinationEd25519,
   WithGuardNode,
   WithSymmetricKey,
+  type WithReason,
 } from '../../types/with';
 import { updateIsOnline } from '../../../state/ducks/onions';
 import { SERVER_HOSTS } from '..';
@@ -347,21 +348,24 @@ export async function processOnionRequestErrorAtDestination({
 async function handleNodeNotFound({
   ed25519NotFound,
   associatedWith,
-}: Partial<WithAssociatedWith> & {
-  ed25519NotFound: string;
-}) {
-  const shortNodeNotFound = ed25519Str(ed25519NotFound);
-  window?.log?.warn('Handling NODE NOT FOUND with: ', shortNodeNotFound);
+  reason,
+}: Partial<WithAssociatedWith> &
+  WithReason & {
+    ed25519NotFound: string;
+  }) {
+  const shortened = ed25519Str(ed25519NotFound);
+
+  window?.log?.warn(`Handling NODE NOT FOUND with: ${shortened}, reason: "${reason}"`);
 
   if (associatedWith) {
-    await SnodePool.dropSnodeFromSwarmIfNeeded(associatedWith, ed25519NotFound);
+    await SnodePool.dropSnodeFromSwarmIfNeeded(associatedWith, ed25519NotFound, reason);
   }
 
-  await SnodePool.dropSnodeFromSnodePool(ed25519NotFound);
+  await SnodePool.dropSnodeFromSnodePool(ed25519NotFound, reason);
   snodeFailureCount[ed25519NotFound] = 0;
   // try to remove the not found snode from any of the paths if it's there.
   // it may not be here, as the snode note found might be the target snode of the request.
-  await OnionPaths.dropSnodeFromPath(ed25519NotFound);
+  await OnionPaths.dropSnodeFromPath(ed25519NotFound, reason);
 }
 
 async function processAnyOtherErrorOnPath(
@@ -379,11 +383,18 @@ async function processAnyOtherErrorOnPath(
       const nodeNotFound = ciphertext.substr(NEXT_NODE_NOT_FOUND_PREFIX.length);
       // we are checking errors on the path, a nodeNotFound on the path should trigger a rebuild
 
-      await handleNodeNotFound({ ed25519NotFound: nodeNotFound, associatedWith });
+      await handleNodeNotFound({
+        ed25519NotFound: nodeNotFound,
+        associatedWith,
+        reason: 'processAnyOtherErrorOnPath NEXT_NODE_NOT_FOUND_PREFIX',
+      });
     } else {
       // Otherwise we increment the whole path failure count
 
-      await incrementBadPathCountOrDrop(guardNodeEd25519);
+      await incrementBadPathCountOrDrop(
+        guardNodeEd25519,
+        'processAnyOtherErrorOnPath: Otherwise we increment the whole path failure count'
+      );
     }
 
     processOxenServerError(status, ciphertext);
@@ -412,6 +423,7 @@ async function processAnyOtherErrorAtDestination(
       await handleNodeNotFound({
         ed25519NotFound: nodeNotFound,
         associatedWith,
+        reason: 'processAnyOtherErrorAtDestination NEXT_NODE_NOT_FOUND_PREFIX',
       });
 
       // We have to retry with another targetNode so it's not just rebuilding the path. We have to go one lever higher (lokiOnionFetch).
@@ -424,6 +436,7 @@ async function processAnyOtherErrorAtDestination(
     await Onions.incrementBadSnodeCountOrDrop({
       snodeEd25519: destinationEd25519,
       associatedWith,
+      reason: `processAnyOtherErrorAtDestination: ${status} for snodeDestinationEd25519: ${ed25519Str(destinationEd25519)}, associatedWith: ${associatedWith ? ed25519Str(associatedWith) : 'null'}, body: "${body}"`,
     });
     throw new Error(`Bad Path handled. Retry this request. Status: ${status}`);
   }
@@ -619,12 +632,11 @@ async function processNoSymmetricKeyError(
   symmetricKey?: ArrayBuffer
 ): Promise<ArrayBuffer> {
   if (!symmetricKey) {
-    const errorMsg =
-      'No symmetric key to decode response, probably a time out on the onion request itself';
+    const errorMsg = `No symmetric key to decode response, probably a time out on the onion request itself with guardNode: ${ed25519Str(guardNode.pubkey_ed25519)}`;
 
     window?.log?.error(errorMsg);
 
-    await incrementBadPathCountOrDrop(guardNode.pubkey_ed25519);
+    await incrementBadPathCountOrDrop(guardNode.pubkey_ed25519, errorMsg);
 
     throw new Error(errorMsg);
   }
@@ -738,20 +750,24 @@ async function handle421InvalidSwarm({
       throw new pRetry.AbortError(ERROR_421_HANDLED_RETRY_REQUEST);
     }
     // remove this node from the swarm of this pubkey
-    await SnodePool.dropSnodeFromSwarmIfNeeded(associatedWith, destinationSnodeEd25519);
+    await SnodePool.dropSnodeFromSwarmIfNeeded(
+      associatedWith,
+      destinationSnodeEd25519,
+      'handle421InvalidSwarm'
+    );
   } catch (e) {
     if (e.message !== ERROR_421_HANDLED_RETRY_REQUEST) {
-      window?.log?.warn(
-        'Got error while parsing 421 result. Dropping this snode from the swarm of this pubkey',
-        e
-      );
+      const errorStr =
+        'Got error while parsing 421 result. Dropping this snode from the swarm of this pubkey';
+      window?.log?.warn(errorStr, e.message);
       // could not parse result. Consider that this snode as invalid
-      await SnodePool.dropSnodeFromSwarmIfNeeded(associatedWith, destinationSnodeEd25519);
+      await SnodePool.dropSnodeFromSwarmIfNeeded(associatedWith, destinationSnodeEd25519, errorStr);
     }
   }
   await Onions.incrementBadSnodeCountOrDrop({
     snodeEd25519: destinationSnodeEd25519,
     associatedWith,
+    reason: 'handle421InvalidSwarm',
   });
 
   // this is important we throw so another retry is made and we exit the handling of that response
@@ -774,29 +790,34 @@ async function handle421InvalidSwarm({
 async function incrementBadSnodeCountOrDrop({
   snodeEd25519,
   associatedWith,
-}: Partial<WithAssociatedWith> & {
-  snodeEd25519: string;
-}) {
+  reason,
+}: Partial<WithAssociatedWith> &
+  WithReason & {
+    snodeEd25519: string;
+  }) {
   const oldFailureCount = snodeFailureCount[snodeEd25519] || 0;
   const newFailureCount = oldFailureCount + 1;
   snodeFailureCount[snodeEd25519] = newFailureCount;
   if (newFailureCount >= snodeFailureThreshold) {
-    window?.log?.warn(
-      `Failure threshold reached for snode: ${ed25519Str(snodeEd25519)}; dropping it.`
-    );
+    const errorStr = `Failure threshold reached for snode: ${ed25519Str(snodeEd25519)}; dropping it.`;
+    window?.log?.warn(errorStr);
 
     if (associatedWith) {
-      await SnodePool.dropSnodeFromSwarmIfNeeded(associatedWith, snodeEd25519);
+      await SnodePool.dropSnodeFromSwarmIfNeeded(
+        associatedWith,
+        snodeEd25519,
+        `${errorStr} (${reason})`
+      );
     }
-    await SnodePool.dropSnodeFromSnodePool(snodeEd25519);
+    await SnodePool.dropSnodeFromSnodePool(snodeEd25519, `${errorStr} (${reason})`);
     snodeFailureCount[snodeEd25519] = 0;
 
-    await OnionPaths.dropSnodeFromPath(snodeEd25519);
+    await OnionPaths.dropSnodeFromPath(snodeEd25519, `${errorStr} (${reason})`);
   } else {
     window?.log?.warn(
       `Couldn't reach snode at: ${ed25519Str(
         snodeEd25519
-      )}; setting his failure count to ${newFailureCount}`
+      )}; setting his failure count to ${newFailureCount} with reason: (${reason})`
     );
   }
 }

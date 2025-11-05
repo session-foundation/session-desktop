@@ -321,6 +321,7 @@ describe('OnionPathsErrors', () => {
           expect(incrementBadSnodeCountOrDropSpy.firstCall.args[0]).to.deep.eq({
             snodeEd25519: targetNode,
             associatedWith,
+            reason: 'handle421InvalidSwarm',
           });
         });
       });
@@ -366,6 +367,7 @@ describe('OnionPathsErrors', () => {
           expect(incrementBadSnodeCountOrDropSpy.firstCall.args[0]).to.deep.eq({
             snodeEd25519: targetNode,
             associatedWith,
+            reason: 'handle421InvalidSwarm',
           });
         });
 
@@ -404,6 +406,7 @@ describe('OnionPathsErrors', () => {
           expect(incrementBadSnodeCountOrDropSpy.firstCall.args[0]).to.deep.eq({
             snodeEd25519: targetNode,
             associatedWith,
+            reason: 'handle421InvalidSwarm',
           });
         });
 
@@ -444,6 +447,7 @@ describe('OnionPathsErrors', () => {
           expect(incrementBadSnodeCountOrDropSpy.firstCall.args[0]).to.deep.eq({
             snodeEd25519: targetNode,
             associatedWith,
+            reason: 'handle421InvalidSwarm',
           });
         });
       });
@@ -654,6 +658,7 @@ describe('OnionPathsErrors', () => {
     for (let index = 0; index < 6; index++) {
       expect(incrementBadSnodeCountOrDropSpy.args[index][0]).to.deep.eq({
         snodeEd25519: oldOnionPaths[0][(index % 2) + 1].pubkey_ed25519,
+        reason: 'processAnyOtherErrorOnPath: Otherwise we increment the whole path failure count',
       });
     }
 

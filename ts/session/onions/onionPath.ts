@@ -106,7 +106,7 @@ export async function buildNewOnionPathsOneAtATime() {
  *
  * @param snodeEd25519 the snode pubkey to drop
  */
-export async function dropSnodeFromPath(snodeEd25519: string) {
+export async function dropSnodeFromPath(snodeEd25519: string, reason: string) {
   const pathWithSnodeIndex = onionPaths.findIndex(path =>
     path.some(snode => snode.pubkey_ed25519 === snodeEd25519)
   );
@@ -121,7 +121,7 @@ export async function dropSnodeFromPath(snodeEd25519: string) {
     return;
   }
   window?.log?.info(
-    `${logPrefix} dropping snode ${ed25519Str(snodeEd25519)} from path index: ${pathWithSnodeIndex}`
+    `${logPrefix} dropping snode ${ed25519Str(snodeEd25519)} from path index: ${pathWithSnodeIndex} with reason: "${reason}"`
   );
   // make a copy now so we don't alter the real one while doing stuff here
   const oldPaths = cloneDeep(onionPaths);
@@ -249,17 +249,17 @@ export async function getOnionPath({ toExclude }: { toExclude?: Snode }): Promis
 /**
  * If we don't know which nodes is causing trouble, increment the issue with this full path.
  */
-export async function incrementBadPathCountOrDrop(snodeEd25519: string) {
+export async function incrementBadPathCountOrDrop(snodeEd25519: string, reason: string) {
   const pathWithSnodeIndex = onionPaths.findIndex(path =>
     path.some(snode => snode.pubkey_ed25519 === snodeEd25519)
   );
 
   if (pathWithSnodeIndex === -1) {
     window?.log?.info(
-      `${logPrefix} incrementBadPathCountOrDrop: Did not find any path containing this snode`
+      `${logPrefix} incrementBadPathCountOrDrop: Did not find any path containing this snode (reason was "${reason}")`
     );
     // this might happen if the snodeEd25519 is the one of the target snode, just increment the target snode count by 1
-    await Onions.incrementBadSnodeCountOrDrop({ snodeEd25519 });
+    await Onions.incrementBadSnodeCountOrDrop({ snodeEd25519, reason });
 
     return undefined;
   }
@@ -267,12 +267,14 @@ export async function incrementBadPathCountOrDrop(snodeEd25519: string) {
   const guardNodeEd25519 = onionPaths[pathWithSnodeIndex][0].pubkey_ed25519;
 
   window?.log?.info(
-    `${logPrefix} incrementBadPathCountOrDrop starting with guard ${ed25519Str(guardNodeEd25519)}`
+    `${logPrefix} incrementBadPathCountOrDrop starting with guard ${ed25519Str(guardNodeEd25519)}, reason: "${reason}"`
   );
 
   const pathWithIssues = onionPaths[pathWithSnodeIndex];
 
-  window?.log?.info(`${logPrefix} handling bad path for path index${pathWithSnodeIndex} `);
+  window?.log?.info(
+    `${logPrefix} handling bad path for path index${pathWithSnodeIndex}, reason: "${reason}" `
+  );
   const oldPathFailureCount = pathFailureCount[guardNodeEd25519] || 0;
 
   const newPathFailureCount = oldPathFailureCount + 1;
@@ -280,11 +282,11 @@ export async function incrementBadPathCountOrDrop(snodeEd25519: string) {
   // a guard node is dropped when the path is dropped completely (in dropPathStartingWithGuardNode)
   for (let index = 1; index < pathWithIssues.length; index++) {
     const snode = pathWithIssues[index];
-    await Onions.incrementBadSnodeCountOrDrop({ snodeEd25519: snode.pubkey_ed25519 });
+    await Onions.incrementBadSnodeCountOrDrop({ snodeEd25519: snode.pubkey_ed25519, reason });
   }
 
   if (newPathFailureCount >= pathFailureThreshold) {
-    return dropPathStartingWithGuardNode(guardNodeEd25519);
+    return dropPathStartingWithGuardNode(guardNodeEd25519, reason);
   }
   // the path is not yet THAT bad. keep it for now
   pathFailureCount[guardNodeEd25519] = newPathFailureCount;
@@ -296,17 +298,19 @@ export async function incrementBadPathCountOrDrop(snodeEd25519: string) {
  * It writes to the db the updated list of guardNodes.
  * @param ed25519Key the guard node ed25519 pubkey
  */
-async function dropPathStartingWithGuardNode(guardNodeEd25519: string) {
-  await SnodePool.dropSnodeFromSnodePool(guardNodeEd25519);
+async function dropPathStartingWithGuardNode(guardNodeEd25519: string, reason: string) {
+  await SnodePool.dropSnodeFromSnodePool(guardNodeEd25519, reason);
 
   const failingPathIndex = onionPaths.findIndex(p => p[0].pubkey_ed25519 === guardNodeEd25519);
   if (failingPathIndex === -1) {
-    window?.log?.warn(`${logPrefix} No such path starts with this guard node `);
+    window?.log?.warn(
+      `${logPrefix} No such path starts with this guard node ${ed25519Str(guardNodeEd25519)} `
+    );
   } else {
     window?.log?.info(
       `${logPrefix} Dropping path starting with guard node ${ed25519Str(
         guardNodeEd25519
-      )}; index:${failingPathIndex}`
+      )}; index:${failingPathIndex} with reason: "${reason}"`
     );
     onionPaths = onionPaths.filter(p => p[0].pubkey_ed25519 !== guardNodeEd25519);
   }

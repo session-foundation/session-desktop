@@ -31,12 +31,12 @@ const logPrefix = '[snodePool]';
  * Use `dropSnodeFromSwarmIfNeeded` for that
  * @param snodeEd25519 the snode ed25519 to drop from the snode pool
  */
-async function dropSnodeFromSnodePool(snodeEd25519: string) {
+async function dropSnodeFromSnodePool(snodeEd25519: string, reason: string) {
   const exists = _.some(randomSnodePool, x => x.pubkey_ed25519 === snodeEd25519);
   if (exists) {
     _.remove(randomSnodePool, x => x.pubkey_ed25519 === snodeEd25519);
     window?.log?.warn(
-      `${logPrefix} Dropping ${ed25519Str(snodeEd25519)} from snode pool. ${
+      `${logPrefix} Dropping ${ed25519Str(snodeEd25519)} from snode pool for reason: "${reason}". ${
         randomSnodePool.length
       } snodes remaining in randomPool`
     );
@@ -335,11 +335,12 @@ async function tryToGetConsensusWithSnodesWithRetries() {
  */
 async function dropSnodeFromSwarmIfNeeded(
   pubkey: string,
-  snodeToDropEd25519: string
+  snodeToDropEd25519: string,
+  reason: string
 ): Promise<void> {
   // this call either used the cache or fetch the swarm from the db
   window?.log?.warn(
-    `${logPrefix} Dropping ${ed25519Str(snodeToDropEd25519)} from swarm of ${ed25519Str(pubkey)}`
+    `${logPrefix} Dropping ${ed25519Str(snodeToDropEd25519)} from swarm of ${ed25519Str(pubkey)} for reason: "${reason}"`
   );
 
   const existingSwarm = await SnodePool.getSwarmFromCacheOrDb(pubkey);

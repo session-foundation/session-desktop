@@ -78,7 +78,7 @@ describe('OnionPaths', () => {
 
     describe('with valid snode pool', () => {
       it('rebuilds after removing last snode on path', async () => {
-        await OnionPaths.dropSnodeFromPath(oldOnionPaths[2][2].pubkey_ed25519);
+        await OnionPaths.dropSnodeFromPath(oldOnionPaths[2][2].pubkey_ed25519, 'unit test');
         const newOnionPath = OnionPaths.TEST_getTestOnionPath();
 
         // only the last snode should have been updated
@@ -96,7 +96,7 @@ describe('OnionPaths', () => {
 
         const oldOnionPathsCopy = cloneDeep(oldOnionPaths);
 
-        await OnionPaths.dropSnodeFromPath(oldOnionPathsCopy[2][1].pubkey_ed25519);
+        await OnionPaths.dropSnodeFromPath(oldOnionPathsCopy[2][1].pubkey_ed25519, 'unit test');
         const newOnionPath = OnionPaths.TEST_getTestOnionPath();
 
         const oldOnionPath2 = oldOnionPathsCopy[2];
@@ -208,7 +208,8 @@ describe('OnionPaths', () => {
       fetchSnodePoolFromSeedNodeWithRetries.resolves(badPool);
       SnodePool.TEST_resetState(badPool);
       // drop a snode from the last path, only allowing snodes with an ip on the same subnet /24 of one of our first node
-      const func = async () => OnionPaths.dropSnodeFromPath(snodeToDrop.pubkey_ed25519);
+      const func = async () =>
+        OnionPaths.dropSnodeFromPath(snodeToDrop.pubkey_ed25519, 'unit test');
       await expect(func()).rejectedWith('Not enough snodes with snodes to exclude length');
     });
   });
