@@ -50,13 +50,11 @@ const handleSetFeatureFlag = ({
 
   forceUpdate();
 
-  if (flag === 'proAvailable' || flag === 'mockOthersHavePro') {
-    ConvoHub.use()
-      .getConversations()
-      .forEach(convo => {
-        convo.triggerUIRefresh();
-      });
-  }
+  ConvoHub.use()
+    .getConversations()
+    .forEach(convo => {
+      convo.triggerUIRefresh();
+    });
 };
 
 const handleFeatureFlagToggle = ({ flag, parentFlag, forceUpdate }: FeatureFlagToggleType) => {
