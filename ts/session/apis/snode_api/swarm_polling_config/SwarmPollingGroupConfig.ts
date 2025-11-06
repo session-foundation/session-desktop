@@ -20,6 +20,7 @@ import { GroupSync } from '../../../utils/job_runners/jobs/GroupSyncJob';
 import { destroyMessagesAndUpdateRedux } from '../../../disappearing_messages';
 import { ConversationTypeEnum } from '../../../../models/types';
 import { AvatarDownload } from '../../../utils/job_runners/jobs/AvatarDownloadJob';
+import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 /**
  * This is a basic optimization to avoid running the logic when the `deleteBeforeSeconds`
@@ -34,7 +35,7 @@ const lastAppliedRemoveAttachmentSentBeforeSeconds = new Map<GroupPubkeyType, nu
 
 async function handleMetaMergeResults(groupPk: GroupPubkeyType) {
   const infos = await MetaGroupWrapperActions.infoGet(groupPk);
-  if (window.sessionFeatureFlags.debugLibsessionDumps) {
+  if (getFeatureFlag('debugLibsessionDumps')) {
     const dumps = await MetaGroupWrapperActions.metaMakeDump(groupPk);
     window.log.info(
       `pushChangesToGroupSwarmIfNeeded: current meta dump: ${ed25519Str(groupPk)}:`,

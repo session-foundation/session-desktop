@@ -14,6 +14,7 @@ import { APPLICATION_JSON } from '../../../types/MIME';
 import { sha256 } from '../../crypto';
 import { allowOnlyOneAtATime } from '../../utils/Promise';
 import { GetServicesNodesFromSeedRequest } from '../snode_api/SnodeRequestTypes';
+import { getDataFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 /**
  * Fetch all snodes from seed nodes.
@@ -64,7 +65,7 @@ const getSslAgentForSeedNode = async (seedNodeHost: string, isSsl = false) => {
     return undefined;
   }
 
-  if (window.sessionFeatureFlags?.useLocalDevNet) {
+  if (getDataFeatureFlag('useLocalDevNet')) {
     const sslOptions: https.AgentOptions = {
       // local devnet: allow unauthorized
       rejectUnauthorized: false,

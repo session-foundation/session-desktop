@@ -1,5 +1,70 @@
 import { z } from 'zod';
+import { ProOriginatingPlatform } from 'libsession_util_nodejs';
 import { SessionBackendBaseResponseSchema } from '../session_backend_server';
+import { assertUnreachable } from '../../../types/sqlSharedTypes';
+
+// Mirrors backend enum
+export enum ProStatus {
+  NeverBeenPro = 0,
+  Active = 1,
+  Expired = 2,
+}
+
+// Mirrors backend enum
+export enum ProAccessVariant {
+  Nil = 0,
+  OneMonth = 1,
+  ThreeMonth = 2,
+  TwelveMonth = 3,
+}
+
+// Mirrors backend enum
+export enum ProItemStatus {
+  Nil = 0,
+  Unredeemed = 1,
+  Redeemed = 2,
+  Expired = 3,
+  Revoked = 4,
+}
+
+// Mirrors backend enum
+export enum ProPaymentProvider {
+  Nil = 0,
+  GooglePlayStore = 1,
+  iOSAppStore = 2,
+}
+
+export function getProPaymentProviderFromProOriginatingPlatform(
+  v: ProOriginatingPlatform
+): ProPaymentProvider {
+  switch (v) {
+    case 'Nil':
+      return ProPaymentProvider.Nil;
+    case 'Google':
+      return ProPaymentProvider.GooglePlayStore;
+    case 'iOS':
+      return ProPaymentProvider.iOSAppStore;
+    default:
+      assertUnreachable(v, 'getProPaymentProviderFromProOriginatingPlatform');
+      throw new Error('getProPaymentProviderFromProOriginatingPlatform: case not handled');
+  }
+}
+
+export function getProOriginatingPlatformFromProPaymentProvider(
+  v: ProPaymentProvider
+): ProOriginatingPlatform {
+  switch (v) {
+    case ProPaymentProvider.Nil:
+      return 'Nil';
+    case ProPaymentProvider.GooglePlayStore:
+      return 'Google';
+    case ProPaymentProvider.iOSAppStore:
+      return 'iOS';
+    default:
+      assertUnreachable(v, 'getProOriginatingPlatformFromProPaymentProvider');
+      throw new Error('getProOriginatingPlatformFromProPaymentProvider: case not handled');
+  }
+}
 
 const ProProofResultSchema = z.object({
   version: z.number(),
@@ -35,14 +100,31 @@ export const GetProRevocationsResponseSchema = SessionBackendBaseResponseSchema.
 
 export type GetProRevocationsResponseType = z.infer<typeof GetProRevocationsResponseSchema>;
 
-const ProStatusItemSchema = z.object({});
+const ProStatusItemSchema = z.object({
+  status: z.nativeEnum(ProItemStatus),
+  plan: z.nativeEnum(ProAccessVariant),
+  payment_provider: z.nativeEnum(ProPaymentProvider),
+  auto_renewing: z.boolean(),
+  unredeemed_unix_ts_ms: z.number(),
+  redeemed_unix_ts_ms: z.number(),
+  expiry_unix_ts_ms: z.number(),
+  grace_period_duration_ms: z.number(),
+  platform_refund_expiry_unix_ts_ms: z.number(),
+  revoked_unix_ts_ms: z.number(),
+  google_payment_token: z.string().nullable(),
+  google_order_id: z.string().nullable(),
+  apple_original_tx_id: z.string().nullable(),
+  apple_tx_id: z.string().nullable(),
+  apple_web_line_order_id: z.string().nullable(),
+});
 
 const ProStatusResultSchema = z.object({
+  status: z.nativeEnum(ProStatus),
   auto_renewing: z.boolean(),
   expiring_unix_ts_ms: z.number(),
   grace_period_duration_ms: z.number(),
-  status: z.number(),
-  version: z.number(),
+  error_report: z.number(),
+  payments_total: z.number(),
   items: z.array(ProStatusItemSchema),
 });
 

@@ -11,22 +11,34 @@ import {
 import { UserUtils } from '../utils';
 import { timeoutWithAbort } from '../utils/Promise';
 import { DURATION } from '../constants';
+import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 
 export type SessionServerConfigType = {
   name: string;
   url: `${'http' | 'https'}://${string}`;
   edPkHex: string;
   xPkHex: string;
-  timeoutMs: number;
+  requestTimeoutMs: number;
+  abortControllerTimeoutMs: number;
+};
+
+export type SessionBackendServerApiOptions = Omit<
+  SessionServerConfigType,
+  'requestTimeoutMs' | 'abortControllerTimeoutMs'
+> & {
+  requestTimeoutMs?: number;
+  abortControllerTimeoutMs?: number;
 };
 
 type WithZodSchemaValidation<S = ZodSchema> = {
   withZodSchema: S;
 };
 
+type HTTPMethod = 'GET' | 'POST';
+
 type SessionBackendServerMakeRequestParams = {
   path: `/${string}`;
-  method: 'GET' | 'POST';
+  method: HTTPMethod;
   bodyGetter?: () => Promise<string | null>;
   blindSignRequest?: boolean;
 };
@@ -50,10 +62,17 @@ export type SessionBackendServerApiResponse = SessionBackendBaseResponseSchema &
 export default class SessionBackendServerApi {
   readonly server: SessionServerConfigType;
 
-  constructor(server: Omit<SessionServerConfigType, 'timeoutMs'>, timeoutMsOverride?: number) {
+  constructor(
+    server: SessionBackendServerApiOptions,
+    requestTimeoutMsOverride?: number,
+    abortControllerTimeoutMs?: number
+  ) {
     this.server = {
       ...server,
-      timeoutMs: timeoutMsOverride || 10 * DURATION.SECONDS,
+      requestTimeoutMs:
+        server.requestTimeoutMs || requestTimeoutMsOverride || 10 * DURATION.SECONDS,
+      abortControllerTimeoutMs:
+        server.abortControllerTimeoutMs || abortControllerTimeoutMs || 30 * DURATION.SECONDS,
     };
   }
 
@@ -65,13 +84,13 @@ export default class SessionBackendServerApi {
   }
 
   public logInfo(msg: string, path?: string) {
-    window.log.info(`[${this.server.name}] ${path?.length ? `${path}: ` : ''}${msg}`);
+    window?.log?.info(`[${this.server.name}] ${path?.length ? `${path}: ` : ''}${msg}`);
   }
   public logError(msg: string, path?: string) {
-    window.log.error(`[${this.server.name}] ${path?.length ? `${path}: ` : ''}${msg}`);
+    window?.log?.error(`[${this.server.name}] ${path?.length ? `${path}: ` : ''}${msg}`);
   }
   public logZodError(zodError: ZodError, path?: string) {
-    window.log.error(`[${this.server.name}] ${path?.length ? `${path}: ` : ''}`, zodError);
+    window?.log?.error(`[${this.server.name}] ${path?.length ? `${path}: ` : ''}`, zodError);
   }
 
   // NOTE: returns null if the ed25519 key pair is not found
@@ -80,7 +99,7 @@ export default class SessionBackendServerApi {
     path,
     body,
   }: {
-    method: string;
+    method: HTTPMethod;
     path: string;
     body: string | null;
   }): Promise<BlindSignedHeaders | null> {
@@ -146,9 +165,9 @@ export default class SessionBackendServerApi {
         },
         false,
         controller.signal,
-        this.server.timeoutMs
+        this.server.requestTimeoutMs
       ),
-      this.server.timeoutMs,
+      this.server.abortControllerTimeoutMs,
       controller
     );
 
@@ -158,7 +177,7 @@ export default class SessionBackendServerApi {
     }
 
     if (!batchGlobalIsSuccess(result)) {
-      if (window.sessionFeatureFlags?.debugServerRequests) {
+      if (getFeatureFlag('debugServerRequests')) {
         this.logError(`failed with status ${parseBatchGlobalStatusCode(result)}`, path);
       }
 
@@ -201,13 +220,13 @@ export default class SessionBackendServerApi {
   public async makeRequest(
     params: SessionBackendServerMakeRequestParams
   ): Promise<SessionBackendServerApiResponse> {
-    if (window.sessionFeatureFlags?.debugServerRequests) {
+    if (getFeatureFlag('debugServerRequests')) {
       this.logInfo(`\nrequest: ${JSON.stringify({ url: this.server.url, params })}`, params.path);
     }
 
     const response = await this._makeRequest(params);
 
-    if (window.sessionFeatureFlags?.debugServerRequests) {
+    if (getFeatureFlag('debugServerRequests')) {
       this.logInfo(`\nresponse: ${JSON.stringify(response)}`, params.path);
     }
 

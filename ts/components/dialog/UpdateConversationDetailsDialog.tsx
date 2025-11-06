@@ -44,6 +44,7 @@ import type { WithConvoId } from '../../session/types/with';
 import { UploadFirstImageButton } from '../buttons/avatar/UploadFirstImageButton';
 import { sanitizeDisplayNameOrToast } from '../registration/utils';
 import { ProfileManager } from '../../session/profile_manager/ProfileManager';
+import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 
 /**
  * We want the description to be at most 200 visible characters, in addition
@@ -230,7 +231,7 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
     if (
       isPublic ||
       isMe ||
-      (PubKey.is03Pubkey(conversationId) && window.sessionFeatureFlags.useClosedGroupV2QAButtons)
+      (PubKey.is03Pubkey(conversationId) && getFeatureFlag('useClosedGroupV2QAButtons'))
     ) {
       dispatch(updateEditProfilePictureModal({ conversationId }));
       return;

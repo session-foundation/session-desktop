@@ -19,20 +19,20 @@ export default class ProBackendAPI {
 
   static getProSigningArgs() {
     // TODO: get real pro master private key
-    const masterPrivkey = {} as Uint8Array;
+    const masterPrivKeyHex = '';
     return {
       requestVersion: ProBackendAPI.requestVersion,
-      masterPrivkey,
+      masterPrivKeyHex,
       unixTsMs: NetworkTime.now(),
     };
   }
 
   private static async getProProofBody() {
     // TODO: get real rotating private key
-    const rotatingPrivkey = {} as Uint8Array;
+    const rotatingPrivKeyHex = '';
     return ProWrapperActions.proProofRequestBody({
       ...ProBackendAPI.getProSigningArgs(),
-      rotatingPrivkey,
+      rotatingPrivKeyHex,
     });
   }
 

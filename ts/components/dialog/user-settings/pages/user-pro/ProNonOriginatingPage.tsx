@@ -19,8 +19,9 @@ import { showLinkVisitWarningDialog } from '../../../OpenUrlModal';
 import { proButtonProps } from '../../../SessionProInfoModal';
 import { Flex } from '../../../../basic/Flex';
 import type { ProNonOriginatingPageVariant } from '../../../../../types/ReduxTypes';
-import { ProOriginatingPlatform, useProAccessDetails } from '../../../../../hooks/useHasPro';
+import { useProAccessDetails } from '../../../../../hooks/useHasPro';
 import LIBSESSION_CONSTANTS from '../../../../../session/utils/libsession/libsession_constants';
+import { ProPaymentProvider } from '../../../../../session/apis/pro_backend_api/types';
 
 type VariantPageProps = {
   variant: ProNonOriginatingPageVariant;
@@ -463,14 +464,14 @@ function ProInfoBlockRefund() {
   }
 
   switch (data.provider) {
-    case ProOriginatingPlatform.iOSAppStore:
+    case ProPaymentProvider.iOSAppStore:
       return <ProInfoBlockRefundIOS />;
-    case ProOriginatingPlatform.GooglePlayStore:
+    case ProPaymentProvider.GooglePlayStore:
       return <ProInfoBlockRefundGooglePlay />;
-    case ProOriginatingPlatform.Nil:
+    case ProPaymentProvider.Nil:
       return <ProInfoBlockRefundSessionSupport />;
     default:
-      return assertUnreachable(data.provider, `Unknown pro originating platform: ${data.provider}`);
+      return assertUnreachable(data.provider, `Unknown pro payment provider: ${data.provider}`);
   }
 }
 

@@ -1,7 +1,7 @@
 import { LOCALE_DEFAULTS } from '../localization/constants';
 import {
   FEATURE_RELEASE_CHECK_INTERVAL,
-  type SessionFeatureFlagKeys,
+  type SessionBooleanFeatureFlagKeys,
 } from '../state/ducks/types/releasedFeaturesReduxTypes';
 import { Notifications } from './notifications';
 import { Storage } from './storage';
@@ -22,7 +22,7 @@ export const handleReleaseNotification = ({
   delayMs,
   force,
 }: {
-  featureName: SessionFeatureFlagKeys;
+  featureName: SessionBooleanFeatureFlagKeys;
   message: string;
   notifyAt: number;
   lastRefreshedAt: number;

@@ -5,7 +5,10 @@ import { SessionServerConfigType } from '../session_backend_server';
 // not exported/included in the SERVER_HOSTS as this is for testing only
 const PRO_BACKEND_DEV = 'pro-backend-dev.getsession.org';
 
-const PRO_BACKENDS: Record<'DEFAULT' | 'DEV', Omit<SessionServerConfigType, 'timeoutMs'>> = {
+const PRO_BACKENDS: Record<
+  'DEFAULT' | 'DEV',
+  Omit<SessionServerConfigType, 'requestTimeoutMs' | 'abortControllerTimeoutMs'>
+> = {
   DEFAULT: {
     name: 'ProBackend',
     url: `http://${SERVER_HOSTS.PRO_SERVER}`,

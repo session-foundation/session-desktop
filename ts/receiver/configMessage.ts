@@ -52,6 +52,7 @@ import {
 } from '../webworker/workers/browser/libsession_worker_interface';
 import { CONVERSATION } from '../session/constants';
 import { CONVERSATION_PRIORITIES, ConversationTypeEnum } from '../models/types';
+import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
 
 type IncomingUserResult = {
   needsPush: boolean;
@@ -123,7 +124,7 @@ async function mergeUserConfigsWithIncomingUpdates(
 
       const variant = LibSessionUtil.userNamespaceToVariant(namespace);
 
-      if (window.sessionFeatureFlags.debugLibsessionDumps) {
+      if (getFeatureFlag('debugLibsessionDumps')) {
         await printDumpForDebug(
           `printDumpsForDebugging: before merge of ${toMerge.length}, ${variant}:`,
           variant
@@ -142,7 +143,7 @@ async function mergeUserConfigsWithIncomingUpdates(
         `${variant}: needsPush:${needsPush} needsDump:${needsDump}; mergedCount:${hashesMerged.length} `
       );
 
-      if (window.sessionFeatureFlags.debugLibsessionDumps) {
+      if (getFeatureFlag('debugLibsessionDumps')) {
         await printDumpForDebug(`printDumpsForDebugging: after merge of ${variant}:`, variant);
       }
       const incomingConfResult: IncomingUserResult = {

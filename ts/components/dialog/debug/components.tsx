@@ -43,12 +43,10 @@ import { SimpleSessionInput } from '../../inputs/SessionInput';
 import { NetworkTime } from '../../../util/NetworkTime';
 import { SessionButtonShiny } from '../../basic/SessionButtonShiny';
 import ProBackendAPI from '../../../session/apis/pro_backend_api/ProBackendAPI';
-// import { proBackendDataActions } from '../../../state/ducks/proBackendData';
-// import { useProBackendProofData } from '../../../ state / selectors / proBackendData';
 
 type DebugButtonProps = SessionButtonProps & { shiny?: boolean };
 
-function DebugButton({ shiny, style: _style, ...rest }: DebugButtonProps) {
+export function DebugButton({ shiny, style: _style, ...rest }: DebugButtonProps) {
   const style = { minWidth: 'max-content', width: '48%', ..._style };
 
   if (shiny) {
@@ -341,7 +339,6 @@ export const DebugActions = () => {
       <DebugButton
         onClick={async () => {
           await ProBackendAPI.getProProof();
-          // dispatch(proBackendDataActions.fetchProProofFromProBackend());
         }}
       >
         Get Pro Proof

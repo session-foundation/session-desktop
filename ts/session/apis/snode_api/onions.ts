@@ -29,6 +29,7 @@ import {
 import { updateIsOnline } from '../../../state/ducks/onions';
 import { SERVER_HOSTS } from '..';
 import { ReduxOnionSelectors } from '../../../state/selectors/onions';
+import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 // hold the ed25519 key of a snode against the time it fails. Used to remove a snode only after a few failures (snodeFailureThreshold failures)
 let snodeFailureCount: Record<string, number> = {};
@@ -843,7 +844,7 @@ async function sendOnionRequestHandlingSnodeEjectNoRetries({
       timeoutMs,
     });
 
-    if (window.sessionFeatureFlags?.debugOnionRequests) {
+    if (getFeatureFlag('debugOnionRequests')) {
       window.log.info(
         `sendOnionRequestHandlingSnodeEjectNoRetries: sendOnionRequestNoRetries: useV4:${useV4} destSnodeX25519:${destSnodeX25519}; \nfinalDestOptions:${JSON.stringify(
           finalDestOptions

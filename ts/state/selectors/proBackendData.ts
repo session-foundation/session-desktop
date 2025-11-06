@@ -20,6 +20,10 @@ export const getProBackendProStatusData = (state: StateType): ProBackendDataStat
   return getProBackendData(state).proStatus;
 };
 
+export const getProBackendCurrentUserStatus = (state: StateType) => {
+  return getProBackendData(state).proStatus.data?.status;
+};
+
 export const useProBackendData = (): ProBackendDataState => {
   return useSelector(getProBackendData);
 };
@@ -34,4 +38,8 @@ export const useProBackendRevocationsData = (): ProBackendDataState['revocations
 
 export const useProBackendProStatusData = (): ProBackendDataState['proStatus'] => {
   return useSelector(getProBackendProStatusData);
+};
+
+export const useProBackendCurrentUserStatus = () => {
+  return useSelector(getProBackendCurrentUserStatus);
 };

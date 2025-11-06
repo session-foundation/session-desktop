@@ -61,6 +61,7 @@ import { NetworkTime } from '../../util/NetworkTime';
 import { MergedAbortSignal } from '../apis/snode_api/requestWith';
 import { WithAllow401s } from '../types/with';
 import { ERROR_421_HANDLED_RETRY_REQUEST } from '../apis/snode_api/onions';
+import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 
 // ================ SNODE STORE ================
 
@@ -373,7 +374,7 @@ async function getSignatureParamsFromNamespace(
 }
 
 function logBuildSubRequests(subRequests: Array<BuiltSnodeSubRequests>) {
-  if (!window.sessionFeatureFlags.debugBuiltSnodeRequests) {
+  if (!getFeatureFlag('debugBuiltSnodeRequests')) {
     return;
   }
   window.log.debug(

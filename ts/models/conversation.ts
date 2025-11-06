@@ -948,7 +948,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
 
     if (this.isMe()) {
-      return getFeatureFlag('mockCurrentUserHasPro');
+      // TODO: how do we do this
+      return false;
     }
 
     return getFeatureFlag('mockOthersHavePro');

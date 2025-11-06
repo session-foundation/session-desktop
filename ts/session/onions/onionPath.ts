@@ -21,6 +21,7 @@ import { SnodePool } from '../apis/snode_api/snodePool';
 import { SnodePoolConstants } from '../apis/snode_api/snodePoolConstants';
 import { desiredGuardCount, minimumGuardCount, ONION_REQUEST_HOPS } from './onionPathConstants';
 import { OnionPathEmptyError } from '../utils/errors';
+import { getDataFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 
 export function getOnionPathMinTimeout() {
   return DURATION.SECONDS;
@@ -486,7 +487,7 @@ async function buildNewOnionPathsWorker() {
           'Too few nodes "unique by ip" to build an onion path. Even after fetching from seed.'
         );
       }
-      let otherNodes = window.sessionFeatureFlags?.useLocalDevNet
+      let otherNodes = getDataFeatureFlag('useLocalDevNet')
         ? allNodes
         : _.differenceBy(oneNodeForEachSubnet24KeepingRatio, guardNodes, 'pubkey_ed25519');
       const guards = _.shuffle(guardNodes);

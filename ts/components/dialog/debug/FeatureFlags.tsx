@@ -1,31 +1,37 @@
-import { isArray, isBoolean } from 'lodash';
+import { isBoolean } from 'lodash';
 import { useEffect, useState } from 'react';
 import { clipboard } from 'electron';
 import {
+  getDataFeatureFlag,
   getFeatureFlag,
   MockProAccessExpiryOptions,
-  SessionFeatureFlagKeys,
+  SessionDataFeatureFlags,
   useDataFeatureFlag,
-  type SessionFeatureFlagWithDataKeys,
-  type SessionFlagsKeys,
+  type SessionDataFeatureFlagKeys,
+  type SessionBooleanFeatureFlagKeys,
+  useFeatureFlag,
 } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { Flex } from '../../basic/Flex';
 import { SessionToggle } from '../../basic/SessionToggle';
-import { HintText, SpacerSM, SpacerXS } from '../../basic/Text';
+import { HintText, SpacerXS } from '../../basic/Text';
 import { DEBUG_FEATURE_FLAGS } from './constants';
 import { ConvoHub } from '../../../session/conversations';
 import { isDebugMode } from '../../../shared/env_vars';
 import { ProMessageFeature } from '../../../models/proMessageFeature';
-import { ProAccessVariant, ProOriginatingPlatform } from '../../../hooks/useHasPro';
 import { SessionButtonShiny } from '../../basic/SessionButtonShiny';
 import { SessionButtonColor, SessionButtonShape } from '../../basic/SessionButton';
 import { ToastUtils } from '../../../session/utils';
 import { DebugMenuSection } from './DebugMenuModal';
+import {
+  ProAccessVariant,
+  ProPaymentProvider,
+  ProStatus,
+} from '../../../session/apis/pro_backend_api/types';
 
 type FeatureFlagToggleType = {
   forceUpdate: () => void;
-  flag: SessionFlagsKeys;
-  parentFlag?: SessionFlagsKeys;
+  flag: SessionBooleanFeatureFlagKeys;
+  parentFlag?: SessionBooleanFeatureFlagKeys;
 };
 
 const handleSetFeatureFlag = ({
@@ -35,21 +41,16 @@ const handleSetFeatureFlag = ({
   value,
 }: FeatureFlagToggleType & { value: boolean }) => {
   if (parentFlag) {
-    (window as any).sessionFeatureFlags[parentFlag][flag] = value;
+    (window as any).sessionBooleanFeatureFlags[parentFlag][flag] = value;
     window.log.debug(`[debugMenu] toggled ${parentFlag}.${flag} to ${value}`);
   } else {
-    (window as any).sessionFeatureFlags[flag] = value;
+    (window as any).sessionBooleanFeatureFlags[flag] = value;
     window.log.debug(`[debugMenu] toggled ${flag} to ${value}`);
   }
 
   forceUpdate();
 
-  if (
-    flag === 'proAvailable' ||
-    flag === 'mockCurrentUserHasPro' ||
-    flag === 'mockOthersHavePro' ||
-    flag === 'mockCurrentUserHasProExpired'
-  ) {
+  if (flag === 'proAvailable' || flag === 'mockOthersHavePro') {
     ConvoHub.use()
       .getConversations()
       .forEach(convo => {
@@ -60,28 +61,30 @@ const handleSetFeatureFlag = ({
 
 const handleFeatureFlagToggle = ({ flag, parentFlag, forceUpdate }: FeatureFlagToggleType) => {
   const currentValue = parentFlag
-    ? (window as any).sessionFeatureFlags[parentFlag][flag]
-    : (window as any).sessionFeatureFlags[flag];
+    ? (window as any).sessionBooleanFeatureFlags[parentFlag][flag]
+    : (window as any).sessionBooleanFeatureFlags[flag];
   handleSetFeatureFlag({ flag, parentFlag, forceUpdate, value: !currentValue });
 };
 
 export const FlagToggle = ({
   flag,
-  value,
   forceUpdate,
   parentFlag,
   label,
-  visibleOnlyWithBooleanFlag,
+  visibleWithBooleanFlag,
+  visibleWithEnumFlag,
   hiddenAndDisabledWhenKeyEnabled,
 }: FeatureFlagToggleType & {
-  value: any;
   label?: string;
-  visibleOnlyWithBooleanFlag?: SessionFeatureFlagKeys;
-  hiddenAndDisabledWhenKeyEnabled?: SessionFeatureFlagKeys;
+  visibleWithBooleanFlag?: SessionBooleanFeatureFlagKeys;
+  visibleWithEnumFlag?: VisibleWithEnumFlagType<SessionDataFeatureFlagKeys>;
+  hiddenAndDisabledWhenKeyEnabled?: SessionBooleanFeatureFlagKeys;
 }) => {
   const key = `feature-flag-toggle-${flag}`;
-  const visibleFlag = visibleOnlyWithBooleanFlag
-    ? getFeatureFlag(visibleOnlyWithBooleanFlag)
+  const visibleFlag = visibleWithBooleanFlag ? getFeatureFlag(visibleWithBooleanFlag) : true;
+  const dataFlag = visibleWithEnumFlag ? getDataFeatureFlag(visibleWithEnumFlag.flag) : null;
+  const visibleWithDataFlag = visibleWithEnumFlag
+    ? dataFlag !== null && visibleWithEnumFlag.isVisible(dataFlag)
     : true;
 
   const hideAndDisable = hiddenAndDisabledWhenKeyEnabled
@@ -95,7 +98,7 @@ export const FlagToggle = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hideAndDisable]);
 
-  return visibleFlag ? (
+  return visibleFlag && visibleWithDataFlag ? (
     <Flex
       key={key}
       id={key}
@@ -104,14 +107,13 @@ export const FlagToggle = ({
       $alignItems="center"
       $justifyContent="flex-start"
       $flexGap="var(--margins-sm)"
-      style={{ display: visibleFlag ? undefined : 'hidden' }}
     >
       <SessionToggle
-        active={value}
+        active={!!getFeatureFlag(flag)}
         onClick={() => void handleFeatureFlagToggle({ flag, parentFlag, forceUpdate })}
       />
       <span>
-        {label || flag}
+        {label || formatDefaultFlagName(flag) || flag}
         {DEBUG_FEATURE_FLAGS.DEV.includes(flag) ? <HintText>Experimental</HintText> : null}
         {DEBUG_FEATURE_FLAGS.UNTESTED.includes(flag) ? <HintText>Untested</HintText> : null}
       </span>
@@ -124,11 +126,11 @@ const handleFeatureFlagWithDataChange = ({
   value,
   forceUpdate,
 }: {
-  flag: SessionFeatureFlagWithDataKeys;
+  flag: SessionDataFeatureFlagKeys;
   value: any;
   forceUpdate: () => void;
 }) => {
-  window.sessionFeatureFlagsWithData[flag] = value;
+  window.sessionDataFeatureFlags[flag] = value;
   forceUpdate();
 
   ConvoHub.use()
@@ -140,10 +142,11 @@ const handleFeatureFlagWithDataChange = ({
 
 type FlagDropdownInputProps = {
   forceUpdate: () => void;
-  flag: SessionFeatureFlagWithDataKeys;
+  flag: SessionDataFeatureFlagKeys;
   options: Array<{ label: string; value: number | string | null }>;
   unsetOption: { label: string; value: number | string | null };
-  visibleOnlyWithBooleanFlag?: SessionFeatureFlagKeys;
+  visibleWithBooleanFlag?: SessionBooleanFeatureFlagKeys;
+  visibleWithEnumFlag?: VisibleWithEnumFlagType<SessionDataFeatureFlagKeys>;
   label: string;
 };
 
@@ -152,14 +155,15 @@ export const FlagEnumDropdownInput = ({
   options,
   forceUpdate,
   unsetOption,
-  visibleOnlyWithBooleanFlag,
+  visibleWithBooleanFlag,
+  visibleWithEnumFlag,
   label,
 }: FlagDropdownInputProps) => {
   const key = `feature-flag-dropdown-${flag}`;
   const [selected, setSelected] = useState<number | string | null>(() => {
-    const initValue = window.sessionFeatureFlagsWithData[flag];
+    const initValue = window.sessionDataFeatureFlags[flag];
     return typeof initValue === 'string' || Number.isFinite(initValue)
-      ? initValue
+      ? (initValue as string | number)
       : unsetOption.value;
   });
   const handleSelect = (newValue: number | string | null) => {
@@ -171,11 +175,14 @@ export const FlagEnumDropdownInput = ({
     });
   };
 
-  const visibleFlag = visibleOnlyWithBooleanFlag
-    ? getFeatureFlag(visibleOnlyWithBooleanFlag)
+  const visibleFlag = visibleWithBooleanFlag ? getFeatureFlag(visibleWithBooleanFlag) : true;
+
+  const dataFlag = visibleWithEnumFlag ? getDataFeatureFlag(visibleWithEnumFlag.flag) : null;
+  const visibleWithDataFlag = visibleWithEnumFlag
+    ? dataFlag !== null && visibleWithEnumFlag.isVisible(dataFlag)
     : true;
 
-  return visibleFlag ? (
+  return visibleFlag && visibleWithDataFlag ? (
     <Flex
       key={key}
       id={key}
@@ -225,21 +232,21 @@ export const FlagEnumDropdownInput = ({
 
 type FlagIntegerInputProps = {
   forceUpdate: () => void;
-  flag: SessionFeatureFlagWithDataKeys;
-  visibleOnlyWithBooleanFlag?: SessionFeatureFlagKeys;
+  flag: SessionDataFeatureFlagKeys;
+  visibleWithBooleanFlag?: SessionBooleanFeatureFlagKeys;
   label: string;
 };
 
 export const FlagIntegerInput = ({
   flag,
   forceUpdate,
-  visibleOnlyWithBooleanFlag,
+  visibleWithBooleanFlag,
   label,
 }: FlagIntegerInputProps) => {
   const currentValue = useDataFeatureFlag(flag);
   const key = `feature-flag-integer-input-${flag}`;
   const [value, setValue] = useState<number>(() => {
-    const initValue = window.sessionFeatureFlagsWithData[flag];
+    const initValue = window.sessionDataFeatureFlags[flag];
     return typeof initValue === 'number' && Number.isFinite(initValue) ? initValue : 0;
   });
 
@@ -259,9 +266,7 @@ export const FlagIntegerInput = ({
     });
   };
 
-  const visibleFlag = visibleOnlyWithBooleanFlag
-    ? getFeatureFlag(visibleOnlyWithBooleanFlag)
-    : true;
+  const visibleFlag = visibleWithBooleanFlag ? getFeatureFlag(visibleWithBooleanFlag) : true;
 
   return visibleFlag ? (
     <Flex
@@ -324,8 +329,6 @@ export const FlagIntegerInput = ({
   ) : null;
 };
 
-type FlagValues = boolean | object | string;
-
 const allProFeatures = Object.values(ProMessageFeature);
 
 // Generate the rotation steps: [], [feat1], [feat2], ..., [featN], [f1, f2, ..., fn]
@@ -345,89 +348,107 @@ function rotateMsgProFeat(currentValue: Array<ProMessageFeature>, forceUpdate: (
   // Next index wraps around
   const nextIndex = (index + 1) % proFeatureCycle.length;
 
-  window.sessionFeatureFlags.mockMessageProFeatures = proFeatureCycle[nextIndex];
+  window.sessionDataFeatureFlags.mockMessageProFeatures = proFeatureCycle[nextIndex];
 
   forceUpdate();
 }
 
-const proBooleanFlags: Array<{
-  label: string;
-  key: SessionFeatureFlagKeys;
-  visibleWithParentKey?: SessionFeatureFlagKeys;
-  hiddenAndDisabledWhenKeyEnabled?: SessionFeatureFlagKeys;
-}> = [
-  { label: 'Pro Available', key: 'proAvailable' },
+type VisibleWithEnumFlagType<K extends SessionDataFeatureFlagKeys> = {
+  flag: K;
+  isVisible: (v: SessionDataFeatureFlags[K]) => boolean;
+};
+
+type BooleanFlags = Array<{
+  flag: SessionBooleanFeatureFlagKeys;
+  label?: string;
+  visibleWithBooleanFlag?: SessionBooleanFeatureFlagKeys;
+  visibleWithEnumFlag?: VisibleWithEnumFlagType<SessionDataFeatureFlagKeys>;
+  hiddenAndDisabledWhenKeyEnabled?: SessionBooleanFeatureFlagKeys;
+}>;
+
+function formatDefaultFlagName(key: string) {
+  if (!key?.length) {
+    return '';
+  }
+  const withSpaces = key.replace(/([A-Z])/g, ' $1');
+  return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1).toLowerCase();
+}
+
+const proBooleanFlags: BooleanFlags = [
+  {
+    label: 'Platform Refund Expired',
+    flag: 'mockCurrentUserHasProPlatformRefundExpired',
+    visibleWithBooleanFlag: 'proAvailable',
+    visibleWithEnumFlag: {
+      flag: 'mockProCurrentStatus',
+      isVisible: v => v === ProStatus.Active,
+    },
+  },
+  {
+    label: 'Cancelled',
+    flag: 'mockCurrentUserHasProCancelled',
+    visibleWithEnumFlag: {
+      flag: 'mockProCurrentStatus',
+      isVisible: v => v === ProStatus.Active,
+    },
+  },
+  {
+    label: 'In Grace Period',
+    flag: 'mockCurrentUserHasProInGracePeriod',
+    hiddenAndDisabledWhenKeyEnabled: 'mockCurrentUserHasProCancelled',
+    visibleWithEnumFlag: {
+      flag: 'mockProCurrentStatus',
+      isVisible: v => v === ProStatus.Active,
+    },
+  },
+];
+
+const proBackendBooleanFlags: BooleanFlags = [
   {
     label: 'Backend Loading',
-    key: 'mockProBackendLoading',
-    visibleWithParentKey: 'proAvailable',
+    flag: 'mockProBackendLoading',
+    visibleWithBooleanFlag: 'proAvailable',
     hiddenAndDisabledWhenKeyEnabled: 'mockProBackendError',
   },
   {
     label: 'Backend Error',
-    key: 'mockProBackendError',
-    visibleWithParentKey: 'proAvailable',
+    flag: 'mockProBackendError',
+    visibleWithBooleanFlag: 'proAvailable',
     hiddenAndDisabledWhenKeyEnabled: 'mockProBackendLoading',
   },
   {
     label: 'Recover always succeeds',
-    key: 'mockProRecoverButtonAlwaysSucceed',
-    visibleWithParentKey: 'proAvailable',
+    flag: 'mockProRecoverButtonAlwaysSucceed',
+    visibleWithBooleanFlag: 'proAvailable',
     hiddenAndDisabledWhenKeyEnabled: 'mockProRecoverButtonAlwaysFail',
   },
   {
     label: 'Recover always fails',
-    key: 'mockProRecoverButtonAlwaysFail',
-    visibleWithParentKey: 'proAvailable',
+    flag: 'mockProRecoverButtonAlwaysFail',
+    visibleWithBooleanFlag: 'proAvailable',
     hiddenAndDisabledWhenKeyEnabled: 'mockProRecoverButtonAlwaysSucceed',
-  },
-  {
-    label: 'Pro Groups Available',
-    key: 'proGroupsAvailable',
-    visibleWithParentKey: 'proAvailable',
-  },
-  {
-    label: 'Has Access',
-    key: 'mockCurrentUserHasPro',
-    visibleWithParentKey: 'proAvailable',
-    hiddenAndDisabledWhenKeyEnabled: 'mockCurrentUserHasProExpired',
-  },
-  {
-    label: 'Access Expired',
-    key: 'mockCurrentUserHasProExpired',
-    visibleWithParentKey: 'proAvailable',
-    hiddenAndDisabledWhenKeyEnabled: 'mockCurrentUserHasPro',
-  },
-  {
-    label: 'Platform Refund Expired',
-    key: 'mockCurrentUserHasProPlatformRefundExpired',
-    visibleWithParentKey: 'mockCurrentUserHasPro',
-  },
-  {
-    label: 'Cancelled',
-    key: 'mockCurrentUserHasProCancelled',
-    visibleWithParentKey: 'mockCurrentUserHasPro',
-  },
-  {
-    label: 'In Grace Period',
-    key: 'mockCurrentUserHasProInGracePeriod',
-    visibleWithParentKey: 'mockCurrentUserHasPro',
-    hiddenAndDisabledWhenKeyEnabled: 'mockCurrentUserHasProCancelled',
   },
 ];
 
-const proBooleanFlagKeys = proBooleanFlags.map(({ key }) => key);
+const debugFeatureFlags: BooleanFlags = [
+  {
+    flag: 'showPopoverAnchors',
+  },
+  {
+    flag: 'debugInputCommands',
+  },
+];
 
-export const FeatureFlags = ({
-  flags: _flags,
-  forceUpdate,
-}: {
-  flags: Record<string, FlagValues>;
-  forceUpdate: () => void;
-}) => {
+const handledBooleanFeatureFlags = proBooleanFlags
+  .map(({ flag: key }) => key)
+  .concat(proBackendBooleanFlags.map(({ flag: key }) => key))
+  .concat(debugFeatureFlags.map(({ flag: key }) => key))
+  .concat(['proAvailable', 'proGroupsAvailable']);
+
+export const FeatureFlags = ({ forceUpdate }: { forceUpdate: () => void }) => {
   const flags = Object.fromEntries(
-    Object.entries(_flags).filter(
-      ([key]) => !proBooleanFlagKeys.includes(key as SessionFeatureFlagKeys)
+    Object.entries(window.sessionBooleanFeatureFlags).filter(
+      ([key]) => !handledBooleanFeatureFlags.includes(key as SessionBooleanFeatureFlagKeys)
     )
   );
   return (
@@ -437,7 +458,7 @@ export const FeatureFlags = ({
       </i>
       <SpacerXS />
       {Object.entries(flags).map(([key, value]) => {
-        const flag = key as SessionFlagsKeys;
+        const flag = key as SessionBooleanFeatureFlagKeys;
         if (
           (!isDebugMode() && DEBUG_FEATURE_FLAGS.DEV.includes(flag)) ||
           DEBUG_FEATURE_FLAGS.UNSUPPORTED.includes(flag)
@@ -446,27 +467,26 @@ export const FeatureFlags = ({
         }
 
         if (isBoolean(value)) {
-          return <FlagToggle forceUpdate={forceUpdate} flag={flag} value={value} />;
+          return <FlagToggle forceUpdate={forceUpdate} flag={flag} />;
         }
-        if (isArray(value) && flag === 'mockMessageProFeatures') {
-          return (
-            <Flex
-              $container={true}
-              $alignItems="center"
-              $flexDirection="row"
-              style={{ cursor: 'pointer', gap: 'var(--margins-xs)' }}
-              onClick={() => rotateMsgProFeat(value, forceUpdate)}
-            >
-              <div style={{ flexShrink: 0 }}>{flag}</div>
-              <pre style={{ overflow: 'hidden' }}>{JSON.stringify(value)}</pre>
-            </Flex>
-          );
-        }
-        throw new Error('Feature flag is not a boolean or array');
+        throw new Error('Feature flag is not a boolean');
       })}
     </DebugMenuSection>
   );
 };
+
+export function DebugFeatureFlags({ forceUpdate }: { forceUpdate: () => void }) {
+  if (!isDebugMode()) {
+    return null;
+  }
+  return (
+    <DebugMenuSection title="Debug Feature Flags">
+      {debugFeatureFlags.map(props => (
+        <FlagToggle {...props} forceUpdate={forceUpdate} />
+      ))}
+    </DebugMenuSection>
+  );
+}
 
 export function FeatureFlagDumper({ forceUpdate }: { forceUpdate: () => void }) {
   const [value, setValue] = useState<string>('');
@@ -474,8 +494,8 @@ export function FeatureFlagDumper({ forceUpdate }: { forceUpdate: () => void }) 
   const handleCopyOnClick = () => {
     const json = JSON.stringify(
       {
-        sessionFeatureFlags: window.sessionFeatureFlags,
-        sessionFeatureFlagsWithData: window.sessionFeatureFlagsWithData,
+        sessionBooleanFeatureFlags: window.sessionBooleanFeatureFlags,
+        sessionDataFeatureFlags: window.sessionDataFeatureFlags,
       },
       undefined,
       2
@@ -491,22 +511,22 @@ export function FeatureFlagDumper({ forceUpdate }: { forceUpdate: () => void }) 
 
       if (
         keys.length !== 2 &&
-        keys[0] !== 'sessionFeatureFlags' &&
-        keys[1] !== 'sessionFeatureFlagsWithData'
+        keys[0] !== 'sessionBooleanFeatureFlags' &&
+        keys[1] !== 'sessionDataFeatureFlags'
       ) {
         throw new Error(`Invalid keys in object: ${keys}`);
       }
 
-      if (typeof json.sessionFeatureFlags !== 'object') {
-        throw new Error('sessionFeatureFlags is not an object!');
+      if (typeof json.sessionBooleanFeatureFlags !== 'object') {
+        throw new Error('sessionBooleanFeatureFlags is not an object!');
       }
 
-      if (typeof json.sessionFeatureFlagsWithData !== 'object') {
-        throw new Error('sessionFeatureFlagsWithData is not an object!');
+      if (typeof json.sessionDataFeatureFlags !== 'object') {
+        throw new Error('sessionDataFeatureFlags is not an object!');
       }
 
-      window.sessionFeatureFlags = json.sessionFeatureFlags;
-      window.sessionFeatureFlagsWithData = json.sessionFeatureFlagsWithData;
+      window.sessionBooleanFeatureFlags = json.sessionBooleanFeatureFlags;
+      window.sessionDataFeatureFlags = json.sessionDataFeatureFlags;
 
       forceUpdate();
 
@@ -566,32 +586,67 @@ export function FeatureFlagDumper({ forceUpdate }: { forceUpdate: () => void }) 
   );
 }
 
+function MessageProFeatures({ forceUpdate }: { forceUpdate: () => void }) {
+  const proIsAvailable = useFeatureFlag('proAvailable');
+  const value = useDataFeatureFlag('mockMessageProFeatures') ?? [];
+
+  if (!proIsAvailable) {
+    return null;
+  }
+
+  return (
+    <Flex
+      $container={true}
+      $alignItems="center"
+      $flexDirection="row"
+      style={{ cursor: 'pointer', gap: 'var(--margins-xs)' }}
+      onClick={() => rotateMsgProFeat(value, forceUpdate)}
+    >
+      <div style={{ flexShrink: 0 }}>Message Pro Features</div>
+      <pre style={{ overflow: 'hidden' }}>{JSON.stringify(value)}</pre>
+    </Flex>
+  );
+}
 export const ProDebugSection = ({ forceUpdate }: { forceUpdate: () => void }) => {
   const mockExpiry = useDataFeatureFlag('mockProAccessExpiry');
   return (
     <DebugMenuSection title="Session Pro">
-      {proBooleanFlags.map(
-        ({ label, key, visibleWithParentKey, hiddenAndDisabledWhenKeyEnabled }) => (
-          <FlagToggle
-            forceUpdate={forceUpdate}
-            flag={key}
-            value={window.sessionFeatureFlags[key]}
-            label={label}
-            visibleOnlyWithBooleanFlag={visibleWithParentKey}
-            hiddenAndDisabledWhenKeyEnabled={hiddenAndDisabledWhenKeyEnabled}
-          />
-        )
-      )}
+      <FlagToggle forceUpdate={forceUpdate} flag="proAvailable" label="Pro Beta Released" />
+      <FlagToggle
+        forceUpdate={forceUpdate}
+        flag="proGroupsAvailable"
+        visibleWithBooleanFlag="proAvailable"
+        label="Pro Groups Released"
+      />
       <FlagEnumDropdownInput
-        label="Originating Platform"
-        flag="mockProOriginatingPlatform"
+        label="Current Status"
+        flag="mockProCurrentStatus"
         options={[
-          { label: 'Google Play', value: ProOriginatingPlatform.GooglePlayStore },
-          { label: 'iOS App Store', value: ProOriginatingPlatform.iOSAppStore },
+          { label: 'Never Had Pro', value: ProStatus.NeverBeenPro },
+          { label: 'Active', value: ProStatus.Active },
+          { label: 'Expired', value: ProStatus.Expired },
+        ]}
+        forceUpdate={forceUpdate}
+        unsetOption={{ label: 'Select Current Status', value: null }}
+        visibleWithBooleanFlag="proAvailable"
+      />
+      {proBooleanFlags.map(props => (
+        <FlagToggle {...props} key={props.flag} forceUpdate={forceUpdate} />
+      ))}
+      <FlagEnumDropdownInput
+        label="Payment Provider"
+        flag="mockProPaymentProvider"
+        options={[
+          { label: 'Google Play', value: ProPaymentProvider.GooglePlayStore },
+          { label: 'iOS App Store', value: ProPaymentProvider.iOSAppStore },
         ]}
         forceUpdate={forceUpdate}
         unsetOption={{ label: 'Select originating platform', value: null }}
-        visibleOnlyWithBooleanFlag="mockCurrentUserHasPro"
+        visibleWithBooleanFlag="proAvailable"
+        visibleWithEnumFlag={{
+          flag: 'mockProCurrentStatus',
+          isVisible: v => v !== ProStatus.NeverBeenPro,
+        }}
       />
       <FlagEnumDropdownInput
         label="Access Variant"
@@ -603,7 +658,11 @@ export const ProDebugSection = ({ forceUpdate }: { forceUpdate: () => void }) =>
         ]}
         forceUpdate={forceUpdate}
         unsetOption={{ label: 'Select access variant', value: null }}
-        visibleOnlyWithBooleanFlag="mockCurrentUserHasPro"
+        visibleWithBooleanFlag="proAvailable"
+        visibleWithEnumFlag={{
+          flag: 'mockProCurrentStatus',
+          isVisible: v => v !== ProStatus.NeverBeenPro,
+        }}
       />
       <FlagEnumDropdownInput
         label="Expiry"
@@ -625,37 +684,43 @@ export const ProDebugSection = ({ forceUpdate }: { forceUpdate: () => void }) =>
         ]}
         forceUpdate={forceUpdate}
         unsetOption={{ label: 'Select expiry', value: null }}
-        visibleOnlyWithBooleanFlag="mockCurrentUserHasPro"
+        visibleWithBooleanFlag="proAvailable"
+        visibleWithEnumFlag={{
+          flag: 'mockProCurrentStatus',
+          isVisible: v => v === ProStatus.Active,
+        }}
       />
       {mockExpiry ? (
         <i>Mocked expiry time does not tick, it will keep being set to now + mock_expiry.</i>
       ) : null}
-      <SpacerSM />
       <FlagIntegerInput
         label="Longer Messages Sent"
         flag="mockProLongerMessagesSent"
         forceUpdate={forceUpdate}
-        visibleOnlyWithBooleanFlag="proAvailable"
+        visibleWithBooleanFlag="proAvailable"
       />
       <FlagIntegerInput
         label="Pinned Conversations"
         flag="mockProPinnedConversations"
         forceUpdate={forceUpdate}
-        visibleOnlyWithBooleanFlag="proAvailable"
+        visibleWithBooleanFlag="proAvailable"
       />
       <FlagIntegerInput
         label="Pro Badges Sent"
         flag="mockProBadgesSent"
         forceUpdate={forceUpdate}
-        visibleOnlyWithBooleanFlag="proAvailable"
+        visibleWithBooleanFlag="proAvailable"
       />
       <FlagIntegerInput
         label="Groups Upgraded"
         flag="mockProGroupsUpgraded"
         forceUpdate={forceUpdate}
-        visibleOnlyWithBooleanFlag="proAvailable"
+        visibleWithBooleanFlag="proAvailable"
       />
-      <SpacerSM />
+      {proBackendBooleanFlags.map(props => (
+        <FlagToggle {...props} key={props.flag} forceUpdate={forceUpdate} />
+      ))}
+      <MessageProFeatures forceUpdate={forceUpdate} />
     </DebugMenuSection>
   );
 };
