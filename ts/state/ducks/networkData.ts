@@ -9,7 +9,6 @@ import type { StateType } from '../reducer';
 import { DURATION } from '../../session/constants';
 import { batchGlobalIsSuccess } from '../../session/apis/open_group_api/sogsv3/sogsV3BatchPoll';
 import { sleepFor } from '../../session/utils/Promise';
-import { NetworkTime } from '../../util/NetworkTime';
 import { getFeatureFlag } from './types/releasedFeaturesReduxTypes';
 
 export type NetworkDataState = DeepNullable<InfoResponse>;
@@ -63,7 +62,7 @@ const fetchInfoFromSeshServer = createAsyncThunk(
       if (
         !batchGlobalIsSuccess(result) &&
         stalePriceTimestamp &&
-        NetworkTime.nowSeconds() > stalePriceTimestamp
+        Date.now() / 1000 > stalePriceTimestamp
       ) {
         payloadCreator.dispatch(networkDataActions.clearCachedData());
         payloadCreator.dispatch(setLastRefreshedTimestamp(0));
@@ -99,7 +98,7 @@ const refreshInfoFromSeshServer = createAsyncThunk(
       return;
     }
 
-    if (infoTimestamp && stalePriceTimestamp && NetworkTime.nowSeconds() <= stalePriceTimestamp) {
+    if (infoTimestamp && stalePriceTimestamp && Date.now() / 1000 <= stalePriceTimestamp) {
       if (getFeatureFlag('debugServerRequests')) {
         window.log.info(
           `[networkData/refreshInfoFromSeshServer] using cache. Data will be stale at ${new Date(stalePriceTimestamp * 1000).toISOString()}`
@@ -108,7 +107,7 @@ const refreshInfoFromSeshServer = createAsyncThunk(
       payloadCreator.dispatch(setInfoFakeRefreshing(true));
       await sleepFor(0.5 * DURATION.SECONDS);
       payloadCreator.dispatch(setInfoFakeRefreshing(false));
-      payloadCreator.dispatch(setLastRefreshedTimestamp(NetworkTime.now()));
+      payloadCreator.dispatch(setLastRefreshedTimestamp(Date.now()));
 
       return;
     }
