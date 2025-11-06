@@ -37,7 +37,7 @@ export function closeDbInstance() {
   }
   const dbRef = globalInstance;
   globalInstance = null;
-  // SQLLite documentation suggests that we run `PRAGMA optimize` right before
+  // SQlite documentation suggests that we run `PRAGMA optimize` right before
   // closing the database connection.
   dbRef.pragma('optimize');
   dbRef.close();
