@@ -105,12 +105,12 @@ export const setFeatureFlag = <T extends SessionBooleanFeatureFlagKeys>(
 /**
  * Check if the given flag is a Feature flag with data.
  * @note debug flags are not included in this check
- * @node boolean flags are not included in this check
+ * @note boolean flags are not included in this check
  */
 export const isSessionDataFeatureFlag = (flag: unknown): flag is SessionDataFeatureFlagKeys => {
   const strFlag = flag as string;
   return (
-    !strFlag.startsWith('debug') && Object.keys(window.sessionBooleanFeatureFlags).includes(strFlag)
+    !strFlag.startsWith('debug') && Object.keys(window.sessionDataFeatureFlags).includes(strFlag)
   );
 };
 export const getDataFeatureFlag = <T extends SessionDataFeatureFlagKeys>(

@@ -322,7 +322,7 @@ window.getSeedNodeList = () => {
     return [window.sessionDataFeatureFlags.useLocalDevNet];
   }
 
-  if (window.sessionDataFeatureFlags.useTestNet) {
+  if (window.sessionBooleanFeatureFlags.useTestNet) {
     return ['http://seed2.getsession.org:38157'];
   }
   return [
