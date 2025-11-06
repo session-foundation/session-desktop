@@ -1,9 +1,7 @@
 import useUpdate from 'react-use/lib/useUpdate';
 import { ProDebugSection } from '../FeatureFlags';
-import { FlagToggle } from '../FeatureFlags';
-import { useFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { SessionButton } from '../../../basic/SessionButton';
-import { SpacerLG, SpacerXS } from '../../../basic/Text';
+import { SpacerLG } from '../../../basic/Text';
 import { ProCTAVariant, useShowSessionProInfoDialogCbWithVariant } from '../../SessionProInfoModal';
 import { Flex } from '../../../basic/Flex';
 import { LucideIcon } from '../../../icon/LucideIcon';
@@ -30,9 +28,7 @@ export function ProPlaygroundPage() {
       <SpacerLG />
       <DebugMenuSection title="CTAs" rowWrap={true}>
         <h3>Feature CTAs</h3>
-        <DebugButton onClick={() => handleClick(ProCTAVariant.GENERIC)}>
-          Generic
-        </DebugButton>
+        <DebugButton onClick={() => handleClick(ProCTAVariant.GENERIC)}>Generic</DebugButton>
         <DebugButton onClick={() => handleClick(ProCTAVariant.MESSAGE_CHARACTER_LIMIT)}>
           Character Limit
         </DebugButton>
@@ -47,9 +43,7 @@ export function ProPlaygroundPage() {
         <DebugButton onClick={() => handleClick(ProCTAVariant.ANIMATED_DISPLAY_PICTURE)}>
           Animated Profile Picture
         </DebugButton>
-        <DebugButton
-          onClick={() => handleClick(ProCTAVariant.ANIMATED_DISPLAY_PICTURE_ACTIVATED)}
-        >
+        <DebugButton onClick={() => handleClick(ProCTAVariant.ANIMATED_DISPLAY_PICTURE_ACTIVATED)}>
           Animated Profile Picture (Has pro)
         </DebugButton>
         <h3>Pro Group CTAs</h3>
