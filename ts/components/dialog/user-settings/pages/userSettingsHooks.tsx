@@ -77,7 +77,10 @@ export function useUserSettingsCloseAction(props: UserSettingsModalState) {
     case 'network':
     case 'pro':
     case 'proNonOriginating':
-      return () => dispatch(userSettingsModal(null));
+      return () => {
+        dispatch(userSettingsModal(null));
+        props.afterCloseAction?.();
+      };
 
     default:
       assertUnreachable(userSettingsPage, 'useCloseActionFromPage: invalid userSettingsPage');
@@ -87,6 +90,11 @@ export function useUserSettingsCloseAction(props: UserSettingsModalState) {
 
 export function useUserSettingsBackAction(modalState: UserSettingsModalState) {
   const dispatch = useDispatch();
+
+  if (modalState?.overrideBackAction) {
+    return modalState.overrideBackAction;
+  }
+
   if (!modalState?.userSettingsPage || modalState?.userSettingsPage === 'default') {
     // no back button if we are on the default page
     return undefined;

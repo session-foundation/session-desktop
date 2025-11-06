@@ -50,9 +50,10 @@ import LIBSESSION_CONSTANTS from '../../../../../session/utils/libsession/libses
 import { useDataFeatureFlag } from '../../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { AnimatedSpinnerIcon } from '../../../../loading/spinner/AnimatedSpinnerIcon';
 
-// TODO: There are only 2 props here and both are passed to the nonorigin modal dispatch, can probably be in their own object
+// TODO: All these props are passed to the nonorigin modal dispatch, they can probably be in their own object
 type SectionProps = {
   returnToThisModalAction: () => void;
+  afterCloseAction?: () => void;
   centerAlign?: boolean;
 };
 
@@ -64,15 +65,12 @@ const SectionFlexContainer = styled.div`
 `;
 
 const HeroImageBgContainer = styled.div`
-  height: 220px;
+  height: 240px;
+  align-items: center;
 `;
 
 const HeroImageBg = styled.div<{ noColors?: boolean }>`
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 15%;
-
+  padding-top: 55px;
   justify-items: center;
 
   &::before {
@@ -150,7 +148,8 @@ export function ProHeroImage({
               iconColor={noColors ? 'var(--disabled-color)' : 'var(--primary-color)'}
               iconSize={132}
             />
-            <HeroImageLabelContainer>
+            {/** We force LTR here as we always want the title to read "Session PRO" */}
+            <HeroImageLabelContainer dir="ltr">
               <img src="images/session/session-text.svg" alt="full-brand-text" height={22} />
               <ProIconButton
                 iconSize="large"
@@ -199,7 +198,11 @@ function useBackendErrorDialogButtons() {
   return buttons;
 }
 
-function ProNonProContinueButton({ returnToThisModalAction, centerAlign }: SectionProps) {
+function ProNonProContinueButton({
+  returnToThisModalAction,
+  centerAlign,
+  afterCloseAction,
+}: SectionProps) {
   const dispatch = useDispatch();
   const neverHadPro = useCurrentNeverHadPro();
   const { isLoading, isError } = useProAccessDetails();
@@ -223,10 +226,19 @@ function ProNonProContinueButton({ returnToThisModalAction, centerAlign }: Secti
               userSettingsPage: 'proNonOriginating',
               nonOriginatingVariant: 'upgrade',
               overrideBackAction: returnToThisModalAction,
+              afterCloseAction,
               centerAlign,
             })
     );
-  }, [dispatch, isLoading, isError, backendErrorButtons, centerAlign, returnToThisModalAction]);
+  }, [
+    dispatch,
+    isLoading,
+    isError,
+    backendErrorButtons,
+    centerAlign,
+    returnToThisModalAction,
+    afterCloseAction,
+  ]);
 
   if (!neverHadPro) {
     return null;
@@ -235,9 +247,7 @@ function ProNonProContinueButton({ returnToThisModalAction, centerAlign }: Secti
   return (
     <SessionButton
       {...proButtonProps}
-      buttonColor={
-        isLoading || isError ? SessionButtonColor.Disabled : SessionButtonColor.PrimaryDark
-      }
+      buttonColor={isLoading || isError ? SessionButtonColor.Disabled : SessionButtonColor.Primary}
       onClick={handleClick}
       dataTestId="pro-open-platform-website-button"
     >
@@ -271,6 +281,7 @@ const StatsLabel = styled.div<{ disabled?: boolean }>`
 `;
 
 const proBoxShadow = '0 4px 4px 0 rgba(0, 0, 0, 0.25)';
+const proBoxShadowSmall = '0 4px 4px 0 rgba(0, 0, 0, 0.15)';
 
 function ProStats() {
   const mockProLongerMessagesSent = useDataFeatureFlag('mockProLongerMessagesSent');
@@ -406,7 +417,7 @@ function ProStats() {
   );
 }
 
-function ProSettings({ returnToThisModalAction, centerAlign }: SectionProps) {
+function ProSettings({ returnToThisModalAction, centerAlign, afterCloseAction }: SectionProps) {
   const dispatch = useDispatch();
   const userHasPro = useCurrentUserHasPro();
   const { data, isLoading, isError } = useProAccessDetails();
@@ -438,6 +449,7 @@ function ProSettings({ returnToThisModalAction, centerAlign }: SectionProps) {
     return (
       <ProNonProContinueButton
         returnToThisModalAction={returnToThisModalAction}
+        afterCloseAction={afterCloseAction}
         centerAlign={centerAlign}
       />
     );
@@ -550,6 +562,7 @@ function ProFeatureIconElement({
   position,
   noColor,
 }: WithLucideUnicode & WithProFeaturePosition & { noColor?: boolean }) {
+  const isDarkTheme = useIsDarkTheme();
   const bgStyle =
     position === 0
       ? 'linear-gradient(135deg, #57C9FA 0%, #C993FF 100%)'
@@ -570,8 +583,13 @@ function ProFeatureIconElement({
       $justifyContent={'center'}
       $flexGap="var(--margins-sm)"
     >
-      <StyledFeatureIcon style={{ background: noColor ? 'var(--disabled-color)' : bgStyle }}>
-        <LucideIcon unicode={unicode} iconSize={'huge'} />
+      <StyledFeatureIcon
+        style={{
+          background: noColor ? 'var(--disabled-color)' : bgStyle,
+          boxShadow: isDarkTheme ? undefined : proBoxShadowSmall,
+        }}
+      >
+        <LucideIcon unicode={unicode} iconSize="large" />
       </StyledFeatureIcon>
     </Flex>
   );
@@ -977,6 +995,7 @@ export function ProSettingsPage(modalState: {
   hideBackButton?: boolean;
   hideHelp?: boolean;
   centerAlign?: boolean;
+  afterCloseAction?: () => void;
 }) {
   const dispatch = useDispatch();
   const backAction = useUserSettingsBackAction(modalState);
@@ -993,6 +1012,7 @@ export function ProSettingsPage(modalState: {
           title={null}
           bigHeader={true}
           showExitIcon={true}
+          floatingHeader={true}
           extraLeftButton={
             backAction && !modalState.hideBackButton ? (
               <ModalBackButton onClick={backAction} />
@@ -1008,15 +1028,18 @@ export function ProSettingsPage(modalState: {
         <ProStats />
         <ManageProPreviousAccess
           returnToThisModalAction={returnToThisModalAction}
+          afterCloseAction={modalState.afterCloseAction}
           centerAlign={modalState.centerAlign}
         />
         <ProSettings
           returnToThisModalAction={returnToThisModalAction}
+          afterCloseAction={modalState.afterCloseAction}
           centerAlign={modalState.centerAlign}
         />
         <ProFeatures />
         <ManageProCurrentAccess
           returnToThisModalAction={returnToThisModalAction}
+          afterCloseAction={modalState.afterCloseAction}
           centerAlign={modalState.centerAlign}
         />
         {!modalState.hideHelp ? <ProHelp /> : null}
