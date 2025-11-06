@@ -71,7 +71,7 @@ async function createProBackendFetchAsyncThunk<D>({
 
     const state = payloadCreator.getState() as StateType;
     if (state.proBackendData[key].isFetching) {
-      throw new Error('already fetching');
+      return state.proBackendData[key] as RequestState<D>;
     }
 
     payloadCreator.dispatch(proBackendDataSlice.actions.setIsFetching({ key, result: true }));
