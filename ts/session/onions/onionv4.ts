@@ -1,5 +1,5 @@
 import { from_string, to_string } from 'libsodium-wrappers-sumo';
-import { isString, omit, toNumber } from 'lodash';
+import { isNumber, isString, omit, toNumber } from 'lodash';
 import { EncodeV4OnionRequestInfos, SnodeResponseV4 } from '../apis/snode_api/onions';
 import { concatUInt8Array } from '../crypto';
 import type { OnionV4JSONSnodeResponse } from './onionSend';
@@ -130,7 +130,8 @@ const parseStatusCodeFromV4Request = (
   if (!onionV4Result) {
     return undefined;
   }
-  return onionV4Result?.body?.status_code || undefined;
+  const code = onionV4Result?.body?.status_code;
+  return isNumber(code) ? code : undefined;
 };
 
 export const OnionV4 = { decodeV4Response, parseStatusCodeFromV4Request };

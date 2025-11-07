@@ -16,6 +16,7 @@ import { OnionV4 } from '../../onions/onionv4';
 import { FileFromFileServerDetails } from './types';
 import { queryParamDeterministicEncryption, queryParamServerEd25519Pubkey } from '../../url';
 import { FS, type FILE_SERVER_TARGET_TYPE } from './FileServerTarget';
+import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 const RELEASE_VERSION_ENDPOINT = '/session_version';
 const FILE_ENDPOINT = '/file';
@@ -48,7 +49,7 @@ export const uploadFileToFsWithOnionV4 = async (
     endpoint: FILE_ENDPOINT,
     method: 'POST',
     timeoutMs: 30 * DURATION.SECONDS, // longer time for file upload
-    headers: window.sessionFeatureFlags.fsTTL30s ? { 'X-FS-TTL': '30' } : {},
+    headers: getFeatureFlag('fsTTL30s') ? { 'X-FS-TTL': '30' } : {},
   });
 
   if (!batchGlobalIsSuccess(result)) {
@@ -90,7 +91,7 @@ export const uploadFileToFsWithOnionV4 = async (
 export const downloadFileFromFileServer = async (
   toDownload: FileFromFileServerDetails
 ): Promise<ArrayBuffer | null> => {
-  if (window.sessionFeatureFlags?.debugServerRequests) {
+  if (getFeatureFlag('debugServerRequests')) {
     window.log.info(`about to try to download fsv2: "${toDownload.fullUrl}"`);
   }
 
@@ -101,7 +102,7 @@ export const downloadFileFromFileServer = async (
     throwError: true,
     timeoutMs: 30 * DURATION.SECONDS, // longer time for file download
   });
-  if (window.sessionFeatureFlags?.debugServerRequests) {
+  if (getFeatureFlag('debugServerRequests')) {
     window.log.info(`download fsv2: "${toDownload.fullUrl} got result:`, JSON.stringify(result));
   }
   if (!result) {
@@ -198,7 +199,7 @@ export const extendFileExpiry = async (fileId: string, fsTarget: FILE_SERVER_TAR
   if (!FS.supportsFsExtend(fsTarget)) {
     throw new Error('extendFileExpiry: only works with potato for now');
   }
-  if (window.sessionFeatureFlags?.debugServerRequests) {
+  if (getFeatureFlag('debugServerRequests')) {
     window.log.info(`about to renew expiry of file: "${fileId}"`);
   }
 

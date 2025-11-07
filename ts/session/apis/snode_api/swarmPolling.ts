@@ -64,6 +64,7 @@ import { Snode } from '../../../data/types';
 import { ReduxOnionSelectors } from '../../../state/selectors/onions';
 import ProBackendAPI from '../pro_backend_api/ProBackendAPI';
 import { NetworkTime } from '../../../util/NetworkTime';
+import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 const minMsgCountShouldRetry = 95;
 /**
@@ -122,7 +123,7 @@ function mergeMultipleRetrieveResults(
 }
 
 function swarmLog(msg: string) {
-  if (window.sessionFeatureFlags.debugSwarmPolling) {
+  if (getFeatureFlag('debugSwarmPolling')) {
     window.log.info(msg);
   }
 }
@@ -546,7 +547,7 @@ export class SwarmPolling {
           })),
           {
             nowMs: NetworkTime.now(),
-            proBackendPubkeyHex: ProBackendAPI.getEd25519PubkeyHex(),
+            proBackendPubkeyHex: ProBackendAPI.server.server.edPkHex,
             ed25519GroupPubkeyHex: pubkey,
             groupEncKeys,
           }
@@ -579,7 +580,7 @@ export class SwarmPolling {
       })),
       {
         nowMs: NetworkTime.now(),
-        proBackendPubkeyHex: ProBackendAPI.getEd25519PubkeyHex(),
+        proBackendPubkeyHex: ProBackendAPI.server.server.edPkHex,
         ed25519PrivateKeyHex,
       }
     );

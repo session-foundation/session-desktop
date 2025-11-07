@@ -3,18 +3,7 @@
 // NOTE: Dont import the whole package because we would need to setup the providers which we dont need
 import { isAddress } from 'viem/utils';
 import { z } from 'zod';
-
-const ResponseSchema = z.object({
-  status_code: z.number(),
-  t: z.number(),
-});
-
-/**
- * Response object for all endpoints
- * @property status_code - HTTP status code
- * @property t - Request unix timestamp (seconds)
- */
-export type NetworkAPIResponse = z.infer<typeof ResponseSchema>;
+import { SessionBackendBaseResponseSchema } from '../session_backend_server';
 
 /**
  * Token price info object
@@ -51,7 +40,7 @@ const NetworkSchema = z.object({
   network_staked_usd: z.number(),
 });
 
-const InfoSchema = ResponseSchema.extend({
+export const InfoSchema = SessionBackendBaseResponseSchema.extend({
   price: PriceSchema,
   token: TokenSchema,
   network: NetworkSchema,
@@ -69,7 +58,7 @@ export type InfoResponse = z.infer<typeof InfoSchema>;
 
 // #region /validate/headers
 
-const ValidateHeaderSchema = ResponseSchema.extend({
+export const ValidateHeaderSchema = SessionBackendBaseResponseSchema.extend({
   success: z.boolean(),
   blinded_id: z.string(),
 });

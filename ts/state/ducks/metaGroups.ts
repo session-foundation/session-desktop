@@ -59,6 +59,7 @@ import { processNewAttachment } from '../../types/MessageAttachment';
 import type { StoreGroupMessageSubRequest } from '../../session/apis/snode_api/SnodeRequestTypes';
 import { sectionActions } from './section';
 import { processAvatarData } from '../../util/avatar/processAvatarData';
+import { getFeatureFlag } from './types/releasedFeaturesReduxTypes';
 
 export type GroupState = {
   infos: Record<GroupPubkeyType, GroupInfoGet>;
@@ -445,7 +446,7 @@ const refreshGroupDetailsFromWrapper = createAsyncThunk(
       const infos = await MetaGroupWrapperActions.infoGet(groupPk);
       const members = await MetaGroupWrapperActions.memberGetAll(groupPk);
 
-      if (window.sessionFeatureFlags.debugLibsessionDumps) {
+      if (getFeatureFlag('debugLibsessionDumps')) {
         window.log.info(
           `groupInfo of ${ed25519Str(groupPk)} after refreshGroupDetailsFromWrapper: ${stringify(infos)}`
         );
@@ -1603,7 +1604,7 @@ const metaGroupSlice = createSlice({
       if (infos && members) {
         state.infos[groupPk] = infos;
         state.members[groupPk] = members;
-        if (window.sessionFeatureFlags.debugLibsessionDumps) {
+        if (getFeatureFlag('debugLibsessionDumps')) {
           window.log.info(`groupInfo of ${ed25519Str(groupPk)} after merge: ${stringify(infos)}`);
           window.log.info(
             `groupMembers of ${ed25519Str(groupPk)} after merge: ${stringify(members)}`
@@ -1629,7 +1630,7 @@ const metaGroupSlice = createSlice({
         state.infos[groupPk] = infos;
         state.members[groupPk] = members;
         refreshConvosModelProps([groupPk]);
-        if (window.sessionFeatureFlags.debugLibsessionDumps) {
+        if (getFeatureFlag('debugLibsessionDumps')) {
           window.log.info(
             `groupInfo of ${ed25519Str(groupPk)} after handleUserGroupUpdate: ${stringify(infos)}`
           );
@@ -1655,7 +1656,7 @@ const metaGroupSlice = createSlice({
       state.infos[groupPk] = infos;
       state.members[groupPk] = members;
       refreshConvosModelProps([groupPk]);
-      if (window.sessionFeatureFlags.debugLibsessionDumps) {
+      if (getFeatureFlag('debugLibsessionDumps')) {
         window.log.info(
           `groupInfo of ${ed25519Str(groupPk)} after currentDeviceGroupMembersChange: ${stringify(infos)}`
         );
@@ -1680,7 +1681,7 @@ const metaGroupSlice = createSlice({
       state.infos[groupPk] = infos;
       state.members[groupPk] = members;
       refreshConvosModelProps([groupPk]);
-      if (window.sessionFeatureFlags.debugLibsessionDumps) {
+      if (getFeatureFlag('debugLibsessionDumps')) {
         window.log.info(
           `groupInfo of ${ed25519Str(groupPk)} after currentDeviceGroupNameChange: ${stringify(infos)}`
         );
@@ -1705,7 +1706,7 @@ const metaGroupSlice = createSlice({
       state.infos[groupPk] = infos;
       state.members[groupPk] = members;
       refreshConvosModelProps([groupPk]);
-      if (window.sessionFeatureFlags.debugLibsessionDumps) {
+      if (getFeatureFlag('debugLibsessionDumps')) {
         window.log.info(
           `groupInfo of ${ed25519Str(groupPk)} after currentDeviceGroupAvatarChange: ${stringify(infos)}`
         );
@@ -1730,7 +1731,7 @@ const metaGroupSlice = createSlice({
       state.infos[groupPk] = infos;
       state.members[groupPk] = members;
       refreshConvosModelProps([groupPk]);
-      if (window.sessionFeatureFlags.debugLibsessionDumps) {
+      if (getFeatureFlag('debugLibsessionDumps')) {
         window.log.info(
           `groupInfo of ${ed25519Str(groupPk)} after currentDeviceGroupAvatarRemoval: ${stringify(infos)}`
         );
@@ -1753,7 +1754,7 @@ const metaGroupSlice = createSlice({
       state.infos[groupPk] = infos;
       state.members[groupPk] = members;
       refreshConvosModelProps([groupPk]);
-      if (window.sessionFeatureFlags.debugLibsessionDumps) {
+      if (getFeatureFlag('debugLibsessionDumps')) {
         window.log.info(
           `groupInfo of ${ed25519Str(groupPk)} after handleMemberLeftMessage: ${stringify(infos)}`
         );
@@ -1771,7 +1772,7 @@ const metaGroupSlice = createSlice({
       state.infos[groupPk] = infos;
       state.members[groupPk] = members;
       refreshConvosModelProps([groupPk]);
-      if (window.sessionFeatureFlags.debugLibsessionDumps) {
+      if (getFeatureFlag('debugLibsessionDumps')) {
         window.log.info(
           `groupInfo of ${ed25519Str(groupPk)} after inviteResponseReceived: ${stringify(infos)}`
         );

@@ -886,12 +886,10 @@ export const ProWrapperActions: ProActionsCalls = {
     callLibSessionWorker(['Pro', 'proProofRequestBody', first]) as Promise<
       ReturnType<ProActionsCalls['proProofRequestBody']>
     >,
-
   proRevocationsRequestBody: async first =>
     callLibSessionWorker(['Pro', 'proRevocationsRequestBody', first]) as Promise<
       ReturnType<ProActionsCalls['proRevocationsRequestBody']>
     >,
-
   proStatusRequestBody: async first =>
     callLibSessionWorker(['Pro', 'proStatusRequestBody', first]) as Promise<
       ReturnType<ProActionsCalls['proStatusRequestBody']>

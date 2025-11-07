@@ -146,7 +146,10 @@ import { Model } from './models';
 import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
 import { ReduxOnionSelectors } from '../state/selectors/onions';
 import { tr, tStripped } from '../localization/localeTools';
-import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
+import {
+  getDataFeatureFlag,
+  getFeatureFlag,
+} from '../state/ducks/types/releasedFeaturesReduxTypes';
 import type {
   ConversationInteractionStatus,
   ConversationInteractionType,
@@ -154,6 +157,7 @@ import type {
 import type { LastMessageStatusType } from '../state/ducks/types';
 import { OutgoingUserProfile } from '../types/message';
 import { Timestamp } from '../types/timestamp/timestamp';
+import { ProStatus } from '../session/apis/pro_backend_api/types';
 
 type InMemoryConvoInfos = {
   mentionedUs: boolean;
@@ -948,7 +952,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
 
     if (this.isMe()) {
-      return getFeatureFlag('mockCurrentUserHasPro');
+      // TODO: how do we do we get the real redux data here?
+      return getDataFeatureFlag('mockProCurrentStatus') === ProStatus.Active;
     }
 
     return getFeatureFlag('mockOthersHavePro');

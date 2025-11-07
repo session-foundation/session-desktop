@@ -42,10 +42,11 @@ import { DEBUG_MENU_PAGE, DebugMenuSection, type DebugMenuPageProps } from './De
 import { SimpleSessionInput } from '../../inputs/SessionInput';
 import { NetworkTime } from '../../../util/NetworkTime';
 import { SessionButtonShiny } from '../../basic/SessionButtonShiny';
+import ProBackendAPI from '../../../session/apis/pro_backend_api/ProBackendAPI';
 
 type DebugButtonProps = SessionButtonProps & { shiny?: boolean };
 
-function DebugButton({ shiny, style: _style, ...rest }: DebugButtonProps) {
+export function DebugButton({ shiny, style: _style, ...rest }: DebugButtonProps) {
   const style = { minWidth: 'max-content', width: '48%', ..._style };
 
   if (shiny) {
@@ -334,6 +335,27 @@ export const DebugActions = () => {
         }}
       >
         Open storage profile
+      </DebugButton>
+      <DebugButton
+        onClick={async () => {
+          await ProBackendAPI.getProProof();
+        }}
+      >
+        Get Pro Proof
+      </DebugButton>
+      <DebugButton
+        onClick={async () => {
+          await ProBackendAPI.getProStatus();
+        }}
+      >
+        Get Pro Status
+      </DebugButton>
+      <DebugButton
+        onClick={async () => {
+          await ProBackendAPI.getRevocationList();
+        }}
+      >
+        Get Pro Revocation List
       </DebugButton>
     </DebugMenuSection>
   );

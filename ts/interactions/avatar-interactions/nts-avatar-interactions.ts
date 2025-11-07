@@ -11,6 +11,7 @@ import {
 } from '../../webworker/workers/browser/libsession_worker_interface';
 import { UserUtils } from '../../session/utils';
 import { fromBase64ToArray } from '../../session/utils/String';
+import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 
 export async function uploadAndSetOurAvatarShared({
   decryptedAvatarData,
@@ -31,7 +32,7 @@ export async function uploadAndSetOurAvatarShared({
 
   let encryptedData: ArrayBuffer;
   let encryptionKey: Uint8Array;
-  const deterministicEncryption = window.sessionFeatureFlags?.useDeterministicEncryption;
+  const deterministicEncryption = getFeatureFlag('useDeterministicEncryption');
   if (deterministicEncryption) {
     const encryptedContent = await MultiEncryptWrapperActions.attachmentEncrypt({
       allowLarge: false,

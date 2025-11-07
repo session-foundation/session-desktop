@@ -1,33 +1,45 @@
-import { ProAccessVariant, ProOriginatingPlatform } from '../../../hooks/useHasPro';
 import type { ProMessageFeature } from '../../../models/proMessageFeature';
+import {
+  ProAccessVariant,
+  ProPaymentProvider,
+  ProStatus,
+} from '../../../session/apis/pro_backend_api/types';
 import { DURATION } from '../../../session/constants';
 
-export type SessionFeatureFlags = {
+type SessionBaseBooleanFeatureFlags = {
   replaceLocalizedStringsWithKeys: boolean;
-  // Hooks
-  useOnionRequests: boolean;
+  disableOnionRequests: boolean;
   useDeterministicEncryption: boolean;
   useTestNet: boolean;
-  useLocalDevNet: string;
   useClosedGroupV2QAButtons: boolean;
   alwaysShowRemainingChars: boolean;
   showPopoverAnchors: boolean;
   debugInputCommands: boolean;
   proAvailable: boolean;
   proGroupsAvailable: boolean;
-  mockCurrentUserHasPro: boolean;
-  mockCurrentUserHasProExpired: boolean;
   mockCurrentUserHasProPlatformRefundExpired: boolean;
   mockCurrentUserHasProCancelled: boolean;
   mockCurrentUserHasProInGracePeriod: boolean;
   mockProRecoverButtonAlwaysSucceed: boolean;
   mockProRecoverButtonAlwaysFail: boolean;
   mockOthersHavePro: boolean;
-  mockMessageProFeatures: Array<ProMessageFeature>;
   mockProBackendLoading: boolean;
   mockProBackendError: boolean;
   fsTTL30s: boolean;
 };
+
+export type SessionDebugBooleanFeatureFlags = {
+  debugLogging: boolean;
+  debugLibsessionDumps: boolean;
+  debugBuiltSnodeRequests: boolean;
+  debugSwarmPolling: boolean;
+  debugServerRequests: boolean;
+  debugNonSnodeRequests: boolean;
+  debugOnionRequests: boolean;
+};
+
+export type SessionBooleanFeatureFlags = SessionBaseBooleanFeatureFlags &
+  SessionDebugBooleanFeatureFlags;
 
 // ISO8601 duration format
 export enum MockProAccessExpiryOptions {
@@ -47,8 +59,11 @@ export enum MockProAccessExpiryOptions {
   PT10S = 12,
 }
 
-export type SessionFeatureFlagsWithData = {
-  mockProOriginatingPlatform: ProOriginatingPlatform | null;
+export type SessionDataFeatureFlags = {
+  useLocalDevNet: string | null;
+  mockMessageProFeatures: Array<ProMessageFeature> | null;
+  mockProCurrentStatus: ProStatus | null;
+  mockProPaymentProvider: ProPaymentProvider | null;
   mockProAccessVariant: ProAccessVariant | null;
   mockProAccessExpiry: MockProAccessExpiryOptions | null;
   mockProLongerMessagesSent: number | null;
@@ -57,50 +72,62 @@ export type SessionFeatureFlagsWithData = {
   mockProGroupsUpgraded: number | null;
 };
 
-export type SessionFeatureFlagKeys = keyof SessionFeatureFlags;
-export type SessionFeatureFlagWithDataKeys = keyof SessionFeatureFlagsWithData;
+export type SessionBooleanFeatureFlagKeys = keyof SessionBooleanFeatureFlags;
+export type SessionDataFeatureFlagKeys = keyof SessionDataFeatureFlags;
 
 /**
  * Check if the given flag is a Feature flag.
  * @note debug flags are not included in this check
  * @note data flags are not included in this check
  */
-export const isSessionFeatureFlag = (flag: unknown): flag is SessionFeatureFlagKeys => {
+export const isSessionFeatureFlag = (flag: unknown): flag is SessionBooleanFeatureFlagKeys => {
   const strFlag = flag as string;
-  return !strFlag.startsWith('debug') && Object.keys(window.sessionFeatureFlags).includes(strFlag);
+  return (
+    !strFlag.startsWith('debug') && Object.keys(window.sessionBooleanFeatureFlags).includes(strFlag)
+  );
 };
 
-export const getFeatureFlag = <T extends SessionFeatureFlagKeys>(flag: T) =>
-  window.sessionFeatureFlags[flag];
-export const useFeatureFlag = <T extends SessionFeatureFlagKeys>(flag: T) => getFeatureFlag(flag);
+export const getFeatureFlag = <T extends SessionBooleanFeatureFlagKeys>(flag: T) =>
+  !!window?.sessionBooleanFeatureFlags?.[flag];
+
+export const useFeatureFlag = <T extends SessionBooleanFeatureFlagKeys>(flag: T) =>
+  getFeatureFlag<T>(flag);
+
+export const setFeatureFlag = <T extends SessionBooleanFeatureFlagKeys>(
+  flag: T,
+  value: boolean
+) => {
+  if (window?.sessionBooleanFeatureFlags && flag in window.sessionBooleanFeatureFlags) {
+    window.sessionBooleanFeatureFlags[flag] = value;
+  }
+};
 
 /**
  * Check if the given flag is a Feature flag with data.
  * @note debug flags are not included in this check
- * @node boolean flags are not included in this check
+ * @note boolean flags are not included in this check
  */
-export const isSessionFeatureFlagWithData = (
-  flag: unknown
-): flag is SessionFeatureFlagWithDataKeys => {
+export const isSessionDataFeatureFlag = (flag: unknown): flag is SessionDataFeatureFlagKeys => {
   const strFlag = flag as string;
-  return !strFlag.startsWith('debug') && Object.keys(window.sessionFeatureFlags).includes(strFlag);
+  return (
+    !strFlag.startsWith('debug') && Object.keys(window.sessionDataFeatureFlags).includes(strFlag)
+  );
 };
-export const getDataFeatureFlag = <T extends SessionFeatureFlagWithDataKeys>(flag: T) =>
-  window.sessionFeatureFlagsWithData[flag];
-export const useDataFeatureFlag = <T extends SessionFeatureFlagWithDataKeys>(flag: T) =>
-  getDataFeatureFlag(flag);
+export const getDataFeatureFlag = <T extends SessionDataFeatureFlagKeys>(
+  flag: T
+): SessionDataFeatureFlags[T] | null => window?.sessionDataFeatureFlags[flag] ?? null;
+export const useDataFeatureFlag = <T extends SessionDataFeatureFlagKeys>(
+  flag: T
+): SessionDataFeatureFlags[T] | null => getDataFeatureFlag<T>(flag);
 
-export type SessionFlags = SessionFeatureFlags & {
-  debugLogging: boolean;
-  debugLibsessionDumps: boolean;
-  debugBuiltSnodeRequests: boolean;
-  debugSwarmPolling: boolean;
-  debugServerRequests: boolean;
-  debugNonSnodeRequests: boolean;
-  debugOnionRequests: boolean;
+export const setDataFeatureFlag = <T extends SessionDataFeatureFlagKeys>(
+  flag: T,
+  value: SessionDataFeatureFlags[T]
+) => {
+  if (window?.sessionDataFeatureFlags && flag in window.sessionDataFeatureFlags) {
+    window.sessionDataFeatureFlags[flag] = value;
+  }
 };
-
-export type SessionFlagsKeys = keyof SessionFlags;
 
 /**
  * 1 second in milliseconds

@@ -310,7 +310,7 @@ const handleMessagesResponseV4 = async (
 
       decryptedItems = await MultiEncryptWrapperActions.decryptForCommunity(toProcess, {
         nowMs: NetworkTime.now(),
-        proBackendPubkeyHex: ProBackendAPI.getEd25519PubkeyHex(),
+        proBackendPubkeyHex: ProBackendAPI.server.server.edPkHex,
       });
     } catch (e) {
       window.log.warn('skipping handling community as it failed to decrypt with:', e.message);
@@ -441,7 +441,7 @@ async function handleInboxOutboxMessages(
 
       const decrypted = await MultiEncryptWrapperActions.decryptForCommunity(
         [{ contentOrEnvelope: unblindedPlaintext, serverId: inboxOutboxItem.id }],
-        { nowMs: NetworkTime.now(), proBackendPubkeyHex: ProBackendAPI.getEd25519PubkeyHex() }
+        { nowMs: NetworkTime.now(), proBackendPubkeyHex: ProBackendAPI.server.server.edPkHex }
       );
 
       if (isEmpty(decrypted[0].contentPlaintextUnpadded)) {

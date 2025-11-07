@@ -59,6 +59,7 @@ import { useZoomShortcuts } from '../../hooks/useZoomingShortcut';
 import { OnionStatusLight } from '../dialog/OnionStatusPathDialog';
 import { AvatarReupload } from '../../session/utils/job_runners/jobs/AvatarReuploadJob';
 import { useDebugMenuModal } from '../../state/selectors/modal';
+import { useFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 
 const StyledContainerAvatar = styled.div`
   padding: var(--margins-lg);
@@ -226,6 +227,7 @@ export const ActionsPanel = () => {
   const showDebugMenu = useDebugMode();
   const ourNumber = useSelector(getOurNumber);
   const isDarkTheme = useIsDarkTheme();
+  const fsTTL30sEnabled = useFeatureFlag('fsTTL30s');
   useDebugThemeSwitch();
 
   // this useMount is called only once: when the component is mounted.
@@ -285,7 +287,7 @@ export const ActionsPanel = () => {
       }
       void AvatarReupload.addAvatarReuploadJob();
     },
-    window.sessionFeatureFlags.fsTTL30s ? DURATION.SECONDS * 1 : DURATION.DAYS * 1
+    fsTTL30sEnabled ? DURATION.SECONDS * 1 : DURATION.DAYS * 1
   );
 
   useCheckReleasedFeatures();

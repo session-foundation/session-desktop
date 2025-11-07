@@ -82,7 +82,7 @@ export type LocalizedPopupDialogButtonOptions = {
   label: TrArgs;
   buttonType?: SessionButtonType;
   dataTestId: SessionDataTestId;
-  onClick?: () => void;
+  onClick?: () => Promise<void> | void;
   closeAfterClick?: boolean;
 };
 export type LocalizedPopupDialogState = {

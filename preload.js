@@ -53,23 +53,18 @@ window.getUserKeys = async () => {
   return { id: pubkey, vbid: blindedPkHex };
 };
 
-window.sessionFeatureFlags = {
+window.sessionBooleanFeatureFlags = {
   replaceLocalizedStringsWithKeys: false,
   // Hooks
   useClosedGroupV2QAButtons: false, // TODO DO NOT MERGE
   useDeterministicEncryption: !isEmpty(process.env.SESSION_ATTACH_DETERMINISTIC_ENCRYPTION),
-  useOnionRequests: true,
+  disableOnionRequests: false,
   useTestNet: isTestNet() || isTestIntegration(),
-  useLocalDevNet: !isEmpty(process.env.LOCAL_DEVNET_SEED_URL)
-    ? process.env.LOCAL_DEVNET_SEED_URL
-    : undefined,
   debugInputCommands: !isEmpty(process.env.SESSION_DEBUG),
   alwaysShowRemainingChars: false,
   showPopoverAnchors: false,
   proAvailable: !isEmpty(process.env.SESSION_PRO),
   proGroupsAvailable: !isEmpty(process.env.SESSION_PRO_GROUPS),
-  mockCurrentUserHasPro: !isEmpty(process.env.SESSION_USER_HAS_PRO),
-  mockCurrentUserHasProExpired: !isEmpty(process.env.SESSION_USER_HAS_PRO_EXPIRED),
   mockCurrentUserHasProPlatformRefundExpired: !isEmpty(
     process.env.SESSION_USER_HAS_PRO_PLATFORM_REFUND_EXPIRED
   ),
@@ -78,7 +73,6 @@ window.sessionFeatureFlags = {
   mockProRecoverButtonAlwaysSucceed: !isEmpty(process.env.SESSION_PRO_RECOVER_ALWAYS_SUCCEED),
   mockProRecoverButtonAlwaysFail: !isEmpty(process.env.SESSION_PRO_RECOVER_ALWAYS_FAIL),
   mockOthersHavePro: !isEmpty(process.env.SESSION_OTHERS_HAVE_PRO),
-  mockMessageProFeatures: [],
   mockProBackendLoading: !isEmpty(process.env.SESSION_PRO_BACKEND_LOADING),
   mockProBackendError: !isEmpty(process.env.SESSION_PRO_BACKEND_ERROR),
   // Note: some stuff are init when the app starts, so fsTTL30s should only be set from the env itself (before app starts)
@@ -92,8 +86,13 @@ window.sessionFeatureFlags = {
   debugOnionRequests: false,
 };
 
-window.sessionFeatureFlagsWithData = {
-  mockProOriginatingPlatform: null,
+window.sessionDataFeatureFlags = {
+  useLocalDevNet: !isEmpty(process.env.LOCAL_DEVNET_SEED_URL)
+    ? process.env.LOCAL_DEVNET_SEED_URL
+    : null,
+  mockMessageProFeatures: null,
+  mockProCurrentStatus: null,
+  mockProPaymentProvider: null,
   mockProAccessVariant: null,
   mockProAccessExpiry: null,
   mockProLongerMessagesSent: null,
@@ -309,6 +308,10 @@ const data = require('./ts/data/dataInit');
 data.initData();
 
 const { ConvoHub } = require('./ts/session/conversations/ConversationController');
+const {
+  getDataFeatureFlag,
+  getFeatureFlag,
+} = require('./ts/state/ducks/types/releasedFeaturesReduxTypes.js');
 window.getConversationController = ConvoHub.use;
 
 // Linux seems to periodically let the event loop stop, so this is a global workaround
@@ -319,11 +322,12 @@ setInterval(() => {
 window.clipboard = clipboard;
 
 window.getSeedNodeList = () => {
-  if (window.sessionFeatureFlags.useLocalDevNet) {
-    return [window.sessionFeatureFlags.useLocalDevNet];
+  const localDevNet = getDataFeatureFlag('useLocalDevNet');
+  if (localDevNet) {
+    return [localDevNet];
   }
 
-  if (window.sessionFeatureFlags.useTestNet) {
+  if (getFeatureFlag('useTestNet')) {
     return ['http://seed2.getsession.org:38157'];
   }
   return [

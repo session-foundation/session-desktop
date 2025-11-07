@@ -18,7 +18,12 @@ import {
   SessionWrapperModal,
   WrapperModalWidth,
 } from '../../SessionWrapperModal';
-import { FeatureFlagDumper, FeatureFlags, ProDebugSection } from './FeatureFlags';
+import {
+  DebugFeatureFlags,
+  FeatureFlagDumper,
+  FeatureFlags,
+  ProDebugSection,
+} from './FeatureFlags';
 import { ReleaseChannel } from './ReleaseChannel';
 import { useHotkey } from '../../../hooks/useHotkey';
 import { PopoverPlaygroundPage } from './playgrounds/PopoverPlaygroundPage';
@@ -107,9 +112,10 @@ function MainPage({ setPage }: DebugMenuPageProps) {
         gap: 'var(--margins-lg)',
       }}
     >
-      <FeatureFlags flags={window.sessionFeatureFlags} forceUpdate={forceUpdate} />
+      <FeatureFlags forceUpdate={forceUpdate} />
       <ProDebugSection forceUpdate={forceUpdate} />
       <FeatureFlagDumper forceUpdate={forceUpdate} />
+      <DebugFeatureFlags forceUpdate={forceUpdate} />
       <DebugActions />
       <ExperimentalActions forceUpdate={forceUpdate} />
       <LoggingActions />

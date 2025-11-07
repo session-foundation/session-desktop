@@ -47,6 +47,7 @@ import { SignalService } from '../../../../protobuf';
 import { getSodiumRenderer } from '../../../crypto';
 import { DisappearingMessages } from '../../../disappearing_messages';
 import { GroupUpdateMemberChangeMessage } from '../../../messages/outgoing/controlMessage/group_v2/to_group/GroupUpdateMemberChangeMessage';
+import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 const defaultMsBetweenRetries = 15000; // a long time between retries, to avoid running multiple jobs at the same time, when one was postponed at the same time as one already planned (5s)
 const defaultMaxAttempts = 2;
@@ -164,7 +165,7 @@ async function pushChangesToGroupSwarmIfNeeded({
     return RunJobResult.Success;
   }
 
-  if (window.sessionFeatureFlags.debugLibsessionDumps) {
+  if (getFeatureFlag('debugLibsessionDumps')) {
     const dumps = await MetaGroupWrapperActions.metaMakeDump(groupPk);
     window.log.info(
       `pushChangesToGroupSwarmIfNeeded: current meta dump: ${ed25519Str(groupPk)}:`,

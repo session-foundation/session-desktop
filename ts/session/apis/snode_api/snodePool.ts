@@ -11,6 +11,7 @@ import { requestSnodesForPubkeyFromNetwork } from './getSwarmFor';
 import { Onions } from '.';
 import { ed25519Str } from '../../utils/String';
 import { SnodePoolConstants } from './snodePoolConstants';
+import { getDataFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 let randomSnodePool: Array<Snode> = [];
 
@@ -220,7 +221,7 @@ async function tryToGetConsensusWithSnodesWithRetries() {
   return pRetry(
     async () => {
       const commonNodes = await ServiceNodesList.getSnodePoolFromSnodes();
-      const requiredSnodesForAgreement = window.sessionFeatureFlags.useLocalDevNet
+      const requiredSnodesForAgreement = getDataFeatureFlag('useLocalDevNet')
         ? 12
         : SnodePoolConstants.requiredSnodesForAgreement;
       if (!commonNodes || commonNodes.length < requiredSnodesForAgreement) {
