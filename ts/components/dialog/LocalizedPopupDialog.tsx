@@ -55,8 +55,8 @@ export function LocalizedPopupDialog(props: LocalizedPopupDialogState) {
                 <SessionButton
                   key={label.token}
                   buttonType={buttonType || SessionButtonType.Simple}
-                  onClick={() => {
-                    onClick?.();
+                  onClick={async () => {
+                    await onClick?.();
                     if (closeAfterClick) {
                       onClose();
                     }
