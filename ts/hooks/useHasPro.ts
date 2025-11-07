@@ -133,6 +133,21 @@ function useMockProAccessExpiry(): number | null {
   }
 }
 
+function getProProviderConstantsWithFallbacks(provider: ProPaymentProvider) {
+  const libsessionPaymentProvider = getProOriginatingPlatformFromProPaymentProvider(provider);
+  const constants = LIBSESSION_CONSTANTS.LIBSESSION_PRO_PROVIDERS[libsessionPaymentProvider];
+
+  if (!constants.store) {
+    constants.store = LIBSESSION_CONSTANTS.LIBSESSION_PRO_PROVIDERS.Google.store;
+  }
+
+  if (!constants.store_other) {
+    constants.store_other = LIBSESSION_CONSTANTS.LIBSESSION_PRO_PROVIDERS.Google.store_other;
+  }
+
+  return constants;
+}
+
 type ProAccessDetailsSourceData = {
   currentStatus: ProStatus;
   autoRenew: boolean;
@@ -211,7 +226,6 @@ export function useProAccessDetails(): RequestHook<ProAccessDetails> {
     const latestAccess = status?.data?.items?.[0];
     const provider =
       mockPlatform ?? latestAccess?.payment_provider ?? defaultProAccessDetailsSourceData.provider;
-    const libsessionPaymentProvider = getProOriginatingPlatformFromProPaymentProvider(provider);
     const variant = mockVariant ?? latestAccess?.plan ?? defaultProAccessDetailsSourceData.variant;
     const isPlatformRefundAvailable =
       mockIsPlatformRefundAvailable ||
@@ -243,7 +257,7 @@ export function useProAccessDetails(): RequestHook<ProAccessDetails> {
       expiryTimeRelativeString: formatRoundedUpTimeUntilTimestamp(expiryTimeMs),
       isPlatformRefundAvailable,
       provider,
-      providerConstants: LIBSESSION_CONSTANTS.LIBSESSION_PRO_PROVIDERS[libsessionPaymentProvider],
+      providerConstants: getProProviderConstantsWithFallbacks(provider),
     };
   }, [
     status.data,
