@@ -11,11 +11,13 @@ on:
       - dev
       - 'release/**'
       - 'ci/**'
+      - feat/pro-libsession
   pull_request:
     branches:
       - dev
       - 'release/**'
       - 'ci/**'
+      - feat/pro-libsession
   workflow_dispatch:
     inputs:
       target_branch:
