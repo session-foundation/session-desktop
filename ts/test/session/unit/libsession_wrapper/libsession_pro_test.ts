@@ -20,7 +20,7 @@ describe('libsession_pro', () => {
         })
       ).to.deep.eq({
         proFeatures: [],
-        success: true,
+        status: 'SUCCESS',
         error: null,
         codepointCount: 5,
       });
@@ -33,7 +33,7 @@ describe('libsession_pro', () => {
         })
       ).to.deep.eq({
         proFeatures: ['ANIMATED_AVATAR'],
-        success: true,
+        status: 'SUCCESS',
         error: null,
         codepointCount: 10,
       });
@@ -46,7 +46,7 @@ describe('libsession_pro', () => {
         })
       ).to.deep.eq({
         proFeatures: ['ANIMATED_AVATAR'],
-        success: true,
+        status: 'SUCCESS',
         error: null,
         codepointCount: 10,
       });
@@ -55,26 +55,26 @@ describe('libsession_pro', () => {
       expect(
         ProWrapperNode.proFeaturesForMessage({
           proFeatures: [], // 10k should be added
-          utf16: '01234567891'.repeat(1000), // 1000 * 11 chars = 11000 codepoints
+          utf16: '012345678'.repeat(1000), // 1000 * 9 chars = 9000 codepoints
         })
       ).to.deep.eq({
         proFeatures: ['10K_CHARACTER_LIMIT'],
-        success: true,
+        status: 'SUCCESS',
         error: null,
-        codepointCount: 11000,
+        codepointCount: 9000,
       });
     });
     it('expects 10K_CHARACTER_LIMIT to be added if need for 10k limit (and extra feature requested)', async () => {
       expect(
         ProWrapperNode.proFeaturesForMessage({
           proFeatures: ['ANIMATED_AVATAR'], // 10k should be added
-          utf16: '01234567891'.repeat(1000), // 1000 * 11 chars = 11000 codepoints
+          utf16: '012345678'.repeat(1000), // 1000 * 9 chars = 9000 codepoints
         })
       ).to.deep.eq({
         proFeatures: ['10K_CHARACTER_LIMIT', 'ANIMATED_AVATAR'],
-        success: true,
+        status: 'SUCCESS',
         error: null,
-        codepointCount: 11000,
+        codepointCount: 9000,
       });
     });
   });
@@ -151,11 +151,11 @@ describe('libsession_pro', () => {
     it('generates a valid request body', async () => {
       const validContent = {
         version: 0,
-        history: false,
+        count: 0,
         master_pkey: '3ec4ff1928220d599cccbf8d76002e80191c286906bc18987f46fd9688418852',
         unix_ts_ms: 1761884113627,
         master_sig:
-          '9ee3e6e24d3a62b6debe88b085a475b5b143b01ed21ba9ebfa1d51156057a233f6e6cf1aee3e79c05d36ef56db786260977b9b5c113af99e0d8a8fbf4eab990b',
+          '713421ad79e4710d87b292f07332601c4946f52b284b3bfbe2d61016d91432755f3713d05b83c36387032b97a40ddb7581a8e9852cf722dc7641c773ddde990b',
       };
 
       await getSodiumNode();

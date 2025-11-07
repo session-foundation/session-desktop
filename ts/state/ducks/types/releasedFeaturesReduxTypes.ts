@@ -115,7 +115,7 @@ export const isSessionDataFeatureFlag = (flag: unknown): flag is SessionDataFeat
 };
 export const getDataFeatureFlag = <T extends SessionDataFeatureFlagKeys>(
   flag: T
-): SessionDataFeatureFlags[T] | null => window?.sessionDataFeatureFlags[flag] ?? null;
+): SessionDataFeatureFlags[T] | null => window?.sessionDataFeatureFlags?.[flag] ?? null;
 export const useDataFeatureFlag = <T extends SessionDataFeatureFlagKeys>(
   flag: T
 ): SessionDataFeatureFlags[T] | null => getDataFeatureFlag<T>(flag);
