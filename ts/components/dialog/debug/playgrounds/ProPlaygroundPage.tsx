@@ -1,21 +1,20 @@
 import useUpdate from 'react-use/lib/useUpdate';
 import { ProDebugSection } from '../FeatureFlags';
-import { SessionButton } from '../../../basic/SessionButton';
 import { SpacerLG } from '../../../basic/Text';
 import { ProCTAVariant, useShowSessionProInfoDialogCbWithVariant } from '../../SessionProInfoModal';
 import { Flex } from '../../../basic/Flex';
 import { LucideIcon } from '../../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { DebugButton } from '../components';
-import { DebugMenuSection } from '../DebugMenuModal';
+import { DebugMenuPageProps, DebugMenuSection } from '../DebugMenuModal';
 
-export function ProPlaygroundPage() {
+export function ProPlaygroundPage(props: DebugMenuPageProps) {
   const forceUpdate = useUpdate();
   const handleClick = useShowSessionProInfoDialogCbWithVariant();
 
   return (
     <>
-      <ProDebugSection forceUpdate={forceUpdate} />
+      <ProDebugSection {...props} forceUpdate={forceUpdate} />
       <h2>Call to Actions (CTAs)</h2>
       <Flex
         $container={true}
@@ -27,7 +26,7 @@ export function ProPlaygroundPage() {
       </Flex>
       <SpacerLG />
       <DebugMenuSection title="CTAs" rowWrap={true}>
-        <h3>Feature CTAs</h3>
+        <h3 style={{ width: '100%' }}>Feature CTAs</h3>
         <DebugButton onClick={() => handleClick(ProCTAVariant.GENERIC)}>Generic</DebugButton>
         <DebugButton onClick={() => handleClick(ProCTAVariant.MESSAGE_CHARACTER_LIMIT)}>
           Character Limit
@@ -46,22 +45,22 @@ export function ProPlaygroundPage() {
         <DebugButton onClick={() => handleClick(ProCTAVariant.ANIMATED_DISPLAY_PICTURE_ACTIVATED)}>
           Animated Profile Picture (Has pro)
         </DebugButton>
-        <h3>Pro Group CTAs</h3>
-        <i>WIP</i>
-        <SessionButton onClick={() => handleClick(ProCTAVariant.GROUP_ACTIVATED)}>
+        <h3 style={{ width: '100%' }} >Pro Group CTAs  <i>WIP</i>
+        </h3>
+        <DebugButton onClick={() => handleClick(ProCTAVariant.GROUP_ACTIVATED)}>
           Group Activated
-        </SessionButton>
-        <SessionButton onClick={() => handleClick(ProCTAVariant.GROUP_NON_ADMIN)}>
+        </DebugButton>
+        <DebugButton onClick={() => handleClick(ProCTAVariant.GROUP_NON_ADMIN)}>
           Group (Non-Admin)
-        </SessionButton>
-        <SessionButton onClick={() => handleClick(ProCTAVariant.GROUP_ADMIN)}>
+        </DebugButton>
+        <DebugButton onClick={() => handleClick(ProCTAVariant.GROUP_ADMIN)}>
           Group (Admin)
-        </SessionButton>
-        <h3>Special CTAs</h3>
-        <SessionButton onClick={() => handleClick(ProCTAVariant.EXPIRING_SOON)}>
+        </DebugButton>
+        <h3 style={{ width: '100%' }} >Special CTAs</h3>
+        <DebugButton onClick={() => handleClick(ProCTAVariant.EXPIRING_SOON)}>
           Expiring Soon
-        </SessionButton>
-        <SessionButton onClick={() => handleClick(ProCTAVariant.EXPIRED)}>Expired</SessionButton>
+        </DebugButton>
+        <DebugButton onClick={() => handleClick(ProCTAVariant.EXPIRED)}>Expired</DebugButton>
       </DebugMenuSection>
     </>
   );

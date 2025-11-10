@@ -21,12 +21,13 @@ import { ProMessageFeature } from '../../../models/proMessageFeature';
 import { SessionButtonShiny } from '../../basic/SessionButtonShiny';
 import { SessionButtonColor, SessionButtonShape } from '../../basic/SessionButton';
 import { ToastUtils } from '../../../session/utils';
-import { DebugMenuSection } from './DebugMenuModal';
+import { DEBUG_MENU_PAGE, DebugMenuPageProps, DebugMenuSection } from './DebugMenuModal';
 import {
   ProAccessVariant,
   ProPaymentProvider,
   ProStatus,
 } from '../../../session/apis/pro_backend_api/types';
+import { DebugButton } from './components';
 
 type FeatureFlagToggleType = {
   forceUpdate: () => void;
@@ -605,11 +606,14 @@ function MessageProFeatures({ forceUpdate }: { forceUpdate: () => void }) {
     </Flex>
   );
 }
-export const ProDebugSection = ({ forceUpdate }: { forceUpdate: () => void }) => {
+export const ProDebugSection = ({ forceUpdate, setPage }: DebugMenuPageProps & { forceUpdate: () => void; }) => {
   const mockExpiry = useDataFeatureFlag('mockProAccessExpiry');
+  const proAvailable = useFeatureFlag('proAvailable');
   return (
-    <DebugMenuSection title="Session Pro">
+    <DebugMenuSection title="Session Pro"
+    >
       <FlagToggle forceUpdate={forceUpdate} flag="proAvailable" label="Pro Beta Released" />
+      {proAvailable ? <DebugButton onClick={() => setPage(DEBUG_MENU_PAGE.Pro)}>Pro Playground</DebugButton> : null}
       <FlagToggle
         forceUpdate={forceUpdate}
         flag="proGroupsAvailable"

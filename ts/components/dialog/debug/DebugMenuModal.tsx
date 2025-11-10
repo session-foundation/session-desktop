@@ -66,10 +66,12 @@ export type DebugMenuPageProps = {
 
 export function DebugMenuSection({
   title,
+  titleAdornment,
   children,
   rowWrap,
 }: {
   title?: string;
+  titleAdornment?: ReactNode;
   children: ReactNode;
   rowWrap?: boolean;
 }) {
@@ -91,7 +93,7 @@ export function DebugMenuSection({
           : {}),
       }}
     >
-      {title ? <h2 style={{ width: '100%' }}>{title}</h2> : null}
+      {title ? <h2 style={{ width: '100%', display: 'flex', gap: '4px' }}>{title}{titleAdornment ?? null}</h2> : null}
       {children}
     </PanelButtonGroup>
   );
@@ -113,7 +115,7 @@ function MainPage({ setPage }: DebugMenuPageProps) {
       }}
     >
       <FeatureFlags forceUpdate={forceUpdate} />
-      <ProDebugSection forceUpdate={forceUpdate} />
+      <ProDebugSection forceUpdate={forceUpdate} setPage={setPage} />
       <FeatureFlagDumper forceUpdate={forceUpdate} />
       <DebugFeatureFlags forceUpdate={forceUpdate} />
       <DebugActions />

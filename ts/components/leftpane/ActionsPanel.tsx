@@ -60,6 +60,8 @@ import { OnionStatusLight } from '../dialog/OnionStatusPathDialog';
 import { AvatarReupload } from '../../session/utils/job_runners/jobs/AvatarReuploadJob';
 import { useDebugMenuModal } from '../../state/selectors/modal';
 import { useFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import { withCache } from 'viem/_types/utils/promise/withCache';
+import { useDebugKey } from '../../hooks/useDebugKey';
 
 const StyledContainerAvatar = styled.div`
   padding: var(--margins-lg);
@@ -162,14 +164,11 @@ function useUpdateBadgeCount() {
 }
 
 function useDebugThemeSwitch() {
-  useKey(
-    (event: KeyboardEvent) => {
-      return isDevProd() && event.ctrlKey && event.key === 't';
-    },
-    () => {
-      void handleThemeSwitch();
-    }
-  );
+  useDebugKey({
+    withCtrl: true,
+    key: 't',
+    callback: handleThemeSwitch,
+  })
 }
 
 /**
@@ -194,14 +193,13 @@ function DebugMenuModalButton() {
   const dispatch = useDispatch();
   const debugMenuModalState = useDebugMenuModal();
 
-  useKey(
-    (event: KeyboardEvent) => {
-      return isDevProd() && event.ctrlKey && event.key === 'd';
-    },
-    () => {
+  useDebugKey({
+    withCtrl: true,
+    key: 'd',
+    callback: () => {
       dispatch(updateDebugMenuModal(debugMenuModalState ? null : {}));
-    }
-  );
+    },
+  });
 
   return (
     <SessionLucideIconButton
