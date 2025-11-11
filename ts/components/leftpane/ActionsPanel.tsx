@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import useInterval from 'react-use/lib/useInterval';
 import useTimeoutFn from 'react-use/lib/useTimeoutFn';
-import useKey from 'react-use/lib/useKey';
 
 import useMount from 'react-use/lib/useMount';
 import useThrottleFn from 'react-use/lib/useThrottleFn';
@@ -53,14 +52,13 @@ import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { AvatarMigrate } from '../../session/utils/job_runners/jobs/AvatarMigrateJob';
 import { Storage } from '../../util/storage';
 import { themesArray } from '../../themes/constants/colors';
-import { isDebugMode, isDevProd } from '../../shared/env_vars';
+import { isDebugMode } from '../../shared/env_vars';
 import { GearAvatarButton } from '../buttons/avatar/GearAvatarButton';
 import { useZoomShortcuts } from '../../hooks/useZoomingShortcut';
 import { OnionStatusLight } from '../dialog/OnionStatusPathDialog';
 import { AvatarReupload } from '../../session/utils/job_runners/jobs/AvatarReuploadJob';
 import { useDebugMenuModal } from '../../state/selectors/modal';
 import { useFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
-import { withCache } from 'viem/_types/utils/promise/withCache';
 import { useDebugKey } from '../../hooks/useDebugKey';
 
 const StyledContainerAvatar = styled.div`
@@ -168,7 +166,7 @@ function useDebugThemeSwitch() {
     withCtrl: true,
     key: 't',
     callback: handleThemeSwitch,
-  })
+  });
 }
 
 /**

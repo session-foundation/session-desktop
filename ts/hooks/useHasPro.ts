@@ -1,9 +1,10 @@
 import { useCallback, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { ProOriginatingPlatform } from 'libsession_util_nodejs';
+import useUpdate from 'react-use/lib/useUpdate';
 import {
   MockProAccessExpiryOptions,
-  setFeatureFlag,
+  setDataFeatureFlag,
   useDataFeatureFlag,
   useFeatureFlag,
 } from '../state/ducks/types/releasedFeaturesReduxTypes';
@@ -18,6 +19,8 @@ import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constan
 import {
   useProBackendCurrentUserStatus,
   useProBackendProStatusData,
+  useSetProBackendIsError,
+  useSetProBackendIsLoading,
 } from '../state/selectors/proBackendData';
 import { proBackendDataActions } from '../state/ducks/proBackendData';
 import { NetworkTime } from '../util/NetworkTime';
@@ -32,7 +35,6 @@ import { sleepFor } from '../session/utils/Promise';
 function useCurrentUserProStatus() {
   const proBackendCurrentUserStatus = useProBackendCurrentUserStatus();
   const mockCurrentStatus = useDataFeatureFlag('mockProCurrentStatus');
-  // TODO: also add state from user config
 
   return (
     mockCurrentStatus ??
@@ -162,9 +164,11 @@ type ProAccessDetailsSourceData = {
 
 type RequestHook<D = unknown> = {
   isLoading: boolean;
+  isFetching: boolean;
   isError: boolean;
   refetch: () => Promise<void>;
   data: D;
+  t: number;
 };
 
 type ProAccessDetails = {
@@ -194,14 +198,38 @@ const defaultProAccessDetailsSourceData = {
   isError: false,
 } satisfies ProAccessDetailsSourceData;
 
+function useMockRecoverAccess() {
+  const forceUpdate = useUpdate();
+  const mockSuccess = useFeatureFlag('mockProRecoverButtonAlwaysSucceed');
+
+  const mockRecover = useCallback(() => {
+    if (!mockSuccess) {
+      return;
+    }
+    setDataFeatureFlag('mockProCurrentStatus', ProStatus.Active);
+    setDataFeatureFlag('mockProAccessVariant', ProAccessVariant.OneMonth);
+    setDataFeatureFlag('mockProAccessExpiry', MockProAccessExpiryOptions.P7D);
+    forceUpdate();
+  }, [mockSuccess, forceUpdate]);
+
+  return {
+    mockSuccess,
+    mockRecover,
+  };
+}
+
 export function useProAccessDetails(): RequestHook<ProAccessDetails> {
   const dispatch = useDispatch();
+
+  const setProBackendIsLoading = useSetProBackendIsLoading();
+  const setProBackendIsError = useSetProBackendIsError();
 
   const status = useProBackendProStatusData();
   const currentUserProStatus = useCurrentUserProStatus();
 
   const mockIsLoading = useFeatureFlag('mockProBackendLoading');
   const mockIsError = useFeatureFlag('mockProBackendError');
+  const mockRecoverAccess = useMockRecoverAccess();
 
   const mockVariant = useDataFeatureFlag('mockProAccessVariant');
   const mockPlatform = useDataFeatureFlag('mockProPaymentProvider');
@@ -213,7 +241,10 @@ export function useProAccessDetails(): RequestHook<ProAccessDetails> {
   const mockExpiry = useMockProAccessExpiry();
 
   const isLoading = mockIsLoading || status.isLoading;
-  const isError = mockIsError || status.isError;
+  const isFetching = mockIsLoading || status.isFetching;
+  const isError = mockIsLoading ? false : mockIsError || status.isError;
+
+  const t = status.t ?? 0;
 
   const data = useMemo(() => {
     const now = NetworkTime.now();
@@ -274,20 +305,39 @@ export function useProAccessDetails(): RequestHook<ProAccessDetails> {
     if (mockIsLoading) {
       return;
     }
+
     if (mockIsError) {
-      setFeatureFlag('mockProBackendLoading', true);
-      setFeatureFlag('mockProBackendError', false);
+      setProBackendIsLoading({ key: 'proStatus', result: true });
+      setProBackendIsError({ key: 'proStatus', result: false });
       await sleepFor(5000);
-      setFeatureFlag('mockProBackendError', true);
-      setFeatureFlag('mockProBackendLoading', false);
+      setProBackendIsError({ key: 'proStatus', result: true });
+      setProBackendIsLoading({ key: 'proStatus', result: false });
+      return;
+    }
+
+    if (mockRecoverAccess.mockSuccess) {
+      setProBackendIsLoading({ key: 'proStatus', result: true });
+      await sleepFor(5000);
+      mockRecoverAccess.mockRecover();
+      setProBackendIsLoading({ key: 'proStatus', result: false });
+      return;
     }
     dispatch(proBackendDataActions.refreshProStatusFromProBackend() as any);
-  }, [dispatch, mockIsLoading, mockIsError]);
+  }, [
+    dispatch,
+    mockIsLoading,
+    mockIsError,
+    mockRecoverAccess,
+    setProBackendIsError,
+    setProBackendIsLoading,
+  ]);
 
   return {
     isLoading,
+    isFetching,
     isError,
     refetch,
     data,
+    t,
   };
 }

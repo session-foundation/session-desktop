@@ -93,7 +93,12 @@ export function DebugMenuSection({
           : {}),
       }}
     >
-      {title ? <h2 style={{ width: '100%', display: 'flex', gap: '4px' }}>{title}{titleAdornment ?? null}</h2> : null}
+      {title ? (
+        <h2 style={{ width: '100%', display: 'flex', gap: '4px' }}>
+          {title}
+          {titleAdornment ?? null}
+        </h2>
+      ) : null}
       {children}
     </PanelButtonGroup>
   );
@@ -137,7 +142,7 @@ function getPage(page: DEBUG_MENU_PAGE, setPage: Dispatch<DEBUG_MENU_PAGE>) {
     case DEBUG_MENU_PAGE.POPOVER:
       return <PopoverPlaygroundPage />;
     case DEBUG_MENU_PAGE.Pro:
-      return <ProPlaygroundPage />;
+      return <ProPlaygroundPage setPage={setPage} />;
     case DEBUG_MENU_PAGE.MAIN:
     default:
       return <MainPage setPage={setPage} />;

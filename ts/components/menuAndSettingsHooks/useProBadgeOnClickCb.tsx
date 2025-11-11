@@ -1,22 +1,13 @@
 import { useDispatch } from 'react-redux';
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
 import { ProMessageFeature } from '../../models/proMessageFeature';
-import {
-  updateConversationDetailsModal,
-  updateEditProfilePictureModal,
-  updateSessionProInfoModal,
-  userSettingsModal,
-} from '../../state/ducks/modalDialog';
+import { SessionProInfoState, updateSessionProInfoModal } from '../../state/ducks/modalDialog';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import type { ContactNameContext } from '../conversation/ContactName/ContactNameContext';
 import {
   ProCTAVariant,
   useShowSessionProInfoDialogCbWithVariant,
 } from '../dialog/SessionProInfoModal';
-import {
-  useEditProfilePictureModal,
-  useUpdateConversationDetailsModal,
-} from '../../state/selectors/modal';
 
 type WithUserHasPro = { userHasPro: boolean };
 type WithMessageSentWithProFeat = { messageSentWithProFeat: Array<ProMessageFeature> | null };
@@ -27,9 +18,10 @@ type WithContactNameContext = { contactNameContext: ContactNameContext };
 type WithIsGroupV2 = { isGroupV2: boolean };
 type WithIsBlinded = { isBlinded: boolean };
 type WithProvidedCb = { providedCb: (() => void) | null };
+type HandleProCTA = { cta: SessionProInfoState; context?: undefined; args?: undefined };
 
 type ProBadgeContext =
-  | { context: 'edit-profile-pic'; args: WithUserHasPro }
+  | HandleProCTA
   | { context: 'show-our-profile-dialog'; args: WithCurrentUserHasPro & WithProvidedCb }
   | {
       context: 'conversation-title-dialog'; // the title in the conversation settings ConversationSettingsHeader/UserProfileDialog
@@ -135,39 +127,20 @@ export function useProBadgeOnClickCb(
   const handleShowProInfoModal = useShowSessionProInfoDialogCbWithVariant();
   const isProAvailable = useIsProAvailable();
 
-  const editProfilePictureModal = useEditProfilePictureModal();
-  const conversationDetailsModal = useUpdateConversationDetailsModal();
-
-  const { context, args } = opts;
-
   if (!isProAvailable) {
     // if pro is globally disabled, we never show the badge.
     return doNotShow;
   }
 
-  if (context === 'edit-profile-pic') {
-    // in the edit profile dialog, we always show the badge but the CTA shown is different depending on the user's pro status.
+  if ('cta' in opts && opts.cta) {
     return {
       show: true,
-      cb: () =>
-        dispatch(
-          updateSessionProInfoModal({
-            variant: args.userHasPro
-              ? ProCTAVariant.ANIMATED_DISPLAY_PICTURE_ACTIVATED
-              : ProCTAVariant.ANIMATED_DISPLAY_PICTURE,
-            afterActionButtonCallback: () => {
-              dispatch(updateEditProfilePictureModal(null));
-              dispatch(updateConversationDetailsModal(null));
-            },
-            actionButtonNextModalAfterCloseCallback: () => {
-              dispatch(userSettingsModal({ userSettingsPage: 'default' }));
-              dispatch(updateConversationDetailsModal(conversationDetailsModal));
-              dispatch(updateEditProfilePictureModal(editProfilePictureModal));
-            },
-          })
-        ),
+      cb: () => dispatch(updateSessionProInfoModal(opts.cta)),
     };
   }
+
+  const { context, args } = opts;
+
   if (context === 'show-our-profile-dialog') {
     if (args.currentUserHasPro) {
       // if the current user already has pro, we want to show the badge, but use a custom callback
@@ -287,7 +260,7 @@ export function useProBadgeOnClickCb(
     return showNoCb;
   }
 
-  assertUnreachable(context, 'useProBadgeOnClickCb: context not handled');
+  // assertUnreachable(context, 'useProBadgeOnClickCb: context not handled');
 
   return doNotShow;
 }

@@ -36,6 +36,8 @@ import {
 import { ProIconButton } from '../buttons/ProButton';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { Localizer } from '../basic/Localizer';
+import { CONVERSATION } from '../../session/constants';
+import { formatNumber } from '../../util/i18n/formatting/generics';
 
 export enum ProCTAVariant {
   GENERIC = 0,
@@ -270,6 +272,7 @@ function getDescription(variant: ProCTAVariant, userHasProExpired: boolean): Rea
               ? 'proRenewPinFiveConversations'
               : 'proCallToActionPinnedConversationsMoreThan'
           }
+          limit={formatNumber(CONVERSATION.MAX_PINNED_CONVERSATIONS_STANDARD)}
         />
       );
 
@@ -479,7 +482,7 @@ function Buttons({
     let settingsModalProps: UserSettingsModalState = {
       userSettingsPage: 'pro',
       hideBackButton: true,
-      hideHelp: true,
+      fromCTA: true,
       centerAlign: true,
       afterCloseAction: actionButtonNextModalAfterCloseCallback,
     };
@@ -504,7 +507,6 @@ function Buttons({
         shinyContainerStyle={{
           width: '100%',
         }}
-        buttonColor={SessionButtonColor.PrimaryDark}
         onClick={() => {
           onClose();
           dispatch(userSettingsModal(settingsModalProps));

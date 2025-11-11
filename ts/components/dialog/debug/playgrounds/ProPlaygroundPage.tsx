@@ -45,7 +45,8 @@ export function ProPlaygroundPage(props: DebugMenuPageProps) {
         <DebugButton onClick={() => handleClick(ProCTAVariant.ANIMATED_DISPLAY_PICTURE_ACTIVATED)}>
           Animated Profile Picture (Has pro)
         </DebugButton>
-        <h3 style={{ width: '100%' }} >Pro Group CTAs  <i>WIP</i>
+        <h3 style={{ width: '100%' }}>
+          Pro Group CTAs <i>WIP</i>
         </h3>
         <DebugButton onClick={() => handleClick(ProCTAVariant.GROUP_ACTIVATED)}>
           Group Activated
@@ -56,7 +57,7 @@ export function ProPlaygroundPage(props: DebugMenuPageProps) {
         <DebugButton onClick={() => handleClick(ProCTAVariant.GROUP_ADMIN)}>
           Group (Admin)
         </DebugButton>
-        <h3 style={{ width: '100%' }} >Special CTAs</h3>
+        <h3 style={{ width: '100%' }}>Special CTAs</h3>
         <DebugButton onClick={() => handleClick(ProCTAVariant.EXPIRING_SOON)}>
           Expiring Soon
         </DebugButton>

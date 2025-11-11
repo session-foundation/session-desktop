@@ -47,7 +47,7 @@ export type WithUserSettingsPage = {
   | {
       userSettingsPage: 'pro';
       hideBackButton?: boolean;
-      hideHelp?: boolean;
+      fromCTA?: boolean;
       centerAlign?: boolean;
     }
   | {

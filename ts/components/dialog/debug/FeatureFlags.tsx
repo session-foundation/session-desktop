@@ -606,14 +606,18 @@ function MessageProFeatures({ forceUpdate }: { forceUpdate: () => void }) {
     </Flex>
   );
 }
-export const ProDebugSection = ({ forceUpdate, setPage }: DebugMenuPageProps & { forceUpdate: () => void; }) => {
+export const ProDebugSection = ({
+  forceUpdate,
+  setPage,
+}: DebugMenuPageProps & { forceUpdate: () => void }) => {
   const mockExpiry = useDataFeatureFlag('mockProAccessExpiry');
   const proAvailable = useFeatureFlag('proAvailable');
   return (
-    <DebugMenuSection title="Session Pro"
-    >
+    <DebugMenuSection title="Session Pro">
       <FlagToggle forceUpdate={forceUpdate} flag="proAvailable" label="Pro Beta Released" />
-      {proAvailable ? <DebugButton onClick={() => setPage(DEBUG_MENU_PAGE.Pro)}>Pro Playground</DebugButton> : null}
+      {proAvailable ? (
+        <DebugButton onClick={() => setPage(DEBUG_MENU_PAGE.Pro)}>Pro Playground</DebugButton>
+      ) : null}
       <FlagToggle
         forceUpdate={forceUpdate}
         flag="proGroupsAvailable"
