@@ -84,7 +84,7 @@ const StyledModal = styled.div<{
   position: absolute;
   top: ${props => (props.$topAnchor === 'center' ? 'auto' : props.$topAnchor)};
   max-height: ${props =>
-    `calc(100vh - ${props.$topAnchor === 'center' ? '' : `2 * ${props.$topAnchor}`})`}; // 2* to have the modal centered vertically, if it overflows
+    `calc(100vh - ${props.$topAnchor === 'center' ? '10vh' : `2 * ${props.$topAnchor}`})`}; // 2* to have the modal centered vertically, if it overflows
   animation: fadein var(--default-duration);
   z-index: 150;
   max-width: ${props =>
@@ -223,7 +223,9 @@ export function ModalBottomButtonWithBorder({
 export type ModalTopAnchor = '5vh' | 'center';
 
 type SessionWrapperModalType = {
-  headerChildren: ReactNode;
+  headerChildren?: ReactNode;
+  // Moves the header to be inside the modals body but outside the content Flex, including it in the scrollable content and preserving body padding.
+  moveHeaderIntoScrollableBody?: boolean;
   children: ReactNode;
   /**
    * *Should* be some SessionButtons enclosed in a ModalActionsContainer
@@ -408,6 +410,7 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
     topAnchor,
     $flexGap,
     modalId,
+    moveHeaderIntoScrollableBody,
   } = props;
 
   const [scrolled, setScrolled] = useState(false);
@@ -434,6 +437,11 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
     setScrolled(!!scrollTop);
   };
 
+  const separateHeader =
+    props.headerChildren && !moveHeaderIntoScrollableBody ? props.headerChildren : null;
+  const bodyHeader =
+    props.headerChildren && moveHeaderIntoScrollableBody ? props.headerChildren : null;
+
   return (
     <SessionFocusTrap allowOutsideClick={allowOutsideClick} initialFocus={() => modalRef.current}>
       <IsModalScrolledContext.Provider value={scrolled}>
@@ -455,12 +463,13 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
               ref={modalRef}
               data-modal-id={modalId}
             >
-              {props.headerChildren ? props.headerChildren : null}
+              {separateHeader}
               <StyledModalBody
                 onScroll={handleScroll}
                 shouldOverflow={shouldOverflow}
                 removeScrollbarGutter={removeScrollbarGutter}
               >
+                {bodyHeader}
                 <Flex
                   $container={true}
                   $alignItems="center"

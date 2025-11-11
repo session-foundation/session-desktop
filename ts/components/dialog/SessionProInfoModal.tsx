@@ -572,12 +572,13 @@ export function SessionProInfoModal(props: SessionProInfoState) {
     <SessionWrapperModal
       modalId="sessionProInfoModal"
       onClose={onClose}
-      headerChildren={getImage(props.variant)}
-      padding="0"
-      removeScrollbarGutter={true}
       shouldOverflow={true}
       $contentMinWidth={WrapperModalWidth.normal}
       $contentMaxWidth={WrapperModalWidth.normal}
+      style={{ backgroundColor: 'var(--background-primary-color)' }}
+      moveHeaderIntoScrollableBody={true}
+      removeScrollbarGutter={true}
+      headerChildren={getImage(props.variant)}
       buttonChildren={
         <Buttons
           variant={props.variant}
