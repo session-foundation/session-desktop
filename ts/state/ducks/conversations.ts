@@ -178,7 +178,7 @@ export type PropsForMessageWithoutConvoProps = {
    */
   isTrustedForAttachmentDownload?: boolean;
 
-  proFeatures?: Array<ProMessageFeature>;
+  proFeaturesUsed?: Array<ProMessageFeature>;
 };
 
 export type PropsForMessageWithConvoProps = PropsForMessageWithoutConvoProps & {

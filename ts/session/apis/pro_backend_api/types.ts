@@ -121,7 +121,7 @@ const ProStatusItemSchema = z.object({
 const ProStatusResultSchema = z.object({
   status: z.nativeEnum(ProStatus),
   auto_renewing: z.boolean(),
-  expiring_unix_ts_ms: z.number(),
+  expiry_unix_ts_ms: z.number(),
   grace_period_duration_ms: z.number(),
   error_report: z.number(),
   payments_total: z.number(),

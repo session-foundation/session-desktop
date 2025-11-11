@@ -40,7 +40,6 @@ async function makeGroupMessageSubRequest(
   const groupEncKeyHex = await MetaGroupWrapperActions.keyGetEncryptionKeyHex(groupPk);
   const senderEd25519Seed = await UserUtils.getUserEd25519Seed();
 
-  // debugger;
   const { encryptedData } = await MultiEncryptWrapperActions.encryptForGroup(
     compactedMessages.map(m => {
       return {

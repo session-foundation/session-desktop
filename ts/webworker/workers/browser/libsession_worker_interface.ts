@@ -220,6 +220,12 @@ export const UserConfigWrapperActions: UserConfigWrapperActionsCalls = {
     callLibSessionWorker(['UserConfig', 'generateProMasterKey', ...args]) as Promise<
       ReturnType<UserConfigWrapperActionsCalls['generateProMasterKey']>
     >,
+  generateRotatingPrivKeyHex: async (
+    ...args: Parameters<UserConfigWrapperActionsCalls['generateRotatingPrivKeyHex']>
+  ) =>
+    callLibSessionWorker(['UserConfig', 'generateRotatingPrivKeyHex', ...args]) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['generateRotatingPrivKeyHex']>
+    >,
 };
 
 export const ContactsWrapperActions: ContactsWrapperActionsCalls = {

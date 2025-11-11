@@ -109,6 +109,8 @@ export class VisibleMessage extends DataMessage {
   }
 
   public contentProto(): SignalService.Content {
+    // Note: we do not want this one to call `makeContentProto` because super.contentProto() does it and deals
+    // with the expirable field for us
     const content = super.contentProto();
     content.dataMessage = this.dataProto();
     return content;

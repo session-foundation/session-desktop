@@ -193,7 +193,7 @@ export function useMessageSelected(messageId?: string) {
 export function useMessageSentWithProFeatures(messageId?: string) {
   const msgProps = useMessagePropsByMessageId(messageId);
   const mockedFeatureFlags = useDataFeatureFlag('mockMessageProFeatures');
-  const proFeatures = mockedFeatureFlags ?? msgProps?.propsForMessage.proFeatures;
+  const proFeatures = mockedFeatureFlags ?? msgProps?.propsForMessage.proFeaturesUsed;
 
   return useMemo(() => {
     if (!proFeatures) {

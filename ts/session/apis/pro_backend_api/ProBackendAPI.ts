@@ -1,3 +1,5 @@
+import type { WithMasterPrivKeyHex, WithRotatingPrivKeyHex } from 'libsession_util_nodejs';
+
 import { PRO_API } from './ProBackendTarget';
 import SessionBackendServerApi from '../session_backend_server';
 import {
@@ -17,9 +19,7 @@ export default class ProBackendAPI {
   );
   static readonly requestVersion = 0;
 
-  static getProSigningArgs() {
-    // TODO: get real pro master private key
-    const masterPrivKeyHex = '';
+  static getProSigningArgs({ masterPrivKeyHex }: WithMasterPrivKeyHex) {
     return {
       requestVersion: ProBackendAPI.requestVersion,
       masterPrivKeyHex,
@@ -27,36 +27,39 @@ export default class ProBackendAPI {
     };
   }
 
-  private static async getProProofBody() {
-    // TODO: get real rotating private key
-    const rotatingPrivKeyHex = '';
+  private static async getProProofBody({
+    masterPrivKeyHex,
+    rotatingPrivKeyHex,
+  }: WithMasterPrivKeyHex & WithRotatingPrivKeyHex) {
     return ProWrapperActions.proProofRequestBody({
-      ...ProBackendAPI.getProSigningArgs(),
+      ...ProBackendAPI.getProSigningArgs({ masterPrivKeyHex }),
       rotatingPrivKeyHex,
     });
   }
 
-  static async getProProof(): Promise<GetProProofResponseType | null> {
+  static async getProProof(
+    args: WithMasterPrivKeyHex & WithRotatingPrivKeyHex
+  ): Promise<GetProProofResponseType | null> {
     return ProBackendAPI.server.makeRequestWithSchema({
       path: '/get_pro_proof',
       method: 'POST',
-      bodyGetter: ProBackendAPI.getProProofBody,
+      bodyGetter: () => ProBackendAPI.getProProofBody(args),
       withZodSchema: GetProProofResponseSchema,
     });
   }
 
-  private static async getProStatusBody() {
+  private static async getProStatusBody(args: WithMasterPrivKeyHex) {
     return ProWrapperActions.proStatusRequestBody({
-      ...ProBackendAPI.getProSigningArgs(),
+      ...ProBackendAPI.getProSigningArgs(args),
       withPaymentHistory: false,
     });
   }
 
-  static async getProStatus(): Promise<GetProStatusResponseType | null> {
+  static async getProStatus(args: WithMasterPrivKeyHex): Promise<GetProStatusResponseType | null> {
     return ProBackendAPI.server.makeRequestWithSchema({
       path: '/get_pro_status',
       method: 'POST',
-      bodyGetter: ProBackendAPI.getProStatusBody,
+      bodyGetter: () => ProBackendAPI.getProStatusBody(args),
       withZodSchema: GetProStatusResponseSchema,
     });
   }

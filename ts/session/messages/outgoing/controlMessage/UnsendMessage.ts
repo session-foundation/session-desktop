@@ -29,11 +29,11 @@ export class UnsendMessage extends ContentMessage {
   }
 
   public contentProto(): SignalService.Content {
-    return super.makeContentProto({ unsendMessage: this.unsendProto() });
+    return super.makeContentProto({ unsendRequest: this.unsendProto() });
   }
 
-  public unsendProto(): SignalService.Unsend {
-    return new SignalService.Unsend({
+  public unsendProto(): SignalService.UnsendRequest {
+    return new SignalService.UnsendRequest({
       timestamp: this.referencedMessageTimestamp,
       author: this.author,
     });

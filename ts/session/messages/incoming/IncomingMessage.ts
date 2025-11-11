@@ -7,7 +7,7 @@ type IncomingMessageAvailableTypes =
   | SignalService.ReceiptMessage
   | SignalService.TypingMessage
   | SignalService.DataExtractionNotification
-  | SignalService.Unsend
+  | SignalService.UnsendRequest
   | SignalService.MessageRequestResponse;
 
 export class IncomingMessage<T extends IncomingMessageAvailableTypes> {

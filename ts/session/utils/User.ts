@@ -1,5 +1,6 @@
+import { to_hex } from 'libsodium-wrappers-sumo';
 import { PubkeyType } from 'libsession_util_nodejs';
-import _ from 'lodash';
+import _, { isString } from 'lodash';
 import { UserUtils } from '.';
 import { Data } from '../../data/data';
 import { SessionKeyPair } from '../../receiver/keypairs';
@@ -124,4 +125,47 @@ export async function getOurProfile() {
     updatedAtSeconds,
     profilePic: profilePic ?? null,
   });
+}
+
+/**
+ * Return the pro master key hex from the Item table, or generate and saves it before returning it.
+ */
+export async function getProMasterKeyHex() {
+  const itemId = 'proMasterKeyHex';
+  const item = await Data.getItemById(itemId);
+  if (!item?.value && isString(item?.value) && item.value.length) {
+    return item.value;
+  }
+  const seedHex = to_hex(await UserUtils.getUserEd25519Seed());
+  const { proMasterKeyHex } = await UserConfigWrapperActions.generateProMasterKey({
+    ed25519SeedHex: seedHex,
+  });
+  if (!proMasterKeyHex) {
+    throw new Error('Failed to generate pro master key');
+  }
+  await Data.createOrUpdateItem({
+    id: itemId,
+    value: proMasterKeyHex,
+  });
+  return proMasterKeyHex;
+}
+
+/**
+ * Return the pro rotating key hex from the Item table, or generate and saves it before returning it.
+ */
+export async function getProRotatingKeyHex() {
+  const itemId = 'proRotatingKeyHex';
+  const item = await Data.getItemById(itemId);
+  if (!item?.value && isString(item?.value) && item.value.length > 0) {
+    return item.value;
+  }
+  const { rotatingPrivKeyHex } = await UserConfigWrapperActions.generateRotatingPrivKeyHex();
+  if (!rotatingPrivKeyHex) {
+    throw new Error('Failed to generate pro rotating key');
+  }
+  await Data.createOrUpdateItem({
+    id: itemId,
+    value: rotatingPrivKeyHex,
+  });
+  return rotatingPrivKeyHex;
 }

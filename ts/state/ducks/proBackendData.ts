@@ -1,3 +1,4 @@
+import type { WithMasterPrivKeyHex, WithRotatingPrivKeyHex } from 'libsession_util_nodejs';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { StateType } from '../reducer';
 import {
@@ -7,6 +8,8 @@ import {
 } from '../../session/apis/pro_backend_api/types';
 import ProBackendAPI from '../../session/apis/pro_backend_api/ProBackendAPI';
 import { getFeatureFlag } from './types/releasedFeaturesReduxTypes';
+import { UserUtils } from '../../session/utils';
+import { getProRotatingKeyHex } from '../../session/utils/User';
 
 type RequestState<D = unknown> = {
   isFetching: boolean;
@@ -124,10 +127,13 @@ async function createProBackendFetchAsyncThunk<D>({
 
 const fetchProProofFromProBackend = createAsyncThunk(
   'proBackendData/fetchProProof',
-  async (_, payloadCreator): Promise<RequestState<ProProofResultType>> => {
+  async (
+    args: WithMasterPrivKeyHex & WithRotatingPrivKeyHex,
+    payloadCreator
+  ): Promise<RequestState<ProProofResultType>> => {
     return createProBackendFetchAsyncThunk({
       key: 'proof',
-      getter: ProBackendAPI.getProProof,
+      getter: () => ProBackendAPI.getProProof(args),
       payloadCreator,
     });
   }
@@ -146,10 +152,13 @@ const fetchProRevocationsFromProBackend = createAsyncThunk(
 
 const fetchProStatusFromProBackend = createAsyncThunk(
   'proBackendData/fetchProStatus',
-  async (_, payloadCreator): Promise<RequestState<ProStatusResultType>> => {
+  async (
+    args: WithMasterPrivKeyHex,
+    payloadCreator
+  ): Promise<RequestState<ProStatusResultType>> => {
     return createProBackendFetchAsyncThunk({
       key: 'proStatus',
-      getter: ProBackendAPI.getProStatus,
+      getter: () => ProBackendAPI.getProStatus(args),
       payloadCreator,
     });
   }
@@ -176,8 +185,12 @@ const refreshProProofFromProBackend = createAsyncThunk(
       );
     }
 
-    // TODO: why is this as any here and in network api backend?
-    payloadCreator.dispatch(fetchProProofFromProBackend() as any);
+    const masterPrivKeyHex = await UserUtils.getProMasterKeyHex();
+    const rotatingPrivKeyHex = await getProRotatingKeyHex();
+
+    payloadCreator.dispatch(
+      fetchProProofFromProBackend({ masterPrivKeyHex, rotatingPrivKeyHex }) as any
+    );
   }
 );
 
@@ -202,7 +215,6 @@ const refreshProRevocationsFromProBackend = createAsyncThunk(
       );
     }
 
-    // TODO: why is this as any here and in network api backend?
     payloadCreator.dispatch(fetchProRevocationsFromProBackend() as any);
   }
 );
@@ -227,9 +239,8 @@ const refreshProStatusFromProBackend = createAsyncThunk(
         `[proBackend/refreshProStatusFromProBackend] triggered refresh at ${new Date().toISOString()}`
       );
     }
-
-    // TODO: why is this as any here and in network api backend?
-    payloadCreator.dispatch(fetchProStatusFromProBackend() as any);
+    const masterPrivKeyHex = await UserUtils.getProMasterKeyHex();
+    payloadCreator.dispatch(fetchProStatusFromProBackend({ masterPrivKeyHex }) as any);
   }
 );
 

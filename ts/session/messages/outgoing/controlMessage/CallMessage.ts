@@ -1,5 +1,4 @@
 import { SignalService } from '../../../../protobuf';
-import { signalservice } from '../../../../protobuf/compiled';
 import { TTL_DEFAULT } from '../../../constants';
 import { ExpirableMessage, ExpirableMessageParams } from '../ExpirableMessage';
 
@@ -12,7 +11,7 @@ type CallMessageParams = ExpirableMessageParams & {
 };
 
 export class CallMessage extends ExpirableMessage {
-  public readonly type: signalservice.CallMessage.Type;
+  public readonly type: SignalService.CallMessage.Type;
   public readonly sdpMLineIndexes?: Array<number>;
   public readonly sdpMids?: Array<string>;
   public readonly sdps?: Array<string>;
@@ -28,8 +27,8 @@ export class CallMessage extends ExpirableMessage {
 
     // this does not make any sense
     if (
-      this.type !== signalservice.CallMessage.Type.END_CALL &&
-      this.type !== signalservice.CallMessage.Type.PRE_OFFER &&
+      this.type !== SignalService.CallMessage.Type.END_CALL &&
+      this.type !== SignalService.CallMessage.Type.PRE_OFFER &&
       (!this.sdps || this.sdps.length === 0)
     ) {
       throw new Error('sdps must be set unless this is a END_CALL type message');
@@ -40,6 +39,8 @@ export class CallMessage extends ExpirableMessage {
   }
 
   public contentProto(): SignalService.Content {
+    // Note: we do not want this one to call `makeContentProto` because super.contentProto() does it and deals
+    // with the expirable field for us
     const content = super.contentProto();
     content.callMessage = this.callProto();
     return content;

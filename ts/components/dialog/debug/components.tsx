@@ -43,6 +43,7 @@ import { SimpleSessionInput } from '../../inputs/SessionInput';
 import { NetworkTime } from '../../../util/NetworkTime';
 import { SessionButtonShiny } from '../../basic/SessionButtonShiny';
 import ProBackendAPI from '../../../session/apis/pro_backend_api/ProBackendAPI';
+import { getProMasterKeyHex, getProRotatingKeyHex } from '../../../session/utils/User';
 
 type DebugButtonProps = SessionButtonProps & { shiny?: boolean };
 
@@ -338,14 +339,17 @@ export const DebugActions = () => {
       </DebugButton>
       <DebugButton
         onClick={async () => {
-          await ProBackendAPI.getProProof();
+          const masterPrivKeyHex = await getProMasterKeyHex();
+          const rotatingPrivKeyHex = await getProRotatingKeyHex();
+          await ProBackendAPI.getProProof({ masterPrivKeyHex, rotatingPrivKeyHex });
         }}
       >
         Get Pro Proof
       </DebugButton>
       <DebugButton
         onClick={async () => {
-          await ProBackendAPI.getProStatus();
+          const masterPrivKeyHex = await getProMasterKeyHex();
+          await ProBackendAPI.getProStatus({ masterPrivKeyHex });
         }}
       >
         Get Pro Status

@@ -340,8 +340,8 @@ export async function innerHandleSwarmContentMessage({
       );
       return;
     }
-    if (content.unsendMessage) {
-      await handleUnsendMessage(envelope, content.unsendMessage as SignalService.Unsend);
+    if (content.unsendRequest) {
+      await handleUnsendMessage(envelope, content.unsendRequest as SignalService.UnsendRequest);
       return;
     }
     if (content.callMessage) {
@@ -444,7 +444,10 @@ async function handleTypingMessage(
  * delete message from user swarm and delete locally upon receiving unsend request
  * @param unsendMessage data required to delete message
  */
-async function handleUnsendMessage(envelope: EnvelopePlus, unsendMessage: SignalService.Unsend) {
+async function handleUnsendMessage(
+  envelope: EnvelopePlus,
+  unsendMessage: SignalService.UnsendRequest
+) {
   const { author: messageAuthor, timestamp } = unsendMessage;
   window.log.info(`handleUnsendMessage from ${messageAuthor}: of timestamp: ${timestamp}`);
   if (messageAuthor !== (envelope.senderIdentity || envelope.source)) {

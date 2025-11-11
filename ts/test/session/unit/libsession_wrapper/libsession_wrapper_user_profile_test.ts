@@ -45,7 +45,7 @@ describe('libsession_user_profile', () => {
       const wrapper = new UserConfigWrapperNode(userKeys.ed25519KeyPair.privKeyBytes, null);
 
       const generated = wrapper.generateProMasterKey({ ed25519SeedHex: to_hex(ed25519Seed) });
-      expect(generated.proMasterKey.length).to.equal(64);
+      expect(generated.proMasterKeyHex.length).to.equal(64);
 
       const generatedAgain = wrapper.generateProMasterKey({ ed25519SeedHex: to_hex(ed25519Seed) });
 
