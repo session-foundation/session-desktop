@@ -106,11 +106,11 @@ export function isTokenWithArgs(token: string): token is MergedTokenWithArgs {
 type PluralDictionaryWithArgs = typeof pluralsDictionaryWithArgs;
 
 // those are still a string of the type "string" | "number" and not the typescript types themselves
-type ArgsFromTokenStr<T extends MergedTokenWithArgs> = T extends keyof TokensSimpleAndArgs
-  ? TokensSimpleAndArgs[T]
-  : T extends keyof TokensPluralAndArgs
-    ? TokensPluralAndArgs[T]
-    : never;
+
+type AllTokensWithArgs = TokensSimpleAndArgs & TokensPluralAndArgs;
+type ArgsFromTokenStr<T extends MergedTokenWithArgs> = T extends keyof AllTokensWithArgs
+  ? AllTokensWithArgs[T]
+  : never;
 
 export type ArgsFromToken<T extends MergedLocalizerTokens> = T extends MergedTokenWithArgs
   ? ArgsFromTokenStr<T>
