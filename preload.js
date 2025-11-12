@@ -313,7 +313,6 @@ const {
   getDataFeatureFlag,
   getFeatureFlag,
 } = require('./ts/state/ducks/types/releasedFeaturesReduxTypes.js');
-const { PRO_API } = require('./ts/session/apis/pro_backend_api/ProBackendTarget.js');
 
 window.getConversationController = ConvoHub.use;
 

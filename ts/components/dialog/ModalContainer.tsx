@@ -79,12 +79,12 @@ export const ModalContainer = () => {
   return (
     <>
       {/* Screens */}
-      {/* UserProfileModal needs to be behind the settings dialog because it can open the settings dialog */}
+      {/* UserProfileModal and ConversationSettingsDialog need to be behind the settings dialog because it can open the settings dialog */}
       {userProfileModalState && <UserProfileModal {...userProfileModalState} />}
-      {userSettingsModalState && <UserSettingsDialog {...userSettingsModalState} />}
       {conversationSettingsModalState && (
         <ConversationSettingsDialog {...conversationSettingsModalState} />
       )}
+      {userSettingsModalState && <UserSettingsDialog {...userSettingsModalState} />}
       {onionPathModalState && <OnionPathModal {...onionPathModalState} />}
       {reactListModalState && <ReactListModal {...reactListModalState} />}
       {debugMenuModalState && <DebugMenuModal {...debugMenuModalState} />}

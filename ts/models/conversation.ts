@@ -944,6 +944,9 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
 
     if (this.isClosedGroupV2()) {
+      if (!getFeatureFlag('proGroupsAvailable')) {
+        return false;
+      }
       const admins = this.getGroupAdmins();
       return admins.some(m => {
         // the is05Pubkey is only here to make sure we never have a infinite recursion
