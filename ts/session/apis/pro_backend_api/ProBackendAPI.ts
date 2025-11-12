@@ -10,11 +10,12 @@ import {
 } from './types';
 import { ProWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { NetworkTime } from '../../../util/NetworkTime';
+import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 export default class ProBackendAPI {
-  static readonly server = new SessionBackendServerApi(
-    PRO_API.PRO_BACKENDS[process.env.PRO_DEV ? 'DEV' : 'DEFAULT']
-  );
+  private static readonly server = new SessionBackendServerApi(PRO_API.PRO_BACKENDS.DEFAULT);
+  private static readonly testServer = new SessionBackendServerApi(PRO_API.PRO_BACKENDS.DEV);
+
   static readonly requestVersion = 0;
 
   static getProSigningArgs() {
@@ -27,6 +28,10 @@ export default class ProBackendAPI {
     };
   }
 
+  static getServer() {
+    return getFeatureFlag('useTestProBackend') ? ProBackendAPI.testServer : ProBackendAPI.server;
+  }
+
   private static async getProProofBody() {
     // TODO: get real rotating private key
     const rotatingPrivKeyHex = '';
@@ -37,7 +42,7 @@ export default class ProBackendAPI {
   }
 
   static async getProProof(): Promise<GetProProofResponseType | null> {
-    return ProBackendAPI.server.makeRequestWithSchema({
+    return ProBackendAPI.getServer().makeRequestWithSchema({
       path: '/get_pro_proof',
       method: 'POST',
       bodyGetter: ProBackendAPI.getProProofBody,
@@ -53,7 +58,7 @@ export default class ProBackendAPI {
   }
 
   static async getProStatus(): Promise<GetProStatusResponseType | null> {
-    return ProBackendAPI.server.makeRequestWithSchema({
+    return ProBackendAPI.getServer().makeRequestWithSchema({
       path: '/get_pro_status',
       method: 'POST',
       bodyGetter: ProBackendAPI.getProStatusBody,
@@ -64,7 +69,7 @@ export default class ProBackendAPI {
   static async getRevocationList(): Promise<GetProRevocationsResponseType | null> {
     const bodyGetter = async () => '{ "version": 0, "ticket": 0 }';
 
-    return ProBackendAPI.server.makeRequestWithSchema({
+    return ProBackendAPI.getServer().makeRequestWithSchema({
       path: '/get_pro_revocations',
       method: 'POST',
       bodyGetter,

@@ -11,6 +11,7 @@ type SessionBaseBooleanFeatureFlags = {
   disableOnionRequests: boolean;
   useDeterministicEncryption: boolean;
   useTestNet: boolean;
+  useTestProBackend: boolean;
   useClosedGroupV2QAButtons: boolean;
   alwaysShowRemainingChars: boolean;
   showPopoverAnchors: boolean;
