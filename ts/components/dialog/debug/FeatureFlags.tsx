@@ -14,9 +14,8 @@ import {
 import { Flex } from '../../basic/Flex';
 import { SessionToggle } from '../../basic/SessionToggle';
 import { HintText, SpacerXS } from '../../basic/Text';
-import { DEBUG_FEATURE_FLAGS } from './constants';
+import { DEBUG_FEATURE_FLAGS, isFeatureFlagAvailable } from './constants';
 import { ConvoHub } from '../../../session/conversations';
-import { isDebugMode } from '../../../shared/env_vars';
 import { ProMessageFeature } from '../../../models/proMessageFeature';
 import { SessionButtonShiny } from '../../basic/SessionButtonShiny';
 import { SessionButtonColor, SessionButtonShape } from '../../basic/SessionButton';
@@ -97,6 +96,10 @@ export const FlagToggle = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hideAndDisable]);
 
+  if (!isFeatureFlagAvailable(flag)) {
+    return null;
+  }
+
   return visibleFlag && visibleWithDataFlag ? (
     <Flex
       key={key}
@@ -165,6 +168,11 @@ export const FlagEnumDropdownInput = ({
       ? (initValue as string | number)
       : unsetOption.value;
   });
+
+  if (!isFeatureFlagAvailable(flag)) {
+    return null;
+  }
+
   const handleSelect = (newValue: number | string | null) => {
     setSelected(newValue);
     handleFeatureFlagWithDataChange({
@@ -248,6 +256,10 @@ export const FlagIntegerInput = ({
     const initValue = window.sessionDataFeatureFlags[flag];
     return typeof initValue === 'number' && Number.isFinite(initValue) ? initValue : 0;
   });
+
+  if (!isFeatureFlagAvailable(flag)) {
+    return null;
+  }
 
   const handleOnClick = () => {
     handleFeatureFlagWithDataChange({
@@ -442,7 +454,19 @@ const handledBooleanFeatureFlags = proBooleanFlags
   .map(({ flag: key }) => key)
   .concat(proBackendBooleanFlags.map(({ flag: key }) => key))
   .concat(debugFeatureFlags.map(({ flag: key }) => key))
-  .concat(['proAvailable', 'proGroupsAvailable']);
+  .concat([
+    'proAvailable',
+    'proGroupsAvailable',
+    'useTestProBackend',
+    'mockOthersHavePro',
+    'debugLogging',
+    'debugLibsessionDumps',
+    'debugBuiltSnodeRequests',
+    'debugSwarmPolling',
+    'debugServerRequests',
+    'debugNonSnodeRequests',
+    'debugOnionRequests',
+  ]);
 
 export const FeatureFlags = ({ forceUpdate }: { forceUpdate: () => void }) => {
   const flags = Object.fromEntries(
@@ -458,10 +482,7 @@ export const FeatureFlags = ({ forceUpdate }: { forceUpdate: () => void }) => {
       <SpacerXS />
       {Object.entries(flags).map(([key, value]) => {
         const flag = key as SessionBooleanFeatureFlagKeys;
-        if (
-          (!isDebugMode() && DEBUG_FEATURE_FLAGS.DEV.includes(flag)) ||
-          DEBUG_FEATURE_FLAGS.UNSUPPORTED.includes(flag)
-        ) {
+        if (!isFeatureFlagAvailable(flag)) {
           return null;
         }
 
@@ -475,9 +496,6 @@ export const FeatureFlags = ({ forceUpdate }: { forceUpdate: () => void }) => {
 };
 
 export function DebugFeatureFlags({ forceUpdate }: { forceUpdate: () => void }) {
-  if (!isDebugMode()) {
-    return null;
-  }
   return (
     <DebugMenuSection title="Debug Feature Flags">
       {debugFeatureFlags.map(props => (
@@ -606,6 +624,7 @@ function MessageProFeatures({ forceUpdate }: { forceUpdate: () => void }) {
     </Flex>
   );
 }
+
 export const ProDebugSection = ({
   forceUpdate,
   setPage,
@@ -620,9 +639,21 @@ export const ProDebugSection = ({
       ) : null}
       <FlagToggle
         forceUpdate={forceUpdate}
+        flag="useTestProBackend"
+        visibleWithBooleanFlag="proAvailable"
+        label="Use Test Pro Backend"
+      />
+      <FlagToggle
+        forceUpdate={forceUpdate}
         flag="proGroupsAvailable"
         visibleWithBooleanFlag="proAvailable"
         label="Pro Groups Released"
+      />
+      <FlagToggle
+        forceUpdate={forceUpdate}
+        flag="mockOthersHavePro"
+        visibleWithBooleanFlag="proAvailable"
+        label="Mock Others Have Pro"
       />
       <FlagEnumDropdownInput
         label="Current Status"

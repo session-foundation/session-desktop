@@ -9,7 +9,7 @@ import {
   DataGenerationActions,
   DebugActions,
   ExperimentalActions,
-  LoggingActions,
+  LoggingDebugSection,
   OtherInfo,
   Playgrounds,
 } from './components';
@@ -30,6 +30,7 @@ import { PopoverPlaygroundPage } from './playgrounds/PopoverPlaygroundPage';
 import { ProPlaygroundPage } from './playgrounds/ProPlaygroundPage';
 import { ModalBackButton } from '../shared/ModalBackButton';
 import { PanelButtonGroup } from '../../buttons';
+import { isDebugMode } from '../../../shared/env_vars';
 
 const StyledContent = styled(Flex)`
   padding-inline: var(--margins-sm);
@@ -107,6 +108,7 @@ export function DebugMenuSection({
 function MainPage({ setPage }: DebugMenuPageProps) {
   // NOTE we use forceUpdate here and pass it through so the entire modal refreshes when a flag is toggled
   const forceUpdate = useUpdate();
+  const isDebug = isDebugMode();
   return (
     <div
       style={{
@@ -119,15 +121,22 @@ function MainPage({ setPage }: DebugMenuPageProps) {
         gap: 'var(--margins-lg)',
       }}
     >
+      {!isDebug ? (
+        <DebugMenuSection>
+          {
+            "The debug menu contains feature flag controls and experiments for unreleased Session features. They might not work, or may even break your client. Only use this menu if you know what you're doing. Some debug menu options are only available in debug mode."
+          }
+        </DebugMenuSection>
+      ) : null}
       <FeatureFlags forceUpdate={forceUpdate} />
       <ProDebugSection forceUpdate={forceUpdate} setPage={setPage} />
-      <FeatureFlagDumper forceUpdate={forceUpdate} />
-      <DebugFeatureFlags forceUpdate={forceUpdate} />
+      {isDebug ? <FeatureFlagDumper forceUpdate={forceUpdate} /> : null}
+      {isDebug ? <DebugFeatureFlags forceUpdate={forceUpdate} /> : null}
       <DebugActions />
-      <ExperimentalActions forceUpdate={forceUpdate} />
-      <LoggingActions />
+      {isDebug ? <ExperimentalActions forceUpdate={forceUpdate} /> : null}
+      <LoggingDebugSection forceUpdate={forceUpdate} />
       <Playgrounds setPage={setPage} />
-      <DataGenerationActions />
+      {isDebug ? <DataGenerationActions /> : null}
       <ReleaseChannel />
       <div>
         <AboutInfo />

@@ -43,6 +43,7 @@ import { SimpleSessionInput } from '../../inputs/SessionInput';
 import { NetworkTime } from '../../../util/NetworkTime';
 import { SessionButtonShiny } from '../../basic/SessionButtonShiny';
 import ProBackendAPI from '../../../session/apis/pro_backend_api/ProBackendAPI';
+import { FlagToggle } from './FeatureFlags';
 
 type DebugButtonProps = SessionButtonProps & { shiny?: boolean };
 
@@ -266,9 +267,9 @@ function OfflineButton() {
   );
 }
 
-export const LoggingActions = () => {
+export const LoggingDebugSection = ({ forceUpdate }: { forceUpdate: () => void }) => {
   return (
-    <DebugMenuSection title="Logging" rowWrap={true}>
+    <DebugMenuSection title="Logging">
       <DebugButton
         onClick={() => {
           void saveLogToDesktop();
@@ -277,6 +278,13 @@ export const LoggingActions = () => {
         <Localizer token="helpReportABugExportLogs" />
       </DebugButton>
       <ClearOldLogsButton />
+      <FlagToggle forceUpdate={forceUpdate} flag="debugLogging" />
+      <FlagToggle forceUpdate={forceUpdate} flag="debugLibsessionDumps" />
+      <FlagToggle forceUpdate={forceUpdate} flag="debugBuiltSnodeRequests" />
+      <FlagToggle forceUpdate={forceUpdate} flag="debugSwarmPolling" />
+      <FlagToggle forceUpdate={forceUpdate} flag="debugServerRequests" />
+      <FlagToggle forceUpdate={forceUpdate} flag="debugNonSnodeRequests" />
+      <FlagToggle forceUpdate={forceUpdate} flag="debugOnionRequests" />
     </DebugMenuSection>
   );
 };

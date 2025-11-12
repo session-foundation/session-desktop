@@ -201,19 +201,21 @@ const defaultProAccessDetailsSourceData = {
 function useMockRecoverAccess() {
   const forceUpdate = useUpdate();
   const mockSuccess = useFeatureFlag('mockProRecoverButtonAlwaysSucceed');
+  const mockFail = useFeatureFlag('mockProRecoverButtonAlwaysFail');
 
   const mockRecover = useCallback(() => {
-    if (!mockSuccess) {
+    if (!mockSuccess || mockFail) {
       return;
     }
     setDataFeatureFlag('mockProCurrentStatus', ProStatus.Active);
     setDataFeatureFlag('mockProAccessVariant', ProAccessVariant.OneMonth);
     setDataFeatureFlag('mockProAccessExpiry', MockProAccessExpiryOptions.P7D);
     forceUpdate();
-  }, [mockSuccess, forceUpdate]);
+  }, [mockSuccess, mockFail, forceUpdate]);
 
   return {
     mockSuccess,
+    mockFail,
     mockRecover,
   };
 }
@@ -306,7 +308,7 @@ export function useProAccessDetails(): RequestHook<ProAccessDetails> {
       return;
     }
 
-    if (mockIsError) {
+    if (mockIsError || mockRecoverAccess.mockFail) {
       setProBackendIsLoading({ key: 'proStatus', result: true });
       setProBackendIsError({ key: 'proStatus', result: false });
       await sleepFor(5000);
@@ -317,11 +319,13 @@ export function useProAccessDetails(): RequestHook<ProAccessDetails> {
 
     if (mockRecoverAccess.mockSuccess) {
       setProBackendIsLoading({ key: 'proStatus', result: true });
+      setProBackendIsError({ key: 'proStatus', result: false });
       await sleepFor(5000);
       mockRecoverAccess.mockRecover();
       setProBackendIsLoading({ key: 'proStatus', result: false });
       return;
     }
+
     dispatch(proBackendDataActions.refreshProStatusFromProBackend() as any);
   }, [
     dispatch,
