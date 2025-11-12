@@ -18,10 +18,10 @@ type WithContactNameContext = { contactNameContext: ContactNameContext };
 type WithIsGroupV2 = { isGroupV2: boolean };
 type WithIsBlinded = { isBlinded: boolean };
 type WithProvidedCb = { providedCb: (() => void) | null };
-type HandleProCTA = { cta: SessionProInfoState; context?: undefined; args?: undefined };
+type WithProCTA = { cta: SessionProInfoState };
 
 type ProBadgeContext =
-  | HandleProCTA
+  | { context: 'edit-profile-pic'; args: WithProCTA }
   | { context: 'show-our-profile-dialog'; args: WithCurrentUserHasPro & WithProvidedCb }
   | {
       context: 'conversation-title-dialog'; // the title in the conversation settings ConversationSettingsHeader/UserProfileDialog
@@ -132,14 +132,14 @@ export function useProBadgeOnClickCb(
     return doNotShow;
   }
 
-  if ('cta' in opts && opts.cta) {
+  const { context, args } = opts;
+
+  if (context === 'edit-profile-pic') {
     return {
       show: true,
-      cb: () => dispatch(updateSessionProInfoModal(opts.cta)),
+      cb: () => dispatch(updateSessionProInfoModal(args.cta)),
     };
   }
-
-  const { context, args } = opts;
 
   if (context === 'show-our-profile-dialog') {
     if (args.currentUserHasPro) {
@@ -260,5 +260,6 @@ export function useProBadgeOnClickCb(
     return showNoCb;
   }
 
+  assertUnreachable(context, 'useProBadgeOnClickCb: context not handled');
   return doNotShow;
 }

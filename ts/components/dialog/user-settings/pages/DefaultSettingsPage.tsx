@@ -1,7 +1,6 @@
 import { type RefObject, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
-import useMount from 'react-use/lib/useMount';
 import { useHotkey } from '../../../../hooks/useHotkey';
 import { useOurConversationUsername, useOurAvatarPath } from '../../../../hooks/useParamSelector';
 import { UserUtils, ToastUtils } from '../../../../session/utils';
@@ -35,13 +34,7 @@ import { setDebugMode } from '../../../../state/ducks/debug';
 import { useHideRecoveryPasswordEnabled } from '../../../../state/selectors/settings';
 import { OnionStatusLight } from '../../OnionStatusPathDialog';
 import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
-import {
-  useCurrentUserHasExpiredPro,
-  useCurrentUserHasPro,
-  useProAccessDetails,
-} from '../../../../hooks/useHasPro';
-import { NetworkTime } from '../../../../util/NetworkTime';
-import { DURATION } from '../../../../session/constants';
+import { useCurrentUserHasExpiredPro, useCurrentUserHasPro } from '../../../../hooks/useHasPro';
 
 const handleKeyQRMode = (mode: ProfileDialogModes, setMode: (mode: ProfileDialogModes) => void) => {
   switch (mode) {
@@ -346,7 +339,8 @@ const SessionInfo = () => {
 
 export const DefaultSettingPage = () => {
   const dispatch = useDispatch();
-  const { refetch, t } = useProAccessDetails();
+  // TODO: uncomment when pro backend calls are working
+  // const { refetch, t } = useProAccessDetails();
 
   const profileName = useOurConversationUsername() || '';
   const [enlargedImage, setEnlargedImage] = useState(false);
@@ -373,12 +367,12 @@ export const DefaultSettingPage = () => {
     dispatch(userSettingsModal(null));
   }
 
+  /** TODO: uncomment when pro backend calls are working
   useMount(() => {
-    return;
     if (NetworkTime.now() > t + 1 * DURATION.MINUTES) {
       void refetch();
     }
-  });
+  }); */
 
   return (
     <UserSettingsModalContainer

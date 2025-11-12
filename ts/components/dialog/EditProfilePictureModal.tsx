@@ -173,12 +173,15 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
   }, [dispatch, conversationDetailsModal, editProfilePictureModal]);
 
   const proBadgeCb = useProBadgeOnClickCb({
-    cta: {
-      variant: userHasPro
-        ? ProCTAVariant.ANIMATED_DISPLAY_PICTURE_ACTIVATED
-        : ProCTAVariant.ANIMATED_DISPLAY_PICTURE,
-      afterActionButtonCallback,
-      actionButtonNextModalAfterCloseCallback,
+    context: 'edit-profile-pic',
+    args: {
+      cta: {
+        variant: userHasPro
+          ? ProCTAVariant.ANIMATED_DISPLAY_PICTURE_ACTIVATED
+          : ProCTAVariant.ANIMATED_DISPLAY_PICTURE,
+        afterActionButtonCallback,
+        actionButtonNextModalAfterCloseCallback,
+      },
     },
   });
 
