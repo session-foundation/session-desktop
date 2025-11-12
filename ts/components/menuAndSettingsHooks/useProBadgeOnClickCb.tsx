@@ -260,7 +260,5 @@ export function useProBadgeOnClickCb(
     return showNoCb;
   }
 
-  // assertUnreachable(context, 'useProBadgeOnClickCb: context not handled');
-
   return doNotShow;
 }

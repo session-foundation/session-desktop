@@ -13,14 +13,13 @@ export function AnimatedArrowSpinnerIcon({ size }: AnimatedSpinnerIconProps) {
         viewBox="0 0 24 24"
         fill="none"
         stroke="var(--text-primary-color)"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
         role="img"
         aria-label="Loading"
         transform="scale(-0.85, 0.85)"
       >
-        <title>Loading</title>
         <g>
           <animateTransform
             attributeName="transform"

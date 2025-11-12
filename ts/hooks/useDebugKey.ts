@@ -12,7 +12,7 @@ export function useDebugKey({ callback, key, withCtrl }: UseDebugKeyArgs) {
     return;
   }
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks -- isDevProd is static during runtime, we can conditinally mount this hook.
+  // eslint-disable-next-line react-hooks/rules-of-hooks -- isDevProd is static during runtime, we can conditionally mount this hook.
   useKey((event: KeyboardEvent) => {
     if (withCtrl && !(event.ctrlKey || event.metaKey)) {
       return false;
