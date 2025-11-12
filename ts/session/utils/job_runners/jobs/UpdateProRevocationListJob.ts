@@ -16,8 +16,11 @@ import { proBackendDataActions } from '../../../../state/ducks/proBackendData';
 import { Storage } from '../../../../util/storage';
 import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { formatRoundedUpDuration } from '../../../../util/i18n/formatting/generics';
+import { isDevProd } from '../../../../shared/env_vars';
 
 let lastRunAtMs = 0;
+
+const delayBetweenRuns = isDevProd() ? 15 * DURATION.SECONDS : 15 * DURATION.MINUTES;
 
 class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPersistedData> {
   constructor({
@@ -71,6 +74,8 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
         window.log.debug(
           `UpdateProRevocationListJob: no new revocations from our existing ticket ${lastFetchTicket}`
         );
+        lastRunAtMs = Date.now();
+
         return RunJobResult.Success;
       }
       const newTicket = response.result.ticket;
@@ -118,7 +123,7 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
 
 async function queueNewJobIfNeeded() {
   const diffMs = Date.now() - lastRunAtMs;
-  if (diffMs <= 15 * DURATION.MINUTES) {
+  if (diffMs <= delayBetweenRuns) {
     window.log.debug(
       `NOT Scheduling UpdateProRevocationListJob: as we have already run it recently (${formatRoundedUpDuration(diffMs)} ago)`
     );

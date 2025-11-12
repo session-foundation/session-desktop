@@ -1,7 +1,10 @@
 import type { WithMasterPrivKeyHex, WithRotatingPrivKeyHex } from 'libsession_util_nodejs';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { StateType } from '../reducer';
-import { ProProofResultType, ProStatusResultType } from '../../session/apis/pro_backend_api/types';
+import {
+  ProProofResultType,
+  ProStatusResultType,
+} from '../../session/apis/pro_backend_api/schemas';
 import ProBackendAPI from '../../session/apis/pro_backend_api/ProBackendAPI';
 import { getFeatureFlag } from './types/releasedFeaturesReduxTypes';
 import { UserUtils } from '../../session/utils';

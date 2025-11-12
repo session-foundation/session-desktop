@@ -241,6 +241,12 @@ export default class SessionBackendServerApi {
     undefined
   > | null> {
     const response = await this.makeRequest(requestParams);
+    if (getFeatureFlag('debugServerRequests')) {
+      this.logInfo(
+        `\nfrom ${requestParams.method} on "${requestParams.path}: response: ${JSON.stringify(response)}`,
+        requestParams.path
+      );
+    }
     return this.parseSchema({ path: requestParams.path, response, schema: withZodSchema });
   }
 }

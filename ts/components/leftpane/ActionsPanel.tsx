@@ -52,7 +52,7 @@ import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { AvatarMigrate } from '../../session/utils/job_runners/jobs/AvatarMigrateJob';
 import { Storage } from '../../util/storage';
 import { themesArray } from '../../themes/constants/colors';
-import { isDebugMode } from '../../shared/env_vars';
+import { isDebugMode, isDevProd } from '../../shared/env_vars';
 import { GearAvatarButton } from '../buttons/avatar/GearAvatarButton';
 import { useZoomShortcuts } from '../../hooks/useZoomingShortcut';
 import { OnionStatusLight } from '../dialog/OnionStatusPathDialog';
@@ -167,9 +167,12 @@ function useUpdateBadgeCount() {
  * Note: a job will only be added if it wasn't fetched recently, so there is no harm in running this every minute.
  */
 function usePeriodicFetchRevocationList() {
-  useInterval(() => {
-    void UpdateProRevocationList.queueNewJobIfNeeded();
-  }, 1 * DURATION.MINUTES);
+  useInterval(
+    () => {
+      void UpdateProRevocationList.queueNewJobIfNeeded();
+    },
+    isDevProd() ? 10 * DURATION.SECONDS : 1 * DURATION.MINUTES
+  );
 }
 
 function useDebugThemeSwitch() {

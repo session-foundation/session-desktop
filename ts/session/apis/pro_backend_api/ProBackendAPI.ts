@@ -13,7 +13,7 @@ import {
   GetProRevocationsResponseType,
   GetProStatusResponseSchema,
   GetProStatusResponseType,
-} from './types';
+} from './schemas';
 import { ProWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { NetworkTime } from '../../../util/NetworkTime';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
