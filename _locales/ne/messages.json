@@ -347,6 +347,8 @@
   "emojiReactsHoverYouNameTwoDesktop": "तपाईँ र {name} ले {emoji_name} सँग प्रतिक्रिया दिनुभयो",
   "emojiReactsNotification": "तपाईंको सन्देशमा {emoji} प्रतिकृया जनाइएको छ",
   "enable": "सक्षम गर्नुहोस्",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "कृपया आफ्नो इन्टरनेट जडान जाँच गर्नुहोस् र पुन: प्रयास गर्नुहोस्।",
   "errorCopyAndQuit": "त्रुटि प्रतिलिपि गर्नुहोस् र बाहिर निस्कनुहोस्",
   "errorDatabase": "डेटाबेस त्रुटि",

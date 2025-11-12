@@ -36,6 +36,8 @@ import {
 import { ProIconButton } from '../buttons/ProButton';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { Localizer } from '../basic/Localizer';
+import { CONVERSATION } from '../../session/constants';
+import { formatNumber } from '../../util/i18n/formatting/generics';
 
 export enum ProCTAVariant {
   GENERIC = 0,
@@ -270,6 +272,7 @@ function getDescription(variant: ProCTAVariant, userHasProExpired: boolean): Rea
               ? 'proRenewPinFiveConversations'
               : 'proCallToActionPinnedConversationsMoreThan'
           }
+          limit={formatNumber(CONVERSATION.MAX_PINNED_CONVERSATIONS_STANDARD)}
         />
       );
 
@@ -299,7 +302,7 @@ function getDescription(variant: ProCTAVariant, userHasProExpired: boolean): Rea
       return (
         <>
           <span>
-            {tr('proAlreadyPurchased')}{' '}
+            <Localizer token="proAlreadyPurchased" />{' '}
             <ProIconButton
               iconSize={'small'}
               dataTestId="invalid-data-testid"
@@ -307,7 +310,7 @@ function getDescription(variant: ProCTAVariant, userHasProExpired: boolean): Rea
             />
           </span>
           <br />
-          {tr('proAnimatedDisplayPicture')}
+          <Localizer token="proAnimatedDisplayPicture" />
         </>
       );
 
@@ -337,7 +340,7 @@ function getDescription(variant: ProCTAVariant, userHasProExpired: boolean): Rea
     case ProCTAVariant.GROUP_ACTIVATED:
       return (
         <span>
-          {tr('proGroupActivatedDescription')}{' '}
+          <Localizer token="proGroupActivatedDescription" />{' '}
           <ProIconButton iconSize={'small'} dataTestId="invalid-data-testid" onClick={undefined} />
         </span>
       );
@@ -352,20 +355,20 @@ function getImage(variant: ProCTAVariant): ReactNode {
   switch (variant) {
     case ProCTAVariant.PINNED_CONVERSATION_LIMIT:
     case ProCTAVariant.PINNED_CONVERSATION_LIMIT_GRANDFATHERED:
-      return <StyledCTAImage src="images/cta_hero_pin_convo_limit.webp" />;
+      return <StyledCTAImage src="images/cta/pro-pinned.webp" />;
 
     case ProCTAVariant.ANIMATED_DISPLAY_PICTURE:
     case ProCTAVariant.ANIMATED_DISPLAY_PICTURE_ACTIVATED:
       return (
         <AnimatedCTAImage
-          ctaLayerSrc="images/cta_hero_animated_profile_base_layer.webp"
-          animatedLayerSrc="images/cta_hero_animated_profile_animation_layer.webp"
+          ctaLayerSrc="images/cta/pro-animated-profile.webp"
+          animatedLayerSrc="images/cta/pro-animated-profile-animation.webp"
           animationStyle={{ width: '13%', top: '28.5%', left: '45%' }}
         />
       );
 
     case ProCTAVariant.MESSAGE_CHARACTER_LIMIT:
-      return <StyledCTAImage src="images/cta_hero_char_limit.webp" />;
+      return <StyledCTAImage src="images/cta/pro-higher-character-limit.webp" />;
 
     // TODO: Group CTA images dont exist yet and need to be implemented later
     case ProCTAVariant.GROUP_ADMIN:
@@ -378,8 +381,8 @@ function getImage(variant: ProCTAVariant): ReactNode {
     case ProCTAVariant.EXPIRED:
       return (
         <AnimatedCTAImage
-          ctaLayerSrc="images/cta_hero_generic_base_layer.webp"
-          animatedLayerSrc="images/cta_hero_animated_profile_animation_layer.webp"
+          ctaLayerSrc="images/cta/pro-generic.webp"
+          animatedLayerSrc="images/cta/pro-animated-profile-animation.webp"
           animationStyle={{ width: '8%', top: '59.2%', left: '85.5%' }}
           noColor={variant === ProCTAVariant.EXPIRED}
         />
@@ -479,7 +482,7 @@ function Buttons({
     let settingsModalProps: UserSettingsModalState = {
       userSettingsPage: 'pro',
       hideBackButton: true,
-      hideHelp: true,
+      fromCTA: true,
       centerAlign: true,
       afterCloseAction: actionButtonNextModalAfterCloseCallback,
     };
@@ -504,7 +507,6 @@ function Buttons({
         shinyContainerStyle={{
           width: '100%',
         }}
-        buttonColor={SessionButtonColor.PrimaryDark}
         onClick={() => {
           onClose();
           dispatch(userSettingsModal(settingsModalProps));
@@ -570,12 +572,13 @@ export function SessionProInfoModal(props: SessionProInfoState) {
     <SessionWrapperModal
       modalId="sessionProInfoModal"
       onClose={onClose}
-      headerChildren={getImage(props.variant)}
-      padding="0"
-      removeScrollbarGutter={true}
       shouldOverflow={true}
       $contentMinWidth={WrapperModalWidth.normal}
       $contentMaxWidth={WrapperModalWidth.normal}
+      style={{ backgroundColor: 'var(--background-primary-color)' }}
+      moveHeaderIntoScrollableBody={true}
+      removeScrollbarGutter={true}
+      headerChildren={getImage(props.variant)}
       buttonChildren={
         <Buttons
           variant={props.variant}

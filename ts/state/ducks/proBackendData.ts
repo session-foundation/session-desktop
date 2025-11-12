@@ -28,7 +28,7 @@ const defaultRequestState = {
   data: null,
 } satisfies RequestState;
 
-type RequestActionArgs = {
+export type RequestActionArgs = {
   key: keyof ProBackendDataState;
   result: boolean;
 };
@@ -105,6 +105,16 @@ async function createProBackendFetchAsyncThunk<D>({
       isFetching: false,
       isLoading: false,
       t: response.t,
+    };
+  } catch (e) {
+    window?.log?.error(e);
+    return {
+      data: null as D,
+      error: e.message,
+      isError: true,
+      isFetching: false,
+      isLoading: false,
+      t: 0,
     };
   } finally {
     payloadCreator.dispatch(proBackendDataSlice.actions.setIsFetching({ key, result: false }));

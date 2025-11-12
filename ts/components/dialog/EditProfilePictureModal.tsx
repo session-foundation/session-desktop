@@ -3,7 +3,12 @@ import { useDispatch } from 'react-redux';
 import type { AnyAction, Dispatch } from 'redux';
 import styled from 'styled-components';
 import { ToastUtils, UserUtils } from '../../session/utils';
-import { userSettingsModal, updateEditProfilePictureModal } from '../../state/ducks/modalDialog';
+import {
+  userSettingsModal,
+  updateEditProfilePictureModal,
+  updateConversationDetailsModal,
+  updateSessionProInfoModal,
+} from '../../state/ducks/modalDialog';
 import type { EditProfilePictureModalProps } from '../../types/ReduxTypes';
 import { pickFileForAvatar } from '../../types/attachments/VisualAttachment';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
@@ -26,7 +31,7 @@ import {
 } from '../SessionWrapperModal';
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
 import { SpacerLG, SpacerSM } from '../basic/Text';
-import { ProCTAVariant, useShowSessionProInfoDialogCbWithVariant } from './SessionProInfoModal';
+import { ProCTAVariant } from './SessionProInfoModal';
 import { AvatarSize } from '../avatar/Avatar';
 import { ProIconButton } from '../buttons/ProButton';
 import { useProBadgeOnClickCb } from '../menuAndSettingsHooks/useProBadgeOnClickCb';
@@ -36,6 +41,10 @@ import { UploadFirstImageButton } from '../buttons/avatar/UploadFirstImageButton
 import { Flex } from '../basic/Flex';
 import { LucideIcon } from '../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import {
+  useEditProfilePictureModal,
+  useUpdateConversationDetailsModal,
+} from '../../state/selectors/modal';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
@@ -149,11 +158,31 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
     setIsNewAvatarAnimated(false);
   };
 
-  const handleShowProInfoModal = useShowSessionProInfoDialogCbWithVariant();
+  const editProfilePictureModal = useEditProfilePictureModal();
+  const conversationDetailsModal = useUpdateConversationDetailsModal();
+
+  const afterActionButtonCallback = useCallback(() => {
+    dispatch(updateEditProfilePictureModal(null));
+    dispatch(updateConversationDetailsModal(null));
+  }, [dispatch]);
+
+  const actionButtonNextModalAfterCloseCallback = useCallback(() => {
+    dispatch(userSettingsModal({ userSettingsPage: 'default' }));
+    dispatch(updateConversationDetailsModal(conversationDetailsModal));
+    dispatch(updateEditProfilePictureModal(editProfilePictureModal));
+  }, [dispatch, conversationDetailsModal, editProfilePictureModal]);
 
   const proBadgeCb = useProBadgeOnClickCb({
     context: 'edit-profile-pic',
-    args: { userHasPro },
+    args: {
+      cta: {
+        variant: userHasPro
+          ? ProCTAVariant.ANIMATED_DISPLAY_PICTURE_ACTIVATED
+          : ProCTAVariant.ANIMATED_DISPLAY_PICTURE,
+        afterActionButtonCallback,
+        actionButtonNextModalAfterCloseCallback,
+      },
+    },
   });
 
   const closeDialog = useCallback(() => {
@@ -199,7 +228,13 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
      * All of those are taken care of as part of the `isProUser` check in the conversation model
      */
     if (isProAvailable && !userHasPro && isNewAvatarAnimated && !isCommunity) {
-      handleShowProInfoModal(ProCTAVariant.ANIMATED_DISPLAY_PICTURE);
+      dispatch(
+        updateSessionProInfoModal({
+          variant: ProCTAVariant.ANIMATED_DISPLAY_PICTURE,
+          afterActionButtonCallback,
+          actionButtonNextModalAfterCloseCallback,
+        })
+      );
       window.log.debug('Attempted to upload an animated profile picture without pro!');
       return;
     }

@@ -352,6 +352,8 @@
   "emojiReactsHoverYouNameTwoDesktop": "Sinä ja {name} reagoivat emojilla {emoji_name}",
   "emojiReactsNotification": "Reagoi viestiisi {emoji}",
   "enable": "Ota käyttöön",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "Tarkista Internet-yhteytesi ja yritä uudelleen.",
   "errorCopyAndQuit": "Kopioi virhe ja lopeta",
   "errorDatabase": "Tietokantavirhe",

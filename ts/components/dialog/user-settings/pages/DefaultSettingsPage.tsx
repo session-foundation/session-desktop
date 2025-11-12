@@ -339,6 +339,8 @@ const SessionInfo = () => {
 
 export const DefaultSettingPage = () => {
   const dispatch = useDispatch();
+  // TODO: uncomment when pro backend calls are working
+  // const { refetch, t } = useProAccessDetails();
 
   const profileName = useOurConversationUsername() || '';
   const [enlargedImage, setEnlargedImage] = useState(false);
@@ -364,6 +366,13 @@ export const DefaultSettingPage = () => {
   function closeDialog() {
     dispatch(userSettingsModal(null));
   }
+
+  /** TODO: uncomment when pro backend calls are working
+  useMount(() => {
+    if (NetworkTime.now() > t + 1 * DURATION.MINUTES) {
+      void refetch();
+    }
+  }); */
 
   return (
     <UserSettingsModalContainer

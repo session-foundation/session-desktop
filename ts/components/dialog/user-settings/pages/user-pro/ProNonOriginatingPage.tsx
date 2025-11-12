@@ -19,7 +19,7 @@ import { showLinkVisitWarningDialog } from '../../../OpenUrlModal';
 import { proButtonProps } from '../../../SessionProInfoModal';
 import { Flex } from '../../../../basic/Flex';
 import type { ProNonOriginatingPageVariant } from '../../../../../types/ReduxTypes';
-import { useProAccessDetails } from '../../../../../hooks/useHasPro';
+import { useCurrentNeverHadPro, useProAccessDetails } from '../../../../../hooks/useHasPro';
 import LIBSESSION_CONSTANTS from '../../../../../session/utils/libsession/libsession_constants';
 import { ProPaymentProvider } from '../../../../../session/apis/pro_backend_api/types';
 
@@ -149,6 +149,7 @@ function ProInfoBlockDevice({ textElement }: { textElement: ReactNode }) {
 
 function ProInfoBlockDeviceLinked() {
   const { data } = useProAccessDetails();
+  const hasNeverHadPro = useCurrentNeverHadPro();
   return (
     <ProInfoBlockItem
       iconElement={<ProInfoBlockIconElement unicode={LUCIDE_ICONS_UNICODE.LINK} />}
@@ -156,7 +157,7 @@ function ProInfoBlockDeviceLinked() {
         <ProInfoBlockText>
           <strong>{tr('onLinkedDevice')}</strong>
           <Localizer
-            token="proRenewDesktopLinked"
+            token={hasNeverHadPro ? 'proUpgradeDesktopLinked' : 'proRenewDesktopLinked'}
             platform_store={data.providerConstants.store}
             platform_store_other={data.providerConstants.store_other}
           />

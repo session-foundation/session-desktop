@@ -319,6 +319,8 @@
   "emojiReactsCountOthers": "{count, plural, one [E {count} outra persoa reaccionou {emoji} a esta mensaxe.] other [E {count} outras persoas reaccionaron {emoji} a esta mensaxe.]}",
   "emojiReactsNotification": "Reaccionou á túa mensaxe {emoji}",
   "enable": "Activar",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "Por favor, comproba a túa conexión a Internet e téntao de novo.",
   "errorCopyAndQuit": "Copiar erro e saír",
   "errorDatabase": "Erro de base de datos",

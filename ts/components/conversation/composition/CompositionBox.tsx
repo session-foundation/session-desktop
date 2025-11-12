@@ -122,6 +122,10 @@ interface State {
   characterCount?: number;
 }
 
+function getSendableTextLength(v: string): number {
+  return v.trim().replace(/^\n+|\n+$/g, '').length;
+}
+
 const getDefaultState = (newConvoId?: string) => {
   const draft = getDraftForConversation(newConvoId);
   return {
@@ -133,7 +137,7 @@ const getDefaultState = (newConvoId?: string) => {
     ignoredLink: undefined,
     stagedLinkPreview: undefined,
     showCaptionEditor: undefined,
-    characterCount: undefined,
+    characterCount: getSendableTextLength(draft),
   };
 };
 
@@ -710,7 +714,7 @@ class CompositionBoxInner extends Component<Props, State> {
    * This is a significantly cheaper version of calling @see {@link getSendableText} and getting the length
    */
   private isTextSendable(): boolean {
-    return this.state.draft.trim().replace(/^\n+|\n+$/g, '').length > 0;
+    return getSendableTextLength(this.state.draft) > 0;
   }
 
   private async onSendMessage() {

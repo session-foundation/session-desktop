@@ -46,7 +46,7 @@ import ProBackendAPI from '../../../session/apis/pro_backend_api/ProBackendAPI';
 
 type DebugButtonProps = SessionButtonProps & { shiny?: boolean };
 
-export function DebugButton({ shiny, style: _style, ...rest }: DebugButtonProps) {
+export function DebugButton({ shiny = true, style: _style, ...rest }: DebugButtonProps) {
   const style = { minWidth: 'max-content', width: '48%', ..._style };
 
   if (shiny) {
