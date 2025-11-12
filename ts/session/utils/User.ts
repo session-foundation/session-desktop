@@ -9,6 +9,7 @@ import { PubKey } from '../types';
 import { toHex } from './String';
 import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { OutgoingUserProfile } from '../../types/message';
+import { SettingsKey } from '../../data/settings-key';
 
 export type HexKeyPair = {
   pubKey: string;
@@ -66,7 +67,7 @@ export async function getIdentityKeyPair(): Promise<SessionKeyPair | undefined> 
   if (cachedIdentityKeyPair) {
     return cachedIdentityKeyPair;
   }
-  const item = await Data.getItemById('identityKey');
+  const item = await Data.getItemById(SettingsKey.identityKey);
 
   cachedIdentityKeyPair = item?.value;
   return cachedIdentityKeyPair;
@@ -131,8 +132,7 @@ export async function getOurProfile() {
  * Return the pro master key hex from the Item table, or generate and saves it before returning it.
  */
 export async function getProMasterKeyHex() {
-  const itemId = 'proMasterKeyHex';
-  const item = await Data.getItemById(itemId);
+  const item = await Data.getItemById(SettingsKey.proMasterKeyHex);
   if (!item?.value && isString(item?.value) && item.value.length) {
     return item.value;
   }
@@ -144,7 +144,7 @@ export async function getProMasterKeyHex() {
     throw new Error('Failed to generate pro master key');
   }
   await Data.createOrUpdateItem({
-    id: itemId,
+    id: SettingsKey.proMasterKeyHex,
     value: proMasterKeyHex,
   });
   return proMasterKeyHex;
@@ -154,8 +154,7 @@ export async function getProMasterKeyHex() {
  * Return the pro rotating key hex from the Item table, or generate and saves it before returning it.
  */
 export async function getProRotatingKeyHex() {
-  const itemId = 'proRotatingKeyHex';
-  const item = await Data.getItemById(itemId);
+  const item = await Data.getItemById(SettingsKey.proRotatingKeyHex);
   if (!item?.value && isString(item?.value) && item.value.length > 0) {
     return item.value;
   }
@@ -164,7 +163,7 @@ export async function getProRotatingKeyHex() {
     throw new Error('Failed to generate pro rotating key');
   }
   await Data.createOrUpdateItem({
-    id: itemId,
+    id: SettingsKey.proRotatingKeyHex,
     value: rotatingPrivKeyHex,
   });
   return rotatingPrivKeyHex;

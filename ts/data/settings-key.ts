@@ -35,6 +35,8 @@ const showOnboardingAccountJustCreated = 'showOnboardingAccountJustCreated';
  */
 const lastMessageGroupsRegenerated = 'lastMessageGroupsRegenerated';
 
+const localAttachmentEncryptionKey = 'local_attachment_encrypted_key';
+
 export const SettingsKey = {
   settingsReadReceipt,
   settingsTypingIndicator,
@@ -44,6 +46,7 @@ export const SettingsKey = {
   settingsSpellCheck,
   settingsLinkPreview,
   settingsStartInTray,
+  pendingMessages: 'pendingMessages',
   settingsOpengroupPruning,
   hasBlindedMsgRequestsEnabled,
   settingsNotification,
@@ -61,6 +64,13 @@ export const SettingsKey = {
   proPinnedConversations,
   proBadgesSent,
   proGroupsUpgraded,
+  identityKey: 'identityKey',
+  blocked: 'blocked',
+  numberId: 'number_id',
+  localAttachmentEncryptionKey,
+  spellCheckEnabled: 'spell-check',
+  proMasterKeyHex: 'proMasterKeyHex',
+  proRotatingKeyHex: 'proRotatingKeyHex',
 } as const;
 
 export const KNOWN_BLINDED_KEYS_ITEM = 'KNOWN_BLINDED_KEYS_ITEM';

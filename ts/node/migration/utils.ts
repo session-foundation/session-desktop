@@ -3,6 +3,7 @@ import * as BetterSqlite3 from '@signalapp/better-sqlite3';
 import { isArray } from 'lodash';
 import { CONVERSATIONS_TABLE } from '../database_utility';
 import { getIdentityKeys, sqlNode } from '../sql';
+import { SettingsKey } from '../../data/settings-key';
 
 export const hasDebugEnvVariable = Boolean(process.env.SESSION_DEBUG);
 
@@ -39,7 +40,7 @@ export function getLoggedInUserConvoDuringMigration(db: BetterSqlite3.Database) 
 
 export function getBlockedNumbersDuringMigration(db: BetterSqlite3.Database) {
   try {
-    const blockedItem = sqlNode.getItemById('blocked', db);
+    const blockedItem = sqlNode.getItemById(SettingsKey.blocked, db);
     if (!blockedItem) {
       return [];
     }

@@ -20,7 +20,7 @@ describe('libsession_pro', () => {
           utf16: 'hello',
         })
       ).to.deep.eq({
-        proFeatures: [],
+        proFeaturesBitset: 0n,
         status: 'SUCCESS',
         error: null,
         codepointCount: 5,
@@ -36,23 +36,30 @@ describe('libsession_pro', () => {
           utf16: 'hellohello',
         })
       ).to.deep.eq({
-        proFeatures: ['ANIMATED_AVATAR'],
+        proFeaturesBitset: 4n,
         status: 'SUCCESS',
         error: null,
         codepointCount: 10,
       });
     });
     it('expects 10K_CHARACTER_LIMIT to be ignored if requested as no need for 10k limit', async () => {
+      const withAnimatedAvatar = ProFeatures.addProFeature(
+        0n,
+        ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE
+      );
+
+      const withAnimatedAvatarAnd10k = ProFeatures.addProFeature(
+        withAnimatedAvatar,
+        ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH // 10k should be ignored
+      );
+      console.warn('withAnimatedAvatarAnd10k', withAnimatedAvatarAnd10k);
       expect(
         ProWrapperNode.proFeaturesForMessage({
-          proFeaturesBitset: ProFeatures.addProFeature(
-            ProFeatures.addProFeature(0n, ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE),
-            ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH // 10k should be ignored
-          ),
+          proFeaturesBitset: withAnimatedAvatarAnd10k,
           utf16: 'hellohello',
         })
       ).to.deep.eq({
-        proFeatures: ['ANIMATED_AVATAR'],
+        proFeaturesBitset: 4n,
         status: 'SUCCESS',
         error: null,
         codepointCount: 10,
@@ -65,7 +72,7 @@ describe('libsession_pro', () => {
           utf16: '012345678'.repeat(1000), // 1000 * 9 chars = 9000 codepoints
         })
       ).to.deep.eq({
-        proFeatures: ['10K_CHARACTER_LIMIT'],
+        proFeaturesBitset: 1n,
         status: 'SUCCESS',
         error: null,
         codepointCount: 9000,
@@ -81,7 +88,7 @@ describe('libsession_pro', () => {
           utf16: '012345678'.repeat(1000), // 1000 * 9 chars = 9000 codepoints
         })
       ).to.deep.eq({
-        proFeatures: ['10K_CHARACTER_LIMIT', 'ANIMATED_AVATAR'],
+        proFeaturesBitset: 5n,
         status: 'SUCCESS',
         error: null,
         codepointCount: 9000,

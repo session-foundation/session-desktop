@@ -129,6 +129,23 @@ describe('fillConvoAttributesWithDefaults', () => {
     });
   });
 
+  describe('bitsetProFeatures', () => {
+    it('initialize bitsetProFeatures if not given', () => {
+      expect(fillConvoAttributesWithDefaults({} as ConversationAttributes)).to.have.deep.property(
+        'bitsetProFeatures',
+        undefined
+      );
+    });
+
+    it('do not override bitsetProFeatures if given', () => {
+      expect(
+        fillConvoAttributesWithDefaults({
+          bitsetProFeatures: BigInt(123456789123456789123456789123456789n).toString(),
+        } as ConversationAttributes)
+      ).to.have.deep.property('bitsetProFeatures', '123456789123456789123456789123456789');
+    });
+  });
+
   describe('profileUpdatedSeconds', () => {
     it('does not initialize profileUpdatedSeconds if not given', () => {
       expect(

@@ -105,7 +105,7 @@ function openDevToolsTestIntegration() {
 }
 
 async function getSpellCheckSetting() {
-  const json = sqlNode.getItemById('spell-check');
+  const json = sqlNode.getItemById(SettingsKey.spellCheckEnabled);
   // Default to `true` if setting doesn't exist yet
   if (!json) {
     return true;
@@ -211,6 +211,7 @@ import { tr } from '../localization/localeTools';
 import { isSharpSupported } from '../node/sharp_support/sharpSupport';
 
 import { logCrash } from '../node/crash/log_crash';
+import { SettingsKey } from '../data/settings-key';
 
 function prepareURL(pathSegments: Array<string>, moreKeys?: { theme: any }) {
   const urlObject: url.UrlObject = {
