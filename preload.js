@@ -314,11 +314,12 @@ const {
   getFeatureFlag,
 } = require('./ts/state/ducks/types/releasedFeaturesReduxTypes.js');
 const { PRO_API } = require('./ts/session/apis/pro_backend_api/ProBackendTarget.js');
+
 window.getConversationController = ConvoHub.use;
 
 // Linux seems to periodically let the event loop stop, so this is a global workaround
 setInterval(() => {
-  window.nodeSetImmediate(() => {});
+  window.nodeSetImmediate(() => { });
 }, 1000);
 
 window.clipboard = clipboard;
