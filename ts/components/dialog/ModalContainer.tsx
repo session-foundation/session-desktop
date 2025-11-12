@@ -79,7 +79,7 @@ export const ModalContainer = () => {
   return (
     <>
       {/* Screens */}
-      {/* UserProfileModal and ConversationSettingsDialog need to be behind the settings dialog because it can open the settings dialog */}
+      {/* UserProfileModal and ConversationSettingsDialog need to be behind the settings dialog because they can open the settings dialog */}
       {userProfileModalState && <UserProfileModal {...userProfileModalState} />}
       {conversationSettingsModalState && (
         <ConversationSettingsDialog {...conversationSettingsModalState} />
