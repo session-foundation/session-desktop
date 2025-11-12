@@ -427,6 +427,8 @@ function ProStats() {
 function ProSettings({ state }: SectionProps) {
   const dispatch = useDispatch();
   const userHasPro = useCurrentUserHasPro();
+  const userHasExpiredPro = useCurrentUserHasExpiredPro();
+  const userNeverHadPro = useCurrentNeverHadPro();
   const { data, isLoading, isError } = useProAccessDetails();
   const backendErrorButtons = useBackendErrorDialogButtons();
 
@@ -454,8 +456,12 @@ function ProSettings({ state }: SectionProps) {
     );
   }, [dispatch, isLoading, isError, backendErrorButtons, centerAlign, returnToThisModalAction]);
 
-  if (!userHasPro) {
+  if (state.fromCTA ? !userHasPro : userNeverHadPro) {
     return <ProNonProContinueButton state={state} />;
+  }
+
+  if (userHasExpiredPro) {
+    return null;
   }
 
   return (
