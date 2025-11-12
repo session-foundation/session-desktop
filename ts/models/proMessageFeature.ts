@@ -21,32 +21,32 @@ export enum ProMessageFeature {
   PRO_ANIMATED_DISPLAY_PICTURE = 'pro-animated-display-picture',
 }
 
-function hasProFeature(bitMask: bigint, feature: ProMessageFeature) {
-  return bitMask & numberToBigInt(1 << proFeatureValues.indexOf(feature));
+function hasProFeature(bitset: bigint, feature: ProMessageFeature) {
+  return bitset & numberToBigInt(1 << proFeatureValues.indexOf(feature));
 }
 
-function addProFeature(bitMask: bigint, feature: ProMessageFeature) {
-  return bitMask | numberToBigInt(1 << proFeatureValues.indexOf(feature));
+function addProFeature(bitset: bigint, feature: ProMessageFeature) {
+  return bitset | numberToBigInt(1 << proFeatureValues.indexOf(feature));
 }
 
-function bigintToProFeatures(bitMask: bigint) {
+function bigintToProFeatures(bitset: bigint) {
   // Note: this needs to be the same mapping as the one in the libsession SESSION_PROTOCOL_PRO_FEATURES
 
   const features = [];
-  if (hasProFeature(bitMask, ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH)) {
+  if (hasProFeature(bitset, ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH)) {
     features.push(ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH);
   }
-  if (hasProFeature(bitMask, ProMessageFeature.PRO_BADGE)) {
+  if (hasProFeature(bitset, ProMessageFeature.PRO_BADGE)) {
     features.push(ProMessageFeature.PRO_BADGE);
   }
-  if (hasProFeature(bitMask, ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE)) {
+  if (hasProFeature(bitset, ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE)) {
     features.push(ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE);
   }
   return features;
 }
 
-function bigIntStrToProFeatures(bitMaskAsAstr: string) {
-  const asBigInt = BigInt(bitMaskAsAstr);
+function bigIntStrToProFeatures(bitsetAsAstr: string) {
+  const asBigInt = BigInt(bitsetAsAstr);
 
   return bigintToProFeatures(asBigInt);
 }
@@ -63,7 +63,7 @@ export const ProFeatures = {
   bigIntStrToProFeatures,
   hasProFeature,
   /**
-   * Adds a feature to the bit mask, should only be used for testing.
+   * Adds a feature to the bitset, should only be used for testing.
    */
   addProFeature,
 };

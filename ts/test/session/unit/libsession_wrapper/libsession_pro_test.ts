@@ -52,7 +52,6 @@ describe('libsession_pro', () => {
         withAnimatedAvatar,
         ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH // 10k should be ignored
       );
-      console.warn('withAnimatedAvatarAnd10k', withAnimatedAvatarAnd10k);
       expect(
         ProWrapperNode.proFeaturesForMessage({
           proFeaturesBitset: withAnimatedAvatarAnd10k,

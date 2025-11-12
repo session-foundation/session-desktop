@@ -97,6 +97,7 @@ import { sqlNode } from '../node/sql';
 import * as sqlChannels from '../node/sql_channel';
 import { createTrayIcon } from '../node/tray_icon';
 import { windowMarkShouldQuit, windowShouldQuit } from '../node/window_state';
+import { SettingsKey } from '../data/settings-key';
 
 let appStartInitialSpellcheckSetting = true;
 
@@ -211,7 +212,6 @@ import { tr } from '../localization/localeTools';
 import { isSharpSupported } from '../node/sharp_support/sharpSupport';
 
 import { logCrash } from '../node/crash/log_crash';
-import { SettingsKey } from '../data/settings-key';
 
 function prepareURL(pathSegments: Array<string>, moreKeys?: { theme: any }) {
   const urlObject: url.UrlObject = {
