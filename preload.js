@@ -60,6 +60,7 @@ window.sessionBooleanFeatureFlags = {
   useDeterministicEncryption: !isEmpty(process.env.SESSION_ATTACH_DETERMINISTIC_ENCRYPTION),
   disableOnionRequests: false,
   useTestNet: isTestNet() || isTestIntegration(),
+  useTestProBackend: !isEmpty(process.env.TEST_PRO_BACKEND),
   debugInputCommands: !isEmpty(process.env.SESSION_DEBUG),
   alwaysShowRemainingChars: false,
   showPopoverAnchors: false,
@@ -312,6 +313,8 @@ const {
   getDataFeatureFlag,
   getFeatureFlag,
 } = require('./ts/state/ducks/types/releasedFeaturesReduxTypes.js');
+const { PRO_API } = require('./ts/session/apis/pro_backend_api/ProBackendTarget.js');
+
 window.getConversationController = ConvoHub.use;
 
 // Linux seems to periodically let the event loop stop, so this is a global workaround
