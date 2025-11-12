@@ -348,8 +348,13 @@ export const DebugActions = () => {
       <DebugButton
         onClick={async () => {
           const masterPrivKeyHex = await getProMasterKeyHex();
+          console.warn('masterPrivKeyHex', masterPrivKeyHex);
           const rotatingPrivKeyHex = await getProRotatingKeyHex();
-          await ProBackendAPI.getProProof({ masterPrivKeyHex, rotatingPrivKeyHex });
+          const response = await ProBackendAPI.getProProof({
+            masterPrivKeyHex,
+            rotatingPrivKeyHex,
+          });
+          console.warn('getProProof response', response);
         }}
       >
         Get Pro Proof
@@ -357,7 +362,10 @@ export const DebugActions = () => {
       <DebugButton
         onClick={async () => {
           const masterPrivKeyHex = await getProMasterKeyHex();
-          await ProBackendAPI.getProStatus({ masterPrivKeyHex });
+          console.warn('masterPrivKeyHex', masterPrivKeyHex);
+
+          const response = await ProBackendAPI.getProStatus({ masterPrivKeyHex });
+          console.warn('Get Pro Status', response);
         }}
       >
         Get Pro Status
