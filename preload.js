@@ -319,7 +319,7 @@ window.getConversationController = ConvoHub.use;
 
 // Linux seems to periodically let the event loop stop, so this is a global workaround
 setInterval(() => {
-  window.nodeSetImmediate(() => { });
+  window.nodeSetImmediate(() => {});
 }, 1000);
 
 window.clipboard = clipboard;
