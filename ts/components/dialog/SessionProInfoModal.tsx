@@ -302,7 +302,7 @@ function getDescription(variant: ProCTAVariant, userHasProExpired: boolean): Rea
       return (
         <>
           <span>
-            <Localizer token="proAlreadyPurchased" />
+            <Localizer token="proAlreadyPurchased" />{' '}
             <ProIconButton
               iconSize={'small'}
               dataTestId="invalid-data-testid"
@@ -340,7 +340,7 @@ function getDescription(variant: ProCTAVariant, userHasProExpired: boolean): Rea
     case ProCTAVariant.GROUP_ACTIVATED:
       return (
         <span>
-          <Localizer token="proGroupActivatedDescription" />
+          <Localizer token="proGroupActivatedDescription" />{' '}
           <ProIconButton iconSize={'small'} dataTestId="invalid-data-testid" onClick={undefined} />
         </span>
       );
@@ -382,7 +382,7 @@ function getImage(variant: ProCTAVariant): ReactNode {
       return (
         <AnimatedCTAImage
           ctaLayerSrc="images/cta/pro-generic.webp"
-          animatedLayerSrc="images/cta/pro-generic-animation.webp"
+          animatedLayerSrc="images/cta/pro-animated-profile-animation.webp"
           animationStyle={{ width: '8%', top: '59.2%', left: '85.5%' }}
           noColor={variant === ProCTAVariant.EXPIRED}
         />
