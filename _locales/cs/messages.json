@@ -1,5 +1,4 @@
 {
-  "NoNonAdminsInGroup": "V této skupině nejsou žádní členové, kromě správců.",
   "about": "Info",
   "accept": "Přijmout",
   "accountIDCopy": "Kopírovat ID účtu",
@@ -453,6 +452,8 @@
   "enter": "Vstoupit",
   "enterPasswordDescription": "Zadejte heslo, které jste nastavili pro Session",
   "enterPasswordTooltip": "Zadejte heslo, které používáte k odemknutí Session při spuštění, nikoli heslo pro obnovení",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorCheckingProStatus": "Chyba kontroly stavu Pro",
   "errorConnection": "Zkontrolujte prosím připojení k internetu a zkuste to znovu.",
   "errorCopyAndQuit": "Zkopírovat chybu a ukončit",
@@ -721,6 +722,7 @@
   "nicknameRemove": "Odstranit přezdívku",
   "nicknameSet": "Nastavit přezdívku",
   "no": "Ne",
+  "noNonAdminsInGroup": "V této skupině nejsou žádní členové, kromě správců.",
   "noSuggestions": "Žádné návrhy",
   "nonProLongerMessagesDescription": "Ve všech konverzacích můžete odesílat zprávy o délce až 10000 znaků.",
   "nonProUnlimitedPinnedDescription": "Organizujte komunikace pomocí neomezeného počtu připnutých konverzací.",

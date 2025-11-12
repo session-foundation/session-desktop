@@ -374,6 +374,8 @@
   "emojiReactsHoverYouNameTwoDesktop": "Bạn và {name} đã phản ứng với {emoji_name}",
   "emojiReactsNotification": "Đã phản hồi với tin nhắn của bạn {emoji}",
   "enable": "Bật",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "Vui lòng kiểm tra kết nối internet của bạn và thử lại.",
   "errorCopyAndQuit": "Sao chép lỗi và thoát",
   "errorDatabase": "Lỗi cơ sở dữ liệu",

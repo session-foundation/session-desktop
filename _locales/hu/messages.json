@@ -407,6 +407,8 @@
   "enjoyingSessionButtonNegative": "Még van min javítani {emoji}",
   "enjoyingSessionButtonPositive": "Fantasztikus {emoji}",
   "enjoyingSessionDescription": "Már egy ideje használod a Session-t, hogy tetszik? Nagyon örülnénk, ha megosztanád velünk a véleményedet.",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "Ellenőrizd az internetkapcsolatot, majd próbáld újra.",
   "errorCopyAndQuit": "Hiba másolása és kilépés",
   "errorDatabase": "Adatbázishiba",

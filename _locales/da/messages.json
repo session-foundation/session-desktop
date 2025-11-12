@@ -390,6 +390,8 @@
   "emojiReactsHoverYouNameTwoDesktop": "Du og {name} reagerede med {emoji_name}",
   "emojiReactsNotification": "Reagerede på din besked {emoji}",
   "enable": "Aktivér",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "Venligst tjek din internetforbindelse og prøv igen.",
   "errorCopyAndQuit": "Kopier fejl og afslut",
   "errorDatabase": "Databasefejl",

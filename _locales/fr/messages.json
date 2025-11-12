@@ -1,5 +1,4 @@
 {
-  "NoNonAdminsInGroup": "Il n'y a aucun membre non-administrateur dans ce groupe.",
   "about": "À propos",
   "accept": "Accepter",
   "accountIDCopy": "Copier l'ID de compte",
@@ -453,6 +452,8 @@
   "enter": "Entrer",
   "enterPasswordDescription": "Saisissez le mot de passe que vous avez défini pour Session",
   "enterPasswordTooltip": "Saisissez le mot de passe que vous utilisez pour déverrouiller Session au démarrage, et non votre mot de passe de récupération",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorCheckingProStatus": "Erreur lors de la vérification du statut Pro",
   "errorConnection": "Veuillez vérifier votre connexion internet et réessayer.",
   "errorCopyAndQuit": "Copier l'erreur et quitter",
@@ -718,6 +719,7 @@
   "nicknameRemove": "Supprimer le surnom",
   "nicknameSet": "Définir un surnom",
   "no": "Non",
+  "noNonAdminsInGroup": "Il n'y a aucun membre non-administrateur dans ce groupe.",
   "noSuggestions": "Pas de suggestions",
   "nonProLongerMessagesDescription": "Vous pouvez envoyer des messages d'une taille maximale de 10 000 caractères dans toutes les conversations.",
   "nonProUnlimitedPinnedDescription": "Organisez vos discussions avec un nombre illimité de conversations épinglées.",

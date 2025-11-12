@@ -353,6 +353,8 @@
   "emojiReactsHoverYouNameTwoDesktop": "Sina ja {name} reageerisite {emoji_name}'ga",
   "emojiReactsNotification": "Reageeris sinu sõnumile {emoji}",
   "enable": "Luba",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "Palun kontrollige oma internetiühendust ja proovige uuesti.",
   "errorCopyAndQuit": "Kopeeri viga ja sulge",
   "errorDatabase": "Andmebaasi viga",

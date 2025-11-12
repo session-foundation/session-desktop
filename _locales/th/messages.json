@@ -350,6 +350,8 @@
   "emojiReactsHoverYouNameTwoDesktop": "คุณและ {name} ได้แสดงความรู้สึกด้วย {emoji_name}",
   "emojiReactsNotification": "แสดงความเห็นผ่านอิโมจิที่ข้อความของคุณ {emoji}",
   "enable": "เปิดใช้งาน",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "โปรดตรวจสอบการเชื่อมต่ออินเทอร์เน็ตและลองอีกครั้ง",
   "errorCopyAndQuit": "Copy Error and Quit",
   "errorDatabase": "Database Error",

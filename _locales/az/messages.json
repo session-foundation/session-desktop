@@ -1,5 +1,4 @@
 {
-  "NoNonAdminsInGroup": "Bu qrupda admin olmayan üzv yoxdur.",
   "about": "Haqqında",
   "accept": "Qəbul et",
   "accountIDCopy": "Hesab Kimliyini kopyala",
@@ -444,6 +443,8 @@
   "enjoyingSessionDescription": "Session tətbiqini bir müddətdir istifadə edirsiniz, necə gedir? Fikirlərinizi eşitmək bizim üçün çox dəyərli olardı.",
   "enter": "Daxil ol",
   "enterPasswordDescription": "Session üçün təyin etdiyiniz parolu daxil edin",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorCheckingProStatus": "Pro statusunu yoxlama xətası.",
   "errorConnection": "Lütfən internet bağlantınızı yoxlayıb yenidən sınayın.",
   "errorCopyAndQuit": "Xətanı kopyala və çıx",
@@ -712,6 +713,7 @@
   "nicknameRemove": "Ləqəbi sil",
   "nicknameSet": "Ləqəb təyin et",
   "no": "Xeyr",
+  "noNonAdminsInGroup": "Bu qrupda admin olmayan üzv yoxdur.",
   "noSuggestions": "Təklif yoxdur",
   "nonProLongerMessagesDescription": "Bütün danışıqlarda 10,000 xarakterə qədər mesaj göndərin.",
   "nonProUnlimitedPinnedDescription": "Limitsiz sancılmış danışıqla söhbətləri təşkil edin.",

@@ -405,6 +405,8 @@
   "enjoyingSessionButtonNegative": "改善が必要です {emoji}",
   "enjoyingSessionButtonPositive": "すばらしいです {emoji}",
   "enjoyingSessionDescription": "Sessionをご利用いただいてしばらく経ちましたね。調子はいかがですか？ご意見をお聞かせいただけると嬉しいです。",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "インターネット接続を確認して、もう一度やり直してください",
   "errorCopyAndQuit": "エラーの文章をコピーして終了",
   "errorDatabase": "データベースエラー",

@@ -405,6 +405,8 @@
   "enjoyingSessionButtonNegative": "有待改進 {emoji}",
   "enjoyingSessionButtonPositive": "很棒 {emoji}",
   "enjoyingSessionDescription": "您已使用 Session 一段時間，使用體驗如何？我們非常希望能聽到您的想法。",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "請檢查您的網路連線，然後再試一次。",
   "errorCopyAndQuit": "複製錯誤並離開。",
   "errorDatabase": "資料庫錯誤",

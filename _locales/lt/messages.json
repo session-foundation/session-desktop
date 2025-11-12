@@ -348,6 +348,8 @@
   "emojiReactsHoverYouNameTwoDesktop": "Jūs ir {name} sureagavo su {emoji_name}",
   "emojiReactsNotification": "Sureagavo į jūsų žinutę {emoji}",
   "enable": "Įjungti",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "Patikrinkite savo interneto ryšį ir bandykite dar kartą.",
   "errorCopyAndQuit": "Kopijuoti klaidą ir išeiti",
   "errorDatabase": "Duomenų bazės klaida",

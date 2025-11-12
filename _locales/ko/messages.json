@@ -403,6 +403,8 @@
   "emojiReactsHoverYouNameTwoDesktop": "사용자 및 {name}님이 {emoji_name}으로 반응했습니다",
   "emojiReactsNotification": "당신의 메시지에 {emoji} 반응함",
   "enable": "활성화",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "인터넷 연결을 확인하시고 다시 시도해주세요.",
   "errorCopyAndQuit": "복사 오류 및 종료",
   "errorDatabase": "데이터베이스 오류",

@@ -350,6 +350,8 @@
   "emojiReactsHoverYouNameTwoDesktop": "شما و {name} با {emoji_name} واکنش نشان دادید",
   "emojiReactsNotification": "{emoji} واکنش به پیام شما",
   "enable": "فعال کردن",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "لطفاً اتصال اینترنت خود را بررسی و مجدداً سعی کنید",
   "errorCopyAndQuit": "کپی ارور و خروج",
   "errorDatabase": "خطای پایگاه داده",

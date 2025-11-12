@@ -413,6 +413,8 @@
   "enjoyingSessionButtonPositive": "很棒 {emoji}",
   "enjoyingSessionDescription": "您已使用 Session 一段时间了，感觉如何？非常希望能听到您的反馈。",
   "enter": "进入",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "请检查您的网络连接并重试。",
   "errorCopyAndQuit": "复制错误并退出",
   "errorDatabase": "数据库错误",

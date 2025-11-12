@@ -355,6 +355,8 @@
   "emojiReactsHoverYouNameTwoDesktop": "تۆ و {name} دەستکاری کردبە {emoji_name}",
   "emojiReactsNotification": "وەڵامە لە پەیامەکەت {emoji}",
   "enable": "چالاک کردن",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "پەیامی دەبێ بەبەرەمە ئینتەرنێت و دووبارە بکە.",
   "errorCopyAndQuit": "لەبەرگرتنەوەی هەڵە و دەرچوون",
   "errorDatabase": "هەڵەی بنکەی زانیاریەکان",

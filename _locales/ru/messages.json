@@ -421,6 +421,8 @@
   "enjoyingSessionButtonPositive": "Отлично {emoji}",
   "enjoyingSessionDescription": "Вы уже некоторое время пользуетесь Session, как оно? Нам действительно интересно узнать ваше мнение.",
   "enter": "Войти",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "Пожалуйста, проверьте подключение к интернету и повторите попытку.",
   "errorCopyAndQuit": "Скопировать ошибку и выйти",
   "errorDatabase": "Ошибка базы данных",

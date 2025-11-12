@@ -405,6 +405,8 @@
   "enjoyingSessionButtonNegative": "सुधार की आवश्यकता है {emoji}",
   "enjoyingSessionButtonPositive": "बहुत बढ़िया {emoji}",
   "enjoyingSessionDescription": "आप कुछ समय से Session का उपयोग कर रहे हैं, सब कैसा चल रहा है? हम आपके विचार जानकर बहुत आभारी होंगे।",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "कृपया अपनी इंटरनेट कनेक्शन और फिरसे प्रयास करें।",
   "errorCopyAndQuit": "त्रुटि कॉपी करें और छोड़ दें",
   "errorDatabase": "डेटाबेस त्रुटि",
