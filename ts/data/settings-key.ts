@@ -71,6 +71,14 @@ export const SettingsKey = {
   spellCheckEnabled: 'spell-check',
   proMasterKeyHex: 'proMasterKeyHex',
   proRotatingKeyHex: 'proRotatingKeyHex',
+  /**
+   * The ticket of the last fetched revocations list, number | undefined
+   */
+  proRevocationListTicket: 'proRevocationListTicket',
+  /**
+   * The items of the last fetched revocations list, Array of items validating ProRevocationItemSchema (or undefined)
+   */
+  proRevocationListItems: 'proRevocationListItems',
 } as const;
 
 export const KNOWN_BLINDED_KEYS_ITEM = 'KNOWN_BLINDED_KEYS_ITEM';

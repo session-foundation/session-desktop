@@ -1,4 +1,8 @@
-import type { WithMasterPrivKeyHex, WithRotatingPrivKeyHex } from 'libsession_util_nodejs';
+import type {
+  WithMasterPrivKeyHex,
+  WithRotatingPrivKeyHex,
+  WithTicket,
+} from 'libsession_util_nodejs';
 
 import { PRO_API } from './ProBackendTarget';
 import SessionBackendServerApi from '../session_backend_server';
@@ -55,6 +59,10 @@ export default class ProBackendAPI {
     });
   }
 
+  private static async getRevocationListBody(args: WithTicket) {
+    return ProWrapperActions.proRevocationsRequestBody({ requestVersion: 0, ...args });
+  }
+
   static async getProStatus(args: WithMasterPrivKeyHex): Promise<GetProStatusResponseType | null> {
     return ProBackendAPI.server.makeRequestWithSchema({
       path: '/get_pro_status',
@@ -64,13 +72,11 @@ export default class ProBackendAPI {
     });
   }
 
-  static async getRevocationList(): Promise<GetProRevocationsResponseType | null> {
-    const bodyGetter = async () => '{ "version": 0, "ticket": 0 }';
-
+  static async getRevocationList(args: WithTicket): Promise<GetProRevocationsResponseType | null> {
     return ProBackendAPI.server.makeRequestWithSchema({
       path: '/get_pro_revocations',
       method: 'POST',
-      bodyGetter,
+      bodyGetter: () => ProBackendAPI.getRevocationListBody(args),
       withZodSchema: GetProRevocationsResponseSchema,
     });
   }

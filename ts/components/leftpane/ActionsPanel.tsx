@@ -60,6 +60,7 @@ import { AvatarReupload } from '../../session/utils/job_runners/jobs/AvatarReupl
 import { useDebugMenuModal } from '../../state/selectors/modal';
 import { useFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { useDebugKey } from '../../hooks/useDebugKey';
+import { UpdateProRevocationList } from '../../session/utils/job_runners/jobs/UpdateProRevocationListJob';
 
 const StyledContainerAvatar = styled.div`
   padding: var(--margins-lg);
@@ -161,6 +162,16 @@ function useUpdateBadgeCount() {
   );
 }
 
+/**
+ * Small hook that ticks every minute to add a job to fetch the revocation list.
+ * Note: a job will only be added if it wasn't fetched recently, so there is no harm in running this every minute.
+ */
+function usePeriodicFetchRevocationList() {
+  useInterval(() => {
+    void UpdateProRevocationList.queueNewJobIfNeeded();
+  }, 1 * DURATION.MINUTES);
+}
+
 function useDebugThemeSwitch() {
   useDebugKey({
     withCtrl: true,
@@ -241,6 +252,7 @@ export const ActionsPanel = () => {
   });
 
   useUpdateBadgeCount();
+  usePeriodicFetchRevocationList();
   // setup our own shortcuts so that it changes show in the appearance tab too
   useZoomShortcuts();
 

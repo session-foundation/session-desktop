@@ -10,4 +10,5 @@ export type JobRunnerType =
   | 'AvatarMigrateJob'
   | 'GroupInviteJob'
   | 'GroupPromoteJob'
-  | 'GroupPendingRemovalJob';
+  | 'GroupPendingRemovalJob'
+  | 'UpdateProRevocationListJob';

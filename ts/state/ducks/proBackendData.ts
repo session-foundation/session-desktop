@@ -1,11 +1,7 @@
 import type { WithMasterPrivKeyHex, WithRotatingPrivKeyHex } from 'libsession_util_nodejs';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { StateType } from '../reducer';
-import {
-  ProProofResultType,
-  ProRevocationsResultType,
-  ProStatusResultType,
-} from '../../session/apis/pro_backend_api/types';
+import { ProProofResultType, ProStatusResultType } from '../../session/apis/pro_backend_api/types';
 import ProBackendAPI from '../../session/apis/pro_backend_api/ProBackendAPI';
 import { getFeatureFlag } from './types/releasedFeaturesReduxTypes';
 import { UserUtils } from '../../session/utils';
@@ -40,13 +36,11 @@ type ReducerBooleanStateAction = PayloadAction<RequestActionArgs>;
 
 export type ProBackendDataState = {
   proof: RequestState<ProProofResultType>;
-  revocations: RequestState<ProRevocationsResultType>;
   proStatus: RequestState<ProStatusResultType>;
 };
 
 export const initialProBackendDataState: ProBackendDataState = {
   proof: defaultRequestState,
-  revocations: defaultRequestState,
   proStatus: defaultRequestState,
 };
 
@@ -139,17 +133,6 @@ const fetchProProofFromProBackend = createAsyncThunk(
   }
 );
 
-const fetchProRevocationsFromProBackend = createAsyncThunk(
-  'proBackendData/fetchProRevocations',
-  async (_, payloadCreator): Promise<RequestState<ProRevocationsResultType>> => {
-    return createProBackendFetchAsyncThunk({
-      key: 'revocations',
-      getter: ProBackendAPI.getRevocationList,
-      payloadCreator,
-    });
-  }
-);
-
 const fetchProStatusFromProBackend = createAsyncThunk(
   'proBackendData/fetchProStatus',
   async (
@@ -191,31 +174,6 @@ const refreshProProofFromProBackend = createAsyncThunk(
     payloadCreator.dispatch(
       fetchProProofFromProBackend({ masterPrivKeyHex, rotatingPrivKeyHex }) as any
     );
-  }
-);
-
-const refreshProRevocationsFromProBackend = createAsyncThunk(
-  'proBackendData/refreshProRevocations',
-  async (_opts, payloadCreator) => {
-    if (getFeatureFlag('debugServerRequests')) {
-      window.log.info(
-        `[proBackend/refreshProRevocationsFromProBackend] starting ${new Date().toISOString()}`
-      );
-    }
-
-    const state = payloadCreator.getState() as StateType;
-
-    if (state.proBackendData.revocations.isFetching) {
-      return;
-    }
-
-    if (getFeatureFlag('debugServerRequests')) {
-      window.log.info(
-        `[proBackend/refreshProRevocationsFromProBackend] triggered refresh at ${new Date().toISOString()}`
-      );
-    }
-
-    payloadCreator.dispatch(fetchProRevocationsFromProBackend() as any);
   }
 );
 
@@ -276,15 +234,7 @@ export const proBackendDataSlice = createSlice({
         `[proBackend / fetchProProofFromProBackend] rejected ${action.error.message || action.error} `
       );
     });
-    builder.addCase(fetchProRevocationsFromProBackend.fulfilled, (state, action) => {
-      if (getFeatureFlag('debugServerRequests')) {
-        window.log.info(
-          `[proBackend / fetchProRevocationsFromProBackend] fulfilled ${new Date().toISOString()} `,
-          JSON.stringify(action.payload)
-        );
-      }
-      state.revocations = action.payload;
-    });
+
     builder.addCase(fetchProStatusFromProBackend.fulfilled, (state, action) => {
       if (getFeatureFlag('debugServerRequests')) {
         window.log.info(
@@ -313,9 +263,7 @@ export default proBackendDataSlice.reducer;
 export const proBackendDataActions = {
   ...proBackendDataSlice.actions,
   fetchProProofFromProBackend,
-  fetchProRevocationsFromProBackend,
   fetchProStatusFromProBackend,
   refreshProProofFromProBackend,
-  refreshProRevocationsFromProBackend,
   refreshProStatusFromProBackend,
 };

@@ -356,10 +356,10 @@ export const DebugActions = () => {
       </DebugButton>
       <DebugButton
         onClick={async () => {
-          await ProBackendAPI.getRevocationList();
+          await ProBackendAPI.getRevocationList({ ticket: 0 });
         }}
       >
-        Get Pro Revocation List
+        Get Pro Revocation List (from ticket 0)
       </DebugButton>
     </DebugMenuSection>
   );
