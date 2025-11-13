@@ -978,7 +978,7 @@ function PageHero({ state }: SectionProps) {
           title: { token: 'proStatusError' },
           description: {
             token:
-              isPro || proExpired
+              isPro || (proExpired && !state.fromCTA)
                 ? 'proStatusRefreshNetworkError'
                 : 'proStatusNetworkErrorContinue',
           },
@@ -999,14 +999,17 @@ function PageHero({ state }: SectionProps) {
             : {
                 title: { token: 'checkingProStatus' },
                 description: {
-                  token: proExpired ? 'checkingProStatusDescription' : 'checkingProStatusContinue',
+                  token:
+                    proExpired && !state.fromCTA
+                      ? 'checkingProStatusDescription'
+                      : 'checkingProStatusContinue',
                 },
               }
         )
       );
     }
     // Do nothing if not error or loading
-  }, [dispatch, isPro, proExpired, isLoading, isError, backendErrorButtons]);
+  }, [dispatch, isPro, proExpired, isLoading, isError, backendErrorButtons, state.fromCTA]);
 
   const heroStatusText = useMemo(() => {
     if (isError) {
@@ -1038,9 +1041,9 @@ function PageHero({ state }: SectionProps) {
       onClick={handleClick}
       heroStatusText={heroStatusText}
       heroText={
-        !isPro ? (
+        isPro || (proExpired && !state.fromCTA) ? null : (
           <Localizer token={proExpired ? 'proAccessRenewStart' : 'proFullestPotential'} />
-        ) : null
+        )
       }
       isError={isError}
       noColors={proExpired && !state.fromCTA}
