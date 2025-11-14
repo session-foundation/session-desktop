@@ -1,13 +1,17 @@
-package signalservice;
+// iOS - since we use a modern proto-compiler, we must specify the legacy proto format.
 syntax = "proto2";
 
+// iOS - package name determines class prefix
+package SessionProtos;
+
+option optimize_for = LITE_RUNTIME;
 
 message Envelope {
-  reserved "serverTimestamp";
-  reserved 10;
+  reserved "sourceDevice", "serverTimestamp";
+  reserved 7, 10;
 
   enum Type {
-    SESSION_MESSAGE = 6;
+    SESSION_MESSAGE      = 6;
     CLOSED_GROUP_MESSAGE = 7;
   }
 
@@ -17,6 +21,7 @@ message Envelope {
   // @required
   required uint64 timestamp       = 5;
   optional bytes  content         = 8;
+  optional bytes  proSig          = 11;
 }
 
 message TypingMessage {
@@ -26,36 +31,25 @@ message TypingMessage {
         STOPPED = 1;
     }
 
+    // @required
     required uint64 timestamp = 1;
+    // @required
     required Action action    = 2;
 }
 
-
-message Unsend {
+message UnsendRequest {
+    // @required
   required uint64 timestamp = 1;
+    // @required
   required string author    = 2;
 }
 
 message MessageRequestResponse {
-  required bool                      isApproved                = 1;
+  // @required
+  required bool                      isApproved                = 1; // Whether the request was approved
   optional bytes                     profileKey                = 2;
-  optional DataMessage.LokiProfile   profile                   = 3;
+  optional LokiProfile               profile                   = 3;
 }
-
-message ProMessage {
-  optional ProProof proof    = 1;
-  optional uint64   features = 2;
-}
-
-message ProProof {
-  optional uint32 version           = 1;
-  optional bytes  genIndexHash      = 2;
-  optional bytes  rotatingPublicKey = 3;
-  optional uint64 expireAtMs        = 4; // Epoch timestamp in milliseconds
-  optional bytes  sig               = 5;
-}
-
-
 
 message Content {
   reserved 7, 11, 14;
@@ -67,20 +61,97 @@ message Content {
     DELETE_AFTER_SEND   = 2;
   }
 
-  optional DataMessage                dataMessage                = 1;
-  optional CallMessage                callMessage                = 3;
-  optional ReceiptMessage             receiptMessage             = 5;
-  optional TypingMessage              typingMessage              = 6;
-  optional DataExtractionNotification dataExtractionNotification = 8;
-  optional Unsend                     unsendMessage              = 9;
-  optional MessageRequestResponse     messageRequestResponse     = 10;
-  optional ExpirationType             expirationType             = 12;
-  optional uint32                     expirationTimer            = 13;
-  optional uint64                     sigTimestamp               = 15;
-  optional ProMessage                 proMessage                 = 16;
+  // reserved 7, 11, 15;
+  // reserved "configurationMessage", "sharedConfigMessage", "lastDisappearingMessageChangeTimestamp";
 
+  optional DataMessage                dataMessage                            = 1;
+  optional CallMessage                callMessage                            = 3;
+  optional ReceiptMessage             receiptMessage                         = 5;
+  optional TypingMessage              typingMessage                          = 6;
+  optional DataExtractionNotification dataExtractionNotification             = 8;
+  optional UnsendRequest              unsendRequest                          = 9;
+  optional MessageRequestResponse     messageRequestResponse                 = 10;
+  optional ExpirationType             expirationType                         = 12;
+  optional uint32                     expirationTimer                        = 13;
+  optional uint64                     sigTimestamp                           = 15;
+  optional ProMessage                 proMessage                             = 16;
+
+  // NOTE: Temporary transition field to include the pro-signature into Content for community
+  // messages to use.
+  //
+  // Community messages are currently sent and received as plaintext Content. We call this state of
+  // the network v0.
+  //
+  // We will continue to send Community messages using the Content structure, but, now enhanced with
+  // the optional `proSigForCommunityMessageOnly` field which contains the pro signature. We call
+  // this network v1. The new clients running v1 will pack the pro-signature into the payload. We
+  // maintain forwards compatibility with clients on v0 as we are still sending content
+  // on the wire, they skip the new pro data.
+  //
+  // Simultaneously in v1 the responsibility of parsing the open groups messages will go into
+  // libsession. Libsession will be setup to try and parse the open groups message as a `Content`
+  // message at first, if that fails it will try to read the community message as an `Envelope`.
+  // In summary in a v1 network:
+  //
+  //   v0 will still receive messages from v1 as they send `Content` community messages.
+  //
+  //   v1 accepts v0 (`Content`) and v1 (`Envelope`) on the wire for community messages. v1 sends
+  //   `Content` community messages so that there's compatibility with v0.
+  //
+  // After a defined transitionary period, we create a new release and update libsession to stop
+  // sending `Content` for communities and transition to sending `Envelope` for messages. We mark
+  // this as a v2 network:
+  //
+  //   v0 will still receive messages from v1 (`Content`) but not v2 (`Envelope`) community
+  //   messages.
+  //
+  //   v1 accepts v0 (`Content`) and v1 (`Envelope`) on the wire for community messages. v1 sends
+  //   `Content` community messages so that there's compatibility with v0.
+  //
+  //   v2 swaps the parsing order. it tries parsing v1 (`envelope`) then v0 (`content`) from a
+  //   community message. v2 sends `envelope` community messages so compatbility is maintained with
+  //   v1 but not v0.
+  //
+  // After a final transitionary period, v3, remove parsing content entirely from libsession for
+  // community messages and removes the pro-signature from `content`. in this final stage, v2 and v3
+  // are the final set of clients that can continue to talk to each other.
+  //
+  // +---------+----------------+-------------+------------------+-------------+-------------+
+  // | Version | Sends          | Receives v0 | Receives v1      | Receives v2 | Receives v3 |
+  // |         |                | (Content)   | (Content+ProSig) | (Envelope)  | (Envelope)  |
+  // +---------+----------------+-------------+------------------+-------------+-------------+
+  // | v0      | Content        | Yes         | Yes              | No          | No          |
+  // +---------+----------------+-------------+------------------+-------------+-------------+
+  // | v1      | Content+ProSig | Yes         | Yes              | Yes         | Yes         |
+  // +---------+----------------+-------------+------------------+-------------+-------------+
+  // | v2      | Envelope       | Yes         | Yes              | Yes         | Yes         |
+  // +---------+----------------+-------------+------------------+-------------+-------------+
+  // | v3      | Envelope       | No          | No               | Yes         | Yes         |
+  // +---------+----------------+-------------+------------------+-------------+-------------+
+  optional bytes                      proSigForCommunityMessageOnly          = 17;
 }
 
+message CallMessage {
+
+  enum Type {
+    PRE_OFFER          = 6;
+    OFFER              = 1;
+    ANSWER             = 2;
+    PROVISIONAL_ANSWER = 3;
+    ICE_CANDIDATES     = 4;
+    END_CALL           = 5;
+  }
+
+    // Multiple ICE candidates may be batched together for performance
+
+    // @required
+    required Type   type            = 1;
+  repeated string sdps            = 2;
+  repeated uint32 sdpMLineIndexes = 3;
+  repeated string sdpMids         = 4;
+    // @required
+  required string uuid            = 5;
+}
 
 message DataExtractionNotification {
 
@@ -89,81 +160,65 @@ message DataExtractionNotification {
     MEDIA_SAVED = 2; // timestamp
   }
 
+  // @required
   required Type   type      = 1;
   optional uint64 timestamp = 2;
 }
 
-message GroupUpdateInviteMessage {
-  required string         groupSessionId         = 1; // The `groupIdentityPublicKey` with a `03` prefix
-  required string         name                   = 2;
-  required bytes          memberAuthData         = 3;
-  required bytes          adminSignature         = 4;
-}
-
-message GroupUpdateInfoChangeMessage {
-	enum Type {
-    NAME                  = 1;
-		AVATAR                = 2;
-    DISAPPEARING_MESSAGES = 3;
+message LokiProfile {
+    optional string displayName = 1;
+    optional string profilePicture = 2;
+    /**
+     * The timestamp of the last profile update.
+     * This is used to prioritize the correct profile info based on multiple and outdated incoming messages.
+     * Note: this is in seconds.
+     */
+    optional uint64 lastProfileUpdateSeconds = 3;
   }
-
-  required Type     type              = 1;
-  optional string   updatedName       = 2;
-  optional uint32   updatedExpiration = 3;
-  required bytes    adminSignature    = 4;
-}
-
-message GroupUpdateMemberChangeMessage {
-  enum Type {
-    ADDED    = 1;
-    REMOVED  = 2;
-    PROMOTED = 3;
-  }
-
-  required Type   type               = 1;
-  repeated string memberSessionIds   = 2;
-  optional bool   historyShared      = 3;
-  required bytes  adminSignature     = 4;
-
-}
-
-
-message GroupUpdatePromoteMessage {
-  required bytes          groupIdentitySeed       = 1;
-  required string         name                    = 2;
-}
-
-message GroupUpdateMemberLeftMessage {
-  // the pubkey of the member left is included as part of the closed group encryption logic (senderIdentity on desktop)
-}
-
-message GroupUpdateInviteResponseMessage {
-  required bool                      isApproved                = 1; // Whether the request was approved
-}
-
-
-message GroupUpdateDeleteMemberContentMessage {
-  repeated string memberSessionIds    = 1;
-  repeated string messageHashes       = 2;
-  optional bytes  adminSignature      = 3;
-}
-
-message GroupUpdateMemberLeftNotificationMessage {
-  // the pubkey of the member left is included as part of the closed group encryption logic (senderIdentity on desktop)
-}
-
-message GroupUpdateMessage {
-  optional GroupUpdateInviteMessage                  inviteMessage                 = 1;
-  optional GroupUpdateInfoChangeMessage              infoChangeMessage             = 2;
-  optional GroupUpdateMemberChangeMessage            memberChangeMessage           = 3;
-  optional GroupUpdatePromoteMessage                 promoteMessage                = 4;
-  optional GroupUpdateMemberLeftMessage              memberLeftMessage             = 5;
-  optional GroupUpdateInviteResponseMessage          inviteResponse                = 6;
-  optional GroupUpdateDeleteMemberContentMessage     deleteMemberContent           = 7;
-  optional GroupUpdateMemberLeftNotificationMessage  memberLeftNotificationMessage = 8;
-}
 
 message DataMessage {
+
+  enum Flags {
+    EXPIRATION_TIMER_UPDATE = 2;
+  }
+
+  message Quote {
+    reserved 3, 4;
+    reserved "text", "attachments";
+
+    // @required
+    required uint64            id          = 1;
+    // @required
+    required string            author      = 2;
+  }
+
+  message Preview {
+    // @required
+    required string            url   = 1;
+    optional string            title = 2;
+    optional AttachmentPointer image = 3;
+  }
+
+  message Reaction {
+    enum Action {
+        REACT = 0;
+        REMOVE = 1;
+    }
+    // @required
+    required uint64 id        = 1; // Message timestamp
+    // @required
+    required string author    = 2;
+    optional string emoji     = 3;
+    // @required
+    required Action action    = 4;
+  }
+
+  message OpenGroupInvitation {
+    // @required
+    required string url = 1;
+    // @required
+    required string name = 3;
+  }
 
   // 7 = timestamp unused and should not be used
   reserved 7;
@@ -180,85 +235,18 @@ message DataMessage {
   reserved 3;
   reserved "group";
 
-  enum Flags {
-    EXPIRATION_TIMER_UPDATE   = 2;
-  }
-
-  message Reaction {
-    enum Action {
-        REACT = 0;
-        REMOVE = 1;
-    }
-    required uint64 id        = 1; // Message timestamp
-    required string author    = 2;
-    optional string emoji     = 3;
-    required Action action    = 4;
-  }
-
-  message Quote {
-    reserved 3, 4;
-    reserved "text", "attachments";
-
-    required uint64           id          = 1;
-    required string           author      = 2;
-  }
-
-  message Preview {
-    required string            url   = 1;
-    optional string            title = 2;
-    optional AttachmentPointer image = 3;
-  }
-
-  message LokiProfile {
-    optional string displayName = 1;
-    optional string profilePicture = 2;
-    /**
-     * The timestamp of the last profile update.
-     * This is used to prioritize the correct profile info based on multiple and outdated incoming messages.
-     * Note: this is in seconds.
-     */
-    optional uint64 lastProfileUpdateSeconds = 3;
-  }
-
-  message OpenGroupInvitation {
-    required string url = 1;
-    required string name = 3;
-  }
-
-
-
-  optional string                    body                      = 1;
-  repeated AttachmentPointer         attachments               = 2;
-  optional uint32                    flags                     = 4;
-  optional bytes                     profileKey                = 6;
-  optional Quote                     quote                     = 8;
-  repeated Preview                   preview                   = 10;
-  optional Reaction                  reaction                  = 11;
-  optional LokiProfile               profile                   = 101;
-  optional OpenGroupInvitation       openGroupInvitation       = 102;
-  optional string                    syncTarget                = 105;
-  optional bool                      blocksCommunityMessageRequests  = 106;
-  optional GroupUpdateMessage        groupUpdateMessage              = 120;
-}
-
-message CallMessage {
-
-  enum Type {
-    PRE_OFFER          = 6;
-    OFFER              = 1;
-    ANSWER             = 2;
-    PROVISIONAL_ANSWER = 3;
-    ICE_CANDIDATES     = 4;
-    END_CALL           = 5;
-  }
-
-  required Type type              = 1;
-  repeated string sdps            = 2;
-  repeated uint32 sdpMLineIndexes = 3;
-  repeated string sdpMids         = 4;
-
-  required string uuid            = 5;
-
+  optional string                    body                           = 1;
+  repeated AttachmentPointer         attachments                    = 2;
+  optional uint32                    flags                          = 4;
+  optional bytes                     profileKey                     = 6;
+  optional Quote                     quote                          = 8;
+  repeated Preview                   preview                        = 10;
+  optional Reaction                  reaction                       = 11;
+  optional LokiProfile               profile                        = 101;
+  optional OpenGroupInvitation       openGroupInvitation            = 102;
+  optional string                    syncTarget                     = 105;
+  optional bool                      blocksCommunityMessageRequests = 106;
+  optional GroupUpdateMessage        groupUpdateMessage             = 120;
 }
 
 message ReceiptMessage {
@@ -273,6 +261,8 @@ message ReceiptMessage {
 }
 
 message AttachmentPointer {
+  reserved "thumbnail";
+  reserved 5;
 
   enum Flags {
     VOICE_MESSAGE = 1;
@@ -295,11 +285,101 @@ message AttachmentPointer {
    * - `d=` // if the file is deterministically encrypted, this field is present, otherwise it is not
    * If needed, those fields are a &, and can be parsed/built with the usual URLSearchParams logic
    */
-  optional string  url  = 101;
+  optional string  url           = 101;
 }
 
+// Group Update Messages
 
+message GroupUpdateMessage {
+  optional GroupUpdateInviteMessage                  inviteMessage                 = 1;
+  optional GroupUpdateInfoChangeMessage              infoChangeMessage             = 2;
+  optional GroupUpdateMemberChangeMessage            memberChangeMessage           = 3;
+  optional GroupUpdatePromoteMessage                 promoteMessage                = 4;
+  optional GroupUpdateMemberLeftMessage              memberLeftMessage             = 5;
+  optional GroupUpdateInviteResponseMessage          inviteResponse                = 6;
+  optional GroupUpdateDeleteMemberContentMessage     deleteMemberContent           = 7;
+  optional GroupUpdateMemberLeftNotificationMessage  memberLeftNotificationMessage = 8;
+}
 
+message GroupUpdateInviteMessage {
+  // @required
+  required string         groupSessionId         = 1; // The `groupIdentityPublicKey` with a `03` prefix
+  // @required
+  required string         name                   = 2;
+  // @required
+  required bytes          memberAuthData         = 3;
+  // @required
+  required bytes          adminSignature         = 4;
+}
+
+message GroupUpdatePromoteMessage {
+  // @required
+  required bytes          groupIdentitySeed       = 1;
+  // @required
+  required string         name                    = 2;
+}
+
+message GroupUpdateInfoChangeMessage {
+	enum Type {
+    NAME                  = 1;
+		AVATAR                = 2;
+    DISAPPEARING_MESSAGES = 3;
+  }
+
+  // @required
+  required Type     type              = 1;
+  optional string   updatedName       = 2;
+  optional uint32   updatedExpiration = 3;
+  // @required
+  required bytes    adminSignature    = 4;
+}
+
+message GroupUpdateMemberChangeMessage {
+  enum Type {
+    ADDED    = 1;
+    REMOVED  = 2;
+    PROMOTED = 3;
+  }
+
+  // @required
+  required Type   type               = 1;
+  repeated string memberSessionIds   = 2;
+  optional bool   historyShared      = 3;
+  // @required
+  required bytes  adminSignature     = 4;
+}
+
+message GroupUpdateMemberLeftMessage {
+  // the pubkey of the member left is included as part of the group encryption logic (senderIdentity on desktop)
+}
+
+message GroupUpdateMemberLeftNotificationMessage {
+  // the pubkey of the member left is included as part of the group encryption logic (senderIdentity on desktop)
+}
+
+message GroupUpdateInviteResponseMessage {
+  // @required
+  required bool                      isApproved                = 1; // Whether the request was approved
+}
+
+message GroupUpdateDeleteMemberContentMessage {
+  repeated string memberSessionIds   = 1;
+  repeated string messageHashes      = 2;
+  optional bytes  adminSignature     = 3;
+}
+
+message ProProof {
+  optional uint32 version           = 1;
+  optional bytes  genIndexHash      = 2;
+  optional bytes  rotatingPublicKey = 3;
+  optional uint64 expireAtMs        = 4; // Epoch timestamp in milliseconds
+  optional bytes  sig               = 5;
+}
+
+message ProMessage {
+  optional ProProof proof    = 1;
+  optional uint64   features = 2;
+}
 
 message WebSocketRequestMessage {
   optional string verb    = 1;

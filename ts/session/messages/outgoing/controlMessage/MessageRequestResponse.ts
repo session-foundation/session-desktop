@@ -19,7 +19,10 @@ export class MessageRequestResponse extends ContentMessage {
   }
 
   public contentProto(): SignalService.Content {
-    return super.makeContentProto({ messageRequestResponse: this.messageRequestResponseProto() });
+    // Note: message request responses are not disappearing messages
+    return super.makeNonDisappearingContentProto({
+      messageRequestResponse: this.messageRequestResponseProto(),
+    });
   }
 
   public messageRequestResponseProto(): SignalService.MessageRequestResponse {
@@ -30,5 +33,13 @@ export class MessageRequestResponse extends ContentMessage {
     });
 
     return response;
+  }
+
+  public lokiProfileProto() {
+    return this.userProfile?.toProtobufDetails() ?? {};
+  }
+
+  public proMessageProto() {
+    return null;
   }
 }

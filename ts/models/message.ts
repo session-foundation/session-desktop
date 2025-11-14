@@ -1,7 +1,7 @@
 import autoBind from 'auto-bind';
 import { filesize } from 'filesize';
 import { GroupPubkeyType, PubkeyType } from 'libsession_util_nodejs';
-import { debounce, isEmpty, isEqual, size as lodashSize, uniq } from 'lodash';
+import { debounce, isEmpty, isEqual, isString, size as lodashSize, uniq } from 'lodash';
 import { SignalService } from '../protobuf';
 import { ConvoHub } from '../session/conversations';
 import { ContentMessage } from '../session/messages/outgoing';
@@ -109,7 +109,6 @@ export class MessageModel extends Model<MessageAttributes> {
     if (!this.get('conversationId')) {
       throw new Error('A message always needs to have an conversationId.');
     }
-
     if (!attributes.skipTimerInit) {
       void this.setToExpire();
     }
@@ -607,7 +606,7 @@ export class MessageModel extends Model<MessageAttributes> {
 
     const attachments = this.get('attachments') || [];
     const isTrustedForAttachmentDownload = this.isTrustedForAttachmentDownload();
-    const proFeatures = this.getProFeatures();
+    const proFeaturesUsed = this.getProFeaturesUsed();
     const body = this.get('body');
     const props: PropsForMessageWithoutConvoProps = {
       id: this.id,
@@ -647,8 +646,8 @@ export class MessageModel extends Model<MessageAttributes> {
     if (isTrustedForAttachmentDownload) {
       props.isTrustedForAttachmentDownload = isTrustedForAttachmentDownload;
     }
-    if (proFeatures.length) {
-      props.proFeatures = proFeatures;
+    if (proFeaturesUsed.length) {
+      props.proFeaturesUsed = proFeaturesUsed;
     }
     const isUnread = this.isUnread();
     if (isUnread) {
@@ -892,6 +891,9 @@ export class MessageModel extends Model<MessageAttributes> {
           identifier: this.id,
           createAtNetworkTimestamp: NetworkTime.now(),
           userProfile: await UserUtils.getOurProfile(),
+          outgoingProMessageDetails: await UserUtils.getOutgoingProMessageDetails({
+            utf16: body ?? '',
+          }),
           body,
           attachments,
           preview: preview ? [preview] : [],
@@ -923,6 +925,9 @@ export class MessageModel extends Model<MessageAttributes> {
         preview: preview ? [preview] : [],
         quote,
         userProfile: await UserUtils.getOurProfile(),
+        outgoingProMessageDetails: await UserUtils.getOutgoingProMessageDetails({
+          utf16: body ?? '',
+        }),
         // Note: we should have the fields set on that object when we've added it to the DB.
         // We don't want to reuse the conversation setting, as it might change since this message was sent.
         expirationType: this.getExpirationType() || 'unknown',
@@ -1065,7 +1070,7 @@ export class MessageModel extends Model<MessageAttributes> {
     if (this.get('synced') || this.get('sentSync')) {
       return;
     }
-    const { dataMessage } = content;
+    const { dataMessage, proMessage } = content;
 
     if (
       dataMessage &&
@@ -1089,7 +1094,8 @@ export class MessageModel extends Model<MessageAttributes> {
         dataMessage as SignalService.DataMessage,
         conversation.id,
         sentTimestamp,
-        expireUpdate
+        expireUpdate,
+        proMessage as SignalService.ProMessage | null
       );
 
       if (syncMessage) {
@@ -1376,14 +1382,14 @@ export class MessageModel extends Model<MessageAttributes> {
     }
   }
 
-  private getProFeatures(): Array<ProMessageFeature> {
+  private getProFeaturesUsed(): Array<ProMessageFeature> {
     const proFeatures = this.get('proFeatures');
 
-    if (!proFeatures) {
+    if (!proFeatures || !isString(proFeatures)) {
       return [];
     }
 
-    return ProFeatures.numberToProFeatures(proFeatures);
+    return ProFeatures.bigIntStrToProFeatures(proFeatures);
   }
 
   private dispatchMessageUpdate() {

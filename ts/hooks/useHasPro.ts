@@ -253,7 +253,7 @@ export function useProAccessDetails(): RequestHook<ProAccessDetails> {
 
     const expiryTimeMs =
       mockExpiry ??
-      status.data?.expiring_unix_ts_ms ??
+      status.data?.expiry_unix_ts_ms ??
       defaultProAccessDetailsSourceData.expiryTimeMs;
 
     const latestAccess = status?.data?.items?.[0];

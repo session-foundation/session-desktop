@@ -19,7 +19,9 @@ export function cleanData(data: any): any {
     }
     // eslint-disable no-param-reassign
 
-    if (_.isFunction(value.toNumber)) {
+    if (typeof value === 'bigint') {
+      throw new Error('bigints are not supported. Please use a stringified bigint instead');
+    } else if (_.isFunction(value.toNumber)) {
       // eslint-disable-next-line no-param-reassign
       data[key] = value.toNumber();
     } else if (_.isFunction(value)) {

@@ -115,7 +115,9 @@ export class GroupUpdateMemberChangeMessage extends GroupUpdateMessage {
       memberChangeMessage.historyShared = true;
     }
 
-    return new SignalService.DataMessage({ groupUpdateMessage: { memberChangeMessage } });
+    const proto = super.makeDataProto();
+    proto.groupUpdateMessage = { memberChangeMessage };
+    return proto;
   }
 
   public isForGroupSwarm(): boolean {
@@ -123,5 +125,13 @@ export class GroupUpdateMemberChangeMessage extends GroupUpdateMessage {
   }
   public isFor1o1Swarm(): boolean {
     return false;
+  }
+
+  public proMessageProto() {
+    return null;
+  }
+
+  public lokiProfileProto() {
+    return {};
   }
 }

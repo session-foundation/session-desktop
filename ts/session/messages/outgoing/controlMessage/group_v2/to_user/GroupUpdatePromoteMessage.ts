@@ -34,9 +34,9 @@ export class GroupUpdatePromoteMessage extends GroupUpdateMessage {
       name: this.groupName,
     });
 
-    return new SignalService.DataMessage({
-      groupUpdateMessage: { promoteMessage },
-    });
+    const proto = super.makeDataProto();
+    proto.groupUpdateMessage = { promoteMessage };
+    return proto;
   }
 
   public isForGroupSwarm(): boolean {
@@ -44,5 +44,13 @@ export class GroupUpdatePromoteMessage extends GroupUpdateMessage {
   }
   public isFor1o1Swarm(): boolean {
     return true;
+  }
+
+  public lokiProfileProto() {
+    return this.userProfile?.toProtobufDetails() ?? {};
+  }
+
+  public proMessageProto() {
+    return null;
   }
 }

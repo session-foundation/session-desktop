@@ -97,6 +97,7 @@ import { sqlNode } from '../node/sql';
 import * as sqlChannels from '../node/sql_channel';
 import { createTrayIcon } from '../node/tray_icon';
 import { windowMarkShouldQuit, windowShouldQuit } from '../node/window_state';
+import { SettingsKey } from '../data/settings-key';
 
 let appStartInitialSpellcheckSetting = true;
 
@@ -105,7 +106,7 @@ function openDevToolsTestIntegration() {
 }
 
 async function getSpellCheckSetting() {
-  const json = sqlNode.getItemById('spell-check');
+  const json = sqlNode.getItemById(SettingsKey.spellCheckEnabled);
   // Default to `true` if setting doesn't exist yet
   if (!json) {
     return true;

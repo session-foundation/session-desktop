@@ -7,6 +7,7 @@ import { ContentMessage } from '../messages/outgoing';
 import { PubKey } from '../types';
 import { OutgoingRawMessage, StoredRawMessage } from '../types/RawMessage';
 import { MessageUtils } from '../utils';
+import { SettingsKey } from '../../data/settings-key';
 
 // This is an abstraction for storing pending messages.
 // Ideally we want to store pending messages in the database so that
@@ -110,7 +111,7 @@ export class PendingMessageCache {
   }
 
   protected async getFromStorage(): Promise<Array<OutgoingRawMessage>> {
-    const data = await Data.getItemById('pendingMessages');
+    const data = await Data.getItemById(SettingsKey.pendingMessages);
     if (!data || !data.value) {
       return [];
     }

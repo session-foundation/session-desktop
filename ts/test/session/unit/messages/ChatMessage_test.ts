@@ -17,6 +17,7 @@ import { TestUtils } from '../../../test-utils';
 const sharedNoExpire = {
   expirationType: DisappearingMessageMode[0],
   expireTimer: 0,
+  outgoingProMessageDetails: null,
 };
 
 describe('VisibleMessage', () => {

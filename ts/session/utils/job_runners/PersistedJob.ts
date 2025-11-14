@@ -4,6 +4,7 @@ import { cloneDeep, flatten, isEmpty, isNil, uniq } from 'lodash';
 export type PersistedJobType =
   | 'UserSyncJobType'
   | 'GroupSyncJobType'
+  | 'UpdateProRevocationListJobType'
   | 'AvatarDownloadJobType'
   | 'AvatarReuploadJobType'
   | 'AvatarMigrateJobType'
@@ -67,6 +68,11 @@ export interface UserSyncPersistedData extends PersistedJobData {
 export interface GroupSyncPersistedData extends PersistedJobData {
   jobType: 'GroupSyncJobType';
 }
+
+export interface UpdateProRevocationListPersistedData extends PersistedJobData {
+  jobType: 'UpdateProRevocationListJobType';
+}
+
 interface PersistedDataWithMsgIds extends PersistedJobData {
   msgIds: Array<string>;
 }
@@ -90,7 +96,8 @@ export type TypeOfPersistedData =
   | FakeSleepForMultiJobData
   | GroupSyncPersistedData
   | GroupInvitePersistedData
-  | GroupPendingRemovalsPersistedData;
+  | GroupPendingRemovalsPersistedData
+  | UpdateProRevocationListPersistedData;
 
 export type AddJobCheckReturn = 'skipAddSameJobPresent' | null;
 

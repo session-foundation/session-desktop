@@ -29,13 +29,22 @@ export class UnsendMessage extends ContentMessage {
   }
 
   public contentProto(): SignalService.Content {
-    return super.makeContentProto({ unsendMessage: this.unsendProto() });
+    // Note: unsend messages are not disappearing messages
+    return super.makeNonDisappearingContentProto({ unsendRequest: this.unsendProto() });
   }
 
-  public unsendProto(): SignalService.Unsend {
-    return new SignalService.Unsend({
+  public unsendProto(): SignalService.UnsendRequest {
+    return new SignalService.UnsendRequest({
       timestamp: this.referencedMessageTimestamp,
       author: this.author,
     });
+  }
+
+  public proMessageProto() {
+    return null;
+  }
+
+  public lokiProfileProto() {
+    return {};
   }
 }

@@ -62,4 +62,12 @@ export class GroupUpdateInviteMessage extends GroupUpdateMessage {
   public isFor1o1Swarm(): boolean {
     return true;
   }
+
+  public lokiProfileProto() {
+    return this.userProfile?.toProtobufDetails() ?? {};
+  }
+
+  public proMessageProto() {
+    return null;
+  }
 }

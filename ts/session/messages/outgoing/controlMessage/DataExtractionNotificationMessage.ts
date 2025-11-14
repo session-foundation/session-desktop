@@ -27,7 +27,7 @@ export class DataExtractionNotificationMessage extends ExpirableMessage {
   }
 
   public contentProto(): SignalService.Content {
-    const content = super.contentProto();
+    const content = super.makeDisappearingContentProto();
     content.dataExtractionNotification = this.extractionProto();
     return content;
   }
@@ -41,6 +41,14 @@ export class DataExtractionNotificationMessage extends ExpirableMessage {
       type: action,
       timestamp: this.referencedAttachmentTimestamp,
     });
+  }
+
+  public proMessageProto() {
+    return null;
+  }
+
+  public lokiProfileProto() {
+    return {};
   }
 }
 

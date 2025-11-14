@@ -90,7 +90,9 @@ export class GroupUpdateInfoChangeMessage extends GroupUpdateMessage {
         break;
     }
 
-    return new SignalService.DataMessage({ groupUpdateMessage: { infoChangeMessage } });
+    const proto = super.makeDataProto();
+    proto.groupUpdateMessage = { infoChangeMessage };
+    return proto;
   }
 
   public isForGroupSwarm(): boolean {
@@ -98,5 +100,13 @@ export class GroupUpdateInfoChangeMessage extends GroupUpdateMessage {
   }
   public isFor1o1Swarm(): boolean {
     return false;
+  }
+
+  public proMessageProto() {
+    return null;
+  }
+
+  public lokiProfileProto() {
+    return {};
   }
 }

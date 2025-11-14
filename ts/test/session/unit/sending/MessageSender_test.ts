@@ -20,6 +20,7 @@ import { TestUtils } from '../../../test-utils';
 import {
   TypedStub,
   stubData,
+  stubLibSessionWorker,
   stubUtilWorker,
   stubValidSnodeSwarm,
   stubWindowLog,
@@ -76,6 +77,7 @@ describe('MessageSender', () => {
 
       it('should only call lokiMessageAPI once if no errors occurred', async () => {
         stubValidSnodeSwarm();
+        stubLibSessionWorker(null);
         TestUtils.stubMultiEncryptWrapper();
         await MessageSender.sendSingleMessage({
           message: rawMessage,

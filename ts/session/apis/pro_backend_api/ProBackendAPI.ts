@@ -1,3 +1,9 @@
+import type {
+  WithMasterPrivKeyHex,
+  WithRotatingPrivKeyHex,
+  WithTicket,
+} from 'libsession_util_nodejs';
+
 import { PRO_API } from './ProBackendTarget';
 import SessionBackendServerApi from '../session_backend_server';
 import {
@@ -7,7 +13,7 @@ import {
   GetProRevocationsResponseType,
   GetProStatusResponseSchema,
   GetProStatusResponseType,
-} from './types';
+} from './schemas';
 import { ProWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { NetworkTime } from '../../../util/NetworkTime';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
@@ -18,9 +24,7 @@ export default class ProBackendAPI {
 
   static readonly requestVersion = 0;
 
-  static getProSigningArgs() {
-    // TODO: get real pro master private key
-    const masterPrivKeyHex = '';
+  static getProSigningArgs({ masterPrivKeyHex }: WithMasterPrivKeyHex) {
     return {
       requestVersion: ProBackendAPI.requestVersion,
       masterPrivKeyHex,
@@ -32,47 +36,52 @@ export default class ProBackendAPI {
     return getFeatureFlag('useTestProBackend') ? ProBackendAPI.testServer : ProBackendAPI.server;
   }
 
-  private static async getProProofBody() {
-    // TODO: get real rotating private key
-    const rotatingPrivKeyHex = '';
+  private static async getProProofBody({
+    masterPrivKeyHex,
+    rotatingPrivKeyHex,
+  }: WithMasterPrivKeyHex & WithRotatingPrivKeyHex) {
     return ProWrapperActions.proProofRequestBody({
-      ...ProBackendAPI.getProSigningArgs(),
+      ...ProBackendAPI.getProSigningArgs({ masterPrivKeyHex }),
       rotatingPrivKeyHex,
     });
   }
 
-  static async getProProof(): Promise<GetProProofResponseType | null> {
+  static async getProProof(
+    args: WithMasterPrivKeyHex & WithRotatingPrivKeyHex
+  ): Promise<GetProProofResponseType | null> {
     return ProBackendAPI.getServer().makeRequestWithSchema({
       path: '/get_pro_proof',
       method: 'POST',
-      bodyGetter: ProBackendAPI.getProProofBody,
+      bodyGetter: () => ProBackendAPI.getProProofBody(args),
       withZodSchema: GetProProofResponseSchema,
     });
   }
 
-  private static async getProStatusBody() {
+  private static async getProStatusBody(args: WithMasterPrivKeyHex) {
     return ProWrapperActions.proStatusRequestBody({
-      ...ProBackendAPI.getProSigningArgs(),
+      ...ProBackendAPI.getProSigningArgs(args),
       withPaymentHistory: false,
     });
   }
 
-  static async getProStatus(): Promise<GetProStatusResponseType | null> {
+  private static async getRevocationListBody(args: WithTicket) {
+    return ProWrapperActions.proRevocationsRequestBody({ requestVersion: 0, ...args });
+  }
+
+  static async getProStatus(args: WithMasterPrivKeyHex): Promise<GetProStatusResponseType | null> {
     return ProBackendAPI.getServer().makeRequestWithSchema({
       path: '/get_pro_status',
       method: 'POST',
-      bodyGetter: ProBackendAPI.getProStatusBody,
+      bodyGetter: () => ProBackendAPI.getProStatusBody(args),
       withZodSchema: GetProStatusResponseSchema,
     });
   }
 
-  static async getRevocationList(): Promise<GetProRevocationsResponseType | null> {
-    const bodyGetter = async () => '{ "version": 0, "ticket": 0 }';
-
+  static async getRevocationList(args: WithTicket): Promise<GetProRevocationsResponseType | null> {
     return ProBackendAPI.getServer().makeRequestWithSchema({
       path: '/get_pro_revocations',
       method: 'POST',
-      bodyGetter,
+      bodyGetter: () => ProBackendAPI.getRevocationListBody(args),
       withZodSchema: GetProRevocationsResponseSchema,
     });
   }

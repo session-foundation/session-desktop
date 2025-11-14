@@ -9,6 +9,7 @@ import { DisappearingMessageMode } from '../../../../session/disappearing_messag
 const sharedNoExpire = {
   expireTimer: 0,
   expirationType: DisappearingMessageMode[0],
+  userProfile: null,
 };
 
 describe('CommunityInvitationMessage', () => {

@@ -124,7 +124,7 @@ class OutgoingUserProfile {
       return this.emptyProtobufDetails();
     }
 
-    const profile = new SignalService.DataMessage.LokiProfile();
+    const profile = new SignalService.LokiProfile();
     // don't set display name if it's empty
     if (this.displayName) {
       profile.displayName = this.displayName;

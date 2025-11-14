@@ -474,6 +474,7 @@ function saveConversation(data: ConversationAttributes): SaveConversationReturn 
     groupAdmins,
     avatarPointer,
     triggerNotificationsFor,
+    bitsetProFeatures,
     profileUpdatedSeconds,
     isTrustedForAttachmentDownload,
     isApproved,
@@ -526,6 +527,7 @@ function saveConversation(data: ConversationAttributes): SaveConversationReturn 
       lastJoinedTimestamp,
       groupAdmins: groupAdmins && groupAdmins.length ? arrayStrToJson(groupAdmins) : '[]',
       avatarPointer,
+      bitsetProFeatures,
       triggerNotificationsFor,
       profileUpdatedSeconds,
       isTrustedForAttachmentDownload: toSqliteBoolean(isTrustedForAttachmentDownload),
@@ -2386,7 +2388,7 @@ function cleanUpMessagesJson() {
 }
 
 function cleanUpOldOpengroupsOnStart() {
-  const ourNumber = getItemById('number_id');
+  const ourNumber = getItemById(SettingsKey.numberId);
   if (!ourNumber || !ourNumber.value) {
     console.info('cleanUpOldOpengroups: ourNumber is not set');
     return;

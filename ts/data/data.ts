@@ -26,7 +26,7 @@ import { Storage } from '../util/storage';
 import { channels } from './channels';
 import * as dataInit from './dataInit';
 import { cleanData } from './dataUtils';
-import { SNODE_POOL_ITEM_ID } from './settings-key';
+import { SettingsKey, SNODE_POOL_ITEM_ID } from './settings-key';
 import {
   FindAllMessageFromSendersInConversationTypeArgs,
   FindAllMessageHashesInConversationMatchingAuthorTypeArgs,
@@ -69,16 +69,16 @@ async function updateGuardNodes(nodes: Array<string>): Promise<void> {
 }
 
 async function generateAttachmentKeyIfEmpty() {
-  const existingKey = await getItemById('local_attachment_encrypted_key');
+  const existingKey = await getItemById(SettingsKey.localAttachmentEncryptionKey);
   if (!existingKey) {
     const sodium = await getSodiumRenderer();
     const encryptingKey = sodium.to_hex(sodium.randombytes_buf(32));
     await createOrUpdateItem({
-      id: 'local_attachment_encrypted_key',
+      id: SettingsKey.localAttachmentEncryptionKey,
       value: encryptingKey,
     });
     // be sure to write the new key to the cache. so we can access it straight away
-    await Storage.put('local_attachment_encrypted_key', encryptingKey);
+    await Storage.put(SettingsKey.localAttachmentEncryptionKey, encryptingKey);
   }
 }
 

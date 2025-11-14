@@ -40,7 +40,7 @@ async function makeGroupMessageSubRequest(
   const groupEncKeyHex = await MetaGroupWrapperActions.keyGetEncryptionKeyHex(groupPk);
   const senderEd25519Seed = await UserUtils.getUserEd25519Seed();
 
-  // debugger;
+  const proRotatingPrivateKey = await UserUtils.getProRotatingPrivateKeyHex();
   const { encryptedData } = await MultiEncryptWrapperActions.encryptForGroup(
     compactedMessages.map(m => {
       return {
@@ -49,7 +49,7 @@ async function makeGroupMessageSubRequest(
         groupEd25519Pubkey: m.destination,
         groupEncKey: groupEncKeyHex,
         senderEd25519Seed,
-        proRotatingEd25519PrivKey: null,
+        proRotatingEd25519PrivKey: proRotatingPrivateKey,
       };
     })
   );
@@ -92,11 +92,11 @@ function makeStoreGroupKeysSubRequest({
 
   if (!group.secretKey || isEmpty(group.secretKey)) {
     window.log.debug(
-      `makeStoreGroupKeysSubRequest: ${ed25519Str(groupPk)}: keysEncryptedmessage not empty but we do not have the secretKey`
+      `makeStoreGroupKeysSubRequest: ${ed25519Str(groupPk)}: keysEncryptedMessage not empty but we do not have the secretKey`
     );
 
     throw new Error(
-      'makeStoreGroupKeysSubRequest: keysEncryptedmessage not empty but we do not have the secretKey'
+      'makeStoreGroupKeysSubRequest: keysEncryptedMessage not empty but we do not have the secretKey'
     );
   }
   return new StoreGroupKeysSubRequest({

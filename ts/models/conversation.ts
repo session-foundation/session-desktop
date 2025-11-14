@@ -754,12 +754,16 @@ export class ConversationModel extends Model<ConversationAttributes> {
         expireTimer,
         this.getExpirationMode()
       );
+      const body = '';
       const chatMessageParams: VisibleMessageParams = {
-        body: '',
+        body,
         // we need to use a new timestamp here, otherwise android&iOS will consider this message as a duplicate and drop the synced reaction
         createAtNetworkTimestamp: NetworkTime.now(),
         reaction,
         userProfile: await UserUtils.getOurProfile(),
+        outgoingProMessageDetails: await UserUtils.getOutgoingProMessageDetails({
+          utf16: body,
+        }),
         expirationType,
         expireTimer,
       };
@@ -2530,6 +2534,9 @@ export class ConversationModel extends Model<ConversationAttributes> {
         preview: preview ? [preview] : [],
         quote,
         userProfile: await UserUtils.getOurProfile(),
+        outgoingProMessageDetails: await UserUtils.getOutgoingProMessageDetails({
+          utf16: body ?? '',
+        }),
       };
 
       if (PubKey.isBlinded(this.id)) {
@@ -2588,6 +2595,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
             url: communityInvitation.url,
             expirationType: chatMessageParams.expirationType,
             expireTimer: chatMessageParams.expireTimer,
+            userProfile: chatMessageParams.userProfile,
           });
           // we need the return await so that errors are caught in the catch {}
           await MessageQueue.use().sendToPubKey(
@@ -2675,6 +2683,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
 
     const sogsVisibleMessage = new OpenGroupVisibleMessage(messageParams);
+    const proRotatingPrivateKey = await UserUtils.getProRotatingPrivateKeyHex();
 
     const { encryptedData } = await MultiEncryptWrapperActions.encryptForCommunityInbox([
       {
@@ -2683,7 +2692,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
         senderEd25519Seed: await UserUtils.getUserEd25519Seed(),
         recipientPubkey: this.id,
         sentTimestampMs: messageParams.createAtNetworkTimestamp,
-        proRotatingEd25519PrivKey: null,
+        proRotatingEd25519PrivKey: proRotatingPrivateKey,
       },
     ]);
 

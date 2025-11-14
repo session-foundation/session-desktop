@@ -3,6 +3,7 @@ import { SessionKeyPair } from '../receiver/keypairs';
 import { DEFAULT_RECENT_REACTS } from '../session/constants';
 import { deleteSettingsBoolValue, updateSettingsBoolValue } from '../state/ducks/settings';
 import { Data } from '../data/data';
+import { SettingsKey } from '../data/settings-key';
 
 let ready = false;
 
@@ -101,11 +102,11 @@ function getBoolOr(settingsKey: string, fallback: boolean): boolean {
 }
 
 export async function setLocalPubKey(pubkey: string) {
-  await put('number_id', `${pubkey}.1`);
+  await put(SettingsKey.numberId, `${pubkey}.1`);
 }
 
 export function getOurPubKeyStrFromStorage() {
-  const numberId = get('number_id') as string | undefined;
+  const numberId = get(SettingsKey.numberId) as string | undefined;
   if (numberId === undefined) {
     return undefined;
   }

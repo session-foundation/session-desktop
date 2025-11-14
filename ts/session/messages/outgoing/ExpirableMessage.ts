@@ -2,14 +2,14 @@ import { SignalService } from '../../../protobuf';
 import { DURATION, TTL_DEFAULT } from '../../constants';
 import { DisappearingMessageType } from '../../disappearing_messages/types';
 import { ContentMessage } from './ContentMessage';
-import { MessageParams } from './Message';
+import type { MessageParams } from './Message';
 
 export type ExpirableMessageParams = MessageParams & {
   expirationType: DisappearingMessageType;
   expireTimer: number;
 };
 
-export class ExpirableMessage extends ContentMessage {
+export abstract class ExpirableMessage extends ContentMessage {
   public readonly expirationType: DisappearingMessageType;
   /** in seconds, 0 means no expiration */
   public readonly expireTimer: number;
@@ -23,8 +23,8 @@ export class ExpirableMessage extends ContentMessage {
     this.expireTimer = params.expireTimer;
   }
 
-  public contentProto(): SignalService.Content {
-    return super.makeContentProto({
+  public makeDisappearingContentProto(): SignalService.Content {
+    return super.makeNonDisappearingContentProto({
       expirationType:
         this.expirationType === 'deleteAfterSend'
           ? SignalService.Content.ExpirationType.DELETE_AFTER_SEND
@@ -34,9 +34,6 @@ export class ExpirableMessage extends ContentMessage {
       expirationTimer: this.expireTimer >= 0 ? this.expireTimer : undefined,
     });
   }
-
-  // Note: dataProto() or anything else must be implemented in the child classes
-  // public dataProto()
 
   public getDisappearingMessageType(): DisappearingMessageType | undefined {
     return this.expirationType || undefined;
