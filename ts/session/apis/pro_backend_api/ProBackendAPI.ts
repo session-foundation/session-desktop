@@ -60,7 +60,7 @@ export default class ProBackendAPI {
   private static async getProStatusBody(args: WithMasterPrivKeyHex) {
     return ProWrapperActions.proStatusRequestBody({
       ...ProBackendAPI.getProSigningArgs(args),
-      withPaymentHistory: false,
+      count: 1,
     });
   }
 

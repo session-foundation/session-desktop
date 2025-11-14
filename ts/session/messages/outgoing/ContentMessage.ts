@@ -1,17 +1,14 @@
 import { SignalService } from '../../../protobuf';
+import type { OutgoingUserProfile } from '../../../types/message';
 import { OutgoingProMessageDetails } from '../../../types/message/OutgoingProMessageDetails';
 import { TTL_DEFAULT } from '../../constants';
-import { Message } from './Message';
-import type { OutgoingProMessageDetailsOrProto } from './visibleMessage/VisibleMessage';
+import { Message, type MessageParams, type WithOutgoingUserProfile } from './Message';
+import type {
+  OutgoingProMessageDetailsOrProto,
+  WithProMessageDetailsOrProto,
+} from './visibleMessage/VisibleMessage';
 
-type InstanceFields<T> = {
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  [K in keyof T as T[K] extends Function ? never : K]: T[K];
-};
-
-type ContentFields = Partial<Omit<InstanceFields<SignalService.Content>, 'sigTimestamp'>>;
-
-export abstract class ContentMessage extends Message {
+export abstract class ContentMessageNoProfile extends Message {
   public plainTextBuffer(): Uint8Array {
     const contentProto = this.contentProto();
     if (!contentProto.sigTimestamp) {
@@ -24,31 +21,63 @@ export abstract class ContentMessage extends Message {
     return TTL_DEFAULT.CONTENT_MESSAGE;
   }
 
-  public makeNonDisappearingContentProto<T extends ContentFields>(extra: T) {
+  protected makeNonDisappearingContentProto() {
     return new SignalService.Content({
-      ...extra,
       sigTimestamp: this.createAtNetworkTimestamp,
     });
   }
 
   public abstract contentProto(): SignalService.Content;
+}
 
-  public abstract proMessageProto(): SignalService.ProMessage | null;
-  public abstract lokiProfileProto(): Partial<
-    Pick<SignalService.DataMessage, 'profile' | 'profileKey'>
-  >;
+export abstract class ContentMessageWithProfile extends ContentMessageNoProfile {
+  private readonly userProfile: OutgoingUserProfile | null;
+  private readonly proMessageDetails: OutgoingProMessageDetailsOrProto;
 
-  /**
-   * Utility function to convert the OutgoingProMessageDetailsOrProto to a SignalService.ProMessage
-   * depending on what is provided.
-   * This is just to avoid duplicating this code in all the message types that need it.
-   */
-  public static proMessageProtoFromDetailsOrProto(
-    detailsOrProto: OutgoingProMessageDetailsOrProto
-  ): SignalService.ProMessage | null {
-    if (detailsOrProto instanceof OutgoingProMessageDetails) {
-      return detailsOrProto.toProtobufDetails();
-    }
-    return detailsOrProto;
+  constructor(params: MessageParams & WithOutgoingUserProfile & WithProMessageDetailsOrProto) {
+    super(params);
+    this.userProfile = params.userProfile;
+    this.proMessageDetails = params.outgoingProMessageDetails;
   }
+
+  protected makeNonDisappearingContentProto(): SignalService.Content {
+    window.log.warn(
+      'makeNonDisappearingContentProto cannot be called directly on a `ContentMessageWithProfile`.'
+    );
+    window.log.warn(
+      'You probably want to use makeNonDisappearingContentProtoWithPro, or inherit from`ContentMessageNoProfile` instead.'
+    );
+    throw new Error(
+      'makeNonDisappearingContentProto cannot be called directly on a `ContentMessageWithProfile.`'
+    );
+  }
+
+  protected makeNonDisappearingContentProtoWithPro() {
+    const content = super.makeNonDisappearingContentProto();
+    content.proMessage = this.proMessageProto();
+
+    return content;
+  }
+
+  private proMessageProto(): SignalService.ProMessage | null {
+    return proMessageProtoFromDetailsOrProto(this.proMessageDetails);
+  }
+
+  protected lokiProfileProto(): Partial<Pick<SignalService.DataMessage, 'profile' | 'profileKey'>> {
+    return this.userProfile?.toProtobufDetails() ?? {};
+  }
+}
+
+/**
+ * Utility function to convert the OutgoingProMessageDetailsOrProto to a SignalService.ProMessage
+ * depending on what is provided.
+ * This is just to avoid duplicating this code in all the message types that need it.
+ */
+export function proMessageProtoFromDetailsOrProto(
+  detailsOrProto: OutgoingProMessageDetailsOrProto
+): SignalService.ProMessage | null {
+  if (detailsOrProto instanceof OutgoingProMessageDetails) {
+    return detailsOrProto.toProtobufDetails();
+  }
+  return detailsOrProto;
 }

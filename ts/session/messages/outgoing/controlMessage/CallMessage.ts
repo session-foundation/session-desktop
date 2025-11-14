@@ -1,6 +1,6 @@
 import { SignalService } from '../../../../protobuf';
 import { TTL_DEFAULT } from '../../../constants';
-import { ExpirableMessage, ExpirableMessageParams } from '../ExpirableMessage';
+import { ExpirableMessageNoProfile, ExpirableMessageParams } from '../ExpirableMessage';
 
 type CallMessageParams = ExpirableMessageParams & {
   type: SignalService.CallMessage.Type;
@@ -10,7 +10,7 @@ type CallMessageParams = ExpirableMessageParams & {
   uuid: string;
 };
 
-export class CallMessage extends ExpirableMessage {
+export class CallMessage extends ExpirableMessageNoProfile {
   public readonly type: SignalService.CallMessage.Type;
   public readonly sdpMLineIndexes?: Array<number>;
   public readonly sdpMids?: Array<string>;
@@ -38,7 +38,7 @@ export class CallMessage extends ExpirableMessage {
     }
   }
 
-  public contentProto(): SignalService.Content {
+  public override contentProto(): SignalService.Content {
     const content = super.makeDisappearingContentProto();
     content.callMessage = this.callProto();
     return content;
@@ -56,13 +56,5 @@ export class CallMessage extends ExpirableMessage {
       sdps: this.sdps,
       uuid: this.uuid,
     });
-  }
-
-  public proMessageProto() {
-    return null;
-  }
-
-  public lokiProfileProto() {
-    return {};
   }
 }

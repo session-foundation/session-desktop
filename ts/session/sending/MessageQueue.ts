@@ -5,7 +5,7 @@ import { OutgoingRawMessage, PubKey } from '../types';
 import { JobQueue, MessageUtils, UserUtils } from '../utils';
 import { PendingMessageCache } from './PendingMessageCache';
 
-import { ContentMessage } from '../messages/outgoing';
+import { type ContentMessageNoProfile } from '../messages/outgoing';
 import { ClosedGroupV2VisibleMessage } from '../messages/outgoing/visibleMessage/ClosedGroupVisibleMessage';
 import { SyncMessageType } from '../utils/sync/syncUtils';
 import { MessageSentHandler } from './MessageSentHandler';
@@ -38,7 +38,7 @@ export class MessageQueueCl {
 
   public async sendToPubKey(
     destinationPubKey: PubKey,
-    message: ContentMessage,
+    message: ContentMessageNoProfile,
     namespace: SnodeNamespaces,
     sentCb?: (message: OutgoingRawMessage) => Promise<void>
   ): Promise<void> {
@@ -246,7 +246,7 @@ export class MessageQueueCl {
     isSyncMessage,
   }: {
     pubkey: PubKey;
-    message: ContentMessage;
+    message: ContentMessageNoProfile;
     namespace: SnodeNamespaces;
     isSyncMessage: boolean;
   }): Promise<number | null> {
@@ -335,7 +335,7 @@ export class MessageQueueCl {
    */
   private async process(
     destinationPk: PubKey,
-    message: ContentMessage,
+    message: ContentMessageNoProfile,
     namespace: SnodeNamespaces,
     sentCb?: (message: OutgoingRawMessage) => Promise<void>
   ): Promise<void> {

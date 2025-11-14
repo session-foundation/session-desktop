@@ -2637,9 +2637,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (!PubKey.is03Pubkey(this.id)) {
       throw new Error('sendMessageToGroupV2 needs a 03 key');
     }
-    const visibleMessage = new VisibleMessage(chatMessageParams);
     const groupVisibleMessage = new ClosedGroupV2VisibleMessage({
-      chatMessage: visibleMessage,
+      chatMessageParams,
       destination: this.id,
     });
 

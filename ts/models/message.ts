@@ -4,7 +4,7 @@ import { GroupPubkeyType, PubkeyType } from 'libsession_util_nodejs';
 import { debounce, isEmpty, isEqual, isString, size as lodashSize, uniq } from 'lodash';
 import { SignalService } from '../protobuf';
 import { ConvoHub } from '../session/conversations';
-import { ContentMessage } from '../session/messages/outgoing';
+import { ContentMessageNoProfile } from '../session/messages/outgoing';
 import { ClosedGroupV2VisibleMessage } from '../session/messages/outgoing/visibleMessage/ClosedGroupVisibleMessage';
 import { PubKey } from '../session/types';
 import {
@@ -961,7 +961,7 @@ export class MessageModel extends Model<MessageAttributes> {
       if (conversation.isClosedGroupV2()) {
         const groupV2VisibleMessage = new ClosedGroupV2VisibleMessage({
           destination: PubKey.cast(this.get('conversationId')).key as GroupPubkeyType,
-          chatMessage,
+          chatMessageParams: chatParams,
         });
         // we need the return await so that errors are caught in the catch {}
         return await MessageQueue.use().sendToGroupV2({
@@ -1051,7 +1051,7 @@ export class MessageModel extends Model<MessageAttributes> {
     }
   }
 
-  public async sendSyncMessageOnly(contentMessage: ContentMessage) {
+  public async sendSyncMessageOnly(contentMessage: ContentMessageNoProfile) {
     const now = NetworkTime.now();
 
     this.set({
@@ -1062,7 +1062,9 @@ export class MessageModel extends Model<MessageAttributes> {
     await this.commit();
 
     const content =
-      contentMessage instanceof ContentMessage ? contentMessage.contentProto() : contentMessage;
+      contentMessage instanceof ContentMessageNoProfile
+        ? contentMessage.contentProto()
+        : contentMessage;
     await this.sendSyncMessage(content, now);
   }
 
@@ -1091,7 +1093,7 @@ export class MessageModel extends Model<MessageAttributes> {
 
       const syncMessage = buildSyncMessage(
         this.id,
-        dataMessage as SignalService.DataMessage,
+        dataMessage satisfies SignalService.IDataMessage as SignalService.DataMessage,
         conversation.id,
         sentTimestamp,
         expireUpdate,

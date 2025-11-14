@@ -2,13 +2,11 @@ import Long from 'long';
 
 import { SignalService } from '../../../../protobuf';
 import { Reaction } from '../../../../types/Reaction';
-import { DataMessage } from '../DataMessage';
-import { type OutgoingUserProfile } from '../../../../types/message';
+import { DataMessageWithProfile } from '../DataMessage';
 import { ExpirableMessageParams } from '../ExpirableMessage';
 import { attachmentIdAsLongFromUrl } from '../../../utils';
 import type { WithOutgoingUserProfile } from '../Message';
 import { OutgoingProMessageDetails } from '../../../../types/message/OutgoingProMessageDetails';
-import { ContentMessage } from '../ContentMessage';
 
 interface AttachmentPointerCommon {
   contentType?: string;
@@ -85,7 +83,7 @@ export type VisibleMessageParams = ExpirableMessageParams &
     syncTarget?: string; // undefined means it is not a synced message
   };
 
-export class VisibleMessage extends DataMessage {
+export class VisibleMessage extends DataMessageWithProfile {
   public readonly reaction?: Reaction;
 
   private readonly attachments?: Array<AttachmentPointerWithUrl & { deprecatedId: Long }>;
@@ -98,15 +96,14 @@ export class VisibleMessage extends DataMessage {
   /// - Note: `null or undefined` if this isn't a sync message.
   private readonly syncTarget?: string;
 
-  protected readonly userProfile: OutgoingUserProfile | null;
-  protected readonly proMessageDetails: OutgoingProMessageDetailsOrProto;
-
   constructor(params: VisibleMessageParams) {
     super({
       createAtNetworkTimestamp: params.createAtNetworkTimestamp,
       identifier: params.identifier,
       expirationType: params.expirationType,
       expireTimer: params.expireTimer,
+      outgoingProMessageDetails: params.outgoingProMessageDetails,
+      userProfile: params.userProfile,
     });
     this.attachments = params.attachments?.map(attachment => ({
       ...attachment,
@@ -114,9 +111,6 @@ export class VisibleMessage extends DataMessage {
     }));
     this.body = params.body;
     this.quote = params.quote;
-
-    this.userProfile = params.userProfile;
-    this.proMessageDetails = params.outgoingProMessageDetails;
 
     this.preview = params.preview?.map(attachment => ({
       ...attachment,
@@ -128,13 +122,13 @@ export class VisibleMessage extends DataMessage {
     this.syncTarget = params.syncTarget;
   }
 
-  public contentProto(): SignalService.Content {
+  public override contentProto(): SignalService.Content {
     // Note: we need to forward the stored proMessage here to the super contentProto()
     return super.contentProto();
   }
 
-  public dataProto(): SignalService.DataMessage {
-    const dataMessage = new SignalService.DataMessage({});
+  public override dataProto(): SignalService.DataMessage {
+    const dataMessage = super.makeDataProtoWithProfile();
 
     if (this.body) {
       dataMessage.body = this.body;
@@ -147,12 +141,6 @@ export class VisibleMessage extends DataMessage {
     }
     if (this.syncTarget) {
       dataMessage.syncTarget = this.syncTarget;
-    }
-
-    const protobufDetails = this.userProfile?.toProtobufDetails() ?? {};
-    dataMessage.profile = protobufDetails.profile;
-    if (protobufDetails.profileKey) {
-      dataMessage.profileKey = protobufDetails.profileKey;
     }
 
     if (this.quote) {
@@ -187,13 +175,5 @@ export class VisibleMessage extends DataMessage {
       this.identifier === comparator.identifier &&
       this.createAtNetworkTimestamp === comparator.createAtNetworkTimestamp
     );
-  }
-
-  public lokiProfileProto() {
-    return this.userProfile?.toProtobufDetails() ?? {};
-  }
-
-  public proMessageProto() {
-    return ContentMessage.proMessageProtoFromDetailsOrProto(this.proMessageDetails);
   }
 }

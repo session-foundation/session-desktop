@@ -181,7 +181,7 @@ describe('libsession_pro', () => {
             requestVersion: 0,
             masterPrivKeyHex: masterPrivKey,
             unixTsMs: 1761884113627,
-            withPaymentHistory: false,
+            count: 10,
           })
         )
       ).to.deep.eq(validContent);

@@ -1,6 +1,6 @@
 import { SignalService } from '../../../../protobuf';
 import { PubKey } from '../../../types';
-import { DataMessage } from '../DataMessage';
+import { DataMessageNoProfile } from '../DataMessage';
 import { ExpirableMessageParams } from '../ExpirableMessage';
 
 type ExpirationTimerUpdateMessageParams = ExpirableMessageParams & {
@@ -10,7 +10,7 @@ type ExpirationTimerUpdateMessageParams = ExpirableMessageParams & {
 // NOTE legacy messages used a data message for the expireTimer.
 // The new ones use properties on the Content Message
 
-export class ExpirationTimerUpdateMessage extends DataMessage {
+export class ExpirationTimerUpdateMessage extends DataMessageNoProfile {
   public readonly syncTarget?: string;
 
   constructor(params: ExpirationTimerUpdateMessageParams) {
@@ -26,8 +26,8 @@ export class ExpirationTimerUpdateMessage extends DataMessage {
 
   // Note: DataMessage::contentProto is already what we need here, so no need to rewrite it
 
-  public dataProto(): SignalService.DataMessage {
-    const proto = super.makeDataProto();
+  public override dataProto(): SignalService.DataMessage {
+    const proto = super.makeDataProtoNoProfile();
     proto.flags = SignalService.DataMessage.Flags.EXPIRATION_TIMER_UPDATE;
 
     if (this.syncTarget) {
@@ -39,13 +39,5 @@ export class ExpirationTimerUpdateMessage extends DataMessage {
 
   public ttl(): number {
     return super.ttl();
-  }
-
-  public lokiProfileProto() {
-    return {};
-  }
-
-  public proMessageProto() {
-    return null;
   }
 }
