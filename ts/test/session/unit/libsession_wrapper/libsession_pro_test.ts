@@ -167,11 +167,11 @@ describe('libsession_pro', () => {
     it('generates a valid request body', async () => {
       const validContent = {
         version: 0,
-        count: 0,
+        count: 10,
         master_pkey: '3ec4ff1928220d599cccbf8d76002e80191c286906bc18987f46fd9688418852',
         unix_ts_ms: 1761884113627,
         master_sig:
-          '713421ad79e4710d87b292f07332601c4946f52b284b3bfbe2d61016d91432755f3713d05b83c36387032b97a40ddb7581a8e9852cf722dc7641c773ddde990b',
+          '76018d58a345d6031b9177be737bfac0c766045e4b010e65e8dd1e5408071b1d40dbbfe5d93a81653cd5e6bee033b4f308fa3f45757928b7b5a3394d5884e103',
       };
 
       await getSodiumNode();

@@ -27,11 +27,10 @@ import {
 } from '../../../test-utils/utils';
 import { NetworkTime } from '../../../../util/NetworkTime';
 
-describe('MessageSender', () => {
-  afterEach(() => {
-    sinon.restore();
-  });
+const proGeneratedPrivKeyHex =
+  '01234567890123456789012345678901234567890123456789012345678901230123456789012345678901234567890123456789012345678901234567890123';
 
+describe('MessageSender', () => {
   beforeEach(async () => {
     TestUtils.stubWindowLog();
     TestUtils.stubWindowFeatureFlags();
@@ -41,6 +40,11 @@ describe('MessageSender', () => {
     stubData('getAllConversations').resolves([]);
     stubData('saveConversation').resolves();
     await ConvoHub.use().load();
+    Sinon.stub(UserUtils, 'getProRotatingPrivateKeyHex').resolves(proGeneratedPrivKeyHex);
+  });
+  
+  afterEach(() => {
+    sinon.restore();
   });
 
   describe('send', () => {
@@ -254,6 +258,7 @@ describe('MessageSender', () => {
 
     it('should call sendOnionRequestHandlingSnodeEjectStub', async () => {
       TestUtils.stubMultiEncryptWrapper();
+
       const sendOnionRequestHandlingSnodeEjectStub = Sinon.stub(
         Onions,
         'sendOnionRequestHandlingSnodeEjectNoRetries'
