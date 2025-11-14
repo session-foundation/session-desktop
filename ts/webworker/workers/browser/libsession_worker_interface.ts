@@ -214,6 +214,20 @@ export const UserConfigWrapperActions: UserConfigWrapperActionsCalls = {
     callLibSessionWorker(['UserConfig', 'setProConfig', proConfig]) as Promise<
       ReturnType<UserConfigWrapperActionsCalls['setProConfig']>
     >,
+
+  getProFeaturesBitset: async (
+    ...args: Parameters<UserConfigWrapperActionsCalls['getProFeaturesBitset']>
+  ) =>
+    callLibSessionWorker(['UserConfig', 'getProFeaturesBitset', ...args]) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['getProFeaturesBitset']>
+    >,
+  setProFeaturesBitset: async (
+    ...args: Parameters<UserConfigWrapperActionsCalls['setProFeaturesBitset']>
+  ) =>
+    callLibSessionWorker(['UserConfig', 'setProFeaturesBitset', ...args]) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['setProFeaturesBitset']>
+    >,
+
   generateProMasterKey: async (
     ...args: Parameters<UserConfigWrapperActionsCalls['generateProMasterKey']>
   ) =>

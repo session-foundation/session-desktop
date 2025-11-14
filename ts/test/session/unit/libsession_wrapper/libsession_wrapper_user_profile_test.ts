@@ -68,6 +68,7 @@ describe('libsession_user_profile', () => {
           genIndexHashB64: to_base64(ed25519Seed, base64_variants.ORIGINAL),
           rotatingPubkeyHex: to_hex(randombytes_buf(32)),
           version: 132,
+          signatureHex: to_hex(randombytes_buf(64)),
         },
       };
 
@@ -78,6 +79,19 @@ describe('libsession_user_profile', () => {
         throw new Error('proConfigFromWrapper is null');
       }
       expect(proConfigFromWrapper).to.be.deep.eq(proConfig);
+    });
+  });
+
+  describe('proFeaturesBitset', () => {
+    it('can set & get pro proFeaturesBitset', async () => {
+      const userKeys = await TestUtils.generateUserKeyPairs();
+
+      const wrapper = new UserConfigWrapperNode(userKeys.ed25519KeyPair.privKeyBytes, null);
+      expect(wrapper.getProFeaturesBitset()).to.be.deep.eq(0);
+
+      wrapper.setProFeaturesBitset({ proFeaturesBitset: 4n });
+
+      expect(wrapper.getProFeaturesBitset()).to.be.deep.eq(4);
     });
   });
 });

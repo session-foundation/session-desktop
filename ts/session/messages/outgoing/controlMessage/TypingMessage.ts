@@ -23,7 +23,8 @@ export class TypingMessage extends ContentMessage {
   }
 
   public contentProto(): SignalService.Content {
-    return super.makeContentProto({ typingMessage: this.typingProto() });
+    // Note: typing messages are not disappearing messages
+    return super.makeNonDisappearingContentProto({ typingMessage: this.typingProto() });
   }
 
   protected typingProto(): SignalService.TypingMessage {
@@ -36,5 +37,13 @@ export class TypingMessage extends ContentMessage {
     typingMessage.timestamp = this.createAtNetworkTimestamp;
 
     return typingMessage;
+  }
+
+  public proMessageProto() {
+    return null;
+  }
+
+  public lokiProfileProto() {
+    return {};
   }
 }

@@ -44,6 +44,7 @@ async function encryptForGroup(
   }
 
   const groupEncKeyHex = await MetaGroupWrapperActions.keyGetEncryptionKeyHex(destination);
+  const proRotatingPrivateKey = await UserUtils.getProRotatingPrivateKeyHex();
 
   const cipherText = await MultiEncryptWrapperActions.encryptForGroup([
     {
@@ -52,7 +53,7 @@ async function encryptForGroup(
       groupEd25519Pubkey: destination,
       groupEncKey: groupEncKeyHex,
       senderEd25519Seed: await UserUtils.getUserEd25519Seed(),
-      proRotatingEd25519PrivKey: null,
+      proRotatingEd25519PrivKey: proRotatingPrivateKey,
     },
   ]);
 
@@ -86,6 +87,7 @@ async function encryptMessageAndWrap(
   if (!PubKey.is05Pubkey(destination)) {
     throw new Error('encryptMessageAndWrap: now, this could only be a 05 pubkey');
   }
+  const proRotatingPrivateKey = await UserUtils.getProRotatingPrivateKeyHex();
 
   const encryptedAndWrappedData = await MultiEncryptWrapperActions.encryptFor1o1([
     {
@@ -93,7 +95,7 @@ async function encryptMessageAndWrap(
       sentTimestampMs: networkTimestamp,
       recipientPubkey: destination,
       senderEd25519Seed: await UserUtils.getUserEd25519Seed(),
-      proRotatingEd25519PrivKey: null,
+      proRotatingEd25519PrivKey: proRotatingPrivateKey,
     },
   ]);
 

@@ -1,15 +1,19 @@
 import { to_hex } from 'libsodium-wrappers-sumo';
 import { PubkeyType } from 'libsession_util_nodejs';
-import _, { isString } from 'lodash';
+import _, { isEmpty, isString } from 'lodash';
 import { UserUtils } from '.';
 import { Data } from '../../data/data';
 import { SessionKeyPair } from '../../receiver/keypairs';
 import { getOurPubKeyStrFromStorage } from '../../util/storage';
 import { PubKey } from '../types';
 import { toHex } from './String';
-import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
+import {
+  ProWrapperActions,
+  UserConfigWrapperActions,
+} from '../../webworker/workers/browser/libsession_worker_interface';
 import { OutgoingUserProfile } from '../../types/message';
 import { SettingsKey } from '../../data/settings-key';
+import { OutgoingProMessageDetails } from '../../types/message/OutgoingProMessageDetails';
 
 export type HexKeyPair = {
   pubKey: string;
@@ -117,14 +121,41 @@ async function getUserEd25519PrivKey() {
 }
 
 export async function getOurProfile() {
-  const displayName = (await UserConfigWrapperActions.getName()) || 'Anonymous';
-  const updatedAtSeconds = await UserConfigWrapperActions.getProfileUpdatedSeconds();
-  const profilePic = await UserConfigWrapperActions.getProfilePic();
+  const [displayName, updatedAtSeconds, profilePic] = await Promise.all([
+    UserConfigWrapperActions.getName(),
+    UserConfigWrapperActions.getProfileUpdatedSeconds(),
+    UserConfigWrapperActions.getProfilePic(),
+  ]);
 
   return new OutgoingUserProfile({
-    displayName,
+    displayName: displayName || 'Anonymous',
     updatedAtSeconds,
     profilePic: profilePic ?? null,
+  });
+}
+
+export async function getOutgoingProMessageDetails({ utf16 }: { utf16: string }) {
+  const [proConfig, proFeaturesUserBitset] = await Promise.all([
+    UserConfigWrapperActions.getProConfig(),
+    UserConfigWrapperActions.getProFeaturesBitset(),
+  ]);
+  // Note: if we do not have a proof we don't want to send a proMessage.
+  // Note: if we don't have a user pro feature enabled, we might still need to add one for the message itself, see below
+  if (!proConfig || !isEmpty(proConfig) || isEmpty(proConfig.proProof)) {
+    return null;
+  }
+
+  const proFeaturesForMsg = await ProWrapperActions.proFeaturesForMessage({
+    proFeaturesBitset: proFeaturesUserBitset,
+    utf16,
+  });
+
+  if (proFeaturesForMsg.status !== 'SUCCESS') {
+    return null;
+  }
+  return new OutgoingProMessageDetails({
+    proConfig,
+    proFeaturesBitset: proFeaturesForMsg.proFeaturesBitset,
   });
 }
 
@@ -151,19 +182,19 @@ export async function getProMasterKeyHex() {
 }
 
 /**
- * Return the pro rotating key hex from the Item table, or generate and saves it before returning it.
+ * Return the pro rotating private key (hex) from the Item table, or generate and saves it before returning it.
  */
-export async function getProRotatingKeyHex() {
-  const item = await Data.getItemById(SettingsKey.proRotatingKeyHex);
+export async function getProRotatingPrivateKeyHex() {
+  const item = await Data.getItemById(SettingsKey.proRotatingPrivateKeyHex);
   if (!item?.value && isString(item?.value) && item.value.length > 0) {
     return item.value;
   }
   const { rotatingPrivKeyHex } = await UserConfigWrapperActions.generateRotatingPrivKeyHex();
   if (!rotatingPrivKeyHex) {
-    throw new Error('Failed to generate pro rotating key');
+    throw new Error('Failed to generate pro rotating private key');
   }
   await Data.createOrUpdateItem({
-    id: SettingsKey.proRotatingKeyHex,
+    id: SettingsKey.proRotatingPrivateKeyHex,
     value: rotatingPrivKeyHex,
   });
   return rotatingPrivKeyHex;

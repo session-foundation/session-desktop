@@ -50,4 +50,12 @@ export class ClosedGroupV2VisibleMessage extends DataMessage {
     const dataProto = this.chatMessage.dataProto();
     return dataProto;
   }
+
+  public lokiProfileProto() {
+    return this.chatMessage.lokiProfileProto();
+  }
+
+  public proMessageProto() {
+    return this.chatMessage.proMessageProto();
+  }
 }

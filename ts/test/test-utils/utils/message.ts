@@ -36,6 +36,7 @@ export function generateVisibleMessage({
     expireTimer: 0,
     userProfile: null,
     preview: undefined,
+    outgoingProMessageDetails: null,
   });
 }
 
@@ -79,6 +80,7 @@ export function generateOpenGroupVisibleMessage(): OpenGroupVisibleMessage {
   return new OpenGroupVisibleMessage({
     createAtNetworkTimestamp: Date.now(),
     userProfile: null,
+    outgoingProMessageDetails: null,
   });
 }
 
@@ -156,6 +158,7 @@ export function generateDisappearingVisibleMessage({
     expireTimer: expireTimer ?? 0,
     userProfile: null,
     preview: undefined,
+    outgoingProMessageDetails: null,
   });
 }
 

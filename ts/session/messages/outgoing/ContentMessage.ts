@@ -22,7 +22,7 @@ export abstract class ContentMessage extends Message {
     return TTL_DEFAULT.CONTENT_MESSAGE;
   }
 
-  public makeContentProto<T extends ContentFields>(extra: T) {
+  public makeNonDisappearingContentProto<T extends ContentFields>(extra: T) {
     return new SignalService.Content({
       ...extra,
       sigTimestamp: this.createAtNetworkTimestamp,
@@ -30,4 +30,9 @@ export abstract class ContentMessage extends Message {
   }
 
   public abstract contentProto(): SignalService.Content;
+
+  public abstract proMessageProto(): SignalService.ProMessage | null;
+  public abstract lokiProfileProto(): Partial<
+    Pick<SignalService.DataMessage, 'profile' | 'profileKey'>
+  >;
 }

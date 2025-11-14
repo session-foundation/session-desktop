@@ -70,7 +70,7 @@ export const SettingsKey = {
   localAttachmentEncryptionKey,
   spellCheckEnabled: 'spell-check',
   proMasterKeyHex: 'proMasterKeyHex',
-  proRotatingKeyHex: 'proRotatingKeyHex',
+  proRotatingPrivateKeyHex: 'proRotatingPrivateKeyHex',
   /**
    * The ticket of the last fetched revocations list, number | undefined
    */

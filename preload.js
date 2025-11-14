@@ -82,7 +82,7 @@ window.sessionBooleanFeatureFlags = {
   debugLibsessionDumps: !isEmpty(process.env.SESSION_DEBUG_LIBSESSION_DUMPS),
   debugBuiltSnodeRequests: !isEmpty(process.env.SESSION_DEBUG_BUILT_SNODE_REQUEST),
   debugSwarmPolling: !isEmpty(process.env.SESSION_DEBUG_SWARM_POLLING),
-  debugServerRequests: false,
+  debugServerRequests: !isEmpty(process.env.SESSION_DEBUG_SERVER_REQUESTS),
   debugNonSnodeRequests: false,
   debugOnionRequests: false,
 };

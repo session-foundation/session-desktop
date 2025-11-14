@@ -14,7 +14,9 @@ export class GroupUpdateMemberLeftNotificationMessage extends GroupUpdateMessage
     const memberLeftNotificationMessage =
       new SignalService.GroupUpdateMemberLeftNotificationMessage({});
 
-    return new SignalService.DataMessage({ groupUpdateMessage: { memberLeftNotificationMessage } });
+    const proto = super.makeDataProto();
+    proto.groupUpdateMessage = { memberLeftNotificationMessage };
+    return proto;
   }
 
   public isForGroupSwarm(): boolean {
@@ -22,5 +24,13 @@ export class GroupUpdateMemberLeftNotificationMessage extends GroupUpdateMessage
   }
   public isFor1o1Swarm(): boolean {
     return false;
+  }
+
+  public proMessageProto() {
+    return null;
+  }
+
+  public lokiProfileProto() {
+    return {};
   }
 }

@@ -1,4 +1,5 @@
 import Long from 'long';
+
 import { SignalService } from '../../../../protobuf';
 import { Reaction } from '../../../../types/Reaction';
 import { DataMessage } from '../DataMessage';
@@ -6,6 +7,7 @@ import { type OutgoingUserProfile } from '../../../../types/message';
 import { ExpirableMessageParams } from '../ExpirableMessage';
 import { attachmentIdAsLongFromUrl } from '../../../utils';
 import type { WithOutgoingUserProfile } from '../Message';
+import { OutgoingProMessageDetails } from '../../../../types/message/OutgoingProMessageDetails';
 
 interface AttachmentPointerCommon {
   contentType?: string;
@@ -66,6 +68,11 @@ export type VisibleMessageParams = ExpirableMessageParams &
     preview?: Array<PreviewWithAttachmentUrl>;
     reaction?: Reaction;
     syncTarget?: string; // undefined means it is not a synced message
+    /**
+     * When syncing a message, we get the already built proMessage.
+     * We keep track of it in the visible message here so we can reuse it when building the sync message.
+     */
+    outgoingProMessageDetails: OutgoingProMessageDetails | SignalService.ProMessage | null;
   };
 
 export class VisibleMessage extends DataMessage {
@@ -74,13 +81,18 @@ export class VisibleMessage extends DataMessage {
   private readonly attachments?: Array<AttachmentPointerWithUrl & { deprecatedId: Long }>;
   private readonly body?: string;
   private readonly quote?: Quote;
-  private readonly userProfile: OutgoingUserProfile | null;
 
   private readonly preview?: Array<PreviewWithAttachmentUrl & { deprecatedId?: Long }>;
 
   /// In the case of a sync message, the public key of the person the message was targeted at.
   /// - Note: `null or undefined` if this isn't a sync message.
   private readonly syncTarget?: string;
+
+  protected readonly userProfile: OutgoingUserProfile | null;
+  protected readonly proMessageDetails:
+    | OutgoingProMessageDetails
+    | SignalService.ProMessage
+    | null = null;
 
   constructor(params: VisibleMessageParams) {
     super({
@@ -97,7 +109,9 @@ export class VisibleMessage extends DataMessage {
     this.quote = params.quote;
 
     this.userProfile = params.userProfile;
-
+    if ('outgoingProMessageDetails' in params) {
+      this.proMessageDetails = params.outgoingProMessageDetails;
+    }
     this.preview = params.preview?.map(attachment => ({
       ...attachment,
       deprecatedId: attachment.image?.url
@@ -109,11 +123,8 @@ export class VisibleMessage extends DataMessage {
   }
 
   public contentProto(): SignalService.Content {
-    // Note: we do not want this one to call `makeContentProto` because super.contentProto() does it and deals
-    // with the expirable field for us
-    const content = super.contentProto();
-    content.dataMessage = this.dataProto();
-    return content;
+    // Note: we need to forward the stored proMessage here to the super contentProto()
+    return super.contentProto();
   }
 
   public dataProto(): SignalService.DataMessage {
@@ -170,5 +181,16 @@ export class VisibleMessage extends DataMessage {
       this.identifier === comparator.identifier &&
       this.createAtNetworkTimestamp === comparator.createAtNetworkTimestamp
     );
+  }
+
+  public lokiProfileProto() {
+    return this.userProfile?.toProtobufDetails() ?? {};
+  }
+
+  public proMessageProto(): SignalService.ProMessage | null {
+    if (this.proMessageDetails instanceof OutgoingProMessageDetails) {
+      return this.proMessageDetails.toProtobufDetails();
+    }
+    return this.proMessageDetails;
   }
 }

@@ -2,7 +2,7 @@ import { SignalService } from '../../../../../../protobuf';
 import { SnodeNamespaces } from '../../../../../apis/snode_api/namespaces';
 import { GroupUpdateMessage, GroupUpdateMessageParams } from '../GroupUpdateMessage';
 
-type Params = GroupUpdateMessageParams & {
+type GroupUpdateInviteResponseMessageParams = GroupUpdateMessageParams & {
   isApproved: boolean;
 };
 
@@ -12,10 +12,10 @@ type Params = GroupUpdateMessageParams & {
  *
  */
 export class GroupUpdateInviteResponseMessage extends GroupUpdateMessage {
-  public readonly isApproved: Params['isApproved'];
+  public readonly isApproved: GroupUpdateInviteResponseMessageParams['isApproved'];
   public readonly namespace = SnodeNamespaces.ClosedGroupMessages;
 
-  constructor(params: Params) {
+  constructor(params: GroupUpdateInviteResponseMessageParams) {
     super(params);
     this.isApproved = params.isApproved;
   }
@@ -37,5 +37,13 @@ export class GroupUpdateInviteResponseMessage extends GroupUpdateMessage {
   }
   public isFor1o1Swarm(): boolean {
     return false;
+  }
+
+  public lokiProfileProto() {
+    return this.userProfile?.toProtobufDetails() ?? {};
+  }
+
+  public proMessageProto() {
+    return null;
   }
 }

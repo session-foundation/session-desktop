@@ -7,7 +7,7 @@ import useInterval from 'react-use/lib/useInterval';
 import { filesize } from 'filesize';
 import styled from 'styled-components';
 
-import type { PubkeyType } from 'libsession_util_nodejs';
+import type { ProProof, PubkeyType } from 'libsession_util_nodejs';
 import { chunk, toNumber } from 'lodash';
 import { Flex } from '../../basic/Flex';
 import { SpacerXS } from '../../basic/Text';
@@ -34,7 +34,10 @@ import { Errors } from '../../../types/Errors';
 import { PubKey } from '../../../session/types';
 import { ConvoHub } from '../../../session/conversations';
 import { ConversationTypeEnum } from '../../../models/types';
-import { ContactsWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
+import {
+  ContactsWrapperActions,
+  UserConfigWrapperActions,
+} from '../../../webworker/workers/browser/libsession_worker_interface';
 import { usePolling } from '../../../hooks/usePolling';
 import { releasedFeaturesActions } from '../../../state/ducks/releasedFeatures';
 import { networkDataActions } from '../../../state/ducks/networkData';
@@ -43,7 +46,7 @@ import { SimpleSessionInput } from '../../inputs/SessionInput';
 import { NetworkTime } from '../../../util/NetworkTime';
 import { SessionButtonShiny } from '../../basic/SessionButtonShiny';
 import ProBackendAPI from '../../../session/apis/pro_backend_api/ProBackendAPI';
-import { getProMasterKeyHex, getProRotatingKeyHex } from '../../../session/utils/User';
+import { getProMasterKeyHex } from '../../../session/utils/User';
 import { FlagToggle } from './FeatureFlags';
 
 type DebugButtonProps = SessionButtonProps & { shiny?: boolean };
@@ -349,12 +352,22 @@ export const DebugActions = () => {
         onClick={async () => {
           const masterPrivKeyHex = await getProMasterKeyHex();
           console.warn('masterPrivKeyHex', masterPrivKeyHex.slice(0, 64));
-          const rotatingPrivKeyHex = await getProRotatingKeyHex();
+          const rotatingPrivKeyHex = await UserUtils.getProRotatingPrivateKeyHex();
           const response = await ProBackendAPI.getProProof({
             masterPrivKeyHex,
             rotatingPrivKeyHex,
           });
           console.warn('getProProof response', response);
+          if (response?.status_code === 200) {
+            const proProof: ProProof = {
+              expiryMs: response.result.expiry_unix_ts_ms,
+              genIndexHashB64: response.result.gen_index_hash,
+              rotatingPubkeyHex: response.result.rotating_pkey,
+              version: response.result.version,
+              signatureHex: response.result.sig,
+            };
+            await UserConfigWrapperActions.setProConfig({ proProof, rotatingPrivKeyHex });
+          }
         }}
       >
         Get Pro Proof

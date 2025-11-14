@@ -5,6 +5,7 @@ import { ExpirableMessageParams } from '../ExpirableMessage';
 
 type ExpirationTimerUpdateMessageParams = ExpirableMessageParams & {
   syncTarget?: string | PubKey;
+  proMessage?: SignalService.ProMessage | null;
 };
 
 // NOTE legacy messages used a data message for the expireTimer.
@@ -24,28 +25,28 @@ export class ExpirationTimerUpdateMessage extends DataMessage {
     this.syncTarget = params.syncTarget ? PubKey.cast(params.syncTarget).key : undefined;
   }
 
-  public contentProto(): SignalService.Content {
-    // Note: we do not want this one to call `makeContentProto` because super.contentProto() does it and deals
-    // with the expirable field for usn
-    return new SignalService.Content({
-      ...super.contentProto(),
-      dataMessage: this.dataProto(),
-    });
-  }
+  // Note: DataMessage::contentProto is already what we need here, so no need to rewrite it
 
   public dataProto(): SignalService.DataMessage {
-    const data = new SignalService.DataMessage({});
-
-    data.flags = SignalService.DataMessage.Flags.EXPIRATION_TIMER_UPDATE;
+    const proto = super.makeDataProto();
+    proto.flags = SignalService.DataMessage.Flags.EXPIRATION_TIMER_UPDATE;
 
     if (this.syncTarget) {
-      data.syncTarget = this.syncTarget;
+      proto.syncTarget = this.syncTarget;
     }
 
-    return data;
+    return proto;
   }
 
   public ttl(): number {
     return super.ttl();
+  }
+
+  public lokiProfileProto() {
+    return {};
+  }
+
+  public proMessageProto() {
+    return null;
   }
 }

@@ -8,7 +8,7 @@ import {
 import ProBackendAPI from '../../session/apis/pro_backend_api/ProBackendAPI';
 import { getFeatureFlag } from './types/releasedFeaturesReduxTypes';
 import { UserUtils } from '../../session/utils';
-import { getProRotatingKeyHex } from '../../session/utils/User';
+import { getProRotatingPrivateKeyHex } from '../../session/utils/User';
 
 type RequestState<D = unknown> = {
   isFetching: boolean;
@@ -172,7 +172,7 @@ const refreshProProofFromProBackend = createAsyncThunk(
     }
 
     const masterPrivKeyHex = await UserUtils.getProMasterKeyHex();
-    const rotatingPrivKeyHex = await getProRotatingKeyHex();
+    const rotatingPrivKeyHex = await getProRotatingPrivateKeyHex();
 
     payloadCreator.dispatch(
       fetchProProofFromProBackend({ masterPrivKeyHex, rotatingPrivKeyHex }) as any
