@@ -940,7 +940,6 @@ async function handleNameChangeFromUI({
       identifier: msg.id,
       createAtNetworkTimestamp,
       secretKey: group.secretKey,
-      userProfile: null,
       sodium: await getSodiumRenderer(),
       ...DisappearingMessages.getExpireDetailsForOutgoingMessage(convo, createAtNetworkTimestamp),
     });
@@ -1072,7 +1071,6 @@ async function handleAvatarChangeFromUI({
     identifier: msg.id,
     createAtNetworkTimestamp,
     secretKey: group.secretKey,
-    userProfile: null,
     sodium: await getSodiumRenderer(),
     ...DisappearingMessages.getExpireDetailsForOutgoingMessage(convo, createAtNetworkTimestamp),
   });
@@ -1172,7 +1170,6 @@ async function handleClearAvatarFromUI({ groupPk }: WithGroupPubkey) {
     identifier: msg.id,
     createAtNetworkTimestamp,
     secretKey: group.secretKey,
-    userProfile: null,
     sodium: await getSodiumRenderer(),
     ...DisappearingMessages.getExpireDetailsForOutgoingMessage(convo, createAtNetworkTimestamp),
   });

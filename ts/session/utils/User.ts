@@ -134,7 +134,11 @@ export async function getOurProfile() {
   });
 }
 
-export async function getOutgoingProMessageDetails({ utf16 }: { utf16: string }) {
+export async function getOutgoingProMessageDetails({
+  utf16,
+}: {
+  utf16: string | null | undefined;
+}) {
   const [proConfig, proFeaturesUserBitset] = await Promise.all([
     UserConfigWrapperActions.getProConfig(),
     UserConfigWrapperActions.getProFeaturesBitset(),
@@ -147,7 +151,7 @@ export async function getOutgoingProMessageDetails({ utf16 }: { utf16: string })
 
   const proFeaturesForMsg = await ProWrapperActions.proFeaturesForMessage({
     proFeaturesBitset: proFeaturesUserBitset,
-    utf16,
+    utf16: utf16 ?? '',
   });
 
   if (proFeaturesForMsg.status !== 'SUCCESS') {

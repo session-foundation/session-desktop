@@ -1,14 +1,19 @@
 import { SignalService } from '../../../../protobuf';
 import { type OutgoingUserProfile } from '../../../../types/message';
+import type { WithOutgoingProMessageDetails } from '../../../../types/message/OutgoingProMessageDetails';
 import { ContentMessage } from '../ContentMessage';
 import { MessageParams, type WithOutgoingUserProfile } from '../Message';
+import type { OutgoingProMessageDetailsOrProto } from '../visibleMessage/VisibleMessage';
 
 // Note: a MessageRequestResponse message should not expire at all on the recipient side/nor our side.
-export type MessageRequestResponseParams = MessageParams & WithOutgoingUserProfile;
+export type MessageRequestResponseParams = MessageParams &
+  WithOutgoingUserProfile &
+  WithOutgoingProMessageDetails;
 
 export class MessageRequestResponse extends ContentMessage {
   // Note: we send a response only if it is an accept
   private readonly userProfile: OutgoingUserProfile | null;
+  private readonly proMessageDetails: OutgoingProMessageDetailsOrProto | null;
 
   constructor(params: MessageRequestResponseParams) {
     super({
@@ -16,6 +21,7 @@ export class MessageRequestResponse extends ContentMessage {
     } as MessageRequestResponseParams);
 
     this.userProfile = params.userProfile;
+    this.proMessageDetails = params.outgoingProMessageDetails;
   }
 
   public contentProto(): SignalService.Content {
@@ -40,6 +46,6 @@ export class MessageRequestResponse extends ContentMessage {
   }
 
   public proMessageProto() {
-    return null;
+    return ContentMessage.proMessageProtoFromDetailsOrProto(this.proMessageDetails);
   }
 }

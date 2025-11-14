@@ -892,7 +892,7 @@ export class MessageModel extends Model<MessageAttributes> {
           createAtNetworkTimestamp: NetworkTime.now(),
           userProfile: await UserUtils.getOurProfile(),
           outgoingProMessageDetails: await UserUtils.getOutgoingProMessageDetails({
-            utf16: body ?? '',
+            utf16: body,
           }),
           body,
           attachments,
@@ -926,7 +926,7 @@ export class MessageModel extends Model<MessageAttributes> {
         quote,
         userProfile: await UserUtils.getOurProfile(),
         outgoingProMessageDetails: await UserUtils.getOutgoingProMessageDetails({
-          utf16: body ?? '',
+          utf16: body,
         }),
         // Note: we should have the fields set on that object when we've added it to the DB.
         // We don't want to reuse the conversation setting, as it might change since this message was sent.

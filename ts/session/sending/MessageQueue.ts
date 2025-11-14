@@ -25,6 +25,7 @@ import { GroupUpdateInviteMessage } from '../messages/outgoing/controlMessage/gr
 import { GroupUpdatePromoteMessage } from '../messages/outgoing/controlMessage/group_v2/to_user/GroupUpdatePromoteMessage';
 import { OpenGroupVisibleMessage } from '../messages/outgoing/visibleMessage/OpenGroupVisibleMessage';
 import { OpenGroupRequestCommonType } from '../../data/types';
+import type { GroupUpdateInviteResponseMessage } from '../messages/outgoing/controlMessage/group_v2/to_group/GroupUpdateInviteResponseMessage';
 
 export class MessageQueueCl {
   private readonly jobQueues: Map<string, JobQueue> = new Map();
@@ -158,6 +159,7 @@ export class MessageQueueCl {
       | GroupUpdateMemberChangeMessage
       | GroupUpdateInfoChangeMessage
       | GroupUpdateDeleteMemberContentMessage
+      | GroupUpdateInviteResponseMessage
       | GroupUpdateMemberLeftMessage;
     sentCb?: (message: OutgoingRawMessage) => Promise<void>;
   }): Promise<void> {

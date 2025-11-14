@@ -11,7 +11,7 @@ import {
 } from '../GroupUpdateMessage';
 
 // Note: `Partial<AdminSigDetails>` because that message can also be sent as a non-admin and we always give sodium but not always the secretKey
-type Params = GroupUpdateMessageParams &
+type Params = Omit<GroupUpdateMessageParams, 'userProfile'> &
   Partial<Omit<AdminSigDetails, 'sodium'>> &
   Omit<AdminSigDetails, 'secretKey'> & {
     memberSessionIds: Array<PubkeyType>;

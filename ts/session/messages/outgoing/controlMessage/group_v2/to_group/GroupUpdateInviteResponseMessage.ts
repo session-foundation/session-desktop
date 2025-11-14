@@ -1,10 +1,15 @@
 import { SignalService } from '../../../../../../protobuf';
 import { SnodeNamespaces } from '../../../../../apis/snode_api/namespaces';
+import { ContentMessage } from '../../../ContentMessage';
+import type { WithOutgoingUserProfile } from '../../../Message';
+import type { WithProMessageDetailsOrProto } from '../../../visibleMessage/VisibleMessage';
 import { GroupUpdateMessage, GroupUpdateMessageParams } from '../GroupUpdateMessage';
 
-type GroupUpdateInviteResponseMessageParams = GroupUpdateMessageParams & {
-  isApproved: boolean;
-};
+type GroupUpdateInviteResponseMessageParams = GroupUpdateMessageParams &
+  WithOutgoingUserProfile &
+  WithProMessageDetailsOrProto & {
+    isApproved: boolean;
+  };
 
 /**
  * GroupUpdateInviteResponseMessage is sent to the group's swarm.
@@ -14,10 +19,14 @@ type GroupUpdateInviteResponseMessageParams = GroupUpdateMessageParams & {
 export class GroupUpdateInviteResponseMessage extends GroupUpdateMessage {
   public readonly isApproved: GroupUpdateInviteResponseMessageParams['isApproved'];
   public readonly namespace = SnodeNamespaces.ClosedGroupMessages;
+  private readonly userProfile: GroupUpdateInviteResponseMessageParams['userProfile'];
+  private readonly proMessageDetails: GroupUpdateInviteResponseMessageParams['outgoingProMessageDetails'];
 
   constructor(params: GroupUpdateInviteResponseMessageParams) {
     super(params);
     this.isApproved = params.isApproved;
+    this.proMessageDetails = params.outgoingProMessageDetails;
+    this.userProfile = params.userProfile;
   }
 
   public dataProto(): SignalService.DataMessage {
@@ -44,6 +53,6 @@ export class GroupUpdateInviteResponseMessage extends GroupUpdateMessage {
   }
 
   public proMessageProto() {
-    return null;
+    return ContentMessage.proMessageProtoFromDetailsOrProto(this.proMessageDetails);
   }
 }

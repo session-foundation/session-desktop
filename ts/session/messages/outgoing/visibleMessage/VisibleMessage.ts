@@ -8,6 +8,7 @@ import { ExpirableMessageParams } from '../ExpirableMessage';
 import { attachmentIdAsLongFromUrl } from '../../../utils';
 import type { WithOutgoingUserProfile } from '../Message';
 import { OutgoingProMessageDetails } from '../../../../types/message/OutgoingProMessageDetails';
+import { ContentMessage } from '../ContentMessage';
 
 interface AttachmentPointerCommon {
   contentType?: string;
@@ -60,19 +61,28 @@ export interface Quote {
   author: string;
 }
 
+export type OutgoingProMessageDetailsOrProto =
+  | OutgoingProMessageDetails
+  | SignalService.ProMessage
+  | null;
+
+export type WithProMessageDetailsOrProto = {
+  /**
+   * When sending a message we have the ProMessageDetails.
+   * When syncing a just sent message, we only have the already built proMessage
+   */
+  outgoingProMessageDetails: OutgoingProMessageDetailsOrProto;
+};
+
 export type VisibleMessageParams = ExpirableMessageParams &
-  WithOutgoingUserProfile & {
+  WithOutgoingUserProfile &
+  WithProMessageDetailsOrProto & {
     attachments?: Array<AttachmentPointerWithUrl>;
     body?: string;
     quote?: Quote;
     preview?: Array<PreviewWithAttachmentUrl>;
     reaction?: Reaction;
     syncTarget?: string; // undefined means it is not a synced message
-    /**
-     * When syncing a message, we get the already built proMessage.
-     * We keep track of it in the visible message here so we can reuse it when building the sync message.
-     */
-    outgoingProMessageDetails: OutgoingProMessageDetails | SignalService.ProMessage | null;
   };
 
 export class VisibleMessage extends DataMessage {
@@ -89,10 +99,7 @@ export class VisibleMessage extends DataMessage {
   private readonly syncTarget?: string;
 
   protected readonly userProfile: OutgoingUserProfile | null;
-  protected readonly proMessageDetails:
-    | OutgoingProMessageDetails
-    | SignalService.ProMessage
-    | null = null;
+  protected readonly proMessageDetails: OutgoingProMessageDetailsOrProto;
 
   constructor(params: VisibleMessageParams) {
     super({
@@ -109,9 +116,8 @@ export class VisibleMessage extends DataMessage {
     this.quote = params.quote;
 
     this.userProfile = params.userProfile;
-    if ('outgoingProMessageDetails' in params) {
-      this.proMessageDetails = params.outgoingProMessageDetails;
-    }
+    this.proMessageDetails = params.outgoingProMessageDetails;
+
     this.preview = params.preview?.map(attachment => ({
       ...attachment,
       deprecatedId: attachment.image?.url
@@ -187,10 +193,7 @@ export class VisibleMessage extends DataMessage {
     return this.userProfile?.toProtobufDetails() ?? {};
   }
 
-  public proMessageProto(): SignalService.ProMessage | null {
-    if (this.proMessageDetails instanceof OutgoingProMessageDetails) {
-      return this.proMessageDetails.toProtobufDetails();
-    }
-    return this.proMessageDetails;
+  public proMessageProto() {
+    return ContentMessage.proMessageProtoFromDetailsOrProto(this.proMessageDetails);
   }
 }

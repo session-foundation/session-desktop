@@ -5,7 +5,6 @@ import { ExpirableMessageParams } from '../ExpirableMessage';
 
 type ExpirationTimerUpdateMessageParams = ExpirableMessageParams & {
   syncTarget?: string | PubKey;
-  proMessage?: SignalService.ProMessage | null;
 };
 
 // NOTE legacy messages used a data message for the expireTimer.

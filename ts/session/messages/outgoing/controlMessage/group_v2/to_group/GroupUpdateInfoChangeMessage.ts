@@ -6,7 +6,7 @@ import { stringToUint8Array } from '../../../../../utils/String';
 import {
   AdminSigDetails,
   GroupUpdateMessage,
-  GroupUpdateMessageParams,
+  type GroupUpdateMessageParams,
 } from '../GroupUpdateMessage';
 
 type NameChangeParams = GroupUpdateMessageParams &

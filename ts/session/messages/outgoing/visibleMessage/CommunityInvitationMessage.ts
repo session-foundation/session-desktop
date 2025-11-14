@@ -1,10 +1,13 @@
 import { SignalService } from '../../../../protobuf';
+import { ContentMessage } from '../ContentMessage';
 import { DataMessage } from '../DataMessage';
 import { ExpirableMessageParams } from '../ExpirableMessage';
 import type { WithOutgoingUserProfile } from '../Message';
+import type { WithProMessageDetailsOrProto } from './VisibleMessage';
 
 type CommunityInvitationMessageParams = ExpirableMessageParams &
-  WithOutgoingUserProfile & {
+  WithOutgoingUserProfile &
+  WithProMessageDetailsOrProto & {
     url: string;
     name: string;
   };
@@ -12,7 +15,8 @@ type CommunityInvitationMessageParams = ExpirableMessageParams &
 export class CommunityInvitationMessage extends DataMessage {
   private readonly url: string;
   private readonly name: string;
-  private readonly userProfile: WithOutgoingUserProfile['userProfile'];
+  private readonly userProfile: CommunityInvitationMessageParams['userProfile'];
+  private readonly proMessageDetails: CommunityInvitationMessageParams['outgoingProMessageDetails'];
 
   constructor(params: CommunityInvitationMessageParams) {
     super({
@@ -24,6 +28,7 @@ export class CommunityInvitationMessage extends DataMessage {
     this.url = params.url;
     this.name = params.name;
     this.userProfile = params.userProfile;
+    this.proMessageDetails = params.outgoingProMessageDetails;
   }
 
   public dataProto(): SignalService.DataMessage {
@@ -42,6 +47,6 @@ export class CommunityInvitationMessage extends DataMessage {
   }
 
   public proMessageProto() {
-    return null;
+    return ContentMessage.proMessageProtoFromDetailsOrProto(this.proMessageDetails);
   }
 }

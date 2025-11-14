@@ -1,12 +1,17 @@
 import { GroupPubkeyType } from 'libsession_util_nodejs';
 import { SignalService } from '../../../../../../protobuf';
 import { GroupUpdateMessage, GroupUpdateMessageParams } from '../GroupUpdateMessage';
+import type { WithOutgoingUserProfile } from '../../../Message';
+import type { OutgoingProMessageDetailsOrProto } from '../../../visibleMessage/VisibleMessage';
+import { ContentMessage } from '../../../ContentMessage';
 
-interface Params extends GroupUpdateMessageParams {
-  groupPk: GroupPubkeyType;
-  groupIdentitySeed: Uint8Array;
-  groupName: string;
-}
+type Params = GroupUpdateMessageParams &
+  WithOutgoingUserProfile & {
+    groupPk: GroupPubkeyType;
+    groupIdentitySeed: Uint8Array;
+    groupName: string;
+    outgoingProMessageDetails: OutgoingProMessageDetailsOrProto;
+  };
 
 /**
  * GroupUpdatePromoteMessage is sent as a 1o1 message to the recipient, not through the group's swarm.
@@ -14,12 +19,16 @@ interface Params extends GroupUpdateMessageParams {
 export class GroupUpdatePromoteMessage extends GroupUpdateMessage {
   public readonly groupIdentitySeed: Params['groupIdentitySeed'];
   public readonly groupName: Params['groupName'];
+  private readonly userProfile: Params['userProfile'];
+  private readonly proMessageDetails: Params['outgoingProMessageDetails'];
 
   constructor(params: Params) {
     super(params);
 
     this.groupIdentitySeed = params.groupIdentitySeed;
     this.groupName = params.groupName;
+    this.proMessageDetails = params.outgoingProMessageDetails;
+    this.userProfile = params.userProfile;
     if (!this.groupIdentitySeed || this.groupIdentitySeed.length !== 32) {
       throw new Error('groupIdentitySeed must be set');
     }
@@ -51,6 +60,6 @@ export class GroupUpdatePromoteMessage extends GroupUpdateMessage {
   }
 
   public proMessageProto() {
-    return null;
+    return ContentMessage.proMessageProtoFromDetailsOrProto(this.proMessageDetails);
   }
 }
