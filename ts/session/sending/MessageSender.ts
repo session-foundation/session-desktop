@@ -590,8 +590,10 @@ async function sendToOpenGroupV2(
   filesToLink: Array<string>
 ): Promise<OpenGroupMessageV2 | boolean> {
   // we agreed to pad messages for opengroup v2
+  const proRotatingPrivateKey = await UserUtils.getProRotatingPrivateKeyHex();
+
   const paddedBody = await MultiEncryptWrapperActions.encryptForCommunity([
-    { plaintext: rawMessage.plainTextBuffer(), proRotatingEd25519PrivKey: null },
+    { plaintext: rawMessage.plainTextBuffer(), proRotatingEd25519PrivKey: proRotatingPrivateKey },
   ]);
   const v2Message = new OpenGroupMessageV2({
     sentTimestamp: NetworkTime.now(),

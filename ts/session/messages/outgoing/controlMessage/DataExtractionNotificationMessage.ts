@@ -27,9 +27,7 @@ export class DataExtractionNotificationMessage extends ExpirableMessage {
   }
 
   public contentProto(): SignalService.Content {
-    // Note: we do not want this one to call `makeContentProto` because super.contentProto() does it and deals
-    // with the expirable field for us
-    const content = super.contentProto();
+    const content = super.makeDisappearingContentProto();
     content.dataExtractionNotification = this.extractionProto();
     return content;
   }
@@ -43,6 +41,14 @@ export class DataExtractionNotificationMessage extends ExpirableMessage {
       type: action,
       timestamp: this.referencedAttachmentTimestamp,
     });
+  }
+
+  public proMessageProto() {
+    return null;
+  }
+
+  public lokiProfileProto() {
+    return {};
   }
 }
 

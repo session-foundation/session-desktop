@@ -15,7 +15,8 @@ export class ReadReceiptMessage extends ContentMessage {
   }
 
   public contentProto(): SignalService.Content {
-    return super.makeContentProto({ receiptMessage: this.receiptProto() });
+    // Note: read receipts are not disappearing messages
+    return super.makeNonDisappearingContentProto({ receiptMessage: this.receiptProto() });
   }
 
   protected receiptProto(): SignalService.ReceiptMessage {
@@ -23,5 +24,13 @@ export class ReadReceiptMessage extends ContentMessage {
       type: SignalService.ReceiptMessage.Type.READ,
       timestamp: this.timestamps,
     });
+  }
+
+  public proMessageProto() {
+    return null;
+  }
+
+  public lokiProfileProto() {
+    return {};
   }
 }

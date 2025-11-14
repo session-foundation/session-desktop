@@ -29,4 +29,12 @@ export class OpenGroupVisibleMessage extends VisibleMessage {
 
     return dataMessage;
   }
+
+  public lokiProfileProto() {
+    return super.lokiProfileProto();
+  }
+
+  public proMessageProto() {
+    return super.proMessageProto();
+  }
 }

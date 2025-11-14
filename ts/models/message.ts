@@ -891,6 +891,9 @@ export class MessageModel extends Model<MessageAttributes> {
           identifier: this.id,
           createAtNetworkTimestamp: NetworkTime.now(),
           userProfile: await UserUtils.getOurProfile(),
+          outgoingProMessageDetails: await UserUtils.getOutgoingProMessageDetails({
+            utf16: body ?? '',
+          }),
           body,
           attachments,
           preview: preview ? [preview] : [],
@@ -922,6 +925,9 @@ export class MessageModel extends Model<MessageAttributes> {
         preview: preview ? [preview] : [],
         quote,
         userProfile: await UserUtils.getOurProfile(),
+        outgoingProMessageDetails: await UserUtils.getOutgoingProMessageDetails({
+          utf16: body ?? '',
+        }),
         // Note: we should have the fields set on that object when we've added it to the DB.
         // We don't want to reuse the conversation setting, as it might change since this message was sent.
         expirationType: this.getExpirationType() || 'unknown',
@@ -1064,7 +1070,7 @@ export class MessageModel extends Model<MessageAttributes> {
     if (this.get('synced') || this.get('sentSync')) {
       return;
     }
-    const { dataMessage } = content;
+    const { dataMessage, proMessage } = content;
 
     if (
       dataMessage &&
@@ -1088,7 +1094,8 @@ export class MessageModel extends Model<MessageAttributes> {
         dataMessage as SignalService.DataMessage,
         conversation.id,
         sentTimestamp,
-        expireUpdate
+        expireUpdate,
+        proMessage as SignalService.ProMessage | null
       );
 
       if (syncMessage) {

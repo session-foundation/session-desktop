@@ -68,8 +68,9 @@ export class GroupUpdateDeleteMemberContentMessage extends GroupUpdateMessage {
       memberSessionIds: this.memberSessionIds,
       messageHashes: this.messageHashes,
     });
-
-    return new SignalService.DataMessage({ groupUpdateMessage: { deleteMemberContent } });
+    const proto = super.makeDataProto();
+    proto.groupUpdateMessage = { deleteMemberContent };
+    return proto;
   }
 
   public isForGroupSwarm(): boolean {
@@ -77,5 +78,13 @@ export class GroupUpdateDeleteMemberContentMessage extends GroupUpdateMessage {
   }
   public isFor1o1Swarm(): boolean {
     return false;
+  }
+
+  public proMessageProto() {
+    return null;
+  }
+
+  public lokiProfileProto() {
+    return {};
   }
 }
