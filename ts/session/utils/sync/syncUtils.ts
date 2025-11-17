@@ -1,4 +1,4 @@
-import { isEmpty, isNumber, toNumber } from 'lodash';
+import { isEmpty, isNumber } from 'lodash';
 import { SignalService } from '../../../protobuf';
 import { UserSyncJobDone } from '../../../shims/events';
 
@@ -13,6 +13,7 @@ import {
   VisibleMessage,
 } from '../../messages/outgoing/visibleMessage/VisibleMessage';
 import { UserSync } from '../job_runners/jobs/UserSyncJob';
+import { longOrNumberToNumber } from '../../../types/long/longOrNumberToNumber';
 
 export const forceSyncConfigurationNowIfNeeded = async (waitForMessageSent = false) => {
   return new Promise(resolve => {
@@ -126,7 +127,7 @@ export const buildSyncMessage = (
     throw new Error('Tried to build a sync message without a sentTimestamp');
   }
   // don't include our profileKey on syncing message. This is to be done through libsession now
-  const timestamp = toNumber(sentTimestamp);
+  const timestamp = longOrNumberToNumber(sentTimestamp);
 
   if (
     dataMessage.flags === SignalService.DataMessage.Flags.EXPIRATION_TIMER_UPDATE &&

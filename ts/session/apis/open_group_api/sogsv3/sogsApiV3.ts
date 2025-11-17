@@ -31,7 +31,7 @@ import { createSwarmMessageSentFromUs } from '../../../../models/messageFactory'
 import { SignalService } from '../../../../protobuf';
 import { innerHandleSwarmContentMessage } from '../../../../receiver/contentMessage';
 import { handleOutboxMessageModel } from '../../../../receiver/dataMessage';
-import { EnvelopePlus } from '../../../../receiver/types';
+import { DecodedEnvelope } from '../../../../receiver/types';
 import { assertUnreachable, type AwaitedReturn } from '../../../../types/sqlSharedTypes';
 import { getSodiumRenderer } from '../../../crypto';
 import { DisappearingMessages } from '../../../disappearing_messages';
@@ -46,6 +46,7 @@ import { NetworkTime } from '../../../../util/NetworkTime';
 import { MultiEncryptWrapperActions } from '../../../../webworker/workers/browser/libsession_worker_interface';
 import ProBackendAPI from '../../pro_backend_api/ProBackendAPI';
 import { handleOpenGroupMessage } from '../../../../receiver/opengroup';
+import { longOrNumberToNumber } from '../../../../types/long/longOrNumberToNumber';
 
 /**
  * Get the convo matching those criteria and make sure it is an opengroup convo, or return null.
@@ -303,7 +304,7 @@ const handleMessagesResponseV4 = async (
         .filter(m => m.data)
         .map(m => ({
           contentOrEnvelope: fromBase64ToArray(m.data!),
-          // we need to forward the id so we can map what was succesffuly decrypted
+          // we need to forward the id so we can map what was successfully decrypted
           // with the fields we have on the request itself.
           serverId: m.id,
         }));
@@ -335,7 +336,8 @@ const handleMessagesResponseV4 = async (
         await handleOpenGroupMessage({
           roomInfos: roomDetails,
           decodedContent,
-          sentTimestamp: msgToHandle.posted,
+          // see above, that `posted` field has been converted to ms
+          sentTimestampMs: msgToHandle.posted,
           // important to keep the msgToHandle here as it has blindedIds replaced for us and people we know
           sender: msgToHandle.session_id,
           serverId: decrypted.serverId,
@@ -450,18 +452,28 @@ async function handleInboxOutboxMessages(
 
       // decrypt message from result
       const contentPayload = decrypted[0].contentPlaintextUnpadded;
-      const builtEnvelope: EnvelopePlus = {
-        content: decrypted[0].contentPlaintextUnpadded,
+      const decodedEnvelope = new DecodedEnvelope({
+        contentDecrypted: decrypted[0].contentPlaintextUnpadded,
         source: senderUnblinded, // this is us for an outbox message, and the sender for an inbox message
         senderIdentity: '',
-        receivedAt: Date.now(),
-        timestamp: postedAtInMs,
+        receivedAtMs: Date.now(),
+        sentAtMs: postedAtInMs,
         id: v4(),
-      };
+        // communities messages do not have a messageHash
+        messageHash: '',
+        // sogs message cannot expire
+        messageExpirationFromRetrieve: null,
+      });
       const contentDecrypted = SignalService.Content.decode(contentPayload);
-      if (!shouldProcessContentMessage(builtEnvelope, contentDecrypted, true)) {
+      if (
+        !shouldProcessContentMessage({
+          sentAtMs: decodedEnvelope.sentAtMs,
+          sigTimestampMs: longOrNumberToNumber(contentDecrypted.sigTimestamp),
+          isCommunity: true,
+        })
+      ) {
         window.log.warn(
-          `received inbox/outbox message that did not pass the shouldProcessContentMessage test envelopeTs: ${builtEnvelope.timestamp}`
+          `received inbox/outbox message that did not pass the shouldProcessContentMessage test envelopeTs: ${decodedEnvelope.sentAtMs}`
         );
         continue;
       }
@@ -529,11 +541,7 @@ async function handleInboxOutboxMessages(
         }
 
         await innerHandleSwarmContentMessage({
-          envelope: builtEnvelope,
-          sentAtTimestamp: postedAtInMs,
-          contentDecrypted: builtEnvelope.content,
-          messageHash: '',
-          messageExpirationFromRetrieve: null, // sogs message cannot expire
+          envelope: decodedEnvelope,
         });
       }
     } catch (e) {

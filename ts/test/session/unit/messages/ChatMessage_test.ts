@@ -2,7 +2,6 @@ import { expect } from 'chai';
 import Sinon from 'sinon';
 // eslint-disable-next-line import/order
 
-import { toNumber } from 'lodash';
 import { SignalService } from '../../../../protobuf';
 import { Constants } from '../../../../session';
 import {
@@ -13,6 +12,7 @@ import {
 } from '../../../../session/messages/outgoing/visibleMessage/VisibleMessage';
 import { DisappearingMessageMode } from '../../../../session/disappearing_messages/types';
 import { TestUtils } from '../../../test-utils';
+import { longOrNumberToNumber } from '../../../../types/long/longOrNumberToNumber';
 
 const sharedNoExpire = {
   expirationType: DisappearingMessageMode[0],
@@ -98,7 +98,7 @@ describe('VisibleMessage', () => {
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
-    const decodedID = toNumber(decoded.dataMessage?.quote?.id);
+    const decodedID = longOrNumberToNumber(decoded.dataMessage?.quote?.id ?? 0);
     expect(decodedID).to.be.equal(1234);
     expect(decoded.dataMessage?.quote).to.have.deep.property('author', 'author');
   });
@@ -144,7 +144,7 @@ describe('VisibleMessage', () => {
     const decoded = SignalService.Content.decode(plainText);
     expect(decoded.dataMessage?.attachments).to.have.lengthOf(1);
     const firstAttachment = decoded?.dataMessage?.attachments?.[0];
-    const decodedID = toNumber(firstAttachment?.deprecatedId);
+    const decodedID = longOrNumberToNumber(firstAttachment?.deprecatedId ?? 0);
     expect(decodedID).to.be.equal(1234);
     expect(firstAttachment?.contentType).to.be.deep.equal('contentType');
     expect(firstAttachment?.url).to.be.deep.equal('http://thisisaareal/url/1234');

@@ -22,41 +22,45 @@ describe('shouldProcessContentMessage', () => {
     describe('with sig timestamp', () => {
       it('if timestamps match: return true', async () => {
         expect(
-          shouldProcessContentMessage(
-            { timestamp: envelopeTs },
-            { sigTimestamp: envelopeTs },
-            isCommunity
-          )
+          shouldProcessContentMessage({
+            sentAtMs: envelopeTs,
+            sigTimestampMs: envelopeTs,
+            isCommunity,
+          })
         ).to.eq(true);
       });
       it('if timestamps do not match: return false', async () => {
         expect(
-          shouldProcessContentMessage(
-            { timestamp: envelopeTs },
-            { sigTimestamp: envelopeTs + 2 },
-            isCommunity
-          )
+          shouldProcessContentMessage({
+            sentAtMs: envelopeTs,
+            sigTimestampMs: envelopeTs + 2,
+            isCommunity,
+          })
         ).to.eq(false);
       });
     });
     describe('without sig timestamp', () => {
       it('if timestamps match or not: return true', async () => {
         expect(
-          shouldProcessContentMessage(
-            { timestamp: envelopeTs },
-            { sigTimestamp: undefined as any },
-            isCommunity
-          )
+          shouldProcessContentMessage({
+            sentAtMs: envelopeTs,
+            sigTimestampMs: undefined as any,
+            isCommunity,
+          })
         ).to.eq(true);
         expect(
-          shouldProcessContentMessage({ timestamp: envelopeTs }, { sigTimestamp: 0 }, isCommunity)
+          shouldProcessContentMessage({
+            sentAtMs: envelopeTs,
+            sigTimestampMs: 0,
+            isCommunity,
+          })
         ).to.eq(true);
         expect(
-          shouldProcessContentMessage(
-            { timestamp: envelopeTs },
-            { sigTimestamp: Long.fromNumber(0) as any },
-            isCommunity
-          )
+          shouldProcessContentMessage({
+            sentAtMs: envelopeTs,
+            sigTimestampMs: Long.fromNumber(0) as any,
+            isCommunity,
+          })
         ).to.eq(true);
       });
     });
@@ -67,45 +71,45 @@ describe('shouldProcessContentMessage', () => {
     describe('with sig timestamp', () => {
       it('if timestamps roughly match: return true', async () => {
         expect(
-          shouldProcessContentMessage(
-            { timestamp: envelopeTs },
-            { sigTimestamp: envelopeTs },
-            isCommunity
-          ),
+          shouldProcessContentMessage({
+            sentAtMs: envelopeTs,
+            sigTimestampMs: envelopeTs,
+            isCommunity,
+          }),
           'exact match'
         ).to.eq(true);
         expect(
-          shouldProcessContentMessage(
-            { timestamp: envelopeTs },
-            { sigTimestamp: envelopeTs + 6 * DURATION.HOURS - 1 },
-            isCommunity
-          ),
+          shouldProcessContentMessage({
+            sentAtMs: envelopeTs,
+            sigTimestampMs: envelopeTs + 6 * DURATION.HOURS - 1,
+            isCommunity,
+          }),
           'just below 6h of diff (positive)'
         ).to.eq(true);
         expect(
-          shouldProcessContentMessage(
-            { timestamp: envelopeTs },
-            { sigTimestamp: envelopeTs - 6 * DURATION.HOURS + 1 },
-            isCommunity
-          ),
+          shouldProcessContentMessage({
+            sentAtMs: envelopeTs,
+            sigTimestampMs: envelopeTs - 6 * DURATION.HOURS + 1,
+            isCommunity,
+          }),
           'just below 6h of diff (negative)'
         ).to.eq(true);
       });
       it('if timestamps do not roughly match: return false', async () => {
         expect(
-          shouldProcessContentMessage(
-            { timestamp: envelopeTs },
-            { sigTimestamp: envelopeTs + 6 * DURATION.HOURS + 1 },
-            isCommunity
-          ),
+          shouldProcessContentMessage({
+            sentAtMs: envelopeTs,
+            sigTimestampMs: envelopeTs + 6 * DURATION.HOURS + 1,
+            isCommunity,
+          }),
           'just above 6h of diff'
         ).to.eq(false);
         expect(
-          shouldProcessContentMessage(
-            { timestamp: envelopeTs },
-            { sigTimestamp: envelopeTs - 6 * DURATION.HOURS - 1 },
-            isCommunity
-          ),
+          shouldProcessContentMessage({
+            sentAtMs: envelopeTs,
+            sigTimestampMs: envelopeTs - 6 * DURATION.HOURS - 1,
+            isCommunity,
+          }),
           'just above 6h of diff'
         ).to.eq(false);
       });
@@ -113,23 +117,27 @@ describe('shouldProcessContentMessage', () => {
     describe('without sig timestamp', () => {
       it('if timestamps match or not: return true', async () => {
         expect(
-          shouldProcessContentMessage(
-            { timestamp: envelopeTs },
-            { sigTimestamp: undefined as any },
-            isCommunity
-          ),
+          shouldProcessContentMessage({
+            sentAtMs: envelopeTs,
+            sigTimestampMs: undefined as any,
+            isCommunity,
+          }),
           'sigTimestamp undefined'
         ).to.eq(true);
         expect(
-          shouldProcessContentMessage({ timestamp: envelopeTs }, { sigTimestamp: 0 }, isCommunity),
+          shouldProcessContentMessage({
+            sentAtMs: envelopeTs,
+            sigTimestampMs: 0,
+            isCommunity,
+          }),
           'sigTimestamp 0 as number'
         ).to.eq(true);
         expect(
-          shouldProcessContentMessage(
-            { timestamp: envelopeTs },
-            { sigTimestamp: Long.fromNumber(0) as any },
-            isCommunity
-          ),
+          shouldProcessContentMessage({
+            sentAtMs: envelopeTs,
+            sigTimestampMs: Long.fromNumber(0) as any,
+            isCommunity,
+          }),
           'sigTimestamp 0 as Long'
         ).to.eq(true);
       });

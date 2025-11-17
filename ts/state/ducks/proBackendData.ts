@@ -22,7 +22,6 @@ import { Storage } from '../../util/storage';
 import { NetworkTime } from '../../util/NetworkTime';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 
-
 type RequestState<D = unknown> = {
   isFetching: boolean;
   // Shortcut for `isFetching && !data`

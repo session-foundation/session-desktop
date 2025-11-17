@@ -1,9 +1,9 @@
 /* eslint-disable no-param-reassign */
-import { isEmpty, omit, toNumber } from 'lodash';
+import { isEmpty, omit } from 'lodash';
 
 import { SignalService } from '../protobuf';
 import { getEnvelopeId } from './common';
-import { EnvelopePlus } from './types';
+import { type DecodedEnvelope } from './types';
 
 import { Data } from '../data/data';
 import { ConversationModel } from '../models/conversation';
@@ -28,6 +28,7 @@ import { GroupV2Receiver } from './groupv2/handleGroupV2Message';
 import { ConversationTypeEnum } from '../models/types';
 import { ed25519Str } from '../session/utils/String';
 import { Timestamp } from '../types/timestamp/timestamp';
+import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
 
 function cleanAttachment(attachment: SignalService.IAttachmentPointer) {
   return {
@@ -66,7 +67,7 @@ function cleanAttachments(decryptedDataMessage: SignalService.DataMessage) {
 
   if (quote) {
     if (quote.id) {
-      quote.id = toNumber(quote.id);
+      quote.id = longOrNumberToNumber(quote.id);
     }
   }
 }
@@ -129,16 +130,12 @@ export function cleanIncomingDataMessage(rawDataMessage: SignalService.DataMessa
  */
 export async function handleSwarmDataMessage({
   envelope,
-  messageHash,
   rawDataMessage,
   senderConversationModel,
-  sentAtTimestamp,
   expireUpdate,
 }: WithDisappearingMessageUpdate & {
-  envelope: EnvelopePlus;
-  sentAtTimestamp: number;
+  envelope: DecodedEnvelope;
   rawDataMessage: SignalService.DataMessage;
-  messageHash: string;
   senderConversationModel: ConversationModel;
 }): Promise<void> {
   window.log.info('handleSwarmDataMessage');
@@ -147,12 +144,12 @@ export async function handleSwarmDataMessage({
 
   if (cleanDataMessage.groupUpdateMessage) {
     await GroupV2Receiver.handleGroupUpdateMessage({
-      signatureTimestamp: sentAtTimestamp,
+      signatureTimestamp: envelope.sentAtMs,
       updateMessage: rawDataMessage.groupUpdateMessage as SignalService.GroupUpdateMessage,
       source: envelope.source,
       senderIdentity: envelope.senderIdentity,
       expireUpdate,
-      messageHash,
+      messageHash: envelope.messageHash,
     });
     // Groups update should always be able to be decrypted as we get the keys before trying to decrypt them.
     return;
@@ -232,19 +229,17 @@ export async function handleSwarmDataMessage({
   }
 
   let msgModel =
-    isSyncedMessage ||
-    (envelope.senderIdentity && isUsFromCache(envelope.senderIdentity)) ||
-    (envelope.source && isUsFromCache(envelope.source))
+    isSyncedMessage || isUsFromCache(envelope.getAuthor())
       ? createSwarmMessageSentFromUs({
           conversationId: convoIdToAddTheMessageTo,
-          messageHash,
-          sentAt: sentAtTimestamp,
+          messageHash: envelope.messageHash,
+          sentAt: envelope.sentAtMs,
         })
       : createSwarmMessageSentFromNotUs({
           conversationId: convoIdToAddTheMessageTo,
-          messageHash,
+          messageHash: envelope.messageHash,
           sender: senderConversationModel.id,
-          sentAt: sentAtTimestamp,
+          sentAt: envelope.sentAtMs,
         });
 
   if (!isEmpty(expireUpdate)) {
@@ -258,8 +253,8 @@ export async function handleSwarmDataMessage({
 
   await handleSwarmMessage(
     msgModel,
-    messageHash,
-    sentAtTimestamp,
+    envelope.messageHash,
+    envelope.sentAtMs,
     cleanDataMessage,
     convoToAddMessageTo
   );

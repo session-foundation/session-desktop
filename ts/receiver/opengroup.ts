@@ -10,6 +10,7 @@ import { cleanIncomingDataMessage, messageHasVisibleContent } from './dataMessag
 import { handleMessageJob, toRegularMessage } from './queuedJob';
 import { OpenGroupRequestCommonType } from '../data/types';
 import { shouldProcessContentMessage } from './common';
+import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
 
 /**
  * Common checks and decoding that takes place for both v2 and v4 message types.
@@ -18,29 +19,35 @@ export const handleOpenGroupMessage = async ({
   decodedContent,
   roomInfos,
   sender,
-  sentTimestamp,
+  sentTimestampMs,
   serverId,
 }: {
   roomInfos: OpenGroupRequestCommonType;
   decodedContent: SignalService.Content;
-  sentTimestamp: number;
+  sentTimestampMs: number;
   sender: string;
   serverId: number;
 }) => {
-  if (!decodedContent || !sentTimestamp || !sender) {
+  if (!decodedContent || !sentTimestampMs || !sender) {
     return;
   }
 
   const { serverUrl, roomId } = roomInfos;
-  if (!decodedContent || !sentTimestamp || !sender || !serverId) {
+  if (!decodedContent || !sentTimestampMs || !sender || !serverId) {
     window?.log?.warn('Invalid data passed to handleOpenGroupV2Message.');
     return;
   }
 
-  if (!shouldProcessContentMessage({ timestamp: sentTimestamp }, decodedContent, true)) {
+  if (
+    !shouldProcessContentMessage({
+      sentAtMs: sentTimestampMs,
+      sigTimestampMs: longOrNumberToNumber(decodedContent.sigTimestamp),
+      isCommunity: true,
+    })
+  ) {
     window?.log?.info(
       'sogs message: shouldProcessContentMessage is false for message sentAt:',
-      sentTimestamp
+      sentTimestampMs
     );
     return;
   }
@@ -77,7 +84,7 @@ export const handleOpenGroupMessage = async ({
     const isMe = isUsAnySogsFromCache(sender);
 
     // this timestamp has already been forced to ms by the handleMessagesResponseV4() function
-    const commonAttributes = { serverTimestamp: sentTimestamp, serverId, conversationId };
+    const commonAttributes = { serverTimestamp: sentTimestampMs, serverId, conversationId };
     const attributesForNotUs = { ...commonAttributes, sender };
     // those lines just create an empty message only in-memory with some basic stuff set.
     // the whole decoding of data is happening in handleMessageJob()

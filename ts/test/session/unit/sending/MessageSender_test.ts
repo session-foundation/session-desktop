@@ -1,6 +1,5 @@
 import { expect } from 'chai';
 // eslint-disable-next-line import/order
-import _ from 'lodash';
 import Sinon, * as sinon from 'sinon';
 import { SignalService } from '../../../../protobuf';
 import { OpenGroupMessageV2 } from '../../../../session/apis/open_group_api/opengroupV2/OpenGroupMessageV2';
@@ -26,6 +25,7 @@ import {
   stubWindowLog,
 } from '../../../test-utils/utils';
 import { NetworkTime } from '../../../../util/NetworkTime';
+import { longOrNumberToNumber } from '../../../../types/long/longOrNumberToNumber';
 
 const proGeneratedPrivKeyHex =
   '01234567890123456789012345678901234567890123456789012345678901230123456789012345678901234567890123456789012345678901234567890123';
@@ -213,7 +213,7 @@ describe('MessageSender', () => {
 
         // the timestamp in the message is not overridden on sending as it should be set with the network offset when created.
         // we need that timestamp to not be overridden as the signature of the message depends on it.
-        const decodedTimestampFromSending = _.toNumber(envelope.timestamp);
+        const decodedTimestampFromSending = longOrNumberToNumber(envelope.timestamp);
         expect(decodedTimestampFromSending).to.be.eq(visibleMessage.createAtNetworkTimestamp);
       });
     });

@@ -26,6 +26,7 @@ import { LinkPreviews } from '../util/linkPreviews';
 import { GroupV2Receiver } from './groupv2/handleGroupV2Message';
 import { Constants } from '../session';
 import { Timestamp } from '../types/timestamp/timestamp';
+import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
 
 function isMessageModel(
   msg: MessageModel | MessageModelPropsWithoutConvoProps
@@ -49,12 +50,12 @@ async function copyFromQuotedMessage(
   const quoteLocal: Quote = {
     attachments: null,
     author,
-    id: _.toNumber(quoteId),
+    id: longOrNumberToNumber(quoteId),
     text: null,
     referencedMessageNotFound: false,
   };
 
-  const id = _.toNumber(quoteId);
+  const id = longOrNumberToNumber(quoteId);
 
   // First we try to look for the quote in memory
   const stateConversations = window.inboxStore?.getState().conversations;
