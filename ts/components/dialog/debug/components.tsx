@@ -383,7 +383,7 @@ export const DebugActions = () => {
         onClick={async () => {
           const masterPrivKeyHex = await getProMasterKeyHex();
           const response = await ProBackendAPI.getProDetails({ masterPrivKeyHex });
-          window?.log?.info('Pro Revocation List: ', response);
+          window?.log?.info('Pro Details: ', response);
         }}
       >
         Dump Get Pro Details
