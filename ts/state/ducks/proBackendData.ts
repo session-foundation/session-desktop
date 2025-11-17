@@ -284,6 +284,10 @@ const fetchGetProDetailsFromProBackend = createAsyncThunk(
 const refreshGetProDetailsFromProBackend = createAsyncThunk(
   'proBackendData/refreshGetProDetails',
   async (opts: WithCallerContext = {}, payloadCreator) => {
+    if (!getFeatureFlag('proAvailable')) {
+      return;
+    }
+
     if (getFeatureFlag('debugServerRequests')) {
       window.log.info(
         `[proBackend/refreshGetProDetailsFromProBackend] starting ${new Date().toISOString()}`

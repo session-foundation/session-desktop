@@ -42,6 +42,7 @@ import {
 } from '../../../../hooks/useHasPro';
 import { NetworkTime } from '../../../../util/NetworkTime';
 import { DURATION_SECONDS } from '../../../../session/constants';
+import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 const handleKeyQRMode = (mode: ProfileDialogModes, setMode: (mode: ProfileDialogModes) => void) => {
   switch (mode) {
@@ -374,6 +375,9 @@ export const DefaultSettingPage = () => {
   }
 
   useMount(() => {
+    if (!getFeatureFlag('proAvailable')) {
+      return;
+    }
     if (NetworkTime.nowSeconds() > t + 1 * DURATION_SECONDS.MINUTES) {
       void refetch();
     }
