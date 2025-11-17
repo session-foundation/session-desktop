@@ -351,13 +351,20 @@ export const DebugActions = () => {
       <DebugButton
         onClick={async () => {
           const masterPrivKeyHex = await getProMasterKeyHex();
-          console.warn('masterPrivKeyHex', masterPrivKeyHex.slice(0, 64));
+          window?.log?.info('masterPrivKeyHex: ', masterPrivKeyHex.slice(0, 64));
+        }}
+      >
+        Dump Pro Master Priv Key
+      </DebugButton>
+      <DebugButton
+        onClick={async () => {
+          const masterPrivKeyHex = await getProMasterKeyHex();
           const rotatingPrivKeyHex = await UserUtils.getProRotatingPrivateKeyHex();
           const response = await ProBackendAPI.generateProProof({
             masterPrivKeyHex,
             rotatingPrivKeyHex,
           });
-          console.warn('getProProof response', response);
+          window?.log?.info('getProProof response: ', response);
           if (response?.status_code === 200) {
             const proProof: ProProof = {
               expiryMs: response.result.expiry_unix_ts_ms,
@@ -370,25 +377,24 @@ export const DebugActions = () => {
           }
         }}
       >
-        Get Pro Proof
+        Dump Get Pro Proof
       </DebugButton>
       <DebugButton
         onClick={async () => {
           const masterPrivKeyHex = await getProMasterKeyHex();
-          console.warn('masterPrivKeyHex', masterPrivKeyHex.slice(0, 64));
-
-          const response = await ProBackendAPI.getProStatus({ masterPrivKeyHex });
-          console.warn('Get Pro Status', response);
+          const response = await ProBackendAPI.getProDetails({ masterPrivKeyHex });
+          window?.log?.info('Pro Revocation List: ', response);
         }}
       >
-        Get Pro Status
+        Dump Get Pro Details
       </DebugButton>
       <DebugButton
         onClick={async () => {
-          await ProBackendAPI.getRevocationList({ ticket: 0 });
+          const response = await ProBackendAPI.getRevocationList({ ticket: 0 });
+          window?.log?.info('Pro Revocation List: ', response);
         }}
       >
-        Get Pro Revocation List (from ticket 0)
+        Dump Get Pro Revocation List (from ticket 0)
       </DebugButton>
     </DebugMenuSection>
   );

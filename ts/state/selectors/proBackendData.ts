@@ -6,33 +6,46 @@ import {
   RequestActionArgs,
   type ProBackendDataState,
 } from '../ducks/proBackendData';
+import { SettingsKey } from '../../data/settings-key';
+import { Storage } from '../../util/storage';
+import { ProDetailsResultSchema } from '../../session/apis/pro_backend_api/schemas';
 
 export const getProBackendData = (state: StateType): ProBackendDataState => {
   return state.proBackendData;
 };
 
-export const getProBackendProofData = (state: StateType): ProBackendDataState['proof'] => {
-  return getProBackendData(state).proof;
-};
+function getProDetailsFromStorage() {
+  const response = Storage.get(SettingsKey.proDetails);
+  if (!response) {
+    return null;
+  }
+  const result = ProDetailsResultSchema.safeParse(response);
+  if (result.success) {
+    return result.data;
+  }
+  window?.log?.error('failed to parse pro details from storage: ', result.error);
+  return null;
+}
 
-export const getProBackendProDetailsData = (state: StateType): ProBackendDataState['details'] => {
-  return getProBackendData(state).details;
+export const getProBackendProDetails = (state: StateType): ProBackendDataState['details'] => {
+  const details = getProBackendData(state).details;
+
+  if (!details.data) {
+    return {
+      ...details,
+      data: getProDetailsFromStorage(),
+    };
+  }
+
+  return details;
 };
 
 export const getProBackendCurrentUserStatus = (state: StateType) => {
-  return getProBackendData(state).details.data?.status;
+  return getProBackendProDetails(state).data?.status;
 };
 
-export const useProBackendData = (): ProBackendDataState => {
-  return useSelector(getProBackendData);
-};
-
-export const useProBackendProofData = (): ProBackendDataState['proof'] => {
-  return useSelector(getProBackendProofData);
-};
-
-export const useProBackendProDetailsData = (): ProBackendDataState['details'] => {
-  return useSelector(getProBackendProDetailsData);
+export const useProBackendProDetails = (): ProBackendDataState['details'] => {
+  return useSelector(getProBackendProDetails);
 };
 
 export const useProBackendCurrentUserStatus = () => {
