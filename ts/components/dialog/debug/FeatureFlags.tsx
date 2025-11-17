@@ -643,9 +643,9 @@ export const ProDebugSection = ({
 
   const resetPro = useCallback(async () => {
     await Storage.remove(SettingsKey.proDetails);
-
+    dispatch(proBackendDataActions.reset({ key: 'details' }));
     // TODO: delete pro proof
-  }, []);
+  }, [dispatch]);
 
   const resetProMocking = useCallback(() => {
     window.sessionDataFeatureFlags = {

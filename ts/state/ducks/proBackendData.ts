@@ -330,6 +330,10 @@ export const proBackendDataSlice = createSlice({
       state[action.payload.key].isError = action.payload.result;
       return state;
     },
+    reset(state, action: PayloadAction<{ key: keyof ProBackendDataState }>) {
+      state[action.payload.key] = defaultRequestState;
+      return state;
+    },
   },
   extraReducers: builder => {
     builder.addCase(fetchGetProDetailsFromProBackend.rejected, (_state, action) => {
