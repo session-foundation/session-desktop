@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { SessionBackendBaseResponseSchema } from '../session_backend_server';
 import { ProItemStatus, ProAccessVariant, ProPaymentProvider, ProStatus } from './types';
 
-const ProProofResultSchema = z.object({
+export const ProProofResultSchema = z.object({
   version: z.number(),
   expiry_unix_ts_ms: z.number(),
   gen_index_hash: z.string(),
@@ -12,11 +12,11 @@ const ProProofResultSchema = z.object({
 
 export type ProProofResultType = z.infer<typeof ProProofResultSchema>;
 
-export const GetProProofResponseSchema = SessionBackendBaseResponseSchema.extend({
+export const GenerateProProofResponseSchema = SessionBackendBaseResponseSchema.extend({
   result: ProProofResultSchema,
 });
 
-export type GetProProofResponseType = z.infer<typeof GetProProofResponseSchema>;
+export type GenerateProProofResponseType = z.infer<typeof GenerateProProofResponseSchema>;
 
 const ProRevocationItemSchema = z.object({
   expiry_unix_ts_ms: z.number(),
@@ -36,7 +36,7 @@ export const GetProRevocationsResponseSchema = SessionBackendBaseResponseSchema.
 
 export type GetProRevocationsResponseType = z.infer<typeof GetProRevocationsResponseSchema>;
 
-const ProStatusItemSchema = z.object({
+const ProDetailsItemSchema = z.object({
   status: z.nativeEnum(ProItemStatus),
   plan: z.nativeEnum(ProAccessVariant),
   payment_provider: z.nativeEnum(ProPaymentProvider),
@@ -47,27 +47,27 @@ const ProStatusItemSchema = z.object({
   grace_period_duration_ms: z.number(),
   platform_refund_expiry_unix_ts_ms: z.number(),
   revoked_unix_ts_ms: z.number(),
-  google_payment_token: z.string().nullable(),
-  google_order_id: z.string().nullable(),
-  apple_original_tx_id: z.string().nullable(),
-  apple_tx_id: z.string().nullable(),
-  apple_web_line_order_id: z.string().nullable(),
+  google_payment_token: z.string().optional(),
+  google_order_id: z.string().optional(),
+  apple_original_tx_id: z.string().optional(),
+  apple_tx_id: z.string().optional(),
+  apple_web_line_order_id: z.string().optional(),
 });
 
-const ProStatusResultSchema = z.object({
+export const ProDetailsResultSchema = z.object({
   status: z.nativeEnum(ProStatus),
   auto_renewing: z.boolean(),
   expiry_unix_ts_ms: z.number(),
   grace_period_duration_ms: z.number(),
   error_report: z.number(),
   payments_total: z.number(),
-  items: z.array(ProStatusItemSchema),
+  items: z.array(ProDetailsItemSchema),
 });
 
-export type ProStatusResultType = z.infer<typeof ProStatusResultSchema>;
+export type ProDetailsResultType = z.infer<typeof ProDetailsResultSchema>;
 
-export const GetProStatusResponseSchema = SessionBackendBaseResponseSchema.extend({
-  result: ProStatusResultSchema,
+export const GetProDetailsResponseSchema = SessionBackendBaseResponseSchema.extend({
+  result: ProDetailsResultSchema,
 });
 
-export type GetProStatusResponseType = z.infer<typeof GetProStatusResponseSchema>;
+export type GetProDetailsResponseType = z.infer<typeof GetProDetailsResponseSchema>;

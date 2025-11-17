@@ -79,6 +79,7 @@ export const SettingsKey = {
    * The items of the last fetched revocations list, Array of items validating ProRevocationItemSchema (or undefined)
    */
   proRevocationListItems: 'proRevocationListItems',
+  proDetails: 'proDetails',
 } as const;
 
 export const KNOWN_BLINDED_KEYS_ITEM = 'KNOWN_BLINDED_KEYS_ITEM';
