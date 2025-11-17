@@ -53,55 +53,6 @@ window.getUserKeys = async () => {
   return { id: pubkey, vbid: blindedPkHex };
 };
 
-window.sessionBooleanFeatureFlags = {
-  replaceLocalizedStringsWithKeys: false,
-  // Hooks
-  useClosedGroupV2QAButtons: false, // TODO DO NOT MERGE
-  useDeterministicEncryption: !isEmpty(process.env.SESSION_ATTACH_DETERMINISTIC_ENCRYPTION),
-  disableOnionRequests: false,
-  useTestNet: isTestNet() || isTestIntegration(),
-  useTestProBackend: !isEmpty(process.env.TEST_PRO_BACKEND),
-  debugInputCommands: !isEmpty(process.env.SESSION_DEBUG),
-  alwaysShowRemainingChars: false,
-  showPopoverAnchors: false,
-  proAvailable: !isEmpty(process.env.SESSION_PRO),
-  proGroupsAvailable: !isEmpty(process.env.SESSION_PRO_GROUPS),
-  mockCurrentUserHasProPlatformRefundExpired: !isEmpty(
-    process.env.SESSION_USER_HAS_PRO_PLATFORM_REFUND_EXPIRED
-  ),
-  mockCurrentUserHasProCancelled: !isEmpty(process.env.SESSION_USER_HAS_PRO_CANCELLED),
-  mockCurrentUserHasProInGracePeriod: !isEmpty(process.env.SESSION_USER_HAS_PRO_IN_GRACE),
-  mockProRecoverButtonAlwaysSucceed: !isEmpty(process.env.SESSION_PRO_RECOVER_ALWAYS_SUCCEED),
-  mockProRecoverButtonAlwaysFail: !isEmpty(process.env.SESSION_PRO_RECOVER_ALWAYS_FAIL),
-  mockOthersHavePro: !isEmpty(process.env.SESSION_OTHERS_HAVE_PRO),
-  mockProBackendLoading: !isEmpty(process.env.SESSION_PRO_BACKEND_LOADING),
-  mockProBackendError: !isEmpty(process.env.SESSION_PRO_BACKEND_ERROR),
-  // Note: some stuff are init when the app starts, so fsTTL30s should only be set from the env itself (before app starts)
-  fsTTL30s: !isEmpty(process.env.FILE_SERVER_TTL_30S),
-  debugLogging: !isEmpty(process.env.SESSION_DEBUG),
-  debugLibsessionDumps: !isEmpty(process.env.SESSION_DEBUG_LIBSESSION_DUMPS),
-  debugBuiltSnodeRequests: !isEmpty(process.env.SESSION_DEBUG_BUILT_SNODE_REQUEST),
-  debugSwarmPolling: !isEmpty(process.env.SESSION_DEBUG_SWARM_POLLING),
-  debugServerRequests: !isEmpty(process.env.SESSION_DEBUG_SERVER_REQUESTS),
-  debugNonSnodeRequests: false,
-  debugOnionRequests: false,
-};
-
-window.sessionDataFeatureFlags = {
-  useLocalDevNet: !isEmpty(process.env.LOCAL_DEVNET_SEED_URL)
-    ? process.env.LOCAL_DEVNET_SEED_URL
-    : null,
-  mockMessageProFeatures: null,
-  mockProCurrentStatus: null,
-  mockProPaymentProvider: null,
-  mockProAccessVariant: null,
-  mockProAccessExpiry: null,
-  mockProLongerMessagesSent: null,
-  mockProPinnedConversations: null,
-  mockProBadgesSent: null,
-  mockProGroupsUpgraded: null,
-};
-
 window.versionInfo = {
   environment: window.getEnvironment(),
   version: window.getVersion(),
@@ -309,6 +260,15 @@ const data = require('./ts/data/dataInit');
 data.initData();
 
 const { ConvoHub } = require('./ts/session/conversations/ConversationController');
+
+const {
+  defaultBooleanFeatureFlags,
+  defaultDataFeatureFlags,
+} = require('./ts/state/ducks/types/defaultFeatureFlags.js');
+
+window.sessionBooleanFeatureFlags = defaultBooleanFeatureFlags;
+window.sessionDataFeatureFlags = defaultDataFeatureFlags;
+
 const {
   getDataFeatureFlag,
   getFeatureFlag,

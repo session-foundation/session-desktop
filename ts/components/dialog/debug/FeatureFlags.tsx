@@ -1,6 +1,7 @@
 import { isBoolean } from 'lodash';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { clipboard } from 'electron';
+import { useDispatch } from 'react-redux';
 import {
   getDataFeatureFlag,
   getFeatureFlag,
@@ -27,6 +28,13 @@ import {
   ProStatus,
 } from '../../../session/apis/pro_backend_api/types';
 import { DebugButton } from './components';
+import { proBackendDataActions } from '../../../state/ducks/proBackendData';
+import { Storage } from '../../../util/storage';
+import { SettingsKey } from '../../../data/settings-key';
+import {
+  defaultProBooleanFeatureFlags,
+  defaultProDataFeatureFlags,
+} from '../../../state/ducks/types/defaultFeatureFlags';
 
 type FeatureFlagToggleType = {
   forceUpdate: () => void;
@@ -629,13 +637,50 @@ export const ProDebugSection = ({
   forceUpdate,
   setPage,
 }: DebugMenuPageProps & { forceUpdate: () => void }) => {
+  const dispatch = useDispatch();
   const mockExpiry = useDataFeatureFlag('mockProAccessExpiry');
   const proAvailable = useFeatureFlag('proAvailable');
+
+  const resetPro = useCallback(async () => {
+    await Storage.remove(SettingsKey.proDetails);
+
+    // TODO: delete pro proof
+  }, []);
+
+  const resetProMocking = useCallback(() => {
+    window.sessionDataFeatureFlags = {
+      ...window.sessionDataFeatureFlags,
+      ...defaultProDataFeatureFlags,
+    };
+    window.sessionBooleanFeatureFlags = {
+      ...window.sessionBooleanFeatureFlags,
+      ...defaultProBooleanFeatureFlags,
+    };
+    forceUpdate();
+  }, [forceUpdate]);
+
   return (
     <DebugMenuSection title="Session Pro">
       <FlagToggle forceUpdate={forceUpdate} flag="proAvailable" label="Pro Beta Released" />
       {proAvailable ? (
+        <DebugButton buttonColor={SessionButtonColor.Danger} onClick={resetPro}>
+          Reset All Pro State
+        </DebugButton>
+      ) : null}
+      {proAvailable ? (
         <DebugButton onClick={() => setPage(DEBUG_MENU_PAGE.Pro)}>Pro Playground</DebugButton>
+      ) : null}
+      {proAvailable ? (
+        <DebugButton
+          onClick={() => {
+            if (!proAvailable) {
+              return;
+            }
+            dispatch(proBackendDataActions.refreshGetProDetailsFromProBackend({}) as any);
+          }}
+        >
+          Refresh Pro Details
+        </DebugButton>
       ) : null}
       <FlagToggle
         forceUpdate={forceUpdate}
@@ -649,6 +694,11 @@ export const ProDebugSection = ({
         visibleWithBooleanFlag="proAvailable"
         label="Pro Groups Released"
       />
+      {proAvailable ? (
+        <DebugButton buttonColor={SessionButtonColor.Danger} onClick={resetProMocking}>
+          Reset Pro Mocking
+        </DebugButton>
+      ) : null}
       <FlagToggle
         forceUpdate={forceUpdate}
         flag="mockOthersHavePro"

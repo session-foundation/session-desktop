@@ -1,5 +1,3 @@
-import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
-
 function envAppInstanceIncludes(toInclude: string) {
   if (!process.env.NODE_APP_INSTANCE) {
     return false;
@@ -21,10 +19,6 @@ export function isProd() {
 
 export function isTestIntegration() {
   return envAppInstanceIncludes('test-integration');
-}
-
-export function hasClosedGroupV2QAButtons() {
-  return getFeatureFlag('useClosedGroupV2QAButtons');
 }
 
 export function isUnitTest() {

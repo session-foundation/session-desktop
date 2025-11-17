@@ -48,6 +48,7 @@ import { SessionButtonShiny } from '../../basic/SessionButtonShiny';
 import ProBackendAPI from '../../../session/apis/pro_backend_api/ProBackendAPI';
 import { getProMasterKeyHex } from '../../../session/utils/User';
 import { FlagToggle } from './FeatureFlags';
+import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 type DebugButtonProps = SessionButtonProps & { shiny?: boolean };
 
@@ -351,20 +352,14 @@ export const DebugActions = () => {
       <DebugButton
         onClick={async () => {
           const masterPrivKeyHex = await getProMasterKeyHex();
-          window?.log?.info('masterPrivKeyHex: ', masterPrivKeyHex.slice(0, 64));
-        }}
-      >
-        Dump Pro Master Priv Key
-      </DebugButton>
-      <DebugButton
-        onClick={async () => {
-          const masterPrivKeyHex = await getProMasterKeyHex();
           const rotatingPrivKeyHex = await UserUtils.getProRotatingPrivateKeyHex();
           const response = await ProBackendAPI.generateProProof({
             masterPrivKeyHex,
             rotatingPrivKeyHex,
           });
-          window?.log?.info('getProProof response: ', response);
+          if (getFeatureFlag('debugServerRequests')) {
+            window?.log?.debug('getProProof response: ', response);
+          }
           if (response?.status_code === 200) {
             const proProof: ProProof = {
               expiryMs: response.result.expiry_unix_ts_ms,
@@ -377,24 +372,28 @@ export const DebugActions = () => {
           }
         }}
       >
-        Dump Get Pro Proof
+        Get Pro Proof
       </DebugButton>
       <DebugButton
         onClick={async () => {
           const masterPrivKeyHex = await getProMasterKeyHex();
           const response = await ProBackendAPI.getProDetails({ masterPrivKeyHex });
-          window?.log?.info('Pro Details: ', response);
+          if (getFeatureFlag('debugServerRequests')) {
+            window?.log?.debug('Pro Details: ', response);
+          }
         }}
       >
-        Dump Get Pro Details
+        Get Pro Details
       </DebugButton>
       <DebugButton
         onClick={async () => {
           const response = await ProBackendAPI.getRevocationList({ ticket: 0 });
-          window?.log?.info('Pro Revocation List: ', response);
+          if (getFeatureFlag('debugServerRequests')) {
+            window?.log?.debug('Pro Revocation List: ', response);
+          }
         }}
       >
-        Dump Get Pro Revocation List (from ticket 0)
+        Get Pro Revocation List (from ticket 0)
       </DebugButton>
     </DebugMenuSection>
   );
@@ -609,7 +608,13 @@ export const AboutInfo = () => {
 export const OtherInfo = () => {
   const otherInfo = useAsync(async () => {
     const { id, vbid } = await window.getUserKeys();
-    return [`${tr('accountIdYours')}: ${id}`, `VBID: ${vbid}`];
+    const proMasterKey = (await getProMasterKeyHex())?.slice(0, 64);
+    const result = [
+      `${tr('accountIdYours')}: ${id}`,
+      `VBID: ${vbid}`,
+      `Pro Master Key: ${proMasterKey}`,
+    ];
+    return result;
   }, []);
 
   return (
