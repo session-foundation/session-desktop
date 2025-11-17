@@ -77,7 +77,7 @@ export abstract class ContentMessageWithProfile extends ContentMessageNoProfile 
  * depending on what is provided.
  * This is just to avoid duplicating this code in all the message types that need it.
  */
-export function proMessageProtoFromDetailsOrProto(
+function proMessageProtoFromDetailsOrProto(
   detailsOrProto: OutgoingProMessageDetailsOrProto
 ): SignalService.ProMessage | null {
   if (detailsOrProto instanceof OutgoingProMessageDetails) {

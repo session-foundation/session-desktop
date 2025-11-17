@@ -145,7 +145,7 @@ export async function getOutgoingProMessageDetails({
   ]);
   // Note: if we do not have a proof we don't want to send a proMessage.
   // Note: if we don't have a user pro feature enabled, we might still need to add one for the message itself, see below
-  if (!proConfig || !isEmpty(proConfig) || isEmpty(proConfig.proProof)) {
+  if (!proConfig || isEmpty(proConfig?.proProof)) {
     return null;
   }
 
