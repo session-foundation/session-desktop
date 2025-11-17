@@ -42,6 +42,14 @@ type FeatureFlagToggleType = {
   parentFlag?: SessionBooleanFeatureFlagKeys;
 };
 
+function resetAllConversationUI() {
+  ConvoHub.use()
+    .getConversations()
+    .forEach(convo => {
+      convo.triggerUIRefresh();
+    });
+}
+
 const handleSetFeatureFlag = ({
   flag,
   parentFlag,
@@ -57,12 +65,7 @@ const handleSetFeatureFlag = ({
   }
 
   forceUpdate();
-
-  ConvoHub.use()
-    .getConversations()
-    .forEach(convo => {
-      convo.triggerUIRefresh();
-    });
+  resetAllConversationUI();
 };
 
 const handleFeatureFlagToggle = ({ flag, parentFlag, forceUpdate }: FeatureFlagToggleType) => {
@@ -142,12 +145,7 @@ const handleFeatureFlagWithDataChange = ({
 }) => {
   window.sessionDataFeatureFlags[flag] = value;
   forceUpdate();
-
-  ConvoHub.use()
-    .getConversations()
-    .forEach(convo => {
-      convo.triggerUIRefresh();
-    });
+  resetAllConversationUI();
 };
 
 type FlagDropdownInputProps = {
@@ -554,12 +552,7 @@ export function FeatureFlagDumper({ forceUpdate }: { forceUpdate: () => void }) 
       window.sessionDataFeatureFlags = json.sessionDataFeatureFlags;
 
       forceUpdate();
-
-      ConvoHub.use()
-        .getConversations()
-        .forEach(convo => {
-          convo.triggerUIRefresh();
-        });
+      resetAllConversationUI();
     } catch (e) {
       ToastUtils.pushToastError('flag-dumper-toast-set', e.message);
     }
@@ -657,6 +650,7 @@ export const ProDebugSection = ({
       ...defaultProBooleanFeatureFlags,
     };
     forceUpdate();
+    resetAllConversationUI();
   }, [forceUpdate]);
 
   return (
