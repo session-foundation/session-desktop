@@ -7,12 +7,12 @@ import type {
 import { PRO_API } from './ProBackendTarget';
 import SessionBackendServerApi from '../session_backend_server';
 import {
-  GetProProofResponseSchema,
-  GetProProofResponseType,
+  GenerateProProofResponseSchema,
+  GenerateProProofResponseType,
   GetProRevocationsResponseSchema,
   GetProRevocationsResponseType,
-  GetProStatusResponseSchema,
-  GetProStatusResponseType,
+  GetProDetailsResponseSchema,
+  GetProDetailsResponseType,
 } from './schemas';
 import { ProWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { NetworkTime } from '../../../util/NetworkTime';
@@ -46,21 +46,22 @@ export default class ProBackendAPI {
     });
   }
 
-  static async getProProof(
+  static async generateProProof(
     args: WithMasterPrivKeyHex & WithRotatingPrivKeyHex
-  ): Promise<GetProProofResponseType | null> {
+  ): Promise<GenerateProProofResponseType | null> {
     return ProBackendAPI.getServer().makeRequestWithSchema({
-      path: '/get_pro_proof',
+      path: '/generate_pro_proof',
       method: 'POST',
       bodyGetter: () => ProBackendAPI.getProProofBody(args),
-      withZodSchema: GetProProofResponseSchema,
+      withZodSchema: GenerateProProofResponseSchema,
     });
   }
 
   private static async getProStatusBody(args: WithMasterPrivKeyHex) {
     return ProWrapperActions.proStatusRequestBody({
       ...ProBackendAPI.getProSigningArgs(args),
-      withPaymentHistory: false,
+      // NOTE: The latest payment is the only one required for state derivation
+      count: 1,
     });
   }
 
@@ -68,12 +69,12 @@ export default class ProBackendAPI {
     return ProWrapperActions.proRevocationsRequestBody({ requestVersion: 0, ...args });
   }
 
-  static async getProStatus(args: WithMasterPrivKeyHex): Promise<GetProStatusResponseType | null> {
+  static async getProStatus(args: WithMasterPrivKeyHex): Promise<GetProDetailsResponseType | null> {
     return ProBackendAPI.getServer().makeRequestWithSchema({
-      path: '/get_pro_status',
+      path: '/get_pro_details',
       method: 'POST',
       bodyGetter: () => ProBackendAPI.getProStatusBody(args),
-      withZodSchema: GetProStatusResponseSchema,
+      withZodSchema: GetProDetailsResponseSchema,
     });
   }
 

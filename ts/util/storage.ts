@@ -4,10 +4,19 @@ import { DEFAULT_RECENT_REACTS } from '../session/constants';
 import { deleteSettingsBoolValue, updateSettingsBoolValue } from '../state/ducks/settings';
 import { Data } from '../data/data';
 import { SettingsKey } from '../data/settings-key';
+import { ProProofResultType, ProDetailsResultType } from '../session/apis/pro_backend_api/schemas';
 
 let ready = false;
 
-type ValueType = string | number | boolean | SessionKeyPair | Array<string>;
+// TODO: Add dynamic typing, this should be done as part of the settings refactor
+type ValueType =
+  | string
+  | number
+  | boolean
+  | SessionKeyPair
+  | Array<string>
+  | ProDetailsResultType
+  | ProProofResultType;
 type InsertedValueType = { id: string; value: ValueType };
 let items: Record<string, InsertedValueType>;
 let callbacks: Array<() => void> = [];

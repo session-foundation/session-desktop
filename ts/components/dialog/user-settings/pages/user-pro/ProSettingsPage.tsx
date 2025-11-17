@@ -1,13 +1,5 @@
 import { isNumber } from 'lodash';
-import {
-  MouseEventHandler,
-  SessionDataTestId,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react';
+import { MouseEventHandler, SessionDataTestId, useCallback, useMemo, type ReactNode } from 'react';
 import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 import { ModalBasicHeader } from '../../../../SessionWrapperModal';
@@ -56,8 +48,8 @@ import { SpacerMD } from '../../../../basic/Text';
 import LIBSESSION_CONSTANTS from '../../../../../session/utils/libsession/libsession_constants';
 import { useDataFeatureFlag } from '../../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { AnimatedSpinnerIcon } from '../../../../loading/spinner/AnimatedSpinnerIcon';
-import { ProStatus } from '../../../../../session/apis/pro_backend_api/types';
 import { AnimatedArrowSpinnerIcon } from '../../../../loading/spinner/AnimatedArrowSpinnerIcon';
+import { useSetProBackendIsLoading } from '../../../../../state/selectors/proBackendData';
 
 type ProSettingsModalState = {
   fromCTA?: boolean;
@@ -781,12 +773,11 @@ function ManageProAccess({ state }: SectionProps) {
   const dispatch = useDispatch();
   const isDarkTheme = useIsDarkTheme();
   const userHasExpiredPro = useCurrentUserHasExpiredPro();
+  const setProBackendIsLoading = useSetProBackendIsLoading();
 
   const { returnToThisModalAction, centerAlign } = state;
 
-  const [isRecoveringState, setIsRecoveringState] = useState<boolean>(false);
-
-  const { isLoading, isFetching, isError, refetch, data } = useProAccessDetails();
+  const { isLoading, isError, refetch } = useProAccessDetails();
 
   const backendErrorButtons = useBackendErrorDialogButtons();
 
@@ -813,59 +804,10 @@ function ManageProAccess({ state }: SectionProps) {
   }, [dispatch, isLoading, isError, backendErrorButtons, centerAlign, returnToThisModalAction]);
 
   const handleClickRecover = useCallback(async () => {
-    await refetch();
-    setIsRecoveringState(true);
-  }, [refetch]);
-
-  const handleRecoverSuccess = useCallback(() => {
-    return dispatch(
-      updateLocalizedPopupDialog({
-        title: { token: 'proAccessRestored' },
-        description: { token: 'proAccessRestoredDescription' },
-      })
-    );
-  }, [dispatch]);
-
-  const handleRecoverFailed = useCallback(() => {
-    dispatch(
-      updateLocalizedPopupDialog({
-        title: { token: 'proAccessNotFound' },
-        description: { token: 'proAccessNotFoundDescription' },
-        overrideButtons: [
-          {
-            label: { token: 'helpSupport' },
-            dataTestId: 'pro-backend-error-support-button',
-            onClick: () => {
-              showLinkVisitWarningDialog(
-                'https://sessionapp.zendesk.com/hc/sections/4416517450649-Support',
-                dispatch
-              );
-            },
-            closeAfterClick: true,
-          },
-          {
-            label: { token: 'close' },
-            dataTestId: 'modal-close-button',
-            closeAfterClick: true,
-          },
-        ],
-      })
-    );
-  }, [dispatch]);
-
-  useEffect(() => {
-    if (!isRecoveringState) {
-      return;
-    }
-
-    if (!isFetching) {
-      if (data.currentStatus === ProStatus.Active) {
-        handleRecoverSuccess();
-      } else {
-        handleRecoverFailed();
-      }
-    }
-  }, [isRecoveringState, isFetching, data, handleRecoverSuccess, handleRecoverFailed]);
+    // isLoading state needs to be reset to true as we are hard reloading and need to show that in the UI
+    setProBackendIsLoading({ key: 'details', result: true });
+    refetch({ callerContext: 'recover' });
+  }, [refetch, setProBackendIsLoading]);
 
   return (
     <SectionFlexContainer>

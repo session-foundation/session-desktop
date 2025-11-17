@@ -7,6 +7,23 @@ export abstract class DataMessage extends ExpirableMessage {
     content.dataMessage = this.dataProto();
     content.proMessage = this.proMessageProto();
 
+    // if (proMessageDetails?.proFeaturesBitset && !isEmpty(proMessageDetails.proConfig)) {
+    //   // Note: we only want to set the proof if any features are used
+    //   content.proMessage = new SignalService.ProMessage({
+    //     features: bigIntToLong(proMessageDetails.proFeaturesBitset),
+    //     proof: {
+    //       expireAtMs: proMessageDetails.proConfig?.proProof.expiryMs,
+    //       genIndexHash: from_base64(
+    //         proMessageDetails.proConfig?.proProof.genIndexHashB64,
+    //         base64_variants.ORIGINAL
+    //       ),
+    //       rotatingPublicKey: from_hex(proMessageDetails.proConfig?.proProof.rotatingPubkeyHex),
+    //       version: proMessageDetails.proConfig?.proProof.version,
+    //       sig: from_hex(proMessageDetails.proConfig?.proProof.signatureHex),
+    //     },
+    //   });
+    // }
+
     return content;
   }
 

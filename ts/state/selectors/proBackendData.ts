@@ -15,12 +15,12 @@ export const getProBackendProofData = (state: StateType): ProBackendDataState['p
   return getProBackendData(state).proof;
 };
 
-export const getProBackendProStatusData = (state: StateType): ProBackendDataState['proStatus'] => {
-  return getProBackendData(state).proStatus;
+export const getProBackendProDetailsData = (state: StateType): ProBackendDataState['details'] => {
+  return getProBackendData(state).details;
 };
 
 export const getProBackendCurrentUserStatus = (state: StateType) => {
-  return getProBackendData(state).proStatus.data?.status;
+  return getProBackendData(state).details.data?.status;
 };
 
 export const useProBackendData = (): ProBackendDataState => {
@@ -31,8 +31,8 @@ export const useProBackendProofData = (): ProBackendDataState['proof'] => {
   return useSelector(getProBackendProofData);
 };
 
-export const useProBackendProStatusData = (): ProBackendDataState['proStatus'] => {
-  return useSelector(getProBackendProStatusData);
+export const useProBackendProDetailsData = (): ProBackendDataState['details'] => {
+  return useSelector(getProBackendProDetailsData);
 };
 
 export const useProBackendCurrentUserStatus = () => {
