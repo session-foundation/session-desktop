@@ -63,6 +63,10 @@ export abstract class ContentMessageWithProfile extends ContentMessageNoProfile 
     return proMessageProtoFromDetailsOrProto(this.proMessageDetails);
   }
 
+  /**
+   * Returns the profile details as a protobuf object to include for this message.
+   * `protected` as this needs to be set in the dataProto() or messageRequestResponse() calls.
+   */
   protected lokiProfileProto(): Partial<Pick<SignalService.DataMessage, 'profile' | 'profileKey'>> {
     return this.userProfile?.toProtobufDetails() ?? {};
   }

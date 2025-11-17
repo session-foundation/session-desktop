@@ -42,7 +42,7 @@ describe('MessageSender', () => {
     await ConvoHub.use().load();
     Sinon.stub(UserUtils, 'getProRotatingPrivateKeyHex').resolves(proGeneratedPrivKeyHex);
   });
-  
+
   afterEach(() => {
     sinon.restore();
   });
