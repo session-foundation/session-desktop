@@ -12,7 +12,6 @@ import ProBackendAPI from '../../../apis/pro_backend_api/ProBackendAPI';
 import { getItemById } from '../../../../data/data';
 import { SettingsKey } from '../../../../data/settings-key';
 import { DURATION } from '../../../constants';
-import { proBackendDataActions } from '../../../../state/ducks/proBackendData';
 import { Storage } from '../../../../util/storage';
 import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { formatRoundedUpDuration } from '../../../../util/i18n/formatting/generics';
@@ -92,7 +91,6 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
       window.log.info(
         `UpdateProRevocationListJob: new revocations from ticket #${lastFetchTicket}: to #${newTicket}. itemsCount: ${response.result.items.length}`
       );
-      window.inboxStore?.dispatch(proBackendDataActions.refreshProStatusFromProBackend() as any);
 
       return RunJobResult.Success;
     } catch (e) {

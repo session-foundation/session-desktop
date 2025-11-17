@@ -1,14 +1,27 @@
-import type { WithMasterPrivKeyHex, WithRotatingPrivKeyHex } from 'libsession_util_nodejs';
+import type {
+  ProProof,
+  WithMasterPrivKeyHex,
+  WithRotatingPrivKeyHex,
+} from 'libsession_util_nodejs';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { StateType } from '../reducer';
-import {
-  ProProofResultType,
-  ProStatusResultType,
-} from '../../session/apis/pro_backend_api/schemas';
 import ProBackendAPI from '../../session/apis/pro_backend_api/ProBackendAPI';
 import { getFeatureFlag } from './types/releasedFeaturesReduxTypes';
 import { UserUtils } from '../../session/utils';
-import { getProRotatingPrivateKeyHex } from '../../session/utils/User';
+import { getProRotatingPrivateKeyHex, getProMasterKeyHex } from '../../session/utils/User';
+import { updateLocalizedPopupDialog } from './modalDialog';
+import { showLinkVisitWarningDialog } from '../../components/dialog/OpenUrlModal';
+import { ProStatus } from '../../session/apis/pro_backend_api/types';
+import { SettingsKey } from '../../data/settings-key';
+import {
+  ProProofResultType,
+  ProDetailsResultType,
+} from '../../session/apis/pro_backend_api/schemas';
+import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
+import { Storage } from '../../util/storage';
+import { NetworkTime } from '../../util/NetworkTime';
+import { assertUnreachable } from '../../types/sqlSharedTypes';
+
 
 type RequestState<D = unknown> = {
   isFetching: boolean;
@@ -16,6 +29,8 @@ type RequestState<D = unknown> = {
   isLoading: boolean;
   // Shortcut for `!!error`
   isError: boolean;
+  // True if the request has been made
+  isEnabled: boolean;
   error: string | null;
   t: number;
   data: D | null;
@@ -25,6 +40,7 @@ const defaultRequestState = {
   isFetching: false,
   isLoading: false,
   isError: false,
+  isEnabled: false,
   error: null,
   t: 0,
   data: null,
@@ -39,12 +55,12 @@ type ReducerBooleanStateAction = PayloadAction<RequestActionArgs>;
 
 export type ProBackendDataState = {
   proof: RequestState<ProProofResultType>;
-  proStatus: RequestState<ProStatusResultType>;
+  details: RequestState<ProDetailsResultType>;
 };
 
 export const initialProBackendDataState: ProBackendDataState = {
   proof: defaultRequestState,
-  proStatus: defaultRequestState,
+  details: defaultRequestState,
 };
 
 type ApiResponse<T> = {
@@ -53,34 +69,53 @@ type ApiResponse<T> = {
   result: T;
 };
 
+type PayloadCreatorType = Parameters<Parameters<typeof createAsyncThunk>['1']>['1'];
+
 type CreateProBackendFetchAsyncThunk<D> = {
   key: keyof ProBackendDataState;
   getter: () => Promise<ApiResponse<D> | null>;
-  payloadCreator: Parameters<Parameters<typeof createAsyncThunk>['1']>['1'];
+  payloadCreator: PayloadCreatorType;
+  contextHandler?: (state: RequestState<D>) => Promise<void>;
+  // Runs at the end of the function, as long as the function doesn't early return because it was already fetching.
+  callback?: (initialState: RequestState<D>, state: RequestState<D>) => Promise<void>;
 };
+
+export type WithCallerContext = { callerContext?: 'recover' };
 
 async function createProBackendFetchAsyncThunk<D>({
   key,
   getter,
   payloadCreator,
+  contextHandler,
+  callback,
 }: CreateProBackendFetchAsyncThunk<D>): Promise<RequestState<D>> {
+  const debug = getFeatureFlag('debugServerRequests');
+  if (debug) {
+    window?.log?.info(`[${key}] starting ${new Date().toISOString()}`);
+  }
+
+  const state = payloadCreator.getState() as StateType;
+  const initialState = state.proBackendData[key] as RequestState<D>;
+  let result = initialState;
   try {
-    if (getFeatureFlag('debugServerRequests')) {
-      window.log.info(`[${key}] starting ${new Date().toISOString()}`);
+    if (initialState.isFetching) {
+      if (debug) {
+        window?.log?.info(`[${key}] already fetching! returning no-op ${new Date().toISOString()}`);
+      }
+      // no operation
+      return result;
     }
 
-    const state = payloadCreator.getState() as StateType;
-    if (state.proBackendData[key].isFetching) {
-      return state.proBackendData[key] as RequestState<D>;
+    if (!result.isEnabled) {
+      payloadCreator.dispatch(
+        proBackendDataSlice.actions.setIsLoading({
+          key,
+          result: true,
+        })
+      );
+      payloadCreator.dispatch(proBackendDataSlice.actions.setIsEnabled({ key, result: true }));
     }
-
     payloadCreator.dispatch(proBackendDataSlice.actions.setIsFetching({ key, result: true }));
-    payloadCreator.dispatch(
-      proBackendDataSlice.actions.setIsLoading({
-        key,
-        result: !state.proBackendData[key].data,
-      })
-    );
 
     const response = await getter();
     if (!response) {
@@ -88,74 +123,210 @@ async function createProBackendFetchAsyncThunk<D>({
     }
 
     if (response.status_code !== 200) {
-      return {
-        data: state.proBackendData[key].data as D | null,
+      result = {
+        data: result.data,
         error: 'TODO: get the error',
         isError: true,
         isFetching: false,
         isLoading: false,
         t: response.t,
+        isEnabled: true,
+      };
+    } else {
+      result = {
+        data: response.result as D,
+        error: null,
+        isError: false,
+        isFetching: false,
+        isLoading: false,
+        t: response.t,
+        isEnabled: true,
       };
     }
-
-    return {
-      data: response.result as D,
-      error: null,
-      isError: false,
-      isFetching: false,
-      isLoading: false,
-      t: response.t,
-    };
   } catch (e) {
     window?.log?.error(e);
-    return {
+    result = {
       data: null as D,
       error: e.message,
       isError: true,
       isFetching: false,
       isLoading: false,
       t: 0,
+      isEnabled: true,
     };
-  } finally {
-    payloadCreator.dispatch(proBackendDataSlice.actions.setIsFetching({ key, result: false }));
-    payloadCreator.dispatch(proBackendDataSlice.actions.setIsLoading({ key, result: false }));
   }
+
+  if (contextHandler) {
+    await contextHandler(result);
+  }
+
+  if (callback) {
+    await callback(initialState, result);
+  }
+
+  return result;
 }
 
-const fetchProProofFromProBackend = createAsyncThunk(
-  'proBackendData/fetchProProof',
+const fetchGenerateProProofFromProBackend = createAsyncThunk(
+  'proBackendData/fetchGenerateProProof',
   async (
     args: WithMasterPrivKeyHex & WithRotatingPrivKeyHex,
     payloadCreator
   ): Promise<RequestState<ProProofResultType>> => {
     return createProBackendFetchAsyncThunk({
       key: 'proof',
-      getter: () => ProBackendAPI.getProProof(args),
+      getter: () => ProBackendAPI.generateProProof(args),
       payloadCreator,
     });
   }
 );
 
-const fetchProStatusFromProBackend = createAsyncThunk(
-  'proBackendData/fetchProStatus',
+/** TODO: work out where and if we need this
+function getProDetailsFromStorage() {
+  const response = Storage.get(SettingsKey.proDetails);
+  if (!response) {
+    return null;
+  }
+  const result = ProDetailsResultSchema.safeParse(response);
+  if (result.success) {
+    return result.data;
+  }
+  window?.log?.error('failed to parse pro details from storage: ', result.error)
+  return null;
+}
+
+*/
+
+async function putProDetailsInStorage(details: ProDetailsResultType) {
+  await Storage.put(SettingsKey.proDetails, details);
+}
+
+async function handleNewProProof(rotatingPrivKeyHex: string) {
+  const masterPrivKeyHex = await getProMasterKeyHex();
+  const response = await ProBackendAPI.generateProProof({
+    masterPrivKeyHex,
+    rotatingPrivKeyHex,
+  });
+  if (response?.status_code === 200) {
+    const proProof = {
+      expiryMs: response.result.expiry_unix_ts_ms,
+      genIndexHashB64: response.result.gen_index_hash,
+      rotatingPubkeyHex: response.result.rotating_pkey,
+      version: response.result.version,
+      signatureHex: response.result.sig,
+    } satisfies ProProof;
+    await UserConfigWrapperActions.setProConfig({ proProof, rotatingPrivKeyHex });
+  } else {
+    window?.log?.error('failed to get new pro proof: ', response);
+  }
+}
+
+async function handleClearProProof() {
+  // TODO: remove pro proof from user config
+}
+
+async function handleExpired() {
+  // TODO: handle expired and expiring soon CTAs
+}
+
+async function handleProProof(accessExpiry: number, autoRenewing: boolean) {
+  const proConfig = await UserConfigWrapperActions.getProConfig();
+  const now = NetworkTime.now();
+
+  // TODO: add buffer time to check expiry at least 1 min diff
+  if (!proConfig || proConfig.proProof.expiryMs < now || (autoRenewing && accessExpiry < now)) {
+    const rotatingPrivKeyHex =
+      proConfig?.rotatingPrivKeyHex ?? (await UserUtils.getProRotatingPrivateKeyHex());
+    await handleNewProProof(rotatingPrivKeyHex);
+  }
+}
+
+const fetchGetProDetailsFromProBackend = createAsyncThunk(
+  'proBackendData/fetchGetProDetails',
   async (
-    args: WithMasterPrivKeyHex,
+    { callerContext: context, ...args }: WithMasterPrivKeyHex & WithCallerContext,
     payloadCreator
-  ): Promise<RequestState<ProStatusResultType>> => {
+  ): Promise<RequestState<ProDetailsResultType>> => {
     return createProBackendFetchAsyncThunk({
-      key: 'proStatus',
+      key: 'details',
       getter: () => ProBackendAPI.getProStatus(args),
       payloadCreator,
+      callback: async (_initialState, state) => {
+        // TODO: work out if we actually need to know the previous state
+        // const previousState = initialState.isEnabled && initialState.data ? initialState.data : getProDetailsFromStorage();
+
+        if (state.data) {
+          switch (state.data.status) {
+            case ProStatus.Active:
+              await handleProProof(state.data.expiry_unix_ts_ms, state.data.auto_renewing);
+              break;
+
+            case ProStatus.NeverBeenPro:
+              await handleClearProProof();
+              break;
+
+            case ProStatus.Expired:
+              await handleClearProProof();
+              await handleExpired();
+              break;
+
+            default:
+              assertUnreachable(state.data.status, 'handleBackendProStatusChange');
+              break;
+          }
+        }
+
+        if (state.data) {
+          await putProDetailsInStorage(state.data);
+        }
+      },
+      contextHandler: async state => {
+        if (context === 'recover') {
+          if (state.data?.status === ProStatus.Active) {
+            payloadCreator.dispatch(
+              updateLocalizedPopupDialog({
+                title: { token: 'proAccessRestored' },
+                description: { token: 'proAccessRestoredDescription' },
+              })
+            );
+          } else {
+            payloadCreator.dispatch(
+              updateLocalizedPopupDialog({
+                title: { token: 'proAccessNotFound' },
+                description: { token: 'proAccessNotFoundDescription' },
+                overrideButtons: [
+                  {
+                    label: { token: 'helpSupport' },
+                    dataTestId: 'pro-backend-error-support-button',
+                    onClick: () => {
+                      showLinkVisitWarningDialog(
+                        'https://sessionapp.zendesk.com/hc/sections/4416517450649-Support',
+                        payloadCreator.dispatch
+                      );
+                    },
+                    closeAfterClick: true,
+                  },
+                  {
+                    label: { token: 'close' },
+                    dataTestId: 'modal-close-button',
+                    closeAfterClick: true,
+                  },
+                ],
+              })
+            );
+          }
+        }
+      },
     });
   }
 );
 
-const refreshProProofFromProBackend = createAsyncThunk(
-  'proBackendData/refreshProProof',
+const refreshGenerateProProofFromProBackend = createAsyncThunk(
+  'proBackendData/refreshGenerateProProof',
   async (_opts, payloadCreator) => {
     if (getFeatureFlag('debugServerRequests')) {
       window.log.info(
-        `[proBackend/refreshProProofFromProBackend] starting ${new Date().toISOString()}`
+        `[proBackend/refreshGeneraeteProProofFromProBackend] starting ${new Date().toISOString()}`
       );
     }
 
@@ -167,7 +338,7 @@ const refreshProProofFromProBackend = createAsyncThunk(
 
     if (getFeatureFlag('debugServerRequests')) {
       window.log.info(
-        `[proBackend/refreshProProofFromProBackend] triggered refresh at ${new Date().toISOString()}`
+        `[proBackend/refreshGenerateProProofFromProBackend] triggered refresh at ${new Date().toISOString()}`
       );
     }
 
@@ -175,33 +346,33 @@ const refreshProProofFromProBackend = createAsyncThunk(
     const rotatingPrivKeyHex = await getProRotatingPrivateKeyHex();
 
     payloadCreator.dispatch(
-      fetchProProofFromProBackend({ masterPrivKeyHex, rotatingPrivKeyHex }) as any
+      fetchGenerateProProofFromProBackend({ masterPrivKeyHex, rotatingPrivKeyHex }) as any
     );
   }
 );
 
-const refreshProStatusFromProBackend = createAsyncThunk(
-  'proBackendData/refreshProStatus',
-  async (_opts, payloadCreator) => {
+const refreshGetProDetailsFromProBackend = createAsyncThunk(
+  'proBackendData/refreshGetProDetails',
+  async (opts: WithCallerContext = {}, payloadCreator) => {
     if (getFeatureFlag('debugServerRequests')) {
       window.log.info(
-        `[proBackend/refreshProStatusFromProBackend] starting ${new Date().toISOString()}`
+        `[proBackend/refreshGetProDetailsFromProBackend] starting ${new Date().toISOString()}`
       );
     }
 
     const state = payloadCreator.getState() as StateType;
 
-    if (state.proBackendData.proStatus.isFetching) {
+    if (state.proBackendData.details.isFetching) {
       return;
     }
 
     if (getFeatureFlag('debugServerRequests')) {
       window.log.info(
-        `[proBackend/refreshProStatusFromProBackend] triggered refresh at ${new Date().toISOString()}`
+        `[proBackend/refreshGetProDetailsFromProBackend] triggered refresh at ${new Date().toISOString()}`
       );
     }
     const masterPrivKeyHex = await UserUtils.getProMasterKeyHex();
-    payloadCreator.dispatch(fetchProStatusFromProBackend({ masterPrivKeyHex }) as any);
+    payloadCreator.dispatch(fetchGetProDetailsFromProBackend({ ...opts, masterPrivKeyHex }) as any);
   }
 );
 
@@ -209,6 +380,10 @@ export const proBackendDataSlice = createSlice({
   name: 'proBackendData',
   initialState: initialProBackendDataState,
   reducers: {
+    setIsEnabled(state, action: ReducerBooleanStateAction) {
+      state[action.payload.key].isEnabled = action.payload.result;
+      return state;
+    },
     setIsFetching(state, action: ReducerBooleanStateAction) {
       state[action.payload.key].isFetching = action.payload.result;
       return state;
@@ -223,40 +398,40 @@ export const proBackendDataSlice = createSlice({
     },
   },
   extraReducers: builder => {
-    builder.addCase(fetchProProofFromProBackend.fulfilled, (state, action) => {
+    builder.addCase(fetchGenerateProProofFromProBackend.fulfilled, (state, action) => {
       if (getFeatureFlag('debugServerRequests')) {
         window.log.info(
-          `[proBackend / fetchProProofFromProBackend] fulfilled ${new Date().toISOString()} `,
+          `[proBackend / fetchGenerateProProofFromProBackend] fulfilled ${new Date().toISOString()} `,
           JSON.stringify(action.payload)
         );
       }
       state.proof = action.payload;
     });
-    builder.addCase(fetchProProofFromProBackend.rejected, (_state, action) => {
+    builder.addCase(fetchGenerateProProofFromProBackend.rejected, (_state, action) => {
       window.log.error(
-        `[proBackend / fetchProProofFromProBackend] rejected ${action.error.message || action.error} `
+        `[proBackend / fetchGenerateProProofFromProBackend] rejected ${action.error.message || action.error} `
       );
     });
 
-    builder.addCase(fetchProStatusFromProBackend.fulfilled, (state, action) => {
+    builder.addCase(fetchGetProDetailsFromProBackend.fulfilled, (state, action) => {
       if (getFeatureFlag('debugServerRequests')) {
         window.log.info(
-          `[proBackend / fetchProStatusFromProBackend] fulfilled ${new Date().toISOString()} `,
+          `[proBackend / fetchGetProDetailsFromProBackend] fulfilled ${new Date().toISOString()} `,
           JSON.stringify(action.payload)
         );
       }
-      state.proStatus = action.payload;
+      state.details = action.payload;
     });
-    builder.addCase(refreshProProofFromProBackend.fulfilled, (_state, _action) => {
+    builder.addCase(refreshGenerateProProofFromProBackend.fulfilled, (_state, _action) => {
       if (getFeatureFlag('debugServerRequests')) {
         window.log.info(
-          `[proBackend / refreshProProofFromProBackend] fulfilled ${new Date().toISOString()} `
+          `[proBackend / refreshGenerateProProofFromProBackend] fulfilled ${new Date().toISOString()} `
         );
       }
     });
-    builder.addCase(refreshProProofFromProBackend.rejected, (_state, action) => {
+    builder.addCase(refreshGenerateProProofFromProBackend.rejected, (_state, action) => {
       window.log.error(
-        `[proBackend / refreshProProofFromProBackend] rejected ${JSON.stringify(action.error.message || action.error)} `
+        `[proBackend / refreshGenerateProProofFromProBackend] rejected ${JSON.stringify(action.error.message || action.error)} `
       );
     });
   },
@@ -265,8 +440,8 @@ export const proBackendDataSlice = createSlice({
 export default proBackendDataSlice.reducer;
 export const proBackendDataActions = {
   ...proBackendDataSlice.actions,
-  fetchProProofFromProBackend,
-  fetchProStatusFromProBackend,
-  refreshProProofFromProBackend,
-  refreshProStatusFromProBackend,
+  fetchGenerateProProofFromProBackend,
+  fetchGetProDetailsFromProBackend,
+  refreshGenerateProProofFromProBackend,
+  refreshGetProDetailsFromProBackend,
 };

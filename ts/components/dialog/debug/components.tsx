@@ -353,7 +353,7 @@ export const DebugActions = () => {
           const masterPrivKeyHex = await getProMasterKeyHex();
           console.warn('masterPrivKeyHex', masterPrivKeyHex.slice(0, 64));
           const rotatingPrivKeyHex = await UserUtils.getProRotatingPrivateKeyHex();
-          const response = await ProBackendAPI.getProProof({
+          const response = await ProBackendAPI.generateProProof({
             masterPrivKeyHex,
             rotatingPrivKeyHex,
           });
