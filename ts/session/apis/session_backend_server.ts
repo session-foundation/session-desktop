@@ -209,7 +209,6 @@ export default class SessionBackendServerApi {
       return result.data;
     }
 
-    // TODO: i think if data is null error will be discarded, test this
     if (result.error) {
       this.logZodError(result.error, path);
     } else {

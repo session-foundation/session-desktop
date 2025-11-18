@@ -119,7 +119,7 @@ async function createProBackendFetchAsyncThunk<D>({
 
     if (response.status_code !== 200) {
       if (!error) {
-        error = `Recieved ${response.status_code} status code with no error message`;
+        error = `Received ${response.status_code} status code with no error message`;
       }
       result = {
         data: result.data,

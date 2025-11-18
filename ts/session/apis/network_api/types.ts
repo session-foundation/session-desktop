@@ -2,7 +2,7 @@
 import { z } from 'zod';
 import { SessionBackendBaseResponseSchema } from '../session_backend_server';
 
-// NOTE: this is only needed  here for schema validation, but we should move this elsewhere if we use it for other things
+// NOTE: this is only needed here for schema validation, but we should move this elsewhere if we use it for other things
 const ethereumAddressRegex = /^0x[a-fA-F0-9]{40}$/;
 export type EthereumAddress = `0x${string}`;
 const isEthereumAddress = (v: string): v is EthereumAddress => ethereumAddressRegex.test(v);
