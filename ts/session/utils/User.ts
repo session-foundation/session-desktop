@@ -182,20 +182,17 @@ export async function getProMasterKeyHex() {
 }
 
 /**
- * Return the pro rotating private key (hex) from the Item table, or generate and saves it before returning it.
+ * Return the pro rotating private key (hex) from user config, or generate it before returning it.
  */
 export async function getProRotatingPrivateKeyHex() {
-  const item = await Data.getItemById(SettingsKey.proRotatingPrivateKeyHex);
-  if (!item?.value && isString(item?.value) && item.value.length > 0) {
-    return item.value;
+  const proConfig = await UserConfigWrapperActions.getProConfig();
+  if (proConfig?.rotatingPrivKeyHex) {
+    return proConfig.rotatingPrivKeyHex;
   }
+
   const { rotatingPrivKeyHex } = await UserConfigWrapperActions.generateRotatingPrivKeyHex();
   if (!rotatingPrivKeyHex) {
     throw new Error('Failed to generate pro rotating private key');
   }
-  await Data.createOrUpdateItem({
-    id: SettingsKey.proRotatingPrivateKeyHex,
-    value: rotatingPrivKeyHex,
-  });
   return rotatingPrivKeyHex;
 }
