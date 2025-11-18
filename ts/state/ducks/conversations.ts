@@ -33,6 +33,7 @@ import { sectionActions } from './section';
 import { ed25519Str } from '../../session/utils/String';
 import { UserUtils } from '../../session/utils';
 import type { ProMessageFeature } from '../../models/proMessageFeature';
+import { handleProTriggeredCTAs } from '../../components/dialog/SessionProInfoModal';
 
 export type MessageModelPropsWithoutConvoProps = {
   propsForMessage: PropsForMessageWithoutConvoProps;
@@ -1140,6 +1141,10 @@ export async function openConversationWithMessages(args: {
     })
   );
   window.inboxStore?.dispatch(sectionActions.resetRightOverlayMode());
+
+  if (window.inboxStore) {
+    await handleProTriggeredCTAs(window.inboxStore.dispatch);
+  }
 }
 
 export async function openConversationToSpecificMessage(args: {

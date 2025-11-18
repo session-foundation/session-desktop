@@ -1,5 +1,5 @@
 import { isBoolean } from 'lodash';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { clipboard } from 'electron';
 import { useDispatch } from 'react-redux';
 import {
@@ -636,6 +636,8 @@ export const ProDebugSection = ({
 
   const resetPro = useCallback(async () => {
     await Storage.remove(SettingsKey.proDetails);
+    await Storage.remove(SettingsKey.proExpiringSoonCTA);
+    await Storage.remove(SettingsKey.proExpiredCTA);
     dispatch(proBackendDataActions.reset({ key: 'details' }));
     // TODO: delete pro proof
   }, [dispatch]);
@@ -652,6 +654,47 @@ export const ProDebugSection = ({
     forceUpdate();
     resetAllConversationUI();
   }, [forceUpdate]);
+
+  const proExpiringSoonCTASetting = Storage.get(SettingsKey.proExpiringSoonCTA);
+  const proExpiredCTASetting = Storage.get(SettingsKey.proExpiredCTA);
+
+  const { handleSetExpiringSoonCTA, setExpiringSoonCTAString } = useMemo(() => {
+    if (proExpiringSoonCTASetting === undefined) {
+      return {
+        handleSetExpiringSoonCTA: async () => Storage.put(SettingsKey.proExpiringSoonCTA, true),
+        setExpiringSoonCTAString: 'Set Expiring Soon CTA to show',
+      };
+    }
+    if (proExpiringSoonCTASetting) {
+      return {
+        handleSetExpiringSoonCTA: async () => Storage.put(SettingsKey.proExpiringSoonCTA, false),
+        setExpiringSoonCTAString: 'Set Expiring Soon CTA as already shown',
+      };
+    }
+    return {
+      handleSetExpiringSoonCTA: async () => Storage.remove(SettingsKey.proExpiringSoonCTA),
+      setExpiringSoonCTAString: 'Set Expiring Soon CTA as never shown',
+    };
+  }, [proExpiringSoonCTASetting]);
+
+  const { handleSetExpiredCTA, setExpiredCTAString } = useMemo(() => {
+    if (proExpiredCTASetting === undefined) {
+      return {
+        handleSetExpiredCTA: async () => Storage.put(SettingsKey.proExpiredCTA, true),
+        setExpiredCTAString: 'Set Expired CTA to show',
+      };
+    }
+    if (proExpiredCTASetting) {
+      return {
+        handleSetExpiredCTA: async () => Storage.put(SettingsKey.proExpiredCTA, false),
+        setExpiredCTAString: 'Set Expired CTA as already shown',
+      };
+    }
+    return {
+      handleSetExpiredCTA: async () => Storage.remove(SettingsKey.proExpiredCTA),
+      setExpiredCTAString: 'Set Expired CTA as never shown',
+    };
+  }, [proExpiredCTASetting]);
 
   return (
     <DebugMenuSection title="Session Pro">
@@ -802,6 +845,30 @@ export const ProDebugSection = ({
         <FlagToggle {...props} key={props.flag} forceUpdate={forceUpdate} />
       ))}
       <MessageProFeatures forceUpdate={forceUpdate} />
+      <i>
+        The CTAs will show when a conversation is next opened or the user settings modal is next
+        closed
+      </i>
+      {proAvailable ? (
+        <DebugButton
+          onClick={async () => {
+            await handleSetExpiringSoonCTA();
+            forceUpdate();
+          }}
+        >
+          {setExpiringSoonCTAString}
+        </DebugButton>
+      ) : null}
+      {proAvailable ? (
+        <DebugButton
+          onClick={async () => {
+            await handleSetExpiredCTA();
+            forceUpdate();
+          }}
+        >
+          {setExpiredCTAString}
+        </DebugButton>
+      ) : null}
     </DebugMenuSection>
   );
 };
