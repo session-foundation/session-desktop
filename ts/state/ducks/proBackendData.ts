@@ -261,6 +261,7 @@ const fetchGetProDetailsFromProBackend = createAsyncThunk(
           if (state.data.error_report === 1) {
             state.isError = true;
             state.error = 'Backend unable to process current state, please try again later.';
+            // NOTE: we want to continue processing the state, as even if there was an error we need to try to handle the pro proofs.
           }
           switch (state.data.status) {
             case ProStatus.Active:
