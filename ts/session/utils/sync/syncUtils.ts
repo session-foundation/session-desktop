@@ -3,7 +3,6 @@ import { SignalService } from '../../../protobuf';
 import { UserSyncJobDone } from '../../../shims/events';
 
 import { DisappearingMessageUpdate } from '../../disappearing_messages/types';
-import { DataMessage } from '../../messages/outgoing';
 import { ExpirationTimerUpdateMessage } from '../../messages/outgoing/controlMessage/ExpirationTimerUpdateMessage';
 import { MessageRequestResponse } from '../../messages/outgoing/controlMessage/MessageRequestResponse';
 import { UnsendMessage } from '../../messages/outgoing/controlMessage/UnsendMessage';
@@ -113,20 +112,15 @@ export type SyncMessageType =
 
 export const buildSyncMessage = (
   identifier: string,
-  data: DataMessage | SignalService.DataMessage,
+  dataMessage: SignalService.DataMessage,
   syncTarget: string,
   sentTimestamp: number,
   expireUpdate: DisappearingMessageUpdate,
   proMessage: SignalService.ProMessage | null | undefined
 ): VisibleMessage | ExpirationTimerUpdateMessage | null => {
-  if (
-    (data as any).constructor.name !== 'DataMessage' &&
-    !(data instanceof SignalService.DataMessage)
-  ) {
-    window?.log?.warn('buildSyncMessage with something else than a DataMessage');
+  if (!(dataMessage instanceof SignalService.DataMessage)) {
+    throw new Error('buildSyncMessage with something else than a DataMessage');
   }
-
-  const dataMessage = data instanceof DataMessage ? data.dataProto() : data;
 
   if (!sentTimestamp || !isNumber(sentTimestamp)) {
     throw new Error('Tried to build a sync message without a sentTimestamp');

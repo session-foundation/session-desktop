@@ -304,7 +304,7 @@ const handleUserGroupUpdate = createAsyncThunk(
     if (state.groups.infos[groupPk] && state.groups.members[groupPk]) {
       const infos = await MetaGroupWrapperActions.infoGet(groupPk);
       const members = await MetaGroupWrapperActions.memberGetAll(groupPk);
-      window.log.info(
+      window.log.debug(
         `handleUserGroupUpdate group ${ed25519Str(groupPk)} already present in redux slice`,
         infos,
         members
@@ -940,7 +940,6 @@ async function handleNameChangeFromUI({
       identifier: msg.id,
       createAtNetworkTimestamp,
       secretKey: group.secretKey,
-      userProfile: null,
       sodium: await getSodiumRenderer(),
       ...DisappearingMessages.getExpireDetailsForOutgoingMessage(convo, createAtNetworkTimestamp),
     });
@@ -1072,7 +1071,6 @@ async function handleAvatarChangeFromUI({
     identifier: msg.id,
     createAtNetworkTimestamp,
     secretKey: group.secretKey,
-    userProfile: null,
     sodium: await getSodiumRenderer(),
     ...DisappearingMessages.getExpireDetailsForOutgoingMessage(convo, createAtNetworkTimestamp),
   });
@@ -1172,7 +1170,6 @@ async function handleClearAvatarFromUI({ groupPk }: WithGroupPubkey) {
     identifier: msg.id,
     createAtNetworkTimestamp,
     secretKey: group.secretKey,
-    userProfile: null,
     sodium: await getSodiumRenderer(),
     ...DisappearingMessages.getExpireDetailsForOutgoingMessage(convo, createAtNetworkTimestamp),
   });

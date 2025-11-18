@@ -1,17 +1,21 @@
 import { GroupPubkeyType } from 'libsession_util_nodejs';
 import { SignalService } from '../../../../../../protobuf';
-import { GroupUpdateMessage, GroupUpdateMessageParams } from '../GroupUpdateMessage';
+import { GroupUpdateMessageParams, GroupUpdateMessageWithProfile } from '../GroupUpdateMessage';
+import type { WithOutgoingUserProfile } from '../../../Message';
+import type { OutgoingProMessageDetailsOrProto } from '../../../visibleMessage/VisibleMessage';
 
-interface Params extends GroupUpdateMessageParams {
-  groupPk: GroupPubkeyType;
-  groupIdentitySeed: Uint8Array;
-  groupName: string;
-}
+type Params = GroupUpdateMessageParams &
+  WithOutgoingUserProfile & {
+    groupPk: GroupPubkeyType;
+    groupIdentitySeed: Uint8Array;
+    groupName: string;
+    outgoingProMessageDetails: OutgoingProMessageDetailsOrProto;
+  };
 
 /**
  * GroupUpdatePromoteMessage is sent as a 1o1 message to the recipient, not through the group's swarm.
  */
-export class GroupUpdatePromoteMessage extends GroupUpdateMessage {
+export class GroupUpdatePromoteMessage extends GroupUpdateMessageWithProfile {
   public readonly groupIdentitySeed: Params['groupIdentitySeed'];
   public readonly groupName: Params['groupName'];
 
@@ -28,29 +32,14 @@ export class GroupUpdatePromoteMessage extends GroupUpdateMessage {
     }
   }
 
-  public dataProto(): SignalService.DataMessage {
+  public override dataProto(): SignalService.DataMessage {
     const promoteMessage = new SignalService.GroupUpdatePromoteMessage({
       groupIdentitySeed: this.groupIdentitySeed,
       name: this.groupName,
     });
 
-    const proto = super.makeDataProto();
+    const proto = super.makeDataProtoWithProfile();
     proto.groupUpdateMessage = { promoteMessage };
     return proto;
-  }
-
-  public isForGroupSwarm(): boolean {
-    return false;
-  }
-  public isFor1o1Swarm(): boolean {
-    return true;
-  }
-
-  public lokiProfileProto() {
-    return this.userProfile?.toProtobufDetails() ?? {};
-  }
-
-  public proMessageProto() {
-    return null;
   }
 }

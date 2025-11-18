@@ -930,6 +930,9 @@ export class ConversationModel extends Model<ConversationAttributes> {
     const messageRequestResponseParams: MessageRequestResponseParams = {
       createAtNetworkTimestamp: NetworkTime.now(),
       userProfile: await UserUtils.getOurProfile(),
+      outgoingProMessageDetails: await UserUtils.getOutgoingProMessageDetails({
+        utf16: undefined,
+      }),
     };
 
     const messageRequestResponse = new MessageRequestResponse(messageRequestResponseParams);
@@ -1288,7 +1291,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
             sodium: await getSodiumRenderer(),
             secretKey: group.secretKey,
             updatedExpirationSeconds: expireUpdate.expireTimer,
-            userProfile: null,
           });
 
           const extraStoreRequests = await StoreGroupRequestFactory.makeGroupMessageSubRequest(
@@ -2535,7 +2537,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
         quote,
         userProfile: await UserUtils.getOurProfile(),
         outgoingProMessageDetails: await UserUtils.getOutgoingProMessageDetails({
-          utf16: body ?? '',
+          utf16: body,
         }),
       };
 
@@ -2596,6 +2598,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
             expirationType: chatMessageParams.expirationType,
             expireTimer: chatMessageParams.expireTimer,
             userProfile: chatMessageParams.userProfile,
+            outgoingProMessageDetails: chatMessageParams.outgoingProMessageDetails,
           });
           // we need the return await so that errors are caught in the catch {}
           await MessageQueue.use().sendToPubKey(
@@ -2637,9 +2640,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (!PubKey.is03Pubkey(this.id)) {
       throw new Error('sendMessageToGroupV2 needs a 03 key');
     }
-    const visibleMessage = new VisibleMessage(chatMessageParams);
     const groupVisibleMessage = new ClosedGroupV2VisibleMessage({
-      chatMessage: visibleMessage,
+      chatMessageParams,
       destination: this.id,
     });
 

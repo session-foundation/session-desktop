@@ -1,17 +1,21 @@
 import { SignalService } from '../../../../../../protobuf';
+import type { WithOutgoingUserProfile } from '../../../Message';
 import { Preconditions } from '../../../preconditions';
-import { GroupUpdateMessage, GroupUpdateMessageParams } from '../GroupUpdateMessage';
+import type { WithProMessageDetailsOrProto } from '../../../visibleMessage/VisibleMessage';
+import { GroupUpdateMessageParams, GroupUpdateMessageWithProfile } from '../GroupUpdateMessage';
 
-interface Params extends GroupUpdateMessageParams {
-  groupName: string;
-  adminSignature: Uint8Array; // this is a signature of `"INVITE" || inviteeSessionId || timestamp`
-  memberAuthData: Uint8Array;
-}
+type Params = GroupUpdateMessageParams &
+  WithOutgoingUserProfile &
+  WithProMessageDetailsOrProto & {
+    groupName: string;
+    adminSignature: Uint8Array; // this is a signature of `"INVITE" || inviteeSessionId || timestamp`
+    memberAuthData: Uint8Array;
+  };
 
 /**
  * GroupUpdateInviteMessage is sent as a 1o1 message to the recipient, not through the group's swarm.
  */
-export class GroupUpdateInviteMessage extends GroupUpdateMessage {
+export class GroupUpdateInviteMessage extends GroupUpdateMessageWithProfile {
   public readonly groupName: Params['groupName'];
   public readonly adminSignature: Params['adminSignature'];
   public readonly memberAuthData: Params['memberAuthData'];
@@ -39,7 +43,7 @@ export class GroupUpdateInviteMessage extends GroupUpdateMessage {
     });
   }
 
-  public dataProto(): SignalService.DataMessage {
+  public override dataProto(): SignalService.DataMessage {
     const inviteMessage = new SignalService.GroupUpdateInviteMessage({
       groupSessionId: this.destination,
       name: this.groupName,
@@ -47,27 +51,8 @@ export class GroupUpdateInviteMessage extends GroupUpdateMessage {
       memberAuthData: this.memberAuthData,
     });
 
-    const ourProfile = this.userProfile?.toProtobufDetails() ?? {};
-
-    return new SignalService.DataMessage({
-      ...ourProfile,
-      groupUpdateMessage: { inviteMessage },
-    });
-  }
-
-  public isForGroupSwarm(): boolean {
-    return false;
-  }
-
-  public isFor1o1Swarm(): boolean {
-    return true;
-  }
-
-  public lokiProfileProto() {
-    return this.userProfile?.toProtobufDetails() ?? {};
-  }
-
-  public proMessageProto() {
-    return null;
+    const proto = super.makeDataProtoWithProfile();
+    proto.groupUpdateMessage = { inviteMessage };
+    return proto;
   }
 }

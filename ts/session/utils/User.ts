@@ -134,20 +134,24 @@ export async function getOurProfile() {
   });
 }
 
-export async function getOutgoingProMessageDetails({ utf16 }: { utf16: string }) {
+export async function getOutgoingProMessageDetails({
+  utf16,
+}: {
+  utf16: string | null | undefined;
+}) {
   const [proConfig, proFeaturesUserBitset] = await Promise.all([
     UserConfigWrapperActions.getProConfig(),
     UserConfigWrapperActions.getProFeaturesBitset(),
   ]);
   // Note: if we do not have a proof we don't want to send a proMessage.
   // Note: if we don't have a user pro feature enabled, we might still need to add one for the message itself, see below
-  if (!proConfig || !isEmpty(proConfig) || isEmpty(proConfig.proProof)) {
+  if (!proConfig || isEmpty(proConfig?.proProof)) {
     return null;
   }
 
   const proFeaturesForMsg = await ProWrapperActions.proFeaturesForMessage({
     proFeaturesBitset: proFeaturesUserBitset,
-    utf16,
+    utf16: utf16 ?? '',
   });
 
   if (proFeaturesForMsg.status !== 'SUCCESS') {

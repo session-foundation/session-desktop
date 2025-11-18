@@ -1,6 +1,6 @@
 import { isFinite } from 'lodash';
 import { SignalService } from '../../../../protobuf';
-import { ContentMessage } from '../ContentMessage';
+import { ContentMessageNoProfile } from '../ContentMessage';
 import { MessageParams } from '../Message';
 
 type UnsendMessageParams = MessageParams & {
@@ -8,7 +8,7 @@ type UnsendMessageParams = MessageParams & {
   referencedMessageTimestamp: number;
 };
 
-export class UnsendMessage extends ContentMessage {
+export class UnsendMessage extends ContentMessageNoProfile {
   private readonly author: string;
   private readonly referencedMessageTimestamp: UnsendMessageParams['referencedMessageTimestamp'];
 
@@ -28,23 +28,15 @@ export class UnsendMessage extends ContentMessage {
     this.referencedMessageTimestamp = params.referencedMessageTimestamp;
   }
 
-  public contentProto(): SignalService.Content {
+  public override contentProto(): SignalService.Content {
     // Note: unsend messages are not disappearing messages
-    return super.makeNonDisappearingContentProto({ unsendRequest: this.unsendProto() });
-  }
+    const content = super.makeNonDisappearingContentProto();
 
-  public unsendProto(): SignalService.UnsendRequest {
-    return new SignalService.UnsendRequest({
+    content.unsendRequest = new SignalService.UnsendRequest({
       timestamp: this.referencedMessageTimestamp,
       author: this.author,
     });
-  }
 
-  public proMessageProto() {
-    return null;
-  }
-
-  public lokiProfileProto() {
-    return {};
+    return content;
   }
 }

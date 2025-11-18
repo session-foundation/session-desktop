@@ -1,4 +1,4 @@
-import { ContentMessage } from '..';
+import { ContentMessageNoProfile } from '..';
 import { Constants } from '../../..';
 import { SignalService } from '../../../../protobuf';
 import { MessageParams } from '../Message';
@@ -7,7 +7,7 @@ type TypingMessageParams = MessageParams & {
   isTyping: boolean;
 };
 
-export class TypingMessage extends ContentMessage {
+export class TypingMessage extends ContentMessageNoProfile {
   public readonly isTyping: boolean;
 
   constructor(params: TypingMessageParams) {
@@ -22,28 +22,18 @@ export class TypingMessage extends ContentMessage {
     return Constants.TTL_DEFAULT.TYPING_MESSAGE;
   }
 
-  public contentProto(): SignalService.Content {
+  public override contentProto(): SignalService.Content {
     // Note: typing messages are not disappearing messages
-    return super.makeNonDisappearingContentProto({ typingMessage: this.typingProto() });
-  }
-
-  protected typingProto(): SignalService.TypingMessage {
-    const action = this.isTyping
-      ? SignalService.TypingMessage.Action.STARTED
-      : SignalService.TypingMessage.Action.STOPPED;
+    const content = super.makeNonDisappearingContentProto();
 
     const typingMessage = new SignalService.TypingMessage();
-    typingMessage.action = action;
+    typingMessage.action = this.isTyping
+      ? SignalService.TypingMessage.Action.STARTED
+      : SignalService.TypingMessage.Action.STOPPED;
     typingMessage.timestamp = this.createAtNetworkTimestamp;
 
-    return typingMessage;
-  }
+    content.typingMessage = typingMessage;
 
-  public proMessageProto() {
-    return null;
-  }
-
-  public lokiProfileProto() {
-    return {};
+    return content;
   }
 }

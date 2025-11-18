@@ -6,7 +6,7 @@ import { ConvoHub } from '../../../conversations';
 import { DisappearingMessages } from '../../../disappearing_messages';
 import { PubKey } from '../../../types';
 import { UserUtils } from '../../../utils';
-import { ExpirableMessage, ExpirableMessageParams } from '../ExpirableMessage';
+import { ExpirableMessageNoProfile, ExpirableMessageParams } from '../ExpirableMessage';
 import { NetworkTime } from '../../../../util/NetworkTime';
 import { MessageQueue } from '../../../sending';
 
@@ -14,7 +14,7 @@ type DataExtractionNotificationMessageParams = ExpirableMessageParams & {
   referencedAttachmentTimestamp: number;
 };
 
-export class DataExtractionNotificationMessage extends ExpirableMessage {
+export class DataExtractionNotificationMessage extends ExpirableMessageNoProfile {
   public readonly referencedAttachmentTimestamp: number;
 
   constructor(params: DataExtractionNotificationMessageParams) {
@@ -26,7 +26,7 @@ export class DataExtractionNotificationMessage extends ExpirableMessage {
     }
   }
 
-  public contentProto(): SignalService.Content {
+  public override contentProto(): SignalService.Content {
     const content = super.makeDisappearingContentProto();
     content.dataExtractionNotification = this.extractionProto();
     return content;
@@ -41,14 +41,6 @@ export class DataExtractionNotificationMessage extends ExpirableMessage {
       type: action,
       timestamp: this.referencedAttachmentTimestamp,
     });
-  }
-
-  public proMessageProto() {
-    return null;
-  }
-
-  public lokiProfileProto() {
-    return {};
   }
 }
 

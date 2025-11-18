@@ -5,8 +5,8 @@ import { LibSodiumWrappers } from '../../../../../crypto';
 import { stringToUint8Array } from '../../../../../utils/String';
 import {
   AdminSigDetails,
-  GroupUpdateMessage,
-  GroupUpdateMessageParams,
+  GroupUpdateMessageNoProfile,
+  type GroupUpdateMessageParams,
 } from '../GroupUpdateMessage';
 
 type NameChangeParams = GroupUpdateMessageParams &
@@ -29,7 +29,7 @@ type DisappearingMessageChangeParams = GroupUpdateMessageParams &
 /**
  * GroupUpdateInfoChangeMessage is sent as a message to group's swarm.
  */
-export class GroupUpdateInfoChangeMessage extends GroupUpdateMessage {
+export class GroupUpdateInfoChangeMessage extends GroupUpdateMessageNoProfile {
   public readonly typeOfChange: SignalService.GroupUpdateInfoChangeMessage.Type;
   public readonly updatedName: string = '';
   public readonly updatedExpirationSeconds: number = 0;
@@ -68,7 +68,7 @@ export class GroupUpdateInfoChangeMessage extends GroupUpdateMessage {
     }
   }
 
-  public dataProto(): SignalService.DataMessage {
+  public override dataProto(): SignalService.DataMessage {
     const infoChangeMessage = new SignalService.GroupUpdateInfoChangeMessage({
       type: this.typeOfChange,
       adminSignature: this.sodium.crypto_sign_detached(
@@ -90,23 +90,9 @@ export class GroupUpdateInfoChangeMessage extends GroupUpdateMessage {
         break;
     }
 
-    const proto = super.makeDataProto();
+    const proto = super.makeDataProtoNoProfile();
     proto.groupUpdateMessage = { infoChangeMessage };
+
     return proto;
-  }
-
-  public isForGroupSwarm(): boolean {
-    return true;
-  }
-  public isFor1o1Swarm(): boolean {
-    return false;
-  }
-
-  public proMessageProto() {
-    return null;
-  }
-
-  public lokiProfileProto() {
-    return {};
   }
 }

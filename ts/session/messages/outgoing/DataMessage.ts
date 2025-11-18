@@ -1,11 +1,10 @@
 import { SignalService } from '../../../protobuf';
-import { ExpirableMessage } from './ExpirableMessage';
+import { ExpirableMessageNoProfile, ExpirableMessageWithProfile } from './ExpirableMessage';
 
-export abstract class DataMessage extends ExpirableMessage {
-  public contentProto(): SignalService.Content {
+export abstract class DataMessageNoProfile extends ExpirableMessageNoProfile {
+  public override contentProto(): SignalService.Content {
     const content = super.makeDisappearingContentProto();
     content.dataMessage = this.dataProto();
-    content.proMessage = this.proMessageProto();
 
     // if (proMessageDetails?.proFeaturesBitset && !isEmpty(proMessageDetails.proConfig)) {
     //   // Note: we only want to set the proof if any features are used
@@ -29,13 +28,32 @@ export abstract class DataMessage extends ExpirableMessage {
 
   public abstract dataProto(): SignalService.DataMessage;
 
-  protected makeDataProto(): SignalService.DataMessage {
+  protected makeDataProtoNoProfile(): SignalService.DataMessage {
+    const dataMessage = new SignalService.DataMessage({});
+
+    return dataMessage;
+  }
+}
+
+export abstract class DataMessageWithProfile extends ExpirableMessageWithProfile {
+  public override contentProto(): SignalService.Content {
+    const content = super.makeDisappearingContentProto();
+    content.dataMessage = this.dataProto();
+
+    return content;
+  }
+
+  public abstract dataProto(): SignalService.DataMessage;
+
+  protected makeDataProtoWithProfile(): SignalService.DataMessage {
     const dataMessage = new SignalService.DataMessage({});
     const { profile, profileKey } = this.lokiProfileProto();
 
     if (profile && profileKey) {
       dataMessage.profile = profile;
       dataMessage.profileKey = profileKey;
+    } else if (profile?.displayName) {
+      dataMessage.profile = { displayName: profile.displayName };
     }
 
     return dataMessage;

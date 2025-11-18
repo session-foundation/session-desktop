@@ -1,4 +1,4 @@
-import { ContentMessage } from '../..';
+import { ContentMessageNoProfile } from '../..';
 import { SignalService } from '../../../../../protobuf';
 import { MessageParams } from '../../Message';
 
@@ -6,7 +6,7 @@ type ReadReceiptMessageParams = MessageParams & {
   timestamps: Array<number>;
 };
 
-export class ReadReceiptMessage extends ContentMessage {
+export class ReadReceiptMessage extends ContentMessageNoProfile {
   public readonly timestamps: Array<number>;
 
   constructor({ createAtNetworkTimestamp, identifier, timestamps }: ReadReceiptMessageParams) {
@@ -14,23 +14,14 @@ export class ReadReceiptMessage extends ContentMessage {
     this.timestamps = timestamps;
   }
 
-  public contentProto(): SignalService.Content {
+  public override contentProto(): SignalService.Content {
     // Note: read receipts are not disappearing messages
-    return super.makeNonDisappearingContentProto({ receiptMessage: this.receiptProto() });
-  }
+    const content = super.makeNonDisappearingContentProto();
 
-  protected receiptProto(): SignalService.ReceiptMessage {
-    return new SignalService.ReceiptMessage({
+    content.receiptMessage = new SignalService.ReceiptMessage({
       type: SignalService.ReceiptMessage.Type.READ,
       timestamp: this.timestamps,
     });
-  }
-
-  public proMessageProto() {
-    return null;
-  }
-
-  public lokiProfileProto() {
-    return {};
+    return content;
   }
 }

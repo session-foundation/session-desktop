@@ -1,12 +1,12 @@
 import { OutgoingRawMessage } from '../types/RawMessage';
 
 import { SnodeNamespaces } from '../apis/snode_api/namespaces';
-import { ContentMessage } from '../messages/outgoing';
+import { ContentMessageNoProfile } from '../messages/outgoing';
 import { PubKey } from '../types';
 
 export async function toRawMessage(
   destinationPubKey: PubKey,
-  message: ContentMessage,
+  message: ContentMessageNoProfile,
   namespace: SnodeNamespaces
 ): Promise<OutgoingRawMessage> {
   const ttl = message.ttl();

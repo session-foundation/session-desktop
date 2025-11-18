@@ -46,7 +46,7 @@ import { SnodeSignature, SnodeSignatureResult } from '../apis/snode_api/signatur
 import { SnodePool } from '../apis/snode_api/snodePool';
 import { DURATION, TTL_DEFAULT } from '../constants';
 import { ConvoHub } from '../conversations';
-import { ContentMessage } from '../messages/outgoing';
+import { type ContentMessageNoProfile } from '../messages/outgoing';
 import { UnsendMessage } from '../messages/outgoing/controlMessage/UnsendMessage';
 import { OpenGroupVisibleMessage } from '../messages/outgoing/visibleMessage/OpenGroupVisibleMessage';
 import { PubKey } from '../types';
@@ -69,7 +69,7 @@ function getMinRetryTimeout() {
   return 1000;
 }
 
-function isContentSyncMessage(message: ContentMessage) {
+function isContentSyncMessage(message: ContentMessageNoProfile) {
   if (message instanceof UnsendMessage || (message as any).syncTarget?.length > 0) {
     return true;
   }
