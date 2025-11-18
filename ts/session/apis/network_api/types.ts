@@ -1,9 +1,11 @@
-// #region /info
-
 // NOTE: Dont import the whole package because we would need to setup the providers which we dont need
-import { isAddress } from 'viem/utils';
 import { z } from 'zod';
 import { SessionBackendBaseResponseSchema } from '../session_backend_server';
+
+// NOTE: this is only needed  here for schema validation, but we should move this elsewhere if we use it for other things
+const ethereumAddressRegex = /^0x[a-fA-F0-9]{40}$/;
+export type EthereumAddress = `0x${string}`;
+const isEthereumAddress = (v: string): v is EthereumAddress => ethereumAddressRegex.test(v);
 
 /**
  * Token price info object
@@ -28,7 +30,7 @@ const PriceSchema = z.object({
 const TokenSchema = z.object({
   staking_requirement: z.number(),
   staking_reward_pool: z.number(),
-  contract_address: z.string().refine(val => isAddress(val)),
+  contract_address: z.string().refine(isEthereumAddress),
 });
 
 /** Network info object
@@ -54,10 +56,6 @@ export const InfoSchema = SessionBackendBaseResponseSchema.extend({
  */
 export type InfoResponse = z.infer<typeof InfoSchema>;
 
-// #endregion /info
-
-// #region /validate/headers
-
 export const ValidateHeaderSchema = SessionBackendBaseResponseSchema.extend({
   success: z.boolean(),
   blinded_id: z.string(),
@@ -69,4 +67,3 @@ export const ValidateHeaderSchema = SessionBackendBaseResponseSchema.extend({
  * @property blinded_id - VBID that was used in the request headers
  */
 export type ValidateHeaderResponse = z.infer<typeof ValidateHeaderSchema>;
-// #endregion /validate/headers
