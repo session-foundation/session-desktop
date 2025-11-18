@@ -1,3 +1,4 @@
+import { to_base64 } from 'libsodium-wrappers-sumo';
 import { expect } from 'chai';
 import { describe } from 'mocha';
 import {
@@ -5,7 +6,6 @@ import {
   fillConvoAttributesWithDefaults,
 } from '../../../../models/conversationAttributes';
 import { CONVERSATION_PRIORITIES } from '../../../../models/types';
-import { to_base64 } from 'libsodium-wrappers-sumo';
 
 describe('fillConvoAttributesWithDefaults', () => {
   describe('members', () => {

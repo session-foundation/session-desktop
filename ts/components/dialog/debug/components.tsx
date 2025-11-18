@@ -1,3 +1,4 @@
+import { base64_variants, from_hex, to_base64 } from 'libsodium-wrappers-sumo';
 import useAsync from 'react-use/lib/useAsync';
 import { ipcRenderer, shell } from 'electron';
 import { useDispatch } from 'react-redux';
@@ -48,7 +49,7 @@ import { SessionButtonShiny } from '../../basic/SessionButtonShiny';
 import ProBackendAPI from '../../../session/apis/pro_backend_api/ProBackendAPI';
 import { getProMasterKeyHex } from '../../../session/utils/User';
 import { FlagToggle } from './FeatureFlags';
-import { base64_variants, from_hex, to_base64 } from 'libsodium-wrappers-sumo';
+import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 type DebugButtonProps = SessionButtonProps & { shiny?: boolean };
 
@@ -352,13 +353,14 @@ export const DebugActions = () => {
       <DebugButton
         onClick={async () => {
           const masterPrivKeyHex = await getProMasterKeyHex();
-          console.warn('masterPrivKeyHex', masterPrivKeyHex.slice(0, 64));
           const rotatingPrivKeyHex = await UserUtils.getProRotatingPrivateKeyHex();
           const response = await ProBackendAPI.generateProProof({
             masterPrivKeyHex,
             rotatingPrivKeyHex,
           });
-          console.warn('getProProof response', response);
+          if (getFeatureFlag('debugServerRequests')) {
+            window?.log?.debug('getProProof response: ', response);
+          }
           if (response?.status_code === 200) {
             const proProof: ProProof = {
               expiryMs: response.result.expiry_unix_ts_ms,
@@ -379,17 +381,20 @@ export const DebugActions = () => {
       <DebugButton
         onClick={async () => {
           const masterPrivKeyHex = await getProMasterKeyHex();
-          console.warn('masterPrivKeyHex', masterPrivKeyHex.slice(0, 64));
-
-          const response = await ProBackendAPI.getProStatus({ masterPrivKeyHex });
-          console.warn('Get Pro Status', response);
+          const response = await ProBackendAPI.getProDetails({ masterPrivKeyHex });
+          if (getFeatureFlag('debugServerRequests')) {
+            window?.log?.debug('Pro Details: ', response);
+          }
         }}
       >
-        Get Pro Status
+        Get Pro Details
       </DebugButton>
       <DebugButton
         onClick={async () => {
-          await ProBackendAPI.getRevocationList({ ticket: 0 });
+          const response = await ProBackendAPI.getRevocationList({ ticket: 0 });
+          if (getFeatureFlag('debugServerRequests')) {
+            window?.log?.debug('Pro Revocation List: ', response);
+          }
         }}
       >
         Get Pro Revocation List (from ticket 0)
@@ -607,7 +612,13 @@ export const AboutInfo = () => {
 export const OtherInfo = () => {
   const otherInfo = useAsync(async () => {
     const { id, vbid } = await window.getUserKeys();
-    return [`${tr('accountIdYours')}: ${id}`, `VBID: ${vbid}`];
+    const proMasterKey = (await getProMasterKeyHex())?.slice(0, 64);
+    const result = [
+      `${tr('accountIdYours')}: ${id}`,
+      `VBID: ${vbid}`,
+      `Pro Master Key: ${proMasterKey}`,
+    ];
+    return result;
   }, []);
 
   return (

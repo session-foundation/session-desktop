@@ -1,5 +1,5 @@
 import type { ProMessageFeature } from '../../../models/proMessageFeature';
-import {
+import type {
   ProAccessVariant,
   ProPaymentProvider,
   ProStatus,

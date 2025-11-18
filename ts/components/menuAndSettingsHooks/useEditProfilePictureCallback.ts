@@ -1,7 +1,7 @@
 import { useDispatch } from 'react-redux';
 import { useIsGroupV2, useIsMe, useIsPublic, useWeAreAdmin } from '../../hooks/useParamSelector';
 import { updateEditProfilePictureModal } from '../../state/ducks/modalDialog';
-import { hasClosedGroupV2QAButtons } from '../../shared/env_vars';
+import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 
 /**
  * We can edit
@@ -16,7 +16,7 @@ function useEditProfilePicture({ conversationId }: { conversationId: string }) {
 
   const weAreAdmin = useWeAreAdmin(conversationId);
 
-  const hasQAButtonsOn = hasClosedGroupV2QAButtons();
+  const hasQAButtonsOn = getFeatureFlag('useClosedGroupV2QAButtons');
 
   return isMe || ((isPublic || (isGroup && hasQAButtonsOn)) && weAreAdmin);
 }

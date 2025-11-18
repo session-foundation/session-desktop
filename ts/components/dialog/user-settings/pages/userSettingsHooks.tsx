@@ -6,6 +6,7 @@ import {
   type UserSettingsPage,
 } from '../../../../state/ducks/modalDialog';
 import { assertUnreachable } from '../../../../types/sqlSharedTypes';
+import { handleProTriggeredCTAs } from '../../SessionProInfoModal';
 
 export function useUserSettingsTitle(page: UserSettingsModalState | undefined) {
   if (!page) {
@@ -79,6 +80,7 @@ export function useUserSettingsCloseAction(props: UserSettingsModalState) {
     case 'proNonOriginating':
       return () => {
         dispatch(userSettingsModal(null));
+        void handleProTriggeredCTAs(dispatch);
         props.afterCloseAction?.();
       };
 

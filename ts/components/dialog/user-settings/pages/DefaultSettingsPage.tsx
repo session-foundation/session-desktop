@@ -11,6 +11,7 @@ import {
   updateConversationDetailsModal,
   userSettingsModal,
   updateDeleteAccountModal,
+  UserSettingsModalState,
 } from '../../../../state/ducks/modalDialog';
 import { networkDataActions } from '../../../../state/ducks/networkData';
 import { sectionActions } from '../../../../state/ducks/section';
@@ -42,6 +43,8 @@ import {
 } from '../../../../hooks/useHasPro';
 import { NetworkTime } from '../../../../util/NetworkTime';
 import { DURATION_SECONDS } from '../../../../session/constants';
+import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { useUserSettingsCloseAction } from './userSettingsHooks';
 
 const handleKeyQRMode = (mode: ProfileDialogModes, setMode: (mode: ProfileDialogModes) => void) => {
   switch (mode) {
@@ -344,8 +347,9 @@ const SessionInfo = () => {
   );
 };
 
-export const DefaultSettingPage = () => {
+export const DefaultSettingPage = (modalState: UserSettingsModalState) => {
   const dispatch = useDispatch();
+  const closeAction = useUserSettingsCloseAction(modalState);
   const { refetch, t } = useProAccessDetails();
 
   const profileName = useOurConversationUsername() || '';
@@ -369,11 +373,10 @@ export const DefaultSettingPage = () => {
     ToastUtils.pushCopiedToClipBoard();
   }
 
-  function closeDialog() {
-    dispatch(userSettingsModal(null));
-  }
-
   useMount(() => {
+    if (!getFeatureFlag('proAvailable')) {
+      return;
+    }
     if (NetworkTime.nowSeconds() > t + 1 * DURATION_SECONDS.MINUTES) {
       void refetch();
     }
@@ -388,7 +391,7 @@ export const DefaultSettingPage = () => {
           extraRightButton={<ModalPencilIcon onClick={showUpdateProfileInformation} />}
         />
       }
-      onClose={closeDialog}
+      onClose={closeAction || undefined}
     >
       <Flex
         $container={true}
