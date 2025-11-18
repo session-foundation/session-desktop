@@ -54,7 +54,7 @@ describe('libsession_user_profile', () => {
   });
 
   describe('proConfig', () => {
-    it('can set & get pro config', async () => {
+    it('can set, get & remove pro config', async () => {
       const userKeys = await TestUtils.generateUserKeyPairs();
       const ed25519Seed = userKeys.ed25519KeyPair.privateKey.slice(0, 32);
 
@@ -79,19 +79,36 @@ describe('libsession_user_profile', () => {
         throw new Error('proConfigFromWrapper is null');
       }
       expect(proConfigFromWrapper).to.be.deep.eq(proConfig);
+
+      wrapper.removeProConfig();
+
+      expect(wrapper.getProConfig()).to.be.deep.eq(null);
     });
   });
 
-  describe('proFeaturesBitset', () => {
-    it('can set & get pro proFeaturesBitset', async () => {
+  describe('setProBadge', () => {
+    it('can set & get setProBadge', async () => {
       const userKeys = await TestUtils.generateUserKeyPairs();
 
       const wrapper = new UserConfigWrapperNode(userKeys.ed25519KeyPair.privKeyBytes, null);
-      expect(wrapper.getProFeaturesBitset()).to.be.deep.eq(0);
+      expect(wrapper.getProFeaturesBitset()).to.be.deep.eq(0n);
 
-      wrapper.setProFeaturesBitset({ proFeaturesBitset: 4n });
+      wrapper.setProBadge(true);
 
-      expect(wrapper.getProFeaturesBitset()).to.be.deep.eq(4);
+      expect(wrapper.getProFeaturesBitset()).to.be.deep.eq(2n);
+    });
+  });
+
+  describe('setAnimatedAvatar', () => {
+    it('can set & get setAnimatedAvatar', async () => {
+      const userKeys = await TestUtils.generateUserKeyPairs();
+
+      const wrapper = new UserConfigWrapperNode(userKeys.ed25519KeyPair.privKeyBytes, null);
+      expect(wrapper.getProFeaturesBitset()).to.be.deep.eq(0n);
+
+      wrapper.setAnimatedAvatar(true);
+
+      expect(wrapper.getProFeaturesBitset()).to.be.deep.eq(4n);
     });
   });
 });

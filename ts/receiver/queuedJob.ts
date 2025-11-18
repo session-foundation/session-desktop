@@ -491,11 +491,6 @@ async function processProDetails({
   messageModel: MessageModel;
   decodedEnvelope: SwarmDecodedEnvelope;
 }) {
-  console.warn('processProDetails', decodedEnvelope);
-  console.warn(
-    'isProProofValidAtMs',
-    decodedEnvelope.isProProofValidAtMs(decodedEnvelope.sentAtMs)
-  );
   // if the pro proof was valid when the message was sent, save the bitset of pro features used in the message
   if (
     decodedEnvelope.validPro?.proFeaturesBitset &&

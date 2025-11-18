@@ -1180,7 +1180,6 @@ async function handleDecryptedMessagesForSwarm(
         // we failed to decrypt that message, mark it as seen and move on
         continue;
       }
-      console.warn('foundDecrypted.decodedEnvelope', foundDecrypted.decodedEnvelope);
 
       const decodedEnvelope = new SwarmDecodedEnvelope({
         id: v4(),

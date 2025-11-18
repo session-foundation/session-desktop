@@ -13,10 +13,10 @@ export function getEnvelopeId(envelope: BaseDecodedEnvelope) {
 export function shouldProcessContentMessage({
   sentAtMs,
   isCommunity,
-  sigTimestampMs,
+  sigTimestampMs = 0,
 }: {
   sentAtMs: number;
-  sigTimestampMs: number;
+  sigTimestampMs: number | undefined;
   isCommunity: boolean;
 }) {
   // FIXME: drop this case once the change has been out in the wild long enough

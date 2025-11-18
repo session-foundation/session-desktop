@@ -35,6 +35,7 @@ import {
   defaultProBooleanFeatureFlags,
   defaultProDataFeatureFlags,
 } from '../../../state/ducks/types/defaultFeatureFlags';
+import { UserConfigWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 
 type FeatureFlagToggleType = {
   forceUpdate: () => void;
@@ -366,6 +367,15 @@ function rotateMsgProFeat(currentValue: Array<ProMessageFeature>, forceUpdate: (
   const nextIndex = (index + 1) % proFeatureCycle.length;
 
   window.sessionDataFeatureFlags.mockMessageProFeatures = proFeatureCycle[nextIndex];
+
+  void UserConfigWrapperActions.setProBadge(
+    window.sessionDataFeatureFlags.mockMessageProFeatures.includes(ProMessageFeature.PRO_BADGE)
+  );
+  void UserConfigWrapperActions.setAnimatedAvatar(
+    window.sessionDataFeatureFlags.mockMessageProFeatures.includes(
+      ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE
+    )
+  );
 
   forceUpdate();
 }

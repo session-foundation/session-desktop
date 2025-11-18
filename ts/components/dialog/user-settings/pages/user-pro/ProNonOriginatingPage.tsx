@@ -537,8 +537,8 @@ function ProPageButtonRefund() {
       onClick={() => {
         showLinkVisitWarningDialog(
           data.isPlatformRefundAvailable
-            ? data.providerConstants.refund_url
-            : data.providerConstants.refund_after_platform_deadline_url,
+            ? data.providerConstants.refund_platform_url
+            : data.providerConstants.refund_support_url,
           dispatch
         );
       }}

@@ -78,7 +78,6 @@ export abstract class BaseDecodedEnvelope {
 
     // we only want to set this if the pro proof has been confirmed valid
     // Note: this does not validate the expiry of the proof, it only validates that the signature is valid. Use `isProProofValid` for that
-    console.warn('args.decodedPro', args.decodedPro);
     this.validPro = args.decodedPro?.proStatus === 'Valid' ? args.decodedPro : null;
   }
 
