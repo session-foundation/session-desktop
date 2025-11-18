@@ -207,7 +207,7 @@ export async function innerHandleSwarmContentMessage({
       })
     ) {
       window.log.info(
-        `innerHandleSwarmContentMessage: dropping invalid content message sentAtMs:${decodedEnvelope.sentAtMs}`
+        `innerHandleSwarmContentMessage: dropping invalid content message sentAtMs: ${decodedEnvelope.sentAtMs}`
       );
       return;
     }

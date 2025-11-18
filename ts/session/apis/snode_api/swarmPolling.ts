@@ -1186,7 +1186,7 @@ async function handleDecryptedMessagesForSwarm(
         source: groupPk ?? foundDecrypted.decodedEnvelope.sessionId,
         senderIdentity: groupPk ? foundDecrypted.decodedEnvelope.sessionId : '', // none for 1o1 messages
         contentDecrypted: foundDecrypted.decodedEnvelope.contentPlaintextUnpadded,
-        receivedAtMs: Date.now(),
+        receivedAtMs: NetworkTime.now(),
         messageHash: msg.hash,
         sentAtMs: foundDecrypted.decodedEnvelope.envelope.timestampMs,
         messageExpirationFromRetrieve: msg.expiration,

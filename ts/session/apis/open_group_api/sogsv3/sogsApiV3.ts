@@ -337,7 +337,7 @@ const handleMessagesResponseV4 = async (
           // important to keep the msgToHandle here as it has blindedIds replaced for us and people we know
           senderIdentity: msgToHandle.session_id,
           contentDecrypted: decrypted.contentPlaintextUnpadded,
-          receivedAtMs: Date.now(),
+          receivedAtMs: NetworkTime.now(),
           // see above, that `posted` field has been converted to ms above
           sentAtMs: msgToHandle.posted,
           serverId: decrypted.serverId,
@@ -467,7 +467,7 @@ async function handleInboxOutboxMessages(
         contentDecrypted: decrypted[0].contentPlaintextUnpadded,
         source: senderUnblinded, // this is us for an outbox message, and the sender for an inbox message
         senderIdentity: '',
-        receivedAtMs: Date.now(),
+        receivedAtMs: NetworkTime.now(),
         sentAtMs: postedAtInMs,
         id: v4(),
         decodedPro: decrypted[0].decodedPro,

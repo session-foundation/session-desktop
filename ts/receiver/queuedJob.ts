@@ -357,7 +357,7 @@ export async function handleMessageJob(
   window?.log?.info(
     `Starting handleMessageJob for message ${messageModel.idForLogging()}, ${
       messageModel.get('serverTimestamp') || messageModel.get('timestamp')
-    } in conversation ${conversation.idForLogging()}, messageHash:${decodedEnvelope.messageHash}`
+    } in conversation ${conversation.idForLogging()}, messageHash: ${decodedEnvelope.messageHash}`
   );
 
   const sendingDeviceConversation = await ConvoHub.use().getOrCreateAndWait(
