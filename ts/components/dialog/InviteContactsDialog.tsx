@@ -17,7 +17,6 @@ import { useSelectedIsGroupV2 } from '../../state/selectors/selectedConversation
 import { MemberListItem } from '../MemberListItem';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionToggle } from '../basic/SessionToggle';
-import { hasClosedGroupV2QAButtons } from '../../shared/env_vars';
 import { ConversationTypeEnum } from '../../models/types';
 import { Localizer } from '../basic/Localizer';
 import { tr } from '../../localization/localeTools';
@@ -32,6 +31,7 @@ import {
 import { searchActions } from '../../state/ducks/search';
 import { ToastUtils } from '../../session/utils';
 import { StyledContactListInModal } from '../list/StyledContactList';
+import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 
 type Props = {
   conversationId: string;
@@ -198,7 +198,7 @@ const InviteContactsDialogInner = (props: Props) => {
     >
       <SpacerLG />
 
-      {isGroupV2 && hasClosedGroupV2QAButtons() && (
+      {isGroupV2 && getFeatureFlag('useClosedGroupV2QAButtons') && (
         <>
           <span
             style={{

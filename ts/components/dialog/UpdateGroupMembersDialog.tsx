@@ -19,7 +19,6 @@ import {
 
 import { useSet } from '../../hooks/useSet';
 import { PubKey } from '../../session/types';
-import { hasClosedGroupV2QAButtons } from '../../shared/env_vars';
 import { groupInfoActions } from '../../state/ducks/metaGroups';
 import {
   useMemberGroupChangePending,
@@ -40,6 +39,7 @@ import {
   SessionWrapperModal,
   WrapperModalWidth,
 } from '../SessionWrapperModal';
+import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 
 type Props = {
   conversationId: string;
@@ -213,7 +213,9 @@ export const UpdateGroupMembersDialog = (props: Props) => {
         </ModalActionsContainer>
       }
     >
-      {hasClosedGroupV2QAButtons() && weAreAdmin && PubKey.is03Pubkey(conversationId) ? (
+      {getFeatureFlag('useClosedGroupV2QAButtons') &&
+      weAreAdmin &&
+      PubKey.is03Pubkey(conversationId) ? (
         <>
           <span
             style={{

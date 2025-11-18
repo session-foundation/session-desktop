@@ -18,7 +18,7 @@ import {
 import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
 import {
   useProBackendCurrentUserStatus,
-  useProBackendProDetailsData,
+  useProBackendProDetails,
   useSetProBackendIsError,
   useSetProBackendIsLoading,
 } from '../state/selectors/proBackendData';
@@ -226,7 +226,7 @@ export function useProAccessDetails(): RequestHook<ProAccessDetails> {
   const setProBackendIsLoading = useSetProBackendIsLoading();
   const setProBackendIsError = useSetProBackendIsError();
 
-  const details = useProBackendProDetailsData();
+  const details = useProBackendProDetails();
   const currentUserProStatus = useCurrentUserProStatus();
 
   const mockIsLoading = useFeatureFlag('mockProBackendLoading');

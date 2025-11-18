@@ -57,7 +57,7 @@ export default class ProBackendAPI {
     });
   }
 
-  private static async getProStatusBody(args: WithMasterPrivKeyHex) {
+  private static async getProDetailsBody(args: WithMasterPrivKeyHex) {
     return ProWrapperActions.proStatusRequestBody({
       ...ProBackendAPI.getProSigningArgs(args),
       // NOTE: The latest payment is the only one required for state derivation
@@ -69,11 +69,13 @@ export default class ProBackendAPI {
     return ProWrapperActions.proRevocationsRequestBody({ requestVersion: 0, ...args });
   }
 
-  static async getProStatus(args: WithMasterPrivKeyHex): Promise<GetProDetailsResponseType | null> {
+  static async getProDetails(
+    args: WithMasterPrivKeyHex
+  ): Promise<GetProDetailsResponseType | null> {
     return ProBackendAPI.getServer().makeRequestWithSchema({
       path: '/get_pro_details',
       method: 'POST',
-      bodyGetter: () => ProBackendAPI.getProStatusBody(args),
+      bodyGetter: () => ProBackendAPI.getProDetailsBody(args),
       withZodSchema: GetProDetailsResponseSchema,
     });
   }

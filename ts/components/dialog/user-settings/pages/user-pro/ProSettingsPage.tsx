@@ -48,8 +48,6 @@ import { SpacerMD } from '../../../../basic/Text';
 import LIBSESSION_CONSTANTS from '../../../../../session/utils/libsession/libsession_constants';
 import { useDataFeatureFlag } from '../../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { AnimatedSpinnerIcon } from '../../../../loading/spinner/AnimatedSpinnerIcon';
-import { AnimatedArrowSpinnerIcon } from '../../../../loading/spinner/AnimatedArrowSpinnerIcon';
-import { useSetProBackendIsLoading } from '../../../../../state/selectors/proBackendData';
 
 type ProSettingsModalState = {
   fromCTA?: boolean;
@@ -773,11 +771,10 @@ function ManageProAccess({ state }: SectionProps) {
   const dispatch = useDispatch();
   const isDarkTheme = useIsDarkTheme();
   const userHasExpiredPro = useCurrentUserHasExpiredPro();
-  const setProBackendIsLoading = useSetProBackendIsLoading();
 
   const { returnToThisModalAction, centerAlign } = state;
 
-  const { isLoading, isError, refetch } = useProAccessDetails();
+  const { isLoading, isError } = useProAccessDetails();
 
   const backendErrorButtons = useBackendErrorDialogButtons();
 
@@ -803,11 +800,11 @@ function ManageProAccess({ state }: SectionProps) {
     );
   }, [dispatch, isLoading, isError, backendErrorButtons, centerAlign, returnToThisModalAction]);
 
-  const handleClickRecover = useCallback(async () => {
+  /** const handleClickRecover = useCallback(async () => {
     // isLoading state needs to be reset to true as we are hard reloading and need to show that in the UI
     setProBackendIsLoading({ key: 'details', result: true });
     refetch({ callerContext: 'recover' });
-  }, [refetch, setProBackendIsLoading]);
+  }, [refetch, setProBackendIsLoading]); */
 
   return (
     <SectionFlexContainer>
@@ -845,6 +842,7 @@ function ManageProAccess({ state }: SectionProps) {
               : {})}
           />
         ) : null}
+        {/** NOTE: this is being removed but we'll keep the code for now in case we need it back again
         <PanelIconButton
           text={{ token: 'proAccessRecover' }}
           dataTestId="recover-pro-button"
@@ -857,7 +855,7 @@ function ManageProAccess({ state }: SectionProps) {
             )
           }
           rowReverse
-        />
+        /> */}
       </PanelButtonGroup>
     </SectionFlexContainer>
   );
@@ -869,10 +867,12 @@ function ManageProPreviousAccess(props: SectionProps) {
   return userHasExpiredPro ? <ManageProAccess {...props} /> : null;
 }
 
-function ManageProRecoverAccess(props: SectionProps) {
-  const neverHadPro = useCurrentNeverHadPro();
-
-  return neverHadPro ? <ManageProAccess {...props} /> : null;
+function ManageProRecoverAccess(_props: SectionProps) {
+  return null;
+  /** NOTE: keep this for now, if we want to re-add the never had pro revcover button we need this, otherwise we can delete on launch
+   * const neverHadPro = useCurrentNeverHadPro();
+   * return neverHadPro ? <ManageProAccess {...props} /> : null;
+   */
 }
 
 function ProHelp() {

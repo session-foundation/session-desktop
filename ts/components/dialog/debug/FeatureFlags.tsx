@@ -1,6 +1,7 @@
 import { isBoolean } from 'lodash';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { clipboard } from 'electron';
+import { useDispatch } from 'react-redux';
 import {
   getDataFeatureFlag,
   getFeatureFlag,
@@ -27,12 +28,27 @@ import {
   ProStatus,
 } from '../../../session/apis/pro_backend_api/types';
 import { DebugButton } from './components';
+import { proBackendDataActions } from '../../../state/ducks/proBackendData';
+import { Storage } from '../../../util/storage';
+import { SettingsKey } from '../../../data/settings-key';
+import {
+  defaultProBooleanFeatureFlags,
+  defaultProDataFeatureFlags,
+} from '../../../state/ducks/types/defaultFeatureFlags';
 
 type FeatureFlagToggleType = {
   forceUpdate: () => void;
   flag: SessionBooleanFeatureFlagKeys;
   parentFlag?: SessionBooleanFeatureFlagKeys;
 };
+
+function resetAllConversationUI() {
+  ConvoHub.use()
+    .getConversations()
+    .forEach(convo => {
+      convo.triggerUIRefresh();
+    });
+}
 
 const handleSetFeatureFlag = ({
   flag,
@@ -49,12 +65,7 @@ const handleSetFeatureFlag = ({
   }
 
   forceUpdate();
-
-  ConvoHub.use()
-    .getConversations()
-    .forEach(convo => {
-      convo.triggerUIRefresh();
-    });
+  resetAllConversationUI();
 };
 
 const handleFeatureFlagToggle = ({ flag, parentFlag, forceUpdate }: FeatureFlagToggleType) => {
@@ -134,12 +145,7 @@ const handleFeatureFlagWithDataChange = ({
 }) => {
   window.sessionDataFeatureFlags[flag] = value;
   forceUpdate();
-
-  ConvoHub.use()
-    .getConversations()
-    .forEach(convo => {
-      convo.triggerUIRefresh();
-    });
+  resetAllConversationUI();
 };
 
 type FlagDropdownInputProps = {
@@ -546,12 +552,7 @@ export function FeatureFlagDumper({ forceUpdate }: { forceUpdate: () => void }) 
       window.sessionDataFeatureFlags = json.sessionDataFeatureFlags;
 
       forceUpdate();
-
-      ConvoHub.use()
-        .getConversations()
-        .forEach(convo => {
-          convo.triggerUIRefresh();
-        });
+      resetAllConversationUI();
     } catch (e) {
       ToastUtils.pushToastError('flag-dumper-toast-set', e.message);
     }
@@ -629,13 +630,94 @@ export const ProDebugSection = ({
   forceUpdate,
   setPage,
 }: DebugMenuPageProps & { forceUpdate: () => void }) => {
+  const dispatch = useDispatch();
   const mockExpiry = useDataFeatureFlag('mockProAccessExpiry');
   const proAvailable = useFeatureFlag('proAvailable');
+
+  const resetPro = useCallback(async () => {
+    await Storage.remove(SettingsKey.proDetails);
+    await Storage.remove(SettingsKey.proExpiringSoonCTA);
+    await Storage.remove(SettingsKey.proExpiredCTA);
+    dispatch(proBackendDataActions.reset({ key: 'details' }));
+    // TODO: delete pro proof
+  }, [dispatch]);
+
+  const resetProMocking = useCallback(() => {
+    window.sessionDataFeatureFlags = {
+      ...window.sessionDataFeatureFlags,
+      ...defaultProDataFeatureFlags,
+    };
+    window.sessionBooleanFeatureFlags = {
+      ...window.sessionBooleanFeatureFlags,
+      ...defaultProBooleanFeatureFlags,
+    };
+    forceUpdate();
+    resetAllConversationUI();
+  }, [forceUpdate]);
+
+  const proExpiringSoonCTASetting = Storage.get(SettingsKey.proExpiringSoonCTA);
+  const proExpiredCTASetting = Storage.get(SettingsKey.proExpiredCTA);
+
+  const { handleSetExpiringSoonCTA, setExpiringSoonCTAString } = useMemo(() => {
+    if (proExpiringSoonCTASetting === undefined) {
+      return {
+        handleSetExpiringSoonCTA: async () => Storage.put(SettingsKey.proExpiringSoonCTA, true),
+        setExpiringSoonCTAString: 'Set Expiring Soon CTA to show',
+      };
+    }
+    if (proExpiringSoonCTASetting) {
+      return {
+        handleSetExpiringSoonCTA: async () => Storage.put(SettingsKey.proExpiringSoonCTA, false),
+        setExpiringSoonCTAString: 'Set Expiring Soon CTA as already shown',
+      };
+    }
+    return {
+      handleSetExpiringSoonCTA: async () => Storage.remove(SettingsKey.proExpiringSoonCTA),
+      setExpiringSoonCTAString: 'Set Expiring Soon CTA as never shown',
+    };
+  }, [proExpiringSoonCTASetting]);
+
+  const { handleSetExpiredCTA, setExpiredCTAString } = useMemo(() => {
+    if (proExpiredCTASetting === undefined) {
+      return {
+        handleSetExpiredCTA: async () => Storage.put(SettingsKey.proExpiredCTA, true),
+        setExpiredCTAString: 'Set Expired CTA to show',
+      };
+    }
+    if (proExpiredCTASetting) {
+      return {
+        handleSetExpiredCTA: async () => Storage.put(SettingsKey.proExpiredCTA, false),
+        setExpiredCTAString: 'Set Expired CTA as already shown',
+      };
+    }
+    return {
+      handleSetExpiredCTA: async () => Storage.remove(SettingsKey.proExpiredCTA),
+      setExpiredCTAString: 'Set Expired CTA as never shown',
+    };
+  }, [proExpiredCTASetting]);
+
   return (
     <DebugMenuSection title="Session Pro">
       <FlagToggle forceUpdate={forceUpdate} flag="proAvailable" label="Pro Beta Released" />
       {proAvailable ? (
+        <DebugButton buttonColor={SessionButtonColor.Danger} onClick={resetPro}>
+          Reset All Pro State
+        </DebugButton>
+      ) : null}
+      {proAvailable ? (
         <DebugButton onClick={() => setPage(DEBUG_MENU_PAGE.Pro)}>Pro Playground</DebugButton>
+      ) : null}
+      {proAvailable ? (
+        <DebugButton
+          onClick={() => {
+            if (!proAvailable) {
+              return;
+            }
+            dispatch(proBackendDataActions.refreshGetProDetailsFromProBackend({}) as any);
+          }}
+        >
+          Refresh Pro Details
+        </DebugButton>
       ) : null}
       <FlagToggle
         forceUpdate={forceUpdate}
@@ -649,6 +731,11 @@ export const ProDebugSection = ({
         visibleWithBooleanFlag="proAvailable"
         label="Pro Groups Released"
       />
+      {proAvailable ? (
+        <DebugButton buttonColor={SessionButtonColor.Danger} onClick={resetProMocking}>
+          Reset Pro Mocking
+        </DebugButton>
+      ) : null}
       <FlagToggle
         forceUpdate={forceUpdate}
         flag="mockOthersHavePro"
@@ -758,6 +845,30 @@ export const ProDebugSection = ({
         <FlagToggle {...props} key={props.flag} forceUpdate={forceUpdate} />
       ))}
       <MessageProFeatures forceUpdate={forceUpdate} />
+      <i>
+        The CTAs will show when a conversation is next opened or the user settings modal is next
+        closed
+      </i>
+      {proAvailable ? (
+        <DebugButton
+          onClick={async () => {
+            await handleSetExpiringSoonCTA();
+            forceUpdate();
+          }}
+        >
+          {setExpiringSoonCTAString}
+        </DebugButton>
+      ) : null}
+      {proAvailable ? (
+        <DebugButton
+          onClick={async () => {
+            await handleSetExpiredCTA();
+            forceUpdate();
+          }}
+        >
+          {setExpiredCTAString}
+        </DebugButton>
+      ) : null}
     </DebugMenuSection>
   );
 };

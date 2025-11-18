@@ -8,7 +8,6 @@ import { promoteUsersInGroup } from '../interactions/conversationInteractions';
 import { PubKey } from '../session/types';
 import { UserUtils } from '../session/utils';
 import { GroupInvite } from '../session/utils/job_runners/jobs/GroupInviteJob';
-import { hasClosedGroupV2QAButtons } from '../shared/env_vars';
 import {
   useMemberHasAcceptedInvite,
   useMemberIsNominatedAdmin,
@@ -32,6 +31,7 @@ import { assertUnreachable } from '../types/sqlSharedTypes';
 import { tr } from '../localization/localeTools';
 import { ContactName } from './conversation/ContactName/ContactName';
 import type { ContactNameSuffixInMemberList } from './conversation/ContactName/ContactNameContext';
+import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
 
 const AvatarContainer = styled.div`
   position: relative;
@@ -229,7 +229,7 @@ const ResendButton = ({ groupPk, pubkey }: { pubkey: PubkeyType; groupPk: GroupP
   const memberStatus = useMemberStatus(pubkey, groupPk);
 
   // as soon as the `admin` flag is set in the group for that member, we should be able to resend a promote as we cannot remove an admin.
-  const canResendPromotion = hasClosedGroupV2QAButtons() && nominatedAdmin;
+  const canResendPromotion = getFeatureFlag('useClosedGroupV2QAButtons') && nominatedAdmin;
 
   // we can always remove/and readd a non-admin member. So we consider that a member who accepted the invite cannot be resent an invite.
   const canResendInvite = !acceptedInvite;
@@ -281,7 +281,7 @@ const PromoteButton = ({ groupPk, pubkey }: { pubkey: PubkeyType; groupPk: Group
   // We want to show that button only to promote a normal member who accepted a normal invite but wasn't promoted yet.
   // ^ this is only the case for testing. The UI will be different once we release the promotion process
   if (
-    !hasClosedGroupV2QAButtons() ||
+    !getFeatureFlag('useClosedGroupV2QAButtons') ||
     !memberAcceptedInvite ||
     memberIsNominatedAdmin ||
     memberIsPendingRemoval
