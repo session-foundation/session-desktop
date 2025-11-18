@@ -1,5 +1,5 @@
 import AbortController from 'abort-controller';
-import { z, ZodError, ZodSchema } from 'zod';
+import { z, ZodError } from 'zod';
 import { BlindingActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { isOnionV4JSONSnodeResponse, OnionSending } from '../onions/onionSend';
 import { fromUInt8ArrayToBase64 } from '../utils/String';
@@ -30,7 +30,7 @@ export type SessionBackendServerApiOptions = Omit<
   abortControllerTimeoutMs?: number;
 };
 
-type WithZodSchemaValidation<S = ZodSchema> = {
+type WithZodSchemaValidation<S = typeof SessionBackendBaseResponseSchema> = {
   withZodSchema: S;
 };
 
@@ -51,12 +51,13 @@ type BlindSignedHeaders = {
 
 export const SessionBackendBaseResponseSchema = z.object({
   status_code: z.number(),
+  error: z.string().optional(),
   t: z.number(),
 });
 
-export type SessionBackendBaseResponseSchema = z.infer<typeof SessionBackendBaseResponseSchema>;
+export type SessionBackendBaseResponseType = z.infer<typeof SessionBackendBaseResponseSchema>;
 
-export type SessionBackendServerApiResponse = SessionBackendBaseResponseSchema &
+export type SessionBackendServerApiResponse = SessionBackendBaseResponseType &
   Record<string, unknown>;
 
 export default class SessionBackendServerApi {
@@ -76,9 +77,10 @@ export default class SessionBackendServerApi {
     };
   }
 
-  private static getGenericErrorResponse() {
+  private static getGenericErrorResponse(error?: string) {
     return {
       status_code: 500,
+      error,
       t: NetworkTime.nowSeconds(),
     };
   }
@@ -129,6 +131,11 @@ export default class SessionBackendServerApi {
     };
   }
 
+  private handleError(message: string, path: string) {
+    this.logError(message, path);
+    return SessionBackendServerApi.getGenericErrorResponse(message);
+  }
+
   private async _makeRequest({
     path,
     method,
@@ -146,8 +153,7 @@ export default class SessionBackendServerApi {
       : {};
 
     if (headers === null) {
-      this.logError('failed to blind sign request parameters', path);
-      return SessionBackendServerApi.getGenericErrorResponse();
+      return this.handleError('failed to blind sign request parameters', path);
     }
 
     const url = new URL(path, this.server.url);
@@ -172,16 +178,11 @@ export default class SessionBackendServerApi {
     );
 
     if (!result || !isOnionV4JSONSnodeResponse(result) || typeof result.body !== 'object') {
-      this.logError(`returned a non json response ${JSON.stringify(result)}`, path);
-      return SessionBackendServerApi.getGenericErrorResponse();
+      return this.handleError(`returned a non json response: ${JSON.stringify(result)}`, path);
     }
 
     if (!batchGlobalIsSuccess(result)) {
-      if (getFeatureFlag('debugServerRequests')) {
-        this.logError(`failed with status ${parseBatchGlobalStatusCode(result)}`, path);
-      }
-
-      return SessionBackendServerApi.getGenericErrorResponse();
+      return this.handleError(`failed with status ${parseBatchGlobalStatusCode(result)}`, path);
     }
 
     return {
@@ -194,7 +195,7 @@ export default class SessionBackendServerApi {
     };
   }
 
-  private parseSchema<R extends ZodSchema>({
+  private parseSchema<R extends typeof SessionBackendBaseResponseSchema>({
     path,
     response,
     schema,
@@ -202,7 +203,7 @@ export default class SessionBackendServerApi {
     path: string;
     response: SessionBackendServerApiResponse;
     schema: R;
-  }): Exclude<ReturnType<R['safeParse']>['data'], undefined> | null {
+  }): z.infer<R> | null {
     const result = schema.safeParse(response);
     if (result.success) {
       return result.data;
@@ -233,13 +234,11 @@ export default class SessionBackendServerApi {
     return response;
   }
 
-  public async makeRequestWithSchema<R extends ZodSchema>({
+  public async makeRequestWithSchema<R extends typeof SessionBackendBaseResponseSchema>({
     withZodSchema,
     ...requestParams
-  }: SessionBackendServerMakeRequestParams & WithZodSchemaValidation<R>): Promise<Exclude<
-    ReturnType<R['safeParse']>['data'],
-    undefined
-  > | null> {
+  }: SessionBackendServerMakeRequestParams &
+    WithZodSchemaValidation<R>): Promise<z.infer<R> | null> {
     const response = await this.makeRequest(requestParams);
     if (getFeatureFlag('debugServerRequests')) {
       this.logInfo(
@@ -247,6 +246,15 @@ export default class SessionBackendServerApi {
         requestParams.path
       );
     }
+
+    if (response.status_code !== 200) {
+      return this.parseSchema({
+        path: requestParams.path,
+        response,
+        schema: SessionBackendBaseResponseSchema,
+      });
+    }
+
     return this.parseSchema({ path: requestParams.path, response, schema: withZodSchema });
   }
 }

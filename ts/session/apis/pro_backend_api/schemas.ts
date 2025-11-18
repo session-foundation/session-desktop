@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { SessionBackendBaseResponseSchema } from '../session_backend_server';
 import { ProItemStatus, ProAccessVariant, ProPaymentProvider, ProStatus } from './types';
+import { SessionBackendBaseResponseSchema } from '../session_backend_server';
 
 export const ProProofResultSchema = z.object({
   version: z.number(),

@@ -16,6 +16,7 @@ import { Storage } from '../../util/storage';
 import { NetworkTime } from '../../util/NetworkTime';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { DURATION } from '../../session/constants';
+import { SessionBackendBaseResponseType } from '../../session/apis/session_backend_server';
 
 type RequestState<D = unknown> = {
   isFetching: boolean;
@@ -55,9 +56,7 @@ export const initialProBackendDataState: ProBackendDataState = {
   details: defaultRequestState,
 };
 
-type ApiResponse<T> = {
-  status_code: number;
-  t: number;
+type ApiResponse<T> = SessionBackendBaseResponseType & {
   result: T;
 };
 
@@ -83,7 +82,7 @@ async function createProBackendFetchAsyncThunk<D>({
 }: CreateProBackendFetchAsyncThunk<D>): Promise<RequestState<D>> {
   const debug = getFeatureFlag('debugServerRequests');
   if (debug) {
-    window?.log?.info(`[${key}] starting ${new Date().toISOString()}`);
+    window?.log?.debug(`[${key}] starting ${new Date().toISOString()}`);
   }
 
   const state = payloadCreator.getState() as StateType;
@@ -92,7 +91,9 @@ async function createProBackendFetchAsyncThunk<D>({
   try {
     if (initialState.isFetching) {
       if (debug) {
-        window?.log?.info(`[${key}] already fetching! returning no-op ${new Date().toISOString()}`);
+        window?.log?.debug(
+          `[${key}] already fetching! returning no-op ${new Date().toISOString()}`
+        );
       }
       // no operation
       return result;
@@ -114,27 +115,36 @@ async function createProBackendFetchAsyncThunk<D>({
       throw new Error('Data fetch failed');
     }
 
+    let error = response.error ?? null;
+
     if (response.status_code !== 200) {
+      if (!error) {
+        error = `Received ${response.status_code} status code with no error message`;
+      }
       result = {
         data: result.data,
-        error: 'TODO: get the error',
+        error,
         isError: true,
         isFetching: false,
         isLoading: false,
         t: response.t,
         isEnabled: true,
       };
-    } else {
-      result = {
-        data: response.result as D,
-        error: null,
-        isError: false,
-        isFetching: false,
-        isLoading: false,
-        t: response.t,
-        isEnabled: true,
-      };
     }
+
+    if (error && debug) {
+      window?.log?.error(error);
+    }
+
+    result = {
+      data: error ? result.data : response.result,
+      error,
+      isError: !!error,
+      isFetching: false,
+      isLoading: false,
+      t: response.t,
+      isEnabled: true,
+    };
   } catch (e) {
     window?.log?.error(e);
     result = {
