@@ -8,18 +8,7 @@ import {
 } from 'libsession_util_nodejs';
 import { z } from 'zod';
 
-import {
-  compact,
-  concat,
-  flatten,
-  isArray,
-  isEmpty,
-  last,
-  omit,
-  sampleSize,
-  toNumber,
-  uniqBy,
-} from 'lodash';
+import { compact, concat, flatten, isArray, isEmpty, last, omit, sampleSize, uniqBy } from 'lodash';
 import { v4 } from 'uuid';
 import { Data } from '../../../data/data';
 import * as Receiver from '../../../receiver/receiver';
@@ -28,7 +17,7 @@ import { ERROR_CODE_NO_CONNECT } from './SNodeAPI';
 
 import { ConversationModel } from '../../../models/conversation';
 import { LibsessionMessageHandler } from '../../../receiver/libsession/handleLibSessionMessage';
-import { EnvelopePlus } from '../../../receiver/types';
+import { SwarmDecodedEnvelope } from '../../../receiver/types';
 import { updateIsOnline } from '../../../state/ducks/onions';
 import { assertUnreachable } from '../../../types/sqlSharedTypes';
 import {
@@ -1192,23 +1181,22 @@ async function handleDecryptedMessagesForSwarm(
         continue;
       }
 
-      const envelopePlus: EnvelopePlus = {
+      const decodedEnvelope = new SwarmDecodedEnvelope({
         id: v4(),
-        senderIdentity: groupPk ? foundDecrypted.decodedEnvelope.sessionId : '', // none for 1o1 messages
-        receivedAt: Date.now(),
-        content: foundDecrypted.decodedEnvelope.contentPlaintextUnpadded,
         source: groupPk ?? foundDecrypted.decodedEnvelope.sessionId,
-        timestamp: foundDecrypted.decodedEnvelope.envelope.timestampMs,
-      };
+        senderIdentity: groupPk ? foundDecrypted.decodedEnvelope.sessionId : '', // none for 1o1 messages
+        contentDecrypted: foundDecrypted.decodedEnvelope.contentPlaintextUnpadded,
+        receivedAtMs: NetworkTime.now(),
+        messageHash: msg.hash,
+        sentAtMs: foundDecrypted.decodedEnvelope.envelope.timestampMs,
+        messageExpirationFromRetrieve: msg.expiration,
+        decodedPro: foundDecrypted.decodedEnvelope.decodedPro,
+      });
 
       // this is the processing of the message itself, which can be long.
       // We allow 1 minute per message at most, which should be plenty
       await Receiver.handleSwarmContentDecryptedWithTimeout({
-        envelope: envelopePlus,
-        contentDecrypted: envelopePlus.content,
-        messageHash: msg.hash,
-        sentAtTimestamp: toNumber(envelopePlus.timestamp),
-        messageExpirationFromRetrieve: msg.expiration,
+        decodedEnvelope,
       });
     } catch (e) {
       window.log.warn(

@@ -2230,6 +2230,8 @@ async function updateToSessionSchemaVersion50(currentVersion: number, db: Better
   db.transaction(() => {
     db.exec(`
           ALTER TABLE ${CONVERSATIONS_TABLE} ADD COLUMN bitsetProFeatures TEXT;
+          ALTER TABLE ${CONVERSATIONS_TABLE} ADD COLUMN proGenIndexHashB64 TEXT;
+          ALTER TABLE ${CONVERSATIONS_TABLE} ADD COLUMN proExpiryTsMs INTEGER;
          `);
 
     writeSessionSchemaVersion(targetVersion, db);

@@ -1394,6 +1394,15 @@ export class MessageModel extends Model<MessageAttributes> {
     return ProFeatures.bigIntStrToProFeatures(proFeatures);
   }
 
+  public setProFeaturesUsed(proFeatures: bigint | null) {
+    const proFeaturesStr = proFeatures ? proFeatures.toString() : undefined;
+    if (isEqual(proFeaturesStr, this.get('proFeatures'))) {
+      return false;
+    }
+    this.set({ proFeatures: proFeaturesStr });
+    return true;
+  }
+
   private dispatchMessageUpdate() {
     updatesToDispatch.set(this.id, this.getMessageModelProps());
     throttledAllMessagesDispatch();

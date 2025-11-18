@@ -1,25 +1,16 @@
 /* eslint-disable more/no-then */
 
-import { EnvelopePlus } from './types';
-
 // innerHandleSwarmContentMessage is only needed because of code duplication in handleDecryptedEnvelope...
 import { innerHandleSwarmContentMessage } from './contentMessage';
 
 import { DURATION } from '../session/constants';
 import { sleepFor } from '../session/utils/Promise';
+import type { SwarmDecodedEnvelope } from './types';
 
 export async function handleSwarmContentDecryptedWithTimeout({
-  envelope,
-  messageHash,
-  sentAtTimestamp,
-  contentDecrypted,
-  messageExpirationFromRetrieve,
+  decodedEnvelope,
 }: {
-  envelope: EnvelopePlus;
-  messageHash: string;
-  sentAtTimestamp: number;
-  contentDecrypted: ArrayBuffer;
-  messageExpirationFromRetrieve: number | null;
+  decodedEnvelope: SwarmDecodedEnvelope;
 }) {
   let taskDone = false;
   return Promise.race([
@@ -30,23 +21,19 @@ export async function handleSwarmContentDecryptedWithTimeout({
       }
       window.log.error(
         'handleSwarmContentDecryptedWithTimeout timer expired for envelope ',
-        envelope.id
+        decodedEnvelope.id
       );
     })(),
     (async () => {
       try {
         await innerHandleSwarmContentMessage({
-          envelope,
-          messageHash,
-          contentDecrypted,
-          sentAtTimestamp,
-          messageExpirationFromRetrieve,
+          decodedEnvelope,
         });
       } catch (e) {
         window.log.error(
           'handleSwarmContentDecryptedWithTimeout task failed with ',
           e.message,
-          envelope.id
+          decodedEnvelope.id
         );
       } finally {
         taskDone = true;

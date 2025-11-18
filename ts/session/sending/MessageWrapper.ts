@@ -101,7 +101,6 @@ async function encryptMessageAndWrap(
 
   return {
     encryptedAndWrappedData: encryptedAndWrappedData.encryptedData[0],
-    // encryptedAndWrappedData: data,
     networkTimestamp,
     namespace,
     ttl,

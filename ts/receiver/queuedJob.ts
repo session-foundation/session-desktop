@@ -5,7 +5,7 @@ import { Data } from '../data/data';
 import { ConversationModel } from '../models/conversation';
 import { MessageModel } from '../models/message';
 import { ConvoHub } from '../session/conversations';
-import { Quote } from './types';
+import { Quote, type BaseDecodedEnvelope, type SwarmDecodedEnvelope } from './types';
 
 import { MessageDirection } from '../models/messageType';
 import { ConversationTypeEnum } from '../models/types';
@@ -26,6 +26,7 @@ import { LinkPreviews } from '../util/linkPreviews';
 import { GroupV2Receiver } from './groupv2/handleGroupV2Message';
 import { Constants } from '../session';
 import { Timestamp } from '../types/timestamp/timestamp';
+import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
 
 function isMessageModel(
   msg: MessageModel | MessageModelPropsWithoutConvoProps
@@ -49,12 +50,12 @@ async function copyFromQuotedMessage(
   const quoteLocal: Quote = {
     attachments: null,
     author,
-    id: _.toNumber(quoteId),
+    id: longOrNumberToNumber(quoteId),
     text: null,
     referencedMessageNotFound: false,
   };
 
-  const id = _.toNumber(quoteId);
+  const id = longOrNumberToNumber(quoteId);
 
   // First we try to look for the quote in memory
   const stateConversations = window.inboxStore?.getState().conversations;
@@ -225,8 +226,7 @@ async function handleRegularMessage(
   sendingDeviceConversation: ConversationModel,
   message: MessageModel,
   rawDataMessage: RegularMessageType,
-  source: string,
-  messageHash: string
+  decodedEnvelope: BaseDecodedEnvelope
 ): Promise<void> {
   // this does not trigger a UI update nor write to the db
   await copyFromQuotedMessage(message, rawDataMessage.quote);
@@ -257,7 +257,7 @@ async function handleRegularMessage(
     })),
     body,
     conversationId: conversation.id,
-    messageHash,
+    messageHash: decodedEnvelope.messageHash,
     errors: undefined,
   });
 
@@ -273,8 +273,8 @@ async function handleRegularMessage(
     await sendingDeviceConversation.updateBlocksSogsMsgReqsTimestamp(updateBlockTimestamp, false);
   }
 
-  await toggleMsgRequestBannerIfNeeded(conversation, message, source);
-  await handleMessageFromPendingMember(conversation, message, source);
+  await toggleMsgRequestBannerIfNeeded(conversation, message, decodedEnvelope.getAuthor());
+  await handleMessageFromPendingMember(conversation, message, decodedEnvelope.getAuthor());
 
   const conversationActiveAt = conversation.getActiveAt();
   if (
@@ -301,7 +301,7 @@ async function handleRegularMessage(
   // we just received a message from that user so we reset the typing indicator for this convo
   await conversation.notifyTypingNoCommit({
     isTyping: false,
-    sender: source,
+    sender: decodedEnvelope.getAuthor(),
   });
 }
 
@@ -352,17 +352,16 @@ export async function handleMessageJob(
   messageModel: MessageModel,
   conversation: ConversationModel,
   regularDataMessage: RegularMessageType,
-  source: string,
-  messageHash: string
+  decodedEnvelope: SwarmDecodedEnvelope
 ) {
   window?.log?.info(
     `Starting handleMessageJob for message ${messageModel.idForLogging()}, ${
       messageModel.get('serverTimestamp') || messageModel.get('timestamp')
-    } in conversation ${conversation.idForLogging()}, messageHash:${messageHash}`
+    } in conversation ${conversation.idForLogging()}, messageHash: ${decodedEnvelope.messageHash}`
   );
 
   const sendingDeviceConversation = await ConvoHub.use().getOrCreateAndWait(
-    source,
+    decodedEnvelope.getAuthor(),
     ConversationTypeEnum.PRIVATE
   );
 
@@ -416,14 +415,14 @@ export async function handleMessageJob(
       await conversation.updateExpireTimer({
         providedDisappearingMode: expirationModeUpdate,
         providedExpireTimer: expireTimerUpdate,
-        providedSource: source,
-        fromSync: source === UserUtils.getOurPubKeyStrFromCache(),
+        providedSource: decodedEnvelope.getAuthor(),
+        fromSync: decodedEnvelope.getAuthor() === UserUtils.getOurPubKeyStrFromCache(),
         sentAt: messageModel.get('received_at'),
         existingMessage: messageModel,
         shouldCommitConvo: false,
         fromCurrentDevice: false,
         fromConfigMessage: false,
-        messageHash,
+        messageHash: decodedEnvelope.messageHash,
         // NOTE we don't commit yet because we want to get the message id, see below
       });
     } else {
@@ -433,10 +432,11 @@ export async function handleMessageJob(
         sendingDeviceConversation,
         messageModel,
         regularDataMessage,
-        source,
-        messageHash
+        decodedEnvelope
       );
     }
+
+    await processProDetails({ sendingDeviceConversation, messageModel, decodedEnvelope });
 
     // save the message model to the db and then save the messageId generated to our in-memory copy
     const id = await messageModel.commit();
@@ -481,4 +481,24 @@ export async function handleMessageJob(
     const errorForLog = error && error.stack ? error.stack : error;
     window?.log?.error('handleMessageJob', messageModel.idForLogging(), 'error:', errorForLog);
   }
+}
+
+async function processProDetails({
+  decodedEnvelope,
+  messageModel,
+}: {
+  sendingDeviceConversation: ConversationModel;
+  messageModel: MessageModel;
+  decodedEnvelope: SwarmDecodedEnvelope;
+}) {
+  // if the pro proof was valid when the message was sent, save the bitset of pro features used in the message
+  if (
+    decodedEnvelope.validPro?.proFeaturesBitset &&
+    decodedEnvelope.isProProofValidAtMs(decodedEnvelope.sentAtMs)
+  ) {
+    // Note: msgModel.commit() is always called when receiving a message.
+    messageModel.setProFeaturesUsed(decodedEnvelope.validPro.proFeaturesBitset);
+  }
+
+  // FIXME process pro changes at the contact level too.
 }

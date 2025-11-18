@@ -13,7 +13,7 @@ type AnimatedSpinnerIconProps = {
 
 export function AnimatedSpinnerIcon({ size }: AnimatedSpinnerIconProps) {
   return (
-    <AnimatedSpinnerIconWrapper size={size}>
+    <AnimatedSpinnerIconWrapper size={size} data-testid="loading-spinner">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         fill="none"

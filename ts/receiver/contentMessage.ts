@@ -1,7 +1,7 @@
-import { compact, flatten, isEmpty, isFinite, toNumber } from 'lodash';
+import { compact, flatten, isEmpty, isFinite } from 'lodash';
 
 import { handleSwarmDataMessage } from './dataMessage';
-import { EnvelopePlus } from './types';
+import { type BaseDecodedEnvelope, type SwarmDecodedEnvelope } from './types';
 
 import { SignalService } from '../protobuf';
 import { PubKey } from '../session/types';
@@ -34,17 +34,16 @@ import { sentAtMoreRecentThanWrapper } from './sentAtMoreRecent';
 import { CONVERSATION_PRIORITIES, ConversationTypeEnum } from '../models/types';
 import { shouldProcessContentMessage } from './common';
 import { Timestamp } from '../types/timestamp/timestamp';
-import { longOrNumberToNumber } from '../types/message';
+import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
 
 async function shouldDropIncomingPrivateMessage(
-  sentAtTimestamp: number,
-  envelope: EnvelopePlus,
+  envelope: BaseDecodedEnvelope,
   content: SignalService.Content
 ) {
   const isUs = UserUtils.isUsFromCache(envelope.source);
   // sentAtMoreRecentThanWrapper is going to be true, if the latest contact wrapper we processed was roughly more recent that this message timestamp
   const moreRecentOrNah = await sentAtMoreRecentThanWrapper(
-    sentAtTimestamp,
+    envelope.sentAtMs,
     isUs ? 'UserConfig' : 'ContactsConfig'
   );
   const isSyncedMessage = isUsFromCache(envelope.source);
@@ -65,12 +64,12 @@ async function shouldDropIncomingPrivateMessage(
         if (us && ourPriority <= CONVERSATION_PRIORITIES.hidden) {
           // if the wrapper data is more recent than this message and the NTS conversation is hidden, just drop this incoming message to avoid showing the NTS conversation again.
           window.log.info(
-            `shouldDropIncomingPrivateMessage: received message in NTS which appears to be hidden in our most recent libsession user config, sentAt: ${sentAtTimestamp}. Dropping it`
+            `shouldDropIncomingPrivateMessage: received message in NTS which appears to be hidden in our most recent libsession user config, sentAt: ${envelope.sentAtMs}. Dropping it`
           );
           return true;
         }
         window.log.info(
-          `shouldDropIncomingPrivateMessage: received message on conversation ${syncTargetOrSource} which appears to NOT be hidden/removed in our most recent libsession user config, sentAt: ${sentAtTimestamp}. `
+          `shouldDropIncomingPrivateMessage: received message on conversation ${syncTargetOrSource} which appears to NOT be hidden/removed in our most recent libsession user config, sentAt: ${envelope.sentAtMs}. `
         );
         return false;
       }
@@ -87,13 +86,13 @@ async function shouldDropIncomingPrivateMessage(
         ) {
           // the wrapper is more recent that this message and there is no such private conversation. Just drop this incoming message.
           window.log.info(
-            `shouldDropIncomingPrivateMessage: received message on conversation ${syncTargetOrSource} which appears to be hidden/removed in our most recent libsession contact config, sentAt: ${sentAtTimestamp}. Dropping it`
+            `shouldDropIncomingPrivateMessage: received message on conversation ${syncTargetOrSource} which appears to be hidden/removed in our most recent libsession contact config, sentAt: ${envelope.sentAtMs}. Dropping it`
           );
           return true;
         }
 
         window.log.info(
-          `shouldDropIncomingPrivateMessage: received message on conversation ${syncTargetOrSource} which appears to NOT be hidden/removed in our most recent libsession contact config, sentAt: ${sentAtTimestamp}. `
+          `shouldDropIncomingPrivateMessage: received message on conversation ${syncTargetOrSource} which appears to NOT be hidden/removed in our most recent libsession contact config, sentAt: ${envelope.sentAtMs}. `
         );
       } else {
         window.log.info(
@@ -157,7 +156,7 @@ function shouldDropBlockedUserMessage(
   return !isGroupV2UpdateMessage;
 }
 
-async function dropIncomingGroupMessage(envelope: EnvelopePlus, sentAtTimestamp: number) {
+async function dropIncomingGroupMessage(envelope: BaseDecodedEnvelope) {
   try {
     if (PubKey.is03Pubkey(envelope.source)) {
       const infos = await MetaGroupWrapperActions.infoGet(envelope.source);
@@ -167,10 +166,10 @@ async function dropIncomingGroupMessage(envelope: EnvelopePlus, sentAtTimestamp:
       }
 
       if (
-        sentAtTimestamp &&
+        envelope.sentAtMs &&
         ((infos.deleteAttachBeforeSeconds &&
-          sentAtTimestamp <= infos.deleteAttachBeforeSeconds * 1000) ||
-          (infos.deleteBeforeSeconds && sentAtTimestamp <= infos.deleteBeforeSeconds * 1000))
+          envelope.sentAtMs <= infos.deleteAttachBeforeSeconds * 1000) ||
+          (infos.deleteBeforeSeconds && envelope.sentAtMs <= infos.deleteBeforeSeconds * 1000))
       ) {
         window?.log?.info(
           `Incoming message sent before the group ${ed25519Str(envelope.source)} deleteBeforeSeconds or deleteAttachBeforeSeconds. Dropping it.`
@@ -188,29 +187,27 @@ async function dropIncomingGroupMessage(envelope: EnvelopePlus, sentAtTimestamp:
 }
 
 export async function innerHandleSwarmContentMessage({
-  contentDecrypted,
-  envelope,
-  messageHash,
-  sentAtTimestamp,
-  messageExpirationFromRetrieve,
+  decodedEnvelope,
 }: {
-  envelope: EnvelopePlus;
-  sentAtTimestamp: number;
-  contentDecrypted: ArrayBuffer;
-  messageHash: string;
-  messageExpirationFromRetrieve: number | null;
+  decodedEnvelope: BaseDecodedEnvelope;
 }): Promise<void> {
   try {
     window.log.info('innerHandleSwarmContentMessage');
 
-    const content = SignalService.Content.decode(new Uint8Array(contentDecrypted));
+    const content = SignalService.Content.decode(new Uint8Array(decodedEnvelope.contentDecrypted));
     // This function gets called with an inbox content from a community. When that's the case,
     // the messageHash is empty.
     // `shouldProcessContentMessage` is a lot less strict in terms of timestamps for community messages, and needs to be.
     // Not having this isCommunity flag set to true would make any incoming message from a blinded message request be dropped.
-    if (!shouldProcessContentMessage(envelope, content, !messageHash)) {
+    if (
+      !shouldProcessContentMessage({
+        sentAtMs: decodedEnvelope.sentAtMs,
+        sigTimestampMs: longOrNumberToNumber(content.sigTimestamp),
+        isCommunity: !decodedEnvelope.messageHash,
+      })
+    ) {
       window.log.info(
-        `innerHandleSwarmContentMessage: dropping invalid content message ${envelope.timestamp}`
+        `innerHandleSwarmContentMessage: dropping invalid content message sentAtMs: ${decodedEnvelope.sentAtMs}`
       );
       return;
     }
@@ -224,32 +221,32 @@ export async function innerHandleSwarmContentMessage({
      * a control message through (if the associated closed group is not blocked)
      */
 
-    const blocked = BlockedNumberController.isBlocked(envelope.senderIdentity || envelope.source);
+    const blocked = BlockedNumberController.isBlocked(decodedEnvelope.getAuthor());
     if (blocked) {
-      const envelopeSource = envelope.source;
+      const envelopeSource = decodedEnvelope.source;
       // We want to allow a blocked user message if that's a control message for a known group and the group is not blocked
       if (shouldDropBlockedUserMessage(content, envelopeSource)) {
         window?.log?.info(
-          `Dropping blocked user message ${ed25519Str(envelope.senderIdentity || envelope.source)}`
+          `Dropping blocked user message ${ed25519Str(decodedEnvelope.getAuthor())}`
         );
         return;
       }
       window?.log?.info(
-        `Allowing control/update message only from blocked user ${ed25519Str(envelope.senderIdentity)} in group: ${ed25519Str(envelope.source)}`
+        `Allowing control/update message only from blocked user ${ed25519Str(decodedEnvelope.senderIdentity)} in group: ${ed25519Str(decodedEnvelope.source)}`
       );
     }
 
-    if (await dropIncomingGroupMessage(envelope, sentAtTimestamp)) {
+    if (await dropIncomingGroupMessage(decodedEnvelope)) {
       // message removed from cache in `dropIncomingGroupMessage` already
       return;
     }
 
     // if this is a direct message, envelope.senderIdentity is undefined
     // if this is a closed group message, envelope.senderIdentity is the sender's pubkey and envelope.source is the closed group's pubkey
-    const isPrivateConversationMessage = !envelope.senderIdentity;
+    const isPrivateConversationMessage = !decodedEnvelope.senderIdentity;
 
     if (isPrivateConversationMessage) {
-      if (await shouldDropIncomingPrivateMessage(sentAtTimestamp, envelope, content)) {
+      if (await shouldDropIncomingPrivateMessage(decodedEnvelope, content)) {
         return;
       }
     }
@@ -259,7 +256,7 @@ export async function innerHandleSwarmContentMessage({
      * For a private conversation message, this is just the conversation with that user
      */
     const senderConversationModel = await ConvoHub.use().getOrCreateAndWait(
-      isPrivateConversationMessage ? envelope.source : envelope.senderIdentity,
+      isPrivateConversationMessage ? decodedEnvelope.source : decodedEnvelope.senderIdentity,
       ConversationTypeEnum.PRIVATE
     );
 
@@ -281,15 +278,21 @@ export async function innerHandleSwarmContentMessage({
     if (!isPrivateConversationMessage) {
       // this is a group message,
       // we have a second conversation to make sure exists: the group conversation
-      conversationModelForUIUpdate = PubKey.is03Pubkey(envelope.source)
-        ? await ConvoHub.use().getOrCreateAndWait(envelope.source, ConversationTypeEnum.GROUPV2)
-        : await ConvoHub.use().getOrCreateAndWait(envelope.source, ConversationTypeEnum.GROUP);
+      conversationModelForUIUpdate = PubKey.is03Pubkey(decodedEnvelope.source)
+        ? await ConvoHub.use().getOrCreateAndWait(
+            decodedEnvelope.source,
+            ConversationTypeEnum.GROUPV2
+          )
+        : await ConvoHub.use().getOrCreateAndWait(
+            decodedEnvelope.source,
+            ConversationTypeEnum.GROUP
+          );
     }
 
     const expireUpdate = await DisappearingMessages.checkForExpireUpdateInContentMessage(
       content,
       conversationModelForUIUpdate,
-      messageExpirationFromRetrieve
+      decodedEnvelope.messageExpirationFromRetrieve
     );
     if (content.dataMessage) {
       // because typescript is funky with incoming protobufs
@@ -298,10 +301,8 @@ export async function innerHandleSwarmContentMessage({
       }
 
       await handleSwarmDataMessage({
-        envelope,
-        sentAtTimestamp,
+        decodedEnvelope,
         rawDataMessage: content.dataMessage as SignalService.DataMessage,
-        messageHash,
         senderConversationModel,
         expireUpdate: expireUpdate || null,
       });
@@ -310,50 +311,55 @@ export async function innerHandleSwarmContentMessage({
     }
 
     if (content.receiptMessage) {
-      perfStart(`handleReceiptMessage-${envelope.id}`);
+      perfStart(`handleReceiptMessage-${decodedEnvelope.id}`);
 
-      await handleReceiptMessage(envelope, content.receiptMessage);
-      perfEnd(`handleReceiptMessage-${envelope.id}`, 'handleReceiptMessage');
+      await handleReceiptMessage(decodedEnvelope, content.receiptMessage);
+      perfEnd(`handleReceiptMessage-${decodedEnvelope.id}`, 'handleReceiptMessage');
       return;
     }
     if (content.typingMessage) {
-      perfStart(`handleTypingMessage-${envelope.id}`);
+      perfStart(`handleTypingMessage-${decodedEnvelope.id}`);
 
-      await handleTypingMessage(envelope, content.typingMessage as SignalService.TypingMessage);
-      perfEnd(`handleTypingMessage-${envelope.id}`, 'handleTypingMessage');
+      await handleTypingMessage(
+        decodedEnvelope,
+        content.typingMessage as SignalService.TypingMessage
+      );
+      perfEnd(`handleTypingMessage-${decodedEnvelope.id}`, 'handleTypingMessage');
       return;
     }
 
     if (content.dataExtractionNotification) {
-      perfStart(`handleDataExtractionNotification-${envelope.id}`);
+      perfStart(`handleDataExtractionNotification-${decodedEnvelope.id}`);
 
       await handleDataExtractionNotification({
-        envelope,
+        decodedEnvelope,
         dataExtractionNotification:
           content.dataExtractionNotification as SignalService.DataExtractionNotification,
         expireUpdate,
-        messageHash,
       });
       perfEnd(
-        `handleDataExtractionNotification-${envelope.id}`,
+        `handleDataExtractionNotification-${decodedEnvelope.id}`,
         'handleDataExtractionNotification'
       );
       return;
     }
     if (content.unsendRequest) {
-      await handleUnsendMessage(envelope, content.unsendRequest as SignalService.UnsendRequest);
+      await handleUnsendMessage(
+        decodedEnvelope,
+        content.unsendRequest as SignalService.UnsendRequest
+      );
       return;
     }
     if (content.callMessage) {
-      await handleCallMessage(envelope, content.callMessage as SignalService.CallMessage, {
+      await handleCallMessage(decodedEnvelope, content.callMessage as SignalService.CallMessage, {
         expireDetails: expireUpdate,
-        messageHash,
+        messageHash: decodedEnvelope.messageHash,
       });
       return;
     }
     if (content.messageRequestResponse) {
       await handleMessageRequestResponse(
-        envelope,
+        decodedEnvelope,
         content.messageRequestResponse as SignalService.MessageRequestResponse
       );
       return;
@@ -383,7 +389,7 @@ async function onReadReceipt(readAt: number, timestamp: number, source: string) 
 }
 
 async function handleReceiptMessage(
-  envelope: EnvelopePlus,
+  envelope: SwarmDecodedEnvelope,
   receiptMessage: SignalService.IReceiptMessage
 ) {
   const receipt = receiptMessage as SignalService.ReceiptMessage;
@@ -394,7 +400,7 @@ async function handleReceiptMessage(
   if (type === SignalService.ReceiptMessage.Type.READ) {
     // eslint-disable-next-line no-restricted-syntax
     for (const ts of timestamp) {
-      const promise = onReadReceipt(toNumber(envelope.timestamp), toNumber(ts), envelope.source);
+      const promise = onReadReceipt(envelope.sentAtMs, longOrNumberToNumber(ts), envelope.source);
       results.push(promise);
     }
   }
@@ -402,7 +408,7 @@ async function handleReceiptMessage(
 }
 
 async function handleTypingMessage(
-  envelope: EnvelopePlus,
+  envelope: SwarmDecodedEnvelope,
   typingMessage: SignalService.TypingMessage
 ): Promise<void> {
   const { timestamp, action } = typingMessage;
@@ -413,13 +419,12 @@ async function handleTypingMessage(
     return;
   }
 
-  if (envelope.timestamp && timestamp) {
-    const sentAtTimestamp = toNumber(envelope.timestamp);
-    const typingTimestamp = toNumber(timestamp);
+  if (envelope.sentAtMs && timestamp) {
+    const typingTimestamp = longOrNumberToNumber(timestamp);
 
-    if (typingTimestamp !== sentAtTimestamp) {
+    if (typingTimestamp !== envelope.sentAtMs) {
       window?.log?.warn(
-        `Typing message envelope timestamp (${sentAtTimestamp}) did not match typing timestamp (${typingTimestamp})`
+        `Typing message envelope timestamp (${envelope.sentAtMs}) did not match typing timestamp (${typingTimestamp})`
       );
       return;
     }
@@ -445,12 +450,12 @@ async function handleTypingMessage(
  * @param unsendMessage data required to delete message
  */
 async function handleUnsendMessage(
-  envelope: EnvelopePlus,
+  envelope: SwarmDecodedEnvelope,
   unsendMessage: SignalService.UnsendRequest
 ) {
   const { author: messageAuthor, timestamp } = unsendMessage;
   window.log.info(`handleUnsendMessage from ${messageAuthor}: of timestamp: ${timestamp}`);
-  if (messageAuthor !== (envelope.senderIdentity || envelope.source)) {
+  if (messageAuthor !== envelope.getAuthor()) {
     window?.log?.error(
       'handleUnsendMessage: Dropping request as the author and the sender differs.'
     );
@@ -471,7 +476,7 @@ async function handleUnsendMessage(
     await Data.getMessagesBySenderAndSentAt([
       {
         source: messageAuthor,
-        timestamp: toNumber(timestamp),
+        timestamp: longOrNumberToNumber(timestamp),
       },
     ])
   )?.[0];
@@ -505,7 +510,7 @@ async function handleUnsendMessage(
  * Sets approval fields for conversation depending on response's values. If request is approving, pushes notification and
  */
 async function handleMessageRequestResponse(
-  envelope: EnvelopePlus,
+  envelope: SwarmDecodedEnvelope,
   messageRequestResponse: SignalService.MessageRequestResponse
 ) {
   // no one cares about the is `messageRequestResponse.isApproved` field currently.
@@ -532,7 +537,7 @@ async function handleMessageRequestResponse(
   );
   let mostRecentActiveAt = Math.max(...compact(convosToMerge.map(m => m.getActiveAt())));
   if (!isFinite(mostRecentActiveAt) || mostRecentActiveAt <= 0) {
-    mostRecentActiveAt = toNumber(envelope.timestamp);
+    mostRecentActiveAt = envelope.sentAtMs;
   }
 
   const previousApprovedMe = conversationToApprove.didApproveMe();
@@ -629,10 +634,7 @@ async function handleMessageRequestResponse(
   }
 
   // Conversation was not approved before so a sync is needed
-  await conversationToApprove.addIncomingApprovalMessage(
-    toNumber(envelope.timestamp),
-    unblindedConvoId
-  );
+  await conversationToApprove.addIncomingApprovalMessage(envelope.sentAtMs, unblindedConvoId);
 }
 
 /**
@@ -642,19 +644,17 @@ async function handleMessageRequestResponse(
  */
 
 export async function handleDataExtractionNotification({
-  envelope,
+  decodedEnvelope,
   expireUpdate,
-  messageHash,
   dataExtractionNotification,
 }: {
-  envelope: EnvelopePlus;
+  decodedEnvelope: SwarmDecodedEnvelope;
   dataExtractionNotification: SignalService.DataExtractionNotification;
   expireUpdate: ReadyToDisappearMsgUpdate | undefined;
-  messageHash: string;
 }): Promise<void> {
   // Note: we currently don't care about the timestamp included in the field itself, just the timestamp of the envelope
 
-  const { source, timestamp } = envelope;
+  const { source, sentAtMs } = decodedEnvelope;
 
   const convo = ConvoHub.use().get(source);
   if (!convo || !convo.isPrivate()) {
@@ -663,18 +663,16 @@ export async function handleDataExtractionNotification({
     return;
   }
 
-  if (!source || !timestamp) {
+  if (!source || !sentAtMs) {
     window?.log?.info('DataNotification pre check failed');
 
     return;
   }
 
-  const sentAtTimestamp = toNumber(timestamp);
-
   let created = await convo.addSingleIncomingMessage({
     source,
-    messageHash,
-    sent_at: sentAtTimestamp,
+    messageHash: decodedEnvelope.messageHash,
+    sent_at: sentAtMs,
     dataExtractionNotification: {
       type: dataExtractionNotification.type,
     },

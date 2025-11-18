@@ -1,4 +1,4 @@
-import { longOrNumberToNumber } from '../message';
+import { longOrNumberToNumber } from '../long/longOrNumberToNumber';
 
 // in about 71 years
 const MAX_TIMESTAMP_SECONDS = 4000000000;

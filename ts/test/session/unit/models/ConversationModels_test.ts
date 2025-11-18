@@ -1,3 +1,4 @@
+import { to_base64 } from 'libsodium-wrappers-sumo';
 import { expect } from 'chai';
 import { describe } from 'mocha';
 import {
@@ -143,6 +144,43 @@ describe('fillConvoAttributesWithDefaults', () => {
           bitsetProFeatures: BigInt(123456789123456789123456789123456789n).toString(),
         } as ConversationAttributes)
       ).to.have.deep.property('bitsetProFeatures', '123456789123456789123456789123456789');
+    });
+  });
+
+  describe('proGenIndexHashB64', () => {
+    it('initialize proGenIndexHashB64 if not given', () => {
+      expect(fillConvoAttributesWithDefaults({} as ConversationAttributes)).to.have.deep.property(
+        'proGenIndexHashB64',
+        undefined
+      );
+    });
+
+    it('do not override proGenIndexHashB64 if given', () => {
+      expect(
+        fillConvoAttributesWithDefaults({
+          proGenIndexHashB64: to_base64('123456789123456789123456789123456789'),
+        } as ConversationAttributes)
+      ).to.have.deep.property(
+        'proGenIndexHashB64',
+        to_base64('123456789123456789123456789123456789')
+      );
+    });
+  });
+
+  describe('proExpiryTsMs', () => {
+    it('initialize proExpiryTsMs if not given', () => {
+      expect(fillConvoAttributesWithDefaults({} as ConversationAttributes)).to.have.deep.property(
+        'proExpiryTsMs',
+        undefined
+      );
+    });
+
+    it('do not override proExpiryTsMs if given', () => {
+      expect(
+        fillConvoAttributesWithDefaults({
+          proExpiryTsMs: 12345698,
+        } as ConversationAttributes)
+      ).to.have.deep.property('proExpiryTsMs', 12345698);
     });
   });
 

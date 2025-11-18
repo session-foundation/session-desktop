@@ -1575,7 +1575,6 @@ const metaGroupSlice = createSlice({
       window.log.error('a initNewGroupInWrapper was rejected', action.error);
       state.creationFromUIPending = false;
       return state;
-      // FIXME delete the wrapper completely & corresponding dumps, and user groups entry?
     });
     builder.addCase(initNewGroupInWrapper.pending, (state, _action) => {
       state.creationFromUIPending = true;
