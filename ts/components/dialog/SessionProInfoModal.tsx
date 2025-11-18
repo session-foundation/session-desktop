@@ -88,7 +88,7 @@ const StyledAnimationImage = styled.img`
 
 const StyledAnimatedCTAImageContainer = styled.div<{ noColor?: boolean }>`
   position: relative;
-  ${props => (props.noColor ? 'filter: grayscale(100%);' : '')}
+  ${props => (props.noColor ? 'filter: grayscale(100%) brightness(0.8);' : '')}
 `;
 
 function AnimatedCTAImage({
