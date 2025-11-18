@@ -1,5 +1,6 @@
 import type { ProProof, WithMasterPrivKeyHex } from 'libsession_util_nodejs';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { isUndefined } from 'lodash';
 import type { StateType } from '../reducer';
 import ProBackendAPI from '../../session/apis/pro_backend_api/ProBackendAPI';
 import { getFeatureFlag } from './types/releasedFeaturesReduxTypes';
@@ -14,6 +15,7 @@ import { UserConfigWrapperActions } from '../../webworker/workers/browser/libses
 import { Storage } from '../../util/storage';
 import { NetworkTime } from '../../util/NetworkTime';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
+import { DURATION } from '../../session/constants';
 
 type RequestState<D = unknown> = {
   isFetching: boolean;
@@ -67,7 +69,7 @@ type CreateProBackendFetchAsyncThunk<D> = {
   payloadCreator: PayloadCreatorType;
   contextHandler?: (state: RequestState<D>) => Promise<void>;
   // Runs at the end of the function, as long as the function doesn't early return because it was already fetching.
-  callback?: (initialState: RequestState<D>, state: RequestState<D>) => Promise<void>;
+  callback?: (state: RequestState<D>) => Promise<RequestState<D>>;
 };
 
 export type WithCallerContext = { callerContext?: 'recover' };
@@ -151,7 +153,7 @@ async function createProBackendFetchAsyncThunk<D>({
   }
 
   if (callback) {
-    await callback(initialState, result);
+    result = await callback(result);
   }
 
   return result;
@@ -185,19 +187,62 @@ async function handleClearProProof() {
   // TODO: remove pro proof from user config
 }
 
-async function handleExpired() {
-  // TODO: handle expired and expiring soon CTAs
-}
-
-async function handleProProof(accessExpiry: number, autoRenewing: boolean) {
-  const proConfig = await UserConfigWrapperActions.getProConfig();
+async function handleExpiryCTAs(
+  accessExpiryTsMs: number,
+  autoRenewing: boolean,
+  status: ProStatus
+) {
   const now = NetworkTime.now();
 
-  // TODO: add buffer time to check expiry at least 1 min diff
-  if (!proConfig || proConfig.proProof.expiryMs < now || (autoRenewing && accessExpiry < now)) {
-    const rotatingPrivKeyHex =
-      proConfig?.rotatingPrivKeyHex ?? (await UserUtils.getProRotatingPrivateKeyHex());
+  const sevenDaysBeforeExpiry = accessExpiryTsMs - 7 * DURATION.DAYS;
+  const thirtyDaysAfterExpiry = accessExpiryTsMs + 30 * DURATION.DAYS;
+
+  const proExpiringSoonCTA = !isUndefined(Storage.get(SettingsKey.proExpiringSoonCTA));
+  const proExpiredCTA = !isUndefined(Storage.get(SettingsKey.proExpiredCTA));
+
+  if (now < sevenDaysBeforeExpiry) {
+    // More than 7 days before expiry, remove CTA items if they exist. This means the items were set for a previous cycle of pro access.
+    if (proExpiringSoonCTA) {
+      await Storage.remove(SettingsKey.proExpiringSoonCTA);
+    }
+    if (proExpiredCTA) {
+      await Storage.remove(SettingsKey.proExpiredCTA);
+    }
+  } else if (sevenDaysBeforeExpiry < now && now < accessExpiryTsMs) {
+    // Between 7 days before expiry and expiry, Expiring Soon CTA needs to be marked to be shown if not already. Only shown if not auto-renewing
+    if (status === ProStatus.Active && !autoRenewing && !proExpiringSoonCTA) {
+      await Storage.put(SettingsKey.proExpiringSoonCTA, true);
+    }
+  } else if (accessExpiryTsMs < now && now < thirtyDaysAfterExpiry) {
+    // Between expiry and 30 days after expiry, Expired CTA needs to be marked to be shown if not already
+    if (status === ProStatus.Expired && !proExpiredCTA) {
+      await Storage.put(SettingsKey.proExpiredCTA, true);
+    }
+  }
+}
+
+async function handleProProof(accessExpiryTsMs: number, autoRenewing: boolean, status: ProStatus) {
+  if (status !== ProStatus.Active) {
+    return;
+  }
+
+  const proConfig = await UserConfigWrapperActions.getProConfig();
+
+  if (!proConfig || !proConfig.proProof) {
+    const rotatingPrivKeyHex = await UserUtils.getProRotatingPrivateKeyHex();
     await handleNewProProof(rotatingPrivKeyHex);
+  } else {
+    const sixtyMinutesBeforeAccessExpiry = accessExpiryTsMs - DURATION.HOURS;
+    const sixtyMinutesBeforeProofExpiry = proConfig.proProof.expiryMs - DURATION.HOURS;
+    const now = NetworkTime.now();
+    if (
+      sixtyMinutesBeforeProofExpiry < now &&
+      now < sixtyMinutesBeforeAccessExpiry &&
+      autoRenewing
+    ) {
+      const rotatingPrivKeyHex = proConfig.rotatingPrivKeyHex;
+      await handleNewProProof(rotatingPrivKeyHex);
+    }
   }
 }
 
@@ -211,14 +256,19 @@ const fetchGetProDetailsFromProBackend = createAsyncThunk(
       key: 'details',
       getter: () => ProBackendAPI.getProDetails(args),
       payloadCreator,
-      callback: async (_initialState, state) => {
-        // TODO: work out if we actually need to know the previous state
-        // const previousState = initialState.isEnabled && initialState.data ? initialState.data : getProDetailsFromStorage();
-
+      callback: async state => {
         if (state.data) {
+          if (state.data.error_report === 1) {
+            state.isError = true;
+            state.error = 'Backend unable to process current state, please try again later.';
+          }
           switch (state.data.status) {
             case ProStatus.Active:
-              await handleProProof(state.data.expiry_unix_ts_ms, state.data.auto_renewing);
+              await handleProProof(
+                state.data.expiry_unix_ts_ms,
+                state.data.auto_renewing,
+                state.data.status
+              );
               break;
 
             case ProStatus.NeverBeenPro:
@@ -227,18 +277,23 @@ const fetchGetProDetailsFromProBackend = createAsyncThunk(
 
             case ProStatus.Expired:
               await handleClearProProof();
-              await handleExpired();
               break;
 
             default:
               assertUnreachable(state.data.status, 'handleBackendProStatusChange');
               break;
           }
+          await handleExpiryCTAs(
+            state.data.expiry_unix_ts_ms,
+            state.data.auto_renewing,
+            state.data.status
+          );
         }
 
         if (state.data) {
           await putProDetailsInStorage(state.data);
         }
+        return state;
       },
       contextHandler: async state => {
         if (context === 'recover') {

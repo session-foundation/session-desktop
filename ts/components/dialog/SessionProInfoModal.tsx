@@ -38,6 +38,8 @@ import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { Localizer } from '../basic/Localizer';
 import { CONVERSATION } from '../../session/constants';
 import { formatNumber } from '../../util/i18n/formatting/generics';
+import { Storage } from '../../util/storage';
+import { SettingsKey } from '../../data/settings-key';
 
 export enum ProCTAVariant {
   GENERIC = 0,
@@ -633,3 +635,21 @@ export const useShowSessionProInfoDialogCbWithVariant = () => {
 
   return (variant: ProCTAVariant) => showSessionProInfoDialog(variant, dispatch);
 };
+
+export async function handleProTriggeredCTAs(dispatch: Dispatch<any>) {
+  if (Storage.get(SettingsKey.proExpiringSoonCTA)) {
+    dispatch(
+      updateSessionProInfoModal({
+        variant: ProCTAVariant.EXPIRING_SOON,
+      })
+    );
+    await Storage.put(SettingsKey.proExpiringSoonCTA, false);
+  } else if (Storage.get(SettingsKey.proExpiredCTA)) {
+    dispatch(
+      updateSessionProInfoModal({
+        variant: ProCTAVariant.EXPIRED,
+      })
+    );
+    await Storage.put(SettingsKey.proExpiredCTA, false);
+  }
+}

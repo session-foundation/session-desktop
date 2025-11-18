@@ -23,7 +23,7 @@ export const UserSettingsDialog = (modalState: UserSettingsModalState) => {
 
   switch (userSettingsPage) {
     case 'default':
-      return <DefaultSettingPage />;
+      return <DefaultSettingPage {...modalState} />;
     case 'privacy':
       return <PrivacySettingsPage {...modalState} />;
     case 'notifications':
