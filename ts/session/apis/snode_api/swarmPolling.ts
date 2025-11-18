@@ -17,7 +17,7 @@ import { ERROR_CODE_NO_CONNECT } from './SNodeAPI';
 
 import { ConversationModel } from '../../../models/conversation';
 import { LibsessionMessageHandler } from '../../../receiver/libsession/handleLibSessionMessage';
-import { DecodedEnvelope } from '../../../receiver/types';
+import { SwarmDecodedEnvelope } from '../../../receiver/types';
 import { updateIsOnline } from '../../../state/ducks/onions';
 import { assertUnreachable } from '../../../types/sqlSharedTypes';
 import {
@@ -1180,8 +1180,9 @@ async function handleDecryptedMessagesForSwarm(
         // we failed to decrypt that message, mark it as seen and move on
         continue;
       }
+      console.warn('foundDecrypted.decodedEnvelope', foundDecrypted.decodedEnvelope);
 
-      const decodedEnvelope = new DecodedEnvelope({
+      const decodedEnvelope = new SwarmDecodedEnvelope({
         id: v4(),
         source: groupPk ?? foundDecrypted.decodedEnvelope.sessionId,
         senderIdentity: groupPk ? foundDecrypted.decodedEnvelope.sessionId : '', // none for 1o1 messages
@@ -1190,12 +1191,13 @@ async function handleDecryptedMessagesForSwarm(
         messageHash: msg.hash,
         sentAtMs: foundDecrypted.decodedEnvelope.envelope.timestampMs,
         messageExpirationFromRetrieve: msg.expiration,
+        decodedPro: foundDecrypted.decodedEnvelope.decodedPro,
       });
 
       // this is the processing of the message itself, which can be long.
       // We allow 1 minute per message at most, which should be plenty
       await Receiver.handleSwarmContentDecryptedWithTimeout({
-        envelope: decodedEnvelope,
+        decodedEnvelope,
       });
     } catch (e) {
       window.log.warn(

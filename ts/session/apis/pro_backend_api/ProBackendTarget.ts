@@ -4,6 +4,7 @@ import { SessionServerConfigType } from '../session_backend_server';
 
 // not exported/included in the SERVER_HOSTS as this is for testing only
 const PRO_BACKEND_DEV = 'pro-backend-dev.getsession.org';
+// const PRO_BACKEND_DEV = '192.168.1.223:8888';
 
 const PRO_BACKENDS: Record<
   'DEFAULT' | 'DEV',
@@ -19,6 +20,7 @@ const PRO_BACKENDS: Record<
   DEV: {
     name: 'ProBackendDev',
     url: `https://${PRO_BACKEND_DEV}`,
+    // url: `http://${PRO_BACKEND_DEV}`,
     edPkHex: 'fc947730f49eb01427a66e050733294d9e520e545c7a27125a780634e0860a27',
     xPkHex: '920b81e9bf1a06e70814432668c61487d6fdbe13faaee3b09ebc56223061f140',
   },

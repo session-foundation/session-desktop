@@ -1,3 +1,6 @@
+import type { DecodedPro } from 'libsession_util_nodejs';
+import { isNil } from 'lodash';
+
 export interface Quote {
   id: number; // this is in fact a uint64 so we will have an issue
   author: string;
@@ -6,11 +9,28 @@ export interface Quote {
   referencedMessageNotFound: boolean;
 }
 
-export class DecodedEnvelope {
+type DecodedProConstructorArgs = {
+  id: string;
+  source: string;
+  senderIdentity: string;
+  contentDecrypted: Uint8Array;
+  receivedAtMs: number;
+  sentAtMs: number;
+  decodedPro: DecodedPro | null;
+  messageHash: string;
+  messageExpirationFromRetrieve: number | null;
+};
+
+export abstract class BaseDecodedEnvelope {
   /**
    * A generated id for this envelope (usually a v4 uuid)
    */
   public readonly id: string;
+
+  /**
+   * The server id of the message. Only valid for sogs messages
+   */
+  public readonly serverId: number | null = null;
 
   /**
    * The source of the message. For 1o1 messages, this is the sender's pubkey. For groups, this is the group's pubkey.
@@ -34,9 +54,10 @@ export class DecodedEnvelope {
 
   public readonly contentDecrypted: Uint8Array;
 
+  public readonly validPro: DecodedPro | null;
+
   /**
-   * The message hash as stored on the snode.
-   * Communities do not have a message hash, so this is set to ''.
+   * Sogs messages have no messageHash, but we still need to set it to '' for the receiving pipeline to play nice
    */
   public readonly messageHash: string;
 
@@ -45,16 +66,7 @@ export class DecodedEnvelope {
    */
   public readonly messageExpirationFromRetrieve: number | null;
 
-  constructor(args: {
-    id: string;
-    senderIdentity: string;
-    source: string;
-    contentDecrypted: Uint8Array;
-    receivedAtMs: number;
-    sentAtMs: number;
-    messageHash: string;
-    messageExpirationFromRetrieve: number | null;
-  }) {
+  constructor(args: DecodedProConstructorArgs) {
     this.id = args.id;
     this.source = args.source;
     this.senderIdentity = args.senderIdentity;
@@ -63,9 +75,50 @@ export class DecodedEnvelope {
     this.sentAtMs = args.sentAtMs;
     this.messageHash = args.messageHash;
     this.messageExpirationFromRetrieve = args.messageExpirationFromRetrieve;
+
+    // we only want to set this if the pro proof has been confirmed valid
+    // Note: this does not validate the expiry of the proof, it only validates that the signature is valid. Use `isProProofValid` for that
+    console.warn('args.decodedPro', args.decodedPro);
+    this.validPro = args.decodedPro?.proStatus === 'Valid' ? args.decodedPro : null;
   }
 
   public getAuthor() {
     return this.senderIdentity || this.source;
+  }
+
+  /**
+   * Return true if the pro proof is set and is valid at the given timestamp.
+   * Note: you should use the NetworkTime as timestampMs here (unless you check against a message timestamp)
+   */
+  public isProProofValidAtMs(timestampMs: number) {
+    if (!this.validPro) {
+      return false;
+    }
+    if (this.validPro.proStatus !== 'Valid') {
+      return false;
+    }
+    return this.validPro.proProof.expiryMs > timestampMs;
+  }
+}
+
+export class SwarmDecodedEnvelope extends BaseDecodedEnvelope {}
+
+export class SogsDecodedEnvelope extends BaseDecodedEnvelope {
+  /**
+   * The server id of the message. Only valid for sogs messages
+   */
+  public readonly serverId: number;
+
+  constructor(
+    args: DecodedProConstructorArgs & {
+      serverId: number;
+    }
+  ) {
+    super(args);
+
+    if (isNil(args.serverId)) {
+      throw new Error('serverId cannot be null for sogs messages');
+    }
+    this.serverId = args.serverId;
   }
 }

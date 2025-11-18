@@ -2523,6 +2523,13 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
       // we are trying to send a message to someone. Make sure this convo is not hidden
       await this.unhideIfNeeded(true);
+      console.warn(
+        'send  message to convo',
+        this.idForLogging(),
+        await UserUtils.getOutgoingProMessageDetails({
+          utf16: body,
+        })
+      );
 
       // TODO break down those functions  (sendMessage and retrySend into smaller functions and narrow the VisibleMessageParams to preview, etc. with checks of types)
       // an OpenGroupV2 message is just a visible message

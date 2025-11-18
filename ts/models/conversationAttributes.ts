@@ -115,9 +115,11 @@ export interface ConversationAttributes {
    * We use
    *  - a bigint so we can do bitset operations on it if need, and we are expected to support 64 pro features
    *  - a string as we need to convert a bigint to a string to send it over IPC.
-   *
    */
   bitsetProFeatures?: string;
+
+  proGenIndexHashB64?: string;
+  proExpiryTsMs?: number;
 
   triggerNotificationsFor: ConversationNotificationSettingType;
   /** in seconds, 0 means no expiration */
@@ -180,6 +182,8 @@ export const fillConvoAttributesWithDefaults = (
     lastMessageInteractionStatus: null,
 
     bitsetProFeatures: undefined,
+    proGenIndexHashB64: undefined,
+    proExpiryTsMs: undefined,
 
     triggerNotificationsFor: 'all', // if the settings is not set in the db, this is the default
 

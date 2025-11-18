@@ -88,6 +88,7 @@ async function encryptMessageAndWrap(
     throw new Error('encryptMessageAndWrap: now, this could only be a 05 pubkey');
   }
   const proRotatingPrivateKey = await UserUtils.getProRotatingPrivateKeyHex();
+  console.warn('encryptMessageAndWrap: proRotatingPrivateKey', proRotatingPrivateKey);
 
   const encryptedAndWrappedData = await MultiEncryptWrapperActions.encryptFor1o1([
     {

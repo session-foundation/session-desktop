@@ -31,7 +31,7 @@ import { createSwarmMessageSentFromUs } from '../../../../models/messageFactory'
 import { SignalService } from '../../../../protobuf';
 import { innerHandleSwarmContentMessage } from '../../../../receiver/contentMessage';
 import { handleOutboxMessageModel } from '../../../../receiver/dataMessage';
-import { DecodedEnvelope } from '../../../../receiver/types';
+import { SogsDecodedEnvelope } from '../../../../receiver/types';
 import { assertUnreachable, type AwaitedReturn } from '../../../../types/sqlSharedTypes';
 import { getSodiumRenderer } from '../../../crypto';
 import { DisappearingMessages } from '../../../disappearing_messages';
@@ -331,16 +331,27 @@ const handleMessagesResponseV4 = async (
           continue;
         }
 
+        const decodedEnvelope = new SogsDecodedEnvelope({
+          id: v4(),
+          source: msgToHandle.session_id,
+          // important to keep the msgToHandle here as it has blindedIds replaced for us and people we know
+          senderIdentity: msgToHandle.session_id,
+          contentDecrypted: decrypted.contentPlaintextUnpadded,
+          receivedAtMs: Date.now(),
+          // see above, that `posted` field has been converted to ms above
+          sentAtMs: msgToHandle.posted,
+          serverId: decrypted.serverId,
+          decodedPro: decrypted.decodedPro,
+          messageHash: '',
+          messageExpirationFromRetrieve: null,
+        });
+
         const decodedContent = SignalService.Content.decode(decrypted.contentPlaintextUnpadded);
 
         await handleOpenGroupMessage({
           roomInfos: roomDetails,
+          decodedEnvelope,
           decodedContent,
-          // see above, that `posted` field has been converted to ms
-          sentTimestampMs: msgToHandle.posted,
-          // important to keep the msgToHandle here as it has blindedIds replaced for us and people we know
-          sender: msgToHandle.session_id,
-          serverId: decrypted.serverId,
         });
       } catch (e) {
         window?.log?.warn('handleOpenGroupMessage failed with', e.message);
@@ -452,16 +463,16 @@ async function handleInboxOutboxMessages(
 
       // decrypt message from result
       const contentPayload = decrypted[0].contentPlaintextUnpadded;
-      const decodedEnvelope = new DecodedEnvelope({
+      const decodedEnvelope = new SogsDecodedEnvelope({
         contentDecrypted: decrypted[0].contentPlaintextUnpadded,
         source: senderUnblinded, // this is us for an outbox message, and the sender for an inbox message
         senderIdentity: '',
         receivedAtMs: Date.now(),
         sentAtMs: postedAtInMs,
         id: v4(),
-        // communities messages do not have a messageHash
+        decodedPro: decrypted[0].decodedPro,
+        serverId: decrypted[0].serverId,
         messageHash: '',
-        // sogs message cannot expire
         messageExpirationFromRetrieve: null,
       });
       const contentDecrypted = SignalService.Content.decode(contentPayload);
@@ -512,10 +523,9 @@ async function handleInboxOutboxMessages(
 
           await handleOutboxMessageModel(
             msgModel,
-            '',
-            postedAtInMs,
             contentDecrypted.dataMessage as SignalService.DataMessage,
-            outboxConversationModel
+            outboxConversationModel,
+            decodedEnvelope
           );
         }
       } else {
@@ -541,7 +551,7 @@ async function handleInboxOutboxMessages(
         }
 
         await innerHandleSwarmContentMessage({
-          envelope: decodedEnvelope,
+          decodedEnvelope,
         });
       }
     } catch (e) {

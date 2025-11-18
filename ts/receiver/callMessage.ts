@@ -2,13 +2,13 @@ import { SignalService } from '../protobuf';
 import { TTL_DEFAULT } from '../session/constants';
 import { CallManager, UserUtils } from '../session/utils';
 import { WithOptExpireUpdate } from '../session/utils/calling/CallManager';
-import { type DecodedEnvelope } from './types';
+import { type SwarmDecodedEnvelope } from './types';
 import { WithMessageHash } from '../session/types/with';
 import { NetworkTime } from '../util/NetworkTime';
 
 // messageHash & messageHash are only needed for actions adding a callMessage to the database (so they expire)
 export async function handleCallMessage(
-  envelope: DecodedEnvelope,
+  envelope: SwarmDecodedEnvelope,
   callMessage: SignalService.CallMessage,
   expireDetails: WithOptExpireUpdate & WithMessageHash
 ) {

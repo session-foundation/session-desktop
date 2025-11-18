@@ -1,7 +1,7 @@
 import { compact, flatten, isEmpty, isFinite } from 'lodash';
 
 import { handleSwarmDataMessage } from './dataMessage';
-import { type DecodedEnvelope } from './types';
+import { type BaseDecodedEnvelope, type SwarmDecodedEnvelope } from './types';
 
 import { SignalService } from '../protobuf';
 import { PubKey } from '../session/types';
@@ -37,7 +37,7 @@ import { Timestamp } from '../types/timestamp/timestamp';
 import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
 
 async function shouldDropIncomingPrivateMessage(
-  envelope: DecodedEnvelope,
+  envelope: BaseDecodedEnvelope,
   content: SignalService.Content
 ) {
   const isUs = UserUtils.isUsFromCache(envelope.source);
@@ -156,7 +156,7 @@ function shouldDropBlockedUserMessage(
   return !isGroupV2UpdateMessage;
 }
 
-async function dropIncomingGroupMessage(envelope: DecodedEnvelope) {
+async function dropIncomingGroupMessage(envelope: BaseDecodedEnvelope) {
   try {
     if (PubKey.is03Pubkey(envelope.source)) {
       const infos = await MetaGroupWrapperActions.infoGet(envelope.source);
@@ -187,27 +187,27 @@ async function dropIncomingGroupMessage(envelope: DecodedEnvelope) {
 }
 
 export async function innerHandleSwarmContentMessage({
-  envelope,
+  decodedEnvelope,
 }: {
-  envelope: DecodedEnvelope;
+  decodedEnvelope: BaseDecodedEnvelope;
 }): Promise<void> {
   try {
     window.log.info('innerHandleSwarmContentMessage');
 
-    const content = SignalService.Content.decode(new Uint8Array(envelope.contentDecrypted));
+    const content = SignalService.Content.decode(new Uint8Array(decodedEnvelope.contentDecrypted));
     // This function gets called with an inbox content from a community. When that's the case,
     // the messageHash is empty.
     // `shouldProcessContentMessage` is a lot less strict in terms of timestamps for community messages, and needs to be.
     // Not having this isCommunity flag set to true would make any incoming message from a blinded message request be dropped.
     if (
       !shouldProcessContentMessage({
-        sentAtMs: envelope.sentAtMs,
+        sentAtMs: decodedEnvelope.sentAtMs,
         sigTimestampMs: longOrNumberToNumber(content.sigTimestamp),
-        isCommunity: !envelope.messageHash,
+        isCommunity: !decodedEnvelope.messageHash,
       })
     ) {
       window.log.info(
-        `innerHandleSwarmContentMessage: dropping invalid content message sentAtMs:${envelope.sentAtMs}`
+        `innerHandleSwarmContentMessage: dropping invalid content message sentAtMs:${decodedEnvelope.sentAtMs}`
       );
       return;
     }
@@ -221,30 +221,32 @@ export async function innerHandleSwarmContentMessage({
      * a control message through (if the associated closed group is not blocked)
      */
 
-    const blocked = BlockedNumberController.isBlocked(envelope.getAuthor());
+    const blocked = BlockedNumberController.isBlocked(decodedEnvelope.getAuthor());
     if (blocked) {
-      const envelopeSource = envelope.source;
+      const envelopeSource = decodedEnvelope.source;
       // We want to allow a blocked user message if that's a control message for a known group and the group is not blocked
       if (shouldDropBlockedUserMessage(content, envelopeSource)) {
-        window?.log?.info(`Dropping blocked user message ${ed25519Str(envelope.getAuthor())}`);
+        window?.log?.info(
+          `Dropping blocked user message ${ed25519Str(decodedEnvelope.getAuthor())}`
+        );
         return;
       }
       window?.log?.info(
-        `Allowing control/update message only from blocked user ${ed25519Str(envelope.senderIdentity)} in group: ${ed25519Str(envelope.source)}`
+        `Allowing control/update message only from blocked user ${ed25519Str(decodedEnvelope.senderIdentity)} in group: ${ed25519Str(decodedEnvelope.source)}`
       );
     }
 
-    if (await dropIncomingGroupMessage(envelope)) {
+    if (await dropIncomingGroupMessage(decodedEnvelope)) {
       // message removed from cache in `dropIncomingGroupMessage` already
       return;
     }
 
     // if this is a direct message, envelope.senderIdentity is undefined
     // if this is a closed group message, envelope.senderIdentity is the sender's pubkey and envelope.source is the closed group's pubkey
-    const isPrivateConversationMessage = !envelope.senderIdentity;
+    const isPrivateConversationMessage = !decodedEnvelope.senderIdentity;
 
     if (isPrivateConversationMessage) {
-      if (await shouldDropIncomingPrivateMessage(envelope, content)) {
+      if (await shouldDropIncomingPrivateMessage(decodedEnvelope, content)) {
         return;
       }
     }
@@ -254,7 +256,7 @@ export async function innerHandleSwarmContentMessage({
      * For a private conversation message, this is just the conversation with that user
      */
     const senderConversationModel = await ConvoHub.use().getOrCreateAndWait(
-      isPrivateConversationMessage ? envelope.source : envelope.senderIdentity,
+      isPrivateConversationMessage ? decodedEnvelope.source : decodedEnvelope.senderIdentity,
       ConversationTypeEnum.PRIVATE
     );
 
@@ -276,15 +278,21 @@ export async function innerHandleSwarmContentMessage({
     if (!isPrivateConversationMessage) {
       // this is a group message,
       // we have a second conversation to make sure exists: the group conversation
-      conversationModelForUIUpdate = PubKey.is03Pubkey(envelope.source)
-        ? await ConvoHub.use().getOrCreateAndWait(envelope.source, ConversationTypeEnum.GROUPV2)
-        : await ConvoHub.use().getOrCreateAndWait(envelope.source, ConversationTypeEnum.GROUP);
+      conversationModelForUIUpdate = PubKey.is03Pubkey(decodedEnvelope.source)
+        ? await ConvoHub.use().getOrCreateAndWait(
+            decodedEnvelope.source,
+            ConversationTypeEnum.GROUPV2
+          )
+        : await ConvoHub.use().getOrCreateAndWait(
+            decodedEnvelope.source,
+            ConversationTypeEnum.GROUP
+          );
     }
 
     const expireUpdate = await DisappearingMessages.checkForExpireUpdateInContentMessage(
       content,
       conversationModelForUIUpdate,
-      envelope.messageExpirationFromRetrieve
+      decodedEnvelope.messageExpirationFromRetrieve
     );
     if (content.dataMessage) {
       // because typescript is funky with incoming protobufs
@@ -293,7 +301,7 @@ export async function innerHandleSwarmContentMessage({
       }
 
       await handleSwarmDataMessage({
-        envelope,
+        decodedEnvelope,
         rawDataMessage: content.dataMessage as SignalService.DataMessage,
         senderConversationModel,
         expireUpdate: expireUpdate || null,
@@ -303,49 +311,55 @@ export async function innerHandleSwarmContentMessage({
     }
 
     if (content.receiptMessage) {
-      perfStart(`handleReceiptMessage-${envelope.id}`);
+      perfStart(`handleReceiptMessage-${decodedEnvelope.id}`);
 
-      await handleReceiptMessage(envelope, content.receiptMessage);
-      perfEnd(`handleReceiptMessage-${envelope.id}`, 'handleReceiptMessage');
+      await handleReceiptMessage(decodedEnvelope, content.receiptMessage);
+      perfEnd(`handleReceiptMessage-${decodedEnvelope.id}`, 'handleReceiptMessage');
       return;
     }
     if (content.typingMessage) {
-      perfStart(`handleTypingMessage-${envelope.id}`);
+      perfStart(`handleTypingMessage-${decodedEnvelope.id}`);
 
-      await handleTypingMessage(envelope, content.typingMessage as SignalService.TypingMessage);
-      perfEnd(`handleTypingMessage-${envelope.id}`, 'handleTypingMessage');
+      await handleTypingMessage(
+        decodedEnvelope,
+        content.typingMessage as SignalService.TypingMessage
+      );
+      perfEnd(`handleTypingMessage-${decodedEnvelope.id}`, 'handleTypingMessage');
       return;
     }
 
     if (content.dataExtractionNotification) {
-      perfStart(`handleDataExtractionNotification-${envelope.id}`);
+      perfStart(`handleDataExtractionNotification-${decodedEnvelope.id}`);
 
       await handleDataExtractionNotification({
-        envelope,
+        decodedEnvelope,
         dataExtractionNotification:
           content.dataExtractionNotification as SignalService.DataExtractionNotification,
         expireUpdate,
       });
       perfEnd(
-        `handleDataExtractionNotification-${envelope.id}`,
+        `handleDataExtractionNotification-${decodedEnvelope.id}`,
         'handleDataExtractionNotification'
       );
       return;
     }
     if (content.unsendRequest) {
-      await handleUnsendMessage(envelope, content.unsendRequest as SignalService.UnsendRequest);
+      await handleUnsendMessage(
+        decodedEnvelope,
+        content.unsendRequest as SignalService.UnsendRequest
+      );
       return;
     }
     if (content.callMessage) {
-      await handleCallMessage(envelope, content.callMessage as SignalService.CallMessage, {
+      await handleCallMessage(decodedEnvelope, content.callMessage as SignalService.CallMessage, {
         expireDetails: expireUpdate,
-        messageHash: envelope.messageHash,
+        messageHash: decodedEnvelope.messageHash,
       });
       return;
     }
     if (content.messageRequestResponse) {
       await handleMessageRequestResponse(
-        envelope,
+        decodedEnvelope,
         content.messageRequestResponse as SignalService.MessageRequestResponse
       );
       return;
@@ -375,7 +389,7 @@ async function onReadReceipt(readAt: number, timestamp: number, source: string) 
 }
 
 async function handleReceiptMessage(
-  envelope: DecodedEnvelope,
+  envelope: SwarmDecodedEnvelope,
   receiptMessage: SignalService.IReceiptMessage
 ) {
   const receipt = receiptMessage as SignalService.ReceiptMessage;
@@ -394,7 +408,7 @@ async function handleReceiptMessage(
 }
 
 async function handleTypingMessage(
-  envelope: DecodedEnvelope,
+  envelope: SwarmDecodedEnvelope,
   typingMessage: SignalService.TypingMessage
 ): Promise<void> {
   const { timestamp, action } = typingMessage;
@@ -436,7 +450,7 @@ async function handleTypingMessage(
  * @param unsendMessage data required to delete message
  */
 async function handleUnsendMessage(
-  envelope: DecodedEnvelope,
+  envelope: SwarmDecodedEnvelope,
   unsendMessage: SignalService.UnsendRequest
 ) {
   const { author: messageAuthor, timestamp } = unsendMessage;
@@ -496,7 +510,7 @@ async function handleUnsendMessage(
  * Sets approval fields for conversation depending on response's values. If request is approving, pushes notification and
  */
 async function handleMessageRequestResponse(
-  envelope: DecodedEnvelope,
+  envelope: SwarmDecodedEnvelope,
   messageRequestResponse: SignalService.MessageRequestResponse
 ) {
   // no one cares about the is `messageRequestResponse.isApproved` field currently.
@@ -630,17 +644,17 @@ async function handleMessageRequestResponse(
  */
 
 export async function handleDataExtractionNotification({
-  envelope,
+  decodedEnvelope,
   expireUpdate,
   dataExtractionNotification,
 }: {
-  envelope: DecodedEnvelope;
+  decodedEnvelope: SwarmDecodedEnvelope;
   dataExtractionNotification: SignalService.DataExtractionNotification;
   expireUpdate: ReadyToDisappearMsgUpdate | undefined;
 }): Promise<void> {
   // Note: we currently don't care about the timestamp included in the field itself, just the timestamp of the envelope
 
-  const { source, sentAtMs } = envelope;
+  const { source, sentAtMs } = decodedEnvelope;
 
   const convo = ConvoHub.use().get(source);
   if (!convo || !convo.isPrivate()) {
@@ -657,7 +671,7 @@ export async function handleDataExtractionNotification({
 
   let created = await convo.addSingleIncomingMessage({
     source,
-    messageHash: envelope.messageHash,
+    messageHash: decodedEnvelope.messageHash,
     sent_at: sentAtMs,
     dataExtractionNotification: {
       type: dataExtractionNotification.type,

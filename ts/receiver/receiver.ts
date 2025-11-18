@@ -5,12 +5,12 @@ import { innerHandleSwarmContentMessage } from './contentMessage';
 
 import { DURATION } from '../session/constants';
 import { sleepFor } from '../session/utils/Promise';
-import type { DecodedEnvelope } from './types';
+import type { SwarmDecodedEnvelope } from './types';
 
 export async function handleSwarmContentDecryptedWithTimeout({
-  envelope,
+  decodedEnvelope,
 }: {
-  envelope: DecodedEnvelope;
+  decodedEnvelope: SwarmDecodedEnvelope;
 }) {
   let taskDone = false;
   return Promise.race([
@@ -21,19 +21,19 @@ export async function handleSwarmContentDecryptedWithTimeout({
       }
       window.log.error(
         'handleSwarmContentDecryptedWithTimeout timer expired for envelope ',
-        envelope.id
+        decodedEnvelope.id
       );
     })(),
     (async () => {
       try {
         await innerHandleSwarmContentMessage({
-          envelope,
+          decodedEnvelope,
         });
       } catch (e) {
         window.log.error(
           'handleSwarmContentDecryptedWithTimeout task failed with ',
           e.message,
-          envelope.id
+          decodedEnvelope.id
         );
       } finally {
         taskDone = true;

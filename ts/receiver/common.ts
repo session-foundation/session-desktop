@@ -1,8 +1,8 @@
-import { type DecodedEnvelope } from './types';
+import { type BaseDecodedEnvelope } from './types';
 import { DURATION } from '../session/constants';
 import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
 
-export function getEnvelopeId(envelope: DecodedEnvelope) {
+export function getEnvelopeId(envelope: BaseDecodedEnvelope) {
   if (envelope.source) {
     return `${envelope.source} ${longOrNumberToNumber(envelope.sentAtMs)} (${envelope.id})`;
   }
