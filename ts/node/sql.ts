@@ -86,6 +86,7 @@ import {
 } from './sqlInstance';
 import { OpenGroupV2Room } from '../data/types';
 import { tr } from '../localization/localeTools';
+import { getFileCreationTimestampMs } from './fs_utility';
 
 // eslint:disable: function-name non-literal-fs-path
 
@@ -269,6 +270,13 @@ function savePasswordHash(hash: string) {
 
 function removePasswordHash() {
   removeItemById(PASS_HASH_ID);
+}
+
+function getDBCreationTimestampMs(): number | null {
+  if (!databaseFilePath) {
+    return null;
+  }
+  return getFileCreationTimestampMs(databaseFilePath);
 }
 
 function getIdentityKeyById(id: string, instance: BetterSqlite3.Database) {
@@ -2533,6 +2541,7 @@ export const sqlNode = {
   close,
   removeDB,
   setSQLPassword,
+  getDBCreationTimestampMs,
 
   getPasswordHash,
   savePasswordHash,

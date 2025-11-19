@@ -144,6 +144,11 @@ const doAppStartUp = async () => {
   }, 1 * DURATION.MINUTES);
 
   void regenerateLastMessagesGroupsCommunities();
+
+  const dbCreationTimestampMs = await Data.getDBCreationTimestampMs();
+  if (dbCreationTimestampMs && dbCreationTimestampMs > 7 * DURATION.DAYS) {
+    // TODO: show donate CTA if not clicked before, check this too
+  }
 };
 
 function useUpdateBadgeCount() {

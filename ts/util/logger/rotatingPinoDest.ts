@@ -6,6 +6,7 @@ import pino from 'pino';
 
 import { DURATION } from '../../session/constants';
 import { LogLevel } from './Logging';
+import { getFileCreationTimestampMs } from '../../node/fs_utility';
 
 /**
  * Keep at most rotated 3 files, so  4 files total including the "current" one
@@ -52,10 +53,10 @@ export function createRotatingPinoDest({
   function maybeRotate(startingIndex = maxSavedLogFiles - 1) {
     let pendingFileIndex = startingIndex;
     try {
-      const { birthtimeMs } = fs.statSync(logFile);
+      const fileCreationTimeMs = getFileCreationTimestampMs(logFile);
 
       // more recent than
-      if (birthtimeMs > Date.now() - ROTATION_INTERVAL) {
+      if (fileCreationTimeMs && fileCreationTimeMs > Date.now() - ROTATION_INTERVAL) {
         return;
       }
 

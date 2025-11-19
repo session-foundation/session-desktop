@@ -60,6 +60,10 @@ async function getPasswordHash(): Promise<string | null> {
   return channels.getPasswordHash();
 }
 
+async function getDBCreationTimestampMs(): Promise<number | null> {
+  return channels.getDBCreationTimestampMs();
+}
+
 // Guard Nodes
 async function getGuardNodes(): Promise<Array<GuardNode>> {
   return channels.getGuardNodes();
@@ -781,6 +785,7 @@ export const Data = {
   close,
   removeDB,
   getPasswordHash,
+  getDBCreationTimestampMs,
 
   // items table logic
   createOrUpdateItem,
