@@ -2,7 +2,7 @@ import fs from 'fs';
 
 export function getFileCreationTimestampMs(filePath: string): number | null {
   if (!filePath || typeof filePath !== 'string') {
-    console.warn('Invalid file path provided');
+    console.warn(`Invalid file path provided ${filePath}`);
     return null;
   }
 

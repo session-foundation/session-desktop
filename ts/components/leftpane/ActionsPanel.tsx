@@ -148,7 +148,7 @@ const doAppStartUp = async () => {
   void regenerateLastMessagesGroupsCommunities();
 
   const dbCreationTimestampMs = await Data.getDBCreationTimestampMs();
-  if (dbCreationTimestampMs && dbCreationTimestampMs > 7 * DURATION.DAYS) {
+  if (dbCreationTimestampMs && dbCreationTimestampMs + 7 * DURATION.DAYS < Date.now()) {
     // TODO: add checks around if the user has interacted with the donation url dialog before
     const interacted = false;
     if (!interacted) {
