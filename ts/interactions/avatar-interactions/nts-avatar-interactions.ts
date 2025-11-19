@@ -33,6 +33,7 @@ export async function uploadAndSetOurAvatarShared({
   let encryptedData: ArrayBuffer;
   let encryptionKey: Uint8Array;
   const deterministicEncryption = getFeatureFlag('useDeterministicEncryption');
+  const isAnimated = mainAvatarDetails.isAnimated;
   if (deterministicEncryption) {
     const encryptedContent = await MultiEncryptWrapperActions.attachmentEncrypt({
       allowLarge: false,
@@ -95,6 +96,7 @@ export async function uploadAndSetOurAvatarShared({
       key: encryptionKey,
       url: fileUrl,
     });
+    await UserConfigWrapperActions.setAnimatedAvatar(isAnimated);
   } else if (context === 'reuploadAvatar') {
     await UserConfigWrapperActions.setReuploadProfilePic({
       key: encryptionKey,

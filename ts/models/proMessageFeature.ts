@@ -22,7 +22,7 @@ export enum ProMessageFeature {
 }
 
 function hasProFeature(bitset: bigint, feature: ProMessageFeature) {
-  return bitset & numberToBigInt(1 << proFeatureValues.indexOf(feature));
+  return !!(bitset & numberToBigInt(1 << proFeatureValues.indexOf(feature)));
 }
 
 function addProFeature(bitset: bigint, feature: ProMessageFeature) {
