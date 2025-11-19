@@ -1,5 +1,12 @@
 import { isNumber } from 'lodash';
-import { MouseEventHandler, SessionDataTestId, useCallback, useMemo, type ReactNode } from 'react';
+import {
+  MouseEventHandler,
+  SessionDataTestId,
+  useCallback,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 import { ModalBasicHeader } from '../../../../SessionWrapperModal';
@@ -48,6 +55,11 @@ import { SpacerMD } from '../../../../basic/Text';
 import LIBSESSION_CONSTANTS from '../../../../../session/utils/libsession/libsession_constants';
 import { useDataFeatureFlag } from '../../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { AnimatedSpinnerIcon } from '../../../../loading/spinner/AnimatedSpinnerIcon';
+import { UserConfigWrapperActions } from '../../../../../webworker/workers/browser/libsession_worker_interface';
+import {
+  ProFeatures as ProFeaturesFinder,
+  ProMessageFeature,
+} from '../../../../../models/proMessageFeature';
 
 type ProSettingsModalState = {
   fromCTA?: boolean;
@@ -422,6 +434,8 @@ function ProSettings({ state }: SectionProps) {
   const { data, isLoading, isError } = useProAccessDetails();
   const backendErrorButtons = useBackendErrorDialogButtons();
 
+  const [proBadgeEnabled, setProBadgeEnabled] = useState(false);
+
   const { returnToThisModalAction, centerAlign } = state;
 
   const handleUpdateAccessClick = useCallback(() => {
@@ -482,9 +496,15 @@ function ProSettings({ state }: SectionProps) {
           text={{ token: 'proBadge' }}
           subText={{ token: 'proBadgeVisible' }}
           onClick={async () => {
-            throw new Error('Not implemented, and state {false} too');
+            const newProBadgeEnabled = !proBadgeEnabled;
+            await UserConfigWrapperActions.setProBadge(newProBadgeEnabled);
+            const refreshed = ProFeaturesFinder.hasProFeature(
+              await UserConfigWrapperActions.getProFeaturesBitset(),
+              ProMessageFeature.PRO_BADGE
+            );
+            setProBadgeEnabled(refreshed);
           }}
-          active={false}
+          active={proBadgeEnabled}
         />
       </PanelButtonGroup>
     </SectionFlexContainer>

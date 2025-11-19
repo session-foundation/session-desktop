@@ -157,6 +157,7 @@ import type {
 import type { LastMessageStatusType } from '../state/ducks/types';
 import { OutgoingUserProfile } from '../types/message';
 import { Timestamp } from '../types/timestamp/timestamp';
+import { getProDetailsFromStorage } from '../state/selectors/proBackendData';
 import { ProStatus } from '../session/apis/pro_backend_api/types';
 
 type InMemoryConvoInfos = {
@@ -962,8 +963,10 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
 
     if (this.isMe()) {
-      // TODO: how do we do we get the real redux data here?
-      return getDataFeatureFlag('mockProCurrentStatus') === ProStatus.Active;
+      return (
+        (getDataFeatureFlag('mockProCurrentStatus') ?? getProDetailsFromStorage()?.status) ===
+        ProStatus.Active
+      );
     }
 
     return getFeatureFlag('mockOthersHavePro');

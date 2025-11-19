@@ -645,11 +645,11 @@ export const ProDebugSection = ({
   const proAvailable = useFeatureFlag('proAvailable');
 
   const resetPro = useCallback(async () => {
+    await UserConfigWrapperActions.removeProConfig();
     await Storage.remove(SettingsKey.proDetails);
     await Storage.remove(SettingsKey.proExpiringSoonCTA);
     await Storage.remove(SettingsKey.proExpiredCTA);
     dispatch(proBackendDataActions.reset({ key: 'details' }));
-    // TODO: delete pro proof
   }, [dispatch]);
 
   const resetProMocking = useCallback(() => {
