@@ -45,7 +45,7 @@ import { BlockOrUnblockDialog } from './blockOrUnblock/BlockOrUnblockDialog';
 import { DebugMenuModal } from './debug/DebugMenuModal';
 import { ConversationSettingsDialog } from './conversationSettings/conversationSettingsDialog';
 import { SessionConfirm } from './SessionConfirm';
-import { SessionProInfoModal } from './SessionProInfoModal';
+import { SessionCTA } from './SessionCTA';
 import { LocalizedPopupDialog } from './LocalizedPopupDialog';
 import { UserSettingsDialog } from './user-settings/UserSettingsDialog';
 
@@ -113,7 +113,7 @@ export const ModalContainer = () => {
       {localizedPopupDialogState && <LocalizedPopupDialog {...localizedPopupDialogState} />}
       {lightBoxOptions && <LightboxGallery {...lightBoxOptions} />}
       {openUrlModalState && <OpenUrlModal {...openUrlModalState} />}
-      {sessionProInfoState && <SessionProInfoModal {...sessionProInfoState} />}
+      {sessionProInfoState && <SessionCTA {...sessionProInfoState} />}
       {/* Should be on top of all other modals */}
       {confirmModalState && <SessionConfirm {...confirmModalState} />}
     </>

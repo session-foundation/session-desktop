@@ -24,6 +24,7 @@ import { DURATION } from '../../session/constants';
 import {
   onionPathModal,
   updateDebugMenuModal,
+  updateSessionCTA,
   userSettingsModal,
 } from '../../state/ducks/modalDialog';
 
@@ -61,6 +62,7 @@ import { useDebugMenuModal } from '../../state/selectors/modal';
 import { useFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { useDebugKey } from '../../hooks/useDebugKey';
 import { UpdateProRevocationList } from '../../session/utils/job_runners/jobs/UpdateProRevocationListJob';
+import { CTAVariant } from '../dialog/cta/types';
 
 const StyledContainerAvatar = styled.div`
   padding: var(--margins-lg);
@@ -147,7 +149,11 @@ const doAppStartUp = async () => {
 
   const dbCreationTimestampMs = await Data.getDBCreationTimestampMs();
   if (dbCreationTimestampMs && dbCreationTimestampMs > 7 * DURATION.DAYS) {
-    // TODO: show donate CTA if not clicked before, check this too
+    // TODO: add checks around if the user has interacted with the donation url dialog before
+    const interacted = false;
+    if (!interacted) {
+      window.inboxStore?.dispatch(updateSessionCTA({ variant: CTAVariant.DONATE_GENERIC }));
+    }
   }
 };
 

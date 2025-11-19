@@ -146,7 +146,7 @@ function MiscSection() {
         }
         text={{ token: 'donate' }}
         onClick={() => {
-          showLinkVisitWarningDialog('https://session.foundation/donate#app', dispatch);
+          showLinkVisitWarningDialog('https://getsession.org/donate', dispatch);
         }}
         dataTestId="donate-settings-menu-item"
       />

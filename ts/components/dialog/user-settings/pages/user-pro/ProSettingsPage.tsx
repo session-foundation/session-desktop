@@ -42,7 +42,7 @@ import {
   useProAccessDetails,
 } from '../../../../../hooks/useHasPro';
 import { SessionButton, SessionButtonColor } from '../../../../basic/SessionButton';
-import { proButtonProps } from '../../../SessionProInfoModal';
+import { proButtonProps } from '../../../SessionCTA';
 import { useIsProGroupsAvailable } from '../../../../../hooks/useIsProAvailable';
 import { SpacerMD } from '../../../../basic/Text';
 import LIBSESSION_CONSTANTS from '../../../../../session/utils/libsession/libsession_constants';
