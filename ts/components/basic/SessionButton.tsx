@@ -128,14 +128,11 @@ const StyledSolidButton = styled(StyledBaseButton)<{ isDarkTheme: boolean }>`
     &:hover {
       background-color: var(--transparent-color);
       color: ${props =>
-        props.isDarkTheme && props.color && props.color !== SessionButtonColor.Tertiary
-          ? `var(--${props.color}-color)`
-          : `var(--button-solid-text-hover-color)`};
-      border: 1px solid
-        ${props =>
-          props.isDarkTheme && props.color
+        props.isDarkTheme
+          ? props.color && props.color !== SessionButtonColor.Tertiary
             ? `var(--${props.color}-color)`
-            : `var(--button-solid-text-hover-color)`};
+            : 'var(--primary-color)'
+          : `var(--button-solid-text-hover-color)`};
     }
   }
 `;
