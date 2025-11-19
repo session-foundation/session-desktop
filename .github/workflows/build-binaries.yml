@@ -82,7 +82,7 @@ jobs:
           omitNameDuringUpdate: true
 
   build_linux:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: [create_draft_release_if_needed]
     strategy:
       fail-fast: false
