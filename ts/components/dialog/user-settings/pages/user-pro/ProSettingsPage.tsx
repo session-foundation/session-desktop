@@ -498,8 +498,9 @@ function ProSettings({ state }: SectionProps) {
           onClick={async () => {
             const newProBadgeEnabled = !proBadgeEnabled;
             await UserConfigWrapperActions.setProBadge(newProBadgeEnabled);
+            const proFeatures = await UserConfigWrapperActions.getProFeaturesBitset();
             const refreshed = ProFeaturesFinder.hasProFeature(
-              await UserConfigWrapperActions.getProFeaturesBitset(),
+              proFeatures,
               ProMessageFeature.PRO_BADGE
             );
             setProBadgeEnabled(refreshed);

@@ -96,13 +96,13 @@ export async function uploadAndSetOurAvatarShared({
       key: encryptionKey,
       url: fileUrl,
     });
+    await UserConfigWrapperActions.setAnimatedAvatar(isAnimated);
   } else if (context === 'reuploadAvatar') {
     await UserConfigWrapperActions.setReuploadProfilePic({
       key: encryptionKey,
       url: fileUrl,
     });
   }
-  await UserConfigWrapperActions.setAnimatedAvatar(isAnimated);
 
   return {
     avatarPointer: ourConvo.getAvatarPointer(),
