@@ -63,14 +63,13 @@ export async function registerUrlInteraction(url: string, interaction: URLIntera
   await Storage.put(SettingsKey.urlInteractions, interactions);
 }
 
-export function hasUrlInteraction(url: string, interaction: URLInteraction) {
+export function getUrlInteractionsForUrl(url: string): Array<URLInteraction> {
   if (!isValidUrl(url)) {
-    return false;
+    return [];
   }
 
   const interactions = getUrlInteractions();
-  const found = interactions.find(item => item.url === url);
-  return found?.interactions.includes(interaction);
+  return interactions.find(item => item.url === url)?.interactions ?? [];
 }
 
 export async function clearAllUrlInteractions() {
