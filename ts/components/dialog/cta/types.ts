@@ -39,7 +39,7 @@ const proCTAVariants = [
 export type ProCTAVariant = (typeof proCTAVariants)[number];
 
 export const isProCTAVariant = (v: CTAVariant): v is ProCTAVariant =>
-  proCTAVariants.includes(v as ProCTAVariant);
+  proCTAVariants.includes(v as number);
 
 export type CTAVariantExcludingProCTAs = Exclude<CTAVariant, ProCTAVariant>;
 
@@ -55,5 +55,5 @@ const variantsForNonGroupFeatures = [
 type VariantForNonGroupFeature = (typeof variantsForNonGroupFeatures)[number];
 
 export function isProCTAFeatureVariant(variant: CTAVariant): variant is VariantForNonGroupFeature {
-  return variantsForNonGroupFeatures.includes(variant as any);
+  return variantsForNonGroupFeatures.includes(variant as number);
 }
