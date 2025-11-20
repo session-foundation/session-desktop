@@ -95,6 +95,7 @@ import { ReduxOnionSelectors } from '../state/selectors/onions';
 import { tStrippedWithObj, tr, tStripped } from '../localization/localeTools';
 import type { QuotedAttachmentType } from '../components/conversation/message/message-content/quote/Quote';
 import { ProFeatures, ProMessageFeature } from './proMessageFeature';
+import { privateSet, privateSetKey } from './modelFriends';
 
 // tslint:disable: cyclomatic-complexity
 
@@ -1321,16 +1322,22 @@ export class MessageModel extends Model<MessageAttributes> {
     this.set({ expireTimer: expireTimerSeconds });
   }
 
+  /**
+   * Exposed for convenience, but not recommended to use directly.
+   */
   public set(attrs: Partial<MessageAttributes>) {
-    super.set(attrs);
+    super[privateSet](attrs);
     return this;
   }
 
+  /**
+   * Exposed for convenience, but not recommended to use directly.
+   */
   public setKey<K extends keyof MessageAttributes>(
     key: K,
     value: MessageAttributes[K] | undefined
   ) {
-    super.setKey(key, value);
+    super[privateSetKey](key, value);
     return this;
   }
 

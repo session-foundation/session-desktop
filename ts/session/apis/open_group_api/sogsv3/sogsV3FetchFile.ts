@@ -12,6 +12,10 @@ import { OpenGroupPollingUtils } from '../opengroupV2/OpenGroupPollingUtils';
 import { getOpenGroupV2ConversationId } from '../utils/OpenGroupUtils';
 import { OpenGroupV2Room } from '../../../../data/types';
 import { DURATION } from '../../../constants';
+import {
+  SessionProfileResetAvatarGroupCommunity,
+  SessionProfileSetAvatarDownloadedAny,
+} from '../../../../models/profile';
 
 function fileDetailsToEndpoint({ fileId, roomId }: { fileId: number | string; roomId: string }) {
   return `/room/${roomId}/file/${fileId}`;
@@ -157,19 +161,22 @@ export async function sogsV3FetchPreviewAndSaveIt(roomInfos: OpenGroupV2RoomWith
 
     // this does commit to DB and UI
     if (imageFullUrl) {
-      await convo.setSessionProfile({
+      const profile = new SessionProfileSetAvatarDownloadedAny({
+        convo,
         displayName: null, // null so we don't overwrite it
-        type: 'setAvatarDownloadedCommunity',
         avatarPath: upgradedAttachment.path,
         avatarPointer: imageFullUrl,
         fallbackAvatarPath: upgradedAttachment.path, // no need for a fallback for a community
         profileKey: new Uint8Array(), // unneeded for a community
       });
+
+      await profile.applyChangesIfNeeded();
     } else {
-      await convo.setSessionProfile({
+      const profile = new SessionProfileResetAvatarGroupCommunity({
+        convo,
         displayName: null, // null so we don't overwrite it
-        type: 'resetAvatarCommunity',
       });
+      await profile.applyChangesIfNeeded();
     }
   }
 }

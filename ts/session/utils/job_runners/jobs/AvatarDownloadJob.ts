@@ -16,6 +16,7 @@ import { processAvatarData } from '../../../../util/avatar/processAvatarData';
 import { downloadAttachmentFs } from '../../../../receiver/attachments';
 import { extractDetailsFromUrlFragment } from '../../../url';
 import { MultiEncryptWrapperActions } from '../../../../webworker/workers/browser/libsession_worker_interface';
+import { SessionProfileSetAvatarDownloadedAny } from '../../../../models/profile';
 
 const defaultMsBetweenRetries = 10000;
 const defaultMaxAttempts = 3;
@@ -184,16 +185,15 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
           return RunJobResult.RetryJobIfPossible; // so we retry this job
         }
 
-        await conversation.setSessionProfile({
-          type: conversation.isPrivate()
-            ? 'setAvatarDownloadedPrivate'
-            : 'setAvatarDownloadedGroup',
+        const profile = new SessionProfileSetAvatarDownloadedAny({
+          convo: conversation,
           displayName: null, // null to not update the display name.
           avatarPath: mainAvatarPath,
           fallbackAvatarPath,
           avatarPointer: toDownloadPointer,
           profileKey: toDownloadProfileKey,
         });
+        await profile.applyChangesIfNeeded();
 
         changes = true;
       } catch (e) {

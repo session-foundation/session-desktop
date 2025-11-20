@@ -496,14 +496,10 @@ export const ConvoInfoVolatileWrapperActions: ConvoInfoVolatileWrapperActionsCal
       ReturnType<ConvoInfoVolatileWrapperActionsCalls['getAll1o1']>
     >,
 
-  set1o1: async (pubkeyHex: string, lastRead: number, unread: boolean) =>
-    callLibSessionWorker([
-      'ConvoInfoVolatileConfig',
-      'set1o1',
-      pubkeyHex,
-      lastRead,
-      unread,
-    ]) as Promise<ReturnType<ConvoInfoVolatileWrapperActionsCalls['set1o1']>>,
+  set1o1: async (...args: Parameters<ConvoInfoVolatileWrapperActionsCalls['set1o1']>) =>
+    callLibSessionWorker(['ConvoInfoVolatileConfig', 'set1o1', ...args]) as Promise<
+      ReturnType<ConvoInfoVolatileWrapperActionsCalls['set1o1']>
+    >,
 
   erase1o1: async (pubkeyHex: string) =>
     callLibSessionWorker(['ConvoInfoVolatileConfig', 'erase1o1', pubkeyHex]) as Promise<
@@ -521,14 +517,12 @@ export const ConvoInfoVolatileWrapperActions: ConvoInfoVolatileWrapperActionsCal
       ReturnType<ConvoInfoVolatileWrapperActionsCalls['getAllLegacyGroups']>
     >,
 
-  setLegacyGroup: async (pubkeyHex: string, lastRead: number, unread: boolean) =>
-    callLibSessionWorker([
-      'ConvoInfoVolatileConfig',
-      'setLegacyGroup',
-      pubkeyHex,
-      lastRead,
-      unread,
-    ]) as Promise<ReturnType<ConvoInfoVolatileWrapperActionsCalls['setLegacyGroup']>>,
+  setLegacyGroup: async (
+    ...args: Parameters<ConvoInfoVolatileWrapperActionsCalls['setLegacyGroup']>
+  ) =>
+    callLibSessionWorker(['ConvoInfoVolatileConfig', 'setLegacyGroup', ...args]) as Promise<
+      ReturnType<ConvoInfoVolatileWrapperActionsCalls['setLegacyGroup']>
+    >,
 
   eraseLegacyGroup: async (pubkeyHex: string) =>
     callLibSessionWorker(['ConvoInfoVolatileConfig', 'eraseLegacyGroup', pubkeyHex]) as Promise<
@@ -545,14 +539,10 @@ export const ConvoInfoVolatileWrapperActions: ConvoInfoVolatileWrapperActionsCal
       ReturnType<ConvoInfoVolatileWrapperActionsCalls['getAllGroups']>
     >,
 
-  setGroup: async (pubkeyHex: GroupPubkeyType, lastRead: number, unread: boolean) =>
-    callLibSessionWorker([
-      'ConvoInfoVolatileConfig',
-      'setGroup',
-      pubkeyHex,
-      lastRead,
-      unread,
-    ]) as Promise<ReturnType<ConvoInfoVolatileWrapperActionsCalls['setGroup']>>,
+  setGroup: async (...args: Parameters<ConvoInfoVolatileWrapperActionsCalls['setGroup']>) =>
+    callLibSessionWorker(['ConvoInfoVolatileConfig', 'setGroup', ...args]) as Promise<
+      ReturnType<ConvoInfoVolatileWrapperActionsCalls['setGroup']>
+    >,
 
   eraseGroup: async (pubkeyHex: GroupPubkeyType) =>
     callLibSessionWorker(['ConvoInfoVolatileConfig', 'eraseGroup', pubkeyHex]) as Promise<
@@ -570,14 +560,12 @@ export const ConvoInfoVolatileWrapperActions: ConvoInfoVolatileWrapperActionsCal
       ReturnType<ConvoInfoVolatileWrapperActionsCalls['getAllCommunities']>
     >,
 
-  setCommunityByFullUrl: async (fullUrlWithPubkey: string, lastRead: number, unread: boolean) =>
-    callLibSessionWorker([
-      'ConvoInfoVolatileConfig',
-      'setCommunityByFullUrl',
-      fullUrlWithPubkey,
-      lastRead,
-      unread,
-    ]) as Promise<ReturnType<ConvoInfoVolatileWrapperActionsCalls['setCommunityByFullUrl']>>,
+  setCommunityByFullUrl: async (
+    ...args: Parameters<ConvoInfoVolatileWrapperActionsCalls['setCommunityByFullUrl']>
+  ) =>
+    callLibSessionWorker(['ConvoInfoVolatileConfig', 'setCommunityByFullUrl', ...args]) as Promise<
+      ReturnType<ConvoInfoVolatileWrapperActionsCalls['setCommunityByFullUrl']>
+    >,
 
   eraseCommunityByFullUrl: async (fullUrlWithOrWithoutPubkey: string) =>
     callLibSessionWorker([

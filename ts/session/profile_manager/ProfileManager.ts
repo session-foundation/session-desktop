@@ -8,6 +8,11 @@ import { ConversationTypeEnum } from '../../models/types';
 import { RetrieveDisplayNameError } from '../utils/errors';
 import { NetworkTime } from '../../util/NetworkTime';
 import type { WithProfileUpdatedAtSeconds } from '../../models/conversationAttributes';
+import {
+  SessionDisplayNameOnlyPrivate,
+  SessionProfileResetAvatarPrivate,
+  SessionProfileSetAvatarBeforeDownloadPrivate,
+} from '../../models/profile';
 
 /**
  * This can be used to update our conversation display name with the given name right away, and plan an AvatarDownloadJob to retrieve the new avatar if needed to download it
@@ -72,19 +77,21 @@ async function updateProfileOfContact({
   // with what we have locally, so we need the commit to have already the right values in pointer and profileKey)
 
   if (profileUrl && profileKey) {
-    changes = await conversation.setSessionProfile({
-      type: 'setAvatarBeforeDownloadPrivate',
+    const profile = new SessionProfileSetAvatarBeforeDownloadPrivate({
+      convo: conversation,
       profileKey,
       avatarPointer: profileUrl,
       displayName,
       profileUpdatedAtSeconds,
     });
+    changes = await profile.applyChangesIfNeeded();
   } else {
-    changes = await conversation.setSessionProfile({
-      type: 'resetAvatarPrivate',
-      profileUpdatedAtSeconds,
+    const profile = new SessionProfileResetAvatarPrivate({
+      convo: conversation,
       displayName,
+      profileUpdatedAtSeconds,
     });
+    changes = await profile.applyChangesIfNeeded();
   }
 
   if (changes.nameChanged || changes.avatarChanged) {
@@ -138,11 +145,12 @@ async function updateOurProfileDisplayName(newName: string) {
     throw new RetrieveDisplayNameError();
   }
 
-  await conversation.setSessionProfile({
-    type: 'displayNameChangeOnlyPrivate',
+  const profile = new SessionDisplayNameOnlyPrivate({
+    convo: conversation,
     displayName: newName,
     profileUpdatedAtSeconds: NetworkTime.nowSeconds(),
   });
+  await profile.applyChangesIfNeeded();
 
   // might be good to not trigger a sync if the name did not change
   await conversation.commit();

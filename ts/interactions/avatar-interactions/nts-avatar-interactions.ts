@@ -12,6 +12,7 @@ import {
 import { UserUtils } from '../../session/utils';
 import { fromBase64ToArray } from '../../session/utils/String';
 import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import { SessionProfileSetAvatarDownloadedAny } from '../../models/profile';
 
 export async function uploadAndSetOurAvatarShared({
   decryptedAvatarData,
@@ -83,14 +84,16 @@ export async function uploadAndSetOurAvatarShared({
 
   // Replace our temporary image with the attachment pointer from the server.
   // Note: this commits already to the DB.
-  await ourConvo.setSessionProfile({
+  const profile = new SessionProfileSetAvatarDownloadedAny({
+    convo: ourConvo,
     avatarPath: savedMainAvatar.path,
     fallbackAvatarPath: processedFallbackAvatar?.path || savedMainAvatar.path,
     displayName: null,
     avatarPointer: fileUrl,
-    type: 'setAvatarDownloadedPrivate',
     profileKey: encryptionKey,
   });
+  await profile.applyChangesIfNeeded();
+
   if (context === 'uploadNewAvatar') {
     await UserConfigWrapperActions.setNewProfilePic({
       key: encryptionKey,

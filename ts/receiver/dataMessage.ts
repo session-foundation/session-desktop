@@ -29,6 +29,7 @@ import { ConversationTypeEnum } from '../models/types';
 import { ed25519Str } from '../session/utils/String';
 import { Timestamp } from '../types/timestamp/timestamp';
 import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
+import { NetworkTime } from '../util/NetworkTime';
 
 function cleanAttachment(attachment: SignalService.IAttachmentPointer) {
   return {
@@ -218,6 +219,25 @@ export async function handleSwarmDataMessage({
       profileUpdatedAtSeconds: new Timestamp({
         value: cleanDataMessage.profile.lastProfileUpdateSeconds ?? 0,
       }).seconds(),
+    });
+  }
+
+  // if, when we process that message we have a valid pro proof that is not expired,
+  // we can process the pro details of that user
+  if (
+    !isMe &&
+    senderConversationModel &&
+    decodedEnvelope.validPro &&
+    decodedEnvelope.isProProofValidAtMs(NetworkTime.now()) &&
+    cleanDataMessage.profile
+  ) {
+    await senderConversationModel.setDbContactProDetails({
+      proGenIndexHashB64: decodedEnvelope.validPro.proProof.genIndexHashB64,
+      proExpiryTsMs: decodedEnvelope.validPro.proProof.expiryMs,
+      bitsetProFeatures: decodedEnvelope.validPro.proFeaturesBitset,
+      incomingChangeSeconds: longOrNumberToNumber(
+        cleanDataMessage.profile.lastProfileUpdateSeconds ?? 0
+      ),
     });
   }
 

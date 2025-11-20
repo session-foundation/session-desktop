@@ -800,8 +800,8 @@ async function handleConvoInfoVolatileUpdate() {
 
             await applyConvoVolatileUpdateFromWrapper(
               fromWrapper.pubkeyHex,
-              fromWrapper.unread,
-              fromWrapper.lastRead
+              fromWrapper.forcedUnread,
+              fromWrapper.lastReadTsMs
             );
           }
         } catch (e) {
@@ -822,8 +822,8 @@ async function handleConvoInfoVolatileUpdate() {
 
             await applyConvoVolatileUpdateFromWrapper(
               convoId,
-              fromWrapper.unread,
-              fromWrapper.lastRead
+              fromWrapper.forcedUnread,
+              fromWrapper.lastReadTsMs
             );
           }
         } catch (e) {
@@ -842,8 +842,8 @@ async function handleConvoInfoVolatileUpdate() {
 
             await applyConvoVolatileUpdateFromWrapper(
               fromWrapper.pubkeyHex,
-              fromWrapper.unread,
-              fromWrapper.lastRead
+              fromWrapper.forcedUnread,
+              fromWrapper.lastReadTsMs
             );
           }
         } catch (e) {
@@ -863,8 +863,8 @@ async function handleConvoInfoVolatileUpdate() {
             try {
               await applyConvoVolatileUpdateFromWrapper(
                 fromWrapper.pubkeyHex,
-                fromWrapper.unread,
-                fromWrapper.lastRead
+                fromWrapper.forcedUnread,
+                fromWrapper.lastReadTsMs
               );
             } catch (e) {
               window.log.warn(

@@ -1,5 +1,5 @@
 import autoBind from 'auto-bind';
-import { from_hex, to_hex } from 'libsodium-wrappers-sumo';
+import { from_hex } from 'libsodium-wrappers-sumo';
 import {
   debounce,
   includes,
@@ -99,11 +99,6 @@ import {
   isOpenOrClosedGroup,
   READ_MESSAGE_STATE,
   type ConversationNotificationSettingType,
-  type WithAvatarPathAndFallback,
-  type WithAvatarPointer,
-  type WithAvatarPointerProfileKey,
-  type WithProfileKey,
-  type WithProfileUpdatedAtSeconds,
 } from './conversationAttributes';
 
 import { ReadReceiptMessage } from '../session/messages/outgoing/controlMessage/receipt/ReadReceiptMessage';
@@ -159,77 +154,12 @@ import { OutgoingUserProfile } from '../types/message';
 import { Timestamp } from '../types/timestamp/timestamp';
 import { getProDetailsFromStorage } from '../state/selectors/proBackendData';
 import { ProStatus } from '../session/apis/pro_backend_api/types';
+import { privateSet, privateSetKey } from './modelFriends';
 
 type InMemoryConvoInfos = {
   mentionedUs: boolean;
   unreadCount: number;
 };
-
-type WithSetSessionProfileType<
-  T extends
-    | 'displayNameChangeOnlyPrivate'
-    | 'resetAvatarPrivate'
-    | 'resetAvatarGroup'
-    | 'resetAvatarCommunity'
-    | 'setAvatarBeforeDownloadPrivate'
-    | 'setAvatarBeforeDownloadGroup'
-    | 'setAvatarDownloadedPrivate'
-    | 'setAvatarDownloadedCommunity'
-    | 'setAvatarDownloadedGroup',
-> = {
-  type: T;
-};
-
-type WithDisplayNameChange = { displayName?: string | null };
-
-type SetSessionProfileDetails = WithDisplayNameChange &
-  (
-    | (WithSetSessionProfileType<'displayNameChangeOnlyPrivate'> & WithProfileUpdatedAtSeconds)
-    | (WithSetSessionProfileType<'resetAvatarPrivate'> & WithProfileUpdatedAtSeconds)
-    // no need for profileUpdatedAtSeconds for groups/communities
-    | WithSetSessionProfileType<'resetAvatarGroup' | 'resetAvatarCommunity'>
-    // Note: for communities, we set & download the avatar as a single step
-    | (WithSetSessionProfileType<'setAvatarBeforeDownloadPrivate'> &
-        WithProfileUpdatedAtSeconds &
-        WithAvatarPointerProfileKey)
-    // no need for profileUpdatedAtSeconds for groups
-    | (WithSetSessionProfileType<'setAvatarBeforeDownloadGroup'> &
-        WithProfileKey &
-        WithAvatarPointer) // no need for profileUpdatedAtSeconds for groups
-    // Note: for communities, we set & download the avatar as a single step
-    | (WithSetSessionProfileType<'setAvatarDownloadedPrivate'> &
-        WithAvatarPointerProfileKey &
-        WithAvatarPathAndFallback)
-
-    // no need for profileUpdatedAtSeconds for groups/communities
-    | (WithSetSessionProfileType<'setAvatarDownloadedCommunity' | 'setAvatarDownloadedGroup'> &
-        WithAvatarPointerProfileKey &
-        WithAvatarPathAndFallback)
-  );
-
-type SetSessionProfileReturn = {
-  nameChanged: boolean;
-  avatarChanged: boolean;
-  avatarNeedsDownload: boolean;
-};
-
-/**
- *
- * Type guard for the set profile action that is private.
- * We need to do some extra processing for private actions, as they have a updatedAtSeconds field.
- */
-function isSetProfileWithUpdatedAtSeconds<T extends SetSessionProfileDetails>(
-  _action: T
-): _action is Extract<T, { profileUpdatedAtSeconds: number }> {
-  /**
-   * We temporarily want to not write the profileUpdatedAtSeconds as we want this behavior to
-   * be used only once a user has updated their profile picture (and resized it).
-   */
-  window.log.debug('isSetProfileWithUpdatedAtSeconds forced to return false for now');
-  return false;
-
-  // return 'profileUpdatedAtSeconds' in action;
-}
 
 /**
  * Some fields are not stored in the database, but are kept in memory.
@@ -436,14 +366,14 @@ export class ConversationModel extends Model<ConversationAttributes> {
   }
 
   public setNotificationsFor(notificationsFor: ConversationNotificationSettingType) {
-    this.setKey('triggerNotificationsFor', notificationsFor);
+    this[privateSetKey]('triggerNotificationsFor', notificationsFor);
   }
 
   public setLastJoinedTimestamp(timestamp: number) {
     if (timestamp === this.getLastJoinedTimestamp()) {
       return;
     }
-    this.setKey('lastJoinedTimestamp', timestamp);
+    this[privateSetKey]('lastJoinedTimestamp', timestamp);
   }
 
   public setExpirationArgs({
@@ -456,8 +386,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (mode === this.getExpirationMode() && expireTimer === this.getExpireTimer()) {
       return;
     }
-    this.setKey('expirationMode', mode);
-    this.setKey('expireTimer', expireTimer);
+    this[privateSetKey]('expirationMode', mode);
+    this[privateSetKey]('expireTimer', expireTimer);
   }
 
   public setIsExpired03Group(isExpired: boolean) {
@@ -467,7 +397,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (isExpired === this.getIsExpired03Group()) {
       return;
     }
-    this.setKey('isExpired03Group', isExpired);
+    this[privateSetKey]('isExpired03Group', isExpired);
   }
 
   public getConversationModelProps(): ReduxConversationType {
@@ -636,7 +566,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (!xor(this.getGroupAdmins(), groupAdmins).length) {
       return false;
     }
-    this.set({ groupAdmins: sortedNewAdmins });
+    this[privateSet]({ groupAdmins: sortedNewAdmins });
     if (shouldCommit) {
       await this.commit();
     }
@@ -1479,7 +1409,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       return;
     }
 
-    this.set({
+    this[privateSet]({
       nickname: truncatedNickname || undefined,
       displayNameInProfile: this.getRealSessionUsername(),
     });
@@ -1487,173 +1417,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (shouldCommit) {
       await this.commit();
     }
-  }
-
-  private shouldApplyPrivateProfileUpdate<T extends SetSessionProfileDetails>(
-    newProfile: SetSessionProfileDetails
-  ): newProfile is Extract<T, { profileUpdatedAtSeconds: number }> {
-    if (isSetProfileWithUpdatedAtSeconds(newProfile)) {
-      // For the transition period, we need to allow an incoming profile to be applied when
-      // the timestamp is not set (defaults to 0).
-      if (newProfile.profileUpdatedAtSeconds === 0 && this.getProfileUpdatedSeconds() === 0) {
-        window.log.debug(
-          `shouldApplyPrivateProfileUpdate for ${ed25519Str(this.id)} incomingSeconds:0 currentSeconds:0. Allowing overwrite`
-        );
-        return true;
-      }
-      const ts = new Timestamp({ value: newProfile.profileUpdatedAtSeconds });
-      window.log.debug(
-        `shouldApplyPrivateProfileUpdate for ${ed25519Str(this.id)} incomingSeconds:${ts.seconds()} currentSeconds:${this.getProfileUpdatedSeconds()} -> ${this.getProfileUpdatedSeconds() < ts.seconds()}`
-      );
-
-      return this.getProfileUpdatedSeconds() < ts.seconds();
-    }
-    // for non private setProfile calls, we do not need to check the updatedAtSeconds
-    return true;
-  }
-
-  /**
-   * Updates this conversation with the provided displayName, avatarPath, staticAvatarPath and avatarPointer.
-   * - displayName can be set to null to not update the display name.
-   * - if any of the avatar fields is set, they all need to be set.
-   *
-   * This function does commit to the DB if any changes are detected.
-   */
-  public async setSessionProfile(
-    newProfile: SetSessionProfileDetails
-  ): Promise<SetSessionProfileReturn> {
-    let nameChanged = false;
-
-    const existingSessionName = this.getRealSessionUsername();
-    if (
-      this.shouldApplyPrivateProfileUpdate(newProfile) &&
-      newProfile.displayName !== existingSessionName &&
-      newProfile.displayName
-    ) {
-      this.set({
-        displayNameInProfile: newProfile.displayName,
-      });
-      // name has changed, also apply the new profileUpdatedAtSeconds timestamp
-      if (isSetProfileWithUpdatedAtSeconds(newProfile)) {
-        this.set({ profileUpdatedSeconds: newProfile.profileUpdatedAtSeconds });
-      }
-      nameChanged = true;
-    }
-    const type = newProfile.type;
-
-    switch (type) {
-      case 'displayNameChangeOnlyPrivate': {
-        if (nameChanged) {
-          await this.commit();
-        }
-        return { nameChanged, avatarNeedsDownload: false, avatarChanged: false };
-      }
-      case 'resetAvatarPrivate':
-      case 'resetAvatarGroup':
-      case 'resetAvatarCommunity': {
-        let avatarChanged = false;
-        if (
-          // When the avatar update is about a private one, we need to check
-          // if the profile has been updated more recently that what we have already
-          this.shouldApplyPrivateProfileUpdate(newProfile)
-        ) {
-          if (
-            this.getAvatarInProfilePath() ||
-            this.getFallbackAvatarInProfilePath() ||
-            this.getAvatarPointer() ||
-            this.getProfileKey()
-          ) {
-            this.set({
-              avatarInProfile: undefined,
-              avatarPointer: undefined,
-              profileKey: undefined,
-              fallbackAvatarInProfile: undefined,
-            });
-            avatarChanged = true;
-            // avatar has changed, also apply the new profileUpdatedAtSeconds timestamp
-            if (isSetProfileWithUpdatedAtSeconds(newProfile)) {
-              this.set({ profileUpdatedSeconds: newProfile.profileUpdatedAtSeconds });
-            }
-          }
-        }
-        if (avatarChanged || nameChanged) {
-          await this.commit();
-        }
-        return { nameChanged, avatarNeedsDownload: false, avatarChanged };
-      }
-
-      case 'setAvatarBeforeDownloadPrivate':
-      case 'setAvatarBeforeDownloadGroup': {
-        const newProfileKeyHex = isString(newProfile.profileKey)
-          ? newProfile.profileKey
-          : to_hex(newProfile.profileKey);
-
-        const existingAvatarPointer = this.getAvatarPointer();
-        const existingProfileKeyHex = this.getProfileKey();
-        const hasAvatarInNewProfile = !!newProfile.avatarPointer || !!newProfileKeyHex;
-        // if no changes are needed, return early
-        if (
-          isEqual(existingAvatarPointer, newProfile.avatarPointer) &&
-          isEqual(existingProfileKeyHex, newProfileKeyHex)
-        ) {
-          if (nameChanged) {
-            await this.commit();
-          }
-          return { nameChanged, avatarNeedsDownload: false, avatarChanged: false };
-        }
-        this.set({ avatarPointer: newProfile.avatarPointer, profileKey: newProfileKeyHex });
-
-        // avatar has changed, also apply the new profileUpdatedAtSeconds timestamp
-        if (isSetProfileWithUpdatedAtSeconds(newProfile)) {
-          this.set({ profileUpdatedSeconds: newProfile.profileUpdatedAtSeconds });
-        }
-        await this.commit();
-
-        return { nameChanged, avatarNeedsDownload: hasAvatarInNewProfile, avatarChanged: true };
-      }
-      case 'setAvatarDownloadedPrivate':
-      case 'setAvatarDownloadedGroup':
-      case 'setAvatarDownloadedCommunity': {
-        const newProfileKeyHex = isString(newProfile.profileKey)
-          ? newProfile.profileKey
-          : to_hex(newProfile.profileKey);
-
-        const existingAvatarPointer = this.getAvatarPointer();
-        const existingProfileKeyHex = this.getProfileKey();
-        const originalAvatar = this.getAvatarInProfilePath();
-        const originalFallbackAvatar = this.getFallbackAvatarInProfilePath();
-
-        // if no changes are needed, return early
-        if (
-          isEqual(originalAvatar, newProfile.avatarPath) &&
-          isEqual(originalFallbackAvatar, newProfile.fallbackAvatarPath) &&
-          isEqual(existingAvatarPointer, newProfile.avatarPointer) &&
-          isEqual(existingProfileKeyHex, newProfileKeyHex)
-        ) {
-          if (nameChanged) {
-            await this.commit();
-          }
-          return { nameChanged, avatarChanged: false, avatarNeedsDownload: false };
-        }
-
-        // avatar has changed, but we are only dealing with the downloaded part of it here
-        // so this actually is not a profile update change. Nothing to do, as the newProfile type suggests
-
-        this.set({
-          avatarPointer: newProfile.avatarPointer,
-          avatarInProfile: newProfile.avatarPath,
-          fallbackAvatarInProfile: newProfile.fallbackAvatarPath,
-          profileKey: newProfileKeyHex,
-        });
-
-        await this.commit();
-        return { nameChanged, avatarNeedsDownload: false, avatarChanged: true };
-      }
-      default:
-        assertUnreachable(type, `handlePrivateProfileUpdate: unhandled case "${type}"`);
-    }
-
-    throw new Error('Should have returned earlier');
   }
 
   public getIsTrustedForAttachmentDownload() {
@@ -1664,21 +1427,21 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (isTrusted === this.getIsTrustedForAttachmentDownload()) {
       return;
     }
-    this.setKey('isTrustedForAttachmentDownload', isTrusted);
+    this[privateSetKey]('isTrustedForAttachmentDownload', isTrusted);
   }
 
   public setLastMessage(lastMessage: string | null) {
     if (lastMessage === this.getLastMessage()) {
       return;
     }
-    this.set({ lastMessage });
+    this[privateSet]({ lastMessage });
   }
 
   public setLastMessageStatus(lastMessageStatus: LastMessageStatusType | undefined) {
     if (lastMessageStatus === this.getLastMessageStatus()) {
       return;
     }
-    this.set({ lastMessageStatus });
+    this[privateSet]({ lastMessageStatus });
   }
 
   public getLastMessageStatus() {
@@ -1704,13 +1467,13 @@ export class ConversationModel extends Model<ConversationAttributes> {
       if (opts.type === current.type && opts.status === current.status) {
         return;
       }
-      this.set({ lastMessageInteractionType: opts.type });
-      this.set({ lastMessageInteractionStatus: opts.status });
+      this[privateSet]({ lastMessageInteractionType: opts.type });
+      this[privateSet]({ lastMessageInteractionStatus: opts.status });
     }
     if (current === null) {
       return;
     }
-    this.set({ lastMessageInteractionType: null, lastMessageInteractionStatus: null });
+    this[privateSet]({ lastMessageInteractionType: null, lastMessageInteractionStatus: null });
   }
 
   /**
@@ -1724,7 +1487,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
     const existingSessionName = this.getRealSessionUsername();
     if (newDisplayName !== existingSessionName && newDisplayName) {
-      this.set({ displayNameInProfile: newDisplayName });
+      this[privateSet]({ displayNameInProfile: newDisplayName });
     }
   }
 
@@ -1798,7 +1561,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (avatarPointer === this.getAvatarPointer()) {
       return;
     }
-    this.set({ avatarPointer });
+    this[privateSet]({ avatarPointer });
   }
 
   /**
@@ -1868,7 +1631,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     shouldCommit: boolean = true
   ): Promise<boolean> {
     if (priority !== this.getPriority()) {
-      this.set({
+      this[privateSet]({
         priority,
       });
 
@@ -1890,7 +1653,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     const newPriority = pinnedBefore
       ? CONVERSATION_PRIORITIES.default
       : CONVERSATION_PRIORITIES.pinned;
-    this.set({
+    this[privateSet]({
       priority: newPriority,
     });
     if (shouldCommit) {
@@ -1947,7 +1710,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
     const priority = this.getPriority();
     if (priority >= CONVERSATION_PRIORITIES.default) {
-      this.set({ priority: CONVERSATION_PRIORITIES.hidden });
+      this[privateSet]({ priority: CONVERSATION_PRIORITIES.hidden });
       if (shouldCommit) {
         await this.commit();
       }
@@ -1962,7 +1725,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (left === this.getLeft()) {
       return;
     }
-    this.set({ left });
+    this[privateSet]({ left });
   }
 
   /**
@@ -1979,7 +1742,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
   public async markAsUnread(forcedValue: boolean, shouldCommit: boolean = true) {
     if (!!forcedValue !== this.isMarkedUnread()) {
-      this.set({
+      this[privateSet]({
         markedAsUnread: !!forcedValue,
       });
       if (shouldCommit) {
@@ -1990,6 +1753,81 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
   public isMarkedUnread(): boolean {
     return !!this.get('markedAsUnread');
+  }
+
+  /**
+   * Return the pro details of this contact as they are stored in the database.
+   */
+  public dbContactProDetails() {
+    /**
+     * We only want to return the stored pro details if this is a contact.
+     * A contact is a private, non NTS, non blinded, and approved at least on one side.
+     */
+    if (this.getConvoType() !== ConvoTypeNarrow.contact) {
+      return null;
+    }
+    const proGenIndexHashB64 = this.get('proGenIndexHashB64');
+    const proExpiryTsMs = this.get('proExpiryTsMs');
+    const bitsetProFeatures = this.get('bitsetProFeatures');
+    return {
+      proGenIndexHashB64,
+      proExpiryTsMs,
+      bitsetProFeatures,
+    };
+  }
+
+  public async setDbContactProDetails(
+    {
+      bitsetProFeatures,
+      proExpiryTsMs,
+      proGenIndexHashB64,
+      incomingChangeSeconds,
+    }: {
+      proGenIndexHashB64: string | null;
+      proExpiryTsMs: number | null;
+      bitsetProFeatures: bigint | null;
+      incomingChangeSeconds: number;
+    },
+    shouldCommit = true
+  ) {
+    if (this.getConvoType() !== ConvoTypeNarrow.contact) {
+      // we only care about contacts here
+      window.log.debug(`setDbContactProDetails for ${ed25519Str(this.id)}: not a contact`);
+      return;
+    }
+    const ts = new Timestamp({ value: incomingChangeSeconds });
+    window.log.debug(
+      `setDbContactProDetails for ${ed25519Str(this.id)} incomingSeconds:${ts.seconds()} currentSeconds:${this.getProfileUpdatedSeconds()} -> ${this.getProfileUpdatedSeconds() < ts.seconds()}`
+    );
+
+    if (this.getProfileUpdatedSeconds() >= ts.seconds()) {
+      // the current version we have is more recent than the incoming, so we can safely discard it
+      return;
+    }
+
+    let changes = false;
+    if (
+      !isNil(bitsetProFeatures) &&
+      this.get('bitsetProFeatures') !== bitsetProFeatures.toString()
+    ) {
+      this[privateSetKey]('bitsetProFeatures', bitsetProFeatures.toString());
+      changes = true;
+    }
+    if (!isNil(proGenIndexHashB64) && this.get('proGenIndexHashB64') !== proGenIndexHashB64) {
+      this[privateSetKey]('proGenIndexHashB64', proGenIndexHashB64);
+      changes = true;
+    }
+    if (!isNil(proExpiryTsMs) && this.get('proExpiryTsMs') !== proExpiryTsMs) {
+      this[privateSetKey]('proExpiryTsMs', proExpiryTsMs);
+      changes = true;
+    }
+
+    // this.set
+    console.warn('this is still TODO, I think');
+
+    if (changes && shouldCommit) {
+      await this.commit();
+    }
   }
 
   public async updateBlocksSogsMsgReqsTimestamp(
@@ -2005,7 +1843,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       (blocksSogsMsgReqsTimestamp === 0 && this.get('blocksSogsMsgReqsTimestamp') !== 0) ||
       blocksSogsMsgReqsTimestamp > this.get('blocksSogsMsgReqsTimestamp')
     ) {
-      this.set({
+      this[privateSet]({
         blocksSogsMsgReqsTimestamp,
       });
       if (shouldCommit) {
@@ -2022,7 +1860,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
   }
 
   public setActiveAt(activeAt: number | undefined) {
-    this.set({ active_at: activeAt });
+    this[privateSet]({ active_at: activeAt });
   }
 
   /**
@@ -2038,7 +1876,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
     if (valueForced !== Boolean(this.isApproved())) {
       window?.log?.debug(`Setting ${ed25519Str(this.id)} isApproved to: ${value}`);
-      this.set({
+      this[privateSet]({
         isApproved: valueForced,
       });
 
@@ -2059,7 +1897,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     const valueForced = Boolean(value);
     if (valueForced !== Boolean(this.didApproveMe())) {
       window?.log?.debug(`Setting ${ed25519Str(this.id)} didApproveMe to: ${value}`);
-      this.set({
+      this[privateSet]({
         didApproveMe: valueForced,
       });
 
@@ -2085,7 +1923,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       );
       throw new Error('tried to setOriginConversationID with invalid parameter ');
     }
-    this.set({
+    this[privateSet]({
       conversationIdOrigin,
     });
 
@@ -2479,7 +2317,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (isEqual(members, this.getMembers())) {
       return;
     }
-    this.set({ members });
+    this[privateSet]({ members });
   }
 
   public isKickedFromGroup(): boolean {
@@ -2746,7 +2584,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
         this.get('lastMessageInteractionType') ||
         this.get('lastMessageInteractionStatus')
       ) {
-        this.set({
+        this[privateSet]({
           lastMessage: '',
           lastMessageStatus: undefined,
           lastMessageInteractionType: undefined,
@@ -2800,7 +2638,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
         // we only store the first 60 chars in the db for the lastMessage attributes (see sql.ts)
         return;
       }
-      this.set({
+      this[privateSet]({
         ...lastMessageUpdate,
       });
       await this.commit();

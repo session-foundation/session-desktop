@@ -25,6 +25,7 @@ import { SnodeAPI } from '../session/apis/snode_api/SNodeAPI';
 import { tr } from '../localization/localeTools';
 import { NetworkTime } from './NetworkTime';
 import { UserConfigWrapperActions } from '../webworker/workers/browser/libsession_worker_interface';
+import { SessionDisplayNameOnlyPrivate } from '../models/profile';
 
 /**
  * Might throw
@@ -230,11 +231,12 @@ export async function registrationDone(ourPubkey: string, displayName: string) {
   );
   await UserConfigWrapperActions.setNameTruncated(displayName ?? 'Anonymous');
 
-  await conversation.setSessionProfile({
-    type: 'displayNameChangeOnlyPrivate',
+  const profile = new SessionDisplayNameOnlyPrivate({
+    convo: conversation,
     displayName,
     profileUpdatedAtSeconds: NetworkTime.nowSeconds(),
   });
+  await profile.applyChangesIfNeeded();
 
   await conversation.setIsApproved(true, false);
   await conversation.setDidApproveMe(true, false);

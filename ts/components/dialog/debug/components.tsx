@@ -50,6 +50,7 @@ import ProBackendAPI from '../../../session/apis/pro_backend_api/ProBackendAPI';
 import { getProMasterKeyHex } from '../../../session/utils/User';
 import { FlagToggle } from './FeatureFlags';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { SessionDisplayNameOnlyPrivate } from '../../../models/profile';
 
 type DebugButtonProps = SessionButtonProps & { shiny?: boolean };
 
@@ -93,11 +94,12 @@ async function generateOneRandomContact() {
   // for it to be inserted in the config
   created.setActiveAt(Date.now());
   await created.setIsApproved(true, false);
-  await created.setSessionProfile({
-    type: 'displayNameChangeOnlyPrivate',
+  const profile = new SessionDisplayNameOnlyPrivate({
+    convo: created,
     displayName: id.slice(2, 8),
     profileUpdatedAtSeconds: NetworkTime.nowSeconds(),
   });
+  await profile.applyChangesIfNeeded();
 
   await created.commit();
   return created;

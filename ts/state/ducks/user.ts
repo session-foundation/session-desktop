@@ -7,6 +7,7 @@ import { ed25519Str } from '../../session/utils/String';
 import { userSettingsModal, updateEditProfilePictureModal } from './modalDialog';
 import { NetworkTime } from '../../util/NetworkTime';
 import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
+import { SessionProfileResetAvatarPrivate } from '../../models/profile';
 
 export type UserStateType = {
   ourDisplayNameInProfile: string;
@@ -74,11 +75,14 @@ const clearOurAvatar = createAsyncThunk('user/clearOurAvatar', async () => {
     return;
   }
 
-  await convo.setSessionProfile({
-    type: 'resetAvatarPrivate',
+  const profile = new SessionProfileResetAvatarPrivate({
+    convo,
     displayName: null,
     profileUpdatedAtSeconds: NetworkTime.nowSeconds(),
   });
+
+  await profile.applyChangesIfNeeded();
+
   await UserConfigWrapperActions.setNewProfilePic({
     url: null,
     key: null,

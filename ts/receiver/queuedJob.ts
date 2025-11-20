@@ -11,7 +11,6 @@ import { MessageDirection } from '../models/messageType';
 import { ConversationTypeEnum } from '../models/types';
 import { SignalService } from '../protobuf';
 import { DisappearingMessages } from '../session/disappearing_messages';
-import { ProfileManager } from '../session/profile_manager/ProfileManager';
 import { PubKey } from '../session/types';
 import { UserUtils } from '../session/utils';
 import {
@@ -25,7 +24,6 @@ import { getHideMessageRequestBannerOutsideRedux } from '../state/selectors/user
 import { LinkPreviews } from '../util/linkPreviews';
 import { GroupV2Receiver } from './groupv2/handleGroupV2Message';
 import { Constants } from '../session';
-import { Timestamp } from '../types/timestamp/timestamp';
 import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
 
 function isMessageModel(
@@ -458,20 +456,6 @@ export async function handleMessageJob(
     }
 
     void queueAttachmentDownloads(messageModel, conversation);
-    // Check if we need to update any profile names
-    // the only profile we don't update with what is coming here is ours,
-    // as our profile is shared across our devices with libsession
-    if (messageModel.isIncoming() && regularDataMessage.profile) {
-      await ProfileManager.updateProfileOfContact({
-        pubkey: sendingDeviceConversation.id,
-        displayName: regularDataMessage.profile.displayName,
-        profileUrl: regularDataMessage.profile.profilePicture,
-        profileKey: regularDataMessage.profileKey,
-        profileUpdatedAtSeconds: new Timestamp({
-          value: regularDataMessage.profile.lastProfileUpdateSeconds ?? 0,
-        }).seconds(),
-      });
-    }
 
     await markConvoAsReadIfOutgoingMessage(conversation, messageModel);
     if (messageModel.get('unread')) {

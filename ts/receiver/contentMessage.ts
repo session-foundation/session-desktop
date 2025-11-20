@@ -35,6 +35,10 @@ import { CONVERSATION_PRIORITIES, ConversationTypeEnum } from '../models/types';
 import { shouldProcessContentMessage } from './common';
 import { Timestamp } from '../types/timestamp/timestamp';
 import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
+import {
+  SessionProfileResetAvatarPrivate,
+  SessionProfileSetAvatarDownloadedAny,
+} from '../models/profile';
 
 async function shouldDropIncomingPrivateMessage(
   envelope: BaseDecodedEnvelope,
@@ -556,24 +560,23 @@ async function handleMessageRequestResponse(
     const srcFallbackAvatarPath = srcConvo.getFallbackAvatarInProfilePath();
     const srcProfilePic = srcProfileDetails.toHexProfilePicture();
 
-    const avatarChanges =
+    const profileChanges =
       srcAvatarPath && srcFallbackAvatarPath && srcProfilePic.url && srcProfilePic.key
-        ? {
-            type: 'setAvatarDownloadedPrivate' as const,
+        ? new SessionProfileSetAvatarDownloadedAny({
             avatarPath: srcAvatarPath,
             fallbackAvatarPath: srcFallbackAvatarPath,
             avatarPointer: srcProfilePic.url,
             profileKey: srcProfilePic.key,
+            displayName: srcConvo.getRealSessionUsername(),
+            convo: conversationToApprove,
+          })
+        : new SessionProfileResetAvatarPrivate({
             profileUpdatedAtSeconds: srcProfileDetails.getUpdatedAtSeconds(),
-          }
-        : {
-            type: 'resetAvatarPrivate' as const,
-            profileUpdatedAtSeconds: srcProfileDetails.getUpdatedAtSeconds(),
-          };
-    await conversationToApprove.setSessionProfile({
-      displayName: srcConvo.getRealSessionUsername(),
-      ...avatarChanges,
-    });
+            displayName: srcConvo.getRealSessionUsername(),
+            convo: conversationToApprove,
+          });
+    await profileChanges.applyChangesIfNeeded();
+
     await conversationToApprove.setIsApproved(convosToMerge[0].isApproved(), false);
     // nickname might be set already in conversationToApprove, so don't overwrite it
 
