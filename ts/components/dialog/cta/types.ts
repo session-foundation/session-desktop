@@ -1,6 +1,4 @@
 export enum CTAVariant {
-  NIL = 0,
-
   // NOTE: -- Pro CTAs --
   PRO_GENERIC = 1,
 

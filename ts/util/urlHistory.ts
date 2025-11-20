@@ -1,9 +1,14 @@
 import { z } from 'zod';
 import { SettingsKey } from '../data/settings-key';
 import { Storage } from './storage';
+import { tr } from '../localization/localeTools';
 
 // NOTE: we currently only want to use url interactions for official urls. Once we have the ability to "trust" a url this can change
 function isValidUrl(url: string): boolean {
+  if (!URL.canParse(url)) {
+    return false;
+  }
+
   const host = new URL(url).host;
   return (
     host === 'getsession.org' ||
@@ -89,12 +94,13 @@ export async function removeUrlInteractionHistory(url: string) {
 export function urlInteractionToString(interaction: URLInteraction) {
   switch (interaction) {
     case URLInteraction.OPEN:
-      return 'Open';
+      return tr('open');
     case URLInteraction.COPY:
-      return 'Copy';
+      return tr('copy');
     case URLInteraction.TRUST:
+      // TODO: use localized string once it exists
       return 'Trust';
     default:
-      return 'Unknown';
+      return tr('unknown');
   }
 }

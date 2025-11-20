@@ -155,9 +155,6 @@ function getImage(variant: CTAVariant): ReactNode {
         />
       );
 
-    case CTAVariant.NIL:
-      return null;
-
     default:
       assertUnreachable(variant, 'getImage');
       throw new Error('unreachable');
@@ -169,8 +166,6 @@ function getTitle(variant: CTAVariantExcludingProCTAs) {
     case CTAVariant.DONATE_GENERIC:
       // FIXME: replace with localised string
       return 'Session Needs Your Help';
-    case CTAVariant.NIL:
-      return null;
     default:
       assertUnreachable(variant, 'CtaTitle');
       throw new Error('unreachable');
@@ -198,9 +193,6 @@ function getDescription(variant: CTAVariantExcludingProCTAs) {
           {`Donating keeps Session secure, independent, and online.`}
         </>
       );
-
-    case CTAVariant.NIL:
-      return null;
 
     default:
       assertUnreachable(variant, 'CtaTitle');
