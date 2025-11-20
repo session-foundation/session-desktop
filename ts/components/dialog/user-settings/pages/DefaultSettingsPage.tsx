@@ -42,7 +42,7 @@ import {
   useProAccessDetails,
 } from '../../../../hooks/useHasPro';
 import { NetworkTime } from '../../../../util/NetworkTime';
-import { DURATION_SECONDS } from '../../../../session/constants';
+import { APP_URL, DURATION_SECONDS } from '../../../../session/constants';
 import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { useUserSettingsCloseAction } from './userSettingsHooks';
 
@@ -146,7 +146,7 @@ function MiscSection() {
         }
         text={{ token: 'donate' }}
         onClick={() => {
-          showLinkVisitWarningDialog('https://getsession.org/donate', dispatch);
+          showLinkVisitWarningDialog(APP_URL.DONATE, dispatch);
         }}
         dataTestId="donate-settings-menu-item"
       />

@@ -8,6 +8,7 @@ import {
   AboutInfo,
   DataGenerationActions,
   DebugActions,
+  DebugUrlInteractionsSection,
   ExperimentalActions,
   LoggingDebugSection,
   OtherInfo,
@@ -137,6 +138,7 @@ function MainPage({ setPage }: DebugMenuPageProps) {
       <LoggingDebugSection forceUpdate={forceUpdate} />
       <Playgrounds setPage={setPage} />
       {isDebug ? <DataGenerationActions /> : null}
+      {isDebug ? <DebugUrlInteractionsSection /> : null}
       <ReleaseChannel />
       <div>
         <AboutInfo />

@@ -5,6 +5,7 @@ import { deleteSettingsBoolValue, updateSettingsBoolValue } from '../state/ducks
 import { Data } from '../data/data';
 import { SettingsKey } from '../data/settings-key';
 import { ProProofResultType, ProDetailsResultType } from '../session/apis/pro_backend_api/schemas';
+import { UrlInteractionsType } from './urlHistory';
 
 let ready = false;
 
@@ -15,6 +16,7 @@ type ValueType =
   | boolean
   | SessionKeyPair
   | Array<string>
+  | UrlInteractionsType
   | ProDetailsResultType
   | ProProofResultType;
 type InsertedValueType = { id: string; value: ValueType };

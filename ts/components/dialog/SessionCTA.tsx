@@ -40,6 +40,7 @@ import {
 } from './cta/types';
 import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { showLinkVisitWarningDialog } from './OpenUrlModal';
+import { APP_URL } from '../../session/constants';
 
 function useIsProCTAVariant(v: CTAVariant): v is ProCTAVariant {
   return useMemo(() => isProCTAVariant(v), [v]);
@@ -257,7 +258,7 @@ function Buttons({
           onClick={() => {
             // TODO: this should be moved to a constant as its used in 2 places and will have special behaviour
             // TODO: implement link usage tracking
-            showLinkVisitWarningDialog('https://getsession.org/donate', dispatch);
+            showLinkVisitWarningDialog(APP_URL.DONATE, dispatch);
             onClose();
           }}
           dataTestId="modal-session-pro-confirm-button"

@@ -63,6 +63,7 @@ import { useFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTyp
 import { useDebugKey } from '../../hooks/useDebugKey';
 import { UpdateProRevocationList } from '../../session/utils/job_runners/jobs/UpdateProRevocationListJob';
 import { CTAVariant } from '../dialog/cta/types';
+import { hasUrlInteraction } from '../../util/urlHistory';
 
 const StyledContainerAvatar = styled.div`
   padding: var(--margins-lg);
@@ -149,8 +150,7 @@ const doAppStartUp = async () => {
 
   const dbCreationTimestampMs = await Data.getDBCreationTimestampMs();
   if (dbCreationTimestampMs && dbCreationTimestampMs + 7 * DURATION.DAYS < Date.now()) {
-    // TODO: add checks around if the user has interacted with the donation url dialog before
-    const interacted = false;
+    const interacted = hasUrlInteraction();
     if (!interacted) {
       window.inboxStore?.dispatch(updateSessionCTA({ variant: CTAVariant.DONATE_GENERIC }));
     }
