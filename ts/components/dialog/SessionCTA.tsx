@@ -428,7 +428,7 @@ export const useShowSessionCTACbWithVariant = () => {
 };
 
 export async function handleTriggeredProCTAs(dispatch: Dispatch<any>) {
-  const proAvailable = !getFeatureFlag('proAvailable');
+  const proAvailable = getFeatureFlag('proAvailable');
 
   if (Storage.get(SettingsKey.proExpiringSoonCTA)) {
     if (!proAvailable) {

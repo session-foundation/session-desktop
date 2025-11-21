@@ -233,18 +233,20 @@ async function handleExpiryCTAs(
   }
 }
 
+let lastKnownProofExpiryTimestamp: number | null = null;
 let scheduledProofExpiryTaskTimestamp: number | null = null;
 let scheduledProofExpiryTaskId: ReturnType<typeof setTimeout> | null = null;
 let scheduledAccessExpiryTaskTimestamp: number | null = null;
 let scheduledAccessExpiryTaskId: ReturnType<typeof setTimeout> | null = null;
 
 function scheduleRefresh(timestampMs: number) {
-  window?.log?.info(`Scheduling a pro details refresh for ${timestampMs}`);
+  const delay = Math.max(timestampMs - NetworkTime.now(), 15 * DURATION.SECONDS);
+  window?.log?.info(`Scheduling a pro details refresh in ${delay}ms for ${timestampMs}`);
   return setTimeout(() => {
     window?.inboxStore?.dispatch(
       proBackendDataActions.refreshGetProDetailsFromProBackend({}) as any
     );
-  }, timestampMs - NetworkTime.now());
+  }, delay);
 }
 
 async function handleProProof(accessExpiryTsMs: number, autoRenewing: boolean, status: ProStatus) {
@@ -297,13 +299,14 @@ async function handleProProof(accessExpiryTsMs: number, autoRenewing: boolean, s
 
   if (
     proofExpiry &&
-    (!scheduledProofExpiryTaskTimestamp || proofExpiry > scheduledProofExpiryTaskTimestamp)
+    (!scheduledProofExpiryTaskTimestamp || proofExpiry !== lastKnownProofExpiryTimestamp)
   ) {
     if (scheduledProofExpiryTaskId) {
       clearTimeout(scheduledProofExpiryTaskId);
     }
     // Random number of minutes between 10 and 60
     const minutes = Math.floor(Math.random() * 51) + 10;
+    lastKnownProofExpiryTimestamp = proofExpiry;
     scheduledProofExpiryTaskTimestamp = proofExpiry - minutes * DURATION.MINUTES;
     scheduledProofExpiryTaskId = scheduleRefresh(scheduledProofExpiryTaskTimestamp);
   }
