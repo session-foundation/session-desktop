@@ -19,12 +19,11 @@ import { getOurNumber } from '../../state/selectors/user';
 
 import { DecryptedAttachmentsManager } from '../../session/crypto/DecryptedAttachmentsManager';
 
-import { APP_URL, DURATION } from '../../session/constants';
+import { DURATION } from '../../session/constants';
 
 import {
   onionPathModal,
   updateDebugMenuModal,
-  updateSessionCTA,
   userSettingsModal,
 } from '../../state/ducks/modalDialog';
 
@@ -62,8 +61,8 @@ import { useDebugMenuModal } from '../../state/selectors/modal';
 import { useFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { useDebugKey } from '../../hooks/useDebugKey';
 import { UpdateProRevocationList } from '../../session/utils/job_runners/jobs/UpdateProRevocationListJob';
-import { CTAVariant } from '../dialog/cta/types';
-import { getUrlInteractionsForUrl, URLInteraction } from '../../util/urlHistory';
+import { proBackendDataActions } from '../../state/ducks/proBackendData';
+import { handleTriggeredProCTAs } from '../dialog/SessionCTA';
 
 const StyledContainerAvatar = styled.div`
   padding: var(--margins-lg);
@@ -117,6 +116,12 @@ const doAppStartUp = async () => {
   void SnodePool.getFreshSwarmFor(UserUtils.getOurPubKeyStrFromCache()).then(() => {
     // trigger any other actions that need to be done after the swarm is ready
     window.inboxStore?.dispatch(networkDataActions.fetchInfoFromSeshServer() as any);
+    window.inboxStore?.dispatch(
+      proBackendDataActions.refreshGetProDetailsFromProBackend({}) as any
+    );
+    if (window.inboxStore) {
+      void handleTriggeredProCTAs(window.inboxStore.dispatch);
+    }
   }); // refresh our swarm on start to speed up the first message fetching event
   void Data.cleanupOrphanedAttachments();
 
@@ -147,17 +152,6 @@ const doAppStartUp = async () => {
   }, 1 * DURATION.MINUTES);
 
   void regenerateLastMessagesGroupsCommunities();
-
-  const dbCreationTimestampMs = await Data.getDBCreationTimestampMs();
-  if (dbCreationTimestampMs && dbCreationTimestampMs + 7 * DURATION.DAYS < Date.now()) {
-    const donateInteractions = getUrlInteractionsForUrl(APP_URL.DONATE);
-    if (
-      !donateInteractions.includes(URLInteraction.COPY) &&
-      !donateInteractions.includes(URLInteraction.OPEN)
-    ) {
-      window.inboxStore?.dispatch(updateSessionCTA({ variant: CTAVariant.DONATE_GENERIC }));
-    }
-  }
 };
 
 function useUpdateBadgeCount() {

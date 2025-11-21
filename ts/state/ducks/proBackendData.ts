@@ -173,7 +173,7 @@ async function putProDetailsInStorage(details: ProDetailsResultType) {
   await Storage.put(SettingsKey.proDetails, details);
 }
 
-async function handleNewProProof(rotatingPrivKeyHex: string) {
+async function handleNewProProof(rotatingPrivKeyHex: string): Promise<ProProof | null> {
   const masterPrivKeyHex = await getProMasterKeyHex();
   const response = await ProBackendAPI.generateProProof({
     masterPrivKeyHex,
@@ -188,13 +188,15 @@ async function handleNewProProof(rotatingPrivKeyHex: string) {
       signatureHex: response.result.sig,
     } satisfies ProProof;
     await UserConfigWrapperActions.setProConfig({ proProof, rotatingPrivKeyHex });
-  } else {
-    window?.log?.error('failed to get new pro proof: ', response);
+    return proProof;
   }
+  window?.log?.error('failed to get new pro proof: ', response);
+  return null;
 }
 
 async function handleClearProProof() {
-  // TODO: remove pro proof from user config
+  await UserConfigWrapperActions.removeProConfig();
+  // TODO: remove access expiry timestamp from synced user config
 }
 
 async function handleExpiryCTAs(
@@ -231,6 +233,22 @@ async function handleExpiryCTAs(
   }
 }
 
+let lastKnownProofExpiryTimestamp: number | null = null;
+let scheduledProofExpiryTaskTimestamp: number | null = null;
+let scheduledProofExpiryTaskId: ReturnType<typeof setTimeout> | null = null;
+let scheduledAccessExpiryTaskTimestamp: number | null = null;
+let scheduledAccessExpiryTaskId: ReturnType<typeof setTimeout> | null = null;
+
+function scheduleRefresh(timestampMs: number) {
+  const delay = Math.max(timestampMs - NetworkTime.now(), 15 * DURATION.SECONDS);
+  window?.log?.info(`Scheduling a pro details refresh in ${delay}ms for ${timestampMs}`);
+  return setTimeout(() => {
+    window?.inboxStore?.dispatch(
+      proBackendDataActions.refreshGetProDetailsFromProBackend({}) as any
+    );
+  }, delay);
+}
+
 async function handleProProof(accessExpiryTsMs: number, autoRenewing: boolean, status: ProStatus) {
   if (status !== ProStatus.Active) {
     return;
@@ -238,10 +256,22 @@ async function handleProProof(accessExpiryTsMs: number, autoRenewing: boolean, s
 
   const proConfig = await UserConfigWrapperActions.getProConfig();
 
+  // TODO: if the user config access expiry timestamp is different, set it and sync the user config
+
+  let proofExpiry: number | null = null;
+
   if (!proConfig || !proConfig.proProof) {
-    const rotatingPrivKeyHex = await UserUtils.getProRotatingPrivateKeyHex();
-    await handleNewProProof(rotatingPrivKeyHex);
+    try {
+      const rotatingPrivKeyHex = await UserUtils.getProRotatingPrivateKeyHex();
+      const newProof = await handleNewProProof(rotatingPrivKeyHex);
+      if (newProof) {
+        proofExpiry = newProof.expiryMs;
+      }
+    } catch (e) {
+      window?.log?.error(e);
+    }
   } else {
+    proofExpiry = proConfig.proProof.expiryMs;
     const sixtyMinutesBeforeAccessExpiry = accessExpiryTsMs - DURATION.HOURS;
     const sixtyMinutesBeforeProofExpiry = proConfig.proProof.expiryMs - DURATION.HOURS;
     const now = NetworkTime.now();
@@ -251,8 +281,34 @@ async function handleProProof(accessExpiryTsMs: number, autoRenewing: boolean, s
       autoRenewing
     ) {
       const rotatingPrivKeyHex = proConfig.rotatingPrivKeyHex;
-      await handleNewProProof(rotatingPrivKeyHex);
+      const newProof = await handleNewProProof(rotatingPrivKeyHex);
+      if (newProof) {
+        proofExpiry = newProof.expiryMs;
+      }
     }
+  }
+
+  const accessExpiryRefreshTimestamp = accessExpiryTsMs + 30 * DURATION.SECONDS;
+  if (accessExpiryRefreshTimestamp !== scheduledAccessExpiryTaskTimestamp) {
+    if (scheduledAccessExpiryTaskId) {
+      clearTimeout(scheduledAccessExpiryTaskId);
+    }
+    scheduledAccessExpiryTaskTimestamp = accessExpiryRefreshTimestamp;
+    scheduledAccessExpiryTaskId = scheduleRefresh(scheduledAccessExpiryTaskTimestamp);
+  }
+
+  if (
+    proofExpiry &&
+    (!scheduledProofExpiryTaskTimestamp || proofExpiry !== lastKnownProofExpiryTimestamp)
+  ) {
+    if (scheduledProofExpiryTaskId) {
+      clearTimeout(scheduledProofExpiryTaskId);
+    }
+    // Random number of minutes between 10 and 60
+    const minutes = Math.floor(Math.random() * 51) + 10;
+    lastKnownProofExpiryTimestamp = proofExpiry;
+    scheduledProofExpiryTaskTimestamp = proofExpiry - minutes * DURATION.MINUTES;
+    scheduledProofExpiryTaskId = scheduleRefresh(scheduledProofExpiryTaskTimestamp);
   }
 }
 
