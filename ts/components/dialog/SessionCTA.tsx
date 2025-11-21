@@ -40,7 +40,9 @@ import {
 } from './cta/types';
 import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { showLinkVisitWarningDialog } from './OpenUrlModal';
-import { APP_URL } from '../../session/constants';
+import { APP_URL, DURATION } from '../../session/constants';
+import { Data } from '../../data/data';
+import { getUrlInteractionsForUrl, URLInteraction } from '../../util/urlHistory';
 
 function useIsProCTAVariant(v: CTAVariant): v is ProCTAVariant {
   return useMemo(() => isProCTAVariant(v), [v]);
@@ -426,11 +428,12 @@ export const useShowSessionCTACbWithVariant = () => {
 };
 
 export async function handleTriggeredProCTAs(dispatch: Dispatch<any>) {
-  if (!getFeatureFlag('proAvailable')) {
-    return;
-  }
+  const proAvailable = !getFeatureFlag('proAvailable');
 
   if (Storage.get(SettingsKey.proExpiringSoonCTA)) {
+    if (!proAvailable) {
+      return;
+    }
     dispatch(
       updateSessionCTA({
         variant: CTAVariant.PRO_EXPIRING_SOON,
@@ -438,11 +441,25 @@ export async function handleTriggeredProCTAs(dispatch: Dispatch<any>) {
     );
     await Storage.put(SettingsKey.proExpiringSoonCTA, false);
   } else if (Storage.get(SettingsKey.proExpiredCTA)) {
+    if (!proAvailable) {
+      return;
+    }
     dispatch(
       updateSessionCTA({
         variant: CTAVariant.PRO_EXPIRED,
       })
     );
     await Storage.put(SettingsKey.proExpiredCTA, false);
+  } else {
+    const dbCreationTimestampMs = await Data.getDBCreationTimestampMs();
+    if (dbCreationTimestampMs && dbCreationTimestampMs + 7 * DURATION.DAYS < Date.now()) {
+      const donateInteractions = getUrlInteractionsForUrl(APP_URL.DONATE);
+      if (
+        !donateInteractions.includes(URLInteraction.COPY) &&
+        !donateInteractions.includes(URLInteraction.OPEN)
+      ) {
+        dispatch(updateSessionCTA({ variant: CTAVariant.DONATE_GENERIC }));
+      }
+    }
   }
 }
