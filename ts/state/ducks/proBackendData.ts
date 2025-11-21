@@ -234,7 +234,7 @@ async function handleExpiryCTAs(
     // Between expiry and 30 days after expiry, Expired CTA needs to be marked to be shown if not already
     if (status === ProStatus.Expired && !proExpiredCTA) {
       await Storage.put(SettingsKey.proExpiredCTA, true);
-      // The expiring soon CTA should be removed if its set as we want to show it again in the future if needed
+      // The expiring soon CTA should be removed if it's set as we want to show it again in the future if needed
       if (proExpiringSoonCTA) {
         await Storage.remove(SettingsKey.proExpiringSoonCTA);
       }
