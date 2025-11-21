@@ -68,6 +68,26 @@ export async function registerUrlInteraction(url: string, interaction: URLIntera
   await Storage.put(SettingsKey.urlInteractions, interactions);
 }
 
+export async function removeUrlInteraction(url: string, interaction: URLInteraction) {
+  if (!isValidUrl(url)) {
+    return;
+  }
+
+  const interactions = getUrlInteractions();
+  const idx = interactions.findIndex(item => item.url === url);
+
+  if (idx !== -1) {
+    const interactionIdx = interactions[idx].interactions.findIndex(item => item === interaction);
+    if (interactionIdx !== -1) {
+      interactions[idx].interactions.splice(interactionIdx);
+      if (!interactions[idx].interactions.length) {
+        interactions.splice(idx);
+      }
+      await Storage.put(SettingsKey.urlInteractions, interactions);
+    }
+  }
+}
+
 export function getUrlInteractionsForUrl(url: string): Array<URLInteraction> {
   if (!isValidUrl(url)) {
     return [];
