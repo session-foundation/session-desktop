@@ -212,6 +212,11 @@ async function handleExpiryCTAs(
   const proExpiringSoonCTA = !isUndefined(Storage.get(SettingsKey.proExpiringSoonCTA));
   const proExpiredCTA = !isUndefined(Storage.get(SettingsKey.proExpiredCTA));
 
+  // Remove the pro expired cta item if the user gets pro again
+  if (status === ProStatus.Active && proExpiredCTA) {
+    await Storage.remove(SettingsKey.proExpiredCTA);
+  }
+
   if (now < sevenDaysBeforeExpiry) {
     // More than 7 days before expiry, remove CTA items if they exist. This means the items were set for a previous cycle of pro access.
     if (proExpiringSoonCTA) {
@@ -229,6 +234,10 @@ async function handleExpiryCTAs(
     // Between expiry and 30 days after expiry, Expired CTA needs to be marked to be shown if not already
     if (status === ProStatus.Expired && !proExpiredCTA) {
       await Storage.put(SettingsKey.proExpiredCTA, true);
+      // The expiring soon CTA should be removed if it's set as we want to show it again in the future if needed
+      if (proExpiringSoonCTA) {
+        await Storage.remove(SettingsKey.proExpiringSoonCTA);
+      }
     }
   }
 }
