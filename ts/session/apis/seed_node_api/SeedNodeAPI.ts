@@ -1,7 +1,8 @@
 import https from 'https';
 import tls from 'tls';
-
+import { setDefaultAutoSelectFamilyAttemptTimeout } from 'net';
 import _ from 'lodash';
+
 // eslint-disable-next-line import/no-named-default
 import { default as insecureNodeFetch } from 'node-fetch';
 import pRetry from 'p-retry';
@@ -275,7 +276,10 @@ async function getSnodesFromSeedUrl(urlObj: URL): Promise<Array<any>> {
     agent: sslAgent,
   };
   window?.log?.info(`insecureNodeFetch => plaintext for getSnodesFromSeedUrl  ${url}`);
-
+  // Note: node has a default timeout of 250ms to pick ipv4 or ipv6 address, but sometimes it times out
+  // Increase that duration to 500ms as it seems to be resolving our issues.
+  // see https://github.com/nodejs/undici/issues/2990#issuecomment-2408883876
+  setDefaultAutoSelectFamilyAttemptTimeout(500);
   const response = await insecureNodeFetch(url, fetchOptions);
 
   if (response.status !== 200) {
