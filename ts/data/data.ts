@@ -60,6 +60,15 @@ async function getPasswordHash(): Promise<string | null> {
   return channels.getPasswordHash();
 }
 
+// Note: once we have this timestamp there is no reason it should change
+let cachedDBCreationTimestampMs: null | number = null;
+async function getDBCreationTimestampMs(): Promise<number | null> {
+  if (!cachedDBCreationTimestampMs) {
+    cachedDBCreationTimestampMs = await channels.getDBCreationTimestampMs();
+  }
+  return cachedDBCreationTimestampMs;
+}
+
 // Guard Nodes
 async function getGuardNodes(): Promise<Array<GuardNode>> {
   return channels.getGuardNodes();
@@ -781,6 +790,7 @@ export const Data = {
   close,
   removeDB,
   getPasswordHash,
+  getDBCreationTimestampMs,
 
   // items table logic
   createOrUpdateItem,

@@ -14,7 +14,6 @@
   "accountIdYoursDescription": "Dit is uw Account-ID. Andere gebruikers kunnen het scannen om een gesprek met u te beginnen.",
   "actualSize": "Werkelijke grootte",
   "add": "Toevoegen",
-  "addAdmins": "Beheerders toevoegen",
   "addAdminsDescription": "Voer de account-ID in van de gebruiker die u promoot als admin.<br/><br/>Om meerdere gebruikers toe te voegen, voer elk account-ID in, gescheiden door een komma. Tot 20 Account ID's kunnen tegelijkertijd worden opgegeven.",
   "adminCannotBeRemoved": "Admins kunnen niet worden verwijderd.",
   "adminMorePromotedToAdmin": "<b>{name}</b> en <b>{count} anderen</b> zijn gepromoveerd tot Admin.",

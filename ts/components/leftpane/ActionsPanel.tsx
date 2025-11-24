@@ -61,6 +61,8 @@ import { useDebugMenuModal } from '../../state/selectors/modal';
 import { useFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { useDebugKey } from '../../hooks/useDebugKey';
 import { UpdateProRevocationList } from '../../session/utils/job_runners/jobs/UpdateProRevocationListJob';
+import { proBackendDataActions } from '../../state/ducks/proBackendData';
+import { handleTriggeredProCTAs } from '../dialog/SessionCTA';
 
 const StyledContainerAvatar = styled.div`
   padding: var(--margins-lg);
@@ -114,6 +116,12 @@ const doAppStartUp = async () => {
   void SnodePool.getFreshSwarmFor(UserUtils.getOurPubKeyStrFromCache()).then(() => {
     // trigger any other actions that need to be done after the swarm is ready
     window.inboxStore?.dispatch(networkDataActions.fetchInfoFromSeshServer() as any);
+    window.inboxStore?.dispatch(
+      proBackendDataActions.refreshGetProDetailsFromProBackend({}) as any
+    );
+    if (window.inboxStore) {
+      void handleTriggeredProCTAs(window.inboxStore.dispatch);
+    }
   }); // refresh our swarm on start to speed up the first message fetching event
   void Data.cleanupOrphanedAttachments();
 

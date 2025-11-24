@@ -16,6 +16,7 @@ const channelsToMake = new Set([
   'close',
   'removeDB',
   'getPasswordHash',
+  'getDBCreationTimestampMs',
   'getGuardNodes',
   'updateGuardNodes',
   'createOrUpdateItem',

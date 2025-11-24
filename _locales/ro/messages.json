@@ -14,7 +14,6 @@
   "accountIdYoursDescription": "Acesta este ID-ul tău de cont. Alți utilizatori îl pot scana pentru a începe o conversație cu tine.",
   "actualSize": "Mărime actuală",
   "add": "Adaugă",
-  "addAdmins": "Adaugă administratori",
   "addAdminsDescription": "Introdu ID-ul contului utilizatorului pe care îl promovezi ca administrator.<br/><br/>Pentru a adăuga mai mulți utilizatori, introduceți fiecare ID al contului separat prin virgulă. Pot fi specificate până la 20 de ID-uri de cont o dată.",
   "adminCannotBeRemoved": "Administratorii nu pot fi eliminați.",
   "adminMorePromotedToAdmin": "<b>{name}</b> și <b>{count} alții</b> au fost promovați la nivel de administrator.",

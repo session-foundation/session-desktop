@@ -8,14 +8,12 @@ import {
   useIsPrivate,
   useIsPrivateAndFriend,
 } from '../../hooks/useParamSelector';
-import {
-  ProCTAVariant,
-  useShowSessionProInfoDialogCbWithVariant,
-} from '../dialog/SessionProInfoModal';
+import { useShowSessionCTACbWithVariant } from '../dialog/SessionCTA';
 import { Constants } from '../../session';
 import { getPinnedConversationsCount } from '../../state/selectors/conversations';
 import { useIsMessageRequestOverlayShown } from '../../state/selectors/section';
 import { useCurrentUserHasPro } from '../../hooks/useHasPro';
+import { CTAVariant } from '../dialog/cta/types';
 
 function useShowPinUnpin(conversationId: string) {
   const isPrivateAndFriend = useIsPrivateAndFriend(conversationId);
@@ -46,7 +44,7 @@ export function useTogglePinConversationHandler(id: string) {
   const isProAvailable = useIsProAvailable();
   const hasPro = useCurrentUserHasPro();
 
-  const handleShowProDialog = useShowSessionProInfoDialogCbWithVariant();
+  const handleShowProDialog = useShowSessionCTACbWithVariant();
 
   const showPinUnpin = useShowPinUnpin(id);
 
@@ -66,7 +64,7 @@ export function useTogglePinConversationHandler(id: string) {
   return () =>
     handleShowProDialog(
       pinnedConversationsCount > Constants.CONVERSATION.MAX_PINNED_CONVERSATIONS_STANDARD
-        ? ProCTAVariant.PINNED_CONVERSATION_LIMIT_GRANDFATHERED
-        : ProCTAVariant.PINNED_CONVERSATION_LIMIT
+        ? CTAVariant.PRO_PINNED_CONVERSATION_LIMIT_GRANDFATHERED
+        : CTAVariant.PRO_PINNED_CONVERSATION_LIMIT
     );
 }

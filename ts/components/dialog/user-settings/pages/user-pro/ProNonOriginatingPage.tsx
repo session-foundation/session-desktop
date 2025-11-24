@@ -16,7 +16,7 @@ import { LucideIcon } from '../../../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE, WithLucideUnicode } from '../../../../icon/lucide';
 import { SessionButton, SessionButtonColor } from '../../../../basic/SessionButton';
 import { showLinkVisitWarningDialog } from '../../../OpenUrlModal';
-import { proButtonProps } from '../../../SessionProInfoModal';
+import { proButtonProps } from '../../../SessionCTA';
 import { Flex } from '../../../../basic/Flex';
 import type { ProNonOriginatingPageVariant } from '../../../../../types/ReduxTypes';
 import { useCurrentNeverHadPro, useProAccessDetails } from '../../../../../hooks/useHasPro';

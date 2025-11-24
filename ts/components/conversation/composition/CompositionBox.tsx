@@ -61,10 +61,11 @@ import { useShowBlockUnblock } from '../../menuAndSettingsHooks/useShowBlockUnbl
 import { showLocalizedPopupDialog } from '../../dialog/LocalizedPopupDialog';
 import { formatNumber } from '../../../util/i18n/formatting/generics';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
-import { ProCTAVariant, showSessionProInfoDialog } from '../../dialog/SessionProInfoModal';
+import { showSessionCTA } from '../../dialog/SessionCTA';
 import { tStripped } from '../../../localization/localeTools';
 import type { ProcessedLinkPreviewThumbnailType } from '../../../webworker/workers/node/image_processor/image_processor';
 import { selectWeAreProUser } from '../../../hooks/useParamSelector';
+import { CTAVariant } from '../../dialog/cta/types';
 
 export interface ReplyingToMessageProps {
   convoId: string;
@@ -750,7 +751,7 @@ class CompositionBoxInner extends Component<Props, State> {
       const dispatch = window.inboxStore?.dispatch;
       if (dispatch) {
         if (isProAvailable && !hasPro) {
-          showSessionProInfoDialog(ProCTAVariant.MESSAGE_CHARACTER_LIMIT, dispatch);
+          showSessionCTA(CTAVariant.PRO_MESSAGE_CHARACTER_LIMIT, dispatch);
         } else {
           showLocalizedPopupDialog(
             {

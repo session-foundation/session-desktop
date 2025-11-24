@@ -1,13 +1,11 @@
 import { useDispatch } from 'react-redux';
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
 import { ProMessageFeature } from '../../models/proMessageFeature';
-import { SessionProInfoState, updateSessionProInfoModal } from '../../state/ducks/modalDialog';
+import { SessionCTAState, updateSessionCTA } from '../../state/ducks/modalDialog';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import type { ContactNameContext } from '../conversation/ContactName/ContactNameContext';
-import {
-  ProCTAVariant,
-  useShowSessionProInfoDialogCbWithVariant,
-} from '../dialog/SessionProInfoModal';
+import { useShowSessionCTACbWithVariant } from '../dialog/SessionCTA';
+import { CTAVariant } from '../dialog/cta/types';
 
 type WithUserHasPro = { userHasPro: boolean };
 type WithMessageSentWithProFeat = { messageSentWithProFeat: Array<ProMessageFeature> | null };
@@ -18,7 +16,7 @@ type WithContactNameContext = { contactNameContext: ContactNameContext };
 type WithIsGroupV2 = { isGroupV2: boolean };
 type WithIsBlinded = { isBlinded: boolean };
 type WithProvidedCb = { providedCb: (() => void) | null };
-type WithProCTA = { cta: SessionProInfoState };
+type WithProCTA = { cta: SessionCTAState };
 
 type ProBadgeContext =
   | { context: 'edit-profile-pic'; args: WithProCTA }
@@ -99,14 +97,14 @@ function isContactNameNoShowContext(context: ContactNameContext) {
   }
 }
 
-function proFeatureToVariant(proFeature: ProMessageFeature): ProCTAVariant {
+function proFeatureToVariant(proFeature: ProMessageFeature): CTAVariant {
   switch (proFeature) {
     case ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH:
-      return ProCTAVariant.MESSAGE_CHARACTER_LIMIT;
+      return CTAVariant.PRO_MESSAGE_CHARACTER_LIMIT;
     case ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE:
-      return ProCTAVariant.ANIMATED_DISPLAY_PICTURE;
+      return CTAVariant.PRO_ANIMATED_DISPLAY_PICTURE;
     case ProMessageFeature.PRO_BADGE:
-      return ProCTAVariant.GENERIC;
+      return CTAVariant.PRO_GENERIC;
     default:
       assertUnreachable(proFeature, 'ProFeatureToVariant: unknown case');
       throw new Error('unreachable');
@@ -124,7 +122,7 @@ export function useProBadgeOnClickCb(
   opts: ProBadgeContext
 ): ShowTagWithCb | ShowTagNoCb | DoNotShowTag {
   const dispatch = useDispatch();
-  const handleShowProInfoModal = useShowSessionProInfoDialogCbWithVariant();
+  const handleShowProInfoModal = useShowSessionCTACbWithVariant();
   const isProAvailable = useIsProAvailable();
 
   if (!isProAvailable) {
@@ -137,7 +135,7 @@ export function useProBadgeOnClickCb(
   if (context === 'edit-profile-pic') {
     return {
       show: true,
-      cb: () => dispatch(updateSessionProInfoModal(args.cta)),
+      cb: () => dispatch(updateSessionCTA(args.cta)),
     };
   }
 
@@ -171,7 +169,7 @@ export function useProBadgeOnClickCb(
           cb: () => {
             handleShowProInfoModal(
               multiProFeatUsed
-                ? ProCTAVariant.GENERIC
+                ? CTAVariant.PRO_GENERIC
                 : proFeatureToVariant(messageSentWithProFeat[0])
             );
           },
@@ -202,7 +200,7 @@ export function useProBadgeOnClickCb(
       // if this is a groupv2, the badge should open the "groupv2 activated" modal onclick
       return {
         show: true,
-        cb: () => handleShowProInfoModal(ProCTAVariant.GROUP_ACTIVATED),
+        cb: () => handleShowProInfoModal(CTAVariant.PRO_GROUP_ACTIVATED),
       };
     }
 
@@ -211,7 +209,7 @@ export function useProBadgeOnClickCb(
       return showNoCb;
     }
     // FOMO: user shown has pro but we don't: show CTA on click
-    return { show: true, cb: () => handleShowProInfoModal(ProCTAVariant.GENERIC) };
+    return { show: true, cb: () => handleShowProInfoModal(CTAVariant.PRO_GENERIC) };
   }
 
   if (context === 'character-count') {
@@ -222,7 +220,7 @@ export function useProBadgeOnClickCb(
     // FOMO
     return {
       show: true,
-      cb: () => handleShowProInfoModal(ProCTAVariant.MESSAGE_CHARACTER_LIMIT),
+      cb: () => handleShowProInfoModal(CTAVariant.PRO_MESSAGE_CHARACTER_LIMIT),
     };
   }
 
@@ -255,7 +253,7 @@ export function useProBadgeOnClickCb(
         return showNoCb;
       }
 
-      return { show: true, cb: () => handleShowProInfoModal(ProCTAVariant.GENERIC) };
+      return { show: true, cb: () => handleShowProInfoModal(CTAVariant.PRO_GENERIC) };
     }
     return showNoCb;
   }

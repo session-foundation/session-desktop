@@ -9,7 +9,7 @@ import { DebugButton } from '../components';
 import { DebugMenuPageProps, DebugMenuSection } from '../DebugMenuModal';
 import { CTAVariant } from '../../cta/types';
 
-export function ProPlaygroundPage(props: DebugMenuPageProps) {
+export function CTAPlaygroundPage(props: DebugMenuPageProps) {
   const forceUpdate = useUpdate();
   const handleClick = useShowSessionCTACbWithVariant();
 

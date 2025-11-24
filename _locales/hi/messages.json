@@ -14,7 +14,6 @@
   "accountIdYoursDescription": "यह आपका Account ID है। अन्य उपयोगकर्ता आपके साथ बातचीत शुरू करने के लिए इसे स्कैन कर सकते हैं।",
   "actualSize": "वास्तविक आकार",
   "add": "जोड़ें",
-  "addAdmins": "एडमिन जोड़ें",
   "addAdminsDescription": "उस उपयोगकर्ता का Account ID दर्ज करें जिसे आप एडमिन बना रहे हैं।<br/><br/>एक से अधिक उपयोगकर्ताओं को जोड़ने के लिए, प्रत्येक Account ID को कॉमा से अलग करके दर्ज करें। एक बार में अधिकतम 20 Account ID दर्ज किए जा सकते हैं।",
   "adminCannotBeRemoved": "एडमिन हटाए नहीं जा सकते।",
   "adminMorePromotedToAdmin": "<b>{name}</b> और <b>{count} अन्य</b> को Admin बनाया गया।",
