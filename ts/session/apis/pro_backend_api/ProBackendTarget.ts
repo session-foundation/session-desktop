@@ -14,8 +14,8 @@ const PRO_BACKENDS: Record<
     name: 'ProBackend',
     url: `http://${SERVER_HOSTS.PRO_SERVER}`,
     // FIXME: to be replaced by the real pubkey
-    edPkHex: 'not_set_yet',
-    xPkHex: 'not_set_yet',
+    edPkHex: 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+    xPkHex: 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
   },
   DEV: {
     name: 'ProBackendDev',
