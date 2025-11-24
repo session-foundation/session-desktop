@@ -281,7 +281,7 @@ async function scheduleAvatarDownloadJobIfNeeded(groupPk: GroupPubkeyType) {
 
     if (!profileUrl || !profileKeyHex) {
       // no avatar set for this group: make sure we also remove the one we might have locally.
-      if (conversation.getAvatarPointer() || conversation.getProfileKey()) {
+      if (conversation.getAvatarPointer() || conversation.getProfileKeyHex()) {
         const profile = new SessionProfileResetAvatarGroupCommunity({
           convo: conversation,
           displayName: null,

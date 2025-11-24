@@ -37,7 +37,7 @@ export function shouldAddAvatarDownloadJob({ conversationId }: { conversationId:
     return false;
   }
   const prevPointer = conversation.getAvatarPointer();
-  const profileKey = conversation.getProfileKey();
+  const profileKey = conversation.getProfileKeyHex();
   const hasNoAvatar = isEmpty(prevPointer) || isEmpty(profileKey);
 
   if (hasNoAvatar) {
@@ -112,7 +112,7 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
     }
     let changes = false;
     const toDownloadPointer = conversation.getAvatarPointer();
-    const toDownloadProfileKey = conversation.getProfileKey();
+    const toDownloadProfileKey = conversation.getProfileKeyHex();
 
     // if there is an avatar and profileKey for that user/group ('', null and undefined excluded), download, decrypt and save the avatar locally.
     if (toDownloadPointer && toDownloadProfileKey) {
@@ -165,7 +165,7 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
           );
 
           // we autoscale incoming avatars because our app keeps decrypted avatars in memory and some platforms allows large avatars to be uploaded.
-          const processed = await processAvatarData(decryptedData, conversation.isMe());
+          const processed = await processAvatarData(decryptedData, conversation.isMe(), true);
 
           const upgradedMainAvatar = await processNewAttachment({
             data: processed.mainAvatarDetails.outputBuffer,

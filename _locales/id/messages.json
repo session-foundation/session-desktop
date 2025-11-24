@@ -14,7 +14,6 @@
   "accountIdYoursDescription": "Ini adalah ID akun anda. Pengguna lain bisa memindainya untuk memulai percakapan dengan anda.",
   "actualSize": "Ukuran Sebenarnya",
   "add": "Tambahkan",
-  "addAdmins": "Tambah Admin",
   "adminCannotBeRemoved": "Admin tidak dapat dihapus.",
   "adminMorePromotedToAdmin": "<b>{name}</b> dan <b>{count} lainnya</b> dipromosikan menjadi Admin.",
   "adminPromote": "Promosikan Admin",

@@ -159,7 +159,7 @@ abstract class SessionProfileChanges {
       this.convo.getAvatarInProfilePath() ||
       this.convo.getFallbackAvatarInProfilePath() ||
       this.convo.getAvatarPointer() ||
-      this.convo.getProfileKey()
+      this.convo.getProfileKeyHex()
     ) {
       this.convo[privateSet]({
         avatarInProfile: undefined,
@@ -221,7 +221,7 @@ abstract class SessionProfileChanges {
     const newProfileKeyHex = isString(args.profileKey) ? args.profileKey : to_hex(args.profileKey);
 
     const existingAvatarPointer = this.convo.getAvatarPointer();
-    const existingProfileKeyHex = this.convo.getProfileKey();
+    const existingProfileKeyHex = this.convo.getProfileKeyHex();
     const hasAvatarInNewProfile = !!args.avatarPointer || !!newProfileKeyHex;
     // if no changes are needed, return early
     if (
@@ -242,7 +242,7 @@ abstract class SessionProfileChanges {
     const newProfileKeyHex = isString(args.profileKey) ? args.profileKey : to_hex(args.profileKey);
 
     const existingAvatarPointer = this.convo.getAvatarPointer();
-    const existingProfileKeyHex = this.convo.getProfileKey();
+    const existingProfileKeyHex = this.convo.getProfileKeyHex();
     const originalAvatar = this.convo.getAvatarInProfilePath();
     const originalFallbackAvatar = this.convo.getFallbackAvatarInProfilePath();
 

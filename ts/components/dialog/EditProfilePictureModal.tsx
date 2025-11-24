@@ -7,7 +7,7 @@ import {
   userSettingsModal,
   updateEditProfilePictureModal,
   updateConversationDetailsModal,
-  updateSessionProInfoModal,
+  updateSessionCTA,
 } from '../../state/ducks/modalDialog';
 import type { EditProfilePictureModalProps } from '../../types/ReduxTypes';
 import { pickFileForAvatar } from '../../types/attachments/VisualAttachment';
@@ -31,7 +31,6 @@ import {
 } from '../SessionWrapperModal';
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
 import { SpacerLG, SpacerSM } from '../basic/Text';
-import { ProCTAVariant } from './SessionProInfoModal';
 import { AvatarSize } from '../avatar/Avatar';
 import { ProIconButton } from '../buttons/ProButton';
 import { useProBadgeOnClickCb } from '../menuAndSettingsHooks/useProBadgeOnClickCb';
@@ -45,6 +44,7 @@ import {
   useEditProfilePictureModal,
   useUpdateConversationDetailsModal,
 } from '../../state/selectors/modal';
+import { CTAVariant } from './cta/types';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
@@ -147,6 +147,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
   const ourAvatarIsUploading = useOurAvatarIsUploading();
   const ourAvatarUploadFailed = useOurAvatarUploadFailed();
   const sogsAvatarIsUploading = useAvatarOfRoomIsUploading(conversationId);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const [newAvatarObjectUrl, setNewAvatarObjectUrl] = useState<string | null>(avatarPath);
   const [isNewAvatarAnimated, setIsNewAvatarAnimated] = useState<boolean>(false);
@@ -177,8 +178,8 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
     args: {
       cta: {
         variant: userHasPro
-          ? ProCTAVariant.ANIMATED_DISPLAY_PICTURE_ACTIVATED
-          : ProCTAVariant.ANIMATED_DISPLAY_PICTURE,
+          ? CTAVariant.PRO_ANIMATED_DISPLAY_PICTURE_ACTIVATED
+          : CTAVariant.PRO_ANIMATED_DISPLAY_PICTURE,
         afterActionButtonCallback,
         actionButtonNextModalAfterCloseCallback,
       },
@@ -195,7 +196,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
   const isPublic = useIsPublic(conversationId);
 
   const handleAvatarClick = async () => {
-    const res = await pickFileForAvatar();
+    const res = await pickFileForAvatar(setIsProcessing);
 
     if (!res) {
       window.log.error('Failed to pick avatar');
@@ -229,8 +230,8 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
      */
     if (isProAvailable && !userHasPro && isNewAvatarAnimated && !isCommunity) {
       dispatch(
-        updateSessionProInfoModal({
-          variant: ProCTAVariant.ANIMATED_DISPLAY_PICTURE,
+        updateSessionCTA({
+          variant: CTAVariant.PRO_ANIMATED_DISPLAY_PICTURE,
           afterActionButtonCallback,
           actionButtonNextModalAfterCloseCallback,
         })
@@ -242,7 +243,8 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
     await triggerUploadProfileAvatar(newAvatarObjectUrl, conversationId, dispatch);
   };
 
-  const loading = ourAvatarIsUploading || groupAvatarChangePending || sogsAvatarIsUploading;
+  const loading =
+    ourAvatarIsUploading || groupAvatarChangePending || sogsAvatarIsUploading || isProcessing;
 
   const newAvatarLoaded = newAvatarObjectUrl !== avatarPath;
 
@@ -360,7 +362,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
       {loading ? (
         <>
           <SpacerSM />
-          {isMe ? <Localizer token="updating" /> : null}
+          {isMe && !isProcessing ? <Localizer token="updating" /> : null}
           <SessionSpinner loading={loading} height="30px" />
         </>
       ) : (

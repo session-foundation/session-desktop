@@ -14,7 +14,6 @@
   "accountIdYoursDescription": "Aquest és el vostre ID de compte. Els altres usuaris el poden escanejar per a encetar una conversa amb vós.",
   "actualSize": "Mida actual",
   "add": "Afegir",
-  "addAdmins": "Afegiu administradors",
   "addAdminsDescription": "Introdueix l'ID del compte de l'usuari que estàs promocionant a administrador.<br/><br/>Per afegir diversos usuaris, introdueix cada ID del compte separat per una coma. Es poden especificar fins a 20 identificadors de compte alhora.",
   "adminCannotBeRemoved": "Els administradors no es poden eliminar.",
   "adminMorePromotedToAdmin": "<b>{name}</b> i <b>{count} altres</b> han estat ascendits a Admin.",

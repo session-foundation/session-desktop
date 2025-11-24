@@ -43,12 +43,10 @@ export class WorkerInterface {
       const { resolve, reject, fnName } = job;
 
       if (errorForDisplay) {
-        // eslint:disable: no-console
-
         window?.log?.error(`Error received from worker job ${jobId} (${fnName}):`, errorForDisplay);
-        return reject(
-          new Error(`Error received from worker job ${jobId} (${fnName}): ${errorForDisplay}`)
-        );
+        // Note: don't wrap this with a prefix as we want to be able to show what was the error as is to the user in a toast.
+        // If you want to add something, add it at the end.
+        return reject(new Error(errorForDisplay));
       }
 
       return resolve(result);

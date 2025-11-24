@@ -2,7 +2,7 @@ import { base64_variants, from_hex, to_base64 } from 'libsodium-wrappers-sumo';
 import useAsync from 'react-use/lib/useAsync';
 import { ipcRenderer, shell } from 'electron';
 import { useDispatch } from 'react-redux';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import useAsyncFn from 'react-use/lib/useAsyncFn';
 import useInterval from 'react-use/lib/useInterval';
 import { filesize } from 'filesize';
@@ -51,6 +51,15 @@ import { getProMasterKeyHex } from '../../../session/utils/User';
 import { FlagToggle } from './FeatureFlags';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { SessionDisplayNameOnlyPrivate } from '../../../models/profile';
+import {
+  clearAllUrlInteractions,
+  getUrlInteractions,
+  removeUrlInteractionHistory,
+  urlInteractionToString,
+} from '../../../util/urlHistory';
+import { formatRoundedUpTimeUntilTimestamp } from '../../../util/i18n/formatting/generics';
+import { LucideIcon } from '../../icon/LucideIcon';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 
 type DebugButtonProps = SessionButtonProps & { shiny?: boolean };
 
@@ -401,6 +410,50 @@ export const DebugActions = () => {
       >
         Get Pro Revocation List (from ticket 0)
       </DebugButton>
+    </DebugMenuSection>
+  );
+};
+
+export const DebugUrlInteractionsSection = () => {
+  const [urlInteractions, setUrlInteractions] = useState(getUrlInteractions());
+
+  const refresh = useCallback(() => setUrlInteractions(getUrlInteractions()), []);
+  const removeUrl = useCallback(async (url: string) => removeUrlInteractionHistory(url), []);
+  const clearAll = useCallback(async () => {
+    await clearAllUrlInteractions();
+    refresh();
+  }, [refresh]);
+
+  return (
+    <DebugMenuSection title="Url Interactions">
+      <DebugButton onClick={clearAll} buttonColor={SessionButtonColor.Danger}>
+        Clear All
+      </DebugButton>
+      <DebugButton onClick={refresh}>Refresh</DebugButton>
+      <table>
+        <tr>
+          <th>URL</th>
+          <th>Interactions</th>
+          <th>Last Updated</th>
+        </tr>
+        {urlInteractions.map(({ url, interactions, lastUpdated }) => {
+          const updatedStr = formatRoundedUpTimeUntilTimestamp(lastUpdated);
+          return (
+            <tr key={url}>
+              <td>{url}</td> <td>{interactions.map(urlInteractionToString).join(', ')}</td>{' '}
+              <td>{updatedStr}</td>{' '}
+              <td>
+                <DebugButton
+                  buttonColor={SessionButtonColor.Danger}
+                  onClick={async () => removeUrl(url)}
+                >
+                  <LucideIcon unicode={LUCIDE_ICONS_UNICODE.TRASH2} iconSize="small" />
+                </DebugButton>
+              </td>
+            </tr>
+          );
+        })}
+      </table>
     </DebugMenuSection>
   );
 };

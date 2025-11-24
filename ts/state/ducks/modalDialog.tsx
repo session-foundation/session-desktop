@@ -12,9 +12,9 @@ import type {
   ProNonOriginatingPageVariant,
 } from '../../types/ReduxTypes';
 import { WithConvoId } from '../../session/types/with';
-import type { ProCTAVariant } from '../../components/dialog/SessionProInfoModal';
 import type { TrArgs } from '../../localization/localeTools';
 import { SessionButtonType } from '../../components/basic/SessionButton';
+import type { CTAVariant } from '../../components/dialog/cta/types';
 
 export type BanType = 'ban' | 'unban';
 
@@ -91,11 +91,11 @@ export type LocalizedPopupDialogState = {
   overrideButtons?: Array<LocalizedPopupDialogButtonOptions>;
 } | null;
 
-export type SessionProInfoState = {
-  variant: ProCTAVariant;
+export type SessionCTAState = {
+  variant: CTAVariant;
   afterActionButtonCallback?: () => void;
   // If the action button opens another modal, this callback is called after that next modal is closed.
-  // For example: If "ProInfoModal" is opened from the "EditProfilePictureModal", and "ProInfoModal"'s
+  // For example: If "SessionCTA" is opened from the "EditProfilePictureModal", and "SessionCTA"'s
   // action button opens the "ProSettingsModal", we want to re-open "EditProfilePictureModal"
   // when "ProSettingsModal" closes.
   actionButtonNextModalAfterCloseCallback?: () => void;
@@ -185,7 +185,7 @@ export type ModalState = {
   hideRecoveryPasswordModal: HideRecoveryPasswordModalState;
   openUrlModal: OpenUrlModalState;
   localizedPopupDialog: LocalizedPopupDialogState;
-  sessionProInfoModal: SessionProInfoState;
+  sessionProInfoModal: SessionCTAState;
   lightBoxOptions: LightBoxOptions;
   debugMenuModal: DebugMenuModalState;
   conversationSettingsModal: ConversationSettingsModalState;
@@ -323,7 +323,7 @@ const ModalSlice = createSlice({
     updateLocalizedPopupDialog(state, action: PayloadAction<LocalizedPopupDialogState>) {
       return pushOrPopModal(state, 'localizedPopupDialog', action.payload);
     },
-    updateSessionProInfoModal(state, action: PayloadAction<SessionProInfoState>) {
+    updateSessionCTA(state, action: PayloadAction<SessionCTAState>) {
       return pushOrPopModal(state, 'sessionProInfoModal', action.payload);
     },
     updateLightBoxOptions(state, action: PayloadAction<LightBoxOptions>) {
@@ -373,7 +373,7 @@ export const {
   updateHideRecoveryPasswordModal,
   updateOpenUrlModal,
   updateLocalizedPopupDialog,
-  updateSessionProInfoModal,
+  updateSessionCTA,
   updateLightBoxOptions,
   updateDebugMenuModal,
   updateConversationSettingsModal,

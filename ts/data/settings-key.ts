@@ -69,6 +69,7 @@ export const SettingsKey = {
   numberId: 'number_id',
   localAttachmentEncryptionKey,
   spellCheckEnabled: 'spell-check',
+  urlInteractions: 'urlInteractions',
   proMasterKeyHex: 'proMasterKeyHex',
   proRotatingPrivateKeyHex: 'proRotatingPrivateKeyHex',
   /**

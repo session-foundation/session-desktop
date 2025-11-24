@@ -1125,7 +1125,7 @@ async function handleClearAvatarFromUI({ groupPk }: WithGroupPubkey) {
     isNil(convo.getAvatarPointer()) &&
     isNil(convo.getAvatarInProfilePath()) &&
     isNil(convo.getFallbackAvatarInProfilePath()) &&
-    isNil(convo.getProfileKey())
+    isNil(convo.getProfileKeyHex())
   ) {
     return;
   }

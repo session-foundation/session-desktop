@@ -1508,7 +1508,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
    * Returns the profile key attributes of this instance.
    * If the attribute is unset, empty, or not a string, returns `undefined`.
    */
-  public getProfileKey(): string | undefined {
+  public getProfileKeyHex(): string | undefined {
     const profileKey = this.get('profileKey');
     if (!profileKey || !isString(profileKey)) {
       return undefined;
@@ -1546,11 +1546,11 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
     const avatarPointer = this.getAvatarPointer() ?? null;
     const displayName = this.getRealSessionUsername() ?? '';
-    const profileKey = this.getProfileKey() ?? null;
+    const profileKeyHex = this.getProfileKeyHex() ?? null;
     const updatedAtSeconds = this.getProfileUpdatedSeconds();
 
     return new OutgoingUserProfile({
-      profilePic: { url: avatarPointer, key: profileKey ? from_hex(profileKey) : null },
+      profilePic: { url: avatarPointer, key: profileKeyHex ? from_hex(profileKeyHex) : null },
       displayName,
       updatedAtSeconds,
     });
@@ -1633,6 +1633,10 @@ export class ConversationModel extends Model<ConversationAttributes> {
       this[privateSet]({
         priority,
       });
+
+      if (this.isMe()) {
+        await UserConfigWrapperActions.setPriority(priority);
+      }
 
       if (shouldCommit) {
         await this.commit();

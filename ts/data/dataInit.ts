@@ -16,6 +16,7 @@ const channelsToMake = new Set([
   'close',
   'removeDB',
   'getPasswordHash',
+  'getDBCreationTimestampMs',
   'getGuardNodes',
   'updateGuardNodes',
   'createOrUpdateItem',
@@ -255,8 +256,12 @@ function removeJob(id: number) {
 }
 
 function makeJob(fnName: string) {
-  if (_shuttingDown && fnName !== 'close') {
+  if (_shuttingDown && fnName !== 'close' && fnName !== 'removeDB') {
     throw new Error(`Rejecting SQL channel job (${fnName}); application is shutting down`);
+  }
+  if (!_shuttingDown && fnName === 'close') {
+    window?.log?.debug(`SQL channel job close() called, marking as shutting down`);
+    _shuttingDown = true;
   }
 
   _jobCounter += 1;

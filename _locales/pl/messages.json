@@ -14,7 +14,6 @@
   "accountIdYoursDescription": "To Twój identyfikator konta. Inni użytkownicy mogą go zeskanować, aby rozpocząć z Tobą rozmowę.",
   "actualSize": "Rzeczywisty rozmiar",
   "add": "Dodaj",
-  "addAdmins": "Dodaj administratorów",
   "addAdminsDescription": "Wprowadź identyfikator konta użytkownika, którego chcesz awansować na administratora.<br/><br/>Aby dodać wielu użytkowników, wpisz każdy identyfikator konta oddzielone przecinkiem. Można jednocześnie podać maksymalnie 20 identyfikatorów kont.",
   "adminCannotBeRemoved": "Nie można usuwać administratorów.",
   "adminMorePromotedToAdmin": "<b>{name}</b> i <b>{count} innych</b> zostali awansowani na administratów.",

@@ -1,7 +1,8 @@
 import https from 'https';
 import tls from 'tls';
-
+import { setDefaultAutoSelectFamilyAttemptTimeout } from 'net';
 import _ from 'lodash';
+
 // eslint-disable-next-line import/no-named-default
 import { default as insecureNodeFetch } from 'node-fetch';
 import pRetry from 'p-retry';
@@ -209,23 +210,21 @@ export async function TEST_fetchSnodePoolFromSeedNodeRetryable(
     throw new Error('fetchSnodePoolFromSeedNodeRetryable: Seed nodes are empty');
   }
 
-  const seedNodeUrl = _.sample(seedNodes);
-  if (!seedNodeUrl) {
+  if (!seedNodes.length) {
     window?.log?.warn(
-      'loki_snode_api::fetchSnodePoolFromSeedNodeRetryable - Could not select random snodes from',
+      'loki_snode_api::fetchSnodePoolFromSeedNodeRetryable - no seednodes',
       seedNodes
     );
     throw new Error('fetchSnodePoolFromSeedNodeRetryable: Seed nodes are empty #2');
   }
 
-  const tryUrl = new URL(seedNodeUrl);
+  const snodes = await Promise.race(seedNodes.map(s => getSnodesFromSeedUrl(new URL(s))));
 
-  const snodes = await getSnodesFromSeedUrl(tryUrl);
   if (snodes.length === 0) {
     window?.log?.warn(
-      `loki_snode_api::fetchSnodePoolFromSeedNodeRetryable - ${seedNodeUrl} did not return any snodes`
+      `loki_snode_api::fetchSnodePoolFromSeedNodeRetryable - Promise.race did not return any snodes`
     );
-    throw new Error(`Failed to contact seed node: ${seedNodeUrl}`);
+    throw new Error(`Failed to contact seed node: Promise.race did not return any snodes`);
   }
 
   return snodes;
@@ -275,7 +274,10 @@ async function getSnodesFromSeedUrl(urlObj: URL): Promise<Array<any>> {
     agent: sslAgent,
   };
   window?.log?.info(`insecureNodeFetch => plaintext for getSnodesFromSeedUrl  ${url}`);
-
+  // Note: node has a default timeout of 250ms to pick ipv4 or ipv6 address, but sometimes it times out
+  // Increase that duration to 500ms as it seems to be resolving our issues.
+  // see https://github.com/nodejs/undici/issues/2990#issuecomment-2408883876
+  setDefaultAutoSelectFamilyAttemptTimeout(500);
   const response = await insecureNodeFetch(url, fetchOptions);
 
   if (response.status !== 200) {
