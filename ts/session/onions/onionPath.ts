@@ -33,8 +33,12 @@ import { SnodePool } from '../apis/snode_api/snodePool';
 import { SnodePoolConstants } from '../apis/snode_api/snodePoolConstants';
 import { desiredGuardCount, minimumGuardCount, ONION_REQUEST_HOPS } from './onionPathConstants';
 import { OnionPathEmptyError } from '../utils/errors';
-import { getDataFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import {
+  getDataFeatureFlag,
+  getFeatureFlag,
+} from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { logDebugWithCat } from '../../util/logger/debugLog';
+import { stringify } from '../../types/sqlSharedTypes';
 
 export function getOnionPathMinTimeout() {
   return DURATION.SECONDS;
@@ -139,15 +143,13 @@ export async function dropSnodeFromPath(snodeEd25519: string, reason: string) {
   const allSnodesInPathToPatchUp = cloneDeep(pathToPatchUp);
   pathToPatchUp = pathToPatchUp.filter(snode => snode.pubkey_ed25519 !== snodeEd25519);
   const toExcludeFromRandomSnode = flattenDeep(allSnodesInPathToPatchUp);
-  logDebugWithCat(
-    logPrefix,
-    `pathToPatchUp: ${stringify(pathToPatchUp)}`,
-    window.sessionFeatureFlags.debugOnionPaths
-  );
+  const debugOnionPaths = getFeatureFlag('debugOnionPaths');
+
+  logDebugWithCat(logPrefix, `pathToPatchUp: ${stringify(pathToPatchUp)}`, debugOnionPaths);
   logDebugWithCat(
     logPrefix,
     `toExcludeFromRandomSnode: ${stringify(toExcludeFromRandomSnode)}`,
-    window.sessionFeatureFlags.debugOnionPaths
+    debugOnionPaths
   );
   // this call throws if it cannot return a valid snode.
   const snodeToAppendToPath = await SnodePool.getRandomSnode({
@@ -156,7 +158,7 @@ export async function dropSnodeFromPath(snodeEd25519: string, reason: string) {
   logDebugWithCat(
     logPrefix,
     `random snode selected: ${stringify(snodeToAppendToPath)}`,
-    window.sessionFeatureFlags.debugOnionPaths
+    debugOnionPaths
   );
 
   // Don't test the new snode as this would reveal the user's IP
@@ -164,14 +166,14 @@ export async function dropSnodeFromPath(snodeEd25519: string, reason: string) {
   logDebugWithCat(
     logPrefix,
     `onionPaths[${pathWithSnodeIndex}] before: ${stringify(onionPaths[pathWithSnodeIndex])}`,
-    window.sessionFeatureFlags.debugOnionPaths
+    debugOnionPaths
   );
 
   onionPaths[pathWithSnodeIndex] = pathToPatchUp;
   logDebugWithCat(
     logPrefix,
     `onionPaths[${pathWithSnodeIndex}] after: ${stringify(onionPaths[pathWithSnodeIndex])}`,
-    window.sessionFeatureFlags.debugOnionPaths
+    debugOnionPaths
   );
 }
 
@@ -530,10 +532,12 @@ async function buildNewOnionPathsWorker() {
 
       const weightedSingleSnodePerSubnet = SnodePool.getWeightedSingleSnodePerSubnet(allNodes);
 
+      const debugOnionPaths = getFeatureFlag('debugOnionPaths');
+
       logDebugWithCat(
         logPrefix,
         ` oneNodeForEachSubnet24KeepingRatio: ${stringify(weightedSingleSnodePerSubnet)}`,
-        window.sessionFeatureFlags.debugOnionPaths
+        debugOnionPaths
       );
       if (weightedSingleSnodePerSubnet.length <= SnodePoolConstants.minSnodePoolCount) {
         throw new Error(
@@ -583,11 +587,7 @@ async function buildNewOnionPathsWorker() {
       }
 
       window?.log?.info(`${logPrefix} Built ${onionPaths.length} onion paths`);
-      logDebugWithCat(
-        logPrefix,
-        ` paths built: ${stringify(onionPaths)}`,
-        window.sessionFeatureFlags.debugOnionPaths
-      );
+      logDebugWithCat(logPrefix, ` paths built: ${stringify(onionPaths)}`, debugOnionPaths);
     },
     {
       retries: 3, // 4 total

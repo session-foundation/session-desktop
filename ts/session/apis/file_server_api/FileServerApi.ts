@@ -210,7 +210,7 @@ export const extendFileExpiry = async (fileId: string, fsTarget: FILE_SERVER_TAR
   if (!FS.supportsFsExtend(fsTarget)) {
     throw new Error('extendFileExpiry: only works with potato for now');
   }
-  
+
   if (getFeatureFlag('debugServerRequests')) {
     window.log.info(`about to renew expiry of file: "${fileId}"`);
   }
