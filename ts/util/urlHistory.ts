@@ -36,7 +36,7 @@ export type UrlInteractionsType = z.infer<typeof UrlInteractionsSchema>;
 
 export function getUrlInteractions() {
   let interactions: UrlInteractionsType = [];
-  const rawInteractions = Storage.get(SettingsKey.urlInteractions);
+  const rawInteractions = Storage.get(SettingsKey.urlInteractions) ?? [];
   const result = UrlInteractionsSchema.safeParse(rawInteractions);
   if (result.error) {
     window?.log?.error(`failed to parse ${SettingsKey.urlInteractions}`, result.error);
