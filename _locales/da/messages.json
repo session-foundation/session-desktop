@@ -13,7 +13,6 @@
   "accountIdYoursDescription": "Dette er din kontoid. Andre brugere kan scanne den for at starte en samtale med dig.",
   "actualSize": "Faktisk størrelse",
   "add": "Tilføj",
-  "addAdmins": "Tilføj administratorer",
   "adminCannotBeRemoved": "Admins kan ikke fjernes.",
   "adminMorePromotedToAdmin": "<b>{name}</b> og <b>{count} andre</b> blev forfremmet til Admin.",
   "adminPromote": "Forfrem administratorer",

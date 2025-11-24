@@ -14,7 +14,6 @@
   "accountIdYoursDescription": "Este es tu ID de cuenta. Otros usuarios pueden escanearlo para iniciar una conversación contigo.",
   "actualSize": "Tamaño original",
   "add": "Añadir",
-  "addAdmins": "Añadir Administradores",
   "addAdminsDescription": "Ingrese el Account ID del usuario que desea promover a administrador.<br/><br/>Para agregar varios usuarios, ingrese cada Account ID separado por una coma. Puede especificar hasta 20 Account ID a la vez.",
   "adminCannotBeRemoved": "Los administradores no pueden ser eliminados.",
   "adminMorePromotedToAdmin": "<b>{name}</b> y <b>{count} más</b> fueron promovidos a Administradores.",

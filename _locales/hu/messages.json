@@ -14,7 +14,6 @@
   "accountIdYoursDescription": "Ez a te Felhasználó ID-d. Más felhasználók beszkennelhetik, hogy egy beszélgetést indítsanak el veled.",
   "actualSize": "Eredeti méret",
   "add": "Hozzáadás",
-  "addAdmins": "Adminisztrátorok hozzáadása",
   "addAdminsDescription": "Adja meg a felhasználó fiókazonosítóját, akit adminisztrátorrá kíván kinevezni.<br/><br/>Egyszerre több felhasználó hozzáadásához adja meg az egyes fiókazonosítókat vesszővel elválasztva. Egyszerre legfeljebb 20 fiókazonosító adható meg.",
   "adminCannotBeRemoved": "Adminokat nem lehet eltávolítani.",
   "adminMorePromotedToAdmin": "<b>{name}</b> és <b>{count} másik személy</b> adminisztrátorrá lettek előléptetve.",
