@@ -53,7 +53,7 @@ export abstract class DataMessageWithProfile extends ExpirableMessageWithProfile
       dataMessage.profile = profile;
       dataMessage.profileKey = profileKey;
     } else if (profile?.displayName) {
-      dataMessage.profile = { displayName: profile.displayName };
+      dataMessage.profile = profile;
     }
 
     return dataMessage;

@@ -101,13 +101,13 @@ async function insertConvoFromDBIntoWrapperAndRefresh(convoId: string): Promise<
       try {
         const proDetails = foundConvo.dbContactProDetails();
         // this saves the details for contacts and `Note To Self`
-
-        await ConvoInfoVolatileWrapperActions.set1o1(convoId, {
+        const toSet = {
           forcedUnread: isForcedUnread,
           lastReadTsMs: lastReadMessageTimestamp,
           proGenIndexHashB64: proDetails?.proGenIndexHashB64 || null,
           proExpiryTsMs: proDetails?.proExpiryTsMs || null,
-        });
+        };
+        await ConvoInfoVolatileWrapperActions.set1o1(convoId, toSet);
 
         await refreshConvoVolatileCached(convoId, false, false);
       } catch (e) {

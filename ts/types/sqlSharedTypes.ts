@@ -107,6 +107,7 @@ export function getContactInfoFromDBValues({
   expirationMode,
   expireTimer,
   dbProfileUpdatedAtSeconds,
+  bitsetProFeatures,
 }: {
   id: string;
   dbApproved: boolean;
@@ -121,6 +122,7 @@ export function getContactInfoFromDBValues({
   expirationMode: DisappearingMessageConversationModeType | undefined;
   expireTimer: number | undefined;
   dbProfileUpdatedAtSeconds: number;
+  bitsetProFeatures: bigint | undefined;
 }): ContactInfoSet {
   const wrapperContact: ContactInfoSet = {
     id,
@@ -134,6 +136,7 @@ export function getContactInfoFromDBValues({
     expirationMode,
     expirationTimerSeconds: !!expireTimer && expireTimer > 0 ? expireTimer : 0,
     profileUpdatedSeconds: dbProfileUpdatedAtSeconds,
+    profileProFeatures: bitsetProFeatures,
   };
 
   if (

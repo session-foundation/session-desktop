@@ -56,7 +56,6 @@ class OutgoingUserProfile {
       value: updatedAtSeconds,
       expectedUnit: 'seconds',
     });
-    console.warn('lastProfileUpdateTs', this.lastProfileUpdateTs);
     this.initFromPicDetails(args.profilePic);
   }
 
@@ -129,9 +128,7 @@ class OutgoingUserProfile {
     if (this.displayName) {
       profile.displayName = this.displayName;
     }
-    console.warn('protobufdetails', this.lastProfileUpdateTs.seconds())
     profile.lastProfileUpdateSeconds = this.lastProfileUpdateTs.seconds();
-    console.warn('protobufdetailsafter', profile.lastProfileUpdateSeconds)
 
     const picDetails = this.toProfilePicture();
     if (picDetails.url && picDetails.key) {

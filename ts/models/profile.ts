@@ -182,7 +182,7 @@ abstract class SessionProfileChanges {
     if (!this.shouldApplyChange(newProfileUpdatedAtSeconds)) {
       return { proDetailsChanged };
     }
-    debugger;
+
     if (this.convo.isMe()) {
       // We don't want to set the pro details of ourself,
       // as we can just use the ones provided from libsession directly.

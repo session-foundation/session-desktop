@@ -127,12 +127,6 @@ export async function getOurProfile() {
     UserConfigWrapperActions.getProfilePic(),
   ]);
 
-  console.warn(
-    'UserConfigWrapperActions.getProfileUpdatedSeconds',
-    await UserConfigWrapperActions.getProfileUpdatedSeconds(),
-    updatedAtSeconds
-  );
-
   return new OutgoingUserProfile({
     displayName: displayName || 'Anonymous',
     updatedAtSeconds,
