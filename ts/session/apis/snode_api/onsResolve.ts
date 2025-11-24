@@ -34,7 +34,7 @@ async function getSessionIDForOnsName(onsNameCase: string) {
 
   // we do this request with validationCount snodes
   const promises = range(0, validationCount).map(async () => {
-    const targetNode = await SnodePool.getRandomSnode();
+    const targetNode = await SnodePool.getRandomSnode({ snodesToExclude: [] });
 
     const results = await BatchRequests.doUnsignedSnodeBatchRequestNoRetries({
       unsignedSubRequests: [subRequest],

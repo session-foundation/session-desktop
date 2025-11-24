@@ -280,7 +280,7 @@ async function scheduleAvatarDownloadJobIfNeeded(groupPk: GroupPubkeyType) {
 
     if (!profileUrl || !profileKeyHex) {
       // no avatar set for this group: make sure we also remove the one we might have locally.
-      if (conversation.getAvatarPointer() || conversation.getProfileKey()) {
+      if (conversation.getAvatarPointer() || conversation.getProfileKeyHex()) {
         await conversation.setSessionProfile({
           type: 'resetAvatarGroup',
           displayName: null,
@@ -292,7 +292,7 @@ async function scheduleAvatarDownloadJobIfNeeded(groupPk: GroupPubkeyType) {
 
     // here, an avatar for this group is set. First we need to make sure if that's the same as we already have
     const prevPointer = conversation.getAvatarPointer();
-    const prevProfileKey = conversation.getProfileKey();
+    const prevProfileKey = conversation.getProfileKeyHex();
 
     if (prevPointer !== profileUrl || prevProfileKey !== profileKeyHex) {
       // set the avatar for this group, it will be downloaded by the job scheduled below

@@ -210,23 +210,21 @@ export async function TEST_fetchSnodePoolFromSeedNodeRetryable(
     throw new Error('fetchSnodePoolFromSeedNodeRetryable: Seed nodes are empty');
   }
 
-  const seedNodeUrl = _.sample(seedNodes);
-  if (!seedNodeUrl) {
+  if (!seedNodes.length) {
     window?.log?.warn(
-      'loki_snode_api::fetchSnodePoolFromSeedNodeRetryable - Could not select random snodes from',
+      'loki_snode_api::fetchSnodePoolFromSeedNodeRetryable - no seednodes',
       seedNodes
     );
     throw new Error('fetchSnodePoolFromSeedNodeRetryable: Seed nodes are empty #2');
   }
 
-  const tryUrl = new URL(seedNodeUrl);
+  const snodes = await Promise.race(seedNodes.map(s => getSnodesFromSeedUrl(new URL(s))));
 
-  const snodes = await getSnodesFromSeedUrl(tryUrl);
   if (snodes.length === 0) {
     window?.log?.warn(
-      `loki_snode_api::fetchSnodePoolFromSeedNodeRetryable - ${seedNodeUrl} did not return any snodes`
+      `loki_snode_api::fetchSnodePoolFromSeedNodeRetryable - Promise.race did not return any snodes`
     );
-    throw new Error(`Failed to contact seed node: ${seedNodeUrl}`);
+    throw new Error(`Failed to contact seed node: Promise.race did not return any snodes`);
   }
 
   return snodes;

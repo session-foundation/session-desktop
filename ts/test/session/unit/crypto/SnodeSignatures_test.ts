@@ -205,22 +205,6 @@ describe('SnodeSignature', () => {
         await verifySig(ret, verificationData);
       });
 
-      it.skip('can sign a delete with authData if adminSecretKey is empty', async () => {
-        // we can't really test this atm. We'd need the full env of wrapper setup as we need need for the subaccountSign itself, part of the wrapper
-        // const hashes = ['hash4321', 'hash4221'];
-        // const group = getEmptyUserGroup();
-        // const ret = await SnodeGroupSignature.getGroupSignatureByHashesParams({
-        //   method: 'delete',
-        //   groupPk: validGroupPk,
-        //   messagesHashes: hashes,
-        //   group: { ...group, authData: currentUserSubAccountAuthData },
-        // });
-        // expect(ret.pubkey).to.be.eq(validGroupPk);
-        // expect(ret.messages).to.be.deep.eq(hashes);
-        // const verificationData = `delete${hashes.join('')}`;
-        // await verifySig(ret, verificationData);
-      });
-
       it('throws if none are set', async () => {
         const hashes = ['hash4321', 'hash4221'];
 

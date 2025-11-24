@@ -10,8 +10,8 @@ import {
   UserConfigWrapperActions,
 } from '../../webworker/workers/browser/libsession_worker_interface';
 import { UserUtils } from '../../session/utils';
-import { fromBase64ToArray } from '../../session/utils/String';
 import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import { fromHexToArray } from '../../session/utils/String';
 
 export async function uploadAndSetOurAvatarShared({
   decryptedAvatarData,
@@ -45,10 +45,10 @@ export async function uploadAndSetOurAvatarShared({
     encryptionKey = encryptedContent.encryptionKey;
   } else {
     // if this is a reupload, reuse the current profile key. Otherwise generate a new one
-    const existingProfileKey = ourConvo.getProfileKey();
+    const existingProfileKeyHex = ourConvo.getProfileKeyHex();
     const profileKey =
-      context === 'reuploadAvatar' && existingProfileKey
-        ? fromBase64ToArray(existingProfileKey)
+      context === 'reuploadAvatar' && existingProfileKeyHex
+        ? fromHexToArray(existingProfileKeyHex)
         : randombytes_buf(32);
     encryptedData = await encryptProfile(mainAvatarDetails.outputBuffer, profileKey);
     encryptionKey = profileKey;
@@ -106,6 +106,6 @@ export async function uploadAndSetOurAvatarShared({
 
   return {
     avatarPointer: ourConvo.getAvatarPointer(),
-    profileKey: ourConvo.getProfileKey(),
+    profileKey: ourConvo.getProfileKeyHex(),
   };
 }

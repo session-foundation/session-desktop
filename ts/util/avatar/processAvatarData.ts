@@ -16,7 +16,11 @@ import { MAX_ATTACHMENT_FILESIZE_BYTES } from '../../session/constants';
  * This is because we need to be able to reupload our full avatar to the file server, and mobile pixel density can be 3x.
  * We still want to reduce incoming avatars to 200 x 200 for performance reasons.
  */
-export async function processAvatarData(arrayBuffer: ArrayBuffer, planForReupload: boolean) {
+export async function processAvatarData(
+  arrayBuffer: ArrayBuffer,
+  planForReupload: boolean,
+  remoteChange = false
+) {
   if (!arrayBuffer || arrayBuffer.byteLength === 0 || !isArrayBuffer(arrayBuffer)) {
     throw new Error('processAvatarData: arrayBuffer is empty');
   }
@@ -27,7 +31,11 @@ export async function processAvatarData(arrayBuffer: ArrayBuffer, planForReuploa
    * 2. a fallback avatar in case the user looses its pro (static image, even if the main avatar is animated)
    */
   // this is step 1, we generate a scaled down avatar, but keep its nature (animated or not)
-  const processed = await ImageProcessor.processAvatarData(arrayBuffer, planForReupload);
+  const processed = await ImageProcessor.processAvatarData(
+    arrayBuffer,
+    planForReupload,
+    remoteChange
+  );
 
   if (!processed) {
     throw new Error('processLocalAvatarChange: failed to process avatar');
@@ -38,7 +46,7 @@ export async function processAvatarData(arrayBuffer: ArrayBuffer, planForReuploa
   // sanity check the returned data
   if (mainAvatarDetails.format !== 'webp' && mainAvatarDetails.format !== 'gif') {
     throw new Error(
-      'processLocalAvatarChange: we only support animated mainAvatarDetails in webp after conversion'
+      'processLocalAvatarChange: we only support animated mainAvatarDetails in webp or gif after conversion'
     );
   }
 
@@ -56,9 +64,7 @@ export async function processAvatarData(arrayBuffer: ArrayBuffer, planForReuploa
   }
 
   if (mainAvatarDetails.size >= MAX_ATTACHMENT_FILESIZE_BYTES) {
-    throw new Error(
-      'processLocalAvatarChange: mainAvatarDetails size is too big after conversion (bigger than fs limit'
-    );
+    throw new Error('Provided image is too big after conversion. Please use another image.');
   }
 
   return { mainAvatarDetails, avatarFallback };
