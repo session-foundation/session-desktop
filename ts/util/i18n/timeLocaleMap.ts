@@ -24,7 +24,6 @@ export const timeLocaleMap: Record<CrowdinLocale, Locale> = {
   en: supportedByDateFns.enUS,
 
   // then overwrite anything that we don't agree with or need to support specifically.
-  // @ts-expect-error - When building the locales with --en-only, this break tsc but is a non-issue
   'es-419': supportedByDateFns.es,
   fa: supportedByDateFns.faIR,
   fil: supportedByDateFns.fi,

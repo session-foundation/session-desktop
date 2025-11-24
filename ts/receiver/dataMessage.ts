@@ -27,9 +27,8 @@ import { Reactions } from '../util/reactions';
 import { GroupV2Receiver } from './groupv2/handleGroupV2Message';
 import { ConversationTypeEnum } from '../models/types';
 import { ed25519Str } from '../session/utils/String';
-import { Timestamp } from '../types/timestamp/timestamp';
 import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
-import { NetworkTime } from '../util/NetworkTime';
+import { buildPrivateProfileChangeFromSwarmDataMessage } from '../models/profile';
 
 function cleanAttachment(attachment: SignalService.IAttachmentPointer) {
   return {
@@ -205,40 +204,15 @@ export async function handleSwarmDataMessage({
   );
 
   // Check if we need to update any profile names
-  if (
-    !isMe &&
-    senderConversationModel &&
-    cleanDataMessage.profile &&
-    cleanDataMessage.profileKey?.length
-  ) {
-    await ProfileManager.updateProfileOfContact({
-      pubkey: senderConversationModel.id,
-      displayName: cleanDataMessage.profile.displayName,
-      profileUrl: cleanDataMessage.profile.profilePicture,
-      profileKey: cleanDataMessage.profileKey,
-      profileUpdatedAtSeconds: new Timestamp({
-        value: cleanDataMessage.profile.lastProfileUpdateSeconds ?? 0,
-      }).seconds(),
+  if (!isMe && senderConversationModel) {
+    const profile = buildPrivateProfileChangeFromSwarmDataMessage({
+      convo: senderConversationModel,
+      dataMessage: cleanDataMessage,
+      decodedPro: decodedEnvelope.validPro,
     });
-  }
-
-  // if, when we process that message we have a valid pro proof that is not expired,
-  // we can process the pro details of that user
-  if (
-    !isMe &&
-    senderConversationModel &&
-    decodedEnvelope.validPro &&
-    decodedEnvelope.isProProofValidAtMs(NetworkTime.now()) &&
-    cleanDataMessage.profile
-  ) {
-    await senderConversationModel.setDbContactProDetails({
-      proGenIndexHashB64: decodedEnvelope.validPro.proProof.genIndexHashB64,
-      proExpiryTsMs: decodedEnvelope.validPro.proProof.expiryMs,
-      bitsetProFeatures: decodedEnvelope.validPro.proFeaturesBitset,
-      incomingChangeSeconds: longOrNumberToNumber(
-        cleanDataMessage.profile.lastProfileUpdateSeconds ?? 0
-      ),
-    });
+    if (profile) {
+      await ProfileManager.updateProfileOfContact(profile);
+    }
   }
 
   if (!messageHasVisibleContent(cleanDataMessage)) {

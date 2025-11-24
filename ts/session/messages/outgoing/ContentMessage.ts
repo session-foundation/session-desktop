@@ -36,6 +36,9 @@ export abstract class ContentMessageWithProfile extends ContentMessageNoProfile 
 
   constructor(params: MessageParams & WithOutgoingUserProfile & WithProMessageDetailsOrProto) {
     super(params);
+    console.warn('ContentMessageWithProfile', params);
+
+    current issue is that this.userProfile .last updaedAt appears unset on receijving side
     this.userProfile = params.userProfile;
     this.proMessageDetails = params.outgoingProMessageDetails;
   }
@@ -68,6 +71,7 @@ export abstract class ContentMessageWithProfile extends ContentMessageNoProfile 
    * `protected` as this needs to be set in the dataProto() or messageRequestResponse() calls.
    */
   protected lokiProfileProto(): Partial<Pick<SignalService.DataMessage, 'profile' | 'profileKey'>> {
+    console.warn('lokiProfileProto', this.userProfile, this.userProfile?.toProtobufDetails());
     return this.userProfile?.toProtobufDetails() ?? {};
   }
 }

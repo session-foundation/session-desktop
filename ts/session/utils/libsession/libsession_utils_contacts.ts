@@ -93,6 +93,7 @@ async function insertContactFromDBIntoWrapperAndRefresh(
     dbProfileUpdatedAtSeconds,
   });
   try {
+    console.warn('set', wrapperContact);
     await ContactsWrapperActions.set(wrapperContact);
   } catch (e) {
     window.log.warn(`ContactsWrapperActions.set of ${id} failed with ${e.message}`);

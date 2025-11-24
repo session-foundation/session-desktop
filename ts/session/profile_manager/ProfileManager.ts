@@ -7,29 +7,15 @@ import { AvatarDownload } from '../utils/job_runners/jobs/AvatarDownloadJob';
 import { ConversationTypeEnum } from '../../models/types';
 import { RetrieveDisplayNameError } from '../utils/errors';
 import { NetworkTime } from '../../util/NetworkTime';
-import type { WithProfileUpdatedAtSeconds } from '../../models/conversationAttributes';
 import {
   SessionDisplayNameOnlyPrivate,
-  SessionProfileResetAvatarPrivate,
-  SessionProfileSetAvatarBeforeDownloadPrivate,
+  type SessionProfilePrivateChange,
 } from '../../models/profile';
 
 /**
  * This can be used to update our conversation display name with the given name right away, and plan an AvatarDownloadJob to retrieve the new avatar if needed to download it
  */
-async function updateOurProfileSync({
-  displayName,
-  profileUrl,
-  profileKey,
-  priority,
-  profileUpdatedAtSeconds,
-}: {
-  displayName: string | undefined;
-  profileUrl: string | null;
-  profileKey: Uint8Array | null;
-  priority: number | null; // passing null means to not update the priority at all (used for legacy config message for now)
-  profileUpdatedAtSeconds: number;
-}) {
+async function updateOurProfileSync(profile: SessionProfilePrivateChange, priority: number | null) {
   const us = UserUtils.getOurPubKeyStrFromCache();
   const ourConvo = ConvoHub.use().get(us);
   if (!ourConvo?.id) {
@@ -37,13 +23,14 @@ async function updateOurProfileSync({
     return;
   }
 
-  await updateProfileOfContact({
-    pubkey: us,
-    displayName,
-    profileUrl,
-    profileKey,
-    profileUpdatedAtSeconds,
-  });
+  const changes = await profile.applyChangesIfNeeded();
+
+  if (changes.avatarNeedsDownload) {
+    await AvatarDownload.addAvatarDownloadJob({
+      conversationId: profile.getConvoId(),
+    });
+  }
+
   if (priority !== null) {
     await ourConvo.setPriorityFromWrapper(priority, true);
   }
@@ -52,56 +39,13 @@ async function updateOurProfileSync({
 /**
  * This can be used to update the display name of the given pubkey right away, and plan an AvatarDownloadJob to retrieve the new avatar if needed to download it.
  */
-async function updateProfileOfContact({
-  pubkey,
-  displayName,
-  profileKey,
-  profileUrl,
-  profileUpdatedAtSeconds,
-}: {
-  pubkey: string;
-  displayName: string | null | undefined;
-  profileUrl: string | null | undefined;
-  profileKey: Uint8Array | null | undefined;
-} & WithProfileUpdatedAtSeconds) {
-  const conversation = ConvoHub.use().get(pubkey);
-
-  if (!conversation || !conversation.isPrivate()) {
-    window.log.warn('updateProfileOfContact can only be used for existing and private convos');
-    return;
-  }
-  let changes;
-
-  // we have to set it right away and not in the async download job, as the next .commit will save it to the
-  // database and wrapper (and we do not want to override anything in the wrapper's content
-  // with what we have locally, so we need the commit to have already the right values in pointer and profileKey)
-
-  if (profileUrl && profileKey) {
-    const profile = new SessionProfileSetAvatarBeforeDownloadPrivate({
-      convo: conversation,
-      profileKey,
-      avatarPointer: profileUrl,
-      displayName,
-      profileUpdatedAtSeconds,
-    });
-    changes = await profile.applyChangesIfNeeded();
-  } else {
-    const profile = new SessionProfileResetAvatarPrivate({
-      convo: conversation,
-      displayName,
-      profileUpdatedAtSeconds,
-    });
-    changes = await profile.applyChangesIfNeeded();
-  }
-
-  if (changes.nameChanged || changes.avatarChanged) {
-    await conversation.commit();
-  }
+async function updateProfileOfContact(profile: SessionProfilePrivateChange) {
+  const changes = await profile.applyChangesIfNeeded();
 
   if (changes.avatarNeedsDownload) {
     // this call will download the new avatar or reset the local filepath if needed
     await AvatarDownload.addAvatarDownloadJob({
-      conversationId: pubkey,
+      conversationId: profile.getConvoId(),
     });
   }
 }

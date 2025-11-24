@@ -151,7 +151,6 @@ import type {
 } from '../interactions/types';
 import type { LastMessageStatusType } from '../state/ducks/types';
 import { OutgoingUserProfile } from '../types/message';
-import { Timestamp } from '../types/timestamp/timestamp';
 import { getProDetailsFromStorage } from '../state/selectors/proBackendData';
 import { ProStatus } from '../session/apis/pro_backend_api/types';
 import { privateSet, privateSetKey } from './modelFriends';
@@ -1774,60 +1773,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
       proExpiryTsMs,
       bitsetProFeatures,
     };
-  }
-
-  public async setDbContactProDetails(
-    {
-      bitsetProFeatures,
-      proExpiryTsMs,
-      proGenIndexHashB64,
-      incomingChangeSeconds,
-    }: {
-      proGenIndexHashB64: string | null;
-      proExpiryTsMs: number | null;
-      bitsetProFeatures: bigint | null;
-      incomingChangeSeconds: number;
-    },
-    shouldCommit = true
-  ) {
-    if (this.getConvoType() !== ConvoTypeNarrow.contact) {
-      // we only care about contacts here
-      window.log.debug(`setDbContactProDetails for ${ed25519Str(this.id)}: not a contact`);
-      return;
-    }
-    const ts = new Timestamp({ value: incomingChangeSeconds });
-    window.log.debug(
-      `setDbContactProDetails for ${ed25519Str(this.id)} incomingSeconds:${ts.seconds()} currentSeconds:${this.getProfileUpdatedSeconds()} -> ${this.getProfileUpdatedSeconds() < ts.seconds()}`
-    );
-
-    if (this.getProfileUpdatedSeconds() >= ts.seconds()) {
-      // the current version we have is more recent than the incoming, so we can safely discard it
-      return;
-    }
-
-    let changes = false;
-    if (
-      !isNil(bitsetProFeatures) &&
-      this.get('bitsetProFeatures') !== bitsetProFeatures.toString()
-    ) {
-      this[privateSetKey]('bitsetProFeatures', bitsetProFeatures.toString());
-      changes = true;
-    }
-    if (!isNil(proGenIndexHashB64) && this.get('proGenIndexHashB64') !== proGenIndexHashB64) {
-      this[privateSetKey]('proGenIndexHashB64', proGenIndexHashB64);
-      changes = true;
-    }
-    if (!isNil(proExpiryTsMs) && this.get('proExpiryTsMs') !== proExpiryTsMs) {
-      this[privateSetKey]('proExpiryTsMs', proExpiryTsMs);
-      changes = true;
-    }
-
-    // this.set
-    console.warn('this is still TODO, I think');
-
-    if (changes && shouldCommit) {
-      await this.commit();
-    }
   }
 
   public async updateBlocksSogsMsgReqsTimestamp(

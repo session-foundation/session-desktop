@@ -30,6 +30,7 @@ import { getOppositeTheme, isThemeMismatched } from '../util/theme';
 import { getCrowdinLocale } from '../util/i18n/shared';
 import { rtlLocales } from '../localization/constants';
 import { SessionEventEmitter } from '../shared/event_emitter';
+import { getSodiumRenderer } from '../session/crypto';
 
 // Globally disable drag and drop
 document.body.addEventListener(
@@ -170,6 +171,8 @@ Storage.onready(async () => {
   const lastVersion = Storage.get('version');
   newVersion = !lastVersion || currentVersion !== lastVersion;
   await Storage.put('version', currentVersion);
+  // make sure to load this
+  await getSodiumRenderer();
 
   if (newVersion) {
     window.log.info(`[updater] New version detected: ${currentVersion}; previous: ${lastVersion}`);

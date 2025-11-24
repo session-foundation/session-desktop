@@ -22,6 +22,7 @@ import { ConversationTypeEnum } from '../../../../models/types';
 import { AvatarDownload } from '../../../utils/job_runners/jobs/AvatarDownloadJob';
 import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import {
+  buildPrivateProfileChangeFromMetaGroupMember,
   SessionProfileResetAvatarGroupCommunity,
   SessionProfileSetAvatarBeforeDownloadGroup,
 } from '../../../../models/profile';
@@ -185,16 +186,12 @@ async function handleMetaMergeResults(groupPk: GroupPubkeyType) {
         ConversationTypeEnum.PRIVATE
       );
     }
-    if (member.name && member.name !== memberConvoInDB.getRealSessionUsername()) {
-      // eslint-disable-next-line no-await-in-loop
-      await ProfileManager.updateProfileOfContact({
-        pubkey: member.pubkeyHex,
-        displayName: member.name,
-        profileUrl: member.profilePicture?.url || null,
-        profileKey: member.profilePicture?.key || null,
-        profileUpdatedAtSeconds: member.profileUpdatedSeconds,
-      });
-    }
+    const profile = buildPrivateProfileChangeFromMetaGroupMember({
+      convo: memberConvoInDB,
+      member,
+    });
+    // eslint-disable-next-line no-await-in-loop
+    await ProfileManager.updateProfileOfContact(profile);
   }
 }
 

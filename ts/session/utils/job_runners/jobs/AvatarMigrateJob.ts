@@ -136,11 +136,12 @@ class AvatarMigrateJob extends PersistedJob<AvatarMigratePersistedData> {
         const profile = new SessionProfileResetAvatarPrivate({
           convo: conversation,
           displayName: null, // null to not update the display name.
-
           // this is the AvatarMigrateJob.
           // We want to override the avatars that was stored for that user
           // as we can't decrypt it.
           profileUpdatedAtSeconds: NetworkTime.nowSeconds(),
+          // Don't overwrite those if they are set
+          proDetails: { bitsetProFeatures: null, proExpiryTsMs: null, proGenIndexHashB64: null },
         });
         await profile.applyChangesIfNeeded();
 
@@ -190,11 +191,12 @@ class AvatarMigrateJob extends PersistedJob<AvatarMigratePersistedData> {
         const profile = new SessionProfileResetAvatarPrivate({
           convo: conversation,
           displayName: null, // null to not update the display name.
-
           // this is the AvatarMigrateJob.
-          // We want to override the avatars that was stored for that user
+          // We want to override the avatar that was stored for that user
           // as we can't decrypt it.
           profileUpdatedAtSeconds: NetworkTime.nowSeconds(),
+          // Don't overwrite those if they are set
+          proDetails: { bitsetProFeatures: null, proExpiryTsMs: null, proGenIndexHashB64: null },
         });
         await profile.applyChangesIfNeeded();
       }
