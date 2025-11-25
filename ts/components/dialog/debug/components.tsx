@@ -686,7 +686,7 @@ export const AboutInfo = () => {
 export const OtherInfo = () => {
   const otherInfo = useAsync(async () => {
     const { id, vbid } = await window.getUserKeys();
-    const proMasterKey = (await getProMasterKeyHex())?.slice(0, 64);
+    const proMasterKey = (await getProMasterKeyHex())?.slice(64);
     const result = [
       `${tr('accountIdYours')}: ${id}`,
       `VBID: ${vbid}`,
