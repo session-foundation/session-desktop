@@ -14,7 +14,6 @@
   "accountIdYoursDescription": "これはあなたのアカウントIDです。他のユーザーはこれをスキャンしてあなたと会話を始めることができます。",
   "actualSize": "実サイズ",
   "add": "追加",
-  "addAdmins": "管理者を追加する",
   "addAdminsDescription": "管理者に昇格させるユーザーのAccount IDを入力してください。<br/><br/>複数のユーザーを追加するには、各Account IDをカンマで区切って入力してください。一度に最大20件まで指定できます。",
   "adminCannotBeRemoved": "アドミンを削除することはできません",
   "adminMorePromotedToAdmin": "<b>{name}</b> と <b>{count}人</b> がアドミンに昇格しました",

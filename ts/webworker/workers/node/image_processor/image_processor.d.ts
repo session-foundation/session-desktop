@@ -44,7 +44,8 @@ export type ProcessedLinkPreviewThumbnailType = NonNullable<
 export type ImageProcessorWorkerActions = {
   /**
    * Process an avatar. Depending on if we want this to be reuploaded or not, we allow gif as a return format or not.
-   * The reason is that when we plan for reupload, we don't convert gif to webp, as we want to keep the original gif.
+   * The reason is that when we plan for reupload, we don't **always** convert gif to webp, as we might want to keep it as gif.
+   * We will try to convert an input gif to webp, but if it takes too long or the resulting file size is too big, we will just use the original gif.
    * When the change is not planned for reupload, we convert everything to a webp.
    * This function will generate a mainAvatar, and a fallbackAvatar if needed.
    *
@@ -60,7 +61,8 @@ export type ImageProcessorWorkerActions = {
    */
   processAvatarData: (
     input: ArrayBufferLike,
-    planForReupload: boolean
+    planForReupload: boolean,
+    remoteChange: boolean
   ) => Promise<{
     mainAvatarDetails: Omit<MaybeAnimatedOutputType, 'format'> & WithImageFormat<'gif' | 'webp'>;
     avatarFallback: (StaticOutputType & WithWebpFormat) | null;

@@ -117,9 +117,12 @@ async function getPropsForMessageInfo(
   const found = await Data.getMessageById(messageId);
   const attachmentsWithMediaDetails: Array<PropsForAttachment> = [];
   if (found) {
+    const attachmentsInMsg = found.get('attachments') || [];
+
     // process attachments so we have the fileSize, url and screenshots
     for (let i = 0; i < attachments.length; i++) {
       const props = found.getPropsForAttachment(attachments[i]);
+      const fsUrl = attachmentsInMsg?.[i].url;
       if (
         props?.contentType &&
         GoogleChrome.isVideoTypeSupported(props?.contentType) &&
@@ -134,6 +137,7 @@ async function getPropsForMessageInfo(
         attachmentsWithMediaDetails.push({
           ...props,
           duration,
+          url: fsUrl,
         });
       } else if (props?.contentType && isAudio(props.contentType) && !props.duration && props.url) {
         // eslint-disable-next-line no-await-in-loop
@@ -145,9 +149,10 @@ async function getPropsForMessageInfo(
         attachmentsWithMediaDetails.push({
           ...props,
           duration,
+          url: fsUrl,
         });
       } else if (props) {
-        attachmentsWithMediaDetails.push(props);
+        attachmentsWithMediaDetails.push({ ...props, url: fsUrl });
       }
     }
 

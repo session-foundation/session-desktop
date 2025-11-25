@@ -825,6 +825,13 @@ export class MessageModel extends Model<MessageAttributes> {
       }ms. Attachments: ${attachments.map(m => m.url)}`
     );
 
+    this.setAttachments(
+      this.getAttachments()?.map((a: any, index: number) => ({ ...a, url: attachments[index].url }))
+    );
+    // Note: we don't care about the fileUrl/fileId of previews, only of attachments as they are displayed in the message info
+
+    await this.commit();
+
     return {
       body,
       attachments,

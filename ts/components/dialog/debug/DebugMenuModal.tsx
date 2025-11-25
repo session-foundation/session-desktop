@@ -211,6 +211,7 @@ export function DebugMenuModal() {
       allowOutsideClick={false}
     >
       <StyledContent
+        dir="ltr"
         $container={true}
         $flexDirection="column"
         $alignItems="flex-start"

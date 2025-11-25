@@ -14,7 +14,6 @@
   "accountIdYoursDescription": "Detta är ditt konto-ID. Andra användare kan skanna det för att starta en konversation med dig.",
   "actualSize": "Aktuella storlek",
   "add": "Lägg till",
-  "addAdmins": "Lägg till administratörer",
   "addAdminsDescription": "Ange Account ID för användaren du gör till administratör.<br/><br/>För att lägga till flera användare, ange varje Account ID separerat med ett kommatecken. Upp till 20 Account ID:er kan anges åt gången.",
   "adminCannotBeRemoved": "Administratörer kan inte tas bort.",
   "adminMorePromotedToAdmin": "<b>{name}</b> och <b>{count} andra </b> blev befordrade till Admin.",

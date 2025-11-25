@@ -44,6 +44,9 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
   }
 
   public async run(): Promise<RunJobResult> {
+    if (!getFeatureFlag('proAvailable')) {
+      return RunJobResult.Success;
+    }
     const start = Date.now();
 
     try {

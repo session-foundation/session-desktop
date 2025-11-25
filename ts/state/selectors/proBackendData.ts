@@ -14,7 +14,7 @@ export const getProBackendData = (state: StateType): ProBackendDataState => {
   return state.proBackendData;
 };
 
-function getProDetailsFromStorage() {
+export function getProDetailsFromStorage() {
   const response = Storage.get(SettingsKey.proDetails);
   if (!response) {
     return null;

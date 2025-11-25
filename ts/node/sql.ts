@@ -276,6 +276,9 @@ function getDBCreationTimestampMs(): number | null {
   if (!databaseFilePath) {
     return null;
   }
+  if (process.env.DB_CREATION_TIMESTAMP_MS) {
+    return Number.parseInt(process.env.DB_CREATION_TIMESTAMP_MS, 10);
+  }
   return getFileCreationTimestampMs(databaseFilePath);
 }
 

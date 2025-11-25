@@ -10,6 +10,12 @@ import {
   type TokensSimpleAndArgs,
 } from './locales';
 
+// NOTE: this forces a plural string to use the "1" variant
+export const PLURAL_COUNT_ONE = 1;
+
+// NOTE: this forces a plural string to use the "other" variant
+export const PLURAL_COUNT_OTHER = 99;
+
 // Note: those two functions are actually duplicates of Errors.toString.
 // We should maybe make that a module that we reuse?
 function withClause(error: unknown) {

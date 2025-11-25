@@ -22,7 +22,7 @@ import {
   SessionButtonType,
 } from '../basic/SessionButton';
 import { SpacerSM, SpacerXL } from '../basic/Text';
-import { MergedLocalizerTokens, tr } from '../../localization/localeTools';
+import type { MergedLocalizerTokens } from '../../localization/localeTools';
 import { SessionButtonShiny } from '../basic/SessionButtonShiny';
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
 import { useCurrentUserHasPro } from '../../hooks/useHasPro';
@@ -40,7 +40,10 @@ import {
 } from './cta/types';
 import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { showLinkVisitWarningDialog } from './OpenUrlModal';
-import { APP_URL } from '../../session/constants';
+import { APP_URL, DURATION } from '../../session/constants';
+import { Data } from '../../data/data';
+import { getUrlInteractionsForUrl, URLInteraction } from '../../util/urlHistory';
+import { Localizer } from '../basic/Localizer';
 
 function useIsProCTAVariant(v: CTAVariant): v is ProCTAVariant {
   return useMemo(() => isProCTAVariant(v), [v]);
@@ -125,7 +128,6 @@ function getImage(variant: CTAVariant): ReactNode {
 
     case CTAVariant.PRO_ANIMATED_DISPLAY_PICTURE:
     case CTAVariant.PRO_ANIMATED_DISPLAY_PICTURE_ACTIVATED:
-    case CTAVariant.DONATE_GENERIC:
       return (
         <AnimatedCTAImage
           ctaLayerSrc="images/cta/pro-animated-profile.webp"
@@ -155,6 +157,9 @@ function getImage(variant: CTAVariant): ReactNode {
         />
       );
 
+    case CTAVariant.DONATE_GENERIC:
+      return <StyledCTAImage src="images/cta/donate.webp" />;
+
     default:
       assertUnreachable(variant, 'getImage');
       throw new Error('unreachable');
@@ -164,8 +169,7 @@ function getImage(variant: CTAVariant): ReactNode {
 function getTitle(variant: CTAVariantExcludingProCTAs) {
   switch (variant) {
     case CTAVariant.DONATE_GENERIC:
-      // FIXME: replace with localised string
-      return 'Session Needs Your Help';
+      return <Localizer token="donateSessionHelp" />;
     default:
       assertUnreachable(variant, 'CtaTitle');
       throw new Error('unreachable');
@@ -184,15 +188,7 @@ function CtaTitle({ variant }: { variant: CTAVariant }) {
 function getDescription(variant: CTAVariantExcludingProCTAs) {
   switch (variant) {
     case CTAVariant.DONATE_GENERIC:
-      // FIXME: replace with localised string
-      return (
-        <>
-          {`Session is fighting powerful forces trying to weaken privacy, but we can’t continue this fight alone.`}
-          <br />
-          <br />
-          {`Donating keeps Session secure, independent, and online.`}
-        </>
-      );
+      return <Localizer token="donateSessionDescription" />;
 
     default:
       assertUnreachable(variant, 'CtaTitle');
@@ -248,15 +244,12 @@ function Buttons({
             width: '100%',
           }}
           onClick={() => {
-            // TODO: this should be moved to a constant as its used in 2 places and will have special behaviour
-            // TODO: implement link usage tracking
             showLinkVisitWarningDialog(APP_URL.DONATE, dispatch);
             onClose();
           }}
           dataTestId="modal-session-pro-confirm-button"
         >
-          {/** FIXME: replace with localised string */}
-          Donate
+          <Localizer token="donate" />
         </SessionButtonShiny>
       );
     }
@@ -296,7 +289,7 @@ function Buttons({
         }}
         dataTestId="modal-session-pro-confirm-button"
       >
-        {tr(buttonTextKey)}
+        <Localizer token={buttonTextKey} />
       </SessionButtonShiny>
     );
   }, [
@@ -307,12 +300,11 @@ function Buttons({
     afterActionButtonCallback,
   ]);
 
-  const closeButtonText = useMemo(() => {
+  const closeButtonToken: MergedLocalizerTokens = useMemo(() => {
     if (variant === CTAVariant.DONATE_GENERIC) {
-      // FIXME: replace with localised string
-      return 'Skip';
+      return 'maybeLater';
     }
-    return tr(actionButton && variant !== CTAVariant.PRO_EXPIRING_SOON ? 'cancel' : 'close');
+    return actionButton && variant !== CTAVariant.PRO_EXPIRING_SOON ? 'cancel' : 'close';
   }, [variant, actionButton]);
 
   return (
@@ -338,7 +330,7 @@ function Buttons({
         dataTestId="modal-session-pro-cancel-button"
         style={!actionButton ? { ...proButtonProps.style, width: '50%' } : proButtonProps.style}
       >
-        {closeButtonText}
+        <Localizer token={closeButtonToken} />
       </SessionButton>
     </ModalActionsContainer>
   );
@@ -426,11 +418,12 @@ export const useShowSessionCTACbWithVariant = () => {
 };
 
 export async function handleTriggeredProCTAs(dispatch: Dispatch<any>) {
-  if (!getFeatureFlag('proAvailable')) {
-    return;
-  }
+  const proAvailable = getFeatureFlag('proAvailable');
 
   if (Storage.get(SettingsKey.proExpiringSoonCTA)) {
+    if (!proAvailable) {
+      return;
+    }
     dispatch(
       updateSessionCTA({
         variant: CTAVariant.PRO_EXPIRING_SOON,
@@ -438,11 +431,25 @@ export async function handleTriggeredProCTAs(dispatch: Dispatch<any>) {
     );
     await Storage.put(SettingsKey.proExpiringSoonCTA, false);
   } else if (Storage.get(SettingsKey.proExpiredCTA)) {
+    if (!proAvailable) {
+      return;
+    }
     dispatch(
       updateSessionCTA({
         variant: CTAVariant.PRO_EXPIRED,
       })
     );
     await Storage.put(SettingsKey.proExpiredCTA, false);
+  } else {
+    const dbCreationTimestampMs = await Data.getDBCreationTimestampMs();
+    if (dbCreationTimestampMs && dbCreationTimestampMs + 7 * DURATION.DAYS < Date.now()) {
+      const donateInteractions = getUrlInteractionsForUrl(APP_URL.DONATE);
+      if (
+        !donateInteractions.includes(URLInteraction.COPY) &&
+        !donateInteractions.includes(URLInteraction.OPEN)
+      ) {
+        dispatch(updateSessionCTA({ variant: CTAVariant.DONATE_GENERIC }));
+      }
+    }
   }
 }

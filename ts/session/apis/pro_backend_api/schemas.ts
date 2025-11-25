@@ -42,6 +42,7 @@ const ProDetailsItemSchema = z.object({
   payment_provider: z.nativeEnum(ProPaymentProvider),
   auto_renewing: z.boolean(),
   unredeemed_unix_ts_ms: z.number(),
+  refund_requested_unix_ts_ms: z.number(),
   redeemed_unix_ts_ms: z.number(),
   expiry_unix_ts_ms: z.number(),
   grace_period_duration_ms: z.number(),
@@ -60,6 +61,7 @@ export const ProDetailsResultSchema = z.object({
   expiry_unix_ts_ms: z.number(),
   grace_period_duration_ms: z.number(),
   error_report: z.number(),
+  refund_requested_unix_ts_ms: z.number(),
   payments_total: z.number(),
   items: z.array(ProDetailsItemSchema),
 });

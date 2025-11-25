@@ -147,6 +147,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
   const ourAvatarIsUploading = useOurAvatarIsUploading();
   const ourAvatarUploadFailed = useOurAvatarUploadFailed();
   const sogsAvatarIsUploading = useAvatarOfRoomIsUploading(conversationId);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const [newAvatarObjectUrl, setNewAvatarObjectUrl] = useState<string | null>(avatarPath);
   const [isNewAvatarAnimated, setIsNewAvatarAnimated] = useState<boolean>(false);
@@ -195,7 +196,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
   const isPublic = useIsPublic(conversationId);
 
   const handleAvatarClick = async () => {
-    const res = await pickFileForAvatar();
+    const res = await pickFileForAvatar(setIsProcessing);
 
     if (!res) {
       window.log.error('Failed to pick avatar');
@@ -242,7 +243,8 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
     await triggerUploadProfileAvatar(newAvatarObjectUrl, conversationId, dispatch);
   };
 
-  const loading = ourAvatarIsUploading || groupAvatarChangePending || sogsAvatarIsUploading;
+  const loading =
+    ourAvatarIsUploading || groupAvatarChangePending || sogsAvatarIsUploading || isProcessing;
 
   const newAvatarLoaded = newAvatarObjectUrl !== avatarPath;
 
@@ -360,7 +362,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
       {loading ? (
         <>
           <SpacerSM />
-          {isMe ? <Localizer token="updating" /> : null}
+          {isMe && !isProcessing ? <Localizer token="updating" /> : null}
           <SessionSpinner loading={loading} height="30px" />
         </>
       ) : (

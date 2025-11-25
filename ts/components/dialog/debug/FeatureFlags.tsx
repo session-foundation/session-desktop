@@ -39,6 +39,7 @@ import {
 } from '../../../state/ducks/types/defaultFeatureFlags';
 import { UserConfigWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { useProAccessDetails } from '../../../hooks/useHasPro';
+import { isDebugMode } from '../../../shared/env_vars';
 
 type FeatureFlagToggleType = {
   forceUpdate: () => void;
@@ -884,11 +885,11 @@ export const ProDebugSection = ({
   const proAvailable = useFeatureFlag('proAvailable');
 
   const resetPro = useCallback(async () => {
+    await UserConfigWrapperActions.removeProConfig();
     await Storage.remove(SettingsKey.proDetails);
     await Storage.remove(SettingsKey.proExpiringSoonCTA);
     await Storage.remove(SettingsKey.proExpiredCTA);
     dispatch(proBackendDataActions.reset({ key: 'details' }));
-    // TODO: delete pro proof
   }, [dispatch]);
 
   const resetProMocking = useCallback(() => {
@@ -944,6 +945,10 @@ export const ProDebugSection = ({
       setExpiredCTAString: 'Set Expired CTA as never shown',
     };
   }, [proExpiredCTASetting]);
+
+  if (!proAvailable && !isDebugMode()) {
+    return null;
+  }
 
   return (
     <DebugMenuSection title="Session Pro">
