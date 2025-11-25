@@ -431,7 +431,13 @@ export const DebugUrlInteractionsSection = () => {
   const [urlInteractions, setUrlInteractions] = useState(getUrlInteractions());
 
   const refresh = useCallback(() => setUrlInteractions(getUrlInteractions()), []);
-  const removeUrl = useCallback(async (url: string) => removeUrlInteractionHistory(url), []);
+  const removeUrl = useCallback(
+    async (url: string) => {
+      await removeUrlInteractionHistory(url);
+      refresh();
+    },
+    [refresh]
+  );
   const clearAll = useCallback(async () => {
     await clearAllUrlInteractions();
     refresh();
