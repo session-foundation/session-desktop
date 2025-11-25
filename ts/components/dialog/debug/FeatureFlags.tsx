@@ -36,6 +36,7 @@ import {
   defaultProDataFeatureFlags,
 } from '../../../state/ducks/types/defaultFeatureFlags';
 import { UserConfigWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
+import { isDebugMode } from '../../../shared/env_vars';
 
 type FeatureFlagToggleType = {
   forceUpdate: () => void;
@@ -705,6 +706,10 @@ export const ProDebugSection = ({
       setExpiredCTAString: 'Set Expired CTA as never shown',
     };
   }, [proExpiredCTASetting]);
+
+  if (!proAvailable && !isDebugMode()) {
+    return null;
+  }
 
   return (
     <DebugMenuSection title="Session Pro">
