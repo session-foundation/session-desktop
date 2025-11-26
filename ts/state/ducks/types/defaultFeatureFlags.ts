@@ -42,6 +42,8 @@ export const defaultBooleanFeatureFlags = {
   debugOnionRequests: false,
   debugOnionPaths: !isEmpty(process.env.SESSION_DEBUG_ONION_PATHS),
   debugSnodePool: !isEmpty(process.env.SESSION_DEBUG_SNODE_POOL),
+  debugInsecureNodeFetch: !isEmpty(process.env.SESSION_DEBUG_INSECURE_NODE_FETCH),
+  debugOnlineState: !isEmpty(process.env.SESSION_DEBUG_ONLINE_STATE),
 } satisfies SessionBooleanFeatureFlags;
 
 export const defaultProDataFeatureFlags = {

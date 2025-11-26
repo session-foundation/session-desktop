@@ -2,7 +2,7 @@ import https from 'https';
 import ByteBuffer from 'bytebuffer';
 import { to_string } from 'libsodium-wrappers-sumo';
 import { cloneDeep, isEmpty, isString, omit } from 'lodash';
-import insecureNodeFetch, { RequestInit, Response } from 'node-fetch';
+import type { RequestInit, Response } from 'node-fetch';
 import pRetry from 'p-retry';
 // eslint-disable-next-line import/no-unresolved
 import { AbortSignal as AbortSignalNode } from 'node-fetch/externals';
@@ -27,10 +27,9 @@ import {
   WithSymmetricKey,
   type WithReason,
 } from '../../types/with';
-import { updateIsOnline } from '../../../state/ducks/onions';
 import { SERVER_HOSTS } from '..';
-import { ReduxOnionSelectors } from '../../../state/selectors/onions';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { FetchDestination, insecureNodeFetch } from '../../utils/InsecureNodeFetch';
 
 // hold the ed25519 key of a snode against the time it fails. Used to remove a snode only after a few failures (snodeFailureThreshold failures)
 let snodeFailureCount: Record<string, number> = {};
@@ -838,6 +837,8 @@ async function sendOnionRequestHandlingSnodeEjectNoRetries({
   throwErrors,
   allow401s,
   timeoutMs,
+  destination,
+  caller,
 }: WithAbortSignal &
   WithTimeoutMs &
   WithAllow401s &
@@ -848,6 +849,8 @@ async function sendOnionRequestHandlingSnodeEjectNoRetries({
     finalRelayOptions?: FinalRelayOptions;
     useV4: boolean;
     throwErrors: boolean;
+    destination: FetchDestination;
+    caller: string;
   }): Promise<SnodeResponse | SnodeResponseV4 | undefined> {
   // this sendOnionRequestNoRetries() call has to be the only one like this.
   // If you need to call it, call it through sendOnionRequestHandlingSnodeEjectNoRetries because this is the one handling path rebuilding and known errors
@@ -863,6 +866,8 @@ async function sendOnionRequestHandlingSnodeEjectNoRetries({
       abortSignal,
       useV4,
       timeoutMs,
+      destination,
+      caller,
     });
 
     if (getFeatureFlag('debugOnionRequests')) {
@@ -1004,6 +1009,8 @@ const sendOnionRequestNoRetries = async ({
   abortSignal,
   timeoutMs,
   useV4,
+  destination,
+  caller,
 }: WithAbortSignal &
   WithTimeoutMs & {
     nodePath: Array<Snode>;
@@ -1011,6 +1018,8 @@ const sendOnionRequestNoRetries = async ({
     finalDestOptions: FinalDestOptions;
     finalRelayOptions?: FinalRelayOptions; // use only when the target is not a snode
     useV4: boolean;
+    destination: FetchDestination;
+    caller: string;
   }) => {
   // Warning: be sure to do a copy otherwise the delete below creates issue with retries
   // we want to forward the destination_ed25519_hex explicitly so remove it from the copy directly
@@ -1080,13 +1089,8 @@ const sendOnionRequestNoRetries = async ({
       '...',
       destX25519hex.substring(32)
     );
-    if (e.message === ERROR_CODE_NO_CONNECT || !navigator.onLine) {
-      if (ReduxOnionSelectors.isOnlineOutsideRedux()) {
-        window.inboxStore?.dispatch(updateIsOnline(false));
-      }
-    } else if (!ReduxOnionSelectors.isOnlineOutsideRedux()) {
-      window.inboxStore?.dispatch(updateIsOnline(true));
-    }
+
+    // NOTE: dont handle online status here
 
     throw e;
   }
@@ -1123,7 +1127,12 @@ const sendOnionRequestNoRetries = async ({
   // no logs for that one insecureNodeFetch as we do need to call insecureNodeFetch to our guardNodes
   // window?.log?.info('insecureNodeFetch => plaintext for sendOnionRequestNoRetries');
 
-  const response = await insecureNodeFetch(guardUrl, guardFetchOptions);
+  const response = await insecureNodeFetch({
+    url: guardUrl,
+    fetchOptions: guardFetchOptions,
+    destination,
+    caller: `${caller} -> sendOnionRequestNoRetries`,
+  });
   return { response, decodingSymmetricKey: destCtx.symmetricKey };
 };
 
@@ -1159,6 +1168,8 @@ async function sendOnionRequestSnodeDestNoRetries({
     allow401s,
     abortSignal,
     timeoutMs,
+    destination: FetchDestination.SERVICE_NODE,
+    caller: 'sendOnionRequestSnodeDestNoRetries',
   });
 }
 

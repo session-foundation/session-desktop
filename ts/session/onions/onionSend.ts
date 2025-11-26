@@ -27,6 +27,7 @@ import { SERVER_HOSTS } from '../apis';
 import type { FileFromFileServerDetails } from '../apis/file_server_api/types';
 import { FS, type FILE_SERVER_TARGET_TYPE } from '../apis/file_server_api/FileServerTarget';
 import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import { FetchDestination } from '../utils/InsecureNodeFetch';
 
 export type OnionFetchOptions = {
   method: string;
@@ -118,7 +119,9 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
   fetchOptions: OnionFetchOptions,
   throwErrors: boolean,
   abortSignal: MergedAbortSignal,
-  timeoutMs: number
+  timeoutMs: number,
+  destination: FetchDestination,
+  caller: string
 ): Promise<OnionV4SnodeResponse | null> => {
   if (!fetchOptions.useV4) {
     throw new Error('sendViaOnionV4ToNonSnodeWithRetries is only to be used for onion v4 calls');
@@ -180,6 +183,8 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
           throwErrors,
           allow401s: false,
           timeoutMs,
+          destination,
+          caller,
         });
 
         if (getFeatureFlag('debugNonSnodeRequests')) {
@@ -381,7 +386,9 @@ async function sendJsonViaOnionV4ToSogs(
     },
     throwErrors,
     abortSignal,
-    timeoutMs
+    timeoutMs,
+    FetchDestination.SOGS,
+    'sendJsonViaOnionV4ToSogs'
   );
 
   return res as OnionV4JSONSnodeResponse | null;
@@ -441,7 +448,9 @@ async function sendBinaryViaOnionV4ToSogs(
     },
     false,
     abortSignal,
-    timeoutMs
+    timeoutMs,
+    FetchDestination.SOGS,
+    'sendBinaryViaOnionV4ToSogs'
   );
 
   return res as OnionV4JSONSnodeResponse;
@@ -484,7 +493,9 @@ async function sendBinaryViaOnionV4ToFileServer({
     },
     false,
     abortSignal,
-    timeoutMs
+    timeoutMs,
+    FetchDestination.SESSION_SERVER,
+    'sendBinaryViaOnionV4ToFileServer'
   );
 
   return res as OnionV4JSONSnodeResponse;
@@ -529,7 +540,9 @@ async function getBinaryViaOnionV4FromFileServer({
     },
     throwError,
     abortSignal,
-    timeoutMs
+    timeoutMs,
+    FetchDestination.SESSION_SERVER,
+    'getBinaryViaOnionV4FromFileServer'
   );
 
   if (getFeatureFlag('debugServerRequests')) {
@@ -577,44 +590,9 @@ async function sendJsonViaOnionV4ToFileServer({
     },
     false,
     abortSignal,
-    timeoutMs
-  );
-
-  return res as OnionV4JSONSnodeResponse;
-}
-
-/**
- * Send some generic json to the sent server.
- * This function should probably not used directly as we only need it for the NetworkApi.makeRequest() function
- */
-async function sendJsonViaOnionV4ToSeshServer({
-  url,
-  method,
-  headers,
-  stringifiedBody,
-  pubkey,
-  abortSignal,
-  timeoutMs,
-}: WithAbortSignal &
-  WithTimeoutMs & {
-    url: URL;
-    method: string;
-    headers: Record<string, string | number>;
-    stringifiedBody: string | null;
-    pubkey: string;
-  }): Promise<OnionV4JSONSnodeResponse | null> {
-  const res = await OnionSending.sendViaOnionV4ToNonSnodeWithRetries(
-    pubkey,
-    url,
-    {
-      method,
-      headers,
-      body: stringifiedBody,
-      useV4: true,
-    },
-    false,
-    abortSignal,
-    timeoutMs
+    timeoutMs,
+    FetchDestination.SESSION_SERVER,
+    'sendJsonViaOnionV4ToFileServer'
   );
 
   return res as OnionV4JSONSnodeResponse;
@@ -636,7 +614,6 @@ export const OnionSending = {
   sendBinaryViaOnionV4ToFileServer,
   sendBinaryViaOnionV4ToSogs,
   getBinaryViaOnionV4FromFileServer,
-  sendJsonViaOnionV4ToSeshServer,
   sendJsonViaOnionV4ToFileServer,
   getMinTimeoutForSogs,
 };

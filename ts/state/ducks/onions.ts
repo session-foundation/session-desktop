@@ -23,7 +23,6 @@ const onionSlice = createSlice({
     },
     updateIsOnline(state: OnionState, action: PayloadAction<boolean>) {
       state.isOnline = action.payload;
-      window?.log?.warn(`${Date.now()}, making it online in redux`);
       return state;
     },
   },

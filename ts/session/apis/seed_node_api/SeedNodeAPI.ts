@@ -3,8 +3,6 @@ import tls from 'tls';
 import { setDefaultAutoSelectFamilyAttemptTimeout } from 'net';
 import _ from 'lodash';
 
-// eslint-disable-next-line import/no-named-default
-import { default as insecureNodeFetch } from 'node-fetch';
 import pRetry from 'p-retry';
 
 import { SeedNodeAPI } from '.';
@@ -16,6 +14,7 @@ import { sha256 } from '../../crypto';
 import { allowOnlyOneAtATime } from '../../utils/Promise';
 import { GetServicesNodesFromSeedRequest } from '../snode_api/SnodeRequestTypes';
 import { getDataFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { FetchDestination, insecureNodeFetch } from '../../utils/InsecureNodeFetch';
 
 /**
  * Fetch all snodes from seed nodes.
@@ -278,7 +277,12 @@ async function getSnodesFromSeedUrl(urlObj: URL): Promise<Array<any>> {
   // Increase that duration to 500ms as it seems to be resolving our issues.
   // see https://github.com/nodejs/undici/issues/2990#issuecomment-2408883876
   setDefaultAutoSelectFamilyAttemptTimeout(500);
-  const response = await insecureNodeFetch(url, fetchOptions);
+  const response = await insecureNodeFetch({
+    url,
+    fetchOptions,
+    destination: FetchDestination.SEED_NODE,
+    caller: 'getSnodesFromSeedUrl',
+  });
 
   if (response.status !== 200) {
     window?.log?.error(
@@ -306,6 +310,9 @@ async function getSnodesFromSeedUrl(urlObj: URL): Promise<Array<any>> {
       );
       throw new Error(`getSnodesFromSeedUrl: json.result is empty from ${urlObj.href}`);
     }
+
+    // NOTE islonelere
+
     // NOTE Filter out nodes that have missing ip addresses since they are not valid or 0.0.0.0 nodes which haven't submitted uptime proofs
     const validNodes = result.service_node_states.filter(
       (snode: any) => snode.public_ip && snode.public_ip !== '0.0.0.0'

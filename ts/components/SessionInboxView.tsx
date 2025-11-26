@@ -18,7 +18,7 @@ import {
 } from '../state/ducks/conversations';
 import { initialDefaultRoomState } from '../state/ducks/defaultRooms';
 import { initialModalState } from '../state/ducks/modalDialog';
-import { initialOnionPathState, updateIsOnline } from '../state/ducks/onions';
+import { initialOnionPathState } from '../state/ducks/onions';
 import { initialPrimaryColorState } from '../state/ducks/primaryColor';
 import { initialSearchState } from '../state/ducks/search';
 import { initialSectionState } from '../state/ducks/section';
@@ -154,7 +154,7 @@ export const doAppStartUp = async () => {
   window.inboxStore = await createSessionInboxStore();
   window.getState = window.inboxStore.getState;
 
-  window.inboxStore?.dispatch(
+  window.inboxStore.dispatch(
     updateAllOnStorageReady({
       hasBlindedMsgRequestsEnabled: Storage.getBoolOr(
         SettingsKey.hasBlindedMsgRequestsEnabled,
@@ -176,8 +176,6 @@ export const doAppStartUp = async () => {
 
   // eslint-disable-next-line more/no-then
   void SnodePool.getFreshSwarmFor(UserUtils.getOurPubKeyStrFromCache()).then(() => {
-    // NOTE: we know we are online if we have a fresh swarm so we can optimistically set this
-    window.inboxStore?.dispatch(updateIsOnline(true));
     // trigger any other actions that need to be done after the swarm is ready
     window.inboxStore?.dispatch(networkDataActions.fetchInfoFromSeshServer() as any);
     window.inboxStore?.dispatch(
