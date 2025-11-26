@@ -219,11 +219,11 @@ export const UserConfigWrapperActions: UserConfigWrapperActionsCalls = {
       ReturnType<UserConfigWrapperActionsCalls['removeProConfig']>
     >,
 
-  getProFeaturesBitset: async (
-    ...args: Parameters<UserConfigWrapperActionsCalls['getProFeaturesBitset']>
+  getProProfileBitset: async (
+    ...args: Parameters<UserConfigWrapperActionsCalls['getProProfileBitset']>
   ) =>
-    callLibSessionWorker(['UserConfig', 'getProFeaturesBitset', ...args]) as Promise<
-      ReturnType<UserConfigWrapperActionsCalls['getProFeaturesBitset']>
+    callLibSessionWorker(['UserConfig', 'getProProfileBitset', ...args]) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['getProProfileBitset']>
     >,
   setProBadge: async (...args: Parameters<UserConfigWrapperActionsCalls['setProBadge']>) =>
     callLibSessionWorker(['UserConfig', 'setProBadge', ...args]) as Promise<
