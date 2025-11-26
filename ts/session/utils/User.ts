@@ -14,6 +14,7 @@ import {
 import { OutgoingUserProfile } from '../../types/message';
 import { SettingsKey } from '../../data/settings-key';
 import { OutgoingProMessageDetails } from '../../types/message/OutgoingProMessageDetails';
+import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 
 export type HexKeyPair = {
   pubKey: string;
@@ -139,6 +140,9 @@ export async function getOutgoingProMessageDetails({
 }: {
   utf16: string | null | undefined;
 }) {
+  if (!getFeatureFlag('proAvailable')) {
+    return null;
+  }
   const [proConfig, proProfileBitset] = await Promise.all([
     UserConfigWrapperActions.getProConfig(),
     UserConfigWrapperActions.getProProfileBitset(),
