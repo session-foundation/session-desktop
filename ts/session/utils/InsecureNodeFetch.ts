@@ -63,10 +63,11 @@ function isClientOfflineFromError(e: FetchError) {
 // If a request succeeds and was for any destination on the Session Network we want to set online to true.
 function handleGoOnline(response: Response, destination: FetchDestination) {
   if (
-    (response.ok && destination === FetchDestination.SERVICE_NODE) ||
-    destination === FetchDestination.SEED_NODE ||
-    destination === FetchDestination.SESSION_SERVER ||
-    destination === FetchDestination.SOGS
+    response.ok &&
+    (destination === FetchDestination.SERVICE_NODE ||
+      destination === FetchDestination.SEED_NODE ||
+      destination === FetchDestination.SESSION_SERVER ||
+      destination === FetchDestination.SOGS)
   ) {
     setIsOnlineIfDifferent(true);
   }
