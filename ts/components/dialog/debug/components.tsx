@@ -686,11 +686,12 @@ export const AboutInfo = () => {
 export const OtherInfo = () => {
   const otherInfo = useAsync(async () => {
     const { id, vbid } = await window.getUserKeys();
-    const proMasterKey = (await getProMasterKeyHex())?.slice(64);
+    const proMasterKey = await getProMasterKeyHex();
     const result = [
       `${tr('accountIdYours')}: ${id}`,
       `VBID: ${vbid}`,
-      `Pro Master Key: ${proMasterKey}`,
+      `Pro Public Master Key: ${proMasterKey?.slice(64)}`,
+      `Pro Private Master Key: ${proMasterKey?.slice(0, 64)}`,
     ];
     return result;
   }, []);
@@ -739,7 +740,15 @@ export const OtherInfo = () => {
                 $alignItems="flex-start"
                 $flexGap="var(--margins-xs)"
               >
-                <p style={{ userSelect: 'text', lineHeight: 1.5 }}>{info}</p>
+                <p
+                  style={{
+                    userSelect: 'text',
+                    lineHeight: 1.5,
+                    fontSize: 'var(--font-size-small)',
+                  }}
+                >
+                  {info}
+                </p>
                 <CopyToClipboardIcon
                   iconSize={'small'}
                   copyContent={info}
