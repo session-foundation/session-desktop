@@ -1,7 +1,9 @@
 import { isBoolean } from 'lodash';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Dispatch, useCallback, useEffect, useMemo, useState } from 'react';
 import { clipboard } from 'electron';
 import { useDispatch } from 'react-redux';
+import useAsync from 'react-use/lib/useAsync';
+import { ProConfig, ProProof } from 'libsession_util_nodejs';
 import {
   getDataFeatureFlag,
   getFeatureFlag,
@@ -36,6 +38,7 @@ import {
   defaultProDataFeatureFlags,
 } from '../../../state/ducks/types/defaultFeatureFlags';
 import { UserConfigWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
+import { useProAccessDetails } from '../../../hooks/useHasPro';
 import { isDebugMode } from '../../../shared/env_vars';
 
 type FeatureFlagToggleType = {
@@ -594,6 +597,7 @@ export function FeatureFlagDumper({ forceUpdate }: { forceUpdate: () => void }) 
           Set Feature Flags
         </SessionButtonShiny>
       </div>
+
       <textarea
         style={{
           width: '100%',
@@ -634,6 +638,241 @@ function MessageProFeatures({ forceUpdate }: { forceUpdate: () => void }) {
       <div style={{ flexShrink: 0 }}>Message Pro Features</div>
       <pre style={{ overflow: 'hidden' }}>{JSON.stringify(value)}</pre>
     </Flex>
+  );
+}
+
+function DebugInput({
+  value,
+  setValue,
+  label,
+}: {
+  value: string;
+  setValue: Dispatch<string>;
+  label: string;
+}) {
+  return (
+    <div>
+      <label
+        style={{
+          display: 'block',
+          color: 'var(--text-primary-color)',
+        }}
+      >
+        {label}
+      </label>
+      <input
+        value={value}
+        onChange={e => setValue(e.target.value)}
+        style={{
+          width: '100%',
+          padding: 'var(--margins-xs) var(--margins-sm)',
+          backgroundColor: 'var(--background-primary-color)',
+          color: 'var(--text-primary-color)',
+          border: '1px solid var(--border-color)',
+          borderRadius: 'var(--border-radius)',
+          cursor: 'pointer',
+        }}
+      />
+    </div>
+  );
+}
+
+function ProConfigForm({
+  proConfig,
+  forceUpdate,
+}: {
+  proConfig?: ProConfig | null;
+  forceUpdate: () => Promise<void>;
+}) {
+  const hasProConfig = !proConfig || typeof proConfig === 'object';
+  const [error, setError] = useState<Error | null>();
+  const [rotatingPrivKeyInput, setRotatingPrivKeyInput] = useState<string>(
+    proConfig?.rotatingPrivKeyHex ?? ''
+  );
+  const [rotatingPubKeyInput, setRotatingPubKeyInput] = useState<string>(
+    proConfig?.proProof.rotatingPubkeyHex ?? ''
+  );
+  const [expiryInput, setExpiryInput] = useState<string>(
+    proConfig?.proProof.expiryMs.toString() ?? ''
+  );
+  const [sigInput, setSigInput] = useState<string>(proConfig?.proProof.signatureHex ?? '');
+  const [genHashInput, setGenHashInput] = useState<string>(
+    proConfig?.proProof.genIndexHashB64 ?? ''
+  );
+  const [versionInput, setVersionInput] = useState<string>(
+    proConfig?.proProof.version.toString() ?? ''
+  );
+
+  const [configDumpValue, setConfigDumpValue] = useState<string>(
+    hasProConfig ? JSON.stringify(proConfig) : ''
+  );
+
+  const setProProof = useCallback(
+    async (config: Parameters<typeof UserConfigWrapperActions.setProConfig>[0]) => {
+      try {
+        await UserConfigWrapperActions.setProConfig(config);
+      } catch (e) {
+        window?.log?.error(e);
+        setError(e);
+      }
+    },
+    []
+  );
+
+  const save = useCallback(async () => {
+    const proProof = {
+      rotatingPubkeyHex: rotatingPubKeyInput,
+      expiryMs: Number(expiryInput),
+      signatureHex: sigInput,
+      genIndexHashB64: genHashInput,
+      version: Number(versionInput),
+    } satisfies ProProof;
+    await setProProof({
+      proProof,
+      rotatingPrivKeyHex: rotatingPrivKeyInput,
+    });
+  }, [
+    setProProof,
+    rotatingPrivKeyInput,
+    rotatingPubKeyInput,
+    expiryInput,
+    sigInput,
+    genHashInput,
+    versionInput,
+  ]);
+
+  const copy = useCallback(() => {
+    const json = JSON.stringify(proConfig);
+    clipboard.writeText(json);
+    ToastUtils.pushToastSuccess('flag-dumper-toast-copy', 'Copied to clipboard');
+  }, [proConfig]);
+
+  const setConfig = useCallback(async () => {
+    try {
+      const parsed = JSON.parse(configDumpValue) as ProConfig;
+
+      // Update all the input fields with the pasted config
+      setRotatingPrivKeyInput(parsed.rotatingPrivKeyHex ?? '');
+      setRotatingPubKeyInput(parsed.proProof.rotatingPubkeyHex ?? '');
+      setExpiryInput(parsed.proProof.expiryMs.toString() ?? '');
+      setSigInput(parsed.proProof.signatureHex ?? '');
+      setGenHashInput(parsed.proProof.genIndexHashB64 ?? '');
+      setVersionInput(parsed.proProof.version.toString() ?? '');
+
+      ToastUtils.pushToastSuccess('flag-dumper-toast-paste', 'Pasted from clipboard');
+      await forceUpdate();
+    } catch (e) {
+      window?.log?.error(e);
+      ToastUtils.pushToastError('flag-dumper-toast-paste-error', `Failed to paste: ${e?.message}`);
+    }
+  }, [configDumpValue, forceUpdate]);
+
+  const removeConfig = useCallback(async () => {
+    await UserConfigWrapperActions.removeProConfig();
+    setRotatingPrivKeyInput('');
+    setRotatingPubKeyInput('');
+    setExpiryInput('');
+    setSigInput('');
+    setGenHashInput('');
+    setVersionInput('');
+    setConfigDumpValue('');
+    await forceUpdate();
+  }, [forceUpdate]);
+
+  return (
+    <div style={{ width: '100%' }}>
+      <h2>Pro Config Dumper</h2>
+      <DebugButton onClick={copy} disabled={!hasProConfig}>
+        Copy Config Dump
+      </DebugButton>
+      <DebugButton onClick={setConfig} disabled={!configDumpValue?.length}>
+        Set Config Dump
+      </DebugButton>
+      <label
+        style={{
+          display: 'block',
+          color: 'var(--text-primary-color)',
+        }}
+      >
+        Config Dump
+      </label>
+      <textarea
+        style={{
+          width: '100%',
+          minWidth: '100px',
+          padding: 'var(--margins-xs) var(--margins-sm)',
+          backgroundColor: 'var(--background-primary-color)',
+          color: 'var(--text-primary-color)',
+          border: '1px solid var(--border-color)',
+          borderRadius: 'var(--border-radius)',
+        }}
+        onChange={e => setConfigDumpValue(e.target.value)}
+        defaultValue={configDumpValue}
+      />
+      <h2>Pro Config</h2>
+      <DebugButton
+        onClick={removeConfig}
+        disabled={!hasProConfig}
+        buttonColor={SessionButtonColor.Danger}
+      >
+        Delete Pro Config
+      </DebugButton>
+      <DebugInput
+        label="Rotating Private Key"
+        value={rotatingPrivKeyInput}
+        setValue={setRotatingPrivKeyInput}
+      />
+      <DebugInput
+        label="Rotating Public Key"
+        value={rotatingPubKeyInput}
+        setValue={setRotatingPubKeyInput}
+      />
+      <DebugInput label="Expiry Timestamp (ms)" value={expiryInput} setValue={setExpiryInput} />
+      <DebugInput label="Signature" value={sigInput} setValue={setSigInput} />
+      <DebugInput label="Gen Hash" value={genHashInput} setValue={setGenHashInput} />
+      <DebugInput label="Version" value={versionInput} setValue={setVersionInput} />
+      <DebugButton onClick={save}>Set Pro Config</DebugButton>
+      {error?.message ? error.message : null}
+    </div>
+  );
+}
+
+function ProConfigManager({ forceUpdate }: { forceUpdate: () => void }) {
+  const { refetch, isFetching } = useProAccessDetails();
+  const [proConfig, setProConfig] = useState<ProConfig | null>(null);
+  const getProConfig = useCallback(async () => {
+    const config = await UserConfigWrapperActions.getProConfig();
+    if (!config) {
+      window?.log?.error('pro config not found');
+      return null;
+    }
+    return config;
+  }, []);
+
+  const initialState = useAsync(async () => {
+    return getProConfig();
+  }, []);
+
+  const _forceUpdate = useCallback(async () => {
+    setProConfig(await getProConfig());
+    forceUpdate();
+  }, [forceUpdate, getProConfig]);
+
+  useEffect(() => {
+    if (!isFetching) {
+      void _forceUpdate();
+    }
+  }, [isFetching, _forceUpdate]);
+
+  return initialState.loading ? (
+    'Loading Pro Config...'
+  ) : (
+    <div style={{ width: '100%' }}>
+      <h2>Pro Config Manager</h2>
+      <DebugButton onClick={refetch}>Generate New Proof From Backend (refresh)</DebugButton>
+      <i>Changing the pro config may result in an invalid pro config</i>
+      <ProConfigForm proConfig={proConfig ?? initialState.value} forceUpdate={_forceUpdate} />
+    </div>
   );
 }
 
@@ -884,6 +1123,7 @@ export const ProDebugSection = ({
           {setExpiredCTAString}
         </DebugButton>
       ) : null}
+      {proAvailable ? <ProConfigManager forceUpdate={forceUpdate} /> : null}
     </DebugMenuSection>
   );
 };
