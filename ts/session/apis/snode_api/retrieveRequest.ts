@@ -254,7 +254,6 @@ async function retrieveNextMessagesNoRetries(
     return toRet;
   } catch (e) {
     window?.log?.warn('exception while parsing json of nextMessage:', e);
-    // NOTE: dont handle online status here
     throw new Error(
       `_retrieveNextMessages - exception while parsing json of nextMessage ${targetNode.ip}:${targetNode.port}: ${e?.message}`
     );

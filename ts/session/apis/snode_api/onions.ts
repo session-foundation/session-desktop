@@ -1090,8 +1090,6 @@ const sendOnionRequestNoRetries = async ({
       destX25519hex.substring(32)
     );
 
-    // NOTE: dont handle online status here
-
     throw e;
   }
 

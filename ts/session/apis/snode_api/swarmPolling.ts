@@ -790,7 +790,6 @@ export class SwarmPolling {
 
       return results;
     } catch (e) {
-      // NOTE: dont handle online status here
       window?.log?.warn('SwarmPolling: pollNodeForKey failed with:', e.message);
       return null;
     }
