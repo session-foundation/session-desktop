@@ -4,7 +4,10 @@ import {
   createPublicMessageSentFromUs,
 } from '../models/messageFactory';
 import { SignalService } from '../protobuf';
-import { isUsAnySogsFromCache } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
+import {
+  getCachedNakedKeyFromBlindedNoServerPubkey,
+  isUsAnySogsFromCache,
+} from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import { getOpenGroupV2ConversationId } from '../session/apis/open_group_api/utils/OpenGroupUtils';
 import { ConvoHub } from '../session/conversations';
 import { cleanIncomingDataMessage, messageHasVisibleContent } from './dataMessage';
@@ -13,6 +16,9 @@ import { OpenGroupRequestCommonType } from '../data/types';
 import { shouldProcessContentMessage } from './common';
 import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
 import type { SogsDecodedEnvelope } from './types';
+import { ProfileManager } from '../session/profile_manager/ProfileManager';
+import { buildPrivateProfileChangeFromSwarmDataMessage } from '../models/profile';
+import { ConversationTypeEnum } from '../models/types';
 
 /**
  * Common checks and decoding that takes place for both v2 and v4 message types.
@@ -95,14 +101,36 @@ export const handleOpenGroupMessage = async ({
       ? createPublicMessageSentFromUs(commonAttributes)
       : createPublicMessageSentFromNotUs(attributesForNotUs);
 
+    const cleanedDataMessage = cleanIncomingDataMessage(
+      decodedContent?.dataMessage as SignalService.DataMessage
+    );
+    const potentiallyBlindedSender = decodedEnvelope.getAuthor();
+    const potentiallyUnblinded =
+      getCachedNakedKeyFromBlindedNoServerPubkey(potentiallyBlindedSender) ??
+      potentiallyBlindedSender;
+    const sendingDeviceConversation = await ConvoHub.use().getOrCreateAndWait(
+      getCachedNakedKeyFromBlindedNoServerPubkey(potentiallyBlindedSender) ?? potentiallyUnblinded,
+      ConversationTypeEnum.PRIVATE
+    );
+
+    // Check if we need to update any profile names
+    if (!isMe) {
+      const profile = buildPrivateProfileChangeFromSwarmDataMessage({
+        convo: sendingDeviceConversation,
+        dataMessage: cleanedDataMessage,
+        decodedPro: decodedEnvelope.validPro,
+      });
+      if (profile) {
+        await ProfileManager.updateProfileOfContact(profile);
+      }
+    }
+
     // Note: deduplication is made in filterDuplicatesFromDbAndIncoming now
 
     await handleMessageJob(
       msgModel,
       communityConvo,
-      toRegularMessage(
-        cleanIncomingDataMessage(decodedContent?.dataMessage as SignalService.DataMessage)
-      ),
+      toRegularMessage(cleanedDataMessage),
       decodedEnvelope
     );
   });

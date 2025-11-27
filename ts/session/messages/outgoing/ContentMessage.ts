@@ -14,6 +14,7 @@ export abstract class ContentMessageNoProfile extends Message {
     if (!contentProto.sigTimestamp) {
       throw new Error('trying to build a ContentMessage without a sig timestamp is unsupported');
     }
+
     return SignalService.Content.encode(contentProto).finish();
   }
 
