@@ -1,8 +1,9 @@
 import { useCallback, useMemo } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { ProOriginatingPlatform } from 'libsession_util_nodejs';
 import useUpdate from 'react-use/lib/useUpdate';
 import {
+  getDataFeatureFlag,
   MockProAccessExpiryOptions,
   setDataFeatureFlag,
   useDataFeatureFlag,
@@ -10,14 +11,13 @@ import {
 } from '../state/ducks/types/releasedFeaturesReduxTypes';
 import { assertUnreachable } from '../types/sqlSharedTypes';
 import { useIsProAvailable } from './useIsProAvailable';
-import { useIsProUser } from './useParamSelector';
 import {
   formatDateWithLocale,
   formatRoundedUpTimeUntilTimestamp,
 } from '../util/i18n/formatting/generics';
 import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
 import {
-  useProBackendCurrentUserStatus,
+  getProBackendCurrentUserStatus,
   useProBackendProDetails,
   useSetProBackendIsError,
   useSetProBackendIsLoading,
@@ -31,16 +31,26 @@ import {
   ProStatus,
 } from '../session/apis/pro_backend_api/types';
 import { sleepFor } from '../session/utils/Promise';
+import { UserUtils } from '../session/utils';
+import type { StateType } from '../state/reducer';
 
-function useCurrentUserProStatus() {
-  const proBackendCurrentUserStatus = useProBackendCurrentUserStatus();
-  const mockCurrentStatus = useDataFeatureFlag('mockProCurrentStatus');
+export function selectOurProStatus(state: StateType) {
+  const proBackendCurrentUserStatus = getProBackendCurrentUserStatus(state);
+  const mockCurrentStatus = getDataFeatureFlag('mockProCurrentStatus');
 
   return (
     mockCurrentStatus ??
     proBackendCurrentUserStatus ??
     defaultProAccessDetailsSourceData.currentStatus
   );
+}
+
+export function selectWeAreProUser(state: StateType) {
+  return selectOurProStatus(state) === ProStatus.Active;
+}
+
+function useCurrentUserProStatus() {
+  return useSelector((state: StateType) => selectOurProStatus(state));
 }
 
 /**
@@ -74,12 +84,32 @@ export function useCurrentNeverHadPro() {
   return isProAvailable && status === ProStatus.NeverBeenPro;
 }
 
-// TODO: we have a disconnect in what state we use where for if the current user is pro, this needs to be looked into
-export function useUserHasPro(convoId?: string) {
-  const isProAvailable = useIsProAvailable();
-  const userIsPro = useIsProUser(convoId);
+/**
+ * Returns true if the corresponding user has a valid and pro proof and pro badge feature enabled.
+ * Note: Only used for the other users and not ourselves
+ */
+function useShowProBadgeForOther(convoId?: string) {
+  return useSelector((state: StateType) =>
+    convoId ? (state.conversations.conversationLookup[convoId]?.showProBadgeOthers ?? false) : false
+  );
+}
 
-  return isProAvailable && userIsPro;
+export function useShowProBadgeFor(convoId?: string) {
+  const isProAvailable = useIsProAvailable();
+  // the current user pro badge is always shown if we have a valid pro
+  const currentUserHasPro = useCurrentUserHasPro();
+  // the other user pro badge is shown if they have a valid pro proof and pro badge feature enabled
+  const otherUserHasPro = useShowProBadgeForOther(convoId);
+
+  if (!isProAvailable) {
+    return false;
+  }
+
+  if (UserUtils.isUsFromCache(convoId)) {
+    return currentUserHasPro;
+  }
+
+  return otherUserHasPro;
 }
 
 function proAccessVariantToString(variant: ProAccessVariant): string {

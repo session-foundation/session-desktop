@@ -141,8 +141,9 @@ export async function getOutgoingProMessageDetails({
 }) {
   const [proConfig, proFeaturesUserBitset] = await Promise.all([
     UserConfigWrapperActions.getProConfig(),
-    UserConfigWrapperActions.getProFeaturesBitset(),
+    UserConfigWrapperActions.getProProfileBitset(),
   ]);
+
   // Note: if we do not have a proof we don't want to send a proMessage.
   // Note: if we don't have a user pro feature enabled, we might still need to add one for the message itself, see below
   if (!proConfig || isEmpty(proConfig?.proProof)) {
@@ -150,7 +151,6 @@ export async function getOutgoingProMessageDetails({
   }
 
   const proFeaturesForMsg = await ProWrapperActions.proFeaturesForMessage({
-    proFeaturesBitset: proFeaturesUserBitset,
     utf16: utf16 ?? '',
   });
 
@@ -159,7 +159,7 @@ export async function getOutgoingProMessageDetails({
   }
   return new OutgoingProMessageDetails({
     proConfig,
-    proFeaturesBitset: proFeaturesForMsg.proFeaturesBitset,
+    proFeaturesBitset: proFeaturesUserBitset,
   });
 }
 

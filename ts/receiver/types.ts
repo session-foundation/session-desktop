@@ -78,7 +78,7 @@ export abstract class BaseDecodedEnvelope {
 
     // we only want to set this if the pro proof has been confirmed valid
     // Note: this does not validate the expiry of the proof, it only validates that the signature is valid. Use `isProProofValid` for that
-    this.validPro = args.decodedPro?.proStatus === 'Valid' ? args.decodedPro : null;
+    this.validPro = args.decodedPro?.proStatus === 'ValidOrExpired' ? args.decodedPro : null;
   }
 
   public getAuthor() {
@@ -93,7 +93,7 @@ export abstract class BaseDecodedEnvelope {
     if (!this.validPro) {
       return false;
     }
-    if (this.validPro.proStatus !== 'Valid') {
+    if (this.validPro.proStatus !== 'ValidOrExpired') {
       return false;
     }
     return this.validPro.proProof.expiryMs > timestampMs;

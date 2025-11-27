@@ -72,14 +72,14 @@ export const handleOpenGroupMessage = async ({
     return;
   }
 
-  const groupConvo = ConvoHub.use().get(conversationId);
+  const communityConvo = ConvoHub.use().get(conversationId);
 
-  if (!groupConvo) {
+  if (!communityConvo) {
     window?.log?.warn('Skipping handleJob for unknown convo: ', conversationId);
     return;
   }
 
-  void groupConvo.queueJob(async () => {
+  void communityConvo.queueJob(async () => {
     const isMe = isUsAnySogsFromCache(decodedEnvelope.getAuthor());
 
     // this timestamp has already been forced to ms by the handleMessagesResponseV4() function
@@ -99,7 +99,7 @@ export const handleOpenGroupMessage = async ({
 
     await handleMessageJob(
       msgModel,
-      groupConvo,
+      communityConvo,
       toRegularMessage(
         cleanIncomingDataMessage(decodedContent?.dataMessage as SignalService.DataMessage)
       ),

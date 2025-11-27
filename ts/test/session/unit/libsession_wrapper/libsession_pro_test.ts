@@ -2,7 +2,6 @@ import { expect } from 'chai';
 import { ProWrapperNode } from 'libsession_util_nodejs';
 import Sinon from 'sinon';
 import { getSodiumNode } from '../../../../node/sodiumNode';
-import { ProFeatures, ProMessageFeature } from '../../../../models/proMessageFeature';
 
 const masterPrivKey = '4d3ffd1e98982ee64b86990901a73d3627536b4103ce8d006cb836d45a525c51';
 const rotatingPrivKey = '3e6933de326f5647769f7b3e6db2ca6469c768141be9384276a3692ea04cbee7';
@@ -16,7 +15,6 @@ describe('libsession_pro', () => {
     it('no need for 10k limit', async () => {
       expect(
         ProWrapperNode.proFeaturesForMessage({
-          proFeaturesBitset: 0n,
           utf16: 'hello',
         })
       ).to.deep.eq({
@@ -26,68 +24,14 @@ describe('libsession_pro', () => {
         codepointCount: 5,
       });
     });
-    it('expects ANIMATED_AVATAR to be forwarded as no need for 10k limit', async () => {
-      expect(
-        ProWrapperNode.proFeaturesForMessage({
-          proFeaturesBitset: ProFeatures.addProFeature(
-            0n,
-            ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE
-          ),
-          utf16: 'hellohello',
-        })
-      ).to.deep.eq({
-        proFeaturesBitset: 4n,
-        status: 'SUCCESS',
-        error: null,
-        codepointCount: 10,
-      });
-    });
-    it('expects 10K_CHARACTER_LIMIT to be ignored if requested as no need for 10k limit', async () => {
-      const withAnimatedAvatar = ProFeatures.addProFeature(
-        0n,
-        ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE
-      );
 
-      const withAnimatedAvatarAnd10k = ProFeatures.addProFeature(
-        withAnimatedAvatar,
-        ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH // 10k should be ignored
-      );
-      expect(
-        ProWrapperNode.proFeaturesForMessage({
-          proFeaturesBitset: withAnimatedAvatarAnd10k,
-          utf16: 'hellohello',
-        })
-      ).to.deep.eq({
-        proFeaturesBitset: 4n,
-        status: 'SUCCESS',
-        error: null,
-        codepointCount: 10,
-      });
-    });
     it('expects 10K_CHARACTER_LIMIT to be added if need for 10k limit', async () => {
       expect(
         ProWrapperNode.proFeaturesForMessage({
-          proFeaturesBitset: 0n, // 10k should be added
           utf16: '012345678'.repeat(1000), // 1000 * 9 chars = 9000 codepoints
         })
       ).to.deep.eq({
         proFeaturesBitset: 1n,
-        status: 'SUCCESS',
-        error: null,
-        codepointCount: 9000,
-      });
-    });
-    it('expects 10K_CHARACTER_LIMIT to be added if need for 10k limit (and extra feature requested)', async () => {
-      expect(
-        ProWrapperNode.proFeaturesForMessage({
-          proFeaturesBitset: ProFeatures.addProFeature(
-            0n,
-            ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE
-          ), // 10k should be added
-          utf16: '012345678'.repeat(1000), // 1000 * 9 chars = 9000 codepoints
-        })
-      ).to.deep.eq({
-        proFeaturesBitset: 5n,
         status: 'SUCCESS',
         error: null,
         codepointCount: 9000,

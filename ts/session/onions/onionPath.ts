@@ -545,7 +545,8 @@ async function buildNewOnionPathsWorker() {
         );
       }
       let otherNodes = getDataFeatureFlag('useLocalDevNet')
-        ? allNodes
+        ? // Note: for local sesh net we still need to exclude the guard nodes from the nodes that can be picked randomly for path building
+          differenceBy(allNodes, guardNodes, 'pubkey_ed25519')
         : differenceBy(weightedSingleSnodePerSubnet, guardNodes, 'pubkey_ed25519');
       const guards = shuffle(guardNodes);
 
@@ -564,24 +565,15 @@ async function buildNewOnionPathsWorker() {
         const path = [guards[i]];
 
         do {
-          // selection of the last snode (edge snode) needs at least v2.8.0
-          if (path.length === nodesNeededPerPaths) {
-            const randomEdgeSnode = getRandomEdgeSnode(otherNodes);
-            otherNodes = otherNodes.filter(n => {
-              return n.pubkey_ed25519 !== randomEdgeSnode?.pubkey_ed25519;
-            });
-            path.push(randomEdgeSnode);
-          } else {
-            const snode = sample(otherNodes);
-            if (!snode) {
-              throw new Error('no more snode found for path building');
-            }
-            otherNodes = otherNodes.filter(n => {
-              return n.pubkey_ed25519 !== snode?.pubkey_ed25519;
-            });
-
-            path.push(snode);
+          const snode = sample(otherNodes);
+          if (!snode) {
+            throw new Error('no more snode found for path building');
           }
+          otherNodes = otherNodes.filter(n => {
+            return n.pubkey_ed25519 !== snode?.pubkey_ed25519;
+          });
+
+          path.push(snode);
         } while (path.length <= nodesNeededPerPaths);
         onionPaths.push(path);
       }

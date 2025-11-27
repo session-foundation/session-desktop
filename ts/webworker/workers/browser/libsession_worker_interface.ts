@@ -219,11 +219,17 @@ export const UserConfigWrapperActions: UserConfigWrapperActionsCalls = {
       ReturnType<UserConfigWrapperActionsCalls['removeProConfig']>
     >,
 
-  getProFeaturesBitset: async (
-    ...args: Parameters<UserConfigWrapperActionsCalls['getProFeaturesBitset']>
+  getProProfileBitset: async (
+    ...args: Parameters<UserConfigWrapperActionsCalls['getProProfileBitset']>
   ) =>
-    callLibSessionWorker(['UserConfig', 'getProFeaturesBitset', ...args]) as Promise<
-      ReturnType<UserConfigWrapperActionsCalls['getProFeaturesBitset']>
+    callLibSessionWorker(['UserConfig', 'getProProfileBitset', ...args]) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['getProProfileBitset']>
+    >,
+  getProAccessExpiry: async (
+    ...args: Parameters<UserConfigWrapperActionsCalls['getProAccessExpiry']>
+  ) =>
+    callLibSessionWorker(['UserConfig', 'getProAccessExpiry', ...args]) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['getProAccessExpiry']>
     >,
   setProBadge: async (...args: Parameters<UserConfigWrapperActionsCalls['setProBadge']>) =>
     callLibSessionWorker(['UserConfig', 'setProBadge', ...args]) as Promise<
@@ -234,6 +240,12 @@ export const UserConfigWrapperActions: UserConfigWrapperActionsCalls = {
   ) =>
     callLibSessionWorker(['UserConfig', 'setAnimatedAvatar', ...args]) as Promise<
       ReturnType<UserConfigWrapperActionsCalls['setAnimatedAvatar']>
+    >,
+  setProAccessExpiry: async (
+    ...args: Parameters<UserConfigWrapperActionsCalls['setProAccessExpiry']>
+  ) =>
+    callLibSessionWorker(['UserConfig', 'setProAccessExpiry', ...args]) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['setProAccessExpiry']>
     >,
 
   generateProMasterKey: async (

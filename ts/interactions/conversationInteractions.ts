@@ -77,7 +77,7 @@ export const handleAcceptConversationRequest = async ({
 }) => {
   const convo = ConvoHub.use().get(convoId);
   if (!convo || convo.isApproved() || (!convo.isPrivate() && !convo.isClosedGroupV2())) {
-    window?.log?.info('Conversation is already approved or not private/03group');
+    window?.log?.debug('Conversation is already approved or not private/03group');
 
     return null;
   }

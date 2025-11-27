@@ -36,17 +36,6 @@ export function useOurAvatarPath() {
   return useAvatarPath(UserUtils.getOurPubKeyStrFromCache());
 }
 
-export function useIsProUser(convoId: string | undefined) {
-  const convoProps = useConversationPropsById(convoId);
-  return convoProps?.isProUser || false;
-}
-
-export function selectWeAreProUser(state: StateType) {
-  return (
-    state.conversations.conversationLookup[UserUtils.getOurPubKeyStrFromCache()]?.isProUser || false
-  );
-}
-
 /**
  * Returns the nickname, the groupname or the displayNameInProfile of that conversation if set.
  */

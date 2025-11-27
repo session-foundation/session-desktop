@@ -23,7 +23,6 @@ type SessionBaseBooleanFeatureFlags = {
   mockCurrentUserHasProInGracePeriod: boolean;
   mockProRecoverButtonAlwaysSucceed: boolean;
   mockProRecoverButtonAlwaysFail: boolean;
-  mockOthersHavePro: boolean;
   mockProBackendLoading: boolean;
   mockProBackendError: boolean;
   fsTTL30s: boolean;

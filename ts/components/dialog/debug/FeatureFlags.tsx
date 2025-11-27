@@ -474,7 +474,6 @@ const handledBooleanFeatureFlags = proBooleanFlags
     'proAvailable',
     'proGroupsAvailable',
     'useTestProBackend',
-    'mockOthersHavePro',
     'debugLogging',
     'debugLibsessionDumps',
     'debugBuiltSnodeRequests',
@@ -746,12 +745,7 @@ export const ProDebugSection = ({
           Reset Pro Mocking
         </DebugButton>
       ) : null}
-      <FlagToggle
-        forceUpdate={forceUpdate}
-        flag="mockOthersHavePro"
-        visibleWithBooleanFlag="proAvailable"
-        label="Mock Others Have Pro"
-      />
+
       <FlagEnumDropdownInput
         label="Current Status"
         flag="mockProCurrentStatus"

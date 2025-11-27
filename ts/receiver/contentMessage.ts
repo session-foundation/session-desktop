@@ -523,6 +523,9 @@ async function handleMessageRequestResponse(
 
   const convosToMerge = findCachedBlindedMatchOrLookupOnAllServers(envelope.source, sodium);
   const unblindedConvoId = envelope.source;
+  window?.log?.debug(
+    `handleMessageRequestResponse: src:${ed25519Str(envelope.source)}, unblindedConvo: ${ed25519Str(unblindedConvoId)}`
+  );
 
   if (!PubKey.is05Pubkey(unblindedConvoId)) {
     window?.log?.warn(
@@ -547,18 +550,18 @@ async function handleMessageRequestResponse(
   await conversationToApprove.unhideIfNeeded(false);
   await conversationToApprove.commit();
 
+  // grab the profile details from the msg request response
+  const profile = buildPrivateProfileChangeFromMsgRequestResponse({
+    convo: conversationToApprove,
+    messageRequestResponse,
+    decodedPro: envelope.validPro,
+  });
+
+  if (profile) {
+    await ProfileManager.updateProfileOfContact(profile);
+  }
+
   if (convosToMerge.length) {
-    // grab the profile details from the msg request response
-    const profile = buildPrivateProfileChangeFromMsgRequestResponse({
-      convo: conversationToApprove,
-      messageRequestResponse,
-      decodedPro: envelope.validPro,
-    });
-
-    if (profile) {
-      await ProfileManager.updateProfileOfContact(profile);
-    }
-
     await conversationToApprove.setIsApproved(convosToMerge[0].isApproved(), false);
     // nickname might be set already in conversationToApprove, so don't overwrite it
 
@@ -596,7 +599,6 @@ async function handleMessageRequestResponse(
       await ConvoHub.use().deleteBlindedContact(element.id);
     }
   }
-
   if (previousApprovedMe) {
     await conversationToApprove.commit();
 

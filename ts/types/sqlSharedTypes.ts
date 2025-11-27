@@ -136,7 +136,7 @@ export function getContactInfoFromDBValues({
     expirationMode,
     expirationTimerSeconds: !!expireTimer && expireTimer > 0 ? expireTimer : 0,
     profileUpdatedSeconds: dbProfileUpdatedAtSeconds,
-    profileProFeatures: bitsetProFeatures,
+    proProfileBitset: bitsetProFeatures,
   };
 
   if (

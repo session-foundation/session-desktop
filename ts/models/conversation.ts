@@ -141,19 +141,15 @@ import { Model } from './models';
 import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
 import { ReduxOnionSelectors } from '../state/selectors/onions';
 import { tr, tStripped } from '../localization/localeTools';
-import {
-  getDataFeatureFlag,
-  getFeatureFlag,
-} from '../state/ducks/types/releasedFeaturesReduxTypes';
+import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
 import type {
   ConversationInteractionStatus,
   ConversationInteractionType,
 } from '../interactions/types';
 import type { LastMessageStatusType } from '../state/ducks/types';
 import { OutgoingUserProfile } from '../types/message';
-import { getProDetailsFromStorage } from '../state/selectors/proBackendData';
-import { ProStatus } from '../session/apis/pro_backend_api/types';
 import { privateSet, privateSetKey } from './modelFriends';
+import { ProFeatures, ProMessageFeature } from './proMessageFeature';
 
 type InMemoryConvoInfos = {
   mentionedUs: boolean;
@@ -490,8 +486,9 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (this.getExpireTimer()) {
       toRet.expireTimer = this.getExpireTimer();
     }
-    if (this.isProUser()) {
-      toRet.isProUser = true;
+
+    if (this.showProBadgeFor()) {
+      toRet.showProBadgeOthers = true;
     }
     // those are values coming only from both the DB or the wrapper. Currently we display the data from the DB
     if (this.isClosedGroup()) {
@@ -873,7 +870,37 @@ export class ConversationModel extends Model<ConversationAttributes> {
       .catch(window?.log?.error);
   }
 
-  private isProUser(): boolean {
+  private hasValidCurrentProProof(): boolean {
+    if (this.isPublic()) {
+      // Note: communities are considered pro users (they can have animated avatars)
+      // but this function is too generic to return true
+      return false;
+    }
+    if (this.isClosedGroupV2()) {
+      if (!getFeatureFlag('proGroupsAvailable')) {
+        return false;
+      }
+      const admins = this.getGroupAdmins();
+      return admins.some(m => {
+        // the is05Pubkey is only here to make sure we never have a infinite recursion
+        return PubKey.is05Pubkey(m) && ConvoHub.use().get(m)?.hasValidCurrentProProof();
+      });
+    }
+    const proDetails = this.dbContactProDetails();
+    if (!proDetails || !proDetails.proExpiryTsMs) {
+      return false;
+    }
+
+    if (this.isMe()) {
+      // The logic for the pro proof for ourselves is coming from libsession.
+      return false;
+    }
+
+    // We verify a pro proof before saving it, so if the pro proof is not expired yet it is valid.
+    return proDetails.proExpiryTsMs >= NetworkTime.now();
+  }
+
+  private showProBadgeFor(): boolean {
     if (this.isPublic()) {
       // Note: communities are considered pro users (they can have animated avatars)
       // but this function is too generic to return true
@@ -887,18 +914,17 @@ export class ConversationModel extends Model<ConversationAttributes> {
       const admins = this.getGroupAdmins();
       return admins.some(m => {
         // the is05Pubkey is only here to make sure we never have a infinite recursion
-        return PubKey.is05Pubkey(m) && ConvoHub.use().get(m)?.isProUser();
+        return PubKey.is05Pubkey(m) && ConvoHub.use().get(m)?.hasValidCurrentProProof();
       });
     }
 
-    if (this.isMe()) {
-      return (
-        (getDataFeatureFlag('mockProCurrentStatus') ?? getProDetailsFromStorage()?.status) ===
-        ProStatus.Active
-      );
-    }
+    const proFeaturesStr = this.get('bitsetProFeatures');
+    const proFeatures = proFeaturesStr ? ProFeatures.bigIntStrToProFeatures(proFeaturesStr) : [];
 
-    return getFeatureFlag('mockOthersHavePro');
+    const hasValidProProof = this.hasValidCurrentProProof();
+    const hasProBadgeFeature = proFeatures.includes(ProMessageFeature.PRO_BADGE);
+
+    return hasValidProProof && hasProBadgeFeature;
   }
 
   public async sendMessage(msg: SendMessageType) {
@@ -2078,7 +2104,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
    */
   public getProOrNotAvatarPath() {
     const proAvailable = getFeatureFlag('proAvailable');
-    return !proAvailable || this.isProUser()
+    return !proAvailable || !this.hasValidCurrentProProof()
       ? this.getAvatarInProfilePath()
       : this.getFallbackAvatarInProfilePath();
   }

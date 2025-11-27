@@ -250,7 +250,10 @@ export interface ReduxConversationType {
   isMarkedUnread?: boolean;
 
   blocksSogsMsgReqsTimestamp?: number; // undefined means 0
-  isProUser?: boolean;
+  /**
+   * Only used for the other users and not ourselves
+   */
+  showProBadgeOthers?: boolean;
 }
 
 export interface NotificationForConvoOption {

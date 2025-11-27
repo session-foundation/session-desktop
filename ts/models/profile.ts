@@ -566,7 +566,7 @@ export function buildPrivateProfileChangeFromContactUpdate({
     displayName: contact.name,
     profileUpdatedAtSeconds: contact.profileUpdatedSeconds,
     proDetails: {
-      bitsetProFeatures: contact?.profileProFeatures ?? null,
+      bitsetProFeatures: contact?.proProfileBitset ?? null,
       proExpiryTsMs: convoVolatileDetails?.proExpiryTsMs ?? null,
       proGenIndexHashB64: convoVolatileDetails?.genIndexHashB64 ?? null,
     },

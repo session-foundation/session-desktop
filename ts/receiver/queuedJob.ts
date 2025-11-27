@@ -483,6 +483,4 @@ async function processProDetails({
     // Note: msgModel.commit() is always called when receiving a message.
     messageModel.setProFeaturesUsed(decodedEnvelope.validPro.proFeaturesBitset);
   }
-
-  // FIXME process pro changes at the contact level too.
 }
