@@ -28,6 +28,8 @@ import {
 import { NetworkTime } from '../../../../util/NetworkTime';
 import type { ConfigWrapperUser } from '../../../../webworker/workers/browser/libsession_worker_functions';
 import { objectEntries } from '../../../../shared/object_utils';
+import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { longOrNumberToNumber } from '../../../../types/long/longOrNumberToNumber';
 
 const defaultMsBetweenRetries = 5 * DURATION.SECONDS; // a long time between retries, to avoid running multiple jobs at the same time, when one was postponed at the same time as one already planned (5s)
 const defaultMaxAttempts = 2;
@@ -58,7 +60,7 @@ async function confirmPushedAndDump(
     if (change.pushed.seqno) {
       if (!toConfirmPushed[variant]) {
         toConfirmPushed[variant] = {
-          seqno: change.pushed.seqno.toNumber(),
+          seqno: longOrNumberToNumber(change.pushed.seqno),
           hashes: [change.messageHash],
         };
       } else {
@@ -137,7 +139,7 @@ async function pushChangesToUserSwarmIfNeeded() {
     })
   );
 
-  if (window.sessionFeatureFlags.debugLibsessionDumps) {
+  if (getFeatureFlag('debugLibsessionDumps')) {
     for (let index = 0; index < LibSessionUtil.requiredUserVariants.length; index++) {
       const variant = LibSessionUtil.requiredUserVariants[index];
 

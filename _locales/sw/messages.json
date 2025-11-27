@@ -349,6 +349,8 @@
   "emojiReactsHoverYouNameTwoDesktop": "Wewe na {name} mliitikia na {emoji_name}",
   "emojiReactsNotification": "Amezidi ujumbe wako {emoji}",
   "enable": "Wezesha",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "Tafadhali kagua muunganiko wako wa intaneti na ujaribu tena.",
   "errorCopyAndQuit": "Nakili Hitilafu na Kuacha",
   "errorDatabase": "Hitilafu ya Database",

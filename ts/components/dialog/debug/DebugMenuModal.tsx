@@ -1,15 +1,16 @@
 import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 import useUpdate from 'react-use/lib/useUpdate';
-import { type Dispatch, useState } from 'react';
+import { type Dispatch, useState, ReactNode } from 'react';
 import { Flex } from '../../basic/Flex';
 import { updateDebugMenuModal } from '../../../state/ducks/modalDialog';
 import {
   AboutInfo,
   DataGenerationActions,
   DebugActions,
+  DebugUrlInteractionsSection,
   ExperimentalActions,
-  LoggingActions,
+  LoggingDebugSection,
   OtherInfo,
   Playgrounds,
 } from './components';
@@ -18,12 +19,19 @@ import {
   SessionWrapperModal,
   WrapperModalWidth,
 } from '../../SessionWrapperModal';
-import { FeatureFlags } from './FeatureFlags';
+import {
+  DebugFeatureFlags,
+  FeatureFlagDumper,
+  FeatureFlags,
+  ProDebugSection,
+} from './FeatureFlags';
 import { ReleaseChannel } from './ReleaseChannel';
 import { useHotkey } from '../../../hooks/useHotkey';
 import { PopoverPlaygroundPage } from './playgrounds/PopoverPlaygroundPage';
 import { ProPlaygroundPage } from './playgrounds/ProPlaygroundPage';
 import { ModalBackButton } from '../shared/ModalBackButton';
+import { PanelButtonGroup } from '../../buttons';
+import { isDebugMode } from '../../../shared/env_vars';
 
 const StyledContent = styled(Flex)`
   padding-inline: var(--margins-sm);
@@ -58,21 +66,85 @@ export type DebugMenuPageProps = {
   setPage: Dispatch<DEBUG_MENU_PAGE>;
 };
 
+export function DebugMenuSection({
+  title,
+  titleAdornment,
+  children,
+  rowWrap,
+}: {
+  title?: string;
+  titleAdornment?: ReactNode;
+  children: ReactNode;
+  rowWrap?: boolean;
+}) {
+  return (
+    <PanelButtonGroup
+      style={{
+        maxWidth: '550px',
+      }}
+      containerStyle={{
+        paddingBlock: 'var(--margins-md)',
+        paddingInline: 'var(--margins-lg)',
+        gap: 'var(--margins-sm)',
+        width: '100%',
+        ...(rowWrap
+          ? {
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+            }
+          : {}),
+      }}
+    >
+      {title ? (
+        <h2 style={{ width: '100%', display: 'flex', gap: '4px' }}>
+          {title}
+          {titleAdornment ?? null}
+        </h2>
+      ) : null}
+      {children}
+    </PanelButtonGroup>
+  );
+}
+
 function MainPage({ setPage }: DebugMenuPageProps) {
   // NOTE we use forceUpdate here and pass it through so the entire modal refreshes when a flag is toggled
   const forceUpdate = useUpdate();
+  const isDebug = isDebugMode();
   return (
-    <>
-      <FeatureFlags flags={window.sessionFeatureFlags} forceUpdate={forceUpdate} />
+    <div
+      style={{
+        display: 'flex',
+        width: '100%',
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+        gap: 'var(--margins-lg)',
+      }}
+    >
+      {!isDebug ? (
+        <DebugMenuSection>
+          {
+            "The debug menu contains feature flag controls and experiments for unreleased Session features. They might not work, or may even break your client. Only use this menu if you know what you're doing. Some debug menu options are only available in debug mode."
+          }
+        </DebugMenuSection>
+      ) : null}
+      <FeatureFlags forceUpdate={forceUpdate} />
+      <ProDebugSection forceUpdate={forceUpdate} setPage={setPage} />
+      {isDebug ? <FeatureFlagDumper forceUpdate={forceUpdate} /> : null}
+      {isDebug ? <DebugFeatureFlags forceUpdate={forceUpdate} /> : null}
       <DebugActions />
-      <LoggingActions />
+      {isDebug ? <ExperimentalActions forceUpdate={forceUpdate} /> : null}
+      <LoggingDebugSection forceUpdate={forceUpdate} />
       <Playgrounds setPage={setPage} />
-      <ExperimentalActions forceUpdate={forceUpdate} />
-      <DataGenerationActions />
+      {isDebug ? <DataGenerationActions /> : null}
+      {isDebug ? <DebugUrlInteractionsSection /> : null}
       <ReleaseChannel />
-      <AboutInfo />
-      <OtherInfo />
-    </>
+      <div>
+        <AboutInfo />
+        <OtherInfo />
+      </div>
+    </div>
   );
 }
 
@@ -81,7 +153,7 @@ function getPage(page: DEBUG_MENU_PAGE, setPage: Dispatch<DEBUG_MENU_PAGE>) {
     case DEBUG_MENU_PAGE.POPOVER:
       return <PopoverPlaygroundPage />;
     case DEBUG_MENU_PAGE.Pro:
-      return <ProPlaygroundPage />;
+      return <ProPlaygroundPage setPage={setPage} />;
     case DEBUG_MENU_PAGE.MAIN:
     default:
       return <MainPage setPage={setPage} />;
@@ -139,6 +211,7 @@ export function DebugMenuModal() {
       allowOutsideClick={false}
     >
       <StyledContent
+        dir="ltr"
         $container={true}
         $flexDirection="column"
         $alignItems="flex-start"

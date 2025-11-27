@@ -21,6 +21,9 @@ export type ExpirationTimerUpdate = {
 export type DisappearingMessageUpdate = {
   expirationType: DisappearingMessageType;
   expirationTimer: number;
+  /**
+   * The message expiration from the retrieve request itself (milliseconds since epoch)
+   */
   messageExpirationFromRetrieve: number | null;
 };
 

@@ -1,4 +1,4 @@
-import { ContentMessage } from '../..';
+import { ContentMessageNoProfile } from '../..';
 import { SignalService } from '../../../../../protobuf';
 import { MessageParams } from '../../Message';
 
@@ -6,7 +6,7 @@ type ReadReceiptMessageParams = MessageParams & {
   timestamps: Array<number>;
 };
 
-export class ReadReceiptMessage extends ContentMessage {
+export class ReadReceiptMessage extends ContentMessageNoProfile {
   public readonly timestamps: Array<number>;
 
   constructor({ createAtNetworkTimestamp, identifier, timestamps }: ReadReceiptMessageParams) {
@@ -14,14 +14,14 @@ export class ReadReceiptMessage extends ContentMessage {
     this.timestamps = timestamps;
   }
 
-  public contentProto(): SignalService.Content {
-    return super.makeContentProto({ receiptMessage: this.receiptProto() });
-  }
+  public override contentProto(): SignalService.Content {
+    // Note: read receipts are not disappearing messages
+    const content = super.makeNonDisappearingContentProto();
 
-  protected receiptProto(): SignalService.ReceiptMessage {
-    return new SignalService.ReceiptMessage({
+    content.receiptMessage = new SignalService.ReceiptMessage({
       type: SignalService.ReceiptMessage.Type.READ,
       timestamp: this.timestamps,
     });
+    return content;
   }
 }

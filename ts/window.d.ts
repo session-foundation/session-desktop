@@ -6,7 +6,10 @@ import { Persistor } from 'redux-persist/es/types';
 
 import { PrimaryColorStateType, ThemeStateType } from './themes/constants/colors';
 import type { EventEmitter } from './shared/event_emitter';
-import type { SessionFlags } from './state/ducks/types/releasedFeaturesReduxTypes';
+import type {
+  SessionDataFeatureFlags,
+  SessionBooleanFeatureFlags,
+} from './state/ducks/types/releasedFeaturesReduxTypes';
 
 /*
 We declare window stuff here instead of global.d.ts because we are importing other declarations.
@@ -22,7 +25,8 @@ declare global {
     getSettingValue: (id: string, comparisonValue?: any) => any;
     setSettingValue: (id: string, value: any) => Promise<void>;
     log: any;
-    sessionFeatureFlags: SessionFlags;
+    sessionBooleanFeatureFlags: SessionBooleanFeatureFlags;
+    sessionDataFeatureFlags: SessionDataFeatureFlags;
     onLogin: (pw: string) => Promise<void>; // only set on the password window
     onTryPassword: (pw: string) => Promise<void>; // only set on the main window
     persistStore?: Persistor;

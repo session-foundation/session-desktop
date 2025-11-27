@@ -352,6 +352,8 @@
   "emojiReactsHoverYouNameTwoDesktop": "Та болон {name} нар {emoji_name} -ээр хариу үйлдэл үзүүлсэн",
   "emojiReactsNotification": "Таны зурваст эможи хариу үзүүлсэн {emoji}",
   "enable": "Идэвхжүүлэх",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "Интернэт холболтоо шалгаж дахин оролдоно уу.",
   "errorCopyAndQuit": "Алдаа болон програмыг хаах",
   "errorDatabase": "Өгөгдлийн сангийн алдаа",

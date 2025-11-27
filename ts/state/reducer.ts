@@ -25,6 +25,7 @@ import releasedFeaturesReducer, { type ReleasedFeaturesState } from './ducks/rel
 import { debugReducer, type DebugState } from './ducks/debug';
 import networkModalReducer, { type NetworkModalState } from './ducks/networkModal';
 import networkDataReducer, { type NetworkDataState } from './ducks/networkData';
+import proBackendDataReducer, { ProBackendDataState } from './ducks/proBackendData';
 
 export type StateType = {
   search: SearchStateType;
@@ -47,6 +48,7 @@ export type StateType = {
   debug: DebugState;
   networkModal: NetworkModalState;
   networkData: NetworkDataState;
+  proBackendData: ProBackendDataState;
 };
 
 const reducers = {
@@ -70,6 +72,7 @@ const reducers = {
   debug: debugReducer,
   networkModal: networkModalReducer,
   networkData: networkDataReducer,
+  proBackendData: proBackendDataReducer,
 };
 
 // Making this work would require that our reducer signature supported AnyAction, not

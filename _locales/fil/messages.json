@@ -348,6 +348,8 @@
   "emojiReactsHoverYouNameTwoDesktop": "Ikaw at si {name} nag-react ng {emoji_name}",
   "emojiReactsNotification": "Nag-react sa iyong mensahe {emoji}",
   "enable": "I-enable",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "Pakitingnan ang iyong koneksiyon sa internet at subukang muli.",
   "errorCopyAndQuit": "Kopyahin ang Error at Umalis",
   "errorDatabase": "Database error",

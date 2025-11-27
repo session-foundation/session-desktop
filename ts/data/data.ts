@@ -17,18 +17,16 @@ import { DisappearingMessages } from '../session/disappearing_messages';
 import { fromArrayBufferToBase64, fromBase64ToArrayBuffer } from '../session/utils/String';
 import { MessageResultProps } from '../types/message';
 import {
-  AsyncWrapper,
   MsgDuplicateSearchOpenGroup,
   SaveConversationReturn,
   SaveSeenMessageHash,
-  UnprocessedDataNode,
   UpdateLastHashType,
 } from '../types/sqlSharedTypes';
 import { Storage } from '../util/storage';
 import { channels } from './channels';
 import * as dataInit from './dataInit';
 import { cleanData } from './dataUtils';
-import { SNODE_POOL_ITEM_ID } from './settings-key';
+import { SettingsKey, SNODE_POOL_ITEM_ID } from './settings-key';
 import {
   FindAllMessageFromSendersInConversationTypeArgs,
   FindAllMessageHashesInConversationMatchingAuthorTypeArgs,
@@ -62,6 +60,15 @@ async function getPasswordHash(): Promise<string | null> {
   return channels.getPasswordHash();
 }
 
+// Note: once we have this timestamp there is no reason it should change
+let cachedDBCreationTimestampMs: null | number = null;
+async function getDBCreationTimestampMs(): Promise<number | null> {
+  if (!cachedDBCreationTimestampMs) {
+    cachedDBCreationTimestampMs = await channels.getDBCreationTimestampMs();
+  }
+  return cachedDBCreationTimestampMs;
+}
+
 // Guard Nodes
 async function getGuardNodes(): Promise<Array<GuardNode>> {
   return channels.getGuardNodes();
@@ -71,16 +78,16 @@ async function updateGuardNodes(nodes: Array<string>): Promise<void> {
 }
 
 async function generateAttachmentKeyIfEmpty() {
-  const existingKey = await getItemById('local_attachment_encrypted_key');
+  const existingKey = await getItemById(SettingsKey.localAttachmentEncryptionKey);
   if (!existingKey) {
     const sodium = await getSodiumRenderer();
     const encryptingKey = sodium.to_hex(sodium.randombytes_buf(32));
     await createOrUpdateItem({
-      id: 'local_attachment_encrypted_key',
+      id: SettingsKey.localAttachmentEncryptionKey,
       value: encryptingKey,
     });
     // be sure to write the new key to the cache. so we can access it straight away
-    await Storage.put('local_attachment_encrypted_key', encryptingKey);
+    await Storage.put(SettingsKey.localAttachmentEncryptionKey, encryptingKey);
   }
 }
 
@@ -622,45 +629,6 @@ async function getNextExpiringMessage(): Promise<Array<MessageModel>> {
   return makeMessageModels(messages);
 }
 
-// Unprocessed
-
-const getUnprocessedCount: AsyncWrapper<UnprocessedDataNode['getUnprocessedCount']> = () => {
-  return channels.getUnprocessedCount();
-};
-
-const getAllUnprocessed: AsyncWrapper<UnprocessedDataNode['getAllUnprocessed']> = () => {
-  return channels.getAllUnprocessed();
-};
-
-const getUnprocessedById: AsyncWrapper<UnprocessedDataNode['getUnprocessedById']> = id => {
-  return channels.getUnprocessedById(id);
-};
-
-const saveUnprocessed: AsyncWrapper<UnprocessedDataNode['saveUnprocessed']> = data => {
-  return channels.saveUnprocessed(cleanData(data));
-};
-
-const updateUnprocessedAttempts: AsyncWrapper<UnprocessedDataNode['updateUnprocessedAttempts']> = (
-  id,
-  attempts
-) => {
-  return channels.updateUnprocessedAttempts(id, attempts);
-};
-const updateUnprocessedWithData: AsyncWrapper<UnprocessedDataNode['updateUnprocessedWithData']> = (
-  id,
-  data
-) => {
-  return channels.updateUnprocessedWithData(id, cleanData(data));
-};
-
-const removeUnprocessed: AsyncWrapper<UnprocessedDataNode['removeUnprocessed']> = id => {
-  return channels.removeUnprocessed(id);
-};
-
-const removeAllUnprocessed: AsyncWrapper<UnprocessedDataNode['removeAllUnprocessed']> = () => {
-  return channels.removeAllUnprocessed();
-};
-
 // Attachment downloads
 
 async function getNextAttachmentDownloadJobs(limit: number): Promise<any> {
@@ -822,6 +790,7 @@ export const Data = {
   close,
   removeDB,
   getPasswordHash,
+  getDBCreationTimestampMs,
 
   // items table logic
   createOrUpdateItem,
@@ -889,16 +858,6 @@ export const Data = {
   getExpiredMessages,
   getOutgoingWithoutExpiresAt,
   getNextExpiringMessage,
-
-  // Unprocessed messages data
-  getUnprocessedCount,
-  getAllUnprocessed,
-  getUnprocessedById,
-  saveUnprocessed,
-  updateUnprocessedAttempts,
-  updateUnprocessedWithData,
-  removeUnprocessed,
-  removeAllUnprocessed,
 
   // attachments download jobs
   getNextAttachmentDownloadJobs,

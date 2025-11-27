@@ -14,7 +14,6 @@ import Sinon, * as sinon from 'sinon';
 
 import { PubkeyType } from 'libsession_util_nodejs';
 import { randombytes_buf } from 'libsodium-wrappers-sumo';
-import { ContentMessage } from '../../../../session/messages/outgoing';
 import { MessageSender } from '../../../../session/sending';
 import { MessageQueueCl } from '../../../../session/sending/MessageQueue';
 import { PubKey } from '../../../../session/types';
@@ -28,6 +27,7 @@ import { TypedStub, generateFakeSnode, stubData } from '../../../test-utils/util
 import { MessageWrapper } from '../../../../session/sending/MessageWrapper';
 import { SnodePool } from '../../../../session/apis/snode_api/snodePool';
 import { BatchRequests } from '../../../../session/apis/snode_api/batchRequest';
+import type { ContentMessageNoProfile } from '../../../../session/messages/outgoing';
 
 chai.use(chaiAsPromised as any);
 chai.should();
@@ -231,7 +231,7 @@ describe('MessageQueue', () => {
       const message = TestUtils.generateVisibleMessage();
       await messageQueueStub.sendToPubKey(device, message, SnodeNamespaces.Default);
 
-      const args = stub.lastCall.args as [Array<PubKey>, ContentMessage];
+      const args = stub.lastCall.args as [Array<PubKey>, ContentMessageNoProfile];
       expect(args[0]).to.be.equal(device);
       expect(args[1]).to.equal(message);
     });

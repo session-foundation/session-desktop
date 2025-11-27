@@ -16,12 +16,13 @@ import { OnionV4 } from '../../onions/onionv4';
 import { FileFromFileServerDetails } from './types';
 import { queryParamDeterministicEncryption, queryParamServerEd25519Pubkey } from '../../url';
 import { FS, type FILE_SERVER_TARGET_TYPE } from './FileServerTarget';
+import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 const RELEASE_VERSION_ENDPOINT = '/session_version';
 const FILE_ENDPOINT = '/file';
 
 function getShortTTLHeadersIfNeeded(): Record<string, string> {
-  if (window.sessionFeatureFlags?.fsTTL30s) {
+  if (getFeatureFlag('fsTTL30s')) {
     return { 'X-FS-TTL': '30' };
   }
   return {};
@@ -101,7 +102,7 @@ export const uploadFileToFsWithOnionV4 = async (
 export const downloadFileFromFileServer = async (
   toDownload: FileFromFileServerDetails
 ): Promise<ArrayBuffer | null> => {
-  if (window.sessionFeatureFlags?.debugServerRequests) {
+  if (getFeatureFlag('debugServerRequests')) {
     window.log.info(`about to try to download fsv2: "${toDownload.fullUrl}"`);
   }
 
@@ -112,7 +113,7 @@ export const downloadFileFromFileServer = async (
     throwError: true,
     timeoutMs: 30 * DURATION.SECONDS, // longer time for file download
   });
-  if (window.sessionFeatureFlags?.debugServerRequests) {
+  if (getFeatureFlag('debugServerRequests')) {
     window.log.info(`download fsv2: "${toDownload.fullUrl} got result:`, JSON.stringify(result));
   }
   if (!result) {
@@ -204,7 +205,13 @@ export const getLatestReleaseFromFileServer = async (
  *
  */
 export const extendFileExpiry = async (fileId: string, fsTarget: FILE_SERVER_TARGET_TYPE) => {
-  if (window.sessionFeatureFlags?.debugServerRequests) {
+  // TODO: remove this once QA is done
+
+  if (!FS.supportsFsExtend(fsTarget)) {
+    throw new Error('extendFileExpiry: only works with potato for now');
+  }
+
+  if (getFeatureFlag('debugServerRequests')) {
     window.log.info(`about to renew expiry of file: "${fileId}"`);
   }
 

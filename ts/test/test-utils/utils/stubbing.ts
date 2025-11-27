@@ -124,7 +124,7 @@ export function stubSVGElement() {
   }
 }
 
-export const enableLogRedirect = false;
+export const enableLogRedirect = !!process.env.TEST_LOG_REDIRECT;
 
 export const stubWindowLog = () => {
   stubWindow('log', {
@@ -136,7 +136,7 @@ export const stubWindowLog = () => {
 };
 
 export const stubWindowFeatureFlags = () => {
-  stubWindow('sessionFeatureFlags', { debug: {} } as any);
+  stubWindow('sessionBooleanFeatureFlags', { debug: {} } as any);
 };
 
 export const stubWindowWhisper = () => {

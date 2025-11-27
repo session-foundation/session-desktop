@@ -35,7 +35,13 @@ function isContactToStoreInWrapper(convo: ConversationModel): boolean {
   } catch (e) {
     return false;
   }
-  return !convo.isMe() && convo.isPrivate() && convo.isActive() && !PubKey.isBlinded(convo.id);
+  return (
+    !convo.isMe() &&
+    convo.isPrivate() &&
+    convo.isActive() &&
+    !PubKey.isBlinded(convo.id) &&
+    convo.id.length === 66
+  );
 }
 
 /**

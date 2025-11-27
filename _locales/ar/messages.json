@@ -375,6 +375,8 @@
   "emojiReactsHoverYouNameTwoDesktop": "تفاعلت أنت و{name} مع {emoji_name}",
   "emojiReactsNotification": "تفاعل مع رسالتك بـ {emoji}",
   "enable": "تفعيل",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "الرجاء التحقق من اتصالك بالإنترنت وحاول مرة أخرى.",
   "errorCopyAndQuit": "نسخ الخطأ والخروج",
   "errorDatabase": "خطأ في قاعدة البيانات",

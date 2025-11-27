@@ -329,6 +329,8 @@
   "emojiReactsHoverYouNameTwoDesktop": "Jūs un {name} reaģējāt ar {emoji_name}",
   "emojiReactsNotification": "{emoji} reaģēja uz tavu ziņu",
   "enable": "Iespējot",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "Lūdzu, pārbaudi savu interneta pieslēgumu un mēģini vēlreiz.",
   "errorCopyAndQuit": "Kopēt kļūdu un iziet",
   "errorDatabase": "Datu bāzes kļūda",

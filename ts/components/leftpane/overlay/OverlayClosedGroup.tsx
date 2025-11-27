@@ -23,7 +23,6 @@ import { SessionToggle } from '../../basic/SessionToggle';
 import { SpacerLG, SpacerMD } from '../../basic/Text';
 import { SessionSpinner } from '../../loading';
 import { StyledLeftPaneOverlay } from './OverlayMessage';
-import { hasClosedGroupV2QAButtons } from '../../../shared/env_vars';
 import type { StateType } from '../../../state/reducer';
 import { PubKey } from '../../../session/types';
 import { searchActions } from '../../../state/ducks/search';
@@ -31,6 +30,7 @@ import { useContactsToInviteTo } from '../../../hooks/useContactsToInviteToGroup
 import { NoContacts, NoResultsForSearch } from '../../search/NoResults';
 import { SimpleSessionTextarea } from '../../inputs/SessionInput';
 import { tr, tStripped } from '../../../localization/localeTools';
+import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 const StyledGroupMemberListContainer = styled.div`
   display: flex;
@@ -146,7 +146,7 @@ export const OverlayClosedGroupV2 = () => {
           errorDataTestId="error-message"
         />
         <SpacerMD />
-        {hasClosedGroupV2QAButtons() && (
+        {getFeatureFlag('useClosedGroupV2QAButtons') && (
           <>
             <span
               style={{

@@ -1,28 +1,31 @@
-import { toNumber } from 'lodash';
-import { EnvelopePlus } from './types';
-import type { SignalService } from '../protobuf';
+import { type BaseDecodedEnvelope } from './types';
 import { DURATION } from '../session/constants';
+import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
 
-export function getEnvelopeId(envelope: EnvelopePlus) {
+export function getEnvelopeId(envelope: BaseDecodedEnvelope) {
   if (envelope.source) {
-    return `${envelope.source} ${toNumber(envelope.timestamp)} (${envelope.id})`;
+    return `${envelope.source} ${longOrNumberToNumber(envelope.sentAtMs)} (${envelope.id})`;
   }
 
   return envelope.id;
 }
 
-export function shouldProcessContentMessage(
-  envelope: Pick<EnvelopePlus, 'timestamp'>,
-  content: Pick<SignalService.Content, 'sigTimestamp'>,
-  isCommunity: boolean
-) {
+export function shouldProcessContentMessage({
+  sentAtMs,
+  isCommunity,
+  sigTimestampMs = 0,
+}: {
+  sentAtMs: number;
+  sigTimestampMs: number | undefined;
+  isCommunity: boolean;
+}) {
   // FIXME: drop this case once the change has been out in the wild long enough
-  if (!content.sigTimestamp || !toNumber(content.sigTimestamp)) {
+  if (!sentAtMs || !longOrNumberToNumber(sigTimestampMs)) {
     // legacy client
     return true;
   }
-  const envelopeTimestamp = toNumber(envelope.timestamp);
-  const contentTimestamp = toNumber(content.sigTimestamp);
+  const envelopeTimestamp = longOrNumberToNumber(sentAtMs);
+  const contentTimestamp = longOrNumberToNumber(sigTimestampMs);
   if (!isCommunity) {
     return envelopeTimestamp === contentTimestamp;
   }

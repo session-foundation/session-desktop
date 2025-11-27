@@ -234,7 +234,7 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
           }}
           toggleDataTestId={'enable-typing-indicators-settings-toggle'}
           rowDataTestId={'enable-typing-indicators-settings-row'}
-        />{' '}
+        />
       </PanelButtonGroup>
       <PanelLabelWithDescription title={{ token: 'linkPreviews' }} />
       <PanelButtonGroup>

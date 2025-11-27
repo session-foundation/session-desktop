@@ -24,6 +24,8 @@ import {
   EncryptionDomain,
   type ConfirmPush,
   type UtilitiesWrapperActionsCalls,
+  type ProConfig,
+  type ProActionsCalls,
 } from 'libsession_util_nodejs';
 // eslint-disable-next-line import/order
 import { join } from 'path';
@@ -202,6 +204,49 @@ export const UserConfigWrapperActions: UserConfigWrapperActionsCalls = {
   setNoteToSelfExpiry: async (expirySeconds: number) =>
     callLibSessionWorker(['UserConfig', 'setNoteToSelfExpiry', expirySeconds]) as Promise<
       ReturnType<UserConfigWrapperActionsCalls['setNoteToSelfExpiry']>
+    >,
+
+  getProConfig: async () =>
+    callLibSessionWorker(['UserConfig', 'getProConfig']) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['getProConfig']>
+    >,
+  setProConfig: async (proConfig: ProConfig) =>
+    callLibSessionWorker(['UserConfig', 'setProConfig', proConfig]) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['setProConfig']>
+    >,
+  removeProConfig: async () =>
+    callLibSessionWorker(['UserConfig', 'removeProConfig']) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['removeProConfig']>
+    >,
+
+  getProProfileBitset: async (
+    ...args: Parameters<UserConfigWrapperActionsCalls['getProProfileBitset']>
+  ) =>
+    callLibSessionWorker(['UserConfig', 'getProProfileBitset', ...args]) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['getProProfileBitset']>
+    >,
+  setProBadge: async (...args: Parameters<UserConfigWrapperActionsCalls['setProBadge']>) =>
+    callLibSessionWorker(['UserConfig', 'setProBadge', ...args]) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['setProBadge']>
+    >,
+  setAnimatedAvatar: async (
+    ...args: Parameters<UserConfigWrapperActionsCalls['setAnimatedAvatar']>
+  ) =>
+    callLibSessionWorker(['UserConfig', 'setAnimatedAvatar', ...args]) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['setAnimatedAvatar']>
+    >,
+
+  generateProMasterKey: async (
+    ...args: Parameters<UserConfigWrapperActionsCalls['generateProMasterKey']>
+  ) =>
+    callLibSessionWorker(['UserConfig', 'generateProMasterKey', ...args]) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['generateProMasterKey']>
+    >,
+  generateRotatingPrivKeyHex: async (
+    ...args: Parameters<UserConfigWrapperActionsCalls['generateRotatingPrivKeyHex']>
+  ) =>
+    callLibSessionWorker(['UserConfig', 'generateRotatingPrivKeyHex', ...args]) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['generateRotatingPrivKeyHex']>
     >,
 };
 
@@ -726,6 +771,10 @@ export const MetaGroupWrapperActions: MetaGroupWrapperActionsCalls = {
     callLibSessionWorker([`MetaGroupConfig-${groupPk}`, 'keyGetAll']) as Promise<
       ReturnType<MetaGroupWrapperActionsCalls['keyGetAll']>
     >,
+  keyGetEncryptionKeyHex: async (groupPk: GroupPubkeyType) =>
+    callLibSessionWorker([`MetaGroupConfig-${groupPk}`, 'keyGetEncryptionKeyHex']) as Promise<
+      ReturnType<MetaGroupWrapperActionsCalls['keyGetEncryptionKeyHex']>
+    >,
   activeHashes: async (groupPk: GroupPubkeyType) =>
     callLibSessionWorker([`MetaGroupConfig-${groupPk}`, 'activeHashes']) as Promise<
       ReturnType<MetaGroupWrapperActionsCalls['activeHashes']>
@@ -802,9 +851,6 @@ export const MetaGroupWrapperActions: MetaGroupWrapperActionsCalls = {
 };
 
 export const MultiEncryptWrapperActions: MultiEncryptActionsCalls = {
-  /* Reuse the UserConfigWrapperActions with the UserConfig argument */
-  ...createBaseActionsFor('UserConfig'),
-
   /** UserConfig wrapper specific actions */
   multiEncrypt: async args =>
     callLibSessionWorker(['MultiEncrypt', 'multiEncrypt', args]) as Promise<
@@ -823,6 +869,58 @@ export const MultiEncryptWrapperActions: MultiEncryptActionsCalls = {
   attachmentEncrypt: async args =>
     callLibSessionWorker(['MultiEncrypt', 'attachmentEncrypt', args]) as Promise<
       ReturnType<MultiEncryptActionsCalls['attachmentEncrypt']>
+    >,
+
+  encryptFor1o1: async args =>
+    callLibSessionWorker(['MultiEncrypt', 'encryptFor1o1', args]) as Promise<
+      ReturnType<MultiEncryptActionsCalls['encryptFor1o1']>
+    >,
+
+  encryptForCommunityInbox: async args =>
+    callLibSessionWorker(['MultiEncrypt', 'encryptForCommunityInbox', args]) as Promise<
+      ReturnType<MultiEncryptActionsCalls['encryptForCommunityInbox']>
+    >,
+
+  encryptForCommunity: async args =>
+    callLibSessionWorker(['MultiEncrypt', 'encryptForCommunity', args]) as Promise<
+      ReturnType<MultiEncryptActionsCalls['encryptForCommunity']>
+    >,
+
+  encryptForGroup: async args =>
+    callLibSessionWorker(['MultiEncrypt', 'encryptForGroup', args]) as Promise<
+      ReturnType<MultiEncryptActionsCalls['encryptForGroup']>
+    >,
+
+  decryptForCommunity: async (first, second) =>
+    callLibSessionWorker(['MultiEncrypt', 'decryptForCommunity', first, second]) as Promise<
+      ReturnType<MultiEncryptActionsCalls['decryptForCommunity']>
+    >,
+  decryptFor1o1: async (first, second) =>
+    callLibSessionWorker(['MultiEncrypt', 'decryptFor1o1', first, second]) as Promise<
+      ReturnType<MultiEncryptActionsCalls['decryptFor1o1']>
+    >,
+  decryptForGroup: async (first, second) =>
+    callLibSessionWorker(['MultiEncrypt', 'decryptForGroup', first, second]) as Promise<
+      ReturnType<MultiEncryptActionsCalls['decryptForGroup']>
+    >,
+};
+
+export const ProWrapperActions: ProActionsCalls = {
+  proFeaturesForMessage: async first =>
+    callLibSessionWorker(['Pro', 'proFeaturesForMessage', first]) as Promise<
+      ReturnType<ProActionsCalls['proFeaturesForMessage']>
+    >,
+  proProofRequestBody: async first =>
+    callLibSessionWorker(['Pro', 'proProofRequestBody', first]) as Promise<
+      ReturnType<ProActionsCalls['proProofRequestBody']>
+    >,
+  proRevocationsRequestBody: async first =>
+    callLibSessionWorker(['Pro', 'proRevocationsRequestBody', first]) as Promise<
+      ReturnType<ProActionsCalls['proRevocationsRequestBody']>
+    >,
+  proStatusRequestBody: async first =>
+    callLibSessionWorker(['Pro', 'proStatusRequestBody', first]) as Promise<
+      ReturnType<ProActionsCalls['proStatusRequestBody']>
     >,
 };
 

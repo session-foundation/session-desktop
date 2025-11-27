@@ -1,5 +1,11 @@
-import { ContentMessage } from './ContentMessage';
-import { DataMessage } from './DataMessage';
+import { ContentMessageNoProfile, ContentMessageWithProfile } from './ContentMessage';
+import { DataMessageNoProfile, DataMessageWithProfile } from './DataMessage';
 import { Message } from './Message';
 
-export { ContentMessage, DataMessage, Message };
+export {
+  ContentMessageNoProfile,
+  ContentMessageWithProfile,
+  DataMessageNoProfile,
+  DataMessageWithProfile,
+  Message,
+};

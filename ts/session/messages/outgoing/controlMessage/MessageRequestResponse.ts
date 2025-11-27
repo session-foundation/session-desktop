@@ -1,29 +1,31 @@
 import { SignalService } from '../../../../protobuf';
-import { type OutgoingUserProfile } from '../../../../types/message';
-import { ContentMessage } from '../ContentMessage';
+import type { WithOutgoingProMessageDetails } from '../../../../types/message/OutgoingProMessageDetails';
+import { ContentMessageWithProfile } from '../ContentMessage';
 import { MessageParams, type WithOutgoingUserProfile } from '../Message';
 
 // Note: a MessageRequestResponse message should not expire at all on the recipient side/nor our side.
-export type MessageRequestResponseParams = MessageParams & WithOutgoingUserProfile;
+export type MessageRequestResponseParams = MessageParams &
+  WithOutgoingUserProfile &
+  WithOutgoingProMessageDetails;
 
-export class MessageRequestResponse extends ContentMessage {
-  // Note: we send a response only if it is an accept
-  private readonly userProfile: OutgoingUserProfile | null;
-
+export class MessageRequestResponse extends ContentMessageWithProfile {
   constructor(params: MessageRequestResponseParams) {
     super({
       createAtNetworkTimestamp: params.createAtNetworkTimestamp,
-    } as MessageRequestResponseParams);
-
-    this.userProfile = params.userProfile;
+      outgoingProMessageDetails: params.outgoingProMessageDetails,
+      userProfile: params.userProfile,
+    });
   }
 
-  public contentProto(): SignalService.Content {
-    return super.makeContentProto({ messageRequestResponse: this.messageRequestResponseProto() });
+  public override contentProto(): SignalService.Content {
+    // Note: message request responses are not disappearing messages
+    const content = super.makeNonDisappearingContentProtoWithPro();
+    content.messageRequestResponse = this.messageRequestResponseProto();
+    return content;
   }
 
   public messageRequestResponseProto(): SignalService.MessageRequestResponse {
-    const protobufDetails = this.userProfile?.toProtobufDetails() ?? {};
+    const protobufDetails = this.lokiProfileProto();
     const response = new SignalService.MessageRequestResponse({
       isApproved: true,
       ...protobufDetails,

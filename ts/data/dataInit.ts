@@ -16,6 +16,7 @@ const channelsToMake = new Set([
   'close',
   'removeDB',
   'getPasswordHash',
+  'getDBCreationTimestampMs',
   'getGuardNodes',
   'updateGuardNodes',
   'createOrUpdateItem',
@@ -76,14 +77,6 @@ const channelsToMake = new Set([
   'hasConversationOutgoingMessage',
   'getSeenMessagesByHashList',
   'getLastHashBySnode',
-  'getUnprocessedCount',
-  'getAllUnprocessed',
-  'getUnprocessedById',
-  'saveUnprocessed',
-  'updateUnprocessedAttempts',
-  'updateUnprocessedWithData',
-  'removeUnprocessed',
-  'removeAllUnprocessed',
   'getNextAttachmentDownloadJobs',
   'saveAttachmentDownloadJob',
   'resetAttachmentDownloadPending',
@@ -263,8 +256,12 @@ function removeJob(id: number) {
 }
 
 function makeJob(fnName: string) {
-  if (_shuttingDown && fnName !== 'close') {
+  if (_shuttingDown && fnName !== 'close' && fnName !== 'removeDB') {
     throw new Error(`Rejecting SQL channel job (${fnName}); application is shutting down`);
+  }
+  if (!_shuttingDown && fnName === 'close') {
+    window?.log?.debug(`SQL channel job close() called, marking as shutting down`);
+    _shuttingDown = true;
   }
 
   _jobCounter += 1;

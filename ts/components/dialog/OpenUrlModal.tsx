@@ -14,6 +14,7 @@ import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/S
 import { SpacerXS } from '../basic/Text';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
 import { tr } from '../../localization/localeTools';
+import { registerUrlInteraction, URLInteraction } from '../../util/urlHistory';
 
 const StyledScrollDescriptionContainer = styled.div`
   max-height: 150px;
@@ -33,13 +34,15 @@ export function OpenUrlModal(props: OpenUrlModalState) {
     dispatch(updateOpenUrlModal(null));
   }
 
-  function onClickOpen() {
+  async function onClickOpen() {
     void shell.openExternal(url);
     onClose();
+    await registerUrlInteraction(url, URLInteraction.OPEN);
   }
 
-  function onClickCopy() {
+  async function onClickCopy() {
     MessageInteraction.copyBodyToClipboard(url);
+    await registerUrlInteraction(url, URLInteraction.COPY);
     onClose();
   }
 

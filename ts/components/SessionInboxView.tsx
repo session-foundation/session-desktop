@@ -44,6 +44,7 @@ import type { UserGroupState } from '../state/ducks/userGroups';
 import { initialThemeState } from '../state/theme/ducks/theme';
 import { initialNetworkModalState } from '../state/ducks/networkModal';
 import { initialNetworkDataState } from '../state/ducks/networkData';
+import { initialProBackendDataState } from '../state/ducks/proBackendData';
 
 function makeLookup<T>(items: Array<T>, key: string): { [key: string]: T } {
   // Yep, we can't index into item without knowing what it is. True. But we want to.
@@ -98,6 +99,7 @@ async function createSessionInboxStore() {
     debug: initialDebugState,
     networkModal: initialNetworkModalState,
     networkData: initialNetworkDataState,
+    proBackendData: initialProBackendDataState,
   };
 
   return createStore(initialState);

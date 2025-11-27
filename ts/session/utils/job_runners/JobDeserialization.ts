@@ -14,6 +14,7 @@ import { GroupPendingRemovals } from './jobs/GroupPendingRemovalsJob';
 import { GroupSync } from './jobs/GroupSyncJob';
 import { UpdateMsgExpirySwarm } from './jobs/UpdateMsgExpirySwarmJob';
 import { AvatarReupload } from './jobs/AvatarReuploadJob';
+import { UpdateProRevocationList } from './jobs/UpdateProRevocationListJob';
 
 export function persistedJobFromData<T extends TypeOfPersistedData>(
   data: T
@@ -42,6 +43,10 @@ export function persistedJobFromData<T extends TypeOfPersistedData>(
       return new GroupSync.GroupSyncJob(data) as unknown as PersistedJob<T>;
     case 'UpdateMsgExpirySwarmJobType':
       return new UpdateMsgExpirySwarm.UpdateMsgExpirySwarmJob(data) as unknown as PersistedJob<T>;
+    case 'UpdateProRevocationListJobType':
+      return new UpdateProRevocationList.UpdateProRevocationListJob(
+        data
+      ) as unknown as PersistedJob<T>;
 
     case 'FakeSleepForJobType':
       return new FakeSleepForJob(data) as unknown as PersistedJob<T>;

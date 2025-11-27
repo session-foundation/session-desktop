@@ -10,7 +10,7 @@ export type RetrieveMessageItem = {
    */
   hash: string;
   /**
-   * When the message is set to expire on the snode.
+   * When the message is set to expire on the snode. (milliseconds)
    */
   expiration: number;
   /**

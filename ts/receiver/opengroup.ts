@@ -1,62 +1,52 @@
-import { noop } from 'lodash';
+import { isNil } from 'lodash';
 import {
   createPublicMessageSentFromNotUs,
   createPublicMessageSentFromUs,
 } from '../models/messageFactory';
 import { SignalService } from '../protobuf';
-import { OpenGroupMessageV4 } from '../session/apis/open_group_api/opengroupV2/OpenGroupServerPoller';
 import { isUsAnySogsFromCache } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import { getOpenGroupV2ConversationId } from '../session/apis/open_group_api/utils/OpenGroupUtils';
 import { ConvoHub } from '../session/conversations';
-import { removeMessagePadding } from '../session/crypto/BufferPadding';
-import { perfEnd, perfStart } from '../session/utils/Performance';
-import { fromBase64ToArray } from '../session/utils/String';
 import { cleanIncomingDataMessage, messageHasVisibleContent } from './dataMessage';
 import { handleMessageJob, toRegularMessage } from './queuedJob';
 import { OpenGroupRequestCommonType } from '../data/types';
 import { shouldProcessContentMessage } from './common';
-
-export const handleOpenGroupV4Message = async (
-  message: OpenGroupMessageV4,
-  roomInfos: OpenGroupRequestCommonType
-) => {
-  const { data, id, posted, session_id } = message;
-  if (data && posted && session_id) {
-    await handleOpenGroupMessage(roomInfos, data, posted, session_id, id);
-  } else {
-    throw Error('Missing data passed to handleOpenGroupV4Message.');
-  }
-};
+import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
+import type { SogsDecodedEnvelope } from './types';
 
 /**
  * Common checks and decoding that takes place for both v2 and v4 message types.
  */
-const handleOpenGroupMessage = async (
-  roomInfos: OpenGroupRequestCommonType,
-  base64EncodedData: string,
-  sentTimestamp: number,
-  sender: string,
-  serverId: number
-) => {
+export const handleOpenGroupMessage = async ({
+  decodedContent,
+  decodedEnvelope,
+  roomInfos,
+}: {
+  roomInfos: OpenGroupRequestCommonType;
+  decodedEnvelope: SogsDecodedEnvelope;
+  decodedContent: SignalService.Content;
+}) => {
   const { serverUrl, roomId } = roomInfos;
-  if (!base64EncodedData || !sentTimestamp || !sender || !serverId) {
+  if (
+    !decodedContent ||
+    !decodedEnvelope.sentAtMs ||
+    !decodedEnvelope.getAuthor() ||
+    isNil(decodedEnvelope.serverId)
+  ) {
     window?.log?.warn('Invalid data passed to handleOpenGroupV2Message.');
     return;
   }
 
-  // Note: opengroup messages should not be padded
-  perfStart(`fromBase64ToArray-${base64EncodedData.length}`);
-  const arr = fromBase64ToArray(base64EncodedData);
-  perfEnd(`fromBase64ToArray-${base64EncodedData.length}`, 'fromBase64ToArray');
-
-  const dataUint = new Uint8Array(removeMessagePadding(arr));
-
-  const decodedContent = SignalService.Content.decode(dataUint);
-
-  if (!shouldProcessContentMessage({ timestamp: sentTimestamp }, decodedContent, true)) {
+  if (
+    !shouldProcessContentMessage({
+      sentAtMs: decodedEnvelope.sentAtMs,
+      sigTimestampMs: longOrNumberToNumber(decodedContent.sigTimestamp),
+      isCommunity: true,
+    })
+  ) {
     window?.log?.info(
       'sogs message: shouldProcessContentMessage is false for message sentAt:',
-      sentTimestamp
+      decodedEnvelope.sentAtMs
     );
     return;
   }
@@ -90,11 +80,15 @@ const handleOpenGroupMessage = async (
   }
 
   void groupConvo.queueJob(async () => {
-    const isMe = isUsAnySogsFromCache(sender);
+    const isMe = isUsAnySogsFromCache(decodedEnvelope.getAuthor());
 
     // this timestamp has already been forced to ms by the handleMessagesResponseV4() function
-    const commonAttributes = { serverTimestamp: sentTimestamp, serverId, conversationId };
-    const attributesForNotUs = { ...commonAttributes, sender };
+    const commonAttributes = {
+      serverTimestamp: decodedEnvelope.sentAtMs,
+      serverId: decodedEnvelope.serverId,
+      conversationId,
+    };
+    const attributesForNotUs = { ...commonAttributes, sender: decodedEnvelope.getAuthor() };
     // those lines just create an empty message only in-memory with some basic stuff set.
     // the whole decoding of data is happening in handleMessageJob()
     const msgModel = isMe
@@ -109,9 +103,7 @@ const handleOpenGroupMessage = async (
       toRegularMessage(
         cleanIncomingDataMessage(decodedContent?.dataMessage as SignalService.DataMessage)
       ),
-      noop,
-      sender,
-      ''
+      decodedEnvelope
     );
   });
 };

@@ -15,6 +15,7 @@ import {
 } from '../SessionWrapperModal';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
 import { ModalFlexContainer } from './shared/ModalFlexContainer';
+import { useCurrentUserHasPro } from '../../hooks/useHasPro';
 
 const DEVICE_ONLY = 'device_only' as const;
 const DEVICE_AND_NETWORK = 'device_and_network' as const;
@@ -63,14 +64,19 @@ const DescriptionBeforeAskingConfirmation = (props: {
 };
 
 const DescriptionWhenAskingConfirmation = (props: { deleteMode: DeleteModes }) => {
+  const hasPro = useCurrentUserHasPro();
   return (
     <ModalDescription
       dataTestId="modal-description"
       localizerProps={{
         token:
           props.deleteMode === 'device_and_network'
-            ? 'clearDeviceAndNetworkConfirm'
-            : 'clearDeviceDescription',
+            ? hasPro
+              ? 'proClearAllDataNetwork'
+              : 'clearDeviceAndNetworkConfirm'
+            : hasPro
+              ? 'proClearAllDataDevice'
+              : 'clearDeviceDescription',
       }}
     />
   );

@@ -60,14 +60,12 @@ import {
   getUsBlindedInThatServer,
   isUsAnySogsFromCache,
 } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
-import { SogsBlinding } from '../session/apis/open_group_api/sogsv3/sogsBlinding';
 import {
   fileDetailsToURL,
   sogsV3FetchPreviewAndSaveIt,
 } from '../session/apis/open_group_api/sogsv3/sogsV3FetchFile';
 import { SnodeNamespaces } from '../session/apis/snode_api/namespaces';
 import { getSodiumRenderer } from '../session/crypto';
-import { addMessagePadding } from '../session/crypto/BufferPadding';
 import { DecryptedAttachmentsManager } from '../session/crypto/DecryptedAttachmentsManager';
 import {
   MessageRequestResponse,
@@ -133,6 +131,7 @@ import { UpdateMsgExpirySwarm } from '../session/utils/job_runners/jobs/UpdateMs
 import { getLibGroupKickedOutsideRedux } from '../state/selectors/userGroups';
 import {
   MetaGroupWrapperActions,
+  MultiEncryptWrapperActions,
   UserConfigWrapperActions,
   UserGroupsWrapperActions,
 } from '../webworker/workers/browser/libsession_worker_interface';
@@ -147,7 +146,10 @@ import { Model } from './models';
 import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
 import { ReduxOnionSelectors } from '../state/selectors/onions';
 import { tr, tStripped } from '../localization/localeTools';
-import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
+import {
+  getDataFeatureFlag,
+  getFeatureFlag,
+} from '../state/ducks/types/releasedFeaturesReduxTypes';
 import type {
   ConversationInteractionStatus,
   ConversationInteractionType,
@@ -155,6 +157,8 @@ import type {
 import type { LastMessageStatusType } from '../state/ducks/types';
 import { OutgoingUserProfile } from '../types/message';
 import { Timestamp } from '../types/timestamp/timestamp';
+import { getProDetailsFromStorage } from '../state/selectors/proBackendData';
+import { ProStatus } from '../session/apis/pro_backend_api/types';
 
 type InMemoryConvoInfos = {
   mentionedUs: boolean;
@@ -744,12 +748,16 @@ export class ConversationModel extends Model<ConversationAttributes> {
         expireTimer,
         this.getExpirationMode()
       );
+      const body = '';
       const chatMessageParams: VisibleMessageParams = {
-        body: '',
+        body,
         // we need to use a new timestamp here, otherwise android&iOS will consider this message as a duplicate and drop the synced reaction
         createAtNetworkTimestamp: NetworkTime.now(),
         reaction,
         userProfile: await UserUtils.getOurProfile(),
+        outgoingProMessageDetails: await UserUtils.getOutgoingProMessageDetails({
+          utf16: body,
+        }),
         expirationType,
         expireTimer,
       };
@@ -916,6 +924,9 @@ export class ConversationModel extends Model<ConversationAttributes> {
     const messageRequestResponseParams: MessageRequestResponseParams = {
       createAtNetworkTimestamp: NetworkTime.now(),
       userProfile: await UserUtils.getOurProfile(),
+      outgoingProMessageDetails: await UserUtils.getOutgoingProMessageDetails({
+        utf16: undefined,
+      }),
     };
 
     const messageRequestResponse = new MessageRequestResponse(messageRequestResponseParams);
@@ -934,6 +945,9 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
 
     if (this.isClosedGroupV2()) {
+      if (!getFeatureFlag('proGroupsAvailable')) {
+        return false;
+      }
       const admins = this.getGroupAdmins();
       return admins.some(m => {
         // the is05Pubkey is only here to make sure we never have a infinite recursion
@@ -942,7 +956,10 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
 
     if (this.isMe()) {
-      return getFeatureFlag('mockCurrentUserHasPro');
+      return (
+        (getDataFeatureFlag('mockProCurrentStatus') ?? getProDetailsFromStorage()?.status) ===
+        ProStatus.Active
+      );
     }
 
     return getFeatureFlag('mockOthersHavePro');
@@ -1270,7 +1287,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
             sodium: await getSodiumRenderer(),
             secretKey: group.secretKey,
             updatedExpirationSeconds: expireUpdate.expireTimer,
-            userProfile: null,
           });
 
           const extraStoreRequests = await StoreGroupRequestFactory.makeGroupMessageSubRequest(
@@ -2520,6 +2536,9 @@ export class ConversationModel extends Model<ConversationAttributes> {
         preview: preview ? [preview] : [],
         quote,
         userProfile: await UserUtils.getOurProfile(),
+        outgoingProMessageDetails: await UserUtils.getOutgoingProMessageDetails({
+          utf16: body,
+        }),
       };
 
       if (PubKey.isBlinded(this.id)) {
@@ -2578,6 +2597,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
             url: communityInvitation.url,
             expirationType: chatMessageParams.expirationType,
             expireTimer: chatMessageParams.expireTimer,
+            userProfile: chatMessageParams.userProfile,
+            outgoingProMessageDetails: chatMessageParams.outgoingProMessageDetails,
           });
           // we need the return await so that errors are caught in the catch {}
           await MessageQueue.use().sendToPubKey(
@@ -2619,9 +2640,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (!PubKey.is03Pubkey(this.id)) {
       throw new Error('sendMessageToGroupV2 needs a 03 key');
     }
-    const visibleMessage = new VisibleMessage(chatMessageParams);
     const groupVisibleMessage = new ClosedGroupV2VisibleMessage({
-      chatMessage: visibleMessage,
+      chatMessageParams,
       destination: this.id,
     });
 
@@ -2665,22 +2685,26 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
 
     const sogsVisibleMessage = new OpenGroupVisibleMessage(messageParams);
-    const paddedBody = addMessagePadding(sogsVisibleMessage.plainTextBuffer());
+    const proRotatingPrivateKey = await UserUtils.getProRotatingPrivateKeyHex();
 
-    const serverPubKey = roomInfo.serverPublicKey;
+    const { encryptedData } = await MultiEncryptWrapperActions.encryptForCommunityInbox([
+      {
+        communityPubkey: roomInfo.serverPublicKey,
+        plaintext: sogsVisibleMessage.plainTextBuffer(),
+        senderEd25519Seed: await UserUtils.getUserEd25519Seed(),
+        recipientPubkey: this.id,
+        sentTimestampMs: messageParams.createAtNetworkTimestamp,
+        proRotatingEd25519PrivKey: proRotatingPrivateKey,
+      },
+    ]);
 
-    const encryptedMsg = await SogsBlinding.encryptBlindedMessage({
-      rawData: paddedBody,
-      senderSigningKey: ourSignKeyBytes,
-      serverPubKey: from_hex(serverPubKey),
-      recipientBlindedPublicKey: from_hex(this.id.slice(2)),
-    });
-
-    if (!encryptedMsg) {
-      throw new Error('encryptBlindedMessage failed');
+    if (!encryptedData[0]) {
+      throw new Error('MultiEncryptWrapperActions.encryptForCommunityInbox failed');
     }
     if (!messageParams.identifier) {
-      throw new Error('encryptBlindedMessage messageParams needs an identifier');
+      throw new Error(
+        'MultiEncryptWrapperActions.encryptForCommunityInbox messageParams needs an identifier'
+      );
     }
 
     this.setActiveAt(Date.now());
@@ -2688,7 +2712,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
     // TODO we need to add support for sending blinded25 message request in addition to the legacy blinded15
     await MessageQueue.use().sendToOpenGroupV2BlindedRequest({
-      encryptedContent: encryptedMsg,
+      encryptedContent: encryptedData[0],
       roomInfos: roomInfo,
       message: sogsVisibleMessage,
       recipientBlindedId: this.id,

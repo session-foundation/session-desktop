@@ -8,11 +8,15 @@ export function SettingsChevronBasic({
   onClick,
   text,
   subText,
+  subTextColor,
+  loading,
 }: {
   text: TrArgs;
   subText: TrArgs;
+  subTextColor?: string;
   baseDataTestId: SettingsChevron;
   onClick: (() => Promise<void>) | (() => void);
+  loading?: boolean;
 }) {
   return (
     <PanelChevronButton
@@ -20,6 +24,7 @@ export function SettingsChevronBasic({
         <PanelButtonTextWithSubText
           text={text}
           subText={subText}
+          subTextColorOverride={subTextColor}
           textDataTestId={`${baseDataTestId}-settings-text`}
           subTextDataTestId={`${baseDataTestId}-settings-sub-text`}
         />
@@ -27,6 +32,7 @@ export function SettingsChevronBasic({
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       onClick={onClick}
       baseDataTestId={baseDataTestId}
+      showAnimatedSpinnerIcon={loading}
     />
   );
 }

@@ -18,6 +18,7 @@ describe('MessageRequestResponse', () => {
     message = new MessageRequestResponse({
       createAtNetworkTimestamp: Date.now(),
       userProfile: null,
+      outgoingProMessageDetails: null,
     });
 
     expect(message.ttl()).to.equal(Constants.TTL_DEFAULT.CONTENT_MESSAGE);
@@ -27,6 +28,7 @@ describe('MessageRequestResponse', () => {
     message = new MessageRequestResponse({
       createAtNetworkTimestamp: Date.now(),
       userProfile: null,
+      outgoingProMessageDetails: null,
     });
 
     expect(message.identifier).to.not.equal(null, 'identifier cannot be null');
@@ -39,6 +41,7 @@ describe('MessageRequestResponse', () => {
       createAtNetworkTimestamp: Date.now(),
       identifier,
       userProfile: null,
+      outgoingProMessageDetails: null,
     });
 
     expect(message.identifier).to.not.equal(identifier, 'identifier should match');
@@ -48,6 +51,7 @@ describe('MessageRequestResponse', () => {
     message = new MessageRequestResponse({
       createAtNetworkTimestamp: Date.now(),
       userProfile: null,
+      outgoingProMessageDetails: null,
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -60,6 +64,7 @@ describe('MessageRequestResponse', () => {
     message = new MessageRequestResponse({
       createAtNetworkTimestamp: Date.now(),
       userProfile: null,
+      outgoingProMessageDetails: null,
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -76,6 +81,7 @@ describe('MessageRequestResponse', () => {
         profilePic: { url: null, key: null },
         updatedAtSeconds: 1,
       }),
+      outgoingProMessageDetails: null,
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -93,6 +99,7 @@ describe('MessageRequestResponse', () => {
         profilePic: null,
         updatedAtSeconds: 1,
       }),
+      outgoingProMessageDetails: null,
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -117,6 +124,7 @@ describe('MessageRequestResponse', () => {
     message = new MessageRequestResponse({
       createAtNetworkTimestamp: Date.now(),
       userProfile,
+      outgoingProMessageDetails: null,
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -140,6 +148,7 @@ describe('MessageRequestResponse', () => {
         profilePic: { url: null, key: new Uint8Array([1, 2, 3, 4, 5, 6]) },
         updatedAtSeconds: 1,
       }),
+      outgoingProMessageDetails: null,
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -162,6 +171,7 @@ describe('MessageRequestResponse', () => {
         profilePic: { url: 'https://somevalidurl.com', key: null },
         updatedAtSeconds: 1,
       }),
+      outgoingProMessageDetails: null,
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);

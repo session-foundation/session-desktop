@@ -1,11 +1,12 @@
 import Long from 'long';
+
 import { SignalService } from '../../../../protobuf';
 import { Reaction } from '../../../../types/Reaction';
-import { DataMessage } from '../DataMessage';
-import { type OutgoingUserProfile } from '../../../../types/message';
+import { DataMessageWithProfile } from '../DataMessage';
 import { ExpirableMessageParams } from '../ExpirableMessage';
 import { attachmentIdAsLongFromUrl } from '../../../utils';
 import type { WithOutgoingUserProfile } from '../Message';
+import { OutgoingProMessageDetails } from '../../../../types/message/OutgoingProMessageDetails';
 
 interface AttachmentPointerCommon {
   contentType?: string;
@@ -58,8 +59,22 @@ export interface Quote {
   author: string;
 }
 
+export type OutgoingProMessageDetailsOrProto =
+  | OutgoingProMessageDetails
+  | SignalService.ProMessage
+  | null;
+
+export type WithProMessageDetailsOrProto = {
+  /**
+   * When sending a message we have the ProMessageDetails.
+   * When syncing a just sent message, we only have the already built proMessage
+   */
+  outgoingProMessageDetails: OutgoingProMessageDetailsOrProto;
+};
+
 export type VisibleMessageParams = ExpirableMessageParams &
-  WithOutgoingUserProfile & {
+  WithOutgoingUserProfile &
+  WithProMessageDetailsOrProto & {
     attachments?: Array<AttachmentPointerWithUrl>;
     body?: string;
     quote?: Quote;
@@ -68,13 +83,12 @@ export type VisibleMessageParams = ExpirableMessageParams &
     syncTarget?: string; // undefined means it is not a synced message
   };
 
-export class VisibleMessage extends DataMessage {
+export class VisibleMessage extends DataMessageWithProfile {
   public readonly reaction?: Reaction;
 
   private readonly attachments?: Array<AttachmentPointerWithUrl & { deprecatedId: Long }>;
   private readonly body?: string;
   private readonly quote?: Quote;
-  private readonly userProfile: OutgoingUserProfile | null;
 
   private readonly preview?: Array<PreviewWithAttachmentUrl & { deprecatedId?: Long }>;
 
@@ -88,6 +102,8 @@ export class VisibleMessage extends DataMessage {
       identifier: params.identifier,
       expirationType: params.expirationType,
       expireTimer: params.expireTimer,
+      outgoingProMessageDetails: params.outgoingProMessageDetails,
+      userProfile: params.userProfile,
     });
     this.attachments = params.attachments?.map(attachment => ({
       ...attachment,
@@ -95,8 +111,6 @@ export class VisibleMessage extends DataMessage {
     }));
     this.body = params.body;
     this.quote = params.quote;
-
-    this.userProfile = params.userProfile;
 
     this.preview = params.preview?.map(attachment => ({
       ...attachment,
@@ -108,14 +122,13 @@ export class VisibleMessage extends DataMessage {
     this.syncTarget = params.syncTarget;
   }
 
-  public contentProto(): SignalService.Content {
-    const content = super.contentProto();
-    content.dataMessage = this.dataProto();
-    return content;
+  public override contentProto(): SignalService.Content {
+    // Note: we need to forward the stored proMessage here to the super contentProto()
+    return super.contentProto();
   }
 
-  public dataProto(): SignalService.DataMessage {
-    const dataMessage = new SignalService.DataMessage({});
+  public override dataProto(): SignalService.DataMessage {
+    const dataMessage = super.makeDataProtoWithProfile();
 
     if (this.body) {
       dataMessage.body = this.body;
@@ -128,12 +141,6 @@ export class VisibleMessage extends DataMessage {
     }
     if (this.syncTarget) {
       dataMessage.syncTarget = this.syncTarget;
-    }
-
-    const protobufDetails = this.userProfile?.toProtobufDetails() ?? {};
-    dataMessage.profile = protobufDetails.profile;
-    if (protobufDetails.profileKey) {
-      dataMessage.profileKey = protobufDetails.profileKey;
     }
 
     if (this.quote) {

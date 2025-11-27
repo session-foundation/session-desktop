@@ -348,6 +348,8 @@
   "emojiReactsHoverYouNameTwoDesktop": "Ти и {name} реагирахте с {emoji_name}",
   "emojiReactsNotification": "Реагира на вашето съобщение {emoji}",
   "enable": "Активиране",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "Моля, проверете интернет връзката си и опитайте отново.",
   "errorCopyAndQuit": "Копирай грешката и излез",
   "errorDatabase": "Грешка в базата данни",

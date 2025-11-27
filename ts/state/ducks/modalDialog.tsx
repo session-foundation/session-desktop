@@ -1,14 +1,20 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { SessionDataTestId } from 'react';
 import { BlockOrUnblockModalState } from '../../components/dialog/blockOrUnblock/BlockOrUnblockModalState';
 import { EnterPasswordModalProps } from '../../components/dialog/EnterPasswordModal';
 import { HideRecoveryPasswordDialogProps } from '../../components/dialog/HideRecoveryPasswordDialog';
 import { SessionConfirmDialogProps } from '../../components/dialog/SessionConfirm';
 import { MediaItemType } from '../../components/lightbox/LightboxGallery';
 import { AttachmentTypeWithPath } from '../../types/Attachment';
-import type { EditProfilePictureModalProps, PasswordAction } from '../../types/ReduxTypes';
+import type {
+  EditProfilePictureModalProps,
+  PasswordAction,
+  ProNonOriginatingPageVariant,
+} from '../../types/ReduxTypes';
 import { WithConvoId } from '../../session/types/with';
-import type { SessionProInfoVariant } from '../../components/dialog/SessionProInfoModal';
 import type { TrArgs } from '../../localization/localeTools';
+import { SessionButtonType } from '../../components/basic/SessionButton';
+import type { CTAVariant } from '../../components/dialog/cta/types';
 
 export type BanType = 'ban' | 'unban';
 
@@ -25,14 +31,32 @@ export type UserSettingsPage =
   | 'clear-data'
   | 'password'
   | 'preferences'
-  | 'network';
+  | 'network'
+  | 'pro'
+  | 'proNonOriginating';
 
-export type WithUserSettingsPage =
-  | { userSettingsPage: Exclude<UserSettingsPage, 'password'> }
+export type WithUserSettingsPage = {
+  overrideBackAction?: () => void;
+  afterCloseAction?: () => void;
+} & (
+  | { userSettingsPage: Exclude<UserSettingsPage, 'password' | 'pro' | 'proNonOriginating'> }
   | {
       userSettingsPage: 'password';
       passwordAction: PasswordAction;
-    };
+    }
+  | {
+      userSettingsPage: 'pro';
+      hideBackButton?: boolean;
+      fromCTA?: boolean;
+      centerAlign?: boolean;
+    }
+  | {
+      userSettingsPage: 'proNonOriginating';
+      nonOriginatingVariant: ProNonOriginatingPageVariant;
+      hideBackButton?: boolean;
+      centerAlign?: boolean;
+    }
+);
 
 export type ConfirmModalState = SessionConfirmDialogProps | null;
 
@@ -53,11 +77,29 @@ export type OnionPathModalState = object | null;
 export type EnterPasswordModalState = EnterPasswordModalProps | null;
 export type DeleteAccountModalState = object | null;
 export type OpenUrlModalState = { urlToOpen: string } | null;
+
+export type LocalizedPopupDialogButtonOptions = {
+  label: TrArgs;
+  buttonType?: SessionButtonType;
+  dataTestId: SessionDataTestId;
+  onClick?: () => Promise<void> | void;
+  closeAfterClick?: boolean;
+};
 export type LocalizedPopupDialogState = {
   title: TrArgs;
   description: TrArgs;
+  overrideButtons?: Array<LocalizedPopupDialogButtonOptions>;
 } | null;
-export type SessionProInfoState = { variant: SessionProInfoVariant } | null;
+
+export type SessionCTAState = {
+  variant: CTAVariant;
+  afterActionButtonCallback?: () => void;
+  // If the action button opens another modal, this callback is called after that next modal is closed.
+  // For example: If "SessionCTA" is opened from the "EditProfilePictureModal", and "SessionCTA"'s
+  // action button opens the "ProSettingsModal", we want to re-open "EditProfilePictureModal"
+  // when "ProSettingsModal" closes.
+  actionButtonNextModalAfterCloseCallback?: () => void;
+} | null;
 
 export type UserProfileModalState = {
   /** this can be blinded or not */
@@ -143,7 +185,7 @@ export type ModalState = {
   hideRecoveryPasswordModal: HideRecoveryPasswordModalState;
   openUrlModal: OpenUrlModalState;
   localizedPopupDialog: LocalizedPopupDialogState;
-  sessionProInfoModal: SessionProInfoState;
+  sessionProInfoModal: SessionCTAState;
   lightBoxOptions: LightBoxOptions;
   debugMenuModal: DebugMenuModalState;
   conversationSettingsModal: ConversationSettingsModalState;
@@ -281,7 +323,7 @@ const ModalSlice = createSlice({
     updateLocalizedPopupDialog(state, action: PayloadAction<LocalizedPopupDialogState>) {
       return pushOrPopModal(state, 'localizedPopupDialog', action.payload);
     },
-    updateSessionProInfoModal(state, action: PayloadAction<SessionProInfoState>) {
+    updateSessionCTA(state, action: PayloadAction<SessionCTAState>) {
       return pushOrPopModal(state, 'sessionProInfoModal', action.payload);
     },
     updateLightBoxOptions(state, action: PayloadAction<LightBoxOptions>) {
@@ -331,7 +373,7 @@ export const {
   updateHideRecoveryPasswordModal,
   updateOpenUrlModal,
   updateLocalizedPopupDialog,
-  updateSessionProInfoModal,
+  updateSessionCTA,
   updateLightBoxOptions,
   updateDebugMenuModal,
   updateConversationSettingsModal,

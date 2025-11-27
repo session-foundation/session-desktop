@@ -51,9 +51,7 @@ export const classicDark: ThemeColorVariables = {
   '--button-outline-border-hover-color': 'var(--text-primary-color)',
   '--button-outline-disabled-color': 'var(--disabled-color)',
 
-  '--button-solid-background-color': 'var(--text-primary-color)',
   '--button-solid-background-hover-color': 'var(--transparent-color)',
-  '--button-solid-text-color': THEMES.CLASSIC_DARK.COLOR0,
   '--button-solid-text-hover-color': 'var(--text-primary-color)',
   '--button-solid-disabled-color': 'var(--disabled-color)',
 
@@ -112,7 +110,7 @@ export const classicDark: ThemeColorVariables = {
   '--emoji-reaction-bar-icon-color': 'var(--text-primary-color)',
 
   '--modal-background-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.5)`,
-  '--modal-background-content-color': 'var(--background-primary-color)',
+  '--modal-background-content-color': COLORS.NEARBLACK,
   '--modal-text-color': 'var(--text-primary-color)',
   '--modal-text-danger-color': 'var(--danger-color)',
   '--modal-shadow-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 1.0)`,

@@ -419,51 +419,5 @@ describe('libsession_metagroup', () => {
         'rekey should be false on fresh group'
       );
     });
-
-    it.skip('merging a key conflict marks needsRekey to true', () => {
-      const metaGroupWrapper2 = new MetaGroupWrapperNode({
-        groupEd25519Pubkey: toFixedUint8ArrayOfLength(
-          HexString.fromHexString(groupCreated.pubkeyHex.slice(2)),
-          32
-        ).buffer,
-        groupEd25519Secretkey: groupCreated.secretKey,
-        metaDumped: null,
-        userEd25519Secretkey: toFixedUint8ArrayOfLength(us.ed25519KeyPair.privateKey, 64).buffer,
-      });
-
-      // mark current user as admin
-      metaGroupWrapper.memberSetPromotionAccepted(us.x25519KeyPair.pubkeyHex);
-      metaGroupWrapper2.memberSetPromotionAccepted(us.x25519KeyPair.pubkeyHex);
-
-      // add 2 normal members to each of those wrappers
-      const m1 = TestUtils.generateFakePubKeyStr();
-      const m2 = TestUtils.generateFakePubKeyStr();
-      metaGroupWrapper.memberSetInviteAccepted(m1);
-      metaGroupWrapper.memberSetInviteAccepted(m2);
-      metaGroupWrapper2.memberSetInviteAccepted(m1);
-      metaGroupWrapper2.memberSetInviteAccepted(m2);
-
-      expect(metaGroupWrapper.keysNeedsRekey()).to.be.eq(false);
-      expect(metaGroupWrapper2.keysNeedsRekey()).to.be.eq(false);
-
-      // remove m2 from wrapper2, and m1 from wrapper1
-      const rekeyed1 = metaGroupWrapper2.memberEraseAndRekey([m2]);
-      const rekeyed2 = metaGroupWrapper.memberEraseAndRekey([m1]);
-      expect(rekeyed1).to.be.eq(true);
-      expect(rekeyed2).to.be.eq(true);
-
-      // const push1 = metaGroupWrapper.push();
-      // metaGroupWrapper2.metaMerge([push1]);
-
-      // const wrapper2Rekeyed = metaGroupWrapper2.keyRekey();
-      // metaGroupWrapper.keyRekey();
-
-      // const loadedKey = metaGroupWrapper.loadKeyMessage('fakehash1', wrapper2Rekeyed, Date.now());
-      // expect(loadedKey).to.be.eq(true, 'key should have been loaded');
-      expect(metaGroupWrapper.keysNeedsRekey()).to.be.eq(
-        true,
-        'rekey should be true for after add'
-      );
-    });
   });
 });

@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import useInterval from 'react-use/lib/useInterval';
 import useTimeoutFn from 'react-use/lib/useTimeoutFn';
-import useKey from 'react-use/lib/useKey';
 
 import useMount from 'react-use/lib/useMount';
 import useThrottleFn from 'react-use/lib/useThrottleFn';
@@ -58,6 +57,13 @@ import { GearAvatarButton } from '../buttons/avatar/GearAvatarButton';
 import { useZoomShortcuts } from '../../hooks/useZoomingShortcut';
 import { OnionStatusLight } from '../dialog/OnionStatusPathDialog';
 import { AvatarReupload } from '../../session/utils/job_runners/jobs/AvatarReuploadJob';
+import { useDebugMenuModal } from '../../state/selectors/modal';
+import { useFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import { useDebugKey } from '../../hooks/useDebugKey';
+import { UpdateProRevocationList } from '../../session/utils/job_runners/jobs/UpdateProRevocationListJob';
+import { proBackendDataActions } from '../../state/ducks/proBackendData';
+import { handleTriggeredProCTAs } from '../dialog/SessionCTA';
+import { useIsProAvailable } from '../../hooks/useIsProAvailable';
 
 const StyledContainerAvatar = styled.div`
   padding: var(--margins-lg);
@@ -111,6 +117,12 @@ const doAppStartUp = async () => {
   void SnodePool.getFreshSwarmFor(UserUtils.getOurPubKeyStrFromCache()).then(() => {
     // trigger any other actions that need to be done after the swarm is ready
     window.inboxStore?.dispatch(networkDataActions.fetchInfoFromSeshServer() as any);
+    window.inboxStore?.dispatch(
+      proBackendDataActions.refreshGetProDetailsFromProBackend({}) as any
+    );
+    if (window.inboxStore) {
+      void handleTriggeredProCTAs(window.inboxStore.dispatch);
+    }
   }); // refresh our swarm on start to speed up the first message fetching event
   void Data.cleanupOrphanedAttachments();
 
@@ -159,17 +171,29 @@ function useUpdateBadgeCount() {
   );
 }
 
-function useDebugThemeSwitch() {
-  useKey(
-    (event: KeyboardEvent) => {
-      return event.ctrlKey && event.key === 't';
-    },
+/**
+ * Small hook that ticks every minute to add a job to fetch the revocation list.
+ * Note: a job will only be added if it wasn't fetched recently, so there is no harm in running this every minute.
+ */
+function usePeriodicFetchRevocationList() {
+  const proAvailable = useIsProAvailable();
+  useInterval(
     () => {
-      if (isDevProd()) {
-        void handleThemeSwitch();
+      if (!proAvailable) {
+        return;
       }
-    }
+      void UpdateProRevocationList.queueNewJobIfNeeded();
+    },
+    isDevProd() ? 10 * DURATION.SECONDS : 1 * DURATION.MINUTES
   );
+}
+
+function useDebugThemeSwitch() {
+  useDebugKey({
+    withCtrl: true,
+    key: 't',
+    callback: handleThemeSwitch,
+  });
 }
 
 /**
@@ -190,6 +214,31 @@ async function regenerateLastMessagesGroupsCommunities() {
   await Storage.put(SettingsKey.lastMessageGroupsRegenerated, true);
 }
 
+function DebugMenuModalButton() {
+  const dispatch = useDispatch();
+  const debugMenuModalState = useDebugMenuModal();
+
+  useDebugKey({
+    withCtrl: true,
+    key: 'd',
+    callback: () => {
+      dispatch(updateDebugMenuModal(debugMenuModalState ? null : {}));
+    },
+  });
+
+  return (
+    <SessionLucideIconButton
+      iconSize="medium"
+      padding="var(--margins-lg)"
+      unicode={LUCIDE_ICONS_UNICODE.SQUARE_CODE}
+      dataTestId="debug-menu-section"
+      onClick={() => {
+        dispatch(updateDebugMenuModal({}));
+      }}
+    />
+  );
+}
+
 /**
  * ActionsPanel is the far left banner (not the left pane).
  * The panel with buttons to switch between the message/contact/settings/theme views
@@ -201,6 +250,7 @@ export const ActionsPanel = () => {
   const showDebugMenu = useDebugMode();
   const ourNumber = useSelector(getOurNumber);
   const isDarkTheme = useIsDarkTheme();
+  const fsTTL30sEnabled = useFeatureFlag('fsTTL30s');
   useDebugThemeSwitch();
 
   // this useMount is called only once: when the component is mounted.
@@ -218,6 +268,7 @@ export const ActionsPanel = () => {
   });
 
   useUpdateBadgeCount();
+  usePeriodicFetchRevocationList();
   // setup our own shortcuts so that it changes show in the appearance tab too
   useZoomShortcuts();
 
@@ -260,7 +311,7 @@ export const ActionsPanel = () => {
       }
       void AvatarReupload.addAvatarReuploadJob();
     },
-    window.sessionFeatureFlags.fsTTL30s ? DURATION.SECONDS * 1 : DURATION.DAYS * 1
+    fsTTL30sEnabled ? DURATION.SECONDS * 1 : DURATION.DAYS * 1
   );
 
   useCheckReleasedFeatures();
@@ -286,17 +337,7 @@ export const ActionsPanel = () => {
           />
           <GearAvatarButton />
         </StyledContainerAvatar>
-        {showDebugMenu && (
-          <SessionLucideIconButton
-            iconSize="medium"
-            padding="var(--margins-lg)"
-            unicode={LUCIDE_ICONS_UNICODE.SQUARE_CODE}
-            dataTestId="debug-menu-section"
-            onClick={() => {
-              dispatch(updateDebugMenuModal({}));
-            }}
-          />
-        )}
+        {showDebugMenu ? <DebugMenuModalButton /> : null}
         <OnionStatusLight
           handleClick={() => {
             dispatch(onionPathModal({}));

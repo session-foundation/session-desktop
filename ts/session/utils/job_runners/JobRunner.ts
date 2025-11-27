@@ -16,6 +16,7 @@ import {
   UserSyncPersistedData,
   type AvatarMigratePersistedData,
   type AvatarReuploadPersistedData,
+  type UpdateProRevocationListPersistedData,
 } from './PersistedJob';
 import { JobRunnerType } from './jobs/JobRunnerType';
 import { DURATION } from '../../constants';
@@ -406,10 +407,15 @@ const fetchSwarmMsgExpiryRunner = new PersistedJobRunner<FetchMsgExpirySwarmPers
   'FetchMsgExpirySwarmJob'
 );
 
+const updateProRevocationListRunner = new PersistedJobRunner<UpdateProRevocationListPersistedData>(
+  'UpdateProRevocationListJob'
+);
+
 export const runners = {
   userSyncRunner,
   groupSyncRunner,
   updateMsgExpiryRunner,
+  updateProRevocationListRunner,
   fetchSwarmMsgExpiryRunner,
   avatarDownloadRunner,
   avatarReuploadRunner,

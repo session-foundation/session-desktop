@@ -1,20 +1,26 @@
+import { base64_variants, from_hex, to_base64 } from 'libsodium-wrappers-sumo';
 import useAsync from 'react-use/lib/useAsync';
 import { ipcRenderer, shell } from 'electron';
 import { useDispatch } from 'react-redux';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import useAsyncFn from 'react-use/lib/useAsyncFn';
 import useInterval from 'react-use/lib/useInterval';
 import { filesize } from 'filesize';
 import styled from 'styled-components';
 
-import type { PubkeyType } from 'libsession_util_nodejs';
+import type { ProProof, PubkeyType } from 'libsession_util_nodejs';
 import { chunk, toNumber } from 'lodash';
 import { Flex } from '../../basic/Flex';
-import { SpacerSM, SpacerXS } from '../../basic/Text';
+import { SpacerXS } from '../../basic/Text';
 import { tr } from '../../../localization/localeTools';
 import { CopyToClipboardIcon } from '../../buttons';
 import { Localizer } from '../../basic/Localizer';
-import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
+import {
+  SessionButton,
+  SessionButtonColor,
+  SessionButtonProps,
+  SessionButtonShape,
+} from '../../basic/SessionButton';
 import { ToastUtils, UserUtils } from '../../../session/utils';
 import { getLatestReleaseFromFileServer } from '../../../session/apis/file_server_api/FileServerApi';
 import { SessionSpinner } from '../../loading';
@@ -29,13 +35,54 @@ import { Errors } from '../../../types/Errors';
 import { PubKey } from '../../../session/types';
 import { ConvoHub } from '../../../session/conversations';
 import { ConversationTypeEnum } from '../../../models/types';
-import { ContactsWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
+import {
+  ContactsWrapperActions,
+  UserConfigWrapperActions,
+} from '../../../webworker/workers/browser/libsession_worker_interface';
 import { usePolling } from '../../../hooks/usePolling';
 import { releasedFeaturesActions } from '../../../state/ducks/releasedFeatures';
 import { networkDataActions } from '../../../state/ducks/networkData';
-import { DEBUG_MENU_PAGE, type DebugMenuPageProps } from './DebugMenuModal';
+import { DEBUG_MENU_PAGE, DebugMenuSection, type DebugMenuPageProps } from './DebugMenuModal';
 import { SimpleSessionInput } from '../../inputs/SessionInput';
 import { NetworkTime } from '../../../util/NetworkTime';
+import { SessionButtonShiny } from '../../basic/SessionButtonShiny';
+import ProBackendAPI from '../../../session/apis/pro_backend_api/ProBackendAPI';
+import { getProMasterKeyHex } from '../../../session/utils/User';
+import { FlagToggle } from './FeatureFlags';
+import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
+import {
+  clearAllUrlInteractions,
+  getUrlInteractions,
+  removeUrlInteractionHistory,
+  urlInteractionToString,
+} from '../../../util/urlHistory';
+import { formatRoundedUpTimeUntilTimestamp } from '../../../util/i18n/formatting/generics';
+import { LucideIcon } from '../../icon/LucideIcon';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
+import { useIsProAvailable } from '../../../hooks/useIsProAvailable';
+
+type DebugButtonProps = SessionButtonProps & { shiny?: boolean; hide?: boolean };
+
+export function DebugButton({ shiny = true, style: _style, hide, ...rest }: DebugButtonProps) {
+  if (hide) {
+    return null;
+  }
+
+  const style = { minWidth: 'max-content', width: '48%', ..._style };
+
+  if (shiny) {
+    return (
+      <SessionButtonShiny
+        shinyContainerStyle={style}
+        buttonColor={SessionButtonColor.PrimaryDark}
+        buttonShape={SessionButtonShape.Square}
+        {...rest}
+      />
+    );
+  }
+
+  return <SessionButton style={style} buttonShape={SessionButtonShape.Square} {...rest} />;
+}
 
 const hexRef = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
 
@@ -79,7 +126,7 @@ const CheckVersionButton = ({ channelToCheck }: { channelToCheck: ReleaseChannel
   });
 
   return (
-    <SessionButton
+    <DebugButton
       onClick={async () => {
         if (state.loading || state.error) {
           window.log.error(
@@ -133,7 +180,7 @@ const CheckVersionButton = ({ channelToCheck }: { channelToCheck: ReleaseChannel
     >
       <SessionSpinner loading={loading || state.loading} color={'var(--text-primary-color)'} />
       {!loading && !state.loading ? `Check ${channelToCheck} version` : null}
-    </SessionButton>
+    </DebugButton>
   );
 };
 
@@ -169,14 +216,14 @@ const CheckForUpdatesButton = () => {
   });
 
   return (
-    <SessionButton
+    <DebugButton
       onClick={() => {
         void handleCheckForUpdates();
       }}
     >
       <SessionSpinner loading={state.loading} color={'var(--text-primary-color)'} />
       {!state.loading ? 'Check for updates' : null}
-    </SessionButton>
+    </DebugButton>
   );
 };
 
@@ -214,14 +261,13 @@ const ClearOldLogsButton = () => {
   });
 
   return (
-    <SessionButton
+    <DebugButton
       onClick={() => {
         void handleDeleteAllLogs();
       }}
-      style={{ minWidth: '250px' }}
     >
       Clear old logs {filesize(logSize)}
-    </SessionButton>
+    </DebugButton>
   );
 };
 
@@ -229,7 +275,7 @@ function OfflineButton() {
   const [isOnline, setIsOnline] = useState(window.isOnline);
 
   return (
-    <SessionButton
+    <DebugButton
       onClick={() => {
         window.isOnline = !isOnline;
         setIsOnline(!isOnline);
@@ -237,109 +283,197 @@ function OfflineButton() {
       }}
     >
       Go {isOnline ? 'offline' : 'online'}
-    </SessionButton>
+    </DebugButton>
   );
 }
 
-export const LoggingActions = () => {
+export const LoggingDebugSection = ({ forceUpdate }: { forceUpdate: () => void }) => {
   return (
-    <>
-      <h2>Logging</h2>
-      <SpacerXS />
-      <Flex
-        $container={true}
-        maxWidth="900px"
-        $justifyContent="flex-start"
-        $alignItems="flex-start"
-        $flexWrap="wrap"
-        $flexGap="var(--margins-lg)"
+    <DebugMenuSection title="Logging">
+      <DebugButton
+        onClick={() => {
+          void saveLogToDesktop();
+        }}
       >
-        <SessionButton
-          onClick={() => {
-            void saveLogToDesktop();
-          }}
-        >
-          <Localizer token="helpReportABugExportLogs" />
-        </SessionButton>
-        <ClearOldLogsButton />
-      </Flex>
-      <SpacerSM />
-    </>
+        <Localizer token="helpReportABugExportLogs" />
+      </DebugButton>
+      <ClearOldLogsButton />
+      <FlagToggle forceUpdate={forceUpdate} flag="debugLogging" />
+      <FlagToggle forceUpdate={forceUpdate} flag="debugLibsessionDumps" />
+      <FlagToggle forceUpdate={forceUpdate} flag="debugBuiltSnodeRequests" />
+      <FlagToggle forceUpdate={forceUpdate} flag="debugSwarmPolling" />
+      <FlagToggle forceUpdate={forceUpdate} flag="debugServerRequests" />
+      <FlagToggle forceUpdate={forceUpdate} flag="debugNonSnodeRequests" />
+      <FlagToggle forceUpdate={forceUpdate} flag="debugOnionRequests" />
+    </DebugMenuSection>
   );
 };
 
 export const Playgrounds = ({ setPage }: DebugMenuPageProps) => {
+  const proAvailable = useIsProAvailable();
+
+  if (!proAvailable) {
+    return null;
+  }
+
   return (
-    <>
-      <h2>Playgrounds</h2>
-      <SessionButton onClick={() => setPage(DEBUG_MENU_PAGE.Pro)}>Pro Playground</SessionButton>
-      <SessionButton onClick={() => setPage(DEBUG_MENU_PAGE.POPOVER)}>
-        Popover Playground
-      </SessionButton>
-    </>
+    <DebugMenuSection title="Playgrounds" rowWrap={true}>
+      <DebugButton onClick={() => setPage(DEBUG_MENU_PAGE.Pro)}>Pro Playground</DebugButton>
+      <DebugButton onClick={() => setPage(DEBUG_MENU_PAGE.POPOVER)}>Popover Playground</DebugButton>
+    </DebugMenuSection>
   );
 };
 
 export const DebugActions = () => {
   const dispatch = useDispatch();
+  const proAvailable = useIsProAvailable();
 
   return (
-    <>
-      <h2>Actions</h2>
-      <SpacerXS />
-      <Flex
-        $container={true}
-        maxWidth="900px"
-        $justifyContent="flex-start"
-        $alignItems="flex-start"
-        $flexWrap="wrap"
-        $flexGap="var(--margins-lg)"
+    <DebugMenuSection title="Actions" rowWrap={true}>
+      <DebugButton
+        buttonColor={SessionButtonColor.Danger}
+        onClick={() => {
+          dispatch(setDebugMode(false));
+          dispatch(updateDebugMenuModal(null));
+        }}
       >
-        <SessionButton
-          buttonColor={SessionButtonColor.Danger}
-          onClick={() => {
-            dispatch(setDebugMode(false));
-            dispatch(updateDebugMenuModal(null));
-          }}
-        >
-          Exit Debug Mode
-        </SessionButton>
-        <OfflineButton />
-        {window.getCommitHash() ? (
-          <SessionButton
-            onClick={() => {
-              void shell.openExternal(
-                `https://github.com/session-foundation/session-desktop/commit/${window.getCommitHash()}`
-              );
-            }}
-          >
-            Go to commit
-          </SessionButton>
-        ) : null}
-        <SessionButton
+        Exit Debug Mode
+      </DebugButton>
+      <OfflineButton />
+      {window.getCommitHash() ? (
+        <DebugButton
           onClick={() => {
             void shell.openExternal(
-              `https://github.com/session-foundation/session-desktop/releases/tag/v${window.getVersion()}`
+              `https://github.com/session-foundation/session-desktop/commit/${window.getCommitHash()}`
             );
           }}
         >
-          <Localizer token="updateReleaseNotes" />
-        </SessionButton>
-        <CheckForUpdatesButton />
-        <CheckVersionButton channelToCheck="stable" />
-        <CheckVersionButton channelToCheck="alpha" />
-        <SessionButton
-          width="180px"
-          onClick={async () => {
-            const storageProfile = await ipcRenderer.invoke('get-storage-profile');
-            void shell.openPath(storageProfile);
-          }}
-        >
-          Open storage profile
-        </SessionButton>
-      </Flex>
-      <SpacerSM />
-    </>
+          Go to commit
+        </DebugButton>
+      ) : null}
+      <DebugButton
+        onClick={() => {
+          void shell.openExternal(
+            `https://github.com/session-foundation/session-desktop/releases/tag/v${window.getVersion()}`
+          );
+        }}
+      >
+        <Localizer token="updateReleaseNotes" />
+      </DebugButton>
+      <CheckForUpdatesButton />
+      <CheckVersionButton channelToCheck="stable" />
+      <CheckVersionButton channelToCheck="alpha" />
+      <DebugButton
+        onClick={async () => {
+          const storageProfile = await ipcRenderer.invoke('get-storage-profile');
+          void shell.openPath(storageProfile);
+        }}
+      >
+        Open storage profile
+      </DebugButton>
+      <DebugButton
+        hide={!proAvailable}
+        onClick={async () => {
+          const masterPrivKeyHex = await getProMasterKeyHex();
+          const rotatingPrivKeyHex = await UserUtils.getProRotatingPrivateKeyHex();
+          const response = await ProBackendAPI.generateProProof({
+            masterPrivKeyHex,
+            rotatingPrivKeyHex,
+          });
+          if (getFeatureFlag('debugServerRequests')) {
+            window?.log?.debug('getProProof response: ', response);
+          }
+          if (response?.status_code === 200) {
+            const proProof: ProProof = {
+              expiryMs: response.result.expiry_unix_ts_ms,
+              genIndexHashB64: to_base64(
+                from_hex(response.result.gen_index_hash),
+                base64_variants.ORIGINAL
+              ),
+              rotatingPubkeyHex: response.result.rotating_pkey,
+              version: response.result.version,
+              signatureHex: response.result.sig,
+            };
+            await UserConfigWrapperActions.setProConfig({ proProof, rotatingPrivKeyHex });
+          }
+        }}
+      >
+        Get Pro Proof
+      </DebugButton>
+      <DebugButton
+        hide={!proAvailable}
+        onClick={async () => {
+          const masterPrivKeyHex = await getProMasterKeyHex();
+          const response = await ProBackendAPI.getProDetails({ masterPrivKeyHex });
+          if (getFeatureFlag('debugServerRequests')) {
+            window?.log?.debug('Pro Details: ', response);
+          }
+        }}
+      >
+        Get Pro Details
+      </DebugButton>
+      <DebugButton
+        hide={!proAvailable}
+        onClick={async () => {
+          const response = await ProBackendAPI.getRevocationList({ ticket: 0 });
+          if (getFeatureFlag('debugServerRequests')) {
+            window?.log?.debug('Pro Revocation List: ', response);
+          }
+        }}
+      >
+        Get Pro Revocation List (from ticket 0)
+      </DebugButton>
+    </DebugMenuSection>
+  );
+};
+
+export const DebugUrlInteractionsSection = () => {
+  const [urlInteractions, setUrlInteractions] = useState(getUrlInteractions());
+
+  const refresh = useCallback(() => setUrlInteractions(getUrlInteractions()), []);
+  const removeUrl = useCallback(
+    async (url: string) => {
+      await removeUrlInteractionHistory(url);
+      refresh();
+    },
+    [refresh]
+  );
+  const clearAll = useCallback(async () => {
+    await clearAllUrlInteractions();
+    refresh();
+  }, [refresh]);
+
+  return (
+    <DebugMenuSection title="Url Interactions">
+      <DebugButton onClick={clearAll} buttonColor={SessionButtonColor.Danger}>
+        Clear All
+      </DebugButton>
+      <DebugButton onClick={refresh}>Refresh</DebugButton>
+      <table>
+        <tr>
+          <th>URL</th>
+          <th>Interactions</th>
+          <th>Last Updated</th>
+        </tr>
+        {urlInteractions.map(({ url, interactions, lastUpdated }) => {
+          const updatedStr = formatRoundedUpTimeUntilTimestamp(lastUpdated);
+          return (
+            <tr key={url}>
+              <td>{url}</td> <td>{interactions.map(urlInteractionToString).join(', ')}</td>{' '}
+              <td>{updatedStr}</td>{' '}
+              <td>
+                <DebugButton
+                  buttonColor={SessionButtonColor.Danger}
+                  onClick={async () => removeUrl(url)}
+                >
+                  <LucideIcon unicode={LUCIDE_ICONS_UNICODE.TRASH2} iconSize="small" />
+                </DebugButton>
+              </td>
+            </tr>
+          );
+        })}
+      </table>
+    </DebugMenuSection>
   );
 };
 
@@ -357,27 +491,17 @@ export const ExperimentalActions = ({ forceUpdate }: { forceUpdate: () => void }
   // }
 
   return (
-    <>
-      <h2>Experimental Actions 🚨</h2>
-      <SpacerXS />
-      <Flex
-        $container={true}
-        maxWidth="900px"
-        $justifyContent="flex-start"
-        $alignItems="flex-start"
-        $flexWrap="wrap"
-        $flexGap="var(--margins-lg)"
+    <DebugMenuSection title="Experimental Actions 🚨" rowWrap={true}>
+      <DebugButton
+        onClick={() => {
+          dispatch(releasedFeaturesActions.resetExperiments() as any);
+          forceUpdate();
+        }}
       >
-        <SessionButton
-          onClick={() => {
-            dispatch(releasedFeaturesActions.resetExperiments() as any);
-            forceUpdate();
-          }}
-        >
-          Reset experiments
-        </SessionButton>
+        Reset experiments
+      </DebugButton>
 
-        {/* <SessionButton
+      {/* <SessionButton
           onClick={() => {
             dispatch(releasedFeaturesActions.updateSesh101NotificationAt(notifyAt));
             setCountdown(true);
@@ -392,16 +516,14 @@ export const ExperimentalActions = ({ forceUpdate }: { forceUpdate: () => void }
               : '(10s)'}
           </span>
         </SessionButton> */}
-        <SessionButton
-          onClick={() => {
-            dispatch(networkDataActions.fetchInfoFromSeshServer() as any);
-          }}
-        >
-          Network Info Request (Force)
-        </SessionButton>
-      </Flex>
-      <SpacerSM />
-    </>
+      <DebugButton
+        onClick={() => {
+          dispatch(networkDataActions.fetchInfoFromSeshServer() as any);
+        }}
+      >
+        Network Info Request (Force)
+      </DebugButton>
+    </DebugMenuSection>
   );
 };
 
@@ -465,7 +587,7 @@ function AddDummyContactButton() {
         onEnterPressed={() => void doIt()}
         providedError={undefined}
       />
-      <SessionButton onClick={doIt} disabled={loading}>
+      <DebugButton onClick={doIt} disabled={loading}>
         {loading ? (
           <>
             {addedCount}/{countToAdd}...
@@ -473,28 +595,16 @@ function AddDummyContactButton() {
         ) : (
           `Add ${countToAdd} contacts (current: ${contactsCount})`
         )}
-      </SessionButton>
+      </DebugButton>
     </StyledDummyContactsContainer>
   );
 }
 
 export const DataGenerationActions = () => {
   return (
-    <>
-      <h2>Data generation</h2>
-      <SpacerXS />
-      <Flex
-        $container={true}
-        maxWidth="900px"
-        $justifyContent="flex-start"
-        $alignItems="flex-start"
-        $flexWrap="wrap"
-        $flexGap="var(--margins-lg)"
-      >
-        <AddDummyContactButton />
-      </Flex>
-      <SpacerSM />
-    </>
+    <DebugMenuSection title="Data generation">
+      <AddDummyContactButton />
+    </DebugMenuSection>
   );
 };
 
@@ -576,7 +686,14 @@ export const AboutInfo = () => {
 export const OtherInfo = () => {
   const otherInfo = useAsync(async () => {
     const { id, vbid } = await window.getUserKeys();
-    return [`${tr('accountIdYours')}: ${id}`, `VBID: ${vbid}`];
+    const proMasterKey = await getProMasterKeyHex();
+    const result = [
+      `${tr('accountIdYours')}: ${id}`,
+      `VBID: ${vbid}`,
+      `Pro Public Master Key: ${proMasterKey?.slice(64)}`,
+      `Pro Private Master Key: ${proMasterKey?.slice(0, 64)}`,
+    ];
+    return result;
   }, []);
 
   return (
@@ -623,7 +740,15 @@ export const OtherInfo = () => {
                 $alignItems="flex-start"
                 $flexGap="var(--margins-xs)"
               >
-                <p style={{ userSelect: 'text', lineHeight: 1.5 }}>{info}</p>
+                <p
+                  style={{
+                    userSelect: 'text',
+                    lineHeight: 1.5,
+                    fontSize: 'var(--font-size-small)',
+                  }}
+                >
+                  {info}
+                </p>
                 <CopyToClipboardIcon
                   iconSize={'small'}
                   copyContent={info}

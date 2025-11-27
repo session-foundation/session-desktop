@@ -1,16 +1,17 @@
 import { type RefObject, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
+import useMount from 'react-use/lib/useMount';
 import { useHotkey } from '../../../../hooks/useHotkey';
 import { useOurConversationUsername, useOurAvatarPath } from '../../../../hooks/useParamSelector';
 import { UserUtils, ToastUtils } from '../../../../session/utils';
 import { resetConversationExternal } from '../../../../state/ducks/conversations';
 import {
-  updateSessionProInfoModal,
   onionPathModal,
   updateConversationDetailsModal,
   userSettingsModal,
   updateDeleteAccountModal,
+  UserSettingsModalState,
 } from '../../../../state/ducks/modalDialog';
 import { networkDataActions } from '../../../../state/ducks/networkData';
 import { sectionActions } from '../../../../state/ducks/section';
@@ -26,7 +27,6 @@ import { SessionIconButton, SessionLucideIconButton } from '../../../icon/Sessio
 import { QRView } from '../../../qrview/QrView';
 import { ModalBasicHeader } from '../../../SessionWrapperModal';
 import { showLinkVisitWarningDialog } from '../../OpenUrlModal';
-import { SessionProInfoVariant } from '../../SessionProInfoModal';
 import { ModalPencilIcon } from '../../shared/ModalPencilButton';
 import { ProfileHeader, ProfileName } from '../components';
 import type { ProfileDialogModes } from '../ProfileDialogModes';
@@ -36,6 +36,15 @@ import { setDebugMode } from '../../../../state/ducks/debug';
 import { useHideRecoveryPasswordEnabled } from '../../../../state/selectors/settings';
 import { OnionStatusLight } from '../../OnionStatusPathDialog';
 import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
+import {
+  useCurrentUserHasExpiredPro,
+  useCurrentUserHasPro,
+  useProAccessDetails,
+} from '../../../../hooks/useHasPro';
+import { NetworkTime } from '../../../../util/NetworkTime';
+import { APP_URL, DURATION_SECONDS } from '../../../../session/constants';
+import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { useUserSettingsCloseAction } from './userSettingsHooks';
 
 const handleKeyQRMode = (mode: ProfileDialogModes, setMode: (mode: ProfileDialogModes) => void) => {
   switch (mode) {
@@ -92,10 +101,13 @@ function SessionProSection() {
   const dispatch = useDispatch();
 
   const isProAvailable = useIsProAvailable();
+  const userHasPro = useCurrentUserHasPro();
+  const currentUserHasExpiredPro = useCurrentUserHasExpiredPro();
 
   if (!isProAvailable) {
     return null;
   }
+
   return (
     <PanelButtonGroup>
       <PanelIconButton
@@ -104,9 +116,15 @@ function SessionProSection() {
             <ProIconButton onClick={undefined} iconSize="small" dataTestId="invalid-data-testid" />
           </div>
         }
-        text={{ token: 'appPro' }}
+        text={{
+          token: userHasPro
+            ? 'sessionProBeta'
+            : currentUserHasExpiredPro
+              ? 'proRenewBeta'
+              : 'upgradeSession',
+        }}
         onClick={() => {
-          dispatch(updateSessionProInfoModal({ variant: SessionProInfoVariant.GENERIC }));
+          dispatch(userSettingsModal({ userSettingsPage: 'pro' }));
         }}
         dataTestId="session-pro-settings-menu-item"
         color="var(--renderer-span-primary-color)"
@@ -128,7 +146,7 @@ function MiscSection() {
         }
         text={{ token: 'donate' }}
         onClick={() => {
-          showLinkVisitWarningDialog('https://session.foundation/donate#app', dispatch);
+          showLinkVisitWarningDialog(APP_URL.DONATE, dispatch);
         }}
         dataTestId="donate-settings-menu-item"
       />
@@ -329,8 +347,10 @@ const SessionInfo = () => {
   );
 };
 
-export const DefaultSettingPage = () => {
+export const DefaultSettingPage = (modalState: UserSettingsModalState) => {
   const dispatch = useDispatch();
+  const closeAction = useUserSettingsCloseAction(modalState);
+  const { refetch, t } = useProAccessDetails();
 
   const profileName = useOurConversationUsername() || '';
   const [enlargedImage, setEnlargedImage] = useState(false);
@@ -353,9 +373,14 @@ export const DefaultSettingPage = () => {
     ToastUtils.pushCopiedToClipBoard();
   }
 
-  function closeDialog() {
-    dispatch(userSettingsModal(null));
-  }
+  useMount(() => {
+    if (!getFeatureFlag('proAvailable')) {
+      return;
+    }
+    if (NetworkTime.nowSeconds() > t + 1 * DURATION_SECONDS.MINUTES) {
+      void refetch();
+    }
+  });
 
   return (
     <UserSettingsModalContainer
@@ -366,7 +391,7 @@ export const DefaultSettingPage = () => {
           extraRightButton={<ModalPencilIcon onClick={showUpdateProfileInformation} />}
         />
       }
-      onClose={closeDialog}
+      onClose={closeAction || undefined}
     >
       <Flex
         $container={true}

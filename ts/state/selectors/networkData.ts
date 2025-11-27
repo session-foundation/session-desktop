@@ -1,14 +1,13 @@
 import { useSelector } from 'react-redux';
-import type { Address } from 'viem';
 import type { StateType } from '../reducer';
 import type { NetworkDataState } from '../ducks/networkData';
 import { NetworkTime } from '../../util/NetworkTime';
+import type { EthereumAddress } from '../../session/apis/network_api/types';
 
 export const getNetworkData = (state: StateType): NetworkDataState => {
   return state.networkData;
 };
 
-// #region - Getters
 const getInfoTimestamp = (state: StateType) => getNetworkData(state).t || 0;
 
 const getNetworkStatusCode = (state: StateType) => getNetworkData(state).status_code;
@@ -37,10 +36,6 @@ const getNetworkStakedTokens = (state: StateType) =>
   getNetworkData(state).network?.network_staked_tokens;
 
 const getNetworkStakedUSD = (state: StateType) => getNetworkData(state).network?.network_staked_usd;
-
-// #endregion
-
-// #region - Hooks
 
 /**
  * @returns true if we have stale data (or not data)
@@ -86,7 +81,7 @@ export const useStakingRewardPool = (): number | null => {
   return stakingRewardPool;
 };
 
-export const useTokenContractAddress = (): Address | null => {
+export const useTokenContractAddress = (): EthereumAddress | null => {
   return useSelector(getTokenContractAddress);
 };
 
@@ -103,5 +98,3 @@ export const useNetworkStakedUSD = (): number | null => {
   const networkStakedUSD = useSelector(getNetworkStakedUSD);
   return networkStakedUSD;
 };
-
-// #endregion
