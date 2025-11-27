@@ -14,6 +14,7 @@ import {
 import { OutgoingUserProfile } from '../../types/message';
 import { SettingsKey } from '../../data/settings-key';
 import { OutgoingProMessageDetails } from '../../types/message/OutgoingProMessageDetails';
+import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 
 export type HexKeyPair = {
   pubKey: string;
@@ -139,9 +140,12 @@ export async function getOutgoingProMessageDetails({
 }: {
   utf16: string | null | undefined;
 }) {
-  const [proConfig, proFeaturesUserBitset] = await Promise.all([
+  if (!getFeatureFlag('proAvailable')) {
+    return null;
+  }
+  const [proConfig, proProfileBitset] = await Promise.all([
     UserConfigWrapperActions.getProConfig(),
-    UserConfigWrapperActions.getProFeaturesBitset(),
+    UserConfigWrapperActions.getProProfileBitset(),
   ]);
   // Note: if we do not have a proof we don't want to send a proMessage.
   // Note: if we don't have a user pro feature enabled, we might still need to add one for the message itself, see below
@@ -149,17 +153,17 @@ export async function getOutgoingProMessageDetails({
     return null;
   }
 
-  const proFeaturesForMsg = await ProWrapperActions.proFeaturesForMessage({
-    proFeaturesBitset: proFeaturesUserBitset,
+  const { proMessageBitset, status } = await ProWrapperActions.proFeaturesForMessage({
     utf16: utf16 ?? '',
   });
 
-  if (proFeaturesForMsg.status !== 'SUCCESS') {
+  if (status !== 'SUCCESS') {
     return null;
   }
   return new OutgoingProMessageDetails({
     proConfig,
-    proFeaturesBitset: proFeaturesForMsg.proFeaturesBitset,
+    proMessageBitset,
+    proProfileBitset,
   });
 }
 

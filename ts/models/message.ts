@@ -95,6 +95,7 @@ import { ReduxOnionSelectors } from '../state/selectors/onions';
 import { tStrippedWithObj, tr, tStripped } from '../localization/localeTools';
 import type { QuotedAttachmentType } from '../components/conversation/message/message-content/quote/Quote';
 import { ProFeatures, ProMessageFeature } from './proMessageFeature';
+import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
 
 // tslint:disable: cyclomatic-complexity
 
@@ -1392,21 +1393,43 @@ export class MessageModel extends Model<MessageAttributes> {
   }
 
   private getProFeaturesUsed(): Array<ProMessageFeature> {
-    const proFeatures = this.get('proFeatures');
-
-    if (!proFeatures || !isString(proFeatures)) {
+    if (!getFeatureFlag('proAvailable')) {
       return [];
     }
 
-    return ProFeatures.bigIntStrToProFeatures(proFeatures);
+    const proProfileBitset = this.get('proProfileBitset');
+    const proMessageBitset = this.get('proMessageBitset');
+    if (!proProfileBitset && !proMessageBitset) {
+      return [];
+    }
+
+    if (!isString(proProfileBitset) && !isString(proMessageBitset)) {
+      return [];
+    }
+
+    return ProFeatures.proBitsetsToProFeatures({ proProfileBitset, proMessageBitset });
   }
 
-  public setProFeaturesUsed(proFeatures: bigint | null) {
-    const proFeaturesStr = proFeatures ? proFeatures.toString() : undefined;
-    if (isEqual(proFeaturesStr, this.get('proFeatures'))) {
+  public setProFeaturesUsed({
+    proProfileBitset,
+    proMessageBitset,
+  }: {
+    proProfileBitset: bigint | null;
+    proMessageBitset: bigint | null;
+  }) {
+    if (!getFeatureFlag('proAvailable')) {
       return false;
     }
-    this.set({ proFeatures: proFeaturesStr });
+    const proProfileStr = proProfileBitset ? proProfileBitset.toString() : undefined;
+    const proMessageStr = proMessageBitset ? proMessageBitset.toString() : undefined;
+    if (
+      isEqual(proProfileBitset, this.get('proProfileBitset')) &&
+      isEqual(proMessageStr, this.get('proMessageBitset'))
+    ) {
+      return false;
+    }
+    this.set({ proProfileBitset: proProfileStr });
+    this.set({ proMessageBitset: proMessageStr });
     return true;
   }
 

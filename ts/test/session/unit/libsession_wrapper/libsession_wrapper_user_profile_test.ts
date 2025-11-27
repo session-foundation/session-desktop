@@ -91,11 +91,11 @@ describe('libsession_user_profile', () => {
       const userKeys = await TestUtils.generateUserKeyPairs();
 
       const wrapper = new UserConfigWrapperNode(userKeys.ed25519KeyPair.privKeyBytes, null);
-      expect(wrapper.getProFeaturesBitset()).to.be.deep.eq(0n);
+      expect(wrapper.getProProfileBitset()).to.be.deep.eq(0n);
 
       wrapper.setProBadge(true);
 
-      expect(wrapper.getProFeaturesBitset()).to.be.deep.eq(2n);
+      expect(wrapper.getProProfileBitset()).to.be.deep.eq(1n);
     });
   });
 
@@ -104,11 +104,11 @@ describe('libsession_user_profile', () => {
       const userKeys = await TestUtils.generateUserKeyPairs();
 
       const wrapper = new UserConfigWrapperNode(userKeys.ed25519KeyPair.privKeyBytes, null);
-      expect(wrapper.getProFeaturesBitset()).to.be.deep.eq(0n);
+      expect(wrapper.getProProfileBitset()).to.be.deep.eq(0n);
 
       wrapper.setAnimatedAvatar(true);
 
-      expect(wrapper.getProFeaturesBitset()).to.be.deep.eq(4n);
+      expect(wrapper.getProProfileBitset()).to.be.deep.eq(2n);
     });
   });
 });

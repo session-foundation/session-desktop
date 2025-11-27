@@ -9,40 +9,51 @@ import { ProFeatures, ProMessageFeature } from '../../models/proMessageFeature';
 
 export class OutgoingProMessageDetails {
   public readonly proConfig?: ProConfig;
-  public readonly proFeaturesBitset?: bigint;
+  public readonly proProfileBitset: bigint;
+  public readonly proMessageBitset: bigint;
 
-  constructor(args: { proConfig?: ProConfig; proFeaturesBitset?: bigint }) {
+  constructor(args: {
+    proConfig?: ProConfig;
+    proProfileBitset?: bigint;
+    proMessageBitset?: bigint;
+  }) {
     this.proConfig = args.proConfig;
 
-    this.proFeaturesBitset = args.proFeaturesBitset || 0n;
+    this.proProfileBitset = args.proProfileBitset || 0n;
+    this.proMessageBitset = args.proMessageBitset || 0n;
+
     const mockMessageProFeatures = getDataFeatureFlag('mockMessageProFeatures');
     if (mockMessageProFeatures?.length) {
       if (mockMessageProFeatures.includes(ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH)) {
-        this.proFeaturesBitset = ProFeatures.addProFeature(
-          this.proFeaturesBitset,
-          ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH
+        this.proMessageBitset = ProFeatures.addProFeature(
+          this.proMessageBitset,
+          ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH,
+          'proMessage'
         );
       }
       if (mockMessageProFeatures.includes(ProMessageFeature.PRO_BADGE)) {
-        this.proFeaturesBitset = ProFeatures.addProFeature(
-          this.proFeaturesBitset,
-          ProMessageFeature.PRO_BADGE
+        this.proProfileBitset = ProFeatures.addProFeature(
+          this.proProfileBitset,
+          ProMessageFeature.PRO_BADGE,
+          'proProfile'
         );
       }
       if (mockMessageProFeatures.includes(ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE)) {
-        this.proFeaturesBitset = ProFeatures.addProFeature(
-          this.proFeaturesBitset,
-          ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE
+        this.proProfileBitset = ProFeatures.addProFeature(
+          this.proProfileBitset,
+          ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE,
+          'proProfile'
         );
       }
     }
   }
 
   public toProtobufDetails(): SignalService.ProMessage | null {
-    if (!this.proFeaturesBitset || !this.proConfig || !this.proConfig.proProof) {
-      if (!this.proFeaturesBitset && !isEmpty(this.proConfig?.proProof)) {
+    const hasOneBitsetSet = !!(this.proProfileBitset || this.proMessageBitset);
+    if (!hasOneBitsetSet || !this.proConfig || !this.proConfig.proProof) {
+      if (!hasOneBitsetSet && !isEmpty(this.proConfig?.proProof)) {
         window.log.debug(
-          'OutgoingProMessageDetails: proof is not empty but features are so not including pro proof.'
+          'OutgoingProMessageDetails: proof is not empty but bitsets are so not including pro proof.'
         );
       }
       return null;
@@ -51,7 +62,8 @@ export class OutgoingProMessageDetails {
       this.proConfig.proProof;
 
     return new SignalService.ProMessage({
-      features: bigIntToLong(this.proFeaturesBitset),
+      profileBitset: bigIntToLong(this.proProfileBitset),
+      messageBitset: bigIntToLong(this.proMessageBitset),
       proof: {
         expireAtMs: expiryMs,
         genIndexHash: from_base64(genIndexHashB64, base64_variants.ORIGINAL),
