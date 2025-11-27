@@ -154,7 +154,7 @@ export const doAppStartUp = async () => {
   window.inboxStore = await createSessionInboxStore();
   window.getState = window.inboxStore.getState;
 
-  window.inboxStore.dispatch(
+  window.inboxStore?.dispatch(
     updateAllOnStorageReady({
       hasBlindedMsgRequestsEnabled: Storage.getBoolOr(
         SettingsKey.hasBlindedMsgRequestsEnabled,
