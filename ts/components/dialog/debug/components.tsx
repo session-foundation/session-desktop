@@ -60,10 +60,15 @@ import {
 import { formatRoundedUpTimeUntilTimestamp } from '../../../util/i18n/formatting/generics';
 import { LucideIcon } from '../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
+import { useIsProAvailable } from '../../../hooks/useIsProAvailable';
 
-type DebugButtonProps = SessionButtonProps & { shiny?: boolean };
+type DebugButtonProps = SessionButtonProps & { shiny?: boolean; hide?: boolean };
 
-export function DebugButton({ shiny = true, style: _style, ...rest }: DebugButtonProps) {
+export function DebugButton({ shiny = true, style: _style, hide, ...rest }: DebugButtonProps) {
+  if (hide) {
+    return null;
+  }
+
   const style = { minWidth: 'max-content', width: '48%', ..._style };
 
   if (shiny) {
@@ -307,6 +312,12 @@ export const LoggingDebugSection = ({ forceUpdate }: { forceUpdate: () => void }
 };
 
 export const Playgrounds = ({ setPage }: DebugMenuPageProps) => {
+  const proAvailable = useIsProAvailable();
+
+  if (!proAvailable) {
+    return null;
+  }
+
   return (
     <DebugMenuSection title="Playgrounds" rowWrap={true}>
       <DebugButton onClick={() => setPage(DEBUG_MENU_PAGE.Pro)}>Pro Playground</DebugButton>
@@ -317,6 +328,7 @@ export const Playgrounds = ({ setPage }: DebugMenuPageProps) => {
 
 export const DebugActions = () => {
   const dispatch = useDispatch();
+  const proAvailable = useIsProAvailable();
 
   return (
     <DebugMenuSection title="Actions" rowWrap={true}>
@@ -362,6 +374,7 @@ export const DebugActions = () => {
         Open storage profile
       </DebugButton>
       <DebugButton
+        hide={!proAvailable}
         onClick={async () => {
           const masterPrivKeyHex = await getProMasterKeyHex();
           const rotatingPrivKeyHex = await UserUtils.getProRotatingPrivateKeyHex();
@@ -390,6 +403,7 @@ export const DebugActions = () => {
         Get Pro Proof
       </DebugButton>
       <DebugButton
+        hide={!proAvailable}
         onClick={async () => {
           const masterPrivKeyHex = await getProMasterKeyHex();
           const response = await ProBackendAPI.getProDetails({ masterPrivKeyHex });
@@ -401,6 +415,7 @@ export const DebugActions = () => {
         Get Pro Details
       </DebugButton>
       <DebugButton
+        hide={!proAvailable}
         onClick={async () => {
           const response = await ProBackendAPI.getRevocationList({ ticket: 0 });
           if (getFeatureFlag('debugServerRequests')) {
@@ -418,7 +433,13 @@ export const DebugUrlInteractionsSection = () => {
   const [urlInteractions, setUrlInteractions] = useState(getUrlInteractions());
 
   const refresh = useCallback(() => setUrlInteractions(getUrlInteractions()), []);
-  const removeUrl = useCallback(async (url: string) => removeUrlInteractionHistory(url), []);
+  const removeUrl = useCallback(
+    async (url: string) => {
+      await removeUrlInteractionHistory(url);
+      refresh();
+    },
+    [refresh]
+  );
   const clearAll = useCallback(async () => {
     await clearAllUrlInteractions();
     refresh();
@@ -667,11 +688,12 @@ export const AboutInfo = () => {
 export const OtherInfo = () => {
   const otherInfo = useAsync(async () => {
     const { id, vbid } = await window.getUserKeys();
-    const proMasterKey = (await getProMasterKeyHex())?.slice(0, 64);
+    const proMasterKey = await getProMasterKeyHex();
     const result = [
       `${tr('accountIdYours')}: ${id}`,
       `VBID: ${vbid}`,
-      `Pro Master Key: ${proMasterKey}`,
+      `Pro Public Master Key: ${proMasterKey?.slice(64)}`,
+      `Pro Private Master Key: ${proMasterKey?.slice(0, 64)}`,
     ];
     return result;
   }, []);
@@ -720,7 +742,15 @@ export const OtherInfo = () => {
                 $alignItems="flex-start"
                 $flexGap="var(--margins-xs)"
               >
-                <p style={{ userSelect: 'text', lineHeight: 1.5 }}>{info}</p>
+                <p
+                  style={{
+                    userSelect: 'text',
+                    lineHeight: 1.5,
+                    fontSize: 'var(--font-size-small)',
+                  }}
+                >
+                  {info}
+                </p>
                 <CopyToClipboardIcon
                   iconSize={'small'}
                   copyContent={info}

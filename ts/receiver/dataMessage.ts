@@ -297,7 +297,7 @@ async function handleSwarmMessage(
   void convoToAddMessageTo.queueJob(async () => {
     // this call has to be made inside the queueJob!
     // We handle reaction DataMessages separately
-    if (!convoToAddMessageTo.isPublic() && rawDataMessage.reaction) {
+    if (!convoToAddMessageTo.isOpenGroupV2() && rawDataMessage.reaction) {
       await Reactions.handleMessageReaction({
         reaction: rawDataMessage.reaction,
         sender: msgModel.get('source'),

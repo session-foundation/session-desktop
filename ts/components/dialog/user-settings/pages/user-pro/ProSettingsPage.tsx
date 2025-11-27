@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import useMount from 'react-use/lib/useMount';
 import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 import { ModalBasicHeader } from '../../../../SessionWrapperModal';
@@ -438,6 +439,21 @@ function ProSettings({ state }: SectionProps) {
 
   const { returnToThisModalAction, centerAlign } = state;
 
+  const refreshProBadge = useCallback(async () => {
+    const proProfileBitset = await UserConfigWrapperActions.getProProfileBitset();
+
+    const refreshed = ProFeaturesFinder.hasProFeature(
+      proProfileBitset,
+      ProMessageFeature.PRO_BADGE,
+      'proProfile'
+    );
+    setProBadgeEnabled(refreshed);
+  }, []);
+
+  useMount(() => {
+    void refreshProBadge();
+  });
+
   const handleUpdateAccessClick = useCallback(() => {
     dispatch(
       isError
@@ -498,12 +514,7 @@ function ProSettings({ state }: SectionProps) {
           onClick={async () => {
             const newProBadgeEnabled = !proBadgeEnabled;
             await UserConfigWrapperActions.setProBadge(newProBadgeEnabled);
-            const proFeatures = await UserConfigWrapperActions.getProProfileBitset();
-            const refreshed = ProFeaturesFinder.hasProFeature(
-              proFeatures,
-              ProMessageFeature.PRO_BADGE
-            );
-            setProBadgeEnabled(refreshed);
+            void refreshProBadge();
           }}
           active={proBadgeEnabled}
         />

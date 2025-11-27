@@ -377,8 +377,9 @@ message ProProof {
 }
 
 message ProMessage {
-  optional ProProof proof    = 1;
-  optional uint64   features = 2;
+  optional ProProof proof         = 1;
+  optional uint64   profileBitset = 2;
+  optional uint64   messageBitset = 3;
 }
 
 message WebSocketRequestMessage {

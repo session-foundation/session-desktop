@@ -23,7 +23,11 @@ function getProDetailsFromStorage() {
   if (result.success) {
     return result.data;
   }
-  window?.log?.error('failed to parse pro details from storage: ', result.error);
+  void Storage.remove(SettingsKey.proDetails);
+  window?.log?.error(
+    'failed to parse pro details from storage, removing item. error:',
+    result.error
+  );
   return null;
 }
 

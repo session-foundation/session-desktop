@@ -96,6 +96,7 @@ import { tStrippedWithObj, tr, tStripped } from '../localization/localeTools';
 import type { QuotedAttachmentType } from '../components/conversation/message/message-content/quote/Quote';
 import { ProFeatures, ProMessageFeature } from './proMessageFeature';
 import { privateSet, privateSetKey } from './modelFriends';
+import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
 
 // tslint:disable: cyclomatic-complexity
 
@@ -323,7 +324,7 @@ export class MessageModel extends Model<MessageAttributes> {
 
         if (convo) {
           const isGroup = !convo.isPrivate();
-          const isCommunity = convo.isPublic();
+          const isCommunity = convo.isOpenGroupV2();
 
           switch (interactionType) {
             case ConversationInteractionType.Hide:
@@ -578,10 +579,6 @@ export class MessageModel extends Model<MessageAttributes> {
       return 'read';
     }
     const sent = this.get('sent');
-    // control messages we've sent, synced from the network appear to just have the
-    // sent_at field set, but our current devices also have this field set when we are just sending it... So idk how to have behavior work fine.,
-    // TODOLATER
-    // const sentAt = this.get('sent_at');
     const sentTo = this.get('sent_to') || [];
 
     if (sent || sentTo.length > 0) {
@@ -799,7 +796,7 @@ export class MessageModel extends Model<MessageAttributes> {
     const firstPreviewWithData = previewWithData?.[0] || null;
 
     // we want to go for the v1, if this is an OpenGroupV1 or not an open group at all
-    if (conversation?.isPublic()) {
+    if (conversation?.isOpenGroupV2()) {
       const openGroupV2 = conversation.toOpenGroupV2();
       attachmentPromise = uploadAttachmentsV3(finalAttachments, openGroupV2);
       linkPreviewPromise = uploadLinkPreviewsV3(firstPreviewWithData, openGroupV2);
@@ -894,7 +891,7 @@ export class MessageModel extends Model<MessageAttributes> {
       }
       const { body, attachments, preview, quote, fileIdsToLink } = await this.uploadData();
 
-      if (conversation.isPublic()) {
+      if (conversation.isOpenGroupV2()) {
         const openGroupParams: OpenGroupVisibleMessageParams = {
           identifier: this.id,
           createAtNetworkTimestamp: NetworkTime.now(),
@@ -1399,21 +1396,43 @@ export class MessageModel extends Model<MessageAttributes> {
   }
 
   private getProFeaturesUsed(): Array<ProMessageFeature> {
-    const proFeatures = this.get('proFeatures');
-
-    if (!proFeatures || !isString(proFeatures)) {
+    if (!getFeatureFlag('proAvailable')) {
       return [];
     }
 
-    return ProFeatures.bigIntStrToProFeatures(proFeatures);
+    const proProfileBitset = this.get('proProfileBitset');
+    const proMessageBitset = this.get('proMessageBitset');
+    if (!proProfileBitset && !proMessageBitset) {
+      return [];
+    }
+
+    if (!isString(proProfileBitset) && !isString(proMessageBitset)) {
+      return [];
+    }
+
+    return ProFeatures.proBitsetsToProFeatures({ proProfileBitset, proMessageBitset });
   }
 
-  public setProFeaturesUsed(proFeatures: bigint | null) {
-    const proFeaturesStr = proFeatures ? proFeatures.toString() : undefined;
-    if (isEqual(proFeaturesStr, this.get('proFeatures'))) {
+  public setProFeaturesUsed({
+    proProfileBitset,
+    proMessageBitset,
+  }: {
+    proProfileBitset: bigint | null;
+    proMessageBitset: bigint | null;
+  }) {
+    if (!getFeatureFlag('proAvailable')) {
       return false;
     }
-    this.set({ proFeatures: proFeaturesStr });
+    const proProfileStr = proProfileBitset ? proProfileBitset.toString() : undefined;
+    const proMessageStr = proMessageBitset ? proMessageBitset.toString() : undefined;
+    if (
+      isEqual(proProfileBitset, this.get('proProfileBitset')) &&
+      isEqual(proMessageStr, this.get('proMessageBitset'))
+    ) {
+      return false;
+    }
+    this.set({ proProfileBitset: proProfileStr });
+    this.set({ proMessageBitset: proMessageStr });
     return true;
   }
 

@@ -78,7 +78,7 @@ const roomAvatarChange = createAsyncThunk(
   }) => {
     const convo = ConvoHub.use().get(conversationId);
 
-    if (!convo?.isPublic()) {
+    if (!convo?.isOpenGroupV2()) {
       throw new Error('changeCommunityAvatar can only be used for communities');
     }
     const blobAvatarAlreadyScaled = await urlToBlob(avatarObjectUrl);

@@ -261,7 +261,7 @@ async function handleRegularMessage(
 
   const serverTimestamp = message.get('serverTimestamp');
   if (
-    conversation.isPublic() &&
+    conversation.isOpenGroupV2() &&
     PubKey.isBlinded(sendingDeviceConversation.id) &&
     isNumber(serverTimestamp)
   ) {
@@ -475,12 +475,13 @@ async function processProDetails({
   messageModel: MessageModel;
   decodedEnvelope: SwarmDecodedEnvelope;
 }) {
-  // if the pro proof was valid when the message was sent, save the bitset of pro features used in the message
-  if (
-    decodedEnvelope.validPro?.proFeaturesBitset &&
-    decodedEnvelope.isProProofValidAtMs(decodedEnvelope.sentAtMs)
-  ) {
+  // if there are no pro proof, or the pro proof is not valid at the time the message was sent, do nothing
+  if (!decodedEnvelope.validPro || !decodedEnvelope.isProProofValidAtMs(decodedEnvelope.sentAtMs)) {
+    return;
+  }
+  // otherwise, we have a valid pro proof, save the bitset of pro features used in the message
+  if (decodedEnvelope.validPro.proMessageBitset || decodedEnvelope.validPro.proProfileBitset) {
     // Note: msgModel.commit() is always called when receiving a message.
-    messageModel.setProFeaturesUsed(decodedEnvelope.validPro.proFeaturesBitset);
+    messageModel.setProFeaturesUsed(decodedEnvelope.validPro);
   }
 }

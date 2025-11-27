@@ -18,7 +18,7 @@ describe('libsession_pro', () => {
           utf16: 'hello',
         })
       ).to.deep.eq({
-        proFeaturesBitset: 0n,
+        proMessageBitset: 0n,
         status: 'SUCCESS',
         error: null,
         codepointCount: 5,
@@ -31,7 +31,7 @@ describe('libsession_pro', () => {
           utf16: '012345678'.repeat(1000), // 1000 * 9 chars = 9000 codepoints
         })
       ).to.deep.eq({
-        proFeaturesBitset: 1n,
+        proMessageBitset: 1n,
         status: 'SUCCESS',
         error: null,
         codepointCount: 9000,
@@ -88,9 +88,9 @@ describe('libsession_pro', () => {
         rotating_pkey: '574b0063d782e6b56beac6c1b67766f0f81ecacf66ab7efefd2c9a65d6c8de88',
         unix_ts_ms: 1761884113627,
         master_sig:
-          '1bf719cc278d63e66ca89e4fabba8d8e0730995058ef3082ec90213449ab5c991eb3de6f757834a154accd308cf9fc4b086cc98586c9bd265d0b14aeeed0960b',
+          'd1f0da92e22df8f285da4fe0fc92322ef0155c0c5ed2586532458a5758995b9b7bf98a3a0772af11e162e78ceba13ab936041fee4a59f04b3d28a77d17b0b603',
         rotating_sig:
-          'c5e6a469d9210b0483cfc306b96b986147d95b59893a66ddc7ce5123c070246243660f76f34dc728dbdd75eb28707f4bb69a659e458c2587a55b9cfccc48030f',
+          'cb1a3a4e5037c30bf662be6e3b33025b64612edd668d4494c7190e93629c2c0591c2dbbb2e6930732eadbbb9b7fcf98df3d085fddfb7fed58c75901b50c12506',
       };
 
       await getSodiumNode();
@@ -115,7 +115,7 @@ describe('libsession_pro', () => {
         master_pkey: '3ec4ff1928220d599cccbf8d76002e80191c286906bc18987f46fd9688418852',
         unix_ts_ms: 1761884113627,
         master_sig:
-          '76018d58a345d6031b9177be737bfac0c766045e4b010e65e8dd1e5408071b1d40dbbfe5d93a81653cd5e6bee033b4f308fa3f45757928b7b5a3394d5884e103',
+          'f9065b20b5162b58e5580e855f979521ff02826b25b72b68a1c6c44c4eeb74e5e626e783de4ae715d7ef4438827f858221eb06aae2e7c4eea6ef3cd31e0e1c0f',
       };
 
       await getSodiumNode();

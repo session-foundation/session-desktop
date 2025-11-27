@@ -14,6 +14,7 @@ import {
 import { OutgoingUserProfile } from '../../types/message';
 import { SettingsKey } from '../../data/settings-key';
 import { OutgoingProMessageDetails } from '../../types/message/OutgoingProMessageDetails';
+import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 
 export type HexKeyPair = {
   pubKey: string;
@@ -139,7 +140,10 @@ export async function getOutgoingProMessageDetails({
 }: {
   utf16: string | null | undefined;
 }) {
-  const [proConfig, proFeaturesUserBitset] = await Promise.all([
+  if (!getFeatureFlag('proAvailable')) {
+    return null;
+  }
+  const [proConfig, proProfileBitset] = await Promise.all([
     UserConfigWrapperActions.getProConfig(),
     UserConfigWrapperActions.getProProfileBitset(),
   ]);
@@ -150,16 +154,17 @@ export async function getOutgoingProMessageDetails({
     return null;
   }
 
-  const proFeaturesForMsg = await ProWrapperActions.proFeaturesForMessage({
+  const { proMessageBitset, status } = await ProWrapperActions.proFeaturesForMessage({
     utf16: utf16 ?? '',
   });
 
-  if (proFeaturesForMsg.status !== 'SUCCESS') {
+  if (status !== 'SUCCESS') {
     return null;
   }
   return new OutgoingProMessageDetails({
     proConfig,
-    proFeaturesBitset: proFeaturesUserBitset,
+    proMessageBitset,
+    proProfileBitset,
   });
 }
 

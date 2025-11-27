@@ -413,7 +413,7 @@ export async function showLeaveGroupByConvoId(conversationId: string, name: stri
 export async function showDeleteGroupByConvoId(conversationId: string, name: string | undefined) {
   const conversation = ConvoHub.use().get(conversationId);
 
-  const isPublic = conversation.isPublic();
+  const isPublic = conversation.isOpenGroupV2();
 
   const weAreAdmin = conversation.weAreAdminUnblinded();
 
@@ -667,7 +667,7 @@ async function saveConversationInteractionErrorAsMessage({
   });
 
   // NOTE at this time we don't have visible control messages in communities
-  if (conversation.isPublic()) {
+  if (conversation.isOpenGroupV2()) {
     return;
   }
 

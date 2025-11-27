@@ -276,8 +276,8 @@ function getDBCreationTimestampMs(): number | null {
   if (!databaseFilePath) {
     return null;
   }
-  if (process.env.DB_CREATION_TIMESTAMP) {
-    return Number.parseInt(process.env.DB_CREATION_TIMESTAMP, 10);
+  if (process.env.DB_CREATION_TIMESTAMP_MS) {
+    return Number.parseInt(process.env.DB_CREATION_TIMESTAMP_MS, 10);
   }
   return getFileCreationTimestampMs(databaseFilePath);
 }
@@ -565,11 +565,6 @@ function fetchConvoMemoryDetails(convoId: string): SaveConversationReturn {
   const unreadCount = getUnreadCountByConversation(convoId);
   const lastReadTimestampMessageSentTimestamp = getLastMessageReadInConversation(convoId);
 
-  // TODOLATER it would be nice to be able to remove the lastMessage and lastMessageStatus from the conversation table, and just return it when saving the conversation
-  // and saving it in memory only.
-  // But we'd need to update a bunch of things as we do some logic before setting the lastUpdate text and status mostly in `getMessagePropStatus` and `getNotificationText()`
-  // const lastMessages = getLastMessagesByConversation(convoId, 1) as Array:Record<string, any>>;
-
   return {
     mentionedUs: hasMentionedUsUnread,
     unreadCount,
@@ -616,7 +611,7 @@ export function getIdentityKeys(db: BetterSqlite3.Database) {
 
     const ed25519PrivateKeyUintArray = parsedIdentityKey?.value?.ed25519KeyPair?.privateKey;
 
-    // TODOLATER migrate the ed25519KeyPair for all the users already logged in to a base64 representation
+    // TODO migrate the ed25519KeyPair for all the users already logged in to a base64 representation
     const privateEd25519 = new Uint8Array(Object.values(ed25519PrivateKeyUintArray));
 
     if (!privateEd25519 || isEmpty(privateEd25519)) {
@@ -1751,7 +1746,6 @@ function getFirstUnreadMessageWithMention(
   }
   const likeMatch = `%@${ourPkInThatConversation}%`;
 
-  // TODOLATER make this use the fts search table rather than this one?
   const rows = assertGlobalInstanceOrInstance(instance)
     .prepare(
       `

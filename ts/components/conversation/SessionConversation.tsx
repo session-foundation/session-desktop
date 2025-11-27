@@ -261,7 +261,7 @@ export class SessionConversation extends Component<Props, State> {
     if (!selectedConversation || !messagesProps) {
       return <EmptyMessageView />;
     }
-    // TODOLATER break selectionMode into it's own container component so we can use hooks to fetch relevant state from the store
+    // TODO break selectionMode into it's own container component so we can use hooks to fetch relevant state from the store
     const selectionMode = selectedMessages.length > 0;
 
     return (

@@ -207,7 +207,7 @@ async function regenerateLastMessagesGroupsCommunities() {
 
   ConvoHub.use()
     .getConversations()
-    .filter(m => m.isClosedGroupV2() || m.isPublic())
+    .filter(m => m.isClosedGroupV2() || m.isOpenGroupV2())
     .forEach(m => {
       m.updateLastMessage();
     });

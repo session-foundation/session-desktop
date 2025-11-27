@@ -16,7 +16,7 @@ function formatInteractionNotification(
 
     if (convo) {
       const isGroup = !convo.isPrivate();
-      const isCommunity = convo.isPublic();
+      const isCommunity = convo.isOpenGroupV2();
       const conversationName = convo?.getRealSessionUsername() || tr('unknown');
 
       switch (interactionType) {

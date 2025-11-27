@@ -215,7 +215,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       case ConversationTypeEnum.GROUPV2:
         return `group:${ed25519Str(this.id)}`;
       case ConversationTypeEnum.GROUP: {
-        if (this.isPublic()) {
+        if (this.isOpenGroupV2()) {
           return `comm:${this.id}`;
         }
         return `group_legacy:${ed25519Str(this.id)}`;
@@ -231,18 +231,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
   }
 
   /**
-   * Same as this.isOpenGroupV2().
-   *
-   * // TODOLATER merge them together
-   */
-  public isPublic(): boolean {
-    return this.isOpenGroupV2();
-  }
-
-  /**
-   * Same as this.isPublic().
-   *
-   * // TODOLATER merge them together
+   * Returns true if this conversation's id matches a sogs/community format
    */
   public isOpenGroupV2(): boolean {
     return OpenGroupUtils.isOpenGroupV2(this.id);
@@ -273,7 +262,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (this.isPrivate()) {
       return ConvoTypeNarrow.contact;
     }
-    if (this.isPublic()) {
+    if (this.isOpenGroupV2()) {
       return ConvoTypeNarrow.community;
     }
     if (this.isClosedGroup() && !this.isClosedGroupV2()) {
@@ -443,7 +432,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       toRet.weAreAdmin = true;
     }
 
-    if (this.isPublic()) {
+    if (this.isOpenGroupV2()) {
       toRet.isPublic = true;
     }
 
@@ -496,7 +485,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
 
     // those are values coming only from both the DB or the wrapper. Currently we display the data from the DB
-    if (this.isClosedGroup() || this.isPublic()) {
+    if (this.isClosedGroup() || this.isOpenGroupV2()) {
       // for public, this value always comes from the DB
       toRet.groupAdmins = this.getGroupAdmins();
     }
@@ -639,7 +628,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       return null;
     }
     let msgSource = quotedMessage.getSource();
-    if (this.isPublic()) {
+    if (this.isOpenGroupV2()) {
       const room = OpenGroupData.getV2OpenGroupRoom(this.id);
       if (room && roomHasBlindEnabled(room) && msgSource === UserUtils.getOurPubKeyStrFromCache()) {
         // this room should send message with blinded pubkey, so we need to make the quote with them too.
@@ -871,7 +860,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
   }
 
   private hasValidCurrentProProof(): boolean {
-    if (this.isPublic()) {
+    if (this.isOpenGroupV2()) {
       // Note: communities are considered pro users (they can have animated avatars)
       // but this function is too generic to return true
       return false;
@@ -901,7 +890,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
   }
 
   private showProBadgeFor(): boolean {
-    if (this.isPublic()) {
+    if (this.isOpenGroupV2()) {
       // Note: communities are considered pro users (they can have animated avatars)
       // but this function is too generic to return true
       return false;
@@ -919,12 +908,14 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
 
     const proFeaturesStr = this.get('bitsetProFeatures');
-    const proFeatures = proFeaturesStr ? ProFeatures.bigIntStrToProFeatures(proFeaturesStr) : [];
+    const hasProBadgeOn =
+      proFeaturesStr && isString(proFeaturesStr)
+        ? ProFeatures.hasProFeature(proFeaturesStr, ProMessageFeature.PRO_BADGE, 'proProfile')
+        : false;
 
     const hasValidProProof = this.hasValidCurrentProProof();
-    const hasProBadgeFeature = proFeatures.includes(ProMessageFeature.PRO_BADGE);
 
-    return hasValidProProof && hasProBadgeFeature;
+    return hasValidProProof && hasProBadgeOn;
   }
 
   public async sendMessage(msg: SendMessageType) {
@@ -957,7 +948,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
         this.getExpirationMode()
       ),
       expireTimer: this.getExpireTimer(),
-      serverTimestamp: this.isPublic() ? networkTimestamp : undefined,
+      serverTimestamp: this.isOpenGroupV2() ? networkTimestamp : undefined,
       groupInvitation,
     });
 
@@ -1296,7 +1287,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     >
   ) {
     let sender: string = UserUtils.getOurPubKeyStrFromCache();
-    if (this.isPublic()) {
+    if (this.isOpenGroupV2()) {
       const openGroup = OpenGroupData.getV2OpenGroupRoom(this.id);
       if (openGroup && openGroup.serverPublicKey && roomHasBlindEnabled(openGroup)) {
         const signingKeys = await UserUtils.getUserED25519KeyPairBytes();
@@ -1605,14 +1596,14 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (this.isPrivate()) {
       return PubKey.shorten(this.id);
     }
-    if (this.isPublic()) {
+    if (this.isOpenGroupV2()) {
       return tr('communityUnknown');
     }
     return tr('unknown');
   }
 
   public isAdmin(pubKey?: string) {
-    if (!this.isPublic() && !this.isGroup()) {
+    if (!this.isOpenGroupV2() && !this.isGroup()) {
       return false;
     }
     if (!pubKey) {
@@ -1638,7 +1629,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (!pubKey) {
       throw new Error('isModerator() pubKey is falsy');
     }
-    if (!this.isPublic()) {
+    if (!this.isOpenGroupV2()) {
       return false;
     }
 
@@ -1938,7 +1929,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       description?: string;
     };
   }) {
-    if (!this.isPublic()) {
+    if (!this.isOpenGroupV2()) {
       return;
     }
     if (!infos || isEmpty(infos)) {
@@ -1980,7 +1971,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       hasChange = hasChange || true;
     }
 
-    if (this.isPublic() && details.image_id && isNumber(details.image_id)) {
+    if (this.isOpenGroupV2() && details.image_id && isNumber(details.image_id)) {
       const roomInfos = OpenGroupData.getV2OpenGroupRoom(this.id);
       if (roomInfos) {
         void sogsV3FetchPreviewAndSaveIt({

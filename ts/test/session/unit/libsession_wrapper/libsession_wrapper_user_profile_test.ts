@@ -95,7 +95,7 @@ describe('libsession_user_profile', () => {
 
       wrapper.setProBadge(true);
 
-      expect(wrapper.getProProfileBitset()).to.be.deep.eq(2n);
+      expect(wrapper.getProProfileBitset()).to.be.deep.eq(1n);
     });
   });
 
@@ -107,8 +107,7 @@ describe('libsession_user_profile', () => {
       expect(wrapper.getProProfileBitset()).to.be.deep.eq(0n);
 
       wrapper.setAnimatedAvatar(true);
-
-      expect(wrapper.getProProfileBitset()).to.be.deep.eq(4n);
+      expect(wrapper.getProProfileBitset()).to.be.deep.eq(2n);
     });
   });
 
@@ -117,7 +116,7 @@ describe('libsession_user_profile', () => {
       const userKeys = await TestUtils.generateUserKeyPairs();
 
       const wrapper = new UserConfigWrapperNode(userKeys.ed25519KeyPair.privKeyBytes, null);
-      expect(wrapper.getProAccessExpiry()).to.be.deep.eq(0n);
+      expect(wrapper.getProAccessExpiry()).to.be.deep.eq(null);
 
       const now = Date.now();
       wrapper.setProAccessExpiry(now);

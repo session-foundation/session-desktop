@@ -27,8 +27,6 @@ let timeout: any;
 let logger: any;
 const _activeAttachmentDownloadJobs: Record<string, Promise<void>> = {};
 
-// TODOLATER type those `any` properties
-
 export async function start(options: any = {}) {
   ({ logger } = options);
   if (!logger) {

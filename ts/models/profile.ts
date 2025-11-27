@@ -78,7 +78,7 @@ abstract class SessionProfileChanges {
   }
 
   protected assertConvoIsGroupV2OrCommunity(identifier: string) {
-    if (!this.convo.isClosedGroupV2() && !this.convo.isPublic()) {
+    if (!this.convo.isClosedGroupV2() && !this.convo.isOpenGroupV2()) {
       throw new Error(`${identifier}: expected a group v2 conversations or a community`);
     }
   }
@@ -510,7 +510,7 @@ export function buildPrivateProfileChangeFromMsgRequestResponse({
       value: messageRequestResponse.profile.lastProfileUpdateSeconds ?? 0,
     }).seconds(),
     proDetails: {
-      bitsetProFeatures: decodedPro?.proFeaturesBitset ?? null,
+      bitsetProFeatures: decodedPro?.proProfileBitset ?? null,
       proExpiryTsMs: decodedPro?.proProof.expiryMs ?? null,
       proGenIndexHashB64: decodedPro?.proProof.genIndexHashB64 ?? null,
     },
@@ -599,7 +599,7 @@ export function buildPrivateProfileChangeFromSwarmDataMessage({
       value: dataMessage.profile.lastProfileUpdateSeconds ?? 0,
     }).seconds(),
     proDetails: {
-      bitsetProFeatures: decodedPro?.proFeaturesBitset ?? null,
+      bitsetProFeatures: decodedPro?.proProfileBitset ?? null,
       proExpiryTsMs: decodedPro?.proProof.expiryMs ?? null,
       proGenIndexHashB64: decodedPro?.proProof.genIndexHashB64 ?? null,
     },

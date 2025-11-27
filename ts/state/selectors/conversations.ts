@@ -99,7 +99,7 @@ export const getSortedMessagesOfSelectedConversation = createSelector(
       return [];
     }
 
-    const isPublic = convo.isPublic() || false;
+    const isPublic = convo.isOpenGroupV2() || false;
     const sortedMessage = sortMessages(messages, isPublic);
 
     return updateFirstMessageOfSeries(sortedMessage);

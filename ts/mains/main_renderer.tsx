@@ -160,7 +160,7 @@ Storage.onready(async () => {
       // Stop background processing
       AttachmentDownloads.stop();
       // Stop processing incoming messages
-      // TODOLATER stop polling opengroup v2 and swarm nodes
+      // TODO stop polling opengroup v2 and swarm nodes
 
       // Shut down the data interface cleanly
       await Data.shutdown();
