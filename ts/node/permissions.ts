@@ -2,7 +2,7 @@
 //   https://electronjs.org/docs/api/session#sessetpermissionrequesthandlerhandler
 import { session } from 'electron';
 
-import { UserConfig } from './config/user_config';
+import { getPermissionMediaSetting } from './settings';
 
 const PERMISSIONS: Record<string, boolean> = {
   // Allowed
@@ -19,10 +19,10 @@ const PERMISSIONS: Record<string, boolean> = {
   pointerLock: false,
 };
 
-function createPermissionHandler(userConfig: UserConfig) {
+function createPermissionHandler() {
   return (_webContents: any, permission: any, callback: any) => {
     // We default 'media' permission to false, but the user can override that
-    if (permission === 'media' && userConfig.get('mediaPermissions')) {
+    if (permission === 'media' && getPermissionMediaSetting()) {
       return callback(true);
     }
 
@@ -36,11 +36,11 @@ function createPermissionHandler(userConfig: UserConfig) {
   };
 }
 
-export function installPermissionsHandler({ userConfig }: { userConfig: UserConfig }) {
+export function installPermissionsHandler() {
   // Setting the permission request handler to null first forces any permissions to be
   //   requested again. Without this, revoked permissions might still be available if
   //   they've already been used successfully.
   session.defaultSession.setPermissionRequestHandler(null);
 
-  session.defaultSession.setPermissionRequestHandler(createPermissionHandler(userConfig));
+  session.defaultSession.setPermissionRequestHandler(createPermissionHandler());
 }

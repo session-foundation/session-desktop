@@ -19,7 +19,7 @@ export class OpenGroupVisibleMessage extends VisibleMessage {
       expireTimer: 0,
     });
     // they are the opposite of each others
-    this.blocksCommunityMessageRequests = !Storage.get(SettingsKey.hasBlindedMsgRequestsEnabled);
+    this.blocksCommunityMessageRequests = !Storage.get(SettingsKey.settingsBlindedMsgRequests);
   }
 
   public dataProto(): SignalService.DataMessage {

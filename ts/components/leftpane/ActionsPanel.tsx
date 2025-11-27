@@ -169,7 +169,7 @@ const triggerSyncIfNeeded = async () => {
   await ConvoHub.use().get(us).setDidApproveMe(true, true);
   await ConvoHub.use().get(us).setIsApproved(true, true);
   const didWeHandleAConfigurationMessageAlready =
-    (await Data.getItemById(SettingsKey.hasSyncedInitialConfigurationItem))?.value || false;
+    (await Data.getItemById(SettingsKey.settingsSyncedInitialConfigurationItem))?.value || false;
   if (didWeHandleAConfigurationMessageAlready) {
     await forceSyncConfigurationNowIfNeeded();
   }
@@ -177,7 +177,8 @@ const triggerSyncIfNeeded = async () => {
 
 const triggerAvatarReUploadIfNeeded = async () => {
   const lastAvatarUploadExpiryMs =
-    (await Data.getItemById(SettingsKey.ntsAvatarExpiryMs))?.value || Number.MAX_SAFE_INTEGER;
+    (await Data.getItemById(SettingsKey.settingsNtsAvatarExpiryMs))?.value ||
+    Number.MAX_SAFE_INTEGER;
 
   if (NetworkTime.now() > lastAvatarUploadExpiryMs) {
     window.log.info('Reuploading avatar...');
@@ -232,7 +233,7 @@ const doAppStartUp = async () => {
     if (avatarPointer) {
       const details = await getFileInfoFromFileServer(avatarPointer);
       if (details?.expiryMs) {
-        await Storage.put(SettingsKey.ntsAvatarExpiryMs, details.expiryMs);
+        await Storage.put(SettingsKey.settingsNtsAvatarExpiryMs, details.expiryMs);
       }
     }
   }, 20000);

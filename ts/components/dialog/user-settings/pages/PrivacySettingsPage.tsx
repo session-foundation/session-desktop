@@ -1,9 +1,7 @@
-import useUpdate from 'react-use/lib/useUpdate';
 import { useDispatch } from 'react-redux';
 
 import { tr } from '../../../../localization/localeTools';
 import {
-  updateConfirmModal,
   userSettingsModal,
   type UserSettingsModalState,
 } from '../../../../state/ducks/modalDialog';
@@ -24,73 +22,18 @@ import {
   useUserSettingsCloseAction,
   useUserSettingsTitle,
 } from './userSettingsHooks';
-import { CallManager, UserUtils } from '../../../../session/utils';
 import { SessionButtonColor } from '../../../basic/SessionButton';
 import {
-  useHasLinkPreviewEnabled,
-  useWeHaveBlindedMsgRequestsEnabled,
+  useHasLinkPreviewSetting,
+  usePermissionMediaSettings,
+  useReadReceiptSetting,
+  useTypingIndicatorSetting,
+  useWeHaveBlindedMsgRequestsSetting,
 } from '../../../../state/selectors/settings';
-import { SettingsKey } from '../../../../data/settings-key';
-import { SessionUtilUserProfile } from '../../../../session/utils/libsession/libsession_utils_user_profile';
-import { getPasswordHash, Storage } from '../../../../util/storage';
+import { getPasswordHash } from '../../../../util/storage';
 import { SpacerXS } from '../../../basic/Text';
 import { SettingsToggleBasic } from '../components/SettingsToggleBasic';
 import { SettingsPanelButtonInlineBasic } from '../components/SettingsPanelButtonInlineBasic';
-
-const toggleCallMediaPermissions = async (triggerUIUpdate: () => void) => {
-  const currentValue = window.getCallMediaPermissions();
-  const onClose = () => window.inboxStore?.dispatch(updateConfirmModal(null));
-  if (!currentValue) {
-    window.inboxStore?.dispatch(
-      updateConfirmModal({
-        title: tr('callsVoiceAndVideoBeta'),
-        i18nMessage: { token: 'callsVoiceAndVideoModalDescription' },
-        okTheme: SessionButtonColor.Danger,
-        okText: tr('theContinue'),
-        onClickOk: async () => {
-          await window.toggleCallMediaPermissionsTo(true);
-          triggerUIUpdate();
-          CallManager.onTurnedOnCallMediaPermissions();
-          onClose();
-        },
-        onClickCancel: async () => {
-          await window.toggleCallMediaPermissionsTo(false);
-          triggerUIUpdate();
-          onClose();
-        },
-        onClickClose: onClose,
-      })
-    );
-  } else {
-    await window.toggleCallMediaPermissionsTo(false);
-    triggerUIUpdate();
-  }
-};
-
-async function toggleLinkPreviews(isToggleOn: boolean, forceUpdate: () => void) {
-  if (!isToggleOn) {
-    window.inboxStore?.dispatch(
-      updateConfirmModal({
-        title: tr('linkPreviewsSend'),
-        i18nMessage: { token: 'linkPreviewsSendModalDescription' },
-        okTheme: SessionButtonColor.Danger,
-        okText: tr('theContinue'),
-        onClickOk: async () => {
-          const newValue = !isToggleOn;
-          await window.setSettingValue(SettingsKey.settingsLinkPreview, newValue);
-          forceUpdate();
-        },
-        onClickClose: () => {
-          window.inboxStore?.dispatch(updateConfirmModal(null));
-        },
-      })
-    );
-  } else {
-    await window.setSettingValue(SettingsKey.settingsLinkPreview, false);
-    await Storage.put(SettingsKey.hasLinkPreviewPopupBeenDisplayed, false);
-    forceUpdate();
-  }
-}
 
 /**
  * This is a static version of the TypingBubble component, but is only used here, hence why it's not a SessionIcon.
@@ -165,10 +108,13 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
   const backAction = useUserSettingsBackAction(modalState);
   const closeAction = useUserSettingsCloseAction(modalState);
   const title = useUserSettingsTitle(modalState);
-  const weHaveBlindedRequestsEnabled = useWeHaveBlindedMsgRequestsEnabled();
-  const isLinkPreviewsOn = useHasLinkPreviewEnabled();
 
-  const forceUpdate = useUpdate();
+  const blindedMsgRequestsSetting = useWeHaveBlindedMsgRequestsSetting();
+  const linkPreviewSetting = useHasLinkPreviewSetting();
+  const typingIndicatorSetting = useTypingIndicatorSetting();
+  const readReceiptSetting = useReadReceiptSetting();
+
+  const mediaPermissionSettings = usePermissionMediaSettings();
 
   return (
     <SessionWrapperModal
@@ -189,21 +135,15 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
       <PanelButtonGroup>
         <SettingsToggleBasic
           baseDataTestId="enable-calls"
-          active={Boolean(window.getCallMediaPermissions())}
-          onClick={async () => {
-            await toggleCallMediaPermissions(forceUpdate);
-            forceUpdate();
-          }}
+          active={mediaPermissionSettings.callMediaPermissionEnabled}
+          onClick={mediaPermissionSettings.toggleCallMediaPermission}
           text={{ token: 'callsVoiceAndVideoBeta' }}
           subText={{ token: 'callsVoiceAndVideoToggleDescription' }}
         />
         <SettingsToggleBasic
           baseDataTestId="enable-microphone"
-          active={Boolean(window.getSettingValue('media-permissions'))}
-          onClick={async () => {
-            await window.toggleMediaPermissions();
-            forceUpdate();
-          }}
+          active={mediaPermissionSettings.mediaPermissionEnabled}
+          onClick={mediaPermissionSettings.toggleMediaPermission}
           text={{ token: 'permissionsMicrophone' }}
           subText={{ token: 'permissionsMicrophoneDescription' }}
         />
@@ -212,15 +152,8 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
       <PanelButtonGroup>
         <SettingsToggleBasic
           baseDataTestId="enable-communities-message-requests"
-          active={weHaveBlindedRequestsEnabled}
-          onClick={async () => {
-            const toggledValue = !weHaveBlindedRequestsEnabled;
-            await window.setSettingValue(SettingsKey.hasBlindedMsgRequestsEnabled, toggledValue);
-            await SessionUtilUserProfile.insertUserProfileIntoWrapper(
-              UserUtils.getOurPubKeyStrFromCache()
-            );
-            forceUpdate();
-          }}
+          active={blindedMsgRequestsSetting.enabled}
+          onClick={blindedMsgRequestsSetting.toggle}
           text={{ token: 'messageRequestsCommunities' }}
           subText={{ token: 'messageRequestsCommunitiesDescription' }}
         />
@@ -229,12 +162,8 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
       <PanelButtonGroup>
         <SettingsToggleBasic
           baseDataTestId="enable-read-receipts"
-          active={window.getSettingValue(SettingsKey.settingsReadReceipt)}
-          onClick={async () => {
-            const old = Boolean(window.getSettingValue(SettingsKey.settingsReadReceipt));
-            await window.setSettingValue(SettingsKey.settingsReadReceipt, !old);
-            forceUpdate();
-          }}
+          active={readReceiptSetting.enabled}
+          onClick={readReceiptSetting.toggle}
           text={{ token: 'readReceipts' }}
           subText={{ token: 'readReceiptsDescription' }}
         />
@@ -256,12 +185,8 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
               }
             />
           }
-          active={Boolean(window.getSettingValue(SettingsKey.settingsTypingIndicator))}
-          onClick={async () => {
-            const old = Boolean(window.getSettingValue(SettingsKey.settingsTypingIndicator));
-            await window.setSettingValue(SettingsKey.settingsTypingIndicator, !old);
-            forceUpdate();
-          }}
+          active={typingIndicatorSetting.enabled}
+          onClick={typingIndicatorSetting.toggle}
           toggleDataTestId={'enable-typing-indicators-settings-toggle'}
           rowDataTestId={'enable-typing-indicators-settings-row'}
         />{' '}
@@ -270,10 +195,8 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
       <PanelButtonGroup>
         <SettingsToggleBasic
           baseDataTestId="enable-link-previews"
-          active={isLinkPreviewsOn}
-          onClick={async () => {
-            void toggleLinkPreviews(isLinkPreviewsOn, forceUpdate);
-          }}
+          active={linkPreviewSetting.enabled}
+          onClick={linkPreviewSetting.toggle}
           text={{ token: 'linkPreviewsSend' }}
           subText={{ token: 'linkPreviewsDescription' }}
         />

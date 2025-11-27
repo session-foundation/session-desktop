@@ -171,7 +171,7 @@ async function createAccount(identityKeyPair: SessionKeyPair) {
     Storage.remove('local_attachment_encrypted_key'),
     Storage.remove(SettingsKey.settingsReadReceipt),
     Storage.remove(SettingsKey.settingsTypingIndicator),
-    Storage.remove(SettingsKey.hideRecoveryPassword),
+    Storage.remove(SettingsKey.settingsHideRecoveryPassword),
   ]);
 
   // update our own identity key, which may have changed
@@ -188,11 +188,11 @@ async function createAccount(identityKeyPair: SessionKeyPair) {
   await Storage.put(SettingsKey.settingsTypingIndicator, false);
 
   // opengroups pruning in ON by default on new accounts, but you can change that from the settings
-  await Storage.put(SettingsKey.settingsOpengroupPruning, true);
-  await window.setOpengroupPruning(true);
+  await Storage.put(SettingsKey.settingsOpenGroupPruning, true);
+  await window.setSettingsValue(SettingsKey.settingsOpenGroupPruning, true);
 
   // turn off hide recovery password by default
-  await Storage.put(SettingsKey.hideRecoveryPassword, false);
+  await Storage.put(SettingsKey.settingsHideRecoveryPassword, false);
 
   await setLocalPubKey(pubKeyString);
 }

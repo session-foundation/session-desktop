@@ -5,7 +5,6 @@ import nativeEmojiData from '@emoji-mart/data';
 import { ipcRenderer } from 'electron';
 // eslint-disable-next-line import/no-named-default
 
-import { isMacOS } from '../OS';
 import { SessionInboxView } from '../components/SessionInboxView';
 import { SessionRegistrationView } from '../components/registration/SessionRegistrationView';
 import { Data } from '../data/data';
@@ -87,7 +86,7 @@ function mapOldThemeToNew(theme: string) {
 
 // using __unused as lodash is imported using _
 ipcRenderer.on('native-theme-update', (__unused, shouldUseDarkColors) => {
-  const shouldFollowSystemTheme = window.getSettingValue(SettingsKey.hasFollowSystemThemeEnabled);
+  const shouldFollowSystemTheme = window.getSettingValue(SettingsKey.settingsFollowSystemTheme);
 
   if (shouldFollowSystemTheme) {
     const theme = window.Events.getThemeSetting();
@@ -143,12 +142,6 @@ Storage.onready(async () => {
     getThemeSetting: () => Storage.get('theme-setting', 'classic-dark'),
     setThemeSetting: async (value: any) => {
       await Storage.put('theme-setting', value);
-    },
-    getHideMenuBar: () => Storage.get('hide-menu-bar'),
-    setHideMenuBar: async (value: boolean) => {
-      await Storage.put('hide-menu-bar', value);
-      window.setAutoHideMenuBar(false);
-      window.setMenuBarVisibility(!value);
     },
 
     getSpellCheck: () => Storage.get('spell-check', true),
@@ -263,9 +256,9 @@ async function start() {
 
   function openInbox() {
     switchBodyToRtlIfNeeded();
-    const hideMenuBar = Storage.get('hide-menu-bar', true) as boolean;
-    window.setAutoHideMenuBar(hideMenuBar);
-    window.setMenuBarVisibility(!hideMenuBar);
+    // const hideMenuBar = Storage.get('hide-menu-bar', true);
+    // window.setAutoHideMenuBar(hideMenuBar);
+    // window.setMenuBarVisibility(!hideMenuBar);
     // eslint-disable-next-line more/no-then
     void ConvoHub.use()
       .loadPromise()
@@ -310,16 +303,6 @@ async function start() {
     await window.Events.setThemeSetting(newTheme);
   };
 
-  window.toggleMenuBar = () => {
-    const current = window.getSettingValue('hide-menu-bar');
-    if (current === undefined) {
-      window.Events.setHideMenuBar(false);
-      return;
-    }
-
-    window.Events.setHideMenuBar(!current);
-  };
-
   window.toggleSpellCheck = () => {
     const currentValue = window.getSettingValue('spell-check');
     // if undefined, it means 'default' so true. but we have to toggle it, so false
@@ -327,40 +310,6 @@ async function start() {
     const newValue = currentValue !== undefined ? !currentValue : false;
     window.Events.setSpellCheck(newValue);
     ToastUtils.pushRestartNeeded();
-  };
-
-  window.toggleMediaPermissions = async () => {
-    const value = window.getMediaPermissions();
-    if (value === true) {
-      const valueCallPermissions = window.getCallMediaPermissions();
-      if (valueCallPermissions) {
-        window.log.info('toggleMediaPermissions : forcing callPermissions to false');
-
-        await window.toggleCallMediaPermissionsTo(false);
-      }
-    }
-
-    if (value === false && isMacOS()) {
-      window.askForMediaAccess();
-    }
-    window.setMediaPermissions(!value);
-  };
-
-  window.toggleCallMediaPermissionsTo = async enabled => {
-    const previousValue = window.getCallMediaPermissions();
-    if (previousValue === enabled) {
-      return;
-    }
-    if (previousValue === false) {
-      // value was false and we toggle it so we turn it on
-      if (isMacOS()) {
-        window.askForMediaAccess();
-      }
-      window.log.info('toggleCallMediaPermissionsTo : forcing audio/video to true');
-      // turning ON "call permissions" forces turning on "audio/video permissions"
-      window.setMediaPermissions(true);
-    }
-    window.setCallMediaPermissions(enabled);
   };
 
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -382,7 +331,6 @@ async function start() {
   if (launchCount === 1) {
     // Initialise default settings
     await window.setSettingValue('hide-menu-bar', true);
-    await window.setSettingValue(SettingsKey.settingsLinkPreview, false);
   }
 
   WhisperEvents.on('openInbox', () => {

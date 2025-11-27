@@ -24,7 +24,7 @@ async function insertUserProfileIntoWrapper(convoId: string) {
   const dbProfileKey = fromHexToArray(ourConvo.getProfileKey() || '');
   const priority = ourConvo.get('priority') || CONVERSATION_PRIORITIES.default; // this has to be a direct call to .get() and not getPriority()
 
-  const areBlindedMsgRequestEnabled = !!Storage.get(SettingsKey.hasBlindedMsgRequestsEnabled);
+  const areBlindedMsgRequestEnabled = !!Storage.get(SettingsKey.settingsBlindedMsgRequests);
 
   const expirySeconds = ourConvo.getExpireTimer() || 0;
   window.log.debug(

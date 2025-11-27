@@ -7,26 +7,24 @@
 import {
   app,
   BrowserWindow,
-  protocol as electronProtocol,
   ipcMain as ipc,
   ipcMain,
   IpcMainEvent,
   Menu,
   nativeTheme,
   powerSaveBlocker,
+  protocol as electronProtocol,
   screen,
   shell,
   systemPreferences,
 } from 'electron';
-
-import crypto from 'crypto';
 import fs from 'fs';
 import os from 'os';
 import path, { join } from 'path';
 import { platform as osPlatform } from 'process';
 import url from 'url';
 
-import _, { isEmpty, isNumber, isFinite } from 'lodash';
+import _, { isEmpty, isFinite, isNumber } from 'lodash';
 
 import { addHandler } from '../node/global_errors';
 import { setup as setupSpellChecker } from '../node/spell_check';
@@ -34,9 +32,67 @@ import { setup as setupSpellChecker } from '../node/spell_check';
 import electronLocalshortcut from 'electron-localshortcut';
 import packageJson from '../../package.json';
 
+import { SettingsKey, type SettingsKeyType, type SettingsState } from '../data/settings-key';
+import { config } from '../node/config';
+
+// Very important to put before the single instance check, since it is based on the
+//   userData directory.
+import {
+  getUserDBHasPassword,
+  getUserSQLKey,
+  removeUserConfig,
+  setUserDBHasPassword,
+  userConfig,
+} from '../node/config/user_config';
+import * as PasswordUtil from '../util/passwordUtils';
+// We generally want to pull in our own modules after this point, after the user
+//   data directory has been set.
+import { initAttachmentsChannel } from '../node/attachment_channel';
+
+import * as updater from '../updater/index';
+
+import {
+  getEphemeralWindowConfig,
+  removeEphemeralConfig,
+  setEphemeralWindowConfig,
+} from '../node/config/ephemeral_config';
+import { createTemplate } from '../node/menu';
+import { installPermissionsHandler } from '../node/permissions';
+import { installFileHandler, installWebHandler } from '../node/protocol_filter';
+import { sqlNode } from '../node/sql';
+import * as sqlChannels from '../node/sql_channel';
+import { createTrayIcon } from '../node/tray_icon';
+import { windowMarkShouldQuit, windowShouldQuit } from '../node/window_state';
+import { readFile } from 'fs-extra';
+import { getAppRootPath } from '../node/getRootPath';
+import { setLatestRelease } from '../node/latest_desktop_release';
+import { isDevProd, isTestIntegration } from '../shared/env_vars';
+import { classicDark } from '../themes';
+
+import { getCrowdinLocale, isSessionLocaleSet } from '../util/i18n/shared';
+import { loadLocalizedDictionary } from '../node/locale';
+import { simpleDictionaryNoArgs } from '../localization/locales';
+import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
+import { isReleaseChannel } from '../updater/types';
+import { canAutoUpdate, checkForUpdates } from '../updater/updater';
+import { initializeMainProcessLogger } from '../util/logger/main_process_logging';
+
+import * as log from '../util/logger/log';
+import { DURATION } from '../session/constants';
+import { tr } from '../localization/localeTools';
+import { isMacOS, isWindows } from '../OS';
+import {
+  getAutoUpdateSetting,
+  getSpellCheckSetting,
+  getStartInTraySetting,
+  setInMemorySetting,
+} from '../node/settings';
+
 addHandler();
 
 const getRealPath = (p: string) => fs.realpathSync(p);
+
+const getUserDataPath = () => getRealPath(app.getPath('userData'));
 
 // All of our polling is done from the renderer thread, so we need to set this flag
 // to keep polling even if the renderer hidden/minimized.
@@ -66,45 +122,11 @@ let readyForShutdown: boolean = false;
 // Tray icon and related objects
 let tray: any = null;
 
-import { config } from '../node/config';
-
-// Very important to put before the single instance check, since it is based on the
-//   userData directory.
-import { userConfig } from '../node/config/user_config';
-import * as PasswordUtil from '../util/passwordUtils';
-
 const development = (config as any).environment === 'development';
 const appInstance = config.util.getEnv('NODE_APP_INSTANCE') || 0;
 
-// We generally want to pull in our own modules after this point, after the user
-//   data directory has been set.
-import { initAttachmentsChannel } from '../node/attachment_channel';
-
-import * as updater from '../updater/index';
-
-import { ephemeralConfig } from '../node/config/ephemeral_config';
-import { createTemplate } from '../node/menu';
-import { installPermissionsHandler } from '../node/permissions';
-import { installFileHandler, installWebHandler } from '../node/protocol_filter';
-import { sqlNode } from '../node/sql';
-import * as sqlChannels from '../node/sql_channel';
-import { createTrayIcon } from '../node/tray_icon';
-import { windowMarkShouldQuit, windowShouldQuit } from '../node/window_state';
-
-let appStartInitialSpellcheckSetting = true;
-
 function openDevToolsTestIntegration() {
   return isTestIntegration() && !isEmpty(process.env.TEST_OPEN_DEV_TOOLS);
-}
-
-async function getSpellCheckSetting() {
-  const json = sqlNode.getItemById('spell-check');
-  // Default to `true` if setting doesn't exist yet
-  if (!json) {
-    return true;
-  }
-
-  return json.value;
 }
 
 function showWindow() {
@@ -152,34 +174,9 @@ if (!process.mas) {
   }
 }
 
-const windowFromUserConfig = userConfig.get('window');
-const windowFromEphemeral = ephemeralConfig.get('window');
-let windowConfig = windowFromEphemeral || windowFromUserConfig;
-if (windowFromUserConfig) {
-  userConfig.set('window', null);
-  ephemeralConfig.set('window', windowConfig);
-}
+let windowConfig = getEphemeralWindowConfig();
 
-import { readFile } from 'fs-extra';
-import { getAppRootPath } from '../node/getRootPath';
-import { setLatestRelease } from '../node/latest_desktop_release';
-import { isDevProd, isTestIntegration } from '../shared/env_vars';
-import { classicDark } from '../themes';
-
-import { isSessionLocaleSet, getCrowdinLocale } from '../util/i18n/shared';
-import { loadLocalizedDictionary } from '../node/locale';
-import { simpleDictionaryNoArgs } from '../localization/locales';
-import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
-import { isReleaseChannel } from '../updater/types';
-import { canAutoUpdate, checkForUpdates } from '../updater/updater';
-import { initializeMainProcessLogger } from '../util/logger/main_process_logging';
-
-import * as log from '../util/logger/log';
-import { DURATION } from '../session/constants';
-import { tr } from '../localization/localeTools';
-import { isMacOS, isWindows } from '../OS';
-
-function prepareURL(pathSegments: Array<string>, moreKeys?: { theme: any }) {
+function prepareURL(pathSegments: Array<string>, moreKeys?: { theme?: any, appStartInitialSpellcheckSetting?: boolean }) {
   const urlObject: url.UrlObject = {
     pathname: join(...pathSegments),
     protocol: 'file:',
@@ -194,8 +191,8 @@ function prepareURL(pathSegments: Array<string>, moreKeys?: { theme: any }) {
       hostname: os.hostname(),
       appInstance: process.env.NODE_APP_INSTANCE,
       proxyUrl: process.env.HTTPS_PROXY || process.env.https_proxy,
-      appStartInitialSpellcheckSetting,
       ...moreKeys,
+      appStartInitialSpellcheckSetting: moreKeys?.appStartInitialSpellcheckSetting ?? false,
     },
   };
   return url.format(urlObject);
@@ -238,7 +235,11 @@ function getWindowSize() {
   return { width, height, minWidth, minHeight };
 }
 
-function isVisible(window: { x: number; y: number; width: number }, bounds: any) {
+function isVisible(window: { x?: number; y?: number; width: number }, bounds: any) {
+  if (typeof window.x === 'undefined' || typeof window.y === 'undefined') {
+    return false;
+  }
+
   const boundsX = _.get(bounds, 'x') || 0;
   const boundsY = _.get(bounds, 'y') || 0;
   const boundsWidth = _.get(bounds, 'width') || getDefaultWindowSize().defaultWidth;
@@ -262,23 +263,47 @@ function isVisible(window: { x: number; y: number; width: number }, bounds: any)
   );
 }
 
-function getStartInTray() {
-  const startInTray =
-    process.argv.some(arg => arg === '--start-in-tray') || userConfig.get('startInTray');
-  const usingTrayIcon = startInTray || process.argv.some(arg => arg === '--use-tray-icon');
-  return { usingTrayIcon, startInTray };
+function getUsingStartInTray() {
+  return (
+    getStartInTraySetting() ||
+    process.argv.some(arg => arg === '--start-in-tray' || arg === '--use-tray-icon')
+  );
+}
+
+function captureAndSaveWindowStats() {
+  if (!mainWindow) {
+    return;
+  }
+
+  const size = mainWindow.getSize();
+  const position = mainWindow.getPosition();
+
+  // so if we need to recreate the window, we have the most recent settings
+  windowConfig = {
+    maximized: mainWindow.isMaximized(),
+    hideMenuBar: windowConfig.hideMenuBar,
+    width: size[0],
+    height: size[1],
+    x: position[0],
+    y: position[1],
+  };
+
+  if (mainWindow.isFullScreen()) {
+    // Only include this property if true, because when explicitly set to
+    // false the fullscreen button will be disabled on osx
+    windowConfig.fullscreen = true;
+  }
+
+  console.log(`Updating BrowserWindow config: ${JSON.stringify(windowConfig)}`);
+  setEphemeralWindowConfig(windowConfig);
 }
 
 async function createWindow() {
   const { minWidth, minHeight, width, height } = getWindowSize();
-  windowConfig = windowConfig || {};
   const picked = {
-    maximized: (windowConfig as any).maximized || false,
-    autoHideMenuBar: (windowConfig as any).autoHideMenuBar || false,
-    width: (windowConfig as any).width || width,
-    height: (windowConfig as any).height || height,
-    x: (windowConfig as any).x,
-    y: (windowConfig as any).y,
+    ...windowConfig,
+    width: windowConfig.width || width,
+    height: windowConfig.height || height,
   };
 
   if (isTestIntegration()) {
@@ -295,7 +320,6 @@ async function createWindow() {
     show: true,
     minWidth,
     minHeight,
-    fullscreen: false as boolean | undefined,
     // Default theme is Classic Dark
     backgroundColor: classicDark['--background-primary-color'],
     webPreferences: {
@@ -305,7 +329,7 @@ async function createWindow() {
       contextIsolation: false,
       preload: path.join(getAppRootPath(), 'preload.js'),
       nativeWindowOpen: true,
-      spellcheck: await getSpellCheckSetting(),
+      spellcheck: getSpellCheckSetting(),
       backgroundThrottling: false,
     },
     // only set icon for Linux, the executable one will be used by default for other platforms
@@ -315,33 +339,24 @@ async function createWindow() {
     ...picked,
   };
 
-  if (!_.isNumber(windowOptions.width) || windowOptions.width < minWidth) {
+  if (windowOptions.width < minWidth) {
     windowOptions.width = Math.max(minWidth, width);
   }
-  if (!_.isNumber(windowOptions.height) || windowOptions.height < minHeight) {
+  if (windowOptions.height < minHeight) {
     windowOptions.height = Math.max(minHeight, height);
-  }
-  if (!_.isBoolean(windowOptions.maximized)) {
-    delete windowOptions.maximized;
-  }
-  if (!_.isBoolean(windowOptions.autoHideMenuBar)) {
-    delete windowOptions.autoHideMenuBar;
   }
 
   const visibleOnAnyScreen = _.some(screen.getAllDisplays(), display => {
-    if (!_.isNumber(windowOptions.x) || !_.isNumber(windowOptions.y)) {
-      return false;
-    }
-
     return isVisible(windowOptions, _.get(display, 'bounds'));
   });
+
   if (!visibleOnAnyScreen) {
     console.log('Location reset needed');
     delete windowOptions.x;
     delete windowOptions.y;
   }
 
-  if (windowOptions.fullscreen === false) {
+  if (!windowOptions.fullscreen) {
     delete windowOptions.fullscreen;
   }
 
@@ -349,6 +364,12 @@ async function createWindow() {
 
   // Create the browser window.
   mainWindow = new BrowserWindow(windowOptions);
+
+  // BrowserWindow's options doesn't have a way to construct the window with menu bar options so they need to be set
+  if (!isMacOS()) {
+    mainWindow.setMenuBarVisibility(!windowOptions.hideMenuBar);
+    mainWindow.setAutoHideMenuBar(windowOptions.hideMenuBar);
+  }
 
   setupSpellChecker(mainWindow);
 
@@ -377,36 +398,6 @@ async function createWindow() {
     mainWindow.reload();
   });
 
-  function captureAndSaveWindowStats() {
-    if (!mainWindow) {
-      return;
-    }
-
-    const size = mainWindow.getSize();
-    const position = mainWindow.getPosition();
-
-    // so if we need to recreate the window, we have the most recent settings
-    windowConfig = {
-      maximized: mainWindow.isMaximized(),
-      autoHideMenuBar: mainWindow.isMenuBarAutoHide(),
-      width: size[0],
-      height: size[1],
-      x: position[0],
-
-      y: position[1],
-      fullscreen: false as boolean | undefined,
-    };
-
-    if (mainWindow.isFullScreen()) {
-      // Only include this property if true, because when explicitly set to
-      // false the fullscreen button will be disabled on osx
-      (windowConfig as any).fullscreen = true;
-    }
-
-    console.log(`Updating BrowserWindow config: ${JSON.stringify(windowConfig)}`);
-    ephemeralConfig.set('window', windowConfig);
-  }
-
   const debouncedCaptureStats = _.debounce(captureAndSaveWindowStats, 500);
   mainWindow.on('resize', debouncedCaptureStats);
   mainWindow.on('move', debouncedCaptureStats);
@@ -422,7 +413,7 @@ async function createWindow() {
     }
   });
 
-  const urlToLoad = prepareURL([getAppRootPath(), 'background.html']);
+  const urlToLoad = prepareURL([getAppRootPath(), 'background.html'], {appStartInitialSpellcheckSetting: getSpellCheckSetting()});
 
   await mainWindow.loadURL(urlToLoad);
   if (openDevToolsTestIntegration()) {
@@ -465,7 +456,7 @@ async function createWindow() {
 
     // On Mac, or on other platforms when the tray icon is in use, the window
     // should be only hidden, not closed, when the user clicks the close button
-    if (!windowShouldQuit() && (getStartInTray().usingTrayIcon || process.platform === 'darwin')) {
+    if (!windowShouldQuit() && (getUsingStartInTray() || process.platform === 'darwin')) {
       // toggle the visibility of the show/hide tray icon menu entries
       if (tray) {
         tray.updateContextMenu();
@@ -519,8 +510,8 @@ async function readyForUpdates() {
 
   // Second, start checking for app updates
   try {
-    // if the user disabled auto updates, this will actually not start the updater
-    await updater.start(getMainWindow, userConfig, log);
+    const autoUpdateEnabled = getAutoUpdateSetting();
+    await updater.start(getMainWindow, autoUpdateEnabled, log);
   } catch (error) {
     (log || console).error(
       '[updater] Error starting update checks:',
@@ -622,7 +613,7 @@ async function showPasswordWindow() {
 
     // On Mac, or on other platforms when the tray icon is in use, the window
     // should be only hidden, not closed, when the user clicks the close button
-    if (!windowShouldQuit() && (getStartInTray().usingTrayIcon || process.platform === 'darwin')) {
+    if (!windowShouldQuit()) {
       // toggle the visibility of the show/hide tray icon menu entries
       if (tray) {
         tray.updateContextMenu();
@@ -707,7 +698,7 @@ async function saveDebugLog(_event: any) {
 // Some APIs can only be used after this event occurs.
 let ready = false;
 app.on('ready', async () => {
-  const userDataPath = getRealPath(app.getPath('userData'));
+  const userDataPath = getUserDataPath();
   const installPath = getRealPath(join(app.getAppPath(), '..', '..'));
 
   installFileHandler({
@@ -720,8 +711,6 @@ app.on('ready', async () => {
   installWebHandler({
     protocol: electronProtocol,
   });
-
-  installPermissionsHandler({ userConfig });
 
   await initializeMainProcessLogger(getMainWindow);
   console.log('app ready');
@@ -740,10 +729,10 @@ app.on('ready', async () => {
     console.log(`crowdin locale is ${loadedLocale.crowdinLocale}`);
   }
 
-  const key = getDefaultSQLKey();
+  const key = getUserSQLKey();
   // Try to show the main window with the default key
   // If that fails then show the password window
-  const dbHasPassword = userConfig.get('dbHasPassword');
+  const dbHasPassword = getUserDBHasPassword();
   if (dbHasPassword) {
     console.log('showing password window');
     await showPasswordWindow();
@@ -753,35 +742,23 @@ app.on('ready', async () => {
   }
 });
 
-function getDefaultSQLKey() {
-  let key = userConfig.get('key');
-  if (!key) {
-    console.log('key/initialize: Generating new encryption key, since we did not find it on disk');
-    // https://www.zetetic.net/sqlcipher/sqlcipher-api/#key
-    key = crypto.randomBytes(32).toString('hex');
-    userConfig.set('key', key);
-  }
-
-  return key as string;
-}
-
 async function removeDB() {
   // this don't remove attachments and stuff like that...
-  const userDir = getRealPath(app.getPath('userData'));
+  const userDir = getUserDataPath();
   sqlNode.removeDB(userDir);
 
   try {
     console.error('Remove DB: removing.', userDir);
 
     try {
-      userConfig.remove();
+      removeUserConfig();
     } catch (e) {
       if (e.code !== 'ENOENT') {
         throw e;
       }
     }
     try {
-      ephemeralConfig.remove();
+      removeEphemeralConfig();
     } catch (e) {
       if (e.code !== 'ENOENT') {
         throw e;
@@ -793,25 +770,26 @@ async function removeDB() {
 }
 
 async function showMainWindow(sqlKey: string, passwordAttempt = false) {
-  const userDataPath = getRealPath(app.getPath('userData'));
+  const userDataPath = getUserDataPath();
 
   await sqlNode.initializeSql({
     configDir: userDataPath,
     key: sqlKey,
     passwordAttempt,
   });
-  appStartInitialSpellcheckSetting = await getSpellCheckSetting();
   sqlChannels.initializeSqlChannel();
 
   await initAttachmentsChannel({
     userDataPath,
   });
 
+  installPermissionsHandler();
+
   ready = true;
 
   await createWindow();
 
-  if (getStartInTray().usingTrayIcon) {
+  if (getUsingStartInTray()) {
     tray = createTrayIcon(getMainWindow);
   }
 
@@ -941,16 +919,20 @@ ipc.on('resetDatabase', async () => {
   app.quit();
 });
 
-ipc.on('set-auto-hide-menu-bar', (_event, autoHide) => {
-  if (mainWindow) {
-    mainWindow.setAutoHideMenuBar(autoHide);
-  }
-});
+registerIpcHandlersForSettings({
+  key: SettingsKey.settingsHideMenuBar,
+  setter: async newValue => {
+    if (typeof newValue !== 'boolean') {
+      throw new Error('Invalid new value for hide menu bar');
+    }
 
-ipc.on('set-menu-bar-visibility', (_event, visibility) => {
-  if (mainWindow) {
-    mainWindow.setMenuBarVisibility(visibility);
-  }
+    if (mainWindow) {
+      mainWindow.setMenuBarVisibility(!newValue);
+      mainWindow.setAutoHideMenuBar(newValue);
+      windowConfig.hideMenuBar = newValue;
+      captureAndSaveWindowStats();
+    }
+  },
 });
 
 ipc.on('close-about', () => {
@@ -958,6 +940,33 @@ ipc.on('close-about', () => {
     aboutWindow.close();
   }
 });
+
+type IPCFunction = (...args: Array<unknown>) => Promise<unknown>;
+
+function registerIpcHandler(handlerName: string, func: IPCFunction) {
+  ipc.on(handlerName, async (event, ...args) => {
+    try {
+      const response = await func(...args);
+      event.sender.send(`${handlerName}-response`, response);
+    } catch (e) {
+      event.sender.send(`${handlerName}-response`, { error: e.message });
+    }
+  });
+}
+
+type IPCSettingsRegistrationParams = {
+  key: SettingsKeyType;
+  getter?: IPCFunction;
+  setter: IPCFunction;
+};
+
+function registerIpcHandlersForSettings({ key, getter, setter }: IPCSettingsRegistrationParams) {
+  if (getter) {
+    registerIpcHandler(`get-${key}`, getter);
+  }
+
+  registerIpcHandler(`set-${key}`, setter);
+}
 
 // Password screen related IPC calls
 ipc.on('password-window-login', async (event, passPhrase) => {
@@ -974,58 +983,68 @@ ipc.on('password-window-login', async (event, passPhrase) => {
   }
 });
 
-ipc.on('password-recovery-phrase', async (event, passPhrase) => {
-  const sendResponse = (e: string | undefined) => {
-    event.sender.send('password-recovery-phrase-response', e);
+registerIpcHandler('node-settings', async () => {
+  const loginSettings = app.getLoginItemSettings();
+
+  const settings = {
+    settingsBools: {
+      [SettingsKey.settingsAutoStart]: loginSettings.openAtLogin,
+      [SettingsKey.settingsHideMenuBar]: windowConfig.hideMenuBar,
+    } satisfies Partial<SettingsState['settingsBools']>,
   };
 
+  console.log(settings);
+  return settings;
+});
+
+registerIpcHandler('password-recovery-phrase', async passPhrase => {
   try {
+    if (typeof passPhrase !== 'string') {
+      return;
+    }
+
     // Check if the hash we have stored matches the given password.
     const hash = sqlNode.getPasswordHash();
 
+    if (!hash) {
+      return;
+    }
+
     const hashMatches = passPhrase && PasswordUtil.matchesHash(passPhrase, hash);
-    if (hash && !hashMatches) {
+    if (!hashMatches) {
       throw new Error('Invalid password');
     }
-    // no issues. send back undefined, meaning OK
-    sendResponse(undefined);
-  } catch (e) {
+  } catch (_error) {
     const localisedError = simpleDictionaryNoArgs.passwordIncorrect[getCrowdinLocale()];
-    // send back the error
-    sendResponse(localisedError);
+    throw new Error(localisedError);
   }
 });
 
-ipc.on('start-in-tray-on-start', (event, newValue) => {
-  try {
-    userConfig.set('startInTray', newValue);
-    if (newValue) {
-      if (!tray) {
-        tray = createTrayIcon(getMainWindow);
-      }
-    } else {
-      // destroy is not working for a lot of desktop env. So for simplicity, we don't destroy it here but just
-      // show a toast to explain to the user that he needs to restart
-      // tray.destroy();
-      // tray = null;
+registerIpcHandlersForSettings({
+  key: SettingsKey.settingsStartInTray,
+  setter: async newValue => {
+    if (typeof newValue !== 'boolean') {
+      throw new Error('Invalid new value for start in tray');
     }
-    event.sender.send('start-in-tray-on-start-response', null);
-  } catch (e) {
-    event.sender.send('start-in-tray-on-start-response', e);
-  }
+
+    if (newValue && !tray) {
+      tray = createTrayIcon(getMainWindow);
+    }
+    // destroy is not working for a lot of desktop env. So for simplicity, we don't destroy it here but just
+    // show a toast to explain to the user that he needs to restart
+    // else {
+    // tray.destroy();
+    // tray = null;
+    // }
+  },
 });
 
-ipc.on('get-start-in-tray', event => {
-  try {
-    const val = userConfig.get('startInTray');
-    event.sender.send('get-start-in-tray-response', val);
-  } catch (e) {
-    event.sender.send('get-start-in-tray-response', false);
-  }
-});
-
-ipc.on('set-auto-start-enabled', (event, newValue) => {
-  try {
+registerIpcHandlersForSettings({
+  key: SettingsKey.settingsAutoStart,
+  setter: async newValue => {
+    if (typeof newValue !== 'boolean') {
+      throw new Error('Invalid new value for auto start');
+    }
     // Set the login item settings based on the platform
     if (isMacOS()) {
       // macOS
@@ -1047,44 +1066,12 @@ ipc.on('set-auto-start-enabled', (event, newValue) => {
     } else {
       throw new Error(`Unsupported platform for auto start: ${process.platform}`);
     }
-
-    event.sender.send('set-auto-start-enabled-response', null);
-  } catch (e) {
-    event.sender.send('set-auto-start-enabled-response', e);
-  }
-});
-
-ipc.on('get-auto-start-enabled', event => {
-  try {
-    const loginSettings = app.getLoginItemSettings();
-    const isEnabled = loginSettings.openAtLogin;
-    event.sender.send('get-auto-start-enabled-response', isEnabled);
-  } catch (e) {
-    event.sender.send('get-auto-start-enabled-response', false);
-  }
+  },
 });
 
 ipcMain.on('update-badge-count', (_event, count) => {
   if (app.isReady()) {
     app.setBadgeCount(isNumber(count) && isFinite(count) && count >= 0 ? count : 0);
-  }
-});
-
-ipc.on('get-opengroup-pruning', event => {
-  try {
-    const val = userConfig.get('opengroupPruning');
-    event.sender.send('get-opengroup-pruning-response', val);
-  } catch (e) {
-    event.sender.send('get-opengroup-pruning-response', false);
-  }
-});
-
-ipc.on('set-opengroup-pruning', (event, newValue) => {
-  try {
-    userConfig.set('opengroupPruning', newValue);
-    event.sender.send('set-opengroup-pruning-response', null);
-  } catch (e) {
-    event.sender.send('set-opengroup-pruning-response', e);
   }
 });
 
@@ -1104,17 +1091,17 @@ ipc.on('set-password', async (event, passPhrase, oldPhrase) => {
     }
 
     if (isEmpty(passPhrase)) {
-      const defaultKey = getDefaultSQLKey();
+      const defaultKey = getUserSQLKey();
       sqlNode.setSQLPassword(defaultKey);
       sqlNode.removePasswordHash();
-      userConfig.set('dbHasPassword', false);
+      setUserDBHasPassword(false);
       sendResponse(undefined);
     } else {
       sqlNode.setSQLPassword(passPhrase);
       const newHash = PasswordUtil.generateHash(passPhrase);
       sqlNode.savePasswordHash(newHash);
       const updatedHash = sqlNode.getPasswordHash();
-      userConfig.set('dbHasPassword', true);
+      setUserDBHasPassword(true);
       sendResponse(updatedHash);
     }
   } catch (e) {
@@ -1141,45 +1128,53 @@ ipc.on('get-media-permissions', event => {
   // eslint-disable-next-line no-param-reassign
   event.returnValue = userConfig.get('mediaPermissions') || false;
 });
-ipc.on('set-media-permissions', (event, value) => {
-  userConfig.set('mediaPermissions', value);
+registerIpcHandlersForSettings({
+  key: SettingsKey.settingsPermissionMedia,
+  setter: async newValue => {
+    if (typeof newValue !== 'boolean') {
+      throw new Error('Invalid new value for settingsPermissionMedia');
+    }
 
-  // We reinstall permissions handler to ensure that a revoked permission takes effect
-  installPermissionsHandler({ userConfig });
+    setInMemorySetting(SettingsKey.settingsPermissionMedia, newValue);
+    if (!newValue) {
+      setInMemorySetting(SettingsKey.settingsPermissionCallMedia, false);
+    }
 
-  event.sender.send('set-success-media-permissions', null);
+    // We reinstall permissions handler to ensure that a revoked permission takes effect
+    installPermissionsHandler();
+  },
 });
 
-// This should be called with an ipc sendSync
-ipc.on('get-call-media-permissions', event => {
-  // eslint-disable-next-line no-param-reassign
-  event.returnValue = userConfig.get('callMediaPermissions') || false;
-});
-ipc.on('set-call-media-permissions', (event, value) => {
-  userConfig.set('callMediaPermissions', value);
-
-  // We reinstall permissions handler to ensure that a revoked permission takes effect
-  installPermissionsHandler({ userConfig });
-
-  event.sender.send('set-success-call-media-permissions', null);
-});
-
-// Session - Auto updating
-ipc.on('get-auto-update-setting', event => {
-  const configValue = userConfig.get('autoUpdate');
-  // eslint-disable-next-line no-param-reassign
-  event.returnValue = typeof configValue !== 'boolean' ? true : configValue;
+registerIpcHandlersForSettings({
+  key: SettingsKey.settingsPermissionCallMedia,
+  setter: async newValue => {
+    if (typeof newValue !== 'boolean') {
+      throw new Error('Invalid new value for settingsPermissionCallMedia');
+    }
+    setInMemorySetting(SettingsKey.settingsPermissionCallMedia, newValue);
+    if (newValue) {
+      setInMemorySetting(SettingsKey.settingsPermissionMedia, true);
+    }
+    // We reinstall permissions handler to ensure that a revoked permission takes effect
+    installPermissionsHandler();
+  },
 });
 
-ipc.on('set-auto-update-setting', async (_event, enabled) => {
-  userConfig.set('autoUpdate', !!enabled);
+registerIpcHandlersForSettings({
+  key: SettingsKey.settingsAutoUpdate,
+  setter: async newValue => {
+    if (typeof newValue !== 'boolean') {
+      throw new Error('Invalid new value for autoUpdate');
+    }
 
-  if (enabled) {
-    await readyForUpdates();
-  } else {
-    updater.stop();
-    isReadyForUpdates = false;
-  }
+    setInMemorySetting(SettingsKey.settingsAutoUpdate, newValue);
+    if (newValue) {
+      await readyForUpdates();
+    } else {
+      updater.stop();
+      isReadyForUpdates = false;
+    }
+  },
 });
 
 ipc.on('get-native-theme', event => {

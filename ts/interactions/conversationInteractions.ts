@@ -548,7 +548,7 @@ export async function showLinkSharingConfirmationModalDialog(e: any) {
   const pastedText = e.clipboardData.getData('text');
   if (isURL(pastedText) && !window.getSettingValue(SettingsKey.settingsLinkPreview, false)) {
     const alreadyDisplayedPopup =
-      (await Data.getItemById(SettingsKey.hasLinkPreviewPopupBeenDisplayed))?.value || false;
+      (await Data.getItemById(SettingsKey.settingsLinkPreviewPopupHasDisplayed))?.value || false;
     if (!alreadyDisplayedPopup) {
       window.inboxStore?.dispatch(
         updateConfirmModal({
@@ -559,7 +559,7 @@ export async function showLinkSharingConfirmationModalDialog(e: any) {
             await window.setSettingValue(SettingsKey.settingsLinkPreview, true);
           },
           onClickClose: async () => {
-            await Storage.put(SettingsKey.hasLinkPreviewPopupBeenDisplayed, true);
+            await Storage.put(SettingsKey.settingsLinkPreviewPopupHasDisplayed, true);
           },
           okText: tr('enable'),
         })

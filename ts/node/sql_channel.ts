@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron';
-import { ephemeralConfig } from './config/ephemeral_config';
+import { removeEphemeralConfig } from './config/ephemeral_config';
 import { userConfig } from './config/user_config';
 import { sqlNode } from './sql';
 
@@ -40,7 +40,7 @@ export function initializeSqlChannel() {
         }
       }
       try {
-        ephemeralConfig.remove();
+        removeEphemeralConfig();
       } catch (e) {
         if (e.code !== 'ENOENT') {
           throw e;

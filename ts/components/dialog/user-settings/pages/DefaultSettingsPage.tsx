@@ -34,7 +34,7 @@ import type { ProfileDialogModes } from '../ProfileDialogModes';
 import { tr } from '../../../../localization/localeTools';
 import { useIsProAvailable } from '../../../../hooks/useIsProAvailable';
 import { setDebugMode } from '../../../../state/ducks/debug';
-import { useHideRecoveryPasswordEnabled } from '../../../../state/selectors/settings';
+import { useHideRecoveryPasswordSetting } from '../../../../state/selectors/settings';
 
 const handleKeyQRMode = (mode: ProfileDialogModes, setMode: (mode: ProfileDialogModes) => void) => {
   switch (mode) {
@@ -217,7 +217,7 @@ function SettingsSection() {
 
 function AdminSection() {
   const dispatch = useDispatch();
-  const recoveryPasswordHidden = useHideRecoveryPasswordEnabled();
+  const { enabled: recoveryPasswordHidden } = useHideRecoveryPasswordSetting();
 
   return (
     <PanelButtonGroup>

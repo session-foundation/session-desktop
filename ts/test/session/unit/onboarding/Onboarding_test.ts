@@ -8,7 +8,6 @@ import {
   signInByLinkingDevice,
 } from '../../../../util/accountManager';
 import { TestUtils } from '../../../test-utils';
-import { stubWindow } from '../../../test-utils/utils';
 import { sanitizeDisplayNameOrToast } from '../../../../components/registration/utils';
 import { EmptyDisplayNameError } from '../../../../session/utils/errors';
 
@@ -21,7 +20,6 @@ describe('Onboarding', () => {
     TestUtils.stubI18n();
     TestUtils.stubData('createOrUpdateItem').resolves();
     TestUtils.stubData('removeItemById').resolves();
-    stubWindow('setOpengroupPruning', () => {});
     Sinon.stub(getSwarmPollingInstance(), 'pollOnceForOurDisplayName').resolves(polledDisplayName);
   });
 

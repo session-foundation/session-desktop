@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { LeftOverlayMode, sectionActions } from '../../state/ducks/section';
 import { disableRecoveryPhrasePrompt } from '../../state/ducks/userConfig';
 import { useLeftOverlayMode } from '../../state/selectors/section';
-import { useHideRecoveryPasswordEnabled } from '../../state/selectors/settings';
+import { useHideRecoveryPasswordSetting } from '../../state/selectors/settings';
 import { useIsDarkTheme } from '../../state/theme/selectors/theme';
 import { getShowRecoveryPhrasePrompt } from '../../state/selectors/userConfig';
 import { isSignWithRecoveryPhrase } from '../../util/storage';
@@ -108,7 +108,7 @@ function getLeftPaneHeaderLabel(leftOverlayMode: LeftOverlayMode | undefined): s
 export const LeftPaneBanner = () => {
   const isDarkTheme = useIsDarkTheme();
   const isSignInWithRecoveryPhrase = isSignWithRecoveryPhrase();
-  const hideRecoveryPassword = useHideRecoveryPasswordEnabled();
+  const { enabled: hideRecoveryPassword } = useHideRecoveryPasswordSetting();
 
   const dispatch = useDispatch();
 

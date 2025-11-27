@@ -32,7 +32,7 @@ export async function ensureThemeConsistency(): Promise<boolean> {
 }
 
 const setupTheme = async () => {
-  const shouldFollowSystemTheme = window.getSettingValue(SettingsKey.hasFollowSystemThemeEnabled);
+  const shouldFollowSystemTheme = window.getSettingValue(SettingsKey.settingsFollowSystemTheme);
   const theme = window.Events.getThemeSetting();
   const themeConfig = {
     theme,

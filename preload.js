@@ -97,6 +97,26 @@ window.setZoomFactor = number => {
   webFrame.setZoomFactor(number);
 };
 
+function handleIpcResponse(resolve, reject) {
+  return (_event, value) =>
+    value && typeof value === 'object' && 'error' in value && value.error
+      ? reject(value.error)
+      : resolve(value);
+}
+
+function registerIpcRoundTripHandler(handlerName, func) {
+  return async (...args) =>
+    new Promise((resolve, reject) => {
+      ipc.once(`${handlerName}-response`, handleIpcResponse(resolve, reject));
+      ipc.send(handlerName, ...args);
+      func?.(...args);
+    });
+}
+
+function registerIpcRoundTripHandlerForSetSetting(settingsKey) {
+  return registerIpcRoundTripHandler(`set-${settingsKey}`);
+}
+
 // Set the password for the database
 window.setPassword = async (passPhrase, oldPhrase) =>
   new Promise((resolve, reject) => {
@@ -114,84 +134,51 @@ window.setPassword = async (passPhrase, oldPhrase) =>
   });
 
 // called to verify that the password is correct when showing the recovery from seed modal
-window.onTryPassword = async passPhrase =>
-  new Promise((resolve, reject) => {
-    ipc.once('password-recovery-phrase-response', (_event, error) => {
-      if (error) {
-        return reject(error);
-      }
-      return resolve();
-    });
-    ipc.send('password-recovery-phrase', passPhrase);
-  });
 
-window.setStartInTray = async startInTray =>
-  new Promise((resolve, reject) => {
-    ipc.once('start-in-tray-on-start-response', (_event, error) => {
-      if (error) {
-        reject(error);
-        return;
-      }
-      resolve();
-      return;
-    });
-    ipc.send('start-in-tray-on-start', startInTray);
-    void window.setSettingValue(SettingsKey.settingsStartInTray, startInTray);
-  });
+window.onTryPassword = registerIpcRoundTripHandler('password-recovery-phrase');
+window.getNodeSettings = registerIpcRoundTripHandler('node-settings');
 
-window.getStartInTray = async () => {
-  return new Promise(resolve => {
-    ipc.once('get-start-in-tray-response', (_event, value) => {
-      resolve(value);
-    });
-    ipc.send('get-start-in-tray');
-  });
+const setNodeAutoUpdate = registerIpcRoundTripHandlerForSetSetting(SettingsKey.settingsAutoUpdate);
+const setNodeStartInTray = registerIpcRoundTripHandlerForSetSetting(
+  SettingsKey.settingsStartInTray
+);
+const setNodeAutoStart = registerIpcRoundTripHandlerForSetSetting(SettingsKey.settingsAutoStart);
+const setHideMenuBar = registerIpcRoundTripHandlerForSetSetting(SettingsKey.settingsHideMenuBar);
+const setPermissionMedia = registerIpcRoundTripHandlerForSetSetting(
+  SettingsKey.settingsPermissionMedia
+);
+const setPermissionCallMedia = registerIpcRoundTripHandlerForSetSetting(
+  SettingsKey.settingsPermissionCallMedia
+);
+
+window.setSettingsValue = async (key, ...args) => {
+  switch (key) {
+    // These values shouldn't be stored as their state is derivable
+    case SettingsKey.settingsHideMenuBar:
+      return setHideMenuBar(...args);
+    case SettingsKey.settingsAutoStart:
+      return setNodeAutoStart(...args);
+
+    // These values must be stored as their state is not derivable
+    case SettingsKey.settingsAutoUpdate:
+      await setNodeAutoUpdate(...args);
+      break;
+    case SettingsKey.settingsStartInTray:
+      await setNodeStartInTray(...args);
+      break;
+    case SettingsKey.settingsPermissionMedia:
+      await setPermissionMedia(...args);
+      break;
+    case SettingsKey.settingsPermissionCallMedia:
+      await setPermissionCallMedia(...args);
+      break;
+    default:
+      break;
+  }
+  await Storage.put(key, ...args);
 };
 
-window.setAutoStartEnabled = async autoStart =>
-  new Promise((resolve, reject) => {
-    ipc.once('set-auto-start-enabled-response', (_event, error) => {
-      if (error) {
-        reject(error);
-        return;
-      }
-      resolve();
-      return;
-    });
-    ipc.send('set-auto-start-enabled', autoStart);
-    void window.setSettingValue(SettingsKey.settingsAutoStart, autoStart);
-  });
-
-window.getAutoStartEnabled = async () => {
-  return new Promise(resolve => {
-    ipc.once('get-auto-start-enabled-response', (_event, value) => {
-      resolve(value);
-    });
-    ipc.send('get-auto-start-enabled');
-  });
-};
-
-window.getOpengroupPruning = async () => {
-  return new Promise(resolve => {
-    ipc.once('get-opengroup-pruning-response', (_event, value) => {
-      resolve(value);
-    });
-    ipc.send('get-opengroup-pruning');
-  });
-};
-
-window.setOpengroupPruning = async opengroupPruning =>
-  new Promise((resolve, reject) => {
-    ipc.once('set-opengroup-pruning-response', (_event, error) => {
-      if (error) {
-        reject(error);
-        return;
-      }
-      resolve();
-      return;
-    });
-    ipc.send('set-opengroup-pruning', opengroupPruning);
-  });
+window.setSettingValue = Storage.put;
 
 window._ = require('lodash');
 
@@ -208,13 +195,6 @@ window.drawAttention = () => {
 window.showWindow = () => {
   window.log.info('show window');
   ipc.send('show-window');
-};
-
-window.setAutoHideMenuBar = autoHide => {
-  ipc.send('set-auto-hide-menu-bar', autoHide);
-};
-window.setMenuBarVisibility = visibility => {
-  ipc.send('set-menu-bar-visibility', visibility);
 };
 
 window.restart = () => {
@@ -242,47 +222,12 @@ window.getSettingValue = (settingID, comparisonValue = null) => {
   // Eg. window.getSettingValue('theme', 'classic-dark')
   // returns 'false' when the value is 'classic-light'.
 
-  // We need to get specific settings from the main process
-  if (settingID === 'media-permissions') {
-    return window.getMediaPermissions();
-  } else if (settingID === 'call-media-permissions') {
-    return window.getCallMediaPermissions();
-  } else if (settingID === 'auto-update') {
-    return window.getAutoUpdateEnabled();
-  }
-
   const settingVal = Storage.get(settingID);
   return comparisonValue ? !!settingVal === comparisonValue : settingVal;
 };
 
-window.setSettingValue = async (settingID, value) => {
-  // For auto updating we need to pass the value to the main process
-  if (settingID === 'auto-update') {
-    window.setAutoUpdateEnabled(value);
-    return;
-  }
-
-  await Storage.put(settingID, value);
-};
-
-window.getMediaPermissions = () => ipc.sendSync('get-media-permissions');
-window.setMediaPermissions = value => {
-  ipc.send('set-media-permissions', !!value);
-};
-
-window.getCallMediaPermissions = () => ipc.sendSync('get-call-media-permissions');
-window.setCallMediaPermissions = value => {
-  ipc.send('set-call-media-permissions', !!value);
-};
-
 window.askForMediaAccess = () => {
   ipc.send('media-access');
-};
-
-// Auto update setting
-window.getAutoUpdateEnabled = () => ipc.sendSync('get-auto-update-setting');
-window.setAutoUpdateEnabled = value => {
-  ipc.send('set-auto-update-setting', !!value);
 };
 
 ipc.on('get-ready-for-shutdown', async () => {

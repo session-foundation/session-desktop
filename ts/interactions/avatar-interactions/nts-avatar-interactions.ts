@@ -118,7 +118,7 @@ export async function uploadAndSetOurAvatarShared({
     displayName,
     avatarPointer: fileUrl,
   });
-  await Storage.put(SettingsKey.ntsAvatarExpiryMs, expiresMs);
+  await Storage.put(SettingsKey.settingsNtsAvatarExpiryMs, expiresMs);
 
   return {
     avatarPointer: ourConvo.getAvatarPointer(),

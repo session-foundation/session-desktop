@@ -1,36 +1,27 @@
-import { isBoolean } from 'lodash';
+import { isBoolean, merge } from 'lodash';
 
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
-import { SettingsKey } from '../../data/settings-key';
+import {
+  isSettingsBoolKey,
+  type SettingsBoolKey,
+  SettingsBools,
+  SettingsDefault,
+  type SettingsState,
+} from '../../data/settings-key';
 
-const SettingsBoolsKeyTrackedInRedux = [
-  SettingsKey.settingsLinkPreview,
-  SettingsKey.hasBlindedMsgRequestsEnabled,
-  SettingsKey.hasFollowSystemThemeEnabled,
-  SettingsKey.hasShiftSendEnabled,
-  SettingsKey.hideRecoveryPassword,
-  SettingsKey.showOnboardingAccountJustCreated,
-] as const;
+export function getSettingsDefaultState(): SettingsState {
+  const settingsBools = Object.fromEntries(SettingsBools.map(key => [key, SettingsDefault[key]]));
 
-export type SettingsState = {
-  settingsBools: Record<(typeof SettingsBoolsKeyTrackedInRedux)[number], boolean>;
-};
-
-export function getSettingsInitialState() {
   return {
-    settingsBools: {
-      'link-preview-setting': false, // this is the value of SettingsKey.settingsLinkPreview
-      hasBlindedMsgRequestsEnabled: false,
-      hasFollowSystemThemeEnabled: false,
-      hasShiftSendEnabled: false,
-      hideRecoveryPassword: false,
-      showOnboardingAccountJustCreated: true,
-    },
-  };
+    settingsBools,
+  } as SettingsState;
 }
 
-function isTrackedBoolean(key: string): key is (typeof SettingsBoolsKeyTrackedInRedux)[number] {
-  return SettingsBoolsKeyTrackedInRedux.indexOf(key as any) !== -1;
+export async function getSettingsInitialState(): Promise<SettingsState> {
+  const nodeState = await window.getNodeSettings();
+  const defaultState = getSettingsDefaultState();
+
+  return merge(defaultState, nodeState);
 }
 
 /**
@@ -43,43 +34,16 @@ const settingsSlice = createSlice({
   name: 'settings',
   // when this createSlice gets invoke, the storage is not ready, but redux still wants a state so we just avoid hitting the storage.
   // Once the storage is ready,
-  initialState: getSettingsInitialState(),
+  initialState: getSettingsDefaultState(),
   reducers: {
-    updateAllOnStorageReady(
-      state,
-      {
-        payload,
-      }: PayloadAction<{
-        settingsLinkPreview: boolean;
-        hasBlindedMsgRequestsEnabled: boolean;
-        hasFollowSystemThemeEnabled: boolean;
-        hasShiftSendEnabled: boolean;
-        hideRecoveryPassword: boolean;
-        showOnboardingAccountJustCreated: boolean;
-      }>
-    ) {
-      const {
-        hasBlindedMsgRequestsEnabled,
-        hasFollowSystemThemeEnabled,
-        settingsLinkPreview,
-        hasShiftSendEnabled,
-        hideRecoveryPassword,
-        showOnboardingAccountJustCreated,
-      } = payload;
-
-      state.settingsBools['link-preview-setting'] = settingsLinkPreview;
-      state.settingsBools.hasBlindedMsgRequestsEnabled = hasBlindedMsgRequestsEnabled;
-      state.settingsBools.hasFollowSystemThemeEnabled = hasFollowSystemThemeEnabled;
-      state.settingsBools.hasShiftSendEnabled = hasShiftSendEnabled;
-      state.settingsBools.hideRecoveryPassword = hideRecoveryPassword;
-      state.settingsBools.showOnboardingAccountJustCreated = showOnboardingAccountJustCreated;
-
+    updateAllOnStorageReady(state, { payload }: PayloadAction<Record<SettingsBoolKey, boolean>>) {
+      state.settingsBools = merge(state.settingsBools, payload);
       return state;
     },
     updateSettingsBoolValue(state, action: PayloadAction<{ id: string; value: boolean }>) {
       const { id, value } = action.payload;
 
-      if (!isTrackedBoolean(id) || !isBoolean(value)) {
+      if (!isSettingsBoolKey(id) || !isBoolean(value)) {
         return state;
       }
 
@@ -88,7 +52,7 @@ const settingsSlice = createSlice({
       return state;
     },
     deleteSettingsBoolValue(state, action: PayloadAction<string>) {
-      if (!isTrackedBoolean(action.payload)) {
+      if (!isSettingsBoolKey(action.payload)) {
         return state;
       }
 

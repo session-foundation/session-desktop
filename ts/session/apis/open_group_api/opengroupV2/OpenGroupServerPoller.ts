@@ -247,7 +247,7 @@ export class OpenGroupServerPoller {
         if (roomHasBlindEnabled(rooms[0])) {
           const maxInboxId = Math.max(...rooms.map(r => r.lastInboxIdFetched || 0));
 
-          if (Storage.get(SettingsKey.hasBlindedMsgRequestsEnabled)) {
+          if (Storage.get(SettingsKey.settingsBlindedMsgRequests)) {
             // This only works for servers with blinding capabilities
             // adding inbox subrequest info
             subrequestOptions.push({

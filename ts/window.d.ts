@@ -7,6 +7,7 @@ import { Persistor } from 'redux-persist/es/types';
 import { PrimaryColorStateType, ThemeStateType } from './themes/constants/colors';
 import type { EventEmitter } from './shared/event_emitter';
 import type { SessionFlags } from './state/ducks/types/releasedFeaturesReduxTypes';
+import type { SettingsBoolKey, SettingsKey } from './data/settings-key';
 
 /*
 We declare window stuff here instead of global.d.ts because we are importing other declarations.
@@ -33,10 +34,6 @@ declare global {
       oldPassword: string | null
     ) => Promise<string | undefined>;
     isOnline: boolean;
-    toggleMediaPermissions: () => Promise<void>;
-    toggleCallMediaPermissionsTo: (enabled: boolean) => Promise<void>;
-    getCallMediaPermissions: () => boolean;
-    toggleMenuBar: () => void;
     toggleSpellCheck: () => void;
     primaryColor: PrimaryColorStateType;
     theme: ThemeStateType;
@@ -51,10 +48,7 @@ declare global {
     getNodeVersion: () => string;
 
     showWindow: () => void;
-    setCallMediaPermissions: (val: boolean) => void;
-    setMediaPermissions: (val: boolean) => void;
     askForMediaAccess: () => void;
-    getMediaPermissions: () => boolean;
     nodeSetImmediate: any;
 
     getTitle: () => string;
@@ -72,15 +66,9 @@ declare global {
       conversationKey: string;
       messageId: string | null;
     }) => Promise<void>;
-    setStartInTray: (val: boolean) => Promise<void>;
-    getStartInTray: () => Promise<boolean>;
-    setAutoStartEnabled: (val: boolean) => Promise<void>;
-    getAutoStartEnabled: () => Promise<boolean>;
-    getOpengroupPruning: () => Promise<boolean>;
-    setOpengroupPruning: (val: boolean) => Promise<void>;
+    getNodeSettings: () => Promise<{ settingsBools: Record<SettingsBoolKey, boolean> }>;
+    setSettingsValue: (key: (typeof SettingsKey)[number], value: boolean) => Promise<void>;
     closeAbout: () => void;
-    getAutoUpdateEnabled: () => boolean;
-    setAutoUpdateEnabled: (enabled: boolean) => void;
     setZoomFactor: (newZoom: number) => void;
     updateZoomFactor: () => void;
     getUserKeys: () => Promise<{ id: string; vbid: string }>;

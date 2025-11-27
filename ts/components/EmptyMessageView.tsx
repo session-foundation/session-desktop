@@ -5,7 +5,7 @@ import { isSignWithRecoveryPhrase } from '../util/storage';
 import { Flex } from './basic/Flex';
 import { Spacer2XL, SpacerXS } from './basic/Text';
 import { Localizer } from './basic/Localizer';
-import { useShowOnboardingAccountJustCreated } from '../state/selectors/settings';
+import { useShowOnboardingAccountJustCreatedSetting } from '../state/selectors/settings';
 import { tr } from '../localization/localeTools';
 
 const StyledPlaceholder = styled(Flex)`
@@ -72,8 +72,9 @@ export const EmptyMessageView = () => {
   const conversationCount = useSelector(getLeftPaneConversationIdsCount);
   const isSignInWithRecoveryPhrase = isSignWithRecoveryPhrase();
 
-  const showOnboardingAccountJustCreated = useShowOnboardingAccountJustCreated();
-  const newAccountCreated = !isSignInWithRecoveryPhrase && showOnboardingAccountJustCreated;
+  const showOnboardingAccountJustCreatedSetting = useShowOnboardingAccountJustCreatedSetting();
+  const newAccountCreated =
+    !isSignInWithRecoveryPhrase && showOnboardingAccountJustCreatedSetting.enabled;
 
   return (
     <StyledPlaceholder

@@ -9,6 +9,8 @@ import {
 } from 'libsession_util_nodejs';
 import { compact, isArray, isEmpty, isNil, isString, map, pick } from 'lodash';
 
+import { app } from 'electron';
+import path from 'path';
 import { ConversationAttributes } from '../../models/conversationAttributes';
 import { fromHexToArray } from '../../session/utils/String';
 import { CONFIG_DUMP_TABLE } from '../../types/sqlSharedTypes';
@@ -27,7 +29,7 @@ import {
   rebuildFtsTable,
 } from '../database_utility';
 
-import { SettingsKey, SNODE_POOL_ITEM_ID } from '../../data/settings-key';
+import { SettingsKey, type SettingsKeyType, SNODE_POOL_ITEM_ID } from '../../data/settings-key';
 import { sleepFor } from '../../session/utils/Promise';
 import { sqlNode } from '../sql';
 import MIGRATION_HELPERS from './helpers';
@@ -37,6 +39,7 @@ import {
   hasDebugEnvVariable,
 } from './utils';
 import { CONVERSATION_PRIORITIES } from '../../models/types';
+import { start } from '../config/base_config';
 
 // eslint:disable: quotemark one-variable-per-declaration no-unused-expression
 
@@ -120,6 +123,7 @@ const LOKI_SCHEMA_VERSIONS: Array<
   updateToSessionSchemaVersion45,
   updateToSessionSchemaVersion46,
   updateToSessionSchemaVersion47,
+  updateToSessionSchemaVersion48,
 ];
 
 function updateToSessionSchemaVersion1(currentVersion: number, db: BetterSqlite3.Database) {
@@ -1621,7 +1625,7 @@ function updateToSessionSchemaVersion33(currentVersion: number, db: BetterSqlite
 
     // update the item stored in the DB with that value too
     sqlNode.createOrUpdateItem(
-      { id: SettingsKey.hasBlindedMsgRequestsEnabled, value: blindedReqEnabled },
+      { id: SettingsKey.settingsBlindedMsgRequests, value: blindedReqEnabled },
       db
     );
 
@@ -2042,7 +2046,10 @@ function updateToSessionSchemaVersion42(currentVersion: number, db: BetterSqlite
     const convoCount = row ? row['count(*)'] || 0 : 0;
     console.log(`convoCount: ${convoCount}`);
 
-    const itemValue = sqlNode.getItemById(SettingsKey.showOnboardingAccountJustCreated, db)?.value;
+    const itemValue = sqlNode.getItemById(
+      SettingsKey.settingsShowOnboardingAccountJustCreated,
+      db
+    )?.value;
     console.log(`showOnboardingAccountJustCreated before: ${itemValue}`);
 
     if (convoCount > 1 && itemValue === undefined) {
@@ -2051,13 +2058,13 @@ function updateToSessionSchemaVersion42(currentVersion: number, db: BetterSqlite
       );
 
       sqlNode.createOrUpdateItem(
-        { id: SettingsKey.showOnboardingAccountJustCreated, value: false },
+        { id: SettingsKey.settingsShowOnboardingAccountJustCreated, value: false },
         db
       );
     }
     console.log(
       'showOnboardingAccountJustCreated after ',
-      sqlNode.getItemById(SettingsKey.showOnboardingAccountJustCreated, db)?.value
+      sqlNode.getItemById(SettingsKey.settingsShowOnboardingAccountJustCreated, db)?.value
     );
 
     writeSessionSchemaVersion(targetVersion, db);
@@ -2174,6 +2181,146 @@ async function updateToSessionSchemaVersion47(currentVersion: number, db: Better
         UPDATE ${MESSAGES_TABLE} SET
         json = json_remove(json, '$.group', '$.isPublic')
       `);
+
+    writeSessionSchemaVersion(targetVersion, db);
+  })();
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
+}
+
+async function updateToSessionSchemaVersion48(currentVersion: number, db: BetterSqlite3.Database) {
+  const targetVersion = 48;
+  if (currentVersion >= targetVersion) {
+    return;
+  }
+  console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
+
+  const dbItemsKeyMap: Record<string, SettingsKeyType> = {
+    'read-receipt-setting': 'settingsReadReceipt',
+    'typing-indicators-settings': 'settingsTypingIndicator',
+    hasShiftSendEnabled: 'settingsShiftSend',
+    'spell-check': 'settingsSpellCheck',
+    'link-preview-setting': 'settingsLinkPreview',
+    hasBlindedMsgRequestsEnabled: 'settingsBlindedMsgRequests',
+    'notification-setting': 'settingsNotification',
+    'audio-notification-setting': 'settingsAudioNotification',
+    hasSyncedInitialConfigurationItem: 'settingsSyncedInitialConfigurationItem',
+    ntsAvatarExpiryMs: 'settingsNtsAvatarExpiryMs',
+    hasLinkPreviewPopupBeenDisplayed: 'settingsLinkPreviewPopupHasDisplayed',
+    hasFollowSystemThemeEnabled: 'settingsFollowSystemTheme',
+    hideRecoveryPassword: 'settingsHideRecoveryPassword',
+    latestUserProfileEnvelopeTimestamp: 'latestUserProfileEnvelopeTimestamp',
+    latestUserGroupEnvelopeTimestamp: 'latestUserGroupEnvelopeTimestamp',
+    latestUserContactsEnvelopeTimestamp: 'latestUserContactsEnvelopeTimestamp',
+    settingsShowOnboardingAccountJustCreated: 'settingsShowOnboardingAccountJustCreated',
+  };
+
+  const dbItemsKeysToDelete = [
+    'hide-menu-bar',
+    'start-in-tray-setting',
+    'prune-setting',
+    'auto-update',
+  ];
+
+  const oldKeys = Object.keys(dbItemsKeyMap);
+
+  db.transaction(() => {
+    const rows = db
+      .prepare(
+        `SELECT id, json FROM ${ITEMS_TABLE} WHERE id IN (${oldKeys.map(() => '?').join(',')});`
+      )
+      .all(oldKeys);
+
+    const insertStmt = db.prepare(
+      `INSERT OR REPLACE INTO ${ITEMS_TABLE} (id, json) VALUES (?, ?);`
+    );
+    const deleteStmt = db.prepare(`DELETE FROM ${ITEMS_TABLE} WHERE id = ?;`);
+
+    for (let i = 0; i < dbItemsKeysToDelete.length; i++) {
+      deleteStmt.run(dbItemsKeysToDelete[i]);
+    }
+
+    const userDataPath = app.getPath('userData');
+    const targetPath = path.join(userDataPath, 'config.json');
+    const userConfig = start('user', targetPath);
+
+    const mediaPermission = userConfig.get('mediaPermissions');
+    const callMediaPermission = userConfig.get('callMediaPermissions');
+    const autoUpdate = userConfig.get('autoUpdate');
+    const startInTray = userConfig.get('startInTray');
+    const opengroupPruning = userConfig.get('opengroupPruning');
+
+    if (callMediaPermission === true) {
+      insertStmt.run(
+        'settingsPermissionCallMedia',
+        JSON.stringify({ id: 'settingsPermissionCallMedia', value: true })
+      );
+      insertStmt.run(
+        'settingsPermissionMedia',
+        JSON.stringify({ id: 'settingsPermissionMedia', value: true })
+      );
+    } else if (mediaPermission === true) {
+      insertStmt.run(
+        'settingsPermissionMedia',
+        JSON.stringify({ id: 'settingsPermissionMedia', value: true })
+      );
+    }
+
+    if (autoUpdate === true) {
+      insertStmt.run(
+        'settingsAutoUpdate',
+        JSON.stringify({ id: 'settingsAutoUpdate', value: true })
+      );
+    }
+
+    if (startInTray === true) {
+      insertStmt.run(
+        'settingsStartInTray',
+        JSON.stringify({ id: 'settingsStartInTray', value: true })
+      );
+    }
+
+    if (opengroupPruning === true) {
+      insertStmt.run(
+        'settingsOpenGroupPruning',
+        JSON.stringify({ id: 'settingsOpenGroupPruning', value: true })
+      );
+    }
+
+    for (let i = 0; i < rows.length; i += 1) {
+      const row = rows[i];
+
+      if (!row || !('json' in row) || !row.json) {
+        continue;
+      }
+
+      const item = JSON.parse(row.json);
+
+      if (
+        typeof item !== 'object' ||
+        !('id' in item) ||
+        !item.id ||
+        !('value' in item) ||
+        typeof item.value === 'undefined' ||
+        item.value === null
+      ) {
+        continue;
+      }
+
+      if (!oldKeys.includes(item.id)) {
+        continue;
+      }
+
+      const newKey = dbItemsKeyMap[item.id];
+
+      if (!newKey) {
+        continue;
+      }
+
+      insertStmt.run(newKey, JSON.stringify({ id: newKey, value: item.value }));
+
+      deleteStmt.run(item.id);
+    }
 
     writeSessionSchemaVersion(targetVersion, db);
   })();

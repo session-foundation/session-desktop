@@ -223,10 +223,10 @@ async function handleUserProfileUpdate(result: IncomingUserResult): Promise<void
     return;
   }
 
-  const currentBlindedMsgRequest = Storage.get(SettingsKey.hasBlindedMsgRequestsEnabled);
+  const currentBlindedMsgRequest = Storage.get(SettingsKey.settingsBlindedMsgRequests);
   const newBlindedMsgRequest = await UserConfigWrapperActions.getEnableBlindedMsgRequest();
   if (!isNil(newBlindedMsgRequest) && newBlindedMsgRequest !== currentBlindedMsgRequest) {
-    await window.setSettingValue(SettingsKey.hasBlindedMsgRequestsEnabled, newBlindedMsgRequest); // this does the dispatch to redux
+    await window.setSettingValue(SettingsKey.settingsBlindedMsgRequests, newBlindedMsgRequest); // this does the dispatch to redux
   }
 
   const picUpdate =

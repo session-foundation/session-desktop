@@ -664,7 +664,7 @@ class CompositionBoxInner extends Component<Props, State> {
    * @param event - Keyboard event.
    */
   private async onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    const isShiftSendEnabled = !!window.getSettingValue(SettingsKey.hasShiftSendEnabled);
+    const isShiftSendEnabled = !!window.getSettingValue(SettingsKey.settingsShiftSend);
     if (
       !event.nativeEvent.isComposing &&
       event.key === 'Enter' &&

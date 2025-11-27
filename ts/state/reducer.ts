@@ -14,7 +14,7 @@ import { PrimaryColorStateType, ThemeStateType } from '../themes/constants/color
 import { groupReducer, GroupState } from './ducks/metaGroups';
 import { modalReducer as modals, ModalState } from './ducks/modalDialog';
 import { defaultOnionReducer as onionPaths, OnionState } from './ducks/onions';
-import { settingsReducer, SettingsState } from './ducks/settings';
+import { settingsReducer } from './ducks/settings';
 import {
   reducer as stagedAttachments,
   StagedAttachmentsStateType,
@@ -25,6 +25,7 @@ import releasedFeaturesReducer, { type ReleasedFeaturesState } from './ducks/rel
 import { debugReducer, type DebugState } from './ducks/debug';
 import networkModalReducer, { type NetworkModalState } from './ducks/networkModal';
 import networkDataReducer, { type NetworkDataState } from './ducks/networkData';
+import type { SettingsState } from '../data/settings-key';
 
 export type StateType = {
   search: SearchStateType;

@@ -19,24 +19,11 @@ import {
 } from './userSettingsHooks';
 import { SettingsKey } from '../../../../data/settings-key';
 import { SettingsToggleBasic } from '../components/SettingsToggleBasic';
-import { ToastUtils } from '../../../../session/utils';
 import { toggleAudioAutoplay } from '../../../../state/ducks/userConfig';
 
 import { getAudioAutoplay } from '../../../../state/selectors/userConfig';
 import { SettingsChevronBasic } from '../components/SettingsChevronBasic';
-
-async function toggleCommunitiesPruning() {
-  try {
-    const newValue = !(await window.getOpengroupPruning());
-
-    // make sure to write it here too, as this is the value used on the UI to mark the toggle as true/false
-    await window.setSettingValue(SettingsKey.settingsOpengroupPruning, newValue);
-    await window.setOpengroupPruning(newValue);
-    ToastUtils.pushRestartNeeded();
-  } catch (e) {
-    window.log.warn('toggleCommunitiesPruning change error:', e);
-  }
-}
+import { useOpengroupPruningSetting } from '../../../../state/selectors/settings';
 
 export function ConversationSettingsPage(modalState: UserSettingsModalState) {
   const forceUpdate = useUpdate();
@@ -45,9 +32,8 @@ export function ConversationSettingsPage(modalState: UserSettingsModalState) {
   const title = useUserSettingsTitle(modalState);
   const dispatch = useDispatch();
 
-  const isOpengroupPruningEnabled = Boolean(
-    window.getSettingValue(SettingsKey.settingsOpengroupPruning)
-  );
+  const opengroupPruningSetting = useOpengroupPruningSetting();
+
   const isSpellCheckActive =
     window.getSettingValue(SettingsKey.settingsSpellCheck) === undefined
       ? true
@@ -73,11 +59,8 @@ export function ConversationSettingsPage(modalState: UserSettingsModalState) {
       <PanelButtonGroup>
         <SettingsToggleBasic
           baseDataTestId="conversation-trimming"
-          active={isOpengroupPruningEnabled}
-          onClick={async () => {
-            await toggleCommunitiesPruning();
-            forceUpdate();
-          }}
+          active={opengroupPruningSetting.enabled}
+          onClick={opengroupPruningSetting.toggle}
           text={{ token: 'conversationsMessageTrimmingTrimCommunities' }}
           subText={{ token: 'conversationsMessageTrimmingTrimCommunitiesDescription' }}
         />

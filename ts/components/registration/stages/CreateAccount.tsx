@@ -47,7 +47,7 @@ async function signUp(signUpDetails: AccountCreateDetails) {
   try {
     await resetRegistration();
     await registerSingleDevice(recoveryPassword, 'english', displayName);
-    await Storage.put(SettingsKey.hasSyncedInitialConfigurationItem, Date.now());
+    await Storage.put(SettingsKey.settingsSyncedInitialConfigurationItem, Date.now());
     await setSignWithRecoveryPhrase(false);
     window.Whisper.events.trigger('openInbox');
   } catch (e) {

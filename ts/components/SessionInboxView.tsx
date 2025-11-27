@@ -29,7 +29,7 @@ import { initialUserConfigState } from '../state/ducks/userConfig';
 import { StateType } from '../state/reducer';
 import { SessionMainPanel } from './SessionMainPanel';
 
-import { SettingsKey } from '../data/settings-key';
+import { type SettingsBoolKey, SettingsBools, SettingsDefault } from '../data/settings-key';
 import { groupInfoActions, initialGroupState } from '../state/ducks/metaGroups';
 import { makeUserGroupGetRedux } from '../state/ducks/types/groupReduxTypes';
 import { getSettingsInitialState, updateAllOnStorageReady } from '../state/ducks/settings';
@@ -69,6 +69,8 @@ async function createSessionInboxStore() {
     userGroups[m.pubkeyHex] = makeUserGroupGetRedux(m);
   });
 
+  const settingsInitialState = await getSettingsInitialState();
+
   const initialState: StateType = {
     conversations: {
       ...getEmptyConversationState(),
@@ -91,7 +93,7 @@ async function createSessionInboxStore() {
     stagedAttachments: getEmptyStagedAttachmentsState(),
     call: initialCallState,
     sogsRoomInfo: initialSogsRoomInfoState,
-    settings: getSettingsInitialState(),
+    settings: settingsInitialState,
     groups: initialGroupState,
     userGroups: { userGroups },
     releasedFeatures: initialReleasedFeaturesState,
@@ -103,30 +105,32 @@ async function createSessionInboxStore() {
   return createStore(initialState);
 }
 
+async function getStorageSettingsBools() {
+  const nodeState = (await window.getNodeSettings()).settingsBools;
+
+  const items: Partial<Record<SettingsBoolKey, boolean>> = {};
+
+  for (let i = 0; i < SettingsBools.length; i++) {
+    const key = SettingsBools[i];
+    const value = nodeState[key] ?? Storage.get(key);
+    if (typeof value === 'boolean') {
+      items[key] = value;
+    } else {
+      items[key] = SettingsDefault[key];
+    }
+  }
+
+  return items as Record<SettingsBoolKey, boolean>;
+}
+
 async function setupLeftPane(forceUpdateInboxComponent: () => void) {
   window.openConversationWithMessages = openConversationWithMessages;
 
   window.inboxStore = await createSessionInboxStore();
 
-  window.inboxStore?.dispatch(
-    updateAllOnStorageReady({
-      hasBlindedMsgRequestsEnabled: Storage.getBoolOr(
-        SettingsKey.hasBlindedMsgRequestsEnabled,
-        false
-      ),
-      settingsLinkPreview: Storage.getBoolOr(SettingsKey.settingsLinkPreview, false),
-      hasFollowSystemThemeEnabled: Storage.getBoolOr(
-        SettingsKey.hasFollowSystemThemeEnabled,
-        false
-      ),
-      hasShiftSendEnabled: Storage.getBoolOr(SettingsKey.hasShiftSendEnabled, false),
-      hideRecoveryPassword: Storage.getBoolOr(SettingsKey.hideRecoveryPassword, false),
-      showOnboardingAccountJustCreated: Storage.getBoolOr(
-        SettingsKey.showOnboardingAccountJustCreated,
-        true
-      ),
-    })
-  );
+  const storageBools = await getStorageSettingsBools();
+
+  window.inboxStore?.dispatch(updateAllOnStorageReady(storageBools));
   window.inboxStore?.dispatch(groupInfoActions.loadMetaDumpsFromDB() as any); // this loads the dumps from DB and fills the 03-groups slice with the corresponding details
   forceUpdateInboxComponent();
   window.getState = window.inboxStore.getState;

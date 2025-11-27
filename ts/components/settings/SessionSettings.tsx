@@ -1,7 +1,16 @@
+import { Storage } from '../../util/storage';
+import { SettingsDefault, SettingsKey } from '../../data/settings-key';
+
 export function getMediaPermissionsSettings() {
-  return window.getSettingValue('media-permissions');
+  return Storage.getBoolOr(
+    SettingsKey.settingsPermissionMedia,
+    SettingsDefault[SettingsKey.settingsPermissionMedia]
+  );
 }
 
 export function getCallMediaPermissionsSettings() {
-  return window.getSettingValue('call-media-permissions');
+  return Storage.getBoolOr(
+    SettingsKey.settingsPermissionCallMedia,
+    SettingsDefault[SettingsKey.settingsPermissionCallMedia]
+  );
 }

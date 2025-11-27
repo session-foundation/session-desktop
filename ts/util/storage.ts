@@ -3,6 +3,7 @@ import { SessionKeyPair } from '../receiver/keypairs';
 import { DEFAULT_RECENT_REACTS } from '../session/constants';
 import { deleteSettingsBoolValue, updateSettingsBoolValue } from '../state/ducks/settings';
 import { Data } from '../data/data';
+import { updateStorageSchema } from './storageMigrations';
 
 let ready = false;
 
@@ -83,6 +84,8 @@ async function fetch() {
     items[id] = item;
   }
 
+  await updateStorageSchema();
+
   ready = true;
   callListeners();
 }
@@ -161,6 +164,18 @@ export async function saveRecentReactions(reactions: Array<string>) {
 
 export function getPasswordHash() {
   return Storage.get('passHash') as string;
+}
+
+export function getStorageSchemaVersion(): number {
+  const version = Storage.get('storage_version');
+  if (!version || typeof version !== 'number') {
+    return 0;
+  }
+  return version;
+}
+
+export async function setStorageSchemaVersion(version: number) {
+  await Storage.put('storage_version', version);
 }
 
 export const Storage = { fetch, put, get, getBoolOr, remove, onready, reset };

@@ -26,10 +26,11 @@ import {
   useUserSettingsTitle,
 } from './userSettingsHooks';
 import { SettingsToggleBasic } from '../components/SettingsToggleBasic';
-import { useHasFollowSystemThemeEnabled } from '../../../../state/selectors/settings';
-import { SettingsKey } from '../../../../data/settings-key';
+import {
+  useFollowSystemThemeSetting,
+  useHideMenuBarSetting,
+} from '../../../../state/selectors/settings';
 import { isHideMenuBarSupported } from '../../../../types/Settings';
-import { ensureThemeConsistency } from '../../../../themes/SessionTheme';
 import {
   getPrimaryColors,
   getThemeColors,
@@ -315,7 +316,8 @@ const ZoomFactorMenuPicker = ({
   );
 };
 
-function ZoomFactorPicker({ forceUpdate }: { forceUpdate: () => void }) {
+function ZoomFactorPicker() {
+  const forceUpdate = useUpdate();
   const baseDataTestId = 'zoom-factor';
   useInterval(() => {
     // the keyboard shortcuts can change this value. So let's make this refresh often when visible
@@ -381,18 +383,13 @@ export function AppearanceSettingsPage(modalState: UserSettingsModalState) {
   const backAction = useUserSettingsBackAction(modalState);
   const closeAction = useUserSettingsCloseAction(modalState);
   const title = useUserSettingsTitle(modalState);
-  const forceUpdate = useUpdate();
 
-  const isFollowSystemThemeEnabled = useHasFollowSystemThemeEnabled();
+  const followSystemThemeSetting = useFollowSystemThemeSetting();
+  const hideMenuBarSetting = useHideMenuBarSetting();
 
   const themes = getThemeColors();
   const selectedTheme = useTheme();
   const selectedThemeColors = themes.find(theme => theme.id === selectedTheme);
-
-  const isHideMenuBarActive =
-    window.getSettingValue(SettingsKey.settingsMenuBar) === undefined
-      ? true
-      : window.getSettingValue(SettingsKey.settingsMenuBar);
 
   if (!selectedThemeColors) {
     throw new Error('No theme colors found');
@@ -430,20 +427,13 @@ export function AppearanceSettingsPage(modalState: UserSettingsModalState) {
           baseDataTestId="auto-dark-mode"
           text={{ token: 'appearanceAutoDarkMode' }}
           subText={{ token: 'followSystemSettings' }}
-          onClick={async () => {
-            const toggledValue = !isFollowSystemThemeEnabled;
-            await window.setSettingValue(SettingsKey.hasFollowSystemThemeEnabled, toggledValue);
-            if (!isFollowSystemThemeEnabled) {
-              await ensureThemeConsistency();
-            }
-            forceUpdate();
-          }}
-          active={isFollowSystemThemeEnabled}
+          onClick={followSystemThemeSetting.toggle}
+          active={followSystemThemeSetting.enabled}
         />
       </PanelButtonGroup>
       <PanelLabelWithDescription title={{ token: 'display' }} />
       <PanelButtonGroup>
-        <ZoomFactorPicker forceUpdate={forceUpdate} />
+        <ZoomFactorPicker />
       </PanelButtonGroup>
       {isHideMenuBarSupported() ? (
         <>
@@ -453,11 +443,8 @@ export function AppearanceSettingsPage(modalState: UserSettingsModalState) {
               baseDataTestId="hide-menu-bar"
               text={{ token: 'appearanceHideMenuBar' }}
               subText={{ token: 'hideMenuBarDescription' }}
-              onClick={async () => {
-                window.toggleMenuBar();
-                forceUpdate();
-              }}
-              active={isHideMenuBarActive}
+              onClick={hideMenuBarSetting.toggle}
+              active={hideMenuBarSetting.enabled}
             />
           </PanelButtonGroup>
         </>

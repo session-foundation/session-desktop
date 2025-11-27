@@ -24,7 +24,7 @@ import {
   useUserSettingsTitle,
 } from './userSettingsHooks';
 import { SettingsPanelButtonInlineBasic } from '../components/SettingsPanelButtonInlineBasic';
-import { useHideRecoveryPasswordEnabled } from '../../../../state/selectors/settings';
+import { useHideRecoveryPasswordSetting } from '../../../../state/selectors/settings';
 import { tr } from '../../../../localization/localeTools';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../../../basic/SessionButton';
 import { useHotkey } from '../../../../hooks/useHotkey';
@@ -61,7 +61,7 @@ export function RecoveryPasswordSettingsPage(modalState: UserSettingsModalState)
   const backAction = useUserSettingsBackAction(modalState);
   const closeAction = useUserSettingsCloseAction(modalState);
   const title = useUserSettingsTitle(modalState);
-  const recoveryPasswordHidden = useHideRecoveryPasswordEnabled();
+  const { enabled: recoveryPasswordHidden } = useHideRecoveryPasswordSetting();
   const [fullScreen, setFullScreen] = useState(false);
 
   const recoveryPhrase = getCurrentRecoveryPhrase();

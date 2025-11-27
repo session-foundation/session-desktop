@@ -1115,8 +1115,8 @@ export async function openConversationWithMessages(args: {
 }) {
   const { conversationKey, messageId } = args;
 
-  if (Storage.getBoolOr(SettingsKey.showOnboardingAccountJustCreated, true)) {
-    await Storage.put(SettingsKey.showOnboardingAccountJustCreated, false);
+  if (Storage.getBoolOr(SettingsKey.settingsShowOnboardingAccountJustCreated, true)) {
+    await Storage.put(SettingsKey.settingsShowOnboardingAccountJustCreated, false);
   }
 
   await DisappearingMessages.destroyExpiredMessages();

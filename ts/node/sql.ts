@@ -61,7 +61,7 @@ import {
   UpdateLastHashType,
 } from '../types/sqlSharedTypes';
 
-import { KNOWN_BLINDED_KEYS_ITEM, SettingsKey } from '../data/settings-key';
+import { KNOWN_BLINDED_KEYS_ITEM, SettingsDefault, SettingsKey } from '../data/settings-key';
 import {
   FindAllMessageFromSendersInConversationTypeArgs,
   FindAllMessageHashesInConversationMatchingAuthorTypeArgs,
@@ -1859,7 +1859,9 @@ function cleanUpUnreadExpiredDaRMessages() {
  */
 function cleanUpInvalidConversationIds() {
   const deleteResult = assertGlobalInstance()
-    .prepare(`DELETE FROM ${CONVERSATIONS_TABLE} WHERE id = '' OR id IS NULL OR typeof(id) != 'text';`)
+    .prepare(
+      `DELETE FROM ${CONVERSATIONS_TABLE} WHERE id = '' OR id IS NULL OR typeof(id) != 'text';`
+    )
     .run();
 
   console.info(`cleanUpInvalidConversationIds removed ${deleteResult.changes} rows`);
@@ -2497,12 +2499,13 @@ function cleanUpOldOpengroupsOnStart() {
     console.info('cleanUpOldOpengroups: ourNumber is not set');
     return;
   }
-  let pruneSetting = getItemById(SettingsKey.settingsOpengroupPruning)?.value;
+  let pruneSetting = getItemById(SettingsKey.settingsOpenGroupPruning)?.value;
 
-  if (pruneSetting === undefined) {
+  if (typeof pruneSetting !== 'boolean') {
     console.info('Prune settings is undefined (and not explicitly false), forcing it to true.');
-    createOrUpdateItem({ id: SettingsKey.settingsOpengroupPruning, value: true });
-    pruneSetting = true;
+    const defaultValue = SettingsDefault[SettingsKey.settingsOpenGroupPruning];
+    createOrUpdateItem({ id: SettingsKey.settingsOpenGroupPruning, value: defaultValue });
+    pruneSetting = defaultValue;
   }
 
   if (!pruneSetting) {
