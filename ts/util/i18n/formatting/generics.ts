@@ -4,6 +4,7 @@ import {
   format,
   formatDistanceStrict,
   formatDistanceToNowStrict,
+  formatDuration,
   formatRelative,
 } from 'date-fns';
 import { omit, upperFirst } from 'lodash';
@@ -121,3 +122,45 @@ export const formatToTimeOnlyInEnglish = (date: Date) => {
     hour12: true,
   }).format(date);
 };
+
+/**
+ * Formats a duration to a rounded up localized duration string.
+ *
+ * Rules:
+ * - Days: when more than 1 full day remains (rounds up)
+ * - Hours: when less than 1 full day but more than 1 full hour remains (rounds up)
+ * - Minutes: when less than 1 full hour remains (rounds up, minimum 1 minute)
+ *
+ * @param durationsMs - Duration in milliseconds
+ * @returns A formatted string like "25 days", "24 hours", or "33 minutes"
+ */
+export function formatRoundedUpDuration(durationMs: number): string {
+  const locale = getTimeLocaleDictionary();
+  const daysRemaining = durationMs / (1000 * 60 * 60 * 24);
+  if (daysRemaining >= 1) {
+    const displayDays = Math.ceil(daysRemaining);
+    const duration = { days: displayDays };
+    return formatDuration(duration, { locale });
+  }
+
+  const hoursRemaining = durationMs / (1000 * 60 * 60);
+  if (hoursRemaining >= 1) {
+    const displayHours = Math.ceil(hoursRemaining);
+    const duration = { hours: displayHours };
+    return formatDuration(duration, { locale });
+  }
+
+  const minutesRemaining = durationMs / (1000 * 60);
+  const displayMinutes = Math.max(1, Math.ceil(minutesRemaining));
+  const duration = { minutes: displayMinutes };
+  return formatDuration(duration, { locale });
+}
+
+/**
+ * Formats the time remaining until a unix timestamp with localized duration strings.
+ * @see {@link formatRoundedUpDuration}
+ */
+export function formatRoundedUpTimeUntilTimestamp(unixTsMs: number): string {
+  const msRemaining = unixTsMs - Date.now();
+  return formatRoundedUpDuration(msRemaining);
+}

@@ -11,8 +11,12 @@ import { requestSnodesForPubkeyFromNetwork } from './getSwarmFor';
 import { Onions } from '.';
 import { ed25519Str } from '../../utils/String';
 import { SnodePoolConstants } from './snodePoolConstants';
-import { stringify } from '../../../types/sqlSharedTypes';
+import {
+  getDataFeatureFlag,
+  getFeatureFlag,
+} from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { logDebugWithCat } from '../../../util/logger/debugLog';
+import { stringify } from '../../../types/sqlSharedTypes';
 
 let randomSnodePool: Array<Snode> = [];
 
@@ -80,7 +84,7 @@ async function getRandomSnode({
   }
 
   // get an unmodified snode pool without the nodes to exclude either by pubkey or by subnet
-  const snodePoolWithoutExcluded = window.sessionFeatureFlags?.useLocalDevNet
+  const snodePoolWithoutExcluded = getDataFeatureFlag('useLocalDevNet')
     ? randomSnodePool
     : randomSnodePool.filter(
         e =>
@@ -88,21 +92,23 @@ async function getRandomSnode({
           !hasSnodeSameSubnetIp(snodesToExclude, e)
       );
 
+  const debugSnodePool = getFeatureFlag('debugSnodePool');
+
   const weightedWithoutExcludedSnodes = getWeightedSingleSnodePerSubnet(snodePoolWithoutExcluded);
   logDebugWithCat(
     logPrefix,
     `getRandomSnode: snodePoolNoFilter: ${stringify(randomSnodePool.map(m => pick(m, ['ip', 'pubkey_ed25519'])))}`,
-    window.sessionFeatureFlags.debugSnodePool
+    debugSnodePool
   );
   logDebugWithCat(
     logPrefix,
     `getRandomSnode: snodePoolWithoutExcluded: ${stringify(snodePoolWithoutExcluded.map(m => pick(m, ['ip', 'pubkey_ed25519'])))}`,
-    window.sessionFeatureFlags.debugSnodePool
+    debugSnodePool
   );
   logDebugWithCat(
     logPrefix,
     `getRandomSnode: weightedWithoutExcludedSnodes: ${stringify(weightedWithoutExcludedSnodes.map(m => pick(m, ['ip', 'pubkey_ed25519'])))}`,
-    window.sessionFeatureFlags.debugSnodePool
+    debugSnodePool
   );
   if (!weightedWithoutExcludedSnodes?.length) {
     // used for tests
@@ -116,7 +122,7 @@ async function getRandomSnode({
   logDebugWithCat(
     logPrefix,
     `getRandomSnode: snodePicked: ${stringify(snodePicked)}`,
-    window.sessionFeatureFlags.debugSnodePool
+    debugSnodePool
   );
   return snodePicked;
 }
@@ -294,7 +300,7 @@ async function tryToGetConsensusWithSnodesWithRetries() {
   return pRetry(
     async () => {
       const commonNodes = await ServiceNodesList.getSnodePoolFromSnodes();
-      const requiredSnodesForAgreement = window.sessionFeatureFlags.useLocalDevNet
+      const requiredSnodesForAgreement = getDataFeatureFlag('useLocalDevNet')
         ? 12
         : SnodePoolConstants.requiredSnodesForAgreement;
       if (!commonNodes || commonNodes.length < requiredSnodesForAgreement) {

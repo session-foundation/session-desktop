@@ -348,6 +348,8 @@
   "emojiReactsHoverYouNameTwoDesktop": "আপনি এবং {name} {emoji_name} দিয়ে প্রতিক্রিয়া করেছেন",
   "emojiReactsNotification": "আপনার মেসেজে {emoji} প্রতিক্রিয়া জানানো হয়েছে",
   "enable": "সক্রিয় করুন",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "আপনার ইন্টারনেট সংযোগ যাচাই করুন এবং আবার চেষ্টা করুন।",
   "errorCopyAndQuit": "কপি ত্রুটি এবং প্রস্থান করুন",
   "errorDatabase": "ডাটাবেস ত্রুটি",

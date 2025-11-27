@@ -63,9 +63,7 @@ export type ThemeColorVariables = {
 
   /* Solid */
   /* Also used for Pills */
-  '--button-solid-background-color': string;
   '--button-solid-background-hover-color': string;
-  '--button-solid-text-color': string;
   '--button-solid-text-hover-color': string;
   '--button-solid-disabled-color': string;
 

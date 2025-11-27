@@ -1,4 +1,3 @@
-import Long from 'long';
 import type { ProfilePicture } from 'libsession_util_nodejs';
 import { from_hex, to_hex } from 'libsodium-wrappers-sumo';
 import { isEmpty, isString, isTypedArray } from 'lodash';
@@ -124,7 +123,7 @@ class OutgoingUserProfile {
       return this.emptyProtobufDetails();
     }
 
-    const profile = new SignalService.DataMessage.LokiProfile();
+    const profile = new SignalService.LokiProfile();
     // don't set display name if it's empty
     if (this.displayName) {
       profile.displayName = this.displayName;
@@ -156,14 +155,6 @@ class OutgoingUserProfile {
   public getUpdatedAtMs(): number {
     return this.lastProfileUpdateTs.ms();
   }
-}
-
-export function longOrNumberToNumber(value: number | Long): number {
-  const asLong = Long.fromValue(value);
-  if (asLong.greaterThan(Number.MAX_SAFE_INTEGER)) {
-    throw new Error('longOrNumberToNumber: value is too big');
-  }
-  return asLong.toNumber();
 }
 
 type MessageResultProps = MessageAttributes & { snippet: string };

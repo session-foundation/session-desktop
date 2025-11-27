@@ -3,7 +3,6 @@ import styled from 'styled-components';
 import useUpdate from 'react-use/lib/useUpdate';
 import { SessionTooltip, type TooltipProps, useTriggerPosition } from '../../../SessionTooltip';
 import { FlagToggle } from '../FeatureFlags';
-import { useFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { SessionHtmlRenderer } from '../../../basic/SessionHTMLRenderer';
 import { type PopoverProps, SessionPopoverContent } from '../../../SessionPopover';
 import { SessionButton } from '../../../basic/SessionButton';
@@ -135,11 +134,7 @@ export function PopoverPlaygroundPage() {
   return (
     <>
       <h2>Flags</h2>
-      <FlagToggle
-        forceUpdate={forceUpdate}
-        flag="showPopoverAnchors"
-        value={useFeatureFlag('showPopoverAnchors')}
-      />
+      <FlagToggle forceUpdate={forceUpdate} flag="showPopoverAnchors" />
       <h2>Settings</h2>
       <span>
         {'You can change the popover content with this input. It will parse HTML tags like <br>.'}

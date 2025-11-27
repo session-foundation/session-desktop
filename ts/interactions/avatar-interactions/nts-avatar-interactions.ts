@@ -10,6 +10,7 @@ import {
   UserConfigWrapperActions,
 } from '../../webworker/workers/browser/libsession_worker_interface';
 import { UserUtils } from '../../session/utils';
+import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { fromHexToArray } from '../../session/utils/String';
 
 export async function uploadAndSetOurAvatarShared({
@@ -31,7 +32,8 @@ export async function uploadAndSetOurAvatarShared({
 
   let encryptedData: ArrayBuffer;
   let encryptionKey: Uint8Array;
-  const deterministicEncryption = window.sessionFeatureFlags?.useDeterministicEncryption;
+  const deterministicEncryption = getFeatureFlag('useDeterministicEncryption');
+  const isAnimated = mainAvatarDetails.isAnimated;
   if (deterministicEncryption) {
     const encryptedContent = await MultiEncryptWrapperActions.attachmentEncrypt({
       allowLarge: false,
@@ -94,6 +96,7 @@ export async function uploadAndSetOurAvatarShared({
       key: encryptionKey,
       url: fileUrl,
     });
+    await UserConfigWrapperActions.setAnimatedAvatar(isAnimated);
   } else if (context === 'reuploadAvatar') {
     await UserConfigWrapperActions.setReuploadProfilePic({
       key: encryptionKey,

@@ -23,6 +23,7 @@ import { fileServerUrlToFileId } from '../../../apis/file_server_api/types';
 import { DURATION, DURATION_SECONDS } from '../../../constants';
 import { uploadAndSetOurAvatarShared } from '../../../../interactions/avatar-interactions/nts-avatar-interactions';
 import { FS } from '../../../apis/file_server_api/FileServerTarget';
+import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 const defaultMsBetweenRetries = 10000;
 const defaultMaxAttempts = 3;
@@ -77,7 +78,7 @@ function shouldSkipRenew({
 }: {
   ourProfileLastUpdatedSeconds: number;
 }) {
-  if (window.sessionFeatureFlags.fsTTL30s) {
+  if (getFeatureFlag('fsTTL30s')) {
     // this is in dev
     return Date.now() / 1000 - ourProfileLastUpdatedSeconds <= 10 * DURATION_SECONDS.SECONDS;
   }
@@ -90,7 +91,7 @@ function shouldSkipReupload({
 }: {
   ourProfileLastUpdatedSeconds: number;
 }) {
-  if (window.sessionFeatureFlags.fsTTL30s) {
+  if (getFeatureFlag('fsTTL30s')) {
     return nowSeconds() - ourProfileLastUpdatedSeconds <= 10 * DURATION_SECONDS.SECONDS;
   }
   return nowSeconds() - ourProfileLastUpdatedSeconds <= 12 * DURATION_SECONDS.DAYS;

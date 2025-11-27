@@ -1,9 +1,8 @@
-import { isEmpty, isNumber, toNumber } from 'lodash';
+import { isEmpty, isNumber } from 'lodash';
 import { SignalService } from '../../../protobuf';
 import { UserSyncJobDone } from '../../../shims/events';
 
 import { DisappearingMessageUpdate } from '../../disappearing_messages/types';
-import { DataMessage } from '../../messages/outgoing';
 import { ExpirationTimerUpdateMessage } from '../../messages/outgoing/controlMessage/ExpirationTimerUpdateMessage';
 import { MessageRequestResponse } from '../../messages/outgoing/controlMessage/MessageRequestResponse';
 import { UnsendMessage } from '../../messages/outgoing/controlMessage/UnsendMessage';
@@ -14,6 +13,7 @@ import {
   VisibleMessage,
 } from '../../messages/outgoing/visibleMessage/VisibleMessage';
 import { UserSync } from '../job_runners/jobs/UserSyncJob';
+import { longOrNumberToNumber } from '../../../types/long/longOrNumberToNumber';
 
 export const forceSyncConfigurationNowIfNeeded = async (waitForMessageSent = false) => {
   return new Promise(resolve => {
@@ -45,7 +45,8 @@ const buildSyncVisibleMessage = (
   dataMessage: SignalService.DataMessage,
   createAtNetworkTimestamp: number,
   syncTarget: string,
-  expireUpdate: DisappearingMessageUpdate
+  expireUpdate: DisappearingMessageUpdate,
+  proMessage: SignalService.ProMessage | null | undefined
 ) => {
   const body = dataMessage.body || undefined;
 
@@ -83,6 +84,7 @@ const buildSyncVisibleMessage = (
     syncTarget,
     expireTimer: expireUpdate.expirationTimer,
     expirationType: expireUpdate.expirationType,
+    outgoingProMessageDetails: proMessage ?? null,
   });
 };
 
@@ -111,25 +113,21 @@ export type SyncMessageType =
 
 export const buildSyncMessage = (
   identifier: string,
-  data: DataMessage | SignalService.DataMessage,
+  dataMessage: SignalService.DataMessage,
   syncTarget: string,
   sentTimestamp: number,
-  expireUpdate: DisappearingMessageUpdate
+  expireUpdate: DisappearingMessageUpdate,
+  proMessage: SignalService.ProMessage | null | undefined
 ): VisibleMessage | ExpirationTimerUpdateMessage | null => {
-  if (
-    (data as any).constructor.name !== 'DataMessage' &&
-    !(data instanceof SignalService.DataMessage)
-  ) {
-    window?.log?.warn('buildSyncMessage with something else than a DataMessage');
+  if (!(dataMessage instanceof SignalService.DataMessage)) {
+    throw new Error('buildSyncMessage with something else than a DataMessage');
   }
-
-  const dataMessage = data instanceof DataMessage ? data.dataProto() : data;
 
   if (!sentTimestamp || !isNumber(sentTimestamp)) {
     throw new Error('Tried to build a sync message without a sentTimestamp');
   }
   // don't include our profileKey on syncing message. This is to be done through libsession now
-  const timestamp = toNumber(sentTimestamp);
+  const timestamp = longOrNumberToNumber(sentTimestamp);
 
   if (
     dataMessage.flags === SignalService.DataMessage.Flags.EXPIRATION_TIMER_UPDATE &&
@@ -150,7 +148,8 @@ export const buildSyncMessage = (
     dataMessage,
     timestamp,
     syncTarget,
-    expireUpdate
+    expireUpdate,
+    proMessage
   );
   return visibleSyncMessage;
 };

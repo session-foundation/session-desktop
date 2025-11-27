@@ -31,7 +31,7 @@ export async function resetRegistration() {
   ConvoHub.use().reset();
   await ConvoHub.use().load();
   // prefetch snodes list from the network
-  void SnodePool.forceRefreshRandomSnodePool();
+  void SnodePool.getSnodePoolFromDBOrFetchFromSeed();
 }
 
 const StyledRegistrationContainer = styled(Flex)`

@@ -57,7 +57,7 @@ export function parseCapabilities(body: any): null | Array<string> {
   if (!body || isEmpty(body) || !isObject(body) || !isArray((body as any).capabilities)) {
     return null;
   }
-  return (((body as any).capabilities as Array<string>) || []).sort(); // FIXME fix this type
+  return (((body as any).capabilities as Array<string>) || []).sort();
 }
 
 export type ParsedBase64Avatar = {

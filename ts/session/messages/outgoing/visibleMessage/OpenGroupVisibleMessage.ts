@@ -22,7 +22,7 @@ export class OpenGroupVisibleMessage extends VisibleMessage {
     this.blocksCommunityMessageRequests = !Storage.get(SettingsKey.hasBlindedMsgRequestsEnabled);
   }
 
-  public dataProto(): SignalService.DataMessage {
+  public override dataProto(): SignalService.DataMessage {
     const dataMessage = super.dataProto();
 
     dataMessage.blocksCommunityMessageRequests = this.blocksCommunityMessageRequests;

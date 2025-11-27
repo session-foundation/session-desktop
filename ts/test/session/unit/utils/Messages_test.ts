@@ -7,7 +7,6 @@ import { PubKey } from '../../../../session/types';
 import { MessageUtils } from '../../../../session/utils';
 import { TestUtils } from '../../../test-utils';
 
-import { SignalService } from '../../../../protobuf';
 import { SnodeNamespaces } from '../../../../session/apis/snode_api/namespaces';
 
 chai.use(chaiAsPromised as any);
@@ -30,12 +29,11 @@ describe('Message Utils', () => {
         SnodeNamespaces.UserContacts
       );
 
-      expect(Object.keys(rawMessage)).to.have.length(7);
+      expect(Object.keys(rawMessage)).to.have.length(6);
 
       expect(rawMessage.identifier).to.exist;
       expect(rawMessage.namespace).to.exist;
       expect(rawMessage.device).to.exist;
-      expect(rawMessage.encryption).to.exist;
       expect(rawMessage.plainTextBuffer).to.exist;
       expect(rawMessage.ttl).to.exist;
       expect(rawMessage.networkTimestampCreated).to.exist;
@@ -80,14 +78,6 @@ describe('Message Utils', () => {
         true,
         'pubkey of message was not converted correctly'
       );
-    });
-
-    it('should set encryption to Fallback on other messages', async () => {
-      const device = TestUtils.generateFakePubKey();
-      const message = TestUtils.generateVisibleMessage();
-      const rawMessage = await MessageUtils.toRawMessage(device, message, SnodeNamespaces.Default);
-
-      expect(rawMessage.encryption).to.equal(SignalService.Envelope.Type.SESSION_MESSAGE);
     });
   });
 });

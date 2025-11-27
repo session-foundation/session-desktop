@@ -16,10 +16,12 @@ export const loadEmojiPanelI18n = async () => {
       const langData = await import(`@emoji-mart/data/i18n/${lang}.json`);
       return langData;
     } catch (err) {
-      const firstDashIndex = lang.indexOf('-');
+      // this is just to make tsc happy when we are using the --en-only locale
+      const langCopy = lang as string;
+      const firstDashIndex = langCopy.indexOf('-');
       if (firstDashIndex > 0) {
         try {
-          const shortenLang = lang.slice(0, firstDashIndex);
+          const shortenLang = langCopy.slice(0, firstDashIndex);
           triedLocales.push(shortenLang);
           // TODO we should replace this with a locale -> emojimart locale map. like with datefns
 

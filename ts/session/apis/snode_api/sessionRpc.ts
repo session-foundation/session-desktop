@@ -11,6 +11,7 @@ import { APPLICATION_JSON } from '../../../types/MIME';
 import { ERROR_421_HANDLED_RETRY_REQUEST, Onions, snodeHttpsAgent, SnodeResponse } from './onions';
 import { WithAbortSignal, WithTimeoutMs } from './requestWith';
 import { WithAllow401s } from '../../types/with';
+import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 export interface LokiFetchOptions {
   method: 'GET' | 'POST';
@@ -51,10 +52,7 @@ async function doRequestNoRetries({
   try {
     // Absence of targetNode indicates that we want a direct connection
     // (e.g. to connect to a seed node for the first time)
-    const useOnionRequests =
-      window.sessionFeatureFlags?.useOnionRequests === undefined
-        ? true
-        : window.sessionFeatureFlags?.useOnionRequests;
+    const useOnionRequests = !getFeatureFlag('disableOnionRequests');
     if (useOnionRequests && targetNode) {
       const fetchResult = await Onions.lokiOnionFetchNoRetries({
         targetNode,

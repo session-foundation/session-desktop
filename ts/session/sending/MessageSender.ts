@@ -5,7 +5,10 @@ import { GroupPubkeyType, PubkeyType } from 'libsession_util_nodejs';
 import { isArray, isEmpty, isNumber, isString } from 'lodash';
 import pRetry from 'p-retry';
 import { Data } from '../../data/data';
-import { UserGroupsWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
+import {
+  MultiEncryptWrapperActions,
+  UserGroupsWrapperActions,
+} from '../../webworker/workers/browser/libsession_worker_interface';
 import { OpenGroupMessageV2 } from '../apis/open_group_api/opengroupV2/OpenGroupMessageV2';
 import {
   sendMessageOnionV4BlindedRequest,
@@ -43,8 +46,7 @@ import { SnodeSignature, SnodeSignatureResult } from '../apis/snode_api/signatur
 import { SnodePool } from '../apis/snode_api/snodePool';
 import { DURATION, TTL_DEFAULT } from '../constants';
 import { ConvoHub } from '../conversations';
-import { addMessagePadding } from '../crypto/BufferPadding';
-import { ContentMessage } from '../messages/outgoing';
+import { type ContentMessageNoProfile } from '../messages/outgoing';
 import { UnsendMessage } from '../messages/outgoing/controlMessage/UnsendMessage';
 import { OpenGroupVisibleMessage } from '../messages/outgoing/visibleMessage/OpenGroupVisibleMessage';
 import { PubKey } from '../types';
@@ -59,6 +61,7 @@ import { NetworkTime } from '../../util/NetworkTime';
 import { MergedAbortSignal } from '../apis/snode_api/requestWith';
 import { WithAllow401s } from '../types/with';
 import { ERROR_421_HANDLED_RETRY_REQUEST } from '../apis/snode_api/onions';
+import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 
 // ================ SNODE STORE ================
 
@@ -66,7 +69,7 @@ function getMinRetryTimeout() {
   return 1000;
 }
 
-function isContentSyncMessage(message: ContentMessage) {
+function isContentSyncMessage(message: ContentMessageNoProfile) {
   if (message instanceof UnsendMessage || (message as any).syncTarget?.length > 0) {
     return true;
   }
@@ -371,7 +374,7 @@ async function getSignatureParamsFromNamespace(
 }
 
 function logBuildSubRequests(subRequests: Array<BuiltSnodeSubRequests>) {
-  if (!window.sessionFeatureFlags.debugBuiltSnodeRequests) {
+  if (!getFeatureFlag('debugBuiltSnodeRequests')) {
     return;
   }
   window.log.debug(
@@ -587,10 +590,14 @@ async function sendToOpenGroupV2(
   filesToLink: Array<string>
 ): Promise<OpenGroupMessageV2 | boolean> {
   // we agreed to pad messages for opengroup v2
-  const paddedBody = addMessagePadding(rawMessage.plainTextBuffer());
+  const proRotatingPrivateKey = await UserUtils.getProRotatingPrivateKeyHex();
+
+  const paddedBody = await MultiEncryptWrapperActions.encryptForCommunity([
+    { plaintext: rawMessage.plainTextBuffer(), proRotatingEd25519PrivKey: proRotatingPrivateKey },
+  ]);
   const v2Message = new OpenGroupMessageV2({
     sentTimestamp: NetworkTime.now(),
-    base64EncodedData: fromUInt8ArrayToBase64(paddedBody),
+    base64EncodedData: fromUInt8ArrayToBase64(paddedBody.encryptedData[0]),
     filesToLink,
   });
 

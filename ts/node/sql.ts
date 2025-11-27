@@ -56,8 +56,6 @@ import {
   roomHasBlindEnabled,
   SaveConversationReturn,
   SaveSeenMessageHash,
-  UnprocessedDataNode,
-  UnprocessedParameter,
   UpdateLastHashType,
 } from '../types/sqlSharedTypes';
 
@@ -88,6 +86,7 @@ import {
 } from './sqlInstance';
 import { OpenGroupV2Room } from '../data/types';
 import { tr } from '../localization/localeTools';
+import { getFileCreationTimestampMs } from './fs_utility';
 
 // eslint:disable: function-name non-literal-fs-path
 
@@ -271,6 +270,16 @@ function savePasswordHash(hash: string) {
 
 function removePasswordHash() {
   removeItemById(PASS_HASH_ID);
+}
+
+function getDBCreationTimestampMs(): number | null {
+  if (!databaseFilePath) {
+    return null;
+  }
+  if (process.env.DB_CREATION_TIMESTAMP_MS) {
+    return Number.parseInt(process.env.DB_CREATION_TIMESTAMP_MS, 10);
+  }
+  return getFileCreationTimestampMs(databaseFilePath);
 }
 
 function getIdentityKeyById(id: string, instance: BetterSqlite3.Database) {
@@ -476,6 +485,9 @@ function saveConversation(data: ConversationAttributes): SaveConversationReturn 
     groupAdmins,
     avatarPointer,
     triggerNotificationsFor,
+    bitsetProFeatures,
+    proGenIndexHashB64,
+    proExpiryTsMs,
     profileUpdatedSeconds,
     isTrustedForAttachmentDownload,
     isApproved,
@@ -528,6 +540,9 @@ function saveConversation(data: ConversationAttributes): SaveConversationReturn 
       lastJoinedTimestamp,
       groupAdmins: groupAdmins && groupAdmins.length ? arrayStrToJson(groupAdmins) : '[]',
       avatarPointer,
+      bitsetProFeatures,
+      proGenIndexHashB64,
+      proExpiryTsMs,
       triggerNotificationsFor,
       profileUpdatedSeconds,
       isTrustedForAttachmentDownload: toSqliteBoolean(isTrustedForAttachmentDownload),
@@ -1901,112 +1916,6 @@ function getNextExpiringMessage() {
   return map(rows, row => jsonToObject(row.json));
 }
 
-/* Unprocessed a received messages not yet processed */
-const unprocessed: UnprocessedDataNode = {
-  saveUnprocessed: (data: UnprocessedParameter) => {
-    const { id, timestamp, version, attempts, envelope, senderIdentity, messageHash } = data;
-    if (!id) {
-      throw new Error(`saveUnprocessed: id was falsy: ${id}`);
-    }
-
-    assertGlobalInstance()
-      .prepare(
-        `INSERT OR REPLACE INTO unprocessed (
-        id,
-        timestamp,
-        version,
-        attempts,
-        envelope,
-        senderIdentity,
-        serverHash
-      ) values (
-        $id,
-        $timestamp,
-        $version,
-        $attempts,
-        $envelope,
-        $senderIdentity,
-        $messageHash
-      );`
-      )
-      .run({
-        id,
-        timestamp,
-        version,
-        attempts,
-        envelope,
-        senderIdentity,
-        messageHash,
-      });
-  },
-
-  updateUnprocessedAttempts: (id: string, attempts: number) => {
-    assertGlobalInstance()
-      .prepare('UPDATE unprocessed SET attempts = $attempts WHERE id = $id;')
-      .run({
-        id,
-        attempts,
-      });
-  },
-
-  updateUnprocessedWithData: (id: string, data: UnprocessedParameter) => {
-    const { source, decrypted, senderIdentity } = data;
-
-    assertGlobalInstance()
-      .prepare(
-        `UPDATE unprocessed SET
-        source = $source,
-        decrypted = $decrypted,
-        senderIdentity = $senderIdentity
-      WHERE id = $id;`
-      )
-      .run({
-        id,
-        source,
-        decrypted,
-        senderIdentity,
-      });
-  },
-
-  getUnprocessedById: (id: string) => {
-    const row = assertGlobalInstance().prepare('SELECT * FROM unprocessed WHERE id = $id;').get({
-      id,
-    });
-
-    return row;
-  },
-
-  getUnprocessedCount: () => {
-    const row = assertGlobalInstance().prepare('SELECT count(*) from unprocessed;').get();
-
-    if (!row) {
-      throw new Error('getMessageCount: Unable to get count of unprocessed');
-    }
-
-    return row['count(*)'];
-  },
-
-  getAllUnprocessed: () => {
-    const rows = assertGlobalInstance()
-      .prepare('SELECT * FROM unprocessed ORDER BY timestamp ASC;')
-      .all();
-
-    return rows;
-  },
-
-  removeUnprocessed: (id: string): void => {
-    if (Array.isArray(id)) {
-      console.error('removeUnprocessed only supports single ids at a time');
-      throw new Error('removeUnprocessed only supports single ids at a time');
-    }
-    assertGlobalInstance().prepare('DELETE FROM unprocessed WHERE id = $id;').run({ id });
-  },
-
-  removeAllUnprocessed: () => {
-    assertGlobalInstance().prepare('DELETE FROM unprocessed;').run();
-  },
-};
-
 function getNextAttachmentDownloadJobs(limit: number) {
   const timestamp = Date.now();
 
@@ -2081,7 +1990,6 @@ function removeAll() {
   assertGlobalInstance().exec(`
     DELETE FROM ${IDENTITY_KEYS_TABLE};
     DELETE FROM ${ITEMS_TABLE};
-    DELETE FROM unprocessed;
     DELETE FROM ${LAST_HASHES_TABLE};
     DELETE FROM ${NODES_FOR_PUBKEY_TABLE};
     DELETE FROM ${SEEN_MESSAGE_TABLE};
@@ -2437,7 +2345,6 @@ function printDbStats() {
     'sqlite_sequence',
     'sqlite_stat1',
     'sqlite_stat4',
-    'unprocessed',
   ].forEach(i => {
     console.log(`${i} count`, getEntriesCountInTable(i));
   });
@@ -2496,7 +2403,7 @@ function cleanUpMessagesJson() {
 }
 
 function cleanUpOldOpengroupsOnStart() {
-  const ourNumber = getItemById('number_id');
+  const ourNumber = getItemById(SettingsKey.numberId);
   if (!ourNumber || !ourNumber.value) {
     console.info('cleanUpOldOpengroups: ourNumber is not set');
     return;
@@ -2637,6 +2544,7 @@ export const sqlNode = {
   close,
   removeDB,
   setSQLPassword,
+  getDBCreationTimestampMs,
 
   getPasswordHash,
   savePasswordHash,
@@ -2711,9 +2619,6 @@ export const sqlNode = {
   getFirstUnreadMessageIdInConversation,
   getFirstUnreadMessageWithMention,
   hasConversationOutgoingMessage,
-
-  // add all the calls related to the unprocessed cache of incoming messages
-  ...unprocessed,
 
   getNextAttachmentDownloadJobs,
   saveAttachmentDownloadJob,

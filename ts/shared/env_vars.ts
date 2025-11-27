@@ -21,10 +21,6 @@ export function isTestIntegration() {
   return envAppInstanceIncludes('test-integration');
 }
 
-export function hasClosedGroupV2QAButtons() {
-  return !!window.sessionFeatureFlags.useClosedGroupV2QAButtons;
-}
-
 export function isUnitTest() {
   return !!process.env.IS_UNIT_TEST;
 }

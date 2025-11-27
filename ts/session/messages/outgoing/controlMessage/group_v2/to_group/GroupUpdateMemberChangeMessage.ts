@@ -7,7 +7,7 @@ import { LibSodiumWrappers } from '../../../../../crypto';
 import { stringToUint8Array } from '../../../../../utils/String';
 import {
   AdminSigDetails,
-  GroupUpdateMessage,
+  GroupUpdateMessageNoProfile,
   GroupUpdateMessageParams,
 } from '../GroupUpdateMessage';
 
@@ -34,7 +34,7 @@ type MembersPromotedMessageParams = GroupUpdateMessageParams & {
 /**
  * GroupUpdateMemberChangeMessage is sent to the group's swarm.
  */
-export class GroupUpdateMemberChangeMessage extends GroupUpdateMessage {
+export class GroupUpdateMemberChangeMessage extends GroupUpdateMessageNoProfile {
   public readonly typeOfChange: 'added' | 'addedWithHistory' | 'removed' | 'promoted';
 
   public readonly memberSessionIds: Array<PubkeyType> = []; // added, removed, promoted based on the type.
@@ -92,7 +92,7 @@ export class GroupUpdateMemberChangeMessage extends GroupUpdateMessage {
     }
   }
 
-  public dataProto(): SignalService.DataMessage {
+  public override dataProto(): SignalService.DataMessage {
     const { Type } = SignalService.GroupUpdateMemberChangeMessage;
 
     const type: SignalService.GroupUpdateMemberChangeMessage.Type =
@@ -115,13 +115,8 @@ export class GroupUpdateMemberChangeMessage extends GroupUpdateMessage {
       memberChangeMessage.historyShared = true;
     }
 
-    return new SignalService.DataMessage({ groupUpdateMessage: { memberChangeMessage } });
-  }
-
-  public isForGroupSwarm(): boolean {
-    return true;
-  }
-  public isFor1o1Swarm(): boolean {
-    return false;
+    const proto = super.makeDataProtoNoProfile();
+    proto.groupUpdateMessage = { memberChangeMessage };
+    return proto;
   }
 }

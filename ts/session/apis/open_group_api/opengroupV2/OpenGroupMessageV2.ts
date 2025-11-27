@@ -66,13 +66,13 @@ export class OpenGroupMessageV2 {
   public async sign(ourKeyPair: SessionKeyPair | undefined): Promise<OpenGroupMessageV2> {
     if (!ourKeyPair) {
       window?.log?.warn("Couldn't find user X25519 key pair.");
-      throw new Error("Couldn't sign message");
+      throw new Error("Couldn't find user X25519 key pair");
     }
 
     const data = fromBase64ToArray(this.base64EncodedData);
     const signature = sign(new Uint8Array(ourKeyPair.privKey), data, null);
     if (!signature || signature.length === 0) {
-      throw new Error("Couldn't sign message");
+      throw new Error("Couldn't sign message (signature empty)");
     }
     const base64Sig = await callUtilsWorker('arrayBufferToStringBase64', signature);
     return new OpenGroupMessageV2({
@@ -112,7 +112,7 @@ export class OpenGroupMessageV2 {
       signingKeys,
     });
     if (!signature || signature.length === 0) {
-      throw new Error("Couldn't sign message");
+      throw new Error("Couldn't sign message (signature empty)");
     }
     const base64Sig = await callUtilsWorker('arrayBufferToStringBase64', signature);
 

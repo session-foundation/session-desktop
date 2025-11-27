@@ -348,6 +348,8 @@
   "emojiReactsHoverYouNameTwoDesktop": "ඔබ හා {name} {emoji_name} සමඟ ප්‍රතිචාර දැක්වීය",
   "emojiReactsNotification": "ඔබගේ පණිවිඩයට {emoji} ප්‍රතිචාර දක්වා ඇත",
   "enable": "සබල කරන්න",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "කරුණාකර ඔබේ අන්තර්ජාල සම්බන්ධතාව පරීක්ෂා කර නැවත උත්සාහ කරන්න.",
   "errorCopyAndQuit": "දෝෂය පිටපත් කර ඉවත්වන්න",
   "errorDatabase": "දත්තසමුදායේ දෝෂයකි",

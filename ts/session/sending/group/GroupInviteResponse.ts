@@ -21,6 +21,9 @@ export async function sendInviteResponseToGroup({ groupPk }: { groupPk: GroupPub
       expirationType: 'unknown', // an invite response should not expire
       expireTimer: 0,
       userProfile: await UserUtils.getOurProfile(),
+      outgoingProMessageDetails: await UserUtils.getOutgoingProMessageDetails({
+        utf16: undefined,
+      }),
     }),
   });
 }

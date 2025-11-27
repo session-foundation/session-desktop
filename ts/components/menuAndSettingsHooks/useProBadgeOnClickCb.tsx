@@ -1,11 +1,11 @@
+import { useDispatch } from 'react-redux';
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
 import { ProMessageFeature } from '../../models/proMessageFeature';
+import { SessionCTAState, updateSessionCTA } from '../../state/ducks/modalDialog';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import type { ContactNameContext } from '../conversation/ContactName/ContactNameContext';
-import {
-  SessionProInfoVariant,
-  useShowSessionProInfoDialogCbWithVariant,
-} from '../dialog/SessionProInfoModal';
+import { useShowSessionCTACbWithVariant } from '../dialog/SessionCTA';
+import { CTAVariant } from '../dialog/cta/types';
 
 type WithUserHasPro = { userHasPro: boolean };
 type WithMessageSentWithProFeat = { messageSentWithProFeat: Array<ProMessageFeature> | null };
@@ -16,9 +16,10 @@ type WithContactNameContext = { contactNameContext: ContactNameContext };
 type WithIsGroupV2 = { isGroupV2: boolean };
 type WithIsBlinded = { isBlinded: boolean };
 type WithProvidedCb = { providedCb: (() => void) | null };
+type WithProCTA = { cta: SessionCTAState };
 
 type ProBadgeContext =
-  | { context: 'edit-profile-pic'; args: WithUserHasPro }
+  | { context: 'edit-profile-pic'; args: WithProCTA }
   | { context: 'show-our-profile-dialog'; args: WithCurrentUserHasPro & WithProvidedCb }
   | {
       context: 'conversation-title-dialog'; // the title in the conversation settings ConversationSettingsHeader/UserProfileDialog
@@ -96,14 +97,14 @@ function isContactNameNoShowContext(context: ContactNameContext) {
   }
 }
 
-function proFeatureToVariant(proFeature: ProMessageFeature): SessionProInfoVariant {
+function proFeatureToVariant(proFeature: ProMessageFeature): CTAVariant {
   switch (proFeature) {
     case ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH:
-      return SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT;
+      return CTAVariant.PRO_MESSAGE_CHARACTER_LIMIT;
     case ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE:
-      return SessionProInfoVariant.PROFILE_PICTURE_ANIMATED;
+      return CTAVariant.PRO_ANIMATED_DISPLAY_PICTURE;
     case ProMessageFeature.PRO_BADGE:
-      return SessionProInfoVariant.GENERIC;
+      return CTAVariant.PRO_GENERIC;
     default:
       assertUnreachable(proFeature, 'ProFeatureToVariant: unknown case');
       throw new Error('unreachable');
@@ -120,28 +121,24 @@ function proFeatureToVariant(proFeature: ProMessageFeature): SessionProInfoVaria
 export function useProBadgeOnClickCb(
   opts: ProBadgeContext
 ): ShowTagWithCb | ShowTagNoCb | DoNotShowTag {
-  const handleShowProInfoModal = useShowSessionProInfoDialogCbWithVariant();
+  const dispatch = useDispatch();
+  const handleShowProInfoModal = useShowSessionCTACbWithVariant();
   const isProAvailable = useIsProAvailable();
-
-  const { context, args } = opts;
 
   if (!isProAvailable) {
     // if pro is globally disabled, we never show the badge.
     return doNotShow;
   }
 
+  const { context, args } = opts;
+
   if (context === 'edit-profile-pic') {
-    // in the edit profile dialog, we always show the badge but the CTA shown is different depending on the user's pro status.
     return {
       show: true,
-      cb: () =>
-        handleShowProInfoModal(
-          args.userHasPro
-            ? SessionProInfoVariant.ALREADY_PRO_PROFILE_PICTURE_ANIMATED
-            : SessionProInfoVariant.PROFILE_PICTURE_ANIMATED
-        ),
+      cb: () => dispatch(updateSessionCTA(args.cta)),
     };
   }
+
   if (context === 'show-our-profile-dialog') {
     if (args.currentUserHasPro) {
       // if the current user already has pro, we want to show the badge, but use a custom callback
@@ -172,7 +169,7 @@ export function useProBadgeOnClickCb(
           cb: () => {
             handleShowProInfoModal(
               multiProFeatUsed
-                ? SessionProInfoVariant.GENERIC
+                ? CTAVariant.PRO_GENERIC
                 : proFeatureToVariant(messageSentWithProFeat[0])
             );
           },
@@ -203,7 +200,7 @@ export function useProBadgeOnClickCb(
       // if this is a groupv2, the badge should open the "groupv2 activated" modal onclick
       return {
         show: true,
-        cb: () => handleShowProInfoModal(SessionProInfoVariant.GROUP_ACTIVATED),
+        cb: () => handleShowProInfoModal(CTAVariant.PRO_GROUP_ACTIVATED),
       };
     }
 
@@ -212,7 +209,7 @@ export function useProBadgeOnClickCb(
       return showNoCb;
     }
     // FOMO: user shown has pro but we don't: show CTA on click
-    return { show: true, cb: () => handleShowProInfoModal(SessionProInfoVariant.GENERIC) };
+    return { show: true, cb: () => handleShowProInfoModal(CTAVariant.PRO_GENERIC) };
   }
 
   if (context === 'character-count') {
@@ -223,7 +220,7 @@ export function useProBadgeOnClickCb(
     // FOMO
     return {
       show: true,
-      cb: () => handleShowProInfoModal(SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT),
+      cb: () => handleShowProInfoModal(CTAVariant.PRO_MESSAGE_CHARACTER_LIMIT),
     };
   }
 
@@ -256,12 +253,11 @@ export function useProBadgeOnClickCb(
         return showNoCb;
       }
 
-      return { show: true, cb: () => handleShowProInfoModal(SessionProInfoVariant.GENERIC) };
+      return { show: true, cb: () => handleShowProInfoModal(CTAVariant.PRO_GENERIC) };
     }
     return showNoCb;
   }
 
   assertUnreachable(context, 'useProBadgeOnClickCb: context not handled');
-
   return doNotShow;
 }

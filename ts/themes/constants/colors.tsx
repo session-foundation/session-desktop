@@ -25,6 +25,7 @@ export type ColorsType = {
   TRANSPARENT: string;
   WHITE: string;
   BLACK: string;
+  NEARBLACK: string;
   GREY: string;
 };
 
@@ -49,8 +50,8 @@ const warningLight = '#A64B00';
 const warningDark = '#FCB159';
 
 // Disabled
-const disabledLight = '#6D6D6D';
-const disabledDark = '#A1A2A1';
+const disabledDark = '#6D6D6D';
+const disabledLight = '#A1A2A1';
 
 // Path
 const pathDefault = primaryGreen;
@@ -65,6 +66,7 @@ const white = '#FFF';
 
 // Black
 const black = '#000';
+const nearBlack = '#0d0d0d';
 
 // Grey
 const grey = '#616161';
@@ -88,6 +90,7 @@ const COLORS: ColorsType = {
   TRANSPARENT: transparent,
   WHITE: white,
   BLACK: black,
+  NEARBLACK: nearBlack,
   GREY: grey,
 };
 

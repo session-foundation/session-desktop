@@ -95,12 +95,13 @@ declare module 'react' {
     | 'conversation-trimming'
     | 'auto-update'
     | 'auto-dark-mode'
-    | 'hide-menu-bar';
+    | 'hide-menu-bar'
+    | 'pro-badge-visible';
 
   type SettingsRadio =
     | `set-notifications-${'message' | 'name' | 'count'}`
     | `send-with-${'enterForSend' | 'enterForNewLine'}`;
-  type SettingsChevron = `blocked-contacts`;
+  type SettingsChevron = 'blocked-contacts' | 'update-access';
 
   type SettingsInlineButtons =
     | 'set-password'
@@ -108,7 +109,13 @@ declare module 'react' {
     | 'remove-password'
     | 'export-logs'
     | 'hide-recovery-password';
-  type SettingsExternalLinkButtons = 'faq' | 'translate' | 'support' | 'feedback';
+  type SettingsExternalLinkButtons =
+    | 'faq'
+    | 'translate'
+    | 'support'
+    | 'feedback'
+    | 'pro-faq'
+    | 'pro-support';
 
   type SettingsMenuItems =
     | 'message-requests'
@@ -124,6 +131,13 @@ declare module 'react' {
     | 'session-pro'
     | 'preferences'
     | 'donate';
+
+  type ProFeatureItems =
+    | 'longer-messages'
+    | 'more-pins'
+    | 'animated-display-picture'
+    | 'badges'
+    | 'loads-more';
 
   type MenuItems = 'block' | 'delete' | 'accept';
 
@@ -189,6 +203,13 @@ declare module 'react' {
     | 'back'
     | 'modal-back'
     | 'create-group'
+    | 'cancel-pro'
+    | 'renew-pro'
+    | 'recover-pro'
+    | 'request-refund'
+    | 'pro-open-platform-website'
+    | 'pro-backend-error-retry'
+    | 'pro-backend-error-support'
     | `${ConfirmButtons}-confirm`
     | `${CancelButtons}-cancel`
     | `clear-${ClearButtons}`
@@ -258,6 +279,9 @@ declare module 'react' {
     | `${MenuItems}-menu-item`
     | `${SettingsMenuItems}-settings-menu-item`
     | `${Inputs}-input`
+
+    // Pro settings
+    | `${ProFeatureItems}-pro-settings-menu-item`
 
     // timer options
     | DisappearTimeOptionDataTestId

@@ -166,6 +166,8 @@
   "emojiReactsClearAll": "ເຈົ້າຕ້ອງທຳທີໃຫ້ໃຫ້ໄອອິໂມຈີທັງໝົດ {emoji}?",
   "emojiReactsHoverTwoNameMultipleDesktop": "{name} and <span>{count} others</span> reacted with {emoji_name}",
   "enable": "ເປີດ",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorCopyAndQuit": "ເສັກກີ້າບເອີເທິ່ນຫຍັງາ",
   "errorDatabase": "ຂໍ້ມູນຂອງຖານຂໍ້ມູນຜິດພາດ",
   "errorUnknown": "ມີຄວາມຜິດພາດທີ່ບໍ່ແມ່ນທີີ່ຮູ້ຈັກເກີດຂຶ້ນ.",

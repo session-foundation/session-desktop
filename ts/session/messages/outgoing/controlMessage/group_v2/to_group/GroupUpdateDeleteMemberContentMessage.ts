@@ -6,12 +6,12 @@ import { stringToUint8Array } from '../../../../../utils/String';
 import { Preconditions } from '../../../preconditions';
 import {
   AdminSigDetails,
-  GroupUpdateMessage,
+  GroupUpdateMessageNoProfile,
   GroupUpdateMessageParams,
 } from '../GroupUpdateMessage';
 
 // Note: `Partial<AdminSigDetails>` because that message can also be sent as a non-admin and we always give sodium but not always the secretKey
-type Params = GroupUpdateMessageParams &
+type Params = Omit<GroupUpdateMessageParams, 'userProfile'> &
   Partial<Omit<AdminSigDetails, 'sodium'>> &
   Omit<AdminSigDetails, 'secretKey'> & {
     memberSessionIds: Array<PubkeyType>;
@@ -21,7 +21,7 @@ type Params = GroupUpdateMessageParams &
 /**
  * GroupUpdateDeleteMemberContentMessage is sent as a message to group's swarm.
  */
-export class GroupUpdateDeleteMemberContentMessage extends GroupUpdateMessage {
+export class GroupUpdateDeleteMemberContentMessage extends GroupUpdateMessageNoProfile {
   public readonly createAtNetworkTimestamp: Params['createAtNetworkTimestamp'];
   public readonly memberSessionIds: Params['memberSessionIds'];
   public readonly messageHashes: Params['messageHashes'];
@@ -51,7 +51,7 @@ export class GroupUpdateDeleteMemberContentMessage extends GroupUpdateMessage {
     });
   }
 
-  public dataProto(): SignalService.DataMessage {
+  public override dataProto(): SignalService.DataMessage {
     // If we have the secretKey, we can delete it for anyone `"DELETE_CONTENT" || timestamp || sessionId[0] || ... || messageHashes[0] || ...`
 
     let adminSignature: Uint8Array | undefined;
@@ -68,14 +68,8 @@ export class GroupUpdateDeleteMemberContentMessage extends GroupUpdateMessage {
       memberSessionIds: this.memberSessionIds,
       messageHashes: this.messageHashes,
     });
-
-    return new SignalService.DataMessage({ groupUpdateMessage: { deleteMemberContent } });
-  }
-
-  public isForGroupSwarm(): boolean {
-    return true;
-  }
-  public isFor1o1Swarm(): boolean {
-    return false;
+    const proto = super.makeDataProtoNoProfile();
+    proto.groupUpdateMessage = { deleteMemberContent };
+    return proto;
   }
 }

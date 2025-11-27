@@ -136,7 +136,7 @@ export const stubWindowLog = () => {
 };
 
 export const stubWindowFeatureFlags = () => {
-  stubWindow('sessionFeatureFlags', { debug: {} } as any);
+  stubWindow('sessionBooleanFeatureFlags', { debug: {} } as any);
 };
 
 export const stubWindowWhisper = () => {

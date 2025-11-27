@@ -1,12 +1,8 @@
 import { fromBase64, fromHex } from 'bytebuffer';
 import chai, { expect } from 'chai';
 import chaiBytes from 'chai-bytes';
-import { to_hex } from 'libsodium-wrappers-sumo';
 
 import { SogsBlinding } from '../../../../session/apis/open_group_api/sogsv3/sogsBlinding';
-import { concatUInt8Array, getSodiumRenderer } from '../../../../session/crypto';
-import { KeyPrefixType } from '../../../../session/types';
-import { StringUtils } from '../../../../session/utils';
 import { ByteKeyPair } from '../../../../session/utils/User';
 
 chai.use(chaiBytes);
@@ -57,18 +53,6 @@ describe('OpenGroupAuthentication', () => {
     pubKeyBytes: secondPartPrivKey,
   };
 
-  const signingKeysB: ByteKeyPair = {
-    privKeyBytes: new Uint8Array([
-      130, 56, 83, 227, 58, 149, 251, 148, 119, 85, 180, 81, 17, 190, 245, 33, 219, 6, 246, 238,
-      110, 61, 191, 133, 244, 223, 32, 32, 121, 172, 138, 198, 215, 25, 249, 139, 235, 31, 251, 12,
-      100, 87, 84, 131, 231, 45, 87, 251, 204, 133, 20, 3, 118, 71, 29, 47, 245, 62, 216, 163, 254,
-      248, 195, 109,
-    ]),
-    pubKeyBytes: new Uint8Array([
-      215, 25, 249, 139, 235, 31, 251, 12, 100, 87, 84, 131, 231, 45, 87, 251, 204, 133, 20, 3, 118,
-      71, 29, 47, 245, 62, 216, 163, 254, 248, 195, 109,
-    ]),
-  };
   const serverPubKey = new Uint8Array(
     fromHex('c3b3c6f32f0ab5a57f853cc4f30f5da7fda5624b0c77b3fb0829de562ada081d').toArrayBuffer()
   );
@@ -236,107 +220,4 @@ describe('OpenGroupAuthentication', () => {
       });
     });
   });
-
-  describe('Blinded Message Encryption', () => {
-    it('Should encrypt blinded message correctly', async () => {
-      const dataUint = new Uint8Array(StringUtils.encode(body, 'utf8'));
-      const data = await SogsBlinding.encryptBlindedMessage({
-        rawData: dataUint,
-        senderSigningKey: signingKeysA,
-        serverPubKey,
-        recipientSigningKey: signingKeysB,
-      });
-      if (data) {
-        const decrypted = await decryptBlindedMessage(
-          data,
-          signingKeysA,
-          signingKeysB,
-          serverPubKey
-        );
-        expect(decrypted?.messageText).to.be.equal(body);
-        expect(decrypted?.senderED25519PubKey).to.be.equal(to_hex(signingKeysA.pubKeyBytes));
-      }
-    });
-  });
 });
-
-/**
- * This function is actually just used for testing and is useless IRL.
- * We should probably move it somewhere else.
- *
- * The function you are looking for is `decryptWithSessionBlindingProtocol`
- * @param data The data to be decrypted from the sender
- * @param aSignKeyBytes the sender's keypair bytes
- * @param bSignKeyBytes the receivers keypair bytes
- * @param serverPubKey the server the message is sent to
- */
-const decryptBlindedMessage = async (
-  data: Uint8Array,
-  aSignKeyBytes: ByteKeyPair,
-  bSignKeyBytes: ByteKeyPair,
-  serverPubKey: Uint8Array
-): Promise<
-  | {
-      messageText: string;
-      senderED25519PubKey: string;
-      senderSessionId: string;
-    }
-  | undefined
-> => {
-  const sodium = await getSodiumRenderer();
-
-  const aBlindingValues = SogsBlinding.getBlindingValues(serverPubKey, aSignKeyBytes, sodium);
-  const bBlindingValues = SogsBlinding.getBlindingValues(serverPubKey, bSignKeyBytes, sodium);
-  const { publicKey: kA } = aBlindingValues;
-  const { a: b, publicKey: kB } = bBlindingValues;
-
-  const k = sodium.crypto_core_ed25519_scalar_reduce(sodium.crypto_generichash(64, serverPubKey));
-
-  const decryptKey = sodium.crypto_generichash(
-    32,
-    concatUInt8Array(sodium.crypto_scalarmult_ed25519_noclamp(b, kA), kA, kB)
-  );
-
-  const version = data[0];
-  if (version !== 0) {
-    return undefined;
-  }
-
-  const nonceLength = sodium.crypto_aead_xchacha20poly1305_ietf_NPUBBYTES;
-  const ciphertextIncoming = data.slice(1, data.length - nonceLength);
-  const nonceIncoming = data.slice(data.length - nonceLength);
-
-  const plaintextIncoming = sodium.crypto_aead_xchacha20poly1305_ietf_decrypt(
-    null,
-    ciphertextIncoming,
-    null,
-    nonceIncoming,
-    decryptKey
-  );
-
-  if (plaintextIncoming.length <= 32) {
-    // throw Error;
-    console.error('decryptBlindedMessage: plaintext insufficient length');
-    return undefined;
-  }
-
-  const msg = plaintextIncoming.slice(0, plaintextIncoming.length - 32);
-  const senderEdpk = plaintextIncoming.slice(plaintextIncoming.length - 32);
-
-  if (to_hex(kA) !== to_hex(sodium.crypto_scalarmult_ed25519_noclamp(k, senderEdpk))) {
-    throw Error;
-  }
-
-  const messageText = StringUtils.decode(msg, 'utf8');
-
-  const senderSessionId = `${KeyPrefixType.standard}${to_hex(
-    sodium.crypto_sign_ed25519_pk_to_curve25519(senderEdpk)
-  )}`;
-  const senderED25519PubKey = to_hex(senderEdpk);
-
-  return {
-    messageText,
-    senderED25519PubKey,
-    senderSessionId,
-  };
-};

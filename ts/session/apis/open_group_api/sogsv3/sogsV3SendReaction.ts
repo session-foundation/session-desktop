@@ -2,7 +2,7 @@ import { AbortSignal } from 'abort-controller';
 import { SearchIndex } from 'emoji-mart';
 import { Data } from '../../../../data/data';
 import { ConversationModel } from '../../../../models/conversation';
-import { Action, OpenGroupReactionResponse, Reaction } from '../../../../types/Reaction';
+import { Action, Reaction } from '../../../../types/Reaction';
 import { Reactions } from '../../../../util/reactions';
 import { OnionSending } from '../../../onions/onionSend';
 import { ToastUtils, UserUtils } from '../../../utils';
@@ -110,7 +110,7 @@ export const sendSogsReactionOnionV4 = async (
     throw new Error('Could not putReaction, res is invalid');
   }
 
-  const rawMessage = result.body as OpenGroupReactionResponse;
+  const rawMessage = result.body;
   if (!rawMessage) {
     throw new Error('putReaction parsing failed');
   }

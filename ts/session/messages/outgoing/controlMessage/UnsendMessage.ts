@@ -1,6 +1,6 @@
 import { isFinite } from 'lodash';
 import { SignalService } from '../../../../protobuf';
-import { ContentMessage } from '../ContentMessage';
+import { ContentMessageNoProfile } from '../ContentMessage';
 import { MessageParams } from '../Message';
 
 type UnsendMessageParams = MessageParams & {
@@ -8,7 +8,7 @@ type UnsendMessageParams = MessageParams & {
   referencedMessageTimestamp: number;
 };
 
-export class UnsendMessage extends ContentMessage {
+export class UnsendMessage extends ContentMessageNoProfile {
   private readonly author: string;
   private readonly referencedMessageTimestamp: UnsendMessageParams['referencedMessageTimestamp'];
 
@@ -28,14 +28,15 @@ export class UnsendMessage extends ContentMessage {
     this.referencedMessageTimestamp = params.referencedMessageTimestamp;
   }
 
-  public contentProto(): SignalService.Content {
-    return super.makeContentProto({ unsendMessage: this.unsendProto() });
-  }
+  public override contentProto(): SignalService.Content {
+    // Note: unsend messages are not disappearing messages
+    const content = super.makeNonDisappearingContentProto();
 
-  public unsendProto(): SignalService.Unsend {
-    return new SignalService.Unsend({
+    content.unsendRequest = new SignalService.UnsendRequest({
       timestamp: this.referencedMessageTimestamp,
       author: this.author,
     });
+
+    return content;
   }
 }

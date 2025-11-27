@@ -64,21 +64,6 @@
 .composition-container {
   border-top: 1px solid var(--border-color);
   z-index: 1;
-
-  .session-icon-button {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    margin-right: var(--margins-sm);
-
-    .send {
-      padding: var(--margins-xs);
-      border-radius: 50%;
-      height: 30px;
-      width: 30px;
-    }
-  }
 }
 
 .session-recording {
