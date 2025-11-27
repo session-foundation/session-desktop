@@ -40,6 +40,7 @@ export function LocalizedPopupDialog(props: LocalizedPopupDialogState) {
 
   return (
     <SessionWrapperModal
+      modalId="localizedPopupDialog"
       headerChildren={
         <ModalBasicHeader title={<Localizer {...props.title} />} showExitIcon={true} />
       }

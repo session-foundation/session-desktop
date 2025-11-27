@@ -30,6 +30,7 @@ export function TermsOfServicePrivacyDialog(props: TermsOfServicePrivacyDialogPr
 
   return (
     <SessionWrapperModal
+      modalId="confirmModal"
       headerChildren={<ModalBasicHeader title={tr('urlOpen')} showExitIcon={true} />}
       onClose={onClose}
       buttonChildren={

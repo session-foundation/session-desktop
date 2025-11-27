@@ -67,6 +67,7 @@ export const EnterPasswordModal = (props: EnterPasswordModalProps) => {
 
   return (
     <SessionWrapperModal
+      modalId="enterPasswordModal"
       onClose={onClose}
       headerChildren={<ModalBasicHeader title={title} showExitIcon={true} />}
       $contentMinWidth={WrapperModalWidth.narrow}

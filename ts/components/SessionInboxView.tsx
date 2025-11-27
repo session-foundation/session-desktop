@@ -138,6 +138,7 @@ async function setupLeftPane(forceUpdateInboxComponent: () => void) {
 
 export const SessionInboxView = () => {
   const update = useUpdate();
+
   // run only on mount
   useMount(() => {
     void setupLeftPane(update);

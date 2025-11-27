@@ -266,8 +266,16 @@ export function SessionProInfoModal(props: SessionProInfoState) {
   }
   const isGroupCta = props.variant === SessionProInfoVariant.GROUP_ACTIVATED;
 
+  /**
+   * Note: the group activated cta is quite custom, but whatever the pro status of the current pro user,
+   * we do not want to show the CTA for "subscribe to pro".
+   * An admin have subscribed and that's all that's needed to make this group a Pro group.
+   */
+  const hasNoProAndNotGroupCta = !hasPro && !isGroupCta;
+
   return (
     <SessionWrapperModal
+      modalId="sessionProInfoModal"
       onClose={onClose}
       headerChildren={getImage(props.variant)}
       padding="0"
@@ -283,20 +291,20 @@ export function SessionProInfoModal(props: SessionProInfoState) {
             display: 'grid',
             alignItems: 'center',
             justifyItems: 'center',
-            gridTemplateColumns: hasPro ? '1fr' : '1fr 1fr',
+            gridTemplateColumns: !hasNoProAndNotGroupCta ? '1fr' : '1fr 1fr',
             columnGap: 'var(--margins-sm)',
             paddingInline: 'var(--margins-md)',
             marginBottom: 'var(--margins-md)',
             height: 'unset',
           }}
         >
-          {!hasPro ? (
+          {hasNoProAndNotGroupCta ? (
             <SessionButtonShiny
               {...buttonProps}
               shinyContainerStyle={{
                 width: '100%',
               }}
-              buttonColor={SessionButtonColor.Primary}
+              buttonColor={SessionButtonColor.PrimaryDark}
               onClick={onClose}
               dataTestId="modal-session-pro-confirm-button"
             >
@@ -308,16 +316,18 @@ export function SessionProInfoModal(props: SessionProInfoState) {
             buttonColor={SessionButtonColor.Tertiary}
             onClick={onClose}
             dataTestId="modal-session-pro-cancel-button"
-            style={hasPro ? { ...buttonProps.style, width: '50%' } : buttonProps.style}
+            style={
+              !hasNoProAndNotGroupCta ? { ...buttonProps.style, width: '50%' } : buttonProps.style
+            }
           >
-            {tr(hasPro ? 'close' : 'cancel')}
+            {tr(!hasNoProAndNotGroupCta ? 'close' : 'cancel')}
           </SessionButton>
         </ModalActionsContainer>
       }
     >
       <SpacerSM />
-      <StyledCTATitle reverseDirection={hasPro}>
-        {tr(hasPro ? (isGroupCta ? 'proGroupActivated' : 'proActivated') : 'upgradeTo')}
+      <StyledCTATitle reverseDirection={!hasNoProAndNotGroupCta}>
+        {tr(isGroupCta ? 'proGroupActivated' : hasPro ? 'proActivated' : 'upgradeTo')}
         <ProIconButton iconSize={'huge'} dataTestId="invalid-data-testid" onClick={undefined} />
       </StyledCTATitle>
       <SpacerXL />
@@ -325,7 +335,7 @@ export function SessionProInfoModal(props: SessionProInfoState) {
         <StyledScrollDescriptionContainer>
           {getDescription(props.variant)}
         </StyledScrollDescriptionContainer>
-        {!hasPro ? (
+        {hasNoProAndNotGroupCta ? (
           <StyledFeatureList>
             {getFeatureList(props.variant).map(token => (
               <FeatureListItem>{tr(token)}</FeatureListItem>

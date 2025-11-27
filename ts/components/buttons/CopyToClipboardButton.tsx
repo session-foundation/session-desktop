@@ -5,7 +5,7 @@ import useTimeoutFn from 'react-use/lib/useTimeoutFn';
 
 import { useHotkey } from '../../hooks/useHotkey';
 import { ToastUtils } from '../../session/utils';
-import { SessionButtonProps } from '../basic/SessionButton';
+import { SessionButtonProps, type SessionButtonColor } from '../basic/SessionButton';
 import { SessionIconButtonProps, SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import type { SessionIconSize } from '../icon';
@@ -17,12 +17,22 @@ type CopyProps = {
   copyContent?: string;
   onCopyComplete?: (copiedValue: string | undefined) => void;
   hotkey?: boolean;
-};
+} & { buttonColor: SessionButtonColor };
 
-type CopyToClipboardButtonProps = Omit<SessionButtonProps, 'children' | 'onClick'> & CopyProps;
+type CopyToClipboardButtonProps = Omit<SessionButtonProps, 'children' | 'onClick' | 'buttonColor'> &
+  CopyProps;
 
 export const CopyToClipboardButton = (props: CopyToClipboardButtonProps) => {
-  const { copyContent, onCopyComplete, hotkey = false, text } = props;
+  const {
+    copyContent,
+    onCopyComplete,
+    hotkey = false,
+    text,
+    buttonType,
+    buttonColor,
+    dataTestId,
+    disabled,
+  } = props;
   const [copied, setCopied] = useState(false);
 
   // reset the copied state after 5 seconds
@@ -59,9 +69,10 @@ export const CopyToClipboardButton = (props: CopyToClipboardButtonProps) => {
       aria-label={'copy to clipboard button'}
       text={text && !isEmpty(text) ? text : copied ? tr('copied') : tr('copy')}
       onClick={onClick}
-      buttonColor={props.buttonColor}
-      dataTestId={props.dataTestId}
-      disabled={props.disabled}
+      buttonColor={buttonColor}
+      dataTestId={dataTestId}
+      disabled={disabled}
+      buttonType={buttonType}
     />
   );
 };

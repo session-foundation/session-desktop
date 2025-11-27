@@ -1,10 +1,9 @@
 /* eslint-disable no-unneeded-ternary */
-import { AnimatePresence } from 'framer-motion';
 import styled from 'styled-components';
+import useKey from 'react-use/lib/useKey';
 import clsx from 'clsx';
 import type { CSSProperties } from 'styled-components';
 import { ReactNode, useState, useRef, type SessionDataTestId } from 'react';
-import useKey from 'react-use/lib/useKey';
 import { Flex } from './basic/Flex';
 import { SpacerLG } from './basic/Text';
 import { SessionLucideIconButton } from './icon/SessionIconButton';
@@ -15,6 +14,8 @@ import { LUCIDE_ICONS_UNICODE } from './icon/lucide';
 import { IsModalScrolledContext, useIsModalScrolled } from '../contexts/IsModalScrolledContext';
 import { OnModalCloseContext, useOnModalClose } from '../contexts/OnModalCloseContext';
 import { SessionButton, SessionButtonColor, SessionButtonType } from './basic/SessionButton';
+import type { ModalId } from '../state/ducks/modalDialog';
+import { useIsTopModal } from '../state/selectors/modal';
 
 type WithExtraLeftButton = {
   /**
@@ -77,7 +78,7 @@ const StyledModal = styled.div<{
   position: absolute;
   top: ${props => (props.$topAnchor === 'center' ? 'auto' : props.$topAnchor)};
   max-height: ${props =>
-    `calc(100vh - ${props.$topAnchor === 'center' ? '' : `2 * ${props.$topAnchor}`} - 5vh)`}; // 2* to have the modal centered vertically, if it overflows
+    `calc(100vh - ${props.$topAnchor === 'center' ? '' : `2 * ${props.$topAnchor}`})`}; // 2* to have the modal centered vertically, if it overflows
   animation: fadein var(--default-duration);
   z-index: 150;
   max-width: ${props =>
@@ -190,6 +191,7 @@ export function ModalBottomButtonWithBorder({
   onClick,
   buttonColor,
   dataTestId,
+  buttonType,
   disabled,
 }: {
   text: string;
@@ -197,6 +199,7 @@ export function ModalBottomButtonWithBorder({
   disabled?: boolean;
   buttonColor?: SessionButtonColor;
   dataTestId?: SessionDataTestId;
+  buttonType?: SessionButtonType;
 }) {
   return (
     <SessionButton
@@ -204,15 +207,16 @@ export function ModalBottomButtonWithBorder({
       onClick={onClick}
       disabled={disabled}
       buttonColor={buttonColor}
+      buttonType={buttonType}
       dataTestId={dataTestId}
       style={{ minWidth: 'var(--modal-actions-outline-min-width)' }}
     />
   );
 }
 
-export type ModalTopAnchor = '15vh' | '25vh' | '35vh' | '45vh' | 'center';
+export type ModalTopAnchor = '5vh' | 'center';
 
-export type SessionWrapperModalType = {
+type SessionWrapperModalType = {
   headerChildren: ReactNode;
   children: ReactNode;
   /**
@@ -229,10 +233,12 @@ export type SessionWrapperModalType = {
   modalDataTestId?: SessionDataTestId;
   /**
    * Instead of centering the modal (and having layout shifts on height change), we can use this to anchor the modal to a % from the top of the screen.
+   * Defaults to 'center' to keep the modal centered (should only be used for modals that doesn't have height changes)
    */
   topAnchor?: ModalTopAnchor;
   $flexGap?: string;
   style?: Omit<CSSProperties, 'maxWidth' | 'minWidth' | 'padding' | 'border'>;
+  modalId: ModalId;
 };
 
 const useNeedsSpacerOnSide = ({
@@ -331,13 +337,13 @@ export const ModalBasicHeader = ({
         padding={'0'}
         margin={'0'}
       >
+        {extraLeftButton}
         {/* Note: this is just here to keep the title centered, no matter the buttons we have */}
         <ExtraSpacerLeft
           showExitIcon={showExitIcon}
           extraLeftButton={extraLeftButton}
           extraRightButton={extraRightButton}
         />
-        {extraLeftButton}
       </Flex>
       <StyledTitle
         bigHeader={bigHeader}
@@ -367,8 +373,8 @@ export const ModalBasicHeader = ({
             // So we need to use one size bigger than the other icons we use on the header.
             iconSize={'huge'}
             onClick={onClose ?? undefined}
-            padding={'0 var(--margins-xs) 0 var(--margins-xs)'}
-            margin={'0'}
+            padding={'0'}
+            margin={'0 var(--margins-xs) 0 var(--margins-xs)'}
             dataTestId="modal-close-button"
             iconColor="var(--text-primary-color)"
           />
@@ -395,29 +401,20 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
     onClose,
     topAnchor,
     $flexGap,
+    modalId,
   } = props;
 
   const [scrolled, setScrolled] = useState(false);
-
-  useKey(
-    'Esc',
-    _event => {
-      onClose?.();
-    },
-    undefined,
-    [onClose]
-  );
-
-  useKey(
-    'Escape',
-    _event => {
-      onClose?.();
-    },
-    undefined,
-    [onClose]
-  );
-
   const modalRef = useRef<HTMLDivElement>(null);
+
+  const isTopModal = useIsTopModal(modalId);
+
+  useKey((event: KeyboardEvent) => {
+    if (!isTopModal) {
+      return false;
+    }
+    return event.key === 'Esc' || event.key === 'Escape';
+  }, onClose);
 
   const handleClick = (e: any) => {
     if (!modalRef.current?.contains(e.target)) {
@@ -431,48 +428,46 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
   };
 
   return (
-    <AnimatePresence>
-      <SessionFocusTrap allowOutsideClick={allowOutsideClick}>
-        <IsModalScrolledContext.Provider value={scrolled}>
-          <OnModalCloseContext.Provider value={onClose ?? null}>
-            <StyledRootDialog
-              shouldOverflow={shouldOverflow}
-              className={clsx('modal', classes)}
-              onMouseDown={handleClick}
-              role="dialog"
-              data-testid={modalDataTestId}
+    <SessionFocusTrap allowOutsideClick={allowOutsideClick} initialFocus={() => modalRef.current}>
+      <IsModalScrolledContext.Provider value={scrolled}>
+        <OnModalCloseContext.Provider value={onClose ?? null}>
+          <StyledRootDialog
+            shouldOverflow={shouldOverflow}
+            className={clsx('modal', classes)}
+            onMouseDown={handleClick}
+            role="dialog"
+            data-testid={modalDataTestId}
+          >
+            <StyledModal
+              $contentMaxWidth={$contentMaxWidth}
+              $contentMinWidth={$contentMinWidth}
+              $padding={padding}
+              style={style}
+              $topAnchor={topAnchor ?? 'center'}
+              ref={modalRef}
+              data-modal-id={modalId}
             >
-              <StyledModal
-                ref={modalRef}
-                $contentMaxWidth={$contentMaxWidth}
-                $contentMinWidth={$contentMinWidth}
-                $padding={padding}
-                style={style}
-                $topAnchor={topAnchor ?? '15vh'}
+              {props.headerChildren ? props.headerChildren : null}
+              <StyledModalBody
+                onScroll={handleScroll}
+                shouldOverflow={shouldOverflow}
+                removeScrollbarGutter={removeScrollbarGutter}
               >
-                {props.headerChildren ? props.headerChildren : null}
-
-                <StyledModalBody
-                  onScroll={handleScroll}
-                  shouldOverflow={shouldOverflow}
-                  removeScrollbarGutter={removeScrollbarGutter}
+                <Flex
+                  $container={true}
+                  $alignItems="center"
+                  $flexDirection="column"
+                  paddingInline="var(--margins-lg)" // add the padding here so that the rest of the modal isn't affected (including buttonChildren/ModalHeader)
+                  $flexGap={$flexGap}
                 >
-                  <Flex
-                    $container={true}
-                    $alignItems="center"
-                    $flexDirection="column"
-                    paddingInline="var(--margins-lg)" // add the padding here so that the rest of the modal isn't affected (including buttonChildren/ModalHeader)
-                    $flexGap={$flexGap}
-                  >
-                    {props.children}
-                  </Flex>
-                  {props.buttonChildren ? props.buttonChildren : <SpacerLG />}
-                </StyledModalBody>
-              </StyledModal>
-            </StyledRootDialog>
-          </OnModalCloseContext.Provider>
-        </IsModalScrolledContext.Provider>
-      </SessionFocusTrap>
-    </AnimatePresence>
+                  {props.children}
+                </Flex>
+                {props.buttonChildren ? props.buttonChildren : <SpacerLG />}
+              </StyledModalBody>
+            </StyledModal>
+          </StyledRootDialog>
+        </OnModalCloseContext.Provider>
+      </IsModalScrolledContext.Provider>
+    </SessionFocusTrap>
   );
 };

@@ -1,4 +1,4 @@
-import { ipcRenderer, shell } from 'electron';
+import { ipcRenderer } from 'electron';
 import { useState, SessionDataTestId } from 'react';
 
 import { useDispatch } from 'react-redux';
@@ -9,8 +9,13 @@ import useInterval from 'react-use/lib/useInterval';
 import { isEmpty, isTypedArray } from 'lodash';
 import { CityResponse, Reader } from 'maxmind';
 import useMount from 'react-use/lib/useMount';
-import { onionPathModal } from '../../state/ducks/modalDialog';
-import { useFirstOnionPath, useIsOnline } from '../../state/selectors/onions';
+import { onionPathModal, updateOpenUrlModal } from '../../state/ducks/modalDialog';
+import {
+  useFirstOnionPath,
+  useFirstOnionPathLength,
+  useIsOnline,
+  useOnionPathsCount,
+} from '../../state/selectors/onions';
 import { Flex } from '../basic/Flex';
 
 import { Snode } from '../../data/types';
@@ -246,8 +251,8 @@ export const OnionPathModal = () => {
   const dispatch = useDispatch();
   return (
     <SessionWrapperModal
+      modalId="onionPathModal"
       onClose={() => dispatch(onionPathModal(null))}
-      topAnchor="25vh"
       headerChildren={<ModalBasicHeader title={tr('onionRoutingPath')} showExitIcon={true} />}
       buttonChildren={
         <ModalActionsContainer buttonType={SessionButtonType.Simple}>
@@ -255,7 +260,11 @@ export const OnionPathModal = () => {
             text={tr('learnMore')}
             buttonType={SessionButtonType.Simple}
             onClick={() => {
-              void shell.openExternal('https://getsession.org/faq/#onion-routing');
+              dispatch(
+                updateOpenUrlModal({
+                  urlToOpen: 'https://getsession.org/faq/#onion-routing',
+                })
+              );
             }}
           />
         </ModalActionsContainer>
@@ -263,5 +272,52 @@ export const OnionPathModal = () => {
     >
       <OnionPathModalInner />
     </SessionWrapperModal>
+  );
+};
+
+// Set icon color based on result
+const errorColor = 'var(--button-path-error-color)';
+const defaultColor = 'var(--button-path-default-color)';
+const connectingColor = 'var(--button-path-connecting-color)';
+
+const StyledStatusLightContainer = styled.div<{ $inActionPanel: boolean }>`
+  margin-top: ${props => (props.$inActionPanel ? 'auto' : '0')};
+  cursor: ${props => (props.$inActionPanel ? 'pointer' : 'inherit')};
+  padding: ${props => (props.$inActionPanel ? 'var(--margins-md)' : '0')};
+`;
+
+/**
+ * A status light specifically for the action panel. Color is based on aggregate node states instead of individual onion node state
+ */
+export const OnionStatusLight = (
+  props:
+    | { inActionPanel: true; handleClick: () => void }
+    | {
+        inActionPanel: false;
+        handleClick: undefined;
+      }
+) => {
+  const { handleClick, inActionPanel } = props;
+
+  const onionPathsCount = useOnionPathsCount();
+  const firstPathLength = useFirstOnionPathLength();
+  const isOnline = useIsOnline();
+
+  // start with red
+  let iconColor = errorColor;
+  // if we are not online or the first path is not valid, we keep red as color
+  if (isOnline && firstPathLength > 1) {
+    iconColor =
+      onionPathsCount >= 2 ? defaultColor : onionPathsCount >= 1 ? connectingColor : errorColor;
+  }
+
+  return (
+    <StyledStatusLightContainer
+      data-testid="path-light-container"
+      onClick={handleClick}
+      $inActionPanel={inActionPanel}
+    >
+      <OnionPathDot dataTestId="path-light-svg" iconColor={iconColor} />
+    </StyledStatusLightContainer>
   );
 };

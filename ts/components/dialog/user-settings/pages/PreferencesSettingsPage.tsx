@@ -4,11 +4,7 @@ import {
   PanelButtonTextWithSubText,
   PanelLabelWithDescription,
 } from '../../../buttons/panel/PanelButton';
-import {
-  ModalBasicHeader,
-  SessionWrapperModal,
-  WrapperModalWidth,
-} from '../../../SessionWrapperModal';
+import { ModalBasicHeader } from '../../../SessionWrapperModal';
 import { ModalBackButton } from '../../shared/ModalBackButton';
 import {
   useUserSettingsBackAction,
@@ -23,6 +19,7 @@ import {
   useStartInTraySetting,
   useAutoStartSetting,
 } from '../../../../state/selectors/settings';
+import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
 
 function SendWithShiftEnter() {
   const shiftEnterSendSetting = useShiftEnterSendSetting();
@@ -36,7 +33,7 @@ function SendWithShiftEnter() {
   const items = [
     {
       text: 'conversationsSendWithEnterKey',
-      subText: 'conversationsSendWithEnterKeyDescription',
+      subText: 'conversationsEnterSends',
       value: selectedWithSettingFalse,
     },
     {
@@ -48,7 +45,10 @@ function SendWithShiftEnter() {
 
   return (
     <>
-      <PanelLabelWithDescription title={{ token: 'conversationsEnter' }} />
+      <PanelLabelWithDescription
+        title={{ token: 'conversationsEnter' }}
+        description={{ token: 'conversationsEnterDescription' }}
+      />
       <PanelButtonGroup>
         {items.map(({ value, text, subText }) => {
           return (
@@ -86,7 +86,7 @@ export function PreferencesSettingsPage(modalState: UserSettingsModalState) {
   const autoStartSetting = useAutoStartSetting();
 
   return (
-    <SessionWrapperModal
+    <UserSettingsModalContainer
       headerChildren={
         <ModalBasicHeader
           title={title}
@@ -96,9 +96,6 @@ export function PreferencesSettingsPage(modalState: UserSettingsModalState) {
         />
       }
       onClose={closeAction || undefined}
-      shouldOverflow={true}
-      allowOutsideClick={false}
-      $contentMinWidth={WrapperModalWidth.normal}
     >
       <PanelLabelWithDescription title={{ token: 'updates' }} />
       <PanelButtonGroup>
@@ -136,6 +133,6 @@ export function PreferencesSettingsPage(modalState: UserSettingsModalState) {
         />
       </PanelButtonGroup>
       <SendWithShiftEnter />
-    </SessionWrapperModal>
+    </UserSettingsModalContainer>
   );
 }

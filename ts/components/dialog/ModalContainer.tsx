@@ -1,30 +1,28 @@
-import { useSelector } from 'react-redux';
 import {
-  getAddModeratorsModal,
-  getBanOrUnbanUserModalState,
-  getBlockOrUnblockUserModalState,
-  getChangeNickNameDialog,
-  getConfirmModal,
-  getConversationSettingsModalState,
-  getDebugMenuModalState,
-  getDeleteAccountModalState,
-  getUserSettingsModal,
-  getEditProfilePictureModalState,
-  getEnterPasswordModalState,
-  getHideRecoveryPasswordModalState,
-  getInviteContactModal,
-  getLightBoxOptions,
-  getSessionProInfoModalState,
-  getOnionPathDialog,
-  getOpenUrlModalState,
-  getReactClearAllDialog,
-  getReactListDialog,
-  getRemoveModeratorsModal,
-  getSessionNetworkModalState,
-  getUpdateGroupMembersModal,
-  getUserProfileModal,
-  getLocalizedPopupDialogState,
-  getUpdateConversationDetailsModal,
+  useConfirmModal,
+  useInviteContactModal,
+  useAddModeratorsModal,
+  useRemoveModeratorsModal,
+  useUpdateGroupMembersModal,
+  useUpdateConversationDetailsModal,
+  useUserProfileModal,
+  useChangeNickNameDialog,
+  useUserSettingsModal,
+  useOnionPathDialog,
+  useEnterPasswordModal,
+  useDeleteAccountModal,
+  useBanOrUnbanUserModal,
+  useBlockOrUnblockUserModal,
+  useReactListDialog,
+  useReactClearAllDialog,
+  useEditProfilePictureModal,
+  useHideRecoveryPasswordModal,
+  useOpenUrlModal,
+  useLocalizedPopupDialog,
+  useSessionProInfoModal,
+  useLightBoxOptions,
+  useDebugMenuModal,
+  useConversationSettingsModal,
 } from '../../state/selectors/modal';
 import { LightboxGallery } from '../lightbox/LightboxGallery';
 import { BanOrUnBanUserDialog } from './BanOrUnbanUserDialog';
@@ -46,38 +44,36 @@ import { OpenUrlModal } from './OpenUrlModal';
 import { BlockOrUnblockDialog } from './blockOrUnblock/BlockOrUnblockDialog';
 import { DebugMenuModal } from './debug/DebugMenuModal';
 import { ConversationSettingsDialog } from './conversationSettings/conversationSettingsDialog';
-import { SessionNetworkModal } from './network/SessionNetworkModal';
 import { SessionConfirm } from './SessionConfirm';
 import { SessionProInfoModal } from './SessionProInfoModal';
 import { LocalizedPopupDialog } from './LocalizedPopupDialog';
 import { UserSettingsDialog } from './user-settings/UserSettingsDialog';
 
 export const ModalContainer = () => {
-  const confirmModalState = useSelector(getConfirmModal);
-  const inviteModalState = useSelector(getInviteContactModal);
-  const addModeratorsModalState = useSelector(getAddModeratorsModal);
-  const removeModeratorsModalState = useSelector(getRemoveModeratorsModal);
-  const updateGroupMembersModalState = useSelector(getUpdateGroupMembersModal);
-  const updateConversationDetailsModalState = useSelector(getUpdateConversationDetailsModal);
-  const userProfileModalState = useSelector(getUserProfileModal);
-  const changeNicknameModal = useSelector(getChangeNickNameDialog);
-  const userSettingsModalState = useSelector(getUserSettingsModal);
-  const onionPathModalState = useSelector(getOnionPathDialog);
-  const enterPasswordModalState = useSelector(getEnterPasswordModalState);
-  const deleteAccountModalState = useSelector(getDeleteAccountModalState);
-  const banOrUnbanUserModalState = useSelector(getBanOrUnbanUserModalState);
-  const blockOrUnblockModalState = useSelector(getBlockOrUnblockUserModalState);
-  const reactListModalState = useSelector(getReactListDialog);
-  const reactClearAllModalState = useSelector(getReactClearAllDialog);
-  const editProfilePictureModalState = useSelector(getEditProfilePictureModalState);
-  const hideRecoveryPasswordModalState = useSelector(getHideRecoveryPasswordModalState);
-  const openUrlModalState = useSelector(getOpenUrlModalState);
-  const localizedPopupDialogState = useSelector(getLocalizedPopupDialogState);
-  const sessionProInfoState = useSelector(getSessionProInfoModalState);
-  const lightBoxOptions = useSelector(getLightBoxOptions);
-  const debugMenuModalState = useSelector(getDebugMenuModalState);
-  const conversationSettingsModalState = useSelector(getConversationSettingsModalState);
-  const sessionNetworkModalState = useSelector(getSessionNetworkModalState);
+  const confirmModalState = useConfirmModal();
+  const inviteModalState = useInviteContactModal();
+  const addModeratorsModalState = useAddModeratorsModal();
+  const removeModeratorsModalState = useRemoveModeratorsModal();
+  const updateGroupMembersModalState = useUpdateGroupMembersModal();
+  const updateConversationDetailsModalState = useUpdateConversationDetailsModal();
+  const userProfileModalState = useUserProfileModal();
+  const changeNicknameModal = useChangeNickNameDialog();
+  const userSettingsModalState = useUserSettingsModal();
+  const onionPathModalState = useOnionPathDialog();
+  const enterPasswordModalState = useEnterPasswordModal();
+  const deleteAccountModalState = useDeleteAccountModal();
+  const banOrUnbanUserModalState = useBanOrUnbanUserModal();
+  const blockOrUnblockModalState = useBlockOrUnblockUserModal();
+  const reactListModalState = useReactListDialog();
+  const reactClearAllModalState = useReactClearAllDialog();
+  const editProfilePictureModalState = useEditProfilePictureModal();
+  const hideRecoveryPasswordModalState = useHideRecoveryPasswordModal();
+  const openUrlModalState = useOpenUrlModal();
+  const localizedPopupDialogState = useLocalizedPopupDialog();
+  const sessionProInfoState = useSessionProInfoModal();
+  const lightBoxOptions = useLightBoxOptions();
+  const debugMenuModalState = useDebugMenuModal();
+  const conversationSettingsModalState = useConversationSettingsModal();
 
   // NOTE the order of the modals is important for the z-index
   return (
@@ -87,7 +83,6 @@ export const ModalContainer = () => {
       {conversationSettingsModalState && (
         <ConversationSettingsDialog {...conversationSettingsModalState} />
       )}
-      {sessionNetworkModalState && <SessionNetworkModal {...sessionNetworkModalState} />}
       {onionPathModalState && <OnionPathModal {...onionPathModalState} />}
       {reactListModalState && <ReactListModal {...reactListModalState} />}
       {debugMenuModalState && <DebugMenuModal {...debugMenuModalState} />}

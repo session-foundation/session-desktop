@@ -246,7 +246,10 @@ export const ContactName = ({
   const shouldShowShortenPkAsName = !displayName;
 
   const shouldShowPubkey =
-    !shouldShowShortenPkAsName && isPublic && isShowPubkeyCtx(contactNameContext, isBlinded);
+    !shouldShowShortenPkAsName &&
+    !isMe &&
+    isPublic &&
+    isShowPubkeyCtx(contactNameContext, isBlinded);
   const boldProfileName = isBoldProfileNameCtx(contactNameContext);
   const forceSingleLine = isForceSingleLineCtx(contactNameContext);
 

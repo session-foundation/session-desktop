@@ -39,6 +39,7 @@ import { useCurrentUserHasPro } from '../../../../../../hooks/useHasPro';
 import { ProIconButton } from '../../../../../buttons/ProButton';
 import { assertUnreachable } from '../../../../../../types/sqlSharedTypes';
 import { ProMessageFeature } from '../../../../../../models/proMessageFeature';
+import { SessionButtonColor } from '../../../../../basic/SessionButton';
 
 export const MessageInfoLabel = styled.label<{ color?: string }>`
   font-size: var(--font-size-lg);
@@ -78,6 +79,7 @@ export const LabelWithInfo = (props: LabelWithInfoProps) => {
             iconSize={'small'}
             copyContent={props.info}
             margin={'0 0 0 var(--margins-xs)'}
+            buttonColor={SessionButtonColor.TextPrimary}
           />
         ) : null}
       </Flex>

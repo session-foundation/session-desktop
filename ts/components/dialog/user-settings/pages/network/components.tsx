@@ -1,14 +1,17 @@
 import styled from 'styled-components';
 import { ReactNode, useState, type SessionDataTestId } from 'react';
 import useInterval from 'react-use/lib/useInterval';
-import { Flex } from '../../basic/Flex';
-import { getThemeValue } from '../../../themes/globals';
-import { hexColorToRGB } from '../../../util/hexColorToRGB';
-import { formatAbbreviatedExpireDoubleTimer } from '../../../util/i18n/formatting/expirationTimer';
-import { DURATION } from '../../../session/constants';
-import { useInfoLoading, useLastRefreshedTimestamp } from '../../../state/selectors/networkModal';
-import { SessionButton, type SessionButtonProps } from '../../basic/SessionButton';
-import { tr } from '../../../localization/localeTools';
+import { Flex } from '../../../../basic/Flex';
+import { getThemeValue } from '../../../../../themes/globals';
+import { hexColorToRGB } from '../../../../../util/hexColorToRGB';
+import { formatAbbreviatedExpireDoubleTimer } from '../../../../../util/i18n/formatting/expirationTimer';
+import { DURATION } from '../../../../../session/constants';
+import {
+  useInfoLoading,
+  useLastRefreshedTimestamp,
+} from '../../../../../state/selectors/networkModal';
+import { SessionButton, type SessionButtonProps } from '../../../../basic/SessionButton';
+import { tr } from '../../../../../localization/localeTools';
 
 export const SessionNetworkButton = styled(SessionButton)<SessionButtonProps>`
   font-size: var(--font-display-size-lg);

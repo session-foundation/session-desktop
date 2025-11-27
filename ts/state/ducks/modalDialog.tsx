@@ -24,7 +24,8 @@ export type UserSettingsPage =
   | 'blocked-contacts'
   | 'clear-data'
   | 'password'
-  | 'preferences';
+  | 'preferences'
+  | 'network';
 
 export type WithUserSettingsPage =
   | { userSettingsPage: Exclude<UserSettingsPage, 'password'> }
@@ -83,7 +84,6 @@ export type LightBoxOptions = {
 } | null;
 
 export type DebugMenuModalState = object | null;
-export type SessionNetworkModalState = object | null;
 
 export type ConversationSettingsModalPage = 'default' | 'disappearing_message' | 'notifications';
 type SettingsPageThatCannotBeStandalone = Extract<ConversationSettingsModalPage, 'default'>;
@@ -96,6 +96,32 @@ export type ConversationSettingsPage =
       standalonePage: boolean;
     };
 export type ConversationSettingsModalState = (WithConvoId & ConversationSettingsPage) | null;
+
+export type ModalId =
+  | 'confirmModal'
+  | 'inviteContactModal'
+  | 'banOrUnbanUserModal'
+  | 'blockOrUnblockModal'
+  | 'removeModeratorsModal'
+  | 'addModeratorsModal'
+  | 'updateConversationDetailsModal'
+  | 'groupMembersModal'
+  | 'userProfileModal'
+  | 'nickNameModal'
+  | 'userSettingsModal'
+  | 'onionPathModal'
+  | 'enterPasswordModal'
+  | 'deleteAccountModal'
+  | 'reactListModal'
+  | 'reactClearAllModal'
+  | 'editProfilePictureModal'
+  | 'hideRecoveryPasswordModal'
+  | 'openUrlModal'
+  | 'localizedPopupDialog'
+  | 'sessionProInfoModal'
+  | 'lightBoxOptions'
+  | 'debugMenuModal'
+  | 'conversationSettingsModal';
 
 export type ModalState = {
   confirmModal: ConfirmModalState;
@@ -112,20 +138,21 @@ export type ModalState = {
   onionPathModal: OnionPathModalState;
   enterPasswordModal: EnterPasswordModalState;
   deleteAccountModal: DeleteAccountModalState;
-  reactListModalState: ReactModalsState;
-  reactClearAllModalState: ReactModalsState;
-  editProfilePictureModalState: EditProfilePictureModalState;
-  hideRecoveryPasswordModalState: HideRecoveryPasswordModalState;
+  reactListModal: ReactModalsState;
+  reactClearAllModal: ReactModalsState;
+  editProfilePictureModal: EditProfilePictureModalState;
+  hideRecoveryPasswordModal: HideRecoveryPasswordModalState;
   openUrlModal: OpenUrlModalState;
   localizedPopupDialog: LocalizedPopupDialogState;
   sessionProInfoModal: SessionProInfoState;
   lightBoxOptions: LightBoxOptions;
   debugMenuModal: DebugMenuModalState;
   conversationSettingsModal: ConversationSettingsModalState;
-  sessionNetworkModal: SessionNetworkModalState;
+  modalStack: Array<ModalId>;
 };
 
 export const initialModalState: ModalState = {
+  modalStack: [],
   confirmModal: null,
   inviteContactModal: null,
   addModeratorsModal: null,
@@ -140,88 +167,123 @@ export const initialModalState: ModalState = {
   onionPathModal: null,
   enterPasswordModal: null,
   deleteAccountModal: null,
-  reactListModalState: null,
-  reactClearAllModalState: null,
-  editProfilePictureModalState: null,
-  hideRecoveryPasswordModalState: null,
+  reactListModal: null,
+  reactClearAllModal: null,
+  editProfilePictureModal: null,
+  hideRecoveryPasswordModal: null,
   openUrlModal: null,
   localizedPopupDialog: null,
   sessionProInfoModal: null,
   lightBoxOptions: null,
   debugMenuModal: null,
   conversationSettingsModal: null,
-  sessionNetworkModal: null,
 };
+
+function pushModal<T extends ModalId>(
+  state: ModalState,
+  modalId: T,
+  thatModalState: ModalState[T]
+) {
+  state[modalId] = thatModalState;
+  state.modalStack.push(modalId);
+
+  return state;
+}
+
+function popModal(state: ModalState, modalId: ModalId) {
+  state[modalId] = null;
+  state.modalStack = state.modalStack.filter(m => m !== modalId);
+
+  return state;
+}
+
+function pushOrPopModal<T extends ModalId>(
+  state: ModalState,
+  modalId: T,
+  thatModalState: ModalState[T]
+) {
+  const modalStack = state.modalStack;
+  if (thatModalState === null) {
+    // consider that this is a pop of that corresponding modal id
+    return popModal(state, modalId);
+  }
+  // if the modal is already on the stack, do nothing
+  if (modalStack.includes(modalId)) {
+    state[modalId] = thatModalState;
+    return state;
+  }
+  return pushModal(state, modalId, thatModalState);
+}
 
 const ModalSlice = createSlice({
   name: 'modals',
   initialState: initialModalState,
   reducers: {
     updateConfirmModal(state, action: PayloadAction<ConfirmModalState | null>) {
-      return { ...state, confirmModal: action.payload };
+      return pushOrPopModal(state, 'confirmModal', action.payload);
     },
     updateInviteContactModal(state, action: PayloadAction<InviteContactModalState | null>) {
-      return { ...state, inviteContactModal: action.payload };
+      return pushOrPopModal(state, 'inviteContactModal', action.payload);
     },
     updateBanOrUnbanUserModal(state, action: PayloadAction<BanOrUnbanUserModalState | null>) {
-      return { ...state, banOrUnbanUserModal: action.payload };
+      return pushOrPopModal(state, 'banOrUnbanUserModal', action.payload);
     },
     updateBlockOrUnblockModal(state, action: PayloadAction<BlockOrUnblockModalState | null>) {
-      return { ...state, blockOrUnblockModal: action.payload };
+      return pushOrPopModal(state, 'blockOrUnblockModal', action.payload);
     },
     updateAddModeratorsModal(state, action: PayloadAction<AddModeratorsModalState | null>) {
-      return { ...state, addModeratorsModal: action.payload };
+      return pushOrPopModal(state, 'addModeratorsModal', action.payload);
     },
     updateRemoveModeratorsModal(state, action: PayloadAction<RemoveModeratorsModalState | null>) {
-      return { ...state, removeModeratorsModal: action.payload };
+      return pushOrPopModal(state, 'removeModeratorsModal', action.payload);
     },
     updateConversationDetailsModal(
       state,
       action: PayloadAction<UpdateConversationDetailsModalState | null>
     ) {
-      return { ...state, updateConversationDetailsModal: action.payload };
+      return pushOrPopModal(state, 'updateConversationDetailsModal', action.payload);
     },
     updateGroupMembersModal(state, action: PayloadAction<UpdateGroupMembersModalState | null>) {
-      return { ...state, groupMembersModal: action.payload };
+      return pushOrPopModal(state, 'groupMembersModal', action.payload);
     },
     updateUserProfileModal(state, action: PayloadAction<UserProfileModalState | null>) {
-      return { ...state, userProfileModal: action.payload };
+      return pushOrPopModal(state, 'userProfileModal', action.payload);
     },
     changeNickNameModal(state, action: PayloadAction<ChangeNickNameModalState | null>) {
-      return { ...state, nickNameModal: action.payload };
+      return pushOrPopModal(state, 'nickNameModal', action.payload);
     },
     userSettingsModal(state, action: PayloadAction<UserSettingsModalState | null>) {
-      return { ...state, userSettingsModal: action.payload };
+      return pushOrPopModal(state, 'userSettingsModal', action.payload);
     },
     onionPathModal(state, action: PayloadAction<OnionPathModalState | null>) {
-      return { ...state, onionPathModal: action.payload };
+      return pushOrPopModal(state, 'onionPathModal', action.payload);
     },
     updateEnterPasswordModal(state, action: PayloadAction<EnterPasswordModalState | null>) {
-      return { ...state, enterPasswordModal: action.payload };
+      return pushOrPopModal(state, 'enterPasswordModal', action.payload);
     },
     updateDeleteAccountModal(state, action: PayloadAction<DeleteAccountModalState>) {
-      return { ...state, deleteAccountModal: action.payload };
+      return pushOrPopModal(state, 'deleteAccountModal', action.payload);
     },
     updateReactListModal(state, action: PayloadAction<ReactModalsState>) {
-      return { ...state, reactListModalState: action.payload };
+      return pushOrPopModal(state, 'reactListModal', action.payload);
     },
     updateReactClearAllModal(state, action: PayloadAction<ReactModalsState>) {
-      return { ...state, reactClearAllModalState: action.payload };
+      return pushOrPopModal(state, 'reactClearAllModal', action.payload);
     },
     updateEditProfilePictureModal(state, action: PayloadAction<EditProfilePictureModalState>) {
-      return { ...state, editProfilePictureModalState: action.payload };
+      return pushOrPopModal(state, 'editProfilePictureModal', action.payload);
     },
     updateHideRecoveryPasswordModal(state, action: PayloadAction<HideRecoveryPasswordModalState>) {
-      return { ...state, hideRecoveryPasswordModalState: action.payload };
+      return pushOrPopModal(state, 'hideRecoveryPasswordModal', action.payload);
     },
     updateOpenUrlModal(state, action: PayloadAction<OpenUrlModalState>) {
-      return { ...state, openUrlModal: action.payload };
+      return pushOrPopModal(state, 'openUrlModal', action.payload);
     },
     updateLocalizedPopupDialog(state, action: PayloadAction<LocalizedPopupDialogState>) {
-      return { ...state, localizedPopupDialog: action.payload };
+      return pushOrPopModal(state, 'localizedPopupDialog', action.payload);
     },
     updateSessionProInfoModal(state, action: PayloadAction<SessionProInfoState>) {
-      return { ...state, sessionProInfoModal: action.payload };
+      return pushOrPopModal(state, 'sessionProInfoModal', action.payload);
     },
     updateLightBoxOptions(state, action: PayloadAction<LightBoxOptions>) {
       const lightBoxOptions = action.payload;
@@ -237,17 +299,13 @@ const ModalSlice = createSlice({
           lightBoxOptions.selectedIndex = selectedIndex;
         }
       }
-
-      return { ...state, lightBoxOptions };
+      return pushOrPopModal(state, 'lightBoxOptions', lightBoxOptions);
     },
     updateDebugMenuModal(state, action: PayloadAction<DebugMenuModalState>) {
-      return { ...state, debugMenuModal: action.payload };
+      return pushOrPopModal(state, 'debugMenuModal', action.payload);
     },
     updateConversationSettingsModal(state, action: PayloadAction<ConversationSettingsModalState>) {
-      return { ...state, conversationSettingsModal: action.payload };
-    },
-    updateSessionNetworkModal(state, action: PayloadAction<SessionNetworkModalState>) {
-      return { ...state, sessionNetworkModal: action.payload };
+      return pushOrPopModal(state, 'conversationSettingsModal', action.payload);
     },
   },
 });
@@ -278,6 +336,5 @@ export const {
   updateLightBoxOptions,
   updateDebugMenuModal,
   updateConversationSettingsModal,
-  updateSessionNetworkModal,
 } = actions;
 export const modalReducer = reducer;

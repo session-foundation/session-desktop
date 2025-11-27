@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import useKey from 'react-use/lib/useKey';
 
 import { PubkeyType } from 'libsession_util_nodejs';
 import { ToastUtils } from '../../session/utils';
@@ -158,10 +157,6 @@ export const UpdateGroupMembersDialog = (props: Props) => {
     // keeping the dialog open until the async thunk is done
   };
 
-  useKey((event: KeyboardEvent) => {
-    return event.key === 'Esc' || event.key === 'Escape';
-  }, closeDialog);
-
   const onSelect = (member: string) => {
     if (!weAreAdmin) {
       window?.log?.warn('Only group admin can select!');
@@ -189,6 +184,7 @@ export const UpdateGroupMembersDialog = (props: Props) => {
 
   return (
     <SessionWrapperModal
+      modalId="groupMembersModal"
       headerChildren={
         <ModalBasicHeader title={tr(weAreAdmin ? 'manageMembers' : 'groupMembers')} />
       }

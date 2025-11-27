@@ -71,6 +71,7 @@ export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProp
 
   return (
     <SessionWrapperModal
+      modalId="hideRecoveryPasswordModal"
       headerChildren={<ModalBasicHeader title={tr('recoveryPasswordHidePermanently')} />}
       onClose={onClose}
       buttonChildren={

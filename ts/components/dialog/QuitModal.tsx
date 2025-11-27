@@ -49,12 +49,10 @@ export const QuitModal = (props: QuitModalProps) => {
     void onClickOkHandler();
   });
 
-  useKey('Escape', () => {
-    onClickCancelHandler();
-  });
-
   return (
     <SessionWrapperModal
+      // we do not care about this modalID
+      modalId="confirmModal"
       headerChildren={<ModalBasicHeader title={title} />}
       onClose={onClickClose}
       buttonChildren={

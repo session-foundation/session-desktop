@@ -169,6 +169,8 @@ declare module 'react' {
     | 'leave-group'
     | 'delete-group'
     | 'set-password'
+    | 'remove-password'
+    | 'change-password'
     | 'refresh'
     | 'join-community'
     | 'copy-url'
@@ -186,6 +188,7 @@ declare module 'react' {
     | 'resend-promote'
     | 'continue'
     | 'back'
+    | 'modal-back'
     | 'create-group'
     | `${ConfirmButtons}-confirm`
     | `${CancelButtons}-cancel`
@@ -235,8 +238,6 @@ declare module 'react' {
     | 'decline-and-block-message-request'
     | 'session-dropdown'
     | 'path-light-container'
-    | 'back-button-conversation-options'
-    | 'back-button-message-details'
     | 'end-call'
     | 'end-voice-message'
     | 'edit-profile-icon'
