@@ -1,5 +1,5 @@
-import { AbortSignal } from 'abort-controller';
-import { useEffect, useMemo } from 'react';
+import AbortController, { AbortSignal } from 'abort-controller';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styled from 'styled-components';
 import insecureNodeFetch from 'node-fetch';
 
@@ -20,16 +20,21 @@ import { fetchLinkPreviewImage } from '../../util/linkPreviewFetch';
 import { LinkPreviews } from '../../util/linkPreviews';
 import { maxThumbnailDetails } from '../../util/attachment/attachmentSizes';
 import { ImageProcessor } from '../../webworker/workers/browser/image_processor_interface';
+import { DURATION } from '../../session/constants';
+import { SettingsKey } from '../../data/settings-key';
+import { useSelectedConversationKey } from '../../state/selectors/selectedConversation';
+import { ProcessedLinkPreviewThumbnailType } from '../../webworker/workers/node/image_processor/image_processor';
+import { isDevProd } from '../../shared/env_vars';
 
 interface StagedLinkPreviewProps extends StagedLinkPreviewData {
   onClose: (url: string) => void;
 }
-export const LINK_PREVIEW_TIMEOUT = 20 * 1000;
+export const LINK_PREVIEW_TIMEOUT = 20 * DURATION.SECONDS;
 
 export const getPreview = async (url: string, abortSignal: AbortSignal) => {
   // This is already checked elsewhere, but we want to be extra-careful.
   if (!LinkPreviews.isLinkSafeToPreview(url)) {
-    throw new Error('Link not safe for preview');
+    throw new Error(`Link not safe for preview ${isDevProd() ? url : ''}`);
   }
 
   window?.log?.info('insecureNodeFetch => plaintext for getPreview()');
@@ -40,7 +45,7 @@ export const getPreview = async (url: string, abortSignal: AbortSignal) => {
     abortSignal
   );
   if (!linkPreviewMetadata) {
-    throw new Error('Could not fetch link preview metadata');
+    throw new Error(`Could not fetch link preview metadata ${isDevProd() ? url : ''}`);
   }
   const { title, imageHref } = linkPreviewMetadata;
 
@@ -78,21 +83,95 @@ export const getPreview = async (url: string, abortSignal: AbortSignal) => {
   };
 };
 
-export const SessionStagedLinkPreview = (props: StagedLinkPreviewProps) => {
-  if (!props.url) {
+type Props = {
+  draft: string;
+};
+export const SessionStagedLinkPreview = (props: Props) => {
+  // Don't generate link previews if user has turned them off
+  if (!window.getSettingValue(SettingsKey.settingsLinkPreview)) {
     return null;
   }
 
-  return (
-    <StagedLinkPreview
-      onClose={props.onClose}
-      isLoaded={props.isLoaded}
-      title={props.title}
-      domain={props.domain}
-      url={props.url}
-      scaledDown={props.scaledDown}
-    />
+  return <SessionStagedLinkPreviewComp {...props} />;
+};
+
+type StagedLinkPreview = {
+  title: string | null;
+  url: string | null;
+  domain: string | null;
+  scaledDown: ProcessedLinkPreviewThumbnailType | null;
+};
+
+const SessionStagedLinkPreviewComp = ({ draft }: Props) => {
+  const [fetchingLink, setFetchingLink] = useState<string | null>(null);
+
+  const firstLink = useMemo(() => {
+    // we try to match the first link found in the current message
+    const links = LinkPreviews.findLinks(draft, undefined);
+    return links[0];
+  }, [draft]);
+
+  const previews = useRef(new Map<string, StagedLinkPreview>());
+  const fetchTimeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortController = useRef<AbortController | null>(null);
+
+  const fetchLinkPreview = useCallback(async (link: string, signal: AbortSignal) => {
+    try {
+      const ret = await getPreview(link, signal);
+      // we finished loading the preview, and checking the abortController, we are still not aborted.
+      // => update the staged preview
+      if (!signal.aborted) {
+        const newData = {
+          title: ret?.title || null,
+          url: ret?.url || null,
+          domain: (ret?.url && LinkPreviews.getDomain(ret.url)) || '',
+          scaledDown: ret?.scaledDown,
+        };
+        previews.current.set(link, newData);
+      }
+    } catch (e) {
+      window?.log?.warn('fetch link preview: ', e);
+    }
+  }, []);
+
+  const handleFetchLinkPreview = useCallback(
+    (link: string) => {
+      if (link === fetchingLink) {
+        return;
+      }
+      setFetchingLink(link);
+
+      abortController.current?.abort();
+      abortController.current = new AbortController();
+
+      if (fetchTimeoutId.current) {
+        clearTimeout(fetchTimeoutId.current);
+      }
+
+      fetchTimeoutId.current = setTimeout(() => {
+        if (abortController.current && !abortController.current.signal.aborted) {
+          abortController.current.abort();
+        }
+      }, LINK_PREVIEW_TIMEOUT);
+
+      void fetchLinkPreview(link, abortController.current.signal);
+    },
+    [fetchLinkPreview]
   );
+
+  useEffect(() => {
+    if (!previews.current.has(firstLink)) {
+      if (!LinkPreviews.isLinkSafeToPreview(firstLink)) {
+        return;
+      }
+      handleFetchLinkPreview(firstLink);
+    }
+  }, [firstLink, handleFetchLinkPreview]);
+
+  const data = previews.current.get(firstLink) || null;
+  const isLoading = abortController.current?.signal && !abortController.current?.signal?.aborted;
+
+  return <StagedLinkPreview isLoading={!!(!data && isLoading)} data={data} />;
 };
 
 // Note Similar to QuotedMessageComposition
@@ -122,22 +201,19 @@ const StyledText = styled(Flex)`
 `;
 
 const StagedLinkPreview = ({
-  isLoaded,
-  onClose,
-  title,
-  domain,
-  url,
-  scaledDown,
-}: StagedLinkPreviewProps) => {
-  const isContentTypeImage = scaledDown && isImage(scaledDown.contentType);
-
+  isLoading,
+  data,
+}: {
+  isLoading: boolean;
+  data: StagedLinkPreview | null;
+}) => {
   const blobUrl = useMemo(() => {
-    if (!scaledDown) {
-      return undefined;
+    if (!data?.scaledDown) {
+      return null;
     }
-    const blob = new Blob([scaledDown.outputBuffer], { type: scaledDown.contentType });
+    const blob = new Blob([data.scaledDown.outputBuffer], { type: data.scaledDown.contentType });
     return URL.createObjectURL(blob);
-  }, [scaledDown]);
+  }, [data?.scaledDown]);
 
   useEffect(() => {
     return () => {
@@ -147,12 +223,11 @@ const StagedLinkPreview = ({
     };
   }, [blobUrl]);
 
-  if (isLoaded && !(title && domain)) {
+  if (!data) {
     return null;
   }
 
-  const isLoading = !isLoaded;
-
+  const isContentTypeImage = data?.scaledDown && isImage(data.scaledDown.contentType);
   return (
     <StyledStagedLinkPreview
       $container={true}
@@ -169,7 +244,7 @@ const StagedLinkPreview = ({
         {isLoading ? (
           <SessionSpinner loading={isLoading} data-testid="link-preview-loading" />
         ) : null}
-        {isLoaded && isContentTypeImage ? (
+        {!isLoading && isContentTypeImage && blobUrl ? (
           <StyledImage data-testid="link-preview-image">
             <Image
               alt={AriaLabels.imageStagedLinkPreview}
@@ -181,15 +256,17 @@ const StagedLinkPreview = ({
             />
           </StyledImage>
         ) : null}
-        {isLoaded ? <StyledText data-testid="link-preview-title">{title}</StyledText> : null}
+        {!isLoading && data?.title ? (
+          <StyledText data-testid="link-preview-title">{data.title}</StyledText>
+        ) : null}
       </Flex>
       <SessionLucideIconButton
         unicode={LUCIDE_ICONS_UNICODE.X}
         iconColor="var(--chat-buttons-icon-color)"
         iconSize="medium"
-        onClick={() => {
-          onClose(url || '');
-        }}
+        // onClick={() => {
+        //  onClose(url || '');
+        // }}
         margin={'0 var(--margin-close-button-composition-box) 0 0'} // we want this aligned with the send button
         aria-label={tr('close')}
         dataTestId="link-preview-close"

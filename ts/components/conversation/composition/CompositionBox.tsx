@@ -270,8 +270,13 @@ class CompositionBoxInner extends Component<Props, State> {
   }
 
   public render() {
-    const { showRecordingView } = this.state;
-    const { typingEnabled, isBlocked } = this.props;
+    const { showRecordingView, draft } = this.state;
+    const { typingEnabled, isBlocked, stagedAttachments, quotedMessageProps } = this.props;
+
+    // Don't render link previews if quoted message or attachments are already added
+    if (stagedAttachments.length !== 0 || quotedMessageProps?.id) {
+      return null;
+    }
 
     // we completely hide the composition box when typing is not enabled now.
     // Actually not anymore. We want the above, except when we can't write because that user is blocked.
@@ -283,7 +288,9 @@ class CompositionBoxInner extends Component<Props, State> {
     return (
       <Flex $flexDirection="column">
         <SessionQuotedMessageComposition />
-        {this.renderStagedLinkPreview()}
+        {stagedAttachments.length !== 0 || quotedMessageProps?.id ? null : (
+          <SessionStagedLinkPreview draft={draft} />
+        )}
         {this.renderAttachmentsStaged()}
         <div className="composition-container">
           {showRecordingView ? this.renderRecordingView() : this.renderCompositionView()}
@@ -454,133 +461,6 @@ class CompositionBoxInner extends Component<Props, State> {
         {!isUndefined(characterCount) ? <CharacterCount count={characterCount} /> : null}
       </StyledCompositionBoxContainer>
     );
-  }
-  private renderStagedLinkPreview(): JSX.Element | null {
-    // Don't generate link previews if user has turned them off
-    if (!(window.getSettingValue(SettingsKey.settingsLinkPreview) || false)) {
-      return null;
-    }
-
-    const { stagedAttachments, quotedMessageProps } = this.props;
-    const { ignoredLink } = this.state;
-
-    // Don't render link previews if quoted message or attachments are already added
-    if (stagedAttachments.length !== 0 || quotedMessageProps?.id) {
-      return null;
-    }
-    // we try to match the first link found in the current message
-    const links = LinkPreviews.findLinks(this.state.draft, undefined);
-    if (!links || links.length === 0 || ignoredLink === links[0]) {
-      if (this.state.stagedLinkPreview) {
-        this.setState({
-          stagedLinkPreview: undefined,
-        });
-      }
-      return null;
-    }
-    const firstLink = links[0];
-    // if the first link changed, reset the ignored link so that the preview is generated
-    if (ignoredLink && ignoredLink !== firstLink) {
-      this.setState({ ignoredLink: undefined });
-    }
-    if (firstLink !== this.state.stagedLinkPreview?.url) {
-      // trigger fetching of link preview data and image
-      this.fetchLinkPreview(firstLink);
-    }
-
-    // if the fetch did not start yet, just don't show anything
-    if (!this.state.stagedLinkPreview) {
-      return null;
-    }
-
-    const { isLoaded, title, domain, scaledDown } = this.state.stagedLinkPreview;
-
-    return (
-      <SessionStagedLinkPreview
-        isLoaded={isLoaded}
-        title={title}
-        domain={domain}
-        scaledDown={scaledDown}
-        url={firstLink}
-        onClose={url => {
-          this.setState({ ignoredLink: url });
-        }}
-      />
-    );
-  }
-
-  private fetchLinkPreview(firstLink: string) {
-    // mark the link preview as loading, no data are set yet
-    this.setState({
-      stagedLinkPreview: {
-        isLoaded: false,
-        url: firstLink,
-        domain: null,
-        title: null,
-        scaledDown: null,
-      },
-    });
-    const abortController = new AbortController();
-    this.linkPreviewAbortController?.abort();
-    this.linkPreviewAbortController = abortController;
-    setTimeout(() => {
-      abortController.abort();
-    }, LINK_PREVIEW_TIMEOUT);
-
-    // eslint-disable-next-line more/no-then
-    getPreview(firstLink, abortController.signal)
-      .then(ret => {
-        // we finished loading the preview, and checking the abortController, we are still not aborted.
-        // => update the staged preview
-        if (this.linkPreviewAbortController && !this.linkPreviewAbortController.signal.aborted) {
-          this.setState({
-            stagedLinkPreview: {
-              isLoaded: true,
-              title: ret?.title || null,
-              url: ret?.url || null,
-              domain: (ret?.url && LinkPreviews.getDomain(ret.url)) || '',
-              scaledDown: ret?.scaledDown,
-            },
-          });
-        } else if (this.linkPreviewAbortController) {
-          this.setState({
-            stagedLinkPreview: {
-              isLoaded: false,
-              title: null,
-              url: null,
-              domain: null,
-              scaledDown: null,
-            },
-          });
-          this.linkPreviewAbortController = undefined;
-        }
-      })
-      .catch(err => {
-        window?.log?.warn('fetch link preview: ', err);
-        const aborted = this.linkPreviewAbortController?.signal.aborted;
-        this.linkPreviewAbortController = undefined;
-        // if we were aborted, it either means the UI was unmount, or more probably,
-        // than the message was sent without the link preview.
-        // So be sure to reset the staged link preview so it is not sent with the next message.
-
-        // if we were not aborted, it's probably just an error on the fetch. Nothing to do except mark the fetch as done (with errors)
-
-        if (aborted) {
-          this.setState({
-            stagedLinkPreview: undefined,
-          });
-        } else {
-          this.setState({
-            stagedLinkPreview: {
-              isLoaded: true,
-              title: null,
-              url: firstLink,
-              domain: null,
-              scaledDown: null,
-            },
-          });
-        }
-      });
   }
 
   private onClickAttachment(attachment: AttachmentType) {

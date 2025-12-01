@@ -352,6 +352,7 @@ export async function fetchLinkPreviewMetadata(
       signal: abortSignal as AbortSignalNode,
     });
   } catch (err) {
+    console.error(err);
     window?.log?.warn('fetchLinkPreviewMetadata: failed to fetch link preview HTML; bailing');
     return null;
   }
