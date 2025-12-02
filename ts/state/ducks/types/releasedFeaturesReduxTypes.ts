@@ -9,6 +9,7 @@ import { DURATION } from '../../../session/constants';
 type SessionBaseBooleanFeatureFlags = {
   replaceLocalizedStringsWithKeys: boolean;
   disableOnionRequests: boolean;
+  disableImageProcessor: boolean;
   useDeterministicEncryption: boolean;
   useTestNet: boolean;
   useTestProBackend: boolean;

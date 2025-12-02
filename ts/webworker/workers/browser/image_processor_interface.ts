@@ -2,6 +2,7 @@ import { join } from 'path';
 import { getAppRootPath } from '../../../node/getRootPath';
 import { WorkerInterface } from '../../worker_interface';
 import type { ImageProcessorWorkerActions } from '../node/image_processor/image_processor';
+import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 let imageProcessorWorkerInterface: WorkerInterface | undefined;
 
@@ -31,6 +32,9 @@ async function callImageProcessorWorker<T extends WorkerAllowedFunctionName>(
   fnName: T,
   ...args: Parameters<ImageProcessorWorkerActions[T]>
 ): Promise<Awaited<ReturnType<ImageProcessorWorkerActions[T]>>> {
+  if (getFeatureFlag('disableImageProcessor')) {
+    throw new Error('Image processor is disabled!');
+  }
   return internalCallImageProcessorWorker(fnName, ...args);
 }
 
