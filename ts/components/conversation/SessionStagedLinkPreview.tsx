@@ -3,9 +3,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styled from 'styled-components';
 import insecureNodeFetch from 'node-fetch';
 
-import { useForceUpdate } from 'framer-motion';
 import { isUndefined } from 'lodash';
 
+import useUpdate from 'react-use/lib/useUpdate';
+import useUnmount from 'react-use/lib/useUnmount';
 import { Image } from './Image';
 
 import { isImage } from '../../types/MIME';
@@ -159,7 +160,7 @@ const previews = new Map<string, StagedLinkPreview | null>();
 
 const SessionStagedLinkPreviewComp = ({ draft }: Props) => {
   const [hiddenLink, setHiddenLink] = useState<string | null>(null);
-  const [forceUpdate] = useForceUpdate();
+  const forceUpdate = useUpdate();
 
   const firstLink = useMemo(() => {
     // we try to match the first link found in the current message
@@ -180,6 +181,7 @@ const SessionStagedLinkPreviewComp = ({ draft }: Props) => {
       if (result !== false) {
         previews.set(previewFetchInstance.link, result);
       }
+      // Forces the UI to refresh in case the result changes the data state
       forceUpdate();
     },
     [forceUpdate]
@@ -200,6 +202,7 @@ const SessionStagedLinkPreviewComp = ({ draft }: Props) => {
       }
 
       previewFetch.current = new PreviewFetch(link);
+      // Forces the UI to enter the loading state in case it doesnt do that by itself
       forceUpdate();
       void handleFetchResult(previewFetch.current);
     },
@@ -207,7 +210,9 @@ const SessionStagedLinkPreviewComp = ({ draft }: Props) => {
   );
 
   useEffect(() => {
-    handleFetchLinkPreview(firstLink);
+    if (firstLink) {
+      handleFetchLinkPreview(firstLink);
+    }
   }, [firstLink, handleFetchLinkPreview]);
 
   const data = previews.get(firstLink);
@@ -218,6 +223,12 @@ const SessionStagedLinkPreviewComp = ({ draft }: Props) => {
     previewFetch.current.link === firstLink &&
     !previewFetch.current.abortController.signal.aborted
   );
+
+  useUnmount(() => {
+    if (previewFetch.current) {
+      previewFetch.current.cleanup();
+    }
+  });
 
   if (firstLink === hiddenLink) {
     return null;

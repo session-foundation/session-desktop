@@ -270,11 +270,6 @@ class CompositionBoxInner extends Component<Props, State> {
     const { showRecordingView, draft, enabledLinkPreviewsDuringLinkPaste } = this.state;
     const { typingEnabled, isBlocked, stagedAttachments, quotedMessageProps } = this.props;
 
-    // Don't render link previews if quoted message or attachments are already added
-    if (stagedAttachments.length !== 0 || quotedMessageProps?.id) {
-      return null;
-    }
-
     // we completely hide the composition box when typing is not enabled now.
     // Actually not anymore. We want the above, except when we can't write because that user is blocked.
     // When that user is blocked, **and only then**, we want to show the composition box, disabled with the placeholder "unblock to send".
@@ -285,12 +280,15 @@ class CompositionBoxInner extends Component<Props, State> {
     return (
       <Flex $flexDirection="column">
         <SessionQuotedMessageComposition />
-        {stagedAttachments.length !== 0 || quotedMessageProps?.id ? null : (
-          <SessionStagedLinkPreview
-            draft={draft}
-            enabledLinkPreviewsDuringLinkPaste={enabledLinkPreviewsDuringLinkPaste}
-          />
-        )}
+        {
+          // Don't render link previews if quoted message or attachments are already added
+          stagedAttachments.length !== 0 || quotedMessageProps?.id ? null : (
+            <SessionStagedLinkPreview
+              draft={draft}
+              enabledLinkPreviewsDuringLinkPaste={enabledLinkPreviewsDuringLinkPaste}
+            />
+          )
+        }
         {this.renderAttachmentsStaged()}
         <div className="composition-container">
           {showRecordingView ? this.renderRecordingView() : this.renderCompositionView()}
