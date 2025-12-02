@@ -6,6 +6,10 @@
 
 Sets the user interface language.
 
+### SESSION_SKIP_ATTACHMENTS_DOWNLOADS
+
+Does not download attachments if set to any value.
+
 ### TEST_WORKER_INDEX
 
 ### SESSION_ALLOW_APP_SUSPENSION
