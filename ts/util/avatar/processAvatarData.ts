@@ -1,6 +1,7 @@
 import { isArrayBuffer } from 'lodash';
 import { ImageProcessor } from '../../webworker/workers/browser/image_processor_interface';
 import { MAX_ATTACHMENT_FILESIZE_BYTES } from '../../session/constants';
+import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 
 /**
  * Fallback image processor using Canvas API. This should only be used if the main image processor is disabled or not working and the functionality doesn't work without image processing.
@@ -88,47 +89,51 @@ export async function processAvatarData(
     throw new Error('processAvatarData: arrayBuffer is empty');
   }
 
+  if (getFeatureFlag('disableImageProcessor')) {
+    const fallbackData = await processImageFallback(arrayBuffer);
+    // NOTE: animated display pictures are not supported by the fallback image processor
+    return {
+      mainAvatarDetails: fallbackData,
+      avatarFallback: null,
+    };
+  }
+
   /**
    * whatever is provided, we need to generate
    * 1. a resized avatar as we never need to show the full size avatar anywhere in the app
    * 2. a fallback avatar in case the user loses its pro (static image, even if the main avatar is animated)
    */
   // this is step 1, we generate a scaled down avatar, but keep its nature (animated or not)
-  let processed = null;
-  try {
-    processed = await ImageProcessor.processAvatarData(arrayBuffer, planForReupload, remoteChange);
-    if (!processed) {
-      throw new Error('processLocalAvatarChange: failed to process avatar');
-    }
-    const { mainAvatarDetails, avatarFallback } = processed;
+  const processed = await ImageProcessor.processAvatarData(
+    arrayBuffer,
+    planForReupload,
+    remoteChange
+  );
 
-    // sanity check the returned data
-    if (mainAvatarDetails.format !== 'webp' && mainAvatarDetails.format !== 'gif') {
-      throw new Error(
-        'processLocalAvatarChange: we only support animated mainAvatarDetails in webp or gif after conversion'
-      );
-    }
+  if (!processed) {
+    throw new Error('processLocalAvatarChange: failed to process avatar');
+  }
 
-    if (mainAvatarDetails.isAnimated && !avatarFallback) {
-      throw new Error(
-        'processLocalAvatarChange: we only support animated mainAvatarDetails with fallback after conversion'
-      );
-    }
+  const { mainAvatarDetails, avatarFallback } = processed;
 
-    // sanity check the returned data
-    if (avatarFallback && avatarFallback.format !== 'webp') {
-      throw new Error(
-        'processLocalAvatarChange: we only support avatarFallback in jpeg after conversion'
-      );
-    }
-  } catch (e) {
-    window?.log?.error(e);
-    const fallbackData = await processImageFallback(arrayBuffer);
-    // NOTE: animated display pictures are not supported by the fallback image processor
-    processed = {
-      mainAvatarDetails: fallbackData,
-      avatarFallback: null,
-    };
+  // sanity check the returned data
+  if (mainAvatarDetails.format !== 'webp' && mainAvatarDetails.format !== 'gif') {
+    throw new Error(
+      'processLocalAvatarChange: we only support animated mainAvatarDetails in webp or gif after conversion'
+    );
+  }
+
+  if (mainAvatarDetails.isAnimated && !avatarFallback) {
+    throw new Error(
+      'processLocalAvatarChange: we only support animated mainAvatarDetails with fallback after conversion'
+    );
+  }
+
+  // sanity check the returned data
+  if (avatarFallback && avatarFallback.format !== 'webp') {
+    throw new Error(
+      'processLocalAvatarChange: we only support avatarFallback in webp after conversion'
+    );
   }
 
   if (processed.mainAvatarDetails.size >= MAX_ATTACHMENT_FILESIZE_BYTES) {
