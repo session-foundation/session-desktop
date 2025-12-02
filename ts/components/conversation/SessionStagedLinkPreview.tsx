@@ -80,11 +80,12 @@ export const getPreview = async (url: string, abortSignal: AbortSignal) => {
   };
 };
 
-type Props = {
+type SessionStagedLinkPreviewProps = {
   draft: string;
   enabledLinkPreviewsDuringLinkPaste: boolean;
 };
-export const SessionStagedLinkPreview = (props: Props) => {
+
+export const SessionStagedLinkPreview = (props: SessionStagedLinkPreviewProps) => {
   // Don't generate link previews if user has turned them off, the pasted link means the settings key has changed and we have a link
   if (
     !window.getSettingValue(SettingsKey.settingsLinkPreview) &&
@@ -104,16 +105,10 @@ type StagedLinkPreview = {
   scaledDown: Awaited<ReturnType<typeof getPreview>>['scaledDown'] | null;
 };
 
-/**
- * Each time the link changes:
- * 1. abort previous request
- * 2. check cache
- * */
-
 class PreviewFetch {
-  link: string;
-  abortController: AbortController;
-  timeoutId: ReturnType<typeof setTimeout>;
+  readonly link: string;
+  readonly abortController: AbortController;
+  readonly timeoutId: ReturnType<typeof setTimeout>;
 
   constructor(link: string) {
     this.link = link;
@@ -130,6 +125,10 @@ class PreviewFetch {
     clearTimeout(this.timeoutId);
   }
 
+  /**
+   * Fetch the link preview data.
+   * A return of false means dont cache the result, otherwise cache the result.
+   */
   async fetch(): Promise<StagedLinkPreview | null | false> {
     try {
       const ret = await getPreview(this.link, this.abortController.signal);
@@ -158,7 +157,7 @@ class PreviewFetch {
 
 const previews = new Map<string, StagedLinkPreview | null>();
 
-const SessionStagedLinkPreviewComp = ({ draft }: Props) => {
+const SessionStagedLinkPreviewComp = ({ draft }: SessionStagedLinkPreviewProps) => {
   const [hiddenLink, setHiddenLink] = useState<string | null>(null);
   const forceUpdate = useUpdate();
 
