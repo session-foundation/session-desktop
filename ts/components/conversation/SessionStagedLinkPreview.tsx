@@ -3,7 +3,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styled from 'styled-components';
 import insecureNodeFetch from 'node-fetch';
 
-import { StagedLinkPreviewData } from './composition/CompositionBox';
+import { useForceUpdate } from 'framer-motion';
+import { isUndefined } from 'lodash';
 
 import { Image } from './Image';
 
@@ -22,13 +23,8 @@ import { maxThumbnailDetails } from '../../util/attachment/attachmentSizes';
 import { ImageProcessor } from '../../webworker/workers/browser/image_processor_interface';
 import { DURATION } from '../../session/constants';
 import { SettingsKey } from '../../data/settings-key';
-import { useSelectedConversationKey } from '../../state/selectors/selectedConversation';
-import { ProcessedLinkPreviewThumbnailType } from '../../webworker/workers/node/image_processor/image_processor';
 import { isDevProd } from '../../shared/env_vars';
 
-interface StagedLinkPreviewProps extends StagedLinkPreviewData {
-  onClose: (url: string) => void;
-}
 export const LINK_PREVIEW_TIMEOUT = 20 * DURATION.SECONDS;
 
 export const getPreview = async (url: string, abortSignal: AbortSignal) => {
@@ -85,10 +81,14 @@ export const getPreview = async (url: string, abortSignal: AbortSignal) => {
 
 type Props = {
   draft: string;
+  enabledLinkPreviewsDuringLinkPaste: boolean;
 };
 export const SessionStagedLinkPreview = (props: Props) => {
-  // Don't generate link previews if user has turned them off
-  if (!window.getSettingValue(SettingsKey.settingsLinkPreview)) {
+  // Don't generate link previews if user has turned them off, the pasted link means the settings key has changed and we have a link
+  if (
+    !window.getSettingValue(SettingsKey.settingsLinkPreview) &&
+    !props.enabledLinkPreviewsDuringLinkPaste
+  ) {
     return null;
   }
 
@@ -99,11 +99,67 @@ type StagedLinkPreview = {
   title: string | null;
   url: string | null;
   domain: string | null;
-  scaledDown: ProcessedLinkPreviewThumbnailType | null;
+  // NOTE: ts has an issue trying to resolve the direct type from the original file, which is why this is used
+  scaledDown: Awaited<ReturnType<typeof getPreview>>['scaledDown'] | null;
 };
 
+/**
+ * Each time the link changes:
+ * 1. abort previous request
+ * 2. check cache
+ * */
+
+class PreviewFetch {
+  link: string;
+  abortController: AbortController;
+  timeoutId: ReturnType<typeof setTimeout>;
+
+  constructor(link: string) {
+    this.link = link;
+    this.abortController = new AbortController();
+    this.timeoutId = setTimeout(() => {
+      this.cleanup();
+    }, LINK_PREVIEW_TIMEOUT);
+  }
+
+  cleanup() {
+    if (!this.abortController.signal.aborted) {
+      this.abortController.abort();
+    }
+    clearTimeout(this.timeoutId);
+  }
+
+  async fetch(): Promise<StagedLinkPreview | null | false> {
+    try {
+      const ret = await getPreview(this.link, this.abortController.signal);
+      if (this.abortController.signal.aborted) {
+        return false;
+      }
+      // we finished loading the preview, and checking the abortController, we are still not aborted.
+      // => update the staged preview
+      if (ret) {
+        return {
+          title: ret.title || null,
+          url: ret.url || null,
+          domain: (ret.url && LinkPreviews.getDomain(ret.url)) || '',
+          scaledDown: ret.scaledDown,
+        };
+      }
+    } catch (e) {
+      window?.log?.error(e);
+      if (this.abortController.signal.aborted) {
+        return false;
+      }
+    }
+    return null;
+  }
+}
+
+const previews = new Map<string, StagedLinkPreview | null>();
+
 const SessionStagedLinkPreviewComp = ({ draft }: Props) => {
-  const [fetchingLink, setFetchingLink] = useState<string | null>(null);
+  const [hiddenLink, setHiddenLink] = useState<string | null>(null);
+  const [forceUpdate] = useForceUpdate();
 
   const firstLink = useMemo(() => {
     // we try to match the first link found in the current message
@@ -111,67 +167,63 @@ const SessionStagedLinkPreviewComp = ({ draft }: Props) => {
     return links[0];
   }, [draft]);
 
-  const previews = useRef(new Map<string, StagedLinkPreview>());
-  const fetchTimeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const abortController = useRef<AbortController | null>(null);
+  const onClose = useCallback(() => {
+    setHiddenLink(firstLink);
+    forceUpdate();
+  }, [forceUpdate, firstLink]);
 
-  const fetchLinkPreview = useCallback(async (link: string, signal: AbortSignal) => {
-    try {
-      const ret = await getPreview(link, signal);
-      // we finished loading the preview, and checking the abortController, we are still not aborted.
-      // => update the staged preview
-      if (!signal.aborted) {
-        const newData = {
-          title: ret?.title || null,
-          url: ret?.url || null,
-          domain: (ret?.url && LinkPreviews.getDomain(ret.url)) || '',
-          scaledDown: ret?.scaledDown,
-        };
-        previews.current.set(link, newData);
+  const previewFetch = useRef<PreviewFetch | null>(null);
+
+  const handleFetchResult = useCallback(
+    async (previewFetchInstance: PreviewFetch) => {
+      const result = await previewFetchInstance.fetch();
+      if (result !== false) {
+        previews.set(previewFetchInstance.link, result);
       }
-    } catch (e) {
-      window?.log?.warn('fetch link preview: ', e);
-    }
-  }, []);
+      forceUpdate();
+    },
+    [forceUpdate]
+  );
 
   const handleFetchLinkPreview = useCallback(
     (link: string) => {
-      if (link === fetchingLink) {
+      if (previews.has(link)) {
         return;
       }
-      setFetchingLink(link);
 
-      abortController.current?.abort();
-      abortController.current = new AbortController();
-
-      if (fetchTimeoutId.current) {
-        clearTimeout(fetchTimeoutId.current);
+      if (!LinkPreviews.isLinkSafeToPreview(link)) {
+        return;
       }
 
-      fetchTimeoutId.current = setTimeout(() => {
-        if (abortController.current && !abortController.current.signal.aborted) {
-          abortController.current.abort();
-        }
-      }, LINK_PREVIEW_TIMEOUT);
+      if (previewFetch.current) {
+        previewFetch.current.cleanup();
+      }
 
-      void fetchLinkPreview(link, abortController.current.signal);
+      previewFetch.current = new PreviewFetch(link);
+      forceUpdate();
+      void handleFetchResult(previewFetch.current);
     },
-    [fetchLinkPreview]
+    [forceUpdate, handleFetchResult]
   );
 
   useEffect(() => {
-    if (!previews.current.has(firstLink)) {
-      if (!LinkPreviews.isLinkSafeToPreview(firstLink)) {
-        return;
-      }
-      handleFetchLinkPreview(firstLink);
-    }
+    handleFetchLinkPreview(firstLink);
   }, [firstLink, handleFetchLinkPreview]);
 
-  const data = previews.current.get(firstLink) || null;
-  const isLoading = abortController.current?.signal && !abortController.current?.signal?.aborted;
+  const data = previews.get(firstLink);
 
-  return <StagedLinkPreview isLoading={!!(!data && isLoading)} data={data} />;
+  const isLoading = !!(
+    isUndefined(data) &&
+    previewFetch.current &&
+    previewFetch.current.link === firstLink &&
+    !previewFetch.current.abortController.signal.aborted
+  );
+
+  if (firstLink === hiddenLink) {
+    return null;
+  }
+
+  return <StagedLinkPreview isLoading={isLoading} data={data} onClose={onClose} />;
 };
 
 // Note Similar to QuotedMessageComposition
@@ -200,13 +252,13 @@ const StyledText = styled(Flex)`
   margin: 0 0 0 var(--margins-sm);
 `;
 
-const StagedLinkPreview = ({
-  isLoading,
-  data,
-}: {
+type StagedLinkPreviewProps = {
   isLoading: boolean;
-  data: StagedLinkPreview | null;
-}) => {
+  data: StagedLinkPreview | null | undefined;
+  onClose: () => void;
+};
+
+const StagedLinkPreview = ({ isLoading, data, onClose }: StagedLinkPreviewProps) => {
   const blobUrl = useMemo(() => {
     if (!data?.scaledDown) {
       return null;
@@ -223,7 +275,7 @@ const StagedLinkPreview = ({
     };
   }, [blobUrl]);
 
-  if (!data) {
+  if (!data && !isLoading) {
     return null;
   }
 
@@ -264,9 +316,7 @@ const StagedLinkPreview = ({
         unicode={LUCIDE_ICONS_UNICODE.X}
         iconColor="var(--chat-buttons-icon-color)"
         iconSize="medium"
-        // onClick={() => {
-        //  onClose(url || '');
-        // }}
+        onClick={onClose}
         margin={'0 var(--margin-close-button-composition-box) 0 0'} // we want this aligned with the send button
         aria-label={tr('close')}
         dataTestId="link-preview-close"

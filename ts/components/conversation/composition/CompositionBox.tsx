@@ -33,17 +33,12 @@ import {
   StagedAttachmentImportedType,
   StagedPreviewImportedType,
 } from '../../../util/attachment/attachmentsUtil';
-import { LinkPreviews } from '../../../util/linkPreviews';
 import { CaptionEditor } from '../../CaptionEditor';
 import { Flex } from '../../basic/Flex';
 import { getMediaPermissionsSettings } from '../../settings/SessionSettings';
 import { getDraftForConversation, updateDraftForConversation } from '../SessionConversationDrafts';
 import { SessionQuotedMessageComposition } from '../SessionQuotedMessageComposition';
-import {
-  getPreview,
-  LINK_PREVIEW_TIMEOUT,
-  SessionStagedLinkPreview,
-} from '../SessionStagedLinkPreview';
+import { SessionStagedLinkPreview } from '../SessionStagedLinkPreview';
 import { StagedAttachmentList } from '../StagedAttachmentList';
 import {
   AddStagedAttachmentButton,
@@ -121,6 +116,7 @@ interface State {
   stagedLinkPreview?: StagedLinkPreviewData;
   showCaptionEditor?: AttachmentType;
   characterCount?: number;
+  enabledLinkPreviewsDuringLinkPaste: boolean;
 }
 
 function getSendableTextLength(v: string): number {
@@ -139,6 +135,7 @@ const getDefaultState = (newConvoId?: string) => {
     stagedLinkPreview: undefined,
     showCaptionEditor: undefined,
     characterCount: getSendableTextLength(draft),
+    enabledLinkPreviewsDuringLinkPaste: false,
   };
 };
 
@@ -270,7 +267,7 @@ class CompositionBoxInner extends Component<Props, State> {
   }
 
   public render() {
-    const { showRecordingView, draft } = this.state;
+    const { showRecordingView, draft, enabledLinkPreviewsDuringLinkPaste } = this.state;
     const { typingEnabled, isBlocked, stagedAttachments, quotedMessageProps } = this.props;
 
     // Don't render link previews if quoted message or attachments are already added
@@ -289,7 +286,10 @@ class CompositionBoxInner extends Component<Props, State> {
       <Flex $flexDirection="column">
         <SessionQuotedMessageComposition />
         {stagedAttachments.length !== 0 || quotedMessageProps?.id ? null : (
-          <SessionStagedLinkPreview draft={draft} />
+          <SessionStagedLinkPreview
+            draft={draft}
+            enabledLinkPreviewsDuringLinkPaste={enabledLinkPreviewsDuringLinkPaste}
+          />
         )}
         {this.renderAttachmentsStaged()}
         <div className="composition-container">
@@ -329,7 +329,9 @@ class CompositionBoxInner extends Component<Props, State> {
           imgBlob = item.getAsFile();
           break;
         case 'text':
-          void showLinkSharingConfirmationModalDialog(e);
+          void showLinkSharingConfirmationModalDialog(e, () => {
+            this.setState({ enabledLinkPreviewsDuringLinkPaste: true });
+          });
           break;
         default:
       }

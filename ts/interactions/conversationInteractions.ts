@@ -541,7 +541,7 @@ export async function resendMessage(messageId: string) {
  * Check if what is pasted is a URL and prompt confirmation for a setting change
  * @param e paste event
  */
-export async function showLinkSharingConfirmationModalDialog(e: any) {
+export async function showLinkSharingConfirmationModalDialog(e: any, onOk?: () => void) {
   const pastedText = e.clipboardData.getData('text');
   if (isURL(pastedText) && !window.getSettingValue(SettingsKey.settingsLinkPreview, false)) {
     const alreadyDisplayedPopup =
@@ -554,6 +554,7 @@ export async function showLinkSharingConfirmationModalDialog(e: any) {
           okTheme: SessionButtonColor.Danger,
           onClickOk: async () => {
             await window.setSettingValue(SettingsKey.settingsLinkPreview, true);
+            onOk?.();
           },
           onClickClose: async () => {
             await Storage.put(SettingsKey.hasLinkPreviewPopupBeenDisplayed, true);
