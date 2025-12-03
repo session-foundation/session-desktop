@@ -105,6 +105,11 @@ type StagedLinkPreview = {
   scaledDown: Awaited<ReturnType<typeof getPreview>>['scaledDown'] | null;
 };
 
+type PreviewFetchResult = {
+  data: StagedLinkPreview | null;
+  cacheData: boolean;
+};
+
 class PreviewFetch {
   readonly link: string;
   readonly abortController: AbortController;
@@ -125,33 +130,32 @@ class PreviewFetch {
     clearTimeout(this.timeoutId);
   }
 
-  /**
-   * Fetch the link preview data.
-   * A return of false means dont cache the result, otherwise cache the result.
-   */
-  async fetch(): Promise<StagedLinkPreview | null | false> {
+  async fetch(): Promise<PreviewFetchResult> {
     try {
       const ret = await getPreview(this.link, this.abortController.signal);
       if (this.abortController.signal.aborted) {
-        return false;
+        return { data: null, cacheData: false };
       }
       // we finished loading the preview, and checking the abortController, we are still not aborted.
       // => update the staged preview
       if (ret) {
         return {
-          title: ret.title || null,
-          url: ret.url || null,
-          domain: (ret.url && LinkPreviews.getDomain(ret.url)) || '',
-          scaledDown: ret.scaledDown,
+          data: {
+            title: ret.title || null,
+            url: ret.url || null,
+            domain: (ret.url && LinkPreviews.getDomain(ret.url)) || '',
+            scaledDown: ret.scaledDown,
+          },
+          cacheData: true,
         };
       }
     } catch (e) {
       window?.log?.error(e);
       if (this.abortController.signal.aborted) {
-        return false;
+        return { data: null, cacheData: false };
       }
     }
-    return null;
+    return { data: null, cacheData: true };
   }
 }
 
@@ -177,8 +181,8 @@ const SessionStagedLinkPreviewComp = ({ draft }: SessionStagedLinkPreviewProps) 
   const handleFetchResult = useCallback(
     async (previewFetchInstance: PreviewFetch) => {
       const result = await previewFetchInstance.fetch();
-      if (result !== false) {
-        previews.set(previewFetchInstance.link, result);
+      if (result.cacheData) {
+        previews.set(previewFetchInstance.link, result.data);
       }
       // Forces the UI to refresh in case the result changes the data state
       forceUpdate();
