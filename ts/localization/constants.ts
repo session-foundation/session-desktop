@@ -11,6 +11,8 @@ export enum LOCALE_DEFAULTS {
   app_pro = 'Session Pro',
   session_foundation = 'Session Foundation',
   pro = 'Pro',
+  entity_rangeproof = 'Rangeproof PTY LTD',
+  entity_stf = 'The Session Technology Foundation',
 }
 
 export const rtlLocales = ['ar', 'fa', 'he', 'ps', 'ur'];
