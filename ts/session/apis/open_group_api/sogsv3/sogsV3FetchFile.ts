@@ -12,6 +12,7 @@ import { OpenGroupPollingUtils } from '../opengroupV2/OpenGroupPollingUtils';
 import { getOpenGroupV2ConversationId } from '../utils/OpenGroupUtils';
 import { OpenGroupV2Room } from '../../../../data/types';
 import { DURATION } from '../../../constants';
+import { FetchDestination } from '../../../utils/InsecureNodeFetch';
 
 function fileDetailsToEndpoint({ fileId, roomId }: { fileId: number | string; roomId: string }) {
   return `/room/${roomId}/file/${fileId}`;
@@ -93,7 +94,9 @@ export async function fetchBinaryFromSogsWithOnionV4(sendOptions: {
     },
     throwError,
     abortSignal,
-    30 * DURATION.SECONDS // longer time for binary fetch
+    30 * DURATION.SECONDS, // longer time for binary fetch
+    FetchDestination.SOGS,
+    'fetchBinaryFromSogsWithOnionV4'
   );
 
   if (!res?.bodyBinary) {

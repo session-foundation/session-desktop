@@ -1,8 +1,8 @@
 import { AbortSignal } from 'abort-controller';
 import { useEffect, useMemo } from 'react';
 import styled from 'styled-components';
-import insecureNodeFetch from 'node-fetch';
 
+import type { RequestInit, Response } from 'node-fetch';
 import { StagedLinkPreviewData } from './composition/CompositionBox';
 
 import { Image } from './Image';
@@ -20,6 +20,16 @@ import { fetchLinkPreviewImage } from '../../util/linkPreviewFetch';
 import { LinkPreviews } from '../../util/linkPreviews';
 import { maxThumbnailDetails } from '../../util/attachment/attachmentSizes';
 import { ImageProcessor } from '../../webworker/workers/browser/image_processor_interface';
+import { FetchDestination, insecureNodeFetch } from '../../session/utils/InsecureNodeFetch';
+
+function insecureDirectNodeFetch(href: string, init: RequestInit): Promise<Response> {
+  return insecureNodeFetch({
+    url: href,
+    fetchOptions: init,
+    destination: FetchDestination.PUBLIC,
+    caller: 'insecureDirectNodeFetch (linkPreviews)',
+  });
+}
 
 interface StagedLinkPreviewProps extends StagedLinkPreviewData {
   onClose: (url: string) => void;
@@ -35,7 +45,7 @@ export const getPreview = async (url: string, abortSignal: AbortSignal) => {
   window?.log?.info('insecureNodeFetch => plaintext for getPreview()');
 
   const linkPreviewMetadata = await LinkPreviewUtil.fetchLinkPreviewMetadata(
-    insecureNodeFetch,
+    insecureDirectNodeFetch,
     url,
     abortSignal
   );
@@ -48,7 +58,11 @@ export const getPreview = async (url: string, abortSignal: AbortSignal) => {
     try {
       window?.log?.info('insecureNodeFetch => plaintext for getPreview()');
 
-      const fullSizeImage = await fetchLinkPreviewImage(insecureNodeFetch, imageHref, abortSignal);
+      const fullSizeImage = await fetchLinkPreviewImage(
+        insecureDirectNodeFetch,
+        imageHref,
+        abortSignal
+      );
       if (!fullSizeImage) {
         throw new Error('Failed to fetch link preview image');
       }

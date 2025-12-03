@@ -12,6 +12,7 @@ import { UserUtils } from '../utils';
 import { timeoutWithAbort } from '../utils/Promise';
 import { DURATION } from '../constants';
 import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import { FetchDestination } from '../utils/InsecureNodeFetch';
 
 export type SessionServerConfigType = {
   name: string;
@@ -171,7 +172,9 @@ export default class SessionBackendServerApi {
         },
         false,
         controller.signal,
-        this.server.requestTimeoutMs
+        this.server.requestTimeoutMs,
+        FetchDestination.SESSION_SERVER,
+        'SessionBackendServerApi._makeRequest'
       ),
       this.server.abortControllerTimeoutMs,
       controller
