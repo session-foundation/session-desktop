@@ -16,15 +16,14 @@ import { AriaLabels } from '../../util/hardcodedAriaLabels';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { tr } from '../../localization/localeTools';
-
 import { LinkPreviewUtil } from '../../util';
 import { fetchLinkPreviewImage } from '../../util/linkPreviewFetch';
 import { LinkPreviews } from '../../util/linkPreviews';
 import { maxThumbnailDetails } from '../../util/attachment/attachmentSizes';
 import { ImageProcessor } from '../../webworker/workers/browser/image_processor_interface';
 import { DURATION } from '../../session/constants';
-import { SettingsKey } from '../../data/settings-key';
 import { isDevProd } from '../../shared/env_vars';
+import { useHasLinkPreviewEnabled } from '../../state/selectors/settings';
 
 export const LINK_PREVIEW_TIMEOUT = 20 * DURATION.SECONDS;
 
@@ -82,19 +81,11 @@ export const getPreview = async (url: string, abortSignal: AbortSignal) => {
 
 type SessionStagedLinkPreviewProps = {
   draft: string;
-  enabledLinkPreviewsDuringLinkPaste: boolean;
 };
 
-export const SessionStagedLinkPreview = (props: SessionStagedLinkPreviewProps) => {
-  // Don't generate link previews if user has turned them off, the pasted link means the settings key has changed and we have a link
-  if (
-    !window.getSettingValue(SettingsKey.settingsLinkPreview) &&
-    !props.enabledLinkPreviewsDuringLinkPaste
-  ) {
-    return null;
-  }
-
-  return <SessionStagedLinkPreviewComp {...props} />;
+export const SessionStagedLinkPreview = ({ draft }: SessionStagedLinkPreviewProps) => {
+  const enabled = useHasLinkPreviewEnabled();
+  return enabled ? <SessionStagedLinkPreviewComp draft={draft} /> : null;
 };
 
 type StagedLinkPreview = {
@@ -157,6 +148,22 @@ class PreviewFetch {
     }
     return { data: null, cacheData: true };
   }
+}
+
+function useDebouncedIsLoading(isLoading: boolean, delay: number): boolean {
+  const [debouncedIsLoading, setDebouncedIsLoading] = useState(isLoading);
+
+  useEffect(() => {
+    if (!isLoading) {
+      setDebouncedIsLoading(false);
+      return () => undefined;
+    }
+
+    const timer = setTimeout(() => setDebouncedIsLoading(isLoading), delay);
+    return () => clearTimeout(timer);
+  }, [isLoading, delay]);
+
+  return debouncedIsLoading;
 }
 
 const previews = new Map<string, StagedLinkPreview | null>();
@@ -227,6 +234,8 @@ const SessionStagedLinkPreviewComp = ({ draft }: SessionStagedLinkPreviewProps) 
     !previewFetch.current.abortController.signal.aborted
   );
 
+  const debouncedIsLoading = useDebouncedIsLoading(isLoading, DURATION.SECONDS);
+
   useUnmount(() => {
     if (previewFetch.current) {
       previewFetch.current.cleanup();
@@ -237,7 +246,7 @@ const SessionStagedLinkPreviewComp = ({ draft }: SessionStagedLinkPreviewProps) 
     return null;
   }
 
-  return <StagedLinkPreview isLoading={isLoading} data={data} onClose={onClose} />;
+  return <StagedLinkPreview isLoading={debouncedIsLoading} data={data} onClose={onClose} />;
 };
 
 // Note Similar to QuotedMessageComposition

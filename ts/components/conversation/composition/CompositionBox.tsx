@@ -116,7 +116,6 @@ interface State {
   stagedLinkPreview?: StagedLinkPreviewData;
   showCaptionEditor?: AttachmentType;
   characterCount?: number;
-  enabledLinkPreviewsDuringLinkPaste: boolean;
 }
 
 function getSendableTextLength(v: string): number {
@@ -135,7 +134,6 @@ const getDefaultState = (newConvoId?: string) => {
     stagedLinkPreview: undefined,
     showCaptionEditor: undefined,
     characterCount: getSendableTextLength(draft),
-    enabledLinkPreviewsDuringLinkPaste: false,
   };
 };
 
@@ -267,7 +265,7 @@ class CompositionBoxInner extends Component<Props, State> {
   }
 
   public render() {
-    const { showRecordingView, draft, enabledLinkPreviewsDuringLinkPaste } = this.state;
+    const { showRecordingView, draft } = this.state;
     const { typingEnabled, isBlocked, stagedAttachments, quotedMessageProps } = this.props;
 
     // we completely hide the composition box when typing is not enabled now.
@@ -283,10 +281,7 @@ class CompositionBoxInner extends Component<Props, State> {
         {
           // Don't render link previews if quoted message or attachments are already added
           stagedAttachments.length !== 0 || quotedMessageProps?.id ? null : (
-            <SessionStagedLinkPreview
-              draft={draft}
-              enabledLinkPreviewsDuringLinkPaste={enabledLinkPreviewsDuringLinkPaste}
-            />
+            <SessionStagedLinkPreview draft={draft} />
           )
         }
         {this.renderAttachmentsStaged()}
@@ -327,9 +322,7 @@ class CompositionBoxInner extends Component<Props, State> {
           imgBlob = item.getAsFile();
           break;
         case 'text':
-          void showLinkSharingConfirmationModalDialog(e, () => {
-            this.setState({ enabledLinkPreviewsDuringLinkPaste: true });
-          });
+          void showLinkSharingConfirmationModalDialog(e.clipboardData.getData('text'));
           break;
         default:
       }
