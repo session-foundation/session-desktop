@@ -24,6 +24,7 @@ import { ImageProcessor } from '../../webworker/workers/browser/image_processor_
 import { DURATION } from '../../session/constants';
 import { isDevProd } from '../../shared/env_vars';
 import { useHasLinkPreviewEnabled } from '../../state/selectors/settings';
+import { StagedLinkPreviewData } from './composition/CompositionBox';
 
 export const LINK_PREVIEW_TIMEOUT = 20 * DURATION.SECONDS;
 
@@ -81,23 +82,21 @@ export const getPreview = async (url: string, abortSignal: AbortSignal) => {
 
 type SessionStagedLinkPreviewProps = {
   draft: string;
+  setStagedLinkPreview: (linkPreview: StagedLinkPreviewData) => void;
 };
 
-export const SessionStagedLinkPreview = ({ draft }: SessionStagedLinkPreviewProps) => {
+export const SessionStagedLinkPreview = ({
+  draft,
+  setStagedLinkPreview,
+}: SessionStagedLinkPreviewProps) => {
   const enabled = useHasLinkPreviewEnabled();
-  return enabled ? <SessionStagedLinkPreviewComp draft={draft} /> : null;
-};
-
-type StagedLinkPreview = {
-  title: string | null;
-  url: string | null;
-  domain: string | null;
-  // NOTE: ts has an issue trying to resolve the direct type from the original file, which is why this is used
-  scaledDown: Awaited<ReturnType<typeof getPreview>>['scaledDown'] | null;
+  return enabled ? (
+    <SessionStagedLinkPreviewComp draft={draft} setStagedLinkPreview={setStagedLinkPreview} />
+  ) : null;
 };
 
 type PreviewFetchResult = {
-  data: StagedLinkPreview | null;
+  data: StagedLinkPreviewData | null;
   cacheData: boolean;
 };
 
@@ -166,9 +165,12 @@ function useDebouncedIsLoading(isLoading: boolean, delay: number): boolean {
   return debouncedIsLoading;
 }
 
-const previews = new Map<string, StagedLinkPreview | null>();
+const previews = new Map<string, StagedLinkPreviewData | null>();
 
-const SessionStagedLinkPreviewComp = ({ draft }: SessionStagedLinkPreviewProps) => {
+const SessionStagedLinkPreviewComp = ({
+  draft,
+  setStagedLinkPreview,
+}: SessionStagedLinkPreviewProps) => {
   const [hiddenLink, setHiddenLink] = useState<string | null>(null);
   const forceUpdate = useUpdate();
 
@@ -227,6 +229,12 @@ const SessionStagedLinkPreviewComp = ({ draft }: SessionStagedLinkPreviewProps) 
 
   const data = previews.get(firstLink);
 
+  useEffect(() => {
+    if (data) {
+      setStagedLinkPreview(data);
+    }
+  }, [data, setStagedLinkPreview]);
+
   const isLoading = !!(
     isUndefined(data) &&
     previewFetch.current &&
@@ -277,7 +285,7 @@ const StyledText = styled(Flex)`
 
 type StagedLinkPreviewProps = {
   isLoading: boolean;
-  data: StagedLinkPreview | null | undefined;
+  data: StagedLinkPreviewData | null | undefined;
   onClose: () => void;
 };
 

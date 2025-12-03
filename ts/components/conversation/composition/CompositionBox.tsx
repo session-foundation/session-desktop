@@ -71,13 +71,12 @@ export interface ReplyingToMessageProps {
   attachments?: Array<any>;
 }
 
-export interface StagedLinkPreviewData {
-  isLoaded: boolean;
+export type StagedLinkPreviewData = {
   title: string | null;
   url: string | null;
   domain: string | null;
   scaledDown: ProcessedLinkPreviewThumbnailType | null;
-}
+};
 
 export type StagedAttachmentType = AttachmentType & {
   file: File;
@@ -281,7 +280,10 @@ class CompositionBoxInner extends Component<Props, State> {
         {
           // Don't render link previews if quoted message or attachments are already added
           stagedAttachments.length !== 0 || quotedMessageProps?.id ? null : (
-            <SessionStagedLinkPreview draft={draft} />
+            <SessionStagedLinkPreview
+              draft={draft}
+              setStagedLinkPreview={this.setStagedLinkPreview}
+            />
           )
         }
         {this.renderAttachmentsStaged()}
@@ -359,6 +361,10 @@ class CompositionBoxInner extends Component<Props, State> {
 
   private setDraft(draft: string) {
     this.setState({ draft, characterCount: this.getSendableText().length });
+  }
+
+  private setStagedLinkPreview(linkPreview: StagedLinkPreviewData) {
+    this.setState({ stagedLinkPreview: linkPreview });
   }
 
   private toggleEmojiPanel() {
@@ -669,7 +675,7 @@ class CompositionBoxInner extends Component<Props, State> {
 
     // we consider that a link preview without a title at least is not a preview
     const linkPreview =
-      stagedLinkPreview?.isLoaded && stagedLinkPreview.title?.length
+      stagedLinkPreview && stagedLinkPreview.title?.length
         ? _.pick(stagedLinkPreview, 'url', 'scaledDown', 'title')
         : undefined;
 
