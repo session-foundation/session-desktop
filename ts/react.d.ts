@@ -68,9 +68,9 @@ declare module 'react' {
     | 'ban-user'
     | 'unban-user'
     | 'ban-user-delete-all'
-    | 'modal-session-pro';
+    | 'cta';
 
-  type CancelButtons = 'update-group-info' | 'add-admins' | 'unban-user' | 'modal-session-pro';
+  type CancelButtons = 'update-group-info' | 'add-admins' | 'unban-user' | 'cta';
 
   type ClearButtons =
     | `${'group' | 'community' | 'profile'}-info-description`
@@ -362,6 +362,12 @@ declare module 'react' {
     | 'learn-more-network-link'
     | 'your-swarm-amount'
     | 'nodes-securing-amount'
+
+    // Session CTA
+    | 'cta-body'
+    | 'cta-heading'
+    | 'cta-heading-pro-badge'
+    | `cta-list-item-${number}`
 
     // to sort
     | 'restore-using-recovery'

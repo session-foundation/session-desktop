@@ -182,7 +182,7 @@ function CtaTitle({ variant }: { variant: CTAVariant }) {
     return <ProCTATitle variant={variant} />;
   }
 
-  return <StyledCTATitle>{getTitle(variant)}</StyledCTATitle>;
+  return <StyledCTATitle data-testid="cta-heading">{getTitle(variant)}</StyledCTATitle>;
 }
 
 function getDescription(variant: CTAVariantExcludingProCTAs) {
@@ -203,7 +203,9 @@ function CTADescription({ variant }: { variant: CTAVariant }) {
   }
 
   return (
-    <StyledScrollDescriptionContainer>{getDescription(variant)}</StyledScrollDescriptionContainer>
+    <StyledScrollDescriptionContainer data-testid="cta-body">
+      {getDescription(variant)}
+    </StyledScrollDescriptionContainer>
   );
 }
 
@@ -247,7 +249,7 @@ function Buttons({
             showLinkVisitWarningDialog(APP_URL.DONATE, dispatch);
             onClose();
           }}
-          dataTestId="modal-session-pro-confirm-button"
+          dataTestId="cta-confirm-button"
         >
           <Localizer token="donate" />
         </SessionButtonShiny>
@@ -287,7 +289,7 @@ function Buttons({
           dispatch(userSettingsModal(settingsModalProps));
           afterActionButtonCallback?.();
         }}
-        dataTestId="modal-session-pro-confirm-button"
+        dataTestId="cta-confirm-button"
       >
         <Localizer token={buttonTextKey} />
       </SessionButtonShiny>
@@ -327,7 +329,7 @@ function Buttons({
         {...proButtonProps}
         buttonColor={SessionButtonColor.Tertiary}
         onClick={onClose}
-        dataTestId="modal-session-pro-cancel-button"
+        dataTestId="cta-cancel-button"
         style={!actionButton ? { ...proButtonProps.style, width: '50%' } : proButtonProps.style}
       >
         <Localizer token={closeButtonToken} />

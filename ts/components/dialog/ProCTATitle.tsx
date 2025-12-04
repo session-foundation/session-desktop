@@ -50,11 +50,11 @@ export function ProCTATitle({ variant }: { variant: ProCTAVariant }) {
   }, [variant]);
 
   return (
-    <StyledCTATitle reverseDirection={isTitleDirectionReversed}>
+    <StyledCTATitle reverseDirection={isTitleDirectionReversed} data-testid="cta-heading">
       {titleText}
       <ProIconButton
-        iconSize={'huge'}
-        dataTestId="invalid-data-testid"
+        iconSize="huge"
+        dataTestId="cta-heading-pro-badge"
         onClick={undefined}
         noColors={variant === CTAVariant.PRO_EXPIRED}
       />
