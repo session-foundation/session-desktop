@@ -9,21 +9,21 @@ on:
     branches:
       - master
       - dev
-      - 'release/**'
-      - 'ci/**'
+      - "release/**"
+      - "ci/**"
       - feat/pro-libsession
   pull_request:
     branches:
       - dev
-      - 'release/**'
-      - 'ci/**'
+      - "release/**"
+      - "ci/**"
       - feat/pro-libsession
   workflow_dispatch:
     inputs:
       target_branch:
-        description: 'Branch to make a release of'
+        description: "Branch to make a release of"
         required: true
-        default: 'master'
+        default: "master"
 
 # Dynamic name for the run
 run-name: >
@@ -73,7 +73,7 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           tag: v${{ steps.get_version.outputs.VERSION_TAG }}
-          name: 'Session ${{ steps.get_version.outputs.VERSION_TAG }}'
+          name: "Session ${{ steps.get_version.outputs.VERSION_TAG }}"
           draft: true # important to keep this, so we **NEVER** make a live release through the CI
           bodyFile: ${{ env.SHOULD_PUBLISH_ALPHA == 'true' && 'build/release-notes-alpha.md' || 'build/release-notes.md' }}
           allowUpdates: true
@@ -118,7 +118,7 @@ jobs:
           #   cache_suffix: linux-deb
           #   is_qa: true
           #   generate_release_metadata: false
-    name: '${{ matrix.identifier }}'
+    name: "${{ matrix.identifier }}"
 
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -220,7 +220,7 @@ jobs:
         with:
           # the if at the job level checks that version_tag is not empty
           tag: v${{ needs.create_draft_release_if_needed.outputs.version_tag }}
-          artifacts: 'dist/latest-linux.yml'
+          artifacts: "dist/latest-linux.yml"
           draft: true # important to keep this, so we **NEVER** make a live release through the CI
           allowUpdates: true
           omitNameDuringUpdate: true
@@ -234,7 +234,7 @@ jobs:
     needs: [create_draft_release_if_needed]
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    name: 'windows x64'
+    name: "windows x64"
     steps:
       - run: git config --global core.autocrlf false
 
@@ -246,7 +246,7 @@ jobs:
       - name: Setup & Build
         uses: ./actions/setup_and_build
         with:
-          cache_suffix: 'windows_x64'
+          cache_suffix: "windows_x64"
 
         # we want to test on all platforms since some are testing the rendered menus (and are dependent on the platform)
       - name: Unit Test
@@ -268,7 +268,7 @@ jobs:
         if: ${{ needs.create_draft_release_if_needed.outputs.version_tag != '' }}
         run: yarn build-release-publish # No other args needed for windows publish
 
-  # We want both arm64 and intel mac builds, and according to this https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources macos-14 and above is always arm64 and macos-13 is the last intel runner
+  # We want both arm64 and intel mac builds, and according to this https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources macos-14 and above is always arm64 and macos-15 is the last intel runner
   # NOTE x64 builds made on an arm64 host will not bundle the native modules correctly https://github.com/electron-userland/electron-builder/issues/8646
   build_mac:
     strategy:
@@ -280,9 +280,9 @@ jobs:
 
           - architecture: x64
             cache_suffix: mac-x64
-            runner: macos-13
+            runner: macos-15-intel
     runs-on: ${{ matrix.runner }}
-    name: '${{ matrix.architecture }}'
+    name: "${{ matrix.architecture }}"
 
     needs: [create_draft_release_if_needed]
     env:
@@ -348,7 +348,7 @@ jobs:
         # the if at the job level checks that version_tag is not empty
         with:
           tag: v${{ needs.create_draft_release_if_needed.outputs.version_tag }}
-          artifacts: 'dist/latest-mac.yml'
+          artifacts: "dist/latest-mac.yml"
           draft: true # important to keep this, so we **NEVER** make a live release through the CI
           allowUpdates: true
           omitNameDuringUpdate: true
