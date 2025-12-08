@@ -12,9 +12,14 @@ function useShowNoteToSelf({ conversationId }: { conversationId: string }) {
   return isMe && isHidden;
 }
 
+function useDispatch2() {
+  const dispatch = useDispatch();
+  return { dispatch }
+}
+
 export function useShowNoteToSelfCb({ conversationId }: { conversationId: string }) {
   const showNTS = useShowNoteToSelf({ conversationId });
-  const dispatch = useDispatch();
+  const { dispatch } = useDispatch2();
 
   if (!showNTS) {
     return null;

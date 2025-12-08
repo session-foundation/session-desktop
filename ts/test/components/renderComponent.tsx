@@ -28,7 +28,7 @@ const Providers = ({ children }: { children: ReactNode }) => {
   );
 };
 
-function renderComponent(children: ReactElement): TestRenderer.ReactTestRenderer {
+function renderComponent(children: ReactElement<any>): TestRenderer.ReactTestRenderer {
   return TestRenderer.create(<Providers>{children}</Providers>);
 }
 

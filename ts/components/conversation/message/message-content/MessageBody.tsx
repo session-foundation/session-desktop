@@ -3,7 +3,7 @@ import LinkifyIt from 'linkify-it';
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 
-import type { ReactNode } from 'react';
+import type { ReactNode, JSX } from 'react';
 import { RenderTextCallbackType } from '../../../../types/Util';
 import { getEmojiSizeClass, SizeClassType } from '../../../../util/emoji';
 import { LinkPreviews } from '../../../../util/linkPreviews';

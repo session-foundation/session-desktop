@@ -6,7 +6,7 @@ import styled from 'styled-components';
 import { AbortController } from 'abort-controller';
 
 import autoBind from 'auto-bind';
-import { Component, createRef, RefObject, KeyboardEvent } from 'react';
+import { Component, createRef, RefObject, KeyboardEvent, type JSX } from 'react';
 import { FrequentlyUsed } from 'emoji-mart';
 import * as MIME from '../../../types/MIME';
 import { SessionEmojiPanel, StyledEmojiPanel } from '../SessionEmojiPanel';
@@ -217,10 +217,10 @@ const StyledCompositionBoxContainer = styled(Flex)`
 `;
 
 class CompositionBoxInner extends Component<Props, State> {
-  private readonly inputRef: RefObject<CompositionInputRef>;
-  private readonly fileInput: RefObject<HTMLInputElement>;
-  private container: RefObject<HTMLDivElement>;
-  private readonly emojiPanel: RefObject<HTMLDivElement>;
+  private readonly inputRef: RefObject<CompositionInputRef | null>;
+  private readonly fileInput: RefObject<HTMLInputElement | null>;
+  private container: RefObject<HTMLDivElement | null>;
+  private readonly emojiPanel: RefObject<HTMLDivElement | null>;
   private readonly emojiPanelButton: any;
   private linkPreviewAbortController?: AbortController;
 

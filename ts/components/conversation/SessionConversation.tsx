@@ -117,7 +117,7 @@ const GroupMarkedAsExpired = () => {
 };
 
 export class SessionConversation extends Component<Props, State> {
-  private readonly messageContainerRef: RefObject<HTMLDivElement>;
+  private readonly messageContainerRef: RefObject<HTMLDivElement | null>;
   private dragCounter: number;
   private publicMembersRefreshTimeout?: NodeJS.Timeout;
   private readonly updateMemberList: () => any;

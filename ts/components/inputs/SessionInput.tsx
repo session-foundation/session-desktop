@@ -247,8 +247,8 @@ type InputProps = Pick<
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
 };
 
-type WithInputRef = { inputRef?: RefObject<HTMLInputElement> };
-type WithTextAreaRef = { inputRef?: RefObject<HTMLTextAreaElement> };
+type WithInputRef = { inputRef?: RefObject<HTMLInputElement | null> };
+type WithTextAreaRef = { inputRef?: RefObject<HTMLTextAreaElement | null> };
 
 function useUpdateInputValue(onValueChanged: (val: string) => void, disabled?: boolean) {
   return useCallback(

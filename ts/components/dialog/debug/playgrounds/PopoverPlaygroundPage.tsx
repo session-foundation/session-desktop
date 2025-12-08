@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { RefObject, useRef, useState } from 'react';
 import styled from 'styled-components';
 import useUpdate from 'react-use/lib/useUpdate';
 import { SessionTooltip, type TooltipProps, useTriggerPosition } from '../../../SessionTooltip';
@@ -35,12 +35,13 @@ function PopoverGrid(
   const r5 = useRef<HTMLDivElement>(null);
   const r6 = useRef<HTMLDivElement>(null);
 
-  const t1 = useTriggerPosition(r1);
-  const t2 = useTriggerPosition(r2);
-  const t3 = useTriggerPosition(r3);
-  const t4 = useTriggerPosition(r4);
-  const t5 = useTriggerPosition(r5);
-  const t6 = useTriggerPosition(r6);
+  // FIXME: remove as cast
+  const t1 = useTriggerPosition(r1 as RefObject<HTMLDivElement>);
+  const t2 = useTriggerPosition(r2 as RefObject<HTMLDivElement>);
+  const t3 = useTriggerPosition(r3 as RefObject<HTMLDivElement>);
+  const t4 = useTriggerPosition(r4 as RefObject<HTMLDivElement>);
+  const t5 = useTriggerPosition(r5 as RefObject<HTMLDivElement>);
+  const t6 = useTriggerPosition(r6 as RefObject<HTMLDivElement>);
 
   return (
     <>

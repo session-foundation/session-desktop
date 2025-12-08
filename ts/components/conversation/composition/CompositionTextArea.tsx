@@ -49,8 +49,8 @@ type Props = {
   initialDraft: string;
   draft: string;
   setDraft: (draft: string) => void;
-  container: RefObject<HTMLDivElement>;
-  inputRef: RefObject<CompositionInputRef>;
+  container: RefObject<HTMLDivElement | null>;
+  inputRef: RefObject<CompositionInputRef | null>;
   typingEnabled: boolean;
   onKeyDown: KeyboardEventHandler<HTMLDivElement>;
 };
@@ -218,7 +218,7 @@ function useHandleSelect({
 }: {
   focusedItem: SearchableSuggestion;
   handleMentionCleanup: () => void;
-  inputRef: RefObject<CompositionInputRef>;
+  inputRef: RefObject<CompositionInputRef | null>;
   mention: MentionDetails | null;
   results: Array<SearchableSuggestion>;
   setDraft: Dispatch<string>;
@@ -326,7 +326,7 @@ function useHandleKeyDown({
   handleMentionCheck: (content: string, htmlIndex?: number | null) => void;
   handleMentionCleanup: () => void;
   handleSelect: (item?: SessionSuggestionDataItem) => void;
-  inputRef: RefObject<CompositionInputRef>;
+  inputRef: RefObject<CompositionInputRef | null>;
   mention: MentionDetails | null;
   onKeyDown: KeyboardEventHandler<HTMLDivElement>;
   results: Array<SearchableSuggestion>;

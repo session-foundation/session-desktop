@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import type { ReactNode } from 'react';
+import type { ReactNode, JSX } from 'react';
 import { ConvoHub } from '../../session/conversations';
 import { isUsAnySogsFromCache } from '../../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import { PubKey } from '../../session/types';

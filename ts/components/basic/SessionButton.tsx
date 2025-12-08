@@ -150,7 +150,7 @@ export type SessionButtonProps = {
   width?: string;
   margin?: string;
   dataTestId?: SessionDataTestId;
-  reference?: RefObject<HTMLButtonElement>;
+  reference?: RefObject<HTMLButtonElement | null>;
   className?: string;
   style?: CSSProperties;
 };

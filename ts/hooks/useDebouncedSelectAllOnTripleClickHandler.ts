@@ -19,7 +19,7 @@ function selectAllContent(el: HTMLElement) {
 }
 
 interface DebouncedSelectAllOnTripleClickHandlerProps {
-  elementRef: RefObject<HTMLDivElement | HTMLInputElement | HTMLTextAreaElement>;
+  elementRef: RefObject<HTMLDivElement | HTMLInputElement | HTMLTextAreaElement | null>;
   onClick?: MouseEventHandler;
 }
 

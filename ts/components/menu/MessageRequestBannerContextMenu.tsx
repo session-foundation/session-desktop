@@ -8,6 +8,8 @@ import { ItemWithDataTestId } from './items/MenuItemWithDataTestId';
 import { getMenuAnimation } from './MenuAnimation';
 import { tr } from '../../localization/localeTools';
 
+import type { JSX } from "react";
+
 export type PropsContextConversationItem = {
   triggerId: string;
 };

@@ -2,6 +2,8 @@ import { Localizer } from '../../../basic/Localizer';
 import { useShowCopyCommunityUrlCb } from '../../../menuAndSettingsHooks/useCopyCommunityUrl';
 import { ItemWithDataTestId } from '../MenuItemWithDataTestId';
 
+import type { JSX } from "react";
+
 export const CopyCommunityUrlMenuItem = ({ convoId }: { convoId: string }): JSX.Element | null => {
   const copyCommunityUrlCb = useShowCopyCommunityUrlCb(convoId);
 

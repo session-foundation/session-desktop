@@ -36,6 +36,8 @@ import {
 import { tr } from '../../localization/localeTools';
 import { useTogglePinConversationHandler } from '../menuAndSettingsHooks/UseTogglePinConversationHandler';
 
+import type { JSX } from "react";
+
 export type PropsContextConversationItem = {
   triggerId: string;
 };

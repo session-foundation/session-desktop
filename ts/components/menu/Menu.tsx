@@ -38,6 +38,8 @@ import { useChangeNickname } from '../menuAndSettingsHooks/useChangeNickname';
 import { useShowNoteToSelfCb } from '../menuAndSettingsHooks/useShowNoteToSelf';
 import { useShowUserDetailsCbFromConversation } from '../menuAndSettingsHooks/useShowUserDetailsCb';
 
+import type { JSX } from "react";
+
 /** Menu items standardized */
 
 export const InviteContactMenuItem = (): JSX.Element | null => {

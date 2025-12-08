@@ -8,6 +8,8 @@ import {
   renderTextDefault,
 } from '../conversation/message/message-content/MessageBody';
 
+import type { JSX } from "react";
+
 const renderNewLines: RenderTextCallbackType = ({ text, key, isGroup, isPublic }) => (
   <AddNewLines
     key={key}

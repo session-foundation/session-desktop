@@ -4,6 +4,8 @@ import { MediaItemType } from '../../lightbox/LightboxGallery';
 import { DocumentListItem } from './DocumentListItem';
 import { MediaGridItem } from './MediaGridItem';
 
+import type { JSX } from "react";
+
 type Props = {
   type: 'media' | 'documents';
   mediaItems: Array<MediaItemType>;

@@ -61,7 +61,7 @@ const handleKeyQRMode = (mode: ProfileDialogModes, setMode: (mode: ProfileDialog
 const handleKeyCancel = (
   mode: ProfileDialogModes,
   setMode: (mode: ProfileDialogModes) => void,
-  inputRef: RefObject<HTMLInputElement>
+  inputRef: RefObject<HTMLInputElement | null>
 ) => {
   switch (mode) {
     case 'qr':

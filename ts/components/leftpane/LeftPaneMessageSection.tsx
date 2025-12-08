@@ -22,6 +22,8 @@ import { OverlayMessageRequest } from './overlay/OverlayMessageRequest';
 import { OverlayChooseAction } from './overlay/choose-action/OverlayChooseAction';
 import { sectionActions } from '../../state/ducks/section';
 
+import type { JSX } from "react";
+
 const StyledLeftPaneContent = styled.div`
   display: flex;
   flex-direction: column;

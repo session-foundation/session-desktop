@@ -1,5 +1,5 @@
 import { ipcRenderer } from 'electron';
-import { useState, SessionDataTestId } from 'react';
+import { useState, SessionDataTestId, type JSX } from 'react';
 
 import { useDispatch } from 'react-redux';
 import useHover from 'react-use/lib/useHover';
