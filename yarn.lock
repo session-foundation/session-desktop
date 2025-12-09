@@ -475,7 +475,6 @@
 
 "@img/sharp-libvips-linux-sse2-x64@https://github.com/session-foundation/sharp-libvips/releases/download/v1.2.4/sharp-libvips-linux-sse2-x64-1.2.4.tar.gz":
   version "1.2.4"
-  uid b6f6a8a9767448cd2476e6e621e302fc265b7300
   resolved "https://github.com/session-foundation/sharp-libvips/releases/download/v1.2.4/sharp-libvips-linux-sse2-x64-1.2.4.tar.gz#b6f6a8a9767448cd2476e6e621e302fc265b7300"
 
 "@img/sharp-libvips-linux-x64@https://github.com/session-foundation/sharp-libvips/releases/download/v1.2.4/sharp-libvips-linux-x64-1.2.4.tar.gz":
@@ -490,19 +489,19 @@
 
 "@img/sharp-linux-sse2-x64@https://github.com/session-foundation/sharp/releases/download/v0.34.5/img-sharp-linux-sse2-x64-0.34.5.tgz":
   version "0.34.5"
-  resolved "https://github.com/session-foundation/sharp/releases/download/v0.34.5/img-sharp-linux-sse2-x64-0.34.5.tgz#f14fef3f8a0abcb674e5e7c8b7973e601288de0f"
+  resolved "https://github.com/session-foundation/sharp/releases/download/v0.34.5/img-sharp-linux-sse2-x64-0.34.5.tgz#a8815266e727b4992f03f9ad532609796b715d66"
   optionalDependencies:
     "@img/sharp-libvips-linux-sse2-x64" "https://github.com/session-foundation/sharp-libvips/releases/download/v1.2.4/sharp-libvips-linux-sse2-x64-1.2.4.tar.gz"
 
 "@img/sharp-linux-x64@https://github.com/session-foundation/sharp/releases/download/v0.34.5/img-sharp-linux-x64-0.34.5.tgz":
   version "0.34.5"
-  resolved "https://github.com/session-foundation/sharp/releases/download/v0.34.5/img-sharp-linux-x64-0.34.5.tgz#9463a3fa8c2d32e4f8a13732d826433139c2a713"
+  resolved "https://github.com/session-foundation/sharp/releases/download/v0.34.5/img-sharp-linux-x64-0.34.5.tgz#7f9c2ef17e3de008bf6250ee777e272b42d4657e"
   optionalDependencies:
-    "@img/sharp-libvips-linux-sse2-x64" "https://github.com/session-foundation/sharp-libvips/releases/download/v1.2.4/sharp-libvips-linux-sse2-x64-1.2.4.tar.gz"
+    "@img/sharp-libvips-linux-x64" "https://github.com/session-foundation/sharp-libvips/releases/download/v1.2.4/sharp-libvips-linux-x64-1.2.4.tar.gz"
 
 "@img/sharp-win32-x64@https://github.com/session-foundation/sharp/releases/download/v0.34.5/img-sharp-win32-x64-0.34.5.tgz":
   version "0.34.5"
-  resolved "https://github.com/session-foundation/sharp/releases/download/v0.34.5/img-sharp-win32-x64-0.34.5.tgz#1c08e45df1b8c5f900c76b885536e2d7b971d22d"
+  resolved "https://github.com/session-foundation/sharp/releases/download/v0.34.5/img-sharp-win32-x64-0.34.5.tgz#7df72617306675217ba835ed2572efcf5d69a1bf"
 
 "@isaacs/cliui@^8.0.2":
   version "8.0.2"
@@ -6960,7 +6959,7 @@ shallowequal@1.1.0:
 
 "sharp@https://github.com/session-foundation/sharp/releases/download/v0.34.5/sharp-0.34.5.tgz":
   version "0.34.5"
-  resolved "https://github.com/session-foundation/sharp/releases/download/v0.34.5/sharp-0.34.5.tgz#5958055e77c4e95ff3e41b3ce966c40e48c98385"
+  resolved "https://github.com/session-foundation/sharp/releases/download/v0.34.5/sharp-0.34.5.tgz#fc9c3d69501f4c1d20ca0bb2e686bc4952691895"
   dependencies:
     "@img/colour" "^1.0.0"
     detect-libc "^2.1.2"
