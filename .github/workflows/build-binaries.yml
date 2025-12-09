@@ -122,6 +122,7 @@ jobs:
 
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      USE_HARD_LINKS: false # see https://github.com/electron-userland/electron-builder/issues/7093
 
     steps:
       - run: git config --global core.autocrlf false
