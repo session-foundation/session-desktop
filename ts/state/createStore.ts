@@ -14,6 +14,7 @@ const persistConfig = {
   whitelist: ['userConfig'],
 };
 
+// @ts-expect-error -- FIXME
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 const middlewareList = [promiseMiddleware];
@@ -28,3 +29,6 @@ export const createStore = (initialState: any) =>
         immutableCheck: true,
       }).concat(middlewareList),
   });
+
+export type AppDispatch = ReturnType<typeof createStore>['dispatch'];
+

@@ -78,3 +78,6 @@ const reducers = {
 // Making this work would require that our reducer signature supported AnyAction, not
 //   our restricted actions
 export const rootReducer = combineReducers(reducers);
+
+export type RootState = ReturnType<typeof rootReducer>
+

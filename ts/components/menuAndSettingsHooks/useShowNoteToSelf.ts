@@ -12,18 +12,10 @@ function useShowNoteToSelf({ conversationId }: { conversationId: string }) {
   return isMe && isHidden;
 }
 
-function useDispatch2() {
-  const dispatch = useDispatch();
-  return { dispatch }
-}
 
 export function useShowNoteToSelfCb({ conversationId }: { conversationId: string }) {
   const showNTS = useShowNoteToSelf({ conversationId });
-  const { dispatch } = useDispatch2();
-
-  if (!showNTS) {
-    return null;
-  }
+  const dispatch = useDispatch();
 
   const onClickClose = () => {
     dispatch(updateConfirmModal(null));
@@ -45,5 +37,10 @@ export function useShowNoteToSelfCb({ conversationId }: { conversationId: string
       })
     );
   };
+
+  if (!showNTS) {
+    return null;
+  }
+
   return showConfirmationModal;
 }

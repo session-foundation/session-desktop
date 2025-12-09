@@ -66,13 +66,22 @@ function getSourceContent(jsFile) {
 
 module.exports = {
   presets: [
-    ['@babel/preset-env', { modules: 'commonjs' }],
+    ['@babel/preset-env', {
+      modules: 'commonjs',
+      targets: {
+        electron: '34',  // or whatever version you're using
+      },
+    }],
   ],
   plugins: [
     [require.resolve('babel-plugin-react-compiler'), {
       target: '19',
       logger: {
         logEvent(filename, event) {
+          if (filename.includes('useAppDispatch')) {
+            console.log('Processing useAppDispatch:', event.kind);
+          }
+
           if (event.kind === 'CompileError') {
             const debug = process.env.SESSION_RC_DEBUG;
             if (!debug) {
@@ -171,5 +180,8 @@ module.exports = {
   ],
   only: [
     '**/ts/components/**',
+    '**/ts/components/*',
+    '**/ts/state/**',
+    '**/ts/state/*',
   ],
 };
