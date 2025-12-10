@@ -20,12 +20,19 @@ export type GenerateProProofResponseType = z.infer<typeof GenerateProProofRespon
 
 const ProRevocationItemSchema = z.object({
   expiry_unix_ts_ms: z.number(),
+  /**
+   * This is hex
+   */
   gen_index_hash: z.string(),
 });
 
+export const ProRevocationItemsSchema = z.array(ProRevocationItemSchema);
+
+export type ProRevocationItemsType = z.infer<typeof ProRevocationItemsSchema>;
+
 const ProRevocationsResultSchema = z.object({
   ticket: z.number(),
-  items: z.array(ProRevocationItemSchema),
+  items: ProRevocationItemsSchema,
 });
 
 export type ProRevocationsResultType = z.infer<typeof ProRevocationsResultSchema>;

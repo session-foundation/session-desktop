@@ -535,7 +535,6 @@ export class SwarmPolling {
             messageHash: m.hash,
           })),
           {
-            nowMs: NetworkTime.now(),
             proBackendPubkeyHex: ProBackendAPI.getServer().server.edPkHex,
             ed25519GroupPubkeyHex: pubkey,
             groupEncKeys,
@@ -568,7 +567,6 @@ export class SwarmPolling {
         messageHash: m.hash,
       })),
       {
-        nowMs: NetworkTime.now(),
         proBackendPubkeyHex: ProBackendAPI.getServer().server.edPkHex,
         ed25519PrivateKeyHex,
       }

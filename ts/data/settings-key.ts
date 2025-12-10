@@ -74,10 +74,12 @@ export const SettingsKey = {
   proRotatingPrivateKeyHex: 'proRotatingPrivateKeyHex',
   /**
    * The ticket of the last fetched revocations list, number | undefined
+   * Note: changed to this has to be done through the ProRevocationCache
    */
   proRevocationListTicket: 'proRevocationListTicket',
   /**
    * The items of the last fetched revocations list, Array of items validating ProRevocationItemSchema (or undefined)
+   * Note: changed to this has to be done through the ProRevocationCache
    */
   proRevocationListItems: 'proRevocationListItems',
   proDetails: 'proDetails',

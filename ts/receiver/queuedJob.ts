@@ -25,6 +25,7 @@ import { LinkPreviews } from '../util/linkPreviews';
 import { GroupV2Receiver } from './groupv2/handleGroupV2Message';
 import { Constants } from '../session';
 import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
+import { ProRevocationCache } from '../session/revocation_list/pro_revocation_list';
 
 function isMessageModel(
   msg: MessageModel | MessageModelPropsWithoutConvoProps
@@ -434,7 +435,7 @@ export async function handleMessageJob(
       );
     }
 
-    await processProDetails({ sendingDeviceConversation, messageModel, decodedEnvelope });
+    await processProDetailsForMsg({ sendingDeviceConversation, messageModel, decodedEnvelope });
 
     // save the message model to the db and then save the messageId generated to our in-memory copy
     const id = await messageModel.commit();
@@ -467,7 +468,7 @@ export async function handleMessageJob(
   }
 }
 
-async function processProDetails({
+async function processProDetailsForMsg({
   decodedEnvelope,
   messageModel,
 }: {
@@ -475,8 +476,25 @@ async function processProDetails({
   messageModel: MessageModel;
   decodedEnvelope: SwarmDecodedEnvelope;
 }) {
-  // if there are no pro proof, or the pro proof is not valid at the time the message was sent, do nothing
-  if (!decodedEnvelope.validPro || !decodedEnvelope.isProProofValidAtMs(decodedEnvelope.sentAtMs)) {
+  // - if there are no pro proof, or
+  // - the pro proof is not valid (validOrExpired) at the time the message was sent, or
+  // - the pro proof is expired at the time the message was sent, or
+  // - the pro proof is revoked at the time the message was sent
+  // do not save the pro features associated with that message
+  if (
+    !decodedEnvelope.validPro ||
+    !decodedEnvelope.isProProofValidOrExpired() ||
+    decodedEnvelope.isProProofExpiredAtMs(decodedEnvelope.sentAtMs) ||
+    decodedEnvelope.isProProofRevokedAtMs(decodedEnvelope.sentAtMs)
+  ) {
+    return;
+  }
+  const alreadyRevoked = ProRevocationCache.isB64HashRevokedAtMs(
+    decodedEnvelope.validPro.proProof.genIndexHashB64,
+    decodedEnvelope.sentAtMs
+  );
+
+  if (alreadyRevoked) {
     return;
   }
   // otherwise, we have a valid pro proof, save the bitset of pro features used in the message

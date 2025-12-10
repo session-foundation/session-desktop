@@ -9,13 +9,11 @@ import {
   type UpdateProRevocationListPersistedData,
 } from '../PersistedJob';
 import ProBackendAPI from '../../../apis/pro_backend_api/ProBackendAPI';
-import { getItemById } from '../../../../data/data';
-import { SettingsKey } from '../../../../data/settings-key';
 import { DURATION } from '../../../constants';
-import { Storage } from '../../../../util/storage';
 import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { formatRoundedUpDuration } from '../../../../util/i18n/formatting/generics';
 import { isDevProd } from '../../../../shared/env_vars';
+import { ProRevocationCache } from '../../../revocation_list/pro_revocation_list';
 
 let lastRunAtMs = 0;
 
@@ -52,12 +50,10 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
     try {
       window.log.debug(`UpdateProRevocationListJob run() started`);
 
-      const ticketFromDb = await getItemById(SettingsKey.proRevocationListTicket);
-
-      const lastFetchTicket = ticketFromDb?.value || 0;
+      const ticketFromDb = ProRevocationCache.getTicket();
 
       const response = await ProBackendAPI.getRevocationList({
-        ticket: lastFetchTicket,
+        ticket: ticketFromDb,
       });
 
       if (getFeatureFlag('debugServerRequests')) {
@@ -72,9 +68,9 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
         return RunJobResult.RetryJobIfPossible;
       }
 
-      if (response.result.ticket <= lastFetchTicket) {
+      if (response.result.ticket <= ticketFromDb) {
         window.log.debug(
-          `UpdateProRevocationListJob: no new revocations from our existing ticket ${lastFetchTicket}`
+          `UpdateProRevocationListJob: no new revocations from our existing ticket ${ticketFromDb}`
         );
         lastRunAtMs = Date.now();
 
@@ -84,15 +80,15 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
       const newItems = response.result.items;
 
       window.log.debug(
-        `UpdateProRevocationListJob: new revocations from ticket #${lastFetchTicket}: to #${newTicket}. items: ${response.result.items}`
+        `UpdateProRevocationListJob: new revocations from ticket #${ticketFromDb}: to #${newTicket}. items: ${response.result.items}`
       );
 
       // Note: we only want to update the lastRunAt once we have successfully fetched the new revocations
       lastRunAtMs = Date.now();
-      await Storage.put(SettingsKey.proRevocationListTicket, newTicket);
-      await Storage.put(SettingsKey.proRevocationListItems, JSON.stringify(newItems));
+      await ProRevocationCache.setTicket(newTicket);
+      await ProRevocationCache.setListItems(newItems);
       window.log.info(
-        `UpdateProRevocationListJob: new revocations from ticket #${lastFetchTicket}: to #${newTicket}. itemsCount: ${response.result.items.length}`
+        `UpdateProRevocationListJob: new revocations from ticket #${ticketFromDb}: to #${newTicket}. itemsCount: ${response.result.items.length}`
       );
 
       return RunJobResult.Success;

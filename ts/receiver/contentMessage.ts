@@ -554,7 +554,7 @@ async function handleMessageRequestResponse(
   const profile = buildPrivateProfileChangeFromMsgRequestResponse({
     convo: conversationToApprove,
     messageRequestResponse,
-    decodedPro: envelope.validPro,
+    decodedEnvelope: envelope,
   });
 
   if (profile) {

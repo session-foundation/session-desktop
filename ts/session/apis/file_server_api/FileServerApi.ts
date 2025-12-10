@@ -42,7 +42,6 @@ export const uploadFileToFsWithOnionV4 = async (
     return null;
   }
 
-  // TODO: remove this once QA is done
   const target = process.env.POTATO_FS
     ? 'POTATO'
     : process.env.SUPER_DUPER_FS
@@ -205,12 +204,6 @@ export const getLatestReleaseFromFileServer = async (
  *
  */
 export const extendFileExpiry = async (fileId: string, fsTarget: FILE_SERVER_TARGET_TYPE) => {
-  // TODO: remove this once QA is done
-
-  if (!FS.supportsFsExtend(fsTarget)) {
-    throw new Error('extendFileExpiry: only works with potato for now');
-  }
-
   if (getFeatureFlag('debugServerRequests')) {
     window.log.info(`about to renew expiry of file: "${fileId}"`);
   }

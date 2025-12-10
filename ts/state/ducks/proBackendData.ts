@@ -17,6 +17,7 @@ import { NetworkTime } from '../../util/NetworkTime';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { DURATION } from '../../session/constants';
 import { SessionBackendBaseResponseType } from '../../session/apis/session_backend_server';
+import { base64_variants, from_hex, to_base64 } from 'libsodium-wrappers-sumo';
 
 type RequestState<D = unknown> = {
   isFetching: boolean;
@@ -182,7 +183,10 @@ async function handleNewProProof(rotatingPrivKeyHex: string): Promise<ProProof |
   if (response?.status_code === 200) {
     const proProof = {
       expiryMs: response.result.expiry_unix_ts_ms,
-      genIndexHashB64: response.result.gen_index_hash,
+      genIndexHashB64: to_base64(
+        from_hex(response.result.gen_index_hash),
+        base64_variants.ORIGINAL
+      ),
       rotatingPubkeyHex: response.result.rotating_pkey,
       version: response.result.version,
       signatureHex: response.result.sig,

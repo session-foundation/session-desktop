@@ -17,6 +17,7 @@ import { Timestamp } from '../types/timestamp/timestamp';
 import { privateSet, privateSetKey } from './modelFriends';
 import type { SignalService } from '../protobuf';
 import { UserConfigWrapperActions } from '../webworker/workers/browser/libsession_worker_interface';
+import type { SwarmDecodedEnvelope } from '../receiver/types';
 
 type SessionProfileArgs = {
   displayName: string;
@@ -195,6 +196,10 @@ abstract class SessionProfileChanges {
       this.convo.get('bitsetProFeatures') !== bitsetProFeatures.toString()
     ) {
       this.convo[privateSetKey]('bitsetProFeatures', bitsetProFeatures.toString());
+      proDetailsChanged = true;
+    }
+    if (isNil(bitsetProFeatures) && this.convo.get('bitsetProFeatures')) {
+      this.convo[privateSetKey]('bitsetProFeatures', undefined);
       proDetailsChanged = true;
     }
     if (!isNil(proGenIndexHashB64) && this.convo.get('proGenIndexHashB64') !== proGenIndexHashB64) {
@@ -489,31 +494,79 @@ export class SessionProfileSetAvatarDownloadedAny extends SessionProfileChanges 
   }
 }
 
+const emptyProDetails = {
+  proDetails: {
+    bitsetProFeatures: null,
+    proExpiryTsMs: null,
+    proGenIndexHashB64: null,
+  },
+};
+
+function buildProProfileDetailsFromContact({
+  contact,
+  convoVolatileDetails,
+}: {
+  contact: ContactInfoGet;
+  convoVolatileDetails: ConvoInfoVolatileGet1o1 | null;
+}): WithProDetailsContact {
+  return {
+    proDetails: {
+      bitsetProFeatures: contact?.proProfileBitset ?? null,
+      proExpiryTsMs: convoVolatileDetails?.proExpiryTsMs ?? null,
+      proGenIndexHashB64: convoVolatileDetails?.genIndexHashB64 ?? null,
+    },
+  };
+}
+
+function buildProProfileDetailsFromEnvelope({
+  decodedEnvelope,
+}: {
+  decodedEnvelope: SwarmDecodedEnvelope;
+}): WithProDetailsContact {
+  if (!decodedEnvelope.validPro) {
+    return emptyProDetails;
+  }
+  if (
+    !decodedEnvelope.validPro.proProfileBitset ||
+    !decodedEnvelope.validPro.proProof.genIndexHashB64
+  ) {
+    return emptyProDetails;
+  }
+  const isValidOrExpired = decodedEnvelope.isProProofValidOrExpired();
+
+  return isValidOrExpired
+    ? emptyProDetails
+    : {
+        proDetails: {
+          bitsetProFeatures: decodedEnvelope.validPro.proProfileBitset,
+          proExpiryTsMs: decodedEnvelope.validPro.proProof.expiryMs,
+          proGenIndexHashB64: decodedEnvelope.validPro.proProof.genIndexHashB64,
+        },
+      };
+}
+
 /**
  * Build a private profile change from a message request response & pro details.
  */
 export function buildPrivateProfileChangeFromMsgRequestResponse({
   convo,
   messageRequestResponse,
-  decodedPro,
+  decodedEnvelope,
 }: WithConvo & {
   messageRequestResponse: SignalService.MessageRequestResponse;
-  decodedPro: DecodedPro | null;
+  decodedEnvelope: SwarmDecodedEnvelope;
 }) {
   if (isEmpty(messageRequestResponse.profile)) {
     return null;
   }
+
   const shared = {
     convo,
     displayName: messageRequestResponse.profile.displayName,
     profileUpdatedAtSeconds: new Timestamp({
       value: messageRequestResponse.profile.lastProfileUpdateSeconds ?? 0,
     }).seconds(),
-    proDetails: {
-      bitsetProFeatures: decodedPro?.proProfileBitset ?? null,
-      proExpiryTsMs: decodedPro?.proProof.expiryMs ?? null,
-      proGenIndexHashB64: decodedPro?.proProof.genIndexHashB64 ?? null,
-    },
+    ...buildProProfileDetailsFromEnvelope({ decodedEnvelope }),
   };
   if (messageRequestResponse.profileKey && messageRequestResponse.profile.profilePicture) {
     return new SessionProfileSetAvatarBeforeDownloadPrivate({
@@ -561,15 +614,12 @@ export function buildPrivateProfileChangeFromContactUpdate({
   contact: ContactInfoGet;
   convoVolatileDetails: ConvoInfoVolatileGet1o1 | null;
 }) {
+  const proProfileDetails = buildProProfileDetailsFromContact({ contact, convoVolatileDetails });
   const shared = {
     convo,
     displayName: contact.name,
     profileUpdatedAtSeconds: contact.profileUpdatedSeconds,
-    proDetails: {
-      bitsetProFeatures: contact?.proProfileBitset ?? null,
-      proExpiryTsMs: convoVolatileDetails?.proExpiryTsMs ?? null,
-      proGenIndexHashB64: convoVolatileDetails?.genIndexHashB64 ?? null,
-    },
+    ...proProfileDetails,
   };
   if (contact.profilePicture?.url && contact.profilePicture?.key) {
     return new SessionProfileSetAvatarBeforeDownloadPrivate({
